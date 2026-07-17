@@ -431,13 +431,19 @@ class SupabaseSurveyRepository implements SurveyRepository {
   // TTS
   // ---------------------------------------------------------------------------
 
+  static const _viVoiceId = '1619321';
+  static const _enVoiceId = '1914576';
+
   @override
   Future<TtsResult> tts(String text, String language) async {
+    final voiceId = language == 'en' ? _enVoiceId : _viVoiceId;
     final response = await _client.functions.invoke(
       'tts-proxy',
       body: {
         'action': 'generate_and_wait',
         'text': text,
+        'voiceId': voiceId,
+        'speed': 1.0,
         'language': language,
       },
     );

@@ -12,6 +12,7 @@ import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/pill_button.dart';
 import '../../../core/widgets/progress_track.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../profile/profile_providers.dart';
 import '../survey_providers.dart';
 
 // ---------------------------------------------------------------------------
@@ -29,12 +30,14 @@ class TtsPlaybackState {
     this.audioUrl,
     this.durationMs = 0,
     this.positionMs = 0,
+    this.questionId,
   });
   final bool isPlaying;
   final bool isLoading;
   final String? audioUrl;
   final int durationMs;
   final int positionMs;
+  final String? questionId;
 
   /// Active word index estimated from positionMs / durationMs * wordCount.
   int activeWordIndex(int wordCount) {
@@ -53,7 +56,7 @@ class TtsPlaybackNotifier extends StateNotifier<TtsPlaybackState> {
   late final AudioPlayer _player;
   StreamSubscription<Duration>? _posSub;
 
-  Future<void> toggle(String text, String language) async {
+  Future<void> toggle(String text, String language, {String? questionId}) async {
     if (state.isPlaying) {
       await _player.pause();
       state = TtsPlaybackState(
@@ -61,23 +64,29 @@ class TtsPlaybackNotifier extends StateNotifier<TtsPlaybackState> {
         audioUrl: state.audioUrl,
         durationMs: state.durationMs,
         positionMs: state.positionMs,
+        questionId: state.questionId,
       );
       return;
     }
 
-    // If we already have a URL for this session, just resume.
-    if (state.audioUrl != null && !state.isLoading) {
+    // Resume only if same question.
+    if (state.audioUrl != null && !state.isLoading && state.questionId == questionId) {
       await _player.play();
       state = TtsPlaybackState(
         isPlaying: true,
         audioUrl: state.audioUrl,
         durationMs: state.durationMs,
         positionMs: state.positionMs,
+        questionId: state.questionId,
       );
       return;
     }
 
-    state = const TtsPlaybackState(isLoading: true);
+    // New question — stop any existing playback first.
+    if (state.isPlaying || state.audioUrl != null) {
+      await _player.stop();
+    }
+    state = TtsPlaybackState(isLoading: true, questionId: questionId);
     try {
       final repo = _ref.read(surveyRepositoryProvider);
       final result = await repo.tts(text, language);
@@ -91,6 +100,7 @@ class TtsPlaybackNotifier extends StateNotifier<TtsPlaybackState> {
           audioUrl: result.audioUrl,
           durationMs: result.durationMs,
           positionMs: pos.inMilliseconds,
+          questionId: questionId,
         );
       });
 
@@ -98,10 +108,18 @@ class TtsPlaybackNotifier extends StateNotifier<TtsPlaybackState> {
         isPlaying: true,
         audioUrl: result.audioUrl,
         durationMs: result.durationMs,
+        questionId: questionId,
       );
     } catch (_) {
       state = const TtsPlaybackState();
     }
+  }
+
+  Future<void> stopForQuestionChange() async {
+    if (state.isPlaying) {
+      await _player.stop();
+    }
+    state = const TtsPlaybackState();
   }
 
   @override
@@ -178,6 +196,7 @@ class _QuestionView extends ConsumerStatefulWidget {
 
 class _QuestionViewState extends ConsumerState<_QuestionView> {
   Timer? _advanceTimer;
+  int? _lastIndex;
 
   @override
   void dispose() {
@@ -208,10 +227,26 @@ class _QuestionViewState extends ConsumerState<_QuestionView> {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
+    // Stop TTS when question changes
+    if (_lastIndex != null && _lastIndex != currentIndex) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          ref.read(_ttsPlaybackProvider.notifier).stopForQuestionChange();
+        }
+      });
+    }
+    _lastIndex = currentIndex;
+
     final safeIndex = currentIndex.clamp(0, questions.length - 1);
     final question = questions[safeIndex];
     final isLast = safeIndex == questions.length - 1;
     final currentAnswer = answers[question.id];
+
+    final localeCode = ref.watch(appLocaleProvider);
+    final displayText = localeCode == 'en' && question.questionTextEn != null
+        ? question.questionTextEn!
+        : question.questionText;
+    final ttsLanguage = localeCode == 'en' ? 'en' : 'vi';
 
     // Determine layer label
     final layerLabel = _layerLabel(question.layer, l10n);
@@ -238,8 +273,9 @@ class _QuestionViewState extends ConsumerState<_QuestionView> {
               ),
         actions: [
           _TtsButton(
-            questionText: question.questionText,
-            language: 'vi',
+            questionText: displayText,
+            language: ttsLanguage,
+            questionId: question.id,
           ),
           const SizedBox(width: 8),
         ],
@@ -279,7 +315,7 @@ class _QuestionViewState extends ConsumerState<_QuestionView> {
                   children: [
                     WrEyebrow(layerLabel),
                     const SizedBox(height: 16),
-                    _TtsQuestionText(questionText: question.questionText),
+                    _TtsQuestionText(questionText: displayText),
                     const SizedBox(height: 28),
 
                     // Answer options
@@ -339,9 +375,10 @@ class _QuestionViewState extends ConsumerState<_QuestionView> {
 // ---------------------------------------------------------------------------
 
 class _TtsButton extends ConsumerWidget {
-  const _TtsButton({required this.questionText, required this.language});
+  const _TtsButton({required this.questionText, required this.language, required this.questionId});
   final String questionText;
   final String language;
+  final String questionId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -360,7 +397,7 @@ class _TtsButton extends ConsumerWidget {
       onPressed: () {
         ref
             .read(_ttsPlaybackProvider.notifier)
-            .toggle(questionText, language);
+            .toggle(questionText, language, questionId: questionId);
       },
     );
   }

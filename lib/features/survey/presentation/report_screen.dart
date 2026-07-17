@@ -11,6 +11,7 @@ import '../../../core/widgets/pill_button.dart';
 import '../../../core/widgets/progress_track.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../profile/profile_providers.dart';
 import '../survey_providers.dart';
 
 // Provider family for a specific report
@@ -67,7 +68,7 @@ class ReportScreen extends ConsumerWidget {
   }
 }
 
-class _ReportBody extends StatelessWidget {
+class _ReportBody extends ConsumerWidget {
   const _ReportBody({
     required this.report,
     required this.narratives,
@@ -76,7 +77,7 @@ class _ReportBody extends StatelessWidget {
   final CcReportFull report;
   final List<CcNarrative> narratives;
 
-  CcNarrative? _narrative(String type, {String? layer}) {
+  CcNarrative? _narrative(String type, {String? layer, required String language}) {
     return selectNarrative(
       narratives,
       type: type,
@@ -87,7 +88,7 @@ class _ReportBody extends StatelessWidget {
               ? _layerScore(report.bottleneckLayer)
               : _layerScore(
                   layer != null ? SurveyLayer.fromJson(layer) : SurveyLayer.structure),
-      language: 'vi',
+      language: language,
     );
   }
 
@@ -98,10 +99,18 @@ class _ReportBody extends StatelessWidget {
         _ => 0,
       };
 
+  String _narrativeText(CcNarrative n, String language) {
+    if (language == 'en' && n.narrativeTextEn != null) {
+      return n.narrativeTextEn!;
+    }
+    return n.narrativeText;
+  }
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final totalNarrative = _narrative('TOTAL');
+    final localeCode = ref.watch(appLocaleProvider);
+    final totalNarrative = _narrative('TOTAL', language: localeCode);
     final isPremium =
         report.scoreEsi != null || report.scoreEnps != null;
 
@@ -125,7 +134,7 @@ class _ReportBody extends StatelessWidget {
                 if (totalNarrative != null) ...[
                   const SizedBox(height: 16),
                   Text(
-                    totalNarrative.narrativeText,
+                    _narrativeText(totalNarrative, localeCode),
                     textAlign: TextAlign.center,
                     style: WrTextStyles.body,
                   ),
@@ -139,19 +148,22 @@ class _ReportBody extends StatelessWidget {
           _LayerCard(
             label: l10n.reportLayerStructure,
             score: report.scoreStructure,
-            narrative: _narrative('LAYER', layer: 'STRUCTURE'),
+            narrative: _narrative('LAYER', layer: 'STRUCTURE', language: localeCode),
+            localeCode: localeCode,
           ),
           const SizedBox(height: 16),
           _LayerCard(
             label: l10n.reportLayerCulture,
             score: report.scoreCulture,
-            narrative: _narrative('LAYER', layer: 'CULTURE'),
+            narrative: _narrative('LAYER', layer: 'CULTURE', language: localeCode),
+            localeCode: localeCode,
           ),
           const SizedBox(height: 16),
           _LayerCard(
             label: l10n.reportLayerActivity,
             score: report.scoreActivity,
-            narrative: _narrative('LAYER', layer: 'ACTIVITY'),
+            narrative: _narrative('LAYER', layer: 'ACTIVITY', language: localeCode),
+            localeCode: localeCode,
           ),
           const SizedBox(height: 16),
 
@@ -159,8 +171,9 @@ class _ReportBody extends StatelessWidget {
           _BottleneckCard(
             report: report,
             narrative: _narrative('BOTTLENECK',
-                layer: report.bottleneckLayer.toJson()),
+                layer: report.bottleneckLayer.toJson(), language: localeCode),
             l10n: l10n,
+            localeCode: localeCode,
           ),
           const SizedBox(height: 16),
 
@@ -232,10 +245,20 @@ class _LayerCard extends StatelessWidget {
     required this.label,
     required this.score,
     this.narrative,
+    required this.localeCode,
   });
   final String label;
   final double score;
   final CcNarrative? narrative;
+  final String localeCode;
+
+  String? get _narrativeText {
+    if (narrative == null) return null;
+    if (localeCode == 'en' && narrative!.narrativeTextEn != null) {
+      return narrative!.narrativeTextEn;
+    }
+    return narrative!.narrativeText;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -255,9 +278,9 @@ class _LayerCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           WrProgressTrack(value: score / 5.0, color: WrColors.coral),
-          if (narrative != null) ...[
+          if (_narrativeText != null) ...[
             const SizedBox(height: 10),
-            Text(narrative!.narrativeText, style: WrTextStyles.body),
+            Text(_narrativeText!, style: WrTextStyles.body),
           ],
         ],
       ),
@@ -274,10 +297,12 @@ class _BottleneckCard extends StatelessWidget {
     required this.report,
     required this.l10n,
     this.narrative,
+    required this.localeCode,
   });
   final CcReportFull report;
   final AppLocalizations l10n;
   final CcNarrative? narrative;
+  final String localeCode;
 
   String _layerLabel(SurveyLayer layer) => switch (layer) {
         SurveyLayer.structure => l10n.reportLayerStructure,
@@ -285,6 +310,14 @@ class _BottleneckCard extends StatelessWidget {
         SurveyLayer.activity => l10n.reportLayerActivity,
         _ => '',
       };
+
+  String? get _narrativeText {
+    if (narrative == null) return null;
+    if (localeCode == 'en' && narrative!.narrativeTextEn != null) {
+      return narrative!.narrativeTextEn;
+    }
+    return narrative!.narrativeText;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -301,10 +334,10 @@ class _BottleneckCard extends StatelessWidget {
             _layerLabel(report.bottleneckLayer),
             style: WrTextStyles.hLarge.copyWith(color: WrColors.white),
           ),
-          if (narrative != null) ...[
+          if (_narrativeText != null) ...[
             const SizedBox(height: 10),
             Text(
-              narrative!.narrativeText,
+              _narrativeText!,
               style: WrTextStyles.body
                   .copyWith(color: WrColors.white.withValues(alpha: 0.8)),
             ),
