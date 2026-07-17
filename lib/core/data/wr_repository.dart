@@ -132,10 +132,9 @@ class SupabaseWrRepository implements WrRepository {
   Future<int> countCheckins() async {
     final res = await _client
         .from('wr_checkins')
-        .select()
-        .eq('user_id', _uid)
-        .count();
-    return res.count;
+        .count(CountOption.exact)
+        .eq('user_id', _uid);
+    return res;
   }
 
   // --- Insights ---

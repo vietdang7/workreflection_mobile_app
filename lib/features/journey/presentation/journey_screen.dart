@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/models/timeline_event.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
@@ -297,11 +298,12 @@ class _ErrorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = context.l10n;
     return Row(
       children: [
-        Text('Không thể tải dữ liệu.', style: WrTextStyles.body),
+        Text(l10n.homeErrorLoadData, style: WrTextStyles.body),
         const SizedBox(width: 8),
-        TextButton(onPressed: onRetry, child: const Text('Thử lại')),
+        TextButton(onPressed: onRetry, child: Text(l10n.homeRetry)),
       ],
     );
   }
