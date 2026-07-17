@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/splash/splash_screen.dart';
 
 // ---------------------------------------------------------------------------
@@ -80,7 +81,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/onboarding',
-        builder: (context, state) => const _PlaceholderScreen('Onboarding'),
+        builder: (context, state) => const OnboardingScreen(),
       ),
       GoRoute(
         path: '/auth',
