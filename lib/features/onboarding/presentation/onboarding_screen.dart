@@ -21,7 +21,8 @@ class OnboardingScreen extends ConsumerWidget {
       backgroundColor: WrColors.white,
       body: SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
+          // HTML .ob-screen uses padding: 24px 36px 36px
+          padding: const EdgeInsets.fromLTRB(36, 0, 36, 36),
           child: Column(
             children: [
               const SizedBox(height: 24),
@@ -132,7 +133,7 @@ class _Step1 extends StatelessWidget {
         const SizedBox(height: 16),
         Text(
           l10n.onb1Title,
-          style: WrTextStyles.hLarge.copyWith(fontSize: 28, height: 1.3),
+          style: WrTextStyles.hLarge.copyWith(fontSize: 32, fontWeight: FontWeight.w300, height: 1.25, letterSpacing: -0.02 * 32),
         ),
         const SizedBox(height: 16),
         Text(
@@ -175,16 +176,18 @@ class _Step2 extends StatelessWidget {
         variant: WrPillVariant.coral,
       ),
       children: [
+        const WrLogo(),
+        const SizedBox(height: 32),
         _StepTag(label: l10n.onb2Tag, color: WrColors.coral),
         const SizedBox(height: 16),
         Text(
           l10n.onb2Title,
-          style: WrTextStyles.hLarge.copyWith(fontSize: 28, height: 1.3),
+          style: WrTextStyles.hLarge.copyWith(fontSize: 32, fontWeight: FontWeight.w300, height: 1.25, letterSpacing: -0.02 * 32),
         ),
         const SizedBox(height: 12),
         Text(
           l10n.onb2Body,
-          style: WrTextStyles.body.copyWith(fontSize: 15, height: 1.6),
+          style: WrTextStyles.body.copyWith(fontSize: 16, height: 1.65),
         ),
         const SizedBox(height: 24),
         ...options.map(
@@ -222,16 +225,18 @@ class _Step3 extends StatelessWidget {
         variant: WrPillVariant.teal,
       ),
       children: [
+        const WrLogo(),
+        const SizedBox(height: 32),
         _StepTag(label: l10n.onb3Tag, color: WrColors.teal),
         const SizedBox(height: 16),
         Text(
           l10n.onb3Title,
-          style: WrTextStyles.hLarge.copyWith(fontSize: 28, height: 1.3),
+          style: WrTextStyles.hLarge.copyWith(fontSize: 32, fontWeight: FontWeight.w300, height: 1.25, letterSpacing: -0.02 * 32),
         ),
         const SizedBox(height: 12),
         Text(
           l10n.onb3Body,
-          style: WrTextStyles.body.copyWith(fontSize: 15, height: 1.6),
+          style: WrTextStyles.body.copyWith(fontSize: 16, height: 1.65),
         ),
         const SizedBox(height: 24),
         _PromiseCard(
@@ -384,7 +389,7 @@ class _PromiseCard extends StatelessWidget {
   }
 }
 
-/// Progress dot. Active = coral pill 24×8, done = navy 25%, future = muted 8px.
+/// Progress dot. Active = coral pill 24×8, done = navy 25%, future = navy 10%.
 class _StepDot extends StatelessWidget {
   const _StepDot({required this.index, required this.currentStep});
   final int index;
@@ -402,6 +407,7 @@ class _StepDot extends StatelessWidget {
         ),
       );
     } else if (index < currentStep) {
+      // done — navy 25%
       return Container(
         width: 8,
         height: 8,
@@ -411,11 +417,12 @@ class _StepDot extends StatelessWidget {
         ),
       );
     } else {
+      // future — navy 10% (matches HTML: rgba(9,55,116,0.1))
       return Container(
         width: 8,
         height: 8,
-        decoration: const BoxDecoration(
-          color: WrColors.muted,
+        decoration: BoxDecoration(
+          color: WrColors.navy.withValues(alpha: 0.1),
           shape: BoxShape.circle,
         ),
       );

@@ -296,7 +296,13 @@ class _OpportunityCard extends StatelessWidget {
       children: [
         WrEyebrow(l10n.developEyebrowOpportunity),
         const SizedBox(height: 12),
-        WrCardMinimal(
+        // Opportunity card uses r16 per HTML .opp-card spec (not the standard r20 card)
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: WrColors.cream,
+            borderRadius: BorderRadius.circular(16),
+          ),
           child: Row(
             children: [
               Container(
