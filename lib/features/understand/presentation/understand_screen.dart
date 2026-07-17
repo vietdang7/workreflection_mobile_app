@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/models/recurring_situation.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -9,6 +10,7 @@ import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/progress_track.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../survey/survey_providers.dart';
 import '../understand_providers.dart';
 
 class UnderstandScreen extends ConsumerWidget {
@@ -340,6 +342,7 @@ class _CareerHealthCheck extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final countAsync = ref.watch(understandInsightCountProvider);
+    final latestReportAsync = ref.watch(latestReportProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -360,7 +363,25 @@ class _CareerHealthCheck extends ConsumerWidget {
               const SizedBox(height: 8),
               Text(l10n.understandHealthPrompt, style: WrTextStyles.body),
               const SizedBox(height: 12),
-              WrActionLink(label: l10n.understandHealthCta, onTap: () {}),
+              WrActionLink(
+                label: l10n.understandHealthCta,
+                onTap: () => context.push('/survey'),
+              ),
+              // Show "Xem báo cáo gần nhất" if a report exists
+              latestReportAsync.when(
+                data: (report) => report != null
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: WrActionLink(
+                          label: l10n.reportViewLatest,
+                          onTap: () =>
+                              context.push('/survey/report/${report.id}'),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+              ),
             ],
           ),
         ),
