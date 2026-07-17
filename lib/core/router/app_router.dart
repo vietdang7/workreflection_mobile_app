@@ -7,6 +7,7 @@ import '../../features/home/presentation/home_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/shell/shell_screen.dart';
 import '../../features/splash/splash_screen.dart';
+import '../../features/understand/presentation/understand_screen.dart';
 
 // ---------------------------------------------------------------------------
 // Pure redirect logic — no Flutter/Supabase dependencies, fully testable.
@@ -107,7 +108,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/understand',
-                builder: (context, state) => const UnderstandTabScreen(),
+                builder: (context, state) => const UnderstandScreen(),
               ),
             ],
           ),
