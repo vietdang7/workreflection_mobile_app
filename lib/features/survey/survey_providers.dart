@@ -94,9 +94,9 @@ final actionPlanProvider =
 });
 
 final actionProgressProvider =
-    FutureProvider.family<Map<String, bool>, String>((ref, reportId) async {
+    FutureProvider<Map<String, bool>>((ref) async {
   final repo = ref.watch(surveyRepositoryProvider);
-  return repo.getActionProgress(reportId);
+  return repo.getActionProgress();
 });
 
 // ---------------------------------------------------------------------------
@@ -109,10 +109,9 @@ final actionProgressNotifierProvider = StateNotifierProvider.family<
 });
 
 class ActionProgressNotifier extends StateNotifier<Map<String, bool>> {
-  ActionProgressNotifier(this._ref, this._reportId) : super({});
+  ActionProgressNotifier(this._ref, String reportId) : super({});
 
   final Ref _ref;
-  final String _reportId;
 
   void init(Map<String, bool> progress) {
     state = Map.of(progress);
@@ -123,7 +122,7 @@ class ActionProgressNotifier extends StateNotifier<Map<String, bool>> {
     state = {...state, taskId: completed};
     try {
       final repo = _ref.read(surveyRepositoryProvider);
-      await repo.toggleTask(taskId, _reportId, completed);
+      await repo.toggleTask(taskId, completed);
     } catch (_) {
       // Revert on error
       state = {...state, taskId: !completed};

@@ -57,11 +57,11 @@ abstract class SurveyRepository {
   /// Fetch action plan phases + tasks for the given survey type.
   Future<List<ActionPlanPhase>> getActionPlan(SurveyType type);
 
-  /// Fetch task progress for a report (map taskId → completed).
-  Future<Map<String, bool>> getActionProgress(String reportId);
+  /// Fetch task progress for the current user (map taskId → completed).
+  Future<Map<String, bool>> getActionProgress();
 
   /// Toggle a task completion via upsert on cc_user_action_progress.
-  Future<void> toggleTask(String taskId, String reportId, bool completed);
+  Future<void> toggleTask(String taskId, bool completed);
 
   /// Invoke tts-proxy edge function and return TtsResult.
   Future<TtsResult> tts(String text, String language);
@@ -141,18 +141,27 @@ class SupabaseSurveyRepository implements SurveyRepository {
     final configRows = await _client
         .from('cc_question_set_config')
         .select('question_ids')
+        .eq('survey_type', type.toJson())
         .eq('is_active', true)
         .limit(1);
 
     if (configRows.isNotEmpty) {
       final ids = configRows.first['question_ids'] as List<dynamic>;
       if (ids.isNotEmpty) {
+        final idStrings = ids.cast<String>();
         final rows = await _client
             .from('cc_questions')
             .select()
-            .inFilter('id', ids.cast<String>())
-            .order('question_order');
-        return rows.map(CcQuestion.fromJson).toList();
+            .inFilter('id', idStrings)
+            .eq('is_active', true);
+        // Preserve config order
+        final byId = {
+          for (final row in rows) row['id'] as String: row,
+        };
+        return idStrings
+            .where((id) => byId.containsKey(id))
+            .map((id) => CcQuestion.fromJson(byId[id]!))
+            .toList();
       }
     }
 
@@ -326,8 +335,7 @@ class SupabaseSurveyRepository implements SurveyRepository {
     final phaseRows = await _client
         .from('cc_action_plan_phases')
         .select()
-        .eq('survey_type', type.toJson())
-        .order('display_order');
+        .order('day');
 
     final taskRows = await _client
         .from('cc_action_plan_tasks')
@@ -359,12 +367,11 @@ class SupabaseSurveyRepository implements SurveyRepository {
   }
 
   @override
-  Future<Map<String, bool>> getActionProgress(String reportId) async {
+  Future<Map<String, bool>> getActionProgress() async {
     final rows = await _client
         .from('cc_user_action_progress')
         .select('task_id, completed')
-        .eq('user_id', _uid)
-        .eq('report_id', reportId);
+        .eq('user_id', _uid);
     return {
       for (final row in rows as List)
         row['task_id'] as String: row['completed'] as bool? ?? false,
@@ -372,14 +379,13 @@ class SupabaseSurveyRepository implements SurveyRepository {
   }
 
   @override
-  Future<void> toggleTask(String taskId, String reportId, bool completed) async {
+  Future<void> toggleTask(String taskId, bool completed) async {
     await _client.from('cc_user_action_progress').upsert({
       'user_id': _uid,
       'task_id': taskId,
-      'report_id': reportId,
       'completed': completed,
       'completed_at': completed ? DateTime.now().toIso8601String() : null,
-    }, onConflict: 'user_id,task_id,report_id');
+    }, onConflict: 'user_id,task_id');
   }
 
   // ---------------------------------------------------------------------------

@@ -299,7 +299,7 @@ void main() {
 
       expect(repo.toggleTaskCalls, hasLength(1));
       expect(repo.toggleTaskCalls.first.$1, 't1');
-      expect(repo.toggleTaskCalls.first.$3, true); // toggled to true
+      expect(repo.toggleTaskCalls.first.$2, true); // toggled to true
     });
 
     testWidgets('multiple phases shown in order', (tester) async {

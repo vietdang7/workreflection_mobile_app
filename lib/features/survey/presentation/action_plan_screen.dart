@@ -54,7 +54,7 @@ class _ActionPlanBody extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final planAsync = ref.watch(actionPlanProvider(surveyType));
-    final progressAsync = ref.watch(actionProgressProvider(reportId));
+    final progressAsync = ref.watch(actionProgressProvider);
 
     return planAsync.when(
       loading: () =>

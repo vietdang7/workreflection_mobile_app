@@ -8,12 +8,15 @@ import 'package:workreflection_mobile/core/models/mobile_profile.dart';
 import 'package:workreflection_mobile/core/models/practice.dart';
 import 'package:workreflection_mobile/core/models/recurring_situation.dart';
 import 'package:workreflection_mobile/core/models/sca_report.dart';
+import 'package:workreflection_mobile/core/models/survey_models.dart';
 import 'package:workreflection_mobile/core/models/timeline_event.dart';
 import 'package:workreflection_mobile/core/models/workshop.dart';
 import 'package:workreflection_mobile/features/develop/develop_providers.dart';
 import 'package:workreflection_mobile/features/home/home_providers.dart';
+import 'package:workreflection_mobile/features/survey/survey_providers.dart';
 
 import '../support/fake_repository.dart';
+import '../support/fake_survey_repository.dart';
 
 // ---------------------------------------------------------------------------
 // Delegating repos that fail only on write operations
@@ -159,6 +162,66 @@ void main() {
           reason: 'must revert to prior data, not AsyncError');
       expect(state.valueOrNull?.first.status, PracticeStatus.todo,
           reason: 'reverted to todo after failed updatePracticeStatus');
+    });
+  });
+
+  group('FakeSurveyRepository — blocker contracts', () {
+    test('B1+B2: getActionProgress ignores reportId (no param), toggleTask works', () async {
+      final fake = FakeSurveyRepository();
+      fake.seedActionProgress({'t1': false});
+      await fake.toggleTask('t1', true);
+      final progress = await fake.getActionProgress();
+      expect(progress['t1'], isTrue);
+    });
+
+    test('B3: getActionPlan returns all phases ordered by day regardless of type', () async {
+      final fake = FakeSurveyRepository();
+      fake.seedActionPlan([
+        ActionPlanPhase(id: 'p10', day: 10, titleVi: 'Ten', titleEn: 'Ten', surveyType: SurveyType.free, displayOrder: 2),
+        ActionPlanPhase(id: 'p1', day: 1, titleVi: 'One', titleEn: 'One', surveyType: SurveyType.free, displayOrder: 1),
+        ActionPlanPhase(id: 'p5', day: 5, titleVi: 'Five', titleEn: 'Five', surveyType: SurveyType.free, displayOrder: 3),
+      ]);
+      final phases = await fake.getActionPlan(SurveyType.premium);
+      expect(phases.map((p) => p.day).toList(), [1, 5, 10]);
+    });
+
+    test('B4: getQuestions with config preserves order and filters is_active', () async {
+      final fake = FakeSurveyRepository();
+      final q1 = CcQuestion(id: 'q1', layer: SurveyLayer.structure, scaleType: ScaleType.likert5, questionText: 'Q1', questionOrder: 2, isActive: true);
+      final q2 = CcQuestion(id: 'q2', layer: SurveyLayer.culture, scaleType: ScaleType.likert5, questionText: 'Q2', questionOrder: 1, isActive: true);
+      fake.seedQuestions([q1, q2]);
+      fake.seedConfigQuestionIds(['q2', 'q1'], surveyType: SurveyType.free);
+      final qs = await fake.getQuestions(SurveyType.free);
+      expect(qs[0].id, 'q2');
+      expect(qs[1].id, 'q1');
+    });
+
+    test('setToggleFails makes toggleTask throw', () async {
+      final fake = FakeSurveyRepository();
+      fake.seedActionProgress({'t1': false});
+      fake.setToggleFails(true);
+      expect(() async => await fake.toggleTask('t1', true), throwsException);
+    });
+  });
+
+  group('ActionProgressNotifier — rollback', () {
+    test('N18: optimistic toggle rolls back to prior value on failure', () async {
+      final fake = FakeSurveyRepository();
+      fake.seedActionProgress({'t1': false});
+
+      final container = ProviderContainer(overrides: [
+        surveyRepositoryProvider.overrideWithValue(fake),
+      ]);
+      addTearDown(container.dispose);
+
+      final notifier = container.read(actionProgressNotifierProvider('r1').notifier);
+      notifier.init({'t1': false});
+      expect(container.read(actionProgressNotifierProvider('r1'))['t1'], isFalse);
+
+      fake.setToggleFails(true);
+      await notifier.toggle('t1', true);
+
+      expect(container.read(actionProgressNotifierProvider('r1'))['t1'], isFalse);
     });
   });
 }

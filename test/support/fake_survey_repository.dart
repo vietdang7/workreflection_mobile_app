@@ -19,9 +19,13 @@ class FakeSurveyRepository implements SurveyRepository {
     fromCache: true,
   );
 
+  // --- Blocker-faithful fields ---
+  bool _toggleShouldFail = false;
+  List<String>? _configQuestionIds;
+
   // --- Call recorders ---
   final List<Map<String, int>> submitSurveyCalls = [];
-  final List<(String, String, bool)> toggleTaskCalls = [];
+  final List<(String, bool)> toggleTaskCalls = [];
   final List<(String, String)> ttsCalls = [];
 
   // --- Seed helpers ---
@@ -50,6 +54,12 @@ class FakeSurveyRepository implements SurveyRepository {
 
   void seedTtsResult(TtsResult result) => _ttsResult = result;
 
+  void setToggleFails(bool v) => _toggleShouldFail = v;
+
+  void seedConfigQuestionIds(List<String> ids, {SurveyType? surveyType}) {
+    _configQuestionIds = ids;
+  }
+
   // --- SurveyRepository impl ---
 
   @override
@@ -62,8 +72,16 @@ class FakeSurveyRepository implements SurveyRepository {
           : SurveyType.free;
 
   @override
-  Future<List<CcQuestion>> getQuestions(SurveyType type) async =>
-      List.unmodifiable(_questions);
+  Future<List<CcQuestion>> getQuestions(SurveyType type) async {
+    if (_configQuestionIds != null) {
+      final byId = {for (final q in _questions) q.id: q};
+      return _configQuestionIds!
+          .where((id) => byId.containsKey(id) && byId[id]!.isActive)
+          .map((id) => byId[id]!)
+          .toList();
+    }
+    return List.unmodifiable(_questions);
+  }
 
   @override
   Future<Map<ScaleType, List<CcLikertOption>>> getLikertOptions() async =>
@@ -111,16 +129,19 @@ class FakeSurveyRepository implements SurveyRepository {
       List.unmodifiable(_narratives);
 
   @override
-  Future<List<ActionPlanPhase>> getActionPlan(SurveyType type) async =>
-      List.unmodifiable(_actionPlan);
+  Future<List<ActionPlanPhase>> getActionPlan(SurveyType type) async {
+    final sorted = List.of(_actionPlan)..sort((a, b) => a.day.compareTo(b.day));
+    return List.unmodifiable(sorted);
+  }
 
   @override
-  Future<Map<String, bool>> getActionProgress(String reportId) async =>
+  Future<Map<String, bool>> getActionProgress() async =>
       Map.of(_actionProgress);
 
   @override
-  Future<void> toggleTask(String taskId, String reportId, bool completed) async {
-    toggleTaskCalls.add((taskId, reportId, completed));
+  Future<void> toggleTask(String taskId, bool completed) async {
+    if (_toggleShouldFail) throw Exception('toggleTask failed');
+    toggleTaskCalls.add((taskId, completed));
     _actionProgress[taskId] = completed;
   }
 
