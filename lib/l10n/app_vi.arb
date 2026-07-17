@@ -175,5 +175,65 @@
   "tabUnderstand": "Hiểu mình",
   "tabDevelop": "Phát triển",
   "tabJourney": "Hành trình",
-  "tabProfile": "Tôi"
+  "tabProfile": "Tôi",
+
+  "surveyIntroEyebrow": "Career Health Check",
+  "surveyIntroBadgeFree": "FREE",
+  "surveyIntroBadgePremium": "PREMIUM",
+  "surveyIntroTitle": "Kiểm tra sức khỏe nghề nghiệp",
+  "surveyIntroBody": "Trả lời thành thật để nhận báo cáo cá nhân chính xác nhất.",
+  "surveyIntroFieldPosition": "Chức danh",
+  "surveyIntroFieldExperience": "Thâm niên",
+  "surveyIntroFieldCompanyTenure": "Thời gian tại công ty",
+  "surveyIntroFieldCompanySize": "Quy mô công ty",
+  "surveyIntroFieldDepartment": "Phòng ban",
+  "surveyIntroCta": "Bắt đầu khảo sát",
+
+  "surveyLayerStructure": "Cấu trúc",
+  "surveyLayerCulture": "Văn hoá",
+  "surveyLayerActivity": "Hoạt động",
+  "surveyLayerEsi": "Sự hài lòng nhân viên",
+  "surveyLayerEnps": "Gắn kết nhân viên",
+  "surveyProgress": "{current}/{total}",
+  "@surveyProgress": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "surveyCompleteCta": "Hoàn thành",
+
+  "surveyProcessingTitle": "Đang tạo báo cáo của bạn…",
+  "surveyProcessingRetry": "Thử lại",
+  "surveyProcessingError": "Có lỗi xảy ra. Vui lòng thử lại.",
+
+  "reportTitle": "Báo cáo của bạn",
+  "reportScoreLevelHigh": "Xuất sắc",
+  "reportScoreLevelGood": "Tốt",
+  "reportScoreLevelWarning": "Cần chú ý",
+  "reportScoreLevelCritical": "Cần cải thiện",
+  "reportLayerStructure": "Cấu trúc tổ chức",
+  "reportLayerCulture": "Văn hoá làm việc",
+  "reportLayerActivity": "Hoạt động hàng ngày",
+  "reportBottleneckTitle": "Điểm cần cải thiện nhất",
+  "reportEsiTitle": "Chỉ số hài lòng nhân viên (ESI)",
+  "reportEnpsTitle": "Mức độ gắn kết (eNPS)",
+  "reportEnpsPromoter": "Người ủng hộ",
+  "reportEnpsPassive": "Trung lập",
+  "reportEnpsDetractor": "Người phản đối",
+  "reportPremiumUpsell": "Nâng cấp Premium để xem ESI, eNPS và phân tích chuyên sâu hơn.",
+  "reportActionPlanCta": "Kế hoạch 30 ngày",
+  "reportViewLatest": "Xem báo cáo gần nhất",
+
+  "actionPlanTitle": "Kế hoạch 30 ngày",
+  "actionPlanDay": "Ngày {day}",
+  "@actionPlanDay": {
+    "placeholders": {
+      "day": {"type": "int"}
+    }
+  },
+  "actionPlanReflection": "Câu hỏi phản chiếu",
+
+  "surveyTtsToggle": "Đọc câu hỏi",
+  "journeyErrorCard": "Không thể tải hành trình."
 }

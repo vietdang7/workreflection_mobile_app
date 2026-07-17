@@ -379,4 +379,139 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get tabProfile => 'Tôi';
+
+  @override
+  String get surveyIntroEyebrow => 'Career Health Check';
+
+  @override
+  String get surveyIntroBadgeFree => 'FREE';
+
+  @override
+  String get surveyIntroBadgePremium => 'PREMIUM';
+
+  @override
+  String get surveyIntroTitle => 'Kiểm tra sức khỏe nghề nghiệp';
+
+  @override
+  String get surveyIntroBody =>
+      'Trả lời thành thật để nhận báo cáo cá nhân chính xác nhất.';
+
+  @override
+  String get surveyIntroFieldPosition => 'Chức danh';
+
+  @override
+  String get surveyIntroFieldExperience => 'Thâm niên';
+
+  @override
+  String get surveyIntroFieldCompanyTenure => 'Thời gian tại công ty';
+
+  @override
+  String get surveyIntroFieldCompanySize => 'Quy mô công ty';
+
+  @override
+  String get surveyIntroFieldDepartment => 'Phòng ban';
+
+  @override
+  String get surveyIntroCta => 'Bắt đầu khảo sát';
+
+  @override
+  String get surveyLayerStructure => 'Cấu trúc';
+
+  @override
+  String get surveyLayerCulture => 'Văn hoá';
+
+  @override
+  String get surveyLayerActivity => 'Hoạt động';
+
+  @override
+  String get surveyLayerEsi => 'Sự hài lòng nhân viên';
+
+  @override
+  String get surveyLayerEnps => 'Gắn kết nhân viên';
+
+  @override
+  String surveyProgress(int current, int total) {
+    return '$current/$total';
+  }
+
+  @override
+  String get surveyCompleteCta => 'Hoàn thành';
+
+  @override
+  String get surveyProcessingTitle => 'Đang tạo báo cáo của bạn…';
+
+  @override
+  String get surveyProcessingRetry => 'Thử lại';
+
+  @override
+  String get surveyProcessingError => 'Có lỗi xảy ra. Vui lòng thử lại.';
+
+  @override
+  String get reportTitle => 'Báo cáo của bạn';
+
+  @override
+  String get reportScoreLevelHigh => 'Xuất sắc';
+
+  @override
+  String get reportScoreLevelGood => 'Tốt';
+
+  @override
+  String get reportScoreLevelWarning => 'Cần chú ý';
+
+  @override
+  String get reportScoreLevelCritical => 'Cần cải thiện';
+
+  @override
+  String get reportLayerStructure => 'Cấu trúc tổ chức';
+
+  @override
+  String get reportLayerCulture => 'Văn hoá làm việc';
+
+  @override
+  String get reportLayerActivity => 'Hoạt động hàng ngày';
+
+  @override
+  String get reportBottleneckTitle => 'Điểm cần cải thiện nhất';
+
+  @override
+  String get reportEsiTitle => 'Chỉ số hài lòng nhân viên (ESI)';
+
+  @override
+  String get reportEnpsTitle => 'Mức độ gắn kết (eNPS)';
+
+  @override
+  String get reportEnpsPromoter => 'Người ủng hộ';
+
+  @override
+  String get reportEnpsPassive => 'Trung lập';
+
+  @override
+  String get reportEnpsDetractor => 'Người phản đối';
+
+  @override
+  String get reportPremiumUpsell =>
+      'Nâng cấp Premium để xem ESI, eNPS và phân tích chuyên sâu hơn.';
+
+  @override
+  String get reportActionPlanCta => 'Kế hoạch 30 ngày';
+
+  @override
+  String get reportViewLatest => 'Xem báo cáo gần nhất';
+
+  @override
+  String get actionPlanTitle => 'Kế hoạch 30 ngày';
+
+  @override
+  String actionPlanDay(int day) {
+    return 'Ngày $day';
+  }
+
+  @override
+  String get actionPlanReflection => 'Câu hỏi phản chiếu';
+
+  @override
+  String get surveyTtsToggle => 'Đọc câu hỏi';
+
+  @override
+  String get journeyErrorCard => 'Không thể tải hành trình.';
 }

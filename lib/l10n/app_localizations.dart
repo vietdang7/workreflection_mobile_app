@@ -799,6 +799,264 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Tôi'**
   String get tabProfile;
+
+  /// No description provided for @surveyIntroEyebrow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Career Health Check'**
+  String get surveyIntroEyebrow;
+
+  /// No description provided for @surveyIntroBadgeFree.
+  ///
+  /// In vi, this message translates to:
+  /// **'FREE'**
+  String get surveyIntroBadgeFree;
+
+  /// No description provided for @surveyIntroBadgePremium.
+  ///
+  /// In vi, this message translates to:
+  /// **'PREMIUM'**
+  String get surveyIntroBadgePremium;
+
+  /// No description provided for @surveyIntroTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kiểm tra sức khỏe nghề nghiệp'**
+  String get surveyIntroTitle;
+
+  /// No description provided for @surveyIntroBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trả lời thành thật để nhận báo cáo cá nhân chính xác nhất.'**
+  String get surveyIntroBody;
+
+  /// No description provided for @surveyIntroFieldPosition.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chức danh'**
+  String get surveyIntroFieldPosition;
+
+  /// No description provided for @surveyIntroFieldExperience.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thâm niên'**
+  String get surveyIntroFieldExperience;
+
+  /// No description provided for @surveyIntroFieldCompanyTenure.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thời gian tại công ty'**
+  String get surveyIntroFieldCompanyTenure;
+
+  /// No description provided for @surveyIntroFieldCompanySize.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quy mô công ty'**
+  String get surveyIntroFieldCompanySize;
+
+  /// No description provided for @surveyIntroFieldDepartment.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phòng ban'**
+  String get surveyIntroFieldDepartment;
+
+  /// No description provided for @surveyIntroCta.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bắt đầu khảo sát'**
+  String get surveyIntroCta;
+
+  /// No description provided for @surveyLayerStructure.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cấu trúc'**
+  String get surveyLayerStructure;
+
+  /// No description provided for @surveyLayerCulture.
+  ///
+  /// In vi, this message translates to:
+  /// **'Văn hoá'**
+  String get surveyLayerCulture;
+
+  /// No description provided for @surveyLayerActivity.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoạt động'**
+  String get surveyLayerActivity;
+
+  /// No description provided for @surveyLayerEsi.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sự hài lòng nhân viên'**
+  String get surveyLayerEsi;
+
+  /// No description provided for @surveyLayerEnps.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gắn kết nhân viên'**
+  String get surveyLayerEnps;
+
+  /// No description provided for @surveyProgress.
+  ///
+  /// In vi, this message translates to:
+  /// **'{current}/{total}'**
+  String surveyProgress(int current, int total);
+
+  /// No description provided for @surveyCompleteCta.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn thành'**
+  String get surveyCompleteCta;
+
+  /// No description provided for @surveyProcessingTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tạo báo cáo của bạn…'**
+  String get surveyProcessingTitle;
+
+  /// No description provided for @surveyProcessingRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get surveyProcessingRetry;
+
+  /// No description provided for @surveyProcessingError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có lỗi xảy ra. Vui lòng thử lại.'**
+  String get surveyProcessingError;
+
+  /// No description provided for @reportTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Báo cáo của bạn'**
+  String get reportTitle;
+
+  /// No description provided for @reportScoreLevelHigh.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xuất sắc'**
+  String get reportScoreLevelHigh;
+
+  /// No description provided for @reportScoreLevelGood.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tốt'**
+  String get reportScoreLevelGood;
+
+  /// No description provided for @reportScoreLevelWarning.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần chú ý'**
+  String get reportScoreLevelWarning;
+
+  /// No description provided for @reportScoreLevelCritical.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần cải thiện'**
+  String get reportScoreLevelCritical;
+
+  /// No description provided for @reportLayerStructure.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cấu trúc tổ chức'**
+  String get reportLayerStructure;
+
+  /// No description provided for @reportLayerCulture.
+  ///
+  /// In vi, this message translates to:
+  /// **'Văn hoá làm việc'**
+  String get reportLayerCulture;
+
+  /// No description provided for @reportLayerActivity.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoạt động hàng ngày'**
+  String get reportLayerActivity;
+
+  /// No description provided for @reportBottleneckTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm cần cải thiện nhất'**
+  String get reportBottleneckTitle;
+
+  /// No description provided for @reportEsiTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ số hài lòng nhân viên (ESI)'**
+  String get reportEsiTitle;
+
+  /// No description provided for @reportEnpsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mức độ gắn kết (eNPS)'**
+  String get reportEnpsTitle;
+
+  /// No description provided for @reportEnpsPromoter.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người ủng hộ'**
+  String get reportEnpsPromoter;
+
+  /// No description provided for @reportEnpsPassive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trung lập'**
+  String get reportEnpsPassive;
+
+  /// No description provided for @reportEnpsDetractor.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người phản đối'**
+  String get reportEnpsDetractor;
+
+  /// No description provided for @reportPremiumUpsell.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nâng cấp Premium để xem ESI, eNPS và phân tích chuyên sâu hơn.'**
+  String get reportPremiumUpsell;
+
+  /// No description provided for @reportActionPlanCta.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kế hoạch 30 ngày'**
+  String get reportActionPlanCta;
+
+  /// No description provided for @reportViewLatest.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem báo cáo gần nhất'**
+  String get reportViewLatest;
+
+  /// No description provided for @actionPlanTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kế hoạch 30 ngày'**
+  String get actionPlanTitle;
+
+  /// No description provided for @actionPlanDay.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày {day}'**
+  String actionPlanDay(int day);
+
+  /// No description provided for @actionPlanReflection.
+  ///
+  /// In vi, this message translates to:
+  /// **'Câu hỏi phản chiếu'**
+  String get actionPlanReflection;
+
+  /// No description provided for @surveyTtsToggle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đọc câu hỏi'**
+  String get surveyTtsToggle;
+
+  /// No description provided for @journeyErrorCard.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải hành trình.'**
+  String get journeyErrorCard;
 }
 
 class _AppLocalizationsDelegate

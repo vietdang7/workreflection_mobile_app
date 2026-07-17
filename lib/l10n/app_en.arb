@@ -174,5 +174,65 @@
   "tabUnderstand": "Understand",
   "tabDevelop": "Develop",
   "tabJourney": "Journey",
-  "tabProfile": "Me"
+  "tabProfile": "Me",
+
+  "surveyIntroEyebrow": "Career Health Check",
+  "surveyIntroBadgeFree": "FREE",
+  "surveyIntroBadgePremium": "PREMIUM",
+  "surveyIntroTitle": "Career Health Check",
+  "surveyIntroBody": "Answer honestly for the most accurate personal report.",
+  "surveyIntroFieldPosition": "Job title",
+  "surveyIntroFieldExperience": "Years of experience",
+  "surveyIntroFieldCompanyTenure": "Time at company",
+  "surveyIntroFieldCompanySize": "Company size",
+  "surveyIntroFieldDepartment": "Department",
+  "surveyIntroCta": "Start survey",
+
+  "surveyLayerStructure": "Structure",
+  "surveyLayerCulture": "Culture",
+  "surveyLayerActivity": "Activity",
+  "surveyLayerEsi": "Employee Satisfaction",
+  "surveyLayerEnps": "Employee Engagement",
+  "surveyProgress": "{current}/{total}",
+  "@surveyProgress": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "surveyCompleteCta": "Complete",
+
+  "surveyProcessingTitle": "Creating your report…",
+  "surveyProcessingRetry": "Retry",
+  "surveyProcessingError": "An error occurred. Please try again.",
+
+  "reportTitle": "Your Report",
+  "reportScoreLevelHigh": "Excellent",
+  "reportScoreLevelGood": "Good",
+  "reportScoreLevelWarning": "Needs Attention",
+  "reportScoreLevelCritical": "Needs Improvement",
+  "reportLayerStructure": "Organisational Structure",
+  "reportLayerCulture": "Work Culture",
+  "reportLayerActivity": "Daily Activity",
+  "reportBottleneckTitle": "Area needing most improvement",
+  "reportEsiTitle": "Employee Satisfaction Index (ESI)",
+  "reportEnpsTitle": "Employee Engagement (eNPS)",
+  "reportEnpsPromoter": "Promoter",
+  "reportEnpsPassive": "Passive",
+  "reportEnpsDetractor": "Detractor",
+  "reportPremiumUpsell": "Upgrade to Premium to see ESI, eNPS and deeper analysis.",
+  "reportActionPlanCta": "30-day plan",
+  "reportViewLatest": "View latest report",
+
+  "actionPlanTitle": "30-day Plan",
+  "actionPlanDay": "Day {day}",
+  "@actionPlanDay": {
+    "placeholders": {
+      "day": {"type": "int"}
+    }
+  },
+  "actionPlanReflection": "Reflection question",
+
+  "surveyTtsToggle": "Read question",
+  "journeyErrorCard": "Could not load journey."
 }

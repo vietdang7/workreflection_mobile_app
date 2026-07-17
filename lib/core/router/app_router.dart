@@ -11,6 +11,11 @@ import '../../features/develop/presentation/develop_screen.dart';
 import '../../features/journey/presentation/journey_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/understand/presentation/understand_screen.dart';
+import '../../features/survey/presentation/survey_intro_screen.dart';
+import '../../features/survey/presentation/survey_questions_screen.dart';
+import '../../features/survey/presentation/survey_processing_screen.dart';
+import '../../features/survey/presentation/report_screen.dart';
+import '../../features/survey/presentation/action_plan_screen.dart';
 import 'auth_change_notifier.dart';
 
 // ---------------------------------------------------------------------------
@@ -103,6 +108,30 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/auth',
         builder: (context, state) => const AuthScreen(),
+      ),
+
+      // Survey flow (fullscreen, outside shell)
+      GoRoute(
+        path: '/survey',
+        builder: (context, state) => const SurveyIntroScreen(),
+      ),
+      GoRoute(
+        path: '/survey/questions',
+        builder: (context, state) => const SurveyQuestionsScreen(),
+      ),
+      GoRoute(
+        path: '/survey/processing',
+        builder: (context, state) => const SurveyProcessingScreen(),
+      ),
+      GoRoute(
+        path: '/survey/report/:id',
+        builder: (context, state) =>
+            ReportScreen(reportId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/survey/action-plan/:id',
+        builder: (context, state) =>
+            ActionPlanScreen(reportId: state.pathParameters['id']!),
       ),
 
       // Shell with 5 indexed branches

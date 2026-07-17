@@ -376,4 +376,139 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get tabProfile => 'Me';
+
+  @override
+  String get surveyIntroEyebrow => 'Career Health Check';
+
+  @override
+  String get surveyIntroBadgeFree => 'FREE';
+
+  @override
+  String get surveyIntroBadgePremium => 'PREMIUM';
+
+  @override
+  String get surveyIntroTitle => 'Career Health Check';
+
+  @override
+  String get surveyIntroBody =>
+      'Answer honestly for the most accurate personal report.';
+
+  @override
+  String get surveyIntroFieldPosition => 'Job title';
+
+  @override
+  String get surveyIntroFieldExperience => 'Years of experience';
+
+  @override
+  String get surveyIntroFieldCompanyTenure => 'Time at company';
+
+  @override
+  String get surveyIntroFieldCompanySize => 'Company size';
+
+  @override
+  String get surveyIntroFieldDepartment => 'Department';
+
+  @override
+  String get surveyIntroCta => 'Start survey';
+
+  @override
+  String get surveyLayerStructure => 'Structure';
+
+  @override
+  String get surveyLayerCulture => 'Culture';
+
+  @override
+  String get surveyLayerActivity => 'Activity';
+
+  @override
+  String get surveyLayerEsi => 'Employee Satisfaction';
+
+  @override
+  String get surveyLayerEnps => 'Employee Engagement';
+
+  @override
+  String surveyProgress(int current, int total) {
+    return '$current/$total';
+  }
+
+  @override
+  String get surveyCompleteCta => 'Complete';
+
+  @override
+  String get surveyProcessingTitle => 'Creating your report…';
+
+  @override
+  String get surveyProcessingRetry => 'Retry';
+
+  @override
+  String get surveyProcessingError => 'An error occurred. Please try again.';
+
+  @override
+  String get reportTitle => 'Your Report';
+
+  @override
+  String get reportScoreLevelHigh => 'Excellent';
+
+  @override
+  String get reportScoreLevelGood => 'Good';
+
+  @override
+  String get reportScoreLevelWarning => 'Needs Attention';
+
+  @override
+  String get reportScoreLevelCritical => 'Needs Improvement';
+
+  @override
+  String get reportLayerStructure => 'Organisational Structure';
+
+  @override
+  String get reportLayerCulture => 'Work Culture';
+
+  @override
+  String get reportLayerActivity => 'Daily Activity';
+
+  @override
+  String get reportBottleneckTitle => 'Area needing most improvement';
+
+  @override
+  String get reportEsiTitle => 'Employee Satisfaction Index (ESI)';
+
+  @override
+  String get reportEnpsTitle => 'Employee Engagement (eNPS)';
+
+  @override
+  String get reportEnpsPromoter => 'Promoter';
+
+  @override
+  String get reportEnpsPassive => 'Passive';
+
+  @override
+  String get reportEnpsDetractor => 'Detractor';
+
+  @override
+  String get reportPremiumUpsell =>
+      'Upgrade to Premium to see ESI, eNPS and deeper analysis.';
+
+  @override
+  String get reportActionPlanCta => '30-day plan';
+
+  @override
+  String get reportViewLatest => 'View latest report';
+
+  @override
+  String get actionPlanTitle => '30-day Plan';
+
+  @override
+  String actionPlanDay(int day) {
+    return 'Day $day';
+  }
+
+  @override
+  String get actionPlanReflection => 'Reflection question';
+
+  @override
+  String get surveyTtsToggle => 'Read question';
+
+  @override
+  String get journeyErrorCard => 'Could not load journey.';
 }
