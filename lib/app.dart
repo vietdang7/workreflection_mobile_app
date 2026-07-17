@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'core/router/app_router.dart';
 import 'core/theme/wr_theme.dart';
 import 'l10n/app_localizations.dart';
 
@@ -9,9 +10,12 @@ class WrApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return MaterialApp(
+    final router = ref.watch(appRouterProvider);
+
+    return MaterialApp.router(
       title: 'WorkReflection',
       theme: wrTheme(),
+      routerConfig: router,
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -19,9 +23,6 @@ class WrApp extends ConsumerWidget {
         GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: AppLocalizations.supportedLocales,
-      home: const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
     );
   }
 }
