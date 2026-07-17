@@ -5,6 +5,7 @@ import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
 import '../../../core/widgets/pill_button.dart';
+import '../../../core/data/seed_service.dart';
 import '../data/auth_repository.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
@@ -50,6 +51,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           _nameCtrl.text.trim(),
         );
       }
+      // Best-effort: ensure profile row exists and sample data is seeded.
+      await ref.read(seedServiceProvider).ensureSeeded();
       if (mounted) {
         context.go('/home');
       }
