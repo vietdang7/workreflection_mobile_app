@@ -63,15 +63,19 @@ SurveyScores computeSurveyScores({
 
   // eNPS
   int? enps;
+  int? enpsPromoterCount;
+  int? enpsPassiveCount;
+  int? enpsDetractorCount;
+
   if (enpsIds.isNotEmpty) {
-    int promoters = 0, detractors = 0;
+    int promoters = 0, passives = 0, detractors = 0;
     for (final id in enpsIds) {
       if (!answers.containsKey(id)) continue; // exclude missing
       final v = answers[id]!;
       if (v >= 9) {
         promoters++;
       } else if (v >= 7) {
-        // passive: counted neither (reserved for Task 19 eNPS breakdown)
+        passives++;
       } else {
         detractors++;
       }
@@ -81,6 +85,9 @@ SurveyScores computeSurveyScores({
       enps = null;
     } else {
       enps = ((promoters - detractors) / n * 100).round();
+      enpsPromoterCount = promoters;
+      enpsPassiveCount = passives;
+      enpsDetractorCount = detractors;
     }
   }
 
@@ -115,6 +122,9 @@ SurveyScores computeSurveyScores({
     scoreEnps: enps,
     bottleneckLayer: bottleneck,
     scoreLevel: level,
+    enpsPromoters: enpsPromoterCount,
+    enpsPassives: enpsPassiveCount,
+    enpsDetractors: enpsDetractorCount,
   );
 }
 

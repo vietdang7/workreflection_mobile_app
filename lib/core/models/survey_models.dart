@@ -245,6 +245,10 @@ class CcReportFull {
   final Map<String, dynamic>? selectedNarrativeVariants;
   final DateTime createdAt;
 
+  int? get enpsPromoters => subScores?['enps_promoters'] as int?;
+  int? get enpsPassives => subScores?['enps_passives'] as int?;
+  int? get enpsDetractors => subScores?['enps_detractors'] as int?;
+
   factory CcReportFull.fromJson(Map<String, dynamic> json) {
     final snv = json['selected_narrative_variants'];
     final ss = json['sub_scores'];
@@ -390,6 +394,9 @@ class SurveyScores {
     this.scoreEnps,
     required this.bottleneckLayer,
     required this.scoreLevel,
+    this.enpsPromoters,
+    this.enpsPassives,
+    this.enpsDetractors,
   });
 
   final double scoreStructure;
@@ -400,4 +407,7 @@ class SurveyScores {
   final int? scoreEnps;
   final SurveyLayer bottleneckLayer;
   final ScoreLevel scoreLevel;
+  final int? enpsPromoters;
+  final int? enpsPassives;
+  final int? enpsDetractors;
 }

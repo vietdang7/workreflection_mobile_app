@@ -32,7 +32,7 @@ class ActionPlanScreen extends ConsumerWidget {
       body: typeAsync.when(
         loading: () =>
             const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text(AppLocalizations.of(context)!.surveyProcessingError)),
         data: (type) => _ActionPlanBody(
           reportId: reportId,
           surveyType: type,
@@ -59,12 +59,17 @@ class _ActionPlanBody extends ConsumerWidget {
     return planAsync.when(
       loading: () =>
           const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('Error: $e')),
+      error: (e, _) => Center(child: Text(l10n.surveyProcessingError)),
       data: (phases) => progressAsync.when(
         loading: () =>
             const Center(child: CircularProgressIndicator()),
-        error: (e, _) =>
-            const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(
+          child: Padding(
+            padding: const EdgeInsets.all(24),
+            child: Text(l10n.surveyProcessingError,
+                style: WrTextStyles.body, textAlign: TextAlign.center),
+          ),
+        ),
         data: (progress) {
           // Init the optimistic notifier with fetched progress
           WidgetsBinding.instance.addPostFrameCallback((_) {

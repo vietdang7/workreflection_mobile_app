@@ -145,7 +145,7 @@ class SurveyQuestionsScreen extends ConsumerWidget {
         body: Center(child: CircularProgressIndicator()),
       ),
       error: (e, _) => Scaffold(
-        body: Center(child: Text('Error: $e')),
+        body: Center(child: Text(AppLocalizations.of(context)!.surveyProcessingError)),
       ),
       data: (type) => _QuestionsBody(surveyType: type),
     );
@@ -164,12 +164,12 @@ class _QuestionsBody extends ConsumerWidget {
     return questionsAsync.when(
       loading: () => const Scaffold(
           body: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Scaffold(body: Center(child: Text('Error: $e'))),
+      error: (e, _) => Scaffold(body: Center(child: Text(AppLocalizations.of(context)!.surveyProcessingError))),
       data: (questions) => optionsAsync.when(
         loading: () => const Scaffold(
             body: Center(child: CircularProgressIndicator())),
         error: (e, _) =>
-            Scaffold(body: Center(child: Text('Error: $e'))),
+            Scaffold(body: Center(child: Text(AppLocalizations.of(context)!.surveyProcessingError))),
         data: (options) => _QuestionView(
           questions: questions,
           options: options,

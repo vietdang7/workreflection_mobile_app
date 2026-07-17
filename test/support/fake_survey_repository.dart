@@ -21,6 +21,7 @@ class FakeSurveyRepository implements SurveyRepository {
 
   // --- Blocker-faithful fields ---
   bool _toggleShouldFail = false;
+  bool _narrativesFails = false;
   List<String>? _configQuestionIds;
 
   // --- Call recorders ---
@@ -55,6 +56,7 @@ class FakeSurveyRepository implements SurveyRepository {
   void seedTtsResult(TtsResult result) => _ttsResult = result;
 
   void setToggleFails(bool v) => _toggleShouldFail = v;
+  void setNarrativesFails(bool v) => _narrativesFails = v;
 
   void seedConfigQuestionIds(List<String> ids, {SurveyType? surveyType}) {
     _configQuestionIds = ids;
@@ -130,8 +132,10 @@ class FakeSurveyRepository implements SurveyRepository {
   Future<CcReportFull?> getLatestReportFull() async => _latestReport;
 
   @override
-  Future<List<CcNarrative>> getNarratives() async =>
-      List.unmodifiable(_narratives);
+  Future<List<CcNarrative>> getNarratives() async {
+    if (_narrativesFails) throw Exception('forced narrative failure');
+    return List.unmodifiable(_narratives);
+  }
 
   @override
   Future<List<ActionPlanPhase>> getActionPlan(SurveyType type) async {

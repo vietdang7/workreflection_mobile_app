@@ -95,9 +95,8 @@ class SupabaseSurveyRepository implements SurveyRepository {
   String get _userEmail =>
       _client.auth.currentUser?.email ?? '';
 
-  String get _userFullName =>
-      (_client.auth.currentUser?.userMetadata?['display_name'] as String?) ??
-      _userEmail;
+  String? get _userFullName =>
+      (_client.auth.currentUser?.userMetadata?['display_name'] as String?);
 
   // ---------------------------------------------------------------------------
   // Role / type
@@ -112,7 +111,8 @@ class SupabaseSurveyRepository implements SurveyRepository {
         .eq('user_id', _uid)
         .limit(1);
     if (roleRows.isNotEmpty) {
-      return roleRows.first['role'] as String;
+      final role = roleRows.first['role'] as String?;
+      if (role != null && role.isNotEmpty) return role;
     }
     // Fallback: cc_profiles.role
     final profileRows = await _client
@@ -204,11 +204,19 @@ class SupabaseSurveyRepository implements SurveyRepository {
     final rows = await _client
         .from('cc_likert_options')
         .select()
+        .eq('is_active', true)
         .order('display_order');
+
     final result = <ScaleType, List<CcLikertOption>>{};
+    final seen = <String, Set<int>>{};
+
     for (final row in rows) {
       final opt = CcLikertOption.fromJson(row);
-      result.putIfAbsent(opt.scaleType, () => []).add(opt);
+      final key = opt.scaleType.toJson();
+      seen.putIfAbsent(key, () => {});
+      if (seen[key]!.add(opt.value)) {
+        result.putIfAbsent(opt.scaleType, () => []).add(opt);
+      }
     }
     return result;
   }
@@ -290,7 +298,11 @@ class SupabaseSurveyRepository implements SurveyRepository {
       'score_enps': scores.scoreEnps,
       'bottleneck_layer': scores.bottleneckLayer.toJson(),
       'score_level': scores.scoreLevel.toJson(),
-      'sub_scores': null,
+      'sub_scores': scores.scoreEnps != null ? {
+        'enps_promoters': scores.enpsPromoters,
+        'enps_passives': scores.enpsPassives,
+        'enps_detractors': scores.enpsDetractors,
+      } : null,
       'selected_narrative_variants': null,
     }).select().single();
 

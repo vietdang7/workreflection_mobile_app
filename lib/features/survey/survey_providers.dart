@@ -128,29 +128,32 @@ final actionProgressProvider =
 // Optimistic action progress notifier
 // ---------------------------------------------------------------------------
 
-final actionProgressNotifierProvider = StateNotifierProvider.family<
+final actionProgressNotifierProvider = StateNotifierProvider.autoDispose.family<
     ActionProgressNotifier, Map<String, bool>, String>((ref, reportId) {
   return ActionProgressNotifier(ref, reportId);
 });
 
 class ActionProgressNotifier extends StateNotifier<Map<String, bool>> {
+  // ignore: avoid_unused_constructor_parameters
   ActionProgressNotifier(this._ref, String reportId) : super({});
 
   final Ref _ref;
+  bool _initialized = false;
 
   void init(Map<String, bool> progress) {
+    if (_initialized) return;
+    _initialized = true;
     state = Map.of(progress);
   }
 
   Future<void> toggle(String taskId, bool completed) async {
-    // Optimistic update
-    state = {...state, taskId: completed};
+    final priorValue = state[taskId] ?? false;
+    state = {...state, taskId: completed}; // optimistic
     try {
       final repo = _ref.read(surveyRepositoryProvider);
       await repo.toggleTask(taskId, completed);
     } catch (_) {
-      // Revert on error
-      state = {...state, taskId: !completed};
+      state = {...state, taskId: priorValue}; // revert to prior
     }
   }
 }

@@ -45,7 +45,7 @@ class ReportScreen extends ConsumerWidget {
       body: reportAsync.when(
         loading: () =>
             const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text('Error: $e')),
+        error: (e, _) => Center(child: Text(AppLocalizations.of(context)!.surveyProcessingError)),
         data: (report) {
           if (report == null) {
             return Center(
@@ -55,8 +55,13 @@ class ReportScreen extends ConsumerWidget {
           return narrativesAsync.when(
             loading: () =>
                 const Center(child: CircularProgressIndicator()),
-            error: (e, _) =>
-                const Center(child: CircularProgressIndicator()),
+            error: (e, _) => Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Text(l10n.surveyProcessingError,
+                    style: WrTextStyles.body, textAlign: TextAlign.center),
+              ),
+            ),
             data: (narratives) => _ReportBody(
               report: report,
               narratives: narratives,
@@ -403,10 +408,18 @@ class _EnpsCard extends StatelessWidget {
             style: WrTextStyles.hLarge,
           ),
           const SizedBox(height: 8),
-          Text(
-            '${l10n.reportEnpsPromoter} · ${l10n.reportEnpsPassive} · ${l10n.reportEnpsDetractor}',
-            style: WrTextStyles.body,
-          ),
+          if (report.enpsPromoters != null)
+            Text(
+              '${l10n.reportEnpsPromoter}: ${report.enpsPromoters} · '
+              '${l10n.reportEnpsPassive}: ${report.enpsPassives ?? 0} · '
+              '${l10n.reportEnpsDetractor}: ${report.enpsDetractors ?? 0}',
+              style: WrTextStyles.body,
+            )
+          else
+            Text(
+              '${l10n.reportEnpsPromoter} · ${l10n.reportEnpsPassive} · ${l10n.reportEnpsDetractor}',
+              style: WrTextStyles.body,
+            ),
         ],
       ),
     );

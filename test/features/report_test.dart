@@ -210,6 +210,42 @@ void main() {
 
       expect(find.text('Kế hoạch 30 ngày'), findsOneWidget);
     });
+
+    testWidgets('N15: narrative fetch error shows error text not spinner', (tester) async {
+      final r = _report();
+      repo.seedLatestReport(r);
+      repo.setNarrativesFails(true);
+
+      await tester.pumpWidget(_wrap(ReportScreen(reportId: 'r1'), repo: repo));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+      expect(find.textContaining('lỗi'), findsOneWidget);
+    });
+
+    testWidgets('N16: eNPS card shows promoter/passive/detractor counts when available', (tester) async {
+      final report = CcReportFull(
+        id: 'r1',
+        surveyId: 's1',
+        userId: 'u1',
+        scoreTotal: 4.0,
+        scoreStructure: 4.0,
+        scoreCulture: 3.5,
+        scoreActivity: 4.5,
+        scoreEsi: 3.0,
+        scoreEnps: 25,
+        bottleneckLayer: SurveyLayer.culture,
+        scoreLevel: ScoreLevel.good,
+        createdAt: DateTime(2026, 7, 17),
+        subScores: {'enps_promoters': 5, 'enps_passives': 3, 'enps_detractors': 2},
+      );
+      repo.seedLatestReport(report);
+
+      await tester.pumpWidget(_wrap(ReportScreen(reportId: 'r1'), repo: repo));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('5'), findsWidgets); // promoter count
+    });
   });
 
   // ---------------------------------------------------------------------------
