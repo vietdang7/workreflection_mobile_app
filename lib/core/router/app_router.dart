@@ -8,6 +8,7 @@ import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/shell/shell_screen.dart';
 import '../../features/splash/splash_screen.dart';
 import '../../features/develop/presentation/develop_screen.dart';
+import '../../features/journey/presentation/journey_screen.dart';
 import '../../features/understand/presentation/understand_screen.dart';
 
 // ---------------------------------------------------------------------------
@@ -125,7 +126,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/journey',
-                builder: (context, state) => const JourneyTabScreen(),
+                builder: (context, state) => const JourneyScreen(),
               ),
             ],
           ),
