@@ -1,0 +1,145 @@
+{
+  "@@locale": "vi",
+  "appName": "WorkReflection",
+  "@appName": {"description": "App name"},
+
+  "onb1Tag": "Reflection",
+  "onb1Title": "Hành trình bắt đầu\ntừ một câu hỏi nhỏ.",
+  "onb1Body": "Mỗi ngày một khoảnh khắc dừng lại.\nĐể nhìn rõ hơn — không phán xét.",
+  "onb1Cta": "Tiếp tục",
+
+  "onb2Tag": "Understand",
+  "onb2Title": "Điều gì đang khiến\nbạn trăn trở nhất?",
+  "onb2Body": "Hãy gọi tên nó.\nSự rõ ràng là bước đầu tiên\nđể thay đổi.",
+  "onb2Opt1": "Mệt nhưng không biết tại sao",
+  "onb2Opt2": "Cố gắng nhưng không thấy tiến",
+  "onb2Opt3": "Muốn thay đổi, chưa biết bắt đầu từ đâu",
+  "onb2Opt4": "Đang khá ổn, muốn hiểu mình hơn",
+  "onb2Cta": "Bắt đầu ngay",
+
+  "onb3Tag": "Grow",
+  "onb3Title": "Đồng hành cùng\nsự nghiệp của bạn.",
+  "onb3Body": "WorkReflection ghi nhớ hành trình,\ntích lũy insight thành\ncareer intelligence của riêng bạn.",
+  "onb3Promise1Title": "5–15 phút mỗi ngày",
+  "onb3Promise1Sub": "Đủ để tạo ra sự khác biệt",
+  "onb3Promise2Title": "Riêng tư hoàn toàn",
+  "onb3Promise2Sub": "Chỉ bạn mới thấy hành trình của mình",
+  "onb3Promise3Title": "Không phán xét",
+  "onb3Promise3Sub": "Chỉ lắng nghe và phản chiếu",
+  "onb3Cta": "Vào WorkReflection",
+
+  "authLoginTitle": "Chào mừng trở lại",
+  "authRegisterTitle": "Tạo tài khoản",
+  "authEmailLabel": "Email",
+  "authPasswordLabel": "Mật khẩu",
+  "authNameLabel": "Tên của bạn",
+  "authLoginBtn": "Đăng nhập",
+  "authRegisterBtn": "Đăng ký",
+  "authSwitchToRegister": "Chưa có tài khoản? Đăng ký",
+  "authSwitchToLogin": "Đã có tài khoản? Đăng nhập",
+  "authOrDivider": "hoặc",
+  "authGoogleBtn": "Tiếp tục với Google",
+
+  "homeGreeting": "Chào {name}",
+  "@homeGreeting": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "homeCheckinQuestion": "Bạn đang trải qua điều gì?",
+  "homeMoodStressed": "Tôi đang căng thẳng",
+  "homeMoodTired": "Tôi mệt mỏi cần nghỉ ngơi",
+  "homeMoodOkay": "Tôi khá ổn",
+  "homeMoodHappy": "Tôi đang vui",
+  "homeEyebrowSystem": "Hệ thống nhận ra",
+  "homeEyebrowSuggestion": "Gợi ý khi mệt mỏi",
+  "homeEyebrowInsight": "Insight gần nhất",
+  "homeLinkLearnMore": "Tìm hiểu thêm",
+  "homeSuggestionTitle": "Khi bạn muốn nói nhưng chọn im lặng",
+  "homeSuggestionMeta": "VOICE · 5 phút đọc",
+  "homeSuggestionProgress": "3/8 phút",
+  "homeSuggestionStatus": "Đang đọc",
+  "homeInsightSavedDate": "Lưu ngày {date}",
+  "@homeInsightSavedDate": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+
+  "understandGreeting": "Career Snapshot",
+  "understandTitle": "Hiểu mình",
+  "understandEyebrowNeed": "Điều bạn đang tìm kiếm",
+  "understandEyebrowSituations": "Tình huống lặp lại",
+  "understandEyebrowSca": "Trải nghiệm hiện tại (SCA)",
+  "understandEyebrowHealth": "Career Health Check",
+  "understandScaRole": "Minh bạch vai trò",
+  "understandScaVoice": "An toàn khi lên tiếng",
+  "understandScaMeaning": "Định hướng ý nghĩa",
+  "understandStatusStable": "Ổn định",
+  "understandStatusImproving": "Đang cải thiện",
+  "understandStatusUnrated": "Chưa đánh giá",
+  "understandHealthReady": "Bạn đã có đủ {n} reflection.",
+  "@understandHealthReady": {
+    "placeholders": {
+      "n": {"type": "int"}
+    }
+  },
+  "understandHealthPrompt": "Sẵn sàng xem bức tranh tổng thể chưa?",
+  "understandHealthCta": "Bắt đầu kiểm tra",
+  "understandSituationCount": "{n} lần",
+  "@understandSituationCount": {
+    "placeholders": {
+      "n": {"type": "int"}
+    }
+  },
+
+  "developGreeting": "Development Map",
+  "developTitle": "Phát triển",
+  "developEyebrowFocus": "Trọng tâm hiện tại",
+  "developEyebrowPractices": "Practices hôm nay",
+  "developEyebrowOpportunity": "Cơ hội phát triển",
+  "developStage": "Giai đoạn {x} / {y}",
+  "@developStage": {
+    "placeholders": {
+      "x": {"type": "int"},
+      "y": {"type": "int"}
+    }
+  },
+  "developStatusDone": "Hoàn thành",
+  "developStatusDoing": "Đang thực hiện",
+  "developStatusTodo": "Chưa bắt đầu",
+  "developWorkshopTag": "Workshop",
+  "developWorkshopLink": "Tại sao bây giờ?",
+
+  "journeyGreeting": "Career Memory",
+  "journeyTitle": "Hành trình",
+  "journeyEyebrowStory": "Câu chuyện của bạn",
+  "journeyEyebrowMonth": "Tháng {m}",
+  "@journeyEyebrowMonth": {
+    "placeholders": {
+      "m": {"type": "int"}
+    }
+  },
+  "journeyCaption": "Career Companion · Tháng {m}, {yyyy}",
+  "@journeyCaption": {
+    "placeholders": {
+      "m": {"type": "int"},
+      "yyyy": {"type": "int"}
+    }
+  },
+  "journeyTypeMilestone": "MILESTONE",
+  "journeyTypeStory": "STORY",
+  "journeyTypeTheme": "THEME",
+
+  "profileGreeting": "Tài khoản",
+  "profileBadgePremium": "Premium Member",
+  "profileStatStreak": "Ngày streak",
+  "profileStatInsights": "Insight lưu",
+  "profileStatMilestones": "Milestone",
+  "profileEyebrowSettings": "Cài đặt",
+  "profileSettingReminder": "Nhắc nhở hằng ngày",
+  "profileSettingLanguage": "Ngôn ngữ",
+  "profileSettingExport": "Xuất dữ liệu",
+  "profileSettingLogout": "Đăng xuất",
+  "profileLanguageValue": "Tiếng Việt"
+}

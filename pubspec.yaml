@@ -1,0 +1,29 @@
+name: workreflection_mobile
+description: "WorkReflection mobile app — daily career reflection."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  supabase_flutter: ^2.8.0
+  flutter_riverpod: ^2.6.1
+  go_router: ^14.6.0
+  google_fonts: ^6.2.1
+  shared_preferences: ^2.3.0
+  intl: any
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
+  generate: true

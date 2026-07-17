@@ -1,0 +1,144 @@
+{
+  "@@locale": "en",
+  "appName": "WorkReflection",
+
+  "onb1Tag": "Reflection",
+  "onb1Title": "The journey starts\nwith a small question.",
+  "onb1Body": "A moment to pause each day.\nTo see more clearly — without judgment.",
+  "onb1Cta": "Continue",
+
+  "onb2Tag": "Understand",
+  "onb2Title": "What is weighing\non your mind most?",
+  "onb2Body": "Name it.\nClarity is the first step\nto change.",
+  "onb2Opt1": "Tired but don't know why",
+  "onb2Opt2": "Trying hard but not progressing",
+  "onb2Opt3": "Want to change, unsure where to start",
+  "onb2Opt4": "Doing okay, want to know myself better",
+  "onb2Cta": "Get started",
+
+  "onb3Tag": "Grow",
+  "onb3Title": "Walking alongside\nyour career.",
+  "onb3Body": "WorkReflection remembers your journey,\naccumulating insights into\nyour own career intelligence.",
+  "onb3Promise1Title": "5–15 minutes a day",
+  "onb3Promise1Sub": "Enough to make a difference",
+  "onb3Promise2Title": "Completely private",
+  "onb3Promise2Sub": "Only you can see your journey",
+  "onb3Promise3Title": "No judgment",
+  "onb3Promise3Sub": "Just listening and reflecting",
+  "onb3Cta": "Enter WorkReflection",
+
+  "authLoginTitle": "Welcome back",
+  "authRegisterTitle": "Create account",
+  "authEmailLabel": "Email",
+  "authPasswordLabel": "Password",
+  "authNameLabel": "Your name",
+  "authLoginBtn": "Log in",
+  "authRegisterBtn": "Register",
+  "authSwitchToRegister": "No account? Register",
+  "authSwitchToLogin": "Already have an account? Log in",
+  "authOrDivider": "or",
+  "authGoogleBtn": "Continue with Google",
+
+  "homeGreeting": "Hi {name}",
+  "@homeGreeting": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "homeCheckinQuestion": "What are you experiencing?",
+  "homeMoodStressed": "I'm stressed",
+  "homeMoodTired": "I'm tired and need rest",
+  "homeMoodOkay": "I'm doing okay",
+  "homeMoodHappy": "I'm happy",
+  "homeEyebrowSystem": "System noticed",
+  "homeEyebrowSuggestion": "Suggestion when tired",
+  "homeEyebrowInsight": "Latest insight",
+  "homeLinkLearnMore": "Learn more",
+  "homeSuggestionTitle": "When you want to speak but choose silence",
+  "homeSuggestionMeta": "VOICE · 5 min read",
+  "homeSuggestionProgress": "3/8 min",
+  "homeSuggestionStatus": "Reading",
+  "homeInsightSavedDate": "Saved {date}",
+  "@homeInsightSavedDate": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+
+  "understandGreeting": "Career Snapshot",
+  "understandTitle": "Understand",
+  "understandEyebrowNeed": "What you're looking for",
+  "understandEyebrowSituations": "Recurring situations",
+  "understandEyebrowSca": "Current experience (SCA)",
+  "understandEyebrowHealth": "Career Health Check",
+  "understandScaRole": "Role clarity",
+  "understandScaVoice": "Safety to speak up",
+  "understandScaMeaning": "Sense of direction",
+  "understandStatusStable": "Stable",
+  "understandStatusImproving": "Improving",
+  "understandStatusUnrated": "Unrated",
+  "understandHealthReady": "You have {n} reflections.",
+  "@understandHealthReady": {
+    "placeholders": {
+      "n": {"type": "int"}
+    }
+  },
+  "understandHealthPrompt": "Ready to see the big picture?",
+  "understandHealthCta": "Start check",
+  "understandSituationCount": "{n} times",
+  "@understandSituationCount": {
+    "placeholders": {
+      "n": {"type": "int"}
+    }
+  },
+
+  "developGreeting": "Development Map",
+  "developTitle": "Develop",
+  "developEyebrowFocus": "Current focus",
+  "developEyebrowPractices": "Today's practices",
+  "developEyebrowOpportunity": "Growth opportunity",
+  "developStage": "Stage {x} / {y}",
+  "@developStage": {
+    "placeholders": {
+      "x": {"type": "int"},
+      "y": {"type": "int"}
+    }
+  },
+  "developStatusDone": "Done",
+  "developStatusDoing": "In progress",
+  "developStatusTodo": "Not started",
+  "developWorkshopTag": "Workshop",
+  "developWorkshopLink": "Why now?",
+
+  "journeyGreeting": "Career Memory",
+  "journeyTitle": "Journey",
+  "journeyEyebrowStory": "Your story",
+  "journeyEyebrowMonth": "Month {m}",
+  "@journeyEyebrowMonth": {
+    "placeholders": {
+      "m": {"type": "int"}
+    }
+  },
+  "journeyCaption": "Career Companion · Month {m}, {yyyy}",
+  "@journeyCaption": {
+    "placeholders": {
+      "m": {"type": "int"},
+      "yyyy": {"type": "int"}
+    }
+  },
+  "journeyTypeMilestone": "MILESTONE",
+  "journeyTypeStory": "STORY",
+  "journeyTypeTheme": "THEME",
+
+  "profileGreeting": "Account",
+  "profileBadgePremium": "Premium Member",
+  "profileStatStreak": "Streak days",
+  "profileStatInsights": "Saved insights",
+  "profileStatMilestones": "Milestones",
+  "profileEyebrowSettings": "Settings",
+  "profileSettingReminder": "Daily reminder",
+  "profileSettingLanguage": "Language",
+  "profileSettingExport": "Export data",
+  "profileSettingLogout": "Log out",
+  "profileLanguageValue": "English"
+}
