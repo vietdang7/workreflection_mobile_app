@@ -1,10 +1,10 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/auth/presentation/auth_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
+import '../../features/shell/shell_screen.dart';
 import '../../features/splash/splash_screen.dart';
 
 // ---------------------------------------------------------------------------
@@ -88,42 +88,54 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/auth',
         builder: (context, state) => const AuthScreen(),
       ),
-      GoRoute(
-        path: '/home',
-        builder: (context, state) => const _PlaceholderScreen('Home'),
-      ),
-      GoRoute(
-        path: '/understand',
-        builder: (context, state) => const _PlaceholderScreen('Understand'),
-      ),
-      GoRoute(
-        path: '/develop',
-        builder: (context, state) => const _PlaceholderScreen('Develop'),
-      ),
-      GoRoute(
-        path: '/journey',
-        builder: (context, state) => const _PlaceholderScreen('Journey'),
-      ),
-      GoRoute(
-        path: '/profile',
-        builder: (context, state) => const _PlaceholderScreen('Profile'),
+
+      // Shell with 5 indexed branches
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            ShellScreen(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/home',
+                builder: (context, state) => const HomeTabScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/understand',
+                builder: (context, state) => const UnderstandTabScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/develop',
+                builder: (context, state) => const DevelopTabScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/journey',
+                builder: (context, state) => const JourneyTabScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/profile',
+                builder: (context, state) => const ProfileTabScreen(),
+              ),
+            ],
+          ),
+        ],
       ),
     ],
   );
 });
-
-// ---------------------------------------------------------------------------
-// Temporary placeholder — replaced in Task 9 with real screens.
-// ---------------------------------------------------------------------------
-
-class _PlaceholderScreen extends StatelessWidget {
-  const _PlaceholderScreen(this.name);
-  final String name;
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(child: Text(name)),
-    );
-  }
-}
