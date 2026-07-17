@@ -21,6 +21,7 @@ abstract class WrRepository {
   Future<Checkin?> getTodayCheckin();
   Future<void> upsertCheckin(Mood mood);
   Future<List<DateTime>> getCheckinDates({int limit = 60});
+  Future<int> countCheckins();
 
   // --- Insights ---
   Future<Insight?> getLatestInsight();
@@ -78,7 +79,11 @@ class SupabaseWrRepository implements WrRepository {
 
   final SupabaseClient _client;
 
-  String get _uid => _client.auth.currentUser!.id;
+  String get _uid {
+    final user = _client.auth.currentUser;
+    if (user == null) throw StateError('not authenticated');
+    return user.id;
+  }
 
   /// Today's date in Asia/Ho_Chi_Minh as yyyy-MM-dd.
   String get _todayVn {
@@ -121,6 +126,16 @@ class SupabaseWrRepository implements WrRepository {
         .order('checkin_date', ascending: false)
         .limit(limit);
     return rows.map((r) => DateTime.parse(r['checkin_date'] as String)).toList();
+  }
+
+  @override
+  Future<int> countCheckins() async {
+    final res = await _client
+        .from('wr_checkins')
+        .select()
+        .eq('user_id', _uid)
+        .count();
+    return res.count;
   }
 
   // --- Insights ---
@@ -187,13 +202,36 @@ class SupabaseWrRepository implements WrRepository {
 
   @override
   Future<List<Practice>> getTodayPractices() async {
-    final rows = await _client
+    // Try today's VN date first.
+    final todayRows = await _client
         .from('wr_practices')
         .select()
         .eq('user_id', _uid)
         .eq('practice_date', _todayVn)
         .order('created_at');
-    return rows.map(Practice.fromJson).toList();
+    if (todayRows.isNotEmpty) {
+      return todayRows.map(Practice.fromJson).toList();
+    }
+
+    // Fallback: find the most recent practice_date and return those rows.
+    // This prevents the list from going empty just because a new day started.
+    final latestRows = await _client
+        .from('wr_practices')
+        .select()
+        .eq('user_id', _uid)
+        .order('practice_date', ascending: false)
+        .order('created_at')
+        .limit(1);
+    if (latestRows.isEmpty) return [];
+
+    final latestDate = latestRows.first['practice_date'] as String;
+    final fallbackRows = await _client
+        .from('wr_practices')
+        .select()
+        .eq('user_id', _uid)
+        .eq('practice_date', latestDate)
+        .order('created_at');
+    return fallbackRows.map(Practice.fromJson).toList();
   }
 
   @override
@@ -332,19 +370,31 @@ class SupabaseWrRepository implements WrRepository {
     final user = _client.auth.currentUser;
     if (user == null) return;
 
-    final displayName =
-        (user.userMetadata?['display_name'] as String?) ?? user.email ?? '';
+    // Check if a profile row already exists for this user.
+    final existing = await _client
+        .from('wr_mobile_profiles')
+        .select('user_id')
+        .eq('user_id', _uid)
+        .limit(1);
 
-    await _client.from('wr_mobile_profiles').upsert(
-      {
+    if (existing.isEmpty) {
+      // First-time insert: populate display_name from Google metadata or email.
+      final displayName =
+          (user.userMetadata?['display_name'] as String?) ?? user.email ?? '';
+      await _client.from('wr_mobile_profiles').insert({
         'user_id': _uid,
         'display_name': displayName,
         if (onboardingSituation != null)
           'onboarding_situation': onboardingSituation,
         'updated_at': DateTime.now().toIso8601String(),
-      },
-      onConflict: 'user_id',
-    );
+      });
+    } else if (onboardingSituation != null) {
+      // Profile exists — only update fields that don't overwrite user edits.
+      await _client.from('wr_mobile_profiles').update({
+        'onboarding_situation': onboardingSituation,
+        'updated_at': DateTime.now().toIso8601String(),
+      }).eq('user_id', _uid);
+    }
 
     // Idempotent — seed function checks internally and returns early if
     // sample data already exists for this user.

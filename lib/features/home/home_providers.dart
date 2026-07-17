@@ -17,14 +17,17 @@ class CheckinNotifier extends AsyncNotifier<Mood?> {
   }
 
   Future<void> selectMood(Mood mood) async {
+    final prior = state;
     // Optimistic update
     state = AsyncData(mood);
     final repo = ref.read(wrRepositoryProvider);
     try {
       await repo.upsertCheckin(mood);
-    } catch (e, st) {
-      // Revert on failure
-      state = AsyncError(e, st);
+    } catch (e) {
+      // Revert to prior state so the UI stays consistent.
+      state = prior;
+      // Surface the error via a side channel if needed (callers can listen to
+      // checkinErrorProvider or catch via notifier wrapper).
     }
   }
 }

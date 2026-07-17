@@ -611,8 +611,14 @@ abstract class AppLocalizations {
   /// No description provided for @profileBadgePremium.
   ///
   /// In vi, this message translates to:
-  /// **'Premium Member'**
+  /// **'PREMIUM MEMBER'**
   String get profileBadgePremium;
+
+  /// No description provided for @profileBadgeMember.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thành viên'**
+  String get profileBadgeMember;
 
   /// No description provided for @profileStatStreak.
   ///
@@ -667,6 +673,132 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Tiếng Việt'**
   String get profileLanguageValue;
+
+  /// No description provided for @understandStatusNeedsAttention.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần chú ý'**
+  String get understandStatusNeedsAttention;
+
+  /// No description provided for @understandNeedSuffix.
+  ///
+  /// In vi, this message translates to:
+  /// **'· Nhu cầu chủ đạo'**
+  String get understandNeedSuffix;
+
+  /// No description provided for @understandNoSituations.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có tình huống nào được ghi nhận.'**
+  String get understandNoSituations;
+
+  /// No description provided for @homeInsightEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có insight nào. Hãy bắt đầu hành trình của bạn!'**
+  String get homeInsightEmpty;
+
+  /// No description provided for @homeErrorLoadData.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải dữ liệu.'**
+  String get homeErrorLoadData;
+
+  /// No description provided for @homeRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get homeRetry;
+
+  /// No description provided for @homeSystemNoticeQuote.
+  ///
+  /// In vi, this message translates to:
+  /// **'\"Đây là lần thứ {n} bạn gặp tình huống {label}.\"'**
+  String homeSystemNoticeQuote(int n, String label);
+
+  /// No description provided for @developNoTheme.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có trọng tâm phát triển nào. Hãy bắt đầu hành trình của bạn!'**
+  String get developNoTheme;
+
+  /// No description provided for @developNoPractices.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có practice nào hôm nay.'**
+  String get developNoPractices;
+
+  /// No description provided for @developErrorLoadData.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải dữ liệu.'**
+  String get developErrorLoadData;
+
+  /// No description provided for @authValidatorName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập tên'**
+  String get authValidatorName;
+
+  /// No description provided for @authValidatorEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập email'**
+  String get authValidatorEmail;
+
+  /// No description provided for @authValidatorPassword.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng nhập mật khẩu'**
+  String get authValidatorPassword;
+
+  /// No description provided for @languageDialogTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngôn ngữ'**
+  String get languageDialogTitle;
+
+  /// No description provided for @languageOptionVietnamese.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tiếng Việt'**
+  String get languageOptionVietnamese;
+
+  /// No description provided for @languageOptionEnglish.
+  ///
+  /// In vi, this message translates to:
+  /// **'English'**
+  String get languageOptionEnglish;
+
+  /// No description provided for @tabToday.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hôm nay'**
+  String get tabToday;
+
+  /// No description provided for @tabUnderstand.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiểu mình'**
+  String get tabUnderstand;
+
+  /// No description provided for @tabDevelop.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phát triển'**
+  String get tabDevelop;
+
+  /// No description provided for @tabJourney.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hành trình'**
+  String get tabJourney;
+
+  /// No description provided for @tabProfile.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tôi'**
+  String get tabProfile;
 }
 
 class _AppLocalizationsDelegate

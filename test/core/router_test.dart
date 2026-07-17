@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:workreflection_mobile/core/router/app_router.dart';
+import 'package:workreflection_mobile/core/router/auth_change_notifier.dart';
 
 void main() {
   group('computeRedirect', () {
@@ -121,6 +122,39 @@ void main() {
         ),
         isNull,
       );
+    });
+  });
+
+  group('AuthChangeNotifier', () {
+    test('notifies listeners when notify() is called', () {
+      final notifier = AuthChangeNotifier();
+      int notifyCount = 0;
+      notifier.addListener(() => notifyCount++);
+
+      notifier.notify();
+
+      expect(notifyCount, 1);
+    });
+
+    test('notifies multiple times on multiple calls', () {
+      final notifier = AuthChangeNotifier();
+      int notifyCount = 0;
+      notifier.addListener(() => notifyCount++);
+
+      notifier.notify();
+      notifier.notify();
+
+      expect(notifyCount, 2);
+    });
+
+    test('does not notify after dispose', () {
+      final notifier = AuthChangeNotifier();
+      int notifyCount = 0;
+      notifier.addListener(() => notifyCount++);
+      notifier.dispose();
+
+      // After dispose the notifier is gone; the listener must not be called.
+      expect(notifyCount, 0);
     });
   });
 }

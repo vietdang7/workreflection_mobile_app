@@ -119,7 +119,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       ),
                     ),
                     validator: (v) =>
-                        (v == null || v.trim().isEmpty) ? 'Vui lòng nhập tên' : null,
+                        (v == null || v.trim().isEmpty) ? l10n.authValidatorName : null,
                   ),
                   const SizedBox(height: 16),
                 ],
@@ -135,7 +135,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     ),
                   ),
                   validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? 'Vui lòng nhập email' : null,
+                      (v == null || v.trim().isEmpty) ? l10n.authValidatorEmail : null,
                 ),
                 const SizedBox(height: 16),
 
@@ -150,7 +150,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     ),
                   ),
                   validator: (v) =>
-                      (v == null || v.isEmpty) ? 'Vui lòng nhập mật khẩu' : null,
+                      (v == null || v.isEmpty) ? l10n.authValidatorPassword : null,
                 ),
                 const SizedBox(height: 24),
 

@@ -7,6 +7,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
 import 'package:workreflection_mobile/core/models/checkin.dart';
 import 'package:workreflection_mobile/core/models/insight.dart';
+import 'package:workreflection_mobile/core/models/mobile_profile.dart';
 import 'package:workreflection_mobile/core/models/recurring_situation.dart';
 import 'package:workreflection_mobile/features/home/presentation/home_screen.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
@@ -42,22 +43,40 @@ Future<void> _pumpLarge(WidgetTester tester, Widget widget) async {
   await tester.pumpAndSettle();
 }
 
+MobileProfile _profile({String? displayName}) => MobileProfile(
+      userId: 'u1',
+      displayName: displayName,
+      reminderEnabled: true,
+      language: 'vi',
+      createdAt: DateTime(2026, 1, 1),
+      updatedAt: DateTime(2026, 6, 1),
+    );
+
 void main() {
   setUpAll(() async {
     await initializeDateFormatting('vi');
   });
 
   group('HomeScreen widget', () {
-    testWidgets('renders greeting with display name', (tester) async {
+    testWidgets('shows profile displayName from mobileProfileProvider', (tester) async {
       final repo = FakeWrRepository();
-      await _pumpLarge(tester, _wrap(const HomeScreen(displayName: 'Yumi'), repo));
+      repo.seedProfile(_profile(displayName: 'Yumi'));
+      await _pumpLarge(tester, _wrap(const HomeScreen(), repo));
 
       expect(find.textContaining('Chào Yumi'), findsOneWidget);
     });
 
+    testWidgets('falls back to "bạn" when profile has no displayName', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile(displayName: null));
+      await _pumpLarge(tester, _wrap(const HomeScreen(), repo));
+
+      expect(find.textContaining('Chào bạn'), findsOneWidget);
+    });
+
     testWidgets('renders date title key', (tester) async {
       final repo = FakeWrRepository();
-      await _pumpLarge(tester, _wrap(const HomeScreen(displayName: 'Bạn'), repo));
+      await _pumpLarge(tester, _wrap(const HomeScreen(), repo));
 
       final dateFinder = find.byKey(const Key('home_date_title'));
       expect(dateFinder, findsOneWidget);
@@ -65,14 +84,14 @@ void main() {
 
     testWidgets('renders check-in question', (tester) async {
       final repo = FakeWrRepository();
-      await _pumpLarge(tester, _wrap(const HomeScreen(displayName: 'Test'), repo));
+      await _pumpLarge(tester, _wrap(const HomeScreen(), repo));
 
       expect(find.textContaining('Bạn đang trải qua điều gì?'), findsOneWidget);
     });
 
     testWidgets('renders 4 mood buttons', (tester) async {
       final repo = FakeWrRepository();
-      await _pumpLarge(tester, _wrap(const HomeScreen(displayName: 'Test'), repo));
+      await _pumpLarge(tester, _wrap(const HomeScreen(), repo));
 
       expect(find.textContaining('căng thẳng'), findsOneWidget);
       expect(find.textContaining('mệt mỏi'), findsOneWidget);
@@ -82,7 +101,7 @@ void main() {
 
     testWidgets('tapping mood button calls upsertCheckin', (tester) async {
       final repo = FakeWrRepository();
-      await _pumpLarge(tester, _wrap(const HomeScreen(displayName: 'Test'), repo));
+      await _pumpLarge(tester, _wrap(const HomeScreen(), repo));
 
       await tester.tap(find.textContaining('khá ổn').first);
       await tester.pumpAndSettle();
@@ -92,7 +111,7 @@ void main() {
 
     testWidgets('selected mood key changes after tap', (tester) async {
       final repo = FakeWrRepository();
-      await _pumpLarge(tester, _wrap(const HomeScreen(displayName: 'Test'), repo));
+      await _pumpLarge(tester, _wrap(const HomeScreen(), repo));
 
       expect(find.byKey(const Key('mood_btn_happy_selected')), findsNothing);
 
@@ -114,7 +133,7 @@ void main() {
         ),
       ]);
 
-      await _pumpLarge(tester, _wrap(const HomeScreen(displayName: 'Test'), repo));
+      await _pumpLarge(tester, _wrap(const HomeScreen(), repo));
 
       // WrEyebrow uppercases text: "INSIGHT GẦN NHẤT"
       expect(find.textContaining('INSIGHT'), findsWidgets);
@@ -123,7 +142,7 @@ void main() {
 
     testWidgets('shows empty state when no insight', (tester) async {
       final repo = FakeWrRepository();
-      await _pumpLarge(tester, _wrap(const HomeScreen(displayName: 'Test'), repo));
+      await _pumpLarge(tester, _wrap(const HomeScreen(), repo));
 
       expect(find.byKey(const Key('home_insight_empty')), findsOneWidget);
     });
@@ -140,7 +159,7 @@ void main() {
         ),
       ]);
 
-      await _pumpLarge(tester, _wrap(const HomeScreen(displayName: 'Test'), repo));
+      await _pumpLarge(tester, _wrap(const HomeScreen(), repo));
 
       // WrEyebrow uppercases: "HỆ THỐNG NHẬN RA"
       expect(find.textContaining('HỆ THỐNG'), findsOneWidget);
@@ -149,7 +168,7 @@ void main() {
 
     testWidgets('shows suggestion card eyebrow', (tester) async {
       final repo = FakeWrRepository();
-      await _pumpLarge(tester, _wrap(const HomeScreen(displayName: 'Test'), repo));
+      await _pumpLarge(tester, _wrap(const HomeScreen(), repo));
 
       // WrEyebrow uppercases: "GỢI Ý KHI MỆT MỎI"
       expect(find.textContaining('GỢI Ý'), findsOneWidget);

@@ -132,7 +132,8 @@
   "journeyTypeTheme": "THEME",
 
   "profileGreeting": "Tài khoản",
-  "profileBadgePremium": "Premium Member",
+  "profileBadgePremium": "PREMIUM MEMBER",
+  "profileBadgeMember": "Thành viên",
   "profileStatStreak": "Ngày streak",
   "profileStatInsights": "Insight lưu",
   "profileStatMilestones": "Milestone",
@@ -141,5 +142,38 @@
   "profileSettingLanguage": "Ngôn ngữ",
   "profileSettingExport": "Xuất dữ liệu",
   "profileSettingLogout": "Đăng xuất",
-  "profileLanguageValue": "Tiếng Việt"
+  "profileLanguageValue": "Tiếng Việt",
+
+  "understandStatusNeedsAttention": "Cần chú ý",
+  "understandNeedSuffix": "· Nhu cầu chủ đạo",
+  "understandNoSituations": "Chưa có tình huống nào được ghi nhận.",
+
+  "homeInsightEmpty": "Chưa có insight nào. Hãy bắt đầu hành trình của bạn!",
+  "homeErrorLoadData": "Không thể tải dữ liệu.",
+  "homeRetry": "Thử lại",
+  "homeSystemNoticeQuote": "\"Đây là lần thứ {n} bạn gặp tình huống {label}.\"",
+  "@homeSystemNoticeQuote": {
+    "placeholders": {
+      "n": {"type": "int"},
+      "label": {"type": "String"}
+    }
+  },
+
+  "developNoTheme": "Chưa có trọng tâm phát triển nào. Hãy bắt đầu hành trình của bạn!",
+  "developNoPractices": "Không có practice nào hôm nay.",
+  "developErrorLoadData": "Không thể tải dữ liệu.",
+
+  "authValidatorName": "Vui lòng nhập tên",
+  "authValidatorEmail": "Vui lòng nhập email",
+  "authValidatorPassword": "Vui lòng nhập mật khẩu",
+
+  "languageDialogTitle": "Ngôn ngữ",
+  "languageOptionVietnamese": "Tiếng Việt",
+  "languageOptionEnglish": "English",
+
+  "tabToday": "Hôm nay",
+  "tabUnderstand": "Hiểu mình",
+  "tabDevelop": "Phát triển",
+  "tabJourney": "Hành trình",
+  "tabProfile": "Tôi"
 }

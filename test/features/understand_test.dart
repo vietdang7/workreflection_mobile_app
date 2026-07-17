@@ -166,5 +166,23 @@ void main() {
       expect(find.textContaining('An toàn khi lên tiếng'), findsOneWidget);
       expect(find.textContaining('Định hướng ý nghĩa'), findsOneWidget);
     });
+
+    testWidgets('Career Health Check counts checkins + insights combined', (tester) async {
+      // 3 checkins + 2 insights = 5 total reflections
+      final repo = FakeWrRepository();
+      repo.seedCheckinDates([
+        DateTime(2026, 6, 1),
+        DateTime(2026, 6, 2),
+        DateTime(2026, 6, 3),
+      ]);
+      repo.seedInsights([
+        Insight(id: 'i1', userId: 'u1', content: 'A', savedAt: DateTime(2026, 6, 1)),
+        Insight(id: 'i2', userId: 'u1', content: 'B', savedAt: DateTime(2026, 6, 2)),
+      ]);
+      await _pumpLarge(tester, _wrap(const UnderstandScreen(), repo));
+
+      // understandHealthReady uses the combined count: "Bạn đã có đủ 5 reflection."
+      expect(find.textContaining('5'), findsWidgets);
+    });
   });
 }

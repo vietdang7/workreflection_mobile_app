@@ -107,7 +107,7 @@ class _DominantNeedBlock extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                '$source · Nhu cầu chủ đạo',
+                '$source ${l10n.understandNeedSuffix}',
                 style: WrTextStyles.body.copyWith(fontSize: 13),
               ),
             ],
@@ -139,7 +139,7 @@ class _SituationsList extends ConsumerWidget {
               onRetry: () => ref.invalidate(understandSituationsProvider)),
           data: (situations) {
             if (situations.isEmpty) {
-              return Text('Chưa có tình huống nào được ghi nhận.',
+              return Text(l10n.understandNoSituations,
                   style: WrTextStyles.body);
             }
             final maxCount = situations
@@ -223,7 +223,7 @@ class _SituationRow extends StatelessWidget {
   if (score >= 2.5) {
     return (label: l10n.understandStatusImproving, color: WrColors.coral);
   }
-  return (label: 'Cần chú ý', color: WrColors.coral);
+  return (label: l10n.understandStatusNeedsAttention, color: WrColors.coral);
 }
 
 class _ScaCard extends ConsumerWidget {
@@ -301,7 +301,7 @@ class _ScaRow extends StatelessWidget {
           width: 28,
           height: 28,
           decoration: BoxDecoration(
-            color: badgeColor.withValues(alpha: 0.12),
+            color: badgeColor.withValues(alpha: 0.08),
             shape: BoxShape.circle,
           ),
           alignment: Alignment.center,
@@ -393,11 +393,12 @@ class _ErrorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
-        Text('Không thể tải dữ liệu.', style: WrTextStyles.body),
+        Text(l10n.homeErrorLoadData, style: WrTextStyles.body),
         const SizedBox(width: 8),
-        TextButton(onPressed: onRetry, child: const Text('Thử lại')),
+        TextButton(onPressed: onRetry, child: Text(l10n.homeRetry)),
       ],
     );
   }

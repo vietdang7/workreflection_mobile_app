@@ -35,6 +35,7 @@ class PracticesNotifier extends AsyncNotifier<List<Practice>> {
         ? PracticeStatus.doing
         : PracticeStatus.done;
 
+    final prior = state;
     // Optimistic update
     final updated = List<Practice>.from(current);
     updated[idx] = practice.copyWith(
@@ -45,9 +46,9 @@ class PracticesNotifier extends AsyncNotifier<List<Practice>> {
 
     try {
       await ref.read(wrRepositoryProvider).updatePracticeStatus(id, next);
-    } catch (e, st) {
-      // Revert
-      state = AsyncError(e, st);
+    } catch (e) {
+      // Revert to prior state so the UI stays consistent.
+      state = prior;
     }
   }
 }

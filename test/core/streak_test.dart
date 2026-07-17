@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:workreflection_mobile/core/logic/streak.dart';
+import 'package:workreflection_mobile/core/logic/vn_date.dart';
 
 void main() {
   group('computeStreak', () {
@@ -118,6 +119,32 @@ void main() {
         ),
         2,
       );
+    });
+  });
+
+  group('todayVn', () {
+    test('returns a date with only year/month/day (no time component)', () {
+      final d = todayVn();
+      expect(d.hour, 0);
+      expect(d.minute, 0);
+      expect(d.second, 0);
+      expect(d.millisecond, 0);
+    });
+
+    test('is UTC+7 — 17h UTC is still today in Vietnam (23h VN)', () {
+      // 17:00 UTC = 00:00 UTC+7 next day at boundary — test at 16:59 UTC
+      // which is 23:59 VN same day.
+      final utc1659 = DateTime.utc(2026, 7, 16, 16, 59);
+      final vn = todayVnFrom(utc1659);
+      // 16:59 UTC + 7h = 23:59 VN → still July 16 in VN
+      expect(vn, DateTime(2026, 7, 16));
+    });
+
+    test('is UTC+7 — 17h00 UTC is the next day in Vietnam', () {
+      final utc1700 = DateTime.utc(2026, 7, 16, 17, 0);
+      final vn = todayVnFrom(utc1700);
+      // 17:00 UTC + 7h = 00:00 VN next day → July 17
+      expect(vn, DateTime(2026, 7, 17));
     });
   });
 }

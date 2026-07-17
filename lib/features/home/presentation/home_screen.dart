@@ -11,15 +11,16 @@ import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/progress_track.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../features/profile/profile_providers.dart';
 import '../home_providers.dart';
 
 class HomeScreen extends ConsumerWidget {
-  const HomeScreen({super.key, required this.displayName});
-
-  final String displayName;
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final profileAsync = ref.watch(mobileProfileProvider);
+    final displayName = profileAsync.valueOrNull?.displayName ?? 'bạn';
     return Scaffold(
       backgroundColor: WrColors.white,
       body: SafeArea(
@@ -209,7 +210,7 @@ class _SystemNoticeCard extends ConsumerWidget {
               WrEyebrow(l10n.homeEyebrowSystem),
               const SizedBox(height: 12),
               Text(
-                '"Đây là lần thứ ${top.occurrenceCount} bạn gặp tình huống ${top.label}."',
+                l10n.homeSystemNoticeQuote(top.occurrenceCount, top.label),
                 style: WrTextStyles.insightQuote.copyWith(
                   fontSize: 16,
                   color: WrColors.white,
@@ -342,10 +343,11 @@ class _InsightEmpty extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Container(
       key: const Key('home_insight_empty'),
       child: Text(
-        'Chưa có insight nào. Hãy bắt đầu hành trình của bạn!',
+        l10n.homeInsightEmpty,
         style: WrTextStyles.body,
       ),
     );
@@ -403,13 +405,14 @@ class _ErrorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
-        Text('Không thể tải dữ liệu.', style: WrTextStyles.body),
+        Text(l10n.homeErrorLoadData, style: WrTextStyles.body),
         const SizedBox(width: 8),
         TextButton(
           onPressed: onRetry,
-          child: const Text('Thử lại'),
+          child: Text(l10n.homeRetry),
         ),
       ],
     );

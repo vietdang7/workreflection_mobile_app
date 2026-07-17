@@ -37,6 +37,12 @@ class FakeWrRepository implements WrRepository {
 
   // --- Seed helpers ---
 
+  void seedCheckinDates(List<DateTime> dates) {
+    _checkinDates
+      ..clear()
+      ..addAll(dates);
+  }
+
   void seedInsights(List<Insight> insights) {
     _insights
       ..clear()
@@ -114,6 +120,9 @@ class FakeWrRepository implements WrRepository {
   }
 
   @override
+  Future<int> countCheckins() async => _checkinDates.length;
+
+  @override
   Future<Insight?> getLatestInsight() async {
     if (_insights.isEmpty) return null;
     return _insights.first; // already sorted desc
@@ -133,8 +142,25 @@ class FakeWrRepository implements WrRepository {
   Future<DevelopmentTheme?> getActiveTheme() async => _activeTheme;
 
   @override
-  Future<List<Practice>> getTodayPractices() async =>
-      List.unmodifiable(_practices);
+  Future<List<Practice>> getTodayPractices() async {
+    if (_practices.isEmpty) return const [];
+    final now = DateTime.now();
+    final todayDate = DateTime(now.year, now.month, now.day);
+    // Filter for today's practices first.
+    final todayPractices = _practices.where((p) {
+      final d = p.practiceDate;
+      return DateTime(d.year, d.month, d.day) == todayDate;
+    }).toList();
+    if (todayPractices.isNotEmpty) return List.unmodifiable(todayPractices);
+    // Fallback: return practices from the most recent practice_date.
+    final latestDate = _practices
+        .map((p) => DateTime(p.practiceDate.year, p.practiceDate.month, p.practiceDate.day))
+        .reduce((a, b) => a.isAfter(b) ? a : b);
+    return List.unmodifiable(_practices.where((p) {
+      final d = p.practiceDate;
+      return DateTime(d.year, d.month, d.day) == latestDate;
+    }).toList());
+  }
 
   @override
   Future<void> updatePracticeStatus(String id, PracticeStatus status) async {
@@ -201,6 +227,21 @@ class FakeWrRepository implements WrRepository {
   @override
   Future<void> ensureSeeded({String? onboardingSituation}) async {
     ensureSeededCalls.add(onboardingSituation);
+    // Mirror the production contract: only set display_name on first insert
+    // (when profile is absent). Never clobber user-edited display_name.
+    if (_profile == null) {
+      _profile = MobileProfile(
+        userId: 'fake-user',
+        displayName: 'seeded-name',
+        onboardingSituation: onboardingSituation,
+        reminderEnabled: true,
+        language: 'vi',
+        createdAt: DateTime.now(),
+        updatedAt: DateTime.now(),
+      );
+    } else if (onboardingSituation != null) {
+      _profile = _profile!.copyWith(onboardingSituation: onboardingSituation);
+    }
   }
 
   @override

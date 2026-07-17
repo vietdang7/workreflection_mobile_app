@@ -281,7 +281,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profileGreeting => 'Tài khoản';
 
   @override
-  String get profileBadgePremium => 'Premium Member';
+  String get profileBadgePremium => 'PREMIUM MEMBER';
+
+  @override
+  String get profileBadgeMember => 'Thành viên';
 
   @override
   String get profileStatStreak => 'Ngày streak';
@@ -309,4 +312,71 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get profileLanguageValue => 'Tiếng Việt';
+
+  @override
+  String get understandStatusNeedsAttention => 'Cần chú ý';
+
+  @override
+  String get understandNeedSuffix => '· Nhu cầu chủ đạo';
+
+  @override
+  String get understandNoSituations => 'Chưa có tình huống nào được ghi nhận.';
+
+  @override
+  String get homeInsightEmpty =>
+      'Chưa có insight nào. Hãy bắt đầu hành trình của bạn!';
+
+  @override
+  String get homeErrorLoadData => 'Không thể tải dữ liệu.';
+
+  @override
+  String get homeRetry => 'Thử lại';
+
+  @override
+  String homeSystemNoticeQuote(int n, String label) {
+    return '\"Đây là lần thứ $n bạn gặp tình huống $label.\"';
+  }
+
+  @override
+  String get developNoTheme =>
+      'Chưa có trọng tâm phát triển nào. Hãy bắt đầu hành trình của bạn!';
+
+  @override
+  String get developNoPractices => 'Không có practice nào hôm nay.';
+
+  @override
+  String get developErrorLoadData => 'Không thể tải dữ liệu.';
+
+  @override
+  String get authValidatorName => 'Vui lòng nhập tên';
+
+  @override
+  String get authValidatorEmail => 'Vui lòng nhập email';
+
+  @override
+  String get authValidatorPassword => 'Vui lòng nhập mật khẩu';
+
+  @override
+  String get languageDialogTitle => 'Ngôn ngữ';
+
+  @override
+  String get languageOptionVietnamese => 'Tiếng Việt';
+
+  @override
+  String get languageOptionEnglish => 'English';
+
+  @override
+  String get tabToday => 'Hôm nay';
+
+  @override
+  String get tabUnderstand => 'Hiểu mình';
+
+  @override
+  String get tabDevelop => 'Phát triển';
+
+  @override
+  String get tabJourney => 'Hành trình';
+
+  @override
+  String get tabProfile => 'Tôi';
 }

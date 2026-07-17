@@ -1,12 +1,28 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/data/wr_repository.dart';
 import '../../core/logic/streak.dart';
+import '../../core/logic/vn_date.dart';
 import '../../core/models/mobile_profile.dart';
 
 // ---------------------------------------------------------------------------
 // App locale provider — drives WrApp locale live
 // ---------------------------------------------------------------------------
 
+const _kAppLanguage = 'app_language';
+const _kSupportedLocales = {'vi', 'en'};
+
+/// Reads the persisted locale from SharedPreferences.
+/// Falls back to 'vi' when no value is stored or the value is unsupported.
+Future<String> readPersistedLocale() async {
+  final prefs = await SharedPreferences.getInstance();
+  final saved = prefs.getString(_kAppLanguage);
+  if (saved != null && _kSupportedLocales.contains(saved)) return saved;
+  return 'vi';
+}
+
+/// Initialized in main.dart via ProviderScope override with the persisted
+/// locale so the correct locale is applied before the first frame.
 final appLocaleProvider = StateProvider<String>((ref) => 'vi');
 
 // ---------------------------------------------------------------------------
@@ -31,7 +47,7 @@ final milestoneCountProvider = FutureProvider<int>((ref) async {
 
 final streakProvider = FutureProvider<int>((ref) async {
   final dates = await ref.watch(wrRepositoryProvider).getCheckinDates();
-  return computeStreak(dates, DateTime.now());
+  return computeStreak(dates, todayVn());
 });
 
 // ---------------------------------------------------------------------------

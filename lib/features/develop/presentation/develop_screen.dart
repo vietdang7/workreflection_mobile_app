@@ -83,6 +83,7 @@ class _ThemeFocusSection extends ConsumerWidget {
           _ErrorCard(onRetry: () => ref.invalidate(activeThemeProvider)),
       data: (theme) {
         if (theme == null) {
+          final l10n = AppLocalizations.of(context)!;
           return Container(
             key: const Key('develop_no_theme'),
             padding: const EdgeInsets.all(20),
@@ -91,7 +92,7 @@ class _ThemeFocusSection extends ConsumerWidget {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              'Chưa có trọng tâm phát triển nào. Hãy bắt đầu hành trình của bạn!',
+              l10n.developNoTheme,
               style: WrTextStyles.body,
             ),
           );
@@ -172,7 +173,7 @@ class _PracticesSection extends ConsumerWidget {
               _ErrorCard(onRetry: () => ref.invalidate(practicesProvider)),
           data: (practices) {
             if (practices.isEmpty) {
-              return Text('Không có practice nào hôm nay.', style: WrTextStyles.body);
+              return Text(l10n.developNoPractices, style: WrTextStyles.body);
             }
             return Column(
               children: practices
@@ -372,11 +373,12 @@ class _ErrorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
-        Text('Không thể tải dữ liệu.', style: WrTextStyles.body),
+        Text(l10n.developErrorLoadData, style: WrTextStyles.body),
         const SizedBox(width: 8),
-        TextButton(onPressed: onRetry, child: const Text('Thử lại')),
+        TextButton(onPressed: onRetry, child: Text(l10n.homeRetry)),
       ],
     );
   }

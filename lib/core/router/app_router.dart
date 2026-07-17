@@ -11,6 +11,7 @@ import '../../features/develop/presentation/develop_screen.dart';
 import '../../features/journey/presentation/journey_screen.dart';
 import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/understand/presentation/understand_screen.dart';
+import 'auth_change_notifier.dart';
 
 // ---------------------------------------------------------------------------
 // Pure redirect logic — no Flutter/Supabase dependencies, fully testable.
@@ -59,15 +60,25 @@ Future<void> setSeenOnboarding() async {
   await prefs.setBool(_kSeenOnboarding, true);
 }
 
+/// Singleton notifier: call [AuthChangeNotifier.notify] on every auth event
+/// so GoRouter's redirect guard re-runs immediately.
+final authChangeNotifierProvider = Provider<AuthChangeNotifier>((ref) {
+  final notifier = AuthChangeNotifier();
+  ref.onDispose(notifier.dispose);
+  return notifier;
+});
+
 // ---------------------------------------------------------------------------
 // Router
 // ---------------------------------------------------------------------------
 
 final appRouterProvider = Provider<GoRouter>((ref) {
   final seenOnboardingAsync = ref.watch(_seenOnboardingProvider);
+  final authNotifier = ref.watch(authChangeNotifierProvider);
 
   return GoRouter(
     initialLocation: '/splash',
+    refreshListenable: authNotifier,
     redirect: (context, state) {
       final hasSession =
           Supabase.instance.client.auth.currentSession != null;
@@ -103,7 +114,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/home',
-                builder: (context, state) => const HomeScreen(displayName: 'bạn'),
+                builder: (context, state) => const HomeScreen(),
               ),
             ],
           ),

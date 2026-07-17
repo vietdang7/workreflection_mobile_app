@@ -191,5 +191,26 @@ void main() {
 
       expect(find.textContaining('Nói để được nghe'), findsNothing);
     });
+
+    testWidgets('shows practices from most recent date when today has none', (tester) async {
+      // Seed practices with yesterday's date only (simulates day 2+)
+      final yesterday = DateTime.now().subtract(const Duration(days: 1));
+      final repo = FakeWrRepository();
+      repo.seedActiveTheme(_theme());
+      repo.seedPractices([
+        Practice(
+          id: 'old1',
+          userId: 'u1',
+          title: 'Practice from yesterday',
+          status: PracticeStatus.todo,
+          practiceDate: yesterday,
+          createdAt: yesterday,
+        ),
+      ]);
+      await _pumpLarge(tester, _wrap(const DevelopScreen(), repo));
+
+      // Should show the practice from the most recent date, not show empty state
+      expect(find.textContaining('Practice from yesterday'), findsOneWidget);
+    });
   });
 }

@@ -131,7 +131,8 @@
   "journeyTypeTheme": "THEME",
 
   "profileGreeting": "Account",
-  "profileBadgePremium": "Premium Member",
+  "profileBadgePremium": "PREMIUM MEMBER",
+  "profileBadgeMember": "Member",
   "profileStatStreak": "Streak days",
   "profileStatInsights": "Saved insights",
   "profileStatMilestones": "Milestones",
@@ -140,5 +141,38 @@
   "profileSettingLanguage": "Language",
   "profileSettingExport": "Export data",
   "profileSettingLogout": "Log out",
-  "profileLanguageValue": "English"
+  "profileLanguageValue": "English",
+
+  "understandStatusNeedsAttention": "Needs attention",
+  "understandNeedSuffix": "· Dominant need",
+  "understandNoSituations": "No situations recorded yet.",
+
+  "homeInsightEmpty": "No insights yet. Start your journey!",
+  "homeErrorLoadData": "Could not load data.",
+  "homeRetry": "Retry",
+  "homeSystemNoticeQuote": "\"This is the {n}th time you've encountered a {label} situation.\"",
+  "@homeSystemNoticeQuote": {
+    "placeholders": {
+      "n": {"type": "int"},
+      "label": {"type": "String"}
+    }
+  },
+
+  "developNoTheme": "No development focus yet. Start your journey!",
+  "developNoPractices": "No practices for today.",
+  "developErrorLoadData": "Could not load data.",
+
+  "authValidatorName": "Please enter your name",
+  "authValidatorEmail": "Please enter your email",
+  "authValidatorPassword": "Please enter your password",
+
+  "languageDialogTitle": "Language",
+  "languageOptionVietnamese": "Tiếng Việt",
+  "languageOptionEnglish": "English",
+
+  "tabToday": "Today",
+  "tabUnderstand": "Understand",
+  "tabDevelop": "Develop",
+  "tabJourney": "Journey",
+  "tabProfile": "Me"
 }

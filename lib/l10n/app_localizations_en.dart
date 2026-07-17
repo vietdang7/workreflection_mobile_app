@@ -280,7 +280,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileGreeting => 'Account';
 
   @override
-  String get profileBadgePremium => 'Premium Member';
+  String get profileBadgePremium => 'PREMIUM MEMBER';
+
+  @override
+  String get profileBadgeMember => 'Member';
 
   @override
   String get profileStatStreak => 'Streak days';
@@ -308,4 +311,69 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileLanguageValue => 'English';
+
+  @override
+  String get understandStatusNeedsAttention => 'Needs attention';
+
+  @override
+  String get understandNeedSuffix => '· Dominant need';
+
+  @override
+  String get understandNoSituations => 'No situations recorded yet.';
+
+  @override
+  String get homeInsightEmpty => 'No insights yet. Start your journey!';
+
+  @override
+  String get homeErrorLoadData => 'Could not load data.';
+
+  @override
+  String get homeRetry => 'Retry';
+
+  @override
+  String homeSystemNoticeQuote(int n, String label) {
+    return '\"This is the ${n}th time you\'ve encountered a $label situation.\"';
+  }
+
+  @override
+  String get developNoTheme => 'No development focus yet. Start your journey!';
+
+  @override
+  String get developNoPractices => 'No practices for today.';
+
+  @override
+  String get developErrorLoadData => 'Could not load data.';
+
+  @override
+  String get authValidatorName => 'Please enter your name';
+
+  @override
+  String get authValidatorEmail => 'Please enter your email';
+
+  @override
+  String get authValidatorPassword => 'Please enter your password';
+
+  @override
+  String get languageDialogTitle => 'Language';
+
+  @override
+  String get languageOptionVietnamese => 'Tiếng Việt';
+
+  @override
+  String get languageOptionEnglish => 'English';
+
+  @override
+  String get tabToday => 'Today';
+
+  @override
+  String get tabUnderstand => 'Understand';
+
+  @override
+  String get tabDevelop => 'Develop';
+
+  @override
+  String get tabJourney => 'Journey';
+
+  @override
+  String get tabProfile => 'Me';
 }

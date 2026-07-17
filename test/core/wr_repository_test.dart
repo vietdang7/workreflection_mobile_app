@@ -193,6 +193,45 @@ void main() {
       expect(repo.ensureSeededCalls, ['Mệt mỏi']);
     });
 
+    test('ensureSeeded creates profile with displayName on first call (insert path)', () async {
+      expect(await repo.getMobileProfile(), isNull);
+      await repo.ensureSeeded();
+      final profile = await repo.getMobileProfile();
+      expect(profile, isNotNull);
+      expect(profile!.displayName, isNotNull);
+    });
+
+    test('ensureSeeded does NOT overwrite displayName when profile already exists', () async {
+      repo.seedProfile(MobileProfile(
+        userId: 'u1',
+        displayName: 'User Edited Name',
+        reminderEnabled: true,
+        language: 'vi',
+        createdAt: DateTime(2026, 1, 1),
+        updatedAt: DateTime(2026, 6, 1),
+      ));
+      // Simulate a second sign-in event (Google OAuth re-triggering ensureSeeded)
+      await repo.ensureSeeded();
+      final profile = await repo.getMobileProfile();
+      // display_name must NOT be overwritten
+      expect(profile!.displayName, 'User Edited Name');
+    });
+
+    test('ensureSeeded updates onboardingSituation on existing profile without touching displayName', () async {
+      repo.seedProfile(MobileProfile(
+        userId: 'u1',
+        displayName: 'My Name',
+        reminderEnabled: true,
+        language: 'vi',
+        createdAt: DateTime(2026, 1, 1),
+        updatedAt: DateTime(2026, 6, 1),
+      ));
+      await repo.ensureSeeded(onboardingSituation: 'Mệt mỏi');
+      final profile = await repo.getMobileProfile();
+      expect(profile!.displayName, 'My Name');
+      expect(profile.onboardingSituation, 'Mệt mỏi');
+    });
+
     test('saveOnboardingSituation records calls', () async {
       await repo.saveOnboardingSituation('Muốn thay đổi');
       expect(repo.saveOnboardingSituationCalls, ['Muốn thay đổi']);

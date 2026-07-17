@@ -29,6 +29,10 @@ class _WrAppState extends ConsumerState<WrApp> {
     // via a deep link and auth_screen.dart's _submit() path is not taken.
     _authSub = Supabase.instance.client.auth.onAuthStateChange.listen(
       (data) async {
+        // Notify the router so redirect guard re-runs on every auth event
+        // (sign-in via Google OAuth deep-link, sign-out, token refresh, etc.).
+        ref.read(authChangeNotifierProvider).notify();
+
         if (data.event == AuthChangeEvent.signedIn) {
           try {
             await ref.read(seedServiceProvider).ensureSeeded();

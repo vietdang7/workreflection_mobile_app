@@ -99,6 +99,7 @@ class _AvatarSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     final ccAsync = ref.watch(ccProfileProvider);
     final profileAsync = ref.watch(mobileProfileProvider);
 
@@ -145,7 +146,7 @@ class _AvatarSection extends ConsumerWidget {
               const SizedBox(height: 6),
               if (isPremium)
                 Text(
-                  'PREMIUM MEMBER',
+                  l10n.profileBadgePremium,
                   style: const TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
@@ -155,7 +156,7 @@ class _AvatarSection extends ConsumerWidget {
                 )
               else
                 Text(
-                  'Thành viên',
+                  l10n.profileBadgeMember,
                   style: WrTextStyles.body.copyWith(fontSize: 12),
                 ),
             ],
@@ -338,15 +339,16 @@ class _SettingsSection extends ConsumerWidget {
   }
 
   void _showLanguageDialog(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Ngôn ngữ'),
+        title: Text(l10n.languageDialogTitle),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              title: const Text('Tiếng Việt'),
+              title: Text(l10n.languageOptionVietnamese),
               onTap: () async {
                 Navigator.of(ctx).pop();
                 await ref.read(wrRepositoryProvider).updateLanguage('vi');
@@ -356,7 +358,7 @@ class _SettingsSection extends ConsumerWidget {
               },
             ),
             ListTile(
-              title: const Text('English'),
+              title: Text(l10n.languageOptionEnglish),
               onTap: () async {
                 Navigator.of(ctx).pop();
                 await ref.read(wrRepositoryProvider).updateLanguage('en');
