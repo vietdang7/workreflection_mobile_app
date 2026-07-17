@@ -256,7 +256,11 @@ class SupabaseSurveyRepository implements SurveyRepository {
     await _client.from('cc_responses').insert(responses);
 
     // 3. Compute scores client-side
-    final scores = computeSurveyScores(answers: answers, questions: questions);
+    final scores = computeSurveyScores(
+      answers: answers,
+      questions: questions,
+      isPremium: type == SurveyType.premium,
+    );
 
     // 4. Insert cc_reports
     final reportRows = await _client.from('cc_reports').insert({

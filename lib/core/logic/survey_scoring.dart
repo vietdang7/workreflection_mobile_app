@@ -23,6 +23,7 @@ import '../models/survey_models.dart';
 SurveyScores computeSurveyScores({
   required Map<String, int> answers,
   required List<CcQuestion> questions,
+  bool isPremium = false,
 }) {
   // Separate questions by layer.
   final Map<SurveyLayer, List<String>> byLayer = {};
@@ -33,7 +34,12 @@ SurveyScores computeSurveyScores({
   double layerAvg(SurveyLayer layer) {
     final ids = byLayer[layer] ?? [];
     if (ids.isEmpty) return 0.0;
-    final vals = ids.map((id) => answers[id] ?? 0).toList();
+    // Exclude unanswered questions
+    final vals = ids
+        .where((id) => answers.containsKey(id))
+        .map((id) => answers[id]!)
+        .toList();
+    if (vals.isEmpty) return 0.0;
     final avg = vals.reduce((a, b) => a + b) / vals.length;
     return (avg * 10).round() / 10;
   }
@@ -43,28 +49,39 @@ SurveyScores computeSurveyScores({
   final a = layerAvg(SurveyLayer.activity);
   final esiRaw = byLayer.containsKey(SurveyLayer.esi)
       ? layerAvg(SurveyLayer.esi)
-      : null;
+      : (isPremium ? 0.0 : null);
 
   // Weighted total (ESI excluded)
   final totalRaw = s * 0.5 + c * 0.3 + a * 0.2;
   final total = (totalRaw * 10).round() / 10;
 
+  // eNPS ids: layer==ENPS OR scaleType==ENPS_10
+  final enpsIds = questions
+      .where((q) => q.layer == SurveyLayer.enps || q.scaleType == ScaleType.enps10)
+      .map((q) => q.id)
+      .toList();
+
   // eNPS
   int? enps;
-  final enpsIds = byLayer[SurveyLayer.enps] ?? [];
   if (enpsIds.isNotEmpty) {
     int promoters = 0, detractors = 0;
     for (final id in enpsIds) {
-      final v = answers[id] ?? 0;
+      if (!answers.containsKey(id)) continue; // exclude missing
+      final v = answers[id]!;
       if (v >= 9) {
         promoters++;
-      } else if (v < 7) {
+      } else if (v >= 7) {
+        // passive: counted neither (reserved for Task 19 eNPS breakdown)
+      } else {
         detractors++;
       }
-      // passive: >=7 && <9 — counted neither
     }
-    final n = enpsIds.length;
-    enps = ((promoters - detractors) / n * 100).round();
+    final n = enpsIds.where((id) => answers.containsKey(id)).length;
+    if (n == 0) {
+      enps = null;
+    } else {
+      enps = ((promoters - detractors) / n * 100).round();
+    }
   }
 
   // Bottleneck: min(S,C,A) with tie-break S→C→A
@@ -125,7 +142,7 @@ CcNarrative? selectNarrative(
   final candidates = narratives.where((n) {
     if (n.type != type) return false;
     if (n.layer != layer) return false;
-    return n.scoreMin <= score && score <= n.scoreMax;
+    return n.scoreMin <= score;
   }).toList();
 
   if (candidates.isEmpty) return null;

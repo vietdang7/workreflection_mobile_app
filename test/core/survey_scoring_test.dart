@@ -443,5 +443,86 @@ void main() {
       );
       expect(n, isNull);
     });
+
+    test('score above all scoreMax still matches (no upper-bound check)', () {
+      // n4.scoreMin=4.2 <= 5.5 → match (even though 5.5 > n4.scoreMax=5.0 under old logic)
+      final n = selectNarrative(
+        narratives,
+        type: 'TOTAL',
+        layer: null,
+        score: 5.5,
+        language: 'vi',
+      );
+      expect(n?.id, 'n4');
+    });
+
+    test('score 4.2 exactly matches n4', () {
+      final n = selectNarrative(
+        narratives,
+        type: 'TOTAL',
+        layer: null,
+        score: 4.2,
+        language: 'vi',
+      );
+      expect(n?.id, 'n4');
+    });
+  });
+
+  group('computeSurveyScores — M8 null-answer exclusion + eNPS filter', () {
+    test('M8: missing answers excluded from layer average (not 0)', () {
+      final qs = makeQs([
+        ('s1', SurveyLayer.structure, ScaleType.likert5),
+        ('s2', SurveyLayer.structure, ScaleType.likert5),
+        ('c1', SurveyLayer.culture, ScaleType.likert5),
+        ('a1', SurveyLayer.activity, ScaleType.likert5),
+      ]);
+      final answers = {'s1': 4, 'c1': 3, 'a1': 3}; // s2 missing
+      final result = computeSurveyScores(answers: answers, questions: qs);
+      // Structure: only s1=4 → avg=4.0 (not (4+0)/2=2.0)
+      expect(result.scoreStructure, 4.0);
+    });
+
+    test('M8: eNPS question with layer==ENPS counted regardless of scaleType', () {
+      final qs = [
+        CcQuestion(id: 'n1', layer: SurveyLayer.enps, scaleType: ScaleType.likert5, questionText: 'Q', questionOrder: 1, isActive: true),
+      ];
+      final answers = {'n1': 9}; // value >=9 → promoter
+      final result = computeSurveyScores(answers: answers, questions: qs);
+      // eNPS should be computed because layer==ENPS
+      expect(result.scoreEnps, 100);
+    });
+
+    test('M8: eNPS question with scaleType==enps10 counted regardless of layer', () {
+      final qs = [
+        CcQuestion(id: 'n1', layer: SurveyLayer.structure, scaleType: ScaleType.enps10, questionText: 'Q', questionOrder: 1, isActive: true),
+      ];
+      final answers = {'n1': 6}; // detractor
+      final result = computeSurveyScores(answers: answers, questions: qs);
+      expect(result.scoreEnps, -100);
+    });
+
+    test('M8: all eNPS unanswered → scoreEnps null', () {
+      final qs = makeQs([
+        ('s1', SurveyLayer.structure, ScaleType.likert5),
+        ('n1', SurveyLayer.enps, ScaleType.enps10),
+      ]);
+      final answers = {'s1': 4}; // n1 missing
+      final result = computeSurveyScores(answers: answers, questions: qs);
+      expect(result.scoreEnps, isNull);
+    });
+  });
+
+  group('computeSurveyScores — isPremium ESI', () {
+    test('M17: premium with no ESI questions → scoreEsi=0.0 not null', () {
+      final qs = makeQs([('s1', SurveyLayer.structure, ScaleType.likert5)]);
+      final result = computeSurveyScores(answers: {'s1': 4}, questions: qs, isPremium: true);
+      expect(result.scoreEsi, 0.0);
+    });
+
+    test('M17: free with no ESI questions → scoreEsi null', () {
+      final qs = makeQs([('s1', SurveyLayer.structure, ScaleType.likert5)]);
+      final result = computeSurveyScores(answers: {'s1': 4}, questions: qs, isPremium: false);
+      expect(result.scoreEsi, isNull);
+    });
   });
 }
