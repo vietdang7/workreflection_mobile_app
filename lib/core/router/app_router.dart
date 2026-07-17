@@ -9,6 +9,7 @@ import '../../features/shell/shell_screen.dart';
 import '../../features/splash/splash_screen.dart';
 import '../../features/develop/presentation/develop_screen.dart';
 import '../../features/journey/presentation/journey_screen.dart';
+import '../../features/profile/presentation/profile_screen.dart';
 import '../../features/understand/presentation/understand_screen.dart';
 
 // ---------------------------------------------------------------------------
@@ -134,7 +135,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/profile',
-                builder: (context, state) => const ProfileTabScreen(),
+                builder: (context, state) => const ProfileScreen(),
               ),
             ],
           ),

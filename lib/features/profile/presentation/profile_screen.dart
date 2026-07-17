@@ -1,0 +1,427 @@
+import 'dart:convert';
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../../../core/data/wr_repository.dart';
+import '../../../core/theme/wr_colors.dart';
+import '../../../core/theme/wr_theme.dart';
+import '../../../core/widgets/eyebrow.dart';
+import '../../../features/auth/data/auth_repository.dart';
+import '../../../l10n/app_localizations.dart';
+import '../profile_providers.dart';
+
+class ProfileScreen extends ConsumerWidget {
+  const ProfileScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Scaffold(
+      backgroundColor: WrColors.white,
+      body: SafeArea(
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverToBoxAdapter(child: _ProfileHeader()),
+            const SliverToBoxAdapter(child: SizedBox(height: 28)),
+            SliverPadding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  _AvatarSection(),
+                  const SizedBox(height: 1),
+                  _Divider(),
+                  _StatsRow(),
+                  _Divider(),
+                  _SettingsSection(),
+                  const SizedBox(height: 80),
+                ]),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Header
+// ---------------------------------------------------------------------------
+
+class _ProfileHeader extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.profileGreeting, style: WrTextStyles.greeting),
+          const SizedBox(height: 4),
+          _ProfileTitle(),
+        ],
+      ),
+    );
+  }
+}
+
+class _ProfileTitle extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ccAsync = ref.watch(ccProfileProvider);
+    final profileAsync = ref.watch(mobileProfileProvider);
+
+    final name = ccAsync.valueOrNull?['full_name'] as String? ??
+        profileAsync.valueOrNull?.displayName ??
+        'bạn';
+
+    return Text(name, style: WrTextStyles.dateTitle);
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Avatar + email + badge
+// ---------------------------------------------------------------------------
+
+class _AvatarSection extends ConsumerWidget {
+  /// Extract initials from a full name (up to 2 chars).
+  static String _initials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+'));
+    if (parts.isEmpty) return '?';
+    if (parts.length == 1) return parts[0][0].toUpperCase();
+    return (parts.first[0] + parts.last[0]).toUpperCase();
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ccAsync = ref.watch(ccProfileProvider);
+    final profileAsync = ref.watch(mobileProfileProvider);
+
+    final ccData = ccAsync.valueOrNull ?? {};
+    final profile = profileAsync.valueOrNull;
+
+    final name = ccData['full_name'] as String? ?? profile?.displayName ?? 'bạn';
+    final email = ccData['email'] as String? ?? '';
+    final expiresAtRaw = ccData['subscription_expires_at'] as String?;
+    final isPremium = expiresAtRaw != null &&
+        DateTime.tryParse(expiresAtRaw)?.isAfter(DateTime.now()) == true;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          // Avatar circle with initials
+          Container(
+            width: 56,
+            height: 56,
+            decoration: BoxDecoration(
+              color: WrColors.navy.withValues(alpha: 0.08),
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              _initials(name),
+              style: const TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+                color: WrColors.navy,
+              ),
+            ),
+          ),
+          const SizedBox(width: 20),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                email,
+                style: WrTextStyles.body.copyWith(fontSize: 13),
+              ),
+              const SizedBox(height: 6),
+              if (isPremium)
+                Text(
+                  'PREMIUM MEMBER',
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: WrColors.coral,
+                    letterSpacing: 0.04 * 12,
+                  ),
+                )
+              else
+                Text(
+                  'Thành viên',
+                  style: WrTextStyles.body.copyWith(fontSize: 12),
+                ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Stats row
+// ---------------------------------------------------------------------------
+
+class _StatsRow extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final streakAsync = ref.watch(streakProvider);
+    final insightAsync = ref.watch(insightCountProvider);
+    final milestoneAsync = ref.watch(milestoneCountProvider);
+
+    final streak = streakAsync.valueOrNull ?? 0;
+    final insights = insightAsync.valueOrNull ?? 0;
+    final milestones = milestoneAsync.valueOrNull ?? 0;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 20),
+      child: Row(
+        children: [
+          Expanded(child: _StatBlock(number: streak, label: l10n.profileStatStreak)),
+          _StatDivider(),
+          Expanded(child: _StatBlock(number: insights, label: l10n.profileStatInsights)),
+          _StatDivider(),
+          Expanded(child: _StatBlock(number: milestones, label: l10n.profileStatMilestones)),
+        ],
+      ),
+    );
+  }
+}
+
+class _StatBlock extends StatelessWidget {
+  const _StatBlock({required this.number, required this.label});
+  final int number;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          '$number',
+          style: const TextStyle(
+            fontSize: 36,
+            fontWeight: FontWeight.w800,
+            color: WrColors.navy,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: WrTextStyles.body.copyWith(fontSize: 13),
+          textAlign: TextAlign.center,
+        ),
+      ],
+    );
+  }
+}
+
+class _StatDivider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(width: 1, height: 48, color: WrColors.navy.withValues(alpha: 0.1));
+  }
+}
+
+class _Divider extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 1,
+      color: WrColors.coral.withValues(alpha: 0.1),
+      margin: const EdgeInsets.symmetric(vertical: 8),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Settings section
+// ---------------------------------------------------------------------------
+
+class _SettingsSection extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final reminderAsync = ref.watch(reminderProvider);
+    final reminderEnabled = reminderAsync.valueOrNull ?? true;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        WrEyebrow(l10n.profileEyebrowSettings),
+        const SizedBox(height: 12),
+
+        // Reminder toggle
+        _SettingRow(
+          label: l10n.profileSettingReminder,
+          trailing: GestureDetector(
+            key: const Key('profile_reminder_toggle'),
+            onTap: () => ref.read(reminderProvider.notifier).toggle(),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 44,
+              height: 26,
+              decoration: BoxDecoration(
+                color: reminderEnabled ? WrColors.teal : WrColors.muted,
+                borderRadius: BorderRadius.circular(13),
+              ),
+              child: AnimatedAlign(
+                duration: const Duration(milliseconds: 200),
+                alignment: reminderEnabled
+                    ? Alignment.centerRight
+                    : Alignment.centerLeft,
+                child: Container(
+                  width: 20,
+                  height: 20,
+                  margin: const EdgeInsets.all(3),
+                  decoration: const BoxDecoration(
+                    color: WrColors.white,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // Language
+        _SettingRow(
+          label: l10n.profileSettingLanguage,
+          trailing: GestureDetector(
+            onTap: () => _showLanguageDialog(context, ref),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  l10n.profileLanguageValue,
+                  style: WrTextStyles.body.copyWith(fontSize: 13),
+                ),
+                const SizedBox(width: 4),
+                const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
+              ],
+            ),
+          ),
+        ),
+
+        // Export data
+        _SettingRow(
+          label: l10n.profileSettingExport,
+          trailing: GestureDetector(
+            onTap: () => _exportData(context, ref),
+            child: const Icon(Icons.download_outlined, color: WrColors.coral, size: 18),
+          ),
+        ),
+
+        // Logout
+        GestureDetector(
+          key: const Key('profile_logout_btn'),
+          onTap: () => _logout(context, ref),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 14),
+            child: Text(
+              l10n.profileSettingLogout,
+              style: WrTextStyles.hMedium.copyWith(color: WrColors.destructive),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  void _showLanguageDialog(BuildContext context, WidgetRef ref) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Ngôn ngữ'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              title: const Text('Tiếng Việt'),
+              onTap: () async {
+                Navigator.of(ctx).pop();
+                await ref.read(wrRepositoryProvider).updateLanguage('vi');
+                ref.read(appLocaleProvider.notifier).state = 'vi';
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setString('app_language', 'vi');
+              },
+            ),
+            ListTile(
+              title: const Text('English'),
+              onTap: () async {
+                Navigator.of(ctx).pop();
+                await ref.read(wrRepositoryProvider).updateLanguage('en');
+                ref.read(appLocaleProvider.notifier).state = 'en';
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.setString('app_language', 'en');
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _exportData(BuildContext context, WidgetRef ref) async {
+    try {
+      final data = await ref.read(wrRepositoryProvider).exportUserData();
+      final json = const JsonEncoder.withIndent('  ').convert(data);
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/workreflection_export.json');
+      await file.writeAsString(json);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Đã xuất dữ liệu: ${file.path}')),
+        );
+      }
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không thể xuất dữ liệu.')),
+        );
+      }
+    }
+  }
+
+  Future<void> _logout(BuildContext context, WidgetRef ref) async {
+    try {
+      await ref.read(authRepositoryProvider).signOut();
+      // Router redirect handles navigation to /auth
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không thể đăng xuất.')),
+        );
+      }
+    }
+  }
+}
+
+class _SettingRow extends StatelessWidget {
+  const _SettingRow({required this.label, required this.trailing});
+  final String label;
+  final Widget trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label, style: WrTextStyles.hMedium),
+          trailing,
+        ],
+      ),
+    );
+  }
+}
