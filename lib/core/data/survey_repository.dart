@@ -28,11 +28,11 @@ abstract class SurveyRepository {
   Future<Map<ScaleType, List<CcLikertOption>>> getLikertOptions();
 
   /// Submits a completed survey:
-  /// 1. Insert cc_surveys
-  /// 2. Bulk insert cc_responses
+  /// 1. Insert cc_surveys (skip if resuming via existingSurveyId)
+  /// 2. Bulk insert cc_responses (idempotent)
   /// 3. Compute scores client-side
   /// 4. Insert cc_reports
-  /// 5. Best-effort send-email (fire-and-forget)
+  /// 5. Best-effort cc_notifications inserts (fire-and-forget)
   /// Returns the full CcReportFull.
   Future<CcReportFull> submitSurvey({
     required SurveyType type,
@@ -43,6 +43,8 @@ abstract class SurveyRepository {
     String? userCompanyTenure,
     String? userCompanySize,
     String? userDepartment,
+    String? existingSurveyId,
+    void Function(String surveyId)? onSurveyCreated,
   });
 
   /// Fetch a specific report by id.
@@ -225,35 +227,49 @@ class SupabaseSurveyRepository implements SurveyRepository {
     String? userCompanyTenure,
     String? userCompanySize,
     String? userDepartment,
+    String? existingSurveyId,
+    void Function(String surveyId)? onSurveyCreated,
   }) async {
     final now = DateTime.now().toIso8601String();
 
-    // 1. Insert cc_surveys
-    final surveyRows = await _client.from('cc_surveys').insert({
-      'user_id': _uid,
-      'survey_type': type.toJson(),
-      'status': 'COMPLETED',
-      'user_email': _userEmail,
-      'user_full_name': _userFullName,
-      if (userPosition != null) 'user_position': userPosition,
-      if (userWorkExperience != null) 'user_work_experience': userWorkExperience,
-      if (userCompanyTenure != null) 'user_company_tenure': userCompanyTenure,
-      if (userCompanySize != null) 'user_company_size': userCompanySize,
-      if (userDepartment != null) 'user_department': userDepartment,
-      'started_at': now,
-      'completed_at': now,
-      'campaign_id': null,
-    }).select('id').single();
+    // 1. Insert cc_surveys (skip if resuming)
+    final String surveyId;
+    if (existingSurveyId != null) {
+      surveyId = existingSurveyId;
+    } else {
+      final surveyRows = await _client.from('cc_surveys').insert({
+        'user_id': _uid,
+        'survey_type': type.toJson(),
+        'status': 'COMPLETED',
+        'user_email': _userEmail,
+        'user_full_name': _userFullName,
+        if (userPosition != null) 'user_position': userPosition,
+        if (userWorkExperience != null) 'user_work_experience': userWorkExperience,
+        if (userCompanyTenure != null) 'user_company_tenure': userCompanyTenure,
+        if (userCompanySize != null) 'user_company_size': userCompanySize,
+        if (userDepartment != null) 'user_department': userDepartment,
+        'started_at': now,
+        'completed_at': now,
+        'campaign_id': null,
+      }).select('id').single();
+      surveyId = surveyRows['id'] as String;
+      onSurveyCreated?.call(surveyId);
+    }
 
-    final surveyId = surveyRows['id'] as String;
-
-    // 2. Bulk insert cc_responses
-    final responses = answers.entries.map((e) => {
-          'survey_id': surveyId,
-          'question_id': e.key,
-          'answer_value': e.value,
-        }).toList();
-    await _client.from('cc_responses').insert(responses);
+    // 2. Bulk insert cc_responses (idempotent: skip if survey already had responses)
+    final existingResponses = await _client
+        .from('cc_responses')
+        .select('id')
+        .eq('survey_id', surveyId)
+        .limit(1);
+    if (existingResponses.isEmpty) {
+      final responses = answers.entries.map((e) => {
+            'survey_id': surveyId,
+            'question_id': e.key,
+            'answer_value': e.value,
+          }).toList();
+      await _client.from('cc_responses').insert(responses);
+    }
 
     // 3. Compute scores client-side
     final scores = computeSurveyScores(
@@ -278,12 +294,31 @@ class SupabaseSurveyRepository implements SurveyRepository {
       'selected_narrative_variants': null,
     }).select().single();
 
-    // 5. Best-effort send-email (fire-and-forget)
-    _client.functions.invoke('send-email', body: {
-      'template': 'survey-completed',
-      'userId': _uid,
-      'surveyId': surveyId,
-    }).ignore();
+    final reportId = reportRows['id'] as String;
+
+    // 5. Best-effort cc_notifications inserts (fire-and-forget, match web)
+    try {
+      await _client.from('cc_notifications').insert({
+        'target_type': 'admin',
+        'type': 'survey_completed',
+        'title': 'Khảo sát mới hoàn thành',
+        'description': '${type.toJson()} — $_userEmail',
+        'icon': 'survey',
+        'reference_id': surveyId,
+        'reference_url': '/admin/reports',
+      });
+      await _client.from('cc_notifications').insert({
+        'target_type': 'admin',
+        'type': 'report_generated',
+        'title': 'Báo cáo mới được tạo',
+        'description': 'Score: ${scores.scoreTotal}',
+        'icon': 'survey',
+        'reference_id': reportId,
+        'reference_url': '/admin/reports',
+      });
+    } catch (_) {
+      // best-effort — never block survey completion
+    }
 
     return CcReportFull.fromJson(reportRows);
   }

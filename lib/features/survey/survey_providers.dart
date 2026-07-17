@@ -10,6 +10,31 @@ import '../../core/models/survey_models.dart';
 export '../../core/data/survey_repository.dart' show surveyRepositoryProvider;
 
 // ---------------------------------------------------------------------------
+// Intro info (set from SurveyIntroScreen, read in SurveyProcessingScreen)
+// ---------------------------------------------------------------------------
+
+class SurveyIntroInfo {
+  const SurveyIntroInfo({
+    this.userPosition,
+    this.userWorkExperience,
+    this.userCompanyTenure,
+    this.userCompanySize,
+    this.userDepartment,
+  });
+  final String? userPosition;
+  final String? userWorkExperience;
+  final String? userCompanyTenure;
+  final String? userCompanySize;
+  final String? userDepartment;
+}
+
+final surveyIntroInfoProvider =
+    StateProvider<SurveyIntroInfo>((ref) => const SurveyIntroInfo());
+
+// Tracks surveyId created in step 1 of submitSurvey so retry can skip it
+final surveyIdInProgressProvider = StateProvider<String?>((ref) => null);
+
+// ---------------------------------------------------------------------------
 // Role + survey type
 // ---------------------------------------------------------------------------
 

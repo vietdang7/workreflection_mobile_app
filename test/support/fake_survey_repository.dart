@@ -97,8 +97,13 @@ class FakeSurveyRepository implements SurveyRepository {
     String? userCompanyTenure,
     String? userCompanySize,
     String? userDepartment,
+    String? existingSurveyId,
+    void Function(String surveyId)? onSurveyCreated,
   }) async {
     submitSurveyCalls.add(Map.of(answers));
+    if (existingSurveyId == null) {
+      onSurveyCreated?.call('fake-survey-id');
+    }
     final report = _latestReport ??
         CcReportFull(
           id: 'fake-report-id',

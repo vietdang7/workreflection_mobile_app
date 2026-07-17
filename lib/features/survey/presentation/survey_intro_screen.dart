@@ -104,7 +104,20 @@ class _SurveyIntroScreenState extends ConsumerState<SurveyIntroScreen> {
 
               WrPillButton(
                 label: l10n.surveyIntroCta,
-                onPressed: () => context.push('/survey/questions'),
+                onPressed: () {
+                  // Store intro fields
+                  ref.read(surveyIntroInfoProvider.notifier).state = SurveyIntroInfo(
+                    userPosition: _positionCtrl.text.trim().isEmpty ? null : _positionCtrl.text.trim(),
+                    userWorkExperience: _experienceCtrl.text.trim().isEmpty ? null : _experienceCtrl.text.trim(),
+                    userCompanyTenure: _tenureCtrl.text.trim().isEmpty ? null : _tenureCtrl.text.trim(),
+                    userCompanySize: _companySizeCtrl.text.trim().isEmpty ? null : _companySizeCtrl.text.trim(),
+                    userDepartment: _departmentCtrl.text.trim().isEmpty ? null : _departmentCtrl.text.trim(),
+                  );
+                  // Reset answers + index for fresh survey
+                  ref.read(surveyAnswersProvider.notifier).reset();
+                  ref.read(currentQuestionIndexProvider.notifier).state = 0;
+                  context.push('/survey/questions');
+                },
                 variant: WrPillVariant.coral,
               ),
               const SizedBox(height: 40),
