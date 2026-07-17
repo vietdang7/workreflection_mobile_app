@@ -40,7 +40,7 @@ scoreTotal     = S*0.5 + C*0.3 + A*0.2                 // ESI NOT in total
 ## 4. Narratives (`src/pages/results/Free.tsx:252-279`)
 
 - Fetch: `cc_narratives WHERE scope='personal' AND is_active=true`.
-- Match: by `type` (TOTAL, LAYER, BOTTLENECK…), `layer` (null for TOTAL), and score range `score_min <= score <= score_max`; when ranges overlap prefer the HIGHEST `score_min` that is `<= score`.
+- Match: by `type` (TOTAL, LAYER, BOTTLENECK…), `layer` (null for TOTAL), and **only** `score >= score_min` — there is deliberately NO upper-bound check (`Free.tsx:136-141`, avoids gaps between ranges); pick the HIGHEST `score_min` that is `<= score`. **(Corrected 2026-07-17 after review — earlier version wrongly said `score <= score_max`.)**
 - Language: `language=='en' && narrative_text_en != null` → `narrative_text_en` else `narrative_text` (VI).
 - Variants: `narrative_variants` jsonb array; chosen variant ids stored in `cc_reports.selected_narrative_variants`.
 
@@ -48,7 +48,10 @@ scoreTotal     = S*0.5 + C*0.3 + A*0.2                 // ESI NOT in total
 
 - `cc_action_plan_phases`: `day` (1–30), `title_vi`, `title_en`, `description`, `reflection_question`, `survey_type`, `display_order`.
 - `cc_action_plan_tasks`: `phase_id`, `label`, `display_order`.
-- `cc_user_action_progress`: `user_id`, `task_id`, `report_id`, `completed`, `completed_at`. Toggle via upsert/patch (`src/hooks/useActionPlanProgress.ts`). Read-only for anonymous.
+- **(Corrected 2026-07-17 after review, per `useActionPlanProgress.ts` + `migrations/002_fix_action_progress_rls.sql`):**
+  - Phases: fetch ALL phases with **NO survey_type filter**, ORDER BY `day` (not display_order). Seed data only has FREE-typed phases.
+  - Progress: read by `user_id` ONLY (no report_id filter). Upsert `{user_id, task_id, completed, completed_at}` with `onConflict: "user_id,task_id"` — **never write `report_id`** (DB unique constraint is `UNIQUE (user_id, task_id)`; including report_id in onConflict → Postgres 42P10 error).
+  - Read-only for anonymous.
 
 ## 6. Premium gating
 
@@ -63,7 +66,9 @@ scoreTotal     = S*0.5 + C*0.3 + A*0.2                 // ESI NOT in total
 
 ## 8. RPC/edge functions in flow
 
-- `tts-proxy` (above); `send-email` on survey completion/report generation (templates "survey-completed", "report-generated"). No scoring RPCs — all client-side.
+- `tts-proxy` (above). **(Corrected 2026-07-17 after review):** web's actual completion side-effect is two **`cc_notifications` inserts** (`notifyAdminSurveyCompleted`, `notifyAdminReportGenerated` — see `survey-save.ts:231-240` → `src/lib/notifications.ts`), NOT a direct send-email call from the survey flow. The `send-email` edge fn contract (`src/lib/email.ts:15-17`) is `{type, payload}` (not `{template, userId, surveyId}`). No scoring RPCs — all client-side.
+- Question set config lookup filters BOTH `.eq('survey_type', target)` AND `.eq('is_active', true)`; when using config `question_ids`, also filter `cc_questions.is_active = true` and preserve the config's id order. Likert options: filter `is_active = true` and dedup by value.
+- Missing/null answers are EXCLUDED from averages (not counted as 0); eNPS question filter is `layer=="ENPS" || scale_type=="ENPS_10"`. Premium reports always write `score_esi` (0 if no ESI questions), never null.
 
 ## Key web file paths
 
