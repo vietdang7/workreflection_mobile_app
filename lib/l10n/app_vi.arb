@@ -224,6 +224,16 @@
   "reportPremiumUpsell": "Nâng cấp Premium để xem ESI, eNPS và phân tích chuyên sâu hơn.",
   "reportActionPlanCta": "Kế hoạch 30 ngày",
   "reportViewLatest": "Xem báo cáo gần nhất",
+  "reportViewHistory": "Xem lịch sử khảo sát",
+
+  "surveyHistoryTitle": "Lịch sử khảo sát",
+  "surveyHistoryScoreLabel": "Điểm",
+  "surveyHistoryTypeFree": "Free",
+  "surveyHistoryTypePremium": "Premium",
+  "surveyHistoryEmptyTitle": "Chưa có khảo sát nào",
+  "surveyHistoryEmptyBody": "Hoàn thành khảo sát đầu tiên để xem lịch sử tại đây.",
+  "surveyHistoryEmptyCta": "Bắt đầu khảo sát",
+  "profileSurveyHistory": "Lịch sử khảo sát",
 
   "actionPlanTitle": "Kế hoạch 30 ngày",
   "actionPlanDay": "Ngày {day}",

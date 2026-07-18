@@ -382,6 +382,20 @@ class _CareerHealthCheck extends ConsumerWidget {
                 loading: () => const SizedBox.shrink(),
                 error: (_, __) => const SizedBox.shrink(),
               ),
+              // "Xem lịch sử khảo sát" — visible when at least one report exists
+              latestReportAsync.when(
+                data: (report) => report != null
+                    ? Padding(
+                        padding: const EdgeInsets.only(top: 8),
+                        child: WrActionLink(
+                          label: l10n.reportViewHistory,
+                          onTap: () => context.push('/survey/history'),
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+                loading: () => const SizedBox.shrink(),
+                error: (_, __) => const SizedBox.shrink(),
+              ),
             ],
           ),
         ),

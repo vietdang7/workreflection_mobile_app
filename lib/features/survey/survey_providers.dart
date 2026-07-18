@@ -100,6 +100,15 @@ final latestReportProvider = FutureProvider<CcReportFull?>((ref) async {
 });
 
 // ---------------------------------------------------------------------------
+// My reports (survey history list)
+// ---------------------------------------------------------------------------
+
+final myReportsProvider = FutureProvider<List<CcReportSummary>>((ref) async {
+  final repo = ref.watch(surveyRepositoryProvider);
+  return repo.getMyReports();
+});
+
+// ---------------------------------------------------------------------------
 // Narratives
 // ---------------------------------------------------------------------------
 

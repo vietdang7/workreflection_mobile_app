@@ -24,6 +24,7 @@ import '../../features/workshops/presentation/my_workshops_screen.dart';
 import '../../features/coaching/presentation/coaching_screen.dart';
 import '../../features/coaching/presentation/coaching_sessions_screen.dart';
 import '../../features/profile/presentation/profile_edit_screen.dart';
+import '../../features/survey/presentation/survey_history_screen.dart';
 import 'auth_change_notifier.dart';
 
 // ---------------------------------------------------------------------------
@@ -142,6 +143,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/survey/action-plan/:id',
         builder: (context, state) =>
             ActionPlanScreen(reportId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/survey/history',
+        builder: (context, state) => const SurveyHistoryScreen(),
       ),
 
       // Workshop + coaching routes (fullscreen, outside shell)

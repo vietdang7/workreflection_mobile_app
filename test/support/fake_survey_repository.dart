@@ -156,6 +156,21 @@ class FakeSurveyRepository implements SurveyRepository {
   @override
   Future<CcReportFull?> getLatestReportFull() async => _latestReport;
 
+  // Reports list (for survey history)
+  List<CcReportSummary> _reportSummaries = [];
+  Exception? _myReportsError;
+
+  void seedReportSummaries(List<CcReportSummary> summaries) =>
+      _reportSummaries = List.of(summaries);
+
+  void setMyReportsError(Exception? e) => _myReportsError = e;
+
+  @override
+  Future<List<CcReportSummary>> getMyReports() async {
+    if (_myReportsError != null) throw _myReportsError!;
+    return List.unmodifiable(_reportSummaries);
+  }
+
   @override
   Future<List<CcNarrative>> getNarratives() async {
     if (_narrativesFails) throw Exception('forced narrative failure');

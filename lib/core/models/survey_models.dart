@@ -381,6 +381,50 @@ class TtsResult {
 }
 
 // ---------------------------------------------------------------------------
+// CcReportSummary — lightweight list item for survey history
+// ---------------------------------------------------------------------------
+
+class CcReportSummary {
+  const CcReportSummary({
+    required this.id,
+    required this.surveyId,
+    required this.createdAt,
+    required this.scoreTotal,
+    required this.scoreLevel,
+    this.scoreEsi,
+    this.scoreEnps,
+  });
+
+  final String id;
+  final String surveyId;
+  final DateTime createdAt;
+  final double scoreTotal;
+  final ScoreLevel scoreLevel;
+
+  /// Non-null for premium reports.
+  final double? scoreEsi;
+
+  /// Non-null for premium reports.
+  final int? scoreEnps;
+
+  bool get isPremium => scoreEsi != null || scoreEnps != null;
+
+  factory CcReportSummary.fromJson(Map<String, dynamic> json) {
+    return CcReportSummary(
+      id: json['id'] as String,
+      surveyId: json['survey_id'] as String,
+      createdAt: DateTime.parse(json['created_at'] as String),
+      scoreTotal: (json['score_total'] as num).toDouble(),
+      scoreLevel: ScoreLevel.fromJson(json['score_level'] as String),
+      scoreEsi: json['score_esi'] != null
+          ? (json['score_esi'] as num).toDouble()
+          : null,
+      scoreEnps: json['score_enps'] as int?,
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // SurveyScores (output of scoring engine)
 // ---------------------------------------------------------------------------
 

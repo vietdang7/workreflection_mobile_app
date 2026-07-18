@@ -499,6 +499,34 @@ class AppLocalizationsVi extends AppLocalizations {
   String get reportViewLatest => 'Xem báo cáo gần nhất';
 
   @override
+  String get reportViewHistory => 'Xem lịch sử khảo sát';
+
+  @override
+  String get surveyHistoryTitle => 'Lịch sử khảo sát';
+
+  @override
+  String get surveyHistoryScoreLabel => 'Điểm';
+
+  @override
+  String get surveyHistoryTypeFree => 'Free';
+
+  @override
+  String get surveyHistoryTypePremium => 'Premium';
+
+  @override
+  String get surveyHistoryEmptyTitle => 'Chưa có khảo sát nào';
+
+  @override
+  String get surveyHistoryEmptyBody =>
+      'Hoàn thành khảo sát đầu tiên để xem lịch sử tại đây.';
+
+  @override
+  String get surveyHistoryEmptyCta => 'Bắt đầu khảo sát';
+
+  @override
+  String get profileSurveyHistory => 'Lịch sử khảo sát';
+
+  @override
   String get actionPlanTitle => 'Kế hoạch 30 ngày';
 
   @override

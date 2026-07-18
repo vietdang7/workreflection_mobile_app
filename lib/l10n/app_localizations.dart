@@ -1028,6 +1028,60 @@ abstract class AppLocalizations {
   /// **'Xem báo cáo gần nhất'**
   String get reportViewLatest;
 
+  /// No description provided for @reportViewHistory.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem lịch sử khảo sát'**
+  String get reportViewHistory;
+
+  /// No description provided for @surveyHistoryTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lịch sử khảo sát'**
+  String get surveyHistoryTitle;
+
+  /// No description provided for @surveyHistoryScoreLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm'**
+  String get surveyHistoryScoreLabel;
+
+  /// No description provided for @surveyHistoryTypeFree.
+  ///
+  /// In vi, this message translates to:
+  /// **'Free'**
+  String get surveyHistoryTypeFree;
+
+  /// No description provided for @surveyHistoryTypePremium.
+  ///
+  /// In vi, this message translates to:
+  /// **'Premium'**
+  String get surveyHistoryTypePremium;
+
+  /// No description provided for @surveyHistoryEmptyTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có khảo sát nào'**
+  String get surveyHistoryEmptyTitle;
+
+  /// No description provided for @surveyHistoryEmptyBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn thành khảo sát đầu tiên để xem lịch sử tại đây.'**
+  String get surveyHistoryEmptyBody;
+
+  /// No description provided for @surveyHistoryEmptyCta.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bắt đầu khảo sát'**
+  String get surveyHistoryEmptyCta;
+
+  /// No description provided for @profileSurveyHistory.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lịch sử khảo sát'**
+  String get profileSurveyHistory;
+
   /// No description provided for @actionPlanTitle.
   ///
   /// In vi, this message translates to:

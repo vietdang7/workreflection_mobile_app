@@ -65,6 +65,9 @@ abstract class SurveyRepository {
   /// Toggle a task completion via upsert on cc_user_action_progress.
   Future<void> toggleTask(String taskId, bool completed);
 
+  /// Fetch the current user's cc_reports ordered newest-first (summary only).
+  Future<List<CcReportSummary>> getMyReports();
+
   /// Invoke tts-proxy edge function and return TtsResult.
   Future<TtsResult> tts(String text, String language);
 }
@@ -372,6 +375,16 @@ class SupabaseSurveyRepository implements SurveyRepository {
         .limit(1);
     if (rows.isEmpty) return null;
     return CcReportFull.fromJson(rows.first);
+  }
+
+  @override
+  Future<List<CcReportSummary>> getMyReports() async {
+    final rows = await _client
+        .from('cc_reports')
+        .select('id, survey_id, created_at, score_total, score_level, score_esi, score_enps')
+        .eq('user_id', _uid)
+        .order('created_at', ascending: false);
+    return rows.map(CcReportSummary.fromJson).toList();
   }
 
   // ---------------------------------------------------------------------------

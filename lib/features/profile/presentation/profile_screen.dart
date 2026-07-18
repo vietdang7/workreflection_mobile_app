@@ -354,6 +354,16 @@ class _SettingsSection extends ConsumerWidget {
           ),
         ),
 
+        // Survey History
+        _SettingRow(
+          label: l10n.profileSurveyHistory,
+          trailing: GestureDetector(
+            key: const Key('profile_survey_history_btn'),
+            onTap: () => context.push('/survey/history'),
+            child: const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
+          ),
+        ),
+
         // Export data
         _SettingRow(
           label: l10n.profileSettingExport,

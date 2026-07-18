@@ -496,6 +496,34 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportViewLatest => 'View latest report';
 
   @override
+  String get reportViewHistory => 'View survey history';
+
+  @override
+  String get surveyHistoryTitle => 'Survey History';
+
+  @override
+  String get surveyHistoryScoreLabel => 'Score';
+
+  @override
+  String get surveyHistoryTypeFree => 'Free';
+
+  @override
+  String get surveyHistoryTypePremium => 'Premium';
+
+  @override
+  String get surveyHistoryEmptyTitle => 'No surveys yet';
+
+  @override
+  String get surveyHistoryEmptyBody =>
+      'Complete your first survey to see your history here.';
+
+  @override
+  String get surveyHistoryEmptyCta => 'Start survey';
+
+  @override
+  String get profileSurveyHistory => 'Survey History';
+
+  @override
   String get actionPlanTitle => '30-day Plan';
 
   @override

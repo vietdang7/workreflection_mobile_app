@@ -223,6 +223,16 @@
   "reportPremiumUpsell": "Upgrade to Premium to see ESI, eNPS and deeper analysis.",
   "reportActionPlanCta": "30-day plan",
   "reportViewLatest": "View latest report",
+  "reportViewHistory": "View survey history",
+
+  "surveyHistoryTitle": "Survey History",
+  "surveyHistoryScoreLabel": "Score",
+  "surveyHistoryTypeFree": "Free",
+  "surveyHistoryTypePremium": "Premium",
+  "surveyHistoryEmptyTitle": "No surveys yet",
+  "surveyHistoryEmptyBody": "Complete your first survey to see your history here.",
+  "surveyHistoryEmptyCta": "Start survey",
+  "profileSurveyHistory": "Survey History",
 
   "actionPlanTitle": "30-day Plan",
   "actionPlanDay": "Day {day}",
