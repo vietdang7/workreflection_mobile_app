@@ -150,6 +150,16 @@
   "homeInsightEmpty": "No insights yet. Start your journey!",
   "homeErrorLoadData": "Could not load data.",
   "homeRetry": "Retry",
+
+  "homeCtaSurveyEyebrow": "Work Reflection",
+  "homeCtaSurveyTitle": "Take reflection survey",
+  "homeCtaSurveySubtitle": "Look back at your work experience to understand yourself better.",
+  "homeCtaSurveyButton": "Start now",
+  "homeCtaReportTitle": "View latest report",
+  "homeCtaReportSubtitle": "You have completed the reflection survey. View your results.",
+  "homeCtaReportButton": "View report",
+  "homeCtaRetakeSurvey": "Retake survey",
+
   "homeSystemNoticeQuote": "\"This is the {n}th time you've encountered a {label} situation.\"",
   "@homeSystemNoticeQuote": {
     "placeholders": {
@@ -438,5 +448,29 @@
   },
   "understandViewAllInsights": "View all insights",
 
-  "profileCheckinHistory": "Last 30 days"
+  "profileCheckinHistory": "Last 30 days",
+
+  "surveyGuideEyebrow": "Guide",
+  "surveyGuideFreeTitle": "Work Reflection – Reflect on your personal work experience",
+  "surveyGuideFreeIntro": "Welcome to the journey of looking back at your personal work experience.",
+  "surveyGuideFreeDescription": "Work Reflection is a tool that helps professionals systematically look back at their work environment and experience.",
+  "surveyGuideFreeDetails": "The free version includes 15 questions for a quick survey. Upon completion, you will receive an overview reflection report, helping you:",
+  "surveyGuideFreeBenefit1": "See the big picture.",
+  "surveyGuideFreeBenefit2": "Identify areas for adjustment.",
+  "surveyGuideFreeBenefit3": "Have a clearer basis for thinking about the next step in your career.",
+  "surveyGuideFreeNote": "Work Reflection is not intended to evaluate people, but to help you understand how the work system operates around you.",
+  "surveyGuideFreeClosing": "The free version is suitable when you want to start looking back at your work gently, before going deeper with advanced analysis.",
+  "surveyGuidePremiumTitle": "Work Reflection Premium – Deep reflection for clear orientation",
+  "surveyGuidePremiumIntro": "Work Reflection Premium is an advanced analysis version for professionals who want to look back at their work comprehensively and in depth.",
+  "surveyGuidePremiumDetails": "The Premium version helps you:",
+  "surveyGuidePremiumBenefit1": "Analyze in detail the clarity of roles, expectations, and coordination mechanisms",
+  "surveyGuidePremiumBenefit2": "Identify the quality of dialogue, feedback, and psychological safety in the work environment",
+  "surveyGuidePremiumBenefit3": "Evaluate the level of development, motivation, and fit between individual – work – organization",
+  "surveyGuidePremiumBenefit4": "Identify core bottlenecks rather than just seeing surface symptoms",
+  "surveyGuidePremiumClosing": "Work Reflection Premium gives you a clearer framework to make your own decisions.",
+  "surveyGuidePremiumReportDesc": "Upon completion, you will receive an in-depth reflection report with:",
+  "surveyGuidePremiumReport1": "Scores for each group of factors",
+  "surveyGuidePremiumReport2": "Interpretation of the meaning of each area",
+  "surveyGuidePremiumReport3": "Suggestions for thinking and action orientation for the next phase",
+  "surveyGuideCta": "Start"
 }

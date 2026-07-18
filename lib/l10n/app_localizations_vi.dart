@@ -333,6 +333,32 @@ class AppLocalizationsVi extends AppLocalizations {
   String get homeRetry => 'Thử lại';
 
   @override
+  String get homeCtaSurveyEyebrow => 'Phản chiếu công việc';
+
+  @override
+  String get homeCtaSurveyTitle => 'Làm bài phản chiếu';
+
+  @override
+  String get homeCtaSurveySubtitle =>
+      'Nhìn lại trải nghiệm công việc của bạn để hiểu rõ hơn.';
+
+  @override
+  String get homeCtaSurveyButton => 'Bắt đầu ngay';
+
+  @override
+  String get homeCtaReportTitle => 'Xem báo cáo mới nhất';
+
+  @override
+  String get homeCtaReportSubtitle =>
+      'Bạn đã hoàn thành bài phản chiếu. Xem kết quả của mình.';
+
+  @override
+  String get homeCtaReportButton => 'Xem báo cáo';
+
+  @override
+  String get homeCtaRetakeSurvey => 'Làm lại bài phản chiếu';
+
+  @override
   String homeSystemNoticeQuote(int n, String label) {
     return '\"Đây là lần thứ $n bạn gặp tình huống $label.\"';
   }
@@ -998,4 +1024,89 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get profileCheckinHistory => '30 ngày gần đây';
+
+  @override
+  String get surveyGuideEyebrow => 'Hướng dẫn';
+
+  @override
+  String get surveyGuideFreeTitle =>
+      'Work Reflection – Phản chiếu trải nghiệm công việc cá nhân';
+
+  @override
+  String get surveyGuideFreeIntro =>
+      'Chào mừng bạn đến với hành trình nhìn lại trải nghiệm công việc cá nhân.';
+
+  @override
+  String get surveyGuideFreeDescription =>
+      'Work Reflection là công cụ giúp người đi làm nhìn lại môi trường và trải nghiệm công việc của mình một cách có hệ thống.';
+
+  @override
+  String get surveyGuideFreeDetails =>
+      'Phiên bản miễn phí gồm 15 câu hỏi cho phép bạn thực hiện khảo sát nhanh. Sau khi hoàn thành, bạn sẽ nhận được một báo cáo phản chiếu tổng quan, giúp bạn:';
+
+  @override
+  String get surveyGuideFreeBenefit1 => 'Nhìn thấy bức tranh chung.';
+
+  @override
+  String get surveyGuideFreeBenefit2 => 'Nhận diện những điểm cần điều chỉnh.';
+
+  @override
+  String get surveyGuideFreeBenefit3 =>
+      'Có cơ sở rõ ràng hơn để suy nghĩ về bước đi tiếp theo trong công việc.';
+
+  @override
+  String get surveyGuideFreeNote =>
+      'Work Reflection không nhằm đánh giá con người, mà giúp bạn hiểu cách hệ thống công việc đang vận hành xung quanh mình.';
+
+  @override
+  String get surveyGuideFreeClosing =>
+      'Phiên bản miễn phí phù hợp khi bạn muốn bắt đầu nhìn lại công việc một cách nhẹ nhàng, trước khi đi sâu hơn với các phân tích nâng cao.';
+
+  @override
+  String get surveyGuidePremiumTitle =>
+      'Work Reflection Premium – Phản chiếu sâu để định hướng rõ';
+
+  @override
+  String get surveyGuidePremiumIntro =>
+      'Work Reflection Premium là phiên bản phân tích nâng cao dành cho người đi làm muốn nhìn lại công việc một cách toàn diện và có chiều sâu hơn.';
+
+  @override
+  String get surveyGuidePremiumDetails => 'Phiên bản Premium giúp bạn:';
+
+  @override
+  String get surveyGuidePremiumBenefit1 =>
+      'Phân tích chi tiết mức độ rõ ràng trong vai trò, kỳ vọng và cơ chế phối hợp';
+
+  @override
+  String get surveyGuidePremiumBenefit2 =>
+      'Nhận diện chất lượng đối thoại, phản hồi và an toàn tâm lý trong môi trường làm việc';
+
+  @override
+  String get surveyGuidePremiumBenefit3 =>
+      'Đánh giá mức độ phát triển, động lực và sự phù hợp giữa cá nhân – công việc – tổ chức';
+
+  @override
+  String get surveyGuidePremiumBenefit4 =>
+      'Xác định các điểm nghẽn cốt lõi thay vì chỉ thấy triệu chứng bề mặt';
+
+  @override
+  String get surveyGuidePremiumClosing =>
+      'Work Reflection Premium giúp bạn có một khung nhìn rõ ràng hơn để tự đưa ra quyết định.';
+
+  @override
+  String get surveyGuidePremiumReportDesc =>
+      'Sau khi hoàn thành, bạn nhận được báo cáo phản chiếu chuyên sâu với:';
+
+  @override
+  String get surveyGuidePremiumReport1 => 'Điểm số theo từng nhóm yếu tố';
+
+  @override
+  String get surveyGuidePremiumReport2 => 'Diễn giải ý nghĩa từng khu vực';
+
+  @override
+  String get surveyGuidePremiumReport3 =>
+      'Gợi ý định hướng suy nghĩ và hành động cho giai đoạn tiếp theo';
+
+  @override
+  String get surveyGuideCta => 'Bắt đầu';
 }

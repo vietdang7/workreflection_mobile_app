@@ -331,6 +331,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeRetry => 'Retry';
 
   @override
+  String get homeCtaSurveyEyebrow => 'Work Reflection';
+
+  @override
+  String get homeCtaSurveyTitle => 'Take reflection survey';
+
+  @override
+  String get homeCtaSurveySubtitle =>
+      'Look back at your work experience to understand yourself better.';
+
+  @override
+  String get homeCtaSurveyButton => 'Start now';
+
+  @override
+  String get homeCtaReportTitle => 'View latest report';
+
+  @override
+  String get homeCtaReportSubtitle =>
+      'You have completed the reflection survey. View your results.';
+
+  @override
+  String get homeCtaReportButton => 'View report';
+
+  @override
+  String get homeCtaRetakeSurvey => 'Retake survey';
+
+  @override
   String homeSystemNoticeQuote(int n, String label) {
     return '\"This is the ${n}th time you\'ve encountered a $label situation.\"';
   }
@@ -997,4 +1023,90 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileCheckinHistory => 'Last 30 days';
+
+  @override
+  String get surveyGuideEyebrow => 'Guide';
+
+  @override
+  String get surveyGuideFreeTitle =>
+      'Work Reflection – Reflect on your personal work experience';
+
+  @override
+  String get surveyGuideFreeIntro =>
+      'Welcome to the journey of looking back at your personal work experience.';
+
+  @override
+  String get surveyGuideFreeDescription =>
+      'Work Reflection is a tool that helps professionals systematically look back at their work environment and experience.';
+
+  @override
+  String get surveyGuideFreeDetails =>
+      'The free version includes 15 questions for a quick survey. Upon completion, you will receive an overview reflection report, helping you:';
+
+  @override
+  String get surveyGuideFreeBenefit1 => 'See the big picture.';
+
+  @override
+  String get surveyGuideFreeBenefit2 => 'Identify areas for adjustment.';
+
+  @override
+  String get surveyGuideFreeBenefit3 =>
+      'Have a clearer basis for thinking about the next step in your career.';
+
+  @override
+  String get surveyGuideFreeNote =>
+      'Work Reflection is not intended to evaluate people, but to help you understand how the work system operates around you.';
+
+  @override
+  String get surveyGuideFreeClosing =>
+      'The free version is suitable when you want to start looking back at your work gently, before going deeper with advanced analysis.';
+
+  @override
+  String get surveyGuidePremiumTitle =>
+      'Work Reflection Premium – Deep reflection for clear orientation';
+
+  @override
+  String get surveyGuidePremiumIntro =>
+      'Work Reflection Premium is an advanced analysis version for professionals who want to look back at their work comprehensively and in depth.';
+
+  @override
+  String get surveyGuidePremiumDetails => 'The Premium version helps you:';
+
+  @override
+  String get surveyGuidePremiumBenefit1 =>
+      'Analyze in detail the clarity of roles, expectations, and coordination mechanisms';
+
+  @override
+  String get surveyGuidePremiumBenefit2 =>
+      'Identify the quality of dialogue, feedback, and psychological safety in the work environment';
+
+  @override
+  String get surveyGuidePremiumBenefit3 =>
+      'Evaluate the level of development, motivation, and fit between individual – work – organization';
+
+  @override
+  String get surveyGuidePremiumBenefit4 =>
+      'Identify core bottlenecks rather than just seeing surface symptoms';
+
+  @override
+  String get surveyGuidePremiumClosing =>
+      'Work Reflection Premium gives you a clearer framework to make your own decisions.';
+
+  @override
+  String get surveyGuidePremiumReportDesc =>
+      'Upon completion, you will receive an in-depth reflection report with:';
+
+  @override
+  String get surveyGuidePremiumReport1 => 'Scores for each group of factors';
+
+  @override
+  String get surveyGuidePremiumReport2 =>
+      'Interpretation of the meaning of each area';
+
+  @override
+  String get surveyGuidePremiumReport3 =>
+      'Suggestions for thinking and action orientation for the next phase';
+
+  @override
+  String get surveyGuideCta => 'Start';
 }

@@ -4,19 +4,27 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:workreflection_mobile/core/data/survey_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
 import 'package:workreflection_mobile/core/models/checkin.dart';
 import 'package:workreflection_mobile/core/models/insight.dart';
 import 'package:workreflection_mobile/core/models/mobile_profile.dart';
 import 'package:workreflection_mobile/core/models/recurring_situation.dart';
+import 'package:workreflection_mobile/core/models/survey_models.dart';
 import 'package:workreflection_mobile/features/home/presentation/home_screen.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
 
 import '../support/fake_repository.dart';
+import '../support/fake_survey_repository.dart';
 
-Widget _wrap(Widget child, WrRepository repo) {
+Widget _wrap(Widget child, WrRepository repo,
+    {SurveyRepository? surveyRepo}) {
   return ProviderScope(
-    overrides: [wrRepositoryProvider.overrideWithValue(repo)],
+    overrides: [
+      wrRepositoryProvider.overrideWithValue(repo),
+      if (surveyRepo != null)
+        surveyRepositoryProvider.overrideWithValue(surveyRepo),
+    ],
     child: MaterialApp(
       localizationsDelegates: const [
         AppLocalizations.delegate,
@@ -204,6 +212,103 @@ void main() {
       await _pumpLarge(tester, _wrap(const HomeScreen(), repo));
 
       expect(find.textContaining('Tìm hiểu thêm'), findsOneWidget);
+    });
+
+    group('Survey CTA card', () {
+      CcReportSummary makeSummary({String id = 'r1'}) => CcReportSummary(
+            id: id,
+            surveyId: 'sv1',
+            createdAt: DateTime(2026, 7, 18),
+            scoreTotal: 3.8,
+            scoreLevel: ScoreLevel.good,
+          );
+
+      CcReportFull makeFullReport({String id = 'r1'}) => CcReportFull(
+            id: id,
+            surveyId: 'sv1',
+            userId: 'u1',
+            scoreTotal: 3.8,
+            scoreStructure: 4.0,
+            scoreCulture: 3.5,
+            scoreActivity: 3.9,
+            bottleneckLayer: SurveyLayer.culture,
+            scoreLevel: ScoreLevel.good,
+            createdAt: DateTime(2026, 7, 18),
+          );
+
+      testWidgets('shows big CTA card when user has no reports', (tester) async {
+        final wr = FakeWrRepository();
+        final survey = FakeSurveyRepository();
+        survey.seedRole('user');
+        survey.seedReportSummaries([]);
+
+        await _pumpLarge(
+            tester, _wrap(const HomeScreen(), wr, surveyRepo: survey));
+
+        expect(
+            find.byKey(const Key('home_survey_cta_no_report')), findsOneWidget);
+        expect(
+            find.byKey(const Key('home_survey_cta_has_report')), findsNothing);
+      });
+
+      testWidgets('shows view-latest card when user has reports',
+          (tester) async {
+        final wr = FakeWrRepository();
+        final survey = FakeSurveyRepository();
+        survey.seedRole('user');
+        survey.seedReportSummaries([makeSummary(id: 'r1')]);
+        survey.seedLatestReport(makeFullReport(id: 'r1'));
+
+        await _pumpLarge(
+            tester, _wrap(const HomeScreen(), wr, surveyRepo: survey));
+
+        expect(find.byKey(const Key('home_survey_cta_has_report')),
+            findsOneWidget);
+        expect(
+            find.byKey(const Key('home_survey_cta_no_report')), findsNothing);
+      });
+
+      testWidgets('CTA card hidden on error (no crash)', (tester) async {
+        final wr = FakeWrRepository();
+        final survey = FakeSurveyRepository();
+        survey.seedRole('user');
+        survey.setMyReportsError(Exception('network error'));
+
+        await _pumpLarge(
+            tester, _wrap(const HomeScreen(), wr, surveyRepo: survey));
+
+        expect(
+            find.byKey(const Key('home_survey_cta_no_report')), findsNothing);
+        expect(
+            find.byKey(const Key('home_survey_cta_has_report')), findsNothing);
+      });
+
+      testWidgets('start button key present in no-report state', (tester) async {
+        final wr = FakeWrRepository();
+        final survey = FakeSurveyRepository();
+        survey.seedRole('user');
+        survey.seedReportSummaries([]);
+
+        await _pumpLarge(
+            tester, _wrap(const HomeScreen(), wr, surveyRepo: survey));
+
+        expect(find.byKey(const Key('home_survey_cta_start_btn')),
+            findsOneWidget);
+      });
+
+      testWidgets('retake link present when user has reports', (tester) async {
+        final wr = FakeWrRepository();
+        final survey = FakeSurveyRepository();
+        survey.seedRole('user');
+        survey.seedReportSummaries([makeSummary(id: 'r1')]);
+        survey.seedLatestReport(makeFullReport(id: 'r1'));
+
+        await _pumpLarge(
+            tester, _wrap(const HomeScreen(), wr, surveyRepo: survey));
+
+        expect(find.byKey(const Key('home_survey_cta_retake_link')),
+            findsOneWidget);
+      });
     });
   });
 }

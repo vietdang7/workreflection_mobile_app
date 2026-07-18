@@ -26,6 +26,7 @@ import '../../features/coaching/presentation/coaching_sessions_screen.dart';
 import '../../features/profile/presentation/profile_edit_screen.dart';
 import '../../features/survey/presentation/survey_history_screen.dart';
 import '../../features/understand/presentation/insights_screen.dart';
+import '../../features/survey/presentation/survey_guide_screen.dart';
 import 'auth_change_notifier.dart';
 
 // ---------------------------------------------------------------------------
@@ -126,6 +127,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/survey',
         builder: (context, state) => const SurveyIntroScreen(),
+      ),
+      GoRoute(
+        path: '/survey/guide',
+        builder: (context, state) => const SurveyGuideScreen(),
       ),
       GoRoute(
         path: '/survey/questions',

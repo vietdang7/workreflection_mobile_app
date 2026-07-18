@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/models/survey_models.dart';
+import 'package:workreflection_mobile/features/survey/presentation/survey_guide_screen.dart';
 import 'package:workreflection_mobile/features/survey/presentation/survey_intro_screen.dart';
 import 'package:workreflection_mobile/features/survey/presentation/survey_processing_screen.dart';
 import 'package:workreflection_mobile/features/survey/presentation/survey_questions_screen.dart';
@@ -459,13 +460,17 @@ void main() {
       repo.seedQuestions([]);
       repo.seedLikertOptions({});
 
-      // GoRouter so context.push('/survey/questions') does not throw.
+      // GoRouter so context.push('/survey/guide') does not throw.
       final router = GoRouter(
         initialLocation: '/survey/intro',
         routes: [
           GoRoute(
             path: '/survey/intro',
             builder: (_, __) => const SurveyIntroScreen(),
+          ),
+          GoRoute(
+            path: '/survey/guide',
+            builder: (_, __) => const Scaffold(body: Text('guide')),
           ),
           GoRoute(
             path: '/survey/questions',
@@ -528,6 +533,164 @@ void main() {
         reason:
             'Starting a new survey from intro must clear any stale in-progress surveyId',
       );
+    });
+
+    testWidgets(
+        'tapping CTA navigates to /survey/guide (not /survey/questions)',
+        (tester) async {
+      final repo = FakeSurveyRepository();
+      repo.seedRole('user');
+      repo.seedQuestions([]);
+      repo.seedLikertOptions({});
+
+      final navigated = <String>[];
+      final router = GoRouter(
+        initialLocation: '/survey/intro',
+        routes: [
+          GoRoute(
+            path: '/survey/intro',
+            builder: (_, __) => const SurveyIntroScreen(),
+          ),
+          GoRoute(
+            path: '/survey/guide',
+            builder: (_, __) {
+              navigated.add('/survey/guide');
+              return const Scaffold(body: Text('guide'));
+            },
+          ),
+          GoRoute(
+            path: '/survey/questions',
+            builder: (_, __) {
+              navigated.add('/survey/questions');
+              return const Scaffold(body: Text('questions'));
+            },
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [surveyRepositoryProvider.overrideWithValue(repo)],
+          child: MaterialApp.router(
+            routerConfig: router,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('vi')],
+            locale: const Locale('vi'),
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byType(ElevatedButton).first);
+      await tester.pumpAndSettle();
+
+      expect(navigated, contains('/survey/guide'));
+      expect(navigated, isNot(contains('/survey/questions')));
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // SurveyGuideScreen tests
+  // ---------------------------------------------------------------------------
+
+  group('SurveyGuideScreen', () {
+    late FakeSurveyRepository repo;
+
+    setUp(() {
+      repo = FakeSurveyRepository();
+      repo.seedRole('user'); // FREE
+    });
+
+    testWidgets('FREE: shows free title containing "Work Reflection"',
+        (tester) async {
+      await tester.pumpWidget(_wrap(const SurveyGuideScreen(), repo: repo));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byWidgetPredicate(
+          (w) => w is Text && (w.data?.contains('Work Reflection') ?? false),
+        ),
+        findsAtLeast(1),
+      );
+    });
+
+    testWidgets('FREE: shows guide eyebrow', (tester) async {
+      await tester.pumpWidget(_wrap(const SurveyGuideScreen(), repo: repo));
+      await tester.pumpAndSettle();
+
+      // WrEyebrow uppercases → "HƯỚNG DẪN"
+      expect(find.textContaining('HƯỚNG DẪN'), findsOneWidget);
+    });
+
+    testWidgets('FREE: shows 3 benefit items', (tester) async {
+      await tester.pumpWidget(_wrap(const SurveyGuideScreen(), repo: repo));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('guide_benefit_0')), findsOneWidget);
+      expect(find.byKey(const Key('guide_benefit_1')), findsOneWidget);
+      expect(find.byKey(const Key('guide_benefit_2')), findsOneWidget);
+    });
+
+    testWidgets('FREE: CTA button navigates to /survey/questions',
+        (tester) async {
+      final navigated = <String>[];
+      final router = GoRouter(
+        initialLocation: '/survey/guide',
+        routes: [
+          GoRoute(
+            path: '/survey/guide',
+            builder: (_, __) => const SurveyGuideScreen(),
+          ),
+          GoRoute(
+            path: '/survey/questions',
+            builder: (_, __) {
+              navigated.add('/survey/questions');
+              return const Scaffold(body: Text('questions'));
+            },
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(ProviderScope(
+        overrides: [surveyRepositoryProvider.overrideWithValue(repo)],
+        child: MaterialApp.router(
+          routerConfig: router,
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: const [Locale('vi')],
+          locale: const Locale('vi'),
+        ),
+      ));
+      await tester.pumpAndSettle();
+
+      // Scroll to the CTA button (it may be below the fold in default viewport)
+      final ctaBtn = find.byType(ElevatedButton).first;
+      await tester.ensureVisible(ctaBtn);
+      await tester.pumpAndSettle();
+      await tester.tap(ctaBtn, warnIfMissed: false);
+      await tester.pumpAndSettle();
+
+      expect(navigated, contains('/survey/questions'));
+    });
+
+    testWidgets('PREMIUM: shows 4 benefit items', (tester) async {
+      repo.seedRole('premium');
+      await tester.pumpWidget(_wrap(const SurveyGuideScreen(), repo: repo));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('guide_benefit_0')), findsOneWidget);
+      expect(find.byKey(const Key('guide_benefit_1')), findsOneWidget);
+      expect(find.byKey(const Key('guide_benefit_2')), findsOneWidget);
+      expect(find.byKey(const Key('guide_benefit_3')), findsOneWidget);
     });
   });
 }

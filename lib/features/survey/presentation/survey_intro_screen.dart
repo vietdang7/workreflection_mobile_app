@@ -117,7 +117,7 @@ class _SurveyIntroScreenState extends ConsumerState<SurveyIntroScreen> {
                   ref.read(surveyAnswersProvider.notifier).reset();
                   ref.read(currentQuestionIndexProvider.notifier).state = 0;
                   ref.read(surveyIdInProgressProvider.notifier).state = null;
-                  context.push('/survey/questions');
+                  context.push('/survey/guide');
                 },
                 variant: WrPillVariant.coral,
               ),

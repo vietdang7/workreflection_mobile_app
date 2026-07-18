@@ -9,10 +9,12 @@ import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
 import '../../../core/widgets/action_link.dart';
 import '../../../core/widgets/eyebrow.dart';
+import '../../../core/widgets/pill_button.dart';
 import '../../../core/widgets/progress_track.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../features/profile/profile_providers.dart';
+import '../../../features/survey/survey_providers.dart';
 import '../home_providers.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -35,6 +37,8 @@ class HomeScreen extends ConsumerWidget {
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
                   _CheckinSection(),
+                  const SizedBox(height: 28),
+                  _SurveyCta(),
                   const SizedBox(height: 28),
                   _SystemNoticeCard(),
                   const SizedBox(height: 28),
@@ -225,6 +229,96 @@ class _SystemNoticeCard extends ConsumerWidget {
               ),
             ],
           ),
+        );
+      },
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Survey CTA card — state-aware: no report → prominent dark; has report → compact
+// ---------------------------------------------------------------------------
+
+class _SurveyCta extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final reportsAsync = ref.watch(myReportsProvider);
+    final latestAsync = ref.watch(latestReportProvider);
+
+    return reportsAsync.when(
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
+      data: (reports) {
+        if (reports.isEmpty) {
+          return WrCardDark(
+            key: const Key('home_survey_cta_no_report'),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                WrEyebrow(l10n.homeCtaSurveyEyebrow),
+                const SizedBox(height: 12),
+                Text(
+                  l10n.homeCtaSurveyTitle,
+                  style: WrTextStyles.hLarge.copyWith(color: WrColors.white),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  l10n.homeCtaSurveySubtitle,
+                  style: WrTextStyles.body
+                      .copyWith(color: WrColors.white.withValues(alpha: 0.85)),
+                ),
+                const SizedBox(height: 20),
+                WrPillButton(
+                  key: const Key('home_survey_cta_start_btn'),
+                  label: l10n.homeCtaSurveyButton,
+                  onPressed: () => context.push('/survey'),
+                  variant: WrPillVariant.coral,
+                ),
+              ],
+            ),
+          );
+        }
+
+        return latestAsync.when(
+          loading: () => const SizedBox.shrink(),
+          error: (_, __) => const SizedBox.shrink(),
+          data: (latest) {
+            if (latest == null) return const SizedBox.shrink();
+            return WrCardMinimal(
+              key: const Key('home_survey_cta_has_report'),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  WrEyebrow(l10n.homeCtaSurveyEyebrow),
+                  const SizedBox(height: 12),
+                  Text(
+                    l10n.homeCtaReportTitle,
+                    style: WrTextStyles.hMedium,
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    l10n.homeCtaReportSubtitle,
+                    style: WrTextStyles.body.copyWith(fontSize: 13),
+                  ),
+                  const SizedBox(height: 16),
+                  WrPillButton(
+                    key: const Key('home_survey_cta_view_report_btn'),
+                    label: l10n.homeCtaReportButton,
+                    onPressed: () =>
+                        context.push('/survey/report/${latest.id}'),
+                    variant: WrPillVariant.navy,
+                  ),
+                  const SizedBox(height: 12),
+                  WrActionLink(
+                    key: const Key('home_survey_cta_retake_link'),
+                    label: l10n.homeCtaRetakeSurvey,
+                    onTap: () => context.push('/survey'),
+                  ),
+                ],
+              ),
+            );
+          },
         );
       },
     );

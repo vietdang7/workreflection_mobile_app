@@ -710,6 +710,54 @@ abstract class AppLocalizations {
   /// **'Thử lại'**
   String get homeRetry;
 
+  /// No description provided for @homeCtaSurveyEyebrow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phản chiếu công việc'**
+  String get homeCtaSurveyEyebrow;
+
+  /// No description provided for @homeCtaSurveyTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Làm bài phản chiếu'**
+  String get homeCtaSurveyTitle;
+
+  /// No description provided for @homeCtaSurveySubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhìn lại trải nghiệm công việc của bạn để hiểu rõ hơn.'**
+  String get homeCtaSurveySubtitle;
+
+  /// No description provided for @homeCtaSurveyButton.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bắt đầu ngay'**
+  String get homeCtaSurveyButton;
+
+  /// No description provided for @homeCtaReportTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem báo cáo mới nhất'**
+  String get homeCtaReportTitle;
+
+  /// No description provided for @homeCtaReportSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn đã hoàn thành bài phản chiếu. Xem kết quả của mình.'**
+  String get homeCtaReportSubtitle;
+
+  /// No description provided for @homeCtaReportButton.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem báo cáo'**
+  String get homeCtaReportButton;
+
+  /// No description provided for @homeCtaRetakeSurvey.
+  ///
+  /// In vi, this message translates to:
+  /// **'Làm lại bài phản chiếu'**
+  String get homeCtaRetakeSurvey;
+
   /// No description provided for @homeSystemNoticeQuote.
   ///
   /// In vi, this message translates to:
@@ -1975,6 +2023,144 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'30 ngày gần đây'**
   String get profileCheckinHistory;
+
+  /// No description provided for @surveyGuideEyebrow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hướng dẫn'**
+  String get surveyGuideEyebrow;
+
+  /// No description provided for @surveyGuideFreeTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Work Reflection – Phản chiếu trải nghiệm công việc cá nhân'**
+  String get surveyGuideFreeTitle;
+
+  /// No description provided for @surveyGuideFreeIntro.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chào mừng bạn đến với hành trình nhìn lại trải nghiệm công việc cá nhân.'**
+  String get surveyGuideFreeIntro;
+
+  /// No description provided for @surveyGuideFreeDescription.
+  ///
+  /// In vi, this message translates to:
+  /// **'Work Reflection là công cụ giúp người đi làm nhìn lại môi trường và trải nghiệm công việc của mình một cách có hệ thống.'**
+  String get surveyGuideFreeDescription;
+
+  /// No description provided for @surveyGuideFreeDetails.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phiên bản miễn phí gồm 15 câu hỏi cho phép bạn thực hiện khảo sát nhanh. Sau khi hoàn thành, bạn sẽ nhận được một báo cáo phản chiếu tổng quan, giúp bạn:'**
+  String get surveyGuideFreeDetails;
+
+  /// No description provided for @surveyGuideFreeBenefit1.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhìn thấy bức tranh chung.'**
+  String get surveyGuideFreeBenefit1;
+
+  /// No description provided for @surveyGuideFreeBenefit2.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhận diện những điểm cần điều chỉnh.'**
+  String get surveyGuideFreeBenefit2;
+
+  /// No description provided for @surveyGuideFreeBenefit3.
+  ///
+  /// In vi, this message translates to:
+  /// **'Có cơ sở rõ ràng hơn để suy nghĩ về bước đi tiếp theo trong công việc.'**
+  String get surveyGuideFreeBenefit3;
+
+  /// No description provided for @surveyGuideFreeNote.
+  ///
+  /// In vi, this message translates to:
+  /// **'Work Reflection không nhằm đánh giá con người, mà giúp bạn hiểu cách hệ thống công việc đang vận hành xung quanh mình.'**
+  String get surveyGuideFreeNote;
+
+  /// No description provided for @surveyGuideFreeClosing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phiên bản miễn phí phù hợp khi bạn muốn bắt đầu nhìn lại công việc một cách nhẹ nhàng, trước khi đi sâu hơn với các phân tích nâng cao.'**
+  String get surveyGuideFreeClosing;
+
+  /// No description provided for @surveyGuidePremiumTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Work Reflection Premium – Phản chiếu sâu để định hướng rõ'**
+  String get surveyGuidePremiumTitle;
+
+  /// No description provided for @surveyGuidePremiumIntro.
+  ///
+  /// In vi, this message translates to:
+  /// **'Work Reflection Premium là phiên bản phân tích nâng cao dành cho người đi làm muốn nhìn lại công việc một cách toàn diện và có chiều sâu hơn.'**
+  String get surveyGuidePremiumIntro;
+
+  /// No description provided for @surveyGuidePremiumDetails.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phiên bản Premium giúp bạn:'**
+  String get surveyGuidePremiumDetails;
+
+  /// No description provided for @surveyGuidePremiumBenefit1.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phân tích chi tiết mức độ rõ ràng trong vai trò, kỳ vọng và cơ chế phối hợp'**
+  String get surveyGuidePremiumBenefit1;
+
+  /// No description provided for @surveyGuidePremiumBenefit2.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhận diện chất lượng đối thoại, phản hồi và an toàn tâm lý trong môi trường làm việc'**
+  String get surveyGuidePremiumBenefit2;
+
+  /// No description provided for @surveyGuidePremiumBenefit3.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đánh giá mức độ phát triển, động lực và sự phù hợp giữa cá nhân – công việc – tổ chức'**
+  String get surveyGuidePremiumBenefit3;
+
+  /// No description provided for @surveyGuidePremiumBenefit4.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác định các điểm nghẽn cốt lõi thay vì chỉ thấy triệu chứng bề mặt'**
+  String get surveyGuidePremiumBenefit4;
+
+  /// No description provided for @surveyGuidePremiumClosing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Work Reflection Premium giúp bạn có một khung nhìn rõ ràng hơn để tự đưa ra quyết định.'**
+  String get surveyGuidePremiumClosing;
+
+  /// No description provided for @surveyGuidePremiumReportDesc.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sau khi hoàn thành, bạn nhận được báo cáo phản chiếu chuyên sâu với:'**
+  String get surveyGuidePremiumReportDesc;
+
+  /// No description provided for @surveyGuidePremiumReport1.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm số theo từng nhóm yếu tố'**
+  String get surveyGuidePremiumReport1;
+
+  /// No description provided for @surveyGuidePremiumReport2.
+  ///
+  /// In vi, this message translates to:
+  /// **'Diễn giải ý nghĩa từng khu vực'**
+  String get surveyGuidePremiumReport2;
+
+  /// No description provided for @surveyGuidePremiumReport3.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gợi ý định hướng suy nghĩ và hành động cho giai đoạn tiếp theo'**
+  String get surveyGuidePremiumReport3;
+
+  /// No description provided for @surveyGuideCta.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bắt đầu'**
+  String get surveyGuideCta;
 }
 
 class _AppLocalizationsDelegate
