@@ -745,4 +745,60 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get developViewCoaching => 'Khám phá coaching';
+
+  @override
+  String get authForgotPassword => 'Quên mật khẩu?';
+
+  @override
+  String get authForgotPasswordDialogTitle => 'Quên mật khẩu';
+
+  @override
+  String get authForgotPasswordDialogHint =>
+      'Nhập email để nhận link đặt lại mật khẩu';
+
+  @override
+  String get authForgotPasswordSubmit => 'Gửi link đặt lại';
+
+  @override
+  String get authForgotPasswordSuccess =>
+      'Kiểm tra email của bạn để đặt lại mật khẩu.';
+
+  @override
+  String get authForgotPasswordErrorInvalidEmail => 'Email không hợp lệ';
+
+  @override
+  String get authForgotPasswordError =>
+      'Không thể gửi email. Vui lòng thử lại.';
+
+  @override
+  String get profileSettingChangePassword => 'Đổi mật khẩu';
+
+  @override
+  String get changePasswordTitle => 'Đổi mật khẩu';
+
+  @override
+  String get changePasswordNewLabel => 'Mật khẩu mới';
+
+  @override
+  String get changePasswordConfirmLabel => 'Xác nhận mật khẩu mới';
+
+  @override
+  String get changePasswordSubmit => 'Cập nhật mật khẩu';
+
+  @override
+  String get changePasswordSuccess => 'Mật khẩu đã được cập nhật.';
+
+  @override
+  String get changePasswordErrorTooShort => 'Mật khẩu phải có ít nhất 6 ký tự';
+
+  @override
+  String get changePasswordErrorMismatch => 'Mật khẩu xác nhận không khớp';
+
+  @override
+  String get changePasswordErrorGeneric =>
+      'Không thể đổi mật khẩu. Vui lòng thử lại.';
+
+  @override
+  String get changePasswordErrorSessionExpired =>
+      'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
 }

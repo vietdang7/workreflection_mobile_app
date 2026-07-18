@@ -314,6 +314,16 @@ class _SettingsSection extends ConsumerWidget {
           ),
         ),
 
+        // Change password
+        _SettingRow(
+          label: l10n.profileSettingChangePassword,
+          trailing: GestureDetector(
+            key: const Key('profile_change_password_btn'),
+            onTap: () => _showChangePasswordDialog(context, ref),
+            child: const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
+          ),
+        ),
+
         // My Workshops
         _SettingRow(
           label: l10n.profileMyWorkshops,
@@ -356,6 +366,40 @@ class _SettingsSection extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+
+  void _showChangePasswordDialog(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => _ChangePasswordDialog(
+        l10n: l10n,
+        onSubmit: (String newPassword) async {
+          Navigator.of(ctx).pop();
+          try {
+            await ref
+                .read(authRepositoryProvider)
+                .changePassword(newPassword);
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(l10n.changePasswordSuccess)),
+              );
+            }
+          } catch (e) {
+            if (context.mounted) {
+              final msg = e.toString().toLowerCase();
+              final text = msg.contains('session') || msg.contains('expired')
+                  ? l10n.changePasswordErrorSessionExpired
+                  : l10n.changePasswordErrorGeneric;
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(text)),
+              );
+            }
+          }
+        },
+        onCancel: () => Navigator.of(ctx).pop(),
+      ),
     );
   }
 
@@ -445,6 +489,128 @@ class _SettingRow extends StatelessWidget {
           trailing,
         ],
       ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Change-password dialog (stateful so it can show/hide passwords)
+// ---------------------------------------------------------------------------
+
+class _ChangePasswordDialog extends StatefulWidget {
+  const _ChangePasswordDialog({
+    required this.l10n,
+    required this.onSubmit,
+    required this.onCancel,
+  });
+
+  final AppLocalizations l10n;
+  /// Called with the validated new password when the user taps submit.
+  final void Function(String newPassword) onSubmit;
+  final VoidCallback onCancel;
+
+  @override
+  State<_ChangePasswordDialog> createState() => _ChangePasswordDialogState();
+}
+
+class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _newPasswordCtrl = TextEditingController();
+  final _confirmPasswordCtrl = TextEditingController();
+  bool _obscureNew = true;
+  bool _obscureConfirm = true;
+
+  @override
+  void dispose() {
+    _newPasswordCtrl.dispose();
+    _confirmPasswordCtrl.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    widget.onSubmit(_newPasswordCtrl.text);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = widget.l10n;
+    return AlertDialog(
+      title: Text(l10n.changePasswordTitle),
+      content: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // New password
+            TextFormField(
+              key: const Key('change_password_new_field'),
+              controller: _newPasswordCtrl,
+              obscureText: _obscureNew,
+              decoration: InputDecoration(
+                labelText: l10n.changePasswordNewLabel,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscureNew ? Icons.visibility_off : Icons.visibility,
+                    size: 18,
+                  ),
+                  onPressed: () => setState(() => _obscureNew = !_obscureNew),
+                ),
+              ),
+              validator: (v) {
+                if (v == null || v.isEmpty) return l10n.authValidatorPassword;
+                if (v.length < 6) return l10n.changePasswordErrorTooShort;
+                return null;
+              },
+            ),
+            const SizedBox(height: 16),
+            // Confirm password
+            TextFormField(
+              key: const Key('change_password_confirm_field'),
+              controller: _confirmPasswordCtrl,
+              obscureText: _obscureConfirm,
+              decoration: InputDecoration(
+                labelText: l10n.changePasswordConfirmLabel,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                suffixIcon: IconButton(
+                  icon: Icon(
+                    _obscureConfirm ? Icons.visibility_off : Icons.visibility,
+                    size: 18,
+                  ),
+                  onPressed: () =>
+                      setState(() => _obscureConfirm = !_obscureConfirm),
+                ),
+              ),
+              validator: (v) {
+                if (v == null || v.isEmpty) return l10n.authValidatorPassword;
+                if (v != _newPasswordCtrl.text) {
+                  return l10n.changePasswordErrorMismatch;
+                }
+                return null;
+              },
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: widget.onCancel,
+          child: Text(l10n.commonCancel),
+        ),
+        TextButton(
+          key: const Key('change_password_submit'),
+          onPressed: _submit,
+          child: Text(
+            l10n.changePasswordSubmit,
+            style: const TextStyle(color: WrColors.coral),
+          ),
+        ),
+      ],
     );
   }
 }

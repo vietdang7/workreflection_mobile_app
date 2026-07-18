@@ -1489,6 +1489,108 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Khám phá coaching'**
   String get developViewCoaching;
+
+  /// No description provided for @authForgotPassword.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quên mật khẩu?'**
+  String get authForgotPassword;
+
+  /// No description provided for @authForgotPasswordDialogTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quên mật khẩu'**
+  String get authForgotPasswordDialogTitle;
+
+  /// No description provided for @authForgotPasswordDialogHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập email để nhận link đặt lại mật khẩu'**
+  String get authForgotPasswordDialogHint;
+
+  /// No description provided for @authForgotPasswordSubmit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi link đặt lại'**
+  String get authForgotPasswordSubmit;
+
+  /// No description provided for @authForgotPasswordSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kiểm tra email của bạn để đặt lại mật khẩu.'**
+  String get authForgotPasswordSuccess;
+
+  /// No description provided for @authForgotPasswordErrorInvalidEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email không hợp lệ'**
+  String get authForgotPasswordErrorInvalidEmail;
+
+  /// No description provided for @authForgotPasswordError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể gửi email. Vui lòng thử lại.'**
+  String get authForgotPasswordError;
+
+  /// No description provided for @profileSettingChangePassword.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi mật khẩu'**
+  String get profileSettingChangePassword;
+
+  /// No description provided for @changePasswordTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi mật khẩu'**
+  String get changePasswordTitle;
+
+  /// No description provided for @changePasswordNewLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mật khẩu mới'**
+  String get changePasswordNewLabel;
+
+  /// No description provided for @changePasswordConfirmLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận mật khẩu mới'**
+  String get changePasswordConfirmLabel;
+
+  /// No description provided for @changePasswordSubmit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cập nhật mật khẩu'**
+  String get changePasswordSubmit;
+
+  /// No description provided for @changePasswordSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mật khẩu đã được cập nhật.'**
+  String get changePasswordSuccess;
+
+  /// No description provided for @changePasswordErrorTooShort.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mật khẩu phải có ít nhất 6 ký tự'**
+  String get changePasswordErrorTooShort;
+
+  /// No description provided for @changePasswordErrorMismatch.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mật khẩu xác nhận không khớp'**
+  String get changePasswordErrorMismatch;
+
+  /// No description provided for @changePasswordErrorGeneric.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể đổi mật khẩu. Vui lòng thử lại.'**
+  String get changePasswordErrorGeneric;
+
+  /// No description provided for @changePasswordErrorSessionExpired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'**
+  String get changePasswordErrorSessionExpired;
 }
 
 class _AppLocalizationsDelegate

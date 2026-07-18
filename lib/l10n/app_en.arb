@@ -346,5 +346,24 @@
   "profileMyCoaching": "My Coaching",
   "developWorkshopSection": "Development opportunities",
   "developViewWorkshops": "View all workshops",
-  "developViewCoaching": "Explore coaching"
+  "developViewCoaching": "Explore coaching",
+
+  "authForgotPassword": "Forgot password?",
+  "authForgotPasswordDialogTitle": "Forgot password",
+  "authForgotPasswordDialogHint": "Enter your email to receive a password reset link",
+  "authForgotPasswordSubmit": "Send reset link",
+  "authForgotPasswordSuccess": "Check your email to reset your password.",
+  "authForgotPasswordErrorInvalidEmail": "Invalid email",
+  "authForgotPasswordError": "Could not send email. Please try again.",
+
+  "profileSettingChangePassword": "Change password",
+  "changePasswordTitle": "Change password",
+  "changePasswordNewLabel": "New password",
+  "changePasswordConfirmLabel": "Confirm new password",
+  "changePasswordSubmit": "Update password",
+  "changePasswordSuccess": "Password updated successfully.",
+  "changePasswordErrorTooShort": "Password must be at least 6 characters",
+  "changePasswordErrorMismatch": "Passwords do not match",
+  "changePasswordErrorGeneric": "Could not change password. Please try again.",
+  "changePasswordErrorSessionExpired": "Session expired. Please log in again."
 }

@@ -744,4 +744,61 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get developViewCoaching => 'Explore coaching';
+
+  @override
+  String get authForgotPassword => 'Forgot password?';
+
+  @override
+  String get authForgotPasswordDialogTitle => 'Forgot password';
+
+  @override
+  String get authForgotPasswordDialogHint =>
+      'Enter your email to receive a password reset link';
+
+  @override
+  String get authForgotPasswordSubmit => 'Send reset link';
+
+  @override
+  String get authForgotPasswordSuccess =>
+      'Check your email to reset your password.';
+
+  @override
+  String get authForgotPasswordErrorInvalidEmail => 'Invalid email';
+
+  @override
+  String get authForgotPasswordError =>
+      'Could not send email. Please try again.';
+
+  @override
+  String get profileSettingChangePassword => 'Change password';
+
+  @override
+  String get changePasswordTitle => 'Change password';
+
+  @override
+  String get changePasswordNewLabel => 'New password';
+
+  @override
+  String get changePasswordConfirmLabel => 'Confirm new password';
+
+  @override
+  String get changePasswordSubmit => 'Update password';
+
+  @override
+  String get changePasswordSuccess => 'Password updated successfully.';
+
+  @override
+  String get changePasswordErrorTooShort =>
+      'Password must be at least 6 characters';
+
+  @override
+  String get changePasswordErrorMismatch => 'Passwords do not match';
+
+  @override
+  String get changePasswordErrorGeneric =>
+      'Could not change password. Please try again.';
+
+  @override
+  String get changePasswordErrorSessionExpired =>
+      'Session expired. Please log in again.';
 }

@@ -7,6 +7,8 @@ abstract class AuthRepository {
   Future<void> signUp(String email, String password, String displayName);
   Future<void> signInWithGoogle();
   Future<void> signOut();
+  Future<void> resetPassword(String email);
+  Future<void> changePassword(String newPassword);
 }
 
 /// Live implementation backed by Supabase.
@@ -53,6 +55,29 @@ class SupabaseAuthRepository implements AuthRepository {
   @override
   Future<void> signOut() async {
     await _client.auth.signOut();
+  }
+
+  /// Sends a password-reset email. The link will redirect the user to
+  /// the production web reset-password page (https://workreflection.app/reset-password)
+  /// which is the same URL used by the web's send-email edge function.
+  @override
+  Future<void> resetPassword(String email) async {
+    await _client.auth.resetPasswordForEmail(
+      email,
+      redirectTo: 'https://workreflection.app/reset-password',
+    );
+  }
+
+  /// Updates the current user's password.
+  /// Requires an active session; throws if session is expired.
+  @override
+  Future<void> changePassword(String newPassword) async {
+    final response = await _client.auth.updateUser(
+      UserAttributes(password: newPassword),
+    );
+    if (response.user == null) {
+      throw Exception('changePassword: no user returned');
+    }
   }
 }
 

@@ -347,5 +347,24 @@
   "profileMyCoaching": "Coaching của tôi",
   "developWorkshopSection": "Cơ hội phát triển",
   "developViewWorkshops": "Xem tất cả workshop",
-  "developViewCoaching": "Khám phá coaching"
+  "developViewCoaching": "Khám phá coaching",
+
+  "authForgotPassword": "Quên mật khẩu?",
+  "authForgotPasswordDialogTitle": "Quên mật khẩu",
+  "authForgotPasswordDialogHint": "Nhập email để nhận link đặt lại mật khẩu",
+  "authForgotPasswordSubmit": "Gửi link đặt lại",
+  "authForgotPasswordSuccess": "Kiểm tra email của bạn để đặt lại mật khẩu.",
+  "authForgotPasswordErrorInvalidEmail": "Email không hợp lệ",
+  "authForgotPasswordError": "Không thể gửi email. Vui lòng thử lại.",
+
+  "profileSettingChangePassword": "Đổi mật khẩu",
+  "changePasswordTitle": "Đổi mật khẩu",
+  "changePasswordNewLabel": "Mật khẩu mới",
+  "changePasswordConfirmLabel": "Xác nhận mật khẩu mới",
+  "changePasswordSubmit": "Cập nhật mật khẩu",
+  "changePasswordSuccess": "Mật khẩu đã được cập nhật.",
+  "changePasswordErrorTooShort": "Mật khẩu phải có ít nhất 6 ký tự",
+  "changePasswordErrorMismatch": "Mật khẩu xác nhận không khớp",
+  "changePasswordErrorGeneric": "Không thể đổi mật khẩu. Vui lòng thử lại.",
+  "changePasswordErrorSessionExpired": "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại."
 }

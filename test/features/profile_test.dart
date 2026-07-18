@@ -6,14 +6,40 @@ import 'package:workreflection_mobile/core/data/wr_repository.dart';
 import 'package:workreflection_mobile/core/models/insight.dart';
 import 'package:workreflection_mobile/core/models/mobile_profile.dart';
 import 'package:workreflection_mobile/core/models/timeline_event.dart';
+import 'package:workreflection_mobile/features/auth/data/auth_repository.dart';
 import 'package:workreflection_mobile/features/profile/presentation/profile_screen.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
 
 import '../support/fake_repository.dart';
 
-Widget _wrap(Widget child, WrRepository repo) {
+// ---------------------------------------------------------------------------
+// Fake AuthRepository for profile tests — mirrors the one in auth_test.dart
+// ---------------------------------------------------------------------------
+class _FakeAuthRepository implements AuthRepository {
+  String? lastChangedPassword;
+  bool changeShouldFail = false;
+  bool changeSessionExpired = false;
+
+  @override Future<void> signIn(String e, String p) async {}
+  @override Future<void> signUp(String e, String p, String n) async {}
+  @override Future<void> signInWithGoogle() async {}
+  @override Future<void> signOut() async {}
+  @override Future<void> resetPassword(String email) async {}
+
+  @override
+  Future<void> changePassword(String newPassword) async {
+    lastChangedPassword = newPassword;
+    if (changeSessionExpired) throw Exception('Session expired');
+    if (changeShouldFail) throw Exception('Something went wrong');
+  }
+}
+
+Widget _wrap(Widget child, WrRepository repo, {AuthRepository? authRepo}) {
   return ProviderScope(
-    overrides: [wrRepositoryProvider.overrideWithValue(repo)],
+    overrides: [
+      wrRepositoryProvider.overrideWithValue(repo),
+      if (authRepo != null) authRepositoryProvider.overrideWithValue(authRepo),
+    ],
     child: MaterialApp(
       localizationsDelegates: const [
         AppLocalizations.delegate,
@@ -204,6 +230,119 @@ void main() {
 
       expect(find.byKey(const Key('profile_my_coaching_btn')), findsOneWidget);
       expect(find.textContaining('Coaching của tôi'), findsOneWidget);
+    });
+
+    testWidgets('shows change-password row', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile());
+      repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
+      await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
+
+      expect(find.byKey(const Key('profile_change_password_btn')), findsOneWidget);
+      expect(find.textContaining('Đổi mật khẩu'), findsOneWidget);
+    });
+
+    testWidgets('change-password row opens dialog', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile());
+      repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
+      final authRepo = _FakeAuthRepository();
+      await _pumpLarge(
+        tester,
+        _wrap(const ProfileScreen(), repo, authRepo: authRepo),
+      );
+
+      await tester.tap(find.byKey(const Key('profile_change_password_btn')));
+      await tester.pumpAndSettle();
+
+      // Dialog title visible
+      expect(find.textContaining('Đổi mật khẩu'), findsWidgets);
+      expect(find.byKey(const Key('change_password_submit')), findsOneWidget);
+    });
+
+    testWidgets('change-password dialog calls changePassword on repo', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile());
+      repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
+      final authRepo = _FakeAuthRepository();
+      await _pumpLarge(
+        tester,
+        _wrap(const ProfileScreen(), repo, authRepo: authRepo),
+      );
+
+      await tester.tap(find.byKey(const Key('profile_change_password_btn')));
+      await tester.pumpAndSettle();
+
+      // Use keys to avoid ambiguity with other TextFormFields on the screen
+      await tester.enterText(
+        find.byKey(const Key('change_password_new_field')),
+        'newpass123',
+      );
+      await tester.enterText(
+        find.byKey(const Key('change_password_confirm_field')),
+        'newpass123',
+      );
+
+      await tester.tap(find.byKey(const Key('change_password_submit')));
+      await tester.pumpAndSettle();
+
+      expect(authRepo.lastChangedPassword, 'newpass123');
+    });
+
+    testWidgets('change-password shows success snackbar', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile());
+      repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
+      final authRepo = _FakeAuthRepository();
+      await _pumpLarge(
+        tester,
+        _wrap(const ProfileScreen(), repo, authRepo: authRepo),
+      );
+
+      await tester.tap(find.byKey(const Key('profile_change_password_btn')));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('change_password_new_field')),
+        'newpass123',
+      );
+      await tester.enterText(
+        find.byKey(const Key('change_password_confirm_field')),
+        'newpass123',
+      );
+
+      await tester.tap(find.byKey(const Key('change_password_submit')));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('đã được cập nhật'), findsOneWidget);
+    });
+
+    testWidgets('change-password shows session-expired snackbar on error', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile());
+      repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
+      final authRepo = _FakeAuthRepository()..changeSessionExpired = true;
+      await _pumpLarge(
+        tester,
+        _wrap(const ProfileScreen(), repo, authRepo: authRepo),
+      );
+
+      await tester.tap(find.byKey(const Key('profile_change_password_btn')));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('change_password_new_field')),
+        'newpass123',
+      );
+      await tester.enterText(
+        find.byKey(const Key('change_password_confirm_field')),
+        'newpass123',
+      );
+
+      await tester.tap(find.byKey(const Key('change_password_submit')));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Phiên đăng nhập'), findsOneWidget);
     });
   });
 }

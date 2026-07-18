@@ -67,6 +67,37 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     }
   }
 
+  Future<void> _showForgotPasswordDialog(BuildContext context) async {
+    await showDialog<void>(
+      context: context,
+      builder: (ctx) => _ForgotPasswordDialog(
+        onSubmit: (String email) async {
+          Navigator.of(ctx).pop();
+          await _sendPasswordReset(email);
+        },
+        onCancel: () => Navigator.of(ctx).pop(),
+      ),
+    );
+  }
+
+  Future<void> _sendPasswordReset(String email) async {
+    final l10n = context.l10n;
+    try {
+      await ref.read(authRepositoryProvider).resetPassword(email);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.authForgotPasswordSuccess)),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.authForgotPasswordError)),
+        );
+      }
+    }
+  }
+
   Future<void> _googleSignIn() async {
     setState(() {
       _isLoading = true;
@@ -152,7 +183,26 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   validator: (v) =>
                       (v == null || v.isEmpty) ? l10n.authValidatorPassword : null,
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 8),
+
+                // Forgot password link (login mode only)
+                if (_isLogin)
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: TextButton(
+                      key: const Key('auth_forgot_password_btn'),
+                      onPressed: () => _showForgotPasswordDialog(context),
+                      child: Text(
+                        l10n.authForgotPassword,
+                        style: const TextStyle(
+                          color: WrColors.coral,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                const SizedBox(height: 16),
 
                 // Inline error
                 if (_errorMessage != null) ...[
@@ -261,6 +311,83 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Self-contained forgot-password dialog (owns its own controller lifecycle)
+// ---------------------------------------------------------------------------
+
+class _ForgotPasswordDialog extends StatefulWidget {
+  const _ForgotPasswordDialog({
+    required this.onSubmit,
+    required this.onCancel,
+  });
+
+  final void Function(String email) onSubmit;
+  final VoidCallback onCancel;
+
+  @override
+  State<_ForgotPasswordDialog> createState() => _ForgotPasswordDialogState();
+}
+
+class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailCtrl = TextEditingController();
+
+  @override
+  void dispose() {
+    _emailCtrl.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (!(_formKey.currentState?.validate() ?? false)) return;
+    widget.onSubmit(_emailCtrl.text.trim());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = context.l10n;
+    return AlertDialog(
+      title: Text(l10n.authForgotPasswordDialogTitle),
+      content: Form(
+        key: _formKey,
+        child: TextFormField(
+          key: const Key('auth_forgot_password_email_field'),
+          controller: _emailCtrl,
+          keyboardType: TextInputType.emailAddress,
+          decoration: InputDecoration(
+            labelText: l10n.authEmailLabel,
+            hintText: l10n.authForgotPasswordDialogHint,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+          validator: (v) {
+            if (v == null || v.trim().isEmpty) return l10n.authValidatorEmail;
+            if (!v.contains('@')) {
+              return l10n.authForgotPasswordErrorInvalidEmail;
+            }
+            return null;
+          },
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: widget.onCancel,
+          child: Text(l10n.commonCancel),
+        ),
+        TextButton(
+          key: const Key('auth_forgot_password_submit'),
+          onPressed: _submit,
+          child: Text(
+            l10n.authForgotPasswordSubmit,
+            style: const TextStyle(color: WrColors.coral),
+          ),
+        ),
+      ],
     );
   }
 }

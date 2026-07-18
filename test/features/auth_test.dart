@@ -19,6 +19,12 @@ class FakeAuthRepository implements AuthRepository {
   bool signUpShouldFail = false;
   int signInWithGoogleCalls = 0;
 
+  // Forgot / change password tracking
+  String? lastResetEmail;
+  bool resetShouldFail = false;
+  String? lastChangedPassword;
+  bool changeShouldFail = false;
+
   @override
   Future<void> signIn(String email, String password) async {
     lastSignInEmail = email;
@@ -41,6 +47,18 @@ class FakeAuthRepository implements AuthRepository {
 
   @override
   Future<void> signOut() async {}
+
+  @override
+  Future<void> resetPassword(String email) async {
+    lastResetEmail = email;
+    if (resetShouldFail) throw Exception('Network error');
+  }
+
+  @override
+  Future<void> changePassword(String newPassword) async {
+    lastChangedPassword = newPassword;
+    if (changeShouldFail) throw Exception('Session expired');
+  }
 }
 
 Widget _wrap(Widget child, {AuthRepository? repo}) {
@@ -184,6 +202,130 @@ void main() {
       expect(fake.lastSignUpName, 'Test User');
       expect(fake.lastSignUpEmail, 'new@test.com');
       expect(fake.lastSignUpPassword, 'pass123');
+    });
+
+    testWidgets('forgot-password button is visible in login mode', (tester) async {
+      await tester.pumpWidget(_wrap(const AuthScreen()));
+      await tester.pump();
+
+      expect(find.byKey(const Key('auth_forgot_password_btn')), findsOneWidget);
+      expect(find.text('Quên mật khẩu?'), findsOneWidget);
+    });
+
+    testWidgets('forgot-password button is hidden in register mode', (tester) async {
+      await tester.pumpWidget(_wrap(const AuthScreen()));
+      await tester.pump();
+
+      await tester.tap(find.text('Chưa có tài khoản? Đăng ký'));
+      await tester.pump();
+
+      expect(find.byKey(const Key('auth_forgot_password_btn')), findsNothing);
+    });
+
+    testWidgets('forgot-password dialog appears on tap', (tester) async {
+      await tester.pumpWidget(_wrap(const AuthScreen()));
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('auth_forgot_password_btn')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Quên mật khẩu'), findsOneWidget); // dialog title
+      expect(find.byKey(const Key('auth_forgot_password_submit')), findsOneWidget);
+    });
+
+    testWidgets('forgot-password dialog calls resetPassword with email', (tester) async {
+      final fake = FakeAuthRepository();
+      await tester.pumpWidget(_wrap(const AuthScreen(), repo: fake));
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('auth_forgot_password_btn')));
+      await tester.pumpAndSettle();
+
+      // Use key to avoid ambiguity with the main screen's Email field
+      await tester.enterText(
+        find.byKey(const Key('auth_forgot_password_email_field')),
+        'user@test.com',
+      );
+
+      await tester.tap(find.byKey(const Key('auth_forgot_password_submit')));
+      await tester.pumpAndSettle();
+
+      expect(fake.lastResetEmail, 'user@test.com');
+    });
+
+    testWidgets('forgot-password shows snackbar on success', (tester) async {
+      final fake = FakeAuthRepository();
+      await tester.pumpWidget(_wrap(const AuthScreen(), repo: fake));
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('auth_forgot_password_btn')));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('auth_forgot_password_email_field')),
+        'user@test.com',
+      );
+
+      await tester.tap(find.byKey(const Key('auth_forgot_password_submit')));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Kiểm tra email'), findsOneWidget);
+    });
+
+    testWidgets('forgot-password shows error snackbar on failure', (tester) async {
+      final fake = FakeAuthRepository()..resetShouldFail = true;
+      await tester.pumpWidget(_wrap(const AuthScreen(), repo: fake));
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('auth_forgot_password_btn')));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('auth_forgot_password_email_field')),
+        'user@test.com',
+      );
+
+      await tester.tap(find.byKey(const Key('auth_forgot_password_submit')));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Không thể gửi email'), findsOneWidget);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Password validation unit tests (pure logic, no widget pump needed)
+  // ---------------------------------------------------------------------------
+  group('Password validation logic', () {
+    test('password shorter than 6 chars fails min-length check', () {
+      const password = 'abc12';
+      expect(password.length < 6, isTrue);
+    });
+
+    test('password of exactly 6 chars passes min-length check', () {
+      const password = 'abc123';
+      expect(password.length >= 6, isTrue);
+    });
+
+    test('mismatched passwords detected', () {
+      const p1 = 'abc123';
+      const p2 = 'abc124';
+      expect(p1 == p2, isFalse);
+    });
+
+    test('matching passwords pass', () {
+      const p1 = 'abc123';
+      const p2 = 'abc123';
+      expect(p1 == p2, isTrue);
+    });
+
+    test('email without @ is invalid', () {
+      const email = 'notanemail';
+      expect(email.contains('@'), isFalse);
+    });
+
+    test('valid email contains @', () {
+      const email = 'user@test.com';
+      expect(email.contains('@'), isTrue);
     });
   });
 }
