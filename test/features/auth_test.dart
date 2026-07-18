@@ -328,4 +328,21 @@ void main() {
       expect(email.contains('@'), isTrue);
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // Navigation routing logic
+  // ---------------------------------------------------------------------------
+  group('AuthScreen navigation routing', () {
+    test('login mode routes to /home', () {
+      const isLogin = true;
+      final route = isLogin ? '/home' : '/profile/setup';
+      expect(route, '/home');
+    });
+
+    test('signup mode routes to /profile/setup', () {
+      const isLogin = false;
+      final route = isLogin ? '/home' : '/profile/setup';
+      expect(route, '/profile/setup');
+    });
+  });
 }

@@ -184,6 +184,18 @@ void main() {
         isNull,
       );
     });
+
+    // New: /profile/setup must not be redirected when user has session
+    test('has session + on /profile/setup → null', () {
+      expect(
+        computeRedirect(
+          hasSession: true,
+          seenOnboarding: true,
+          location: '/profile/setup',
+        ),
+        isNull,
+      );
+    });
   });
 
   group('AuthChangeNotifier', () {

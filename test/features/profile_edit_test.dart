@@ -177,4 +177,66 @@ void main() {
       expect(find.byKey(const Key('profile_edit_avatar_tap')), findsOneWidget);
     });
   });
+
+  // ---------------------------------------------------------------------------
+  // Setup mode
+  // ---------------------------------------------------------------------------
+  group('ProfileEditScreen setup mode', () {
+    testWidgets('shows setup title "Hoàn thiện hồ sơ" in setupMode', (tester) async {
+      final repo = _seedRepo();
+      await _pumpEdit(
+        tester,
+        _wrapEdit(const ProfileEditScreen(setupMode: true), repo),
+      );
+      expect(find.text('Hoàn thiện hồ sơ'), findsOneWidget);
+    });
+
+    testWidgets('shows skip button in setupMode', (tester) async {
+      final repo = _seedRepo();
+      await _pumpEdit(
+        tester,
+        _wrapEdit(const ProfileEditScreen(setupMode: true), repo),
+      );
+      expect(find.byKey(const Key('profile_setup_skip_btn')), findsOneWidget);
+      expect(find.text('Bỏ qua'), findsOneWidget);
+    });
+
+    testWidgets('shows "Hoàn tất" label on save button in setupMode', (tester) async {
+      final repo = _seedRepo();
+      await _pumpEdit(
+        tester,
+        _wrapEdit(const ProfileEditScreen(setupMode: true), repo),
+      );
+      expect(find.text('Hoàn tất'), findsOneWidget);
+      expect(find.text('Lưu thay đổi'), findsNothing);
+    });
+
+    testWidgets('no back button in setupMode', (tester) async {
+      final repo = _seedRepo();
+      await _pumpEdit(
+        tester,
+        _wrapEdit(const ProfileEditScreen(setupMode: true), repo),
+      );
+      expect(find.byType(BackButton), findsNothing);
+    });
+
+    testWidgets('normal mode still shows back button', (tester) async {
+      final repo = _seedRepo();
+      await _pumpEdit(
+        tester,
+        _wrapEdit(const ProfileEditScreen(), repo),
+      );
+      expect(find.byType(BackButton), findsOneWidget);
+    });
+
+    testWidgets('normal mode shows "Lưu thay đổi" label', (tester) async {
+      final repo = _seedRepo();
+      await _pumpEdit(
+        tester,
+        _wrapEdit(const ProfileEditScreen(), repo),
+      );
+      expect(find.text('Lưu thay đổi'), findsOneWidget);
+      expect(find.text('Hoàn tất'), findsNothing);
+    });
+  });
 }
