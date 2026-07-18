@@ -18,6 +18,7 @@ import '../../features/survey/presentation/report_screen.dart';
 import '../../features/survey/presentation/action_plan_screen.dart';
 import '../../features/workshops/presentation/workshops_screen.dart';
 import '../../features/workshops/presentation/workshop_detail_screen.dart';
+import '../../features/workshops/presentation/workshop_survey_screen.dart';
 import '../../features/workshops/presentation/checkin_screen.dart';
 import '../../features/workshops/presentation/my_workshops_screen.dart';
 import '../../features/coaching/presentation/coaching_screen.dart';
@@ -156,6 +157,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/workshops/:id',
         builder: (context, state) =>
             WorkshopDetailScreen(workshopId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/workshops/:id/survey',
+        builder: (context, state) =>
+            WorkshopSurveyScreen(workshopId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/my-workshops',
