@@ -679,12 +679,42 @@ class _AiPersonalizedPremiumSection extends ConsumerWidget {
     // EN locale → skip AI section entirely (matches web behavior).
     if (localeCode != 'vi') return const SizedBox.shrink();
 
-    // Watch cc_profiles to populate userContext (matches web's userContextForAI).
-    // Use .valueOrNull so the section never blocks: while loading we pass empty
-    // context (graceful immediate render) and the provider re-fires once the
-    // profile resolves, re-fetching AI content with the populated context.
+    // Gate on cc_profiles settling before invoking AI.
+    // The ai-personalize edge function caches its result server-side keyed by
+    // (report_id, section). Invoking while the profile is still loading would
+    // cache an all-null userContext permanently for this report.
+    // Wait for data OR error before watching aiPersonalizationProvider.
     // Raw DB enum values are sent as-is (e.g. "staff", "less_6m") — same as web.
-    final ccProfile = ref.watch(ccProfileProvider).valueOrNull;
+    final profileAsync = ref.watch(ccProfileProvider);
+    if (profileAsync.isLoading) {
+      // Profile not settled yet — show the same "personalizing" indicator and
+      // do NOT watch aiPersonalizationProvider (avoids premature invocation).
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: WrColors.coral,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              l10n.reportAiPersonalizingLabel,
+              style: WrTextStyles.body
+                  .copyWith(color: WrColors.dark.withValues(alpha: 0.6)),
+            ),
+          ],
+        ),
+      );
+    }
+    // Profile settled (data or error) — build userCtx. On error, all fields are
+    // null; the AI section still runs but without personalisation context.
+    final ccProfile = profileAsync.valueOrNull;
     final userCtx = AiPersonalizationUserContext(
       position: ccProfile?['position'] as String?,
       tenure: ccProfile?['company_tenure'] as String?,

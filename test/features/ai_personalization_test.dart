@@ -12,6 +12,8 @@
 // A9 – widget: AI section is absent for EN locale
 // A10 – invoke receives userContext populated from cc_profiles (position/tenure/dept)
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -352,6 +354,54 @@ void main() {
         // Not translated to display labels.
         expect(ctx.position, isNot('Nhân viên'));
         expect(ctx.tenure, isNot('Dưới 6 tháng'));
+      }
+    });
+
+    testWidgets(
+        'A11: no AI invoke fires while profile is loading; invoke fires with '
+        'populated context after profile completes',
+        (tester) async {
+      final report = _premiumReport();
+      repo.seedLatestReport(report);
+      // No cache → will call invoke on miss.
+      repo.seedAiInvokeResult('model', _modelContent);
+      repo.seedAiInvokeResult('reflection', _reflectionContent);
+      repo.seedAiInvokeResult('relationship', _relationshipContent);
+
+      // Completer keeps getCcProfile suspended until we resolve it.
+      final profileCompleter = Completer<Map<String, dynamic>>();
+      final wrRepo = FakeWrRepository()
+        ..setCcProfileCompleter(profileCompleter);
+
+      await tester.pumpWidget(
+          _wrap(ReportScreen(reportId: 'r1'), repo: repo, wrRepo: wrRepo));
+
+      // One frame: profile is still loading.
+      await tester.pump();
+
+      // AI invoke must NOT have fired yet — profile not settled.
+      expect(repo.aiInvokeCalls, isEmpty,
+          reason: 'invokeAiPersonalize must not fire while profile is loading');
+
+      // Now resolve the profile with populated data.
+      profileCompleter.complete({
+        'position': 'manager',
+        'company_tenure': '1_3y',
+        'department': 'product',
+      });
+      await tester.pumpAndSettle();
+
+      // After profile settles, AI invokes fire with the populated context.
+      expect(repo.aiInvokeCalls,
+          containsAll(['model', 'reflection', 'relationship']));
+      for (final section in ['model', 'reflection', 'relationship']) {
+        final ctx = repo.aiInvokeUserContexts[section]!;
+        expect(ctx.position, 'manager',
+            reason: '$section: position populated from settled profile');
+        expect(ctx.tenure, '1_3y',
+            reason: '$section: tenure populated from settled profile');
+        expect(ctx.department, 'product',
+            reason: '$section: department populated from settled profile');
       }
     });
   });

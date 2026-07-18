@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
 import 'package:workreflection_mobile/core/models/checkin.dart';
 import 'package:workreflection_mobile/core/models/development_theme.dart';
@@ -26,6 +28,8 @@ class FakeWrRepository implements WrRepository {
   ScaReport? _scaReport;
   Workshop? _workshop;
   Map<String, dynamic> _ccProfile = {};
+  // When set, getCcProfile waits for this completer before returning.
+  Completer<Map<String, dynamic>>? _ccProfileCompleter;
 
   // --- Call recorders ---
   final List<Mood> upsertCheckinCalls = [];
@@ -89,6 +93,12 @@ class FakeWrRepository implements WrRepository {
 
   void seedCcProfile(Map<String, dynamic> data) {
     _ccProfile = data;
+  }
+
+  /// Make getCcProfile block until [completer] is completed.
+  /// Complete the completer in the test to simulate a delayed profile load.
+  void setCcProfileCompleter(Completer<Map<String, dynamic>> completer) {
+    _ccProfileCompleter = completer;
   }
 
   // --- WrRepository impl ---
@@ -210,8 +220,12 @@ class FakeWrRepository implements WrRepository {
   Future<Workshop?> getUpcomingWorkshop() async => _workshop;
 
   @override
-  Future<Map<String, dynamic>> getCcProfile() async =>
-      Map<String, dynamic>.from(_ccProfile);
+  Future<Map<String, dynamic>> getCcProfile() async {
+    if (_ccProfileCompleter != null) {
+      return _ccProfileCompleter!.future;
+    }
+    return Map<String, dynamic>.from(_ccProfile);
+  }
 
   @override
   Future<Map<String, dynamic>> exportUserData() async {
