@@ -24,8 +24,13 @@ class FakeSurveyRepository implements SurveyRepository {
   bool _narrativesFails = false;
   List<String>? _configQuestionIds;
 
+  // --- Submit-failure-once fields ---
+  bool _submitFailsOnce = false;
+  int _submitCount = 0;
+
   // --- Call recorders ---
   final List<Map<String, int>> submitSurveyCalls = [];
+  final List<String?> submitExistingIds = [];
   final List<(String, bool)> toggleTaskCalls = [];
   final List<(String, String)> ttsCalls = [];
 
@@ -57,6 +62,10 @@ class FakeSurveyRepository implements SurveyRepository {
 
   void setToggleFails(bool v) => _toggleShouldFail = v;
   void setNarrativesFails(bool v) => _narrativesFails = v;
+  void setSubmitFailsOnce(bool v) {
+    _submitFailsOnce = v;
+    _submitCount = 0;
+  }
 
   void seedConfigQuestionIds(List<String> ids, {SurveyType? surveyType}) {
     _configQuestionIds = ids;
@@ -102,9 +111,14 @@ class FakeSurveyRepository implements SurveyRepository {
     String? existingSurveyId,
     void Function(String surveyId)? onSurveyCreated,
   }) async {
+    _submitCount++;
     submitSurveyCalls.add(Map.of(answers));
+    submitExistingIds.add(existingSurveyId);
     if (existingSurveyId == null) {
       onSurveyCreated?.call('fake-survey-id');
+    }
+    if (_submitFailsOnce && _submitCount == 1) {
+      throw Exception('first submit fails');
     }
     final report = _latestReport ??
         CcReportFull(
