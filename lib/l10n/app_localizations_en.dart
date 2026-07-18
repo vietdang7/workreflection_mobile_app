@@ -344,6 +344,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeCtaSurveyButton => 'Start now';
 
   @override
+  String get homeStartReflection => 'Start reflecting';
+
+  @override
   String get homeCtaReportTitle => 'View latest report';
 
   @override

@@ -346,6 +346,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get homeCtaSurveyButton => 'Bắt đầu ngay';
 
   @override
+  String get homeStartReflection => 'Bắt đầu phản chiếu';
+
+  @override
   String get homeCtaReportTitle => 'Xem báo cáo mới nhất';
 
   @override

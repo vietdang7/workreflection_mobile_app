@@ -734,6 +734,12 @@ abstract class AppLocalizations {
   /// **'Bắt đầu ngay'**
   String get homeCtaSurveyButton;
 
+  /// No description provided for @homeStartReflection.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bắt đầu phản chiếu'**
+  String get homeStartReflection;
+
   /// No description provided for @homeCtaReportTitle.
   ///
   /// In vi, this message translates to:

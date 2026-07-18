@@ -36,9 +36,9 @@ class HomeScreen extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 24),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  _CheckinSection(),
-                  const SizedBox(height: 28),
                   _SurveyCta(),
+                  const SizedBox(height: 20),
+                  _CheckinSection(),
                   const SizedBox(height: 28),
                   _SystemNoticeCard(),
                   const SizedBox(height: 28),
@@ -236,7 +236,10 @@ class _SystemNoticeCard extends ConsumerWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Survey CTA card — state-aware: no report → prominent dark; has report → compact
+// Survey CTA — state-aware, positioned FIRST below the greeting header.
+//   • No report  → full-width coral button "Bắt đầu phản chiếu" (unmissable).
+//   • Has report → navy "Xem báo cáo mới nhất" + text link "Làm lại bài phản chiếu".
+//   • Loading / error → SizedBox.shrink (silent).
 // ---------------------------------------------------------------------------
 
 class _SurveyCta extends ConsumerWidget {
@@ -251,72 +254,61 @@ class _SurveyCta extends ConsumerWidget {
       error: (_, __) => const SizedBox.shrink(),
       data: (reports) {
         if (reports.isEmpty) {
-          return WrCardDark(
+          // ── No report: prominent coral CTA ──────────────────────────────
+          return SizedBox(
             key: const Key('home_survey_cta_no_report'),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                WrEyebrow(l10n.homeCtaSurveyEyebrow),
-                const SizedBox(height: 12),
-                Text(
-                  l10n.homeCtaSurveyTitle,
-                  style: WrTextStyles.hLarge.copyWith(color: WrColors.white),
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              key: const Key('home_survey_cta_start_btn'),
+              onPressed: () => context.push('/survey'),
+              icon: const Icon(Icons.edit_note_rounded, size: 22),
+              label: Text(l10n.homeStartReflection),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: WrColors.coral,
+                foregroundColor: WrColors.white,
+                minimumSize: const Size.fromHeight(52),
+                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  l10n.homeCtaSurveySubtitle,
-                  style: WrTextStyles.body
-                      .copyWith(color: WrColors.white.withValues(alpha: 0.85)),
+                elevation: 3,
+                shadowColor: WrColors.coral.withValues(alpha: 0.35),
+                textStyle: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.2,
                 ),
-                const SizedBox(height: 20),
-                WrPillButton(
-                  key: const Key('home_survey_cta_start_btn'),
-                  label: l10n.homeCtaSurveyButton,
-                  onPressed: () => context.push('/survey'),
-                  variant: WrPillVariant.coral,
-                ),
-              ],
+              ),
             ),
           );
         }
 
+        // ── Has report: navy view-report + retake text link ──────────────
         return latestAsync.when(
           loading: () => const SizedBox.shrink(),
           error: (_, __) => const SizedBox.shrink(),
           data: (latest) {
             if (latest == null) return const SizedBox.shrink();
-            return WrCardMinimal(
+            return Column(
               key: const Key('home_survey_cta_has_report'),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  WrEyebrow(l10n.homeCtaSurveyEyebrow),
-                  const SizedBox(height: 12),
-                  Text(
-                    l10n.homeCtaReportTitle,
-                    style: WrTextStyles.hMedium,
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    l10n.homeCtaReportSubtitle,
-                    style: WrTextStyles.body.copyWith(fontSize: 13),
-                  ),
-                  const SizedBox(height: 16),
-                  WrPillButton(
-                    key: const Key('home_survey_cta_view_report_btn'),
-                    label: l10n.homeCtaReportButton,
-                    onPressed: () =>
-                        context.push('/survey/report/${latest.id}'),
-                    variant: WrPillVariant.navy,
-                  ),
-                  const SizedBox(height: 12),
-                  WrActionLink(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                WrPillButton(
+                  key: const Key('home_survey_cta_view_report_btn'),
+                  label: l10n.homeCtaReportTitle,
+                  onPressed: () =>
+                      context.push('/survey/report/${latest.id}'),
+                  variant: WrPillVariant.navy,
+                ),
+                const SizedBox(height: 10),
+                Center(
+                  child: WrActionLink(
                     key: const Key('home_survey_cta_retake_link'),
                     label: l10n.homeCtaRetakeSurvey,
                     onTap: () => context.push('/survey'),
                   ),
-                ],
-              ),
+                ),
+              ],
             );
           },
         );
