@@ -226,6 +226,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ProfileEditScreen(),
       ),
       GoRoute(
+        path: '/profile/setup',
+        builder: (context, state) => const ProfileEditScreen(setupMode: true),
+      ),
+      GoRoute(
         path: '/vouchers',
         builder: (context, state) => const VouchersScreen(),
       ),
