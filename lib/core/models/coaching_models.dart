@@ -91,8 +91,11 @@ class Coach {
 
   /// Initials: first letter of the first word + first letter of the last word,
   /// uppercased. For single-word names both letters come from the same word.
+  /// Empty/blank names yield '?' so bad data never crashes the UI.
   String get initials {
-    final words = fullName.trim().split(RegExp(r'\s+'));
+    final trimmed = fullName.trim();
+    if (trimmed.isEmpty) return '?';
+    final words = trimmed.split(RegExp(r'\s+'));
     final first = words.first;
     final last = words.last;
     return '${first[0]}${last[0]}'.toUpperCase();

@@ -140,6 +140,12 @@ void main() {
       expect(c.initials, 'CC');
     });
 
+    test('initials from empty/blank name never throws', () {
+      final j = Map<String, dynamic>.from(fullJson)..['full_name'] = '   ';
+      final c = Coach.fromJson(j);
+      expect(c.initials, '?');
+    });
+
     test('null optional fields default correctly', () {
       final j = {
         'id': 'c2',
