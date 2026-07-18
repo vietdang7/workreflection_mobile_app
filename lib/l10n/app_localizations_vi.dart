@@ -980,4 +980,16 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get profileEditSelectHint => 'Chọn...';
+
+  @override
+  String get notificationsTitle => 'Thông báo';
+
+  @override
+  String get notificationsEmpty => 'Chưa có thông báo nào';
+
+  @override
+  String get notificationsMarkAllRead => 'Đánh dấu tất cả đã đọc';
+
+  @override
+  String get notificationsUnread => 'Chưa đọc';
 }

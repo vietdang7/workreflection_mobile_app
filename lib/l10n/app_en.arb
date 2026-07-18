@@ -426,5 +426,10 @@
   "profileEditDeptProduction": "Production",
   "profileEditDeptAdmin": "Admin",
   "profileEditDeptOther": "Other",
-  "profileEditSelectHint": "Select..."
+  "profileEditSelectHint": "Select...",
+
+  "notificationsTitle": "Notifications",
+  "notificationsEmpty": "No notifications yet",
+  "notificationsMarkAllRead": "Mark all read",
+  "notificationsUnread": "Unread"
 }

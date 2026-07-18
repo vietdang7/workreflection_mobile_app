@@ -427,5 +427,10 @@
   "profileEditDeptProduction": "Sản xuất",
   "profileEditDeptAdmin": "Hành chính",
   "profileEditDeptOther": "Khác",
-  "profileEditSelectHint": "Chọn..."
+  "profileEditSelectHint": "Chọn...",
+
+  "notificationsTitle": "Thông báo",
+  "notificationsEmpty": "Chưa có thông báo nào",
+  "notificationsMarkAllRead": "Đánh dấu tất cả đã đọc",
+  "notificationsUnread": "Chưa đọc"
 }

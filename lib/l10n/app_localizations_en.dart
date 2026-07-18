@@ -980,4 +980,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileEditSelectHint => 'Select...';
+
+  @override
+  String get notificationsTitle => 'Notifications';
+
+  @override
+  String get notificationsEmpty => 'No notifications yet';
+
+  @override
+  String get notificationsMarkAllRead => 'Mark all read';
+
+  @override
+  String get notificationsUnread => 'Unread';
 }

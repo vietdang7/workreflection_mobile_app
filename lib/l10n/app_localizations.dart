@@ -1945,6 +1945,30 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Chọn...'**
   String get profileEditSelectHint;
+
+  /// No description provided for @notificationsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông báo'**
+  String get notificationsTitle;
+
+  /// No description provided for @notificationsEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có thông báo nào'**
+  String get notificationsEmpty;
+
+  /// No description provided for @notificationsMarkAllRead.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đánh dấu tất cả đã đọc'**
+  String get notificationsMarkAllRead;
+
+  /// No description provided for @notificationsUnread.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa đọc'**
+  String get notificationsUnread;
 }
 
 class _AppLocalizationsDelegate

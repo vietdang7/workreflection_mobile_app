@@ -10,13 +10,17 @@ import 'package:workreflection_mobile/core/models/insight.dart';
 import 'package:workreflection_mobile/core/models/mobile_profile.dart';
 import 'package:workreflection_mobile/core/models/recurring_situation.dart';
 import 'package:workreflection_mobile/features/home/presentation/home_screen.dart';
+import 'package:workreflection_mobile/features/notifications/notification_providers.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
 
 import '../support/fake_repository.dart';
 
 Widget _wrap(Widget child, WrRepository repo) {
   return ProviderScope(
-    overrides: [wrRepositoryProvider.overrideWithValue(repo)],
+    overrides: [
+      wrRepositoryProvider.overrideWithValue(repo),
+      currentUserIdProvider.overrideWithValue(''),
+    ],
     child: MaterialApp(
       localizationsDelegates: const [
         AppLocalizations.delegate,
