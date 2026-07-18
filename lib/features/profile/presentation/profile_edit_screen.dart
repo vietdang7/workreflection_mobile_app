@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
@@ -12,7 +13,8 @@ import '../profile_providers.dart';
 /// Loads current cc_profiles + mobileProfile, lets user edit,
 /// and calls ProfileEditNotifier.save() on submit.
 class ProfileEditScreen extends ConsumerStatefulWidget {
-  const ProfileEditScreen({super.key});
+  const ProfileEditScreen({super.key, this.setupMode = false});
+  final bool setupMode;
 
   @override
   ConsumerState<ProfileEditScreen> createState() => _ProfileEditScreenState();
@@ -97,9 +99,13 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
         },
       );
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.profileEditSaveSuccess)),
-        );
+        if (widget.setupMode) {
+          context.go('/home');
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(l10n.profileEditSaveSuccess)),
+          );
+        }
       }
     } catch (_) {
       if (context.mounted) {
@@ -140,10 +146,26 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
       appBar: AppBar(
         backgroundColor: WrColors.white,
         elevation: 0,
-        leading: const BackButton(color: WrColors.navy),
-        title: Text(l10n.profileEditTitle, style: WrTextStyles.hMedium),
+        automaticallyImplyLeading: false,
+        leading: widget.setupMode ? null : const BackButton(color: WrColors.navy),
+        title: Text(
+          widget.setupMode ? l10n.profileSetupTitle : l10n.profileEditTitle,
+          style: WrTextStyles.hMedium,
+        ),
         centerTitle: false,
         actions: [
+          if (widget.setupMode)
+            Padding(
+              padding: const EdgeInsets.only(right: 16),
+              child: TextButton(
+                key: const Key('profile_setup_skip_btn'),
+                onPressed: () => context.go('/home'),
+                child: Text(
+                  l10n.profileSetupSkip,
+                  style: const TextStyle(color: WrColors.muted),
+                ),
+              ),
+            ),
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: TextButton(
@@ -159,7 +181,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                       ),
                     )
                   : Text(
-                      l10n.profileEditSave,
+                      widget.setupMode ? l10n.profileSetupComplete : l10n.profileEditSave,
                       style: const TextStyle(
                         color: WrColors.coral,
                         fontWeight: FontWeight.w700,
