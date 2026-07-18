@@ -1248,4 +1248,178 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get subCompSupportLeadership => 'Hỗ trợ lãnh đạo';
+
+  @override
+  String get roadmapTitle => 'Lộ trình hành động';
+
+  @override
+  String get roadmapSubtitle =>
+      'Theo dõi và thực hiện kế hoạch phát triển của bạn';
+
+  @override
+  String get roadmapSelectReport => 'Chọn báo cáo...';
+
+  @override
+  String get roadmapNoPremiumReports => 'Bạn chưa có báo cáo Premium';
+
+  @override
+  String get roadmapNoPremiumReportsBody =>
+      'Hoàn thành khảo sát Premium để mở lộ trình hành động cá nhân.';
+
+  @override
+  String get roadmapStartSurvey => 'Bắt đầu khảo sát';
+
+  @override
+  String get roadmapNoActionsForReport =>
+      'Chưa có dữ liệu hành động cho báo cáo này.';
+
+  @override
+  String get roadmapProgressLabel => 'Tiến độ tổng thể';
+
+  @override
+  String get roadmapDayHeader7 => 'Nhập môn';
+
+  @override
+  String get roadmapDayHeader14 => 'Thử nghiệm';
+
+  @override
+  String get roadmapDayHeader30 => 'Chuyên hoá';
+
+  @override
+  String get roadmapLayerStructure => 'Cấu trúc';
+
+  @override
+  String get roadmapLayerCulture => 'Văn hoá';
+
+  @override
+  String get roadmapLayerActivity => 'Hoạt động';
+
+  @override
+  String get roadmapAddCustomTask => 'Thêm hành động';
+
+  @override
+  String get roadmapAddTaskTitle => 'Thêm hành động tự chọn';
+
+  @override
+  String get roadmapEditTaskTitle => 'Chỉnh sửa hành động';
+
+  @override
+  String get roadmapTaskTitleLabel => 'Tiêu đề';
+
+  @override
+  String get roadmapTaskDescLabel => 'Mô tả (tuỳ chọn)';
+
+  @override
+  String get roadmapTaskDueDateLabel => 'Ngày hoàn thành (tuỳ chọn)';
+
+  @override
+  String get roadmapTaskTitleHint => 'Ví dụ: 1:1 với quản lý';
+
+  @override
+  String get roadmapTaskDescHint => 'Ghi chú thêm...';
+
+  @override
+  String get roadmapTaskAdd => 'Thêm';
+
+  @override
+  String get roadmapTaskSave => 'Lưu';
+
+  @override
+  String get roadmapTaskAdded => 'Đã thêm hành động';
+
+  @override
+  String get roadmapTaskUpdated => 'Đã cập nhật hành động';
+
+  @override
+  String get roadmapTaskDeleted => 'Đã xoá hành động';
+
+  @override
+  String get roadmapErrorToggle => 'Không thể cập nhật. Vui lòng thử lại.';
+
+  @override
+  String get roadmapErrorAdd => 'Không thể thêm hành động. Vui lòng thử lại.';
+
+  @override
+  String get roadmapErrorEdit => 'Không thể chỉnh sửa. Vui lòng thử lại.';
+
+  @override
+  String get roadmapErrorDelete => 'Không thể xoá. Vui lòng thử lại.';
+
+  @override
+  String get roadmapCoachSectionTitle => 'Mời coach đồng hành';
+
+  @override
+  String get roadmapInviteCoach => 'Mời coach';
+
+  @override
+  String get roadmapChooseCoach => 'Chọn coach để mời';
+
+  @override
+  String get roadmapNoCoachesAvailable => 'Không có coach khả dụng';
+
+  @override
+  String get roadmapCoachPending => 'Đang chờ';
+
+  @override
+  String get roadmapCoachAccepted => 'Đã chấp nhận';
+
+  @override
+  String get roadmapCoachRevoked => 'Thu hồi';
+
+  @override
+  String get roadmapCoachInvited => 'Đã gửi lời mời';
+
+  @override
+  String get roadmapErrorInviteCoach => 'Không thể gửi lời mời.';
+
+  @override
+  String get roadmapNoCoachs => 'Bạn chưa mời coach nào.';
+
+  @override
+  String get roadmapActivityLog => 'Báo cáo hoạt động';
+
+  @override
+  String get roadmapActivityEmpty => 'Chưa có hoạt động nào.';
+
+  @override
+  String get roadmapActivityContent => 'Nội dung';
+
+  @override
+  String get roadmapActivityLayer => 'Tầng';
+
+  @override
+  String get roadmapActivityDate => 'Ngày';
+
+  @override
+  String get roadmapRenameReport => 'Đặt tên báo cáo';
+
+  @override
+  String get roadmapNicknameLabel => 'Tên báo cáo';
+
+  @override
+  String get roadmapNicknameHint => 'Ví dụ: Đánh giá tháng 7';
+
+  @override
+  String get roadmapNicknameSaved => 'Đã cập nhật tên.';
+
+  @override
+  String get roadmapNicknameError => 'Không thể lưu tên.';
+
+  @override
+  String get roadmapScoreHigh => 'Tốt – duy trì';
+
+  @override
+  String get roadmapScoreGood => 'Khá – cải thiện nhỏ';
+
+  @override
+  String get roadmapScoreWarning => 'Cần cải thiện';
+
+  @override
+  String get roadmapScoreCritical => 'Cần hành động ngay';
+
+  @override
+  String get roadmapEntryLink => 'Lộ trình phát triển';
+
+  @override
+  String get roadmapProfileLink => 'Lộ trình hành động';
 }

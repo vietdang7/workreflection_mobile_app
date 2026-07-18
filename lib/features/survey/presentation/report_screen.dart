@@ -224,6 +224,17 @@ class _ReportBody extends ConsumerWidget {
                 context.push('/survey/action-plan/${report.id}'),
             variant: WrPillVariant.coral,
           ),
+
+          // Roadmap link (premium reports only)
+          if (isPremium) ...[
+            const SizedBox(height: 12),
+            WrPillButton(
+              label: l10n.roadmapEntryLink,
+              onPressed: () =>
+                  context.push('/roadmap?report=${report.id}'),
+              variant: WrPillVariant.navy,
+            ),
+          ],
           const SizedBox(height: 40),
         ],
       ),

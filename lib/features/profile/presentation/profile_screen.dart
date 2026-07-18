@@ -433,6 +433,16 @@ class _SettingsSection extends ConsumerWidget {
           ),
         ),
 
+        // Action Roadmap
+        _SettingRow(
+          label: l10n.roadmapProfileLink,
+          trailing: GestureDetector(
+            key: const Key('profile_roadmap_btn'),
+            onTap: () => context.push('/roadmap'),
+            child: const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
+          ),
+        ),
+
         // Export data
         _SettingRow(
           label: l10n.profileSettingExport,

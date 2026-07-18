@@ -1248,4 +1248,177 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get subCompSupportLeadership => 'Leadership support';
+
+  @override
+  String get roadmapTitle => 'Action Roadmap';
+
+  @override
+  String get roadmapSubtitle =>
+      'Track and execute your personal development plan';
+
+  @override
+  String get roadmapSelectReport => 'Select report...';
+
+  @override
+  String get roadmapNoPremiumReports => 'No Premium reports yet';
+
+  @override
+  String get roadmapNoPremiumReportsBody =>
+      'Complete a Premium survey to unlock your personal action roadmap.';
+
+  @override
+  String get roadmapStartSurvey => 'Start survey';
+
+  @override
+  String get roadmapNoActionsForReport => 'No action data for this report yet.';
+
+  @override
+  String get roadmapProgressLabel => 'Overall progress';
+
+  @override
+  String get roadmapDayHeader7 => 'Initiation';
+
+  @override
+  String get roadmapDayHeader14 => 'Experimentation';
+
+  @override
+  String get roadmapDayHeader30 => 'Specialisation';
+
+  @override
+  String get roadmapLayerStructure => 'Structure';
+
+  @override
+  String get roadmapLayerCulture => 'Culture';
+
+  @override
+  String get roadmapLayerActivity => 'Activity';
+
+  @override
+  String get roadmapAddCustomTask => 'Add action';
+
+  @override
+  String get roadmapAddTaskTitle => 'Add custom action';
+
+  @override
+  String get roadmapEditTaskTitle => 'Edit action';
+
+  @override
+  String get roadmapTaskTitleLabel => 'Title';
+
+  @override
+  String get roadmapTaskDescLabel => 'Description (optional)';
+
+  @override
+  String get roadmapTaskDueDateLabel => 'Due date (optional)';
+
+  @override
+  String get roadmapTaskTitleHint => 'e.g. 1:1 with manager';
+
+  @override
+  String get roadmapTaskDescHint => 'Additional notes...';
+
+  @override
+  String get roadmapTaskAdd => 'Add';
+
+  @override
+  String get roadmapTaskSave => 'Save';
+
+  @override
+  String get roadmapTaskAdded => 'Action added';
+
+  @override
+  String get roadmapTaskUpdated => 'Action updated';
+
+  @override
+  String get roadmapTaskDeleted => 'Action deleted';
+
+  @override
+  String get roadmapErrorToggle => 'Could not update. Please try again.';
+
+  @override
+  String get roadmapErrorAdd => 'Could not add action. Please try again.';
+
+  @override
+  String get roadmapErrorEdit => 'Could not edit. Please try again.';
+
+  @override
+  String get roadmapErrorDelete => 'Could not delete. Please try again.';
+
+  @override
+  String get roadmapCoachSectionTitle => 'Invite a coaching partner';
+
+  @override
+  String get roadmapInviteCoach => 'Invite coach';
+
+  @override
+  String get roadmapChooseCoach => 'Choose a coach to invite';
+
+  @override
+  String get roadmapNoCoachesAvailable => 'No coaches available';
+
+  @override
+  String get roadmapCoachPending => 'Pending';
+
+  @override
+  String get roadmapCoachAccepted => 'Accepted';
+
+  @override
+  String get roadmapCoachRevoked => 'Revoked';
+
+  @override
+  String get roadmapCoachInvited => 'Invitation sent';
+
+  @override
+  String get roadmapErrorInviteCoach => 'Could not send invitation.';
+
+  @override
+  String get roadmapNoCoachs => 'You have not invited any coaches yet.';
+
+  @override
+  String get roadmapActivityLog => 'Activity log';
+
+  @override
+  String get roadmapActivityEmpty => 'No completed activities yet.';
+
+  @override
+  String get roadmapActivityContent => 'Content';
+
+  @override
+  String get roadmapActivityLayer => 'Layer';
+
+  @override
+  String get roadmapActivityDate => 'Date';
+
+  @override
+  String get roadmapRenameReport => 'Name this report';
+
+  @override
+  String get roadmapNicknameLabel => 'Report name';
+
+  @override
+  String get roadmapNicknameHint => 'e.g. July assessment';
+
+  @override
+  String get roadmapNicknameSaved => 'Name updated.';
+
+  @override
+  String get roadmapNicknameError => 'Could not save name.';
+
+  @override
+  String get roadmapScoreHigh => 'High – maintain';
+
+  @override
+  String get roadmapScoreGood => 'Good – small improvements';
+
+  @override
+  String get roadmapScoreWarning => 'Needs improvement';
+
+  @override
+  String get roadmapScoreCritical => 'Needs immediate action';
+
+  @override
+  String get roadmapEntryLink => 'Development roadmap';
+
+  @override
+  String get roadmapProfileLink => 'Action roadmap';
 }

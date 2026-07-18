@@ -2431,6 +2431,348 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Hỗ trợ lãnh đạo'**
   String get subCompSupportLeadership;
+
+  /// No description provided for @roadmapTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lộ trình hành động'**
+  String get roadmapTitle;
+
+  /// No description provided for @roadmapSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Theo dõi và thực hiện kế hoạch phát triển của bạn'**
+  String get roadmapSubtitle;
+
+  /// No description provided for @roadmapSelectReport.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn báo cáo...'**
+  String get roadmapSelectReport;
+
+  /// No description provided for @roadmapNoPremiumReports.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn chưa có báo cáo Premium'**
+  String get roadmapNoPremiumReports;
+
+  /// No description provided for @roadmapNoPremiumReportsBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn thành khảo sát Premium để mở lộ trình hành động cá nhân.'**
+  String get roadmapNoPremiumReportsBody;
+
+  /// No description provided for @roadmapStartSurvey.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bắt đầu khảo sát'**
+  String get roadmapStartSurvey;
+
+  /// No description provided for @roadmapNoActionsForReport.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có dữ liệu hành động cho báo cáo này.'**
+  String get roadmapNoActionsForReport;
+
+  /// No description provided for @roadmapProgressLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tiến độ tổng thể'**
+  String get roadmapProgressLabel;
+
+  /// No description provided for @roadmapDayHeader7.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập môn'**
+  String get roadmapDayHeader7;
+
+  /// No description provided for @roadmapDayHeader14.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử nghiệm'**
+  String get roadmapDayHeader14;
+
+  /// No description provided for @roadmapDayHeader30.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chuyên hoá'**
+  String get roadmapDayHeader30;
+
+  /// No description provided for @roadmapLayerStructure.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cấu trúc'**
+  String get roadmapLayerStructure;
+
+  /// No description provided for @roadmapLayerCulture.
+  ///
+  /// In vi, this message translates to:
+  /// **'Văn hoá'**
+  String get roadmapLayerCulture;
+
+  /// No description provided for @roadmapLayerActivity.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoạt động'**
+  String get roadmapLayerActivity;
+
+  /// No description provided for @roadmapAddCustomTask.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm hành động'**
+  String get roadmapAddCustomTask;
+
+  /// No description provided for @roadmapAddTaskTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm hành động tự chọn'**
+  String get roadmapAddTaskTitle;
+
+  /// No description provided for @roadmapEditTaskTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉnh sửa hành động'**
+  String get roadmapEditTaskTitle;
+
+  /// No description provided for @roadmapTaskTitleLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tiêu đề'**
+  String get roadmapTaskTitleLabel;
+
+  /// No description provided for @roadmapTaskDescLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mô tả (tuỳ chọn)'**
+  String get roadmapTaskDescLabel;
+
+  /// No description provided for @roadmapTaskDueDateLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày hoàn thành (tuỳ chọn)'**
+  String get roadmapTaskDueDateLabel;
+
+  /// No description provided for @roadmapTaskTitleHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví dụ: 1:1 với quản lý'**
+  String get roadmapTaskTitleHint;
+
+  /// No description provided for @roadmapTaskDescHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghi chú thêm...'**
+  String get roadmapTaskDescHint;
+
+  /// No description provided for @roadmapTaskAdd.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thêm'**
+  String get roadmapTaskAdd;
+
+  /// No description provided for @roadmapTaskSave.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu'**
+  String get roadmapTaskSave;
+
+  /// No description provided for @roadmapTaskAdded.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã thêm hành động'**
+  String get roadmapTaskAdded;
+
+  /// No description provided for @roadmapTaskUpdated.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cập nhật hành động'**
+  String get roadmapTaskUpdated;
+
+  /// No description provided for @roadmapTaskDeleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xoá hành động'**
+  String get roadmapTaskDeleted;
+
+  /// No description provided for @roadmapErrorToggle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể cập nhật. Vui lòng thử lại.'**
+  String get roadmapErrorToggle;
+
+  /// No description provided for @roadmapErrorAdd.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể thêm hành động. Vui lòng thử lại.'**
+  String get roadmapErrorAdd;
+
+  /// No description provided for @roadmapErrorEdit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể chỉnh sửa. Vui lòng thử lại.'**
+  String get roadmapErrorEdit;
+
+  /// No description provided for @roadmapErrorDelete.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể xoá. Vui lòng thử lại.'**
+  String get roadmapErrorDelete;
+
+  /// No description provided for @roadmapCoachSectionTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mời coach đồng hành'**
+  String get roadmapCoachSectionTitle;
+
+  /// No description provided for @roadmapInviteCoach.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mời coach'**
+  String get roadmapInviteCoach;
+
+  /// No description provided for @roadmapChooseCoach.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn coach để mời'**
+  String get roadmapChooseCoach;
+
+  /// No description provided for @roadmapNoCoachesAvailable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có coach khả dụng'**
+  String get roadmapNoCoachesAvailable;
+
+  /// No description provided for @roadmapCoachPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang chờ'**
+  String get roadmapCoachPending;
+
+  /// No description provided for @roadmapCoachAccepted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã chấp nhận'**
+  String get roadmapCoachAccepted;
+
+  /// No description provided for @roadmapCoachRevoked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thu hồi'**
+  String get roadmapCoachRevoked;
+
+  /// No description provided for @roadmapCoachInvited.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã gửi lời mời'**
+  String get roadmapCoachInvited;
+
+  /// No description provided for @roadmapErrorInviteCoach.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể gửi lời mời.'**
+  String get roadmapErrorInviteCoach;
+
+  /// No description provided for @roadmapNoCoachs.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn chưa mời coach nào.'**
+  String get roadmapNoCoachs;
+
+  /// No description provided for @roadmapActivityLog.
+  ///
+  /// In vi, this message translates to:
+  /// **'Báo cáo hoạt động'**
+  String get roadmapActivityLog;
+
+  /// No description provided for @roadmapActivityEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có hoạt động nào.'**
+  String get roadmapActivityEmpty;
+
+  /// No description provided for @roadmapActivityContent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nội dung'**
+  String get roadmapActivityContent;
+
+  /// No description provided for @roadmapActivityLayer.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tầng'**
+  String get roadmapActivityLayer;
+
+  /// No description provided for @roadmapActivityDate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày'**
+  String get roadmapActivityDate;
+
+  /// No description provided for @roadmapRenameReport.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đặt tên báo cáo'**
+  String get roadmapRenameReport;
+
+  /// No description provided for @roadmapNicknameLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên báo cáo'**
+  String get roadmapNicknameLabel;
+
+  /// No description provided for @roadmapNicknameHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ví dụ: Đánh giá tháng 7'**
+  String get roadmapNicknameHint;
+
+  /// No description provided for @roadmapNicknameSaved.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cập nhật tên.'**
+  String get roadmapNicknameSaved;
+
+  /// No description provided for @roadmapNicknameError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể lưu tên.'**
+  String get roadmapNicknameError;
+
+  /// No description provided for @roadmapScoreHigh.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tốt – duy trì'**
+  String get roadmapScoreHigh;
+
+  /// No description provided for @roadmapScoreGood.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khá – cải thiện nhỏ'**
+  String get roadmapScoreGood;
+
+  /// No description provided for @roadmapScoreWarning.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần cải thiện'**
+  String get roadmapScoreWarning;
+
+  /// No description provided for @roadmapScoreCritical.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần hành động ngay'**
+  String get roadmapScoreCritical;
+
+  /// No description provided for @roadmapEntryLink.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lộ trình phát triển'**
+  String get roadmapEntryLink;
+
+  /// No description provided for @roadmapProfileLink.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lộ trình hành động'**
+  String get roadmapProfileLink;
 }
 
 class _AppLocalizationsDelegate
