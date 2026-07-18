@@ -2935,6 +2935,324 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Lộ trình hành động'**
   String get roadmapProfileLink;
+
+  /// No description provided for @profileVouchers.
+  ///
+  /// In vi, this message translates to:
+  /// **'Voucher của tôi'**
+  String get profileVouchers;
+
+  /// No description provided for @profileInvitations.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lời mời tổ chức'**
+  String get profileInvitations;
+
+  /// No description provided for @avatarUploadSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cập nhật ảnh đại diện.'**
+  String get avatarUploadSuccess;
+
+  /// No description provided for @avatarUploadError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tải ảnh lên. Vui lòng thử lại.'**
+  String get avatarUploadError;
+
+  /// No description provided for @avatarPickerTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn ảnh đại diện'**
+  String get avatarPickerTitle;
+
+  /// No description provided for @avatarChangeBtn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đổi ảnh'**
+  String get avatarChangeBtn;
+
+  /// No description provided for @avatarUploading.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tải lên…'**
+  String get avatarUploading;
+
+  /// No description provided for @vouchersTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Voucher của tôi'**
+  String get vouchersTitle;
+
+  /// No description provided for @vouchersSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sao chép mã voucher và dùng khi thanh toán trên web'**
+  String get vouchersSubtitle;
+
+  /// No description provided for @vouchersEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn chưa có voucher nào'**
+  String get vouchersEmpty;
+
+  /// No description provided for @vouchersEmptyBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiện chưa có voucher nào dành cho bạn.'**
+  String get vouchersEmptyBody;
+
+  /// No description provided for @voucherWebNote.
+  ///
+  /// In vi, this message translates to:
+  /// **'Áp dụng mã khi thanh toán trên web'**
+  String get voucherWebNote;
+
+  /// No description provided for @voucherCopied.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã sao chép'**
+  String get voucherCopied;
+
+  /// No description provided for @voucherCopy.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sao chép'**
+  String get voucherCopy;
+
+  /// No description provided for @voucherCopiedToast.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã sao chép mã {code}'**
+  String voucherCopiedToast(String code);
+
+  /// No description provided for @voucherExpired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hết hạn'**
+  String get voucherExpired;
+
+  /// No description provided for @voucherFull.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hết lượt'**
+  String get voucherFull;
+
+  /// No description provided for @voucherAvailable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khả dụng'**
+  String get voucherAvailable;
+
+  /// No description provided for @voucherExpiry.
+  ///
+  /// In vi, this message translates to:
+  /// **'HSD: {date}'**
+  String voucherExpiry(String date);
+
+  /// No description provided for @voucherUsesLeft.
+  ///
+  /// In vi, this message translates to:
+  /// **'Còn {left}/{max} lượt'**
+  String voucherUsesLeft(int left, int max);
+
+  /// No description provided for @voucherDiscountPercent.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giảm {percent}%'**
+  String voucherDiscountPercent(int percent);
+
+  /// No description provided for @voucherDiscountAmount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giảm {amount}đ'**
+  String voucherDiscountAmount(String amount);
+
+  /// No description provided for @voucherAppliesTo.
+  ///
+  /// In vi, this message translates to:
+  /// **'Áp dụng cho'**
+  String get voucherAppliesTo;
+
+  /// No description provided for @voucherProductPremium.
+  ///
+  /// In vi, this message translates to:
+  /// **'Premium'**
+  String get voucherProductPremium;
+
+  /// No description provided for @voucherProductWorkshop.
+  ///
+  /// In vi, this message translates to:
+  /// **'Workshop'**
+  String get voucherProductWorkshop;
+
+  /// No description provided for @voucherProductCoaching.
+  ///
+  /// In vi, this message translates to:
+  /// **'Coaching'**
+  String get voucherProductCoaching;
+
+  /// No description provided for @invitationsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lời mời tham gia tổ chức'**
+  String get invitationsTitle;
+
+  /// No description provided for @invitationsSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý các lời mời từ tổ chức'**
+  String get invitationsSubtitle;
+
+  /// No description provided for @invitationsEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn chưa nhận được lời mời nào'**
+  String get invitationsEmpty;
+
+  /// No description provided for @invitationsPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang chờ'**
+  String get invitationsPending;
+
+  /// No description provided for @invitationsExpired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hết hạn'**
+  String get invitationsExpired;
+
+  /// No description provided for @invitationsProcessed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xử lý'**
+  String get invitationsProcessed;
+
+  /// No description provided for @invitationsAccepted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã chấp nhận'**
+  String get invitationsAccepted;
+
+  /// No description provided for @invitationsDeclined.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã từ chối'**
+  String get invitationsDeclined;
+
+  /// No description provided for @invitationsCancelled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã huỷ'**
+  String get invitationsCancelled;
+
+  /// No description provided for @invitationsAcceptBtn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chấp nhận'**
+  String get invitationsAcceptBtn;
+
+  /// No description provided for @invitationsDeclineBtn.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối'**
+  String get invitationsDeclineBtn;
+
+  /// No description provided for @invitationsAcceptTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chấp nhận lời mời'**
+  String get invitationsAcceptTitle;
+
+  /// No description provided for @invitationsDeclineTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Từ chối lời mời'**
+  String get invitationsDeclineTitle;
+
+  /// No description provided for @invitationsAcceptBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn sẽ trở thành thành viên của {org} với vai trò {role}.'**
+  String invitationsAcceptBody(String org, String role);
+
+  /// No description provided for @invitationsDeclineBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc muốn từ chối lời mời từ {org}?'**
+  String invitationsDeclineBody(String org);
+
+  /// No description provided for @invitationsAcceptSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tham gia {org}.'**
+  String invitationsAcceptSuccess(String org);
+
+  /// No description provided for @invitationsAcceptError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể chấp nhận lời mời.'**
+  String get invitationsAcceptError;
+
+  /// No description provided for @invitationsDeclineSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã từ chối lời mời.'**
+  String get invitationsDeclineSuccess;
+
+  /// No description provided for @invitationsDeclineError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể từ chối lời mời.'**
+  String get invitationsDeclineError;
+
+  /// No description provided for @invitationsExpiredAt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hết hạn: {date}'**
+  String invitationsExpiredAt(String date);
+
+  /// No description provided for @invitationsExpiresAt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hết hạn lúc: {date}'**
+  String invitationsExpiresAt(String date);
+
+  /// No description provided for @invitationsNoPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có lời mời đang chờ'**
+  String get invitationsNoPending;
+
+  /// No description provided for @invitationsNoExpired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không có lời mời hết hạn'**
+  String get invitationsNoExpired;
+
+  /// No description provided for @invitationsNoProcessed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có lời mời nào đã xử lý'**
+  String get invitationsNoProcessed;
+
+  /// No description provided for @invitationsStatPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang chờ'**
+  String get invitationsStatPending;
+
+  /// No description provided for @invitationsStatAccepted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã chấp nhận'**
+  String get invitationsStatAccepted;
+
+  /// No description provided for @invitationsStatExpired.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hết hạn'**
+  String get invitationsStatExpired;
 }
 
 class _AppLocalizationsDelegate

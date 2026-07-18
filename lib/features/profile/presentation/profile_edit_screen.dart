@@ -5,6 +5,7 @@ import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../l10n/app_localizations.dart';
+import '../avatar_providers.dart';
 import '../profile_providers.dart';
 
 /// Navigated to via context.push('/profile/edit').
@@ -61,6 +62,23 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     _department = ccData['department'] as String?;
   }
 
+  Future<void> _pickAvatar(BuildContext context) async {
+    final l10n = AppLocalizations.of(context)!;
+    final url = await ref
+        .read(avatarUploadProvider.notifier)
+        .pickAndUpload();
+    if (!context.mounted) return;
+    if (url != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.avatarUploadSuccess)),
+      );
+    } else if (ref.read(avatarUploadProvider).hasError) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(l10n.avatarUploadError)),
+      );
+    }
+  }
+
   Future<void> _save(BuildContext context) async {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final l10n = AppLocalizations.of(context)!;
@@ -112,6 +130,10 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
         profileAsync.valueOrNull?.displayName ??
         'bạn';
     final initials = _computeInitials(name);
+    final avatarUrl = ccData['avatar_url'] as String?;
+
+    final avatarState = ref.watch(avatarUploadProvider);
+    final isUploadingAvatar = avatarState.isLoading;
 
     return Scaffold(
       backgroundColor: WrColors.white,
@@ -159,33 +181,70 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                   children: [
                     const SizedBox(height: 24),
 
-                    // Avatar (read-only)
+                    // Avatar (tappable — pick from gallery)
                     Center(
                       child: Column(
                         children: [
-                          Container(
-                            width: 72,
-                            height: 72,
-                            decoration: BoxDecoration(
-                              color: WrColors.navy.withValues(alpha: 0.08),
-                              shape: BoxShape.circle,
-                            ),
-                            alignment: Alignment.center,
-                            child: Text(
-                              initials,
-                              style: const TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w700,
-                                color: WrColors.navy,
-                              ),
+                          GestureDetector(
+                            key: const Key('profile_edit_avatar_tap'),
+                            onTap: isUploadingAvatar
+                                ? null
+                                : () => _pickAvatar(context),
+                            child: Stack(
+                              children: [
+                                Container(
+                                  width: 80,
+                                  height: 80,
+                                  decoration: BoxDecoration(
+                                    color: WrColors.navy.withValues(alpha: 0.08),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  clipBehavior: Clip.antiAlias,
+                                  child: avatarUrl != null && avatarUrl.isNotEmpty
+                                      ? Image.network(
+                                          avatarUrl,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (_, __, ___) =>
+                                              _InitialsCircle(initials: initials),
+                                        )
+                                      : _InitialsCircle(initials: initials),
+                                ),
+                                // Camera overlay
+                                Positioned(
+                                  bottom: 0,
+                                  right: 0,
+                                  child: Container(
+                                    width: 26,
+                                    height: 26,
+                                    decoration: BoxDecoration(
+                                      color: WrColors.coral,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                          color: WrColors.white, width: 2),
+                                    ),
+                                    child: isUploadingAvatar
+                                        ? const Padding(
+                                            padding: EdgeInsets.all(4),
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color: WrColors.white,
+                                            ),
+                                          )
+                                        : const Icon(Icons.camera_alt,
+                                            size: 14, color: WrColors.white),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            l10n.profileEditAvatarNote,
+                            isUploadingAvatar
+                                ? l10n.avatarUploading
+                                : l10n.avatarChangeBtn,
                             style: WrTextStyles.body.copyWith(
-                              fontSize: 11,
-                              color: WrColors.muted,
+                              fontSize: 12,
+                              color: WrColors.coral,
                             ),
                             textAlign: TextAlign.center,
                           ),
@@ -433,6 +492,31 @@ class _SelectField<T> extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Helper widget — initials fallback inside avatar circle
+// ---------------------------------------------------------------------------
+
+class _InitialsCircle extends StatelessWidget {
+  const _InitialsCircle({required this.initials});
+  final String initials;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      color: WrColors.navy.withValues(alpha: 0.08),
+      alignment: Alignment.center,
+      child: Text(
+        initials,
+        style: const TextStyle(
+          fontSize: 24,
+          fontWeight: FontWeight.w700,
+          color: WrColors.navy,
+        ),
+      ),
     );
   }
 }

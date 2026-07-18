@@ -51,6 +51,11 @@ class _FailingCheckinRepo implements WrRepository {
   @override Future<Map<String, dynamic>> exportUserData() => _d.exportUserData();
   @override Future<void> ensureSeeded({String? onboardingSituation}) => _d.ensureSeeded(onboardingSituation: onboardingSituation);
   @override Future<void> saveOnboardingSituation(String s) => _d.saveOnboardingSituation(s);
+  @override Future<String> uploadAvatar(List<int> bytes, String ext) => _d.uploadAvatar(bytes, ext);
+  @override Future<List<Map<String, dynamic>>> getVouchers() => _d.getVouchers();
+  @override Future<List<Map<String, dynamic>>> getInvitations() => _d.getInvitations();
+  @override Future<String> acceptInvitation(String token) => _d.acceptInvitation(token);
+  @override Future<void> declineInvitation(String invitationId) => _d.declineInvitation(invitationId);
 }
 
 /// Wraps a FakeWrRepository but throws on updatePracticeStatus.
@@ -82,6 +87,11 @@ class _FailingPracticeRepo implements WrRepository {
   @override Future<Map<String, dynamic>> exportUserData() => _d.exportUserData();
   @override Future<void> ensureSeeded({String? onboardingSituation}) => _d.ensureSeeded(onboardingSituation: onboardingSituation);
   @override Future<void> saveOnboardingSituation(String s) => _d.saveOnboardingSituation(s);
+  @override Future<String> uploadAvatar(List<int> bytes, String ext) => _d.uploadAvatar(bytes, ext);
+  @override Future<List<Map<String, dynamic>>> getVouchers() => _d.getVouchers();
+  @override Future<List<Map<String, dynamic>>> getInvitations() => _d.getInvitations();
+  @override Future<String> acceptInvitation(String token) => _d.acceptInvitation(token);
+  @override Future<void> declineInvitation(String invitationId) => _d.declineInvitation(invitationId);
 }
 
 // ---------------------------------------------------------------------------

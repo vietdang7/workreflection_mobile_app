@@ -626,5 +626,114 @@
   "roadmapScoreWarning": "Cần cải thiện",
   "roadmapScoreCritical": "Cần hành động ngay",
   "roadmapEntryLink": "Lộ trình phát triển",
-  "roadmapProfileLink": "Lộ trình hành động"
+  "roadmapProfileLink": "Lộ trình hành động",
+
+  "profileVouchers": "Voucher của tôi",
+  "profileInvitations": "Lời mời tổ chức",
+
+  "avatarUploadSuccess": "Đã cập nhật ảnh đại diện.",
+  "avatarUploadError": "Không thể tải ảnh lên. Vui lòng thử lại.",
+  "avatarPickerTitle": "Chọn ảnh đại diện",
+  "avatarChangeBtn": "Đổi ảnh",
+  "avatarUploading": "Đang tải lên…",
+
+  "vouchersTitle": "Voucher của tôi",
+  "vouchersSubtitle": "Sao chép mã voucher và dùng khi thanh toán trên web",
+  "vouchersEmpty": "Bạn chưa có voucher nào",
+  "vouchersEmptyBody": "Hiện chưa có voucher nào dành cho bạn.",
+  "voucherWebNote": "Áp dụng mã khi thanh toán trên web",
+  "voucherCopied": "Đã sao chép",
+  "voucherCopy": "Sao chép",
+  "voucherCopiedToast": "Đã sao chép mã {code}",
+  "@voucherCopiedToast": {
+    "placeholders": {
+      "code": {"type": "String"}
+    }
+  },
+  "voucherExpired": "Hết hạn",
+  "voucherFull": "Hết lượt",
+  "voucherAvailable": "Khả dụng",
+  "voucherExpiry": "HSD: {date}",
+  "@voucherExpiry": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "voucherUsesLeft": "Còn {left}/{max} lượt",
+  "@voucherUsesLeft": {
+    "placeholders": {
+      "left": {"type": "int"},
+      "max": {"type": "int"}
+    }
+  },
+  "voucherDiscountPercent": "Giảm {percent}%",
+  "@voucherDiscountPercent": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "voucherDiscountAmount": "Giảm {amount}đ",
+  "@voucherDiscountAmount": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "voucherAppliesTo": "Áp dụng cho",
+  "voucherProductPremium": "Premium",
+  "voucherProductWorkshop": "Workshop",
+  "voucherProductCoaching": "Coaching",
+
+  "invitationsTitle": "Lời mời tham gia tổ chức",
+  "invitationsSubtitle": "Quản lý các lời mời từ tổ chức",
+  "invitationsEmpty": "Bạn chưa nhận được lời mời nào",
+  "invitationsPending": "Đang chờ",
+  "invitationsExpired": "Hết hạn",
+  "invitationsProcessed": "Đã xử lý",
+  "invitationsAccepted": "Đã chấp nhận",
+  "invitationsDeclined": "Đã từ chối",
+  "invitationsCancelled": "Đã huỷ",
+  "invitationsAcceptBtn": "Chấp nhận",
+  "invitationsDeclineBtn": "Từ chối",
+  "invitationsAcceptTitle": "Chấp nhận lời mời",
+  "invitationsDeclineTitle": "Từ chối lời mời",
+  "invitationsAcceptBody": "Bạn sẽ trở thành thành viên của {org} với vai trò {role}.",
+  "@invitationsAcceptBody": {
+    "placeholders": {
+      "org": {"type": "String"},
+      "role": {"type": "String"}
+    }
+  },
+  "invitationsDeclineBody": "Bạn có chắc muốn từ chối lời mời từ {org}?",
+  "@invitationsDeclineBody": {
+    "placeholders": {
+      "org": {"type": "String"}
+    }
+  },
+  "invitationsAcceptSuccess": "Đã tham gia {org}.",
+  "@invitationsAcceptSuccess": {
+    "placeholders": {
+      "org": {"type": "String"}
+    }
+  },
+  "invitationsAcceptError": "Không thể chấp nhận lời mời.",
+  "invitationsDeclineSuccess": "Đã từ chối lời mời.",
+  "invitationsDeclineError": "Không thể từ chối lời mời.",
+  "invitationsExpiredAt": "Hết hạn: {date}",
+  "@invitationsExpiredAt": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "invitationsExpiresAt": "Hết hạn lúc: {date}",
+  "@invitationsExpiresAt": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "invitationsNoPending": "Không có lời mời đang chờ",
+  "invitationsNoExpired": "Không có lời mời hết hạn",
+  "invitationsNoProcessed": "Chưa có lời mời nào đã xử lý",
+  "invitationsStatPending": "Đang chờ",
+  "invitationsStatAccepted": "Đã chấp nhận",
+  "invitationsStatExpired": "Hết hạn"
 }

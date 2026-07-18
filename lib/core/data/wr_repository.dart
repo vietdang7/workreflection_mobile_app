@@ -1,3 +1,5 @@
+import 'dart:typed_data';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -53,6 +55,26 @@ abstract class WrRepository {
   Future<Map<String, dynamic>> getCcProfile();
   Future<void> updateCcProfile(Map<String, dynamic> fields);
   Future<void> updateDisplayName(String displayName);
+
+  // --- Avatar ---
+  /// Upload [bytes] to `avatars/{userId}/avatar.{ext}` with upsert, then
+  /// update cc_profiles.avatar_url with the public URL (cache-busted).
+  Future<String> uploadAvatar(List<int> bytes, String ext);
+
+  // --- Vouchers ---
+  /// Returns active vouchers visible to the current user.
+  Future<List<Map<String, dynamic>>> getVouchers();
+
+  // --- Org invitations ---
+  /// Returns all invitations matching the user's email, ordered newest first.
+  Future<List<Map<String, dynamic>>> getInvitations();
+
+  /// Accept an invitation via the `accept_org_invitation` RPC.
+  /// Returns the org_name from the RPC result.
+  Future<String> acceptInvitation(String token);
+
+  /// Decline an invitation (set status = 'declined').
+  Future<void> declineInvitation(String invitationId);
 
   // --- Export ---
   Future<Map<String, dynamic>> exportUserData();
@@ -336,7 +358,7 @@ class SupabaseWrRepository implements WrRepository {
         .select(
           'full_name, email, subscription_expires_at, '
           'phone, company_name, position, company_size, '
-          'total_work_experience, company_tenure, department',
+          'total_work_experience, company_tenure, department, avatar_url',
         )
         .eq('id', _uid)
         .limit(1);
@@ -355,6 +377,144 @@ class SupabaseWrRepository implements WrRepository {
       'display_name': displayName,
       'updated_at': DateTime.now().toIso8601String(),
     }).eq('user_id', _uid);
+  }
+
+  // --- Avatar ---
+
+  @override
+  Future<String> uploadAvatar(List<int> bytes, String ext) async {
+    final uid = _uid;
+    final filePath = '$uid/avatar.$ext';
+
+    // Remove old files in user's folder first (mirrors web behaviour).
+    final existing =
+        await _client.storage.from('avatars').list(path: uid);
+    if (existing.isNotEmpty) {
+      final toRemove = existing.map((f) => '$uid/${f.name}').toList();
+      await _client.storage.from('avatars').remove(toRemove);
+    }
+
+    // Upload with upsert.
+    await _client.storage.from('avatars').uploadBinary(
+          filePath,
+          Uint8List.fromList(bytes),
+          fileOptions: FileOptions(upsert: true, contentType: 'image/$ext'),
+        );
+
+    // Public URL with cache-bust (mirrors web ?t=Date.now()).
+    final urlData =
+        _client.storage.from('avatars').getPublicUrl(filePath);
+    final publicUrl = '$urlData?t=${DateTime.now().millisecondsSinceEpoch}';
+
+    // Persist to cc_profiles.
+    await _client
+        .from('cc_profiles')
+        .update({'avatar_url': publicUrl}).eq('id', uid);
+
+    return publicUrl;
+  }
+
+  // --- Vouchers ---
+
+  @override
+  Future<List<Map<String, dynamic>>> getVouchers() async {
+    final user = _client.auth.currentUser;
+    if (user == null) return [];
+
+    final rows = await _client
+        .from('cc_vouchers')
+        .select('*')
+        .eq('is_active', true)
+        .order('created_at', ascending: false);
+
+    // Fetch user's org membership to determine if enterprise.
+    final orgRows = await _client
+        .from('cc_org_members')
+        .select('id')
+        .eq('user_id', _uid)
+        .limit(1);
+    final isEnterprise = orgRows.isNotEmpty;
+
+    // Fetch user's role from cc_profiles.
+    final profileRows = await _client
+        .from('cc_profiles')
+        .select('role')
+        .eq('id', _uid)
+        .limit(1);
+    final role = (profileRows.isNotEmpty
+            ? profileRows.first['role'] as String?
+            : null) ??
+        'free';
+
+    final filtered = (rows as List).where((v) {
+      final targetType = (v['target_type'] as String?) ?? 'all';
+      switch (targetType) {
+        case 'all':
+          return true;
+        case 'individual_free':
+          return role == 'free';
+        case 'individual_premium':
+          return role == 'premium';
+        case 'enterprise':
+          return role == 'enterprise' || isEnterprise;
+        case 'specific_users':
+          final assigned = (v['assigned_users'] as List?) ?? [];
+          return assigned.contains(user.id);
+        default:
+          return true;
+      }
+    }).toList();
+
+    return filtered.map((v) => Map<String, dynamic>.from(v as Map)).toList();
+  }
+
+  // --- Org invitations ---
+
+  @override
+  Future<List<Map<String, dynamic>>> getInvitations() async {
+    final user = _client.auth.currentUser;
+    if (user?.email == null) return [];
+
+    final rows = await _client.from('cc_org_invitations').select('''
+        id,
+        org_id,
+        email,
+        role,
+        department,
+        status,
+        expires_at,
+        created_at,
+        token,
+        cc_organizations!inner(name)
+      ''').eq('email', user!.email!.toLowerCase()).order('created_at',
+        ascending: false);
+
+    return (rows as List).map((r) {
+      final map = Map<String, dynamic>.from(r as Map);
+      final org = r['cc_organizations'];
+      map['org_name'] =
+          (org is Map ? org['name'] : null) as String? ?? '';
+      map.remove('cc_organizations');
+      return map;
+    }).toList();
+  }
+
+  @override
+  Future<String> acceptInvitation(String token) async {
+    final result = await _client
+        .rpc('accept_org_invitation', params: {'invitation_token': token});
+    final data = result as Map<String, dynamic>;
+    if (data['success'] != true) {
+      throw Exception(data['error'] ?? 'Failed to accept invitation');
+    }
+    return (data['org_name'] as String?) ?? '';
+  }
+
+  @override
+  Future<void> declineInvitation(String invitationId) async {
+    await _client
+        .from('cc_org_invitations')
+        .update({'status': 'declined'}).eq('id', invitationId);
   }
 
   // --- Export ---

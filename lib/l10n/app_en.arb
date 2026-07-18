@@ -625,5 +625,114 @@
   "roadmapScoreWarning": "Needs improvement",
   "roadmapScoreCritical": "Needs immediate action",
   "roadmapEntryLink": "Development roadmap",
-  "roadmapProfileLink": "Action roadmap"
+  "roadmapProfileLink": "Action roadmap",
+
+  "profileVouchers": "My Vouchers",
+  "profileInvitations": "Organisation Invitations",
+
+  "avatarUploadSuccess": "Avatar updated.",
+  "avatarUploadError": "Could not upload avatar. Please try again.",
+  "avatarPickerTitle": "Choose avatar",
+  "avatarChangeBtn": "Change photo",
+  "avatarUploading": "Uploading…",
+
+  "vouchersTitle": "My Vouchers",
+  "vouchersSubtitle": "Copy a voucher code and use it at checkout on the web",
+  "vouchersEmpty": "No vouchers yet",
+  "vouchersEmptyBody": "There are no vouchers available for you right now.",
+  "voucherWebNote": "Apply codes at checkout on the web",
+  "voucherCopied": "Copied",
+  "voucherCopy": "Copy",
+  "voucherCopiedToast": "Copied code {code}",
+  "@voucherCopiedToast": {
+    "placeholders": {
+      "code": {"type": "String"}
+    }
+  },
+  "voucherExpired": "Expired",
+  "voucherFull": "Used up",
+  "voucherAvailable": "Available",
+  "voucherExpiry": "Exp: {date}",
+  "@voucherExpiry": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "voucherUsesLeft": "{left}/{max} uses left",
+  "@voucherUsesLeft": {
+    "placeholders": {
+      "left": {"type": "int"},
+      "max": {"type": "int"}
+    }
+  },
+  "voucherDiscountPercent": "{percent}% off",
+  "@voucherDiscountPercent": {
+    "placeholders": {
+      "percent": {"type": "int"}
+    }
+  },
+  "voucherDiscountAmount": "{amount} off",
+  "@voucherDiscountAmount": {
+    "placeholders": {
+      "amount": {"type": "String"}
+    }
+  },
+  "voucherAppliesTo": "Applies to",
+  "voucherProductPremium": "Premium",
+  "voucherProductWorkshop": "Workshop",
+  "voucherProductCoaching": "Coaching",
+
+  "invitationsTitle": "Organisation Invitations",
+  "invitationsSubtitle": "Manage invitations from organisations",
+  "invitationsEmpty": "No invitations yet",
+  "invitationsPending": "Pending",
+  "invitationsExpired": "Expired",
+  "invitationsProcessed": "Processed",
+  "invitationsAccepted": "Accepted",
+  "invitationsDeclined": "Declined",
+  "invitationsCancelled": "Cancelled",
+  "invitationsAcceptBtn": "Accept",
+  "invitationsDeclineBtn": "Decline",
+  "invitationsAcceptTitle": "Accept invitation",
+  "invitationsDeclineTitle": "Decline invitation",
+  "invitationsAcceptBody": "You will become a member of {org} with role {role}.",
+  "@invitationsAcceptBody": {
+    "placeholders": {
+      "org": {"type": "String"},
+      "role": {"type": "String"}
+    }
+  },
+  "invitationsDeclineBody": "Are you sure you want to decline the invitation from {org}?",
+  "@invitationsDeclineBody": {
+    "placeholders": {
+      "org": {"type": "String"}
+    }
+  },
+  "invitationsAcceptSuccess": "Joined {org}.",
+  "@invitationsAcceptSuccess": {
+    "placeholders": {
+      "org": {"type": "String"}
+    }
+  },
+  "invitationsAcceptError": "Could not accept invitation.",
+  "invitationsDeclineSuccess": "Invitation declined.",
+  "invitationsDeclineError": "Could not decline invitation.",
+  "invitationsExpiredAt": "Expired: {date}",
+  "@invitationsExpiredAt": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "invitationsExpiresAt": "Expires: {date}",
+  "@invitationsExpiresAt": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "invitationsNoPending": "No pending invitations",
+  "invitationsNoExpired": "No expired invitations",
+  "invitationsNoProcessed": "No processed invitations yet",
+  "invitationsStatPending": "Pending",
+  "invitationsStatAccepted": "Accepted",
+  "invitationsStatExpired": "Expired"
 }

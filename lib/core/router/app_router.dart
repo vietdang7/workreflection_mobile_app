@@ -28,6 +28,8 @@ import '../../features/coaching/presentation/coaching_schedule_screen.dart';
 import '../../features/coaching/presentation/coaching_screen.dart';
 import '../../features/coaching/presentation/coaching_sessions_screen.dart';
 import '../../features/profile/presentation/profile_edit_screen.dart';
+import '../../features/profile/presentation/vouchers_screen.dart';
+import '../../features/profile/presentation/invitations_screen.dart';
 import '../../features/roadmap/presentation/roadmap_screen.dart';
 import '../../features/survey/presentation/survey_history_screen.dart';
 import '../../features/understand/presentation/insights_screen.dart';
@@ -222,6 +224,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile/edit',
         builder: (context, state) => const ProfileEditScreen(),
+      ),
+      GoRoute(
+        path: '/vouchers',
+        builder: (context, state) => const VouchersScreen(),
+      ),
+      GoRoute(
+        path: '/invitations',
+        builder: (context, state) => const InvitationsScreen(),
       ),
       GoRoute(
         path: '/insights',

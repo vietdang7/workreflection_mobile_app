@@ -115,12 +115,14 @@ class _AvatarSection extends ConsumerWidget {
     final isPremium = expiresAtRaw != null &&
         DateTime.tryParse(expiresAtRaw)?.isAfter(DateTime.now()) == true;
 
+    final avatarUrl = ccData['avatar_url'] as String?;
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Avatar circle with initials
+          // Avatar circle — network image when available, else initials
           Container(
             width: 56,
             height: 56,
@@ -128,15 +130,32 @@ class _AvatarSection extends ConsumerWidget {
               color: WrColors.navy.withValues(alpha: 0.08),
               shape: BoxShape.circle,
             ),
-            alignment: Alignment.center,
-            child: Text(
-              _initials(name),
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: WrColors.navy,
-              ),
-            ),
+            clipBehavior: Clip.antiAlias,
+            child: avatarUrl != null && avatarUrl.isNotEmpty
+                ? Image.network(
+                    avatarUrl,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Center(
+                      child: Text(
+                        _initials(name),
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w700,
+                          color: WrColors.navy,
+                        ),
+                      ),
+                    ),
+                  )
+                : Center(
+                    child: Text(
+                      _initials(name),
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                        color: WrColors.navy,
+                      ),
+                    ),
+                  ),
           ),
           const SizedBox(width: 20),
           Column(
@@ -399,6 +418,26 @@ class _SettingsSection extends ConsumerWidget {
           trailing: GestureDetector(
             key: const Key('profile_change_password_btn'),
             onTap: () => _showChangePasswordDialog(context, ref),
+            child: const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
+          ),
+        ),
+
+        // Vouchers
+        _SettingRow(
+          label: l10n.profileVouchers,
+          trailing: GestureDetector(
+            key: const Key('profile_vouchers_btn'),
+            onTap: () => context.push('/vouchers'),
+            child: const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
+          ),
+        ),
+
+        // Org invitations
+        _SettingRow(
+          label: l10n.profileInvitations,
+          trailing: GestureDetector(
+            key: const Key('profile_invitations_btn'),
+            onTap: () => context.push('/invitations'),
             child: const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
           ),
         ),

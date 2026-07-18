@@ -1510,4 +1510,184 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get roadmapProfileLink => 'Lộ trình hành động';
+
+  @override
+  String get profileVouchers => 'Voucher của tôi';
+
+  @override
+  String get profileInvitations => 'Lời mời tổ chức';
+
+  @override
+  String get avatarUploadSuccess => 'Đã cập nhật ảnh đại diện.';
+
+  @override
+  String get avatarUploadError => 'Không thể tải ảnh lên. Vui lòng thử lại.';
+
+  @override
+  String get avatarPickerTitle => 'Chọn ảnh đại diện';
+
+  @override
+  String get avatarChangeBtn => 'Đổi ảnh';
+
+  @override
+  String get avatarUploading => 'Đang tải lên…';
+
+  @override
+  String get vouchersTitle => 'Voucher của tôi';
+
+  @override
+  String get vouchersSubtitle =>
+      'Sao chép mã voucher và dùng khi thanh toán trên web';
+
+  @override
+  String get vouchersEmpty => 'Bạn chưa có voucher nào';
+
+  @override
+  String get vouchersEmptyBody => 'Hiện chưa có voucher nào dành cho bạn.';
+
+  @override
+  String get voucherWebNote => 'Áp dụng mã khi thanh toán trên web';
+
+  @override
+  String get voucherCopied => 'Đã sao chép';
+
+  @override
+  String get voucherCopy => 'Sao chép';
+
+  @override
+  String voucherCopiedToast(String code) {
+    return 'Đã sao chép mã $code';
+  }
+
+  @override
+  String get voucherExpired => 'Hết hạn';
+
+  @override
+  String get voucherFull => 'Hết lượt';
+
+  @override
+  String get voucherAvailable => 'Khả dụng';
+
+  @override
+  String voucherExpiry(String date) {
+    return 'HSD: $date';
+  }
+
+  @override
+  String voucherUsesLeft(int left, int max) {
+    return 'Còn $left/$max lượt';
+  }
+
+  @override
+  String voucherDiscountPercent(int percent) {
+    return 'Giảm $percent%';
+  }
+
+  @override
+  String voucherDiscountAmount(String amount) {
+    return 'Giảm $amountđ';
+  }
+
+  @override
+  String get voucherAppliesTo => 'Áp dụng cho';
+
+  @override
+  String get voucherProductPremium => 'Premium';
+
+  @override
+  String get voucherProductWorkshop => 'Workshop';
+
+  @override
+  String get voucherProductCoaching => 'Coaching';
+
+  @override
+  String get invitationsTitle => 'Lời mời tham gia tổ chức';
+
+  @override
+  String get invitationsSubtitle => 'Quản lý các lời mời từ tổ chức';
+
+  @override
+  String get invitationsEmpty => 'Bạn chưa nhận được lời mời nào';
+
+  @override
+  String get invitationsPending => 'Đang chờ';
+
+  @override
+  String get invitationsExpired => 'Hết hạn';
+
+  @override
+  String get invitationsProcessed => 'Đã xử lý';
+
+  @override
+  String get invitationsAccepted => 'Đã chấp nhận';
+
+  @override
+  String get invitationsDeclined => 'Đã từ chối';
+
+  @override
+  String get invitationsCancelled => 'Đã huỷ';
+
+  @override
+  String get invitationsAcceptBtn => 'Chấp nhận';
+
+  @override
+  String get invitationsDeclineBtn => 'Từ chối';
+
+  @override
+  String get invitationsAcceptTitle => 'Chấp nhận lời mời';
+
+  @override
+  String get invitationsDeclineTitle => 'Từ chối lời mời';
+
+  @override
+  String invitationsAcceptBody(String org, String role) {
+    return 'Bạn sẽ trở thành thành viên của $org với vai trò $role.';
+  }
+
+  @override
+  String invitationsDeclineBody(String org) {
+    return 'Bạn có chắc muốn từ chối lời mời từ $org?';
+  }
+
+  @override
+  String invitationsAcceptSuccess(String org) {
+    return 'Đã tham gia $org.';
+  }
+
+  @override
+  String get invitationsAcceptError => 'Không thể chấp nhận lời mời.';
+
+  @override
+  String get invitationsDeclineSuccess => 'Đã từ chối lời mời.';
+
+  @override
+  String get invitationsDeclineError => 'Không thể từ chối lời mời.';
+
+  @override
+  String invitationsExpiredAt(String date) {
+    return 'Hết hạn: $date';
+  }
+
+  @override
+  String invitationsExpiresAt(String date) {
+    return 'Hết hạn lúc: $date';
+  }
+
+  @override
+  String get invitationsNoPending => 'Không có lời mời đang chờ';
+
+  @override
+  String get invitationsNoExpired => 'Không có lời mời hết hạn';
+
+  @override
+  String get invitationsNoProcessed => 'Chưa có lời mời nào đã xử lý';
+
+  @override
+  String get invitationsStatPending => 'Đang chờ';
+
+  @override
+  String get invitationsStatAccepted => 'Đã chấp nhận';
+
+  @override
+  String get invitationsStatExpired => 'Hết hạn';
 }

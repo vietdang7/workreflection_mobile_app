@@ -168,12 +168,13 @@ void main() {
       expect(find.textContaining('Nhân viên'), findsOneWidget);
     });
 
-    testWidgets('avatar section shows initials and deferred note', (tester) async {
+    testWidgets('avatar section shows initials and tap target', (tester) async {
       final repo = _seedRepo();
       await _pumpEdit(tester, _wrapEdit(const ProfileEditScreen(), repo));
 
       expect(find.textContaining('YT'), findsOneWidget);
-      expect(find.textContaining('workreflection.app'), findsOneWidget);
+      // Avatar is now tappable for upload — verify the tap target exists.
+      expect(find.byKey(const Key('profile_edit_avatar_tap')), findsOneWidget);
     });
   });
 }

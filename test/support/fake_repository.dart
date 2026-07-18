@@ -40,6 +40,29 @@ class FakeWrRepository implements WrRepository {
   final List<String> saveOnboardingSituationCalls = [];
   final List<Map<String, dynamic>> updateCcProfileCalls = [];
   final List<String> updateDisplayNameCalls = [];
+  final List<(List<int>, String)> uploadAvatarCalls = [];
+  final List<String> acceptInvitationCalls = [];
+  final List<String> declineInvitationCalls = [];
+
+  // --- Seed helpers for new features ---
+  List<Map<String, dynamic>> _vouchers = [];
+  List<Map<String, dynamic>> _invitations = [];
+  String _avatarUrl = 'https://fake.supabase.co/avatars/u1/avatar.jpg';
+  String? _acceptInvitationOrgName = 'Test Org';
+  Exception? _acceptInvitationError;
+
+  void seedVouchers(List<Map<String, dynamic>> vouchers) {
+    _vouchers = List.from(vouchers);
+  }
+
+  void seedInvitations(List<Map<String, dynamic>> invitations) {
+    _invitations = List.from(invitations);
+  }
+
+  void setAcceptInvitationResult({String? orgName, Exception? error}) {
+    _acceptInvitationOrgName = orgName;
+    _acceptInvitationError = error;
+  }
 
   // --- Seed helpers ---
 
@@ -276,6 +299,44 @@ class FakeWrRepository implements WrRepository {
     updateDisplayNameCalls.add(displayName);
     if (_profile != null) {
       _profile = _profile!.copyWith(displayName: displayName);
+    }
+  }
+
+  @override
+  Future<String> uploadAvatar(List<int> bytes, String ext) async {
+    uploadAvatarCalls.add((bytes, ext));
+    _avatarUrl =
+        'https://fake.supabase.co/avatars/u1/avatar.$ext?t=12345';
+    _ccProfile = {..._ccProfile, 'avatar_url': _avatarUrl};
+    return _avatarUrl;
+  }
+
+  @override
+  Future<List<Map<String, dynamic>>> getVouchers() async =>
+      List.unmodifiable(_vouchers);
+
+  @override
+  Future<List<Map<String, dynamic>>> getInvitations() async =>
+      List.unmodifiable(_invitations);
+
+  @override
+  Future<String> acceptInvitation(String token) async {
+    acceptInvitationCalls.add(token);
+    if (_acceptInvitationError != null) throw _acceptInvitationError!;
+    // Update in-memory state
+    final idx = _invitations.indexWhere((i) => i['token'] == token);
+    if (idx != -1) {
+      _invitations[idx] = {..._invitations[idx], 'status': 'accepted'};
+    }
+    return _acceptInvitationOrgName ?? 'Test Org';
+  }
+
+  @override
+  Future<void> declineInvitation(String invitationId) async {
+    declineInvitationCalls.add(invitationId);
+    final idx = _invitations.indexWhere((i) => i['id'] == invitationId);
+    if (idx != -1) {
+      _invitations[idx] = {..._invitations[idx], 'status': 'declined'};
     }
   }
 }

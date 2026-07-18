@@ -1510,4 +1510,185 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get roadmapProfileLink => 'Action roadmap';
+
+  @override
+  String get profileVouchers => 'My Vouchers';
+
+  @override
+  String get profileInvitations => 'Organisation Invitations';
+
+  @override
+  String get avatarUploadSuccess => 'Avatar updated.';
+
+  @override
+  String get avatarUploadError => 'Could not upload avatar. Please try again.';
+
+  @override
+  String get avatarPickerTitle => 'Choose avatar';
+
+  @override
+  String get avatarChangeBtn => 'Change photo';
+
+  @override
+  String get avatarUploading => 'Uploading…';
+
+  @override
+  String get vouchersTitle => 'My Vouchers';
+
+  @override
+  String get vouchersSubtitle =>
+      'Copy a voucher code and use it at checkout on the web';
+
+  @override
+  String get vouchersEmpty => 'No vouchers yet';
+
+  @override
+  String get vouchersEmptyBody =>
+      'There are no vouchers available for you right now.';
+
+  @override
+  String get voucherWebNote => 'Apply codes at checkout on the web';
+
+  @override
+  String get voucherCopied => 'Copied';
+
+  @override
+  String get voucherCopy => 'Copy';
+
+  @override
+  String voucherCopiedToast(String code) {
+    return 'Copied code $code';
+  }
+
+  @override
+  String get voucherExpired => 'Expired';
+
+  @override
+  String get voucherFull => 'Used up';
+
+  @override
+  String get voucherAvailable => 'Available';
+
+  @override
+  String voucherExpiry(String date) {
+    return 'Exp: $date';
+  }
+
+  @override
+  String voucherUsesLeft(int left, int max) {
+    return '$left/$max uses left';
+  }
+
+  @override
+  String voucherDiscountPercent(int percent) {
+    return '$percent% off';
+  }
+
+  @override
+  String voucherDiscountAmount(String amount) {
+    return '$amount off';
+  }
+
+  @override
+  String get voucherAppliesTo => 'Applies to';
+
+  @override
+  String get voucherProductPremium => 'Premium';
+
+  @override
+  String get voucherProductWorkshop => 'Workshop';
+
+  @override
+  String get voucherProductCoaching => 'Coaching';
+
+  @override
+  String get invitationsTitle => 'Organisation Invitations';
+
+  @override
+  String get invitationsSubtitle => 'Manage invitations from organisations';
+
+  @override
+  String get invitationsEmpty => 'No invitations yet';
+
+  @override
+  String get invitationsPending => 'Pending';
+
+  @override
+  String get invitationsExpired => 'Expired';
+
+  @override
+  String get invitationsProcessed => 'Processed';
+
+  @override
+  String get invitationsAccepted => 'Accepted';
+
+  @override
+  String get invitationsDeclined => 'Declined';
+
+  @override
+  String get invitationsCancelled => 'Cancelled';
+
+  @override
+  String get invitationsAcceptBtn => 'Accept';
+
+  @override
+  String get invitationsDeclineBtn => 'Decline';
+
+  @override
+  String get invitationsAcceptTitle => 'Accept invitation';
+
+  @override
+  String get invitationsDeclineTitle => 'Decline invitation';
+
+  @override
+  String invitationsAcceptBody(String org, String role) {
+    return 'You will become a member of $org with role $role.';
+  }
+
+  @override
+  String invitationsDeclineBody(String org) {
+    return 'Are you sure you want to decline the invitation from $org?';
+  }
+
+  @override
+  String invitationsAcceptSuccess(String org) {
+    return 'Joined $org.';
+  }
+
+  @override
+  String get invitationsAcceptError => 'Could not accept invitation.';
+
+  @override
+  String get invitationsDeclineSuccess => 'Invitation declined.';
+
+  @override
+  String get invitationsDeclineError => 'Could not decline invitation.';
+
+  @override
+  String invitationsExpiredAt(String date) {
+    return 'Expired: $date';
+  }
+
+  @override
+  String invitationsExpiresAt(String date) {
+    return 'Expires: $date';
+  }
+
+  @override
+  String get invitationsNoPending => 'No pending invitations';
+
+  @override
+  String get invitationsNoExpired => 'No expired invitations';
+
+  @override
+  String get invitationsNoProcessed => 'No processed invitations yet';
+
+  @override
+  String get invitationsStatPending => 'Pending';
+
+  @override
+  String get invitationsStatAccepted => 'Accepted';
+
+  @override
+  String get invitationsStatExpired => 'Expired';
 }
