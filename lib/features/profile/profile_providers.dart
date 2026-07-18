@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/data/wr_repository.dart';
+import '../../core/logic/checkin_history.dart';
 import '../../core/logic/streak.dart';
 import '../../core/logic/vn_date.dart';
 import '../../core/models/mobile_profile.dart';
@@ -48,6 +49,14 @@ final milestoneCountProvider = FutureProvider<int>((ref) async {
 final streakProvider = FutureProvider<int>((ref) async {
   final dates = await ref.watch(wrRepositoryProvider).getCheckinDates();
   return computeStreak(dates, todayVn());
+});
+
+/// 30-element list: index 0 = today−29, index 29 = today.
+/// true = checked in that day.
+final checkinHistoryProvider = FutureProvider<List<bool>>((ref) async {
+  final dates =
+      await ref.watch(wrRepositoryProvider).getCheckinDates(limit: 30);
+  return buildCheckinHistory(checkinDates: dates, today: DateTime.now());
 });
 
 // ---------------------------------------------------------------------------

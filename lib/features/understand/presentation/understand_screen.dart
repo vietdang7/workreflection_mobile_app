@@ -112,6 +112,8 @@ class _DominantNeedBlock extends ConsumerWidget {
                 '$source ${l10n.understandNeedSuffix}',
                 style: WrTextStyles.body.copyWith(fontSize: 13),
               ),
+              const SizedBox(height: 12),
+              _ViewAllInsightsLink(),
             ],
           ),
         );
@@ -400,6 +402,29 @@ class _CareerHealthCheck extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// View-all insights link (only shown when insight count > 0)
+// ---------------------------------------------------------------------------
+
+class _ViewAllInsightsLink extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final countAsync = ref.watch(understandInsightCountProvider);
+    return countAsync.when(
+      data: (count) => count > 0
+          ? WrActionLink(
+              key: const Key('understand_view_all_insights'),
+              label: l10n.understandViewAllInsights,
+              onTap: () => context.push('/insights'),
+            )
+          : const SizedBox.shrink(),
+      loading: () => const SizedBox.shrink(),
+      error: (_, __) => const SizedBox.shrink(),
     );
   }
 }

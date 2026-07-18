@@ -173,5 +173,37 @@ void main() {
       // WrEyebrow uppercases: "GỢI Ý KHI MỆT MỎI"
       expect(find.textContaining('GỢI Ý'), findsOneWidget);
     });
+
+    testWidgets('system notice card has a learn-more link with key', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedSituations([
+        RecurringSituation(
+          id: 's1',
+          userId: 'u1',
+          label: 'Ngại phản biện',
+          occurrenceCount: 3,
+          updatedAt: DateTime(2026, 7, 1),
+        ),
+      ]);
+      await _pumpLarge(tester, _wrap(const HomeScreen(), repo));
+
+      expect(find.byKey(const Key('home_system_notice_learn_more')), findsOneWidget);
+    });
+
+    testWidgets('learn-more link label is "Tìm hiểu thêm"', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedSituations([
+        RecurringSituation(
+          id: 's1',
+          userId: 'u1',
+          label: 'Tình huống X',
+          occurrenceCount: 2,
+          updatedAt: DateTime(2026, 7, 1),
+        ),
+      ]);
+      await _pumpLarge(tester, _wrap(const HomeScreen(), repo));
+
+      expect(find.textContaining('Tìm hiểu thêm'), findsOneWidget);
+    });
   });
 }

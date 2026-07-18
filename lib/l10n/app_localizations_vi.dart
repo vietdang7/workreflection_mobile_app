@@ -980,4 +980,22 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get profileEditSelectHint => 'Chọn...';
+
+  @override
+  String get insightsTitle => 'Tất cả insight';
+
+  @override
+  String get insightsEmpty =>
+      'Bạn chưa có insight nào. Hãy bắt đầu hành trình của bạn!';
+
+  @override
+  String insightSavedDate(String date) {
+    return 'Lưu ngày $date';
+  }
+
+  @override
+  String get understandViewAllInsights => 'Xem tất cả insight';
+
+  @override
+  String get profileCheckinHistory => '30 ngày gần đây';
 }

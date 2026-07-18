@@ -980,4 +980,21 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileEditSelectHint => 'Select...';
+
+  @override
+  String get insightsTitle => 'All insights';
+
+  @override
+  String get insightsEmpty => 'No insights yet. Start your journey!';
+
+  @override
+  String insightSavedDate(String date) {
+    return 'Saved $date';
+  }
+
+  @override
+  String get understandViewAllInsights => 'View all insights';
+
+  @override
+  String get profileCheckinHistory => 'Last 30 days';
 }

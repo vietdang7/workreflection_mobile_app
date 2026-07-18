@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/models/checkin.dart';
@@ -217,7 +218,11 @@ class _SystemNoticeCard extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 16),
-              WrActionLink(label: l10n.homeLinkLearnMore, onTap: () {}),
+              WrActionLink(
+                key: const Key('home_system_notice_learn_more'),
+                label: l10n.homeLinkLearnMore,
+                onTap: () => context.go('/understand'),
+              ),
             ],
           ),
         );

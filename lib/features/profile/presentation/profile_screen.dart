@@ -37,6 +37,8 @@ class ProfileScreen extends ConsumerWidget {
                   _Divider(),
                   _StatsRow(),
                   _Divider(),
+                  _CheckinHistorySection(),
+                  _Divider(),
                   _SettingsSection(),
                   const SizedBox(height: 80),
                 ]),
@@ -241,6 +243,73 @@ class _Divider extends StatelessWidget {
       height: 1,
       color: WrColors.coral.withValues(alpha: 0.1),
       margin: const EdgeInsets.symmetric(vertical: 8),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 30-day check-in history strip
+// ---------------------------------------------------------------------------
+
+class _CheckinHistorySection extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final historyAsync = ref.watch(checkinHistoryProvider);
+
+    return Padding(
+      key: const Key('profile_checkin_history'),
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          WrEyebrow(l10n.profileCheckinHistory),
+          const SizedBox(height: 12),
+          historyAsync.when(
+            loading: () => const SizedBox(
+              height: 36,
+              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+            ),
+            error: (_, __) => const SizedBox.shrink(),
+            data: (history) => _CheckinDotStrip(history: history),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CheckinDotStrip extends StatelessWidget {
+  const _CheckinDotStrip({required this.history});
+
+  /// 30-element list: index 0 = oldest, index 29 = today.
+  final List<bool> history;
+
+  @override
+  Widget build(BuildContext context) {
+    // Render as 5 rows × 6 columns (oldest top-left, newest bottom-right).
+    const cols = 6;
+    const rows = 5;
+    const dotSize = 10.0;
+    const gap = 6.0;
+
+    return Wrap(
+      spacing: gap,
+      runSpacing: gap,
+      children: List.generate(rows * cols, (i) {
+        // history has exactly 30 entries; i maps directly.
+        final checked = i < history.length && history[i];
+        return Container(
+          width: dotSize,
+          height: dotSize,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: checked
+                ? WrColors.teal
+                : WrColors.navy.withValues(alpha: 0.12),
+          ),
+        );
+      }),
     );
   }
 }

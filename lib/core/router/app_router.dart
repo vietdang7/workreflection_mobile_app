@@ -25,6 +25,7 @@ import '../../features/coaching/presentation/coaching_screen.dart';
 import '../../features/coaching/presentation/coaching_sessions_screen.dart';
 import '../../features/profile/presentation/profile_edit_screen.dart';
 import '../../features/survey/presentation/survey_history_screen.dart';
+import '../../features/understand/presentation/insights_screen.dart';
 import 'auth_change_notifier.dart';
 
 // ---------------------------------------------------------------------------
@@ -186,6 +187,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile/edit',
         builder: (context, state) => const ProfileEditScreen(),
+      ),
+      GoRoute(
+        path: '/insights',
+        builder: (context, state) => const InsightsScreen(),
       ),
 
       // Shell with 5 indexed branches

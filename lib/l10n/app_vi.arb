@@ -427,5 +427,17 @@
   "profileEditDeptProduction": "Sản xuất",
   "profileEditDeptAdmin": "Hành chính",
   "profileEditDeptOther": "Khác",
-  "profileEditSelectHint": "Chọn..."
+  "profileEditSelectHint": "Chọn...",
+
+  "insightsTitle": "Tất cả insight",
+  "insightsEmpty": "Bạn chưa có insight nào. Hãy bắt đầu hành trình của bạn!",
+  "insightSavedDate": "Lưu ngày {date}",
+  "@insightSavedDate": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "understandViewAllInsights": "Xem tất cả insight",
+
+  "profileCheckinHistory": "30 ngày gần đây"
 }

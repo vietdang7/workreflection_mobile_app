@@ -184,5 +184,30 @@ void main() {
       // understandHealthReady uses the combined count: "Bạn đã có đủ 5 reflection."
       expect(find.textContaining('5'), findsWidgets);
     });
+
+    testWidgets('view-all insights link hidden when no insights', (tester) async {
+      final repo = FakeWrRepository();
+      // No insights seeded → count = 0
+      await _pumpLarge(tester, _wrap(const UnderstandScreen(), repo));
+
+      expect(find.byKey(const Key('understand_view_all_insights')), findsNothing);
+    });
+
+    testWidgets('view-all insights link visible when insights exist', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedInsights([
+        Insight(
+          id: 'i1',
+          userId: 'u1',
+          content: 'Tôi cần không gian để suy nghĩ.',
+          source: 'VOICE',
+          savedAt: DateTime(2026, 7, 1),
+        ),
+      ]);
+      await _pumpLarge(tester, _wrap(const UnderstandScreen(), repo));
+
+      expect(find.byKey(const Key('understand_view_all_insights')), findsOneWidget);
+      expect(find.textContaining('Xem tất cả insight'), findsOneWidget);
+    });
   });
 }

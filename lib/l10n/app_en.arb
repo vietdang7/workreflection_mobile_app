@@ -426,5 +426,17 @@
   "profileEditDeptProduction": "Production",
   "profileEditDeptAdmin": "Admin",
   "profileEditDeptOther": "Other",
-  "profileEditSelectHint": "Select..."
+  "profileEditSelectHint": "Select...",
+
+  "insightsTitle": "All insights",
+  "insightsEmpty": "No insights yet. Start your journey!",
+  "insightSavedDate": "Saved {date}",
+  "@insightSavedDate": {
+    "placeholders": {
+      "date": {"type": "String"}
+    }
+  },
+  "understandViewAllInsights": "View all insights",
+
+  "profileCheckinHistory": "Last 30 days"
 }

@@ -354,5 +354,32 @@ void main() {
       expect(find.byKey(const Key('profile_edit_profile_btn')), findsOneWidget);
       expect(find.textContaining('Chỉnh sửa hồ sơ'), findsOneWidget);
     });
+
+    testWidgets('shows 30-day checkin history section', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile());
+      repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
+      // Seed a few recent checkin dates
+      repo.seedCheckinDates([
+        DateTime.now(),
+        DateTime.now().subtract(const Duration(days: 1)),
+        DateTime.now().subtract(const Duration(days: 3)),
+      ]);
+      await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
+
+      expect(find.byKey(const Key('profile_checkin_history')), findsOneWidget);
+      // Section eyebrow label (WrEyebrow uppercases)
+      expect(find.textContaining('30 NGÀY'), findsOneWidget);
+    });
+
+    testWidgets('checkin history section visible even with no checkins', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile());
+      repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
+      // No checkin dates → still renders the section
+      await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
+
+      expect(find.byKey(const Key('profile_checkin_history')), findsOneWidget);
+    });
   });
 }

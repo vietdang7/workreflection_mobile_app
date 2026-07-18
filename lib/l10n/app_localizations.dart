@@ -1945,6 +1945,36 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Chọn...'**
   String get profileEditSelectHint;
+
+  /// No description provided for @insightsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tất cả insight'**
+  String get insightsTitle;
+
+  /// No description provided for @insightsEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn chưa có insight nào. Hãy bắt đầu hành trình của bạn!'**
+  String get insightsEmpty;
+
+  /// No description provided for @insightSavedDate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu ngày {date}'**
+  String insightSavedDate(String date);
+
+  /// No description provided for @understandViewAllInsights.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem tất cả insight'**
+  String get understandViewAllInsights;
+
+  /// No description provided for @profileCheckinHistory.
+  ///
+  /// In vi, this message translates to:
+  /// **'30 ngày gần đây'**
+  String get profileCheckinHistory;
 }
 
 class _AppLocalizationsDelegate
