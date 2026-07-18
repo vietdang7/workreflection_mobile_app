@@ -51,6 +51,8 @@ abstract class WrRepository {
   Future<ScaReport?> getLatestScaReport();
   Future<Workshop?> getUpcomingWorkshop();
   Future<Map<String, dynamic>> getCcProfile();
+  Future<void> updateCcProfile(Map<String, dynamic> fields);
+  Future<void> updateDisplayName(String displayName);
 
   // --- Export ---
   Future<Map<String, dynamic>> exportUserData();
@@ -331,11 +333,28 @@ class SupabaseWrRepository implements WrRepository {
   Future<Map<String, dynamic>> getCcProfile() async {
     final rows = await _client
         .from('cc_profiles')
-        .select('full_name, email, subscription_expires_at')
+        .select(
+          'full_name, email, subscription_expires_at, '
+          'phone, company_name, position, company_size, '
+          'total_work_experience, company_tenure, department',
+        )
         .eq('id', _uid)
         .limit(1);
     if (rows.isEmpty) return {};
     return Map<String, dynamic>.from(rows.first);
+  }
+
+  @override
+  Future<void> updateCcProfile(Map<String, dynamic> fields) async {
+    await _client.from('cc_profiles').update(fields).eq('id', _uid);
+  }
+
+  @override
+  Future<void> updateDisplayName(String displayName) async {
+    await _client.from('wr_mobile_profiles').update({
+      'display_name': displayName,
+      'updated_at': DateTime.now().toIso8601String(),
+    }).eq('user_id', _uid);
   }
 
   // --- Export ---

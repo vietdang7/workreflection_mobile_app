@@ -46,6 +46,8 @@ class _FailingCheckinRepo implements WrRepository {
   @override Future<ScaReport?> getLatestScaReport() => _d.getLatestScaReport();
   @override Future<Workshop?> getUpcomingWorkshop() => _d.getUpcomingWorkshop();
   @override Future<Map<String, dynamic>> getCcProfile() => _d.getCcProfile();
+  @override Future<void> updateCcProfile(Map<String, dynamic> fields) => _d.updateCcProfile(fields);
+  @override Future<void> updateDisplayName(String displayName) => _d.updateDisplayName(displayName);
   @override Future<Map<String, dynamic>> exportUserData() => _d.exportUserData();
   @override Future<void> ensureSeeded({String? onboardingSituation}) => _d.ensureSeeded(onboardingSituation: onboardingSituation);
   @override Future<void> saveOnboardingSituation(String s) => _d.saveOnboardingSituation(s);
@@ -75,6 +77,8 @@ class _FailingPracticeRepo implements WrRepository {
   @override Future<ScaReport?> getLatestScaReport() => _d.getLatestScaReport();
   @override Future<Workshop?> getUpcomingWorkshop() => _d.getUpcomingWorkshop();
   @override Future<Map<String, dynamic>> getCcProfile() => _d.getCcProfile();
+  @override Future<void> updateCcProfile(Map<String, dynamic> fields) => _d.updateCcProfile(fields);
+  @override Future<void> updateDisplayName(String displayName) => _d.updateDisplayName(displayName);
   @override Future<Map<String, dynamic>> exportUserData() => _d.exportUserData();
   @override Future<void> ensureSeeded({String? onboardingSituation}) => _d.ensureSeeded(onboardingSituation: onboardingSituation);
   @override Future<void> saveOnboardingSituation(String s) => _d.saveOnboardingSituation(s);

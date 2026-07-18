@@ -770,6 +770,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not send email. Please try again.';
 
   @override
+  String get profileSettingEditProfile => 'Edit Profile';
+
+  @override
   String get profileSettingChangePassword => 'Change password';
 
   @override
@@ -801,4 +804,152 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get changePasswordErrorSessionExpired =>
       'Session expired. Please log in again.';
+
+  @override
+  String get profileEditTitle => 'Edit Profile';
+
+  @override
+  String get profileEditEyebrow => 'Personal Information';
+
+  @override
+  String get profileEditFieldDisplayName => 'Display name';
+
+  @override
+  String get profileEditFieldFullName => 'Full name';
+
+  @override
+  String get profileEditFieldPhone => 'Phone number';
+
+  @override
+  String get profileEditFieldCompanyName => 'Company name';
+
+  @override
+  String get profileEditFieldPosition => 'Job title';
+
+  @override
+  String get profileEditFieldCompanySize => 'Company size';
+
+  @override
+  String get profileEditFieldExperience => 'Work experience';
+
+  @override
+  String get profileEditFieldTenure => 'Time at company';
+
+  @override
+  String get profileEditFieldDepartment => 'Department';
+
+  @override
+  String get profileEditSave => 'Save changes';
+
+  @override
+  String get profileEditSaveSuccess => 'Profile updated.';
+
+  @override
+  String get profileEditSaveError => 'Could not save. Please try again.';
+
+  @override
+  String get profileEditAvatarNote =>
+      'Change your avatar on the web at workreflection.app';
+
+  @override
+  String get profileEditPositionStaff => 'Staff';
+
+  @override
+  String get profileEditPositionTeamLead => 'Team Lead';
+
+  @override
+  String get profileEditPositionManager => 'Manager';
+
+  @override
+  String get profileEditPositionDirector => 'Director';
+
+  @override
+  String get profileEditPositionCLevel => 'C-Level';
+
+  @override
+  String get profileEditPositionIntern => 'Intern';
+
+  @override
+  String get profileEditPositionFreelancer => 'Freelancer';
+
+  @override
+  String get profileEditPositionOther => 'Other';
+
+  @override
+  String get profileEditCompanySize1to10 => '1–10 people';
+
+  @override
+  String get profileEditCompanySize11to50 => '11–50 people';
+
+  @override
+  String get profileEditCompanySize51to200 => '51–200 people';
+
+  @override
+  String get profileEditCompanySize201to500 => '201–500 people';
+
+  @override
+  String get profileEditCompanySize501to1000 => '501–1000 people';
+
+  @override
+  String get profileEditCompanySize1000Plus => '1000+ people';
+
+  @override
+  String get profileEditExpLess1 => 'Under 1 year';
+
+  @override
+  String get profileEditExp1to3 => '1–3 years';
+
+  @override
+  String get profileEditExp3to5 => '3–5 years';
+
+  @override
+  String get profileEditExp5to10 => '5–10 years';
+
+  @override
+  String get profileEditExp10Plus => '10+ years';
+
+  @override
+  String get profileEditTenureLess6m => 'Under 6 months';
+
+  @override
+  String get profileEditTenure6mto1y => '6 months–1 year';
+
+  @override
+  String get profileEditTenure1to2 => '1–2 years';
+
+  @override
+  String get profileEditTenure2to5 => '2–5 years';
+
+  @override
+  String get profileEditTenure5Plus => '5+ years';
+
+  @override
+  String get profileEditDeptMarketing => 'Marketing';
+
+  @override
+  String get profileEditDeptAccounting => 'Accounting';
+
+  @override
+  String get profileEditDeptSales => 'Sales';
+
+  @override
+  String get profileEditDeptPurchasing => 'Purchasing';
+
+  @override
+  String get profileEditDeptHr => 'HR';
+
+  @override
+  String get profileEditDeptIt => 'IT';
+
+  @override
+  String get profileEditDeptProduction => 'Production';
+
+  @override
+  String get profileEditDeptAdmin => 'Admin';
+
+  @override
+  String get profileEditDeptOther => 'Other';
+
+  @override
+  String get profileEditSelectHint => 'Select...';
 }

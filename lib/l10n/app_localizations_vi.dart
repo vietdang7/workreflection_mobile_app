@@ -771,6 +771,9 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không thể gửi email. Vui lòng thử lại.';
 
   @override
+  String get profileSettingEditProfile => 'Chỉnh sửa hồ sơ';
+
+  @override
   String get profileSettingChangePassword => 'Đổi mật khẩu';
 
   @override
@@ -801,4 +804,152 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get changePasswordErrorSessionExpired =>
       'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.';
+
+  @override
+  String get profileEditTitle => 'Chỉnh sửa hồ sơ';
+
+  @override
+  String get profileEditEyebrow => 'Thông tin cá nhân';
+
+  @override
+  String get profileEditFieldDisplayName => 'Tên hiển thị';
+
+  @override
+  String get profileEditFieldFullName => 'Họ và tên';
+
+  @override
+  String get profileEditFieldPhone => 'Số điện thoại';
+
+  @override
+  String get profileEditFieldCompanyName => 'Tên công ty';
+
+  @override
+  String get profileEditFieldPosition => 'Chức danh';
+
+  @override
+  String get profileEditFieldCompanySize => 'Quy mô công ty';
+
+  @override
+  String get profileEditFieldExperience => 'Thâm niên làm việc';
+
+  @override
+  String get profileEditFieldTenure => 'Thời gian tại công ty';
+
+  @override
+  String get profileEditFieldDepartment => 'Phòng ban';
+
+  @override
+  String get profileEditSave => 'Lưu thay đổi';
+
+  @override
+  String get profileEditSaveSuccess => 'Đã cập nhật hồ sơ.';
+
+  @override
+  String get profileEditSaveError => 'Không thể lưu. Vui lòng thử lại.';
+
+  @override
+  String get profileEditAvatarNote =>
+      'Thay ảnh đại diện trên web tại workreflection.app';
+
+  @override
+  String get profileEditPositionStaff => 'Nhân viên';
+
+  @override
+  String get profileEditPositionTeamLead => 'Trưởng nhóm';
+
+  @override
+  String get profileEditPositionManager => 'Quản lý';
+
+  @override
+  String get profileEditPositionDirector => 'Giám đốc';
+
+  @override
+  String get profileEditPositionCLevel => 'C-Level';
+
+  @override
+  String get profileEditPositionIntern => 'Thực tập sinh';
+
+  @override
+  String get profileEditPositionFreelancer => 'Freelancer';
+
+  @override
+  String get profileEditPositionOther => 'Khác';
+
+  @override
+  String get profileEditCompanySize1to10 => '1–10 người';
+
+  @override
+  String get profileEditCompanySize11to50 => '11–50 người';
+
+  @override
+  String get profileEditCompanySize51to200 => '51–200 người';
+
+  @override
+  String get profileEditCompanySize201to500 => '201–500 người';
+
+  @override
+  String get profileEditCompanySize501to1000 => '501–1000 người';
+
+  @override
+  String get profileEditCompanySize1000Plus => 'Trên 1000 người';
+
+  @override
+  String get profileEditExpLess1 => 'Dưới 1 năm';
+
+  @override
+  String get profileEditExp1to3 => '1–3 năm';
+
+  @override
+  String get profileEditExp3to5 => '3–5 năm';
+
+  @override
+  String get profileEditExp5to10 => '5–10 năm';
+
+  @override
+  String get profileEditExp10Plus => 'Trên 10 năm';
+
+  @override
+  String get profileEditTenureLess6m => 'Dưới 6 tháng';
+
+  @override
+  String get profileEditTenure6mto1y => '6 tháng–1 năm';
+
+  @override
+  String get profileEditTenure1to2 => '1–2 năm';
+
+  @override
+  String get profileEditTenure2to5 => '2–5 năm';
+
+  @override
+  String get profileEditTenure5Plus => 'Trên 5 năm';
+
+  @override
+  String get profileEditDeptMarketing => 'Marketing';
+
+  @override
+  String get profileEditDeptAccounting => 'Kế toán';
+
+  @override
+  String get profileEditDeptSales => 'Kinh doanh';
+
+  @override
+  String get profileEditDeptPurchasing => 'Mua hàng';
+
+  @override
+  String get profileEditDeptHr => 'Nhân sự';
+
+  @override
+  String get profileEditDeptIt => 'IT';
+
+  @override
+  String get profileEditDeptProduction => 'Sản xuất';
+
+  @override
+  String get profileEditDeptAdmin => 'Hành chính';
+
+  @override
+  String get profileEditDeptOther => 'Khác';
+
+  @override
+  String get profileEditSelectHint => 'Chọn...';
 }

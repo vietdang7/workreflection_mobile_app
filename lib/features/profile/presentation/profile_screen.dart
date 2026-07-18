@@ -314,6 +314,16 @@ class _SettingsSection extends ConsumerWidget {
           ),
         ),
 
+        // Edit profile
+        _SettingRow(
+          label: l10n.profileSettingEditProfile,
+          trailing: GestureDetector(
+            key: const Key('profile_edit_profile_btn'),
+            onTap: () => context.push('/profile/edit'),
+            child: const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
+          ),
+        ),
+
         // Change password
         _SettingRow(
           label: l10n.profileSettingChangePassword,

@@ -34,6 +34,8 @@ class FakeWrRepository implements WrRepository {
   final List<String> updateLanguageCalls = [];
   final List<String?> ensureSeededCalls = [];
   final List<String> saveOnboardingSituationCalls = [];
+  final List<Map<String, dynamic>> updateCcProfileCalls = [];
+  final List<String> updateDisplayNameCalls = [];
 
   // --- Seed helpers ---
 
@@ -247,5 +249,19 @@ class FakeWrRepository implements WrRepository {
   @override
   Future<void> saveOnboardingSituation(String situation) async {
     saveOnboardingSituationCalls.add(situation);
+  }
+
+  @override
+  Future<void> updateCcProfile(Map<String, dynamic> fields) async {
+    updateCcProfileCalls.add(Map<String, dynamic>.from(fields));
+    _ccProfile = {..._ccProfile, ...fields};
+  }
+
+  @override
+  Future<void> updateDisplayName(String displayName) async {
+    updateDisplayNameCalls.add(displayName);
+    if (_profile != null) {
+      _profile = _profile!.copyWith(displayName: displayName);
+    }
   }
 }

@@ -74,3 +74,35 @@ class ReminderNotifier extends AsyncNotifier<bool> {
 
 final reminderProvider =
     AsyncNotifierProvider<ReminderNotifier, bool>(ReminderNotifier.new);
+
+// ---------------------------------------------------------------------------
+// Profile edit save notifier
+// ---------------------------------------------------------------------------
+
+/// Holds the async save state for the edit screen.
+/// Call [save] with the new field values; it writes to both tables and
+/// invalidates the read providers so ProfileScreen refreshes automatically.
+class ProfileEditNotifier extends AsyncNotifier<void> {
+  @override
+  Future<void> build() async {}
+
+  Future<void> save({
+    required String displayName,
+    required Map<String, dynamic> ccFields,
+  }) async {
+    state = const AsyncLoading();
+    try {
+      await ref.read(wrRepositoryProvider).updateDisplayName(displayName);
+      await ref.read(wrRepositoryProvider).updateCcProfile(ccFields);
+      ref.invalidate(mobileProfileProvider);
+      ref.invalidate(ccProfileProvider);
+      state = const AsyncData(null);
+    } catch (e, st) {
+      state = AsyncError(e, st);
+      rethrow;
+    }
+  }
+}
+
+final profileEditProvider =
+    AsyncNotifierProvider<ProfileEditNotifier, void>(ProfileEditNotifier.new);

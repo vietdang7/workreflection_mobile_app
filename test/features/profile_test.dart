@@ -344,5 +344,15 @@ void main() {
 
       expect(find.textContaining('Phiên đăng nhập'), findsOneWidget);
     });
+
+    testWidgets('shows edit-profile row in settings section', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile());
+      repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
+      await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
+
+      expect(find.byKey(const Key('profile_edit_profile_btn')), findsOneWidget);
+      expect(find.textContaining('Chỉnh sửa hồ sơ'), findsOneWidget);
+    });
   });
 }

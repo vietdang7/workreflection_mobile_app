@@ -1532,6 +1532,12 @@ abstract class AppLocalizations {
   /// **'Không thể gửi email. Vui lòng thử lại.'**
   String get authForgotPasswordError;
 
+  /// No description provided for @profileSettingEditProfile.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉnh sửa hồ sơ'**
+  String get profileSettingEditProfile;
+
   /// No description provided for @profileSettingChangePassword.
   ///
   /// In vi, this message translates to:
@@ -1591,6 +1597,300 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.'**
   String get changePasswordErrorSessionExpired;
+
+  /// No description provided for @profileEditTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉnh sửa hồ sơ'**
+  String get profileEditTitle;
+
+  /// No description provided for @profileEditEyebrow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thông tin cá nhân'**
+  String get profileEditEyebrow;
+
+  /// No description provided for @profileEditFieldDisplayName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên hiển thị'**
+  String get profileEditFieldDisplayName;
+
+  /// No description provided for @profileEditFieldFullName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Họ và tên'**
+  String get profileEditFieldFullName;
+
+  /// No description provided for @profileEditFieldPhone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Số điện thoại'**
+  String get profileEditFieldPhone;
+
+  /// No description provided for @profileEditFieldCompanyName.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tên công ty'**
+  String get profileEditFieldCompanyName;
+
+  /// No description provided for @profileEditFieldPosition.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chức danh'**
+  String get profileEditFieldPosition;
+
+  /// No description provided for @profileEditFieldCompanySize.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quy mô công ty'**
+  String get profileEditFieldCompanySize;
+
+  /// No description provided for @profileEditFieldExperience.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thâm niên làm việc'**
+  String get profileEditFieldExperience;
+
+  /// No description provided for @profileEditFieldTenure.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thời gian tại công ty'**
+  String get profileEditFieldTenure;
+
+  /// No description provided for @profileEditFieldDepartment.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phòng ban'**
+  String get profileEditFieldDepartment;
+
+  /// No description provided for @profileEditSave.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lưu thay đổi'**
+  String get profileEditSave;
+
+  /// No description provided for @profileEditSaveSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã cập nhật hồ sơ.'**
+  String get profileEditSaveSuccess;
+
+  /// No description provided for @profileEditSaveError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể lưu. Vui lòng thử lại.'**
+  String get profileEditSaveError;
+
+  /// No description provided for @profileEditAvatarNote.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thay ảnh đại diện trên web tại workreflection.app'**
+  String get profileEditAvatarNote;
+
+  /// No description provided for @profileEditPositionStaff.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhân viên'**
+  String get profileEditPositionStaff;
+
+  /// No description provided for @profileEditPositionTeamLead.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trưởng nhóm'**
+  String get profileEditPositionTeamLead;
+
+  /// No description provided for @profileEditPositionManager.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý'**
+  String get profileEditPositionManager;
+
+  /// No description provided for @profileEditPositionDirector.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giám đốc'**
+  String get profileEditPositionDirector;
+
+  /// No description provided for @profileEditPositionCLevel.
+  ///
+  /// In vi, this message translates to:
+  /// **'C-Level'**
+  String get profileEditPositionCLevel;
+
+  /// No description provided for @profileEditPositionIntern.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thực tập sinh'**
+  String get profileEditPositionIntern;
+
+  /// No description provided for @profileEditPositionFreelancer.
+  ///
+  /// In vi, this message translates to:
+  /// **'Freelancer'**
+  String get profileEditPositionFreelancer;
+
+  /// No description provided for @profileEditPositionOther.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khác'**
+  String get profileEditPositionOther;
+
+  /// No description provided for @profileEditCompanySize1to10.
+  ///
+  /// In vi, this message translates to:
+  /// **'1–10 người'**
+  String get profileEditCompanySize1to10;
+
+  /// No description provided for @profileEditCompanySize11to50.
+  ///
+  /// In vi, this message translates to:
+  /// **'11–50 người'**
+  String get profileEditCompanySize11to50;
+
+  /// No description provided for @profileEditCompanySize51to200.
+  ///
+  /// In vi, this message translates to:
+  /// **'51–200 người'**
+  String get profileEditCompanySize51to200;
+
+  /// No description provided for @profileEditCompanySize201to500.
+  ///
+  /// In vi, this message translates to:
+  /// **'201–500 người'**
+  String get profileEditCompanySize201to500;
+
+  /// No description provided for @profileEditCompanySize501to1000.
+  ///
+  /// In vi, this message translates to:
+  /// **'501–1000 người'**
+  String get profileEditCompanySize501to1000;
+
+  /// No description provided for @profileEditCompanySize1000Plus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trên 1000 người'**
+  String get profileEditCompanySize1000Plus;
+
+  /// No description provided for @profileEditExpLess1.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dưới 1 năm'**
+  String get profileEditExpLess1;
+
+  /// No description provided for @profileEditExp1to3.
+  ///
+  /// In vi, this message translates to:
+  /// **'1–3 năm'**
+  String get profileEditExp1to3;
+
+  /// No description provided for @profileEditExp3to5.
+  ///
+  /// In vi, this message translates to:
+  /// **'3–5 năm'**
+  String get profileEditExp3to5;
+
+  /// No description provided for @profileEditExp5to10.
+  ///
+  /// In vi, this message translates to:
+  /// **'5–10 năm'**
+  String get profileEditExp5to10;
+
+  /// No description provided for @profileEditExp10Plus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trên 10 năm'**
+  String get profileEditExp10Plus;
+
+  /// No description provided for @profileEditTenureLess6m.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dưới 6 tháng'**
+  String get profileEditTenureLess6m;
+
+  /// No description provided for @profileEditTenure6mto1y.
+  ///
+  /// In vi, this message translates to:
+  /// **'6 tháng–1 năm'**
+  String get profileEditTenure6mto1y;
+
+  /// No description provided for @profileEditTenure1to2.
+  ///
+  /// In vi, this message translates to:
+  /// **'1–2 năm'**
+  String get profileEditTenure1to2;
+
+  /// No description provided for @profileEditTenure2to5.
+  ///
+  /// In vi, this message translates to:
+  /// **'2–5 năm'**
+  String get profileEditTenure2to5;
+
+  /// No description provided for @profileEditTenure5Plus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trên 5 năm'**
+  String get profileEditTenure5Plus;
+
+  /// No description provided for @profileEditDeptMarketing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Marketing'**
+  String get profileEditDeptMarketing;
+
+  /// No description provided for @profileEditDeptAccounting.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kế toán'**
+  String get profileEditDeptAccounting;
+
+  /// No description provided for @profileEditDeptSales.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kinh doanh'**
+  String get profileEditDeptSales;
+
+  /// No description provided for @profileEditDeptPurchasing.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mua hàng'**
+  String get profileEditDeptPurchasing;
+
+  /// No description provided for @profileEditDeptHr.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhân sự'**
+  String get profileEditDeptHr;
+
+  /// No description provided for @profileEditDeptIt.
+  ///
+  /// In vi, this message translates to:
+  /// **'IT'**
+  String get profileEditDeptIt;
+
+  /// No description provided for @profileEditDeptProduction.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sản xuất'**
+  String get profileEditDeptProduction;
+
+  /// No description provided for @profileEditDeptAdmin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hành chính'**
+  String get profileEditDeptAdmin;
+
+  /// No description provided for @profileEditDeptOther.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khác'**
+  String get profileEditDeptOther;
+
+  /// No description provided for @profileEditSelectHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn...'**
+  String get profileEditSelectHint;
 }
 
 class _AppLocalizationsDelegate
