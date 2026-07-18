@@ -1006,6 +1006,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileEditSaveError => 'Could not save. Please try again.';
 
   @override
+  String get profileSetupTitle => 'Complete your profile';
+
+  @override
+  String get profileSetupComplete => 'Done';
+
+  @override
+  String get profileSetupSkip => 'Skip';
+
+  @override
   String get profileEditAvatarNote =>
       'Change your avatar on the web at workreflection.app';
 

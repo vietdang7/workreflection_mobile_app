@@ -1976,6 +1976,24 @@ abstract class AppLocalizations {
   /// **'Không thể lưu. Vui lòng thử lại.'**
   String get profileEditSaveError;
 
+  /// No description provided for @profileSetupTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn thiện hồ sơ'**
+  String get profileSetupTitle;
+
+  /// No description provided for @profileSetupComplete.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn tất'**
+  String get profileSetupComplete;
+
+  /// No description provided for @profileSetupSkip.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bỏ qua'**
+  String get profileSetupSkip;
+
   /// No description provided for @profileEditAvatarNote.
   ///
   /// In vi, this message translates to:

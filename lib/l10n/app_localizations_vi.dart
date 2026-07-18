@@ -1005,6 +1005,15 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profileEditSaveError => 'Không thể lưu. Vui lòng thử lại.';
 
   @override
+  String get profileSetupTitle => 'Hoàn thiện hồ sơ';
+
+  @override
+  String get profileSetupComplete => 'Hoàn tất';
+
+  @override
+  String get profileSetupSkip => 'Bỏ qua';
+
+  @override
   String get profileEditAvatarNote =>
       'Thay ảnh đại diện trên web tại workreflection.app';
 
