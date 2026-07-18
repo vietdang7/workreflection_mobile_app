@@ -201,6 +201,17 @@ class FakeSurveyRepository implements SurveyRepository {
     return _ttsResult;
   }
 
+  // --- eNPS breakdown ---
+  EnpsBreakdown? _enpsBreakdown;
+
+  void seedEnpsBreakdown(EnpsBreakdown? breakdown) {
+    _enpsBreakdown = breakdown;
+  }
+
+  @override
+  Future<EnpsBreakdown?> getEnpsBreakdown(String surveyId) async =>
+      _enpsBreakdown;
+
   // --- Layer sub-scores ---
   final Map<String, List<SubComponentScore>> _layerSubScores = {};
 

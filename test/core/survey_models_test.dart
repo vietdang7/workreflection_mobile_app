@@ -1,4 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/data/survey_repository.dart'
+    show buildSubScoresMap;
 import 'package:workreflection_mobile/core/models/survey_models.dart';
 
 void main() {
@@ -267,6 +269,200 @@ void main() {
       expect(t.phaseId, 'ph1');
       expect(t.label, 'Viết nhật ký');
       expect(t.displayOrder, 1);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // EnpsBreakdown.fromValues — render-time eNPS computation
+  // Thresholds mirror web calculateENPS: >=9 promoter, 7-8 passive, <=6 detractor
+  // ---------------------------------------------------------------------------
+
+  group('EnpsBreakdown.fromValues', () {
+    test('9 → promoter (boundary)', () {
+      final b = EnpsBreakdown.fromValues([9]);
+      expect(b.promoters, 1);
+      expect(b.passives, 0);
+      expect(b.detractors, 0);
+      expect(b.total, 1);
+    });
+
+    test('10 → promoter', () {
+      final b = EnpsBreakdown.fromValues([10]);
+      expect(b.promoters, 1);
+    });
+
+    test('8 → passive (boundary)', () {
+      final b = EnpsBreakdown.fromValues([8]);
+      expect(b.promoters, 0);
+      expect(b.passives, 1);
+      expect(b.detractors, 0);
+    });
+
+    test('7 → passive (boundary)', () {
+      final b = EnpsBreakdown.fromValues([7]);
+      expect(b.passives, 1);
+      expect(b.promoters, 0);
+      expect(b.detractors, 0);
+    });
+
+    test('6 → detractor (boundary below passive)', () {
+      final b = EnpsBreakdown.fromValues([6]);
+      expect(b.detractors, 1);
+      expect(b.promoters, 0);
+      expect(b.passives, 0);
+    });
+
+    test('0 → detractor', () {
+      final b = EnpsBreakdown.fromValues([0]);
+      expect(b.detractors, 1);
+    });
+
+    test('mixed: [9,8,7,6,5] → 1p,2pa,2d', () {
+      final b = EnpsBreakdown.fromValues([9, 8, 7, 6, 5]);
+      expect(b.promoters, 1);
+      expect(b.passives, 2);
+      expect(b.detractors, 2);
+      expect(b.total, 5);
+    });
+
+    test('all promoters', () {
+      final b = EnpsBreakdown.fromValues([9, 10, 9]);
+      expect(b.promoters, 3);
+      expect(b.passives, 0);
+      expect(b.detractors, 0);
+    });
+
+    test('all detractors', () {
+      final b = EnpsBreakdown.fromValues([6, 3, 0]);
+      expect(b.promoters, 0);
+      expect(b.passives, 0);
+      expect(b.detractors, 3);
+    });
+
+    test('empty list → all zeros', () {
+      final b = EnpsBreakdown.fromValues([]);
+      expect(b.promoters, 0);
+      expect(b.passives, 0);
+      expect(b.detractors, 0);
+      expect(b.total, 0);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // buildSubScoresMap — web-canonical sub_scores format
+  // ---------------------------------------------------------------------------
+
+  CcQuestion makeQWithSub(String id, SurveyLayer layer, String? sub) =>
+      CcQuestion(
+        id: id,
+        layer: layer,
+        subComponent: sub,
+        scaleType: ScaleType.likert5,
+        questionText: 'Q',
+        questionOrder: 1,
+        isActive: true,
+      );
+
+  group('buildSubScoresMap', () {
+    test('single sub-component → correct layer and score', () {
+      final questions = [
+        makeQWithSub('q1', SurveyLayer.structure, 'role_expect'),
+        makeQWithSub('q2', SurveyLayer.structure, 'role_expect'),
+      ];
+      final answers = {'q1': 4, 'q2': 2}; // avg = 3.0
+      final result = buildSubScoresMap(answers, questions);
+      expect(result, isNotNull);
+      final entry = result!['role_expect'] as Map;
+      expect(entry['layer'], 'STRUCTURE');
+      expect(entry['score'], 3.0);
+    });
+
+    test('multiple sub-components across layers', () {
+      final questions = [
+        makeQWithSub('q1', SurveyLayer.structure, 'role_expect'),
+        makeQWithSub('q2', SurveyLayer.culture, 'trust'),
+        makeQWithSub('q3', SurveyLayer.activity, 'goal_alignment'),
+      ];
+      final answers = {'q1': 4, 'q2': 3, 'q3': 5};
+      final result = buildSubScoresMap(answers, questions)!;
+      expect((result['role_expect'] as Map)['layer'], 'STRUCTURE');
+      expect((result['role_expect'] as Map)['score'], 4.0);
+      expect((result['trust'] as Map)['layer'], 'CULTURE');
+      expect((result['trust'] as Map)['score'], 3.0);
+      expect((result['goal_alignment'] as Map)['layer'], 'ACTIVITY');
+      expect((result['goal_alignment'] as Map)['score'], 5.0);
+    });
+
+    test('averages multiple answers for same sub-component to 1dp', () {
+      final questions = [
+        makeQWithSub('q1', SurveyLayer.structure, 'collab_rules'),
+        makeQWithSub('q2', SurveyLayer.structure, 'collab_rules'),
+        makeQWithSub('q3', SurveyLayer.structure, 'collab_rules'),
+      ];
+      // avg = (1+2+3)/3 = 2.0
+      final answers = {'q1': 1, 'q2': 2, 'q3': 3};
+      final result = buildSubScoresMap(answers, questions)!;
+      expect((result['collab_rules'] as Map)['score'], 2.0);
+    });
+
+    test('questions without sub_component are skipped', () {
+      final questions = [
+        makeQWithSub('q1', SurveyLayer.structure, null),
+        makeQWithSub('q2', SurveyLayer.culture, 'trust'),
+      ];
+      final answers = {'q1': 5, 'q2': 4};
+      final result = buildSubScoresMap(answers, questions)!;
+      expect(result.containsKey('trust'), isTrue);
+      expect(result.length, 1); // q1 skipped (no sub_component)
+    });
+
+    test('unanswered questions are excluded', () {
+      final questions = [
+        makeQWithSub('q1', SurveyLayer.structure, 'role_expect'),
+        makeQWithSub('q2', SurveyLayer.structure, 'role_expect'),
+      ];
+      // only q1 answered
+      final answers = {'q1': 4};
+      final result = buildSubScoresMap(answers, questions)!;
+      expect((result['role_expect'] as Map)['score'], 4.0);
+    });
+
+    test('ESI sub-components included (mirrors web)', () {
+      final questions = [
+        makeQWithSub('e1', SurveyLayer.esi, 'compensation_income'),
+      ];
+      final answers = {'e1': 3};
+      final result = buildSubScoresMap(answers, questions)!;
+      expect((result['compensation_income'] as Map)['layer'], 'ESI');
+      expect((result['compensation_income'] as Map)['score'], 3.0);
+    });
+
+    test('returns null when no questions have sub_component', () {
+      final questions = [
+        makeQWithSub('q1', SurveyLayer.enps, null),
+      ];
+      final answers = {'q1': 9};
+      final result = buildSubScoresMap(answers, questions);
+      expect(result, isNull);
+    });
+
+    test('returns null when no answers match sub_component questions', () {
+      final questions = [
+        makeQWithSub('q1', SurveyLayer.structure, 'role_expect'),
+      ];
+      final answers = <String, int>{}; // no answers
+      final result = buildSubScoresMap(answers, questions);
+      expect(result, isNull);
+    });
+
+    test('1dp rounding: avg of (1,2) = 1.5 rounds correctly', () {
+      final questions = [
+        makeQWithSub('q1', SurveyLayer.structure, 'comm_channels'),
+        makeQWithSub('q2', SurveyLayer.structure, 'comm_channels'),
+      ];
+      final answers = {'q1': 1, 'q2': 2}; // avg = 1.5
+      final result = buildSubScoresMap(answers, questions)!;
+      expect((result['comm_channels'] as Map)['score'], 1.5);
     });
   });
 }

@@ -2,7 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:workreflection_mobile/core/models/survey_models.dart';
+import 'package:workreflection_mobile/core/models/survey_models.dart'
+    show
+        CcReportFull,
+        EnpsBreakdown,
+        ScoreLevel,
+        SubComponentScore,
+        SurveyLayer;
 import 'package:workreflection_mobile/features/survey/presentation/esi_analysis_screen.dart';
 import 'package:workreflection_mobile/features/survey/presentation/layer_detail_screen.dart';
 import 'package:workreflection_mobile/features/survey/presentation/report_screen.dart';
@@ -358,14 +364,16 @@ void main() {
         bottleneckLayer: SurveyLayer.culture,
         scoreLevel: ScoreLevel.good,
         createdAt: DateTime(2026, 7, 18),
-        subScores: {
-          'enps_promoters': 6,
-          'enps_passives': 3,
-          'enps_detractors': 1,
-        },
       );
       repo.seedLatestReport(report);
       repo.seedEsiPillarScores({});
+      // Seed render-time breakdown (computed from responses, not sub_scores).
+      repo.seedEnpsBreakdown(const EnpsBreakdown(
+        promoters: 6,
+        passives: 3,
+        detractors: 1,
+        total: 10,
+      ));
 
       await tester.pumpWidget(_wrap(
         const EsiAnalysisScreen(reportId: 'r1'),

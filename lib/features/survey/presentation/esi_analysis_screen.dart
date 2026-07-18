@@ -157,7 +157,7 @@ class _EsiNoDataBody extends StatelessWidget {
 // Full body
 // ---------------------------------------------------------------------------
 
-class _EsiAnalysisBody extends StatelessWidget {
+class _EsiAnalysisBody extends ConsumerWidget {
   const _EsiAnalysisBody({
     required this.report,
     required this.pillarScores,
@@ -185,9 +185,13 @@ class _EsiAnalysisBody extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final esi = report.scoreEsi!;
     final enps = report.scoreEnps;
+    // Compute eNPS breakdown from responses at render time (web-canonical approach).
+    final breakdown = enps != null
+        ? ref.watch(enpsBreakdownProvider(report.surveyId)).valueOrNull
+        : null;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -222,12 +226,12 @@ class _EsiAnalysisBody extends StatelessWidget {
                   Text('$enps', style: WrTextStyles.hLarge),
                   const SizedBox(height: 8),
                   Text(_enpsCategory(enps), style: WrTextStyles.body),
-                  if (report.enpsPromoters != null) ...[
+                  if (breakdown != null) ...[
                     const SizedBox(height: 4),
                     Text(
-                      '${l10n.esiAnalysisEnpsPromoter}: ${report.enpsPromoters} · '
-                      '${l10n.esiAnalysisEnpsPassive}: ${report.enpsPassives ?? 0} · '
-                      '${l10n.esiAnalysisEnpsDetractor}: ${report.enpsDetractors ?? 0}',
+                      '${l10n.esiAnalysisEnpsPromoter}: ${breakdown.promoters} · '
+                      '${l10n.esiAnalysisEnpsPassive}: ${breakdown.passives} · '
+                      '${l10n.esiAnalysisEnpsDetractor}: ${breakdown.detractors}',
                       style:
                           WrTextStyles.body.copyWith(color: WrColors.muted),
                     ),

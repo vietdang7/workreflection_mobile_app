@@ -10,6 +10,44 @@ import '../models/ai_personalization_models.dart';
 import '../models/survey_models.dart';
 
 // ---------------------------------------------------------------------------
+// Sub-scores builder — top-level so it can be unit-tested directly.
+// Mirrors web Premium.tsx calculateSubComponentScores exactly.
+// ---------------------------------------------------------------------------
+
+/// Builds the web-canonical sub_scores map: { sub_component: { layer, score } }.
+///
+/// Iterates all questions with a non-null sub_component that have an answer,
+/// groups answer values by sub_component (preserving the question's layer), and
+/// averages to 1 decimal place.  ESI sub-components are included whenever
+/// the questions carry sub_component values — exactly mirroring web.
+/// ENPS questions are excluded (they have no sub_component in practice).
+/// Returns null when no sub_component data is present.
+Map<String, dynamic>? buildSubScoresMap(
+    Map<String, int> answers, List<CcQuestion> questions) {
+  final Map<String, ({String layer, List<int> values})> grouped = {};
+  for (final q in questions) {
+    final sub = q.subComponent;
+    if (sub == null || sub.isEmpty) continue;
+    final val = answers[q.id];
+    if (val == null) continue;
+    if (!grouped.containsKey(sub)) {
+      grouped[sub] = (layer: q.layer.toJson(), values: <int>[]);
+    }
+    grouped[sub]!.values.add(val);
+  }
+  if (grouped.isEmpty) return null;
+
+  final result = <String, dynamic>{};
+  for (final entry in grouped.entries) {
+    final vals = entry.value.values;
+    final avg = vals.reduce((a, b) => a + b) / vals.length;
+    final rounded = (avg * 10).round() / 10;
+    result[entry.key] = {'layer': entry.value.layer, 'score': rounded};
+  }
+  return result;
+}
+
+// ---------------------------------------------------------------------------
 // Abstract interface
 // ---------------------------------------------------------------------------
 
@@ -76,6 +114,11 @@ abstract class SurveyRepository {
   /// for the given survey and layer (e.g. 'STRUCTURE', 'CULTURE', 'ACTIVITY').
   Future<List<SubComponentScore>> getLayerSubScores(
       String surveyId, String layer);
+
+  /// Compute eNPS promoter/passive/detractor breakdown from cc_responses
+  /// for the given survey. Thresholds: >=9 promoter, 7-8 passive, <=6 detractor.
+  /// Returns null when no eNPS responses exist for this survey.
+  Future<EnpsBreakdown?> getEnpsBreakdown(String surveyId);
 
   /// Fetch ESI pillar avg scores keyed by sub_component string
   /// (queries cc_responses + cc_questions WHERE layer='ESI').
@@ -339,11 +382,7 @@ class SupabaseSurveyRepository implements SurveyRepository {
         'score_enps': scores.scoreEnps,
         'bottleneck_layer': scores.bottleneckLayer.toJson(),
         'score_level': scores.scoreLevel.toJson(),
-        'sub_scores': scores.scoreEnps != null ? {
-          'enps_promoters': scores.enpsPromoters,
-          'enps_passives': scores.enpsPassives,
-          'enps_detractors': scores.enpsDetractors,
-        } : null,
+        'sub_scores': _buildSubScores(answers, questions),
         'selected_narrative_variants': null,
       }).select().single();
     }
@@ -492,6 +531,14 @@ class SupabaseSurveyRepository implements SurveyRepository {
   }
 
   // ---------------------------------------------------------------------------
+  // Sub-scores builder (mirrors web Premium.tsx calculateSubComponentScores)
+  // ---------------------------------------------------------------------------
+
+  static Map<String, dynamic>? _buildSubScores(
+          Map<String, int> answers, List<CcQuestion> questions) =>
+      buildSubScoresMap(answers, questions);
+
+  // ---------------------------------------------------------------------------
   // Layer sub-scores (cc_responses + cc_questions JOIN)
   // ---------------------------------------------------------------------------
 
@@ -577,6 +624,44 @@ class SupabaseSurveyRepository implements SurveyRepository {
       for (final e in grouped.entries)
         e.key: e.value.reduce((a, b) => a + b) / e.value.length,
     };
+  }
+
+  // ---------------------------------------------------------------------------
+  // eNPS breakdown (render-time, from cc_responses + cc_questions)
+  // ---------------------------------------------------------------------------
+
+  @override
+  Future<EnpsBreakdown?> getEnpsBreakdown(String surveyId) async {
+    // Fetch all responses for this survey
+    final responseRows = await _client
+        .from('cc_responses')
+        .select('question_id, answer_value')
+        .eq('survey_id', surveyId);
+
+    if (responseRows.isEmpty) return null;
+
+    // Fetch eNPS questions (layer='ENPS' OR scale_type='ENPS_10', active only)
+    final enpsQRows = await _client
+        .from('cc_questions')
+        .select('id')
+        .eq('is_active', true)
+        .or('layer.eq.ENPS,scale_type.eq.ENPS_10');
+
+    if (enpsQRows.isEmpty) return null;
+
+    final enpsQIds = {for (final r in enpsQRows as List) r['id'] as String};
+
+    final values = <int>[];
+    for (final row in responseRows as List) {
+      final qId = row['question_id'] as String;
+      final val = row['answer_value'] as int?;
+      if (enpsQIds.contains(qId) && val != null) {
+        values.add(val);
+      }
+    }
+
+    if (values.isEmpty) return null;
+    return EnpsBreakdown.fromValues(values);
   }
 
   // ---------------------------------------------------------------------------

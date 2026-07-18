@@ -245,10 +245,6 @@ class CcReportFull {
   final Map<String, dynamic>? selectedNarrativeVariants;
   final DateTime createdAt;
 
-  int? get enpsPromoters => subScores?['enps_promoters'] as int?;
-  int? get enpsPassives => subScores?['enps_passives'] as int?;
-  int? get enpsDetractors => subScores?['enps_detractors'] as int?;
-
   factory CcReportFull.fromJson(Map<String, dynamic> json) {
     final snv = json['selected_narrative_variants'];
     final ss = json['sub_scores'];
@@ -420,6 +416,45 @@ class CcReportSummary {
           ? (json['score_esi'] as num).toDouble()
           : null,
       scoreEnps: json['score_enps'] as int?,
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// EnpsBreakdown — render-time eNPS breakdown computed from cc_responses
+// ---------------------------------------------------------------------------
+
+class EnpsBreakdown {
+  const EnpsBreakdown({
+    required this.promoters,
+    required this.passives,
+    required this.detractors,
+    required this.total,
+  });
+
+  final int promoters;
+  final int passives;
+  final int detractors;
+  final int total;
+
+  /// Compute breakdown from raw answer values.
+  /// Thresholds mirror web calculateENPS: >=9 promoter, >=7 passive, else detractor.
+  factory EnpsBreakdown.fromValues(List<int> values) {
+    int promoters = 0, passives = 0, detractors = 0;
+    for (final v in values) {
+      if (v >= 9) {
+        promoters++;
+      } else if (v >= 7) {
+        passives++;
+      } else {
+        detractors++;
+      }
+    }
+    return EnpsBreakdown(
+      promoters: promoters,
+      passives: passives,
+      detractors: detractors,
+      total: values.length,
     );
   }
 }

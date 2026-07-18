@@ -447,15 +447,18 @@ class _EsiCard extends StatelessWidget {
 // eNPS card (Premium)
 // ---------------------------------------------------------------------------
 
-class _EnpsCard extends StatelessWidget {
+class _EnpsCard extends ConsumerWidget {
   const _EnpsCard({required this.report, required this.l10n});
   final CcReportFull report;
   final AppLocalizations l10n;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final enps = report.scoreEnps;
     if (enps == null) return const SizedBox.shrink();
+    // Compute breakdown from responses at render time (web-canonical approach).
+    final breakdownAsync = ref.watch(enpsBreakdownProvider(report.surveyId));
+    final breakdown = breakdownAsync.valueOrNull;
     return WrCardMinimal(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -467,11 +470,11 @@ class _EnpsCard extends StatelessWidget {
             style: WrTextStyles.hLarge,
           ),
           const SizedBox(height: 8),
-          if (report.enpsPromoters != null)
+          if (breakdown != null)
             Text(
-              '${l10n.reportEnpsPromoter}: ${report.enpsPromoters} · '
-              '${l10n.reportEnpsPassive}: ${report.enpsPassives ?? 0} · '
-              '${l10n.reportEnpsDetractor}: ${report.enpsDetractors ?? 0}',
+              '${l10n.reportEnpsPromoter}: ${breakdown.promoters} · '
+              '${l10n.reportEnpsPassive}: ${breakdown.passives} · '
+              '${l10n.reportEnpsDetractor}: ${breakdown.detractors}',
               style: WrTextStyles.body,
             )
           else

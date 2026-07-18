@@ -158,6 +158,17 @@ final esiPillarScoresProvider =
 });
 
 // ---------------------------------------------------------------------------
+// eNPS breakdown (render-time from cc_responses — avoids reading legacy sub_scores)
+// Key: surveyId
+// ---------------------------------------------------------------------------
+
+final enpsBreakdownProvider =
+    FutureProvider.family<EnpsBreakdown?, String>((ref, surveyId) async {
+  final repo = ref.watch(surveyRepositoryProvider);
+  return repo.getEnpsBreakdown(surveyId);
+});
+
+// ---------------------------------------------------------------------------
 // AI Personalization provider
 // ---------------------------------------------------------------------------
 // Key: (reportId, section) — section is 'model' | 'reflection' | 'relationship'.
