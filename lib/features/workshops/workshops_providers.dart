@@ -57,6 +57,29 @@ final hasSubmittedSurveyProvider =
 // Task 11 — My Workshops
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Task 12 — Check-in
+// ---------------------------------------------------------------------------
+
+/// Controls whether the real QR scanner is shown (set to false in tests).
+final checkinScannerEnabledProvider = Provider<bool>((_) => true);
+
+// ---------------------------------------------------------------------------
+// Task 13 — Post-workshop survey
+// ---------------------------------------------------------------------------
+
+/// The active survey question set for a workshop, or null when none assigned.
+final workshopSurveySetProvider =
+    FutureProvider.autoDispose.family<WorkshopSurveySet?, String>(
+        (ref, workshopId) {
+  final repo = ref.watch(workshopRepositoryProvider);
+  return repo.getWorkshopSurveySet(workshopId);
+});
+
+// ---------------------------------------------------------------------------
+// Task 11 — My Workshops
+// ---------------------------------------------------------------------------
+
 /// All registrations for the current user, paired with their workshop detail.
 /// Fetches workshop details in parallel; tolerates null (shows fallback title).
 final myWorkshopsProvider = FutureProvider.autoDispose<
