@@ -234,5 +234,112 @@
   "actionPlanReflection": "Reflection question",
 
   "surveyTtsToggle": "Read question",
-  "journeyErrorCard": "Could not load journey."
+  "journeyErrorCard": "Could not load journey.",
+
+  "wsListTitle": "Workshop",
+  "wsEmpty": "No upcoming workshops",
+  "wsFree": "Free",
+  "wsFullBadge": "Full",
+  "wsRegister": "Register",
+  "wsRegistered": "Registered",
+  "wsAttended": "Attended",
+  "wsCancelled": "Cancelled",
+  "wsCheckin": "Check-in",
+  "wsCheckedInAt": "Checked in at {time}",
+  "@wsCheckedInAt": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "wsResources": "Resources",
+  "wsResourcesLocked": "Resources available for registered attendees",
+  "wsParticipants": "{current}/{max} participants",
+  "@wsParticipants": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "max": {"type": "int"}
+    }
+  },
+  "wsLocation": "Location",
+  "wsPaidDialogTitle": "Complete payment on web",
+  "wsPaidDialogBody": "Please complete payment on the WorkReflection website to register.",
+  "wsPaidDialogOk": "Got it",
+  "wsRegisterSuccess": "Registration successful!",
+  "wsRegisterError": "Registration failed. Please try again.",
+
+  "wsCheckinTitle": "Workshop check-in",
+  "wsCheckinScanHint": "Scan the workshop QR code",
+  "wsCheckinManualLabel": "Or enter check-in code",
+  "wsCheckinSubmit": "Confirm",
+  "wsCheckinInvalidCode": "Invalid code",
+  "wsCheckinNotFound": "Workshop not found with this code",
+  "wsCheckinNotRegistered": "You have not registered for this workshop",
+  "wsCheckinTooEarly": "Check-in not open yet (opens 2 hours before start)",
+  "wsCheckinClosed": "Check-in is closed",
+  "wsCheckinSuccess": "Check-in successful!",
+  "wsCheckinError": "Check-in failed. Please try again.",
+
+  "wsConsentTitle": "Consent to image use",
+  "wsConsentBody": "Do you consent to us using images of you from the workshop for communication purposes?",
+  "wsConsentAccept": "Agree",
+  "wsConsentDecline": "Decline",
+
+  "wsMyTitle": "My Workshops",
+  "wsMyEmpty": "You have not registered for any workshops",
+
+  "wsSurveyCta": "Rate workshop",
+  "wsSurveyTitle": "Rate workshop",
+  "wsSurveySubmit": "Submit rating",
+  "wsSurveyThanks": "Thank you for your rating!",
+  "wsSurveyDone": "Rated",
+
+  "coachTitle": "Coaching",
+  "coachAudienceYoung": "Young professionals",
+  "coachAudienceManager": "Managers",
+  "coachSessionsFmt": "{count} sessions × {minutes} minutes",
+  "@coachSessionsFmt": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "minutes": {"type": "int"}
+    }
+  },
+  "coachClaimFree": "Claim free package",
+  "coachClaimConfirmTitle": "Claim coaching package",
+  "coachClaimConfirmBody": "Do you want to claim the \"{name}\" package?",
+  "@coachClaimConfirmBody": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "coachClaimSuccess": "Coaching package activated!",
+  "coachClaimError": "Unable to activate package. Please try again.",
+  "coachOurCoaches": "Our coaches",
+  "coachYearsExp": "{years} years of experience",
+  "@coachYearsExp": {
+    "placeholders": {
+      "years": {"type": "int"}
+    }
+  },
+  "coachMyTitle": "My coaching schedule",
+  "coachMyEmpty": "You have no coaching sessions yet",
+  "coachPending": "Pending scheduling",
+  "coachScheduled": "Scheduled",
+  "coachCompleted": "Completed",
+  "coachCancelledStatus": "Cancelled",
+  "coachSessionOf": "Session {n}/{total}",
+  "@coachSessionOf": {
+    "placeholders": {
+      "n": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "coachMeetingLink": "Meeting link",
+  "coachWebNote": "Scheduling and reviews are done on the web",
+  "coachViewMy": "View my schedule",
+
+  "profileMyWorkshops": "My Workshops",
+  "profileMyCoaching": "My Coaching",
+  "developWorkshopSection": "Development opportunities",
+  "developViewWorkshops": "View all workshops",
+  "developViewCoaching": "Explore coaching"
 }

@@ -235,5 +235,112 @@
   "actionPlanReflection": "Câu hỏi phản chiếu",
 
   "surveyTtsToggle": "Đọc câu hỏi",
-  "journeyErrorCard": "Không thể tải hành trình."
+  "journeyErrorCard": "Không thể tải hành trình.",
+
+  "wsListTitle": "Workshop",
+  "wsEmpty": "Chưa có workshop nào sắp diễn ra",
+  "wsFree": "Miễn phí",
+  "wsFullBadge": "Đã đầy",
+  "wsRegister": "Đăng ký",
+  "wsRegistered": "Đã đăng ký",
+  "wsAttended": "Đã tham dự",
+  "wsCancelled": "Đã hủy",
+  "wsCheckin": "Check-in",
+  "wsCheckedInAt": "Đã check-in lúc {time}",
+  "@wsCheckedInAt": {
+    "placeholders": {
+      "time": {"type": "String"}
+    }
+  },
+  "wsResources": "Tài liệu",
+  "wsResourcesLocked": "Tài liệu dành cho người đã đăng ký",
+  "wsParticipants": "{current}/{max} người tham gia",
+  "@wsParticipants": {
+    "placeholders": {
+      "current": {"type": "int"},
+      "max": {"type": "int"}
+    }
+  },
+  "wsLocation": "Địa điểm",
+  "wsPaidDialogTitle": "Thanh toán trên web",
+  "wsPaidDialogBody": "Vui lòng hoàn tất thanh toán trên trang web WorkReflection để đăng ký.",
+  "wsPaidDialogOk": "Đã hiểu",
+  "wsRegisterSuccess": "Đăng ký thành công!",
+  "wsRegisterError": "Đăng ký thất bại. Vui lòng thử lại.",
+
+  "wsCheckinTitle": "Check-in workshop",
+  "wsCheckinScanHint": "Quét mã QR của workshop",
+  "wsCheckinManualLabel": "Hoặc nhập mã check-in",
+  "wsCheckinSubmit": "Xác nhận",
+  "wsCheckinInvalidCode": "Mã không hợp lệ",
+  "wsCheckinNotFound": "Không tìm thấy workshop với mã này",
+  "wsCheckinNotRegistered": "Bạn chưa đăng ký workshop này",
+  "wsCheckinTooEarly": "Chưa đến giờ check-in (mở trước giờ bắt đầu 2 tiếng)",
+  "wsCheckinClosed": "Đã hết giờ check-in",
+  "wsCheckinSuccess": "Check-in thành công!",
+  "wsCheckinError": "Check-in thất bại. Vui lòng thử lại.",
+
+  "wsConsentTitle": "Cho phép sử dụng hình ảnh",
+  "wsConsentBody": "Bạn có đồng ý cho chúng tôi sử dụng hình ảnh có bạn trong workshop cho mục đích truyền thông không?",
+  "wsConsentAccept": "Đồng ý",
+  "wsConsentDecline": "Không đồng ý",
+
+  "wsMyTitle": "Workshop của tôi",
+  "wsMyEmpty": "Bạn chưa đăng ký workshop nào",
+
+  "wsSurveyCta": "Đánh giá workshop",
+  "wsSurveyTitle": "Đánh giá workshop",
+  "wsSurveySubmit": "Gửi đánh giá",
+  "wsSurveyThanks": "Cảm ơn bạn đã đánh giá!",
+  "wsSurveyDone": "Đã đánh giá",
+
+  "coachTitle": "Coaching",
+  "coachAudienceYoung": "Người trẻ",
+  "coachAudienceManager": "Quản lý",
+  "coachSessionsFmt": "{count} buổi × {minutes} phút",
+  "@coachSessionsFmt": {
+    "placeholders": {
+      "count": {"type": "int"},
+      "minutes": {"type": "int"}
+    }
+  },
+  "coachClaimFree": "Nhận gói miễn phí",
+  "coachClaimConfirmTitle": "Nhận gói coaching",
+  "coachClaimConfirmBody": "Bạn muốn nhận gói \"{name}\"?",
+  "@coachClaimConfirmBody": {
+    "placeholders": {
+      "name": {"type": "String"}
+    }
+  },
+  "coachClaimSuccess": "Đã kích hoạt gói coaching!",
+  "coachClaimError": "Không thể kích hoạt gói. Vui lòng thử lại.",
+  "coachOurCoaches": "Đội ngũ coach",
+  "coachYearsExp": "{years} năm kinh nghiệm",
+  "@coachYearsExp": {
+    "placeholders": {
+      "years": {"type": "int"}
+    }
+  },
+  "coachMyTitle": "Lịch coaching của tôi",
+  "coachMyEmpty": "Bạn chưa có buổi coaching nào",
+  "coachPending": "Chờ xếp lịch",
+  "coachScheduled": "Đã xếp lịch",
+  "coachCompleted": "Hoàn thành",
+  "coachCancelledStatus": "Đã hủy",
+  "coachSessionOf": "Buổi {n}/{total}",
+  "@coachSessionOf": {
+    "placeholders": {
+      "n": {"type": "int"},
+      "total": {"type": "int"}
+    }
+  },
+  "coachMeetingLink": "Link buổi học",
+  "coachWebNote": "Đặt lịch và đánh giá thực hiện trên web",
+  "coachViewMy": "Xem lịch của tôi",
+
+  "profileMyWorkshops": "Workshop của tôi",
+  "profileMyCoaching": "Coaching của tôi",
+  "developWorkshopSection": "Cơ hội phát triển",
+  "developViewWorkshops": "Xem tất cả workshop",
+  "developViewCoaching": "Khám phá coaching"
 }
