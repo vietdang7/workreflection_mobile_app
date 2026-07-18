@@ -1466,6 +1466,72 @@ abstract class AppLocalizations {
   /// **'Gửi đánh giá thất bại. Vui lòng thử lại.'**
   String get wsSurveyError;
 
+  /// No description provided for @wsSurveyViewResults.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem kết quả'**
+  String get wsSurveyViewResults;
+
+  /// No description provided for @wsSurveyResultsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kết quả khảo sát'**
+  String get wsSurveyResultsTitle;
+
+  /// No description provided for @wsSurveyResultsNotFound.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy kết quả khảo sát.'**
+  String get wsSurveyResultsNotFound;
+
+  /// No description provided for @wsSurveyResultsScore.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm trung bình'**
+  String get wsSurveyResultsScore;
+
+  /// No description provided for @wsSurveyResultsResponses.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} câu trả lời'**
+  String wsSurveyResultsResponses(int count);
+
+  /// No description provided for @wsSurveyResultsLayerScore.
+  ///
+  /// In vi, this message translates to:
+  /// **'{layer}: {score}/5.0'**
+  String wsSurveyResultsLayerScore(String layer, String score);
+
+  /// No description provided for @wsCancelReg.
+  ///
+  /// In vi, this message translates to:
+  /// **'Huỷ đăng ký'**
+  String get wsCancelReg;
+
+  /// No description provided for @wsCancelRegTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Huỷ đăng ký'**
+  String get wsCancelRegTitle;
+
+  /// No description provided for @wsCancelRegBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có chắc muốn huỷ đăng ký workshop này không?'**
+  String get wsCancelRegBody;
+
+  /// No description provided for @wsCancelRegSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã huỷ đăng ký'**
+  String get wsCancelRegSuccess;
+
+  /// No description provided for @wsCancelRegError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Huỷ đăng ký thất bại'**
+  String get wsCancelRegError;
+
   /// No description provided for @coachTitle.
   ///
   /// In vi, this message translates to:

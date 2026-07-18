@@ -87,6 +87,22 @@ abstract class WorkshopRepository {
     required String questionSetId,
     required Map<String, int> answers,
   });
+
+  /// Returns the survey_id of the user's completed survey for [workshopId],
+  /// or null if not found. Used to navigate to the results screen after submit.
+  Future<String?> getCompletedSurveyId(String workshopId);
+
+  /// Returns aggregate score data for a completed survey by [surveyId].
+  ///
+  /// Fetches cc_workshop_responses joined with cc_questions layer data,
+  /// computes per-layer averages and an overall weighted total.
+  Future<WorkshopSurveyResults?> getSurveyResults(String surveyId);
+
+  /// Cancels the current user's registration for a workshop.
+  ///
+  /// Sets status='cancelled', payment_status='cancelled' and decrements
+  /// current_participants — matching the web MyWorkshops.tsx cancelMutation.
+  Future<void> cancelRegistration(String registrationId, String workshopId);
 }
 
 // ---------------------------------------------------------------------------
@@ -367,5 +383,131 @@ class SupabaseWorkshopRepository implements WorkshopRepository {
       'status': 'completed',
       'completed_at': DateTime.now().toIso8601String(),
     }).eq('id', surveyId);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Survey results
+  // ---------------------------------------------------------------------------
+
+  @override
+  Future<String?> getCompletedSurveyId(String workshopId) async {
+    final uid = _uid;
+
+    // Need the active question_set_id to identify the correct survey row.
+    final assignmentRows = await _client
+        .from('cc_workshop_question_set_assignments')
+        .select('question_set_id')
+        .eq('workshop_id', workshopId)
+        .eq('is_active', true)
+        .limit(1);
+
+    if (assignmentRows.isEmpty) return null;
+    final questionSetId = assignmentRows.first['question_set_id'] as String;
+
+    final rows = await _client
+        .from('cc_workshop_surveys')
+        .select('id')
+        .eq('user_id', uid)
+        .eq('workshop_id', workshopId)
+        .eq('question_set_id', questionSetId)
+        .eq('status', 'completed')
+        .order('completed_at', ascending: false)
+        .limit(1);
+
+    if (rows.isEmpty) return null;
+    return rows.first['id'] as String;
+  }
+
+  @override
+  Future<WorkshopSurveyResults?> getSurveyResults(String surveyId) async {
+    // Fetch all responses for this survey.
+    final responseRows = await _client
+        .from('cc_workshop_responses')
+        .select('question_id, answer_value')
+        .eq('survey_id', surveyId);
+
+    if (responseRows.isEmpty) return null;
+
+    final questionIds =
+        responseRows.map((r) => r['question_id'] as String).toSet().toList();
+
+    // Fetch question layers from cc_questions.
+    final questionRows = await _client
+        .from('cc_questions')
+        .select('id, layer')
+        .inFilter('id', questionIds);
+
+    final layerById = <String, String>{
+      for (final q in questionRows)
+        q['id'] as String: (q['layer'] as String).toUpperCase(),
+    };
+
+    // Accumulate per-layer values.
+    final layerValues = <String, List<double>>{};
+    for (final r in responseRows) {
+      final qId = r['question_id'] as String;
+      final layer = layerById[qId];
+      if (layer == null) continue;
+      final val = (r['answer_value'] as num).toDouble();
+      layerValues.putIfAbsent(layer, () => []).add(val);
+    }
+
+    double avg(List<double> vals) =>
+        vals.isEmpty ? 0.0 : vals.reduce((a, b) => a + b) / vals.length;
+
+    double round1(double v) =>
+        (v * 10).round() / 10;
+
+    final layerScores = {
+      for (final e in layerValues.entries) e.key: round1(avg(e.value)),
+    };
+
+    // Weighted total matching web SurveyResults.tsx scoring logic.
+    final s = layerScores['STRUCTURE'] ?? 0.0;
+    final c = layerScores['CULTURE'] ?? 0.0;
+    final a = layerScores['ACTIVITY'] ?? 0.0;
+
+    double total;
+    if (s > 0 && c > 0 && a > 0) {
+      total = round1(s * 0.5 + c * 0.3 + a * 0.2);
+    } else {
+      final active = layerScores.values.where((v) => v > 0).toList();
+      total = active.isEmpty ? 0.0 : round1(avg(active));
+    }
+
+    return WorkshopSurveyResults(
+      layerScores: layerScores,
+      total: total,
+      responseCount: responseRows.length,
+    );
+  }
+
+  // ---------------------------------------------------------------------------
+  // Cancel registration
+  // ---------------------------------------------------------------------------
+
+  @override
+  Future<void> cancelRegistration(
+      String registrationId, String workshopId) async {
+    // Set status and payment_status to 'cancelled' — matching web MyWorkshops
+    // cancelMutation (lines 224-229).
+    await _client.from('cc_workshop_registrations').update({
+      'status': 'cancelled',
+      'payment_status': 'cancelled',
+    }).eq('id', registrationId);
+
+    // Decrement current_participants, matching web (lines 230-235).
+    final workshopRows = await _client
+        .from('cc_workshops')
+        .select('current_participants')
+        .eq('id', workshopId)
+        .limit(1);
+    if (workshopRows.isNotEmpty) {
+      final current =
+          (workshopRows.first['current_participants'] as int?) ?? 0;
+      await _client.from('cc_workshops').update({
+        'current_participants': current > 0 ? current - 1 : 0,
+      }).eq('id', workshopId);
+    }
   }
 }

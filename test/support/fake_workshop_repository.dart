@@ -240,4 +240,51 @@ class FakeWorkshopRepository implements WorkshopRepository {
     });
     _submittedWorkshopIds.add(workshopId);
   }
+
+  // --- Survey results ---
+
+  WorkshopSurveyResults? _surveyResults;
+
+  void seedSurveyResults(WorkshopSurveyResults results) {
+    _surveyResults = results;
+  }
+
+  @override
+  Future<String?> getCompletedSurveyId(String workshopId) async {
+    _maybeThrow();
+    if (!_submittedWorkshopIds.contains(workshopId)) return null;
+    return 'fake-survey-id-$workshopId';
+  }
+
+  @override
+  Future<WorkshopSurveyResults?> getSurveyResults(String surveyId) async {
+    _maybeThrow();
+    return _surveyResults;
+  }
+
+  // --- Cancel registration ---
+
+  final List<(String, String)> cancelRegistrationCalls = [];
+
+  @override
+  Future<void> cancelRegistration(
+      String registrationId, String workshopId) async {
+    _maybeThrow();
+    cancelRegistrationCalls.add((registrationId, workshopId));
+
+    final idx = _registrations.indexWhere((r) => r.id == registrationId);
+    if (idx != -1) {
+      final r = _registrations[idx];
+      _registrations[idx] = WorkshopRegistration(
+        id: r.id,
+        workshopId: r.workshopId,
+        userId: r.userId,
+        status: 'cancelled',
+        checkedInAt: r.checkedInAt,
+        attended: r.attended,
+        imageConsent: r.imageConsent,
+        createdAt: r.createdAt,
+      );
+    }
+  }
 }

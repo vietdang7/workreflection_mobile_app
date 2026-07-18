@@ -393,7 +393,19 @@ class _SurveyArea extends ConsumerWidget {
       error: (_, __) => const SizedBox.shrink(),
       data: (hasSubmitted) {
         if (hasSubmitted) {
-          return Text(l10n.wsSurveyDone, style: WrTextStyles.body);
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(l10n.wsSurveyDone, style: WrTextStyles.body),
+              const SizedBox(height: 8),
+              WrActionLink(
+                key: const Key('ws_detail_view_results'),
+                label: l10n.wsSurveyViewResults,
+                onTap: () => context
+                    .push('/workshops/$workshopId/survey-results'),
+              ),
+            ],
+          );
         }
         return WrActionLink(
           label: l10n.wsSurveyCta,

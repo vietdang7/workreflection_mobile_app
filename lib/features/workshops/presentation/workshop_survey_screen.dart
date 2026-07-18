@@ -3,9 +3,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:go_router/go_router.dart';
+
 import '../../../core/data/workshop_repository.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
+import '../../../core/widgets/action_link.dart';
 import '../../../core/widgets/pill_button.dart';
 import '../../../features/profile/profile_providers.dart';
 import '../../../l10n/app_localizations.dart';
@@ -40,6 +43,7 @@ class _WorkshopSurveyScreenState extends ConsumerState<WorkshopSurveyScreen> {
         answers: Map.of(_answers),
       );
       ref.invalidate(hasSubmittedSurveyProvider(widget.workshopId));
+      ref.invalidate(workshopSurveyResultsProvider(widget.workshopId));
       setState(() {
         _submitted = true;
         _submitting = false;
@@ -84,11 +88,24 @@ class _WorkshopSurveyScreenState extends ConsumerState<WorkshopSurveyScreen> {
           // Success state.
           if (_submitted) {
             return Center(
-              child: Text(
-                l10n.wsSurveyThanks,
-                key: const Key('ws_survey_thanks'),
-                style: WrTextStyles.hMedium,
-                textAlign: TextAlign.center,
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    l10n.wsSurveyThanks,
+                    key: const Key('ws_survey_thanks'),
+                    style: WrTextStyles.hMedium,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 16),
+                  WrActionLink(
+                    key: const Key('ws_survey_view_results'),
+                    label: l10n.wsSurveyViewResults,
+                    onTap: () => context.push(
+                      '/workshops/${widget.workshopId}/survey-results',
+                    ),
+                  ),
+                ],
               ),
             );
           }

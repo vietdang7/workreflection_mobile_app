@@ -153,5 +153,140 @@ void main() {
 
       expect(find.text('—'), findsOneWidget);
     });
+
+    testWidgets('cancel button visible when workshop is >48h away', (tester) async {
+      final futureDate = DateTime.now().add(const Duration(days: 5));
+      repo.seedWorkshops([
+        WorkshopDetail(
+          id: 'ws-1',
+          title: 'Future Workshop',
+          date: futureDate,
+          price: 0,
+          currency: 'VND',
+          currentParticipants: 0,
+          status: 'active',
+          isActive: true,
+        ),
+      ]);
+      repo.seedRegistration(_reg());
+
+      await tester.pumpWidget(_wrap(repo));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('my_ws_cancel')), findsOneWidget);
+    });
+
+    testWidgets('cancel button NOT visible when workshop is <48h away', (tester) async {
+      final soonDate = DateTime.now().add(const Duration(hours: 24));
+      repo.seedWorkshops([
+        WorkshopDetail(
+          id: 'ws-1',
+          title: 'Soon Workshop',
+          date: soonDate,
+          price: 0,
+          currency: 'VND',
+          currentParticipants: 0,
+          status: 'active',
+          isActive: true,
+        ),
+      ]);
+      repo.seedRegistration(_reg());
+
+      await tester.pumpWidget(_wrap(repo));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('my_ws_cancel')), findsNothing);
+    });
+
+    testWidgets('tapping cancel shows confirmation dialog then cancels',
+        (tester) async {
+      final futureDate = DateTime.now().add(const Duration(days: 5));
+      repo.seedWorkshops([
+        WorkshopDetail(
+          id: 'ws-1',
+          title: 'Workshop To Cancel',
+          date: futureDate,
+          price: 0,
+          currency: 'VND',
+          currentParticipants: 0,
+          status: 'active',
+          isActive: true,
+        ),
+      ]);
+      repo.seedRegistration(_reg());
+
+      await tester.pumpWidget(_wrap(repo));
+      await tester.pumpAndSettle();
+
+      // Tap cancel link.
+      await tester.tap(find.byKey(const Key('my_ws_cancel')));
+      await tester.pumpAndSettle();
+
+      // Confirmation dialog buttons should appear.
+      expect(find.byKey(const Key('cancel_confirm')), findsOneWidget);
+      expect(find.byKey(const Key('cancel_dismiss')), findsOneWidget);
+
+      // Confirm cancellation.
+      await tester.tap(find.byKey(const Key('cancel_confirm')));
+      await tester.pumpAndSettle();
+
+      expect(repo.cancelRegistrationCalls, hasLength(1));
+      expect(repo.cancelRegistrationCalls.first, ('reg-1', 'ws-1'));
+    });
+
+    testWidgets('dismiss cancel dialog hides dialog without calling repo',
+        (tester) async {
+      final futureDate = DateTime.now().add(const Duration(days: 5));
+      repo.seedWorkshops([
+        WorkshopDetail(
+          id: 'ws-1',
+          title: 'Workshop X',
+          date: futureDate,
+          price: 0,
+          currency: 'VND',
+          currentParticipants: 0,
+          status: 'active',
+          isActive: true,
+        ),
+      ]);
+      repo.seedRegistration(_reg());
+
+      await tester.pumpWidget(_wrap(repo));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('my_ws_cancel')));
+      await tester.pumpAndSettle();
+
+      // Dismiss.
+      await tester.tap(find.byKey(const Key('cancel_dismiss')));
+      await tester.pumpAndSettle();
+
+      expect(repo.cancelRegistrationCalls, isEmpty);
+      expect(find.byKey(const Key('cancel_confirm')), findsNothing);
+    });
+
+    testWidgets('view results link shown for attended workshop with survey done',
+        (tester) async {
+      repo.seedWorkshops([_ws()]);
+      repo.seedRegistration(_reg(attended: true));
+      repo.seedSubmittedSurvey('ws-1');
+
+      await tester.pumpWidget(_wrap(repo));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('my_ws_view_results')), findsOneWidget);
+    });
+
+    testWidgets('view results link NOT shown when survey not submitted',
+        (tester) async {
+      repo.seedWorkshops([_ws()]);
+      repo.seedRegistration(_reg(attended: true));
+      // No survey submitted.
+
+      await tester.pumpWidget(_wrap(repo));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('my_ws_view_results')), findsNothing);
+    });
   });
 }

@@ -1,4 +1,4 @@
-// Workshop-phase models — Phase 3.
+// Workshop-phase models — Phase 3 / Phase 5.
 // All classes are immutable. No Flutter dependencies.
 
 // ---------------------------------------------------------------------------
@@ -167,4 +167,32 @@ class WorkshopAttachment {
       sortOrder: (json['sort_order'] as int?) ?? 0,
     );
   }
+}
+
+// ---------------------------------------------------------------------------
+// WorkshopSurveyResults
+// ---------------------------------------------------------------------------
+
+/// Computed score summary for a completed workshop survey.
+///
+/// [layerScores] maps layer name (e.g. 'STRUCTURE') → average (1–5).
+/// [total] is a weighted average over the SCA layers (same formula as web):
+///   structure×0.5 + culture×0.3 + activity×0.2 when all three are present,
+///   simple mean of active layers otherwise.
+/// [responseCount] is the total number of responses used.
+class WorkshopSurveyResults {
+  const WorkshopSurveyResults({
+    required this.layerScores,
+    required this.total,
+    required this.responseCount,
+  });
+
+  /// Layer name → average score (0.0 when no data).
+  final Map<String, double> layerScores;
+
+  /// Overall weighted total (0.0–5.0).
+  final double total;
+
+  /// Number of cc_workshop_responses rows used.
+  final int responseCount;
 }

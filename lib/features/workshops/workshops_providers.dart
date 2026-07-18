@@ -77,6 +77,21 @@ final workshopSurveySetProvider =
 });
 
 // ---------------------------------------------------------------------------
+// Task 7 (P5) — Survey results
+// ---------------------------------------------------------------------------
+
+/// Completed survey results (computed scores) for a workshop.
+/// Returns null when no completed survey exists.
+final workshopSurveyResultsProvider =
+    FutureProvider.autoDispose.family<WorkshopSurveyResults?, String>(
+        (ref, workshopId) async {
+  final repo = ref.watch(workshopRepositoryProvider);
+  final surveyId = await repo.getCompletedSurveyId(workshopId);
+  if (surveyId == null) return null;
+  return repo.getSurveyResults(surveyId);
+});
+
+// ---------------------------------------------------------------------------
 // Task 11 — My Workshops
 // ---------------------------------------------------------------------------
 

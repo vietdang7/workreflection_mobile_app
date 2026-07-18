@@ -729,6 +729,44 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wsSurveyError => 'Failed to submit. Please try again.';
 
   @override
+  String get wsSurveyViewResults => 'View results';
+
+  @override
+  String get wsSurveyResultsTitle => 'Survey results';
+
+  @override
+  String get wsSurveyResultsNotFound => 'Survey results not found.';
+
+  @override
+  String get wsSurveyResultsScore => 'Average score';
+
+  @override
+  String wsSurveyResultsResponses(int count) {
+    return '$count responses';
+  }
+
+  @override
+  String wsSurveyResultsLayerScore(String layer, String score) {
+    return '$layer: $score/5.0';
+  }
+
+  @override
+  String get wsCancelReg => 'Cancel registration';
+
+  @override
+  String get wsCancelRegTitle => 'Cancel registration';
+
+  @override
+  String get wsCancelRegBody =>
+      'Are you sure you want to cancel this workshop registration?';
+
+  @override
+  String get wsCancelRegSuccess => 'Registration cancelled';
+
+  @override
+  String get wsCancelRegError => 'Failed to cancel registration';
+
+  @override
   String get coachTitle => 'Coaching';
 
   @override

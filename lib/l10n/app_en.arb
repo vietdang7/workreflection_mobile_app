@@ -322,6 +322,28 @@
   "wsSurveyDone": "Rated",
   "wsSurveyNone": "No survey available for this workshop",
   "wsSurveyError": "Failed to submit. Please try again.",
+  "wsSurveyViewResults": "View results",
+  "wsSurveyResultsTitle": "Survey results",
+  "wsSurveyResultsNotFound": "Survey results not found.",
+  "wsSurveyResultsScore": "Average score",
+  "wsSurveyResultsResponses": "{count} responses",
+  "@wsSurveyResultsResponses": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "wsSurveyResultsLayerScore": "{layer}: {score}/5.0",
+  "@wsSurveyResultsLayerScore": {
+    "placeholders": {
+      "layer": {"type": "String"},
+      "score": {"type": "String"}
+    }
+  },
+  "wsCancelReg": "Cancel registration",
+  "wsCancelRegTitle": "Cancel registration",
+  "wsCancelRegBody": "Are you sure you want to cancel this workshop registration?",
+  "wsCancelRegSuccess": "Registration cancelled",
+  "wsCancelRegError": "Failed to cancel registration",
 
   "coachTitle": "Coaching",
   "coachAudienceYoung": "Young professionals",

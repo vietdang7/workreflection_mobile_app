@@ -730,6 +730,44 @@ class AppLocalizationsVi extends AppLocalizations {
   String get wsSurveyError => 'Gửi đánh giá thất bại. Vui lòng thử lại.';
 
   @override
+  String get wsSurveyViewResults => 'Xem kết quả';
+
+  @override
+  String get wsSurveyResultsTitle => 'Kết quả khảo sát';
+
+  @override
+  String get wsSurveyResultsNotFound => 'Không tìm thấy kết quả khảo sát.';
+
+  @override
+  String get wsSurveyResultsScore => 'Điểm trung bình';
+
+  @override
+  String wsSurveyResultsResponses(int count) {
+    return '$count câu trả lời';
+  }
+
+  @override
+  String wsSurveyResultsLayerScore(String layer, String score) {
+    return '$layer: $score/5.0';
+  }
+
+  @override
+  String get wsCancelReg => 'Huỷ đăng ký';
+
+  @override
+  String get wsCancelRegTitle => 'Huỷ đăng ký';
+
+  @override
+  String get wsCancelRegBody =>
+      'Bạn có chắc muốn huỷ đăng ký workshop này không?';
+
+  @override
+  String get wsCancelRegSuccess => 'Đã huỷ đăng ký';
+
+  @override
+  String get wsCancelRegError => 'Huỷ đăng ký thất bại';
+
+  @override
   String get coachTitle => 'Coaching';
 
   @override

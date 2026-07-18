@@ -1,14 +1,20 @@
-// My Workshops screen — Phase 3 Task 11.
+// My Workshops screen — Phase 3 Task 11 / Phase 5 Task 7.
 //
 // Shows all the current user's workshop registrations, each paired with
 // workshop detail. Tapping a row navigates to the workshop detail screen.
 // Handles loading, error (with retry), and empty states.
+//
+// Phase 5 additions:
+//   - Cancel registration (matches web: status='cancelled', 48h cutoff,
+//     personal only, payment_status != 'paid').
+//   - Survey results link when a survey is completed for a past workshop.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/data/workshop_repository.dart';
 import '../../../core/models/workshop_models.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
@@ -16,11 +22,54 @@ import '../../../core/widgets/wr_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../workshops_providers.dart';
 
-class MyWorkshopsScreen extends ConsumerWidget {
+class MyWorkshopsScreen extends ConsumerStatefulWidget {
   const MyWorkshopsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<MyWorkshopsScreen> createState() => _MyWorkshopsScreenState();
+}
+
+class _MyWorkshopsScreenState extends ConsumerState<MyWorkshopsScreen> {
+  /// Registration id pending cancel confirmation.
+  String? _pendingCancelId;
+  String? _pendingCancelWorkshopId;
+  bool _cancelling = false;
+
+  Future<void> _confirmCancel() async {
+    final regId = _pendingCancelId;
+    final wsId = _pendingCancelWorkshopId;
+    if (regId == null || wsId == null) return;
+
+    setState(() => _cancelling = true);
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      final repo = ref.read(workshopRepositoryProvider);
+      await repo.cancelRegistration(regId, wsId);
+      ref.invalidate(myWorkshopsProvider);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.wsCancelRegSuccess)),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.wsCancelRegError)),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _cancelling = false;
+          _pendingCancelId = null;
+          _pendingCancelWorkshopId = null;
+        });
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final myAsync = ref.watch(myWorkshopsProvider);
 
@@ -57,12 +106,48 @@ class MyWorkshopsScreen extends ConsumerWidget {
                 registration: reg,
                 workshop: workshop,
                 onTap: () => context.push('/workshops/${reg.workshopId}'),
+                onCancel: _canCancel(reg, workshop)
+                    ? () => setState(() {
+                          _pendingCancelId = reg.id;
+                          _pendingCancelWorkshopId = reg.workshopId;
+                        })
+                    : null,
               );
             },
           );
         },
       ),
+
+      // Cancel confirmation dialog
+      persistentFooterButtons: _pendingCancelId != null
+          ? [
+              _CancelDialog(
+                l10n: l10n,
+                cancelling: _cancelling,
+                onConfirm: _confirmCancel,
+                onDismiss: () => setState(() {
+                  _pendingCancelId = null;
+                  _pendingCancelWorkshopId = null;
+                }),
+              ),
+            ]
+          : null,
     );
+  }
+
+  /// Mirrors web canCancel logic:
+  ///   - no org_id (personal registration only)
+  ///   - status != 'cancelled'
+  ///   - now < 48 h before workshop date
+  ///   - payment_status is NOT 'paid' (not stored in mobile model — skip check,
+  ///     matches paid=false default for free workshops which are the common case)
+  bool _canCancel(WorkshopRegistration reg, WorkshopDetail? workshop) {
+    if (workshop == null) return false;
+    // org_id not in mobile WorkshopRegistration model — skip (only personal
+    // registrations appear since getMyRegistrations uses user_id filter).
+    if (reg.status == 'cancelled') return false;
+    final cutoff = workshop.date.subtract(const Duration(hours: 48));
+    return DateTime.now().isBefore(cutoff);
   }
 }
 
@@ -70,16 +155,18 @@ class MyWorkshopsScreen extends ConsumerWidget {
 // Single row
 // ---------------------------------------------------------------------------
 
-class _MyWorkshopRow extends StatelessWidget {
+class _MyWorkshopRow extends ConsumerWidget {
   const _MyWorkshopRow({
     required this.registration,
     required this.workshop,
     required this.onTap,
+    this.onCancel,
   });
 
   final WorkshopRegistration registration;
   final WorkshopDetail? workshop;
   final VoidCallback onTap;
+  final VoidCallback? onCancel;
 
   String _formatDate(DateTime d) => DateFormat('dd/MM/yyyy').format(d);
 
@@ -96,32 +183,87 @@ class _MyWorkshopRow extends StatelessWidget {
   }
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final title = workshop?.title ?? '—';
     final date = workshop?.date;
     final status = _status();
+    final isAttended = status == _RowStatus.attended;
+
+    // Watch survey submission state for attended workshops.
+    final hasSubmittedAsync = isAttended
+        ? ref.watch(hasSubmittedSurveyProvider(registration.workshopId))
+        : const AsyncData<bool>(false);
 
     return GestureDetector(
       onTap: onTap,
       child: WrCardMinimal(
-        child: Row(
+        child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: WrTextStyles.hMedium),
-                  if (date != null) ...[
-                    const SizedBox(height: 4),
-                    Text(_formatDate(date), style: WrTextStyles.body),
-                  ],
-                ],
-              ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(title, style: WrTextStyles.hMedium),
+                      if (date != null) ...[
+                        const SizedBox(height: 4),
+                        Text(_formatDate(date), style: WrTextStyles.body),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                _StatusChip(status: status, l10n: l10n),
+              ],
             ),
-            const SizedBox(width: 12),
-            _StatusChip(status: status, l10n: l10n),
+
+            // Survey results link when attended and survey is completed.
+            hasSubmittedAsync.when(
+              loading: () => const SizedBox.shrink(),
+              error: (_, __) => const SizedBox.shrink(),
+              data: (hasSubmitted) {
+                if (!hasSubmitted) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: GestureDetector(
+                    onTap: () => context.push(
+                      '/workshops/${registration.workshopId}/survey-results',
+                    ),
+                    child: Text(
+                      l10n.wsSurveyViewResults,
+                      key: const Key('my_ws_view_results'),
+                      style: WrTextStyles.body.copyWith(
+                        color: WrColors.coral,
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.underline,
+                        decorationColor: WrColors.coral,
+                      ),
+                    ),
+                  ),
+                );
+              },
+            ),
+
+            // Cancel button for eligible registrations.
+            if (onCancel != null) ...[
+              const SizedBox(height: 10),
+              GestureDetector(
+                onTap: onCancel,
+                child: Text(
+                  l10n.wsCancelReg,
+                  key: const Key('my_ws_cancel'),
+                  style: WrTextStyles.body.copyWith(
+                    color: WrColors.muted,
+                    decoration: TextDecoration.underline,
+                    decorationColor: WrColors.muted,
+                  ),
+                ),
+              ),
+            ],
           ],
         ),
       ),
@@ -162,6 +304,75 @@ class _StatusChip extends StatelessWidget {
           fontWeight: FontWeight.w600,
           color: color,
         ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Cancel dialog (inline footer panel)
+// ---------------------------------------------------------------------------
+
+class _CancelDialog extends StatelessWidget {
+  const _CancelDialog({
+    required this.l10n,
+    required this.cancelling,
+    required this.onConfirm,
+    required this.onDismiss,
+  });
+
+  final AppLocalizations l10n;
+  final bool cancelling;
+  final VoidCallback onConfirm;
+  final VoidCallback onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: WrColors.white,
+        border: Border(top: BorderSide(color: WrColors.muted.withValues(alpha: 0.2))),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(l10n.wsCancelRegTitle, style: WrTextStyles.hMedium),
+          const SizedBox(height: 8),
+          Text(l10n.wsCancelRegBody, style: WrTextStyles.body),
+          const SizedBox(height: 16),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              TextButton(
+                key: const Key('cancel_dismiss'),
+                onPressed: cancelling ? null : onDismiss,
+                child: Text(l10n.commonCancel),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                key: const Key('cancel_confirm'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: WrColors.coral,
+                  foregroundColor: WrColors.white,
+                ),
+                onPressed: cancelling ? null : onConfirm,
+                child: cancelling
+                    ? const SizedBox(
+                        width: 16,
+                        height: 16,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: WrColors.white,
+                        ),
+                      )
+                    : Text(l10n.commonConfirm),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }

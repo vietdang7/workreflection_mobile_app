@@ -323,6 +323,28 @@
   "wsSurveyDone": "Đã đánh giá",
   "wsSurveyNone": "Chưa có khảo sát cho workshop này",
   "wsSurveyError": "Gửi đánh giá thất bại. Vui lòng thử lại.",
+  "wsSurveyViewResults": "Xem kết quả",
+  "wsSurveyResultsTitle": "Kết quả khảo sát",
+  "wsSurveyResultsNotFound": "Không tìm thấy kết quả khảo sát.",
+  "wsSurveyResultsScore": "Điểm trung bình",
+  "wsSurveyResultsResponses": "{count} câu trả lời",
+  "@wsSurveyResultsResponses": {
+    "placeholders": {
+      "count": {"type": "int"}
+    }
+  },
+  "wsSurveyResultsLayerScore": "{layer}: {score}/5.0",
+  "@wsSurveyResultsLayerScore": {
+    "placeholders": {
+      "layer": {"type": "String"},
+      "score": {"type": "String"}
+    }
+  },
+  "wsCancelReg": "Huỷ đăng ký",
+  "wsCancelRegTitle": "Huỷ đăng ký",
+  "wsCancelRegBody": "Bạn có chắc muốn huỷ đăng ký workshop này không?",
+  "wsCancelRegSuccess": "Đã huỷ đăng ký",
+  "wsCancelRegError": "Huỷ đăng ký thất bại",
 
   "coachTitle": "Coaching",
   "coachAudienceYoung": "Người trẻ",
