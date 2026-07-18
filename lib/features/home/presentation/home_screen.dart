@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/models/checkin.dart';
@@ -12,7 +11,6 @@ import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/progress_track.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../../features/notifications/notification_providers.dart';
 import '../../../features/profile/profile_providers.dart';
 import '../home_providers.dart';
 
@@ -57,7 +55,7 @@ class HomeScreen extends ConsumerWidget {
 // Header (greeting + date)
 // ---------------------------------------------------------------------------
 
-class _HomeHeader extends ConsumerWidget {
+class _HomeHeader extends StatelessWidget {
   const _HomeHeader({required this.displayName});
 
   final String displayName;
@@ -75,77 +73,22 @@ class _HomeHeader extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final unreadCount = ref.watch(unreadNotificationCountProvider);
-
     return Padding(
       padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  l10n.homeGreeting(displayName),
-                  style: WrTextStyles.greeting,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  key: const Key('home_date_title'),
-                  _buildDateTitle(),
-                  style: WrTextStyles.dateTitle,
-                ),
-              ],
-            ),
+          Text(
+            l10n.homeGreeting(displayName),
+            style: WrTextStyles.greeting,
           ),
-          // Bell icon with unread badge
-          GestureDetector(
-            key: const Key('notificationBell'),
-            onTap: () async {
-              await context.push('/notifications');
-              // Refresh unread count on return
-              ref.invalidate(notificationsProvider);
-            },
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                const Icon(
-                  Icons.notifications_outlined,
-                  color: WrColors.navy,
-                  size: 28,
-                ),
-                if (unreadCount > 0)
-                  Positioned(
-                    top: -4,
-                    right: -4,
-                    child: Container(
-                      key: const Key('unreadBadge'),
-                      padding: const EdgeInsets.all(3),
-                      decoration: const BoxDecoration(
-                        color: WrColors.coral,
-                        shape: BoxShape.circle,
-                      ),
-                      constraints: const BoxConstraints(
-                        minWidth: 16,
-                        minHeight: 16,
-                      ),
-                      child: Text(
-                        unreadCount > 99 ? '99+' : '$unreadCount',
-                        style: const TextStyle(
-                          color: WrColors.white,
-                          fontSize: 9,
-                          fontWeight: FontWeight.w700,
-                          height: 1,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+          const SizedBox(height: 4),
+          Text(
+            key: const Key('home_date_title'),
+            _buildDateTitle(),
+            style: WrTextStyles.dateTitle,
           ),
         ],
       ),
