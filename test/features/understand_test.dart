@@ -185,9 +185,16 @@ void main() {
       expect(find.textContaining('5'), findsWidgets);
     });
 
-    testWidgets('view-all insights link hidden when no insights', (tester) async {
+    testWidgets('view-all insights link hidden when no insights but checkins exist',
+        (tester) async {
       final repo = FakeWrRepository();
-      // No insights seeded → count = 0
+      // Seed checkins but ZERO insights — regression case: combined count > 0
+      // but the link must still be hidden because there are no insights.
+      repo.seedCheckinDates([
+        DateTime(2026, 6, 1),
+        DateTime(2026, 6, 2),
+        DateTime(2026, 6, 3),
+      ]);
       await _pumpLarge(tester, _wrap(const UnderstandScreen(), repo));
 
       expect(find.byKey(const Key('understand_view_all_insights')), findsNothing);

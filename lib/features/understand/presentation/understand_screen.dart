@@ -113,7 +113,7 @@ class _DominantNeedBlock extends ConsumerWidget {
                 style: WrTextStyles.body.copyWith(fontSize: 13),
               ),
               const SizedBox(height: 12),
-              _ViewAllInsightsLink(),
+              _ViewAllInsightsLink(hasInsight: insight != null),
             ],
           ),
         );
@@ -407,24 +407,24 @@ class _CareerHealthCheck extends ConsumerWidget {
 }
 
 // ---------------------------------------------------------------------------
-// View-all insights link (only shown when insight count > 0)
+// View-all insights link (only shown when at least one insight exists)
 // ---------------------------------------------------------------------------
 
-class _ViewAllInsightsLink extends ConsumerWidget {
+class _ViewAllInsightsLink extends StatelessWidget {
+  const _ViewAllInsightsLink({required this.hasInsight});
+
+  /// True when the latest-insight provider returned a non-null value,
+  /// meaning at least one insight exists for this user.
+  final bool hasInsight;
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
+    if (!hasInsight) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context)!;
-    final countAsync = ref.watch(understandInsightCountProvider);
-    return countAsync.when(
-      data: (count) => count > 0
-          ? WrActionLink(
-              key: const Key('understand_view_all_insights'),
-              label: l10n.understandViewAllInsights,
-              onTap: () => context.push('/insights'),
-            )
-          : const SizedBox.shrink(),
-      loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+    return WrActionLink(
+      key: const Key('understand_view_all_insights'),
+      label: l10n.understandViewAllInsights,
+      onTap: () => context.push('/insights'),
     );
   }
 }
