@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/logic/sca_chart_data.dart';
 import '../../../core/logic/survey_scoring.dart';
+import '../../../core/models/ai_personalization_models.dart';
 import '../../../core/models/survey_models.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
@@ -205,6 +206,12 @@ class _ReportBody extends ConsumerWidget {
             _EsiCard(report: report, l10n: l10n),
             const SizedBox(height: 16),
             _EnpsCard(report: report, l10n: l10n),
+            const SizedBox(height: 16),
+            // AI-personalized narratives (VI only; static fallback on any error)
+            _AiPersonalizedPremiumSection(
+              report: report,
+              localeCode: localeCode,
+            ),
           ] else
             _PremiumUpsellCard(l10n: l10n),
 
@@ -589,7 +596,258 @@ class _ScaRadarPainter extends CustomPainter {
   bool shouldRepaint(_ScaRadarPainter old) => old.data != data;
 }
 
-/// Radar chart section widget that renders the SCA triangle + axis labels.
+// ---------------------------------------------------------------------------
+// AI-personalized premium narrative section (Phase 5 Task 4)
+// ---------------------------------------------------------------------------
+// Mirrors web's usePersonalizedContent pattern:
+//   1. Read cc_ai_personalization_cache (via provider).
+//   2. On cache miss, call ai-personalize edge function.
+//   3. On ANY error / EN locale → show static default narratives silently.
+// All three sections (model, reflection, relationship) are fetched in parallel.
+// ---------------------------------------------------------------------------
+
+class _AiPersonalizedPremiumSection extends ConsumerWidget {
+  const _AiPersonalizedPremiumSection({
+    required this.report,
+    required this.localeCode,
+  });
+
+  final CcReportFull report;
+  final String localeCode;
+
+  AiPersonalizationScoreContext _scoreContext() {
+    final bottleneck = switch (report.bottleneckLayer) {
+      SurveyLayer.structure => 'STRUCTURE',
+      SurveyLayer.culture => 'CULTURE',
+      SurveyLayer.activity => 'ACTIVITY',
+      _ => 'STRUCTURE',
+    };
+    final scoreLevel = switch (report.scoreLevel) {
+      ScoreLevel.high => 'HIGH',
+      ScoreLevel.good => 'GOOD',
+      ScoreLevel.warning => 'WARNING',
+      ScoreLevel.critical => 'CRITICAL',
+    };
+    return AiPersonalizationScoreContext(
+      structure: report.scoreStructure,
+      culture: report.scoreCulture,
+      activity: report.scoreActivity,
+      total: report.scoreTotal,
+      esi: report.scoreEsi ?? 0,
+      bottleneck: bottleneck,
+      scoreLevel: scoreLevel,
+    );
+  }
+
+  // Minimal static defaults (plain strings — not localized here because the
+  // AI section is VI-only; EN locale skips this widget entirely via provider).
+  static const _defaultModel = <String, String>{
+    'quote': '',
+    'intro': '',
+    'structure_desc': '',
+    'culture_desc': '',
+    'activity_desc': '',
+  };
+
+  static const _defaultReflection = <String, String>{
+    'intro': '',
+    'item1_desc': '',
+    'item2_desc': '',
+    'item3_desc': '',
+    'pauses_intro': '',
+    'pause1': '',
+    'pause2': '',
+    'pause3': '',
+  };
+
+  static const _defaultRelationship = <String, String>{
+    'header_quote': '',
+    'misconception_text': '',
+    'misconception_quote': '',
+    'asset1_desc': '',
+    'asset2_desc': '',
+    'asset3_desc': '',
+    'asset4_desc': '',
+    'asset5_desc': '',
+    'closing_quote': '',
+  };
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+
+    // EN locale → skip AI section entirely (matches web behavior).
+    if (localeCode != 'vi') return const SizedBox.shrink();
+
+    final userCtx = const AiPersonalizationUserContext();
+    final scoreCtx = _scoreContext();
+
+    final modelArgs = (
+      reportId: report.id,
+      section: 'model',
+      userContext: userCtx,
+      scoreContext: scoreCtx,
+      defaultContent: _defaultModel,
+      locale: localeCode,
+    );
+    final reflectionArgs = (
+      reportId: report.id,
+      section: 'reflection',
+      userContext: userCtx,
+      scoreContext: scoreCtx,
+      defaultContent: _defaultReflection,
+      locale: localeCode,
+    );
+    final relationshipArgs = (
+      reportId: report.id,
+      section: 'relationship',
+      userContext: userCtx,
+      scoreContext: scoreCtx,
+      defaultContent: _defaultRelationship,
+      locale: localeCode,
+    );
+
+    final modelAsync = ref.watch(aiPersonalizationProvider(modelArgs));
+    final reflectionAsync = ref.watch(aiPersonalizationProvider(reflectionArgs));
+    final relationshipAsync = ref.watch(aiPersonalizationProvider(relationshipArgs));
+
+    // Show a single loading indicator while any section is still resolving.
+    final anyLoading = modelAsync.isLoading ||
+        reflectionAsync.isLoading ||
+        relationshipAsync.isLoading;
+
+    if (anyLoading) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: WrColors.coral,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              l10n.reportAiPersonalizingLabel,
+              style: WrTextStyles.body
+                  .copyWith(color: WrColors.dark.withValues(alpha: 0.6)),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Extract data — null on error or EN locale (already guarded above).
+    final modelData = modelAsync.valueOrNull;
+    final reflectionData = reflectionAsync.valueOrNull;
+    final relationshipData = relationshipAsync.valueOrNull;
+
+    // If all three returned null (AI unavailable / all errors) → nothing to show.
+    if (modelData == null && reflectionData == null && relationshipData == null) {
+      return const SizedBox.shrink();
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (modelData != null) ...[
+          _AiSectionCard(
+            title: l10n.reportAiModelSectionTitle,
+            content: _buildModelContent(modelData),
+          ),
+          const SizedBox(height: 16),
+        ],
+        if (reflectionData != null) ...[
+          _AiSectionCard(
+            title: l10n.reportAiReflectionSectionTitle,
+            content: _buildReflectionContent(reflectionData),
+          ),
+          const SizedBox(height: 16),
+        ],
+        if (relationshipData != null) ...[
+          _AiSectionCard(
+            title: l10n.reportAiRelationshipSectionTitle,
+            content: _buildRelationshipContent(relationshipData),
+          ),
+        ],
+      ],
+    );
+  }
+
+  List<String> _buildModelContent(Map<String, dynamic> data) {
+    final c = AiModelContent.fromJson(data);
+    return [
+      if (c.quote.isNotEmpty) c.quote,
+      if (c.intro.isNotEmpty) c.intro,
+      if (c.structureDesc.isNotEmpty) c.structureDesc,
+      if (c.cultureDesc.isNotEmpty) c.cultureDesc,
+      if (c.activityDesc.isNotEmpty) c.activityDesc,
+    ];
+  }
+
+  List<String> _buildReflectionContent(Map<String, dynamic> data) {
+    final c = AiReflectionContent.fromJson(data);
+    return [
+      if (c.intro.isNotEmpty) c.intro,
+      if (c.item1Desc.isNotEmpty) c.item1Desc,
+      if (c.item2Desc.isNotEmpty) c.item2Desc,
+      if (c.item3Desc.isNotEmpty) c.item3Desc,
+      if (c.pausesIntro.isNotEmpty) c.pausesIntro,
+      if (c.pause1.isNotEmpty) c.pause1,
+      if (c.pause2.isNotEmpty) c.pause2,
+      if (c.pause3.isNotEmpty) c.pause3,
+    ];
+  }
+
+  List<String> _buildRelationshipContent(Map<String, dynamic> data) {
+    final c = AiRelationshipContent.fromJson(data);
+    return [
+      if (c.headerQuote.isNotEmpty) c.headerQuote,
+      if (c.misconceptionText.isNotEmpty) c.misconceptionText,
+      if (c.misconceptionQuote.isNotEmpty) c.misconceptionQuote,
+      if (c.asset1Desc.isNotEmpty) c.asset1Desc,
+      if (c.asset2Desc.isNotEmpty) c.asset2Desc,
+      if (c.asset3Desc.isNotEmpty) c.asset3Desc,
+      if (c.asset4Desc.isNotEmpty) c.asset4Desc,
+      if (c.asset5Desc.isNotEmpty) c.asset5Desc,
+      if (c.closingQuote.isNotEmpty) c.closingQuote,
+    ];
+  }
+}
+
+/// Simple card that renders an AI section title + a list of text paragraphs.
+class _AiSectionCard extends StatelessWidget {
+  const _AiSectionCard({required this.title, required this.content});
+
+  final String title;
+  final List<String> content;
+
+  @override
+  Widget build(BuildContext context) {
+    if (content.isEmpty) return const SizedBox.shrink();
+    return WrCardMinimal(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          WrEyebrow(title),
+          const SizedBox(height: 12),
+          ...content.map(
+            (text) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Text(text, style: WrTextStyles.body),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Radar chart CustomPainter — draws a 3-axis triangular radar chart for S-C-A scores.
 class ScaRadarChart extends StatelessWidget {
   const ScaRadarChart({
     super.key,

@@ -236,6 +236,10 @@
   "reportViewLatest": "Xem báo cáo gần nhất",
   "reportViewHistory": "Xem lịch sử khảo sát",
   "reportScaChartTitle": "Bức tranh S-C-A",
+  "reportAiPersonalizingLabel": "Đang cá nhân hóa báo cáo…",
+  "reportAiModelSectionTitle": "Mô hình làm việc của bạn",
+  "reportAiReflectionSectionTitle": "Phản chiếu cá nhân",
+  "reportAiRelationshipSectionTitle": "Mối quan hệ trong công việc",
 
   "surveyHistoryTitle": "Lịch sử khảo sát",
   "surveyHistoryScoreLabel": "Điểm",

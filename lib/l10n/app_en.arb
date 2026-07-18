@@ -235,6 +235,10 @@
   "reportViewLatest": "View latest report",
   "reportViewHistory": "View survey history",
   "reportScaChartTitle": "S-C-A Overview",
+  "reportAiPersonalizingLabel": "Personalising your report…",
+  "reportAiModelSectionTitle": "Your Work Model",
+  "reportAiReflectionSectionTitle": "Personal Reflection",
+  "reportAiRelationshipSectionTitle": "Work Relationships",
 
   "surveyHistoryTitle": "Survey History",
   "surveyHistoryScoreLabel": "Score",

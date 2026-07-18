@@ -1,4 +1,5 @@
 import 'package:workreflection_mobile/core/data/survey_repository.dart';
+import 'package:workreflection_mobile/core/models/ai_personalization_models.dart';
 import 'package:workreflection_mobile/core/models/survey_models.dart';
 
 /// In-memory fake SurveyRepository for widget/unit tests.
@@ -223,5 +224,46 @@ class FakeSurveyRepository implements SurveyRepository {
   @override
   Future<Map<String, double>> getEsiPillarScores(String surveyId) async {
     return Map.unmodifiable(_esiPillarScores);
+  }
+
+  // --- AI Personalization ---
+  // Cache: (reportId, section) → content map. Null means cache miss.
+  final Map<String, Map<String, dynamic>?> _aiCache = {};
+  // Edge function result: section → content. Null means failure/null returned.
+  final Map<String, Map<String, dynamic>?> _aiInvokeResult = {};
+  bool _aiInvokeShouldFail = false;
+  final List<String> aiInvokeCalls = [];
+
+  /// Pre-seed a completed cache entry for a given (reportId, section).
+  void seedAiCache(String reportId, String section, Map<String, dynamic> content) {
+    _aiCache['$reportId:$section'] = content;
+  }
+
+  /// Pre-seed what invokeAiPersonalize returns for a given section.
+  /// Pass null to simulate a failure/empty response.
+  void seedAiInvokeResult(String section, Map<String, dynamic>? content) {
+    _aiInvokeResult[section] = content;
+  }
+
+  /// When true, invokeAiPersonalize always returns null (simulates network error).
+  void setAiInvokeFails(bool v) => _aiInvokeShouldFail = v;
+
+  @override
+  Future<Map<String, dynamic>?> getCachedAiPersonalization(
+      String reportId, String section) async {
+    return _aiCache['$reportId:$section'];
+  }
+
+  @override
+  Future<Map<String, dynamic>?> invokeAiPersonalize({
+    required String reportId,
+    required String section,
+    required AiPersonalizationUserContext userContext,
+    required AiPersonalizationScoreContext scoreContext,
+    required Map<String, String> defaultContent,
+  }) async {
+    aiInvokeCalls.add(section);
+    if (_aiInvokeShouldFail) return null;
+    return _aiInvokeResult[section];
   }
 }

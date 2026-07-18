@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/data/survey_repository.dart';
+import '../../core/models/ai_personalization_models.dart';
 import '../../core/models/survey_models.dart';
 
 // ---------------------------------------------------------------------------
@@ -154,6 +155,47 @@ final esiPillarScoresProvider =
     FutureProvider.family<Map<String, double>, String>((ref, surveyId) async {
   final repo = ref.watch(surveyRepositoryProvider);
   return repo.getEsiPillarScores(surveyId);
+});
+
+// ---------------------------------------------------------------------------
+// AI Personalization provider
+// ---------------------------------------------------------------------------
+// Key: (reportId, section) — section is 'model' | 'reflection' | 'relationship'.
+// Reads cache first; calls edge function on miss; returns null on any error.
+// VI-only: returns null immediately for 'en' locale (matches web behavior).
+// ---------------------------------------------------------------------------
+
+/// Args type for the AI personalization provider family.
+typedef AiPersonalizationArgs = ({
+  String reportId,
+  String section,
+  AiPersonalizationUserContext userContext,
+  AiPersonalizationScoreContext scoreContext,
+  Map<String, String> defaultContent,
+  String locale,
+});
+
+final aiPersonalizationProvider = FutureProvider.autoDispose
+    .family<Map<String, dynamic>?, AiPersonalizationArgs>(
+        (ref, args) async {
+  // Web skips AI for EN locale — mirror exactly.
+  if (args.locale != 'vi') return null;
+
+  final repo = ref.watch(surveyRepositoryProvider);
+
+  // Step 1: read cache (direct DB query, same as web client).
+  final cached = await repo.getCachedAiPersonalization(
+      args.reportId, args.section);
+  if (cached != null) return cached;
+
+  // Step 2: cache miss → call edge function (returns null on any error).
+  return repo.invokeAiPersonalize(
+    reportId: args.reportId,
+    section: args.section,
+    userContext: args.userContext,
+    scoreContext: args.scoreContext,
+    defaultContent: args.defaultContent,
+  );
 });
 
 // ---------------------------------------------------------------------------

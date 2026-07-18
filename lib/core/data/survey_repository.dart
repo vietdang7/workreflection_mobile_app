@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../logic/survey_scoring.dart';
+import '../models/ai_personalization_models.dart';
 import '../models/survey_models.dart';
 
 // ---------------------------------------------------------------------------
@@ -79,6 +80,24 @@ abstract class SurveyRepository {
   /// Fetch ESI pillar avg scores keyed by sub_component string
   /// (queries cc_responses + cc_questions WHERE layer='ESI').
   Future<Map<String, double>> getEsiPillarScores(String surveyId);
+
+  /// Fetch AI-personalized content for one section from cc_ai_personalization_cache.
+  /// Returns null when no completed cache row exists (cache miss or AI unavailable).
+  /// The caller is responsible for triggering generation via [invokeAiPersonalize].
+  Future<Map<String, dynamic>?> getCachedAiPersonalization(
+      String reportId, String section);
+
+  /// Call the ai-personalize edge function (action=generate).
+  /// Mirrors web's usePersonalizedContent mutation.
+  /// Returns the generated content map, or null on ANY error (graceful fallback).
+  /// Timeout: 10 seconds (mobile is stricter than web's 30 s server-side timeout).
+  Future<Map<String, dynamic>?> invokeAiPersonalize({
+    required String reportId,
+    required String section,
+    required AiPersonalizationUserContext userContext,
+    required AiPersonalizationScoreContext scoreContext,
+    required Map<String, String> defaultContent,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -558,6 +577,60 @@ class SupabaseSurveyRepository implements SurveyRepository {
       for (final e in grouped.entries)
         e.key: e.value.reduce((a, b) => a + b) / e.value.length,
     };
+  }
+
+  // ---------------------------------------------------------------------------
+  // AI Personalization
+  // ---------------------------------------------------------------------------
+
+  @override
+  Future<Map<String, dynamic>?> getCachedAiPersonalization(
+      String reportId, String section) async {
+    final rows = await _client
+        .from('cc_ai_personalization_cache')
+        .select('content')
+        .eq('report_id', reportId)
+        .eq('section', section)
+        .eq('status', 'completed')
+        .limit(1);
+    if (rows.isEmpty) return null;
+    final content = rows.first['content'];
+    if (content == null) return null;
+    return Map<String, dynamic>.from(content as Map);
+  }
+
+  @override
+  Future<Map<String, dynamic>?> invokeAiPersonalize({
+    required String reportId,
+    required String section,
+    required AiPersonalizationUserContext userContext,
+    required AiPersonalizationScoreContext scoreContext,
+    required Map<String, String> defaultContent,
+  }) async {
+    try {
+      final response = await _client.functions
+          .invoke(
+            'ai-personalize',
+            body: {
+              'action': 'generate',
+              'reportId': reportId,
+              'section': section,
+              'userContext': userContext.toJson(),
+              'scoreContext': scoreContext.toJson(),
+              'defaultContent': defaultContent,
+            },
+          )
+          .timeout(const Duration(seconds: 10));
+      final data = response.data;
+      if (data == null) return null;
+      final map = Map<String, dynamic>.from(data as Map);
+      final content = map['content'];
+      if (content == null) return null;
+      return Map<String, dynamic>.from(content as Map);
+    } catch (_) {
+      // Any error (timeout, network, parse) → return null so UI keeps static narrative.
+      return null;
+    }
   }
 
   // ---------------------------------------------------------------------------

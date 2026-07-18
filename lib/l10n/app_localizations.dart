@@ -1088,6 +1088,30 @@ abstract class AppLocalizations {
   /// **'Bức tranh S-C-A'**
   String get reportScaChartTitle;
 
+  /// No description provided for @reportAiPersonalizingLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang cá nhân hóa báo cáo…'**
+  String get reportAiPersonalizingLabel;
+
+  /// No description provided for @reportAiModelSectionTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mô hình làm việc của bạn'**
+  String get reportAiModelSectionTitle;
+
+  /// No description provided for @reportAiReflectionSectionTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phản chiếu cá nhân'**
+  String get reportAiReflectionSectionTitle;
+
+  /// No description provided for @reportAiRelationshipSectionTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mối quan hệ trong công việc'**
+  String get reportAiRelationshipSectionTitle;
+
   /// No description provided for @surveyHistoryTitle.
   ///
   /// In vi, this message translates to:

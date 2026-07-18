@@ -531,6 +531,18 @@ class AppLocalizationsVi extends AppLocalizations {
   String get reportScaChartTitle => 'Bức tranh S-C-A';
 
   @override
+  String get reportAiPersonalizingLabel => 'Đang cá nhân hóa báo cáo…';
+
+  @override
+  String get reportAiModelSectionTitle => 'Mô hình làm việc của bạn';
+
+  @override
+  String get reportAiReflectionSectionTitle => 'Phản chiếu cá nhân';
+
+  @override
+  String get reportAiRelationshipSectionTitle => 'Mối quan hệ trong công việc';
+
+  @override
   String get surveyHistoryTitle => 'Lịch sử khảo sát';
 
   @override

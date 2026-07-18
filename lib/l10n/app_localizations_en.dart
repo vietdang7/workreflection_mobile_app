@@ -528,6 +528,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportScaChartTitle => 'S-C-A Overview';
 
   @override
+  String get reportAiPersonalizingLabel => 'Personalising your report…';
+
+  @override
+  String get reportAiModelSectionTitle => 'Your Work Model';
+
+  @override
+  String get reportAiReflectionSectionTitle => 'Personal Reflection';
+
+  @override
+  String get reportAiRelationshipSectionTitle => 'Work Relationships';
+
+  @override
   String get surveyHistoryTitle => 'Survey History';
 
   @override
