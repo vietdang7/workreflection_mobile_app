@@ -54,7 +54,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       // Best-effort: ensure profile row exists and sample data is seeded.
       await ref.read(seedServiceProvider).ensureSeeded();
       if (mounted) {
-        context.go('/home');
+        context.go(_isLogin ? '/home' : '/profile/setup');
       }
     } catch (e) {
       if (mounted) {
