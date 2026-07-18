@@ -1,7 +1,10 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/logic/sca_chart_data.dart';
 import '../../../core/logic/survey_scoring.dart';
 import '../../../core/models/survey_models.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -148,6 +151,15 @@ class _ReportBody extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 28),
+
+          // SCA Radar Chart (above per-layer cards)
+          ScaRadarChart(
+            structure: report.scoreStructure,
+            culture: report.scoreCulture,
+            activity: report.scoreActivity,
+            l10n: l10n,
+          ),
+          const SizedBox(height: 16),
 
           // S / C / A layer cards
           _LayerCard(
@@ -444,6 +456,236 @@ class _PremiumUpsellCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(l10n.reportPremiumUpsell, style: WrTextStyles.body),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// SCA Radar Chart
+// ---------------------------------------------------------------------------
+
+/// CustomPainter that draws a 3-axis triangular radar chart for S-C-A scores.
+/// Matches the web Premium.tsx radar geometry: Structure=top, Culture=bottom-right,
+/// Activity=bottom-left. Scale 0–5. Grid at levels 1–5.
+class _ScaRadarPainter extends CustomPainter {
+  const _ScaRadarPainter({required this.data});
+
+  final ScaChartData data;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final cx = size.width / 2;
+    final cy = size.height / 2;
+    // maxR: 40% of the shorter dimension, leaving room for labels.
+    final maxR = math.min(size.width, size.height) * 0.40;
+
+    // Axis angles: Structure=top (-π/2), Culture=bottom-right, Activity=bottom-left
+    const angles = [
+      -math.pi / 2,
+      -math.pi / 2 + 2 * math.pi / 3,
+      -math.pi / 2 + 4 * math.pi / 3,
+    ];
+
+    Offset axisPoint(int axis, double ratio) => Offset(
+          cx + math.cos(angles[axis]) * maxR * ratio,
+          cy + math.sin(angles[axis]) * maxR * ratio,
+        );
+
+    // --- Grid triangles (5 levels) ---
+    final gridPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.8
+      ..color = const Color(0xFFE5E5E5);
+
+    for (int level = 1; level <= 5; level++) {
+      final r = level / 5.0;
+      final p0 = axisPoint(0, r);
+      final p1 = axisPoint(1, r);
+      final p2 = axisPoint(2, r);
+      final path = Path()
+        ..moveTo(p0.dx, p0.dy)
+        ..lineTo(p1.dx, p1.dy)
+        ..lineTo(p2.dx, p2.dy)
+        ..close();
+      gridPaint.strokeWidth = level == 5 ? 1.5 : 0.8;
+      canvas.drawPath(path, gridPaint);
+    }
+
+    // --- Axis lines ---
+    final axisPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 0.8
+      ..color = const Color(0xFFE5E5E5);
+
+    for (int i = 0; i < 3; i++) {
+      final tip = axisPoint(i, 1.0);
+      canvas.drawLine(Offset(cx, cy), tip, axisPaint);
+    }
+
+    // --- Data polygon ---
+    final sP = axisPoint(0, data.structureRatio);
+    final cP = axisPoint(1, data.cultureRatio);
+    final aP = axisPoint(2, data.activityRatio);
+
+    final fillPaint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = WrColors.coral.withValues(alpha: 0.15);
+
+    final strokePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5
+      ..strokeJoin = StrokeJoin.round
+      ..color = WrColors.coral;
+
+    final dataPath = Path()
+      ..moveTo(sP.dx, sP.dy)
+      ..lineTo(cP.dx, cP.dy)
+      ..lineTo(aP.dx, aP.dy)
+      ..close();
+
+    canvas.drawPath(dataPath, fillPaint);
+    canvas.drawPath(dataPath, strokePaint);
+
+    // --- Data point circles ---
+    final dotPaint = Paint()
+      ..style = PaintingStyle.fill
+      ..color = WrColors.coral;
+
+    for (final pt in [sP, cP, aP]) {
+      canvas.drawCircle(pt, 5, dotPaint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ScaRadarPainter old) => old.data != data;
+}
+
+/// Radar chart section widget that renders the SCA triangle + axis labels.
+class ScaRadarChart extends StatelessWidget {
+  const ScaRadarChart({
+    super.key,
+    required this.structure,
+    required this.culture,
+    required this.activity,
+    required this.l10n,
+  });
+
+  final double structure;
+  final double culture;
+  final double activity;
+  final AppLocalizations l10n;
+
+  @override
+  Widget build(BuildContext context) {
+    final data = ScaChartData.fromScores(
+      structure: structure,
+      culture: culture,
+      activity: activity,
+    );
+
+    if (!data.hasData) return const SizedBox.shrink();
+
+    return WrCardMinimal(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          WrEyebrow(l10n.reportScaChartTitle),
+          const SizedBox(height: 16),
+          SizedBox(
+            height: 260,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                CustomPaint(
+                  painter: _ScaRadarPainter(data: data),
+                  size: const Size(double.infinity, 260),
+                  child: const SizedBox.expand(),
+                ),
+                // Structure label: top center
+                Positioned(
+                  top: 4,
+                  left: 0,
+                  right: 0,
+                  child: Column(
+                    children: [
+                      Text(
+                        l10n.reportLayerStructure,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: WrColors.dark,
+                        ),
+                      ),
+                      Text(
+                        structure.toStringAsFixed(1),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: WrColors.coral,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Culture label: bottom-right
+                Positioned(
+                  bottom: 4,
+                  right: 8,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        l10n.reportLayerCulture,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: WrColors.dark,
+                        ),
+                      ),
+                      Text(
+                        culture.toStringAsFixed(1),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: WrColors.coral,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // Activity label: bottom-left
+                Positioned(
+                  bottom: 4,
+                  left: 8,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        l10n.reportLayerActivity,
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: WrColors.dark,
+                        ),
+                      ),
+                      Text(
+                        activity.toStringAsFixed(1),
+                        style: const TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w500,
+                          color: WrColors.coral,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

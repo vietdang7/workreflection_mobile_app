@@ -129,11 +129,11 @@ void main() {
       await tester.pumpWidget(_wrap(ReportScreen(reportId: 'r1'), repo: repo));
       await tester.pumpAndSettle();
 
-      // Default bottleneck=culture, so "Văn hoá làm việc" appears in both
-      // layer card AND bottleneck card — use findsWidgets.
-      expect(find.text('Cấu trúc tổ chức'), findsOneWidget);
+      // Layer labels now appear in both the radar chart axis labels AND the
+      // per-layer cards (and bottleneck card for culture) — use findsWidgets.
+      expect(find.text('Cấu trúc tổ chức'), findsWidgets);
       expect(find.text('Văn hoá làm việc'), findsWidgets);
-      expect(find.text('Hoạt động hàng ngày'), findsOneWidget);
+      expect(find.text('Hoạt động hàng ngày'), findsWidgets);
     });
 
     testWidgets('shows bottleneck card with correct layer (culture)',
@@ -245,6 +245,29 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.textContaining('5'), findsWidgets); // promoter count
+    });
+
+    testWidgets('T2-R1: radar chart section renders when SCA scores are present', (tester) async {
+      final report = _report(s: 4.0, c: 3.5, a: 4.5);
+      repo.seedLatestReport(report);
+
+      await tester.pumpWidget(_wrap(ReportScreen(reportId: 'r1'), repo: repo));
+      await tester.pumpAndSettle();
+
+      // WrEyebrow renders text via .toUpperCase() — match uppercased VI string
+      expect(find.text('BỨC TRANH S-C-A'), findsOneWidget);
+      // The chart CustomPaint should be present
+      expect(find.byType(CustomPaint), findsWidgets);
+    });
+
+    testWidgets('T2-R2: radar chart is absent when all SCA scores are zero', (tester) async {
+      final report = _report(s: 0.0, c: 0.0, a: 0.0);
+      repo.seedLatestReport(report);
+
+      await tester.pumpWidget(_wrap(ReportScreen(reportId: 'r1'), repo: repo));
+      await tester.pumpAndSettle();
+
+      expect(find.text('BỨC TRANH S-C-A'), findsNothing);
     });
   });
 
