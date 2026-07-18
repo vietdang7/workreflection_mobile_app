@@ -234,6 +234,7 @@
   "reportActionPlanCta": "30-day plan",
   "reportViewLatest": "View latest report",
   "reportViewHistory": "View survey history",
+  "reportScaChartTitle": "S-C-A Overview",
 
   "surveyHistoryTitle": "Survey History",
   "surveyHistoryScoreLabel": "Score",
