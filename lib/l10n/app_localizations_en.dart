@@ -614,6 +614,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wsLinkCopied => 'Link copied';
 
   @override
+  String get commonCancel => 'Cancel';
+
+  @override
+  String get commonConfirm => 'Confirm';
+
+  @override
   String get wsConsentTitle => 'Consent to image use';
 
   @override

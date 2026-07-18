@@ -615,6 +615,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get wsLinkCopied => 'Đã sao chép liên kết';
 
   @override
+  String get commonCancel => 'Hủy';
+
+  @override
+  String get commonConfirm => 'Xác nhận';
+
+  @override
   String get wsConsentTitle => 'Cho phép sử dụng hình ảnh';
 
   @override

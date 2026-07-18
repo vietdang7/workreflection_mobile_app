@@ -1244,6 +1244,18 @@ abstract class AppLocalizations {
   /// **'Đã sao chép liên kết'**
   String get wsLinkCopied;
 
+  /// No description provided for @commonCancel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hủy'**
+  String get commonCancel;
+
+  /// No description provided for @commonConfirm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận'**
+  String get commonConfirm;
+
   /// No description provided for @wsConsentTitle.
   ///
   /// In vi, this message translates to:

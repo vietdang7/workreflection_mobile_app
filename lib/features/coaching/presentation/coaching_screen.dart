@@ -268,12 +268,12 @@ class _PackageCardState extends ConsumerState<_PackageCard> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.wsPaidDialogOk), // "Đã hiểu" / "Got it" cancel
+            child: Text(l10n.commonCancel),
           ),
           TextButton(
             key: const Key('claimOkBtn'),
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('OK'),
+            child: Text(l10n.commonConfirm),
           ),
         ],
       ),

@@ -279,6 +279,8 @@
   "wsCheckinSuccess": "Check-in successful!",
   "wsCheckinError": "Check-in failed. Please try again.",
   "wsLinkCopied": "Link copied",
+  "commonCancel": "Cancel",
+  "commonConfirm": "Confirm",
 
   "wsConsentTitle": "Consent to image use",
   "wsConsentBody": "Do you consent to us using images of you from the workshop for communication purposes?",
