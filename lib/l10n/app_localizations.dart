@@ -1082,6 +1082,12 @@ abstract class AppLocalizations {
   /// **'Xem lịch sử khảo sát'**
   String get reportViewHistory;
 
+  /// No description provided for @reportScaChartTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bức tranh S-C-A'**
+  String get reportScaChartTitle;
+
   /// No description provided for @surveyHistoryTitle.
   ///
   /// In vi, this message translates to:
@@ -2161,6 +2167,246 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Bắt đầu'**
   String get surveyGuideCta;
+
+  /// No description provided for @layerDetailViewDetail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem chi tiết'**
+  String get layerDetailViewDetail;
+
+  /// No description provided for @layerDetailOverallScore.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm tổng thể'**
+  String get layerDetailOverallScore;
+
+  /// No description provided for @layerDetailNoData.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có dữ liệu'**
+  String get layerDetailNoData;
+
+  /// No description provided for @layerDetailNoDataBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn thành khảo sát để xem phân tích chi tiết.'**
+  String get layerDetailNoDataBody;
+
+  /// No description provided for @layerDetailResponses.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} phản hồi'**
+  String layerDetailResponses(int count);
+
+  /// No description provided for @layerDetailScoreGood.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tốt'**
+  String get layerDetailScoreGood;
+
+  /// No description provided for @layerDetailScoreWarning.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần cải thiện'**
+  String get layerDetailScoreWarning;
+
+  /// No description provided for @layerDetailScoreCritical.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần hành động'**
+  String get layerDetailScoreCritical;
+
+  /// No description provided for @esiAnalysisTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bức tranh hài lòng & trải nghiệm'**
+  String get esiAnalysisTitle;
+
+  /// No description provided for @esiAnalysisEsiScore.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm ESI'**
+  String get esiAnalysisEsiScore;
+
+  /// No description provided for @esiAnalysisEnpsScore.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm eNPS'**
+  String get esiAnalysisEnpsScore;
+
+  /// No description provided for @esiAnalysisPillarsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phân tích ESI theo trụ cột'**
+  String get esiAnalysisPillarsTitle;
+
+  /// No description provided for @esiAnalysisNoData.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có dữ liệu ESI chi tiết'**
+  String get esiAnalysisNoData;
+
+  /// No description provided for @esiAnalysisNoDataBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn thành khảo sát Premium để xem phân tích ESI.'**
+  String get esiAnalysisNoDataBody;
+
+  /// No description provided for @esiAnalysisEnpsPromoter.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ủng hộ viên'**
+  String get esiAnalysisEnpsPromoter;
+
+  /// No description provided for @esiAnalysisEnpsPassive.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trung lập'**
+  String get esiAnalysisEnpsPassive;
+
+  /// No description provided for @esiAnalysisEnpsDetractor.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không ủng hộ'**
+  String get esiAnalysisEnpsDetractor;
+
+  /// No description provided for @esiPillarCompensation.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đãi ngộ & phúc lợi'**
+  String get esiPillarCompensation;
+
+  /// No description provided for @esiPillarGrowth.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cơ hội phát triển'**
+  String get esiPillarGrowth;
+
+  /// No description provided for @esiPillarFairness.
+  ///
+  /// In vi, this message translates to:
+  /// **'Minh bạch & Công bằng'**
+  String get esiPillarFairness;
+
+  /// No description provided for @esiPillarSupport.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hỗ trợ & ghi nhận từ cấp trên'**
+  String get esiPillarSupport;
+
+  /// No description provided for @esiPillarColleagues.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đồng nghiệp & môi trường làm việc'**
+  String get esiPillarColleagues;
+
+  /// No description provided for @subCompRoleExpect.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kỳ vọng vai trò'**
+  String get subCompRoleExpect;
+
+  /// No description provided for @subCompCollabRules.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quy tắc phối hợp'**
+  String get subCompCollabRules;
+
+  /// No description provided for @subCompCommChannels.
+  ///
+  /// In vi, this message translates to:
+  /// **'Kênh giao tiếp'**
+  String get subCompCommChannels;
+
+  /// No description provided for @subCompTrust.
+  ///
+  /// In vi, this message translates to:
+  /// **'Sự tin tưởng'**
+  String get subCompTrust;
+
+  /// No description provided for @subCompPsychSafety.
+  ///
+  /// In vi, this message translates to:
+  /// **'An toàn tâm lý'**
+  String get subCompPsychSafety;
+
+  /// No description provided for @subCompFeedbackDialogue.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đối thoại & Phản hồi'**
+  String get subCompFeedbackDialogue;
+
+  /// No description provided for @subCompGoalAlignment.
+  ///
+  /// In vi, this message translates to:
+  /// **'Liên kết mục tiêu'**
+  String get subCompGoalAlignment;
+
+  /// No description provided for @subCompExecutionRhythm.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhịp thực thi'**
+  String get subCompExecutionRhythm;
+
+  /// No description provided for @subCompRetrospective.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thói quen nhìn lại'**
+  String get subCompRetrospective;
+
+  /// No description provided for @subCompContinuousImprove.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cải tiến liên tục'**
+  String get subCompContinuousImprove;
+
+  /// No description provided for @subCompCompensationIncome.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thu nhập'**
+  String get subCompCompensationIncome;
+
+  /// No description provided for @subCompCompensationBenefits.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phúc lợi'**
+  String get subCompCompensationBenefits;
+
+  /// No description provided for @subCompGrowthCareer.
+  ///
+  /// In vi, this message translates to:
+  /// **'Phát triển sự nghiệp'**
+  String get subCompGrowthCareer;
+
+  /// No description provided for @subCompFairnessEvaluation.
+  ///
+  /// In vi, this message translates to:
+  /// **'Công bằng đánh giá'**
+  String get subCompFairnessEvaluation;
+
+  /// No description provided for @subCompSupportManagement.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hỗ trợ quản lý'**
+  String get subCompSupportManagement;
+
+  /// No description provided for @subCompSupportFeedback.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hỗ trợ phản hồi'**
+  String get subCompSupportFeedback;
+
+  /// No description provided for @subCompSupportCollaboration.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hỗ trợ hợp tác'**
+  String get subCompSupportCollaboration;
+
+  /// No description provided for @subCompSupportLeadership.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hỗ trợ lãnh đạo'**
+  String get subCompSupportLeadership;
 }
 
 class _AppLocalizationsDelegate

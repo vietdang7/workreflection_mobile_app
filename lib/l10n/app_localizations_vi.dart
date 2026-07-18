@@ -528,6 +528,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get reportViewHistory => 'Xem lịch sử khảo sát';
 
   @override
+  String get reportScaChartTitle => 'Bức tranh S-C-A';
+
+  @override
   String get surveyHistoryTitle => 'Lịch sử khảo sát';
 
   @override
@@ -1109,4 +1112,128 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get surveyGuideCta => 'Bắt đầu';
+
+  @override
+  String get layerDetailViewDetail => 'Xem chi tiết';
+
+  @override
+  String get layerDetailOverallScore => 'Điểm tổng thể';
+
+  @override
+  String get layerDetailNoData => 'Chưa có dữ liệu';
+
+  @override
+  String get layerDetailNoDataBody =>
+      'Hoàn thành khảo sát để xem phân tích chi tiết.';
+
+  @override
+  String layerDetailResponses(int count) {
+    return '$count phản hồi';
+  }
+
+  @override
+  String get layerDetailScoreGood => 'Tốt';
+
+  @override
+  String get layerDetailScoreWarning => 'Cần cải thiện';
+
+  @override
+  String get layerDetailScoreCritical => 'Cần hành động';
+
+  @override
+  String get esiAnalysisTitle => 'Bức tranh hài lòng & trải nghiệm';
+
+  @override
+  String get esiAnalysisEsiScore => 'Điểm ESI';
+
+  @override
+  String get esiAnalysisEnpsScore => 'Điểm eNPS';
+
+  @override
+  String get esiAnalysisPillarsTitle => 'Phân tích ESI theo trụ cột';
+
+  @override
+  String get esiAnalysisNoData => 'Chưa có dữ liệu ESI chi tiết';
+
+  @override
+  String get esiAnalysisNoDataBody =>
+      'Hoàn thành khảo sát Premium để xem phân tích ESI.';
+
+  @override
+  String get esiAnalysisEnpsPromoter => 'Ủng hộ viên';
+
+  @override
+  String get esiAnalysisEnpsPassive => 'Trung lập';
+
+  @override
+  String get esiAnalysisEnpsDetractor => 'Không ủng hộ';
+
+  @override
+  String get esiPillarCompensation => 'Đãi ngộ & phúc lợi';
+
+  @override
+  String get esiPillarGrowth => 'Cơ hội phát triển';
+
+  @override
+  String get esiPillarFairness => 'Minh bạch & Công bằng';
+
+  @override
+  String get esiPillarSupport => 'Hỗ trợ & ghi nhận từ cấp trên';
+
+  @override
+  String get esiPillarColleagues => 'Đồng nghiệp & môi trường làm việc';
+
+  @override
+  String get subCompRoleExpect => 'Kỳ vọng vai trò';
+
+  @override
+  String get subCompCollabRules => 'Quy tắc phối hợp';
+
+  @override
+  String get subCompCommChannels => 'Kênh giao tiếp';
+
+  @override
+  String get subCompTrust => 'Sự tin tưởng';
+
+  @override
+  String get subCompPsychSafety => 'An toàn tâm lý';
+
+  @override
+  String get subCompFeedbackDialogue => 'Đối thoại & Phản hồi';
+
+  @override
+  String get subCompGoalAlignment => 'Liên kết mục tiêu';
+
+  @override
+  String get subCompExecutionRhythm => 'Nhịp thực thi';
+
+  @override
+  String get subCompRetrospective => 'Thói quen nhìn lại';
+
+  @override
+  String get subCompContinuousImprove => 'Cải tiến liên tục';
+
+  @override
+  String get subCompCompensationIncome => 'Thu nhập';
+
+  @override
+  String get subCompCompensationBenefits => 'Phúc lợi';
+
+  @override
+  String get subCompGrowthCareer => 'Phát triển sự nghiệp';
+
+  @override
+  String get subCompFairnessEvaluation => 'Công bằng đánh giá';
+
+  @override
+  String get subCompSupportManagement => 'Hỗ trợ quản lý';
+
+  @override
+  String get subCompSupportFeedback => 'Hỗ trợ phản hồi';
+
+  @override
+  String get subCompSupportCollaboration => 'Hỗ trợ hợp tác';
+
+  @override
+  String get subCompSupportLeadership => 'Hỗ trợ lãnh đạo';
 }

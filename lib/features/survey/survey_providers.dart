@@ -134,6 +134,29 @@ final actionProgressProvider =
 });
 
 // ---------------------------------------------------------------------------
+// Layer sub-scores (per sub-component averages from cc_responses + cc_questions)
+// Key: (surveyId, layer) e.g. ('abc', 'STRUCTURE')
+// ---------------------------------------------------------------------------
+
+final layerSubScoresProvider = FutureProvider.family<List<SubComponentScore>,
+    (String, String)>((ref, args) async {
+  final repo = ref.watch(surveyRepositoryProvider);
+  final (surveyId, layer) = args;
+  return repo.getLayerSubScores(surveyId, layer);
+});
+
+// ---------------------------------------------------------------------------
+// ESI pillar scores (sub_component → avg score)
+// Key: surveyId
+// ---------------------------------------------------------------------------
+
+final esiPillarScoresProvider =
+    FutureProvider.family<Map<String, double>, String>((ref, surveyId) async {
+  final repo = ref.watch(surveyRepositoryProvider);
+  return repo.getEsiPillarScores(surveyId);
+});
+
+// ---------------------------------------------------------------------------
 // Optimistic action progress notifier
 // ---------------------------------------------------------------------------
 

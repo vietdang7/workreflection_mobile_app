@@ -70,6 +70,15 @@ abstract class SurveyRepository {
 
   /// Invoke tts-proxy edge function and return TtsResult.
   Future<TtsResult> tts(String text, String language);
+
+  /// Fetch per-sub-component average scores from cc_responses + cc_questions
+  /// for the given survey and layer (e.g. 'STRUCTURE', 'CULTURE', 'ACTIVITY').
+  Future<List<SubComponentScore>> getLayerSubScores(
+      String surveyId, String layer);
+
+  /// Fetch ESI pillar avg scores keyed by sub_component string
+  /// (queries cc_responses + cc_questions WHERE layer='ESI').
+  Future<Map<String, double>> getEsiPillarScores(String surveyId);
 }
 
 // ---------------------------------------------------------------------------
@@ -461,6 +470,94 @@ class SupabaseSurveyRepository implements SurveyRepository {
       'completed': completed,
       'completed_at': completed ? DateTime.now().toIso8601String() : null,
     }, onConflict: 'user_id,task_id');
+  }
+
+  // ---------------------------------------------------------------------------
+  // Layer sub-scores (cc_responses + cc_questions JOIN)
+  // ---------------------------------------------------------------------------
+
+  @override
+  Future<List<SubComponentScore>> getLayerSubScores(
+      String surveyId, String layer) async {
+    // Fetch responses for this survey
+    final responseRows = await _client
+        .from('cc_responses')
+        .select('question_id, answer_value')
+        .eq('survey_id', surveyId);
+
+    // Fetch questions for this layer (active only)
+    final questionRows = await _client
+        .from('cc_questions')
+        .select('id, sub_component')
+        .eq('layer', layer)
+        .eq('is_active', true);
+
+    // Build question → sub_component map
+    final qToSub = <String, String>{};
+    for (final row in questionRows) {
+      final qId = row['id'] as String;
+      final sub = row['sub_component'] as String?;
+      if (sub != null && sub.isNotEmpty) qToSub[qId] = sub;
+    }
+
+    // Aggregate: sub_component → [values]
+    final Map<String, List<int>> grouped = {};
+    for (final row in responseRows) {
+      final qId = row['question_id'] as String;
+      final val = row['answer_value'] as int?;
+      final sub = qToSub[qId];
+      if (sub != null && val != null) {
+        grouped.putIfAbsent(sub, () => []).add(val);
+      }
+    }
+
+    return grouped.entries.map((e) {
+      final avg = e.value.reduce((a, b) => a + b) / e.value.length;
+      return SubComponentScore(
+        subComponent: e.key,
+        label: e.key, // caller maps to l10n label
+        score: avg,
+        count: e.value.length,
+      );
+    }).toList();
+  }
+
+  @override
+  Future<Map<String, double>> getEsiPillarScores(String surveyId) async {
+    // Fetch responses for this survey
+    final responseRows = await _client
+        .from('cc_responses')
+        .select('question_id, answer_value')
+        .eq('survey_id', surveyId);
+
+    // Fetch all ESI questions (active only)
+    final questionRows = await _client
+        .from('cc_questions')
+        .select('id, sub_component')
+        .eq('layer', 'ESI')
+        .eq('is_active', true);
+
+    final qToSub = <String, String>{};
+    for (final row in questionRows) {
+      final qId = row['id'] as String;
+      final sub = row['sub_component'] as String?;
+      if (sub != null && sub.isNotEmpty) qToSub[qId] = sub;
+    }
+
+    final Map<String, List<int>> grouped = {};
+    for (final row in responseRows) {
+      final qId = row['question_id'] as String;
+      final val = row['answer_value'] as int?;
+      final sub = qToSub[qId];
+      if (sub != null && val != null) {
+        grouped.putIfAbsent(sub, () => []).add(val);
+      }
+    }
+
+    return {
+      for (final e in grouped.entries)
+        e.key: e.value.reduce((a, b) => a + b) / e.value.length,
+    };
   }
 
   // ---------------------------------------------------------------------------

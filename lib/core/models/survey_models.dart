@@ -425,6 +425,24 @@ class CcReportSummary {
 }
 
 // ---------------------------------------------------------------------------
+// SubComponentScore — per sub-component avg score from cc_responses + cc_questions
+// ---------------------------------------------------------------------------
+
+class SubComponentScore {
+  const SubComponentScore({
+    required this.subComponent,
+    required this.label,
+    required this.score,
+    required this.count,
+  });
+
+  final String subComponent;
+  final String label;
+  final double score;
+  final int count;
+}
+
+// ---------------------------------------------------------------------------
 // SurveyScores (output of scoring engine)
 // ---------------------------------------------------------------------------
 

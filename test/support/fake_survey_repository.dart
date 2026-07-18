@@ -199,4 +199,29 @@ class FakeSurveyRepository implements SurveyRepository {
     ttsCalls.add((text, language));
     return _ttsResult;
   }
+
+  // --- Layer sub-scores ---
+  final Map<String, List<SubComponentScore>> _layerSubScores = {};
+
+  void seedLayerSubScores(String layer, List<SubComponentScore> scores) {
+    _layerSubScores[layer] = scores;
+  }
+
+  @override
+  Future<List<SubComponentScore>> getLayerSubScores(
+      String surveyId, String layer) async {
+    return List.unmodifiable(_layerSubScores[layer] ?? []);
+  }
+
+  // --- ESI pillar scores ---
+  Map<String, double> _esiPillarScores = {};
+
+  void seedEsiPillarScores(Map<String, double> scores) {
+    _esiPillarScores = Map.of(scores);
+  }
+
+  @override
+  Future<Map<String, double>> getEsiPillarScores(String surveyId) async {
+    return Map.unmodifiable(_esiPillarScores);
+  }
 }

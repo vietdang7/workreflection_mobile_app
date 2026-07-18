@@ -165,6 +165,8 @@ class _ReportBody extends ConsumerWidget {
           _LayerCard(
             label: l10n.reportLayerStructure,
             score: report.scoreStructure,
+            layer: 'STRUCTURE',
+            reportId: report.id,
             narrative: _narrative('LAYER', layer: 'STRUCTURE', language: localeCode),
             localeCode: localeCode,
           ),
@@ -172,6 +174,8 @@ class _ReportBody extends ConsumerWidget {
           _LayerCard(
             label: l10n.reportLayerCulture,
             score: report.scoreCulture,
+            layer: 'CULTURE',
+            reportId: report.id,
             narrative: _narrative('LAYER', layer: 'CULTURE', language: localeCode),
             localeCode: localeCode,
           ),
@@ -179,6 +183,8 @@ class _ReportBody extends ConsumerWidget {
           _LayerCard(
             label: l10n.reportLayerActivity,
             score: report.scoreActivity,
+            layer: 'ACTIVITY',
+            reportId: report.id,
             narrative: _narrative('LAYER', layer: 'ACTIVITY', language: localeCode),
             localeCode: localeCode,
           ),
@@ -261,11 +267,15 @@ class _LayerCard extends StatelessWidget {
   const _LayerCard({
     required this.label,
     required this.score,
+    required this.layer,
+    required this.reportId,
     this.narrative,
     required this.localeCode,
   });
   final String label;
   final double score;
+  final String layer; // 'STRUCTURE' | 'CULTURE' | 'ACTIVITY'
+  final String reportId;
   final CcNarrative? narrative;
   final String localeCode;
 
@@ -279,6 +289,7 @@ class _LayerCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     return WrCardMinimal(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -299,6 +310,15 @@ class _LayerCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(_narrativeText!, style: WrTextStyles.body),
           ],
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () => context.push(
+                  '/survey/report/$reportId/layer/$layer'),
+              child: Text(l10n.layerDetailViewDetail),
+            ),
+          ),
         ],
       ),
     );
@@ -390,6 +410,15 @@ class _EsiCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           WrProgressTrack(value: esi / 5.0, color: WrColors.teal),
+          const SizedBox(height: 12),
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton(
+              onPressed: () =>
+                  context.push('/survey/report/${report.id}/esi'),
+              child: Text(l10n.layerDetailViewDetail),
+            ),
+          ),
         ],
       ),
     );

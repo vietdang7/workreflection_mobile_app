@@ -525,6 +525,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reportViewHistory => 'View survey history';
 
   @override
+  String get reportScaChartTitle => 'S-C-A Overview';
+
+  @override
   String get surveyHistoryTitle => 'Survey History';
 
   @override
@@ -1109,4 +1112,128 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get surveyGuideCta => 'Start';
+
+  @override
+  String get layerDetailViewDetail => 'View details';
+
+  @override
+  String get layerDetailOverallScore => 'Overall Score';
+
+  @override
+  String get layerDetailNoData => 'No data available';
+
+  @override
+  String get layerDetailNoDataBody =>
+      'Complete a survey to see sub-component breakdown.';
+
+  @override
+  String layerDetailResponses(int count) {
+    return '$count responses';
+  }
+
+  @override
+  String get layerDetailScoreGood => 'Good';
+
+  @override
+  String get layerDetailScoreWarning => 'Needs improvement';
+
+  @override
+  String get layerDetailScoreCritical => 'Needs action';
+
+  @override
+  String get esiAnalysisTitle => 'Satisfaction & Experience Picture';
+
+  @override
+  String get esiAnalysisEsiScore => 'ESI Score';
+
+  @override
+  String get esiAnalysisEnpsScore => 'eNPS Score';
+
+  @override
+  String get esiAnalysisPillarsTitle => 'ESI Pillars Breakdown';
+
+  @override
+  String get esiAnalysisNoData => 'No detailed ESI data yet';
+
+  @override
+  String get esiAnalysisNoDataBody =>
+      'Complete a Premium survey to see ESI pillar breakdown.';
+
+  @override
+  String get esiAnalysisEnpsPromoter => 'Promoter';
+
+  @override
+  String get esiAnalysisEnpsPassive => 'Passive';
+
+  @override
+  String get esiAnalysisEnpsDetractor => 'Detractor';
+
+  @override
+  String get esiPillarCompensation => 'Compensation & benefits';
+
+  @override
+  String get esiPillarGrowth => 'Growth opportunities';
+
+  @override
+  String get esiPillarFairness => 'Fairness & transparency';
+
+  @override
+  String get esiPillarSupport => 'Manager support & recognition';
+
+  @override
+  String get esiPillarColleagues => 'Colleagues & work environment';
+
+  @override
+  String get subCompRoleExpect => 'Role expectations';
+
+  @override
+  String get subCompCollabRules => 'Collaboration rules';
+
+  @override
+  String get subCompCommChannels => 'Communication channels';
+
+  @override
+  String get subCompTrust => 'Trust';
+
+  @override
+  String get subCompPsychSafety => 'Psychological safety';
+
+  @override
+  String get subCompFeedbackDialogue => 'Feedback & dialogue';
+
+  @override
+  String get subCompGoalAlignment => 'Goal alignment';
+
+  @override
+  String get subCompExecutionRhythm => 'Execution rhythm';
+
+  @override
+  String get subCompRetrospective => 'Retrospective habit';
+
+  @override
+  String get subCompContinuousImprove => 'Continuous improvement';
+
+  @override
+  String get subCompCompensationIncome => 'Income';
+
+  @override
+  String get subCompCompensationBenefits => 'Benefits';
+
+  @override
+  String get subCompGrowthCareer => 'Career growth';
+
+  @override
+  String get subCompFairnessEvaluation => 'Fair evaluation';
+
+  @override
+  String get subCompSupportManagement => 'Management support';
+
+  @override
+  String get subCompSupportFeedback => 'Feedback support';
+
+  @override
+  String get subCompSupportCollaboration => 'Collaboration support';
+
+  @override
+  String get subCompSupportLeadership => 'Leadership support';
 }

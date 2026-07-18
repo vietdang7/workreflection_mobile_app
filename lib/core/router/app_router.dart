@@ -16,6 +16,8 @@ import '../../features/survey/presentation/survey_questions_screen.dart';
 import '../../features/survey/presentation/survey_processing_screen.dart';
 import '../../features/survey/presentation/report_screen.dart';
 import '../../features/survey/presentation/action_plan_screen.dart';
+import '../../features/survey/presentation/layer_detail_screen.dart';
+import '../../features/survey/presentation/esi_analysis_screen.dart';
 import '../../features/workshops/presentation/workshops_screen.dart';
 import '../../features/workshops/presentation/workshop_detail_screen.dart';
 import '../../features/workshops/presentation/workshop_survey_screen.dart';
@@ -149,6 +151,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/survey/action-plan/:id',
         builder: (context, state) =>
             ActionPlanScreen(reportId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/survey/report/:id/layer/:layer',
+        builder: (context, state) => LayerDetailScreen(
+          reportId: state.pathParameters['id']!,
+          layer: state.pathParameters['layer']!,
+        ),
+      ),
+      GoRoute(
+        path: '/survey/report/:id/esi',
+        builder: (context, state) =>
+            EsiAnalysisScreen(reportId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/survey/history',
