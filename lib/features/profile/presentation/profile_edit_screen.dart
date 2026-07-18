@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/logic/profile_options.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
 import '../../../core/widgets/eyebrow.dart';
@@ -318,14 +319,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                       value: _position,
                       hint: l10n.profileEditSelectHint,
                       items: [
-                        _opt('staff', l10n.profileEditPositionStaff),
-                        _opt('team_lead', l10n.profileEditPositionTeamLead),
-                        _opt('manager', l10n.profileEditPositionManager),
-                        _opt('director', l10n.profileEditPositionDirector),
-                        _opt('c_level', l10n.profileEditPositionCLevel),
-                        _opt('intern', l10n.profileEditPositionIntern),
-                        _opt('freelancer', l10n.profileEditPositionFreelancer),
-                        _opt('other', l10n.profileEditPositionOther),
+                        ...positionOptions(l10n).map((o) => _opt(o.value, o.label)),
                       ],
                       onChanged: (v) => setState(() => _position = v),
                     ),
@@ -338,12 +332,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                       value: _companySize,
                       hint: l10n.profileEditSelectHint,
                       items: [
-                        _opt('1_10', l10n.profileEditCompanySize1to10),
-                        _opt('11_50', l10n.profileEditCompanySize11to50),
-                        _opt('51_200', l10n.profileEditCompanySize51to200),
-                        _opt('201_500', l10n.profileEditCompanySize201to500),
-                        _opt('501_1000', l10n.profileEditCompanySize501to1000),
-                        _opt('1000_plus', l10n.profileEditCompanySize1000Plus),
+                        ...companySizeOptions(l10n).map((o) => _opt(o.value, o.label)),
                       ],
                       onChanged: (v) => setState(() => _companySize = v),
                     ),
@@ -356,11 +345,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                       value: _workExperience,
                       hint: l10n.profileEditSelectHint,
                       items: [
-                        _opt('less_1', l10n.profileEditExpLess1),
-                        _opt('1_3', l10n.profileEditExp1to3),
-                        _opt('3_5', l10n.profileEditExp3to5),
-                        _opt('5_10', l10n.profileEditExp5to10),
-                        _opt('10_plus', l10n.profileEditExp10Plus),
+                        ...workExperienceOptions(l10n).map((o) => _opt(o.value, o.label)),
                       ],
                       onChanged: (v) => setState(() => _workExperience = v),
                     ),
@@ -373,11 +358,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                       value: _tenure,
                       hint: l10n.profileEditSelectHint,
                       items: [
-                        _opt('less_6m', l10n.profileEditTenureLess6m),
-                        _opt('6m_1y', l10n.profileEditTenure6mto1y),
-                        _opt('1_2', l10n.profileEditTenure1to2),
-                        _opt('2_5', l10n.profileEditTenure2to5),
-                        _opt('5_plus', l10n.profileEditTenure5Plus),
+                        ...companyTenureOptions(l10n).map((o) => _opt(o.value, o.label)),
                       ],
                       onChanged: (v) => setState(() => _tenure = v),
                     ),
@@ -390,15 +371,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                       value: _department,
                       hint: l10n.profileEditSelectHint,
                       items: [
-                        _opt('marketing', l10n.profileEditDeptMarketing),
-                        _opt('accounting', l10n.profileEditDeptAccounting),
-                        _opt('sales', l10n.profileEditDeptSales),
-                        _opt('purchasing', l10n.profileEditDeptPurchasing),
-                        _opt('hr', l10n.profileEditDeptHr),
-                        _opt('it', l10n.profileEditDeptIt),
-                        _opt('production', l10n.profileEditDeptProduction),
-                        _opt('admin', l10n.profileEditDeptAdmin),
-                        _opt('other', l10n.profileEditDeptOther),
+                        ...departmentOptions(l10n).map((o) => _opt(o.value, o.label)),
                       ],
                       onChanged: (v) => setState(() => _department = v),
                     ),

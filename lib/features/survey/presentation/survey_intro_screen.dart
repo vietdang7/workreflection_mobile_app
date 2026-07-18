@@ -1,13 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/logic/profile_options.dart';
 import '../../../core/models/survey_models.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/pill_button.dart';
+import '../../../core/data/wr_repository.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../profile/profile_providers.dart';
 import '../survey_providers.dart';
 
 class SurveyIntroScreen extends ConsumerStatefulWidget {
@@ -18,26 +22,99 @@ class SurveyIntroScreen extends ConsumerStatefulWidget {
 }
 
 class _SurveyIntroScreenState extends ConsumerState<SurveyIntroScreen> {
-  final _positionCtrl = TextEditingController();
-  final _experienceCtrl = TextEditingController();
-  final _tenureCtrl = TextEditingController();
-  final _companySizeCtrl = TextEditingController();
-  final _departmentCtrl = TextEditingController();
+  String? _position;
+  String? _experience;
+  String? _tenure;
+  String? _companySize;
+  String? _department;
 
-  @override
-  void dispose() {
-    _positionCtrl.dispose();
-    _experienceCtrl.dispose();
-    _tenureCtrl.dispose();
-    _companySizeCtrl.dispose();
-    _departmentCtrl.dispose();
-    super.dispose();
+  bool _loaded = false;
+
+  // Mirrors web's hasSubmitted ref — prevents re-trigger after auto-skip in
+  // the same widget instance. A new widget instance (after back navigation)
+  // starts fresh, which is the desired behavior (same as web).
+  bool _hasSkipped = false;
+
+  void _initFromProfile(Map<String, dynamic> data) {
+    if (_loaded) return;
+    _loaded = true;
+    _position = data['position'] as String?;
+    _experience = data['total_work_experience'] as String?;
+    _tenure = data['company_tenure'] as String?;
+    _companySize = data['company_size'] as String?;
+    _department = data['department'] as String?;
+  }
+
+  bool _isProfileComplete() => _position != null && _position!.isNotEmpty;
+
+  void _doStateReset() {
+    ref.read(surveyAnswersProvider.notifier).reset();
+    ref.read(currentQuestionIndexProvider.notifier).state = 0;
+    ref.read(surveyIdInProgressProvider.notifier).state = null;
+  }
+
+  Future<void> _ctaTapped({required AppLocalizations l10n}) async {
+    // Store intro info to provider
+    ref.read(surveyIntroInfoProvider.notifier).state = SurveyIntroInfo(
+      userPosition: _position,
+      userWorkExperience: _experience,
+      userCompanyTenure: _tenure,
+      userCompanySize: _companySize,
+      userDepartment: _department,
+    );
+
+    // Update cc_profiles with any entered/changed values (mirrors web line 398)
+    final updateFields = <String, dynamic>{
+      if (_position != null) 'position': _position,
+      if (_experience != null) 'total_work_experience': _experience,
+      if (_tenure != null) 'company_tenure': _tenure,
+      if (_companySize != null) 'company_size': _companySize,
+      if (_department != null) 'department': _department,
+    };
+    if (updateFields.isNotEmpty) {
+      try {
+        await ref.read(wrRepositoryProvider).updateCcProfile(updateFields);
+        ref.invalidate(ccProfileProvider);
+      } catch (_) {
+        // Non-fatal: profile update failure doesn't block survey
+      }
+    }
+
+    // Reset state + navigate
+    _doStateReset();
+    if (mounted) context.push('/survey/guide');
   }
 
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final typeAsync = ref.watch(surveyTypeProvider);
+    final ccAsync = ref.watch(ccProfileProvider);
+
+    // Prefill from profile once data arrives
+    if (ccAsync.hasValue) {
+      _initFromProfile(ccAsync.value ?? {});
+    }
+
+    // Auto-skip: if profile complete AND this widget hasn't already skipped,
+    // navigate to /survey/guide without requiring manual CTA tap.
+    // This mirrors web's auto-redirect when isProfileComplete is true.
+    // _hasSkipped ensures the callback only fires once per widget instance.
+    if (_loaded && !_hasSkipped && _isProfileComplete()) {
+      _hasSkipped = true;
+      SchedulerBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        ref.read(surveyIntroInfoProvider.notifier).state = SurveyIntroInfo(
+          userPosition: _position,
+          userWorkExperience: _experience,
+          userCompanyTenure: _tenure,
+          userCompanySize: _companySize,
+          userDepartment: _department,
+        );
+        _doStateReset();
+        context.push('/survey/guide');
+      });
+    }
 
     return Scaffold(
       backgroundColor: WrColors.white,
@@ -50,81 +127,106 @@ class _SurveyIntroScreenState extends ConsumerState<SurveyIntroScreen> {
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 8),
-              WrEyebrow(l10n.surveyIntroEyebrow),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(
-                    child: Text(l10n.surveyIntroTitle,
-                        style: WrTextStyles.hLarge),
-                  ),
-                  typeAsync.when(
-                    data: (type) => _BadgeChip(
-                      label: type == SurveyType.premium
-                          ? l10n.surveyIntroBadgePremium
-                          : l10n.surveyIntroBadgeFree,
-                      isPremium: type == SurveyType.premium,
+        child: ccAsync.isLoading
+            ? const Center(child: CircularProgressIndicator(color: WrColors.coral))
+            : SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 8),
+                    WrEyebrow(l10n.surveyIntroEyebrow),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(l10n.surveyIntroTitle, style: WrTextStyles.hLarge),
+                        ),
+                        typeAsync.when(
+                          data: (type) => _BadgeChip(
+                            label: type == SurveyType.premium
+                                ? l10n.surveyIntroBadgePremium
+                                : l10n.surveyIntroBadgeFree,
+                            isPremium: type == SurveyType.premium,
+                          ),
+                          loading: () => const SizedBox.shrink(),
+                          error: (_, __) => const SizedBox.shrink(),
+                        ),
+                      ],
                     ),
-                    loading: () => const SizedBox.shrink(),
-                    error: (_, __) => const SizedBox.shrink(),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(l10n.surveyIntroBody, style: WrTextStyles.body),
-              const SizedBox(height: 28),
+                    const SizedBox(height: 12),
+                    Text(l10n.surveyIntroBody, style: WrTextStyles.body),
+                    const SizedBox(height: 28),
 
-              // Optional info fields
-              _InfoField(
-                  controller: _positionCtrl,
-                  label: l10n.surveyIntroFieldPosition),
-              const SizedBox(height: 12),
-              _InfoField(
-                  controller: _experienceCtrl,
-                  label: l10n.surveyIntroFieldExperience),
-              const SizedBox(height: 12),
-              _InfoField(
-                  controller: _tenureCtrl,
-                  label: l10n.surveyIntroFieldCompanyTenure),
-              const SizedBox(height: 12),
-              _InfoField(
-                  controller: _companySizeCtrl,
-                  label: l10n.surveyIntroFieldCompanySize),
-              const SizedBox(height: 12),
-              _InfoField(
-                  controller: _departmentCtrl,
-                  label: l10n.surveyIntroFieldDepartment),
-              const SizedBox(height: 32),
+                    // Position dropdown
+                    _DropdownField<String>(
+                      label: l10n.surveyIntroFieldPosition,
+                      value: _position,
+                      hint: l10n.profileEditSelectHint,
+                      items: positionOptions(l10n)
+                          .map((o) => DropdownMenuItem(value: o.value, child: Text(o.label, style: WrTextStyles.body)))
+                          .toList(),
+                      onChanged: (v) => setState(() => _position = v),
+                    ),
+                    const SizedBox(height: 12),
 
-              WrPillButton(
-                label: l10n.surveyIntroCta,
-                onPressed: () {
-                  // Store intro fields
-                  ref.read(surveyIntroInfoProvider.notifier).state = SurveyIntroInfo(
-                    userPosition: _positionCtrl.text.trim().isEmpty ? null : _positionCtrl.text.trim(),
-                    userWorkExperience: _experienceCtrl.text.trim().isEmpty ? null : _experienceCtrl.text.trim(),
-                    userCompanyTenure: _tenureCtrl.text.trim().isEmpty ? null : _tenureCtrl.text.trim(),
-                    userCompanySize: _companySizeCtrl.text.trim().isEmpty ? null : _companySizeCtrl.text.trim(),
-                    userDepartment: _departmentCtrl.text.trim().isEmpty ? null : _departmentCtrl.text.trim(),
-                  );
-                  // Reset answers + index + in-progress surveyId for fresh survey
-                  ref.read(surveyAnswersProvider.notifier).reset();
-                  ref.read(currentQuestionIndexProvider.notifier).state = 0;
-                  ref.read(surveyIdInProgressProvider.notifier).state = null;
-                  context.push('/survey/guide');
-                },
-                variant: WrPillVariant.coral,
+                    // Work experience dropdown
+                    _DropdownField<String>(
+                      label: l10n.surveyIntroFieldExperience,
+                      value: _experience,
+                      hint: l10n.profileEditSelectHint,
+                      items: workExperienceOptions(l10n)
+                          .map((o) => DropdownMenuItem(value: o.value, child: Text(o.label, style: WrTextStyles.body)))
+                          .toList(),
+                      onChanged: (v) => setState(() => _experience = v),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Company tenure dropdown
+                    _DropdownField<String>(
+                      label: l10n.surveyIntroFieldCompanyTenure,
+                      value: _tenure,
+                      hint: l10n.profileEditSelectHint,
+                      items: companyTenureOptions(l10n)
+                          .map((o) => DropdownMenuItem(value: o.value, child: Text(o.label, style: WrTextStyles.body)))
+                          .toList(),
+                      onChanged: (v) => setState(() => _tenure = v),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Company size dropdown
+                    _DropdownField<String>(
+                      label: l10n.surveyIntroFieldCompanySize,
+                      value: _companySize,
+                      hint: l10n.profileEditSelectHint,
+                      items: companySizeOptions(l10n)
+                          .map((o) => DropdownMenuItem(value: o.value, child: Text(o.label, style: WrTextStyles.body)))
+                          .toList(),
+                      onChanged: (v) => setState(() => _companySize = v),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Department dropdown
+                    _DropdownField<String>(
+                      label: l10n.surveyIntroFieldDepartment,
+                      value: _department,
+                      hint: l10n.profileEditSelectHint,
+                      items: departmentOptions(l10n)
+                          .map((o) => DropdownMenuItem(value: o.value, child: Text(o.label, style: WrTextStyles.body)))
+                          .toList(),
+                      onChanged: (v) => setState(() => _department = v),
+                    ),
+                    const SizedBox(height: 32),
+
+                    WrPillButton(
+                      label: l10n.surveyIntroCta,
+                      onPressed: () => _ctaTapped(l10n: l10n),
+                      variant: WrPillVariant.coral,
+                    ),
+                    const SizedBox(height: 40),
+                  ],
+                ),
               ),
-              const SizedBox(height: 40),
-            ],
-          ),
-        ),
       ),
     );
   }
@@ -158,33 +260,50 @@ class _BadgeChip extends StatelessWidget {
   }
 }
 
-class _InfoField extends StatelessWidget {
-  const _InfoField({required this.controller, required this.label});
-  final TextEditingController controller;
+class _DropdownField<T> extends StatelessWidget {
+  const _DropdownField({
+    required this.label,
+    required this.value,
+    required this.hint,
+    required this.items,
+    required this.onChanged,
+  });
+
   final String label;
+  final T? value;
+  final String hint;
+  final List<DropdownMenuItem<T>> items;
+  final ValueChanged<T?> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: label,
-        labelStyle: WrTextStyles.body,
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: WrColors.navy.withValues(alpha: 0.2)),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: WrTextStyles.body.copyWith(color: WrColors.muted, fontSize: 12),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: WrColors.navy.withValues(alpha: 0.15)),
+        const SizedBox(height: 6),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: WrColors.navy.withValues(alpha: 0.15)),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: DropdownButtonHideUnderline(
+            child: DropdownButton<T>(
+              isExpanded: true,
+              value: value,
+              hint: Text(hint, style: WrTextStyles.body.copyWith(color: WrColors.muted)),
+              items: items,
+              onChanged: onChanged,
+              style: WrTextStyles.body,
+              icon: const Icon(Icons.keyboard_arrow_down, color: WrColors.muted),
+            ),
+          ),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: WrColors.coral),
-        ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-      ),
+      ],
     );
   }
 }

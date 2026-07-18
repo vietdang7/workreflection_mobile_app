@@ -3,6 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:workreflection_mobile/core/data/wr_repository.dart';
 import 'package:workreflection_mobile/core/models/survey_models.dart';
 import 'package:workreflection_mobile/features/survey/presentation/survey_guide_screen.dart';
 import 'package:workreflection_mobile/features/survey/presentation/survey_intro_screen.dart';
@@ -11,6 +12,7 @@ import 'package:workreflection_mobile/features/survey/presentation/survey_questi
 import 'package:workreflection_mobile/features/survey/survey_providers.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
 
+import '../support/fake_repository.dart';
 import '../support/fake_survey_repository.dart';
 
 // ---------------------------------------------------------------------------
@@ -107,6 +109,60 @@ CcReportFull _fakeReport({String id = 'r1'}) => CcReportFull(
       scoreLevel: ScoreLevel.good,
       createdAt: DateTime(2026, 7, 18),
     );
+
+/// Builds a GoRouter harness for SurveyIntroScreen with both repo overrides.
+Widget _introRouterWrap({
+  required FakeSurveyRepository surveyRepo,
+  required FakeWrRepository wrRepo,
+  List<String>? navigatedRoutes,
+  List<Override> extraOverrides = const [],
+  Widget Function(BuildContext, GoRouterState)? guideBuilder,
+}) {
+  final router = GoRouter(
+    initialLocation: '/survey/intro',
+    routes: [
+      GoRoute(
+        path: '/survey/intro',
+        builder: (_, __) => const SurveyIntroScreen(),
+      ),
+      GoRoute(
+        path: '/survey/guide',
+        builder: (ctx, state) {
+          navigatedRoutes?.add('/survey/guide');
+          return guideBuilder != null
+              ? guideBuilder(ctx, state)
+              : const Scaffold(body: Text('guide'));
+        },
+      ),
+      GoRoute(
+        path: '/survey/questions',
+        builder: (_, __) {
+          navigatedRoutes?.add('/survey/questions');
+          return const Scaffold(body: Text('questions'));
+        },
+      ),
+    ],
+  );
+
+  return ProviderScope(
+    overrides: [
+      surveyRepositoryProvider.overrideWithValue(surveyRepo),
+      wrRepositoryProvider.overrideWithValue(wrRepo),
+      ...extraOverrides,
+    ],
+    child: MaterialApp.router(
+      routerConfig: router,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: const [Locale('vi')],
+      locale: const Locale('vi'),
+    ),
+  );
+}
 
 // ---------------------------------------------------------------------------
 // SurveyQuestionsScreen tests
@@ -448,7 +504,7 @@ void main() {
   });
 
   // ---------------------------------------------------------------------------
-  // SurveyIntroScreen — M11 follow-up: surveyIdInProgress reset on new survey
+  // SurveyIntroScreen — surveyIdInProgress reset on new survey
   // ---------------------------------------------------------------------------
 
   group('SurveyIntroScreen — surveyIdInProgress reset', () {
@@ -459,6 +515,10 @@ void main() {
       repo.seedRole('user');
       repo.seedQuestions([]);
       repo.seedLikertOptions({});
+
+      final wrRepo = FakeWrRepository();
+      // No position set → no auto-skip, form is shown
+      wrRepo.seedCcProfile({});
 
       // GoRouter so context.push('/survey/guide') does not throw.
       final router = GoRouter(
@@ -485,6 +545,7 @@ void main() {
         ProviderScope(
           overrides: [
             surveyRepositoryProvider.overrideWithValue(repo),
+            wrRepositoryProvider.overrideWithValue(wrRepo),
           ],
           child: MaterialApp.router(
             routerConfig: router,
@@ -513,18 +574,12 @@ void main() {
           'stale-survey-id';
       expect(capturedRef.read(surveyIdInProgressProvider), 'stale-survey-id');
 
-      // Tap the CTA button (surveyIntroCta localisation → 'Bắt đầu khảo sát' or similar)
-      // Find the WrPillButton by its coral variant — it is the only ElevatedButton/
-      // descendant with coral styling; we match by finding the FilledButton/ElevatedButton.
+      // Tap the CTA button (WrPillButton renders as ElevatedButton).
+      // The button may be below the fold — scroll to it first.
       final ctaFinder = find.byType(ElevatedButton);
-      // If WrPillButton renders as something else, fall back to finding by text key.
-      final anyButton = ctaFinder.evaluate().isNotEmpty
-          ? ctaFinder
-          : find.byWidgetPredicate((w) =>
-              w is InkWell || w is GestureDetector || w is TextButton);
-
-      // Tap first available button-like widget on screen
-      await tester.tap(anyButton.first);
+      await tester.ensureVisible(ctaFinder.first);
+      await tester.pump();
+      await tester.tap(ctaFinder.first, warnIfMissed: false);
       await tester.pump();
 
       expect(
@@ -542,6 +597,10 @@ void main() {
       repo.seedRole('user');
       repo.seedQuestions([]);
       repo.seedLikertOptions({});
+
+      final wrRepo = FakeWrRepository();
+      // No position set → no auto-skip, form is shown
+      wrRepo.seedCcProfile({});
 
       final navigated = <String>[];
       final router = GoRouter(
@@ -570,7 +629,10 @@ void main() {
 
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [surveyRepositoryProvider.overrideWithValue(repo)],
+          overrides: [
+            surveyRepositoryProvider.overrideWithValue(repo),
+            wrRepositoryProvider.overrideWithValue(wrRepo),
+          ],
           child: MaterialApp.router(
             routerConfig: router,
             localizationsDelegates: const [
@@ -586,11 +648,188 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byType(ElevatedButton).first);
+      await tester.ensureVisible(find.byType(ElevatedButton).first);
+      await tester.pump();
+      await tester.tap(find.byType(ElevatedButton).first, warnIfMissed: false);
       await tester.pumpAndSettle();
 
       expect(navigated, contains('/survey/guide'));
       expect(navigated, isNot(contains('/survey/questions')));
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // SurveyIntroScreen — prefill + auto-skip + profile update
+  // ---------------------------------------------------------------------------
+
+  group('SurveyIntroScreen — prefill + auto-skip + profile update', () {
+    FakeSurveyRepository makeSurveyRepo() {
+      final r = FakeSurveyRepository();
+      r.seedRole('user');
+      r.seedQuestions([]);
+      r.seedLikertOptions({});
+      return r;
+    }
+
+    testWidgets('renders position dropdown label when profile empty',
+        (tester) async {
+      final wrRepo = FakeWrRepository()..seedCcProfile({});
+
+      await tester.pumpWidget(_introRouterWrap(
+        surveyRepo: makeSurveyRepo(),
+        wrRepo: wrRepo,
+      ));
+      await tester.pumpAndSettle();
+
+      // Position field label should be visible (l10n: surveyIntroFieldPosition = 'Chức danh')
+      expect(find.textContaining('Chức danh'), findsWidgets);
+    });
+
+    testWidgets('auto-skip navigates to /survey/guide when position is set',
+        (tester) async {
+      final wrRepo = FakeWrRepository()..seedCcProfile({'position': 'staff'});
+      final navigated = <String>[];
+
+      await tester.pumpWidget(_introRouterWrap(
+        surveyRepo: makeSurveyRepo(),
+        wrRepo: wrRepo,
+        navigatedRoutes: navigated,
+      ));
+
+      // pumpAndSettle resolves FutureProvider + postFrameCallback auto-skip
+      await tester.pumpAndSettle();
+
+      expect(navigated, contains('/survey/guide'),
+          reason: 'auto-skip must navigate to /survey/guide when position is set');
+    });
+
+    testWidgets('auto-skip resets surveyIdInProgress', (tester) async {
+      // Strategy: pre-seed surveyIdInProgress = 'stale-id' via a provider
+      // override BEFORE mounting. When auto-skip fires it calls _doStateReset()
+      // which sets surveyIdInProgressProvider to null. We verify that.
+      final wrRepo = FakeWrRepository()..seedCcProfile({'position': 'manager'});
+
+      late WidgetRef capturedRef;
+      final router = GoRouter(
+        initialLocation: '/survey/intro',
+        routes: [
+          GoRoute(
+            path: '/survey/intro',
+            builder: (_, __) => const SurveyIntroScreen(),
+          ),
+          GoRoute(
+            path: '/survey/guide',
+            builder: (_, __) => const Scaffold(body: Text('guide')),
+          ),
+        ],
+      );
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            surveyRepositoryProvider.overrideWithValue(makeSurveyRepo()),
+            wrRepositoryProvider.overrideWithValue(wrRepo),
+            // Pre-seed a stale surveyId so auto-skip can reset it
+            surveyIdInProgressProvider
+                .overrideWith((ref) => 'stale-id'),
+          ],
+          child: MaterialApp.router(
+            routerConfig: router,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('vi')],
+            locale: const Locale('vi'),
+            builder: (context, child) => Consumer(
+              builder: (context, ref, _) {
+                capturedRef = ref;
+                return child ?? const SizedBox.shrink();
+              },
+            ),
+          ),
+        ),
+      );
+
+      // Let FutureProvider resolve + postFrameCallback (auto-skip) fire
+      await tester.pumpAndSettle();
+
+      expect(
+        capturedRef.read(surveyIdInProgressProvider),
+        isNull,
+        reason: 'auto-skip must reset surveyIdInProgress',
+      );
+    });
+
+    testWidgets('NO auto-skip when profile incomplete (position empty)',
+        (tester) async {
+      final wrRepo = FakeWrRepository()..seedCcProfile({});
+      final navigated = <String>[];
+
+      await tester.pumpWidget(_introRouterWrap(
+        surveyRepo: makeSurveyRepo(),
+        wrRepo: wrRepo,
+        navigatedRoutes: navigated,
+      ));
+      await tester.pumpAndSettle();
+
+      // Intro form is still showing — NOT navigated away
+      expect(navigated, isNot(contains('/survey/guide')),
+          reason: 'must NOT auto-skip when position is empty');
+      // The intro screen body is visible (dropdowns render)
+      expect(find.byType(DropdownButton<String>), findsWidgets);
+    });
+
+    testWidgets(
+        '_hasSkipped guard: auto-skip fires only once per widget instance',
+        (tester) async {
+      // With a complete profile the auto-skip fires once on mount.
+      // After navigating to /survey/guide the router shows "guide".
+      // If we could pop back (same widget instance), it would NOT skip again.
+      // In practice going back creates a NEW widget instance which would
+      // auto-skip again — same as web behavior. This test simply verifies
+      // the navigated list has exactly 1 entry (not duplicated in same pump cycle).
+      final wrRepo = FakeWrRepository()..seedCcProfile({'position': 'staff'});
+      final navigated = <String>[];
+
+      await tester.pumpWidget(_introRouterWrap(
+        surveyRepo: makeSurveyRepo(),
+        wrRepo: wrRepo,
+        navigatedRoutes: navigated,
+      ));
+      await tester.pumpAndSettle();
+
+      // Auto-skip should have fired exactly once
+      expect(
+        navigated.where((r) => r == '/survey/guide'),
+        hasLength(1),
+        reason: '_hasSkipped guard must prevent duplicate auto-skip callbacks',
+      );
+    });
+
+    testWidgets(
+        'CTA tap with no fields set: updateCcProfile not called (no non-null fields)',
+        (tester) async {
+      final wrRepo = FakeWrRepository()..seedCcProfile({});
+
+      await tester.pumpWidget(_introRouterWrap(
+        surveyRepo: makeSurveyRepo(),
+        wrRepo: wrRepo,
+      ));
+      await tester.pumpAndSettle();
+
+      // Tap CTA with all dropdowns still null (scroll into view first)
+      await tester.ensureVisible(find.byType(ElevatedButton).first);
+      await tester.pump();
+      await tester.tap(find.byType(ElevatedButton).first, warnIfMissed: false);
+      await tester.pumpAndSettle();
+
+      // No non-null fields → updateCcProfile should NOT have been called
+      expect(wrRepo.updateCcProfileCalls, isEmpty,
+          reason:
+              'updateCcProfile must not be called when no dropdown fields are selected');
     });
   });
 
