@@ -10,11 +10,13 @@
 // A7 – widget: personalized text replaces static text when AI returns content
 // A8 – widget: loading indicator shown while AI is resolving (vi locale)
 // A9 – widget: AI section is absent for EN locale
+// A10 – invoke receives userContext populated from cc_profiles (position/tenure/dept)
 
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/data/wr_repository.dart';
 import 'package:workreflection_mobile/core/models/ai_personalization_models.dart';
 import 'package:workreflection_mobile/core/models/survey_models.dart';
 import 'package:workreflection_mobile/features/profile/profile_providers.dart';
@@ -22,6 +24,7 @@ import 'package:workreflection_mobile/features/survey/presentation/report_screen
 import 'package:workreflection_mobile/features/survey/survey_providers.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
 
+import '../support/fake_repository.dart';
 import '../support/fake_survey_repository.dart';
 
 // ---------------------------------------------------------------------------
@@ -29,10 +32,16 @@ import '../support/fake_survey_repository.dart';
 // ---------------------------------------------------------------------------
 
 Widget _wrap(Widget child,
-    {required FakeSurveyRepository repo, String locale = 'vi'}) {
+    {required FakeSurveyRepository repo,
+    FakeWrRepository? wrRepo,
+    String locale = 'vi'}) {
+  final wr = wrRepo ?? FakeWrRepository();
   return ProviderScope(
     overrides: [
       surveyRepositoryProvider.overrideWithValue(repo),
+      // wrRepositoryProvider must be overridden so ccProfileProvider
+      // (watched by _AiPersonalizedPremiumSection) doesn't hit live Supabase.
+      wrRepositoryProvider.overrideWithValue(wr),
       // appLocaleProvider controls which locale the report_screen widgets use
       // (separate from MaterialApp locale which drives l10n strings).
       appLocaleProvider.overrideWith((ref) => locale),
@@ -303,6 +312,47 @@ void main() {
       expect(find.text('AI intro here'), findsNothing);
       // But the static premium sections (ESI) still show
       expect(find.textContaining('ESI'), findsOneWidget);
+    });
+
+    testWidgets(
+        'A10: invoke receives userContext populated from cc_profiles',
+        (tester) async {
+      final report = _premiumReport();
+      repo.seedLatestReport(report);
+      // No cache → will call invoke for each section
+      repo.seedAiInvokeResult('model', _modelContent);
+      repo.seedAiInvokeResult('reflection', _reflectionContent);
+      repo.seedAiInvokeResult('relationship', _relationshipContent);
+
+      // Seed cc_profiles data in the WrRepository fake.
+      final wrRepo = FakeWrRepository()
+        ..seedCcProfile({
+          'position': 'staff',
+          'company_tenure': 'less_6m',
+          'department': 'engineering',
+        });
+
+      await tester.pumpWidget(
+          _wrap(ReportScreen(reportId: 'r1'), repo: repo, wrRepo: wrRepo));
+      await tester.pumpAndSettle();
+
+      // All three sections should have been invoked (cache miss path).
+      expect(repo.aiInvokeCalls, containsAll(['model', 'reflection', 'relationship']));
+
+      // The invoke calls must have received the cc_profiles data as raw DB
+      // enum values (same as web — no translation, no display labels).
+      for (final section in ['model', 'reflection', 'relationship']) {
+        final ctx = repo.aiInvokeUserContexts[section]!;
+        expect(ctx.position, 'staff',
+            reason: '$section: position must be raw DB value');
+        expect(ctx.tenure, 'less_6m',
+            reason: '$section: tenure must be raw DB value (company_tenure)');
+        expect(ctx.department, 'engineering',
+            reason: '$section: department must be raw DB value');
+        // Not translated to display labels.
+        expect(ctx.position, isNot('Nhân viên'));
+        expect(ctx.tenure, isNot('Dưới 6 tháng'));
+      }
     });
   });
 }

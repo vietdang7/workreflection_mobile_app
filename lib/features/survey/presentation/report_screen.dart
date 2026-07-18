@@ -679,7 +679,17 @@ class _AiPersonalizedPremiumSection extends ConsumerWidget {
     // EN locale → skip AI section entirely (matches web behavior).
     if (localeCode != 'vi') return const SizedBox.shrink();
 
-    final userCtx = const AiPersonalizationUserContext();
+    // Watch cc_profiles to populate userContext (matches web's userContextForAI).
+    // Use .valueOrNull so the section never blocks: while loading we pass empty
+    // context (graceful immediate render) and the provider re-fires once the
+    // profile resolves, re-fetching AI content with the populated context.
+    // Raw DB enum values are sent as-is (e.g. "staff", "less_6m") — same as web.
+    final ccProfile = ref.watch(ccProfileProvider).valueOrNull;
+    final userCtx = AiPersonalizationUserContext(
+      position: ccProfile?['position'] as String?,
+      tenure: ccProfile?['company_tenure'] as String?,
+      department: ccProfile?['department'] as String?,
+    );
     final scoreCtx = _scoreContext();
 
     final modelArgs = (

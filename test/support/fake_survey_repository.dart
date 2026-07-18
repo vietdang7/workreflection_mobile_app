@@ -233,6 +233,8 @@ class FakeSurveyRepository implements SurveyRepository {
   final Map<String, Map<String, dynamic>?> _aiInvokeResult = {};
   bool _aiInvokeShouldFail = false;
   final List<String> aiInvokeCalls = [];
+  // Maps section → last AiPersonalizationUserContext passed to invokeAiPersonalize.
+  final Map<String, AiPersonalizationUserContext> aiInvokeUserContexts = {};
 
   /// Pre-seed a completed cache entry for a given (reportId, section).
   void seedAiCache(String reportId, String section, Map<String, dynamic> content) {
@@ -263,6 +265,7 @@ class FakeSurveyRepository implements SurveyRepository {
     required Map<String, String> defaultContent,
   }) async {
     aiInvokeCalls.add(section);
+    aiInvokeUserContexts[section] = userContext;
     if (_aiInvokeShouldFail) return null;
     return _aiInvokeResult[section];
   }
