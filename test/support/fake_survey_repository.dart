@@ -13,6 +13,8 @@ class FakeSurveyRepository implements SurveyRepository {
   Map<String, bool> _actionProgress = {};
   CcReportFull? _latestReport;
   final Map<String, CcReportFull> _reports = {};
+  // Mirrors idempotent cc_reports: surveyId → report already created
+  final Map<String, CcReportFull> _reportsBySurveyId = {};
   TtsResult _ttsResult = const TtsResult(
     audioUrl: 'https://fake.audio/tts.mp3',
     durationMs: 3000,
@@ -114,16 +116,24 @@ class FakeSurveyRepository implements SurveyRepository {
     _submitCount++;
     submitSurveyCalls.add(Map.of(answers));
     submitExistingIds.add(existingSurveyId);
+
+    final surveyId = existingSurveyId ?? 'fake-survey-id';
     if (existingSurveyId == null) {
-      onSurveyCreated?.call('fake-survey-id');
+      onSurveyCreated?.call(surveyId);
     }
     if (_submitFailsOnce && _submitCount == 1) {
       throw Exception('first submit fails');
     }
+
+    // Idempotent: if a report already exists for this surveyId, return it.
+    if (_reportsBySurveyId.containsKey(surveyId)) {
+      return _reportsBySurveyId[surveyId]!;
+    }
+
     final report = _latestReport ??
         CcReportFull(
           id: 'fake-report-id',
-          surveyId: 'fake-survey-id',
+          surveyId: surveyId,
           userId: 'fake-user',
           scoreTotal: 3.8,
           scoreStructure: 4.0,
@@ -135,6 +145,7 @@ class FakeSurveyRepository implements SurveyRepository {
         );
     _latestReport = report;
     _reports[report.id] = report;
+    _reportsBySurveyId[surveyId] = report;
     return report;
   }
 

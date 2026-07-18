@@ -113,9 +113,10 @@ class _SurveyIntroScreenState extends ConsumerState<SurveyIntroScreen> {
                     userCompanySize: _companySizeCtrl.text.trim().isEmpty ? null : _companySizeCtrl.text.trim(),
                     userDepartment: _departmentCtrl.text.trim().isEmpty ? null : _departmentCtrl.text.trim(),
                   );
-                  // Reset answers + index for fresh survey
+                  // Reset answers + index + in-progress surveyId for fresh survey
                   ref.read(surveyAnswersProvider.notifier).reset();
                   ref.read(currentQuestionIndexProvider.notifier).state = 0;
+                  ref.read(surveyIdInProgressProvider.notifier).state = null;
                   context.push('/survey/questions');
                 },
                 variant: WrPillVariant.coral,

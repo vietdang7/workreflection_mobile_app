@@ -137,8 +137,8 @@ SurveyScores computeSurveyScores({
 ///
 /// Matching rules (research §4):
 /// - Filter by type and layer (null layer = TOTAL-type narratives).
-/// - score_min <= score <= score_max.
-/// - When ranges overlap, prefer the HIGHEST score_min that is <= score.
+/// - score_min <= score (no upper-bound check).
+/// - When multiple candidates match, prefer the HIGHEST score_min that is <= score.
 ///
 /// Language fallback: if language=='en' and narrative_text_en != null → use EN;
 /// otherwise use VI (narrative_text). Returns the matched CcNarrative or null.

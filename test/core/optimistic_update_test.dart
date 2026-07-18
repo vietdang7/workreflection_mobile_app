@@ -204,6 +204,73 @@ void main() {
     });
   });
 
+  group('FakeSurveyRepository — idempotent cc_reports (Fix 3)', () {
+    test('calling submitSurvey twice with same existingSurveyId returns same report, no duplicate', () async {
+      final fake = FakeSurveyRepository();
+
+      // First call: no existingSurveyId → creates survey + report
+      final report1 = await fake.submitSurvey(
+        type: SurveyType.free,
+        answers: {'q1': 3},
+        questions: [],
+        existingSurveyId: null,
+        onSurveyCreated: (_) {},
+      );
+
+      // Second call: same surveyId (simulates provider re-run) → must return same report
+      final report2 = await fake.submitSurvey(
+        type: SurveyType.free,
+        answers: {'q1': 3},
+        questions: [],
+        existingSurveyId: 'fake-survey-id',
+        onSurveyCreated: (_) {},
+      );
+
+      expect(report2.id, equals(report1.id),
+          reason: 'second call with same surveyId must return existing report id');
+      expect(fake.submitSurveyCalls, hasLength(2),
+          reason: 'both calls were recorded');
+    });
+
+    test('different surveyIds produce separate reports', () async {
+      final fake = FakeSurveyRepository();
+
+      // First survey
+      final report1 = await fake.submitSurvey(
+        type: SurveyType.free,
+        answers: {'q1': 3},
+        questions: [],
+        existingSurveyId: null,
+      );
+
+      // Seed a different latestReport so second call returns a distinct report
+      final secondReport = CcReportFull(
+        id: 'report-2',
+        surveyId: 'survey-2',
+        userId: 'u2',
+        scoreTotal: 4.0,
+        scoreStructure: 4.0,
+        scoreCulture: 4.0,
+        scoreActivity: 4.0,
+        bottleneckLayer: SurveyLayer.structure,
+        scoreLevel: ScoreLevel.good,
+        createdAt: DateTime.now(),
+      );
+      fake.seedLatestReport(secondReport);
+
+      final report2 = await fake.submitSurvey(
+        type: SurveyType.free,
+        answers: {'q1': 5},
+        questions: [],
+        existingSurveyId: 'survey-2',
+      );
+
+      expect(report2.id, equals('report-2'));
+      expect(report1.id, isNot(equals(report2.id)),
+          reason: 'distinct surveyIds must produce distinct reports');
+    });
+  });
+
   group('ActionProgressNotifier — rollback', () {
     test('N18: optimistic toggle rolls back to prior value on failure', () async {
       final fake = FakeSurveyRepository();

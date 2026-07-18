@@ -286,25 +286,36 @@ class SupabaseSurveyRepository implements SurveyRepository {
       isPremium: type == SurveyType.premium,
     );
 
-    // 4. Insert cc_reports
-    final reportRows = await _client.from('cc_reports').insert({
-      'survey_id': surveyId,
-      'user_id': _uid,
-      'score_total': scores.scoreTotal,
-      'score_structure': scores.scoreStructure,
-      'score_culture': scores.scoreCulture,
-      'score_activity': scores.scoreActivity,
-      'score_esi': scores.scoreEsi,
-      'score_enps': scores.scoreEnps,
-      'bottleneck_layer': scores.bottleneckLayer.toJson(),
-      'score_level': scores.scoreLevel.toJson(),
-      'sub_scores': scores.scoreEnps != null ? {
-        'enps_promoters': scores.enpsPromoters,
-        'enps_passives': scores.enpsPassives,
-        'enps_detractors': scores.enpsDetractors,
-      } : null,
-      'selected_narrative_variants': null,
-    }).select().single();
+    // 4. Insert cc_reports (idempotent: skip if a report already exists for this survey)
+    final existingReport = await _client
+        .from('cc_reports')
+        .select()
+        .eq('survey_id', surveyId)
+        .limit(1);
+
+    final Map<String, dynamic> reportRows;
+    if (existingReport.isNotEmpty) {
+      reportRows = existingReport.first;
+    } else {
+      reportRows = await _client.from('cc_reports').insert({
+        'survey_id': surveyId,
+        'user_id': _uid,
+        'score_total': scores.scoreTotal,
+        'score_structure': scores.scoreStructure,
+        'score_culture': scores.scoreCulture,
+        'score_activity': scores.scoreActivity,
+        'score_esi': scores.scoreEsi,
+        'score_enps': scores.scoreEnps,
+        'bottleneck_layer': scores.bottleneckLayer.toJson(),
+        'score_level': scores.scoreLevel.toJson(),
+        'sub_scores': scores.scoreEnps != null ? {
+          'enps_promoters': scores.enpsPromoters,
+          'enps_passives': scores.enpsPassives,
+          'enps_detractors': scores.enpsDetractors,
+        } : null,
+        'selected_narrative_variants': null,
+      }).select().single();
+    }
 
     final reportId = reportRows['id'] as String;
 

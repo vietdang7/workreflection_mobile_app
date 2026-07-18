@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/models/survey_models.dart';
+import 'package:workreflection_mobile/features/survey/presentation/survey_intro_screen.dart';
 import 'package:workreflection_mobile/features/survey/presentation/survey_processing_screen.dart';
 import 'package:workreflection_mobile/features/survey/presentation/survey_questions_screen.dart';
 import 'package:workreflection_mobile/features/survey/survey_providers.dart';
@@ -442,6 +443,91 @@ void main() {
       final answers = capturedRef.read(surveyAnswersProvider);
       expect(answers['q1'], 4,
           reason: 'answers must survive across the provider scope lifetime');
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // SurveyIntroScreen — M11 follow-up: surveyIdInProgress reset on new survey
+  // ---------------------------------------------------------------------------
+
+  group('SurveyIntroScreen — surveyIdInProgress reset', () {
+    testWidgets(
+        'tapping CTA resets surveyIdInProgressProvider to null even when stale id was set',
+        (tester) async {
+      final repo = FakeSurveyRepository();
+      repo.seedRole('user');
+      repo.seedQuestions([]);
+      repo.seedLikertOptions({});
+
+      // GoRouter so context.push('/survey/questions') does not throw.
+      final router = GoRouter(
+        initialLocation: '/survey/intro',
+        routes: [
+          GoRoute(
+            path: '/survey/intro',
+            builder: (_, __) => const SurveyIntroScreen(),
+          ),
+          GoRoute(
+            path: '/survey/questions',
+            builder: (_, __) => const Scaffold(body: Text('questions')),
+          ),
+        ],
+      );
+
+      late WidgetRef capturedRef;
+
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            surveyRepositoryProvider.overrideWithValue(repo),
+          ],
+          child: MaterialApp.router(
+            routerConfig: router,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('vi')],
+            locale: const Locale('vi'),
+            builder: (context, child) => Consumer(
+              builder: (context, ref, _) {
+                capturedRef = ref;
+                return child ?? const SizedBox.shrink();
+              },
+            ),
+          ),
+        ),
+      );
+
+      await tester.pumpAndSettle();
+
+      // Simulate a stale in-progress surveyId (e.g. from a prior failed submit)
+      capturedRef.read(surveyIdInProgressProvider.notifier).state =
+          'stale-survey-id';
+      expect(capturedRef.read(surveyIdInProgressProvider), 'stale-survey-id');
+
+      // Tap the CTA button (surveyIntroCta localisation → 'Bắt đầu khảo sát' or similar)
+      // Find the WrPillButton by its coral variant — it is the only ElevatedButton/
+      // descendant with coral styling; we match by finding the FilledButton/ElevatedButton.
+      final ctaFinder = find.byType(ElevatedButton);
+      // If WrPillButton renders as something else, fall back to finding by text key.
+      final anyButton = ctaFinder.evaluate().isNotEmpty
+          ? ctaFinder
+          : find.byWidgetPredicate((w) =>
+              w is InkWell || w is GestureDetector || w is TextButton);
+
+      // Tap first available button-like widget on screen
+      await tester.tap(anyButton.first);
+      await tester.pump();
+
+      expect(
+        capturedRef.read(surveyIdInProgressProvider),
+        isNull,
+        reason:
+            'Starting a new survey from intro must clear any stale in-progress surveyId',
+      );
     });
   });
 }
