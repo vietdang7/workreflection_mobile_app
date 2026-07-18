@@ -132,10 +132,10 @@ class SupabaseCoachingRepository implements CoachingRepository {
     final orderId = orderRow['id'] as String;
 
     // Step 2: Generate a unique order_code and update the row.
-    // Format matches web generateOrderCode: 'CC' + first 8 hex chars of orderId
-    // uppercased (dashes stripped).
+    // Format matches web generateOrderCode (src/lib/order-utils.ts):
+    // 'CNC' + first 8 hex chars of orderId uppercased (dashes stripped).
     final orderCode =
-        'CC${orderId.replaceAll('-', '').substring(0, 8).toUpperCase()}';
+        'CNC${orderId.replaceAll('-', '').substring(0, 8).toUpperCase()}';
     await _client
         .from('cc_orders')
         .update({'order_code': orderCode}).eq('id', orderId);
