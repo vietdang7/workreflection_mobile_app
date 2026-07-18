@@ -649,6 +649,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get wsSurveyDone => 'Đã đánh giá';
 
   @override
+  String get wsSurveyNone => 'Chưa có khảo sát cho workshop này';
+
+  @override
+  String get wsSurveyError => 'Gửi đánh giá thất bại. Vui lòng thử lại.';
+
+  @override
   String get coachTitle => 'Coaching';
 
   @override

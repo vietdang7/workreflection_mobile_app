@@ -648,6 +648,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wsSurveyDone => 'Rated';
 
   @override
+  String get wsSurveyNone => 'No survey available for this workshop';
+
+  @override
+  String get wsSurveyError => 'Failed to submit. Please try again.';
+
+  @override
   String get coachTitle => 'Coaching';
 
   @override

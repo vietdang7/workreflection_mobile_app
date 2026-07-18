@@ -1310,6 +1310,18 @@ abstract class AppLocalizations {
   /// **'Đã đánh giá'**
   String get wsSurveyDone;
 
+  /// No description provided for @wsSurveyNone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có khảo sát cho workshop này'**
+  String get wsSurveyNone;
+
+  /// No description provided for @wsSurveyError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi đánh giá thất bại. Vui lòng thử lại.'**
+  String get wsSurveyError;
+
   /// No description provided for @coachTitle.
   ///
   /// In vi, this message translates to:

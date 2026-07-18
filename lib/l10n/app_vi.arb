@@ -294,6 +294,8 @@
   "wsSurveySubmit": "Gửi đánh giá",
   "wsSurveyThanks": "Cảm ơn bạn đã đánh giá!",
   "wsSurveyDone": "Đã đánh giá",
+  "wsSurveyNone": "Chưa có khảo sát cho workshop này",
+  "wsSurveyError": "Gửi đánh giá thất bại. Vui lòng thử lại.",
 
   "coachTitle": "Coaching",
   "coachAudienceYoung": "Người trẻ",

@@ -293,6 +293,8 @@
   "wsSurveySubmit": "Submit rating",
   "wsSurveyThanks": "Thank you for your rating!",
   "wsSurveyDone": "Rated",
+  "wsSurveyNone": "No survey available for this workshop",
+  "wsSurveyError": "Failed to submit. Please try again.",
 
   "coachTitle": "Coaching",
   "coachAudienceYoung": "Young professionals",
