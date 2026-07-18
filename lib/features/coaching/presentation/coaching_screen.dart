@@ -1,10 +1,11 @@
-// Coaching packages screen — Phase 3 Task 14.
+// Coaching packages screen — Phase 3 Task 14 / Phase 5 Task 6.
 //
 // Sections:
 //   1. Audience toggle (ChoiceChip) — filters packages by targetAudience
 //   2. Package cards (WrCardMinimal) — name, sessions/duration, features,
 //      price, CTA (free claim or paid dialog)
 //   3. Coaches section — CircleAvatar, name, title, specializations, years exp
+//   4. Reviews section — avg rating + up to 6 recent review cards (Phase 5)
 //
 // AppBar action: "Xem lịch của tôi" → pushes '/coaching/sessions'.
 
@@ -123,6 +124,7 @@ class _Body extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final visible = _filtered(packages);
+    final reviewsAsync = ref.watch(coachReviewsProvider);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -171,6 +173,16 @@ class _Body extends ConsumerWidget {
             ),
             const SizedBox(height: 24),
           ],
+
+          // ── Reviews section ─────────────────────────────────────────────
+          reviewsAsync.when(
+            loading: () => const SizedBox.shrink(),
+            error: (_, __) => const SizedBox.shrink(),
+            data: (summary) {
+              if (summary.totalCount == 0) return const SizedBox.shrink();
+              return _ReviewsSection(summary: summary);
+            },
+          ),
         ],
       ),
     );
@@ -451,6 +463,132 @@ class _CoachRow extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Reviews section
+// ---------------------------------------------------------------------------
+
+class _ReviewsSection extends StatelessWidget {
+  const _ReviewsSection({required this.summary});
+  final CoachReviewSummary summary;
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final avg = summary.avgRating.toStringAsFixed(1);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Header row: eyebrow + avg rating badge
+        Row(
+          children: [
+            Expanded(child: WrEyebrow(l10n.coachReviewsTitle)),
+            Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
+                color: WrColors.teal.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(100),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.star_rounded,
+                      size: 14, color: WrColors.teal),
+                  const SizedBox(width: 4),
+                  Text(
+                    '$avg/5.0',
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: WrColors.teal,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+
+        // Review cards
+        ...summary.reviews.map((r) => Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _ReviewCard(review: r),
+            )),
+
+        const SizedBox(height: 16),
+      ],
+    );
+  }
+}
+
+class _ReviewCard extends StatelessWidget {
+  const _ReviewCard({required this.review});
+  final CoachReview review;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: WrColors.cream,
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Star row
+          Row(
+            children: List.generate(5, (i) {
+              return Icon(
+                i < review.rating.round()
+                    ? Icons.star_rounded
+                    : Icons.star_outline_rounded,
+                size: 16,
+                color: WrColors.teal,
+              );
+            }),
+          ),
+          if (review.comment != null && review.comment!.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              '"${review.comment}"',
+              style:
+                  WrTextStyles.body.copyWith(fontStyle: FontStyle.italic),
+            ),
+          ],
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              CircleAvatar(
+                radius: 12,
+                backgroundColor: WrColors.navy.withValues(alpha: 0.1),
+                child: Text(
+                  review.reviewerName.isNotEmpty
+                      ? review.reviewerName[0].toUpperCase()
+                      : '?',
+                  style: const TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w700,
+                    color: WrColors.navy,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(
+                review.reviewerName,
+                style: WrTextStyles.body
+                    .copyWith(fontWeight: FontWeight.w600),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
 }

@@ -140,6 +140,7 @@ class CoachingBooking {
     this.scheduledAt,
     this.durationMinutes,
     this.meetingLink,
+    this.notes,
   });
 
   final String id;
@@ -152,6 +153,7 @@ class CoachingBooking {
   final DateTime? scheduledAt;
   final int? durationMinutes;
   final String? meetingLink;
+  final String? notes;
 
   factory CoachingBooking.fromJson(Map<String, dynamic> json) {
     return CoachingBooking(
@@ -167,6 +169,44 @@ class CoachingBooking {
           : null,
       durationMinutes: json['duration_minutes'] as int?,
       meetingLink: json['meeting_link'] as String?,
+      notes: json['notes'] as String?,
     );
   }
+}
+
+// ---------------------------------------------------------------------------
+// CoachReview
+// ---------------------------------------------------------------------------
+
+/// A single coaching review, sourced from cc_coaching_reviews (user-submitted)
+/// or cc_reviews (admin-curated, review_type='coaching').
+class CoachReview {
+  const CoachReview({
+    required this.rating,
+    required this.reviewerName,
+    this.comment,
+  });
+
+  final num rating;
+  final String reviewerName;
+  final String? comment;
+}
+
+// ---------------------------------------------------------------------------
+// CoachReviewSummary
+// ---------------------------------------------------------------------------
+
+/// Aggregated review data for the coaching screen.
+class CoachReviewSummary {
+  const CoachReviewSummary({
+    required this.avgRating,
+    required this.totalCount,
+    required this.reviews,
+  });
+
+  final double avgRating;
+  final int totalCount;
+
+  /// Up to 6 reviews (most recent / highest priority first).
+  final List<CoachReview> reviews;
 }

@@ -14,12 +14,20 @@ class FakeCoachingRepository implements CoachingRepository {
   final List<Coach> _coaches = [];
   final List<CoachingBooking> _bookings = [];
   int _bookingCounter = 0;
+  CoachReviewSummary _reviewSummary = const CoachReviewSummary(
+    avgRating: 5.0,
+    totalCount: 0,
+    reviews: [],
+  );
 
   /// When set, the next repo call throws this error once, then clears it.
   Object? nextError;
 
   // --- Call recorders ---
   final List<CoachingPackage> claimFreePackageCalls = [];
+
+  /// Records of scheduleBooking calls: list of maps with bookingId, date, time, notes.
+  final List<Map<String, String?>> scheduleBookingCalls = [];
 
   // --- Seed helpers ---
 
@@ -39,6 +47,10 @@ class FakeCoachingRepository implements CoachingRepository {
     _bookings
       ..clear()
       ..addAll(bookings);
+  }
+
+  void seedReviews(CoachReviewSummary summary) {
+    _reviewSummary = summary;
   }
 
   // --- Helpers ---
@@ -100,5 +112,46 @@ class FakeCoachingRepository implements CoachingRepository {
         totalSessions: pkg.sessionsCount,
       ));
     }
+  }
+
+  @override
+  Future<void> scheduleBooking({
+    required String bookingId,
+    required String date,
+    required String time,
+    String? notes,
+  }) async {
+    _maybeThrow();
+    scheduleBookingCalls.add({
+      'bookingId': bookingId,
+      'date': date,
+      'time': time,
+      'notes': notes,
+    });
+    // Update the booking in-place.
+    final idx = _bookings.indexWhere((b) => b.id == bookingId);
+    if (idx == -1) {
+      throw StateError('scheduleBooking: booking $bookingId not found');
+    }
+    final old = _bookings[idx];
+    _bookings[idx] = CoachingBooking(
+      id: old.id,
+      packageId: old.packageId,
+      coachId: old.coachId,
+      orderId: old.orderId,
+      status: 'scheduled',
+      sessionNumber: old.sessionNumber,
+      totalSessions: old.totalSessions,
+      scheduledAt: DateTime.parse('${date}T$time:00'),
+      durationMinutes: old.durationMinutes,
+      meetingLink: old.meetingLink,
+      notes: notes?.trim().isEmpty == true ? null : notes?.trim(),
+    );
+  }
+
+  @override
+  Future<CoachReviewSummary> getCoachReviews() async {
+    _maybeThrow();
+    return _reviewSummary;
   }
 }

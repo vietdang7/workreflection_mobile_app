@@ -800,6 +800,57 @@ class AppLocalizationsEn extends AppLocalizations {
   String get coachViewMy => 'View my schedule';
 
   @override
+  String get coachSchedButton => 'Schedule';
+
+  @override
+  String get coachSchedTitle => 'Choose coaching schedule';
+
+  @override
+  String get coachSchedChooseDate => 'Choose date';
+
+  @override
+  String get coachSchedChooseTime => 'Choose time';
+
+  @override
+  String get coachSchedNotes => 'Notes (optional)';
+
+  @override
+  String get coachSchedNotesHint =>
+      'Enter notes or questions for your coach...';
+
+  @override
+  String get coachSchedSelectedDate => 'Selected date:';
+
+  @override
+  String get coachSchedPickDate => 'Please select a date first';
+
+  @override
+  String get coachSchedPickTime => 'Please select a time first';
+
+  @override
+  String get coachSchedConfirmTitle => 'Confirm scheduling';
+
+  @override
+  String coachSchedConfirmBody(String date, String time) {
+    return 'Schedule coaching session on $date at $time?';
+  }
+
+  @override
+  String get coachSchedSubmit => 'Confirm schedule';
+
+  @override
+  String get coachSchedSuccess => 'Scheduled successfully!';
+
+  @override
+  String get coachSchedError => 'Could not schedule. Please try again.';
+
+  @override
+  String get coachSchedNotFound => 'Coaching session not found';
+
+  @override
+  String get coachReviewsTitle => 'Client reviews';
+
+  @override
   String get profileMyWorkshops => 'My Workshops';
 
   @override

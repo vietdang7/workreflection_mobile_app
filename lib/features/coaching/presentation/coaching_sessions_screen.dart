@@ -1,12 +1,13 @@
-// My coaching sessions screen — Phase 3 Task 15.
+// My coaching sessions screen — Phase 3 Task 15 / Phase 5 Task 6.
 //
 // Groups bookings from myBookingsProvider by status:
 //   - upcoming:  status == 'scheduled'
-//   - pending:   status == 'pending'
+//   - pending:   status == 'pending'  ← now shows "Đặt lịch" button
 //   - history:   status == 'completed' | 'cancelled'
 //
+// Pending bookings (no scheduled_at) show a "Đặt lịch" button that pushes
+// /coaching/schedule/:bookingId (Phase 5 Task 6 — scheduling now in-app).
 // Meeting link row taps copy to clipboard and shows a SnackBar.
-// Bottom note (coachWebNote) always visible when list non-empty.
 // Empty/error states handled.
 
 import 'package:flutter/material.dart';
@@ -103,12 +104,7 @@ class _BookingsList extends StatelessWidget {
             const SizedBox(height: 24),
           ],
 
-          // Web note — always shown when list non-empty
-          Text(
-            l10n.coachWebNote,
-            style: WrTextStyles.body.copyWith(color: WrColors.muted),
-          ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 8),
         ],
       ),
     );
@@ -172,6 +168,31 @@ class _SessionRow extends StatelessWidget {
                     style: WrTextStyles.body,
                   ),
                 ],
+              ),
+            ],
+
+            // "Đặt lịch" button for pending bookings
+            if (b.status == 'pending') ...[
+              const SizedBox(height: 10),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  key: Key('scheduleBtn_${b.id}'),
+                  icon: const Icon(Icons.calendar_today_outlined,
+                      size: 16, color: WrColors.coral),
+                  label: Text(
+                    l10n.coachSchedButton,
+                    style: const TextStyle(color: WrColors.coral),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: WrColors.coral),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: () =>
+                      context.push('/coaching/schedule/${b.id}'),
+                ),
               ),
             ],
 

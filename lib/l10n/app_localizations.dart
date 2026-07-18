@@ -1592,6 +1592,102 @@ abstract class AppLocalizations {
   /// **'Xem lịch của tôi'**
   String get coachViewMy;
 
+  /// No description provided for @coachSchedButton.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đặt lịch'**
+  String get coachSchedButton;
+
+  /// No description provided for @coachSchedTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn lịch coaching'**
+  String get coachSchedTitle;
+
+  /// No description provided for @coachSchedChooseDate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn ngày'**
+  String get coachSchedChooseDate;
+
+  /// No description provided for @coachSchedChooseTime.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chọn giờ'**
+  String get coachSchedChooseTime;
+
+  /// No description provided for @coachSchedNotes.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ghi chú (tuỳ chọn)'**
+  String get coachSchedNotes;
+
+  /// No description provided for @coachSchedNotesHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhập ghi chú hoặc câu hỏi cho coach...'**
+  String get coachSchedNotesHint;
+
+  /// No description provided for @coachSchedSelectedDate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày đã chọn:'**
+  String get coachSchedSelectedDate;
+
+  /// No description provided for @coachSchedPickDate.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng chọn ngày trước'**
+  String get coachSchedPickDate;
+
+  /// No description provided for @coachSchedPickTime.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng chọn giờ trước'**
+  String get coachSchedPickTime;
+
+  /// No description provided for @coachSchedConfirmTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận đặt lịch'**
+  String get coachSchedConfirmTitle;
+
+  /// No description provided for @coachSchedConfirmBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đặt lịch buổi coaching vào ngày {date} lúc {time}?'**
+  String coachSchedConfirmBody(String date, String time);
+
+  /// No description provided for @coachSchedSubmit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận đặt lịch'**
+  String get coachSchedSubmit;
+
+  /// No description provided for @coachSchedSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đặt lịch thành công!'**
+  String get coachSchedSuccess;
+
+  /// No description provided for @coachSchedError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể đặt lịch. Vui lòng thử lại.'**
+  String get coachSchedError;
+
+  /// No description provided for @coachSchedNotFound.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy buổi coaching này'**
+  String get coachSchedNotFound;
+
+  /// No description provided for @coachReviewsTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đánh giá từ khách hàng'**
+  String get coachReviewsTitle;
+
   /// No description provided for @profileMyWorkshops.
   ///
   /// In vi, this message translates to:

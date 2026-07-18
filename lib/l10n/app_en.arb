@@ -366,6 +366,28 @@
   "coachMeetingLink": "Meeting link",
   "coachWebNote": "Scheduling and reviews are done on the web",
   "coachViewMy": "View my schedule",
+  "coachSchedButton": "Schedule",
+  "coachSchedTitle": "Choose coaching schedule",
+  "coachSchedChooseDate": "Choose date",
+  "coachSchedChooseTime": "Choose time",
+  "coachSchedNotes": "Notes (optional)",
+  "coachSchedNotesHint": "Enter notes or questions for your coach...",
+  "coachSchedSelectedDate": "Selected date:",
+  "coachSchedPickDate": "Please select a date first",
+  "coachSchedPickTime": "Please select a time first",
+  "coachSchedConfirmTitle": "Confirm scheduling",
+  "coachSchedConfirmBody": "Schedule coaching session on {date} at {time}?",
+  "@coachSchedConfirmBody": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "time": {"type": "String"}
+    }
+  },
+  "coachSchedSubmit": "Confirm schedule",
+  "coachSchedSuccess": "Scheduled successfully!",
+  "coachSchedError": "Could not schedule. Please try again.",
+  "coachSchedNotFound": "Coaching session not found",
+  "coachReviewsTitle": "Client reviews",
 
   "profileMyWorkshops": "My Workshops",
   "profileMyCoaching": "My Coaching",

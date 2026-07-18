@@ -801,6 +801,56 @@ class AppLocalizationsVi extends AppLocalizations {
   String get coachViewMy => 'Xem lịch của tôi';
 
   @override
+  String get coachSchedButton => 'Đặt lịch';
+
+  @override
+  String get coachSchedTitle => 'Chọn lịch coaching';
+
+  @override
+  String get coachSchedChooseDate => 'Chọn ngày';
+
+  @override
+  String get coachSchedChooseTime => 'Chọn giờ';
+
+  @override
+  String get coachSchedNotes => 'Ghi chú (tuỳ chọn)';
+
+  @override
+  String get coachSchedNotesHint => 'Nhập ghi chú hoặc câu hỏi cho coach...';
+
+  @override
+  String get coachSchedSelectedDate => 'Ngày đã chọn:';
+
+  @override
+  String get coachSchedPickDate => 'Vui lòng chọn ngày trước';
+
+  @override
+  String get coachSchedPickTime => 'Vui lòng chọn giờ trước';
+
+  @override
+  String get coachSchedConfirmTitle => 'Xác nhận đặt lịch';
+
+  @override
+  String coachSchedConfirmBody(String date, String time) {
+    return 'Đặt lịch buổi coaching vào ngày $date lúc $time?';
+  }
+
+  @override
+  String get coachSchedSubmit => 'Xác nhận đặt lịch';
+
+  @override
+  String get coachSchedSuccess => 'Đặt lịch thành công!';
+
+  @override
+  String get coachSchedError => 'Không thể đặt lịch. Vui lòng thử lại.';
+
+  @override
+  String get coachSchedNotFound => 'Không tìm thấy buổi coaching này';
+
+  @override
+  String get coachReviewsTitle => 'Đánh giá từ khách hàng';
+
+  @override
   String get profileMyWorkshops => 'Workshop của tôi';
 
   @override

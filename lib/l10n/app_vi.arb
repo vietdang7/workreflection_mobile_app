@@ -367,6 +367,28 @@
   "coachMeetingLink": "Link buổi học",
   "coachWebNote": "Đặt lịch và đánh giá thực hiện trên web",
   "coachViewMy": "Xem lịch của tôi",
+  "coachSchedButton": "Đặt lịch",
+  "coachSchedTitle": "Chọn lịch coaching",
+  "coachSchedChooseDate": "Chọn ngày",
+  "coachSchedChooseTime": "Chọn giờ",
+  "coachSchedNotes": "Ghi chú (tuỳ chọn)",
+  "coachSchedNotesHint": "Nhập ghi chú hoặc câu hỏi cho coach...",
+  "coachSchedSelectedDate": "Ngày đã chọn:",
+  "coachSchedPickDate": "Vui lòng chọn ngày trước",
+  "coachSchedPickTime": "Vui lòng chọn giờ trước",
+  "coachSchedConfirmTitle": "Xác nhận đặt lịch",
+  "coachSchedConfirmBody": "Đặt lịch buổi coaching vào ngày {date} lúc {time}?",
+  "@coachSchedConfirmBody": {
+    "placeholders": {
+      "date": {"type": "String"},
+      "time": {"type": "String"}
+    }
+  },
+  "coachSchedSubmit": "Xác nhận đặt lịch",
+  "coachSchedSuccess": "Đặt lịch thành công!",
+  "coachSchedError": "Không thể đặt lịch. Vui lòng thử lại.",
+  "coachSchedNotFound": "Không tìm thấy buổi coaching này",
+  "coachReviewsTitle": "Đánh giá từ khách hàng",
 
   "profileMyWorkshops": "Workshop của tôi",
   "profileMyCoaching": "Coaching của tôi",

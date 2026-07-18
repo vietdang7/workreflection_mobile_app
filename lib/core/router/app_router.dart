@@ -23,6 +23,7 @@ import '../../features/workshops/presentation/workshop_detail_screen.dart';
 import '../../features/workshops/presentation/workshop_survey_screen.dart';
 import '../../features/workshops/presentation/checkin_screen.dart';
 import '../../features/workshops/presentation/my_workshops_screen.dart';
+import '../../features/coaching/presentation/coaching_schedule_screen.dart';
 import '../../features/coaching/presentation/coaching_screen.dart';
 import '../../features/coaching/presentation/coaching_sessions_screen.dart';
 import '../../features/profile/presentation/profile_edit_screen.dart';
@@ -173,7 +174,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // Workshop + coaching routes (fullscreen, outside shell)
       // IMPORTANT: '/workshops/checkin' MUST be declared before '/workshops/:id'
       // so the literal segment 'checkin' is not captured as the :id parameter.
-      // Similarly, '/coaching/sessions' MUST precede any future '/coaching/:id' route.
+      // Similarly, '/coaching/sessions' and '/coaching/schedule/:id' MUST precede
+      // any future generic '/coaching/:id' route.
       GoRoute(
         path: '/workshops',
         builder: (context, state) => const WorkshopsScreen(),
@@ -203,6 +205,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/coaching/sessions',
         builder: (context, state) => const CoachingSessionsScreen(),
+      ),
+      GoRoute(
+        path: '/coaching/schedule/:bookingId',
+        builder: (context, state) => CoachingScheduleScreen(
+          bookingId: state.pathParameters['bookingId']!,
+        ),
       ),
       GoRoute(
         path: '/profile/edit',

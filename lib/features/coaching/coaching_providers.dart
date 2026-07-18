@@ -35,3 +35,14 @@ final myBookingsProvider =
   final repo = ref.watch(coachingRepositoryProvider);
   return repo.getMyBookings();
 });
+
+// ---------------------------------------------------------------------------
+// Task 6 (Phase 5) — Coach reviews
+// ---------------------------------------------------------------------------
+
+/// Aggregated coach reviews (admin + user) with avg rating.
+final coachReviewsProvider =
+    FutureProvider.autoDispose<CoachReviewSummary>((ref) {
+  final repo = ref.watch(coachingRepositoryProvider);
+  return repo.getCoachReviews();
+});
