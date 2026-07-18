@@ -511,4 +511,222 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get journeyErrorCard => 'Could not load journey.';
+
+  @override
+  String get wsListTitle => 'Workshop';
+
+  @override
+  String get wsEmpty => 'No upcoming workshops';
+
+  @override
+  String get wsFree => 'Free';
+
+  @override
+  String get wsFullBadge => 'Full';
+
+  @override
+  String get wsRegister => 'Register';
+
+  @override
+  String get wsRegistered => 'Registered';
+
+  @override
+  String get wsAttended => 'Attended';
+
+  @override
+  String get wsCancelled => 'Cancelled';
+
+  @override
+  String get wsCheckin => 'Check-in';
+
+  @override
+  String wsCheckedInAt(String time) {
+    return 'Checked in at $time';
+  }
+
+  @override
+  String get wsResources => 'Resources';
+
+  @override
+  String get wsResourcesLocked =>
+      'Resources available for registered attendees';
+
+  @override
+  String wsParticipants(int current, int max) {
+    return '$current/$max participants';
+  }
+
+  @override
+  String get wsLocation => 'Location';
+
+  @override
+  String get wsPaidDialogTitle => 'Complete payment on web';
+
+  @override
+  String get wsPaidDialogBody =>
+      'Please complete payment on the WorkReflection website to register.';
+
+  @override
+  String get wsPaidDialogOk => 'Got it';
+
+  @override
+  String get wsRegisterSuccess => 'Registration successful!';
+
+  @override
+  String get wsRegisterError => 'Registration failed. Please try again.';
+
+  @override
+  String get wsCheckinTitle => 'Workshop check-in';
+
+  @override
+  String get wsCheckinScanHint => 'Scan the workshop QR code';
+
+  @override
+  String get wsCheckinManualLabel => 'Or enter check-in code';
+
+  @override
+  String get wsCheckinSubmit => 'Confirm';
+
+  @override
+  String get wsCheckinInvalidCode => 'Invalid code';
+
+  @override
+  String get wsCheckinNotFound => 'Workshop not found with this code';
+
+  @override
+  String get wsCheckinNotRegistered =>
+      'You have not registered for this workshop';
+
+  @override
+  String get wsCheckinTooEarly =>
+      'Check-in not open yet (opens 2 hours before start)';
+
+  @override
+  String get wsCheckinClosed => 'Check-in is closed';
+
+  @override
+  String get wsCheckinSuccess => 'Check-in successful!';
+
+  @override
+  String get wsCheckinError => 'Check-in failed. Please try again.';
+
+  @override
+  String get wsConsentTitle => 'Consent to image use';
+
+  @override
+  String get wsConsentBody =>
+      'Do you consent to us using images of you from the workshop for communication purposes?';
+
+  @override
+  String get wsConsentAccept => 'Agree';
+
+  @override
+  String get wsConsentDecline => 'Decline';
+
+  @override
+  String get wsMyTitle => 'My Workshops';
+
+  @override
+  String get wsMyEmpty => 'You have not registered for any workshops';
+
+  @override
+  String get wsSurveyCta => 'Rate workshop';
+
+  @override
+  String get wsSurveyTitle => 'Rate workshop';
+
+  @override
+  String get wsSurveySubmit => 'Submit rating';
+
+  @override
+  String get wsSurveyThanks => 'Thank you for your rating!';
+
+  @override
+  String get wsSurveyDone => 'Rated';
+
+  @override
+  String get coachTitle => 'Coaching';
+
+  @override
+  String get coachAudienceYoung => 'Young professionals';
+
+  @override
+  String get coachAudienceManager => 'Managers';
+
+  @override
+  String coachSessionsFmt(int count, int minutes) {
+    return '$count sessions × $minutes minutes';
+  }
+
+  @override
+  String get coachClaimFree => 'Claim free package';
+
+  @override
+  String get coachClaimConfirmTitle => 'Claim coaching package';
+
+  @override
+  String coachClaimConfirmBody(String name) {
+    return 'Do you want to claim the \"$name\" package?';
+  }
+
+  @override
+  String get coachClaimSuccess => 'Coaching package activated!';
+
+  @override
+  String get coachClaimError => 'Unable to activate package. Please try again.';
+
+  @override
+  String get coachOurCoaches => 'Our coaches';
+
+  @override
+  String coachYearsExp(int years) {
+    return '$years years of experience';
+  }
+
+  @override
+  String get coachMyTitle => 'My coaching schedule';
+
+  @override
+  String get coachMyEmpty => 'You have no coaching sessions yet';
+
+  @override
+  String get coachPending => 'Pending scheduling';
+
+  @override
+  String get coachScheduled => 'Scheduled';
+
+  @override
+  String get coachCompleted => 'Completed';
+
+  @override
+  String get coachCancelledStatus => 'Cancelled';
+
+  @override
+  String coachSessionOf(int n, int total) {
+    return 'Session $n/$total';
+  }
+
+  @override
+  String get coachMeetingLink => 'Meeting link';
+
+  @override
+  String get coachWebNote => 'Scheduling and reviews are done on the web';
+
+  @override
+  String get coachViewMy => 'View my schedule';
+
+  @override
+  String get profileMyWorkshops => 'My Workshops';
+
+  @override
+  String get profileMyCoaching => 'My Coaching';
+
+  @override
+  String get developWorkshopSection => 'Development opportunities';
+
+  @override
+  String get developViewWorkshops => 'View all workshops';
+
+  @override
+  String get developViewCoaching => 'Explore coaching';
 }

@@ -514,4 +514,220 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get journeyErrorCard => 'Không thể tải hành trình.';
+
+  @override
+  String get wsListTitle => 'Workshop';
+
+  @override
+  String get wsEmpty => 'Chưa có workshop nào sắp diễn ra';
+
+  @override
+  String get wsFree => 'Miễn phí';
+
+  @override
+  String get wsFullBadge => 'Đã đầy';
+
+  @override
+  String get wsRegister => 'Đăng ký';
+
+  @override
+  String get wsRegistered => 'Đã đăng ký';
+
+  @override
+  String get wsAttended => 'Đã tham dự';
+
+  @override
+  String get wsCancelled => 'Đã hủy';
+
+  @override
+  String get wsCheckin => 'Check-in';
+
+  @override
+  String wsCheckedInAt(String time) {
+    return 'Đã check-in lúc $time';
+  }
+
+  @override
+  String get wsResources => 'Tài liệu';
+
+  @override
+  String get wsResourcesLocked => 'Tài liệu dành cho người đã đăng ký';
+
+  @override
+  String wsParticipants(int current, int max) {
+    return '$current/$max người tham gia';
+  }
+
+  @override
+  String get wsLocation => 'Địa điểm';
+
+  @override
+  String get wsPaidDialogTitle => 'Thanh toán trên web';
+
+  @override
+  String get wsPaidDialogBody =>
+      'Vui lòng hoàn tất thanh toán trên trang web WorkReflection để đăng ký.';
+
+  @override
+  String get wsPaidDialogOk => 'Đã hiểu';
+
+  @override
+  String get wsRegisterSuccess => 'Đăng ký thành công!';
+
+  @override
+  String get wsRegisterError => 'Đăng ký thất bại. Vui lòng thử lại.';
+
+  @override
+  String get wsCheckinTitle => 'Check-in workshop';
+
+  @override
+  String get wsCheckinScanHint => 'Quét mã QR của workshop';
+
+  @override
+  String get wsCheckinManualLabel => 'Hoặc nhập mã check-in';
+
+  @override
+  String get wsCheckinSubmit => 'Xác nhận';
+
+  @override
+  String get wsCheckinInvalidCode => 'Mã không hợp lệ';
+
+  @override
+  String get wsCheckinNotFound => 'Không tìm thấy workshop với mã này';
+
+  @override
+  String get wsCheckinNotRegistered => 'Bạn chưa đăng ký workshop này';
+
+  @override
+  String get wsCheckinTooEarly =>
+      'Chưa đến giờ check-in (mở trước giờ bắt đầu 2 tiếng)';
+
+  @override
+  String get wsCheckinClosed => 'Đã hết giờ check-in';
+
+  @override
+  String get wsCheckinSuccess => 'Check-in thành công!';
+
+  @override
+  String get wsCheckinError => 'Check-in thất bại. Vui lòng thử lại.';
+
+  @override
+  String get wsConsentTitle => 'Cho phép sử dụng hình ảnh';
+
+  @override
+  String get wsConsentBody =>
+      'Bạn có đồng ý cho chúng tôi sử dụng hình ảnh có bạn trong workshop cho mục đích truyền thông không?';
+
+  @override
+  String get wsConsentAccept => 'Đồng ý';
+
+  @override
+  String get wsConsentDecline => 'Không đồng ý';
+
+  @override
+  String get wsMyTitle => 'Workshop của tôi';
+
+  @override
+  String get wsMyEmpty => 'Bạn chưa đăng ký workshop nào';
+
+  @override
+  String get wsSurveyCta => 'Đánh giá workshop';
+
+  @override
+  String get wsSurveyTitle => 'Đánh giá workshop';
+
+  @override
+  String get wsSurveySubmit => 'Gửi đánh giá';
+
+  @override
+  String get wsSurveyThanks => 'Cảm ơn bạn đã đánh giá!';
+
+  @override
+  String get wsSurveyDone => 'Đã đánh giá';
+
+  @override
+  String get coachTitle => 'Coaching';
+
+  @override
+  String get coachAudienceYoung => 'Người trẻ';
+
+  @override
+  String get coachAudienceManager => 'Quản lý';
+
+  @override
+  String coachSessionsFmt(int count, int minutes) {
+    return '$count buổi × $minutes phút';
+  }
+
+  @override
+  String get coachClaimFree => 'Nhận gói miễn phí';
+
+  @override
+  String get coachClaimConfirmTitle => 'Nhận gói coaching';
+
+  @override
+  String coachClaimConfirmBody(String name) {
+    return 'Bạn muốn nhận gói \"$name\"?';
+  }
+
+  @override
+  String get coachClaimSuccess => 'Đã kích hoạt gói coaching!';
+
+  @override
+  String get coachClaimError => 'Không thể kích hoạt gói. Vui lòng thử lại.';
+
+  @override
+  String get coachOurCoaches => 'Đội ngũ coach';
+
+  @override
+  String coachYearsExp(int years) {
+    return '$years năm kinh nghiệm';
+  }
+
+  @override
+  String get coachMyTitle => 'Lịch coaching của tôi';
+
+  @override
+  String get coachMyEmpty => 'Bạn chưa có buổi coaching nào';
+
+  @override
+  String get coachPending => 'Chờ xếp lịch';
+
+  @override
+  String get coachScheduled => 'Đã xếp lịch';
+
+  @override
+  String get coachCompleted => 'Hoàn thành';
+
+  @override
+  String get coachCancelledStatus => 'Đã hủy';
+
+  @override
+  String coachSessionOf(int n, int total) {
+    return 'Buổi $n/$total';
+  }
+
+  @override
+  String get coachMeetingLink => 'Link buổi học';
+
+  @override
+  String get coachWebNote => 'Đặt lịch và đánh giá thực hiện trên web';
+
+  @override
+  String get coachViewMy => 'Xem lịch của tôi';
+
+  @override
+  String get profileMyWorkshops => 'Workshop của tôi';
+
+  @override
+  String get profileMyCoaching => 'Coaching của tôi';
+
+  @override
+  String get developWorkshopSection => 'Cơ hội phát triển';
+
+  @override
+  String get developViewWorkshops => 'Xem tất cả workshop';
+
+  @override
+  String get developViewCoaching => 'Khám phá coaching';
 }

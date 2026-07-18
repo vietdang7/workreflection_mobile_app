@@ -1057,6 +1057,408 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Không thể tải hành trình.'**
   String get journeyErrorCard;
+
+  /// No description provided for @wsListTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Workshop'**
+  String get wsListTitle;
+
+  /// No description provided for @wsEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa có workshop nào sắp diễn ra'**
+  String get wsEmpty;
+
+  /// No description provided for @wsFree.
+  ///
+  /// In vi, this message translates to:
+  /// **'Miễn phí'**
+  String get wsFree;
+
+  /// No description provided for @wsFullBadge.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đầy'**
+  String get wsFullBadge;
+
+  /// No description provided for @wsRegister.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký'**
+  String get wsRegister;
+
+  /// No description provided for @wsRegistered.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đăng ký'**
+  String get wsRegistered;
+
+  /// No description provided for @wsAttended.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã tham dự'**
+  String get wsAttended;
+
+  /// No description provided for @wsCancelled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã hủy'**
+  String get wsCancelled;
+
+  /// No description provided for @wsCheckin.
+  ///
+  /// In vi, this message translates to:
+  /// **'Check-in'**
+  String get wsCheckin;
+
+  /// No description provided for @wsCheckedInAt.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã check-in lúc {time}'**
+  String wsCheckedInAt(String time);
+
+  /// No description provided for @wsResources.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tài liệu'**
+  String get wsResources;
+
+  /// No description provided for @wsResourcesLocked.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tài liệu dành cho người đã đăng ký'**
+  String get wsResourcesLocked;
+
+  /// No description provided for @wsParticipants.
+  ///
+  /// In vi, this message translates to:
+  /// **'{current}/{max} người tham gia'**
+  String wsParticipants(int current, int max);
+
+  /// No description provided for @wsLocation.
+  ///
+  /// In vi, this message translates to:
+  /// **'Địa điểm'**
+  String get wsLocation;
+
+  /// No description provided for @wsPaidDialogTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thanh toán trên web'**
+  String get wsPaidDialogTitle;
+
+  /// No description provided for @wsPaidDialogBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vui lòng hoàn tất thanh toán trên trang web WorkReflection để đăng ký.'**
+  String get wsPaidDialogBody;
+
+  /// No description provided for @wsPaidDialogOk.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã hiểu'**
+  String get wsPaidDialogOk;
+
+  /// No description provided for @wsRegisterSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký thành công!'**
+  String get wsRegisterSuccess;
+
+  /// No description provided for @wsRegisterError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng ký thất bại. Vui lòng thử lại.'**
+  String get wsRegisterError;
+
+  /// No description provided for @wsCheckinTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Check-in workshop'**
+  String get wsCheckinTitle;
+
+  /// No description provided for @wsCheckinScanHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quét mã QR của workshop'**
+  String get wsCheckinScanHint;
+
+  /// No description provided for @wsCheckinManualLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoặc nhập mã check-in'**
+  String get wsCheckinManualLabel;
+
+  /// No description provided for @wsCheckinSubmit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xác nhận'**
+  String get wsCheckinSubmit;
+
+  /// No description provided for @wsCheckinInvalidCode.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mã không hợp lệ'**
+  String get wsCheckinInvalidCode;
+
+  /// No description provided for @wsCheckinNotFound.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tìm thấy workshop với mã này'**
+  String get wsCheckinNotFound;
+
+  /// No description provided for @wsCheckinNotRegistered.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn chưa đăng ký workshop này'**
+  String get wsCheckinNotRegistered;
+
+  /// No description provided for @wsCheckinTooEarly.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chưa đến giờ check-in (mở trước giờ bắt đầu 2 tiếng)'**
+  String get wsCheckinTooEarly;
+
+  /// No description provided for @wsCheckinClosed.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã hết giờ check-in'**
+  String get wsCheckinClosed;
+
+  /// No description provided for @wsCheckinSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Check-in thành công!'**
+  String get wsCheckinSuccess;
+
+  /// No description provided for @wsCheckinError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Check-in thất bại. Vui lòng thử lại.'**
+  String get wsCheckinError;
+
+  /// No description provided for @wsConsentTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cho phép sử dụng hình ảnh'**
+  String get wsConsentTitle;
+
+  /// No description provided for @wsConsentBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn có đồng ý cho chúng tôi sử dụng hình ảnh có bạn trong workshop cho mục đích truyền thông không?'**
+  String get wsConsentBody;
+
+  /// No description provided for @wsConsentAccept.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đồng ý'**
+  String get wsConsentAccept;
+
+  /// No description provided for @wsConsentDecline.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không đồng ý'**
+  String get wsConsentDecline;
+
+  /// No description provided for @wsMyTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Workshop của tôi'**
+  String get wsMyTitle;
+
+  /// No description provided for @wsMyEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn chưa đăng ký workshop nào'**
+  String get wsMyEmpty;
+
+  /// No description provided for @wsSurveyCta.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đánh giá workshop'**
+  String get wsSurveyCta;
+
+  /// No description provided for @wsSurveyTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đánh giá workshop'**
+  String get wsSurveyTitle;
+
+  /// No description provided for @wsSurveySubmit.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gửi đánh giá'**
+  String get wsSurveySubmit;
+
+  /// No description provided for @wsSurveyThanks.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cảm ơn bạn đã đánh giá!'**
+  String get wsSurveyThanks;
+
+  /// No description provided for @wsSurveyDone.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã đánh giá'**
+  String get wsSurveyDone;
+
+  /// No description provided for @coachTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Coaching'**
+  String get coachTitle;
+
+  /// No description provided for @coachAudienceYoung.
+  ///
+  /// In vi, this message translates to:
+  /// **'Người trẻ'**
+  String get coachAudienceYoung;
+
+  /// No description provided for @coachAudienceManager.
+  ///
+  /// In vi, this message translates to:
+  /// **'Quản lý'**
+  String get coachAudienceManager;
+
+  /// No description provided for @coachSessionsFmt.
+  ///
+  /// In vi, this message translates to:
+  /// **'{count} buổi × {minutes} phút'**
+  String coachSessionsFmt(int count, int minutes);
+
+  /// No description provided for @coachClaimFree.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhận gói miễn phí'**
+  String get coachClaimFree;
+
+  /// No description provided for @coachClaimConfirmTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhận gói coaching'**
+  String get coachClaimConfirmTitle;
+
+  /// No description provided for @coachClaimConfirmBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn muốn nhận gói \"{name}\"?'**
+  String coachClaimConfirmBody(String name);
+
+  /// No description provided for @coachClaimSuccess.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã kích hoạt gói coaching!'**
+  String get coachClaimSuccess;
+
+  /// No description provided for @coachClaimError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể kích hoạt gói. Vui lòng thử lại.'**
+  String get coachClaimError;
+
+  /// No description provided for @coachOurCoaches.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đội ngũ coach'**
+  String get coachOurCoaches;
+
+  /// No description provided for @coachYearsExp.
+  ///
+  /// In vi, this message translates to:
+  /// **'{years} năm kinh nghiệm'**
+  String coachYearsExp(int years);
+
+  /// No description provided for @coachMyTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Lịch coaching của tôi'**
+  String get coachMyTitle;
+
+  /// No description provided for @coachMyEmpty.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bạn chưa có buổi coaching nào'**
+  String get coachMyEmpty;
+
+  /// No description provided for @coachPending.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chờ xếp lịch'**
+  String get coachPending;
+
+  /// No description provided for @coachScheduled.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xếp lịch'**
+  String get coachScheduled;
+
+  /// No description provided for @coachCompleted.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hoàn thành'**
+  String get coachCompleted;
+
+  /// No description provided for @coachCancelledStatus.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã hủy'**
+  String get coachCancelledStatus;
+
+  /// No description provided for @coachSessionOf.
+  ///
+  /// In vi, this message translates to:
+  /// **'Buổi {n}/{total}'**
+  String coachSessionOf(int n, int total);
+
+  /// No description provided for @coachMeetingLink.
+  ///
+  /// In vi, this message translates to:
+  /// **'Link buổi học'**
+  String get coachMeetingLink;
+
+  /// No description provided for @coachWebNote.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đặt lịch và đánh giá thực hiện trên web'**
+  String get coachWebNote;
+
+  /// No description provided for @coachViewMy.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem lịch của tôi'**
+  String get coachViewMy;
+
+  /// No description provided for @profileMyWorkshops.
+  ///
+  /// In vi, this message translates to:
+  /// **'Workshop của tôi'**
+  String get profileMyWorkshops;
+
+  /// No description provided for @profileMyCoaching.
+  ///
+  /// In vi, this message translates to:
+  /// **'Coaching của tôi'**
+  String get profileMyCoaching;
+
+  /// No description provided for @developWorkshopSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cơ hội phát triển'**
+  String get developWorkshopSection;
+
+  /// No description provided for @developViewWorkshops.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem tất cả workshop'**
+  String get developViewWorkshops;
+
+  /// No description provided for @developViewCoaching.
+  ///
+  /// In vi, this message translates to:
+  /// **'Khám phá coaching'**
+  String get developViewCoaching;
 }
 
 class _AppLocalizationsDelegate
