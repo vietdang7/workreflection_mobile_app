@@ -183,6 +183,20 @@ void main() {
       expect(find.textContaining('WORKSHOP'), findsOneWidget);
     });
 
+    testWidgets('opportunity card shows view-workshops and view-coaching links', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedActiveTheme(_theme());
+      repo.seedWorkshop(Workshop(
+        id: 'w1',
+        title: 'Nói để được nghe',
+        date: DateTime(2026, 7, 1),
+      ));
+      await _pumpLarge(tester, _wrap(const DevelopScreen(), repo));
+
+      expect(find.byKey(const Key('develop_view_workshops')), findsOneWidget);
+      expect(find.byKey(const Key('develop_view_coaching')), findsOneWidget);
+    });
+
     testWidgets('hides workshop section when no workshop', (tester) async {
       final repo = FakeWrRepository();
       repo.seedActiveTheme(_theme());

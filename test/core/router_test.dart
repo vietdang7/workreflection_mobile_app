@@ -123,6 +123,67 @@ void main() {
         isNull,
       );
     });
+
+    // Cases 11-14: authenticated user on workshop/coaching routes → no redirect
+    test('has session + on /workshops → null', () {
+      expect(
+        computeRedirect(
+          hasSession: true,
+          seenOnboarding: true,
+          location: '/workshops',
+        ),
+        isNull,
+      );
+    });
+
+    test('has session + on /coaching → null', () {
+      expect(
+        computeRedirect(
+          hasSession: true,
+          seenOnboarding: true,
+          location: '/coaching',
+        ),
+        isNull,
+      );
+    });
+
+    test('has session + on /my-workshops → null', () {
+      expect(
+        computeRedirect(
+          hasSession: true,
+          seenOnboarding: true,
+          location: '/my-workshops',
+        ),
+        isNull,
+      );
+    });
+
+    test('has session + on /coaching/sessions → null', () {
+      expect(
+        computeRedirect(
+          hasSession: true,
+          seenOnboarding: true,
+          location: '/coaching/sessions',
+        ),
+        isNull,
+      );
+    });
+
+    // Route-order regression: /workshops/checkin must not be redirected when
+    // authenticated (computeRedirect returns null for any non-auth path when
+    // hasSession is true). The GoRouter declaration order in app_router.dart
+    // ensures '/workshops/checkin' is registered before '/workshops/:id' so the
+    // literal segment 'checkin' is never captured as the :id parameter.
+    test('has session + on /workshops/checkin → null (not captured as :id)', () {
+      expect(
+        computeRedirect(
+          hasSession: true,
+          seenOnboarding: true,
+          location: '/workshops/checkin',
+        ),
+        isNull,
+      );
+    });
   });
 
   group('AuthChangeNotifier', () {

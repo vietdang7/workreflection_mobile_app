@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/models/development_theme.dart';
 import '../../../core/models/practice.dart';
@@ -337,12 +338,27 @@ class _OpportunityCard extends StatelessWidget {
                     Text(workshop.title,
                         style: WrTextStyles.hMedium.copyWith(fontSize: 15)),
                     const SizedBox(height: 6),
-                    WrActionLink(label: l10n.developWorkshopLink, onTap: () {}),
+                    WrActionLink(
+                      label: l10n.developWorkshopLink,
+                      onTap: () => context.push('/workshops/${workshop.id}'),
+                    ),
                   ],
                 ),
               ),
             ],
           ),
+        ),
+        const SizedBox(height: 16),
+        WrActionLink(
+          key: const Key('develop_view_workshops'),
+          label: l10n.developViewWorkshops,
+          onTap: () => context.push('/workshops'),
+        ),
+        const SizedBox(height: 8),
+        WrActionLink(
+          key: const Key('develop_view_coaching'),
+          label: l10n.developViewCoaching,
+          onTap: () => context.push('/coaching'),
         ),
       ],
     );

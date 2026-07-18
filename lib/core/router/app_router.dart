@@ -16,6 +16,12 @@ import '../../features/survey/presentation/survey_questions_screen.dart';
 import '../../features/survey/presentation/survey_processing_screen.dart';
 import '../../features/survey/presentation/report_screen.dart';
 import '../../features/survey/presentation/action_plan_screen.dart';
+import '../../features/workshops/presentation/workshops_screen.dart';
+import '../../features/workshops/presentation/workshop_detail_screen.dart';
+import '../../features/workshops/presentation/checkin_screen.dart';
+import '../../features/workshops/presentation/my_workshops_screen.dart';
+import '../../features/coaching/presentation/coaching_screen.dart';
+import '../../features/coaching/presentation/coaching_sessions_screen.dart';
 import 'auth_change_notifier.dart';
 
 // ---------------------------------------------------------------------------
@@ -132,6 +138,36 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/survey/action-plan/:id',
         builder: (context, state) =>
             ActionPlanScreen(reportId: state.pathParameters['id']!),
+      ),
+
+      // Workshop + coaching routes (fullscreen, outside shell)
+      // IMPORTANT: '/workshops/checkin' MUST be declared before '/workshops/:id'
+      // so the literal segment 'checkin' is not captured as the :id parameter.
+      // Similarly, '/coaching/sessions' MUST precede any future '/coaching/:id' route.
+      GoRoute(
+        path: '/workshops',
+        builder: (context, state) => const WorkshopsScreen(),
+      ),
+      GoRoute(
+        path: '/workshops/checkin',
+        builder: (context, state) => const CheckinScreen(),
+      ),
+      GoRoute(
+        path: '/workshops/:id',
+        builder: (context, state) =>
+            WorkshopDetailScreen(workshopId: state.pathParameters['id']!),
+      ),
+      GoRoute(
+        path: '/my-workshops',
+        builder: (context, state) => const MyWorkshopsScreen(),
+      ),
+      GoRoute(
+        path: '/coaching',
+        builder: (context, state) => const CoachingScreen(),
+      ),
+      GoRoute(
+        path: '/coaching/sessions',
+        builder: (context, state) => const CoachingSessionsScreen(),
       ),
 
       // Shell with 5 indexed branches

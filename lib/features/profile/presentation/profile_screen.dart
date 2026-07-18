@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -310,6 +311,26 @@ class _SettingsSection extends ConsumerWidget {
                 const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
               ],
             ),
+          ),
+        ),
+
+        // My Workshops
+        _SettingRow(
+          label: l10n.profileMyWorkshops,
+          trailing: GestureDetector(
+            key: const Key('profile_my_workshops_btn'),
+            onTap: () => context.push('/my-workshops'),
+            child: const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
+          ),
+        ),
+
+        // My Coaching
+        _SettingRow(
+          label: l10n.profileMyCoaching,
+          trailing: GestureDetector(
+            key: const Key('profile_my_coaching_btn'),
+            onTap: () => context.push('/coaching/sessions'),
+            child: const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
           ),
         ),
 

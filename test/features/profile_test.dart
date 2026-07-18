@@ -185,5 +185,25 @@ void main() {
       final logoutFinder = find.byKey(const Key('profile_logout_btn'));
       expect(logoutFinder, findsOneWidget);
     });
+
+    testWidgets('shows profileMyWorkshops row', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile());
+      repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
+      await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
+
+      expect(find.byKey(const Key('profile_my_workshops_btn')), findsOneWidget);
+      expect(find.textContaining('Workshop của tôi'), findsOneWidget);
+    });
+
+    testWidgets('shows profileMyCoaching row', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile());
+      repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
+      await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
+
+      expect(find.byKey(const Key('profile_my_coaching_btn')), findsOneWidget);
+      expect(find.textContaining('Coaching của tôi'), findsOneWidget);
+    });
   });
 }
