@@ -332,17 +332,18 @@ void main() {
   // ---------------------------------------------------------------------------
   // Navigation routing logic
   // ---------------------------------------------------------------------------
+
+  // Helper mirrors the routing expression in auth_screen.dart _submit().
+  String routeAfterAuth(bool isLogin) =>
+      isLogin ? '/home' : '/profile/setup';
+
   group('AuthScreen navigation routing', () {
     test('login mode routes to /home', () {
-      const isLogin = true;
-      final route = isLogin ? '/home' : '/profile/setup';
-      expect(route, '/home');
+      expect(routeAfterAuth(true), '/home');
     });
 
     test('signup mode routes to /profile/setup', () {
-      const isLogin = false;
-      final route = isLogin ? '/home' : '/profile/setup';
-      expect(route, '/profile/setup');
+      expect(routeAfterAuth(false), '/profile/setup');
     });
   });
 }
