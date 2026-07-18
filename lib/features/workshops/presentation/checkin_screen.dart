@@ -8,6 +8,7 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 import '../../../core/data/workshop_repository.dart';
 import '../../../core/logic/checkin_rules.dart';
+import '../../../core/models/workshop_models.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
 import '../../../l10n/app_localizations.dart';
@@ -33,7 +34,7 @@ class _CheckinScreenState extends ConsumerState<CheckinScreen> {
   }
 
   Future<void> _handleCode(String raw) async {
-    if (_processing) return;
+    if (_processing || _success) return;
 
     // Capture l10n synchronously before any await.
     final l10n = AppLocalizations.of(context)!;
@@ -120,12 +121,23 @@ class _CheckinScreenState extends ConsumerState<CheckinScreen> {
   }
 
   Future<void> _maybeShowConsentDialog(
-    dynamic registration,
+    WorkshopRegistration registration,
     String workshopId,
     AppLocalizations l10n,
   ) async {
     if (registration.imageConsent != null) return;
     if (!mounted) return;
+
+    Future<void> record(bool consent) async {
+      try {
+        await ref
+            .read(workshopRepositoryProvider)
+            .setImageConsent(registration.id, consent);
+      } catch (_) {
+        // Consent recording is best-effort — never surface an error after a
+        // successful check-in.
+      }
+    }
 
     await showDialog<void>(
       context: context,
@@ -137,18 +149,14 @@ class _CheckinScreenState extends ConsumerState<CheckinScreen> {
           TextButton(
             onPressed: () {
               Navigator.of(ctx).pop();
-              ref
-                  .read(workshopRepositoryProvider)
-                  .setImageConsent(registration.id, false);
+              record(false);
             },
             child: Text(l10n.wsConsentDecline),
           ),
           TextButton(
             onPressed: () {
               Navigator.of(ctx).pop();
-              ref
-                  .read(workshopRepositoryProvider)
-                  .setImageConsent(registration.id, true);
+              record(true);
             },
             child: Text(l10n.wsConsentAccept),
           ),
