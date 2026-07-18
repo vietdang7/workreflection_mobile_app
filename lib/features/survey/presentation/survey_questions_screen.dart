@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
 
+import '../../../core/logic/stt_service.dart';
+import '../../../core/logic/voice_answer_matcher.dart';
 import '../../../core/models/survey_models.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
@@ -128,6 +130,102 @@ class TtsPlaybackNotifier extends StateNotifier<TtsPlaybackState> {
     super.dispose();
   }
 }
+
+// ---------------------------------------------------------------------------
+// STT (voice input) provider (per-screen, auto-disposed)
+// ---------------------------------------------------------------------------
+
+class SttState {
+  const SttState({
+    this.isListening = false,
+    this.isAvailable = false,
+    this.transcript = '',
+  });
+  final bool isListening;
+  final bool isAvailable;
+  final String transcript;
+
+  SttState copyWith({bool? isListening, bool? isAvailable, String? transcript}) =>
+      SttState(
+        isListening: isListening ?? this.isListening,
+        isAvailable: isAvailable ?? this.isAvailable,
+        transcript: transcript ?? this.transcript,
+      );
+}
+
+class SttNotifier extends StateNotifier<SttState> {
+  SttNotifier(this._stt) : super(const SttState()) {
+    _init();
+  }
+
+  final SttService _stt;
+  Timer? _timeout;
+
+  Future<void> _init() async {
+    final available = await _stt.isAvailable;
+    if (mounted) state = state.copyWith(isAvailable: available);
+  }
+
+  Future<void> toggle({
+    required String localeId,
+    required int maxValue,
+    required void Function(int value) onAnswer,
+    required void Function() onNoMatch,
+  }) async {
+    if (state.isListening) {
+      _stopAll();
+      return;
+    }
+    if (!state.isAvailable) return;
+    _timeout?.cancel();
+    state = state.copyWith(isListening: true, transcript: '');
+
+    await _stt.startListening(
+      localeId: localeId,
+      listenFor: const Duration(seconds: 10),
+      onResult: (transcript, {required bool isFinal}) {
+        if (!mounted) return;
+        state = state.copyWith(transcript: transcript);
+        if (isFinal || transcript.isNotEmpty) {
+          final matched = matchVoiceAnswer(transcript, maxValue, locale: localeId);
+          if (matched != null) {
+            _stopAll();
+            onAnswer(matched);
+          } else if (isFinal && transcript.isNotEmpty) {
+            _stopAll();
+            onNoMatch();
+          }
+        }
+      },
+    );
+
+    // Overall timeout — mirror the web 10s listen window.
+    _timeout = Timer(const Duration(seconds: 10), () {
+      if (mounted && state.isListening) {
+        _stopAll();
+        onNoMatch();
+      }
+    });
+  }
+
+  void _stopAll() {
+    _timeout?.cancel();
+    _stt.stopListening();
+    if (mounted) state = state.copyWith(isListening: false);
+  }
+
+  @override
+  void dispose() {
+    _timeout?.cancel();
+    _stt.stopListening();
+    super.dispose();
+  }
+}
+
+final _sttProvider =
+    StateNotifierProvider.autoDispose<SttNotifier, SttState>((ref) {
+  return SttNotifier(ref.watch(sttServiceProvider));
+});
 
 // ---------------------------------------------------------------------------
 // Main screen
@@ -277,6 +375,11 @@ class _QuestionViewState extends ConsumerState<_QuestionView> {
             language: ttsLanguage,
             questionId: question.id,
           ),
+          _MicButton(
+            localeId: localeCode == 'en' ? 'en-US' : 'vi-VN',
+            maxValue: question.scaleType == ScaleType.enps10 ? 10 : 5,
+            onAnswer: (v) => _onAnswer(safeIndex, question.id, v),
+          ),
           const SizedBox(width: 8),
         ],
       ),
@@ -399,6 +502,103 @@ class _TtsButton extends ConsumerWidget {
             .read(_ttsPlaybackProvider.notifier)
             .toggle(questionText, language, questionId: questionId);
       },
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Mic button (voice input)
+// ---------------------------------------------------------------------------
+
+class _MicButton extends ConsumerWidget {
+  const _MicButton({
+    required this.localeId,
+    required this.maxValue,
+    required this.onAnswer,
+  });
+  final String localeId;
+  final int maxValue;
+  final void Function(int) onAnswer;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final sttState = ref.watch(_sttProvider);
+
+    // Hide if STT is unavailable on this device (emulator without mic, etc.)
+    if (!sttState.isAvailable) return const SizedBox.shrink();
+
+    final isListening = sttState.isListening;
+
+    return IconButton(
+      tooltip: isListening ? l10n.voiceInputStopListening : l10n.voiceInputTapToSpeak,
+      icon: AnimatedSwitcher(
+        duration: const Duration(milliseconds: 200),
+        child: isListening
+            ? _PulsingMicIcon(key: const ValueKey('listening'))
+            : Icon(
+                Icons.mic_none_outlined,
+                key: const ValueKey('idle'),
+                color: WrColors.navy,
+              ),
+      ),
+      onPressed: () {
+        ref.read(_sttProvider.notifier).toggle(
+          localeId: localeId,
+          maxValue: maxValue,
+          onAnswer: onAnswer,
+          onNoMatch: () {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(l10n.voiceInputNoMatch),
+                  duration: const Duration(seconds: 2),
+                ),
+              );
+            }
+          },
+        );
+      },
+    );
+  }
+}
+
+/// Simple pulsing mic icon shown while STT is actively listening.
+class _PulsingMicIcon extends StatefulWidget {
+  const _PulsingMicIcon({super.key});
+
+  @override
+  State<_PulsingMicIcon> createState() => _PulsingMicIconState();
+}
+
+class _PulsingMicIconState extends State<_PulsingMicIcon>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+  late final Animation<double> _scale;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    )..repeat(reverse: true);
+    _scale = Tween<double>(begin: 0.85, end: 1.15).animate(
+      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
+    );
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: _scale,
+      child: const Icon(Icons.mic, color: WrColors.coral),
     );
   }
 }

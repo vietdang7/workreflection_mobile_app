@@ -735,5 +735,11 @@
   "invitationsNoProcessed": "Chưa có lời mời nào đã xử lý",
   "invitationsStatPending": "Đang chờ",
   "invitationsStatAccepted": "Đã chấp nhận",
-  "invitationsStatExpired": "Hết hạn"
+  "invitationsStatExpired": "Hết hạn",
+
+  "voiceInputTapToSpeak": "Nhấn để nói câu trả lời",
+  "voiceInputListening": "Đang nghe…",
+  "voiceInputStopListening": "Dừng nghe",
+  "voiceInputNoMatch": "Không nhận diện được — hãy nhấn để thử lại",
+  "voiceInputUnavailable": "Thiết bị không hỗ trợ nhập bằng giọng nói"
 }

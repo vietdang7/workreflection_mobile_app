@@ -3253,6 +3253,36 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Hết hạn'**
   String get invitationsStatExpired;
+
+  /// No description provided for @voiceInputTapToSpeak.
+  ///
+  /// In vi, this message translates to:
+  /// **'Nhấn để nói câu trả lời'**
+  String get voiceInputTapToSpeak;
+
+  /// No description provided for @voiceInputListening.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang nghe…'**
+  String get voiceInputListening;
+
+  /// No description provided for @voiceInputStopListening.
+  ///
+  /// In vi, this message translates to:
+  /// **'Dừng nghe'**
+  String get voiceInputStopListening;
+
+  /// No description provided for @voiceInputNoMatch.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không nhận diện được — hãy nhấn để thử lại'**
+  String get voiceInputNoMatch;
+
+  /// No description provided for @voiceInputUnavailable.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thiết bị không hỗ trợ nhập bằng giọng nói'**
+  String get voiceInputUnavailable;
 }
 
 class _AppLocalizationsDelegate

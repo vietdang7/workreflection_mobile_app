@@ -734,5 +734,11 @@
   "invitationsNoProcessed": "No processed invitations yet",
   "invitationsStatPending": "Pending",
   "invitationsStatAccepted": "Accepted",
-  "invitationsStatExpired": "Expired"
+  "invitationsStatExpired": "Expired",
+
+  "voiceInputTapToSpeak": "Tap to speak your answer",
+  "voiceInputListening": "Listening…",
+  "voiceInputStopListening": "Stop listening",
+  "voiceInputNoMatch": "Could not recognise your answer — please tap to try again",
+  "voiceInputUnavailable": "Voice input unavailable on this device"
 }

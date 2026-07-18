@@ -1691,4 +1691,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get invitationsStatExpired => 'Expired';
+
+  @override
+  String get voiceInputTapToSpeak => 'Tap to speak your answer';
+
+  @override
+  String get voiceInputListening => 'Listening…';
+
+  @override
+  String get voiceInputStopListening => 'Stop listening';
+
+  @override
+  String get voiceInputNoMatch =>
+      'Could not recognise your answer — please tap to try again';
+
+  @override
+  String get voiceInputUnavailable => 'Voice input unavailable on this device';
 }

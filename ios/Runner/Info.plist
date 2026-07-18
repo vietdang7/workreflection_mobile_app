@@ -72,6 +72,10 @@
 	</array>
 	<key>NSCameraUsageDescription</key>
 	<string>Quét mã QR để check-in workshop</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Nhập câu trả lời khảo sát bằng giọng nói</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Nhận dạng giọng nói để chọn câu trả lời khảo sát</string>
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

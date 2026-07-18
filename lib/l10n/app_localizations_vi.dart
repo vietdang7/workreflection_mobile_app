@@ -1690,4 +1690,20 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get invitationsStatExpired => 'Hết hạn';
+
+  @override
+  String get voiceInputTapToSpeak => 'Nhấn để nói câu trả lời';
+
+  @override
+  String get voiceInputListening => 'Đang nghe…';
+
+  @override
+  String get voiceInputStopListening => 'Dừng nghe';
+
+  @override
+  String get voiceInputNoMatch => 'Không nhận diện được — hãy nhấn để thử lại';
+
+  @override
+  String get voiceInputUnavailable =>
+      'Thiết bị không hỗ trợ nhập bằng giọng nói';
 }
