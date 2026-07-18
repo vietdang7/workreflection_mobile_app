@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import '../../../core/l10n/l10n_ext.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -68,9 +67,13 @@ class OnboardingScreen extends ConsumerWidget {
         return _Step3(
           onFinish: () async {
             await setSeenOnboarding();
-            if (context.mounted) {
-              context.go('/auth');
-            }
+            // appRouterProvider watches seenOnboardingProvider → invalidate làm
+            // router rebuild với giá trị mới → router mới redirect /splash →
+            // /auth. Không cần context.go — router mới tự điều hướng.
+            // invalidate + await future đảm bảo AsyncData(true) sẵn sàng
+            // trước frame rebuild kế tiếp, đóng cửa sổ race.
+            ref.invalidate(seenOnboardingProvider);
+            await ref.read(seenOnboardingProvider.future);
           },
         );
       default:

@@ -61,7 +61,9 @@ String? computeRedirect({
 
 const _kSeenOnboarding = 'seen_onboarding';
 
-final _seenOnboardingProvider = FutureProvider<bool>((ref) async {
+/// Exposed so callers can invalidate after [setSeenOnboarding] to force
+/// a fresh read and trigger GoRouter redirect re-evaluation.
+final seenOnboardingProvider = FutureProvider<bool>((ref) async {
   final prefs = await SharedPreferences.getInstance();
   return prefs.getBool(_kSeenOnboarding) ?? false;
 });
@@ -85,7 +87,7 @@ final authChangeNotifierProvider = Provider<AuthChangeNotifier>((ref) {
 // ---------------------------------------------------------------------------
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final seenOnboardingAsync = ref.watch(_seenOnboardingProvider);
+  final seenOnboardingAsync = ref.watch(seenOnboardingProvider);
   final authNotifier = ref.watch(authChangeNotifierProvider);
 
   return GoRouter(
