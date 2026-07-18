@@ -383,7 +383,22 @@ class AppLocalizationsVi extends AppLocalizations {
   String get authValidatorEmail => 'Vui lòng nhập email';
 
   @override
+  String get authValidatorEmailFormat => 'Email không hợp lệ';
+
+  @override
   String get authValidatorPassword => 'Vui lòng nhập mật khẩu';
+
+  @override
+  String get authValidatorPasswordMinLength => 'Mật khẩu phải có ít nhất 6 ký tự';
+
+  @override
+  String get authErrorDuplicateEmail => 'Email này đã được đăng ký. Vui lòng đăng nhập.';
+
+  @override
+  String get authErrorInvalidCredentials => 'Email hoặc mật khẩu không đúng.';
+
+  @override
+  String get authErrorGeneric => 'Đã xảy ra lỗi. Vui lòng thử lại.';
 
   @override
   String get languageDialogTitle => 'Ngôn ngữ';

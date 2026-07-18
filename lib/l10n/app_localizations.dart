@@ -800,11 +800,41 @@ abstract class AppLocalizations {
   /// **'Vui lòng nhập email'**
   String get authValidatorEmail;
 
+  /// No description provided for @authValidatorEmailFormat.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email không hợp lệ'**
+  String get authValidatorEmailFormat;
+
   /// No description provided for @authValidatorPassword.
   ///
   /// In vi, this message translates to:
   /// **'Vui lòng nhập mật khẩu'**
   String get authValidatorPassword;
+
+  /// No description provided for @authValidatorPasswordMinLength.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mật khẩu phải có ít nhất 6 ký tự'**
+  String get authValidatorPasswordMinLength;
+
+  /// No description provided for @authErrorDuplicateEmail.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email này đã được đăng ký. Vui lòng đăng nhập.'**
+  String get authErrorDuplicateEmail;
+
+  /// No description provided for @authErrorInvalidCredentials.
+  ///
+  /// In vi, this message translates to:
+  /// **'Email hoặc mật khẩu không đúng.'**
+  String get authErrorInvalidCredentials;
+
+  /// No description provided for @authErrorGeneric.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã xảy ra lỗi. Vui lòng thử lại.'**
+  String get authErrorGeneric;
 
   /// No description provided for @languageDialogTitle.
   ///

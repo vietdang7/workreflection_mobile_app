@@ -175,7 +175,12 @@
 
   "authValidatorName": "Please enter your name",
   "authValidatorEmail": "Please enter your email",
+  "authValidatorEmailFormat": "Invalid email address",
   "authValidatorPassword": "Please enter your password",
+  "authValidatorPasswordMinLength": "Password must be at least 6 characters",
+  "authErrorDuplicateEmail": "This email is already registered. Please log in instead.",
+  "authErrorInvalidCredentials": "Incorrect email or password.",
+  "authErrorGeneric": "Something went wrong. Please try again.",
 
   "languageDialogTitle": "Language",
   "languageOptionVietnamese": "Tiếng Việt",

@@ -16,7 +16,11 @@ class FakeAuthRepository implements AuthRepository {
   String? lastSignUpPassword;
   String? lastSignUpName;
   bool signInShouldFail = false;
+  // Error message thrown on signIn failure — mirrors Supabase SDK wording.
+  String signInErrorMessage = 'Invalid login credentials';
   bool signUpShouldFail = false;
+  // Error message thrown on signUp failure — mirrors Supabase SDK wording.
+  String signUpErrorMessage = 'User already registered';
   int signInWithGoogleCalls = 0;
 
   // Forgot / change password tracking
@@ -29,7 +33,7 @@ class FakeAuthRepository implements AuthRepository {
   Future<void> signIn(String email, String password) async {
     lastSignInEmail = email;
     lastSignInPassword = password;
-    if (signInShouldFail) throw Exception('Invalid credentials');
+    if (signInShouldFail) throw Exception(signInErrorMessage);
   }
 
   @override
@@ -37,7 +41,7 @@ class FakeAuthRepository implements AuthRepository {
     lastSignUpEmail = email;
     lastSignUpPassword = password;
     lastSignUpName = displayName;
-    if (signUpShouldFail) throw Exception('Email already in use');
+    if (signUpShouldFail) throw Exception(signUpErrorMessage);
   }
 
   @override
@@ -142,8 +146,10 @@ void main() {
       expect(fake.lastSignInPassword, 'secret123');
     });
 
-    testWidgets('shows inline error when signIn fails', (tester) async {
-      final fake = FakeAuthRepository()..signInShouldFail = true;
+    testWidgets('shows friendly l10n error when signIn fails with wrong credentials', (tester) async {
+      final fake = FakeAuthRepository()
+        ..signInShouldFail = true
+        ..signInErrorMessage = 'Invalid login credentials';
       await tester.pumpWidget(_wrap(const AuthScreen(), repo: fake));
       await tester.pump();
 
@@ -153,14 +159,69 @@ void main() {
       );
       await tester.enterText(
         find.widgetWithText(TextFormField, 'Mật khẩu'),
-        'wrong',
+        'wrong123',
       );
 
       await tester.tap(find.widgetWithText(ElevatedButton, 'Đăng nhập'));
       await tester.pumpAndSettle();
 
-      // Error text should appear
-      expect(find.text('Invalid credentials'), findsOneWidget);
+      // Must show friendly l10n message, NOT raw Supabase string.
+      expect(find.text('Email hoặc mật khẩu không đúng.'), findsOneWidget);
+      expect(find.text('Invalid login credentials'), findsNothing);
+    });
+
+    testWidgets('shows friendly l10n error when signup with duplicate email', (tester) async {
+      final fake = FakeAuthRepository()
+        ..signUpShouldFail = true
+        ..signUpErrorMessage = 'User already registered';
+      await tester.pumpWidget(_wrap(const AuthScreen(), repo: fake));
+      await tester.pump();
+
+      // Switch to register mode
+      await tester.tap(find.text('Chưa có tài khoản? Đăng ký'));
+      await tester.pump();
+
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Tên của bạn'),
+        'Test User',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Email'),
+        'dup@test.com',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Mật khẩu'),
+        'pass123',
+      );
+
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Đăng ký'));
+      await tester.pumpAndSettle();
+
+      // Must show friendly l10n message, NOT raw Supabase string.
+      expect(find.text('Email này đã được đăng ký. Vui lòng đăng nhập.'), findsOneWidget);
+      expect(find.text('User already registered'), findsNothing);
+    });
+
+    testWidgets('shows generic error for unknown exception', (tester) async {
+      final fake = FakeAuthRepository()
+        ..signInShouldFail = true
+        ..signInErrorMessage = 'network timeout xyz';
+      await tester.pumpWidget(_wrap(const AuthScreen(), repo: fake));
+      await tester.pump();
+
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Email'),
+        'user@test.com',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Mật khẩu'),
+        'pass123',
+      );
+
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Đăng nhập'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Đã xảy ra lỗi. Vui lòng thử lại.'), findsOneWidget);
     });
 
     testWidgets('Google button calls signInWithGoogle on repository', (tester) async {
@@ -289,6 +350,125 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.textContaining('Không thể gửi email'), findsOneWidget);
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Form validator widget tests
+  // ---------------------------------------------------------------------------
+  group('AuthScreen form validators', () {
+    testWidgets('shows email format error when @ is missing in login', (tester) async {
+      await tester.pumpWidget(_wrap(const AuthScreen()));
+      await tester.pump();
+
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Email'),
+        'notanemail',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Mật khẩu'),
+        'pass123',
+      );
+
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Đăng nhập'));
+      await tester.pump();
+
+      expect(find.text('Email không hợp lệ'), findsOneWidget);
+    });
+
+    testWidgets('shows password min-length error when password is too short in login', (tester) async {
+      await tester.pumpWidget(_wrap(const AuthScreen()));
+      await tester.pump();
+
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Email'),
+        'user@test.com',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Mật khẩu'),
+        'abc',
+      );
+
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Đăng nhập'));
+      await tester.pump();
+
+      expect(find.text('Mật khẩu phải có ít nhất 6 ký tự'), findsOneWidget);
+    });
+
+    testWidgets('shows email format error when @ is missing in register', (tester) async {
+      await tester.pumpWidget(_wrap(const AuthScreen()));
+      await tester.pump();
+
+      await tester.tap(find.text('Chưa có tài khoản? Đăng ký'));
+      await tester.pump();
+
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Tên của bạn'),
+        'Test User',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Email'),
+        'bademail',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Mật khẩu'),
+        'pass123',
+      );
+
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Đăng ký'));
+      await tester.pump();
+
+      expect(find.text('Email không hợp lệ'), findsOneWidget);
+    });
+
+    testWidgets('shows password min-length error in register mode', (tester) async {
+      await tester.pumpWidget(_wrap(const AuthScreen()));
+      await tester.pump();
+
+      await tester.tap(find.text('Chưa có tài khoản? Đăng ký'));
+      await tester.pump();
+
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Tên của bạn'),
+        'Test User',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Email'),
+        'user@test.com',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Mật khẩu'),
+        'short',
+      );
+
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Đăng ký'));
+      await tester.pump();
+
+      expect(find.text('Mật khẩu phải có ít nhất 6 ký tự'), findsOneWidget);
+    });
+
+    testWidgets('accepts valid email and 6-char password without validator error', (tester) async {
+      final fake = FakeAuthRepository();
+      await tester.pumpWidget(_wrap(const AuthScreen(), repo: fake));
+      await tester.pump();
+
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Email'),
+        'user@test.com',
+      );
+      await tester.enterText(
+        find.widgetWithText(TextFormField, 'Mật khẩu'),
+        'abc123',
+      );
+
+      await tester.tap(find.widgetWithText(ElevatedButton, 'Đăng nhập'));
+      await tester.pumpAndSettle();
+
+      // No validator errors
+      expect(find.text('Email không hợp lệ'), findsNothing);
+      expect(find.text('Mật khẩu phải có ít nhất 6 ký tự'), findsNothing);
+      // signIn was called
+      expect(fake.lastSignInEmail, 'user@test.com');
     });
   });
 

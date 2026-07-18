@@ -6,6 +6,7 @@ import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
 import '../../../core/widgets/pill_button.dart';
 import '../../../core/data/seed_service.dart';
+import '../../../l10n/app_localizations.dart';
 import '../data/auth_repository.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
@@ -41,6 +42,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     });
 
     final repo = ref.read(authRepositoryProvider);
+    final l10n = context.l10n;
     try {
       if (_isLogin) {
         await repo.signIn(_emailCtrl.text.trim(), _passwordCtrl.text);
@@ -52,6 +54,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         );
       }
       // Best-effort: ensure profile row exists and sample data is seeded.
+      // Note: app.dart's auth listener also calls ensureSeeded on SIGNED_IN;
+      // the seed service is idempotent so double-calls are safe.
       await ref.read(seedServiceProvider).ensureSeeded();
       if (mounted) {
         context.go(_isLogin ? '/home' : '/profile/setup');
@@ -59,12 +63,32 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _errorMessage = e.toString().replaceFirst('Exception: ', '');
+          _errorMessage = _friendlyAuthError(e, l10n);
         });
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  /// Maps raw Supabase / exception messages to friendly l10n strings.
+  String _friendlyAuthError(Object e, AppLocalizations l10n) {
+    final raw = e.toString().toLowerCase();
+    if (raw.contains('already registered') ||
+        raw.contains('already in use') ||
+        raw.contains('user already exists') ||
+        raw.contains('duplicate') ||
+        raw.contains('unique constraint')) {
+      return l10n.authErrorDuplicateEmail;
+    }
+    if (raw.contains('invalid login') ||
+        raw.contains('invalid credentials') ||
+        raw.contains('wrong password') ||
+        raw.contains('invalid email or password') ||
+        raw.contains('email not confirmed')) {
+      return l10n.authErrorInvalidCredentials;
+    }
+    return l10n.authErrorGeneric;
   }
 
   Future<void> _showForgotPasswordDialog(BuildContext context) async {
@@ -165,8 +189,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  validator: (v) =>
-                      (v == null || v.trim().isEmpty) ? l10n.authValidatorEmail : null,
+                  validator: (v) {
+                    if (v == null || v.trim().isEmpty) return l10n.authValidatorEmail;
+                    if (!v.trim().contains('@')) return l10n.authValidatorEmailFormat;
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 16),
 
@@ -180,8 +207,11 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  validator: (v) =>
-                      (v == null || v.isEmpty) ? l10n.authValidatorPassword : null,
+                  validator: (v) {
+                    if (v == null || v.isEmpty) return l10n.authValidatorPassword;
+                    if (v.length < 6) return l10n.authValidatorPasswordMinLength;
+                    return null;
+                  },
                 ),
                 const SizedBox(height: 8),
 

@@ -380,7 +380,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authValidatorEmail => 'Please enter your email';
 
   @override
+  String get authValidatorEmailFormat => 'Invalid email address';
+
+  @override
   String get authValidatorPassword => 'Please enter your password';
+
+  @override
+  String get authValidatorPasswordMinLength => 'Password must be at least 6 characters';
+
+  @override
+  String get authErrorDuplicateEmail => 'This email is already registered. Please log in instead.';
+
+  @override
+  String get authErrorInvalidCredentials => 'Incorrect email or password.';
+
+  @override
+  String get authErrorGeneric => 'Something went wrong. Please try again.';
 
   @override
   String get languageDialogTitle => 'Language';

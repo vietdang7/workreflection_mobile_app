@@ -176,7 +176,12 @@
 
   "authValidatorName": "Vui lòng nhập tên",
   "authValidatorEmail": "Vui lòng nhập email",
+  "authValidatorEmailFormat": "Email không hợp lệ",
   "authValidatorPassword": "Vui lòng nhập mật khẩu",
+  "authValidatorPasswordMinLength": "Mật khẩu phải có ít nhất 6 ký tự",
+  "authErrorDuplicateEmail": "Email này đã được đăng ký. Vui lòng đăng nhập.",
+  "authErrorInvalidCredentials": "Email hoặc mật khẩu không đúng.",
+  "authErrorGeneric": "Đã xảy ra lỗi. Vui lòng thử lại.",
 
   "languageDialogTitle": "Ngôn ngữ",
   "languageOptionVietnamese": "Tiếng Việt",
