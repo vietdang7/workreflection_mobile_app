@@ -3283,6 +3283,150 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Thiết bị không hỗ trợ nhập bằng giọng nói'**
   String get voiceInputUnavailable;
+
+  /// No description provided for @reportPdfExport.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xuất PDF'**
+  String get reportPdfExport;
+
+  /// No description provided for @reportPdfGenerating.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tạo PDF…'**
+  String get reportPdfGenerating;
+
+  /// No description provided for @reportPdfError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tạo PDF. Vui lòng thử lại.'**
+  String get reportPdfError;
+
+  /// No description provided for @reportPdfCover.
+  ///
+  /// In vi, this message translates to:
+  /// **'Báo cáo Work Reflection'**
+  String get reportPdfCover;
+
+  /// No description provided for @reportPdfTotalScore.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm tổng'**
+  String get reportPdfTotalScore;
+
+  /// No description provided for @reportPdfBottleneck.
+  ///
+  /// In vi, this message translates to:
+  /// **'Điểm cần cải thiện nhất'**
+  String get reportPdfBottleneck;
+
+  /// No description provided for @reportPdfEsiSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chỉ số hài lòng nhân viên (ESI)'**
+  String get reportPdfEsiSection;
+
+  /// No description provided for @reportPdfEnpsSection.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mức độ gắn kết (eNPS)'**
+  String get reportPdfEnpsSection;
+
+  /// No description provided for @reportPdfFooter.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cloud & Coral  |  Nền tảng Work Reflection  |  www.cloudandcoral.com'**
+  String get reportPdfFooter;
+
+  /// No description provided for @reportPdfPreparedFor.
+  ///
+  /// In vi, this message translates to:
+  /// **'Báo cáo dành cho'**
+  String get reportPdfPreparedFor;
+
+  /// No description provided for @reportPdfDateLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày báo cáo'**
+  String get reportPdfDateLabel;
+
+  /// No description provided for @reportPdfFreeTier.
+  ///
+  /// In vi, this message translates to:
+  /// **'Báo cáo Miễn phí'**
+  String get reportPdfFreeTier;
+
+  /// No description provided for @reportPdfPremiumTier.
+  ///
+  /// In vi, this message translates to:
+  /// **'Báo cáo Premium'**
+  String get reportPdfPremiumTier;
+
+  /// No description provided for @wsCertificateDownload.
+  ///
+  /// In vi, this message translates to:
+  /// **'Tải chứng nhận'**
+  String get wsCertificateDownload;
+
+  /// No description provided for @wsCertificateGenerating.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tạo chứng nhận…'**
+  String get wsCertificateGenerating;
+
+  /// No description provided for @wsCertificateError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không thể tạo chứng nhận. Vui lòng thử lại.'**
+  String get wsCertificateError;
+
+  /// No description provided for @wsCertificateTitleLine1.
+  ///
+  /// In vi, this message translates to:
+  /// **'CERTIFICATE OF ATTENDANCE'**
+  String get wsCertificateTitleLine1;
+
+  /// No description provided for @wsCertificateTitleLine2.
+  ///
+  /// In vi, this message translates to:
+  /// **'Chứng nhận tham dự'**
+  String get wsCertificateTitleLine2;
+
+  /// No description provided for @wsCertificateCertifiesLine.
+  ///
+  /// In vi, this message translates to:
+  /// **'This is to certify that / Chứng nhận rằng'**
+  String get wsCertificateCertifiesLine;
+
+  /// No description provided for @wsCertificateAttendedLine.
+  ///
+  /// In vi, this message translates to:
+  /// **'has successfully completed the workshop / Đã tham dự thành công'**
+  String get wsCertificateAttendedLine;
+
+  /// No description provided for @wsCertificateFacilitator.
+  ///
+  /// In vi, this message translates to:
+  /// **'Facilitator'**
+  String get wsCertificateFacilitator;
+
+  /// No description provided for @wsCertificateOrg.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cloud & Coral'**
+  String get wsCertificateOrg;
+
+  /// No description provided for @wsCertificateFooter.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cloud & Coral  |  Nền tảng phát triển tổ chức  |  www.cloudandcoral.com'**
+  String get wsCertificateFooter;
+
+  /// No description provided for @wsCertificateIssuedLabel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ngày cấp'**
+  String get wsCertificateIssuedLabel;
 }
 
 class _AppLocalizationsDelegate

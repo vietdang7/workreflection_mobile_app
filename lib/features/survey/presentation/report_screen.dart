@@ -3,11 +3,13 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:printing/printing.dart';
 
 import '../../../core/logic/sca_chart_data.dart';
 import '../../../core/logic/survey_scoring.dart';
 import '../../../core/models/ai_personalization_models.dart';
 import '../../../core/models/survey_models.dart';
+import '../../../core/pdf/report_pdf_builder.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
 import '../../../core/widgets/eyebrow.dart';
@@ -25,15 +27,119 @@ final _reportProvider =
   return repo.getReport(reportId);
 });
 
-class ReportScreen extends ConsumerWidget {
+class ReportScreen extends ConsumerStatefulWidget {
   const ReportScreen({super.key, required this.reportId});
   final String reportId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<ReportScreen> createState() => _ReportScreenState();
+}
+
+class _ReportScreenState extends ConsumerState<ReportScreen> {
+  bool _isExporting = false;
+
+  Future<void> _exportPdf(
+    CcReportFull report,
+    List<CcNarrative> narratives,
+  ) async {
+    if (_isExporting) return;
+    setState(() => _isExporting = true);
+
     final l10n = AppLocalizations.of(context)!;
-    final reportAsync = ref.watch(_reportProvider(reportId));
+    final localeCode = ref.read(appLocaleProvider);
+    final ccProfile = ref.read(ccProfileProvider).valueOrNull;
+    final userName = (ccProfile?['full_name'] as String?)?.isNotEmpty == true
+        ? ccProfile!['full_name'] as String
+        : (ccProfile?['email'] as String?) ?? '';
+
+    String? narrativeText(CcNarrative? n) {
+      if (n == null) return null;
+      if (localeCode == 'en' && n.narrativeTextEn != null) {
+        return n.narrativeTextEn;
+      }
+      return n.narrativeText;
+    }
+
+    CcNarrative? narrative(String type, {String? layer}) {
+      final score = type == 'TOTAL'
+          ? report.scoreTotal
+          : type == 'BOTTLENECK'
+              ? _layerScore(report, report.bottleneckLayer)
+              : _layerScore(
+                  report,
+                  layer != null
+                      ? SurveyLayer.fromJson(layer)
+                      : SurveyLayer.structure);
+      return selectNarrative(
+        narratives,
+        type: type,
+        layer: layer,
+        score: score,
+        language: localeCode,
+      );
+    }
+
+    final data = ReportPdfData(
+      userName: userName,
+      reportDate: report.createdAt,
+      totalScore: report.scoreTotal,
+      scoreLevel: report.scoreLevel,
+      scoreStructure: report.scoreStructure,
+      scoreCulture: report.scoreCulture,
+      scoreActivity: report.scoreActivity,
+      bottleneckLayer: _bottleneckLayerLabel(report.bottleneckLayer, l10n),
+      bottleneckNarrative:
+          narrativeText(narrative('BOTTLENECK', layer: report.bottleneckLayer.toJson())),
+      structureNarrative: narrativeText(narrative('LAYER', layer: 'STRUCTURE')),
+      cultureNarrative: narrativeText(narrative('LAYER', layer: 'CULTURE')),
+      activityNarrative: narrativeText(narrative('LAYER', layer: 'ACTIVITY')),
+      scoreEsi: report.scoreEsi,
+      scoreEnps: report.scoreEnps,
+      locale: localeCode,
+    );
+
+    try {
+      final bytes = await ReportPdfBuilder.build(data);
+      final safeDate = report.createdAt.toIso8601String().substring(0, 10);
+      await Printing.sharePdf(
+        bytes: bytes,
+        filename: 'report-$safeDate.pdf',
+      );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.reportPdfError)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isExporting = false);
+    }
+  }
+
+  String _bottleneckLayerLabel(SurveyLayer layer, AppLocalizations l10n) =>
+      switch (layer) {
+        SurveyLayer.structure => l10n.reportLayerStructure,
+        SurveyLayer.culture => l10n.reportLayerCulture,
+        SurveyLayer.activity => l10n.reportLayerActivity,
+        _ => '',
+      };
+
+  double _layerScore(CcReportFull report, SurveyLayer layer) => switch (layer) {
+        SurveyLayer.structure => report.scoreStructure,
+        SurveyLayer.culture => report.scoreCulture,
+        SurveyLayer.activity => report.scoreActivity,
+        _ => 0,
+      };
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    final reportAsync = ref.watch(_reportProvider(widget.reportId));
     final narrativesAsync = ref.watch(narrativesProvider);
+
+    // Determine if export is possible (both report and narratives loaded).
+    final canExport = reportAsync.valueOrNull != null &&
+        narrativesAsync.valueOrNull != null;
 
     return Scaffold(
       backgroundColor: WrColors.white,
@@ -45,6 +151,30 @@ class ReportScreen extends ConsumerWidget {
           onPressed: () => context.go('/understand'),
         ),
         title: Text(l10n.reportTitle, style: WrTextStyles.hMedium),
+        actions: [
+          if (canExport)
+            _isExporting
+                ? const Padding(
+                    padding: EdgeInsets.all(14),
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: WrColors.coral,
+                      ),
+                    ),
+                  )
+                : IconButton(
+                    key: const Key('report_pdf_export'),
+                    icon: const Icon(Icons.share_outlined, color: WrColors.navy),
+                    tooltip: l10n.reportPdfExport,
+                    onPressed: () => _exportPdf(
+                      reportAsync.value!,
+                      narrativesAsync.value!,
+                    ),
+                  ),
+        ],
       ),
       body: reportAsync.when(
         loading: () =>

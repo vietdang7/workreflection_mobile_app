@@ -1706,4 +1706,81 @@ class AppLocalizationsVi extends AppLocalizations {
   @override
   String get voiceInputUnavailable =>
       'Thiết bị không hỗ trợ nhập bằng giọng nói';
+
+  @override
+  String get reportPdfExport => 'Xuất PDF';
+
+  @override
+  String get reportPdfGenerating => 'Đang tạo PDF…';
+
+  @override
+  String get reportPdfError => 'Không thể tạo PDF. Vui lòng thử lại.';
+
+  @override
+  String get reportPdfCover => 'Báo cáo Work Reflection';
+
+  @override
+  String get reportPdfTotalScore => 'Điểm tổng';
+
+  @override
+  String get reportPdfBottleneck => 'Điểm cần cải thiện nhất';
+
+  @override
+  String get reportPdfEsiSection => 'Chỉ số hài lòng nhân viên (ESI)';
+
+  @override
+  String get reportPdfEnpsSection => 'Mức độ gắn kết (eNPS)';
+
+  @override
+  String get reportPdfFooter =>
+      'Cloud & Coral  |  Nền tảng Work Reflection  |  www.cloudandcoral.com';
+
+  @override
+  String get reportPdfPreparedFor => 'Báo cáo dành cho';
+
+  @override
+  String get reportPdfDateLabel => 'Ngày báo cáo';
+
+  @override
+  String get reportPdfFreeTier => 'Báo cáo Miễn phí';
+
+  @override
+  String get reportPdfPremiumTier => 'Báo cáo Premium';
+
+  @override
+  String get wsCertificateDownload => 'Tải chứng nhận';
+
+  @override
+  String get wsCertificateGenerating => 'Đang tạo chứng nhận…';
+
+  @override
+  String get wsCertificateError =>
+      'Không thể tạo chứng nhận. Vui lòng thử lại.';
+
+  @override
+  String get wsCertificateTitleLine1 => 'CERTIFICATE OF ATTENDANCE';
+
+  @override
+  String get wsCertificateTitleLine2 => 'Chứng nhận tham dự';
+
+  @override
+  String get wsCertificateCertifiesLine =>
+      'This is to certify that / Chứng nhận rằng';
+
+  @override
+  String get wsCertificateAttendedLine =>
+      'has successfully completed the workshop / Đã tham dự thành công';
+
+  @override
+  String get wsCertificateFacilitator => 'Facilitator';
+
+  @override
+  String get wsCertificateOrg => 'Cloud & Coral';
+
+  @override
+  String get wsCertificateFooter =>
+      'Cloud & Coral  |  Nền tảng phát triển tổ chức  |  www.cloudandcoral.com';
+
+  @override
+  String get wsCertificateIssuedLabel => 'Ngày cấp';
 }

@@ -741,5 +741,31 @@
   "voiceInputListening": "Đang nghe…",
   "voiceInputStopListening": "Dừng nghe",
   "voiceInputNoMatch": "Không nhận diện được — hãy nhấn để thử lại",
-  "voiceInputUnavailable": "Thiết bị không hỗ trợ nhập bằng giọng nói"
+  "voiceInputUnavailable": "Thiết bị không hỗ trợ nhập bằng giọng nói",
+
+  "reportPdfExport": "Xuất PDF",
+  "reportPdfGenerating": "Đang tạo PDF…",
+  "reportPdfError": "Không thể tạo PDF. Vui lòng thử lại.",
+  "reportPdfCover": "Báo cáo Work Reflection",
+  "reportPdfTotalScore": "Điểm tổng",
+  "reportPdfBottleneck": "Điểm cần cải thiện nhất",
+  "reportPdfEsiSection": "Chỉ số hài lòng nhân viên (ESI)",
+  "reportPdfEnpsSection": "Mức độ gắn kết (eNPS)",
+  "reportPdfFooter": "Cloud & Coral  |  Nền tảng Work Reflection  |  www.cloudandcoral.com",
+  "reportPdfPreparedFor": "Báo cáo dành cho",
+  "reportPdfDateLabel": "Ngày báo cáo",
+  "reportPdfFreeTier": "Báo cáo Miễn phí",
+  "reportPdfPremiumTier": "Báo cáo Premium",
+
+  "wsCertificateDownload": "Tải chứng nhận",
+  "wsCertificateGenerating": "Đang tạo chứng nhận…",
+  "wsCertificateError": "Không thể tạo chứng nhận. Vui lòng thử lại.",
+  "wsCertificateTitleLine1": "CERTIFICATE OF ATTENDANCE",
+  "wsCertificateTitleLine2": "Chứng nhận tham dự",
+  "wsCertificateCertifiesLine": "This is to certify that / Chứng nhận rằng",
+  "wsCertificateAttendedLine": "has successfully completed the workshop / Đã tham dự thành công",
+  "wsCertificateFacilitator": "Facilitator",
+  "wsCertificateOrg": "Cloud & Coral",
+  "wsCertificateFooter": "Cloud & Coral  |  Nền tảng phát triển tổ chức  |  www.cloudandcoral.com",
+  "wsCertificateIssuedLabel": "Ngày cấp"
 }

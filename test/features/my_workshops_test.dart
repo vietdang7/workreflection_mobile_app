@@ -288,5 +288,44 @@ void main() {
 
       expect(find.byKey(const Key('my_ws_view_results')), findsNothing);
     });
+
+    // -----------------------------------------------------------------------
+    // Certificate download button — Phase 5 Task 10
+    // Eligibility: reg.attended == true (mirrors web line 586)
+    // -----------------------------------------------------------------------
+
+    testWidgets('download certificate button shown when attended=true',
+        (tester) async {
+      repo.seedWorkshops([_ws()]);
+      repo.seedRegistration(_reg(attended: true));
+
+      await tester.pumpWidget(_wrap(repo));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('my_ws_download_cert')), findsOneWidget);
+    });
+
+    testWidgets('download certificate button NOT shown when attended=false',
+        (tester) async {
+      repo.seedWorkshops([_ws()]);
+      repo.seedRegistration(_reg(attended: false));
+
+      await tester.pumpWidget(_wrap(repo));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('my_ws_download_cert')), findsNothing);
+    });
+
+    testWidgets(
+        'download certificate button NOT shown for cancelled registration',
+        (tester) async {
+      repo.seedWorkshops([_ws()]);
+      repo.seedRegistration(_reg(status: 'cancelled', attended: false));
+
+      await tester.pumpWidget(_wrap(repo));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('my_ws_download_cert')), findsNothing);
+    });
   });
 }

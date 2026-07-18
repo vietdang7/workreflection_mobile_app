@@ -1,4 +1,4 @@
-// My Workshops screen — Phase 3 Task 11 / Phase 5 Task 7.
+// My Workshops screen — Phase 3 Task 11 / Phase 5 Task 7 / Phase 5 Task 10.
 //
 // Shows all the current user's workshop registrations, each paired with
 // workshop detail. Tapping a row navigates to the workshop detail screen.
@@ -8,18 +8,23 @@
 //   - Cancel registration (matches web: status='cancelled', 48h cutoff,
 //     personal only, payment_status != 'paid').
 //   - Survey results link when a survey is completed for a past workshop.
+//   - Task 10: "Tải chứng nhận" button when reg.attended == true (mirrors
+//     web MyWorkshops.tsx line 586: {reg.attended && <Button…>}).
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
+import 'package:printing/printing.dart';
 
 import '../../../core/data/workshop_repository.dart';
 import '../../../core/models/workshop_models.dart';
+import '../../../core/pdf/certificate_pdf_builder.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../profile/profile_providers.dart';
 import '../workshops_providers.dart';
 
 class MyWorkshopsScreen extends ConsumerStatefulWidget {
@@ -34,6 +39,9 @@ class _MyWorkshopsScreenState extends ConsumerState<MyWorkshopsScreen> {
   String? _pendingCancelId;
   String? _pendingCancelWorkshopId;
   bool _cancelling = false;
+
+  /// Set of registration ids currently generating a certificate PDF.
+  final Set<String> _generatingCertFor = {};
 
   Future<void> _confirmCancel() async {
     final regId = _pendingCancelId;
@@ -65,6 +73,52 @@ class _MyWorkshopsScreenState extends ConsumerState<MyWorkshopsScreen> {
           _pendingCancelWorkshopId = null;
         });
       }
+    }
+  }
+
+  /// Generates and shares a certificate PDF for an attended workshop.
+  ///
+  /// Eligibility mirrors web line 586: button shown when reg.attended == true.
+  Future<void> _generateCertificate(
+    WorkshopRegistration reg,
+    WorkshopDetail workshop,
+  ) async {
+    if (_generatingCertFor.contains(reg.id)) return;
+    setState(() => _generatingCertFor.add(reg.id));
+
+    final l10n = AppLocalizations.of(context)!;
+    final locale = ref.read(appLocaleProvider);
+
+    // Fetch participant name from cc_profiles.full_name (fallback to email).
+    final ccProfile = ref.read(ccProfileProvider).valueOrNull;
+    final participantName =
+        (ccProfile?['full_name'] as String?)?.isNotEmpty == true
+            ? ccProfile!['full_name'] as String
+            : ccProfile?['email'] as String?;
+
+    try {
+      final bytes = await CertificatePdfBuilder.build(
+        CertificateData(
+          participantName: participantName,
+          workshopTitle: workshop.title,
+          workshopDate: workshop.date,
+          workshopLocation: workshop.location,
+          locale: locale,
+        ),
+      );
+      final safeTitle = workshop.title.replaceAll(RegExp(r'\s+'), '_');
+      await Printing.sharePdf(
+        bytes: bytes,
+        filename: 'Certificate_$safeTitle.pdf',
+      );
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.wsCertificateError)),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _generatingCertFor.remove(reg.id));
     }
   }
 
@@ -112,6 +166,12 @@ class _MyWorkshopsScreenState extends ConsumerState<MyWorkshopsScreen> {
                           _pendingCancelWorkshopId = reg.workshopId;
                         })
                     : null,
+                onDownloadCertificate:
+                    (reg.attended && workshop != null)
+                        ? () => _generateCertificate(reg, workshop)
+                        : null,
+                isGeneratingCertificate:
+                    _generatingCertFor.contains(reg.id),
               );
             },
           );
@@ -161,12 +221,18 @@ class _MyWorkshopRow extends ConsumerWidget {
     required this.workshop,
     required this.onTap,
     this.onCancel,
+    this.onDownloadCertificate,
+    this.isGeneratingCertificate = false,
   });
 
   final WorkshopRegistration registration;
   final WorkshopDetail? workshop;
   final VoidCallback onTap;
   final VoidCallback? onCancel;
+
+  /// Non-null when reg.attended == true (mirrors web eligibility line 586).
+  final VoidCallback? onDownloadCertificate;
+  final bool isGeneratingCertificate;
 
   String _formatDate(DateTime d) => DateFormat('dd/MM/yyyy').format(d);
 
@@ -262,6 +328,57 @@ class _MyWorkshopRow extends ConsumerWidget {
                     decorationColor: WrColors.muted,
                   ),
                 ),
+              ),
+            ],
+
+            // Certificate download button — shown when reg.attended == true.
+            // Eligibility mirrors web MyWorkshops.tsx line 586:
+            //   {reg.attended && <Button…onClick={generateCertificate}>}
+            if (onDownloadCertificate != null) ...[
+              const SizedBox(height: 10),
+              GestureDetector(
+                onTap: isGeneratingCertificate ? null : onDownloadCertificate,
+                child: isGeneratingCertificate
+                    ? Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: WrColors.coral,
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            l10n.wsCertificateGenerating,
+                            style: WrTextStyles.body
+                                .copyWith(color: WrColors.coral),
+                          ),
+                        ],
+                      )
+                    : Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.download_outlined,
+                            size: 16,
+                            color: WrColors.coral,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            l10n.wsCertificateDownload,
+                            key: const Key('my_ws_download_cert'),
+                            style: WrTextStyles.body.copyWith(
+                              color: WrColors.coral,
+                              fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.underline,
+                              decorationColor: WrColors.coral,
+                            ),
+                          ),
+                        ],
+                      ),
               ),
             ],
           ],

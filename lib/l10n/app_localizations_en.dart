@@ -1707,4 +1707,81 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voiceInputUnavailable => 'Voice input unavailable on this device';
+
+  @override
+  String get reportPdfExport => 'Export PDF';
+
+  @override
+  String get reportPdfGenerating => 'Generating PDF…';
+
+  @override
+  String get reportPdfError => 'Failed to generate PDF. Please try again.';
+
+  @override
+  String get reportPdfCover => 'Work Reflection Report';
+
+  @override
+  String get reportPdfTotalScore => 'Total Score';
+
+  @override
+  String get reportPdfBottleneck => 'Area needing most improvement';
+
+  @override
+  String get reportPdfEsiSection => 'Employee Satisfaction Index (ESI)';
+
+  @override
+  String get reportPdfEnpsSection => 'Employee Engagement (eNPS)';
+
+  @override
+  String get reportPdfFooter =>
+      'Cloud & Coral  |  Work Reflection Platform  |  www.cloudandcoral.com';
+
+  @override
+  String get reportPdfPreparedFor => 'Prepared for';
+
+  @override
+  String get reportPdfDateLabel => 'Report date';
+
+  @override
+  String get reportPdfFreeTier => 'Free Report';
+
+  @override
+  String get reportPdfPremiumTier => 'Premium Report';
+
+  @override
+  String get wsCertificateDownload => 'Download certificate';
+
+  @override
+  String get wsCertificateGenerating => 'Generating certificate…';
+
+  @override
+  String get wsCertificateError =>
+      'Failed to generate certificate. Please try again.';
+
+  @override
+  String get wsCertificateTitleLine1 => 'CERTIFICATE OF ATTENDANCE';
+
+  @override
+  String get wsCertificateTitleLine2 => 'Chứng nhận tham dự';
+
+  @override
+  String get wsCertificateCertifiesLine =>
+      'This is to certify that / Chứng nhận rằng';
+
+  @override
+  String get wsCertificateAttendedLine =>
+      'has successfully completed the workshop / Đã tham dự thành công';
+
+  @override
+  String get wsCertificateFacilitator => 'Facilitator';
+
+  @override
+  String get wsCertificateOrg => 'Cloud & Coral';
+
+  @override
+  String get wsCertificateFooter =>
+      'Cloud & Coral  |  Nền tảng phát triển tổ chức  |  www.cloudandcoral.com';
+
+  @override
+  String get wsCertificateIssuedLabel => 'Issued';
 }

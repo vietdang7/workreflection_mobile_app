@@ -275,6 +275,27 @@ void main() {
 
       expect(find.text('BỨC TRANH S-C-A'), findsNothing);
     });
+
+    testWidgets('PDF export button appears in AppBar when report is loaded',
+        (tester) async {
+      final report = _report();
+      repo.seedLatestReport(report);
+
+      await tester.pumpWidget(_wrap(ReportScreen(reportId: 'r1'), repo: repo));
+      await tester.pumpAndSettle();
+
+      // The share icon button should appear after data loads.
+      expect(find.byKey(const Key('report_pdf_export')), findsOneWidget);
+    });
+
+    testWidgets('PDF export button absent while report is loading',
+        (tester) async {
+      // Do NOT seed a report — loading state persists.
+      await tester.pumpWidget(_wrap(ReportScreen(reportId: 'r1'), repo: repo));
+      await tester.pump(); // one frame — still loading
+
+      expect(find.byKey(const Key('report_pdf_export')), findsNothing);
+    });
   });
 
   // ---------------------------------------------------------------------------

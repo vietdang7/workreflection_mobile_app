@@ -740,5 +740,31 @@
   "voiceInputListening": "Listening…",
   "voiceInputStopListening": "Stop listening",
   "voiceInputNoMatch": "Could not recognise your answer — please tap to try again",
-  "voiceInputUnavailable": "Voice input unavailable on this device"
+  "voiceInputUnavailable": "Voice input unavailable on this device",
+
+  "reportPdfExport": "Export PDF",
+  "reportPdfGenerating": "Generating PDF…",
+  "reportPdfError": "Failed to generate PDF. Please try again.",
+  "reportPdfCover": "Work Reflection Report",
+  "reportPdfTotalScore": "Total Score",
+  "reportPdfBottleneck": "Area needing most improvement",
+  "reportPdfEsiSection": "Employee Satisfaction Index (ESI)",
+  "reportPdfEnpsSection": "Employee Engagement (eNPS)",
+  "reportPdfFooter": "Cloud & Coral  |  Work Reflection Platform  |  www.cloudandcoral.com",
+  "reportPdfPreparedFor": "Prepared for",
+  "reportPdfDateLabel": "Report date",
+  "reportPdfFreeTier": "Free Report",
+  "reportPdfPremiumTier": "Premium Report",
+
+  "wsCertificateDownload": "Download certificate",
+  "wsCertificateGenerating": "Generating certificate…",
+  "wsCertificateError": "Failed to generate certificate. Please try again.",
+  "wsCertificateTitleLine1": "CERTIFICATE OF ATTENDANCE",
+  "wsCertificateTitleLine2": "Chứng nhận tham dự",
+  "wsCertificateCertifiesLine": "This is to certify that / Chứng nhận rằng",
+  "wsCertificateAttendedLine": "has successfully completed the workshop / Đã tham dự thành công",
+  "wsCertificateFacilitator": "Facilitator",
+  "wsCertificateOrg": "Cloud & Coral",
+  "wsCertificateFooter": "Cloud & Coral  |  Nền tảng phát triển tổ chức  |  www.cloudandcoral.com",
+  "wsCertificateIssuedLabel": "Issued"
 }
