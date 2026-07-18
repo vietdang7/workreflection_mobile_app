@@ -612,6 +612,9 @@ class AppLocalizationsVi extends AppLocalizations {
   String get wsCheckinError => 'Check-in thất bại. Vui lòng thử lại.';
 
   @override
+  String get wsLinkCopied => 'Đã sao chép liên kết';
+
+  @override
   String get wsConsentTitle => 'Cho phép sử dụng hình ảnh';
 
   @override

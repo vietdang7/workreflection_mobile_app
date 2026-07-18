@@ -279,6 +279,7 @@
   "wsCheckinClosed": "Đã hết giờ check-in",
   "wsCheckinSuccess": "Check-in thành công!",
   "wsCheckinError": "Check-in thất bại. Vui lòng thử lại.",
+  "wsLinkCopied": "Đã sao chép liên kết",
 
   "wsConsentTitle": "Cho phép sử dụng hình ảnh",
   "wsConsentBody": "Bạn có đồng ý cho chúng tôi sử dụng hình ảnh có bạn trong workshop cho mục đích truyền thông không?",

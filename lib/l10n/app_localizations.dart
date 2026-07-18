@@ -1238,6 +1238,12 @@ abstract class AppLocalizations {
   /// **'Check-in thất bại. Vui lòng thử lại.'**
   String get wsCheckinError;
 
+  /// No description provided for @wsLinkCopied.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đã sao chép liên kết'**
+  String get wsLinkCopied;
+
   /// No description provided for @wsConsentTitle.
   ///
   /// In vi, this message translates to:

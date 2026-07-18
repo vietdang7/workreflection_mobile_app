@@ -223,7 +223,7 @@ class _ErrorCard extends StatelessWidget {
           const SizedBox(height: 16),
           TextButton(
             onPressed: onRetry,
-            child: const Text('Thử lại'),
+            child: Text(AppLocalizations.of(context)!.homeRetry),
           ),
         ],
       ),

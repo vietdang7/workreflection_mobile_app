@@ -486,10 +486,11 @@ class _AttachmentRow extends StatelessWidget {
       leading: Icon(_icon, color: WrColors.navy),
       title: Text(attachment.fileName, style: WrTextStyles.body),
       onTap: () async {
+        final l10n = AppLocalizations.of(context)!;
         await Clipboard.setData(ClipboardData(text: attachment.fileUrl));
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Đã sao chép liên kết')),
+            SnackBar(content: Text(l10n.wsLinkCopied)),
           );
         }
       },
@@ -539,7 +540,7 @@ class _ErrorCard extends StatelessWidget {
           const SizedBox(height: 16),
           TextButton(
             onPressed: onRetry,
-            child: const Text('Thử lại'),
+            child: Text(AppLocalizations.of(context)!.homeRetry),
           ),
         ],
       ),

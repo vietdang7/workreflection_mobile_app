@@ -611,6 +611,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get wsCheckinError => 'Check-in failed. Please try again.';
 
   @override
+  String get wsLinkCopied => 'Link copied';
+
+  @override
   String get wsConsentTitle => 'Consent to image use';
 
   @override
