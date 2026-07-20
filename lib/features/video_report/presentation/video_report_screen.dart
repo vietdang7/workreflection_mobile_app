@@ -5,7 +5,7 @@
 // derived from the current position in milliseconds. Provides play/pause, a
 // seek slider, and a close button.
 //
-// No l10n yet (Task 7 adds it). No MP4 export (out of scope).
+// Strings are localized via AppLocalizations. No MP4 export (out of scope).
 
 import 'dart:async';
 

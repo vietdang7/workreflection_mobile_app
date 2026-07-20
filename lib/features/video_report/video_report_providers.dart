@@ -56,6 +56,9 @@ final videoReportDataProvider =
     userId: report.userId,
     text: scenes.map((s) => s.text).join(' '),
     narrationScript: {
+      // Mark this job as mobile-generated so findCompletedJob can reuse it
+      // later (and so web-Gemini jobs stay out of the mobile cache path).
+      'source': kMobileNarrationSource,
       'scenes':
           scenes.map((s) => {'id': s.id.name, 'text': s.text}).toList(),
     },
