@@ -245,6 +245,11 @@
   "reportAiModelSectionTitle": "Your Work Model",
   "reportAiReflectionSectionTitle": "Personal Reflection",
   "reportAiRelationshipSectionTitle": "Work Relationships",
+  "videoReportButton": "Watch video report",
+  "videoReportTitle": "Video report",
+  "videoReportGenerating": "Generating your video report…",
+  "videoReportError": "Couldn't create the video. Please try again.",
+  "videoReportRetry": "Retry",
 
   "surveyHistoryTitle": "Survey History",
   "surveyHistoryScoreLabel": "Score",

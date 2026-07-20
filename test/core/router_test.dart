@@ -1,4 +1,6 @@
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/router/app_router.dart';
 import 'package:workreflection_mobile/core/router/auth_change_notifier.dart';
 
@@ -195,6 +197,29 @@ void main() {
         ),
         isNull,
       );
+    });
+  });
+
+  group('route configuration', () {
+    // Regression: the video report route must be registered so
+    // context.push('/survey/report/:id/video') resolves the VideoReportScreen.
+    test('has a /survey/report/:id/video route', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      final router = container.read(appRouterProvider);
+
+      final paths = <String>[];
+      void collect(List<RouteBase> routes) {
+        for (final r in routes) {
+          if (r is GoRoute) paths.add(r.path);
+          collect(r.routes);
+        }
+      }
+
+      collect(router.configuration.routes);
+
+      expect(paths, contains('/survey/report/:id/video'));
     });
   });
 

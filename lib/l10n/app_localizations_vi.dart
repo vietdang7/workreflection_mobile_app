@@ -389,10 +389,12 @@ class AppLocalizationsVi extends AppLocalizations {
   String get authValidatorPassword => 'Vui lòng nhập mật khẩu';
 
   @override
-  String get authValidatorPasswordMinLength => 'Mật khẩu phải có ít nhất 6 ký tự';
+  String get authValidatorPasswordMinLength =>
+      'Mật khẩu phải có ít nhất 6 ký tự';
 
   @override
-  String get authErrorDuplicateEmail => 'Email này đã được đăng ký. Vui lòng đăng nhập.';
+  String get authErrorDuplicateEmail =>
+      'Email này đã được đăng ký. Vui lòng đăng nhập.';
 
   @override
   String get authErrorInvalidCredentials => 'Email hoặc mật khẩu không đúng.';
@@ -559,6 +561,21 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get reportAiRelationshipSectionTitle => 'Mối quan hệ trong công việc';
+
+  @override
+  String get videoReportButton => 'Xem video báo cáo';
+
+  @override
+  String get videoReportTitle => 'Video báo cáo';
+
+  @override
+  String get videoReportGenerating => 'Đang tạo video báo cáo…';
+
+  @override
+  String get videoReportError => 'Không tạo được video. Vui lòng thử lại.';
+
+  @override
+  String get videoReportRetry => 'Thử lại';
 
   @override
   String get surveyHistoryTitle => 'Lịch sử khảo sát';

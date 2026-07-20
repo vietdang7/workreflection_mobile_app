@@ -1148,6 +1148,36 @@ abstract class AppLocalizations {
   /// **'Mối quan hệ trong công việc'**
   String get reportAiRelationshipSectionTitle;
 
+  /// No description provided for @videoReportButton.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xem video báo cáo'**
+  String get videoReportButton;
+
+  /// No description provided for @videoReportTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Video báo cáo'**
+  String get videoReportTitle;
+
+  /// No description provided for @videoReportGenerating.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đang tạo video báo cáo…'**
+  String get videoReportGenerating;
+
+  /// No description provided for @videoReportError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không tạo được video. Vui lòng thử lại.'**
+  String get videoReportError;
+
+  /// No description provided for @videoReportRetry.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thử lại'**
+  String get videoReportRetry;
+
   /// No description provided for @surveyHistoryTitle.
   ///
   /// In vi, this message translates to:

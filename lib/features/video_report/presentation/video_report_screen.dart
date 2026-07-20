@@ -12,6 +12,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:workreflection_mobile/l10n/app_localizations.dart';
 import '../../../core/models/survey_models.dart';
 import '../../profile/profile_providers.dart';
 import '../../survey/survey_providers.dart';
@@ -100,6 +101,7 @@ class _VideoReportScreenState extends ConsumerState<VideoReportScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
     final async = ref.watch(videoReportDataProvider(widget.reportId));
 
     return Scaffold(
@@ -108,21 +110,22 @@ class _VideoReportScreenState extends ConsumerState<VideoReportScreen> {
         backgroundColor: _kBg,
         foregroundColor: Colors.white,
         elevation: 0,
+        title: Text(l10n.videoReportTitle),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.of(context).maybePop(),
         ),
       ),
       body: async.when(
-        loading: () => const Center(
+        loading: () => Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 16),
+              const CircularProgressIndicator(),
+              const SizedBox(height: 16),
               Text(
-                'Generating your video…',
-                style: TextStyle(color: Colors.white70),
+                l10n.videoReportGenerating,
+                style: const TextStyle(color: Colors.white70),
               ),
             ],
           ),
@@ -131,15 +134,15 @@ class _VideoReportScreenState extends ConsumerState<VideoReportScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
-                'Something went wrong.',
-                style: TextStyle(color: Colors.white70),
+              Text(
+                l10n.videoReportError,
+                style: const TextStyle(color: Colors.white70),
               ),
               const SizedBox(height: 12),
               ElevatedButton(
                 onPressed: () => ref
                     .invalidate(videoReportDataProvider(widget.reportId)),
-                child: const Text('Retry'),
+                child: Text(l10n.videoReportRetry),
               ),
             ],
           ),
