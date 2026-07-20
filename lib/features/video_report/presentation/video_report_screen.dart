@@ -1,0 +1,264 @@
+// Video Report — audio-synced player screen.
+//
+// Plays the report's TTS audio and uses the playback position as the master
+// clock: the current animated scene (VideoSceneView) and a subtitle overlay are
+// derived from the current position in milliseconds. Provides play/pause, a
+// seek slider, and a close button.
+//
+// No l10n yet (Task 7 adds it). No MP4 export (out of scope).
+
+import 'dart:async';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+import '../../../core/models/survey_models.dart';
+import '../../profile/profile_providers.dart';
+import '../../survey/survey_providers.dart';
+import '../data/video_audio_controller.dart';
+import '../data/video_report_repository.dart';
+import '../models/video_report_models.dart';
+import '../video_report_providers.dart';
+import 'scenes/video_scene_view.dart';
+
+const _kBg = Color(0xFF0B1121);
+
+/// Fetches the [CcReportFull] the scene widgets render. Kept local to the
+/// screen so we do not touch existing survey providers.
+final _screenReportProvider =
+    FutureProvider.family<CcReportFull?, String>((ref, reportId) async {
+  return ref.watch(surveyRepositoryProvider).getReport(reportId);
+});
+
+/// Resolves the display name for the intro/closing scenes from the cc profile.
+final _screenUserNameProvider = FutureProvider<String>((ref) async {
+  final profile = await ref.watch(ccProfileProvider.future);
+  return (profile['full_name'] as String?) ??
+      (profile['email'] as String?) ??
+      '';
+});
+
+class VideoReportScreen extends ConsumerStatefulWidget {
+  const VideoReportScreen({super.key, required this.reportId});
+
+  final String reportId;
+
+  @override
+  ConsumerState<VideoReportScreen> createState() => _VideoReportScreenState();
+}
+
+class _VideoReportScreenState extends ConsumerState<VideoReportScreen> {
+  StreamSubscription<Duration>? _positionSub;
+  bool _loaded = false;
+
+  int _posMs = 0;
+  bool _playing = false;
+
+  /// Loads audio into the controller and starts playback exactly once.
+  void _ensureLoaded(VideoReportData data) {
+    if (_loaded) return;
+    _loaded = true;
+
+    final controller = ref.read(videoAudioControllerProvider);
+    final headers = ref.read(videoReportRepositoryProvider).audioHeaders();
+
+    _positionSub = controller.positionStream.listen((pos) {
+      if (!mounted) return;
+      setState(() => _posMs = pos.inMilliseconds);
+    });
+
+    // Fire-and-forget: load then autoplay.
+    () async {
+      await controller.load(data.audioUrl, headers);
+      await controller.play();
+    }();
+  }
+
+  @override
+  void dispose() {
+    _positionSub?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final async = ref.watch(videoReportDataProvider(widget.reportId));
+
+    return Scaffold(
+      backgroundColor: _kBg,
+      appBar: AppBar(
+        backgroundColor: _kBg,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.close),
+          onPressed: () => Navigator.of(context).maybePop(),
+        ),
+      ),
+      body: async.when(
+        loading: () => const Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              CircularProgressIndicator(),
+              SizedBox(height: 16),
+              Text(
+                'Generating your video…',
+                style: TextStyle(color: Colors.white70),
+              ),
+            ],
+          ),
+        ),
+        error: (e, _) => Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'Something went wrong.',
+                style: TextStyle(color: Colors.white70),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: () => ref
+                    .invalidate(videoReportDataProvider(widget.reportId)),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+        data: (data) {
+          _ensureLoaded(data);
+          return _player(data);
+        },
+      ),
+    );
+  }
+
+  // ---- Player -------------------------------------------------------------
+
+  Widget _player(VideoReportData data) {
+    final scene = _currentScene(data.scenes, _posMs);
+    final progress = _localProgress(scene, _posMs);
+    final cue = _currentCue(data.cues, _posMs);
+
+    final report = ref.watch(_screenReportProvider(widget.reportId));
+    final locale = ref.watch(appLocaleProvider);
+    final userName = ref.watch(_screenUserNameProvider).valueOrNull ?? '';
+
+    return Column(
+      children: [
+        Expanded(
+          child: Center(
+            child: AspectRatio(
+              aspectRatio: 16 / 9,
+              child: ClipRect(
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    if (report.valueOrNull != null && scene != null)
+                      VideoSceneView(
+                        sceneId: scene.id,
+                        report: report.value!,
+                        progress: progress,
+                        locale: locale,
+                        userName: userName,
+                      )
+                    else
+                      const ColoredBox(color: _kBg),
+                    if (cue != null)
+                      Align(
+                        alignment: Alignment.bottomCenter,
+                        child: _SubtitleOverlay(text: cue.text),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+        _controls(data),
+      ],
+    );
+  }
+
+  Widget _controls(VideoReportData data) {
+    final controller = ref.read(videoAudioControllerProvider);
+    final maxMs = data.audioDurationMs;
+    final sliderMax = maxMs <= 0 ? 1.0 : maxMs.toDouble();
+    final sliderValue = _posMs.clamp(0, maxMs).toDouble();
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          StreamBuilder<bool>(
+            stream: controller.playingStream,
+            initialData: controller.playing,
+            builder: (context, snap) {
+              _playing = snap.data ?? false;
+              return IconButton(
+                iconSize: 44,
+                color: Colors.white,
+                icon: Icon(_playing ? Icons.pause : Icons.play_arrow),
+                onPressed: () =>
+                    _playing ? controller.pause() : controller.play(),
+              );
+            },
+          ),
+          Slider(
+            value: sliderValue.clamp(0.0, sliderMax),
+            max: sliderMax,
+            onChanged: maxMs <= 0
+                ? null
+                : (v) =>
+                    controller.seek(Duration(milliseconds: v.round())),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ---- Position → scene / cue mapping (robust) ----------------------------
+
+  /// The scene whose [startMs, endMs) contains [posMs]; falls back to the last
+  /// scene when past the end, or null when there are no scenes.
+  TimedScene? _currentScene(List<TimedScene> scenes, int posMs) {
+    if (scenes.isEmpty) return null;
+    for (final s in scenes) {
+      if (posMs >= s.startMs && posMs < s.endMs) return s;
+    }
+    return scenes.last;
+  }
+
+  double _localProgress(TimedScene? scene, int posMs) {
+    if (scene == null || scene.durationMs <= 0) return 1.0;
+    return ((posMs - scene.startMs) / scene.durationMs).clamp(0.0, 1.0);
+  }
+
+  SubtitleCue? _currentCue(List<SubtitleCue> cues, int posMs) {
+    for (final c in cues) {
+      if (posMs >= c.startMs && posMs < c.endMs) return c;
+    }
+    return null;
+  }
+}
+
+class _SubtitleOverlay extends StatelessWidget {
+  const _SubtitleOverlay({required this.text});
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+      color: Colors.black.withValues(alpha: 0.55),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: const TextStyle(color: Colors.white, fontSize: 15, height: 1.3),
+      ),
+    );
+  }
+}
