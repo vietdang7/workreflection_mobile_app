@@ -73,4 +73,55 @@ Good block
     final timed = assignSceneTimings(scenes: const [], cues: const [], audioDurationMs: 5000);
     expect(timed, isEmpty);
   });
+
+  test('interior boundary snaps to a nearby cue boundary', () {
+    // Three equal-weight scenes over 9000ms → proportional interior boundaries
+    // at 3000 and 6000. Provide a cue whose boundary at 3100 is distinct from
+    // the proportional 3000 but is the nearest cue boundary to it, so the first
+    // interior boundary should snap to 3100 (proving the snap happened).
+    final scenes = [
+      const NarrationScene(id: VideoSceneId.intro, text: 'aaa'),
+      const NarrationScene(id: VideoSceneId.overall, text: 'aaa'),
+      const NarrationScene(id: VideoSceneId.structure, text: 'aaa'),
+    ];
+    const cues = [
+      SubtitleCue(text: 'one', startMs: 0, endMs: 3100),
+      SubtitleCue(text: 'two', startMs: 3100, endMs: 6000),
+      SubtitleCue(text: 'three', startMs: 6000, endMs: 9000),
+    ];
+    final timed =
+        assignSceneTimings(scenes: scenes, cues: cues, audioDurationMs: 9000);
+    // First interior boundary (end of scene 0 / start of scene 1) snapped.
+    expect(timed[0].endMs, 3100);
+    expect(timed[1].startMs, 3100);
+    // Invariants preserved.
+    expect(timed.first.startMs, 0);
+    expect(timed.last.endMs, 9000);
+  });
+
+  test('zero-duration guard: many scenes with sparse cues stay positive', () {
+    // Many scenes but only one interior cue boundary (2500). Naive snapping
+    // would collapse several scenes onto 2500; the guard must keep every scene
+    // strictly positive.
+    final scenes = [
+      const NarrationScene(id: VideoSceneId.intro, text: 'a'),
+      const NarrationScene(id: VideoSceneId.overall, text: 'a'),
+      const NarrationScene(id: VideoSceneId.structure, text: 'a'),
+      const NarrationScene(id: VideoSceneId.culture, text: 'a'),
+      const NarrationScene(id: VideoSceneId.activity, text: 'a'),
+    ];
+    const cues = [
+      SubtitleCue(text: 'only', startMs: 2500, endMs: 2500),
+    ];
+    final timed =
+        assignSceneTimings(scenes: scenes, cues: cues, audioDurationMs: 10000);
+    expect(timed.length, 5);
+    for (final s in timed) {
+      expect(s.endMs > s.startMs, isTrue,
+          reason: 'scene ${s.id} has non-positive duration '
+              '(${s.startMs}..${s.endMs})');
+    }
+    expect(timed.first.startMs, 0);
+    expect(timed.last.endMs, 10000);
+  });
 }

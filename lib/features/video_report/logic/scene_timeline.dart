@@ -65,9 +65,10 @@ int? _parseTimestamp(String value) {
   final hours = int.parse(m.group(1)!);
   final minutes = int.parse(m.group(2)!);
   final seconds = int.parse(m.group(3)!);
-  // Pad fractional part to milliseconds (e.g. '5' -> 500, '50' -> 500? no).
+  // SRT fractional part is decimal seconds: pad/truncate to exactly 3 digits =
+  // milliseconds ('5'->500, '05'->50, '050'->50).
   final fracRaw = m.group(4)!;
-  final frac = int.parse(fracRaw.padRight(3, '0'));
+  final frac = int.parse(fracRaw.padRight(3, '0').substring(0, 3));
   return ((hours * 3600 + minutes * 60 + seconds) * 1000) + frac;
 }
 
@@ -124,13 +125,30 @@ List<TimedScene> assignSceneTimings({
     }
     final sortedCueBoundaries = cueBoundaries.toList()..sort();
     for (var i = 1; i < boundaries.length - 1; i++) {
-      final target = boundaries[i];
-      final snapped = _nearest(sortedCueBoundaries, target);
-      // Keep monotonic (>= previous boundary).
-      boundaries[i] = snapped < boundaries[i - 1] ? boundaries[i - 1] : snapped;
+      final original = boundaries[i];
+      final snapped = _nearest(sortedCueBoundaries, original);
+      // Guard against zero-duration scenes: if snapping would collapse the
+      // previous scene to zero/negative length, keep the original proportional
+      // value instead of the snapped one.
+      final candidate =
+          snapped > boundaries[i - 1] ? snapped : original;
+      // Keep strictly monotonic (> previous boundary by at least 1ms) so every
+      // scene retains a strictly positive duration.
+      boundaries[i] =
+          candidate > boundaries[i - 1] ? candidate : boundaries[i - 1] + 1;
     }
     boundaries[0] = 0;
     boundaries[boundaries.length - 1] = duration;
+    // The forward +1 cascade above can push interior boundaries up to (or past)
+    // the final boundary, which would collapse the last scene(s). Sweep back
+    // from the end and pull each interior boundary strictly below its successor
+    // so every scene keeps a strictly positive duration whenever there is room
+    // (audioDurationMs >= scenes.length).
+    for (var i = boundaries.length - 2; i >= 1; i--) {
+      if (boundaries[i] >= boundaries[i + 1]) {
+        boundaries[i] = boundaries[i + 1] - 1;
+      }
+    }
   }
 
   final result = <TimedScene>[];
