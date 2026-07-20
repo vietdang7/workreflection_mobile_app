@@ -21,6 +21,41 @@ class RawVideoJob {
 }
 
 // ---------------------------------------------------------------------------
+// Poll-response interpretation (pure, testable)
+// ---------------------------------------------------------------------------
+
+// subtitle_data.duration is in SECONDS (num|null) → milliseconds (int|null).
+int? _durationMsFromSubtitle(Map<String, dynamic>? sub) {
+  final d = sub?['duration'];
+  if (d == null) return null;
+  return ((d as num) * 1000).round();
+}
+
+/// Interprets one tts-proxy poll response.
+/// Returns a completed RawVideoJob, null if still pending/processing,
+/// or throws if the job failed or the payload is malformed on a completed job.
+RawVideoJob? interpretPollResponse(Map<String, dynamic> data) {
+  final status = data['status'] as String?;
+
+  if (status == 'completed') {
+    final audioUrl = data['audio_url'];
+    if (audioUrl is! String) {
+      throw Exception('Video job completed but audio_url missing');
+    }
+    final sub = data['subtitle_data'] as Map<String, dynamic>?;
+    return RawVideoJob(
+      audioUrl: audioUrl,
+      srt: sub?['srt'] as String?,
+      durationMs: _durationMsFromSubtitle(sub),
+    );
+  }
+  if (status == 'failed') {
+    throw Exception(data['error_message'] as String? ?? 'TTS generation failed');
+  }
+  return null;
+}
+
+// ---------------------------------------------------------------------------
 // Abstract interface (overridable in tests)
 // ---------------------------------------------------------------------------
 
@@ -33,7 +68,7 @@ abstract class VideoReportRepository {
     required String reportId,
     required String userId,
     required String text,
-    required Object narrationScript,
+    required Map<String, dynamic> narrationScript,
     required String language,
   });
 
@@ -97,7 +132,7 @@ class SupabaseVideoReportRepository implements VideoReportRepository {
     required String reportId,
     required String userId,
     required String text,
-    required Object narrationScript,
+    required Map<String, dynamic> narrationScript,
     required String language,
   }) async {
     final voiceId = language == 'en' ? _enVoiceId : _viVoiceId;
@@ -112,8 +147,15 @@ class SupabaseVideoReportRepository implements VideoReportRepository {
       'language': language,
       'speed': 1.0,
     });
-    final createData = Map<String, dynamic>.from(createResp.data as Map);
+    final rawCreate = createResp.data;
+    if (rawCreate is! Map) {
+      throw Exception('Video job creation failed: unexpected response');
+    }
+    final createData = Map<String, dynamic>.from(rawCreate);
     final jobId = createData['job_id'];
+    if (jobId == null) {
+      throw Exception('Video job creation failed: no job_id returned');
+    }
 
     for (var attempt = 0; attempt < _maxPollAttempts; attempt++) {
       await Future.delayed(_pollInterval);
@@ -123,19 +165,9 @@ class SupabaseVideoReportRepository implements VideoReportRepository {
         'job_id': jobId,
       });
       final data = Map<String, dynamic>.from(pollResp.data as Map);
-      final status = data['status'] as String?;
 
-      if (status == 'completed') {
-        final sub = data['subtitle_data'] as Map<String, dynamic>?;
-        return RawVideoJob(
-          audioUrl: data['audio_url'] as String,
-          srt: sub?['srt'] as String?,
-          durationMs: _durationMsFromSubtitle(sub),
-        );
-      }
-      if (status == 'failed') {
-        throw Exception(data['error_message'] ?? 'TTS generation failed');
-      }
+      final job = interpretPollResponse(data);
+      if (job != null) return job;
     }
 
     throw Exception('TTS timed out');
@@ -153,11 +185,4 @@ class SupabaseVideoReportRepository implements VideoReportRepository {
             'Bearer ${_client.auth.currentSession?.accessToken ?? ''}',
         'apikey': SupabaseConfig.anonKey,
       };
-
-  // subtitle_data.duration is in SECONDS (num|null) → milliseconds (int|null).
-  int? _durationMsFromSubtitle(Map<String, dynamic>? sub) {
-    final d = sub?['duration'];
-    if (d == null) return null;
-    return ((d as num) * 1000).round();
-  }
 }
