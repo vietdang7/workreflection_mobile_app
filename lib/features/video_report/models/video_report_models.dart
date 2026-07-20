@@ -1,18 +1,16 @@
-import 'package:flutter/foundation.dart';
+// Video Report — foundation data models (scenes, subtitle cues, assembled player data).
 
 enum VideoSceneId {
   intro, overall, structure, culture, activity,
   bottleneck, esi, enps, recommendations, closing,
 }
 
-@immutable
 class NarrationScene {
   const NarrationScene({required this.id, required this.text});
   final VideoSceneId id;
   final String text;
 }
 
-@immutable
 class SubtitleCue {
   const SubtitleCue({required this.text, required this.startMs, required this.endMs});
   final String text;
@@ -20,7 +18,6 @@ class SubtitleCue {
   final int endMs;
 }
 
-@immutable
 class TimedScene {
   const TimedScene({required this.id, required this.text, required this.startMs, required this.endMs});
   final VideoSceneId id;
@@ -31,7 +28,6 @@ class TimedScene {
 }
 
 /// Fully assembled data the player needs.
-@immutable
 class VideoReportData {
   const VideoReportData({
     required this.scenes,
