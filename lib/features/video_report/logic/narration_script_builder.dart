@@ -12,6 +12,8 @@ class NarrationScriptBuilder {
 
   List<NarrationScene> build({
     required CcReportFull report,
+    // Reserved for future narrative-based enrichment; current scenes are
+    // score-based text only, so [narratives] is intentionally unused for now.
     required List<CcNarrative> narratives,
     required String userName,
     required String locale,
@@ -125,8 +127,6 @@ class NarrationScriptBuilder {
         : 'Cảm ơn bạn đã lắng nghe. Hãy bắt đầu hành trình phát triển của mình.';
   }
 
-  /// Vietnamese layer-name map keyed on the enum's canonical string
-  /// (SurveyLayer.toJson(): STRUCTURE / CULTURE / ACTIVITY / ESI / ENPS).
   String _layerName(SurveyLayer layer, bool en) {
     if (en) {
       return switch (layer) {
@@ -137,13 +137,12 @@ class NarrationScriptBuilder {
         SurveyLayer.enps => 'eNPS',
       };
     }
-    return switch (layer.toJson()) {
-      'STRUCTURE' => 'Cấu trúc',
-      'CULTURE' => 'Văn hoá',
-      'ACTIVITY' => 'Hoạt động',
-      'ESI' => 'ESI',
-      'ENPS' => 'eNPS',
-      _ => layer.toJson(),
+    return switch (layer) {
+      SurveyLayer.structure => 'Cấu trúc',
+      SurveyLayer.culture => 'Văn hoá',
+      SurveyLayer.activity => 'Hoạt động',
+      SurveyLayer.esi => 'ESI',
+      SurveyLayer.enps => 'eNPS',
     };
   }
 

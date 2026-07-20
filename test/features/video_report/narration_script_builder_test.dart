@@ -58,4 +58,28 @@ void main() {
     );
     expect(scenes.every((s) => s.text.trim().isNotEmpty), isTrue);
   });
+
+  test('english locale produces English intro and overall text', () {
+    final scenes = builder.build(
+      report: _report(), narratives: const [],
+      userName: 'An', locale: 'en', surveyType: SurveyType.premium,
+    );
+    final intro = scenes.firstWhere((s) => s.id == VideoSceneId.intro);
+    final overall = scenes.firstWhere((s) => s.id == VideoSceneId.overall);
+    expect(intro.text, contains('Hello An'));
+    expect(overall.text, contains('out of 5'));
+  });
+
+  test('empty userName falls back per locale', () {
+    final vi = builder.build(
+      report: _report(), narratives: const [],
+      userName: '', locale: 'vi', surveyType: SurveyType.premium,
+    ).firstWhere((s) => s.id == VideoSceneId.intro);
+    final en = builder.build(
+      report: _report(), narratives: const [],
+      userName: '', locale: 'en', surveyType: SurveyType.premium,
+    ).firstWhere((s) => s.id == VideoSceneId.intro);
+    expect(vi.text, contains('bạn'));
+    expect(en.text, contains('there'));
+  });
 }
