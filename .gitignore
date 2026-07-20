@@ -44,3 +44,6 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 .gitnexus
+
+# Claude Code transient agent worktrees (should never be committed)
+.claude/worktrees/
