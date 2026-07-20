@@ -34,6 +34,7 @@ class FakeVideoAudioController implements VideoAudioController {
   int loadCalls = 0;
   int playCalls = 0;
   final List<Duration> seeks = [];
+  bool disposed = false;
 
   @override
   Stream<Duration> get positionStream => positionController.stream;
@@ -70,6 +71,8 @@ class FakeVideoAudioController implements VideoAudioController {
 
   @override
   Future<void> dispose() async {
+    if (disposed) return;
+    disposed = true;
     await positionController.close();
     await _playingController.close();
   }
@@ -146,7 +149,12 @@ Widget _buildApp({
   return ProviderScope(
     overrides: [
       videoReportDataProvider('report-1').overrideWith((ref) async => data),
-      videoAudioControllerProvider.overrideWithValue(fake),
+      // Drive the fake through the REAL autoDispose lifecycle so its dispose()
+      // fires only when the screen's subscription closes (on unmount).
+      videoAudioControllerProvider.overrideWith((ref) {
+        ref.onDispose(fake.dispose);
+        return fake;
+      }),
       videoReportRepositoryProvider
           .overrideWithValue(_FakeVideoReportRepository()),
       surveyRepositoryProvider
@@ -225,5 +233,26 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.text('Second cue line.'), findsOneWidget);
+  });
+
+  testWidgets(
+      'controller lives while screen is mounted and is disposed on unmount',
+      (tester) async {
+    final fake = FakeVideoAudioController();
+    addTearDown(fake.dispose);
+
+    await tester.pumpWidget(_buildApp(fake: fake, data: _cannedData()));
+    await tester.pump();
+
+    // The screen holds a manual subscription, so the autoDispose provider (and
+    // thus the controller) must stay alive while mounted.
+    expect(fake.disposed, isFalse);
+
+    // Unmount the screen by replacing it with an unrelated widget. Closing the
+    // last subscription triggers autoDispose → onDispose(fake.dispose).
+    await tester.pumpWidget(const MaterialApp(home: SizedBox()));
+    await tester.pump();
+
+    expect(fake.disposed, isTrue);
   });
 }

@@ -52,31 +52,49 @@ class _VideoReportScreenState extends ConsumerState<VideoReportScreen> {
   bool _loaded = false;
 
   int _posMs = 0;
-  bool _playing = false;
+
+  /// Manual subscription that keeps the autoDispose [videoAudioControllerProvider]
+  /// alive for the whole screen lifetime. Closing it on [dispose] triggers the
+  /// provider's autoDispose → `onDispose(controller.dispose)`, disposing the
+  /// underlying player exactly once at unmount (never mid-load/playback).
+  late final ProviderSubscription<VideoAudioController> _controllerSub;
+
+  /// The single controller instance for this screen, obtained through
+  /// [_controllerSub]. Do NOT read the provider again elsewhere.
+  late final VideoAudioController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controllerSub = ref.listenManual(videoAudioControllerProvider, (_, __) {});
+    _controller = _controllerSub.read();
+  }
 
   /// Loads audio into the controller and starts playback exactly once.
   void _ensureLoaded(VideoReportData data) {
     if (_loaded) return;
     _loaded = true;
 
-    final controller = ref.read(videoAudioControllerProvider);
     final headers = ref.read(videoReportRepositoryProvider).audioHeaders();
 
-    _positionSub = controller.positionStream.listen((pos) {
+    _positionSub = _controller.positionStream.listen((pos) {
       if (!mounted) return;
       setState(() => _posMs = pos.inMilliseconds);
     });
 
     // Fire-and-forget: load then autoplay.
     () async {
-      await controller.load(data.audioUrl, headers);
-      await controller.play();
+      await _controller.load(data.audioUrl, headers);
+      await _controller.play();
     }();
   }
 
   @override
   void dispose() {
     _positionSub?.cancel();
+    // Closing the last subscription disposes the controller via the provider's
+    // onDispose. Do NOT call _controller.dispose() here (avoid double-dispose).
+    _controllerSub.close();
     super.dispose();
   }
 
@@ -182,7 +200,7 @@ class _VideoReportScreenState extends ConsumerState<VideoReportScreen> {
   }
 
   Widget _controls(VideoReportData data) {
-    final controller = ref.read(videoAudioControllerProvider);
+    final controller = _controller;
     final maxMs = data.audioDurationMs;
     final sliderMax = maxMs <= 0 ? 1.0 : maxMs.toDouble();
     final sliderValue = _posMs.clamp(0, maxMs).toDouble();
@@ -196,13 +214,13 @@ class _VideoReportScreenState extends ConsumerState<VideoReportScreen> {
             stream: controller.playingStream,
             initialData: controller.playing,
             builder: (context, snap) {
-              _playing = snap.data ?? false;
+              final playing = snap.data ?? false;
               return IconButton(
                 iconSize: 44,
                 color: Colors.white,
-                icon: Icon(_playing ? Icons.pause : Icons.play_arrow),
+                icon: Icon(playing ? Icons.pause : Icons.play_arrow),
                 onPressed: () =>
-                    _playing ? controller.pause() : controller.play(),
+                    playing ? controller.pause() : controller.play(),
               );
             },
           ),

@@ -53,8 +53,10 @@ class JustAudioController implements VideoAudioController {
   Future<void> dispose() => _player.dispose();
 }
 
-/// One audio controller per screen (NOT a singleton). Disposed automatically
-/// when the last listener goes away.
+/// One audio controller per screen (NOT a singleton). The player screen holds a
+/// manual subscription for its entire lifetime, so this autoDispose provider
+/// creates a fresh controller when the screen mounts and disposes it (via
+/// [ref.onDispose]) exactly once, when that subscription closes on unmount.
 final videoAudioControllerProvider =
     Provider.autoDispose<VideoAudioController>((ref) {
   final c = JustAudioController();
