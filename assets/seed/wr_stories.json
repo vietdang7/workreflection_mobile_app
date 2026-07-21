@@ -1,0 +1,2150 @@
+[
+  {
+    "story_id": "A1-01",
+    "title": "Tôi đang đi rất nhanh, nhưng đi đâu?",
+    "sca_dimension": "A1",
+    "human_need": "thich_nghi",
+    "situation": "Không biết mình đang đi đúng hướng không",
+    "emotion_tags": [
+      "hoang mang",
+      "nghi ngờ",
+      "mất phương hướng"
+    ],
+    "behavior_tags": [
+      "tìm kiếm định hướng",
+      "đổi mục tiêu"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn vẫn hoàn thành công việc.\nBạn vẫn đạt KPI.\nBạn vẫn được đánh giá tốt.\nNhưng mỗi khi ai đó hỏi:\n\"Bạn muốn mình ở đâu sau 3 năm nữa?\"\nBạn không biết trả lời thế nào.",
+    "reflection_question": "Bạn có đang bận rộn hơn là có định hướng không?",
+    "self_reflection": "Điều gì khiến bạn tin rằng mình đang đi đúng hướng?",
+    "aha_message": "Mất phương hướng không phải là đứng yên.\nĐôi khi nó là di chuyển rất nhanh mà không biết vì sao mình đang chạy.",
+    "practice_action": "Viết ra 3 điều bạn muốn có trong sự nghiệp 3 năm tới."
+  },
+  {
+    "story_id": "A1-02",
+    "title": "Tôi muốn nghỉ việc, nhưng không biết muốn điều gì khác",
+    "sca_dimension": "A1",
+    "human_need": "thich_nghi",
+    "situation": "Muốn chuyển việc",
+    "emotion_tags": [
+      "chán nản",
+      "tò mò",
+      "kỳ vọng"
+    ],
+    "behavior_tags": [
+      "tìm việc mới",
+      "cập nhật CV"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn thường xuyên nghĩ tới việc nghỉ việc.\nNhưng khi tự hỏi:\n\"Nếu nghỉ rồi thì mình muốn gì?\"\nBạn không có câu trả lời rõ ràng.",
+    "reflection_question": "Bạn đang muốn rời khỏi điều gì hay đang hướng tới điều gì?",
+    "self_reflection": "Điều gì đang khiến bạn muốn thay đổi?",
+    "aha_message": "Rời khỏi một nơi không đồng nghĩa với việc đã biết nơi mình muốn đến.",
+    "practice_action": "Liệt kê điều bạn muốn có ở công việc tiếp theo."
+  },
+  {
+    "story_id": "A1-03",
+    "title": "Tôi làm rất nhiều nhưng không thấy ý nghĩa",
+    "sca_dimension": "A1",
+    "human_need": "thich_nghi",
+    "situation": "Không thấy ý nghĩa công việc",
+    "emotion_tags": [
+      "trống rỗng",
+      "mất động lực"
+    ],
+    "behavior_tags": [
+      "làm cho xong",
+      "giảm cam kết"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn hoàn thành mọi việc cần làm.\nNhưng cuối tuần nhìn lại.\nBạn khó trả lời câu hỏi:\n\"Tuần này mình đã tạo ra điều gì có ý nghĩa?\"",
+    "reflection_question": "Điều gì làm bạn cảm thấy công việc của mình đáng để tiếp tục?",
+    "self_reflection": "Lần gần nhất bạn cảm thấy tự hào về công việc là khi nào?",
+    "aha_message": "Động lực bền vững thường đến từ ý nghĩa chứ không chỉ từ thành tích.",
+    "practice_action": "Ghi lại một khoảnh khắc bạn cảm thấy công việc của mình tạo ra giá trị."
+  },
+  {
+    "story_id": "A1-04",
+    "title": "Thành công của tôi có còn là điều tôi muốn?",
+    "sca_dimension": "A1",
+    "human_need": "thich_nghi",
+    "situation": "Mục tiêu thay đổi",
+    "emotion_tags": [
+      "phân vân",
+      "hụt hẫng"
+    ],
+    "behavior_tags": [
+      "xem xét lại mục tiêu"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn từng rất muốn đạt được vị trí hiện tại.\nBây giờ bạn đã có nó.\nNhưng cảm giác hào hứng lại không xuất hiện như mong đợi.",
+    "reflection_question": "Có mục tiêu nào bạn đang theo đuổi chỉ vì từng muốn nó trong quá khứ?",
+    "self_reflection": "Bạn đã thay đổi như thế nào trong vài năm gần đây?",
+    "aha_message": "Mục tiêu cũ không phải lúc nào cũng phù hợp với con người hiện tại.",
+    "practice_action": "Xem lại một mục tiêu nghề nghiệp bạn từng đặt ra cách đây 3 năm."
+  },
+  {
+    "story_id": "A1-05",
+    "title": "Tôi không biết điều gì thực sự quan trọng với mình",
+    "sca_dimension": "A1",
+    "human_need": "thich_nghi",
+    "situation": "Thiếu ưu tiên nghề nghiệp",
+    "emotion_tags": [
+      "quá tải lựa chọn",
+      "bối rối"
+    ],
+    "behavior_tags": [
+      "trì hoãn quyết định"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Có quá nhiều lựa chọn.\nLương cao.\nCông việc thú vị.\nCơ hội học hỏi.\nCân bằng cuộc sống.\nBạn muốn tất cả.\nVà vì thế rất khó ra quyết định.",
+    "reflection_question": "Nếu chỉ được giữ lại 3 điều quan trọng nhất trong công việc, đó sẽ là gì?",
+    "self_reflection": "Điều gì bạn sẵn sàng đánh đổi và điều gì không?",
+    "aha_message": "Sự rõ ràng thường đến khi chúng ta biết điều gì là quan trọng nhất.",
+    "practice_action": "Xếp hạng 5 yếu tố nghề nghiệp quan trọng nhất với bạn."
+  },
+  {
+    "story_id": "A1-06",
+    "title": "Tôi đang phát triển hay chỉ đang bận?",
+    "sca_dimension": "A1",
+    "human_need": "thich_nghi",
+    "situation": "Không chắc mình đang tiến bộ",
+    "emotion_tags": [
+      "sốt ruột",
+      "nghi ngờ"
+    ],
+    "behavior_tags": [
+      "học liên tục",
+      "so sánh bản thân"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Lịch làm việc của bạn kín hơn bao giờ hết.\nNhưng khi nhìn lại 6 tháng qua.\nBạn không chắc mình đang trưởng thành hay chỉ đang làm nhiều hơn.",
+    "reflection_question": "Điều gì cho bạn thấy mình đang phát triển?",
+    "self_reflection": "Bạn học được điều gì mới trong 90 ngày gần đây?",
+    "aha_message": "Khối lượng công việc không phải lúc nào cũng phản ánh sự phát triển.",
+    "practice_action": "Ghi lại 3 kỹ năng bạn đã cải thiện trong năm nay."
+  },
+  {
+    "story_id": "A1-07",
+    "title": "Tôi không còn thấy mình thuộc về nơi này",
+    "sca_dimension": "A1",
+    "human_need": "thich_nghi",
+    "situation": "Mất kết nối với mục tiêu tổ chức",
+    "emotion_tags": [
+      "xa cách",
+      "mất ý nghĩa"
+    ],
+    "behavior_tags": [
+      "giảm tham gia",
+      "tìm cơ hội khác"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Ngày trước bạn hiểu vì sao công ty tồn tại.\nNgày trước bạn tin vào điều mình đang làm.\nBây giờ công việc vẫn vậy.\nNhưng cảm giác kết nối thì không còn.",
+    "reflection_question": "Điều gì đã thay đổi?",
+    "self_reflection": "Bạn còn thấy mình đang đóng góp vào điều gì lớn hơn không?",
+    "aha_message": "Con người thường rời bỏ ý nghĩa trước khi rời bỏ công việc.",
+    "practice_action": "Viết ra điều mà công việc hiện tại đang đóng góp cho người khác."
+  },
+  {
+    "story_id": "A1-08",
+    "title": "Tôi muốn nhiều hơn, nhưng không biết là gì",
+    "sca_dimension": "A1",
+    "human_need": "thich_nghi",
+    "situation": "Khát vọng mơ hồ",
+    "emotion_tags": [
+      "bồn chồn",
+      "khao khát"
+    ],
+    "behavior_tags": [
+      "khám phá cơ hội mới"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn cảm thấy mình có thể làm được nhiều hơn.\nNhưng không biết \"nhiều hơn\" cụ thể là gì.",
+    "reflection_question": "Nếu không sợ thất bại, bạn sẽ thử điều gì?",
+    "self_reflection": "Bạn đang thiếu điều gì nhất trong công việc hiện tại?",
+    "aha_message": "Nhiều người không thiếu năng lực.\nHọ thiếu ngôn ngữ để mô tả điều mình thực sự muốn.",
+    "practice_action": "Hoàn thành câu:\n\"Tôi muốn công việc của mình mang lại nhiều ______ hơn.\""
+  },
+  {
+    "story_id": "A1-09",
+    "title": "Tôi đang sống theo định nghĩa thành công của ai?",
+    "sca_dimension": "A1",
+    "human_need": "thich_nghi",
+    "situation": "Áp lực kỳ vọng",
+    "emotion_tags": [
+      "áp lực",
+      "mâu thuẫn nội tâm"
+    ],
+    "behavior_tags": [
+      "theo đuổi mục tiêu của người khác"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn đạt được những thứ từng được gọi là thành công.\nNhưng đôi lúc vẫn cảm thấy trống rỗng.",
+    "reflection_question": "Mục tiêu hiện tại là của bạn hay của người khác?",
+    "self_reflection": "Bạn đang cố gắng chứng minh điều gì?",
+    "aha_message": "Không phải mọi thành công đều là thành công của chính mình.",
+    "practice_action": "Viết lại định nghĩa thành công cá nhân của bạn ở thời điểm hiện tại."
+  },
+  {
+    "story_id": "A1-10",
+    "title": "Nếu tiếp tục như thế này thêm 3 năm nữa thì sao?",
+    "sca_dimension": "A1",
+    "human_need": "thich_nghi",
+    "situation": "Đánh giá hướng đi hiện tại",
+    "emotion_tags": [
+      "lo lắng",
+      "hy vọng"
+    ],
+    "behavior_tags": [
+      "suy nghĩ về tương lai",
+      "lập kế hoạch"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Hãy tưởng tượng không có thay đổi lớn nào xảy ra.\nBạn vẫn làm công việc hiện tại.\nVẫn ở môi trường hiện tại.\nVẫn theo cách hiện tại.",
+    "reflection_question": "Viễn cảnh đó khiến bạn thấy hào hứng hay lo lắng?",
+    "self_reflection": "Điều gì xuất hiện đầu tiên trong suy nghĩ của bạn?",
+    "aha_message": "Tương lai thường không được tạo ra trong một quyết định lớn.\nNó được tạo ra từ những lựa chọn lặp lại mỗi ngày.",
+    "practice_action": "Viết ra một thay đổi nhỏ bạn muốn thực hiện trong 30 ngày tới.\nA2 – Execution Rhythm\nHuman Need\nAdaptability\nSCA Dimension\nA2 – Execution Rhythm\nCâu hỏi cốt lõi\nTôi có đang biến điều mình biết thành điều mình làm không?"
+  },
+  {
+    "story_id": "A2-01",
+    "title": "Tôi biết phải làm gì nhưng vẫn chưa làm",
+    "sca_dimension": "A2",
+    "human_need": "thich_nghi",
+    "situation": "Trì hoãn hành động",
+    "emotion_tags": [
+      "áy náy",
+      "chần chừ"
+    ],
+    "behavior_tags": [
+      "trì hoãn",
+      "né tránh"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn đã suy nghĩ về việc này nhiều lần.\nBạn biết nó quan trọng.\nBạn biết mình nên bắt đầu.\nNhưng tuần này qua tuần khác.\nNó vẫn nằm trong danh sách dự định.",
+    "reflection_question": "Điều gì đang ngăn bạn bắt đầu?",
+    "self_reflection": "Bạn đang thiếu động lực, thời gian hay sự rõ ràng?",
+    "aha_message": "Đôi khi điều cản trở hành động không phải là khó khăn.\nMà là sự trì hoãn kéo dài.",
+    "practice_action": "Xác định bước nhỏ nhất bạn có thể làm trong 24 giờ tới."
+  },
+  {
+    "story_id": "A2-02",
+    "title": "Tôi có quá nhiều kế hoạch",
+    "sca_dimension": "A2",
+    "human_need": "thich_nghi",
+    "situation": "Quá tải ưu tiên",
+    "emotion_tags": [
+      "rối rắm",
+      "quá tải"
+    ],
+    "behavior_tags": [
+      "chuyển đổi liên tục giữa các việc"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Danh sách việc cần làm ngày càng dài.\nÝ tưởng ngày càng nhiều.\nNhưng tiến độ lại không tương xứng.",
+    "reflection_question": "Bạn đang thiếu nguồn lực hay thiếu tập trung?",
+    "self_reflection": "Điều gì thực sự quan trọng nhất lúc này?",
+    "aha_message": "Khi mọi thứ đều là ưu tiên, thực chất không có gì là ưu tiên.",
+    "practice_action": "Chọn một việc duy nhất quan trọng nhất tuần này."
+  },
+  {
+    "story_id": "A2-03",
+    "title": "Tôi bắt đầu rất tốt nhưng không duy trì được",
+    "sca_dimension": "A2",
+    "human_need": "thich_nghi",
+    "situation": "Mất đà thực hiện",
+    "emotion_tags": [
+      "hụt hẫng",
+      "thất vọng"
+    ],
+    "behavior_tags": [
+      "bỏ dở thói quen"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn từng rất quyết tâm.\nMột tuần.\nHai tuần.\nRồi mọi thứ quay lại như cũ.",
+    "reflection_question": "Điều gì khiến bạn dừng lại?",
+    "self_reflection": "Bạn đang cố gắng quá sức hay thiếu hệ thống hỗ trợ?",
+    "aha_message": "Tiến bộ bền vững thường đến từ nhịp độ ổn định hơn là bùng nổ ngắn hạn.",
+    "practice_action": "Giảm mục tiêu hiện tại xuống mức bạn chắc chắn làm được."
+  },
+  {
+    "story_id": "A2-04",
+    "title": "Tôi luôn bận nhưng không hoàn thành điều quan trọng",
+    "sca_dimension": "A2",
+    "human_need": "thich_nghi",
+    "situation": "Bận rộn nhưng kém hiệu quả",
+    "emotion_tags": [
+      "căng thẳng",
+      "bất lực"
+    ],
+    "behavior_tags": [
+      "chữa cháy",
+      "phản ứng"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Ngày nào cũng đầy lịch.\nViệc nào cũng có lý do chính đáng.\nNhưng điều quan trọng nhất vẫn chưa tiến triển.",
+    "reflection_question": "Điều gì đang chiếm thời gian của bạn?",
+    "self_reflection": "Bạn đang phản ứng với công việc hay chủ động dẫn dắt nó?",
+    "aha_message": "Bận rộn không đồng nghĩa với tiến bộ.",
+    "practice_action": "Ghi lại 3 việc tiêu tốn nhiều thời gian nhất tuần qua."
+  },
+  {
+    "story_id": "A2-05",
+    "title": "Tôi liên tục thay đổi hướng đi",
+    "sca_dimension": "A2",
+    "human_need": "thich_nghi",
+    "situation": "Thiếu nhất quán",
+    "emotion_tags": [
+      "hứng khởi ngắn hạn",
+      "phân tán"
+    ],
+    "behavior_tags": [
+      "đổi mục tiêu liên tục"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn rất dễ hào hứng với điều mới.\nNhưng cũng nhanh chóng chuyển sang điều khác.",
+    "reflection_question": "Bạn đang khám phá hay đang né tránh cam kết?",
+    "self_reflection": "Điều gì khiến bạn khó kiên trì?",
+    "aha_message": "Không phải mọi ý tưởng mới đều cần được theo đuổi ngay lập tức.",
+    "practice_action": "Hoàn thành một việc dang dở trước khi bắt đầu việc mới."
+  },
+  {
+    "story_id": "A2-06",
+    "title": "Tôi chờ đến khi sẵn sàng",
+    "sca_dimension": "A2",
+    "human_need": "thich_nghi",
+    "situation": "Chủ nghĩa hoàn hảo",
+    "emotion_tags": [
+      "lo lắng",
+      "sợ sai"
+    ],
+    "behavior_tags": [
+      "chuẩn bị quá mức"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn muốn chuẩn bị kỹ hơn.\nHọc thêm chút nữa.\nChờ thời điểm phù hợp hơn.\nVà rồi nhiều tháng trôi qua.",
+    "reflection_question": "Điều gì khiến bạn chưa bắt đầu?",
+    "self_reflection": "Bạn đang chuẩn bị hay đang trì hoãn?",
+    "aha_message": "Rất ít người cảm thấy hoàn toàn sẵn sàng trước khi bắt đầu điều mới.",
+    "practice_action": "Làm phiên bản đầu tiên thay vì phiên bản hoàn hảo."
+  },
+  {
+    "story_id": "A2-07",
+    "title": "Tôi có quá nhiều việc dang dở",
+    "sca_dimension": "A2",
+    "human_need": "thich_nghi",
+    "situation": "Thiếu hoàn tất",
+    "emotion_tags": [
+      "tiếc nuối",
+      "mất động lực"
+    ],
+    "behavior_tags": [
+      "bỏ dở giữa chừng"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Có nhiều việc đã bắt đầu.\nNhưng ít việc thực sự hoàn thành.",
+    "reflection_question": "Điều gì thường xảy ra ở giai đoạn giữa?",
+    "self_reflection": "Bạn mất hứng thú hay gặp trở ngại?",
+    "aha_message": "Hoàn thành thường tạo ra nhiều giá trị hơn bắt đầu.",
+    "practice_action": "Chọn một việc đang dang dở và hoàn tất trong tuần này."
+  },
+  {
+    "story_id": "A2-08",
+    "title": "Tôi không thấy kết quả nên muốn bỏ cuộc",
+    "sca_dimension": "A2",
+    "human_need": "thich_nghi",
+    "situation": "Thiếu kiên trì",
+    "emotion_tags": [
+      "nghi ngờ",
+      "nản chí"
+    ],
+    "behavior_tags": [
+      "bỏ cuộc sớm"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn đã cố gắng.\nNhưng kết quả chưa xuất hiện.\nVà bạn bắt đầu nghi ngờ.",
+    "reflection_question": "Bạn đang đánh giá quá trình hay chỉ nhìn kết quả?",
+    "self_reflection": "Điều gì đã thay đổi dù chưa có kết quả rõ ràng?",
+    "aha_message": "Nhiều thay đổi quan trọng diễn ra âm thầm trước khi có kết quả nhìn thấy được.",
+    "practice_action": "Ghi lại những tín hiệu tiến bộ nhỏ trong tuần này."
+  },
+  {
+    "story_id": "A2-09",
+    "title": "Tôi liên tục bị kéo khỏi điều quan trọng",
+    "sca_dimension": "A2",
+    "human_need": "thich_nghi",
+    "situation": "Dễ bị phân tâm",
+    "emotion_tags": [
+      "xao nhãng",
+      "quá tải"
+    ],
+    "behavior_tags": [
+      "multitasking",
+      "đổi việc liên tục"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn bắt đầu ngày với một kế hoạch rõ ràng.\nNhưng đến cuối ngày.\nBạn đã làm rất nhiều việc khác.",
+    "reflection_question": "Điều gì thường làm bạn mất tập trung?",
+    "self_reflection": "Những gián đoạn đó đến từ bên ngoài hay bên trong?",
+    "aha_message": "Khả năng tập trung là một trong những năng lực thực thi quan trọng nhất.",
+    "practice_action": "Dành 30 phút mỗi ngày cho việc quan trọng nhất."
+  },
+  {
+    "story_id": "A2-10",
+    "title": "Điều gì giúp tôi thực sự hành động?",
+    "sca_dimension": "A2",
+    "human_need": "thich_nghi",
+    "situation": "Tìm hiểu động lực thực thi",
+    "emotion_tags": [
+      "tò mò",
+      "chủ động"
+    ],
+    "behavior_tags": [
+      "xây dựng thói quen",
+      "tối ưu cách làm việc"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Có những việc bạn làm rất đều đặn.\nCó những việc mãi không bắt đầu.",
+    "reflection_question": "Điều gì tạo ra khác biệt?",
+    "self_reflection": "Bạn hành động tốt nhất khi có điều kiện nào?",
+    "aha_message": "Mỗi người có một nhịp thực thi riêng.\nHiểu được nhịp đó giúp tạo ra tiến bộ bền vững.",
+    "practice_action": "Quan sát thời điểm bạn làm việc hiệu quả nhất trong tuần này."
+  },
+  {
+    "story_id": "A3-01",
+    "title": "Chuyện này sao lại xảy ra lần nữa?",
+    "sca_dimension": "A3",
+    "human_need": "thich_nghi",
+    "situation": "Lặp lại cùng một vấn đề",
+    "emotion_tags": [
+      "thất vọng",
+      "bất lực",
+      "bối rối"
+    ],
+    "behavior_tags": [
+      "phản ứng theo thói quen",
+      "lặp lại hành vi"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Đây không phải lần đầu.\nNgười khác.\nDự án khác.\nHoàn cảnh khác.\nNhưng cảm giác quen thuộc đến lạ.\nBạn lại thất vọng theo cách cũ.",
+    "reflection_question": "Có điều gì đang lặp lại trong trải nghiệm công việc của bạn?",
+    "self_reflection": "Bạn đã gặp tình huống tương tự bao nhiêu lần?",
+    "aha_message": "Khi một trải nghiệm liên tục quay lại, đôi khi nó đang cố dạy chúng ta điều gì đó.",
+    "practice_action": "Viết ra một vấn đề đã xuất hiện ít nhất 3 lần trong năm qua."
+  },
+  {
+    "story_id": "A3-02",
+    "title": "Tôi biết mình mệt nhưng không biết vì sao",
+    "sca_dimension": "A3",
+    "human_need": "thich_nghi",
+    "situation": "Mệt mỏi không rõ nguyên nhân",
+    "emotion_tags": [
+      "kiệt sức",
+      "trống rỗng",
+      "mất năng lượng"
+    ],
+    "behavior_tags": [
+      "giảm động lực",
+      "thu mình"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn ngủ đủ.\nCông việc không quá tải.\nMọi thứ nhìn từ bên ngoài vẫn ổn.\nNhưng bạn vẫn thấy cạn năng lượng.",
+    "reflection_question": "Điều gì đang lấy đi năng lượng của bạn?",
+    "self_reflection": "Lần gần nhất bạn thực sự cảm thấy nhiều năng lượng là khi nào?",
+    "aha_message": "Kiệt sức không chỉ đến từ làm quá nhiều.\nĐôi khi nó đến từ làm quá lâu những điều không còn tạo ý nghĩa.",
+    "practice_action": "Ghi lại điều làm bạn có năng lượng và điều làm bạn mất năng lượng trong tuần này."
+  },
+  {
+    "story_id": "A3-03",
+    "title": "Tôi phản ứng mạnh hơn mức cần thiết",
+    "sca_dimension": "A3",
+    "human_need": "thich_nghi",
+    "situation": "Phản ứng cảm xúc quá mức",
+    "emotion_tags": [
+      "tức giận",
+      "tổn thương",
+      "khó chịu"
+    ],
+    "behavior_tags": [
+      "phản ứng bốc đồng"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Một góp ý nhỏ.\nMột email ngắn.\nMột cuộc họp bình thường.\nNhưng bạn mang cảm giác khó chịu đó suốt cả ngày.",
+    "reflection_question": "Điều gì trong tình huống đó khiến bạn phản ứng mạnh?",
+    "self_reflection": "Nó làm bạn nhớ tới trải nghiệm nào khác?",
+    "aha_message": "Đôi khi điều làm chúng ta đau không phải sự kiện hiện tại.\nMà là ý nghĩa chúng ta gắn cho nó.",
+    "practice_action": "Lần tới khi cảm xúc xuất hiện mạnh, hãy hỏi:\n\"Điều gì thực sự đang bị chạm tới?\""
+  },
+  {
+    "story_id": "A3-04",
+    "title": "Tôi luôn bận nhưng không thấy tiến bộ",
+    "sca_dimension": "A3",
+    "human_need": "thich_nghi",
+    "situation": "Không nhìn thấy sự phát triển",
+    "emotion_tags": [
+      "nghi ngờ",
+      "sốt ruột"
+    ],
+    "behavior_tags": [
+      "so sánh bản thân",
+      "làm nhiều hơn"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn làm rất nhiều.\nNhưng khi nhìn lại 6 tháng qua.\nBạn không biết mình đã thay đổi điều gì.",
+    "reflection_question": "Nếu phải kể một thay đổi tích cực của mình trong năm nay, bạn sẽ kể điều gì?",
+    "self_reflection": "Bạn đang đo sự phát triển bằng điều gì?",
+    "aha_message": "Những điều không được ghi nhận thường rất khó được nhìn thấy.",
+    "practice_action": "Ghi lại 3 điều bạn làm tốt hơn so với 6 tháng trước."
+  },
+  {
+    "story_id": "A3-05",
+    "title": "Tôi cứ ra quyết định theo cảm xúc",
+    "sca_dimension": "A3",
+    "human_need": "thich_nghi",
+    "situation": "Ra quyết định cảm tính",
+    "emotion_tags": [
+      "lo lắng",
+      "hưng phấn",
+      "dao động"
+    ],
+    "behavior_tags": [
+      "quyết định vội vàng"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Mỗi khi gặp áp lực.\nBạn muốn nghỉ việc.\nMỗi khi được khen.\nBạn thấy mọi thứ đều ổn.\nTâm trạng thay đổi.\nQuyết định cũng thay đổi theo.",
+    "reflection_question": "Bạn thường ra quyết định quan trọng trong trạng thái cảm xúc nào?",
+    "self_reflection": "Những quyết định tốt nhất của bạn thường xuất hiện khi nào?",
+    "aha_message": "Cảm xúc là dữ liệu.\nNhưng không nên là người lái xe.",
+    "practice_action": "Trước quyết định lớn, hãy ghi lại điều bạn đang cảm thấy."
+  },
+  {
+    "story_id": "A3-06",
+    "title": "Tôi không còn nhớ mình đã học được gì",
+    "sca_dimension": "A3",
+    "human_need": "thich_nghi",
+    "situation": "Trải nghiệm không được tích lũy",
+    "emotion_tags": [
+      "tiếc nuối",
+      "mơ hồ"
+    ],
+    "behavior_tags": [
+      "quên bài học",
+      "không ghi nhận"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn đã tham gia nhiều dự án.\nGiải quyết nhiều vấn đề.\nVượt qua nhiều thử thách.\nNhưng nếu ai đó hỏi:\n\"Bạn học được gì từ năm qua?\"\nBạn khó trả lời.",
+    "reflection_question": "Những bài học nào đang bị bạn bỏ quên?",
+    "self_reflection": "Điều gì đáng được ghi lại hơn?",
+    "aha_message": "Trải nghiệm chỉ trở thành trí tuệ khi được nhìn lại.",
+    "practice_action": "Viết lại một bài học quan trọng từ tháng vừa qua."
+  },
+  {
+    "story_id": "A3-07",
+    "title": "Tôi cảm thấy bị mắc kẹt",
+    "sca_dimension": "A3",
+    "human_need": "thich_nghi",
+    "situation": "Không biết bước tiếp theo",
+    "emotion_tags": [
+      "bế tắc",
+      "mất phương hướng"
+    ],
+    "behavior_tags": [
+      "trì hoãn",
+      "đứng yên"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn không gặp khủng hoảng.\nNhưng cũng không thấy tiến lên.\nMọi thứ giống như đang đứng yên.",
+    "reflection_question": "Bạn đang mắc kẹt ở đâu?",
+    "self_reflection": "Điều gì khiến bạn chưa thể bước tiếp?",
+    "aha_message": "Cảm giác mắc kẹt thường xuất hiện trước khi có một thay đổi quan trọng.",
+    "practice_action": "Xác định một bước nhỏ bạn có thể thực hiện trong tuần này."
+  },
+  {
+    "story_id": "A3-08",
+    "title": "Tôi luôn nghĩ mình phải làm tốt hơn",
+    "sca_dimension": "A3",
+    "human_need": "thich_nghi",
+    "situation": "Tự phê bình quá mức",
+    "emotion_tags": [
+      "tự trách",
+      "áp lực"
+    ],
+    "behavior_tags": [
+      "phủ nhận thành tựu"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Dù đạt kết quả tốt.\nBạn vẫn chỉ nhìn thấy điều chưa đủ tốt.",
+    "reflection_question": "Bạn có đang đối xử với bản thân nghiêm khắc hơn người khác?",
+    "self_reflection": "Nếu là đồng nghiệp của mình, bạn sẽ nói gì?",
+    "aha_message": "Sự phát triển cần phản hồi trung thực.\nKhông cần sự chỉ trích liên tục.",
+    "practice_action": "Ghi lại một điều bạn làm tốt hôm nay."
+  },
+  {
+    "story_id": "A3-09",
+    "title": "Tôi đang tránh nhìn vào điều gì?",
+    "sca_dimension": "A3",
+    "human_need": "thich_nghi",
+    "situation": "Né tránh sự thật khó chịu",
+    "emotion_tags": [
+      "lo sợ",
+      "căng thẳng"
+    ],
+    "behavior_tags": [
+      "né tránh",
+      "trì hoãn"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Có một vấn đề bạn đã nhận ra từ lâu.\nNhưng bạn liên tục trì hoãn việc đối diện với nó.",
+    "reflection_question": "Có điều gì bạn biết nhưng chưa muốn thừa nhận?",
+    "self_reflection": "Điều gì khiến việc đó khó khăn?",
+    "aha_message": "Điều khó nhìn nhất thường là điều cần được nhìn thấy nhất.",
+    "practice_action": "Viết ra một sự thật bạn đang né tránh."
+  },
+  {
+    "story_id": "A3-10",
+    "title": "Nếu dừng lại 10 phút để nhìn lại thì sao?",
+    "sca_dimension": "A3",
+    "human_need": "thich_nghi",
+    "situation": "Không có thời gian nhìn lại",
+    "emotion_tags": [
+      "quá tải",
+      "xao nhãng"
+    ],
+    "behavior_tags": [
+      "liên tục bận rộn"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn luôn bận.\nLuôn có việc tiếp theo.\nLuôn có deadline tiếp theo.\nNhưng đã lâu rồi bạn không tự hỏi:\n\"Mình thực sự đang thế nào?\"",
+    "reflection_question": "Lần cuối bạn dành thời gian để nhìn lại bản thân là khi nào?",
+    "self_reflection": "Điều gì xuất hiện nếu bạn dừng lại vài phút?",
+    "aha_message": "Không phải lúc nào chúng ta cũng cần làm nhiều hơn.\nĐôi khi chúng ta cần quan sát nhiều hơn.",
+    "practice_action": "Dành 10 phút cuối ngày để trả lời:\n\"Hôm nay điều gì đáng nhớ nhất?\"\nA4 – Learning Loop\nHuman Need\nAdaptability\nSCA Dimension\nA4 – Learning Loop\nCâu hỏi cốt lõi\nTôi có đang biến trải nghiệm thành sự phát triển không?"
+  },
+  {
+    "story_id": "A4-01",
+    "title": "Tôi cứ mắc lại cùng một lỗi",
+    "sca_dimension": "A4",
+    "human_need": "thich_nghi",
+    "situation": "Lặp lại sai lầm cũ",
+    "emotion_tags": [
+      "tiếc nuối",
+      "thất vọng"
+    ],
+    "behavior_tags": [
+      "lặp lại hành vi"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn nhận ra mình vừa gặp lại một vấn đề quen thuộc.\nĐiều đáng tiếc không phải là nó xảy ra.\nMà là bạn đã từng hứa sẽ không để điều đó lặp lại.",
+    "reflection_question": "Có bài học nào bạn đã nhìn thấy nhưng chưa thực sự áp dụng?",
+    "self_reflection": "Điều gì khiến nó tiếp tục lặp lại?",
+    "aha_message": "Biết một bài học không đồng nghĩa với việc đã học được nó.",
+    "practice_action": "Viết ra một hành động cụ thể để tránh lặp lại tình huống này."
+  },
+  {
+    "story_id": "A4-02",
+    "title": "Tôi đã vượt qua chuyện đó như thế nào?",
+    "sca_dimension": "A4",
+    "human_need": "thich_nghi",
+    "situation": "Nhìn lại thành công",
+    "emotion_tags": [
+      "tự hào",
+      "biết ơn"
+    ],
+    "behavior_tags": [
+      "củng cố hành vi tích cực"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Có một vấn đề từng khiến bạn rất áp lực.\nNhưng hôm nay nó không còn ảnh hưởng như trước.",
+    "reflection_question": "Bạn đã thay đổi điều gì để vượt qua nó?",
+    "self_reflection": "Điều gì giúp bạn trưởng thành hơn?",
+    "aha_message": "Những điều từng rất khó thường chứa nhiều bài học nhất.",
+    "practice_action": "Viết lại một điều bạn từng làm được mà trước đây nghĩ là không thể."
+  },
+  {
+    "story_id": "A4-03",
+    "title": "Tôi học được gì từ thất bại này?",
+    "sca_dimension": "A4",
+    "human_need": "thich_nghi",
+    "situation": "Thất bại trong công việc",
+    "emotion_tags": [
+      "buồn bã",
+      "thất vọng"
+    ],
+    "behavior_tags": [
+      "điều chỉnh cách làm"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Mọi chuyện không diễn ra như mong đợi.\nBạn có thể tự trách mình.\nHoặc có thể học từ nó.",
+    "reflection_question": "Nếu thất bại này là một người thầy, nó đang dạy bạn điều gì?",
+    "self_reflection": "Điều gì bạn sẽ làm khác đi lần sau?",
+    "aha_message": "Thất bại chỉ thực sự vô nghĩa khi chúng ta không học được gì từ nó.",
+    "practice_action": "Viết ra 3 bài học từ trải nghiệm này."
+  },
+  {
+    "story_id": "A4-04",
+    "title": "Tôi đang phát triển theo cách nào?",
+    "sca_dimension": "A4",
+    "human_need": "thich_nghi",
+    "situation": "Không nhận ra sự tiến bộ",
+    "emotion_tags": [
+      "nghi ngờ",
+      "thiếu tự tin"
+    ],
+    "behavior_tags": [
+      "so sánh bản thân"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Chúng ta thường nhìn vào điều chưa có.\nVà quên nhìn vào điều đã thay đổi.",
+    "reflection_question": "Bạn giỏi hơn chính mình của 1 năm trước ở điểm nào?",
+    "self_reflection": "Những kỹ năng hoặc góc nhìn nào đã thay đổi?",
+    "aha_message": "Tiến bộ thường diễn ra chậm đến mức khó nhận thấy.",
+    "practice_action": "Liệt kê 5 điều bạn làm tốt hơn trước đây."
+  },
+  {
+    "story_id": "A4-05",
+    "title": "Tôi đã bỏ lỡ tín hiệu nào?",
+    "sca_dimension": "A4",
+    "human_need": "thich_nghi",
+    "situation": "Sự việc diễn ra không như mong đợi",
+    "emotion_tags": [
+      "tiếc nuối",
+      "cảnh giác"
+    ],
+    "behavior_tags": [
+      "quan sát nhiều hơn"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Khi nhìn lại.\nBạn nhận ra đã có những dấu hiệu từ rất sớm.\nNhưng lúc đó bạn không chú ý.",
+    "reflection_question": "Những tín hiệu nào bạn đã bỏ qua?",
+    "self_reflection": "Nếu gặp lại tình huống tương tự, bạn sẽ quan sát điều gì?",
+    "aha_message": "Kinh nghiệm giúp chúng ta nhìn thấy những điều trước đây mình bỏ lỡ.",
+    "practice_action": "Ghi lại các dấu hiệu cảnh báo sớm bạn muốn nhớ."
+  },
+  {
+    "story_id": "A4-06",
+    "title": "Tôi đang học hay chỉ đang trải nghiệm?",
+    "sca_dimension": "A4",
+    "human_need": "thich_nghi",
+    "situation": "Trải nghiệm nhiều nhưng ít thay đổi",
+    "emotion_tags": [
+      "mơ hồ",
+      "hụt hẫng"
+    ],
+    "behavior_tags": [
+      "tham gia nhưng ít tổng kết"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn tham gia nhiều dự án.\nNhiều khóa học.\nNhiều cơ hội.\nNhưng cảm giác phát triển không tương xứng.",
+    "reflection_question": "Bạn đang tích lũy trải nghiệm hay đang tích lũy bài học?",
+    "self_reflection": "Điều gì đã thay đổi trong cách bạn làm việc?",
+    "aha_message": "Trải nghiệm chỉ tạo ra giá trị khi được chuyển hóa thành nhận thức hoặc hành động.",
+    "practice_action": "Chọn một trải nghiệm gần đây và viết ra điều bạn học được."
+  },
+  {
+    "story_id": "A4-07",
+    "title": "Tôi có đang lặp lại điều hiệu quả?",
+    "sca_dimension": "A4",
+    "human_need": "thich_nghi",
+    "situation": "Không duy trì được thành công",
+    "emotion_tags": [
+      "tiếc nuối",
+      "hoài niệm"
+    ],
+    "behavior_tags": [
+      "mất thói quen tốt"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn từng có một giai đoạn làm việc rất tốt.\nNhiều năng lượng.\nNhiều tiến bộ.\nNhưng rồi mọi thứ biến mất.",
+    "reflection_question": "Điều gì đã giúp bạn thành công lúc đó?",
+    "self_reflection": "Bạn còn duy trì những điều đó không?",
+    "aha_message": "Học hỏi không chỉ là tránh sai lầm.\nMà còn là lặp lại những gì hiệu quả.",
+    "practice_action": "Viết ra 3 điều bạn muốn tái tạo từ giai đoạn tốt nhất của mình."
+  },
+  {
+    "story_id": "A4-08",
+    "title": "Điều này đang dạy tôi điều gì về bản thân?",
+    "sca_dimension": "A4",
+    "human_need": "thich_nghi",
+    "situation": "Tìm ý nghĩa từ trải nghiệm",
+    "emotion_tags": [
+      "tò mò",
+      "khám phá"
+    ],
+    "behavior_tags": [
+      "tự quan sát"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Một sự kiện vừa xảy ra.\nTốt hoặc xấu.\nNhưng điều đáng quan tâm hơn là:\nNó đang cho bạn biết điều gì về chính mình?",
+    "reflection_question": "Bạn hiểu thêm điều gì về bản thân sau trải nghiệm này?",
+    "self_reflection": "Điều gì làm bạn bất ngờ nhất?",
+    "aha_message": "Mỗi trải nghiệm đều là một tấm gương.",
+    "practice_action": "Viết một điều mới bạn vừa khám phá về bản thân."
+  },
+  {
+    "story_id": "A4-09",
+    "title": "Tôi đã thay đổi quyết định như thế nào?",
+    "sca_dimension": "A4",
+    "human_need": "thich_nghi",
+    "situation": "Ra quyết định tốt hơn theo thời gian",
+    "emotion_tags": [
+      "tự tin",
+      "trưởng thành"
+    ],
+    "behavior_tags": [
+      "ra quyết định có chủ đích"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Có những quyết định bạn sẽ không còn đưa ra giống như vài năm trước.",
+    "reflection_question": "Điều gì đã thay đổi trong cách bạn suy nghĩ?",
+    "self_reflection": "Kinh nghiệm nào ảnh hưởng mạnh nhất đến điều đó?",
+    "aha_message": "Trưởng thành thường thể hiện qua cách chúng ta ra quyết định.",
+    "practice_action": "So sánh cách bạn xử lý một vấn đề hiện tại với 3 năm trước."
+  },
+  {
+    "story_id": "A4-10",
+    "title": "Nếu nhìn lại năm nay như một chương sách",
+    "sca_dimension": "A4",
+    "human_need": "thich_nghi",
+    "situation": "Tổng kết hành trình phát triển",
+    "emotion_tags": [
+      "biết ơn",
+      "chiêm nghiệm"
+    ],
+    "behavior_tags": [
+      "tổng kết",
+      "lập kế hoạch"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Hãy tưởng tượng năm nay là một chương trong cuốn sách nghề nghiệp của bạn.",
+    "reflection_question": "Tên chương đó sẽ là gì?",
+    "self_reflection": "Bài học lớn nhất của chương này là gì?",
+    "aha_message": "Sự phát triển không nằm ở số năm làm việc.\nMà nằm ở số bài học được tích lũy từ những năm đó.",
+    "practice_action": "Viết tiêu đề và bài học lớn nhất của năm nay."
+  },
+  {
+    "story_id": "C1-01",
+    "title": "Tôi lại phải làm thay",
+    "sca_dimension": "C1",
+    "human_need": "ket_noi",
+    "situation": "Đồng nghiệp không hoàn thành phần việc",
+    "emotion_tags": [
+      "thất vọng",
+      "bực bội"
+    ],
+    "behavior_tags": [
+      "làm thay",
+      "kiểm soát"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn đã giao việc.\nĐã thống nhất deadline.\nĐã kiểm tra tiến độ.\nNhưng đến phút cuối.\nBạn vẫn phải nhảy vào xử lý.",
+    "reflection_question": "Điều gì khiến bạn cảm thấy khó tin tưởng trong tình huống này?",
+    "self_reflection": "Đây là trường hợp cá biệt hay một trải nghiệm lặp lại?",
+    "aha_message": "Niềm tin không mất đi trong một lần thất hứa.\nNó mất đi khi điều đó trở thành thói quen.",
+    "practice_action": "Ghi lại một tình huống bạn cảm thấy mình phải \"gánh thay\" người khác."
+  },
+  {
+    "story_id": "C1-02",
+    "title": "Tôi luôn phải kiểm tra lại",
+    "sca_dimension": "C1",
+    "human_need": "ket_noi",
+    "situation": "Không yên tâm giao việc",
+    "emotion_tags": [
+      "lo lắng",
+      "căng thẳng"
+    ],
+    "behavior_tags": [
+      "micromanage",
+      "kiểm tra liên tục"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn giao việc.\nNhưng vẫn liên tục theo dõi.\nLiên tục nhắc nhở.\nLiên tục kiểm tra.",
+    "reflection_question": "Điều gì khiến bạn khó buông quyền kiểm soát?",
+    "self_reflection": "Bạn đang thiếu niềm tin hay đang thiếu thông tin?",
+    "aha_message": "Không phải mọi sự kiểm soát đều xuất phát từ trách nhiệm.\nĐôi khi nó xuất phát từ sự thiếu tin tưởng.",
+    "practice_action": "Xác định một việc bạn có thể trao quyền nhiều hơn trong tuần này."
+  },
+  {
+    "story_id": "C1-03",
+    "title": "Người ta nói một đằng làm một nẻo",
+    "sca_dimension": "C1",
+    "human_need": "ket_noi",
+    "situation": "Lời nói và hành động không nhất quán",
+    "emotion_tags": [
+      "hoài nghi",
+      "mất niềm tin"
+    ],
+    "behavior_tags": [
+      "giảm hợp tác"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Trong cuộc họp.\nMọi người đều đồng ý.\nSau cuộc họp.\nMọi thứ diễn ra theo cách hoàn toàn khác.",
+    "reflection_question": "Bạn phản ứng thế nào khi lời nói và hành động không khớp nhau?",
+    "self_reflection": "Điều đó ảnh hưởng gì đến cách bạn hợp tác?",
+    "aha_message": "Trust được xây bằng sự nhất quán, không phải bằng lời hứa.",
+    "practice_action": "Quan sát một người mà bạn cảm thấy đáng tin và ghi lại điều họ làm khác biệt."
+  },
+  {
+    "story_id": "C1-04",
+    "title": "Tôi không biết có thể nhờ ai",
+    "sca_dimension": "C1",
+    "human_need": "ket_noi",
+    "situation": "Thiếu người hỗ trợ",
+    "emotion_tags": [
+      "cô đơn",
+      "bất an"
+    ],
+    "behavior_tags": [
+      "tự xoay sở"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn gặp một vấn đề khó.\nNhưng không biết ai là người có thể giúp.\nHoặc không chắc ai sẽ sẵn lòng giúp.",
+    "reflection_question": "Bạn có cảm thấy mình đang đơn độc trong công việc không?",
+    "self_reflection": "Ai là người bạn có thể tìm đến khi gặp khó khăn?",
+    "aha_message": "Trust không chỉ là tin người khác làm việc.\nTrust còn là tin rằng mình sẽ không phải đối mặt một mình.",
+    "practice_action": "Liệt kê 3 người bạn có thể tìm đến khi cần hỗ trợ."
+  },
+  {
+    "story_id": "C1-05",
+    "title": "Tôi giữ lại vì sợ bị thất vọng",
+    "sca_dimension": "C1",
+    "human_need": "ket_noi",
+    "situation": "Không muốn kỳ vọng vào người khác",
+    "emotion_tags": [
+      "phòng vệ",
+      "thất vọng"
+    ],
+    "behavior_tags": [
+      "ôm việc",
+      "làm một mình"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn chọn tự làm.\nKhông phải vì nhanh hơn.\nMà vì không muốn thất vọng thêm một lần nữa.",
+    "reflection_question": "Bạn đang bảo vệ hiệu quả công việc hay đang bảo vệ cảm xúc của mình?",
+    "self_reflection": "Điều gì khiến bạn ngừng kỳ vọng vào người khác?",
+    "aha_message": "Đôi khi sự thiếu tin tưởng khiến chúng ta cô lập chính mình.",
+    "practice_action": "Xác định một việc nhỏ bạn có thể chia sẻ với người khác."
+  },
+  {
+    "story_id": "C1-06",
+    "title": "Tôi không chắc cấp trên có giữ lời",
+    "sca_dimension": "C1",
+    "human_need": "ket_noi",
+    "situation": "Mất niềm tin vào lãnh đạo",
+    "emotion_tags": [
+      "hoài nghi",
+      "mất động lực"
+    ],
+    "behavior_tags": [
+      "giảm cam kết"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Những cam kết đã được đưa ra.\nNhưng rồi không xảy ra.\nMột lần.\nRồi nhiều lần.",
+    "reflection_question": "Điều gì làm bạn mất niềm tin nhất?",
+    "self_reflection": "Bạn còn tin những cam kết đó không?",
+    "aha_message": "Trust trong tổ chức thường được xây hoặc mất từ những điều rất nhỏ.",
+    "practice_action": "Ghi lại một cam kết đã được thực hiện đúng và một cam kết chưa được thực hiện."
+  },
+  {
+    "story_id": "C1-07",
+    "title": "Tôi ngại nhờ giúp đỡ",
+    "sca_dimension": "C1",
+    "human_need": "ket_noi",
+    "situation": "Không tin người khác sẽ hỗ trợ",
+    "emotion_tags": [
+      "ngần ngại",
+      "cô lập"
+    ],
+    "behavior_tags": [
+      "tự làm mọi việc"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn đang quá tải.\nNhưng vẫn chọn tự xoay sở.\nKhông phải vì không cần giúp đỡ.\nMà vì không tin việc nhờ giúp sẽ có ích.",
+    "reflection_question": "Điều gì khiến bạn ngần ngại tìm kiếm hỗ trợ?",
+    "self_reflection": "Lần gần nhất bạn nhận được sự giúp đỡ hữu ích là khi nào?",
+    "aha_message": "Trust không chỉ thể hiện qua việc cho đi.\nNó còn thể hiện qua khả năng nhận hỗ trợ.",
+    "practice_action": "Nhờ một người hỗ trợ bạn trong một việc cụ thể tuần này."
+  },
+  {
+    "story_id": "C1-08",
+    "title": "Tôi không biết người khác đang nghĩ gì",
+    "sca_dimension": "C1",
+    "human_need": "ket_noi",
+    "situation": "Thiếu minh bạch",
+    "emotion_tags": [
+      "nghi ngờ",
+      "bất an"
+    ],
+    "behavior_tags": [
+      "suy diễn",
+      "giữ khoảng cách"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Không ai nói gì.\nMọi thứ vẫn diễn ra bình thường.\nNhưng bạn luôn cảm thấy mình đang bỏ lỡ điều gì đó.",
+    "reflection_question": "Bạn có đủ thông tin để cảm thấy an tâm không?",
+    "self_reflection": "Điều gì đang khiến bạn nghi ngờ?",
+    "aha_message": "Trust phát triển tốt nhất trong môi trường có sự minh bạch.",
+    "practice_action": "Xác định một thông tin bạn cần để làm việc hiệu quả hơn."
+  },
+  {
+    "story_id": "C1-09",
+    "title": "Tôi từng tin, nhưng giờ không còn nữa",
+    "sca_dimension": "C1",
+    "human_need": "ket_noi",
+    "situation": "Niềm tin bị tổn thương",
+    "emotion_tags": [
+      "tổn thương",
+      "thất vọng"
+    ],
+    "behavior_tags": [
+      "phòng thủ"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Có thời điểm bạn rất tin tưởng ai đó.\nNhưng một trải nghiệm nào đó đã thay đổi điều đó.",
+    "reflection_question": "Điều gì khiến niềm tin đó thay đổi?",
+    "self_reflection": "Bạn đang mất niềm tin vào một người hay vào một kiểu trải nghiệm?",
+    "aha_message": "Một trải nghiệm tiêu cực có thể ảnh hưởng đến cách chúng ta nhìn nhiều mối quan hệ khác.",
+    "practice_action": "Phân biệt giữa con người cụ thể và trải nghiệm cụ thể."
+  },
+  {
+    "story_id": "C1-10",
+    "title": "Tôi cảm thấy an tâm khi làm việc cùng họ",
+    "sca_dimension": "C1",
+    "human_need": "ket_noi",
+    "situation": "Trải nghiệm tin cậy tích cực",
+    "emotion_tags": [
+      "an tâm",
+      "tin tưởng"
+    ],
+    "behavior_tags": [
+      "hợp tác",
+      "trao quyền"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Có những người mà chỉ cần biết họ tham gia.\nBạn đã thấy nhẹ nhõm hơn.\nKhông phải vì họ hoàn hảo.\nMà vì bạn biết họ sẽ làm điều họ nói.",
+    "reflection_question": "Ai là người khiến bạn cảm thấy yên tâm nhất khi làm việc cùng?",
+    "self_reflection": "Điều gì tạo nên cảm giác đó?",
+    "aha_message": "Trust không phải là một cảm giác mơ hồ.\nNó được xây từ những hành vi rất cụ thể và lặp lại.",
+    "practice_action": "Ghi lại 3 hành vi khiến bạn cảm thấy tin tưởng một người."
+  },
+  {
+    "story_id": "C2-01",
+    "title": "Ý tưởng của bạn biến mất trong cuộc họp",
+    "sca_dimension": "C2",
+    "human_need": "ket_noi",
+    "situation": "Không được lắng nghe",
+    "emotion_tags": [
+      "thất vọng",
+      "hụt hẫng",
+      "bất lực"
+    ],
+    "behavior_tags": [
+      "im lặng",
+      "rút lui",
+      "né phát biểu"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn đã chuẩn bị khá kỹ.\nKhi cuộc họp bắt đầu, bạn chia sẻ ý tưởng của mình.\nKhông ai phản hồi.\nCuộc trò chuyện tiếp tục như thể điều đó chưa từng được nói ra.\nMười phút sau, một người khác nhắc lại ý tưởng tương tự.\nLần này mọi người hào hứng.",
+    "reflection_question": "Tình huống này quen thuộc với bạn đến đâu?",
+    "self_reflection": "Lần gần nhất bạn cảm thấy tiếng nói của mình không được nhìn thấy là khi nào?",
+    "aha_message": "Đôi khi điều khiến chúng ta im lặng không phải vì thiếu ý tưởng.\nMà vì nhiều lần lên tiếng nhưng không tạo ra khác biệt.",
+    "practice_action": "Tuần này hãy ghi lại một lần bạn muốn lên tiếng nhưng đã chọn im lặng."
+  },
+  {
+    "story_id": "C2-02",
+    "title": "Cuộc họp kết thúc nhưng điều quan trọng nhất vẫn chưa được nói ra",
+    "sca_dimension": "C2",
+    "human_need": "ket_noi",
+    "situation": "Không dám lên tiếng",
+    "emotion_tags": [
+      "lo lắng",
+      "dè chừng",
+      "bất an"
+    ],
+    "behavior_tags": [
+      "giữ ý kiến",
+      "né phản biện"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn nhận ra có một rủi ro lớn trong kế hoạch.\nBạn đã nghĩ đến việc nói ra.\nRồi lại tự nhủ:\n\"Chắc mọi người cũng biết rồi.\"\n\"Chắc mình đang nghĩ quá.\"\nCuộc họp kết thúc.\nKhông ai nhắc đến vấn đề đó.",
+    "reflection_question": "Bạn đã bao nhiêu lần giữ lại điều mình thực sự muốn nói?",
+    "self_reflection": "Điều gì thường khiến bạn ngần ngại lên tiếng?",
+    "aha_message": "Nhiều tổ chức không thiếu ý tưởng.\nHọ thiếu những người cảm thấy đủ an toàn để nói ra điều mình thấy.",
+    "practice_action": "Viết ra một điều bạn đang giữ lại nhưng nghĩ rằng đội ngũ nên biết."
+  },
+  {
+    "story_id": "C2-03",
+    "title": "Bạn đồng ý dù trong lòng không đồng ý",
+    "sca_dimension": "C2",
+    "human_need": "ket_noi",
+    "situation": "Ngại phản biện",
+    "emotion_tags": [
+      "căng thẳng",
+      "lo mất lòng"
+    ],
+    "behavior_tags": [
+      "đồng ý cho xong",
+      "né tranh luận"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn biết phương án được chọn chưa phải lựa chọn tốt nhất.\nNhưng mọi người đều đồng ý.\nBạn không muốn trở thành người duy nhất phản đối.\nBạn gật đầu.\nCuộc họp tiếp tục.",
+    "reflection_question": "Bạn có thường đồng ý chỉ để tránh tranh luận không?",
+    "self_reflection": "Điều gì khiến bạn khó nói ra quan điểm khác biệt?",
+    "aha_message": "Sự đồng thuận không phải lúc nào cũng là dấu hiệu của sự đồng lòng.\nĐôi khi nó chỉ là dấu hiệu của sự im lặng tập thể.",
+    "practice_action": "Lần tới khi có ý kiến khác, hãy thử đặt một câu hỏi thay vì phản đối trực tiếp."
+  },
+  {
+    "story_id": "C2-04",
+    "title": "Bạn bị ngắt lời giữa chừng",
+    "sca_dimension": "C2",
+    "human_need": "ket_noi",
+    "situation": "Tiếng nói bị xem nhẹ",
+    "emotion_tags": [
+      "khó chịu",
+      "tổn thương"
+    ],
+    "behavior_tags": [
+      "giảm tham gia",
+      "thu mình"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn đang trình bày.\nMột người khác cắt ngang.\nCuộc trò chuyện chuyển hướng.\nKhông ai quay lại phần bạn đang nói.\nBạn dừng lại.",
+    "reflection_question": "Điều đó khiến bạn cảm thấy thế nào?",
+    "self_reflection": "Sau những trải nghiệm như vậy, bạn có thay đổi cách tham gia cuộc họp không?",
+    "aha_message": "Một vài trải nghiệm nhỏ lặp đi lặp lại có thể làm giảm sự tham gia nhiều hơn chúng ta nghĩ.",
+    "practice_action": "Quan sát xem tuần này có ai bị ngắt lời trong cuộc họp hay không."
+  },
+  {
+    "story_id": "C2-05",
+    "title": "Bạn muốn góp ý nhưng sợ làm mất lòng",
+    "sca_dimension": "C2",
+    "human_need": "ket_noi",
+    "situation": "Ngại phản hồi người khác",
+    "emotion_tags": [
+      "lo lắng",
+      "do dự"
+    ],
+    "behavior_tags": [
+      "giữ lại phản hồi"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn thấy một đồng nghiệp đang gặp khó khăn.\nBạn biết một góp ý nhỏ có thể giúp họ cải thiện.\nNhưng bạn lo rằng họ sẽ hiểu sai ý mình.\nCuối cùng bạn không nói gì.",
+    "reflection_question": "Bạn có thường giữ lại góp ý vì sợ ảnh hưởng mối quan hệ không?",
+    "self_reflection": "Bạn học được điều gì về phản hồi từ môi trường làm việc trước đây?",
+    "aha_message": "Nhiều người không né phản hồi vì thiếu quan tâm.\nHọ né vì quá quan tâm đến mối quan hệ.",
+    "practice_action": "Hãy thử đưa ra một phản hồi tích cực và cụ thể trong tuần này."
+  },
+  {
+    "story_id": "C2-06",
+    "title": "Bạn nhận lỗi thay vì giải thích",
+    "sca_dimension": "C2",
+    "human_need": "ket_noi",
+    "situation": "Sợ bị đánh giá",
+    "emotion_tags": [
+      "xấu hổ",
+      "lo sợ"
+    ],
+    "behavior_tags": [
+      "nhận lỗi",
+      "né giải thích"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Một vấn đề xảy ra.\nCó nhiều nguyên nhân.\nNhưng bạn cảm thấy việc giải thích sẽ chỉ khiến mọi thứ phức tạp hơn.\nBạn nhận lỗi.\nRồi kết thúc câu chuyện thật nhanh.",
+    "reflection_question": "Bạn có thường chọn im lặng để tránh bị đánh giá không?",
+    "self_reflection": "Bạn sợ điều gì nhất khi mắc lỗi?",
+    "aha_message": "Khi con người sợ bị phán xét, họ thường chọn bảo vệ hình ảnh hơn là chia sẻ sự thật.",
+    "practice_action": "Ghi lại lần gần nhất bạn mắc lỗi và điều bạn đã học được từ nó."
+  },
+  {
+    "story_id": "C2-07",
+    "title": "Bạn có câu hỏi nhưng không hỏi",
+    "sca_dimension": "C2",
+    "human_need": "ket_noi",
+    "situation": "Ngại đặt câu hỏi",
+    "emotion_tags": [
+      "ngại ngùng",
+      "thiếu tự tin"
+    ],
+    "behavior_tags": [
+      "giả vờ hiểu",
+      "không hỏi"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Mọi người dường như đều hiểu.\nChỉ có bạn cảm thấy chưa rõ.\nBạn muốn hỏi.\nNhưng lại sợ câu hỏi của mình quá đơn giản.\nBạn im lặng.",
+    "reflection_question": "Bạn có thường giả vờ đã hiểu để tránh cảm giác ngại ngùng không?",
+    "self_reflection": "Điều gì khiến bạn khó đặt câu hỏi?",
+    "aha_message": "Những câu hỏi không được hỏi thường tạo ra những sai lầm tốn kém hơn nhiều.",
+    "practice_action": "Tuần này hãy chủ động hỏi một điều bạn thực sự chưa hiểu."
+  },
+  {
+    "story_id": "C2-08",
+    "title": "Bạn được mời góp ý nhưng không tin rằng điều đó tạo ra thay đổi",
+    "sca_dimension": "C2",
+    "human_need": "ket_noi",
+    "situation": "Tiếng nói không tạo ảnh hưởng",
+    "emotion_tags": [
+      "thất vọng",
+      "hoài nghi"
+    ],
+    "behavior_tags": [
+      "bỏ qua khảo sát",
+      "không tham gia"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Khảo sát.\nWorkshop.\nTownhall.\nMọi người được mời chia sẻ ý kiến.\nBạn từng tham gia.\nNhưng chưa thấy điều gì thay đổi.\nLần này bạn bỏ qua.",
+    "reflection_question": "Bạn còn tin rằng tiếng nói của mình có thể tạo ra khác biệt không?",
+    "self_reflection": "Điều gì khiến niềm tin đó giảm đi?",
+    "aha_message": "Người ta không ngừng lên tiếng vì thiếu ý kiến.\nHọ ngừng lên tiếng vì thiếu bằng chứng rằng ý kiến của mình có giá trị.",
+    "practice_action": "Viết ra một thay đổi nhỏ mà bạn mong muốn nhất trong môi trường làm việc của mình."
+  },
+  {
+    "story_id": "C2-09",
+    "title": "Bạn luôn là người cuối cùng phát biểu",
+    "sca_dimension": "C2",
+    "human_need": "ket_noi",
+    "situation": "Tự kiểm duyệt bản thân",
+    "emotion_tags": [
+      "lo lắng",
+      "dè dặt"
+    ],
+    "behavior_tags": [
+      "chờ người khác phát biểu"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn có ý kiến.\nNhưng luôn chờ người khác nói trước.\nBạn muốn chắc rằng ý tưởng của mình không quá khác biệt.\nĐôi khi cuộc họp kết thúc trước khi tới lượt bạn.",
+    "reflection_question": "Bạn thường phát biểu để đóng góp hay để tránh sai?",
+    "self_reflection": "Điều gì xảy ra nếu bạn là người nói đầu tiên?",
+    "aha_message": "Sự tự tin không phải lúc nào cũng đến trước hành động.\nĐôi khi nó xuất hiện sau nhiều lần dám thử.",
+    "practice_action": "Trong cuộc họp tiếp theo, hãy thử phát biểu sớm hơn bình thường."
+  },
+  {
+    "story_id": "C2-10",
+    "title": "Bạn đã từng rất tích cực, nhưng bây giờ không còn nữa",
+    "sca_dimension": "C2",
+    "human_need": "ket_noi",
+    "situation": "Rút lui khỏi sự tham gia",
+    "emotion_tags": [
+      "mất động lực",
+      "thờ ơ"
+    ],
+    "behavior_tags": [
+      "ít đóng góp",
+      "ít chia sẻ"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Ngày đầu tiên vào công ty.\nBạn đầy ý tưởng.\nBạn muốn đóng góp.\nBạn muốn thay đổi điều gì đó.\nBây giờ bạn vẫn làm việc chăm chỉ.\nNhưng không còn nhiệt tình tham gia như trước.",
+    "reflection_question": "Điều gì đã thay đổi?",
+    "self_reflection": "Bạn bắt đầu rút lui từ thời điểm nào?",
+    "aha_message": "Sự tham gia không mất đi trong một ngày.\nNó giảm dần sau nhiều lần cảm thấy tiếng nói của mình không còn ý nghĩa.",
+    "practice_action": "Nhớ lại một thời điểm bạn từng rất chủ động. Khi đó điều gì khác so với hiện tại?"
+  },
+  {
+    "story_id": "C3-01",
+    "title": "Tôi biết có vấn đề nhưng không muốn nói",
+    "sca_dimension": "C3",
+    "human_need": "ket_noi",
+    "situation": "Né tránh cuộc trò chuyện khó",
+    "emotion_tags": [
+      "lo lắng",
+      "e ngại"
+    ],
+    "behavior_tags": [
+      "im lặng",
+      "né tránh"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Có một vấn đề đang tồn tại.\nBạn nhìn thấy nó.\nNhưng bạn quyết định im lặng.\nKhông phải vì không quan tâm.\nMà vì không biết nói thế nào.",
+    "reflection_question": "Có điều gì bạn đang tránh nhắc tới không?",
+    "self_reflection": "Điều gì khiến cuộc trò chuyện đó trở nên khó khăn?",
+    "aha_message": "Điều không được nói ra thường không tự biến mất.",
+    "practice_action": "Viết xuống điều bạn muốn nói nhưng chưa từng nói."
+  },
+  {
+    "story_id": "C3-02",
+    "title": "Mỗi lần góp ý đều trở thành tranh cãi",
+    "sca_dimension": "C3",
+    "human_need": "ket_noi",
+    "situation": "Đối thoại phòng thủ",
+    "emotion_tags": [
+      "bực bội",
+      "thất vọng"
+    ],
+    "behavior_tags": [
+      "phản bác",
+      "tự vệ"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn muốn góp ý.\nNhưng người đối diện lập tức giải thích hoặc phản bác.",
+    "reflection_question": "Điều gì thường xảy ra khi bạn đưa ra phản hồi?",
+    "self_reflection": "Bạn đang cố chứng minh hay đang cố hiểu nhau?",
+    "aha_message": "Một cuộc đối thoại tốt bắt đầu bằng sự tò mò, không phải sự đúng sai.",
+    "practice_action": "Trong cuộc trò chuyện tiếp theo, thử hỏi thêm một câu trước khi đưa ra ý kiến."
+  },
+  {
+    "story_id": "C3-03",
+    "title": "Chúng tôi chỉ nói về công việc, không nói về vấn đề",
+    "sca_dimension": "C3",
+    "human_need": "ket_noi",
+    "situation": "Trao đổi bề mặt",
+    "emotion_tags": [
+      "xa cách",
+      "dè dặt"
+    ],
+    "behavior_tags": [
+      "tránh chủ đề nhạy cảm"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Cuộc họp diễn ra đều đặn.\nCông việc vẫn được cập nhật.\nNhưng những điều thực sự quan trọng lại không xuất hiện.",
+    "reflection_question": "Có chủ đề nào mọi người luôn tránh nhắc đến không?",
+    "self_reflection": "Điều gì khiến chủ đề đó trở nên nhạy cảm?",
+    "aha_message": "Không phải mọi cuộc trao đổi đều tạo ra sự hiểu nhau.",
+    "practice_action": "Xác định một chủ đề quan trọng nhưng ít được nhắc tới."
+  },
+  {
+    "story_id": "C3-04",
+    "title": "Tôi không cảm thấy mình được hiểu",
+    "sca_dimension": "C3",
+    "human_need": "ket_noi",
+    "situation": "Thiếu lắng nghe",
+    "emotion_tags": [
+      "cô đơn",
+      "không được thấu hiểu"
+    ],
+    "behavior_tags": [
+      "ngắt lời",
+      "phản ứng vội"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn đã cố giải thích.\nNhưng cảm giác như người khác chỉ chờ để phản hồi.",
+    "reflection_question": "Lần gần nhất bạn cảm thấy được lắng nghe là khi nào?",
+    "self_reflection": "Điều gì tạo ra cảm giác đó?",
+    "aha_message": "Được lắng nghe thường quan trọng hơn được đồng ý.",
+    "practice_action": "Quan sát một cuộc trò chuyện và đếm số lần bạn thực sự lắng nghe."
+  },
+  {
+    "story_id": "C3-05",
+    "title": "Chúng tôi luôn hiểu khác nhau về cùng một việc",
+    "sca_dimension": "C3",
+    "human_need": "ket_noi",
+    "situation": "Hiểu lầm kéo dài",
+    "emotion_tags": [
+      "bối rối",
+      "khó chịu"
+    ],
+    "behavior_tags": [
+      "diễn giải khác nhau"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Sau cuộc họp.\nMỗi người lại hiểu một kiểu.",
+    "reflection_question": "Bạn có thường xuyên phải làm rõ lại những gì đã thống nhất không?",
+    "self_reflection": "Điều gì đang bị bỏ sót trong quá trình trao đổi?",
+    "aha_message": "Đối thoại không chỉ là nói.\nMà còn là tạo ra cùng một sự hiểu biết.",
+    "practice_action": "Sau cuộc trao đổi quan trọng, thử tóm tắt lại điều bạn hiểu."
+  },
+  {
+    "story_id": "C3-06",
+    "title": "Tôi sợ làm người khác khó chịu",
+    "sca_dimension": "C3",
+    "human_need": "ket_noi",
+    "situation": "Ngại phản hồi thẳng thắn",
+    "emotion_tags": [
+      "sợ mất lòng",
+      "lo lắng"
+    ],
+    "behavior_tags": [
+      "giữ ý kiến cho riêng mình"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn nhận ra một vấn đề.\nNhưng không muốn nói vì sợ ảnh hưởng mối quan hệ.",
+    "reflection_question": "Bạn thường giữ lại điều gì khi giao tiếp?",
+    "self_reflection": "Điều gì bạn đang cố bảo vệ?",
+    "aha_message": "Sự tử tế không đồng nghĩa với việc tránh sự thật.",
+    "practice_action": "Chọn một phản hồi nhỏ nhưng chân thành để chia sẻ."
+  },
+  {
+    "story_id": "C3-07",
+    "title": "Cuộc họp kết thúc nhưng vấn đề vẫn còn",
+    "sca_dimension": "C3",
+    "human_need": "ket_noi",
+    "situation": "Đối thoại không dẫn tới chuyển động",
+    "emotion_tags": [
+      "hụt hẫng",
+      "hoài nghi"
+    ],
+    "behavior_tags": [
+      "họp nhiều",
+      "thay đổi ít"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Mọi người đã trao đổi rất nhiều.\nNhưng sau đó không có gì thay đổi.",
+    "reflection_question": "Bạn có cảm thấy các cuộc trao đổi dẫn đến hành động không?",
+    "self_reflection": "Điều gì đang bị thiếu?",
+    "aha_message": "Đối thoại tốt tạo ra hiểu biết.\nĐối thoại xuất sắc tạo ra chuyển động.",
+    "practice_action": "Xác định hành động cụ thể tiếp theo sau một cuộc trao đổi."
+  },
+  {
+    "story_id": "C3-08",
+    "title": "Tôi luôn phải đoán ý người khác",
+    "sca_dimension": "C3",
+    "human_need": "ket_noi",
+    "situation": "Giao tiếp gián tiếp",
+    "emotion_tags": [
+      "mơ hồ",
+      "bất an"
+    ],
+    "behavior_tags": [
+      "nói vòng",
+      "đoán ý"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Không ai nói thẳng.\nMọi người dùng những câu rất an toàn.",
+    "reflection_question": "Bạn có thường phải suy đoán điều người khác thực sự muốn nói không?",
+    "self_reflection": "Điều đó ảnh hưởng thế nào tới công việc?",
+    "aha_message": "Sự rõ ràng giúp tiết kiệm rất nhiều năng lượng cảm xúc.",
+    "practice_action": "Thử diễn đạt nhu cầu của mình rõ ràng hơn một chút."
+  },
+  {
+    "story_id": "C3-09",
+    "title": "Chúng tôi nói chuyện nhưng không kết nối",
+    "sca_dimension": "C3",
+    "human_need": "ket_noi",
+    "situation": "Thiếu đối thoại thực chất",
+    "emotion_tags": [
+      "xa cách",
+      "trống rỗng"
+    ],
+    "behavior_tags": [
+      "giao tiếp xã giao"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Mọi người giao tiếp thường xuyên.\nNhưng vẫn cảm thấy xa cách.",
+    "reflection_question": "Điều gì còn thiếu trong các cuộc trao đổi hiện tại?",
+    "self_reflection": "Bạn có thực sự biết người đối diện đang nghĩ gì không?",
+    "aha_message": "Tần suất giao tiếp không đồng nghĩa với chất lượng giao tiếp.",
+    "practice_action": "Đặt một câu hỏi sâu hơn trong cuộc trò chuyện tiếp theo."
+  },
+  {
+    "story_id": "C3-10",
+    "title": "Cuộc trò chuyện nào đang cần diễn ra?",
+    "sca_dimension": "C3",
+    "human_need": "ket_noi",
+    "situation": "Đối thoại bị trì hoãn",
+    "emotion_tags": [
+      "căng thẳng",
+      "ngập ngừng"
+    ],
+    "behavior_tags": [
+      "trì hoãn đối thoại"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Có những cuộc trò chuyện mà bạn biết mình cần có.\nNhưng vẫn chưa bắt đầu.",
+    "reflection_question": "Cuộc trò chuyện nào bạn đang trì hoãn?",
+    "self_reflection": "Điều gì khiến bạn chưa sẵn sàng?",
+    "aha_message": "Nhiều bước ngoặt quan trọng bắt đầu từ một cuộc đối thoại can đảm.",
+    "practice_action": "Viết ra câu mở đầu cho cuộc trò chuyện đó."
+  },
+  {
+    "story_id": "S1-01",
+    "title": "Tôi không biết thế nào mới là làm tốt",
+    "sca_dimension": "S1",
+    "human_need": "ro_rang",
+    "situation": "Kỳ vọng không rõ ràng",
+    "emotion_tags": [
+      "mơ hồ",
+      "lo lắng",
+      "thiếu tự tin"
+    ],
+    "behavior_tags": [
+      "hỏi lại",
+      "đoán ý"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn cố gắng hoàn thành công việc.\nNhưng luôn có cảm giác:\n\"Mình có đang làm đúng điều người khác mong đợi không?\"",
+    "reflection_question": "Bạn có biết thế nào là một kết quả tốt trong công việc hiện tại không?",
+    "self_reflection": "Ai là người định nghĩa thành công cho vai trò của bạn?",
+    "aha_message": "Khi kỳ vọng không rõ ràng, rất khó để cảm thấy tự tin.",
+    "practice_action": "Viết ra 3 kết quả quan trọng nhất mà vai trò của bạn cần tạo ra."
+  },
+  {
+    "story_id": "S1-02",
+    "title": "Việc gì cũng đến tay tôi",
+    "sca_dimension": "S1",
+    "human_need": "ro_rang",
+    "situation": "Ranh giới vai trò mơ hồ",
+    "emotion_tags": [
+      "quá tải",
+      "bực bội"
+    ],
+    "behavior_tags": [
+      "ôm việc",
+      "làm thay"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn thường xuyên nhận thêm việc.\nKhông phải vì đó là trách nhiệm của mình.\nMà vì không ai rõ ai sẽ làm.",
+    "reflection_question": "Bạn có đang gánh những việc đáng lẽ thuộc về người khác?",
+    "self_reflection": "Điều gì khiến việc đó tiếp tục xảy ra?",
+    "aha_message": "Sự mơ hồ về vai trò thường tạo ra quá tải.",
+    "practice_action": "Ghi lại một việc bạn nghĩ không thuộc vai trò của mình."
+  },
+  {
+    "story_id": "S1-03",
+    "title": "Tôi không biết ưu tiên điều gì",
+    "sca_dimension": "S1",
+    "human_need": "ro_rang",
+    "situation": "Ưu tiên xung đột",
+    "emotion_tags": [
+      "rối rắm",
+      "áp lực"
+    ],
+    "behavior_tags": [
+      "chuyển việc liên tục"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Có quá nhiều việc cần làm.\nMọi việc đều được gọi là \"quan trọng\".",
+    "reflection_question": "Bạn có biết điều gì quan trọng nhất trong vai trò hiện tại không?",
+    "self_reflection": "Nếu chỉ hoàn thành một việc tuần này, đó nên là việc gì?",
+    "aha_message": "Vai trò rõ ràng giúp tạo ra ưu tiên rõ ràng.",
+    "practice_action": "Xác định 1 KPI quan trọng nhất của vai trò hiện tại."
+  },
+  {
+    "story_id": "S1-04",
+    "title": "Tôi luôn cảm thấy mình chưa đủ tốt",
+    "sca_dimension": "S1",
+    "human_need": "ro_rang",
+    "situation": "Tiêu chí đánh giá không rõ",
+    "emotion_tags": [
+      "nghi ngờ bản thân"
+    ],
+    "behavior_tags": [
+      "làm quá mức"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn làm việc chăm chỉ.\nNhưng vẫn không chắc mình đang làm tốt hay không.",
+    "reflection_question": "Bạn đang đánh giá bản thân bằng tiêu chí nào?",
+    "self_reflection": "Tiêu chí đó có thực sự rõ ràng không?",
+    "aha_message": "Sự không chắc chắn kéo dài thường đến từ việc thiếu tiêu chuẩn rõ ràng.",
+    "practice_action": "Liệt kê các tiêu chí đánh giá thành công của vai trò hiện tại."
+  },
+  {
+    "story_id": "S1-05",
+    "title": "Tôi nhận được những chỉ đạo trái ngược nhau",
+    "sca_dimension": "S1",
+    "human_need": "ro_rang",
+    "situation": "Kỳ vọng xung đột",
+    "emotion_tags": [
+      "căng thẳng",
+      "bối rối"
+    ],
+    "behavior_tags": [
+      "chiều lòng nhiều phía"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Một người yêu cầu làm nhanh.\nNgười khác yêu cầu làm kỹ.\nBạn cố làm cả hai.",
+    "reflection_question": "Bạn đang phải đáp ứng bao nhiêu kỳ vọng khác nhau?",
+    "self_reflection": "Kỳ vọng nào thực sự quan trọng?",
+    "aha_message": "Không phải mọi kỳ vọng đều có giá trị ngang nhau.",
+    "practice_action": "Xác định ai là stakeholder quan trọng nhất trong vai trò của bạn."
+  },
+  {
+    "story_id": "S1-06",
+    "title": "Tôi không hiểu tại sao mình phải làm việc này",
+    "sca_dimension": "S1",
+    "human_need": "ro_rang",
+    "situation": "Mất kết nối với mục đích công việc",
+    "emotion_tags": [
+      "chán nản",
+      "mất động lực"
+    ],
+    "behavior_tags": [
+      "làm cho xong"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn hoàn thành nhiệm vụ.\nNhưng không thấy ý nghĩa của nó.",
+    "reflection_question": "Bạn có hiểu công việc này đóng góp điều gì không?",
+    "self_reflection": "Ai hưởng lợi từ công việc bạn đang làm?",
+    "aha_message": "Con người thường gắn kết hơn khi hiểu mục đích phía sau công việc.",
+    "practice_action": "Viết ra ai được hưởng lợi từ công việc của bạn."
+  },
+  {
+    "story_id": "S1-07",
+    "title": "Tôi không biết mình có quyền quyết định đến đâu",
+    "sca_dimension": "S1",
+    "human_need": "ro_rang",
+    "situation": "Phạm vi trách nhiệm không rõ",
+    "emotion_tags": [
+      "do dự",
+      "lo lắng"
+    ],
+    "behavior_tags": [
+      "né quyết định"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn muốn chủ động.\nNhưng sợ vượt quá quyền hạn.",
+    "reflection_question": "Bạn có biết mình được phép quyết định điều gì không?",
+    "self_reflection": "Điều gì khiến bạn do dự?",
+    "aha_message": "Thiếu rõ ràng về quyền hạn làm giảm sự chủ động.",
+    "practice_action": "Liệt kê 3 việc bạn có thể tự quyết định mà không cần xin phép."
+  },
+  {
+    "story_id": "S1-08",
+    "title": "Vai trò của tôi đang thay đổi",
+    "sca_dimension": "S1",
+    "human_need": "ro_rang",
+    "situation": "Vai trò chuyển đổi",
+    "emotion_tags": [
+      "bất an",
+      "mất cân bằng"
+    ],
+    "behavior_tags": [
+      "thích nghi bị động"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Công việc hiện tại không còn giống lúc bạn bắt đầu.\nNhưng không ai thực sự nói rõ điều đó.",
+    "reflection_question": "Vai trò của bạn đã thay đổi như thế nào?",
+    "self_reflection": "Bạn có đang được kỳ vọng khác trước không?",
+    "aha_message": "Vai trò luôn tiến hóa, nhưng kỳ vọng không phải lúc nào cũng được cập nhật.",
+    "practice_action": "So sánh vai trò hiện tại với 1 năm trước."
+  },
+  {
+    "story_id": "S1-09",
+    "title": "Tôi không biết điều gì là đủ",
+    "sca_dimension": "S1",
+    "human_need": "ro_rang",
+    "situation": "Kỳ vọng vô hạn",
+    "emotion_tags": [
+      "kiệt sức",
+      "áp lực"
+    ],
+    "behavior_tags": [
+      "làm việc quá mức"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Dù làm được bao nhiêu.\nLuôn có thêm điều cần làm.",
+    "reflection_question": "Bạn có biết đâu là điểm hoàn thành hợp lý không?",
+    "self_reflection": "Ai đang định nghĩa \"đủ\"?",
+    "aha_message": "Không có giới hạn rõ ràng thường dẫn đến kiệt sức.",
+    "practice_action": "Xác định tiêu chuẩn \"đủ tốt\" cho một nhiệm vụ quan trọng."
+  },
+  {
+    "story_id": "S1-10",
+    "title": "Tôi thực sự được thuê để làm gì?",
+    "sca_dimension": "S1",
+    "human_need": "ro_rang",
+    "situation": "Mất rõ ràng về vai trò cốt lõi",
+    "emotion_tags": [
+      "mất phương hướng"
+    ],
+    "behavior_tags": [
+      "phân tán nguồn lực"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Sau nhiều năm làm việc.\nBạn nhận ra mình dành phần lớn thời gian cho những việc không phải lý do ban đầu mình được tuyển.",
+    "reflection_question": "Nếu mô tả vai trò hiện tại bằng một câu, bạn sẽ viết gì?",
+    "self_reflection": "Bạn có đang làm đúng công việc mình được kỳ vọng làm không?",
+    "aha_message": "Sự rõ ràng bắt đầu từ việc hiểu vai trò cốt lõi của mình.",
+    "practice_action": "Viết lại Job Description của chính mình bằng ngôn ngữ đơn giản.\nS2 – Collaboration Capability\nHuman Need\nClarity\nSCA Dimension\nS2 – Năng lực phối hợp\nCâu hỏi cốt lõi\nTôi có biết cách phối hợp với người khác để công việc được hoàn thành không?"
+  },
+  {
+    "story_id": "S2-01",
+    "title": "Tôi không biết nên tìm ai để giải quyết việc này",
+    "sca_dimension": "S2",
+    "human_need": "ro_rang",
+    "situation": "Thiếu rõ ràng về đầu mối",
+    "emotion_tags": [
+      "bối rối",
+      "lạc hướng"
+    ],
+    "behavior_tags": [
+      "hỏi nhiều nơi"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn gặp một vấn đề.\nNhưng không biết ai là người phù hợp để hỗ trợ.\nBạn hỏi nhiều nơi.\nMỗi người chỉ bạn sang một người khác.",
+    "reflection_question": "Khi gặp khó khăn, bạn có biết tìm ai không?",
+    "self_reflection": "Điều gì khiến việc tìm đúng người trở nên khó khăn?",
+    "aha_message": "Phối hợp hiệu quả bắt đầu từ việc biết ai đang nắm điều gì.",
+    "practice_action": "Liệt kê 3 người bạn thường tìm đến khi cần hỗ trợ."
+  },
+  {
+    "story_id": "S2-02",
+    "title": "Tôi luôn phải chờ người khác",
+    "sca_dimension": "S2",
+    "human_need": "ro_rang",
+    "situation": "Phụ thuộc trong quy trình",
+    "emotion_tags": [
+      "sốt ruột",
+      "bất lực"
+    ],
+    "behavior_tags": [
+      "chờ đợi",
+      "trì hoãn"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn đã hoàn thành phần việc của mình.\nNhưng dự án vẫn đứng yên.\nVì đang chờ một người khác.",
+    "reflection_question": "Điều gì thường làm công việc bị chậm lại?",
+    "self_reflection": "Bạn có nhìn thấy toàn bộ quy trình không?",
+    "aha_message": "Nút thắt thường nằm ở điểm giao nhau giữa các vai trò.",
+    "practice_action": "Xác định bước nào trong quy trình thường gây chậm trễ nhất."
+  },
+  {
+    "story_id": "S2-03",
+    "title": "Chúng tôi làm cùng một việc mà không biết",
+    "sca_dimension": "S2",
+    "human_need": "ro_rang",
+    "situation": "Chồng chéo trách nhiệm",
+    "emotion_tags": [
+      "khó chịu",
+      "lãng phí"
+    ],
+    "behavior_tags": [
+      "làm trùng việc"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Sau nhiều ngày làm việc.\nBạn phát hiện đồng nghiệp cũng đang làm cùng một việc tương tự.",
+    "reflection_question": "Bạn có thường gặp tình huống công việc bị trùng lặp không?",
+    "self_reflection": "Điều gì khiến điều đó xảy ra?",
+    "aha_message": "Sự phối hợp yếu thường tạo ra lãng phí vô hình.",
+    "practice_action": "Quan sát một công việc có nhiều người cùng tham gia."
+  },
+  {
+    "story_id": "S2-04",
+    "title": "Việc bị đẩy qua đẩy lại",
+    "sca_dimension": "S2",
+    "human_need": "ro_rang",
+    "situation": "Không rõ trách nhiệm",
+    "emotion_tags": [
+      "bực bội",
+      "căng thẳng"
+    ],
+    "behavior_tags": [
+      "đùn đẩy trách nhiệm"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Khi có vấn đề phát sinh.\nKhông ai chắc mình là người cần xử lý.",
+    "reflection_question": "Khi có sự cố, mọi người phản ứng thế nào?",
+    "self_reflection": "Ai là người chịu trách nhiệm cuối cùng?",
+    "aha_message": "Công việc dễ bị đình trệ khi quyền sở hữu không rõ ràng.",
+    "practice_action": "Xác định ai là người sở hữu kết quả cuối cùng của một nhiệm vụ quan trọng."
+  },
+  {
+    "story_id": "S2-05",
+    "title": "Chúng tôi hiểu khác nhau về cùng một mục tiêu",
+    "sca_dimension": "S2",
+    "human_need": "ro_rang",
+    "situation": "Thiếu đồng bộ",
+    "emotion_tags": [
+      "thất vọng",
+      "rời rạc"
+    ],
+    "behavior_tags": [
+      "làm việc lệch hướng"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Mỗi người đều nỗ lực.\nNhưng hướng đi lại khác nhau.",
+    "reflection_question": "Mọi người có đang nhìn cùng một mục tiêu không?",
+    "self_reflection": "Điều gì thường bị hiểu khác nhau?",
+    "aha_message": "Phối hợp không phải làm cùng nhau.\nMà là đi cùng hướng.",
+    "practice_action": "Thử hỏi đồng nghiệp mục tiêu quan trọng nhất hiện tại là gì."
+  },
+  {
+    "story_id": "S2-06",
+    "title": "Tôi luôn phải nhắc lại nhiều lần",
+    "sca_dimension": "S2",
+    "human_need": "ro_rang",
+    "situation": "Thiếu cơ chế phối hợp",
+    "emotion_tags": [
+      "mệt mỏi",
+      "áp lực"
+    ],
+    "behavior_tags": [
+      "nhắc việc liên tục"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn đã trao đổi.\nNhưng vẫn phải nhắc lại.\nRồi lại nhắc thêm lần nữa.",
+    "reflection_question": "Điều gì thường bị bỏ sót trong quá trình phối hợp?",
+    "self_reflection": "Thông tin đang được quản lý bằng hệ thống hay trí nhớ?",
+    "aha_message": "Vấn đề không phải con người quên.\nMà là hệ thống chưa hỗ trợ họ nhớ.",
+    "practice_action": "Xác định một việc đang phụ thuộc quá nhiều vào việc nhắc nhở thủ công."
+  },
+  {
+    "story_id": "S2-07",
+    "title": "Tôi không hiểu công việc của người khác",
+    "sca_dimension": "S2",
+    "human_need": "ro_rang",
+    "situation": "Thiếu hiểu biết liên chức năng",
+    "emotion_tags": [
+      "xa cách",
+      "hiểu lầm"
+    ],
+    "behavior_tags": [
+      "làm việc theo silo"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn biết rất rõ công việc của mình.\nNhưng không hiểu người khác đang chịu áp lực gì.",
+    "reflection_question": "Bạn hiểu bao nhiêu về công việc của các nhóm khác?",
+    "self_reflection": "Điều gì sẽ thay đổi nếu bạn hiểu họ hơn?",
+    "aha_message": "Sự cảm thông trong công việc thường bắt đầu từ sự hiểu biết.",
+    "practice_action": "Tìm hiểu một quy trình của bộ phận khác."
+  },
+  {
+    "story_id": "S2-08",
+    "title": "Mỗi lần phối hợp đều rất mệt",
+    "sca_dimension": "S2",
+    "human_need": "ro_rang",
+    "situation": "Chi phí phối hợp cao",
+    "emotion_tags": [
+      "quá tải",
+      "kiệt sức"
+    ],
+    "behavior_tags": [
+      "họp nhiều",
+      "trao đổi lặp"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Một việc đơn giản.\nNhưng cần rất nhiều cuộc họp và trao đổi.",
+    "reflection_question": "Điều gì làm việc phối hợp trở nên tốn năng lượng?",
+    "self_reflection": "Khó khăn nằm ở con người hay quy trình?",
+    "aha_message": "Khi cấu trúc rõ ràng, việc phối hợp trở nên nhẹ nhàng hơn.",
+    "practice_action": "Ghi lại những bước phối hợp gây mất thời gian nhất."
+  },
+  {
+    "story_id": "S2-09",
+    "title": "Chúng tôi phụ thuộc quá nhiều vào một người",
+    "sca_dimension": "S2",
+    "human_need": "ro_rang",
+    "situation": "Điểm nghẽn phối hợp",
+    "emotion_tags": [
+      "lo lắng",
+      "phụ thuộc"
+    ],
+    "behavior_tags": [
+      "tập trung kiến thức vào một người"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Có một người biết mọi thứ.\nKhi người đó bận hoặc nghỉ phép.\nMọi việc gần như dừng lại.",
+    "reflection_question": "Có ai đang trở thành điểm nghẽn trong hệ thống không?",
+    "self_reflection": "Điều gì khiến hệ thống phụ thuộc vào họ?",
+    "aha_message": "Một hệ thống khỏe không phụ thuộc vào một cá nhân duy nhất.",
+    "practice_action": "Xác định kiến thức hoặc quy trình cần được chia sẻ nhiều hơn."
+  },
+  {
+    "story_id": "S2-10",
+    "title": "Điều gì giúp chúng tôi phối hợp tốt nhất?",
+    "sca_dimension": "S2",
+    "human_need": "ro_rang",
+    "situation": "Nhận diện điều kiện phối hợp hiệu quả",
+    "emotion_tags": [
+      "tin tưởng",
+      "nhẹ nhõm"
+    ],
+    "behavior_tags": [
+      "chủ động phối hợp"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Có những thời điểm mọi việc diễn ra rất trơn tru.\nMọi người hiểu nhau.\nCông việc tiến triển nhanh.",
+    "reflection_question": "Điều gì đang hiện diện khi việc phối hợp hiệu quả?",
+    "self_reflection": "Điều đó có thể được tạo ra thường xuyên hơn không?",
+    "aha_message": "Những gì hoạt động tốt cũng đáng được quan sát như những gì chưa tốt.",
+    "practice_action": "Ghi lại một trải nghiệm phối hợp hiệu quả gần đây.\nS3 – Information Flow\nHuman Need\nClarity\nSCA Dimension\nS3 – Dòng chảy thông tin\nCâu hỏi cốt lõi\nTôi có thể tiếp cận đúng thông tin vào đúng thời điểm để làm tốt công việc của mình không?"
+  },
+  {
+    "story_id": "S3-01",
+    "title": "Tôi không biết tìm thông tin ở đâu",
+    "sca_dimension": "S3",
+    "human_need": "ro_rang",
+    "situation": "Khó tìm thông tin",
+    "emotion_tags": [
+      "bối rối",
+      "mất kiên nhẫn"
+    ],
+    "behavior_tags": [
+      "tìm kiếm nhiều nơi"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn biết thông tin đó tồn tại.\nNhưng không biết nằm ở đâu.\nBạn phải hỏi nhiều người hoặc tìm rất lâu.",
+    "reflection_question": "Bạn có thường mất thời gian để tìm thông tin không?",
+    "self_reflection": "Thông tin nào bạn phải đi tìm nhiều nhất?",
+    "aha_message": "Khi thông tin khó tiếp cận, năng lượng thường bị tiêu hao trước khi công việc bắt đầu.",
+    "practice_action": "Ghi lại một thông tin bạn đã mất nhiều thời gian để tìm trong tuần qua."
+  },
+  {
+    "story_id": "S3-02",
+    "title": "Tôi phát hiện thông tin quá muộn",
+    "sca_dimension": "S3",
+    "human_need": "ro_rang",
+    "situation": "Thông tin đến trễ",
+    "emotion_tags": [
+      "hụt hẫng",
+      "bị động"
+    ],
+    "behavior_tags": [
+      "phản ứng muộn"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn đang làm việc theo một hướng.\nRồi phát hiện có một thay đổi quan trọng đã diễn ra từ trước.",
+    "reflection_question": "Bạn có thường biết tin sau người khác không?",
+    "self_reflection": "Điều đó ảnh hưởng thế nào đến công việc của bạn?",
+    "aha_message": "Không chỉ chất lượng thông tin quan trọng.\nThời điểm nhận được thông tin cũng quan trọng.",
+    "practice_action": "Xác định loại thông tin bạn cần nhận sớm hơn."
+  },
+  {
+    "story_id": "S3-03",
+    "title": "Mỗi người nói một kiểu",
+    "sca_dimension": "S3",
+    "human_need": "ro_rang",
+    "situation": "Thông tin không nhất quán",
+    "emotion_tags": [
+      "hoang mang",
+      "nghi ngờ"
+    ],
+    "behavior_tags": [
+      "xác minh nhiều lần"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn hỏi ba người.\nNhận được ba câu trả lời khác nhau.",
+    "reflection_question": "Điều này quen thuộc với bạn đến đâu?",
+    "self_reflection": "Điều gì khiến mọi người hiểu khác nhau?",
+    "aha_message": "Sự thiếu nhất quán thường tạo ra nhiều nhầm lẫn hơn việc thiếu thông tin.",
+    "practice_action": "Quan sát một thông tin đang được diễn giải khác nhau trong tổ chức."
+  },
+  {
+    "story_id": "S3-04",
+    "title": "Tôi không biết thông tin nào là mới nhất",
+    "sca_dimension": "S3",
+    "human_need": "ro_rang",
+    "situation": "Phiên bản thông tin không rõ",
+    "emotion_tags": [
+      "lo lắng",
+      "thiếu chắc chắn"
+    ],
+    "behavior_tags": [
+      "dùng sai tài liệu"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Có nhiều file.\nNhiều tài liệu.\nNhiều nguồn.\nNhưng không ai chắc đâu là bản chính thức.",
+    "reflection_question": "Bạn có từng làm việc trên thông tin đã lỗi thời?",
+    "self_reflection": "Điều gì khiến việc cập nhật trở nên khó khăn?",
+    "aha_message": "Thông tin cũ thường tạo ra quyết định sai.",
+    "practice_action": "Kiểm tra một tài liệu bạn đang sử dụng thường xuyên."
+  },
+  {
+    "story_id": "S3-05",
+    "title": "Tôi phải hỏi cùng một câu hỏi nhiều lần",
+    "sca_dimension": "S3",
+    "human_need": "ro_rang",
+    "situation": "Kiến thức không được lưu giữ",
+    "emotion_tags": [
+      "mệt mỏi",
+      "lặp lại"
+    ],
+    "behavior_tags": [
+      "hỏi lại liên tục"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Mỗi lần cần thông tin.\nBạn lại phải hỏi lại từ đầu.",
+    "reflection_question": "Điều gì thường xuyên phải được giải thích lặp đi lặp lại?",
+    "self_reflection": "Tại sao kiến thức đó chưa được ghi nhận?",
+    "aha_message": "Một hệ thống tốt giúp thông tin ở lại ngay cả khi con người thay đổi.",
+    "practice_action": "Ghi lại một kiến thức nên được lưu trữ thay vì truyền miệng."
+  },
+  {
+    "story_id": "S3-06",
+    "title": "Tôi bị ngập trong quá nhiều thông tin",
+    "sca_dimension": "S3",
+    "human_need": "ro_rang",
+    "situation": "Quá tải thông tin",
+    "emotion_tags": [
+      "quá tải",
+      "mất tập trung"
+    ],
+    "behavior_tags": [
+      "đọc nhiều",
+      "xử lý ít"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Tin nhắn.\nEmail.\nThông báo.\nTài liệu.\nMọi thứ đều quan trọng.",
+    "reflection_question": "Bạn có cảm thấy khó theo kịp lượng thông tin hiện tại không?",
+    "self_reflection": "Thông tin nào thực sự hữu ích với bạn?",
+    "aha_message": "Nhiều thông tin không đồng nghĩa với nhiều sự rõ ràng.",
+    "practice_action": "Loại bỏ một nguồn thông tin không còn giá trị."
+  },
+  {
+    "story_id": "S3-07",
+    "title": "Có những thứ chỉ một vài người biết",
+    "sca_dimension": "S3",
+    "human_need": "ro_rang",
+    "situation": "Thông tin bị giữ lại",
+    "emotion_tags": [
+      "bất công",
+      "khó chịu"
+    ],
+    "behavior_tags": [
+      "phụ thuộc người khác"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn nhận ra một số người luôn có lợi thế.\nKhông phải vì họ giỏi hơn.\nMà vì họ biết nhiều hơn.",
+    "reflection_question": "Có thông tin nào không dễ tiếp cận với tất cả mọi người không?",
+    "self_reflection": "Điều đó ảnh hưởng thế nào đến sự công bằng?",
+    "aha_message": "Thông tin là một dạng quyền lực trong hệ thống.",
+    "practice_action": "Xác định một thông tin nên được chia sẻ rộng hơn."
+  },
+  {
+    "story_id": "S3-08",
+    "title": "Tôi không hiểu bức tranh toàn cảnh",
+    "sca_dimension": "S3",
+    "human_need": "ro_rang",
+    "situation": "Thiếu ngữ cảnh",
+    "emotion_tags": [
+      "mất kết nối",
+      "mơ hồ"
+    ],
+    "behavior_tags": [
+      "làm theo chỉ dẫn"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Bạn biết việc mình cần làm.\nNhưng không hiểu tại sao nó quan trọng.",
+    "reflection_question": "Bạn có hiểu công việc của mình kết nối với mục tiêu lớn hơn thế nào không?",
+    "self_reflection": "Điều gì còn thiếu trong bức tranh hiện tại?",
+    "aha_message": "Thông tin chỉ có ý nghĩa khi được đặt trong ngữ cảnh phù hợp.",
+    "practice_action": "Hỏi thêm về mục tiêu hoặc lý do phía sau một nhiệm vụ."
+  },
+  {
+    "story_id": "S3-09",
+    "title": "Tôi không biết điều gì đã thay đổi",
+    "sca_dimension": "S3",
+    "human_need": "ro_rang",
+    "situation": "Thiếu cập nhật",
+    "emotion_tags": [
+      "bất ngờ",
+      "bị động"
+    ],
+    "behavior_tags": [
+      "chạy theo thay đổi"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Một quy trình mới xuất hiện.\nMột quyết định mới được đưa ra.\nNhưng bạn không hề biết.",
+    "reflection_question": "Bạn có thường xuyên bất ngờ trước những thay đổi không?",
+    "self_reflection": "Thông tin thay đổi đang được truyền đi như thế nào?",
+    "aha_message": "Thay đổi không được truyền đạt thường tạo ra kháng cự.",
+    "practice_action": "Quan sát một thay đổi gần đây và cách nó được truyền thông."
+  },
+  {
+    "story_id": "S3-10",
+    "title": "Điều gì giúp tôi luôn có đủ thông tin?",
+    "sca_dimension": "S3",
+    "human_need": "ro_rang",
+    "situation": "Nhận diện dòng chảy thông tin hiệu quả",
+    "emotion_tags": [
+      "chủ động",
+      "tự tin"
+    ],
+    "behavior_tags": [
+      "tìm kiếm và chia sẻ thông tin"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Có những thời điểm bạn cảm thấy rất rõ ràng.\nBạn biết điều gì đang diễn ra.\nBạn biết mình cần làm gì.",
+    "reflection_question": "Điều gì tạo ra cảm giác đó?",
+    "self_reflection": "Bạn nhận thông tin từ đâu?",
+    "aha_message": "Sự rõ ràng thường xuất hiện khi thông tin đúng được tiếp cận đúng lúc.",
+    "practice_action": "Ghi lại nguồn thông tin hữu ích nhất với bạn hiện nay."
+  }
+]
