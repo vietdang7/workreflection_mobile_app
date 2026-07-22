@@ -185,7 +185,7 @@ class ReflectionStep {
 // WrInsight
 // ---------------------------------------------------------------------------
 
-/// Maps to public.wr_insights.
+/// Maps to public.wr_reflection_insights.
 class WrInsight {
   const WrInsight({
     required this.userId,
@@ -221,7 +221,7 @@ class WrInsight {
     );
   }
 
-  /// Returns a map suitable for INSERT into public.wr_insights.
+  /// Returns a map suitable for INSERT into public.wr_reflection_insights.
   /// Excludes server-generated fields: id, created_at.
   Map<String, dynamic> toInsert() => {
         'user_id': userId,

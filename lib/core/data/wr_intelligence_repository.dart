@@ -188,7 +188,7 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
   @override
   Future<WrInsight?> fetchLatestInsight(String userId) async {
     final rows = await _client
-        .from('wr_insights')
+        .from('wr_reflection_insights')
         .select()
         .eq('user_id', userId)
         .order('created_at', ascending: false)
@@ -201,7 +201,7 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
   Future<List<WrInsight>> fetchInsightHistory(String userId) async {
     // NOTE: Does NOT enforce premium gating. Caller must check WrEntitlement.
     final rows = await _client
-        .from('wr_insights')
+        .from('wr_reflection_insights')
         .select()
         .eq('user_id', userId)
         .order('created_at', ascending: false);
@@ -210,7 +210,7 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
 
   @override
   Future<void> insertInsight(WrInsight i) async {
-    await _client.from('wr_insights').insert(i.toInsert());
+    await _client.from('wr_reflection_insights').insert(i.toInsert());
   }
 
   @override

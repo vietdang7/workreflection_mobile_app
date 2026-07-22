@@ -71,8 +71,8 @@ create table if not exists public.wr_reflection_steps (
   created_at       timestamptz not null default now()
 );
 
--- 7. wr_insights
-create table if not exists public.wr_insights (
+-- 7. wr_reflection_insights
+create table if not exists public.wr_reflection_insights (
   id             uuid primary key default gen_random_uuid(),
   user_id        uuid not null references auth.users(id) on delete cascade,
   source         text check (source in ('story','self_check','pattern')),
@@ -149,7 +149,7 @@ create table if not exists public.wr_context_documents (
 
 create index if not exists wr_human_need_snapshots_user_idx        on public.wr_human_need_snapshots (user_id, created_at desc);
 create index if not exists wr_reflection_steps_user_idx            on public.wr_reflection_steps (user_id, created_at desc);
-create index if not exists wr_insights_user_idx                    on public.wr_insights (user_id, created_at desc);
+create index if not exists wr_reflection_insights_user_idx                    on public.wr_reflection_insights (user_id, created_at desc);
 create index if not exists wr_pattern_counts_user_idx              on public.wr_pattern_counts (user_id);
 create index if not exists wr_pattern_narratives_user_idx          on public.wr_pattern_narratives (user_id, created_at desc);
 create index if not exists wr_growth_journey_user_idx              on public.wr_growth_journey_snapshots (user_id, created_at desc);
@@ -263,32 +263,32 @@ create policy "wr_reflection_steps_owner_delete"
   for delete
   using (auth.uid() = user_id);
 
--- wr_insights (owner-only 4 policies)
-alter table public.wr_insights enable row level security;
+-- wr_reflection_insights (owner-only 4 policies)
+alter table public.wr_reflection_insights enable row level security;
 
-drop policy if exists "wr_insights_owner_select" on public.wr_insights;
-drop policy if exists "wr_insights_owner_insert" on public.wr_insights;
-drop policy if exists "wr_insights_owner_update" on public.wr_insights;
-drop policy if exists "wr_insights_owner_delete" on public.wr_insights;
+drop policy if exists "wr_reflection_insights_owner_select" on public.wr_reflection_insights;
+drop policy if exists "wr_reflection_insights_owner_insert" on public.wr_reflection_insights;
+drop policy if exists "wr_reflection_insights_owner_update" on public.wr_reflection_insights;
+drop policy if exists "wr_reflection_insights_owner_delete" on public.wr_reflection_insights;
 
-create policy "wr_insights_owner_select"
-  on public.wr_insights
+create policy "wr_reflection_insights_owner_select"
+  on public.wr_reflection_insights
   for select
   using (auth.uid() = user_id);
 
-create policy "wr_insights_owner_insert"
-  on public.wr_insights
+create policy "wr_reflection_insights_owner_insert"
+  on public.wr_reflection_insights
   for insert
   with check (auth.uid() = user_id);
 
-create policy "wr_insights_owner_update"
-  on public.wr_insights
+create policy "wr_reflection_insights_owner_update"
+  on public.wr_reflection_insights
   for update
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
-create policy "wr_insights_owner_delete"
-  on public.wr_insights
+create policy "wr_reflection_insights_owner_delete"
+  on public.wr_reflection_insights
   for delete
   using (auth.uid() = user_id);
 
