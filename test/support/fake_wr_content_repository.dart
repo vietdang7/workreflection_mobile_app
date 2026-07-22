@@ -100,4 +100,22 @@ class FakeWrContentRepository implements WrContentRepository {
     final capped = sorted.length > limit ? sorted.sublist(0, limit) : sorted;
     return List.unmodifiable(capped);
   }
+
+  @override
+  Future<List<CareerMemoryEvent>> fetchMemoryEventsForUser(
+    String userId, {
+    int? limit,
+  }) async {
+    _maybeThrow();
+    final sorted = _events.where((e) => e.userId == userId).toList()
+      ..sort((a, b) {
+        final aTime = a.createdAt ?? DateTime(1970);
+        final bTime = b.createdAt ?? DateTime(1970);
+        return bTime.compareTo(aTime);
+      });
+    if (limit != null && sorted.length > limit) {
+      return List.unmodifiable(sorted.sublist(0, limit));
+    }
+    return List.unmodifiable(sorted);
+  }
 }

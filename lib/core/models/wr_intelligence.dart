@@ -475,6 +475,7 @@ class PracticeEnrollment {
     this.id,
     this.startedAt,
     this.completedAt,
+    this.completedSteps = const [],
   });
 
   final String? id;
@@ -483,7 +484,13 @@ class PracticeEnrollment {
   final DateTime? startedAt;
   final DateTime? completedAt;
 
+  /// IDs of practice steps the user has marked done (e.g. ['pt-voice-1']).
+  /// Maps to completed_steps text[] column added by migration 20260722000002.
+  final List<String> completedSteps;
+
   factory PracticeEnrollment.fromJson(Map<String, dynamic> json) {
+    final raw = json['completed_steps'];
+    final steps = raw is List ? raw.cast<String>() : <String>[];
     return PracticeEnrollment(
       id: json['id'] as String?,
       userId: json['user_id'] as String,
@@ -494,6 +501,7 @@ class PracticeEnrollment {
       completedAt: json['completed_at'] != null
           ? DateTime.parse(json['completed_at'] as String)
           : null,
+      completedSteps: steps,
     );
   }
 
@@ -503,6 +511,17 @@ class PracticeEnrollment {
         'user_id': userId,
         'theme_id': themeId,
       };
+
+  PracticeEnrollment copyWith({List<String>? completedSteps}) {
+    return PracticeEnrollment(
+      id: id,
+      userId: userId,
+      themeId: themeId,
+      startedAt: startedAt,
+      completedAt: completedAt,
+      completedSteps: completedSteps ?? this.completedSteps,
+    );
+  }
 }
 
 // ---------------------------------------------------------------------------

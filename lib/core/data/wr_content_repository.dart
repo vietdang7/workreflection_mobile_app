@@ -39,6 +39,13 @@ abstract class WrContentRepository {
   /// Fetches the current user's career memory events, newest first.
   /// [limit] defaults to 50.
   Future<List<CareerMemoryEvent>> fetchMemoryEvents({int limit = 50});
+
+  /// Fetch memory events for a specific [userId] — for UI layers that
+  /// pass userId explicitly (e.g. Journey screen via Riverpod provider).
+  Future<List<CareerMemoryEvent>> fetchMemoryEventsForUser(
+    String userId, {
+    int? limit,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -109,6 +116,23 @@ class SupabaseWrContentRepository implements WrContentRepository {
         .eq('user_id', uid)
         .order('created_at', ascending: false)
         .limit(limit);
+    return rows.map(CareerMemoryEvent.fromJson).toList();
+  }
+
+  @override
+  Future<List<CareerMemoryEvent>> fetchMemoryEventsForUser(
+    String userId, {
+    int? limit,
+  }) async {
+    var query = _client
+        .from('wr_career_memory_events')
+        .select()
+        .eq('user_id', userId)
+        .order('created_at', ascending: false);
+    if (limit != null) {
+      query = query.limit(limit);
+    }
+    final rows = await query;
     return rows.map(CareerMemoryEvent.fromJson).toList();
   }
 }

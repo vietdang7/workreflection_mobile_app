@@ -64,6 +64,13 @@ abstract class WrIntelligenceRepository {
   /// Enroll user in a practice theme.
   Future<void> enrollTheme(PracticeEnrollment e);
 
+  /// Update the completedSteps list for an enrollment.
+  Future<void> updateEnrollmentSteps({
+    required String userId,
+    required String themeId,
+    required List<String> completedSteps,
+  });
+
   /// Mark a theme enrollment as completed for [userId]/[themeId].
   Future<void> completeTheme({required String userId, required String themeId});
 
@@ -237,6 +244,19 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
   @override
   Future<void> enrollTheme(PracticeEnrollment e) async {
     await _client.from('wr_practice_enrollments').insert(e.toInsert());
+  }
+
+  @override
+  Future<void> updateEnrollmentSteps({
+    required String userId,
+    required String themeId,
+    required List<String> completedSteps,
+  }) async {
+    await _client
+        .from('wr_practice_enrollments')
+        .update({'completed_steps': completedSteps})
+        .eq('user_id', userId)
+        .eq('theme_id', themeId);
   }
 
   @override

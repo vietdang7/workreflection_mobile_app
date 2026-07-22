@@ -26,6 +26,8 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
   final List<ScaSelfCheckResponse> insertSelfCheckResponseCalls = [];
   final List<WrInsight> insertInsightCalls = [];
   final List<PracticeEnrollment> enrollThemeCalls = [];
+  final List<({String userId, String themeId, List<String> completedSteps})>
+      updateEnrollmentStepsCalls = [];
   final List<({String userId, String themeId})> completeThemeCalls = [];
   final List<WrContextDocument> insertContextDocumentCalls = [];
   final List<({String userId, String situationCode, String scaDimensionDb})>
@@ -240,6 +242,26 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
   }
 
   @override
+  Future<void> updateEnrollmentSteps({
+    required String userId,
+    required String themeId,
+    required List<String> completedSteps,
+  }) async {
+    _maybeThrow();
+    updateEnrollmentStepsCalls.add((
+      userId: userId,
+      themeId: themeId,
+      completedSteps: completedSteps,
+    ));
+    final idx = _enrollments.indexWhere(
+      (e) => e.userId == userId && e.themeId == themeId,
+    );
+    if (idx >= 0) {
+      _enrollments[idx] = _enrollments[idx].copyWith(completedSteps: completedSteps);
+    }
+  }
+
+  @override
   Future<void> completeTheme({
     required String userId,
     required String themeId,
@@ -257,6 +279,7 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
         themeId: e.themeId,
         startedAt: e.startedAt,
         completedAt: DateTime.now(),
+        completedSteps: e.completedSteps,
       );
     }
   }

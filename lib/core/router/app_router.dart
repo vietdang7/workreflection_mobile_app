@@ -42,6 +42,7 @@ import '../../features/wr/presentation/wr_discover_screen.dart';
 import '../../features/wr/presentation/wr_growth_screen.dart';
 import '../../features/wr/presentation/wr_journey_screen.dart';
 import '../../features/wr/presentation/wr_paywall_screen.dart';
+import '../../features/wr/presentation/wr_self_check_screen.dart';
 import 'auth_change_notifier.dart';
 
 // ---------------------------------------------------------------------------
@@ -277,6 +278,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile',
         builder: (context, state) => const ProfileScreen(),
+      ),
+
+      GoRoute(
+        path: '/wr/self-check',
+        builder: (context, state) => const WrSelfCheckScreen(),
       ),
 
       GoRoute(
