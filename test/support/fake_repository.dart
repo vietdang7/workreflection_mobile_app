@@ -130,7 +130,11 @@ class FakeWrRepository implements WrRepository {
   Future<Checkin?> getTodayCheckin() async => _todayCheckin;
 
   @override
-  Future<void> upsertCheckin(Mood mood) async {
+  Future<void> upsertCheckin(
+    Mood mood, {
+    CheckinEnergy? energy,
+    CheckinDirection? direction,
+  }) async {
     upsertCheckinCalls.add(mood);
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
@@ -138,6 +142,8 @@ class FakeWrRepository implements WrRepository {
       id: 'fake-checkin',
       userId: 'fake-user',
       mood: mood,
+      energy: energy,
+      direction: direction,
       checkinDate: today,
       createdAt: now,
     );
@@ -147,6 +153,10 @@ class FakeWrRepository implements WrRepository {
     )) {
       _checkinDates.add(today);
     }
+  }
+
+  void seedTodayCheckin(Checkin checkin) {
+    _todayCheckin = checkin;
   }
 
   @override

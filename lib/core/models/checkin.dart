@@ -18,6 +18,55 @@ enum Mood {
   }
 }
 
+/// Energy level for the new check-in UI (Phase 2).
+/// Maps to wr_checkins.energy check constraint.
+enum CheckinEnergy {
+  good,
+  ok,
+  low;
+
+  String get dbValue => switch (this) {
+        CheckinEnergy.good => 'good',
+        CheckinEnergy.ok => 'ok',
+        CheckinEnergy.low => 'low',
+      };
+
+  static CheckinEnergy fromDb(String value) => switch (value) {
+        'good' => CheckinEnergy.good,
+        'ok' => CheckinEnergy.ok,
+        'low' => CheckinEnergy.low,
+        _ => throw ArgumentError('Unknown CheckinEnergy db value: $value'),
+      };
+
+  /// Maps energy → legacy Mood for backward-compatible upsert.
+  Mood toMood() => switch (this) {
+        CheckinEnergy.good => Mood.happy,
+        CheckinEnergy.ok => Mood.okay,
+        CheckinEnergy.low => Mood.tired,
+      };
+}
+
+/// Perceived direction — forward/steady/backward.
+/// Maps to wr_checkins.direction check constraint.
+enum CheckinDirection {
+  forward,
+  steady,
+  backward;
+
+  String get dbValue => switch (this) {
+        CheckinDirection.forward => 'forward',
+        CheckinDirection.steady => 'steady',
+        CheckinDirection.backward => 'backward',
+      };
+
+  static CheckinDirection fromDb(String value) => switch (value) {
+        'forward' => CheckinDirection.forward,
+        'steady' => CheckinDirection.steady,
+        'backward' => CheckinDirection.backward,
+        _ => throw ArgumentError('Unknown CheckinDirection db value: $value'),
+      };
+}
+
 /// Maps to the public.wr_checkins table.
 class Checkin {
   const Checkin({
@@ -26,11 +75,15 @@ class Checkin {
     required this.mood,
     required this.checkinDate,
     required this.createdAt,
+    this.energy,
+    this.direction,
   });
 
   final String id;
   final String userId;
   final Mood mood;
+  final CheckinEnergy? energy;
+  final CheckinDirection? direction;
 
   /// The calendar date of the check-in (time component stripped).
   final DateTime checkinDate;
@@ -43,6 +96,12 @@ class Checkin {
       mood: Mood.fromDb(json['mood'] as String),
       checkinDate: DateTime.parse(json['checkin_date'] as String),
       createdAt: DateTime.parse(json['created_at'] as String),
+      energy: json['energy'] != null
+          ? CheckinEnergy.fromDb(json['energy'] as String)
+          : null,
+      direction: json['direction'] != null
+          ? CheckinDirection.fromDb(json['direction'] as String)
+          : null,
     );
   }
 }

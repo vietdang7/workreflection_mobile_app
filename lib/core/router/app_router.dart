@@ -35,6 +35,8 @@ import '../../features/survey/presentation/survey_history_screen.dart';
 import '../../features/understand/presentation/insights_screen.dart';
 import '../../features/survey/presentation/survey_guide_screen.dart';
 import '../../features/wr/presentation/wr_home_screen.dart';
+import '../../features/wr/presentation/wr_situation_flow_screen.dart';
+import '../../features/wr/presentation/wr_story_flow_screen.dart';
 import '../../features/wr/presentation/wr_story_screen.dart';
 import '../../features/wr/presentation/wr_discover_screen.dart';
 import '../../features/wr/presentation/wr_growth_screen.dart';
@@ -275,6 +277,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile',
         builder: (context, state) => const ProfileScreen(),
+      ),
+
+      GoRoute(
+        path: '/wr/situation',
+        builder: (context, state) => const WrSituationFlowScreen(),
+      ),
+      GoRoute(
+        path: '/wr/story/flow',
+        builder: (context, state) => const WrStoryFlowScreen(),
       ),
 
       GoRoute(

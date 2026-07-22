@@ -28,7 +28,7 @@ class _FailingCheckinRepo implements WrRepository {
   final FakeWrRepository _d;
 
   @override Future<Checkin?> getTodayCheckin() => _d.getTodayCheckin();
-  @override Future<void> upsertCheckin(Mood mood) async => throw Exception('network error');
+  @override Future<void> upsertCheckin(Mood mood, {CheckinEnergy? energy, CheckinDirection? direction}) async => throw Exception('network error');
   @override Future<List<DateTime>> getCheckinDates({int limit = 60}) => _d.getCheckinDates(limit: limit);
   @override Future<int> countCheckins() => _d.countCheckins();
   @override Future<Insight?> getLatestInsight() => _d.getLatestInsight();
@@ -64,7 +64,7 @@ class _FailingPracticeRepo implements WrRepository {
   final FakeWrRepository _d;
 
   @override Future<Checkin?> getTodayCheckin() => _d.getTodayCheckin();
-  @override Future<void> upsertCheckin(Mood mood) => _d.upsertCheckin(mood);
+  @override Future<void> upsertCheckin(Mood mood, {CheckinEnergy? energy, CheckinDirection? direction}) => _d.upsertCheckin(mood, energy: energy, direction: direction);
   @override Future<List<DateTime>> getCheckinDates({int limit = 60}) => _d.getCheckinDates(limit: limit);
   @override Future<int> countCheckins() => _d.countCheckins();
   @override Future<Insight?> getLatestInsight() => _d.getLatestInsight();

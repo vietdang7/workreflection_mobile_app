@@ -2,7 +2,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/data/wr_intelligence_repository.dart';
+import '../../core/data/wr_repository.dart';
 import '../../core/logic/wr_entitlement.dart';
+import '../../core/models/checkin.dart';
 import '../../core/models/wr_intelligence.dart';
 
 /// Provides the current authenticated user's id.
@@ -29,4 +31,10 @@ final wrEntitlementProvider = FutureProvider<WrEntitlement>((ref) async {
   } catch (_) {
     return WrEntitlement(plan: WrPlan.free);
   }
+});
+
+/// Fetch today's check-in (nullable). Used by WrHomeScreen to detect saved state.
+final todayCheckinProvider = FutureProvider<Checkin?>((ref) async {
+  final repo = ref.watch(wrRepositoryProvider);
+  return repo.getTodayCheckin();
 });

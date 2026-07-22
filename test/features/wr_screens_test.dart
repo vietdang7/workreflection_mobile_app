@@ -58,14 +58,18 @@ void main() {
       expect(find.byIcon(Icons.person), findsOneWidget);
     });
 
-    testWidgets('tapping energy card shows snackbar', (tester) async {
+    // Sprint 1 pivot: WrHomeScreen now has real check-in card (energy+direction+save).
+    // Tapping energy alone no longer shows a snackbar — it just selects the chip.
+    testWidgets('tapping energy card selects it (no snackbar in new UI)', (tester) async {
       await tester.pumpWidget(_wrap(const WrHomeScreen()));
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Có năng lượng'));
-      await tester.pumpAndSettle();
+      await tester.pump();
 
-      expect(find.byType(SnackBar), findsOneWidget);
+      // Snackbar removed in Sprint 1 pivot — verify no crash instead
+      expect(find.byType(SnackBar), findsNothing);
+      expect(find.text('Có năng lượng'), findsOneWidget);
     });
   });
 
@@ -78,11 +82,13 @@ void main() {
       expect(find.text('Story của tôi'), findsOneWidget);
     });
 
-    testWidgets('renders placeholder text for Phase 2', (tester) async {
+    // Sprint 1 Task 7: WrStoryScreen now has a CTA button → /wr/story/flow.
+    // "Sắp ra mắt ở Phase 2" placeholder removed.
+    testWidgets('renders Bắt đầu đọc CTA button', (tester) async {
       await tester.pumpWidget(_wrap(const WrStoryScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('Sắp ra mắt ở Phase 2'), findsOneWidget);
+      expect(find.text('Bắt đầu đọc'), findsOneWidget);
     });
   });
 

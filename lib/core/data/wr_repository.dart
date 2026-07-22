@@ -21,7 +21,11 @@ import '../models/workshop.dart';
 abstract class WrRepository {
   // --- Check-ins ---
   Future<Checkin?> getTodayCheckin();
-  Future<void> upsertCheckin(Mood mood);
+  Future<void> upsertCheckin(
+    Mood mood, {
+    CheckinEnergy? energy,
+    CheckinDirection? direction,
+  });
   Future<List<DateTime>> getCheckinDates({int limit = 60});
   Future<int> countCheckins();
 
@@ -130,12 +134,18 @@ class SupabaseWrRepository implements WrRepository {
   }
 
   @override
-  Future<void> upsertCheckin(Mood mood) async {
+  Future<void> upsertCheckin(
+    Mood mood, {
+    CheckinEnergy? energy,
+    CheckinDirection? direction,
+  }) async {
     await _client.from('wr_checkins').upsert(
       {
         'user_id': _uid,
         'checkin_date': _todayVn,
         'mood': mood.dbValue,
+        if (energy != null) 'energy': energy.dbValue,
+        if (direction != null) 'direction': direction.dbValue,
       },
       onConflict: 'user_id,checkin_date',
     );
