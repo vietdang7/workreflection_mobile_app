@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/auth/presentation/auth_screen.dart';
-import '../../features/home/presentation/home_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/shell/shell_screen.dart';
 import '../../features/splash/splash_screen.dart';
@@ -35,6 +34,12 @@ import '../../features/roadmap/presentation/roadmap_screen.dart';
 import '../../features/survey/presentation/survey_history_screen.dart';
 import '../../features/understand/presentation/insights_screen.dart';
 import '../../features/survey/presentation/survey_guide_screen.dart';
+import '../../features/wr/presentation/wr_home_screen.dart';
+import '../../features/wr/presentation/wr_story_screen.dart';
+import '../../features/wr/presentation/wr_discover_screen.dart';
+import '../../features/wr/presentation/wr_growth_screen.dart';
+import '../../features/wr/presentation/wr_journey_screen.dart';
+import '../../features/wr/presentation/wr_paywall_screen.dart';
 import 'auth_change_notifier.dart';
 
 // ---------------------------------------------------------------------------
@@ -254,7 +259,40 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
 
-      // Shell with 5 indexed branches
+      // Legacy tab screens — preserved as fullscreen routes (not in shell anymore)
+      GoRoute(
+        path: '/understand',
+        builder: (context, state) => const UnderstandScreen(),
+      ),
+      GoRoute(
+        path: '/develop',
+        builder: (context, state) => const DevelopScreen(),
+      ),
+      GoRoute(
+        path: '/journey',
+        builder: (context, state) => const JourneyScreen(),
+      ),
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
+
+      GoRoute(
+        path: '/wr/paywall',
+        builder: (context, state) {
+          final triggerStr = state.uri.queryParameters['trigger'];
+          final trigger = switch (triggerStr) {
+            'ai_insight' => PaywallTrigger.aiInsight,
+            'report' => PaywallTrigger.report,
+            'trial_end' => PaywallTrigger.trialEnd,
+            'benchmark' => PaywallTrigger.benchmark,
+            _ => PaywallTrigger.defaultTrigger,
+          };
+          return WrPaywallScreen(trigger: trigger);
+        },
+      ),
+
+      // Shell with 5 indexed branches — WR companion pivot
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             ShellScreen(navigationShell: navigationShell),
@@ -263,39 +301,39 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/home',
-                builder: (context, state) => const HomeScreen(),
+                builder: (context, state) => const WrHomeScreen(),
               ),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/understand',
-                builder: (context, state) => const UnderstandScreen(),
+                path: '/wr/story',
+                builder: (context, state) => const WrStoryScreen(),
               ),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/develop',
-                builder: (context, state) => const DevelopScreen(),
+                path: '/wr/discover',
+                builder: (context, state) => const WrDiscoverScreen(),
               ),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/journey',
-                builder: (context, state) => const JourneyScreen(),
+                path: '/wr/growth',
+                builder: (context, state) => const WrGrowthScreen(),
               ),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/profile',
-                builder: (context, state) => const ProfileScreen(),
+                path: '/wr/journey',
+                builder: (context, state) => const WrJourneyScreen(),
               ),
             ],
           ),

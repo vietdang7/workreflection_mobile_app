@@ -39,11 +39,11 @@ class _TabDef {
 }
 
 List<_TabDef> _buildTabs(AppLocalizations l10n) => [
-  _TabDef(icon: Icons.home_outlined, label: l10n.tabToday),
-  _TabDef(icon: Icons.self_improvement_outlined, label: l10n.tabUnderstand),
-  _TabDef(icon: Icons.trending_up_outlined, label: l10n.tabDevelop),
-  _TabDef(icon: Icons.route_outlined, label: l10n.tabJourney),
-  _TabDef(icon: Icons.person_outline, label: l10n.tabProfile),
+  _TabDef(icon: Icons.home_outlined, label: l10n.tabWrHome),
+  _TabDef(icon: Icons.auto_stories_outlined, label: l10n.tabWrStory),
+  _TabDef(icon: Icons.search_outlined, label: l10n.tabWrDiscover),
+  _TabDef(icon: Icons.spa_outlined, label: l10n.tabWrGrowth),
+  _TabDef(icon: Icons.timeline_outlined, label: l10n.tabWrJourney),
 ];
 
 class WrTabBar extends StatelessWidget {

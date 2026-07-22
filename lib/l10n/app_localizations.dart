@@ -884,6 +884,36 @@ abstract class AppLocalizations {
   /// **'Tôi'**
   String get tabProfile;
 
+  /// No description provided for @tabWrHome.
+  ///
+  /// In vi, this message translates to:
+  /// **'Home'**
+  String get tabWrHome;
+
+  /// No description provided for @tabWrStory.
+  ///
+  /// In vi, this message translates to:
+  /// **'Trải nghiệm'**
+  String get tabWrStory;
+
+  /// No description provided for @tabWrDiscover.
+  ///
+  /// In vi, this message translates to:
+  /// **'Bức tranh'**
+  String get tabWrDiscover;
+
+  /// No description provided for @tabWrGrowth.
+  ///
+  /// In vi, this message translates to:
+  /// **'Thực hành'**
+  String get tabWrGrowth;
+
+  /// No description provided for @tabWrJourney.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hành trình'**
+  String get tabWrJourney;
+
   /// No description provided for @surveyIntroEyebrow.
   ///
   /// In vi, this message translates to:

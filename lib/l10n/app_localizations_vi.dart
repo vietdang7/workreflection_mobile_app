@@ -427,6 +427,21 @@ class AppLocalizationsVi extends AppLocalizations {
   String get tabProfile => 'Tôi';
 
   @override
+  String get tabWrHome => 'Home';
+
+  @override
+  String get tabWrStory => 'Trải nghiệm';
+
+  @override
+  String get tabWrDiscover => 'Bức tranh';
+
+  @override
+  String get tabWrGrowth => 'Thực hành';
+
+  @override
+  String get tabWrJourney => 'Hành trình';
+
+  @override
   String get surveyIntroEyebrow => 'Career Health Check';
 
   @override
