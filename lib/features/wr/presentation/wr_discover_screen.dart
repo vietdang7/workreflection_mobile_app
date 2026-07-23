@@ -2,10 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/data/wr_content_repository.dart';
 import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/logic/wr_self_check_questions.dart';
-import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/action_link.dart';
@@ -18,12 +16,6 @@ import '../wr_providers.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 // Local providers
 // ─────────────────────────────────────────────────────────────────────────────
-
-final _discoverSituationsProvider =
-    FutureProvider<List<WrSituation>>((ref) async {
-  final repo = ref.watch(wrContentRepositoryProvider);
-  return repo.fetchSituations();
-});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -73,7 +65,7 @@ class WrDiscoverScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final historyAsync = ref.watch(wrSelfCheckHistoryProvider);
     final patternsAsync = ref.watch(wrPatternCountsProvider);
-    final situationsAsync = ref.watch(_discoverSituationsProvider);
+    final situationsAsync = ref.watch(wrSituationsProvider);
     final entitlementAsync = ref.watch(wrEntitlementProvider);
 
     final history = historyAsync.valueOrNull ?? const [];
@@ -106,7 +98,7 @@ class WrDiscoverScreen extends ConsumerWidget {
                         fontSize: 32,
                         fontWeight: FontWeight.w800,
                         color: WrColors.navy,
-                        letterSpacing: -0.03 * 32,
+                        letterSpacing: -0.03 * 32, // -3% em tracking per mockup
                         height: 1.1,
                       ),
                     ),
@@ -563,7 +555,7 @@ class _LockedCard extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w700,
-                  color: Color(0xFFD4A017),
+                  color: WrColors.amber,
                 ),
               ),
             ],

@@ -178,7 +178,7 @@ void main() {
       await tester.pumpAndSettle();
       // Should auto-save WITHOUT requiring manual button tap
       expect(wr.upsertCheckinCalls, isNotEmpty);
-      expect(wr.upsertCheckinCalls, contains(Mood.happy));
+      expect(wr.upsertCheckinCalls.map((c) => c.mood), contains(Mood.happy));
     });
 
     testWidgets('shows saved badge after auto-save', (tester) async {

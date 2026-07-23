@@ -1,10 +1,12 @@
 // lib/features/wr/wr_providers.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../../core/data/wr_content_repository.dart';
 import '../../core/data/wr_intelligence_repository.dart';
 import '../../core/data/wr_repository.dart';
 import '../../core/logic/wr_entitlement.dart';
 import '../../core/models/checkin.dart';
+import '../../core/models/wr_content.dart';
 import '../../core/models/wr_intelligence.dart';
 
 /// Provides the current authenticated user's id.
@@ -61,4 +63,10 @@ final wrLatestInsightProvider = FutureProvider<WrInsight?>((ref) async {
   if (userId == null) return null;
   final repo = ref.watch(wrIntelligenceRepositoryProvider);
   return repo.fetchLatestInsight(userId);
+});
+
+/// Fetch WR situations list (shared between home and discover screens).
+final wrSituationsProvider = FutureProvider<List<WrSituation>>((ref) async {
+  final repo = ref.watch(wrContentRepositoryProvider);
+  return repo.fetchSituations();
 });

@@ -2,12 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/data/wr_content_repository.dart';
 import '../../../core/data/wr_repository.dart';
 import '../../../core/logic/vn_date.dart';
 import '../../../core/models/checkin.dart';
 import '../../../core/models/mobile_profile.dart';
-import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/action_link.dart';
@@ -23,11 +21,6 @@ import '../wr_providers.dart';
 final _mobileProfileProvider = FutureProvider<MobileProfile?>((ref) async {
   final repo = ref.watch(wrRepositoryProvider);
   return repo.getMobileProfile();
-});
-
-final _homeSituationsProvider = FutureProvider<List<WrSituation>>((ref) async {
-  final repo = ref.watch(wrContentRepositoryProvider);
-  return repo.fetchSituations();
 });
 
 // ---------------------------------------------------------------------------
@@ -69,9 +62,18 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
         energy: _energy,
         direction: _direction,
       );
-      if (mounted) setState(() { _saved = true; _saving = false; });
+      if (mounted) {
+        setState(() { _saved = true; _saving = false; });
+        ref.invalidate(todayCheckinProvider);
+        ref.invalidate(wrPatternCountsProvider);
+      }
     } catch (_) {
-      if (mounted) setState(() { _saving = false; _autoSaveTriggered = false; });
+      if (mounted) {
+        setState(() { _saving = false; _saved = false; _autoSaveTriggered = false; });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không lưu được check-in. Thử lại.')),
+        );
+      }
     }
   }
 
@@ -94,19 +96,18 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final todayCheckinAsync = ref.watch(todayCheckinProvider);
     final profileAsync = ref.watch(_mobileProfileProvider);
     final patternsAsync = ref.watch(wrPatternCountsProvider);
-    final situationsAsync = ref.watch(_homeSituationsProvider);
+    final situationsAsync = ref.watch(wrSituationsProvider);
     final insightAsync = ref.watch(wrLatestInsightProvider);
 
-    // Pre-populate saved state from existing check-in
-    todayCheckinAsync.whenData((checkin) {
-      if (checkin != null && !_saved) {
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (mounted) setState(() { _saved = true; });
-        });
-      }
+    // Pre-populate saved state from existing check-in (runs once when data arrives)
+    ref.listen<AsyncValue<Checkin?>>(todayCheckinProvider, (_, next) {
+      next.whenData((checkin) {
+        if (checkin != null && !_saved && mounted) {
+          setState(() { _saved = true; });
+        }
+      });
     });
 
     final displayName = profileAsync.valueOrNull?.displayName ?? '';
@@ -153,7 +154,7 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
                         fontSize: 32,
                         fontWeight: FontWeight.w800,
                         color: WrColors.navy,
-                        letterSpacing: -0.03 * 32,
+                        letterSpacing: -0.03 * 32, // -3% em tracking per mockup
                         height: 1.1,
                       ),
                     ),
@@ -488,19 +489,19 @@ class _SavedBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFE6F4EA),
+        color: WrColors.successBg,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: const [
-          Icon(Icons.check_circle_outline, color: Color(0xFF2E7D32), size: 16),
+          Icon(Icons.check_circle_outline, color: WrColors.success, size: 16),
           SizedBox(width: 6),
           Text(
             'Đã lưu · Check-in hôm nay',
             style: TextStyle(
               fontSize: 13,
-              color: Color(0xFF2E7D32),
+              color: WrColors.success,
               fontWeight: FontWeight.w500,
             ),
           ),

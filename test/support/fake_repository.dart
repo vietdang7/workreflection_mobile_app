@@ -18,6 +18,7 @@ import 'package:workreflection_mobile/core/models/workshop.dart';
 class FakeWrRepository implements WrRepository {
   // --- Internal state ---
   Checkin? _todayCheckin;
+  Exception? _upsertError;
   final List<DateTime> _checkinDates = [];
   final List<Insight> _insights = [];
   final List<RecurringSituation> _situations = [];
@@ -32,7 +33,7 @@ class FakeWrRepository implements WrRepository {
   Completer<Map<String, dynamic>>? _ccProfileCompleter;
 
   // --- Call recorders ---
-  final List<Mood> upsertCheckinCalls = [];
+  final List<({Mood mood, CheckinEnergy? energy, CheckinDirection? direction})> upsertCheckinCalls = [];
   final List<(String, PracticeStatus)> updatePracticeStatusCalls = [];
   final List<bool> updateReminderCalls = [];
   final List<String> updateLanguageCalls = [];
@@ -57,6 +58,14 @@ class FakeWrRepository implements WrRepository {
 
   void seedInvitations(List<Map<String, dynamic>> invitations) {
     _invitations = List.from(invitations);
+  }
+
+  void setUpsertError(Exception error) {
+    _upsertError = error;
+  }
+
+  void clearUpsertError() {
+    _upsertError = null;
   }
 
   void setAcceptInvitationResult({String? orgName, Exception? error}) {
@@ -135,7 +144,8 @@ class FakeWrRepository implements WrRepository {
     CheckinEnergy? energy,
     CheckinDirection? direction,
   }) async {
-    upsertCheckinCalls.add(mood);
+    if (_upsertError != null) throw _upsertError!;
+    upsertCheckinCalls.add((mood: mood, energy: energy, direction: direction));
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     _todayCheckin = Checkin(

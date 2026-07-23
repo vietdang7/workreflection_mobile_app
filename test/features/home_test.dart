@@ -114,7 +114,7 @@ void main() {
       await tester.tap(find.textContaining('khá ổn').first);
       await tester.pumpAndSettle();
 
-      expect(repo.upsertCheckinCalls, contains(Mood.okay));
+      expect(repo.upsertCheckinCalls.map((c) => c.mood), contains(Mood.okay));
     });
 
     testWidgets('selected mood key changes after tap', (tester) async {

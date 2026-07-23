@@ -43,7 +43,7 @@ void main() {
     test('records upsertCheckin calls', () async {
       await repo.upsertCheckin(Mood.stressed);
       await repo.upsertCheckin(Mood.happy);
-      expect(repo.upsertCheckinCalls, [Mood.stressed, Mood.happy]);
+      expect(repo.upsertCheckinCalls.map((c) => c.mood), [Mood.stressed, Mood.happy]);
     });
   });
 

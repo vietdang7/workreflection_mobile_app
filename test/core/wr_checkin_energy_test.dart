@@ -27,8 +27,9 @@ void main() {
 
     test('upsertCheckin records energy in call log', () async {
       await repo.upsertCheckin(Mood.tired, energy: CheckinEnergy.low);
-      // upsertCheckinCalls still records Mood for backward compat
-      expect(repo.upsertCheckinCalls, [Mood.tired]);
+      expect(repo.upsertCheckinCalls.single.mood, Mood.tired);
+      expect(repo.upsertCheckinCalls.single.energy, CheckinEnergy.low);
+      expect(repo.upsertCheckinCalls.single.direction, isNull);
     });
   });
 }

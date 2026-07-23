@@ -129,7 +129,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Tiến lên'));
       await tester.pumpAndSettle();
-      expect(wr.upsertCheckinCalls, contains(Mood.happy));
+      expect(wr.upsertCheckinCalls.map((c) => c.mood), contains(Mood.happy));
     });
 
     testWidgets('shows saved confirmation after auto-save', (tester) async {
@@ -176,6 +176,39 @@ void main() {
         createdAt: now,
       ));
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
+      expect(find.textContaining('Đã lưu'), findsOneWidget);
+    });
+  });
+
+  group('WrHomeScreen — error feedback', () {
+    testWidgets('repo throws → no saved badge, shows SnackBar', (tester) async {
+      final wr = FakeWrRepository();
+      wr.setUpsertError(Exception('db error'));
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
+      await tester.tap(find.text('Có năng lượng'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Tiến lên'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Đã lưu'), findsNothing);
+      expect(find.textContaining('Không lưu được'), findsWidgets);
+    });
+
+    testWidgets('after error, re-selecting direction triggers upsert again', (tester) async {
+      final wr = FakeWrRepository();
+      wr.setUpsertError(Exception('db error'));
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
+      // First attempt — fails
+      await tester.tap(find.text('Có năng lượng'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Tiến lên'));
+      await tester.pumpAndSettle();
+      // Clear error so second attempt succeeds
+      wr.clearUpsertError();
+      // Re-tap direction to trigger auto-save again
+      await tester.tap(find.text('Tiến lên'));
+      await tester.pumpAndSettle();
+      // First call threw before recording; second call succeeds and is recorded.
+      expect(wr.upsertCheckinCalls.length, 1);
       expect(find.textContaining('Đã lưu'), findsOneWidget);
     });
   });
