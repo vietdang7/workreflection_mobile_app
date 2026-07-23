@@ -24,6 +24,48 @@ final _mobileProfileProvider = FutureProvider<MobileProfile?>((ref) async {
 });
 
 // ---------------------------------------------------------------------------
+// Mood option data
+// ---------------------------------------------------------------------------
+
+enum _MoodOption {
+  stressed,  // "Tôi đang căng thẳng"
+  tired,     // "Tôi mệt mỏi cần nghỉ ngơi"
+  okay,      // "Tôi khá ổn"
+  happy;     // "Tôi đang vui"
+
+  String get label => switch (this) {
+        _MoodOption.stressed => 'Tôi đang\ncăng thẳng',
+        _MoodOption.tired    => 'Tôi mệt mỏi\ncần nghỉ ngơi',
+        _MoodOption.okay     => 'Tôi\nkhá ổn',
+        _MoodOption.happy    => 'Tôi\nđang vui',
+      };
+
+  CheckinEnergy get energy => switch (this) {
+        _MoodOption.stressed => CheckinEnergy.low,
+        _MoodOption.tired    => CheckinEnergy.low,
+        _MoodOption.okay     => CheckinEnergy.ok,
+        _MoodOption.happy    => CheckinEnergy.good,
+      };
+
+  Mood get mood => energy.toMood();
+
+  /// Whether this option corresponds to a "low/tired" state (shows share card)
+  bool get isLowEnergy => this == _MoodOption.stressed || this == _MoodOption.tired;
+}
+
+/// Reverse-map from saved energy → best matching _MoodOption for prepopulate.
+/// low → tired, ok → okay, good → happy (stressed has same energy as tired,
+/// so we default to tired for prepopulate since we can't distinguish from DB).
+_MoodOption? _moodOptionFromEnergy(CheckinEnergy? energy) {
+  if (energy == null) return null;
+  return switch (energy) {
+    CheckinEnergy.low  => _MoodOption.tired,
+    CheckinEnergy.ok   => _MoodOption.okay,
+    CheckinEnergy.good => _MoodOption.happy,
+  };
+}
+
+// ---------------------------------------------------------------------------
 // WrHomeScreen
 // ---------------------------------------------------------------------------
 
@@ -35,11 +77,9 @@ class WrHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
-  CheckinEnergy? _energy;
-  CheckinDirection? _direction;
+  _MoodOption? _selected;
   bool _saved = false;
-  bool _saving = false;
-  bool _autoSaveTriggered = false;
+  bool _prepopulated = false;
 
   String _dateLabel() {
     final now = todayVn();
@@ -52,45 +92,32 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
     return '${weekdays[now.weekday - 1]}, $day/$month';
   }
 
-  Future<void> _save() async {
-    if (_energy == null || _direction == null) return;
-    setState(() => _saving = true);
+  Future<void> _save(_MoodOption option) async {
+    final previousSelected = _selected;
+    setState(() { _selected = option; });
     try {
       final repo = ref.read(wrRepositoryProvider);
       await repo.upsertCheckin(
-        _energy!.toMood(),
-        energy: _energy,
-        direction: _direction,
+        option.mood,
+        energy: option.energy,
+        direction: null,
       );
       if (mounted) {
-        setState(() { _saved = true; _saving = false; });
+        setState(() { _saved = true; });
         ref.invalidate(todayCheckinProvider);
         ref.invalidate(wrPatternCountsProvider);
       }
     } catch (_) {
       if (mounted) {
-        setState(() { _saving = false; _saved = false; _autoSaveTriggered = false; });
+        // Revert selection on error
+        setState(() {
+          _selected = previousSelected;
+          _saved = false;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Không lưu được check-in. Thử lại.')),
         );
       }
-    }
-  }
-
-  void _onEnergySelected(CheckinEnergy e) {
-    setState(() { _energy = e; });
-    _tryAutoSave();
-  }
-
-  void _onDirectionSelected(CheckinDirection d) {
-    setState(() { _direction = d; });
-    _tryAutoSave();
-  }
-
-  void _tryAutoSave() {
-    if (_energy != null && _direction != null && !_saved && !_autoSaveTriggered) {
-      _autoSaveTriggered = true;
-      _save();
     }
   }
 
@@ -101,11 +128,16 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
     final situationsAsync = ref.watch(wrSituationsProvider);
     final insightAsync = ref.watch(wrLatestInsightProvider);
 
-    // Pre-populate saved state from existing check-in (runs once when data arrives)
+    // Pre-populate from today's saved check-in (runs once)
     ref.listen<AsyncValue<Checkin?>>(todayCheckinProvider, (_, next) {
       next.whenData((checkin) {
-        if (checkin != null && !_saved && mounted) {
-          setState(() { _saved = true; });
+        if (checkin != null && !_prepopulated && mounted) {
+          final option = _moodOptionFromEnergy(checkin.energy);
+          setState(() {
+            _prepopulated = true;
+            _saved = true;
+            if (option != null) _selected = option;
+          });
         }
       });
     });
@@ -122,12 +154,12 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
       topPattern = patterns.first;
     }
 
-    // Eyebrow text for story section
-    final isLowSaved = _saved && _energy == CheckinEnergy.low;
+    // Conditions based on selected mood
+    final isLowSaved = _saved && (_selected?.isLowEnergy ?? false);
     final storyEyebrow = isLowSaved ? 'GỢI Ý KHI MỆT MỎI' : 'GỢI Ý HÔM NAY';
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFBF9),
+      backgroundColor: WrColors.white,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -154,7 +186,7 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
                         fontSize: 32,
                         fontWeight: FontWeight.w800,
                         color: WrColors.navy,
-                        letterSpacing: -0.03 * 32, // -3% em tracking per mockup
+                        letterSpacing: -0.03 * 32,
                         height: 1.1,
                       ),
                     ),
@@ -163,13 +195,10 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
               ),
             ),
 
-            // ── divider ───────────────────────────────────────────────────
-            const SliverToBoxAdapter(child: WrSectionDivider()),
-
-            // ── check-in section ─────────────────────────────────────────
+            // ── check-in section: 2×2 mood grid ─────────────────────────
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -183,87 +212,54 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
                         height: 1.2,
                       ),
                     ),
-                    const SizedBox(height: 16),
-                    // Energy row — always visible
-                    Row(
+                    const SizedBox(height: 24),
+                    // 2×2 grid
+                    Column(
                       children: [
-                        _WrCheckinButton(
-                          label: 'Có năng lượng',
-                          selected: _energy == CheckinEnergy.good,
-                          onTap: () => _onEnergySelected(CheckinEnergy.good),
+                        Row(
+                          children: [
+                            _MoodButton(
+                              option: _MoodOption.stressed,
+                              selected: _selected == _MoodOption.stressed,
+                              onTap: () => _save(_MoodOption.stressed),
+                            ),
+                            const SizedBox(width: 12),
+                            _MoodButton(
+                              option: _MoodOption.tired,
+                              selected: _selected == _MoodOption.tired,
+                              onTap: () => _save(_MoodOption.tired),
+                            ),
+                          ],
                         ),
-                        const SizedBox(width: 12),
-                        _WrCheckinButton(
-                          label: 'Bình thường',
-                          selected: _energy == CheckinEnergy.ok,
-                          onTap: () => _onEnergySelected(CheckinEnergy.ok),
-                        ),
-                        const SizedBox(width: 12),
-                        _WrCheckinButton(
-                          label: 'Mệt mỏi',
-                          selected: _energy == CheckinEnergy.low,
-                          onTap: () => _onEnergySelected(CheckinEnergy.low),
+                        const SizedBox(height: 12),
+                        Row(
+                          children: [
+                            _MoodButton(
+                              option: _MoodOption.okay,
+                              selected: _selected == _MoodOption.okay,
+                              onTap: () => _save(_MoodOption.okay),
+                            ),
+                            const SizedBox(width: 12),
+                            _MoodButton(
+                              option: _MoodOption.happy,
+                              selected: _selected == _MoodOption.happy,
+                              onTap: () => _save(_MoodOption.happy),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                    // Direction row — revealed after energy selected
-                    AnimatedSize(
-                      duration: const Duration(milliseconds: 200),
-                      curve: Curves.easeInOut,
-                      child: _energy != null
-                          ? Padding(
-                              padding: const EdgeInsets.only(top: 12),
-                              child: Row(
-                                children: [
-                                  _WrCheckinButton(
-                                    label: 'Tiến lên',
-                                    selected: _direction == CheckinDirection.forward,
-                                    onTap: () => _onDirectionSelected(CheckinDirection.forward),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  _WrCheckinButton(
-                                    label: 'Đứng yên',
-                                    selected: _direction == CheckinDirection.steady,
-                                    onTap: () => _onDirectionSelected(CheckinDirection.steady),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  _WrCheckinButton(
-                                    label: 'Thụt lùi',
-                                    selected: _direction == CheckinDirection.backward,
-                                    onTap: () => _onDirectionSelected(CheckinDirection.backward),
-                                  ),
-                                ],
-                              ),
-                            )
-                          : const SizedBox.shrink(),
-                    ),
-                    // Saving indicator
-                    if (_saving)
-                      const Padding(
-                        padding: EdgeInsets.only(top: 12),
-                        child: SizedBox(
-                          height: 20,
-                          width: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: WrColors.coral),
-                        ),
-                      ),
-                    // Saved badge
-                    if (_saved && !_saving)
-                      const Padding(
-                        padding: EdgeInsets.only(top: 12),
-                        child: _SavedBadge(),
-                      ),
-                    const SizedBox(height: 20),
+                    const SizedBox(height: 28),
                   ],
                 ),
               ),
             ),
 
-            // ── share card (energy=low) ───────────────────────────────────
-            if (_saved && _energy == CheckinEnergy.low)
+            // ── share card (low energy: stressed or tired) ───────────────
+            if (isLowSaved)
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 4),
+                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 28),
                   child: WrCardMinimal(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -296,19 +292,14 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
                 ),
               ),
 
-            // ── divider ───────────────────────────────────────────────────
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 4),
-                child: WrSectionDivider(),
-              ),
-            ),
+            // ── divider (duy nhất) ────────────────────────────────────────
+            const SliverToBoxAdapter(child: WrSectionDivider()),
 
             // ── card hệ thống nhận ra ─────────────────────────────────────
             if (topPattern != null) ...[
               SliverToBoxAdapter(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                  padding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
                   child: WrCardDark(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -339,47 +330,71 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
                   ),
                 ),
               ),
-              const SliverToBoxAdapter(child: SizedBox(height: 20)),
+              const SliverToBoxAdapter(child: SizedBox(height: 28)),
             ],
 
             // ── section gợi ý story ───────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(24, 4, 24, 0),
+                padding: EdgeInsets.fromLTRB(24, topPattern != null ? 0 : 28, 24, 0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     WrEyebrow(storyEyebrow),
                     const SizedBox(height: 10),
                     WrCardMinimal(
-                      child: Column(
+                      child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
-                            'Bạn chưa đọc câu chuyện nào.',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
+                          // Icon ô 48×48
+                          Container(
+                            width: 48,
+                            height: 48,
+                            decoration: BoxDecoration(
+                              color: WrColors.white,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(
+                              Icons.menu_book_outlined,
                               color: WrColors.navy,
+                              size: 28,
                             ),
                           ),
-                          const SizedBox(height: 6),
-                          const Text(
-                            'Các câu chuyện giúp bạn nhận ra patterns trong cuộc sống nghề nghiệp.',
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: WrColors.muted,
-                              height: 1.5,
+                          const SizedBox(width: 16),
+                          // Text column
+                          const Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Bạn chưa đọc câu chuyện nào.',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: WrColors.navy,
+                                  ),
+                                ),
+                                SizedBox(height: 6),
+                                Text(
+                                  'Câu chuyện giúp bạn nhận ra pattern nghề nghiệp.',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: WrColors.muted,
+                                    height: 1.5,
+                                  ),
+                                ),
+                              ],
                             ),
-                          ),
-                          const SizedBox(height: 12),
-                          WrActionLink(
-                            label: 'Đọc câu chuyện đầu tiên',
-                            onTap: () => context.push('/wr/story'),
                           ),
                         ],
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    WrActionLink(
+                      label: 'Đọc câu chuyện đầu tiên',
+                      onTap: () => context.push('/wr/story'),
+                    ),
+                    const SizedBox(height: 28),
                   ],
                 ),
               ),
@@ -387,12 +402,6 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
 
             // ── insight section ───────────────────────────────────────────
             if (insight != null) ...[
-              const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 20),
-                  child: WrSectionDivider(),
-                ),
-              ),
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
@@ -437,17 +446,17 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
 }
 
 // ---------------------------------------------------------------------------
-// _WrCheckinButton
+// _MoodButton — 2×2 grid button
 // ---------------------------------------------------------------------------
 
-class _WrCheckinButton extends StatelessWidget {
-  const _WrCheckinButton({
-    required this.label,
+class _MoodButton extends StatelessWidget {
+  const _MoodButton({
+    required this.option,
     required this.selected,
     required this.onTap,
   });
 
-  final String label;
+  final _MoodOption option;
   final bool selected;
   final VoidCallback onTap;
 
@@ -463,7 +472,7 @@ class _WrCheckinButton extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
           ),
           child: Text(
-            label,
+            option.label,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13,
@@ -472,40 +481,6 @@ class _WrCheckinButton extends StatelessWidget {
             ),
           ),
         ),
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// _SavedBadge
-// ---------------------------------------------------------------------------
-
-class _SavedBadge extends StatelessWidget {
-  const _SavedBadge();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: WrColors.successBg,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: const [
-          Icon(Icons.check_circle_outline, color: WrColors.success, size: 16),
-          SizedBox(width: 6),
-          Text(
-            'Đã lưu · Check-in hôm nay',
-            style: TextStyle(
-              fontSize: 13,
-              color: WrColors.success,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
       ),
     );
   }

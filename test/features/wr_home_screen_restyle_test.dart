@@ -1,5 +1,5 @@
 // Tests cho WrHomeScreen sau khi restyle theo HTML mockup (Task 2A).
-// TDD: các test này được viết TRƯỚC khi implement.
+// TDD: cập nhật cho UI 2×2 mood grid (thay 2-bước energy+direction).
 // Run: flutter test test/features/wr_home_screen_restyle_test.dart
 
 import 'package:flutter/material.dart';
@@ -13,6 +13,7 @@ import 'package:workreflection_mobile/core/models/checkin.dart';
 import 'package:workreflection_mobile/core/models/mobile_profile.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
+import 'package:workreflection_mobile/core/widgets/section_divider.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_home_screen.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 
@@ -31,6 +32,10 @@ GoRouter _makeRouter({required Widget home}) => GoRouter(
         GoRoute(
           path: '/wr/situation',
           builder: (_, __) => const Scaffold(body: Text('SituationScreen')),
+        ),
+        GoRoute(
+          path: '/wr/story',
+          builder: (_, __) => const Scaffold(body: Text('StoryScreen')),
         ),
         GoRoute(
           path: '/wr/discover',
@@ -120,7 +125,6 @@ void main() {
 
     testWidgets('shows date-title with weekday and date (Thứ X, dd/MM)', (tester) async {
       await _pumpLarge(tester, _wrap(const WrHomeScreen()));
-      // Date title must contain a Vietnamese weekday and a dd/MM pattern
       final now = DateTime.now();
       final dayStr = now.day.toString().padLeft(2, '0');
       final monthStr = now.month.toString().padLeft(2, '0');
@@ -129,85 +133,125 @@ void main() {
 
     testWidgets('does NOT show avatar/profile button in header', (tester) async {
       await _pumpLarge(tester, _wrap(const WrHomeScreen()));
-      // The old design had a CircleAvatar/IconButton for profile in the header.
-      // After restyle, profile is tab 5 — no inline profile button.
-      // Check: no /profile navigation button in top-area.
-      // We verify by checking that the person icon is absent (or the GestureDetector
-      // that navigates to /profile in the header area).
-      // Implementation uses a Column without a Row with avatar.
-      // Simple check: no Icons.person in the widget tree from the header.
       expect(find.byIcon(Icons.person), findsNothing);
     });
   });
 
-  // ── 2A.2: check-in grid ──────────────────────────────────────────────────
+  // ── 2A.2: check-in 2×2 grid ─────────────────────────────────────────────
 
-  group('2A.2 check-in grid', () {
-    testWidgets('renders energy row with 3 buttons', (tester) async {
+  group('2A.2 check-in 2×2 mood grid', () {
+    testWidgets('(a) renders 4 mood buttons with correct labels', (tester) async {
       await _pumpLarge(tester, _wrap(const WrHomeScreen()));
-      expect(find.text('Có năng lượng'), findsOneWidget);
-      expect(find.text('Bình thường'), findsOneWidget);
-      expect(find.text('Mệt mỏi'), findsOneWidget);
+      expect(find.textContaining('căng thẳng'), findsOneWidget);
+      expect(find.textContaining('mệt mỏi'), findsOneWidget);
+      expect(find.textContaining('khá ổn'), findsOneWidget);
+      expect(find.textContaining('đang vui'), findsOneWidget);
     });
 
-    testWidgets('direction row hidden before energy selected', (tester) async {
+    testWidgets('NO old energy buttons (Có năng lượng / Bình thường / Mệt mỏi)', (tester) async {
       await _pumpLarge(tester, _wrap(const WrHomeScreen()));
-      // Direction options should not be visible until energy is chosen
+      expect(find.text('Có năng lượng'), findsNothing);
+      expect(find.text('Bình thường'), findsNothing);
+      // "Mệt mỏi" alone (without surrounding text) should not appear
+      expect(find.text('Mệt mỏi'), findsNothing);
+    });
+
+    testWidgets('NO old direction buttons (Tiến lên / Đứng yên / Thụt lùi)', (tester) async {
+      await _pumpLarge(tester, _wrap(const WrHomeScreen()));
       expect(find.text('Tiến lên'), findsNothing);
       expect(find.text('Đứng yên'), findsNothing);
       expect(find.text('Thụt lùi'), findsNothing);
     });
 
-    testWidgets('direction row revealed after energy selected', (tester) async {
-      await _pumpLarge(tester, _wrap(const WrHomeScreen()));
-      await tester.tap(find.text('Có năng lượng'));
-      await tester.pumpAndSettle();
-      expect(find.text('Tiến lên'), findsOneWidget);
-      expect(find.text('Đứng yên'), findsOneWidget);
-      expect(find.text('Thụt lùi'), findsOneWidget);
-    });
-
-    testWidgets('auto-saves when both energy and direction selected (no manual Save button)', (tester) async {
+    testWidgets('(b) tap "mệt mỏi" → upsertCheckin energy=low direction=null, button coral, share card shown, eyebrow GỢI Ý KHI MỆT MỎI', (tester) async {
       final wr = FakeWrRepository();
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
-      // Select energy
-      await tester.tap(find.text('Có năng lượng'));
+
+      await tester.tap(find.textContaining('mệt mỏi'));
       await tester.pumpAndSettle();
-      // Select direction
-      await tester.tap(find.text('Tiến lên'));
-      await tester.pumpAndSettle();
-      // Should auto-save WITHOUT requiring manual button tap
+
+      // upsertCheckin called with energy=low, direction=null
       expect(wr.upsertCheckinCalls, isNotEmpty);
-      expect(wr.upsertCheckinCalls.map((c) => c.mood), contains(Mood.happy));
+      final call = wr.upsertCheckinCalls.first;
+      expect(call.energy, CheckinEnergy.low);
+      expect(call.direction, isNull);
+
+      // Share card shown
+      expect(find.textContaining('Bạn mệt vì điều gì?'), findsOneWidget);
+
+      // Eyebrow changes
+      expect(find.textContaining('GỢI Ý KHI MỆT MỎI'), findsOneWidget);
     });
 
-    testWidgets('shows saved badge after auto-save', (tester) async {
+    testWidgets('(b) tap "căng thẳng" → energy=low, share card shown', (tester) async {
       final wr = FakeWrRepository();
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
-      await tester.tap(find.text('Bình thường'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Đứng yên'));
-      await tester.pumpAndSettle();
-      expect(find.textContaining('Đã lưu'), findsOneWidget);
-    });
 
-    testWidgets('no explicit Save button in the new layout', (tester) async {
-      await _pumpLarge(tester, _wrap(const WrHomeScreen()));
-      // There should be no "Lưu check-in" button
-      expect(find.widgetWithText(ElevatedButton, 'Lưu check-in'), findsNothing);
-    });
+      await tester.tap(find.textContaining('căng thẳng'));
+      await tester.pumpAndSettle();
 
-    testWidgets('energy=low shows share card (card-minimal style)', (tester) async {
-      final wr = FakeWrRepository();
-      await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
-      await tester.tap(find.text('Mệt mỏi'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Thụt lùi'));
-      await tester.pumpAndSettle();
+      expect(wr.upsertCheckinCalls.first.energy, CheckinEnergy.low);
+      expect(wr.upsertCheckinCalls.first.direction, isNull);
       expect(find.textContaining('Bạn mệt vì điều gì?'), findsOneWidget);
     });
 
-    testWidgets('pre-populates saved state when today checkin exists', (tester) async {
+    testWidgets('(c) tap "khá ổn" → energy=ok, NO share card, eyebrow GỢI Ý HÔM NAY', (tester) async {
+      final wr = FakeWrRepository();
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
+
+      await tester.tap(find.textContaining('khá ổn'));
+      await tester.pumpAndSettle();
+
+      expect(wr.upsertCheckinCalls.first.energy, CheckinEnergy.ok);
+      expect(wr.upsertCheckinCalls.first.direction, isNull);
+      expect(find.textContaining('Bạn mệt vì điều gì?'), findsNothing);
+      expect(find.textContaining('GỢI Ý HÔM NAY'), findsOneWidget);
+    });
+
+    testWidgets('(c) tap "đang vui" → energy=good, NO share card', (tester) async {
+      final wr = FakeWrRepository();
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
+
+      await tester.tap(find.textContaining('đang vui'));
+      await tester.pumpAndSettle();
+
+      expect(wr.upsertCheckinCalls.first.energy, CheckinEnergy.good);
+      expect(wr.upsertCheckinCalls.first.direction, isNull);
+      expect(find.textContaining('Bạn mệt vì điều gì?'), findsNothing);
+    });
+
+    testWidgets('single-select: re-tap another button updates selection', (tester) async {
+      final wr = FakeWrRepository();
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
+
+      // First tap mệt mỏi
+      await tester.tap(find.textContaining('mệt mỏi'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Bạn mệt vì điều gì?'), findsOneWidget);
+
+      // Then tap khá ổn
+      await tester.tap(find.textContaining('khá ổn'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Bạn mệt vì điều gì?'), findsNothing);
+      // Second upsert called
+      expect(wr.upsertCheckinCalls.length, 2);
+    });
+
+    testWidgets('(d) save error → SnackBar + revert selection', (tester) async {
+      final wr = FakeWrRepository();
+      wr.setUpsertError(Exception('db error'));
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
+
+      await tester.tap(find.textContaining('mệt mỏi'));
+      await tester.pumpAndSettle();
+
+      // SnackBar shown
+      expect(find.textContaining('Không lưu được'), findsWidgets);
+      // Share card NOT shown (selection reverted)
+      expect(find.textContaining('Bạn mệt vì điều gì?'), findsNothing);
+    });
+
+    testWidgets('(e) prepopulate from todayCheckinProvider: energy=ok → "khá ổn" pre-selected', (tester) async {
       final wr = FakeWrRepository();
       final now = DateTime.now();
       wr.seedTodayCheckin(Checkin(
@@ -215,22 +259,67 @@ void main() {
         userId: 'u1',
         mood: Mood.okay,
         energy: CheckinEnergy.ok,
-        direction: CheckinDirection.steady,
+        direction: null,
         checkinDate: DateTime(now.year, now.month, now.day),
         createdAt: now,
       ));
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
-      expect(find.textContaining('Đã lưu'), findsOneWidget);
+      // No share card (ok energy is not low)
+      expect(find.textContaining('Bạn mệt vì điều gì?'), findsNothing);
+      // All 4 buttons still rendered
+      expect(find.textContaining('khá ổn'), findsOneWidget);
+    });
+
+    testWidgets('(e) prepopulate from todayCheckinProvider: energy=low → "mệt mỏi" pre-selected, share card shown', (tester) async {
+      final wr = FakeWrRepository();
+      final now = DateTime.now();
+      wr.seedTodayCheckin(Checkin(
+        id: 'c2',
+        userId: 'u1',
+        mood: Mood.tired,
+        energy: CheckinEnergy.low,
+        direction: null,
+        checkinDate: DateTime(now.year, now.month, now.day),
+        createdAt: now,
+      ));
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
+      // Share card shown due to low energy prepopulate
+      expect(find.textContaining('Bạn mệt vì điều gì?'), findsOneWidget);
+    });
+
+    testWidgets('NO CircularProgressIndicator (spinner removed)', (tester) async {
+      await _pumpLarge(tester, _wrap(const WrHomeScreen()));
+      expect(find.byType(CircularProgressIndicator), findsNothing);
+    });
+
+    testWidgets('no explicit Lưu check-in button', (tester) async {
+      await _pumpLarge(tester, _wrap(const WrHomeScreen()));
+      expect(find.widgetWithText(ElevatedButton, 'Lưu check-in'), findsNothing);
     });
   });
 
-  // ── 2A.3: divider ───────────────────────────────────────────────────────
+  // ── 2A.3: divider — exactly 1 WrSectionDivider ──────────────────────────
 
   group('2A.3 divider', () {
-    testWidgets('renders WrSectionDivider between sections', (tester) async {
+    testWidgets('(f) exactly 1 WrSectionDivider on screen', (tester) async {
       await _pumpLarge(tester, _wrap(const WrHomeScreen()));
-      // At least one Divider widget should be present
-      expect(find.byType(Divider), findsWidgets);
+      expect(find.byType(WrSectionDivider), findsOneWidget);
+    });
+
+    testWidgets('(f) still exactly 1 WrSectionDivider when pattern card shown', (tester) async {
+      final intel = FakeWrIntelligenceRepository();
+      intel.seedPatternCounts([_pattern(count: 3)]);
+      final content = FakeWrContentRepository();
+      content.seedSituations([_situation()]);
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), intel: intel, content: content));
+      expect(find.byType(WrSectionDivider), findsOneWidget);
+    });
+
+    testWidgets('(f) still exactly 1 WrSectionDivider when insight shown', (tester) async {
+      final intel = FakeWrIntelligenceRepository();
+      intel.seedInsights([_insight()]);
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), intel: intel));
+      expect(find.byType(WrSectionDivider), findsOneWidget);
     });
   });
 
@@ -238,7 +327,6 @@ void main() {
 
   group('2A.4 card hệ thống nhận ra', () {
     testWidgets('hidden when no pattern data', (tester) async {
-      // No patterns seeded
       await _pumpLarge(tester, _wrap(const WrHomeScreen()));
       expect(find.textContaining('HỆ THỐNG NHẬN RA'), findsNothing);
     });
@@ -267,7 +355,6 @@ void main() {
       final content = FakeWrContentRepository();
       content.seedSituations([_situation(text: 'Áp lực deadline')]);
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), intel: intel, content: content));
-      // Should contain a mention of the situation or occurrence
       expect(find.textContaining('Áp lực deadline'), findsWidgets);
     });
 
@@ -277,7 +364,6 @@ void main() {
       final content = FakeWrContentRepository();
       content.seedSituations([_situation()]);
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), intel: intel, content: content));
-      // Tap "Tìm hiểu thêm" link
       await tester.tap(find.textContaining('Tìm hiểu thêm'));
       await tester.pumpAndSettle();
       expect(find.text('DiscoverScreen'), findsOneWidget);
@@ -287,24 +373,27 @@ void main() {
   // ── 2A.5: section gợi ý story ────────────────────────────────────────────
 
   group('2A.5 section gợi ý story', () {
-    testWidgets('shows eyebrow GỢI Ý HÔM NAY by default (no low energy)', (tester) async {
+    testWidgets('shows eyebrow GỢI Ý HÔM NAY by default', (tester) async {
       await _pumpLarge(tester, _wrap(const WrHomeScreen()));
       expect(find.textContaining('GỢI Ý HÔM NAY'), findsOneWidget);
     });
 
-    testWidgets('shows eyebrow GỢI Ý KHI MỆT MỎI when energy=low saved', (tester) async {
+    testWidgets('shows eyebrow GỢI Ý KHI MỆT MỎI when low energy selected', (tester) async {
       final wr = FakeWrRepository();
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
-      await tester.tap(find.text('Mệt mỏi'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Thụt lùi'));
+      await tester.tap(find.textContaining('mệt mỏi'));
       await tester.pumpAndSettle();
       expect(find.textContaining('GỢI Ý KHI MỆT MỎI'), findsOneWidget);
     });
 
-    testWidgets('shows CTA to read first story when no story data', (tester) async {
+    testWidgets('story card has icon + CTA link', (tester) async {
       await _pumpLarge(tester, _wrap(const WrHomeScreen()));
-      // Story card has multiple widgets containing "câu chuyện"
+      expect(find.byIcon(Icons.menu_book_outlined), findsOneWidget);
+      expect(find.textContaining('Đọc câu chuyện đầu tiên'), findsOneWidget);
+    });
+
+    testWidgets('shows story text mentioning câu chuyện', (tester) async {
+      await _pumpLarge(tester, _wrap(const WrHomeScreen()));
       expect(find.textContaining('câu chuyện'), findsWidgets);
     });
   });
@@ -329,8 +418,17 @@ void main() {
       final intel = FakeWrIntelligenceRepository();
       intel.seedInsights([_insight(content: 'Test insight')]);
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), intel: intel));
-      // Should show "Lưu ngày dd/MM"
       expect(find.textContaining('Lưu ngày'), findsOneWidget);
+    });
+  });
+
+  // ── 2A.7: scaffold background ────────────────────────────────────────────
+
+  group('2A.7 scaffold', () {
+    testWidgets('backgroundColor is WrColors.white (#FFFFFF)', (tester) async {
+      await _pumpLarge(tester, _wrap(const WrHomeScreen()));
+      final scaffold = tester.widget<Scaffold>(find.byType(Scaffold).first);
+      expect(scaffold.backgroundColor, const Color(0xFFFFFFFF));
     });
   });
 }

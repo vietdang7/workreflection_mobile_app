@@ -166,18 +166,19 @@ group('WrHomeScreen', () {
     await tester.pumpWidget(_wrap(const WrHomeScreen()));
     await tester.pumpAndSettle();
 
-    // New design: h-large question text, no old 'CHECK-IN NHANH' card header
+    // New design: 2×2 mood grid with question heading
     expect(find.textContaining('Bạn đang trải qua điều gì?'), findsOneWidget);
-    expect(find.text('Có năng lượng'), findsOneWidget);
+    expect(find.textContaining('căng thẳng'), findsOneWidget);
   });
 
-  testWidgets('renders 3 energy option cards', (tester) async {
+  testWidgets('renders 4 mood option buttons (2×2 grid)', (tester) async {
     await tester.pumpWidget(_wrap(const WrHomeScreen()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Có năng lượng'), findsOneWidget);
-    expect(find.text('Bình thường'), findsOneWidget);
-    expect(find.text('Mệt mỏi'), findsOneWidget);
+    expect(find.textContaining('căng thẳng'), findsOneWidget);
+    expect(find.textContaining('mệt mỏi'), findsOneWidget);
+    expect(find.textContaining('khá ổn'), findsOneWidget);
+    expect(find.textContaining('đang vui'), findsOneWidget);
   });
 
   testWidgets('no avatar button in header (profile is tab 5)', (tester) async {
@@ -188,15 +189,15 @@ group('WrHomeScreen', () {
     expect(find.byIcon(Icons.person), findsNothing);
   });
 
-  testWidgets('tapping energy card selects it (no snackbar in new UI)', (tester) async {
+  testWidgets('tapping mood button keeps button visible', (tester) async {
     await tester.pumpWidget(_wrap(const WrHomeScreen()));
     await tester.pumpAndSettle();
 
-    await tester.tap(find.text('Có năng lượng'));
+    await tester.tap(find.textContaining('đang vui'));
     await tester.pump();
 
-    expect(find.byType(SnackBar), findsNothing);
-    expect(find.text('Có năng lượng'), findsOneWidget);
+    // Button stays visible after tap (no page navigation, just selection state)
+    expect(find.textContaining('đang vui'), findsOneWidget);
   });
 });
 

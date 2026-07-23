@@ -1,6 +1,6 @@
-// Widget tests for WrHomeScreen — updated for restyle (Task 2A).
-// UI mới: auto-save khi đủ energy+direction, không có nút "Lưu check-in",
-// không có Icons.person trong header, direction row ẩn cho đến khi chọn energy.
+// Widget tests for WrHomeScreen — updated for 2×2 mood grid restyle.
+// UI mới: tap 1 nút → auto-save ngay, không cần chọn direction.
+// Run: flutter test test/features/wr_home_screen_test.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,6 +29,10 @@ GoRouter _makeRouter({required Widget home}) => GoRouter(
         GoRoute(
           path: '/wr/discover',
           builder: (_, __) => const Scaffold(body: Text('DiscoverScreen')),
+        ),
+        GoRoute(
+          path: '/wr/story',
+          builder: (_, __) => const Scaffold(body: Text('StoryScreen')),
         ),
       ],
     );
@@ -88,33 +92,31 @@ void main() {
 
     testWidgets('no profile avatar/person icon in header (profile is tab 5)', (tester) async {
       await _pumpLarge(tester, _wrap(const WrHomeScreen()));
-      // New design: profile moved to tab 5, no inline avatar
       expect(find.byIcon(Icons.person), findsNothing);
     });
   });
 
-  group('WrHomeScreen — check-in (auto-save UI)', () {
-    testWidgets('renders 3 energy options always visible', (tester) async {
+  group('WrHomeScreen — check-in 2×2 grid', () {
+    testWidgets('renders 4 mood options', (tester) async {
       await _pumpLarge(tester, _wrap(const WrHomeScreen()));
-      expect(find.text('Có năng lượng'), findsOneWidget);
-      expect(find.text('Bình thường'), findsOneWidget);
-      expect(find.text('Mệt mỏi'), findsOneWidget);
+      expect(find.textContaining('căng thẳng'), findsOneWidget);
+      expect(find.textContaining('mệt mỏi'), findsOneWidget);
+      expect(find.textContaining('khá ổn'), findsOneWidget);
+      expect(find.textContaining('đang vui'), findsOneWidget);
     });
 
-    testWidgets('direction row hidden before energy selected', (tester) async {
+    testWidgets('old energy labels gone', (tester) async {
+      await _pumpLarge(tester, _wrap(const WrHomeScreen()));
+      expect(find.text('Có năng lượng'), findsNothing);
+      expect(find.text('Bình thường'), findsNothing);
+      expect(find.text('Mệt mỏi'), findsNothing);
+    });
+
+    testWidgets('old direction labels gone', (tester) async {
       await _pumpLarge(tester, _wrap(const WrHomeScreen()));
       expect(find.text('Tiến lên'), findsNothing);
       expect(find.text('Đứng yên'), findsNothing);
       expect(find.text('Thụt lùi'), findsNothing);
-    });
-
-    testWidgets('direction row revealed after energy selected', (tester) async {
-      await _pumpLarge(tester, _wrap(const WrHomeScreen()));
-      await tester.tap(find.text('Có năng lượng'));
-      await tester.pumpAndSettle();
-      expect(find.text('Tiến lên'), findsOneWidget);
-      expect(find.text('Đứng yên'), findsOneWidget);
-      expect(find.text('Thụt lùi'), findsOneWidget);
     });
 
     testWidgets('no explicit Lưu check-in button', (tester) async {
@@ -122,32 +124,37 @@ void main() {
       expect(find.widgetWithText(ElevatedButton, 'Lưu check-in'), findsNothing);
     });
 
-    testWidgets('auto-saves when energy + direction both selected', (tester) async {
+    testWidgets('tap mood option → auto-saves immediately (no second step)', (tester) async {
       final wr = FakeWrRepository();
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
-      await tester.tap(find.text('Có năng lượng'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Tiến lên'));
+      await tester.tap(find.textContaining('đang vui'));
       await tester.pumpAndSettle();
       expect(wr.upsertCheckinCalls.map((c) => c.mood), contains(Mood.happy));
+      expect(wr.upsertCheckinCalls.first.direction, isNull);
     });
 
-    testWidgets('shows saved confirmation after auto-save', (tester) async {
+    testWidgets('tap "mệt mỏi" saves energy=low', (tester) async {
       final wr = FakeWrRepository();
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
-      await tester.tap(find.text('Bình thường'));
+      await tester.tap(find.textContaining('mệt mỏi'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Đứng yên'));
-      await tester.pumpAndSettle();
-      expect(find.textContaining('Đã lưu'), findsOneWidget);
+      expect(wr.upsertCheckinCalls.first.energy, CheckinEnergy.low);
+      expect(wr.upsertCheckinCalls.first.direction, isNull);
     });
 
-    testWidgets('energy=low + direction shows share card after auto-save', (tester) async {
+    testWidgets('tap "khá ổn" saves energy=ok', (tester) async {
       final wr = FakeWrRepository();
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
-      await tester.tap(find.text('Mệt mỏi'));
+      await tester.tap(find.textContaining('khá ổn'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Thụt lùi'));
+      expect(wr.upsertCheckinCalls.first.energy, CheckinEnergy.ok);
+      expect(wr.upsertCheckinCalls.first.direction, isNull);
+    });
+
+    testWidgets('energy=low or stressed shows share card after save', (tester) async {
+      final wr = FakeWrRepository();
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
+      await tester.tap(find.textContaining('mệt mỏi'));
       await tester.pumpAndSettle();
       expect(find.textContaining('Bạn mệt vì điều gì?'), findsOneWidget);
       expect(find.text('Chia sẻ thêm'), findsOneWidget);
@@ -156,9 +163,7 @@ void main() {
     testWidgets('energy=good does NOT show share card', (tester) async {
       final wr = FakeWrRepository();
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
-      await tester.tap(find.text('Có năng lượng'));
-      await tester.pumpAndSettle();
-      await tester.tap(find.text('Tiến lên'));
+      await tester.tap(find.textContaining('đang vui'));
       await tester.pumpAndSettle();
       expect(find.textContaining('Bạn mệt vì điều gì?'), findsNothing);
     });
@@ -171,45 +176,41 @@ void main() {
         userId: 'u1',
         mood: Mood.okay,
         energy: CheckinEnergy.ok,
-        direction: CheckinDirection.steady,
+        direction: null,
         checkinDate: DateTime(now.year, now.month, now.day),
         createdAt: now,
       ));
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
-      expect(find.textContaining('Đã lưu'), findsOneWidget);
+      // Prepopulated — no error, screen renders fine
+      expect(find.byType(WrHomeScreen), findsOneWidget);
     });
   });
 
   group('WrHomeScreen — error feedback', () {
-    testWidgets('repo throws → no saved badge, shows SnackBar', (tester) async {
+    testWidgets('repo throws → no share card, shows SnackBar', (tester) async {
       final wr = FakeWrRepository();
       wr.setUpsertError(Exception('db error'));
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
-      await tester.tap(find.text('Có năng lượng'));
+      await tester.tap(find.textContaining('mệt mỏi'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Tiến lên'));
-      await tester.pumpAndSettle();
-      expect(find.textContaining('Đã lưu'), findsNothing);
+      expect(find.textContaining('Bạn mệt vì điều gì?'), findsNothing);
       expect(find.textContaining('Không lưu được'), findsWidgets);
     });
 
-    testWidgets('after error, re-selecting direction triggers upsert again', (tester) async {
+    testWidgets('after error, re-tapping another option triggers upsert again', (tester) async {
       final wr = FakeWrRepository();
       wr.setUpsertError(Exception('db error'));
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
-      // First attempt — fails
-      await tester.tap(find.text('Có năng lượng'));
+      // First attempt — fails (error thrown before recording in fake)
+      await tester.tap(find.textContaining('mệt mỏi'));
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Tiến lên'));
-      await tester.pumpAndSettle();
-      // Clear error so second attempt succeeds
+      // Clear error
       wr.clearUpsertError();
-      // Re-tap direction to trigger auto-save again
-      await tester.tap(find.text('Tiến lên'));
+      // Tap another option
+      await tester.tap(find.textContaining('khá ổn'));
       await tester.pumpAndSettle();
-      // First call threw before recording; second call succeeds and is recorded.
       expect(wr.upsertCheckinCalls.length, 1);
-      expect(find.textContaining('Đã lưu'), findsOneWidget);
+      expect(find.textContaining('Bạn mệt vì điều gì?'), findsNothing);
     });
   });
 }
