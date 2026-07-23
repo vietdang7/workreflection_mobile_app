@@ -11,7 +11,7 @@ import 'package:workreflection_mobile/l10n/app_localizations.dart';
 //   0 /home          — Hôm nay — Icons.home_outlined
 //   1 /wr/discover   — Hiểu mình — Icons.person_outline
 //   2 /wr/growth     — Phát triển — Icons.trending_up
-//   3 /wr/journey    — Hành trình — Icons.notes_outlined
+//   3 /wr/journey    — Hành trình — Icons.subject
 //   4 /profile       — Tôi — Icons.settings_outlined
 // Tab bar shows ONLY icon + coral dot (NO text label rendered).
 // ---------------------------------------------------------------------------

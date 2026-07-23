@@ -45,7 +45,7 @@ List<_TabDef> _buildTabs(AppLocalizations l10n) => [
   _TabDef(icon: Icons.home_outlined,     semanticsLabel: l10n.tabToday),
   _TabDef(icon: Icons.person_outline,    semanticsLabel: l10n.tabUnderstand),
   _TabDef(icon: Icons.trending_up,       semanticsLabel: l10n.tabDevelop),
-  _TabDef(icon: Icons.notes,             semanticsLabel: l10n.tabJourney),
+  _TabDef(icon: Icons.subject,           semanticsLabel: l10n.tabJourney),
   _TabDef(icon: Icons.settings_outlined, semanticsLabel: l10n.tabProfile),
 ];
 
