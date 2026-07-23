@@ -233,7 +233,7 @@ class WrJourneyScreen extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(22, 20, 22, 4),
                 child: GestureDetector(
-                  onTap: () => context.push('/profile'),
+                  onTap: () => context.go('/profile'),
                   child: Container(
                     decoration: BoxDecoration(
                       color: WrColors.white,

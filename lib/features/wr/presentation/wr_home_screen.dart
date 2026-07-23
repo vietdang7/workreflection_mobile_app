@@ -98,7 +98,7 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
                       ),
                     ),
                     GestureDetector(
-                      onTap: () => context.push('/profile'),
+                      onTap: () => context.go('/profile'),
                       child: Container(
                         width: 34, height: 34,
                         decoration: const BoxDecoration(

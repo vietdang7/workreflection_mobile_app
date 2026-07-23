@@ -68,9 +68,9 @@ class WrTabBar extends StatelessWidget {
       height: 64 + bottomPadding,
       decoration: BoxDecoration(
         color: WrColors.white.withValues(alpha: 0.95),
-        border: const Border(
+        border: Border(
           top: BorderSide(
-            color: Color(0x14093774), // navy 8% — matches HTML rgba(9,55,116,.08)
+            color: WrColors.navy.withValues(alpha: 0.08),
             width: 0.5,
           ),
         ),
@@ -126,7 +126,7 @@ class WrTabItem extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Icon(icon, color: color, size: 24),
-            const SizedBox(height: 5),
+            const SizedBox(height: 5), // icon-to-dot spacing
             // Active dot — 4px coral, hidden when inactive
             AnimatedContainer(
               duration: const Duration(milliseconds: 200),

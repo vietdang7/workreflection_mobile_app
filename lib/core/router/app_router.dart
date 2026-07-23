@@ -362,7 +362,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ],
       ),
 
-      // /wr/story — fullscreen push (parentNavigatorKey = root), NOT a shell tab.
+      // /wr/story — fullscreen push, uses root navigator implicitly (not nested in shell).
       GoRoute(
         path: '/wr/story',
         builder: (context, state) => const WrStoryScreen(),
