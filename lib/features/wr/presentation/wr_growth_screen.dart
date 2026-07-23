@@ -8,6 +8,11 @@ import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
+import '../../../core/widgets/action_link.dart';
+import '../../../core/widgets/eyebrow.dart';
+import '../../../core/widgets/progress_track.dart';
+import '../../../core/widgets/section_divider.dart';
+import '../../../core/widgets/wr_card.dart';
 import '../wr_providers.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -52,375 +57,435 @@ class WrGrowthScreen extends ConsumerWidget {
       body: SafeArea(
         child: themesAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, __) => _buildEmpty(context),
+          error: (_, __) => _buildContent(
+            context,
+            ref,
+            themes: const [],
+            enrollments: const [],
+            entitlement: WrEntitlement(plan: WrPlan.free),
+          ),
           data: (themes) {
-            if (themes.isEmpty) return _buildEmpty(context);
             final enrollments = enrollmentsAsync.valueOrNull ?? const [];
             final entitlement = entitlementAsync.valueOrNull ??
                 WrEntitlement(plan: WrPlan.free);
-            return _buildThemes(context, ref, themes, enrollments, entitlement);
+            return _buildContent(
+              context,
+              ref,
+              themes: themes,
+              enrollments: enrollments,
+              entitlement: entitlement,
+            );
           },
         ),
       ),
     );
   }
 
-  // ── Empty state ──────────────────────────────────────────────────────────
+  Widget _buildContent(
+    BuildContext context,
+    WidgetRef ref, {
+    required List<PracticeTheme> themes,
+    required List<PracticeEnrollment> enrollments,
+    required WrEntitlement entitlement,
+  }) {
+    // Find the first active (non-completed) enrollment
+    final activeEnrollment =
+        enrollments.where((e) => e.completedAt == null).firstOrNull;
+    final activeTheme = activeEnrollment != null
+        ? themes.where((t) => t.themeId == activeEnrollment.themeId).firstOrNull
+        : null;
 
-  Widget _buildEmpty(BuildContext context) {
     return CustomScrollView(
-      slivers: const [
-        SliverToBoxAdapter(
+      slivers: [
+        // ── Top area ────────────────────────────────────────────────────────
+        const SliverToBoxAdapter(
           child: Padding(
-            padding: EdgeInsets.fromLTRB(22, 12, 22, 20),
+            padding: EdgeInsets.fromLTRB(22, 16, 22, 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Thực hành',
+                  'Development Map',
                   style: TextStyle(
-                    fontSize: 10,
-                    color: Color(0xFFA3A3A3),
-                    letterSpacing: 0.02,
-                  ),
-                ),
-                SizedBox(height: 3),
-                Text(
-                  'Chưa có chủ đề',
-                  style: TextStyle(
-                    fontSize: 21,
-                    fontWeight: FontWeight.w700,
-                    color: WrColors.dark,
+                    fontSize: 14,
+                    color: WrColors.muted,
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
                 SizedBox(height: 4),
                 Text(
-                  'Đọc story và nhận Insight — WorkReflection sẽ đề xuất thực hành phù hợp.',
+                  'Phát triển',
                   style: TextStyle(
-                    fontSize: 13,
-                    color: Color(0xFF737373),
-                    height: 1.6,
+                    fontSize: 32,
+                    fontWeight: FontWeight.w800,
+                    color: WrColors.navy,
+                    height: 1.15,
                   ),
                 ),
               ],
             ),
           ),
         ),
-      ],
-    );
-  }
 
-  // ── Theme list view ──────────────────────────────────────────────────────
-
-  Widget _buildThemes(
-    BuildContext context,
-    WidgetRef ref,
-    List<PracticeTheme> themes,
-    List<PracticeEnrollment> enrollments,
-    WrEntitlement entitlement,
-  ) {
-    final activeCount =
-        enrollments.where((e) => e.completedAt == null).length;
-
-    return CustomScrollView(
-      slivers: [
-        const SliverToBoxAdapter(
+        // ── Active theme card (card-dark) or empty invite ────────────────
+        SliverToBoxAdapter(
           child: Padding(
-            padding: EdgeInsets.fromLTRB(22, 12, 22, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Thực hành',
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: Color(0xFFA3A3A3),
-                    letterSpacing: 0.02,
-                  ),
-                ),
-                SizedBox(height: 3),
-                Text(
-                  'Chủ đề của bạn',
-                  style: TextStyle(
-                    fontSize: 21,
-                    fontWeight: FontWeight.w700,
-                    color: WrColors.dark,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        SliverList(
-          delegate: SliverChildBuilderDelegate(
-            (ctx, i) {
-              final theme = themes[i];
-              final enrollment = enrollments
-                  .where((e) => e.themeId == theme.themeId)
-                  .firstOrNull;
-              return Padding(
-                padding: const EdgeInsets.fromLTRB(22, 0, 22, 12),
-                child: _ThemeCard(
-                  theme: theme,
-                  enrollment: enrollment,
-                  entitlement: entitlement,
-                  activeEnrollmentCount: activeCount,
-                  onEnroll: () async {
-                    if (!entitlement.canEnrollPracticeTheme(activeCount)) {
-                      context.push('/wr/paywall');
-                      return;
-                    }
-                    final userId = ref.read(currentUserIdProvider);
-                    if (userId == null) return;
-                    final repo = ref.read(wrIntelligenceRepositoryProvider);
-                    await repo.enrollTheme(
-                      PracticeEnrollment(
+            padding: const EdgeInsets.fromLTRB(22, 0, 22, 20),
+            child: activeTheme != null
+                ? _ActiveThemeCardDark(
+                    theme: activeTheme,
+                    enrollment: activeEnrollment!,
+                    entitlement: entitlement,
+                    onStepDone: (stepId, steps, allSteps) async {
+                      final userId = ref.read(currentUserIdProvider);
+                      if (userId == null) return;
+                      final repo = ref.read(wrIntelligenceRepositoryProvider);
+                      final contentRepo = ref.read(wrContentRepositoryProvider);
+
+                      final newCompleted = [...steps, stepId];
+                      await repo.updateEnrollmentSteps(
                         userId: userId,
-                        themeId: theme.themeId,
-                      ),
-                    );
-                    ref.invalidate(_practiceEnrollmentsProvider);
-                  },
-                  onStepDone: (stepId, steps, allStepsForTheme) async {
-                    final userId = ref.read(currentUserIdProvider);
-                    if (userId == null) return;
-                    final repo = ref.read(wrIntelligenceRepositoryProvider);
-                    final contentRepo = ref.read(wrContentRepositoryProvider);
-
-                    final newCompleted = [...steps, stepId];
-                    await repo.updateEnrollmentSteps(
-                      userId: userId,
-                      themeId: theme.themeId,
-                      completedSteps: newCompleted,
-                    );
-
-                    // Insert memory event
-                    final stepTitle = allStepsForTheme
-                        .where((s) => s.stepId == stepId)
-                        .map((s) => s.title)
-                        .firstOrNull;
-                    await contentRepo.insertMemoryEvent(
-                      CareerMemoryEvent(
-                        id: DateTime.now().millisecondsSinceEpoch.toString(),
-                        userId: userId,
-                        behavior: 'practice_step_done',
-                        reflectionText:
-                            '${theme.title} — ${stepTitle ?? stepId}',
-                      ),
-                    );
-
-                    // Only complete theme if all steps (including premium) are done
-                    final allStepIds =
-                        allStepsForTheme.map((s) => s.stepId).toSet();
-                    final hasCompletedAll =
-                        allStepIds.every((id) => newCompleted.contains(id));
-
-                    if (hasCompletedAll) {
-                      await repo.completeTheme(
-                        userId: userId,
-                        themeId: theme.themeId,
+                        themeId: activeTheme.themeId,
+                        completedSteps: newCompleted,
                       );
+
+                      final stepTitle = allSteps
+                          .where((s) => s.stepId == stepId)
+                          .map((s) => s.title)
+                          .firstOrNull;
                       await contentRepo.insertMemoryEvent(
                         CareerMemoryEvent(
-                          id: '${DateTime.now().millisecondsSinceEpoch}t',
+                          id: DateTime.now().millisecondsSinceEpoch.toString(),
                           userId: userId,
-                          behavior: 'practice_theme_done',
-                          reflectionText: theme.title,
+                          behavior: 'practice_step_done',
+                          reflectionText:
+                              '${activeTheme.title} — ${stepTitle ?? stepId}',
                         ),
                       );
-                    }
 
-                    ref.invalidate(_practiceEnrollmentsProvider);
-                  },
-                ),
-              );
-            },
-            childCount: themes.length,
+                      final allStepIds =
+                          allSteps.map((s) => s.stepId).toSet();
+                      final hasCompletedAll =
+                          allStepIds.every((id) => newCompleted.contains(id));
+
+                      if (hasCompletedAll) {
+                        await repo.completeTheme(
+                          userId: userId,
+                          themeId: activeTheme.themeId,
+                        );
+                        await contentRepo.insertMemoryEvent(
+                          CareerMemoryEvent(
+                            id: '${DateTime.now().millisecondsSinceEpoch}t',
+                            userId: userId,
+                            behavior: 'practice_theme_done',
+                            reflectionText: activeTheme.title,
+                          ),
+                        );
+                      }
+
+                      ref.invalidate(_practiceEnrollmentsProvider);
+                    },
+                    onPremiumTap: () => context.push('/wr/paywall'),
+                  )
+                : WrCardMinimal(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const WrEyebrow(
+                          'TRỌNG TÂM HIỆN TẠI',
+                          color: WrColors.muted,
+                        ),
+                        const SizedBox(height: 10),
+                        const Text(
+                          'Chưa có chủ đề nào đang thực hành',
+                          style: TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                            color: WrColors.dark,
+                            height: 1.3,
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        const Text(
+                          'Đọc story và nhận Insight — WorkReflection sẽ đề xuất thực hành phù hợp với bạn.',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: WrColors.muted,
+                            height: 1.6,
+                          ),
+                        ),
+                        const SizedBox(height: 14),
+                        WrActionLink(
+                          label: 'Khám phá story',
+                          onTap: () => context.push('/wr/story'),
+                        ),
+                      ],
+                    ),
+                  ),
           ),
         ),
-        const SliverToBoxAdapter(child: SizedBox(height: 16)),
+
+        // ── Practices hôm nay (chỉ hiện khi có active theme) ────────────
+        if (activeTheme != null)
+          _PracticesSectionSliver(
+            theme: activeTheme,
+            enrollment: activeEnrollment!,
+            entitlement: entitlement,
+            onStepDone: (stepId, steps, allSteps) async {
+              final userId = ref.read(currentUserIdProvider);
+              if (userId == null) return;
+              final repo = ref.read(wrIntelligenceRepositoryProvider);
+              final contentRepo = ref.read(wrContentRepositoryProvider);
+
+              final newCompleted = [...steps, stepId];
+              await repo.updateEnrollmentSteps(
+                userId: userId,
+                themeId: activeTheme.themeId,
+                completedSteps: newCompleted,
+              );
+
+              final stepTitle = allSteps
+                  .where((s) => s.stepId == stepId)
+                  .map((s) => s.title)
+                  .firstOrNull;
+              await contentRepo.insertMemoryEvent(
+                CareerMemoryEvent(
+                  id: DateTime.now().millisecondsSinceEpoch.toString(),
+                  userId: userId,
+                  behavior: 'practice_step_done',
+                  reflectionText:
+                      '${activeTheme.title} — ${stepTitle ?? stepId}',
+                ),
+              );
+
+              final allStepIds = allSteps.map((s) => s.stepId).toSet();
+              final hasCompletedAll =
+                  allStepIds.every((id) => newCompleted.contains(id));
+
+              if (hasCompletedAll) {
+                await repo.completeTheme(
+                  userId: userId,
+                  themeId: activeTheme.themeId,
+                );
+                await contentRepo.insertMemoryEvent(
+                  CareerMemoryEvent(
+                    id: '${DateTime.now().millisecondsSinceEpoch}t',
+                    userId: userId,
+                    behavior: 'practice_theme_done',
+                    reflectionText: activeTheme.title,
+                  ),
+                );
+              }
+
+              ref.invalidate(_practiceEnrollmentsProvider);
+            },
+            onPremiumTap: () => context.push('/wr/paywall'),
+          ),
+
+        // ── Divider ──────────────────────────────────────────────────────
+        if (activeTheme != null)
+          const SliverToBoxAdapter(
+            child: Padding(
+              padding: EdgeInsets.fromLTRB(22, 4, 22, 16),
+              child: WrSectionDivider(),
+            ),
+          ),
+
+        // NOTE: "Cơ hội phát triển" / opp-card section intentionally omitted.
+        // No real workshop/opportunity data source exists in the current
+        // codebase. Re-enable when a workshop data provider is wired up.
+
+        const SliverToBoxAdapter(child: SizedBox(height: 24)),
       ],
     );
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// _ThemeCard — shows one practice theme with its steps
+// _ActiveThemeCardDark — navy card-dark showing active theme + progress
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _ThemeCard extends ConsumerWidget {
-  const _ThemeCard({
+class _ActiveThemeCardDark extends ConsumerWidget {
+  const _ActiveThemeCardDark({
     required this.theme,
     required this.enrollment,
     required this.entitlement,
-    required this.activeEnrollmentCount,
-    required this.onEnroll,
     required this.onStepDone,
+    required this.onPremiumTap,
   });
 
   final PracticeTheme theme;
-  final PracticeEnrollment? enrollment;
+  final PracticeEnrollment enrollment;
   final WrEntitlement entitlement;
-  final int activeEnrollmentCount;
-  final VoidCallback onEnroll;
   final Future<void> Function(
     String stepId,
     List<String> currentCompleted,
     List<PracticeStep> allSteps,
   ) onStepDone;
+  final VoidCallback onPremiumTap;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final stepsAsync = ref.watch(_practiceStepsProvider(theme.themeId));
+    final completed = enrollment.completedSteps;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: WrColors.white,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0x0F000000)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Theme header
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+    return WrCardDark(
+      child: stepsAsync.when(
+        loading: () => const SizedBox(
+          height: 120,
+          child: Center(
+            child: CircularProgressIndicator(
+              color: WrColors.white,
+              strokeWidth: 2,
+            ),
+          ),
+        ),
+        error: (_, __) => const SizedBox.shrink(),
+        data: (steps) {
+          final totalSteps = steps.length;
+          final completedCount = completed.length;
+          final progress =
+              totalSteps > 0 ? completedCount / totalSteps : 0.0;
+
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              WrEyebrow(
+                'TRỌNG TÂM HIỆN TẠI',
+                color: WrColors.white.withValues(alpha: 0.50),
+              ),
+              const SizedBox(height: 10),
+              Text(
+                theme.title,
+                maxLines: 2,
+                softWrap: true,
+                style: const TextStyle(
+                  fontSize: 40,
+                  fontWeight: FontWeight.w800,
+                  color: WrColors.white,
+                  height: 1.05,
+                ),
+              ),
+              if (theme.description != null) ...[
+                const SizedBox(height: 10),
                 Text(
-                  theme.title,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: WrColors.dark,
+                  theme.description!,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: WrColors.white.withValues(alpha: 0.70),
+                    height: 1.55,
                   ),
                 ),
-                if (theme.description != null) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    theme.description!,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: Color(0xFF737373),
-                      height: 1.55,
-                    ),
-                  ),
-                ],
               ],
-            ),
-          ),
-
-          const SizedBox(height: 12),
-
-          // Steps
-          stepsAsync.when(
-            loading: () => const Padding(
-              padding: EdgeInsets.all(16),
-              child: LinearProgressIndicator(),
-            ),
-            error: (_, __) => const SizedBox.shrink(),
-            data: (steps) {
-              final completed = enrollment?.completedSteps ?? const [];
-              return Column(
-                children: steps.map((step) {
-                  final isDone = completed.contains(step.stepId);
-                  final isPremiumLocked = step.isPremium &&
-                      !entitlement.canAccessPracticeStep(
-                          isPremiumStep: true);
-                  // Next step = first non-done, non-premium-locked step
-                  final isNext = !isDone &&
-                      !isPremiumLocked &&
-                      completed.length == step.stepOrder - 1;
-
-                  return _StepRow(
-                    step: step,
-                    isDone: isDone,
-                    isPremiumLocked: isPremiumLocked,
-                    isNext: isNext,
-                    onDone: enrollment == null
-                        ? null
-                        : () => onStepDone(
-                              step.stepId,
-                              completed,
-                              steps,
-                            ),
-                    onPremiumTap: isPremiumLocked
-                        ? () => context.push('/wr/paywall')
-                        : null,
-                  );
-                }).toList(),
-              );
-            },
-          ),
-
-          // Enroll / status button
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 10, 16, 14),
-            child: enrollment == null
-                ? SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      onPressed: onEnroll,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: WrColors.dark,
-                        foregroundColor: WrColors.white,
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 11),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: const Text(
-                        'Bắt đầu chủ đề',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  )
-                : enrollment!.completedAt != null
-                    ? Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 8),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFE6F7F7),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.check_circle_rounded,
-                                size: 14, color: WrColors.teal),
-                            SizedBox(width: 6),
-                            Text(
-                              'Hoàn thành',
-                              style: TextStyle(
-                                  fontSize: 12, color: WrColors.teal),
-                            ),
-                          ],
-                        ),
-                      )
-                    : const SizedBox.shrink(),
-          ),
-        ],
+              const SizedBox(height: 16),
+              WrProgressTrack(
+                value: progress,
+                color: WrColors.white.withValues(alpha: 0.80),
+                trackColor: WrColors.white.withValues(alpha: 0.20),
+                height: 3,
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Giai đoạn ${completedCount + 1} / $totalSteps',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: WrColors.white.withValues(alpha: 0.50),
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// _StepRow
+// _PracticesSectionSliver — "PRACTICES HÔM NAY" list as a sliver
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _StepRow extends StatelessWidget {
-  const _StepRow({
+class _PracticesSectionSliver extends ConsumerWidget {
+  const _PracticesSectionSliver({
+    required this.theme,
+    required this.enrollment,
+    required this.entitlement,
+    required this.onStepDone,
+    required this.onPremiumTap,
+  });
+
+  final PracticeTheme theme;
+  final PracticeEnrollment enrollment;
+  final WrEntitlement entitlement;
+  final Future<void> Function(
+    String stepId,
+    List<String> currentCompleted,
+    List<PracticeStep> allSteps,
+  ) onStepDone;
+  final VoidCallback onPremiumTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final stepsAsync = ref.watch(_practiceStepsProvider(theme.themeId));
+
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(22, 0, 22, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const WrEyebrow('PRACTICES HÔM NAY'),
+            const SizedBox(height: 12),
+            stepsAsync.when(
+              loading: () => const LinearProgressIndicator(),
+              error: (_, __) => const SizedBox.shrink(),
+              data: (steps) {
+                final completed = enrollment.completedSteps;
+                return Column(
+                  children: steps.asMap().entries.map((entry) {
+                    final index = entry.key;
+                    final step = entry.value;
+                    final isDone = completed.contains(step.stepId);
+                    final isPremiumLocked = step.isPremium &&
+                        !entitlement.canAccessPracticeStep(
+                            isPremiumStep: true);
+                    final isNext = !isDone &&
+                        !isPremiumLocked &&
+                        completed.length == step.stepOrder - 1;
+
+                    return _PracticeListItem(
+                      step: step,
+                      isDone: isDone,
+                      isPremiumLocked: isPremiumLocked,
+                      isNext: isNext,
+                      isFirst: index == 0,
+                      onDone: isNext && !isPremiumLocked
+                          ? () => onStepDone(step.stepId, completed, steps)
+                          : null,
+                      onPremiumTap:
+                          isPremiumLocked ? onPremiumTap : null,
+                    );
+                  }).toList(),
+                );
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _PracticeListItem — một bước trong danh sách practices
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _PracticeListItem extends StatelessWidget {
+  const _PracticeListItem({
     required this.step,
     required this.isDone,
     required this.isPremiumLocked,
     required this.isNext,
+    required this.isFirst,
     this.onDone,
     this.onPremiumTap,
   });
@@ -429,50 +494,39 @@ class _StepRow extends StatelessWidget {
   final bool isDone;
   final bool isPremiumLocked;
   final bool isNext;
+  final bool isFirst;
   final VoidCallback? onDone;
   final VoidCallback? onPremiumTap;
 
   @override
   Widget build(BuildContext context) {
     return Opacity(
-      opacity: isPremiumLocked ? 0.45 : 1.0,
+      opacity: isDone ? 0.45 : 1.0,
       child: GestureDetector(
         onTap: isPremiumLocked ? onPremiumTap : null,
         child: Container(
-          decoration: const BoxDecoration(
-            border: Border(top: BorderSide(color: Color(0x0D000000))),
+          decoration: BoxDecoration(
+            border: isFirst
+                ? null
+                : const Border(
+                    top: BorderSide(
+                      color: Color(0x0D093774), // rgba(9,55,116,0.05)
+                    ),
+                  ),
           ),
-          padding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+          padding: const EdgeInsets.symmetric(vertical: 14),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Step indicator
-              Container(
+              // ── Left icon (22px area) ────────────────────────────────
+              SizedBox(
                 width: 22,
                 height: 22,
-                decoration: BoxDecoration(
-                  color: isDone
-                      ? WrColors.teal
-                      : const Color(0x0D000000),
-                  shape: BoxShape.circle,
-                ),
-                child: Center(
-                  child: isDone
-                      ? const Icon(Icons.check,
-                          size: 12, color: WrColors.white)
-                      : Text(
-                          '${step.stepOrder}',
-                          style: const TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFFA3A3A3),
-                          ),
-                        ),
-                ),
+                child: Center(child: _buildIcon()),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 14),
 
-              // Title
+              // ── Title + status ───────────────────────────────────────
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -480,33 +534,24 @@ class _StepRow extends StatelessWidget {
                     Text(
                       step.title,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 14,
                         fontWeight: FontWeight.w600,
                         color: isDone
                             ? const Color(0xFF737373)
-                            : WrColors.dark,
+                            : WrColors.navy,
                         decoration:
                             isDone ? TextDecoration.lineThrough : null,
+                        decorationColor: const Color(0xFF737373),
                       ),
                     ),
-                    if (isPremiumLocked)
-                      const Padding(
-                        padding: EdgeInsets.only(top: 2),
-                        child: Text(
-                          '⭐ Premium',
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: Color(0xFFD4A017),
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
+                    const SizedBox(height: 2),
+                    _buildStatusText(),
                   ],
                 ),
               ),
 
-              // "Xong" button for next step
-              if (isNext && onDone != null && !isPremiumLocked)
+              // ── Trailing action ──────────────────────────────────────
+              if (isNext && onDone != null)
                 GestureDetector(
                   onTap: onDone,
                   child: Container(
@@ -525,10 +570,91 @@ class _StepRow extends StatelessWidget {
                       ),
                     ),
                   ),
+                )
+              else if (isPremiumLocked && onPremiumTap != null)
+                GestureDetector(
+                  onTap: onPremiumTap,
+                  child: const Icon(
+                    Icons.lock_rounded,
+                    size: 16,
+                    color: WrColors.muted,
+                  ),
                 ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildIcon() {
+    if (isDone) {
+      return const Icon(Icons.check_circle, color: WrColors.teal, size: 20);
+    }
+    if (isNext && !isPremiumLocked) {
+      return const Icon(Icons.play_arrow, color: WrColors.coral, size: 16);
+    }
+    if (isPremiumLocked) {
+      return Container(
+        width: 20,
+        height: 20,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: WrColors.muted, width: 1.5),
+        ),
+      );
+    }
+    // Chưa bắt đầu
+    return Container(
+      width: 20,
+      height: 20,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: WrColors.muted.withValues(alpha: 0.40),
+          width: 1.5,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatusText() {
+    if (isPremiumLocked) {
+      return const Text(
+        '⭐ Premium',
+        style: TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          color: Color(0xFFD4A017), // amber
+        ),
+      );
+    }
+    if (isDone) {
+      return const Text(
+        'Hoàn thành',
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: WrColors.teal,
+        ),
+      );
+    }
+    if (isNext) {
+      return const Text(
+        'Đang thực hiện',
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: WrColors.coral,
+        ),
+      );
+    }
+    return const Text(
+      'Chưa bắt đầu',
+      style: TextStyle(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: WrColors.muted,
       ),
     );
   }

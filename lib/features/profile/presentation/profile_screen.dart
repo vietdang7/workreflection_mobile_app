@@ -124,8 +124,8 @@ class _AvatarSection extends ConsumerWidget {
         children: [
           // Avatar circle — network image when available, else initials
           Container(
-            width: 56,
-            height: 56,
+            width: 60,
+            height: 60,
             decoration: BoxDecoration(
               color: WrColors.navy.withValues(alpha: 0.08),
               shape: BoxShape.circle,
