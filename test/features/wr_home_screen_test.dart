@@ -309,18 +309,19 @@ void main() {
       expect(find.text('Có điều gì bạn muốn nhìn lại hôm nay không?'), findsOneWidget);
     });
 
-    testWidgets('happy → Q2 shows "Điều gì làm bạn vui hôm nay?"', (tester) async {
+    testWidgets('happy → Q2 shows "Bạn muốn phát triển điều gì tiếp theo?"', (tester) async {
       await _pumpLarge(tester, _wrap(const WrHomeScreen()));
       await tester.tap(find.textContaining('đang vui'));
       await tester.pumpAndSettle();
-      expect(find.text('Điều gì làm bạn vui hôm nay?'), findsOneWidget);
+      expect(find.text('Bạn muốn phát triển điều gì tiếp theo?'), findsOneWidget);
     });
 
     testWidgets('Q2 shows chips from wrSituationsProvider', (tester) async {
       final content = FakeWrContentRepository();
+      // tired needs: thichNghi, phatTrien → seed với humanNeed phù hợp
       content.seedSituations([
-        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.s1, wave: 2),
-        WrSituation(code: 'sit-02', text: 'Mâu thuẫn nhóm', scaDimension: ScaDimension.s1, wave: 2),
+        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.c2, wave: 2, humanNeed: HumanNeed.thichNghi),
+        WrSituation(code: 'sit-02', text: 'Mâu thuẫn nhóm', scaDimension: ScaDimension.c2, wave: 2, humanNeed: HumanNeed.thichNghi),
       ]);
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), content: content));
       await tester.tap(find.textContaining('mệt mỏi'));
@@ -341,7 +342,7 @@ void main() {
     testWidgets('chip tap → recordSituationOccurrence called with correct situationCode', (tester) async {
       final content = FakeWrContentRepository();
       content.seedSituations([
-        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.s1, wave: 2),
+        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.c2, wave: 2, humanNeed: HumanNeed.thichNghi),
       ]);
       final intel = FakeWrIntelligenceRepository();
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), content: content, intel: intel));
@@ -356,7 +357,7 @@ void main() {
     testWidgets('chip tap → first-time confirmation "Hệ thống sẽ ghi nhớ điều này…" shown', (tester) async {
       final content = FakeWrContentRepository();
       content.seedSituations([
-        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.s1, wave: 2),
+        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.c2, wave: 2, humanNeed: HumanNeed.thichNghi),
       ]);
       final intel = FakeWrIntelligenceRepository();
       // No prior patterns → count will be 1 after save
@@ -371,7 +372,7 @@ void main() {
     testWidgets('chip tap → repeat confirmation "lần thứ N" shown when count>=2', (tester) async {
       final content = FakeWrContentRepository();
       content.seedSituations([
-        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.s1, wave: 2),
+        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.c2, wave: 2, humanNeed: HumanNeed.thichNghi),
       ]);
       final intel = FakeWrIntelligenceRepository();
       // Seed 1 prior occurrence → after save fake increments to 2
@@ -423,7 +424,7 @@ void main() {
     testWidgets('chip error → SnackBar shown, chip deselected', (tester) async {
       final content = FakeWrContentRepository();
       content.seedSituations([
-        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.s1, wave: 2),
+        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.c2, wave: 2, humanNeed: HumanNeed.thichNghi),
       ]);
       final intel = FakeWrIntelligenceRepository();
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), content: content, intel: intel));
@@ -440,7 +441,7 @@ void main() {
     testWidgets('story eyebrow is GỢI Ý CHO BẠN after chip saved', (tester) async {
       final content = FakeWrContentRepository();
       content.seedSituations([
-        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.s1, wave: 2),
+        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.c2, wave: 2, humanNeed: HumanNeed.thichNghi),
       ]);
       final intel = FakeWrIntelligenceRepository();
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), content: content, intel: intel));
@@ -485,6 +486,7 @@ void main() {
           scaDimension: ScaDimension.s1,
           wave: 2,
           expectedOutcome: 'Được hiểu và hỗ trợ kịp thời',
+          humanNeed: HumanNeed.thichNghi,
         ),
       ]);
       final intel = FakeWrIntelligenceRepository();
@@ -506,6 +508,7 @@ void main() {
           scaDimension: ScaDimension.s1,
           wave: 2,
           scaPerspective: 'Bạn đang cần rõ ràng về kỳ vọng',
+          humanNeed: HumanNeed.thichNghi,
         ),
       ]);
       final intel = FakeWrIntelligenceRepository();
@@ -520,7 +523,7 @@ void main() {
     testWidgets('confirmation card memory line — first time (count < 2)', (tester) async {
       final content = FakeWrContentRepository();
       content.seedSituations([
-        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.s1, wave: 2),
+        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.c2, wave: 2, humanNeed: HumanNeed.thichNghi),
       ]);
       final intel = FakeWrIntelligenceRepository();
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), content: content, intel: intel));
@@ -534,7 +537,7 @@ void main() {
     testWidgets('confirmation card memory line — repeat (count >= 2)', (tester) async {
       final content = FakeWrContentRepository();
       content.seedSituations([
-        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.s1, wave: 2),
+        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.c2, wave: 2, humanNeed: HumanNeed.thichNghi),
       ]);
       final intel = FakeWrIntelligenceRepository();
       intel.seedPatternCounts([
@@ -553,13 +556,13 @@ void main() {
     testWidgets('story card shows title matching situation scaDimension', (tester) async {
       final content = FakeWrContentRepository();
       content.seedSituations([
-        WrSituation(code: 'sit-s1', text: 'Áp lực deadline', scaDimension: ScaDimension.s1, wave: 2),
+        WrSituation(code: 'sit-s1', text: 'Áp lực deadline', scaDimension: ScaDimension.c2, wave: 2, humanNeed: HumanNeed.thichNghi),
       ]);
       content.seedStories([
         WrStory(
-          storyId: 'st-s1-01',
-          title: 'Câu chuyện S1',
-          scaDimension: ScaDimension.s1,
+          storyId: 'st-c2-01',
+          title: 'Câu chuyện C2',
+          scaDimension: ScaDimension.c2,
           storyContent: 'content',
           emotionTags: const [],
           behaviorTags: const [],
@@ -581,20 +584,20 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Áp lực deadline'));
       await tester.pumpAndSettle();
-      expect(find.textContaining('Câu chuyện S1'), findsOneWidget);
+      expect(find.textContaining('Câu chuyện C2'), findsOneWidget);
       expect(find.textContaining('Câu chuyện C1'), findsNothing);
     });
 
     testWidgets('story CTA button "Đọc câu chuyện này" shown after chip save', (tester) async {
       final content = FakeWrContentRepository();
       content.seedSituations([
-        WrSituation(code: 'sit-s1', text: 'Áp lực deadline', scaDimension: ScaDimension.s1, wave: 2),
+        WrSituation(code: 'sit-s1', text: 'Áp lực deadline', scaDimension: ScaDimension.c2, wave: 2, humanNeed: HumanNeed.thichNghi),
       ]);
       content.seedStories([
         WrStory(
-          storyId: 'st-s1-01',
-          title: 'Câu chuyện S1',
-          scaDimension: ScaDimension.s1,
+          storyId: 'st-c2-01',
+          title: 'Câu chuyện C2',
+          scaDimension: ScaDimension.c2,
           storyContent: 'content',
           emotionTags: const [],
           behaviorTags: const [],
@@ -613,7 +616,7 @@ void main() {
     testWidgets('eyebrow GỢI Ý CHO BẠN shown after chip save', (tester) async {
       final content = FakeWrContentRepository();
       content.seedSituations([
-        WrSituation(code: 'sit-s1', text: 'Áp lực deadline', scaDimension: ScaDimension.s1, wave: 2),
+        WrSituation(code: 'sit-s1', text: 'Áp lực deadline', scaDimension: ScaDimension.c2, wave: 2, humanNeed: HumanNeed.thichNghi),
       ]);
       content.seedStories([
         WrStory(
@@ -698,7 +701,7 @@ void main() {
     testWidgets('(a) tap chip X → record 1 lần; đổi mood; tap lại chip X → recordSituationOccurrence KHÔNG gọi lần 2, card vẫn hiện', (tester) async {
       final content = FakeWrContentRepository();
       content.seedSituations([
-        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.s1, wave: 2),
+        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.c2, wave: 2, humanNeed: HumanNeed.thichNghi),
       ]);
       final intel = FakeWrIntelligenceRepository();
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), content: content, intel: intel));
@@ -731,8 +734,8 @@ void main() {
     testWidgets('(b) tap chip X rồi tap chip Y khác → record được gọi cho Y', (tester) async {
       final content = FakeWrContentRepository();
       content.seedSituations([
-        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.s1, wave: 2),
-        WrSituation(code: 'sit-02', text: 'Mâu thuẫn nhóm', scaDimension: ScaDimension.c1, wave: 2),
+        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.c2, wave: 2, humanNeed: HumanNeed.thichNghi),
+        WrSituation(code: 'sit-02', text: 'Mâu thuẫn nhóm', scaDimension: ScaDimension.c1, wave: 2, humanNeed: HumanNeed.thichNghi),
       ]);
       final intel = FakeWrIntelligenceRepository();
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), content: content, intel: intel));

@@ -65,7 +65,15 @@ enum _MoodOption {
         _MoodOption.stressed => 'Điều gì đang khiến bạn căng thẳng?',
         _MoodOption.tired    => 'Bạn mệt vì điều gì?',
         _MoodOption.okay     => 'Có điều gì bạn muốn nhìn lại hôm nay không?',
-        _MoodOption.happy    => 'Điều gì làm bạn vui hôm nay?',
+        _MoodOption.happy    => 'Bạn muốn phát triển điều gì tiếp theo?',
+      };
+
+  /// HumanNeeds to filter Q2 chips for this mood (ordered by priority).
+  List<HumanNeed> get q2Needs => switch (this) {
+        _MoodOption.stressed => [HumanNeed.ketNoi, HumanNeed.thichNghi],
+        _MoodOption.tired    => [HumanNeed.thichNghi, HumanNeed.phatTrien],
+        _MoodOption.okay     => [HumanNeed.roRang],
+        _MoodOption.happy    => [HumanNeed.phatTrien],
       };
 }
 
@@ -109,6 +117,8 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
   WrSituation? _selectedSituation; // full WrSituation after chip save, for card
   WrStory? _suggestedStory;        // story matching scaDimension after chip save
   bool _okayDone = false;           // true = user tapped "Không, hôm nay ổn"
+  bool _joyDone = false;            // true = user tapped "Chỉ muốn ghi lại niềm vui"
+  String? _joyMessage;              // message shown after joy escape tap
   // Session-local dedup: codes already recorded this session (not reset on mood change)
   final Set<String> _recordedCodes = {};
 
@@ -139,6 +149,8 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
       _saving = true;
       _pendingOption = null;
       _okayDone = false;
+      _joyDone = false;
+      _joyMessage = null;
       _situationSaved = false;
       _selectedSituationCode = null;
       _suggestedStory = null;
@@ -217,6 +229,16 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
         situationCode: sit.code,
         scaDimensionDb: sit.scaDimension.dbValue,
       );
+
+      // Insert reflection step (notice) — lỗi không chặn card xác nhận
+      try {
+        await intelRepo.insertReflectionStep(ReflectionStep(
+          userId: userId,
+          step: ReflectionStepType.notice,
+          content: sit.code,
+        ));
+      } catch (_) { /* nuốt lỗi */ }
+
       // count pattern after save
       final savedSituation = sit;
       final counts = await intelRepo.fetchPatternCounts(userId);
@@ -251,6 +273,67 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
         );
       }
     }
+  }
+
+  /// Tap on "Chỉ muốn ghi lại niềm vui" chip (happy mood escape).
+  /// Inserts a reflection_step notice but does NOT call recordSituationOccurrence.
+  Future<void> _tapJoyEscape() async {
+    if (_joyDone) return;
+    final userId = ref.read(currentUserIdProvider) ?? '';
+    final intelRepo = ref.read(wrIntelligenceRepositoryProvider);
+    try {
+      await intelRepo.insertReflectionStep(ReflectionStep(
+        userId: userId,
+        step: ReflectionStepType.notice,
+        content: 'Ghi lại niềm vui',
+      ));
+      if (mounted) {
+        setState(() {
+          _joyDone = true;
+          _joyMessage = 'Đã ghi lại — thật tốt khi có một ngày như vậy.';
+        });
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không lưu được. Thử lại.')),
+        );
+      }
+    }
+  }
+
+  /// Build filtered + sorted list of Q2 situation chips for the selected mood.
+  List<WrSituation> _buildQ2Chips(
+    List<WrSituation> situations,
+    List<PatternCount> patterns,
+  ) {
+    if (_selected == null || situations.isEmpty) return const [];
+
+    final needs = _selected!.q2Needs;
+
+    // Pool: situations whose humanNeed is in the mood's needs list.
+    // Order: by needs list order (first need's sits first, then second need's, etc.)
+    List<WrSituation> pool = [];
+    for (final need in needs) {
+      final needSits = situations.where((s) => s.humanNeed == need).toList();
+      // For happy mood (phatTrien only): sort by scaDimension descending (A4, A3, A2, A1)
+      if (_selected == _MoodOption.happy && need == HumanNeed.phatTrien) {
+        needSits.sort((a, b) => b.scaDimension.dbValue.compareTo(a.scaDimension.dbValue));
+      }
+      pool.addAll(needSits);
+    }
+
+    // Priority: pool situations that appear in patterns, sorted by occurrenceCount desc
+    final prioritySits = patterns
+        .map((p) => pool.where((s) => s.code == p.situationCode).firstOrNull)
+        .whereType<WrSituation>()
+        .toList();
+    final prioritySet = {for (final s in prioritySits) s.code};
+
+    // Fill remaining from pool (preserving pool order)
+    final fillSits = pool.where((s) => !prioritySet.contains(s.code)).toList();
+
+    return [...prioritySits, ...fillSits].take(5).toList();
   }
 
   @override
@@ -292,20 +375,11 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
         ? 'GỢI Ý CHO BẠN'
         : (isLowSaved ? 'GỢI Ý KHI MỆT MỎI' : 'GỢI Ý HÔM NAY');
 
-    // Build Q2 chips: priority order = situations in patterns (by count desc),
-    // then fill from situations list, total max 5 real chips + 1 "Khác →"
-    List<WrSituation> q2Chips = [];
-    if (_selected != null && situations.isNotEmpty) {
-      // Priority: situations that appear in patterns (sorted by pattern count desc)
-      final prioritySits = patterns
-          .map((p) => situations.where((s) => s.code == p.situationCode).firstOrNull)
-          .whereType<WrSituation>()
-          .toList();
-      final prioritySet = {for (final s in prioritySits) s.code};
-      // Fill remaining from situations list
-      final fillSits = situations.where((s) => !prioritySet.contains(s.code)).toList();
-      q2Chips = [...prioritySits, ...fillSits].take(5).toList();
-    }
+    // Build Q2 chips filtered by mood's needs
+    final q2Chips = _buildQ2Chips(situations, patterns);
+
+    // Whether Q2 escape chips have been acted on (okay or happy)
+    final isEscapeDone = _okayDone || _joyDone;
 
     return Scaffold(
       backgroundColor: WrColors.white,
@@ -421,24 +495,20 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
                                   spacing: 8,
                                   runSpacing: 8,
                                   children: [
-                                    // "Không, hôm nay ổn" chip — only for okay mood, hidden after tap
+                                    // "Không, hôm nay ổn" escape chip — only for okay, before tap
                                     if (_selected == _MoodOption.okay && !_okayDone)
                                       GestureDetector(
                                         onTap: () => setState(() { _okayDone = true; }),
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                          decoration: BoxDecoration(
-                                            color: WrColors.cream,
-                                            borderRadius: BorderRadius.circular(100),
-                                          ),
-                                          child: const Text(
-                                            'Không, hôm nay ổn',
-                                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: WrColors.navy),
-                                          ),
-                                        ),
+                                        child: _EscapeChip(label: 'Không, hôm nay ổn'),
                                       ),
-                                    // Real situation chips (up to 5) — only when NOT okayDone
-                                    if (!_okayDone)
+                                    // "Chỉ muốn ghi lại niềm vui" escape chip — only for happy, before tap
+                                    if (_selected == _MoodOption.happy && !_joyDone)
+                                      GestureDetector(
+                                        onTap: _tapJoyEscape,
+                                        child: _EscapeChip(label: 'Chỉ muốn ghi lại niềm vui'),
+                                      ),
+                                    // Real situation chips (up to 5) — only when NOT escaped
+                                    if (!isEscapeDone)
                                       ...q2Chips.map((sit) => GestureDetector(
                                             onTap: () => _saveSituation(sit),
                                             child: Container(
@@ -464,8 +534,8 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
                                               ),
                                             ),
                                           )),
-                                    // "Khác →" chip — only when NOT okayDone
-                                    if (!_okayDone)
+                                    // "Khác →" chip — only when NOT escaped
+                                    if (!isEscapeDone)
                                       GestureDetector(
                                         onTap: () => context.push('/wr/situation'),
                                         child: Container(
@@ -494,6 +564,18 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
                                   const Text(
                                     'Tuyệt. Hẹn gặp bạn ngày mai.',
                                     style: TextStyle(
+                                      fontSize: 14,
+                                      color: WrColors.muted,
+                                      height: 1.5,
+                                    ),
+                                  ),
+                                ],
+                                // "Chỉ muốn ghi lại niềm vui" closing line
+                                if (_joyDone && _joyMessage != null) ...[
+                                  const SizedBox(height: 12),
+                                  Text(
+                                    _joyMessage!,
+                                    style: const TextStyle(
                                       fontSize: 14,
                                       color: WrColors.muted,
                                       height: 1.5,
@@ -708,6 +790,34 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
 
             const SliverToBoxAdapter(child: SizedBox(height: 80)),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _EscapeChip — shared pill widget for escape options (okay / happy)
+// ---------------------------------------------------------------------------
+
+class _EscapeChip extends StatelessWidget {
+  const _EscapeChip({required this.label});
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      decoration: BoxDecoration(
+        color: WrColors.cream,
+        borderRadius: BorderRadius.circular(100),
+      ),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 13,
+          fontWeight: FontWeight.w500,
+          color: WrColors.navy,
         ),
       ),
     );
