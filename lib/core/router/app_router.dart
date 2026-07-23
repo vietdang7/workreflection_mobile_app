@@ -275,10 +275,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/journey',
         builder: (context, state) => const JourneyScreen(),
       ),
-      GoRoute(
-        path: '/profile',
-        builder: (context, state) => const ProfileScreen(),
-      ),
+      // NOTE: /profile is now a shell branch (Tab 4). Removed standalone route
+      // to avoid GoRouter duplicate-path error.
 
       GoRoute(
         path: '/wr/self-check',
@@ -309,7 +307,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
 
-      // Shell with 5 indexed branches — WR companion pivot
+      // Shell with 5 indexed branches — final HTML mockup
+      // Tab 0: /home       — Hôm nay
+      // Tab 1: /wr/discover — Hiểu mình (path kept; label/icon changed — low risk)
+      // Tab 2: /wr/growth  — Phát triển
+      // Tab 3: /wr/journey — Hành trình
+      // Tab 4: /profile    — Tôi (moved into shell; /profile/edit stays fullscreen)
+      //
+      // /wr/story is NOT a shell branch anymore — it is a fullscreen route below.
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             ShellScreen(navigationShell: navigationShell),
@@ -319,14 +324,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/home',
                 builder: (context, state) => const WrHomeScreen(),
-              ),
-            ],
-          ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/wr/story',
-                builder: (context, state) => const WrStoryScreen(),
               ),
             ],
           ),
@@ -354,7 +351,21 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/profile',
+                builder: (context, state) => const ProfileScreen(),
+              ),
+            ],
+          ),
         ],
+      ),
+
+      // /wr/story — fullscreen push (parentNavigatorKey = root), NOT a shell tab.
+      GoRoute(
+        path: '/wr/story',
+        builder: (context, state) => const WrStoryScreen(),
       ),
     ],
   );
