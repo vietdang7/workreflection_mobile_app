@@ -361,7 +361,7 @@ void main() {
       await tester.pumpAndSettle();
       await tester.tap(find.text('Áp lực deadline'));
       await tester.pumpAndSettle();
-      expect(find.textContaining('Cảm ơn bạn đã chia sẻ. Hệ thống sẽ ghi nhớ điều này.'), findsOneWidget);
+      expect(find.textContaining('Hệ thống sẽ ghi nhớ điều này cho hành trình của bạn.'), findsOneWidget);
     });
 
     testWidgets('chip tap → repeat confirmation "lần thứ N" shown when count>=2', (tester) async {
@@ -445,6 +445,31 @@ void main() {
       await tester.tap(find.text('Áp lực deadline'));
       await tester.pumpAndSettle();
       expect(find.text('GỢI Ý CHO BẠN'), findsOneWidget);
+    });
+
+    testWidgets('okay mood → "Không, hôm nay ổn" chip shown', (tester) async {
+      await _pumpLarge(tester, _wrap(const WrHomeScreen()));
+      await tester.tap(find.textContaining('khá ổn'));
+      await tester.pumpAndSettle();
+      expect(find.text('Không, hôm nay ổn'), findsOneWidget);
+    });
+
+    testWidgets('tap "Không, hôm nay ổn" → shows closing message, no record call', (tester) async {
+      final intel = FakeWrIntelligenceRepository();
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), intel: intel));
+      await tester.tap(find.textContaining('khá ổn'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Không, hôm nay ổn'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Tuyệt. Hẹn gặp bạn ngày mai.'), findsOneWidget);
+      expect(intel.recordSituationOccurrenceCalls, isEmpty);
+    });
+
+    testWidgets('stressed mood → "Không, hôm nay ổn" chip NOT shown', (tester) async {
+      await _pumpLarge(tester, _wrap(const WrHomeScreen()));
+      await tester.tap(find.textContaining('căng thẳng'));
+      await tester.pumpAndSettle();
+      expect(find.text('Không, hôm nay ổn'), findsNothing);
     });
   });
 

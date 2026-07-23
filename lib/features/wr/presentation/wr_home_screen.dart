@@ -105,6 +105,7 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
   bool _situationSaved = false;     // true = chip was saved successfully
   int _situationCount = 0;          // pattern count after save (for "lần thứ N" message)
   bool _savingSituation = false;    // spinner guard for chip tap
+  bool _okayDone = false;           // true = user tapped "Không, hôm nay ổn"
 
   String _dateLabel() {
     final now = todayVn();
@@ -132,6 +133,9 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
       _selected = option;
       _saving = true;
       _pendingOption = null;
+      _okayDone = false;
+      _situationSaved = false;
+      _selectedSituationCode = null;
     });
 
     try {
@@ -379,61 +383,92 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
                                   spacing: 8,
                                   runSpacing: 8,
                                   children: [
-                                    // Real situation chips (up to 5)
-                                    ...q2Chips.map((sit) => GestureDetector(
-                                          onTap: () => _saveSituation(sit),
-                                          child: Container(
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 14,
-                                              vertical: 8,
-                                            ),
-                                            decoration: BoxDecoration(
-                                              color: _selectedSituationCode == sit.code
-                                                  ? WrColors.coral
-                                                  : WrColors.cream,
-                                              borderRadius: BorderRadius.circular(100),
-                                            ),
-                                            child: Text(
-                                              sit.text,
-                                              style: TextStyle(
-                                                fontSize: 13,
-                                                color: _selectedSituationCode == sit.code
-                                                    ? WrColors.white
-                                                    : WrColors.navy,
-                                              ),
-                                            ),
+                                    // "Không, hôm nay ổn" chip — only for okay mood
+                                    if (_selected == _MoodOption.okay)
+                                      GestureDetector(
+                                        onTap: () => setState(() { _okayDone = true; }),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                          decoration: BoxDecoration(
+                                            color: WrColors.cream,
+                                            borderRadius: BorderRadius.circular(100),
                                           ),
-                                        )),
-                                    // "Khác →" chip
-                                    GestureDetector(
-                                      onTap: () => context.push('/wr/situation'),
-                                      child: Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 14,
-                                          vertical: 8,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: WrColors.cream,
-                                          borderRadius: BorderRadius.circular(100),
-                                        ),
-                                        child: const Text(
-                                          'Khác →',
-                                          style: TextStyle(
-                                            fontSize: 13,
-                                            color: WrColors.navy,
+                                          child: const Text(
+                                            'Không, hôm nay ổn',
+                                            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: WrColors.navy),
                                           ),
                                         ),
                                       ),
-                                    ),
+                                    // Real situation chips (up to 5) — only when NOT okayDone
+                                    if (!_okayDone)
+                                      ...q2Chips.map((sit) => GestureDetector(
+                                            onTap: () => _saveSituation(sit),
+                                            child: Container(
+                                              padding: const EdgeInsets.symmetric(
+                                                horizontal: 14,
+                                                vertical: 8,
+                                              ),
+                                              decoration: BoxDecoration(
+                                                color: _selectedSituationCode == sit.code
+                                                    ? WrColors.coral
+                                                    : WrColors.cream,
+                                                borderRadius: BorderRadius.circular(100),
+                                              ),
+                                              child: Text(
+                                                sit.text,
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w500,
+                                                  color: _selectedSituationCode == sit.code
+                                                      ? WrColors.white
+                                                      : WrColors.navy,
+                                                ),
+                                              ),
+                                            ),
+                                          )),
+                                    // "Khác →" chip — only when NOT okayDone
+                                    if (!_okayDone)
+                                      GestureDetector(
+                                        onTap: () => context.push('/wr/situation'),
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 14,
+                                            vertical: 8,
+                                          ),
+                                          decoration: BoxDecoration(
+                                            color: WrColors.cream,
+                                            borderRadius: BorderRadius.circular(100),
+                                          ),
+                                          child: const Text(
+                                            'Khác →',
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              color: WrColors.navy,
+                                            ),
+                                          ),
+                                        ),
+                                      ),
                                   ],
                                 ),
-                                // Confirmation text after chip saved
+                                // "Không, hôm nay ổn" closing line
+                                if (_okayDone) ...[
+                                  const SizedBox(height: 12),
+                                  const Text(
+                                    'Tuyệt. Hẹn gặp bạn ngày mai.',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      color: WrColors.muted,
+                                      height: 1.5,
+                                    ),
+                                  ),
+                                ],
+                                // Temporary: keep chip-save confirmation as simple text (will be replaced in Task 3)
                                 if (_situationSaved) ...[
                                   const SizedBox(height: 8),
                                   Text(
                                     _situationCount >= 2
                                         ? 'Hệ thống đã ghi nhớ — đây là lần thứ $_situationCount bạn chia sẻ điều này.'
-                                        : 'Cảm ơn bạn đã chia sẻ. Hệ thống sẽ ghi nhớ điều này.',
+                                        : 'Hệ thống sẽ ghi nhớ điều này cho hành trình của bạn.',
                                     style: const TextStyle(
                                       fontSize: 14,
                                       color: WrColors.muted,
