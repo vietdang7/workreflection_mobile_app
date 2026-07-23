@@ -26,6 +26,11 @@ double _scoreToPercent(double score) =>
     ((score - 1) / 4).clamp(0.0, 1.0) * 100;
 
 /// Label for dominant need based on LOWEST SCA pillar.
+///
+/// Null scores default to 5.0 (midpoint) so an unanswered pillar is never
+/// treated as the weakest one — only explicitly low scores surface as dominant.
+/// Edge case: if all three are null (no self-check yet) every pillar gets 5.0
+/// and the tie-break always returns C ("An toàn khi lên tiếng") by design.
 String _dominantNeedLabel(ScaSelfCheckResponse r) {
   final s = r.structureScore ?? 5.0;
   final c = r.cultureScore ?? 5.0;

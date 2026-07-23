@@ -109,6 +109,8 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
   WrSituation? _selectedSituation; // full WrSituation after chip save, for card
   WrStory? _suggestedStory;        // story matching scaDimension after chip save
   bool _okayDone = false;           // true = user tapped "Không, hôm nay ổn"
+  // Session-local dedup: codes already recorded this session (not reset on mood change)
+  final Set<String> _recordedCodes = {};
 
   String _dateLabel() {
     final now = todayVn();
@@ -185,6 +187,27 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
 
   Future<void> _saveSituation(WrSituation sit) async {
     if (_savingSituation) return;
+
+    // Session-local dedup: already recorded this code → show confirmation card
+    // without calling recordSituationOccurrence again (prevents inflated count).
+    if (_recordedCodes.contains(sit.code)) {
+      setState(() {
+        _selectedSituationCode = sit.code;
+        _situationSaved = true;
+        _selectedSituation = sit;
+        // _situationCount already set from first record; reuse it.
+      });
+      // Still re-fetch story in case it wasn't loaded yet.
+      try {
+        final storyRepo = ref.read(wrContentRepositoryProvider);
+        final stories = await storyRepo.fetchStories(dimension: sit.scaDimension);
+        if (mounted) {
+          setState(() { _suggestedStory = stories.isNotEmpty ? stories.first : null; });
+        }
+      } catch (_) { /* ignore */ }
+      return;
+    }
+
     setState(() { _savingSituation = true; _selectedSituationCode = sit.code; });
     try {
       final userId = ref.read(currentUserIdProvider) ?? '';
@@ -210,6 +233,7 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
         suggested = null;
       }
       if (mounted) {
+        _recordedCodes.add(sit.code);
         setState(() {
           _situationSaved = true;
           _situationCount = thisCount;
@@ -272,10 +296,8 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
     // then fill from situations list, total max 5 real chips + 1 "Khác →"
     List<WrSituation> q2Chips = [];
     if (_selected != null && situations.isNotEmpty) {
-      final patternCodes = patterns.map((p) => p.situationCode).toSet();
       // Priority: situations that appear in patterns (sorted by pattern count desc)
       final prioritySits = patterns
-          .where((p) => patternCodes.contains(p.situationCode))
           .map((p) => situations.where((s) => s.code == p.situationCode).firstOrNull)
           .whereType<WrSituation>()
           .toList();

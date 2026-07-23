@@ -353,7 +353,7 @@ void main() {
       expect(intel.recordSituationOccurrenceCalls.first.situationCode, 'sit-01');
     });
 
-    testWidgets('chip tap → first-time confirmation "Cảm ơn bạn đã chia sẻ..." shown', (tester) async {
+    testWidgets('chip tap → first-time confirmation "Hệ thống sẽ ghi nhớ điều này…" shown', (tester) async {
       final content = FakeWrContentRepository();
       content.seedSituations([
         WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.s1, wave: 2),
@@ -689,6 +689,69 @@ void main() {
       ));
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
       expect(find.textContaining('Bạn mệt vì điều gì?'), findsNothing);
+    });
+  });
+
+  // ── I-1: session-local dedup — chống record trùng tình huống trong phiên ───
+
+  group('WrHomeScreen — I-1 dedup: chống record trùng chip trong phiên', () {
+    testWidgets('(a) tap chip X → record 1 lần; đổi mood; tap lại chip X → recordSituationOccurrence KHÔNG gọi lần 2, card vẫn hiện', (tester) async {
+      final content = FakeWrContentRepository();
+      content.seedSituations([
+        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.s1, wave: 2),
+      ]);
+      final intel = FakeWrIntelligenceRepository();
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), content: content, intel: intel));
+
+      // Tap mood "mệt mỏi" rồi tap chip X lần đầu → record được gọi
+      await tester.tap(find.textContaining('mệt mỏi'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Áp lực deadline'));
+      await tester.pumpAndSettle();
+      expect(intel.recordSituationOccurrenceCalls.length, 1);
+      expect(find.textContaining('Hệ thống sẽ ghi nhớ điều này'), findsOneWidget);
+
+      // Đổi mood → chip ẩn (Q2 reset), nhưng _recordedCodes giữ nguyên
+      await tester.tap(find.textContaining('căng thẳng'));
+      await tester.pumpAndSettle();
+
+      // Đổi lại mood "mệt mỏi" → chip X hiện lại
+      await tester.tap(find.textContaining('mệt mỏi'));
+      await tester.pumpAndSettle();
+
+      // Tap lại chip X → KHÔNG gọi record lần 2
+      await tester.tap(find.text('Áp lực deadline'));
+      await tester.pumpAndSettle();
+      expect(intel.recordSituationOccurrenceCalls.length, 1, reason: 'recordSituationOccurrence chỉ được gọi 1 lần dù tap lại chip X');
+
+      // Confirmation card vẫn hiện
+      expect(find.textContaining('Hệ thống sẽ ghi nhớ điều này'), findsOneWidget);
+    });
+
+    testWidgets('(b) tap chip X rồi tap chip Y khác → record được gọi cho Y', (tester) async {
+      final content = FakeWrContentRepository();
+      content.seedSituations([
+        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.s1, wave: 2),
+        WrSituation(code: 'sit-02', text: 'Mâu thuẫn nhóm', scaDimension: ScaDimension.c1, wave: 2),
+      ]);
+      final intel = FakeWrIntelligenceRepository();
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), content: content, intel: intel));
+
+      // Tap mood "mệt mỏi"
+      await tester.tap(find.textContaining('mệt mỏi'));
+      await tester.pumpAndSettle();
+
+      // Tap chip X (sit-01) → record lần 1
+      await tester.tap(find.text('Áp lực deadline'));
+      await tester.pumpAndSettle();
+      expect(intel.recordSituationOccurrenceCalls.length, 1);
+      expect(intel.recordSituationOccurrenceCalls.first.situationCode, 'sit-01');
+
+      // Tap chip Y (sit-02) → record lần 2 cho Y
+      await tester.tap(find.text('Mâu thuẫn nhóm'));
+      await tester.pumpAndSettle();
+      expect(intel.recordSituationOccurrenceCalls.length, 2, reason: 'chip Y chưa được record, phải gọi recordSituationOccurrence');
+      expect(intel.recordSituationOccurrenceCalls.last.situationCode, 'sit-02');
     });
   });
 }
