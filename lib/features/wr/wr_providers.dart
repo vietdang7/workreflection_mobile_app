@@ -38,3 +38,27 @@ final todayCheckinProvider = FutureProvider<Checkin?>((ref) async {
   final repo = ref.watch(wrRepositoryProvider);
   return repo.getTodayCheckin();
 });
+
+/// Fetch pattern counts for current user, ordered by occurrence_count desc.
+final wrPatternCountsProvider = FutureProvider<List<PatternCount>>((ref) async {
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null) return const [];
+  final repo = ref.watch(wrIntelligenceRepositoryProvider);
+  return repo.fetchPatternCounts(userId);
+});
+
+/// Fetch self-check history for current user, newest first.
+final wrSelfCheckHistoryProvider = FutureProvider<List<ScaSelfCheckResponse>>((ref) async {
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null) return const [];
+  final repo = ref.watch(wrIntelligenceRepositoryProvider);
+  return repo.fetchSelfCheckHistory(userId);
+});
+
+/// Fetch latest insight for current user.
+final wrLatestInsightProvider = FutureProvider<WrInsight?>((ref) async {
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null) return null;
+  final repo = ref.watch(wrIntelligenceRepositoryProvider);
+  return repo.fetchLatestInsight(userId);
+});

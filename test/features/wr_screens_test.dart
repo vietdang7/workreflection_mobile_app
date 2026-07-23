@@ -166,8 +166,9 @@ group('WrHomeScreen', () {
     await tester.pumpWidget(_wrap(const WrHomeScreen()));
     await tester.pumpAndSettle();
 
-    expect(find.text('CHECK-IN NHANH'), findsOneWidget);
-    expect(find.text('Ngày hôm nay của bạn như thế nào?'), findsOneWidget);
+    // New design: h-large question text, no old 'CHECK-IN NHANH' card header
+    expect(find.textContaining('Bạn đang trải qua điều gì?'), findsOneWidget);
+    expect(find.text('Có năng lượng'), findsOneWidget);
   });
 
   testWidgets('renders 3 energy option cards', (tester) async {
@@ -179,11 +180,12 @@ group('WrHomeScreen', () {
     expect(find.text('Mệt mỏi'), findsOneWidget);
   });
 
-  testWidgets('avatar button exists', (tester) async {
+  testWidgets('no avatar button in header (profile is tab 5)', (tester) async {
     await tester.pumpWidget(_wrap(const WrHomeScreen()));
     await tester.pumpAndSettle();
 
-    expect(find.byIcon(Icons.person), findsOneWidget);
+    // New design removed inline profile button from header
+    expect(find.byIcon(Icons.person), findsNothing);
   });
 
   testWidgets('tapping energy card selects it (no snackbar in new UI)', (tester) async {
@@ -227,58 +229,56 @@ group('WrDiscoverScreen — empty state', () {
     await tester.pumpWidget(_wrap(const WrDiscoverScreen()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Chưa có dữ liệu'), findsOneWidget);
+    // New design: "Chưa có đủ dữ liệu" in dominant need empty card
+    expect(find.textContaining('Chưa có'), findsWidgets);
   });
 
-  testWidgets('renders 4-step progress tracker', (tester) async {
+  testWidgets('renders CTA to do self-check when no history', (tester) async {
     await tester.pumpWidget(_wrap(const WrDiscoverScreen()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Đọc câu chuyện đầu tiên'), findsOneWidget);
-    expect(find.text('Trả lời câu hỏi phản chiếu'), findsOneWidget);
-    expect(find.text('Nhận Aha Moment đầu tiên'), findsOneWidget);
-    expect(find.text('Bức tranh bắt đầu xuất hiện'), findsOneWidget);
+    // New design shows CTA "Làm 15 câu phản chiếu" in empty need card
+    expect(find.textContaining('15 câu phản chiếu'), findsWidgets);
   });
 
   testWidgets('CTA is Làm 15 câu phản chiếu when no history', (tester) async {
     await tester.pumpWidget(_wrap(const WrDiscoverScreen()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Làm 15 câu phản chiếu'), findsOneWidget);
+    expect(find.textContaining('15 câu phản chiếu'), findsWidgets);
   });
 });
 
 group('WrDiscoverScreen — has data (free user)', () {
-  testWidgets('shows 3 score bars with pillar names (no S/C/A codes)', (tester) async {
+  testWidgets('shows SCA labels with new design (Minh bạch vai trò, etc.)', (tester) async {
     final intel = FakeWrIntelligenceRepository();
     intel.seedSelfCheckHistory([_selfCheckResponse()]);
 
     await tester.pumpWidget(_wrap(const WrDiscoverScreen(), intel: intel));
     await tester.pumpAndSettle();
 
-    // Must show friendly names — NOT technical codes
-    expect(find.text('Sự rõ ràng'), findsOneWidget);
-    expect(find.text('Mối quan hệ'), findsOneWidget);
-    expect(find.text('Cách làm việc'), findsOneWidget);
-
-    // Must NOT show technical codes
-    expect(find.text('S'), findsNothing);
-    expect(find.text('Structure'), findsNothing);
-    expect(find.text('Culture'), findsNothing);
-    expect(find.text('Activity'), findsNothing);
+    // New design: SCA card with labels instead of score bars
+    expect(find.textContaining('Minh bạch vai trò'), findsWidgets);
+    expect(find.textContaining('An toàn khi lên tiếng'), findsWidgets);
+    expect(find.textContaining('Định hướng ý nghĩa'), findsWidgets);
   });
 
-  testWidgets('shows Làm lại button when has data', (tester) async {
+  testWidgets('shows ĐIỀU BẠN ĐANG TÌM KIẾM section when data present', (tester) async {
     final intel = FakeWrIntelligenceRepository();
     intel.seedSelfCheckHistory([_selfCheckResponse()]);
 
     await tester.pumpWidget(_wrap(const WrDiscoverScreen(), intel: intel));
     await tester.pumpAndSettle();
 
-    expect(find.text('Làm lại'), findsOneWidget);
+    expect(find.textContaining('ĐIỀU BẠN ĐANG TÌM KIẾM'), findsOneWidget);
   });
 
   testWidgets('shows 2 locked premium cards for free user', (tester) async {
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     final intel = FakeWrIntelligenceRepository();
     intel.seedSelfCheckHistory([_selfCheckResponse()]);
 
@@ -290,7 +290,12 @@ group('WrDiscoverScreen — has data (free user)', () {
     expect(find.textContaining('Premium'), findsWidgets);
   });
 
-  testWidgets('shows history list for premium user (no locked cards)', (tester) async {
+  testWidgets('shows no locked cards for premium user', (tester) async {
+    tester.view.physicalSize = const Size(1080, 4000);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
+
     final intel = FakeWrIntelligenceRepository();
     intel.seedSelfCheckHistory([
       _selfCheckResponse(s: 4.0, c: 3.5, a: 4.2),
@@ -306,11 +311,11 @@ group('WrDiscoverScreen — has data (free user)', () {
     ));
     await tester.pumpAndSettle();
 
-    // History section present
-    expect(find.text('LỊCH SỬ ĐO'), findsOneWidget);
-    // No locked feature cards
+    // New design: premium users do not see locked cards
     expect(find.text('Báo cáo chuyên sâu 49 câu'), findsNothing);
     expect(find.text('Diễn giải sâu & xu hướng theo thời gian'), findsNothing);
+    // MỞ KHOÁ VỚI PREMIUM eyebrow not shown
+    expect(find.textContaining('MỞ KHOÁ VỚI PREMIUM'), findsNothing);
   });
 });
 

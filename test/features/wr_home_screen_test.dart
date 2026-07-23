@@ -1,3 +1,7 @@
+// Widget tests for WrHomeScreen — updated for restyle (Task 2A).
+// UI mới: auto-save khi đủ energy+direction, không có nút "Lưu check-in",
+// không có Icons.person trong header, direction row ẩn cho đến khi chọn energy.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -14,7 +18,6 @@ import '../support/fake_repository.dart';
 import '../support/fake_wr_content_repository.dart';
 import '../support/fake_wr_intelligence_repository.dart';
 
-// Minimal GoRouter for WrHomeScreen — handles /wr/situation navigation
 GoRouter _makeRouter({required Widget home}) => GoRouter(
       initialLocation: '/home',
       routes: [
@@ -22,6 +25,10 @@ GoRouter _makeRouter({required Widget home}) => GoRouter(
         GoRoute(
           path: '/wr/situation',
           builder: (_, __) => const Scaffold(body: Text('SituationScreen')),
+        ),
+        GoRoute(
+          path: '/wr/discover',
+          builder: (_, __) => const Scaffold(body: Text('DiscoverScreen')),
         ),
       ],
     );
@@ -76,78 +83,71 @@ void main() {
 
     testWidgets('falls back gracefully when no profile', (tester) async {
       await _pumpLarge(tester, _wrap(const WrHomeScreen()));
-      // Should not crash; header renders without displayName
       expect(find.byType(WrHomeScreen), findsOneWidget);
+    });
+
+    testWidgets('no profile avatar/person icon in header (profile is tab 5)', (tester) async {
+      await _pumpLarge(tester, _wrap(const WrHomeScreen()));
+      // New design: profile moved to tab 5, no inline avatar
+      expect(find.byIcon(Icons.person), findsNothing);
     });
   });
 
-  group('WrHomeScreen — check-in card', () {
-    testWidgets('renders energy options', (tester) async {
+  group('WrHomeScreen — check-in (auto-save UI)', () {
+    testWidgets('renders 3 energy options always visible', (tester) async {
       await _pumpLarge(tester, _wrap(const WrHomeScreen()));
       expect(find.text('Có năng lượng'), findsOneWidget);
       expect(find.text('Bình thường'), findsOneWidget);
       expect(find.text('Mệt mỏi'), findsOneWidget);
     });
 
-    testWidgets('renders direction options', (tester) async {
+    testWidgets('direction row hidden before energy selected', (tester) async {
       await _pumpLarge(tester, _wrap(const WrHomeScreen()));
+      expect(find.text('Tiến lên'), findsNothing);
+      expect(find.text('Đứng yên'), findsNothing);
+      expect(find.text('Thụt lùi'), findsNothing);
+    });
+
+    testWidgets('direction row revealed after energy selected', (tester) async {
+      await _pumpLarge(tester, _wrap(const WrHomeScreen()));
+      await tester.tap(find.text('Có năng lượng'));
+      await tester.pumpAndSettle();
       expect(find.text('Tiến lên'), findsOneWidget);
       expect(find.text('Đứng yên'), findsOneWidget);
       expect(find.text('Thụt lùi'), findsOneWidget);
     });
 
-    testWidgets('save button disabled until both selected', (tester) async {
+    testWidgets('no explicit Lưu check-in button', (tester) async {
       await _pumpLarge(tester, _wrap(const WrHomeScreen()));
-      final btn = tester.widget<ElevatedButton>(
-        find.widgetWithText(ElevatedButton, 'Lưu check-in'),
-      );
-      expect(btn.onPressed, isNull);
+      expect(find.widgetWithText(ElevatedButton, 'Lưu check-in'), findsNothing);
     });
 
-    testWidgets('save button enabled after energy + direction selected', (tester) async {
-      await _pumpLarge(tester, _wrap(const WrHomeScreen()));
-      await tester.tap(find.text('Có năng lượng'));
-      await tester.pump();
-      await tester.tap(find.text('Tiến lên'));
-      await tester.pump();
-      final btn = tester.widget<ElevatedButton>(
-        find.widgetWithText(ElevatedButton, 'Lưu check-in'),
-      );
-      expect(btn.onPressed, isNotNull);
-    });
-
-    testWidgets('tapping save calls upsertCheckin with correct energy', (tester) async {
+    testWidgets('auto-saves when energy + direction both selected', (tester) async {
       final wr = FakeWrRepository();
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
       await tester.tap(find.text('Có năng lượng'));
-      await tester.pump();
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Tiến lên'));
-      await tester.pump();
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Lưu check-in'));
       await tester.pumpAndSettle();
       expect(wr.upsertCheckinCalls, contains(Mood.happy));
     });
 
-    testWidgets('shows saved confirmation after save', (tester) async {
+    testWidgets('shows saved confirmation after auto-save', (tester) async {
       final wr = FakeWrRepository();
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
       await tester.tap(find.text('Bình thường'));
-      await tester.pump();
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Đứng yên'));
-      await tester.pump();
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Lưu check-in'));
       await tester.pumpAndSettle();
       expect(find.textContaining('Đã lưu'), findsOneWidget);
     });
 
-    testWidgets('energy=low shows share card after save', (tester) async {
+    testWidgets('energy=low + direction shows share card after auto-save', (tester) async {
       final wr = FakeWrRepository();
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
       await tester.tap(find.text('Mệt mỏi'));
-      await tester.pump();
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Thụt lùi'));
-      await tester.pump();
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Lưu check-in'));
       await tester.pumpAndSettle();
       expect(find.textContaining('Bạn mệt vì điều gì?'), findsOneWidget);
       expect(find.text('Chia sẻ thêm'), findsOneWidget);
@@ -157,10 +157,8 @@ void main() {
       final wr = FakeWrRepository();
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
       await tester.tap(find.text('Có năng lượng'));
-      await tester.pump();
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Tiến lên'));
-      await tester.pump();
-      await tester.tap(find.widgetWithText(ElevatedButton, 'Lưu check-in'));
       await tester.pumpAndSettle();
       expect(find.textContaining('Bạn mệt vì điều gì?'), findsNothing);
     });
