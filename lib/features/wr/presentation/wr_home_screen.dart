@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/data/wr_intelligence_repository.dart';
 import '../../../core/data/wr_repository.dart';
 import '../../../core/logic/vn_date.dart';
 import '../../../core/models/checkin.dart';
 import '../../../core/models/mobile_profile.dart';
+import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/action_link.dart';
@@ -54,8 +56,16 @@ enum _MoodOption {
         _MoodOption.happy    => Mood.happy,
       };
 
-  /// Whether this option corresponds to a "low/tired" state (shows share card)
+  /// Whether this option corresponds to a "low/tired" state
   bool get isLowEnergy => this == _MoodOption.stressed || this == _MoodOption.tired;
+
+  /// Q2 title for this mood
+  String get q2Title => switch (this) {
+        _MoodOption.stressed => 'Điều gì đang khiến bạn căng thẳng?',
+        _MoodOption.tired    => 'Bạn mệt vì điều gì?',
+        _MoodOption.okay     => 'Có điều gì bạn muốn nhìn lại hôm nay không?',
+        _MoodOption.happy    => 'Điều gì làm bạn vui hôm nay?',
+      };
 }
 
 /// Reverse-map from saved Checkin → best matching _MoodOption for prepopulate.
@@ -90,6 +100,12 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
   bool _saving = false;
   _MoodOption? _pendingOption; // latest-wins: queued option while _saving==true
 
+  // Q2 state
+  String? _selectedSituationCode;   // null = no chip selected yet
+  bool _situationSaved = false;     // true = chip was saved successfully
+  int _situationCount = 0;          // pattern count after save (for "lần thứ N" message)
+  bool _savingSituation = false;    // spinner guard for chip tap
+
   String _dateLabel() {
     final now = todayVn();
     final weekdays = [
@@ -103,7 +119,6 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
 
   Future<void> _save(_MoodOption option) async {
     // Latest-wins: if already saving, record the pending option and return.
-    // The in-flight call will re-invoke _save with the latest option when done.
     if (_saving) {
       setState(() {
         _selected = option; // optimistic UI update
@@ -160,6 +175,40 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
     }
   }
 
+  Future<void> _saveSituation(WrSituation sit) async {
+    if (_savingSituation) return;
+    setState(() { _savingSituation = true; _selectedSituationCode = sit.code; });
+    try {
+      final userId = ref.read(currentUserIdProvider) ?? '';
+      final intelRepo = ref.read(wrIntelligenceRepositoryProvider);
+      await intelRepo.recordSituationOccurrence(
+        userId: userId,
+        situationCode: sit.code,
+        scaDimensionDb: sit.scaDimension.dbValue,
+      );
+      // count pattern after save
+      final counts = await intelRepo.fetchPatternCounts(userId);
+      final thisCount = counts
+          .where((p) => p.situationCode == sit.code)
+          .fold<int>(0, (acc, p) => acc + p.occurrenceCount);
+      if (mounted) {
+        setState(() {
+          _situationSaved = true;
+          _situationCount = thisCount;
+          _savingSituation = false;
+        });
+        ref.invalidate(wrPatternCountsProvider);
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() { _savingSituation = false; _selectedSituationCode = null; });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không lưu được tình huống. Thử lại.')),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final profileAsync = ref.watch(_mobileProfileProvider);
@@ -195,7 +244,26 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
 
     // Conditions based on selected mood
     final isLowSaved = _saved && (_selected?.isLowEnergy ?? false);
-    final storyEyebrow = isLowSaved ? 'GỢI Ý KHI MỆT MỎI' : 'GỢI Ý HÔM NAY';
+    final storyEyebrow = _situationSaved
+        ? 'GỢI Ý CHO BẠN'
+        : (isLowSaved ? 'GỢI Ý KHI MỆT MỎI' : 'GỢI Ý HÔM NAY');
+
+    // Build Q2 chips: priority order = situations in patterns (by count desc),
+    // then fill from situations list, total max 5 real chips + 1 "Khác →"
+    List<WrSituation> q2Chips = [];
+    if (_selected != null && situations.isNotEmpty) {
+      final patternCodes = patterns.map((p) => p.situationCode).toSet();
+      // Priority: situations that appear in patterns (sorted by pattern count desc)
+      final prioritySits = patterns
+          .where((p) => patternCodes.contains(p.situationCode))
+          .map((p) => situations.where((s) => s.code == p.situationCode).firstOrNull)
+          .whereType<WrSituation>()
+          .toList();
+      final prioritySet = {for (final s in prioritySits) s.code};
+      // Fill remaining from situations list
+      final fillSits = situations.where((s) => !prioritySet.contains(s.code)).toList();
+      q2Chips = [...prioritySits, ...fillSits].take(5).toList();
+    }
 
     return Scaffold(
       backgroundColor: WrColors.white,
@@ -234,7 +302,7 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
               ),
             ),
 
-            // ── check-in section: 2×2 mood grid ─────────────────────────
+            // ── check-in section: 2×2 mood grid + Q2 reveal ─────────────
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
@@ -288,48 +356,99 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
                         ),
                       ],
                     ),
+                    // ── Q2 inline reveal (AnimatedSize) ─────────────────
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeInOut,
+                      child: _selected == null
+                          ? const SizedBox.shrink()
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 24),
+                                Text(
+                                  _selected!.q2Title,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: WrColors.navy,
+                                  ),
+                                ),
+                                const SizedBox(height: 12),
+                                Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: [
+                                    // Real situation chips (up to 5)
+                                    ...q2Chips.map((sit) => GestureDetector(
+                                          onTap: () => _saveSituation(sit),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 14,
+                                              vertical: 8,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color: _selectedSituationCode == sit.code
+                                                  ? WrColors.coral
+                                                  : WrColors.cream,
+                                              borderRadius: BorderRadius.circular(100),
+                                            ),
+                                            child: Text(
+                                              sit.text,
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                color: _selectedSituationCode == sit.code
+                                                    ? WrColors.white
+                                                    : WrColors.navy,
+                                              ),
+                                            ),
+                                          ),
+                                        )),
+                                    // "Khác →" chip
+                                    GestureDetector(
+                                      onTap: () => context.push('/wr/situation'),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 14,
+                                          vertical: 8,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: WrColors.cream,
+                                          borderRadius: BorderRadius.circular(100),
+                                        ),
+                                        child: const Text(
+                                          'Khác →',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: WrColors.navy,
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                // Confirmation text after chip saved
+                                if (_situationSaved) ...[
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    _situationCount >= 2
+                                        ? 'Hệ thống đã ghi nhớ — đây là lần thứ $_situationCount bạn chia sẻ điều này.'
+                                        : 'Cảm ơn bạn đã chia sẻ. Hệ thống sẽ ghi nhớ điều này.',
+                                    style: const TextStyle(
+                                      fontSize: 14,
+                                      color: WrColors.muted,
+                                      height: 1.5,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                    ),
                     const SizedBox(height: 28),
                   ],
                 ),
               ),
             ),
-
-            // ── share card (low energy: stressed or tired) ───────────────
-            if (isLowSaved)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 0, 24, 28),
-                  child: WrCardMinimal(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'Bạn mệt vì điều gì?',
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: WrColors.navy,
-                          ),
-                        ),
-                        const SizedBox(height: 6),
-                        const Text(
-                          'Đôi khi hiểu được nguyên nhân giúp bạn nhẹ hơn một chút.',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: WrColors.muted,
-                            height: 1.5,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        WrActionLink(
-                          label: 'Chia sẻ thêm',
-                          onTap: () => context.push('/wr/situation'),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
 
             // ── divider (duy nhất) ────────────────────────────────────────
             const SliverToBoxAdapter(child: WrSectionDivider()),

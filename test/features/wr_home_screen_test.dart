@@ -11,6 +11,8 @@ import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart'
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
 import 'package:workreflection_mobile/core/models/checkin.dart';
 import 'package:workreflection_mobile/core/models/mobile_profile.dart';
+import 'package:workreflection_mobile/core/models/wr_content.dart';
+import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_home_screen.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 
@@ -151,13 +153,13 @@ void main() {
       expect(wr.upsertCheckinCalls.first.direction, isNull);
     });
 
-    testWidgets('energy=low or stressed shows share card after save', (tester) async {
+    testWidgets('energy=low or stressed shows Q2 inline after save', (tester) async {
       final wr = FakeWrRepository();
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
       await tester.tap(find.textContaining('mệt mỏi'));
       await tester.pumpAndSettle();
       expect(find.textContaining('Bạn mệt vì điều gì?'), findsOneWidget);
-      expect(find.text('Chia sẻ thêm'), findsOneWidget);
+      expect(find.text('Chia sẻ thêm'), findsNothing);
     });
 
     testWidgets('energy=good does NOT show share card', (tester) async {
@@ -279,10 +281,177 @@ void main() {
     });
   });
 
+  // ── Q2 conversational reveal ────────────────────────────────────────────────
+
+  group('WrHomeScreen — Q2 conversational reveal', () {
+    testWidgets('stressed → Q2 shows "Điều gì đang khiến bạn căng thẳng?"', (tester) async {
+      await _pumpLarge(tester, _wrap(const WrHomeScreen()));
+      await tester.tap(find.textContaining('căng thẳng'));
+      await tester.pumpAndSettle();
+      expect(find.text('Điều gì đang khiến bạn căng thẳng?'), findsOneWidget);
+    });
+
+    testWidgets('tired → Q2 shows "Bạn mệt vì điều gì?"', (tester) async {
+      await _pumpLarge(tester, _wrap(const WrHomeScreen()));
+      await tester.tap(find.textContaining('mệt mỏi'));
+      await tester.pumpAndSettle();
+      expect(find.text('Bạn mệt vì điều gì?'), findsOneWidget);
+    });
+
+    testWidgets('okay → Q2 shows "Có điều gì bạn muốn nhìn lại hôm nay không?"', (tester) async {
+      await _pumpLarge(tester, _wrap(const WrHomeScreen()));
+      await tester.tap(find.textContaining('khá ổn'));
+      await tester.pumpAndSettle();
+      expect(find.text('Có điều gì bạn muốn nhìn lại hôm nay không?'), findsOneWidget);
+    });
+
+    testWidgets('happy → Q2 shows "Điều gì làm bạn vui hôm nay?"', (tester) async {
+      await _pumpLarge(tester, _wrap(const WrHomeScreen()));
+      await tester.tap(find.textContaining('đang vui'));
+      await tester.pumpAndSettle();
+      expect(find.text('Điều gì làm bạn vui hôm nay?'), findsOneWidget);
+    });
+
+    testWidgets('Q2 shows chips from wrSituationsProvider', (tester) async {
+      final content = FakeWrContentRepository();
+      content.seedSituations([
+        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.s1, wave: 2),
+        WrSituation(code: 'sit-02', text: 'Mâu thuẫn nhóm', scaDimension: ScaDimension.s1, wave: 2),
+      ]);
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), content: content));
+      await tester.tap(find.textContaining('mệt mỏi'));
+      await tester.pumpAndSettle();
+      expect(find.text('Áp lực deadline'), findsOneWidget);
+      expect(find.text('Mâu thuẫn nhóm'), findsOneWidget);
+    });
+
+    testWidgets('"Khác →" chip navigates to /wr/situation', (tester) async {
+      await _pumpLarge(tester, _wrap(const WrHomeScreen()));
+      await tester.tap(find.textContaining('mệt mỏi'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Khác →'));
+      await tester.pumpAndSettle();
+      expect(find.text('SituationScreen'), findsOneWidget);
+    });
+
+    testWidgets('chip tap → recordSituationOccurrence called with correct situationCode', (tester) async {
+      final content = FakeWrContentRepository();
+      content.seedSituations([
+        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.s1, wave: 2),
+      ]);
+      final intel = FakeWrIntelligenceRepository();
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), content: content, intel: intel));
+      await tester.tap(find.textContaining('mệt mỏi'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Áp lực deadline'));
+      await tester.pumpAndSettle();
+      expect(intel.recordSituationOccurrenceCalls, isNotEmpty);
+      expect(intel.recordSituationOccurrenceCalls.first.situationCode, 'sit-01');
+    });
+
+    testWidgets('chip tap → first-time confirmation "Cảm ơn bạn đã chia sẻ..." shown', (tester) async {
+      final content = FakeWrContentRepository();
+      content.seedSituations([
+        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.s1, wave: 2),
+      ]);
+      final intel = FakeWrIntelligenceRepository();
+      // No prior patterns → count will be 1 after save
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), content: content, intel: intel));
+      await tester.tap(find.textContaining('mệt mỏi'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Áp lực deadline'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Cảm ơn bạn đã chia sẻ. Hệ thống sẽ ghi nhớ điều này.'), findsOneWidget);
+    });
+
+    testWidgets('chip tap → repeat confirmation "lần thứ N" shown when count>=2', (tester) async {
+      final content = FakeWrContentRepository();
+      content.seedSituations([
+        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.s1, wave: 2),
+      ]);
+      final intel = FakeWrIntelligenceRepository();
+      // Seed 1 prior occurrence → after save fake increments to 2
+      intel.seedPatternCounts([
+        PatternCount(
+          userId: 'u1',
+          situationCode: 'sit-01',
+          occurrenceCount: 1,
+          lastSeenAt: DateTime(2026, 7, 20),
+        ),
+      ]);
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), content: content, intel: intel));
+      await tester.tap(find.textContaining('mệt mỏi'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Áp lực deadline'));
+      await tester.pumpAndSettle();
+      // Confirmation text with "lần thứ 2" (not the HỆ THỐNG NHẬN RA card)
+      expect(
+        find.textContaining('Hệ thống đã ghi nhớ — đây là lần thứ 2 bạn chia sẻ điều này.'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('(d) old share card "Bạn mệt vì điều gì?" no longer present after tired tap', (tester) async {
+      final wr = FakeWrRepository();
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
+      await tester.tap(find.textContaining('mệt mỏi'));
+      await tester.pumpAndSettle();
+      expect(find.text('Chia sẻ thêm'), findsNothing);
+    });
+
+    testWidgets('(e) prepopulate: Q2 visible immediately when today checkin exists', (tester) async {
+      final wr = FakeWrRepository();
+      final now = DateTime.now();
+      wr.seedTodayCheckin(Checkin(
+        id: 'c-ok',
+        userId: 'u1',
+        mood: Mood.okay,
+        energy: CheckinEnergy.ok,
+        direction: null,
+        checkinDate: DateTime(now.year, now.month, now.day),
+        createdAt: now,
+      ));
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
+      // Q2 visible for "okay" mood without tapping
+      expect(find.text('Có điều gì bạn muốn nhìn lại hôm nay không?'), findsOneWidget);
+    });
+
+    testWidgets('chip error → SnackBar shown, chip deselected', (tester) async {
+      final content = FakeWrContentRepository();
+      content.seedSituations([
+        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.s1, wave: 2),
+      ]);
+      final intel = FakeWrIntelligenceRepository();
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), content: content, intel: intel));
+      // Tap mood first and let it settle (invalidates wrPatternCountsProvider → fetchPatternCounts)
+      await tester.tap(find.textContaining('mệt mỏi'));
+      await tester.pumpAndSettle();
+      // Now set error — next intel call will be recordSituationOccurrence
+      intel.nextError = Exception('db error');
+      await tester.tap(find.text('Áp lực deadline'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Không lưu được tình huống'), findsWidgets);
+    });
+
+    testWidgets('story eyebrow is GỢI Ý CHO BẠN after chip saved', (tester) async {
+      final content = FakeWrContentRepository();
+      content.seedSituations([
+        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.s1, wave: 2),
+      ]);
+      final intel = FakeWrIntelligenceRepository();
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), content: content, intel: intel));
+      await tester.tap(find.textContaining('mệt mỏi'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Áp lực deadline'));
+      await tester.pumpAndSettle();
+      expect(find.text('GỢI Ý CHO BẠN'), findsOneWidget);
+    });
+  });
+
   // ── I1: prepopulate dùng mood field ────────────────────────────────────────
 
   group('WrHomeScreen — I1 prepopulate theo checkin.mood', () {
-    testWidgets('checkin mood=stressed → nút căng thẳng được chọn (share card hiện)', (tester) async {
+    testWidgets('checkin mood=stressed → nút căng thẳng được chọn (Q2 hiện)', (tester) async {
       final wr = FakeWrRepository();
       final now = DateTime.now();
       wr.seedTodayCheckin(Checkin(
@@ -295,11 +464,12 @@ void main() {
         createdAt: now,
       ));
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
-      // stressed là low energy → share card hiện
-      expect(find.textContaining('Bạn mệt vì điều gì?'), findsOneWidget);
+      // stressed → Q2 title hiện
+      expect(find.textContaining('Điều gì đang khiến bạn căng thẳng?'), findsOneWidget);
+      expect(find.text('Chia sẻ thêm'), findsNothing);
     });
 
-    testWidgets('checkin mood=tired → share card hiện, stressed không bị chọn nhầm', (tester) async {
+    testWidgets('checkin mood=tired → Q2 hiện, stressed không bị chọn nhầm', (tester) async {
       final wr = FakeWrRepository();
       final now = DateTime.now();
       wr.seedTodayCheckin(Checkin(
@@ -312,8 +482,9 @@ void main() {
         createdAt: now,
       ));
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
-      // tired cũng low energy → share card hiện
+      // tired → Q2 title "Bạn mệt vì điều gì?"
       expect(find.textContaining('Bạn mệt vì điều gì?'), findsOneWidget);
+      expect(find.text('Chia sẻ thêm'), findsNothing);
     });
 
     testWidgets('checkin mood=happy → không có share card', (tester) async {
