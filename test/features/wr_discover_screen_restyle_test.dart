@@ -291,4 +291,52 @@ void main() {
       expect(find.textContaining('Premium'), findsWidgets);
     });
   });
+
+  group('2B.7 nhu cầu chủ đạo — trụ THẤP NHẤT', () {
+    testWidgets('S lowest → quote "Được rõ ràng về vai trò và kỳ vọng của mình."', (tester) async {
+      final intel = FakeWrIntelligenceRepository();
+      intel.seedSelfCheckHistory([_selfCheck(s: 1.0, c: 3.0, a: 4.0)]);
+      await _pumpLarge(tester, _wrap(const WrDiscoverScreen(), intel: intel));
+      expect(find.textContaining('rõ ràng về vai trò'), findsOneWidget);
+      expect(find.textContaining('Minh bạch vai trò'), findsWidgets);
+    });
+
+    testWidgets('C lowest → quote "Được lắng nghe và thể hiện quan điểm."', (tester) async {
+      final intel = FakeWrIntelligenceRepository();
+      intel.seedSelfCheckHistory([_selfCheck(s: 4.0, c: 1.0, a: 3.0)]);
+      await _pumpLarge(tester, _wrap(const WrDiscoverScreen(), intel: intel));
+      expect(find.textContaining('lắng nghe và thể hiện quan điểm'), findsOneWidget);
+      expect(find.textContaining('An toàn khi lên tiếng'), findsWidgets);
+    });
+
+    testWidgets('A lowest → quote "Được làm công việc có ý nghĩa với mình."', (tester) async {
+      final intel = FakeWrIntelligenceRepository();
+      intel.seedSelfCheckHistory([_selfCheck(s: 3.0, c: 4.0, a: 1.0)]);
+      await _pumpLarge(tester, _wrap(const WrDiscoverScreen(), intel: intel));
+      expect(find.textContaining('công việc có ý nghĩa'), findsOneWidget);
+      expect(find.textContaining('Định hướng ý nghĩa'), findsWidgets);
+    });
+
+    testWidgets('tie between S and C → C wins (priority C > S > A)', (tester) async {
+      final intel = FakeWrIntelligenceRepository();
+      intel.seedSelfCheckHistory([_selfCheck(s: 2.0, c: 2.0, a: 4.0)]);
+      await _pumpLarge(tester, _wrap(const WrDiscoverScreen(), intel: intel));
+      expect(find.textContaining('lắng nghe và thể hiện quan điểm'), findsOneWidget);
+      expect(find.textContaining('An toàn khi lên tiếng'), findsWidgets);
+    });
+
+    testWidgets('dominant need section shows quote and caption without card wrapper', (tester) async {
+      final intel = FakeWrIntelligenceRepository();
+      intel.seedSelfCheckHistory([_selfCheck(s: 4.0, c: 1.0, a: 3.0)]);
+      await _pumpLarge(tester, _wrap(const WrDiscoverScreen(), intel: intel));
+      expect(find.textContaining('lắng nghe'), findsOneWidget);
+      expect(find.textContaining('Nhu cầu chủ đạo'), findsOneWidget);
+    });
+
+    testWidgets('scaffold backgroundColor is WrColors.white', (tester) async {
+      await _pumpLarge(tester, _wrap(const WrDiscoverScreen()));
+      final scaffold = tester.widget<Scaffold>(find.byType(Scaffold).first);
+      expect(scaffold.backgroundColor, const Color(0xFFFFFFFF));
+    });
+  });
 }

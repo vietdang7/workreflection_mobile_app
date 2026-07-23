@@ -25,14 +25,25 @@ import '../wr_providers.dart';
 double _scoreToPercent(double score) =>
     ((score - 1) / 4).clamp(0.0, 1.0) * 100;
 
-/// Label for dominant need based on top SCA pillar.
+/// Label for dominant need based on LOWEST SCA pillar.
 String _dominantNeedLabel(ScaSelfCheckResponse r) {
-  final s = r.structureScore ?? 0;
-  final c = r.cultureScore ?? 0;
-  final a = r.activityScore ?? 0;
-  if (s >= c && s >= a) return 'Minh bạch vai trò';
-  if (c >= s && c >= a) return 'An toàn khi lên tiếng';
+  final s = r.structureScore ?? 5.0;
+  final c = r.cultureScore ?? 5.0;
+  final a = r.activityScore ?? 5.0;
+  final minScore = [s, c, a].reduce((a, b) => a < b ? a : b);
+  // Tie-break: C > S > A (C wins if tied)
+  if (c == minScore) return 'An toàn khi lên tiếng';
+  if (s == minScore) return 'Minh bạch vai trò';
   return 'Định hướng ý nghĩa';
+}
+
+String _dominantNeedQuote(ScaSelfCheckResponse r) {
+  final label = _dominantNeedLabel(r);
+  return switch (label) {
+    'Minh bạch vai trò' => '"Được rõ ràng về vai trò và kỳ vọng của mình."',
+    'An toàn khi lên tiếng' => '"Được lắng nghe và thể hiện quan điểm."',
+    _ => '"Được làm công việc có ý nghĩa với mình."',
+  };
 }
 
 /// SCA pillar label mapping.
@@ -79,7 +90,7 @@ class WrDiscoverScreen extends ConsumerWidget {
     final isPremium = entitlement.isPremium;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFBF9),
+      backgroundColor: WrColors.white,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -240,34 +251,31 @@ class WrDiscoverScreen extends ConsumerWidget {
 
   Widget _buildDominantNeed(ScaSelfCheckResponse latest) {
     final needLabel = _dominantNeedLabel(latest);
+    final quote = _dominantNeedQuote(latest);
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        const WrEyebrow('ĐIỀU BẠN ĐANG TÌM KIẾM'),
-        const SizedBox(height: 10),
-        WrCardMinimal(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '"$needLabel"',
-                style: const TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.w400,
-                  fontStyle: FontStyle.italic,
-                  color: WrColors.navy,
-                  height: 1.45,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                '$needLabel · Nhu cầu chủ đạo',
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: WrColors.muted,
-                ),
-              ),
-            ],
+        const Center(child: WrEyebrow('ĐIỀU BẠN ĐANG TÌM KIẾM')),
+        const SizedBox(height: 16),
+        Text(
+          quote,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 26,
+            fontWeight: FontWeight.w400,
+            fontStyle: FontStyle.italic,
+            color: WrColors.navy,
+            height: 1.35,
+            letterSpacing: -0.52,
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(
+          '$needLabel · Nhu cầu chủ đạo',
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 13,
+            color: WrColors.muted,
           ),
         ),
       ],
@@ -292,7 +300,22 @@ class WrDiscoverScreen extends ConsumerWidget {
           final i = entry.key;
           final p = entry.value;
           final name = sitMap[p.situationCode] ?? p.situationCode ?? '?';
-          final isTop = i == 0;
+          final Color countColor;
+          final FontWeight countWeight;
+          final Color trackColor;
+          if (i == 0) {
+            countColor = WrColors.coral;
+            countWeight = FontWeight.w700;
+            trackColor = WrColors.coral;
+          } else if (i == 1) {
+            countColor = WrColors.teal;
+            countWeight = FontWeight.w600;
+            trackColor = WrColors.navy;
+          } else {
+            countColor = WrColors.muted;
+            countWeight = FontWeight.w600;
+            trackColor = WrColors.navy.withValues(alpha: 0.4);
+          }
           return Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: Column(
@@ -314,8 +337,8 @@ class WrDiscoverScreen extends ConsumerWidget {
                       '${p.occurrenceCount} lần',
                       style: TextStyle(
                         fontSize: 13,
-                        fontWeight: FontWeight.w700,
-                        color: isTop ? WrColors.coral : WrColors.muted,
+                        fontWeight: countWeight,
+                        color: countColor,
                       ),
                     ),
                   ],
@@ -325,7 +348,7 @@ class WrDiscoverScreen extends ConsumerWidget {
                   value: maxCount > 0
                       ? p.occurrenceCount / maxCount
                       : 0,
-                  color: isTop ? WrColors.coral : WrColors.muted,
+                  color: trackColor,
                 ),
               ],
             ),
