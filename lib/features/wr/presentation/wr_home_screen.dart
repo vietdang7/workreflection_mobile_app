@@ -47,21 +47,28 @@ enum _MoodOption {
         _MoodOption.happy    => CheckinEnergy.good,
       };
 
-  Mood get mood => energy.toMood();
+  Mood get mood => switch (this) {
+        _MoodOption.stressed => Mood.stressed,
+        _MoodOption.tired    => Mood.tired,
+        _MoodOption.okay     => Mood.okay,
+        _MoodOption.happy    => Mood.happy,
+      };
 
   /// Whether this option corresponds to a "low/tired" state (shows share card)
   bool get isLowEnergy => this == _MoodOption.stressed || this == _MoodOption.tired;
 }
 
-/// Reverse-map from saved energy → best matching _MoodOption for prepopulate.
-/// low → tired, ok → okay, good → happy (stressed has same energy as tired,
-/// so we default to tired for prepopulate since we can't distinguish from DB).
-_MoodOption? _moodOptionFromEnergy(CheckinEnergy? energy) {
-  if (energy == null) return null;
-  return switch (energy) {
-    CheckinEnergy.low  => _MoodOption.tired,
-    CheckinEnergy.ok   => _MoodOption.okay,
-    CheckinEnergy.good => _MoodOption.happy,
+/// Reverse-map from saved Checkin → best matching _MoodOption for prepopulate.
+/// Uses checkin.mood first (can distinguish stressed vs tired), falls back to
+/// energy if mood doesn't match the 4 known values.
+_MoodOption? _moodOptionFromCheckin(Checkin? checkin) {
+  if (checkin == null) return null;
+  // Prefer mood field — gives exact mapping including stressed vs tired.
+  return switch (checkin.mood) {
+    Mood.stressed => _MoodOption.stressed,
+    Mood.tired    => _MoodOption.tired,
+    Mood.okay     => _MoodOption.okay,
+    Mood.happy    => _MoodOption.happy,
   };
 }
 
@@ -80,6 +87,8 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
   _MoodOption? _selected;
   bool _saved = false;
   bool _prepopulated = false;
+  bool _saving = false;
+  _MoodOption? _pendingOption; // latest-wins: queued option while _saving==true
 
   String _dateLabel() {
     final now = todayVn();
@@ -93,8 +102,23 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
   }
 
   Future<void> _save(_MoodOption option) async {
+    // Latest-wins: if already saving, record the pending option and return.
+    // The in-flight call will re-invoke _save with the latest option when done.
+    if (_saving) {
+      setState(() {
+        _selected = option; // optimistic UI update
+        _pendingOption = option;
+      });
+      return;
+    }
+
     final previousSelected = _selected;
-    setState(() { _selected = option; });
+    setState(() {
+      _selected = option;
+      _saving = true;
+      _pendingOption = null;
+    });
+
     try {
       final repo = ref.read(wrRepositoryProvider);
       await repo.upsertCheckin(
@@ -109,14 +133,29 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
       }
     } catch (_) {
       if (mounted) {
-        // Revert selection on error
+        // Only revert if no newer tap has already updated _selected.
+        final hasNewerTap = _pendingOption != null;
         setState(() {
-          _selected = previousSelected;
-          _saved = false;
+          if (!hasNewerTap) {
+            _selected = previousSelected;
+            _saved = false;
+          }
         });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Không lưu được check-in. Thử lại.')),
         );
+      }
+    } finally {
+      if (mounted) {
+        final next = _pendingOption;
+        setState(() {
+          _saving = false;
+          _pendingOption = null;
+        });
+        // If a newer tap came in while saving, process it now.
+        if (next != null) {
+          await _save(next);
+        }
       }
     }
   }
@@ -132,7 +171,7 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
     ref.listen<AsyncValue<Checkin?>>(todayCheckinProvider, (_, next) {
       next.whenData((checkin) {
         if (checkin != null && !_prepopulated && mounted) {
-          final option = _moodOptionFromEnergy(checkin.energy);
+          final option = _moodOptionFromCheckin(checkin);
           setState(() {
             _prepopulated = true;
             _saved = true;

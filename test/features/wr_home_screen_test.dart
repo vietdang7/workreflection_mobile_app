@@ -213,4 +213,123 @@ void main() {
       expect(find.textContaining('Bạn mệt vì điều gì?'), findsNothing);
     });
   });
+
+  // ── C1: race condition guard ────────────────────────────────────────────────
+
+  group('WrHomeScreen — C1 race condition guard', () {
+    testWidgets('tap nhanh 2 nút: trạng thái cuối (đang vui) được giữ, upsert cuối đúng mood', (tester) async {
+      // FakeWrRepository.upsertCheckin() resolves synchronously in fake,
+      // but _saving guard ensures sequential execution (latest-wins).
+      final wr = FakeWrRepository();
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
+
+      // Tap "căng thẳng" then immediately "đang vui" (before settle).
+      await tester.tap(find.textContaining('căng thẳng'));
+      await tester.pump(); // start first save, do not settle
+      await tester.tap(find.textContaining('đang vui'));
+      await tester.pumpAndSettle(); // let both saves complete
+
+      // Final UI state: "đang vui" selected (no share card)
+      expect(find.textContaining('Bạn mệt vì điều gì?'), findsNothing);
+
+      // Last upsert was for happy mood
+      expect(wr.upsertCheckinCalls.last.mood, Mood.happy);
+      expect(wr.upsertCheckinCalls.last.energy, CheckinEnergy.good);
+    });
+
+    testWidgets('tap nhanh 2 nút: _selected không bị revert về null sau khi save xong', (tester) async {
+      final wr = FakeWrRepository();
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
+
+      await tester.tap(find.textContaining('mệt mỏi'));
+      await tester.pump();
+      await tester.tap(find.textContaining('khá ổn'));
+      await tester.pumpAndSettle();
+
+      // Final selection is "khá ổn" — screen renders fine with no share card
+      expect(find.textContaining('Bạn mệt vì điều gì?'), findsNothing);
+      expect(find.byType(WrHomeScreen), findsOneWidget);
+    });
+  });
+
+  // ── I1: Mood.stressed mapping ───────────────────────────────────────────────
+
+  group('WrHomeScreen — I1 Mood.stressed mapping', () {
+    testWidgets('tap căng thẳng → upsertCheckin nhận Mood.stressed + energy low', (tester) async {
+      final wr = FakeWrRepository();
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
+      await tester.tap(find.textContaining('căng thẳng'));
+      await tester.pumpAndSettle();
+
+      expect(wr.upsertCheckinCalls, isNotEmpty);
+      final call = wr.upsertCheckinCalls.first;
+      expect(call.mood, Mood.stressed);
+      expect(call.energy, CheckinEnergy.low);
+      expect(call.direction, isNull);
+    });
+
+    testWidgets('tap mệt mỏi → upsertCheckin nhận Mood.tired (không phải stressed)', (tester) async {
+      final wr = FakeWrRepository();
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
+      await tester.tap(find.textContaining('mệt mỏi'));
+      await tester.pumpAndSettle();
+
+      expect(wr.upsertCheckinCalls.first.mood, Mood.tired);
+      expect(wr.upsertCheckinCalls.first.mood, isNot(Mood.stressed));
+    });
+  });
+
+  // ── I1: prepopulate dùng mood field ────────────────────────────────────────
+
+  group('WrHomeScreen — I1 prepopulate theo checkin.mood', () {
+    testWidgets('checkin mood=stressed → nút căng thẳng được chọn (share card hiện)', (tester) async {
+      final wr = FakeWrRepository();
+      final now = DateTime.now();
+      wr.seedTodayCheckin(Checkin(
+        id: 'c-stressed',
+        userId: 'u1',
+        mood: Mood.stressed,
+        energy: CheckinEnergy.low,
+        direction: null,
+        checkinDate: DateTime(now.year, now.month, now.day),
+        createdAt: now,
+      ));
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
+      // stressed là low energy → share card hiện
+      expect(find.textContaining('Bạn mệt vì điều gì?'), findsOneWidget);
+    });
+
+    testWidgets('checkin mood=tired → share card hiện, stressed không bị chọn nhầm', (tester) async {
+      final wr = FakeWrRepository();
+      final now = DateTime.now();
+      wr.seedTodayCheckin(Checkin(
+        id: 'c-tired',
+        userId: 'u1',
+        mood: Mood.tired,
+        energy: CheckinEnergy.low,
+        direction: null,
+        checkinDate: DateTime(now.year, now.month, now.day),
+        createdAt: now,
+      ));
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
+      // tired cũng low energy → share card hiện
+      expect(find.textContaining('Bạn mệt vì điều gì?'), findsOneWidget);
+    });
+
+    testWidgets('checkin mood=happy → không có share card', (tester) async {
+      final wr = FakeWrRepository();
+      final now = DateTime.now();
+      wr.seedTodayCheckin(Checkin(
+        id: 'c-happy',
+        userId: 'u1',
+        mood: Mood.happy,
+        energy: CheckinEnergy.good,
+        direction: null,
+        checkinDate: DateTime(now.year, now.month, now.day),
+        createdAt: now,
+      ));
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
+      expect(find.textContaining('Bạn mệt vì điều gì?'), findsNothing);
+    });
+  });
 }
