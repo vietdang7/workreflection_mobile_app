@@ -399,8 +399,8 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
                                   spacing: 8,
                                   runSpacing: 8,
                                   children: [
-                                    // "Không, hôm nay ổn" chip — only for okay mood
-                                    if (_selected == _MoodOption.okay)
+                                    // "Không, hôm nay ổn" chip — only for okay mood, hidden after tap
+                                    if (_selected == _MoodOption.okay && !_okayDone)
                                       GestureDetector(
                                         onTap: () => setState(() { _okayDone = true; }),
                                         child: Container(
