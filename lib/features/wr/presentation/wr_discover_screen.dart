@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/logic/wr_self_check_questions.dart';
+import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/action_link.dart';
@@ -14,10 +15,6 @@ import '../../../core/widgets/wr_card.dart';
 import '../wr_providers.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Local providers
-// ─────────────────────────────────────────────────────────────────────────────
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Helpers
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -25,31 +22,69 @@ import '../wr_providers.dart';
 double _scoreToPercent(double score) =>
     ((score - 1) / 4).clamp(0.0, 1.0) * 100;
 
-/// Label for dominant need based on LOWEST SCA pillar.
-///
-/// Null scores default to 5.0 (midpoint) so an unanswered pillar is never
-/// treated as the weakest one — only explicitly low scores surface as dominant.
-/// Edge case: if all three are null (no self-check yet) every pillar gets 5.0
-/// and the tie-break always returns C ("An toàn khi lên tiếng") by design.
-String _dominantNeedLabel(ScaSelfCheckResponse r) {
+// ── Dominant need from BEHAVIOUR (situation choices) ────────────────────────
+
+/// Compute dominant HumanNeed from pattern counts + situation map.
+/// Sums occurrenceCount per HumanNeed; need with highest total = nhu cầu chủ đạo.
+/// Returns null when patterns is empty or no situation has a humanNeed.
+HumanNeed? _dominantNeedFromBehaviour(
+  List<PatternCount> patterns,
+  List<WrSituation> situations,
+) {
+  if (patterns.isEmpty) return null;
+  final codeToNeed = <String, HumanNeed>{
+    for (final s in situations)
+      if (s.humanNeed != null) s.code: s.humanNeed!,
+  };
+  final tally = <HumanNeed, int>{};
+  for (final p in patterns) {
+    final code = p.situationCode;
+    if (code == null) continue;
+    final need = codeToNeed[code];
+    if (need == null) continue;
+    tally[need] = (tally[need] ?? 0) + p.occurrenceCount;
+  }
+  if (tally.isEmpty) return null;
+  return tally.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
+}
+
+/// Quote and caption for each HumanNeed (4 nhu cầu cốt lõi).
+({String quote, String caption}) _needDisplay(HumanNeed need) => switch (need) {
+      HumanNeed.roRang => (
+          quote: '"Được rõ ràng về vai trò và điều mình cần đạt tới."',
+          caption: 'Rõ ràng · Nhu cầu chủ đạo',
+        ),
+      HumanNeed.ketNoi => (
+          quote: '"Được lắng nghe, tin tưởng và kết nối thật với đồng đội."',
+          caption: 'Kết nối · Nhu cầu chủ đạo',
+        ),
+      HumanNeed.thichNghi => (
+          quote: '"Được một nhịp làm việc ổn định để đi vào chiều sâu."',
+          caption: 'Thích nghi · Nhu cầu chủ đạo',
+        ),
+      HumanNeed.phatTrien => (
+          quote: '"Được làm công việc có ý nghĩa và ngày càng tiến bộ."',
+          caption: 'Phát triển · Nhu cầu chủ đạo',
+        ),
+    };
+
+// ── Fallback: dominant need from self-check SCA lowest pillar ──────────────
+
+/// Map SCA lowest pillar → HumanNeed (fallback when no patterns yet).
+/// S → roRang, C → ketNoi, A → phatTrien.
+/// Tie-break: C > S > A.
+HumanNeed _dominantNeedFromSelfCheck(ScaSelfCheckResponse r) {
   final s = r.structureScore ?? 5.0;
   final c = r.cultureScore ?? 5.0;
   final a = r.activityScore ?? 5.0;
   final minScore = [s, c, a].reduce((a, b) => a < b ? a : b);
   // Tie-break: C > S > A (C wins if tied)
-  if (c == minScore) return 'An toàn khi lên tiếng';
-  if (s == minScore) return 'Minh bạch vai trò';
-  return 'Định hướng ý nghĩa';
+  if (c == minScore) return HumanNeed.ketNoi;
+  if (s == minScore) return HumanNeed.roRang;
+  return HumanNeed.phatTrien;
 }
 
-String _dominantNeedQuote(ScaSelfCheckResponse r) {
-  final label = _dominantNeedLabel(r);
-  return switch (label) {
-    'Minh bạch vai trò' => '"Được rõ ràng về vai trò và kỳ vọng của mình."',
-    'An toàn khi lên tiếng' => '"Được lắng nghe và thể hiện quan điểm."',
-    _ => '"Được làm công việc có ý nghĩa với mình."',
-  };
-}
+// ── SCA helpers (unchanged) ────────────────────────────────────────────────
 
 /// SCA pillar label mapping.
 String _scaLabel(SelfCheckPillar p) => switch (p) {
@@ -94,6 +129,20 @@ class WrDiscoverScreen extends ConsumerWidget {
     final latest = history.isNotEmpty ? history.first : null;
     final isPremium = entitlement.isPremium;
 
+    // Compute dominant need:
+    // 1. From behaviour (patterns × situations humanNeed)
+    // 2. Fallback from self-check lowest pillar (if has self-check but no patterns)
+    final behaviourNeed = _dominantNeedFromBehaviour(patterns, situations);
+    final dominantNeed = behaviourNeed ??
+        (latest != null ? _dominantNeedFromSelfCheck(latest) : null);
+
+    // Visibility rules:
+    // - "Điều bạn đang tìm kiếm" + "Tình huống lặp lại": show when has patterns OR has self-check
+    // - SCA card + health-check: show only when has self-check
+    final hasPatterns = patterns.isNotEmpty;
+    final hasSelfCheck = latest != null;
+    final showNeedSection = hasPatterns || hasSelfCheck;
+
     return Scaffold(
       backgroundColor: WrColors.white,
       body: SafeArea(
@@ -130,14 +179,14 @@ class WrDiscoverScreen extends ConsumerWidget {
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-                child: latest == null
-                    ? _buildEmptyNeed(context)
-                    : _buildDominantNeed(latest),
+                child: showNeedSection && dominantNeed != null
+                    ? _buildDominantNeed(dominantNeed)
+                    : _buildEmptyNeed(context),
               ),
             ),
 
-            // ── divider ─────────────────────────────────────────────────
-            if (latest != null) ...[
+            // ── sections that need at least patterns or self-check ───────
+            if (showNeedSection) ...[
               const SliverToBoxAdapter(
                 child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 20),
@@ -146,7 +195,7 @@ class WrDiscoverScreen extends ConsumerWidget {
               ),
 
               // ── tình huống lặp lại ────────────────────────────────────
-              if (patterns.isNotEmpty)
+              if (hasPatterns)
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
@@ -154,24 +203,26 @@ class WrDiscoverScreen extends ConsumerWidget {
                   ),
                 ),
 
-              // ── SCA card ─────────────────────────────────────────────
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-                  child: _buildScaCard(latest),
+              // ── SCA card (only when has self-check) ──────────────────
+              if (hasSelfCheck)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                    child: _buildScaCard(latest),
+                  ),
                 ),
-              ),
 
-              // ── career health check ───────────────────────────────────
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
-                  child: _buildHealthCheck(context, history.length),
+              // ── career health check (only when has self-check) ────────
+              if (hasSelfCheck)
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+                    child: _buildHealthCheck(context, history.length),
+                  ),
                 ),
-              ),
 
               // ── premium gating ────────────────────────────────────────
-              if (!isPremium) ...[
+              if (hasSelfCheck && !isPremium) ...[
                 const SliverToBoxAdapter(
                   child: Padding(
                     padding: EdgeInsets.fromLTRB(24, 24, 24, 0),
@@ -252,18 +303,17 @@ class WrDiscoverScreen extends ConsumerWidget {
     );
   }
 
-  // ── Dominant need ───────────────────────────────────────────────────────
+  // ── Dominant need (from behaviour or self-check fallback) ───────────────
 
-  Widget _buildDominantNeed(ScaSelfCheckResponse latest) {
-    final needLabel = _dominantNeedLabel(latest);
-    final quote = _dominantNeedQuote(latest);
+  Widget _buildDominantNeed(HumanNeed need) {
+    final display = _needDisplay(need);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
         const Center(child: WrEyebrow('ĐIỀU BẠN ĐANG TÌM KIẾM')),
         const SizedBox(height: 16),
         Text(
-          quote,
+          display.quote,
           textAlign: TextAlign.center,
           style: const TextStyle(
             fontSize: 26,
@@ -276,7 +326,7 @@ class WrDiscoverScreen extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          '$needLabel · Nhu cầu chủ đạo',
+          display.caption,
           textAlign: TextAlign.center,
           style: const TextStyle(
             fontSize: 13,

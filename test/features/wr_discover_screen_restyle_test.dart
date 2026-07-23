@@ -301,11 +301,13 @@ void main() {
       expect(find.textContaining('Minh bạch vai trò'), findsWidgets);
     });
 
-    testWidgets('C lowest → quote "Được lắng nghe và thể hiện quan điểm."', (tester) async {
+    testWidgets('C lowest → fallback ketNoi quote "Được lắng nghe, tin tưởng..."', (tester) async {
       final intel = FakeWrIntelligenceRepository();
       intel.seedSelfCheckHistory([_selfCheck(s: 4.0, c: 1.0, a: 3.0)]);
       await _pumpLarge(tester, _wrap(const WrDiscoverScreen(), intel: intel));
-      expect(find.textContaining('lắng nghe và thể hiện quan điểm'), findsOneWidget);
+      expect(find.textContaining('lắng nghe, tin tưởng'), findsOneWidget);
+      expect(find.textContaining('Kết nối · Nhu cầu chủ đạo'), findsOneWidget);
+      // SCA labels still visible in SCA card
       expect(find.textContaining('An toàn khi lên tiếng'), findsWidgets);
     });
 
@@ -317,11 +319,12 @@ void main() {
       expect(find.textContaining('Định hướng ý nghĩa'), findsWidgets);
     });
 
-    testWidgets('tie between S and C → C wins (priority C > S > A)', (tester) async {
+    testWidgets('tie between S and C → C wins → fallback ketNoi quote', (tester) async {
       final intel = FakeWrIntelligenceRepository();
       intel.seedSelfCheckHistory([_selfCheck(s: 2.0, c: 2.0, a: 4.0)]);
       await _pumpLarge(tester, _wrap(const WrDiscoverScreen(), intel: intel));
-      expect(find.textContaining('lắng nghe và thể hiện quan điểm'), findsOneWidget);
+      expect(find.textContaining('lắng nghe, tin tưởng'), findsOneWidget);
+      expect(find.textContaining('Kết nối · Nhu cầu chủ đạo'), findsOneWidget);
       expect(find.textContaining('An toàn khi lên tiếng'), findsWidgets);
     });
 
