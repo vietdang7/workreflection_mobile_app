@@ -36,6 +36,10 @@ GoRouter _makeRouter({required Widget home}) => GoRouter(
           path: '/wr/story',
           builder: (_, __) => const Scaffold(body: Text('StoryScreen')),
         ),
+        GoRoute(
+          path: '/wr/story/flow',
+          builder: (_, __) => const Scaffold(body: Text('StoryFlowScreen')),
+        ),
       ],
     );
 
@@ -542,6 +546,93 @@ void main() {
       await tester.tap(find.text('Áp lực deadline'));
       await tester.pumpAndSettle();
       expect(find.textContaining('Hệ thống đã ghi nhớ — đây là lần thứ 2 bạn gặp tình huống này.'), findsOneWidget);
+    });
+  });
+
+  group('WrHomeScreen — story suggestion after chip save', () {
+    testWidgets('story card shows title matching situation scaDimension', (tester) async {
+      final content = FakeWrContentRepository();
+      content.seedSituations([
+        WrSituation(code: 'sit-s1', text: 'Áp lực deadline', scaDimension: ScaDimension.s1, wave: 2),
+      ]);
+      content.seedStories([
+        WrStory(
+          storyId: 'st-s1-01',
+          title: 'Câu chuyện S1',
+          scaDimension: ScaDimension.s1,
+          storyContent: 'content',
+          emotionTags: const [],
+          behaviorTags: const [],
+          careerStages: const [],
+        ),
+        WrStory(
+          storyId: 'st-c1-01',
+          title: 'Câu chuyện C1',
+          scaDimension: ScaDimension.c1,
+          storyContent: 'content',
+          emotionTags: const [],
+          behaviorTags: const [],
+          careerStages: const [],
+        ),
+      ]);
+      final intel = FakeWrIntelligenceRepository();
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), content: content, intel: intel));
+      await tester.tap(find.textContaining('mệt mỏi'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Áp lực deadline'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Câu chuyện S1'), findsOneWidget);
+      expect(find.textContaining('Câu chuyện C1'), findsNothing);
+    });
+
+    testWidgets('story CTA button "Đọc câu chuyện này" shown after chip save', (tester) async {
+      final content = FakeWrContentRepository();
+      content.seedSituations([
+        WrSituation(code: 'sit-s1', text: 'Áp lực deadline', scaDimension: ScaDimension.s1, wave: 2),
+      ]);
+      content.seedStories([
+        WrStory(
+          storyId: 'st-s1-01',
+          title: 'Câu chuyện S1',
+          scaDimension: ScaDimension.s1,
+          storyContent: 'content',
+          emotionTags: const [],
+          behaviorTags: const [],
+          careerStages: const [],
+        ),
+      ]);
+      final intel = FakeWrIntelligenceRepository();
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), content: content, intel: intel));
+      await tester.tap(find.textContaining('mệt mỏi'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Áp lực deadline'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Đọc câu chuyện này'), findsOneWidget);
+    });
+
+    testWidgets('eyebrow GỢI Ý CHO BẠN shown after chip save', (tester) async {
+      final content = FakeWrContentRepository();
+      content.seedSituations([
+        WrSituation(code: 'sit-s1', text: 'Áp lực deadline', scaDimension: ScaDimension.s1, wave: 2),
+      ]);
+      content.seedStories([
+        WrStory(
+          storyId: 'st-s1-01',
+          title: 'Câu chuyện S1',
+          scaDimension: ScaDimension.s1,
+          storyContent: 'content',
+          emotionTags: const [],
+          behaviorTags: const [],
+          careerStages: const [],
+        ),
+      ]);
+      final intel = FakeWrIntelligenceRepository();
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), content: content, intel: intel));
+      await tester.tap(find.textContaining('mệt mỏi'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Áp lực deadline'));
+      await tester.pumpAndSettle();
+      expect(find.text('GỢI Ý CHO BẠN'), findsOneWidget);
     });
   });
 

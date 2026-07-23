@@ -34,6 +34,7 @@ import '../../features/roadmap/presentation/roadmap_screen.dart';
 import '../../features/survey/presentation/survey_history_screen.dart';
 import '../../features/understand/presentation/insights_screen.dart';
 import '../../features/survey/presentation/survey_guide_screen.dart';
+import '../models/wr_content.dart';
 import '../../features/wr/presentation/wr_home_screen.dart';
 import '../../features/wr/presentation/wr_situation_flow_screen.dart';
 import '../../features/wr/presentation/wr_story_flow_screen.dart';
@@ -289,7 +290,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/wr/story/flow',
-        builder: (context, state) => const WrStoryFlowScreen(),
+        builder: (context, state) {
+          final dimStr = state.uri.queryParameters['dimension'];
+          ScaDimension? dim;
+          if (dimStr != null) {
+            try {
+              dim = ScaDimension.fromDb(dimStr);
+            } catch (_) {
+              dim = null;
+            }
+          }
+          return WrStoryFlowScreen(initialDimension: dim);
+        },
       ),
 
       GoRoute(

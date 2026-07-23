@@ -29,7 +29,9 @@ const _phaseLabels = {
 };
 
 class WrStoryFlowScreen extends ConsumerStatefulWidget {
-  const WrStoryFlowScreen({super.key});
+  const WrStoryFlowScreen({super.key, this.initialDimension});
+
+  final ScaDimension? initialDimension;
 
   @override
   ConsumerState<WrStoryFlowScreen> createState() => _WrStoryFlowScreenState();
@@ -55,7 +57,7 @@ class _WrStoryFlowScreenState extends ConsumerState<WrStoryFlowScreen> {
 
   Future<void> _loadStories() async {
     final contentRepo = ref.read(wrContentRepositoryProvider);
-    final allStories = await contentRepo.fetchStories();
+    final allStories = await contentRepo.fetchStories(dimension: widget.initialDimension);
     final events = await contentRepo.fetchMemoryEvents(limit: 200);
     final seenIds = events.map((e) => e.storyId).whereType<String>().toSet();
 

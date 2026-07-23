@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/data/wr_content_repository.dart';
 import '../../../core/data/wr_intelligence_repository.dart';
 import '../../../core/data/wr_repository.dart';
 import '../../../core/logic/vn_date.dart';
@@ -106,6 +107,7 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
   int _situationCount = 0;          // pattern count after save (for "lần thứ N" message)
   bool _savingSituation = false;    // spinner guard for chip tap
   WrSituation? _selectedSituation; // full WrSituation after chip save, for card
+  WrStory? _suggestedStory;        // story matching scaDimension after chip save
   bool _okayDone = false;           // true = user tapped "Không, hôm nay ổn"
 
   String _dateLabel() {
@@ -137,6 +139,7 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
       _okayDone = false;
       _situationSaved = false;
       _selectedSituationCode = null;
+      _suggestedStory = null;
     });
 
     try {
@@ -197,12 +200,22 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
       final thisCount = counts
           .where((p) => p.situationCode == sit.code)
           .fold<int>(0, (acc, p) => acc + p.occurrenceCount);
+      // Fetch a suggested story for this dimension
+      WrStory? suggested;
+      try {
+        final storyRepo = ref.read(wrContentRepositoryProvider);
+        final stories = await storyRepo.fetchStories(dimension: sit.scaDimension);
+        suggested = stories.isNotEmpty ? stories.first : null;
+      } catch (_) {
+        suggested = null;
+      }
       if (mounted) {
         setState(() {
           _situationSaved = true;
           _situationCount = thisCount;
           _savingSituation = false;
           _selectedSituation = savedSituation;
+          _suggestedStory = suggested;
         });
         ref.invalidate(wrPatternCountsProvider);
       }
@@ -586,22 +599,26 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
                           ),
                           const SizedBox(width: 16),
                           // Text column
-                          const Expanded(
+                          Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  'Bạn chưa đọc câu chuyện nào.',
-                                  style: TextStyle(
+                                  _suggestedStory != null
+                                      ? _suggestedStory!.title
+                                      : 'Bạn chưa đọc câu chuyện nào.',
+                                  style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.w600,
                                     color: WrColors.navy,
                                   ),
                                 ),
-                                SizedBox(height: 6),
+                                const SizedBox(height: 6),
                                 Text(
-                                  'Câu chuyện giúp bạn nhận ra pattern nghề nghiệp.',
-                                  style: TextStyle(
+                                  _suggestedStory != null
+                                      ? (_suggestedStory!.situation ?? 'Câu chuyện giúp bạn nhận ra pattern nghề nghiệp.')
+                                      : 'Câu chuyện giúp bạn nhận ra pattern nghề nghiệp.',
+                                  style: const TextStyle(
                                     fontSize: 13,
                                     color: WrColors.muted,
                                     height: 1.5,
@@ -615,8 +632,14 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
                     ),
                     const SizedBox(height: 8),
                     WrActionLink(
-                      label: 'Đọc câu chuyện đầu tiên',
-                      onTap: () => context.push('/wr/story'),
+                      label: _suggestedStory != null ? 'Đọc câu chuyện này' : 'Đọc câu chuyện đầu tiên',
+                      onTap: () {
+                        if (_suggestedStory != null && _selectedSituation != null) {
+                          context.push('/wr/story/flow?dimension=${_selectedSituation!.scaDimension.dbValue}');
+                        } else {
+                          context.push('/wr/story');
+                        }
+                      },
                     ),
                     const SizedBox(height: 28),
                   ],
