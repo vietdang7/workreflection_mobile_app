@@ -46,6 +46,15 @@ abstract class WrContentRepository {
     String userId, {
     int? limit,
   });
+
+  /// Delete all career memory events for [userId] and [situationCode] that
+  /// fall on the same Vietnam-local date as [day].
+  /// Used by commitTodaySituation when user changes situation within a day.
+  Future<void> deleteTodayMemoryEventsForSituation({
+    required String userId,
+    required String situationCode,
+    required DateTime day,
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -134,5 +143,26 @@ class SupabaseWrContentRepository implements WrContentRepository {
     }
     final rows = await query;
     return rows.map(CareerMemoryEvent.fromJson).toList();
+  }
+
+  @override
+  Future<void> deleteTodayMemoryEventsForSituation({
+    required String userId,
+    required String situationCode,
+    required DateTime day,
+  }) async {
+    // day is a VN-local date-only DateTime (from todayVn()).
+    // We compute the UTC bounds of that VN day:
+    //   VN midnight = day (no time) → UTC = day - 7h
+    //   VN end of day = day + 1 day - 1ms → UTC = (day + 1d) - 7h - 1ms
+    final vnMidnightUtc = day.toUtc().subtract(const Duration(hours: 7));
+    final vnEndOfDayUtc = vnMidnightUtc.add(const Duration(hours: 24));
+    await _client
+        .from('wr_career_memory_events')
+        .delete()
+        .eq('user_id', userId)
+        .eq('situation_code', situationCode)
+        .gte('created_at', vnMidnightUtc.toIso8601String())
+        .lt('created_at', vnEndOfDayUtc.toIso8601String());
   }
 }

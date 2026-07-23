@@ -32,6 +32,8 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
   final List<WrContextDocument> insertContextDocumentCalls = [];
   final List<({String userId, String situationCode, String scaDimensionDb})>
       recordSituationOccurrenceCalls = [];
+  final List<({String userId, String situationCode})>
+      decrementSituationOccurrenceCalls = [];
 
   // --- Seed helpers ---
   void seedEntitlement(WrEntitlementRecord? r) => _entitlement = r;
@@ -147,6 +149,35 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
         occurrenceCount: 1,
         lastSeenAt: DateTime.now(),
       ));
+    }
+  }
+
+  @override
+  Future<void> decrementSituationOccurrence({
+    required String userId,
+    required String situationCode,
+  }) async {
+    _maybeThrow();
+    decrementSituationOccurrenceCalls.add((
+      userId: userId,
+      situationCode: situationCode,
+    ));
+    final idx = _patternCounts.indexWhere(
+      (p) => p.userId == userId && p.situationCode == situationCode,
+    );
+    if (idx < 0) return;
+    final existing = _patternCounts[idx];
+    if (existing.occurrenceCount > 1) {
+      _patternCounts[idx] = PatternCount(
+        id: existing.id,
+        userId: userId,
+        situationCode: situationCode,
+        scaDimension: existing.scaDimension,
+        occurrenceCount: existing.occurrenceCount - 1,
+        lastSeenAt: existing.lastSeenAt,
+      );
+    } else {
+      _patternCounts.removeAt(idx);
     }
   }
 

@@ -1,4 +1,5 @@
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
+import 'package:workreflection_mobile/core/logic/vn_date.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 
 /// In-memory fake WrContentRepository for widget/unit tests.
@@ -19,6 +20,8 @@ class FakeWrContentRepository implements WrContentRepository {
 
   // --- Call recorders ---
   final List<CareerMemoryEvent> insertMemoryEventCalls = [];
+  final List<({String userId, String situationCode, DateTime day})>
+      deleteTodayMemoryEventsForSituationCalls = [];
 
   // --- Seed helpers ---
 
@@ -85,7 +88,24 @@ class FakeWrContentRepository implements WrContentRepository {
   Future<void> insertMemoryEvent(CareerMemoryEvent event) async {
     _maybeThrow();
     insertMemoryEventCalls.add(event);
-    _events.add(event);
+    // Stamp createdAt = now if not provided, so date-based filtering works in tests.
+    final stamped = event.createdAt != null
+        ? event
+        : CareerMemoryEvent(
+            id: event.id,
+            userId: event.userId,
+            storyId: event.storyId,
+            situationCode: event.situationCode,
+            humanNeed: event.humanNeed,
+            scaDimension: event.scaDimension,
+            emotion: event.emotion,
+            behavior: event.behavior,
+            intensity: event.intensity,
+            reflectionText: event.reflectionText,
+            careerStage: event.careerStage,
+            createdAt: DateTime.now(),
+          );
+    _events.add(stamped);
   }
 
   @override
@@ -117,5 +137,30 @@ class FakeWrContentRepository implements WrContentRepository {
       return List.unmodifiable(sorted.sublist(0, limit));
     }
     return List.unmodifiable(sorted);
+  }
+
+  @override
+  Future<void> deleteTodayMemoryEventsForSituation({
+    required String userId,
+    required String situationCode,
+    required DateTime day,
+  }) async {
+    _maybeThrow();
+    deleteTodayMemoryEventsForSituationCalls.add((
+      userId: userId,
+      situationCode: situationCode,
+      day: day,
+    ));
+    // day is a VN-local date-only DateTime (from todayVn()).
+    // todayVnFrom expects UTC and adds 7h internally — pass UTC directly.
+    final dayVn = todayVnFrom(day.toUtc());
+    _events.removeWhere((e) {
+      if (e.userId != userId) return false;
+      if (e.situationCode != situationCode) return false;
+      final created = e.createdAt;
+      if (created == null) return false;
+      final eventDayVn = todayVnFrom(created.toUtc());
+      return eventDayVn == dayVn;
+    });
   }
 }

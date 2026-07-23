@@ -32,6 +32,13 @@ abstract class WrIntelligenceRepository {
     required String scaDimensionDb,
   });
 
+  /// Decrement occurrence_count for (userId, situationCode).
+  /// If count > 1: update count - 1. If count == 1: delete the row entirely.
+  Future<void> decrementSituationOccurrence({
+    required String userId,
+    required String situationCode,
+  });
+
   /// Insert a reflection step.
   Future<void> insertReflectionStep(ReflectionStep step);
 
@@ -155,6 +162,32 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
         'occurrence_count': 1,
         'last_seen_at': now,
       });
+    }
+  }
+
+  @override
+  Future<void> decrementSituationOccurrence({
+    required String userId,
+    required String situationCode,
+  }) async {
+    final existing = await _client
+        .from('wr_pattern_counts')
+        .select('id, occurrence_count')
+        .eq('user_id', userId)
+        .eq('situation_code', situationCode)
+        .maybeSingle();
+    if (existing == null) return;
+    final count = existing['occurrence_count'] as int;
+    if (count > 1) {
+      await _client
+          .from('wr_pattern_counts')
+          .update({'occurrence_count': count - 1})
+          .eq('id', existing['id'] as String);
+    } else {
+      await _client
+          .from('wr_pattern_counts')
+          .delete()
+          .eq('id', existing['id'] as String);
     }
   }
 
