@@ -49,6 +49,8 @@ Widget _wrap(
   FakeWrContentRepository? content,
   FakeWrIntelligenceRepository? intel,
   String? userId,
+  // Set nullUserId=true để override currentUserIdProvider dengan null (userId param diabaikan)
+  bool nullUserId = false,
 }) {
   final wrRepo = wr ?? FakeWrRepository();
   final contentRepo = content ?? FakeWrContentRepository();
@@ -59,7 +61,7 @@ Widget _wrap(
       wrRepositoryProvider.overrideWithValue(wrRepo),
       wrContentRepositoryProvider.overrideWithValue(contentRepo),
       wrIntelligenceRepositoryProvider.overrideWithValue(intelRepo),
-      currentUserIdProvider.overrideWithValue(userId ?? 'u1'),
+      currentUserIdProvider.overrideWithValue(nullUserId ? null : (userId ?? 'u1')),
     ],
     child: MaterialApp.router(routerConfig: router),
   );
@@ -755,6 +757,131 @@ void main() {
       await tester.pumpAndSettle();
       expect(intel.recordSituationOccurrenceCalls.length, 2, reason: 'chip Y chưa được record, phải gọi recordSituationOccurrence');
       expect(intel.recordSituationOccurrenceCalls.last.situationCode, 'sit-02');
+    });
+  });
+
+  // ── C1: double-tap race guard on _tapJoyEscape ──────────────────────────
+  group('WrHomeScreen — C1: double-tap joy-escape chỉ ghi 1 lần', () {
+    // Verify guard bằng cách tap chip, pump 1 frame (async chưa done), rồi tap lại.
+    // Guard _savingJoyEscape=true được set TRƯỚC await nên tap 2 bị chặn → 1 call.
+    testWidgets('tap joy escape rồi pump 1 frame rồi tap lại → insertReflectionStep chỉ gọi 1 lần', (tester) async {
+      final intel = FakeWrIntelligenceRepository();
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), intel: intel));
+
+      // Tap mood happy để Q2 reveal
+      await tester.tap(find.textContaining('đang vui'));
+      await tester.pumpAndSettle();
+
+      // Lấy center của chip trực tiếp (tránh finder bị evaluate lại sau rebuild)
+      final chipText = find.text('Chỉ muốn ghi lại niềm vui');
+      expect(chipText, findsOneWidget, reason: 'chip joy escape phải tồn tại sau tap happy');
+      final chipCenter = tester.getCenter(chipText);
+
+      // Tap lần 1 bằng coordinates — không pumpAndSettle
+      await tester.tapAt(chipCenter);
+      await tester.pump(Duration.zero); // 1 frame: _savingJoyEscape=true đã set, await chưa done
+
+      // Tap lần 2 cùng vị trí — _savingJoyEscape guard phải block
+      await tester.tapAt(chipCenter);
+      await tester.pumpAndSettle(); // giải quyết hết future cả 2 tap
+
+      final joySteps = intel.insertReflectionStepCalls
+          .where((s) => s.content == 'Ghi lại niềm vui')
+          .toList();
+      expect(joySteps.length, 1,
+          reason: '_savingJoyEscape guard phải chặn double-tap, chỉ ghi 1 lần');
+    });
+  });
+
+  // ── I1: guard userId rỗng ────────────────────────────────────────────────
+  group('WrHomeScreen — I1: userId rỗng không ghi DB', () {
+    testWidgets('userId null → tap chip tình huống KHÔNG gọi recordSituationOccurrence', (tester) async {
+      final content = FakeWrContentRepository();
+      content.seedSituations([
+        WrSituation(
+          code: 'sit-01',
+          text: 'Áp lực deadline',
+          scaDimension: ScaDimension.c2,
+          wave: 2,
+          humanNeed: HumanNeed.thichNghi,
+        ),
+      ]);
+      final intel = FakeWrIntelligenceRepository();
+      // nullUserId=true → currentUserIdProvider trả về null thực sự
+      await _pumpLarge(
+        tester,
+        _wrap(const WrHomeScreen(), content: content, intel: intel, nullUserId: true),
+      );
+
+      await tester.tap(find.textContaining('mệt mỏi'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Áp lực deadline'));
+      await tester.pumpAndSettle();
+
+      expect(intel.recordSituationOccurrenceCalls, isEmpty,
+          reason: 'userId rỗng → không được gọi recordSituationOccurrence');
+      expect(intel.insertReflectionStepCalls
+          .where((s) => s.userId.isEmpty)
+          .toList(), isEmpty,
+          reason: 'không được gọi insertReflectionStep với userId rỗng');
+    });
+
+    testWidgets('userId null → tap joy escape KHÔNG gọi insertReflectionStep', (tester) async {
+      final intel = FakeWrIntelligenceRepository();
+      await _pumpLarge(
+        tester,
+        _wrap(const WrHomeScreen(), intel: intel, nullUserId: true),
+      );
+
+      await tester.tap(find.textContaining('đang vui'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Chỉ muốn ghi lại niềm vui'));
+      await tester.pumpAndSettle();
+
+      expect(intel.insertReflectionStepCalls, isEmpty,
+          reason: 'userId rỗng → không được gọi insertReflectionStep');
+    });
+  });
+
+  // ── I3: sort phatTrien theo ScaDimension enum index ─────────────────────
+  group('WrHomeScreen — I3: happy chips sorted A4 trước A1', () {
+    testWidgets('pool có A1 và A4 phatTrien → A4 đứng trước A1 trong danh sách chip', (tester) async {
+      final content = FakeWrContentRepository();
+      // Seed theo thứ tự A1 trước, A4 sau — sort phải đảo ngược
+      content.seedSituations([
+        WrSituation(
+          code: 'sit-a1',
+          text: 'Học kỹ năng mới A1',
+          scaDimension: ScaDimension.a1,
+          wave: 1,
+          humanNeed: HumanNeed.phatTrien,
+        ),
+        WrSituation(
+          code: 'sit-a4',
+          text: 'Dẫn dắt nhóm A4',
+          scaDimension: ScaDimension.a4,
+          wave: 2,
+          humanNeed: HumanNeed.phatTrien,
+        ),
+      ]);
+      final intel = FakeWrIntelligenceRepository();
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), content: content, intel: intel));
+
+      // Tap mood happy
+      await tester.tap(find.textContaining('đang vui'));
+      await tester.pumpAndSettle();
+
+      // Tìm vị trí các chip trong widget tree
+      final a4Finder = find.text('Dẫn dắt nhóm A4');
+      final a1Finder = find.text('Học kỹ năng mới A1');
+      expect(a4Finder, findsOneWidget, reason: 'chip A4 phải hiện');
+      expect(a1Finder, findsOneWidget, reason: 'chip A1 phải hiện');
+
+      // A4 phải có dy nhỏ hơn (hoặc bằng) A1 → A4 đứng trước
+      final a4Offset = tester.getTopLeft(a4Finder);
+      final a1Offset = tester.getTopLeft(a1Finder);
+      expect(a4Offset.dy, lessThanOrEqualTo(a1Offset.dy),
+          reason: 'A4 (index cao hơn) phải đứng trước A1 sau sort desc theo enum index');
     });
   });
 }

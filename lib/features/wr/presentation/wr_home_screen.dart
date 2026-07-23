@@ -118,8 +118,11 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
   WrStory? _suggestedStory;        // story matching scaDimension after chip save
   bool _okayDone = false;           // true = user tapped "Không, hôm nay ổn"
   bool _joyDone = false;            // true = user tapped "Chỉ muốn ghi lại niềm vui"
+  bool _savingJoyEscape = false;    // race guard: set true BEFORE first await, cleared in finally
   String? _joyMessage;              // message shown after joy escape tap
-  // Session-local dedup: codes already recorded this session (not reset on mood change)
+  // Session-local dedup: codes already recorded this session (not reset on mood change).
+  // Dedup theo situation trong phiên là CỐ Ý: cùng tình huống trong ngày chỉ ghi 1 nhật ký
+  // + 1 lần bump pattern, kể cả khi người dùng đổi cảm xúc giữa chừng.
   final Set<String> _recordedCodes = {};
 
   String _dateLabel() {
@@ -223,6 +226,10 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
     setState(() { _savingSituation = true; _selectedSituationCode = sit.code; });
     try {
       final userId = ref.read(currentUserIdProvider) ?? '';
+      if (userId.isEmpty) {
+        setState(() { _savingSituation = false; _selectedSituationCode = null; });
+        return;
+      }
       final intelRepo = ref.read(wrIntelligenceRepositoryProvider);
       await intelRepo.recordSituationOccurrence(
         userId: userId,
@@ -278,8 +285,14 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
   /// Tap on "Chỉ muốn ghi lại niềm vui" chip (happy mood escape).
   /// Inserts a reflection_step notice but does NOT call recordSituationOccurrence.
   Future<void> _tapJoyEscape() async {
-    if (_joyDone) return;
+    if (_joyDone || _savingJoyEscape) return;
+    // Set guard IMMEDIATELY before any await to prevent double-tap race condition.
+    setState(() { _savingJoyEscape = true; });
     final userId = ref.read(currentUserIdProvider) ?? '';
+    if (userId.isEmpty) {
+      setState(() { _savingJoyEscape = false; });
+      return;
+    }
     final intelRepo = ref.read(wrIntelligenceRepositoryProvider);
     try {
       await intelRepo.insertReflectionStep(ReflectionStep(
@@ -299,6 +312,8 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
           const SnackBar(content: Text('Không lưu được. Thử lại.')),
         );
       }
+    } finally {
+      if (mounted) setState(() { _savingJoyEscape = false; });
     }
   }
 
@@ -316,9 +331,10 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
     List<WrSituation> pool = [];
     for (final need in needs) {
       final needSits = situations.where((s) => s.humanNeed == need).toList();
-      // For happy mood (phatTrien only): sort by scaDimension descending (A4, A3, A2, A1)
+      // For happy mood (phatTrien only): sort by ScaDimension enum index descending
+      // so A4(9) > A3(8) > A2(7) > A1(6) — safe even if pool mixes S/C dimensions.
       if (_selected == _MoodOption.happy && need == HumanNeed.phatTrien) {
-        needSits.sort((a, b) => b.scaDimension.dbValue.compareTo(a.scaDimension.dbValue));
+        needSits.sort((a, b) => b.scaDimension.index.compareTo(a.scaDimension.index));
       }
       pool.addAll(needSits);
     }
