@@ -16,6 +16,7 @@ import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/section_divider.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../wr_providers.dart';
+import '../wr_situation_service.dart';
 
 // ---------------------------------------------------------------------------
 // Local providers
@@ -120,10 +121,6 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
   bool _joyDone = false;            // true = user tapped "Chỉ muốn ghi lại niềm vui"
   bool _savingJoyEscape = false;    // race guard: set true BEFORE first await, cleared in finally
   String? _joyMessage;              // message shown after joy escape tap
-  // Session-local dedup: codes already recorded this session (not reset on mood change).
-  // Dedup theo situation trong phiên là CỐ Ý: cùng tình huống trong ngày chỉ ghi 1 nhật ký
-  // + 1 lần bump pattern, kể cả khi người dùng đổi cảm xúc giữa chừng.
-  final Set<String> _recordedCodes = {};
 
   String _dateLabel() {
     final now = todayVn();
@@ -203,55 +200,19 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
   Future<void> _saveSituation(WrSituation sit) async {
     if (_savingSituation) return;
 
-    // Session-local dedup: already recorded this code → show confirmation card
-    // without calling recordSituationOccurrence again (prevents inflated count).
-    if (_recordedCodes.contains(sit.code)) {
-      setState(() {
-        _selectedSituationCode = sit.code;
-        _situationSaved = true;
-        _selectedSituation = sit;
-        // _situationCount already set from first record; reuse it.
-      });
-      // Still re-fetch story in case it wasn't loaded yet.
-      try {
-        final storyRepo = ref.read(wrContentRepositoryProvider);
-        final stories = await storyRepo.fetchStories(dimension: sit.scaDimension);
-        if (mounted) {
-          setState(() { _suggestedStory = stories.isNotEmpty ? stories.first : null; });
-        }
-      } catch (_) { /* ignore */ }
-      return;
-    }
-
     setState(() { _savingSituation = true; _selectedSituationCode = sit.code; });
     try {
-      final userId = ref.read(currentUserIdProvider) ?? '';
-      if (userId.isEmpty) {
-        setState(() { _savingSituation = false; _selectedSituationCode = null; });
-        return;
-      }
-      final intelRepo = ref.read(wrIntelligenceRepositoryProvider);
-      await intelRepo.recordSituationOccurrence(
-        userId: userId,
-        situationCode: sit.code,
-        scaDimensionDb: sit.scaDimension.dbValue,
-      );
+      // Map mood to emotion string for memory event.
+      final emotion = switch (_selected) {
+        _MoodOption.stressed => 'low',
+        _MoodOption.tired    => 'low',
+        _MoodOption.okay     => 'ok',
+        _MoodOption.happy    => 'good',
+        null                 => null,
+      };
 
-      // Insert reflection step (notice) — lỗi không chặn card xác nhận
-      try {
-        await intelRepo.insertReflectionStep(ReflectionStep(
-          userId: userId,
-          step: ReflectionStepType.notice,
-          content: sit.code,
-        ));
-      } catch (_) { /* nuốt lỗi */ }
+      final count = await commitTodaySituation(ref, sit: sit, emotion: emotion);
 
-      // count pattern after save
-      final savedSituation = sit;
-      final counts = await intelRepo.fetchPatternCounts(userId);
-      final thisCount = counts
-          .where((p) => p.situationCode == sit.code)
-          .fold<int>(0, (acc, p) => acc + p.occurrenceCount);
       // Fetch a suggested story for this dimension
       WrStory? suggested;
       try {
@@ -262,12 +223,11 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
         suggested = null;
       }
       if (mounted) {
-        _recordedCodes.add(sit.code);
         setState(() {
           _situationSaved = true;
-          _situationCount = thisCount;
+          _situationCount = count;
           _savingSituation = false;
-          _selectedSituation = savedSituation;
+          _selectedSituation = sit;
           _suggestedStory = suggested;
         });
         ref.invalidate(wrPatternCountsProvider);

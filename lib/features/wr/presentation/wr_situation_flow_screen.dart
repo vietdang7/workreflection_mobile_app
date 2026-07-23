@@ -3,10 +3,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/data/wr_content_repository.dart';
-import '../../../core/data/wr_intelligence_repository.dart';
 import '../../../core/models/wr_content.dart';
 import '../../../core/theme/wr_colors.dart';
-import '../wr_providers.dart';
+import '../wr_situation_service.dart';
 
 class WrSituationFlowScreen extends ConsumerStatefulWidget {
   const WrSituationFlowScreen({super.key});
@@ -25,39 +24,13 @@ class _WrSituationFlowScreenState extends ConsumerState<WrSituationFlowScreen> {
     if (_selected == null) return;
     setState(() => _saving = true);
     try {
-      final userId = ref.read(currentUserIdProvider) ?? '';
-      final contentRepo = ref.read(wrContentRepositoryProvider);
-      final intelRepo = ref.read(wrIntelligenceRepositoryProvider);
       final sit = _selected!;
-
-      // (a) record occurrence
-      await intelRepo.recordSituationOccurrence(
-        userId: userId,
-        situationCode: sit.code,
-        scaDimensionDb: sit.scaDimension.dbValue,
-      );
-
-      // (b) count pattern after
-      final counts = await intelRepo.fetchPatternCounts(userId);
-      final thisCount = counts
-          .where((p) => p.situationCode == sit.code)
-          .fold<int>(0, (acc, p) => acc + p.occurrenceCount);
-
-      // (c) insert memory event
-      await contentRepo.insertMemoryEvent(CareerMemoryEvent(
-        id: '',
-        userId: userId,
-        situationCode: sit.code,
-        humanNeed: sit.humanNeed,
-        scaDimension: sit.scaDimension,
-        emotion: 'low',
-      ));
-
+      final count = await commitTodaySituation(ref, sit: sit, emotion: 'low');
       if (mounted) {
         setState(() {
           _step = 2;
           _saving = false;
-          _patternCountAfterSave = thisCount;
+          _patternCountAfterSave = count;
         });
       }
     } catch (_) {
