@@ -386,7 +386,7 @@ void main() {
       await tester.pumpAndSettle();
       // Confirmation text with "lần thứ 2" (not the HỆ THỐNG NHẬN RA card)
       expect(
-        find.textContaining('Hệ thống đã ghi nhớ — đây là lần thứ 2 bạn chia sẻ điều này.'),
+        find.textContaining('Hệ thống đã ghi nhớ — đây là lần thứ 2 bạn gặp tình huống này.'),
         findsOneWidget,
       );
     });
@@ -470,6 +470,78 @@ void main() {
       await tester.tap(find.textContaining('căng thẳng'));
       await tester.pumpAndSettle();
       expect(find.text('Không, hôm nay ổn'), findsNothing);
+    });
+
+    testWidgets('confirmation card shows expectedOutcome italic after chip save', (tester) async {
+      final content = FakeWrContentRepository();
+      content.seedSituations([
+        WrSituation(
+          code: 'sit-01',
+          text: 'Áp lực deadline',
+          scaDimension: ScaDimension.s1,
+          wave: 2,
+          expectedOutcome: 'Được hiểu và hỗ trợ kịp thời',
+        ),
+      ]);
+      final intel = FakeWrIntelligenceRepository();
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), content: content, intel: intel));
+      await tester.tap(find.textContaining('mệt mỏi'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Áp lực deadline'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Nghe như điều bạn đang mong'), findsOneWidget);
+      expect(find.textContaining('Được hiểu và hỗ trợ kịp thời'), findsOneWidget);
+    });
+
+    testWidgets('confirmation card shows scaPerspective after chip save', (tester) async {
+      final content = FakeWrContentRepository();
+      content.seedSituations([
+        WrSituation(
+          code: 'sit-01',
+          text: 'Áp lực deadline',
+          scaDimension: ScaDimension.s1,
+          wave: 2,
+          scaPerspective: 'Bạn đang cần rõ ràng về kỳ vọng',
+        ),
+      ]);
+      final intel = FakeWrIntelligenceRepository();
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), content: content, intel: intel));
+      await tester.tap(find.textContaining('mệt mỏi'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Áp lực deadline'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Bạn đang cần rõ ràng về kỳ vọng'), findsOneWidget);
+    });
+
+    testWidgets('confirmation card memory line — first time (count < 2)', (tester) async {
+      final content = FakeWrContentRepository();
+      content.seedSituations([
+        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.s1, wave: 2),
+      ]);
+      final intel = FakeWrIntelligenceRepository();
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), content: content, intel: intel));
+      await tester.tap(find.textContaining('mệt mỏi'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Áp lực deadline'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Hệ thống sẽ ghi nhớ điều này cho hành trình của bạn.'), findsOneWidget);
+    });
+
+    testWidgets('confirmation card memory line — repeat (count >= 2)', (tester) async {
+      final content = FakeWrContentRepository();
+      content.seedSituations([
+        WrSituation(code: 'sit-01', text: 'Áp lực deadline', scaDimension: ScaDimension.s1, wave: 2),
+      ]);
+      final intel = FakeWrIntelligenceRepository();
+      intel.seedPatternCounts([
+        PatternCount(userId: 'u1', situationCode: 'sit-01', occurrenceCount: 1, lastSeenAt: DateTime(2026, 7, 20)),
+      ]);
+      await _pumpLarge(tester, _wrap(const WrHomeScreen(), content: content, intel: intel));
+      await tester.tap(find.textContaining('mệt mỏi'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Áp lực deadline'));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('Hệ thống đã ghi nhớ — đây là lần thứ 2 bạn gặp tình huống này.'), findsOneWidget);
     });
   });
 

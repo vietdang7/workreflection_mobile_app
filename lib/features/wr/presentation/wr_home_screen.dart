@@ -105,6 +105,7 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
   bool _situationSaved = false;     // true = chip was saved successfully
   int _situationCount = 0;          // pattern count after save (for "lần thứ N" message)
   bool _savingSituation = false;    // spinner guard for chip tap
+  WrSituation? _selectedSituation; // full WrSituation after chip save, for card
   bool _okayDone = false;           // true = user tapped "Không, hôm nay ổn"
 
   String _dateLabel() {
@@ -191,6 +192,7 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
         scaDimensionDb: sit.scaDimension.dbValue,
       );
       // count pattern after save
+      final savedSituation = sit;
       final counts = await intelRepo.fetchPatternCounts(userId);
       final thisCount = counts
           .where((p) => p.situationCode == sit.code)
@@ -200,12 +202,13 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
           _situationSaved = true;
           _situationCount = thisCount;
           _savingSituation = false;
+          _selectedSituation = savedSituation;
         });
         ref.invalidate(wrPatternCountsProvider);
       }
     } catch (_) {
       if (mounted) {
-        setState(() { _savingSituation = false; _selectedSituationCode = null; });
+        setState(() { _savingSituation = false; _selectedSituationCode = null; _selectedSituation = null; });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Không lưu được tình huống. Thử lại.')),
         );
@@ -462,17 +465,45 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
                                     ),
                                   ),
                                 ],
-                                // Temporary: keep chip-save confirmation as simple text (will be replaced in Task 3)
-                                if (_situationSaved) ...[
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    _situationCount >= 2
-                                        ? 'Hệ thống đã ghi nhớ — đây là lần thứ $_situationCount bạn chia sẻ điều này.'
-                                        : 'Hệ thống sẽ ghi nhớ điều này cho hành trình của bạn.',
-                                    style: const TextStyle(
-                                      fontSize: 14,
-                                      color: WrColors.muted,
-                                      height: 1.5,
+                                // Confirmation card after chip save
+                                if (_situationSaved && _selectedSituation != null) ...[
+                                  const SizedBox(height: 16),
+                                  WrCardMinimal(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        if (_selectedSituation!.expectedOutcome != null)
+                                          Text(
+                                            'Nghe như điều bạn đang mong: "${_selectedSituation!.expectedOutcome}"',
+                                            style: const TextStyle(
+                                              fontSize: 15,
+                                              fontStyle: FontStyle.italic,
+                                              color: WrColors.navy,
+                                              height: 1.5,
+                                            ),
+                                          ),
+                                        if (_selectedSituation!.expectedOutcome != null && _selectedSituation!.scaPerspective != null)
+                                          const SizedBox(height: 10),
+                                        if (_selectedSituation!.scaPerspective != null)
+                                          Text(
+                                            _selectedSituation!.scaPerspective!,
+                                            style: TextStyle(
+                                              fontSize: 13,
+                                              color: WrColors.navy.withValues(alpha: 0.75),
+                                              height: 1.5,
+                                            ),
+                                          ),
+                                        const SizedBox(height: 10),
+                                        Text(
+                                          _situationCount >= 2
+                                              ? 'Hệ thống đã ghi nhớ — đây là lần thứ $_situationCount bạn gặp tình huống này.'
+                                              : 'Hệ thống sẽ ghi nhớ điều này cho hành trình của bạn.',
+                                          style: const TextStyle(
+                                            fontSize: 12,
+                                            color: WrColors.muted,
+                                          ),
+                                        ),
+                                      ],
                                     ),
                                   ),
                                 ],
