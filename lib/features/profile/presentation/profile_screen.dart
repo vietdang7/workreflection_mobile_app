@@ -37,8 +37,6 @@ class ProfileScreen extends ConsumerWidget {
                   _Divider(),
                   _StatsRow(),
                   _Divider(),
-                  _CheckinHistorySection(),
-                  _Divider(),
                   _SettingsSection(),
                   const SizedBox(height: 80),
                 ]),
@@ -267,73 +265,6 @@ class _Divider extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// 30-day check-in history strip
-// ---------------------------------------------------------------------------
-
-class _CheckinHistorySection extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    final historyAsync = ref.watch(checkinHistoryProvider);
-
-    return Padding(
-      key: const Key('profile_checkin_history'),
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          WrEyebrow(l10n.profileCheckinHistory),
-          const SizedBox(height: 12),
-          historyAsync.when(
-            loading: () => const SizedBox(
-              height: 36,
-              child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
-            ),
-            error: (_, __) => const SizedBox.shrink(),
-            data: (history) => _CheckinDotStrip(history: history),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _CheckinDotStrip extends StatelessWidget {
-  const _CheckinDotStrip({required this.history});
-
-  /// 30-element list: index 0 = oldest, index 29 = today.
-  final List<bool> history;
-
-  @override
-  Widget build(BuildContext context) {
-    // Render as 5 rows × 6 columns (oldest top-left, newest bottom-right).
-    const cols = 6;
-    const rows = 5;
-    const dotSize = 10.0;
-    const gap = 6.0;
-
-    return Wrap(
-      spacing: gap,
-      runSpacing: gap,
-      children: List.generate(rows * cols, (i) {
-        // history has exactly 30 entries; i maps directly.
-        final checked = i < history.length && history[i];
-        return Container(
-          width: dotSize,
-          height: dotSize,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: checked
-                ? WrColors.teal
-                : WrColors.navy.withValues(alpha: 0.12),
-          ),
-        );
-      }),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Settings section
 // ---------------------------------------------------------------------------
 
@@ -358,11 +289,11 @@ class _SettingsSection extends ConsumerWidget {
             onTap: () => ref.read(reminderProvider.notifier).toggle(),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              width: 44,
-              height: 26,
+              width: 40,
+              height: 22,
               decoration: BoxDecoration(
                 color: reminderEnabled ? WrColors.teal : WrColors.muted,
-                borderRadius: BorderRadius.circular(13),
+                borderRadius: BorderRadius.circular(11),
               ),
               child: AnimatedAlign(
                 duration: const Duration(milliseconds: 200),
@@ -370,8 +301,8 @@ class _SettingsSection extends ConsumerWidget {
                     ? Alignment.centerRight
                     : Alignment.centerLeft,
                 child: Container(
-                  width: 20,
-                  height: 20,
+                  width: 16,
+                  height: 16,
                   margin: const EdgeInsets.all(3),
                   decoration: const BoxDecoration(
                     color: WrColors.white,
@@ -422,66 +353,6 @@ class _SettingsSection extends ConsumerWidget {
           ),
         ),
 
-        // Vouchers
-        _SettingRow(
-          label: l10n.profileVouchers,
-          trailing: GestureDetector(
-            key: const Key('profile_vouchers_btn'),
-            onTap: () => context.push('/vouchers'),
-            child: const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
-          ),
-        ),
-
-        // Org invitations
-        _SettingRow(
-          label: l10n.profileInvitations,
-          trailing: GestureDetector(
-            key: const Key('profile_invitations_btn'),
-            onTap: () => context.push('/invitations'),
-            child: const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
-          ),
-        ),
-
-        // My Workshops
-        _SettingRow(
-          label: l10n.profileMyWorkshops,
-          trailing: GestureDetector(
-            key: const Key('profile_my_workshops_btn'),
-            onTap: () => context.push('/my-workshops'),
-            child: const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
-          ),
-        ),
-
-        // My Coaching
-        _SettingRow(
-          label: l10n.profileMyCoaching,
-          trailing: GestureDetector(
-            key: const Key('profile_my_coaching_btn'),
-            onTap: () => context.push('/coaching/sessions'),
-            child: const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
-          ),
-        ),
-
-        // Survey History
-        _SettingRow(
-          label: l10n.profileSurveyHistory,
-          trailing: GestureDetector(
-            key: const Key('profile_survey_history_btn'),
-            onTap: () => context.push('/survey/history'),
-            child: const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
-          ),
-        ),
-
-        // Action Roadmap
-        _SettingRow(
-          label: l10n.roadmapProfileLink,
-          trailing: GestureDetector(
-            key: const Key('profile_roadmap_btn'),
-            onTap: () => context.push('/roadmap'),
-            child: const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
-          ),
-        ),
-
         // Export data
         _SettingRow(
           label: l10n.profileSettingExport,
@@ -491,12 +362,12 @@ class _SettingsSection extends ConsumerWidget {
           ),
         ),
 
-        // Logout
+        // Logout — no border-bottom (last item), padding vertical 16
         GestureDetector(
           key: const Key('profile_logout_btn'),
           onTap: () => _logout(context, ref),
           child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 14),
+            padding: const EdgeInsets.symmetric(vertical: 16),
             child: Text(
               l10n.profileSettingLogout,
               style: WrTextStyles.hMedium.copyWith(color: WrColors.destructive),
@@ -618,8 +489,16 @@ class _SettingRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 14),
+    return Container(
+      decoration: BoxDecoration(
+        border: Border(
+          bottom: BorderSide(
+            color: WrColors.navy.withValues(alpha: 0.05),
+            width: 1,
+          ),
+        ),
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 16),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [

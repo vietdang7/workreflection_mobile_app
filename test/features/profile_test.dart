@@ -212,24 +212,57 @@ void main() {
       expect(logoutFinder, findsOneWidget);
     });
 
-    testWidgets('shows profileMyWorkshops row', (tester) async {
+    // Legacy items must NOT appear after pivot
+    testWidgets('legacy items removed — workshops/coaching/vouchers/invitations/survey/roadmap not in UI', (tester) async {
       final repo = FakeWrRepository();
       repo.seedProfile(_profile());
       repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
       await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
 
-      expect(find.byKey(const Key('profile_my_workshops_btn')), findsOneWidget);
-      expect(find.textContaining('Workshop của tôi'), findsOneWidget);
+      expect(find.byKey(const Key('profile_my_workshops_btn')), findsNothing);
+      expect(find.byKey(const Key('profile_my_coaching_btn')), findsNothing);
+      expect(find.byKey(const Key('profile_vouchers_btn')), findsNothing);
+      expect(find.byKey(const Key('profile_invitations_btn')), findsNothing);
+      expect(find.byKey(const Key('profile_survey_history_btn')), findsNothing);
+      expect(find.byKey(const Key('profile_roadmap_btn')), findsNothing);
     });
 
-    testWidgets('shows profileMyCoaching row', (tester) async {
+    testWidgets('check-in history section not shown after pivot', (tester) async {
       final repo = FakeWrRepository();
       repo.seedProfile(_profile());
       repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
       await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
 
-      expect(find.byKey(const Key('profile_my_coaching_btn')), findsOneWidget);
-      expect(find.textContaining('Coaching của tôi'), findsOneWidget);
+      expect(find.byKey(const Key('profile_checkin_history')), findsNothing);
+    });
+
+    testWidgets('settings has exactly 6 items in order: reminder/language/edit/password/export/logout', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile());
+      repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
+      await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
+
+      expect(find.textContaining('Nhắc nhở hằng ngày'), findsOneWidget);
+      expect(find.textContaining('Ngôn ngữ'), findsOneWidget);
+      expect(find.textContaining('Chỉnh sửa hồ sơ'), findsOneWidget);
+      expect(find.textContaining('Đổi mật khẩu'), findsOneWidget);
+      expect(find.textContaining('Xuất dữ liệu'), findsOneWidget);
+      expect(find.textContaining('Đăng xuất'), findsOneWidget);
+    });
+
+    testWidgets('logout text uses destructive color 0xFFFF3B30', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile());
+      repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
+      await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
+
+      // Find the logout GestureDetector by key, then verify text color
+      final logoutBtn = find.byKey(const Key('profile_logout_btn'));
+      expect(logoutBtn, findsOneWidget);
+      final textWidget = tester.widget<Text>(
+        find.descendant(of: logoutBtn, matching: find.byType(Text)),
+      );
+      expect(textWidget.style?.color, const Color(0xFFFF3B30));
     });
 
     testWidgets('shows change-password row', (tester) async {
@@ -355,31 +388,5 @@ void main() {
       expect(find.textContaining('Chỉnh sửa hồ sơ'), findsOneWidget);
     });
 
-    testWidgets('shows 30-day checkin history section', (tester) async {
-      final repo = FakeWrRepository();
-      repo.seedProfile(_profile());
-      repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
-      // Seed a few recent checkin dates
-      repo.seedCheckinDates([
-        DateTime.now(),
-        DateTime.now().subtract(const Duration(days: 1)),
-        DateTime.now().subtract(const Duration(days: 3)),
-      ]);
-      await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
-
-      expect(find.byKey(const Key('profile_checkin_history')), findsOneWidget);
-      // Section eyebrow label (WrEyebrow uppercases)
-      expect(find.textContaining('30 NGÀY'), findsOneWidget);
-    });
-
-    testWidgets('checkin history section visible even with no checkins', (tester) async {
-      final repo = FakeWrRepository();
-      repo.seedProfile(_profile());
-      repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
-      // No checkin dates → still renders the section
-      await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
-
-      expect(find.byKey(const Key('profile_checkin_history')), findsOneWidget);
-    });
   });
 }
