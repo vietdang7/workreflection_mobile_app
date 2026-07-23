@@ -1,3 +1,5 @@
+import 'dart:math' show min;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -95,6 +97,59 @@ class WrGrowthScreen extends ConsumerWidget {
         ? themes.where((t) => t.themeId == activeEnrollment.themeId).firstOrNull
         : null;
 
+    // ── Shared onStepDone handler (used by both card-dark and practices list)
+    Future<void> onStepDone(
+      String stepId,
+      List<String> currentCompleted,
+      List<PracticeStep> allSteps,
+    ) async {
+      final userId = ref.read(currentUserIdProvider);
+      if (userId == null) return;
+      final repo = ref.read(wrIntelligenceRepositoryProvider);
+      final contentRepo = ref.read(wrContentRepositoryProvider);
+
+      final newCompleted = [...currentCompleted, stepId];
+      await repo.updateEnrollmentSteps(
+        userId: userId,
+        themeId: activeTheme!.themeId,
+        completedSteps: newCompleted,
+      );
+
+      final stepTitle = allSteps
+          .where((s) => s.stepId == stepId)
+          .map((s) => s.title)
+          .firstOrNull;
+      await contentRepo.insertMemoryEvent(
+        CareerMemoryEvent(
+          id: DateTime.now().millisecondsSinceEpoch.toString(),
+          userId: userId,
+          behavior: 'practice_step_done',
+          reflectionText: '${activeTheme.title} — ${stepTitle ?? stepId}',
+        ),
+      );
+
+      final allStepIds = allSteps.map((s) => s.stepId).toSet();
+      final hasCompletedAll =
+          allStepIds.every((id) => newCompleted.contains(id));
+
+      if (hasCompletedAll) {
+        await repo.completeTheme(
+          userId: userId,
+          themeId: activeTheme.themeId,
+        );
+        await contentRepo.insertMemoryEvent(
+          CareerMemoryEvent(
+            id: '${DateTime.now().millisecondsSinceEpoch}t',
+            userId: userId,
+            behavior: 'practice_theme_done',
+            reflectionText: activeTheme.title,
+          ),
+        );
+      }
+
+      ref.invalidate(_practiceEnrollmentsProvider);
+    }
+
     return CustomScrollView(
       slivers: [
         // ── Top area ────────────────────────────────────────────────────────
@@ -136,55 +191,7 @@ class WrGrowthScreen extends ConsumerWidget {
                     theme: activeTheme,
                     enrollment: activeEnrollment!,
                     entitlement: entitlement,
-                    onStepDone: (stepId, steps, allSteps) async {
-                      final userId = ref.read(currentUserIdProvider);
-                      if (userId == null) return;
-                      final repo = ref.read(wrIntelligenceRepositoryProvider);
-                      final contentRepo = ref.read(wrContentRepositoryProvider);
-
-                      final newCompleted = [...steps, stepId];
-                      await repo.updateEnrollmentSteps(
-                        userId: userId,
-                        themeId: activeTheme.themeId,
-                        completedSteps: newCompleted,
-                      );
-
-                      final stepTitle = allSteps
-                          .where((s) => s.stepId == stepId)
-                          .map((s) => s.title)
-                          .firstOrNull;
-                      await contentRepo.insertMemoryEvent(
-                        CareerMemoryEvent(
-                          id: DateTime.now().millisecondsSinceEpoch.toString(),
-                          userId: userId,
-                          behavior: 'practice_step_done',
-                          reflectionText:
-                              '${activeTheme.title} — ${stepTitle ?? stepId}',
-                        ),
-                      );
-
-                      final allStepIds =
-                          allSteps.map((s) => s.stepId).toSet();
-                      final hasCompletedAll =
-                          allStepIds.every((id) => newCompleted.contains(id));
-
-                      if (hasCompletedAll) {
-                        await repo.completeTheme(
-                          userId: userId,
-                          themeId: activeTheme.themeId,
-                        );
-                        await contentRepo.insertMemoryEvent(
-                          CareerMemoryEvent(
-                            id: '${DateTime.now().millisecondsSinceEpoch}t',
-                            userId: userId,
-                            behavior: 'practice_theme_done',
-                            reflectionText: activeTheme.title,
-                          ),
-                        );
-                      }
-
-                      ref.invalidate(_practiceEnrollmentsProvider);
-                    },
+                    onStepDone: onStepDone,
                     onPremiumTap: () => context.push('/wr/paywall'),
                   )
                 : WrCardMinimal(
@@ -231,54 +238,7 @@ class WrGrowthScreen extends ConsumerWidget {
             theme: activeTheme,
             enrollment: activeEnrollment!,
             entitlement: entitlement,
-            onStepDone: (stepId, steps, allSteps) async {
-              final userId = ref.read(currentUserIdProvider);
-              if (userId == null) return;
-              final repo = ref.read(wrIntelligenceRepositoryProvider);
-              final contentRepo = ref.read(wrContentRepositoryProvider);
-
-              final newCompleted = [...steps, stepId];
-              await repo.updateEnrollmentSteps(
-                userId: userId,
-                themeId: activeTheme.themeId,
-                completedSteps: newCompleted,
-              );
-
-              final stepTitle = allSteps
-                  .where((s) => s.stepId == stepId)
-                  .map((s) => s.title)
-                  .firstOrNull;
-              await contentRepo.insertMemoryEvent(
-                CareerMemoryEvent(
-                  id: DateTime.now().millisecondsSinceEpoch.toString(),
-                  userId: userId,
-                  behavior: 'practice_step_done',
-                  reflectionText:
-                      '${activeTheme.title} — ${stepTitle ?? stepId}',
-                ),
-              );
-
-              final allStepIds = allSteps.map((s) => s.stepId).toSet();
-              final hasCompletedAll =
-                  allStepIds.every((id) => newCompleted.contains(id));
-
-              if (hasCompletedAll) {
-                await repo.completeTheme(
-                  userId: userId,
-                  themeId: activeTheme.themeId,
-                );
-                await contentRepo.insertMemoryEvent(
-                  CareerMemoryEvent(
-                    id: '${DateTime.now().millisecondsSinceEpoch}t',
-                    userId: userId,
-                    behavior: 'practice_theme_done',
-                    reflectionText: activeTheme.title,
-                  ),
-                );
-              }
-
-              ref.invalidate(_practiceEnrollmentsProvider);
-            },
+            onStepDone: onStepDone,
             onPremiumTap: () => context.push('/wr/paywall'),
           ),
 
@@ -290,10 +250,6 @@ class WrGrowthScreen extends ConsumerWidget {
               child: WrSectionDivider(),
             ),
           ),
-
-        // NOTE: "Cơ hội phát triển" / opp-card section intentionally omitted.
-        // No real workshop/opportunity data source exists in the current
-        // codebase. Re-enable when a workshop data provider is wired up.
 
         const SliverToBoxAdapter(child: SizedBox(height: 24)),
       ],
@@ -386,7 +342,9 @@ class _ActiveThemeCardDark extends ConsumerWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Giai đoạn ${completedCount + 1} / $totalSteps',
+                completedCount >= totalSteps
+                    ? 'Hoàn thành'
+                    : 'Giai đoạn ${min(completedCount + 1, totalSteps)} / $totalSteps',
                 style: TextStyle(
                   fontSize: 12,
                   color: WrColors.white.withValues(alpha: 0.50),
@@ -438,7 +396,9 @@ class _PracticesSectionSliver extends ConsumerWidget {
             stepsAsync.when(
               loading: () => const LinearProgressIndicator(),
               error: (_, __) => const SizedBox.shrink(),
-              data: (steps) {
+              data: (rawSteps) {
+                final steps = List.of(rawSteps)
+                  ..sort((a, b) => a.stepOrder.compareTo(b.stepOrder));
                 final completed = enrollment.completedSteps;
                 return Column(
                   children: steps.asMap().entries.map((entry) {
@@ -500,8 +460,9 @@ class _PracticeListItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Opacity(
+    return AnimatedOpacity(
       opacity: isDone ? 0.45 : 1.0,
+      duration: const Duration(milliseconds: 200),
       child: GestureDetector(
         onTap: isPremiumLocked ? onPremiumTap : null,
         child: Container(

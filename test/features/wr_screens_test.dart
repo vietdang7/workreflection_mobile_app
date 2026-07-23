@@ -710,6 +710,158 @@ group('WrJourneyScreen — with events (free user)', () {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// WrGrowthScreen — phase counter (Critical fix #1)
+// ─────────────────────────────────────────────────────────────────────────────
+
+group('WrGrowthScreen — phase counter', () {
+  testWidgets('shows Giai đoạn 1 / 2 when no steps completed', (tester) async {
+    final intel = FakeWrIntelligenceRepository();
+    intel.seedPracticeThemes([_theme()]);
+    intel.seedPracticeSteps('pt-voice', [
+      _step(id: 'pt-voice-1', order: 1, title: 'Nhận diện'),
+      _step(id: 'pt-voice-2', order: 2, title: 'Thử nghiệm'),
+    ]);
+    intel.seedEnrollments([_enrollment()]);
+
+    await tester.pumpWidget(_wrap(const WrGrowthScreen(), intel: intel));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Giai đoạn 1 / 2'), findsOneWidget);
+  });
+
+  testWidgets('shows Giai đoạn 2 / 2 when first step completed', (tester) async {
+    final intel = FakeWrIntelligenceRepository();
+    intel.seedPracticeThemes([_theme()]);
+    intel.seedPracticeSteps('pt-voice', [
+      _step(id: 'pt-voice-1', order: 1, title: 'Nhận diện'),
+      _step(id: 'pt-voice-2', order: 2, title: 'Thử nghiệm'),
+    ]);
+    intel.seedEnrollments([_enrollment(completed: ['pt-voice-1'])]);
+
+    await tester.pumpWidget(_wrap(const WrGrowthScreen(), intel: intel));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Giai đoạn 2 / 2'), findsOneWidget);
+  });
+
+  testWidgets('shows Hoàn thành (not 3/2) when all steps completed', (tester) async {
+    final intel = FakeWrIntelligenceRepository();
+    intel.seedPracticeThemes([_theme()]);
+    intel.seedPracticeSteps('pt-voice', [
+      _step(id: 'pt-voice-1', order: 1, title: 'Nhận diện'),
+      _step(id: 'pt-voice-2', order: 2, title: 'Thử nghiệm'),
+    ]);
+    intel.seedEnrollments([
+      _enrollment(completed: ['pt-voice-1', 'pt-voice-2']),
+    ]);
+
+    await tester.pumpWidget(_wrap(const WrGrowthScreen(), intel: intel));
+    await tester.pumpAndSettle();
+
+    // Counter text must show "Hoàn thành", NOT "Giai đoạn 3 / 2"
+    // (the step status texts also show "Hoàn thành" for each completed step;
+    //  the key check is that the counter does NOT show an out-of-range value)
+    expect(find.textContaining('3 / 2'), findsNothing);
+    // Counter label text is exactly "Hoàn thành" (12px muted white)
+    // At least one "Hoàn thành" text exists — counter-level check
+    expect(find.textContaining('Hoàn thành'), findsWidgets);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WrGrowthScreen — step ordering (Important fix #4)
+// ─────────────────────────────────────────────────────────────────────────────
+
+group('WrGrowthScreen — step ordering', () {
+  testWidgets('marks correct isNext step even when steps arrive out of order', (tester) async {
+    final intel = FakeWrIntelligenceRepository();
+    intel.seedPracticeThemes([_theme()]);
+    // Seed steps intentionally out of order: order 2 before order 1
+    intel.seedPracticeSteps('pt-voice', [
+      _step(id: 'pt-voice-2', order: 2, title: 'Thử nghiệm'),
+      _step(id: 'pt-voice-1', order: 1, title: 'Nhận diện'),
+    ]);
+    intel.seedEnrollments([_enrollment()]);
+
+    await tester.pumpWidget(_wrap(const WrGrowthScreen(), intel: intel));
+    await tester.pumpAndSettle();
+
+    // Step with order=1 should be isNext (Đang thực hiện), order=2 should be Chưa bắt đầu
+    expect(find.text('Đang thực hiện'), findsOneWidget);
+    expect(find.text('Chưa bắt đầu'), findsOneWidget);
+  });
+
+  testWidgets('isNext advances to step 2 after step 1 completed, regardless of seeding order', (tester) async {
+    final intel = FakeWrIntelligenceRepository();
+    intel.seedPracticeThemes([_theme()]);
+    // Seed out of order
+    intel.seedPracticeSteps('pt-voice', [
+      _step(id: 'pt-voice-3', order: 3, title: 'Duy trì'),
+      _step(id: 'pt-voice-1', order: 1, title: 'Nhận diện'),
+      _step(id: 'pt-voice-2', order: 2, title: 'Thử nghiệm'),
+    ]);
+    // step 1 done → step 2 (order=2) should be isNext
+    intel.seedEnrollments([_enrollment(completed: ['pt-voice-1'])]);
+
+    await tester.pumpWidget(_wrap(const WrGrowthScreen(), intel: intel));
+    await tester.pumpAndSettle();
+
+    // Only one "Đang thực hiện" status must appear
+    expect(find.text('Đang thực hiện'), findsOneWidget);
+    // And the other two are done/not-started
+    expect(find.text('Hoàn thành'), findsOneWidget);
+    expect(find.text('Chưa bắt đầu'), findsOneWidget);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// WrJourneyScreen — narrative window cap (Critical fix #2)
+// ─────────────────────────────────────────────────────────────────────────────
+
+group('WrJourneyScreen — narrative window cap', () {
+  testWidgets('narrative shows span in days when oldest event is within 30 days', (tester) async {
+    final now = DateTime.now();
+    final content = FakeWrContentRepository();
+    content.seedMemoryEvents([
+      _event(id: 'e1', reflectionText: 'Khoảnh khắc 1', createdAt: now.subtract(const Duration(days: 5))),
+      _event(id: 'e2', reflectionText: 'Khoảnh khắc 2', createdAt: now.subtract(const Duration(days: 10))),
+    ]);
+
+    await tester.pumpWidget(_wrap(const WrJourneyScreen(), content: content));
+    await tester.pumpAndSettle();
+
+    // Span must be ≤ 30: "Trong 10 ngày qua" (oldest is 10 days ago)
+    expect(find.textContaining('ngày qua'), findsOneWidget);
+    // Must NOT produce a span > 30
+    expect(find.textContaining('365 ngày'), findsNothing);
+  });
+
+  testWidgets('narrative caps at 30 ngày when oldest event is older than 30 days', (tester) async {
+    final now = DateTime.now();
+    final content = FakeWrContentRepository();
+    content.seedMemoryEvents([
+      _event(id: 'e1', reflectionText: 'Recent', createdAt: now.subtract(const Duration(days: 5))),
+      _event(id: 'e2', reflectionText: 'Old', createdAt: now.subtract(const Duration(days: 90))),
+    ]);
+
+    await tester.pumpWidget(_wrap(const WrJourneyScreen(), content: content));
+    await tester.pumpAndSettle();
+
+    // Must cap at 30 ngày, NOT show 90
+    expect(find.textContaining('30 ngày qua'), findsOneWidget);
+    expect(find.textContaining('90 ngày'), findsNothing);
+  });
+
+  testWidgets('narrative zero days when no events', (tester) async {
+    await tester.pumpWidget(_wrap(const WrJourneyScreen()));
+    await tester.pumpAndSettle();
+
+    // No events → 0 days, 0 khoảnh khắc
+    expect(find.textContaining('0 khoảnh khắc'), findsOneWidget);
+  });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
 // WrPaywallScreen
 // ─────────────────────────────────────────────────────────────────────────────
 

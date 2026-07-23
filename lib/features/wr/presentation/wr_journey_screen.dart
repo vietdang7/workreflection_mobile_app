@@ -50,9 +50,11 @@ class WrJourneyScreen extends ConsumerWidget {
 
     // Narrative counts (using full list, before truncation)
     final totalEvents = allEvents.length;
-    final daysSince = (allEvents.isNotEmpty && allEvents.last.createdAt != null)
+    const narrativeWindowDays = 30;
+    final rawDays = (allEvents.isNotEmpty && allEvents.last.createdAt != null)
         ? now.difference(allEvents.last.createdAt!).inDays
         : 0;
+    final daysSince = rawDays.clamp(0, narrativeWindowDays);
     final narrativeText =
         'Trong $daysSince ngày qua, bạn đã ghi nhận $totalEvents khoảnh khắc'
         ' trong Career Memory của mình.';
