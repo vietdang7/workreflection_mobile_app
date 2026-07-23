@@ -163,7 +163,7 @@ void main() {
       expect(find.text('Thụt lùi'), findsNothing);
     });
 
-    testWidgets('(b) tap "mệt mỏi" → upsertCheckin energy=low direction=null, button coral, share card shown, eyebrow GỢI Ý KHI MỆT MỎI', (tester) async {
+    testWidgets('(b) tap "mệt mỏi" → upsertCheckin energy=low direction=null, button coral, Q2 shown, eyebrow GỢI Ý KHI MỆT MỎI', (tester) async {
       final wr = FakeWrRepository();
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
 
@@ -176,14 +176,16 @@ void main() {
       expect(call.energy, CheckinEnergy.low);
       expect(call.direction, isNull);
 
-      // Share card shown
+      // Q2 title shown (inline reveal, not old share card)
       expect(find.textContaining('Bạn mệt vì điều gì?'), findsOneWidget);
+      // Old share card action link gone
+      expect(find.text('Chia sẻ thêm'), findsNothing);
 
       // Eyebrow changes
       expect(find.textContaining('GỢI Ý KHI MỆT MỎI'), findsOneWidget);
     });
 
-    testWidgets('(b) tap "căng thẳng" → energy=low, share card shown', (tester) async {
+    testWidgets('(b) tap "căng thẳng" → energy=low, Q2 shown', (tester) async {
       final wr = FakeWrRepository();
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
 
@@ -192,10 +194,11 @@ void main() {
 
       expect(wr.upsertCheckinCalls.first.energy, CheckinEnergy.low);
       expect(wr.upsertCheckinCalls.first.direction, isNull);
-      expect(find.textContaining('Bạn mệt vì điều gì?'), findsOneWidget);
+      expect(find.textContaining('Điều gì đang khiến bạn căng thẳng?'), findsOneWidget);
+      expect(find.text('Chia sẻ thêm'), findsNothing);
     });
 
-    testWidgets('(c) tap "khá ổn" → energy=ok, NO share card, eyebrow GỢI Ý HÔM NAY', (tester) async {
+    testWidgets('(c) tap "khá ổn" → energy=ok, NO share card, Q2 shown, eyebrow GỢI Ý HÔM NAY', (tester) async {
       final wr = FakeWrRepository();
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
 
@@ -204,7 +207,7 @@ void main() {
 
       expect(wr.upsertCheckinCalls.first.energy, CheckinEnergy.ok);
       expect(wr.upsertCheckinCalls.first.direction, isNull);
-      expect(find.textContaining('Bạn mệt vì điều gì?'), findsNothing);
+      expect(find.text('Chia sẻ thêm'), findsNothing);
       expect(find.textContaining('GỢI Ý HÔM NAY'), findsOneWidget);
     });
 
@@ -232,7 +235,9 @@ void main() {
       // Then tap khá ổn
       await tester.tap(find.textContaining('khá ổn'));
       await tester.pumpAndSettle();
-      expect(find.textContaining('Bạn mệt vì điều gì?'), findsNothing);
+      // Q2 switches to "khá ổn" question
+      expect(find.textContaining('Có điều gì bạn muốn nhìn lại hôm nay không?'), findsOneWidget);
+      expect(find.text('Chia sẻ thêm'), findsNothing);
       // Second upsert called
       expect(wr.upsertCheckinCalls.length, 2);
     });
@@ -270,7 +275,7 @@ void main() {
       expect(find.textContaining('khá ổn'), findsOneWidget);
     });
 
-    testWidgets('(e) prepopulate from todayCheckinProvider: energy=low → "mệt mỏi" pre-selected, share card shown', (tester) async {
+    testWidgets('(e) prepopulate from todayCheckinProvider: energy=low → "mệt mỏi" pre-selected, Q2 shown', (tester) async {
       final wr = FakeWrRepository();
       final now = DateTime.now();
       wr.seedTodayCheckin(Checkin(
@@ -283,8 +288,9 @@ void main() {
         createdAt: now,
       ));
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
-      // Share card shown due to low energy prepopulate
+      // Q2 shown due to low energy prepopulate (tired → "Bạn mệt vì điều gì?")
       expect(find.textContaining('Bạn mệt vì điều gì?'), findsOneWidget);
+      expect(find.text('Chia sẻ thêm'), findsNothing);
     });
 
     testWidgets('NO CircularProgressIndicator (spinner removed)', (tester) async {
@@ -378,7 +384,7 @@ void main() {
       expect(find.textContaining('GỢI Ý HÔM NAY'), findsOneWidget);
     });
 
-    testWidgets('shows eyebrow GỢI Ý KHI MỆT MỎI when low energy selected', (tester) async {
+    testWidgets('shows eyebrow GỢI Ý KHI MỆT MỎI when low energy selected (no chip saved yet)', (tester) async {
       final wr = FakeWrRepository();
       await _pumpLarge(tester, _wrap(const WrHomeScreen(), wr: wr));
       await tester.tap(find.textContaining('mệt mỏi'));
