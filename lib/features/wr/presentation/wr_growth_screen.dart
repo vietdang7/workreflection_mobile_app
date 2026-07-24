@@ -241,9 +241,9 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
             padding: const EdgeInsets.fromLTRB(22, 16, 22, 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
-                WrTabBackLink(currentTab: WrTab.growth),
-                Text(
+              children: [
+                const WrTabBackLink(currentTab: WrTab.growth),
+                const Text(
                   'Development Map',
                   style: TextStyle(
                     fontSize: 14,
@@ -251,8 +251,8 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
                     fontWeight: FontWeight.w400,
                   ),
                 ),
-                SizedBox(height: 4),
-                Text(
+                const SizedBox(height: 4),
+                const Text(
                   'Phát triển',
                   style: TextStyle(
                     fontSize: 32,

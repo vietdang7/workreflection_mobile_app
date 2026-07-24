@@ -38,9 +38,10 @@ class WrTabBackLink extends StatelessWidget {
       return const SizedBox.shrink();
     }
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () => context.go(fromTab.path),
       child: const Padding(
-        padding: EdgeInsets.symmetric(vertical: 6),
+        padding: EdgeInsets.symmetric(vertical: 12),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [

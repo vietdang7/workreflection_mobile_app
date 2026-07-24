@@ -131,8 +131,8 @@ class WrJourneyScreen extends ConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(22, 20, 22, 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    WrTabBackLink(currentTab: WrTab.journey),
+                  children: [
+                    const WrTabBackLink(currentTab: WrTab.journey),
                     Text(
                       'Career Memory',
                       style: TextStyle(
