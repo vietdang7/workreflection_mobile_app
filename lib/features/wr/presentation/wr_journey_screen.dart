@@ -11,6 +11,7 @@ import '../../../core/widgets/action_link.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/progress_track.dart';
 import '../../../core/widgets/section_divider.dart';
+import '../../../core/widgets/tab_back_link.dart';
 import '../wr_providers.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -125,12 +126,13 @@ class WrJourneyScreen extends ConsumerWidget {
         child: CustomScrollView(
           slivers: [
             // ── Top area: "Career Memory" greeting + "Hành trình" title ──
-            const SliverToBoxAdapter(
+            SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(22, 20, 22, 12),
+                padding: const EdgeInsets.fromLTRB(22, 20, 22, 12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
+                  children: const [
+                    WrTabBackLink(currentTab: WrTab.journey),
                     Text(
                       'Career Memory',
                       style: TextStyle(

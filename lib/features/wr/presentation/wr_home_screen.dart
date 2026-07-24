@@ -14,6 +14,7 @@ import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/action_link.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/section_divider.dart';
+import '../../../core/widgets/tab_back_link.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../wr_providers.dart';
 import '../wr_situation_service.dart';
@@ -369,6 +370,7 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    const WrTabBackLink(currentTab: WrTab.home),
                     Text(
                       displayName.isNotEmpty ? 'Chào $displayName' : 'Chào bạn',
                       style: const TextStyle(
