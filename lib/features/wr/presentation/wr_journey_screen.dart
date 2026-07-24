@@ -133,7 +133,7 @@ class WrJourneyScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const WrTabBackLink(currentTab: WrTab.journey),
-                    Text(
+                    const Text(
                       'Career Memory',
                       style: TextStyle(
                         fontSize: 14,
@@ -141,8 +141,8 @@ class WrJourneyScreen extends ConsumerWidget {
                         height: 1.4,
                       ),
                     ),
-                    SizedBox(height: 4),
-                    Text(
+                    const SizedBox(height: 4),
+                    const Text(
                       'Hành trình',
                       style: TextStyle(
                         fontSize: 32,
