@@ -228,7 +228,7 @@ class WrJourneyScreen extends ConsumerWidget {
                     patterns: topPatterns,
                     sitMap: sitMap,
                     maxCount: maxCount,
-                    onViewDiscover: () => context.go('/wr/discover'),
+                    onViewDiscover: () => context.go('/wr/discover?from=journey'),
                   ),
                 ),
               ),
@@ -262,7 +262,7 @@ class WrJourneyScreen extends ConsumerWidget {
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(22, 0, 22, 4),
                   child: _EmptyMemoryCard(
-                    onCreateFirst: () => context.go('/home'),
+                    onCreateFirst: () => context.go('/home?from=journey'),
                   ),
                 ),
               )

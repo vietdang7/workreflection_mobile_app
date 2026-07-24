@@ -446,7 +446,7 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
           const SizedBox(height: 8),
           WrActionLink(
             label: 'Xem trong Hiểu mình',
-            onTap: () => context.go('/wr/discover'),
+            onTap: () => context.go('/wr/discover?from=growth'),
           ),
         ],
       ),

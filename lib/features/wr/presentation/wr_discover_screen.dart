@@ -297,7 +297,7 @@ class WrDiscoverScreen extends ConsumerWidget {
         const SizedBox(height: 12),
         WrActionLink(
           label: 'Bắt đầu thực hành',
-          onTap: () => context.go('/wr/growth'),
+          onTap: () => context.go('/wr/growth?from=discover'),
         ),
       ],
     );
@@ -380,7 +380,7 @@ class WrDiscoverScreen extends ConsumerWidget {
         const SizedBox(height: 4),
         WrActionLink(
           label: 'Xem toàn bộ hành trình',
-          onTap: () => context.go('/wr/journey'),
+          onTap: () => context.go('/wr/journey?from=discover'),
         ),
         const SizedBox(height: 8),
       ],

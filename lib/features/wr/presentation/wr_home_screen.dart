@@ -642,7 +642,7 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
                         const SizedBox(height: 14),
                         WrActionLink(
                           label: 'Tìm hiểu thêm',
-                          onTap: () => context.go('/wr/discover'),
+                          onTap: () => context.go('/wr/discover?from=home'),
                         ),
                       ],
                     ),
