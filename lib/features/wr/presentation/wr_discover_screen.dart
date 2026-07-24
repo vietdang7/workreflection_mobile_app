@@ -199,7 +199,7 @@ class WrDiscoverScreen extends ConsumerWidget {
                 SliverToBoxAdapter(
                   child: Padding(
                     padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
-                    child: _buildRecurringSituations(patterns, sitMap),
+                    child: _buildRecurringSituations(patterns, sitMap, context),
                   ),
                 ),
 
@@ -342,6 +342,7 @@ class WrDiscoverScreen extends ConsumerWidget {
   Widget _buildRecurringSituations(
     List<PatternCount> patterns,
     Map<String, String> sitMap,
+    BuildContext context,
   ) {
     final maxCount =
         patterns.isEmpty ? 1 : patterns.first.occurrenceCount.toDouble();
@@ -409,6 +410,13 @@ class WrDiscoverScreen extends ConsumerWidget {
             ),
           );
         }),
+        // Task E: Link chéo sang Journey
+        const SizedBox(height: 4),
+        WrActionLink(
+          label: 'Xem toàn bộ hành trình',
+          onTap: () => context.go('/wr/journey'),
+        ),
+        const SizedBox(height: 8),
       ],
     );
   }

@@ -692,7 +692,8 @@ group('WrJourneyScreen — with events (free user)', () {
     await tester.pumpWidget(_wrap(const WrJourneyScreen()));
     await tester.pumpAndSettle();
 
-    expect(find.text('Phân tích mô thức chuyên sâu'), findsOneWidget);
+    // Empty state grid mới đẩy banner xuống dưới viewport — dùng skipOffstage: false
+    expect(find.text('Phân tích mô thức chuyên sâu', skipOffstage: false), findsOneWidget);
   });
 
   testWidgets('does NOT show Hồ sơ nghề nghiệp link (removed per mockup)', (tester) async {

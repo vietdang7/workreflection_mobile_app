@@ -7,7 +7,9 @@ import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
+import '../../../core/widgets/action_link.dart';
 import '../../../core/widgets/eyebrow.dart';
+import '../../../core/widgets/progress_track.dart';
 import '../../../core/widgets/section_divider.dart';
 import '../wr_providers.dart';
 
@@ -32,6 +34,26 @@ final _memoryEventsProvider =
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Map emotion string → tiếng Việt (dùng cho cả title fallback và body).
+String _emotionLabel(String? emotion) => switch (emotion) {
+      'low' => 'Mệt mỏi',
+      'ok' => 'Ổn',
+      'good' => 'Vui',
+      _ => emotion ?? '',
+    };
+
+/// Map HumanNeed → label tiếng Việt ngắn (dùng cho chip chủ đề).
+String _humanNeedLabel(HumanNeed need) => switch (need) {
+      HumanNeed.roRang => 'Rõ ràng',
+      HumanNeed.ketNoi => 'Kết nối',
+      HumanNeed.thichNghi => 'Thích nghi',
+      HumanNeed.phatTrien => 'Phát triển',
+    };
+
+// ─────────────────────────────────────────────────────────────────────────────
 // WrJourneyScreen
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -42,11 +64,18 @@ class WrJourneyScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final eventsAsync = ref.watch(_memoryEventsProvider);
     final entitlementAsync = ref.watch(wrEntitlementProvider);
+    final situationsAsync = ref.watch(wrSituationsProvider);
+    final patternsAsync = ref.watch(wrPatternCountsProvider);
 
     final now = DateTime.now();
     final entitlement =
         entitlementAsync.valueOrNull ?? WrEntitlement(plan: WrPlan.free);
     final allEvents = eventsAsync.valueOrNull ?? const [];
+    final situations = situationsAsync.valueOrNull ?? const [];
+    final patterns = patternsAsync.valueOrNull ?? const [];
+
+    // sitMap: code → display text
+    final sitMap = {for (final s in situations) s.code: s.text};
 
     // Narrative counts (using full list, before truncation)
     final totalEvents = allEvents.length;
@@ -69,6 +98,26 @@ class WrJourneyScreen extends ConsumerWidget {
     final timelineMonth = events.isNotEmpty && events.first.createdAt != null
         ? events.first.createdAt!.month
         : now.month;
+
+    // Stats by event type
+    final statExperience =
+        allEvents.where((e) => e.situationCode != null).length;
+    final statReflection = allEvents.where((e) => e.storyId != null).length;
+    final statPractice = allEvents
+        .where((e) =>
+            e.behavior == 'practice_step_done' ||
+            e.behavior == 'practice_theme_done')
+        .length;
+    final statInsight =
+        allEvents.where((e) => e.behavior == 'insight').length;
+    final hasStats =
+        statExperience > 0 || statReflection > 0 || statPractice > 0 || statInsight > 0;
+
+    // Top 3 patterns for "CHỦ ĐỀ LẶP LẠI" section
+    final topPatterns = patterns.take(3).toList();
+    final maxCount = topPatterns.isEmpty
+        ? 1.0
+        : topPatterns.first.occurrenceCount.toDouble();
 
     return Scaffold(
       backgroundColor: const Color(0xFFFBFBF9),
@@ -141,6 +190,19 @@ class WrJourneyScreen extends ConsumerWidget {
                         color: WrColors.muted,
                       ),
                     ),
+
+                    // Task C: Stats theo loại (chỉ hiện khi có ít nhất 1 loại)
+                    if (hasStats) ...[
+                      const SizedBox(height: 20),
+                      _StatsRow(
+                        key: const Key('journey_stats_row'),
+                        experience: statExperience,
+                        reflection: statReflection,
+                        practice: statPractice,
+                        insight: statInsight,
+                      ),
+                    ],
+
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -154,6 +216,27 @@ class WrJourneyScreen extends ConsumerWidget {
                 child: WrSectionDivider(),
               ),
             ),
+
+            // ── Task B: Section CHỦ ĐỀ LẶP LẠI ──────────────────────────
+            if (topPatterns.isNotEmpty) ...[
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 20, 22, 0),
+                  child: _RecurringThemesSection(
+                    patterns: topPatterns,
+                    sitMap: sitMap,
+                    maxCount: maxCount,
+                    onViewDiscover: () => context.go('/wr/discover'),
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 22),
+                  child: WrSectionDivider(),
+                ),
+              ),
+            ],
 
             // ── Section: Timeline THÁNG {M} ───────────────────────────────
             SliverToBoxAdapter(
@@ -173,10 +256,12 @@ class WrJourneyScreen extends ConsumerWidget {
                 ),
               )
             else if (events.isEmpty)
-              const SliverToBoxAdapter(
+              SliverToBoxAdapter(
                 child: Padding(
-                  padding: EdgeInsets.fromLTRB(22, 0, 22, 4),
-                  child: _EmptyMemoryCard(),
+                  padding: const EdgeInsets.fromLTRB(22, 0, 22, 4),
+                  child: _EmptyMemoryCard(
+                    onCreateFirst: () => context.go('/home'),
+                  ),
                 ),
               )
             else
@@ -189,6 +274,7 @@ class WrJourneyScreen extends ConsumerWidget {
                         _TimelineItem(
                           event: events[i],
                           isLast: i == events.length - 1,
+                          sitMap: sitMap,
                         ),
                     ],
                   ),
@@ -276,11 +362,170 @@ Color _labelColor(CareerMemoryEvent e) {
 // Sub-widgets
 // ─────────────────────────────────────────────────────────────────────────────
 
+/// Task C: Hàng stats đếm event theo loại.
+class _StatsRow extends StatelessWidget {
+  const _StatsRow({
+    super.key,
+    required this.experience,
+    required this.reflection,
+    required this.practice,
+    required this.insight,
+  });
+
+  final int experience;
+  final int reflection;
+  final int practice;
+  final int insight;
+
+  @override
+  Widget build(BuildContext context) {
+    final items = <({int count, String label})>[
+      if (experience > 0) (count: experience, label: 'Trải nghiệm'),
+      if (reflection > 0) (count: reflection, label: 'Phản chiếu'),
+      if (practice > 0) (count: practice, label: 'Thực hành'),
+      if (insight > 0) (count: insight, label: 'Insight'),
+    ];
+
+    if (items.isEmpty) return const SizedBox.shrink();
+
+    final dividerColor = WrColors.navy.withValues(alpha: 0.12);
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.start,
+      children: [
+        for (int i = 0; i < items.length; i++) ...[
+          if (i > 0)
+            Container(
+              width: 1,
+              height: 32,
+              color: dividerColor,
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+            ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${items[i].count}',
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w800,
+                  color: WrColors.navy,
+                  height: 1.1,
+                ),
+              ),
+              Text(
+                items[i].label,
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: WrColors.muted,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Task B: Section "CHỦ ĐỀ LẶP LẠI".
+class _RecurringThemesSection extends StatelessWidget {
+  const _RecurringThemesSection({
+    required this.patterns,
+    required this.sitMap,
+    required this.maxCount,
+    required this.onViewDiscover,
+  });
+
+  final List<PatternCount> patterns;
+  final Map<String, String> sitMap;
+  final double maxCount;
+  final VoidCallback onViewDiscover;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const WrEyebrow('CHỦ ĐỀ LẶP LẠI'),
+        const SizedBox(height: 12),
+        ...patterns.asMap().entries.map((entry) {
+          final i = entry.key;
+          final p = entry.value;
+          final name = sitMap[p.situationCode] ?? p.situationCode ?? '?';
+          final Color countColor;
+          final FontWeight countWeight;
+          final Color trackColor;
+          if (i == 0) {
+            countColor = WrColors.coral;
+            countWeight = FontWeight.w700;
+            trackColor = WrColors.coral;
+          } else if (i == 1) {
+            countColor = WrColors.teal;
+            countWeight = FontWeight.w600;
+            trackColor = WrColors.navy;
+          } else {
+            countColor = WrColors.muted;
+            countWeight = FontWeight.w600;
+            trackColor = WrColors.navy.withValues(alpha: 0.4);
+          }
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        name,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: WrColors.navy,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '${p.occurrenceCount} lần',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: countWeight,
+                        color: countColor,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                WrProgressTrack(
+                  value: maxCount > 0 ? p.occurrenceCount / maxCount : 0,
+                  color: trackColor,
+                ),
+              ],
+            ),
+          );
+        }),
+        const SizedBox(height: 4),
+        WrActionLink(
+          label: 'Xem trong Hiểu mình',
+          onTap: onViewDiscover,
+        ),
+        const SizedBox(height: 20),
+      ],
+    );
+  }
+}
+
 /// Timeline item: dot + vertical connector line + content.
 class _TimelineItem extends StatelessWidget {
-  const _TimelineItem({required this.event, required this.isLast});
+  const _TimelineItem({
+    required this.event,
+    required this.isLast,
+    required this.sitMap,
+  });
   final CareerMemoryEvent event;
   final bool isLast;
+  final Map<String, String> sitMap;
 
   @override
   Widget build(BuildContext context) {
@@ -291,14 +536,27 @@ class _TimelineItem extends StatelessWidget {
     final dot = _dotColor(event);
     final label = _eventTypeLabel(event);
     final labelColor = _labelColor(event);
-    final title = event.reflectionText ?? event.emotion ?? '';
-    // Body: show emotion when reflectionText is also present as title
-    final body = (event.reflectionText != null &&
-            event.reflectionText!.isNotEmpty &&
-            event.emotion != null &&
-            event.emotion!.isNotEmpty)
-        ? event.emotion!
-        : '';
+
+    // Task A: Title ưu tiên situationCode → reflectionText → emotion (tiếng Việt)
+    final String title;
+    if (event.situationCode != null) {
+      title = sitMap[event.situationCode] ?? event.situationCode!;
+    } else if (event.reflectionText != null &&
+        event.reflectionText!.isNotEmpty) {
+      title = event.reflectionText!;
+    } else {
+      title = _emotionLabel(event.emotion);
+    }
+
+    // Body: hiện emotion (tiếng Việt) khi title không phải emotion
+    final String body;
+    if (event.emotion != null && event.emotion!.isNotEmpty) {
+      final emotionVn = _emotionLabel(event.emotion);
+      // Chỉ hiện body nếu title khác với emotion label
+      body = (title != emotionVn) ? emotionVn : '';
+    } else {
+      body = '';
+    }
 
     return Padding(
       padding: EdgeInsets.only(bottom: isLast ? 0 : 24),
@@ -373,15 +631,24 @@ class _TimelineItem extends StatelessWidget {
                     ),
                   ),
                 ],
-                // Type label: 11px w700 colored per type
+                // Type label row (với chip humanNeed nếu có)
                 const SizedBox(height: 6),
-                Text(
-                  label,
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: labelColor,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      label,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: labelColor,
+                      ),
+                    ),
+                    // Task A: Chip chủ đề từ humanNeed
+                    if (event.humanNeed != null) ...[
+                      const SizedBox(width: 8),
+                      _HumanNeedChip(need: event.humanNeed!),
+                    ],
+                  ],
                 ),
               ],
             ),
@@ -392,8 +659,35 @@ class _TimelineItem extends StatelessWidget {
   }
 }
 
+/// Chip pill nhỏ hiển thị humanNeed label.
+class _HumanNeedChip extends StatelessWidget {
+  const _HumanNeedChip({required this.need});
+  final HumanNeed need;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: WrColors.navy.withValues(alpha: 0.06),
+        borderRadius: BorderRadius.circular(100),
+      ),
+      child: Text(
+        _humanNeedLabel(need),
+        style: const TextStyle(
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+          color: WrColors.navy,
+        ),
+      ),
+    );
+  }
+}
+
+/// Task D: Empty state mới với grid 2×2 + nút.
 class _EmptyMemoryCard extends StatelessWidget {
-  const _EmptyMemoryCard();
+  const _EmptyMemoryCard({required this.onCreateFirst});
+  final VoidCallback onCreateFirst;
 
   @override
   Widget build(BuildContext context) {
@@ -404,10 +698,10 @@ class _EmptyMemoryCard extends StatelessWidget {
         border: Border.all(color: const Color(0x0F000000)),
       ),
       padding: const EdgeInsets.all(16),
-      child: const Column(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          const Text(
             'Career Memory trống',
             style: TextStyle(
               fontSize: 14,
@@ -415,14 +709,103 @@ class _EmptyMemoryCard extends StatelessWidget {
               color: WrColors.dark,
             ),
           ),
-          SizedBox(height: 4),
-          Text(
+          const SizedBox(height: 4),
+          const Text(
             'Mỗi lần phản chiếu sẽ tạo ra một mảnh ký ức nghề nghiệp được lưu tại đây.',
             style: TextStyle(
               fontSize: 12,
               color: Color(0xFF737373),
               height: 1.6,
             ),
+          ),
+          const SizedBox(height: 16),
+          // Grid 2×2 loại sự kiện
+          GridView.count(
+            crossAxisCount: 2,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisSpacing: 8,
+            mainAxisSpacing: 8,
+            childAspectRatio: 2.2,
+            children: const [
+              _TypeCard(icon: '◎', title: 'Trải nghiệm', desc: 'Điều bạn gặp mỗi ngày'),
+              _TypeCard(icon: '◈', title: 'Phản chiếu', desc: 'Từ câu chuyện bạn đọc'),
+              _TypeCard(icon: '✦', title: 'Thực hành', desc: 'Bước bạn hoàn thành'),
+              _TypeCard(icon: '◇', title: 'Insight', desc: 'Góc nhìn thay đổi'),
+            ],
+          ),
+          const SizedBox(height: 16),
+          // Nút full-width navy
+          SizedBox(
+            width: double.infinity,
+            child: GestureDetector(
+              onTap: onCreateFirst,
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                decoration: BoxDecoration(
+                  color: WrColors.navy,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                alignment: Alignment.center,
+                child: const Text(
+                  'Tạo Memory đầu tiên →',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: WrColors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Thẻ loại sự kiện trong grid empty state.
+class _TypeCard extends StatelessWidget {
+  const _TypeCard({
+    required this.icon,
+    required this.title,
+    required this.desc,
+  });
+  final String icon;
+  final String title;
+  final String desc;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: WrColors.white,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: WrColors.navy.withValues(alpha: 0.10)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 13)),
+          const SizedBox(height: 2),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: WrColors.dark,
+            ),
+          ),
+          Text(
+            desc,
+            style: const TextStyle(
+              fontSize: 10,
+              color: WrColors.muted,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
