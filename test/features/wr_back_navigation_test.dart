@@ -15,6 +15,7 @@ import 'package:workreflection_mobile/features/wr/presentation/wr_discover_scree
 import 'package:workreflection_mobile/features/wr/presentation/wr_growth_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_home_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_journey_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/wr_story_screen.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 
 import '../support/fake_repository.dart';
@@ -378,6 +379,81 @@ void main() {
         // Về Discover: thấy title đặc trưng, không thấy "Quay lại"
         expect(find.text('Hiểu mình'), findsOneWidget);
         expect(find.text('Quay lại'), findsNothing);
+      },
+    );
+  });
+
+  // ── Task 4: nút lùi /wr/story ───────────────────────────────────────────────
+  group('WrStoryScreen — nút lùi', () {
+    testWidgets(
+      '(a) push /wr/story từ /home → thấy icon arrow_back → tap → về home',
+      (tester) async {
+        final router = GoRouter(
+          initialLocation: '/home',
+          routes: [
+            GoRoute(
+              path: '/home',
+              builder: (_, __) => const Scaffold(body: Text('HOME_STUB')),
+            ),
+            GoRoute(
+              path: '/wr/story',
+              builder: (_, __) => const WrStoryScreen(),
+            ),
+          ],
+        );
+        tester.view.physicalSize = const Size(1080, 6000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+        await tester.pumpAndSettle();
+
+        // Navigate lên /wr/story bằng push
+        router.push('/wr/story');
+        await tester.pumpAndSettle();
+
+        // Phải thấy icon arrow_back_ios_new
+        expect(find.byIcon(Icons.arrow_back_ios_new), findsOneWidget);
+
+        // Tap → pop về HOME_STUB
+        await tester.tap(find.byIcon(Icons.arrow_back_ios_new));
+        await tester.pumpAndSettle();
+
+        expect(find.text('HOME_STUB'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      '(b) initial thẳng /wr/story (không có stack) → tap icon → về /home',
+      (tester) async {
+        final router = GoRouter(
+          initialLocation: '/wr/story',
+          routes: [
+            GoRoute(
+              path: '/home',
+              builder: (_, __) => const Scaffold(body: Text('HOME_STUB')),
+            ),
+            GoRoute(
+              path: '/wr/story',
+              builder: (_, __) => const WrStoryScreen(),
+            ),
+          ],
+        );
+        tester.view.physicalSize = const Size(1080, 6000);
+        tester.view.devicePixelRatio = 1.0;
+        addTearDown(tester.view.resetPhysicalSize);
+        addTearDown(tester.view.resetDevicePixelRatio);
+
+        await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+        await tester.pumpAndSettle();
+
+        expect(find.byIcon(Icons.arrow_back_ios_new), findsOneWidget);
+
+        await tester.tap(find.byIcon(Icons.arrow_back_ios_new));
+        await tester.pumpAndSettle();
+
+        expect(find.text('HOME_STUB'), findsOneWidget);
       },
     );
   });
