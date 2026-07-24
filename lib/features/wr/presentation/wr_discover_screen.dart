@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/logic/wr_dominant_need.dart';
 import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/logic/wr_self_check_questions.dart';
 import '../../../core/models/wr_content.dart';
@@ -11,6 +12,7 @@ import '../../../core/widgets/action_link.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/progress_track.dart';
 import '../../../core/widgets/section_divider.dart';
+import '../../../core/widgets/tab_back_link.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../wr_providers.dart';
 
@@ -21,32 +23,6 @@ import '../wr_providers.dart';
 /// Score 1.0–5.0 → percent 0–100.
 double _scoreToPercent(double score) =>
     ((score - 1) / 4).clamp(0.0, 1.0) * 100;
-
-// ── Dominant need from BEHAVIOUR (situation choices) ────────────────────────
-
-/// Compute dominant HumanNeed from pattern counts + situation map.
-/// Sums occurrenceCount per HumanNeed; need with highest total = nhu cầu chủ đạo.
-/// Returns null when patterns is empty or no situation has a humanNeed.
-HumanNeed? _dominantNeedFromBehaviour(
-  List<PatternCount> patterns,
-  List<WrSituation> situations,
-) {
-  if (patterns.isEmpty) return null;
-  final codeToNeed = <String, HumanNeed>{
-    for (final s in situations)
-      if (s.humanNeed != null) s.code: s.humanNeed!,
-  };
-  final tally = <HumanNeed, int>{};
-  for (final p in patterns) {
-    final code = p.situationCode;
-    if (code == null) continue;
-    final need = codeToNeed[code];
-    if (need == null) continue;
-    tally[need] = (tally[need] ?? 0) + p.occurrenceCount;
-  }
-  if (tally.isEmpty) return null;
-  return tally.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
-}
 
 /// Quote and caption for each HumanNeed (4 nhu cầu cốt lõi).
 ({String quote, String caption}) _needDisplay(HumanNeed need) => switch (need) {
@@ -67,22 +43,6 @@ HumanNeed? _dominantNeedFromBehaviour(
           caption: 'Phát triển · Nhu cầu chủ đạo',
         ),
     };
-
-// ── Fallback: dominant need from self-check SCA lowest pillar ──────────────
-
-/// Map SCA lowest pillar → HumanNeed (fallback when no patterns yet).
-/// S → roRang, C → ketNoi, A → phatTrien.
-/// Tie-break: C > S > A.
-HumanNeed _dominantNeedFromSelfCheck(ScaSelfCheckResponse r) {
-  final s = r.structureScore ?? 5.0;
-  final c = r.cultureScore ?? 5.0;
-  final a = r.activityScore ?? 5.0;
-  final minScore = [s, c, a].reduce((a, b) => a < b ? a : b);
-  // Tie-break: C > S > A (C wins if tied)
-  if (c == minScore) return HumanNeed.ketNoi;
-  if (s == minScore) return HumanNeed.roRang;
-  return HumanNeed.phatTrien;
-}
 
 // ── SCA helpers (unchanged) ────────────────────────────────────────────────
 
@@ -132,9 +92,9 @@ class WrDiscoverScreen extends ConsumerWidget {
     // Compute dominant need:
     // 1. From behaviour (patterns × situations humanNeed)
     // 2. Fallback from self-check lowest pillar (if has self-check but no patterns)
-    final behaviourNeed = _dominantNeedFromBehaviour(patterns, situations);
+    final behaviourNeed = dominantNeedFromBehaviour(patterns, situations);
     final dominantNeed = behaviourNeed ??
-        (latest != null ? _dominantNeedFromSelfCheck(latest) : null);
+        (latest != null ? dominantNeedFromSelfCheck(latest) : null);
 
     // Visibility rules:
     // - "Điều bạn đang tìm kiếm" + "Tình huống lặp lại": show when has patterns OR has self-check
@@ -154,10 +114,11 @@ class WrDiscoverScreen extends ConsumerWidget {
                 padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    WrEyebrow('Career Snapshot'),
-                    SizedBox(height: 4),
-                    Text(
+                  children: [
+                    const WrTabBackLink(currentTab: WrTab.discover),
+                    const WrEyebrow('Career Snapshot'),
+                    const SizedBox(height: 4),
+                    const Text(
                       'Hiểu mình',
                       style: TextStyle(
                         fontSize: 32,
@@ -180,7 +141,7 @@ class WrDiscoverScreen extends ConsumerWidget {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
                 child: showNeedSection && dominantNeed != null
-                    ? _buildDominantNeed(dominantNeed)
+                    ? _buildDominantNeed(dominantNeed, context)
                     : _buildEmptyNeed(context),
               ),
             ),
@@ -305,7 +266,7 @@ class WrDiscoverScreen extends ConsumerWidget {
 
   // ── Dominant need (from behaviour or self-check fallback) ───────────────
 
-  Widget _buildDominantNeed(HumanNeed need) {
+  Widget _buildDominantNeed(HumanNeed need, BuildContext context) {
     final display = _needDisplay(need);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.center,
@@ -332,6 +293,11 @@ class WrDiscoverScreen extends ConsumerWidget {
             fontSize: 13,
             color: WrColors.muted,
           ),
+        ),
+        const SizedBox(height: 12),
+        WrActionLink(
+          label: 'Bắt đầu thực hành',
+          onTap: () => context.go('/wr/growth'),
         ),
       ],
     );

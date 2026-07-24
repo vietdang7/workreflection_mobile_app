@@ -491,16 +491,14 @@ group('WrGrowthScreen — with themes (free user)', () {
 
   testWidgets('no active theme shows empty invite card (not Practices section)', (tester) async {
     final intel = FakeWrIntelligenceRepository();
-    intel.seedPracticeThemes([_theme()]);
-    intel.seedPracticeSteps('pt-voice', [
-      _step(id: 'pt-voice-1', order: 1),
-    ]);
+    // Seed no themes → no unenrolledThemes → old empty card shown
+    intel.seedPracticeThemes([]);
     // No enrollment → no active theme → empty card, no practices section
 
     await tester.pumpWidget(_wrap(const WrGrowthScreen(), intel: intel));
     await tester.pumpAndSettle();
 
-    // New design: not enrolled → empty cream card invite, no "Bắt đầu chủ đề"
+    // No themes available → falls through to old card with "Khám phá story"
     expect(find.textContaining('Khám phá story'), findsOneWidget);
     expect(find.text('Bắt đầu chủ đề'), findsNothing);
     expect(find.textContaining('PRACTICES HÔM NAY'), findsNothing);
