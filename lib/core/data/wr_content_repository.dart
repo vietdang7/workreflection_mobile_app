@@ -155,7 +155,11 @@ class SupabaseWrContentRepository implements WrContentRepository {
     // We compute the UTC bounds of that VN day:
     //   VN midnight = day (no time) → UTC = day - 7h
     //   VN end of day = day + 1 day - 1ms → UTC = (day + 1d) - 7h - 1ms
-    final vnMidnightUtc = day.toUtc().subtract(const Duration(hours: 7));
+    // day is a VN-local date-only DateTime (year/month/day only, no timezone).
+    // Build the UTC equivalent of VN midnight directly from the date components,
+    // without calling .toUtc() which would apply the machine's local timezone
+    // and cause a double-shift on UTC+7 devices.
+    final vnMidnightUtc = DateTime.utc(day.year, day.month, day.day).subtract(const Duration(hours: 7));
     final vnEndOfDayUtc = vnMidnightUtc.add(const Duration(hours: 24));
     await _client
         .from('wr_career_memory_events')

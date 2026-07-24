@@ -266,6 +266,89 @@ void main() {
   // (e) event from another day is NOT touched
   // ---------------------------------------------------------------------------
 
+  // ---------------------------------------------------------------------------
+  // (b2) Boundary ngày VN: 23:59 hôm qua / 00:01 hôm nay
+  // ---------------------------------------------------------------------------
+
+  group('(b2) deleteTodayMemoryEventsForSituation — boundary VN 23:59/00:01', () {
+    // Fixed "today" = 2026-07-23 VN. Mốc UTC cố định, độc lập múi giờ máy.
+    // VN 2026-07-23 00:00 = UTC 2026-07-22 17:00:00
+
+    test('event VN 23:59 HÔM QUA không bị xóa', () async {
+      final repo = FakeWrContentRepository();
+      // VN 2026-07-22 23:59 = UTC 2026-07-21 16:59
+      // VN yesterday midnight = UTC 2026-07-21 17:00
+      // VN yesterday 23:59 = UTC 2026-07-21 17:00 + 23h59m = 2026-07-22 16:59 UTC
+      final yesterdayVn2359 = DateTime.utc(2026, 7, 22, 16, 59, 0);
+      repo.seedMemoryEvents([
+        _evt(
+          id: 'e-yesterday-2359',
+          userId: 'u1',
+          situationCode: 'sit-A',
+          createdAt: yesterdayVn2359,
+        ),
+      ]);
+
+      await repo.deleteTodayMemoryEventsForSituation(
+        userId: 'u1',
+        situationCode: 'sit-A',
+        day: _today, // VN 2026-07-23
+      );
+
+      final events = await repo.fetchMemoryEventsForUser('u1');
+      expect(events, hasLength(1),
+          reason: 'event VN 23:59 hôm qua (UTC 2026-07-22 16:59) KHÔNG bị xóa');
+    });
+
+    test('event VN 00:01 HÔM NAY bị xóa', () async {
+      final repo = FakeWrContentRepository();
+      // VN 2026-07-23 00:01 = UTC 2026-07-22 17:01
+      final todayVn0001 = DateTime.utc(2026, 7, 22, 17, 1, 0);
+      repo.seedMemoryEvents([
+        _evt(
+          id: 'e-today-0001',
+          userId: 'u1',
+          situationCode: 'sit-A',
+          createdAt: todayVn0001,
+        ),
+      ]);
+
+      await repo.deleteTodayMemoryEventsForSituation(
+        userId: 'u1',
+        situationCode: 'sit-A',
+        day: _today, // VN 2026-07-23
+      );
+
+      final events = await repo.fetchMemoryEventsForUser('u1');
+      expect(events, isEmpty,
+          reason: 'event VN 00:01 hôm nay (UTC 2026-07-22 17:01) PHẢI bị xóa');
+    });
+
+    test('đúng mốc VN 00:00 bị xóa, VN 23:59 ngày trước không bị xóa', () async {
+      final repo = FakeWrContentRepository();
+      // VN 2026-07-23 00:00 = UTC 2026-07-22 17:00 (chính xác mốc)
+      final todayVnMidnight = DateTime.utc(2026, 7, 22, 17, 0, 0);
+      // VN 2026-07-22 23:59 = UTC 2026-07-22 16:59
+      final yesterdayVn2359 = DateTime.utc(2026, 7, 22, 16, 59, 0);
+
+      repo.seedMemoryEvents([
+        _evt(id: 'e-midnight', userId: 'u1', situationCode: 'sit-A', createdAt: todayVnMidnight),
+        _evt(id: 'e-2359', userId: 'u1', situationCode: 'sit-A', createdAt: yesterdayVn2359),
+      ]);
+
+      await repo.deleteTodayMemoryEventsForSituation(
+        userId: 'u1',
+        situationCode: 'sit-A',
+        day: _today,
+      );
+
+      final events = await repo.fetchMemoryEventsForUser('u1');
+      expect(events, hasLength(1));
+      expect(events.first.id, 'e-2359',
+          reason: 'VN 23:59 hôm qua không bị xóa; VN 00:00 hôm nay bị xóa');
+    });
+  });
+
   group('(e) events from other day preserved', () {
     test('yesterday sit-A event NOT deleted when deleting today sit-A', () async {
       final repo = FakeWrContentRepository();

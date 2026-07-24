@@ -74,6 +74,9 @@ WrSituation _sit(String code, {ScaDimension dim = ScaDimension.s1, HumanNeed? ne
 final _todayVnMidnightUtc = DateTime.utc(2026, 7, 22, 17, 0, 0);
 // Yesterday VN midnight UTC = 2026-07-21 17:00 UTC.
 final _yesterdayVnMidnightUtc = DateTime.utc(2026, 7, 21, 17, 0, 0);
+// A stable instant inside VN "today" (2026-07-23 12:00) to inject as the clock,
+// so day-boundary assertions don't depend on the machine's real calendar date.
+final _nowVnTodayUtc = _todayVnMidnightUtc.add(const Duration(hours: 12));
 
 CareerMemoryEvent _memEvt({
   required String situationCode,
@@ -283,6 +286,187 @@ void main() {
 
       expect(content.insertMemoryEventCalls, hasLength(1),
           reason: 'memory event only inserted once');
+    });
+  });
+
+  // ── FIX 2: Atomicity — insertMemoryEvent lỗi → rollback count ───────────
+
+  group('atomicity: insertMemoryEvent lỗi → count không tăng ròng', () {
+    testWidgets('khi insertMemoryEvent throw, count sit-A KHÔNG tăng (rollback)', (tester) async {
+      final content = FakeWrContentRepository();
+      final intel = FakeWrIntelligenceRepository();
+
+      final ref = await _pumpRef(tester, content: content, intel: intel);
+
+      // Giả lập insertMemoryEvent ném lỗi
+      content.nextError = Exception('DB error on memory event');
+
+      // commitTodaySituation sẽ: record OK, insertMemoryEvent throw → rollback → rethrow
+      await expectLater(
+        () => commitTodaySituation(ref, sit: _sit('sit-A')),
+        throwsException,
+        reason: 'lỗi insertMemoryEvent phải được rethrow',
+      );
+
+      // Count sit-A phải = 0 (record +1 rồi rollback -1 = 0)
+      final counts = await intel.fetchPatternCounts('u1');
+      final aCount = counts.where((c) => c.situationCode == 'sit-A').firstOrNull;
+      expect(aCount, isNull,
+          reason: 'count sit-A phải bị rollback về 0 khi insertMemoryEvent lỗi');
+    });
+  });
+
+  // ── FIX 2: Atomicity — record B lỗi khi có A → A không mất ─────────────
+
+  group('atomicity: record B lỗi khi có A hôm nay → A không bị decrement', () {
+    testWidgets('khi recordSituationOccurrence(B) throw, A vẫn nguyên count=1', (tester) async {
+      final content = FakeWrContentRepository();
+      final intel = FakeWrIntelligenceRepository();
+
+      final ref = await _pumpRef(tester, content: content, intel: intel);
+
+      // Bước 1: record A thành công
+      await commitTodaySituation(ref, sit: _sit('sit-A'));
+
+      var counts = await intel.fetchPatternCounts('u1');
+      expect(counts.any((c) => c.situationCode == 'sit-A' && c.occurrenceCount == 1), isTrue,
+          reason: 'sit-A phải có count=1 sau bước 1');
+
+      // Bước 2: switch sang B nhưng recordSituationOccurrence(B) lỗi
+      intel.nextError = Exception('DB error on record B');
+
+      await expectLater(
+        () => commitTodaySituation(ref, sit: _sit('sit-B')),
+        throwsException,
+        reason: 'lỗi recordSituationOccurrence(B) phải được rethrow',
+      );
+
+      // A phải còn nguyên (gỡ A xảy ra AFTER record B, mà B đã lỗi trước khi gỡ A)
+      counts = await intel.fetchPatternCounts('u1');
+      final aCount = counts.where((c) => c.situationCode == 'sit-A').firstOrNull;
+      expect(aCount?.occurrenceCount, 1,
+          reason: 'sit-A KHÔNG bị decrement khi record B lỗi (record new trước, gỡ cũ sau)');
+      expect(
+        intel.decrementSituationOccurrenceCalls.where((c) => c.situationCode == 'sit-A'),
+        isEmpty,
+        reason: 'decrement A không được gọi khi record B lỗi',
+      );
+    });
+  });
+
+  // ── FIX 2: Self-heal — marker tồn tại nhưng count==0 → re-record ────────
+
+  group('self-heal: marker tồn tại hôm nay nhưng count==0 → re-record', () {
+    testWidgets('sit-A có memory event hôm nay nhưng count==0 → commitTodaySituation re-record', (tester) async {
+      final content = FakeWrContentRepository();
+      final intel = FakeWrIntelligenceRepository();
+
+      // Pre-seed: memory event cho sit-A HÔM NAY (VN 2026-07-23)
+      // nhưng KHÔNG seed pattern count → count == 0 (partial failure trước)
+      content.seedMemoryEvents([
+        CareerMemoryEvent(
+          id: 'evt-sit-A',
+          userId: 'u1',
+          situationCode: 'sit-A',
+          // VN 2026-07-23 02:00 = UTC 2026-07-22 19:00
+          createdAt: _todayVnMidnightUtc.add(const Duration(hours: 2)),
+        ),
+      ]);
+      // count = 0 (không seed)
+
+      final ref = await _pumpRef(tester, content: content, intel: intel);
+
+      // Self-heal: marker có nhưng count==0 → should re-record
+      final count = await commitTodaySituation(ref, sit: _sit('sit-A'), nowUtc: _nowVnTodayUtc);
+
+      expect(count, 1, reason: 'sau self-heal count phải là 1');
+      expect(
+        intel.recordSituationOccurrenceCalls.where((c) => c.situationCode == 'sit-A'),
+        hasLength(1),
+        reason: 'recordSituationOccurrence phải được gọi để self-heal',
+      );
+    });
+  });
+
+  // ── FIX 1: Boundary ngày VN trong service (lọc todayCodes) ──────────────
+
+  group('boundary ngày VN trong service: 23:59 hôm qua KHÔNG phải hôm nay', () {
+    testWidgets('event VN 23:59 hôm qua KHÔNG được coi là hôm nay → không decrement', (tester) async {
+      final content = FakeWrContentRepository();
+      final intel = FakeWrIntelligenceRepository();
+
+      // sit-A hôm qua VN 23:59 = UTC 2026-07-21 16:59
+      // VN yesterday midnight UTC = 2026-07-21 17:00 → VN 23:59 = 2026-07-21 16:59 UTC
+      final yesterdayVn2359Utc = DateTime.utc(2026, 7, 21, 16, 59, 0);
+
+      intel.seedPatternCounts([
+        PatternCount(
+          userId: 'u1',
+          situationCode: 'sit-A',
+          occurrenceCount: 1,
+          lastSeenAt: DateTime(2026, 7, 22),
+        ),
+      ]);
+      content.seedMemoryEvents([
+        CareerMemoryEvent(
+          id: 'evt-yesterday-2359',
+          userId: 'u1',
+          situationCode: 'sit-A',
+          createdAt: yesterdayVn2359Utc, // VN 2026-07-22 23:59 (hôm qua)
+        ),
+      ]);
+
+      final ref = await _pumpRef(tester, content: content, intel: intel);
+
+      // Chọn sit-B hôm nay
+      await commitTodaySituation(ref, sit: _sit('sit-B'), nowUtc: _nowVnTodayUtc);
+
+      final counts = await intel.fetchPatternCounts('u1');
+      final aCount = counts.where((c) => c.situationCode == 'sit-A').firstOrNull;
+
+      expect(aCount?.occurrenceCount, 1,
+          reason: 'event VN 23:59 hôm qua KHÔNG phải hôm nay → sit-A không bị decrement');
+      expect(
+        intel.decrementSituationOccurrenceCalls.where((c) => c.situationCode == 'sit-A'),
+        isEmpty,
+        reason: 'decrement sit-A KHÔNG được gọi',
+      );
+    });
+
+    testWidgets('event VN 00:01 HÔM NAY được coi là hôm nay → decrement khi switch', (tester) async {
+      final content = FakeWrContentRepository();
+      final intel = FakeWrIntelligenceRepository();
+
+      // VN 00:01 hôm nay = UTC 2026-07-22 17:01
+      final todayVn0001Utc = _todayVnMidnightUtc.add(const Duration(minutes: 1));
+
+      intel.seedPatternCounts([
+        PatternCount(
+          userId: 'u1',
+          situationCode: 'sit-A',
+          occurrenceCount: 2,
+          lastSeenAt: DateTime(2026, 7, 23),
+        ),
+      ]);
+      content.seedMemoryEvents([
+        CareerMemoryEvent(
+          id: 'evt-today-0001',
+          userId: 'u1',
+          situationCode: 'sit-A',
+          createdAt: todayVn0001Utc, // VN 2026-07-23 00:01 (hôm nay)
+        ),
+      ]);
+
+      final ref = await _pumpRef(tester, content: content, intel: intel);
+
+      // Switch sang sit-B hôm nay
+      await commitTodaySituation(ref, sit: _sit('sit-B'), nowUtc: _nowVnTodayUtc);
+
+      expect(
+        intel.decrementSituationOccurrenceCalls.where((c) => c.situationCode == 'sit-A'),
+        isNotEmpty,
+        reason: 'event VN 00:01 HÔM NAY → sit-A PHẢI được decrement khi switch sang B',
+      );
     });
   });
 }

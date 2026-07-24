@@ -34,7 +34,12 @@ class _WrSituationFlowScreenState extends ConsumerState<WrSituationFlowScreen> {
         });
       }
     } catch (_) {
-      if (mounted) setState(() => _saving = false);
+      if (mounted) {
+        setState(() => _saving = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không lưu được tình huống. Thử lại.')),
+        );
+      }
     }
   }
 
