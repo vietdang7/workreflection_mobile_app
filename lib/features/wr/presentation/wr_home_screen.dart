@@ -30,67 +30,96 @@ final _mobileProfileProvider = FutureProvider<MobileProfile?>((ref) async {
 });
 
 // ---------------------------------------------------------------------------
-// Mood option data
+// Check-in options — sáu lựa chọn: 3 mức năng lượng rồi 3 hướng đi.
 // ---------------------------------------------------------------------------
 
-enum _MoodOption {
-  stressed,  // "Tôi đang căng thẳng"
-  tired,     // "Tôi mệt mỏi cần nghỉ ngơi"
-  okay,      // "Tôi khá ổn"
-  happy;     // "Tôi đang vui"
+enum _EnergyOption {
+  good, // "Có năng lượng"
+  ok, // "Bình thường"
+  low; // "Mệt mỏi"
 
   String get label => switch (this) {
-        _MoodOption.stressed => 'Tôi đang\ncăng thẳng',
-        _MoodOption.tired    => 'Tôi mệt mỏi\ncần nghỉ ngơi',
-        _MoodOption.okay     => 'Tôi\nkhá ổn',
-        _MoodOption.happy    => 'Tôi\nđang vui',
-      };
+    _EnergyOption.good => 'Có năng lượng',
+    _EnergyOption.ok => 'Bình thường',
+    _EnergyOption.low => 'Mệt mỏi',
+  };
 
   CheckinEnergy get energy => switch (this) {
-        _MoodOption.stressed => CheckinEnergy.low,
-        _MoodOption.tired    => CheckinEnergy.low,
-        _MoodOption.okay     => CheckinEnergy.ok,
-        _MoodOption.happy    => CheckinEnergy.good,
-      };
+    _EnergyOption.good => CheckinEnergy.good,
+    _EnergyOption.ok => CheckinEnergy.ok,
+    _EnergyOption.low => CheckinEnergy.low,
+  };
 
   Mood get mood => switch (this) {
-        _MoodOption.stressed => Mood.stressed,
-        _MoodOption.tired    => Mood.tired,
-        _MoodOption.okay     => Mood.okay,
-        _MoodOption.happy    => Mood.happy,
-      };
+    _EnergyOption.good => Mood.happy,
+    _EnergyOption.ok => Mood.okay,
+    _EnergyOption.low => Mood.tired,
+  };
 
-  /// Whether this option corresponds to a "low/tired" state
-  bool get isLowEnergy => this == _MoodOption.stressed || this == _MoodOption.tired;
+  /// Mã cảm xúc lưu kèm memory-event khi người dùng chọn tình huống.
+  String get emotionCode => switch (this) {
+    _EnergyOption.good => 'good',
+    _EnergyOption.ok => 'ok',
+    _EnergyOption.low => 'low',
+  };
 
-  /// Q2 title for this mood
+  bool get isLowEnergy => this == _EnergyOption.low;
+
+  /// Câu hỏi tiếp theo (Q2) tương ứng mức năng lượng.
   String get q2Title => switch (this) {
-        _MoodOption.stressed => 'Điều gì đang khiến bạn căng thẳng?',
-        _MoodOption.tired    => 'Bạn mệt vì điều gì?',
-        _MoodOption.okay     => 'Có điều gì bạn muốn nhìn lại hôm nay không?',
-        _MoodOption.happy    => 'Bạn muốn phát triển điều gì tiếp theo?',
-      };
+    _EnergyOption.low => 'Điều gì đang làm bạn mất năng lượng?',
+    _EnergyOption.ok => 'Có điều gì bạn muốn nhìn lại hôm nay không?',
+    _EnergyOption.good => 'Bạn muốn phát triển điều gì tiếp theo?',
+  };
 
-  /// HumanNeeds to filter Q2 chips for this mood (ordered by priority).
+  /// HumanNeed dùng để lọc chip tình huống ở Q2 (theo thứ tự ưu tiên).
   List<HumanNeed> get q2Needs => switch (this) {
-        _MoodOption.stressed => [HumanNeed.ketNoi, HumanNeed.thichNghi],
-        _MoodOption.tired    => [HumanNeed.thichNghi, HumanNeed.phatTrien],
-        _MoodOption.okay     => [HumanNeed.roRang],
-        _MoodOption.happy    => [HumanNeed.phatTrien],
-      };
+    _EnergyOption.low => [HumanNeed.thichNghi, HumanNeed.ketNoi],
+    _EnergyOption.ok => [HumanNeed.roRang],
+    _EnergyOption.good => [HumanNeed.phatTrien],
+  };
 }
 
-/// Reverse-map from saved Checkin → best matching _MoodOption for prepopulate.
-/// Uses checkin.mood first (can distinguish stressed vs tired), falls back to
-/// energy if mood doesn't match the 4 known values.
-_MoodOption? _moodOptionFromCheckin(Checkin? checkin) {
+enum _DirectionOption {
+  forward, // "Tiến lên"
+  steady, // "Đứng yên"
+  backward; // "Thụt lùi"
+
+  String get label => switch (this) {
+    _DirectionOption.forward => 'Tiến lên',
+    _DirectionOption.steady => 'Đứng yên',
+    _DirectionOption.backward => 'Thụt lùi',
+  };
+
+  CheckinDirection get direction => switch (this) {
+    _DirectionOption.forward => CheckinDirection.forward,
+    _DirectionOption.steady => CheckinDirection.steady,
+    _DirectionOption.backward => CheckinDirection.backward,
+  };
+}
+
+/// Reverse-map từ check-in đã lưu → lựa chọn năng lượng, để prepopulate.
+/// Ưu tiên trường `energy`; nếu thiếu thì suy ra từ `mood`.
+_EnergyOption? _energyOptionFromCheckin(Checkin? checkin) {
   if (checkin == null) return null;
-  // Prefer mood field — gives exact mapping including stressed vs tired.
-  return switch (checkin.mood) {
-    Mood.stressed => _MoodOption.stressed,
-    Mood.tired    => _MoodOption.tired,
-    Mood.okay     => _MoodOption.okay,
-    Mood.happy    => _MoodOption.happy,
+  return switch (checkin.energy) {
+    CheckinEnergy.good => _EnergyOption.good,
+    CheckinEnergy.ok => _EnergyOption.ok,
+    CheckinEnergy.low => _EnergyOption.low,
+    null => switch (checkin.mood) {
+      Mood.happy => _EnergyOption.good,
+      Mood.okay => _EnergyOption.ok,
+      Mood.tired || Mood.stressed => _EnergyOption.low,
+    },
+  };
+}
+
+_DirectionOption? _directionOptionFromCheckin(Checkin? checkin) {
+  return switch (checkin?.direction) {
+    CheckinDirection.forward => _DirectionOption.forward,
+    CheckinDirection.steady => _DirectionOption.steady,
+    CheckinDirection.backward => _DirectionOption.backward,
+    null => null,
   };
 }
 
@@ -106,56 +135,79 @@ class WrHomeScreen extends ConsumerStatefulWidget {
 }
 
 class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
-  _MoodOption? _selected;
+  _EnergyOption? _selected;
+  _DirectionOption? _direction;
   bool _saved = false;
   bool _prepopulated = false;
   bool _saving = false;
-  _MoodOption? _pendingOption; // latest-wins: queued option while _saving==true
+  String? _checkinError; // lỗi lưu check-in, hiện ngay dưới nút Lưu
 
   // Q2 state
-  String? _selectedSituationCode;   // null = no chip selected yet
-  bool _situationSaved = false;     // true = chip was saved successfully
-  int _situationCount = 0;          // pattern count after save (for "lần thứ N" message)
-  bool _savingSituation = false;    // spinner guard for chip tap
+  String? _selectedSituationCode; // null = no chip selected yet
+  bool _situationSaved = false; // true = chip was saved successfully
+  int _situationCount = 0; // pattern count after save (for "lần thứ N" message)
+  bool _savingSituation = false; // spinner guard for chip tap
   WrSituation? _selectedSituation; // full WrSituation after chip save, for card
-  WrStory? _suggestedStory;        // story matching scaDimension after chip save
-  bool _okayDone = false;           // true = user tapped "Không, hôm nay ổn"
-  bool _joyDone = false;            // true = user tapped "Chỉ muốn ghi lại niềm vui"
-  bool _savingJoyEscape = false;    // race guard: set true BEFORE first await, cleared in finally
-  String? _joyMessage;              // message shown after joy escape tap
+  WrStory? _suggestedStory; // story matching scaDimension after chip save
+  bool _okayDone = false; // true = user tapped "Không, hôm nay ổn"
+  bool _joyDone = false; // true = user tapped "Chỉ muốn ghi lại niềm vui"
+  bool _savingJoyEscape =
+      false; // race guard: set true BEFORE first await, cleared in finally
+  String? _joyMessage; // message shown after joy escape tap
 
   String _dateLabel() {
     final now = todayVn();
     final weekdays = [
-      'Thứ Hai', 'Thứ Ba', 'Thứ Tư', 'Thứ Năm',
-      'Thứ Sáu', 'Thứ Bảy', 'Chủ Nhật',
+      'Thứ Hai',
+      'Thứ Ba',
+      'Thứ Tư',
+      'Thứ Năm',
+      'Thứ Sáu',
+      'Thứ Bảy',
+      'Chủ Nhật',
     ];
     final day = now.day.toString().padLeft(2, '0');
     final month = now.month.toString().padLeft(2, '0');
     return '${weekdays[now.weekday - 1]}, $day/$month';
   }
 
-  Future<void> _save(_MoodOption option) async {
-    // Latest-wins: if already saving, record the pending option and return.
-    if (_saving) {
-      setState(() {
-        _selected = option; // optimistic UI update
-        _pendingOption = option;
-      });
-      return;
-    }
-
-    final previousSelected = _selected;
+  /// Chọn mức năng lượng. Chưa ghi gì — chỉ mở phần chọn hướng đi và dọn lại
+  /// trạng thái Q2 của lần check-in trước.
+  void _selectEnergy(_EnergyOption option) {
+    if (_saving) return;
     setState(() {
       _selected = option;
-      _saving = true;
-      _pendingOption = null;
+      _saved = false;
+      _checkinError = null;
       _okayDone = false;
       _joyDone = false;
       _joyMessage = null;
       _situationSaved = false;
       _selectedSituationCode = null;
+      _selectedSituation = null;
       _suggestedStory = null;
+    });
+  }
+
+  void _selectDirection(_DirectionOption option) {
+    if (_saving) return;
+    setState(() {
+      _direction = option;
+      _saved = false;
+      _checkinError = null;
+    });
+  }
+
+  /// Ghi check-in — chỉ chạy khi người dùng bấm nút Lưu, và chỉ khi đã chọn
+  /// đủ cả năng lượng lẫn hướng đi.
+  Future<void> _saveCheckin() async {
+    final option = _selected;
+    final direction = _direction;
+    if (option == null || direction == null || _saving) return;
+
+    setState(() {
+      _saving = true;
+      _checkinError = null;
     });
 
     try {
@@ -163,38 +215,27 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
       await repo.upsertCheckin(
         option.mood,
         energy: option.energy,
-        direction: null,
+        direction: direction.direction,
       );
       if (mounted) {
-        setState(() { _saved = true; });
+        setState(() {
+          _saved = true;
+        });
         ref.invalidate(todayCheckinProvider);
         ref.invalidate(wrPatternCountsProvider);
       }
     } catch (_) {
       if (mounted) {
-        // Only revert if no newer tap has already updated _selected.
-        final hasNewerTap = _pendingOption != null;
         setState(() {
-          if (!hasNewerTap) {
-            _selected = previousSelected;
-            _saved = false;
-          }
+          _saved = false;
+          _checkinError = 'Không lưu được check-in. Thử lại.';
         });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không lưu được check-in. Thử lại.')),
-        );
       }
     } finally {
       if (mounted) {
-        final next = _pendingOption;
         setState(() {
           _saving = false;
-          _pendingOption = null;
         });
-        // If a newer tap came in while saving, process it now.
-        if (next != null) {
-          await _save(next);
-        }
       }
     }
   }
@@ -202,16 +243,13 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
   Future<void> _saveSituation(WrSituation sit) async {
     if (_savingSituation) return;
 
-    setState(() { _savingSituation = true; _selectedSituationCode = sit.code; });
+    setState(() {
+      _savingSituation = true;
+      _selectedSituationCode = sit.code;
+    });
     try {
-      // Map mood to emotion string for memory event.
-      final emotion = switch (_selected) {
-        _MoodOption.stressed => 'low',
-        _MoodOption.tired    => 'low',
-        _MoodOption.okay     => 'ok',
-        _MoodOption.happy    => 'good',
-        null                 => null,
-      };
+      // Map energy to emotion string for memory event.
+      final emotion = _selected?.emotionCode;
 
       final count = await commitTodaySituation(ref, sit: sit, emotion: emotion);
 
@@ -219,7 +257,9 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
       WrStory? suggested;
       try {
         final storyRepo = ref.read(wrContentRepositoryProvider);
-        final stories = await storyRepo.fetchStories(dimension: sit.scaDimension);
+        final stories = await storyRepo.fetchStories(
+          dimension: sit.scaDimension,
+        );
         suggested = stories.isNotEmpty ? stories.first : null;
       } catch (_) {
         suggested = null;
@@ -236,7 +276,11 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
       }
     } catch (_) {
       if (mounted) {
-        setState(() { _savingSituation = false; _selectedSituationCode = null; _selectedSituation = null; });
+        setState(() {
+          _savingSituation = false;
+          _selectedSituationCode = null;
+          _selectedSituation = null;
+        });
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Không lưu được tình huống. Thử lại.')),
         );
@@ -249,19 +293,25 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
   Future<void> _tapJoyEscape() async {
     if (_joyDone || _savingJoyEscape) return;
     // Set guard IMMEDIATELY before any await to prevent double-tap race condition.
-    setState(() { _savingJoyEscape = true; });
+    setState(() {
+      _savingJoyEscape = true;
+    });
     final userId = ref.read(currentUserIdProvider) ?? '';
     if (userId.isEmpty) {
-      setState(() { _savingJoyEscape = false; });
+      setState(() {
+        _savingJoyEscape = false;
+      });
       return;
     }
     final intelRepo = ref.read(wrIntelligenceRepositoryProvider);
     try {
-      await intelRepo.insertReflectionStep(ReflectionStep(
-        userId: userId,
-        step: ReflectionStepType.notice,
-        content: 'Ghi lại niềm vui',
-      ));
+      await intelRepo.insertReflectionStep(
+        ReflectionStep(
+          userId: userId,
+          step: ReflectionStepType.notice,
+          content: 'Ghi lại niềm vui',
+        ),
+      );
       if (mounted) {
         setState(() {
           _joyDone = true;
@@ -275,7 +325,11 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
         );
       }
     } finally {
-      if (mounted) setState(() { _savingJoyEscape = false; });
+      if (mounted) {
+        setState(() {
+          _savingJoyEscape = false;
+        });
+      }
     }
   }
 
@@ -293,10 +347,12 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
     List<WrSituation> pool = [];
     for (final need in needs) {
       final needSits = situations.where((s) => s.humanNeed == need).toList();
-      // For happy mood (phatTrien only): sort by ScaDimension enum index descending
+      // For good energy (phatTrien only): sort by ScaDimension enum index descending
       // so A4(9) > A3(8) > A2(7) > A1(6) — safe even if pool mixes S/C dimensions.
-      if (_selected == _MoodOption.happy && need == HumanNeed.phatTrien) {
-        needSits.sort((a, b) => b.scaDimension.index.compareTo(a.scaDimension.index));
+      if (_selected == _EnergyOption.good && need == HumanNeed.phatTrien) {
+        needSits.sort(
+          (a, b) => b.scaDimension.index.compareTo(a.scaDimension.index),
+        );
       }
       pool.addAll(needSits);
     }
@@ -325,11 +381,13 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
     ref.listen<AsyncValue<Checkin?>>(todayCheckinProvider, (_, next) {
       next.whenData((checkin) {
         if (checkin != null && !_prepopulated && mounted) {
-          final option = _moodOptionFromCheckin(checkin);
+          final option = _energyOptionFromCheckin(checkin);
+          final direction = _directionOptionFromCheckin(checkin);
           setState(() {
             _prepopulated = true;
             _saved = true;
             if (option != null) _selected = option;
+            if (direction != null) _direction = direction;
           });
         }
       });
@@ -372,25 +430,41 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const WrTabBackLink(currentTab: WrTab.home),
-                    Text(
-                      displayName.isNotEmpty ? 'Chào $displayName' : 'Chào bạn',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w400,
-                        color: WrColors.muted,
-                        letterSpacing: -0.01,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _dateLabel(),
-                      style: const TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w800,
-                        color: WrColors.navy,
-                        letterSpacing: -0.03 * 32,
-                        height: 1.1,
-                      ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                displayName.isNotEmpty
+                                    ? 'Chào $displayName'
+                                    : 'Chào bạn',
+                                style: const TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w400,
+                                  color: WrColors.muted,
+                                  letterSpacing: -0.01,
+                                ),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                _dateLabel(),
+                                style: const TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.w800,
+                                  color: WrColors.navy,
+                                  letterSpacing: -0.03 * 32,
+                                  height: 1.1,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        // Avatar → hồ sơ (Tôi không còn là một tab riêng).
+                        _ProfileAvatarButton(displayName: displayName),
+                      ],
                     ),
                   ],
                 ),
@@ -405,7 +479,7 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Bạn đang trải qua điều gì?',
+                      'Ngày hôm nay của bạn như thế nào?',
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w700,
@@ -414,48 +488,96 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
                         height: 1.2,
                       ),
                     ),
-                    const SizedBox(height: 24),
-                    // 2×2 grid
-                    Column(
+                    const SizedBox(height: 20),
+                    // Bước 1 — mức năng lượng (3 lựa chọn)
+                    const WrEyebrow('NĂNG LƯỢNG'),
+                    const SizedBox(height: 10),
+                    Row(
                       children: [
-                        Row(
-                          children: [
-                            _MoodButton(
-                              option: _MoodOption.stressed,
-                              selected: _selected == _MoodOption.stressed,
-                              onTap: () => _save(_MoodOption.stressed),
-                            ),
-                            const SizedBox(width: 12),
-                            _MoodButton(
-                              option: _MoodOption.tired,
-                              selected: _selected == _MoodOption.tired,
-                              onTap: () => _save(_MoodOption.tired),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 12),
-                        Row(
-                          children: [
-                            _MoodButton(
-                              option: _MoodOption.okay,
-                              selected: _selected == _MoodOption.okay,
-                              onTap: () => _save(_MoodOption.okay),
-                            ),
-                            const SizedBox(width: 12),
-                            _MoodButton(
-                              option: _MoodOption.happy,
-                              selected: _selected == _MoodOption.happy,
-                              onTap: () => _save(_MoodOption.happy),
-                            ),
-                          ],
-                        ),
+                        for (final option in _EnergyOption.values) ...[
+                          if (option != _EnergyOption.values.first)
+                            const SizedBox(width: 10),
+                          _ChoiceButton(
+                            label: option.label,
+                            selected: _selected == option,
+                            onTap: () => _selectEnergy(option),
+                          ),
+                        ],
                       ],
+                    ),
+                    // Bước 2 — hướng đi, chỉ hiện sau khi đã chọn năng lượng
+                    AnimatedSize(
+                      duration: const Duration(milliseconds: 250),
+                      curve: Curves.easeInOut,
+                      child: _selected == null
+                          ? const SizedBox.shrink()
+                          : Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const SizedBox(height: 20),
+                                const WrEyebrow('HÔM NAY BẠN THẤY MÌNH'),
+                                const SizedBox(height: 10),
+                                Row(
+                                  children: [
+                                    for (final option
+                                        in _DirectionOption.values) ...[
+                                      if (option !=
+                                          _DirectionOption.values.first)
+                                        const SizedBox(width: 10),
+                                      _ChoiceButton(
+                                        label: option.label,
+                                        selected: _direction == option,
+                                        onTap: () => _selectDirection(option),
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                                const SizedBox(height: 16),
+                                SizedBox(
+                                  width: double.infinity,
+                                  child: ElevatedButton(
+                                    key: const Key('wr_save_checkin_button'),
+                                    onPressed: (_direction == null || _saving)
+                                        ? null
+                                        : _saveCheckin,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: WrColors.navy,
+                                      foregroundColor: WrColors.white,
+                                      disabledBackgroundColor: WrColors.cream,
+                                      disabledForegroundColor: WrColors.muted,
+                                      minimumSize: const Size.fromHeight(48),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      _saved
+                                          ? 'Đã lưu check-in'
+                                          : 'Lưu check-in',
+                                      style: const TextStyle(
+                                        fontWeight: FontWeight.w600,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                if (_checkinError != null) ...[
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    _checkinError!,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      color: WrColors.coral,
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
                     ),
                     // ── Q2 inline reveal (AnimatedSize) ─────────────────
                     AnimatedSize(
                       duration: const Duration(milliseconds: 250),
                       curve: Curves.easeInOut,
-                      child: _selected == null
+                      child: (_selected == null || !_saved)
                           ? const SizedBox.shrink()
                           : Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -475,48 +597,64 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
                                   runSpacing: 8,
                                   children: [
                                     // "Không, hôm nay ổn" escape chip — only for okay, before tap
-                                    if (_selected == _MoodOption.okay && !_okayDone)
+                                    if (_selected == _EnergyOption.ok &&
+                                        !_okayDone)
                                       GestureDetector(
-                                        onTap: () => setState(() { _okayDone = true; }),
-                                        child: _EscapeChip(label: 'Không, hôm nay ổn'),
+                                        onTap: () => setState(() {
+                                          _okayDone = true;
+                                        }),
+                                        child: _EscapeChip(
+                                          label: 'Không, hôm nay ổn',
+                                        ),
                                       ),
                                     // "Chỉ muốn ghi lại niềm vui" escape chip — only for happy, before tap
-                                    if (_selected == _MoodOption.happy && !_joyDone)
+                                    if (_selected == _EnergyOption.good &&
+                                        !_joyDone)
                                       GestureDetector(
                                         onTap: _tapJoyEscape,
-                                        child: _EscapeChip(label: 'Chỉ muốn ghi lại niềm vui'),
+                                        child: _EscapeChip(
+                                          label: 'Chỉ muốn ghi lại niềm vui',
+                                        ),
                                       ),
                                     // Real situation chips (up to 5) — only when NOT escaped
                                     if (!isEscapeDone)
-                                      ...q2Chips.map((sit) => GestureDetector(
-                                            onTap: () => _saveSituation(sit),
-                                            child: Container(
-                                              padding: const EdgeInsets.symmetric(
-                                                horizontal: 14,
-                                                vertical: 8,
-                                              ),
-                                              decoration: BoxDecoration(
-                                                color: _selectedSituationCode == sit.code
-                                                    ? WrColors.coral
-                                                    : WrColors.cream,
-                                                borderRadius: BorderRadius.circular(100),
-                                              ),
-                                              child: Text(
-                                                sit.text,
-                                                style: TextStyle(
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.w500,
-                                                  color: _selectedSituationCode == sit.code
-                                                      ? WrColors.white
-                                                      : WrColors.navy,
-                                                ),
+                                      ...q2Chips.map(
+                                        (sit) => GestureDetector(
+                                          onTap: () => _saveSituation(sit),
+                                          child: Container(
+                                            padding: const EdgeInsets.symmetric(
+                                              horizontal: 14,
+                                              vertical: 8,
+                                            ),
+                                            decoration: BoxDecoration(
+                                              color:
+                                                  _selectedSituationCode ==
+                                                      sit.code
+                                                  ? WrColors.coral
+                                                  : WrColors.cream,
+                                              borderRadius:
+                                                  BorderRadius.circular(100),
+                                            ),
+                                            child: Text(
+                                              sit.text,
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.w500,
+                                                color:
+                                                    _selectedSituationCode ==
+                                                        sit.code
+                                                    ? WrColors.white
+                                                    : WrColors.navy,
                                               ),
                                             ),
-                                          )),
+                                          ),
+                                        ),
+                                      ),
                                     // "Khác →" chip — only when NOT escaped
                                     if (!isEscapeDone)
                                       GestureDetector(
-                                        onTap: () => context.push('/wr/situation'),
+                                        onTap: () =>
+                                            context.push('/wr/situation'),
                                         child: Container(
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: 14,
@@ -524,7 +662,9 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
                                           ),
                                           decoration: BoxDecoration(
                                             color: WrColors.cream,
-                                            borderRadius: BorderRadius.circular(100),
+                                            borderRadius: BorderRadius.circular(
+                                              100,
+                                            ),
                                           ),
                                           child: const Text(
                                             'Khác →',
@@ -562,13 +702,17 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
                                   ),
                                 ],
                                 // Confirmation card after chip save
-                                if (_situationSaved && _selectedSituation != null) ...[
+                                if (_situationSaved &&
+                                    _selectedSituation != null) ...[
                                   const SizedBox(height: 16),
                                   WrCardMinimal(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        if (_selectedSituation!.expectedOutcome != null)
+                                        if (_selectedSituation!
+                                                .expectedOutcome !=
+                                            null)
                                           Text(
                                             'Nghe như điều bạn đang mong: "${_selectedSituation!.expectedOutcome}"',
                                             style: const TextStyle(
@@ -578,14 +722,23 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
                                               height: 1.5,
                                             ),
                                           ),
-                                        if (_selectedSituation!.expectedOutcome != null && _selectedSituation!.scaPerspective != null)
+                                        if (_selectedSituation!
+                                                    .expectedOutcome !=
+                                                null &&
+                                            _selectedSituation!
+                                                    .scaPerspective !=
+                                                null)
                                           const SizedBox(height: 10),
-                                        if (_selectedSituation!.scaPerspective != null)
+                                        if (_selectedSituation!
+                                                .scaPerspective !=
+                                            null)
                                           Text(
                                             _selectedSituation!.scaPerspective!,
                                             style: TextStyle(
                                               fontSize: 13,
-                                              color: WrColors.navy.withValues(alpha: 0.75),
+                                              color: WrColors.navy.withValues(
+                                                alpha: 0.75,
+                                              ),
                                               height: 1.5,
                                             ),
                                           ),
@@ -620,7 +773,8 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
                 child: _CareerSnapshotCard(
-                  snapshot: ref.watch(wrCareerSnapshotProvider).valueOrNull ??
+                  snapshot:
+                      ref.watch(wrCareerSnapshotProvider).valueOrNull ??
                       const CareerSnapshot(),
                 ),
               ),
@@ -667,7 +821,12 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
             // ── section gợi ý story ───────────────────────────────────────
             SliverToBoxAdapter(
               child: Padding(
-                padding: EdgeInsets.fromLTRB(24, topPattern != null ? 0 : 28, 24, 0),
+                padding: EdgeInsets.fromLTRB(
+                  24,
+                  topPattern != null ? 0 : 28,
+                  24,
+                  0,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -710,7 +869,8 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
                                 const SizedBox(height: 6),
                                 Text(
                                   _suggestedStory != null
-                                      ? (_suggestedStory!.situation ?? 'Câu chuyện giúp bạn nhận ra pattern nghề nghiệp.')
+                                      ? (_suggestedStory!.situation ??
+                                            'Câu chuyện giúp bạn nhận ra pattern nghề nghiệp.')
                                       : 'Câu chuyện giúp bạn nhận ra pattern nghề nghiệp.',
                                   style: const TextStyle(
                                     fontSize: 13,
@@ -726,10 +886,15 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
                     ),
                     const SizedBox(height: 8),
                     WrActionLink(
-                      label: _suggestedStory != null ? 'Đọc câu chuyện này' : 'Đọc câu chuyện đầu tiên',
+                      label: _suggestedStory != null
+                          ? 'Đọc câu chuyện này'
+                          : 'Đọc câu chuyện đầu tiên',
                       onTap: () {
-                        if (_suggestedStory != null && _selectedSituation != null) {
-                          context.push('/wr/story/flow?dimension=${_selectedSituation!.scaDimension.dbValue}');
+                        if (_suggestedStory != null &&
+                            _selectedSituation != null) {
+                          context.push(
+                            '/wr/story/flow?dimension=${_selectedSituation!.scaDimension.dbValue}',
+                          );
                         } else {
                           context.push('/wr/story');
                         }
@@ -815,17 +980,17 @@ class _EscapeChip extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// _MoodButton — 2×2 grid button
+// _ChoiceButton — ô chọn dùng chung cho hàng năng lượng và hàng hướng đi
 // ---------------------------------------------------------------------------
 
-class _MoodButton extends StatelessWidget {
-  const _MoodButton({
-    required this.option,
+class _ChoiceButton extends StatelessWidget {
+  const _ChoiceButton({
+    required this.label,
     required this.selected,
     required this.onTap,
   });
 
-  final _MoodOption option;
+  final String label;
   final bool selected;
   final VoidCallback onTap;
 
@@ -835,19 +1000,64 @@ class _MoodButton extends StatelessWidget {
       child: GestureDetector(
         onTap: onTap,
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+          padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
           decoration: BoxDecoration(
             color: selected ? WrColors.coral : WrColors.cream,
             borderRadius: BorderRadius.circular(16),
           ),
           child: Text(
-            option.label,
+            label,
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: selected ? WrColors.white : WrColors.navy,
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// _ProfileAvatarButton — lối vào hồ sơ từ header
+// ---------------------------------------------------------------------------
+
+class _ProfileAvatarButton extends StatelessWidget {
+  const _ProfileAvatarButton({required this.displayName});
+
+  final String displayName;
+
+  String get _initials {
+    final parts = displayName.trim().split(RegExp(r'\s+'))
+      ..removeWhere((p) => p.isEmpty);
+    if (parts.isEmpty) return 'WR';
+    if (parts.length == 1) return parts.first.characters.first.toUpperCase();
+    return (parts.first.characters.first + parts.last.characters.first)
+        .toUpperCase();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      key: const Key('wr_home_profile_button'),
+      behavior: HitTestBehavior.opaque,
+      onTap: () => context.push('/profile'),
+      child: Container(
+        width: 44,
+        height: 44,
+        alignment: Alignment.center,
+        decoration: const BoxDecoration(
+          color: WrColors.cream,
+          shape: BoxShape.circle,
+        ),
+        child: Text(
+          _initials,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w700,
+            color: WrColors.navy,
           ),
         ),
       ),
@@ -896,7 +1106,10 @@ class _CareerSnapshotCard extends StatelessWidget {
             if (snapshot.careerGoal != null)
               _SnapshotRow(label: 'Quan tâm', value: snapshot.careerGoal!),
             if (snapshot.currentChallenge != null)
-              _SnapshotRow(label: 'Trăn trở', value: snapshot.currentChallenge!),
+              _SnapshotRow(
+                label: 'Trăn trở',
+                value: snapshot.currentChallenge!,
+              ),
             const SizedBox(height: 10),
             WrActionLink(
               label: 'Cập nhật',
