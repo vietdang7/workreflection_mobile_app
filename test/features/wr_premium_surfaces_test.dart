@@ -20,11 +20,20 @@ import '../support/fake_repository.dart';
 import '../support/fake_wr_content_repository.dart';
 import '../support/fake_wr_intelligence_repository.dart';
 
+class _FakeDocumentPicker implements WrDocumentPicker {
+  _FakeDocumentPicker(this.document);
+
+  final WrPickedDocument? document;
+
+  @override
+  Future<WrPickedDocument?> pick() async => document;
+}
+
 WrEntitlementRecord _premium() => WrEntitlementRecord(
-      userId: 'u1',
-      plan: WrPlan.premium,
-      validUntil: DateTime.now().add(const Duration(days: 30)),
-    );
+  userId: 'u1',
+  plan: WrPlan.premium,
+  validUntil: DateTime.now().add(const Duration(days: 30)),
+);
 
 Widget _wrap(
   Widget screen, {
@@ -46,8 +55,9 @@ Widget _wrap(
   return ProviderScope(
     overrides: [
       wrIntelligenceRepositoryProvider.overrideWithValue(intel),
-      wrContentRepositoryProvider
-          .overrideWithValue(content ?? FakeWrContentRepository()),
+      wrContentRepositoryProvider.overrideWithValue(
+        content ?? FakeWrContentRepository(),
+      ),
       wrRepositoryProvider.overrideWithValue(wr ?? FakeWrRepository()),
       currentUserIdProvider.overrideWithValue('u1'),
     ],
@@ -75,12 +85,17 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        await _seenWhileScrolling(tester, find.text('DIỄN BIẾN THEO THỜI GIAN')),
+        await _seenWhileScrolling(
+          tester,
+          find.text('DIỄN BIẾN THEO THỜI GIAN'),
+        ),
         isTrue,
       );
       expect(
         await _seenWhileScrolling(
-            tester, find.text('Mở diễn biến theo thời gian')),
+          tester,
+          find.text('Mở diễn biến theo thời gian'),
+        ),
         isTrue,
       );
     });
@@ -108,21 +123,25 @@ void main() {
       );
       expect(
         await _seenWhileScrolling(
-            tester, find.text('Mở diễn biến theo thời gian')),
+          tester,
+          find.text('Mở diễn biến theo thời gian'),
+        ),
         isFalse,
       );
     });
 
-    testWidgets('Paid nhưng chưa có dữ liệu: hiện thông điệp mời quay lại',
-        (tester) async {
-      final intel = FakeWrIntelligenceRepository()
-        ..seedEntitlement(_premium());
+    testWidgets('Paid nhưng chưa có dữ liệu: hiện thông điệp mời quay lại', (
+      tester,
+    ) async {
+      final intel = FakeWrIntelligenceRepository()..seedEntitlement(_premium());
       await tester.pumpWidget(_wrap(const WrJourneyScreen(), intel: intel));
       await tester.pumpAndSettle();
 
       expect(
         await _seenWhileScrolling(
-            tester, find.textContaining('Chưa đủ dữ liệu để kể lại diễn biến')),
+          tester,
+          find.textContaining('Chưa đủ dữ liệu để kể lại diễn biến'),
+        ),
         isTrue,
       );
     });
@@ -141,8 +160,9 @@ void main() {
       expect(find.text('Mở phân tích sâu'), findsOneWidget);
     });
 
-    testWidgets('Free đã đủ quota: nút thêm bị khoá và nêu lý do',
-        (tester) async {
+    testWidgets('Free đã đủ quota: nút thêm bị khoá và nêu lý do', (
+      tester,
+    ) async {
       final intel = FakeWrIntelligenceRepository()
         ..seedEntitlement(null)
         ..seedContextDocuments([
@@ -167,8 +187,9 @@ void main() {
       expect(btn.onPressed, isNull);
     });
 
-    testWidgets('Paid: không giới hạn số lượng, phân tích sâu mở',
-        (tester) async {
+    testWidgets('Paid: không giới hạn số lượng, phân tích sâu mở', (
+      tester,
+    ) async {
       final intel = FakeWrIntelligenceRepository()
         ..seedEntitlement(_premium())
         ..seedContextDocuments([
@@ -198,6 +219,63 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('PAYWALL'), findsOneWidget);
+    });
+
+    testWidgets('accepts a PDF file and preserves its extension', (
+      tester,
+    ) async {
+      final intel = FakeWrIntelligenceRepository()..seedEntitlement(null);
+      final wr = FakeWrRepository();
+      final picker = _FakeDocumentPicker(
+        const WrPickedDocument(
+          name: 'job-description.pdf',
+          bytes: [1, 2, 3, 4],
+        ),
+      );
+      await tester.pumpWidget(
+        _wrap(
+          WrContextDocScreen(picker: picker),
+          intel: intel,
+          wr: wr,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Thêm tài liệu'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Mô tả công việc (JD)'));
+      await tester.pumpAndSettle();
+
+      expect(wr.uploadContextDocumentCalls, hasLength(1));
+      expect(wr.uploadContextDocumentCalls.single.ext, 'pdf');
+      expect(wr.uploadContextDocumentCalls.single.docType, 'jd');
+      expect(intel.insertContextDocumentCalls, hasLength(1));
+    });
+
+    testWidgets('rejects unsupported file formats before upload', (
+      tester,
+    ) async {
+      final intel = FakeWrIntelligenceRepository()..seedEntitlement(null);
+      final wr = FakeWrRepository();
+      final picker = _FakeDocumentPicker(
+        const WrPickedDocument(name: 'notes.txt', bytes: [1, 2]),
+      );
+      await tester.pumpWidget(
+        _wrap(
+          WrContextDocScreen(picker: picker),
+          intel: intel,
+          wr: wr,
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Thêm tài liệu'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Tài liệu khác'));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Chỉ hỗ trợ PDF'), findsOneWidget);
+      expect(wr.uploadContextDocumentCalls, isEmpty);
     });
   });
 }

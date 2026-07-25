@@ -15,6 +15,18 @@ import '../models/sca_report.dart';
 import '../models/timeline_event.dart';
 import '../models/workshop.dart';
 
+String contextDocumentContentType(String extension) {
+  return switch (extension.toLowerCase()) {
+    'pdf' => 'application/pdf',
+    'doc' => 'application/msword',
+    'docx' =>
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+    'png' => 'image/png',
+    'jpg' || 'jpeg' => 'image/jpeg',
+    _ => 'application/octet-stream',
+  };
+}
+
 // ---------------------------------------------------------------------------
 // Abstract interface
 // ---------------------------------------------------------------------------
@@ -154,16 +166,13 @@ class SupabaseWrRepository implements WrRepository {
     CheckinEnergy? energy,
     CheckinDirection? direction,
   }) async {
-    await _client.from('wr_checkins').upsert(
-      {
-        'user_id': _uid,
-        'checkin_date': _todayVn,
-        'mood': mood.dbValue,
-        if (energy != null) 'energy': energy.dbValue,
-        if (direction != null) 'direction': direction.dbValue,
-      },
-      onConflict: 'user_id,checkin_date',
-    );
+    await _client.from('wr_checkins').upsert({
+      'user_id': _uid,
+      'checkin_date': _todayVn,
+      'mood': mood.dbValue,
+      if (energy != null) 'energy': energy.dbValue,
+      if (direction != null) 'direction': direction.dbValue,
+    }, onConflict: 'user_id,checkin_date');
   }
 
   @override
@@ -174,7 +183,9 @@ class SupabaseWrRepository implements WrRepository {
         .eq('user_id', _uid)
         .order('checkin_date', ascending: false)
         .limit(limit);
-    return rows.map((r) => DateTime.parse(r['checkin_date'] as String)).toList();
+    return rows
+        .map((r) => DateTime.parse(r['checkin_date'] as String))
+        .toList();
   }
 
   @override
@@ -284,11 +295,15 @@ class SupabaseWrRepository implements WrRepository {
 
   @override
   Future<void> updatePracticeStatus(String id, PracticeStatus status) async {
-    await _client.from('wr_practices').update({
-      'status': status.dbValue,
-      if (status == PracticeStatus.done)
-        'completed_at': DateTime.now().toIso8601String(),
-    }).eq('id', id).eq('user_id', _uid);
+    await _client
+        .from('wr_practices')
+        .update({
+          'status': status.dbValue,
+          if (status == PracticeStatus.done)
+            'completed_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', id)
+        .eq('user_id', _uid);
   }
 
   // --- Timeline ---
@@ -366,7 +381,9 @@ class SupabaseWrRepository implements WrRepository {
   Future<ScaReport?> getLatestScaReport() async {
     final rows = await _client
         .from('cc_reports')
-        .select('id, user_id, score_structure, score_culture, score_activity, created_at')
+        .select(
+          'id, user_id, score_structure, score_culture, score_activity, created_at',
+        )
         .eq('user_id', _uid)
         .order('created_at', ascending: false)
         .limit(1);
@@ -409,10 +426,13 @@ class SupabaseWrRepository implements WrRepository {
 
   @override
   Future<void> updateDisplayName(String displayName) async {
-    await _client.from('wr_mobile_profiles').update({
-      'display_name': displayName,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('user_id', _uid);
+    await _client
+        .from('wr_mobile_profiles')
+        .update({
+          'display_name': displayName,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('user_id', _uid);
   }
 
   // --- Avatar ---
@@ -426,10 +446,15 @@ class SupabaseWrRepository implements WrRepository {
     final uid = _uid;
     final stamp = DateTime.now().millisecondsSinceEpoch;
     final filePath = '$uid/$docType-$stamp.$ext';
-    await _client.storage.from('context-docs').uploadBinary(
+    await _client.storage
+        .from('context-docs')
+        .uploadBinary(
           filePath,
           Uint8List.fromList(bytes),
-          fileOptions: FileOptions(upsert: true, contentType: 'image/$ext'),
+          fileOptions: FileOptions(
+            upsert: true,
+            contentType: contextDocumentContentType(ext),
+          ),
         );
     return filePath;
   }
@@ -440,29 +465,30 @@ class SupabaseWrRepository implements WrRepository {
     final filePath = '$uid/avatar.$ext';
 
     // Remove old files in user's folder first (mirrors web behaviour).
-    final existing =
-        await _client.storage.from('avatars').list(path: uid);
+    final existing = await _client.storage.from('avatars').list(path: uid);
     if (existing.isNotEmpty) {
       final toRemove = existing.map((f) => '$uid/${f.name}').toList();
       await _client.storage.from('avatars').remove(toRemove);
     }
 
     // Upload with upsert.
-    await _client.storage.from('avatars').uploadBinary(
+    await _client.storage
+        .from('avatars')
+        .uploadBinary(
           filePath,
           Uint8List.fromList(bytes),
           fileOptions: FileOptions(upsert: true, contentType: 'image/$ext'),
         );
 
     // Public URL with cache-bust (mirrors web ?t=Date.now()).
-    final urlData =
-        _client.storage.from('avatars').getPublicUrl(filePath);
+    final urlData = _client.storage.from('avatars').getPublicUrl(filePath);
     final publicUrl = '$urlData?t=${DateTime.now().millisecondsSinceEpoch}';
 
     // Persist to cc_profiles.
     await _client
         .from('cc_profiles')
-        .update({'avatar_url': publicUrl}).eq('id', uid);
+        .update({'avatar_url': publicUrl})
+        .eq('id', uid);
 
     return publicUrl;
   }
@@ -494,7 +520,8 @@ class SupabaseWrRepository implements WrRepository {
         .select('role')
         .eq('id', _uid)
         .limit(1);
-    final role = (profileRows.isNotEmpty
+    final role =
+        (profileRows.isNotEmpty
             ? profileRows.first['role'] as String?
             : null) ??
         'free';
@@ -528,7 +555,9 @@ class SupabaseWrRepository implements WrRepository {
     final user = _client.auth.currentUser;
     if (user?.email == null) return [];
 
-    final rows = await _client.from('cc_org_invitations').select('''
+    final rows = await _client
+        .from('cc_org_invitations')
+        .select('''
         id,
         org_id,
         email,
@@ -539,14 +568,14 @@ class SupabaseWrRepository implements WrRepository {
         created_at,
         token,
         cc_organizations!inner(name)
-      ''').eq('email', user!.email!.toLowerCase()).order('created_at',
-        ascending: false);
+      ''')
+        .eq('email', user!.email!.toLowerCase())
+        .order('created_at', ascending: false);
 
     return (rows as List).map((r) {
       final map = Map<String, dynamic>.from(r as Map);
       final org = r['cc_organizations'];
-      map['org_name'] =
-          (org is Map ? org['name'] : null) as String? ?? '';
+      map['org_name'] = (org is Map ? org['name'] : null) as String? ?? '';
       map.remove('cc_organizations');
       return map;
     }).toList();
@@ -554,8 +583,10 @@ class SupabaseWrRepository implements WrRepository {
 
   @override
   Future<String> acceptInvitation(String token) async {
-    final result = await _client
-        .rpc('accept_org_invitation', params: {'invitation_token': token});
+    final result = await _client.rpc(
+      'accept_org_invitation',
+      params: {'invitation_token': token},
+    );
     final data = result as Map<String, dynamic>;
     if (data['success'] != true) {
       throw Exception(data['error'] ?? 'Failed to accept invitation');
@@ -567,7 +598,8 @@ class SupabaseWrRepository implements WrRepository {
   Future<void> declineInvitation(String invitationId) async {
     await _client
         .from('cc_org_invitations')
-        .update({'status': 'declined'}).eq('id', invitationId);
+        .update({'status': 'declined'})
+        .eq('id', invitationId);
   }
 
   // --- Export ---
@@ -621,10 +653,13 @@ class SupabaseWrRepository implements WrRepository {
       });
     } else if (onboardingSituation != null) {
       // Profile exists — only update fields that don't overwrite user edits.
-      await _client.from('wr_mobile_profiles').update({
-        'onboarding_situation': onboardingSituation,
-        'updated_at': DateTime.now().toIso8601String(),
-      }).eq('user_id', _uid);
+      await _client
+          .from('wr_mobile_profiles')
+          .update({
+            'onboarding_situation': onboardingSituation,
+            'updated_at': DateTime.now().toIso8601String(),
+          })
+          .eq('user_id', _uid);
     }
 
     // Idempotent — seed function checks internally and returns early if
@@ -634,9 +669,12 @@ class SupabaseWrRepository implements WrRepository {
 
   @override
   Future<void> saveOnboardingSituation(String situation) async {
-    await _client.from('wr_mobile_profiles').update({
-      'onboarding_situation': situation,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('user_id', _uid);
+    await _client
+        .from('wr_mobile_profiles')
+        .update({
+          'onboarding_situation': situation,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('user_id', _uid);
   }
 }

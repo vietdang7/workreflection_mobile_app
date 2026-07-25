@@ -120,7 +120,11 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
             children: [
               GestureDetector(
                 onTap: () => context.pop(),
-                child: const Icon(Icons.arrow_back_ios_new, size: 18, color: WrColors.dark),
+                child: const Icon(
+                  Icons.arrow_back_ios_new,
+                  size: 18,
+                  color: WrColors.dark,
+                ),
               ),
               const SizedBox(height: 28),
               Container(
@@ -131,7 +135,10 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                   borderRadius: BorderRadius.circular(14),
                 ),
                 child: const Center(
-                  child: Text('◉', style: TextStyle(fontSize: 22, color: WrColors.dark)),
+                  child: Text(
+                    '◉',
+                    style: TextStyle(fontSize: 22, color: WrColors.dark),
+                  ),
                 ),
               ),
               const SizedBox(height: 20),
@@ -147,7 +154,11 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
               const SizedBox(height: 10),
               const Text(
                 'Trả lời thành thật theo cảm nhận thực tế trong môi trường làm việc của bạn — không có câu trả lời đúng hay sai.',
-                style: TextStyle(fontSize: 14, color: Color(0xFF737373), height: 1.65),
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF737373),
+                  height: 1.65,
+                ),
               ),
               const SizedBox(height: 16),
               _InfoRow(icon: '⏱', text: 'Khoảng 3–4 phút'),
@@ -500,7 +511,11 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
         children: [
           const WrEyebrow('ĐIỀU ĐÁNG CHÚ Ý NHẤT'),
           const SizedBox(height: 10),
-          _NarrativeCard(title: n.title, text: n.text, pillarName: n.pillarName),
+          _NarrativeCard(
+            title: n.title,
+            text: n.text,
+            pillarName: n.pillarName,
+          ),
         ],
       ),
     );
@@ -513,14 +528,16 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
   // Story tự do".
 
   Widget _buildDeepDive() {
-    final entitlement = ref.watch(wrEntitlementProvider).valueOrNull ??
+    final entitlement =
+        ref.watch(wrEntitlementProvider).valueOrNull ??
         WrEntitlement(plan: WrPlan.free);
     if (!entitlement.canUseFeature(WrPremiumFeature.selfCheckDeepDive)) {
       return const _DeepDiveLocked();
     }
 
     final imbalance = detectPillarImbalance(_sScore, _cScore, _aScore);
-    final history = ref.watch(wrSelfCheckHistoryProvider).valueOrNull ?? const [];
+    final history =
+        ref.watch(wrSelfCheckHistoryProvider).valueOrNull ?? const [];
     final trend = trendFromHistory(history);
     final patterns = ref.watch(wrPatternCountsProvider).valueOrNull ?? const [];
     final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
@@ -541,14 +558,16 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
             (SelfCheckPillar.c, _cScore),
             (SelfCheckPillar.a, _aScore),
           ]) ...[
-            Builder(builder: (_) {
-              final n = pillarNarrative(pillar, score);
-              return _NarrativeCard(
-                title: n.title,
-                text: n.text,
-                pillarName: n.pillarName,
-              );
-            }),
+            Builder(
+              builder: (_) {
+                final n = pillarNarrative(pillar, score);
+                return _NarrativeCard(
+                  title: n.title,
+                  text: n.text,
+                  pillarName: n.pillarName,
+                );
+              },
+            ),
             const SizedBox(height: 10),
           ],
 
@@ -565,7 +584,8 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
           const SizedBox(height: 10),
           if (trend == null)
             const _NarrativeCard(
-              text: 'Đây là lần tự soi đầu tiên được ghi lại. Làm lại sau vài '
+              text:
+                  'Đây là lần tự soi đầu tiên được ghi lại. Làm lại sau vài '
                   'tuần, WorkReflection sẽ cho bạn thấy điều gì đã đổi và điều '
                   'gì vẫn ở nguyên đó.',
             )
@@ -573,7 +593,8 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
             _NarrativeCard(
               title: 'Đã ghi ${trend.takenCount} lần tự soi',
               text: trend.summary,
-              footer: 'Sự rõ ràng ${_delta(trend.structureDelta)} · '
+              footer:
+                  'Sự rõ ràng ${_delta(trend.structureDelta)} · '
                   'Mối quan hệ ${_delta(trend.cultureDelta)} · '
                   'Cách làm việc ${_delta(trend.activityDelta)}',
             ),
@@ -583,12 +604,15 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
             const WrEyebrow('ĐỐI CHIẾU VỚI ĐIỀU BẠN HAY GẶP'),
             const SizedBox(height: 10),
             _NarrativeCard(
-              text: 'Những gì bạn ghi lại trong các câu chuyện cũng chỉ về '
+              text:
+                  'Những gì bạn ghi lại trong các câu chuyện cũng chỉ về '
                   'cùng một hướng với "${lowest.displayName}":',
               footer: relatedPatterns
-                  .map((p) =>
-                      '${sitText[p.situationCode] ?? p.situationCode ?? 'tình huống này'}'
-                      ' — lần thứ ${p.occurrenceCount}')
+                  .map(
+                    (p) =>
+                        '${sitText[p.situationCode] ?? p.situationCode ?? 'tình huống này'}'
+                        ' — lần thứ ${p.occurrenceCount}',
+                  )
                   .join('\n'),
             ),
           ],
@@ -711,8 +735,11 @@ class _DeepDiveLocked extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.lock_outline,
-                        size: 15, color: WrColors.amber),
+                    const Icon(
+                      Icons.lock_outline,
+                      size: 15,
+                      color: WrColors.amber,
+                    ),
                     const SizedBox(width: 6),
                     Text(
                       'Premium',
@@ -752,8 +779,10 @@ class _DeepDiveLocked extends StatelessWidget {
                     ),
                     child: const Text(
                       'Mở diễn giải sâu',
-                      style:
-                          TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
@@ -834,7 +863,10 @@ class _PillarScoreCard extends StatelessWidget {
               ),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 3,
+                ),
                 decoration: BoxDecoration(
                   color: _badgeBg,
                   borderRadius: BorderRadius.circular(100),
@@ -863,10 +895,7 @@ class _PillarScoreCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             '${(score * 20).round()}%',
-            style: const TextStyle(
-              fontSize: 11,
-              color: Color(0xFFA3A3A3),
-            ),
+            style: const TextStyle(fontSize: 11, color: Color(0xFFA3A3A3)),
           ),
         ],
       ),

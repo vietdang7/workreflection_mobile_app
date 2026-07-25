@@ -3,12 +3,12 @@
 //   Tải lên : Free (giới hạn số lượng — WrEntitlement.maxContextDocuments)
 //   Phân tích sâu : Paid
 //
-// Ảnh chụp/scan được đưa lên Supabase Storage bucket `context-docs`, đường dẫn
-// lưu vào wr_context_documents.file_path.
+// PDF, DOC, DOCX hoặc ảnh được đưa lên Supabase Storage bucket `context-docs`,
+// đường dẫn lưu vào wr_context_documents.file_path.
 
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../../../core/data/wr_intelligence_repository.dart';
 import '../../../core/data/wr_repository.dart';
@@ -25,14 +25,57 @@ const _kDocTypes = <(String, String)>[
   ('other', 'Tài liệu khác'),
 ];
 
-String docTypeLabel(String? type) =>
-    _kDocTypes.firstWhere((e) => e.$1 == type, orElse: () => _kDocTypes.last).$2;
+String docTypeLabel(String? type) => _kDocTypes
+    .firstWhere((e) => e.$1 == type, orElse: () => _kDocTypes.last)
+    .$2;
+
+const _kMaxContextDocumentBytes = 10 * 1024 * 1024;
+const _kContextDocumentExtensions = [
+  'pdf',
+  'doc',
+  'docx',
+  'png',
+  'jpg',
+  'jpeg',
+];
+
+class WrPickedDocument {
+  const WrPickedDocument({required this.name, required this.bytes});
+
+  final String name;
+  final List<int> bytes;
+}
+
+abstract class WrDocumentPicker {
+  Future<WrPickedDocument?> pick();
+}
+
+class PlatformWrDocumentPicker implements WrDocumentPicker {
+  const PlatformWrDocumentPicker();
+
+  @override
+  Future<WrPickedDocument?> pick() async {
+    final result = await FilePicker.pickFiles(
+      type: FileType.custom,
+      allowedExtensions: _kContextDocumentExtensions,
+      allowMultiple: false,
+      withData: true,
+    );
+    if (result == null || result.files.isEmpty) return null;
+    final file = result.files.single;
+    final bytes = file.bytes;
+    if (bytes == null) {
+      throw const FormatException('Không đọc được nội dung tệp đã chọn.');
+    }
+    return WrPickedDocument(name: file.name, bytes: bytes);
+  }
+}
 
 class WrContextDocScreen extends ConsumerStatefulWidget {
   const WrContextDocScreen({super.key, this.picker});
 
   /// Cho phép test bơm picker giả.
-  final ImagePicker? picker;
+  final WrDocumentPicker? picker;
 
   @override
   ConsumerState<WrContextDocScreen> createState() => _WrContextDocScreenState();
@@ -49,29 +92,40 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
       _errorMsg = null;
     });
     try {
-      final picker = widget.picker ?? ImagePicker();
-      final picked = await picker.pickImage(source: ImageSource.gallery);
+      final picker = widget.picker ?? const PlatformWrDocumentPicker();
+      final picked = await picker.pick();
       if (picked == null) {
         if (mounted) setState(() => _busy = false);
         return;
       }
-      final bytes = await picked.readAsBytes();
-      final ext = picked.name.split('.').last.toLowerCase();
+      final dot = picked.name.lastIndexOf('.');
+      if (dot <= 0 || dot == picked.name.length - 1) {
+        throw const FormatException(
+          'Tệp chưa có định dạng PDF, DOC, DOCX, PNG hoặc JPG.',
+        );
+      }
+      final ext = picked.name.substring(dot + 1).toLowerCase();
+      if (!_kContextDocumentExtensions.contains(ext)) {
+        throw const FormatException('Chỉ hỗ trợ PDF, DOC, DOCX, PNG và JPG.');
+      }
+      if (picked.bytes.length > _kMaxContextDocumentBytes) {
+        throw const FormatException('Tệp cần nhỏ hơn hoặc bằng 10 MB.');
+      }
       final userId = ref.read(currentUserIdProvider);
       if (userId == null) throw StateError('chưa đăng nhập');
 
       final path = await ref
           .read(wrRepositoryProvider)
-          .uploadContextDocument(bytes, ext, docType);
+          .uploadContextDocument(picked.bytes, ext, docType);
 
-      await ref.read(wrIntelligenceRepositoryProvider).insertContextDocument(
-            WrContextDocument(
-              userId: userId,
-              docType: docType,
-              filePath: path,
-            ),
+      await ref
+          .read(wrIntelligenceRepositoryProvider)
+          .insertContextDocument(
+            WrContextDocument(userId: userId, docType: docType, filePath: path),
           );
       ref.invalidate(wrContextDocumentsProvider);
+    } on FormatException catch (error) {
+      if (mounted) setState(() => _errorMsg = error.message);
     } catch (_) {
       if (mounted) {
         setState(() => _errorMsg = 'Chưa tải lên được. Bạn thử lại giúp nhé.');
@@ -102,7 +156,8 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final entitlement = ref.watch(wrEntitlementProvider).valueOrNull ??
+    final entitlement =
+        ref.watch(wrEntitlementProvider).valueOrNull ??
         WrEntitlement(plan: WrPlan.free);
     final docs = ref.watch(wrContextDocumentsProvider).valueOrNull ?? const [];
     final canUpload = entitlement.canUploadContextDocument(docs.length);
@@ -125,7 +180,8 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
           children: [
             const Text(
               'Thêm JD hoặc CV để WorkReflection hiểu đúng bối cảnh công việc '
-              'của bạn khi gợi ý câu chuyện và thực hành.',
+              'của bạn khi gợi ý câu chuyện và thực hành. Hỗ trợ PDF, DOC, '
+              'DOCX, PNG, JPG (tối đa 10 MB).',
               style: TextStyle(
                 fontSize: 13,
                 height: 1.65,
@@ -263,8 +319,11 @@ class _DocRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.description_outlined,
-              size: 18, color: WrColors.muted),
+          const Icon(
+            Icons.description_outlined,
+            size: 18,
+            color: WrColors.muted,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -281,10 +340,7 @@ class _DocRow extends StatelessWidget {
                 if (at != null)
                   Text(
                     '${at.day}/${at.month}/${at.year}',
-                    style: const TextStyle(
-                      fontSize: 11,
-                      color: WrColors.muted,
-                    ),
+                    style: const TextStyle(fontSize: 11, color: WrColors.muted),
                   ),
               ],
             ),

@@ -51,14 +51,17 @@ class _WrStoryFlowScreenState extends ConsumerState<WrStoryFlowScreen> {
 
   Future<void> _loadStories() async {
     final contentRepo = ref.read(wrContentRepositoryProvider);
-    final allStories = await contentRepo.fetchStories(dimension: widget.initialDimension);
+    final allStories = await contentRepo.fetchStories(
+      dimension: widget.initialDimension,
+    );
     final events = await contentRepo.fetchMemoryEvents(limit: 200);
     final seenIds = events.map((e) => e.storyId).whereType<String>().toSet();
 
     // Xếp theo Career Snapshot: ba chiều của vai trò trước, phần còn lại theo
     // thứ tự đợt triển khai (DataSpec v3 Tầng 4). Chưa có hồ sơ → thứ tự đợt.
     final snapshot =
-        ref.read(wrCareerSnapshotProvider).valueOrNull ?? const CareerSnapshot();
+        ref.read(wrCareerSnapshotProvider).valueOrNull ??
+        const CareerSnapshot();
     final sorted = rankStoriesForProfile(allStories, snapshot);
 
     // Remove seen, but keep fallback
@@ -100,46 +103,65 @@ class _WrStoryFlowScreenState extends ConsumerState<WrStoryFlowScreen> {
       final story = _story!;
 
       // (a) insert CareerMemoryEvent
-      await contentRepo.insertMemoryEvent(CareerMemoryEvent(
-        id: '',
-        userId: userId,
-        storyId: story.storyId,
-        scaDimension: story.scaDimension,
-        humanNeed: story.humanNeed,
-        intensity: _intensity,
-        reflectionText: _reflectionText.isNotEmpty ? _reflectionText : null,
-        behavior: memType,
-      ));
+      await contentRepo.insertMemoryEvent(
+        CareerMemoryEvent(
+          id: '',
+          userId: userId,
+          storyId: story.storyId,
+          scaDimension: story.scaDimension,
+          humanNeed: story.humanNeed,
+          intensity: _intensity,
+          reflectionText: _reflectionText.isNotEmpty ? _reflectionText : null,
+          behavior: memType,
+        ),
+      );
 
       // (b) insert WrInsight
       if (story.ahaMessage != null) {
-        await intelRepo.insertInsight(WrInsight(
-          userId: userId,
-          source: 'story',
-          scaDimension: story.scaDimension,
-          humanNeed: story.humanNeed,
-          content: story.ahaMessage!,
-        ));
+        await intelRepo.insertInsight(
+          WrInsight(
+            userId: userId,
+            source: 'story',
+            scaDimension: story.scaDimension,
+            humanNeed: story.humanNeed,
+            content: story.ahaMessage!,
+          ),
+        );
       }
 
-      // (c) insert ReflectionSteps: insight + action
-      await intelRepo.insertReflectionStep(ReflectionStep(
-        userId: userId,
-        step: ReflectionStepType.insight,
-        content: story.ahaMessage,
-      ));
-      if (_practiceAdded && story.practiceAction != null) {
-        await intelRepo.insertReflectionStep(ReflectionStep(
+      // (c) Khép kín đúng chu trình 5 bước:
+      // Notice → Meaning → Insight → Choice → Action.
+      final reflectionSteps = [
+        ReflectionStep(
+          userId: userId,
+          step: ReflectionStepType.notice,
+          content: story.situation ?? story.title,
+        ),
+        ReflectionStep(
+          userId: userId,
+          step: ReflectionStepType.meaning,
+          content: _reflectionText.isNotEmpty ? _reflectionText : null,
+        ),
+        ReflectionStep(
+          userId: userId,
+          step: ReflectionStepType.insight,
+          content: story.ahaMessage,
+        ),
+        ReflectionStep(
+          userId: userId,
+          step: ReflectionStepType.choice,
+          content: _practiceAdded
+              ? 'Chọn thử một thực hành nhỏ · $memType'
+              : memType,
+        ),
+        ReflectionStep(
           userId: userId,
           step: ReflectionStepType.action,
-          content: story.practiceAction,
-        ));
-      } else {
-        await intelRepo.insertReflectionStep(ReflectionStep(
-          userId: userId,
-          step: ReflectionStepType.action,
-          content: null,
-        ));
+          content: _practiceAdded ? story.practiceAction : null,
+        ),
+      ];
+      for (final step in reflectionSteps) {
+        await intelRepo.insertReflectionStep(step);
       }
 
       await Future.delayed(const Duration(milliseconds: 800));
@@ -165,10 +187,16 @@ class _WrStoryFlowScreenState extends ConsumerState<WrStoryFlowScreen> {
     if (_story == null) {
       return Scaffold(
         body: Center(
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Text('Không có câu chuyện nào.'),
-            TextButton(onPressed: () => context.go('/home'), child: const Text('Về trang chủ')),
-          ]),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Không có câu chuyện nào.'),
+              TextButton(
+                onPressed: () => context.go('/home'),
+                child: const Text('Về trang chủ'),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -185,12 +213,14 @@ class _WrStoryFlowScreenState extends ConsumerState<WrStoryFlowScreen> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back_ios_new, size: 18),
-                    onPressed: _phase == _StoryPhase.story ? null : () {
-                      setState(() {
-                        final idx = _StoryPhase.values.indexOf(_phase);
-                        if (idx > 0) _phase = _StoryPhase.values[idx - 1];
-                      });
-                    },
+                    onPressed: _phase == _StoryPhase.story
+                        ? null
+                        : () {
+                            setState(() {
+                              final idx = _StoryPhase.values.indexOf(_phase);
+                              if (idx > 0) _phase = _StoryPhase.values[idx - 1];
+                            });
+                          },
                   ),
                   Expanded(
                     child: Column(
@@ -202,8 +232,14 @@ class _WrStoryFlowScreenState extends ConsumerState<WrStoryFlowScreen> {
                           minHeight: 3,
                         ),
                         const SizedBox(height: 4),
-                        Text(_phaseLabel,
-                            style: const TextStyle(fontSize: 10, color: Color(0xFFA3A3A3), fontWeight: FontWeight.w500)),
+                        Text(
+                          _phaseLabel,
+                          style: const TextStyle(
+                            fontSize: 10,
+                            color: Color(0xFFA3A3A3),
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -225,37 +261,40 @@ class _WrStoryFlowScreenState extends ConsumerState<WrStoryFlowScreen> {
     final story = _story!;
     return switch (_phase) {
       _StoryPhase.story => _PhaseStory(
-          story: story,
-          onResonates: () => setState(() => _phase = _StoryPhase.aha),
-          onNotResonates: _nextStory,
-        ),
+        story: story,
+        onResonates: () => setState(() => _phase = _StoryPhase.aha),
+        onNotResonates: _nextStory,
+      ),
       _StoryPhase.aha => _PhaseAha(
-          story: story,
-          onContinue: () => setState(() => _phase = _StoryPhase.confidence),
-        ),
+        story: story,
+        onContinue: () => setState(() => _phase = _StoryPhase.confidence),
+      ),
       _StoryPhase.confidence => _PhaseConfidence(
-          onSelect: (intensity) => setState(() {
-            _intensity = intensity;
-            _phase = _StoryPhase.reflection;
-          }),
-        ),
+        onSelect: (intensity) => setState(() {
+          _intensity = intensity;
+          _phase = _StoryPhase.reflection;
+        }),
+      ),
       _StoryPhase.reflection => _PhaseReflection(
-          story: story,
-          onSave: (text) => setState(() {
-            _reflectionText = text;
-            _phase = _StoryPhase.practice;
-          }),
-          onSkip: () => setState(() => _phase = _StoryPhase.practice),
-        ),
+        story: story,
+        onSave: (text) => setState(() {
+          _reflectionText = text;
+          _phase = _StoryPhase.practice;
+        }),
+        onSkip: () => setState(() => _phase = _StoryPhase.practice),
+      ),
       _StoryPhase.practice => _PhasePractice(
-          story: story,
-          onAdd: () => setState(() {
-            _practiceAdded = true;
-            _phase = _StoryPhase.memory;
-          }),
-          onSkip: () => setState(() => _phase = _StoryPhase.memory),
-        ),
-      _StoryPhase.memory => _PhaseMemory(saving: _saving, onSelect: _saveMemory),
+        story: story,
+        onAdd: () => setState(() {
+          _practiceAdded = true;
+          _phase = _StoryPhase.memory;
+        }),
+        onSkip: () => setState(() => _phase = _StoryPhase.memory),
+      ),
+      _StoryPhase.memory => _PhaseMemory(
+        saving: _saving,
+        onSelect: _saveMemory,
+      ),
     };
   }
 }
@@ -265,7 +304,11 @@ class _WrStoryFlowScreenState extends ConsumerState<WrStoryFlowScreen> {
 // ---------------------------------------------------------------------------
 
 class _PhaseStory extends StatelessWidget {
-  const _PhaseStory({required this.story, required this.onResonates, required this.onNotResonates});
+  const _PhaseStory({
+    required this.story,
+    required this.onResonates,
+    required this.onNotResonates,
+  });
   final WrStory story;
   final VoidCallback onResonates;
   final VoidCallback onNotResonates;
@@ -277,22 +320,36 @@ class _PhaseStory extends StatelessWidget {
       children: [
         Text(
           '"${story.storyContent}"',
-          style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic, color: WrColors.dark, height: 1.7),
+          style: const TextStyle(
+            fontSize: 16,
+            fontStyle: FontStyle.italic,
+            color: WrColors.dark,
+            height: 1.7,
+          ),
         ),
         const SizedBox(height: 32),
         ElevatedButton(
           onPressed: onResonates,
           style: ElevatedButton.styleFrom(
-            backgroundColor: WrColors.navy, foregroundColor: WrColors.white,
+            backgroundColor: WrColors.navy,
+            foregroundColor: WrColors.white,
             minimumSize: const Size.fromHeight(48),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
-          child: const Text('Tôi cũng từng như vậy', style: TextStyle(fontWeight: FontWeight.w600)),
+          child: const Text(
+            'Tôi cũng từng như vậy',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
         ),
         const SizedBox(height: 12),
         TextButton(
           onPressed: onNotResonates,
-          child: const Text('Câu chuyện này không quen với tôi', style: TextStyle(color: Color(0xFF737373))),
+          child: const Text(
+            'Câu chuyện này không quen với tôi',
+            style: TextStyle(color: Color(0xFF737373)),
+          ),
         ),
       ],
     );
@@ -310,8 +367,15 @@ class _PhaseAha extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
       children: [
         if (story.ahaMessage != null)
-          Text(story.ahaMessage!,
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: WrColors.dark, height: 1.5)),
+          Text(
+            story.ahaMessage!,
+            style: const TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: WrColors.dark,
+              height: 1.5,
+            ),
+          ),
         if (story.selfReflection != null) ...[
           const SizedBox(height: 20),
           Container(
@@ -321,19 +385,31 @@ class _PhaseAha extends StatelessWidget {
               color: const Color(0xFFFFF8F0),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Text(story.selfReflection!,
-                style: const TextStyle(fontSize: 14, color: Color(0xFF4B5563), height: 1.6)),
+            child: Text(
+              story.selfReflection!,
+              style: const TextStyle(
+                fontSize: 14,
+                color: Color(0xFF4B5563),
+                height: 1.6,
+              ),
+            ),
           ),
         ],
         const SizedBox(height: 32),
         ElevatedButton(
           onPressed: onContinue,
           style: ElevatedButton.styleFrom(
-            backgroundColor: WrColors.navy, foregroundColor: WrColors.white,
+            backgroundColor: WrColors.navy,
+            foregroundColor: WrColors.white,
             minimumSize: const Size.fromHeight(48),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
-          child: const Text('Tiếp tục', style: TextStyle(fontWeight: FontWeight.w600)),
+          child: const Text(
+            'Tiếp tục',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
         ),
       ],
     );
@@ -349,8 +425,15 @@ class _PhaseConfidence extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
       children: [
-        const Text('Điều này có liên quan đến bạn không?',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: WrColors.dark, height: 1.4)),
+        const Text(
+          'Điều này có liên quan đến bạn không?',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: WrColors.dark,
+            height: 1.4,
+          ),
+        ),
         const SizedBox(height: 24),
         _ConfidenceOption(label: 'Rất liên quan', onTap: () => onSelect(3)),
         const SizedBox(height: 10),
@@ -378,14 +461,25 @@ class _ConfidenceOption extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: const Color(0x1A2C335D)),
         ),
-        child: Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: WrColors.dark)),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w500,
+            color: WrColors.dark,
+          ),
+        ),
       ),
     );
   }
 }
 
 class _PhaseReflection extends StatefulWidget {
-  const _PhaseReflection({required this.story, required this.onSave, required this.onSkip});
+  const _PhaseReflection({
+    required this.story,
+    required this.onSave,
+    required this.onSkip,
+  });
   final WrStory story;
   final ValueChanged<String> onSave;
   final VoidCallback onSkip;
@@ -398,44 +492,76 @@ class _PhaseReflectionState extends State<_PhaseReflection> {
   final _ctrl = TextEditingController();
 
   @override
-  void dispose() { _ctrl.dispose(); super.dispose(); }
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final question = widget.story.reflectionQuestion ?? 'Điều này gợi lên điều gì với bạn?';
+    final question =
+        widget.story.reflectionQuestion ?? 'Điều này gợi lên điều gì với bạn?';
     return ListView(
       padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
       children: [
-        Text(question, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: WrColors.dark, height: 1.4)),
+        Text(
+          question,
+          style: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            color: WrColors.dark,
+            height: 1.4,
+          ),
+        ),
         const SizedBox(height: 16),
         TextField(
           controller: _ctrl,
           maxLines: 5,
           decoration: InputDecoration(
             hintText: 'Viết suy nghĩ của bạn...',
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0x1A2C335D))),
-            filled: true, fillColor: WrColors.white,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Color(0x1A2C335D)),
+            ),
+            filled: true,
+            fillColor: WrColors.white,
           ),
         ),
         const SizedBox(height: 16),
         ElevatedButton(
           onPressed: () => widget.onSave(_ctrl.text),
           style: ElevatedButton.styleFrom(
-            backgroundColor: WrColors.navy, foregroundColor: WrColors.white,
+            backgroundColor: WrColors.navy,
+            foregroundColor: WrColors.white,
             minimumSize: const Size.fromHeight(48),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
-          child: const Text('Lưu và tiếp tục', style: TextStyle(fontWeight: FontWeight.w600)),
+          child: const Text(
+            'Lưu và tiếp tục',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
         ),
         const SizedBox(height: 10),
-        TextButton(onPressed: widget.onSkip, child: const Text('Bỏ qua', style: TextStyle(color: Color(0xFF737373)))),
+        TextButton(
+          onPressed: widget.onSkip,
+          child: const Text(
+            'Bỏ qua',
+            style: TextStyle(color: Color(0xFF737373)),
+          ),
+        ),
       ],
     );
   }
 }
 
 class _PhasePractice extends StatelessWidget {
-  const _PhasePractice({required this.story, required this.onAdd, required this.onSkip});
+  const _PhasePractice({
+    required this.story,
+    required this.onAdd,
+    required this.onSkip,
+  });
   final WrStory story;
   final VoidCallback onAdd;
   final VoidCallback onSkip;
@@ -449,24 +575,43 @@ class _PhasePractice extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: WrColors.white, borderRadius: BorderRadius.circular(12),
+              color: WrColors.white,
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(color: const Color(0x1A2C335D)),
             ),
-            child: Text(story.practiceAction!,
-                style: const TextStyle(fontSize: 15, color: WrColors.dark, height: 1.5)),
+            child: Text(
+              story.practiceAction!,
+              style: const TextStyle(
+                fontSize: 15,
+                color: WrColors.dark,
+                height: 1.5,
+              ),
+            ),
           ),
         const SizedBox(height: 24),
         ElevatedButton(
           onPressed: onAdd,
           style: ElevatedButton.styleFrom(
-            backgroundColor: WrColors.navy, foregroundColor: WrColors.white,
+            backgroundColor: WrColors.navy,
+            foregroundColor: WrColors.white,
             minimumSize: const Size.fromHeight(48),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
-          child: const Text('Thêm vào lịch thực hành', style: TextStyle(fontWeight: FontWeight.w600)),
+          child: const Text(
+            'Thêm vào lịch thực hành',
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
         ),
         const SizedBox(height: 10),
-        TextButton(onPressed: onSkip, child: const Text('Lần này bỏ qua', style: TextStyle(color: Color(0xFF737373)))),
+        TextButton(
+          onPressed: onSkip,
+          child: const Text(
+            'Lần này bỏ qua',
+            style: TextStyle(color: Color(0xFF737373)),
+          ),
+        ),
       ],
     );
   }
@@ -490,16 +635,31 @@ class _PhaseMemory extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
       children: [
-        const Text('Trải nghiệm này thuộc loại nào?',
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: WrColors.dark, height: 1.4)),
+        const Text(
+          'Trải nghiệm này thuộc loại nào?',
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: WrColors.dark,
+            height: 1.4,
+          ),
+        ),
         const SizedBox(height: 20),
         GridView.count(
-          crossAxisCount: 2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 10, mainAxisSpacing: 10, childAspectRatio: 2.5,
-          children: _options.map((opt) => _MemoryTypeBtn(
-            label: opt.$2,
-            onTap: () => onSelect(opt.$1),
-          )).toList(),
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          childAspectRatio: 2.5,
+          children: _options
+              .map(
+                (opt) => _MemoryTypeBtn(
+                  label: opt.$2,
+                  onTap: () => onSelect(opt.$1),
+                ),
+              )
+              .toList(),
         ),
       ],
     );
@@ -518,11 +678,19 @@ class _MemoryTypeBtn extends StatelessWidget {
       child: Container(
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: WrColors.white, borderRadius: BorderRadius.circular(10),
+          color: WrColors.white,
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: const Color(0x1A2C335D)),
         ),
-        child: Text(label, textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: WrColors.dark)),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: WrColors.dark,
+          ),
+        ),
       ),
     );
   }

@@ -2,41 +2,38 @@ import 'package:flutter/material.dart';
 import '../../../core/theme/wr_colors.dart';
 
 /// Trigger cho các headline khác nhau của Paywall.
-enum PaywallTrigger {
-  defaultTrigger,
-  aiInsight,
-  report,
-  trialEnd,
-  benchmark,
-}
+enum PaywallTrigger { defaultTrigger, aiInsight, report, trialEnd, benchmark }
 
 class WrPaywallScreen extends StatelessWidget {
-  const WrPaywallScreen({super.key, this.trigger = PaywallTrigger.defaultTrigger});
+  const WrPaywallScreen({
+    super.key,
+    this.trigger = PaywallTrigger.defaultTrigger,
+  });
 
   final PaywallTrigger trigger;
 
   ({String title, String sub}) get _headline => switch (trigger) {
-        PaywallTrigger.aiInsight => (
-            title: 'AI Insight dành riêng cho bạn',
-            sub: 'Nhận insight cá nhân hoá từ Career Memory của bạn.',
-          ),
-        PaywallTrigger.report => (
-            title: 'Báo cáo chuyên sâu đang chờ bạn',
-            sub: 'Xem đầy đủ bức tranh nghề nghiệp của bạn.',
-          ),
-        PaywallTrigger.trialEnd => (
-            title: 'Tháng trải nghiệm của bạn kết thúc',
-            sub: 'Tiếp tục hành trình với Premium.',
-          ),
-        PaywallTrigger.benchmark => (
-            title: 'So sánh với người đi làm cùng ngành',
-            sub: 'Career Benchmark sẽ sớm ra mắt với Premium.',
-          ),
-        PaywallTrigger.defaultTrigger => (
-            title: 'Mở khoá toàn bộ hành trình',
-            sub: 'Tiếp tục phát triển không giới hạn.',
-          ),
-      };
+    PaywallTrigger.aiInsight => (
+      title: 'AI Insight dành riêng cho bạn',
+      sub: 'Nhận insight cá nhân hoá từ Career Memory của bạn.',
+    ),
+    PaywallTrigger.report => (
+      title: 'Báo cáo chuyên sâu đang chờ bạn',
+      sub: 'Xem đầy đủ bức tranh nghề nghiệp của bạn.',
+    ),
+    PaywallTrigger.trialEnd => (
+      title: 'Tháng trải nghiệm của bạn kết thúc',
+      sub: 'Tiếp tục hành trình với Premium.',
+    ),
+    PaywallTrigger.benchmark => (
+      title: 'So sánh với người đi làm cùng ngành',
+      sub: 'Career Benchmark sẽ sớm ra mắt với Premium.',
+    ),
+    PaywallTrigger.defaultTrigger => (
+      title: 'Mở khoá toàn bộ hành trình',
+      sub: 'Tiếp tục phát triển không giới hạn.',
+    ),
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -46,22 +43,27 @@ class WrPaywallScreen extends StatelessWidget {
       _Highlight(
         icon: '◈',
         title: 'AI Insight cá nhân hoá',
-        desc: 'Phát hiện mô thức từ Career Memory của bạn. Ngày càng chính xác hơn.',
+        desc:
+            'Phát hiện mô thức từ Career Memory của bạn. Ngày càng chính xác hơn.',
       ),
       _Highlight(
         icon: '📊',
-        title: 'Báo cáo chuyên sâu',
-        desc: '49 câu phân tích đầy đủ 3 chiều Sự rõ ràng · Mối quan hệ · Cách làm việc.',
+        title: 'Diễn giải Self-Check sâu',
+        desc:
+            'Nhìn xu hướng, điểm mất cân bằng và đối chiếu với Career Pattern '
+            'từ đúng 15 câu phản chiếu.',
       ),
       _Highlight(
         icon: '📈',
         title: 'Career Pattern',
-        desc: 'Nhìn thấy các mô thức lặp lại trong hành trình nghề nghiệp theo thời gian.',
+        desc:
+            'Nhìn thấy các mô thức lặp lại trong hành trình nghề nghiệp theo thời gian.',
       ),
       _Highlight(
         icon: '◎',
         title: 'Không giới hạn',
-        desc: 'Story không giới hạn, Thực hành không giới hạn, Career Memory đầy đủ.',
+        desc:
+            'Story không giới hạn, Thực hành không giới hạn, Career Memory đầy đủ.',
       ),
     ];
 
@@ -72,7 +74,7 @@ class WrPaywallScreen extends StatelessWidget {
       _FeatureRow(label: '15 câu phản chiếu', avail: true),
       _FeatureRow(label: '3 chủ đề Thực hành', avail: true),
       _FeatureRow(label: 'AI Insight', avail: false),
-      _FeatureRow(label: 'Báo cáo chuyên sâu 49 câu', avail: false),
+      _FeatureRow(label: 'Xu hướng Self-Check & mất cân bằng', avail: false),
       _FeatureRow(label: 'Career Pattern Analysis', avail: false),
       _FeatureRow(label: 'Career Benchmark', avail: false),
       _FeatureRow(label: 'Không giới hạn Thực hành', avail: false),
@@ -105,7 +107,10 @@ class WrPaywallScreen extends StatelessWidget {
                               color: WrColors.coral,
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 9,
+                              vertical: 2,
+                            ),
                             child: const Text(
                               'PREMIUM',
                               style: TextStyle(
@@ -118,7 +123,10 @@ class WrPaywallScreen extends StatelessWidget {
                           const SizedBox(width: 8),
                           const Text(
                             '499.000đ / năm',
-                            style: TextStyle(fontSize: 10, color: Color(0x66FFFFFF)),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Color(0x66FFFFFF),
+                            ),
                           ),
                         ],
                       ),
@@ -154,7 +162,11 @@ class WrPaywallScreen extends StatelessWidget {
                       color: const Color(0x1AFFFFFF),
                       borderRadius: BorderRadius.circular(15),
                     ),
-                    child: const Icon(Icons.close, color: Color(0x99FFFFFF), size: 14),
+                    child: const Icon(
+                      Icons.close,
+                      color: Color(0x99FFFFFF),
+                      size: 14,
+                    ),
                   ),
                 ),
               ],
@@ -183,10 +195,12 @@ class WrPaywallScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        ...premiumHighlights.map((item) => Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: _HighlightCard(highlight: item),
-                            )),
+                        ...premiumHighlights.map(
+                          (item) => Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: _HighlightCard(highlight: item),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -213,9 +227,7 @@ class WrPaywallScreen extends StatelessWidget {
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(color: const Color(0x0F000000)),
                           ),
-                          child: const Column(
-                            children: freeFeatures,
-                          ),
+                          child: const Column(children: freeFeatures),
                         ),
                       ],
                     ),
@@ -239,12 +251,17 @@ class WrPaywallScreen extends StatelessWidget {
                           backgroundColor: WrColors.coral,
                           foregroundColor: WrColors.navy,
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
                           elevation: 0,
                         ),
                         child: const Text(
                           'Bắt đầu Premium →',
-                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                          style: TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ),
@@ -276,7 +293,11 @@ class WrPaywallScreen extends StatelessWidget {
                           SizedBox(height: 3),
                           Text(
                             'Nếu không hài lòng trong 7 ngày đầu, chúng tôi hoàn tiền toàn bộ. Không câu hỏi.',
-                            style: TextStyle(fontSize: 10, color: Color(0xFF737373), height: 1.6),
+                            style: TextStyle(
+                              fontSize: 10,
+                              color: Color(0xFF737373),
+                              height: 1.6,
+                            ),
                           ),
                         ],
                       ),
@@ -293,7 +314,11 @@ class WrPaywallScreen extends StatelessWidget {
 }
 
 class _Highlight {
-  const _Highlight({required this.icon, required this.title, required this.desc});
+  const _Highlight({
+    required this.icon,
+    required this.title,
+    required this.desc,
+  });
   final String icon;
   final String title;
   final String desc;
@@ -342,7 +367,11 @@ class _HighlightCard extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   highlight.desc,
-                  style: const TextStyle(fontSize: 11, color: Color(0xFF737373), height: 1.6),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF737373),
+                    height: 1.6,
+                  ),
                 ),
               ],
             ),

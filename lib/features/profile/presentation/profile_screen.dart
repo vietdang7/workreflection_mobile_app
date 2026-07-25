@@ -58,13 +58,32 @@ class _ProfileHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+      padding: const EdgeInsets.fromLTRB(10, 8, 24, 0),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.profileGreeting, style: WrTextStyles.greeting),
+          IconButton(
+            key: const Key('profile_back_button'),
+            tooltip: 'Quay lại',
+            onPressed: () {
+              if (context.canPop()) {
+                context.pop();
+              } else {
+                context.go('/home');
+              }
+            },
+            icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+          ),
           const SizedBox(height: 4),
-          _ProfileTitle(),
+          Padding(
+            padding: const EdgeInsets.only(left: 14),
+            child: Text(l10n.profileGreeting, style: WrTextStyles.greeting),
+          ),
+          const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.only(left: 14),
+            child: _ProfileTitle(),
+          ),
         ],
       ),
     );
@@ -77,7 +96,8 @@ class _ProfileTitle extends ConsumerWidget {
     final ccAsync = ref.watch(ccProfileProvider);
     final profileAsync = ref.watch(mobileProfileProvider);
 
-    final name = ccAsync.valueOrNull?['full_name'] as String? ??
+    final name =
+        ccAsync.valueOrNull?['full_name'] as String? ??
         profileAsync.valueOrNull?.displayName ??
         'bạn';
 
@@ -107,10 +127,12 @@ class _AvatarSection extends ConsumerWidget {
     final ccData = ccAsync.valueOrNull ?? {};
     final profile = profileAsync.valueOrNull;
 
-    final name = ccData['full_name'] as String? ?? profile?.displayName ?? 'bạn';
+    final name =
+        ccData['full_name'] as String? ?? profile?.displayName ?? 'bạn';
     final email = ccData['email'] as String? ?? '';
     final expiresAtRaw = ccData['subscription_expires_at'] as String?;
-    final isPremium = expiresAtRaw != null &&
+    final isPremium =
+        expiresAtRaw != null &&
         DateTime.tryParse(expiresAtRaw)?.isAfter(DateTime.now()) == true;
 
     final avatarUrl = ccData['avatar_url'] as String?;
@@ -159,10 +181,7 @@ class _AvatarSection extends ConsumerWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                email,
-                style: WrTextStyles.body.copyWith(fontSize: 13),
-              ),
+              Text(email, style: WrTextStyles.body.copyWith(fontSize: 13)),
               const SizedBox(height: 6),
               if (isPremium)
                 Text(
@@ -207,11 +226,23 @@ class _StatsRow extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(vertical: 20),
       child: Row(
         children: [
-          Expanded(child: _StatBlock(number: streak, label: l10n.profileStatStreak)),
+          Expanded(
+            child: _StatBlock(number: streak, label: l10n.profileStatStreak),
+          ),
           _StatDivider(),
-          Expanded(child: _StatBlock(number: insights, label: l10n.profileStatInsights)),
+          Expanded(
+            child: _StatBlock(
+              number: insights,
+              label: l10n.profileStatInsights,
+            ),
+          ),
           _StatDivider(),
-          Expanded(child: _StatBlock(number: milestones, label: l10n.profileStatMilestones)),
+          Expanded(
+            child: _StatBlock(
+              number: milestones,
+              label: l10n.profileStatMilestones,
+            ),
+          ),
         ],
       ),
     );
@@ -249,7 +280,11 @@ class _StatBlock extends StatelessWidget {
 class _StatDivider extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Container(width: 1, height: 48, color: WrColors.navy.withValues(alpha: 0.1));
+    return Container(
+      width: 1,
+      height: 48,
+      color: WrColors.navy.withValues(alpha: 0.1),
+    );
   }
 }
 
@@ -327,7 +362,11 @@ class _SettingsSection extends ConsumerWidget {
                   style: WrTextStyles.body.copyWith(fontSize: 13),
                 ),
                 const SizedBox(width: 4),
-                const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
+                const Icon(
+                  Icons.chevron_right,
+                  color: WrColors.muted,
+                  size: 16,
+                ),
               ],
             ),
           ),
@@ -339,7 +378,24 @@ class _SettingsSection extends ConsumerWidget {
           trailing: GestureDetector(
             key: const Key('profile_edit_profile_btn'),
             onTap: () => context.push('/profile/edit'),
-            child: const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
+            child: const Icon(
+              Icons.chevron_right,
+              color: WrColors.muted,
+              size: 16,
+            ),
+          ),
+        ),
+
+        _SettingRow(
+          label: 'Career Snapshot',
+          trailing: GestureDetector(
+            key: const Key('profile_career_snapshot_btn'),
+            onTap: () => context.push('/wr/career-setup'),
+            child: const Icon(
+              Icons.chevron_right,
+              color: WrColors.muted,
+              size: 16,
+            ),
           ),
         ),
 
@@ -349,7 +405,11 @@ class _SettingsSection extends ConsumerWidget {
           trailing: GestureDetector(
             key: const Key('profile_context_docs_btn'),
             onTap: () => context.push('/wr/context-docs'),
-            child: const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
+            child: const Icon(
+              Icons.chevron_right,
+              color: WrColors.muted,
+              size: 16,
+            ),
           ),
         ),
 
@@ -359,7 +419,11 @@ class _SettingsSection extends ConsumerWidget {
           trailing: GestureDetector(
             key: const Key('profile_change_password_btn'),
             onTap: () => _showChangePasswordDialog(context, ref),
-            child: const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
+            child: const Icon(
+              Icons.chevron_right,
+              color: WrColors.muted,
+              size: 16,
+            ),
           ),
         ),
 
@@ -368,7 +432,11 @@ class _SettingsSection extends ConsumerWidget {
           label: l10n.profileSettingExport,
           trailing: GestureDetector(
             onTap: () => _exportData(context, ref),
-            child: const Icon(Icons.download_outlined, color: WrColors.coral, size: 18),
+            child: const Icon(
+              Icons.download_outlined,
+              color: WrColors.coral,
+              size: 18,
+            ),
           ),
         ),
 
@@ -397,9 +465,7 @@ class _SettingsSection extends ConsumerWidget {
         onSubmit: (String newPassword) async {
           Navigator.of(ctx).pop();
           try {
-            await ref
-                .read(authRepositoryProvider)
-                .changePassword(newPassword);
+            await ref.read(authRepositoryProvider).changePassword(newPassword);
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
                 SnackBar(content: Text(l10n.changePasswordSuccess)),
@@ -411,9 +477,9 @@ class _SettingsSection extends ConsumerWidget {
               final text = msg.contains('session') || msg.contains('expired')
                   ? l10n.changePasswordErrorSessionExpired
                   : l10n.changePasswordErrorGeneric;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(text)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(text)));
             }
           }
         },
@@ -484,9 +550,9 @@ class _SettingsSection extends ConsumerWidget {
       // Router redirect handles navigation to /auth
     } catch (e) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không thể đăng xuất.')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Không thể đăng xuất.')));
       }
     }
   }
@@ -532,6 +598,7 @@ class _ChangePasswordDialog extends StatefulWidget {
   });
 
   final AppLocalizations l10n;
+
   /// Called with the validated new password when the user taps submit.
   final void Function(String newPassword) onSubmit;
   final VoidCallback onCancel;
@@ -625,10 +692,7 @@ class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: widget.onCancel,
-          child: Text(l10n.commonCancel),
-        ),
+        TextButton(onPressed: widget.onCancel, child: Text(l10n.commonCancel)),
         TextButton(
           key: const Key('change_password_submit'),
           onPressed: _submit,

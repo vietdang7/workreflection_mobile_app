@@ -5,6 +5,6 @@
 -- `updated_at` sẵn có đóng vai trò last_updated.
 
 alter table public.wr_mobile_profiles
-  add column if not exists current_role      text,
+  add column if not exists "current_role"    text,
   add column if not exists career_goal       text,
   add column if not exists current_challenge text;

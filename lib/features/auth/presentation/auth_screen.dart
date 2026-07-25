@@ -58,7 +58,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       // the seed service is idempotent so double-calls are safe.
       await ref.read(seedServiceProvider).ensureSeeded();
       if (mounted) {
-        context.go(_isLogin ? '/home' : '/profile/setup');
+        context.go(_isLogin ? '/home' : '/wr/career-setup');
       }
     } catch (e) {
       if (mounted) {
@@ -109,15 +109,15 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     try {
       await ref.read(authRepositoryProvider).resetPassword(email);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.authForgotPasswordSuccess)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.authForgotPasswordSuccess)));
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.authForgotPasswordError)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.authForgotPasswordError)));
       }
     }
   }
@@ -173,8 +173,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
-                    validator: (v) =>
-                        (v == null || v.trim().isEmpty) ? l10n.authValidatorName : null,
+                    validator: (v) => (v == null || v.trim().isEmpty)
+                        ? l10n.authValidatorName
+                        : null,
                   ),
                   const SizedBox(height: 16),
                 ],
@@ -190,8 +191,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     ),
                   ),
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return l10n.authValidatorEmail;
-                    if (!v.trim().contains('@')) return l10n.authValidatorEmailFormat;
+                    if (v == null || v.trim().isEmpty) {
+                      return l10n.authValidatorEmail;
+                    }
+                    if (!v.trim().contains('@')) {
+                      return l10n.authValidatorEmailFormat;
+                    }
                     return null;
                   },
                 ),
@@ -208,8 +213,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     ),
                   ),
                   validator: (v) {
-                    if (v == null || v.isEmpty) return l10n.authValidatorPassword;
-                    if (v.length < 6) return l10n.authValidatorPasswordMinLength;
+                    if (v == null || v.isEmpty) {
+                      return l10n.authValidatorPassword;
+                    }
+                    if (v.length < 6) {
+                      return l10n.authValidatorPasswordMinLength;
+                    }
                     return null;
                   },
                 ),
@@ -238,7 +247,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                 if (_errorMessage != null) ...[
                   Text(
                     _errorMessage!,
-                    style: const TextStyle(color: WrColors.destructive, fontSize: 14),
+                    style: const TextStyle(
+                      color: WrColors.destructive,
+                      fontSize: 14,
+                    ),
                   ),
                   const SizedBox(height: 12),
                 ],
@@ -281,10 +293,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     const Expanded(child: Divider()),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text(
-                        l10n.authOrDivider,
-                        style: WrTextStyles.body,
-                      ),
+                      child: Text(l10n.authOrDivider, style: WrTextStyles.body),
                     ),
                     const Expanded(child: Divider()),
                   ],
@@ -350,10 +359,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 // ---------------------------------------------------------------------------
 
 class _ForgotPasswordDialog extends StatefulWidget {
-  const _ForgotPasswordDialog({
-    required this.onSubmit,
-    required this.onCancel,
-  });
+  const _ForgotPasswordDialog({required this.onSubmit, required this.onCancel});
 
   final void Function(String email) onSubmit;
   final VoidCallback onCancel;
@@ -391,9 +397,7 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
           decoration: InputDecoration(
             labelText: l10n.authEmailLabel,
             hintText: l10n.authForgotPasswordDialogHint,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
           validator: (v) {
             if (v == null || v.trim().isEmpty) return l10n.authValidatorEmail;
@@ -405,10 +409,7 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: widget.onCancel,
-          child: Text(l10n.commonCancel),
-        ),
+        TextButton(onPressed: widget.onCancel, child: Text(l10n.commonCancel)),
         TextButton(
           key: const Key('auth_forgot_password_submit'),
           onPressed: _submit,

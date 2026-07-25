@@ -6,6 +6,7 @@ import '../../core/data/wr_intelligence_repository.dart';
 import '../../core/data/wr_repository.dart';
 import '../../core/logic/wr_career_profile.dart';
 import '../../core/logic/wr_entitlement.dart';
+import '../../core/logic/wr_intelligence_fallback.dart';
 import '../../core/models/checkin.dart';
 import '../../core/models/wr_content.dart';
 import '../../core/models/wr_intelligence.dart';
@@ -51,7 +52,9 @@ final wrPatternCountsProvider = FutureProvider<List<PatternCount>>((ref) async {
 });
 
 /// Fetch self-check history for current user, newest first.
-final wrSelfCheckHistoryProvider = FutureProvider<List<ScaSelfCheckResponse>>((ref) async {
+final wrSelfCheckHistoryProvider = FutureProvider<List<ScaSelfCheckResponse>>((
+  ref,
+) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return const [];
   final repo = ref.watch(wrIntelligenceRepositoryProvider);
@@ -74,27 +77,58 @@ final wrSituationsProvider = FutureProvider<List<WrSituation>>((ref) async {
 
 /// Pattern Nâng cao — bản tường thuật diễn biến thay đổi qua thời gian.
 /// Hai Lớp v1.2 §III: Paid.
-final wrPatternNarrativesProvider =
-    FutureProvider<List<PatternNarrative>>((ref) async {
+final wrPatternNarrativesProvider = FutureProvider<List<PatternNarrative>>((
+  ref,
+) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return const [];
   final repo = ref.watch(wrIntelligenceRepositoryProvider);
-  return repo.fetchPatternNarratives(userId);
+  final stored = await repo.fetchPatternNarratives(userId);
+  if (stored.isNotEmpty) return stored;
+  final contentRepo = ref.watch(wrContentRepositoryProvider);
+  final results = await Future.wait([
+    contentRepo.fetchMemoryEventsForUser(userId, limit: 200),
+    contentRepo.fetchSituations(),
+  ]);
+  return buildPatternNarrativeFallback(
+    userId: userId,
+    events: results[0] as List<CareerMemoryEvent>,
+    situations: results[1] as List<WrSituation>,
+  );
 });
 
 /// Growth Journey snapshots (Progress, Direction). Hai Lớp v1.2 §III: Paid.
-final wrGrowthSnapshotsProvider =
-    FutureProvider<List<GrowthJourneySnapshot>>((ref) async {
+final wrGrowthSnapshotsProvider = FutureProvider<List<GrowthJourneySnapshot>>((
+  ref,
+) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return const [];
   final repo = ref.watch(wrIntelligenceRepositoryProvider);
-  return repo.fetchGrowthSnapshots(userId);
+  final stored = await repo.fetchGrowthSnapshots(userId);
+  if (stored.isNotEmpty) return stored;
+  final enrollments = await repo.fetchEnrollments(userId);
+  if (enrollments.isEmpty) return const [];
+  final themes = await repo.fetchPracticeThemes();
+  final themeIds = enrollments.map((e) => e.themeId).toSet();
+  final stepLists = await Future.wait(
+    themeIds.map((themeId) => repo.fetchPracticeSteps(themeId)),
+  );
+  return buildGrowthSnapshotFallback(
+    userId: userId,
+    enrollments: enrollments,
+    themes: themes,
+    stepsByTheme: {
+      for (var index = 0; index < themeIds.length; index++)
+        themeIds.elementAt(index): stepLists[index],
+    },
+  );
 });
 
 /// Context Document (JD, CV). Hai Lớp v1.2 §III: tải lên Free (giới hạn số
 /// lượng), phân tích sâu Paid.
-final wrContextDocumentsProvider =
-    FutureProvider<List<WrContextDocument>>((ref) async {
+final wrContextDocumentsProvider = FutureProvider<List<WrContextDocument>>((
+  ref,
+) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return const [];
   final repo = ref.watch(wrIntelligenceRepositoryProvider);

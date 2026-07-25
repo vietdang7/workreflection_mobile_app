@@ -59,10 +59,32 @@ String? computeRedirect({
   required String location,
 }) {
   const authScreens = {'/splash', '/onboarding', '/auth'};
+  const webOnlyPrefixes = {
+    '/survey',
+    '/workshops',
+    '/my-workshops',
+    '/coaching',
+    '/understand',
+    '/develop',
+    '/journey',
+    '/vouchers',
+    '/invitations',
+    '/insights',
+    '/roadmap',
+  };
+  final path = Uri.tryParse(location)?.path ?? location;
 
   if (hasSession) {
     // Logged-in users must not linger on auth/onboarding screens.
-    if (authScreens.contains(location)) return '/home';
+    if (authScreens.contains(path)) return '/home';
+    // Workshop, coaching and organization assessment live on the web product.
+    // Keep legacy route declarations compilable, but never expose them in the
+    // personal daily-reflection mobile experience.
+    if (webOnlyPrefixes.any(
+      (prefix) => path == prefix || path.startsWith('$prefix/'),
+    )) {
+      return '/home';
+    }
     return null;
   }
 
@@ -117,8 +139,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: '/splash',
     refreshListenable: authNotifier,
     redirect: (context, state) {
-      final hasSession =
-          Supabase.instance.client.auth.currentSession != null;
+      final hasSession = Supabase.instance.client.auth.currentSession != null;
       final seenOnboarding = seenOnboardingAsync.valueOrNull ?? false;
       final location = state.uri.toString();
 
@@ -137,10 +158,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/onboarding',
         builder: (context, state) => const OnboardingScreen(),
       ),
-      GoRoute(
-        path: '/auth',
-        builder: (context, state) => const AuthScreen(),
-      ),
+      GoRoute(path: '/auth', builder: (context, state) => const AuthScreen()),
 
       // Survey flow (fullscreen, outside shell)
       GoRoute(
@@ -247,6 +265,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const ProfileEditScreen(setupMode: true),
       ),
       GoRoute(
+        path: '/profile',
+        builder: (context, state) => const ProfileScreen(),
+      ),
+      GoRoute(
         path: '/vouchers',
         builder: (context, state) => const VouchersScreen(),
       ),
@@ -260,9 +282,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/roadmap',
-        builder: (context, state) => RoadmapScreen(
-          initialReportId: state.uri.queryParameters['report'],
-        ),
+        builder: (context, state) =>
+            RoadmapScreen(initialReportId: state.uri.queryParameters['report']),
       ),
 
       // Legacy tab screens — preserved as fullscreen routes (not in shell anymore)
@@ -278,9 +299,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/journey',
         builder: (context, state) => const JourneyScreen(),
       ),
-      // NOTE: /profile is now a shell branch (Tab 4). Removed standalone route
-      // to avoid GoRouter duplicate-path error.
-
       GoRoute(
         path: '/wr/self-check',
         builder: (context, state) => const WrSelfCheckScreen(),
@@ -331,14 +349,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
 
-      // Shell with 5 indexed branches — final HTML mockup
-      // Tab 0: /home       — Hôm nay
-      // Tab 1: /wr/discover — Hiểu mình (path kept; label/icon changed — low risk)
-      // Tab 2: /wr/growth  — Phát triển
-      // Tab 3: /wr/journey — Hành trình
-      // Tab 4: /profile    — Tôi (moved into shell; /profile/edit stays fullscreen)
-      //
-      // /wr/story is NOT a shell branch anymore — it is a fullscreen route below.
+      // Shell with 5 indexed branches — latest supporting prototype + audio:
+      // Hôm nay / Trải nghiệm / Bức tranh / Thực hành / Hành trình.
+      // Hồ sơ mở từ avatar trên Home, không chiếm một tab hằng ngày.
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             ShellScreen(navigationShell: navigationShell),
@@ -348,6 +361,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               GoRoute(
                 path: '/home',
                 builder: (context, state) => const WrHomeScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/wr/story',
+                builder: (context, state) => const WrStoryScreen(),
               ),
             ],
           ),
@@ -375,21 +396,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/profile',
-                builder: (context, state) => const ProfileScreen(),
-              ),
-            ],
-          ),
         ],
-      ),
-
-      // /wr/story — fullscreen push, uses root navigator implicitly (not nested in shell).
-      GoRoute(
-        path: '/wr/story',
-        builder: (context, state) => const WrStoryScreen(),
       ),
     ],
   );

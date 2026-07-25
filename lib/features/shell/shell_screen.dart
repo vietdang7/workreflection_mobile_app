@@ -5,7 +5,8 @@ import '../../l10n/app_localizations.dart';
 
 // ---------------------------------------------------------------------------
 // Shell — hosts the 5-tab StatefulShellRoute.indexedStack
-// Final HTML mockup: Hôm nay / Hiểu mình / Phát triển / Hành trình / Tôi
+// Latest supporting prototype: Hôm nay / Trải nghiệm / Bức tranh /
+// Thực hành / Hành trình
 // Tab bar: icon-only (no text label), 24px icon, 4px coral dot, 64px height.
 // ---------------------------------------------------------------------------
 
@@ -42,19 +43,18 @@ class _TabDef {
 }
 
 List<_TabDef> _buildTabs(AppLocalizations l10n) => [
-  _TabDef(icon: Icons.home_outlined,     semanticsLabel: l10n.tabToday),
-  _TabDef(icon: Icons.person_outline,    semanticsLabel: l10n.tabUnderstand),
-  _TabDef(icon: Icons.trending_up,       semanticsLabel: l10n.tabDevelop),
-  _TabDef(icon: Icons.subject,           semanticsLabel: l10n.tabJourney),
-  _TabDef(icon: Icons.settings_outlined, semanticsLabel: l10n.tabProfile),
+  _TabDef(icon: Icons.home_outlined, semanticsLabel: l10n.tabToday),
+  const _TabDef(
+    icon: Icons.auto_stories_outlined,
+    semanticsLabel: 'Trải nghiệm',
+  ),
+  _TabDef(icon: Icons.person_outline, semanticsLabel: l10n.tabUnderstand),
+  _TabDef(icon: Icons.trending_up, semanticsLabel: l10n.tabDevelop),
+  _TabDef(icon: Icons.subject, semanticsLabel: l10n.tabJourney),
 ];
 
 class WrTabBar extends StatelessWidget {
-  const WrTabBar({
-    super.key,
-    required this.currentIndex,
-    required this.onTap,
-  });
+  const WrTabBar({super.key, required this.currentIndex, required this.onTap});
 
   final int currentIndex;
   final ValueChanged<int> onTap;

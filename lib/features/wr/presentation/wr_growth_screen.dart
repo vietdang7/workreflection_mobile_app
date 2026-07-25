@@ -24,14 +24,16 @@ import '../wr_providers.dart';
 // Local providers
 // ─────────────────────────────────────────────────────────────────────────────
 
-final _practiceThemesProvider =
-    FutureProvider<List<PracticeTheme>>((ref) async {
+final _practiceThemesProvider = FutureProvider<List<PracticeTheme>>((
+  ref,
+) async {
   final repo = ref.watch(wrIntelligenceRepositoryProvider);
   return repo.fetchPracticeThemes();
 });
 
-final _practiceEnrollmentsProvider =
-    FutureProvider<List<PracticeEnrollment>>((ref) async {
+final _practiceEnrollmentsProvider = FutureProvider<List<PracticeEnrollment>>((
+  ref,
+) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return const [];
   final repo = ref.watch(wrIntelligenceRepositoryProvider);
@@ -40,9 +42,9 @@ final _practiceEnrollmentsProvider =
 
 final _practiceStepsProvider =
     FutureProvider.family<List<PracticeStep>, String>((ref, themeId) async {
-  final repo = ref.watch(wrIntelligenceRepositoryProvider);
-  return repo.fetchPracticeSteps(themeId);
-});
+      final repo = ref.watch(wrIntelligenceRepositoryProvider);
+      return repo.fetchPracticeSteps(themeId);
+    });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WrGrowthScreen — ConsumerStatefulWidget for enroll double-tap guard
@@ -66,11 +68,13 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
     setState(() => _enrollingThemeIds.add(themeId));
     try {
       final repo = ref.read(wrIntelligenceRepositoryProvider);
-      await repo.enrollTheme(PracticeEnrollment(
-        userId: userId,
-        themeId: themeId,
-        completedSteps: const [],
-      ));
+      await repo.enrollTheme(
+        PracticeEnrollment(
+          userId: userId,
+          themeId: themeId,
+          completedSteps: const [],
+        ),
+      );
       ref.invalidate(_practiceEnrollmentsProvider);
     } catch (_) {
       if (mounted) {
@@ -108,7 +112,8 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
           ),
           data: (themes) {
             final enrollments = enrollmentsAsync.valueOrNull ?? const [];
-            final entitlement = entitlementAsync.valueOrNull ??
+            final entitlement =
+                entitlementAsync.valueOrNull ??
                 WrEntitlement(plan: WrPlan.free);
             final patterns = patternsAsync.valueOrNull ?? const [];
             final situations = situationsAsync.valueOrNull ?? const [];
@@ -139,20 +144,23 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
     required ScaSelfCheckResponse? latestSelfCheck,
   }) {
     // Find the first active (non-completed) enrollment
-    final activeEnrollment =
-        enrollments.where((e) => e.completedAt == null).firstOrNull;
+    final activeEnrollment = enrollments
+        .where((e) => e.completedAt == null)
+        .firstOrNull;
     final activeTheme = activeEnrollment != null
         ? themes.where((t) => t.themeId == activeEnrollment.themeId).firstOrNull
         : null;
 
     // Themes chưa enroll (loại bỏ MỌI enrollment, kể cả completed)
     final enrolledThemeIds = enrollments.map((e) => e.themeId).toSet();
-    final unenrolledThemes =
-        themes.where((t) => !enrolledThemeIds.contains(t.themeId)).toList();
+    final unenrolledThemes = themes
+        .where((t) => !enrolledThemeIds.contains(t.themeId))
+        .toList();
 
     // Dominant need tính từ behaviour hoặc self-check
     final behaviourNeed = dominantNeedFromBehaviour(patterns, situations);
-    final dominantNeed = behaviourNeed ??
+    final dominantNeed =
+        behaviourNeed ??
         (latestSelfCheck != null
             ? dominantNeedFromSelfCheck(latestSelfCheck)
             : null);
@@ -213,14 +221,12 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
       );
 
       final allStepIds = allSteps.map((s) => s.stepId).toSet();
-      final hasCompletedAll =
-          allStepIds.every((id) => newCompleted.contains(id));
+      final hasCompletedAll = allStepIds.every(
+        (id) => newCompleted.contains(id),
+      );
 
       if (hasCompletedAll) {
-        await repo.completeTheme(
-          userId: userId,
-          themeId: activeTheme.themeId,
-        );
+        await repo.completeTheme(userId: userId, themeId: activeTheme.themeId);
         await contentRepo.insertMemoryEvent(
           CareerMemoryEvent(
             id: '${DateTime.now().millisecondsSinceEpoch}t',
@@ -292,8 +298,7 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
                     suggestedTheme: suggestedTheme,
                     dominantNeed: dominantNeed,
                     hasPillarReason: hasPillarReason,
-                    canEnroll:
-                        entitlement.canEnrollPracticeTheme(activeCount),
+                    canEnroll: entitlement.canEnrollPracticeTheme(activeCount),
                   ),
           ),
         ),
@@ -351,7 +356,7 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
                   _GrowthJourneySection(
                     snapshots:
                         ref.watch(wrGrowthSnapshotsProvider).valueOrNull ??
-                            const [],
+                        const [],
                   ),
               ],
             ),
@@ -378,10 +383,7 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const WrEyebrow(
-              'TRỌNG TÂM HIỆN TẠI',
-              color: WrColors.muted,
-            ),
+            const WrEyebrow('TRỌNG TÂM HIỆN TẠI', color: WrColors.muted),
             const SizedBox(height: 10),
             const Text(
               'Chưa có chủ đề nào đang thực hành',
@@ -467,10 +469,7 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
               ),
               child: const Text(
                 'Bắt đầu thực hành',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
               ),
             ),
           ),
@@ -519,7 +518,9 @@ class _NextStepCardSliver extends ConsumerWidget {
                 (s) =>
                     !completed.contains(s.stepId) &&
                     !(s.isPremium &&
-                        !entitlement.canAccessPracticeStep(isPremiumStep: true)),
+                        !entitlement.canAccessPracticeStep(
+                          isPremiumStep: true,
+                        )),
               )
               .firstOrNull;
 
@@ -549,10 +550,7 @@ class _NextStepCardSliver extends ConsumerWidget {
                     child: const Center(
                       child: Text(
                         '◎',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: WrColors.coral,
-                        ),
+                        style: TextStyle(fontSize: 16, color: WrColors.coral),
                       ),
                     ),
                   ),
@@ -613,7 +611,8 @@ class _ActiveThemeCardDark extends ConsumerWidget {
     String stepId,
     List<String> currentCompleted,
     List<PracticeStep> allSteps,
-  ) onStepDone;
+  )
+  onStepDone;
   final VoidCallback onPremiumTap;
 
   @override
@@ -636,8 +635,7 @@ class _ActiveThemeCardDark extends ConsumerWidget {
         data: (steps) {
           final totalSteps = steps.length;
           final completedCount = completed.length;
-          final progress =
-              totalSteps > 0 ? completedCount / totalSteps : 0.0;
+          final progress = totalSteps > 0 ? completedCount / totalSteps : 0.0;
 
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -714,7 +712,8 @@ class _PracticesSectionSliver extends ConsumerWidget {
     String stepId,
     List<String> currentCompleted,
     List<PracticeStep> allSteps,
-  ) onStepDone;
+  )
+  onStepDone;
   final VoidCallback onPremiumTap;
 
   @override
@@ -741,10 +740,11 @@ class _PracticesSectionSliver extends ConsumerWidget {
                     final index = entry.key;
                     final step = entry.value;
                     final isDone = completed.contains(step.stepId);
-                    final isPremiumLocked = step.isPremium &&
-                        !entitlement.canAccessPracticeStep(
-                            isPremiumStep: true);
-                    final isNext = !isDone &&
+                    final isPremiumLocked =
+                        step.isPremium &&
+                        !entitlement.canAccessPracticeStep(isPremiumStep: true);
+                    final isNext =
+                        !isDone &&
                         !isPremiumLocked &&
                         completed.length == step.stepOrder - 1;
 
@@ -757,8 +757,7 @@ class _PracticesSectionSliver extends ConsumerWidget {
                       onDone: isNext && !isPremiumLocked
                           ? () => onStepDone(step.stepId, completed, steps)
                           : null,
-                      onPremiumTap:
-                          isPremiumLocked ? onPremiumTap : null,
+                      onPremiumTap: isPremiumLocked ? onPremiumTap : null,
                     );
                   }).toList(),
                 );
@@ -803,8 +802,7 @@ class _OtherPracticesSectionSliver extends StatelessWidget {
             const WrEyebrow('THỰC HÀNH KHÁC'),
             const SizedBox(height: 12),
             ...unenrolledThemes.map((theme) {
-              final canEnroll =
-                  entitlement.canEnrollPracticeTheme(activeCount);
+              final canEnroll = entitlement.canEnrollPracticeTheme(activeCount);
               final isEnrolling = enrollingThemeIds.contains(theme.themeId);
 
               return Padding(
@@ -842,7 +840,9 @@ class _OtherPracticesSectionSliver extends StatelessWidget {
                                   : () => onEnroll(theme.themeId),
                               child: Container(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 14, vertical: 7),
+                                  horizontal: 14,
+                                  vertical: 7,
+                                ),
                                 decoration: BoxDecoration(
                                   color: WrColors.navy,
                                   borderRadius: BorderRadius.circular(8),
@@ -962,20 +962,14 @@ class _PracticeListItem extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Task E: tag trên title
-                    if (tag != null) ...[
-                      tag,
-                      const SizedBox(height: 3),
-                    ],
+                    if (tag != null) ...[tag, const SizedBox(height: 3)],
                     Text(
                       step.title,
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: isDone
-                            ? const Color(0xFF737373)
-                            : WrColors.navy,
-                        decoration:
-                            isDone ? TextDecoration.lineThrough : null,
+                        color: isDone ? const Color(0xFF737373) : WrColors.navy,
+                        decoration: isDone ? TextDecoration.lineThrough : null,
                         decorationColor: const Color(0xFF737373),
                       ),
                     ),
@@ -991,7 +985,9 @@ class _PracticeListItem extends StatelessWidget {
                   onTap: onDone,
                   child: Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 10, vertical: 5),
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
                     decoration: BoxDecoration(
                       color: WrColors.dark,
                       borderRadius: BorderRadius.circular(7),
@@ -1119,8 +1115,6 @@ class _StepTag extends StatelessWidget {
   }
 }
 
-
-
 // ---------------------------------------------------------------------------
 // Growth Journey (Progress · Direction) — Hai Lớp v1.2 §III, Paid
 // ---------------------------------------------------------------------------
@@ -1134,7 +1128,8 @@ class _GrowthJourneySection extends StatelessWidget {
   Widget build(BuildContext context) {
     if (snapshots.isEmpty) {
       return const _GrowthNote(
-        text: 'Chưa có chặng nào được tổng kết. Sau vài tuần thực hành đều, '
+        text:
+            'Chưa có chặng nào được tổng kết. Sau vài tuần thực hành đều, '
             'WorkReflection sẽ dựng lại chặng đường của bạn ở đây.',
       );
     }

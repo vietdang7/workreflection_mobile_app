@@ -126,64 +126,59 @@ void main() {
       );
     });
 
-    // Cases 11-14: authenticated user on workshop/coaching routes → no redirect
-    test('has session + on /workshops → null', () {
+    // Workshop/coaching/organization tools are web-only in the mobile product.
+    test('has session + on /workshops → /home', () {
       expect(
         computeRedirect(
           hasSession: true,
           seenOnboarding: true,
           location: '/workshops',
         ),
-        isNull,
+        '/home',
       );
     });
 
-    test('has session + on /coaching → null', () {
+    test('has session + on /coaching → /home', () {
       expect(
         computeRedirect(
           hasSession: true,
           seenOnboarding: true,
           location: '/coaching',
         ),
-        isNull,
+        '/home',
       );
     });
 
-    test('has session + on /my-workshops → null', () {
+    test('has session + on /my-workshops → /home', () {
       expect(
         computeRedirect(
           hasSession: true,
           seenOnboarding: true,
           location: '/my-workshops',
         ),
-        isNull,
+        '/home',
       );
     });
 
-    test('has session + on /coaching/sessions → null', () {
+    test('has session + on /coaching/sessions → /home', () {
       expect(
         computeRedirect(
           hasSession: true,
           seenOnboarding: true,
           location: '/coaching/sessions',
         ),
-        isNull,
+        '/home',
       );
     });
 
-    // Route-order regression: /workshops/checkin must not be redirected when
-    // authenticated (computeRedirect returns null for any non-auth path when
-    // hasSession is true). The GoRouter declaration order in app_router.dart
-    // ensures '/workshops/checkin' is registered before '/workshops/:id' so the
-    // literal segment 'checkin' is never captured as the :id parameter.
-    test('has session + on /workshops/checkin → null (not captured as :id)', () {
+    test('has session + on /workshops/checkin → /home', () {
       expect(
         computeRedirect(
           hasSession: true,
           seenOnboarding: true,
           location: '/workshops/checkin',
         ),
-        isNull,
+        '/home',
       );
     });
 

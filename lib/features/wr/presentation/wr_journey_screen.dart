@@ -26,8 +26,9 @@ const _kFreeMemoryLimit = 10;
 // Local providers
 // ─────────────────────────────────────────────────────────────────────────────
 
-final _memoryEventsProvider =
-    FutureProvider<List<CareerMemoryEvent>>((ref) async {
+final _memoryEventsProvider = FutureProvider<List<CareerMemoryEvent>>((
+  ref,
+) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return const [];
   final repo = ref.watch(wrContentRepositoryProvider);
@@ -41,19 +42,19 @@ final _memoryEventsProvider =
 
 /// Map emotion string → tiếng Việt (dùng cho cả title fallback và body).
 String _emotionLabel(String? emotion) => switch (emotion) {
-      'low' => 'Mệt mỏi',
-      'ok' => 'Ổn',
-      'good' => 'Vui',
-      _ => emotion ?? '',
-    };
+  'low' => 'Mệt mỏi',
+  'ok' => 'Ổn',
+  'good' => 'Vui',
+  _ => emotion ?? '',
+};
 
 /// Map HumanNeed → label tiếng Việt ngắn (dùng cho chip chủ đề).
 String _humanNeedLabel(HumanNeed need) => switch (need) {
-      HumanNeed.roRang => 'Rõ ràng',
-      HumanNeed.ketNoi => 'Kết nối',
-      HumanNeed.thichNghi => 'Thích nghi',
-      HumanNeed.phatTrien => 'Phát triển',
-    };
+  HumanNeed.roRang => 'Rõ ràng',
+  HumanNeed.ketNoi => 'Kết nối',
+  HumanNeed.thichNghi => 'Thích nghi',
+  HumanNeed.phatTrien => 'Phát triển',
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WrJourneyScreen
@@ -95,8 +96,8 @@ class WrJourneyScreen extends ConsumerWidget {
     // Free users see at most _kFreeMemoryLimit events; premium sees all.
     final events =
         (!entitlement.isPremium && allEvents.length > _kFreeMemoryLimit)
-            ? allEvents.sublist(0, _kFreeMemoryLimit)
-            : allEvents;
+        ? allEvents.sublist(0, _kFreeMemoryLimit)
+        : allEvents;
 
     // Timeline header month: from first event, else current month
     final timelineMonth = events.isNotEmpty && events.first.createdAt != null
@@ -104,18 +105,23 @@ class WrJourneyScreen extends ConsumerWidget {
         : now.month;
 
     // Stats by event type
-    final statExperience =
-        allEvents.where((e) => e.situationCode != null).length;
+    final statExperience = allEvents
+        .where((e) => e.situationCode != null)
+        .length;
     final statReflection = allEvents.where((e) => e.storyId != null).length;
     final statPractice = allEvents
-        .where((e) =>
-            e.behavior == 'practice_step_done' ||
-            e.behavior == 'practice_theme_done')
+        .where(
+          (e) =>
+              e.behavior == 'practice_step_done' ||
+              e.behavior == 'practice_theme_done',
+        )
         .length;
-    final statInsight =
-        allEvents.where((e) => e.behavior == 'insight').length;
+    final statInsight = allEvents.where((e) => e.behavior == 'insight').length;
     final hasStats =
-        statExperience > 0 || statReflection > 0 || statPractice > 0 || statInsight > 0;
+        statExperience > 0 ||
+        statReflection > 0 ||
+        statPractice > 0 ||
+        statInsight > 0;
 
     // Top 3 patterns for "CHỦ ĐỀ LẶP LẠI" section
     final topPatterns = patterns.take(3).toList();
@@ -231,7 +237,8 @@ class WrJourneyScreen extends ConsumerWidget {
                     patterns: topPatterns,
                     sitMap: sitMap,
                     maxCount: maxCount,
-                    onViewDiscover: () => context.go('/wr/discover?from=journey'),
+                    onViewDiscover: () =>
+                        context.go('/wr/discover?from=journey'),
                   ),
                 ),
               ),
@@ -309,8 +316,9 @@ class WrJourneyScreen extends ConsumerWidget {
                   children: [
                     const WrEyebrow('DIỄN BIẾN THEO THỜI GIAN'),
                     const SizedBox(height: 10),
-                    if (!entitlement
-                        .canUseFeature(WrPremiumFeature.patternAdvanced))
+                    if (!entitlement.canUseFeature(
+                      WrPremiumFeature.patternAdvanced,
+                    ))
                       const WrPremiumLock(
                         description:
                             'Bản đầy đủ kể lại những mẫu hình của bạn đã đổi '
@@ -321,7 +329,8 @@ class WrJourneyScreen extends ConsumerWidget {
                       )
                     else if (narratives.isEmpty)
                       const _PlainNote(
-                        text: 'Chưa đủ dữ liệu để kể lại diễn biến. Ghi thêm '
+                        text:
+                            'Chưa đủ dữ liệu để kể lại diễn biến. Ghi thêm '
                             'vài lần nữa, WorkReflection sẽ chỉ ra điều gì '
                             'đang đổi và điều gì vẫn ở nguyên đó.',
                       )
@@ -354,11 +363,12 @@ Color _dotColor(CareerMemoryEvent e) {
     'practice_theme_done' => WrColors.teal,
     'insight' => const Color(0xFF5B8CC9),
     'decision' => WrColors.coral,
-    _ => e.storyId != null
-        ? const Color(0xFF5E7A5A)
-        : e.situationCode != null
-            ? WrColors.navy
-            : WrColors.muted,
+    _ =>
+      e.storyId != null
+          ? const Color(0xFF5E7A5A)
+          : e.situationCode != null
+          ? WrColors.navy
+          : WrColors.muted,
   };
 }
 
@@ -445,10 +455,7 @@ class _StatsRow extends StatelessWidget {
               ),
               Text(
                 items[i].label,
-                style: const TextStyle(
-                  fontSize: 11,
-                  color: WrColors.muted,
-                ),
+                style: const TextStyle(fontSize: 11, color: WrColors.muted),
               ),
             ],
           ),
@@ -536,10 +543,7 @@ class _RecurringThemesSection extends StatelessWidget {
           );
         }),
         const SizedBox(height: 4),
-        WrActionLink(
-          label: 'Xem trong Hiểu mình',
-          onTap: onViewDiscover,
-        ),
+        WrActionLink(label: 'Xem trong Hiểu mình', onTap: onViewDiscover),
         const SizedBox(height: 20),
       ],
     );
@@ -605,8 +609,10 @@ class _TimelineItem extends StatelessWidget {
                   child: Container(
                     width: 11,
                     height: 11,
-                    decoration:
-                        BoxDecoration(color: dot, shape: BoxShape.circle),
+                    decoration: BoxDecoration(
+                      color: dot,
+                      shape: BoxShape.circle,
+                    ),
                   ),
                 ),
                 // Vertical connector (hidden for last item)
@@ -633,10 +639,7 @@ class _TimelineItem extends StatelessWidget {
                 if (dateStr.isNotEmpty)
                   Text(
                     dateStr,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: WrColors.muted,
-                    ),
+                    style: const TextStyle(fontSize: 12, color: WrColors.muted),
                   ),
                 if (dateStr.isNotEmpty) const SizedBox(height: 2),
                 // Title (h-medium): 16px w600 dark
@@ -758,9 +761,21 @@ class _EmptyMemoryCard extends StatelessWidget {
             mainAxisSpacing: 8,
             childAspectRatio: 2.2,
             children: const [
-              _TypeCard(icon: '◎', title: 'Trải nghiệm', desc: 'Điều bạn gặp mỗi ngày'),
-              _TypeCard(icon: '◈', title: 'Phản chiếu', desc: 'Từ câu chuyện bạn đọc'),
-              _TypeCard(icon: '✦', title: 'Thực hành', desc: 'Bước bạn hoàn thành'),
+              _TypeCard(
+                icon: '◎',
+                title: 'Trải nghiệm',
+                desc: 'Điều bạn gặp mỗi ngày',
+              ),
+              _TypeCard(
+                icon: '◈',
+                title: 'Phản chiếu',
+                desc: 'Từ câu chuyện bạn đọc',
+              ),
+              _TypeCard(
+                icon: '✦',
+                title: 'Thực hành',
+                desc: 'Bước bạn hoàn thành',
+              ),
               _TypeCard(icon: '◇', title: 'Insight', desc: 'Góc nhìn thay đổi'),
             ],
           ),
@@ -830,10 +845,7 @@ class _TypeCard extends StatelessWidget {
           ),
           Text(
             desc,
-            style: const TextStyle(
-              fontSize: 10,
-              color: WrColors.muted,
-            ),
+            style: const TextStyle(fontSize: 10, color: WrColors.muted),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -844,10 +856,7 @@ class _TypeCard extends StatelessWidget {
 }
 
 class _LockBanner extends StatelessWidget {
-  const _LockBanner({
-    required this.label,
-    required this.onTap,
-  });
+  const _LockBanner({required this.label, required this.onTap});
   final String label;
   final VoidCallback onTap;
   static const String? icon = null;
@@ -896,7 +905,6 @@ class _LockBanner extends StatelessWidget {
     );
   }
 }
-
 
 // ---------------------------------------------------------------------------
 // Ghi chú dạng văn xuôi — dùng cho Pattern Nâng cao

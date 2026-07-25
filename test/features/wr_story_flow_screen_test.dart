@@ -6,6 +6,7 @@ import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
+import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_story_flow_screen.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 
@@ -22,13 +23,21 @@ WrStory _story({
   String? practice = 'Hôm nay thử làm một việc nhỏ.',
   HumanNeed? need = HumanNeed.roRang,
 }) => WrStory(
-  storyId: storyId, title: 'Story $storyId', scaDimension: dim,
-  storyContent: content, emotionTags: [], behaviorTags: [], careerStages: [],
-  ahaMessage: aha, reflectionQuestion: reflection, practiceAction: practice,
+  storyId: storyId,
+  title: 'Story $storyId',
+  scaDimension: dim,
+  storyContent: content,
+  emotionTags: [],
+  behaviorTags: [],
+  careerStages: [],
+  ahaMessage: aha,
+  reflectionQuestion: reflection,
+  practiceAction: practice,
   humanNeed: need,
 );
 
-Widget _wrap(Widget screen, {
+Widget _wrap(
+  Widget screen, {
   FakeWrContentRepository? content,
   FakeWrIntelligenceRepository? intel,
   FakeWrRepository? wr,
@@ -40,7 +49,10 @@ Widget _wrap(Widget screen, {
     initialLocation: '/wr/story/flow',
     routes: [
       GoRoute(path: '/wr/story/flow', builder: (_, __) => screen),
-      GoRoute(path: '/home', builder: (_, __) => const Scaffold(body: Text('Home'))),
+      GoRoute(
+        path: '/home',
+        builder: (_, __) => const Scaffold(body: Text('Home')),
+      ),
     ],
   );
   return ProviderScope(
@@ -69,17 +81,24 @@ void main() {
       final content = FakeWrContentRepository();
       content.seedStories([_story(content: 'Có một lần tôi gặp khó khăn')]);
       await _pump(tester, _wrap(const WrStoryFlowScreen(), content: content));
-      expect(find.textContaining('Có một lần tôi gặp khó khăn'), findsOneWidget);
+      expect(
+        find.textContaining('Có một lần tôi gặp khó khăn'),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('shows label "Bạn có bao giờ?" for story phase', (tester) async {
+    testWidgets('shows label "Bạn có bao giờ?" for story phase', (
+      tester,
+    ) async {
       final content = FakeWrContentRepository();
       content.seedStories([_story()]);
       await _pump(tester, _wrap(const WrStoryFlowScreen(), content: content));
       expect(find.textContaining('Bạn có bao giờ?'), findsOneWidget);
     });
 
-    testWidgets('tapping "Tôi cũng từng như vậy" moves to aha phase', (tester) async {
+    testWidgets('tapping "Tôi cũng từng như vậy" moves to aha phase', (
+      tester,
+    ) async {
       final content = FakeWrContentRepository();
       content.seedStories([_story(aha: 'Điều WorkReflection nhận ra')]);
       await _pump(tester, _wrap(const WrStoryFlowScreen(), content: content));
@@ -114,7 +133,10 @@ void main() {
   });
 
   group('WrStoryFlowScreen — confidence phase', () {
-    Future<void> toConfidence(WidgetTester tester, FakeWrContentRepository content) async {
+    Future<void> toConfidence(
+      WidgetTester tester,
+      FakeWrContentRepository content,
+    ) async {
       await _pump(tester, _wrap(const WrStoryFlowScreen(), content: content));
       await tester.tap(find.text('Tôi cũng từng như vậy'));
       await tester.pumpAndSettle();
@@ -130,8 +152,11 @@ void main() {
       expect(find.text('Không liên quan'), findsOneWidget);
     });
 
-    testWidgets('selecting confidence moves to reflection phase', (tester) async {
-      final content = FakeWrContentRepository()..seedStories([_story(reflection: 'Gợi lên điều gì?')]);
+    testWidgets('selecting confidence moves to reflection phase', (
+      tester,
+    ) async {
+      final content = FakeWrContentRepository()
+        ..seedStories([_story(reflection: 'Gợi lên điều gì?')]);
       await toConfidence(tester, content);
       await tester.tap(find.text('Rất liên quan'));
       await tester.pumpAndSettle();
@@ -140,14 +165,27 @@ void main() {
   });
 
   group('WrStoryFlowScreen — memory phase', () {
-    Future<void> toMemory(WidgetTester tester, FakeWrContentRepository content, {FakeWrIntelligenceRepository? intel}) async {
-      final w = _wrap(const WrStoryFlowScreen(), content: content, intel: intel);
+    Future<void> toMemory(
+      WidgetTester tester,
+      FakeWrContentRepository content, {
+      FakeWrIntelligenceRepository? intel,
+    }) async {
+      final w = _wrap(
+        const WrStoryFlowScreen(),
+        content: content,
+        intel: intel,
+      );
       await _pump(tester, w);
-      await tester.tap(find.text('Tôi cũng từng như vậy')); await tester.pumpAndSettle();
-      await tester.tap(find.text('Tiếp tục')); await tester.pumpAndSettle();
-      await tester.tap(find.text('Rất liên quan')); await tester.pumpAndSettle();
-      await tester.tap(find.text('Bỏ qua')); await tester.pumpAndSettle(); // reflection skip
-      await tester.tap(find.text('Lần này bỏ qua')); await tester.pumpAndSettle(); // practice skip
+      await tester.tap(find.text('Tôi cũng từng như vậy'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Tiếp tục'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Rất liên quan'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Bỏ qua'));
+      await tester.pumpAndSettle(); // reflection skip
+      await tester.tap(find.text('Lần này bỏ qua'));
+      await tester.pumpAndSettle(); // practice skip
     }
 
     testWidgets('shows 4 memory type buttons', (tester) async {
@@ -159,20 +197,29 @@ void main() {
       expect(find.text('Quyết định đã rõ'), findsOneWidget);
     });
 
-    testWidgets('selecting memory type saves 3 records (memory event + insight + 2 reflection steps)', (tester) async {
-      final content = FakeWrContentRepository()..seedStories([_story()]);
-      final intel = FakeWrIntelligenceRepository();
-      await toMemory(tester, content, intel: intel);
-      await tester.tap(find.text('Nhận ra điều gì đó')); await tester.pumpAndSettle();
-      // memory event
-      expect(content.insertMemoryEventCalls.length, 1);
-      // insight
-      expect(intel.insertInsightCalls.length, 1);
-      // reflection steps: insight + action
-      expect(intel.insertReflectionStepCalls.length, 2);
-    });
+    testWidgets(
+      'selecting memory type saves memory, insight and the complete 5-step reflection cycle',
+      (tester) async {
+        final content = FakeWrContentRepository()..seedStories([_story()]);
+        final intel = FakeWrIntelligenceRepository();
+        await toMemory(tester, content, intel: intel);
+        await tester.tap(find.text('Nhận ra điều gì đó'));
+        await tester.pumpAndSettle();
+        // memory event
+        expect(content.insertMemoryEventCalls.length, 1);
+        // insight
+        expect(intel.insertInsightCalls.length, 1);
+        expect(intel.insertReflectionStepCalls.length, 5);
+        expect(
+          intel.insertReflectionStepCalls.map((step) => step.step),
+          ReflectionStepType.values,
+        );
+      },
+    );
 
-    testWidgets('"Câu chuyện này không quen" goes to next story', (tester) async {
+    testWidgets('"Câu chuyện này không quen" goes to next story', (
+      tester,
+    ) async {
       final content = FakeWrContentRepository();
       content.seedStories([
         _story(storyId: 'st1', dim: ScaDimension.c2, content: 'Story 1'),

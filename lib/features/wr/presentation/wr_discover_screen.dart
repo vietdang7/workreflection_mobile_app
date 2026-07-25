@@ -21,37 +21,36 @@ import '../wr_providers.dart';
 // ─────────────────────────────────────────────────────────────────────────────
 
 /// Score 1.0–5.0 → percent 0–100.
-double _scoreToPercent(double score) =>
-    ((score - 1) / 4).clamp(0.0, 1.0) * 100;
+double _scoreToPercent(double score) => ((score - 1) / 4).clamp(0.0, 1.0) * 100;
 
 /// Quote and caption for each HumanNeed (4 nhu cầu cốt lõi).
 ({String quote, String caption}) _needDisplay(HumanNeed need) => switch (need) {
-      HumanNeed.roRang => (
-          quote: '"Được rõ ràng về vai trò và điều mình cần đạt tới."',
-          caption: 'Rõ ràng · Nhu cầu chủ đạo',
-        ),
-      HumanNeed.ketNoi => (
-          quote: '"Được lắng nghe, tin tưởng và kết nối thật với đồng đội."',
-          caption: 'Kết nối · Nhu cầu chủ đạo',
-        ),
-      HumanNeed.thichNghi => (
-          quote: '"Được một nhịp làm việc ổn định để đi vào chiều sâu."',
-          caption: 'Thích nghi · Nhu cầu chủ đạo',
-        ),
-      HumanNeed.phatTrien => (
-          quote: '"Được làm công việc có ý nghĩa và ngày càng tiến bộ."',
-          caption: 'Phát triển · Nhu cầu chủ đạo',
-        ),
-    };
+  HumanNeed.roRang => (
+    quote: '"Được rõ ràng về vai trò và điều mình cần đạt tới."',
+    caption: 'Rõ ràng · Nhu cầu chủ đạo',
+  ),
+  HumanNeed.ketNoi => (
+    quote: '"Được lắng nghe, tin tưởng và kết nối thật với đồng đội."',
+    caption: 'Kết nối · Nhu cầu chủ đạo',
+  ),
+  HumanNeed.thichNghi => (
+    quote: '"Được một nhịp làm việc ổn định để đi vào chiều sâu."',
+    caption: 'Thích nghi · Nhu cầu chủ đạo',
+  ),
+  HumanNeed.phatTrien => (
+    quote: '"Được làm công việc có ý nghĩa và ngày càng tiến bộ."',
+    caption: 'Phát triển · Nhu cầu chủ đạo',
+  ),
+};
 
 // ── SCA helpers (unchanged) ────────────────────────────────────────────────
 
 /// SCA pillar label mapping.
 String _scaLabel(SelfCheckPillar p) => switch (p) {
-      SelfCheckPillar.s => 'Minh bạch vai trò',
-      SelfCheckPillar.c => 'An toàn khi lên tiếng',
-      SelfCheckPillar.a => 'Định hướng ý nghĩa',
-    };
+  SelfCheckPillar.s => 'Minh bạch vai trò',
+  SelfCheckPillar.c => 'An toàn khi lên tiếng',
+  SelfCheckPillar.a => 'Định hướng ý nghĩa',
+};
 
 /// Score → status string.
 String _scaStatus(double? score) {
@@ -93,7 +92,8 @@ class WrDiscoverScreen extends ConsumerWidget {
     // 1. From behaviour (patterns × situations humanNeed)
     // 2. Fallback from self-check lowest pillar (if has self-check but no patterns)
     final behaviourNeed = dominantNeedFromBehaviour(patterns, situations);
-    final dominantNeed = behaviourNeed ??
+    final dominantNeed =
+        behaviourNeed ??
         (latest != null ? dominantNeedFromSelfCheck(latest) : null);
 
     // Visibility rules:
@@ -196,19 +196,7 @@ class WrDiscoverScreen extends ConsumerWidget {
                     child: _LockedCard(
                       icon: '📈',
                       title: 'Diễn giải sâu & xu hướng theo thời gian',
-                      onTap: () =>
-                          context.push('/wr/paywall?trigger=report'),
-                    ),
-                  ),
-                ),
-                SliverToBoxAdapter(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 10, 24, 0),
-                    child: _LockedCard(
-                      icon: '📊',
-                      title: 'Báo cáo chuyên sâu 49 câu',
-                      onTap: () =>
-                          context.push('/wr/paywall?trigger=report'),
+                      onTap: () => context.push('/wr/paywall?trigger=report'),
                     ),
                   ),
                 ),
@@ -289,10 +277,7 @@ class WrDiscoverScreen extends ConsumerWidget {
         Text(
           display.caption,
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontSize: 13,
-            color: WrColors.muted,
-          ),
+          style: const TextStyle(fontSize: 13, color: WrColors.muted),
         ),
         const SizedBox(height: 12),
         WrActionLink(
@@ -310,8 +295,9 @@ class WrDiscoverScreen extends ConsumerWidget {
     Map<String, String> sitMap,
     BuildContext context,
   ) {
-    final maxCount =
-        patterns.isEmpty ? 1 : patterns.first.occurrenceCount.toDouble();
+    final maxCount = patterns.isEmpty
+        ? 1
+        : patterns.first.occurrenceCount.toDouble();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -367,9 +353,7 @@ class WrDiscoverScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 6),
                 WrProgressTrack(
-                  value: maxCount > 0
-                      ? p.occurrenceCount / maxCount
-                      : 0,
+                  value: maxCount > 0 ? p.occurrenceCount / maxCount : 0,
                   color: trackColor,
                 ),
               ],
@@ -474,10 +458,7 @@ class WrDiscoverScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 10),
-                WrProgressTrack(
-                  value: count / 15,
-                  color: WrColors.coral,
-                ),
+                WrProgressTrack(value: count / 15, color: WrColors.coral),
               ],
               const SizedBox(height: 12),
               WrActionLink(
