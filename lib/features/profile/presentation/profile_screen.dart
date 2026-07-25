@@ -343,6 +343,16 @@ class _SettingsSection extends ConsumerWidget {
           ),
         ),
 
+        // Tài liệu bối cảnh (JD/CV) — Hai Lớp v1.2 §III
+        _SettingRow(
+          label: 'Tài liệu bối cảnh',
+          trailing: GestureDetector(
+            key: const Key('profile_context_docs_btn'),
+            onTap: () => context.push('/wr/context-docs'),
+            child: const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
+          ),
+        ),
+
         // Change password
         _SettingRow(
           label: l10n.profileSettingChangePassword,

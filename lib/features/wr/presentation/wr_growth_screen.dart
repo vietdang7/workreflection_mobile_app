@@ -8,6 +8,7 @@ import '../../../core/data/wr_content_repository.dart';
 import '../../../core/data/wr_intelligence_repository.dart';
 import '../../../core/logic/wr_dominant_need.dart';
 import '../../../core/logic/wr_entitlement.dart';
+import '../../../core/widgets/wr_premium_lock.dart';
 import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -326,6 +327,36 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
             enrollingThemeIds: _enrollingThemeIds,
             onPaywall: () => context.push('/wr/paywall'),
           ),
+
+        // ── Growth Journey (Hai Lớp v1.2 §III — Paid) ────────────────────
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(22, 4, 22, 0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const WrSectionDivider(),
+                const SizedBox(height: 16),
+                const WrEyebrow('CHẶNG ĐƯỜNG PHÁT TRIỂN'),
+                const SizedBox(height: 10),
+                if (!entitlement.canUseFeature(WrPremiumFeature.growthJourney))
+                  const WrPremiumLock(
+                    description:
+                        'Bản đầy đủ tổng kết từng chặng: bạn đã đi được bao xa '
+                        'và hướng nào đang mở ra tiếp theo.',
+                    ctaLabel: 'Mở chặng đường phát triển',
+                    paywallTrigger: 'growth_journey',
+                  )
+                else
+                  _GrowthJourneySection(
+                    snapshots:
+                        ref.watch(wrGrowthSnapshotsProvider).valueOrNull ??
+                            const [],
+                  ),
+              ],
+            ),
+          ),
+        ),
 
         const SliverToBoxAdapter(child: SizedBox(height: 24)),
       ],
@@ -1088,3 +1119,111 @@ class _StepTag extends StatelessWidget {
   }
 }
 
+
+
+// ---------------------------------------------------------------------------
+// Growth Journey (Progress · Direction) — Hai Lớp v1.2 §III, Paid
+// ---------------------------------------------------------------------------
+
+class _GrowthJourneySection extends StatelessWidget {
+  const _GrowthJourneySection({required this.snapshots});
+
+  final List<GrowthJourneySnapshot> snapshots;
+
+  @override
+  Widget build(BuildContext context) {
+    if (snapshots.isEmpty) {
+      return const _GrowthNote(
+        text: 'Chưa có chặng nào được tổng kết. Sau vài tuần thực hành đều, '
+            'WorkReflection sẽ dựng lại chặng đường của bạn ở đây.',
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final s in snapshots.take(4)) ...[
+          _GrowthNote(
+            label: s.periodLabel,
+            text: s.direction ?? 'Chặng này chưa có ghi chú hướng đi.',
+            progress: s.progress,
+          ),
+          const SizedBox(height: 10),
+        ],
+      ],
+    );
+  }
+}
+
+class _GrowthNote extends StatelessWidget {
+  const _GrowthNote({required this.text, this.label, this.progress});
+
+  final String text;
+  final String? label;
+  final Map<String, dynamic>? progress;
+
+  @override
+  Widget build(BuildContext context) {
+    final entries = (progress ?? const {}).entries.toList();
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      decoration: BoxDecoration(
+        color: WrColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0x0F000000)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (label != null && label!.trim().isNotEmpty) ...[
+            Text(
+              label!,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                color: Color(0xFFA3A3A3),
+              ),
+            ),
+            const SizedBox(height: 6),
+          ],
+          Text(
+            text,
+            style: const TextStyle(
+              fontSize: 13,
+              height: 1.65,
+              color: Color(0xFF4A5568),
+            ),
+          ),
+          if (entries.isNotEmpty) ...[
+            const SizedBox(height: 10),
+            Wrap(
+              spacing: 6,
+              runSpacing: 6,
+              children: [
+                for (final e in entries)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF4F4F1),
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    child: Text(
+                      '${e.key}: ${e.value}',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w600,
+                        color: WrColors.dark,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}

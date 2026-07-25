@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/data/wr_content_repository.dart';
 import '../../../core/logic/wr_entitlement.dart';
+import '../../../core/widgets/wr_premium_lock.dart';
 import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -67,6 +68,8 @@ class WrJourneyScreen extends ConsumerWidget {
     final entitlementAsync = ref.watch(wrEntitlementProvider);
     final situationsAsync = ref.watch(wrSituationsProvider);
     final patternsAsync = ref.watch(wrPatternCountsProvider);
+    final narratives =
+        ref.watch(wrPatternNarrativesProvider).valueOrNull ?? const [];
 
     final now = DateTime.now();
     final entitlement =
@@ -295,14 +298,39 @@ class WrJourneyScreen extends ConsumerWidget {
                 ),
               ),
 
-            // ── Pattern deep-dive lock banner (always shown) ─────────────
+            // ── Pattern Nâng cao (Hai Lớp v1.2 §III — Paid) ──────────────
+            // Thay cho banner khoá cũ vốn chỉ dẫn sang paywall mà không có
+            // nội dung thật cho người đã trả tiền.
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(22, 12, 22, 0),
-                child: _LockBanner(
-                  icon: '◈',
-                  label: 'Phân tích mô thức chuyên sâu',
-                  onTap: () => context.push('/wr/paywall'),
+                padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const WrEyebrow('DIỄN BIẾN THEO THỜI GIAN'),
+                    const SizedBox(height: 10),
+                    if (!entitlement
+                        .canUseFeature(WrPremiumFeature.patternAdvanced))
+                      const WrPremiumLock(
+                        description:
+                            'Bản đầy đủ kể lại những mẫu hình của bạn đã đổi '
+                            'thế nào qua từng giai đoạn — điều gì đang nhạt '
+                            'dần và điều gì vẫn quay lại.',
+                        ctaLabel: 'Mở diễn biến theo thời gian',
+                        paywallTrigger: 'pattern_advanced',
+                      )
+                    else if (narratives.isEmpty)
+                      const _PlainNote(
+                        text: 'Chưa đủ dữ liệu để kể lại diễn biến. Ghi thêm '
+                            'vài lần nữa, WorkReflection sẽ chỉ ra điều gì '
+                            'đang đổi và điều gì vẫn ở nguyên đó.',
+                      )
+                    else
+                      for (final n in narratives.take(3)) ...[
+                        _PlainNote(text: n.narrative, period: _period(n)),
+                        const SizedBox(height: 10),
+                      ],
+                  ],
                 ),
               ),
             ),
@@ -819,11 +847,10 @@ class _LockBanner extends StatelessWidget {
   const _LockBanner({
     required this.label,
     required this.onTap,
-    this.icon,
   });
   final String label;
   final VoidCallback onTap;
-  final String? icon;
+  static const String? icon = null;
 
   @override
   Widget build(BuildContext context) {
@@ -865,6 +892,64 @@ class _LockBanner extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+
+// ---------------------------------------------------------------------------
+// Ghi chú dạng văn xuôi — dùng cho Pattern Nâng cao
+// ---------------------------------------------------------------------------
+
+String? _period(PatternNarrative n) {
+  final start = n.periodStart;
+  final end = n.periodEnd;
+  if (start == null && end == null) return null;
+  String f(DateTime d) => '${d.day}/${d.month}/${d.year}';
+  if (start != null && end != null) return '${f(start)} → ${f(end)}';
+  return f((start ?? end)!);
+}
+
+class _PlainNote extends StatelessWidget {
+  const _PlainNote({required this.text, this.period});
+
+  final String text;
+  final String? period;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      decoration: BoxDecoration(
+        color: WrColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0x0F000000)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (period != null) ...[
+            Text(
+              period!,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFFA3A3A3),
+              ),
+            ),
+            const SizedBox(height: 6),
+          ],
+          Text(
+            text,
+            style: const TextStyle(
+              fontSize: 13,
+              height: 1.65,
+              color: Color(0xFF4A5568),
+            ),
+          ),
+        ],
       ),
     );
   }

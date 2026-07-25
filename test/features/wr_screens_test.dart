@@ -686,12 +686,21 @@ group('WrJourneyScreen — with events (free user)', () {
     expect(find.text('Xem toàn bộ Career Memory'), findsNothing);
   });
 
-  testWidgets('shows pattern analysis lock banner always', (tester) async {
+  testWidgets('shows Pattern Nâng cao section always', (tester) async {
     await tester.pumpWidget(_wrap(const WrJourneyScreen()));
     await tester.pumpAndSettle();
 
-    // Empty state grid mới đẩy banner xuống dưới viewport — dùng skipOffstage: false
-    expect(find.text('Phân tích mô thức chuyên sâu', skipOffstage: false), findsOneWidget);
+    // Khối "Diễn biến theo thời gian" thay cho banner khoá placeholder cũ:
+    // free thấy khối mờ + nút nâng cấp (Hai Lớp v1.2 §III/§IV).
+    // Section nằm dưới viewport — dùng skipOffstage: false.
+    expect(
+      find.text('DIỄN BIẾN THEO THỜI GIAN', skipOffstage: false),
+      findsOneWidget,
+    );
+    expect(
+      find.text('Mở diễn biến theo thời gian', skipOffstage: false),
+      findsOneWidget,
+    );
   });
 
   testWidgets('does NOT show Hồ sơ nghề nghiệp link (removed per mockup)', (tester) async {

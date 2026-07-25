@@ -72,6 +72,35 @@ final wrSituationsProvider = FutureProvider<List<WrSituation>>((ref) async {
   return repo.fetchSituations();
 });
 
+/// Pattern Nâng cao — bản tường thuật diễn biến thay đổi qua thời gian.
+/// Hai Lớp v1.2 §III: Paid.
+final wrPatternNarrativesProvider =
+    FutureProvider<List<PatternNarrative>>((ref) async {
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null) return const [];
+  final repo = ref.watch(wrIntelligenceRepositoryProvider);
+  return repo.fetchPatternNarratives(userId);
+});
+
+/// Growth Journey snapshots (Progress, Direction). Hai Lớp v1.2 §III: Paid.
+final wrGrowthSnapshotsProvider =
+    FutureProvider<List<GrowthJourneySnapshot>>((ref) async {
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null) return const [];
+  final repo = ref.watch(wrIntelligenceRepositoryProvider);
+  return repo.fetchGrowthSnapshots(userId);
+});
+
+/// Context Document (JD, CV). Hai Lớp v1.2 §III: tải lên Free (giới hạn số
+/// lượng), phân tích sâu Paid.
+final wrContextDocumentsProvider =
+    FutureProvider<List<WrContextDocument>>((ref) async {
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null) return const [];
+  final repo = ref.watch(wrIntelligenceRepositoryProvider);
+  return repo.fetchContextDocuments(userId);
+});
+
 /// Career Snapshot của người dùng hiện tại (vai trò · mục tiêu · trăn trở).
 /// Trả về snapshot rỗng khi chưa đăng nhập hoặc chưa thiết lập.
 final wrCareerSnapshotProvider = FutureProvider<CareerSnapshot>((ref) async {

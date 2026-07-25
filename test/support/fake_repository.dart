@@ -40,6 +40,7 @@ class FakeWrRepository implements WrRepository {
   final List<String> updateLanguageCalls = [];
   final List<CareerSnapshot> saveCareerSnapshotCalls = [];
   bool failSaveCareerSnapshot = false;
+  final List<({String ext, String docType})> uploadContextDocumentCalls = [];
   final List<String?> ensureSeededCalls = [];
   final List<String> saveOnboardingSituationCalls = [];
   final List<Map<String, dynamic>> updateCcProfileCalls = [];
@@ -249,6 +250,16 @@ class FakeWrRepository implements WrRepository {
     if (_profile != null) {
       _profile = _profile!.copyWith(reminderEnabled: enabled);
     }
+  }
+
+  @override
+  Future<String> uploadContextDocument(
+    List<int> bytes,
+    String ext,
+    String docType,
+  ) async {
+    uploadContextDocumentCalls.add((ext: ext, docType: docType));
+    return 'u1/$docType-1.$ext';
   }
 
   @override

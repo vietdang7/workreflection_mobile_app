@@ -70,6 +70,16 @@ abstract class WrRepository {
   /// update cc_profiles.avatar_url with the public URL (cache-busted).
   Future<String> uploadAvatar(List<int> bytes, String ext);
 
+  // --- Context documents (JD / CV) ---
+  /// Upload [bytes] vào `context-docs/{userId}/{docType}-{timestamp}.{ext}`
+  /// và trả về đường dẫn trong bucket để lưu vào
+  /// `wr_context_documents.file_path`.
+  Future<String> uploadContextDocument(
+    List<int> bytes,
+    String ext,
+    String docType,
+  );
+
   // --- Vouchers ---
   /// Returns active vouchers visible to the current user.
   Future<List<Map<String, dynamic>>> getVouchers();
@@ -406,6 +416,23 @@ class SupabaseWrRepository implements WrRepository {
   }
 
   // --- Avatar ---
+
+  @override
+  Future<String> uploadContextDocument(
+    List<int> bytes,
+    String ext,
+    String docType,
+  ) async {
+    final uid = _uid;
+    final stamp = DateTime.now().millisecondsSinceEpoch;
+    final filePath = '$uid/$docType-$stamp.$ext';
+    await _client.storage.from('context-docs').uploadBinary(
+          filePath,
+          Uint8List.fromList(bytes),
+          fileOptions: FileOptions(upsert: true, contentType: 'image/$ext'),
+        );
+    return filePath;
+  }
 
   @override
   Future<String> uploadAvatar(List<int> bytes, String ext) async {

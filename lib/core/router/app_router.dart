@@ -37,6 +37,7 @@ import '../../features/survey/presentation/survey_guide_screen.dart';
 import '../models/wr_content.dart';
 import '../../features/wr/presentation/wr_home_screen.dart';
 import '../../features/wr/presentation/wr_career_setup_screen.dart';
+import '../../features/wr/presentation/wr_context_doc_screen.dart';
 import '../../features/wr/presentation/wr_situation_flow_screen.dart';
 import '../../features/wr/presentation/wr_story_flow_screen.dart';
 import '../../features/wr/presentation/wr_story_screen.dart';
@@ -288,6 +289,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/wr/career-setup',
         builder: (context, state) => const WrCareerSetupScreen(),
+      ),
+
+      GoRoute(
+        path: '/wr/context-docs',
+        builder: (context, state) => const WrContextDocScreen(),
       ),
 
       GoRoute(
