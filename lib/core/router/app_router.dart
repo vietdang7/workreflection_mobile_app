@@ -36,6 +36,7 @@ import '../../features/understand/presentation/insights_screen.dart';
 import '../../features/survey/presentation/survey_guide_screen.dart';
 import '../models/wr_content.dart';
 import '../../features/wr/presentation/wr_home_screen.dart';
+import '../../features/wr/presentation/wr_career_setup_screen.dart';
 import '../../features/wr/presentation/wr_situation_flow_screen.dart';
 import '../../features/wr/presentation/wr_story_flow_screen.dart';
 import '../../features/wr/presentation/wr_story_screen.dart';
@@ -282,6 +283,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/wr/self-check',
         builder: (context, state) => const WrSelfCheckScreen(),
+      ),
+
+      GoRoute(
+        path: '/wr/career-setup',
+        builder: (context, state) => const WrCareerSetupScreen(),
       ),
 
       GoRoute(

@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:workreflection_mobile/core/logic/wr_career_profile.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
 import 'package:workreflection_mobile/core/models/checkin.dart';
 import 'package:workreflection_mobile/core/models/development_theme.dart';
@@ -37,6 +38,8 @@ class FakeWrRepository implements WrRepository {
   final List<(String, PracticeStatus)> updatePracticeStatusCalls = [];
   final List<bool> updateReminderCalls = [];
   final List<String> updateLanguageCalls = [];
+  final List<CareerSnapshot> saveCareerSnapshotCalls = [];
+  bool failSaveCareerSnapshot = false;
   final List<String?> ensureSeededCalls = [];
   final List<String> saveOnboardingSituationCalls = [];
   final List<Map<String, dynamic>> updateCcProfileCalls = [];
@@ -245,6 +248,15 @@ class FakeWrRepository implements WrRepository {
     updateReminderCalls.add(enabled);
     if (_profile != null) {
       _profile = _profile!.copyWith(reminderEnabled: enabled);
+    }
+  }
+
+  @override
+  Future<void> saveCareerSnapshot(CareerSnapshot snapshot) async {
+    if (failSaveCareerSnapshot) throw Exception('save failed');
+    saveCareerSnapshotCalls.add(snapshot);
+    if (_profile != null) {
+      _profile = _profile!.copyWith(careerSnapshot: snapshot);
     }
   }
 

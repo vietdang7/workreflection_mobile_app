@@ -6,6 +6,7 @@ import '../../../core/data/wr_content_repository.dart';
 import '../../../core/data/wr_intelligence_repository.dart';
 import '../../../core/data/wr_repository.dart';
 import '../../../core/logic/vn_date.dart';
+import '../../../core/logic/wr_career_profile.dart';
 import '../../../core/models/checkin.dart';
 import '../../../core/models/mobile_profile.dart';
 import '../../../core/models/wr_content.dart';
@@ -614,6 +615,17 @@ class _WrHomeScreenState extends ConsumerState<WrHomeScreen> {
             // ── divider (duy nhất) ────────────────────────────────────────
             const SliverToBoxAdapter(child: WrSectionDivider()),
 
+            // ── career snapshot ───────────────────────────────────────────
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
+                child: _CareerSnapshotCard(
+                  snapshot: ref.watch(wrCareerSnapshotProvider).valueOrNull ??
+                      const CareerSnapshot(),
+                ),
+              ),
+            ),
+
             // ── card hệ thống nhận ra ─────────────────────────────────────
             if (topPattern != null) ...[
               SliverToBoxAdapter(
@@ -838,6 +850,97 @@ class _MoodButton extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Career Snapshot card
+// Spec: giao-dien-ho-tro.jsx — CareerSnapshotCard.
+// Chưa thiết lập → lời mời; đã thiết lập → tóm tắt + "Cập nhật".
+// ---------------------------------------------------------------------------
+
+class _CareerSnapshotCard extends StatelessWidget {
+  const _CareerSnapshotCard({required this.snapshot});
+
+  final CareerSnapshot snapshot;
+
+  @override
+  Widget build(BuildContext context) {
+    final empty = snapshot.isEmpty;
+    return WrCardMinimal(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const WrEyebrow('CAREER SNAPSHOT'),
+          const SizedBox(height: 10),
+          if (empty) ...[
+            const Text(
+              'Thêm vài thông tin để WorkReflection gợi ý đúng với bối cảnh '
+              'công việc của bạn.',
+              style: TextStyle(
+                fontSize: 13,
+                height: 1.6,
+                color: WrColors.muted,
+              ),
+            ),
+            const SizedBox(height: 12),
+            WrActionLink(
+              label: 'Thiết lập hồ sơ',
+              onTap: () => context.push('/wr/career-setup'),
+            ),
+          ] else ...[
+            if (snapshot.currentRole != null)
+              _SnapshotRow(label: 'Vai trò', value: snapshot.currentRole!),
+            if (snapshot.careerGoal != null)
+              _SnapshotRow(label: 'Quan tâm', value: snapshot.careerGoal!),
+            if (snapshot.currentChallenge != null)
+              _SnapshotRow(label: 'Trăn trở', value: snapshot.currentChallenge!),
+            const SizedBox(height: 10),
+            WrActionLink(
+              label: 'Cập nhật',
+              onTap: () => context.push('/wr/career-setup'),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _SnapshotRow extends StatelessWidget {
+  const _SnapshotRow({required this.label, required this.value});
+
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 74,
+            child: Text(
+              label,
+              style: const TextStyle(fontSize: 12, color: WrColors.muted),
+            ),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: WrColors.navy,
+                height: 1.45,
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

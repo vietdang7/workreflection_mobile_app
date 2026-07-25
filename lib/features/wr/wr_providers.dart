@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/data/wr_content_repository.dart';
 import '../../core/data/wr_intelligence_repository.dart';
 import '../../core/data/wr_repository.dart';
+import '../../core/logic/wr_career_profile.dart';
 import '../../core/logic/wr_entitlement.dart';
 import '../../core/models/checkin.dart';
 import '../../core/models/wr_content.dart';
@@ -69,4 +70,16 @@ final wrLatestInsightProvider = FutureProvider<WrInsight?>((ref) async {
 final wrSituationsProvider = FutureProvider<List<WrSituation>>((ref) async {
   final repo = ref.watch(wrContentRepositoryProvider);
   return repo.fetchSituations();
+});
+
+/// Career Snapshot của người dùng hiện tại (vai trò · mục tiêu · trăn trở).
+/// Trả về snapshot rỗng khi chưa đăng nhập hoặc chưa thiết lập.
+final wrCareerSnapshotProvider = FutureProvider<CareerSnapshot>((ref) async {
+  final repo = ref.watch(wrRepositoryProvider);
+  try {
+    final profile = await repo.getMobileProfile();
+    return profile?.careerSnapshot ?? const CareerSnapshot();
+  } catch (_) {
+    return const CareerSnapshot();
+  }
 });

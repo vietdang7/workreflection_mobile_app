@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../logic/wr_career_profile.dart';
 import '../models/checkin.dart';
 import '../models/development_theme.dart';
 import '../models/insight.dart';
@@ -52,6 +53,10 @@ abstract class WrRepository {
   Future<MobileProfile?> getMobileProfile();
   Future<void> updateReminder(bool enabled);
   Future<void> updateLanguage(String lang);
+
+  /// Ghi Career Snapshot (vai trò · mục tiêu · trăn trở) vào
+  /// `wr_mobile_profiles`. Bước bị bỏ qua được ghi null.
+  Future<void> saveCareerSnapshot(CareerSnapshot snapshot);
 
   // --- CC tables (web-app shared) ---
   Future<ScaReport?> getLatestScaReport();
@@ -329,6 +334,17 @@ class SupabaseWrRepository implements WrRepository {
         .from('wr_mobile_profiles')
         .update({
           'language': lang,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('user_id', _uid);
+  }
+
+  @override
+  Future<void> saveCareerSnapshot(CareerSnapshot snapshot) async {
+    await _client
+        .from('wr_mobile_profiles')
+        .update({
+          ...snapshot.toUpdate(),
           'updated_at': DateTime.now().toIso8601String(),
         })
         .eq('user_id', _uid);
