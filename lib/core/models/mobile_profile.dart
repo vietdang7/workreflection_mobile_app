@@ -1,3 +1,5 @@
+import '../logic/wr_career_profile.dart';
+
 /// Maps to the public.wr_mobile_profiles table.
 class MobileProfile {
   const MobileProfile({
@@ -8,6 +10,7 @@ class MobileProfile {
     required this.language,
     required this.createdAt,
     required this.updatedAt,
+    this.careerSnapshot = const CareerSnapshot(),
   });
 
   final String userId;
@@ -18,6 +21,10 @@ class MobileProfile {
   final DateTime createdAt;
   final DateTime updatedAt;
 
+  /// Career Snapshot (vai trò · mục tiêu · trăn trở). Rỗng khi người dùng
+  /// chưa thiết lập hồ sơ.
+  final CareerSnapshot careerSnapshot;
+
   factory MobileProfile.fromJson(Map<String, dynamic> json) {
     return MobileProfile(
       userId: json['user_id'] as String,
@@ -27,6 +34,7 @@ class MobileProfile {
       language: json['language'] as String,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
+      careerSnapshot: CareerSnapshot.fromJson(json),
     );
   }
 
@@ -36,6 +44,7 @@ class MobileProfile {
     bool? reminderEnabled,
     String? language,
     DateTime? updatedAt,
+    CareerSnapshot? careerSnapshot,
   }) {
     return MobileProfile(
       userId: userId,
@@ -45,6 +54,7 @@ class MobileProfile {
       language: language ?? this.language,
       createdAt: createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
+      careerSnapshot: careerSnapshot ?? this.careerSnapshot,
     );
   }
 }

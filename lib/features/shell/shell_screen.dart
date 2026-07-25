@@ -5,6 +5,8 @@ import '../../l10n/app_localizations.dart';
 
 // ---------------------------------------------------------------------------
 // Shell — hosts the 5-tab StatefulShellRoute.indexedStack
+// Final HTML mockup: Hôm nay / Hiểu mình / Phát triển / Hành trình / Tôi
+// Tab bar: icon-only (no text label), 24px icon, 4px coral dot, 64px height.
 // ---------------------------------------------------------------------------
 
 class ShellScreen extends StatelessWidget {
@@ -29,21 +31,22 @@ class ShellScreen extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Tab bar — 64px + safe-area, white/95%, top hairline, 5 items
+// Tab bar — 64px + safe-area, white/95%, top hairline 0.5px navy 8%, 5 items.
+// Each item: icon 24px + 4px coral dot below (NO text label).
 // ---------------------------------------------------------------------------
 
 class _TabDef {
-  const _TabDef({required this.icon, required this.label});
+  const _TabDef({required this.icon, required this.semanticsLabel});
   final IconData icon;
-  final String label;
+  final String semanticsLabel;
 }
 
 List<_TabDef> _buildTabs(AppLocalizations l10n) => [
-  _TabDef(icon: Icons.home_outlined, label: l10n.tabToday),
-  _TabDef(icon: Icons.self_improvement_outlined, label: l10n.tabUnderstand),
-  _TabDef(icon: Icons.trending_up_outlined, label: l10n.tabDevelop),
-  _TabDef(icon: Icons.route_outlined, label: l10n.tabJourney),
-  _TabDef(icon: Icons.person_outline, label: l10n.tabProfile),
+  _TabDef(icon: Icons.home_outlined,     semanticsLabel: l10n.tabToday),
+  _TabDef(icon: Icons.person_outline,    semanticsLabel: l10n.tabUnderstand),
+  _TabDef(icon: Icons.trending_up,       semanticsLabel: l10n.tabDevelop),
+  _TabDef(icon: Icons.subject,           semanticsLabel: l10n.tabJourney),
+  _TabDef(icon: Icons.settings_outlined, semanticsLabel: l10n.tabProfile),
 ];
 
 class WrTabBar extends StatelessWidget {
@@ -65,10 +68,10 @@ class WrTabBar extends StatelessWidget {
       height: 64 + bottomPadding,
       decoration: BoxDecoration(
         color: WrColors.white.withValues(alpha: 0.95),
-        border: const Border(
+        border: Border(
           top: BorderSide(
-            color: Color(0x14093774), // navy 8%
-            width: 1,
+            color: WrColors.navy.withValues(alpha: 0.08),
+            width: 0.5,
           ),
         ),
       ),
@@ -80,7 +83,7 @@ class WrTabBar extends StatelessWidget {
             (i) => Expanded(
               child: WrTabItem(
                 icon: tabs[i].icon,
-                label: tabs[i].label,
+                semanticsLabel: tabs[i].semanticsLabel,
                 isActive: i == currentIndex,
                 onTap: () => onTap(i),
               ),
@@ -92,18 +95,19 @@ class WrTabBar extends StatelessWidget {
   }
 }
 
-/// A single tab item: icon + label + 4px coral dot below when active.
+/// A single tab item: icon 24px + 4px coral dot (NO text label).
+/// Uses [semanticsLabel] for accessibility (Semantics widget).
 class WrTabItem extends StatelessWidget {
   const WrTabItem({
     super.key,
     required this.icon,
-    required this.label,
+    required this.semanticsLabel,
     required this.isActive,
     required this.onTap,
   });
 
   final IconData icon;
-  final String label;
+  final String semanticsLabel;
   final bool isActive;
   final VoidCallback onTap;
 
@@ -111,36 +115,31 @@ class WrTabItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = isActive ? WrColors.coral : WrColors.muted;
 
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: color, size: 22),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-              color: color,
+    return Semantics(
+      label: semanticsLabel,
+      selected: isActive,
+      button: true,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 24),
+            const SizedBox(height: 5), // icon-to-dot spacing
+            // Active dot — 4px coral, hidden when inactive
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              width: 4,
+              height: 4,
+              decoration: BoxDecoration(
+                color: isActive ? WrColors.coral : Colors.transparent,
+                shape: BoxShape.circle,
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          // Active dot
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: isActive ? 4 : 0,
-            height: isActive ? 4 : 0,
-            decoration: const BoxDecoration(
-              color: WrColors.coral,
-              shape: BoxShape.circle,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
-

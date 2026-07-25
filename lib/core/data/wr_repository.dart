@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../logic/wr_career_profile.dart';
 import '../models/checkin.dart';
 import '../models/development_theme.dart';
 import '../models/insight.dart';
@@ -21,7 +22,11 @@ import '../models/workshop.dart';
 abstract class WrRepository {
   // --- Check-ins ---
   Future<Checkin?> getTodayCheckin();
-  Future<void> upsertCheckin(Mood mood);
+  Future<void> upsertCheckin(
+    Mood mood, {
+    CheckinEnergy? energy,
+    CheckinDirection? direction,
+  });
   Future<List<DateTime>> getCheckinDates({int limit = 60});
   Future<int> countCheckins();
 
@@ -49,6 +54,10 @@ abstract class WrRepository {
   Future<void> updateReminder(bool enabled);
   Future<void> updateLanguage(String lang);
 
+  /// Ghi Career Snapshot (vai trò · mục tiêu · trăn trở) vào
+  /// `wr_mobile_profiles`. Bước bị bỏ qua được ghi null.
+  Future<void> saveCareerSnapshot(CareerSnapshot snapshot);
+
   // --- CC tables (web-app shared) ---
   Future<ScaReport?> getLatestScaReport();
   Future<Workshop?> getUpcomingWorkshop();
@@ -60,6 +69,16 @@ abstract class WrRepository {
   /// Upload [bytes] to `avatars/{userId}/avatar.{ext}` with upsert, then
   /// update cc_profiles.avatar_url with the public URL (cache-busted).
   Future<String> uploadAvatar(List<int> bytes, String ext);
+
+  // --- Context documents (JD / CV) ---
+  /// Upload [bytes] vào `context-docs/{userId}/{docType}-{timestamp}.{ext}`
+  /// và trả về đường dẫn trong bucket để lưu vào
+  /// `wr_context_documents.file_path`.
+  Future<String> uploadContextDocument(
+    List<int> bytes,
+    String ext,
+    String docType,
+  );
 
   // --- Vouchers ---
   /// Returns active vouchers visible to the current user.
@@ -130,12 +149,18 @@ class SupabaseWrRepository implements WrRepository {
   }
 
   @override
-  Future<void> upsertCheckin(Mood mood) async {
+  Future<void> upsertCheckin(
+    Mood mood, {
+    CheckinEnergy? energy,
+    CheckinDirection? direction,
+  }) async {
     await _client.from('wr_checkins').upsert(
       {
         'user_id': _uid,
         'checkin_date': _todayVn,
         'mood': mood.dbValue,
+        if (energy != null) 'energy': energy.dbValue,
+        if (direction != null) 'direction': direction.dbValue,
       },
       onConflict: 'user_id,checkin_date',
     );
@@ -324,6 +349,17 @@ class SupabaseWrRepository implements WrRepository {
         .eq('user_id', _uid);
   }
 
+  @override
+  Future<void> saveCareerSnapshot(CareerSnapshot snapshot) async {
+    await _client
+        .from('wr_mobile_profiles')
+        .update({
+          ...snapshot.toUpdate(),
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('user_id', _uid);
+  }
+
   // --- CC tables ---
 
   @override
@@ -380,6 +416,23 @@ class SupabaseWrRepository implements WrRepository {
   }
 
   // --- Avatar ---
+
+  @override
+  Future<String> uploadContextDocument(
+    List<int> bytes,
+    String ext,
+    String docType,
+  ) async {
+    final uid = _uid;
+    final stamp = DateTime.now().millisecondsSinceEpoch;
+    final filePath = '$uid/$docType-$stamp.$ext';
+    await _client.storage.from('context-docs').uploadBinary(
+          filePath,
+          Uint8List.fromList(bytes),
+          fileOptions: FileOptions(upsert: true, contentType: 'image/$ext'),
+        );
+    return filePath;
+  }
 
   @override
   Future<String> uploadAvatar(List<int> bytes, String ext) async {

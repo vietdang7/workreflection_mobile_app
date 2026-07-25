@@ -355,6 +355,15 @@ class _ReportBody extends ConsumerWidget {
             variant: WrPillVariant.coral,
           ),
 
+          // Video report (available for all reports)
+          const SizedBox(height: 12),
+          WrPillButton(
+            label: l10n.videoReportButton,
+            onPressed: () =>
+                context.push('/survey/report/${report.id}/video'),
+            variant: WrPillVariant.navy,
+          ),
+
           // Roadmap link (premium reports only)
           if (isPremium) ...[
             const SizedBox(height: 12),

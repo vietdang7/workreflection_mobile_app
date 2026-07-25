@@ -386,10 +386,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authValidatorPassword => 'Please enter your password';
 
   @override
-  String get authValidatorPasswordMinLength => 'Password must be at least 6 characters';
+  String get authValidatorPasswordMinLength =>
+      'Password must be at least 6 characters';
 
   @override
-  String get authErrorDuplicateEmail => 'This email is already registered. Please log in instead.';
+  String get authErrorDuplicateEmail =>
+      'This email is already registered. Please log in instead.';
 
   @override
   String get authErrorInvalidCredentials => 'Incorrect email or password.';
@@ -556,6 +558,22 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get reportAiRelationshipSectionTitle => 'Work Relationships';
+
+  @override
+  String get videoReportButton => 'Watch video report';
+
+  @override
+  String get videoReportTitle => 'Video report';
+
+  @override
+  String get videoReportGenerating => 'Generating your video report…';
+
+  @override
+  String get videoReportError =>
+      'Couldn\'t create the video. Please try again.';
+
+  @override
+  String get videoReportRetry => 'Retry';
 
   @override
   String get surveyHistoryTitle => 'Survey History';

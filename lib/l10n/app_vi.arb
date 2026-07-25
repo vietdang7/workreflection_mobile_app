@@ -192,7 +192,6 @@
   "tabDevelop": "Phát triển",
   "tabJourney": "Hành trình",
   "tabProfile": "Tôi",
-
   "surveyIntroEyebrow": "Career Health Check",
   "surveyIntroBadgeFree": "FREE",
   "surveyIntroBadgePremium": "PREMIUM",
@@ -246,6 +245,11 @@
   "reportAiModelSectionTitle": "Mô hình làm việc của bạn",
   "reportAiReflectionSectionTitle": "Phản chiếu cá nhân",
   "reportAiRelationshipSectionTitle": "Mối quan hệ trong công việc",
+  "videoReportButton": "Xem video báo cáo",
+  "videoReportTitle": "Video báo cáo",
+  "videoReportGenerating": "Đang tạo video báo cáo…",
+  "videoReportError": "Không tạo được video. Vui lòng thử lại.",
+  "videoReportRetry": "Thử lại",
 
   "surveyHistoryTitle": "Lịch sử khảo sát",
   "surveyHistoryScoreLabel": "Điểm",

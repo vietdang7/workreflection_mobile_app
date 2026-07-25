@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../features/auth/presentation/auth_screen.dart';
-import '../../features/home/presentation/home_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/shell/shell_screen.dart';
 import '../../features/splash/splash_screen.dart';
@@ -18,6 +17,7 @@ import '../../features/survey/presentation/report_screen.dart';
 import '../../features/survey/presentation/action_plan_screen.dart';
 import '../../features/survey/presentation/layer_detail_screen.dart';
 import '../../features/survey/presentation/esi_analysis_screen.dart';
+import '../../features/video_report/presentation/video_report_screen.dart';
 import '../../features/workshops/presentation/workshops_screen.dart';
 import '../../features/workshops/presentation/workshop_detail_screen.dart';
 import '../../features/workshops/presentation/workshop_survey_screen.dart';
@@ -34,6 +34,18 @@ import '../../features/roadmap/presentation/roadmap_screen.dart';
 import '../../features/survey/presentation/survey_history_screen.dart';
 import '../../features/understand/presentation/insights_screen.dart';
 import '../../features/survey/presentation/survey_guide_screen.dart';
+import '../models/wr_content.dart';
+import '../../features/wr/presentation/wr_home_screen.dart';
+import '../../features/wr/presentation/wr_career_setup_screen.dart';
+import '../../features/wr/presentation/wr_context_doc_screen.dart';
+import '../../features/wr/presentation/wr_situation_flow_screen.dart';
+import '../../features/wr/presentation/wr_story_flow_screen.dart';
+import '../../features/wr/presentation/wr_story_screen.dart';
+import '../../features/wr/presentation/wr_discover_screen.dart';
+import '../../features/wr/presentation/wr_growth_screen.dart';
+import '../../features/wr/presentation/wr_journey_screen.dart';
+import '../../features/wr/presentation/wr_paywall_screen.dart';
+import '../../features/wr/presentation/wr_self_check_screen.dart';
 import 'auth_change_notifier.dart';
 
 // ---------------------------------------------------------------------------
@@ -170,6 +182,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             EsiAnalysisScreen(reportId: state.pathParameters['id']!),
       ),
       GoRoute(
+        path: '/survey/report/:id/video',
+        builder: (context, state) =>
+            VideoReportScreen(reportId: state.pathParameters['id']!),
+      ),
+      GoRoute(
         path: '/survey/history',
         builder: (context, state) => const SurveyHistoryScreen(),
       ),
@@ -248,7 +265,80 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         ),
       ),
 
-      // Shell with 5 indexed branches
+      // Legacy tab screens — preserved as fullscreen routes (not in shell anymore)
+      GoRoute(
+        path: '/understand',
+        builder: (context, state) => const UnderstandScreen(),
+      ),
+      GoRoute(
+        path: '/develop',
+        builder: (context, state) => const DevelopScreen(),
+      ),
+      GoRoute(
+        path: '/journey',
+        builder: (context, state) => const JourneyScreen(),
+      ),
+      // NOTE: /profile is now a shell branch (Tab 4). Removed standalone route
+      // to avoid GoRouter duplicate-path error.
+
+      GoRoute(
+        path: '/wr/self-check',
+        builder: (context, state) => const WrSelfCheckScreen(),
+      ),
+
+      GoRoute(
+        path: '/wr/career-setup',
+        builder: (context, state) => const WrCareerSetupScreen(),
+      ),
+
+      GoRoute(
+        path: '/wr/context-docs',
+        builder: (context, state) => const WrContextDocScreen(),
+      ),
+
+      GoRoute(
+        path: '/wr/situation',
+        builder: (context, state) => const WrSituationFlowScreen(),
+      ),
+      GoRoute(
+        path: '/wr/story/flow',
+        builder: (context, state) {
+          final dimStr = state.uri.queryParameters['dimension'];
+          ScaDimension? dim;
+          if (dimStr != null) {
+            try {
+              dim = ScaDimension.fromDb(dimStr);
+            } catch (_) {
+              dim = null;
+            }
+          }
+          return WrStoryFlowScreen(initialDimension: dim);
+        },
+      ),
+
+      GoRoute(
+        path: '/wr/paywall',
+        builder: (context, state) {
+          final triggerStr = state.uri.queryParameters['trigger'];
+          final trigger = switch (triggerStr) {
+            'ai_insight' => PaywallTrigger.aiInsight,
+            'report' => PaywallTrigger.report,
+            'trial_end' => PaywallTrigger.trialEnd,
+            'benchmark' => PaywallTrigger.benchmark,
+            _ => PaywallTrigger.defaultTrigger,
+          };
+          return WrPaywallScreen(trigger: trigger);
+        },
+      ),
+
+      // Shell with 5 indexed branches — final HTML mockup
+      // Tab 0: /home       — Hôm nay
+      // Tab 1: /wr/discover — Hiểu mình (path kept; label/icon changed — low risk)
+      // Tab 2: /wr/growth  — Phát triển
+      // Tab 3: /wr/journey — Hành trình
+      // Tab 4: /profile    — Tôi (moved into shell; /profile/edit stays fullscreen)
+      //
+      // /wr/story is NOT a shell branch anymore — it is a fullscreen route below.
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             ShellScreen(navigationShell: navigationShell),
@@ -257,31 +347,31 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/home',
-                builder: (context, state) => const HomeScreen(),
+                builder: (context, state) => const WrHomeScreen(),
               ),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/understand',
-                builder: (context, state) => const UnderstandScreen(),
+                path: '/wr/discover',
+                builder: (context, state) => const WrDiscoverScreen(),
               ),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/develop',
-                builder: (context, state) => const DevelopScreen(),
+                path: '/wr/growth',
+                builder: (context, state) => const WrGrowthScreen(),
               ),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: '/journey',
-                builder: (context, state) => const JourneyScreen(),
+                path: '/wr/journey',
+                builder: (context, state) => const WrJourneyScreen(),
               ),
             ],
           ),
@@ -294,6 +384,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             ],
           ),
         ],
+      ),
+
+      // /wr/story — fullscreen push, uses root navigator implicitly (not nested in shell).
+      GoRoute(
+        path: '/wr/story',
+        builder: (context, state) => const WrStoryScreen(),
       ),
     ],
   );
