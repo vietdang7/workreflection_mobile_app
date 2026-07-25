@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/data/wr_intelligence_repository.dart';
+import '../../../core/logic/wr_entitlement.dart';
+import '../../../core/logic/wr_self_check_narrative.dart';
 import '../../../core/logic/wr_self_check_questions.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
-import '../../../core/data/wr_intelligence_repository.dart';
+import '../../../core/widgets/eyebrow.dart';
 import '../wr_providers.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -85,6 +88,8 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
             takenAt: DateTime.now(),
           ),
         );
+        // Lần trả lời vừa rồi phải nằm trong lịch sử để khối xu hướng so đúng.
+        ref.invalidate(wrSelfCheckHistoryProvider);
       }
     } catch (e) {
       if (mounted) setState(() => _errorMsg = 'Lưu không thành công: $e');
@@ -411,6 +416,12 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
               ),
             ),
 
+            // ── Free: một đoạn đọc nhanh cho trụ thấp nhất ────────────────
+            SliverToBoxAdapter(child: _buildQuickRead()),
+
+            // ── Paid: diễn giải sâu · mất cân bằng · xu hướng · pattern ───
+            SliverToBoxAdapter(child: _buildDeepDive()),
+
             // Action buttons
             SliverToBoxAdapter(
               child: Padding(
@@ -469,11 +480,291 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
       ),
     );
   }
+
+  // ── Free: đọc nhanh trụ thấp nhất ────────────────────────────────────────
+  // Hai Lớp v1.2 §II: Free nhận "kết quả tức thời cho từng trụ tại thời điểm
+  // trả lời, không lưu xu hướng".
+
+  Widget _buildQuickRead() {
+    final pillar = lowestPillar(_sScore, _cScore, _aScore);
+    final score = switch (pillar) {
+      SelfCheckPillar.s => _sScore,
+      SelfCheckPillar.c => _cScore,
+      SelfCheckPillar.a => _aScore,
+    };
+    final n = pillarNarrative(pillar, score);
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(22, 20, 22, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const WrEyebrow('ĐIỀU ĐÁNG CHÚ Ý NHẤT'),
+          const SizedBox(height: 10),
+          _NarrativeCard(title: n.title, text: n.text, pillarName: n.pillarName),
+        ],
+      ),
+    );
+  }
+
+  // ── Paid: diễn giải sâu ──────────────────────────────────────────────────
+  // Hai Lớp v1.2 §II: Paid nhận "diễn giải sâu theo bộ narrative đã có sẵn
+  // (theo khoảng điểm, phát hiện mất cân bằng giữa các trụ); theo dõi xu hướng
+  // qua nhiều lần trả lời theo thời gian; đối chiếu chéo với Pattern rút ra từ
+  // Story tự do".
+
+  Widget _buildDeepDive() {
+    final entitlement = ref.watch(wrEntitlementProvider).valueOrNull ??
+        WrEntitlement(plan: WrPlan.free);
+    if (!entitlement.canUseFeature(WrPremiumFeature.selfCheckDeepDive)) {
+      return const _DeepDiveLocked();
+    }
+
+    final imbalance = detectPillarImbalance(_sScore, _cScore, _aScore);
+    final history = ref.watch(wrSelfCheckHistoryProvider).valueOrNull ?? const [];
+    final trend = trendFromHistory(history);
+    final patterns = ref.watch(wrPatternCountsProvider).valueOrNull ?? const [];
+    final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
+    final sitText = {for (final s in situations) s.code: s.text};
+
+    final lowest = lowestPillar(_sScore, _cScore, _aScore);
+    final relatedPatterns = patternsForPillar(lowest, patterns);
+
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(22, 24, 22, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const WrEyebrow('DIỄN GIẢI SÂU'),
+          const SizedBox(height: 10),
+          for (final (pillar, score) in [
+            (SelfCheckPillar.s, _sScore),
+            (SelfCheckPillar.c, _cScore),
+            (SelfCheckPillar.a, _aScore),
+          ]) ...[
+            Builder(builder: (_) {
+              final n = pillarNarrative(pillar, score);
+              return _NarrativeCard(
+                title: n.title,
+                text: n.text,
+                pillarName: n.pillarName,
+              );
+            }),
+            const SizedBox(height: 10),
+          ],
+
+          if (imbalance != null) ...[
+            const SizedBox(height: 8),
+            const WrEyebrow('MẤT CÂN BẰNG GIỮA CÁC MẶT'),
+            const SizedBox(height: 10),
+            _NarrativeCard(text: imbalanceNarrative(imbalance)),
+            const SizedBox(height: 10),
+          ],
+
+          const SizedBox(height: 8),
+          const WrEyebrow('XU HƯỚNG THEO THỜI GIAN'),
+          const SizedBox(height: 10),
+          if (trend == null)
+            const _NarrativeCard(
+              text: 'Đây là lần tự soi đầu tiên được ghi lại. Làm lại sau vài '
+                  'tuần, WorkReflection sẽ cho bạn thấy điều gì đã đổi và điều '
+                  'gì vẫn ở nguyên đó.',
+            )
+          else
+            _NarrativeCard(
+              title: 'Đã ghi ${trend.takenCount} lần tự soi',
+              text: trend.summary,
+              footer: 'Sự rõ ràng ${_delta(trend.structureDelta)} · '
+                  'Mối quan hệ ${_delta(trend.cultureDelta)} · '
+                  'Cách làm việc ${_delta(trend.activityDelta)}',
+            ),
+
+          if (relatedPatterns.isNotEmpty) ...[
+            const SizedBox(height: 18),
+            const WrEyebrow('ĐỐI CHIẾU VỚI ĐIỀU BẠN HAY GẶP'),
+            const SizedBox(height: 10),
+            _NarrativeCard(
+              text: 'Những gì bạn ghi lại trong các câu chuyện cũng chỉ về '
+                  'cùng một hướng với "${lowest.displayName}":',
+              footer: relatedPatterns
+                  .map((p) =>
+                      '${sitText[p.situationCode] ?? p.situationCode ?? 'tình huống này'}'
+                      ' — lần thứ ${p.occurrenceCount}')
+                  .join('\n'),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  static String _delta(double d) {
+    if (d.abs() < 0.05) return 'giữ nguyên';
+    final sign = d > 0 ? '+' : '−';
+    return '$sign${d.abs().toStringAsFixed(1)}';
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Sub-widgets
 // ─────────────────────────────────────────────────────────────────────────────
+
+/// Khối diễn giải dạng văn xuôi dùng chung cho Free và Paid.
+class _NarrativeCard extends StatelessWidget {
+  const _NarrativeCard({
+    required this.text,
+    this.title,
+    this.pillarName,
+    this.footer,
+  });
+
+  final String text;
+  final String? title;
+  final String? pillarName;
+  final String? footer;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      decoration: BoxDecoration(
+        color: WrColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: const Color(0x0F000000)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (pillarName != null) ...[
+            Text(
+              pillarName!,
+              style: const TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+                color: Color(0xFFA3A3A3),
+              ),
+            ),
+            const SizedBox(height: 4),
+          ],
+          if (title != null) ...[
+            Text(
+              title!,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                height: 1.4,
+                color: WrColors.dark,
+              ),
+            ),
+            const SizedBox(height: 6),
+          ],
+          Text(
+            text,
+            style: const TextStyle(
+              fontSize: 13,
+              height: 1.65,
+              color: Color(0xFF4A5568),
+            ),
+          ),
+          if (footer != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              footer!,
+              style: const TextStyle(
+                fontSize: 12,
+                height: 1.6,
+                fontWeight: FontWeight.w600,
+                color: WrColors.dark,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Khối Premium bị khoá — hiện mờ kèm nút nâng cấp (Hai Lớp v1.2 §IV,
+/// khoá cấp tính năng: "ẩn hoặc hiện dạng mờ kèm nút nâng cấp").
+class _DeepDiveLocked extends StatelessWidget {
+  const _DeepDiveLocked();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(22, 24, 22, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const WrEyebrow('DIỄN GIẢI SÂU'),
+          const SizedBox(height: 10),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFFF4F4F1),
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: const Color(0x14000000)),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.lock_outline,
+                        size: 15, color: WrColors.amber),
+                    const SizedBox(width: 6),
+                    Text(
+                      'Premium',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                        color: WrColors.amber,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Bản đầy đủ đọc kỹ từng mặt theo khoảng điểm của bạn, chỉ ra '
+                  'chỗ mất cân bằng giữa ba mặt, so với những lần tự soi trước '
+                  'và đối chiếu với những tình huống bạn hay gặp.',
+                  style: TextStyle(
+                    fontSize: 13,
+                    height: 1.65,
+                    color: Color(0xFF6B7280),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => context.push('/wr/paywall'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: WrColors.dark,
+                      foregroundColor: WrColors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      elevation: 0,
+                    ),
+                    child: const Text(
+                      'Mở diễn giải sâu',
+                      style:
+                          TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 class _InfoRow extends StatelessWidget {
   const _InfoRow({required this.icon, required this.text});

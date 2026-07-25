@@ -47,6 +47,24 @@ const kWave1Dimensions = <ScaDimension>[
   ScaDimension.c1,
 ];
 
+/// DataSpec v3 Tầng 4 — thứ tự triển khai đầy đủ (Đợt 1 → 2 → 3).
+/// Dùng làm thứ tự nền cho phần còn lại sau các chiều ưu tiên của vai trò.
+const kWaveOrderDimensions = <ScaDimension>[
+  // Đợt 1
+  ScaDimension.c2,
+  ScaDimension.a1,
+  ScaDimension.a3,
+  ScaDimension.c1,
+  // Đợt 2
+  ScaDimension.a4,
+  ScaDimension.a2,
+  ScaDimension.s1,
+  // Đợt 3
+  ScaDimension.c3,
+  ScaDimension.s2,
+  ScaDimension.s3,
+];
+
 // ---------------------------------------------------------------------------
 // Ánh xạ vai trò
 // ---------------------------------------------------------------------------
@@ -151,10 +169,22 @@ class CareerSnapshot {
 // Xếp hạng story theo hồ sơ
 // ---------------------------------------------------------------------------
 
+/// Thứ tự chiều SCA hiệu dụng cho [role]: ba chiều của vai trò trước, phần
+/// còn lại theo thứ tự đợt triển khai của DataSpec v3.
+///
+/// Với vai trò không xác định, kết quả chính là [kWaveOrderDimensions].
+List<ScaDimension> effectiveDimensionOrder(String? role) {
+  final head = roleToDimensions(role);
+  return [
+    ...head,
+    ...kWaveOrderDimensions.where((d) => !head.contains(d)),
+  ];
+}
+
 /// Sắp xếp lại [stories] theo mức phù hợp với [snapshot].
 ///
 /// Thứ tự ưu tiên:
-///   1. Chiều SCA nằm trong danh sách ưu tiên của vai trò (theo đúng thứ tự).
+///   1. Chiều SCA theo [effectiveDimensionOrder] của vai trò.
 ///   2. Trong cùng một chiều: story có `careerStages` trùng giai đoạn của
 ///      vai trò xếp trước.
 ///   3. Còn lại giữ nguyên thứ tự đầu vào (stable).
@@ -164,7 +194,7 @@ List<WrStory> rankStoriesForProfile(
   List<WrStory> stories,
   CareerSnapshot snapshot,
 ) {
-  final dims = roleToDimensions(snapshot.currentRole);
+  final dims = effectiveDimensionOrder(snapshot.currentRole);
   final stages = roleToCareerStages(snapshot.currentRole).toSet();
 
   int dimRank(ScaDimension d) {

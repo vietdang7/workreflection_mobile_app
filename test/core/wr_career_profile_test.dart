@@ -170,18 +170,32 @@ void main() {
       expect(ranked.first.storyId, 'C2-01');
     });
 
-    test('is stable for stories outside the priority set', () {
+    test('phần đuôi theo thứ tự đợt triển khai của DataSpec v3', () {
       final ranked = rankStoriesForProfile(
         stories,
         const CareerSnapshot(currentRole: 'Team Leader'),
       );
+      // Sau C1/C2/C3 (vai trò), thứ tự đợt còn lại là A1, A3, A4, A2, S1, S2, S3
+      // → A2 đứng trước S3.
       final tail = ranked
           .where((s) =>
               s.scaDimension == ScaDimension.s3 ||
               s.scaDimension == ScaDimension.a2)
           .map((s) => s.storyId)
           .toList();
-      expect(tail, ['S3-01', 'A2-01']);
+      expect(tail, ['A2-01', 'S3-01']);
+    });
+
+    test('không có hồ sơ thì giữ nguyên thứ tự đợt triển khai đầy đủ', () {
+      expect(effectiveDimensionOrder(null), kWaveOrderDimensions);
+    });
+
+    test('effectiveDimensionOrder luôn phủ đủ 10 chiều, không trùng', () {
+      for (final role in [null, ...kCareerRoleOptions]) {
+        final order = effectiveDimensionOrder(role);
+        expect(order.length, 10, reason: 'role=$role');
+        expect(order.toSet().length, 10, reason: 'role=$role có chiều trùng');
+      }
     });
 
     test('does not mutate the input list', () {

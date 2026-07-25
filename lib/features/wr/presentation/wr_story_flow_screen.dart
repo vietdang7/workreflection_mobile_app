@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/data/wr_content_repository.dart';
 import '../../../core/data/wr_intelligence_repository.dart';
+import '../../../core/logic/wr_career_profile.dart';
 import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -11,13 +12,6 @@ import '../wr_providers.dart';
 
 // Phase order cho story flow
 enum _StoryPhase { story, aha, confidence, reflection, practice, memory }
-
-// Wave priority: C2, A1, A3, C1, A4, A2, S1, C3, S2, S3
-const _dimensionPriority = [
-  ScaDimension.c2, ScaDimension.a1, ScaDimension.a3, ScaDimension.c1,
-  ScaDimension.a4, ScaDimension.a2, ScaDimension.s1, ScaDimension.c3,
-  ScaDimension.s2, ScaDimension.s3,
-];
 
 const _phaseLabels = {
   _StoryPhase.story: 'Bạn có bao giờ?',
@@ -61,15 +55,11 @@ class _WrStoryFlowScreenState extends ConsumerState<WrStoryFlowScreen> {
     final events = await contentRepo.fetchMemoryEvents(limit: 200);
     final seenIds = events.map((e) => e.storyId).whereType<String>().toSet();
 
-    // Sort by dimension priority
-    final sorted = List.of(allStories);
-    sorted.sort((a, b) {
-      final ai = _dimensionPriority.indexOf(a.scaDimension);
-      final bi = _dimensionPriority.indexOf(b.scaDimension);
-      final aIdx = ai == -1 ? 999 : ai;
-      final bIdx = bi == -1 ? 999 : bi;
-      return aIdx.compareTo(bIdx);
-    });
+    // Xếp theo Career Snapshot: ba chiều của vai trò trước, phần còn lại theo
+    // thứ tự đợt triển khai (DataSpec v3 Tầng 4). Chưa có hồ sơ → thứ tự đợt.
+    final snapshot =
+        ref.read(wrCareerSnapshotProvider).valueOrNull ?? const CareerSnapshot();
+    final sorted = rankStoriesForProfile(allStories, snapshot);
 
     // Remove seen, but keep fallback
     final unseen = sorted.where((s) => !seenIds.contains(s.storyId)).toList();
