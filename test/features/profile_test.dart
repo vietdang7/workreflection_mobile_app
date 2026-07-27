@@ -189,6 +189,47 @@ void main() {
       expect(repo.updateReminderCalls, isNotEmpty);
     });
 
+    // Trước đây chỉ mỗi icon 16px bên phải là vùng bấm, nên các mục ở màn này
+    // gần như không ấn được. Cả dòng phải nhận cú chạm.
+    testWidgets('bấm vào nhãn cũng bật/tắt được nhắc nhở', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile(reminder: true));
+      repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
+      await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
+
+      await tester.tap(find.text('Nhắc nhở hằng ngày'));
+      await tester.pumpAndSettle();
+
+      expect(repo.updateReminderCalls, isNotEmpty);
+    });
+
+    testWidgets('mỗi mục cài đặt đều có vùng bấm', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile());
+      repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
+      await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
+
+      for (final key in const [
+        'profile_language_row',
+        'profile_edit_profile_btn',
+        'profile_context_docs_btn',
+        'profile_paywall_btn',
+        'profile_change_password_btn',
+        'profile_export_btn',
+        'profile_logout_btn',
+      ]) {
+        final row = find.byKey(Key(key));
+        expect(row, findsOneWidget, reason: 'thiếu dòng $key');
+        expect(
+          tester.widget<InkWell>(
+            find.descendant(of: row, matching: find.byType(InkWell)),
+          ).onTap,
+          isNotNull,
+          reason: 'dòng $key không bấm được',
+        );
+      }
+    });
+
     testWidgets('avatar shows initials from display name', (tester) async {
       final repo = FakeWrRepository();
       repo.seedProfile(_profile());

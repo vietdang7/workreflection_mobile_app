@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
@@ -281,33 +283,31 @@ class _SettingsSection extends ConsumerWidget {
         WrEyebrow(l10n.profileEyebrowSettings),
         const SizedBox(height: 12),
 
-        // Reminder toggle
+        // Reminder toggle — bấm đâu trên dòng cũng bật/tắt được.
         _SettingRow(
           label: l10n.profileSettingReminder,
-          trailing: GestureDetector(
+          onTap: () => ref.read(reminderProvider.notifier).toggle(),
+          trailing: AnimatedContainer(
             key: const Key('profile_reminder_toggle'),
-            onTap: () => ref.read(reminderProvider.notifier).toggle(),
-            child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 40,
+            height: 22,
+            decoration: BoxDecoration(
+              color: reminderEnabled ? WrColors.teal : WrColors.muted,
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: AnimatedAlign(
               duration: const Duration(milliseconds: 200),
-              width: 40,
-              height: 22,
-              decoration: BoxDecoration(
-                color: reminderEnabled ? WrColors.teal : WrColors.muted,
-                borderRadius: BorderRadius.circular(11),
-              ),
-              child: AnimatedAlign(
-                duration: const Duration(milliseconds: 200),
-                alignment: reminderEnabled
-                    ? Alignment.centerRight
-                    : Alignment.centerLeft,
-                child: Container(
-                  width: 16,
-                  height: 16,
-                  margin: const EdgeInsets.all(3),
-                  decoration: const BoxDecoration(
-                    color: WrColors.white,
-                    shape: BoxShape.circle,
-                  ),
+              alignment: reminderEnabled
+                  ? Alignment.centerRight
+                  : Alignment.centerLeft,
+              child: Container(
+                width: 16,
+                height: 16,
+                margin: const EdgeInsets.all(3),
+                decoration: const BoxDecoration(
+                  color: WrColors.white,
+                  shape: BoxShape.circle,
                 ),
               ),
             ),
@@ -316,73 +316,78 @@ class _SettingsSection extends ConsumerWidget {
 
         // Language
         _SettingRow(
+          key: const Key('profile_language_row'),
           label: l10n.profileSettingLanguage,
-          trailing: GestureDetector(
-            onTap: () => _showLanguageDialog(context, ref),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  l10n.profileLanguageValue,
-                  style: WrTextStyles.body.copyWith(fontSize: 13),
-                ),
-                const SizedBox(width: 4),
-                const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
-              ],
-            ),
+          onTap: () => _showLanguageDialog(context, ref),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                l10n.profileLanguageValue,
+                style: WrTextStyles.body.copyWith(fontSize: 13),
+              ),
+              const SizedBox(width: 4),
+              const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
+            ],
           ),
         ),
 
         // Edit profile
         _SettingRow(
+          key: const Key('profile_edit_profile_btn'),
           label: l10n.profileSettingEditProfile,
-          trailing: GestureDetector(
-            key: const Key('profile_edit_profile_btn'),
-            onTap: () => context.push('/profile/edit'),
-            child: const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
-          ),
+          onTap: () => context.push('/profile/edit'),
+          trailing:
+              const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
         ),
 
         // Tài liệu bối cảnh (JD/CV) — Hai Lớp v1.2 §III
         _SettingRow(
+          key: const Key('profile_context_docs_btn'),
           label: 'Tài liệu bối cảnh',
-          trailing: GestureDetector(
-            key: const Key('profile_context_docs_btn'),
-            onTap: () => context.push('/wr/context-docs'),
-            child: const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
-          ),
+          onTap: () => context.push('/wr/context-docs'),
+          trailing:
+              const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
+        ),
+
+        // Đăng ký Premium
+        _SettingRow(
+          key: const Key('profile_paywall_btn'),
+          label: 'Bản Premium',
+          onTap: () => context.push('/wr/paywall'),
+          trailing:
+              const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
         ),
 
         // Change password
         _SettingRow(
+          key: const Key('profile_change_password_btn'),
           label: l10n.profileSettingChangePassword,
-          trailing: GestureDetector(
-            key: const Key('profile_change_password_btn'),
-            onTap: () => _showChangePasswordDialog(context, ref),
-            child: const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
-          ),
+          onTap: () => _showChangePasswordDialog(context, ref),
+          trailing:
+              const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
         ),
 
         // Export data
         _SettingRow(
+          key: const Key('profile_export_btn'),
           label: l10n.profileSettingExport,
-          trailing: GestureDetector(
-            onTap: () => _exportData(context, ref),
-            child: const Icon(Icons.download_outlined, color: WrColors.coral, size: 18),
+          onTap: () => _exportData(context, ref),
+          trailing: const Icon(
+            Icons.download_outlined,
+            color: WrColors.coral,
+            size: 18,
           ),
         ),
 
-        // Logout — no border-bottom (last item), padding vertical 16
-        GestureDetector(
+        // Logout — dòng cuối, không kẻ vạch dưới
+        _SettingRow(
           key: const Key('profile_logout_btn'),
+          label: l10n.profileSettingLogout,
+          labelColor: WrColors.destructive,
+          showBorder: false,
           onTap: () => _logout(context, ref),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: Text(
-              l10n.profileSettingLogout,
-              style: WrTextStyles.hMedium.copyWith(color: WrColors.destructive),
-            ),
-          ),
+          trailing: const SizedBox.shrink(),
         ),
       ],
     );
@@ -461,6 +466,19 @@ class _SettingsSection extends ConsumerWidget {
     try {
       final data = await ref.read(wrRepositoryProvider).exportUserData();
       final json = const JsonEncoder.withIndent('  ').convert(data);
+
+      // Trên web không có thư mục tài liệu để ghi — path_provider ném lỗi và
+      // nút này im lặng không làm gì. Chép vào clipboard là đường dùng được.
+      if (kIsWeb) {
+        await Clipboard.setData(ClipboardData(text: json));
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Đã chép dữ liệu vào clipboard.')),
+          );
+        }
+        return;
+      }
+
       final dir = await getApplicationDocumentsDirectory();
       final file = File('${dir.path}/workreflection_export.json');
       await file.writeAsString(json);
@@ -492,29 +510,56 @@ class _SettingsSection extends ConsumerWidget {
   }
 }
 
+/// Một dòng cài đặt.
+///
+/// Cả dòng là vùng bấm, không phải riêng mũi tên bên phải: một icon 16px là
+/// đích quá nhỏ để trúng, nên trước đây các mục ở đây gần như không bấm được.
 class _SettingRow extends StatelessWidget {
-  const _SettingRow({required this.label, required this.trailing});
+  const _SettingRow({
+    super.key,
+    required this.label,
+    required this.trailing,
+    this.onTap,
+    this.labelColor,
+    this.showBorder = true,
+  });
+
   final String label;
   final Widget trailing;
+  final VoidCallback? onTap;
+  final Color? labelColor;
+  final bool showBorder;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        border: Border(
-          bottom: BorderSide(
-            color: WrColors.navy.withValues(alpha: 0.05),
-            width: 1,
-          ),
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        decoration: showBorder
+            ? BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: WrColors.navy.withValues(alpha: 0.05),
+                    width: 1,
+                  ),
+                ),
+              )
+            : null,
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: labelColor == null
+                    ? WrTextStyles.hMedium
+                    : WrTextStyles.hMedium.copyWith(color: labelColor),
+              ),
+            ),
+            trailing,
+          ],
         ),
-      ),
-      padding: const EdgeInsets.symmetric(vertical: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(label, style: WrTextStyles.hMedium),
-          trailing,
-        ],
       ),
     );
   }
