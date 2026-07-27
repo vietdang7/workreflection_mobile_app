@@ -25,6 +25,7 @@ import '../../../core/widgets/section_divider.dart';
 import '../../../core/widgets/tab_back_link.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../core/widgets/wr_link_row.dart';
+import '../../workshops/workshops_providers.dart';
 import '../growth_providers.dart';
 import '../wr_providers.dart';
 
@@ -333,6 +334,9 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
             ),
           ),
 
+        // ── Cơ hội phát triển — workshop gần nhất sắp diễn ra ────────────
+        const _OpportunitySliver(),
+
         // ── Ba lối rẽ, mỗi lối một màn riêng ────────────────────────────
         SliverToBoxAdapter(
           child: Padding(
@@ -486,6 +490,121 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
             onTap: () => context.go('/wr/discover?from=growth'),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _OpportunitySliver — "CƠ HỘI PHÁT TRIỂN" (opp-card của giao diện mẫu)
+//
+// Workshop chưa có trường gắn với trụ SCA hay nhu cầu, nên đây là buổi gần
+// nhất sắp diễn ra chứ không phải buổi "hợp với bạn". Nói đúng điều mình biết:
+// dòng phụ là ngày diễn ra, không phải một lý do bịa ra.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _OpportunitySliver extends ConsumerWidget {
+  const _OpportunitySliver();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final workshops = ref.watch(activeWorkshopsProvider).valueOrNull ?? const [];
+    final now = DateTime.now();
+    final upcoming = workshops
+        .where((w) => !w.date.isBefore(DateTime(now.year, now.month, now.day)))
+        .toList()
+      ..sort((a, b) => a.date.compareTo(b.date));
+    final next = upcoming.firstOrNull;
+    if (next == null) return const SliverToBoxAdapter(child: SizedBox.shrink());
+
+    return SliverToBoxAdapter(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(22, 4, 22, 20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const WrEyebrow('CƠ HỘI PHÁT TRIỂN'),
+            const SizedBox(height: 12),
+            InkWell(
+              key: const Key('wr_growth_opportunity'),
+              borderRadius: BorderRadius.circular(16),
+              onTap: () => context.push('/workshops/${next.id}'),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: WrColors.cream,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: WrColors.white,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      child: const Icon(
+                        Icons.mic_none_rounded,
+                        size: 22,
+                        color: WrColors.navy,
+                      ),
+                    ),
+                    const SizedBox(width: 14),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            (next.category ?? 'Workshop').toUpperCase(),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: WrColors.teal,
+                              letterSpacing: 0.44,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            next.title,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 15,
+                              fontWeight: FontWeight.w600,
+                              color: WrColors.navy,
+                              height: 1.3,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Row(
+                            children: [
+                              Text(
+                                'Ngày ${next.date.day.toString().padLeft(2, '0')}'
+                                '/${next.date.month.toString().padLeft(2, '0')}',
+                                style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: WrColors.coral,
+                                ),
+                              ),
+                              const SizedBox(width: 3),
+                              const Icon(
+                                Icons.arrow_forward,
+                                size: 12,
+                                color: WrColors.coral,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

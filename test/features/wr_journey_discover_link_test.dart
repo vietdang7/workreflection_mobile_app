@@ -272,14 +272,15 @@ void main() {
       await _pumpLarge(tester, _wrapJourney(content: content));
 
       expect(find.textContaining('2 mảnh ký ức'), findsOneWidget);
-      expect(find.text('DÒNG THỜI GIAN'), findsOneWidget);
+      // Dòng thời gian gom theo tháng — hai mục cùng tháng 7 nằm chung một cụm.
+      expect(find.text('THÁNG 7, 2026'), findsOneWidget);
     });
 
     testWidgets('0 events → lời mời, không có dòng thời gian', (tester) async {
       await _pumpLarge(tester, _wrapJourney());
 
       expect(find.textContaining('Chưa có mảnh ký ức nào'), findsOneWidget);
-      expect(find.text('DÒNG THỜI GIAN'), findsNothing);
+      expect(find.textContaining('THÁNG '), findsNothing);
     });
 
     testWidgets('không còn khối diễn giải ngay trên tab', (tester) async {
@@ -331,6 +332,65 @@ void main() {
       expect(find.text('PHẢN CHIẾU'), findsOneWidget);
       expect(find.text('THỰC HÀNH'), findsOneWidget);
       expect(find.text('INSIGHT'), findsOneWidget);
+    });
+
+    testWidgets('mỗi tháng một tiêu đề riêng', (tester) async {
+      final content = FakeWrContentRepository();
+      content.seedMemoryEvents([
+        _event(
+          id: 'e1',
+          userId: 'u1',
+          reflectionText: 'Tháng bảy',
+          createdAt: DateTime(2026, 7, 20),
+        ),
+        _event(
+          id: 'e2',
+          userId: 'u1',
+          reflectionText: 'Tháng sáu',
+          createdAt: DateTime(2026, 6, 2),
+        ),
+      ]);
+
+      await _pumpLarge(tester, _wrapJourney(content: content));
+
+      expect(find.text('THÁNG 7, 2026'), findsOneWidget);
+      expect(find.text('THÁNG 6, 2026'), findsOneWidget);
+    });
+  });
+
+  group('groupJourneyByMonth', () {
+    JourneyEntry entry(String title, DateTime? at) =>
+        JourneyEntry(at: at, label: 'PHẢN TƯ', title: title, color: Colors.black);
+
+    test('gom các mục cùng tháng vào một cụm, giữ thứ tự đã sắp', () {
+      final months = groupJourneyByMonth([
+        entry('a', DateTime(2026, 7, 20)),
+        entry('b', DateTime(2026, 7, 2)),
+        entry('c', DateTime(2026, 6, 30)),
+      ]);
+
+      expect(months.map((m) => m.label).toList(),
+          ['THÁNG 7, 2026', 'THÁNG 6, 2026']);
+      expect(months.first.entries.map((e) => e.title).toList(), ['a', 'b']);
+    });
+
+    test('cùng tháng khác năm không bị gộp', () {
+      final months = groupJourneyByMonth([
+        entry('a', DateTime(2026, 7, 1)),
+        entry('b', DateTime(2025, 7, 1)),
+      ]);
+
+      expect(months.length, 2);
+    });
+
+    test('mục không có thời gian dồn xuống cuối', () {
+      final months = groupJourneyByMonth([
+        entry('a', DateTime(2026, 7, 1)),
+        entry('b', null),
+      ]);
+
+      expect(months.last.label, 'CHƯA RÕ THỜI GIAN');
+      expect(months.last.entries.single.title, 'b');
     });
   });
 

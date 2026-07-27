@@ -113,6 +113,42 @@ List<JourneyEntry> buildJourneyEntries({
   return entries;
 }
 
+/// Một cụm mục cùng tháng trên dòng thời gian.
+class JourneyMonth {
+  const JourneyMonth({required this.label, required this.entries});
+
+  final String label;
+  final List<JourneyEntry> entries;
+}
+
+/// Gom dòng thời gian theo tháng, giữ nguyên thứ tự mới-trước đã sắp.
+///
+/// Mắt người đọc mốc thời gian theo cụm chứ không theo từng dòng — không có
+/// tiêu đề tháng thì một danh sách dài trông như một khối phẳng.
+List<JourneyMonth> groupJourneyByMonth(List<JourneyEntry> entries) {
+  final months = <JourneyMonth>[];
+  final undated = <JourneyEntry>[];
+
+  for (final e in entries) {
+    final at = e.at;
+    if (at == null) {
+      undated.add(e);
+      continue;
+    }
+    final label = 'THÁNG ${at.month}, ${at.year}';
+    if (months.isNotEmpty && months.last.label == label) {
+      months.last.entries.add(e);
+    } else {
+      months.add(JourneyMonth(label: label, entries: [e]));
+    }
+  }
+
+  if (undated.isNotEmpty) {
+    months.add(JourneyMonth(label: 'CHƯA RÕ THỜI GIAN', entries: undated));
+  }
+  return months;
+}
+
 String emotionLabel(String? emotion) => switch (emotion) {
       'low' => 'Mệt mỏi',
       'ok' => 'Ổn',
@@ -178,6 +214,11 @@ class WrJourneyScreen extends ConsumerWidget {
           children: [
             const WrTabBackLink(currentTab: WrTab.journey),
             const Text(
+              'Career Memory',
+              style: TextStyle(fontSize: 14, color: WrColors.muted),
+            ),
+            const SizedBox(height: 2),
+            const Text(
               'Hành trình',
               style: TextStyle(
                 fontSize: 32,
@@ -207,16 +248,21 @@ class WrJourneyScreen extends ConsumerWidget {
               const SizedBox(height: 32),
               const WrSectionDivider(),
               const SizedBox(height: 24),
-              const WrEyebrow('DÒNG THỜI GIAN'),
-              const SizedBox(height: 8),
-              for (int i = 0; i < shown.length; i++)
-                _EntryRow(
-                  entry: shown[i],
-                  isLast: i == shown.length - 1,
-                  onTap: shown[i].episodeId == null
-                      ? null
-                      : () => context.push('/wr/episode/${shown[i].episodeId}'),
-                ),
+              for (final month in groupJourneyByMonth(shown)) ...[
+                WrEyebrow(month.label),
+                const SizedBox(height: 16),
+                for (int i = 0; i < month.entries.length; i++)
+                  _EntryRow(
+                    entry: month.entries[i],
+                    isLast: i == month.entries.length - 1,
+                    onTap: month.entries[i].episodeId == null
+                        ? null
+                        : () => context.push(
+                              '/wr/episode/${month.entries[i].episodeId}',
+                            ),
+                  ),
+                const SizedBox(height: 20),
+              ],
               if (capped)
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
@@ -267,96 +313,108 @@ class _EntryRow extends StatelessWidget {
     final at = entry.at;
     final dateStr = at == null
         ? ''
+        // Năm đã nằm ở tiêu đề tháng, không lặp lại trên từng dòng.
         : '${at.day.toString().padLeft(2, '0')}/'
-            '${at.month.toString().padLeft(2, '0')}/${at.year}';
+            '${at.month.toString().padLeft(2, '0')}';
 
     return InkWell(
       onTap: onTap,
-      child: Padding(
-        padding: EdgeInsets.only(top: 16, bottom: isLast ? 8 : 16),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Padding(
-              padding: const EdgeInsets.only(top: 6),
+      child: Stack(
+        children: [
+          // Đường nối các mốc — dòng thời gian phải trông liền mạch, không
+          // phải một danh sách chấm rời.
+          if (!isLast)
+            Positioned(
+              left: 5,
+              top: 24,
+              bottom: 0,
               child: Container(
-                width: 9,
-                height: 9,
-                decoration: BoxDecoration(
-                  color: entry.color,
-                  shape: BoxShape.circle,
-                ),
+                width: 1,
+                color: WrColors.navy.withValues(alpha: 0.1),
               ),
             ),
-            const SizedBox(width: 14),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
+          Padding(
+            padding: EdgeInsets.only(top: 16, bottom: isLast ? 8 : 16),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 5),
+                  child: Container(
+                    width: 11,
+                    height: 11,
+                    decoration: BoxDecoration(
+                      color: entry.color,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 14),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        entry.label,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: entry.color,
-                          letterSpacing: 0.8,
-                        ),
-                      ),
-                      if (dateStr.isNotEmpty) ...[
-                        const SizedBox(width: 8),
+                      if (dateStr.isNotEmpty)
                         Text(
                           dateStr,
                           style: const TextStyle(
-                            fontSize: 11,
+                            fontSize: 12,
                             color: WrColors.muted,
                           ),
                         ),
+                      const SizedBox(height: 4),
+                      Text(
+                        entry.title,
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: WrColors.navy,
+                          height: 1.45,
+                        ),
+                      ),
+                      if (entry.subtitle != null &&
+                          entry.subtitle!.isNotEmpty &&
+                          entry.subtitle != entry.title) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          entry.subtitle!,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: WrColors.muted,
+                            height: 1.5,
+                          ),
+                        ),
                       ],
+                      const SizedBox(height: 6),
+                      Text(
+                        entry.label,
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w700,
+                          color: entry.color,
+                          letterSpacing: 0.4,
+                        ),
+                      ),
                     ],
                   ),
-                  const SizedBox(height: 6),
-                  Text(
-                    entry.title,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: WrColors.navy,
-                      height: 1.45,
+                ),
+                if (onTap != null) ...[
+                  const SizedBox(width: 8),
+                  const Padding(
+                    padding: EdgeInsets.only(top: 4),
+                    child: Icon(
+                      Icons.arrow_forward_ios,
+                      size: 13,
+                      color: WrColors.muted,
                     ),
                   ),
-                  if (entry.subtitle != null &&
-                      entry.subtitle!.isNotEmpty &&
-                      entry.subtitle != entry.title) ...[
-                    const SizedBox(height: 4),
-                    Text(
-                      entry.subtitle!,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: WrColors.muted,
-                        height: 1.5,
-                      ),
-                    ),
-                  ],
                 ],
-              ),
+              ],
             ),
-            if (onTap != null) ...[
-              const SizedBox(width: 8),
-              const Padding(
-                padding: EdgeInsets.only(top: 4),
-                child: Icon(
-                  Icons.arrow_forward_ios,
-                  size: 13,
-                  color: WrColors.muted,
-                ),
-              ),
-            ],
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

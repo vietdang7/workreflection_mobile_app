@@ -488,7 +488,7 @@ void main() {
   });
 
   group('WrJourneyScreen — timeline', () {
-    testWidgets('renders DÒNG THỜI GIAN eyebrow when there are entries', (
+    testWidgets('gom mục theo tháng khi có dữ liệu', (
       tester,
     ) async {
       final content = FakeWrContentRepository();
@@ -503,7 +503,7 @@ void main() {
       await tester.pumpWidget(_wrap(const WrJourneyScreen(), content: content));
       await tester.pumpAndSettle();
 
-      expect(find.text('DÒNG THỜI GIAN'), findsOneWidget);
+      expect(find.text('THÁNG 7, 2026'), findsOneWidget);
     });
 
     testWidgets('renders event reflectionText as timeline title', (
