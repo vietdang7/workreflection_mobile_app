@@ -256,117 +256,48 @@ void main() {
   // Task A: Chip chủ đề (humanNeed)
   // ─────────────────────────────────────────────────────────────────────────────
 
-  group('Task A — Chip chủ đề humanNeed', () {
-    testWidgets('humanNeed roRang → chip "Rõ ràng" hiện cạnh label loại', (tester) async {
+  // ───────────────────────────────────────────────────────────────────────────
+  // Hành trình sau tối giản: chỉ ghi nhận + dòng thời gian, mọi diễn giải
+  // chuyển sang màn riêng.
+  // ───────────────────────────────────────────────────────────────────────────
+
+  group('Hành trình — ghi nhận, không diễn giải', () {
+    testWidgets('đếm đúng số mảnh ký ức', (tester) async {
       final content = FakeWrContentRepository();
       content.seedMemoryEvents([
-        _event(
-          id: 'e1',
-          userId: 'u1',
-          reflectionText: 'Cần biết rõ vai trò',
-          humanNeed: HumanNeed.roRang,
-          createdAt: DateTime(2026, 7, 20),
-        ),
+        _event(id: 'e1', userId: 'u1', reflectionText: 'Một', createdAt: DateTime(2026, 7, 20)),
+        _event(id: 'e2', userId: 'u1', reflectionText: 'Hai', createdAt: DateTime(2026, 7, 19)),
       ]);
 
       await _pumpLarge(tester, _wrapJourney(content: content));
 
-      expect(find.text('Rõ ràng'), findsOneWidget);
+      expect(find.textContaining('2 mảnh ký ức'), findsOneWidget);
+      expect(find.text('DÒNG THỜI GIAN'), findsOneWidget);
     });
 
-    testWidgets('humanNeed ketNoi → chip "Kết nối"', (tester) async {
-      final content = FakeWrContentRepository();
-      content.seedMemoryEvents([
-        _event(
-          id: 'e1',
-          userId: 'u1',
-          reflectionText: 'Muốn kết nối đồng đội',
-          humanNeed: HumanNeed.ketNoi,
-          createdAt: DateTime(2026, 7, 20),
-        ),
-      ]);
+    testWidgets('0 events → lời mời, không có dòng thời gian', (tester) async {
+      await _pumpLarge(tester, _wrapJourney());
 
-      await _pumpLarge(tester, _wrapJourney(content: content));
-
-      expect(find.text('Kết nối'), findsOneWidget);
+      expect(find.textContaining('Chưa có mảnh ký ức nào'), findsOneWidget);
+      expect(find.text('DÒNG THỜI GIAN'), findsNothing);
     });
 
-    testWidgets('humanNeed phatTrien → chip "Phát triển"', (tester) async {
-      final content = FakeWrContentRepository();
-      content.seedMemoryEvents([
-        _event(
-          id: 'e1',
-          userId: 'u1',
-          reflectionText: 'Muốn phát triển bản thân',
-          humanNeed: HumanNeed.phatTrien,
-          createdAt: DateTime(2026, 7, 20),
-        ),
-      ]);
-
-      await _pumpLarge(tester, _wrapJourney(content: content));
-
-      expect(find.text('Phát triển'), findsOneWidget);
-    });
-
-    testWidgets('không có humanNeed → không có chip', (tester) async {
-      final content = FakeWrContentRepository();
-      content.seedMemoryEvents([
-        _event(
-          id: 'e1',
-          userId: 'u1',
-          reflectionText: 'Không có nhu cầu',
-          humanNeed: null,
-          createdAt: DateTime(2026, 7, 20),
-        ),
-      ]);
-
-      await _pumpLarge(tester, _wrapJourney(content: content));
-
-      // Không có chip text nào trong bộ 4 nhu cầu
-      expect(find.text('Rõ ràng'), findsNothing);
-      expect(find.text('Kết nối'), findsNothing);
-      expect(find.text('Thích nghi'), findsNothing);
-      expect(find.text('Phát triển'), findsNothing);
-    });
-  });
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // Task B: Section "CHỦ ĐỀ LẶP LẠI" trên Journey
-  // ─────────────────────────────────────────────────────────────────────────────
-
-  group('Task B — Section CHỦ ĐỀ LẶP LẠI', () {
-    testWidgets('có patterns → thấy eyebrow CHỦ ĐỀ LẶP LẠI', (tester) async {
+    testWidgets('không còn khối diễn giải ngay trên tab', (tester) async {
       final content = FakeWrContentRepository();
       content.seedSituations([_situation(code: 'sit-01', text: 'Áp lực deadline')]);
 
       final intel = FakeWrIntelligenceRepository();
       intel.seedPatternCounts([_pattern(code: 'sit-01', count: 4)]);
 
-      await _pumpLarge(
-        tester,
-        _wrapJourney(content: content, intel: intel),
-      );
+      await _pumpLarge(tester, _wrapJourney(content: content, intel: intel));
 
-      expect(find.textContaining('CHỦ ĐỀ LẶP LẠI'), findsOneWidget);
+      // "CHỦ ĐỀ LẶP LẠI" thuộc về Hiểu mình, không lặp lại ở đây.
+      expect(find.textContaining('CHỦ ĐỀ LẶP LẠI'), findsNothing);
+      // Diễn biến theo thời gian giờ là một dòng dẫn sang màn riêng.
+      expect(find.byKey(const Key('wr_journey_narrative_row')), findsOneWidget);
     });
 
-    testWidgets('có patterns → thấy text tình huống và "N lần"', (tester) async {
-      final content = FakeWrContentRepository();
-      content.seedSituations([_situation(code: 'sit-01', text: 'Áp lực deadline')]);
-
-      final intel = FakeWrIntelligenceRepository();
-      intel.seedPatternCounts([_pattern(code: 'sit-01', count: 4)]);
-
-      await _pumpLarge(
-        tester,
-        _wrapJourney(content: content, intel: intel),
-      );
-
-      expect(find.text('Áp lực deadline'), findsWidgets);
-      expect(find.textContaining('4 lần'), findsOneWidget);
-    });
-
-    testWidgets('có patterns → thấy link "Xem trong Hiểu mình →"', (tester) async {
+    testWidgets('có patterns → vẫn có lối sang Hiểu mình', (tester) async {
       final intel = FakeWrIntelligenceRepository();
       intel.seedPatternCounts([_pattern(code: 'sit-01', count: 2)]);
 
@@ -375,137 +306,31 @@ void main() {
       expect(find.textContaining('Xem trong Hiểu mình'), findsOneWidget);
     });
 
-    testWidgets('không có patterns → section ẩn (không thấy CHỦ ĐỀ LẶP LẠI)', (tester) async {
+    testWidgets('không có patterns → ẩn lối sang Hiểu mình', (tester) async {
       await _pumpLarge(tester, _wrapJourney());
 
-      expect(find.textContaining('CHỦ ĐỀ LẶP LẠI'), findsNothing);
+      expect(find.textContaining('Xem trong Hiểu mình'), findsNothing);
     });
 
-    testWidgets('chỉ hiện top 3 patterns', (tester) async {
-      final content = FakeWrContentRepository();
-      content.seedSituations([
-        _situation(code: 'sit-01', text: 'Pattern 1'),
-        _situation(code: 'sit-02', text: 'Pattern 2'),
-        _situation(code: 'sit-03', text: 'Pattern 3'),
-        _situation(code: 'sit-04', text: 'Pattern 4'),
-      ]);
-
-      final intel = FakeWrIntelligenceRepository();
-      intel.seedPatternCounts([
-        _pattern(code: 'sit-01', count: 10),
-        _pattern(code: 'sit-02', count: 8),
-        _pattern(code: 'sit-03', count: 6),
-        _pattern(code: 'sit-04', count: 4),
-      ]);
-
-      await _pumpLarge(tester, _wrapJourney(content: content, intel: intel));
-
-      // 3 đầu hiện, cái 4 không hiện trong section CHỦ ĐỀ LẶP LẠI
-      expect(find.text('Pattern 1'), findsWidgets);
-      expect(find.text('Pattern 2'), findsWidgets);
-      expect(find.text('Pattern 3'), findsWidgets);
-      expect(find.text('Pattern 4'), findsNothing);
-    });
-  });
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // Task C: Stats theo loại
-  // ─────────────────────────────────────────────────────────────────────────────
-
-  group('Task C — Stats theo loại', () {
-    testWidgets('events nhiều loại → đếm đúng số lượng từng loại', (tester) async {
+    testWidgets('nhãn loại sự kiện hiện đúng', (tester) async {
       final content = FakeWrContentRepository();
       content.seedMemoryEvents([
-        // 2 Trải nghiệm (situationCode)
-        _event(id: 'e1', userId: 'u1', situationCode: 'sit-01', createdAt: DateTime(2026, 7, 20)),
-        _event(id: 'e2', userId: 'u1', situationCode: 'sit-02', createdAt: DateTime(2026, 7, 19)),
-        // 1 Phản chiếu (storyId)
-        _event(id: 'e3', userId: 'u1', storyId: 'story-01', createdAt: DateTime(2026, 7, 18)),
-        // 1 Thực hành (practice_step_done)
-        _event(id: 'e4', userId: 'u1', behavior: 'practice_step_done', createdAt: DateTime(2026, 7, 17)),
-        // 1 Insight
-        _event(id: 'e5', userId: 'u1', behavior: 'insight', createdAt: DateTime(2026, 7, 16)),
-      ]);
-
-      await _pumpLarge(tester, _wrapJourney(content: content));
-
-      // Kiểm tra số đếm xuất hiện
-      expect(find.text('2'), findsWidgets); // 2 Trải nghiệm
-      expect(find.text('Trải nghiệm'), findsOneWidget);
-      expect(find.text('1'), findsWidgets); // Phản chiếu / Thực hành / Insight đều = 1
-      expect(find.text('Phản chiếu'), findsOneWidget);
-      expect(find.text('Thực hành'), findsOneWidget);
-      expect(find.text('Insight'), findsWidgets); // Cũng có label INSIGHT trong timeline
-    });
-
-    testWidgets('0 events → stats row (journey_stats_row) không xuất hiện trong cây widget',
-        (tester) async {
-      await _pumpLarge(tester, _wrapJourney());
-
-      // Narrative luôn hiện kể cả 0 events
-      expect(find.textContaining('0 khoảnh khắc'), findsOneWidget);
-
-      // _StatsRow có Key('journey_stats_row') — khi hasStats = false, widget không render
-      expect(find.byKey(const Key('journey_stats_row')), findsNothing);
-    });
-
-    testWidgets('chỉ có event loại Trải nghiệm → chỉ hiện count Trải nghiệm', (tester) async {
-      final content = FakeWrContentRepository();
-      content.seedMemoryEvents([
-        _event(id: 'e1', userId: 'u1', situationCode: 'sit-01', createdAt: DateTime(2026, 7, 20)),
-        _event(id: 'e2', userId: 'u1', situationCode: 'sit-02', createdAt: DateTime(2026, 7, 19)),
-      ]);
-
-      await _pumpLarge(tester, _wrapJourney(content: content));
-
-      expect(find.text('Trải nghiệm'), findsOneWidget);
-      // Phản chiếu và Thực hành không có → không hiện
-      expect(find.text('Phản chiếu'), findsNothing);
-      expect(find.text('Thực hành'), findsNothing);
-    });
-  });
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // Task D: Empty state mới
-  // ─────────────────────────────────────────────────────────────────────────────
-
-  group('Task D — Empty state Journey mới', () {
-    testWidgets('0 events → thấy "Career Memory trống"', (tester) async {
-      await _pumpLarge(tester, _wrapJourney());
-
-      expect(find.text('Career Memory trống'), findsOneWidget);
-    });
-
-    testWidgets('0 events → thấy 4 thẻ loại sự kiện', (tester) async {
-      await _pumpLarge(tester, _wrapJourney());
-
-      expect(find.text('Trải nghiệm'), findsOneWidget);
-      expect(find.text('Phản chiếu'), findsOneWidget);
-      expect(find.text('Thực hành'), findsOneWidget);
-      expect(find.text('Insight'), findsOneWidget);
-    });
-
-    testWidgets('0 events → thấy nút "Tạo Memory đầu tiên →"', (tester) async {
-      await _pumpLarge(tester, _wrapJourney());
-
-      expect(find.textContaining('Tạo Memory đầu tiên'), findsOneWidget);
-    });
-
-    testWidgets('có events → không thấy grid empty state', (tester) async {
-      final content = FakeWrContentRepository();
-      content.seedMemoryEvents([
+        _event(id: 'e1', userId: 'u1', storyId: 'story-01', createdAt: DateTime(2026, 7, 18)),
         _event(
-          id: 'e1',
+          id: 'e2',
           userId: 'u1',
-          reflectionText: 'Insight đầu tiên',
-          createdAt: DateTime(2026, 7, 20),
+          behavior: 'practice_step_done',
+          reflectionText: 'Chủ đề — Bước 1',
+          createdAt: DateTime(2026, 7, 17),
         ),
+        _event(id: 'e3', userId: 'u1', behavior: 'insight', reflectionText: 'Nhận ra', createdAt: DateTime(2026, 7, 16)),
       ]);
 
       await _pumpLarge(tester, _wrapJourney(content: content));
 
-      // Empty state không hiện
-      expect(find.textContaining('Tạo Memory đầu tiên'), findsNothing);
+      expect(find.text('PHẢN CHIẾU'), findsOneWidget);
+      expect(find.text('THỰC HÀNH'), findsOneWidget);
+      expect(find.text('INSIGHT'), findsOneWidget);
     });
   });
 

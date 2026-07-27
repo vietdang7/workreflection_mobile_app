@@ -1,369 +1,128 @@
+// Hành trình — Memory Surface (WXS §8.4).
+//
+// Nguồn chính của dòng thời gian là Reflection Episode: mỗi Episode đã khép
+// lại là một đơn vị ý nghĩa hoàn chỉnh (WXS §1.6), có khoảnh khắc, có điều
+// nhận ra, có bước nhỏ. Các sự kiện Career Memory khác (thực hành, kỹ năng,
+// insight rời) được trộn vào theo thời gian.
+//
+// Episode đã tự ghi một memory event `reflection_episode` khi khép lại, nên
+// khi đọc được Episode thì loại các event đó ra để không đếm hai lần.
+//
+// Màn này chỉ liệt kê. Bấm vào một lần nhìn lại mới mở màn đọc riêng.
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/data/wr_content_repository.dart';
 import '../../../core/logic/wr_entitlement.dart';
-import '../../../core/widgets/wr_premium_lock.dart';
 import '../../../core/models/wr_content.dart';
+import '../../../core/models/wr_episode.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
-import '../../../core/widgets/action_link.dart';
 import '../../../core/widgets/eyebrow.dart';
-import '../../../core/widgets/progress_track.dart';
 import '../../../core/widgets/section_divider.dart';
 import '../../../core/widgets/tab_back_link.dart';
+import '../../../core/widgets/wr_link_row.dart';
 import '../wr_providers.dart';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Constants
-// ─────────────────────────────────────────────────────────────────────────────
+/// Bản ghi hiển thị trên dòng thời gian — Episode hoặc Career Memory event.
+class JourneyEntry {
+  const JourneyEntry({
+    required this.at,
+    required this.label,
+    required this.title,
+    required this.color,
+    this.subtitle,
+    this.episodeId,
+  });
 
-/// Free tier: show at most 10 memory events before showing lock banner.
-const _kFreeMemoryLimit = 10;
+  final DateTime? at;
+  final String label;
+  final String title;
+  final String? subtitle;
+  final Color color;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Local providers
-// ─────────────────────────────────────────────────────────────────────────────
+  /// Có id nghĩa là bấm vào mở được màn đọc riêng.
+  final String? episodeId;
+}
 
-final _memoryEventsProvider =
-    FutureProvider<List<CareerMemoryEvent>>((ref) async {
-  final userId = ref.watch(currentUserIdProvider);
-  if (userId == null) return const [];
-  final repo = ref.watch(wrContentRepositoryProvider);
-  // Fetch all events; screen truncates to _kFreeMemoryLimit for free users.
-  return repo.fetchMemoryEventsForUser(userId);
-});
+/// Free tier: hiện tối đa 10 mục trước khi mời mở bản đầy đủ.
+const int kFreeJourneyLimit = 10;
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Helpers
-// ─────────────────────────────────────────────────────────────────────────────
+/// Mã behavior mà Episode ghi vào Career Memory khi khép lại.
+const String kEpisodeBehavior = 'reflection_episode';
 
-/// Map emotion string → tiếng Việt (dùng cho cả title fallback và body).
-String _emotionLabel(String? emotion) => switch (emotion) {
+/// Dựng dòng thời gian từ Episode + Career Memory event, mới nhất trước.
+///
+/// Chỉ Episode đã khép lại mới vào Hành trình — WDA Inv.6: chưa có ý nghĩa
+/// thì chưa phải ký ức nghề nghiệp.
+List<JourneyEntry> buildJourneyEntries({
+  required List<ReflectionEpisode> episodes,
+  required List<CareerMemoryEvent> events,
+  required Map<String, String> situationLabels,
+}) {
+  final entries = <JourneyEntry>[];
+
+  final closed = episodes
+      .where((e) => e.state == ExperienceState.integrated)
+      .toList(growable: false);
+
+  for (final e in closed) {
+    entries.add(JourneyEntry(
+      at: e.closedAt ?? e.updatedAt ?? e.openedAt,
+      label: 'PHẢN TƯ',
+      title: e.draftMeaning?.trim().isNotEmpty == true
+          ? e.draftMeaning!.trim()
+          : e.humanMoment.label,
+      subtitle: e.situationCode != null
+          ? situationLabels[e.situationCode]
+          : e.humanMoment.label,
+      color: WrColors.navy,
+      episodeId: e.id,
+    ));
+  }
+
+  // Khi đã đọc được Episode thì bỏ event do chính Episode sinh ra.
+  final skipEpisodeEvents = closed.isNotEmpty;
+  for (final ev in events) {
+    if (skipEpisodeEvents && ev.behavior == kEpisodeBehavior) continue;
+    final title = ev.situationCode != null
+        ? (situationLabels[ev.situationCode] ?? ev.situationCode!)
+        : (ev.reflectionText?.trim().isNotEmpty == true
+            ? ev.reflectionText!.trim()
+            : emotionLabel(ev.emotion));
+    final mood =
+        ev.emotion?.isNotEmpty == true ? emotionLabel(ev.emotion) : null;
+    entries.add(JourneyEntry(
+      at: ev.createdAt,
+      label: eventTypeLabel(ev),
+      title: title,
+      subtitle: mood == title ? null : mood,
+      color: eventColor(ev),
+    ));
+  }
+
+  entries.sort((a, b) {
+    final av = a.at;
+    final bv = b.at;
+    if (av == null && bv == null) return 0;
+    if (av == null) return 1;
+    if (bv == null) return -1;
+    return bv.compareTo(av);
+  });
+  return entries;
+}
+
+String emotionLabel(String? emotion) => switch (emotion) {
       'low' => 'Mệt mỏi',
       'ok' => 'Ổn',
       'good' => 'Vui',
-      _ => emotion ?? '',
+      _ => emotion ?? 'Ghi chú',
     };
 
-/// Map HumanNeed → label tiếng Việt ngắn (dùng cho chip chủ đề).
-String _humanNeedLabel(HumanNeed need) => switch (need) {
-      HumanNeed.roRang => 'Rõ ràng',
-      HumanNeed.ketNoi => 'Kết nối',
-      HumanNeed.thichNghi => 'Thích nghi',
-      HumanNeed.phatTrien => 'Phát triển',
-    };
-
-// ─────────────────────────────────────────────────────────────────────────────
-// WrJourneyScreen
-// ─────────────────────────────────────────────────────────────────────────────
-
-class WrJourneyScreen extends ConsumerWidget {
-  const WrJourneyScreen({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final eventsAsync = ref.watch(_memoryEventsProvider);
-    final entitlementAsync = ref.watch(wrEntitlementProvider);
-    final situationsAsync = ref.watch(wrSituationsProvider);
-    final patternsAsync = ref.watch(wrPatternCountsProvider);
-    final narratives =
-        ref.watch(wrPatternNarrativesProvider).valueOrNull ?? const [];
-
-    final now = DateTime.now();
-    final entitlement =
-        entitlementAsync.valueOrNull ?? WrEntitlement(plan: WrPlan.free);
-    final allEvents = eventsAsync.valueOrNull ?? const [];
-    final situations = situationsAsync.valueOrNull ?? const [];
-    final patterns = patternsAsync.valueOrNull ?? const [];
-
-    // sitMap: code → display text
-    final sitMap = {for (final s in situations) s.code: s.text};
-
-    // Narrative counts (using full list, before truncation)
-    final totalEvents = allEvents.length;
-    const narrativeWindowDays = 30;
-    final rawDays = (allEvents.isNotEmpty && allEvents.last.createdAt != null)
-        ? now.difference(allEvents.last.createdAt!).inDays
-        : 0;
-    final daysSince = rawDays.clamp(0, narrativeWindowDays);
-    final narrativeText =
-        'Trong $daysSince ngày qua, bạn đã ghi nhận $totalEvents khoảnh khắc'
-        ' trong Career Memory của mình.';
-
-    // Free users see at most _kFreeMemoryLimit events; premium sees all.
-    final events =
-        (!entitlement.isPremium && allEvents.length > _kFreeMemoryLimit)
-            ? allEvents.sublist(0, _kFreeMemoryLimit)
-            : allEvents;
-
-    // Timeline header month: from first event, else current month
-    final timelineMonth = events.isNotEmpty && events.first.createdAt != null
-        ? events.first.createdAt!.month
-        : now.month;
-
-    // Stats by event type
-    final statExperience =
-        allEvents.where((e) => e.situationCode != null).length;
-    final statReflection = allEvents.where((e) => e.storyId != null).length;
-    final statPractice = allEvents
-        .where((e) =>
-            e.behavior == 'practice_step_done' ||
-            e.behavior == 'practice_theme_done')
-        .length;
-    final statInsight =
-        allEvents.where((e) => e.behavior == 'insight').length;
-    final hasStats =
-        statExperience > 0 || statReflection > 0 || statPractice > 0 || statInsight > 0;
-
-    // Top 3 patterns for "CHỦ ĐỀ LẶP LẠI" section
-    final topPatterns = patterns.take(3).toList();
-    final maxCount = topPatterns.isEmpty
-        ? 1.0
-        : topPatterns.first.occurrenceCount.toDouble();
-
-    return Scaffold(
-      backgroundColor: const Color(0xFFFBFBF9),
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            // ── Top area: "Career Memory" greeting + "Hành trình" title ──
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(22, 20, 22, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const WrTabBackLink(currentTab: WrTab.journey),
-                    const Text(
-                      'Career Memory',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: WrColors.muted,
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Hành trình',
-                      style: TextStyle(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w800,
-                        color: WrColors.navy,
-                        height: 1.2,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // ── Divider ───────────────────────────────────────────────────
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 22),
-                child: WrSectionDivider(),
-              ),
-            ),
-
-            // ── Section: CÂU CHUYỆN CỦA BẠN ─────────────────────────────
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(22, 20, 22, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const WrEyebrow('CÂU CHUYỆN CỦA BẠN'),
-                    const SizedBox(height: 12),
-                    // Insight quote style: 20px italic navy, height 1.45
-                    Text(
-                      narrativeText,
-                      style: const TextStyle(
-                        fontSize: 20,
-                        fontStyle: FontStyle.italic,
-                        color: WrColors.navy,
-                        height: 1.45,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    // Caption: 12px muted
-                    Text(
-                      'Career Companion · Tháng ${now.month}, ${now.year}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        color: WrColors.muted,
-                      ),
-                    ),
-
-                    // Task C: Stats theo loại (chỉ hiện khi có ít nhất 1 loại)
-                    if (hasStats) ...[
-                      const SizedBox(height: 20),
-                      _StatsRow(
-                        key: const Key('journey_stats_row'),
-                        experience: statExperience,
-                        reflection: statReflection,
-                        practice: statPractice,
-                        insight: statInsight,
-                      ),
-                    ],
-
-                    const SizedBox(height: 20),
-                  ],
-                ),
-              ),
-            ),
-
-            // ── Divider ───────────────────────────────────────────────────
-            const SliverToBoxAdapter(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 22),
-                child: WrSectionDivider(),
-              ),
-            ),
-
-            // ── Task B: Section CHỦ ĐỀ LẶP LẠI ──────────────────────────
-            if (topPatterns.isNotEmpty) ...[
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(22, 20, 22, 0),
-                  child: _RecurringThemesSection(
-                    patterns: topPatterns,
-                    sitMap: sitMap,
-                    maxCount: maxCount,
-                    onViewDiscover: () => context.go('/wr/discover?from=journey'),
-                  ),
-                ),
-              ),
-              const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 22),
-                  child: WrSectionDivider(),
-                ),
-              ),
-            ],
-
-            // ── Section: Timeline THÁNG {M} ───────────────────────────────
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(22, 20, 22, 0),
-                child: WrEyebrow('THÁNG $timelineMonth'),
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 16)),
-
-            if (eventsAsync.isLoading)
-              const SliverToBoxAdapter(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 22),
-                  child: LinearProgressIndicator(),
-                ),
-              )
-            else if (events.isEmpty)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(22, 0, 22, 4),
-                  child: _EmptyMemoryCard(
-                    onCreateFirst: () => context.go('/home?from=journey'),
-                  ),
-                ),
-              )
-            else
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 22),
-                  child: Column(
-                    children: [
-                      for (int i = 0; i < events.length; i++)
-                        _TimelineItem(
-                          event: events[i],
-                          isLast: i == events.length - 1,
-                          sitMap: sitMap,
-                        ),
-                    ],
-                  ),
-                ),
-              ),
-
-            // ── Free lock banner ─────────────────────────────────────────
-            if (!entitlement.isPremium && events.length >= _kFreeMemoryLimit)
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(22, 8, 22, 0),
-                  child: _LockBanner(
-                    label: 'Xem toàn bộ Career Memory',
-                    onTap: () => context.push('/wr/paywall'),
-                  ),
-                ),
-              ),
-
-            // ── Pattern Nâng cao (Hai Lớp v1.2 §III — Paid) ──────────────
-            // Thay cho banner khoá cũ vốn chỉ dẫn sang paywall mà không có
-            // nội dung thật cho người đã trả tiền.
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const WrEyebrow('DIỄN BIẾN THEO THỜI GIAN'),
-                    const SizedBox(height: 10),
-                    if (!entitlement
-                        .canUseFeature(WrPremiumFeature.patternAdvanced))
-                      const WrPremiumLock(
-                        description:
-                            'Bản đầy đủ kể lại những mẫu hình của bạn đã đổi '
-                            'thế nào qua từng giai đoạn — điều gì đang nhạt '
-                            'dần và điều gì vẫn quay lại.',
-                        ctaLabel: 'Mở diễn biến theo thời gian',
-                        paywallTrigger: 'pattern_advanced',
-                      )
-                    else if (narratives.isEmpty)
-                      const _PlainNote(
-                        text: 'Chưa đủ dữ liệu để kể lại diễn biến. Ghi thêm '
-                            'vài lần nữa, WorkReflection sẽ chỉ ra điều gì '
-                            'đang đổi và điều gì vẫn ở nguyên đó.',
-                      )
-                    else
-                      for (final n in narratives.take(3)) ...[
-                        _PlainNote(text: n.narrative, period: _period(n)),
-                        const SizedBox(height: 10),
-                      ],
-                  ],
-                ),
-              ),
-            ),
-
-            const SliverToBoxAdapter(child: SizedBox(height: 24)),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Helper functions
-// ─────────────────────────────────────────────────────────────────────────────
-
-/// Dot color per event behavior/type.
-Color _dotColor(CareerMemoryEvent e) {
-  return switch (e.behavior) {
-    'practice_step_done' => WrColors.teal,
-    'practice_theme_done' => WrColors.teal,
-    'insight' => const Color(0xFF5B8CC9),
-    'decision' => WrColors.coral,
-    _ => e.storyId != null
-        ? const Color(0xFF5E7A5A)
-        : e.situationCode != null
-            ? WrColors.navy
-            : WrColors.muted,
-  };
-}
-
-/// Human-readable type label (uppercase per mockup).
-String _eventTypeLabel(CareerMemoryEvent e) {
+String eventTypeLabel(CareerMemoryEvent e) {
+  if (e.behavior == kEpisodeBehavior) return 'PHẢN TƯ';
+  if (e.behavior == 'skill_certified') return 'KỸ NĂNG';
   if (e.behavior == 'practice_step_done' ||
       e.behavior == 'practice_theme_done') {
     return 'THỰC HÀNH';
@@ -375,8 +134,9 @@ String _eventTypeLabel(CareerMemoryEvent e) {
   return 'GHI CHÚ';
 }
 
-/// Label color per event type.
-Color _labelColor(CareerMemoryEvent e) {
+Color eventColor(CareerMemoryEvent e) {
+  if (e.behavior == kEpisodeBehavior) return WrColors.navy;
+  if (e.behavior == 'skill_certified') return WrColors.teal;
   if (e.behavior == 'practice_step_done' ||
       e.behavior == 'practice_theme_done') {
     return WrColors.teal;
@@ -384,572 +144,219 @@ Color _labelColor(CareerMemoryEvent e) {
   if (e.behavior == 'insight') return const Color(0xFF5B8CC9);
   if (e.behavior == 'decision') return WrColors.coral;
   if (e.storyId != null) return const Color(0xFF5E7A5A);
-  if (e.situationCode != null) return WrColors.navy;
   return WrColors.muted;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Sub-widgets
-// ─────────────────────────────────────────────────────────────────────────────
+// ---------------------------------------------------------------------------
 
-/// Task C: Hàng stats đếm event theo loại.
-class _StatsRow extends StatelessWidget {
-  const _StatsRow({
-    super.key,
-    required this.experience,
-    required this.reflection,
-    required this.practice,
-    required this.insight,
+class WrJourneyScreen extends ConsumerWidget {
+  const WrJourneyScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final episodes = ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
+    final events = ref.watch(wrMemoryEventsProvider).valueOrNull ?? const [];
+    final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
+    final patterns = ref.watch(wrPatternCountsProvider).valueOrNull ?? const [];
+    final entitlement = ref.watch(wrEntitlementProvider).valueOrNull ??
+        WrEntitlement(plan: WrPlan.free);
+
+    final sitMap = {for (final s in situations) s.code: s.text};
+    final all = buildJourneyEntries(
+      episodes: episodes,
+      events: events,
+      situationLabels: sitMap,
+    );
+    final capped = !entitlement.isPremium && all.length > kFreeJourneyLimit;
+    final shown = capped ? all.sublist(0, kFreeJourneyLimit) : all;
+
+    return Scaffold(
+      backgroundColor: WrColors.white,
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(24, 8, 24, 80),
+          children: [
+            const WrTabBackLink(currentTab: WrTab.journey),
+            const Text(
+              'Hành trình',
+              style: TextStyle(
+                fontSize: 32,
+                fontWeight: FontWeight.w800,
+                color: WrColors.navy,
+                letterSpacing: -0.96,
+                height: 1.1,
+              ),
+            ),
+            const SizedBox(height: 28),
+
+            const WrEyebrow('CAREER MEMORY'),
+            const SizedBox(height: 14),
+            Text(
+              all.isEmpty
+                  ? 'Chưa có mảnh ký ức nào. Mỗi lần nhìn lại sẽ để lại một dấu ở đây.'
+                  : 'Bạn đã để lại ${all.length} mảnh ký ức nghề nghiệp.',
+              style: const TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.w600,
+                color: WrColors.navy,
+                height: 1.4,
+              ),
+            ),
+
+            if (all.isNotEmpty) ...[
+              const SizedBox(height: 32),
+              const WrSectionDivider(),
+              const SizedBox(height: 24),
+              const WrEyebrow('DÒNG THỜI GIAN'),
+              const SizedBox(height: 8),
+              for (int i = 0; i < shown.length; i++)
+                _EntryRow(
+                  entry: shown[i],
+                  isLast: i == shown.length - 1,
+                  onTap: shown[i].episodeId == null
+                      ? null
+                      : () => context.push('/wr/episode/${shown[i].episodeId}'),
+                ),
+              if (capped)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: WrLinkRow(
+                    key: const Key('wr_journey_full_memory_row'),
+                    label: 'Xem toàn bộ Career Memory',
+                    hint: '⭐ Premium',
+                    onTap: () => context.push('/wr/paywall'),
+                  ),
+                ),
+            ],
+
+            const SizedBox(height: 24),
+            const WrSectionDivider(),
+            const SizedBox(height: 12),
+
+            if (patterns.isNotEmpty)
+              WrLinkRow(
+                key: const Key('wr_journey_discover_row'),
+                label: 'Xem trong Hiểu mình',
+                onTap: () => context.go('/wr/discover?from=journey'),
+              ),
+            WrLinkRow(
+              key: const Key('wr_journey_narrative_row'),
+              label: 'Diễn biến theo thời gian',
+              onTap: () => context.push('/wr/journey/narrative'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _EntryRow extends StatelessWidget {
+  const _EntryRow({
+    required this.entry,
+    required this.isLast,
+    this.onTap,
   });
 
-  final int experience;
-  final int reflection;
-  final int practice;
-  final int insight;
+  final JourneyEntry entry;
+  final bool isLast;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    final items = <({int count, String label})>[
-      if (experience > 0) (count: experience, label: 'Trải nghiệm'),
-      if (reflection > 0) (count: reflection, label: 'Phản chiếu'),
-      if (practice > 0) (count: practice, label: 'Thực hành'),
-      if (insight > 0) (count: insight, label: 'Insight'),
-    ];
+    final at = entry.at;
+    final dateStr = at == null
+        ? ''
+        : '${at.day.toString().padLeft(2, '0')}/'
+            '${at.month.toString().padLeft(2, '0')}/${at.year}';
 
-    if (items.isEmpty) return const SizedBox.shrink();
-
-    final dividerColor = WrColors.navy.withValues(alpha: 0.12);
-
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.start,
-      children: [
-        for (int i = 0; i < items.length; i++) ...[
-          if (i > 0)
-            Container(
-              width: 1,
-              height: 32,
-              color: dividerColor,
-              margin: const EdgeInsets.symmetric(horizontal: 16),
-            ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '${items[i].count}',
-                style: const TextStyle(
-                  fontSize: 22,
-                  fontWeight: FontWeight.w800,
-                  color: WrColors.navy,
-                  height: 1.1,
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: EdgeInsets.only(top: 16, bottom: isLast ? 8 : 16),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 6),
+              child: Container(
+                width: 9,
+                height: 9,
+                decoration: BoxDecoration(
+                  color: entry.color,
+                  shape: BoxShape.circle,
                 ),
               ),
-              Text(
-                items[i].label,
-                style: const TextStyle(
-                  fontSize: 11,
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        entry.label,
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: entry.color,
+                          letterSpacing: 0.8,
+                        ),
+                      ),
+                      if (dateStr.isNotEmpty) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          dateStr,
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: WrColors.muted,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    entry.title,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: WrColors.navy,
+                      height: 1.45,
+                    ),
+                  ),
+                  if (entry.subtitle != null &&
+                      entry.subtitle!.isNotEmpty &&
+                      entry.subtitle != entry.title) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      entry.subtitle!,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: WrColors.muted,
+                        height: 1.5,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (onTap != null) ...[
+              const SizedBox(width: 8),
+              const Padding(
+                padding: EdgeInsets.only(top: 4),
+                child: Icon(
+                  Icons.arrow_forward_ios,
+                  size: 13,
                   color: WrColors.muted,
                 ),
               ),
             ],
-          ),
-        ],
-      ],
-    );
-  }
-}
-
-/// Task B: Section "CHỦ ĐỀ LẶP LẠI".
-class _RecurringThemesSection extends StatelessWidget {
-  const _RecurringThemesSection({
-    required this.patterns,
-    required this.sitMap,
-    required this.maxCount,
-    required this.onViewDiscover,
-  });
-
-  final List<PatternCount> patterns;
-  final Map<String, String> sitMap;
-  final double maxCount;
-  final VoidCallback onViewDiscover;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const WrEyebrow('CHỦ ĐỀ LẶP LẠI'),
-        const SizedBox(height: 12),
-        ...patterns.asMap().entries.map((entry) {
-          final i = entry.key;
-          final p = entry.value;
-          final name = sitMap[p.situationCode] ?? p.situationCode ?? '?';
-          final Color countColor;
-          final FontWeight countWeight;
-          final Color trackColor;
-          if (i == 0) {
-            countColor = WrColors.coral;
-            countWeight = FontWeight.w700;
-            trackColor = WrColors.coral;
-          } else if (i == 1) {
-            countColor = WrColors.teal;
-            countWeight = FontWeight.w600;
-            trackColor = WrColors.navy;
-          } else {
-            countColor = WrColors.muted;
-            countWeight = FontWeight.w600;
-            trackColor = WrColors.navy.withValues(alpha: 0.4);
-          }
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        name,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: WrColors.navy,
-                        ),
-                      ),
-                    ),
-                    Text(
-                      '${p.occurrenceCount} lần',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: countWeight,
-                        color: countColor,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 6),
-                WrProgressTrack(
-                  value: maxCount > 0 ? p.occurrenceCount / maxCount : 0,
-                  color: trackColor,
-                ),
-              ],
-            ),
-          );
-        }),
-        const SizedBox(height: 4),
-        WrActionLink(
-          label: 'Xem trong Hiểu mình',
-          onTap: onViewDiscover,
-        ),
-        const SizedBox(height: 20),
-      ],
-    );
-  }
-}
-
-/// Timeline item: dot + vertical connector line + content.
-class _TimelineItem extends StatelessWidget {
-  const _TimelineItem({
-    required this.event,
-    required this.isLast,
-    required this.sitMap,
-  });
-  final CareerMemoryEvent event;
-  final bool isLast;
-  final Map<String, String> sitMap;
-
-  @override
-  Widget build(BuildContext context) {
-    final date = event.createdAt;
-    final dateStr = date != null
-        ? '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}'
-        : '';
-    final dot = _dotColor(event);
-    final label = _eventTypeLabel(event);
-    final labelColor = _labelColor(event);
-
-    // Task A: Title ưu tiên situationCode → reflectionText → emotion (tiếng Việt)
-    final String title;
-    if (event.situationCode != null) {
-      title = sitMap[event.situationCode] ?? event.situationCode!;
-    } else if (event.reflectionText != null &&
-        event.reflectionText!.isNotEmpty) {
-      title = event.reflectionText!;
-    } else {
-      title = _emotionLabel(event.emotion);
-    }
-
-    // Body: hiện emotion (tiếng Việt) khi title không phải emotion
-    final String body;
-    if (event.emotion != null && event.emotion!.isNotEmpty) {
-      final emotionVn = _emotionLabel(event.emotion);
-      // Chỉ hiện body nếu title khác với emotion label
-      body = (title != emotionVn) ? emotionVn : '';
-    } else {
-      body = '';
-    }
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: isLast ? 0 : 24),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Left column: dot + vertical line
-          SizedBox(
-            width: 11,
-            child: Stack(
-              clipBehavior: Clip.none,
-              children: [
-                // Dot (11×11 circle, marginTop 4 per CSS spec)
-                Padding(
-                  padding: const EdgeInsets.only(top: 4),
-                  child: Container(
-                    width: 11,
-                    height: 11,
-                    decoration:
-                        BoxDecoration(color: dot, shape: BoxShape.circle),
-                  ),
-                ),
-                // Vertical connector (hidden for last item)
-                if (!isLast)
-                  Positioned(
-                    left: 5,
-                    top: 15,
-                    bottom: -24,
-                    child: Container(
-                      width: 1,
-                      color: WrColors.navy.withValues(alpha: 0.10),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 16),
-          // Right column: content
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // Date: 12px muted
-                if (dateStr.isNotEmpty)
-                  Text(
-                    dateStr,
-                    style: const TextStyle(
-                      fontSize: 12,
-                      color: WrColors.muted,
-                    ),
-                  ),
-                if (dateStr.isNotEmpty) const SizedBox(height: 2),
-                // Title (h-medium): 16px w600 dark
-                if (title.isNotEmpty)
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: WrColors.dark,
-                    ),
-                  ),
-                // Body text: 14px dark 80% height 1.5
-                if (body.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    body,
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: WrColors.dark.withValues(alpha: 0.80),
-                      height: 1.5,
-                    ),
-                  ),
-                ],
-                // Type label row (với chip humanNeed nếu có)
-                const SizedBox(height: 6),
-                Row(
-                  children: [
-                    Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: labelColor,
-                      ),
-                    ),
-                    // Task A: Chip chủ đề từ humanNeed
-                    if (event.humanNeed != null) ...[
-                      const SizedBox(width: 8),
-                      _HumanNeedChip(need: event.humanNeed!),
-                    ],
-                  ],
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Chip pill nhỏ hiển thị humanNeed label.
-class _HumanNeedChip extends StatelessWidget {
-  const _HumanNeedChip({required this.need});
-  final HumanNeed need;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: WrColors.navy.withValues(alpha: 0.06),
-        borderRadius: BorderRadius.circular(100),
-      ),
-      child: Text(
-        _humanNeedLabel(need),
-        style: const TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-          color: WrColors.navy,
-        ),
-      ),
-    );
-  }
-}
-
-/// Task D: Empty state mới với grid 2×2 + nút.
-class _EmptyMemoryCard extends StatelessWidget {
-  const _EmptyMemoryCard({required this.onCreateFirst});
-  final VoidCallback onCreateFirst;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: WrColors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0x0F000000)),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'Career Memory trống',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: WrColors.dark,
-            ),
-          ),
-          const SizedBox(height: 4),
-          const Text(
-            'Mỗi lần phản chiếu sẽ tạo ra một mảnh ký ức nghề nghiệp được lưu tại đây.',
-            style: TextStyle(
-              fontSize: 12,
-              color: Color(0xFF737373),
-              height: 1.6,
-            ),
-          ),
-          const SizedBox(height: 16),
-          // Grid 2×2 loại sự kiện
-          GridView.count(
-            crossAxisCount: 2,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            crossAxisSpacing: 8,
-            mainAxisSpacing: 8,
-            childAspectRatio: 2.2,
-            children: const [
-              _TypeCard(icon: '◎', title: 'Trải nghiệm', desc: 'Điều bạn gặp mỗi ngày'),
-              _TypeCard(icon: '◈', title: 'Phản chiếu', desc: 'Từ câu chuyện bạn đọc'),
-              _TypeCard(icon: '✦', title: 'Thực hành', desc: 'Bước bạn hoàn thành'),
-              _TypeCard(icon: '◇', title: 'Insight', desc: 'Góc nhìn thay đổi'),
-            ],
-          ),
-          const SizedBox(height: 16),
-          // Nút full-width navy
-          SizedBox(
-            width: double.infinity,
-            child: GestureDetector(
-              onTap: onCreateFirst,
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 13),
-                decoration: BoxDecoration(
-                  color: WrColors.navy,
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                alignment: Alignment.center,
-                child: const Text(
-                  'Tạo Memory đầu tiên →',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: WrColors.white,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Thẻ loại sự kiện trong grid empty state.
-class _TypeCard extends StatelessWidget {
-  const _TypeCard({
-    required this.icon,
-    required this.title,
-    required this.desc,
-  });
-  final String icon;
-  final String title;
-  final String desc;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: WrColors.white,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: WrColors.navy.withValues(alpha: 0.10)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Text(icon, style: const TextStyle(fontSize: 13)),
-          const SizedBox(height: 2),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w600,
-              color: WrColors.dark,
-            ),
-          ),
-          Text(
-            desc,
-            style: const TextStyle(
-              fontSize: 10,
-              color: WrColors.muted,
-            ),
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _LockBanner extends StatelessWidget {
-  const _LockBanner({
-    required this.label,
-    required this.onTap,
-  });
-  final String label;
-  final VoidCallback onTap;
-  static const String? icon = null;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Opacity(
-        opacity: 0.7,
-        child: Container(
-          decoration: BoxDecoration(
-            color: WrColors.white,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0x0F000000)),
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-          child: Row(
-            children: [
-              if (icon != null) ...[
-                Text(icon!, style: const TextStyle(fontSize: 16)),
-                const SizedBox(width: 10),
-              ],
-              Expanded(
-                child: Text(
-                  label,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w500,
-                    color: WrColors.dark,
-                  ),
-                ),
-              ),
-              const Text(
-                '⭐ Premium',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                  color: Color(0xFFD4A017),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-
-// ---------------------------------------------------------------------------
-// Ghi chú dạng văn xuôi — dùng cho Pattern Nâng cao
-// ---------------------------------------------------------------------------
-
-String? _period(PatternNarrative n) {
-  final start = n.periodStart;
-  final end = n.periodEnd;
-  if (start == null && end == null) return null;
-  String f(DateTime d) => '${d.day}/${d.month}/${d.year}';
-  if (start != null && end != null) return '${f(start)} → ${f(end)}';
-  return f((start ?? end)!);
-}
-
-class _PlainNote extends StatelessWidget {
-  const _PlainNote({required this.text, this.period});
-
-  final String text;
-  final String? period;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-      decoration: BoxDecoration(
-        color: WrColors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0x0F000000)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (period != null) ...[
-            Text(
-              period!,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
-                color: Color(0xFFA3A3A3),
-              ),
-            ),
-            const SizedBox(height: 6),
           ],
-          Text(
-            text,
-            style: const TextStyle(
-              fontSize: 13,
-              height: 1.65,
-              color: Color(0xFF4A5568),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

@@ -182,8 +182,15 @@ class SupabaseWrEpisodeRepository implements WrEpisodeRepository {
     required ReflectionEpisode episode,
     required String meaning,
   }) async {
-    if (episode.state != ExperienceState.meaningForming) {
-      assertTransition(episode.state, ExperienceState.meaningForming);
+    // Episode vừa được mở lại đi qua Exploring trước (WXS §4.3 State 9) —
+    // hai chặng đều hợp lệ, không phải nhảy cóc.
+    var from = episode.state;
+    if (from == ExperienceState.reactivated) {
+      assertTransition(from, ExperienceState.exploring);
+      from = ExperienceState.exploring;
+    }
+    if (from != ExperienceState.meaningForming) {
+      assertTransition(from, ExperienceState.meaningForming);
     }
     return _patch(episode, {
       'state': ExperienceState.meaningForming.dbValue,

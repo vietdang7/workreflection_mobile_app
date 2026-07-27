@@ -119,6 +119,31 @@ final wrOpenEpisodeProvider = FutureProvider<ReflectionEpisode?>((ref) async {
   }
 });
 
+/// Career Memory events của người dùng — nguồn phụ cho tab Hành trình
+/// (thực hành, kỹ năng, insight rời). Rỗng khi chưa đăng nhập hoặc lỗi đọc.
+final wrMemoryEventsProvider =
+    FutureProvider<List<CareerMemoryEvent>>((ref) async {
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null) return const [];
+  final repo = ref.watch(wrContentRepositoryProvider);
+  try {
+    return await repo.fetchMemoryEventsForUser(userId);
+  } catch (_) {
+    return const [];
+  }
+});
+
+/// Một Episode cụ thể — nguồn cho màn đọc chi tiết mở từ Hành trình.
+final wrEpisodeByIdProvider =
+    FutureProvider.family<ReflectionEpisode?, String>((ref, id) async {
+  final repo = ref.watch(wrEpisodeRepositoryProvider);
+  try {
+    return await repo.fetchEpisode(id);
+  } catch (_) {
+    return null;
+  }
+});
+
 /// Lịch sử Episode, mới nhất trước — nguồn cho tab Hành trình.
 final wrEpisodeHistoryProvider =
     FutureProvider<List<ReflectionEpisode>>((ref) async {

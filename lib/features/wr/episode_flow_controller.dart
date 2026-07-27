@@ -46,6 +46,22 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
   /// Rời luồng mà không đóng Episode — Episode vẫn mở, Home mời quay lại.
   void leave() => state = null;
 
+  /// Mở lại một Episode đã khép hoặc đang ngủ để hiểu lại nó.
+  ///
+  /// WPA Inv.4 / WXS Inv.7: Reflection luôn có thể mở lại, không có trạng thái
+  /// khóa vĩnh viễn. Reactivated luôn quay về Exploring (WXS §4.3 State 9),
+  /// nên chuỗi Pattern được tiếp tục chứ không bắt đầu lại từ đầu.
+  Future<ReflectionEpisode?> reopen(ReflectionEpisode episode) async {
+    if (!canTransition(episode.state, ExperienceState.reactivated)) {
+      return null;
+    }
+    final reopened = await _repo.reactivate(episode);
+    state = reopened;
+    _ref.invalidate(wrOpenEpisodeProvider);
+    _ref.invalidate(wrEpisodeHistoryProvider);
+    return reopened;
+  }
+
   // -------------------------------------------------------------------------
   // Capture
   // -------------------------------------------------------------------------

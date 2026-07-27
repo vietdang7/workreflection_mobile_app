@@ -120,8 +120,13 @@ class FakeWrEpisodeRepository implements WrEpisodeRepository {
     required String meaning,
   }) async {
     _maybeThrow();
-    if (episode.state != ExperienceState.meaningForming) {
-      assertTransition(episode.state, ExperienceState.meaningForming);
+    var from = episode.state;
+    if (from == ExperienceState.reactivated) {
+      assertTransition(from, ExperienceState.exploring);
+      from = ExperienceState.exploring;
+    }
+    if (from != ExperienceState.meaningForming) {
+      assertTransition(from, ExperienceState.meaningForming);
     }
     return _store(episode.copyWith(
       state: ExperienceState.meaningForming,

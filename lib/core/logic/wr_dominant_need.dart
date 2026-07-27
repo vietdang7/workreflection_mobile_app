@@ -34,6 +34,48 @@ HumanNeed? dominantNeedFromBehaviour(
 }
 
 // ---------------------------------------------------------------------------
+// Development Flow gate — WXS §3.12 Invariant 6
+// ---------------------------------------------------------------------------
+
+/// Số lần lặp tối thiểu trước khi Development Flow được phép xuất hiện.
+/// WXS §3.12 Inv.6: "Development Flow chỉ xuất hiện khi đã có Pattern đủ
+/// mạnh — ít nhất hai Episode cùng chủ đề."
+const int kDevelopmentFlowThreshold = 2;
+
+/// Tổng số lần đã gặp các tình huống thuộc [need].
+int occurrencesForNeed(
+  HumanNeed need,
+  List<PatternCount> patterns,
+  List<WrSituation> situations,
+) {
+  final codeToNeed = <String, HumanNeed>{
+    for (final s in situations)
+      if (s.humanNeed != null) s.code: s.humanNeed!,
+  };
+  var total = 0;
+  for (final p in patterns) {
+    final code = p.situationCode;
+    if (code == null) continue;
+    if (codeToNeed[code] == need) total += p.occurrenceCount;
+  }
+  return total;
+}
+
+/// Đã đủ dữ liệu để đề xuất thực hành chưa?
+///
+/// Một lần gặp chưa phải Pattern — hệ thống không được vội đẩy người dùng vào
+/// Development Flow (WXS §3.12 Inv.6).
+bool developmentFlowUnlocked({
+  required HumanNeed? need,
+  required List<PatternCount> patterns,
+  required List<WrSituation> situations,
+}) {
+  if (need == null) return false;
+  return occurrencesForNeed(need, patterns, situations) >=
+      kDevelopmentFlowThreshold;
+}
+
+// ---------------------------------------------------------------------------
 // dominantNeedFromSelfCheck
 // ---------------------------------------------------------------------------
 

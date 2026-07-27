@@ -197,16 +197,85 @@ Mỗi màn: 1 tiêu đề, tối đa 1 khối nội dung, 1 hành động chính
 | 7 | Experience có độc lập với Platform không? | Có — state machine và Pattern nằm ở `core/logic`, thuần Dart, không phụ thuộc Flutter |
 | 8 | Có truy ngược được về WDA/HXA/WIA/WPA không? | Có — mỗi quyết định đều chú thích điều khoản tương ứng trong mã nguồn |
 
-## 8. Việc còn lại
+## 8. Sprint F — dọn nốt ba việc treo (2026-07-27, vòng 2)
 
-- **Migration chưa push**: `20260725000000/1/2` (từ đợt trước) và
-  `20260727000000_wr_reflection_episodes` — backend dùng chung với web app,
-  cần được duyệt trước khi push. Khi bảng chưa tồn tại, app degrade mềm:
-  `wrOpenEpisodeProvider` nuốt lỗi và trả null, Home hiện lời mời bắt đầu.
+### F1 · Migration
+`supabase db push --include-all` chỉ còn **một** migration chưa lên:
+`20260727000000_wr_reflection_episodes`. Ba migration `20260725000*` hoá ra
+đã có trên remote từ trước — mục "3 migration chưa push" ở §5 là **sai**, nay
+đã sửa. Remote còn ba version `20260725000003/4/5` do web app đẩy lên, đã thêm
+stub rỗng tương ứng để `db push` không kẹt (giữ nguyên thủ thuật stub).
+
+Lệnh push bị lớp phân quyền của phiên chặn — **chủ dự án cần tự chạy**:
+```
+supabase db push --include-all
+```
+Trước khi push, `--dry-run` xác nhận đúng một file, toàn bộ là DDL thêm mới
+(create table if not exists · 2 index · 4 policy owner-only), không có lệnh
+xoá hay sửa bảng nào của web app.
+
+### F2 · Rút gọn màn Phát triển (D3)
+Tab Phát triển nay chỉ còn: tiêu đề · thẻ "bước đang chờ bạn" · thẻ chủ đề
+đang thực hành · danh sách bước hôm nay · ba dòng dẫn. Ba khối cũ tách thành
+màn riêng: `/wr/growth/themes` · `/wr/growth/skills` · `/wr/growth/journey`.
+Provider dùng chung chuyển sang `lib/features/wr/growth_providers.dart`;
+`wr_growth_screen.dart` 1.356 → 999 dòng.
+
+### F3 · Hành trình đọc từ Episode
+`buildJourneyEntries()` trộn Episode đã Integrated với Career Memory event
+theo thời gian, và **bỏ event `reflection_episode`** khi đã đọc được Episode
+để không đếm hai lần. Mỗi dòng phản tư bấm được → `/wr/episode/:id`, màn đọc
+dựng lại từng câu hỏi + câu trả lời theo đúng thứ tự Pattern. Khối "diễn biến
+theo thời gian" (Premium) tách sang `/wr/journey/narrative`.
+
+### F4 · Hai ràng buộc phát hiện khi rà lại tài liệu
+| Nguồn | Ràng buộc bị bỏ sót | Đã xử lý |
+|---|---|---|
+| WXS §3.12 Inv.6 | Development Flow chỉ mở khi Pattern đủ mạnh — **≥ 2 Episode cùng chủ đề** | `developmentFlowUnlocked()`; thẻ gợi ý thực hành không hiện khi mới gặp một lần. Tự đánh giá SCA không thay được ngưỡng này |
+| WPA Inv.4 · WXS Inv.7 | Reflection luôn mở lại được — **không có trạng thái khoá vĩnh viễn** | Nút "Hiểu lại chuyện này" trên màn chi tiết; `EpisodeFlowController.reopen()`; `saveDraftMeaning` cho phép Reactivated đi qua Exploring (hai chặng hợp lệ, không nhảy cóc) |
+
+---
+
+## 9. Đối chiếu toàn bộ Invariant của bộ tài liệu
+
+| Nguồn | Invariant | Trạng thái |
+|---|---|---|
+| HXA 1 | Experience bắt đầu từ Human Moment | ✅ Episode không tồn tại nếu chưa chọn 1 trong 6 archetype |
+| HXA 2 | Reflection không bắt đầu từ ứng dụng | ✅ Home chỉ mời, không nhắc ép |
+| HXA 3 · WIA 1–10 | AI không phản tư thay, không Confirm, không sở hữu Object | ✅ (vacuous — chưa có AI runtime; câu hỏi là bảng tĩnh) |
+| HXA 4 | Chưa xong Pattern thì không sang Pattern kế | ✅ nút Tiếp `null` khi chưa trả lời |
+| HXA 5 | Người dùng không chọn Pattern theo tên | ✅ `nextPattern()` suy ra từ archetype |
+| HXA 6 · WPA 8 | Journey không có điểm kết thúc | ✅ không có màn "hoàn tất hành trình" |
+| HXA 7 · WXS 6 · WDA 5 | Career Memory chỉ lưu Reflection đã có Meaning | ✅ chỉ ghi sau Meaning Confirmed |
+| HXA 8 · WPA 9 | Mọi màn phục vụ một Human Moment / Building Block | ✅ ghi chú điều khoản trong mã nguồn |
+| WXS Obj.3 | Episode luôn sinh Meaning | ✅ Episode chưa có Meaning thì ngủ, không vào Hành trình |
+| WXS Flow 6 | Development Flow cần ≥ 2 Episode cùng chủ đề | ✅ **F4** |
+| WXS Runtime 4 | Career Memory chỉ cập nhật sau khi Meaning được xác nhận | ✅ `integrate()` sau `confirmMeaning()` |
+| WXS Runtime 5 · Orch.7 | Pause · Resume · Recovery không mất tiến trình | ✅ state ghi xuống DB mỗi bước; Home resume đúng màn |
+| WXS Surface 3 | Chỉ hiện thông tin phục vụ Meaning, không lấp đầy màn | ✅ Home 290 dòng · Hiểu mình/Hành trình chỉ liệt kê dòng |
+| WXS Surface 7 | Surface độc lập Device/Platform | ✅ state machine + grammar thuần Dart |
+| WXS 3 · WPA 1 | Meaning chỉ xác lập khi người dùng xác nhận | ✅ nút xác nhận là hành động người dùng |
+| WXS 5 | Experience State là trạng thái nhận thức, không phải giao diện | ✅ 9 state persist ở DB, độc lập màn |
+| WXS 6 · WPA 3 · 6 | Không nhảy cóc · Career Memory không bị ghi đè | ✅ `assertTransition` + chỉ insert, không update |
+| WPA 4 · WXS 7 | Reflection luôn mở lại được | ✅ **F4** |
+| WDA 6 | Chỉ Story đạt Level 2 mới vào Career Memory | ✅ ghi Meaning chứ không ghi ghi chú thô |
+| WDA 9 | Choice là một bước trong Reflection Cycle | ⚠️ ghi `notice · meaning · insight · action`, **chưa ghi `choice`** riêng |
+| WXS Obj.5 | Journey xoay quanh đúng một Development Theme | ⚠️ `wr_reflection_episodes.theme_id` có cột nhưng chưa được gán |
+| WIA toàn chương | Ba tầng AI (Reflective · Contextual · Generative) | ❌ **chưa hiện thực** — toàn bộ WIA còn là thiết kế |
+
+## 10. Việc còn lại
+
+- **Migration `20260727000000` chưa push** — xem §8 F1. Chủ dự án chạy tay
+  `supabase db push --include-all`. Khi bảng chưa tồn tại, app degrade mềm:
+  `wrOpenEpisodeProvider` nuốt lỗi và trả null, Home hiện lời mời bắt đầu —
+  nhưng **luồng phản tư không lưu được** cho tới khi push xong.
 - **Chưa chạy trên máy thật**: mới dừng ở `flutter build apk --debug`.
 - **`Ghi tiêu chuẩn 6_1.mp3` / `10_1.mp3`** (77 MB và 122 MB) vẫn chưa
   transcribe được — phần nội dung trong hai file này chưa được đối chiếu.
-- **Tab Hành trình** chưa đọc từ `wr_reflection_episodes`; vẫn dựa trên
-  `wr_career_memory_events` như cũ. Hoạt động đúng nhưng chưa tận dụng Episode.
-- **Sprint D3** (rút gọn màn Phát triển, tách danh sách chủ đề khác sang màn
-  riêng) chưa làm — màn này vẫn còn dài hơn mức tối giản mong muốn.
+- **Bước `choice` của Reflection Cycle** (WDA Inv.9) chưa được ghi riêng vào
+  `wr_reflection_steps`; hiện gộp vào `action`.
+- **`theme_id` của Episode** chưa được gán, nên chưa gom Episode theo
+  Development Theme (WXS Obj.5).
+- **Tầng WIA (AI)** chưa hiện thực: câu hỏi dẫn dắt là bảng tĩnh
+  `(Archetype × Pattern)`. Đúng vai trò "hỏi chứ không kết luận", nhưng chưa
+  có Reflective / Contextual / Generative Intelligence như WIA mô tả.

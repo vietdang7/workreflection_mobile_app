@@ -4,12 +4,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+// Phát triển — Practice Surface (WXS §8.6).
+//
+// Màn này chỉ giữ đúng một việc: chủ đề đang thực hành và bước kế tiếp.
+// "Thực hành khác", "Kỹ năng đã hình thành" và "Chặng đường phát triển" đã
+// tách thành màn riêng — bấm vào dòng mới mở, không xổ tại chỗ.
+
 import '../../../core/data/wr_content_repository.dart';
 import '../../../core/data/wr_intelligence_repository.dart';
 import '../../../core/logic/wr_dominant_need.dart';
 import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/logic/wr_skill_certification.dart';
-import '../../../core/widgets/wr_premium_lock.dart';
 import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -19,42 +24,9 @@ import '../../../core/widgets/progress_track.dart';
 import '../../../core/widgets/section_divider.dart';
 import '../../../core/widgets/tab_back_link.dart';
 import '../../../core/widgets/wr_card.dart';
+import '../../../core/widgets/wr_link_row.dart';
+import '../growth_providers.dart';
 import '../wr_providers.dart';
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Local providers
-// ─────────────────────────────────────────────────────────────────────────────
-
-final _practiceThemesProvider =
-    FutureProvider<List<PracticeTheme>>((ref) async {
-  final repo = ref.watch(wrIntelligenceRepositoryProvider);
-  return repo.fetchPracticeThemes();
-});
-
-final _practiceEnrollmentsProvider =
-    FutureProvider<List<PracticeEnrollment>>((ref) async {
-  final userId = ref.watch(currentUserIdProvider);
-  if (userId == null) return const [];
-  final repo = ref.watch(wrIntelligenceRepositoryProvider);
-  return repo.fetchEnrollments(userId);
-});
-
-final _practiceStepsProvider =
-    FutureProvider.family<List<PracticeStep>, String>((ref, themeId) async {
-  final repo = ref.watch(wrIntelligenceRepositoryProvider);
-  return repo.fetchPracticeSteps(themeId);
-});
-
-/// Career Memory events — nguồn để đếm số lần đã thực hành.
-final _memoryEventsProvider =
-    FutureProvider<List<CareerMemoryEvent>>((ref) async {
-  final repo = ref.watch(wrContentRepositoryProvider);
-  try {
-    return await repo.fetchMemoryEvents(limit: 200);
-  } catch (_) {
-    return const [];
-  }
-});
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WrGrowthScreen — ConsumerStatefulWidget for enroll double-tap guard
@@ -83,7 +55,7 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
         themeId: themeId,
         completedSteps: const [],
       ));
-      ref.invalidate(_practiceEnrollmentsProvider);
+      ref.invalidate(practiceEnrollmentsProvider);
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -97,8 +69,8 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final themesAsync = ref.watch(_practiceThemesProvider);
-    final enrollmentsAsync = ref.watch(_practiceEnrollmentsProvider);
+    final themesAsync = ref.watch(practiceThemesProvider);
+    final enrollmentsAsync = ref.watch(practiceEnrollmentsProvider);
     final entitlementAsync = ref.watch(wrEntitlementProvider);
     final patternsAsync = ref.watch(wrPatternCountsProvider);
     final situationsAsync = ref.watch(wrSituationsProvider);
@@ -169,10 +141,19 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
             ? dominantNeedFromSelfCheck(latestSelfCheck)
             : null);
 
+    // WXS §3.12 Inv.6 — Development Flow chỉ mở khi Pattern đủ mạnh (≥ 2 lần
+    // lặp cùng chủ đề). Một lần gặp chưa phải Pattern, không được vội đẩy
+    // người dùng vào thực hành. Tự đánh giá SCA không thay thế được điều này.
+    final canSuggestPractice = developmentFlowUnlocked(
+      need: behaviourNeed,
+      patterns: patterns,
+      situations: situations,
+    );
+
     // Theme gợi ý: match trụ từ dominantNeed
     PracticeTheme? suggestedTheme;
     bool hasPillarReason = false;
-    if (dominantNeed != null && unenrolledThemes.isNotEmpty) {
+    if (canSuggestPractice && dominantNeed != null && unenrolledThemes.isNotEmpty) {
       final pillar = needPillarLetter(dominantNeed);
       suggestedTheme = unenrolledThemes
           .where(
@@ -266,7 +247,7 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
         );
       }
 
-      ref.invalidate(_practiceEnrollmentsProvider);
+      ref.invalidate(practiceEnrollmentsProvider);
     }
 
     return CustomScrollView(
@@ -352,53 +333,32 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
             ),
           ),
 
-        // ── Task D: Section "THỰC HÀNH KHÁC" ────────────────────────────
-        if (unenrolledThemes.isNotEmpty)
-          _OtherPracticesSectionSliver(
-            unenrolledThemes: unenrolledThemes,
-            activeCount: activeCount,
-            entitlement: entitlement,
-            onEnroll: (themeId) => _enroll(themeId),
-            enrollingThemeIds: _enrollingThemeIds,
-            onPaywall: () => context.push('/wr/paywall'),
-          ),
-
-        // ── Kỹ năng đã hình thành (ghi nhận — luôn miễn phí) ─────────────
+        // ── Ba lối rẽ, mỗi lối một màn riêng ────────────────────────────
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(22, 4, 22, 0),
-            child: _CertifiedSkillsSection(
-              themes: themes,
-              enrollments: enrollments,
-            ),
-          ),
-        ),
-
-        // ── Growth Journey (Hai Lớp v1.2 §III — Paid) ────────────────────
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(22, 4, 22, 0),
+            padding: const EdgeInsets.fromLTRB(22, 0, 22, 0),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const WrSectionDivider(),
-                const SizedBox(height: 16),
-                const WrEyebrow('CHẶNG ĐƯỜNG PHÁT TRIỂN'),
-                const SizedBox(height: 10),
-                if (!entitlement.canUseFeature(WrPremiumFeature.growthJourney))
-                  const WrPremiumLock(
-                    description:
-                        'Bản đầy đủ tổng kết từng chặng: bạn đã đi được bao xa '
-                        'và hướng nào đang mở ra tiếp theo.',
-                    ctaLabel: 'Mở chặng đường phát triển',
-                    paywallTrigger: 'growth_journey',
-                  )
-                else
-                  _GrowthJourneySection(
-                    snapshots:
-                        ref.watch(wrGrowthSnapshotsProvider).valueOrNull ??
-                            const [],
-                  ),
+                if (activeTheme == null) const WrSectionDivider(),
+                WrLinkRow(
+                  key: const Key('wr_growth_other_themes_row'),
+                  label: 'Thực hành khác',
+                  hint: unenrolledThemes.isEmpty
+                      ? null
+                      : '${unenrolledThemes.length} chủ đề',
+                  onTap: () => context.push('/wr/growth/themes'),
+                ),
+                WrLinkRow(
+                  key: const Key('wr_growth_skills_row'),
+                  label: 'Kỹ năng đã hình thành',
+                  onTap: () => context.push('/wr/growth/skills'),
+                ),
+                WrLinkRow(
+                  key: const Key('wr_growth_journey_row'),
+                  label: 'Chặng đường phát triển',
+                  onTap: () => context.push('/wr/growth/journey'),
+                ),
               ],
             ),
           ),
@@ -532,87 +492,6 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Kỹ năng đã hình thành — chứng nhận khi lặp lại thực hành đủ nhiều.
-// Đây là ghi nhận hành trình, nên bản miễn phí cũng thấy.
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _CertifiedSkillsSection extends ConsumerWidget {
-  const _CertifiedSkillsSection({
-    required this.themes,
-    required this.enrollments,
-  });
-
-  final List<PracticeTheme> themes;
-  final List<PracticeEnrollment> enrollments;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final events = ref.watch(_memoryEventsProvider).valueOrNull ?? const [];
-    final skills = certifiedSkills(
-      themes: themes,
-      enrollments: enrollments,
-      events: events,
-    );
-    if (skills.isEmpty) return const SizedBox.shrink();
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const WrSectionDivider(),
-        const SizedBox(height: 16),
-        const WrEyebrow('KỸ NĂNG ĐÃ HÌNH THÀNH'),
-        const SizedBox(height: 12),
-        for (final skill in skills)
-          Padding(
-            key: Key('wr_skill_${skill.themeId}'),
-            padding: const EdgeInsets.only(bottom: 14),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Icon(
-                  Icons.verified_outlined,
-                  size: 18,
-                  color: WrColors.teal,
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        skill.title,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: WrColors.navy,
-                          height: 1.4,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        skill.completed
-                            ? 'Bạn đã đi hết chặng thực hành này.'
-                            : 'Bạn đã lặp lại ${skill.practiceCount} lần — '
-                                'đủ để trở thành kỹ năng.',
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: WrColors.muted,
-                          height: 1.5,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        const SizedBox(height: 8),
-      ],
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // Task C: _NextStepCardSliver — card "BƯỚC ĐANG CHỜ BẠN"
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -629,7 +508,7 @@ class _NextStepCardSliver extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final stepsAsync = ref.watch(_practiceStepsProvider(theme.themeId));
+    final stepsAsync = ref.watch(practiceStepsProvider(theme.themeId));
 
     return SliverToBoxAdapter(
       child: stepsAsync.when(
@@ -745,7 +624,7 @@ class _ActiveThemeCardDark extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final stepsAsync = ref.watch(_practiceStepsProvider(theme.themeId));
+    final stepsAsync = ref.watch(practiceStepsProvider(theme.themeId));
     final completed = enrollment.completedSteps;
 
     return WrCardDark(
@@ -846,7 +725,7 @@ class _PracticesSectionSliver extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final stepsAsync = ref.watch(_practiceStepsProvider(theme.themeId));
+    final stepsAsync = ref.watch(practiceStepsProvider(theme.themeId));
 
     return SliverToBoxAdapter(
       child: Padding(
@@ -891,124 +770,6 @@ class _PracticesSectionSliver extends ConsumerWidget {
                 );
               },
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Task D: _OtherPracticesSectionSliver — "THỰC HÀNH KHÁC"
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _OtherPracticesSectionSliver extends StatelessWidget {
-  const _OtherPracticesSectionSliver({
-    required this.unenrolledThemes,
-    required this.activeCount,
-    required this.entitlement,
-    required this.onEnroll,
-    required this.enrollingThemeIds,
-    required this.onPaywall,
-  });
-
-  final List<PracticeTheme> unenrolledThemes;
-  final int activeCount;
-  final WrEntitlement entitlement;
-  final void Function(String themeId) onEnroll;
-  final Set<String> enrollingThemeIds;
-  final VoidCallback onPaywall;
-
-  @override
-  Widget build(BuildContext context) {
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(22, 0, 22, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const WrEyebrow('THỰC HÀNH KHÁC'),
-            const SizedBox(height: 12),
-            ...unenrolledThemes.map((theme) {
-              final canEnroll =
-                  entitlement.canEnrollPracticeTheme(activeCount);
-              final isEnrolling = enrollingThemeIds.contains(theme.themeId);
-
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: WrCardMinimal(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        theme.title,
-                        style: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
-                          color: WrColors.navy,
-                        ),
-                      ),
-                      if (theme.description != null) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          theme.description!,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            color: WrColors.muted,
-                            height: 1.5,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 10),
-                      canEnroll
-                          ? GestureDetector(
-                              onTap: isEnrolling
-                                  ? null
-                                  : () => onEnroll(theme.themeId),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                    horizontal: 14, vertical: 7),
-                                decoration: BoxDecoration(
-                                  color: WrColors.navy,
-                                  borderRadius: BorderRadius.circular(8),
-                                ),
-                                child: isEnrolling
-                                    ? const SizedBox(
-                                        width: 12,
-                                        height: 12,
-                                        child: CircularProgressIndicator(
-                                          color: WrColors.white,
-                                          strokeWidth: 1.5,
-                                        ),
-                                      )
-                                    : const Text(
-                                        'Bắt đầu',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
-                                          color: WrColors.white,
-                                        ),
-                                      ),
-                              ),
-                            )
-                          : GestureDetector(
-                              onTap: onPaywall,
-                              child: const Text(
-                                '⭐ Premium',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                  color: Color(0xFFD4A017),
-                                ),
-                              ),
-                            ),
-                    ],
-                  ),
-                ),
-              );
-            }),
           ],
         ),
       ),
@@ -1241,115 +1002,6 @@ class _StepTag extends StatelessWidget {
         fontWeight: FontWeight.w700,
         color: color,
         letterSpacing: 0.07 * 8,
-      ),
-    );
-  }
-}
-
-
-
-// ---------------------------------------------------------------------------
-// Growth Journey (Progress · Direction) — Hai Lớp v1.2 §III, Paid
-// ---------------------------------------------------------------------------
-
-class _GrowthJourneySection extends StatelessWidget {
-  const _GrowthJourneySection({required this.snapshots});
-
-  final List<GrowthJourneySnapshot> snapshots;
-
-  @override
-  Widget build(BuildContext context) {
-    if (snapshots.isEmpty) {
-      return const _GrowthNote(
-        text: 'Chưa có chặng nào được tổng kết. Sau vài tuần thực hành đều, '
-            'WorkReflection sẽ dựng lại chặng đường của bạn ở đây.',
-      );
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        for (final s in snapshots.take(4)) ...[
-          _GrowthNote(
-            label: s.periodLabel,
-            text: s.direction ?? 'Chặng này chưa có ghi chú hướng đi.',
-            progress: s.progress,
-          ),
-          const SizedBox(height: 10),
-        ],
-      ],
-    );
-  }
-}
-
-class _GrowthNote extends StatelessWidget {
-  const _GrowthNote({required this.text, this.label, this.progress});
-
-  final String text;
-  final String? label;
-  final Map<String, dynamic>? progress;
-
-  @override
-  Widget build(BuildContext context) {
-    final entries = (progress ?? const {}).entries.toList();
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-      decoration: BoxDecoration(
-        color: WrColors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0x0F000000)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (label != null && label!.trim().isNotEmpty) ...[
-            Text(
-              label!,
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: Color(0xFFA3A3A3),
-              ),
-            ),
-            const SizedBox(height: 6),
-          ],
-          Text(
-            text,
-            style: const TextStyle(
-              fontSize: 13,
-              height: 1.65,
-              color: Color(0xFF4A5568),
-            ),
-          ),
-          if (entries.isNotEmpty) ...[
-            const SizedBox(height: 10),
-            Wrap(
-              spacing: 6,
-              runSpacing: 6,
-              children: [
-                for (final e in entries)
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF4F4F1),
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    child: Text(
-                      '${e.key}: ${e.value}',
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w600,
-                        color: WrColors.dark,
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-          ],
-        ],
       ),
     );
   }

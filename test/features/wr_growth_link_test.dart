@@ -16,6 +16,7 @@ import 'package:workreflection_mobile/core/logic/wr_dominant_need.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_growth_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/wr_growth_themes_screen.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 
 import '../support/fake_wr_content_repository.dart';
@@ -66,6 +67,26 @@ Widget _wrapGrowth({
   final intelRepo = intel ?? FakeWrIntelligenceRepository();
   if (entitlement != null) intelRepo.seedEntitlement(entitlement);
   final router = _makeRouter(home: const WrGrowthScreen());
+  return ProviderScope(
+    overrides: [
+      wrContentRepositoryProvider.overrideWithValue(contentRepo),
+      wrIntelligenceRepositoryProvider.overrideWithValue(intelRepo),
+      currentUserIdProvider.overrideWithValue(userId),
+    ],
+    child: MaterialApp.router(routerConfig: router),
+  );
+}
+
+/// Màn "Thực hành khác" — sau Sprint D3 danh sách chủ đề chưa bắt đầu nằm ở
+/// màn riêng, không còn xổ trong tab Phát triển.
+Widget _wrapThemes({
+  FakeWrContentRepository? content,
+  FakeWrIntelligenceRepository? intel,
+  String userId = 'u1',
+}) {
+  final contentRepo = content ?? FakeWrContentRepository();
+  final intelRepo = intel ?? FakeWrIntelligenceRepository();
+  final router = _makeRouter(home: const WrGrowthThemesScreen());
   return ProviderScope(
     overrides: [
       wrContentRepositoryProvider.overrideWithValue(contentRepo),
@@ -257,7 +278,6 @@ group('Task B — Card gợi ý từ Hiểu mình', () {
     await _pumpLarge(tester, _wrapGrowth(content: content, intel: intel));
 
     expect(find.text('GỢI Ý TỪ HIỂU MÌNH'), findsOneWidget);
-    // theme title có thể xuất hiện ở card gợi ý + section THỰC HÀNH KHÁC
     expect(find.text('Thực hành kết nối'), findsAtLeastNWidgets(1));
     expect(
       find.text('Vì bạn đang tìm kiếm sự kết nối.'),
@@ -284,9 +304,9 @@ group('Task B — Card gợi ý từ Hiểu mình', () {
     expect(find.text('GỢI Ý TỪ HIỂU MÌNH'), findsNothing);
     // Nút 'Bắt đầu thực hành' không xuất hiện trong card gợi ý
     expect(find.text('Bắt đầu thực hành'), findsNothing);
-    // Section 'THỰC HÀNH KHÁC' vẫn hiện theme — nút đó là 'Bắt đầu' (không phải 'Bắt đầu thực hành')
-    expect(find.text('THỰC HÀNH KHÁC'), findsOneWidget);
-    expect(find.text('Bắt đầu'), findsOneWidget);
+    // Danh sách chủ đề khác không còn xổ tại chỗ — chỉ còn một dòng dẫn đi.
+    expect(find.text('THỰC HÀNH KHÁC'), findsNothing);
+    expect(find.byKey(const Key('wr_growth_other_themes_row')), findsOneWidget);
   });
 
   testWidgets('tap Bắt đầu thực hành → enrollThemeCalls có đúng themeId',
@@ -388,25 +408,20 @@ group('Task C — Card BƯỚC ĐANG CHỜ BẠN', () {
 // Task D — Section "THỰC HÀNH KHÁC" + enroll + quota
 // ─────────────────────────────────────────────────────────────────────────────
 
-group('Task D — Section THỰC HÀNH KHÁC', () {
-  testWidgets('theme chưa enroll hiện trong THỰC HÀNH KHÁC', (tester) async {
+group('Task D — Màn Thực hành khác', () {
+  testWidgets('chỉ liệt kê theme chưa enroll', (tester) async {
     final intel = FakeWrIntelligenceRepository();
     intel.seedPracticeThemes([
       _theme('t1', 'Chủ đề đang làm'),
       _theme('t2', 'Chủ đề chưa làm'),
     ]);
-    intel.seedPracticeSteps('t1', [_step('s1', 't1', 1, 'Bước 1')]);
-    intel.seedPracticeSteps('t2', []);
-    intel.seedEnrollments([
-      _enrollment('t1'),
-    ]);
+    intel.seedEnrollments([_enrollment('t1')]);
 
-    await _pumpLarge(tester, _wrapGrowth(intel: intel));
+    await _pumpLarge(tester, _wrapThemes(intel: intel));
 
     expect(find.text('THỰC HÀNH KHÁC'), findsOneWidget);
     expect(find.text('Chủ đề chưa làm'), findsOneWidget);
-    // Chủ đề đang làm không xuất hiện trong section khác
-    expect(find.text('Chủ đề đang làm'), findsOneWidget); // chỉ ở header
+    expect(find.text('Chủ đề đang làm'), findsNothing);
   });
 
   testWidgets('tap Bắt đầu → enrollTheme gọi đúng themeId', (tester) async {
@@ -416,7 +431,7 @@ group('Task D — Section THỰC HÀNH KHÁC', () {
     ]);
     intel.seedEnrollments([]);
 
-    await _pumpLarge(tester, _wrapGrowth(intel: intel));
+    await _pumpLarge(tester, _wrapThemes(intel: intel));
 
     expect(find.text('Bắt đầu'), findsOneWidget);
     await tester.tap(find.text('Bắt đầu'));
@@ -429,29 +444,19 @@ group('Task D — Section THỰC HÀNH KHÁC', () {
     expect(intel.enrollThemeCalls.first.completedAt, isNull);
   });
 
-  testWidgets(
-      'đủ quota free (3 active) → hiện ⭐ Premium thay nút Bắt đầu',
+  testWidgets('đủ quota free (2 active) → hiện ⭐ Premium thay nút Bắt đầu',
       (tester) async {
     final intel = FakeWrIntelligenceRepository();
     intel.seedPracticeThemes([
       _theme('t1', 'Active 1'),
       _theme('t2', 'Active 2'),
-      _theme('t3', 'Active 3'),
-      _theme('t4', 'Chưa enroll'),
+      _theme('t3', 'Chưa enroll'),
     ]);
-    intel.seedPracticeSteps('t1', []);
-    intel.seedPracticeSteps('t2', []);
-    intel.seedPracticeSteps('t3', []);
-    intel.seedPracticeSteps('t4', []);
-    intel.seedEnrollments([
-      _enrollment('t1'),
-      _enrollment('t2'),
-      _enrollment('t3'),
-    ]);
+    intel.seedEnrollments([_enrollment('t1'), _enrollment('t2')]);
 
-    await _pumpLarge(tester, _wrapGrowth(intel: intel));
+    await _pumpLarge(tester, _wrapThemes(intel: intel));
 
-    expect(find.text('THỰC HÀNH KHÁC'), findsOneWidget);
+    expect(find.byKey(const Key('wr_growth_themes_quota')), findsOneWidget);
     expect(find.text('⭐ Premium'), findsWidgets);
     expect(find.text('Bắt đầu'), findsNothing);
   });
@@ -461,23 +466,13 @@ group('Task D — Section THỰC HÀNH KHÁC', () {
     intel.seedPracticeThemes([
       _theme('t1', 'Active 1'),
       _theme('t2', 'Active 2'),
-      _theme('t3', 'Active 3'),
-      _theme('t4', 'Chưa enroll'),
+      _theme('t3', 'Chưa enroll'),
     ]);
-    intel.seedPracticeSteps('t1', []);
-    intel.seedPracticeSteps('t2', []);
-    intel.seedPracticeSteps('t3', []);
-    intel.seedPracticeSteps('t4', []);
-    intel.seedEnrollments([
-      _enrollment('t1'),
-      _enrollment('t2'),
-      _enrollment('t3'),
-    ]);
+    intel.seedEnrollments([_enrollment('t1'), _enrollment('t2')]);
 
-    await _pumpLarge(tester, _wrapGrowth(intel: intel));
+    await _pumpLarge(tester, _wrapThemes(intel: intel));
 
-    final premiumFinders = find.text('⭐ Premium');
-    await tester.tap(premiumFinders.first);
+    await tester.tap(find.text('⭐ Premium').first);
     await tester.pumpAndSettle();
 
     expect(find.text('PaywallScreen'), findsOneWidget);

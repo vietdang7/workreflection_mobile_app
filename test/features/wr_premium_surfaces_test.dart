@@ -13,7 +13,7 @@ import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart'
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_context_doc_screen.dart';
-import 'package:workreflection_mobile/features/wr/presentation/wr_journey_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/wr_journey_narrative_screen.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 
 import '../support/fake_repository.dart';
@@ -68,10 +68,10 @@ Future<bool> _seenWhileScrolling(WidgetTester tester, Finder finder) async {
 }
 
 void main() {
-  group('Pattern Nâng cao (Hành trình)', () {
+  group('Pattern Nâng cao (màn Diễn biến theo thời gian)', () {
     testWidgets('Free: khối bị khoá kèm nút nâng cấp', (tester) async {
       final intel = FakeWrIntelligenceRepository()..seedEntitlement(null);
-      await tester.pumpWidget(_wrap(const WrJourneyScreen(), intel: intel));
+      await tester.pumpWidget(_wrap(const WrJourneyNarrativeScreen(), intel: intel));
       await tester.pumpAndSettle();
 
       expect(
@@ -96,7 +96,7 @@ void main() {
             periodEnd: DateTime(2026, 7, 1),
           ),
         ]);
-      await tester.pumpWidget(_wrap(const WrJourneyScreen(), intel: intel));
+      await tester.pumpWidget(_wrap(const WrJourneyNarrativeScreen(), intel: intel));
       await tester.pumpAndSettle();
 
       expect(
@@ -117,7 +117,7 @@ void main() {
         (tester) async {
       final intel = FakeWrIntelligenceRepository()
         ..seedEntitlement(_premium());
-      await tester.pumpWidget(_wrap(const WrJourneyScreen(), intel: intel));
+      await tester.pumpWidget(_wrap(const WrJourneyNarrativeScreen(), intel: intel));
       await tester.pumpAndSettle();
 
       expect(

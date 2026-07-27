@@ -44,6 +44,11 @@ import '../../features/wr/presentation/wr_story_screen.dart';
 import '../../features/wr/presentation/wr_discover_screen.dart';
 import '../../features/wr/presentation/wr_growth_screen.dart';
 import '../../features/wr/presentation/wr_journey_screen.dart';
+import '../../features/wr/presentation/wr_episode_detail_screen.dart';
+import '../../features/wr/presentation/wr_growth_journey_screen.dart';
+import '../../features/wr/presentation/wr_growth_skills_screen.dart';
+import '../../features/wr/presentation/wr_growth_themes_screen.dart';
+import '../../features/wr/presentation/wr_journey_narrative_screen.dart';
 import '../../features/wr/presentation/wr_pattern_detail_screen.dart';
 import '../../features/wr/presentation/wr_paywall_screen.dart';
 import '../../features/wr/presentation/wr_self_check_screen.dart';
@@ -334,6 +339,30 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => WrPatternDetailScreen(
           situationCode: state.pathParameters['code'] ?? '',
         ),
+      ),
+
+      // ── Màn đọc tách khỏi tab (một màn – một hành động) ────────────────
+      GoRoute(
+        path: '/wr/episode/:id',
+        builder: (context, state) => WrEpisodeDetailScreen(
+          episodeId: state.pathParameters['id'] ?? '',
+        ),
+      ),
+      GoRoute(
+        path: '/wr/journey/narrative',
+        builder: (context, state) => const WrJourneyNarrativeScreen(),
+      ),
+      GoRoute(
+        path: '/wr/growth/themes',
+        builder: (context, state) => const WrGrowthThemesScreen(),
+      ),
+      GoRoute(
+        path: '/wr/growth/skills',
+        builder: (context, state) => const WrGrowthSkillsScreen(),
+      ),
+      GoRoute(
+        path: '/wr/growth/journey',
+        builder: (context, state) => const WrGrowthJourneyScreen(),
       ),
 
       GoRoute(

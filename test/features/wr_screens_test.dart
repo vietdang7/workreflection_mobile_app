@@ -449,24 +449,17 @@ void main() {
   // ─────────────────────────────────────────────────────────────────────────────
 
   group('WrJourneyScreen — top-area', () {
-    testWidgets('renders Career Memory greeting and Hành trình title', (
+    testWidgets('renders Career Memory eyebrow and Hành trình title', (
       tester,
     ) async {
       await tester.pumpWidget(_wrap(const WrJourneyScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('Career Memory'), findsOneWidget);
+      expect(find.text('CAREER MEMORY'), findsOneWidget);
       expect(find.text('Hành trình'), findsOneWidget);
     });
 
-    testWidgets('renders CÂU CHUYỆN CỦA BẠN eyebrow', (tester) async {
-      await tester.pumpWidget(_wrap(const WrJourneyScreen()));
-      await tester.pumpAndSettle();
-
-      expect(find.textContaining('CÂU CHUYỆN CỦA BẠN'), findsOneWidget);
-    });
-
-    testWidgets('renders narrative text with event count', (tester) async {
+    testWidgets('renders memory count', (tester) async {
       final content = FakeWrContentRepository();
       content.seedMemoryEvents([
         _event(
@@ -484,29 +477,23 @@ void main() {
       await tester.pumpWidget(_wrap(const WrJourneyScreen(), content: content));
       await tester.pumpAndSettle();
 
-      // Narrative contains event count "2 khoảnh khắc"
-      expect(find.textContaining('2 khoảnh khắc'), findsOneWidget);
-    });
-
-    testWidgets('renders Career Companion caption', (tester) async {
-      await tester.pumpWidget(_wrap(const WrJourneyScreen()));
-      await tester.pumpAndSettle();
-
-      expect(find.textContaining('Career Companion'), findsOneWidget);
+      expect(find.textContaining('2 mảnh ký ức'), findsOneWidget);
     });
   });
 
   group('WrJourneyScreen — empty state', () {
-    testWidgets('shows empty memory card when no events', (tester) async {
+    testWidgets('shows invitation when no events', (tester) async {
       await tester.pumpWidget(_wrap(const WrJourneyScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('Career Memory trống'), findsOneWidget);
+      expect(find.textContaining('Chưa có mảnh ký ức nào'), findsOneWidget);
     });
   });
 
   group('WrJourneyScreen — timeline', () {
-    testWidgets('renders THÁNG eyebrow with month number', (tester) async {
+    testWidgets('renders DÒNG THỜI GIAN eyebrow when there are entries', (
+      tester,
+    ) async {
       final content = FakeWrContentRepository();
       content.seedMemoryEvents([
         _event(
@@ -519,8 +506,7 @@ void main() {
       await tester.pumpWidget(_wrap(const WrJourneyScreen(), content: content));
       await tester.pumpAndSettle();
 
-      // THÁNG 7 eyebrow (month of first event)
-      expect(find.textContaining('THÁNG'), findsOneWidget);
+      expect(find.text('DÒNG THỜI GIAN'), findsOneWidget);
     });
 
     testWidgets('renders event reflectionText as timeline title', (
@@ -597,9 +583,39 @@ void main() {
       await tester.pumpWidget(_wrap(const WrJourneyScreen(), content: content));
       await tester.pumpAndSettle();
 
-      // Lock banner in tree (may be off-screen in test viewport — sliver lazy loads)
+      // Đúng 10 mục thì chưa vượt ngưỡng — dòng mời mở bản đầy đủ chưa hiện.
       expect(
-        find.text('Xem toàn bộ Career Memory', skipOffstage: false),
+        find.byKey(const Key('wr_journey_full_memory_row'),
+            skipOffstage: false),
+        findsNothing,
+      );
+    });
+
+    testWidgets('vượt 10 mục → hiện dòng mời mở toàn bộ Career Memory', (
+      tester,
+    ) async {
+      tester.view.physicalSize = const Size(1080, 6000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+
+      final content = FakeWrContentRepository();
+      content.seedMemoryEvents(
+        List.generate(
+          12,
+          (i) => _event(
+            id: 'e$i',
+            reflectionText: 'Event $i',
+            createdAt: DateTime(2026, 7, 22 - i),
+          ),
+        ),
+      );
+
+      await tester.pumpWidget(_wrap(const WrJourneyScreen(), content: content));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('wr_journey_full_memory_row')),
         findsOneWidget,
       );
     });
@@ -630,20 +646,20 @@ void main() {
       expect(find.text('Xem toàn bộ Career Memory'), findsNothing);
     });
 
-    testWidgets('shows Pattern Nâng cao section always', (tester) async {
+    testWidgets('diễn biến theo thời gian là một dòng dẫn sang màn riêng', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(const WrJourneyScreen()));
       await tester.pumpAndSettle();
 
-      // Khối "Diễn biến theo thời gian" thay cho banner khoá placeholder cũ:
-      // free thấy khối mờ + nút nâng cấp (Hai Lớp v1.2 §III/§IV).
-      // Section nằm dưới viewport — dùng skipOffstage: false.
       expect(
-        find.text('DIỄN BIẾN THEO THỜI GIAN', skipOffstage: false),
+        find.byKey(const Key('wr_journey_narrative_row'), skipOffstage: false),
         findsOneWidget,
       );
+      // Nội dung diễn giải không còn nằm ngay trên tab.
       expect(
         find.text('Mở diễn biến theo thời gian', skipOffstage: false),
-        findsOneWidget,
+        findsNothing,
       );
     });
 
@@ -786,80 +802,6 @@ void main() {
       },
     );
   });
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // WrJourneyScreen — narrative window cap (Critical fix #2)
-  // ─────────────────────────────────────────────────────────────────────────────
-
-  group('WrJourneyScreen — narrative window cap', () {
-    testWidgets(
-      'narrative shows span in days when oldest event is within 30 days',
-      (tester) async {
-        final now = DateTime.now();
-        final content = FakeWrContentRepository();
-        content.seedMemoryEvents([
-          _event(
-            id: 'e1',
-            reflectionText: 'Khoảnh khắc 1',
-            createdAt: now.subtract(const Duration(days: 5)),
-          ),
-          _event(
-            id: 'e2',
-            reflectionText: 'Khoảnh khắc 2',
-            createdAt: now.subtract(const Duration(days: 10)),
-          ),
-        ]);
-
-        await tester.pumpWidget(
-          _wrap(const WrJourneyScreen(), content: content),
-        );
-        await tester.pumpAndSettle();
-
-        // Span must be ≤ 30: "Trong 10 ngày qua" (oldest is 10 days ago)
-        expect(find.textContaining('ngày qua'), findsOneWidget);
-        // Must NOT produce a span > 30
-        expect(find.textContaining('365 ngày'), findsNothing);
-      },
-    );
-
-    testWidgets(
-      'narrative caps at 30 ngày when oldest event is older than 30 days',
-      (tester) async {
-        final now = DateTime.now();
-        final content = FakeWrContentRepository();
-        content.seedMemoryEvents([
-          _event(
-            id: 'e1',
-            reflectionText: 'Recent',
-            createdAt: now.subtract(const Duration(days: 5)),
-          ),
-          _event(
-            id: 'e2',
-            reflectionText: 'Old',
-            createdAt: now.subtract(const Duration(days: 90)),
-          ),
-        ]);
-
-        await tester.pumpWidget(
-          _wrap(const WrJourneyScreen(), content: content),
-        );
-        await tester.pumpAndSettle();
-
-        // Must cap at 30 ngày, NOT show 90
-        expect(find.textContaining('30 ngày qua'), findsOneWidget);
-        expect(find.textContaining('90 ngày'), findsNothing);
-      },
-    );
-
-    testWidgets('narrative zero days when no events', (tester) async {
-      await tester.pumpWidget(_wrap(const WrJourneyScreen()));
-      await tester.pumpAndSettle();
-
-      // No events → 0 days, 0 khoảnh khắc
-      expect(find.textContaining('0 khoảnh khắc'), findsOneWidget);
-    });
-  });
-
   // ─────────────────────────────────────────────────────────────────────────────
   // WrPaywallScreen
   // ─────────────────────────────────────────────────────────────────────────────
