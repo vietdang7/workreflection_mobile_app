@@ -2,12 +2,14 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/data/wr_content_repository.dart';
+import '../../core/data/wr_episode_repository.dart';
 import '../../core/data/wr_intelligence_repository.dart';
 import '../../core/data/wr_repository.dart';
 import '../../core/logic/wr_career_profile.dart';
 import '../../core/logic/wr_entitlement.dart';
 import '../../core/models/checkin.dart';
 import '../../core/models/wr_content.dart';
+import '../../core/models/wr_episode.dart';
 import '../../core/models/wr_intelligence.dart';
 
 /// Provides the current authenticated user's id.
@@ -103,6 +105,33 @@ final wrContextDocumentsProvider =
 
 /// Career Snapshot của người dùng hiện tại (vai trò · mục tiêu · trăn trở).
 /// Trả về snapshot rỗng khi chưa đăng nhập hoặc chưa thiết lập.
+/// Episode phản tư đang mở của người dùng — WXS §4.5 (pause/resume).
+/// Home dùng provider này để mời tiếp tục thay vì bắt đầu lại từ đầu.
+/// Trả về null khi bảng chưa tồn tại hoặc chưa có Episode nào đang mở.
+final wrOpenEpisodeProvider = FutureProvider<ReflectionEpisode?>((ref) async {
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null) return null;
+  final repo = ref.watch(wrEpisodeRepositoryProvider);
+  try {
+    return await repo.fetchOpenEpisode(userId);
+  } catch (_) {
+    return null;
+  }
+});
+
+/// Lịch sử Episode, mới nhất trước — nguồn cho tab Hành trình.
+final wrEpisodeHistoryProvider =
+    FutureProvider<List<ReflectionEpisode>>((ref) async {
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null) return const [];
+  final repo = ref.watch(wrEpisodeRepositoryProvider);
+  try {
+    return await repo.fetchEpisodes(userId, limit: 50);
+  } catch (_) {
+    return const [];
+  }
+});
+
 final wrCareerSnapshotProvider = FutureProvider<CareerSnapshot>((ref) async {
   final repo = ref.watch(wrRepositoryProvider);
   try {
