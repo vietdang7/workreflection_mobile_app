@@ -46,6 +46,12 @@ import '../../features/wr/presentation/wr_growth_screen.dart';
 import '../../features/wr/presentation/wr_journey_screen.dart';
 import '../../features/wr/presentation/wr_paywall_screen.dart';
 import '../../features/wr/presentation/wr_self_check_screen.dart';
+import '../../features/wr/presentation/flow/wr_commit_screen.dart';
+import '../../features/wr/presentation/flow/wr_done_screen.dart';
+import '../../features/wr/presentation/flow/wr_energy_screen.dart';
+import '../../features/wr/presentation/flow/wr_meaning_screen.dart';
+import '../../features/wr/presentation/flow/wr_moment_screen.dart';
+import '../../features/wr/presentation/flow/wr_step_screen.dart';
 import 'auth_change_notifier.dart';
 
 // ---------------------------------------------------------------------------
@@ -294,6 +300,32 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/wr/context-docs',
         builder: (context, state) => const WrContextDocScreen(),
+      ),
+
+      // Luồng phản tư — mỗi màn một hành động (WXS §8.7 Focused Surface).
+      GoRoute(
+        path: '/wr/flow/energy',
+        builder: (context, state) => const WrEnergyScreen(),
+      ),
+      GoRoute(
+        path: '/wr/flow/moment',
+        builder: (context, state) => const WrMomentScreen(),
+      ),
+      GoRoute(
+        path: '/wr/flow/step',
+        builder: (context, state) => const WrStepScreen(),
+      ),
+      GoRoute(
+        path: '/wr/flow/meaning',
+        builder: (context, state) => const WrMeaningScreen(),
+      ),
+      GoRoute(
+        path: '/wr/flow/commit',
+        builder: (context, state) => const WrCommitScreen(),
+      ),
+      GoRoute(
+        path: '/wr/flow/done',
+        builder: (context, state) => const WrDoneScreen(),
       ),
 
       GoRoute(

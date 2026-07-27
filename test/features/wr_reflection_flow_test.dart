@@ -1,0 +1,391 @@
+// Test luồng phản tư mới — WXS §4 (Experience State Machine) + HXA §2, §3.
+//
+// Kiểm chứng đúng những yêu cầu của khách:
+//   • Home chỉ mời, không xổ nội dung
+//   • mỗi màn một hành động: năng lượng → khoảnh khắc → từng câu hỏi
+//   • sáu thẻ Human Moment
+//   • ghi chú tự viết được lưu thành ký ức
+//   • bỏ dở giữa chừng thì quay lại vẫn tiếp tục, không bắt đầu lại
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
+import 'package:workreflection_mobile/core/data/wr_episode_repository.dart';
+import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
+import 'package:workreflection_mobile/core/data/wr_repository.dart';
+import 'package:workreflection_mobile/core/models/checkin.dart';
+import 'package:workreflection_mobile/core/models/wr_episode.dart';
+import 'package:workreflection_mobile/features/wr/presentation/flow/wr_commit_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/flow/wr_done_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/flow/wr_energy_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/flow/wr_meaning_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/flow/wr_moment_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/flow/wr_step_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/wr_home_screen.dart';
+import 'package:workreflection_mobile/features/wr/wr_providers.dart';
+import 'package:workreflection_mobile/l10n/app_localizations.dart';
+
+import '../support/fake_repository.dart';
+import '../support/fake_wr_content_repository.dart';
+import '../support/fake_wr_episode_repository.dart';
+import '../support/fake_wr_intelligence_repository.dart';
+
+class _Harness {
+  _Harness()
+      : episodes = FakeWrEpisodeRepository(),
+        intel = FakeWrIntelligenceRepository(),
+        content = FakeWrContentRepository(),
+        wr = FakeWrRepository();
+
+  final FakeWrEpisodeRepository episodes;
+  final FakeWrIntelligenceRepository intel;
+  final FakeWrContentRepository content;
+  final FakeWrRepository wr;
+
+  Widget app({String initialLocation = '/home'}) {
+    final router = GoRouter(
+      initialLocation: initialLocation,
+      routes: [
+        GoRoute(path: '/home', builder: (_, __) => const WrHomeScreen()),
+        GoRoute(
+          path: '/wr/flow/energy',
+          builder: (_, __) => const WrEnergyScreen(),
+        ),
+        GoRoute(
+          path: '/wr/flow/moment',
+          builder: (_, __) => const WrMomentScreen(),
+        ),
+        GoRoute(
+          path: '/wr/flow/step',
+          builder: (_, __) => const WrStepScreen(),
+        ),
+        GoRoute(
+          path: '/wr/flow/meaning',
+          builder: (_, __) => const WrMeaningScreen(),
+        ),
+        GoRoute(
+          path: '/wr/flow/commit',
+          builder: (_, __) => const WrCommitScreen(),
+        ),
+        GoRoute(
+          path: '/wr/flow/done',
+          builder: (_, __) => const WrDoneScreen(),
+        ),
+        GoRoute(
+          path: '/profile',
+          builder: (_, __) => const Scaffold(body: Text('Profile')),
+        ),
+      ],
+    );
+
+    return ProviderScope(
+      overrides: [
+        wrEpisodeRepositoryProvider.overrideWithValue(episodes),
+        wrIntelligenceRepositoryProvider.overrideWithValue(intel),
+        wrContentRepositoryProvider.overrideWithValue(content),
+        wrRepositoryProvider.overrideWithValue(wr),
+        currentUserIdProvider.overrideWithValue('u1'),
+      ],
+      child: MaterialApp.router(
+        routerConfig: router,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('vi'),
+      ),
+    );
+  }
+}
+
+Future<void> _pump(WidgetTester tester, Widget app) async {
+  tester.view.physicalSize = const Size(1080, 2400);
+  tester.view.devicePixelRatio = 3.0;
+  addTearDown(tester.view.reset);
+  await tester.pumpWidget(app);
+  await tester.pumpAndSettle();
+}
+
+void main() {
+  group('Home — chỉ một lời mời', () {
+    testWidgets('không xổ nội dung nào khác', (tester) async {
+      final h = _Harness();
+      await _pump(tester, h.app());
+
+      expect(find.byKey(const Key('wr_home_start_reflection')), findsOneWidget);
+      // Những khối từng nằm chồng trên Home nay không còn.
+      expect(find.textContaining('CAREER SNAPSHOT'), findsNothing);
+      expect(find.textContaining('GỢI Ý'), findsNothing);
+      expect(find.text('Có năng lượng'), findsNothing);
+    });
+
+    testWidgets('bấm Bắt đầu mở màn năng lượng riêng', (tester) async {
+      final h = _Harness();
+      await _pump(tester, h.app());
+
+      await tester.tap(find.byKey(const Key('wr_home_start_reflection')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Năng lượng của bạn lúc này thế nào?'), findsOneWidget);
+      expect(find.text('Có năng lượng'), findsOneWidget);
+      expect(find.text('Bình thường'), findsOneWidget);
+      expect(find.text('Mệt mỏi'), findsOneWidget);
+    });
+
+    testWidgets('có phiên đang mở thì mời tiếp tục, không bắt đầu lại',
+        (tester) async {
+      final h = _Harness();
+      h.seedOpenEpisode();
+      await _pump(tester, h.app());
+
+      expect(find.byKey(const Key('wr_home_resume_reflection')), findsOneWidget);
+      expect(find.text(HumanMoment.confusion.tension), findsOneWidget);
+    });
+  });
+
+  group('Màn năng lượng', () {
+    testWidgets('chưa chọn thì chưa đi tiếp được', (tester) async {
+      final h = _Harness();
+      await _pump(tester, h.app(initialLocation: '/wr/flow/energy'));
+
+      final button = tester.widget<ElevatedButton>(
+        find.byKey(const Key('wr_flow_primary')),
+      );
+      expect(button.onPressed, isNull);
+    });
+
+    testWidgets('chọn xong mở màn sáu khoảnh khắc', (tester) async {
+      final h = _Harness();
+      await _pump(tester, h.app(initialLocation: '/wr/flow/energy'));
+
+      await tester.tap(find.byKey(const Key('wr_energy_low')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
+      await tester.pumpAndSettle();
+
+      for (final moment in HumanMoment.values) {
+        expect(
+          find.byKey(Key('wr_moment_${moment.dbValue}')),
+          findsOneWidget,
+          reason: 'thiếu thẻ ${moment.dbValue}',
+        );
+      }
+    });
+  });
+
+  group('Màn khoảnh khắc', () {
+    testWidgets('đúng sáu thẻ, không hơn', (tester) async {
+      final h = _Harness();
+      await _pump(tester, h.app(initialLocation: '/wr/flow/energy'));
+      await tester.tap(find.byKey(const Key('wr_energy_ok')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
+      await tester.pumpAndSettle();
+
+      expect(find.text(HumanMoment.arrival.label), findsOneWidget);
+      expect(find.text(HumanMoment.celebration.label), findsOneWidget);
+    });
+
+    testWidgets('chọn khoảnh khắc mở Episode ở state captured', (tester) async {
+      final h = _Harness();
+      await _pump(tester, h.app(initialLocation: '/wr/flow/energy'));
+      await tester.tap(find.byKey(const Key('wr_energy_low')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('wr_moment_recovery')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
+      await tester.pumpAndSettle();
+
+      expect(h.episodes.openEpisodeCalls, hasLength(1));
+      final opened = h.episodes.openEpisodeCalls.first;
+      expect(opened.humanMoment, HumanMoment.recovery);
+      expect(opened.energy, CheckinEnergy.low);
+      expect(opened.state, ExperienceState.captured);
+      // Check-in ngày vẫn được ghi, mood suy ra từ năng lượng.
+      expect(h.wr.upsertCheckinCalls, hasLength(1));
+      expect(h.wr.upsertCheckinCalls.first.energy, CheckinEnergy.low);
+      expect(h.wr.upsertCheckinCalls.first.mood, Mood.tired);
+      // Không còn ghi "hướng đi".
+      expect(h.wr.upsertCheckinCalls.first.direction, isNull);
+    });
+  });
+
+  group('Các bước phản tư', () {
+    testWidgets('hiện đúng một câu hỏi mỗi lần và đi theo chuỗi của archetype',
+        (tester) async {
+      final h = _Harness();
+      h.seedOpenEpisode(moment: HumanMoment.recovery);
+      await _pump(tester, h.app());
+      await _resume(tester);
+
+      // Recovery: Notice → Explore → Preserve
+      expect(find.text('BƯỚC 1/3'), findsOneWidget);
+      expect(find.text('Điều gì đang làm bạn mất năng lượng?'), findsOneWidget);
+
+      await _writeStep(tester, 'Cuộc họp sáng nay');
+      expect(find.text('BƯỚC 2/3'), findsOneWidget);
+      expect(find.text('Điều đó chạm tới điều gì bên trong bạn?'),
+          findsOneWidget);
+    });
+
+    testWidgets('chưa viết gì thì chưa đi tiếp được', (tester) async {
+      final h = _Harness();
+      h.seedOpenEpisode(moment: HumanMoment.recovery);
+      await _pump(tester, h.app());
+      await _resume(tester);
+
+      final button = tester.widget<ElevatedButton>(
+        find.byKey(const Key('wr_flow_primary')),
+      );
+      expect(button.onPressed, isNull);
+    });
+
+    testWidgets('đi hết chuỗi thì sang màn Ý nghĩa', (tester) async {
+      final h = _Harness();
+      h.seedOpenEpisode(moment: HumanMoment.recovery);
+      await _pump(tester, h.app());
+      await _resume(tester);
+
+      await _writeStep(tester, 'Cuộc họp sáng nay');
+      await _writeStep(tester, 'Cảm giác không được nghe');
+      await _writeStep(tester, 'Mình cần nói sớm hơn');
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Nếu giữ lại một điều từ lần nhìn lại này, đó là gì?'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('thoát giữa chừng thì phiên ngủ, không mất', (tester) async {
+      final h = _Harness();
+      h.seedOpenEpisode(moment: HumanMoment.recovery);
+      await _pump(tester, h.app());
+      await _resume(tester);
+
+      await _writeStep(tester, 'Cuộc họp sáng nay');
+      await tester.tap(find.byKey(const Key('wr_flow_close')));
+      await tester.pumpAndSettle();
+
+      expect(h.episodes.dormantCalls, hasLength(1));
+      final saved = h.episodes.episodes.single;
+      expect(saved.state, ExperienceState.dormant);
+      // Ghi chú đã viết vẫn còn nguyên.
+      expect(saved.notes['notice'], 'Cuộc họp sáng nay');
+    });
+  });
+
+  group('Ý nghĩa và ký ức', () {
+    testWidgets('nạp sẵn lời người dùng, chỉ người dùng xác nhận',
+        (tester) async {
+      final h = _Harness();
+      h.seedOpenEpisode(
+        moment: HumanMoment.celebration,
+        state: ExperienceState.exploring,
+        patternsDone: const [
+          ReflectionPattern.notice,
+          ReflectionPattern.name,
+          ReflectionPattern.preserve,
+        ],
+        notes: const {'name': 'Mình đã dám trình bày trước cả phòng'},
+      );
+      await _pump(tester, h.app());
+      await _resume(tester);
+      await tester.pumpAndSettle();
+
+      final field = tester.widget<TextField>(
+        find.byKey(const Key('wr_meaning_field')),
+      );
+      expect(field.controller!.text, 'Mình đã dám trình bày trước cả phòng');
+
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
+      await tester.pumpAndSettle();
+
+      expect(h.episodes.confirmMeaningCalls, hasLength(1));
+      // Insight chỉ được tạo sau khi người dùng xác nhận.
+      expect(h.intel.insertInsightCalls, hasLength(1));
+      expect(
+        h.intel.insertInsightCalls.first.content,
+        'Mình đã dám trình bày trước cả phòng',
+      );
+    });
+
+    testWidgets('khép phiên mới ghi Career Memory (WDA Inv.6)', (tester) async {
+      final h = _Harness();
+      h.seedOpenEpisode(
+        moment: HumanMoment.celebration,
+        state: ExperienceState.exploring,
+        patternsDone: const [
+          ReflectionPattern.notice,
+          ReflectionPattern.name,
+          ReflectionPattern.preserve,
+        ],
+        notes: const {'name': 'Mình đã dám trình bày'},
+      );
+      await _pump(tester, h.app());
+      await _resume(tester);
+      await tester.pumpAndSettle();
+
+      // Trước khi xác nhận: chưa có ký ức nào.
+      expect(h.content.insertMemoryEventCalls, isEmpty);
+
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
+      await tester.pumpAndSettle();
+
+      // Celebration không có bước Commit → sang thẳng màn khép.
+      expect(h.episodes.integrateCalls, hasLength(1));
+      expect(h.content.insertMemoryEventCalls, hasLength(1));
+      expect(
+        h.content.insertMemoryEventCalls.first.reflectionText,
+        'Mình đã dám trình bày',
+      );
+      expect(
+        h.content.insertMemoryEventCalls.first.behavior,
+        'reflection_episode',
+      );
+      expect(h.episodes.episodes.single.state, ExperienceState.integrated);
+    });
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+extension on _Harness {
+  void seedOpenEpisode({
+    HumanMoment moment = HumanMoment.confusion,
+    ExperienceState state = ExperienceState.captured,
+    List<ReflectionPattern> patternsDone = const [],
+    Map<String, String> notes = const {},
+  }) {
+    episodes.seed([
+      ReflectionEpisode(
+        id: 'ep-seed',
+        userId: 'u1',
+        humanMoment: moment,
+        state: state,
+        energy: CheckinEnergy.low,
+        patternsDone: patternsDone,
+        notes: notes,
+      ),
+    ]);
+  }
+}
+
+/// Bấm "Tiếp tục" trên Home để vào đúng màn của trạng thái hiện tại.
+Future<void> _resume(WidgetTester tester) async {
+  await tester.tap(find.byKey(const Key('wr_home_resume_reflection')));
+  await tester.pumpAndSettle();
+}
+
+/// Viết một bước phản tư rồi bấm Tiếp.
+Future<void> _writeStep(WidgetTester tester, String text) async {
+  await tester.enterText(find.byKey(const Key('wr_step_note')), text);
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(const Key('wr_flow_primary')));
+  await tester.pumpAndSettle();
+}

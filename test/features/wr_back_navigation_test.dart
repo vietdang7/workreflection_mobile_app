@@ -212,17 +212,11 @@ void main() {
   });
 
   // ── Home tab ────────────────────────────────────────────────────────────────
-  group('Home tab — WrTabBackLink', () {
+  // Home không còn WrTabBackLink: sau khi tối giản, Home chỉ là lời mời và
+  // không còn màn nào link chéo tới nó bằng ?from=.
+  group('Home tab', () {
     testWidgets(
-      '?from=journey → thấy "Quay lại"',
-      (tester) async {
-        await _pumpLarge(tester, _wrapHome('/home?from=journey'));
-        expect(find.text('Quay lại'), findsOneWidget);
-      },
-    );
-
-    testWidgets(
-      'không ?from → không thấy "Quay lại"',
+      'không hiện "Quay lại"',
       (tester) async {
         await _pumpLarge(tester, _wrapHome('/home'));
         expect(find.text('Quay lại'), findsNothing);

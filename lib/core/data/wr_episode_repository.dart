@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../logic/wr_experience_state.dart';
+import '../models/wr_content.dart';
 import '../models/wr_episode.dart';
 
 // ---------------------------------------------------------------------------
@@ -31,10 +32,12 @@ abstract class WrEpisodeRepository {
 
   /// Ghi một bước phản tư: thêm pattern vào patterns_done, lưu ghi chú.
   /// Tự chuyển Captured → Exploring ở bước đầu tiên.
+  /// [situation] gắn thêm ngữ cảnh tình huống nếu bước này là chọn tình huống.
   Future<ReflectionEpisode> recordPattern({
     required ReflectionEpisode episode,
     required ReflectionPattern pattern,
     String? note,
+    WrSituation? situation,
   });
 
   /// Lưu Draft Meaning — chưa vào Career Memory (WXS §4.3 State 4).
@@ -142,6 +145,7 @@ class SupabaseWrEpisodeRepository implements WrEpisodeRepository {
     required ReflectionEpisode episode,
     required ReflectionPattern pattern,
     String? note,
+    WrSituation? situation,
   }) async {
     // Bước phản tư đầu tiên đưa Episode từ Captured sang Exploring.
     final nextState = episode.state == ExperienceState.captured ||
@@ -164,6 +168,12 @@ class SupabaseWrEpisodeRepository implements WrEpisodeRepository {
       'state': nextState.dbValue,
       'patterns_done': patterns.map((p) => p.dbValue).toList(),
       'notes': notes,
+      if (situation != null) ...{
+        'situation_code': situation.code,
+        'sca_dimension': situation.scaDimension.dbValue,
+        if (situation.humanNeed != null)
+          'human_need': situation.humanNeed!.dbValue,
+      },
     });
   }
 

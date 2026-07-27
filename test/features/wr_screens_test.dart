@@ -144,25 +144,21 @@ void main() {
   // WrHomeScreen
   // ─────────────────────────────────────────────────────────────────────────────
 
+  // Home sau khi tái cấu trúc chỉ còn lời mời — chi tiết luồng nằm ở
+  // test/features/wr_reflection_flow_test.dart.
   group('WrHomeScreen', () {
-    testWidgets('renders greeting and check-in block', (tester) async {
+    testWidgets('chỉ mời dừng lại, không xổ nội dung', (tester) async {
       await tester.pumpWidget(_wrap(const WrHomeScreen()));
       await tester.pumpAndSettle();
 
+      expect(find.text('Dừng lại một chút?'), findsOneWidget);
       expect(
-        find.textContaining('Ngày hôm nay của bạn như thế nào?'),
+        find.byKey(const Key('wr_home_start_reflection')),
         findsOneWidget,
       );
-      expect(find.text('Có năng lượng'), findsOneWidget);
-    });
-
-    testWidgets('renders 3 energy choices', (tester) async {
-      await tester.pumpWidget(_wrap(const WrHomeScreen()));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Có năng lượng'), findsOneWidget);
-      expect(find.text('Bình thường'), findsOneWidget);
-      expect(find.text('Mệt mỏi'), findsOneWidget);
+      // Không còn ô chọn năng lượng ngay trên Home.
+      expect(find.text('Có năng lượng'), findsNothing);
+      expect(find.text('Tiến lên'), findsNothing);
     });
 
     testWidgets('avatar button opens profile from header', (tester) async {
@@ -170,18 +166,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('wr_home_profile_button')), findsOneWidget);
-    });
-
-    testWidgets('tapping energy reveals direction choices', (tester) async {
-      await tester.pumpWidget(_wrap(const WrHomeScreen()));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Có năng lượng'));
-      await tester.pump();
-
-      expect(find.text('Tiến lên'), findsOneWidget);
-      expect(find.text('Đứng yên'), findsOneWidget);
-      expect(find.text('Thụt lùi'), findsOneWidget);
     });
   });
 
