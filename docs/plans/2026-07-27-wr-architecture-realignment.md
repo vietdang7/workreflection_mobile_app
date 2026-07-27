@@ -206,10 +206,12 @@ Mỗi màn: 1 tiêu đề, tối đa 1 khối nội dung, 1 hành động chính
 đã sửa. Remote còn ba version `20260725000003/4/5` do web app đẩy lên, đã thêm
 stub rỗng tương ứng để `db push` không kẹt (giữ nguyên thủ thuật stub).
 
-Lệnh push bị lớp phân quyền của phiên chặn — **chủ dự án cần tự chạy**:
-```
-supabase db push --include-all
-```
+**Đã push xong ngày 2026-07-27** (chủ dự án chạy tay `supabase db push
+--include-all`; lệnh bị lớp phân quyền của phiên chặn nên trợ lý không chạy
+được). `supabase migration list` xác nhận `20260727000000` có ở cả Local và
+Remote. Bốn dòng NOTICE khi chạy là `drop policy if exists` trên bảng mới —
+vô hại.
+
 Trước khi push, `--dry-run` xác nhận đúng một file, toàn bộ là DDL thêm mới
 (create table if not exists · 2 index · 4 policy owner-only), không có lệnh
 xoá hay sửa bảng nào của web app.
@@ -265,10 +267,11 @@ theo thời gian" (Premium) tách sang `/wr/journey/narrative`.
 
 ## 10. Việc còn lại
 
-- **Migration `20260727000000` chưa push** — xem §8 F1. Chủ dự án chạy tay
-  `supabase db push --include-all`. Khi bảng chưa tồn tại, app degrade mềm:
-  `wrOpenEpisodeProvider` nuốt lỗi và trả null, Home hiện lời mời bắt đầu —
-  nhưng **luồng phản tư không lưu được** cho tới khi push xong.
+- ~~Migration `20260727000000` chưa push~~ — **xong 2026-07-27**, xem §8 F1.
+- **Chưa kiểm thử end-to-end trên dữ liệu thật**: bảng vừa có, cần đi trọn một
+  vòng phản tư trên máy/trình duyệt để xác nhận Episode ghi được và Home bắt
+  đầu tích luỹ. Ngưỡng hiển thị: 2 lần lặp mới hiện "Hệ thống nhận ra",
+  5 lần mới mở phần diễn giải.
 - **Chưa chạy trên máy thật**: mới dừng ở `flutter build apk --debug`.
 - **`Ghi tiêu chuẩn 6_1.mp3` / `10_1.mp3`** (77 MB và 122 MB) vẫn chưa
   transcribe được — phần nội dung trong hai file này chưa được đối chiếu.
