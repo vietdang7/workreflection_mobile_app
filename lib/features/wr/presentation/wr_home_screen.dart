@@ -1,20 +1,22 @@
-// Home — WXS §8.7 (Balanced Surface) + HXA §6.4 (Empty Screen Test).
+// Hôm nay — bố cục theo giao diện chính (`giao-dien-chinh.html` §screen-home).
 //
-// Câu hỏi của Empty Screen Test: "Điều duy nhất người dùng cần ngay lúc này là
-// gì?" Câu trả lời: được hỏi một câu. Vì vậy Home KHÔNG mời bấm "Bắt đầu" rồi
-// mới hỏi — Home hỏi luôn:
+// Bốn khối, đúng thứ tự của bản thiết kế:
 //   1. lời chào + ngày
-//   2. "Năng lượng của bạn lúc này thế nào?" + ba ô to
-//   3. một dòng ý nghĩa gần nhất — nếu có
+//   2. "Bạn đang trải qua điều gì?" + lưới check-in 2×2
+//   3. thẻ navy "Hệ thống nhận ra"  → dẫn sang màn chi tiết điều lặp lại
+//   4. "Gợi ý khi …" + thẻ story    → dẫn sang màn đọc
+//   5. "Insight gần nhất"
 //
-// Chọn một ô là đã trả lời: luồng đi thẳng sang màn khoảnh khắc, rồi tới các
-// câu hỏi dẫn dắt tương ứng với khoảnh khắc đó. Một màn, một hành động.
+// Toàn bộ nội dung ba khối dưới đến từ dữ liệu thật của người dùng
+// (`lib/core/logic/wr_home_surface.dart`). Chưa đủ dữ liệu thì khối biến mất
+// hẳn — WXS Orch. Inv.5: im lặng là lựa chọn hợp lệ, không bịa nội dung mẫu.
 //
-// Ngoại lệ duy nhất: khi còn một phiên đang dở, Journey Continuity được ưu
-// tiên hơn novelty (WXS Orch. Inv.3) — Home mời tiếp tục trước.
+// Chọn một ô check-in là đã trả lời: luồng đi thẳng sang màn khoảnh khắc rồi
+// tới các câu hỏi dẫn dắt của khoảnh khắc đó (HXA §2.5, §3.6). Không có nút
+// "Bắt đầu" trung gian.
 //
-// Mọi thứ khác (tình huống lặp lại, SCA, story, thực hành) sống ở tab của nó.
-// Home không xổ nội dung.
+// Ngoại lệ: còn phiên đang dở thì Journey Continuity được ưu tiên hơn novelty
+// (WXS Orch. Inv.3) — Home mời tiếp tục trước.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,21 +24,48 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/data/wr_repository.dart';
 import '../../../core/logic/vn_date.dart';
+import '../../../core/logic/wr_dominant_need.dart';
 import '../../../core/logic/wr_experience_state.dart';
+import '../../../core/logic/wr_home_surface.dart';
 import '../../../core/models/checkin.dart';
 import '../../../core/models/mobile_profile.dart';
 import '../../../core/models/wr_episode.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
+import '../../../core/widgets/progress_track.dart';
+import '../../../core/widgets/section_divider.dart';
+import '../../../core/widgets/wr_card.dart';
 import '../episode_flow_controller.dart';
 import '../wr_providers.dart';
-import 'flow/wr_energy_screen.dart' show energyLabel;
-import 'flow/wr_flow_scaffold.dart' show WrBigChoiceTile;
 
 final _mobileProfileProvider = FutureProvider<MobileProfile?>((ref) async {
   final repo = ref.watch(wrRepositoryProvider);
   return repo.getMobileProfile();
 });
+
+// ---------------------------------------------------------------------------
+// Lưới check-in — bốn ô như bản thiết kế, mỗi ô là một mức năng lượng.
+//
+// Khách yêu cầu bỏ bước "trạng thái" tách rời khỏi "năng lượng"; ở đây chỉ còn
+// MỘT câu hỏi, bốn cách nói của cùng một thang năng lượng.
+// ---------------------------------------------------------------------------
+
+typedef CheckinOption = ({String id, String label, CheckinEnergy energy});
+
+const List<CheckinOption> kCheckinOptions = [
+  (id: 'stress', label: 'Tôi đang\ncăng thẳng', energy: CheckinEnergy.low),
+  (id: 'tired', label: 'Tôi mệt mỏi\ncần nghỉ ngơi', energy: CheckinEnergy.low),
+  (id: 'ok', label: 'Tôi\nkhá ổn', energy: CheckinEnergy.ok),
+  (id: 'happy', label: 'Tôi\nđang vui', energy: CheckinEnergy.good),
+];
+
+/// Nhãn khối gợi ý, đổi theo năng lượng đã check-in hôm nay.
+String suggestionEyebrow(CheckinEnergy? energy) => switch (energy) {
+      CheckinEnergy.low => 'GỢI Ý KHI MỆT MỎI',
+      CheckinEnergy.ok => 'GỢI Ý HÔM NAY',
+      CheckinEnergy.good => 'GỢI Ý ĐỂ ĐI XA HƠN',
+      null => 'GỢI Ý HÔM NAY',
+    };
 
 class WrHomeScreen extends ConsumerWidget {
   const WrHomeScreen({super.key});
@@ -63,18 +92,18 @@ class WrHomeScreen extends ConsumerWidget {
     final displayName =
         ref.watch(_mobileProfileProvider).valueOrNull?.displayName ?? '';
     final openEpisode = ref.watch(wrOpenEpisodeProvider).valueOrNull;
-    final latestInsight = ref.watch(wrLatestInsightProvider).valueOrNull;
+    final todayEnergy = ref.watch(todayCheckinProvider).valueOrNull?.energy;
 
     return Scaffold(
       backgroundColor: WrColors.white,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // ── lời chào ────────────────────────────────────────────────
-              Row(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ── top-area ────────────────────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
@@ -90,7 +119,7 @@ class WrHomeScreen extends ConsumerWidget {
                             color: WrColors.muted,
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 2),
                         Text(
                           _dateLabel(),
                           style: const TextStyle(
@@ -107,35 +136,123 @@ class WrHomeScreen extends ConsumerWidget {
                   _ProfileAvatarButton(displayName: displayName),
                 ],
               ),
+            ),
 
-              const Spacer(),
+            // ── screen-body ─────────────────────────────────────────────
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
+                children: [
+                  if (openEpisode != null)
+                    _ResumeInvite(episode: openEpisode)
+                  else
+                    const _CheckinQuestion(),
+                  const SizedBox(height: 28),
+                  const WrSectionDivider(),
+                  const SizedBox(height: 28),
+                  const _SystemNoticeCard(),
+                  _StorySuggestionSection(energy: todayEnergy),
+                  const _LatestInsightSection(),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
 
-              // ── câu hỏi duy nhất ────────────────────────────────────────
-              if (openEpisode != null)
-                _ResumeInvite(episode: openEpisode)
-              else
-                const _EnergyQuestion(),
+// ---------------------------------------------------------------------------
+// 2 · "Bạn đang trải qua điều gì?" + lưới 2×2
+// ---------------------------------------------------------------------------
 
-              const Spacer(),
+class _CheckinQuestion extends ConsumerWidget {
+  const _CheckinQuestion();
 
-              // ── một dòng ý nghĩa gần nhất ───────────────────────────────
-              if (latestInsight != null) ...[
-                const WrEyebrow('LẦN GẦN NHẤT BẠN NHẬN RA'),
-                const SizedBox(height: 10),
-                Text(
-                  '"${latestInsight.content}"',
-                  maxLines: 3,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontStyle: FontStyle.italic,
-                    color: WrColors.navy,
-                    height: 1.5,
-                  ),
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final todayEnergy = ref.watch(todayCheckinProvider).valueOrNull?.energy;
+    // Chỉ tô đúng một ô: ô đầu tiên khớp năng lượng đã ghi hôm nay.
+    final selectedId = todayEnergy == null
+        ? null
+        : kCheckinOptions
+            .where((o) => o.energy == todayEnergy)
+            .map((o) => o.id)
+            .firstOrNull;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Bạn đang trải qua điều gì?',
+          style: TextStyle(
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            color: WrColors.navy,
+            height: 1.2,
+            letterSpacing: -0.44,
+          ),
+        ),
+        const SizedBox(height: 16),
+        for (var i = 0; i < kCheckinOptions.length; i += 2) ...[
+          if (i > 0) const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _CheckinTile(
+                  option: kCheckinOptions[i],
+                  selected: kCheckinOptions[i].id == selectedId,
                 ),
-                const SizedBox(height: 12),
-              ],
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: i + 1 < kCheckinOptions.length
+                    ? _CheckinTile(
+                        option: kCheckinOptions[i + 1],
+                        selected: kCheckinOptions[i + 1].id == selectedId,
+                      )
+                    : const SizedBox.shrink(),
+              ),
             ],
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _CheckinTile extends ConsumerWidget {
+  const _CheckinTile({required this.option, required this.selected});
+
+  final CheckinOption option;
+  final bool selected;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return GestureDetector(
+      key: Key('wr_home_checkin_${option.id}'),
+      behavior: HitTestBehavior.opaque,
+      onTap: () {
+        ref.read(pendingEnergyProvider.notifier).state = option.energy;
+        context.push('/wr/flow/moment');
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 18),
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected ? WrColors.coral : WrColors.cream,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Text(
+          option.label,
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            height: 1.35,
+            color: selected ? WrColors.white : WrColors.navy,
           ),
         ),
       ),
@@ -144,43 +261,244 @@ class WrHomeScreen extends ConsumerWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Câu hỏi mở đầu — HXA §2.4 bước Pause.
-//
-// Không có nút "Bắt đầu": bấm vào một ô năng lượng đã là câu trả lời, và câu
-// trả lời đó đưa thẳng sang khoảnh khắc. Yêu cầu khách 2026-07-27: "app hỏi
-// luôn năng lượng, trả lời rồi thì hỏi tiếp các câu phía sau tuỳ trường hợp."
+// 3 · Thẻ navy "Hệ thống nhận ra" — đọc lại chính con số của người dùng.
 // ---------------------------------------------------------------------------
 
-class _EnergyQuestion extends ConsumerWidget {
-  const _EnergyQuestion();
+class _SystemNoticeCard extends ConsumerWidget {
+  const _SystemNoticeCard();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final patterns = ref.watch(wrPatternCountsProvider).valueOrNull ?? const [];
+    final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
+    final notice = systemNotice(patterns: patterns, situations: situations);
+
+    // Chưa lặp lại lần nào thì hệ thống chưa có gì để nhận ra — im lặng.
+    if (notice == null) return const SizedBox.shrink();
+
+    return Padding(
+      key: const Key('wr_home_system_notice'),
+      padding: const EdgeInsets.only(bottom: 28),
+      child: WrCardDark(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            WrEyebrow(
+              'HỆ THỐNG NHẬN RA',
+              color: WrColors.cream.withValues(alpha: 0.5),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              '"${notice.sentence}"',
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w500,
+                fontStyle: FontStyle.italic,
+                color: WrColors.cream,
+                height: 1.45,
+              ),
+            ),
+            const SizedBox(height: 14),
+            GestureDetector(
+              key: const Key('wr_home_notice_link'),
+              behavior: HitTestBehavior.opaque,
+              onTap: () =>
+                  context.push('/wr/pattern/${notice.situationCode}'),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Tìm hiểu thêm',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: WrColors.coral,
+                    ),
+                  ),
+                  SizedBox(width: 4),
+                  Icon(Icons.arrow_forward, size: 14, color: WrColors.coral),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 4 · "Gợi ý khi …" — story chọn theo trụ SCA / nhu cầu đang nổi.
+// ---------------------------------------------------------------------------
+
+class _StorySuggestionSection extends ConsumerWidget {
+  const _StorySuggestionSection({required this.energy});
+
+  final CheckinEnergy? energy;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final stories = ref.watch(wrStoriesProvider).valueOrNull ?? const [];
+    final patterns = ref.watch(wrPatternCountsProvider).valueOrNull ?? const [];
+    final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
+    final events = ref.watch(wrMemoryEventsProvider).valueOrNull ?? const [];
+
+    final suggestion = suggestStory(
+      stories: stories,
+      patterns: patterns,
+      situations: situations,
+      events: events,
+    );
+    if (suggestion == null) return const SizedBox.shrink();
+
+    final story = suggestion.story;
+    final need = story.humanNeed;
+    final meta = [
+      if (need != null) needLabel(need).toUpperCase(),
+      '${suggestion.minutes} phút đọc',
+    ].join(' · ');
+
+    return Padding(
+      key: const Key('wr_home_story_suggestion'),
+      padding: const EdgeInsets.only(bottom: 28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          WrEyebrow(suggestionEyebrow(energy)),
+          const SizedBox(height: 8),
+          GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: () => context.push('/wr/story'),
+            child: WrCardMinimal(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: WrColors.white,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: const Icon(
+                          Icons.menu_book_outlined,
+                          size: 26,
+                          color: WrColors.navy,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              story.title,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                                color: WrColors.dark,
+                                height: 1.3,
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              meta,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: WrColors.dark.withValues(alpha: 0.8),
+                                height: 1.5,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  WrProgressTrack(
+                    value: suggestion.alreadyRead ? 1.0 : 0.0,
+                    color: WrColors.navy,
+                    trackColor: WrColors.navy.withValues(alpha: 0.1),
+                    height: 3,
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${suggestion.minutes} phút',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: WrColors.dark.withValues(alpha: 0.8),
+                        ),
+                      ),
+                      Text(
+                        suggestion.alreadyRead ? 'Đã đọc' : 'Chưa đọc',
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                          color: suggestion.alreadyRead
+                              ? WrColors.teal
+                              : WrColors.coral,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// 5 · "Insight gần nhất" — câu chính người dùng đã xác nhận.
+// ---------------------------------------------------------------------------
+
+class _LatestInsightSection extends ConsumerWidget {
+  const _LatestInsightSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final insight = ref.watch(wrLatestInsightProvider).valueOrNull;
+    if (insight == null) return const SizedBox.shrink();
+
+    final at = insight.createdAt;
+    final saved = at == null
+        ? null
+        : 'Lưu ngày ${at.day.toString().padLeft(2, '0')}/'
+            '${at.month.toString().padLeft(2, '0')}';
+
     return Column(
+      key: const Key('wr_home_latest_insight'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const WrEyebrow('LÚC NÀY'),
-        const SizedBox(height: 12),
-        const Text(
-          'Năng lượng của bạn thế nào?',
-          style: TextStyle(
-            fontSize: 28,
-            fontWeight: FontWeight.w700,
+        const WrEyebrow('INSIGHT GẦN NHẤT'),
+        const SizedBox(height: 8),
+        Text(
+          '"${insight.content}"',
+          style: const TextStyle(
+            fontSize: 20,
+            fontStyle: FontStyle.italic,
             color: WrColors.navy,
-            height: 1.25,
-            letterSpacing: -0.6,
+            height: 1.45,
+            letterSpacing: -0.3,
           ),
         ),
-        const SizedBox(height: 24),
-        for (final energy in CheckinEnergy.values) ...[
-          if (energy != CheckinEnergy.values.first) const SizedBox(height: 12),
-          WrBigChoiceTile(
-            key: Key('wr_home_energy_${energy.dbValue}'),
-            label: energyLabel(energy),
-            onTap: () {
-              ref.read(pendingEnergyProvider.notifier).state = energy;
-              context.push('/wr/flow/moment');
-            },
+        if (saved != null) ...[
+          const SizedBox(height: 10),
+          Text(
+            saved,
+            style: TextStyle(
+              fontSize: 12,
+              color: WrColors.dark.withValues(alpha: 0.8),
+            ),
           ),
         ],
       ],
@@ -204,18 +522,18 @@ class _ResumeInvite extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const WrEyebrow('ĐANG CHỜ BẠN'),
-        const SizedBox(height: 12),
+        const SizedBox(height: 10),
         Text(
           episode.humanMoment.tension,
           style: const TextStyle(
-            fontSize: 24,
+            fontSize: 22,
             fontWeight: FontWeight.w700,
             color: WrColors.navy,
-            height: 1.3,
-            letterSpacing: -0.5,
+            height: 1.2,
+            letterSpacing: -0.44,
           ),
         ),
-        const SizedBox(height: 28),
+        const SizedBox(height: 20),
         SizedBox(
           width: double.infinity,
           child: ElevatedButton(
@@ -227,7 +545,7 @@ class _ResumeInvite extends ConsumerWidget {
             style: ElevatedButton.styleFrom(
               backgroundColor: WrColors.navy,
               foregroundColor: WrColors.white,
-              minimumSize: const Size.fromHeight(56),
+              minimumSize: const Size.fromHeight(52),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
@@ -238,7 +556,6 @@ class _ResumeInvite extends ConsumerWidget {
             ),
           ),
         ),
-        const SizedBox(height: 4),
         TextButton(
           key: const Key('wr_home_start_new_reflection'),
           onPressed: () => context.push('/wr/flow/energy'),

@@ -138,8 +138,8 @@ void main() {
       await tester.pumpWidget(_wrap(const WrHomeScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('Năng lượng của bạn thế nào?'), findsOneWidget);
-      expect(find.text('Có năng lượng'), findsOneWidget);
+      expect(find.text('Bạn đang trải qua điều gì?'), findsOneWidget);
+      expect(find.byKey(const Key('wr_home_checkin_tired')), findsOneWidget);
       // Không còn nút trung gian, cũng không còn bước "hướng đi".
       expect(find.byKey(const Key('wr_home_start_reflection')), findsNothing);
       expect(find.text('Tiến lên'), findsNothing);

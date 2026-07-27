@@ -111,6 +111,14 @@ String needPillarLetter(HumanNeed need) => switch (need) {
 // needSeekingLabel
 // ---------------------------------------------------------------------------
 
+/// Tên ngắn của nhu cầu — dùng làm nhãn phân loại nội dung.
+String needLabel(HumanNeed need) => switch (need) {
+      HumanNeed.roRang => 'Rõ ràng',
+      HumanNeed.ketNoi => 'Kết nối',
+      HumanNeed.thichNghi => 'Thích nghi',
+      HumanNeed.phatTrien => 'Phát triển',
+    };
+
 /// Vietnamese label for what the user is seeking, used in suggestion card reason.
 String needSeekingLabel(HumanNeed need) => switch (need) {
       HumanNeed.roRang => 'sự rõ ràng',

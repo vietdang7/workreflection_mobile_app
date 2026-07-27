@@ -112,15 +112,16 @@ void main() {
       final h = _Harness();
       await _pump(tester, h.app());
 
-      expect(find.text('Năng lượng của bạn thế nào?'), findsOneWidget);
-      expect(find.byKey(const Key('wr_home_energy_good')), findsOneWidget);
-      expect(find.byKey(const Key('wr_home_energy_ok')), findsOneWidget);
-      expect(find.byKey(const Key('wr_home_energy_low')), findsOneWidget);
+      expect(find.text('Bạn đang trải qua điều gì?'), findsOneWidget);
+      for (final o in kCheckinOptions) {
+        expect(
+          find.byKey(Key('wr_home_checkin_${o.id}')),
+          findsOneWidget,
+          reason: 'thiếu ô ${o.id}',
+        );
+      }
       // Không còn nút trung gian.
       expect(find.byKey(const Key('wr_home_start_reflection')), findsNothing);
-      // Những khối từng nằm chồng trên Home nay không còn.
-      expect(find.textContaining('CAREER SNAPSHOT'), findsNothing);
-      expect(find.textContaining('GỢI Ý'), findsNothing);
     });
 
     testWidgets('trả lời năng lượng là mở thẳng màn khoảnh khắc',
@@ -128,7 +129,7 @@ void main() {
       final h = _Harness();
       await _pump(tester, h.app());
 
-      await tester.tap(find.byKey(const Key('wr_home_energy_low')));
+      await tester.tap(find.byKey(const Key('wr_home_checkin_tired')));
       await tester.pumpAndSettle();
 
       for (final moment in HumanMoment.values) {
@@ -148,7 +149,7 @@ void main() {
 
       expect(find.byKey(const Key('wr_home_resume_reflection')), findsOneWidget);
       expect(find.text(HumanMoment.confusion.tension), findsOneWidget);
-      expect(find.byKey(const Key('wr_home_energy_low')), findsNothing);
+      expect(find.byKey(const Key('wr_home_checkin_tired')), findsNothing);
     });
   });
 
@@ -177,7 +178,7 @@ void main() {
     testWidgets('đúng sáu thẻ, không hơn', (tester) async {
       final h = _Harness();
       await _pump(tester, h.app());
-      await tester.tap(find.byKey(const Key('wr_home_energy_ok')));
+      await tester.tap(find.byKey(const Key('wr_home_checkin_ok')));
       await tester.pumpAndSettle();
 
       expect(find.text(HumanMoment.arrival.label), findsOneWidget);
@@ -187,7 +188,7 @@ void main() {
     testWidgets('chọn khoảnh khắc mở Episode ở state captured', (tester) async {
       final h = _Harness();
       await _pump(tester, h.app());
-      await tester.tap(find.byKey(const Key('wr_home_energy_low')));
+      await tester.tap(find.byKey(const Key('wr_home_checkin_tired')));
       await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const Key('wr_moment_recovery')));

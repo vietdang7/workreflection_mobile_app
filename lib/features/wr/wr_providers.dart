@@ -119,6 +119,16 @@ final wrOpenEpisodeProvider = FutureProvider<ReflectionEpisode?>((ref) async {
   }
 });
 
+/// Thư viện story — nguồn cho khối "Gợi ý khi …" trên màn Hôm nay.
+final wrStoriesProvider = FutureProvider<List<WrStory>>((ref) async {
+  final repo = ref.watch(wrContentRepositoryProvider);
+  try {
+    return await repo.fetchStories();
+  } catch (_) {
+    return const [];
+  }
+});
+
 /// Career Memory events của người dùng — nguồn phụ cho tab Hành trình
 /// (thực hành, kỹ năng, insight rời). Rỗng khi chưa đăng nhập hoặc lỗi đọc.
 final wrMemoryEventsProvider =
