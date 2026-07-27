@@ -32,8 +32,14 @@ final pendingEnergyProvider = StateProvider<CheckinEnergy?>((ref) => null);
 
 /// Một cặp hỏi–đáp người dùng đã đi qua trong Episode.
 class ReflectionRecapItem {
-  const ReflectionRecapItem({required this.prompt, required this.answer});
+  const ReflectionRecapItem({
+    required this.pattern,
+    required this.prompt,
+    required this.answer,
+  });
 
+  /// Bước đã sinh ra câu trả lời này — cần để ghi đè khi người dùng sửa.
+  final ReflectionPattern pattern;
   final String prompt;
   final String answer;
 }
@@ -164,11 +170,30 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
       final note = ep.notes[pattern.dbValue]?.trim();
       if (note == null || note.isEmpty) continue;
       items.add(ReflectionRecapItem(
+        pattern: pattern,
         prompt: promptFor(ep.humanMoment, pattern),
         answer: note,
       ));
     }
     return items;
+  }
+
+  /// Sửa lại câu trả lời của một bước đã đi qua.
+  ///
+  /// WPA Inv.4: không có gì trong một Reflection bị khoá vĩnh viễn. Người dùng
+  /// đọc lại rồi thấy mình viết cụt thì phải sửa được ngay tại chỗ, không phải
+  /// lùi qua từng màn.
+  Future<void> editNote({
+    required ReflectionPattern pattern,
+    required String note,
+  }) async {
+    final ep = state;
+    if (ep == null || note.trim().isEmpty) return;
+    state = await _repo.recordPattern(
+      episode: ep,
+      pattern: pattern,
+      note: note,
+    );
   }
 
   /// Lưu bản nháp ý nghĩa — chưa vào Career Memory.

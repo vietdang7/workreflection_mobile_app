@@ -1,8 +1,10 @@
 // Màn 4 — Ý nghĩa.
 //
 // WXS §4.3 State 4→5 và WIA Invariant 2: hệ thống chỉ đề xuất (Propose), người
-// dùng là người duy nhất xác nhận (Confirm). Vì vậy ô chữ ở đây được nạp sẵn
-// bằng chính lời người dùng đã viết, và họ được sửa trước khi xác nhận.
+// dùng là người duy nhất xác nhận (Confirm).
+//
+// Màn đọc lại đủ cặp hỏi–đáp đã đi qua. Mỗi câu sửa được ngay tại chỗ
+// (WPA Inv.4): đọc lại rồi thấy mình viết cụt thì không phải lùi qua từng màn.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -77,7 +79,9 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
     return WrFlowScaffold(
       eyebrow: 'Điều bạn nhận ra',
       title: 'Nếu giữ lại một điều từ lần nhìn lại này, đó là gì?',
-      subtitle: 'Chỉ điều bạn thấy đúng với mình. Sửa lại thoải mái.',
+      subtitle: recap.isEmpty
+          ? 'Chỉ điều bạn thấy đúng với mình.'
+          : 'Bấm vào một câu bên dưới nếu bạn muốn viết lại.',
       progress: 0.85,
       onBack: () => context.pop(),
       onClose: _leave,
@@ -100,7 +104,11 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
             ),
             const SizedBox(height: 12),
             for (final item in recap) ...[
-              _RecapItem(prompt: item.prompt, answer: item.answer),
+              _RecapItem(
+                key: Key('wr_meaning_recap_${item.pattern.dbValue}'),
+                item: item,
+                onSave: (text) => _saveNote(item.pattern, text),
+              ),
               const SizedBox(height: 14),
             ],
             const SizedBox(height: 10),
@@ -142,6 +150,20 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
     );
   }
 
+  Future<void> _saveNote(ReflectionPattern pattern, String text) async {
+    try {
+      await ref
+          .read(episodeFlowProvider.notifier)
+          .editNote(pattern: pattern, note: text);
+    } catch (e, s) {
+      logFlowError('editNote', e, s);
+      if (mounted) {
+        setState(() =>
+            _error = flowErrorMessage('Không sửa được câu này. Thử lại.', e));
+      }
+    }
+  }
+
   Future<void> _leave() async {
     final text = _controller.text.trim();
     if (text.isNotEmpty) {
@@ -159,13 +181,56 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
 
 /// Một cặp hỏi–đáp đã đi qua: câu hỏi ở trên, chữ của người dùng ở dưới.
 ///
-/// Đọc là biết ngay chữ mình viết thuộc về câu nào — trước đây chỉ hiện mỗi
-/// câu trả lời nên nó lơ lửng, không rõ đang nói về chuyện gì.
-class _RecapItem extends StatelessWidget {
-  const _RecapItem({required this.prompt, required this.answer});
+/// Bấm vào là sửa được ngay tại chỗ. Chỉ đọc thôi thì vô ích: người dùng nhìn
+/// lại mới thấy mình vừa trả lời cụt, mà lúc đó lại không làm gì được.
+class _RecapItem extends StatefulWidget {
+  const _RecapItem({
+    super.key,
+    required this.item,
+    required this.onSave,
+  });
 
-  final String prompt;
-  final String answer;
+  final ReflectionRecapItem item;
+  final Future<void> Function(String text) onSave;
+
+  @override
+  State<_RecapItem> createState() => _RecapItemState();
+}
+
+class _RecapItemState extends State<_RecapItem> {
+  late final TextEditingController _controller =
+      TextEditingController(text: widget.item.answer);
+  final _focus = FocusNode();
+  bool _editing = false;
+  bool _saving = false;
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focus.dispose();
+    super.dispose();
+  }
+
+  void _startEditing() {
+    setState(() {
+      _editing = true;
+      _controller.text = widget.item.answer;
+    });
+    _focus.requestFocus();
+  }
+
+  Future<void> _save() async {
+    final text = _controller.text.trim();
+    if (text.isEmpty || _saving) return;
+    setState(() => _saving = true);
+    await widget.onSave(text);
+    if (mounted) {
+      setState(() {
+        _saving = false;
+        _editing = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -173,7 +238,7 @@ class _RecapItem extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          prompt,
+          widget.item.prompt,
           style: const TextStyle(
             fontSize: 13,
             color: WrColors.muted,
@@ -181,14 +246,95 @@ class _RecapItem extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        Text(
-          answer,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: WrColors.navy,
-            height: 1.45,
+        if (_editing) _buildEditor() else _buildAnswer(),
+      ],
+    );
+  }
+
+  Widget _buildAnswer() {
+    return InkWell(
+      onTap: _startEditing,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 2),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Expanded(
+              child: Text(
+                widget.item.answer,
+                style: const TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: WrColors.navy,
+                  height: 1.45,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Padding(
+              padding: EdgeInsets.only(top: 3),
+              child: Icon(
+                Icons.edit_outlined,
+                size: 15,
+                color: WrColors.muted,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEditor() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          decoration: BoxDecoration(
+            color: WrColors.cream,
+            borderRadius: BorderRadius.circular(12),
           ),
+          child: TextField(
+            key: Key('wr_meaning_recap_field_${widget.item.pattern.dbValue}'),
+            controller: _controller,
+            focusNode: _focus,
+            maxLines: 4,
+            minLines: 1,
+            style: const TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.w600,
+              color: WrColors.navy,
+              height: 1.45,
+            ),
+            decoration: const InputDecoration(border: InputBorder.none),
+            onSubmitted: (_) => _save(),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            TextButton(
+              onPressed: _saving ? null : () => setState(() => _editing = false),
+              child: const Text(
+                'Bỏ qua',
+                style: TextStyle(fontSize: 13, color: WrColors.muted),
+              ),
+            ),
+            TextButton(
+              key: Key('wr_meaning_recap_save_${widget.item.pattern.dbValue}'),
+              onPressed: _saving ? null : _save,
+              child: const Text(
+                'Lưu',
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: WrColors.coral,
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );

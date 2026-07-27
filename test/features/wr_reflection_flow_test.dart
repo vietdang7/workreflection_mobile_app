@@ -363,6 +363,51 @@ void main() {
       expect(field.controller!.text, '');
     });
 
+    // Đọc lại mà không sửa được thì vô ích: người dùng nhìn lại mới thấy mình
+    // vừa trả lời cụt, lúc đó phải viết lại được ngay (WPA Inv.4).
+    testWidgets('sửa lại được câu trả lời ngay trên màn Ý nghĩa',
+        (tester) async {
+      final h = _Harness();
+      h.seedOpenEpisode(
+        moment: HumanMoment.celebration,
+        state: ExperienceState.exploring,
+        patternsDone: const [
+          ReflectionPattern.notice,
+          ReflectionPattern.name,
+          ReflectionPattern.preserve,
+        ],
+        notes: const {'name': 'hôm nay'},
+      );
+      await _pump(tester, h.app());
+      await _resume(tester);
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('wr_meaning_recap_name')), findsOneWidget);
+      final answer = find.text('hôm nay');
+      await tester.ensureVisible(answer);
+      await tester.pumpAndSettle();
+      await tester.tap(answer);
+      await tester.pumpAndSettle();
+
+      await tester.enterText(
+        find.byKey(const Key('wr_meaning_recap_field_name')),
+        'Mình đã dám trình bày trước cả phòng',
+      );
+      await tester.tap(find.byKey(const Key('wr_meaning_recap_save_name')));
+      await tester.pumpAndSettle();
+
+      expect(
+        h.episodes.episodes.single.notes['name'],
+        'Mình đã dám trình bày trước cả phòng',
+      );
+      // Sửa xong quay về dạng đọc, chữ mới hiện ngay.
+      expect(
+        find.text('Mình đã dám trình bày trước cả phòng'),
+        findsOneWidget,
+      );
+      expect(find.text('hôm nay'), findsNothing);
+    });
+
     testWidgets('chỉ người dùng xác nhận mới sinh Insight', (tester) async {
       final h = _Harness();
       h.seedOpenEpisode(
