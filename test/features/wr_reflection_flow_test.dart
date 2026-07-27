@@ -151,6 +151,56 @@ void main() {
       expect(find.text(HumanMoment.confusion.tension), findsOneWidget);
       expect(find.byKey(const Key('wr_home_checkin_tired')), findsNothing);
     });
+
+    // Bỏ dở giữa chừng là Episode ngủ. Nếu Home không mời lại thì người dùng
+    // mất đường quay về — trái WPA Inv.4.
+    testWidgets('phiên đang ngủ vẫn được mời tiếp tục', (tester) async {
+      final h = _Harness();
+      h.seedOpenEpisode(
+        state: ExperienceState.dormant,
+        patternsDone: const [ReflectionPattern.notice],
+        notes: const {'notice': 'cố lên'},
+      );
+      await _pump(tester, h.app());
+
+      expect(find.byKey(const Key('wr_home_resume_reflection')), findsOneWidget);
+    });
+
+    // Dormant chỉ đi được sang Reactivated (WXS §4.4). Nạp thẳng vào luồng thì
+    // bước lưu kế tiếp đâm vào transition bất hợp lệ và hiện "Không lưu được".
+    testWidgets('tiếp tục phiên đang ngủ thì đánh thức trước khi đi tiếp',
+        (tester) async {
+      final h = _Harness();
+      h.seedOpenEpisode(
+        state: ExperienceState.dormant,
+        patternsDone: const [
+          ReflectionPattern.notice,
+          ReflectionPattern.name,
+          ReflectionPattern.explore,
+          ReflectionPattern.preserve,
+        ],
+        notes: const {'notice': 'cố lên'},
+      );
+      await _pump(tester, h.app());
+      await _resume(tester);
+
+      expect(h.episodes.episodes.single.state, ExperienceState.reactivated);
+
+      // Và bước xác nhận ý nghĩa lưu được, không báo lỗi.
+      await tester.enterText(
+        find.byKey(const Key('wr_meaning_field')),
+        'Tôi cần nói ra sớm hơn.',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Không lưu được'), findsNothing);
+      expect(
+        h.episodes.episodes.single.draftMeaning,
+        'Tôi cần nói ra sớm hơn.',
+      );
+    });
   });
 
   group('Màn năng lượng đứng riêng', () {

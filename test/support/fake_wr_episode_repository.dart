@@ -46,7 +46,7 @@ class FakeWrEpisodeRepository implements WrEpisodeRepository {
   Future<ReflectionEpisode?> fetchOpenEpisode(String userId) async {
     _maybeThrow();
     for (final e in episodes.reversed) {
-      if (e.userId == userId && e.state.isOpen) return e;
+      if (e.userId == userId && e.state.isResumable) return e;
     }
     return null;
   }

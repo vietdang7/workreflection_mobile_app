@@ -91,9 +91,9 @@ class SupabaseWrEpisodeRepository implements WrEpisodeRepository {
 
   static const _table = 'wr_reflection_episodes';
 
-  /// Các state được coi là "đang mở" — khớp [ExperienceState.isOpen].
+  /// Các state còn quay lại tiếp được — khớp [ExperienceState.isResumable].
   static final List<String> _openStates = ExperienceState.values
-      .where((s) => s.isOpen)
+      .where((s) => s.isResumable)
       .map((s) => s.dbValue)
       .toList(growable: false);
 

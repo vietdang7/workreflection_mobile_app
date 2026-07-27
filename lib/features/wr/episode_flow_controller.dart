@@ -40,8 +40,16 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
       _ref.read(wrIntelligenceRepositoryProvider);
   WrContentRepository get _content => _ref.read(wrContentRepositoryProvider);
 
-  /// Nạp lại một Episode đang mở (nút "Tiếp tục" ở Home).
-  void resume(ReflectionEpisode episode) => state = episode;
+  /// Nạp lại một Episode để đi tiếp (nút "Tiếp tục" ở Home).
+  ///
+  /// Episode đang ngủ phải được đánh thức trước: Dormant chỉ đi được sang
+  /// Reactivated (WXS §4.4). Nếu nạp thẳng vào luồng, bước lưu kế tiếp sẽ đâm
+  /// vào một transition bất hợp lệ và người dùng chỉ thấy "Không lưu được".
+  Future<ReflectionEpisode> resume(ReflectionEpisode episode) async {
+    final woken = await reopen(episode);
+    state = woken ?? episode;
+    return state!;
+  }
 
   /// Rời luồng mà không đóng Episode — Episode vẫn mở, Home mời quay lại.
   void leave() => state = null;

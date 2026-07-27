@@ -538,9 +538,10 @@ class _ResumeInvite extends ConsumerWidget {
           width: double.infinity,
           child: ElevatedButton(
             key: const Key('wr_home_resume_reflection'),
-            onPressed: () {
-              ref.read(episodeFlowProvider.notifier).resume(episode);
-              context.push(_routeForState(episode));
+            onPressed: () async {
+              final route = _routeForState(episode);
+              await ref.read(episodeFlowProvider.notifier).resume(episode);
+              if (context.mounted) context.push(route);
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: WrColors.navy,

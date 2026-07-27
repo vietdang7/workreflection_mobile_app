@@ -144,6 +144,13 @@ enum ExperienceState {
         ExperienceState.integrated || ExperienceState.dormant => false,
         _ => true,
       };
+
+  /// Episode còn có thể quay lại tiếp — gồm cả bản đang ngủ.
+  ///
+  /// WXS §4.5: tạm dừng là giữ chỗ, không phải bỏ. Nếu chỉ hỏi [isOpen] thì
+  /// một Episode vừa Dormant sẽ biến mất khỏi màn Hôm nay và người dùng mất
+  /// đường quay lại — trái WPA Inv.4 (Reflection luôn mở lại được).
+  bool get isResumable => isOpen || this == ExperienceState.dormant;
 }
 
 // ---------------------------------------------------------------------------
