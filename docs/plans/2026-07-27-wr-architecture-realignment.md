@@ -154,7 +154,14 @@ Mỗi màn: 1 tiêu đề, tối đa 1 khối nội dung, 1 hành động chính
 - **E1** Gỡ lối vào survey 49 câu, workshops, coaching, video report, roadmap,
   insights, `/understand` `/develop` `/journey` khỏi mọi màn còn dùng
   (giữ file + route, chỉ cắt liên kết).
+  → **Đã sẵn ở trạng thái này**: rà toàn bộ `context.push` / `context.go` trong
+  5 tab (Hôm nay · Hiểu mình · Phát triển · Hành trình · Tôi) và các màn con,
+  không màn nào còn trỏ tới nhóm cũ. Các lối vào duy nhất nằm bên trong chính
+  nhóm màn cũ, vốn đã bị bỏ khỏi shell từ trước. Không cần cắt thêm liên kết.
+  Sau Sprint B, `/wr/situation` cũng thành route mồ côi (Home không còn gọi).
 - **E2** Chuẩn khoảng trắng/typography tối giản dùng chung cho các màn flow.
+  → Xong qua `WrFlowScaffold`: padding 24, một tiêu đề 26px, một khối, một nút
+  52px; các ô chọn cao 92–104px.
 - **E3** Cập nhật test, `flutter analyze`, `flutter test`, `flutter build apk`.
 
 ---
@@ -174,3 +181,32 @@ Mỗi màn: 1 tiêu đề, tối đa 1 khối nội dung, 1 hành động chính
 - Toàn bộ test xanh (bao gồm test mới cho state machine và flow check-in).
 - `flutter build apk --debug` thành công.
 - Đối chiếu 8 câu Experience Audit (WXS §7.8) cho luồng check-in mới.
+
+---
+
+## 7. Đối chiếu Experience Audit (WXS §7.8) — luồng phản tư mới
+
+| # | Câu hỏi Audit | Trả lời |
+|---|---|---|
+| 1 | Experience bắt đầu từ Human Moment chưa? | Có — màn thứ hai của luồng là chọn 1 trong 6 Archetype; Episode không tồn tại nếu chưa chọn |
+| 2 | Reflection có đủ Integrity (đủ chuỗi) không? | Có — Pattern sequence theo archetype, nút Tiếp bị khoá khi chưa trả lời, state machine chặn nhảy cóc |
+| 3 | Meaning do Human tạo ra hay AI tạo ra? | Human — hệ thống chỉ nạp sẵn chính lời người dùng đã viết; Insight chỉ được tạo sau khi bấm xác nhận |
+| 4 | Career Memory có được làm giàu không? | Có — mỗi Episode khép lại ghi một Career Memory Event kèm Meaning, tình huống, năng lượng |
+| 5 | AI có xuất hiện đúng State không? | Chưa có AI runtime; câu hỏi dẫn dắt là bảng tĩnh theo (Archetype × Pattern), đúng vai trò hỏi chứ không kết luận |
+| 6 | Journey Continuity có bị gián đoạn không? | Không — thoát giữa chừng thì Episode ngủ, Home mời "Tiếp tục" đúng màn của trạng thái |
+| 7 | Experience có độc lập với Platform không? | Có — state machine và Pattern nằm ở `core/logic`, thuần Dart, không phụ thuộc Flutter |
+| 8 | Có truy ngược được về WDA/HXA/WIA/WPA không? | Có — mỗi quyết định đều chú thích điều khoản tương ứng trong mã nguồn |
+
+## 8. Việc còn lại
+
+- **Migration chưa push**: `20260725000000/1/2` (từ đợt trước) và
+  `20260727000000_wr_reflection_episodes` — backend dùng chung với web app,
+  cần được duyệt trước khi push. Khi bảng chưa tồn tại, app degrade mềm:
+  `wrOpenEpisodeProvider` nuốt lỗi và trả null, Home hiện lời mời bắt đầu.
+- **Chưa chạy trên máy thật**: mới dừng ở `flutter build apk --debug`.
+- **`Ghi tiêu chuẩn 6_1.mp3` / `10_1.mp3`** (77 MB và 122 MB) vẫn chưa
+  transcribe được — phần nội dung trong hai file này chưa được đối chiếu.
+- **Tab Hành trình** chưa đọc từ `wr_reflection_episodes`; vẫn dựa trên
+  `wr_career_memory_events` như cũ. Hoạt động đúng nhưng chưa tận dụng Episode.
+- **Sprint D3** (rút gọn màn Phát triển, tách danh sách chủ đề khác sang màn
+  riêng) chưa làm — màn này vẫn còn dài hơn mức tối giản mong muốn.
