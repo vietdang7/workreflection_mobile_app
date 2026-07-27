@@ -78,19 +78,6 @@ Widget _wrap(
   );
 }
 
-ScaSelfCheckResponse _selfCheckResponse({
-  double s = 3.5,
-  double c = 4.0,
-  double a = 2.8,
-}) => ScaSelfCheckResponse(
-  id: 'r1',
-  userId: 'u1',
-  answers: const {},
-  structureScore: s,
-  cultureScore: c,
-  activityScore: a,
-  takenAt: DateTime(2026, 7, 22),
-);
 
 PracticeTheme _theme({
   String id = 'pt-voice',
@@ -189,105 +176,27 @@ void main() {
   // WrDiscoverScreen — Sprint 1
   // ─────────────────────────────────────────────────────────────────────────────
 
+  // Hiểu mình sau tái cấu trúc: chỉ liệt kê dòng ghi nhận, phần diễn giải nằm
+  // ở màn chi tiết. Chi tiết hai tầng free/premium xem
+  // test/features/wr_discover_two_tier_test.dart.
   group('WrDiscoverScreen — empty state', () {
-    testWidgets('renders empty-state title when no history', (tester) async {
+    testWidgets('mời phản tư khi chưa có dữ liệu', (tester) async {
       await tester.pumpWidget(_wrap(const WrDiscoverScreen()));
       await tester.pumpAndSettle();
 
-      // New design: "Chưa có đủ dữ liệu" in dominant need empty card
-      expect(find.textContaining('Chưa có'), findsWidgets);
-    });
-
-    testWidgets('renders CTA to do self-check when no history', (tester) async {
-      await tester.pumpWidget(_wrap(const WrDiscoverScreen()));
-      await tester.pumpAndSettle();
-
-      // New design shows CTA "Làm 15 câu phản chiếu" in empty need card
-      expect(find.textContaining('15 câu phản chiếu'), findsWidgets);
-    });
-
-    testWidgets('CTA is Làm 15 câu phản chiếu when no history', (tester) async {
-      await tester.pumpWidget(_wrap(const WrDiscoverScreen()));
-      await tester.pumpAndSettle();
-
-      expect(find.textContaining('15 câu phản chiếu'), findsWidgets);
-    });
-  });
-
-  group('WrDiscoverScreen — has data (free user)', () {
-    testWidgets('shows SCA labels with new design (Minh bạch vai trò, etc.)', (
-      tester,
-    ) async {
-      final intel = FakeWrIntelligenceRepository();
-      intel.seedSelfCheckHistory([_selfCheckResponse()]);
-
-      await tester.pumpWidget(_wrap(const WrDiscoverScreen(), intel: intel));
-      await tester.pumpAndSettle();
-
-      // New design: SCA card with labels instead of score bars
-      expect(find.textContaining('Minh bạch vai trò'), findsWidgets);
-      expect(find.textContaining('An toàn khi lên tiếng'), findsWidgets);
-      expect(find.textContaining('Định hướng ý nghĩa'), findsWidgets);
-    });
-
-    testWidgets('shows ĐIỀU BẠN ĐANG TÌM KIẾM section when data present', (
-      tester,
-    ) async {
-      final intel = FakeWrIntelligenceRepository();
-      intel.seedSelfCheckHistory([_selfCheckResponse()]);
-
-      await tester.pumpWidget(_wrap(const WrDiscoverScreen(), intel: intel));
-      await tester.pumpAndSettle();
-
-      expect(find.textContaining('ĐIỀU BẠN ĐANG TÌM KIẾM'), findsOneWidget);
-    });
-
-    testWidgets('shows 2 locked premium cards for free user', (tester) async {
-      tester.view.physicalSize = const Size(1080, 4000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-
-      final intel = FakeWrIntelligenceRepository();
-      intel.seedSelfCheckHistory([_selfCheckResponse()]);
-
-      await tester.pumpWidget(_wrap(const WrDiscoverScreen(), intel: intel));
-      await tester.pumpAndSettle();
-
+      expect(find.text('Hiểu mình'), findsOneWidget);
       expect(
-        find.text('Diễn giải sâu & xu hướng theo thời gian'),
+        find.text('Chưa có lần nhìn lại nào được ghi.'),
         findsOneWidget,
       );
-      expect(find.text('Báo cáo chuyên sâu 49 câu'), findsOneWidget);
-      expect(find.textContaining('Premium'), findsWidgets);
     });
 
-    testWidgets('shows no locked cards for premium user', (tester) async {
-      tester.view.physicalSize = const Size(1080, 4000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-
-      final intel = FakeWrIntelligenceRepository();
-      intel.seedSelfCheckHistory([
-        _selfCheckResponse(s: 4.0, c: 3.5, a: 4.2),
-        _selfCheckResponse(s: 3.0, c: 3.0, a: 3.0),
-      ]);
-      intel.seedEntitlement(
-        WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
-      );
-
-      await tester.pumpWidget(_wrap(const WrDiscoverScreen(), intel: intel));
+    testWidgets('không diễn giải gì khi chưa có dữ liệu', (tester) async {
+      await tester.pumpWidget(_wrap(const WrDiscoverScreen()));
       await tester.pumpAndSettle();
 
-      // New design: premium users do not see locked cards
-      expect(find.text('Báo cáo chuyên sâu 49 câu'), findsNothing);
-      expect(
-        find.text('Diễn giải sâu & xu hướng theo thời gian'),
-        findsNothing,
-      );
-      // MỞ KHOÁ VỚI PREMIUM eyebrow not shown
-      expect(find.textContaining('MỞ KHOÁ VỚI PREMIUM'), findsNothing);
+      // Phần diễn giải (nhu cầu chủ đạo) không còn ở tầng miễn phí.
+      expect(find.textContaining('ĐIỀU BẠN ĐANG TÌM KIẾM'), findsNothing);
     });
   });
 

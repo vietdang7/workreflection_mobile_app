@@ -8,6 +8,7 @@ import '../../../core/data/wr_content_repository.dart';
 import '../../../core/data/wr_intelligence_repository.dart';
 import '../../../core/logic/wr_dominant_need.dart';
 import '../../../core/logic/wr_entitlement.dart';
+import '../../../core/logic/wr_skill_certification.dart';
 import '../../../core/widgets/wr_premium_lock.dart';
 import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_intelligence.dart';
@@ -42,6 +43,17 @@ final _practiceStepsProvider =
     FutureProvider.family<List<PracticeStep>, String>((ref, themeId) async {
   final repo = ref.watch(wrIntelligenceRepositoryProvider);
   return repo.fetchPracticeSteps(themeId);
+});
+
+/// Career Memory events — nguồn để đếm số lần đã thực hành.
+final _memoryEventsProvider =
+    FutureProvider<List<CareerMemoryEvent>>((ref) async {
+  final repo = ref.watch(wrContentRepositoryProvider);
+  try {
+    return await repo.fetchMemoryEvents(limit: 200);
+  } catch (_) {
+    return const [];
+  }
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -212,6 +224,29 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
         ),
       );
 
+      // Chứng nhận kỹ năng: lặp lại đủ nhiều thì ghi một dấu mốc, đúng một lần.
+      try {
+        final events = await contentRepo.fetchMemoryEvents(limit: 200);
+        final certified = certifiedSkills(
+          themes: [activeTheme],
+          enrollments: [activeEnrollment!.copyWith(completedSteps: newCompleted)],
+          events: events,
+        );
+        for (final skill
+            in newlyCertified(certified: certified, events: events)) {
+          await contentRepo.insertMemoryEvent(
+            CareerMemoryEvent(
+              id: '',
+              userId: userId,
+              behavior: kSkillCertifiedBehavior,
+              reflectionText: skill.title,
+            ),
+          );
+        }
+      } catch (_) {
+        /* best-effort: dấu mốc sẽ được ghi ở lần thực hành sau */
+      }
+
       final allStepIds = allSteps.map((s) => s.stepId).toSet();
       final hasCompletedAll =
           allStepIds.every((id) => newCompleted.contains(id));
@@ -327,6 +362,17 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
             enrollingThemeIds: _enrollingThemeIds,
             onPaywall: () => context.push('/wr/paywall'),
           ),
+
+        // ── Kỹ năng đã hình thành (ghi nhận — luôn miễn phí) ─────────────
+        SliverToBoxAdapter(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(22, 4, 22, 0),
+            child: _CertifiedSkillsSection(
+              themes: themes,
+              enrollments: enrollments,
+            ),
+          ),
+        ),
 
         // ── Growth Journey (Hai Lớp v1.2 §III — Paid) ────────────────────
         SliverToBoxAdapter(
@@ -481,6 +527,87 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Kỹ năng đã hình thành — chứng nhận khi lặp lại thực hành đủ nhiều.
+// Đây là ghi nhận hành trình, nên bản miễn phí cũng thấy.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _CertifiedSkillsSection extends ConsumerWidget {
+  const _CertifiedSkillsSection({
+    required this.themes,
+    required this.enrollments,
+  });
+
+  final List<PracticeTheme> themes;
+  final List<PracticeEnrollment> enrollments;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final events = ref.watch(_memoryEventsProvider).valueOrNull ?? const [];
+    final skills = certifiedSkills(
+      themes: themes,
+      enrollments: enrollments,
+      events: events,
+    );
+    if (skills.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const WrSectionDivider(),
+        const SizedBox(height: 16),
+        const WrEyebrow('KỸ NĂNG ĐÃ HÌNH THÀNH'),
+        const SizedBox(height: 12),
+        for (final skill in skills)
+          Padding(
+            key: Key('wr_skill_${skill.themeId}'),
+            padding: const EdgeInsets.only(bottom: 14),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(
+                  Icons.verified_outlined,
+                  size: 18,
+                  color: WrColors.teal,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        skill.title,
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
+                          color: WrColors.navy,
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        skill.completed
+                            ? 'Bạn đã đi hết chặng thực hành này.'
+                            : 'Bạn đã lặp lại ${skill.practiceCount} lần — '
+                                'đủ để trở thành kỹ năng.',
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: WrColors.muted,
+                          height: 1.5,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        const SizedBox(height: 8),
+      ],
     );
   }
 }

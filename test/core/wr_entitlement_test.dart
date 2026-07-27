@@ -93,24 +93,25 @@ void main() {
   // Level 3: Quota gating — practice themes
   // ---------------------------------------------------------------------------
   group('Level 3 - practice theme quota', () {
-    test('free user has max 3 active themes', () {
-      expect(freePlan().maxActivePracticeThemes, 3);
+    // Yêu cầu khách 2026-07-27: free tối đa 2 chủ đề cùng lúc.
+    test('free user has max 2 active themes', () {
+      expect(freePlan().maxActivePracticeThemes, 2);
     });
 
     test('premium user has unlimited (null) themes', () {
       expect(activePremium().maxActivePracticeThemes, isNull);
     });
 
-    test('free user can enroll when activeCount < 3', () {
+    test('free user can enroll when activeCount < 2', () {
       expect(freePlan().canEnrollPracticeTheme(0), isTrue);
-      expect(freePlan().canEnrollPracticeTheme(2), isTrue);
+      expect(freePlan().canEnrollPracticeTheme(1), isTrue);
     });
 
-    test('free user cannot enroll when activeCount == 3', () {
-      expect(freePlan().canEnrollPracticeTheme(3), isFalse);
+    test('free user cannot enroll when activeCount == 2', () {
+      expect(freePlan().canEnrollPracticeTheme(2), isFalse);
     });
 
-    test('free user cannot enroll when activeCount > 3', () {
+    test('free user cannot enroll when activeCount > 2', () {
       expect(freePlan().canEnrollPracticeTheme(4), isFalse);
     });
 

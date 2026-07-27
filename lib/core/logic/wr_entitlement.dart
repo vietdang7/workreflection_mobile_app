@@ -78,8 +78,9 @@ class WrEntitlement {
   // -------------------------------------------------------------------------
 
   /// Max active (non-completed) practice theme enrollments.
-  /// Free: 3. Premium: null (unlimited).
-  int? get maxActivePracticeThemes => isPremium ? null : 3;
+  /// Free: 2 — yêu cầu khách 2026-07-27 ("free chỉ được chọn thực hành tối đa
+  /// 2 chủ đề cùng lúc"). Premium: null (unlimited).
+  int? get maxActivePracticeThemes => isPremium ? null : 2;
 
   /// Returns true if user can enroll in another practice theme.
   /// [activeCount] = count of enrollments where completedAt == null.

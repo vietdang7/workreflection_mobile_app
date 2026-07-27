@@ -513,44 +513,24 @@ void main() {
   // Task E: Link chéo Discover → Journey
   // ─────────────────────────────────────────────────────────────────────────────
 
-  group('Task E — Link chéo Discover', () {
-    testWidgets('có patterns → thấy link "Xem toàn bộ hành trình →"', (tester) async {
+  // Link chéo "Xem toàn bộ hành trình" đã bỏ khỏi Hiểu mình sau khi tối giản:
+  // mỗi dòng nay mở màn chi tiết của chính điều lặp lại đó.
+  group('Hiểu mình sau tối giản', () {
+    testWidgets('không còn link chéo sang Hành trình', (tester) async {
       final content = FakeWrContentRepository();
-      content.seedSituations([_situation(code: 'sit-01', text: 'Áp lực deadline')]);
+      content.seedSituations([
+        _situation(code: 'sit-01', text: 'Áp lực deadline'),
+      ]);
 
       final intel = FakeWrIntelligenceRepository();
       intel.seedSelfCheckHistory([_selfCheck()]);
       intel.seedPatternCounts([_pattern(code: 'sit-01', count: 4)]);
 
       await _pumpLarge(tester, _wrapDiscover(content: content, intel: intel));
-
-      expect(find.textContaining('Xem toàn bộ hành trình'), findsOneWidget);
-    });
-
-    testWidgets('không có patterns → không có link hành trình', (tester) async {
-      await _pumpLarge(tester, _wrapDiscover());
 
       expect(find.textContaining('Xem toàn bộ hành trình'), findsNothing);
-    });
-
-    testWidgets('tap link → điều hướng đến /wr/journey', (tester) async {
-      final content = FakeWrContentRepository();
-      content.seedSituations([_situation(code: 'sit-01', text: 'Áp lực deadline')]);
-
-      final intel = FakeWrIntelligenceRepository();
-      intel.seedSelfCheckHistory([_selfCheck()]);
-      intel.seedPatternCounts([_pattern(code: 'sit-01', count: 4)]);
-
-      await _pumpLarge(tester, _wrapDiscover(content: content, intel: intel));
-
-      // Tìm và tap link
-      final linkFinder = find.textContaining('Xem toàn bộ hành trình', skipOffstage: false);
-      expect(linkFinder, findsOneWidget);
-      await tester.tap(linkFinder);
-      await tester.pumpAndSettle();
-
-      // Màn hình Journey được hiện
-      expect(find.text('JourneyScreen'), findsOneWidget);
+      expect(find.text('Áp lực deadline'), findsOneWidget);
+      expect(find.text('4 lần'), findsOneWidget);
     });
   });
 }

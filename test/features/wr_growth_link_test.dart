@@ -15,7 +15,6 @@ import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart'
 import 'package:workreflection_mobile/core/logic/wr_dominant_need.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
-import 'package:workreflection_mobile/features/wr/presentation/wr_discover_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_growth_screen.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 
@@ -77,23 +76,6 @@ Widget _wrapGrowth({
   );
 }
 
-Widget _wrapDiscover({
-  FakeWrContentRepository? content,
-  FakeWrIntelligenceRepository? intel,
-  String userId = 'u1',
-}) {
-  final contentRepo = content ?? FakeWrContentRepository();
-  final intelRepo = intel ?? FakeWrIntelligenceRepository();
-  final router = _makeRouter(home: const WrDiscoverScreen());
-  return ProviderScope(
-    overrides: [
-      wrContentRepositoryProvider.overrideWithValue(contentRepo),
-      wrIntelligenceRepositoryProvider.overrideWithValue(intelRepo),
-      currentUserIdProvider.overrideWithValue(userId),
-    ],
-    child: MaterialApp.router(routerConfig: router),
-  );
-}
 
 Future<void> _pumpLarge(WidgetTester tester, Widget widget) async {
   tester.view.physicalSize = const Size(1080, 6000);
@@ -545,57 +527,9 @@ group('Task E — Tags bước theo stepOrder', () {
     expect(find.text('CHUYỂN HÓA'), findsOneWidget);
   });
 
-  testWidgets(
-      'Discover: có dominant need → hiện link Bắt đầu thực hành → navigate /wr/growth',
-      (tester) async {
-    final content = FakeWrContentRepository();
-    content.seedSituations([_sit('s-connect', HumanNeed.ketNoi)]);
-
-    final intel = FakeWrIntelligenceRepository();
-    intel.seedPatternCounts([_pattern('s-connect', 3)]);
-
-    await _pumpLarge(
-        tester, _wrapDiscover(content: content, intel: intel));
-
-    expect(find.text('Bắt đầu thực hành'), findsOneWidget);
-
-    await tester.tap(find.text('Bắt đầu thực hành'));
-    await tester.pumpAndSettle();
-
-    expect(find.text('GrowthScreen'), findsOneWidget);
-  });
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// Regression: Discover không bị break sau khi refactor helper
-// ─────────────────────────────────────────────────────────────────────────────
-
-group('Regression — Discover sau refactor Task A', () {
-  testWidgets(
-      'Discover hiện ĐIỀU BẠN ĐANG TÌM KIẾM khi có patterns',
-      (tester) async {
-    final content = FakeWrContentRepository();
-    content.seedSituations([_sit('s-clear', HumanNeed.roRang)]);
-
-    final intel = FakeWrIntelligenceRepository();
-    intel.seedPatternCounts([_pattern('s-clear', 2)]);
-
-    await _pumpLarge(
-        tester, _wrapDiscover(content: content, intel: intel));
-
-    expect(find.text('ĐIỀU BẠN ĐANG TÌM KIẾM'), findsOneWidget);
-  });
-
-  testWidgets(
-      'Discover hiện empty state khi không có pattern và không có self-check',
-      (tester) async {
-    final content = FakeWrContentRepository();
-    final intel = FakeWrIntelligenceRepository();
-
-    await _pumpLarge(
-        tester, _wrapDiscover(content: content, intel: intel));
-
-    expect(find.text('Chưa có đủ dữ liệu'), findsOneWidget);
-  });
-});
+// Các test cũ về liên kết chéo từ Hiểu mình sang Phát triển đã bỏ: sau khi tối
+// giản, Hiểu mình chỉ liệt kê ghi nhận và mở màn chi tiết, không còn nút gợi ý
+// thực hành. Phần hai tầng free/premium xem wr_discover_two_tier_test.dart.
 } // end main

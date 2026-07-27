@@ -44,6 +44,7 @@ import '../../features/wr/presentation/wr_story_screen.dart';
 import '../../features/wr/presentation/wr_discover_screen.dart';
 import '../../features/wr/presentation/wr_growth_screen.dart';
 import '../../features/wr/presentation/wr_journey_screen.dart';
+import '../../features/wr/presentation/wr_pattern_detail_screen.dart';
 import '../../features/wr/presentation/wr_paywall_screen.dart';
 import '../../features/wr/presentation/wr_self_check_screen.dart';
 import '../../features/wr/presentation/flow/wr_commit_screen.dart';
@@ -326,6 +327,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/wr/flow/done',
         builder: (context, state) => const WrDoneScreen(),
+      ),
+
+      GoRoute(
+        path: '/wr/pattern/:code',
+        builder: (context, state) => WrPatternDetailScreen(
+          situationCode: state.pathParameters['code'] ?? '',
+        ),
       ),
 
       GoRoute(

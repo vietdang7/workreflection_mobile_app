@@ -300,82 +300,8 @@ void main() {
     );
   });
 
-  // ── RT2: Discover → Growth round-trip ───────────────────────────────────────
-  group('RT2: Discover → Growth round-trip (link chéo ?from=)', () {
-    testWidgets(
-      'Discover: tap "Bắt đầu thực hành" → Growth thấy "Quay lại" → tap → về Discover',
-      (tester) async {
-        final contentRepo = FakeWrContentRepository();
-        final intelRepo = FakeWrIntelligenceRepository();
-        // Seed patterns + selfCheck để _buildDominantNeed hiển thị
-        intelRepo.seedPatternCounts([
-          PatternCount(
-            id: '1',
-            userId: 'u1',
-            situationCode: 'sit1',
-            scaDimension: null,
-            occurrenceCount: 5,
-            lastSeenAt: DateTime.now(),
-          ),
-        ]);
-        contentRepo.seedSituations([
-          const WrSituation(
-            code: 'sit1',
-            text: 'Tình huống phát triển',
-            scaDimension: ScaDimension.a1,
-            wave: 1,
-            humanNeed: HumanNeed.phatTrien,
-          ),
-        ]);
-
-        final router = GoRouter(
-          initialLocation: '/wr/discover',
-          routes: [
-            GoRoute(
-              path: '/wr/discover',
-              builder: (_, __) => const WrDiscoverScreen(),
-            ),
-            GoRoute(
-              path: '/wr/growth',
-              builder: (_, __) => const WrGrowthScreen(),
-            ),
-            GoRoute(path: '/home', builder: (_, __) => const Scaffold(body: Text('HOME_STUB'))),
-            GoRoute(path: '/wr/journey', builder: (_, __) => const Scaffold(body: Text('JOURNEY_STUB'))),
-            GoRoute(path: '/wr/self-check', builder: (_, __) => const Scaffold(body: Text('SELFCHECK'))),
-            GoRoute(path: '/wr/paywall', builder: (_, __) => const Scaffold(body: Text('PAYWALL'))),
-            GoRoute(path: '/wr/story', builder: (_, __) => const Scaffold(body: Text('STORY'))),
-          ],
-        );
-        final app = ProviderScope(
-          overrides: [
-            wrContentRepositoryProvider.overrideWithValue(contentRepo),
-            wrIntelligenceRepositoryProvider.overrideWithValue(intelRepo),
-            currentUserIdProvider.overrideWithValue('u1'),
-          ],
-          child: MaterialApp.router(routerConfig: router),
-        );
-
-        await _pumpLarge(tester, app);
-        // Discover phải hiện "Bắt đầu thực hành"
-        expect(find.text('Bắt đầu thực hành'), findsOneWidget);
-
-        // Tap → Growth với ?from=discover
-        await tester.tap(find.text('Bắt đầu thực hành'));
-        await tester.pumpAndSettle();
-
-        // Growth phải hiện "Quay lại"
-        expect(find.text('Quay lại'), findsOneWidget);
-
-        // Tap "Quay lại" → về Discover
-        await tester.tap(find.text('Quay lại'));
-        await tester.pumpAndSettle();
-
-        // Về Discover: thấy title đặc trưng, không thấy "Quay lại"
-        expect(find.text('Hiểu mình'), findsOneWidget);
-        expect(find.text('Quay lại'), findsNothing);
-      },
-    );
-  });
+  // RT2 (Discover → Growth qua nút "Bắt đầu thực hành") đã bỏ: sau khi tối
+  // giản, Hiểu mình không còn nút gợi ý thực hành, mỗi dòng mở màn chi tiết.
 
   // ── Task 4: nút lùi /wr/story ───────────────────────────────────────────────
   group('WrStoryScreen — nút lùi', () {
