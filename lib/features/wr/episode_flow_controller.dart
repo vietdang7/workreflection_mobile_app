@@ -30,6 +30,14 @@ final episodeFlowProvider =
 /// dùng chọn Human Moment.
 final pendingEnergyProvider = StateProvider<CheckinEnergy?>((ref) => null);
 
+/// Một cặp hỏi–đáp người dùng đã đi qua trong Episode.
+class ReflectionRecapItem {
+  const ReflectionRecapItem({required this.prompt, required this.answer});
+
+  final String prompt;
+  final String answer;
+}
+
 class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
   EpisodeFlowController(this._ref) : super(null);
 
@@ -139,23 +147,28 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
   // Meaning
   // -------------------------------------------------------------------------
 
-  /// Câu tóm lược hệ thống đề xuất — WIA: chỉ Propose, không Confirm.
-  /// Lấy ghi chú sâu nhất người dùng đã viết, không thêm diễn giải.
-  String proposedMeaning() {
+  /// Những gì người dùng vừa viết, KÈM câu hỏi đã sinh ra chúng.
+  ///
+  /// Một câu trả lời tách khỏi câu hỏi của nó thì vô nghĩa: "hôm nay" không
+  /// nói lên điều gì nếu không biết nó trả lời cho câu nào. Bước Ý nghĩa phải
+  /// đọc lại đủ cặp hỏi–đáp thì người dùng mới rút ra được điều muốn giữ.
+  ///
+  /// Trả về theo đúng thứ tự đã đi qua của archetype.
+  List<ReflectionRecapItem> recap() {
     final ep = state;
-    if (ep == null) return '';
-    const priority = [
-      ReflectionPattern.reframe,
-      ReflectionPattern.explore,
-      ReflectionPattern.name,
-      ReflectionPattern.notice,
-      ReflectionPattern.preserve,
-    ];
-    for (final p in priority) {
-      final note = ep.notes[p.dbValue];
-      if (note != null && note.trim().isNotEmpty) return note.trim();
+    if (ep == null) return const [];
+    final sequence =
+        patternSequences[ep.humanMoment] ?? const <ReflectionPattern>[];
+    final items = <ReflectionRecapItem>[];
+    for (final pattern in sequence) {
+      final note = ep.notes[pattern.dbValue]?.trim();
+      if (note == null || note.isEmpty) continue;
+      items.add(ReflectionRecapItem(
+        prompt: promptFor(ep.humanMoment, pattern),
+        answer: note,
+      ));
     }
-    return '';
+    return items;
   }
 
   /// Lưu bản nháp ý nghĩa — chưa vào Career Memory.

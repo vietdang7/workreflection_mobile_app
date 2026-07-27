@@ -16,6 +16,7 @@ import 'package:workreflection_mobile/core/data/wr_episode_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
 import 'package:workreflection_mobile/core/models/checkin.dart';
+import 'package:workreflection_mobile/core/logic/wr_experience_state.dart';
 import 'package:workreflection_mobile/core/models/wr_episode.dart';
 import 'package:workreflection_mobile/features/wr/presentation/flow/wr_commit_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/flow/wr_done_screen.dart';
@@ -324,7 +325,10 @@ void main() {
   });
 
   group('Ý nghĩa và ký ức', () {
-    testWidgets('nạp sẵn lời người dùng, chỉ người dùng xác nhận',
+    // Câu trả lời tách khỏi câu hỏi thì vô nghĩa. Bước Ý nghĩa phải đọc lại
+    // đủ cặp hỏi–đáp, và ô nhập để trống — điều muốn giữ là chữ mới của người
+    // dùng, không phải đáp án của một câu hỏi khác bê sang.
+    testWidgets('đọc lại đủ câu hỏi lẫn câu trả lời, ô nhập để trống',
         (tester) async {
       final h = _Harness();
       h.seedOpenEpisode(
@@ -341,20 +345,56 @@ void main() {
       await _resume(tester);
       await tester.pumpAndSettle();
 
+      expect(find.byKey(const Key('wr_meaning_recap')), findsOneWidget);
+      expect(
+        find.text(
+          promptFor(HumanMoment.celebration, ReflectionPattern.name),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Mình đã dám trình bày trước cả phòng'),
+        findsOneWidget,
+      );
+
       final field = tester.widget<TextField>(
         find.byKey(const Key('wr_meaning_field')),
       );
-      expect(field.controller!.text, 'Mình đã dám trình bày trước cả phòng');
+      expect(field.controller!.text, '');
+    });
 
+    testWidgets('chỉ người dùng xác nhận mới sinh Insight', (tester) async {
+      final h = _Harness();
+      h.seedOpenEpisode(
+        moment: HumanMoment.celebration,
+        state: ExperienceState.exploring,
+        patternsDone: const [
+          ReflectionPattern.notice,
+          ReflectionPattern.name,
+          ReflectionPattern.preserve,
+        ],
+        notes: const {'name': 'Mình đã dám trình bày trước cả phòng'},
+      );
+      await _pump(tester, h.app());
+      await _resume(tester);
+      await tester.pumpAndSettle();
+
+      // Chưa viết gì thì chưa xác nhận được.
+      expect(h.intel.insertInsightCalls, isEmpty);
+
+      await tester.enterText(
+        find.byKey(const Key('wr_meaning_field')),
+        'Tôi lên tiếng được khi thấy an toàn.',
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('wr_flow_primary')));
       await tester.pumpAndSettle();
 
       expect(h.episodes.confirmMeaningCalls, hasLength(1));
-      // Insight chỉ được tạo sau khi người dùng xác nhận.
       expect(h.intel.insertInsightCalls, hasLength(1));
       expect(
         h.intel.insertInsightCalls.first.content,
-        'Mình đã dám trình bày trước cả phòng',
+        'Tôi lên tiếng được khi thấy an toàn.',
       );
     });
 
@@ -377,6 +417,11 @@ void main() {
       // Trước khi xác nhận: chưa có ký ức nào.
       expect(h.content.insertMemoryEventCalls, isEmpty);
 
+      await tester.enterText(
+        find.byKey(const Key('wr_meaning_field')),
+        'Mình đã dám trình bày',
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('wr_flow_primary')));
       await tester.pumpAndSettle();
 

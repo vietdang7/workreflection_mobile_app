@@ -64,11 +64,15 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
       return WrFlowGone(onHome: () => context.go('/home'));
     }
 
+    // Chỉ khôi phục bản nháp CHÍNH người dùng đã lưu. Không nạp lại câu trả
+    // lời của bước trước: nó là đáp án cho một câu hỏi khác, đặt vào đây thì
+    // người dùng không biết chữ đó ở đâu ra.
     if (!_prefilled) {
-      final proposed = ref.read(episodeFlowProvider.notifier).proposedMeaning();
-      _controller.text = episode.draftMeaning ?? proposed;
+      _controller.text = episode.draftMeaning ?? '';
       _prefilled = true;
     }
+
+    final recap = ref.read(episodeFlowProvider.notifier).recap();
 
     return WrFlowScaffold(
       eyebrow: 'Điều bạn nhận ra',
@@ -83,6 +87,24 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          if (recap.isNotEmpty) ...[
+            const Text(
+              'BẠN VỪA VIẾT',
+              key: Key('wr_meaning_recap'),
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.55,
+                color: WrColors.muted,
+              ),
+            ),
+            const SizedBox(height: 12),
+            for (final item in recap) ...[
+              _RecapItem(prompt: item.prompt, answer: item.answer),
+              const SizedBox(height: 14),
+            ],
+            const SizedBox(height: 10),
+          ],
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             decoration: BoxDecoration(
@@ -132,5 +154,43 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
     }
     await ref.read(episodeFlowProvider.notifier).pause();
     if (mounted) context.go('/home');
+  }
+}
+
+/// Một cặp hỏi–đáp đã đi qua: câu hỏi ở trên, chữ của người dùng ở dưới.
+///
+/// Đọc là biết ngay chữ mình viết thuộc về câu nào — trước đây chỉ hiện mỗi
+/// câu trả lời nên nó lơ lửng, không rõ đang nói về chuyện gì.
+class _RecapItem extends StatelessWidget {
+  const _RecapItem({required this.prompt, required this.answer});
+
+  final String prompt;
+  final String answer;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          prompt,
+          style: const TextStyle(
+            fontSize: 13,
+            color: WrColors.muted,
+            height: 1.45,
+          ),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          answer,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: WrColors.navy,
+            height: 1.45,
+          ),
+        ),
+      ],
+    );
   }
 }
