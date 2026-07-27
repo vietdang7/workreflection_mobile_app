@@ -126,3 +126,15 @@ String needSeekingLabel(HumanNeed need) => switch (need) {
       HumanNeed.thichNghi => 'sự thích nghi',
       HumanNeed.phatTrien => 'sự phát triển',
     };
+
+/// Câu đọc lên ở khối "Điều bạn đang tìm kiếm" của màn Hiểu mình.
+///
+/// Đây là định nghĩa của chính nhu cầu, không phải diễn giải riêng cho một
+/// người — phần diễn giải nằm ở màn chi tiết. Nhu cầu nào được chọn mới là
+/// dữ liệu thật: nó suy ra từ những tình huống đang lặp lại của người dùng.
+String needSeekingSentence(HumanNeed need) => switch (need) {
+      HumanNeed.roRang => 'Biết rõ mình đang ở đâu và được chờ đợi điều gì.',
+      HumanNeed.ketNoi => 'Được lắng nghe và thể hiện quan điểm.',
+      HumanNeed.thichNghi => 'Giữ được mình khi mọi thứ đổi thay.',
+      HumanNeed.phatTrien => 'Thấy mình đang đi về phía trước.',
+    };

@@ -102,8 +102,12 @@ void main() {
 
       expect(find.text('Không được lắng nghe trong họp'), findsOneWidget);
       expect(find.text('3 lần'), findsOneWidget);
-      // Không có câu diễn giải nào ở tầng danh sách.
-      expect(find.textContaining('ĐIỀU BẠN ĐANG TÌM KIẾM'), findsNothing);
+      // Nhu cầu chủ đạo là dữ kiện đếm được (nhu cầu nào lặp nhiều nhất), nên
+      // ở tầng ghi nhận. Phần "vì sao nó lặp lại" vẫn nằm ở màn chi tiết.
+      expect(find.byKey(const Key('wr_discover_seeking')), findsOneWidget);
+      expect(find.text('KẾT NỐI · Nhu cầu chủ đạo'), findsOneWidget);
+      // Không có câu diễn giải riêng cho người này ở tầng danh sách.
+      expect(find.textContaining('ĐIỀU ĐỨNG SAU'), findsNothing);
     });
 
     testWidgets('đếm số lần đã nhìn lại từ lịch sử Episode', (tester) async {
@@ -150,6 +154,62 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Bạn đã ghi lại điều này 3 lần.'), findsOneWidget);
+    });
+  });
+
+  // Bố cục theo giao-dien-chinh.html §screen-understand — nhưng mọi con số và
+  // trạng thái đều đọc từ dữ liệu thật, không có dòng minh hoạ nào cứng.
+  group('Hiểu mình — trải nghiệm hiện tại (SCA)', () {
+    testWidgets('chưa tự đánh giá thì cả ba trụ đều nói chưa đánh giá',
+        (tester) async {
+      await _pump(
+        tester,
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: FakeWrIntelligenceRepository(),
+          content: FakeWrContentRepository(),
+        ),
+      );
+
+      expect(find.text('TRẢI NGHIỆM HIỆN TẠI (SCA)'), findsOneWidget);
+      expect(find.text('Chưa đánh giá'), findsNWidgets(3));
+      expect(find.text('Chưa tự đánh giá lần nào'), findsOneWidget);
+    });
+
+    testWidgets('đọc điểm ba trụ từ lần tự đánh giá gần nhất', (tester) async {
+      final intel = FakeWrIntelligenceRepository()
+        ..seedSelfCheckHistory([
+          ScaSelfCheckResponse(
+            userId: 'u1',
+            answers: const {},
+            structureScore: 4.2,
+            cultureScore: 3.0,
+            activityScore: 1.8,
+            takenAt: DateTime(2026, 7, 26),
+          ),
+        ]);
+
+      await _pump(
+        tester,
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: intel,
+          content: FakeWrContentRepository(),
+        ),
+      );
+
+      expect(find.text('Đang phát triển'), findsOneWidget); // S = 4.2
+      expect(find.text('Cần chú ý'), findsOneWidget); //       C = 3.0
+      expect(find.text('Ưu tiên cải thiện'), findsOneWidget); // A = 1.8
+      expect(find.text('Đã tự đánh giá 1 lần'), findsOneWidget);
+    });
+
+    test('ngưỡng trạng thái trụ giữ đúng như màn Tự đánh giá', () {
+      expect(pillarStatusLabel(null), 'Chưa đánh giá');
+      expect(pillarStatusLabel(0), 'Chưa đánh giá');
+      expect(pillarStatusLabel(1.8), 'Ưu tiên cải thiện');
+      expect(pillarStatusLabel(2.5), 'Cần chú ý');
+      expect(pillarStatusLabel(3.8), 'Đang phát triển');
     });
   });
 
