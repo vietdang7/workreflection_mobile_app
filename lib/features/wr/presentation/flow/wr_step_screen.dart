@@ -133,7 +133,7 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
           if (showSituations)
             ..._situationTiles(episode)
           else
-            _noteField(),
+            _noteField(promptHintFor(episode.humanMoment, pattern)),
           if (_error != null) ...[
             const SizedBox(height: 16),
             Text(
@@ -162,7 +162,7 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
     ];
   }
 
-  Widget _noteField() {
+  Widget _noteField(String hint) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
@@ -180,10 +180,10 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
           color: WrColors.navy,
           height: 1.6,
         ),
-        decoration: const InputDecoration(
+        decoration: InputDecoration(
           border: InputBorder.none,
-          hintText: 'Viết vài dòng cho riêng bạn…',
-          hintStyle: TextStyle(fontSize: 15, color: WrColors.muted),
+          hintText: hint,
+          hintStyle: const TextStyle(fontSize: 15, color: WrColors.muted),
         ),
         onChanged: (_) => setState(() {}),
       ),

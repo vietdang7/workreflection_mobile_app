@@ -247,6 +247,48 @@ void main() {
         }
       }
     });
+
+    // Ba luật rút từ mục tiêu của từng Pattern (HXA §3.5). Vi phạm luật nào
+    // cũng cho ra câu trả lời cụt — đây là thứ đã làm hỏng nhánh Growth.
+
+    test('Explore không hỏi một mốc thời gian', () {
+      // "Lần gần nhất … là khi nào?" chỉ nhận về một cái ngày. Explore cần
+      // Surface → Depth.
+      for (final moment in HumanMoment.values) {
+        if (!patternSequences[moment]!.contains(ReflectionPattern.explore)) {
+          continue;
+        }
+        final prompt = promptFor(moment, ReflectionPattern.explore);
+        expect(prompt.contains('khi nào'), isFalse,
+            reason: '${moment.dbValue}/explore đang hỏi mốc thời gian');
+      }
+    });
+
+    test('Preserve không lặp lại câu hỏi của bước Ý nghĩa', () {
+      // Bước Ý nghĩa đã hỏi "giữ lại điều gì". Preserve phải giữ một chi tiết
+      // cụ thể, không phải bài học.
+      for (final moment in HumanMoment.values) {
+        if (!patternSequences[moment]!.contains(ReflectionPattern.preserve)) {
+          continue;
+        }
+        final prompt = promptFor(moment, ReflectionPattern.preserve);
+        expect(prompt.contains('giữ lại'), isFalse,
+            reason: '${moment.dbValue}/preserve trùng bước Ý nghĩa');
+      }
+    });
+
+    test('mọi bước đều có nửa câu mở đầu gợi ý', () {
+      for (final moment in HumanMoment.values) {
+        for (final pattern in patternSequences[moment]!) {
+          final hint = promptHintFor(moment, pattern);
+          expect(hint, isNotEmpty);
+          expect(hint, isNot('Viết vài dòng cho riêng bạn…'),
+              reason: '${moment.dbValue}/${pattern.dbValue} thiếu gợi ý');
+          expect(hint.endsWith('…'), isTrue,
+              reason: '$hint phải là nửa câu bỏ lửng');
+        }
+      }
+    });
   });
 
   group('HumanMoment — HXA §2.5', () {

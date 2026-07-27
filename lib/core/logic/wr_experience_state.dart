@@ -150,40 +150,60 @@ const Map<ReflectionPattern, String> _defaultPrompts = {
   ReflectionPattern.preserve: 'Điều gì trong hôm nay đáng được giữ lại?',
 };
 
+// Ba luật rút từ mục tiêu của từng Pattern (HXA §3.5). Câu hỏi vi phạm một
+// trong ba luật này sẽ nhận về câu trả lời cụt:
+//
+//   1. Không hỏi một dữ kiện. "Lần gần nhất là khi nào?" chỉ nhận được một mốc
+//      thời gian, mà Explore cần Surface → Depth — một cái ngày thì không sâu.
+//   2. Không bắt nghĩ ra từ chỗ trống. Commit là Insight → Action: hành động
+//      phải bám vào tình huống vừa kể, không phải sáng tác một việc mới.
+//   3. Preserve không được trùng bước Ý nghĩa. Bước đó đã hỏi "giữ lại điều
+//      gì"; Preserve giữ một chi tiết cụ thể, không phải bài học.
 const Map<HumanMoment, Map<ReflectionPattern, String>> _momentPrompts = {
   HumanMoment.arrival: {
     ReflectionPattern.notice: 'Lúc này trong bạn đang có điều gì?',
-    ReflectionPattern.name: 'Bạn sẽ gọi tên cảm giác đó là gì?',
-    ReflectionPattern.preserve: 'Điều gì hôm nay bạn muốn nhớ lại sau này?',
+    ReflectionPattern.name:
+        'Nếu gọi tên cảm giác đó bằng một câu, bạn sẽ nói gì?',
+    ReflectionPattern.preserve:
+        'Có chi tiết nào của hôm nay bạn muốn nhớ lại sau này?',
   },
   HumanMoment.confusion: {
     ReflectionPattern.notice: 'Điều gì đang khiến bạn thấy chưa ổn?',
     ReflectionPattern.name: 'Nếu phải gọi tên điều chưa ổn đó, bạn gọi là gì?',
-    ReflectionPattern.explore: 'Có điều gì bạn chưa từng để ý trong chuyện này?',
-    ReflectionPattern.preserve: 'Bạn muốn giữ lại điều gì từ lần nhìn lại này?',
+    ReflectionPattern.explore:
+        'Chuyện này làm bạn nhớ tới lần nào trước đây không?',
+    ReflectionPattern.preserve:
+        'Chi tiết nào trong chuyện này bạn muốn nhớ lại sau?',
   },
   HumanMoment.decision: {
     ReflectionPattern.notice: 'Bạn đang phải chọn giữa những điều gì?',
     ReflectionPattern.name: 'Điều gì làm lựa chọn này khó với bạn?',
     ReflectionPattern.explore: 'Điều gì thực sự quan trọng với bạn ở đây?',
-    ReflectionPattern.reframe: 'Nhìn từ ba năm sau, bạn sẽ mong mình đã chọn thế nào?',
-    ReflectionPattern.commit: 'Bước nhỏ nào giúp bạn tiến gần hơn tới lựa chọn đó?',
+    ReflectionPattern.reframe:
+        'Ba năm nữa nhìn lại, bạn mong mình đã chọn thế nào?',
+    ReflectionPattern.commit:
+        'Tuần này bạn làm được việc nhỏ nào để chọn dễ hơn?',
   },
   HumanMoment.growth: {
     ReflectionPattern.notice: 'Bạn muốn mình khá hơn ở điều gì?',
-    ReflectionPattern.explore: 'Lần gần nhất bạn làm tốt điều đó là khi nào?',
-    ReflectionPattern.commit: 'Tuần này bạn muốn thử một điều nhỏ nào?',
-    ReflectionPattern.preserve: 'Điều gì đáng được ghi lại cho chặng sau?',
+    ReflectionPattern.explore:
+        'Kể lại một lần bạn làm được điều đó — chuyện gì đã xảy ra?',
+    ReflectionPattern.commit:
+        'Tuần này, trong tình huống nào bạn có thể thử lại điều đó?',
+    ReflectionPattern.preserve: 'Điều gì trong lần làm được đó bạn muốn nhớ?',
   },
   HumanMoment.recovery: {
     ReflectionPattern.notice: 'Điều gì đang làm bạn mất năng lượng?',
-    ReflectionPattern.explore: 'Điều đó chạm tới điều gì bên trong bạn?',
-    ReflectionPattern.preserve: 'Điều gì bạn muốn ghi lại để lần sau nhẹ hơn?',
+    ReflectionPattern.explore:
+        'Điều gì làm chuyện này nặng hơn mức bình thường?',
+    ReflectionPattern.preserve:
+        'Điều gì đã giúp bạn dễ thở hơn, dù chỉ một chút?',
   },
   HumanMoment.celebration: {
     ReflectionPattern.notice: 'Bạn vừa làm được điều gì?',
     ReflectionPattern.name: 'Điều gì làm bạn thấy điều đó đáng tự hào?',
-    ReflectionPattern.preserve: 'Bạn muốn giữ lại điều gì từ trải nghiệm này?',
+    ReflectionPattern.preserve:
+        'Khoảnh khắc nào trong chuyện đó bạn muốn nhớ lâu?',
   },
 };
 
@@ -192,4 +212,61 @@ String promptFor(HumanMoment moment, ReflectionPattern pattern) {
   return _momentPrompts[moment]?[pattern] ??
       _defaultPrompts[pattern] ??
       'Bạn đang nghĩ gì?';
+}
+
+// ---------------------------------------------------------------------------
+// Nửa câu mở đầu gợi ý trong ô nhập.
+//
+// HXA §3.5 Pattern Name nói thẳng cách làm: đưa sẵn "Tôi thấy… / Tôi đang…".
+// Một ô trống với dòng "Viết vài dòng cho riêng bạn…" không giúp ai bắt đầu;
+// nửa câu có sẵn thì có.
+// ---------------------------------------------------------------------------
+
+const Map<ReflectionPattern, String> _defaultHints = {
+  ReflectionPattern.notice: 'Tôi đang…',
+  ReflectionPattern.name: 'Tôi thấy…',
+  ReflectionPattern.explore: 'Hôm đó…',
+  ReflectionPattern.reframe: 'Có lẽ…',
+  ReflectionPattern.commit: 'Tôi sẽ…',
+  ReflectionPattern.preserve: 'Tôi muốn nhớ…',
+};
+
+const Map<HumanMoment, Map<ReflectionPattern, String>> _momentHints = {
+  HumanMoment.arrival: {
+    ReflectionPattern.notice: 'Trong đầu tôi đang…',
+    ReflectionPattern.preserve: 'Lúc…',
+  },
+  HumanMoment.confusion: {
+    ReflectionPattern.notice: 'Chuyện là…',
+    ReflectionPattern.explore: 'Nó giống lần…',
+    ReflectionPattern.preserve: 'Khoảnh khắc…',
+  },
+  HumanMoment.decision: {
+    ReflectionPattern.notice: 'Một bên là… bên kia là…',
+    ReflectionPattern.name: 'Khó vì…',
+    ReflectionPattern.explore: 'Với tôi, quan trọng nhất là…',
+    ReflectionPattern.reframe: 'Tôi mong mình đã…',
+    ReflectionPattern.commit: 'Tuần này tôi sẽ…',
+  },
+  HumanMoment.growth: {
+    ReflectionPattern.notice: 'Tôi muốn khá hơn ở…',
+    ReflectionPattern.commit: 'Khi… tôi sẽ…',
+  },
+  HumanMoment.recovery: {
+    ReflectionPattern.notice: 'Tôi đang mệt vì…',
+    ReflectionPattern.explore: 'Có lẽ vì…',
+    ReflectionPattern.preserve: 'Tôi thấy nhẹ hơn khi…',
+  },
+  HumanMoment.celebration: {
+    ReflectionPattern.notice: 'Tôi vừa…',
+    ReflectionPattern.name: 'Vì…',
+    ReflectionPattern.preserve: 'Lúc…',
+  },
+};
+
+/// Nửa câu gợi ý hiện mờ trong ô nhập của một bước.
+String promptHintFor(HumanMoment moment, ReflectionPattern pattern) {
+  return _momentHints[moment]?[pattern] ??
+      _defaultHints[pattern] ??
+      'Viết vài dòng cho riêng bạn…';
 }

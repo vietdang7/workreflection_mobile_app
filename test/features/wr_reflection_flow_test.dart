@@ -273,8 +273,10 @@ void main() {
 
       await _writeStep(tester, 'Cuộc họp sáng nay');
       expect(find.text('BƯỚC 2/3'), findsOneWidget);
-      expect(find.text('Điều đó chạm tới điều gì bên trong bạn?'),
-          findsOneWidget);
+      expect(
+        find.text(promptFor(HumanMoment.recovery, ReflectionPattern.explore)),
+        findsOneWidget,
+      );
     });
 
     testWidgets('chưa viết gì thì chưa đi tiếp được', (tester) async {
