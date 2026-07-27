@@ -51,7 +51,7 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
       context.push(wantsCommit ? '/wr/flow/commit' : '/wr/flow/done');
     } catch (e, s) {
       logFlowError('confirmMeaning', e, s);
-      if (mounted) setState(() => _error = 'Không lưu được. Thử lại.');
+      if (mounted) setState(() => _error = flowErrorMessage('Không lưu được. Thử lại.', e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }

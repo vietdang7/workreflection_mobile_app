@@ -12,3 +12,12 @@ void logFlowError(String step, Object error, [StackTrace? stack]) {
   debugPrint('[wr-flow] $step thất bại: $error');
   if (stack != null) debugPrintStack(stackTrace: stack, label: '[wr-flow] $step');
 }
+
+/// Câu báo lỗi hiện trên màn hình.
+///
+/// Bản release chỉ nói ngắn gọn. Bản debug ghép thêm nguyên văn lỗi để người
+/// đang thử app chụp lại được ngay, khỏi phải mở console.
+String flowErrorMessage(String friendly, Object error) {
+  if (!kDebugMode) return friendly;
+  return '$friendly\n\n$error';
+}

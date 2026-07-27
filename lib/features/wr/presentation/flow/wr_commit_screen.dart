@@ -42,7 +42,7 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
       if (mounted) context.push('/wr/flow/done');
     } catch (e, s) {
       logFlowError('commitAction', e, s);
-      if (mounted) setState(() => _error = 'Không lưu được. Thử lại.');
+      if (mounted) setState(() => _error = flowErrorMessage('Không lưu được. Thử lại.', e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
