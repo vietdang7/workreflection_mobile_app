@@ -1,7 +1,10 @@
-// Màn 1 của luồng phản tư — mức năng lượng.
+// Màn năng lượng — bản đứng riêng, dùng khi bắt đầu một lần nhìn lại mới
+// trong lúc còn phiên đang dở. Lượt đầu tiên trong ngày được hỏi ngay trên
+// Home (xem `_EnergyQuestion` trong wr_home_screen.dart).
 //
 // Chỉ một việc trên màn này: chọn năng lượng. Không mood, không hướng đi,
 // không thẻ gợi ý (yêu cầu khách: bỏ trùng lặp trạng thái/năng lượng).
+// Chọn xong là đi tiếp luôn — không cần nút xác nhận.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -22,17 +25,11 @@ class WrEnergyScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final selected = ref.watch(pendingEnergyProvider);
-
     return WrFlowScaffold(
-      eyebrow: 'Hôm nay',
-      title: 'Năng lượng của bạn lúc này thế nào?',
+      eyebrow: 'Lúc này',
+      title: 'Năng lượng của bạn thế nào?',
       progress: 0.2,
       onClose: () => context.go('/home'),
-      primaryLabel: 'Tiếp',
-      onPrimary: selected == null
-          ? null
-          : () => context.push('/wr/flow/moment'),
       child: Column(
         children: [
           for (final energy in CheckinEnergy.values) ...[
@@ -41,9 +38,10 @@ class WrEnergyScreen extends ConsumerWidget {
             WrBigChoiceTile(
               key: Key('wr_energy_${energy.dbValue}'),
               label: energyLabel(energy),
-              selected: selected == energy,
-              onTap: () =>
-                  ref.read(pendingEnergyProvider.notifier).state = energy,
+              onTap: () {
+                ref.read(pendingEnergyProvider.notifier).state = energy;
+                context.push('/wr/flow/moment');
+              },
             ),
           ],
         ],

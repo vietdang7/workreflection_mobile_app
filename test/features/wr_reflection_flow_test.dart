@@ -107,32 +107,40 @@ Future<void> _pump(WidgetTester tester, Widget app) async {
 }
 
 void main() {
-  group('Home — chỉ một lời mời', () {
-    testWidgets('không xổ nội dung nào khác', (tester) async {
+  group('Home — hỏi luôn năng lượng', () {
+    testWidgets('hỏi ngay trên Home, không cần bấm Bắt đầu', (tester) async {
       final h = _Harness();
       await _pump(tester, h.app());
 
-      expect(find.byKey(const Key('wr_home_start_reflection')), findsOneWidget);
+      expect(find.text('Năng lượng của bạn thế nào?'), findsOneWidget);
+      expect(find.byKey(const Key('wr_home_energy_good')), findsOneWidget);
+      expect(find.byKey(const Key('wr_home_energy_ok')), findsOneWidget);
+      expect(find.byKey(const Key('wr_home_energy_low')), findsOneWidget);
+      // Không còn nút trung gian.
+      expect(find.byKey(const Key('wr_home_start_reflection')), findsNothing);
       // Những khối từng nằm chồng trên Home nay không còn.
       expect(find.textContaining('CAREER SNAPSHOT'), findsNothing);
       expect(find.textContaining('GỢI Ý'), findsNothing);
-      expect(find.text('Có năng lượng'), findsNothing);
     });
 
-    testWidgets('bấm Bắt đầu mở màn năng lượng riêng', (tester) async {
+    testWidgets('trả lời năng lượng là mở thẳng màn khoảnh khắc',
+        (tester) async {
       final h = _Harness();
       await _pump(tester, h.app());
 
-      await tester.tap(find.byKey(const Key('wr_home_start_reflection')));
+      await tester.tap(find.byKey(const Key('wr_home_energy_low')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Năng lượng của bạn lúc này thế nào?'), findsOneWidget);
-      expect(find.text('Có năng lượng'), findsOneWidget);
-      expect(find.text('Bình thường'), findsOneWidget);
-      expect(find.text('Mệt mỏi'), findsOneWidget);
+      for (final moment in HumanMoment.values) {
+        expect(
+          find.byKey(Key('wr_moment_${moment.dbValue}')),
+          findsOneWidget,
+          reason: 'thiếu thẻ ${moment.dbValue}',
+        );
+      }
     });
 
-    testWidgets('có phiên đang mở thì mời tiếp tục, không bắt đầu lại',
+    testWidgets('có phiên đang mở thì mời tiếp tục, không hỏi lại năng lượng',
         (tester) async {
       final h = _Harness();
       h.seedOpenEpisode();
@@ -140,27 +148,19 @@ void main() {
 
       expect(find.byKey(const Key('wr_home_resume_reflection')), findsOneWidget);
       expect(find.text(HumanMoment.confusion.tension), findsOneWidget);
+      expect(find.byKey(const Key('wr_home_energy_low')), findsNothing);
     });
   });
 
-  group('Màn năng lượng', () {
-    testWidgets('chưa chọn thì chưa đi tiếp được', (tester) async {
+  group('Màn năng lượng đứng riêng', () {
+    testWidgets('chọn xong mở màn sáu khoảnh khắc, không cần nút xác nhận',
+        (tester) async {
       final h = _Harness();
       await _pump(tester, h.app(initialLocation: '/wr/flow/energy'));
 
-      final button = tester.widget<ElevatedButton>(
-        find.byKey(const Key('wr_flow_primary')),
-      );
-      expect(button.onPressed, isNull);
-    });
-
-    testWidgets('chọn xong mở màn sáu khoảnh khắc', (tester) async {
-      final h = _Harness();
-      await _pump(tester, h.app(initialLocation: '/wr/flow/energy'));
+      expect(find.byKey(const Key('wr_flow_primary')), findsNothing);
 
       await tester.tap(find.byKey(const Key('wr_energy_low')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('wr_flow_primary')));
       await tester.pumpAndSettle();
 
       for (final moment in HumanMoment.values) {
@@ -176,10 +176,8 @@ void main() {
   group('Màn khoảnh khắc', () {
     testWidgets('đúng sáu thẻ, không hơn', (tester) async {
       final h = _Harness();
-      await _pump(tester, h.app(initialLocation: '/wr/flow/energy'));
-      await tester.tap(find.byKey(const Key('wr_energy_ok')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('wr_flow_primary')));
+      await _pump(tester, h.app());
+      await tester.tap(find.byKey(const Key('wr_home_energy_ok')));
       await tester.pumpAndSettle();
 
       expect(find.text(HumanMoment.arrival.label), findsOneWidget);
@@ -188,15 +186,11 @@ void main() {
 
     testWidgets('chọn khoảnh khắc mở Episode ở state captured', (tester) async {
       final h = _Harness();
-      await _pump(tester, h.app(initialLocation: '/wr/flow/energy'));
-      await tester.tap(find.byKey(const Key('wr_energy_low')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('wr_flow_primary')));
+      await _pump(tester, h.app());
+      await tester.tap(find.byKey(const Key('wr_home_energy_low')));
       await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const Key('wr_moment_recovery')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('wr_flow_primary')));
       await tester.pumpAndSettle();
 
       expect(h.episodes.openEpisodeCalls, hasLength(1));

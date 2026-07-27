@@ -134,17 +134,14 @@ void main() {
   // Home sau khi tái cấu trúc chỉ còn lời mời — chi tiết luồng nằm ở
   // test/features/wr_reflection_flow_test.dart.
   group('WrHomeScreen', () {
-    testWidgets('chỉ mời dừng lại, không xổ nội dung', (tester) async {
+    testWidgets('hỏi luôn năng lượng, không xổ nội dung khác', (tester) async {
       await tester.pumpWidget(_wrap(const WrHomeScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('Dừng lại một chút?'), findsOneWidget);
-      expect(
-        find.byKey(const Key('wr_home_start_reflection')),
-        findsOneWidget,
-      );
-      // Không còn ô chọn năng lượng ngay trên Home.
-      expect(find.text('Có năng lượng'), findsNothing);
+      expect(find.text('Năng lượng của bạn thế nào?'), findsOneWidget);
+      expect(find.text('Có năng lượng'), findsOneWidget);
+      // Không còn nút trung gian, cũng không còn bước "hướng đi".
+      expect(find.byKey(const Key('wr_home_start_reflection')), findsNothing);
       expect(find.text('Tiến lên'), findsNothing);
     });
 

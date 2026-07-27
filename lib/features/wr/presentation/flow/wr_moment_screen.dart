@@ -24,12 +24,14 @@ class _WrMomentScreenState extends ConsumerState<WrMomentScreen> {
   bool _busy = false;
   String? _error;
 
-  Future<void> _next() async {
-    final moment = _selected;
+  /// Chọn khoảnh khắc là đã trả lời — Episode mở ngay và luồng đi tiếp.
+  /// Không có nút xác nhận: mỗi màn chỉ một hành động.
+  Future<void> _pick(HumanMoment moment) async {
     final energy = ref.read(pendingEnergyProvider);
-    if (moment == null || energy == null || _busy) return;
+    if (energy == null || _busy) return;
 
     setState(() {
+      _selected = moment;
       _busy = true;
       _error = null;
     });
@@ -55,9 +57,6 @@ class _WrMomentScreenState extends ConsumerState<WrMomentScreen> {
       progress: 0.4,
       onBack: () => context.pop(),
       onClose: () => context.go('/home'),
-      primaryLabel: 'Tiếp',
-      busy: _busy,
-      onPrimary: _selected == null ? null : _next,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -93,7 +92,7 @@ class _WrMomentScreenState extends ConsumerState<WrMomentScreen> {
       label: moment.label,
       selected: _selected == moment,
       height: 104,
-      onTap: () => setState(() => _selected = moment),
+      onTap: _busy ? () {} : () => _pick(moment),
     );
   }
 }

@@ -1,10 +1,17 @@
 // Home — WXS §8.7 (Balanced Surface) + HXA §6.4 (Empty Screen Test).
 //
 // Câu hỏi của Empty Screen Test: "Điều duy nhất người dùng cần ngay lúc này là
-// gì?" Câu trả lời: một lời mời dừng lại. Vì vậy màn này chỉ có:
+// gì?" Câu trả lời: được hỏi một câu. Vì vậy Home KHÔNG mời bấm "Bắt đầu" rồi
+// mới hỏi — Home hỏi luôn:
 //   1. lời chào + ngày
-//   2. một lời mời phản tư (hoặc lời mời tiếp tục phiên đang mở)
+//   2. "Năng lượng của bạn lúc này thế nào?" + ba ô to
 //   3. một dòng ý nghĩa gần nhất — nếu có
+//
+// Chọn một ô là đã trả lời: luồng đi thẳng sang màn khoảnh khắc, rồi tới các
+// câu hỏi dẫn dắt tương ứng với khoảnh khắc đó. Một màn, một hành động.
+//
+// Ngoại lệ duy nhất: khi còn một phiên đang dở, Journey Continuity được ưu
+// tiên hơn novelty (WXS Orch. Inv.3) — Home mời tiếp tục trước.
 //
 // Mọi thứ khác (tình huống lặp lại, SCA, story, thực hành) sống ở tab của nó.
 // Home không xổ nội dung.
@@ -16,12 +23,15 @@ import 'package:go_router/go_router.dart';
 import '../../../core/data/wr_repository.dart';
 import '../../../core/logic/vn_date.dart';
 import '../../../core/logic/wr_experience_state.dart';
+import '../../../core/models/checkin.dart';
 import '../../../core/models/mobile_profile.dart';
 import '../../../core/models/wr_episode.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../episode_flow_controller.dart';
 import '../wr_providers.dart';
+import 'flow/wr_energy_screen.dart' show energyLabel;
+import 'flow/wr_flow_scaffold.dart' show WrBigChoiceTile;
 
 final _mobileProfileProvider = FutureProvider<MobileProfile?>((ref) async {
   final repo = ref.watch(wrRepositoryProvider);
@@ -100,11 +110,11 @@ class WrHomeScreen extends ConsumerWidget {
 
               const Spacer(),
 
-              // ── lời mời duy nhất ────────────────────────────────────────
+              // ── câu hỏi duy nhất ────────────────────────────────────────
               if (openEpisode != null)
                 _ResumeInvite(episode: openEpisode)
               else
-                const _StartInvite(),
+                const _EnergyQuestion(),
 
               const Spacer(),
 
@@ -134,19 +144,25 @@ class WrHomeScreen extends ConsumerWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Lời mời bắt đầu — HXA §2.4 bước Pause: làm cho việc dừng lại thành tự nhiên.
+// Câu hỏi mở đầu — HXA §2.4 bước Pause.
+//
+// Không có nút "Bắt đầu": bấm vào một ô năng lượng đã là câu trả lời, và câu
+// trả lời đó đưa thẳng sang khoảnh khắc. Yêu cầu khách 2026-07-27: "app hỏi
+// luôn năng lượng, trả lời rồi thì hỏi tiếp các câu phía sau tuỳ trường hợp."
 // ---------------------------------------------------------------------------
 
-class _StartInvite extends StatelessWidget {
-  const _StartInvite();
+class _EnergyQuestion extends ConsumerWidget {
+  const _EnergyQuestion();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        const WrEyebrow('LÚC NÀY'),
+        const SizedBox(height: 12),
         const Text(
-          'Dừng lại một chút?',
+          'Năng lượng của bạn thế nào?',
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w700,
@@ -155,31 +171,18 @@ class _StartInvite extends StatelessWidget {
             letterSpacing: -0.6,
           ),
         ),
-        const SizedBox(height: 12),
-        const Text(
-          'Vài phút nhìn lại, để hôm nay không trôi qua như mọi ngày.',
-          style: TextStyle(fontSize: 15, color: WrColors.muted, height: 1.6),
-        ),
-        const SizedBox(height: 28),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            key: const Key('wr_home_start_reflection'),
-            onPressed: () => context.push('/wr/flow/energy'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: WrColors.navy,
-              foregroundColor: WrColors.white,
-              minimumSize: const Size.fromHeight(56),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-            ),
-            child: const Text(
-              'Bắt đầu',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
+        const SizedBox(height: 24),
+        for (final energy in CheckinEnergy.values) ...[
+          if (energy != CheckinEnergy.values.first) const SizedBox(height: 12),
+          WrBigChoiceTile(
+            key: Key('wr_home_energy_${energy.dbValue}'),
+            label: energyLabel(energy),
+            onTap: () {
+              ref.read(pendingEnergyProvider.notifier).state = energy;
+              context.push('/wr/flow/moment');
+            },
           ),
-        ),
+        ],
       ],
     );
   }
