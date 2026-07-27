@@ -9,6 +9,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/wr_colors.dart';
 import '../../episode_flow_controller.dart';
+import '../../../../core/logic/wr_flow_error.dart';
 import 'wr_flow_scaffold.dart';
 
 class WrCommitScreen extends ConsumerStatefulWidget {
@@ -39,7 +40,8 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
     try {
       await ref.read(episodeFlowProvider.notifier).commit(text);
       if (mounted) context.push('/wr/flow/done');
-    } catch (_) {
+    } catch (e, s) {
+      logFlowError('commitAction', e, s);
       if (mounted) setState(() => _error = 'Không lưu được. Thử lại.');
     } finally {
       if (mounted) setState(() => _busy = false);

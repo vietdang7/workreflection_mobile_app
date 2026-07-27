@@ -17,6 +17,7 @@ import '../../../../core/models/wr_episode.dart';
 import '../../../../core/theme/wr_colors.dart';
 import '../../episode_flow_controller.dart';
 import '../../wr_providers.dart';
+import '../../../../core/logic/wr_flow_error.dart';
 import 'wr_flow_scaffold.dart';
 
 class WrStepScreen extends ConsumerStatefulWidget {
@@ -74,7 +75,8 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
       if (remaining == null && mounted) {
         context.push('/wr/flow/meaning');
       }
-    } catch (_) {
+    } catch (e, s) {
+      logFlowError('recordPattern', e, s);
       if (mounted) setState(() => _error = 'Không lưu được. Thử lại.');
     } finally {
       if (mounted) setState(() => _busy = false);

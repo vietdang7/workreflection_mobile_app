@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/models/wr_episode.dart';
 import '../../../../core/theme/wr_colors.dart';
 import '../../episode_flow_controller.dart';
+import '../../../../core/logic/wr_flow_error.dart';
 import 'wr_flow_scaffold.dart';
 
 class WrMomentScreen extends ConsumerStatefulWidget {
@@ -40,7 +41,8 @@ class _WrMomentScreenState extends ConsumerState<WrMomentScreen> {
           .read(episodeFlowProvider.notifier)
           .start(energy: energy, moment: moment);
       if (mounted) context.push('/wr/flow/step');
-    } catch (_) {
+    } catch (e, s) {
+      logFlowError('openEpisode', e, s);
       if (mounted) {
         setState(() => _error = 'Không mở được phiên phản tư. Thử lại.');
       }

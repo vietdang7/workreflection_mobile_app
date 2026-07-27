@@ -13,6 +13,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/wr_colors.dart';
 import '../../episode_flow_controller.dart';
 import '../../wr_providers.dart';
+import '../../../../core/logic/wr_flow_error.dart';
 import 'wr_flow_scaffold.dart';
 
 class WrDoneScreen extends ConsumerStatefulWidget {
@@ -39,7 +40,8 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
     _situationCode = episode?.situationCode;
     try {
       await ref.read(episodeFlowProvider.notifier).integrate();
-    } catch (_) {
+    } catch (e, s) {
+      logFlowError('integrate', e, s);
       /* best-effort: nội dung đã được ghi ở từng bước */
     }
     if (mounted) setState(() => _integrating = false);
