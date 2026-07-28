@@ -34,6 +34,7 @@ import 'package:workreflection_mobile/features/wr/presentation/flow/wr_step_scre
 import 'package:workreflection_mobile/features/wr/presentation/wr_home_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_mood_library_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_mood_reader_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/wr_journey_screen.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
 
@@ -278,6 +279,10 @@ class _Stage {
           path: '/wr/flow/commit',
           builder: (_, __) => const WrCommitScreen(),
         ),
+        GoRoute(
+          path: '/wr/journey',
+          builder: (_, __) => const WrJourneyScreen(),
+        ),
         GoRoute(path: '/profile', builder: (_, __) => const Scaffold()),
         GoRoute(path: '/wr/flow/done', builder: (_, __) => const Scaffold()),
         GoRoute(
@@ -485,6 +490,134 @@ void main() {
     await expectLater(
       find.byType(MaterialApp),
       matchesGoldenFile('../../screenshots/07_lua_chon.png'),
+    );
+  });
+
+  // Chụp thêm trạng thái ĐÃ CHỌN: đây là lúc nút Lưu mới sáng lên, và cũng là
+  // lúc `reflect_choice` được ghi (§V · WDA Inv.9). Ảnh 07 chỉ có trạng thái
+  // ban đầu nên không cho thấy khác biệt nào của bước Choice.
+  testWidgets('08 · Lựa chọn — đã chọn một câu', skip: !_enabled, (tester) async {
+    final s = buildStage();
+    s.episodes.seed([
+      const ReflectionEpisode(
+        id: 'ep',
+        userId: 'u1',
+        humanMoment: HumanMoment.celebration,
+        state: ExperienceState.exploring,
+        energy: CheckinEnergy.low,
+        situationCode: 'C2-sit-01',
+        patternsDone: [
+          ReflectionPattern.notice,
+          ReflectionPattern.name,
+          ReflectionPattern.preserve,
+        ],
+        notes: {'notice': 'Tôi vừa nói ra được điều mình nghĩ.'},
+      ),
+    ]);
+    tester.view.physicalSize = const Size(390, 900) * 3;
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(s.app('/home'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('wr_home_resume_reflection')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('wr_flow_primary')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('wr_choice_1')));
+    await tester.pumpAndSettle();
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('../../screenshots/08_lua_chon_da_chon.png'),
+    );
+  });
+
+  /// Timeline đủ loại mốc, để soi nhãn loại (§9.1 · §XII.5).
+  ///
+  /// Kèm Pattern lặp đủ ngưỡng: Cơ hội phát triển chỉ xuất hiện khi đã có đủ
+  /// dữ kiện (kGrowthOpportunityThreshold = 4). Thiếu cái này thì cả bản Free
+  /// lẫn Premium đều không hiện gì, và ảnh chụp không nói lên điều gì về §11.4.
+  void seedJourney(_Stage s) {
+    s.intel.seedPatternCounts([
+      PatternCount(
+        id: 'p1',
+        userId: 'u1',
+        situationCode: 'C2-sit-01',
+        scaDimension: ScaDimension.c2,
+        occurrenceCount: 5,
+        lastSeenAt: DateTime(2026, 7, 26),
+      ),
+      PatternCount(
+        id: 'p2',
+        userId: 'u1',
+        situationCode: 'C2-sit-02',
+        scaDimension: ScaDimension.c2,
+        occurrenceCount: 4,
+        lastSeenAt: DateTime(2026, 7, 20),
+      ),
+    ]);
+    s.content.seedMemoryEvents([
+      CareerMemoryEvent(
+        id: 'e1',
+        userId: 'u1',
+        behavior: 'reflection_episode',
+        reflectionText: 'Tôi nhận ra mình im lặng vì sợ làm hỏng không khí.',
+        createdAt: DateTime(2026, 7, 26),
+      ),
+      CareerMemoryEvent(
+        id: 'e2',
+        userId: 'u1',
+        behavior: 'insight',
+        reflectionText: 'Nói sớm hơn thì đỡ mệt hơn.',
+        createdAt: DateTime(2026, 7, 20),
+      ),
+      CareerMemoryEvent(
+        id: 'e3',
+        userId: 'u1',
+        behavior: 'practice_step_note',
+        reflectionText: 'Thử nói trước một người: tôi đã nhắn cho chị Lan.',
+        createdAt: DateTime(2026, 6, 18),
+      ),
+    ]);
+  }
+
+  testWidgets('09 · Hành trình — Free, Cơ hội phát triển còn khoá',
+      skip: !_enabled, (tester) async {
+    final s = buildStage();
+    seedJourney(s);
+    await _shoot(
+      tester,
+      s.app('/wr/journey'),
+      '09_hanh_trinh_free',
+      size: const Size(390, 1100),
+    );
+  });
+
+  testWidgets('10 · Hành trình — Premium, Cơ hội phát triển đã mở',
+      skip: !_enabled, (tester) async {
+    final s = buildStage();
+    seedJourney(s);
+    s.intel
+      ..seedEntitlement(
+        const WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
+      )
+      ..seedGrowthOpportunity(
+        GrowthOpportunity(
+          id: 'go-1',
+          userId: 'u1',
+          suggestionText: 'Có vẻ phần lớn điều bạn nhìn lại xoay quanh quan hệ '
+              'với người khác trong công việc. Nếu điều đó đúng, hướng phát '
+              'triển gần nhất của bạn có thể là năng lực đối thoại: nói điều '
+              'khó nói mà vẫn giữ được quan hệ.',
+          confidenceNote: GrowthOpportunity.kConfidenceNote,
+          basedOn: const ['C2-sit-01'],
+          generatedAt: DateTime(2026, 7, 28),
+        ),
+      );
+    await _shoot(
+      tester,
+      s.app('/wr/journey'),
+      '10_hanh_trinh_premium',
+      size: const Size(390, 1200),
     );
   });
 }
