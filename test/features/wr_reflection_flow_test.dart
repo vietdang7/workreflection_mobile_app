@@ -452,6 +452,72 @@ void main() {
       );
     });
 
+    // Owner gặp trên bản debug 2026-07-28: màn Lựa chọn mở bằng push, bấm Back
+    // là về đúng màn Ý nghĩa với Episode đã meaning_confirmed. Bấm nút lần nữa
+    // thì code chạy lại chuỗi forming → confirmed và ném
+    // "Transition bất hợp lệ: meaning_confirmed → meaning_forming".
+    /// Đi trọn đường như người dùng: xác nhận Ý nghĩa (sang màn Lựa chọn bằng
+    /// push) rồi bấm Back để quay lại đúng màn Ý nghĩa — lúc này Episode đã ở
+    /// meaning_confirmed. Seed thẳng state đó KHÔNG tái hiện được, vì resume từ
+    /// Home sẽ nhảy luôn sang màn Lựa chọn.
+    Future<_Harness> backToMeaningAfterConfirm(WidgetTester tester) async {
+      final h = _Harness();
+      h.seedOpenEpisode(
+        moment: HumanMoment.celebration,
+        state: ExperienceState.exploring,
+        patternsDone: const [
+          ReflectionPattern.notice,
+          ReflectionPattern.name,
+          ReflectionPattern.preserve,
+        ],
+        notes: const {'name': 'Mình đã dám trình bày'},
+      );
+      await _pump(tester, h.app());
+      await _resume(tester);
+      await _confirmMeaning(tester);
+      // Nút Back riêng của WrFlowScaffold, không phải AppBar chuẩn.
+      await tester.tap(find.byKey(const Key('wr_flow_back')));
+      await tester.pumpAndSettle();
+      return h;
+    }
+
+    testWidgets('quay lại bấm xác nhận lần nữa không ném lỗi trạng thái',
+        (tester) async {
+      final h = await backToMeaningAfterConfirm(tester);
+      expect(h.episodes.episodes.single.state,
+          ExperienceState.meaningConfirmed);
+      final insightsAfterFirst = h.intel.insertInsightCalls.length;
+
+      // Không sửa gì, bấm lại đúng nút đó.
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Transition bất hợp lệ'), findsNothing);
+      expect(find.textContaining('Không lưu được'), findsNothing);
+      // Câu không đổi thì không ghi gì, và không sinh Insight trùng.
+      expect(h.episodes.reviseMeaningCalls, isEmpty);
+      expect(h.intel.insertInsightCalls, hasLength(insightsAfterFirst));
+    });
+
+    testWidgets('sửa lại câu đã xác nhận thì cập nhật, vẫn không đổi trạng thái',
+        (tester) async {
+      final h = await backToMeaningAfterConfirm(tester);
+
+      await tester.enterText(
+        find.byKey(const Key('wr_meaning_field')),
+        'Câu mới sau khi nghĩ lại.',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
+      await tester.pumpAndSettle();
+
+      expect(h.episodes.reviseMeaningCalls, hasLength(1));
+      final saved = h.episodes.episodes.single;
+      expect(saved.draftMeaning, 'Câu mới sau khi nghĩ lại.');
+      expect(saved.state, ExperienceState.meaningConfirmed);
+      expect(find.textContaining('Transition bất hợp lệ'), findsNothing);
+    });
+
     testWidgets('khép phiên mới ghi Career Memory (WDA Inv.6)', (tester) async {
       final h = _Harness();
       h.seedOpenEpisode(

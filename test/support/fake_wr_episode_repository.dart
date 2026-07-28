@@ -18,6 +18,7 @@ class FakeWrEpisodeRepository implements WrEpisodeRepository {
   final List<ReflectionEpisode> openEpisodeCalls = [];
   final List<ReflectionEpisode> integrateCalls = [];
   final List<ReflectionEpisode> confirmMeaningCalls = [];
+  final List<ReflectionEpisode> reviseMeaningCalls = [];
   final List<ReflectionEpisode> dormantCalls = [];
 
   void seed(List<ReflectionEpisode> seeded) {
@@ -151,6 +152,17 @@ class FakeWrEpisodeRepository implements WrEpisodeRepository {
       draftMeaning: meaning.trim(),
       confirmedInsightId: insightId,
     ));
+  }
+
+  @override
+  Future<ReflectionEpisode> reviseMeaning({
+    required ReflectionEpisode episode,
+    required String meaning,
+  }) async {
+    _maybeThrow();
+    reviseMeaningCalls.add(episode);
+    // Không assertTransition: sửa câu chữ không đổi trạng thái nào.
+    return _store(episode.copyWith(draftMeaning: meaning.trim()));
   }
 
   @override

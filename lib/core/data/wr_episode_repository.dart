@@ -53,6 +53,18 @@ abstract class WrEpisodeRepository {
     String? insightId,
   });
 
+  /// Sửa lại câu Meaning của một Episode ĐÃ xác nhận, giữ nguyên trạng thái.
+  ///
+  /// WXS §4.4 cấm đi ngược `meaning_confirmed → meaning_forming`, nên không thể
+  /// dùng lại [saveDraftMeaning] để sửa. Nhưng người dùng vẫn quay lại được màn
+  /// Ý nghĩa (màn Lựa chọn mở bằng push, bấm Back là về), và sửa một câu chữ
+  /// không phải là đi ngược tiến trình nhận thức — nó không đổi trạng thái nào
+  /// cả. Vì vậy đây là một phép cập nhật thuần, KHÔNG có assertTransition.
+  Future<ReflectionEpisode> reviseMeaning({
+    required ReflectionEpisode episode,
+    required String meaning,
+  });
+
   /// Lưu Tiny Next Step (HXA Pattern Commit).
   /// [choice] là câu người dùng chọn từ Bể Lựa chọn (v1.6 §V · §VI); null khi
   /// họ tự viết. [action] là điều họ cam kết làm, luôn có.
@@ -213,6 +225,15 @@ class SupabaseWrEpisodeRepository implements WrEpisodeRepository {
       'draft_meaning': meaning.trim(),
       if (insightId != null) 'confirmed_insight_id': insightId,
     });
+  }
+
+  @override
+  Future<ReflectionEpisode> reviseMeaning({
+    required ReflectionEpisode episode,
+    required String meaning,
+  }) async {
+    // Cố ý không có assertTransition — xem lý do ở khai báo trong interface.
+    return _patch(episode, {'draft_meaning': meaning.trim()});
   }
 
   @override
