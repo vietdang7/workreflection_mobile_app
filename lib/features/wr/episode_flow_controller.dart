@@ -227,17 +227,20 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
     var ep = state;
     if (ep == null) return;
 
-    // Đã xác nhận rồi mà quay lại bấm lần nữa (màn Lựa chọn mở bằng push, bấm
-    // Back là về đúng đây). Không được chạy lại chuỗi forming → confirmed:
-    // WXS §4.4 cấm đi ngược, và saveDraftMeaning sẽ ném
-    // "Transition bất hợp lệ: meaning_confirmed → meaning_forming".
-    if (ep.state == ExperienceState.meaningConfirmed) {
+    // Ý nghĩa đã xác lập mà quay lại bấm lần nữa. Màn Lựa chọn và màn Đóng đều
+    // mở bằng push, nên bấm Back là về đúng đây từ bất kỳ chặng nào sau đó —
+    // gặp được cả ba state, không riêng meaning_confirmed. Chạy lại chuỗi
+    // forming → confirmed lúc này là đâm vào "Transition bất hợp lệ" (WXS §4.4).
+    if (ep.state.meaningAlreadySettled) {
       final text = meaning.trim();
-      if (text.isNotEmpty && text != ep.draftMeaning?.trim()) {
+      if (ep.state.canReviseMeaningInPlace &&
+          text.isNotEmpty &&
+          text != ep.draftMeaning?.trim()) {
         // Sửa câu chữ — cập nhật thuần, không đổi trạng thái.
         state = await _repo.reviseMeaning(episode: ep, meaning: text);
       }
-      // Không đổi gì thì không ghi gì, và KHÔNG sinh thêm một Insight trùng.
+      // Còn lại thì KHÔNG ghi gì: không sinh Insight trùng, và không lặng lẽ
+      // sửa một phiên đã cam kết hoặc đã vào Career Memory.
       return;
     }
 

@@ -151,6 +151,33 @@ enum ExperienceState {
   /// một Episode vừa Dormant sẽ biến mất khỏi màn Hôm nay và người dùng mất
   /// đường quay lại — trái WPA Inv.4 (Reflection luôn mở lại được).
   bool get isResumable => isOpen || this == ExperienceState.dormant;
+
+  /// Ý nghĩa đã được xác lập rồi — đừng chạy lại chuỗi xác nhận.
+  ///
+  /// Màn Ý nghĩa mở màn Lựa chọn bằng `push`, nên bấm Back là quay về đúng nó ở
+  /// bất kỳ chặng nào sau đó. Chạy lại `saveDraftMeaning` khi đó là đâm vào
+  /// `<state> → meaning_forming`, mà WXS §4.4 cấm đi ngược từ CẢ BA state này.
+  ///
+  /// Hỏi cả lớp trạng thái chứ không so từng cái: bản vá đầu chỉ chặn
+  /// `meaning_confirmed` nên người dùng khép phiên xong bấm Back hai lần vẫn
+  /// gặp đúng lỗi đó với `integrated`.
+  bool get meaningAlreadySettled => switch (this) {
+        ExperienceState.meaningConfirmed ||
+        ExperienceState.committed ||
+        ExperienceState.integrated =>
+          true,
+        _ => false,
+      };
+
+  /// Còn sửa được câu Meaning tại chỗ hay không.
+  ///
+  /// Chỉ đúng ở [meaningConfirmed]: phiên vẫn đang mở và chưa có gì được chốt
+  /// dựa trên câu đó. Từ [committed] trở đi thì đã có lựa chọn gắn vào, và
+  /// [integrated] thì Career Memory đã ghi — sửa lặng lẽ sẽ làm bản ghi lệch
+  /// với ký ức đã lưu. Muốn đổi thì phải mở lại phiên (WPA Inv.4), là một hành
+  /// động có chủ đích của người dùng chứ không phải tác dụng phụ của nút Back.
+  bool get canReviseMeaningInPlace =>
+      this == ExperienceState.meaningConfirmed;
 }
 
 // ---------------------------------------------------------------------------

@@ -499,6 +499,52 @@ void main() {
       expect(h.intel.insertInsightCalls, hasLength(insightsAfterFirst));
     });
 
+    // Owner gặp tiếp trên bản web 2026-07-28: "Transition bất hợp lệ:
+    // integrated → meaning_forming". Màn Đóng KHÔNG có nút Back trong app, nên
+    // đường về là nút Back của trình duyệt — thứ đi vòng qua mọi nút của app.
+    // Bản vá đầu chỉ chặn meaning_confirmed nên vẫn dính ở integrated.
+    testWidgets('khép phiên rồi lùi về màn Ý nghĩa cũng không ném lỗi',
+        (tester) async {
+      final h = _Harness();
+      h.moodContent.seedChoicePool(const ['Ghi nhớ điều này để xem lại sau']);
+      h.seedOpenEpisode(
+        moment: HumanMoment.celebration,
+        state: ExperienceState.exploring,
+        patternsDone: const [
+          ReflectionPattern.notice,
+          ReflectionPattern.name,
+          ReflectionPattern.preserve,
+        ],
+        notes: const {'name': 'Mình đã dám trình bày'},
+      );
+      await _pump(tester, h.app());
+      await _resume(tester);
+      await _confirmMeaning(tester);
+
+      // Chọn một lựa chọn rồi lưu → sang màn Đóng, Episode được integrate.
+      await tester.tap(find.byKey(const Key('wr_choice_0')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
+      await tester.pumpAndSettle();
+      expect(h.episodes.episodes.single.state, ExperienceState.integrated);
+
+      // Back của trình duyệt: Đóng → Lựa chọn → Ý nghĩa.
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('wr_meaning_field')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Transition bất hợp lệ'), findsNothing);
+      expect(find.textContaining('Không lưu được'), findsNothing);
+      // Phiên đã vào Career Memory — tuyệt đối không sửa lặng lẽ.
+      expect(h.episodes.reviseMeaningCalls, isEmpty);
+      expect(h.episodes.episodes.single.state, ExperienceState.integrated);
+    });
+
     testWidgets('sửa lại câu đã xác nhận thì cập nhật, vẫn không đổi trạng thái',
         (tester) async {
       final h = await backToMeaningAfterConfirm(tester);
