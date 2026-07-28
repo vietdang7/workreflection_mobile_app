@@ -6,6 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 
+import '../../support/fake_wr_intelligence_repository.dart';
+
 void main() {
   // ---------------------------------------------------------------------------
   // WrPlan enum
@@ -332,6 +334,33 @@ void main() {
       expect(insert['doc_type'], 'cv');
       expect(insert.containsKey('id'), isFalse);
       expect(insert.containsKey('uploaded_at'), isFalse);
+    });
+  });
+
+  // Bắt được khi chạy thật 2026-07-28: migration 20260728000000 nới check
+  // constraint sca_dimension cho bốn bảng nhưng sót wr_reflection_insights, nên
+  // phản tư trên tình huống tích cực bị Supabase trả 400. Không test nào thấy
+  // vì fake repository nhận mọi giá trị.
+  group('Hợp đồng với check constraint của DB', () {
+    test('mọi ScaDimension đều nằm trong miền giá trị DB chấp nhận', () {
+      for (final dim in ScaDimension.values) {
+        expect(
+          kAllowedScaDimensions,
+          contains(dim.dbValue),
+          reason: '${dim.dbValue} có trong enum nhưng chưa được thêm vào check '
+              'constraint — thêm chiều mới thì phải nới constraint kèm theo, '
+              'nếu không mọi lần ghi chiều đó sẽ bị DB từ chối.',
+        );
+      }
+    });
+
+    test('hai nhóm tích cực của v1.6 §2.2 nằm trong miền giá trị', () {
+      expect(kAllowedScaDimensions, containsAll(['P-ACHIEVE', 'P-STEADY']));
+    });
+
+    test('luồng Episode ghi source mà DB chấp nhận', () {
+      // Giá trị này là thứ EpisodeFlowController.confirmMeaning gửi đi.
+      expect(kAllowedInsightSources, contains('episode'));
     });
   });
 }

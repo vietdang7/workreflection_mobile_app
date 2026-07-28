@@ -14,6 +14,7 @@ import '../../core/data/wr_episode_repository.dart';
 import '../../core/data/wr_intelligence_repository.dart';
 import '../../core/data/wr_repository.dart';
 import '../../core/logic/wr_experience_state.dart';
+import '../../core/logic/wr_flow_error.dart';
 import '../../core/models/checkin.dart';
 import '../../core/models/wr_content.dart';
 import '../../core/models/wr_episode.dart';
@@ -130,8 +131,9 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
           .read(wrRepositoryProvider)
           .upsertCheckin(mood ?? energy.toMood(), energy: energy);
       _ref.invalidate(todayCheckinProvider);
-    } catch (_) {
-      /* nuốt lỗi: check-in không phải mục đích chính của Episode */
+    } catch (e, s) {
+      // Không chặn luồng, nhưng phải nhìn thấy được ở bản debug.
+      logFlowError('upsertCheckin', e, s);
     }
 
     return episode;
@@ -239,8 +241,11 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
         humanNeed: ep.humanNeed,
         content: meaning.trim(),
       ));
-    } catch (_) {
-      /* best-effort: Episode vẫn giữ draft_meaning */
+    } catch (e, s) {
+      // Đúng chỗ đã giấu lỗi 400 `source = 'episode'` suốt từ 2026-07-27:
+      // Episode vẫn giữ draft_meaning nên màn hình đi tiếp như không có gì,
+      // trong khi bảng Insight rỗng. Best-effort thì được, nhưng phải kêu.
+      logFlowError('insertInsight', e, s);
     }
 
     state = await _repo.confirmMeaning(episode: ep, meaning: meaning);
@@ -284,8 +289,8 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
         behavior: 'reflection_episode',
         reflectionText: ep.draftMeaning,
       ));
-    } catch (_) {
-      /* best-effort */
+    } catch (e, s) {
+      logFlowError('insertMemoryEvent', e, s);
     }
 
     // (2) Đếm tình huống lặp lại — nguồn cho tab Hiểu mình.
@@ -298,8 +303,8 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
           situationCode: code,
           scaDimensionDb: dim.dbValue,
         );
-      } catch (_) {
-        /* best-effort */
+      } catch (e, s) {
+        logFlowError('recordSituationOccurrence', e, s);
       }
     }
 
@@ -328,8 +333,8 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
     if (canTransition(ep.state, ExperienceState.dormant)) {
       try {
         await _repo.makeDormant(ep);
-      } catch (_) {
-        /* best-effort */
+      } catch (e, s) {
+        logFlowError('makeDormant', e, s);
       }
     }
     state = null;
@@ -348,8 +353,8 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
         step: type,
         content: content.trim(),
       ));
-    } catch (_) {
-      /* best-effort */
+    } catch (e, s) {
+      logFlowError('insertReflectionStep(${type.dbValue})', e, s);
     }
   }
 }

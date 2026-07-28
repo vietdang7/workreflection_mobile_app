@@ -244,6 +244,7 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
   @override
   Future<void> insertInsight(WrInsight i) async {
     _maybeThrow();
+    _assertInsightConstraints(i);
     insertInsightCalls.add(i);
     _insights.add(i);
   }
@@ -391,4 +392,52 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
   }
 
   List<PracticeStepNote> get stepNotes => List.unmodifiable(_stepNotes);
+}
+
+// ---------------------------------------------------------------------------
+// Ràng buộc của DB, chép lại ở fake
+// ---------------------------------------------------------------------------
+
+/// Giá trị `source` mà `wr_reflection_insights` chấp nhận.
+///
+/// Giữ khớp với check constraint trong
+/// `supabase/migrations/20260728000005_wr_insights_episode_source.sql`.
+const Set<String> kAllowedInsightSources = {
+  'story',
+  'self_check',
+  'pattern',
+  'episode',
+};
+
+/// Chiều SCA mà các bảng WR chấp nhận, kể cả hai nhóm tích cực của v1.6 §2.2.
+const Set<String> kAllowedScaDimensions = {
+  'S1', 'S2', 'S3',
+  'C1', 'C2', 'C3',
+  'A1', 'A2', 'A3', 'A4',
+  'P-ACHIEVE', 'P-STEADY',
+};
+
+/// Ném khi payload vi phạm check constraint, đúng như Postgres sẽ làm.
+///
+/// Vì sao fake phải biết ràng buộc này: ngày 2026-07-28 luồng Episode ghi
+/// `source = 'episode'` trong khi constraint chỉ cho ba giá trị cũ. Mọi lần xác
+/// nhận Ý nghĩa đều bị Supabase trả 400, nhưng 1377 test vẫn xanh vì fake nhận
+/// tuốt. Lỗi chỉ lộ khi chạy thật trên trình duyệt. Fake nhận mọi thứ thì test
+/// không còn nói được gì về việc app có ghi được xuống DB thật hay không.
+void _assertInsightConstraints(WrInsight i) {
+  final source = i.source;
+  if (source != null && !kAllowedInsightSources.contains(source)) {
+    throw StateError(
+      'wr_reflection_insights_source_check: "$source" không nằm trong '
+      '$kAllowedInsightSources',
+    );
+  }
+
+  final dim = i.scaDimension?.dbValue;
+  if (dim != null && !kAllowedScaDimensions.contains(dim)) {
+    throw StateError(
+      'wr_reflection_insights_sca_dimension_check: "$dim" không nằm trong '
+      '$kAllowedScaDimensions',
+    );
+  }
 }
