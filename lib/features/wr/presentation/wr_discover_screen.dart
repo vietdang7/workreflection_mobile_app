@@ -2,7 +2,10 @@
 //
 // Bố cục lấy theo giao-dien-chinh.html §screen-understand:
 //   Điều bạn đang tìm kiếm → Tình huống lặp lại (có thanh so sánh) →
-//   Trải nghiệm hiện tại (SCA) → Hành trình đã đi.
+//   Trải nghiệm hiện tại → Hành trình đã đi.
+//
+// Nhãn cố tình không kèm chữ "SCA" (v1.6 §XII.5: thuật ngữ nội bộ không phơi
+// ra người dùng), dù bên dưới vẫn là ba trụ SCA.
 //
 // Hai tầng vẫn giữ nguyên như trước:
 //   • GHI NHẬN (miễn phí): bạn đã phản tư bao nhiêu lần, tình huống nào lặp

@@ -331,7 +331,8 @@ void main() {
 
       expect(find.text('PHẢN CHIẾU'), findsOneWidget);
       expect(find.text('THỰC HÀNH'), findsOneWidget);
-      expect(find.text('INSIGHT'), findsOneWidget);
+      // §XII.5: nhãn loại dùng tiếng Việt, không phơi tên loại nội bộ.
+      expect(find.text('NHẬN RA'), findsOneWidget);
     });
 
     testWidgets('mỗi tháng một tiêu đề riêng', (tester) async {

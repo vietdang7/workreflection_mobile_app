@@ -159,6 +159,11 @@ String emotionLabel(String? emotion) => switch (emotion) {
       _ => emotion ?? 'Ghi chú',
     };
 
+/// Nhãn loại của một mốc trên timeline Hành trình.
+///
+/// v1.6 §9.1 liệt kê bốn nhãn MILESTONE/STORY/THEME/INSIGHT, nhưng đó là tên
+/// loại nội bộ. §XII.5 yêu cầu không phơi thuật ngữ nội bộ ra người dùng, nên ở
+/// đây dùng tiếng Việt — quyết định đã chốt với owner 2026-07-28.
 String eventTypeLabel(CareerMemoryEvent e) {
   if (e.behavior == kEpisodeBehavior) return 'PHẢN TƯ';
   if (e.behavior == 'skill_certified') return 'KỸ NĂNG';
@@ -167,7 +172,7 @@ String eventTypeLabel(CareerMemoryEvent e) {
       e.behavior == 'practice_theme_done') {
     return 'THỰC HÀNH';
   }
-  if (e.behavior == 'insight') return 'INSIGHT';
+  if (e.behavior == 'insight') return 'NHẬN RA';
   if (e.behavior == 'decision') return 'QUYẾT ĐỊNH';
   if (e.storyId != null) return 'PHẢN CHIẾU';
   if (e.situationCode != null) return 'TRẢI NGHIỆM';
