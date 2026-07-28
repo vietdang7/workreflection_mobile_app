@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/wr_intelligence.dart';
+import '../models/wr_mood_content.dart';
 
 // ---------------------------------------------------------------------------
 // Abstract interface
@@ -92,6 +93,21 @@ abstract class WrIntelligenceRepository {
 
   /// Fetch growth journey snapshots for [userId].
   Future<List<GrowthJourneySnapshot>> fetchGrowthSnapshots(String userId);
+
+  // --- Hai Lớp v1.6 ---
+
+  /// Cơ hội phát triển mới nhất của [userId] (§XI). Null khi chưa tổng hợp lần
+  /// nào — khi đó UI im lặng thay vì bịa nội dung.
+  Future<GrowthOpportunity?> fetchLatestGrowthOpportunity(String userId);
+
+  /// Lưu một gợi ý Cơ hội phát triển đã tổng hợp (§11.5).
+  Future<void> insertGrowthOpportunity(GrowthOpportunity opportunity);
+
+  /// Ghi chú tùy chọn khi hoàn thành một bước Thực hành (§VII).
+  ///
+  /// Trả về id của dòng vừa ghi, để nối với mục Career Memory sinh ra từ nó.
+  /// Ghi lại cùng một bước thì cập nhật chính dòng cũ.
+  Future<String?> upsertPracticeStepNote(PracticeStepNote note);
 }
 
 // ---------------------------------------------------------------------------
@@ -337,5 +353,36 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
         .eq('user_id', userId)
         .order('created_at', ascending: false);
     return rows.map(GrowthJourneySnapshot.fromJson).toList();
+  }
+
+  // --- Hai Lớp v1.6 ---
+
+  @override
+  Future<GrowthOpportunity?> fetchLatestGrowthOpportunity(String userId) async {
+    final rows = await _client
+        .from('wr_growth_opportunities')
+        .select()
+        .eq('user_id', userId)
+        .order('generated_at', ascending: false)
+        .limit(1);
+    if (rows.isEmpty) return null;
+    return GrowthOpportunity.fromJson(rows.first);
+  }
+
+  @override
+  Future<void> insertGrowthOpportunity(GrowthOpportunity opportunity) async {
+    await _client
+        .from('wr_growth_opportunities')
+        .insert(opportunity.toInsert());
+  }
+
+  @override
+  Future<String?> upsertPracticeStepNote(PracticeStepNote note) async {
+    final rows = await _client
+        .from('wr_practice_step_notes')
+        .upsert(note.toInsert(), onConflict: 'user_id,step_id')
+        .select('id');
+    if (rows.isEmpty) return null;
+    return rows.first['id'] as String?;
   }
 }

@@ -30,6 +30,9 @@ class _WrMomentScreenState extends ConsumerState<WrMomentScreen> {
   Future<void> _pick(HumanMoment moment) async {
     final energy = ref.read(pendingEnergyProvider);
     if (energy == null || _busy) return;
+    // Cảm xúc thật người dùng vừa chạm ở lưới check-in. Null khi vào luồng từ
+    // màn năng lượng đứng riêng — lúc đó controller tự suy từ energy.
+    final mood = ref.read(pendingMoodProvider);
 
     setState(() {
       _selected = moment;
@@ -39,7 +42,7 @@ class _WrMomentScreenState extends ConsumerState<WrMomentScreen> {
     try {
       await ref
           .read(episodeFlowProvider.notifier)
-          .start(energy: energy, moment: moment);
+          .start(energy: energy, moment: moment, mood: mood);
       if (mounted) context.push('/wr/flow/step');
     } catch (e, s) {
       logFlowError('openEpisode', e, s);

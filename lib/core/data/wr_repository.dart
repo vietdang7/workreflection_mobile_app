@@ -58,6 +58,16 @@ abstract class WrRepository {
   /// `wr_mobile_profiles`. Bước bị bỏ qua được ghi null.
   Future<void> saveCareerSnapshot(CareerSnapshot snapshot);
 
+  /// Ghi lịch sử tình huống đã xem (Hai Lớp v1.6 §4.1).
+  ///
+  /// Lưu theo Person chứ không theo phiên (§XII.2) — xoay vòng chống lặp chỉ có
+  /// nghĩa khi nhớ được qua nhiều ngày. Danh sách đã được cắt còn tối đa 30 mục
+  /// ở tầng logic trước khi tới đây.
+  Future<void> saveRecentSituationIds(List<String> codes);
+
+  /// Ghi mô tả tự do về vai trò hiện tại (§11.3). Tùy chọn, có thể để trống.
+  Future<void> saveRoleText(String? roleText);
+
   // --- CC tables (web-app shared) ---
   Future<ScaReport?> getLatestScaReport();
   Future<Workshop?> getUpcomingWorkshop();
@@ -355,6 +365,31 @@ class SupabaseWrRepository implements WrRepository {
         .from('wr_mobile_profiles')
         .update({
           ...snapshot.toUpdate(),
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('user_id', _uid);
+  }
+
+  @override
+  Future<void> saveRecentSituationIds(List<String> codes) async {
+    await _client
+        .from('wr_mobile_profiles')
+        .update({
+          'recent_situation_ids': codes,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('user_id', _uid);
+  }
+
+  @override
+  Future<void> saveRoleText(String? roleText) async {
+    final trimmed = roleText?.trim();
+    await _client
+        .from('wr_mobile_profiles')
+        .update({
+          // Chuỗi rỗng ghi thành null: "chưa điền" và "điền rồi xoá hết" là
+          // cùng một trạng thái, không nên phân biệt ở tầng dữ liệu.
+          'role_text': (trimmed == null || trimmed.isEmpty) ? null : trimmed,
           'updated_at': DateTime.now().toIso8601String(),
         })
         .eq('user_id', _uid);

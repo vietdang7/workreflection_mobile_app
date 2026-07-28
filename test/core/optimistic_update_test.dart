@@ -45,6 +45,8 @@ class _FailingCheckinRepo implements WrRepository {
   @override Future<void> updateReminder(bool e) => _d.updateReminder(e);
   @override Future<void> updateLanguage(String l) => _d.updateLanguage(l);
   @override Future<void> saveCareerSnapshot(CareerSnapshot s) => _d.saveCareerSnapshot(s);
+  @override Future<void> saveRecentSituationIds(List<String> c) => _d.saveRecentSituationIds(c);
+  @override Future<void> saveRoleText(String? r) => _d.saveRoleText(r);
   @override Future<String> uploadContextDocument(List<int> b, String e, String d) => _d.uploadContextDocument(b, e, d);
   @override Future<ScaReport?> getLatestScaReport() => _d.getLatestScaReport();
   @override Future<Workshop?> getUpcomingWorkshop() => _d.getUpcomingWorkshop();
@@ -83,6 +85,8 @@ class _FailingPracticeRepo implements WrRepository {
   @override Future<void> updateReminder(bool e) => _d.updateReminder(e);
   @override Future<void> updateLanguage(String l) => _d.updateLanguage(l);
   @override Future<void> saveCareerSnapshot(CareerSnapshot s) => _d.saveCareerSnapshot(s);
+  @override Future<void> saveRecentSituationIds(List<String> c) => _d.saveRecentSituationIds(c);
+  @override Future<void> saveRoleText(String? r) => _d.saveRoleText(r);
   @override Future<String> uploadContextDocument(List<int> b, String e, String d) => _d.uploadContextDocument(b, e, d);
   @override Future<ScaReport?> getLatestScaReport() => _d.getLatestScaReport();
   @override Future<Workshop?> getUpcomingWorkshop() => _d.getUpcomingWorkshop();

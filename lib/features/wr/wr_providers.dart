@@ -11,6 +11,10 @@ import '../../core/models/checkin.dart';
 import '../../core/models/wr_content.dart';
 import '../../core/models/wr_episode.dart';
 import '../../core/models/wr_intelligence.dart';
+import '../../core/logic/wr_growth_opportunity.dart';
+import '../../core/logic/wr_situation_picker.dart';
+import '../../core/models/wr_mood_content.dart';
+import 'episode_flow_controller.dart';
 
 /// Provides the current authenticated user's id.
 /// Override in tests with a fixed userId string.
@@ -175,4 +179,94 @@ final wrCareerSnapshotProvider = FutureProvider<CareerSnapshot>((ref) async {
   } catch (_) {
     return const CareerSnapshot();
   }
+});
+
+/// Lịch sử tình huống đã chọn gần đây (Hai Lớp v1.6 §4.1).
+///
+/// Nguồn cho cơ chế xoay vòng chống lặp ở bước chọn tình huống. Lưu theo Person
+/// trên `wr_mobile_profiles` chứ không theo phiên (§XII.2), nên vẫn còn hiệu lực
+/// sau khi đóng app hoặc đổi thiết bị.
+final wrRecentSituationIdsProvider =
+    FutureProvider<List<String>>((ref) async {
+  final repo = ref.watch(wrRepositoryProvider);
+  try {
+    final profile = await repo.getMobileProfile();
+    return profile?.recentSituationIds ?? const [];
+  } catch (_) {
+    // Không đọc được lịch sử thì coi như chưa xem gì — xoay vòng kém đi một
+    // nhịp, nhưng danh sách gợi ý vẫn hiện đủ.
+    return const [];
+  }
+});
+
+/// Story ứng với tình huống của Episode đang mở — nguồn cho câu Self Reflection,
+/// gợi ý Aha (bước Ý nghĩa) và Practice (bước Lựa chọn).
+///
+/// Kiến trúc Dữ liệu v1.6 §V. Null khi Episode chưa gắn tình huống nào (người
+/// dùng tự viết thay vì chọn chip) hoặc không nối được sang story cùng chiều —
+/// khi đó UI phải im lặng, không bịa một câu Aha.
+final wrEpisodeStoryProvider = Provider<WrStory?>((ref) {
+  final episode = ref.watch(episodeFlowProvider);
+  final code = episode?.situationCode;
+  if (code == null) return null;
+
+  final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
+  final stories = ref.watch(wrStoriesProvider).valueOrNull ?? const [];
+  if (situations.isEmpty || stories.isEmpty) return null;
+
+  WrSituation? situation;
+  for (final s in situations) {
+    if (s.code == code) {
+      situation = s;
+      break;
+    }
+  }
+  if (situation == null) return null;
+
+  return resolveStoryFor(situation, stories);
+});
+
+/// Mô tả công việc hiện tại người dùng tự viết (§XI, `wr_mobile_profiles.role_text`).
+final wrRoleTextProvider = FutureProvider<String?>((ref) async {
+  try {
+    return (await ref.watch(wrRepositoryProvider).getMobileProfile())?.roleText;
+  } catch (_) {
+    // Không đọc được mô tả công việc thì Cơ hội phát triển vẫn nói được ở mức
+    // trụ SCA — không đáng để cả khối biến mất.
+    return null;
+  }
+});
+
+/// Cơ hội phát triển hiện tại (§XI).
+///
+/// Ưu tiên bản đối tác đã tổng hợp sẵn trong `wr_growth_opportunities`; chưa có
+/// thì suy ra bằng luật ngay trên máy. Thứ tự này để khi đối tác bật AI, app tự
+/// dùng bản của họ mà không cần sửa gì thêm.
+///
+/// Null nghĩa là chưa đủ dữ liệu — §11.3 yêu cầu im lặng, không bịa.
+final wrGrowthOpportunityProvider =
+    FutureProvider<GrowthOpportunity?>((ref) async {
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null) return null;
+
+  try {
+    final stored = await ref
+        .watch(wrIntelligenceRepositoryProvider)
+        .fetchLatestGrowthOpportunity(userId);
+    if (stored != null) return stored;
+  } catch (_) {
+    /* bảng chưa có hoặc mạng hỏng — rơi xuống bản suy ra bằng luật */
+  }
+
+  final patterns = await ref.watch(wrPatternCountsProvider.future);
+  final situations = await ref.watch(wrSituationsProvider.future);
+  final roleText = await ref.watch(wrRoleTextProvider.future);
+
+  return deriveGrowthOpportunity(
+    userId: userId,
+    patterns: patterns,
+    situations: situations,
+    roleText: roleText,
+    now: DateTime.now(),
+  );
 });

@@ -33,11 +33,22 @@ enum HumanNeed {
 // ScaDimension enum
 // ---------------------------------------------------------------------------
 
-/// 10 chiều SCA. dbValue matches wr_situations.sca_dimension check constraint.
+/// 10 chiều SCA + 2 nhóm tình huống tích cực.
+/// dbValue matches wr_situations.sca_dimension check constraint.
+///
 /// Wave mapping (read-only, not stored on enum):
 ///   wave1 = C2, A1, A3, C1
 ///   wave2 = A4, A2, S1
 ///   wave3 = C3, S2, S3
+///
+/// [pAchieve] và [pSteady] KHÔNG phải chiều SCA. Kiến trúc Dữ liệu v1.6 §2.3:
+/// Career Situation Library chỉ có tình huống dạng vấn đề, vì nguồn gốc là công
+/// cụ chẩn đoán tổ chức. Người dùng check-in "khá ổn" / "đang vui" mà vẫn nhận
+/// tình huống vấn đề thì thấy gượng ép, nên hai nhóm này được soạn thêm và dùng
+/// chung một trường `dim` với SCA (§2.2).
+///
+/// Mọi thống kê SCA phải lọc bằng [isSca] trước, nếu không hai nhóm tích cực sẽ
+/// lẫn vào điểm số của một trụ mà chúng không thuộc về.
 enum ScaDimension {
   s1,
   s2,
@@ -48,7 +59,9 @@ enum ScaDimension {
   a1,
   a2,
   a3,
-  a4;
+  a4,
+  pAchieve,
+  pSteady;
 
   String get dbValue => switch (this) {
         ScaDimension.s1 => 'S1',
@@ -61,7 +74,16 @@ enum ScaDimension {
         ScaDimension.a2 => 'A2',
         ScaDimension.a3 => 'A3',
         ScaDimension.a4 => 'A4',
+        ScaDimension.pAchieve => 'P-ACHIEVE',
+        ScaDimension.pSteady => 'P-STEADY',
       };
+
+  /// True cho 10 chiều SCA thật; false cho hai nhóm tình huống tích cực.
+  bool get isSca => !isPositive;
+
+  /// True cho nhóm tình huống tích cực tự soạn (§2.3).
+  bool get isPositive =>
+      this == ScaDimension.pAchieve || this == ScaDimension.pSteady;
 
   static ScaDimension fromDb(String value) => switch (value) {
         'S1' => ScaDimension.s1,
@@ -74,6 +96,8 @@ enum ScaDimension {
         'A2' => ScaDimension.a2,
         'A3' => ScaDimension.a3,
         'A4' => ScaDimension.a4,
+        'P-ACHIEVE' => ScaDimension.pAchieve,
+        'P-STEADY' => ScaDimension.pSteady,
         _ => throw ArgumentError('Unknown ScaDimension db value: $value'),
       };
 }

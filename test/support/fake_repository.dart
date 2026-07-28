@@ -40,6 +40,8 @@ class FakeWrRepository implements WrRepository {
   final List<String> updateLanguageCalls = [];
   final List<CareerSnapshot> saveCareerSnapshotCalls = [];
   bool failSaveCareerSnapshot = false;
+  final List<List<String>> saveRecentSituationIdsCalls = [];
+  final List<String?> saveRoleTextCalls = [];
   final List<({String ext, String docType})> uploadContextDocumentCalls = [];
   final List<String?> ensureSeededCalls = [];
   final List<String> saveOnboardingSituationCalls = [];
@@ -268,6 +270,25 @@ class FakeWrRepository implements WrRepository {
     saveCareerSnapshotCalls.add(snapshot);
     if (_profile != null) {
       _profile = _profile!.copyWith(careerSnapshot: snapshot);
+    }
+  }
+
+  @override
+  Future<void> saveRecentSituationIds(List<String> codes) async {
+    saveRecentSituationIdsCalls.add(List.unmodifiable(codes));
+    if (_profile != null) {
+      _profile = _profile!.copyWith(recentSituationIds: codes);
+    }
+  }
+
+  @override
+  Future<void> saveRoleText(String? roleText) async {
+    final trimmed = roleText?.trim();
+    final normalised =
+        (trimmed == null || trimmed.isEmpty) ? null : trimmed;
+    saveRoleTextCalls.add(normalised);
+    if (_profile != null) {
+      _profile = _profile!.copyWith(roleText: normalised);
     }
   }
 

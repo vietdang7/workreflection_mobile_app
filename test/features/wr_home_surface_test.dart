@@ -10,10 +10,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
+import 'package:workreflection_mobile/core/data/wr_mood_content_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
 import 'package:workreflection_mobile/core/logic/wr_home_surface.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
+import 'package:workreflection_mobile/core/models/checkin.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
+import 'package:workreflection_mobile/core/models/wr_mood_content.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_home_screen.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
@@ -21,6 +24,7 @@ import 'package:workreflection_mobile/l10n/app_localizations.dart';
 import '../support/fake_repository.dart';
 import '../support/fake_wr_content_repository.dart';
 import '../support/fake_wr_intelligence_repository.dart';
+import '../support/fake_wr_mood_content_repository.dart';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -75,6 +79,8 @@ CareerMemoryEvent _readEvent(String storyId) => CareerMemoryEvent(
 Widget _wrap({
   FakeWrContentRepository? content,
   FakeWrIntelligenceRepository? intel,
+  FakeWrMoodContentRepository? moodContent,
+  FakeWrRepository? repo,
 }) {
   final router = GoRouter(
     initialLocation: '/home',
@@ -86,8 +92,13 @@ Widget _wrap({
             Scaffold(body: Text('PATTERN ${s.pathParameters['code']}')),
       ),
       GoRoute(
-        path: '/wr/story',
-        builder: (_, __) => const Scaffold(body: Text('STORY')),
+        path: '/wr/mood-library',
+        builder: (_, __) => const Scaffold(body: Text('THƯ VIỆN')),
+      ),
+      GoRoute(
+        path: '/wr/mood-content/:id',
+        builder: (_, s) =>
+            Scaffold(body: Text('ĐỌC ${s.pathParameters['id']}')),
       ),
       GoRoute(
         path: '/wr/flow/moment',
@@ -102,7 +113,9 @@ Widget _wrap({
           .overrideWithValue(content ?? FakeWrContentRepository()),
       wrIntelligenceRepositoryProvider
           .overrideWithValue(intel ?? FakeWrIntelligenceRepository()),
-      wrRepositoryProvider.overrideWithValue(FakeWrRepository()),
+      wrMoodContentRepositoryProvider
+          .overrideWithValue(moodContent ?? FakeWrMoodContentRepository()),
+      wrRepositoryProvider.overrideWithValue(repo ?? FakeWrRepository()),
       currentUserIdProvider.overrideWithValue('u1'),
     ],
     child: MaterialApp.router(
@@ -234,7 +247,7 @@ void main() {
 
       expect(find.text('Bạn đang trải qua điều gì?'), findsOneWidget);
       expect(find.byKey(const Key('wr_home_system_notice')), findsNothing);
-      expect(find.byKey(const Key('wr_home_story_suggestion')), findsNothing);
+      expect(find.byKey(const Key('wr_home_mood_content')), findsNothing);
       expect(find.byKey(const Key('wr_home_latest_insight')), findsNothing);
     });
 
@@ -269,27 +282,113 @@ void main() {
       expect(find.text('PATTERN s1'), findsOneWidget);
     });
 
-    testWidgets('khối gợi ý lấy story thật kèm thời lượng ước lượng',
+    testWidgets('chưa check-in thì khối Thư viện Cảm xúc im lặng',
         (tester) async {
-      final content = FakeWrContentRepository()
-        ..seedStories([
-          _story(
-            'st-a',
-            'Khi bạn muốn nói nhưng chọn im lặng',
-            need: HumanNeed.ketNoi,
-            content: List.filled(kWordsPerMinute * 5, 'từ').join(' '),
-          ),
+      // §8.3: thẻ bám vào cảm xúc vừa check-in. Không có cảm xúc thì không có
+      // gì để gợi ý — bịa một mục mặc định là sai tinh thần "đúng cảm giác
+      // lúc này".
+      final moodContent = FakeWrMoodContentRepository()
+        ..seedContent([
+          fakeMoodContent(id: 'm1', mood: Mood.stressed, title: 'Ba nhịp thở'),
         ]);
 
-      await _pump(tester, _wrap(content: content));
+      await _pump(tester, _wrap(moodContent: moodContent));
 
-      expect(find.byKey(const Key('wr_home_story_suggestion')), findsOneWidget);
-      expect(
-        find.text('Khi bạn muốn nói nhưng chọn im lặng'),
-        findsOneWidget,
-      );
-      expect(find.text('KẾT NỐI · 5 phút đọc'), findsOneWidget);
-      expect(find.text('Chưa đọc'), findsOneWidget);
+      expect(find.byKey(const Key('wr_home_mood_content')), findsNothing);
+    });
+
+    testWidgets('khối gợi ý lấy đúng mục đầu tiên theo cảm xúc đã check-in',
+        (tester) async {
+      final repo = FakeWrRepository()..seedTodayCheckin(_checkin(Mood.stressed));
+      final moodContent = FakeWrMoodContentRepository()
+        ..seedContent([
+          // sortOrder 2 nạp trước để chắc chắn thẻ chọn theo THỨ TỰ chứ không
+          // phải theo thứ tự trả về của kho.
+          fakeMoodContent(
+            id: 'm2',
+            mood: Mood.stressed,
+            sortOrder: 2,
+            title: 'Bài thứ hai',
+          ),
+          fakeMoodContent(
+            id: 'm1',
+            mood: Mood.stressed,
+            sortOrder: 1,
+            title: 'Ba nhịp thở trước khi phản hồi',
+            kind: 'HEALING AUDIO',
+            duration: '3 phút',
+            type: MoodContentType.audio,
+          ),
+          fakeMoodContent(id: 'm9', mood: Mood.happy, title: 'Bài của vui'),
+        ]);
+
+      await _pump(tester, _wrap(moodContent: moodContent, repo: repo));
+
+      expect(find.byKey(const Key('wr_home_mood_content')), findsOneWidget);
+      expect(find.text('GỢI Ý KHI CĂNG THẲNG'), findsOneWidget);
+      expect(find.text('Ba nhịp thở trước khi phản hồi'), findsOneWidget);
+      expect(find.text('HEALING AUDIO · 3 phút'), findsOneWidget);
+      // Không được lấy nhầm mục của cảm xúc khác.
+      expect(find.text('Bài của vui'), findsNothing);
+      expect(find.text('Bài thứ hai'), findsNothing);
+    });
+
+    testWidgets('nhãn thẻ đổi theo từng cảm xúc', (tester) async {
+      // Người vừa chọn "đang vui" mà thấy "Gợi ý khi căng thẳng" thì thẻ mất
+      // hết ý nghĩa.
+      const expected = {
+        Mood.stressed: 'GỢI Ý KHI CĂNG THẲNG',
+        Mood.tired: 'GỢI Ý KHI MỆT MỎI',
+        Mood.okay: 'GỢI Ý CHO HÔM NAY',
+        Mood.happy: 'GIỮ LẠI CẢM XÚC NÀY',
+      };
+
+      for (final entry in expected.entries) {
+        final repo = FakeWrRepository()..seedTodayCheckin(_checkin(entry.key));
+        final moodContent = FakeWrMoodContentRepository()
+          ..seedContent([fakeMoodContent(id: 'c', mood: entry.key)]);
+
+        await _pump(tester, _wrap(moodContent: moodContent, repo: repo));
+        expect(find.text(entry.value), findsOneWidget,
+            reason: 'sai nhãn cho ${entry.key.name}');
+      }
+    });
+
+    testWidgets('nội dung còn nháp hiện nhãn Nháp', (tester) async {
+      // §8.2 + §XII.3: placeholder = true là chưa sẵn sàng phát hành.
+      final repo = FakeWrRepository()..seedTodayCheckin(_checkin(Mood.okay));
+      final moodContent = FakeWrMoodContentRepository()
+        ..seedContent([
+          fakeMoodContent(id: 'm1', mood: Mood.okay, placeholder: true),
+        ]);
+
+      await _pump(tester, _wrap(moodContent: moodContent, repo: repo));
+
+      expect(find.text('Nháp'), findsOneWidget);
+    });
+
+    testWidgets('chạm thẻ mở đúng màn đọc của mục đó', (tester) async {
+      final repo = FakeWrRepository()..seedTodayCheckin(_checkin(Mood.tired));
+      final moodContent = FakeWrMoodContentRepository()
+        ..seedContent([fakeMoodContent(id: 'abc', mood: Mood.tired)]);
+
+      await _pump(tester, _wrap(moodContent: moodContent, repo: repo));
+      await tester.tap(find.byKey(const Key('wr_home_mood_content_card')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('ĐỌC abc'), findsOneWidget);
+    });
+
+    testWidgets('link Xem thêm mở màn Thư viện', (tester) async {
+      final repo = FakeWrRepository()..seedTodayCheckin(_checkin(Mood.happy));
+      final moodContent = FakeWrMoodContentRepository()
+        ..seedContent([fakeMoodContent(id: 'm1', mood: Mood.happy)]);
+
+      await _pump(tester, _wrap(moodContent: moodContent, repo: repo));
+      await tester.tap(find.byKey(const Key('wr_home_mood_library_link')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('THƯ VIỆN'), findsOneWidget);
     });
 
     testWidgets('Insight gần nhất hiện câu và ngày lưu thật', (tester) async {
@@ -313,3 +412,13 @@ void main() {
     });
   });
 }
+
+/// Check-in hôm nay với [mood] — chỉ cần đúng trường `mood` cho các test thẻ
+/// Thư viện Nội dung Cảm xúc.
+Checkin _checkin(Mood mood) => Checkin(
+      id: 'ck-1',
+      userId: 'u1',
+      mood: mood,
+      checkinDate: DateTime(2026, 7, 28),
+      createdAt: DateTime(2026, 7, 28),
+    );

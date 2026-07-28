@@ -159,7 +159,7 @@ void main() {
 
   // Bố cục theo giao-dien-chinh.html §screen-understand — nhưng mọi con số và
   // trạng thái đều đọc từ dữ liệu thật, không có dòng minh hoạ nào cứng.
-  group('Hiểu mình — trải nghiệm hiện tại (SCA)', () {
+  group('Hiểu mình — trải nghiệm hiện tại', () {
     testWidgets('chưa tự đánh giá thì cả ba trụ đều nói chưa đánh giá',
         (tester) async {
       await _pump(
@@ -171,7 +171,9 @@ void main() {
         ),
       );
 
-      expect(find.text('TRẢI NGHIỆM HIỆN TẠI (SCA)'), findsOneWidget);
+      // Hai Lớp v1.6 §XII.5 — chữ "SCA" là thuật ngữ nội bộ, không lộ ra UI.
+      expect(find.text('TRẢI NGHIỆM HIỆN TẠI'), findsOneWidget);
+      expect(find.textContaining('SCA'), findsNothing);
       expect(find.text('Chưa đánh giá'), findsNWidgets(3));
       expect(find.text('Chưa tự đánh giá lần nào'), findsOneWidget);
     });

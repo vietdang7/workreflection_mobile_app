@@ -4,8 +4,13 @@
 //   1. lời chào + ngày
 //   2. "Bạn đang trải qua điều gì?" + lưới check-in 2×2
 //   3. thẻ navy "Hệ thống nhận ra"  → dẫn sang màn chi tiết điều lặp lại
-//   4. "Gợi ý khi …" + thẻ story    → dẫn sang màn đọc
+//   4. "Gợi ý khi …" + thẻ Thư viện Nội dung Cảm xúc → dẫn sang màn đọc/nghe
 //   5. "Insight gần nhất"
+//
+// Bốn khối này khớp đúng danh sách nội dung tab Home ở Kiến trúc Dữ liệu v1.6
+// §9.1. Thẻ ở khối 4 trước đây gợi ý một Story; từ v1.6 nó là Thư viện Nội dung
+// Cảm xúc (§VIII) — hai mạch khác nhau: Story giờ là nguồn nội dung cho tình
+// huống trong luồng phản tư, còn thư viện này là nội dung chăm sóc cảm xúc.
 //
 // Toàn bộ nội dung ba khối dưới đến từ dữ liệu thật của người dùng
 // (`lib/core/logic/wr_home_surface.dart`). Chưa đủ dữ liệu thì khối biến mất
@@ -24,19 +29,21 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/data/wr_repository.dart';
 import '../../../core/logic/vn_date.dart';
-import '../../../core/logic/wr_dominant_need.dart';
 import '../../../core/logic/wr_experience_state.dart';
 import '../../../core/logic/wr_home_surface.dart';
 import '../../../core/models/checkin.dart';
 import '../../../core/models/mobile_profile.dart';
 import '../../../core/models/wr_episode.dart';
+import '../../../core/models/wr_mood_content.dart';
 import '../../../core/theme/wr_colors.dart';
+import '../../../core/widgets/wr_profile_avatar.dart';
 import '../../../core/widgets/eyebrow.dart';
-import '../../../core/widgets/progress_track.dart';
 import '../../../core/widgets/section_divider.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../episode_flow_controller.dart';
+import '../mood_content_providers.dart';
 import '../wr_providers.dart';
+import 'wr_mood_library_screen.dart' show WrDraftBadge;
 
 final _mobileProfileProvider = FutureProvider<MobileProfile?>((ref) async {
   final repo = ref.watch(wrRepositoryProvider);
@@ -50,22 +57,37 @@ final _mobileProfileProvider = FutureProvider<MobileProfile?>((ref) async {
 // MỘT câu hỏi, bốn cách nói của cùng một thang năng lượng.
 // ---------------------------------------------------------------------------
 
-typedef CheckinOption = ({String id, String label, CheckinEnergy energy});
+typedef CheckinOption = ({
+  String id,
+  String label,
+  CheckinEnergy energy,
+  Mood mood,
+});
 
+/// Bốn ô check-in. [mood] KHÔNG suy được từ [energy]: "căng thẳng" và "mệt mỏi"
+/// dùng chung `CheckinEnergy.low`, nhưng Kiến trúc Dữ liệu v1.6 §III lọc tình
+/// huống theo hai cụm chiều khác nhau cho hai cảm xúc đó. Giữ cả hai trường.
 const List<CheckinOption> kCheckinOptions = [
-  (id: 'stress', label: 'Tôi đang\ncăng thẳng', energy: CheckinEnergy.low),
-  (id: 'tired', label: 'Tôi mệt mỏi\ncần nghỉ ngơi', energy: CheckinEnergy.low),
-  (id: 'ok', label: 'Tôi\nkhá ổn', energy: CheckinEnergy.ok),
-  (id: 'happy', label: 'Tôi\nđang vui', energy: CheckinEnergy.good),
+  (
+    id: 'stress',
+    label: 'Tôi đang\ncăng thẳng',
+    energy: CheckinEnergy.low,
+    mood: Mood.stressed,
+  ),
+  (
+    id: 'tired',
+    label: 'Tôi mệt mỏi\ncần nghỉ ngơi',
+    energy: CheckinEnergy.low,
+    mood: Mood.tired,
+  ),
+  (id: 'ok', label: 'Tôi\nkhá ổn', energy: CheckinEnergy.ok, mood: Mood.okay),
+  (
+    id: 'happy',
+    label: 'Tôi\nđang vui',
+    energy: CheckinEnergy.good,
+    mood: Mood.happy,
+  ),
 ];
-
-/// Nhãn khối gợi ý, đổi theo năng lượng đã check-in hôm nay.
-String suggestionEyebrow(CheckinEnergy? energy) => switch (energy) {
-      CheckinEnergy.low => 'GỢI Ý KHI MỆT MỎI',
-      CheckinEnergy.ok => 'GỢI Ý HÔM NAY',
-      CheckinEnergy.good => 'GỢI Ý ĐỂ ĐI XA HƠN',
-      null => 'GỢI Ý HÔM NAY',
-    };
 
 class WrHomeScreen extends ConsumerWidget {
   const WrHomeScreen({super.key});
@@ -92,7 +114,6 @@ class WrHomeScreen extends ConsumerWidget {
     final displayName =
         ref.watch(_mobileProfileProvider).valueOrNull?.displayName ?? '';
     final openEpisode = ref.watch(wrOpenEpisodeProvider).valueOrNull;
-    final todayEnergy = ref.watch(todayCheckinProvider).valueOrNull?.energy;
 
     return Scaffold(
       backgroundColor: WrColors.white,
@@ -133,7 +154,10 @@ class WrHomeScreen extends ConsumerWidget {
                       ],
                     ),
                   ),
-                  _ProfileAvatarButton(displayName: displayName),
+                  WrProfileAvatar(
+                    key: const Key('wr_home_profile_button'),
+                    displayName: displayName,
+                  ),
                 ],
               ),
             ),
@@ -151,7 +175,7 @@ class WrHomeScreen extends ConsumerWidget {
                   const WrSectionDivider(),
                   const SizedBox(height: 28),
                   const _SystemNoticeCard(),
-                  _StorySuggestionSection(energy: todayEnergy),
+                  const _MoodContentSection(),
                   const _LatestInsightSection(),
                 ],
               ),
@@ -172,14 +196,16 @@ class _CheckinQuestion extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final todayEnergy = ref.watch(todayCheckinProvider).valueOrNull?.energy;
-    // Chỉ tô đúng một ô: ô đầu tiên khớp năng lượng đã ghi hôm nay.
-    final selectedId = todayEnergy == null
+    // Tô theo cảm xúc đã ghi, không theo năng lượng: "căng thẳng" và "mệt mỏi"
+    // cùng là năng lượng thấp, nên khớp bằng energy sẽ luôn sáng ô đầu tiên dù
+    // người dùng chạm ô thứ hai.
+    final todayMood = ref.watch(todayCheckinProvider).valueOrNull?.mood;
+    final selectedId = todayMood == null
         ? null
         : kCheckinOptions
-            .where((o) => o.energy == todayEnergy)
-            .map((o) => o.id)
-            .firstOrNull;
+              .where((o) => o.mood == todayMood)
+              .map((o) => o.id)
+              .firstOrNull;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -235,6 +261,7 @@ class _CheckinTile extends ConsumerWidget {
       behavior: HitTestBehavior.opaque,
       onTap: () {
         ref.read(pendingEnergyProvider.notifier).state = option.energy;
+        ref.read(pendingMoodProvider.notifier).state = option.mood;
         context.push('/wr/flow/moment');
       },
       child: AnimatedContainer(
@@ -302,8 +329,7 @@ class _SystemNoticeCard extends ConsumerWidget {
             GestureDetector(
               key: const Key('wr_home_notice_link'),
               behavior: HitTestBehavior.opaque,
-              onTap: () =>
-                  context.push('/wr/pattern/${notice.situationCode}'),
+              onTap: () => context.push('/wr/pattern/${notice.situationCode}'),
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -328,126 +354,130 @@ class _SystemNoticeCard extends ConsumerWidget {
 }
 
 // ---------------------------------------------------------------------------
-// 4 · "Gợi ý khi …" — story chọn theo trụ SCA / nhu cầu đang nổi.
+// 4 · "Gợi ý khi …" — Thư viện Nội dung Cảm xúc.
+//
+// Kiến trúc Dữ liệu v1.6 §8.3: Home hiện đúng MỘT mục, là mục đầu tiên của
+// nhóm theo cảm xúc vừa check-in. Không xoay vòng ở đây — xoay vòng làm thẻ
+// đổi nội dung mỗi lần mở app, người dùng không quay lại được bài đang đọc dở.
+//
+// §8.3: miễn phí cho mọi người dùng, không phân lớp Free/Paid, vì đây là nội
+// dung chăm sóc cảm xúc chứ không phải trí tuệ rút từ dữ liệu cá nhân.
 // ---------------------------------------------------------------------------
 
-class _StorySuggestionSection extends ConsumerWidget {
-  const _StorySuggestionSection({required this.energy});
-
-  final CheckinEnergy? energy;
+class _MoodContentSection extends ConsumerWidget {
+  const _MoodContentSection();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final stories = ref.watch(wrStoriesProvider).valueOrNull ?? const [];
-    final patterns = ref.watch(wrPatternCountsProvider).valueOrNull ?? const [];
-    final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
-    final events = ref.watch(wrMemoryEventsProvider).valueOrNull ?? const [];
+    final mood = ref.watch(todayCheckinProvider).valueOrNull?.mood;
+    final items = ref.watch(wrTodayMoodContentProvider).valueOrNull ?? const [];
 
-    final suggestion = suggestStory(
-      stories: stories,
-      patterns: patterns,
-      situations: situations,
-      events: events,
-    );
-    if (suggestion == null) return const SizedBox.shrink();
+    // Chưa check-in hoặc chưa có nội dung thì khối biến mất hẳn —
+    // WXS Orch. Inv.5: im lặng là lựa chọn hợp lệ, không bịa nội dung mẫu.
+    if (mood == null || items.isEmpty) return const SizedBox.shrink();
 
-    final story = suggestion.story;
-    final need = story.humanNeed;
-    final meta = [
-      if (need != null) needLabel(need).toUpperCase(),
-      '${suggestion.minutes} phút đọc',
-    ].join(' · ');
+    final item = items.first;
 
     return Padding(
-      key: const Key('wr_home_story_suggestion'),
+      key: const Key('wr_home_mood_content'),
       padding: const EdgeInsets.only(bottom: 28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          WrEyebrow(suggestionEyebrow(energy)),
+          WrEyebrow(moodSuggestionTitle(mood)),
           const SizedBox(height: 8),
           GestureDetector(
+            key: const Key('wr_home_mood_content_card'),
             behavior: HitTestBehavior.opaque,
-            onTap: () => context.push('/wr/story'),
+            onTap: () => context.push('/wr/mood-content/${item.id}'),
             child: WrCardMinimal(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+              child: Row(
                 children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        width: 48,
-                        height: 48,
-                        decoration: BoxDecoration(
-                          color: WrColors.white,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.menu_book_outlined,
-                          size: 26,
-                          color: WrColors.navy,
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                  Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: WrColors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      item.type == MoodContentType.audio
+                          ? Icons.mic_none_outlined
+                          : Icons.menu_book_outlined,
+                      size: 26,
+                      color: WrColors.navy,
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
                           children: [
-                            Text(
-                              story.title,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: WrColors.dark,
-                                height: 1.3,
+                            Flexible(
+                              child: Text(
+                                item.title,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color: WrColors.dark,
+                                  height: 1.3,
+                                ),
                               ),
                             ),
-                            const SizedBox(height: 4),
-                            Text(
-                              meta,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: WrColors.dark.withValues(alpha: 0.8),
-                                height: 1.5,
-                              ),
-                            ),
+                            if (item.placeholder) ...[
+                              const SizedBox(width: 6),
+                              const WrDraftBadge(),
+                            ],
                           ],
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  WrProgressTrack(
-                    value: suggestion.alreadyRead ? 1.0 : 0.0,
-                    color: WrColors.navy,
-                    trackColor: WrColors.navy.withValues(alpha: 0.1),
-                    height: 3,
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        '${suggestion.minutes} phút',
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: WrColors.dark.withValues(alpha: 0.8),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${item.kind} · ${item.duration}',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: WrColors.dark.withValues(alpha: 0.8),
+                            height: 1.5,
+                          ),
                         ),
-                      ),
-                      Text(
-                        suggestion.alreadyRead ? 'Đã đọc' : 'Chưa đọc',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: suggestion.alreadyRead
-                              ? WrColors.teal
-                              : WrColors.coral,
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.chevron_right,
+                    size: 18,
+                    color: WrColors.muted,
                   ),
                 ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 10),
+          Center(
+            child: GestureDetector(
+              key: const Key('wr_home_mood_library_link'),
+              behavior: HitTestBehavior.opaque,
+              onTap: () => context.push('/wr/mood-library'),
+              // Mũi tên dùng Icon chứ không dùng ký tự "→": font chữ của app
+              // không chắc có glyph U+2192, thiếu là ra ô vuông rỗng.
+              child: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 4),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Xem thêm gợi ý trong thư viện',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: WrColors.teal,
+                      ),
+                    ),
+                    SizedBox(width: 4),
+                    Icon(Icons.arrow_forward, size: 13, color: WrColors.teal),
+                  ],
+                ),
               ),
             ),
           ),
@@ -473,7 +503,7 @@ class _LatestInsightSection extends ConsumerWidget {
     final saved = at == null
         ? null
         : 'Lưu ngày ${at.day.toString().padLeft(2, '0')}/'
-            '${at.month.toString().padLeft(2, '0')}';
+              '${at.month.toString().padLeft(2, '0')}';
 
     return Column(
       key: const Key('wr_home_latest_insight'),
@@ -581,50 +611,5 @@ class _ResumeInvite extends ConsumerWidget {
         '/wr/flow/meaning',
       _ => '/wr/flow/step',
     };
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Lối vào hồ sơ
-// ---------------------------------------------------------------------------
-
-class _ProfileAvatarButton extends StatelessWidget {
-  const _ProfileAvatarButton({required this.displayName});
-
-  final String displayName;
-
-  String get _initials {
-    final parts = displayName.trim().split(RegExp(r'\s+'))
-      ..removeWhere((p) => p.isEmpty);
-    if (parts.isEmpty) return 'WR';
-    if (parts.length == 1) return parts.first.characters.first.toUpperCase();
-    return (parts.first.characters.first + parts.last.characters.first)
-        .toUpperCase();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      key: const Key('wr_home_profile_button'),
-      behavior: HitTestBehavior.opaque,
-      onTap: () => context.push('/profile'),
-      child: Container(
-        width: 44,
-        height: 44,
-        alignment: Alignment.center,
-        decoration: const BoxDecoration(
-          color: WrColors.cream,
-          shape: BoxShape.circle,
-        ),
-        child: Text(
-          _initials,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w700,
-            color: WrColors.navy,
-          ),
-        ),
-      ),
-    );
   }
 }

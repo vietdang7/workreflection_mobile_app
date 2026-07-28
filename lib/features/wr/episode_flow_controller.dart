@@ -30,6 +30,15 @@ final episodeFlowProvider =
 /// dùng chọn Human Moment.
 final pendingEnergyProvider = StateProvider<CheckinEnergy?>((ref) => null);
 
+/// Cảm xúc vừa chọn ở lưới check-in, giữ nguyên bốn mức của [Mood].
+///
+/// Vì sao cần tách khỏi [pendingEnergyProvider]: "căng thẳng" và "mệt mỏi" đều
+/// là năng lượng thấp, nên `CheckinEnergy.low.toMood()` gộp cả hai thành
+/// [Mood.tired]. Nhưng Kiến trúc Dữ liệu v1.6 §III lọc tình huống theo hai cụm
+/// chiều KHÁC nhau cho hai cảm xúc đó (A3+C2 với A3+A1). Mất phân biệt ở đây là
+/// mất luôn bộ lọc.
+final pendingMoodProvider = StateProvider<Mood?>((ref) => null);
+
 /// Một cặp hỏi–đáp người dùng đã đi qua trong Episode.
 class ReflectionRecapItem {
   const ReflectionRecapItem({
@@ -89,10 +98,18 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
   // -------------------------------------------------------------------------
 
   /// Mở Episode mới sau khi người dùng chọn năng lượng + Human Moment.
-  /// Ghi luôn check-in ngày hôm nay (mood suy ra từ energy — cột mood NOT NULL).
+  ///
+  /// Ghi luôn check-in ngày hôm nay. [mood] là cảm xúc người dùng thực sự chạm
+  /// ở lưới check-in; bỏ trống thì suy ra từ [energy] như trước (dùng cho lối
+  /// vào không qua lưới, ví dụ mở phiên mới khi đang dở một phiên khác).
+  ///
+  /// Truyền [mood] vào thay vì luôn suy từ energy là có lý do: `energy.toMood()`
+  /// gộp "căng thẳng" và "mệt mỏi" thành [Mood.tired], trong khi v1.6 §III cần
+  /// hai cụm chiều khác nhau cho hai cảm xúc này.
   Future<ReflectionEpisode> start({
     required CheckinEnergy energy,
     required HumanMoment moment,
+    Mood? mood,
   }) async {
     final userId = _ref.read(currentUserIdProvider) ?? '';
     final episode = await _repo.openEpisode(
@@ -111,7 +128,7 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
     try {
       await _ref
           .read(wrRepositoryProvider)
-          .upsertCheckin(energy.toMood(), energy: energy);
+          .upsertCheckin(mood ?? energy.toMood(), energy: energy);
       _ref.invalidate(todayCheckinProvider);
     } catch (_) {
       /* nuốt lỗi: check-in không phải mục đích chính của Episode */

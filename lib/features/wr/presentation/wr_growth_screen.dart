@@ -25,9 +25,12 @@ import '../../../core/widgets/section_divider.dart';
 import '../../../core/widgets/tab_back_link.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../core/widgets/wr_link_row.dart';
+import '../../../core/models/wr_mood_content.dart';
+import '../../../core/widgets/wr_profile_avatar.dart';
 import '../../workshops/workshops_providers.dart';
 import '../growth_providers.dart';
 import '../wr_providers.dart';
+import 'wr_practice_note_sheet.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WrGrowthScreen — ConsumerStatefulWidget for enroll double-tap guard
@@ -186,6 +189,19 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
       final repo = ref.read(wrIntelligenceRepositoryProvider);
       final contentRepo = ref.read(wrContentRepositoryProvider);
 
+      final stepTitle = allSteps
+          .where((s) => s.stepId == stepId)
+          .map((s) => s.title)
+          .firstOrNull;
+
+      // §VII: hỏi ghi chú TRƯỚC khi ghi bất cứ thứ gì. Đóng tấm là huỷ hẳn —
+      // bước vẫn chưa xong, chứ không phải xong-mà-không-ghi-chú.
+      final noteResult = await showPracticeNoteSheet(
+        context,
+        stepTitle: stepTitle ?? 'Bước thực hành',
+      );
+      if (noteResult == null) return;
+
       final newCompleted = [...currentCompleted, stepId];
       await repo.updateEnrollmentSteps(
         userId: userId,
@@ -193,10 +209,6 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
         completedSteps: newCompleted,
       );
 
-      final stepTitle = allSteps
-          .where((s) => s.stepId == stepId)
-          .map((s) => s.title)
-          .firstOrNull;
       await contentRepo.insertMemoryEvent(
         CareerMemoryEvent(
           id: DateTime.now().millisecondsSinceEpoch.toString(),
@@ -205,6 +217,30 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
           reflectionText: '${activeTheme.title} — ${stepTitle ?? stepId}',
         ),
       );
+
+      // §VII: chỉ khi người dùng thực sự viết mới sinh thêm một mảnh ký ức
+      // mang đúng lời của họ. "Bỏ qua" đi thẳng qua khối này.
+      final note = noteResult.note?.trim();
+      if (noteResult.action == PracticeNoteAction.saveWithNote &&
+          note != null &&
+          note.isNotEmpty) {
+        try {
+          await repo.upsertPracticeStepNote(
+            PracticeStepNote(userId: userId, stepId: stepId, note: note),
+          );
+          await contentRepo.insertMemoryEvent(
+            CareerMemoryEvent(
+              id: '${DateTime.now().millisecondsSinceEpoch}n',
+              userId: userId,
+              behavior: kPracticeStepNoteBehavior,
+              reflectionText: '${stepTitle ?? stepId}: $note',
+            ),
+          );
+        } catch (_) {
+          /* best-effort: bước vẫn được đánh dấu xong, không nuốt ngược tiến độ
+             chỉ vì ghi chú lưu hỏng */
+        }
+      }
 
       // Chứng nhận kỹ năng: lặp lại đủ nhiều thì ghi một dấu mốc, đúng một lần.
       try {
@@ -261,23 +297,37 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const WrTabBackLink(currentTab: WrTab.growth),
-                const Text(
-                  'Development Map',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: WrColors.muted,
-                    fontWeight: FontWeight.w400,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                const Text(
-                  'Phát triển',
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w800,
-                    color: WrColors.navy,
-                    height: 1.15,
-                  ),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Development Map',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: WrColors.muted,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                          SizedBox(height: 4),
+                          Text(
+                            'Phát triển',
+                            style: TextStyle(
+                              fontSize: 32,
+                              fontWeight: FontWeight.w800,
+                              color: WrColors.navy,
+                              height: 1.15,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    // v1.6 §9.1: "Tôi" là avatar ở mọi màn tab.
+                    const WrProfileAvatar(),
+                  ],
                 ),
               ],
             ),
@@ -496,7 +546,11 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// _OpportunitySliver — "CƠ HỘI PHÁT TRIỂN" (opp-card của giao diện mẫu)
+// _OpportunitySliver — "MỞ RỘNG OFFLINE" (opp-card của giao diện mẫu)
+//
+// Hai Lớp v1.6 §11.6 đổi nhãn thẻ workshop cross-sell này từ "Cơ hội phát
+// triển" sang "Mở rộng offline": từ v1.6, "Cơ hội phát triển" chỉ còn một
+// nghĩa duy nhất là Domain Concept ở tab Hành trình.
 //
 // Workshop chưa có trường gắn với trụ SCA hay nhu cầu, nên đây là buổi gần
 // nhất sắp diễn ra chứ không phải buổi "hợp với bạn". Nói đúng điều mình biết:
@@ -523,7 +577,7 @@ class _OpportunitySliver extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const WrEyebrow('CƠ HỘI PHÁT TRIỂN'),
+            const WrEyebrow('MỞ RỘNG OFFLINE'),
             const SizedBox(height: 12),
             InkWell(
               key: const Key('wr_growth_opportunity'),

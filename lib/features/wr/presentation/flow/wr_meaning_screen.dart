@@ -13,6 +13,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/models/wr_episode.dart';
 import '../../../../core/theme/wr_colors.dart';
 import '../../episode_flow_controller.dart';
+import '../../wr_providers.dart';
 import '../../../../core/logic/wr_flow_error.dart';
 import 'wr_flow_scaffold.dart';
 
@@ -46,11 +47,15 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
       final notifier = ref.read(episodeFlowProvider.notifier);
       await notifier.confirmMeaning(text);
       if (!mounted) return;
-      final moment = ref.read(episodeFlowProvider)?.humanMoment;
-      // Chuỗi của Decision và Growth kết thúc bằng Commit — mời đặt bước nhỏ.
-      final wantsCommit =
-          moment == HumanMoment.decision || moment == HumanMoment.growth;
-      context.push(wantsCommit ? '/wr/flow/commit' : '/wr/flow/done');
+      // Hai Lớp v1.6 §V: MỌI phiên đều đi qua bước Lựa chọn, không riêng
+      // Decision và Growth như trước. Lý do đổi: từ v1.6 bước này không còn bắt
+      // gõ một bước nhỏ, mà đưa sẵn bốn lựa chọn để chạm (§VI) — chi phí gần
+      // như bằng không, trong khi "Reflection luôn mở ra một lựa chọn khác" là
+      // đúng với cả sáu khoảnh khắc.
+      //
+      // Bỏ qua vẫn được: HXA §3.8 giữ nguyên — Reflection kết thúc khi đủ ý
+      // nghĩa, không phải khi đủ bước.
+      context.push('/wr/flow/commit');
     } catch (e, s) {
       logFlowError('confirmMeaning', e, s);
       if (mounted) setState(() => _error = flowErrorMessage('Không lưu được. Thử lại.', e));
@@ -66,15 +71,40 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
       return WrFlowGone(onHome: () => context.go('/home'));
     }
 
-    // Chỉ khôi phục bản nháp CHÍNH người dùng đã lưu. Không nạp lại câu trả
-    // lời của bước trước: nó là đáp án cho một câu hỏi khác, đặt vào đây thì
-    // người dùng không biết chữ đó ở đâu ra.
+    final story = ref.watch(wrEpisodeStoryProvider);
+
+    // Thư viện tình huống và story nạp bất đồng bộ. Lần dựng đầu tiên chúng
+    // thường CHƯA về, nên `story` còn null. Nếu chốt _prefilled ngay lúc đó, ô
+    // nhập vĩnh viễn trống và câu Aha không bao giờ xuất hiện.
+    final contentReady = !ref.watch(wrSituationsProvider).isLoading &&
+        !ref.watch(wrStoriesProvider).isLoading;
+
+    // Thứ tự ưu tiên khi điền sẵn ô nhập:
+    //   1. bản nháp CHÍNH người dùng đã lưu — không được đè lên,
+    //   2. câu Aha của tình huống đã chọn (Hai Lớp v1.6 §V, bước Insight:
+    //      "chấp nhận hoặc chỉnh sửa Aha").
+    //
+    // Không nạp lại câu trả lời của bước trước: nó là đáp án cho một câu hỏi
+    // khác, đặt vào đây thì người dùng không biết chữ đó ở đâu ra.
+    //
+    // Aha chỉ là ĐỀ XUẤT — WIA Inv.2: hệ thống propose, người dùng confirm.
+    // Ô nhập vẫn sửa được nguyên vẹn, và nút xác nhận vẫn phải bấm.
     if (!_prefilled) {
-      _controller.text = episode.draftMeaning ?? '';
-      _prefilled = true;
+      final draft = episode.draftMeaning?.trim();
+      if (draft != null && draft.isNotEmpty) {
+        _controller.text = draft;
+        _prefilled = true;
+      } else if (episode.situationCode == null || contentReady) {
+        // Chỉ chốt khi đã biết chắc: hoặc phiên này không gắn tình huống nào
+        // (người dùng tự viết), hoặc thư viện đã nạp xong và ta biết có Aha hay
+        // không. Chốt sớm hơn là mất câu gợi ý.
+        _controller.text = story?.ahaMessage?.trim() ?? '';
+        _prefilled = true;
+      }
     }
 
     final recap = ref.read(episodeFlowProvider.notifier).recap();
+    final selfReflection = story?.selfReflection?.trim();
 
     return WrFlowScaffold(
       eyebrow: 'Điều bạn nhận ra',
@@ -91,6 +121,32 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // §V bước Insight: đọc câu Self Reflection để đào sâu, TRƯỚC khi
+          // nhìn thấy gợi ý Aha. Đảo thứ tự thì Aha trở thành đáp án cho sẵn
+          // và câu hỏi mất tác dụng.
+          if (selfReflection != null && selfReflection.isNotEmpty) ...[
+            Container(
+              key: const Key('wr_meaning_self_reflection'),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+              decoration: BoxDecoration(
+                color: WrColors.cream,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Text(
+                selfReflection,
+                style: const TextStyle(
+                  fontSize: 14.5,
+                  fontStyle: FontStyle.italic,
+                  color: WrColors.navy,
+                  height: 1.6,
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+          ],
           if (recap.isNotEmpty) ...[
             const Text(
               'BẠN VỪA VIẾT',

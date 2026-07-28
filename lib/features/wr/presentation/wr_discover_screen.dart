@@ -26,6 +26,7 @@ import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/progress_track.dart';
 import '../../../core/widgets/section_divider.dart';
 import '../../../core/widgets/tab_back_link.dart';
+import '../../../core/widgets/wr_profile_avatar.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../wr_providers.dart';
 
@@ -89,20 +90,34 @@ class WrDiscoverScreen extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 80),
           children: [
             const WrTabBackLink(currentTab: WrTab.discover),
-            const Text(
-              'Career Snapshot',
-              style: TextStyle(fontSize: 14, color: WrColors.muted),
-            ),
-            const SizedBox(height: 2),
-            const Text(
-              'Hiểu mình',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.w800,
-                color: WrColors.navy,
-                letterSpacing: -0.96,
-                height: 1.1,
-              ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Career Snapshot',
+                        style: TextStyle(fontSize: 14, color: WrColors.muted),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Hiểu mình',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w800,
+                          color: WrColors.navy,
+                          letterSpacing: -0.96,
+                          height: 1.1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // v1.6 §9.1: "Tôi" là avatar ở mọi màn tab, không còn tab riêng.
+                const WrProfileAvatar(),
+              ],
             ),
 
             // ── Điều bạn đang tìm kiếm ──────────────────────────────────
@@ -327,7 +342,7 @@ class _ScaCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const WrEyebrow('TRẢI NGHIỆM HIỆN TẠI (SCA)'),
+            const WrEyebrow('TRẢI NGHIỆM HIỆN TẠI'),
             const SizedBox(height: 6),
             for (final pillar in SelfCheckPillar.values)
               _ScaRow(pillar: pillar, score: _scoreOf(pillar)),

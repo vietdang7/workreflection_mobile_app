@@ -4,8 +4,10 @@ import '../../core/theme/wr_colors.dart';
 import '../../l10n/app_localizations.dart';
 
 // ---------------------------------------------------------------------------
-// Shell — hosts the 5-tab StatefulShellRoute.indexedStack
-// Final HTML mockup: Hôm nay / Hiểu mình / Phát triển / Hành trình / Tôi
+// Shell — hosts the 4-tab StatefulShellRoute.indexedStack
+// Kiến trúc Dữ liệu Hai Lớp v1.6 §9.1: Hôm nay / Hiểu mình / Phát triển /
+// Hành trình. "Tôi" không còn là tab — nó là avatar ở góc trên mỗi màn
+// (`WrProfileAvatar`), mở /profile dưới dạng màn đẩy toàn màn hình.
 // Tab bar: icon-only (no text label), 24px icon, 4px coral dot, 64px height.
 // ---------------------------------------------------------------------------
 
@@ -46,7 +48,6 @@ List<_TabDef> _buildTabs(AppLocalizations l10n) => [
   _TabDef(icon: Icons.person_outline,    semanticsLabel: l10n.tabUnderstand),
   _TabDef(icon: Icons.trending_up,       semanticsLabel: l10n.tabDevelop),
   _TabDef(icon: Icons.subject,           semanticsLabel: l10n.tabJourney),
-  _TabDef(icon: Icons.settings_outlined, semanticsLabel: l10n.tabProfile),
 ];
 
 class WrTabBar extends StatelessWidget {

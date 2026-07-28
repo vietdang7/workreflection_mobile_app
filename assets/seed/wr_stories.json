@@ -2146,5 +2146,233 @@
     "self_reflection": "Bạn nhận thông tin từ đâu?",
     "aha_message": "Sự rõ ràng thường xuất hiện khi thông tin đúng được tiếp cận đúng lúc.",
     "practice_action": "Ghi lại nguồn thông tin hữu ích nhất với bạn hiện nay."
+  },
+  {
+    "story_id": "P-01",
+    "title": "Tôi vừa hoàn thành một việc khó hơn mong đợi",
+    "sca_dimension": "P-ACHIEVE",
+    "human_need": "phat_trien",
+    "situation": "Hoàn thành việc khó hơn mong đợi",
+    "emotion_tags": [
+      "nhẹ nhõm",
+      "tự hào",
+      "bất ngờ"
+    ],
+    "behavior_tags": [
+      "ghi nhận thành quả",
+      "rút kinh nghiệm"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Tôi đã lo lắng trước khi bắt đầu.\nDeadline gấp.\nYêu cầu không rõ ràng lúc đầu.\nNhưng tôi đã hoàn thành, và kết quả tốt hơn tôi nghĩ.",
+    "reflection_question": "Điều gì đã giúp tôi vượt qua được việc này?",
+    "self_reflection": "Tôi có thường dừng lại để ghi nhận những lúc mình làm tốt không?",
+    "aha_message": "Thành công dễ trôi qua nhanh hơn khó khăn trong trí nhớ. Dừng lại một chút để giữ nó lại cũng là một hình thức phản chiếu.",
+    "practice_action": "Ghi lại điều cụ thể tôi đã làm đúng trong việc này, để lần sau có thể lặp lại."
+  },
+  {
+    "story_id": "P-02",
+    "title": "Tôi được ghi nhận tích cực từ cấp trên",
+    "sca_dimension": "P-ACHIEVE",
+    "human_need": "phat_trien",
+    "situation": "Được ghi nhận từ cấp quản lý",
+    "emotion_tags": [
+      "vui",
+      "bất ngờ",
+      "ngờ vực"
+    ],
+    "behavior_tags": [
+      "tiếp nhận ghi nhận",
+      "tự đánh giá"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Tôi không mong đợi điều đó.\nNhưng trong một cuộc trò chuyện ngắn, quản lý của tôi nói rằng họ đánh giá cao cách tôi xử lý công việc gần đây.",
+    "reflection_question": "Lời ghi nhận đó chạm vào điều gì ở tôi?",
+    "self_reflection": "Tôi có tin vào điều đó, hay có phần nào trong tôi vẫn nghi ngờ?",
+    "aha_message": "Ghi nhận từ người khác có giá trị, nhưng ý nghĩa thật sự đến khi tôi cũng tự công nhận điều đó cho chính mình.",
+    "practice_action": "Viết lại chính xác lời ghi nhận đó, và một câu tôi tự nói với mình để giữ lại cảm giác này."
+  },
+  {
+    "story_id": "P-03",
+    "title": "Tôi giúp được đồng nghiệp gỡ một vấn đề khó",
+    "sca_dimension": "P-ACHIEVE",
+    "human_need": "phat_trien",
+    "situation": "Hỗ trợ đồng nghiệp vượt qua khó khăn",
+    "emotion_tags": [
+      "ấm áp",
+      "hữu ích",
+      "kết nối"
+    ],
+    "behavior_tags": [
+      "lắng nghe",
+      "đặt câu hỏi",
+      "hỗ trợ"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Họ đã mắc kẹt một thời gian.\nTôi không có câu trả lời hoàn hảo, nhưng đặt vài câu hỏi và cùng họ nhìn lại vấn đề.\nCuối cùng họ tự tìm ra hướng đi.",
+    "reflection_question": "Điều gì khiến tôi sẵn sàng dừng lại để giúp, dù có thể mình cũng đang bận?",
+    "self_reflection": "Cảm giác sau khi giúp được ai đó khác gì với việc tự mình hoàn thành một việc?",
+    "aha_message": "Đôi khi giá trị lớn nhất mình mang lại không phải là câu trả lời, mà là sự có mặt đủ lâu để người khác tự tìm ra câu trả lời của họ.",
+    "practice_action": "Nhắn cho người đó một câu hỏi thăm xem hướng đi đó có thực sự hiệu quả không."
+  },
+  {
+    "story_id": "P-04",
+    "title": "Tôi được tăng lương hoặc thăng chức",
+    "sca_dimension": "P-ACHIEVE",
+    "human_need": "phat_trien",
+    "situation": "Được tăng lương hoặc thăng chức",
+    "emotion_tags": [
+      "vui",
+      "ngỡ ngàng",
+      "áp lực"
+    ],
+    "behavior_tags": [
+      "ăn mừng",
+      "nghĩ về bước tiếp theo"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Sau một thời gian dài làm việc, điều đó cuối cùng cũng đến.\nTôi vui, nhưng cũng có chút ngỡ ngàng, như thể chưa kịp tin.",
+    "reflection_question": "Điều gì trong hành trình vừa qua khiến tôi xứng đáng với điều này?",
+    "self_reflection": "Tôi có đang cho phép mình thật sự vui với điều này không, hay đã vội nghĩ đến áp lực tiếp theo?",
+    "aha_message": "Kết quả tốt thường kéo theo kỳ vọng mới rất nhanh. Nhưng cho phép mình dừng lại ăn mừng cũng là một phần của hành trình, không phải sự xao nhãng.",
+    "practice_action": "Làm một điều nhỏ để tự thưởng cho mình trước khi nghĩ đến bước tiếp theo."
+  },
+  {
+    "story_id": "P-05",
+    "title": "Tôi nhận được lời cảm ơn bất ngờ từ ai đó",
+    "sca_dimension": "P-ACHIEVE",
+    "human_need": "phat_trien",
+    "situation": "Nhận lời cảm ơn bất ngờ",
+    "emotion_tags": [
+      "bất ngờ",
+      "ấm áp",
+      "được nhìn thấy"
+    ],
+    "behavior_tags": [
+      "ghi nhận đóng góp nhỏ"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Tôi không nghĩ việc mình làm đáng để nhắc đến.\nNhưng ai đó chủ động nói lời cảm ơn, và điều đó khiến tôi bất ngờ.",
+    "reflection_question": "Việc gì tôi làm mà tưởng là nhỏ, nhưng lại có ý nghĩa với người khác?",
+    "self_reflection": "Tôi có hay đánh giá thấp những đóng góp thầm lặng của chính mình không?",
+    "aha_message": "Những điều mình cho là bình thường đôi khi lại là điều người khác nhớ lâu nhất.",
+    "practice_action": "Ghi lại việc đó, để nhắc mình rằng những đóng góp nhỏ vẫn có giá trị thật."
+  },
+  {
+    "story_id": "P-06",
+    "title": "Công việc hôm nay diễn ra đúng như tôi mong đợi",
+    "sca_dimension": "P-STEADY",
+    "human_need": "phat_trien",
+    "situation": "Một ngày làm việc đúng kế hoạch",
+    "emotion_tags": [
+      "bình thản",
+      "hài lòng",
+      "nhẹ nhõm"
+    ],
+    "behavior_tags": [
+      "ghi nhận sự ổn định"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Không có gì bất ngờ.\nKhông có khủng hoảng.\nMọi việc tôi lên kế hoạch đều diễn ra như dự tính.",
+    "reflection_question": "Những ngày như thế này có thường xảy ra với tôi không?",
+    "self_reflection": "Tôi có coi trọng những ngày ổn định, hay chỉ chú ý khi có chuyện xảy ra?",
+    "aha_message": "Sự ổn định thường bị xem là hiển nhiên, trong khi nó là kết quả của rất nhiều điều đã được làm đúng phía sau.",
+    "practice_action": "Ghi lại một điều đã góp phần khiến hôm nay suôn sẻ."
+  },
+  {
+    "story_id": "P-07",
+    "title": "Tôi cảm thấy làm chủ được nhịp độ công việc của mình",
+    "sca_dimension": "P-STEADY",
+    "human_need": "phat_trien",
+    "situation": "Làm chủ được nhịp độ công việc",
+    "emotion_tags": [
+      "chủ động",
+      "tự tin",
+      "thư thái"
+    ],
+    "behavior_tags": [
+      "sắp xếp ưu tiên",
+      "giữ nhịp"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Tôi không chạy theo deadline.\nTôi biết việc gì cần làm trước, việc gì có thể chờ.\nCảm giác này khá hiếm.",
+    "reflection_question": "Điều gì khác biệt hôm nay so với những ngày tôi cảm thấy bị cuốn đi?",
+    "self_reflection": "Tôi có thể giữ được nhịp độ này trong bao lâu?",
+    "aha_message": "Làm chủ nhịp độ không có nghĩa là làm ít hơn, mà là biết điều gì thực sự cần sự chú ý của mình lúc này.",
+    "practice_action": "Ghi lại cách tôi đã sắp xếp công việc hôm nay, để thử lặp lại vào ngày khác."
+  },
+  {
+    "story_id": "P-08",
+    "title": "Tôi vừa học được một điều nhỏ nhưng hữu ích",
+    "sca_dimension": "P-STEADY",
+    "human_need": "phat_trien",
+    "situation": "Học được một điều nhỏ trong công việc",
+    "emotion_tags": [
+      "tò mò",
+      "hài lòng",
+      "sáng tỏ"
+    ],
+    "behavior_tags": [
+      "ghi lại bài học",
+      "áp dụng ngay"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Không phải điều gì lớn lao.\nNhưng nó giúp tôi làm một việc quen thuộc theo cách hiệu quả hơn.",
+    "reflection_question": "Điều nhỏ này có thể thay đổi cách tôi làm việc về lâu dài không?",
+    "self_reflection": "Tôi có thường bỏ qua những bài học nhỏ vì chúng không đủ lớn để ghi nhớ không?",
+    "aha_message": "Phần lớn sự tiến bộ không đến từ những bước ngoặt lớn, mà từ rất nhiều điều nhỏ được tích lũy.",
+    "practice_action": "Viết lại điều mình vừa học, bằng chính lời của mình."
+  },
+  {
+    "story_id": "P-09",
+    "title": "Tôi có một cuộc trò chuyện tốt với đồng nghiệp",
+    "sca_dimension": "P-STEADY",
+    "human_need": "phat_trien",
+    "situation": "Một cuộc trò chuyện dễ chịu với đồng nghiệp",
+    "emotion_tags": [
+      "dễ chịu",
+      "kết nối",
+      "nhẹ nhõm"
+    ],
+    "behavior_tags": [
+      "chủ động trò chuyện",
+      "duy trì kết nối"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Không phải một cuộc họp quan trọng.\nChỉ là một cuộc trò chuyện ngắn, nhưng tôi rời đi với cảm giác dễ chịu.",
+    "reflection_question": "Điều gì khiến cuộc trò chuyện đó khác với những cuộc trao đổi thường ngày?",
+    "self_reflection": "Tôi có đang dành đủ thời gian cho những kết nối như vậy không?",
+    "aha_message": "Những mối quan hệ tốt trong công việc thường không được xây từ những cuộc họp lớn, mà từ rất nhiều cuộc trò chuyện nhỏ như thế này.",
+    "practice_action": "Chủ động tạo thêm một cuộc trò chuyện tương tự trong tuần này."
+  },
+  {
+    "story_id": "P-10",
+    "title": "Hôm nay không có gì đặc biệt, nhưng tôi thấy ổn",
+    "sca_dimension": "P-STEADY",
+    "human_need": "phat_trien",
+    "situation": "Một ngày bình thường, không có gì đè nặng",
+    "emotion_tags": [
+      "bình yên",
+      "nhẹ nhàng",
+      "ổn định"
+    ],
+    "behavior_tags": [
+      "ghi nhận ngày bình thường"
+    ],
+    "career_stages": [],
+    "difficulty_level": null,
+    "story_content": "Nếu phải kể lại, tôi sẽ không nhớ nhiều chi tiết.\nNhưng cảm giác chung là nhẹ nhàng, không có gì đè nặng.",
+    "reflection_question": "Tôi có công nhận những ngày không có gì đặc biệt này không, hay chỉ nhớ những ngày nhiều biến động?",
+    "self_reflection": "Điều gì đang diễn ra tốt mà tôi ít khi để ý tới?",
+    "aha_message": "Không phải mọi trải nghiệm đáng ghi nhớ đều kịch tính. Đôi khi sự bình yên cũng là một dữ liệu quan trọng.",
+    "practice_action": "Ghi một câu ngắn về cảm giác hôm nay, dù không có gì đặc biệt để kể."
   }
 ]

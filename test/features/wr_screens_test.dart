@@ -10,6 +10,7 @@ import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
+import 'package:workreflection_mobile/core/models/wr_mood_content.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_discover_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_growth_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_home_screen.dart';
@@ -425,6 +426,13 @@ void main() {
         await tester.tap(find.text('Xong'));
         await tester.pumpAndSettle();
 
+        // §VII: bấm Xong mở tấm ghi chú trước, chưa ghi gì cả.
+        expect(intel.updateEnrollmentStepsCalls, isEmpty);
+        expect(find.byKey(const Key('wr_practice_note_field')), findsOneWidget);
+
+        await tester.tap(find.byKey(const Key('wr_practice_note_skip')));
+        await tester.pumpAndSettle();
+
         // updateEnrollmentSteps called with pt-voice-1
         expect(intel.updateEnrollmentStepsCalls, isNotEmpty);
         expect(
@@ -437,8 +445,85 @@ void main() {
           content.insertMemoryEventCalls.last.behavior,
           'practice_step_done',
         );
+        // "Bỏ qua" không sinh thêm gì — không ghi chú, không mảnh ký ức thứ hai.
+        expect(intel.upsertPracticeStepNoteCalls, isEmpty);
+        expect(
+          content.insertMemoryEventCalls
+              .where((e) => e.behavior == kPracticeStepNoteBehavior),
+          isEmpty,
+        );
       },
     );
+
+    testWidgets(
+      'ghi chú khi hoàn thành bước sinh thêm một mảnh Career Memory (§VII)',
+      (tester) async {
+        final intel = FakeWrIntelligenceRepository();
+        final content = FakeWrContentRepository();
+        intel.seedPracticeThemes([_theme()]);
+        intel.seedPracticeSteps('pt-voice', [
+          _step(id: 'pt-voice-1', order: 1, title: 'Nhận diện'),
+          _step(id: 'pt-voice-2', order: 2, title: 'Thử nghiệm'),
+        ]);
+        intel.seedEnrollments([_enrollment()]);
+
+        await tester.pumpWidget(
+          _wrap(const WrGrowthScreen(), intel: intel, content: content),
+        );
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.text('Xong'));
+        await tester.pumpAndSettle();
+
+        await tester.enterText(
+          find.byKey(const Key('wr_practice_note_field')),
+          'Mình nói được ý của mình trong buổi họp sáng nay.',
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('wr_practice_note_save')));
+        await tester.pumpAndSettle();
+
+        expect(intel.upsertPracticeStepNoteCalls, hasLength(1));
+        expect(intel.upsertPracticeStepNoteCalls.single.stepId, 'pt-voice-1');
+
+        final noteEvents = content.insertMemoryEventCalls
+            .where((e) => e.behavior == kPracticeStepNoteBehavior)
+            .toList();
+        expect(noteEvents, hasLength(1));
+        // §VII: "{tên hành động}: {nội dung}"
+        expect(
+          noteEvents.single.reflectionText,
+          'Nhận diện: Mình nói được ý của mình trong buổi họp sáng nay.',
+        );
+      },
+    );
+
+    testWidgets('đóng tấm ghi chú là huỷ hẳn — bước vẫn chưa xong', (
+      tester,
+    ) async {
+      final intel = FakeWrIntelligenceRepository();
+      final content = FakeWrContentRepository();
+      intel.seedPracticeThemes([_theme()]);
+      intel.seedPracticeSteps('pt-voice', [
+        _step(id: 'pt-voice-1', order: 1, title: 'Nhận diện'),
+      ]);
+      intel.seedEnrollments([_enrollment()]);
+
+      await tester.pumpWidget(
+        _wrap(const WrGrowthScreen(), intel: intel, content: content),
+      );
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Xong'));
+      await tester.pumpAndSettle();
+
+      // Chạm ra ngoài tấm = đóng, không phải "xong mà không ghi chú".
+      await tester.tapAt(const Offset(10, 10));
+      await tester.pumpAndSettle();
+
+      expect(intel.updateEnrollmentStepsCalls, isEmpty);
+      expect(content.insertMemoryEventCalls, isEmpty);
+    });
   });
 
   // ─────────────────────────────────────────────────────────────────────────────

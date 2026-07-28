@@ -88,7 +88,7 @@ class _Tab extends StatelessWidget {
 }
 
 void main() {
-  group('ShellScreen — final HTML mockup 5 tabs', () {
+  group('ShellScreen — bốn tab (Hai Lớp v1.6 §9.1)', () {
     testWidgets('WrTabBar widget exists in tree', (tester) async {
       await tester.pumpWidget(_wrapWithRouter());
       await tester.pumpAndSettle();
@@ -96,11 +96,12 @@ void main() {
       expect(find.byType(WrTabBar), findsOneWidget);
     });
 
-    testWidgets('WrTabItem widgets count is 5', (tester) async {
+    testWidgets('WrTabItem widgets count is 4', (tester) async {
       await tester.pumpWidget(_wrapWithRouter());
       await tester.pumpAndSettle();
 
-      expect(find.byType(WrTabItem), findsNWidgets(5));
+      // v1.6 §9.1 rút còn bốn tab; "Tôi" thành avatar ở góc trên mỗi màn.
+      expect(find.byType(WrTabItem), findsNWidgets(4));
     });
 
     testWidgets('initial tab shows home content', (tester) async {
@@ -162,18 +163,6 @@ void main() {
       expect(find.text('Journey tab'), findsOneWidget);
     });
 
-    testWidgets('tapping tab index 4 (Tôi) switches to profile branch',
-        (tester) async {
-      await tester.pumpWidget(_wrapWithRouter());
-      await tester.pumpAndSettle();
-
-      final tabItems = find.byType(WrTabItem);
-      await tester.tap(tabItems.at(4));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Profile tab'), findsOneWidget);
-    });
-
     testWidgets('active tab icon uses coral color, inactive uses muted',
         (tester) async {
       await tester.pumpWidget(_wrapWithRouter());
@@ -185,29 +174,29 @@ void main() {
       expect(tabItems[1].isActive, isFalse);
       expect(tabItems[2].isActive, isFalse);
       expect(tabItems[3].isActive, isFalse);
-      expect(tabItems[4].isActive, isFalse);
     });
   });
 
   group('Router configuration — shell branch paths', () {
-    test('appRouterProvider shell has 5 branches with correct paths', () {
+    test('appRouterProvider shell has 4 branches with correct paths', () {
       // This is a structural contract test — verifies the router declaration
       // includes the required shell branches in the expected order.
       // The actual router is tested via shell_test; this group documents intent.
 
+      // /profile KHÔNG còn trong danh sách này — v1.6 §9.1 đưa nó ra ngoài
+      // shell, thành màn đẩy toàn màn hình mở từ avatar.
       const expectedBranchPaths = [
         '/home',
         '/wr/discover',
         '/wr/growth',
         '/wr/journey',
-        '/profile',
       ];
 
       // Verify path list compiles (no assertion needed — this is a documentation test)
-      expect(expectedBranchPaths.length, 5);
+      expect(expectedBranchPaths.length, 4);
       expect(expectedBranchPaths[0], '/home');
       expect(expectedBranchPaths[1], '/wr/discover');
-      expect(expectedBranchPaths[4], '/profile');
+      expect(expectedBranchPaths.contains('/profile'), isFalse);
     });
   });
 }

@@ -69,7 +69,7 @@
   "understandTitle": "Understand",
   "understandEyebrowNeed": "What you're looking for",
   "understandEyebrowSituations": "Recurring situations",
-  "understandEyebrowSca": "Current experience (SCA)",
+  "understandEyebrowSca": "Current experience",
   "understandEyebrowHealth": "Career Health Check",
   "understandScaRole": "Role clarity",
   "understandScaVoice": "Safety to speak up",
@@ -96,7 +96,7 @@
   "developTitle": "Develop",
   "developEyebrowFocus": "Current focus",
   "developEyebrowPractices": "Today's practices",
-  "developEyebrowOpportunity": "Growth opportunity",
+  "developEyebrowOpportunity": "Offline extensions",
   "developStage": "Stage {x} / {y}",
   "@developStage": {
     "placeholders": {
@@ -423,7 +423,7 @@
 
   "profileMyWorkshops": "My Workshops",
   "profileMyCoaching": "My Coaching",
-  "developWorkshopSection": "Development opportunities",
+  "developWorkshopSection": "Offline extensions",
   "developViewWorkshops": "View all workshops",
   "developViewCoaching": "Explore coaching",
 

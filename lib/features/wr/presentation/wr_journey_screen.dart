@@ -18,11 +18,14 @@ import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_episode.dart';
 import '../../../core/models/wr_intelligence.dart';
+import '../../../core/models/wr_mood_content.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/section_divider.dart';
 import '../../../core/widgets/tab_back_link.dart';
 import '../../../core/widgets/wr_link_row.dart';
+import '../../../core/widgets/wr_premium_lock.dart';
+import '../../../core/widgets/wr_profile_avatar.dart';
 import '../wr_providers.dart';
 
 /// Bản ghi hiển thị trên dòng thời gian — Episode hoặc Career Memory event.
@@ -159,6 +162,7 @@ String emotionLabel(String? emotion) => switch (emotion) {
 String eventTypeLabel(CareerMemoryEvent e) {
   if (e.behavior == kEpisodeBehavior) return 'PHẢN TƯ';
   if (e.behavior == 'skill_certified') return 'KỸ NĂNG';
+  if (e.behavior == kPracticeStepNoteBehavior) return 'ĐIỀU MÌNH GHI LẠI';
   if (e.behavior == 'practice_step_done' ||
       e.behavior == 'practice_theme_done') {
     return 'THỰC HÀNH';
@@ -173,6 +177,7 @@ String eventTypeLabel(CareerMemoryEvent e) {
 Color eventColor(CareerMemoryEvent e) {
   if (e.behavior == kEpisodeBehavior) return WrColors.navy;
   if (e.behavior == 'skill_certified') return WrColors.teal;
+  if (e.behavior == kPracticeStepNoteBehavior) return const Color(0xFF5E7A5A);
   if (e.behavior == 'practice_step_done' ||
       e.behavior == 'practice_theme_done') {
     return WrColors.teal;
@@ -213,20 +218,34 @@ class WrJourneyScreen extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 80),
           children: [
             const WrTabBackLink(currentTab: WrTab.journey),
-            const Text(
-              'Career Memory',
-              style: TextStyle(fontSize: 14, color: WrColors.muted),
-            ),
-            const SizedBox(height: 2),
-            const Text(
-              'Hành trình',
-              style: TextStyle(
-                fontSize: 32,
-                fontWeight: FontWeight.w800,
-                color: WrColors.navy,
-                letterSpacing: -0.96,
-                height: 1.1,
-              ),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Career Memory',
+                        style: TextStyle(fontSize: 14, color: WrColors.muted),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Hành trình',
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w800,
+                          color: WrColors.navy,
+                          letterSpacing: -0.96,
+                          height: 1.1,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                // v1.6 §9.1: "Tôi" là avatar ở mọi màn tab, không còn tab riêng.
+                const WrProfileAvatar(),
+              ],
             ),
             const SizedBox(height: 28),
 
@@ -275,6 +294,10 @@ class WrJourneyScreen extends ConsumerWidget {
                 ),
             ],
 
+            // Cơ hội phát triển — §XI. Nằm dưới Career Memory vì nó là điều
+            // rút ra TỪ chặng đường, không phải một mục của chặng đường.
+            const _GrowthOpportunitySection(),
+
             const SizedBox(height: 24),
             const WrSectionDivider(),
             const SizedBox(height: 12),
@@ -292,6 +315,95 @@ class WrJourneyScreen extends ConsumerWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Cơ hội phát triển — Hai Lớp v1.6 §XI
+// ---------------------------------------------------------------------------
+
+/// Khối "Cơ hội phát triển" dưới Career Memory.
+///
+/// Ba điều kiện của §XI được cài ở đây:
+///   §11.3  Chưa suy ra được gợi ý nào thì cả khối biến mất, không hiện khung
+///          rỗng cũng không hiện lời mời chung chung.
+///   §11.4  Free chỉ thấy khối khoá; nội dung gợi ý không lọt ra ngoài paywall.
+///   §XII.7 [GrowthOpportunity.suggestionText] và [GrowthOpportunity.confidenceNote]
+///          dựng chung một chỗ — không nhánh nào hiện câu gợi ý mà thiếu ghi chú.
+class _GrowthOpportunitySection extends ConsumerWidget {
+  const _GrowthOpportunitySection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final opportunity = ref.watch(wrGrowthOpportunityProvider).valueOrNull;
+    if (opportunity == null) return const SizedBox.shrink();
+
+    final entitlement = ref.watch(wrEntitlementProvider).valueOrNull ??
+        WrEntitlement(plan: WrPlan.free);
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 28),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const WrSectionDivider(),
+          const SizedBox(height: 24),
+          const WrEyebrow('CƠ HỘI PHÁT TRIỂN'),
+          const SizedBox(height: 14),
+          if (!entitlement.isPremium)
+            const WrPremiumLock(
+              key: Key('wr_journey_growth_opportunity_lock'),
+              description:
+                  'Từ những gì bạn đã nhìn lại, bản đầy đủ chỉ ra một hướng '
+                  'năng lực đáng phát triển tiếp — kèm lý do vì sao là hướng đó.',
+              ctaLabel: 'Mở Cơ hội phát triển',
+              paywallTrigger: 'growth_opportunity',
+            )
+          else
+            Container(
+              key: const Key('wr_journey_growth_opportunity'),
+              width: double.infinity,
+              padding: const EdgeInsets.all(18),
+              decoration: BoxDecoration(
+                color: WrColors.cream,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    opportunity.suggestionText,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      height: 1.6,
+                      color: WrColors.navy,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    opportunity.confidenceNote,
+                    key: const Key('wr_journey_growth_confidence'),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      height: 1.55,
+                      color: WrColors.muted,
+                      fontStyle: FontStyle.italic,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 12),
+          WrLinkRow(
+            key: const Key('wr_journey_work_info_row'),
+            label: 'Thông tin công việc hiện tại',
+            hint: 'Gợi ý sát hơn',
+            onTap: () => context.push('/wr/work-info'),
+          ),
+        ],
       ),
     );
   }

@@ -212,7 +212,7 @@ void main() {
       for (final key in const [
         'profile_language_row',
         'profile_edit_profile_btn',
-        'profile_context_docs_btn',
+        'profile_work_info_btn',
         'profile_paywall_btn',
         'profile_change_password_btn',
         'profile_export_btn',

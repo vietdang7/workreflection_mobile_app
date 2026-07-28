@@ -40,6 +40,9 @@ class WrEnergyScreen extends ConsumerWidget {
               label: energyLabel(energy),
               onTap: () {
                 ref.read(pendingEnergyProvider.notifier).state = energy;
+                // Màn này chỉ hỏi năng lượng, không hỏi cảm xúc. Xoá lựa chọn
+                // cũ để phiên mới không mang theo cảm xúc của phiên trước.
+                ref.read(pendingMoodProvider.notifier).state = null;
                 context.push('/wr/flow/moment');
               },
             ),

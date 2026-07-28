@@ -40,6 +40,8 @@ import '../../features/wr/presentation/wr_career_setup_screen.dart';
 import '../../features/wr/presentation/wr_context_doc_screen.dart';
 import '../../features/wr/presentation/wr_situation_flow_screen.dart';
 import '../../features/wr/presentation/wr_story_flow_screen.dart';
+import '../../features/wr/presentation/wr_mood_library_screen.dart';
+import '../../features/wr/presentation/wr_mood_reader_screen.dart';
 import '../../features/wr/presentation/wr_story_screen.dart';
 import '../../features/wr/presentation/wr_discover_screen.dart';
 import '../../features/wr/presentation/wr_growth_screen.dart';
@@ -52,6 +54,7 @@ import '../../features/wr/presentation/wr_journey_narrative_screen.dart';
 import '../../features/wr/presentation/wr_pattern_detail_screen.dart';
 import '../../features/wr/presentation/wr_paywall_screen.dart';
 import '../../features/wr/presentation/wr_self_check_screen.dart';
+import '../../features/wr/presentation/wr_work_info_screen.dart';
 import '../../features/wr/presentation/flow/wr_commit_screen.dart';
 import '../../features/wr/presentation/flow/wr_done_screen.dart';
 import '../../features/wr/presentation/flow/wr_energy_screen.dart';
@@ -394,18 +397,22 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             'report' => PaywallTrigger.report,
             'trial_end' => PaywallTrigger.trialEnd,
             'benchmark' => PaywallTrigger.benchmark,
+            'growth_opportunity' => PaywallTrigger.growthOpportunity,
             _ => PaywallTrigger.defaultTrigger,
           };
           return WrPaywallScreen(trigger: trigger);
         },
       ),
 
-      // Shell with 5 indexed branches — final HTML mockup
+      // Shell with 4 indexed branches — Hai Lớp v1.6 §9.1
       // Tab 0: /home       — Hôm nay
       // Tab 1: /wr/discover — Hiểu mình (path kept; label/icon changed — low risk)
       // Tab 2: /wr/growth  — Phát triển
       // Tab 3: /wr/journey — Hành trình
-      // Tab 4: /profile    — Tôi (moved into shell; /profile/edit stays fullscreen)
+      //
+      // /profile không còn là tab: v1.6 §9.1 chỉ có bốn tab, "Tôi" thành avatar
+      // góc trên mỗi màn. Route vẫn là /profile, chỉ chuyển thành màn đẩy toàn
+      // màn hình bên dưới — mọi `context.push('/profile')` cũ vẫn chạy.
       //
       // /wr/story is NOT a shell branch anymore — it is a fullscreen route below.
       StatefulShellRoute.indexedStack(
@@ -444,21 +451,38 @@ final appRouterProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-          StatefulShellBranch(
-            routes: [
-              GoRoute(
-                path: '/profile',
-                builder: (context, state) => const ProfileScreen(),
-              ),
-            ],
-          ),
         ],
+      ),
+
+      // /profile — màn đẩy toàn màn hình, mở từ avatar (v1.6 §9.1).
+      GoRoute(
+        path: '/profile',
+        builder: (context, state) => const ProfileScreen(),
       ),
 
       // /wr/story — fullscreen push, uses root navigator implicitly (not nested in shell).
       GoRoute(
         path: '/wr/story',
         builder: (context, state) => const WrStoryScreen(),
+      ),
+
+      // Thông tin công việc hiện tại — Hai Lớp v1.6 §XI.
+      GoRoute(
+        path: '/wr/work-info',
+        builder: (context, state) => const WrWorkInfoScreen(),
+      ),
+
+      // Thư viện Nội dung Cảm xúc — Hai Lớp v1.6 §VIII.
+      // §8.3: miễn phí cho mọi người dùng, không phân lớp Free/Paid.
+      GoRoute(
+        path: '/wr/mood-library',
+        builder: (context, state) => const WrMoodLibraryScreen(),
+      ),
+      GoRoute(
+        path: '/wr/mood-content/:id',
+        builder: (context, state) => WrMoodReaderScreen(
+          contentId: state.pathParameters['id']!,
+        ),
       ),
     ],
   );

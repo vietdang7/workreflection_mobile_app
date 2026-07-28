@@ -108,12 +108,39 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--situations", default=str(SIT_DEFAULT))
     parser.add_argument("--stories", default=str(STO_DEFAULT))
+    parser.add_argument(
+        "--migration",
+        default=str(MIGRATION),
+        help="Migration file whose SEED_START/SEED_END block gets rewritten.",
+    )
+    parser.add_argument(
+        "--prefix",
+        default=None,
+        help=(
+            "Chỉ sinh các bản ghi có code/story_id bắt đầu bằng tiền tố này "
+            "(ví dụ 'P-' cho nhóm tình huống tích cực v1.6 §2.3). "
+            "Bỏ qua để sinh toàn bộ. Dùng khi một đợt nội dung mới cần nằm ở "
+            "migration riêng thay vì viết đè lên migration đã chạy trên DB."
+        ),
+    )
     args = parser.parse_args()
 
     with open(args.situations, encoding="utf-8") as f:
         situations = json.load(f)
     with open(args.stories, encoding="utf-8") as f:
         stories = json.load(f)
+
+    if args.prefix:
+        situations = [s for s in situations
+                      if s["code"].startswith(args.prefix)]
+        stories = [s for s in stories
+                   if s["story_id"].startswith(args.prefix)]
+        if not situations and not stories:
+            print(f"[ERROR] Không có bản ghi nào khớp tiền tố {args.prefix!r}",
+                  file=sys.stderr)
+            sys.exit(1)
+
+    migration_path = Path(args.migration)
 
     lines = []
     lines.append(SEED_START)
@@ -127,11 +154,12 @@ def main():
     sql_block = "\n".join(lines)
 
     # Read migration file and replace seed block
-    if not MIGRATION.exists():
-        print(f"[ERROR] Migration file not found: {MIGRATION}", file=sys.stderr)
+    if not migration_path.exists():
+        print(f"[ERROR] Migration file not found: {migration_path}",
+              file=sys.stderr)
         sys.exit(1)
 
-    migration_text = MIGRATION.read_text(encoding="utf-8")
+    migration_text = migration_path.read_text(encoding="utf-8")
 
     if SEED_START in migration_text and SEED_END in migration_text:
         # Replace existing block
@@ -143,8 +171,8 @@ def main():
         # Append
         new_text = migration_text.rstrip() + "\n\n" + sql_block + "\n"
 
-    MIGRATION.write_text(new_text, encoding="utf-8")
-    print(f"[OK] Seed SQL written to {MIGRATION}", file=sys.stderr)
+    migration_path.write_text(new_text, encoding="utf-8")
+    print(f"[OK] Seed SQL written to {migration_path}", file=sys.stderr)
     print(f"     situations: {len(situations)}", file=sys.stderr)
     print(f"     stories   : {len(stories)}", file=sys.stderr)
 

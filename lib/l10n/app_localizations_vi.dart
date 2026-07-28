@@ -175,7 +175,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get understandEyebrowSituations => 'Tình huống lặp lại';
 
   @override
-  String get understandEyebrowSca => 'Trải nghiệm hiện tại (SCA)';
+  String get understandEyebrowSca => 'Trải nghiệm hiện tại';
 
   @override
   String get understandEyebrowHealth => 'Career Health Check';
@@ -227,7 +227,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get developEyebrowPractices => 'Practices hôm nay';
 
   @override
-  String get developEyebrowOpportunity => 'Cơ hội phát triển';
+  String get developEyebrowOpportunity => 'Mở rộng offline';
 
   @override
   String developStage(int x, int y) {
@@ -930,7 +930,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profileMyCoaching => 'Coaching của tôi';
 
   @override
-  String get developWorkshopSection => 'Cơ hội phát triển';
+  String get developWorkshopSection => 'Mở rộng offline';
 
   @override
   String get developViewWorkshops => 'Xem tất cả workshop';

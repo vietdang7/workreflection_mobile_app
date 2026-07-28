@@ -64,6 +64,33 @@ class _ProfileHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // v1.6 §9.1: màn này không còn là tab, nên phải tự có lối quay lại.
+          // Không có nút này thì mở từ avatar xong là kẹt.
+          if (GoRouter.maybeOf(context) != null && context.canPop())
+            GestureDetector(
+              key: const Key('profile_back'),
+              behavior: HitTestBehavior.opaque,
+              onTap: () => context.pop(),
+              child: const Padding(
+                padding: EdgeInsets.only(bottom: 8),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.arrow_back_ios_new,
+                        size: 14, color: WrColors.muted),
+                    SizedBox(width: 6),
+                    Text(
+                      'Quay lại',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: WrColors.muted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           Text(l10n.profileGreeting, style: WrTextStyles.greeting),
           const SizedBox(height: 4),
           _ProfileTitle(),
@@ -341,11 +368,13 @@ class _SettingsSection extends ConsumerWidget {
               const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
         ),
 
-        // Tài liệu bối cảnh (JD/CV) — Hai Lớp v1.2 §III
+        // Thông tin công việc — Hai Lớp v1.6 §XI. Màn này gom cả mô tả tự viết
+        // lẫn lối vào Tài liệu bối cảnh (JD/CV) của v1.2 §III, nên không còn
+        // dòng riêng cho tài liệu nữa.
         _SettingRow(
-          key: const Key('profile_context_docs_btn'),
-          label: 'Tài liệu bối cảnh',
-          onTap: () => context.push('/wr/context-docs'),
+          key: const Key('profile_work_info_btn'),
+          label: 'Thông tin công việc',
+          onTap: () => context.push('/wr/work-info'),
           trailing:
               const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
         ),

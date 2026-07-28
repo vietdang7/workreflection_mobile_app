@@ -8,6 +8,9 @@ enum PaywallTrigger {
   report,
   trialEnd,
   benchmark,
+
+  /// Hai Lớp v1.6 §11.4 — Cơ hội phát triển thuộc lớp Paid.
+  growthOpportunity,
 }
 
 class WrPaywallScreen extends StatelessWidget {
@@ -31,6 +34,11 @@ class WrPaywallScreen extends StatelessWidget {
         PaywallTrigger.benchmark => (
             title: 'So sánh với người đi làm cùng ngành',
             sub: 'Career Benchmark sẽ sớm ra mắt với Premium.',
+          ),
+        PaywallTrigger.growthOpportunity => (
+            title: 'Hướng phát triển tiếp theo của bạn',
+            sub: 'Từ những gì bạn đã nhìn lại, bản đầy đủ chỉ ra một hướng '
+                'năng lực đáng thử tiếp.',
           ),
         PaywallTrigger.defaultTrigger => (
             title: 'Mở khoá toàn bộ hành trình',

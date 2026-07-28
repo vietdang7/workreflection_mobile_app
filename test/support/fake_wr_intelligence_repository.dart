@@ -1,5 +1,6 @@
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
+import 'package:workreflection_mobile/core/models/wr_mood_content.dart';
 
 /// In-memory fake WrIntelligenceRepository for unit/widget tests.
 ///
@@ -18,6 +19,8 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
   final List<WrContextDocument> _contextDocuments = [];
   final List<PatternNarrative> _patternNarratives = [];
   final List<GrowthJourneySnapshot> _growthSnapshots = [];
+  final List<GrowthOpportunity> _growthOpportunities = [];
+  final List<PracticeStepNote> _stepNotes = [];
 
   Object? nextError;
 
@@ -28,6 +31,8 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
   final List<PracticeEnrollment> enrollThemeCalls = [];
   final List<({String userId, String themeId, List<String> completedSteps})>
       updateEnrollmentStepsCalls = [];
+  final List<GrowthOpportunity> insertGrowthOpportunityCalls = [];
+  final List<PracticeStepNote> upsertPracticeStepNoteCalls = [];
   final List<({String userId, String themeId})> completeThemeCalls = [];
   final List<WrContextDocument> insertContextDocumentCalls = [];
   final List<({String userId, String situationCode, String scaDimensionDb})>
@@ -345,4 +350,45 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
       _growthSnapshots.where((s) => s.userId == userId),
     );
   }
+
+  // --- Hai Lớp v1.6 ---
+
+  void seedGrowthOpportunity(GrowthOpportunity o) => _growthOpportunities.add(o);
+
+  @override
+  Future<GrowthOpportunity?> fetchLatestGrowthOpportunity(String userId) async {
+    _maybeThrow();
+    final mine = _growthOpportunities.where((o) => o.userId == userId).toList()
+      ..sort((a, b) => b.generatedAt.compareTo(a.generatedAt));
+    return mine.isEmpty ? null : mine.first;
+  }
+
+  @override
+  Future<void> insertGrowthOpportunity(GrowthOpportunity opportunity) async {
+    _maybeThrow();
+    insertGrowthOpportunityCalls.add(opportunity);
+    _growthOpportunities.add(opportunity);
+  }
+
+  @override
+  Future<String?> upsertPracticeStepNote(PracticeStepNote note) async {
+    _maybeThrow();
+    upsertPracticeStepNoteCalls.add(note);
+    // Một bước chỉ giữ một ghi chú — ghi lại thì đè lên, giống unique
+    // (user_id, step_id) ở DB.
+    _stepNotes.removeWhere(
+      (n) => n.userId == note.userId && n.stepId == note.stepId,
+    );
+    final id = 'note-${_stepNotes.length + 1}';
+    _stepNotes.add(PracticeStepNote(
+      id: id,
+      userId: note.userId,
+      stepId: note.stepId,
+      note: note.note,
+      memoryEventId: note.memoryEventId,
+    ));
+    return id;
+  }
+
+  List<PracticeStepNote> get stepNotes => List.unmodifiable(_stepNotes);
 }
