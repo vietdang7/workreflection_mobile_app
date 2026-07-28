@@ -3,6 +3,8 @@ import 'package:workreflection_mobile/core/logic/wr_experience_state.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 import 'package:workreflection_mobile/core/models/wr_episode.dart';
 
+import 'fake_wr_intelligence_repository.dart' show kAllowedScaDimensions;
+
 /// In-memory fake WrEpisodeRepository cho unit/widget test.
 ///
 /// Giữ nguyên luật state machine như bản thật: mọi transition đều đi qua
@@ -33,6 +35,7 @@ class FakeWrEpisodeRepository implements WrEpisodeRepository {
   }
 
   ReflectionEpisode _store(ReflectionEpisode episode) {
+    _assertEpisodeConstraints(episode);
     final idx = episodes.indexWhere((e) => e.id == episode.id);
     if (idx >= 0) {
       episodes[idx] = episode;
@@ -194,5 +197,20 @@ class FakeWrEpisodeRepository implements WrEpisodeRepository {
     _maybeThrow();
     assertTransition(episode.state, ExperienceState.reactivated);
     return _store(episode.copyWith(state: ExperienceState.reactivated));
+  }
+}
+
+/// Ném khi Episode vi phạm check constraint của `wr_reflection_episodes`.
+///
+/// Cùng lý do với [FakeWrIntelligenceRepository]: bảng Episode ghi
+/// `sca_dimension` của tình huống vừa chọn ở MỌI vòng phản tư, nên nếu constraint
+/// DB hẹp hơn enum Dart thì nhánh tình huống tích cực vỡ mà không test nào thấy.
+void _assertEpisodeConstraints(ReflectionEpisode e) {
+  final dim = e.scaDimension?.dbValue;
+  if (dim != null && !kAllowedScaDimensions.contains(dim)) {
+    throw StateError(
+      'wr_reflection_episodes_sca_dimension_check: "$dim" không nằm trong '
+      '$kAllowedScaDimensions',
+    );
   }
 }
