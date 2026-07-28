@@ -54,9 +54,12 @@ abstract class WrEpisodeRepository {
   });
 
   /// Lưu Tiny Next Step (HXA Pattern Commit).
+  /// [choice] là câu người dùng chọn từ Bể Lựa chọn (v1.6 §V · §VI); null khi
+  /// họ tự viết. [action] là điều họ cam kết làm, luôn có.
   Future<ReflectionEpisode> commitAction({
     required ReflectionEpisode episode,
     required String action,
+    String? choice,
   });
 
   /// Đóng Episode: đưa vào Career Memory (WXS §4.3 State 7).
@@ -216,11 +219,17 @@ class SupabaseWrEpisodeRepository implements WrEpisodeRepository {
   Future<ReflectionEpisode> commitAction({
     required ReflectionEpisode episode,
     required String action,
+    String? choice,
   }) async {
     assertTransition(episode.state, ExperienceState.committed);
+    final picked = choice?.trim();
     return _patch(episode, {
       'state': ExperienceState.committed.dbValue,
       'tiny_action': action.trim(),
+      // Chỉ ghi khi thật sự có lựa chọn được chọn. Người tự viết thì để null
+      // chứ không chép lại tiny_action — làm vậy là biến một câu tự viết thành
+      // "đã chọn từ bể", tức bịa ra dữ liệu chưa từng xảy ra.
+      if (picked != null && picked.isNotEmpty) 'reflect_choice': picked,
     });
   }
 

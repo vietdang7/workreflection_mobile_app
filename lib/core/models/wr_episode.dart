@@ -172,6 +172,7 @@ class ReflectionEpisode {
     this.notes = const {},
     this.draftMeaning,
     this.confirmedInsightId,
+    this.reflectChoice,
     this.tinyAction,
     this.themeId,
     this.memoryEventId,
@@ -198,6 +199,17 @@ class ReflectionEpisode {
 
   final String? draftMeaning;
   final String? confirmedInsightId;
+
+  /// Câu được CHỌN từ Bể Lựa chọn ở bước Choice (v1.6 §V · §VI).
+  ///
+  /// null khi người dùng bỏ qua bể và tự viết: lúc đó không có lựa chọn nào
+  /// được đưa ra để mà chọn, nên ghi một dòng 'choice' sẽ là bịa.
+  ///
+  /// Tách khỏi [tinyAction] vì hai thứ trả lời hai câu khác nhau — "đã chọn
+  /// phương án nào trong số được đưa ra" và "cam kết sẽ làm gì". Khi chọn từ
+  /// bể thì hai trường trùng nội dung, nhưng khi tự viết thì chỉ có cái sau.
+  final String? reflectChoice;
+
   final String? tinyAction;
   final String? themeId;
   final String? memoryEventId;
@@ -232,6 +244,7 @@ class ReflectionEpisode {
           : const {},
       draftMeaning: json['draft_meaning'] as String?,
       confirmedInsightId: json['confirmed_insight_id'] as String?,
+      reflectChoice: json['reflect_choice'] as String?,
       tinyAction: json['tiny_action'] as String?,
       themeId: json['theme_id'] as String?,
       memoryEventId: json['memory_event_id'] as String?,
@@ -273,6 +286,7 @@ class ReflectionEpisode {
     Map<String, String>? notes,
     String? draftMeaning,
     String? confirmedInsightId,
+    String? reflectChoice,
     String? tinyAction,
     String? themeId,
     String? memoryEventId,
@@ -292,6 +306,7 @@ class ReflectionEpisode {
       notes: notes ?? this.notes,
       draftMeaning: draftMeaning ?? this.draftMeaning,
       confirmedInsightId: confirmedInsightId ?? this.confirmedInsightId,
+      reflectChoice: reflectChoice ?? this.reflectChoice,
       tinyAction: tinyAction ?? this.tinyAction,
       themeId: themeId ?? this.themeId,
       memoryEventId: memoryEventId ?? this.memoryEventId,

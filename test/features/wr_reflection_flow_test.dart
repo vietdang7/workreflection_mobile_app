@@ -19,6 +19,7 @@ import 'package:workreflection_mobile/core/models/checkin.dart';
 import 'package:workreflection_mobile/core/logic/wr_experience_state.dart';
 import 'package:workreflection_mobile/core/models/wr_episode.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
+import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 import 'package:workreflection_mobile/core/data/wr_mood_content_repository.dart';
 import 'package:workreflection_mobile/features/wr/presentation/flow/wr_commit_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/flow/wr_done_screen.dart';
@@ -593,6 +594,104 @@ void main() {
 
       expect(find.byKey(const Key('wr_commit_field')), findsOneWidget);
       expect(find.byKey(const Key('wr_choice_0')), findsNothing);
+    });
+  });
+
+  // WDA Invariant 9 + v1.6 §V: Choice là MỘT bước của Reflection Cycle, không
+  // phải một phần của Action. Trước đây câu người dùng chạm bị lưu thẳng vào
+  // tiny_action, nên wr_reflection_steps chưa bao giờ có dòng 'choice'.
+  group('v1.6 · Choice là bước riêng (§V · WDA Inv.9)', () {
+    /// Đưa Episode tới màn Lựa chọn với bể [pool].
+    Future<_Harness> toChoiceStep(
+      WidgetTester tester, {
+      required List<String> pool,
+    }) async {
+      final h = _Harness();
+      if (pool.isNotEmpty) h.moodContent.seedChoicePool(pool);
+      h.seedOpenEpisode(
+        moment: HumanMoment.celebration,
+        state: ExperienceState.exploring,
+        patternsDone: const [
+          ReflectionPattern.notice,
+          ReflectionPattern.name,
+          ReflectionPattern.preserve,
+        ],
+      );
+      await _pump(tester, h.app());
+      await _resume(tester);
+      await _confirmMeaning(tester);
+      return h;
+    }
+
+    testWidgets('chạm một lựa chọn thì ghi cả bước choice lẫn bước action',
+        (tester) async {
+      const pool = [
+        'Thử một cách tiếp cận khác vào lần tới',
+        'Giữ nguyên cách làm hiện tại, quan sát thêm',
+        'Chưa biết, cần thêm thời gian',
+        'Nói chuyện với ai đó về điều này',
+      ];
+      final h = await toChoiceStep(tester, pool: pool);
+
+      // Bể xáo ngẫu nhiên nên không biết trước câu nào ở vị trí 0 — đọc thẳng
+      // nhãn đang hiện để biết mình vừa chạm vào cái gì.
+      final tile = find.byKey(const Key('wr_choice_0'));
+      final shown = tester
+          .widget<Text>(
+            find.descendant(of: tile, matching: find.byType(Text)).first,
+          )
+          .data;
+
+      await tester.tap(tile);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
+      await tester.pumpAndSettle();
+
+      final picked = h.episodes.episodes.single.reflectChoice;
+      expect(picked, shown, reason: 'phải lưu đúng câu người dùng đã chạm');
+      expect(pool, contains(picked));
+
+      final steps = h.intel.insertReflectionStepCalls;
+      final choiceSteps =
+          steps.where((s) => s.step == ReflectionStepType.choice).toList();
+      final actionSteps =
+          steps.where((s) => s.step == ReflectionStepType.action).toList();
+
+      expect(choiceSteps, hasLength(1));
+      expect(choiceSteps.single.content, picked);
+      // Action vẫn còn: câu đó vừa là lựa chọn, vừa là điều đã cam kết.
+      expect(actionSteps, hasLength(1));
+      expect(actionSteps.single.content, picked);
+    });
+
+    testWidgets('tự viết thì có bước action nhưng KHÔNG có bước choice',
+        (tester) async {
+      // Bể rỗng → màn lùi về ô tự viết. Không có lựa chọn nào được đưa ra,
+      // nên ghi một dòng 'choice' sẽ là bịa ra việc chưa từng xảy ra.
+      final h = await toChoiceStep(tester, pool: const []);
+
+      await tester.enterText(
+        find.byKey(const Key('wr_commit_field')),
+        'Tuần này tôi sẽ nói ra sớm hơn.',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
+      await tester.pumpAndSettle();
+
+      expect(h.episodes.episodes.single.reflectChoice, isNull);
+
+      final steps = h.intel.insertReflectionStepCalls;
+      expect(
+        steps.where((s) => s.step == ReflectionStepType.choice),
+        isEmpty,
+      );
+      expect(
+        steps
+            .where((s) => s.step == ReflectionStepType.action)
+            .single
+            .content,
+        'Tuần này tôi sẽ nói ra sớm hơn.',
+      );
     });
   });
 

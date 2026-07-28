@@ -154,12 +154,15 @@ class FakeWrEpisodeRepository implements WrEpisodeRepository {
   Future<ReflectionEpisode> commitAction({
     required ReflectionEpisode episode,
     required String action,
+    String? choice,
   }) async {
     _maybeThrow();
     assertTransition(episode.state, ExperienceState.committed);
+    final picked = choice?.trim();
     return _store(episode.copyWith(
       state: ExperienceState.committed,
       tinyAction: action.trim(),
+      reflectChoice: picked != null && picked.isNotEmpty ? picked : null,
     ));
   }
 

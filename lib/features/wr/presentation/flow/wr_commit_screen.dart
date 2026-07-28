@@ -55,7 +55,8 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
     return _options ??= pickChoiceOptions(practice: practice, pool: pool);
   }
 
-  Future<void> _save(String action) async {
+  /// [choice] chỉ có khi câu này được chạm từ bể Lựa chọn (v1.6 §V · §VI).
+  Future<void> _save(String action, {String? choice}) async {
     if (_busy) return;
     final text = action.trim();
     if (text.isEmpty) return;
@@ -64,7 +65,7 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
       _error = null;
     });
     try {
-      await ref.read(episodeFlowProvider.notifier).commit(text);
+      await ref.read(episodeFlowProvider.notifier).commit(text, choice: choice);
       if (mounted) context.push('/wr/flow/done');
     } catch (e, s) {
       logFlowError('commitAction', e, s);
@@ -106,7 +107,11 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
       primaryLabel: 'Lưu lựa chọn này',
       busy: _busy,
       onPrimary: canSave
-          ? () => _save(showChoices ? _picked! : _controller.text)
+          ? () => showChoices
+              // Chạm từ bể: câu này vừa là Choice vừa là Tiny Next Step.
+              ? _save(_picked!, choice: _picked)
+              // Tự viết: có cam kết, nhưng không có lựa chọn nào được chọn.
+              : _save(_controller.text)
           : null,
       // Hai lối ra phụ, tuỳ đang ở chế độ nào.
       secondaryLabel: showChoices ? 'Tự viết' : 'Chưa cần bước nào',

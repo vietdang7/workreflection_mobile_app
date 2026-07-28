@@ -252,10 +252,17 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
   // -------------------------------------------------------------------------
 
   /// Lưu bước nhỏ tiếp theo (có thể bỏ qua).
-  Future<void> commit(String action) async {
+  ///
+  /// [choice] là câu người dùng chạm từ Bể Lựa chọn (v1.6 §V · §VI). Người tự
+  /// viết thì để null — không có lựa chọn nào được đưa ra để mà chọn.
+  Future<void> commit(String action, {String? choice}) async {
     final ep = state;
     if (ep == null) return;
-    state = await _repo.commitAction(episode: ep, action: action);
+    state = await _repo.commitAction(
+      episode: ep,
+      action: action,
+      choice: choice,
+    );
   }
 
   /// Đóng Episode: ghi Career Memory, pattern count, reflection steps.
@@ -302,6 +309,9 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
     await _insertStep(userId, ReflectionStepType.meaning,
         ep.notes[ReflectionPattern.explore.dbValue]);
     await _insertStep(userId, ReflectionStepType.insight, ep.draftMeaning);
+    // WDA Inv.9 + §V: Choice là một bước riêng, không phải một phần của Action.
+    // Chỉ có dòng này khi người dùng thật sự chọn từ bể; tự viết thì bỏ qua.
+    await _insertStep(userId, ReflectionStepType.choice, ep.reflectChoice);
     await _insertStep(userId, ReflectionStepType.action, ep.tinyAction);
 
     state = await _repo.integrate(episode: ep);
