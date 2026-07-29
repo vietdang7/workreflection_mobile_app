@@ -21,6 +21,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/logic/wr_dominant_need.dart';
+import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/logic/wr_self_check_questions.dart';
 import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_intelligence.dart';
@@ -31,6 +32,7 @@ import '../../../core/widgets/section_divider.dart';
 import '../../../core/widgets/tab_back_link.dart';
 import '../../../core/widgets/wr_profile_avatar.dart';
 import '../../../core/widgets/wr_card.dart';
+import '../../../core/widgets/wr_premium_lock.dart';
 import '../wr_providers.dart';
 
 /// Số lần lặp tối thiểu để hệ thống dám đọc ra nguyên nhân sâu.
@@ -39,6 +41,13 @@ const int kInsightThreshold = 5;
 
 /// Dưới ngưỡng này thanh so sánh mờ đi — mới một lần thì chưa thành nếp.
 const int kPatternFaintThreshold = 2;
+
+/// Số tình huống hiện thẳng ở tab Hiểu mình.
+///
+/// Ba, không phải sáu: màn này là tấm gương chứ không phải bảng số liệu, và
+/// một danh sách dài thì không ai đọc hết. Phần còn lại nằm sau "Xem thêm",
+/// mở ra màn riêng — không xổ tất cả trên một trang.
+const int kDiscoverPatternPreview = 3;
 
 // ---------------------------------------------------------------------------
 // Trạng thái một trụ SCA, suy từ điểm tự đánh giá gần nhất (thang 1–5).
@@ -82,9 +91,12 @@ class WrDiscoverScreen extends ConsumerWidget {
     final latestCheck = selfChecks.isEmpty ? null : selfChecks.first;
 
     // Thanh so sánh lấy tình huống lặp nhiều nhất làm mốc — người dùng thấy
-    // ngay điều nào đang lớn hơn điều nào.
-    final top = patterns.take(6).toList();
-    final maxCount = top.fold<int>(1, (m, p) => p.occurrenceCount > m ? p.occurrenceCount : m);
+    // ngay điều nào đang lớn hơn điều nào. Mốc tính trên TOÀN BỘ danh sách để
+    // ba thanh ở đây và danh sách đầy đủ đo cùng một thước.
+    final top = patterns.take(kDiscoverPatternPreview).toList();
+    final hidden = patterns.length - top.length;
+    final maxCount = patterns.fold<int>(
+        1, (m, p) => p.occurrenceCount > m ? p.occurrenceCount : m);
 
     return Scaffold(
       backgroundColor: WrColors.white,
@@ -128,7 +140,7 @@ class WrDiscoverScreen extends ConsumerWidget {
             // im lặng, không đoán bừa (WXS Orch. Inv.5).
             if (need != null) ...[
               const SizedBox(height: 24),
-              _SeekingBlock(need: need),
+              _NeedReadingBlock(need: need),
             ],
 
             const SizedBox(height: 28),
@@ -147,12 +159,10 @@ class WrDiscoverScreen extends ConsumerWidget {
                   height: 1.6,
                 ),
               )
-            else
+            else ...[
               for (final p in top) ...[
-                _PatternRow(
-                  label: sitMap[p.situationCode] ??
-                      p.situationCode ??
-                      'Tình huống',
+                WrPatternRow(
+                  label: situationLabelFor(sitMap, p.situationCode),
                   count: p.occurrenceCount,
                   ratio: p.occurrenceCount / maxCount,
                   onTap: () => context.push(
@@ -161,6 +171,14 @@ class WrDiscoverScreen extends ConsumerWidget {
                 ),
                 if (p != top.last) const SizedBox(height: 18),
               ],
+              if (hidden > 0) ...[
+                const SizedBox(height: 18),
+                _SeeMoreLink(
+                  count: hidden,
+                  onTap: () => context.push('/wr/patterns'),
+                ),
+              ],
+            ],
 
             const SizedBox(height: 28),
             const WrSectionDivider(),
@@ -193,6 +211,87 @@ class WrDiscoverScreen extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Đọc vị nhu cầu — ba lớp, Premium (quyết định của khách 2026-07-29).
+//
+// Free thấy đúng một khối khoá: mọi câu diễn giải đều nằm sau paywall, kể cả
+// tên nhu cầu chủ đạo. Ranh giới giữ nguyên tinh thần cũ — Free xem dữ kiện
+// đếm được (tình huống nào lặp mấy lần, đã nhìn lại bao nhiêu lần), Premium
+// mới đọc ra điều đứng sau những con số đó.
+// ---------------------------------------------------------------------------
+
+class _NeedReadingBlock extends ConsumerWidget {
+  const _NeedReadingBlock({required this.need});
+
+  final HumanNeed need;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final entitlement = ref.watch(wrEntitlementProvider).valueOrNull ??
+        WrEntitlement(plan: WrPlan.free);
+    if (!entitlement.canUseFeature(WrPremiumFeature.aiInsight)) {
+      return const WrPremiumLock(
+        key: Key('wr_discover_need_lock'),
+        description:
+            'Bản đầy đủ đọc ra điều bạn đang thật sự tìm kiếm đứng sau những '
+            'tình huống lặp lại này, bằng lời của đời sống chứ không phải con số.',
+        ctaLabel: 'Mở phần đọc vị',
+        paywallTrigger: 'need_reading',
+      );
+    }
+
+    final reading = needReading(need);
+    return Column(
+      key: const Key('wr_discover_need_reading'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SeekingBlock(need: need),
+        const SizedBox(height: 24),
+        _ReadingLayer(
+          eyebrow: 'MONG ĐỢI KẾT QUẢ',
+          text: reading.expectedOutcome,
+        ),
+        const SizedBox(height: 18),
+        _ReadingLayer(
+          eyebrow: 'NHU CẦU CỐT LÕI',
+          text: reading.coreNeed,
+        ),
+        const SizedBox(height: 18),
+        _ReadingLayer(
+          eyebrow: 'GÓC NHÌN · ${reading.perspectiveLabel.toUpperCase()}',
+          text: reading.perspectiveText,
+        ),
+      ],
+    );
+  }
+}
+
+class _ReadingLayer extends StatelessWidget {
+  const _ReadingLayer({required this.eyebrow, required this.text});
+
+  final String eyebrow;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        WrEyebrow(eyebrow),
+        const SizedBox(height: 8),
+        Text(
+          text,
+          style: const TextStyle(
+            fontSize: 15,
+            color: WrColors.navy,
+            height: 1.65,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -244,8 +343,9 @@ class _SeekingBlock extends StatelessWidget {
 // Một dòng tình huống lặp lại — số lần + thanh so sánh, không diễn giải.
 // ---------------------------------------------------------------------------
 
-class _PatternRow extends StatelessWidget {
-  const _PatternRow({
+class WrPatternRow extends StatelessWidget {
+  const WrPatternRow({
+    super.key,
     required this.label,
     required this.count,
     required this.ratio,
@@ -307,6 +407,43 @@ class _PatternRow extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             WrProgressTrack(value: ratio, color: barColor),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// "Xem thêm" — lối sang danh sách đầy đủ, giữ màn chính gọn đúng ba dòng.
+// ---------------------------------------------------------------------------
+
+class _SeeMoreLink extends StatelessWidget {
+  const _SeeMoreLink({required this.count, required this.onTap});
+
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      key: const Key('wr_discover_see_more'),
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          children: [
+            Text(
+              'Xem thêm $count điều lặp lại',
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: WrColors.teal,
+              ),
+            ),
+            const SizedBox(width: 4),
+            const Icon(Icons.arrow_forward, size: 14, color: WrColors.teal),
           ],
         ),
       ),
@@ -391,24 +528,14 @@ class _ScaRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 10),
       child: Row(
         children: [
+          // Chấm màu, không phải chữ "S/C/A": ba trụ vẫn phân biệt được bằng
+          // màu, nhưng người dùng không phải đọc mã của bộ khung nội bộ.
           Container(
-            width: 26,
-            height: 26,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: color.withValues(alpha: 0.15),
-            ),
-            child: Text(
-              pillar.name.toUpperCase(),
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: color,
-              ),
-            ),
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(shape: BoxShape.circle, color: color),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Text(
               pillar.displayName,
@@ -438,12 +565,22 @@ class _ScaRow extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 /// Tên hiển thị của một tình huống theo mã.
+///
+/// Không bao giờ trả về chính cái mã. `C2-sit-01` là thuật ngữ nội bộ (v1.6
+/// §XII.5) — hiện nó ra là phơi bộ khung SCA cho người dùng, mà đúng lúc tệ
+/// nhất: khi thư viện tình huống chưa tải xong hoặc mất mạng.
 String situationLabel(List<WrSituation> situations, String? code) {
   if (code == null) return 'Tình huống';
   for (final s in situations) {
     if (s.code == code) return s.text;
   }
-  return code;
+  return 'Tình huống';
+}
+
+/// Bản dùng map — cùng luật với [situationLabel].
+String situationLabelFor(Map<String, String> labels, String? code) {
+  if (code == null) return 'Tình huống';
+  return labels[code] ?? 'Tình huống';
 }
 
 /// Số lần đã gặp một tình huống.

@@ -49,8 +49,13 @@ class JourneyEntry {
   final String? episodeId;
 }
 
-/// Free tier: hiện tối đa 10 mục trước khi mời mở bản đầy đủ.
-const int kFreeJourneyLimit = 10;
+// Free tier KHÔNG xem được mục ký ức nào — quyết định của khách 2026-07-29:
+// "Career Memory đầy đủ bị khoá hoàn toàn với tài khoản Free".
+//
+// Bản trước cho Free xem 10 mục gần nhất rồi mới cắt; giờ dòng thời gian chỉ
+// hiện với Premium. Con số tổng vẫn nói ra, vì đó là việc của chính người dùng
+// đã làm (cùng loại với "Bạn đã nhìn lại N lần" ở Hiểu mình) — cái bị khoá là
+// nội dung từng mảnh ký ức.
 
 /// Mã behavior mà Episode ghi vào Career Memory khi khép lại.
 const String kEpisodeBehavior = 'reflection_episode';
@@ -89,8 +94,13 @@ List<JourneyEntry> buildJourneyEntries({
   final skipEpisodeEvents = closed.isNotEmpty;
   for (final ev in events) {
     if (skipEpisodeEvents && ev.behavior == kEpisodeBehavior) continue;
+    // Không rơi về chính cái mã: `C2-sit-01` là thuật ngữ nội bộ, không phải
+    // thứ để người dùng đọc trên dòng thời gian của đời mình (v1.6 §XII.5).
     final title = ev.situationCode != null
-        ? (situationLabels[ev.situationCode] ?? ev.situationCode!)
+        ? (situationLabels[ev.situationCode] ??
+            (ev.reflectionText?.trim().isNotEmpty == true
+                ? ev.reflectionText!.trim()
+                : 'Một lần nhìn lại'))
         : (ev.reflectionText?.trim().isNotEmpty == true
             ? ev.reflectionText!.trim()
             : emotionLabel(ev.emotion));
@@ -213,8 +223,8 @@ class WrJourneyScreen extends ConsumerWidget {
       events: events,
       situationLabels: sitMap,
     );
-    final capped = !entitlement.isPremium && all.length > kFreeJourneyLimit;
-    final shown = capped ? all.sublist(0, kFreeJourneyLimit) : all;
+    final locked = !entitlement.isPremium;
+    final shown = locked ? const <JourneyEntry>[] : all;
 
     return Scaffold(
       backgroundColor: WrColors.white,
@@ -254,6 +264,12 @@ class WrJourneyScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 28),
 
+            // Diễn biến theo thời gian — thẻ mở đầu tab, theo giao diện mẫu
+            // Sprint 2. Trước đây nó là một dòng dẫn nằm tận cuối màn, nên thứ
+            // duy nhất tóm được cả chặng đường lại là thứ dễ bỏ sót nhất.
+            const _NarrativeCard(),
+            const SizedBox(height: 28),
+
             const WrEyebrow('CAREER MEMORY'),
             const SizedBox(height: 14),
             Text(
@@ -268,7 +284,19 @@ class WrJourneyScreen extends ConsumerWidget {
               ),
             ),
 
-            if (all.isNotEmpty) ...[
+            if (all.isNotEmpty && locked) ...[
+              const SizedBox(height: 24),
+              const WrPremiumLock(
+                key: Key('wr_journey_memory_lock'),
+                description:
+                    'Bản đầy đủ mở lại từng mảnh ký ức nghề nghiệp bạn đã để '
+                    'lại — đọc lại được bất cứ lúc nào, theo đúng dòng thời gian.',
+                ctaLabel: 'Mở toàn bộ Career Memory',
+                paywallTrigger: 'career_memory',
+              ),
+            ],
+
+            if (all.isNotEmpty && !locked) ...[
               const SizedBox(height: 32),
               const WrSectionDivider(),
               const SizedBox(height: 24),
@@ -287,16 +315,6 @@ class WrJourneyScreen extends ConsumerWidget {
                   ),
                 const SizedBox(height: 20),
               ],
-              if (capped)
-                Padding(
-                  padding: const EdgeInsets.only(top: 8),
-                  child: WrLinkRow(
-                    key: const Key('wr_journey_full_memory_row'),
-                    label: 'Xem toàn bộ Career Memory',
-                    hint: '⭐ Premium',
-                    onTap: () => context.push('/wr/paywall'),
-                  ),
-                ),
             ],
 
             // Cơ hội phát triển — §XI. Nằm dưới Career Memory vì nó là điều
@@ -313,13 +331,106 @@ class WrJourneyScreen extends ConsumerWidget {
                 label: 'Xem trong Hiểu mình',
                 onTap: () => context.go('/wr/discover?from=journey'),
               ),
-            WrLinkRow(
-              key: const Key('wr_journey_narrative_row'),
-              label: 'Diễn biến theo thời gian',
-              onTap: () => context.push('/wr/journey/narrative'),
-            ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Diễn biến theo thời gian — thẻ mở đầu tab Hành trình
+// ---------------------------------------------------------------------------
+
+/// Thẻ navy mở đầu tab: hệ thống đọc ra điều gì đang đổi trong bạn.
+///
+/// Đây là DIỄN GIẢI nên thuộc Premium (Hai Lớp v1.2 §III). Bản miễn phí thấy
+/// thẻ và biết mình đang bỏ lỡ gì, nhưng không thấy một chữ nào của nội dung —
+/// khác với làm mờ, vì chữ mờ vẫn là chữ đã gửi xuống máy người dùng.
+class _NarrativeCard extends ConsumerWidget {
+  const _NarrativeCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final entitlement = ref.watch(wrEntitlementProvider).valueOrNull ??
+        WrEntitlement(plan: WrPlan.free);
+    final narratives =
+        ref.watch(wrPatternNarrativesProvider).valueOrNull ?? const [];
+    final canRead =
+        entitlement.canUseFeature(WrPremiumFeature.patternAdvanced);
+    final latest = narratives.isNotEmpty ? narratives.first.narrative : null;
+
+    return Container(
+      key: const Key('wr_journey_narrative_card'),
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: WrColors.navy,
+        borderRadius: BorderRadius.circular(16),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                canRead ? Icons.auto_awesome : Icons.lock_outline,
+                size: 14,
+                color: WrColors.coral,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                canRead ? 'DIỄN BIẾN THEO THỜI GIAN' : 'PREMIUM',
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 0.6,
+                  color: WrColors.coral,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            canRead && latest != null
+                ? latest
+                : canRead
+                    ? 'Chưa đủ dữ liệu để kể lại diễn biến. Ghi thêm vài lần '
+                        'nữa, WorkReflection sẽ chỉ ra điều gì đang đổi.'
+                    : 'Bản đầy đủ kể lại những mẫu hình của bạn đã đổi thế nào '
+                        'qua từng giai đoạn — điều gì đang nhạt dần và điều gì '
+                        'vẫn quay lại.',
+            style: TextStyle(
+              fontSize: 15,
+              height: 1.65,
+              color: WrColors.white.withValues(alpha: 0.88),
+              fontStyle: canRead && latest != null
+                  ? FontStyle.italic
+                  : FontStyle.normal,
+            ),
+          ),
+          const SizedBox(height: 16),
+          GestureDetector(
+            key: const Key('wr_journey_narrative_row'),
+            behavior: HitTestBehavior.opaque,
+            onTap: () => context.push('/wr/journey/narrative'),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  canRead ? 'Đọc toàn bộ diễn biến' : 'Xem bản đầy đủ có gì',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: WrColors.coral,
+                  ),
+                ),
+                const SizedBox(width: 5),
+                const Icon(Icons.arrow_forward, size: 14, color: WrColors.coral),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

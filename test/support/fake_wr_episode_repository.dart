@@ -19,6 +19,8 @@ class FakeWrEpisodeRepository implements WrEpisodeRepository {
   final List<ReflectionEpisode> integrateCalls = [];
   final List<ReflectionEpisode> confirmMeaningCalls = [];
   final List<ReflectionEpisode> reviseMeaningCalls = [];
+  final List<ReflectionEpisode> commitActionCalls = [];
+  final List<ReflectionEpisode> reviseActionCalls = [];
   final List<ReflectionEpisode> dormantCalls = [];
 
   void seed(List<ReflectionEpisode> seeded) {
@@ -173,11 +175,30 @@ class FakeWrEpisodeRepository implements WrEpisodeRepository {
   }) async {
     _maybeThrow();
     assertTransition(episode.state, ExperienceState.committed);
+    commitActionCalls.add(episode);
     final picked = choice?.trim();
     return _store(episode.copyWith(
       state: ExperienceState.committed,
       tinyAction: action.trim(),
       reflectChoice: picked != null && picked.isNotEmpty ? picked : null,
+    ));
+  }
+
+  @override
+  Future<ReflectionEpisode> reviseAction({
+    required ReflectionEpisode episode,
+    required String action,
+    String? choice,
+  }) async {
+    _maybeThrow();
+    reviseActionCalls.add(episode);
+    // Không assertTransition: đổi câu không đổi trạng thái nào.
+    final picked = choice?.trim();
+    final hasPick = picked != null && picked.isNotEmpty;
+    return _store(episode.copyWith(
+      tinyAction: action.trim(),
+      reflectChoice: hasPick ? picked : null,
+      clearReflectChoice: !hasPick,
     ));
   }
 

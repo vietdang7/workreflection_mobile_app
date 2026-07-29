@@ -199,6 +199,12 @@ void main() {
       );
       await tester.pumpAndSettle();
 
+      // Tab Hành trình dài hơn sau khi thêm thẻ Diễn biến — phải cuộn tới dòng
+      // rồi mới bấm được.
+      await tester.ensureVisible(
+        find.byKey(const Key('wr_journey_work_info_row')),
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('wr_journey_work_info_row')));
       await tester.pumpAndSettle();
       expect(find.text('WorkInfo'), findsOneWidget);

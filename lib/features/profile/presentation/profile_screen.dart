@@ -39,6 +39,7 @@ class ProfileScreen extends ConsumerWidget {
                   _Divider(),
                   _StatsRow(),
                   _Divider(),
+                  _PremiumCard(),
                   _SettingsSection(),
                   const SizedBox(height: 80),
                 ]),
@@ -91,26 +92,12 @@ class _ProfileHeader extends StatelessWidget {
                 ),
               ),
             ),
+          // Tên đã nằm ở khối nhận diện căn giữa ngay bên dưới — in lại ở đây
+          // là đọc tên người dùng hai lần trong một màn hình.
           Text(l10n.profileGreeting, style: WrTextStyles.greeting),
-          const SizedBox(height: 4),
-          _ProfileTitle(),
         ],
       ),
     );
-  }
-}
-
-class _ProfileTitle extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final ccAsync = ref.watch(ccProfileProvider);
-    final profileAsync = ref.watch(mobileProfileProvider);
-
-    final name = ccAsync.valueOrNull?['full_name'] as String? ??
-        profileAsync.valueOrNull?.displayName ??
-        'bạn';
-
-    return Text(name, style: WrTextStyles.dateTitle);
   }
 }
 
@@ -144,15 +131,19 @@ class _AvatarSection extends ConsumerWidget {
 
     final avatarUrl = ccData['avatar_url'] as String?;
 
+    // Giao diện mẫu Sprint 2 (screenProfile): khối nhận diện căn giữa —
+    // ảnh, tên, email, rồi mới tới nhãn gói. Bố cục hàng ngang cũ đẩy email
+    // lên ngang hàng avatar và không có chỗ cho tên, nên màn "Tôi" mở ra mà
+    // không nói ngay được đây là ai.
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
+      child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Avatar circle — network image when available, else initials
           Container(
-            width: 60,
-            height: 60,
+            width: 64,
+            height: 64,
             decoration: BoxDecoration(
               color: WrColors.navy.withValues(alpha: 0.08),
               shape: BoxShape.circle,
@@ -184,33 +175,118 @@ class _AvatarSection extends ConsumerWidget {
                     ),
                   ),
           ),
-          const SizedBox(width: 20),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                email,
-                style: WrTextStyles.body.copyWith(fontSize: 13),
+          const SizedBox(height: 12),
+          Text(
+            name,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: WrColors.navy,
+              height: 1.2,
+            ),
+          ),
+          if (email.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              email,
+              textAlign: TextAlign.center,
+              style: WrTextStyles.body.copyWith(fontSize: 13),
+            ),
+          ],
+          const SizedBox(height: 10),
+          // Nhãn gói dạng viên thuốc — người dùng biết ngay mình đang ở bản nào.
+          Container(
+            key: const Key('profile_plan_pill'),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+            decoration: BoxDecoration(
+              color: isPremium
+                  ? WrColors.coral.withValues(alpha: 0.14)
+                  : WrColors.navy.withValues(alpha: 0.06),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              isPremium ? l10n.profileBadgePremium : l10n.profileBadgeMember,
+              style: TextStyle(
+                fontSize: 11.5,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.5,
+                color: isPremium ? WrColors.coral : WrColors.navy,
               ),
-              const SizedBox(height: 6),
-              if (isPremium)
-                Text(
-                  l10n.profileBadgePremium,
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: WrColors.coral,
-                    letterSpacing: 0.04 * 12,
-                  ),
-                )
-              else
-                Text(
-                  l10n.profileBadgeMember,
-                  style: WrTextStyles.body.copyWith(fontSize: 12),
-                ),
-            ],
+            ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Thẻ mời nâng cấp — chỉ hiện với bản miễn phí (giao diện mẫu Sprint 2)
+// ---------------------------------------------------------------------------
+
+class _PremiumCard extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ccData = ref.watch(ccProfileProvider).valueOrNull ?? {};
+    final expiresAtRaw = ccData['subscription_expires_at'] as String?;
+    final isPremium = expiresAtRaw != null &&
+        DateTime.tryParse(expiresAtRaw)?.isAfter(DateTime.now()) == true;
+    if (isPremium) return const SizedBox.shrink();
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 20),
+      child: GestureDetector(
+        key: const Key('profile_premium_card'),
+        behavior: HitTestBehavior.opaque,
+        onTap: () => context.push('/wr/paywall'),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: WrColors.coral.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Mở khoá bản đầy đủ',
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: WrColors.navy,
+                ),
+              ),
+              const SizedBox(height: 6),
+              const Text(
+                'Phần đọc vị nhu cầu, diễn biến theo thời gian, toàn bộ '
+                'Career Memory và thực hành không giới hạn.',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: WrColors.muted,
+                  height: 1.55,
+                ),
+              ),
+              const SizedBox(height: 12),
+              const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'Xem chi tiết',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: WrColors.coral,
+                    ),
+                  ),
+                  SizedBox(width: 5),
+                  Icon(Icons.arrow_forward, size: 14, color: WrColors.coral),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

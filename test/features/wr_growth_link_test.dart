@@ -17,6 +17,7 @@ import 'package:workreflection_mobile/core/models/wr_content.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_growth_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_growth_themes_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/wr_practice_theme_screen.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 
 import '../support/fake_wr_content_repository.dart';
@@ -79,6 +80,27 @@ Widget _wrapGrowth({
 
 /// Màn "Thực hành khác" — sau Sprint D3 danh sách chủ đề chưa bắt đầu nằm ở
 /// màn riêng, không còn xổ trong tab Phát triển.
+/// Màn một chủ đề — từ giao diện mẫu Sprint 2, chuỗi bước nằm ở đây chứ không
+/// còn xổ ngay trên tab Phát triển.
+Widget _wrapPracticeTheme(
+  String themeId, {
+  FakeWrContentRepository? content,
+  FakeWrIntelligenceRepository? intel,
+  String userId = 'u1',
+}) {
+  final contentRepo = content ?? FakeWrContentRepository();
+  final intelRepo = intel ?? FakeWrIntelligenceRepository();
+  final router = _makeRouter(home: WrPracticeThemeScreen(themeId: themeId));
+  return ProviderScope(
+    overrides: [
+      wrContentRepositoryProvider.overrideWithValue(contentRepo),
+      wrIntelligenceRepositoryProvider.overrideWithValue(intelRepo),
+      currentUserIdProvider.overrideWithValue(userId),
+    ],
+    child: MaterialApp.router(routerConfig: router),
+  );
+}
+
 Widget _wrapThemes({
   FakeWrContentRepository? content,
   FakeWrIntelligenceRepository? intel,
@@ -496,11 +518,11 @@ group('Task E — Tags bước theo stepOrder', () {
     ]);
     intel.seedEnrollments([_enrollment('t1')]);
 
-    await _pumpLarge(tester, _wrapGrowth(intel: intel));
+    await _pumpLarge(tester, _wrapPracticeTheme('t1', intel: intel));
 
     expect(find.text('NHẬN DIỆN'), findsOneWidget);
     expect(find.text('THỬ NGHIỆM'), findsOneWidget);
-    expect(find.text('CHUYỂN HÓA'), findsOneWidget);
+    expect(find.text('CHUYỂN HOÁ'), findsOneWidget);
   });
 
   testWidgets('step order 4 → không có tag', (tester) async {
@@ -514,12 +536,13 @@ group('Task E — Tags bước theo stepOrder', () {
     ]);
     intel.seedEnrollments([_enrollment('t1')]);
 
-    await _pumpLarge(tester, _wrapGrowth(intel: intel));
+    await _pumpLarge(tester, _wrapPracticeTheme('t1', intel: intel));
 
-    // Chỉ 3 tags cho order 1-3
+    // Chỉ 3 tag cho order 1-3; bước 4 hiện tên nhưng không có nhãn giai đoạn.
     expect(find.text('NHẬN DIỆN'), findsOneWidget);
     expect(find.text('THỬ NGHIỆM'), findsOneWidget);
-    expect(find.text('CHUYỂN HÓA'), findsOneWidget);
+    expect(find.text('CHUYỂN HOÁ'), findsOneWidget);
+    expect(find.text('Bước 4 không tag'), findsOneWidget);
   });
 
 });

@@ -178,6 +178,26 @@ enum ExperienceState {
   /// động có chủ đích của người dùng chứ không phải tác dụng phụ của nút Back.
   bool get canReviseMeaningInPlace =>
       this == ExperienceState.meaningConfirmed;
+
+  /// Lựa chọn đã được chốt rồi — đừng chạy lại `commitAction`.
+  ///
+  /// Cùng một cái bẫy như [meaningAlreadySettled], chỉ lùi thêm một màn: màn
+  /// Đóng cũng mở bằng `push`, nên bấm Back từ đó là về đúng màn Lựa chọn với
+  /// Episode đã ở [committed] hoặc [integrated]. Cả hai đều không đi được sang
+  /// [committed] (WXS §4.4), nên bấm "Lưu lựa chọn này" lần nữa sẽ ném
+  /// "Transition bất hợp lệ".
+  bool get actionAlreadySettled => switch (this) {
+        ExperienceState.committed || ExperienceState.integrated => true,
+        _ => false,
+      };
+
+  /// Còn đổi lựa chọn tại chỗ được hay không.
+  ///
+  /// Chỉ đúng ở [committed]: phiên vẫn đang mở, chưa có gì được chốt dựa trên
+  /// câu đó. Sang [integrated] thì Career Memory và reflection steps đã ghi
+  /// `tiny_action` rồi — sửa lặng lẽ sẽ làm Episode lệch với ký ức đã lưu.
+  /// Muốn đổi thì mở lại phiên (WPA Inv.4), là một hành động có chủ đích.
+  bool get canReviseActionInPlace => this == ExperienceState.committed;
 }
 
 // ---------------------------------------------------------------------------
@@ -318,6 +338,10 @@ class ReflectionEpisode {
     String? themeId,
     String? memoryEventId,
     DateTime? closedAt,
+    /// Xoá hẳn `reflectChoice` về null. Cần riêng một cờ vì truyền null vào
+    /// [reflectChoice] chỉ có nghĩa "giữ nguyên", trong khi đổi từ câu chọn sẵn
+    /// sang câu tự viết thì lựa chọn cũ phải biến mất.
+    bool clearReflectChoice = false,
   }) {
     return ReflectionEpisode(
       id: id ?? this.id,
@@ -333,7 +357,8 @@ class ReflectionEpisode {
       notes: notes ?? this.notes,
       draftMeaning: draftMeaning ?? this.draftMeaning,
       confirmedInsightId: confirmedInsightId ?? this.confirmedInsightId,
-      reflectChoice: reflectChoice ?? this.reflectChoice,
+      reflectChoice:
+          clearReflectChoice ? null : (reflectChoice ?? this.reflectChoice),
       tinyAction: tinyAction ?? this.tinyAction,
       themeId: themeId ?? this.themeId,
       memoryEventId: memoryEventId ?? this.memoryEventId,

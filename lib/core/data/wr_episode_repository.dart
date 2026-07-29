@@ -74,6 +74,19 @@ abstract class WrEpisodeRepository {
     String? choice,
   });
 
+  /// Đổi lại lựa chọn của một Episode ĐÃ cam kết, giữ nguyên trạng thái.
+  ///
+  /// Cùng lý do với [reviseMeaning]: `committed → committed` không nằm trong
+  /// bảng transition (WXS §4.4), nên không dùng lại được [commitAction] để đổi
+  /// câu. Nhưng người dùng vẫn quay lại được màn Lựa chọn bằng nút Back, và đổi
+  /// một Tiny Next Step khi phiên còn mở thì không đi ngược tiến trình nhận
+  /// thức nào. Vì vậy đây là phép cập nhật thuần, KHÔNG có assertTransition.
+  Future<ReflectionEpisode> reviseAction({
+    required ReflectionEpisode episode,
+    required String action,
+    String? choice,
+  });
+
   /// Đóng Episode: đưa vào Career Memory (WXS §4.3 State 7).
   Future<ReflectionEpisode> integrate({
     required ReflectionEpisode episode,
@@ -251,6 +264,22 @@ class SupabaseWrEpisodeRepository implements WrEpisodeRepository {
       // chứ không chép lại tiny_action — làm vậy là biến một câu tự viết thành
       // "đã chọn từ bể", tức bịa ra dữ liệu chưa từng xảy ra.
       if (picked != null && picked.isNotEmpty) 'reflect_choice': picked,
+    });
+  }
+
+  @override
+  Future<ReflectionEpisode> reviseAction({
+    required ReflectionEpisode episode,
+    required String action,
+    String? choice,
+  }) async {
+    // Cố ý không có assertTransition — xem lý do ở khai báo trong interface.
+    final picked = choice?.trim();
+    return _patch(episode, {
+      'tiny_action': action.trim(),
+      // Ghi cả khi rỗng: người dùng vừa đổi từ một câu chọn sẵn sang câu tự
+      // viết thì reflect_choice cũ không còn đúng nữa, giữ lại là bịa.
+      'reflect_choice': picked != null && picked.isNotEmpty ? picked : null,
     });
   }
 

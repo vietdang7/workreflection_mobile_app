@@ -1,0 +1,320 @@
+// Một chủ đề thực hành — toàn bộ các bước nằm ở đây.
+//
+// Giao diện mẫu Sprint 2 (practiceDetail): tab Phát triển chỉ liệt kê chủ đề,
+// bấm vào một chủ đề mới mở ra chuỗi bước. Nhờ vậy người dùng thấy được cả
+// đường đi của chủ đề — đã qua đâu, đang ở đâu, còn gì phía trước — thay vì
+// chỉ thấy đúng một bước kế tiếp.
+//
+// Bước Premium vẫn hiện nguyên nội dung mờ kèm nút mở khoá (Hai Lớp v1.2 §IV,
+// khoá cấp nội dung): giấu hẳn thì người dùng không biết mình đang bỏ lỡ gì.
+
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+
+import '../../../core/logic/wr_entitlement.dart';
+import '../../../core/models/wr_intelligence.dart';
+import '../../../core/theme/wr_colors.dart';
+import '../../../core/widgets/wr_detail_scaffold.dart';
+import '../growth_providers.dart';
+import '../wr_providers.dart';
+import 'wr_practice_step_completion.dart';
+
+class WrPracticeThemeScreen extends ConsumerWidget {
+  const WrPracticeThemeScreen({super.key, required this.themeId});
+
+  final String themeId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final themes = ref.watch(practiceThemesProvider).valueOrNull ?? const [];
+    final enrollments =
+        ref.watch(practiceEnrollmentsProvider).valueOrNull ?? const [];
+    final entitlement = ref.watch(wrEntitlementProvider).valueOrNull ??
+        WrEntitlement(plan: WrPlan.free);
+    final stepsAsync = ref.watch(practiceStepsProvider(themeId));
+
+    final theme = themes.where((t) => t.themeId == themeId).firstOrNull;
+    final enrollment =
+        enrollments.where((e) => e.themeId == themeId).firstOrNull;
+
+    if (theme == null) {
+      return const WrDetailScaffold(
+        eyebrow: 'THỰC HÀNH',
+        title: 'Không tìm thấy chủ đề',
+        children: [
+          Text(
+            'Chủ đề này không còn nữa. Quay lại tab Phát triển để chọn chủ đề khác.',
+            key: Key('wr_practice_theme_gone'),
+            style: TextStyle(fontSize: 15, color: WrColors.muted, height: 1.6),
+          ),
+        ],
+      );
+    }
+
+    final steps = (stepsAsync.valueOrNull ?? const <PracticeStep>[]).toList()
+      ..sort((a, b) => a.stepOrder.compareTo(b.stepOrder));
+    final completed = enrollment?.completedSteps ?? const <String>[];
+    final doneCount = steps.where((s) => completed.contains(s.stepId)).length;
+
+    return WrDetailScaffold(
+      eyebrow: enrollment == null
+          ? 'CHƯA BẮT ĐẦU'
+          : (enrollment.completedAt != null
+              ? 'ĐÃ HOÀN THÀNH'
+              : 'ĐANG THỰC HÀNH'),
+      title: theme.title,
+      children: [
+        if (theme.description != null) ...[
+          Text(
+            theme.description!,
+            style: const TextStyle(
+              fontSize: 14,
+              color: WrColors.muted,
+              height: 1.6,
+            ),
+          ),
+          const SizedBox(height: 18),
+        ],
+        WrPracticeProgressDots(total: steps.length, done: doneCount),
+        const SizedBox(height: 8),
+        Text(
+          steps.isEmpty
+              ? 'Chủ đề này chưa có bước nào.'
+              : '$doneCount/${steps.length} bước hoàn thành',
+          key: const Key('wr_practice_theme_progress'),
+          style: const TextStyle(fontSize: 13, color: WrColors.muted),
+        ),
+        const SizedBox(height: 24),
+        for (int i = 0; i < steps.length; i++)
+          _StepBlock(
+            step: steps[i],
+            index: i,
+            isDone: completed.contains(steps[i].stepId),
+            isLocked: steps[i].isPremium &&
+                !entitlement.canAccessPracticeStep(isPremiumStep: true),
+            // Chỉ bước liền sau bước đã xong mới bấm được: chuỗi thực hành đi
+            // theo thứ tự, không nhảy cóc.
+            isNext: !completed.contains(steps[i].stepId) &&
+                completed.length == steps[i].stepOrder - 1,
+            canAct: enrollment != null && enrollment.completedAt == null,
+            onDone: () => completePracticeStep(
+              context: context,
+              ref: ref,
+              theme: theme,
+              enrollment: enrollment!,
+              stepId: steps[i].stepId,
+              allSteps: steps,
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// Dải chấm tiến độ của một chủ đề — mỗi chấm là một bước.
+class WrPracticeProgressDots extends StatelessWidget {
+  const WrPracticeProgressDots({
+    super.key,
+    required this.total,
+    required this.done,
+  });
+
+  final int total;
+  final int done;
+
+  @override
+  Widget build(BuildContext context) {
+    if (total == 0) return const SizedBox.shrink();
+    return Row(
+      children: [
+        for (int i = 0; i < total; i++) ...[
+          if (i > 0) const SizedBox(width: 6),
+          Container(
+            width: 22,
+            height: 5,
+            decoration: BoxDecoration(
+              color: i < done
+                  ? WrColors.teal
+                  : WrColors.navy.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(3),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _StepBlock extends StatelessWidget {
+  const _StepBlock({
+    required this.step,
+    required this.index,
+    required this.isDone,
+    required this.isLocked,
+    required this.isNext,
+    required this.canAct,
+    required this.onDone,
+  });
+
+  final PracticeStep step;
+  final int index;
+  final bool isDone;
+  final bool isLocked;
+  final bool isNext;
+  final bool canAct;
+  final VoidCallback onDone;
+
+  @override
+  Widget build(BuildContext context) {
+    final tag = practiceStageTag(step.stepOrder);
+
+    return Opacity(
+      opacity: isLocked ? 0.72 : 1,
+      child: Padding(
+        key: Key('wr_practice_step_${step.stepId}'),
+        padding: const EdgeInsets.only(bottom: 26),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 26,
+              height: 26,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: isDone
+                    ? WrColors.teal
+                    : WrColors.navy.withValues(alpha: 0.08),
+              ),
+              child: isDone
+                  ? const Icon(Icons.check, size: 15, color: WrColors.white)
+                  : Text(
+                      '${index + 1}',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: WrColors.navy,
+                      ),
+                    ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  if (isLocked) ...[
+                    const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(Icons.lock_outline,
+                            size: 13, color: WrColors.amber),
+                        SizedBox(width: 5),
+                        Text(
+                          'Premium',
+                          style: TextStyle(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.5,
+                            color: WrColors.amber,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 6),
+                  ],
+                  if (tag != null) ...[
+                    Text(
+                      tag,
+                      style: const TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.6,
+                        color: WrColors.muted,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                  ],
+                  Text(
+                    step.title,
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                      height: 1.35,
+                      color: isDone ? WrColors.muted : WrColors.navy,
+                      decoration: isDone ? TextDecoration.lineThrough : null,
+                      decorationColor: WrColors.muted,
+                    ),
+                  ),
+                  if (step.content != null && step.content!.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      step.content!,
+                      style: const TextStyle(
+                        fontSize: 13.5,
+                        color: WrColors.muted,
+                        height: 1.6,
+                      ),
+                    ),
+                  ],
+                  if (isLocked) ...[
+                    const SizedBox(height: 12),
+                    _StepButton(
+                      key: Key('wr_practice_step_unlock_${step.stepId}'),
+                      label: 'Mở khoá bước này',
+                      onTap: () =>
+                          context.push('/wr/paywall?trigger=practice_step'),
+                    ),
+                  ] else if (!isDone && isNext && canAct) ...[
+                    const SizedBox(height: 12),
+                    _StepButton(
+                      key: Key('wr_practice_step_done_${step.stepId}'),
+                      label: 'Đánh dấu hoàn thành',
+                      onTap: onDone,
+                    ),
+                  ] else if (!isDone && !isNext) ...[
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Xong bước trước rồi mở tiếp',
+                      style: TextStyle(fontSize: 12, color: WrColors.muted),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _StepButton extends StatelessWidget {
+  const _StepButton({super.key, required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+        decoration: BoxDecoration(
+          color: WrColors.navy,
+          borderRadius: BorderRadius.circular(9),
+        ),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 12.5,
+            fontWeight: FontWeight.w700,
+            color: WrColors.white,
+          ),
+        ),
+      ),
+    );
+  }
+}

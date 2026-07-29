@@ -281,6 +281,29 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
   Future<void> commit(String action, {String? choice}) async {
     final ep = state;
     if (ep == null) return;
+
+    // Đã cam kết rồi mà quay lại bấm lần nữa. Màn Đóng mở bằng push, nên bấm
+    // Back là về đúng đây với Episode ở committed hoặc integrated — cả hai đều
+    // không đi được sang committed (WXS §4.4), chạy lại commitAction lúc này là
+    // đâm vào "Transition bất hợp lệ". Cùng một cái bẫy như [confirmMeaning].
+    if (ep.state.actionAlreadySettled) {
+      final text = action.trim();
+      final picked = choice?.trim();
+      final changed = text != ep.tinyAction?.trim() ||
+          _blankToNull(picked) != _blankToNull(ep.reflectChoice);
+      if (ep.state.canReviseActionInPlace && text.isNotEmpty && changed) {
+        // Đổi câu khi phiên còn mở — cập nhật thuần, không đổi trạng thái.
+        state = await _repo.reviseAction(
+          episode: ep,
+          action: text,
+          choice: picked,
+        );
+      }
+      // Còn lại thì KHÔNG ghi gì: không sửa lặng lẽ một phiên đã vào Career
+      // Memory, và không ghi đè bằng đúng câu cũ.
+      return;
+    }
+
     state = await _repo.commitAction(
       episode: ep,
       action: action,
@@ -293,6 +316,19 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
   Future<void> integrate() async {
     final ep = state;
     if (ep == null) return;
+
+    // Không khép được thì DỪNG NGAY, trước khi ghi bất cứ thứ gì.
+    //
+    // Màn Đóng khép Episode ngay trong initState, nên bấm Back rồi tới lại là
+    // chạy hàm này lần hai với state đã là integrated. Trước bản vá này,
+    // assertTransition chỉ ném ở dòng cuối — sau khi Career Memory, đếm tình
+    // huống và reflection steps đều đã được ghi thêm một lần nữa. Lỗi thì bị
+    // màn hình nuốt, còn dữ liệu thì nhân đôi mà không ai thấy.
+    //
+    // Chặn ở đây cũng giữ luôn WDA Inv.6: state chưa có Meaning thì không
+    // canTransition sang integrated, nên không có gì lọt vào Career Memory.
+    if (!canTransition(ep.state, ExperienceState.integrated)) return;
+
     final userId = ep.userId;
 
     // (1) Career Memory Event — nội dung là Meaning, không phải ghi chú thô.
@@ -357,6 +393,12 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
     }
     state = null;
     _ref.invalidate(wrOpenEpisodeProvider);
+  }
+
+  /// Chuỗi rỗng và null là cùng một chuyện: "không có lựa chọn nào".
+  static String? _blankToNull(String? value) {
+    final text = value?.trim();
+    return (text == null || text.isEmpty) ? null : text;
   }
 
   Future<void> _insertStep(

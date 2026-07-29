@@ -11,6 +11,12 @@ enum PaywallTrigger {
 
   /// Hai Lớp v1.6 §11.4 — Cơ hội phát triển thuộc lớp Paid.
   growthOpportunity,
+
+  /// Đọc vị nhu cầu ở tab Hiểu mình (khách chốt 2026-07-29).
+  needReading,
+
+  /// Toàn bộ Career Memory ở tab Hành trình (khách chốt 2026-07-29).
+  careerMemory,
 }
 
 class WrPaywallScreen extends StatelessWidget {
@@ -39,6 +45,15 @@ class WrPaywallScreen extends StatelessWidget {
             title: 'Hướng phát triển tiếp theo của bạn',
             sub: 'Từ những gì bạn đã nhìn lại, bản đầy đủ chỉ ra một hướng '
                 'năng lực đáng thử tiếp.',
+          ),
+        PaywallTrigger.needReading => (
+            title: 'Điều bạn đang thật sự tìm kiếm',
+            sub: 'Bản đầy đủ đọc ra nhu cầu đứng sau những tình huống cứ lặp '
+                'lại với bạn.',
+          ),
+        PaywallTrigger.careerMemory => (
+            title: 'Toàn bộ ký ức nghề nghiệp của bạn',
+            sub: 'Mở lại từng mảnh bạn đã để lại, theo đúng dòng thời gian.',
           ),
         PaywallTrigger.defaultTrigger => (
             title: 'Mở khoá toàn bộ hành trình',

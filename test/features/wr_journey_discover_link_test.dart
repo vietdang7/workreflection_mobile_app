@@ -35,6 +35,7 @@ GoRouter _makeRouter({required Widget home, String initialLocation = '/test'}) =
         GoRoute(path: '/wr/discover', builder: (_, __) => const Scaffold(body: Text('DiscoverScreen'))),
         GoRoute(path: '/wr/paywall', builder: (_, __) => const Scaffold(body: Text('PaywallScreen'))),
         GoRoute(path: '/wr/self-check', builder: (_, __) => const Scaffold(body: Text('SelfCheckScreen'))),
+        GoRoute(path: '/wr/journey/narrative', builder: (_, __) => const Scaffold(body: Text('Narrative'))),
       ],
     );
 
@@ -42,9 +43,17 @@ Widget _wrapJourney({
   FakeWrContentRepository? content,
   FakeWrIntelligenceRepository? intel,
   String userId = 'u1',
+  // Dòng thời gian Career Memory chỉ hiện với Premium (khách chốt 2026-07-29),
+  // nên test nào kiểm cách dựng dòng thời gian phải bật cờ này.
+  bool premium = false,
 }) {
   final contentRepo = content ?? FakeWrContentRepository();
   final intelRepo = intel ?? FakeWrIntelligenceRepository();
+  if (premium) {
+    intelRepo.seedEntitlement(
+      WrEntitlementRecord(userId: userId, plan: WrPlan.premium),
+    );
+  }
   final router = _makeRouter(home: const WrJourneyScreen());
   return ProviderScope(
     overrides: [
@@ -166,7 +175,7 @@ void main() {
         ),
       ]);
 
-      await _pumpLarge(tester, _wrapJourney(content: content));
+      await _pumpLarge(tester, _wrapJourney(content: content, premium: true));
 
       // Title phải là text tình huống
       expect(find.text('Áp lực deadline'), findsOneWidget);
@@ -189,7 +198,7 @@ void main() {
         ),
       ]);
 
-      await _pumpLarge(tester, _wrapJourney(content: content));
+      await _pumpLarge(tester, _wrapJourney(content: content, premium: true));
 
       // Body phải hiện emotion đã map
       expect(find.text('Mệt mỏi'), findsOneWidget);
@@ -208,7 +217,7 @@ void main() {
         ),
       ]);
 
-      await _pumpLarge(tester, _wrapJourney(content: content));
+      await _pumpLarge(tester, _wrapJourney(content: content, premium: true));
 
       expect(find.text('Ổn'), findsOneWidget);
       expect(find.text('ok'), findsNothing);
@@ -227,7 +236,7 @@ void main() {
         ),
       ]);
 
-      await _pumpLarge(tester, _wrapJourney(content: content));
+      await _pumpLarge(tester, _wrapJourney(content: content, premium: true));
 
       expect(find.text('Vui'), findsOneWidget);
       expect(find.text('good'), findsNothing);
@@ -246,7 +255,7 @@ void main() {
         ),
       ]);
 
-      await _pumpLarge(tester, _wrapJourney(content: content));
+      await _pumpLarge(tester, _wrapJourney(content: content, premium: true));
 
       expect(find.text('Hôm nay tôi học được điều mới'), findsOneWidget);
     });
@@ -269,7 +278,7 @@ void main() {
         _event(id: 'e2', userId: 'u1', reflectionText: 'Hai', createdAt: DateTime(2026, 7, 19)),
       ]);
 
-      await _pumpLarge(tester, _wrapJourney(content: content));
+      await _pumpLarge(tester, _wrapJourney(content: content, premium: true));
 
       expect(find.textContaining('2 mảnh ký ức'), findsOneWidget);
       // Dòng thời gian gom theo tháng — hai mục cùng tháng 7 nằm chung một cụm.
@@ -327,7 +336,7 @@ void main() {
         _event(id: 'e3', userId: 'u1', behavior: 'insight', reflectionText: 'Nhận ra', createdAt: DateTime(2026, 7, 16)),
       ]);
 
-      await _pumpLarge(tester, _wrapJourney(content: content));
+      await _pumpLarge(tester, _wrapJourney(content: content, premium: true));
 
       expect(find.text('PHẢN CHIẾU'), findsOneWidget);
       expect(find.text('THỰC HÀNH'), findsOneWidget);
@@ -352,7 +361,7 @@ void main() {
         ),
       ]);
 
-      await _pumpLarge(tester, _wrapJourney(content: content));
+      await _pumpLarge(tester, _wrapJourney(content: content, premium: true));
 
       expect(find.text('THÁNG 7, 2026'), findsOneWidget);
       expect(find.text('THÁNG 6, 2026'), findsOneWidget);
@@ -417,6 +426,79 @@ void main() {
       expect(find.textContaining('Xem toàn bộ hành trình'), findsNothing);
       expect(find.text('Áp lực deadline'), findsOneWidget);
       expect(find.text('4 lần'), findsOneWidget);
+    });
+  });
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // Thẻ "Diễn biến theo thời gian" mở đầu tab (giao diện mẫu Sprint 2)
+  // ───────────────────────────────────────────────────────────────────────────
+
+  group('Hành trình — thẻ Diễn biến theo thời gian', () {
+    testWidgets('bản miễn phí không thấy một chữ nào của nội dung diễn giải', (
+      tester,
+    ) async {
+      final intel = FakeWrIntelligenceRepository();
+      intel.seedPatternNarratives([
+        PatternNarrative(
+          id: 'n1',
+          userId: 'u1',
+          narrative: 'Bạn đang học cách lên tiếng.',
+        ),
+      ]);
+
+      await _pumpLarge(tester, _wrapJourney(intel: intel));
+
+      expect(find.byKey(const Key('wr_journey_narrative_card')), findsOneWidget);
+      // Khoá, không phải làm mờ: chữ mờ vẫn là chữ đã gửi xuống máy.
+      expect(find.text('Bạn đang học cách lên tiếng.'), findsNothing);
+      expect(find.text('Xem bản đầy đủ có gì'), findsOneWidget);
+    });
+
+    testWidgets('Premium đọc được ngay diễn giải mới nhất trên tab', (
+      tester,
+    ) async {
+      final intel = FakeWrIntelligenceRepository();
+      intel.seedPatternNarratives([
+        PatternNarrative(
+          id: 'n1',
+          userId: 'u1',
+          narrative: 'Bạn đang học cách lên tiếng.',
+        ),
+      ]);
+
+      await _pumpLarge(tester, _wrapJourney(intel: intel, premium: true));
+
+      expect(find.text('Bạn đang học cách lên tiếng.'), findsOneWidget);
+      expect(find.text('Đọc toàn bộ diễn biến'), findsOneWidget);
+    });
+
+    testWidgets('Premium chưa đủ dữ liệu thì nói thẳng, không dựng thẻ rỗng', (
+      tester,
+    ) async {
+      await _pumpLarge(tester, _wrapJourney(premium: true));
+
+      expect(find.byKey(const Key('wr_journey_narrative_card')), findsOneWidget);
+      expect(find.textContaining('Chưa đủ dữ liệu'), findsOneWidget);
+    });
+
+    testWidgets('thẻ nằm TRÊN Career Memory — nó tóm cả chặng đường', (
+      tester,
+    ) async {
+      await _pumpLarge(tester, _wrapJourney(premium: true));
+
+      final card = tester
+          .getTopLeft(find.byKey(const Key('wr_journey_narrative_card')));
+      final memory = tester.getTopLeft(find.text('CAREER MEMORY'));
+      expect(card.dy, lessThan(memory.dy));
+    });
+
+    testWidgets('bấm dòng dẫn mở màn Diễn biến riêng', (tester) async {
+      await _pumpLarge(tester, _wrapJourney());
+
+      await tester.tap(find.byKey(const Key('wr_journey_narrative_row')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Narrative'), findsOneWidget);
     });
   });
 }

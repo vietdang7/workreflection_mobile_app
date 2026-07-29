@@ -21,6 +21,7 @@ import 'package:workreflection_mobile/core/models/wr_episode.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 import 'package:workreflection_mobile/core/data/wr_mood_content_repository.dart';
+import 'package:workreflection_mobile/features/wr/episode_flow_controller.dart';
 import 'package:workreflection_mobile/features/wr/presentation/flow/wr_commit_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/flow/wr_done_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/flow/wr_energy_screen.dart';
@@ -612,6 +613,131 @@ void main() {
         'reflection_episode',
       );
       expect(h.episodes.episodes.single.state, ExperienceState.integrated);
+    });
+
+    // Owner gặp trên bản web 2026-07-29: "Transition bất hợp lệ: integrated →
+    // committed". Cùng một cái bẫy như bước Ý nghĩa, chỉ lùi thêm một màn —
+    // màn Đóng cũng mở bằng push nên Back là về đúng màn Lựa chọn.
+    /// Đi trọn đường: xác nhận Ý nghĩa → chọn một câu → lưu (sang màn Đóng,
+    /// Episode được integrate) → Back về đúng màn Lựa chọn.
+    Future<_Harness> backToChoiceAfterCommit(WidgetTester tester) async {
+      final h = _Harness();
+      h.moodContent.seedChoicePool(const [
+        'Ghi nhớ điều này để xem lại sau',
+        'Nói chuyện với ai đó về điều này',
+        'Chưa biết, cần thêm thời gian',
+        'Không cần hành động gì, chỉ cần ghi nhận là đủ',
+      ]);
+      h.seedOpenEpisode(
+        moment: HumanMoment.celebration,
+        state: ExperienceState.exploring,
+        patternsDone: const [
+          ReflectionPattern.notice,
+          ReflectionPattern.name,
+          ReflectionPattern.preserve,
+        ],
+        notes: const {'name': 'Mình đã dám trình bày'},
+      );
+      await _pump(tester, h.app());
+      await _resume(tester);
+      await _confirmMeaning(tester);
+
+      await tester.tap(find.byKey(const Key('wr_choice_0')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
+      await tester.pumpAndSettle();
+
+      // Back của trình duyệt: Đóng → Lựa chọn.
+      await tester.binding.handlePopRoute();
+      await tester.pumpAndSettle();
+      return h;
+    }
+
+    testWidgets('khép phiên rồi lùi về màn Lựa chọn, bấm lưu lần nữa không ném '
+        'lỗi', (tester) async {
+      final h = await backToChoiceAfterCommit(tester);
+      expect(h.episodes.episodes.single.state, ExperienceState.integrated);
+      expect(find.byKey(const Key('wr_choice_0')), findsOneWidget);
+      // Bể lựa chọn được trộn mỗi lần vào, nên giữ lại câu đã ghi để so.
+      final choiceBefore = h.episodes.episodes.single.reflectChoice;
+
+      await tester.tap(find.byKey(const Key('wr_choice_1')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Transition bất hợp lệ'), findsNothing);
+      expect(find.textContaining('Không lưu được'), findsNothing);
+      // Phiên đã vào Career Memory — không sửa lặng lẽ lựa chọn đã ghi.
+      expect(h.episodes.reviseActionCalls, isEmpty);
+      final saved = h.episodes.episodes.single;
+      expect(saved.state, ExperienceState.integrated);
+      expect(saved.reflectChoice, choiceBefore);
+    });
+
+    testWidgets('lùi về màn Đóng lần nữa không ghi trùng Career Memory',
+        (tester) async {
+      final h = await backToChoiceAfterCommit(tester);
+      expect(h.content.insertMemoryEventCalls, hasLength(1));
+      final stepsAfterFirst = h.intel.insertReflectionStepCalls.length;
+
+      // Tới lại màn Đóng: initState gọi integrate() lần hai.
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
+      await tester.pumpAndSettle();
+
+      expect(h.episodes.integrateCalls, hasLength(1));
+      expect(h.content.insertMemoryEventCalls, hasLength(1));
+      expect(h.intel.insertReflectionStepCalls, hasLength(stepsAfterFirst));
+    });
+
+    // Ở mức controller chứ không qua UI: màn Lựa chọn luôn đẩy sang màn Đóng,
+    // mà màn Đóng khép phiên ngay trong initState — nên state `committed` chỉ
+    // tồn tại khi bước khép chưa chạy xong (đóng app, mất mạng, integrate lỗi).
+    // Đúng lúc đó người dùng vẫn phải đổi được lựa chọn.
+    test('đổi lựa chọn khi phiên còn mở thì cập nhật, không đổi trạng thái',
+        () async {
+      final episodes = FakeWrEpisodeRepository();
+      episodes.seed([
+        const ReflectionEpisode(
+          id: 'ep-seed',
+          userId: 'u1',
+          humanMoment: HumanMoment.celebration,
+          state: ExperienceState.committed,
+          tinyAction: 'Ghi nhớ điều này để xem lại sau',
+          reflectChoice: 'Ghi nhớ điều này để xem lại sau',
+        ),
+      ]);
+      final container = ProviderContainer(overrides: [
+        wrEpisodeRepositoryProvider.overrideWithValue(episodes),
+        currentUserIdProvider.overrideWithValue('u1'),
+      ]);
+      addTearDown(container.dispose);
+
+      final flow = container.read(episodeFlowProvider.notifier);
+      await flow.resume(episodes.episodes.single);
+
+      // Bấm lại đúng câu cũ: không ghi gì cả.
+      await flow.commit(
+        'Ghi nhớ điều này để xem lại sau',
+        choice: 'Ghi nhớ điều này để xem lại sau',
+      );
+      expect(episodes.reviseActionCalls, isEmpty);
+
+      // Đổi sang câu khác: cập nhật thuần, trạng thái giữ nguyên.
+      await flow.commit(
+        'Nói chuyện với ai đó về điều này',
+        choice: 'Nói chuyện với ai đó về điều này',
+      );
+      expect(episodes.commitActionCalls, isEmpty);
+      expect(episodes.reviseActionCalls, hasLength(1));
+      final saved = episodes.episodes.single;
+      expect(saved.state, ExperienceState.committed);
+      expect(saved.tinyAction, 'Nói chuyện với ai đó về điều này');
+      expect(saved.reflectChoice, 'Nói chuyện với ai đó về điều này');
+
+      // Chuyển sang tự viết thì lựa chọn cũ phải biến mất, không giữ lại.
+      await flow.commit('Mình sẽ tự nhắc mình mỗi sáng');
+      expect(episodes.episodes.single.reflectChoice, isNull);
     });
   });
   // -------------------------------------------------------------------------

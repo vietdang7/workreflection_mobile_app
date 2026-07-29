@@ -130,7 +130,15 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
       });
       final remaining = ref.read(episodeFlowProvider.notifier).currentPattern;
       if (remaining == null && mounted) {
-        context.push('/wr/flow/meaning');
+        // pushReplacement chứ KHÔNG push: màn này phải rời hẳn stack.
+        //
+        // Nếu còn nằm dưới màn Ý nghĩa, nó vẫn theo dõi episodeFlowProvider và
+        // vẫn dựng lại mỗi lần Episode đổi trạng thái. Lúc đó nhánh
+        // `remaining == null` ở build sẽ bắn pushReplacement thêm lần nữa và
+        // ĐÈ MẤT màn vừa được đẩy lên: người dùng xác nhận Ý nghĩa xong bị ném
+        // ngược về đúng màn Ý nghĩa thay vì sang Lựa chọn — nhìn hệt như app
+        // hỏi lại câu cũ.
+        context.pushReplacement('/wr/flow/meaning');
       }
     } catch (e, s) {
       logFlowError('recordPattern', e, s);
@@ -151,8 +159,14 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
     final remaining = nextPattern(episode.humanMoment, episode.patternsDone);
     if (remaining == null) {
       // Chuỗi phản tư đã xong — không có gì để hỏi thêm, sang bước Ý nghĩa.
+      //
+      // `isCurrent` là chốt an toàn: chỉ màn đang đứng trên cùng mới được điều
+      // hướng. Không có nó, một bản dựng lại của màn này khi nó đã nằm dưới
+      // đáy stack sẽ đè mất màn người dùng đang xem.
       WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) context.pushReplacement('/wr/flow/meaning');
+        if (!mounted) return;
+        if (ModalRoute.of(context)?.isCurrent != true) return;
+        context.pushReplacement('/wr/flow/meaning');
       });
       return const Scaffold(body: SizedBox.shrink());
     }

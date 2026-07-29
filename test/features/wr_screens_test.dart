@@ -16,6 +16,7 @@ import 'package:workreflection_mobile/features/wr/presentation/wr_growth_screen.
 import 'package:workreflection_mobile/features/wr/presentation/wr_home_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_journey_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_paywall_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/wr_practice_theme_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_story_screen.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
@@ -203,12 +204,15 @@ void main() {
   // ─────────────────────────────────────────────────────────────────────────────
 
   group('WrGrowthScreen — empty state', () {
-    testWidgets('renders top-area greeting Development Map', (tester) async {
+    testWidgets('renders top-area eyebrow Phát triển + title Thực hành', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(const WrGrowthScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('Development Map'), findsOneWidget);
+      // Giao diện mẫu Sprint 2: eyebrow "Phát triển", tiêu đề "Thực hành".
       expect(find.text('Phát triển'), findsOneWidget);
+      expect(find.text('Thực hành'), findsOneWidget);
     });
 
     testWidgets(
@@ -239,7 +243,7 @@ void main() {
   });
 
   group('WrGrowthScreen — with themes (free user)', () {
-    testWidgets('shows card-dark with active theme title when enrolled', (
+    testWidgets('shows theme card with title + progress when enrolled', (
       tester,
     ) async {
       final intel = FakeWrIntelligenceRepository();
@@ -253,14 +257,16 @@ void main() {
       await tester.pumpWidget(_wrap(const WrGrowthScreen(), intel: intel));
       await tester.pumpAndSettle();
 
-      // card-dark shows theme title (TRỌNG TÂM HIỆN TẠI eyebrow + theme name)
-      expect(find.textContaining('TRỌNG TÂM HIỆN TẠI'), findsOneWidget);
+      expect(find.textContaining('CHỦ ĐỀ CỦA BẠN'), findsOneWidget);
+      expect(
+        find.byKey(const Key('wr_growth_theme_card_pt-voice')),
+        findsOneWidget,
+      );
       expect(find.text('Dám lên tiếng'), findsOneWidget);
+      expect(find.text('0/2 bước hoàn thành'), findsOneWidget);
     });
 
-    testWidgets('shows PRACTICES HÔM NAY section with steps when enrolled', (
-      tester,
-    ) async {
+    testWidgets('màn chủ đề liệt kê đủ các bước', (tester) async {
       final intel = FakeWrIntelligenceRepository();
       intel.seedPracticeThemes([_theme()]);
       intel.seedPracticeSteps('pt-voice', [
@@ -270,16 +276,21 @@ void main() {
       ]);
       intel.seedEnrollments([_enrollment()]);
 
-      await tester.pumpWidget(_wrap(const WrGrowthScreen(), intel: intel));
+      await tester.pumpWidget(_wrap(
+        const WrPracticeThemeScreen(themeId: 'pt-voice'),
+        intel: intel,
+      ));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('PRACTICES HÔM NAY'), findsOneWidget);
       expect(find.text('Nhận diện'), findsOneWidget);
       expect(find.text('Thử nghiệm'), findsOneWidget);
       expect(find.text('Duy trì'), findsOneWidget);
+      expect(find.text('0/3 bước hoàn thành'), findsOneWidget);
     });
 
-    testWidgets('done step shows Hoàn thành status (teal)', (tester) async {
+    testWidgets('bước đã xong được đánh dấu trong tiến độ chủ đề', (
+      tester,
+    ) async {
       final intel = FakeWrIntelligenceRepository();
       intel.seedPracticeThemes([_theme()]);
       intel.seedPracticeSteps('pt-voice', [
@@ -291,13 +302,21 @@ void main() {
         _enrollment(completed: ['pt-voice-1']),
       ]);
 
-      await tester.pumpWidget(_wrap(const WrGrowthScreen(), intel: intel));
+      await tester.pumpWidget(_wrap(
+        const WrPracticeThemeScreen(themeId: 'pt-voice'),
+        intel: intel,
+      ));
       await tester.pumpAndSettle();
 
-      expect(find.text('Hoàn thành'), findsOneWidget);
+      expect(find.text('1/2 bước hoàn thành'), findsOneWidget);
+      // Bước đã xong không còn nút bấm — không đánh dấu xong được hai lần.
+      expect(
+        find.byKey(const Key('wr_practice_step_done_pt-voice-1')),
+        findsNothing,
+      );
     });
 
-    testWidgets('current step shows Đang thực hiện status (coral)', (
+    testWidgets('chỉ bước kế tiếp mới có nút đánh dấu hoàn thành', (
       tester,
     ) async {
       final intel = FakeWrIntelligenceRepository();
@@ -308,14 +327,25 @@ void main() {
       ]);
       intel.seedEnrollments([_enrollment()]);
 
-      await tester.pumpWidget(_wrap(const WrGrowthScreen(), intel: intel));
+      await tester.pumpWidget(_wrap(
+        const WrPracticeThemeScreen(themeId: 'pt-voice'),
+        intel: intel,
+      ));
       await tester.pumpAndSettle();
 
-      // First step (order=1, completed.length=0) is isNext → "Đang thực hiện"
-      expect(find.text('Đang thực hiện'), findsOneWidget);
+      expect(
+        find.byKey(const Key('wr_practice_step_done_pt-voice-1')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('wr_practice_step_done_pt-voice-2')),
+        findsNothing,
+      );
     });
 
-    testWidgets('unstarted step shows Chưa bắt đầu status', (tester) async {
+    testWidgets('bước chưa tới lượt nói rõ phải xong bước trước', (
+      tester,
+    ) async {
       final intel = FakeWrIntelligenceRepository();
       intel.seedPracticeThemes([_theme()]);
       intel.seedPracticeSteps('pt-voice', [
@@ -324,11 +354,13 @@ void main() {
       ]);
       intel.seedEnrollments([_enrollment()]);
 
-      await tester.pumpWidget(_wrap(const WrGrowthScreen(), intel: intel));
+      await tester.pumpWidget(_wrap(
+        const WrPracticeThemeScreen(themeId: 'pt-voice'),
+        intel: intel,
+      ));
       await tester.pumpAndSettle();
 
-      // Second step (order=2, completed.length=0 → not isNext) → "Chưa bắt đầu"
-      expect(find.text('Chưa bắt đầu'), findsOneWidget);
+      expect(find.text('Xong bước trước rồi mở tiếp'), findsOneWidget);
     });
 
     testWidgets('shows theme title and steps', (tester) async {
@@ -341,7 +373,10 @@ void main() {
       ]);
       intel.seedEnrollments([_enrollment()]);
 
-      await tester.pumpWidget(_wrap(const WrGrowthScreen(), intel: intel));
+      await tester.pumpWidget(_wrap(
+        const WrPracticeThemeScreen(themeId: 'pt-voice'),
+        intel: intel,
+      ));
       await tester.pumpAndSettle();
 
       expect(find.text('Dám lên tiếng'), findsOneWidget);
@@ -361,10 +396,17 @@ void main() {
       ]);
       intel.seedEnrollments([_enrollment()]);
 
-      await tester.pumpWidget(_wrap(const WrGrowthScreen(), intel: intel));
+      await tester.pumpWidget(_wrap(
+        const WrPracticeThemeScreen(themeId: 'pt-voice'),
+        intel: intel,
+      ));
       await tester.pumpAndSettle();
 
       expect(find.textContaining('Premium'), findsWidgets);
+      expect(
+        find.byKey(const Key('wr_practice_step_unlock_pt-voice-3')),
+        findsOneWidget,
+      );
     });
 
     testWidgets('premium step is accessible for premium user', (tester) async {
@@ -381,11 +423,22 @@ void main() {
         WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
       );
 
-      await tester.pumpWidget(_wrap(const WrGrowthScreen(), intel: intel));
+      await tester.pumpWidget(_wrap(
+        const WrPracticeThemeScreen(themeId: 'pt-voice'),
+        intel: intel,
+      ));
       await tester.pumpAndSettle();
 
-      // Duy trì step visible but NOT dimmed (premium unlocked)
+      // Bước Premium hiện và bấm được, không còn nút mở khoá.
       expect(find.text('Duy trì'), findsOneWidget);
+      expect(
+        find.byKey(const Key('wr_practice_step_unlock_pt-voice-3')),
+        findsNothing,
+      );
+      expect(
+        find.byKey(const Key('wr_practice_step_done_pt-voice-3')),
+        findsOneWidget,
+      );
     });
 
     testWidgets(
@@ -419,11 +472,15 @@ void main() {
         intel.seedEnrollments([_enrollment()]);
 
         await tester.pumpWidget(
-          _wrap(const WrGrowthScreen(), intel: intel, content: content),
+          _wrap(
+            const WrPracticeThemeScreen(themeId: 'pt-voice'),
+            intel: intel,
+            content: content,
+          ),
         );
         await tester.pumpAndSettle();
 
-        await tester.tap(find.text('Xong'));
+        await tester.tap(find.text('Đánh dấu hoàn thành'));
         await tester.pumpAndSettle();
 
         // §VII: bấm Xong mở tấm ghi chú trước, chưa ghi gì cả.
@@ -468,11 +525,15 @@ void main() {
         intel.seedEnrollments([_enrollment()]);
 
         await tester.pumpWidget(
-          _wrap(const WrGrowthScreen(), intel: intel, content: content),
+          _wrap(
+            const WrPracticeThemeScreen(themeId: 'pt-voice'),
+            intel: intel,
+            content: content,
+          ),
         );
         await tester.pumpAndSettle();
 
-        await tester.tap(find.text('Xong'));
+        await tester.tap(find.text('Đánh dấu hoàn thành'));
         await tester.pumpAndSettle();
 
         await tester.enterText(
@@ -510,11 +571,15 @@ void main() {
       intel.seedEnrollments([_enrollment()]);
 
       await tester.pumpWidget(
-        _wrap(const WrGrowthScreen(), intel: intel, content: content),
+        _wrap(
+          const WrPracticeThemeScreen(themeId: 'pt-voice'),
+          intel: intel,
+          content: content,
+        ),
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Xong'));
+      await tester.tap(find.text('Đánh dấu hoàn thành'));
       await tester.pumpAndSettle();
 
       // Chạm ra ngoài tấm = đóng, không phải "xong mà không ghi chú".
@@ -572,7 +637,14 @@ void main() {
     });
   });
 
+  // Dòng thời gian chỉ hiện với Premium (khách chốt 2026-07-29), nên nhóm test
+  // dựng hình này phải chạy dưới tài khoản Premium.
   group('WrJourneyScreen — timeline', () {
+    FakeWrIntelligenceRepository premiumIntel() => FakeWrIntelligenceRepository()
+      ..seedEntitlement(
+        WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
+      );
+
     testWidgets('gom mục theo tháng khi có dữ liệu', (
       tester,
     ) async {
@@ -585,7 +657,7 @@ void main() {
         ),
       ]);
 
-      await tester.pumpWidget(_wrap(const WrJourneyScreen(), content: content));
+      await tester.pumpWidget(_wrap(const WrJourneyScreen(), intel: premiumIntel(), content: content));
       await tester.pumpAndSettle();
 
       expect(find.text('THÁNG 7, 2026'), findsOneWidget);
@@ -603,7 +675,7 @@ void main() {
         ),
       ]);
 
-      await tester.pumpWidget(_wrap(const WrJourneyScreen(), content: content));
+      await tester.pumpWidget(_wrap(const WrJourneyScreen(), intel: premiumIntel(), content: content));
       await tester.pumpAndSettle();
 
       expect(find.text('Insight đầu tiên'), findsOneWidget);
@@ -622,7 +694,7 @@ void main() {
         ),
       ]);
 
-      await tester.pumpWidget(_wrap(const WrJourneyScreen(), content: content));
+      await tester.pumpWidget(_wrap(const WrJourneyScreen(), intel: premiumIntel(), content: content));
       await tester.pumpAndSettle();
 
       expect(find.text('THỰC HÀNH'), findsOneWidget);
@@ -639,21 +711,23 @@ void main() {
         ),
       ]);
 
-      await tester.pumpWidget(_wrap(const WrJourneyScreen(), content: content));
+      await tester.pumpWidget(_wrap(const WrJourneyScreen(), intel: premiumIntel(), content: content));
       await tester.pumpAndSettle();
 
       expect(find.text('QUYẾT ĐỊNH'), findsOneWidget);
     });
   });
 
+  // Quyết định của khách 2026-07-29: Career Memory khoá HOÀN TOÀN với Free.
+  // Bản trước cho xem 10 mục gần nhất rồi mới cắt.
   group('WrJourneyScreen — with events (free user)', () {
-    testWidgets('shows up to 10 events and lock banner at limit', (
+    testWidgets('free không thấy mảnh ký ức nào, chỉ thấy khối khoá', (
       tester,
     ) async {
       final content = FakeWrContentRepository();
       content.seedMemoryEvents(
         List.generate(
-          10,
+          3,
           (i) => _event(
             id: 'e$i',
             reflectionText: 'Event $i',
@@ -665,41 +739,58 @@ void main() {
       await tester.pumpWidget(_wrap(const WrJourneyScreen(), content: content));
       await tester.pumpAndSettle();
 
-      // Đúng 10 mục thì chưa vượt ngưỡng — dòng mời mở bản đầy đủ chưa hiện.
       expect(
-        find.byKey(const Key('wr_journey_full_memory_row'),
-            skipOffstage: false),
+        find.byKey(const Key('wr_journey_memory_lock'), skipOffstage: false),
+        findsOneWidget,
+      );
+      for (var i = 0; i < 3; i++) {
+        expect(find.text('Event $i', skipOffstage: false), findsNothing,
+            reason: 'mảnh ký ức $i lọt ra ngoài paywall');
+      }
+      // Con số tổng vẫn nói ra — đó là việc chính người dùng đã làm.
+      expect(
+        find.textContaining('3 mảnh ký ức', skipOffstage: false),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('chưa có ký ức nào thì không dựng khối khoá rỗng', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_wrap(const WrJourneyScreen()));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('wr_journey_memory_lock'), skipOffstage: false),
         findsNothing,
       );
     });
 
-    testWidgets('vượt 10 mục → hiện dòng mời mở toàn bộ Career Memory', (
-      tester,
-    ) async {
-      tester.view.physicalSize = const Size(1080, 6000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.resetPhysicalSize);
-      addTearDown(tester.view.resetDevicePixelRatio);
-
-      final content = FakeWrContentRepository();
-      content.seedMemoryEvents(
-        List.generate(
-          12,
-          (i) => _event(
-            id: 'e$i',
-            reflectionText: 'Event $i',
-            createdAt: DateTime(2026, 7, 22 - i),
-          ),
-        ),
+    testWidgets('premium đọc được từng mảnh ký ức', (tester) async {
+      final intel = FakeWrIntelligenceRepository();
+      intel.seedEntitlement(
+        WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
       );
+      final content = FakeWrContentRepository();
+      content.seedMemoryEvents([
+        _event(
+          id: 'e1',
+          userId: 'u1',
+          reflectionText: 'Event 1',
+          createdAt: DateTime(2026, 7, 22),
+        ),
+      ]);
 
-      await tester.pumpWidget(_wrap(const WrJourneyScreen(), content: content));
+      await tester.pumpWidget(
+        _wrap(const WrJourneyScreen(), intel: intel, content: content),
+      );
       await tester.pumpAndSettle();
 
       expect(
-        find.byKey(const Key('wr_journey_full_memory_row')),
-        findsOneWidget,
+        find.byKey(const Key('wr_journey_memory_lock'), skipOffstage: false),
+        findsNothing,
       );
+      expect(find.text('Event 1', skipOffstage: false), findsOneWidget);
     });
 
     testWidgets('no lock banner for premium user', (tester) async {
@@ -784,7 +875,7 @@ void main() {
       await tester.pumpWidget(_wrap(const WrGrowthScreen(), intel: intel));
       await tester.pumpAndSettle();
 
-      expect(find.text('Giai đoạn 1 / 2'), findsOneWidget);
+      expect(find.text('Giai đoạn 1/2'), findsOneWidget);
     });
 
     testWidgets('shows Giai đoạn 2 / 2 when first step completed', (
@@ -803,7 +894,7 @@ void main() {
       await tester.pumpWidget(_wrap(const WrGrowthScreen(), intel: intel));
       await tester.pumpAndSettle();
 
-      expect(find.text('Giai đoạn 2 / 2'), findsOneWidget);
+      expect(find.text('Giai đoạn 2/2'), findsOneWidget);
     });
 
     testWidgets('shows Hoàn thành (not 3/2) when all steps completed', (
@@ -822,13 +913,10 @@ void main() {
       await tester.pumpWidget(_wrap(const WrGrowthScreen(), intel: intel));
       await tester.pumpAndSettle();
 
-      // Counter text must show "Hoàn thành", NOT "Giai đoạn 3 / 2"
-      // (the step status texts also show "Hoàn thành" for each completed step;
-      //  the key check is that the counter does NOT show an out-of-range value)
-      expect(find.textContaining('3 / 2'), findsNothing);
-      // Counter label text is exactly "Hoàn thành" (12px muted white)
-      // At least one "Hoàn thành" text exists — counter-level check
-      expect(find.textContaining('Hoàn thành'), findsWidgets);
+      // Đếm giai đoạn không được vượt tổng số bước.
+      expect(find.textContaining('3/2'), findsNothing);
+      expect(find.text('Giai đoạn 2/2'), findsOneWidget);
+      expect(find.text('2/2 bước hoàn thành'), findsOneWidget);
     });
   });
 
@@ -849,12 +937,18 @@ void main() {
       ]);
       intel.seedEnrollments([_enrollment()]);
 
-      await tester.pumpWidget(_wrap(const WrGrowthScreen(), intel: intel));
+      await tester.pumpWidget(_wrap(
+        const WrPracticeThemeScreen(themeId: 'pt-voice'),
+        intel: intel,
+      ));
       await tester.pumpAndSettle();
 
-      // Step with order=1 should be isNext (Đang thực hiện), order=2 should be Chưa bắt đầu
-      expect(find.text('Đang thực hiện'), findsOneWidget);
-      expect(find.text('Chưa bắt đầu'), findsOneWidget);
+      // Bước order=1 mới là bước kế tiếp, dù được gieo sau.
+      expect(
+        find.byKey(const Key('wr_practice_step_done_pt-voice-1')),
+        findsOneWidget,
+      );
+      expect(find.text('Xong bước trước rồi mở tiếp'), findsOneWidget);
     });
 
     testWidgets(
@@ -873,14 +967,19 @@ void main() {
           _enrollment(completed: ['pt-voice-1']),
         ]);
 
-        await tester.pumpWidget(_wrap(const WrGrowthScreen(), intel: intel));
+        await tester.pumpWidget(_wrap(
+          const WrPracticeThemeScreen(themeId: 'pt-voice'),
+          intel: intel,
+        ));
         await tester.pumpAndSettle();
 
-        // Only one "Đang thực hiện" status must appear
-        expect(find.text('Đang thực hiện'), findsOneWidget);
-        // And the other two are done/not-started
-        expect(find.text('Hoàn thành'), findsOneWidget);
-        expect(find.text('Chưa bắt đầu'), findsOneWidget);
+        // Đúng một bước được phép bấm, và đó là bước order=2.
+        expect(find.text('Đánh dấu hoàn thành'), findsOneWidget);
+        expect(
+          find.byKey(const Key('wr_practice_step_done_pt-voice-2')),
+          findsOneWidget,
+        );
+        expect(find.text('1/3 bước hoàn thành'), findsOneWidget);
       },
     );
   });
@@ -930,6 +1029,27 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('So sánh với người đi làm cùng ngành'), findsOneWidget);
+    });
+
+    // Hai khoá mới của 2026-07-29 phải nói đúng thứ vừa bị khoá, không rơi về
+    // headline chung — nếu không thì bấm "Mở phần đọc vị" lại thấy một câu
+    // quảng cáo không liên quan.
+    testWidgets('need_reading trigger nói đúng phần vừa khoá', (tester) async {
+      await tester.pumpWidget(
+        _wrap(const WrPaywallScreen(trigger: PaywallTrigger.needReading)),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Điều bạn đang thật sự tìm kiếm'), findsOneWidget);
+    });
+
+    testWidgets('career_memory trigger nói đúng phần vừa khoá', (tester) async {
+      await tester.pumpWidget(
+        _wrap(const WrPaywallScreen(trigger: PaywallTrigger.careerMemory)),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.text('Toàn bộ ký ức nghề nghiệp của bạn'), findsOneWidget);
     });
 
     testWidgets('shows PREMIUM badge and price', (tester) async {

@@ -50,8 +50,10 @@ import '../../features/wr/presentation/wr_episode_detail_screen.dart';
 import '../../features/wr/presentation/wr_growth_journey_screen.dart';
 import '../../features/wr/presentation/wr_growth_skills_screen.dart';
 import '../../features/wr/presentation/wr_growth_themes_screen.dart';
+import '../../features/wr/presentation/wr_practice_theme_screen.dart';
 import '../../features/wr/presentation/wr_journey_narrative_screen.dart';
 import '../../features/wr/presentation/wr_pattern_detail_screen.dart';
+import '../../features/wr/presentation/wr_patterns_screen.dart';
 import '../../features/wr/presentation/wr_paywall_screen.dart';
 import '../../features/wr/presentation/wr_self_check_screen.dart';
 import '../../features/wr/presentation/wr_work_info_screen.dart';
@@ -338,6 +340,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
 
       GoRoute(
+        path: '/wr/patterns',
+        builder: (context, state) => const WrPatternsScreen(),
+      ),
+
+      GoRoute(
         path: '/wr/pattern/:code',
         builder: (context, state) => WrPatternDetailScreen(
           situationCode: state.pathParameters['code'] ?? '',
@@ -358,6 +365,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/wr/growth/themes',
         builder: (context, state) => const WrGrowthThemesScreen(),
+      ),
+      // Một chủ đề thực hành và toàn bộ chuỗi bước của nó.
+      // Đặt SAU /wr/growth/themes để đường tĩnh không bị nuốt bởi :id.
+      GoRoute(
+        path: '/wr/growth/theme/:id',
+        builder: (context, state) => WrPracticeThemeScreen(
+          themeId: state.pathParameters['id']!,
+        ),
       ),
       GoRoute(
         path: '/wr/growth/skills',
@@ -398,6 +413,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             'trial_end' => PaywallTrigger.trialEnd,
             'benchmark' => PaywallTrigger.benchmark,
             'growth_opportunity' => PaywallTrigger.growthOpportunity,
+            'need_reading' => PaywallTrigger.needReading,
+            'career_memory' => PaywallTrigger.careerMemory,
             _ => PaywallTrigger.defaultTrigger,
           };
           return WrPaywallScreen(trigger: trigger);

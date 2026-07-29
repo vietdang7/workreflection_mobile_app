@@ -429,5 +429,74 @@ void main() {
       expect(find.textContaining('Chỉnh sửa hồ sơ'), findsOneWidget);
     });
 
+    // ─────────────────────────────────────────────────────────────────────────
+    // Bố cục theo giao diện mẫu Sprint 2 (screenProfile)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    testWidgets('khối nhận diện có tên, email và nhãn gói — mỗi thứ một lần', (
+      tester,
+    ) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile());
+      repo.seedCcProfile({
+        'full_name': 'Yumi Trần',
+        'email': 'yumi@workreflection.app',
+        'subscription_expires_at': null,
+      });
+      await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
+
+      // Tên in đúng một lần: trước đây header và khối nhận diện in hai lần.
+      expect(find.text('Yumi Trần'), findsOneWidget);
+      expect(find.text('yumi@workreflection.app'), findsOneWidget);
+      expect(find.byKey(const Key('profile_plan_pill')), findsOneWidget);
+    });
+
+    testWidgets('bản miễn phí thấy thẻ mời nâng cấp', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile());
+      repo.seedCcProfile({
+        'full_name': 'Yumi Trần',
+        'email': 'yumi@workreflection.app',
+        'subscription_expires_at': null,
+      });
+      await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
+
+      expect(find.byKey(const Key('profile_premium_card')), findsOneWidget);
+      expect(find.text('Mở khoá bản đầy đủ'), findsOneWidget);
+    });
+
+    testWidgets('Premium không bị mời nâng cấp thêm lần nữa', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile());
+      repo.seedCcProfile({
+        'full_name': 'Yumi Trần',
+        'email': 'yumi@workreflection.app',
+        'subscription_expires_at':
+            DateTime.now().add(const Duration(days: 30)).toIso8601String(),
+      });
+      await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
+
+      expect(find.byKey(const Key('profile_premium_card')), findsNothing);
+    });
+
+    testWidgets('mọi lối vào tài khoản vẫn nằm trên màn này', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile());
+      repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
+      await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
+
+      // Đây là màn "Tôi" duy nhất — sửa hồ sơ, đổi mật khẩu, đăng xuất đều ở
+      // đây, không tan vào tab Hành trình.
+      for (final key in [
+        'profile_edit_profile_btn',
+        'profile_change_password_btn',
+        'profile_work_info_btn',
+        'profile_export_btn',
+        'profile_logout_btn',
+      ]) {
+        expect(find.byKey(Key(key)), findsOneWidget, reason: 'thiếu $key');
+      }
+    });
+
   });
 }
