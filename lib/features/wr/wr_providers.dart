@@ -1,5 +1,6 @@
 // lib/features/wr/wr_providers.dart
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/data/wr_content_repository.dart';
 import '../../core/data/wr_episode_repository.dart';
@@ -12,6 +13,7 @@ import '../../core/models/wr_content.dart';
 import '../../core/models/wr_episode.dart';
 import '../../core/models/wr_intelligence.dart';
 import '../../core/logic/wr_growth_opportunity.dart';
+import '../../core/logic/wr_premium_override.dart';
 import '../../core/logic/wr_repeated_situations.dart';
 import '../../core/logic/wr_situation_picker.dart';
 import '../../core/models/wr_mood_content.dart';
@@ -28,9 +30,77 @@ final currentUserIdProvider = Provider<String?>((ref) {
   }
 });
 
+/// Email của người đang đăng nhập. Override trong test.
+///
+/// Chỉ dùng để quyết định ai thấy công tắc Premium thử nghiệm — mọi thứ khác
+/// định danh bằng [currentUserIdProvider].
+final currentUserEmailProvider = Provider<String?>((ref) {
+  try {
+    return Supabase.instance.client.auth.currentUser?.email;
+  } catch (_) {
+    return null;
+  }
+});
+
+/// True khi người đang đăng nhập được phép bật/tắt gói ngay trong app.
+final canTogglePremiumProvider = Provider<bool>(
+  (ref) => canTogglePremium(ref.watch(currentUserEmailProvider)),
+);
+
+/// Trạng thái công tắc Premium thử nghiệm, lưu trên máy.
+///
+/// null = chưa động vào, dùng gói thật. Xem `wr_premium_override.dart`.
+final premiumOverrideProvider =
+    StateNotifierProvider<PremiumOverrideNotifier, bool?>(
+  (ref) => PremiumOverrideNotifier()..load(),
+);
+
+class PremiumOverrideNotifier extends StateNotifier<bool?> {
+  PremiumOverrideNotifier() : super(null);
+
+  static const String _key = 'wr_dev_premium_override';
+
+  Future<void> load() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      // containsKey chứ không phải getBool ?? false: "chưa động vào" và "đã ép
+      // về miễn phí" là hai trạng thái khác nhau.
+      if (prefs.containsKey(_key)) state = prefs.getBool(_key);
+    } catch (_) {
+      /* không đọc được thì coi như chưa động vào — dùng gói thật */
+    }
+  }
+
+  /// [value] null nghĩa là trả về gói thật.
+  Future<void> set(bool? value) async {
+    state = value;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (value == null) {
+        await prefs.remove(_key);
+      } else {
+        await prefs.setBool(_key, value);
+      }
+    } catch (_) {
+      /* best-effort: đổi được trong phiên này, mở lại app thì mất */
+    }
+  }
+}
+
 /// Fetches WrEntitlement for current user.
 /// Returns WrEntitlement(plan: WrPlan.free) on null/error (safe default).
+///
+/// Công tắc thử nghiệm được áp ở ĐÂY, tức trước mọi cổng Premium của app —
+/// `canUseFeature`, hạn mức chủ đề thực hành, hạn mức tài liệu bối cảnh đều
+/// đọc qua provider này, nên bật một chỗ là cả app đổi theo.
 final wrEntitlementProvider = FutureProvider<WrEntitlement>((ref) async {
+  final override = ref.watch(premiumOverrideProvider);
+  if (override != null && ref.watch(canTogglePremiumProvider)) {
+    // validUntil để null: WrEntitlement.isPremium coi null là còn hạn, đúng ý
+    // "ép cứng", khỏi phải bịa một ngày hết hạn.
+    return WrEntitlement(plan: override ? WrPlan.premium : WrPlan.free);
+  }
+
   final repo = ref.watch(wrIntelligenceRepositoryProvider);
   try {
     final userId = ref.watch(currentUserIdProvider);

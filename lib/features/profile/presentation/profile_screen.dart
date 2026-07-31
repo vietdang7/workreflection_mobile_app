@@ -10,11 +10,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/data/wr_repository.dart';
+import '../../../core/logic/wr_premium_override.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../features/auth/data/auth_repository.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../wr/wr_providers.dart';
 import '../profile_providers.dart';
 
 class ProfileScreen extends ConsumerWidget {
@@ -126,8 +128,15 @@ class _AvatarSection extends ConsumerWidget {
     final name = ccData['full_name'] as String? ?? profile?.displayName ?? 'bạn';
     final email = ccData['email'] as String? ?? '';
     final expiresAtRaw = ccData['subscription_expires_at'] as String?;
-    final isPremium = expiresAtRaw != null &&
-        DateTime.tryParse(expiresAtRaw)?.isAfter(DateTime.now()) == true;
+    // Nhãn gói phải nói cùng một điều với các cổng Premium trong app. Nếu để
+    // nó đọc thẳng `cc_profiles` thì bật công tắc xong màn này vẫn ghi "MEMBER"
+    // trong khi mọi khoá đã mở — người thử nghiệm không biết tin cái nào.
+    final isPremium = resolvePremium(
+      actual: expiresAtRaw != null &&
+          DateTime.tryParse(expiresAtRaw)?.isAfter(DateTime.now()) == true,
+      override: ref.watch(premiumOverrideProvider),
+      allowed: ref.watch(canTogglePremiumProvider),
+    );
 
     final avatarUrl = ccData['avatar_url'] as String?;
 
@@ -230,8 +239,12 @@ class _PremiumCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final ccData = ref.watch(ccProfileProvider).valueOrNull ?? {};
     final expiresAtRaw = ccData['subscription_expires_at'] as String?;
-    final isPremium = expiresAtRaw != null &&
-        DateTime.tryParse(expiresAtRaw)?.isAfter(DateTime.now()) == true;
+    final isPremium = resolvePremium(
+      actual: expiresAtRaw != null &&
+          DateTime.tryParse(expiresAtRaw)?.isAfter(DateTime.now()) == true,
+      override: ref.watch(premiumOverrideProvider),
+      allowed: ref.watch(canTogglePremiumProvider),
+    );
     if (isPremium) return const SizedBox.shrink();
 
     return Padding(
@@ -370,6 +383,81 @@ class _Divider extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
+// Công tắc Premium thử nghiệm — chỉ tài khoản nội bộ thấy
+// ---------------------------------------------------------------------------
+//
+// Không phải tính năng sản phẩm: đây là cách chủ sản phẩm xem qua lại hai bản
+// trên cùng một máy khi nghiệm thu. Xem `wr_premium_override.dart` để hiểu vì
+// sao công tắc nằm ở máy chứ không ghi vào `wr_entitlements`.
+
+class _PremiumOverrideRow extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final override = ref.watch(premiumOverrideProvider);
+    final entitlement = ref.watch(wrEntitlementProvider).valueOrNull;
+    final on = entitlement?.isPremium ?? false;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _SettingRow(
+          key: const Key('profile_premium_override_row'),
+          label: 'Bật Premium (thử nghiệm)',
+          onTap: () =>
+              ref.read(premiumOverrideProvider.notifier).set(!on),
+          trailing: AnimatedContainer(
+            key: const Key('profile_premium_override_toggle'),
+            duration: const Duration(milliseconds: 200),
+            width: 40,
+            height: 22,
+            decoration: BoxDecoration(
+              color: on ? WrColors.coral : WrColors.muted,
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: AnimatedAlign(
+              duration: const Duration(milliseconds: 200),
+              alignment: on ? Alignment.centerRight : Alignment.centerLeft,
+              child: Container(
+                width: 16,
+                height: 16,
+                margin: const EdgeInsets.all(3),
+                decoration: const BoxDecoration(
+                  color: WrColors.white,
+                  shape: BoxShape.circle,
+                ),
+              ),
+            ),
+          ),
+        ),
+
+        // Lối quay về gói thật. Không có nó thì sau khi chạm một lần, máy này
+        // vĩnh viễn nói dối về gói — kể cả khi thanh toán thật đã đổi trạng
+        // thái, và không cách nào biết mình đang xem bản giả hay bản thật.
+        if (override != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 2, bottom: 10),
+            child: GestureDetector(
+              key: const Key('profile_premium_override_reset'),
+              behavior: HitTestBehavior.opaque,
+              onTap: () =>
+                  ref.read(premiumOverrideProvider.notifier).set(null),
+              child: Text(
+                'Đang ép ${override ? 'Premium' : 'miễn phí'} trên máy này · '
+                'chạm để dùng lại gói thật',
+                style: TextStyle(
+                  fontSize: 11.5,
+                  height: 1.5,
+                  color: WrColors.coral.withValues(alpha: 0.9),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Settings section
 // ---------------------------------------------------------------------------
 
@@ -463,6 +551,10 @@ class _SettingsSection extends ConsumerWidget {
           trailing:
               const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
         ),
+
+        // Công tắc thử nghiệm — chỉ hiện với tài khoản nội bộ. Đặt ngay dưới
+        // "Bản Premium" để hai thứ nói về cùng một chuyện nằm cạnh nhau.
+        if (ref.watch(canTogglePremiumProvider)) _PremiumOverrideRow(),
 
         // Change password
         _SettingRow(

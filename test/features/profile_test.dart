@@ -7,10 +7,16 @@ import 'package:workreflection_mobile/core/models/insight.dart';
 import 'package:workreflection_mobile/core/models/mobile_profile.dart';
 import 'package:workreflection_mobile/core/models/timeline_event.dart';
 import 'package:workreflection_mobile/features/auth/data/auth_repository.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
+import 'package:workreflection_mobile/core/logic/wr_premium_override.dart';
+import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 import 'package:workreflection_mobile/features/profile/presentation/profile_screen.dart';
+import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
 
 import '../support/fake_repository.dart';
+import '../support/fake_wr_intelligence_repository.dart';
 
 // ---------------------------------------------------------------------------
 // Fake AuthRepository for profile tests — mirrors the one in auth_test.dart
@@ -34,11 +40,28 @@ class _FakeAuthRepository implements AuthRepository {
   }
 }
 
-Widget _wrap(Widget child, WrRepository repo, {AuthRepository? authRepo}) {
+Widget _wrap(
+  Widget child,
+  WrRepository repo, {
+  AuthRepository? authRepo,
+  String? signedInEmail,
+  FakeWrIntelligenceRepository? intel,
+}) {
   return ProviderScope(
     overrides: [
       wrRepositoryProvider.overrideWithValue(repo),
       if (authRepo != null) authRepositoryProvider.overrideWithValue(authRepo),
+      // Không override thì provider hỏi Supabase, chưa khởi tạo nên trả null —
+      // tức công tắc ẩn. Đó cũng là điều mọi test cũ đang trông đợi.
+      if (signedInEmail != null) ...[
+        currentUserEmailProvider.overrideWithValue(signedInEmail),
+        // Thiếu cái này thì wrEntitlementProvider thoát sớm ở nhánh
+        // `userId == null` và luôn trả về miễn phí — công tắc sẽ đọc sai
+        // trạng thái ban đầu mà test vẫn xanh vì lý do khác.
+        currentUserIdProvider.overrideWithValue('u1'),
+        wrIntelligenceRepositoryProvider
+            .overrideWithValue(intel ?? FakeWrIntelligenceRepository()),
+      ],
     ],
     child: MaterialApp(
       localizationsDelegates: const [
@@ -498,5 +521,138 @@ void main() {
       }
     });
 
+  });
+
+  // -------------------------------------------------------------------------
+  // Công tắc Premium thử nghiệm — chỉ tài khoản nội bộ. Xem
+  // `lib/core/logic/wr_premium_override.dart` để hiểu vì sao nó nằm ở máy chứ
+  // không ghi vào `wr_entitlements` (RLS bảng đó chỉ cho SELECT).
+  // -------------------------------------------------------------------------
+  group('ProfileScreen — công tắc Premium riêng tài khoản nội bộ', () {
+    setUp(() => SharedPreferences.setMockInitialValues({}));
+
+    FakeWrRepository seeded() => FakeWrRepository()
+      ..seedProfile(_profile())
+      ..seedCcProfile({
+        'full_name': 'The Dang',
+        'email': kPremiumTogglePermittedEmails.first,
+        // Gói THẬT là miễn phí — để chứng minh công tắc tự nó đổi được nhãn.
+        'subscription_expires_at': null,
+      });
+
+    testWidgets('tài khoản khác không thấy công tắc', (tester) async {
+      final repo = FakeWrRepository()
+        ..seedProfile(_profile())
+        ..seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
+
+      await _pumpLarge(
+        tester,
+        _wrap(const ProfileScreen(), repo, signedInEmail: 'y@y.com'),
+      );
+
+      expect(
+        find.byKey(const Key('profile_premium_override_row')),
+        findsNothing,
+      );
+      // Dòng "Bản Premium" thường thì vẫn còn — công tắc không thay nó.
+      expect(find.byKey(const Key('profile_paywall_btn')), findsOneWidget);
+    });
+
+    testWidgets('đúng tài khoản thì thấy công tắc', (tester) async {
+      await _pumpLarge(
+        tester,
+        _wrap(const ProfileScreen(), seeded(),
+            signedInEmail: kPremiumTogglePermittedEmails.first),
+      );
+
+      expect(
+        find.byKey(const Key('profile_premium_override_row')),
+        findsOneWidget,
+      );
+      // Chưa chạm thì không có dòng nhắc "đang ép" — mặc định là gói thật.
+      expect(
+        find.byKey(const Key('profile_premium_override_reset')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('bật công tắc thì nhãn gói đổi theo, dù gói thật là miễn phí',
+        (tester) async {
+      await _pumpLarge(
+        tester,
+        _wrap(const ProfileScreen(), seeded(),
+            signedInEmail: kPremiumTogglePermittedEmails.first),
+      );
+
+      expect(find.text('Thành viên'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('profile_premium_override_row')));
+      await tester.pumpAndSettle();
+
+      // Nhãn gói và các cổng Premium phải nói cùng một điều — để lệch thì
+      // người thử nghiệm không biết tin cái nào.
+      expect(find.text('PREMIUM MEMBER'), findsOneWidget);
+      expect(
+        find.byKey(const Key('profile_premium_override_reset')),
+        findsOneWidget,
+      );
+      // Thẻ mời nâng cấp phải biến mất, đúng như người Premium thật thấy.
+      expect(find.byKey(const Key('profile_premium_card')), findsNothing);
+    });
+
+    testWidgets('chạm dòng nhắc thì quay về gói thật', (tester) async {
+      await _pumpLarge(
+        tester,
+        _wrap(const ProfileScreen(), seeded(),
+            signedInEmail: kPremiumTogglePermittedEmails.first),
+      );
+
+      await tester.tap(find.byKey(const Key('profile_premium_override_row')));
+      await tester.pumpAndSettle();
+      expect(find.text('PREMIUM MEMBER'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('profile_premium_override_reset')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Thành viên'), findsOneWidget);
+      expect(
+        find.byKey(const Key('profile_premium_override_reset')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('tắt được cả chiều ngược lại: Premium thật xem bản miễn phí',
+        (tester) async {
+      final repo = FakeWrRepository()
+        ..seedProfile(_profile())
+        ..seedCcProfile({
+          'full_name': 'The Dang',
+          'email': kPremiumTogglePermittedEmails.first,
+          'subscription_expires_at':
+              DateTime.now().add(const Duration(days: 30)).toIso8601String(),
+        });
+      // Phải gieo CẢ HAI nguồn. Màn này đọc `cc_profiles` cho nhãn gói, còn
+      // mọi cổng tính năng đọc `wr_entitlements` — công tắc lấy trạng thái ban
+      // đầu từ nguồn thứ hai vì đó mới là thứ thật sự mở khoá.
+      final intel = FakeWrIntelligenceRepository()
+        ..seedEntitlement(const WrEntitlementRecord(
+          userId: 'u1',
+          plan: WrPlan.premium,
+        ));
+
+      await _pumpLarge(
+        tester,
+        _wrap(const ProfileScreen(), repo,
+            signedInEmail: kPremiumTogglePermittedEmails.first, intel: intel),
+      );
+
+      expect(find.text('PREMIUM MEMBER'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('profile_premium_override_row')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Thành viên'), findsOneWidget);
+      expect(find.byKey(const Key('profile_premium_card')), findsOneWidget);
+    });
   });
 }
