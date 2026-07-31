@@ -259,6 +259,7 @@ class WrBigChoiceTile extends StatelessWidget {
     required this.onTap,
     this.selected = false,
     this.height = 92,
+    this.badge,
   });
 
   final String label;
@@ -266,8 +267,24 @@ class WrBigChoiceTile extends StatelessWidget {
   final VoidCallback onTap;
   final double height;
 
+  /// Dòng chữ nhỏ phía trên nhãn. Dùng cho ô neo ở bước Notice ("Lần trước"),
+  /// để người dùng nhận ra ngay đây là điều mình đã chọn lần rồi và chạm lại
+  /// được — không có dấu này thì nó trông y hệt bốn gợi ý mới.
+  final String? badge;
+
   @override
   Widget build(BuildContext context) {
+    final fg = selected ? WrColors.white : WrColors.navy;
+    final text = Text(
+      label,
+      style: TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        height: 1.35,
+        color: fg,
+      ),
+    );
+
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -280,15 +297,27 @@ class WrBigChoiceTile extends StatelessWidget {
           color: selected ? WrColors.coral : WrColors.cream,
           borderRadius: BorderRadius.circular(18),
         ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            height: 1.35,
-            color: selected ? WrColors.white : WrColors.navy,
-          ),
-        ),
+        child: badge == null
+            ? text
+            : Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    badge!.toUpperCase(),
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 0.8,
+                      color: selected
+                          ? WrColors.white.withValues(alpha: 0.85)
+                          : WrColors.teal,
+                    ),
+                  ),
+                  const SizedBox(height: 5),
+                  Flexible(child: text),
+                ],
+              ),
       ),
     );
   }

@@ -15,6 +15,7 @@
 
 import '../models/wr_content.dart';
 import '../models/wr_intelligence.dart';
+import 'wr_repeated_situations.dart';
 import 'wr_self_check_questions.dart';
 
 // ---------------------------------------------------------------------------
@@ -333,15 +334,21 @@ SelfCheckPillar pillarOfDimension(ScaDimension d) => switch (d) {
     };
 
 /// Các pattern lặp lại thuộc [pillar], nhiều lần nhất trước.
-List<PatternCount> patternsForPillar(
+/// Đọc recentSituationIds, không đọc `wr_pattern_counts`. Khối "Đối chiếu với
+/// điều bạn hay gặp" chính là mục §4.3 gọi là "đối chiếu" — một trong các tính
+/// năng bắt buộc dùng nguồn sự thật duy nhất (Kiến trúc v2.0).
+List<RepeatedSituation> patternsForPillar(
   SelfCheckPillar pillar,
-  List<PatternCount> patterns, {
+  List<String> recent,
+  List<WrSituation> situations, {
   int limit = 3,
 }) {
-  final matched = patterns
-      .where((p) =>
-          p.scaDimension != null && pillarOfDimension(p.scaDimension!) == pillar)
-      .toList()
-    ..sort((a, b) => b.occurrenceCount.compareTo(a.occurrenceCount));
-  return matched.take(limit).toList();
+  final codeToDim = {for (final s in situations) s.code: s.scaDimension};
+  return rankSituations(recent)
+      .where((r) {
+        final dim = codeToDim[r.situationCode];
+        return dim != null && pillarOfDimension(dim) == pillar;
+      })
+      .take(limit)
+      .toList();
 }

@@ -78,6 +78,21 @@ void assertTransition(ExperienceState from, ExperienceState to) {
 
 // ---------------------------------------------------------------------------
 // Pattern sequence per Archetype — HXA §3.6 Session Grammar
+//
+// ⚠ TỪ 2026-07-31 CÁC CHUỖI NÀY KHÔNG CÒN ĐIỀU KHIỂN LUỒNG NGƯỜI DÙNG ĐI.
+//
+// Kiến trúc Dữ liệu v2.0 §V chốt một luồng 5 bước CỐ ĐỊNH cho mọi phiên: chọn
+// tình huống → chi tiết (tuỳ chọn) → Aha → Lựa chọn → đã lưu. Xem
+// `lib/core/logic/wr_reflect_flow.dart`.
+//
+// Chạy theo chuỗi của archetype là đúng chỗ đã hỏng: bước đầu của mọi chuỗi là
+// `notice` (một ô chữ trống), chip tình huống nằm ở `name`, và `name` VẮNG MẶT
+// trong chuỗi của `growth` lẫn `recovery` — nên hai archetype đó không bao giờ
+// ghi được `situation_code`.
+//
+// Giữ lại vì: `promptFor` còn dùng để đọc lại ghi chú của các Episode CŨ ở màn
+// chi tiết Hành trình, và bảng này là tài liệu HXA §3.6. Đừng nối nó lại vào
+// điều hướng.
 // ---------------------------------------------------------------------------
 
 const Map<HumanMoment, List<ReflectionPattern>> patternSequences = {

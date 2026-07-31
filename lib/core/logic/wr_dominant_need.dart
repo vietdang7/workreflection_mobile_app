@@ -9,25 +9,29 @@ import '../models/wr_intelligence.dart';
 // dominantNeedFromBehaviour
 // ---------------------------------------------------------------------------
 
-/// Compute dominant [HumanNeed] from pattern counts + situation list.
-/// Sums occurrenceCount per HumanNeed; need with highest total = nhu cầu chủ đạo.
-/// Returns null when [patterns] is empty or no situation has a humanNeed.
+/// Nhu cầu chủ đạo, đọc từ [recent] — recentSituationIds.
+///
+/// v2.0 §4.3: "nhóm recentSituationIds theo trường need của từng Situation, lấy
+/// nhu cầu xuất hiện nhiều nhất. Nếu recentSituationIds rỗng, hiển thị trạng
+/// thái chưa đủ dữ liệu, không suy đoán."
+///
+/// Trước bản 2026-07-31 hàm này đọc `wr_pattern_counts` — con số tích luỹ vĩnh
+/// viễn, còn cộng cả những lần ghi qua màn `/wr/situation` cũ. §4.3 cấm: chỉ
+/// recentSituationIds được trả lời câu hỏi "đang phản chiếu nhiều về điều gì".
 HumanNeed? dominantNeedFromBehaviour(
-  List<PatternCount> patterns,
+  List<String> recent,
   List<WrSituation> situations,
 ) {
-  if (patterns.isEmpty) return null;
+  if (recent.isEmpty) return null;
   final codeToNeed = <String, HumanNeed>{
     for (final s in situations)
       if (s.humanNeed != null) s.code: s.humanNeed!,
   };
   final tally = <HumanNeed, int>{};
-  for (final p in patterns) {
-    final code = p.situationCode;
-    if (code == null) continue;
+  for (final code in recent) {
     final need = codeToNeed[code];
     if (need == null) continue;
-    tally[need] = (tally[need] ?? 0) + p.occurrenceCount;
+    tally[need] = (tally[need] ?? 0) + 1;
   }
   if (tally.isEmpty) return null;
   return tally.entries.reduce((a, b) => a.value >= b.value ? a : b).key;
@@ -42,10 +46,10 @@ HumanNeed? dominantNeedFromBehaviour(
 /// mạnh — ít nhất hai Episode cùng chủ đề."
 const int kDevelopmentFlowThreshold = 2;
 
-/// Tổng số lần đã gặp các tình huống thuộc [need].
+/// Số lần các tình huống thuộc [need] xuất hiện trong recentSituationIds.
 int occurrencesForNeed(
   HumanNeed need,
-  List<PatternCount> patterns,
+  List<String> recent,
   List<WrSituation> situations,
 ) {
   final codeToNeed = <String, HumanNeed>{
@@ -53,25 +57,34 @@ int occurrencesForNeed(
       if (s.humanNeed != null) s.code: s.humanNeed!,
   };
   var total = 0;
-  for (final p in patterns) {
-    final code = p.situationCode;
-    if (code == null) continue;
-    if (codeToNeed[code] == need) total += p.occurrenceCount;
+  for (final code in recent) {
+    if (codeToNeed[code] == need) total++;
   }
   return total;
 }
 
 /// Đã đủ dữ liệu để đề xuất thực hành chưa?
 ///
-/// Một lần gặp chưa phải Pattern — hệ thống không được vội đẩy người dùng vào
-/// Development Flow (WXS §3.12 Inv.6).
+/// Hai đường mở khoá, đúng hai hướng khách chốt 2026-07-31:
+///
+///   1. Tích luỹ hàng ngày — một lần gặp chưa phải Pattern, nên đường này vẫn
+///      giữ nguyên ngưỡng lặp của WXS §3.12 Inv.6: hệ thống không tự đẩy người
+///      dùng vào Development Flow khi mới thấy một lần.
+///   2. Tự đánh giá — người dùng CHỦ ĐỘNG ngồi trả lời 15 câu Self-Check thì
+///      mở ngay, không phải chờ lặp. Inv.6 sinh ra để chặn hệ thống suy diễn
+///      vội từ một lần gặp, không phải để chặn chính người dùng nói ra mình
+///      đang vướng ở đâu.
+///
+/// [hasSelfCheck] = người dùng đã hoàn tất ít nhất một lần Self-Check.
 bool developmentFlowUnlocked({
   required HumanNeed? need,
-  required List<PatternCount> patterns,
+  required List<String> recent,
   required List<WrSituation> situations,
+  bool hasSelfCheck = false,
 }) {
   if (need == null) return false;
-  return occurrencesForNeed(need, patterns, situations) >=
+  if (hasSelfCheck) return true;
+  return occurrencesForNeed(need, recent, situations) >=
       kDevelopmentFlowThreshold;
 }
 

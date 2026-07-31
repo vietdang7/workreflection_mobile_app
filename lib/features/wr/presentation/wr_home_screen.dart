@@ -1,11 +1,38 @@
-// Hôm nay — bố cục theo giao diện chính (`giao-dien-chinh.html` §screen-home).
+// Hôm nay — BỐ CỤC theo mockup Sprint 2 (`WorkReflection_Sprint2_Mockup (1).html`
+// §screenHome), HỆ MÀU theo `giao-dien-chinh.html`.
 //
-// Bốn khối, đúng thứ tự của bản thiết kế:
+// Hai bản thiết kế này xung đột về màu và khách đã chốt (2026-07-30) lấy mỗi bản
+// một nửa:
+//   · bố cục, câu chữ, thứ tự khối, pill, chữ serif  → Sprint 2
+//   · nền màn TRẮNG, thẻ KEM #FFF3E6 (`.card-minimal`, bo 20, đệm 20),
+//     ô check-in kem, ô đang chọn tô ĐẶC coral        → giao-dien-chinh
+//
+// Lý do: Sprint 2 đổi nền màn sang #FBF9F5 và thẻ sang trắng-viền-navy, nhưng
+// Home là màn DUY NHẤT trong app từng đổi theo — ba tab còn lại (Hiểu mình, Phát
+// triển, Hành trình) vẫn nền trắng + thẻ kem. Khách nhìn thấy ngay: "không giống
+// ban đầu là nền kem và màu cam nữa". Một màn lệch cả app thì lỗi ở màn đó.
+//
+// Từ 2026-07-30 hệ màu của màn này là hệ màu CHUNG: ba tab kia đã kéo về đúng
+// bốn quy ước ở `wr_card.dart` (nền trắng · thẻ kem · thẻ đọc-chậm navy · ô lồng
+// trắng). Sửa màu ở đây là sửa cả bốn tab — đọc ghi chú ở `wr_card.dart` trước.
+//
+// Các khối, đúng thứ tự của bản thiết kế:
 //   1. lời chào + ngày
 //   2. "Bạn đang trải qua điều gì?" + lưới check-in 2×2
 //   3. thẻ navy "Hệ thống nhận ra"  → dẫn sang màn chi tiết điều lặp lại
 //   4. "Gợi ý khi …" + thẻ Thư viện Nội dung Cảm xúc → dẫn sang màn đọc/nghe
 //   5. "Insight gần nhất"
+//   6. "Tiếp tục hôm nay" — bước thực hành đang dở
+//
+// ⚠ Khối 3 và 4 CHỈ hiện sau khi đã check-in hôm nay — đúng nhánh
+//   `state.checkedInToday ? … : ''` của mockup, và đúng lời khách 2026-07-29:
+//   "màn hình ban đầu nó chỉ hiển thị ngày hôm nay của bạn thế nào, insight gần
+//   nhất, và tiếp tục một cái thực hành bạn đang làm dở. Hệ thống nhận ra và
+//   gợi ý hôm nay là hai cái hiển thị ra SAU khi họ check in xong."
+//
+//   Lý do của khách, không phải thẩm mỹ: "hệ thống nhận ra" chỉ có nghĩa khi nó
+//   đọc ra từ chính lần check-in vừa rồi. Bày sẵn từ đầu thì nó thành một lời
+//   phán chung chung, và gợi ý thì không biết gợi theo cảm xúc nào.
 //
 // Bốn khối này khớp đúng danh sách nội dung tab Home ở Kiến trúc Dữ liệu v1.6
 // §9.1. Thẻ ở khối 4 trước đây gợi ý một Story; từ v1.6 nó là Thư viện Nội dung
@@ -29,21 +56,22 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/data/wr_repository.dart';
 import '../../../core/logic/vn_date.dart';
-import '../../../core/logic/wr_experience_state.dart';
 import '../../../core/logic/wr_home_surface.dart';
+import '../../../core/logic/wr_repeated_situations.dart';
 import '../../../core/models/checkin.dart';
 import '../../../core/models/mobile_profile.dart';
-import '../../../core/models/wr_episode.dart';
 import '../../../core/models/wr_mood_content.dart';
 import '../../../core/theme/wr_colors.dart';
+import '../../../core/theme/wr_text.dart';
 import '../../../core/widgets/wr_profile_avatar.dart';
 import '../../../core/widgets/eyebrow.dart';
-import '../../../core/widgets/section_divider.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../episode_flow_controller.dart';
+import '../growth_providers.dart';
 import '../mood_content_providers.dart';
 import '../wr_providers.dart';
 import 'wr_mood_library_screen.dart' show WrDraftBadge;
+import 'wr_practice_step_completion.dart' show practiceStageLabel;
 
 final _mobileProfileProvider = FutureProvider<MobileProfile?>((ref) async {
   final repo = ref.watch(wrRepositoryProvider);
@@ -102,28 +130,32 @@ class WrHomeScreen extends ConsumerWidget {
     'Chủ Nhật',
   ];
 
+  /// `Thứ Ba, 24 tháng 6` — nguyên văn khuôn ngày của mockup.
+  ///
+  /// Không dùng `24/06`: dòng này là lời chào, đọc thành câu. Dạng gạch chéo là
+  /// ngôn ngữ của bảng dữ liệu, để dành cho "Lưu ngày 20/06" ở thẻ Insight.
   String _dateLabel() {
     final now = todayVn();
-    final day = now.day.toString().padLeft(2, '0');
-    final month = now.month.toString().padLeft(2, '0');
-    return '${_weekdays[now.weekday - 1]}, $day/$month';
+    return '${_weekdays[now.weekday - 1]}, ${now.day} tháng ${now.month}';
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final displayName =
         ref.watch(_mobileProfileProvider).valueOrNull?.displayName ?? '';
-    final openEpisode = ref.watch(wrOpenEpisodeProvider).valueOrNull;
 
     return Scaffold(
+      // `giao-dien-chinh.html` §.screen: nền màn TRẮNG, thẻ mới là màu kem. Sắc
+      // kem nằm ở thẻ chứ không ở nền — đảo lại thì màn vàng cả mảng và thẻ
+      // chìm mất.
       backgroundColor: WrColors.white,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // ── top-area ────────────────────────────────────────────────
+            // ── .topbar { padding: 8px 22px 14px } ──────────────────────
             Padding(
-              padding: const EdgeInsets.fromLTRB(24, 8, 24, 16),
+              padding: const EdgeInsets.fromLTRB(22, 8, 22, 14),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
@@ -131,29 +163,32 @@ class WrHomeScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        // Mockup: ngày là dòng `.tiny` ở TRÊN, lời chào là
+                        // `.h1` ở dưới. Trước đây app làm ngược — ngày to 32px
+                        // choán đầu màn, tên người dùng thành chú thích.
+                        Text(
+                          _dateLabel(),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            color: WrColors.text3,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
                         Text(
                           displayName.isNotEmpty
                               ? 'Chào $displayName'
                               : 'Chào bạn',
                           style: const TextStyle(
-                            fontSize: 14,
-                            color: WrColors.muted,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          _dateLabel(),
-                          style: const TextStyle(
-                            fontSize: 32,
+                            fontSize: 21,
                             fontWeight: FontWeight.w800,
                             color: WrColors.navy,
-                            letterSpacing: -0.96,
-                            height: 1.1,
+                            height: 1.32,
                           ),
                         ),
                       ],
                     ),
                   ),
+                  const SizedBox(width: 12),
                   WrProfileAvatar(
                     key: const Key('wr_home_profile_button'),
                     displayName: displayName,
@@ -162,21 +197,28 @@ class WrHomeScreen extends ConsumerWidget {
               ),
             ),
 
-            // ── screen-body ─────────────────────────────────────────────
+            // ── .scr-body ───────────────────────────────────────────────
+            // `.section-gap { margin: 0 22px 14px }` → lề ngang 22, các thẻ
+            // cách nhau 14. Không có đường kẻ ngang nào trong mockup.
             Expanded(
               child: ListView(
-                padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
+                padding: const EdgeInsets.fromLTRB(22, 0, 22, 34),
                 children: [
-                  if (openEpisode != null)
-                    _ResumeInvite(episode: openEpisode)
-                  else
-                    const _CheckinQuestion(),
-                  const SizedBox(height: 28),
-                  const WrSectionDivider(),
-                  const SizedBox(height: 28),
+                  // Lưới check-in là khối CỐ ĐỊNH của mockup: luôn ở đây, luôn
+                  // bày sẵn bốn câu trả lời. Trước đây phiên đang dở thay chỗ
+                  // nó bằng một nút "Tiếp tục", nghĩa là muốn nói hôm nay mình
+                  // thế nào thì phải bấm thêm một nút nữa — hỏi xong rồi giấu
+                  // mất chỗ trả lời.
+                  const _CheckinQuestion(),
+                  // Thứ tự lấy nguyên từ `screenHome()`: check-in (cố định) →
+                  // Hệ thống nhận ra → Gợi ý → Insight gần nhất → Tiếp tục hôm
+                  // nay. Hai khối giữa nằm trong nhánh `state.checkedInToday`
+                  // của mockup, nên chúng vắng mặt trước check-in mà KHÔNG đổi
+                  // chỗ ba khối còn lại.
                   const _SystemNoticeCard(),
                   const _MoodContentSection(),
                   const _LatestInsightSection(),
+                  const _ContinueTodaySection(),
                 ],
               ),
             ),
@@ -207,42 +249,64 @@ class _CheckinQuestion extends ConsumerWidget {
               .map((o) => o.id)
               .firstOrNull;
 
+    // KHÔNG bọc trong thẻ: `giao-dien-chinh.html` đặt lưới check-in thẳng trên
+    // nền trắng của màn, và ô check-in mới là thứ màu kem. Bọc thêm một thẻ kem
+    // thì ô kem đứng trên nền kem — biến mất luôn đường ranh giữa hai thứ.
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Text(
-          'Bạn đang trải qua điều gì?',
+          // Nguyên văn mockup Sprint 2 §screenHome, cỡ chữ `.h2` = 15.5px.
+          'Ngày hôm nay của bạn như thế nào?',
           style: TextStyle(
-            fontSize: 22,
+            fontSize: 15.5,
             fontWeight: FontWeight.w700,
             color: WrColors.navy,
-            height: 1.2,
-            letterSpacing: -0.44,
+            height: 1.35,
           ),
         ),
         const SizedBox(height: 16),
         for (var i = 0; i < kCheckinOptions.length; i += 2) ...[
           if (i > 0) const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _CheckinTile(
-                  option: kCheckinOptions[i],
-                  selected: kCheckinOptions[i].id == selectedId,
+            // IntrinsicHeight để hai ô cùng hàng cao bằng nhau như lưới CSS —
+            // "Tôi khá ổn" một dòng và "Tôi mệt mỏi cần nghỉ ngơi" hai dòng mà
+            // để tự do thì hai ô lệch nhau.
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(
+                  child: _CheckinTile(
+                    option: kCheckinOptions[i],
+                    selected: kCheckinOptions[i].id == selectedId,
+                  ),
                 ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: i + 1 < kCheckinOptions.length
-                    ? _CheckinTile(
-                        option: kCheckinOptions[i + 1],
-                        selected: kCheckinOptions[i + 1].id == selectedId,
-                      )
-                    : const SizedBox.shrink(),
-              ),
-            ],
+                const SizedBox(width: 12),
+                Expanded(
+                  child: i + 1 < kCheckinOptions.length
+                      ? _CheckinTile(
+                          option: kCheckinOptions[i + 1],
+                          selected: kCheckinOptions[i + 1].id == selectedId,
+                        )
+                      : const SizedBox.shrink(),
+                ),
+              ],
+            ),
           ),
         ],
+        const SizedBox(height: 12),
+        const SizedBox(
+          width: double.infinity,
+          child: Text(
+            'Chạm để bắt đầu một Reflection, dựa trên đúng cảm giác lúc này.',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 11,
+              color: WrColors.text3,
+              height: 1.5,
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -259,14 +323,33 @@ class _CheckinTile extends ConsumerWidget {
     return GestureDetector(
       key: Key('wr_home_checkin_${option.id}'),
       behavior: HitTestBehavior.opaque,
+      // v2.0 §9.1: "Home dẫn thẳng vào luồng 5 bước ngay sau khi người dùng
+      // chạm chọn cảm xúc check-in". Không còn màn "Chọn khoảnh khắc" chen vào
+      // giữa — sáu Human Moment Archetype giờ suy ra từ chính cảm xúc này
+      // (`momentForMood`), đúng tinh thần HXA §2.5 xem archetype là bộ TỪ VỰNG
+      // chứ không phải một câu hỏi đặt ra cho người dùng.
+      //
+      // Check-in ghi ngay tại đây, còn Episode chỉ mở khi người dùng thật sự
+      // chạm một tình huống ở màn sau — lý do ở `wr_step_screen.dart`.
       onTap: () {
         ref.read(pendingEnergyProvider.notifier).state = option.energy;
         ref.read(pendingMoodProvider.notifier).state = option.mood;
-        context.push('/wr/flow/moment');
+        ref.read(episodeFlowProvider.notifier).saveCheckin(
+              energy: option.energy,
+              mood: option.mood,
+            );
+        context.push('/wr/flow/step');
       },
+      // `giao-dien-chinh.html` §.checkin-btn: ô nền KEM, không viền, bo 16; ô
+      // đang chọn tô ĐẶC coral và chữ đảo sang trắng.
+      //
+      // Khách 2026-07-30 chọn giữ hệ màu này thay vì kiểu viền mảnh của Sprint 2
+      // ("không giống ban đầu là nền kem và màu cam nữa"). Ô kem đứng trên thẻ
+      // kem vẫn tách ra được vì thẻ chứa nó là màn trắng — xem `_CheckinQuestion`
+      // dùng nền trắng cho riêng khối này.
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 18),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
         alignment: Alignment.center,
         decoration: BoxDecoration(
           color: selected ? WrColors.coral : WrColors.cream,
@@ -278,7 +361,7 @@ class _CheckinTile extends ConsumerWidget {
           style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            height: 1.35,
+            height: 1.4,
             color: selected ? WrColors.white : WrColors.navy,
           ),
         ),
@@ -289,6 +372,10 @@ class _CheckinTile extends ConsumerWidget {
 
 // ---------------------------------------------------------------------------
 // 3 · Thẻ navy "Hệ thống nhận ra" — đọc lại chính con số của người dùng.
+//
+// Chỉ hiện SAU khi đã check-in hôm nay (họp khách 2026-07-29). Trước đó màn
+// Home rút về đúng ba việc: hỏi hôm nay thế nào, Insight gần nhất, và thực hành
+// đang dở.
 // ---------------------------------------------------------------------------
 
 class _SystemNoticeCard extends ConsumerWidget {
@@ -296,57 +383,75 @@ class _SystemNoticeCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final patterns = ref.watch(wrPatternCountsProvider).valueOrNull ?? const [];
+    // Cùng một điều kiện với khối "Gợi ý khi …" ngay dưới: hai khối này là một
+    // cặp, cùng xuất hiện sau check-in.
+    final checkedIn = ref.watch(todayCheckinProvider).valueOrNull != null;
+    if (!checkedIn) return const SizedBox.shrink();
+
+    // recentSituationIds, không phải `wr_pattern_counts` (v2.0 §4.3). Trước bản
+    // 2026-07-31 thẻ này nói "Đây là lần thứ 4 bạn gặp tình huống X" trong khi
+    // luồng hiện hành mới ghi đúng MỘT lần — ba lần kia là số tích luỹ cũ.
+    final episodes = ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
     final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
-    final notice = systemNotice(patterns: patterns, situations: situations);
+    final notice = systemNotice(
+      recent: recentSituationIds(episodes),
+      situations: situations,
+    );
 
     // Chưa lặp lại lần nào thì hệ thống chưa có gì để nhận ra — im lặng.
     if (notice == null) return const SizedBox.shrink();
 
     return Padding(
       key: const Key('wr_home_system_notice'),
-      padding: const EdgeInsets.only(bottom: 28),
-      child: WrCardDark(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            WrEyebrow(
-              'HỆ THỐNG NHẬN RA',
-              color: WrColors.cream.withValues(alpha: 0.5),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              '"${notice.sentence}"',
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w500,
-                fontStyle: FontStyle.italic,
-                color: WrColors.cream,
-                height: 1.45,
+      padding: const EdgeInsets.only(top: 14),
+      // Mockup không cho thẻ này bấm được, nhưng app có màn chi tiết điều lặp
+      // lại nên giữ cú chạm ở CẢ thẻ thay vì thêm một dòng link không có trong
+      // bản thiết kế. Cùng một điểm đến, ít hơn một phần tử lạ.
+      child: GestureDetector(
+        key: const Key('wr_home_notice_link'),
+        behavior: HitTestBehavior.opaque,
+        onTap: () => context.push('/wr/pattern/${notice.situationCode}'),
+        child: WrCardNavy(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              WrEyebrow(
+                'HỆ THỐNG NHẬN RA',
+                color: WrColors.cream.withValues(alpha: 0.55),
               ),
-            ),
-            const SizedBox(height: 14),
-            GestureDetector(
-              key: const Key('wr_home_notice_link'),
-              behavior: HitTestBehavior.opaque,
-              onTap: () => context.push('/wr/pattern/${notice.situationCode}'),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Tìm hiểu thêm',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: WrColors.coral,
-                    ),
+              const SizedBox(height: 6),
+              Text(
+                '"${notice.sentence}"',
+                // `.muted.serif` + italic — câu này là hệ thống đang trích lại
+                // điều lặp lại của chính người dùng, không phải chữ giao diện.
+                style: WrText.serifQuote(
+                  fontSize: 14,
+                  color: WrColors.cream,
+                ),
+              ),
+              const SizedBox(height: 10),
+              // `.pill` của mockup: nói rõ đây là lớp Pattern cơ bản và nó miễn
+              // phí — để người dùng không tưởng mình đang xem thử một tính năng
+              // trả tiền rồi mất hứng.
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                decoration: BoxDecoration(
+                  color: WrColors.white.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(100),
+                ),
+                child: const Text(
+                  'Pattern cơ bản · miễn phí',
+                  style: TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.27,
+                    color: WrColors.cream,
                   ),
-                  SizedBox(width: 4),
-                  Icon(Icons.arrow_forward, size: 14, color: WrColors.coral),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -380,80 +485,89 @@ class _MoodContentSection extends ConsumerWidget {
 
     return Padding(
       key: const Key('wr_home_mood_content'),
-      padding: const EdgeInsets.only(bottom: 28),
+      padding: const EdgeInsets.only(top: 14),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          WrEyebrow(moodSuggestionTitle(mood)),
-          const SizedBox(height: 8),
           GestureDetector(
             key: const Key('wr_home_mood_content_card'),
             behavior: HitTestBehavior.opaque,
             onTap: () => context.push('/wr/mood-content/${item.id}'),
+            // Mockup: eyebrow nằm TRONG thẻ, không đứng ngoài làm tiêu đề mục.
             child: WrCardMinimal(
-              child: Row(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: WrColors.white,
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Icon(
-                      item.type == MoodContentType.audio
-                          ? Icons.mic_none_outlined
-                          : Icons.menu_book_outlined,
-                      size: 26,
-                      color: WrColors.navy,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
+                  WrEyebrow(moodSuggestionTitle(mood)),
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          // Trắng, không phải navy 6%: thẻ chứa nó giờ là kem,
+                          // mà navy 6% trên kem thì chỉ ra một vệt xám bẩn.
+                          color: WrColors.white,
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(
+                          item.type == MoodContentType.audio
+                              ? Icons.mic_none_outlined
+                              : Icons.menu_book_outlined,
+                          size: 22,
+                          color: WrColors.navy,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Flexible(
-                              child: Text(
-                                item.title,
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color: WrColors.dark,
-                                  height: 1.3,
+                            Row(
+                              children: [
+                                Flexible(
+                                  child: Text(
+                                    item.title,
+                                    style: const TextStyle(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.w600,
+                                      color: WrColors.navy,
+                                      height: 1.35,
+                                    ),
+                                  ),
                                 ),
+                                if (item.placeholder) ...[
+                                  const SizedBox(width: 6),
+                                  const WrDraftBadge(),
+                                ],
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '${item.kind} · ${item.duration}',
+                              style: const TextStyle(
+                                fontSize: 11,
+                                color: WrColors.text3,
+                                height: 1.5,
                               ),
                             ),
-                            if (item.placeholder) ...[
-                              const SizedBox(width: 6),
-                              const WrDraftBadge(),
-                            ],
                           ],
                         ),
-                        const SizedBox(height: 4),
-                        Text(
-                          '${item.kind} · ${item.duration}',
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: WrColors.dark.withValues(alpha: 0.8),
-                            height: 1.5,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const Icon(
-                    Icons.chevron_right,
-                    size: 18,
-                    color: WrColors.muted,
+                      ),
+                      const SizedBox(width: 8),
+                      const Icon(
+                        Icons.chevron_right,
+                        size: 18,
+                        color: WrColors.text3,
+                      ),
+                    ],
                   ),
                 ],
               ),
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 4),
           Center(
             child: GestureDetector(
               key: const Key('wr_home_mood_library_link'),
@@ -462,20 +576,20 @@ class _MoodContentSection extends ConsumerWidget {
               // Mũi tên dùng Icon chứ không dùng ký tự "→": font chữ của app
               // không chắc có glyph U+2192, thiếu là ra ô vuông rỗng.
               child: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 4),
+                padding: EdgeInsets.symmetric(vertical: 10),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       'Xem thêm gợi ý trong thư viện',
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 11,
                         fontWeight: FontWeight.w700,
                         color: WrColors.teal,
                       ),
                     ),
                     SizedBox(width: 4),
-                    Icon(Icons.arrow_forward, size: 13, color: WrColors.teal),
+                    Icon(Icons.arrow_forward, size: 12, color: WrColors.teal),
                   ],
                 ),
               ),
@@ -505,111 +619,164 @@ class _LatestInsightSection extends ConsumerWidget {
         : 'Lưu ngày ${at.day.toString().padLeft(2, '0')}/'
               '${at.month.toString().padLeft(2, '0')}';
 
-    return Column(
+    return Padding(
       key: const Key('wr_home_latest_insight'),
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const WrEyebrow('INSIGHT GẦN NHẤT'),
-        const SizedBox(height: 8),
-        Text(
-          '"${insight.content}"',
-          style: const TextStyle(
-            fontSize: 20,
-            fontStyle: FontStyle.italic,
-            color: WrColors.navy,
-            height: 1.45,
-            letterSpacing: -0.3,
-          ),
-        ),
-        if (saved != null) ...[
-          const SizedBox(height: 10),
-          Text(
-            saved,
-            style: TextStyle(
-              fontSize: 12,
-              color: WrColors.dark.withValues(alpha: 0.8),
+      padding: const EdgeInsets.only(top: 14),
+      // Navy đậm như thẻ "Hệ thống nhận ra" (khách 2026-07-30). Hai thẻ này là
+      // một cặp về nội dung — đều là câu TRÍCH về chính người dùng, một câu do hệ
+      // thống đọc ra, một câu do người dùng tự đặt tên. Cùng giọng nói thì cùng
+      // màu áo. Các thẻ kem còn lại là thứ để làm, không phải thứ để đọc chậm.
+      child: WrCardNavy(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            WrEyebrow(
+              'INSIGHT GẦN NHẤT',
+              color: WrColors.cream.withValues(alpha: 0.55),
             ),
-          ),
-        ],
-      ],
+            const SizedBox(height: 6),
+            Text(
+              '"${insight.content}"',
+              // `.muted.serif` italic 13.5px của mockup — cùng giọng với thẻ
+              // "Hệ thống nhận ra", vì cả hai đều là câu trích về người dùng.
+              style: WrText.serifQuote(
+                fontSize: 13.5,
+                color: WrColors.cream,
+              ),
+            ),
+            if (saved != null) ...[
+              const SizedBox(height: 8),
+              Text(
+                saved,
+                style: TextStyle(
+                  fontSize: 11,
+                  color: WrColors.cream.withValues(alpha: 0.6),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }
 
 // ---------------------------------------------------------------------------
-// Lời mời tiếp tục — WXS §5.11: không "Chào mừng trở lại", mà hỏi phiên nào
-// đang chờ. Experience luôn tiếp tục, không khởi động lại.
+// 6 · "Tiếp tục hôm nay" — bước thực hành đang dở.
+//
+// Vị trí lấy từ mockup: nằm CUỐI màn, ngay dưới "Insight gần nhất", và có mặt
+// kể cả trước khi check-in. Nó là sợi dây nối tab Home với tab Phát triển:
+// người dùng mở app ra thấy ngay việc mình đang làm dở, khỏi phải nhớ mà bấm
+// sang tab.
+//
+// Khối này LUÔN có mặt, đúng như mockup (khách 2026-07-30: "section Tiếp tục
+// hôm nay đâu sao tôi không thấy").
+//
+// Trước đây nó biến mất khi chưa ghi danh chủ đề nào, viện WXS Orch. Inv.5. Chỗ
+// sai của lập luận đó: ghi danh chỉ xảy ra khi người dùng tự vào tab Phát triển
+// chọn một chủ đề — không có bước nào trong luồng phản tư tự ghi danh. Nên với
+// gần như mọi người dùng thật, khối này im lặng VĨNH VIỄN, và Home mất hẳn sợi
+// dây nối sang Phát triển. Im lặng chỉ hợp lệ khi nó tạm thời.
+//
+// Vì thế: chưa có chủ đề nào đang theo thì khối vẫn đứng đây, nhưng đổi lời —
+// mời chọn một chủ đề, dẫn sang danh sách chủ đề ở tab Phát triển. Vẫn là một
+// dòng có việc để làm, không phải thẻ rỗng.
 // ---------------------------------------------------------------------------
 
-class _ResumeInvite extends ConsumerWidget {
-  const _ResumeInvite({required this.episode});
+/// Dòng mời tiếp tục, đúng khuôn câu của mockup.
+String _continueLabel(PendingPracticeStep pending) {
+  final stage = practiceStageLabel(pending.step.stepOrder);
+  final tail = stage == null ? pending.step.title : 'bước $stage đang chờ';
+  return '"${pending.theme.title}": $tail';
+}
 
-  final ReflectionEpisode episode;
+class _ContinueTodaySection extends ConsumerWidget {
+  const _ContinueTodaySection();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        const WrEyebrow('ĐANG CHỜ BẠN'),
-        const SizedBox(height: 10),
-        Text(
-          episode.humanMoment.tension,
-          style: const TextStyle(
-            fontSize: 22,
-            fontWeight: FontWeight.w700,
-            color: WrColors.navy,
-            height: 1.2,
-            letterSpacing: -0.44,
-          ),
-        ),
-        const SizedBox(height: 20),
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            key: const Key('wr_home_resume_reflection'),
-            onPressed: () async {
-              final route = _routeForState(episode);
-              await ref.read(episodeFlowProvider.notifier).resume(episode);
-              if (context.mounted) context.push(route);
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: WrColors.navy,
-              foregroundColor: WrColors.white,
-              minimumSize: const Size.fromHeight(52),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+    final pending = ref.watch(wrPendingPracticeStepProvider).valueOrNull;
+
+    // Chưa theo chủ đề nào: cùng một khối, cùng một chỗ, đổi lời và đổi điểm
+    // đến sang danh sách chủ đề.
+    final label = pending == null
+        ? 'Chưa có chủ đề nào đang theo. Chọn một chủ đề để bắt đầu.'
+        : _continueLabel(pending);
+    final route = pending == null
+        ? '/wr/growth/themes'
+        : '/wr/growth/theme/${pending.theme.themeId}';
+
+    return Padding(
+      key: const Key('wr_home_continue_today'),
+      // `.card + .card { margin-top: 12px }` — Insight và Tiếp tục hôm nay là
+      // hai thẻ cùng một nhóm trong mockup, nên khoảng cách 12 chứ không 14.
+      padding: const EdgeInsets.only(top: 12),
+      child: WrCardMinimal(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const WrEyebrow('TIẾP TỤC HÔM NAY'),
+            const SizedBox(height: 6),
+            GestureDetector(
+              key: const Key('wr_home_continue_today_card'),
+              behavior: HitTestBehavior.opaque,
+              onTap: () => context.push(route),
+              // Dòng bên trong là một ô NỔI trên thẻ kem, tô trắng. Bản trước tô
+              // navy 3% để chìm xuống nền trắng; trên nền kem thì sắc đó mất
+              // hẳn, dòng chữ nằm trơ không ra hình một ô bấm được.
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                decoration: BoxDecoration(
+                  color: WrColors.white,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.bolt_outlined,
+                      size: 20,
+                      color: WrColors.coral,
+                    ),
+                    const SizedBox(width: 10),
+                    Expanded(
+                      child: Text(
+                        // Mockup: `"Dám lên tiếng": bước Thử nghiệm đang chờ`.
+                        // Home nói TÊN GIAI ĐOẠN chứ không nói tên việc cụ thể —
+                        // tên việc thuộc màn chủ đề, nơi người dùng thật sự làm
+                        // nó. Ở đây chỉ cần đủ để nhớ mình đang dở tới đâu.
+                        //
+                        // Bước thứ tư trở đi không có tên giai đoạn thì lùi về
+                        // tên việc, thà dài còn hơn để trống một nửa câu.
+                        label,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          color: WrColors.navy,
+                          height: 1.5,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const Icon(
+                      Icons.chevron_right,
+                      size: 18,
+                      color: WrColors.text3,
+                    ),
+                  ],
+                ),
               ),
             ),
-            child: const Text(
-              'Tiếp tục',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
-            ),
-          ),
+          ],
         ),
-        TextButton(
-          key: const Key('wr_home_start_new_reflection'),
-          onPressed: () => context.push('/wr/flow/energy'),
-          child: const Text(
-            'Bắt đầu một lần nhìn lại mới',
-            style: TextStyle(fontSize: 14, color: WrColors.muted),
-          ),
-        ),
-      ],
+      ),
     );
   }
-
-  /// Màn tương ứng với trạng thái nhận thức hiện tại — phục hồi Experience,
-  /// không phục hồi Screen (WXS §4.5).
-  static String _routeForState(ReflectionEpisode episode) {
-    return switch (episode.state) {
-      ExperienceState.meaningConfirmed => '/wr/flow/commit',
-      ExperienceState.committed => '/wr/flow/done',
-      ExperienceState.meaningForming => '/wr/flow/meaning',
-      // Đã đi hết chuỗi phản tư nhưng chưa đặt tên ý nghĩa.
-      _ when nextPattern(episode.humanMoment, episode.patternsDone) == null =>
-        '/wr/flow/meaning',
-      _ => '/wr/flow/step',
-    };
-  }
 }
+
+// Thẻ "ĐANG CHỜ BẠN" (mời tiếp tục phiên phản tư đang dở) đã bỏ khỏi Home theo
+// yêu cầu khách 2026-07-30: mockup Sprint 2 không có nó, và Home phải đúng bằng
+// bản thiết kế.
+//
+// Phiên dở KHÔNG mất đường quay lại: nó vẫn nằm trong tab Hành trình, mở ra màn
+// chi tiết Episode và tiếp tục bằng nút `wr_episode_reopen`. Chạm một ô check-in
+// ở đây thì mở phiên MỚI (`EpisodeFlow.start`), không đụng gì phiên cũ.

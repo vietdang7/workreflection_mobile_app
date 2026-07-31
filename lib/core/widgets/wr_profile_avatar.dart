@@ -30,7 +30,7 @@ class WrProfileAvatar extends StatelessWidget {
   const WrProfileAvatar({
     super.key,
     this.displayName = '',
-    this.size = 44,
+    this.size = 36,
   });
 
   /// Tên hiển thị để lấy chữ cái đầu. Rỗng thì hiện 'WR'.
@@ -50,16 +50,17 @@ class WrProfileAvatar extends StatelessWidget {
           width: size,
           height: size,
           alignment: Alignment.center,
+          // `.avatar { width:36; background: var(--trust); color: var(--cream) }`
           decoration: const BoxDecoration(
-            color: WrColors.cream,
+            color: WrColors.navy,
             shape: BoxShape.circle,
           ),
           child: Text(
             profileInitials(displayName),
             style: TextStyle(
-              fontSize: size * 0.32,
+              fontSize: size * 0.39,
               fontWeight: FontWeight.w700,
-              color: WrColors.navy,
+              color: WrColors.cream,
             ),
           ),
         ),

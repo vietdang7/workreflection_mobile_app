@@ -140,7 +140,7 @@ void main() {
       await tester.pumpWidget(_wrap(const WrHomeScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('Bạn đang trải qua điều gì?'), findsOneWidget);
+      expect(find.text('Ngày hôm nay của bạn như thế nào?'), findsOneWidget);
       expect(find.byKey(const Key('wr_home_checkin_tired')), findsOneWidget);
       // Không còn nút trung gian, cũng không còn bước "hướng đi".
       expect(find.byKey(const Key('wr_home_start_reflection')), findsNothing);
@@ -184,10 +184,14 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Hiểu mình'), findsOneWidget);
+      // Chưa nhìn lại lần nào thì thẻ Career Health không dựng (một thanh 0/15
+      // trên màn mời bắt đầu là báo cáo một con số bằng không), và mục "Hành
+      // trình đã đi" đã bỏ hẳn — lời mời còn lại là bộ 15 câu.
       expect(
-        find.text('Chưa có lần nhìn lại nào được ghi.'),
-        findsOneWidget,
+        find.byKey(const Key('wr_discover_career_health')),
+        findsNothing,
       );
+      expect(find.text('Bắt đầu Self-Check'), findsOneWidget);
     });
 
     testWidgets('không diễn giải gì khi chưa có dữ liệu', (tester) async {

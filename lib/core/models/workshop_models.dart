@@ -9,6 +9,7 @@
 class WorkshopDetail {
   const WorkshopDetail({
     required this.id,
+    this.slug,
     required this.title,
     this.description,
     this.category,
@@ -29,6 +30,13 @@ class WorkshopDetail {
   });
 
   final String id;
+
+  /// Đường dẫn thân thiện của buổi trên web (`cc_workshops.slug`).
+  ///
+  /// Route bên web nhận cả hai: `/services/workshops/:id` tự nhận ra tham số là
+  /// UUID hay slug. Ưu tiên slug vì đó là link người dùng thấy và chia sẻ được;
+  /// buổi cũ chưa có slug thì rơi về UUID, vẫn mở đúng.
+  final String? slug;
   final String title;
   final String? description;
   final String? category;
@@ -58,6 +66,7 @@ class WorkshopDetail {
   factory WorkshopDetail.fromJson(Map<String, dynamic> json) {
     return WorkshopDetail(
       id: json['id'] as String,
+      slug: json['slug'] as String?,
       title: json['title'] as String,
       description: json['description'] as String?,
       category: json['category'] as String?,

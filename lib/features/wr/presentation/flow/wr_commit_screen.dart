@@ -15,8 +15,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/logic/wr_reflect_flow.dart';
 import '../../../../core/logic/wr_situation_picker.dart';
 import '../../../../core/theme/wr_colors.dart';
+import '../../../../core/widgets/wr_voice_field.dart';
 import '../../episode_flow_controller.dart';
 import '../../mood_content_providers.dart';
 import '../../wr_providers.dart';
@@ -101,7 +103,7 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
       eyebrow: 'Lựa chọn',
       title: 'Nếu hiểu như vậy, bạn sẽ chọn điều gì?',
       subtitle: 'Reflection luôn mở ra một lựa chọn khác.',
-      progress: 0.95,
+      progress: reflectProgress(3),
       onBack: () => context.pop(),
       onClose: () => context.push('/wr/flow/done'),
       primaryLabel: 'Lưu lựa chọn này',
@@ -154,32 +156,13 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
               ),
             ),
           ] else
-            Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 10,
-              ),
-              decoration: BoxDecoration(
-                color: WrColors.cream,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: TextField(
-                key: const Key('wr_commit_field'),
-                controller: _controller,
-                maxLines: 4,
-                minLines: 3,
-                style: const TextStyle(
-                  fontSize: 16,
-                  color: WrColors.navy,
-                  height: 1.6,
-                ),
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  hintText: 'Mình sẽ thử…',
-                  hintStyle: TextStyle(fontSize: 15, color: WrColors.muted),
-                ),
-                onChanged: (_) => setState(() {}),
-              ),
+            WrVoiceField(
+              fieldKey: const Key('wr_commit_field'),
+              controller: _controller,
+              hintText: 'Mình sẽ thử…',
+              minLines: 3,
+              maxLines: 4,
+              onChanged: () => setState(() {}),
             ),
           if (_error != null) ...[
             const SizedBox(height: 16),

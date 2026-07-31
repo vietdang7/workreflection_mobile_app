@@ -55,17 +55,38 @@ const int kChoicePoolSampleWithoutPractice = 4;
 
 /// Năm tình huống cho bước Notice, đã lọc theo [mood] và tránh lặp [recentIds].
 ///
-/// Thuật toán theo đúng pseudo-code §4.1:
+/// Thuật toán theo pseudo-code §4.1, CÓ MỘT SỬA ĐỔI bắt buộc — xem khối dưới:
 ///
 ///   relevant = lọc theo cụm dims của mood
 ///   basePool = relevant nếu đủ ≥5, ngược lại toàn bộ thư viện
-///   unseen   = basePool bỏ đi những mã đã có trong recentIds
-///   pool     = unseen nếu đủ ≥5, ngược lại basePool
-///   → 5 mục ngẫu nhiên từ pool
+///   neo      = tình huống gần đây nhất đã chọn mà vẫn thuộc basePool  ← THÊM
+///   unseen   = basePool bỏ neo và bỏ những mã đã có trong recentIds
+///   pool     = unseen nếu đủ chỗ, ngược lại basePool bỏ neo
+///   → neo đứng đầu, rồi 4 mục ngẫu nhiên từ pool
 ///
-/// Hai lần "nếu đủ ≥5, ngược lại lùi về tập rộng hơn" là chủ đích: thà đưa gợi
-/// ý kém liên quan còn hơn đưa danh sách trống. Nhưng thứ tự ưu tiên luôn là
+/// Hai lần "nếu đủ, ngược lại lùi về tập rộng hơn" là chủ đích: thà đưa gợi ý
+/// kém liên quan còn hơn đưa danh sách trống. Nhưng thứ tự ưu tiên luôn là
 /// đúng-cảm-xúc trước, rồi mới tới chưa-từng-thấy.
+///
+/// ---------------------------------------------------------------------------
+/// VÌ SAO PHẢI CÓ Ô NEO — tài liệu tự mâu thuẫn ở chỗ này
+/// ---------------------------------------------------------------------------
+///
+/// §4.1 bảo LOẠI khỏi bể mọi mã đã có trong recentSituationIds (30 mã gần
+/// nhất). §4.3 bảo ĐẾM số lần lặp của từng mã trong chính danh sách đó. Hai câu
+/// không thể cùng đúng: đã loại thì không bao giờ chọn lại được, mà không chọn
+/// lại được thì không mã nào đếm quá 1.
+///
+/// Đó không phải suy luận. Trên DB thật ngày 2026-07-31, một người dùng có 16
+/// Episode mang mã — **16 mã phân biệt, 0 lần lặp**. Người này cụm "mệt mỏi"
+/// (A3+A1, 20 tình huống) đã dùng 8 mã; cả 8 bị khoá khỏi bể vì `unseen` vẫn
+/// còn 12 ≥ 5. Họ mô tả đúng triệu chứng: "tôi cũng ráng chọn rồi nhưng vẫn
+/// không thấy... không thấy các câu hỏi mà tôi đã chọn ban đầu để chọn".
+///
+/// Cách chữa giữ được cả hai ý: xoay vòng vẫn lo phần đa dạng cho 4 ô còn lại,
+/// nhưng MỘT ô luôn dành cho điều gần nhất người đó đã chọn trong cụm này. "Vẫn
+/// chuyện đó" luôn cách một cú chạm, nên một chuyện lặp thật sẽ đếm lên thật.
+/// Ô neo đứng ĐẦU, không trộn — mục đích của nó là tìm thấy được ngay.
 ///
 /// [mood] null nghĩa là vào thẳng từ tab, không qua check-in — khi đó dùng toàn
 /// bộ thư viện, vì không có cảm xúc nào để bám vào.
@@ -81,20 +102,60 @@ List<WrSituation> pickSituationChoices({
   int count = kSituationChoiceCount,
   Random? random,
 }) {
-  if (all.isEmpty) return const [];
+  // Chỉ những tình huống còn được đề xuất mới vào bể. 60 chip Tầng 1 cũ vẫn
+  // nằm trong bảng để tra ngược ra nhãn cho lịch sử Episode.
+  //
+  // ⚠ Đính chính (đo trên DB thật 2026-07-31): hai tập KHÔNG phải một bản đổi
+  // tên của nhau. Đối chiếu từng chip cũ với mục thư viện CÙNG CHIỀU: chỉ 6/60
+  // là cùng một câu, 5/60 gần, 49/60 diễn đạt hẳn một tình huống khác. Chúng
+  // phủ cùng bộ chiều SCA nhưng bằng hai bộ từ vựng riêng.
+  //
+  // Vì vậy vẫn phải gỡ chúng khỏi bể: bày cả hai là đưa người dùng hai bộ từ
+  // vựng cho cùng một chiều, và số đếm "Tình huống lặp lại" (§4.3) bị xé đôi
+  // theo bộ nào họ tình cờ chạm. Nhưng ĐỪNG suy ra rằng mọi mã cũ đều có một
+  // mã mới tương đương để ghép lịch sử — phần lớn thì không.
+  final offered = all.where((s) => !s.isRetired).toList();
+  if (offered.isEmpty) return const [];
 
   final dims = mood == null ? null : kMoodDimensions[mood];
 
   final relevant = dims == null
-      ? all
-      : all.where((s) => dims.contains(s.scaDimension)).toList();
+      ? offered
+      : offered.where((s) => dims.contains(s.scaDimension)).toList();
 
-  final basePool = relevant.length >= count ? relevant : all;
+  final basePool = relevant.length >= count ? relevant : offered;
 
-  final unseen = basePool.where((s) => !recentIds.contains(s.code)).toList();
-  final pool = unseen.length >= count ? unseen : basePool;
+  final anchor = anchorSituation(basePool, recentIds);
+  final rest = anchor == null
+      ? basePool
+      : basePool.where((s) => s.code != anchor.code).toList();
+  final fill = anchor == null ? count : count - 1;
 
-  return _shuffle(pool, random).take(count).toList();
+  final unseen = rest.where((s) => !recentIds.contains(s.code)).toList();
+  final pool = unseen.length >= fill ? unseen : rest;
+
+  return [
+    if (anchor != null) anchor,
+    ..._shuffle(pool, random).take(fill),
+  ];
+}
+
+/// Tình huống gần đây nhất đã được chọn mà vẫn còn trong [pool].
+///
+/// [recentIds] có mới nhất đứng đầu (§4.1), nên duyệt xuôi là ra ngay cái gần
+/// nhất. Trả về null khi chưa chọn lần nào, hoặc khi mọi mã đã chọn đều nằm
+/// ngoài bể hiện tại — ví dụ đổi cảm xúc check-in sang một cụm chiều khác hẳn.
+///
+/// Tầng UI gọi lại hàm này trên chính danh sách đang hiện để biết chip nào là ô
+/// neo mà gắn nhãn "Lần trước". An toàn: mọi mã khác trong danh sách nếu có mặt
+/// trong [recentIds] đều CŨ HƠN ô neo, nên phép duyệt vẫn trả về đúng nó.
+WrSituation? anchorSituation(List<WrSituation> pool, List<String> recentIds) {
+  for (final code in recentIds) {
+    for (final s in pool) {
+      if (s.code == code) return s;
+    }
+  }
+  return null;
 }
 
 /// Ghi nhận [code] vừa được chọn vào lịch sử chống lặp.
@@ -154,20 +215,25 @@ List<String> pickChoiceOptions({
 
 /// Story chứa story/reflection/selfReflection/aha/practice cho [situation].
 ///
-/// Kiến trúc Dữ liệu v1.6 §2.2 mô tả Situation là MỘT thực thể có đủ chín
-/// trường. Trong app, dữ liệu đó nằm ở hai bảng ra đời tách nhau:
+/// v2.0 §2.2 mô tả Situation là MỘT thực thể có đủ chín trường. Trong app, dữ
+/// liệu đó nằm ở hai bảng ra đời tách nhau — nhưng từ migration
+/// `20260731090000_wr_situations_from_library.sql`, MỌI tình huống còn được đề
+/// xuất đều có mã trùng khít giữa hai bảng:
 ///
-///   wr_situations : 60 nhãn chip ngắn, mã `<DIM>-sit-NN`
-///   wr_stories    : 100 nội dung đầy đủ, mã `<DIM>-NN`
+///   wr_situations : 100 mục thư viện `<DIM>-NN` + 10 tích cực `P-NN`
+///   wr_stories    : đúng 110 mã đó
 ///
-/// Hai tập mã KHÔNG trùng nhau, trừ 10 tình huống tích cực P-01→P-10 vốn được
-/// tạo cùng lúc ở cả hai bảng. Vì vậy hàm này nối theo hai nấc:
+/// Nên nhánh (1) dưới đây luôn trúng cho phiên mới.
 ///
-///   1. Trùng mã tuyệt đối — đúng cho nhóm P-*.
-///   2. Cùng chiều SCA — cho 60 tình huống còn lại. Chọn theo chỉ số suy ra từ
-///      mã chip nên cùng một chip LUÔN ra cùng một story: nếu bốc ngẫu nhiên,
-///      câu Aha sẽ đổi mỗi lần mở, và người dùng không thể quay lại điều mình
-///      vừa đọc.
+/// Nhánh (2) chỉ còn phục vụ dữ liệu CŨ: những Episode đã ghi mã Tầng 1
+/// `<DIM>-sit-NN` trước khi gộp. Mã đó không có story trùng tên, nên lùi về một
+/// story cùng chiều, chọn theo chỉ số suy ra từ mã để cùng một chip LUÔN ra
+/// cùng một story — bốc ngẫu nhiên thì câu Aha đổi mỗi lần mở và người dùng
+/// không quay lại được điều mình vừa đọc.
+///
+/// ⚠ Nhánh (2) là phép ĐOÁN: câu chuyện nó trả về thường không nói đúng tình
+/// huống đã chọn. Đó chính là lý do phải gộp mã. Đừng dựa vào nó cho nội dung
+/// mới — thêm tình huống nào thì thêm story cùng mã cho tình huống đó.
 ///
 /// Trả về null khi không có story nào cùng chiều — khi đó tầng UI phải tự lo,
 /// tuyệt đối không bịa một câu Aha.

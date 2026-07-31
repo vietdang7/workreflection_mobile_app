@@ -1,9 +1,14 @@
 // Thư viện Nội dung Cảm xúc — màn danh sách.
 // Kiến trúc Dữ liệu Hai Lớp v1.6 §VIII, §8.3.
 //
-// Mở từ "Xem thêm gợi ý trong thư viện" ở Home. Liệt kê đủ 5 mục mỗi nhóm cảm
-// xúc, không chỉ nhóm vừa check-in — người dùng có thể đang tìm một bài đã đọc
-// hôm khác, lúc tâm trạng khác.
+// Mở từ "Xem thêm gợi ý trong thư viện" ở Home. Chỉ liệt kê nhóm ĐÚNG cảm xúc
+// vừa check-in (khách chốt 2026-07-29): "nút xem thêm gợi ý trong thư viện thì
+// nó cũng hiển thị theo cảm xúc của khách hàng chọn thôi chứ không hiển thị hết
+// 1 list như vậy". Đang mệt mà phải lướt qua bốn nhóm mới tới nhóm của mình là
+// bắt người ta làm việc đúng lúc họ ít sức nhất.
+//
+// Chưa check-in (vào bằng đường khác) thì mới bày cả bốn nhóm — lúc đó không có
+// cảm xúc nào để lọc, giấu bớt là giấu mất nội dung.
 //
 // §8.3: MIỄN PHÍ toàn bộ, không phân lớp Free/Paid. Không có khoá, không có
 // paywall trên màn này.
@@ -17,6 +22,7 @@ import '../../../core/models/wr_mood_content.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../mood_content_providers.dart';
+import '../wr_providers.dart';
 
 /// Thứ tự nhóm cố định, khớp thứ tự bốn ô check-in ở Home.
 const List<Mood> kMoodLibraryOrder = [
@@ -32,6 +38,8 @@ class WrMoodLibraryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final library = ref.watch(wrMoodLibraryProvider);
+    final todayMood = ref.watch(todayCheckinProvider).valueOrNull?.mood;
+    final order = todayMood == null ? kMoodLibraryOrder : [todayMood];
 
     return Scaffold(
       backgroundColor: WrColors.white,
@@ -52,6 +60,11 @@ class WrMoodLibraryScreen extends ConsumerWidget {
           error: (_, __) => const _LibraryEmpty(),
           data: (grouped) {
             if (grouped.isEmpty) return const _LibraryEmpty();
+            // Lọc xong mà nhóm của chính cảm xúc đó rỗng thì cũng là rỗng —
+            // đừng lặng lẽ bày lại cả bốn nhóm, người dùng sẽ tưởng bộ lọc hỏng.
+            if (order.every((m) => (grouped[m] ?? const []).isEmpty)) {
+              return const _LibraryEmpty();
+            }
             return ListView(
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
               children: [
@@ -68,7 +81,7 @@ class WrMoodLibraryScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 24),
-                for (final mood in kMoodLibraryOrder)
+                for (final mood in order)
                   if ((grouped[mood] ?? const []).isNotEmpty) ...[
                     Padding(
                       padding: const EdgeInsets.only(bottom: 10, top: 6),

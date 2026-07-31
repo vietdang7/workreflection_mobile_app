@@ -16,13 +16,14 @@ import 'package:workreflection_mobile/core/data/wr_episode_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
 import 'package:workreflection_mobile/core/models/checkin.dart';
-import 'package:workreflection_mobile/core/logic/wr_experience_state.dart';
+import 'package:workreflection_mobile/core/logic/wr_reflect_flow.dart';
 import 'package:workreflection_mobile/core/models/wr_episode.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 import 'package:workreflection_mobile/core/data/wr_mood_content_repository.dart';
 import 'package:workreflection_mobile/features/wr/episode_flow_controller.dart';
 import 'package:workreflection_mobile/features/wr/presentation/flow/wr_commit_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/flow/wr_detail_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/flow/wr_done_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/flow/wr_energy_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/flow/wr_meaning_screen.dart';
@@ -37,6 +38,7 @@ import '../support/fake_wr_content_repository.dart';
 import '../support/fake_wr_episode_repository.dart';
 import '../support/fake_wr_intelligence_repository.dart';
 import '../support/fake_wr_mood_content_repository.dart';
+import '../support/resume_open_episode.dart';
 
 class _Harness {
   _Harness()
@@ -68,6 +70,10 @@ class _Harness {
         GoRoute(
           path: '/wr/flow/step',
           builder: (_, __) => const WrStepScreen(),
+        ),
+        GoRoute(
+          path: '/wr/flow/detail',
+          builder: (_, __) => const WrDetailScreen(),
         ),
         GoRoute(
           path: '/wr/flow/meaning',
@@ -121,7 +127,7 @@ void main() {
       final h = _Harness();
       await _pump(tester, h.app());
 
-      expect(find.text('Bạn đang trải qua điều gì?'), findsOneWidget);
+      expect(find.text('Ngày hôm nay của bạn như thế nào?'), findsOneWidget);
       for (final o in kCheckinOptions) {
         expect(
           find.byKey(Key('wr_home_checkin_${o.id}')),
@@ -133,46 +139,48 @@ void main() {
       expect(find.byKey(const Key('wr_home_start_reflection')), findsNothing);
     });
 
-    testWidgets('trả lời năng lượng là mở thẳng màn khoảnh khắc',
+    // v2.0 §9.1: "Home dẫn thẳng vào luồng 5 bước ngay sau khi người dùng chạm
+    // chọn cảm xúc check-in". Màn "Chọn khoảnh khắc" từng chen vào giữa đã bị
+    // gỡ khỏi đường này — nó đẩy chip tình huống xuống bước hai và, với hai
+    // archetype không có bước đó, làm mất hẳn `situation_code`.
+    testWidgets('trả lời cảm xúc là mở thẳng bước chọn tình huống',
         (tester) async {
       final h = _Harness();
+      h.content.seedSituations(_someSituations);
       await _pump(tester, h.app());
 
       await tester.tap(find.byKey(const Key('wr_home_checkin_tired')));
       await tester.pumpAndSettle();
 
+      expect(find.byType(WrStepScreen), findsOneWidget);
+      expect(find.text(kNoticePrompt), findsOneWidget);
+      // Không có màn khoảnh khắc nào chen giữa.
       for (final moment in HumanMoment.values) {
-        expect(
-          find.byKey(Key('wr_moment_${moment.dbValue}')),
-          findsOneWidget,
-          reason: 'thiếu thẻ ${moment.dbValue}',
-        );
+        expect(find.byKey(Key('wr_moment_${moment.dbValue}')), findsNothing);
       }
+      // Và không có ô chữ nào ở bước đầu.
+      expect(find.byType(TextField), findsNothing);
     });
 
-    testWidgets('có phiên đang mở thì mời tiếp tục, không hỏi lại năng lượng',
-        (tester) async {
+    testWidgets('có phiên đang mở thì Home KHÔNG mời tiếp tục, chỉ có đúng các '
+        'khối của mockup', (tester) async {
+      // Khách 2026-07-30: bỏ thẻ "ĐANG CHỜ BẠN". Mockup Sprint 2 không có nó, và
+      // Home phải đúng bằng bản thiết kế.
+      //
+      // Phiên dở không mất đường quay lại: rời luồng gọi `pause()` nên phiên
+      // thành dormant và tab Hành trình mở lại được nó ("Hiểu lại chuyện này").
       final h = _Harness();
       h.seedOpenEpisode();
       await _pump(tester, h.app());
 
-      expect(find.byKey(const Key('wr_home_resume_reflection')), findsOneWidget);
-      expect(find.text(HumanMoment.confusion.tension), findsOneWidget);
-      expect(find.byKey(const Key('wr_home_checkin_tired')), findsNothing);
-    });
-
-    // Bỏ dở giữa chừng là Episode ngủ. Nếu Home không mời lại thì người dùng
-    // mất đường quay về — trái WPA Inv.4.
-    testWidgets('phiên đang ngủ vẫn được mời tiếp tục', (tester) async {
-      final h = _Harness();
-      h.seedOpenEpisode(
-        state: ExperienceState.dormant,
-        patternsDone: const [ReflectionPattern.notice],
-        notes: const {'notice': 'cố lên'},
+      expect(find.byKey(const Key('wr_home_resume_reflection')), findsNothing);
+      expect(find.text(HumanMoment.confusion.tension), findsNothing);
+      // Lưới check-in vẫn nguyên chỗ — hỏi thì phải bày sẵn chỗ trả lời.
+      expect(find.byKey(const Key('wr_home_checkin_tired')), findsOneWidget);
+      expect(
+        find.text('Ngày hôm nay của bạn như thế nào?'),
+        findsOneWidget,
       );
-      await _pump(tester, h.app());
-
-      expect(find.byKey(const Key('wr_home_resume_reflection')), findsOneWidget);
     });
 
     // Dormant chỉ đi được sang Reactivated (WXS §4.4). Nạp thẳng vào luồng thì
@@ -184,9 +192,7 @@ void main() {
         state: ExperienceState.dormant,
         patternsDone: const [
           ReflectionPattern.notice,
-          ReflectionPattern.name,
           ReflectionPattern.explore,
-          ReflectionPattern.preserve,
         ],
         notes: const {'notice': 'cố lên'},
       );
@@ -233,112 +239,140 @@ void main() {
     });
   });
 
-  group('Màn khoảnh khắc', () {
-    testWidgets('đúng sáu thẻ, không hơn', (tester) async {
+  group('Màn khoảnh khắc — chỉ còn là lối vào phụ', () {
+    // Không còn nằm trên đường Home → Reflect (§9.1), nhưng vẫn giữ cho lối vào
+    // qua màn năng lượng: ở đó không có cảm xúc nào để suy ra archetype.
+    testWidgets('vẫn đủ sáu thẻ khi vào từ màn năng lượng', (tester) async {
       final h = _Harness();
-      await _pump(tester, h.app());
-      await tester.tap(find.byKey(const Key('wr_home_checkin_ok')));
+      await _pump(tester, h.app(initialLocation: '/wr/flow/energy'));
+      await tester.tap(find.byKey(const Key('wr_energy_low')));
       await tester.pumpAndSettle();
 
       expect(find.text(HumanMoment.arrival.label), findsOneWidget);
       expect(find.text(HumanMoment.celebration.label), findsOneWidget);
     });
+  });
 
-    testWidgets('chọn khoảnh khắc mở Episode ở state captured', (tester) async {
+  group('Bước 0 — chọn tình huống (§V)', () {
+    testWidgets('chạm một tình huống mở Episode và ghi ngay situation_code',
+        (tester) async {
       final h = _Harness();
+      h.content.seedSituations(_someSituations);
       await _pump(tester, h.app());
       await tester.tap(find.byKey(const Key('wr_home_checkin_tired')));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('wr_moment_recovery')));
+      // Check-in được ghi ngay khi chạm ô cảm xúc, TRƯỚC khi có Episode nào.
+      expect(h.wr.upsertCheckinCalls, hasLength(1));
+      expect(h.wr.upsertCheckinCalls.first.energy, CheckinEnergy.low);
+      expect(h.wr.upsertCheckinCalls.first.mood, Mood.tired);
+      expect(h.wr.upsertCheckinCalls.first.direction, isNull);
+      // Chưa chọn tình huống thì chưa có phiên rỗng nào trong DB.
+      expect(h.episodes.openEpisodeCalls, isEmpty);
+
+      final shown = _firstVisibleSituationCode();
+      await tester.tap(find.byKey(Key('wr_situation_$shown')));
       await tester.pumpAndSettle();
 
       expect(h.episodes.openEpisodeCalls, hasLength(1));
       final opened = h.episodes.openEpisodeCalls.first;
+      // Archetype suy từ cảm xúc: "mệt mỏi" → Recovery (HXA §2.5).
       expect(opened.humanMoment, HumanMoment.recovery);
       expect(opened.energy, CheckinEnergy.low);
       expect(opened.state, ExperienceState.captured);
-      // Check-in ngày vẫn được ghi, mood suy ra từ năng lượng.
-      expect(h.wr.upsertCheckinCalls, hasLength(1));
-      expect(h.wr.upsertCheckinCalls.first.energy, CheckinEnergy.low);
-      expect(h.wr.upsertCheckinCalls.first.mood, Mood.tired);
-      // Không còn ghi "hướng đi".
-      expect(h.wr.upsertCheckinCalls.first.direction, isNull);
-    });
-  });
 
-  group('Các bước phản tư', () {
-    testWidgets('hiện đúng một câu hỏi mỗi lần và đi theo chuỗi của archetype',
-        (tester) async {
-      final h = _Harness();
-      h.seedOpenEpisode(moment: HumanMoment.recovery);
-      await _pump(tester, h.app());
-      await _resume(tester);
-
-      // Recovery: Notice → Explore → Preserve
-      expect(find.text('BƯỚC 1/3'), findsOneWidget);
-      expect(find.text('Điều gì đang làm bạn mất năng lượng?'), findsOneWidget);
-
-      await _writeStep(tester, 'Cuộc họp sáng nay');
-      expect(find.text('BƯỚC 2/3'), findsOneWidget);
-      expect(
-        find.text(promptFor(HumanMoment.recovery, ReflectionPattern.explore)),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('chưa viết gì thì chưa đi tiếp được', (tester) async {
-      final h = _Harness();
-      h.seedOpenEpisode(moment: HumanMoment.recovery);
-      await _pump(tester, h.app());
-      await _resume(tester);
-
-      final button = tester.widget<ElevatedButton>(
-        find.byKey(const Key('wr_flow_primary')),
-      );
-      expect(button.onPressed, isNull);
-    });
-
-    testWidgets('đi hết chuỗi thì sang màn Ý nghĩa', (tester) async {
-      final h = _Harness();
-      h.seedOpenEpisode(moment: HumanMoment.recovery);
-      await _pump(tester, h.app());
-      await _resume(tester);
-
-      await _writeStep(tester, 'Cuộc họp sáng nay');
-      await _writeStep(tester, 'Cảm giác không được nghe');
-      await _writeStep(tester, 'Mình cần nói sớm hơn');
-      await tester.pumpAndSettle();
-
-      expect(
-        find.text('Nếu giữ lại một điều từ lần nhìn lại này, đó là gì?'),
-        findsOneWidget,
-      );
+      final saved = h.episodes.episodes.single;
+      expect(saved.situationCode, shown);
+      expect(saved.patternsDone, contains(ReflectionPattern.notice));
+      // §4.1: mã vừa chọn được đẩy lên đầu lịch sử chống lặp.
+      expect(h.wr.saveRecentSituationIdsCalls.last.first, shown);
     });
 
     testWidgets('thoát giữa chừng thì phiên ngủ, không mất', (tester) async {
       final h = _Harness();
-      h.seedOpenEpisode(moment: HumanMoment.recovery);
+      h.content.seedSituations(_someSituations);
+      h.seedOpenEpisode(
+        moment: HumanMoment.recovery,
+        state: ExperienceState.exploring,
+        patternsDone: const [ReflectionPattern.notice],
+        situationCode: 'A3-sit-01',
+      );
       await _pump(tester, h.app());
-      await _resume(tester);
+      await _resume(tester, stopAtDetail: true);
 
-      await _writeStep(tester, 'Cuộc họp sáng nay');
+      await tester.enterText(
+        find.byKey(const Key('wr_detail_field')),
+        'Cuộc họp sáng nay',
+      );
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('wr_flow_close')));
       await tester.pumpAndSettle();
 
       expect(h.episodes.dormantCalls, hasLength(1));
       final saved = h.episodes.episodes.single;
       expect(saved.state, ExperienceState.dormant);
-      // Ghi chú đã viết vẫn còn nguyên.
-      expect(saved.notes['notice'], 'Cuộc họp sáng nay');
+      // Chữ đã viết vẫn còn nguyên.
+      expect(saved.notes['explore'], 'Cuộc họp sáng nay');
+    });
+  });
+
+  group('Bước 1 — chi tiết cụ thể (§V)', () {
+    testWidgets('bỏ trống vẫn đi tiếp được — bước này KHÔNG bắt buộc',
+        (tester) async {
+      final h = _Harness();
+      h.seedOpenEpisode(
+        moment: HumanMoment.recovery,
+        state: ExperienceState.exploring,
+        patternsDone: const [ReflectionPattern.notice],
+      );
+      await _pump(tester, h.app());
+      await _resume(tester, stopAtDetail: true);
+
+      expect(find.byType(WrDetailScreen), findsOneWidget);
+      final button = tester.widget<ElevatedButton>(
+        find.byKey(const Key('wr_flow_primary')),
+      );
+      expect(button.onPressed, isNotNull,
+          reason: '§V ghi rõ "không bắt buộc" — khoá nút khi ô trống là biến '
+              'một bước tuỳ chọn thành bắt buộc');
+
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
+      await tester.pumpAndSettle();
+      expect(find.byType(WrMeaningScreen), findsOneWidget);
+      // Không viết gì thì không ghi bước nào.
+      expect(h.episodes.episodes.single.notes['explore'], isNull);
+    });
+
+    testWidgets('viết rồi thì lưu vào bước explore', (tester) async {
+      final h = _Harness();
+      h.seedOpenEpisode(
+        moment: HumanMoment.recovery,
+        state: ExperienceState.exploring,
+        patternsDone: const [ReflectionPattern.notice],
+      );
+      await _pump(tester, h.app());
+      await _resume(tester, stopAtDetail: true);
+
+      await tester.enterText(
+        find.byKey(const Key('wr_detail_field')),
+        'Cảm giác không được nghe',
+      );
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(WrMeaningScreen), findsOneWidget);
+      expect(
+        h.episodes.episodes.single.notes['explore'],
+        'Cảm giác không được nghe',
+      );
     });
   });
 
   group('Ý nghĩa và ký ức', () {
-    // Câu trả lời tách khỏi câu hỏi thì vô nghĩa. Bước Ý nghĩa phải đọc lại
-    // đủ cặp hỏi–đáp, và ô nhập để trống — điều muốn giữ là chữ mới của người
-    // dùng, không phải đáp án của một câu hỏi khác bê sang.
-    testWidgets('đọc lại đủ câu hỏi lẫn câu trả lời, ô nhập để trống',
+    // Câu trả lời tách khỏi câu hỏi thì vô nghĩa. Bước Insight phải đọc lại đủ
+    // cặp hỏi–đáp. Ô nhập thì mở sẵn bằng câu Aha (§V) — không có tình huống
+    // thì dùng câu mặc định, không bao giờ để trống.
+    testWidgets('đọc lại đủ câu hỏi lẫn câu trả lời, ô nhập mở sẵn câu Aha',
         (tester) async {
       final h = _Harness();
       h.seedOpenEpisode(
@@ -346,22 +380,16 @@ void main() {
         state: ExperienceState.exploring,
         patternsDone: const [
           ReflectionPattern.notice,
-          ReflectionPattern.name,
-          ReflectionPattern.preserve,
+          ReflectionPattern.explore,
         ],
-        notes: const {'name': 'Mình đã dám trình bày trước cả phòng'},
+        notes: const {'explore': 'Mình đã dám trình bày trước cả phòng'},
       );
       await _pump(tester, h.app());
       await _resume(tester);
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('wr_meaning_recap')), findsOneWidget);
-      expect(
-        find.text(
-          promptFor(HumanMoment.celebration, ReflectionPattern.name),
-        ),
-        findsOneWidget,
-      );
+      expect(find.text(kCustomDetailPrompt), findsOneWidget);
       expect(
         find.text('Mình đã dám trình bày trước cả phòng'),
         findsOneWidget,
@@ -370,7 +398,7 @@ void main() {
       final field = tester.widget<TextField>(
         find.byKey(const Key('wr_meaning_field')),
       );
-      expect(field.controller!.text, '');
+      expect(field.controller!.text, kDefaultAha);
     });
 
     // Đọc lại mà không sửa được thì vô ích: người dùng nhìn lại mới thấy mình
@@ -383,16 +411,15 @@ void main() {
         state: ExperienceState.exploring,
         patternsDone: const [
           ReflectionPattern.notice,
-          ReflectionPattern.name,
-          ReflectionPattern.preserve,
+          ReflectionPattern.explore,
         ],
-        notes: const {'name': 'hôm nay'},
+        notes: const {'explore': 'hôm nay'},
       );
       await _pump(tester, h.app());
       await _resume(tester);
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('wr_meaning_recap_name')), findsOneWidget);
+      expect(find.byKey(const Key('wr_meaning_recap_explore')), findsOneWidget);
       final answer = find.text('hôm nay');
       await tester.ensureVisible(answer);
       await tester.pumpAndSettle();
@@ -400,14 +427,14 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.enterText(
-        find.byKey(const Key('wr_meaning_recap_field_name')),
+        find.byKey(const Key('wr_meaning_recap_field_explore')),
         'Mình đã dám trình bày trước cả phòng',
       );
-      await tester.tap(find.byKey(const Key('wr_meaning_recap_save_name')));
+      await tester.tap(find.byKey(const Key('wr_meaning_recap_save_explore')));
       await tester.pumpAndSettle();
 
       expect(
-        h.episodes.episodes.single.notes['name'],
+        h.episodes.episodes.single.notes['explore'],
         'Mình đã dám trình bày trước cả phòng',
       );
       // Sửa xong quay về dạng đọc, chữ mới hiện ngay.
@@ -425,8 +452,7 @@ void main() {
         state: ExperienceState.exploring,
         patternsDone: const [
           ReflectionPattern.notice,
-          ReflectionPattern.name,
-          ReflectionPattern.preserve,
+          ReflectionPattern.explore,
         ],
         notes: const {'name': 'Mình đã dám trình bày trước cả phòng'},
       );
@@ -468,10 +494,9 @@ void main() {
         state: ExperienceState.exploring,
         patternsDone: const [
           ReflectionPattern.notice,
-          ReflectionPattern.name,
-          ReflectionPattern.preserve,
+          ReflectionPattern.explore,
         ],
-        notes: const {'name': 'Mình đã dám trình bày'},
+        notes: const {'explore': 'Mình đã dám trình bày'},
       );
       await _pump(tester, h.app());
       await _resume(tester);
@@ -513,10 +538,9 @@ void main() {
         state: ExperienceState.exploring,
         patternsDone: const [
           ReflectionPattern.notice,
-          ReflectionPattern.name,
-          ReflectionPattern.preserve,
+          ReflectionPattern.explore,
         ],
-        notes: const {'name': 'Mình đã dám trình bày'},
+        notes: const {'explore': 'Mình đã dám trình bày'},
       );
       await _pump(tester, h.app());
       await _resume(tester);
@@ -572,10 +596,9 @@ void main() {
         state: ExperienceState.exploring,
         patternsDone: const [
           ReflectionPattern.notice,
-          ReflectionPattern.name,
-          ReflectionPattern.preserve,
+          ReflectionPattern.explore,
         ],
-        notes: const {'name': 'Mình đã dám trình bày'},
+        notes: const {'explore': 'Mình đã dám trình bày'},
       );
       await _pump(tester, h.app());
       await _resume(tester);
@@ -633,10 +656,9 @@ void main() {
         state: ExperienceState.exploring,
         patternsDone: const [
           ReflectionPattern.notice,
-          ReflectionPattern.name,
-          ReflectionPattern.preserve,
+          ReflectionPattern.explore,
         ],
-        notes: const {'name': 'Mình đã dám trình bày'},
+        notes: const {'explore': 'Mình đã dám trình bày'},
       );
       await _pump(tester, h.app());
       await _resume(tester);
@@ -790,8 +812,7 @@ void main() {
         state: ExperienceState.exploring,
         patternsDone: const [
           ReflectionPattern.notice,
-          ReflectionPattern.name,
-          ReflectionPattern.preserve,
+          ReflectionPattern.explore,
         ],
         situationCode: 'C2-sit-01',
       );
@@ -821,8 +842,7 @@ void main() {
         state: ExperienceState.exploring,
         patternsDone: const [
           ReflectionPattern.notice,
-          ReflectionPattern.name,
-          ReflectionPattern.preserve,
+          ReflectionPattern.explore,
         ],
       );
 
@@ -851,8 +871,7 @@ void main() {
         state: ExperienceState.exploring,
         patternsDone: const [
           ReflectionPattern.notice,
-          ReflectionPattern.name,
-          ReflectionPattern.preserve,
+          ReflectionPattern.explore,
         ],
       );
       await _pump(tester, h.app());
@@ -966,8 +985,7 @@ void main() {
         state: ExperienceState.exploring,
         patternsDone: const [
           ReflectionPattern.notice,
-          ReflectionPattern.name,
-          ReflectionPattern.preserve,
+          ReflectionPattern.explore,
         ],
         situationCode: 'C2-sit-01',
       );
@@ -1021,8 +1039,7 @@ void main() {
         state: ExperienceState.exploring,
         patternsDone: const [
           ReflectionPattern.notice,
-          ReflectionPattern.name,
-          ReflectionPattern.preserve,
+          ReflectionPattern.explore,
         ],
         situationCode: 'C2-sit-01',
         draftMeaning: 'Chữ của chính tôi.',
@@ -1080,15 +1097,32 @@ Future<void> _confirmMeaning(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
-Future<void> _resume(WidgetTester tester) async {
-  await tester.tap(find.byKey(const Key('wr_home_resume_reflection')));
-  await tester.pumpAndSettle();
-}
+Future<void> _resume(WidgetTester tester, {bool stopAtDetail = false}) =>
+    resumeOpenEpisode(tester, stopAtDetail: stopAtDetail);
 
-/// Viết một bước phản tư rồi bấm Tiếp.
-Future<void> _writeStep(WidgetTester tester, String text) async {
-  await tester.enterText(find.byKey(const Key('wr_step_note')), text);
-  await tester.pumpAndSettle();
-  await tester.tap(find.byKey(const Key('wr_flow_primary')));
-  await tester.pumpAndSettle();
+/// Vài tình huống đủ để bước Notice có chip mà chạm.
+const _someSituations = [
+  WrSituation(
+    code: 'A3-sit-01',
+    text: 'Việc dồn nhiều hơn mình xử lý nổi',
+    scaDimension: ScaDimension.a3,
+    wave: 1,
+  ),
+  WrSituation(
+    code: 'A1-sit-01',
+    text: 'Không biết mình đang đi về đâu',
+    scaDimension: ScaDimension.a1,
+    wave: 1,
+  ),
+];
+
+/// Mã của chip đang hiện đầu tiên. Danh sách được trộn ngẫu nhiên (§4.1) nên
+/// không đoán trước được mã nào ở vị trí nào.
+String _firstVisibleSituationCode() {
+  for (final s in _someSituations) {
+    if (find.byKey(Key('wr_situation_${s.code}')).evaluate().isNotEmpty) {
+      return s.code;
+    }
+  }
+  throw StateError('không có chip tình huống nào đang hiện');
 }

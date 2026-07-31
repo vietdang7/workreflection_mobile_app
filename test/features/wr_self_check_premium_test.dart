@@ -21,19 +21,28 @@ Widget _wrap({
   required FakeWrIntelligenceRepository intel,
   FakeWrContentRepository? content,
 }) {
+  // Bộ câu hỏi là route CON của '/', không phải route gốc: có vậy ngăn xếp mới
+  // có chỗ để lùi về khi người dùng bấm "Đóng". Dựng nó làm route gốc thì
+  // `context.pop()` không có gì để pop và test không kiểm được lối thoát.
   final router = GoRouter(
     initialLocation: '/wr/self-check',
     routes: [
       GoRoute(
-        path: '/wr/self-check',
-        builder: (_, __) => const WrSelfCheckScreen(),
+        path: '/',
+        builder: (_, __) => const Scaffold(body: Text('HOME')),
+        routes: [
+          GoRoute(
+            path: 'wr/self-check',
+            builder: (_, __) => const WrSelfCheckScreen(),
+          ),
+          GoRoute(
+            path: 'wr/paywall',
+            builder: (_, __) => const Scaffold(body: Text('PAYWALL')),
+          ),
+          GoRoute(path: 'wr/growth', builder: (_, __) => const Scaffold()),
+          GoRoute(path: 'wr/journey', builder: (_, __) => const Scaffold()),
+        ],
       ),
-      GoRoute(
-        path: '/wr/paywall',
-        builder: (_, __) => const Scaffold(body: Text('PAYWALL')),
-      ),
-      GoRoute(path: '/wr/growth', builder: (_, __) => const Scaffold()),
-      GoRoute(path: '/wr/journey', builder: (_, __) => const Scaffold()),
     ],
   );
   return ProviderScope(
@@ -217,5 +226,159 @@ void main() {
     await _completeSurvey(tester, label: 'Hoàn toàn đúng');
 
     await _expectVisible(tester, find.text('DIỄN GIẢI SÂU'));
+  });
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // Lối thoát. Trước bản này màn chỉ có mũi tên lùi MỘT câu — đang ở câu 12 mà
+  // muốn ra thì phải bấm mười hai lần, tức là trên thực tế không có cửa ra.
+  // ───────────────────────────────────────────────────────────────────────────
+  group('thoát khỏi bộ câu hỏi', () {
+    Future<void> openFirstQuestion(WidgetTester tester) async {
+      await tester.tap(find.text('Bắt đầu →'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('chưa trả lời câu nào thì đóng thẳng, không cản đường',
+        (tester) async {
+      final intel = FakeWrIntelligenceRepository()..seedEntitlement(null);
+      await tester.pumpWidget(_wrap(intel: intel));
+      await tester.pumpAndSettle();
+
+      await openFirstQuestion(tester);
+      expect(find.byKey(const Key('wr_self_check_close')), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('wr_self_check_close')));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('Thoát khỏi bộ câu hỏi'), findsNothing);
+      expect(find.byType(WrSelfCheckScreen), findsNothing);
+    });
+
+    testWidgets('đã trả lời rồi thì hỏi lại trước khi bỏ', (tester) async {
+      // Bài dở không được lưu ở đâu cả — chạm nhầm "Đóng" là mất sạch.
+      final intel = FakeWrIntelligenceRepository()..seedEntitlement(null);
+      await tester.pumpWidget(_wrap(intel: intel));
+      await tester.pumpAndSettle();
+
+      await openFirstQuestion(tester);
+      for (var i = 0; i < 3; i++) {
+        await tester.tap(find.text('Đôi khi đúng'));
+        await tester.pump(const Duration(milliseconds: 300));
+        await tester.pumpAndSettle();
+      }
+
+      await tester.tap(find.byKey(const Key('wr_self_check_close')));
+      await tester.pumpAndSettle();
+
+      expect(find.textContaining('3 câu bạn đã trả lời'), findsOneWidget);
+
+      // "Làm tiếp" đưa về đúng chỗ đang dở, không mất gì.
+      await tester.tap(find.text('Làm tiếp'));
+      await tester.pumpAndSettle();
+      expect(find.text('Câu 4 / 15'), findsOneWidget);
+
+      // "Thoát" mới thật sự ra khỏi màn, và không ghi gì xuống.
+      await tester.tap(find.byKey(const Key('wr_self_check_close')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('wr_self_check_close_confirm')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(WrSelfCheckScreen), findsNothing);
+      expect(intel.insertSelfCheckResponseCalls, isEmpty);
+    });
+  });
+
+  // ───────────────────────────────────────────────────────────────────────────
+  // Đổi ý giữa hai lựa chọn — hồi quy cho lỗi đã ăn mất dữ liệu thật.
+  //
+  // Trước bản vá, mỗi lượt chạm hẹn thêm một lần tự nhảy câu sau 260ms. Chọn
+  // một mức rồi đổi sang mức khác là hai lần hẹn cùng nổ: một câu bị bỏ qua,
+  // và ở câu cuối thì `_finishSurvey` chạy hai lượt, ghi hai bản ghi.
+  //
+  // Trên DB thật (tài khoản e9588fae…) đã có đúng ba cặp bản ghi trùng
+  // 23/7 · 29/7 · 30/7, và bản 30/7 chỉ còn 12/15 câu — thiếu scq-04, scq-05,
+  // scq-07.
+  // ───────────────────────────────────────────────────────────────────────────
+  group('đổi ý giữa chừng không được ăn mất câu', () {
+    /// Chạm [first] rồi đổi sang [second] TRƯỚC khi màn kịp tự nhảy câu.
+    Future<void> answerThenChangeMind(
+      WidgetTester tester, {
+      String first = 'Đôi khi đúng',
+      String second = 'Khá đúng',
+    }) async {
+      await tester.tap(find.text(first));
+      await tester.pump(const Duration(milliseconds: 100)); // < 260ms
+      await tester.tap(find.text(second));
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('trả lời đủ 15 câu, không câu nào bị nhảy qua', (tester) async {
+      final intel = FakeWrIntelligenceRepository()..seedEntitlement(null);
+      await tester.pumpWidget(_wrap(intel: intel));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Bắt đầu →'));
+      await tester.pumpAndSettle();
+
+      for (var i = 0; i < kSelfCheckQuestions.length; i++) {
+        // Số câu hiện trên đầu màn phải tăng đúng một bậc mỗi vòng.
+        expect(
+          find.text('Câu ${i + 1} / ${kSelfCheckQuestions.length}'),
+          findsOneWidget,
+          reason: 'đã nhảy quá câu ${i + 1}',
+        );
+        await answerThenChangeMind(tester);
+      }
+
+      expect(intel.insertSelfCheckResponseCalls, hasLength(1));
+      expect(
+        intel.insertSelfCheckResponseCalls.single.answers,
+        hasLength(kSelfCheckQuestions.length),
+      );
+    });
+
+    testWidgets('đổi ý ở câu cuối chỉ ghi xuống một bản ghi', (tester) async {
+      final intel = FakeWrIntelligenceRepository()..seedEntitlement(null);
+      await tester.pumpWidget(_wrap(intel: intel));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Bắt đầu →'));
+      await tester.pumpAndSettle();
+
+      for (var i = 0; i < kSelfCheckQuestions.length - 1; i++) {
+        await tester.tap(find.text('Đôi khi đúng'));
+        await tester.pump(const Duration(milliseconds: 300));
+        await tester.pumpAndSettle();
+      }
+
+      await answerThenChangeMind(tester);
+
+      expect(find.text('Bức tranh của bạn'), findsOneWidget);
+      expect(intel.insertSelfCheckResponseCalls, hasLength(1));
+    });
+
+    testWidgets('mức được ghi là mức chọn SAU CÙNG', (tester) async {
+      // Vá lỗi bằng cách chặn lượt chạm thứ hai cũng hết nhảy câu, nhưng khi đó
+      // người dùng không đổi ý được nữa và mức ghi xuống là mức chạm nhầm.
+      // Test này khoá lại: huỷ-rồi-hẹn-lại, không phải chặn.
+      final intel = FakeWrIntelligenceRepository()..seedEntitlement(null);
+      await tester.pumpWidget(_wrap(intel: intel));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.text('Bắt đầu →'));
+      await tester.pumpAndSettle();
+
+      for (var i = 0; i < kSelfCheckQuestions.length; i++) {
+        await answerThenChangeMind(
+          tester,
+          first: 'Hoàn toàn không đúng', // 1
+          second: 'Hoàn toàn đúng', //     5
+        );
+      }
+
+      final saved = intel.insertSelfCheckResponseCalls.single;
+      expect(saved.answers.values.toSet(), {5});
+    });
   });
 }

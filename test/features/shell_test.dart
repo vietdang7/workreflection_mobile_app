@@ -96,6 +96,18 @@ void main() {
       expect(find.byType(WrTabBar), findsOneWidget);
     });
 
+    // Khách 2026-07-30: "bỏ cái ô chatbot giúp tôi, chúng ta sẽ làm cái này
+    // sau". Bong bóng chỉ được gỡ khỏi shell — `WrAskBubble` và màn `/wr/ask`
+    // vẫn còn nguyên, nên test này canh đúng một chuyện: nó không tự mọc lại
+    // trên các tab.
+    testWidgets('không có bong bóng hỏi nổi trên tab nào', (tester) async {
+      await tester.pumpWidget(_wrapWithRouter());
+      await tester.pumpAndSettle();
+
+      expect(find.byType(WrAskBubble), findsNothing);
+      expect(find.byKey(const Key('wr_ask_bubble')), findsNothing);
+    });
+
     testWidgets('WrTabItem widgets count is 4', (tester) async {
       await tester.pumpWidget(_wrapWithRouter());
       await tester.pumpAndSettle();
@@ -111,19 +123,22 @@ void main() {
       expect(find.text('Home tab'), findsOneWidget);
     });
 
-    testWidgets('tab bar does NOT render any visible text labels', (tester) async {
+    testWidgets('mỗi tab có nhãn chữ như mockup Sprint 2', (tester) async {
+      // Bản trước giấu nhãn, chỉ để icon + chấm coral. Mockup `.tab .lbl` có
+      // nhãn 9px dưới mỗi icon — bốn icon trần thì người mới mở app phải đoán.
       await tester.pumpWidget(_wrapWithRouter());
       await tester.pumpAndSettle();
 
-      // In icon-only mode there must be no Text widgets in the WrTabBar
       final tabBarFinder = find.byType(WrTabBar);
       expect(tabBarFinder, findsOneWidget);
 
-      final textsInsideTabBar = find.descendant(
-        of: tabBarFinder,
-        matching: find.byType(Text),
-      );
-      expect(textsInsideTabBar, findsNothing);
+      for (final label in ['Hôm nay', 'Hiểu mình', 'Phát triển', 'Hành trình']) {
+        expect(
+          find.descendant(of: tabBarFinder, matching: find.text(label)),
+          findsOneWidget,
+          reason: 'thiếu nhãn tab "$label"',
+        );
+      }
     });
 
     testWidgets('tapping tab index 1 (Hiểu mình) switches to discover branch',

@@ -27,6 +27,7 @@ import 'package:workreflection_mobile/features/auth/data/auth_repository.dart';
 import 'package:workreflection_mobile/features/auth/presentation/auth_screen.dart';
 import 'package:workreflection_mobile/features/profile/presentation/profile_edit_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/flow/wr_commit_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/flow/wr_detail_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/flow/wr_done_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/flow/wr_energy_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/flow/wr_meaning_screen.dart';
@@ -47,6 +48,7 @@ import '../support/fake_wr_content_repository.dart';
 import '../support/fake_wr_episode_repository.dart';
 import '../support/fake_wr_intelligence_repository.dart';
 import '../support/fake_wr_mood_content_repository.dart';
+import '../support/resume_open_episode.dart';
 
 // ---------------------------------------------------------------------------
 // Fake AuthRepository — ghi lại lệnh gọi, không chạm mạng.
@@ -150,6 +152,7 @@ class _Stage {
       GoRoute(path: '/wr/flow/energy', builder: (_, __) => const WrEnergyScreen()),
       GoRoute(path: '/wr/flow/moment', builder: (_, __) => const WrMomentScreen()),
       GoRoute(path: '/wr/flow/step', builder: (_, __) => const WrStepScreen()),
+      GoRoute(path: '/wr/flow/detail', builder: (_, __) => const WrDetailScreen()),
       GoRoute(path: '/wr/flow/meaning', builder: (_, __) => const WrMeaningScreen()),
       GoRoute(path: '/wr/flow/commit', builder: (_, __) => const WrCommitScreen()),
       GoRoute(path: '/wr/flow/done', builder: (_, __) => const WrDoneScreen()),
@@ -195,18 +198,29 @@ Future<void> _pump(WidgetTester tester, Widget app) async {
   await tester.pumpAndSettle();
 }
 
-/// Đi hết các bước phản tư của khoảnh khắc đang mở, mỗi bước một câu trả lời.
-Future<void> _answerAllSteps(WidgetTester tester) async {
-  for (var i = 1; i <= 8; i++) {
-    if (find.byType(WrStepScreen).evaluate().isEmpty) return;
-    if (find.byKey(const Key('wr_step_note')).evaluate().isEmpty) {
-      // Bước Name hiện thẻ tình huống — chạm một thẻ.
-      await tester.tap(find.byKey(const Key('wr_situation_C2-sit-01')),
-          warnIfMissed: false);
+/// Đi hai bước ghi dữ liệu của luồng §V: chọn tình huống rồi qua bước chi tiết.
+///
+/// Kết thúc ở màn Insight. [detail] null nghĩa là bỏ trống ô chi tiết — §V cho
+/// phép, và đó cũng là đường phần lớn người dùng đi.
+Future<void> _walkToMeaning(WidgetTester tester, {String? detail}) async {
+  // Bước 0 — CHỌN, không viết. Danh sách trộn ngẫu nhiên nên chạm mã nào đang
+  // hiện thì chạm mã đó.
+  if (find.byType(WrStepScreen).evaluate().isNotEmpty) {
+    for (final code in const ['C2-sit-01', 'A3-sit-01']) {
+      final chip = find.byKey(Key('wr_situation_$code'));
+      if (chip.evaluate().isEmpty) continue;
+      await tester.ensureVisible(chip);
       await tester.pumpAndSettle();
-    } else {
-      await tester.enterText(
-          find.byKey(const Key('wr_step_note')), 'điều tôi viết ở bước $i');
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+      break;
+    }
+  }
+
+  // Bước 1 — chi tiết cụ thể, không bắt buộc.
+  if (find.byType(WrDetailScreen).evaluate().isNotEmpty) {
+    if (detail != null) {
+      await tester.enterText(find.byKey(const Key('wr_detail_field')), detail);
       await tester.pumpAndSettle();
     }
     await tester.tap(find.byKey(const Key('wr_flow_primary')));
@@ -253,17 +267,20 @@ void main() {
     // ── 3. Check-in mở luồng phản tư ─────────────────────────────────────
     await tester.tap(find.byKey(const Key('wr_home_checkin_tired')));
     await tester.pumpAndSettle();
-    expect(find.byType(WrMomentScreen), findsOneWidget);
-
-    await tester.tap(find.byKey(const Key('wr_moment_confusion')));
-    await tester.pumpAndSettle();
-
-    // Episode mở ra và check-in ngày được ghi.
-    expect(stage.episodes.episodes, hasLength(1));
+    // v2.0 §9.1: check-in dẫn THẲNG vào bước chọn tình huống, không qua màn
+    // khoảnh khắc nào.
+    expect(find.byType(WrStepScreen), findsOneWidget);
+    expect(find.byType(WrMomentScreen), findsNothing);
+    // Check-in ngày ghi ngay, Episode thì chưa — chưa chọn gì thì chưa có phiên.
     expect(stage.wr.upsertCheckinCalls, hasLength(1));
+    expect(stage.episodes.episodes, isEmpty);
 
-    // ── 4. Trả lời hết các bước → màn Ý nghĩa ────────────────────────────
-    await _answerAllSteps(tester);
+    // ── 4. Chọn tình huống → chi tiết → màn Ý nghĩa ──────────────────────
+    await _walkToMeaning(tester, detail: 'điều tôi viết thêm');
+    expect(stage.episodes.episodes, hasLength(1));
+    // Mã tình huống PHẢI được ghi — nếu không, "Tình huống lặp lại" và điểm
+    // SCA ở tab Hiểu mình sẽ trống mãi (§4.3).
+    expect(stage.episodes.episodes.single.situationCode, isNotNull);
     expect(find.byType(WrMeaningScreen), findsOneWidget);
     // Màn Bước phải rời hẳn stack. Còn nằm dưới là nó vẫn dựng lại theo Episode
     // và bắn điều hướng đè mất màn đang xem — xem test riêng bên dưới.
@@ -305,7 +322,7 @@ void main() {
     stage.router.go('/wr/discover');
     await tester.pumpAndSettle();
     expect(find.byType(WrDiscoverScreen), findsOneWidget);
-    expect(find.text('Bạn đã nhìn lại 1 lần.'), findsOneWidget);
+    expect(find.textContaining('Bạn đã nhìn lại 1/15 lần'), findsOneWidget);
     // Free: mọi diễn giải nằm sau paywall.
     expect(find.byKey(const Key('wr_discover_need_lock')), findsOneWidget);
 
@@ -346,9 +363,7 @@ void main() {
 
     await tester.tap(find.byKey(const Key('wr_home_checkin_tired')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('wr_moment_celebration')));
-    await tester.pumpAndSettle();
-    await _answerAllSteps(tester);
+    await _walkToMeaning(tester);
 
     await tester.enterText(
         find.byKey(const Key('wr_meaning_field')), 'Điều tôi muốn giữ lại.');
@@ -383,24 +398,29 @@ void main() {
     // Phiên 1 — bỏ dở giữa chừng bằng nút đóng.
     await tester.tap(find.byKey(const Key('wr_home_checkin_tired')));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('wr_moment_recovery')));
-    await tester.pumpAndSettle();
+    for (final code in const ['C2-sit-01', 'A3-sit-01']) {
+      final chip = find.byKey(Key('wr_situation_$code'));
+      if (chip.evaluate().isEmpty) continue;
+      await tester.ensureVisible(chip);
+      await tester.pumpAndSettle();
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+      break;
+    }
     await tester.enterText(
-        find.byKey(const Key('wr_step_note')), 'câu trả lời dở dang');
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('wr_flow_primary')));
+        find.byKey(const Key('wr_detail_field')), 'câu trả lời dở dang');
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('wr_flow_close')));
     await tester.pumpAndSettle();
 
-    // Về Home và được mời quay lại — WXS §4.5: tạm dừng là giữ chỗ.
+    // Về Home. Từ 2026-07-30 Home KHÔNG còn thẻ mời tiếp tục (khách yêu cầu bỏ
+    // theo mockup), nhưng phiên vẫn được giữ chỗ — WXS §4.5.
     expect(find.byType(WrHomeScreen), findsOneWidget);
-    expect(find.byKey(const Key('wr_home_resume_reflection')), findsOneWidget);
+    expect(find.byKey(const Key('wr_home_resume_reflection')), findsNothing);
     expect(stage.episodes.episodes.single.state, ExperienceState.dormant);
 
-    // Bấm tiếp tục: Episode ngủ phải được đánh thức, không ném lỗi transition.
-    await tester.tap(find.byKey(const Key('wr_home_resume_reflection')));
-    await tester.pumpAndSettle();
+    // Tiếp tục: Episode ngủ phải được đánh thức, không ném lỗi transition.
+    await resumeOpenEpisode(tester);
 
     expect(find.textContaining('Transition bất hợp lệ'), findsNothing);
     expect(find.textContaining('Không lưu được'), findsNothing);
@@ -408,10 +428,10 @@ void main() {
         isNot(ExperienceState.dormant));
 
     // Đi tiếp được tới cuối chuỗi, không bắt trả lời lại từ đầu.
-    await _answerAllSteps(tester);
+    await _walkToMeaning(tester);
     expect(find.byType(WrMeaningScreen), findsOneWidget);
     expect(
-      stage.episodes.episodes.single.notes['notice'],
+      stage.episodes.episodes.single.notes['explore'],
       'câu trả lời dở dang',
     );
   });

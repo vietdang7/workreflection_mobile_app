@@ -117,6 +117,7 @@ class WrSituation {
     this.expectedOutcome,
     this.scaPerspective,
     this.createdAt,
+    this.retiredAt,
   });
 
   final String code;
@@ -127,6 +128,20 @@ class WrSituation {
   final String? scaPerspective;
   final int wave;
   final DateTime? createdAt;
+
+  /// Khác null = ngưng đề xuất cho phiên mới.
+  ///
+  /// Dùng cho 60 chip Tầng 1 cũ (`<DIM>-sit-NN`), đã được thay bằng 100 mục của
+  /// Career Situation Library có mã trùng `wr_stories.story_id`.
+  ///
+  /// KHÔNG xoá khỏi bảng: `wr_reflection_episodes`, `wr_pattern_counts` và
+  /// `wr_career_memory_events` còn tham chiếu những mã này, và tab Hiểu mình
+  /// tra ngược ra nhãn từ đó. Xoá là làm trống nhãn của toàn bộ lịch sử.
+  /// Chỉ những chỗ CHÀO MỜI một tình huống mới phải lọc — xem
+  /// [pickSituationChoices].
+  final DateTime? retiredAt;
+
+  bool get isRetired => retiredAt != null;
 
   factory WrSituation.fromJson(Map<String, dynamic> json) {
     final rawNeed = json['human_need'] as String?;
@@ -140,6 +155,9 @@ class WrSituation {
       wave: json['wave'] as int,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
+          : null,
+      retiredAt: json['retired_at'] != null
+          ? DateTime.parse(json['retired_at'] as String)
           : null,
     );
   }

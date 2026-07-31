@@ -6,10 +6,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
+import 'package:workreflection_mobile/core/data/wr_episode_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
 import 'package:workreflection_mobile/core/models/mobile_profile.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
+import 'package:workreflection_mobile/core/models/wr_episode.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 import 'package:workreflection_mobile/core/models/wr_mood_content.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_journey_screen.dart';
@@ -19,6 +21,7 @@ import 'package:workreflection_mobile/l10n/app_localizations.dart';
 
 import '../support/fake_repository.dart';
 import '../support/fake_wr_content_repository.dart';
+import '../support/fake_wr_episode_repository.dart';
 import '../support/fake_wr_intelligence_repository.dart';
 
 final _now = DateTime(2026, 7, 28);
@@ -33,20 +36,29 @@ List<WrSituation> _situations() => const [
       ),
     ];
 
-List<PatternCount> _patterns() => [
-      PatternCount(
+/// Năm lượt nhìn lại cùng chọn `C1-sit-01`.
+///
+/// Gieo EPISODE chứ không gieo `wr_pattern_counts`: từ 2026-07-31 luật Cơ hội
+/// phát triển đọc recentSituationIds (Kiến trúc v2.0 §4.3).
+FakeWrEpisodeRepository _episodes() => FakeWrEpisodeRepository()
+  ..seed([
+    for (var i = 0; i < 5; i++)
+      ReflectionEpisode(
+        id: 'e$i',
         userId: 'u1',
+        humanMoment: HumanMoment.confusion,
+        state: ExperienceState.integrated,
         situationCode: 'C1-sit-01',
-        occurrenceCount: 5,
-        lastSeenAt: _now,
+        openedAt: _now.add(Duration(hours: i)),
       ),
-    ];
+  ]);
 
 Widget _wrap(
   Widget child, {
   required FakeWrRepository repo,
   FakeWrIntelligenceRepository? intel,
   FakeWrContentRepository? content,
+  FakeWrEpisodeRepository? episodes,
   bool premium = false,
 }) {
   final intelRepo = intel ?? FakeWrIntelligenceRepository();
@@ -81,6 +93,8 @@ Widget _wrap(
       wrRepositoryProvider.overrideWithValue(repo),
       wrIntelligenceRepositoryProvider.overrideWithValue(intelRepo),
       wrContentRepositoryProvider.overrideWithValue(contentRepo),
+      wrEpisodeRepositoryProvider
+          .overrideWithValue(episodes ?? FakeWrEpisodeRepository()),
       currentUserIdProvider.overrideWithValue('u1'),
     ],
     child: MaterialApp.router(
@@ -107,11 +121,14 @@ FakeWrRepository _repo({String? roleText}) {
   return repo;
 }
 
-({FakeWrIntelligenceRepository intel, FakeWrContentRepository content})
-    _withEnoughPatterns() {
-  final intel = FakeWrIntelligenceRepository()..seedPatternCounts(_patterns());
+({
+  FakeWrIntelligenceRepository intel,
+  FakeWrContentRepository content,
+  FakeWrEpisodeRepository episodes,
+}) _withEnoughPatterns() {
+  final intel = FakeWrIntelligenceRepository();
   final content = FakeWrContentRepository()..seedSituations(_situations());
-  return (intel: intel, content: content);
+  return (intel: intel, content: content, episodes: _episodes());
 }
 
 void main() {
@@ -144,6 +161,7 @@ void main() {
           repo: _repo(),
           intel: fakes.intel,
           content: fakes.content,
+          episodes: fakes.episodes,
         ),
       );
       await tester.pumpAndSettle();
@@ -162,6 +180,12 @@ void main() {
 
     testWidgets('Premium thấy gợi ý, và luôn kèm ghi chú độ chính xác (§XII.7)',
         (tester) async {
+      // Khung test mặc định 800px không đủ cao: từ khi các test này gieo
+      // Episode thật (nguồn của recentSituationIds), dòng thời gian Hành trình
+      // dài thêm và đẩy khối Cơ hội phát triển ra ngoài vùng ListView dựng lười.
+      tester.view.physicalSize = const Size(1080, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
       final fakes = _withEnoughPatterns();
       await tester.pumpWidget(
         _wrap(
@@ -169,6 +193,7 @@ void main() {
           repo: _repo(),
           intel: fakes.intel,
           content: fakes.content,
+          episodes: fakes.episodes,
           premium: true,
         ),
       );
@@ -187,6 +212,12 @@ void main() {
     });
 
     testWidgets('có dòng dẫn sang màn Thông tin công việc', (tester) async {
+      // Khung test mặc định 800px không đủ cao: từ khi các test này gieo
+      // Episode thật (nguồn của recentSituationIds), dòng thời gian Hành trình
+      // dài thêm và đẩy khối Cơ hội phát triển ra ngoài vùng ListView dựng lười.
+      tester.view.physicalSize = const Size(1080, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
       final fakes = _withEnoughPatterns();
       await tester.pumpWidget(
         _wrap(
@@ -194,6 +225,7 @@ void main() {
           repo: _repo(),
           intel: fakes.intel,
           content: fakes.content,
+          episodes: fakes.episodes,
           premium: true,
         ),
       );
@@ -212,6 +244,12 @@ void main() {
 
     testWidgets('bản đối tác đã tổng hợp thì dùng bản đó, không suy bằng luật',
         (tester) async {
+      // Khung test mặc định 800px không đủ cao: từ khi các test này gieo
+      // Episode thật (nguồn của recentSituationIds), dòng thời gian Hành trình
+      // dài thêm và đẩy khối Cơ hội phát triển ra ngoài vùng ListView dựng lười.
+      tester.view.physicalSize = const Size(1080, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
       final fakes = _withEnoughPatterns();
       fakes.intel.seedGrowthOpportunity(
         GrowthOpportunity(
@@ -230,6 +268,7 @@ void main() {
           repo: _repo(),
           intel: fakes.intel,
           content: fakes.content,
+          episodes: fakes.episodes,
           premium: true,
         ),
       );

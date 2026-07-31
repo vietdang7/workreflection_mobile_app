@@ -402,6 +402,7 @@ class PracticeTheme {
     this.scaDimension,
     this.description,
     this.createdAt,
+    this.retiredAt,
   });
 
   final String themeId;
@@ -409,6 +410,16 @@ class PracticeTheme {
   final ScaDimension? scaDimension;
   final String? description;
   final DateTime? createdAt;
+
+  /// Khác null = chủ đề ngưng đề xuất cho người mới.
+  ///
+  /// Không xoá khỏi bảng vì người đã ghi danh vẫn phải đi tiếp được chuỗi bước
+  /// của mình — xoá là làm hỏng `completedSteps` của họ. Chỉ những nơi CHÀO MỜI
+  /// một chủ đề mới mới phải lọc: gợi ý ở màn Phát triển và danh sách "Chủ đề
+  /// bạn có thể bắt đầu".
+  final DateTime? retiredAt;
+
+  bool get isRetired => retiredAt != null;
 
   factory PracticeTheme.fromJson(Map<String, dynamic> json) {
     final rawDim = json['sca_dimension'] as String?;
@@ -419,6 +430,9 @@ class PracticeTheme {
       description: json['description'] as String?,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
+          : null,
+      retiredAt: json['retired_at'] != null
+          ? DateTime.parse(json['retired_at'] as String)
           : null,
     );
   }

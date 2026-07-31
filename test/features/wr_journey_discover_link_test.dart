@@ -11,14 +11,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
+import 'package:workreflection_mobile/core/data/wr_episode_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
+import 'package:workreflection_mobile/core/models/wr_episode.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_discover_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_journey_screen.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 
 import '../support/fake_wr_content_repository.dart';
+import '../support/fake_wr_episode_repository.dart';
 import '../support/fake_wr_intelligence_repository.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -68,6 +71,7 @@ Widget _wrapJourney({
 Widget _wrapDiscover({
   FakeWrContentRepository? content,
   FakeWrIntelligenceRepository? intel,
+  FakeWrEpisodeRepository? episodes,
   String userId = 'u1',
 }) {
   final contentRepo = content ?? FakeWrContentRepository();
@@ -77,11 +81,28 @@ Widget _wrapDiscover({
     overrides: [
       wrContentRepositoryProvider.overrideWithValue(contentRepo),
       wrIntelligenceRepositoryProvider.overrideWithValue(intelRepo),
+      // Danh sách "Tình huống lặp lại" đọc từ Episode chứ không từ
+      // `wr_pattern_counts` kể từ 2026-07-29.
+      wrEpisodeRepositoryProvider
+          .overrideWithValue(episodes ?? FakeWrEpisodeRepository()),
       currentUserIdProvider.overrideWithValue(userId),
     ],
     child: MaterialApp.router(routerConfig: router),
   );
 }
+
+/// [count] Episode đã khép cho cùng một mã tình huống.
+List<ReflectionEpisode> _closedEpisodes(String code, int count) => [
+      for (var i = 1; i <= count; i++)
+        ReflectionEpisode(
+          id: 'ep-$code-$i',
+          userId: 'u1',
+          humanMoment: HumanMoment.confusion,
+          state: ExperienceState.integrated,
+          situationCode: code,
+          closedAt: DateTime(2026, 7, 20).add(Duration(hours: i)),
+        ),
+    ];
 
 Future<void> _pumpLarge(WidgetTester tester, Widget widget) async {
   tester.view.physicalSize = const Size(1080, 6000);
@@ -421,7 +442,13 @@ void main() {
       intel.seedSelfCheckHistory([_selfCheck()]);
       intel.seedPatternCounts([_pattern(code: 'sit-01', count: 4)]);
 
-      await _pumpLarge(tester, _wrapDiscover(content: content, intel: intel));
+      final episodes = FakeWrEpisodeRepository()
+        ..seed(_closedEpisodes('sit-01', 4));
+
+      await _pumpLarge(
+        tester,
+        _wrapDiscover(content: content, intel: intel, episodes: episodes),
+      );
 
       expect(find.textContaining('Xem toàn bộ hành trình'), findsNothing);
       expect(find.text('Áp lực deadline'), findsOneWidget);

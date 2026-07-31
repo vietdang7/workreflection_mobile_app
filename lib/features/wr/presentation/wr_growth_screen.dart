@@ -13,9 +13,13 @@ import 'package:go_router/go_router.dart';
 import '../../../core/data/wr_intelligence_repository.dart';
 import '../../../core/logic/wr_dominant_need.dart';
 import '../../../core/logic/wr_entitlement.dart';
+import '../../../core/logic/wr_practice_match.dart';
+import '../../../core/logic/wr_repeated_situations.dart';
+import '../../../core/logic/wr_tra_chieu.dart';
 import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
+import '../../../core/theme/wr_text.dart';
 import '../../../core/widgets/action_link.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/section_divider.dart';
@@ -72,12 +76,17 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
     final themesAsync = ref.watch(practiceThemesProvider);
     final enrollmentsAsync = ref.watch(practiceEnrollmentsProvider);
     final entitlementAsync = ref.watch(wrEntitlementProvider);
-    final patternsAsync = ref.watch(wrPatternCountsProvider);
+    // Nguồn duy nhất cho "đang phản chiếu nhiều về điều gì" (v2.0 §4.3) —
+    // trước đây màn này đọc `wrPatternCountsProvider`.
+    final episodesAsync = ref.watch(wrEpisodeHistoryProvider);
     final situationsAsync = ref.watch(wrSituationsProvider);
     final selfCheckAsync = ref.watch(wrSelfCheckHistoryProvider);
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFBF9),
+      // Nền TRẮNG như ba tab kia — xem `wr_card.dart`. Trước đây màn này dùng
+      // #FBFBF9, một sắc ngà không có trong hệ màu nào cả: đứng riêng thì không
+      // ai thấy, nhưng chuyển tab từ Home sang là thấy màn tối đi một chút.
+      backgroundColor: WrColors.white,
       body: SafeArea(
         child: themesAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -86,7 +95,7 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
             themes: const [],
             enrollments: const [],
             entitlement: WrEntitlement(plan: WrPlan.free),
-            patterns: const [],
+            recent: const [],
             situations: const [],
             latestSelfCheck: null,
           ),
@@ -94,7 +103,7 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
             final enrollments = enrollmentsAsync.valueOrNull ?? const [];
             final entitlement = entitlementAsync.valueOrNull ??
                 WrEntitlement(plan: WrPlan.free);
-            final patterns = patternsAsync.valueOrNull ?? const [];
+            final episodes = episodesAsync.valueOrNull ?? const [];
             final situations = situationsAsync.valueOrNull ?? const [];
             final history = selfCheckAsync.valueOrNull ?? const [];
             final latestSelfCheck = history.isNotEmpty ? history.first : null;
@@ -103,7 +112,7 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
               themes: themes,
               enrollments: enrollments,
               entitlement: entitlement,
-              patterns: patterns,
+              recent: recentSituationIds(episodes),
               situations: situations,
               latestSelfCheck: latestSelfCheck,
             );
@@ -118,7 +127,7 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
     required List<PracticeTheme> themes,
     required List<PracticeEnrollment> enrollments,
     required WrEntitlement entitlement,
-    required List<PatternCount> patterns,
+    required List<String> recent,
     required List<WrSituation> situations,
     required ScaSelfCheckResponse? latestSelfCheck,
   }) {
@@ -129,46 +138,50 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
         ? themes.where((t) => t.themeId == activeEnrollment.themeId).firstOrNull
         : null;
 
-    // Themes chưa enroll (loại bỏ MỌI enrollment, kể cả completed)
+    // Themes chưa enroll (loại bỏ MỌI enrollment, kể cả completed) và chưa bị
+    // ngưng đề xuất. `pt-voice` / `pt-rhythm` đời đầu trùng chiều với `pt-c2` /
+    // `pt-a2` nên đã đánh dấu retired — mời người mới vào chúng là mời vào một
+    // bản cũ của cùng một chủ đề.
     final enrolledThemeIds = enrollments.map((e) => e.themeId).toSet();
-    final unenrolledThemes =
-        themes.where((t) => !enrolledThemeIds.contains(t.themeId)).toList();
+    final unenrolledThemes = themes
+        .where((t) => !enrolledThemeIds.contains(t.themeId) && !t.isRetired)
+        .toList();
 
     // Dominant need tính từ behaviour hoặc self-check
-    final behaviourNeed = dominantNeedFromBehaviour(patterns, situations);
+    final behaviourNeed = dominantNeedFromBehaviour(recent, situations);
     final dominantNeed = behaviourNeed ??
         (latestSelfCheck != null
             ? dominantNeedFromSelfCheck(latestSelfCheck)
             : null);
 
-    // WXS §3.12 Inv.6 — Development Flow chỉ mở khi Pattern đủ mạnh (≥ 2 lần
-    // lặp cùng chủ đề). Một lần gặp chưa phải Pattern, không được vội đẩy
-    // người dùng vào thực hành. Tự đánh giá SCA không thay thế được điều này.
+    // Hai hướng mở khoá thực hành (khách chốt 2026-07-31):
+    //
+    //   Hướng 1 — tích luỹ hàng ngày: vẫn giữ ngưỡng lặp của WXS §3.12 Inv.6.
+    //   Hướng 2 — Self-Check 15 câu: làm xong là ra chủ đề luôn.
+    //
+    // Bản trước chỉ truyền `behaviourNeed` vào đây, nên người mới chỉ làm
+    // Self-Check thì `need` luôn null và cổng đóng vĩnh viễn — nút "Vào Thực
+    // hành" ở cuối màn Tự đánh giá rơi thẳng vào thẻ trống. Hướng 2 khi đó
+    // không tồn tại trên thực tế.
     final canSuggestPractice = developmentFlowUnlocked(
-      need: behaviourNeed,
-      patterns: patterns,
+      need: dominantNeed,
+      recent: recent,
       situations: situations,
+      hasSelfCheck: latestSelfCheck != null,
     );
 
-    // Theme gợi ý: match trụ từ dominantNeed
-    PracticeTheme? suggestedTheme;
-    bool hasPillarReason = false;
-    if (canSuggestPractice && dominantNeed != null && unenrolledThemes.isNotEmpty) {
-      final pillar = needPillarLetter(dominantNeed);
-      suggestedTheme = unenrolledThemes
-          .where(
-            (t) =>
-                t.scaDimension != null &&
-                t.scaDimension!.dbValue.startsWith(pillar),
-          )
-          .firstOrNull;
-      if (suggestedTheme != null) {
-        hasPillarReason = true;
-      } else {
-        // Fallback: theme chưa enroll đầu tiên bất kỳ
-        suggestedTheme = unenrolledThemes.first;
-        hasPillarReason = false;
-      }
+    // Chủ đề gợi ý — khớp theo CHIỀU của tình huống đang lặp, không phải chỉ
+    // theo chữ cái trụ. Xem `wr_practice_match.dart`.
+    PracticeSuggestion? suggestion;
+    if (canSuggestPractice &&
+        dominantNeed != null &&
+        unenrolledThemes.isNotEmpty) {
+      suggestion = suggestPracticeTheme(
+        candidates: unenrolledThemes,
+        recent: recent,
+        situations: situations,
+        need: dominantNeed,
+      );
     }
 
     // Quota
@@ -254,9 +267,9 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
             child: enrolledCards.isEmpty
                 ? _buildNoActiveThemeCard(
                     context,
-                    suggestedTheme: suggestedTheme,
+                    suggestion: suggestion,
                     dominantNeed: dominantNeed,
-                    hasPillarReason: hasPillarReason,
+                    situations: situations,
                     canEnroll:
                         entitlement.canEnrollPracticeTheme(activeCount),
                   )
@@ -301,14 +314,6 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
               children: [
                 if (activeTheme == null) const WrSectionDivider(),
                 WrLinkRow(
-                  key: const Key('wr_growth_other_themes_row'),
-                  label: 'Thực hành khác',
-                  hint: unenrolledThemes.isEmpty
-                      ? null
-                      : '${unenrolledThemes.length} chủ đề',
-                  onTap: () => context.push('/wr/growth/themes'),
-                ),
-                WrLinkRow(
                   key: const Key('wr_growth_skills_row'),
                   label: 'Kỹ năng đã hình thành',
                   onTap: () => context.push('/wr/growth/skills'),
@@ -330,13 +335,41 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
 
   // ── Task B: Card khi không có active enrollment ───────────────────────────
 
+  /// Câu giải thích vì sao lại là chủ đề này. null = không giải thích được thì
+  /// im lặng, không bịa một lý do nghe cho có.
+  String? _suggestionReason(
+    PracticeSuggestion? suggestion,
+    List<WrSituation> situations,
+    HumanNeed? need,
+  ) {
+    switch (suggestion?.kind) {
+      case PracticeMatchKind.dimension:
+        final code = suggestion!.reasonSituationCode;
+        final text = situations.where((s) => s.code == code).firstOrNull?.text;
+        if (text == null) return null;
+        final n = suggestion.reasonCount;
+        return n > 1
+            ? 'Vì bạn đã gặp "$text" $n lần.'
+            : 'Vì bạn đã gặp "$text".';
+      case PracticeMatchKind.pillar:
+        // Chưa có tình huống nào để chỉ ra — mới chỉ Self-Check chẳng hạn.
+        return need == null
+            ? null
+            : 'Vì bạn đang tìm kiếm ${needSeekingLabel(need)}.';
+      case PracticeMatchKind.fallback:
+      case null:
+        return null;
+    }
+  }
+
   Widget _buildNoActiveThemeCard(
     BuildContext context, {
-    required PracticeTheme? suggestedTheme,
+    required PracticeSuggestion? suggestion,
     required HumanNeed? dominantNeed,
-    required bool hasPillarReason,
+    required List<WrSituation> situations,
     required bool canEnroll,
   }) {
+    final suggestedTheme = suggestion?.theme;
     if (suggestedTheme == null) {
       // Fallback cũ: không có theme hoặc themes rỗng
       return WrCardMinimal(
@@ -403,10 +436,15 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
               ),
             ),
           ],
-          if (hasPillarReason && dominantNeed != null) ...[
+          // Lý do — nói ĐÚNG cái đã dẫn tới chủ đề này. Khớp được theo tình
+          // huống thì gọi thẳng tên tình huống và số lần: đó là điều người dùng
+          // tự nhận ra được, khác hẳn một câu chung chung về nhu cầu.
+          if (_suggestionReason(suggestion, situations, dominantNeed)
+              case final reason?) ...[
             const SizedBox(height: 6),
             Text(
-              'Vì bạn đang tìm kiếm ${needSeekingLabel(dominantNeed)}.',
+              reason,
+              key: const Key('wr_growth_suggestion_reason'),
               style: const TextStyle(
                 fontSize: 12,
                 color: WrColors.muted,
@@ -451,15 +489,36 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// _OpportunitySliver — "MỞ RỘNG OFFLINE" (opp-card của giao diện mẫu)
+// _OpportunitySliver — thẻ mời buổi Trà Chiều Nghề Nghiệp sắp tới.
 //
-// Hai Lớp v1.6 §11.6 đổi nhãn thẻ workshop cross-sell này từ "Cơ hội phát
-// triển" sang "Mở rộng offline": từ v1.6, "Cơ hội phát triển" chỉ còn một
-// nghĩa duy nhất là Domain Concept ở tab Hành trình.
+// Họp khách 2026-07-29 thu hẹp thẻ này lại: trước đây nó gợi buổi workshop gần
+// nhất BẤT KỲ của web app. Khách không muốn thế — "nếu offline cho Work
+// Reflection thì nó sẽ là một chương trình riêng cho Work Reflection thôi".
+// Đẩy cả kho workshop sang làm app có mùi bán hàng, đúng thứ khách đang tránh.
 //
-// Workshop chưa có trường gắn với trụ SCA hay nhu cầu, nên đây là buổi gần
-// nhất sắp diễn ra chứ không phải buổi "hợp với bạn". Nói đúng điều mình biết:
-// dòng phụ là ngày diễn ra, không phải một lý do bịa ra.
+// Vì vậy thẻ chỉ đọc các buổi có category Trà Chiều, và KHÔNG rơi về một
+// workshop khác cho có khi chưa buổi nào được mở.
+//
+// Nhưng thẻ vẫn hiện: chương trình có thật kể cả khi lịch còn trống, và màn chi
+// tiết đã nói thẳng "chưa mở buổi nào" chứ không dựng thẻ rỗng. Bản trước ẩn cả
+// khối khi `nextTraChieu` trả null — trên máy khách 2026-07-30 chưa có buổi nào
+// mang category Trà Chiều trong `cc_workshops`, nên Trà Chiều mất hẳn khỏi tab
+// Phát triển: "tôi không còn thấy cái mục giao diện trà chiều đâu cả".
+//
+// Ẩn cả cửa vào vì lịch trống là nhầm hai chuyện: KHÔNG CÓ BUỔI NÀO SẮP TỚI ≠
+// KHÔNG CÓ CHƯƠNG TRÌNH. Ba luật, cách buổi diễn ra, lịch dự kiến — người dùng
+// vẫn nên đọc được để quyết định có muốn dự lần sau hay không.
+//
+// Hình thức theo mockup Sprint 2 (`screenAct`, thẻ cuối màn Phát triển): nền
+// NAVY, pill teal "Offline · Trà Chiều Nghề Nghiệp", chủ đề buổi là câu trích
+// serif in nghiêng, rồi một dòng nhỏ nói khuôn buổi. Navy là có chủ đích — đây
+// là khối duy nhất trên màn dẫn ra NGOÀI app, và nó phải khác hẳn các thẻ chủ
+// đề trắng để không bị đọc lẫn thành "một chủ đề nữa để thực hành".
+//
+// 2026-07-30: khách bỏ dòng "Thực hành khác" ở màn này và đặt thẻ Trà Chiều vào
+// đúng chỗ đó — mockup không có màn danh sách chủ đề, chủ đề đến từ gợi ý.
+// ⚠ Hệ quả: `/wr/growth/themes` giờ chỉ còn một lối vào — khối "Tiếp tục hôm
+//   nay" ở Home khi chưa theo chủ đề nào.
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _OpportunitySliver extends ConsumerWidget {
@@ -468,101 +527,92 @@ class _OpportunitySliver extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final workshops = ref.watch(activeWorkshopsProvider).valueOrNull ?? const [];
-    final now = DateTime.now();
-    final upcoming = workshops
-        .where((w) => !w.date.isBefore(DateTime(now.year, now.month, now.day)))
-        .toList()
-      ..sort((a, b) => a.date.compareTo(b.date));
-    final next = upcoming.firstOrNull;
-    if (next == null) return const SliverToBoxAdapter(child: SizedBox.shrink());
+    final next = nextTraChieu(workshops, now: DateTime.now());
 
     return SliverToBoxAdapter(
       child: Padding(
         padding: const EdgeInsets.fromLTRB(22, 4, 22, 20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const WrEyebrow('MỞ RỘNG OFFLINE'),
-            const SizedBox(height: 12),
-            InkWell(
-              key: const Key('wr_growth_opportunity'),
-              borderRadius: BorderRadius.circular(16),
-              onTap: () => context.push('/workshops/${next.id}'),
-              child: Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: WrColors.cream,
-                  borderRadius: BorderRadius.circular(16),
-                ),
-                child: Row(
+        child: InkWell(
+          key: const Key('wr_growth_opportunity'),
+          borderRadius: BorderRadius.circular(20),
+          onTap: () => context.push('/wr/tra-chieu'),
+          child: WrCardNavy(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
                   children: [
-                    Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: WrColors.white,
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: const Icon(
-                        Icons.mic_none_rounded,
-                        size: 22,
-                        color: WrColors.navy,
-                      ),
+                    const Icon(
+                      Icons.home_outlined,
+                      size: 16,
+                      color: WrColors.coral,
                     ),
-                    const SizedBox(width: 14),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            (next.category ?? 'Workshop').toUpperCase(),
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: WrColors.teal,
-                              letterSpacing: 0.44,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            next.title,
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.w600,
-                              color: WrColors.navy,
-                              height: 1.3,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Row(
-                            children: [
-                              Text(
-                                'Ngày ${next.date.day.toString().padLeft(2, '0')}'
-                                '/${next.date.month.toString().padLeft(2, '0')}',
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w600,
-                                  color: WrColors.coral,
-                                ),
-                              ),
-                              const SizedBox(width: 3),
-                              const Icon(
-                                Icons.arrow_forward,
-                                size: 12,
-                                color: WrColors.coral,
-                              ),
-                            ],
-                          ),
-                        ],
+                    const SizedBox(width: 6),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: WrColors.teal.withValues(alpha: 0.22),
+                        borderRadius: BorderRadius.circular(100),
+                      ),
+                      child: Text(
+                        'Offline · $kTraChieuLabel',
+                        style: const TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                          color: WrColors.teal,
+                          letterSpacing: 0.2,
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ),
+                const SizedBox(height: 10),
+                // Lịch trống thì nói đúng như vậy, không mượn câu chủ đề của
+                // buổi cũ đã diễn ra để thẻ trông có nội dung.
+                Text(
+                  next == null
+                      ? 'Chưa có buổi nào được mở.'
+                      : '"${next.title}"',
+                  style: WrText.serifQuote(
+                    fontSize: 14,
+                    color: WrColors.cream,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  next == null
+                      ? kTraChieuFormatLabel
+                      : '${traChieuWhenLabel(next)} · $kTraChieuFormatLabel',
+                  style: TextStyle(
+                    fontSize: 11,
+                    height: 1.5,
+                    color: WrColors.cream.withValues(alpha: 0.6),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Xem chi tiết',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: WrColors.cream.withValues(alpha: 0.55),
+                      ),
+                    ),
+                    Icon(
+                      Icons.chevron_right,
+                      size: 18,
+                      color: WrColors.cream.withValues(alpha: 0.55),
+                    ),
+                  ],
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -616,33 +666,25 @@ class _NextStepCardSliver extends ConsumerWidget {
               behavior: HitTestBehavior.opaque,
               onTap: () =>
                   context.push('/wr/growth/theme/${theme.themeId}'),
-              child: Container(
-              decoration: BoxDecoration(
-                color: WrColors.white,
-                border: Border.all(
-                  color: WrColors.navy.withValues(alpha: 0.12),
-                ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.all(14),
+              child: WrCardMinimal(
+              padding: const EdgeInsets.all(16),
               child: Row(
                 children: [
-                  // Ô vuông coral nhạt với icon
+                  // Ô vuông trắng với icon — ô lồng trong thẻ kem thì trắng, y
+                  // như ô icon của thẻ "Gợi ý" và ô "Tiếp tục hôm nay" ở Home.
                   Container(
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: WrColors.coral.withValues(alpha: 0.12),
+                      color: WrColors.white,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Center(
-                      child: Text(
-                        '◎',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: WrColors.coral,
-                        ),
-                      ),
+                    // Icon, không phải chữ '◎': glyph đó không có trong mọi font
+                    // và máy nào thiếu thì hiện ra ô vuông rỗng.
+                    child: const Icon(
+                      Icons.adjust,
+                      size: 17,
+                      color: WrColors.coral,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -713,15 +755,9 @@ class WrPracticeThemeCard extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: InkWell(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(20),
         onTap: () => context.push('/wr/growth/theme/${theme.themeId}'),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: WrColors.white,
-            border: Border.all(color: WrColors.navy.withValues(alpha: 0.12)),
-            borderRadius: BorderRadius.circular(14),
-          ),
+        child: WrCardMinimal(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -743,7 +779,9 @@ class WrPracticeThemeCard extends ConsumerWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: WrColors.navy.withValues(alpha: 0.06),
+                        // Trắng, không phải navy mờ: navy 6% trên nền kem ra
+                        // một sắc xám ngà, gần như không thấy được viên pill.
+                        color: WrColors.white,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(

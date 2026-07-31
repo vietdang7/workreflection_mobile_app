@@ -23,6 +23,7 @@ import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/section_divider.dart';
 import '../../../core/widgets/tab_back_link.dart';
+import '../../../core/widgets/wr_card.dart';
 import '../../../core/widgets/wr_link_row.dart';
 import '../../../core/widgets/wr_premium_lock.dart';
 import '../../../core/widgets/wr_profile_avatar.dart';
@@ -325,6 +326,16 @@ class WrJourneyScreen extends ConsumerWidget {
             const WrSectionDivider(),
             const SizedBox(height: 12),
 
+            // Ô hỏi tự do — họp khách 2026-07-29. Đặt ở tab Hành trình vì câu
+            // hỏi người dùng muốn đặt ("tôi có phù hợp với công việc đó không")
+            // chỉ trả lời được từ Career Memory, tức từ chính tab này.
+            WrLinkRow(
+              key: const Key('wr_journey_ask_row'),
+              label: 'Hỏi về hành trình của bạn',
+              hint: 'Câu hỏi tự do',
+              onTap: () => context.push('/wr/ask'),
+            ),
+
             if (patterns.isNotEmpty)
               WrLinkRow(
                 key: const Key('wr_journey_discover_row'),
@@ -360,14 +371,8 @@ class _NarrativeCard extends ConsumerWidget {
         entitlement.canUseFeature(WrPremiumFeature.patternAdvanced);
     final latest = narratives.isNotEmpty ? narratives.first.narrative : null;
 
-    return Container(
+    return WrCardNavy(
       key: const Key('wr_journey_narrative_card'),
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: WrColors.navy,
-        borderRadius: BorderRadius.circular(16),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -403,7 +408,8 @@ class _NarrativeCard extends ConsumerWidget {
             style: TextStyle(
               fontSize: 15,
               height: 1.65,
-              color: WrColors.white.withValues(alpha: 0.88),
+              // Kem, không phải trắng mờ: chữ trên thẻ navy ở cả bốn tab là kem.
+              color: WrColors.cream,
               fontStyle: canRead && latest != null
                   ? FontStyle.italic
                   : FontStyle.normal,
@@ -478,14 +484,8 @@ class _GrowthOpportunitySection extends ConsumerWidget {
               paywallTrigger: 'growth_opportunity',
             )
           else
-            Container(
+            WrCardMinimal(
               key: const Key('wr_journey_growth_opportunity'),
-              width: double.infinity,
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                color: WrColors.cream,
-                borderRadius: BorderRadius.circular(16),
-              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

@@ -25,12 +25,12 @@ ScaSelfCheckResponse _resp(
       takenAt: at,
     );
 
-PatternCount _pat(String code, ScaDimension dim, int count) => PatternCount(
-      userId: 'u1',
-      situationCode: code,
+
+WrSituation _sitOf(String code, ScaDimension dim) => WrSituation(
+      code: code,
+      text: code,
       scaDimension: dim,
-      occurrenceCount: count,
-      lastSeenAt: DateTime(2026, 7, 20),
+      wave: 1,
     );
 
 void main() {
@@ -173,41 +173,56 @@ void main() {
     });
   });
 
+  // Từ 2026-07-31 khối "Đối chiếu với điều bạn hay gặp" đọc recentSituationIds
+  // thay vì `wr_pattern_counts` (Kiến trúc v2.0 §4.3 — "đối chiếu" là một trong
+  // các tính năng bắt buộc dùng nguồn duy nhất).
   group('patternsForPillar', () {
-    final patterns = [
-      _pat('C2-sit-01', ScaDimension.c2, 5),
-      _pat('S1-sit-01', ScaDimension.s1, 4),
-      _pat('C1-sit-01', ScaDimension.c1, 3),
-      _pat('A3-sit-01', ScaDimension.a3, 2),
+    List<String> rep(String code, int n) => List.filled(n, code);
+
+    final situations = [
+      _sitOf('C2-sit-01', ScaDimension.c2),
+      _sitOf('S1-sit-01', ScaDimension.s1),
+      _sitOf('C1-sit-01', ScaDimension.c1),
+      _sitOf('A3-sit-01', ScaDimension.a3),
+    ];
+    final recent = [
+      ...rep('C2-sit-01', 5),
+      ...rep('S1-sit-01', 4),
+      ...rep('C1-sit-01', 3),
+      ...rep('A3-sit-01', 2),
     ];
 
-    test('lọc pattern theo trụ, giữ thứ tự số lần lặp giảm dần', () {
-      final c = patternsForPillar(SelfCheckPillar.c, patterns);
+    test('lọc theo trụ, giữ thứ tự số lần lặp giảm dần', () {
+      final c = patternsForPillar(SelfCheckPillar.c, recent, situations);
       expect(c.map((p) => p.situationCode), ['C2-sit-01', 'C1-sit-01']);
 
-      final s = patternsForPillar(SelfCheckPillar.s, patterns);
+      final s = patternsForPillar(SelfCheckPillar.s, recent, situations);
       expect(s.map((p) => p.situationCode), ['S1-sit-01']);
 
-      final a = patternsForPillar(SelfCheckPillar.a, patterns);
+      final a = patternsForPillar(SelfCheckPillar.a, recent, situations);
       expect(a.map((p) => p.situationCode), ['A3-sit-01']);
     });
 
-    test('bỏ qua pattern không có chiều SCA', () {
-      final res = patternsForPillar(SelfCheckPillar.c, [
-        PatternCount(
-          userId: 'u1',
-          occurrenceCount: 9,
-          lastSeenAt: DateTime(2026, 7, 1),
-        ),
-      ]);
+    test('bỏ qua tình huống không có trong danh mục', () {
+      final res = patternsForPillar(
+        SelfCheckPillar.c,
+        rep('khong-ton-tai', 9),
+        situations,
+      );
       expect(res, isEmpty);
     });
 
     test('giới hạn số lượng trả về', () {
-      final many = [
-        for (var i = 0; i < 10; i++) _pat('C2-sit-0$i', ScaDimension.c2, 10 - i),
+      final manySits = [
+        for (var i = 0; i < 10; i++) _sitOf('C2-sit-0$i', ScaDimension.c2),
       ];
-      expect(patternsForPillar(SelfCheckPillar.c, many, limit: 3), hasLength(3));
+      final manyRecent = [
+        for (var i = 0; i < 10; i++) ...rep('C2-sit-0$i', 10 - i),
+      ];
+      expect(
+        patternsForPillar(SelfCheckPillar.c, manyRecent, manySits, limit: 3),
+        hasLength(3),
+      );
     });
   });
 

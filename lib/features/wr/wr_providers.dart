@@ -12,6 +12,7 @@ import '../../core/models/wr_content.dart';
 import '../../core/models/wr_episode.dart';
 import '../../core/models/wr_intelligence.dart';
 import '../../core/logic/wr_growth_opportunity.dart';
+import '../../core/logic/wr_repeated_situations.dart';
 import '../../core/logic/wr_situation_picker.dart';
 import '../../core/models/wr_mood_content.dart';
 import 'episode_flow_controller.dart';
@@ -237,6 +238,23 @@ final wrRoleTextProvider = FutureProvider<String?>((ref) async {
   }
 });
 
+/// Câu hỏi nghề nghiệp người dùng đã gửi, mới nhất trước (họp khách 2026-07-29).
+///
+/// Rỗng khi chưa đăng nhập hoặc bảng chưa tồn tại — ô hỏi vẫn dùng được, chỉ là
+/// không có lịch sử để đọc lại.
+final wrCareerQuestionsProvider =
+    FutureProvider<List<CareerQuestion>>((ref) async {
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null) return const [];
+  try {
+    return await ref
+        .watch(wrIntelligenceRepositoryProvider)
+        .fetchCareerQuestions(userId);
+  } catch (_) {
+    return const [];
+  }
+});
+
 /// Cơ hội phát triển hiện tại (§XI).
 ///
 /// Ưu tiên bản đối tác đã tổng hợp sẵn trong `wr_growth_opportunities`; chưa có
@@ -258,13 +276,13 @@ final wrGrowthOpportunityProvider =
     /* bảng chưa có hoặc mạng hỏng — rơi xuống bản suy ra bằng luật */
   }
 
-  final patterns = await ref.watch(wrPatternCountsProvider.future);
+  final episodes = await ref.watch(wrEpisodeHistoryProvider.future);
   final situations = await ref.watch(wrSituationsProvider.future);
   final roleText = await ref.watch(wrRoleTextProvider.future);
 
   return deriveGrowthOpportunity(
     userId: userId,
-    patterns: patterns,
+    recent: recentSituationIds(episodes),
     situations: situations,
     roleText: roleText,
     now: DateTime.now(),

@@ -4,7 +4,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:workreflection_mobile/core/logic/wr_dominant_need.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
-import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 
 WrSituation _sit(String code, HumanNeed need) => WrSituation(
       code: code,
@@ -14,12 +13,8 @@ WrSituation _sit(String code, HumanNeed need) => WrSituation(
       humanNeed: need,
     );
 
-PatternCount _p(String code, int count) => PatternCount(
-      userId: 'u1',
-      situationCode: code,
-      occurrenceCount: count,
-      lastSeenAt: DateTime(2026, 7, 20),
-    );
+/// [count] lần xuất hiện của [code] trong recentSituationIds.
+List<String> _p(String code, int count) => List.filled(count, code);
 
 void main() {
   final situations = [
@@ -36,7 +31,7 @@ void main() {
     expect(
       developmentFlowUnlocked(
         need: HumanNeed.ketNoi,
-        patterns: [_p('s1', 1)],
+        recent: [..._p('s1', 1)],
         situations: situations,
       ),
       isFalse,
@@ -47,7 +42,7 @@ void main() {
     expect(
       developmentFlowUnlocked(
         need: HumanNeed.ketNoi,
-        patterns: [_p('s1', 2)],
+        recent: [..._p('s1', 2)],
         situations: situations,
       ),
       isTrue,
@@ -58,7 +53,7 @@ void main() {
     expect(
       developmentFlowUnlocked(
         need: HumanNeed.ketNoi,
-        patterns: [_p('s1', 1), _p('s2', 1)],
+        recent: [..._p('s1', 1), ..._p('s2', 1)],
         situations: situations,
       ),
       isTrue,
@@ -66,11 +61,11 @@ void main() {
   });
 
   test('không cộng nhầm nhu cầu khác', () {
-    expect(occurrencesForNeed(HumanNeed.ketNoi, [_p('s3', 9)], situations), 0);
+    expect(occurrencesForNeed(HumanNeed.ketNoi, [..._p('s3', 9)], situations), 0);
     expect(
       developmentFlowUnlocked(
         need: HumanNeed.ketNoi,
-        patterns: [_p('s3', 9)],
+        recent: [..._p('s3', 9)],
         situations: situations,
       ),
       isFalse,
@@ -81,8 +76,46 @@ void main() {
     expect(
       developmentFlowUnlocked(
         need: null,
-        patterns: [_p('s1', 9)],
+        recent: [..._p('s1', 9)],
         situations: situations,
+      ),
+      isFalse,
+    );
+  });
+
+  // ── Hướng 2 — Self-Check mở khoá ngay (khách chốt 2026-07-31) ─────────────
+
+  test('làm xong Self-Check thì mở ngay, không cần lặp lần nào', () {
+    expect(
+      developmentFlowUnlocked(
+        need: HumanNeed.ketNoi,
+        recent: const [],
+        situations: situations,
+        hasSelfCheck: true,
+      ),
+      isTrue,
+    );
+  });
+
+  test('Self-Check vẫn cần một nhu cầu chủ đạo để bám vào', () {
+    expect(
+      developmentFlowUnlocked(
+        need: null,
+        recent: const [],
+        situations: situations,
+        hasSelfCheck: true,
+      ),
+      isFalse,
+    );
+  });
+
+  test('chưa Self-Check thì ngưỡng lặp giữ nguyên', () {
+    expect(
+      developmentFlowUnlocked(
+        need: HumanNeed.ketNoi,
+        recent: [..._p('s1', 1)],
+        situations: situations,
+        hasSelfCheck: false,
       ),
       isFalse,
     );

@@ -18,6 +18,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:workreflection_mobile/core/data/workshop_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_episode_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
@@ -28,21 +29,28 @@ import 'package:workreflection_mobile/core/models/wr_content.dart';
 import 'package:workreflection_mobile/core/models/wr_episode.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 import 'package:workreflection_mobile/core/models/wr_mood_content.dart';
+import 'package:workreflection_mobile/core/models/workshop_models.dart';
+import 'package:workreflection_mobile/core/theme/wr_text.dart';
 import 'package:workreflection_mobile/features/wr/presentation/flow/wr_commit_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/flow/wr_meaning_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/flow/wr_step_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/wr_discover_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/wr_growth_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_home_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_mood_library_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_mood_reader_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_journey_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/wr_tra_chieu_screen.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
 
 import '../support/fake_repository.dart';
+import '../support/fake_workshop_repository.dart';
 import '../support/fake_wr_content_repository.dart';
 import '../support/fake_wr_episode_repository.dart';
 import '../support/fake_wr_intelligence_repository.dart';
 import '../support/fake_wr_mood_content_repository.dart';
+import '../support/resume_open_episode.dart';
 
 // ---------------------------------------------------------------------------
 // Font — không nạp thì chữ tiếng Việt render thành ô vuông và ảnh vô dụng.
@@ -59,6 +67,10 @@ Future<void> _loadFonts() async {
 
   await load('NotoSans', 'assets/fonts/NotoSans-Regular.ttf');
   await load('NotoSans', 'assets/fonts/NotoSans-Bold.ttf');
+
+  // Lora — lớp `.serif` của mockup, dùng cho các câu trích. Không nạp thì các
+  // câu đó rơi về NotoSans và ảnh chụp không cho thấy đúng giọng chữ.
+  await load(WrText.serifFamily, 'assets/fonts/Lora-Italic.ttf');
 
   // Icon cũng là font. Không nạp thì mọi Icon() render thành ô vuông rỗng và
   // ảnh chụp không dùng để duyệt giao diện được.
@@ -252,6 +264,7 @@ class _Stage {
   final FakeWrMoodContentRepository moodContent;
   final FakeWrEpisodeRepository episodes;
   final FakeWrRepository wr;
+  final FakeWorkshopRepository workshops = FakeWorkshopRepository();
 
   Widget app(String location) {
     final router = GoRouter(
@@ -283,6 +296,15 @@ class _Stage {
           path: '/wr/journey',
           builder: (_, __) => const WrJourneyScreen(),
         ),
+        GoRoute(
+          path: '/wr/discover',
+          builder: (_, __) => const WrDiscoverScreen(),
+        ),
+        GoRoute(path: '/wr/growth', builder: (_, __) => const WrGrowthScreen()),
+        GoRoute(
+          path: '/wr/tra-chieu/lich',
+          builder: (_, __) => const WrTraChieuCalendarScreen(),
+        ),
         GoRoute(path: '/profile', builder: (_, __) => const Scaffold()),
         GoRoute(path: '/wr/flow/done', builder: (_, __) => const Scaffold()),
         GoRoute(
@@ -299,6 +321,7 @@ class _Stage {
         wrMoodContentRepositoryProvider.overrideWithValue(moodContent),
         wrEpisodeRepositoryProvider.overrideWithValue(episodes),
         wrRepositoryProvider.overrideWithValue(wr),
+        workshopRepositoryProvider.overrideWithValue(workshops),
         currentUserIdProvider.overrideWithValue('u1'),
       ],
       child: MaterialApp.router(
@@ -370,6 +393,44 @@ void main() {
         lastSeenAt: DateTime(2026, 7, 27),
       ),
     ]);
+    // Nạp cả Insight gần nhất và một chủ đề đang dở: mockup Sprint 2 vẽ Home
+    // với ĐỦ sáu khối. Thiếu hai khối cuối thì ảnh chụp không nói được gì về
+    // nửa dưới màn hình — chỗ dễ lệch nhất so với bản thiết kế.
+    s.intel
+      ..seedInsights([
+        WrInsight(
+          userId: 'u1',
+          content:
+              'Tôi thường im lặng không phải vì không có ý kiến, mà vì sợ phán xét.',
+          createdAt: DateTime(2026, 6, 20),
+        ),
+      ])
+      ..seedPracticeThemes([
+        const PracticeTheme(themeId: 't1', title: 'Dám lên tiếng'),
+      ])
+      ..seedPracticeSteps('t1', [
+        const PracticeStep(
+          stepId: 's1',
+          themeId: 't1',
+          stepOrder: 1,
+          title: 'Quan sát lúc muốn im lặng',
+          isPremium: false,
+        ),
+        const PracticeStep(
+          stepId: 's2',
+          themeId: 't1',
+          stepOrder: 2,
+          title: 'Đặt một câu hỏi trong họp',
+          isPremium: false,
+        ),
+      ])
+      ..seedEnrollments([
+        const PracticeEnrollment(
+          userId: 'u1',
+          themeId: 't1',
+          completedSteps: ['s1'],
+        ),
+      ]);
     await _shoot(tester, s.app('/home'), '01_home');
   });
 
@@ -418,8 +479,7 @@ void main() {
     addTearDown(tester.view.reset);
     await tester.pumpWidget(app);
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('wr_home_resume_reflection')));
-    await tester.pumpAndSettle();
+    await resumeOpenEpisode(tester);
     await expectLater(
       find.byType(MaterialApp),
       matchesGoldenFile('../../screenshots/05_chon_tinh_huong.png'),
@@ -452,8 +512,7 @@ void main() {
     addTearDown(tester.view.reset);
     await tester.pumpWidget(s.app('/home'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('wr_home_resume_reflection')));
-    await tester.pumpAndSettle();
+    await resumeOpenEpisode(tester);
     await expectLater(
       find.byType(MaterialApp),
       matchesGoldenFile('../../screenshots/06_y_nghia_aha.png'),
@@ -483,8 +542,7 @@ void main() {
     addTearDown(tester.view.reset);
     await tester.pumpWidget(s.app('/home'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('wr_home_resume_reflection')));
-    await tester.pumpAndSettle();
+    await resumeOpenEpisode(tester);
     await tester.tap(find.byKey(const Key('wr_flow_primary')));
     await tester.pumpAndSettle();
     await expectLater(
@@ -519,8 +577,7 @@ void main() {
     addTearDown(tester.view.reset);
     await tester.pumpWidget(s.app('/home'));
     await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('wr_home_resume_reflection')));
-    await tester.pumpAndSettle();
+    await resumeOpenEpisode(tester);
     await tester.tap(find.byKey(const Key('wr_flow_primary')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('wr_choice_1')));
@@ -618,6 +675,140 @@ void main() {
       s.app('/wr/journey'),
       '10_hanh_trinh_premium',
       size: const Size(390, 1200),
+    );
+  });
+
+  // Hai tab dưới đây trước không có ảnh nào, nên lần đổi hệ màu 2026-07-30
+  // không có cách nào xem lại được là bốn tab đã cùng một hệ màu hay chưa.
+  testWidgets('11 · Hiểu mình', skip: !_enabled, (tester) async {
+    final s = buildStage();
+    s.intel
+      ..seedPatternCounts([
+        PatternCount(
+          id: 'p1',
+          userId: 'u1',
+          situationCode: 'C2-sit-01',
+          scaDimension: ScaDimension.c2,
+          occurrenceCount: 5,
+          lastSeenAt: DateTime(2026, 7, 27),
+        ),
+      ])
+      ..seedSelfCheckHistory([
+        ScaSelfCheckResponse(
+          id: 'sc1',
+          userId: 'u1',
+          answers: const {'S1': 4, 'C1': 3, 'A1': 4},
+          structureScore: 3.4,
+          cultureScore: 2.6,
+          activityScore: 4.1,
+          takenAt: DateTime(2026, 7, 25),
+        ),
+      ]);
+    await _shoot(
+      tester,
+      s.app('/wr/discover'),
+      '11_hieu_minh',
+      size: const Size(390, 1100),
+    );
+  });
+
+  testWidgets('12 · Phát triển — chủ đề + Trà Chiều', skip: !_enabled,
+      (tester) async {
+    final s = buildStage();
+    s.intel
+      ..seedPracticeThemes([
+        const PracticeTheme(themeId: 't1', title: 'Dám lên tiếng'),
+        const PracticeTheme(themeId: 't2', title: 'Phản hồi hiệu quả'),
+      ])
+      ..seedPracticeSteps('t1', [
+        const PracticeStep(
+          stepId: 's1',
+          themeId: 't1',
+          stepOrder: 1,
+          title: 'Quan sát lúc muốn im lặng',
+          isPremium: false,
+        ),
+        const PracticeStep(
+          stepId: 's2',
+          themeId: 't1',
+          stepOrder: 2,
+          title: 'Đặt một câu hỏi trong họp',
+          isPremium: false,
+        ),
+        const PracticeStep(
+          stepId: 's3',
+          themeId: 't1',
+          stepOrder: 3,
+          title: 'Nói điều khó nói',
+          isPremium: true,
+        ),
+      ])
+      ..seedEnrollments([
+        const PracticeEnrollment(
+          userId: 'u1',
+          themeId: 't1',
+          completedSteps: ['s1'],
+        ),
+      ]);
+    s.workshops.seedWorkshops([
+      WorkshopDetail(
+        id: 'tc1',
+        title: 'Bận cả tuần, nhưng mình đang đi về đâu?',
+        category: 'Trà chiều nghề nghiệp',
+        date: DateTime.now().add(const Duration(days: 9)),
+        startsAt: DateTime.now().add(const Duration(days: 9, hours: 15)),
+        location: 'TP.HCM',
+        price: 99000,
+        currency: 'VND',
+        currentParticipants: 0,
+        status: 'published',
+        isActive: true,
+      ),
+    ]);
+    await _shoot(
+      tester,
+      s.app('/wr/growth'),
+      '12_phat_trien',
+      size: const Size(390, 1250),
+    );
+  });
+
+  testWidgets('13 · Trà Chiều — lịch các buổi', skip: !_enabled, (tester) async {
+    final s = buildStage();
+    s.workshops.seedWorkshops([
+      for (final (i, item) in [
+        ('test-1', 'test 1', 'test 1', 0, 3),
+        (
+          'ban-ca-tuan',
+          'Bận cả tuần, nhưng mình đang đi về đâu?',
+          'Một câu hỏi duy nhất cho cả bàn, không ai phải trả lời trước khi '
+              'sẵn sàng.',
+          99000,
+          17,
+        ),
+      ].indexed)
+        WorkshopDetail(
+          id: 'w$i',
+          slug: item.$1,
+          title: item.$2,
+          description: item.$3,
+          category: 'Trà chiều Nghề nghiệp',
+          date: DateTime(2026, 9, item.$5),
+          startsAt: DateTime(2026, 9, item.$5, 15, 30),
+          endsAt: DateTime(2026, 9, item.$5, 17, 30),
+          location: '123 Trường Sơn, TP.HCM',
+          price: item.$4,
+          currency: 'VND',
+          currentParticipants: 0,
+          status: 'active',
+          isActive: true,
+        ),
+    ]);
+    await _shoot(
+      tester,
+      s.app('/wr/tra-chieu/lich'),
+      '13_tra_chieu_lich',
+      size: const Size(390, 1000),
     );
   });
 }

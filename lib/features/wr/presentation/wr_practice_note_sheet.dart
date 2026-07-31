@@ -10,6 +10,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../core/theme/wr_colors.dart';
+import '../../../core/widgets/wr_voice_field.dart';
 
 /// Kết quả người dùng chọn trên tấm ghi chú.
 enum PracticeNoteAction {
@@ -119,29 +120,13 @@ class _PracticeNoteSheetState extends State<_PracticeNoteSheet> {
               ),
             ),
             const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: WrColors.cream,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: TextField(
-                key: const Key('wr_practice_note_field'),
-                controller: _controller,
-                minLines: 3,
-                maxLines: 5,
-                style: const TextStyle(
-                  fontSize: 15,
-                  color: WrColors.navy,
-                  height: 1.6,
-                ),
-                decoration: const InputDecoration(
-                  border: InputBorder.none,
-                  hintText: 'Điều mình nhận ra khi thử…',
-                  hintStyle: TextStyle(fontSize: 14, color: WrColors.muted),
-                ),
-                onChanged: (_) => setState(() {}),
-              ),
+            WrVoiceField(
+              fieldKey: const Key('wr_practice_note_field'),
+              controller: _controller,
+              hintText: 'Điều mình nhận ra khi thử…',
+              minLines: 3,
+              maxLines: 5,
+              onChanged: () => setState(() {}),
             ),
             const SizedBox(height: 18),
             SizedBox(

@@ -108,6 +108,12 @@ abstract class WrIntelligenceRepository {
   /// Trả về id của dòng vừa ghi, để nối với mục Career Memory sinh ra từ nó.
   /// Ghi lại cùng một bước thì cập nhật chính dòng cũ.
   Future<String?> upsertPracticeStepNote(PracticeStepNote note);
+
+  /// Ghi một câu hỏi nghề nghiệp người dùng vừa gửi.
+  Future<void> insertCareerQuestion(CareerQuestion question);
+
+  /// Câu hỏi nghề nghiệp của [userId], mới nhất trước.
+  Future<List<CareerQuestion>> fetchCareerQuestions(String userId);
 }
 
 // ---------------------------------------------------------------------------
@@ -283,10 +289,16 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
 
   @override
   Future<List<PracticeEnrollment>> fetchEnrollments(String userId) async {
+    // `order` không phải trang trí: không có nó, Postgres được phép trả về thứ
+    // tự bất kỳ, mà cả Home ("chủ đề đang dở") lẫn tab Phát triển ("chủ đề trọng
+    // tâm") đều lấy phần tử ĐẦU của danh sách này. Không sắp thì hai màn có thể
+    // nói về hai chủ đề khác nhau, và cùng một màn đổi chủ đề giữa hai lần mở.
+    // Ghi danh sớm nhất lên trước — thứ tự người dùng đã thấy từ đầu.
     final rows = await _client
         .from('wr_practice_enrollments')
         .select()
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .order('started_at', ascending: true);
     return rows.map(PracticeEnrollment.fromJson).toList();
   }
 
@@ -384,5 +396,21 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
         .select('id');
     if (rows.isEmpty) return null;
     return rows.first['id'] as String?;
+  }
+
+  @override
+  Future<void> insertCareerQuestion(CareerQuestion question) async {
+    await _client.from('wr_career_questions').insert(question.toInsert());
+  }
+
+  @override
+  Future<List<CareerQuestion>> fetchCareerQuestions(String userId) async {
+    final rows = await _client
+        .from('wr_career_questions')
+        .select()
+        .eq('user_id', userId)
+        .order('created_at', ascending: false)
+        .limit(20);
+    return rows.map(CareerQuestion.fromJson).toList();
   }
 }

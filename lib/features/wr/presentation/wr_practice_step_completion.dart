@@ -138,3 +138,15 @@ String? practiceStageTag(int stepOrder) => switch (stepOrder) {
       3 => 'CHUYỂN HOÁ',
       _ => null,
     };
+
+/// Cùng ba giai đoạn nhưng viết như trong câu, không phải nhãn in hoa.
+///
+/// Mockup dùng cả hai dạng: nhãn `.pill` in hoa trên từng bước ở tab Phát
+/// triển, và dạng câu ở dòng "Tiếp tục hôm nay" của Home ("bước Thử nghiệm đang
+/// chờ"). Giữ chung một nguồn để hai nơi không lệch tên giai đoạn.
+String? practiceStageLabel(int stepOrder) => switch (stepOrder) {
+      1 => 'Nhận diện',
+      2 => 'Thử nghiệm',
+      3 => 'Chuyển hoá',
+      _ => null,
+    };

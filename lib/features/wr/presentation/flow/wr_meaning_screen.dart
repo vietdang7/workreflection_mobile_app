@@ -10,8 +10,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/logic/wr_reflect_flow.dart';
 import '../../../../core/models/wr_episode.dart';
 import '../../../../core/theme/wr_colors.dart';
+import '../../../../core/widgets/wr_voice_field.dart';
 import '../../episode_flow_controller.dart';
 import '../../wr_providers.dart';
 import '../../../../core/logic/wr_flow_error.dart';
@@ -81,8 +83,9 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
 
     // Thứ tự ưu tiên khi điền sẵn ô nhập:
     //   1. bản nháp CHÍNH người dùng đã lưu — không được đè lên,
-    //   2. câu Aha của tình huống đã chọn (Hai Lớp v1.6 §V, bước Insight:
-    //      "chấp nhận hoặc chỉnh sửa Aha").
+    //   2. câu Aha của tình huống đã chọn (v2.0 §V, bước Insight: "chấp nhận
+    //      hoặc chỉnh sửa Aha"),
+    //   3. câu Aha mặc định của nhánh "Điều khác" (§V).
     //
     // Không nạp lại câu trả lời của bước trước: nó là đáp án cho một câu hỏi
     // khác, đặt vào đây thì người dùng không biết chữ đó ở đâu ra.
@@ -96,14 +99,19 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
         _prefilled = true;
       } else if (episode.situationCode == null || contentReady) {
         // Chỉ chốt khi đã biết chắc: hoặc phiên này không gắn tình huống nào
-        // (người dùng tự viết), hoặc thư viện đã nạp xong và ta biết có Aha hay
+        // (nhánh "Điều khác"), hoặc thư viện đã nạp xong và ta biết có Aha hay
         // không. Chốt sớm hơn là mất câu gợi ý.
-        _controller.text = story?.ahaMessage?.trim() ?? '';
+        //
+        // [ahaFor] không bao giờ trả chuỗi rỗng: §V bảo bước này luôn mở bằng
+        // một câu đã viết sẵn để sửa, không bao giờ mở bằng ô trống.
+        _controller.text = ahaFor(story?.ahaMessage);
         _prefilled = true;
       }
     }
 
-    final recap = ref.read(episodeFlowProvider.notifier).recap();
+    final recap = ref
+        .read(episodeFlowProvider.notifier)
+        .recap(detailPrompt: detailPrompt(story?.reflectionQuestion));
     final selfReflection = story?.selfReflection?.trim();
 
     return WrFlowScaffold(
@@ -112,7 +120,7 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
       subtitle: recap.isEmpty
           ? 'Chỉ điều bạn thấy đúng với mình.'
           : 'Bấm vào một câu bên dưới nếu bạn muốn viết lại.',
-      progress: 0.85,
+      progress: reflectProgress(2),
       onBack: () => context.pop(),
       onClose: _leave,
       primaryLabel: 'Đây là điều tôi muốn giữ',
@@ -169,30 +177,16 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
             ],
             const SizedBox(height: 10),
           ],
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-            decoration: BoxDecoration(
-              color: WrColors.cream,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: TextField(
-              key: const Key('wr_meaning_field'),
-              controller: _controller,
-              maxLines: 6,
-              minLines: 4,
-              style: const TextStyle(
-                fontSize: 17,
-                color: WrColors.navy,
-                height: 1.6,
-                fontStyle: FontStyle.italic,
-              ),
-              decoration: const InputDecoration(
-                border: InputBorder.none,
-                hintText: 'Tôi nhận ra…',
-                hintStyle: TextStyle(fontSize: 15, color: WrColors.muted),
-              ),
-              onChanged: (_) => setState(() {}),
-            ),
+          // §V: câu Aha là ĐỀ XUẤT, người dùng "chấp nhận hoặc chỉnh sửa". Nút
+          // mic để việc chỉnh sửa không phải gõ lại cả câu trên điện thoại.
+          WrVoiceField(
+            fieldKey: const Key('wr_meaning_field'),
+            controller: _controller,
+            hintText: 'Tôi nhận ra…',
+            italic: true,
+            minLines: 4,
+            maxLines: 6,
+            onChanged: () => setState(() {}),
           ),
           if (_error != null) ...[
             const SizedBox(height: 16),

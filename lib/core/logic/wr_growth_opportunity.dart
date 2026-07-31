@@ -15,7 +15,6 @@
 // Pure Dart — không phụ thuộc Flutter.
 
 import '../models/wr_content.dart';
-import '../models/wr_intelligence.dart';
 import '../models/wr_mood_content.dart';
 
 /// Số lần lặp tối thiểu trước khi được phép nói một Cơ hội phát triển.
@@ -53,12 +52,12 @@ const Map<String, String> _pillarSuggestion = {
 /// neo gợi ý vào vai trò thật, không có thì bỏ, không đoán.
 GrowthOpportunity? deriveGrowthOpportunity({
   required String userId,
-  required List<PatternCount> patterns,
+  required List<String> recent,
   required List<WrSituation> situations,
   String? roleText,
   required DateTime now,
 }) {
-  if (patterns.isEmpty) return null;
+  if (recent.isEmpty) return null;
 
   final codeToDim = <String, ScaDimension>{
     for (final s in situations) s.code: s.scaDimension,
@@ -68,15 +67,13 @@ GrowthOpportunity? deriveGrowthOpportunity({
   // đang ổn, không phải hướng cần phát triển.
   final tally = <String, int>{};
   final basedOn = <String>[];
-  for (final p in patterns) {
-    final code = p.situationCode;
-    if (code == null) continue;
+  for (final code in recent) {
     final dim = codeToDim[code];
     if (dim == null) continue;
     final pillar = _pillarOf(dim);
     if (pillar == null) continue;
-    tally[pillar] = (tally[pillar] ?? 0) + p.occurrenceCount;
-    basedOn.add(code);
+    tally[pillar] = (tally[pillar] ?? 0) + 1;
+    if (!basedOn.contains(code)) basedOn.add(code);
   }
   if (tally.isEmpty) return null;
 

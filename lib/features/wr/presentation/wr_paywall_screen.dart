@@ -17,6 +17,10 @@ enum PaywallTrigger {
 
   /// Toàn bộ Career Memory ở tab Hành trình (khách chốt 2026-07-29).
   careerMemory,
+
+  /// Diễn giải sâu + theo dõi xu hướng của Self-Check (mockup Sprint 2,
+  /// trigger `sca_deep`).
+  selfCheckDeep,
 }
 
 class WrPaywallScreen extends StatelessWidget {
@@ -54,6 +58,11 @@ class WrPaywallScreen extends StatelessWidget {
         PaywallTrigger.careerMemory => (
             title: 'Toàn bộ ký ức nghề nghiệp của bạn',
             sub: 'Mở lại từng mảnh bạn đã để lại, theo đúng dòng thời gian.',
+          ),
+        PaywallTrigger.selfCheckDeep => (
+            title: 'Điều kiện quanh bạn đang đổi thế nào',
+            sub: 'Cùng 15 câu đó, chạy lại theo thời gian để thấy xu hướng, và '
+                'đối chiếu với những gì bạn đã nhìn lại.',
           ),
         PaywallTrigger.defaultTrigger => (
             title: 'Mở khoá toàn bộ hành trình',

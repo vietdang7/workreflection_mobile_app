@@ -47,6 +47,7 @@ class MoodContent {
     required this.type,
     required this.body,
     required this.placeholder,
+    this.audioUrl,
   });
 
   final String id;
@@ -72,6 +73,15 @@ class MoodContent {
 
   /// §8.2: true = còn nháp, chưa thu âm hoặc biên tập chính thức.
   final bool placeholder;
+
+  /// Bản thu đã dựng cho mục HEALING AUDIO. Null = chưa có bản thu.
+  ///
+  /// Dựng một lần rồi lưu xuống DB, không sinh lại mỗi lần mở màn: cùng một
+  /// đoạn chữ thì cùng một bản thu, và gọi lại là đốt credit của dịch vụ TTS.
+  final String? audioUrl;
+
+  /// True khi mục này phát được ngay.
+  bool get hasAudio => (audioUrl?.trim().isNotEmpty ?? false);
 
   /// True khi nội dung đã sẵn sàng phát hành.
   ///
@@ -117,6 +127,9 @@ class MoodContent {
       type: MoodContentType.fromDb(json['type'] as String),
       body: json['body'] as String,
       placeholder: json['placeholder'] as bool,
+      // Cột mới (migration 20260729000000). Đọc mềm để bản app mới vẫn chạy
+      // được với một cơ sở dữ liệu chưa kịp chạy migration.
+      audioUrl: json['audio_url'] as String?,
     );
   }
 }
@@ -200,6 +213,66 @@ class GrowthOpportunity {
         'confidence_note': confidenceNote,
         'based_on': basedOn,
         'generated_at': generatedAt.toUtc().toIso8601String(),
+      };
+}
+
+// ---------------------------------------------------------------------------
+// CareerQuestion — câu hỏi nghề nghiệp người dùng tự đặt
+// ---------------------------------------------------------------------------
+
+/// Một câu hỏi người dùng gửi từ ô hỏi tự do ở tab Hành trình.
+///
+/// Họp khách 2026-07-29: "bạn muốn hỏi gì trong hành trình công việc của bạn
+/// thì bạn có thể hỏi ở đây… phần nào hệ thống trả lời được thì nó trả lời, còn
+/// không thì nó sẽ nói là hệ thống ghi nhận câu hỏi của bạn và chúng tôi sẽ gửi
+/// chi tiết gợi ý cho bạn vào email."
+///
+/// Vì vậy [answer] là NULLABLE và mặc định null: chưa có AI thì câu hỏi vẫn
+/// phải được lưu lại nguyên vẹn để người vận hành đọc và trả lời qua email.
+/// Một ô hỏi không lưu được gì là một ô hỏi vô nghĩa.
+///
+/// ⚠ Ô này KHÔNG phải hộp chat qua lại. Khách chốt rõ: "cái nói chuyện qua nói
+///   chuyện lại chị nghĩ cái đó nó sẽ chờ sau." Một câu hỏi, một lần gửi.
+class CareerQuestion {
+  const CareerQuestion({
+    required this.userId,
+    required this.question,
+    this.id,
+    this.answer,
+    this.answeredAt,
+    this.createdAt,
+  });
+
+  final String? id;
+  final String userId;
+  final String question;
+
+  /// Câu trả lời đã có. Null = đang chờ người vận hành trả lời qua email.
+  final String? answer;
+
+  final DateTime? answeredAt;
+  final DateTime? createdAt;
+
+  bool get isAnswered => (answer?.trim().isNotEmpty ?? false);
+
+  factory CareerQuestion.fromJson(Map<String, dynamic> json) {
+    return CareerQuestion(
+      id: json['id'] as String?,
+      userId: json['user_id'] as String,
+      question: json['question'] as String,
+      answer: json['answer'] as String?,
+      answeredAt: json['answered_at'] != null
+          ? DateTime.parse(json['answered_at'] as String)
+          : null,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : null,
+    );
+  }
+
+  Map<String, dynamic> toInsert() => {
+        'user_id': userId,
+        'question': question,
       };
 }
 

@@ -7,14 +7,21 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../theme/wr_colors.dart';
+import 'wr_card.dart';
 
 class WrPremiumLock extends StatelessWidget {
   const WrPremiumLock({
     super.key,
     required this.description,
     required this.ctaLabel,
+    this.title,
     this.paywallTrigger,
   });
+
+  /// Tên của thứ đang khoá, một dòng. Tuỳ chọn: phần lớn khối khoá nằm ngay
+  /// dưới một tiêu đề mục nên tự nói được mình khoá cái gì; chỉ khối đứng lẻ
+  /// giữa trang mới cần tự xưng tên.
+  final String? title;
 
   /// Mô tả người dùng sẽ mở khoá được gì — bằng ngôn ngữ giá trị, không phải
   /// tên tính năng nội bộ.
@@ -27,14 +34,12 @@ class WrPremiumLock extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF4F4F1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0x14000000)),
-      ),
+    // Thẻ kem như mọi thẻ nội dung khác (xem `wr_card.dart`). Trước đây khối này
+    // dùng nền xám #F4F4F1 + viền đen 8%: một cặp màu không có trong hệ màu nào
+    // của app, và vì khối khoá xuất hiện ở cả bốn tab nên nó là chỗ lệch màu dễ
+    // thấy nhất. Cái phân biệt "đang khoá" là ổ khoá + chữ Premium màu hổ phách,
+    // không phải nền xám.
+    return WrCardMinimal(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -53,13 +58,25 @@ class WrPremiumLock extends StatelessWidget {
               ),
             ],
           ),
+          if (title != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              title!,
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: WrColors.navy,
+                height: 1.35,
+              ),
+            ),
+          ],
           const SizedBox(height: 10),
           Text(
             description,
             style: const TextStyle(
               fontSize: 13,
               height: 1.65,
-              color: Color(0xFF6B7280),
+              color: WrColors.muted,
             ),
           ),
           const SizedBox(height: 14),
@@ -72,7 +89,8 @@ class WrPremiumLock extends StatelessWidget {
                     : '/wr/paywall?trigger=$paywallTrigger',
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: WrColors.dark,
+                // Navy như mọi nút đặc khác trong app (nút "Bắt đầu thực hành").
+                backgroundColor: WrColors.navy,
                 foregroundColor: WrColors.white,
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 shape: RoundedRectangleBorder(

@@ -7,17 +7,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/wr_mood_content_repository.dart';
+import 'package:workreflection_mobile/core/data/wr_repository.dart';
 import 'package:workreflection_mobile/core/models/checkin.dart';
 import 'package:workreflection_mobile/core/models/wr_mood_content.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_mood_library_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_mood_reader_screen.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
 
+import '../support/fake_repository.dart';
 import '../support/fake_wr_mood_content_repository.dart';
 
 Widget _wrap({
   required FakeWrMoodContentRepository moodContent,
   String initial = '/wr/mood-library',
+  Mood? checkedInMood,
 }) {
   final router = GoRouter(
     initialLocation: initial,
@@ -33,9 +36,21 @@ Widget _wrap({
       ),
     ],
   );
+  final repo = FakeWrRepository();
+  if (checkedInMood != null) {
+    repo.seedTodayCheckin(Checkin(
+      id: 'c1',
+      userId: 'u1',
+      mood: checkedInMood,
+      checkinDate: DateTime(2026, 7, 29),
+      createdAt: DateTime(2026, 7, 29),
+    ));
+  }
+
   return ProviderScope(
     overrides: [
       wrMoodContentRepositoryProvider.overrideWithValue(moodContent),
+      wrRepositoryProvider.overrideWithValue(repo),
     ],
     child: MaterialApp.router(
       routerConfig: router,
@@ -80,6 +95,44 @@ void main() {
           .toList();
       final sorted = [...positions]..sort();
       expect(positions, sorted);
+    });
+
+    testWidgets('đã check-in thì CHỈ hiện nhóm của cảm xúc đó', (tester) async {
+      // Khách chốt 2026-07-29: nút "Xem thêm gợi ý trong thư viện" đi từ Home,
+      // nơi người dùng vừa nói mình đang mệt — bày cả bốn nhóm là bắt họ tự lọc
+      // lại điều vừa nói.
+      final repo = FakeWrMoodContentRepository()
+        ..seedContent([
+          fakeMoodContent(id: 'a', mood: Mood.happy, title: 'Của vui'),
+          fakeMoodContent(id: 'b', mood: Mood.stressed, title: 'Của căng'),
+          fakeMoodContent(id: 'd', mood: Mood.tired, title: 'Của mệt'),
+        ]);
+
+      await _pump(
+        tester,
+        _wrap(moodContent: repo, checkedInMood: Mood.tired),
+      );
+
+      expect(find.text('Của mệt'), findsOneWidget);
+      expect(find.text('Của vui'), findsNothing);
+      expect(find.text('Của căng'), findsNothing);
+      expect(find.text('Căng thẳng'), findsNothing);
+    });
+
+    testWidgets('cảm xúc đó chưa có nội dung thì nói rỗng, không bày lại '
+        'cả bốn nhóm', (tester) async {
+      final repo = FakeWrMoodContentRepository()
+        ..seedContent([
+          fakeMoodContent(id: 'a', mood: Mood.happy, title: 'Của vui'),
+        ]);
+
+      await _pump(
+        tester,
+        _wrap(moodContent: repo, checkedInMood: Mood.tired),
+      );
+
+      expect(find.textContaining('Chưa có nội dung'), findsOneWidget);
+      expect(find.text('Của vui'), findsNothing);
     });
 
     testWidgets('các mục trong một nhóm xếp theo sort_order', (tester) async {

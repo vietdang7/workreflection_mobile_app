@@ -15,6 +15,7 @@ import '../../core/data/wr_intelligence_repository.dart';
 import '../../core/data/wr_repository.dart';
 import '../../core/logic/wr_experience_state.dart';
 import '../../core/logic/wr_flow_error.dart';
+import '../../core/logic/wr_reflect_flow.dart';
 import '../../core/models/checkin.dart';
 import '../../core/models/wr_content.dart';
 import '../../core/models/wr_episode.dart';
@@ -98,6 +99,27 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
   // Capture
   // -------------------------------------------------------------------------
 
+  /// Ghi check-in hôm nay mà CHƯA mở Episode nào.
+  ///
+  /// Home gọi hàm này ngay khi người dùng chạm một ô cảm xúc, rồi mới đẩy sang
+  /// bước chọn tình huống. Tách khỏi [start] là có chủ ý: chạm ô cảm xúc đã là
+  /// một câu trả lời đầy đủ và Home phải mở khoá hai khối "Hệ thống nhận ra" /
+  /// "Gợi ý" ngay, nhưng ai quay lui ở bước chọn tình huống thì không được để
+  /// lại một Episode rỗng — Career Health Check đếm Episode.
+  ///
+  /// Best-effort: hỏng thì luồng phản tư vẫn đi tiếp bình thường.
+  Future<void> saveCheckin({
+    required CheckinEnergy energy,
+    required Mood mood,
+  }) async {
+    try {
+      await _ref.read(wrRepositoryProvider).upsertCheckin(mood, energy: energy);
+      _ref.invalidate(todayCheckinProvider);
+    } catch (e, s) {
+      logFlowError('upsertCheckin', e, s);
+    }
+  }
+
   /// Mở Episode mới sau khi người dùng chọn năng lượng + Human Moment.
   ///
   /// Ghi luôn check-in ngày hôm nay. [mood] là cảm xúc người dùng thực sự chạm
@@ -125,16 +147,8 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
     );
     state = episode;
 
-    // Check-in ngày — best-effort, không chặn luồng phản tư.
-    try {
-      await _ref
-          .read(wrRepositoryProvider)
-          .upsertCheckin(mood ?? energy.toMood(), energy: energy);
-      _ref.invalidate(todayCheckinProvider);
-    } catch (e, s) {
-      // Không chặn luồng, nhưng phải nhìn thấy được ở bản debug.
-      logFlowError('upsertCheckin', e, s);
-    }
+    // Check-in ngày — upsert nên gọi lại sau [saveCheckin] của Home là vô hại.
+    await saveCheckin(energy: energy, mood: mood ?? energy.toMood());
 
     return episode;
   }
@@ -142,13 +156,6 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
   // -------------------------------------------------------------------------
   // Exploring
   // -------------------------------------------------------------------------
-
-  /// Pattern kế tiếp cần đi qua. Null = đã đủ, sang bước Ý nghĩa.
-  ReflectionPattern? get currentPattern {
-    final ep = state;
-    if (ep == null) return null;
-    return nextPattern(ep.humanMoment, ep.patternsDone);
-  }
 
   /// Ghi lại một bước phản tư: ghi chú tự viết hoặc tình huống đã chọn.
   Future<void> submitStep({
@@ -172,25 +179,33 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
   // Meaning
   // -------------------------------------------------------------------------
 
-  /// Những gì người dùng vừa viết, KÈM câu hỏi đã sinh ra chúng.
+  /// Những gì người dùng vừa chọn và vừa viết, KÈM câu hỏi đã sinh ra chúng.
   ///
   /// Một câu trả lời tách khỏi câu hỏi của nó thì vô nghĩa: "hôm nay" không
-  /// nói lên điều gì nếu không biết nó trả lời cho câu nào. Bước Ý nghĩa phải
+  /// nói lên điều gì nếu không biết nó trả lời cho câu nào. Bước Insight phải
   /// đọc lại đủ cặp hỏi–đáp thì người dùng mới rút ra được điều muốn giữ.
   ///
-  /// Trả về theo đúng thứ tự đã đi qua của archetype.
-  List<ReflectionRecapItem> recap() {
+  /// Duyệt [kReflectCapturePatterns] chứ KHÔNG duyệt `patternSequences` của
+  /// archetype: từ v2.0 §V mọi phiên đều đi đúng hai bước ghi chữ, trong khi
+  /// chuỗi của `arrival` và `celebration` không có `explore` — đọc theo
+  /// archetype sẽ nuốt mất phần chi tiết của ai check-in "khá ổn"/"đang vui".
+  ///
+  /// [detailPrompt] là câu Reflection của chính tình huống đã chọn; tầng UI đọc
+  /// từ story rồi truyền vào, vì controller không xem được provider nội dung.
+  List<ReflectionRecapItem> recap({String? detailPrompt}) {
     final ep = state;
     if (ep == null) return const [];
-    final sequence =
-        patternSequences[ep.humanMoment] ?? const <ReflectionPattern>[];
+    final prompts = <ReflectionPattern, String>{
+      ReflectionPattern.notice: kNoticePrompt,
+      ReflectionPattern.explore: detailPrompt ?? kCustomDetailPrompt,
+    };
     final items = <ReflectionRecapItem>[];
-    for (final pattern in sequence) {
+    for (final pattern in kReflectCapturePatterns) {
       final note = ep.notes[pattern.dbValue]?.trim();
       if (note == null || note.isEmpty) continue;
       items.add(ReflectionRecapItem(
         pattern: pattern,
-        prompt: promptFor(ep.humanMoment, pattern),
+        prompt: prompts[pattern] ?? promptFor(ep.humanMoment, pattern),
         answer: note,
       ));
     }

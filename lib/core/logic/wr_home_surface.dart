@@ -14,8 +14,8 @@
 // tương ứng biến mất hẳn, không hiện chỗ trống hay câu mời chào rỗng.
 
 import '../models/wr_content.dart';
-import '../models/wr_intelligence.dart';
 import 'wr_dominant_need.dart';
+import 'wr_repeated_situations.dart';
 
 /// Số lần lặp tối thiểu để hệ thống dám nói "đây là lần thứ N".
 /// Một lần chưa phải mẫu hình (WXS §3.12 Inv.6).
@@ -44,27 +44,29 @@ class SystemNotice {
       'Đây là lần thứ $count bạn gặp tình huống $situationText.';
 }
 
-/// Tình huống lặp lại nhiều nhất, nếu đã đủ ngưỡng.
+/// Tình huống lặp lại nhiều nhất trong [recent], nếu đã đủ ngưỡng.
 /// Trả về null khi chưa lặp lại lần nào — lúc đó thẻ không hiện.
+///
+/// Đọc recentSituationIds, không đọc `wr_pattern_counts` (v2.0 §4.3). Trước bản
+/// 2026-07-31, thẻ này nói "Đây là lần thứ 4 bạn gặp tình huống X" trong khi
+/// người dùng chỉ mới ghi tình huống đó MỘT lần qua luồng hiện hành — ba cái
+/// còn lại là số tích luỹ cũ và số cộng từ màn `/wr/situation` đã bỏ.
 SystemNotice? systemNotice({
-  required List<PatternCount> patterns,
+  required List<String> recent,
   required List<WrSituation> situations,
   int threshold = kSystemNoticeThreshold,
 }) {
   final labels = {for (final s in situations) s.code: s.text};
-  PatternCount? top;
-  for (final p in patterns) {
-    if (p.situationCode == null) continue;
-    if (p.occurrenceCount < threshold) continue;
-    if (top == null || p.occurrenceCount > top.occurrenceCount) top = p;
+  final ranked = rankSituations(recent);
+  for (final r in ranked) {
+    if (r.count < threshold) continue;
+    return SystemNotice(
+      situationCode: r.situationCode,
+      situationText: (labels[r.situationCode] ?? r.situationCode).toLowerCase(),
+      count: r.count,
+    );
   }
-  if (top == null) return null;
-  final code = top.situationCode!;
-  return SystemNotice(
-    situationCode: code,
-    situationText: (labels[code] ?? code).toLowerCase(),
-    count: top.occurrenceCount,
-  );
+  return null;
 }
 
 // ---------------------------------------------------------------------------
@@ -103,7 +105,7 @@ int readingMinutes(String content) {
 /// Đọc hết rồi thì vẫn gợi lại story hợp nhất, kèm dấu "đã đọc".
 StorySuggestion? suggestStory({
   required List<WrStory> stories,
-  required List<PatternCount> patterns,
+  required List<String> recent,
   required List<WrSituation> situations,
   required List<CareerMemoryEvent> events,
 }) {
@@ -116,7 +118,7 @@ StorySuggestion? suggestStory({
   bool unread(WrStory s) => !readIds.contains(s.storyId);
 
   final notice = systemNotice(
-    patterns: patterns,
+    recent: recent,
     situations: situations,
     threshold: 1,
   );
@@ -126,7 +128,7 @@ StorySuggestion? suggestStory({
           .where((s) => s.code == notice.situationCode)
           .map((s) => s.scaDimension)
           .firstOrNull;
-  final need = dominantNeedFromBehaviour(patterns, situations);
+  final need = dominantNeedFromBehaviour(recent, situations);
 
   WrStory? pick;
   if (topDimension != null) {

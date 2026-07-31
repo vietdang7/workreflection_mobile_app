@@ -33,6 +33,7 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
       updateEnrollmentStepsCalls = [];
   final List<GrowthOpportunity> insertGrowthOpportunityCalls = [];
   final List<PracticeStepNote> upsertPracticeStepNoteCalls = [];
+  final List<CareerQuestion> insertCareerQuestionCalls = [];
   final List<({String userId, String themeId})> completeThemeCalls = [];
   final List<WrContextDocument> insertContextDocumentCalls = [];
   final List<({String userId, String situationCode, String scaDimensionDb})>
@@ -392,6 +393,40 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
   }
 
   List<PracticeStepNote> get stepNotes => List.unmodifiable(_stepNotes);
+
+  // --- Câu hỏi nghề nghiệp (họp khách 2026-07-29) ---
+
+  final List<CareerQuestion> _careerQuestions = [];
+
+  /// Seed câu hỏi đã có sẵn, mới nhất trước như DB trả về.
+  void seedCareerQuestions(List<CareerQuestion> questions) {
+    _careerQuestions
+      ..clear()
+      ..addAll(questions);
+  }
+
+  @override
+  Future<void> insertCareerQuestion(CareerQuestion question) async {
+    _maybeThrow();
+    insertCareerQuestionCalls.add(question);
+    // Chèn lên đầu: DB sắp theo created_at giảm dần, fake phải cho ra cùng thứ
+    // tự thì test mới nói được điều gì về màn hình thật.
+    _careerQuestions.insert(
+      0,
+      CareerQuestion(
+        id: 'q-${_careerQuestions.length + 1}',
+        userId: question.userId,
+        question: question.question,
+        createdAt: DateTime(2026, 7, 29),
+      ),
+    );
+  }
+
+  @override
+  Future<List<CareerQuestion>> fetchCareerQuestions(String userId) async {
+    _maybeThrow();
+    return _careerQuestions.where((q) => q.userId == userId).toList();
+  }
 }
 
 // ---------------------------------------------------------------------------

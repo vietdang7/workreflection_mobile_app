@@ -14,6 +14,8 @@ import 'package:workreflection_mobile/core/data/wr_mood_content_repository.dart'
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
 import 'package:workreflection_mobile/core/logic/wr_home_surface.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
+import 'package:workreflection_mobile/core/models/wr_episode.dart';
+import 'package:workreflection_mobile/core/data/wr_episode_repository.dart';
 import 'package:workreflection_mobile/core/models/checkin.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 import 'package:workreflection_mobile/core/models/wr_mood_content.dart';
@@ -23,6 +25,7 @@ import 'package:workreflection_mobile/l10n/app_localizations.dart';
 
 import '../support/fake_repository.dart';
 import '../support/fake_wr_content_repository.dart';
+import '../support/fake_wr_episode_repository.dart';
 import '../support/fake_wr_intelligence_repository.dart';
 import '../support/fake_wr_mood_content_repository.dart';
 
@@ -44,12 +47,23 @@ WrSituation _sit(
       humanNeed: need,
     );
 
-PatternCount _pattern(String code, int count) => PatternCount(
-      userId: 'u1',
-      situationCode: code,
-      occurrenceCount: count,
-      lastSeenAt: DateTime(2026, 7, 20),
-    );
+/// [count] lần xuất hiện của [code] trong recentSituationIds.
+List<String> _pattern(String code, int count) => List.filled(count, code);
+
+/// [count] Episode đã chọn tình huống [code] — nguồn thật của
+/// recentSituationIds (v2.0 §4.3). Trước đây các test này gieo
+/// `wr_pattern_counts`; màn hình không còn đọc bảng đó nữa.
+List<ReflectionEpisode> _episodes(String code, int count) => [
+      for (var i = 0; i < count; i++)
+        ReflectionEpisode(
+          id: '\$code-\$i',
+          userId: 'u1',
+          humanMoment: HumanMoment.confusion,
+          state: ExperienceState.integrated,
+          situationCode: code,
+          openedAt: DateTime(2026, 7, 1).add(Duration(hours: i)),
+        ),
+    ];
 
 WrStory _story(
   String id,
@@ -81,6 +95,7 @@ Widget _wrap({
   FakeWrIntelligenceRepository? intel,
   FakeWrMoodContentRepository? moodContent,
   FakeWrRepository? repo,
+  FakeWrEpisodeRepository? episodes,
 }) {
   final router = GoRouter(
     initialLocation: '/home',
@@ -116,6 +131,8 @@ Widget _wrap({
       wrMoodContentRepositoryProvider
           .overrideWithValue(moodContent ?? FakeWrMoodContentRepository()),
       wrRepositoryProvider.overrideWithValue(repo ?? FakeWrRepository()),
+      wrEpisodeRepositoryProvider
+          .overrideWithValue(episodes ?? FakeWrEpisodeRepository()),
       currentUserIdProvider.overrideWithValue('u1'),
     ],
     child: MaterialApp.router(
@@ -145,14 +162,14 @@ void main() {
 
     test('chưa lặp lại thì hệ thống chưa nhận ra gì', () {
       expect(
-        systemNotice(patterns: [_pattern('s1', 1)], situations: situations),
+        systemNotice(recent: [..._pattern('s1', 1)], situations: situations),
         isNull,
       );
     });
 
     test('đủ ngưỡng thì đọc lại đúng con số', () {
       final n = systemNotice(
-        patterns: [_pattern('s1', 5)],
+        recent: [..._pattern('s1', 5)],
         situations: situations,
       );
       expect(n, isNotNull);
@@ -166,7 +183,7 @@ void main() {
 
     test('chọn tình huống lặp nhiều nhất', () {
       final n = systemNotice(
-        patterns: [_pattern('s1', 3), _pattern('s2', 7)],
+        recent: [..._pattern('s1', 3), ..._pattern('s2', 7)],
         situations: [...situations, _sit('s2', 'Bị giao việc gấp')],
       );
       expect(n!.situationCode, 's2');
@@ -190,7 +207,7 @@ void main() {
       expect(
         suggestStory(
           stories: const [],
-          patterns: const [],
+          recent: const [],
           situations: const [],
           events: const [],
         ),
@@ -204,7 +221,7 @@ void main() {
           _story('st-a', 'Khác trụ', dim: ScaDimension.s1),
           _story('st-b', 'Cùng trụ', dim: ScaDimension.a2),
         ],
-        patterns: [_pattern('s1', 4)],
+        recent: [..._pattern('s1', 4)],
         situations: [_sit('s1', 'Tình huống', dim: ScaDimension.a2)],
         events: const [],
       );
@@ -218,7 +235,7 @@ void main() {
           _story('st-a', 'Đã đọc', dim: ScaDimension.a2),
           _story('st-b', 'Chưa đọc', dim: ScaDimension.a2),
         ],
-        patterns: [_pattern('s1', 4)],
+        recent: [..._pattern('s1', 4)],
         situations: [_sit('s1', 'Tình huống', dim: ScaDimension.a2)],
         events: [_readEvent('st-a')],
       );
@@ -228,7 +245,7 @@ void main() {
     test('đọc hết rồi thì vẫn gợi lại, kèm dấu đã đọc', () {
       final s = suggestStory(
         stories: [_story('st-a', 'Đã đọc')],
-        patterns: const [],
+        recent: const [],
         situations: const [],
         events: [_readEvent('st-a')],
       );
@@ -245,20 +262,36 @@ void main() {
     testWidgets('chưa có dữ liệu thì ba khối dưới im lặng', (tester) async {
       await _pump(tester, _wrap());
 
-      expect(find.text('Bạn đang trải qua điều gì?'), findsOneWidget);
+      expect(find.text('Ngày hôm nay của bạn như thế nào?'), findsOneWidget);
       expect(find.byKey(const Key('wr_home_system_notice')), findsNothing);
       expect(find.byKey(const Key('wr_home_mood_content')), findsNothing);
       expect(find.byKey(const Key('wr_home_latest_insight')), findsNothing);
+    });
+
+    testWidgets('chưa check-in thì Hệ thống nhận ra chưa xuất hiện',
+        (tester) async {
+      // Họp khách 2026-07-29: màn Home lúc mở ra chỉ có ba việc. "Hệ thống nhận
+      // ra" và "Gợi ý hôm nay" là hai thứ hiện SAU khi check-in xong.
+      final content = FakeWrContentRepository()
+        ..seedSituations([_sit('s1', 'Ngại phản biện với đồng nghiệp')]);
+      final episodes = FakeWrEpisodeRepository()..seed(_episodes('s1', 5));
+
+      await _pump(tester, _wrap(content: content, episodes: episodes));
+
+      expect(find.byKey(const Key('wr_home_system_notice')), findsNothing);
     });
 
     testWidgets('Hệ thống nhận ra hiện đúng câu từ dữ liệu thật',
         (tester) async {
       final content = FakeWrContentRepository()
         ..seedSituations([_sit('s1', 'Ngại phản biện với đồng nghiệp')]);
-      final intel = FakeWrIntelligenceRepository()
-        ..seedPatternCounts([_pattern('s1', 5)]);
+      final episodes = FakeWrEpisodeRepository()..seed(_episodes('s1', 5));
+      final repo = FakeWrRepository()..seedTodayCheckin(_checkin(Mood.stressed));
 
-      await _pump(tester, _wrap(content: content, intel: intel));
+      await _pump(
+        tester,
+        _wrap(content: content, episodes: episodes, repo: repo),
+      );
 
       expect(find.byKey(const Key('wr_home_system_notice')), findsOneWidget);
       expect(find.text('HỆ THỐNG NHẬN RA'), findsOneWidget);
@@ -272,10 +305,13 @@ void main() {
         (tester) async {
       final content = FakeWrContentRepository()
         ..seedSituations([_sit('s1', 'Ngại phản biện')]);
-      final intel = FakeWrIntelligenceRepository()
-        ..seedPatternCounts([_pattern('s1', 4)]);
+      final episodes = FakeWrEpisodeRepository()..seed(_episodes('s1', 4));
+      final repo = FakeWrRepository()..seedTodayCheckin(_checkin(Mood.stressed));
 
-      await _pump(tester, _wrap(content: content, intel: intel));
+      await _pump(
+        tester,
+        _wrap(content: content, episodes: episodes, repo: repo),
+      );
       await tester.tap(find.byKey(const Key('wr_home_notice_link')));
       await tester.pumpAndSettle();
 

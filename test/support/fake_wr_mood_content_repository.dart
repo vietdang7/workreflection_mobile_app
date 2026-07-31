@@ -71,6 +71,7 @@ MoodContent fakeMoodContent({
   String duration = '3 phút đọc',
   String body = 'Đoạn một.\n\nĐoạn hai.',
   bool placeholder = false,
+  String? audioUrl,
 }) {
   return MoodContent(
     id: id,
@@ -82,5 +83,6 @@ MoodContent fakeMoodContent({
     type: type,
     body: body,
     placeholder: placeholder,
+    audioUrl: audioUrl,
   );
 }

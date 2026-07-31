@@ -29,6 +29,53 @@ void main() {
   _resolveTests();
 
   // -------------------------------------------------------------------------
+  // Gộp Situation về một thực thể (v2.0 §2.2), migration
+  // `20260731090000_wr_situations_from_library.sql`.
+  // -------------------------------------------------------------------------
+  group('tình huống đã ngưng đề xuất', () {
+    WrSituation retired(String code, ScaDimension dim) => WrSituation(
+          code: code,
+          text: 'Tình huống $code',
+          scaDimension: dim,
+          wave: 1,
+          retiredAt: DateTime(2026, 7, 31),
+        );
+
+    test('không bao giờ lọt vào bể gợi ý', () {
+      final all = [
+        ..._library(),
+        for (var i = 1; i <= 6; i++) retired('A3-sit-0$i', ScaDimension.a3),
+      ];
+      // Chạy nhiều lượt vì bể được trộn ngẫu nhiên — một lượt may mắn không
+      // chứng minh được gì.
+      for (var run = 0; run < 40; run++) {
+        final picked = pickSituationChoices(all: all, mood: Mood.stressed);
+        expect(
+          picked.where((s) => s.isRetired),
+          isEmpty,
+          reason: 'chip Tầng 1 cũ trùng nghĩa với mục thư viện — bày cả hai là '
+              'dựng ra hai phiên bản của cùng một tình huống',
+        );
+      }
+    });
+
+    test('vẫn tra ngược ra nhãn được cho lịch sử đã ghi', () {
+      // Đây là lý do KHÔNG xoá khỏi bảng: Episode cũ còn tham chiếu mã này, và
+      // tab Hiểu mình dựng nhãn "Tình huống lặp lại" từ chính bảng này.
+      final all = [retired('C2-sit-01', ScaDimension.c2)];
+      final labels = {for (final s in all) s.code: s.text};
+      expect(labels['C2-sit-01'], 'Tình huống C2-sit-01');
+    });
+
+    test('cả thư viện đều ngưng thì trả rỗng, không lùi về mục đã ngưng', () {
+      final all = [
+        for (var i = 1; i <= 6; i++) retired('A3-sit-0$i', ScaDimension.a3),
+      ];
+      expect(pickSituationChoices(all: all, mood: Mood.stressed), isEmpty);
+    });
+  });
+
+  // -------------------------------------------------------------------------
   group('§III — lọc tình huống theo cảm xúc check-in', () {
     test('mỗi cảm xúc chỉ lấy tình huống trong đúng cụm chiều của nó', () {
       final all = _library();
@@ -114,7 +161,7 @@ void main() {
 
   // -------------------------------------------------------------------------
   group('§IV.1 — xoay vòng chống lặp lại', () {
-    test('ưu tiên tình huống chưa từng xuất hiện', () {
+    test('bốn ô còn lại ưu tiên tình huống chưa từng xuất hiện', () {
       final all = _library();
       final seen = ['A3-1', 'A3-2', 'A3-3', 'C2-1', 'C2-2'];
 
@@ -125,8 +172,9 @@ void main() {
         random: Random(11),
       );
 
-      // Cụm stressed có 12 mục, bỏ 5 đã xem còn 7 ≥ 5 → không được lặp lại.
-      for (final s in picked) {
+      // Cụm stressed có 12 mục, bỏ ô neo và 4 mã đã xem còn 7 ≥ 4 → bốn ô sau
+      // ô neo không được lặp lại.
+      for (final s in picked.skip(1)) {
         expect(seen, isNot(contains(s.code)),
             reason: '${s.code} vừa xem gần đây mà vẫn được gợi ý lại');
       }
@@ -173,6 +221,137 @@ void main() {
       expect(recent.first, 'code-40');
       expect(recent.last, 'code-11');
       expect(recent, isNot(contains('code-1')));
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Ô NEO — luật quan trọng nhất của cả tệp này.
+  //
+  // §4.1 (loại mọi mã đã chọn khỏi bể) và §4.3 (đếm số lần lặp của chính những
+  // mã đó) không thể cùng đúng. Trên DB thật 2026-07-31: 16 Episode mang mã,
+  // 16 mã phân biệt, 0 lần lặp — người dùng báo "ráng chọn rồi nhưng vẫn không
+  // thấy... không thấy các câu hỏi mà tôi đã chọn ban đầu để chọn".
+  //
+  // Bỏ ô neo là "Tình huống lặp lại" trống vĩnh viễn trở lại.
+  // -------------------------------------------------------------------------
+  group('§IV.1 — ô neo: chọn lại được điều lần trước', () {
+    test('điều chọn gần nhất LUÔN có mặt, dù đã nằm trong recentIds', () {
+      final all = _library();
+      // Bể stressed có 12 mục, mới dùng 3 → nhánh "còn nhiều mục chưa xem",
+      // đúng nhánh từng khoá người dùng lại.
+      final seen = ['C2-4', 'A3-2', 'A3-5'];
+
+      for (var run = 0; run < 40; run++) {
+        final picked = pickSituationChoices(
+          all: all,
+          mood: Mood.stressed,
+          recentIds: seen,
+        );
+        expect(picked.first.code, 'C2-4',
+            reason: 'ô neo phải đứng đầu để tìm thấy được ngay');
+        expect(picked, hasLength(kSituationChoiceCount));
+        expect(picked.map((s) => s.code).toSet(), hasLength(picked.length),
+            reason: 'ô neo bị đếm hai lần');
+      }
+    });
+
+    test('neo bám theo cụm cảm xúc, không bám theo lần chọn cuối cùng', () {
+      // Check-in "mệt mỏi" (A3+A1) sau khi lần trước chọn một tình huống C2:
+      // C2 không thuộc cụm này nên không thể neo, phải lùi xuống mã gần nhất
+      // còn nằm trong cụm.
+      final all = _library();
+      final picked = pickSituationChoices(
+        all: all,
+        mood: Mood.tired,
+        recentIds: ['C2-4', 'A1-3', 'S1-1'],
+        random: Random(21),
+      );
+
+      expect(picked.first.code, 'A1-3');
+    });
+
+    test('chưa chọn lần nào thì không có neo, vẫn đủ 5 ô', () {
+      final picked = pickSituationChoices(
+        all: _library(),
+        mood: Mood.stressed,
+        recentIds: const [],
+        random: Random(4),
+      );
+
+      expect(picked, hasLength(kSituationChoiceCount));
+    });
+
+    test('mọi mã đã chọn đều ngoài cụm thì không neo, vẫn đủ 5 ô', () {
+      final picked = pickSituationChoices(
+        all: _library(),
+        mood: Mood.stressed,
+        recentIds: ['S1-1', 'S1-2', 'P-A1'],
+        random: Random(9),
+      );
+
+      expect(picked, hasLength(kSituationChoiceCount));
+      for (final s in picked) {
+        expect(kMoodDimensions[Mood.stressed], contains(s.scaDimension));
+      }
+    });
+
+    test('neo không bao giờ là tình huống đã ngưng đề xuất', () {
+      // Lịch sử cũ đầy mã `-sit-` đã retired. Neo vào một mã như thế là bày lại
+      // đúng cái chip vừa bị gỡ khỏi thư viện.
+      final all = [
+        ..._library(),
+        WrSituation(
+          code: 'C2-sit-01',
+          text: 'Chip Tầng 1 cũ',
+          scaDimension: ScaDimension.c2,
+          wave: 1,
+          retiredAt: DateTime(2026, 7, 31),
+        ),
+      ];
+
+      for (var run = 0; run < 20; run++) {
+        final picked = pickSituationChoices(
+          all: all,
+          mood: Mood.stressed,
+          recentIds: ['C2-sit-01', 'A3-2'],
+        );
+        expect(picked.any((s) => s.isRetired), isFalse);
+        expect(picked.first.code, 'A3-2');
+      }
+    });
+
+    test('chọn lại chính ô neo thì lần sau nó vẫn là neo', () {
+      // Đây là điều làm "Tình huống lặp lại" đếm lên được: ba phiên liên tiếp
+      // chạm cùng một chip là ba lần, không phải ba mã khác nhau.
+      final all = _library();
+      var recent = <String>[];
+
+      for (var session = 0; session < 3; session++) {
+        final picked = pickSituationChoices(
+          all: all,
+          mood: Mood.stressed,
+          recentIds: recent,
+        );
+        final chosen = session == 0
+            ? picked.firstWhere((s) => s.code == 'C2-1',
+                orElse: () => picked.first)
+            : picked.first;
+        if (session > 0) expect(chosen.code, recent.first);
+        recent = rememberSituation(chosen.code, recent);
+      }
+
+      // Ba phiên, một mã duy nhất trong lịch sử xoay vòng — và Episode sẽ có ba
+      // dòng cùng mã đó, tức "3 lần" ở tab Hiểu mình.
+      expect(recent, hasLength(1));
+    });
+
+    test('anchorSituation trả về mã gần nhất còn trong danh sách', () {
+      final pool = [_sit('A3-1', ScaDimension.a3), _sit('C2-9', ScaDimension.c2)];
+
+      expect(anchorSituation(pool, ['C2-9', 'A3-1'])?.code, 'C2-9');
+      expect(anchorSituation(pool, ['S1-1', 'A3-1'])?.code, 'A3-1');
+      expect(anchorSituation(pool, const []), isNull);
+      expect(anchorSituation(pool, ['S1-1']), isNull);
     });
   });
 

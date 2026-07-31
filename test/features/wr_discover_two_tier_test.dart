@@ -41,6 +41,37 @@ PatternCount _pattern(int count) => PatternCount(
       lastSeenAt: DateTime(2026, 7, 26),
     );
 
+/// Episode mang mã tình huống, mỗi mã lặp đúng số lần yêu cầu.
+///
+/// Từ 2026-07-31 mọi khối "đang phản chiếu về điều gì" đọc recentSituationIds —
+/// tức chính bảng Episode (Kiến trúc v2.0 §4.3) — nên test phải gieo Episode
+/// thật thay vì gieo con số tích luỹ trong `wr_pattern_counts`.
+///
+/// `openedAt` là mốc sắp xếp: recentSituationIds tính từ lúc CHỌN tình huống.
+List<ReflectionEpisode> _episodes(
+  Map<String, int> countByCode, {
+  DateTime? from,
+}) {
+  final base = from ?? DateTime(2026, 7, 20);
+  final list = <ReflectionEpisode>[];
+  var i = 0;
+  countByCode.forEach((code, times) {
+    for (var k = 0; k < times; k++) {
+      i++;
+      list.add(ReflectionEpisode(
+        id: 'e\${base.month}\${base.day}-\$i',
+        userId: 'u1',
+        humanMoment: HumanMoment.confusion,
+        state: ExperienceState.integrated,
+        situationCode: code,
+        openedAt: base.add(Duration(hours: i)),
+        closedAt: base.add(Duration(hours: i)),
+      ));
+    }
+  });
+  return list;
+}
+
 Widget _wrap(
   Widget child, {
   required FakeWrIntelligenceRepository intel,
@@ -102,10 +133,17 @@ void main() {
       final intel = FakeWrIntelligenceRepository()
         ..seedPatternCounts([_pattern(3)]);
       final content = FakeWrContentRepository()..seedSituations([_sit]);
+      final episodes = FakeWrEpisodeRepository()
+        ..seed(_episodes({'sit-01': 3}));
 
       await _pump(
         tester,
-        _wrap(const WrDiscoverScreen(), intel: intel, content: content),
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: intel,
+          content: content,
+          episodes: episodes,
+        ),
       );
 
       expect(find.text('Không được lắng nghe trong họp'), findsOneWidget);
@@ -121,13 +159,20 @@ void main() {
 
     testWidgets('bấm mở phần đọc vị thì paywall nói đúng ngữ cảnh',
         (tester) async {
-      final intel = FakeWrIntelligenceRepository()
-        ..seedPatternCounts([_pattern(3)]);
+      // Gieo EPISODE, không gieo `wr_pattern_counts`: từ 2026-07-31 nhu cầu chủ
+      // đạo đọc từ recentSituationIds (Kiến trúc v2.0 §4.3).
       final content = FakeWrContentRepository()..seedSituations([_sit]);
+      final episodes = FakeWrEpisodeRepository()
+        ..seed(_episodes({'sit-01': 3}));
 
       await _pump(
         tester,
-        _wrap(const WrDiscoverScreen(), intel: intel, content: content),
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: FakeWrIntelligenceRepository(),
+          content: content,
+          episodes: episodes,
+        ),
       );
 
       await tester.tap(find.text('Mở phần đọc vị'));
@@ -155,15 +200,21 @@ void main() {
     testWidgets('premium đọc đủ ba lớp, không lộ mã hay chữ SCA',
         (tester) async {
       final intel = FakeWrIntelligenceRepository()
-        ..seedPatternCounts([_pattern(3)])
         ..seedEntitlement(
           WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
         );
       final content = FakeWrContentRepository()..seedSituations([_sit]);
+      final episodes = FakeWrEpisodeRepository()
+        ..seed(_episodes({'sit-01': 3}));
 
       await _pump(
         tester,
-        _wrap(const WrDiscoverScreen(), intel: intel, content: content),
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: intel,
+          content: content,
+          episodes: episodes,
+        ),
       );
 
       expect(find.byKey(const Key('wr_discover_need_lock')), findsNothing);
@@ -181,6 +232,8 @@ void main() {
     });
 
     testWidgets('đếm số lần đã nhìn lại từ lịch sử Episode', (tester) async {
+      // Con số này giờ chỉ còn một chỗ hiện: thẻ Career Health. Mục "Hành trình
+      // đã đi" ở cuối màn đã bỏ vì nói lại đúng con số đó.
       final episodes = FakeWrEpisodeRepository()
         ..seed([
           const ReflectionEpisode(
@@ -207,17 +260,27 @@ void main() {
         ),
       );
 
-      expect(find.text('Bạn đã nhìn lại 2 lần.'), findsOneWidget);
+      expect(
+        find.textContaining('Bạn đã nhìn lại 2/15 lần'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('bấm một dòng mở màn chi tiết riêng', (tester) async {
       final intel = FakeWrIntelligenceRepository()
         ..seedPatternCounts([_pattern(3)]);
       final content = FakeWrContentRepository()..seedSituations([_sit]);
+      final episodes = FakeWrEpisodeRepository()
+        ..seed(_episodes({'sit-01': 3}));
 
       await _pump(
         tester,
-        _wrap(const WrDiscoverScreen(), intel: intel, content: content),
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: intel,
+          content: content,
+          episodes: episodes,
+        ),
       );
 
       await tester.tap(find.text('Không được lắng nghe trong họp'));
@@ -253,22 +316,119 @@ void main() {
             ),
         ];
 
-    testWidgets('sáu tình huống thì chỉ hiện ba, kèm lối xem thêm',
+    // Mỗi tình huống phải lặp ≥ kRepeatedSituationsMinCount mới lên bảng (yêu
+    // cầu khách 2026-07-31), và cửa sổ chỉ giữ 30 lượt gần nhất — bốn tình
+    // huống × 3 lần = 12 lượt, vừa đủ để kiểm tra "chỉ ba dòng ngoài màn".
+    testWidgets('bốn tình huống lặp lại thì chỉ hiện ba, kèm lối xem thêm',
         (tester) async {
       final intel = FakeWrIntelligenceRepository()
         ..seedPatternCounts(manyPatterns(6));
       final content = FakeWrContentRepository()
         ..seedSituations(manySituations(6));
+      final episodes = FakeWrEpisodeRepository()
+        ..seed(_episodes({
+          'sit-00': 4,
+          'sit-01': 4,
+          'sit-02': 3,
+          'sit-03': 3,
+        }));
 
       await _pump(
         tester,
-        _wrap(const WrDiscoverScreen(), intel: intel, content: content),
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: intel,
+          content: content,
+          episodes: episodes,
+        ),
       );
 
       expect(find.text('Tình huống số 0'), findsOneWidget);
       expect(find.text('Tình huống số 2'), findsOneWidget);
       expect(find.text('Tình huống số 3'), findsNothing);
-      expect(find.text('Xem thêm 3 điều lặp lại'), findsOneWidget);
+      expect(find.text('Xem thêm 1 điều lặp lại'), findsOneWidget);
+    });
+
+    testWidgets('dưới ngưỡng lặp thì chưa lên bảng', (tester) async {
+      // Yêu cầu khách 2026-07-31: "chỉ hiện từ 3 lần trở lên, cái nào được chọn
+      // nhiều thì hiển thị lên". Gặp một hai lần là chuyện vừa xảy ra, chưa
+      // phải nếp — để lọt lên thì bảng toàn dòng "1 lần" và điều đang thật sự
+      // trở đi trở lại chìm mất.
+      final content = FakeWrContentRepository()
+        ..seedSituations(manySituations(3));
+      final episodes = FakeWrEpisodeRepository()
+        ..seed(_episodes({'sit-00': 3, 'sit-01': 2, 'sit-02': 1}));
+
+      await _pump(
+        tester,
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: FakeWrIntelligenceRepository(),
+          content: content,
+          episodes: episodes,
+        ),
+      );
+
+      expect(find.text('Tình huống số 0'), findsOneWidget);
+      expect(find.text('Tình huống số 1'), findsNothing);
+      expect(find.text('Tình huống số 2'), findsNothing);
+      // Hai dòng bị chặn không được tính vào "Xem thêm" — con số đó hứa cái gì
+      // thì màn đầy đủ phải có đúng cái đó.
+      expect(find.byKey(const Key('wr_discover_see_more')), findsNothing);
+    });
+
+    testWidgets('đã ghi lại nhưng chưa điều nào tới ngưỡng: nói rõ, '
+        'không báo rỗng như chưa từng ghi', (tester) async {
+      // Hai trạng thái rỗng khác hẳn nhau. Đọc phải câu "sau vài lần nhìn lại"
+      // sau khi đã phản tư mấy lần thì người dùng tưởng app nuốt mất dữ liệu.
+      final content = FakeWrContentRepository()
+        ..seedSituations(manySituations(2));
+      final episodes = FakeWrEpisodeRepository()
+        ..seed(_episodes({'sit-00': 2, 'sit-01': 2}));
+
+      await _pump(
+        tester,
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: FakeWrIntelligenceRepository(),
+          content: content,
+          episodes: episodes,
+        ),
+      );
+
+      expect(find.byKey(const Key('wr_discover_patterns_empty')), findsNothing);
+      expect(
+        find.byKey(const Key('wr_discover_patterns_below_threshold')),
+        findsOneWidget,
+      );
+      expect(find.textContaining('4 lần'), findsOneWidget);
+    });
+
+    testWidgets('chỉ đếm trong 30 lần nhìn lại gần nhất', (tester) async {
+      // Tình huống cũ lặp 3 lần nhưng đã bị 30 lượt mới hơn đẩy ra khỏi cửa sổ
+      // thì biến mất khỏi tấm gương — màn này soi hiện tại, không soi lịch sử.
+      final content = FakeWrContentRepository()
+        ..seedSituations(manySituations(3));
+      final episodes = FakeWrEpisodeRepository()
+        ..seed([
+          ..._episodes({'sit-02': 3}, from: DateTime(2026, 6, 1)),
+          ..._episodes({'sit-00': 16, 'sit-01': 14},
+              from: DateTime(2026, 8, 1)),
+        ]);
+
+      await _pump(
+        tester,
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: FakeWrIntelligenceRepository(),
+          content: content,
+          episodes: episodes,
+        ),
+      );
+
+      expect(find.text('Tình huống số 0'), findsOneWidget);
+      expect(find.text('Tình huống số 1'), findsOneWidget);
+      expect(find.text('Tình huống số 2'), findsNothing);
     });
 
     testWidgets('đúng ba tình huống thì không hiện lối xem thêm',
@@ -277,10 +437,17 @@ void main() {
         ..seedPatternCounts(manyPatterns(3));
       final content = FakeWrContentRepository()
         ..seedSituations(manySituations(3));
+      final episodes = FakeWrEpisodeRepository()
+        ..seed(_episodes({'sit-00': 3, 'sit-01': 3, 'sit-02': 3}));
 
       await _pump(
         tester,
-        _wrap(const WrDiscoverScreen(), intel: intel, content: content),
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: intel,
+          content: content,
+          episodes: episodes,
+        ),
       );
 
       expect(find.byKey(const Key('wr_discover_see_more')), findsNothing);
@@ -292,25 +459,39 @@ void main() {
         ..seedPatternCounts(manyPatterns(6));
       final content = FakeWrContentRepository()
         ..seedSituations(manySituations(6));
+      final episodes = FakeWrEpisodeRepository()
+        ..seed(_episodes({
+          'sit-00': 4,
+          'sit-01': 4,
+          'sit-02': 3,
+          'sit-03': 3,
+        }));
 
       await _pump(
         tester,
-        _wrap(const WrDiscoverScreen(), intel: intel, content: content),
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: intel,
+          content: content,
+          episodes: episodes,
+        ),
       );
 
       await tester.tap(find.byKey(const Key('wr_discover_see_more')));
       await tester.pumpAndSettle();
 
-      for (var i = 0; i < 6; i++) {
+      for (var i = 0; i < 4; i++) {
         expect(find.text('Tình huống số $i'), findsOneWidget,
             reason: 'thiếu dòng $i ở màn đầy đủ');
       }
       expect(find.textContaining('ĐIỀU ĐỨNG SAU'), findsNothing);
 
-      // Từ đây vẫn mở được chi tiết của từng dòng.
-      await tester.tap(find.text('Tình huống số 4'));
+      // Từ đây vẫn mở được chi tiết của từng dòng. Màn chi tiết đọc con số tích
+      // luỹ của cả hành trình (`wr_pattern_counts`), không đọc cửa sổ 10 —
+      // "đã ghi lại bao nhiêu lần" là câu hỏi về cả chặng đường.
+      await tester.tap(find.text('Tình huống số 3'));
       await tester.pumpAndSettle();
-      expect(find.text('Bạn đã ghi lại điều này 6 lần.'), findsOneWidget);
+      expect(find.text('Bạn đã ghi lại điều này 7 lần.'), findsOneWidget);
     });
   });
 
@@ -324,10 +505,17 @@ void main() {
         ..seedPatternCounts([_pattern(3)]);
       // Thư viện rỗng: đúng cảnh mất mạng.
       final content = FakeWrContentRepository();
+      final episodes = FakeWrEpisodeRepository()
+        ..seed(_episodes({'sit-01': 3}));
 
       await _pump(
         tester,
-        _wrap(const WrDiscoverScreen(), intel: intel, content: content),
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: intel,
+          content: content,
+          episodes: episodes,
+        ),
       );
 
       expect(find.textContaining('sit-01'), findsNothing);
@@ -378,7 +566,9 @@ void main() {
       expect(find.text('Mối quan hệ'), findsOneWidget);
       expect(find.text('Cách làm việc'), findsOneWidget);
       expect(find.text('Chưa đánh giá'), findsNWidgets(3));
-      expect(find.text('Chưa tự đánh giá lần nào'), findsOneWidget);
+      // Dòng chân thẻ "Chưa tự đánh giá lần nào / Đã tự đánh giá N lần" đã bỏ:
+      // ba nhãn "Chưa đánh giá" ở trên đã nói đúng điều đó rồi.
+      expect(find.textContaining('tự đánh giá'), findsNothing);
     });
 
     testWidgets('đọc điểm ba trụ từ lần tự đánh giá gần nhất', (tester) async {
@@ -406,7 +596,7 @@ void main() {
       expect(find.text('Đang phát triển'), findsOneWidget); // S = 4.2
       expect(find.text('Cần chú ý'), findsOneWidget); //       C = 3.0
       expect(find.text('Ưu tiên cải thiện'), findsOneWidget); // A = 1.8
-      expect(find.text('Đã tự đánh giá 1 lần'), findsOneWidget);
+      expect(find.textContaining('tự đánh giá'), findsNothing);
     });
 
     test('ngưỡng trạng thái trụ giữ đúng như màn Tự đánh giá', () {
@@ -415,6 +605,220 @@ void main() {
       expect(pillarStatusLabel(1.8), 'Ưu tiên cải thiện');
       expect(pillarStatusLabel(2.5), 'Cần chú ý');
       expect(pillarStatusLabel(3.8), 'Đang phát triển');
+    });
+  });
+
+  // Hai khối lấy từ mockup Sprint 2 §screenUnderstand: lời mời làm bộ 15 câu và
+  // khối Premium "Diễn giải sâu & theo dõi xu hướng".
+  group('Hiểu mình — lời mời Self-Check', () {
+    testWidgets('chưa làm lần nào thì mời bắt đầu', (tester) async {
+      await _pump(
+        tester,
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: FakeWrIntelligenceRepository(),
+          content: FakeWrContentRepository(),
+        ),
+      );
+
+      expect(
+        find.byKey(const Key('wr_discover_self_check_invite')),
+        findsOneWidget,
+      );
+      expect(find.text('Tiến độ lần gần nhất: 0/15'), findsOneWidget);
+      expect(find.text('Bắt đầu Self-Check'), findsOneWidget);
+      expect(find.text('Làm lại Self-Check'), findsNothing);
+      expect(
+        find.textContaining('15 câu hỏi tình huống ngắn'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('đã làm rồi thì đổi thành lời mời làm lại', (tester) async {
+      final intel = FakeWrIntelligenceRepository()
+        ..seedSelfCheckHistory([
+          ScaSelfCheckResponse(
+            userId: 'u1',
+            answers: {for (var i = 1; i <= 15; i++) 'q$i': 4},
+            structureScore: 4,
+            cultureScore: 4,
+            activityScore: 4,
+            takenAt: DateTime(2026, 7, 26),
+          ),
+        ]);
+
+      await _pump(
+        tester,
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: intel,
+          content: FakeWrContentRepository(),
+        ),
+      );
+
+      expect(find.text('Tiến độ lần gần nhất: 15/15'), findsOneWidget);
+      expect(find.text('Làm lại Self-Check'), findsOneWidget);
+      expect(find.text('Bắt đầu Self-Check'), findsNothing);
+    });
+
+    testWidgets('bấm là mở bộ câu hỏi', (tester) async {
+      await _pump(
+        tester,
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: FakeWrIntelligenceRepository(),
+          content: FakeWrContentRepository(),
+        ),
+      );
+
+      await tester.tap(find.text('Bắt đầu Self-Check'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('SELFCHECK'), findsOneWidget);
+    });
+
+    testWidgets('free thấy khối diễn giải sâu, bấm ra đúng ngữ cảnh paywall',
+        (tester) async {
+      await _pump(
+        tester,
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: FakeWrIntelligenceRepository(),
+          content: FakeWrContentRepository(),
+        ),
+      );
+
+      expect(
+        find.byKey(const Key('wr_discover_sca_deep_lock')),
+        findsOneWidget,
+      );
+      expect(find.text('Diễn giải sâu & theo dõi xu hướng'), findsOneWidget);
+
+      await tester.tap(find.text('Mở khoá'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('PAYWALL:sca_deep'), findsOneWidget);
+    });
+
+    testWidgets('cả màn chỉ còn ĐÚNG HAI con số', (tester) async {
+      // Yêu cầu khách 2026-07-31 (vòng cuối): số lần nhìn lại ở Career Health,
+      // và số câu của lần Self-Check gần nhất. Không con số nào khác.
+      //
+      // Trước đó màn có tới bốn: "Đã tự đánh giá 7 lần", "5/15 Reflection",
+      // "Tiến độ lần gần nhất: 12/15", "Bạn đã nhìn lại 16 lần" — hai trong số
+      // đó đếm cùng một thứ bằng hai đơn vị.
+      final episodes = FakeWrEpisodeRepository()
+        ..seed(_episodes({'sit-01': 5}));
+      final intel = FakeWrIntelligenceRepository()
+        ..seedSelfCheckHistory([
+          ScaSelfCheckResponse(
+            userId: 'u1',
+            answers: {for (var i = 1; i <= 15; i++) 'q$i': 3},
+            structureScore: 3,
+            cultureScore: 3,
+            activityScore: 3,
+            takenAt: DateTime(2026, 7, 26),
+          ),
+          ScaSelfCheckResponse(
+            userId: 'u1',
+            answers: {for (var i = 1; i <= 15; i++) 'q$i': 3},
+            structureScore: 3,
+            cultureScore: 3,
+            activityScore: 3,
+            takenAt: DateTime(2026, 7, 20),
+          ),
+        ]);
+
+      await _pump(
+        tester,
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: intel,
+          content: FakeWrContentRepository(),
+          episodes: episodes,
+        ),
+      );
+
+      expect(find.textContaining('Bạn đã nhìn lại 5/15 lần'), findsOneWidget);
+      expect(find.text('Tiến độ lần gần nhất: 15/15'), findsOneWidget);
+
+      // Ba con số cũ đã biến mất hẳn.
+      expect(find.text('Bạn đã nhìn lại 5 lần.'), findsNothing);
+      expect(find.text('HÀNH TRÌNH ĐÃ ĐI'), findsNothing);
+      expect(find.textContaining('tự đánh giá'), findsNothing);
+    });
+
+    testWidgets('bản ghi thiếu câu thì nói đúng số thật, không làm tròn',
+        (tester) async {
+      // Di chứng của lỗi nuốt câu (đã vá): bản 30/7 trên DB thật chỉ còn 12/15.
+      // Hiện "15/15" ở đây là nói dối về dữ liệu đang có.
+      final intel = FakeWrIntelligenceRepository()
+        ..seedSelfCheckHistory([
+          ScaSelfCheckResponse(
+            userId: 'u1',
+            answers: {for (var i = 1; i <= 12; i++) 'q$i': 3},
+            structureScore: 3,
+            cultureScore: 3,
+            activityScore: 3,
+            takenAt: DateTime(2026, 7, 30),
+          ),
+        ]);
+
+      await _pump(
+        tester,
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: intel,
+          content: FakeWrContentRepository(),
+        ),
+      );
+
+      expect(find.text('Tiến độ lần gần nhất: 12/15'), findsOneWidget);
+    });
+
+    testWidgets('quá ngưỡng thì hiện đúng số thật, không chặn ở 15',
+        (tester) async {
+      // Đã nhìn lại 16 lần mà thẻ nói "15/15" là bớt đi công của người dùng.
+      final episodes = FakeWrEpisodeRepository()
+        ..seed(_episodes({'sit-01': 16}));
+
+      await _pump(
+        tester,
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: FakeWrIntelligenceRepository(),
+          content: FakeWrContentRepository(),
+          episodes: episodes,
+        ),
+      );
+
+      expect(
+        find.textContaining('Bạn đã nhìn lại 16/15 lần'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('premium không bị mời mua lại thứ đã mua', (tester) async {
+      final intel = FakeWrIntelligenceRepository()
+        ..seedEntitlement(
+          WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
+        );
+
+      await _pump(
+        tester,
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: intel,
+          content: FakeWrContentRepository(),
+        ),
+      );
+
+      expect(find.byKey(const Key('wr_discover_sca_deep_lock')), findsNothing);
+      // Lời mời làm bộ câu hỏi thì vẫn còn — nó không phải thứ phải trả tiền.
+      expect(
+        find.byKey(const Key('wr_discover_self_check_invite')),
+        findsOneWidget,
+      );
     });
   });
 

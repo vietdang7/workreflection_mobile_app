@@ -35,10 +35,10 @@ import '../../features/survey/presentation/survey_history_screen.dart';
 import '../../features/understand/presentation/insights_screen.dart';
 import '../../features/survey/presentation/survey_guide_screen.dart';
 import '../models/wr_content.dart';
+import '../../features/wr/presentation/wr_ask_screen.dart';
 import '../../features/wr/presentation/wr_home_screen.dart';
 import '../../features/wr/presentation/wr_career_setup_screen.dart';
 import '../../features/wr/presentation/wr_context_doc_screen.dart';
-import '../../features/wr/presentation/wr_situation_flow_screen.dart';
 import '../../features/wr/presentation/wr_story_flow_screen.dart';
 import '../../features/wr/presentation/wr_mood_library_screen.dart';
 import '../../features/wr/presentation/wr_mood_reader_screen.dart';
@@ -56,10 +56,12 @@ import '../../features/wr/presentation/wr_pattern_detail_screen.dart';
 import '../../features/wr/presentation/wr_patterns_screen.dart';
 import '../../features/wr/presentation/wr_paywall_screen.dart';
 import '../../features/wr/presentation/wr_self_check_screen.dart';
+import '../../features/wr/presentation/wr_tra_chieu_screen.dart';
 import '../../features/wr/presentation/wr_work_info_screen.dart';
 import '../../features/wr/presentation/flow/wr_commit_screen.dart';
 import '../../features/wr/presentation/flow/wr_done_screen.dart';
 import '../../features/wr/presentation/flow/wr_energy_screen.dart';
+import '../../features/wr/presentation/flow/wr_detail_screen.dart';
 import '../../features/wr/presentation/flow/wr_meaning_screen.dart';
 import '../../features/wr/presentation/flow/wr_moment_screen.dart';
 import '../../features/wr/presentation/flow/wr_step_screen.dart';
@@ -313,7 +315,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const WrContextDocScreen(),
       ),
 
-      // Luồng phản tư — mỗi màn một hành động (WXS §8.7 Focused Surface).
+      // Luồng Reflect 5 bước — Kiến trúc Dữ liệu v2.0 §V, một bước một màn
+      // (WXS §8.7 Focused Surface):
+      //
+      //   0 Notice  → /wr/flow/step    chọn 1 trong 5 chip tình huống
+      //   1 Meaning → /wr/flow/detail  đọc Story, viết chi tiết (tuỳ chọn)
+      //   2 Insight → /wr/flow/meaning nhận hoặc sửa câu Aha
+      //   3 Choice  → /wr/flow/commit  chọn 1 trong 4 lựa chọn
+      //   4 Action  → /wr/flow/done    đã lưu vào Career Memory
+      //
+      // Hai route `energy` và `moment` KHÔNG nằm trong luồng của §V. Home đi
+      // thẳng vào `step`; chúng chỉ còn là lối vào phụ cho phiên mở ngoài
+      // check-in, và cũng dẫn về `step`.
       GoRoute(
         path: '/wr/flow/energy',
         builder: (context, state) => const WrEnergyScreen(),
@@ -325,6 +338,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/wr/flow/step',
         builder: (context, state) => const WrStepScreen(),
+      ),
+      GoRoute(
+        path: '/wr/flow/detail',
+        builder: (context, state) => const WrDetailScreen(),
       ),
       GoRoute(
         path: '/wr/flow/meaning',
@@ -378,15 +395,40 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/wr/growth/skills',
         builder: (context, state) => const WrGrowthSkillsScreen(),
       ),
+
+      // Ô hỏi về hành trình nghề nghiệp (họp khách 2026-07-29). Mở từ bong
+      // bóng nổi ở mọi tab và từ một dòng dẫn trong tab Hành trình.
+      GoRoute(
+        path: '/wr/ask',
+        builder: (context, state) => const WrAskScreen(),
+      ),
+
+      // Trà Chiều Nghề Nghiệp — chương trình offline riêng (họp khách
+      // 2026-07-29). Đường tĩnh '/lich' đặt trước để không đụng route khác.
+      GoRoute(
+        path: '/wr/tra-chieu',
+        builder: (context, state) => const WrTraChieuScreen(),
+      ),
+      GoRoute(
+        path: '/wr/tra-chieu/lich',
+        builder: (context, state) => const WrTraChieuCalendarScreen(),
+      ),
       GoRoute(
         path: '/wr/growth/journey',
         builder: (context, state) => const WrGrowthJourneyScreen(),
       ),
 
-      GoRoute(
-        path: '/wr/situation',
-        builder: (context, state) => const WrSituationFlowScreen(),
-      ),
+      // `/wr/situation` (WrSituationFlowScreen, Sprint 1) đã bỏ 2026-07-31.
+      //
+      // Không màn nào trong app dẫn tới nó — Kiến trúc v2.0 §IX: "Không còn tab
+      // Reflect độc lập. Luồng Reflect chỉ khởi động từ Home qua check-in cảm
+      // xúc", và việc chọn tình huống là bước 0 của luồng đó (§V), không phải
+      // một màn riêng.
+      //
+      // Nhưng nó vẫn cộng thẳng vào `wr_pattern_counts` mà KHÔNG tạo Episode
+      // nào, nên mỗi lần mở bằng deep link là một lần làm lệch con số của mọi
+      // khối đọc recentSituationIds. Đây là nguồn ghi thứ ba trong ba nguồn
+      // §4.3 cấm — xoá route là cách duy nhất đóng nó lại.
       GoRoute(
         path: '/wr/story/flow',
         builder: (context, state) {
@@ -415,6 +457,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             'growth_opportunity' => PaywallTrigger.growthOpportunity,
             'need_reading' => PaywallTrigger.needReading,
             'career_memory' => PaywallTrigger.careerMemory,
+            'sca_deep' => PaywallTrigger.selfCheckDeep,
             _ => PaywallTrigger.defaultTrigger,
           };
           return WrPaywallScreen(trigger: trigger);

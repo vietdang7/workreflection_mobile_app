@@ -20,12 +20,71 @@ class ShellScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: WrColors.white,
+      // Bong bóng hỏi TẠM TẮT (khách 2026-07-30: "bỏ cái ô chatbot giúp tôi,
+      // chúng ta sẽ làm cái này sau").
+      //
+      // Chỉ gỡ khỏi shell, KHÔNG xoá: `WrAskBubble`, màn `/wr/ask` và bảng câu
+      // hỏi vẫn còn nguyên và vẫn có test. Bật lại là bọc `navigationShell`
+      // trong một Stack rồi thêm:
+      //   const Positioned(right: 18, bottom: 18, child: WrAskBubble())
+      //
+      // Yêu cầu gốc của họp 2026-07-29 vẫn giữ nguyên khi bật lại: bong bóng
+      // nổi trên MỌI tab — "nó sẽ hiển thị trên mọi trang luôn chứ không riêng
+      // trang hành trình".
       body: navigationShell,
       bottomNavigationBar: WrTabBar(
         currentIndex: navigationShell.currentIndex,
         onTap: (index) => navigationShell.goBranch(
           index,
           initialLocation: index == navigationShell.currentIndex,
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Bong bóng hỏi — lối vào ô hỏi tự do về hành trình nghề nghiệp.
+//
+// Nằm ở Stack của shell chứ không phải `floatingActionButton`: FAB của Scaffold
+// sẽ bị thanh tab đẩy lên và đổi chỗ theo bàn phím, còn đây phải luôn ở đúng
+// một chỗ trên cả bốn tab.
+//
+// Cố tình nhỏ và không có nhãn chữ: đây là lối vào phụ, không được cạnh tranh
+// với hành động chính của từng tab.
+// ---------------------------------------------------------------------------
+
+class WrAskBubble extends StatelessWidget {
+  const WrAskBubble({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Hỏi về hành trình nghề nghiệp của bạn',
+      child: GestureDetector(
+        key: const Key('wr_ask_bubble'),
+        behavior: HitTestBehavior.opaque,
+        onTap: () => context.push('/wr/ask'),
+        child: Container(
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
+            color: WrColors.navy,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: WrColors.navy.withValues(alpha: 0.28),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.chat_bubble_outline_rounded,
+            size: 22,
+            color: WrColors.cream,
+          ),
         ),
       ),
     );
@@ -44,10 +103,12 @@ class _TabDef {
 }
 
 List<_TabDef> _buildTabs(AppLocalizations l10n) => [
-  _TabDef(icon: Icons.home_outlined,     semanticsLabel: l10n.tabToday),
-  _TabDef(icon: Icons.person_outline,    semanticsLabel: l10n.tabUnderstand),
-  _TabDef(icon: Icons.trending_up,       semanticsLabel: l10n.tabDevelop),
-  _TabDef(icon: Icons.subject,           semanticsLabel: l10n.tabJourney),
+  // Bốn icon của mockup: con mắt (quan sát) · bóng đèn (hiểu) · tia chớp
+  // (hành động) · nhịp sóng (hành trình).
+  _TabDef(icon: Icons.visibility_outlined, semanticsLabel: l10n.tabToday),
+  _TabDef(icon: Icons.lightbulb_outline,   semanticsLabel: l10n.tabUnderstand),
+  _TabDef(icon: Icons.bolt_outlined,       semanticsLabel: l10n.tabDevelop),
+  _TabDef(icon: Icons.show_chart,          semanticsLabel: l10n.tabJourney),
 ];
 
 class WrTabBar extends StatelessWidget {
@@ -66,15 +127,11 @@ class WrTabBar extends StatelessWidget {
     final tabs = _buildTabs(l10n);
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     return Container(
-      height: 64 + bottomPadding,
-      decoration: BoxDecoration(
-        color: WrColors.white.withValues(alpha: 0.95),
-        border: Border(
-          top: BorderSide(
-            color: WrColors.navy.withValues(alpha: 0.08),
-            width: 0.5,
-          ),
-        ),
+      // `.tabbar { height: 72px; background: white; border-top: 1px --line }`
+      height: 72 + bottomPadding,
+      decoration: const BoxDecoration(
+        color: WrColors.white,
+        border: Border(top: BorderSide(color: WrColors.line)),
       ),
       child: Padding(
         padding: EdgeInsets.only(bottom: bottomPadding),
@@ -114,7 +171,10 @@ class WrTabItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isActive ? WrColors.coral : WrColors.muted;
+    // `.tab` của mockup: icon 21 + nhãn chữ 9px; tab đang mở đổi sang navy và
+    // nhãn đậm hơn. Bản cũ giấu nhãn và chấm coral dưới icon — người mới mở app
+    // phải đoán bốn cái icon nghĩa là gì.
+    final color = isActive ? WrColors.navy : WrColors.text3;
 
     return Semantics(
       label: semanticsLabel,
@@ -126,16 +186,17 @@ class WrTabItem extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: color, size: 24),
-            const SizedBox(height: 5), // icon-to-dot spacing
-            // Active dot — 4px coral, hidden when inactive
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 200),
-              width: 4,
-              height: 4,
-              decoration: BoxDecoration(
-                color: isActive ? WrColors.coral : Colors.transparent,
-                shape: BoxShape.circle,
+            Icon(icon, color: color, size: 21),
+            const SizedBox(height: 4),
+            Text(
+              semanticsLabel,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
+                letterSpacing: 0.09,
+                color: color,
               ),
             ),
           ],
