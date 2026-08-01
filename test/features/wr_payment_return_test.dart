@@ -1,8 +1,10 @@
 // Luồng quay về sau khi mua.
 //
 // Paywall được đẩy lên từ 9 màn khác nhau, rồi chính nó đẩy tiếp màn thanh
-// toán. Nên nếu màn thành công chỉ pop một lớp, người vừa trả tiền xong lại
-// rơi đúng vào trang mời mua. Test này giữ cho điều đó không tái diễn.
+// toán. Nếu màn thành công chỉ pop một lớp, người vừa trả tiền xong lại rơi
+// đúng vào trang mời mua — đúng thứ khách báo ngày 2026-08-01.
+//
+// Khách chốt: bấm nút trên màn thành công thì về thẳng Home.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,7 +22,8 @@ import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 
 import 'wr_payment_screen_test.dart' show FakePaymentRepository;
 
-/// Dựng đúng chồng màn hình thật: trang gốc → Paywall → Thanh toán.
+/// Dựng đúng chồng màn hình thật: trang gốc → Paywall → Thanh toán, cộng Home
+/// để kiểm được đích đến sau khi mua.
 Widget _app(FakePaymentRepository repo, {required bool premiumAfter}) {
   final router = GoRouter(
     initialLocation: '/goc',
@@ -38,6 +41,10 @@ Widget _app(FakePaymentRepository repo, {required bool premiumAfter}) {
             ),
           ),
         ),
+      ),
+      GoRoute(
+        path: '/home',
+        builder: (_, __) => const Scaffold(body: Center(child: Text('HOME'))),
       ),
       GoRoute(
         path: '/wr/paywall',
@@ -85,7 +92,7 @@ Future<void> _goToPayment(WidgetTester tester) async {
 }
 
 void main() {
-  testWidgets('mua xong bấm nút thì về TRANG GỐC, không phải Paywall', (
+  testWidgets('mua xong bấm nút thì về HOME, không phải Paywall', (
     tester,
   ) async {
     final repo = FakePaymentRepository();
@@ -104,8 +111,9 @@ void main() {
     await tester.tap(find.byKey(const Key('wr_payment_success_cta')));
     await tester.pumpAndSettle();
 
-    expect(find.text('TRANG GỐC'), findsOneWidget);
+    expect(find.text('HOME'), findsOneWidget);
     expect(find.byKey(const Key('wr_paywall_cta')), findsNothing);
+    expect(find.byKey(const Key('wr_payment_countdown')), findsNothing);
   });
 
   testWidgets('bấm nút quay lại sau khi đã trả tiền cũng về TRANG GỐC', (

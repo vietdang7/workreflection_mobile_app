@@ -27,27 +27,24 @@ enum PaywallTrigger {
   selfCheckDeep,
 }
 
-/// Mở màn thanh toán và tự đóng Paywall khi đã mua xong.
+/// Mở màn thanh toán, và tự đóng Paywall nếu người dùng quay lại sau khi đã mua.
 ///
-/// Paywall được đẩy lên từ 9 chỗ khác nhau (Hiểu mình, Hành trình, Self-check,
-/// Tôi…), rồi chính nó đẩy tiếp màn thanh toán. Nên sau khi trả tiền, pop một
-/// lớp là rơi đúng vào trang mời mua. Đóng luôn cả Paywall thì người dùng về
-/// thẳng chỗ họ đang đứng lúc đầu, và chỗ đó đã mở khoá sẵn nhờ
-/// `wrEntitlementProvider` được nạp lại.
+/// Đường thường thì màn thanh toán tự `go('/home')` khi bấm nút trên màn thành
+/// công, nên hàm này không phải làm gì. Nhưng người dùng có thể bấm nút quay
+/// lại thay vì bấm nút đó — tiền đã trả rồi mà lại rơi về trang mời mua thì vô
+/// lý, nên hỏi lại quyền một lần trước khi quyết định.
+///
+/// Ngược lại, người CHƯA mua quay lại thì Paywall phải ở nguyên đó: đóng nhầm
+/// là cướp mất lối vào duy nhất.
 Future<void> _openPayment(BuildContext context, WidgetRef ref) async {
-  final bought = await context.push<bool>('/wr/payment');
+  await context.push('/wr/payment');
   if (!context.mounted) return;
 
-  // `bought` null khi người dùng bấm nút quay lại thay vì nút trên màn thành
-  // công — họ vẫn có thể đã trả tiền xong. Hỏi lại quyền cho chắc, chứ giữ
-  // người đã mua ở lại trang mời mua thì vô lý.
-  var premium = bought == true;
-  if (!premium) {
-    try {
-      premium = (await ref.read(wrEntitlementProvider.future)).isPremium;
-    } catch (_) {
-      /* không đọc được thì cứ để nguyên Paywall, không đoán bừa */
-    }
+  var premium = false;
+  try {
+    premium = (await ref.read(wrEntitlementProvider.future)).isPremium;
+  } catch (_) {
+    /* không đọc được thì cứ để nguyên Paywall, không đoán bừa */
   }
 
   if (!context.mounted) return;

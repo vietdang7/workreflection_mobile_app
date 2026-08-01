@@ -18,6 +18,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/data/payment_repository.dart';
 import '../../../core/logic/wr_payment.dart';
@@ -1291,10 +1292,14 @@ class _SuccessView extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 key: const Key('wr_payment_success_cta'),
-                // Trả `true` để Paywall bên dưới biết mà tự đóng theo. Chỉ pop
-                // một lớp thì người vừa mua xong lại rơi đúng vào trang mời
-                // mua — Paywall là chỗ đã đẩy màn này lên.
-                onPressed: () => Navigator.of(context).pop(true),
+                // Về thẳng Home, không lùi từng lớp.
+                //
+                // Chồng màn hình lúc này là: trang đang đứng → Paywall → màn
+                // này. Pop một lớp thì rơi đúng vào trang mời mua, pop hai lớp
+                // thì về trang cũ nhưng Paywall vẫn nằm trong lịch sử. `go`
+                // thay cả chồng, nên bấm nút quay lại sau đó không thể lạc về
+                // trang thanh toán hay Paywall nữa.
+                onPressed: () => context.go('/home'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: WrColors.coral,
                   foregroundColor: WrColors.navy,
