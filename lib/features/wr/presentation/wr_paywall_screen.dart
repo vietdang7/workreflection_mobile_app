@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/logic/wr_pricing.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../wr_providers.dart';
@@ -289,14 +290,8 @@ class WrPaywallScreen extends ConsumerWidget {
                     child: SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
-                        onPressed: () {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Thanh toán sẽ sớm ra mắt'),
-                              duration: Duration(seconds: 3),
-                            ),
-                          );
-                        },
+                        key: const Key('wr_paywall_cta'),
+                        onPressed: () => context.push('/wr/payment'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: WrColors.coral,
                           foregroundColor: WrColors.navy,

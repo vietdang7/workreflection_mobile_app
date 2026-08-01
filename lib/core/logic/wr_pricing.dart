@@ -18,6 +18,13 @@
 /// mặc định thì đổi cả ở đây.
 const num kPremiumFallbackPrice = 499000;
 
+/// Số ngày Premium khi `cc_products.duration_days` bỏ trống.
+///
+/// Cùng con số với `COALESCE(v_duration_days, 365)` trong RPC
+/// `complete_payment` — server mới là nơi thật sự cấp hạn, ở đây chỉ để hiển
+/// thị cho khớp.
+const int kPremiumFallbackDurationDays = 365;
+
 /// Giá gói Premium để hiển thị.
 class WrPremiumPricing {
   const WrPremiumPricing({
@@ -26,7 +33,18 @@ class WrPremiumPricing {
     this.currency = 'VND',
     this.name,
     this.description,
+    this.productId,
+    this.durationDays = kPremiumFallbackDurationDays,
   });
+
+  /// `cc_products.id` — phải ghi vào `cc_orders.product_id`, vì
+  /// `complete_payment` tra ngược bảng này để biết cấp Premium bao nhiêu ngày.
+  ///
+  /// null khi rơi về [fallback]: chưa biết mua gói nào thì không cho tạo đơn.
+  final String? productId;
+
+  /// Hạn gói, để nói "một năm" hay "6 tháng" cho đúng thay vì đoán.
+  final int durationDays;
 
   /// Giá phải trả bây giờ (`cc_products.current_price`).
   final num currentPrice;
@@ -48,7 +66,12 @@ class WrPremiumPricing {
   factory WrPremiumPricing.fromJson(Map<String, dynamic> json) {
     final current = json['current_price'] as num?;
     final original = json['original_price'] as num?;
+    final duration = json['duration_days'] as num?;
     return WrPremiumPricing(
+      productId: json['id'] as String?,
+      durationDays: (duration == null || duration <= 0)
+          ? kPremiumFallbackDurationDays
+          : duration.toInt(),
       // 0 cũng coi như "chưa đặt giá": cột mặc định 0 bên web, và một gói
       // Premium 0đ gần như chắc chắn là dữ liệu bỏ trống chứ không phải miễn
       // phí thật.
@@ -59,6 +82,23 @@ class WrPremiumPricing {
       name: json['name'] as String?,
       description: json['description'] as String?,
     );
+  }
+
+  /// Chỉ mua được khi biết đích xác đang mua gói nào.
+  ///
+  /// Rơi về [fallback] nghĩa là `cc_products` không trả hàng nào: vẫn hiện giá
+  /// tham khảo được, nhưng tạo đơn thì không — đơn thiếu `product_id` sẽ khiến
+  /// `complete_payment` không biết cấp bao nhiêu ngày.
+  bool get canPurchase => productId != null;
+
+  /// "một năm", "6 tháng", "90 ngày" — nói hạn gói cho đúng thay vì đoán.
+  String get durationLabel {
+    if (durationDays % 365 == 0) {
+      final years = durationDays ~/ 365;
+      return years == 1 ? 'một năm' : '$years năm';
+    }
+    if (durationDays % 30 == 0) return '${durationDays ~/ 30} tháng';
+    return '$durationDays ngày';
   }
 
   /// True khi có giá gốc cao hơn giá hiện tại — chỉ khi đó mới gạch ngang.

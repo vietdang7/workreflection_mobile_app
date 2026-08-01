@@ -60,6 +60,12 @@ Widget _wrap(
         path: '/wr/paywall',
         builder: (_, __) => const Scaffold(body: Text('Paywall')),
       ),
+      // Màn thanh toán thật chạm Supabase ngay khi mở (tạo đơn), nên ở đây chỉ
+      // cần chứng minh nút Paywall điều hướng đúng chỗ.
+      GoRoute(
+        path: '/wr/payment',
+        builder: (_, __) => const Scaffold(body: Text('Màn thanh toán')),
+      ),
       GoRoute(
         path: '/wr/growth',
         builder: (_, __) => const Scaffold(body: Text('Growth')),
@@ -1144,7 +1150,7 @@ void main() {
       expect(find.text('Không giới hạn Thực hành'), findsOneWidget);
     });
 
-    testWidgets('CTA button shows payment coming soon snackbar', (
+    testWidgets('CTA button mở màn thanh toán', (
       tester,
     ) async {
       await tester.pumpWidget(_wrap(const WrPaywallScreen()));
@@ -1158,9 +1164,9 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Bắt đầu Premium →'));
-      await tester.pump();
+      await tester.pumpAndSettle();
 
-      expect(find.text('Thanh toán sẽ sớm ra mắt'), findsOneWidget);
+      expect(find.text('Màn thanh toán'), findsOneWidget);
     });
   });
 } // end main

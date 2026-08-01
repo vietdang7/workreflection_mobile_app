@@ -103,4 +103,44 @@ void main() {
       expect(p.discountPercent, 33);
     });
   });
+
+  group('productId và duration_days', () {
+    test('đọc được id và số ngày từ cc_products', () {
+      final p = WrPremiumPricing.fromJson({
+        'id': 'abc-123',
+        'current_price': 249000,
+        'duration_days': 365,
+      });
+      expect(p.productId, 'abc-123');
+      expect(p.durationDays, 365);
+      expect(p.canPurchase, isTrue);
+    });
+
+    test('không có id thì KHÔNG cho mua', () {
+      // complete_payment tra cc_products bằng product_id để biết cấp bao nhiêu
+      // ngày. Tạo đơn thiếu id là trả tiền xong không rõ hạn gói.
+      expect(WrPremiumPricing.fallback.canPurchase, isFalse);
+    });
+
+    test('duration_days trống hoặc 0 rơi về 365, khớp COALESCE trong RPC', () {
+      expect(
+        WrPremiumPricing.fromJson({'current_price': 1}).durationDays,
+        kPremiumFallbackDurationDays,
+      );
+      expect(
+        WrPremiumPricing.fromJson({'current_price': 1, 'duration_days': 0})
+            .durationDays,
+        365,
+      );
+    });
+
+    test('durationLabel nói đúng hạn thay vì đoán', () {
+      WrPremiumPricing withDays(int d) =>
+          WrPremiumPricing(currentPrice: 1, durationDays: d);
+      expect(withDays(365).durationLabel, 'một năm');
+      expect(withDays(730).durationLabel, '2 năm');
+      expect(withDays(180).durationLabel, '6 tháng');
+      expect(withDays(45).durationLabel, '45 ngày');
+    });
+  });
 }

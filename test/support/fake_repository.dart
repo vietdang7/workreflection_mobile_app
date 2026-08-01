@@ -320,6 +320,9 @@ class FakeWrRepository implements WrRepository {
   WrPremiumPricing premiumPricing = const WrPremiumPricing(
     currentPrice: 249000,
     originalPrice: 499000,
+    // Có productId thì mua được — thiếu là màn thanh toán từ chối tạo đơn.
+    productId: 'prod-premium-test',
+    durationDays: 365,
   );
 
   /// Khi khác null, [getPremiumPricing] ném lỗi này thay vì trả giá — để test

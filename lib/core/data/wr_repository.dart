@@ -457,7 +457,8 @@ class SupabaseWrRepository implements WrRepository {
     final rows = await _client
         .from('cc_products')
         .select(
-          'name, description, product_type, current_price, original_price, currency',
+          'id, name, description, product_type, current_price, original_price, '
+          'currency, duration_days',
         )
         .eq('product_type', 'premium')
         .eq('is_active', true)

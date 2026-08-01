@@ -54,6 +54,7 @@ import '../../features/wr/presentation/wr_practice_theme_screen.dart';
 import '../../features/wr/presentation/wr_journey_narrative_screen.dart';
 import '../../features/wr/presentation/wr_pattern_detail_screen.dart';
 import '../../features/wr/presentation/wr_patterns_screen.dart';
+import '../../features/wr/presentation/wr_payment_screen.dart';
 import '../../features/wr/presentation/wr_paywall_screen.dart';
 import '../../features/wr/presentation/wr_self_check_screen.dart';
 import '../../features/wr/presentation/wr_tra_chieu_screen.dart';
@@ -448,6 +449,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           }
           return WrStoryFlowScreen(initialDimension: dim);
         },
+      ),
+
+      GoRoute(
+        path: '/wr/payment',
+        builder: (context, state) => const WrPaymentScreen(),
       ),
 
       GoRoute(
