@@ -36,7 +36,8 @@ abstract class CoachingRepository {
   ///
   /// Flow:
   ///   1. INSERT cc_orders {order_code:'TEMP', user_id, product_type:'coaching',
-  ///      product_id, original_amount:0, final_amount:0, currency, status:'paid'}
+  ///      product_id, original_amount:0, final_amount:0, currency,
+  ///      status:'pending'}
   ///      → get order id
   ///   2. UPDATE cc_orders SET order_code = 'CC<8 hex chars>'
   ///   3. RPC complete_payment(p_order_id) — SECURITY DEFINER, creates N
@@ -278,7 +279,10 @@ class SupabaseCoachingRepository implements CoachingRepository {
       'original_amount': 0,
       'final_amount': 0,
       'currency': pkg.currency,
-      'status': 'paid',
+      // Phải là 'pending'. RLS cc_orders_insert không cho client tự khai một
+      // đơn là 'paid' — chỉ complete_payment (SECURITY DEFINER) mới được đặt
+      // trạng thái đó, ở Step 3 ngay bên dưới.
+      'status': 'pending',
     }).select('id').single();
 
     final orderId = orderRow['id'] as String;
