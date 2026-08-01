@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../logic/wr_career_profile.dart';
+import '../logic/wr_pricing.dart';
 import '../models/checkin.dart';
 import '../models/development_theme.dart';
 import '../models/insight.dart';
@@ -21,7 +23,11 @@ import '../models/workshop.dart';
 abstract class WrRepository {
   // --- Check-ins ---
   Future<Checkin?> getTodayCheckin();
-  Future<void> upsertCheckin(Mood mood);
+  Future<void> upsertCheckin(
+    Mood mood, {
+    CheckinEnergy? energy,
+    CheckinDirection? direction,
+  });
   Future<List<DateTime>> getCheckinDates({int limit = 60});
   Future<int> countCheckins();
 
@@ -49,6 +55,20 @@ abstract class WrRepository {
   Future<void> updateReminder(bool enabled);
   Future<void> updateLanguage(String lang);
 
+  /// Ghi Career Snapshot (vai trò · mục tiêu · trăn trở) vào
+  /// `wr_mobile_profiles`. Bước bị bỏ qua được ghi null.
+  Future<void> saveCareerSnapshot(CareerSnapshot snapshot);
+
+  /// Ghi lịch sử tình huống đã xem (Hai Lớp v1.6 §4.1).
+  ///
+  /// Lưu theo Person chứ không theo phiên (§XII.2) — xoay vòng chống lặp chỉ có
+  /// nghĩa khi nhớ được qua nhiều ngày. Danh sách đã được cắt còn tối đa 30 mục
+  /// ở tầng logic trước khi tới đây.
+  Future<void> saveRecentSituationIds(List<String> codes);
+
+  /// Ghi mô tả tự do về vai trò hiện tại (§11.3). Tùy chọn, có thể để trống.
+  Future<void> saveRoleText(String? roleText);
+
   // --- CC tables (web-app shared) ---
   Future<ScaReport?> getLatestScaReport();
   Future<Workshop?> getUpcomingWorkshop();
@@ -56,10 +76,25 @@ abstract class WrRepository {
   Future<void> updateCcProfile(Map<String, dynamic> fields);
   Future<void> updateDisplayName(String displayName);
 
+  /// Giá gói Premium đang bán, đọc từ `cc_products` — cùng bảng mà trang quản
+  /// trị Gói dịch vụ của web ghi vào (khách chốt 2026-08-01: giá app canh theo
+  /// web). Trả về [WrPremiumPricing.fallback] khi không có gói nào đang bật.
+  Future<WrPremiumPricing> getPremiumPricing();
+
   // --- Avatar ---
   /// Upload [bytes] to `avatars/{userId}/avatar.{ext}` with upsert, then
   /// update cc_profiles.avatar_url with the public URL (cache-busted).
   Future<String> uploadAvatar(List<int> bytes, String ext);
+
+  // --- Context documents (JD / CV) ---
+  /// Upload [bytes] vào `context-docs/{userId}/{docType}-{timestamp}.{ext}`
+  /// và trả về đường dẫn trong bucket để lưu vào
+  /// `wr_context_documents.file_path`.
+  Future<String> uploadContextDocument(
+    List<int> bytes,
+    String ext,
+    String docType,
+  );
 
   // --- Vouchers ---
   /// Returns active vouchers visible to the current user.
@@ -130,12 +165,18 @@ class SupabaseWrRepository implements WrRepository {
   }
 
   @override
-  Future<void> upsertCheckin(Mood mood) async {
+  Future<void> upsertCheckin(
+    Mood mood, {
+    CheckinEnergy? energy,
+    CheckinDirection? direction,
+  }) async {
     await _client.from('wr_checkins').upsert(
       {
         'user_id': _uid,
         'checkin_date': _todayVn,
         'mood': mood.dbValue,
+        if (energy != null) 'energy': energy.dbValue,
+        if (direction != null) 'direction': direction.dbValue,
       },
       onConflict: 'user_id,checkin_date',
     );
@@ -324,6 +365,42 @@ class SupabaseWrRepository implements WrRepository {
         .eq('user_id', _uid);
   }
 
+  @override
+  Future<void> saveCareerSnapshot(CareerSnapshot snapshot) async {
+    await _client
+        .from('wr_mobile_profiles')
+        .update({
+          ...snapshot.toUpdate(),
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('user_id', _uid);
+  }
+
+  @override
+  Future<void> saveRecentSituationIds(List<String> codes) async {
+    await _client
+        .from('wr_mobile_profiles')
+        .update({
+          'recent_situation_ids': codes,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('user_id', _uid);
+  }
+
+  @override
+  Future<void> saveRoleText(String? roleText) async {
+    final trimmed = roleText?.trim();
+    await _client
+        .from('wr_mobile_profiles')
+        .update({
+          // Chuỗi rỗng ghi thành null: "chưa điền" và "điền rồi xoá hết" là
+          // cùng một trạng thái, không nên phân biệt ở tầng dữ liệu.
+          'role_text': (trimmed == null || trimmed.isEmpty) ? null : trimmed,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('user_id', _uid);
+  }
+
   // --- CC tables ---
 
   @override
@@ -356,7 +433,9 @@ class SupabaseWrRepository implements WrRepository {
     final rows = await _client
         .from('cc_profiles')
         .select(
-          'full_name, email, subscription_expires_at, '
+          // `role` quyết định Premium: khách chốt 2026-08-01 rằng Premium web
+          // và app là một, và trang quản trị của web cấp Premium bằng cột này.
+          'full_name, email, role, subscription_expires_at, '
           'phone, company_name, position, company_size, '
           'total_work_experience, company_tenure, department, avatar_url',
         )
@@ -372,6 +451,24 @@ class SupabaseWrRepository implements WrRepository {
   }
 
   @override
+  Future<WrPremiumPricing> getPremiumPricing() async {
+    // Cùng truy vấn với web (`useProductPrice`): gói premium đang bật, lấy cái
+    // display_order nhỏ nhất. Không lọc theo user — bảng giá là chung.
+    final rows = await _client
+        .from('cc_products')
+        .select(
+          'id, name, description, product_type, current_price, original_price, '
+          'currency, duration_days',
+        )
+        .eq('product_type', 'premium')
+        .eq('is_active', true)
+        .order('display_order', ascending: true)
+        .limit(1);
+    if (rows.isEmpty) return WrPremiumPricing.fallback;
+    return WrPremiumPricing.fromJson(Map<String, dynamic>.from(rows.first));
+  }
+
+  @override
   Future<void> updateDisplayName(String displayName) async {
     await _client.from('wr_mobile_profiles').update({
       'display_name': displayName,
@@ -380,6 +477,23 @@ class SupabaseWrRepository implements WrRepository {
   }
 
   // --- Avatar ---
+
+  @override
+  Future<String> uploadContextDocument(
+    List<int> bytes,
+    String ext,
+    String docType,
+  ) async {
+    final uid = _uid;
+    final stamp = DateTime.now().millisecondsSinceEpoch;
+    final filePath = '$uid/$docType-$stamp.$ext';
+    await _client.storage.from('context-docs').uploadBinary(
+          filePath,
+          Uint8List.fromList(bytes),
+          fileOptions: FileOptions(upsert: true, contentType: 'image/$ext'),
+        );
+    return filePath;
+  }
 
   @override
   Future<String> uploadAvatar(List<int> bytes, String ext) async {

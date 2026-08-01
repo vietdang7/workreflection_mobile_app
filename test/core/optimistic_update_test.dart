@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/logic/wr_career_profile.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
 import 'package:workreflection_mobile/core/models/checkin.dart';
 import 'package:workreflection_mobile/core/models/development_theme.dart';
@@ -15,6 +16,8 @@ import 'package:workreflection_mobile/features/develop/develop_providers.dart';
 import 'package:workreflection_mobile/features/home/home_providers.dart';
 import 'package:workreflection_mobile/features/survey/survey_providers.dart';
 
+import 'package:workreflection_mobile/core/logic/wr_pricing.dart';
+
 import '../support/fake_repository.dart';
 import '../support/fake_survey_repository.dart';
 
@@ -28,7 +31,7 @@ class _FailingCheckinRepo implements WrRepository {
   final FakeWrRepository _d;
 
   @override Future<Checkin?> getTodayCheckin() => _d.getTodayCheckin();
-  @override Future<void> upsertCheckin(Mood mood) async => throw Exception('network error');
+  @override Future<void> upsertCheckin(Mood mood, {CheckinEnergy? energy, CheckinDirection? direction}) async => throw Exception('network error');
   @override Future<List<DateTime>> getCheckinDates({int limit = 60}) => _d.getCheckinDates(limit: limit);
   @override Future<int> countCheckins() => _d.countCheckins();
   @override Future<Insight?> getLatestInsight() => _d.getLatestInsight();
@@ -43,9 +46,14 @@ class _FailingCheckinRepo implements WrRepository {
   @override Future<MobileProfile?> getMobileProfile() => _d.getMobileProfile();
   @override Future<void> updateReminder(bool e) => _d.updateReminder(e);
   @override Future<void> updateLanguage(String l) => _d.updateLanguage(l);
+  @override Future<void> saveCareerSnapshot(CareerSnapshot s) => _d.saveCareerSnapshot(s);
+  @override Future<void> saveRecentSituationIds(List<String> c) => _d.saveRecentSituationIds(c);
+  @override Future<void> saveRoleText(String? r) => _d.saveRoleText(r);
+  @override Future<String> uploadContextDocument(List<int> b, String e, String d) => _d.uploadContextDocument(b, e, d);
   @override Future<ScaReport?> getLatestScaReport() => _d.getLatestScaReport();
   @override Future<Workshop?> getUpcomingWorkshop() => _d.getUpcomingWorkshop();
   @override Future<Map<String, dynamic>> getCcProfile() => _d.getCcProfile();
+  @override Future<WrPremiumPricing> getPremiumPricing() => _d.getPremiumPricing();
   @override Future<void> updateCcProfile(Map<String, dynamic> fields) => _d.updateCcProfile(fields);
   @override Future<void> updateDisplayName(String displayName) => _d.updateDisplayName(displayName);
   @override Future<Map<String, dynamic>> exportUserData() => _d.exportUserData();
@@ -64,7 +72,7 @@ class _FailingPracticeRepo implements WrRepository {
   final FakeWrRepository _d;
 
   @override Future<Checkin?> getTodayCheckin() => _d.getTodayCheckin();
-  @override Future<void> upsertCheckin(Mood mood) => _d.upsertCheckin(mood);
+  @override Future<void> upsertCheckin(Mood mood, {CheckinEnergy? energy, CheckinDirection? direction}) => _d.upsertCheckin(mood, energy: energy, direction: direction);
   @override Future<List<DateTime>> getCheckinDates({int limit = 60}) => _d.getCheckinDates(limit: limit);
   @override Future<int> countCheckins() => _d.countCheckins();
   @override Future<Insight?> getLatestInsight() => _d.getLatestInsight();
@@ -79,9 +87,14 @@ class _FailingPracticeRepo implements WrRepository {
   @override Future<MobileProfile?> getMobileProfile() => _d.getMobileProfile();
   @override Future<void> updateReminder(bool e) => _d.updateReminder(e);
   @override Future<void> updateLanguage(String l) => _d.updateLanguage(l);
+  @override Future<void> saveCareerSnapshot(CareerSnapshot s) => _d.saveCareerSnapshot(s);
+  @override Future<void> saveRecentSituationIds(List<String> c) => _d.saveRecentSituationIds(c);
+  @override Future<void> saveRoleText(String? r) => _d.saveRoleText(r);
+  @override Future<String> uploadContextDocument(List<int> b, String e, String d) => _d.uploadContextDocument(b, e, d);
   @override Future<ScaReport?> getLatestScaReport() => _d.getLatestScaReport();
   @override Future<Workshop?> getUpcomingWorkshop() => _d.getUpcomingWorkshop();
   @override Future<Map<String, dynamic>> getCcProfile() => _d.getCcProfile();
+  @override Future<WrPremiumPricing> getPremiumPricing() => _d.getPremiumPricing();
   @override Future<void> updateCcProfile(Map<String, dynamic> fields) => _d.updateCcProfile(fields);
   @override Future<void> updateDisplayName(String displayName) => _d.updateDisplayName(displayName);
   @override Future<Map<String, dynamic>> exportUserData() => _d.exportUserData();

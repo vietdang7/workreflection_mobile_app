@@ -1,0 +1,632 @@
+[
+  {
+    "code": "A1-sit-01",
+    "text": "Không hiểu mục tiêu chung của tổ chức",
+    "sca_dimension": "A1",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn hiểu tổ chức đang đi đâu để biết mình đang đóng góp vào điều gì",
+    "sca_perspective": "Làm việc mà không thấy bức tranh lớn giống như đang ghép puzzle nhưng không ai cho xem hình mẫu. Bạn có thể làm đúng từng mảnh nhưng không biết chúng đang tạo ra gì.",
+    "wave": 1
+  },
+  {
+    "code": "A1-sit-02",
+    "text": "Không biết công việc mình đóng góp điều gì",
+    "sca_dimension": "A1",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn thấy rõ công việc của mình tạo ra giá trị gì cho người khác hoặc cho mục tiêu lớn hơn",
+    "sca_perspective": "Khi không thấy công việc của mình tạo ra điều gì có nghĩa, dần dần bạn chỉ hoàn thành nhiệm vụ chứ không còn thực sự đầu tư. Đó là dấu hiệu bình thường khi sợi dây kết nối với mục tiêu chung bị đứt.",
+    "wave": 1
+  },
+  {
+    "code": "A1-sit-03",
+    "text": "Làm rất nhiều nhưng không thấy ý nghĩa",
+    "sca_dimension": "A1",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn cảm thấy công việc có ý nghĩa thực sự chứ không chỉ là hoàn thành nhiệm vụ",
+    "sca_perspective": "Bận mà trống rỗng là một trong những cảm giác mệt mỏi nhất. Không phải vì bạn làm ít mà vì bạn không thấy lý do thực sự cho những gì mình đang làm. Đây không phải vấn đề thái độ.",
+    "wave": 1
+  },
+  {
+    "code": "A1-sit-04",
+    "text": "Mục tiêu thay đổi liên tục mà không giải thích",
+    "sca_dimension": "A1",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn hiểu lý do khi mục tiêu thay đổi để có thể điều chỉnh đúng hướng thay vì bị cuốn",
+    "sca_perspective": "Khi hướng đi thay đổi liên tục mà không có giải thích, bạn không thể điều chỉnh mà chỉ có thể chạy theo. Cảm giác mất phương hướng đó không phải bạn không thích nghi được mà không ai chỉ rõ hướng mới là gì và tại sao.",
+    "wave": 1
+  },
+  {
+    "code": "A1-sit-05",
+    "text": "Muốn chuyển việc vì không còn thấy phù hợp",
+    "sca_dimension": "A1",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn làm rõ liệu đây là vấn đề với tổ chức này, với nghề, hay với công việc cụ thể",
+    "sca_perspective": "Muốn rời đi có thể là tín hiệu bạn cần thay đổi hoặc cũng có thể là dấu hiệu bạn đã lâu không thấy ý nghĩa trong những gì mình đang làm. Hai điều đó cần được phân biệt trước khi quyết định bước tiếp theo.",
+    "wave": 1
+  },
+  {
+    "code": "A1-sit-06",
+    "text": "Không chắc mình đang đi đúng hướng",
+    "sca_dimension": "A1",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn có cách kiểm chứng xem hướng đi hiện tại có thực sự đưa mình tới nơi mình muốn",
+    "sca_perspective": "Cảm giác không chắc chắn về hướng đi thường xuất hiện khi bạn vẫn bận rộn nhưng đã lâu không có dịp đối chiếu việc mình làm với điều mình muốn. Nghi ngờ ở đây là một tín hiệu lành mạnh, không phải dấu hiệu bạn đang sai.",
+    "wave": 1
+  },
+  {
+    "code": "A2-sit-01",
+    "text": "Luôn bận nhưng không hiệu quả",
+    "sca_dimension": "A2",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn bận vào đúng việc quan trọng thay vì bận vì liên tục phải phản ứng với mọi thứ",
+    "sca_perspective": "Bận mà không hiệu quả là dấu hiệu bạn đang phản ứng nhiều hơn là chủ động. Không phải bạn chậm hay thiếu tập trung mà nhịp làm việc xung quanh không bảo vệ thời gian cho những việc thực sự quan trọng.",
+    "wave": 2
+  },
+  {
+    "code": "A2-sit-02",
+    "text": "Công việc liên tục bị gián đoạn",
+    "sca_dimension": "A2",
+    "human_need": "thich_nghi",
+    "expected_outcome": "Tôi muốn có đủ khối thời gian liên tục để làm việc có chiều sâu",
+    "sca_perspective": "Làm việc sâu cần thời gian liên tục và điều đó không thể có khi mọi thứ liên tục cắt ngang. Bạn không thiếu kỷ luật mà thiếu một môi trường bảo vệ được không gian tập trung.",
+    "wave": 2
+  },
+  {
+    "code": "A2-sit-03",
+    "text": "Quá tải công việc",
+    "sca_dimension": "A2",
+    "human_need": "thich_nghi",
+    "expected_outcome": "Tôi muốn khối lượng công việc được phân bổ hợp lý với năng lực và thời gian thực tế của mình",
+    "sca_perspective": "Quá tải kéo dài không phải vấn đề cá nhân cần giải quyết bằng cách cố thêm. Đó là dấu hiệu tải công việc chưa được nhìn thấy và cân bằng một cách có chủ ý trong nhóm.",
+    "wave": 2
+  },
+  {
+    "code": "A2-sit-04",
+    "text": "Luôn trong trạng thái chạy theo deadline",
+    "sca_dimension": "A2",
+    "human_need": "thich_nghi",
+    "expected_outcome": "Tôi muốn lên kế hoạch đủ tốt để không liên tục rơi vào trạng thái khủng hoảng",
+    "sca_perspective": "Khi mọi deadline đều gấp, không phải bạn không biết lên kế hoạch mà là không có đủ thời gian và sự ổn định để lên kế hoạch thực sự. Khủng hoảng liên tục là dấu hiệu hệ thống, không phải cá nhân.",
+    "wave": 2
+  },
+  {
+    "code": "A2-sit-05",
+    "text": "Không hoàn thành được việc quan trọng",
+    "sca_dimension": "A2",
+    "human_need": "thich_nghi",
+    "expected_outcome": "Tôi muốn bảo vệ được thời gian cho những việc thực sự tạo ra khác biệt",
+    "sca_perspective": "Việc quan trọng thường không có deadline gấp, nên nó luôn thua những việc kêu to hơn. Bạn không thiếu ý chí mà đang ở trong một nhịp làm việc mà cái khẩn cấp luôn thắng cái quan trọng.",
+    "wave": 2
+  },
+  {
+    "code": "A2-sit-06",
+    "text": "Cảm thấy mất kiểm soát với công việc",
+    "sca_dimension": "A2",
+    "human_need": "thich_nghi",
+    "expected_outcome": "Tôi muốn giành lại quyền chủ động với khối lượng và nhịp công việc của mình",
+    "sca_perspective": "Mất kiểm soát thường không đến từ một biến cố lớn mà tích lại từ nhiều việc nhỏ chen ngang. Khi mọi thứ đều do bên ngoài quyết định thời điểm, cảm giác cầm lái sẽ mất dần dù bạn vẫn đang làm rất nhiều.",
+    "wave": 2
+  },
+  {
+    "code": "A3-sit-01",
+    "text": "Không biết mình đang tiến bộ hay thụt lùi",
+    "sca_dimension": "A3",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn có cách nhìn thấy rõ mình đang phát triển như thế nào theo thời gian",
+    "sca_perspective": "Khi không có gì để nhìn lại, rất khó thấy mình đã đi được bao xa. Cảm giác đứng yên thường không phải bạn không tiến mà là bạn chưa có cách nhìn thấy sự tiến bộ của mình.",
+    "wave": 1
+  },
+  {
+    "code": "A3-sit-02",
+    "text": "Liên tục lặp lại cùng một vấn đề",
+    "sca_dimension": "A3",
+    "human_need": "thich_nghi",
+    "expected_outcome": "Tôi muốn hiểu nguyên nhân gốc rễ để thoát ra khỏi vòng lặp này",
+    "sca_perspective": "Lặp lại cùng vấn đề không phải bạn không học hỏi mà là chưa có không gian để thực sự nhìn lại và hiểu tại sao. Kinh nghiệm không tự động thành bài học mà cần được xử lý.",
+    "wave": 1
+  },
+  {
+    "code": "A3-sit-03",
+    "text": "Không hiểu nguyên nhân của sự thất vọng",
+    "sca_dimension": "A3",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn hiểu điều gì thực sự đang xảy ra thay vì chỉ cảm thấy không ổn",
+    "sca_perspective": "Thất vọng thường không phải vì bạn yếu hay sai. Nó thường đến từ nhu cầu phát triển và được ghi nhận chưa được đáp ứng. Hiểu được điều đó là bước đầu tiên để thay đổi được gì đó.",
+    "wave": 1
+  },
+  {
+    "code": "A3-sit-04",
+    "text": "Đưa ra quyết định theo cảm xúc",
+    "sca_dimension": "A3",
+    "human_need": "thich_nghi",
+    "expected_outcome": "Tôi muốn có thể quyết định sáng suốt hơn khi cảm xúc đang lên cao",
+    "sca_perspective": "Quyết định theo cảm xúc thường xảy ra khi bạn không có không gian để dừng lại và nhìn rõ hơn. Không phải bạn không lý trí mà là cảm xúc đang lớn hơn khả năng xử lý trong thời điểm đó.",
+    "wave": 1
+  },
+  {
+    "code": "A3-sit-05",
+    "text": "Cảm thấy bị mắc kẹt",
+    "sca_dimension": "A3",
+    "human_need": "thich_nghi",
+    "expected_outcome": "Tôi muốn thấy được lối ra hoặc ít nhất là hiểu rõ mình đang thực sự ở đâu",
+    "sca_perspective": "Cảm giác mắc kẹt nặng nhất là khi bạn không thấy lối ra. Không phải vì không có mà vì bạn đang ở trong đó quá lâu mà không có dịp nhìn từ bên ngoài.",
+    "wave": 1
+  },
+  {
+    "code": "A3-sit-06",
+    "text": "Không có thời gian nhìn lại",
+    "sca_dimension": "A3",
+    "human_need": "thich_nghi",
+    "expected_outcome": "Tôi muốn có một khoảng dừng đều đặn để hiểu những gì mình vừa trải qua",
+    "sca_perspective": "Không có thời gian nhìn lại là lý do nhiều người đi rất nhanh mà không tiến xa. Trải nghiệm chỉ thành bài học khi được dừng lại xem xét, và khoảng dừng đó cần được xếp lịch chứ hiếm khi tự xuất hiện.",
+    "wave": 1
+  },
+  {
+    "code": "A4-sit-01",
+    "text": "Mắc lại cùng một sai lầm",
+    "sca_dimension": "A4",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn rút ra bài học thực sự để không phải trả giá cho cùng sai lầm nhiều lần",
+    "sca_perspective": "Mắc lại cùng sai lầm không có nghĩa bạn không cố mà là trải nghiệm chưa được chuyển thành bài học cụ thể có thể hành động. Hiểu rồi mà vẫn lặp lại, thường là do hiểu chưa đủ sâu.",
+    "wave": 2
+  },
+  {
+    "code": "A4-sit-02",
+    "text": "Học nhiều nhưng khó áp dụng",
+    "sca_dimension": "A4",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn biến những gì học được thành thay đổi thực sự trong cách làm việc của mình",
+    "sca_perspective": "Học nhiều mà ít thay đổi được không phải bạn không chịu áp dụng mà là thiếu vòng lặp từ học sang thử sang điều chỉnh thực tế. Kiến thức không tự biến thành kỹ năng nếu không qua thực hành có phản hồi.",
+    "wave": 2
+  },
+  {
+    "code": "A4-sit-03",
+    "text": "Không biến trải nghiệm thành bài học",
+    "sca_dimension": "A4",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn có cách tổng kết những gì đã trải qua để tích lũy được sự khôn ngoan thực sự",
+    "sca_perspective": "Trải nghiệm và bài học là hai thứ khác nhau. Bạn có thể có nhiều năm kinh nghiệm mà vẫn cảm thấy mình không học được gì nhiều nếu những gì đã qua chưa bao giờ được nhìn lại đủ sâu.",
+    "wave": 2
+  },
+  {
+    "code": "A4-sit-04",
+    "text": "Muốn thăng tiến nhưng thiếu định hướng",
+    "sca_dimension": "A4",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn có bức tranh rõ về những gì cần phát triển để đạt được mục tiêu nghề nghiệp của mình",
+    "sca_perspective": "Muốn đi lên nhưng không biết đi theo hướng nào là cảm giác dễ khiến người ta nản. Không phải bạn thiếu tham vọng mà bạn thiếu một hệ thống giúp nhìn thấy khoảng cách giữa nơi mình đang đứng và nơi muốn đến.",
+    "wave": 2
+  },
+  {
+    "code": "A4-sit-05",
+    "text": "Muốn chuyển nghề nhưng chưa rõ con đường",
+    "sca_dimension": "A4",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn hiểu rõ mình đang có gì và cần gì trước khi quyết định bước tiếp theo",
+    "sca_perspective": "Bước ra khỏi ngành quen là một quyết định lớn và càng khó hơn khi bạn chưa nhìn rõ mình đang có những giá trị gì có thể mang sang. Chuyển nghề thành công thường bắt đầu từ việc hiểu mình trước khi tìm con đường.",
+    "wave": 2
+  },
+  {
+    "code": "A4-sit-06",
+    "text": "Không biết bước tiếp theo để phát triển",
+    "sca_dimension": "A4",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn biết cụ thể điều gì nên làm tiếp để tiến thêm một bậc",
+    "sca_perspective": "Đứng trước ngã ba mà không thấy đường nào rõ hơn đường nào là cảm giác dễ khiến người ta dậm chân. Không phải bạn thiếu năng lực mà là chưa có ai giúp bạn nhìn thấy khoảng cách giữa nơi mình đang đứng và bậc kế tiếp.",
+    "wave": 2
+  },
+  {
+    "code": "C1-sit-01",
+    "text": "Không tin đồng nghiệp sẽ hoàn thành việc",
+    "sca_dimension": "C1",
+    "human_need": "ket_noi",
+    "expected_outcome": "Tôi muốn có thể tin tưởng người làm cùng mà không cần phải kiểm tra từng bước",
+    "sca_perspective": "Khi bạn phải kiểm tra liên tục mới yên tâm, đó không phải bạn hay lo. Đó là dấu hiệu niềm tin trong nhóm đang thiếu nền tảng thực sự, thường do lịch sử thất hứa tích lũy theo thời gian.",
+    "wave": 1
+  },
+  {
+    "code": "C1-sit-02",
+    "text": "Không được cấp trên tin tưởng",
+    "sca_dimension": "C1",
+    "human_need": "ket_noi",
+    "expected_outcome": "Tôi muốn được trao đủ quyền tự chủ tương xứng với năng lực của mình",
+    "sca_perspective": "Khi cấp trên không trao quyền, cảm giác đó nặng hơn là chỉ bực bội. Nó như thông điệp ngầm rằng năng lực của mình chưa đủ để tin. Nhưng đôi khi vấn đề không phải ở bạn mà ở một nền văn hoá chưa biết cách trao quyền thực sự.",
+    "wave": 1
+  },
+  {
+    "code": "C1-sit-03",
+    "text": "Bị kiểm soát quá mức",
+    "sca_dimension": "C1",
+    "human_need": "ket_noi",
+    "expected_outcome": "Tôi muốn được làm việc với đủ không gian để phát huy năng lực thực sự của mình",
+    "sca_perspective": "Bị kiểm soát quá mức làm mòn động lực ngay cả với người giỏi nhất. Khi không ai tin bạn đủ để để bạn tự quyết, bạn dần ngừng chủ động. Không phải vì lười mà vì chủ động rồi cũng không có tác dụng.",
+    "wave": 1
+  },
+  {
+    "code": "C1-sit-04",
+    "text": "Cảm thấy phải tự làm mọi thứ",
+    "sca_dimension": "C1",
+    "human_need": "ket_noi",
+    "expected_outcome": "Tôi muốn có thể dựa vào người khác thực sự thay vì luôn phải tự lo",
+    "sca_perspective": "Khi giao việc tốn công hơn tự làm, người làm sẽ chọn ôm hết về mình. Không phải vì muốn kiểm soát mà vì chi phí tin tưởng đang cao hơn lợi ích hợp tác.",
+    "wave": 1
+  },
+  {
+    "code": "C1-sit-05",
+    "text": "Khó giao việc cho người khác",
+    "sca_dimension": "C1",
+    "human_need": "ket_noi",
+    "expected_outcome": "Tôi muốn giao được việc và yên tâm rằng nó sẽ được làm đúng",
+    "sca_perspective": "Không giao được việc thường bị hiểu là ôm đồm. Thực ra nó là dấu hiệu bạn chưa có đủ căn cứ để tin, và xây niềm tin đó là việc của cả nhóm chứ không riêng bạn.",
+    "wave": 1
+  },
+  {
+    "code": "C1-sit-06",
+    "text": "Thiếu sự hỗ trợ từ đội nhóm",
+    "sca_dimension": "C1",
+    "human_need": "ket_noi",
+    "expected_outcome": "Tôi muốn biết mình có thể dựa vào ai khi công việc vượt quá sức một người",
+    "sca_perspective": "Cảm giác đơn độc giữa một tập thể là điều nặng nề, vì nó khiến bạn nghi ngờ chỗ đứng của mình. Thường thì không ai cố tình bỏ rơi bạn, mà là nhóm chưa có thói quen nhìn thấy nhau khi ai đó đang quá tải.",
+    "wave": 1
+  },
+  {
+    "code": "C2-sit-01",
+    "text": "Không dám lên tiếng",
+    "sca_dimension": "C2",
+    "human_need": "ket_noi",
+    "expected_outcome": "Tôi muốn có thể nói thật mà không lo bị đánh giá hay bị thiệt",
+    "sca_perspective": "Im lặng khi biết có vấn đề là điều nặng nề. Bạn không thiếu dũng cảm mà đang bảo vệ mình trong một môi trường chưa đủ an toàn để nói thật. Đó là phản ứng lành mạnh trước một điều kiện không lành mạnh.",
+    "wave": 1
+  },
+  {
+    "code": "C2-sit-02",
+    "text": "Không được lắng nghe",
+    "sca_dimension": "C2",
+    "human_need": "ket_noi",
+    "expected_outcome": "Tôi muốn ý kiến của mình được xem xét thực sự chứ không chỉ được nghe cho có",
+    "sca_perspective": "Cảm giác nói mà không ai thật sự nghe là một trong những thứ làm người ta kiệt sức nhất ở chỗ làm. Không phải bạn nói sai mà văn hoá nhóm chưa tạo ra không gian để ý kiến của mọi người thực sự được đón nhận.",
+    "wave": 1
+  },
+  {
+    "code": "C2-sit-03",
+    "text": "Ý kiến bị bỏ qua",
+    "sca_dimension": "C2",
+    "human_need": "ket_noi",
+    "expected_outcome": "Tôi muốn thấy đóng góp của mình tạo ra sự khác biệt dù nhỏ",
+    "sca_perspective": "Khi đóng góp liên tục bị bỏ qua, người ta không chỉ ngừng đóng góp mà còn ngừng tin rằng mình có giá trị ở đây. Đây là mất mát lớn cho cả bạn lẫn nhóm.",
+    "wave": 1
+  },
+  {
+    "code": "C2-sit-04",
+    "text": "Sợ phản hồi cấp trên",
+    "sca_dimension": "C2",
+    "human_need": "ket_noi",
+    "expected_outcome": "Tôi muốn có thể mang vấn đề lên cấp trên mà không sợ bị phán xét hay bất lợi",
+    "sca_perspective": "Sợ phản hồi cấp trên không phải bạn yếu hay thiếu tự tin. Đó là phản ứng hợp lý khi kinh nghiệm trước đó cho thấy lên tiếng có thể có hậu quả. Tổ chức nào mà cấp dưới im lặng, thường không phải vì không có gì để nói.",
+    "wave": 1
+  },
+  {
+    "code": "C2-sit-05",
+    "text": "Tiếng nói của mình không có giá trị",
+    "sca_dimension": "C2",
+    "human_need": "ket_noi",
+    "expected_outcome": "Tôi muốn cảm thấy sự có mặt của mình tạo ra đóng góp thực sự cho nhóm",
+    "sca_perspective": "Cảm giác tiếng nói không có trọng lượng tích lũy âm thầm và đến một lúc người ta không còn cố gắng nữa. Không phải vì bỏ cuộc mà vì không còn thấy đủ lý do để tiếp tục đầu tư.",
+    "wave": 1
+  },
+  {
+    "code": "C2-sit-06",
+    "text": "Sợ mắc lỗi trước tập thể",
+    "sca_dimension": "C2",
+    "human_need": "ket_noi",
+    "expected_outcome": "Tôi muốn có thể thử và sai mà không phải trả giá bằng hình ảnh của mình",
+    "sca_perspective": "Sợ sai trước đám đông không phải yếu đuối. Đó là phản ứng tự nhiên khi bạn từng thấy lỗi bị đem ra mổ xẻ thay vì được xem là một phần của việc học. Nơi nào phạt lỗi công khai, nơi đó người ta ngừng thử.",
+    "wave": 1
+  },
+  {
+    "code": "C3-sit-01",
+    "text": "Có mâu thuẫn nhưng không thể nói ra",
+    "sca_dimension": "C3",
+    "human_need": "ket_noi",
+    "expected_outcome": "Tôi muốn có thể giải quyết bất đồng mà không làm hỏng mối quan hệ",
+    "sca_perspective": "Giữ mâu thuẫn trong lòng không phải bạn ngại va chạm mà bạn đang cẩn thận bảo vệ một mối quan hệ quan trọng. Vấn đề là khi không có không gian an toàn để nói, mâu thuẫn không biến mất mà chỉ đi sâu hơn.",
+    "wave": 3
+  },
+  {
+    "code": "C3-sit-02",
+    "text": "Tránh các cuộc trò chuyện khó",
+    "sca_dimension": "C3",
+    "human_need": "ket_noi",
+    "expected_outcome": "Tôi muốn có thể nói thẳng những điều khó mà không tạo ra căng thẳng không cần thiết",
+    "sca_perspective": "Tránh cuộc trò chuyện khó không phải hèn. Đó là quyết định hợp lý khi bạn chưa biết nói thế nào mà không làm mọi thứ tệ hơn. Kỹ năng đó có thể học được nhưng cần có môi trường đủ an toàn để thử.",
+    "wave": 3
+  },
+  {
+    "code": "C3-sit-03",
+    "text": "Phản hồi dễ trở thành tranh cãi",
+    "sca_dimension": "C3",
+    "human_need": "ket_noi",
+    "expected_outcome": "Tôi muốn trao đổi phản hồi mang tính xây dựng thay vì bảo vệ lập trường",
+    "sca_perspective": "Khi phản hồi dễ bị đọc là công kích, cả hai bên đều phòng thủ trước khi kịp lắng nghe. Điều này không phải vì ai đó khó tính mà vì chưa có chuẩn mực chung về cách đưa và nhận phản hồi an toàn.",
+    "wave": 3
+  },
+  {
+    "code": "C3-sit-04",
+    "text": "Không hiểu nhau dù đã trao đổi",
+    "sca_dimension": "C3",
+    "human_need": "ket_noi",
+    "expected_outcome": "Tôi muốn đảm bảo sau khi trao đổi xong cả hai thực sự hiểu nhau đúng nghĩa",
+    "sca_perspective": "Nói nhiều mà không hiểu nhau không phải ai thiếu năng lực giao tiếp mà là chưa có thói quen dừng lại kiểm tra xem mình có thực sự đang hiểu cùng một điều không.",
+    "wave": 3
+  },
+  {
+    "code": "C3-sit-05",
+    "text": "Bầu không khí căng thẳng kéo dài",
+    "sca_dimension": "C3",
+    "human_need": "ket_noi",
+    "expected_outcome": "Tôi muốn môi trường làm việc đủ thoải mái để tập trung thật sự thay vì liên tục ở trạng thái căng",
+    "sca_perspective": "Căng thẳng kéo dài ngốn năng lượng ngay cả khi bạn không làm gì sai. Đó là dấu hiệu nhiều thứ đang không được nói ra và không được xử lý, không phải chỉ một người hay một vấn đề.",
+    "wave": 3
+  },
+  {
+    "code": "C3-sit-06",
+    "text": "Không biết cách góp ý",
+    "sca_dimension": "C3",
+    "human_need": "ket_noi",
+    "expected_outcome": "Tôi muốn nói được điều cần nói theo cách người kia đón nhận được",
+    "sca_perspective": "Không biết mở lời không phải vì bạn vụng. Góp ý là một kỹ năng cần chuẩn mực chung để dựa vào, và khi nhóm chưa có chuẩn mực đó thì ai nói trước cũng thành người gây chuyện.",
+    "wave": 3
+  },
+  {
+    "code": "S1-sit-01",
+    "text": "Không rõ mình được kỳ vọng điều gì",
+    "sca_dimension": "S1",
+    "human_need": "ro_rang",
+    "expected_outcome": "Tôi muốn biết rõ mình cần đạt được điều gì để được coi là làm tốt",
+    "sca_perspective": "Khi không biết tiêu chí hoàn thành của công việc là gì, người làm giỏi đến đâu cũng khó yên tâm. Cảm giác mơ hồ này thường không phải do bạn mà do kỳ vọng chưa được nói rõ từ đầu hoặc kỳ vọng bị leo thang.",
+    "wave": 2
+  },
+  {
+    "code": "S1-sit-02",
+    "text": "Không rõ trách nhiệm thuộc về ai",
+    "sca_dimension": "S1",
+    "human_need": "ro_rang",
+    "expected_outcome": "Tôi muốn biết ai chịu trách nhiệm việc gì để không bị kẹt ở giữa",
+    "sca_perspective": "Khi ranh giới không rõ, ai cũng có thể làm và ai cũng có thể không làm. Bạn bị kẹt ở giữa không phải vì thiếu năng lực mà vì chưa ai vẽ rõ vai trò của mình cũng",
+    "wave": 2
+  },
+  {
+    "code": "S1-sit-03",
+    "text": "Vai trò chồng chéo với người khác",
+    "sca_dimension": "S1",
+    "human_need": "ro_rang",
+    "expected_outcome": "Tôi muốn có ranh giới đủ rõ để làm việc không bị giẫm chân nhau",
+    "sca_perspective": "Giẫm chân nhau không có nghĩa là ai sai mà là phạm vi chưa được phân định rõ để mỗi người biết mình phụ trách đến đâu. Ma sát này không phải vấn đề cá nhân.",
+    "wave": 2
+  },
+  {
+    "code": "S1-sit-04",
+    "text": "Công việc thay đổi liên tục, không ổn định",
+    "sca_dimension": "S1",
+    "human_need": "ro_rang",
+    "expected_outcome": "Tôi muốn có đủ ổn định để lên kế hoạch và làm việc có chiều sâu",
+    "sca_perspective": "Khi ưu tiên liên tục thay đổi mà không có giải thích, bạn không thể đầu tư thật sự vào bất cứ điều gì. Đó là lý do bạn luôn bận nhưng ít khi cảm thấy mình đã làm được gì.",
+    "wave": 2
+  },
+  {
+    "code": "S1-sit-05",
+    "text": "Không biết thế nào là làm tốt",
+    "sca_dimension": "S1",
+    "human_need": "ro_rang",
+    "expected_outcome": "Tôi muốn có tiêu chí cụ thể để biết khi nào mình thực sự đã làm tốt",
+    "sca_perspective": "Thiếu tiêu chí rõ ràng, người làm tốt và người làm qua loa nhìn từ ngoài không khác nhau là mấy. Điều đó không công bằng với người thực sự nỗ lực.",
+    "wave": 2
+  },
+  {
+    "code": "S1-sit-06",
+    "text": "Không biết ưu tiên điều gì trước",
+    "sca_dimension": "S1",
+    "human_need": "ro_rang",
+    "expected_outcome": "Tôi muốn có thứ tự ưu tiên rõ ràng để tập trung đúng chỗ",
+    "sca_perspective": "Khi mọi thứ đều quan trọng, thực chất không có gì quan trọng hơn cái gì. Bạn không thiếu kỷ luật mà thiếu một hệ thống giúp mình nhìn thấy đâu là việc thật sự cần làm trước.",
+    "wave": 2
+  },
+  {
+    "code": "S2-sit-01",
+    "text": "Khó phối hợp với phòng ban khác",
+    "sca_dimension": "S2",
+    "human_need": "ro_rang",
+    "expected_outcome": "Tôi muốn có quy ước làm việc chung để phối hợp suôn sẻ hơn",
+    "sca_perspective": "Phối hợp khó không phải vì người ta không muốn hợp tác mà vì mỗi bên đang chạy theo một bộ quy tắc khác nhau mà không ai biết. Cần một ngôn ngữ chung trước khi có thể làm việc cùng nhau thật sự.",
+    "wave": 3
+  },
+  {
+    "code": "S2-sit-02",
+    "text": "Người khác làm chậm tiến độ của tôi",
+    "sca_dimension": "S2",
+    "human_need": "ro_rang",
+    "expected_outcome": "Tôi muốn có quy trình rõ để không bị phụ thuộc mà không kiểm soát được",
+    "sca_perspective": "Khi tiến độ của bạn phụ thuộc vào người khác nhưng không có điểm bàn giao rõ ràng, bạn chỉ có thể chờ và lo mà không có cách nào chủ động hơn được.",
+    "wave": 3
+  },
+  {
+    "code": "S2-sit-03",
+    "text": "Không biết tìm ai khi cần hỗ trợ",
+    "sca_dimension": "S2",
+    "human_need": "ro_rang",
+    "expected_outcome": "Tôi muốn biết rõ ai là người tôi cần liên hệ trong từng tình huống",
+    "sca_perspective": "Mất thời gian tìm đúng người không phải do bạn không biết hỏi mà là tổ chức chưa làm rõ ai phụ trách điều gì khi có vấn đề phát sinh.",
+    "wave": 3
+  },
+  {
+    "code": "S2-sit-04",
+    "text": "Làm việc nhóm không hiệu quả",
+    "sca_dimension": "S2",
+    "human_need": "ro_rang",
+    "expected_outcome": "Tôi muốn nhóm có cách làm việc chung đủ rõ để cùng nhau tiến được",
+    "sca_perspective": "Nhóm giỏi không tự nhiên phối hợp tốt mà họ có quy ước chung và cùng hiểu quy ước đó. Khi thiếu nền tảng đó, cả nhóm có thể nỗ lực mà vẫn không đi cùng hướng.",
+    "wave": 3
+  },
+  {
+    "code": "S2-sit-05",
+    "text": "Thường xuyên phải làm lại vì hiểu sai",
+    "sca_dimension": "S2",
+    "human_need": "ro_rang",
+    "expected_outcome": "Tôi muốn có cách xác nhận yêu cầu rõ ràng trước khi bắt tay làm",
+    "sca_perspective": "Phải làm lại nhiều lần không phải bạn nghe kém hay không chú ý mà là chưa có bước xác nhận hiểu chung trước khi triển khai. Lỗi xảy ra ở bước đầu tiên, không phải bước cuối.",
+    "wave": 3
+  },
+  {
+    "code": "S2-sit-06",
+    "text": "Công việc phụ thuộc quá nhiều người",
+    "sca_dimension": "S2",
+    "human_need": "ro_rang",
+    "expected_outcome": "Tôi muốn giảm bớt số mắt xích phải chờ để công việc của mình đi được tiếp",
+    "sca_perspective": "Khi một việc phải đi qua quá nhiều người mới xong, chỉ cần một mắt xích chậm là cả chuỗi dừng lại. Bạn không chậm, chỉ là bạn đang gánh rủi ro của cả một chuỗi phối hợp chưa được thiết kế gọn.",
+    "wave": 3
+  },
+  {
+    "code": "S3-sit-01",
+    "text": "Không biết tìm thông tin ở đâu",
+    "sca_dimension": "S3",
+    "human_need": "ro_rang",
+    "expected_outcome": "Tôi muốn biết rõ kênh nào chứa loại thông tin nào để không mất công tìm vòng",
+    "sca_perspective": "Khi không có bản đồ thông tin rõ ràng, người mới hay người cũ đều phải tự mày mò. Thời gian mất đi không phải vì lười mà vì hệ thống chưa chỉ rõ ai cần tìm gì ở đâu.",
+    "wave": 3
+  },
+  {
+    "code": "S3-sit-02",
+    "text": "Thông tin đến quá muộn",
+    "sca_dimension": "S3",
+    "human_need": "ro_rang",
+    "expected_outcome": "Tôi muốn được cập nhật đúng lúc để không phải quyết định trong mù mờ",
+    "sca_perspective": "Ra quyết định thiếu thông tin không phải bạn vội vàng mà thông tin đến sau khi bạn đã phải hành động rồi. Cảm giác bị động này xuất phát từ nhịp cập nhật chưa được thiết kế đủ kịp thời.",
+    "wave": 3
+  },
+  {
+    "code": "S3-sit-03",
+    "text": "Thông tin mâu thuẫn nhau",
+    "sca_dimension": "S3",
+    "human_need": "ro_rang",
+    "expected_outcome": "Tôi muốn có nguồn thông tin đáng tin để không phải tự đoán đâu là đúng",
+    "sca_perspective": "Khi nhiều kênh song song cùng nói về một việc theo những cách khác nhau, bạn không thể tin ai cả và phải tự quyết định dựa trên phán đoán cá nhân thay vì sự thật chung.",
+    "wave": 3
+  },
+  {
+    "code": "S3-sit-04",
+    "text": "Không được cập nhật khi có thay đổi",
+    "sca_dimension": "S3",
+    "human_need": "ro_rang",
+    "expected_outcome": "Tôi muốn được biết khi có gì thay đổi ảnh hưởng đến công việc của mình",
+    "sca_perspective": "Chỉ biết có thay đổi sau khi đã bị ảnh hưởng là cảm giác bị để ngoài dù mình vẫn đang làm đúng công việc của mình. Vấn đề không phải bạn không hỏi mà là chưa có ai có trách nhiệm chủ động thông báo.",
+    "wave": 3
+  },
+  {
+    "code": "S3-sit-05",
+    "text": "Luôn cảm thấy mình bị động",
+    "sca_dimension": "S3",
+    "human_need": "ro_rang",
+    "expected_outcome": "Tôi muốn có đủ thông tin để chủ động thay vì liên tục phản ứng với những gì xảy ra",
+    "sca_perspective": "Bị động không phải tính cách mà là kết quả tự nhiên khi thông tin luôn đến sau khi cần. Bạn không thể chủ động nếu môi trường xung quanh không cung cấp đủ để lên kế hoạch trước.",
+    "wave": 3
+  },
+  {
+    "code": "S3-sit-06",
+    "text": "Thiếu dữ liệu để ra quyết định",
+    "sca_dimension": "S3",
+    "human_need": "ro_rang",
+    "expected_outcome": "Tôi muốn có đủ dữ liệu cần thiết để quyết định mà không phải phỏng đoán",
+    "sca_perspective": "Quyết định trong thiếu thốn dữ liệu luôn để lại cảm giác bất an, dù kết quả có tốt đi nữa. Đó không phải bạn thiếu quyết đoán mà là chưa có ai chịu trách nhiệm đưa dữ liệu đến tay người cần quyết định.",
+    "wave": 3
+  },
+  {
+    "code": "P-01",
+    "text": "Tôi vừa hoàn thành một việc khó hơn mong đợi",
+    "sca_dimension": "P-ACHIEVE",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn giữ lại cách mình đã vượt qua việc này, để lần sau lặp lại được",
+    "sca_perspective": "Thành công trôi qua nhanh hơn khó khăn trong trí nhớ. Dừng lại ghi nhận một lần làm tốt cũng là phản chiếu, không phải tự mãn.",
+    "wave": 1
+  },
+  {
+    "code": "P-02",
+    "text": "Tôi được ghi nhận tích cực từ cấp trên",
+    "sca_dimension": "P-ACHIEVE",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn tin vào lời ghi nhận đó thay vì gạt đi",
+    "sca_perspective": "Ghi nhận từ bên ngoài chỉ đọng lại khi người nhận cũng tự công nhận điều đó cho mình. Nếu không, nó trôi qua như một câu xã giao.",
+    "wave": 1
+  },
+  {
+    "code": "P-03",
+    "text": "Tôi giúp được đồng nghiệp gỡ một vấn đề khó",
+    "sca_dimension": "P-ACHIEVE",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn hiểu rõ hơn giá trị mình mang lại cho người khác",
+    "sca_perspective": "Giá trị lớn nhất trong hỗ trợ thường không phải câu trả lời, mà là sự có mặt đủ lâu để người kia tự tìm ra câu trả lời của họ.",
+    "wave": 1
+  },
+  {
+    "code": "P-04",
+    "text": "Tôi được tăng lương hoặc thăng chức",
+    "sca_dimension": "P-ACHIEVE",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn cho phép mình vui trọn vẹn trước khi nghĩ đến áp lực tiếp theo",
+    "sca_perspective": "Kết quả tốt kéo theo kỳ vọng mới rất nhanh. Dừng lại ăn mừng là một phần của hành trình, không phải sự xao nhãng.",
+    "wave": 1
+  },
+  {
+    "code": "P-05",
+    "text": "Tôi nhận được lời cảm ơn bất ngờ từ ai đó",
+    "sca_dimension": "P-ACHIEVE",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn nhìn thấy giá trị của những đóng góp mình vẫn cho là nhỏ",
+    "sca_perspective": "Những điều mình cho là bình thường đôi khi lại là điều người khác nhớ lâu nhất.",
+    "wave": 1
+  },
+  {
+    "code": "P-06",
+    "text": "Công việc hôm nay diễn ra đúng như tôi mong đợi",
+    "sca_dimension": "P-STEADY",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn biết điều gì đã khiến hôm nay suôn sẻ, để giữ lại",
+    "sca_perspective": "Sự ổn định thường bị xem là hiển nhiên, trong khi nó là kết quả của rất nhiều điều đã được làm đúng phía sau.",
+    "wave": 1
+  },
+  {
+    "code": "P-07",
+    "text": "Tôi cảm thấy làm chủ được nhịp độ công việc của mình",
+    "sca_dimension": "P-STEADY",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn giữ được nhịp độ này lâu hơn một ngày",
+    "sca_perspective": "Làm chủ nhịp độ không phải làm ít hơn, mà là biết điều gì thực sự cần sự chú ý của mình lúc này.",
+    "wave": 1
+  },
+  {
+    "code": "P-08",
+    "text": "Tôi vừa học được một điều nhỏ nhưng hữu ích",
+    "sca_dimension": "P-STEADY",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn giữ lại bài học nhỏ này thay vì để nó trôi qua",
+    "sca_perspective": "Phần lớn sự tiến bộ không đến từ những bước ngoặt lớn, mà từ rất nhiều điều nhỏ được tích lũy.",
+    "wave": 1
+  },
+  {
+    "code": "P-09",
+    "text": "Tôi có một cuộc trò chuyện tốt với đồng nghiệp",
+    "sca_dimension": "P-STEADY",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn dành đủ chỗ cho những kết nối nhẹ nhàng như vậy",
+    "sca_perspective": "Quan hệ tốt trong công việc hiếm khi được xây từ những cuộc họp lớn, mà từ rất nhiều cuộc trò chuyện nhỏ.",
+    "wave": 1
+  },
+  {
+    "code": "P-10",
+    "text": "Hôm nay không có gì đặc biệt, nhưng tôi thấy ổn",
+    "sca_dimension": "P-STEADY",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn công nhận cả những ngày bình thường, không chỉ những ngày biến động",
+    "sca_perspective": "Không phải mọi trải nghiệm đáng ghi nhớ đều kịch tính. Đôi khi sự bình yên cũng là một dữ liệu quan trọng.",
+    "wave": 1
+  }
+]

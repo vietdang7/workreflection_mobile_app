@@ -174,7 +174,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get understandEyebrowSituations => 'Recurring situations';
 
   @override
-  String get understandEyebrowSca => 'Current experience (SCA)';
+  String get understandEyebrowSca => 'Current experience';
 
   @override
   String get understandEyebrowHealth => 'Career Health Check';
@@ -226,7 +226,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get developEyebrowPractices => 'Today\'s practices';
 
   @override
-  String get developEyebrowOpportunity => 'Growth opportunity';
+  String get developEyebrowOpportunity => 'Offline extensions';
 
   @override
   String developStage(int x, int y) {
@@ -931,7 +931,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileMyCoaching => 'My Coaching';
 
   @override
-  String get developWorkshopSection => 'Development opportunities';
+  String get developWorkshopSection => 'Offline extensions';
 
   @override
   String get developViewWorkshops => 'View all workshops';

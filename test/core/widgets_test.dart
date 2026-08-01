@@ -18,10 +18,11 @@ void main() {
       expect(find.text('HELLO WORLD'), findsOneWidget);
     });
 
-    testWidgets('uses muted color', (tester) async {
+    testWidgets('dùng màu --text-3 của mockup', (tester) async {
       await tester.pumpWidget(wrap(const WrEyebrow('test')));
       final text = tester.widget<Text>(find.byType(Text));
-      expect(text.style?.color, WrColors.muted);
+      expect(text.style?.color, WrColors.text3);
+      expect(text.style?.fontSize, 10);
     });
   });
 

@@ -70,7 +70,7 @@
   "understandTitle": "Hiểu mình",
   "understandEyebrowNeed": "Điều bạn đang tìm kiếm",
   "understandEyebrowSituations": "Tình huống lặp lại",
-  "understandEyebrowSca": "Trải nghiệm hiện tại (SCA)",
+  "understandEyebrowSca": "Trải nghiệm hiện tại",
   "understandEyebrowHealth": "Career Health Check",
   "understandScaRole": "Minh bạch vai trò",
   "understandScaVoice": "An toàn khi lên tiếng",
@@ -97,7 +97,7 @@
   "developTitle": "Phát triển",
   "developEyebrowFocus": "Trọng tâm hiện tại",
   "developEyebrowPractices": "Practices hôm nay",
-  "developEyebrowOpportunity": "Cơ hội phát triển",
+  "developEyebrowOpportunity": "Mở rộng offline",
   "developStage": "Giai đoạn {x} / {y}",
   "@developStage": {
     "placeholders": {
@@ -192,7 +192,6 @@
   "tabDevelop": "Phát triển",
   "tabJourney": "Hành trình",
   "tabProfile": "Tôi",
-
   "surveyIntroEyebrow": "Career Health Check",
   "surveyIntroBadgeFree": "FREE",
   "surveyIntroBadgePremium": "PREMIUM",
@@ -425,7 +424,7 @@
 
   "profileMyWorkshops": "Workshop của tôi",
   "profileMyCoaching": "Coaching của tôi",
-  "developWorkshopSection": "Cơ hội phát triển",
+  "developWorkshopSection": "Mở rộng offline",
   "developViewWorkshops": "Xem tất cả workshop",
   "developViewCoaching": "Khám phá coaching",
 

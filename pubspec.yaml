@@ -24,6 +24,8 @@ dependencies:
   image_picker: ^1.1.2
   speech_to_text: ^7.0.0
   permission_handler: ^11.3.1
+  url_launcher: ^6.3.2
+  http: ^1.6.0
   pdf: ^3.12.0
   printing: ^5.14.3
 
@@ -39,3 +41,14 @@ flutter:
   assets:
     - assets/fonts/NotoSans-Regular.ttf
     - assets/fonts/NotoSans-Bold.ttf
+
+  # Lora — lớp `.serif` của mockup Sprint 2, dùng cho những câu TRÍCH (Insight
+  # gần nhất, "Hệ thống nhận ra"). Nhúng thẳng file chứ không gọi
+  # `GoogleFonts.lora()`: google_fonts tải font qua mạng lúc chạy, nên máy
+  # offline mất chữ serif và test thì ném lỗi tải font.
+  # Nguồn: Google Fonts, giấy phép SIL Open Font License 1.1.
+  fonts:
+    - family: Lora
+      fonts:
+        - asset: assets/fonts/Lora-Italic.ttf
+          style: italic

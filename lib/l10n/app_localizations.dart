@@ -419,7 +419,7 @@ abstract class AppLocalizations {
   /// No description provided for @understandEyebrowSca.
   ///
   /// In vi, this message translates to:
-  /// **'Trải nghiệm hiện tại (SCA)'**
+  /// **'Trải nghiệm hiện tại'**
   String get understandEyebrowSca;
 
   /// No description provided for @understandEyebrowHealth.
@@ -515,7 +515,7 @@ abstract class AppLocalizations {
   /// No description provided for @developEyebrowOpportunity.
   ///
   /// In vi, this message translates to:
-  /// **'Cơ hội phát triển'**
+  /// **'Mở rộng offline'**
   String get developEyebrowOpportunity;
 
   /// No description provided for @developStage.
@@ -1835,7 +1835,7 @@ abstract class AppLocalizations {
   /// No description provided for @developWorkshopSection.
   ///
   /// In vi, this message translates to:
-  /// **'Cơ hội phát triển'**
+  /// **'Mở rộng offline'**
   String get developWorkshopSection;
 
   /// No description provided for @developViewWorkshops.

@@ -1,0 +1,222 @@
+[
+  {
+    "mood": "stress",
+    "sort_order": 1,
+    "title": "Ba nhịp thở trước khi phản hồi",
+    "kind": "HEALING AUDIO",
+    "duration": "3 phút",
+    "type": "audio",
+    "body": "Một bài hướng dẫn hít thở ngắn, giúp bạn lấy lại nhịp trước khi bước vào một cuộc trao đổi căng thẳng.",
+    "script": "Bạn không cần thay đổi tư thế đang ngồi. Chỉ cần để vai được thả lỏng một chút, nếu có thể. (dừng 3 giây)\n\nHít vào, chậm, qua mũi. (dừng 4 giây) Giữ lại một nhịp. (dừng 2 giây) Rồi thở ra, chậm hơn lúc hít vào. (dừng 5 giây) Cảm nhận vai hạ xuống một chút, ngay khi bạn thở ra. (dừng 3 giây)\n\nLần thứ hai. Hít vào, để ý xem bụng có phồng lên không. (dừng 4 giây) Giữ. (dừng 2 giây) Thở ra, để hơi thở thoát ra tự nhiên, không cần kiểm soát âm thanh của nó. (dừng 5 giây)\n\nMột lần cuối. Hít vào. (dừng 4 giây) Giữ một nhịp. (dừng 2 giây) Thở ra, lần này dài hơn một chút so với hai lần trước. (dừng 6 giây)\n\nBạn không cần cảm thấy hoàn toàn bình tĩnh mới được phép tiếp tục. Ba nhịp thở này chỉ cần đủ, để điều bạn sắp nói ra, đến từ một nơi chậm hơn một chút, thay vì từ phản xạ đầu tiên.",
+    "placeholder": true
+  },
+  {
+    "mood": "stress",
+    "sort_order": 2,
+    "title": "Buông một việc, chỉ trong 60 giây",
+    "kind": "HEALING AUDIO",
+    "duration": "2 phút",
+    "type": "audio",
+    "body": "Một bài dẫn rất ngắn giúp bạn tạm gác một việc đang chiếm hết tâm trí, để quay lại sau với một cái đầu nhẹ nhõm hơn.",
+    "script": null,
+    "placeholder": true
+  },
+  {
+    "mood": "stress",
+    "sort_order": 3,
+    "title": "Khi áp lực đến từ việc muốn kiểm soát mọi thứ",
+    "kind": "BÀI ĐỌC",
+    "duration": "4 phút đọc",
+    "type": "reading",
+    "body": "Có những ngày căng thẳng đến từ một deadline gấp, một cuộc họp khó, một quyết định lớn cần đưa ra. Nhưng cũng có những ngày căng thẳng đến mà không có lý do rõ ràng nào cả. Không có sự kiện lớn nào xảy ra, chỉ là cảm giác nặng nề kéo dài từ sáng đến tối.\n\nNếu để ý kỹ hơn, một phần không nhỏ của loại căng thẳng này đến từ việc cố gắng kiểm soát những thứ vốn dĩ không hoàn toàn nằm trong tay mình. Kết quả một cuộc họp. Cách người khác phản ứng. Việc dự án có chạy đúng tiến độ hay không, dù mình đã làm xong phần việc của mình. Không chỉ lo cho phần của mình, mà còn âm thầm ôm luôn phần lo cho những thứ mình không thể quyết định.\n\nĐiều này không đến từ việc ai đó yếu đuối hay thiếu kỷ luật. Muốn kiểm soát thường là một phản xạ tự nhiên khi môi trường xung quanh có nhiều điều không chắc chắn. Càng ít cảm thấy an toàn với những gì sẽ xảy ra, người ta càng có xu hướng bám chặt vào những gì mình nghĩ mình kiểm soát được, dù đôi khi đó chỉ là một ảo giác về sự an toàn.\n\nMột ví dụ nhỏ và quen thuộc: khi giao một phần việc cho đồng nghiệp, nhiều người vẫn tiếp tục kiểm tra, nhắc nhở, hoặc âm thầm làm lại phần đó theo cách của mình. Không hẳn vì không tin đồng nghiệp, mà vì cảm giác an tâm chỉ đến khi mọi thứ đi đúng như hình dung trong đầu mình. Nhưng cái giá của sự an tâm đó là năng lượng bị chia nhỏ ra quá nhiều đầu việc, thay vì tập trung vào nơi thực sự cần có mặt.\n\nMột cách để nhận diện áp lực loại này là tự hỏi, điều đang lo thực sự nằm trong khả năng ảnh hưởng của mình đến đâu. Có việc có thể tác động trực tiếp. Có việc chỉ có thể góp phần, còn lại phụ thuộc vào người khác hoặc hoàn cảnh. Và có việc, dù muốn đến mấy, cũng nằm ngoài tầm với. Ba loại này thường bị gộp chung thành một khối lo lắng duy nhất, khiến năng lượng bị dàn trải đều, thay vì dồn vào đúng chỗ có thể tạo ra khác biệt thật sự.\n\nKhông phải lúc nào việc buông bớt kiểm soát cũng dễ dàng, đặc biệt với những điều mình thực sự quan tâm. Nhưng đôi khi, chỉ cần gọi tên được phần nào trong nỗi lo hiện tại là điều có thể tác động, và phần nào không, cũng đã đủ để căng thẳng nhẹ đi một chút.",
+    "script": null,
+    "placeholder": true
+  },
+  {
+    "mood": "stress",
+    "sort_order": 4,
+    "title": "Căng thẳng không phải là kẻ thù, chỉ là tín hiệu",
+    "kind": "BÀI ĐỌC",
+    "duration": "3 phút đọc",
+    "type": "reading",
+    "body": "Căng thẳng thường bị xem là điều cần loại bỏ. Nhưng đôi khi nó chỉ đang báo hiệu một điều gì đó cần được chú ý, không phải một kẻ thù cần bị đánh bại.",
+    "script": null,
+    "placeholder": true
+  },
+  {
+    "mood": "stress",
+    "sort_order": 5,
+    "title": "Ba phút lặng trước một cuộc họp khó",
+    "kind": "HEALING AUDIO",
+    "duration": "3 phút",
+    "type": "audio",
+    "body": "Một khoảng lặng ngắn để chuẩn bị tâm thế trước khi bước vào một cuộc trao đổi bạn biết sẽ không dễ dàng.",
+    "script": null,
+    "placeholder": true
+  },
+  {
+    "mood": "tired",
+    "sort_order": 1,
+    "title": "Một khoảng lặng 5 phút",
+    "kind": "HEALING AUDIO",
+    "duration": "5 phút",
+    "type": "audio",
+    "body": "Không cần làm gì thêm trong 5 phút này, chỉ cần để cơ thể và tâm trí được nghỉ trước khi tiếp tục.",
+    "script": null,
+    "placeholder": true
+  },
+  {
+    "mood": "tired",
+    "sort_order": 2,
+    "title": "Kiệt sức không phải là yếu đuối",
+    "kind": "BÀI ĐỌC",
+    "duration": "4 phút đọc",
+    "type": "reading",
+    "body": "Kiệt sức thường bị hiểu nhầm là dấu hiệu của sự yếu đuối. Thực ra nó thường là dấu hiệu bạn đã cố gắng rất nhiều, trong một thời gian rất dài.",
+    "script": null,
+    "placeholder": true
+  },
+  {
+    "mood": "tired",
+    "sort_order": 3,
+    "title": "Âm thanh mưa nhẹ để nghỉ ngơi",
+    "kind": "HEALING AUDIO",
+    "duration": "8 phút",
+    "type": "audio",
+    "body": "Một nền âm thanh mưa nhẹ, phù hợp cho một khoảng nghỉ ngắn giữa ngày hoặc trước khi bắt đầu lại công việc.",
+    "script": null,
+    "placeholder": true
+  },
+  {
+    "mood": "tired",
+    "sort_order": 4,
+    "title": "Khi nào nên nghỉ, khi nào nên tiếp tục",
+    "kind": "BÀI ĐỌC",
+    "duration": "4 phút đọc",
+    "type": "reading",
+    "body": "Không phải lúc nào mệt mỏi cũng có nghĩa là phải dừng lại hoàn toàn. Bài viết này giúp bạn phân biệt giữa mệt cần nghỉ và mệt cần một cách tiếp cận khác.",
+    "script": null,
+    "placeholder": true
+  },
+  {
+    "mood": "tired",
+    "sort_order": 5,
+    "title": "Cho phép mình chậm lại hôm nay",
+    "kind": "HEALING AUDIO",
+    "duration": "4 phút",
+    "type": "audio",
+    "body": "Một bài dẫn nhẹ nhàng nhắc bạn rằng chậm lại một ngày không làm bạn tụt lại phía sau.",
+    "script": null,
+    "placeholder": true
+  },
+  {
+    "mood": "ok",
+    "sort_order": 1,
+    "title": "Điều gì đang vận hành tốt trong bạn?",
+    "kind": "BÀI ĐỌC",
+    "duration": "4 phút đọc",
+    "type": "reading",
+    "body": "Những ngày ổn định là lúc tốt nhất để nhận diện điều gì đang thực sự hiệu quả, trước khi mọi thứ thay đổi trở lại.",
+    "script": null,
+    "placeholder": true
+  },
+  {
+    "mood": "ok",
+    "sort_order": 2,
+    "title": "Nhạc nền tập trung nhẹ nhàng",
+    "kind": "HEALING AUDIO",
+    "duration": "10 phút",
+    "type": "audio",
+    "body": "Một nền âm thanh nhẹ, phù hợp cho một buổi làm việc tập trung khi mọi thứ đang khá ổn.",
+    "script": null,
+    "placeholder": true
+  },
+  {
+    "mood": "ok",
+    "sort_order": 3,
+    "title": "Sự ổn định cũng là một thành tựu",
+    "kind": "BÀI ĐỌC",
+    "duration": "3 phút đọc",
+    "type": "reading",
+    "body": "Những ngày không có biến động thường ít được ghi nhận nhất, dù chúng thường là kết quả của rất nhiều điều đã được làm đúng.",
+    "script": null,
+    "placeholder": true
+  },
+  {
+    "mood": "ok",
+    "sort_order": 4,
+    "title": "5 phút định tâm giữa ngày",
+    "kind": "HEALING AUDIO",
+    "duration": "5 phút",
+    "type": "audio",
+    "body": "Một bài dẫn ngắn giúp bạn dừng lại giữa một ngày làm việc bình thường, để cảm nhận rõ hơn trạng thái hiện tại của mình.",
+    "script": null,
+    "placeholder": true
+  },
+  {
+    "mood": "ok",
+    "sort_order": 5,
+    "title": "Những ngày bình thường đáng được ghi nhớ",
+    "kind": "BÀI ĐỌC",
+    "duration": "3 phút đọc",
+    "type": "reading",
+    "body": "Không phải mọi điều đáng nhớ đều kịch tính. Bài viết này nói về giá trị của những ngày không có gì đặc biệt để kể.",
+    "script": null,
+    "placeholder": true
+  },
+  {
+    "mood": "happy",
+    "sort_order": 1,
+    "title": "Ghi lại khoảnh khắc này trước khi nó trôi qua",
+    "kind": "BÀI ĐỌC",
+    "duration": "3 phút đọc",
+    "type": "reading",
+    "body": "Niềm vui thường trôi qua nhanh và ít được ghi nhớ hơn khó khăn. Một vài dòng ngắn có thể giữ lại điều này lâu hơn.",
+    "script": null,
+    "placeholder": true
+  },
+  {
+    "mood": "happy",
+    "sort_order": 2,
+    "title": "Biết ơn trong 2 phút",
+    "kind": "HEALING AUDIO",
+    "duration": "2 phút",
+    "type": "audio",
+    "body": "Một bài dẫn ngắn giúp bạn gọi tên điều đang khiến hôm nay tốt đẹp, để cảm xúc này được ghi nhớ rõ hơn.",
+    "script": null,
+    "placeholder": true
+  },
+  {
+    "mood": "happy",
+    "sort_order": 3,
+    "title": "Niềm vui hôm nay, dữ liệu cho ngày mai",
+    "kind": "BÀI ĐỌC",
+    "duration": "3 phút đọc",
+    "type": "reading",
+    "body": "Những khoảnh khắc vui vẻ hôm nay, nếu được ghi lại, có thể trở thành manh mối quý giá cho việc hiểu điều gì thực sự phù hợp với bạn.",
+    "script": null,
+    "placeholder": true
+  },
+  {
+    "mood": "happy",
+    "sort_order": 4,
+    "title": "Âm thanh ăn mừng nhẹ nhàng",
+    "kind": "HEALING AUDIO",
+    "duration": "3 phút",
+    "type": "audio",
+    "body": "Một bài dẫn ngắn giúp bạn thật sự dừng lại và tận hưởng một tin vui, thay vì vội vàng chuyển sang việc tiếp theo.",
+    "script": null,
+    "placeholder": true
+  },
+  {
+    "mood": "happy",
+    "sort_order": 5,
+    "title": "Ai xứng đáng biết về điều này?",
+    "kind": "BÀI ĐỌC",
+    "duration": "3 phút đọc",
+    "type": "reading",
+    "body": "Đôi khi niềm vui trở nên trọn vẹn hơn khi được chia sẻ. Bài viết ngắn này gợi ý một vài cách để không giữ tin vui một mình.",
+    "script": null,
+    "placeholder": true
+  }
+]

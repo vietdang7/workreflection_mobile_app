@@ -4,7 +4,11 @@ import '../../core/theme/wr_colors.dart';
 import '../../l10n/app_localizations.dart';
 
 // ---------------------------------------------------------------------------
-// Shell — hosts the 5-tab StatefulShellRoute.indexedStack
+// Shell — hosts the 4-tab StatefulShellRoute.indexedStack
+// Kiến trúc Dữ liệu Hai Lớp v1.6 §9.1: Hôm nay / Hiểu mình / Phát triển /
+// Hành trình. "Tôi" không còn là tab — nó là avatar ở góc trên mỗi màn
+// (`WrProfileAvatar`), mở /profile dưới dạng màn đẩy toàn màn hình.
+// Tab bar: icon-only (no text label), 24px icon, 4px coral dot, 64px height.
 // ---------------------------------------------------------------------------
 
 class ShellScreen extends StatelessWidget {
@@ -16,6 +20,17 @@ class ShellScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: WrColors.white,
+      // Bong bóng hỏi TẠM TẮT (khách 2026-07-30: "bỏ cái ô chatbot giúp tôi,
+      // chúng ta sẽ làm cái này sau").
+      //
+      // Chỉ gỡ khỏi shell, KHÔNG xoá: `WrAskBubble`, màn `/wr/ask` và bảng câu
+      // hỏi vẫn còn nguyên và vẫn có test. Bật lại là bọc `navigationShell`
+      // trong một Stack rồi thêm:
+      //   const Positioned(right: 18, bottom: 18, child: WrAskBubble())
+      //
+      // Yêu cầu gốc của họp 2026-07-29 vẫn giữ nguyên khi bật lại: bong bóng
+      // nổi trên MỌI tab — "nó sẽ hiển thị trên mọi trang luôn chứ không riêng
+      // trang hành trình".
       body: navigationShell,
       bottomNavigationBar: WrTabBar(
         currentIndex: navigationShell.currentIndex,
@@ -29,21 +44,71 @@ class ShellScreen extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Tab bar — 64px + safe-area, white/95%, top hairline, 5 items
+// Bong bóng hỏi — lối vào ô hỏi tự do về hành trình nghề nghiệp.
+//
+// Nằm ở Stack của shell chứ không phải `floatingActionButton`: FAB của Scaffold
+// sẽ bị thanh tab đẩy lên và đổi chỗ theo bàn phím, còn đây phải luôn ở đúng
+// một chỗ trên cả bốn tab.
+//
+// Cố tình nhỏ và không có nhãn chữ: đây là lối vào phụ, không được cạnh tranh
+// với hành động chính của từng tab.
+// ---------------------------------------------------------------------------
+
+class WrAskBubble extends StatelessWidget {
+  const WrAskBubble({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      label: 'Hỏi về hành trình nghề nghiệp của bạn',
+      child: GestureDetector(
+        key: const Key('wr_ask_bubble'),
+        behavior: HitTestBehavior.opaque,
+        onTap: () => context.push('/wr/ask'),
+        child: Container(
+          width: 52,
+          height: 52,
+          decoration: BoxDecoration(
+            color: WrColors.navy,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: WrColors.navy.withValues(alpha: 0.28),
+                blurRadius: 16,
+                offset: const Offset(0, 6),
+              ),
+            ],
+          ),
+          child: const Icon(
+            Icons.chat_bubble_outline_rounded,
+            size: 22,
+            color: WrColors.cream,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Tab bar — 64px + safe-area, white/95%, top hairline 0.5px navy 8%, 5 items.
+// Each item: icon 24px + 4px coral dot below (NO text label).
 // ---------------------------------------------------------------------------
 
 class _TabDef {
-  const _TabDef({required this.icon, required this.label});
+  const _TabDef({required this.icon, required this.semanticsLabel});
   final IconData icon;
-  final String label;
+  final String semanticsLabel;
 }
 
 List<_TabDef> _buildTabs(AppLocalizations l10n) => [
-  _TabDef(icon: Icons.home_outlined, label: l10n.tabToday),
-  _TabDef(icon: Icons.self_improvement_outlined, label: l10n.tabUnderstand),
-  _TabDef(icon: Icons.trending_up_outlined, label: l10n.tabDevelop),
-  _TabDef(icon: Icons.route_outlined, label: l10n.tabJourney),
-  _TabDef(icon: Icons.person_outline, label: l10n.tabProfile),
+  // Bốn icon của mockup: con mắt (quan sát) · bóng đèn (hiểu) · tia chớp
+  // (hành động) · nhịp sóng (hành trình).
+  _TabDef(icon: Icons.visibility_outlined, semanticsLabel: l10n.tabToday),
+  _TabDef(icon: Icons.lightbulb_outline,   semanticsLabel: l10n.tabUnderstand),
+  _TabDef(icon: Icons.bolt_outlined,       semanticsLabel: l10n.tabDevelop),
+  _TabDef(icon: Icons.show_chart,          semanticsLabel: l10n.tabJourney),
 ];
 
 class WrTabBar extends StatelessWidget {
@@ -62,15 +127,11 @@ class WrTabBar extends StatelessWidget {
     final tabs = _buildTabs(l10n);
     final bottomPadding = MediaQuery.of(context).padding.bottom;
     return Container(
-      height: 64 + bottomPadding,
-      decoration: BoxDecoration(
-        color: WrColors.white.withValues(alpha: 0.95),
-        border: const Border(
-          top: BorderSide(
-            color: Color(0x14093774), // navy 8%
-            width: 1,
-          ),
-        ),
+      // `.tabbar { height: 72px; background: white; border-top: 1px --line }`
+      height: 72 + bottomPadding,
+      decoration: const BoxDecoration(
+        color: WrColors.white,
+        border: Border(top: BorderSide(color: WrColors.line)),
       ),
       child: Padding(
         padding: EdgeInsets.only(bottom: bottomPadding),
@@ -80,7 +141,7 @@ class WrTabBar extends StatelessWidget {
             (i) => Expanded(
               child: WrTabItem(
                 icon: tabs[i].icon,
-                label: tabs[i].label,
+                semanticsLabel: tabs[i].semanticsLabel,
                 isActive: i == currentIndex,
                 onTap: () => onTap(i),
               ),
@@ -92,55 +153,55 @@ class WrTabBar extends StatelessWidget {
   }
 }
 
-/// A single tab item: icon + label + 4px coral dot below when active.
+/// A single tab item: icon 24px + 4px coral dot (NO text label).
+/// Uses [semanticsLabel] for accessibility (Semantics widget).
 class WrTabItem extends StatelessWidget {
   const WrTabItem({
     super.key,
     required this.icon,
-    required this.label,
+    required this.semanticsLabel,
     required this.isActive,
     required this.onTap,
   });
 
   final IconData icon;
-  final String label;
+  final String semanticsLabel;
   final bool isActive;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final color = isActive ? WrColors.coral : WrColors.muted;
+    // `.tab` của mockup: icon 21 + nhãn chữ 9px; tab đang mở đổi sang navy và
+    // nhãn đậm hơn. Bản cũ giấu nhãn và chấm coral dưới icon — người mới mở app
+    // phải đoán bốn cái icon nghĩa là gì.
+    final color = isActive ? WrColors.navy : WrColors.text3;
 
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(icon, color: color, size: 22),
-          const SizedBox(height: 2),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-              color: color,
+    return Semantics(
+      label: semanticsLabel,
+      selected: isActive,
+      button: true,
+      child: GestureDetector(
+        onTap: onTap,
+        behavior: HitTestBehavior.opaque,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: color, size: 21),
+            const SizedBox(height: 4),
+            Text(
+              semanticsLabel,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                fontSize: 9,
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
+                letterSpacing: 0.09,
+                color: color,
+              ),
             ),
-          ),
-          const SizedBox(height: 4),
-          // Active dot
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
-            width: isActive ? 4 : 0,
-            height: isActive ? 4 : 0,
-            decoration: const BoxDecoration(
-              color: WrColors.coral,
-              shape: BoxShape.circle,
-            ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
 }
-

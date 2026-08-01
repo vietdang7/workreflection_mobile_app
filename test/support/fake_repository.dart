@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:workreflection_mobile/core/logic/wr_career_profile.dart';
+import 'package:workreflection_mobile/core/logic/wr_pricing.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
 import 'package:workreflection_mobile/core/models/checkin.dart';
 import 'package:workreflection_mobile/core/models/development_theme.dart';
@@ -18,6 +20,7 @@ import 'package:workreflection_mobile/core/models/workshop.dart';
 class FakeWrRepository implements WrRepository {
   // --- Internal state ---
   Checkin? _todayCheckin;
+  Exception? _upsertError;
   final List<DateTime> _checkinDates = [];
   final List<Insight> _insights = [];
   final List<RecurringSituation> _situations = [];
@@ -32,10 +35,15 @@ class FakeWrRepository implements WrRepository {
   Completer<Map<String, dynamic>>? _ccProfileCompleter;
 
   // --- Call recorders ---
-  final List<Mood> upsertCheckinCalls = [];
+  final List<({Mood mood, CheckinEnergy? energy, CheckinDirection? direction})> upsertCheckinCalls = [];
   final List<(String, PracticeStatus)> updatePracticeStatusCalls = [];
   final List<bool> updateReminderCalls = [];
   final List<String> updateLanguageCalls = [];
+  final List<CareerSnapshot> saveCareerSnapshotCalls = [];
+  bool failSaveCareerSnapshot = false;
+  final List<List<String>> saveRecentSituationIdsCalls = [];
+  final List<String?> saveRoleTextCalls = [];
+  final List<({String ext, String docType})> uploadContextDocumentCalls = [];
   final List<String?> ensureSeededCalls = [];
   final List<String> saveOnboardingSituationCalls = [];
   final List<Map<String, dynamic>> updateCcProfileCalls = [];
@@ -57,6 +65,14 @@ class FakeWrRepository implements WrRepository {
 
   void seedInvitations(List<Map<String, dynamic>> invitations) {
     _invitations = List.from(invitations);
+  }
+
+  void setUpsertError(Exception error) {
+    _upsertError = error;
+  }
+
+  void clearUpsertError() {
+    _upsertError = null;
   }
 
   void setAcceptInvitationResult({String? orgName, Exception? error}) {
@@ -130,14 +146,21 @@ class FakeWrRepository implements WrRepository {
   Future<Checkin?> getTodayCheckin() async => _todayCheckin;
 
   @override
-  Future<void> upsertCheckin(Mood mood) async {
-    upsertCheckinCalls.add(mood);
+  Future<void> upsertCheckin(
+    Mood mood, {
+    CheckinEnergy? energy,
+    CheckinDirection? direction,
+  }) async {
+    if (_upsertError != null) throw _upsertError!;
+    upsertCheckinCalls.add((mood: mood, energy: energy, direction: direction));
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     _todayCheckin = Checkin(
       id: 'fake-checkin',
       userId: 'fake-user',
       mood: mood,
+      energy: energy,
+      direction: direction,
       checkinDate: today,
       createdAt: now,
     );
@@ -147,6 +170,10 @@ class FakeWrRepository implements WrRepository {
     )) {
       _checkinDates.add(today);
     }
+  }
+
+  void seedTodayCheckin(Checkin checkin) {
+    _todayCheckin = checkin;
   }
 
   @override
@@ -229,6 +256,44 @@ class FakeWrRepository implements WrRepository {
   }
 
   @override
+  Future<String> uploadContextDocument(
+    List<int> bytes,
+    String ext,
+    String docType,
+  ) async {
+    uploadContextDocumentCalls.add((ext: ext, docType: docType));
+    return 'u1/$docType-1.$ext';
+  }
+
+  @override
+  Future<void> saveCareerSnapshot(CareerSnapshot snapshot) async {
+    if (failSaveCareerSnapshot) throw Exception('save failed');
+    saveCareerSnapshotCalls.add(snapshot);
+    if (_profile != null) {
+      _profile = _profile!.copyWith(careerSnapshot: snapshot);
+    }
+  }
+
+  @override
+  Future<void> saveRecentSituationIds(List<String> codes) async {
+    saveRecentSituationIdsCalls.add(List.unmodifiable(codes));
+    if (_profile != null) {
+      _profile = _profile!.copyWith(recentSituationIds: codes);
+    }
+  }
+
+  @override
+  Future<void> saveRoleText(String? roleText) async {
+    final trimmed = roleText?.trim();
+    final normalised =
+        (trimmed == null || trimmed.isEmpty) ? null : trimmed;
+    saveRoleTextCalls.add(normalised);
+    if (_profile != null) {
+      _profile = _profile!.copyWith(roleText: normalised);
+    }
+  }
+
+  @override
   Future<void> updateLanguage(String lang) async {
     updateLanguageCalls.add(lang);
     if (_profile != null) {
@@ -248,6 +313,26 @@ class FakeWrRepository implements WrRepository {
       return _ccProfileCompleter!.future;
     }
     return Map<String, dynamic>.from(_ccProfile);
+  }
+
+  /// Giá gói Premium mà [getPremiumPricing] trả về. Mặc định là giá thật đang
+  /// bán trên web (gốc 499k, còn 249k) để test đọc như production.
+  WrPremiumPricing premiumPricing = const WrPremiumPricing(
+    currentPrice: 249000,
+    originalPrice: 499000,
+    // Có productId thì mua được — thiếu là màn thanh toán từ chối tạo đơn.
+    productId: 'prod-premium-test',
+    durationDays: 365,
+  );
+
+  /// Khi khác null, [getPremiumPricing] ném lỗi này thay vì trả giá — để test
+  /// đường mất mạng.
+  Object? premiumPricingError;
+
+  @override
+  Future<WrPremiumPricing> getPremiumPricing() async {
+    if (premiumPricingError != null) throw premiumPricingError!;
+    return premiumPricing;
   }
 
   @override

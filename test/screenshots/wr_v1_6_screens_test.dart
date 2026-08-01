@@ -1,0 +1,814 @@
+// Chụp màn hình các giao diện mới theo Kiến trúc Dữ liệu Hai Lớp v1.6.
+//
+// Chạy headless trong flutter test, KHÔNG mở app và không cần máy ảo:
+//
+//   WR_SCREENSHOTS=1 flutter test test/screenshots/ --update-goldens
+//
+// Ảnh ra thư mục `screenshots/` ở gốc repo.
+//
+// Đây là test để XEM, không phải test để chặn hồi quy. Mặc định nó tự bỏ qua:
+// so sánh golden phụ thuộc phiên bản font và engine render, nên để nó chạy
+// trong bộ test thường sẽ đỏ trên máy khác hoặc CI vì lý do chẳng liên quan gì
+// tới đúng/sai của sản phẩm.
+
+import 'dart:io';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:go_router/go_router.dart';
+import 'package:workreflection_mobile/core/data/workshop_repository.dart';
+import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
+import 'package:workreflection_mobile/core/data/wr_episode_repository.dart';
+import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
+import 'package:workreflection_mobile/core/data/wr_mood_content_repository.dart';
+import 'package:workreflection_mobile/core/data/wr_repository.dart';
+import 'package:workreflection_mobile/core/models/checkin.dart';
+import 'package:workreflection_mobile/core/models/wr_content.dart';
+import 'package:workreflection_mobile/core/models/wr_episode.dart';
+import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
+import 'package:workreflection_mobile/core/models/wr_mood_content.dart';
+import 'package:workreflection_mobile/core/models/workshop_models.dart';
+import 'package:workreflection_mobile/core/theme/wr_text.dart';
+import 'package:workreflection_mobile/features/wr/presentation/flow/wr_commit_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/flow/wr_meaning_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/flow/wr_step_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/wr_discover_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/wr_growth_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/wr_home_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/wr_mood_library_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/wr_mood_reader_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/wr_journey_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/wr_tra_chieu_screen.dart';
+import 'package:workreflection_mobile/features/wr/wr_providers.dart';
+import 'package:workreflection_mobile/l10n/app_localizations.dart';
+
+import '../support/fake_repository.dart';
+import '../support/fake_workshop_repository.dart';
+import '../support/fake_wr_content_repository.dart';
+import '../support/fake_wr_episode_repository.dart';
+import '../support/fake_wr_intelligence_repository.dart';
+import '../support/fake_wr_mood_content_repository.dart';
+import '../support/resume_open_episode.dart';
+
+// ---------------------------------------------------------------------------
+// Font — không nạp thì chữ tiếng Việt render thành ô vuông và ảnh vô dụng.
+// ---------------------------------------------------------------------------
+
+Future<void> _loadFonts() async {
+  Future<void> load(String family, String path) async {
+    final file = File(path);
+    if (!file.existsSync()) return;
+    final loader = FontLoader(family)
+      ..addFont(Future.value(file.readAsBytesSync().buffer.asByteData()));
+    await loader.load();
+  }
+
+  await load('NotoSans', 'assets/fonts/NotoSans-Regular.ttf');
+  await load('NotoSans', 'assets/fonts/NotoSans-Bold.ttf');
+
+  // Lora — lớp `.serif` của mockup, dùng cho các câu trích. Không nạp thì các
+  // câu đó rơi về NotoSans và ảnh chụp không cho thấy đúng giọng chữ.
+  await load(WrText.serifFamily, 'assets/fonts/Lora-Italic.ttf');
+
+  // Icon cũng là font. Không nạp thì mọi Icon() render thành ô vuông rỗng và
+  // ảnh chụp không dùng để duyệt giao diện được.
+  //
+  // Font này nằm trong cache của Flutter SDK, không nằm trong repo — dò theo
+  // đường dẫn của chính binary flutter đang chạy để máy khác vẫn tìm được.
+  for (final candidate in _materialIconCandidates()) {
+    if (File(candidate).existsSync()) {
+      await load('MaterialIcons', candidate);
+      break;
+    }
+  }
+}
+
+List<String> _materialIconCandidates() {
+  const relative = 'bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf';
+  final roots = <String>[
+    if (Platform.environment['FLUTTER_ROOT'] != null)
+      Platform.environment['FLUTTER_ROOT']!,
+    // Bản cài qua snap.
+    '${Platform.environment['HOME']}/snap/flutter/common/flutter',
+    // Các vị trí cài tay thường gặp.
+    '${Platform.environment['HOME']}/flutter',
+    '/opt/flutter',
+    '/usr/local/flutter',
+  ];
+  return [for (final r in roots) '$r/$relative'];
+}
+
+// ---------------------------------------------------------------------------
+// Dữ liệu mẫu
+// ---------------------------------------------------------------------------
+
+const _situations = [
+  WrSituation(
+    code: 'A3-sit-02',
+    text: 'Liên tục lặp lại cùng một vấn đề',
+    scaDimension: ScaDimension.a3,
+    humanNeed: HumanNeed.thichNghi,
+    wave: 1,
+  ),
+  WrSituation(
+    code: 'C2-sit-01',
+    text: 'Không dám lên tiếng',
+    scaDimension: ScaDimension.c2,
+    humanNeed: HumanNeed.ketNoi,
+    wave: 1,
+  ),
+  WrSituation(
+    code: 'C2-sit-02',
+    text: 'Không được lắng nghe',
+    scaDimension: ScaDimension.c2,
+    humanNeed: HumanNeed.ketNoi,
+    wave: 1,
+  ),
+  WrSituation(
+    code: 'A3-sit-05',
+    text: 'Không có thời gian nhìn lại',
+    scaDimension: ScaDimension.a3,
+    humanNeed: HumanNeed.thichNghi,
+    wave: 1,
+  ),
+  WrSituation(
+    code: 'C2-sit-05',
+    text: 'Sợ mắc lỗi trước tập thể',
+    scaDimension: ScaDimension.c2,
+    humanNeed: HumanNeed.ketNoi,
+    wave: 1,
+  ),
+];
+
+const _stories = [
+  WrStory(
+    storyId: 'C2-01',
+    title: 'Ý tưởng của tôi biến mất trong cuộc họp',
+    scaDimension: ScaDimension.c2,
+    humanNeed: HumanNeed.ketNoi,
+    storyContent: 'Tôi đã chuẩn bị khá kỹ.',
+    emotionTags: [],
+    behaviorTags: [],
+    careerStages: [],
+    selfReflection:
+        'Lần gần nhất tôi cảm thấy tiếng nói của mình không được nhìn thấy '
+        'là khi nào?',
+    ahaMessage:
+        'Đôi khi điều khiến chúng ta im lặng không phải vì thiếu ý tưởng. '
+        'Mà vì nhiều lần lên tiếng nhưng không tạo ra khác biệt.',
+    practiceAction:
+        'Tuần này hãy ghi lại một lần tôi muốn lên tiếng nhưng đã chọn im lặng.',
+  ),
+];
+
+final _moodContent = [
+  fakeMoodContent(
+    id: 'm-stress-1',
+    mood: Mood.stressed,
+    sortOrder: 1,
+    title: 'Ba nhịp thở trước khi phản hồi',
+    kind: 'HEALING AUDIO',
+    duration: '3 phút',
+    type: MoodContentType.audio,
+    body: 'Một bài hướng dẫn hít thở ngắn, giúp bạn lấy lại nhịp trước khi '
+        'bước vào một cuộc trao đổi căng thẳng.',
+    placeholder: true,
+  ),
+  fakeMoodContent(
+    id: 'm-stress-3',
+    mood: Mood.stressed,
+    sortOrder: 3,
+    title: 'Khi áp lực đến từ việc muốn kiểm soát mọi thứ',
+    kind: 'BÀI ĐỌC',
+    duration: '4 phút đọc',
+    body: 'Có những ngày căng thẳng đến từ một deadline gấp, một cuộc họp khó, '
+        'một quyết định lớn cần đưa ra. Nhưng cũng có những ngày căng thẳng '
+        'đến mà không có lý do rõ ràng nào cả.\n\n'
+        'Nếu để ý kỹ hơn, một phần không nhỏ của loại căng thẳng này đến từ '
+        'việc cố gắng kiểm soát những thứ vốn dĩ không hoàn toàn nằm trong '
+        'tay mình. Kết quả một cuộc họp. Cách người khác phản ứng.\n\n'
+        'Điều này không đến từ việc ai đó yếu đuối hay thiếu kỷ luật. Muốn '
+        'kiểm soát thường là một phản xạ tự nhiên khi môi trường xung quanh '
+        'có nhiều điều không chắc chắn.',
+    placeholder: true,
+  ),
+  fakeMoodContent(
+    id: 'm-tired-1',
+    mood: Mood.tired,
+    sortOrder: 1,
+    title: 'Một khoảng lặng 5 phút',
+    kind: 'HEALING AUDIO',
+    duration: '5 phút',
+    type: MoodContentType.audio,
+    body: 'Không cần làm gì thêm trong 5 phút này.',
+    placeholder: true,
+  ),
+  fakeMoodContent(
+    id: 'm-tired-2',
+    mood: Mood.tired,
+    sortOrder: 2,
+    title: 'Kiệt sức không phải là yếu đuối',
+    kind: 'BÀI ĐỌC',
+    duration: '4 phút đọc',
+    body: 'Kiệt sức thường bị hiểu nhầm là dấu hiệu của sự yếu đuối.',
+    placeholder: true,
+  ),
+  fakeMoodContent(
+    id: 'm-ok-1',
+    mood: Mood.okay,
+    sortOrder: 1,
+    title: 'Điều gì đang vận hành tốt trong bạn?',
+    kind: 'BÀI ĐỌC',
+    duration: '4 phút đọc',
+    body: 'Những ngày ổn định là lúc tốt nhất để nhận diện điều gì đang '
+        'thực sự hiệu quả.',
+    placeholder: true,
+  ),
+  fakeMoodContent(
+    id: 'm-happy-1',
+    mood: Mood.happy,
+    sortOrder: 1,
+    title: 'Ghi lại khoảnh khắc này trước khi nó trôi qua',
+    kind: 'BÀI ĐỌC',
+    duration: '3 phút đọc',
+    body: 'Niềm vui thường trôi qua nhanh và ít được ghi nhớ hơn khó khăn.',
+    placeholder: true,
+  ),
+];
+
+const _choicePool = [
+  'Thử một cách tiếp cận khác vào lần tới',
+  'Giữ nguyên cách làm hiện tại, quan sát thêm',
+  'Chưa biết, cần thêm thời gian',
+  'Nói chuyện với ai đó về điều này',
+  'Ghi nhớ điều này để xem lại sau',
+  'Đặt lời nhắc để quay lại tình huống này sau một tuần',
+  'Chia sẻ điều này với người liên quan trực tiếp',
+  'Không cần hành động gì, chỉ cần ghi nhận là đủ',
+];
+
+// ---------------------------------------------------------------------------
+
+class _Stage {
+  _Stage()
+      : content = FakeWrContentRepository(),
+        intel = FakeWrIntelligenceRepository(),
+        moodContent = FakeWrMoodContentRepository(),
+        episodes = FakeWrEpisodeRepository(),
+        wr = FakeWrRepository();
+
+  final FakeWrContentRepository content;
+  final FakeWrIntelligenceRepository intel;
+  final FakeWrMoodContentRepository moodContent;
+  final FakeWrEpisodeRepository episodes;
+  final FakeWrRepository wr;
+  final FakeWorkshopRepository workshops = FakeWorkshopRepository();
+
+  Widget app(String location) {
+    final router = GoRouter(
+      initialLocation: location,
+      routes: [
+        GoRoute(path: '/home', builder: (_, __) => const WrHomeScreen()),
+        GoRoute(
+          path: '/wr/mood-library',
+          builder: (_, __) => const WrMoodLibraryScreen(),
+        ),
+        GoRoute(
+          path: '/wr/mood-content/:id',
+          builder: (_, s) =>
+              WrMoodReaderScreen(contentId: s.pathParameters['id']!),
+        ),
+        GoRoute(
+          path: '/wr/flow/step',
+          builder: (_, __) => const WrStepScreen(),
+        ),
+        GoRoute(
+          path: '/wr/flow/meaning',
+          builder: (_, __) => const WrMeaningScreen(),
+        ),
+        GoRoute(
+          path: '/wr/flow/commit',
+          builder: (_, __) => const WrCommitScreen(),
+        ),
+        GoRoute(
+          path: '/wr/journey',
+          builder: (_, __) => const WrJourneyScreen(),
+        ),
+        GoRoute(
+          path: '/wr/discover',
+          builder: (_, __) => const WrDiscoverScreen(),
+        ),
+        GoRoute(path: '/wr/growth', builder: (_, __) => const WrGrowthScreen()),
+        GoRoute(
+          path: '/wr/tra-chieu/lich',
+          builder: (_, __) => const WrTraChieuCalendarScreen(),
+        ),
+        GoRoute(path: '/profile', builder: (_, __) => const Scaffold()),
+        GoRoute(path: '/wr/flow/done', builder: (_, __) => const Scaffold()),
+        GoRoute(
+          path: '/wr/pattern/:code',
+          builder: (_, __) => const Scaffold(),
+        ),
+      ],
+    );
+
+    return ProviderScope(
+      overrides: [
+        wrContentRepositoryProvider.overrideWithValue(content),
+        wrIntelligenceRepositoryProvider.overrideWithValue(intel),
+        wrMoodContentRepositoryProvider.overrideWithValue(moodContent),
+        wrEpisodeRepositoryProvider.overrideWithValue(episodes),
+        wrRepositoryProvider.overrideWithValue(wr),
+        workshopRepositoryProvider.overrideWithValue(workshops),
+        currentUserIdProvider.overrideWithValue('u1'),
+      ],
+      child: MaterialApp.router(
+        debugShowCheckedModeBanner: false,
+        theme: ThemeData(fontFamily: 'NotoSans', useMaterial3: true),
+        routerConfig: router,
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('vi'),
+      ),
+    );
+  }
+}
+
+Future<void> _shoot(
+  WidgetTester tester,
+  Widget app,
+  String name, {
+  Size size = const Size(390, 844), // iPhone 14
+}) async {
+  tester.view.physicalSize = size * 3;
+  tester.view.devicePixelRatio = 3.0;
+  addTearDown(tester.view.reset);
+  await tester.pumpWidget(app);
+  await tester.pumpAndSettle();
+  await expectLater(
+    find.byType(MaterialApp),
+    matchesGoldenFile('../../screenshots/$name.png'),
+  );
+}
+
+/// Bộ chụp ảnh chỉ chạy khi được yêu cầu rõ ràng.
+final bool _enabled = Platform.environment['WR_SCREENSHOTS'] == '1';
+
+void main() {
+  setUpAll(() async {
+    TestWidgetsFlutterBinding.ensureInitialized();
+    await _loadFonts();
+  });
+
+  _Stage buildStage({Mood mood = Mood.stressed}) {
+    final s = _Stage();
+    s.content
+      ..seedSituations(_situations)
+      ..seedStories(_stories);
+    s.moodContent
+      ..seedContent(_moodContent)
+      ..seedChoicePool(_choicePool);
+    s.wr.seedTodayCheckin(Checkin(
+      id: 'ck',
+      userId: 'u1',
+      mood: mood,
+      checkinDate: DateTime(2026, 7, 28),
+      createdAt: DateTime(2026, 7, 28),
+    ));
+    return s;
+  }
+
+  testWidgets('01 · Home — check-in + Thư viện Cảm xúc', skip: !_enabled,
+      (tester) async {
+    final s = buildStage();
+    s.intel.seedPatternCounts([
+      PatternCount(
+        id: 'p1',
+        userId: 'u1',
+        situationCode: 'C2-sit-01',
+        scaDimension: ScaDimension.c2,
+        occurrenceCount: 5,
+        lastSeenAt: DateTime(2026, 7, 27),
+      ),
+    ]);
+    // Nạp cả Insight gần nhất và một chủ đề đang dở: mockup Sprint 2 vẽ Home
+    // với ĐỦ sáu khối. Thiếu hai khối cuối thì ảnh chụp không nói được gì về
+    // nửa dưới màn hình — chỗ dễ lệch nhất so với bản thiết kế.
+    s.intel
+      ..seedInsights([
+        WrInsight(
+          userId: 'u1',
+          content:
+              'Tôi thường im lặng không phải vì không có ý kiến, mà vì sợ phán xét.',
+          createdAt: DateTime(2026, 6, 20),
+        ),
+      ])
+      ..seedPracticeThemes([
+        const PracticeTheme(themeId: 't1', title: 'Dám lên tiếng'),
+      ])
+      ..seedPracticeSteps('t1', [
+        const PracticeStep(
+          stepId: 's1',
+          themeId: 't1',
+          stepOrder: 1,
+          title: 'Quan sát lúc muốn im lặng',
+          isPremium: false,
+        ),
+        const PracticeStep(
+          stepId: 's2',
+          themeId: 't1',
+          stepOrder: 2,
+          title: 'Đặt một câu hỏi trong họp',
+          isPremium: false,
+        ),
+      ])
+      ..seedEnrollments([
+        const PracticeEnrollment(
+          userId: 'u1',
+          themeId: 't1',
+          completedSteps: ['s1'],
+        ),
+      ]);
+    await _shoot(tester, s.app('/home'), '01_home');
+  });
+
+  testWidgets('02 · Thư viện Nội dung Cảm xúc', skip: !_enabled, (tester) async {
+    await _shoot(
+      tester,
+      buildStage().app('/wr/mood-library'),
+      '02_thu_vien_cam_xuc',
+      size: const Size(390, 1100),
+    );
+  });
+
+  testWidgets('03 · Màn đọc — BÀI ĐỌC', skip: !_enabled, (tester) async {
+    await _shoot(
+      tester,
+      buildStage().app('/wr/mood-content/m-stress-3'),
+      '03_man_doc_bai_doc',
+      size: const Size(390, 1000),
+    );
+  });
+
+  testWidgets('04 · Màn nghe — HEALING AUDIO', skip: !_enabled, (tester) async {
+    await _shoot(
+      tester,
+      buildStage().app('/wr/mood-content/m-stress-1'),
+      '04_man_nghe_audio',
+    );
+  });
+
+  testWidgets('05 · Chọn tình huống — lọc theo cảm xúc', skip: !_enabled, (tester) async {
+    final s = buildStage();
+    s.episodes.seed([
+      const ReflectionEpisode(
+        id: 'ep',
+        userId: 'u1',
+        humanMoment: HumanMoment.confusion,
+        state: ExperienceState.exploring,
+        energy: CheckinEnergy.low,
+        patternsDone: [ReflectionPattern.notice],
+        notes: {'notice': 'Tôi đang thấy nặng đầu vì cuộc họp sáng nay.'},
+      ),
+    ]);
+    final app = s.app('/home');
+    tester.view.physicalSize = const Size(390, 900) * 3;
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(app);
+    await tester.pumpAndSettle();
+    await resumeOpenEpisode(tester);
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('../../screenshots/05_chon_tinh_huong.png'),
+    );
+  });
+
+  testWidgets('06 · Ý nghĩa — Self Reflection + Aha gợi sẵn', skip: !_enabled, (tester) async {
+    final s = buildStage();
+    s.episodes.seed([
+      const ReflectionEpisode(
+        id: 'ep',
+        userId: 'u1',
+        humanMoment: HumanMoment.celebration,
+        state: ExperienceState.exploring,
+        energy: CheckinEnergy.low,
+        situationCode: 'C2-sit-01',
+        patternsDone: [
+          ReflectionPattern.notice,
+          ReflectionPattern.name,
+          ReflectionPattern.preserve,
+        ],
+        notes: {
+          'notice': 'Tôi vừa nói ra được điều mình nghĩ trong cuộc họp.',
+          'name': 'Tôi thấy nhẹ người vì đã không im lặng.',
+        },
+      ),
+    ]);
+    tester.view.physicalSize = const Size(390, 1000) * 3;
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(s.app('/home'));
+    await tester.pumpAndSettle();
+    await resumeOpenEpisode(tester);
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('../../screenshots/06_y_nghia_aha.png'),
+    );
+  });
+
+  testWidgets('07 · Lựa chọn — Practice + bể 8 câu', skip: !_enabled, (tester) async {
+    final s = buildStage();
+    s.episodes.seed([
+      const ReflectionEpisode(
+        id: 'ep',
+        userId: 'u1',
+        humanMoment: HumanMoment.celebration,
+        state: ExperienceState.exploring,
+        energy: CheckinEnergy.low,
+        situationCode: 'C2-sit-01',
+        patternsDone: [
+          ReflectionPattern.notice,
+          ReflectionPattern.name,
+          ReflectionPattern.preserve,
+        ],
+        notes: {'notice': 'Tôi vừa nói ra được điều mình nghĩ.'},
+      ),
+    ]);
+    tester.view.physicalSize = const Size(390, 900) * 3;
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(s.app('/home'));
+    await tester.pumpAndSettle();
+    await resumeOpenEpisode(tester);
+    await tester.tap(find.byKey(const Key('wr_flow_primary')));
+    await tester.pumpAndSettle();
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('../../screenshots/07_lua_chon.png'),
+    );
+  });
+
+  // Chụp thêm trạng thái ĐÃ CHỌN: đây là lúc nút Lưu mới sáng lên, và cũng là
+  // lúc `reflect_choice` được ghi (§V · WDA Inv.9). Ảnh 07 chỉ có trạng thái
+  // ban đầu nên không cho thấy khác biệt nào của bước Choice.
+  testWidgets('08 · Lựa chọn — đã chọn một câu', skip: !_enabled, (tester) async {
+    final s = buildStage();
+    s.episodes.seed([
+      const ReflectionEpisode(
+        id: 'ep',
+        userId: 'u1',
+        humanMoment: HumanMoment.celebration,
+        state: ExperienceState.exploring,
+        energy: CheckinEnergy.low,
+        situationCode: 'C2-sit-01',
+        patternsDone: [
+          ReflectionPattern.notice,
+          ReflectionPattern.name,
+          ReflectionPattern.preserve,
+        ],
+        notes: {'notice': 'Tôi vừa nói ra được điều mình nghĩ.'},
+      ),
+    ]);
+    tester.view.physicalSize = const Size(390, 900) * 3;
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(tester.view.reset);
+    await tester.pumpWidget(s.app('/home'));
+    await tester.pumpAndSettle();
+    await resumeOpenEpisode(tester);
+    await tester.tap(find.byKey(const Key('wr_flow_primary')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('wr_choice_1')));
+    await tester.pumpAndSettle();
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('../../screenshots/08_lua_chon_da_chon.png'),
+    );
+  });
+
+  /// Timeline đủ loại mốc, để soi nhãn loại (§9.1 · §XII.5).
+  ///
+  /// Kèm Pattern lặp đủ ngưỡng: Cơ hội phát triển chỉ xuất hiện khi đã có đủ
+  /// dữ kiện (kGrowthOpportunityThreshold = 4). Thiếu cái này thì cả bản Free
+  /// lẫn Premium đều không hiện gì, và ảnh chụp không nói lên điều gì về §11.4.
+  void seedJourney(_Stage s) {
+    s.intel.seedPatternCounts([
+      PatternCount(
+        id: 'p1',
+        userId: 'u1',
+        situationCode: 'C2-sit-01',
+        scaDimension: ScaDimension.c2,
+        occurrenceCount: 5,
+        lastSeenAt: DateTime(2026, 7, 26),
+      ),
+      PatternCount(
+        id: 'p2',
+        userId: 'u1',
+        situationCode: 'C2-sit-02',
+        scaDimension: ScaDimension.c2,
+        occurrenceCount: 4,
+        lastSeenAt: DateTime(2026, 7, 20),
+      ),
+    ]);
+    s.content.seedMemoryEvents([
+      CareerMemoryEvent(
+        id: 'e1',
+        userId: 'u1',
+        behavior: 'reflection_episode',
+        reflectionText: 'Tôi nhận ra mình im lặng vì sợ làm hỏng không khí.',
+        createdAt: DateTime(2026, 7, 26),
+      ),
+      CareerMemoryEvent(
+        id: 'e2',
+        userId: 'u1',
+        behavior: 'insight',
+        reflectionText: 'Nói sớm hơn thì đỡ mệt hơn.',
+        createdAt: DateTime(2026, 7, 20),
+      ),
+      CareerMemoryEvent(
+        id: 'e3',
+        userId: 'u1',
+        behavior: 'practice_step_note',
+        reflectionText: 'Thử nói trước một người: tôi đã nhắn cho chị Lan.',
+        createdAt: DateTime(2026, 6, 18),
+      ),
+    ]);
+  }
+
+  testWidgets('09 · Hành trình — Free, Cơ hội phát triển còn khoá',
+      skip: !_enabled, (tester) async {
+    final s = buildStage();
+    seedJourney(s);
+    await _shoot(
+      tester,
+      s.app('/wr/journey'),
+      '09_hanh_trinh_free',
+      size: const Size(390, 1100),
+    );
+  });
+
+  testWidgets('10 · Hành trình — Premium, Cơ hội phát triển đã mở',
+      skip: !_enabled, (tester) async {
+    final s = buildStage();
+    seedJourney(s);
+    s.intel
+      ..seedEntitlement(
+        const WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
+      )
+      ..seedGrowthOpportunity(
+        GrowthOpportunity(
+          id: 'go-1',
+          userId: 'u1',
+          suggestionText: 'Có vẻ phần lớn điều bạn nhìn lại xoay quanh quan hệ '
+              'với người khác trong công việc. Nếu điều đó đúng, hướng phát '
+              'triển gần nhất của bạn có thể là năng lực đối thoại: nói điều '
+              'khó nói mà vẫn giữ được quan hệ.',
+          confidenceNote: GrowthOpportunity.kConfidenceNote,
+          basedOn: const ['C2-sit-01'],
+          generatedAt: DateTime(2026, 7, 28),
+        ),
+      );
+    await _shoot(
+      tester,
+      s.app('/wr/journey'),
+      '10_hanh_trinh_premium',
+      size: const Size(390, 1200),
+    );
+  });
+
+  // Hai tab dưới đây trước không có ảnh nào, nên lần đổi hệ màu 2026-07-30
+  // không có cách nào xem lại được là bốn tab đã cùng một hệ màu hay chưa.
+  testWidgets('11 · Hiểu mình', skip: !_enabled, (tester) async {
+    final s = buildStage();
+    s.intel
+      ..seedPatternCounts([
+        PatternCount(
+          id: 'p1',
+          userId: 'u1',
+          situationCode: 'C2-sit-01',
+          scaDimension: ScaDimension.c2,
+          occurrenceCount: 5,
+          lastSeenAt: DateTime(2026, 7, 27),
+        ),
+      ])
+      ..seedSelfCheckHistory([
+        ScaSelfCheckResponse(
+          id: 'sc1',
+          userId: 'u1',
+          answers: const {'S1': 4, 'C1': 3, 'A1': 4},
+          structureScore: 3.4,
+          cultureScore: 2.6,
+          activityScore: 4.1,
+          takenAt: DateTime(2026, 7, 25),
+        ),
+      ]);
+    await _shoot(
+      tester,
+      s.app('/wr/discover'),
+      '11_hieu_minh',
+      size: const Size(390, 1100),
+    );
+  });
+
+  testWidgets('12 · Phát triển — chủ đề + Trà Chiều', skip: !_enabled,
+      (tester) async {
+    final s = buildStage();
+    s.intel
+      ..seedPracticeThemes([
+        const PracticeTheme(themeId: 't1', title: 'Dám lên tiếng'),
+        const PracticeTheme(themeId: 't2', title: 'Phản hồi hiệu quả'),
+      ])
+      ..seedPracticeSteps('t1', [
+        const PracticeStep(
+          stepId: 's1',
+          themeId: 't1',
+          stepOrder: 1,
+          title: 'Quan sát lúc muốn im lặng',
+          isPremium: false,
+        ),
+        const PracticeStep(
+          stepId: 's2',
+          themeId: 't1',
+          stepOrder: 2,
+          title: 'Đặt một câu hỏi trong họp',
+          isPremium: false,
+        ),
+        const PracticeStep(
+          stepId: 's3',
+          themeId: 't1',
+          stepOrder: 3,
+          title: 'Nói điều khó nói',
+          isPremium: true,
+        ),
+      ])
+      ..seedEnrollments([
+        const PracticeEnrollment(
+          userId: 'u1',
+          themeId: 't1',
+          completedSteps: ['s1'],
+        ),
+      ]);
+    s.workshops.seedWorkshops([
+      WorkshopDetail(
+        id: 'tc1',
+        title: 'Bận cả tuần, nhưng mình đang đi về đâu?',
+        category: 'Trà chiều nghề nghiệp',
+        date: DateTime.now().add(const Duration(days: 9)),
+        startsAt: DateTime.now().add(const Duration(days: 9, hours: 15)),
+        location: 'TP.HCM',
+        price: 99000,
+        currency: 'VND',
+        currentParticipants: 0,
+        status: 'published',
+        isActive: true,
+      ),
+    ]);
+    await _shoot(
+      tester,
+      s.app('/wr/growth'),
+      '12_phat_trien',
+      size: const Size(390, 1250),
+    );
+  });
+
+  testWidgets('13 · Trà Chiều — lịch các buổi', skip: !_enabled, (tester) async {
+    final s = buildStage();
+    s.workshops.seedWorkshops([
+      for (final (i, item) in [
+        ('test-1', 'test 1', 'test 1', 0, 3),
+        (
+          'ban-ca-tuan',
+          'Bận cả tuần, nhưng mình đang đi về đâu?',
+          'Một câu hỏi duy nhất cho cả bàn, không ai phải trả lời trước khi '
+              'sẵn sàng.',
+          99000,
+          17,
+        ),
+      ].indexed)
+        WorkshopDetail(
+          id: 'w$i',
+          slug: item.$1,
+          title: item.$2,
+          description: item.$3,
+          category: 'Trà chiều Nghề nghiệp',
+          date: DateTime(2026, 9, item.$5),
+          startsAt: DateTime(2026, 9, item.$5, 15, 30),
+          endsAt: DateTime(2026, 9, item.$5, 17, 30),
+          location: '123 Trường Sơn, TP.HCM',
+          price: item.$4,
+          currency: 'VND',
+          currentParticipants: 0,
+          status: 'active',
+          isActive: true,
+        ),
+    ]);
+    await _shoot(
+      tester,
+      s.app('/wr/tra-chieu/lich'),
+      '13_tra_chieu_lich',
+      size: const Size(390, 1000),
+    );
+  });
+}
