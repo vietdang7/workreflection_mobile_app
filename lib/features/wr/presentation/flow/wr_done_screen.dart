@@ -14,6 +14,7 @@ import '../../../../core/theme/wr_colors.dart';
 import '../../episode_flow_controller.dart';
 import '../../wr_providers.dart';
 import '../../../../core/logic/wr_flow_error.dart';
+import '../../../../core/logic/wr_repeated_situations.dart';
 import 'wr_flow_scaffold.dart';
 
 class WrDoneScreen extends ConsumerStatefulWidget {
@@ -48,15 +49,16 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
   }
 
   /// Số lần đã gặp tình huống này — thuần ghi nhận, không diễn giải.
+  ///
+  /// Đếm từ Episode chứ không từ `wr_pattern_counts` (v2.0 §4.3): bảng kia cộng
+  /// thêm một lần nữa mỗi khi người dùng mở lại một Episode đã khép và xác nhận
+  /// Ý nghĩa lần hai, nên "lần thứ N" ở đây sẽ vượt số lần ghi ở màn chi tiết.
   int? _occurrenceCount() {
     final code = _situationCode;
     if (code == null) return null;
-    final patterns = ref.watch(wrPatternCountsProvider).valueOrNull;
-    if (patterns == null) return null;
-    for (final p in patterns) {
-      if (p.situationCode == code) return p.occurrenceCount;
-    }
-    return null;
+    final episodes = ref.watch(wrEpisodeHistoryProvider).valueOrNull;
+    if (episodes == null) return null;
+    return countSituation(episodes, code);
   }
 
   @override

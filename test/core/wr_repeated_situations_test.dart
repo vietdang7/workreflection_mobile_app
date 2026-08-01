@@ -190,4 +190,69 @@ void main() {
       expect(result.map((r) => r.situationCode), ['du']);
     });
   });
+
+  // Khách báo 2026-08-01: tab Hiểu mình ghi "4 lần", mở ra thì đầu màn ghi "5
+  // lần" mà bên dưới chỉ liệt kê 4 mục. Nguyên nhân: màn chi tiết đếm từ
+  // `wr_pattern_counts` — bảng cộng ở bước KHÉP nên một Episode mở lại rồi xác
+  // nhận Ý nghĩa lần nữa bị cộng hai. Hai hàm dưới đây tồn tại để con số và
+  // danh sách không bao giờ tách nguồn được nữa.
+  group('episodesForSituation / countSituation', () {
+    test('số đếm bằng đúng độ dài danh sách hiện ra', () {
+      final episodes = [
+        ..._many('a', 4, from: DateTime(2026, 7, 1)),
+        ..._many('b', 2, from: DateTime(2026, 7, 5)),
+      ];
+
+      expect(episodesForSituation(episodes, 'a').length, 4);
+      expect(countSituation(episodes, 'a'), 4);
+      expect(countSituation(episodes, 'b'), 2);
+    });
+
+    test('khớp đúng con số mà tab Hiểu mình hiện cho cùng mã', () {
+      final episodes = [
+        ..._many('a', 4, from: DateTime(2026, 7, 1)),
+        ..._many('b', 3, from: DateTime(2026, 7, 5)),
+      ];
+
+      for (final r in repeatedSituations(episodes)) {
+        expect(countSituation(episodes, r.situationCode), r.count);
+      }
+    });
+
+    test('mã chưa từng chọn thì là 0, không phải một', () {
+      expect(countSituation(_many('a', 2, from: DateTime(2026, 7, 1)), 'z'), 0);
+    });
+
+    test('phiên bỏ dở vẫn được tính — tính từ lúc CHỌN', () {
+      final episodes = [
+        _ep('e1', 'a', openedAt: DateTime(2026, 7, 1)),
+        _ep('e2', 'a',
+            state: ExperienceState.reactivated, openedAt: DateTime(2026, 7, 2)),
+      ];
+
+      expect(countSituation(episodes, 'a'), 2);
+    });
+
+    test('danh sách trả về mới nhất đứng đầu', () {
+      final episodes = [
+        _ep('cu', 'a', openedAt: DateTime(2026, 7, 1)),
+        _ep('moi', 'a', openedAt: DateTime(2026, 7, 9)),
+      ];
+
+      expect(
+        episodesForSituation(episodes, 'a').map((e) => e.id),
+        ['moi', 'cu'],
+      );
+    });
+
+    test('cùng cửa sổ 30 với recentSituationIds', () {
+      final episodes = [
+        ..._many('cu', 4, from: DateTime(2026, 6, 1)),
+        ..._many('moi', 30, from: DateTime(2026, 7, 1)),
+      ];
+
+      expect(countSituation(episodes, 'cu'), 0);
+      expect(countSituation(episodes, 'moi'), 30);
+    });
+  });
 }

@@ -288,6 +288,44 @@ void main() {
 
       expect(find.text('Bạn đã ghi lại điều này 3 lần.'), findsOneWidget);
     });
+
+    // Lỗi khách báo 2026-08-01: ngoài ghi "4 lần", bấm vào thì đầu màn ghi
+    // "5 lần" mà bên dưới chỉ có 4 mục. Trên tài khoản thật, `wr_pattern_counts`
+    // của A1-01 = 5 trong khi chỉ có 4 Episode — chênh vì một Episode được khép
+    // hai lần (mở lại rồi xác nhận Ý nghĩa lần nữa cộng thêm một).
+    //
+    // Test gieo đúng thế lệch đó: bảng cũ nói 5, Episode nói 4.
+    testWidgets('số ngoài màn, số trong màn và số mục liệt kê — cùng một con số',
+        (tester) async {
+      final intel = FakeWrIntelligenceRepository()
+        ..seedPatternCounts([_pattern(5)]);
+      final content = FakeWrContentRepository()..seedSituations([_sit]);
+      final episodes = FakeWrEpisodeRepository()
+        ..seed(_episodes({'sit-01': 4}));
+
+      await _pump(
+        tester,
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: intel,
+          content: content,
+          episodes: episodes,
+        ),
+      );
+
+      expect(find.text('4 lần'), findsOneWidget);
+      expect(find.text('5 lần'), findsNothing);
+
+      await tester.tap(find.text('Không được lắng nghe trong họp'));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Bạn đã ghi lại điều này 4 lần.'), findsOneWidget);
+      expect(find.text('Bạn đã ghi lại điều này 5 lần.'), findsNothing);
+
+      // Và đúng bằng số mục thật sự liệt kê bên dưới — chỗ mà người dùng đếm
+      // được bằng mắt và bắt được sự mâu thuẫn.
+      expect(find.text('(chưa đặt tên điều nhận ra)'), findsNWidgets(4));
+    });
   });
 
   // Yêu cầu khách 2026-07-29: màn ngoài chỉ ba tình huống lặp nhiều nhất, phần
@@ -486,12 +524,18 @@ void main() {
       }
       expect(find.textContaining('ĐIỀU ĐỨNG SAU'), findsNothing);
 
-      // Từ đây vẫn mở được chi tiết của từng dòng. Màn chi tiết đọc con số tích
-      // luỹ của cả hành trình (`wr_pattern_counts`), không đọc cửa sổ 10 —
-      // "đã ghi lại bao nhiêu lần" là câu hỏi về cả chặng đường.
+      // Từ đây vẫn mở được chi tiết của từng dòng, và con số ở đó phải bằng
+      // đúng con số dòng vừa bấm.
+      //
+      // Trước 2026-08-01 màn chi tiết đọc `wr_pattern_counts` với lý do "đã ghi
+      // lại bao nhiêu lần là câu hỏi về cả chặng đường". Lý do nghe được, nhưng
+      // bảng đó cộng ở bước KHÉP nên mở lại một Episode đã khép rồi xác nhận Ý
+      // nghĩa lần nữa là cộng thêm một — nó không dài hơn vì nhớ xa hơn, nó dài
+      // hơn vì đếm trùng. Kết quả trên máy khách: ngoài ghi 4, mở ra ghi 5,
+      // trong khi chính màn đó chỉ liệt kê được 4 mục.
       await tester.tap(find.text('Tình huống số 3'));
       await tester.pumpAndSettle();
-      expect(find.text('Bạn đã ghi lại điều này 7 lần.'), findsOneWidget);
+      expect(find.text('Bạn đã ghi lại điều này 3 lần.'), findsOneWidget);
     });
   });
 
@@ -825,9 +869,14 @@ void main() {
   group('Chi tiết điều lặp lại — ngưỡng dữ liệu và Premium', () {
     testWidgets('dưới 5 lần: nói còn thiếu bao nhiêu, chưa mời trả tiền',
         (tester) async {
+      // Gieo Episode chứ không gieo `wr_pattern_counts`: từ 2026-08-01 màn này
+      // đếm từ recentSituationIds như tab Hiểu mình (v2.0 §4.3). Con số tích
+      // luỹ trong bảng kia cố tình để lệch ở đây để chứng minh nó bị bỏ.
       final intel = FakeWrIntelligenceRepository()
-        ..seedPatternCounts([_pattern(3)]);
+        ..seedPatternCounts([_pattern(99)]);
       final content = FakeWrContentRepository()..seedSituations([_sit]);
+      final episodes = FakeWrEpisodeRepository()
+        ..seed(_episodes({'sit-01': 3}));
 
       await _pump(
         tester,
@@ -835,9 +884,11 @@ void main() {
           const WrPatternDetailScreen(situationCode: 'sit-01'),
           intel: intel,
           content: content,
+          episodes: episodes,
         ),
       );
 
+      expect(find.text('Bạn đã ghi lại điều này 3 lần.'), findsOneWidget);
       expect(
         find.byKey(const Key('wr_pattern_not_enough_data')),
         findsOneWidget,
@@ -848,9 +899,10 @@ void main() {
 
     testWidgets('đủ 5 lần nhưng miễn phí: khoá phần diễn giải',
         (tester) async {
-      final intel = FakeWrIntelligenceRepository()
-        ..seedPatternCounts([_pattern(5)]);
+      final intel = FakeWrIntelligenceRepository();
       final content = FakeWrContentRepository()..seedSituations([_sit]);
+      final episodes = FakeWrEpisodeRepository()
+        ..seed(_episodes({'sit-01': 5}));
 
       await _pump(
         tester,
@@ -858,6 +910,7 @@ void main() {
           const WrPatternDetailScreen(situationCode: 'sit-01'),
           intel: intel,
           content: content,
+          episodes: episodes,
         ),
       );
 
@@ -867,7 +920,6 @@ void main() {
 
     testWidgets('đủ 5 lần và premium: hiện phần diễn giải', (tester) async {
       final intel = FakeWrIntelligenceRepository()
-        ..seedPatternCounts([_pattern(6)])
         ..seedEntitlement(
           WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
         )
@@ -879,6 +931,8 @@ void main() {
           ),
         ]);
       final content = FakeWrContentRepository()..seedSituations([_sit]);
+      final episodes = FakeWrEpisodeRepository()
+        ..seed(_episodes({'sit-01': 6}));
 
       await _pump(
         tester,
@@ -886,6 +940,7 @@ void main() {
           const WrPatternDetailScreen(situationCode: 'sit-01'),
           intel: intel,
           content: content,
+          episodes: episodes,
         ),
       );
 

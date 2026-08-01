@@ -11,13 +11,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/logic/wr_entitlement.dart';
+import '../../../core/logic/wr_repeated_situations.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/section_divider.dart';
 import '../../../core/widgets/wr_premium_lock.dart';
 import '../wr_providers.dart';
-import 'wr_discover_screen.dart' show kInsightThreshold, occurrenceOf, situationLabel;
+import 'wr_discover_screen.dart' show kInsightThreshold, situationLabel;
 
 class WrPatternDetailScreen extends ConsumerWidget {
   const WrPatternDetailScreen({super.key, required this.situationCode});
@@ -26,7 +27,6 @@ class WrPatternDetailScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final patterns = ref.watch(wrPatternCountsProvider).valueOrNull ?? const [];
     final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
     final episodes = ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
     final entitlement = ref.watch(wrEntitlementProvider).valueOrNull ??
@@ -35,9 +35,16 @@ class WrPatternDetailScreen extends ConsumerWidget {
         ref.watch(wrPatternNarrativesProvider).valueOrNull ?? const [];
 
     final label = situationLabel(situations, situationCode);
-    final count = occurrenceOf(patterns, situationCode);
-    final related =
-        episodes.where((e) => e.situationCode == situationCode).toList();
+
+    // Con số VÀ danh sách bên dưới lấy từ cùng một tập (v2.0 §4.3), nên đầu màn
+    // không thể nói "5 lần" trong khi bên dưới chỉ liệt kê 4 mục.
+    //
+    // Trước 2026-08-01 dòng này đọc `wr_pattern_counts`. Bảng đó cộng ở bước
+    // KHÉP luồng chứ không phải bước CHỌN, nên mỗi lần mở lại một Episode đã
+    // khép rồi xác nhận Ý nghĩa lần nữa là cộng thêm một — cùng một lần nhìn
+    // lại bị đếm hai. Trên tài khoản thật, A1-01 ra 5 ở bảng đó và 4 ở Episode.
+    final related = episodesForSituation(episodes, situationCode);
+    final count = related.length;
     final hasEnoughData = count >= kInsightThreshold;
     final canRead =
         entitlement.canUseFeature(WrPremiumFeature.patternAdvanced);
@@ -72,9 +79,11 @@ class WrPatternDetailScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             Text(
-              count <= 1
-                  ? 'Bạn mới ghi lại điều này một lần.'
-                  : 'Bạn đã ghi lại điều này $count lần.',
+              switch (count) {
+                0 => 'Bạn chưa ghi lại điều này lần nào.',
+                1 => 'Bạn mới ghi lại điều này một lần.',
+                _ => 'Bạn đã ghi lại điều này $count lần.',
+              },
               style: const TextStyle(
                 fontSize: 15,
                 color: WrColors.muted,

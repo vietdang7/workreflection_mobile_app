@@ -83,6 +83,19 @@ class RepeatedSituation {
 List<String> recentSituationIds(
   List<ReflectionEpisode> episodes, {
   int window = kRecentSituationsWindow,
+}) =>
+    [for (final e in recentEpisodes(episodes, window: window)) e.situationCode!];
+
+/// Chính những Episode đứng sau [recentSituationIds] — cùng phép lọc, cùng thứ
+/// tự, cùng cửa sổ.
+///
+/// Cần cho màn chi tiết một điều lặp lại: nó vừa hiện CON SỐ vừa liệt kê CHÍNH
+/// những lần đó. Nếu số đếm một tập còn danh sách lấy một tập khác thì màn hình
+/// tự mâu thuẫn với chính nó — đúng lỗi khách báo 2026-08-01 (đầu màn ghi "5
+/// lần" trong khi bên dưới chỉ có 4 mục).
+List<ReflectionEpisode> recentEpisodes(
+  List<ReflectionEpisode> episodes, {
+  int window = kRecentSituationsWindow,
 }) {
   final coded = episodes
       .where((e) => e.situationCode?.isNotEmpty ?? false)
@@ -96,7 +109,7 @@ List<String> recentSituationIds(
       return bv.compareTo(av);
     });
 
-  return [for (final e in coded.take(window)) e.situationCode!];
+  return coded.take(window).toList();
 }
 
 /// Xếp hạng tình huống theo số lần xuất hiện trong [recent].
@@ -130,6 +143,32 @@ List<RepeatedSituation> rankSituations(
       return byCount != 0 ? byCount : a.situationCode.compareTo(b.situationCode);
     });
 }
+
+/// Số lần một tình huống xuất hiện trong recentSituationIds.
+///
+/// Dùng cho những chỗ chỉ cần con số của MỘT mã (màn chi tiết một điều lặp
+/// lại, màn Xong cuối luồng Reflect) thay vì cả bảng xếp hạng. Cùng nguồn với
+/// [rankSituations] nên không thể lệch với dòng "N lần" ở tab Hiểu mình.
+///
+/// Không có [minCount]: ngưỡng lặp chỉ là luật HIỂN THỊ của hai màn danh sách
+/// (xem [kRepeatedSituationsMinCount]), còn con số thật thì đếm từ lần đầu.
+List<ReflectionEpisode> episodesForSituation(
+  List<ReflectionEpisode> episodes,
+  String code, {
+  int window = kRecentSituationsWindow,
+}) =>
+    [
+      for (final e in recentEpisodes(episodes, window: window))
+        if (e.situationCode == code) e,
+    ];
+
+/// Số lần một tình huống xuất hiện trong recentSituationIds.
+int countSituation(
+  List<ReflectionEpisode> episodes,
+  String code, {
+  int window = kRecentSituationsWindow,
+}) =>
+    episodesForSituation(episodes, code, window: window).length;
 
 /// Tiện ích gộp: xếp hạng thẳng từ danh sách Episode.
 List<RepeatedSituation> repeatedSituations(
