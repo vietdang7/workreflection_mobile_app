@@ -10,7 +10,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/data/wr_repository.dart';
-import '../../../core/logic/wr_premium_override.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
 import '../../../core/widgets/eyebrow.dart';
@@ -127,16 +126,17 @@ class _AvatarSection extends ConsumerWidget {
 
     final name = ccData['full_name'] as String? ?? profile?.displayName ?? 'bạn';
     final email = ccData['email'] as String? ?? '';
-    final expiresAtRaw = ccData['subscription_expires_at'] as String?;
-    // Nhãn gói phải nói cùng một điều với các cổng Premium trong app. Nếu để
-    // nó đọc thẳng `cc_profiles` thì bật công tắc xong màn này vẫn ghi "MEMBER"
-    // trong khi mọi khoá đã mở — người thử nghiệm không biết tin cái nào.
-    final isPremium = resolvePremium(
-      actual: expiresAtRaw != null &&
-          DateTime.tryParse(expiresAtRaw)?.isAfter(DateTime.now()) == true,
-      override: ref.watch(premiumOverrideProvider),
-      allowed: ref.watch(canTogglePremiumProvider),
-    );
+    // Nhãn gói đọc thẳng từ `wrEntitlementProvider` — đúng cái quyết định mọi
+    // cổng Premium trong app, nên nhãn và khoá không bao giờ nói hai điều khác
+    // nhau (kể cả khi bật công tắc thử nghiệm, vốn đã được áp bên trong
+    // provider đó).
+    //
+    // Trước đây màn này tự suy ra gói từ `cc_profiles.subscription_expires_at`.
+    // Bỏ đi từ 2026-08-01, khi khách chốt Premium web và app là một: nguồn thật
+    // là `cc_profiles.role`, và cột hạn dùng kia không phải thứ web dùng để
+    // quyết định ai là Premium.
+    final isPremium =
+        ref.watch(wrEntitlementProvider).valueOrNull?.isPremium ?? false;
 
     final avatarUrl = ccData['avatar_url'] as String?;
 
@@ -237,14 +237,10 @@ class _AvatarSection extends ConsumerWidget {
 class _PremiumCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final ccData = ref.watch(ccProfileProvider).valueOrNull ?? {};
-    final expiresAtRaw = ccData['subscription_expires_at'] as String?;
-    final isPremium = resolvePremium(
-      actual: expiresAtRaw != null &&
-          DateTime.tryParse(expiresAtRaw)?.isAfter(DateTime.now()) == true,
-      override: ref.watch(premiumOverrideProvider),
-      allowed: ref.watch(canTogglePremiumProvider),
-    );
+    // Cùng nguồn với nhãn gói và mọi cổng Premium khác — mời nâng cấp một
+    // người đã là Premium bên web là lỗi dễ thấy nhất của việc để hai nguồn.
+    final isPremium =
+        ref.watch(wrEntitlementProvider).valueOrNull?.isPremium ?? false;
     if (isPremium) return const SizedBox.shrink();
 
     return Padding(

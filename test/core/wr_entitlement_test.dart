@@ -181,4 +181,33 @@ void main() {
       expect(e.isPremium, isTrue);
     });
   });
+
+  // Premium web ↔ Premium app là MỘT (khách chốt 2026-08-01: "nếu trên web
+  // role Premium thì trên app cũng Premium luôn"). Nguồn là `cc_profiles.role`.
+  group('isWebPremiumRole', () {
+    test('role premium và admin đều mở khoá', () {
+      expect(isWebPremiumRole('premium'), isTrue);
+      expect(isWebPremiumRole('admin'), isTrue);
+    });
+
+    test('không phân biệt hoa thường và khoảng trắng thừa', () {
+      // Role nhập tay từ trang quản trị của web.
+      expect(isWebPremiumRole('Premium'), isTrue);
+      expect(isWebPremiumRole('  PREMIUM  '), isTrue);
+    });
+
+    test('các role còn lại không phải Premium', () {
+      expect(isWebPremiumRole('user'), isFalse);
+      expect(isWebPremiumRole('free'), isFalse);
+      expect(isWebPremiumRole('moderator'), isFalse);
+      expect(isWebPremiumRole('coach'), isFalse);
+      expect(isWebPremiumRole('coordinator'), isFalse);
+    });
+
+    test('null và chuỗi rỗng không phải Premium', () {
+      expect(isWebPremiumRole(null), isFalse);
+      expect(isWebPremiumRole(''), isFalse);
+      expect(isWebPremiumRole('   '), isFalse);
+    });
+  });
 }

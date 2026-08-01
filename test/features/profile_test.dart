@@ -114,28 +114,42 @@ void main() {
       expect(find.textContaining('Yumi Trần'), findsWidgets);
     });
 
-    testWidgets('shows PREMIUM MEMBER badge when subscription active', (tester) async {
+    // Khách chốt 2026-08-01: Premium web và Premium app là MỘT. Nhãn gói ở màn
+    // này đọc `cc_profiles.role` — đúng cột mà trang quản trị của web cấp
+    // Premium bằng nó — chứ không còn tự suy ra từ `subscription_expires_at`.
+    testWidgets('hiện nhãn PREMIUM khi role trên web là premium', (tester) async {
       final repo = FakeWrRepository();
       repo.seedProfile(_profile());
-      // subscription_expires_at in future
       repo.seedCcProfile({
         'full_name': 'Yumi Trần',
         'email': 'yumi@workreflection.app',
-        'subscription_expires_at':
-            DateTime.now().add(const Duration(days: 30)).toIso8601String(),
+        'role': 'premium',
       });
       await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
 
       expect(find.textContaining('PREMIUM'), findsOneWidget);
     });
 
-    testWidgets('shows member (not premium) when subscription null', (tester) async {
+    testWidgets('role admin cũng là Premium', (tester) async {
       final repo = FakeWrRepository();
       repo.seedProfile(_profile());
       repo.seedCcProfile({
         'full_name': 'Yumi Trần',
         'email': 'yumi@workreflection.app',
-        'subscription_expires_at': null,
+        'role': 'admin',
+      });
+      await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
+
+      expect(find.textContaining('PREMIUM'), findsOneWidget);
+    });
+
+    testWidgets('shows member (not premium) when role is empty', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile());
+      repo.seedCcProfile({
+        'full_name': 'Yumi Trần',
+        'email': 'yumi@workreflection.app',
+        'role': null,
       });
       await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
 
@@ -143,14 +157,19 @@ void main() {
       expect(find.textContaining('Thành viên'), findsOneWidget);
     });
 
-    testWidgets('shows member (not premium) when subscription expired', (tester) async {
+    // Chốt chặn hồi quy: `subscription_expires_at` KHÔNG còn quyết định gói
+    // nữa. Hạn còn dài mà role là 'user' thì vẫn là thành viên thường — nếu ai
+    // đó nối lại cột cũ, test này đổ.
+    testWidgets('subscription_expires_at còn hạn nhưng role thường vẫn không Premium',
+        (tester) async {
       final repo = FakeWrRepository();
       repo.seedProfile(_profile());
       repo.seedCcProfile({
         'full_name': 'Yumi Trần',
         'email': 'yumi@workreflection.app',
+        'role': 'user',
         'subscription_expires_at':
-            DateTime.now().subtract(const Duration(days: 1)).toIso8601String(),
+            DateTime.now().add(const Duration(days: 30)).toIso8601String(),
       });
       await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
 
@@ -488,14 +507,13 @@ void main() {
       expect(find.text('Mở khoá bản đầy đủ'), findsOneWidget);
     });
 
-    testWidgets('Premium không bị mời nâng cấp thêm lần nữa', (tester) async {
+    testWidgets('Premium bên web không bị mời nâng cấp thêm lần nữa', (tester) async {
       final repo = FakeWrRepository();
       repo.seedProfile(_profile());
       repo.seedCcProfile({
         'full_name': 'Yumi Trần',
         'email': 'yumi@workreflection.app',
-        'subscription_expires_at':
-            DateTime.now().add(const Duration(days: 30)).toIso8601String(),
+        'role': 'premium',
       });
       await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
 

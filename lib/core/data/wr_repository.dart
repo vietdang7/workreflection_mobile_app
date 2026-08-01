@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../logic/wr_career_profile.dart';
+import '../logic/wr_pricing.dart';
 import '../models/checkin.dart';
 import '../models/development_theme.dart';
 import '../models/insight.dart';
@@ -74,6 +75,11 @@ abstract class WrRepository {
   Future<Map<String, dynamic>> getCcProfile();
   Future<void> updateCcProfile(Map<String, dynamic> fields);
   Future<void> updateDisplayName(String displayName);
+
+  /// Giá gói Premium đang bán, đọc từ `cc_products` — cùng bảng mà trang quản
+  /// trị Gói dịch vụ của web ghi vào (khách chốt 2026-08-01: giá app canh theo
+  /// web). Trả về [WrPremiumPricing.fallback] khi không có gói nào đang bật.
+  Future<WrPremiumPricing> getPremiumPricing();
 
   // --- Avatar ---
   /// Upload [bytes] to `avatars/{userId}/avatar.{ext}` with upsert, then
@@ -427,7 +433,9 @@ class SupabaseWrRepository implements WrRepository {
     final rows = await _client
         .from('cc_profiles')
         .select(
-          'full_name, email, subscription_expires_at, '
+          // `role` quyết định Premium: khách chốt 2026-08-01 rằng Premium web
+          // và app là một, và trang quản trị của web cấp Premium bằng cột này.
+          'full_name, email, role, subscription_expires_at, '
           'phone, company_name, position, company_size, '
           'total_work_experience, company_tenure, department, avatar_url',
         )
@@ -440,6 +448,23 @@ class SupabaseWrRepository implements WrRepository {
   @override
   Future<void> updateCcProfile(Map<String, dynamic> fields) async {
     await _client.from('cc_profiles').update(fields).eq('id', _uid);
+  }
+
+  @override
+  Future<WrPremiumPricing> getPremiumPricing() async {
+    // Cùng truy vấn với web (`useProductPrice`): gói premium đang bật, lấy cái
+    // display_order nhỏ nhất. Không lọc theo user — bảng giá là chung.
+    final rows = await _client
+        .from('cc_products')
+        .select(
+          'name, description, product_type, current_price, original_price, currency',
+        )
+        .eq('product_type', 'premium')
+        .eq('is_active', true)
+        .order('display_order', ascending: true)
+        .limit(1);
+    if (rows.isEmpty) return WrPremiumPricing.fallback;
+    return WrPremiumPricing.fromJson(Map<String, dynamic>.from(rows.first));
   }
 
   @override

@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:workreflection_mobile/core/logic/wr_career_profile.dart';
+import 'package:workreflection_mobile/core/logic/wr_pricing.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
 import 'package:workreflection_mobile/core/models/checkin.dart';
 import 'package:workreflection_mobile/core/models/development_theme.dart';
@@ -312,6 +313,23 @@ class FakeWrRepository implements WrRepository {
       return _ccProfileCompleter!.future;
     }
     return Map<String, dynamic>.from(_ccProfile);
+  }
+
+  /// Giá gói Premium mà [getPremiumPricing] trả về. Mặc định là giá thật đang
+  /// bán trên web (gốc 499k, còn 249k) để test đọc như production.
+  WrPremiumPricing premiumPricing = const WrPremiumPricing(
+    currentPrice: 249000,
+    originalPrice: 499000,
+  );
+
+  /// Khi khác null, [getPremiumPricing] ném lỗi này thay vì trả giá — để test
+  /// đường mất mạng.
+  Object? premiumPricingError;
+
+  @override
+  Future<WrPremiumPricing> getPremiumPricing() async {
+    if (premiumPricingError != null) throw premiumPricingError!;
+    return premiumPricing;
   }
 
   @override

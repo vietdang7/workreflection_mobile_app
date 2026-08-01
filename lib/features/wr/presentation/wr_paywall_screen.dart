@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/logic/wr_pricing.dart';
 import '../../../core/theme/wr_colors.dart';
+import '../wr_providers.dart';
 
 /// Trigger cho các headline khác nhau của Paywall.
 enum PaywallTrigger {
@@ -23,7 +26,7 @@ enum PaywallTrigger {
   selfCheckDeep,
 }
 
-class WrPaywallScreen extends StatelessWidget {
+class WrPaywallScreen extends ConsumerWidget {
   const WrPaywallScreen({super.key, this.trigger = PaywallTrigger.defaultTrigger});
 
   final PaywallTrigger trigger;
@@ -71,8 +74,12 @@ class WrPaywallScreen extends StatelessWidget {
       };
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final h = _headline;
+    // Giá lấy từ `cc_products` — sửa ở trang quản trị của web là app đổi theo.
+    // Trong lúc chờ tải thì dùng giá mặc định chứ không để trống chỗ ghi giá.
+    final pricing =
+        ref.watch(wrPremiumPricingProvider).valueOrNull ?? WrPremiumPricing.fallback;
 
     const premiumHighlights = [
       _Highlight(
@@ -148,9 +155,25 @@ class WrPaywallScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const Text(
-                            '499.000đ / năm',
-                            style: TextStyle(fontSize: 10, color: Color(0x66FFFFFF)),
+                          if (pricing.hasDiscount) ...[
+                            Text(
+                              pricing.originalLabel!,
+                              style: const TextStyle(
+                                fontSize: 10,
+                                color: Color(0x66FFFFFF),
+                                decoration: TextDecoration.lineThrough,
+                                decorationColor: Color(0x66FFFFFF),
+                              ),
+                            ),
+                            const SizedBox(width: 5),
+                          ],
+                          Text(
+                            '${pricing.currentLabel} / năm',
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: Color(0xB3FFFFFF),
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ],
                       ),
@@ -253,9 +276,16 @@ class WrPaywallScreen extends StatelessWidget {
                     ),
                   ),
 
+                  // Giá — đặt ngay trên nút mua để con số là thứ cuối cùng đọc
+                  // được trước khi bấm.
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
+                    child: _PriceBlock(pricing: pricing),
+                  ),
+
                   // CTA
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(22, 14, 22, 8),
+                    padding: const EdgeInsets.fromLTRB(22, 10, 22, 8),
                     child: SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -318,6 +348,87 @@ class WrPaywallScreen extends StatelessWidget {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Giá gốc gạch ngang · giá hiện tại · mức giảm — cùng ba con số mà trang quản
+/// trị Gói dịch vụ của web hiển thị.
+class _PriceBlock extends StatelessWidget {
+  const _PriceBlock({required this.pricing});
+
+  final WrPremiumPricing pricing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: WrColors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: const Color(0x0F000000)),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      pricing.currentLabel,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: WrColors.navy,
+                        height: 1.1,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    if (pricing.hasDiscount)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 3),
+                        child: Text(
+                          pricing.originalLabel!,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            color: Color(0xFF9A9A9A),
+                            decoration: TextDecoration.lineThrough,
+                            decorationColor: Color(0xFF9A9A9A),
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                const Text(
+                  'cho một năm Premium',
+                  style: TextStyle(fontSize: 11, color: Color(0xFF737373)),
+                ),
+              ],
+            ),
+          ),
+          if (pricing.hasDiscount)
+            Container(
+              decoration: BoxDecoration(
+                color: WrColors.coral,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+              child: Text(
+                '−${pricing.discountPercent}%',
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: WrColors.navy,
+                ),
+              ),
+            ),
         ],
       ),
     );

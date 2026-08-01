@@ -14,9 +14,11 @@ import '../../core/models/wr_episode.dart';
 import '../../core/models/wr_intelligence.dart';
 import '../../core/logic/wr_growth_opportunity.dart';
 import '../../core/logic/wr_premium_override.dart';
+import '../../core/logic/wr_pricing.dart';
 import '../../core/logic/wr_repeated_situations.dart';
 import '../../core/logic/wr_situation_picker.dart';
 import '../../core/models/wr_mood_content.dart';
+import '../profile/profile_providers.dart';
 import 'episode_flow_controller.dart';
 
 /// Provides the current authenticated user's id.
@@ -93,6 +95,15 @@ class PremiumOverrideNotifier extends StateNotifier<bool?> {
 /// Công tắc thử nghiệm được áp ở ĐÂY, tức trước mọi cổng Premium của app —
 /// `canUseFeature`, hạn mức chủ đề thực hành, hạn mức tài liệu bối cảnh đều
 /// đọc qua provider này, nên bật một chỗ là cả app đổi theo.
+///
+/// HAI NGUỒN, HOẶC BÊN NÀO CŨNG ĐƯỢC (khách chốt 2026-08-01: "nếu trên web
+/// role Premium thì trên app cũng Premium luôn"):
+///   • `cc_profiles.role` ∈ {premium, admin} — gói mua trên web;
+///   • `wr_entitlements` — gói mua trong app, khi nào mở thanh toán thì tới.
+/// Không đồng bộ dữ liệu giữa hai bảng, chỉ HỢP hai câu trả lời lúc đọc. Đồng
+/// bộ bằng migration là cách đã làm hỏng một lần rồi (xem migration
+/// `20260731160000` và bản lùi `20260731170000`): nó chép trạng thái tại một
+/// thời điểm, rồi trạng thái đó mốc đi. Hợp lúc đọc thì không bao giờ mốc.
 final wrEntitlementProvider = FutureProvider<WrEntitlement>((ref) async {
   final override = ref.watch(premiumOverrideProvider);
   if (override != null && ref.watch(canTogglePremiumProvider)) {
@@ -101,6 +112,23 @@ final wrEntitlementProvider = FutureProvider<WrEntitlement>((ref) async {
     return WrEntitlement(plan: override ? WrPlan.premium : WrPlan.free);
   }
 
+  // Nguồn 1 — vai trò trên web.
+  //
+  // `await ... .future` chứ không phải `.valueOrNull`: chờ hồ sơ tải xong rồi
+  // hẵng trả lời. Đọc giá trị hiện có sẽ trả "miễn phí" trong khoảnh khắc đầu
+  // và người Premium thấy paywall nháy lên rồi mới biến mất.
+  var webPremium = false;
+  try {
+    final cc = await ref.watch(ccProfileProvider.future);
+    webPremium = isWebPremiumRole(cc['role'] as String?);
+  } catch (_) {
+    /* không đọc được hồ sơ web thì còn nguồn 2 bên dưới */
+  }
+  // validUntil null: vai trò web không mang hạn dùng, hết hạn là trang quản trị
+  // hạ role xuống. Bịa một ngày ở đây sẽ tự khoá app trong khi web vẫn mở.
+  if (webPremium) return WrEntitlement(plan: WrPlan.premium);
+
+  // Nguồn 2 — gói mua trong app.
   final repo = ref.watch(wrIntelligenceRepositoryProvider);
   try {
     final userId = ref.watch(currentUserIdProvider);
@@ -110,6 +138,18 @@ final wrEntitlementProvider = FutureProvider<WrEntitlement>((ref) async {
     return WrEntitlement.fromRecord(record);
   } catch (_) {
     return WrEntitlement(plan: WrPlan.free);
+  }
+});
+
+/// Giá gói Premium để hiển thị ở Paywall, đọc từ `cc_products` như web.
+///
+/// Không bao giờ ném: hỏng mạng thì rơi về [WrPremiumPricing.fallback] chứ
+/// không để Paywall trống chỗ ghi giá.
+final wrPremiumPricingProvider = FutureProvider<WrPremiumPricing>((ref) async {
+  try {
+    return await ref.watch(wrRepositoryProvider).getPremiumPricing();
+  } catch (_) {
+    return WrPremiumPricing.fallback;
   }
 });
 

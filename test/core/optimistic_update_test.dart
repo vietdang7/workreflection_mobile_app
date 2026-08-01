@@ -16,6 +16,8 @@ import 'package:workreflection_mobile/features/develop/develop_providers.dart';
 import 'package:workreflection_mobile/features/home/home_providers.dart';
 import 'package:workreflection_mobile/features/survey/survey_providers.dart';
 
+import 'package:workreflection_mobile/core/logic/wr_pricing.dart';
+
 import '../support/fake_repository.dart';
 import '../support/fake_survey_repository.dart';
 
@@ -51,6 +53,7 @@ class _FailingCheckinRepo implements WrRepository {
   @override Future<ScaReport?> getLatestScaReport() => _d.getLatestScaReport();
   @override Future<Workshop?> getUpcomingWorkshop() => _d.getUpcomingWorkshop();
   @override Future<Map<String, dynamic>> getCcProfile() => _d.getCcProfile();
+  @override Future<WrPremiumPricing> getPremiumPricing() => _d.getPremiumPricing();
   @override Future<void> updateCcProfile(Map<String, dynamic> fields) => _d.updateCcProfile(fields);
   @override Future<void> updateDisplayName(String displayName) => _d.updateDisplayName(displayName);
   @override Future<Map<String, dynamic>> exportUserData() => _d.exportUserData();
@@ -91,6 +94,7 @@ class _FailingPracticeRepo implements WrRepository {
   @override Future<ScaReport?> getLatestScaReport() => _d.getLatestScaReport();
   @override Future<Workshop?> getUpcomingWorkshop() => _d.getUpcomingWorkshop();
   @override Future<Map<String, dynamic>> getCcProfile() => _d.getCcProfile();
+  @override Future<WrPremiumPricing> getPremiumPricing() => _d.getPremiumPricing();
   @override Future<void> updateCcProfile(Map<String, dynamic> fields) => _d.updateCcProfile(fields);
   @override Future<void> updateDisplayName(String displayName) => _d.updateDisplayName(displayName);
   @override Future<Map<String, dynamic>> exportUserData() => _d.exportUserData();

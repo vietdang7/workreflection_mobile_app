@@ -22,6 +22,10 @@ import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
 
 import '../support/fake_wr_content_repository.dart';
+import 'package:workreflection_mobile/core/data/wr_repository.dart';
+import 'package:workreflection_mobile/core/logic/wr_pricing.dart';
+
+import '../support/fake_repository.dart';
 import '../support/fake_wr_intelligence_repository.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -32,11 +36,16 @@ Widget _wrap(
   Widget child, {
   FakeWrIntelligenceRepository? intel,
   FakeWrContentRepository? content,
+  FakeWrRepository? repo,
   String? userId,
   WrEntitlementRecord? entitlement,
 }) {
   final intelRepo = intel ?? FakeWrIntelligenceRepository();
   final contentRepo = content ?? FakeWrContentRepository();
+  // Paywall đọc giá qua wrPremiumPricingProvider → wrRepositoryProvider. Không
+  // override thì nó chạm Supabase thật và im lặng rơi về giá mặc định, tức test
+  // không còn kiểm được giá lấy từ `cc_products`.
+  final wrRepo = repo ?? FakeWrRepository();
   if (entitlement != null) intelRepo.seedEntitlement(entitlement);
 
   final router = GoRouter(
@@ -69,6 +78,7 @@ Widget _wrap(
     overrides: [
       wrIntelligenceRepositoryProvider.overrideWithValue(intelRepo),
       wrContentRepositoryProvider.overrideWithValue(contentRepo),
+      wrRepositoryProvider.overrideWithValue(wrRepo),
       currentUserIdProvider.overrideWithValue(userId ?? 'u1'),
     ],
     child: MaterialApp.router(
@@ -1056,12 +1066,54 @@ void main() {
       expect(find.text('Toàn bộ ký ức nghề nghiệp của bạn'), findsOneWidget);
     });
 
+    // Giá lấy từ `cc_products` — cùng nguồn với trang quản trị Gói dịch vụ của
+    // web (khách chốt 2026-08-01: gốc 499.000đ, còn 249.000đ).
     testWidgets('shows PREMIUM badge and price', (tester) async {
       await tester.pumpWidget(_wrap(const WrPaywallScreen()));
       await tester.pumpAndSettle();
 
       expect(find.text('PREMIUM'), findsOneWidget);
+      expect(find.text('249.000đ / năm'), findsOneWidget);
+    });
+
+    testWidgets('giá gốc bị gạch ngang bên cạnh giá đang bán', (tester) async {
+      await tester.pumpWidget(_wrap(const WrPaywallScreen()));
+      await tester.pumpAndSettle();
+
+      // Một ở header, một ở khối giá trên nút mua.
+      expect(find.text('499.000đ'), findsNWidgets(2));
+      expect(find.text('249.000đ'), findsOneWidget);
+      expect(find.text('−50%'), findsOneWidget);
+
+      final struck = tester.widgetList<Text>(find.text('499.000đ'));
+      for (final t in struck) {
+        expect(t.style?.decoration, TextDecoration.lineThrough);
+      }
+    });
+
+    testWidgets('không có khuyến mãi thì không gạch ngang, không hiện mức giảm',
+        (tester) async {
+      final repo = FakeWrRepository()
+        ..premiumPricing = const WrPremiumPricing(currentPrice: 499000);
+      await tester.pumpWidget(_wrap(const WrPaywallScreen(), repo: repo));
+      await tester.pumpAndSettle();
+
       expect(find.text('499.000đ / năm'), findsOneWidget);
+      expect(find.textContaining('%'), findsNothing);
+    });
+
+    testWidgets('giá đổi trên web thì app hiện theo, không cần build lại',
+        (tester) async {
+      final repo = FakeWrRepository()
+        ..premiumPricing = const WrPremiumPricing(
+          currentPrice: 199000,
+          originalPrice: 599000,
+        );
+      await tester.pumpWidget(_wrap(const WrPaywallScreen(), repo: repo));
+      await tester.pumpAndSettle();
+
+      expect(find.text('199.000đ / năm'), findsOneWidget);
+      expect(find.text('−67%'), findsOneWidget);
     });
 
     testWidgets('shows 4 premium highlights', (tester) async {

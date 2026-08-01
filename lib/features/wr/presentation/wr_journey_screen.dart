@@ -24,6 +24,7 @@ import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/section_divider.dart';
 import '../../../core/widgets/tab_back_link.dart';
 import '../../../core/widgets/wr_card.dart';
+import '../../../core/widgets/wr_detail_scaffold.dart';
 import '../../../core/widgets/wr_link_row.dart';
 import '../../../core/widgets/wr_premium_lock.dart';
 import '../../../core/widgets/wr_profile_avatar.dart';
@@ -206,26 +207,40 @@ Color eventColor(CareerMemoryEvent e) {
 
 // ---------------------------------------------------------------------------
 
+/// Số mảnh ký ức hiện thẳng ở tab Hành trình.
+///
+/// Người dùng lâu năm có hàng chục mảnh; đổ hết ra thì tab này thành một cuộn
+/// dài vô tận và mọi thứ nằm dưới Career Memory (Cơ hội phát triển, ô hỏi tự
+/// do) coi như không ai thấy. Phần còn lại nằm ở màn riêng.
+const int kJourneyPreviewCount = 5;
+
+/// Dựng dòng thời gian từ các provider — dùng chung giữa tab Hành trình và màn
+/// Career Memory đầy đủ, để hai nơi không bao giờ liệt kê khác nhau.
+List<JourneyEntry> watchJourneyEntries(WidgetRef ref) {
+  final episodes = ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
+  final events = ref.watch(wrMemoryEventsProvider).valueOrNull ?? const [];
+  final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
+  return buildJourneyEntries(
+    episodes: episodes,
+    events: events,
+    situationLabels: {for (final s in situations) s.code: s.text},
+  );
+}
+
 class WrJourneyScreen extends ConsumerWidget {
   const WrJourneyScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final episodes = ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
-    final events = ref.watch(wrMemoryEventsProvider).valueOrNull ?? const [];
-    final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
     final patterns = ref.watch(wrPatternCountsProvider).valueOrNull ?? const [];
     final entitlement = ref.watch(wrEntitlementProvider).valueOrNull ??
         WrEntitlement(plan: WrPlan.free);
 
-    final sitMap = {for (final s in situations) s.code: s.text};
-    final all = buildJourneyEntries(
-      episodes: episodes,
-      events: events,
-      situationLabels: sitMap,
-    );
+    final all = watchJourneyEntries(ref);
     final locked = !entitlement.isPremium;
-    final shown = locked ? const <JourneyEntry>[] : all;
+    final shown =
+        locked ? const <JourneyEntry>[] : all.take(kJourneyPreviewCount).toList();
+    final hasMore = !locked && all.length > shown.length;
 
     return Scaffold(
       backgroundColor: WrColors.white,
@@ -316,6 +331,13 @@ class WrJourneyScreen extends ConsumerWidget {
                   ),
                 const SizedBox(height: 20),
               ],
+              if (hasMore)
+                WrLinkRow(
+                  key: const Key('wr_journey_memory_see_all'),
+                  label: 'Xem tất cả ${all.length} mảnh ký ức',
+                  hint: 'Còn ${all.length - shown.length} mảnh nữa',
+                  onTap: () => context.push('/wr/career-memory'),
+                ),
             ],
 
             // Cơ hội phát triển — §XI. Nằm dưới Career Memory vì nó là điều
@@ -521,6 +543,74 @@ class _GrowthOpportunitySection extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Career Memory đầy đủ — màn riêng, mở từ tab Hành trình
+// ---------------------------------------------------------------------------
+
+/// Toàn bộ dòng thời gian, không cắt bớt.
+///
+/// Tab Hành trình chỉ hiện [kJourneyPreviewCount] mảnh gần nhất; ai muốn đọc
+/// hết thì sang đây. Cùng một hàm dựng dữ liệu ([watchJourneyEntries]) và cùng
+/// một dòng ([_EntryRow]) với tab, nên hai nơi không thể lệch nhau.
+///
+/// Vẫn là nội dung Premium: khoá ở đây y như ở tab, để mở thẳng bằng đường dẫn
+/// không thành lối đi vòng qua cổng.
+class WrCareerMemoryScreen extends ConsumerWidget {
+  const WrCareerMemoryScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final entitlement = ref.watch(wrEntitlementProvider).valueOrNull ??
+        WrEntitlement(plan: WrPlan.free);
+    final all = watchJourneyEntries(ref);
+    final locked = !entitlement.isPremium;
+
+    return WrDetailScaffold(
+      eyebrow: 'CAREER MEMORY',
+      title: locked || all.isEmpty
+          ? 'Career Memory'
+          : 'Tất cả ${all.length} mảnh ký ức',
+      children: [
+        if (locked)
+          const WrPremiumLock(
+            key: Key('wr_career_memory_lock'),
+            description:
+                'Bản đầy đủ mở lại từng mảnh ký ức nghề nghiệp bạn đã để '
+                'lại — đọc lại được bất cứ lúc nào, theo đúng dòng thời gian.',
+            ctaLabel: 'Mở toàn bộ Career Memory',
+            paywallTrigger: 'career_memory',
+          )
+        else if (all.isEmpty)
+          const Text(
+            'Chưa có mảnh ký ức nào. Mỗi lần nhìn lại sẽ để lại một dấu ở đây.',
+            key: Key('wr_career_memory_empty'),
+            style: TextStyle(
+              fontSize: 15,
+              color: WrColors.muted,
+              height: 1.65,
+            ),
+          )
+        else
+          for (final month in groupJourneyByMonth(all)) ...[
+            WrEyebrow(month.label),
+            const SizedBox(height: 16),
+            for (int i = 0; i < month.entries.length; i++)
+              _EntryRow(
+                entry: month.entries[i],
+                isLast: i == month.entries.length - 1,
+                onTap: month.entries[i].episodeId == null
+                    ? null
+                    : () => context.push(
+                          '/wr/episode/${month.entries[i].episodeId}',
+                        ),
+              ),
+            const SizedBox(height: 20),
+          ],
+      ],
     );
   }
 }

@@ -379,6 +379,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/wr/journey/narrative',
         builder: (context, state) => const WrJourneyNarrativeScreen(),
       ),
+      // Career Memory đầy đủ — tab Hành trình chỉ hiện vài mảnh gần nhất.
+      GoRoute(
+        path: '/wr/career-memory',
+        builder: (context, state) => const WrCareerMemoryScreen(),
+      ),
       GoRoute(
         path: '/wr/growth/themes',
         builder: (context, state) => const WrGrowthThemesScreen(),
