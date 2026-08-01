@@ -128,20 +128,86 @@ List<JourneyEntry> buildJourneyEntries({
   return entries;
 }
 
-/// Một cụm mục cùng tháng trên dòng thời gian.
-class JourneyMonth {
-  const JourneyMonth({required this.label, required this.entries});
+// ---------------------------------------------------------------------------
+// Gom theo tuần trong tháng và ngày trong tuần
+// ---------------------------------------------------------------------------
 
+/// Một ngày trên dòng thời gian.
+class JourneyDay {
+  const JourneyDay({
+    required this.date,
+    required this.label,
+    required this.entries,
+  });
+
+  final DateTime date;
+
+  /// "Hôm nay", "Hôm qua", hoặc "Thứ Sáu, 01/08".
   final String label;
+
   final List<JourneyEntry> entries;
 }
 
-/// Gom dòng thời gian theo tháng, giữ nguyên thứ tự mới-trước đã sắp.
+/// Một tuần trong tháng, chứa các ngày có mục.
+class JourneyWeek {
+  const JourneyWeek({required this.label, required this.days});
+
+  /// "TUẦN 2 · 05–11/08" — số thứ tự để định vị nhanh, khoảng ngày để khỏi
+  /// phải nhẩm xem "tuần 2" là những ngày nào.
+  final String label;
+
+  final List<JourneyDay> days;
+}
+
+/// Một tháng, đã chia tiếp thành tuần và ngày.
+class JourneyMonthDetailed {
+  const JourneyMonthDetailed({required this.label, required this.weeks});
+
+  final String label;
+  final List<JourneyWeek> weeks;
+}
+
+const List<String> _kWeekdayVi = [
+  'Thứ Hai',
+  'Thứ Ba',
+  'Thứ Tư',
+  'Thứ Năm',
+  'Thứ Sáu',
+  'Thứ Bảy',
+  'Chủ Nhật',
+];
+
+String _dd(int n) => n.toString().padLeft(2, '0');
+
+/// Nửa đêm của [d] — khoá gom nhóm theo ngày, bỏ phần giờ.
+DateTime _dayKey(DateTime d) => DateTime(d.year, d.month, d.day);
+
+/// Thứ Hai của tuần chứa [d]. Tuần bắt đầu từ Thứ Hai theo lịch Việt Nam.
+DateTime _mondayOf(DateTime d) =>
+    _dayKey(d).subtract(Duration(days: d.weekday - DateTime.monday));
+
+/// Gom dòng thời gian theo tháng → tuần → ngày, giữ nguyên thứ tự mới-trước.
 ///
-/// Mắt người đọc mốc thời gian theo cụm chứ không theo từng dòng — không có
-/// tiêu đề tháng thì một danh sách dài trông như một khối phẳng.
-List<JourneyMonth> groupJourneyByMonth(List<JourneyEntry> entries) {
-  final months = <JourneyMonth>[];
+/// Vì sao chia ba tầng thay vì đổ phẳng theo tháng: một tháng đủ dùng có thể
+/// có ba bốn chục mảnh, và khi mọi dòng chỉ mang "01/08" thì không đọc ra được
+/// nhịp — hôm nào dày, hôm nào cả tuần không ghi gì. Tách ngày ra thành tiêu đề
+/// cũng bỏ được ngày lặp lại trên từng dòng.
+///
+/// [now] truyền vào chứ không gọi `DateTime.now()` bên trong: nhãn "Hôm nay" /
+/// "Hôm qua" phải kiểm được bằng test mà không phụ thuộc lúc chạy.
+///
+/// Mục không có thời gian dồn vào một tháng "CHƯA RÕ THỜI GIAN" ở cuối, một
+/// tuần một ngày không nhãn — vẫn đọc được, và không bịa cho chúng một ngày.
+List<JourneyMonthDetailed> groupJourneyByWeekAndDay(
+  List<JourneyEntry> entries, {
+  required DateTime now,
+}) {
+  final today = _dayKey(now);
+  final yesterday = today.subtract(const Duration(days: 1));
+
+  // Gom theo tháng trước, giữ nguyên thứ tự đã sắp (mới trước).
+  final monthOrder = <String>[];
+  final byMonth = <String, List<JourneyEntry>>{};
   final undated = <JourneyEntry>[];
 
   for (final e in entries) {
@@ -150,17 +216,101 @@ List<JourneyMonth> groupJourneyByMonth(List<JourneyEntry> entries) {
       undated.add(e);
       continue;
     }
-    final label = 'THÁNG ${at.month}, ${at.year}';
-    if (months.isNotEmpty && months.last.label == label) {
-      months.last.entries.add(e);
-    } else {
-      months.add(JourneyMonth(label: label, entries: [e]));
+    final key = 'THÁNG ${at.month}, ${at.year}';
+    if (!byMonth.containsKey(key)) {
+      monthOrder.add(key);
+      byMonth[key] = [];
     }
+    byMonth[key]!.add(e);
+  }
+
+  final months = <JourneyMonthDetailed>[];
+
+  for (final monthLabel in monthOrder) {
+    final monthEntries = byMonth[monthLabel]!;
+
+    // Trong tháng: gom theo Thứ Hai của tuần, rồi theo ngày.
+    final weekOrder = <DateTime>[];
+    final byWeek = <DateTime, List<JourneyEntry>>{};
+    for (final e in monthEntries) {
+      final monday = _mondayOf(e.at!);
+      if (!byWeek.containsKey(monday)) {
+        weekOrder.add(monday);
+        byWeek[monday] = [];
+      }
+      byWeek[monday]!.add(e);
+    }
+
+    // Số thứ tự tuần đếm từ đầu tháng, nên phải xếp tăng dần rồi mới đánh số —
+    // danh sách đang là mới-trước.
+    final ascending = [...weekOrder]..sort();
+    final weekNumber = <DateTime, int>{
+      for (var i = 0; i < ascending.length; i++) ascending[i]: i + 1,
+    };
+
+    final anyDate = monthEntries.first.at!;
+    final firstOfMonth = DateTime(anyDate.year, anyDate.month, 1);
+    final lastOfMonth = DateTime(anyDate.year, anyDate.month + 1, 0);
+
+    final weeks = <JourneyWeek>[];
+    for (final monday in weekOrder) {
+      // Tuần đầu và tuần cuối tháng thường bị cắt — hiện khoảng ngày THẬT nằm
+      // trong tháng, chứ không phải Thứ Hai của tháng trước.
+      final sunday = monday.add(const Duration(days: 6));
+      final from = monday.isBefore(firstOfMonth) ? firstOfMonth : monday;
+      final to = sunday.isAfter(lastOfMonth) ? lastOfMonth : sunday;
+      final range = '${_dd(from.day)}–${_dd(to.day)}/${_dd(from.month)}';
+
+      final dayOrder = <DateTime>[];
+      final byDay = <DateTime, List<JourneyEntry>>{};
+      for (final e in byWeek[monday]!) {
+        final day = _dayKey(e.at!);
+        if (!byDay.containsKey(day)) {
+          dayOrder.add(day);
+          byDay[day] = [];
+        }
+        byDay[day]!.add(e);
+      }
+
+      weeks.add(JourneyWeek(
+        label: 'TUẦN ${weekNumber[monday]} · $range',
+        days: [
+          for (final day in dayOrder)
+            JourneyDay(
+              date: day,
+              label: switch (day) {
+                _ when day == today => 'Hôm nay',
+                _ when day == yesterday => 'Hôm qua',
+                _ => '${_kWeekdayVi[day.weekday - 1]}, '
+                    '${_dd(day.day)}/${_dd(day.month)}',
+              },
+              entries: byDay[day]!,
+            ),
+        ],
+      ));
+    }
+
+    months.add(JourneyMonthDetailed(label: monthLabel, weeks: weeks));
   }
 
   if (undated.isNotEmpty) {
-    months.add(JourneyMonth(label: 'CHƯA RÕ THỜI GIAN', entries: undated));
+    months.add(JourneyMonthDetailed(
+      label: 'CHƯA RÕ THỜI GIAN',
+      weeks: [
+        JourneyWeek(
+          label: '',
+          days: [
+            JourneyDay(
+              date: DateTime(0),
+              label: '',
+              entries: undated,
+            ),
+          ],
+        ),
+      ],
+    ));
   }
+
   return months;
 }
 
@@ -316,21 +466,10 @@ class WrJourneyScreen extends ConsumerWidget {
               const SizedBox(height: 32),
               const WrSectionDivider(),
               const SizedBox(height: 24),
-              for (final month in groupJourneyByMonth(shown)) ...[
-                WrEyebrow(month.label),
-                const SizedBox(height: 16),
-                for (int i = 0; i < month.entries.length; i++)
-                  _EntryRow(
-                    entry: month.entries[i],
-                    isLast: i == month.entries.length - 1,
-                    onTap: month.entries[i].episodeId == null
-                        ? null
-                        : () => context.push(
-                              '/wr/episode/${month.entries[i].episodeId}',
-                            ),
-                  ),
-                const SizedBox(height: 20),
-              ],
+              ...buildJourneyTimeline(
+                context,
+                groupJourneyByWeekAndDay(shown, now: DateTime.now()),
+              ),
               if (hasMore)
                 WrLinkRow(
                   key: const Key('wr_journey_memory_see_all'),
@@ -548,6 +687,118 @@ class _GrowthOpportunitySection extends ConsumerWidget {
 }
 
 // ---------------------------------------------------------------------------
+// Bộ lọc theo loại
+// ---------------------------------------------------------------------------
+
+/// Một loại mục có mặt trong danh sách, kèm số lượng.
+class JourneyFacet {
+  const JourneyFacet({required this.label, required this.count});
+
+  final String label;
+  final int count;
+}
+
+/// Các loại thật sự có trong [entries], nhiều trước.
+///
+/// Dựng từ chính dữ liệu chứ không liệt kê cứng 9 nhãn của [eventTypeLabel]:
+/// một cái chip "KỸ NĂNG (0)" chỉ để đó cho người dùng bấm vào rồi thấy trang
+/// trống là một lời hứa suông.
+///
+/// Loại bằng điểm nhau xếp theo bảng chữ cái, để thứ tự chip không nhảy giữa
+/// hai lần mở màn.
+List<JourneyFacet> journeyTypeFacets(List<JourneyEntry> entries) {
+  final tally = <String, int>{};
+  for (final e in entries) {
+    tally[e.label] = (tally[e.label] ?? 0) + 1;
+  }
+  final facets = tally.entries
+      .map((e) => JourneyFacet(label: e.key, count: e.value))
+      .toList()
+    ..sort((a, b) {
+      final byCount = b.count.compareTo(a.count);
+      return byCount != 0 ? byCount : a.label.compareTo(b.label);
+    });
+  return facets;
+}
+
+/// Lọc theo loại. [type] null nghĩa là không lọc.
+List<JourneyEntry> filterJourneyByType(
+  List<JourneyEntry> entries,
+  String? type,
+) {
+  if (type == null) return entries;
+  return entries.where((e) => e.label == type).toList();
+}
+
+/// Dựng dòng thời gian ba tầng: tháng → tuần → ngày.
+///
+/// Trả về một danh sách phẳng để nhét thẳng vào `children` của ListView hoặc
+/// WrDetailScaffold — hai màn dùng chung, nên không nơi nào tự vẽ lại tầng nào.
+///
+/// Ngày nằm ở tiêu đề chứ không lặp trên từng dòng, nên [_EntryRow] ở đây tắt
+/// phần ngày đi.
+List<Widget> buildJourneyTimeline(
+  BuildContext context,
+  List<JourneyMonthDetailed> months,
+) {
+  final out = <Widget>[];
+  for (final month in months) {
+    out
+      ..add(WrEyebrow(month.label))
+      ..add(const SizedBox(height: 14));
+
+    for (final week in month.weeks) {
+      if (week.label.isNotEmpty) {
+        out
+          ..add(Padding(
+            padding: const EdgeInsets.only(bottom: 2),
+            child: Text(
+              week.label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.06,
+                color: WrColors.navy.withValues(alpha: 0.45),
+              ),
+            ),
+          ))
+          ..add(const SizedBox(height: 6));
+      }
+
+      for (final day in week.days) {
+        if (day.label.isNotEmpty) {
+          out.add(Padding(
+            padding: const EdgeInsets.only(top: 6, bottom: 2),
+            child: Text(
+              day.label,
+              style: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+                color: WrColors.navy,
+              ),
+            ),
+          ));
+        }
+        for (var i = 0; i < day.entries.length; i++) {
+          final entry = day.entries[i];
+          out.add(_EntryRow(
+            entry: entry,
+            isLast: i == day.entries.length - 1,
+            showDate: false,
+            onTap: entry.episodeId == null
+                ? null
+                : () => context.push('/wr/episode/${entry.episodeId}'),
+          ));
+        }
+      }
+      out.add(const SizedBox(height: 14));
+    }
+    out.add(const SizedBox(height: 8));
+  }
+  return out;
+}
+
+// ---------------------------------------------------------------------------
 // Career Memory đầy đủ — màn riêng, mở từ tab Hành trình
 // ---------------------------------------------------------------------------
 
@@ -559,21 +810,38 @@ class _GrowthOpportunitySection extends ConsumerWidget {
 ///
 /// Vẫn là nội dung Premium: khoá ở đây y như ở tab, để mở thẳng bằng đường dẫn
 /// không thành lối đi vòng qua cổng.
-class WrCareerMemoryScreen extends ConsumerWidget {
+class WrCareerMemoryScreen extends ConsumerStatefulWidget {
   const WrCareerMemoryScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<WrCareerMemoryScreen> createState() =>
+      _WrCareerMemoryScreenState();
+}
+
+class _WrCareerMemoryScreenState extends ConsumerState<WrCareerMemoryScreen> {
+  /// Loại đang lọc. null = xem tất cả.
+  String? _type;
+
+  @override
+  Widget build(BuildContext context) {
     final entitlement = ref.watch(wrEntitlementProvider).valueOrNull ??
         WrEntitlement(plan: WrPlan.free);
     final all = watchJourneyEntries(ref);
     final locked = !entitlement.isPremium;
 
+    // Các chip dựng từ TOÀN BỘ danh sách, không phải từ danh sách đã lọc —
+    // nếu không, chọn một loại xong là mọi chip khác biến mất và không còn
+    // đường quay lại.
+    final facets = journeyTypeFacets(all);
+    final shown = filterJourneyByType(all, _type);
+
     return WrDetailScaffold(
       eyebrow: 'CAREER MEMORY',
       title: locked || all.isEmpty
           ? 'Career Memory'
-          : 'Tất cả ${all.length} mảnh ký ức',
+          : _type == null
+              ? 'Tất cả ${all.length} mảnh ký ức'
+              : '${shown.length} mảnh · ${_type!.toLowerCase()}',
       children: [
         if (locked)
           const WrPremiumLock(
@@ -594,23 +862,128 @@ class WrCareerMemoryScreen extends ConsumerWidget {
               height: 1.65,
             ),
           )
-        else
-          for (final month in groupJourneyByMonth(all)) ...[
-            WrEyebrow(month.label),
-            const SizedBox(height: 16),
-            for (int i = 0; i < month.entries.length; i++)
-              _EntryRow(
-                entry: month.entries[i],
-                isLast: i == month.entries.length - 1,
-                onTap: month.entries[i].episodeId == null
-                    ? null
-                    : () => context.push(
-                          '/wr/episode/${month.entries[i].episodeId}',
-                        ),
-              ),
+        else ...[
+          // Một loại duy nhất thì không có gì để lọc — hàng chip khi đó chỉ là
+          // hai nút cùng cho ra một kết quả.
+          if (facets.length > 1) ...[
+            _TypeFilterBar(
+              facets: facets,
+              total: all.length,
+              selected: _type,
+              onSelect: (t) => setState(() => _type = t),
+            ),
             const SizedBox(height: 20),
           ],
+          if (shown.isEmpty)
+            const Text(
+              'Không có mảnh nào thuộc loại này.',
+              key: Key('wr_career_memory_filter_empty'),
+              style: TextStyle(
+                fontSize: 15,
+                color: WrColors.muted,
+                height: 1.65,
+              ),
+            )
+          else
+            ...buildJourneyTimeline(
+              context,
+              groupJourneyByWeekAndDay(shown, now: DateTime.now()),
+            ),
+        ],
       ],
+    );
+  }
+}
+
+/// Hàng chip lọc theo loại, cuộn ngang.
+///
+/// Cuộn ngang chứ không xuống dòng: tối đa 9 loại, gói thành ba hàng chip sẽ
+/// đẩy dòng thời gian xuống quá sâu trên màn điện thoại.
+class _TypeFilterBar extends StatelessWidget {
+  const _TypeFilterBar({
+    required this.facets,
+    required this.total,
+    required this.selected,
+    required this.onSelect,
+  });
+
+  final List<JourneyFacet> facets;
+  final int total;
+  final String? selected;
+  final ValueChanged<String?> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 32,
+      child: ListView(
+        key: const Key('wr_career_memory_filter_bar'),
+        scrollDirection: Axis.horizontal,
+        padding: EdgeInsets.zero,
+        children: [
+          _Chip(
+            label: 'Tất cả',
+            count: total,
+            active: selected == null,
+            onTap: () => onSelect(null),
+          ),
+          for (final f in facets)
+            _Chip(
+              label: f.label,
+              count: f.count,
+              active: selected == f.label,
+              onTap: () => onSelect(selected == f.label ? null : f.label),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _Chip extends StatelessWidget {
+  const _Chip({
+    required this.label,
+    required this.count,
+    required this.active,
+    required this.onTap,
+  });
+
+  final String label;
+  final int count;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 8),
+      child: GestureDetector(
+        key: Key('wr_career_memory_filter_$label'),
+        behavior: HitTestBehavior.opaque,
+        onTap: onTap,
+        child: Container(
+          alignment: Alignment.center,
+          padding: const EdgeInsets.symmetric(horizontal: 13),
+          decoration: BoxDecoration(
+            color: active ? WrColors.navy : Colors.transparent,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: active
+                  ? WrColors.navy
+                  : WrColors.navy.withValues(alpha: 0.16),
+            ),
+          ),
+          child: Text(
+            '$label $count',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.04,
+              color: active ? WrColors.white : WrColors.navy,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -620,16 +993,21 @@ class _EntryRow extends StatelessWidget {
     required this.entry,
     required this.isLast,
     this.onTap,
+    this.showDate = true,
   });
 
   final JourneyEntry entry;
   final bool isLast;
   final VoidCallback? onTap;
 
+  /// Tắt khi ngày đã nằm ở tiêu đề nhóm ngày — in lại "01/08" ngay dưới dòng
+  /// "Thứ Sáu, 01/08" là nói cùng một điều hai lần.
+  final bool showDate;
+
   @override
   Widget build(BuildContext context) {
     final at = entry.at;
-    final dateStr = at == null
+    final dateStr = (at == null || !showDate)
         ? ''
         // Năm đã nằm ở tiêu đề tháng, không lặp lại trên từng dòng.
         : '${at.day.toString().padLeft(2, '0')}/'

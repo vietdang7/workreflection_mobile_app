@@ -389,39 +389,97 @@ void main() {
     });
   });
 
-  group('groupJourneyByMonth', () {
+  // Career Memory gom ba tầng: tháng → tuần trong tháng → ngày trong tuần
+  // (yêu cầu khách 2026-08-01). `now` truyền vào để nhãn "Hôm nay"/"Hôm qua"
+  // kiểm được mà không phụ thuộc lúc chạy test.
+  group('groupJourneyByWeekAndDay', () {
     JourneyEntry entry(String title, DateTime? at) =>
         JourneyEntry(at: at, label: 'PHẢN TƯ', title: title, color: Colors.black);
 
+    final now = DateTime(2026, 8, 1);
+
     test('gom các mục cùng tháng vào một cụm, giữ thứ tự đã sắp', () {
-      final months = groupJourneyByMonth([
+      final months = groupJourneyByWeekAndDay([
         entry('a', DateTime(2026, 7, 20)),
         entry('b', DateTime(2026, 7, 2)),
         entry('c', DateTime(2026, 6, 30)),
-      ]);
+      ], now: now);
 
       expect(months.map((m) => m.label).toList(),
           ['THÁNG 7, 2026', 'THÁNG 6, 2026']);
-      expect(months.first.entries.map((e) => e.title).toList(), ['a', 'b']);
     });
 
     test('cùng tháng khác năm không bị gộp', () {
-      final months = groupJourneyByMonth([
+      final months = groupJourneyByWeekAndDay([
         entry('a', DateTime(2026, 7, 1)),
         entry('b', DateTime(2025, 7, 1)),
-      ]);
+      ], now: now);
 
       expect(months.length, 2);
     });
 
     test('mục không có thời gian dồn xuống cuối', () {
-      final months = groupJourneyByMonth([
+      final months = groupJourneyByWeekAndDay([
         entry('a', DateTime(2026, 7, 1)),
         entry('b', null),
-      ]);
+      ], now: now);
 
       expect(months.last.label, 'CHƯA RÕ THỜI GIAN');
-      expect(months.last.entries.single.title, 'b');
+      expect(months.last.weeks.single.days.single.entries.single.title, 'b');
+    });
+
+    test('đánh số tuần từ đầu tháng, dù danh sách đang mới-trước', () {
+      // 03/08 là Thứ Hai tuần 2; 01/08 là Thứ Bảy tuần 1.
+      final months = groupJourneyByWeekAndDay([
+        entry('mới', DateTime(2026, 8, 3)),
+        entry('cũ', DateTime(2026, 8, 1)),
+      ], now: DateTime(2026, 8, 20));
+
+      final weeks = months.single.weeks;
+      expect(weeks.first.label, startsWith('TUẦN 2'));
+      expect(weeks.last.label, startsWith('TUẦN 1'));
+    });
+
+    test('khoảng ngày của tuần bị cắt theo biên tháng', () {
+      // Tuần chứa 01/08/2026 bắt đầu từ Thứ Hai 27/07 — nhưng nhãn phải nói
+      // 01–02/08, không lôi ngày của tháng trước vào.
+      final months = groupJourneyByWeekAndDay(
+        [entry('a', DateTime(2026, 8, 1))],
+        now: DateTime(2026, 8, 20),
+      );
+
+      expect(months.single.weeks.single.label, 'TUẦN 1 · 01–02/08');
+    });
+
+    test('ngày mang tên thứ trong tuần', () {
+      final months = groupJourneyByWeekAndDay(
+        [entry('a', DateTime(2026, 8, 5))], // Thứ Tư
+        now: DateTime(2026, 8, 20),
+      );
+
+      expect(months.single.weeks.single.days.single.label, 'Thứ Tư, 05/08');
+    });
+
+    test('hôm nay và hôm qua gọi thẳng tên, không đọc ra ngày', () {
+      final today = DateTime(2026, 8, 20, 9);
+      final months = groupJourneyByWeekAndDay([
+        entry('a', DateTime(2026, 8, 20, 8)),
+        entry('b', DateTime(2026, 8, 19, 8)),
+      ], now: today);
+
+      final days = months.single.weeks.single.days;
+      expect(days.map((d) => d.label).toList(), ['Hôm nay', 'Hôm qua']);
+    });
+
+    test('nhiều mục cùng ngày gom về một tiêu đề ngày', () {
+      final months = groupJourneyByWeekAndDay([
+        entry('a', DateTime(2026, 8, 5, 18)),
+        entry('b', DateTime(2026, 8, 5, 9)),
+      ], now: DateTime(2026, 8, 20));
+
+      final days = months.single.weeks.single.days;
+      expect(days.length, 1);
+      expect(days.single.entries.map((e) => e.title).toList(), ['a', 'b']);
     });
   });
 

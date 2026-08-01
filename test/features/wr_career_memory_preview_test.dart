@@ -36,6 +36,27 @@ List<CareerMemoryEvent> _events(int n) => [
         ),
     ];
 
+/// Trộn nhiều loại để có gì mà lọc: `insight` → NHẬN RA, `decision` → QUYẾT
+/// ĐỊNH. Số lượng lệch nhau để kiểm luôn thứ tự chip (nhiều trước).
+List<CareerMemoryEvent> _mixedEvents() => [
+      for (var i = 1; i <= 5; i++)
+        CareerMemoryEvent(
+          id: 'i$i',
+          userId: 'u1',
+          behavior: 'insight',
+          reflectionText: 'Nhận ra $i',
+          createdAt: DateTime(2026, 7, 1).add(Duration(days: i)),
+        ),
+      for (var i = 1; i <= 2; i++)
+        CareerMemoryEvent(
+          id: 'd$i',
+          userId: 'u1',
+          behavior: 'decision',
+          reflectionText: 'Quyết định $i',
+          createdAt: DateTime(2026, 7, 10).add(Duration(days: i)),
+        ),
+    ];
+
 Widget _wrap({
   required Widget home,
   required List<CareerMemoryEvent> events,
@@ -187,6 +208,108 @@ void main() {
       );
 
       expect(_visibleEntries(tester, 38), 38);
+    });
+
+    // Khách 2026-08-01: "nên phân theo ngày trong tuần, tuần trong tháng".
+    testWidgets('dựng đủ ba tầng tháng · tuần · ngày', (tester) async {
+      await _pumpTall(
+        tester,
+        _wrap(home: const WrCareerMemoryScreen(), events: _events(10)),
+      );
+
+      // Tháng — sự kiện rơi vào 02/07 đến 11/07/2026.
+      expect(find.text('THÁNG 7, 2026'), findsOneWidget);
+      // Tuần — có số thứ tự và khoảng ngày, cắt theo biên tháng.
+      expect(find.textContaining('TUẦN 1 · '), findsOneWidget);
+      expect(find.textContaining('TUẦN 2 · '), findsOneWidget);
+      // Ngày — mang tên thứ, không phải "02/07" trơ trọi.
+      expect(find.text('Thứ Năm, 02/07'), findsOneWidget);
+      expect(find.text('Thứ Bảy, 11/07'), findsOneWidget);
+    });
+
+    testWidgets('ngày không bị in lại trên từng dòng dưới tiêu đề ngày',
+        (tester) async {
+      await _pumpTall(
+        tester,
+        _wrap(home: const WrCareerMemoryScreen(), events: _events(1)),
+      );
+
+      expect(find.text('Thứ Năm, 02/07'), findsOneWidget);
+      // Dòng bên dưới trước đây in thêm "02/07" — giờ ngày chỉ nói một lần.
+      expect(find.text('02/07'), findsNothing);
+    });
+
+    // Bộ lọc theo loại — yêu cầu khách 2026-08-01.
+    testWidgets('hàng chip dựng từ loại thật có trong dữ liệu, nhiều trước',
+        (tester) async {
+      await _pumpTall(
+        tester,
+        _wrap(home: const WrCareerMemoryScreen(), events: _mixedEvents()),
+      );
+
+      expect(find.byKey(const Key('wr_career_memory_filter_bar')),
+          findsOneWidget);
+      expect(find.text('Tất cả 7'), findsOneWidget);
+      expect(find.text('NHẬN RA 5'), findsOneWidget);
+      expect(find.text('QUYẾT ĐỊNH 2'), findsOneWidget);
+      // Loại không có mặt thì không có chip — chip 0 mục là lời hứa suông.
+      expect(find.textContaining('KỸ NĂNG'), findsNothing);
+    });
+
+    testWidgets('chọn một loại thì chỉ còn mục thuộc loại đó', (tester) async {
+      await _pumpTall(
+        tester,
+        _wrap(home: const WrCareerMemoryScreen(), events: _mixedEvents()),
+      );
+
+      await tester
+          .tap(find.byKey(const Key('wr_career_memory_filter_QUYẾT ĐỊNH')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Quyết định 1'), findsOneWidget);
+      expect(find.text('Nhận ra 1'), findsNothing);
+      // Tiêu đề nói đúng số đang xem, không giữ nguyên tổng.
+      expect(find.text('2 mảnh · quyết định'), findsOneWidget);
+    });
+
+    testWidgets('mọi chip vẫn còn sau khi lọc — luôn có đường quay lại',
+        (tester) async {
+      await _pumpTall(
+        tester,
+        _wrap(home: const WrCareerMemoryScreen(), events: _mixedEvents()),
+      );
+
+      await tester
+          .tap(find.byKey(const Key('wr_career_memory_filter_QUYẾT ĐỊNH')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('NHẬN RA 5'), findsOneWidget);
+      expect(find.text('Tất cả 7'), findsOneWidget);
+    });
+
+    testWidgets('bấm lại chip đang chọn thì bỏ lọc', (tester) async {
+      await _pumpTall(
+        tester,
+        _wrap(home: const WrCareerMemoryScreen(), events: _mixedEvents()),
+      );
+
+      final chip = find.byKey(const Key('wr_career_memory_filter_QUYẾT ĐỊNH'));
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+      await tester.tap(chip);
+      await tester.pumpAndSettle();
+
+      expect(find.text('Tất cả 7 mảnh ký ức'), findsOneWidget);
+      expect(find.text('Nhận ra 1'), findsOneWidget);
+    });
+
+    testWidgets('chỉ một loại thì không dựng hàng chip', (tester) async {
+      await _pumpTall(
+        tester,
+        _wrap(home: const WrCareerMemoryScreen(), events: _events(6)),
+      );
+
+      expect(find.byKey(const Key('wr_career_memory_filter_bar')), findsNothing);
     });
 
     testWidgets('bản miễn phí bị khoá — mở thẳng đường dẫn không đi vòng được',
