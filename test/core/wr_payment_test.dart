@@ -183,6 +183,130 @@ void main() {
     });
   });
 
+  group('selectableVouchers', () {
+    WrVoucher v(
+      String code, {
+      String targetType = 'all',
+      List<String> assignedUsers = const [],
+      List<String> applicableProducts = const [],
+      bool isActive = true,
+    }) {
+      return WrVoucher(
+        id: code,
+        code: code,
+        discountType: 'percentage',
+        discountPercent: 10,
+        isActive: isActive,
+        targetType: targetType,
+        assignedUsers: assignedUsers,
+        applicableProducts: applicableProducts,
+      );
+    }
+
+    test('bỏ mã đã tắt', () {
+      final list = selectableVouchers([v('A'), v('B', isActive: false)]);
+      expect(list.map((x) => x.code), ['A']);
+    });
+
+    test('bỏ mã của nhóm người dùng khác', () {
+      final list = selectableVouchers(
+        [v('CHUNG'), v('CHOFREE', targetType: 'individual_free')],
+        userRole: 'premium',
+      );
+      expect(list.map((x) => x.code), ['CHUNG']);
+    });
+
+    test('admin thấy hết', () {
+      final list = selectableVouchers(
+        [v('CHUNG'), v('CHOFREE', targetType: 'individual_free')],
+        userRole: 'admin',
+      );
+      expect(list.length, 2);
+    });
+
+    test('bỏ mã của dịch vụ khác', () {
+      final list = selectableVouchers([
+        v('WS', applicableProducts: ['workshop']),
+        v('PRE', applicableProducts: ['premium']),
+        v('MOI', applicableProducts: []),
+      ]);
+      expect(list.map((x) => x.code), ['PRE', 'MOI']);
+    });
+
+    test('GIỮ LẠI mã hết hạn — lọc hạn là việc của voucherIneligibleReason', () {
+      // Web cũng vậy: mã hết hạn hiện mờ kèm lý do chứ không biến mất, để người
+      // dùng biết mình không nhớ nhầm.
+      final expired = WrVoucher(
+        id: 'e',
+        code: 'CU',
+        discountType: 'percentage',
+        discountPercent: 10,
+        validTo: DateTime(2020),
+      );
+      expect(selectableVouchers([expired]).length, 1);
+    });
+  });
+
+  group('voucherIneligibleReason', () {
+    final now = DateTime(2026, 8, 1);
+
+    test('mã tốt trả null', () {
+      const v = WrVoucher(id: 'a', code: 'A', discountType: 'percentage');
+      expect(voucherIneligibleReason(v, now: now), isNull);
+    });
+
+    test('nêu đúng lý do', () {
+      expect(
+        voucherIneligibleReason(
+          WrVoucher(
+              id: 'a',
+              code: 'A',
+              discountType: 'percentage',
+              validTo: DateTime(2026, 7, 1)),
+          now: now,
+        ),
+        'Hết hạn',
+      );
+      expect(
+        voucherIneligibleReason(
+          const WrVoucher(
+              id: 'a',
+              code: 'A',
+              discountType: 'percentage',
+              maxUses: 3,
+              usedCount: 3),
+          now: now,
+        ),
+        'Hết lượt',
+      );
+      expect(
+        voucherIneligibleReason(
+          WrVoucher(
+              id: 'a',
+              code: 'A',
+              discountType: 'percentage',
+              validFrom: DateTime(2026, 9, 1)),
+          now: now,
+        ),
+        'Chưa hiệu lực',
+      );
+    });
+  });
+
+  group('voucherDiscountLabel', () {
+    test('phần trăm bỏ đuôi .0', () {
+      const v = WrVoucher(
+          id: 'a', code: 'A', discountType: 'percentage', discountPercent: 50);
+      expect(voucherDiscountLabel(v), 'Giảm 50%');
+    });
+
+    test('số tiền cố định có nhóm nghìn', () {
+      const v = WrVoucher(
+          id: 'a', code: 'A', discountType: 'fixed', discountAmount: 100000);
+      expect(voucherDiscountLabel(v), 'Giảm 100.000đ');
+    });
+  });
+
   group('serviceKeyForProductType', () {
     test('mọi *_survey quy về premium', () {
       expect(serviceKeyForProductType('premium_survey'), 'premium');

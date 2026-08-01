@@ -44,6 +44,25 @@ class FakePaymentRepository implements PaymentRepository {
     return order;
   }
 
+  /// Đơn cũ còn hạn mà [findReusablePendingOrder] tìm thấy. Null = không có.
+  WrOrder? reusable;
+  int findReusableCalls = 0;
+
+  @override
+  Future<WrOrder?> findReusablePendingOrder({
+    required String productId,
+    required num amount,
+  }) async {
+    findReusableCalls++;
+    return reusable;
+  }
+
+  /// Danh sách mã mà bảng gợi ý nhận được.
+  List<WrVoucher> vouchers = const [];
+
+  @override
+  Future<List<WrVoucher>> listVouchers() async => vouchers;
+
   @override
   Future<WrOrder> getOrder(String orderId) async => nextPolled ?? order;
 
@@ -278,6 +297,186 @@ void main() {
 
       expect(find.text('Mã giảm giá đã hết hạn'), findsOneWidget);
       expect(repo.completeFreeCalls, 0);
+
+      await tester.pumpWidget(const SizedBox());
+    });
+  });
+
+  group('WrPaymentScreen — dùng lại đơn còn hạn', () {
+    testWidgets('có đơn cũ còn hạn thì KHÔNG tạo đơn mới', (tester) async {
+      final repo = FakePaymentRepository();
+      repo.reusable = WrOrder(
+        id: 'order-cu',
+        code: 'CNCCU000001',
+        status: 'pending',
+        originalAmount: 249000,
+        finalAmount: 249000,
+        expiresAt: DateTime.now().toUtc().add(const Duration(minutes: 12)),
+      );
+
+      await tester.pumpWidget(_wrap(repo));
+      await tester.pump();
+      await tester.pump();
+
+      expect(repo.findReusableCalls, 1);
+      expect(repo.createdProductId, isNull, reason: 'không được tạo đơn mới');
+      await _scrollTo(tester, find.text('CNCCU000001'));
+      expect(find.text('CNCCU000001'), findsOneWidget);
+
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('đếm nốt hạn còn lại chứ không quay về 30:00', (tester) async {
+      final repo = FakePaymentRepository();
+      repo.reusable = WrOrder(
+        id: 'order-cu',
+        code: 'CNCCU000001',
+        status: 'pending',
+        originalAmount: 249000,
+        finalAmount: 249000,
+        expiresAt: DateTime.now().toUtc().add(const Duration(minutes: 12)),
+      );
+
+      await tester.pumpWidget(_wrap(repo));
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.text('Đơn còn hiệu lực 30:00'), findsNothing);
+      expect(find.textContaining('Đơn còn hiệu lực 11:5'), findsOneWidget);
+
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('không có đơn cũ thì tạo mới như thường', (tester) async {
+      final repo = FakePaymentRepository();
+      await tester.pumpWidget(_wrap(repo));
+      await tester.pump();
+      await tester.pump();
+
+      expect(repo.findReusableCalls, 1);
+      expect(repo.createdProductId, 'prod-1');
+
+      await tester.pumpWidget(const SizedBox());
+    });
+  });
+
+  group('WrPaymentScreen — đơn hết hạn', () {
+    testWidgets('hiện mã đơn, số tiền và dịch vụ', (tester) async {
+      final repo = FakePaymentRepository();
+      await tester.pumpWidget(_wrap(repo));
+      await tester.pump();
+      await tester.pump();
+
+      await tester.pump(kPaymentWindow);
+      await tester.pump();
+
+      expect(find.text('Đơn hàng đã hết hạn'), findsOneWidget);
+      expect(find.text('CNCORDER01'), findsOneWidget);
+      expect(find.text('249.000đ'), findsOneWidget);
+      expect(find.text('Work Reflection Premium'), findsOneWidget);
+    });
+
+    testWidgets('bấm tạo đơn mới thì quay lại màn QR', (tester) async {
+      final repo = FakePaymentRepository();
+      await tester.pumpWidget(_wrap(repo));
+      await tester.pump();
+      await tester.pump();
+      await tester.pump(kPaymentWindow);
+      await tester.pump();
+
+      await tester.tap(find.byKey(const Key('wr_payment_expired_retry')));
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.byKey(const Key('wr_payment_expired')), findsNothing);
+      expect(find.text('Đơn còn hiệu lực 30:00'), findsOneWidget);
+
+      await tester.pumpWidget(const SizedBox());
+    });
+  });
+
+  group('WrPaymentScreen — bảng chọn mã', () {
+    const goodVoucher = WrVoucher(
+      id: 'v1',
+      code: 'HELLO50',
+      discountType: 'percentage',
+      discountPercent: 50,
+    );
+
+    testWidgets('hiện mã dùng được kèm mức giảm', (tester) async {
+      final repo = FakePaymentRepository()..vouchers = [goodVoucher];
+      await tester.pumpWidget(_wrap(repo));
+      await tester.pump();
+      await tester.pump();
+
+      await _scrollTo(tester, find.byKey(const Key('wr_payment_voucher_browse')));
+      await tester.tap(find.byKey(const Key('wr_payment_voucher_browse')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('HELLO50'), findsOneWidget);
+      expect(find.text('Giảm 50%'), findsOneWidget);
+
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('mã hết hạn hiện mờ kèm lý do, không có nút Dùng', (
+      tester,
+    ) async {
+      final expired = WrVoucher(
+        id: 'v2',
+        code: 'CUROI',
+        discountType: 'percentage',
+        discountPercent: 10,
+        validTo: DateTime(2020),
+      );
+      final repo = FakePaymentRepository()..vouchers = [expired];
+      await tester.pumpWidget(_wrap(repo));
+      await tester.pump();
+      await tester.pump();
+
+      await _scrollTo(tester, find.byKey(const Key('wr_payment_voucher_browse')));
+      await tester.tap(find.byKey(const Key('wr_payment_voucher_browse')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('CUROI'), findsOneWidget);
+      expect(find.text('Hết hạn'), findsOneWidget);
+      expect(find.byKey(const Key('wr_payment_voucher_pick_CUROI')), findsNothing);
+
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('chọn một mã thì áp dụng luôn', (tester) async {
+      final repo = FakePaymentRepository()..vouchers = [goodVoucher];
+      await tester.pumpWidget(_wrap(repo));
+      await tester.pump();
+      await tester.pump();
+
+      await _scrollTo(tester, find.byKey(const Key('wr_payment_voucher_browse')));
+      await tester.tap(find.byKey(const Key('wr_payment_voucher_browse')));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('wr_payment_voucher_pick_HELLO50')));
+      await tester.pumpAndSettle();
+
+      // Repo giả trả về đơn 0đ nên đi thẳng tới màn thành công.
+      expect(repo.completeFreeCalls, 1);
+      expect(find.byKey(const Key('wr_payment_success')), findsOneWidget);
+    });
+
+    testWidgets('không có mã nào thì nói rõ', (tester) async {
+      final repo = FakePaymentRepository();
+      await tester.pumpWidget(_wrap(repo));
+      await tester.pump();
+      await tester.pump();
+
+      await _scrollTo(tester, find.byKey(const Key('wr_payment_voucher_browse')));
+      await tester.tap(find.byKey(const Key('wr_payment_voucher_browse')));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('wr_payment_voucher_list_empty')),
+        findsOneWidget,
+      );
 
       await tester.pumpWidget(const SizedBox());
     });

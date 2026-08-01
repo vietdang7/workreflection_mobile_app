@@ -93,14 +93,26 @@ class _WrPaymentScreenState extends ConsumerState<WrPaymentScreen> {
     }
 
     try {
-      final order = await ref.read(paymentRepositoryProvider).createPremiumOrder(
+      final repo = ref.read(paymentRepositoryProvider);
+
+      // Nhặt lại đơn còn hạn trước khi tạo mới. Bấm nâng cấp rồi thoát ra vài
+      // lần sẽ để lại một loạt đơn 'expired' rác trong bảng quản trị.
+      final reused = await repo.findReusablePendingOrder(
+        productId: pricing.productId!,
+        amount: pricing.currentPrice,
+      );
+      final order = reused ??
+          await repo.createPremiumOrder(
             productId: pricing.productId!,
             amount: pricing.currentPrice,
             currency: pricing.currency,
           );
+
       if (!mounted) return;
       setState(() {
         _order = order;
+        // Đơn dùng lại thì đếm nốt phần hạn còn lại, không quay về 30 phút.
+        _remaining = _remainingFor(order);
         _creating = false;
       });
       _startTimers();
@@ -111,6 +123,16 @@ class _WrPaymentScreenState extends ConsumerState<WrPaymentScreen> {
         _fatalError = 'Không tạo được đơn hàng. Kiểm tra kết nối rồi thử lại.';
       });
     }
+  }
+
+  /// Hạn còn lại của [order]. Đơn không ghi `expires_at` thì cho trọn cửa sổ.
+  Duration _remainingFor(WrOrder order) {
+    final at = order.expiresAt;
+    if (at == null) return kPaymentWindow;
+    final left = at.difference(DateTime.now().toUtc());
+    if (left.isNegative) return Duration.zero;
+    // Kẹp trên: đơn có hạn dài bất thường cũng không hiện quá cửa sổ chuẩn.
+    return left > kPaymentWindow ? kPaymentWindow : left;
   }
 
   void _startTimers() {
@@ -171,6 +193,20 @@ class _WrPaymentScreenState extends ConsumerState<WrPaymentScreen> {
     setState(() => _order = order.copyWith(status: 'expired'));
   }
 
+  /// Bắt đầu lại từ đầu sau khi đơn hết hạn — tạo đơn mới, hẹn giờ mới.
+  void _restart() {
+    setState(() {
+      _order = null;
+      _creating = true;
+      _remaining = kPaymentWindow;
+      _appliedCode = null;
+      _voucherError = null;
+      _voucherCtl.clear();
+      _invoice = const WrInvoiceForm();
+    });
+    _createOrder();
+  }
+
   /// Đơn 0đ: không có gì để chuyển khoản, tự hoàn tất.
   Future<void> _completeFree() async {
     final order = _order;
@@ -223,6 +259,36 @@ class _WrPaymentScreenState extends ConsumerState<WrPaymentScreen> {
         _voucherBusy = false;
       });
     }
+  }
+
+  /// Mở bảng gợi ý mã. Chọn một mã là điền vào ô rồi áp dụng luôn, như web.
+  Future<void> _openVoucherList() async {
+    final repo = ref.read(paymentRepositoryProvider);
+    final role = ref.read(ccProfileProvider).valueOrNull?['role'] as String?;
+    final userId = ref.read(ccProfileProvider).valueOrNull?['id'] as String?;
+
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: WrColors.white,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => _VoucherListSheet(
+        load: () async {
+          final all = await repo.listVouchers();
+          return selectableVouchers(
+            all,
+            userId: userId,
+            userRole: role,
+          );
+        },
+      ),
+    );
+
+    if (picked == null || !mounted) return;
+    _voucherCtl.text = picked;
+    await _applyVoucher();
   }
 
   Future<void> _removeVoucher() async {
@@ -316,10 +382,10 @@ class _WrPaymentScreenState extends ConsumerState<WrPaymentScreen> {
     }
 
     if (order.status == 'expired') {
-      return _Message(
+      return _ExpiredView(
         key: const Key('wr_payment_expired'),
-        text: 'Đơn hàng đã hết hạn sau ${kPaymentWindow.inMinutes} phút.\n'
-            'Bạn quay lại và bấm nâng cấp lần nữa nhé.',
+        order: order,
+        onRetry: _restart,
       );
     }
 
@@ -337,6 +403,7 @@ class _WrPaymentScreenState extends ConsumerState<WrPaymentScreen> {
           busy: _voucherBusy,
           onApply: _applyVoucher,
           onRemove: _removeVoucher,
+          onBrowse: _openVoucherList,
         ),
         const SizedBox(height: 14),
         _QrCard(order: order),
@@ -490,6 +557,7 @@ class _VoucherCard extends StatelessWidget {
     required this.busy,
     required this.onApply,
     required this.onRemove,
+    required this.onBrowse,
   });
 
   final TextEditingController controller;
@@ -498,6 +566,7 @@ class _VoucherCard extends StatelessWidget {
   final bool busy;
   final VoidCallback onApply;
   final VoidCallback onRemove;
+  final VoidCallback onBrowse;
 
   @override
   Widget build(BuildContext context) {
@@ -507,12 +576,29 @@ class _VoucherCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text('MÃ GIẢM GIÁ',
-              style: TextStyle(
-                  fontSize: 11,
-                  letterSpacing: 0.8,
-                  fontWeight: FontWeight.w700,
-                  color: WrColors.text3)),
+          Row(
+            children: [
+              const Expanded(
+                child: Text('MÃ GIẢM GIÁ',
+                    style: TextStyle(
+                        fontSize: 11,
+                        letterSpacing: 0.8,
+                        fontWeight: FontWeight.w700,
+                        color: WrColors.text3)),
+              ),
+              if (applied == null)
+                TextButton(
+                  key: const Key('wr_payment_voucher_browse'),
+                  onPressed: busy ? null : onBrowse,
+                  style: TextButton.styleFrom(
+                    visualDensity: VisualDensity.compact,
+                    padding: EdgeInsets.zero,
+                  ),
+                  child: const Text('Chọn mã có sẵn',
+                      style: TextStyle(fontSize: 13)),
+                ),
+            ],
+          ),
           const SizedBox(height: 10),
           if (applied != null)
             Row(
@@ -571,6 +657,170 @@ class _VoucherCard extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Bảng gợi ý mã giảm giá. Trả về mã được chọn qua Navigator.pop.
+class _VoucherListSheet extends StatefulWidget {
+  const _VoucherListSheet({required this.load});
+
+  final Future<List<WrVoucher>> Function() load;
+
+  @override
+  State<_VoucherListSheet> createState() => _VoucherListSheetState();
+}
+
+class _VoucherListSheetState extends State<_VoucherListSheet> {
+  late final Future<List<WrVoucher>> _future = widget.load();
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(18, 16, 18, 18),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Chọn mã giảm giá',
+                style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w800,
+                    color: WrColors.navy)),
+            const SizedBox(height: 4),
+            const Text('Những mã đang dùng được cho gói Premium.',
+                style: TextStyle(fontSize: 13, color: WrColors.text3)),
+            const SizedBox(height: 14),
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.of(context).size.height * 0.55,
+              ),
+              child: FutureBuilder<List<WrVoucher>>(
+                future: _future,
+                builder: (context, snap) {
+                  if (snap.connectionState != ConnectionState.done) {
+                    return const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 36),
+                      child: Center(
+                        child: CircularProgressIndicator(color: WrColors.coral),
+                      ),
+                    );
+                  }
+                  // Lỗi mạng cũng hiện như danh sách rỗng: ô nhập tay vẫn còn
+                  // đó, không có lý do chặn người dùng lại.
+                  final list = snap.data ?? const <WrVoucher>[];
+                  if (list.isEmpty) {
+                    return const Padding(
+                      key: Key('wr_payment_voucher_list_empty'),
+                      padding: EdgeInsets.symmetric(vertical: 36),
+                      child: Center(
+                        child: Text('Chưa có mã nào dành cho bạn lúc này.',
+                            style: TextStyle(
+                                fontSize: 14, color: WrColors.text3)),
+                      ),
+                    );
+                  }
+                  final now = DateTime.now();
+                  return ListView.separated(
+                    key: const Key('wr_payment_voucher_list'),
+                    shrinkWrap: true,
+                    itemCount: list.length,
+                    separatorBuilder: (_, __) => const SizedBox(height: 10),
+                    itemBuilder: (_, i) => _VoucherTile(
+                      voucher: list[i],
+                      reason: voucherIneligibleReason(list[i], now: now),
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _VoucherTile extends StatelessWidget {
+  const _VoucherTile({required this.voucher, required this.reason});
+
+  final WrVoucher voucher;
+
+  /// Lý do chưa dùng được; null nghĩa là dùng được.
+  final String? reason;
+
+  @override
+  Widget build(BuildContext context) {
+    final usable = reason == null;
+    final maxUses = voucher.maxUses;
+    return Opacity(
+      // Mã hỏng vẫn hiện, chỉ mờ đi — biến mất không lời giải thích sẽ khiến
+      // người dùng tưởng mình nhớ nhầm mã.
+      opacity: usable ? 1 : 0.55,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: WrColors.line),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(voucher.code,
+                      style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1,
+                          color: WrColors.navy)),
+                  const SizedBox(height: 2),
+                  Text(voucherDiscountLabel(voucher),
+                      style: const TextStyle(
+                          fontSize: 13, color: WrColors.text2)),
+                  if (voucher.validTo != null || (maxUses != null && maxUses > 0))
+                    Padding(
+                      padding: const EdgeInsets.only(top: 3),
+                      child: Text(
+                        [
+                          if (voucher.validTo != null)
+                            'HSD ${_date(voucher.validTo!)}',
+                          if (maxUses != null && maxUses > 0)
+                            'còn ${maxUses - voucher.usedCount}/$maxUses lượt',
+                        ].join(' · '),
+                        style: const TextStyle(
+                            fontSize: 12, color: WrColors.text3),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            if (usable)
+              ElevatedButton(
+                key: Key('wr_payment_voucher_pick_${voucher.code}'),
+                onPressed: () => Navigator.of(context).pop(voucher.code),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: WrColors.teal,
+                  foregroundColor: WrColors.white,
+                  visualDensity: VisualDensity.compact,
+                ),
+                child: const Text('Dùng'),
+              )
+            else
+              Text(reason!,
+                  style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w600,
+                      color: WrColors.muted)),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _date(DateTime d) =>
+      '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
 }
 
 class _QrCard extends StatelessWidget {
@@ -794,6 +1044,116 @@ class _WaitingNote extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Đơn hết hạn. Bố cục theo `PaymentStatus.tsx` bên web: nêu rõ đơn nào,
+/// bao nhiêu tiền, dịch vụ gì — rồi mới mời thử lại.
+class _ExpiredView extends StatelessWidget {
+  const _ExpiredView({required this.order, required this.onRetry, super.key});
+
+  final WrOrder order;
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 76,
+              height: 76,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Color(0x1AFFB020),
+              ),
+              child: const Icon(Icons.schedule,
+                  size: 38, color: Color(0xFFE0930B)),
+            ),
+            const SizedBox(height: 18),
+            const Text('Đơn hàng đã hết hạn',
+                style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: WrColors.navy)),
+            const SizedBox(height: 8),
+            Text(
+              'Phiên thanh toán ${kPaymentWindow.inMinutes} phút đã kết thúc. '
+              'Bạn tạo đơn mới rồi quét lại nhé.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                  fontSize: 14, color: WrColors.text2, height: 1.5),
+            ),
+            const SizedBox(height: 22),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
+              decoration: BoxDecoration(
+                color: WrColors.white,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: WrColors.line),
+              ),
+              child: Column(
+                children: [
+                  _row('Mã đơn hàng', order.code),
+                  _row('Số tiền', formatVndAmount(order.finalAmount)),
+                  _row('Dịch vụ', 'Work Reflection Premium', last: true),
+                ],
+              ),
+            ),
+            const SizedBox(height: 22),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                key: const Key('wr_payment_expired_retry'),
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh, size: 18),
+                label: const Text('Tạo đơn mới',
+                    style: TextStyle(fontWeight: FontWeight.w700)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: WrColors.coral,
+                  foregroundColor: WrColors.navy,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).maybePop(),
+              child: const Text('Để sau'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _row(String label, String value, {bool last = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      decoration: last
+          ? null
+          : const BoxDecoration(
+              border: Border(bottom: BorderSide(color: WrColors.lineSoft)),
+            ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(label,
+              style: const TextStyle(fontSize: 13, color: WrColors.text3)),
+          const SizedBox(width: 16),
+          Text(value,
+              style: const TextStyle(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w700,
+                  color: WrColors.navy)),
+        ],
+      ),
     );
   }
 }

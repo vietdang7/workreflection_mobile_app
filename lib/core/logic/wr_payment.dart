@@ -225,6 +225,90 @@ String? validateVoucher(
   return null;
 }
 
+/// Lọc danh sách mã để gợi ý cho người dùng.
+///
+/// Chỉ lọc theo NHÓM NGƯỜI DÙNG và DỊCH VỤ — hai thứ khiến mã hoàn toàn không
+/// liên quan tới người này. Mã hết hạn hay hết lượt vẫn giữ lại và hiện mờ kèm
+/// lý do, giống web: thấy "mã này đã hết hạn" vẫn hơn là mã biến mất không rõ
+/// vì sao.
+List<WrVoucher> selectableVouchers(
+  List<WrVoucher> all, {
+  String? userId,
+  String? userRole,
+  String? orgId,
+  String productType = kPremiumOrderProductType,
+}) {
+  final role = (userRole ?? '').trim().toLowerCase();
+  final privileged = role == 'admin' || role == 'coordinator';
+  final effectiveRole = role.isEmpty ? 'free' : role;
+  final service = serviceKeyForProductType(productType);
+
+  return all.where((v) {
+    if (!v.isActive) return false;
+
+    if (!privileged && v.targetType != 'all') {
+      final ok = switch (v.targetType) {
+        'individual_free' => effectiveRole == 'free',
+        'individual_premium' => effectiveRole == 'premium',
+        'enterprise' => effectiveRole == 'enterprise' || (orgId ?? '').isNotEmpty,
+        'specific_users' => userId != null && v.assignedUsers.contains(userId),
+        _ => true,
+      };
+      if (!ok) return false;
+    }
+
+    if (v.applicableProducts.isNotEmpty &&
+        !v.applicableProducts.contains(service)) {
+      return false;
+    }
+    return true;
+  }).toList();
+}
+
+/// Lý do một mã trong danh sách chưa dùng được, hoặc null khi dùng được.
+///
+/// Nhẹ hơn [validateVoucher] — chỉ xét thời hạn và lượt dùng, đúng những gì
+/// `checkVoucherEligibility` bên web xét khi vẽ danh sách.
+String? voucherIneligibleReason(WrVoucher voucher, {required DateTime now}) {
+  final validTo = voucher.validTo;
+  if (validTo != null && validTo.isBefore(now)) return 'Hết hạn';
+
+  final maxUses = voucher.maxUses;
+  if (maxUses != null && maxUses > 0 && voucher.usedCount >= maxUses) {
+    return 'Hết lượt';
+  }
+
+  final validFrom = voucher.validFrom;
+  if (validFrom != null && validFrom.isAfter(now)) return 'Chưa hiệu lực';
+
+  return null;
+}
+
+/// "Giảm 50%" hoặc "Giảm 100.000đ".
+String voucherDiscountLabel(WrVoucher voucher) {
+  if (voucher.discountType == 'percentage') {
+    final p = voucher.discountPercent;
+    final text = p == p.roundToDouble() ? p.round().toString() : p.toString();
+    return 'Giảm $text%';
+  }
+  return 'Giảm ${formatVndAmount(voucher.discountAmount ?? 0)}';
+}
+
+/// "249.000đ" — nhóm nghìn bằng dấu chấm.
+///
+/// Trùng cách hiển thị của `formatVndPrice` trong wr_pricing.dart nhưng để
+/// riêng ở đây để tầng logic thanh toán không phải kéo theo file giá.
+String formatVndAmount(num amount) {
+  final digits = amount.round().abs().toString();
+  final buf = StringBuffer();
+  for (var i = 0; i < digits.length; i++) {
+    if (i > 0 && (digits.length - i) % 3 == 0) buf.write('.');
+    buf.write(digits[i]);
+  }
+  const dong = 'đ';
+  return '${amount < 0 ? '-' : ''}$buf$dong';
+}
+
 /// Quy `product_type` của đơn về khoá dịch vụ mà voucher dùng.
 ///
 /// Web gộp mọi `*_survey` về 'premium' và hai loại workshop về 'workshop'.
