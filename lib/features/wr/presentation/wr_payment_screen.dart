@@ -174,6 +174,13 @@ class _WrPaymentScreenState extends ConsumerState<WrPaymentScreen> {
   void _onPaid() {
     _ticker?.cancel();
     _poller?.cancel();
+    // Bỏ công tắc thử nghiệm nếu đang bật. Nó nằm cao hơn mọi nguồn quyền
+    // khác trong wrEntitlementProvider, nên một công tắc "ép miễn phí" bỏ quên
+    // sẽ nuốt trọn gói vừa mua: tiền đã trả, DB đã cấp, mà app vẫn khoá.
+    // Mua thật thì phải thắng công cụ thử nghiệm.
+    if (ref.read(canTogglePremiumProvider)) {
+      ref.read(premiumOverrideProvider.notifier).set(null);
+    }
     // Đọc lại quyền: cc_profiles.role vừa được complete_payment nâng lên
     // 'premium', không làm mới thì app vẫn tưởng đang là Free.
     ref.invalidate(ccProfileProvider);

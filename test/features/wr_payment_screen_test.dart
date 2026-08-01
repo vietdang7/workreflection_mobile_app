@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workreflection_mobile/core/data/payment_repository.dart';
 import 'package:workreflection_mobile/core/logic/wr_payment.dart';
 import 'package:workreflection_mobile/core/logic/wr_pricing.dart';
@@ -543,6 +544,98 @@ void main() {
 
       expect(repo.completeFreeCalls, 2);
       expect(find.byKey(const Key('wr_payment_success')), findsOneWidget);
+    });
+  });
+
+  group('WrPaymentScreen — công tắc thử nghiệm', () {
+    testWidgets('mua xong thì bỏ công tắc đang ép miễn phí', (tester) async {
+      // Tình huống thật 2026-08-01: đơn CNC31194525 đã paid, cc_profiles.role
+      // là admin, mà app vẫn hiện miễn phí — vì công tắc thử nghiệm trên máy
+      // nằm cao hơn mọi nguồn quyền khác trong wrEntitlementProvider.
+      SharedPreferences.setMockInitialValues({
+        'wr_dev_premium_override': false,
+      });
+
+      final repo = FakePaymentRepository();
+      final container = ProviderContainer(
+        overrides: [
+          paymentRepositoryProvider.overrideWithValue(repo),
+          wrPremiumPricingProvider.overrideWith(
+            (ref) async => const WrPremiumPricing(
+              currentPrice: 249000,
+              productId: 'prod-1',
+            ),
+          ),
+          ccProfileProvider.overrideWith((ref) async => {'role': 'admin'}),
+          // Máy này thuộc danh sách được bật/tắt gói.
+          canTogglePremiumProvider.overrideWithValue(true),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await container.read(premiumOverrideProvider.notifier).set(false);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(home: WrPaymentScreen()),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      expect(container.read(premiumOverrideProvider), isFalse,
+          reason: 'trước khi mua vẫn đang bị ép miễn phí');
+
+      repo.nextPolled = repo.order.copyWith(status: 'paid');
+      await tester.pump(kPaymentPollInterval);
+      await tester.pump();
+
+      expect(container.read(premiumOverrideProvider), isNull,
+          reason: 'mua thật phải thắng công cụ thử nghiệm');
+      expect(find.byKey(const Key('wr_payment_success')), findsOneWidget);
+    });
+
+    testWidgets('máy không được phép bật/tắt thì không đụng tới công tắc', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({
+        'wr_dev_premium_override': false,
+      });
+
+      final repo = FakePaymentRepository();
+      final container = ProviderContainer(
+        overrides: [
+          paymentRepositoryProvider.overrideWithValue(repo),
+          wrPremiumPricingProvider.overrideWith(
+            (ref) async => const WrPremiumPricing(
+              currentPrice: 249000,
+              productId: 'prod-1',
+            ),
+          ),
+          ccProfileProvider.overrideWith((ref) async => {'role': 'user'}),
+          canTogglePremiumProvider.overrideWithValue(false),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      await container.read(premiumOverrideProvider.notifier).set(false);
+
+      await tester.pumpWidget(
+        UncontrolledProviderScope(
+          container: container,
+          child: const MaterialApp(home: WrPaymentScreen()),
+        ),
+      );
+      await tester.pump();
+      await tester.pump();
+
+      repo.nextPolled = repo.order.copyWith(status: 'paid');
+      await tester.pump(kPaymentPollInterval);
+      await tester.pump();
+
+      // Công tắc của máy này vốn không có hiệu lực, đụng vào chỉ thừa.
+      expect(container.read(premiumOverrideProvider), isFalse);
     });
   });
 
