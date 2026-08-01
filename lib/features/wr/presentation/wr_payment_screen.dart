@@ -1291,7 +1291,10 @@ class _SuccessView extends StatelessWidget {
               width: double.infinity,
               child: ElevatedButton(
                 key: const Key('wr_payment_success_cta'),
-                onPressed: () => Navigator.of(context).maybePop(),
+                // Trả `true` để Paywall bên dưới biết mà tự đóng theo. Chỉ pop
+                // một lớp thì người vừa mua xong lại rơi đúng vào trang mời
+                // mua — Paywall là chỗ đã đẩy màn này lên.
+                onPressed: () => Navigator.of(context).pop(true),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: WrColors.coral,
                   foregroundColor: WrColors.navy,

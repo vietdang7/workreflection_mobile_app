@@ -27,6 +27,33 @@ enum PaywallTrigger {
   selfCheckDeep,
 }
 
+/// Mở màn thanh toán và tự đóng Paywall khi đã mua xong.
+///
+/// Paywall được đẩy lên từ 9 chỗ khác nhau (Hiểu mình, Hành trình, Self-check,
+/// Tôi…), rồi chính nó đẩy tiếp màn thanh toán. Nên sau khi trả tiền, pop một
+/// lớp là rơi đúng vào trang mời mua. Đóng luôn cả Paywall thì người dùng về
+/// thẳng chỗ họ đang đứng lúc đầu, và chỗ đó đã mở khoá sẵn nhờ
+/// `wrEntitlementProvider` được nạp lại.
+Future<void> _openPayment(BuildContext context, WidgetRef ref) async {
+  final bought = await context.push<bool>('/wr/payment');
+  if (!context.mounted) return;
+
+  // `bought` null khi người dùng bấm nút quay lại thay vì nút trên màn thành
+  // công — họ vẫn có thể đã trả tiền xong. Hỏi lại quyền cho chắc, chứ giữ
+  // người đã mua ở lại trang mời mua thì vô lý.
+  var premium = bought == true;
+  if (!premium) {
+    try {
+      premium = (await ref.read(wrEntitlementProvider.future)).isPremium;
+    } catch (_) {
+      /* không đọc được thì cứ để nguyên Paywall, không đoán bừa */
+    }
+  }
+
+  if (!context.mounted) return;
+  if (premium) context.pop();
+}
+
 class WrPaywallScreen extends ConsumerWidget {
   const WrPaywallScreen({super.key, this.trigger = PaywallTrigger.defaultTrigger});
 
@@ -291,7 +318,7 @@ class WrPaywallScreen extends ConsumerWidget {
                       width: double.infinity,
                       child: ElevatedButton(
                         key: const Key('wr_paywall_cta'),
-                        onPressed: () => context.push('/wr/payment'),
+                        onPressed: () => _openPayment(context, ref),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: WrColors.coral,
                           foregroundColor: WrColors.navy,
