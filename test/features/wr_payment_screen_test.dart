@@ -98,8 +98,14 @@ class FakePaymentRepository implements PaymentRepository {
   @override
   Future<void> expireOrder(String orderId) async => expireCalls++;
 
+  /// Khi khác null, [completeFreeOrder] ném lỗi này — mô phỏng RPC hỏng.
+  Object? completeFreeError;
+
   @override
-  Future<void> completeFreeOrder(String orderId) async => completeFreeCalls++;
+  Future<void> completeFreeOrder(String orderId) async {
+    completeFreeCalls++;
+    if (completeFreeError != null) throw completeFreeError!;
+  }
 }
 
 Widget _wrap(FakePaymentRepository repo, {WrPremiumPricing? pricing}) {
@@ -479,6 +485,64 @@ void main() {
       );
 
       await tester.pumpWidget(const SizedBox());
+    });
+  });
+
+  group('WrPaymentScreen — đơn 0đ', () {
+    /// Đơn đã gắn voucher giảm hết từ trước, mở lại màn là thấy ngay —
+    /// đúng tình huống đơn CNCB2DE90DF ngày 2026-08-01.
+    WrOrder freeOrder() => WrOrder(
+          id: 'order-free',
+          code: 'CNCFREE0001',
+          status: 'pending',
+          originalAmount: 249000,
+          discountAmount: 249000,
+          finalAmount: 0,
+          voucherId: 'v1',
+          expiresAt: DateTime.now().toUtc().add(const Duration(minutes: 20)),
+        );
+
+    testWidgets('không hiện QR, hiện nút nhận Premium', (tester) async {
+      final repo = FakePaymentRepository()
+        ..reusable = freeOrder()
+        ..completeFreeError = StateError('server hỏng');
+
+      await tester.pumpWidget(_wrap(repo));
+      await tester.pump();
+      await tester.pump();
+
+      expect(find.byKey(const Key('wr_payment_qr')), findsNothing);
+      expect(find.byKey(const Key('wr_payment_free_card')), findsOneWidget);
+
+      await tester.pumpWidget(const SizedBox());
+    });
+
+    testWidgets('hoàn tất hụt thì vẫn còn đường thử lại', (tester) async {
+      final repo = FakePaymentRepository()
+        ..reusable = freeOrder()
+        ..completeFreeError = StateError('42883 operator does not exist');
+
+      await tester.pumpWidget(_wrap(repo));
+      await tester.pump();
+      await tester.pump();
+
+      await _scrollTo(tester, find.byKey(const Key('wr_payment_free_complete')));
+      await tester.tap(find.byKey(const Key('wr_payment_free_complete')));
+      await tester.pump();
+      await tester.pump();
+
+      // Lỗi hiện nguyên văn để lần sau khỏi phải dựng đơn thử mới lần ra.
+      expect(find.textContaining('42883'), findsOneWidget);
+      expect(repo.completeFreeCalls, 1);
+
+      // Nút vẫn bấm được — đây chính là chỗ trước đây người dùng bị kẹt.
+      repo.completeFreeError = null;
+      await tester.tap(find.byKey(const Key('wr_payment_free_complete')));
+      await tester.pump();
+      await tester.pump();
+
+      expect(repo.completeFreeCalls, 2);
+      expect(find.byKey(const Key('wr_payment_success')), findsOneWidget);
     });
   });
 

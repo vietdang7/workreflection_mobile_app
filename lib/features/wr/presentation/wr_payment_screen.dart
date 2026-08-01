@@ -51,6 +51,10 @@ class _WrPaymentScreenState extends ConsumerState<WrPaymentScreen> {
   bool _voucherBusy = false;
   String? _appliedCode;
 
+  // Đơn 0đ
+  bool _completingFree = false;
+  String? _freeError;
+
   // Hoá đơn
   WrInvoiceForm _invoice = const WrInvoiceForm();
   Timer? _invoiceDebounce;
@@ -203,6 +207,8 @@ class _WrPaymentScreenState extends ConsumerState<WrPaymentScreen> {
       _voucherError = null;
       _voucherCtl.clear();
       _invoice = const WrInvoiceForm();
+      _completingFree = false;
+      _freeError = null;
     });
     _createOrder();
   }
@@ -210,13 +216,22 @@ class _WrPaymentScreenState extends ConsumerState<WrPaymentScreen> {
   /// Đơn 0đ: không có gì để chuyển khoản, tự hoàn tất.
   Future<void> _completeFree() async {
     final order = _order;
-    if (order == null) return;
+    if (order == null || _completingFree) return;
+    setState(() {
+      _completingFree = true;
+      _freeError = null;
+    });
     try {
       await ref.read(paymentRepositoryProvider).completeFreeOrder(order.id);
       _onPaid();
     } catch (e) {
       if (!mounted) return;
-      setState(() => _voucherError = 'Không hoàn tất được đơn. Thử lại giúp mình.');
+      setState(() {
+        _completingFree = false;
+        // Kèm nguyên văn lỗi server. Một câu chung chung "thử lại giúp mình"
+        // đã từng giấu mất lỗi 42883 của RPC, phải đi dựng đơn thử mới lần ra.
+        _freeError = 'Không hoàn tất được đơn.\n$e';
+      });
     }
   }
 
@@ -304,6 +319,7 @@ class _WrPaymentScreenState extends ConsumerState<WrPaymentScreen> {
         _appliedCode = null;
         _voucherCtl.clear();
         _voucherError = null;
+        _freeError = null;
       });
     } finally {
       if (mounted) setState(() => _voucherBusy = false);
@@ -406,17 +422,29 @@ class _WrPaymentScreenState extends ConsumerState<WrPaymentScreen> {
           onBrowse: _openVoucherList,
         ),
         const SizedBox(height: 14),
-        _QrCard(order: order),
-        const SizedBox(height: 14),
-        _BankCard(
-          order: order,
-          copiedField: _copiedField,
-          onCopy: _copy,
-        ),
+        // Đơn 0đ không có gì để quét. Hiện QR số tiền 0 chỉ làm người dùng
+        // hoang mang, và họ cần một đường thử lại khi hoàn tất hụt.
+        if (order.isFree)
+          _FreeOrderCard(
+            busy: _completingFree,
+            error: _freeError,
+            onComplete: _completeFree,
+          )
+        else ...[
+          _QrCard(order: order),
+          const SizedBox(height: 14),
+          _BankCard(
+            order: order,
+            copiedField: _copiedField,
+            onCopy: _copy,
+          ),
+        ],
         const SizedBox(height: 14),
         _InvoiceCard(form: _invoice, onChanged: _updateInvoice),
-        const SizedBox(height: 18),
-        const _WaitingNote(),
+        if (!order.isFree) ...[
+          const SizedBox(height: 18),
+          const _WaitingNote(),
+        ],
       ],
     );
   }
@@ -653,6 +681,75 @@ class _VoucherCard extends StatelessWidget {
                 key: const Key('wr_payment_voucher_error'),
                 style: const TextStyle(fontSize: 13, color: WrColors.coral)),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Đơn 0đ — thay chỗ của QR và khối ngân hàng.
+///
+/// Có nút bấm riêng chứ không chỉ tự chạy một lần lúc áp voucher: hoàn tất hụt
+/// (mất mạng, lỗi server) mà không có đường thử lại thì người dùng kẹt cứng,
+/// buộc phải gỡ voucher rồi áp lại mới mong chạy lại.
+class _FreeOrderCard extends StatelessWidget {
+  const _FreeOrderCard({
+    required this.busy,
+    required this.error,
+    required this.onComplete,
+  });
+
+  final bool busy;
+  final String? error;
+  final VoidCallback onComplete;
+
+  @override
+  Widget build(BuildContext context) {
+    return _Card(
+      key: const Key('wr_payment_free_card'),
+      child: Column(
+        children: [
+          const Icon(Icons.card_giftcard, size: 34, color: WrColors.teal),
+          const SizedBox(height: 10),
+          const Text('Đơn này miễn phí',
+              style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: WrColors.navy)),
+          const SizedBox(height: 4),
+          const Text('Mã giảm giá đã trừ hết. Không cần chuyển khoản.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 13, color: WrColors.text3)),
+          if (error != null) ...[
+            const SizedBox(height: 12),
+            Text(error!,
+                key: const Key('wr_payment_free_error'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                    fontSize: 12.5, color: WrColors.coral, height: 1.4)),
+          ],
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              key: const Key('wr_payment_free_complete'),
+              onPressed: busy ? null : onComplete,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: WrColors.coral,
+                foregroundColor: WrColors.navy,
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                busy
+                    ? 'Đang xử lý…'
+                    : (error == null ? 'Nhận Premium' : 'Thử lại'),
+                style: const TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
         ],
       ),
     );
