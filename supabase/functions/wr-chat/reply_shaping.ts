@@ -74,6 +74,18 @@ const RISK_REDIRECT_RE =
 const CALM_OFFER_RE =
   /(muốn|thử|gợi ý|giới thiệu)[^.?!]{0,40}(bài đọc|bài nghe|audio|nội dung nhẹ)|thư viện nội dung cảm xúc/i;
 
+/// Trợ lý đang CHỈ VÀO cái nút mở luồng Reflection.
+///
+/// Khách gặp 2026-08-03: sau khi họ nói "có", trợ lý trả lời "nút mở luồng
+/// Reflection đang hiện ngay dưới đây, bạn bấm vào đó nhé" mà KHÔNG đặt thẻ, nên
+/// dưới bong bóng chẳng có nút nào. Chỉ vào một thứ không tồn tại còn tệ hơn im
+/// lặng: người dùng tìm quanh màn hình rồi nghĩ app hỏng.
+///
+/// Đây là tín hiệu chắc chắn, không cần đoán: trợ lý không có lý do nào khác để
+/// nhắc tới "nút" giữa một cuộc trò chuyện.
+const REFLECT_POINTER_RE =
+  /(nút|bấm vào)[^.?!]{0,50}(reflection|luồng|ngay dưới|bên dưới|phía dưới)|bấm vào (nút|đó)/i;
+
 /// Gỡ thẻ, lột Markdown, và áp luật an toàn.
 export function shapeReply(raw: string): ShapedReply {
   let action: ChatAction | null = null;
@@ -85,7 +97,10 @@ export function shapeReply(raw: string): ShapedReply {
     action = found[0][1].toLowerCase() as ChatAction;
   }
 
-  let text = raw.replace(ACTION_RE, '');
+  // Gộp khoảng trắng thừa do gỡ thẻ để lại. Model đôi khi đặt thẻ GIỮA câu chứ
+  // không ở dòng cuối như prompt dặn, và khi đó chỗ vừa gỡ chừa lại hai dấu cách
+  // liền nhau giữa câu chữ.
+  let text = raw.replace(ACTION_RE, '').replace(/[ \t]{2,}/g, ' ');
   text = stripMarkdown(text);
 
   // ── Luật an toàn ────────────────────────────────────────────────────────
@@ -107,6 +122,13 @@ export function shapeReply(raw: string): ShapedReply {
   // mở được. Đặt SAU luật trên để nhánh mục 8 luôn là nhánh quyết định.
   if (action === null && CALM_OFFER_RE.test(text)) {
     action = 'calm';
+  }
+
+  // Và nếu trợ lý đang chỉ vào cái nút mở luồng Reflection thì cái nút đó phải
+  // có thật. Đặt cuối cùng: hai luật trên nói về nội dung cảm xúc, luật này chỉ
+  // dọn nốt trường hợp trợ lý nhắc tới nút mà quên đặt thẻ.
+  if (action === null && REFLECT_POINTER_RE.test(text)) {
+    action = 'reflect';
   }
 
   return { text: text.trim(), action };

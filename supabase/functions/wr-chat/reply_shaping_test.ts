@@ -220,3 +220,37 @@ Deno.test('nhánh mục 8 thật có đủ hai dấu hiệu thì vẫn được 
   );
   assertEquals(r.action, 'calm');
 });
+
+// ---------------------------------------------------------------------------
+// Chỉ vào nút thì nút phải có thật
+// ---------------------------------------------------------------------------
+
+Deno.test('nhắc tới nút mở luồng mà quên thẻ thì vẫn hiện nút', () => {
+  // Khách gặp 2026-08-03: trợ lý bảo "bấm vào đó" mà dưới bong bóng trống trơn.
+  const r = shapeReply(
+    'Nút mở luồng Reflection đang hiện ngay dưới đây, bạn bấm vào đó để bắt đầu nhé.',
+  );
+  assertEquals(r.action, 'reflect');
+});
+
+Deno.test('gỡ thẻ giữa câu không để lại khoảng trắng đôi', () => {
+  const r = shapeReply('Bạn bấm vào nút [[ACTION:reflect]] ở ngay dưới nhé.');
+  assertEquals(r.text.includes('  '), false);
+  assertEquals(r.text, 'Bạn bấm vào nút ở ngay dưới nhé.');
+  assertEquals(r.action, 'reflect');
+});
+
+Deno.test('câu thường không nhắc nút thì KHÔNG ép nút reflect', () => {
+  const r = shapeReply(
+    'Nghe quen thuộc đấy. Bạn có nhớ điều gì khiến bạn chọn im lặng lúc đó không?',
+  );
+  assertEquals(r.action, null);
+});
+
+Deno.test('nhánh mục 8 vẫn thắng luật chỉ-vào-nút', () => {
+  const r = shapeReply(
+    'Mình không phải chuyên gia tâm lý. Hãy tìm đến một người thân bạn tin '
+      + 'tưởng ngay bây giờ nhé. Bạn bấm vào đó nếu muốn đọc một chút.',
+  );
+  assertEquals(r.action, 'calm');
+});

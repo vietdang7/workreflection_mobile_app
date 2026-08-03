@@ -355,12 +355,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
     { role: 'user', content: message },
   ];
 
-  let reply: string;
-  try {
+  /// Gọi OpenRouter một lần.
+  const callUpstream = () => {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
-
-    const res = await fetch(OPENROUTER_URL, {
+    return fetch(OPENROUTER_URL, {
       method: 'POST',
       signal: controller.signal,
       headers: {
@@ -382,6 +381,29 @@ Deno.serve(async (req: Request): Promise<Response> => {
         reasoning: { enabled: false },
       }),
     }).finally(() => clearTimeout(timer));
+  };
+
+  let reply: string;
+  try {
+    // THỬ LẠI MỘT LẦN khi đường lên trục trặc tạm thời.
+    //
+    // Bản đầu không thử lại, nên một cú vấp của nhà cung cấp là người dùng nhận
+    // ngay "Mình chưa trả lời được" và phải tự gõ lại. Khách gặp đúng lỗi này
+    // ngày 2026-08-03 (502 giữa cuộc trò chuyện đang trôi chảy). Đo lúc đó thấy
+    // OpenRouter vẫn sống nhưng độ trễ dao động từ 0,9 tới 11,7 giây, tức là
+    // trục trặc thoáng qua chứ không phải hỏng hẳn.
+    //
+    // Chỉ thử lại với lỗi CÓ THỂ TỰ KHỎI: 429 và nhóm 5xx. Lỗi 4xx khác là sai
+    // ở phía ta, thử lại chỉ tốn thêm tiền cho cùng một câu trả lời sai.
+    //
+    // Đúng MỘT lần thôi: người dùng đang nhìn con trỏ nhấp nháy, và hai lần chờ
+    // 45 giây liên tiếp thì thà báo lỗi để họ gửi lại còn hơn.
+    let res = await callUpstream();
+    if (res.status === 429 || res.status >= 500) {
+      console.warn(`OpenRouter ${res.status}, thử lại một lần.`);
+      await new Promise((r) => setTimeout(r, 600));
+      res = await callUpstream();
+    }
 
     if (!res.ok) {
       const detail = await res.text();

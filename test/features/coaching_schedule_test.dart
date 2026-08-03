@@ -65,6 +65,19 @@ Widget _wrapSimple(Widget home, FakeCoachingRepository repo) {
   );
 }
 
+/// Cuộn tới nút gửi rồi mới bấm.
+///
+/// Nút nằm dưới đáy màn hình giả lập: cả trang là một `SingleChildScrollView`
+/// nên trên máy thật người dùng cuộn xuống là thấy, nhưng trong test thì tâm nút
+/// rơi ra ngoài khung 800×1400 và cú `tap` bắn vào khoảng không — không có gì
+/// nhận sự kiện, và bài test đỏ ở chỗ chẳng liên quan gì tới thứ nó muốn kiểm.
+Future<void> _tapSubmit(WidgetTester tester) async {
+  final btn = find.byKey(const Key('scheduleSubmitBtn'));
+  await tester.ensureVisible(btn);
+  await tester.pumpAndSettle();
+  await tester.tap(btn);
+}
+
 CoachingBooking _pendingBooking({
   String id = 'b-1',
   int sessionNumber = 1,
@@ -159,7 +172,7 @@ void main() {
           _wrapSimple(const CoachingScheduleScreen(bookingId: 'b-1'), repo));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('scheduleSubmitBtn')));
+      await _tapSubmit(tester);
       await tester.pump(); // let snackbar render
       await tester.pump(const Duration(milliseconds: 300));
 
@@ -203,7 +216,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Submit
-      await tester.tap(find.byKey(const Key('scheduleSubmitBtn')));
+      await _tapSubmit(tester);
       await tester.pumpAndSettle();
 
       // Confirm dialog
@@ -248,7 +261,7 @@ void main() {
       // Set error before submit
       repo.nextError = Exception('network');
 
-      await tester.tap(find.byKey(const Key('scheduleSubmitBtn')));
+      await _tapSubmit(tester);
       await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const Key('scheduleConfirmBtn')));
