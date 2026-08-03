@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workreflection_mobile/core/data/ausynclab_tts_service.dart';
 import 'package:workreflection_mobile/core/data/workshop_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
@@ -22,7 +23,9 @@ import 'package:workreflection_mobile/core/data/wr_mood_content_repository.dart'
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
 import 'package:workreflection_mobile/core/logic/stt_service.dart';
 import 'package:workreflection_mobile/core/logic/wr_tra_chieu.dart';
+import 'package:workreflection_mobile/core/data/wr_chat_repository.dart';
 import 'package:workreflection_mobile/core/models/checkin.dart';
+import 'package:workreflection_mobile/core/models/wr_chat.dart';
 import 'package:workreflection_mobile/core/models/wr_episode.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 import 'package:workreflection_mobile/core/models/wr_mood_content.dart';
@@ -40,6 +43,7 @@ import 'package:workreflection_mobile/l10n/app_localizations.dart';
 
 import '../support/fake_repository.dart';
 import '../support/fake_workshop_repository.dart';
+import '../support/fake_wr_chat_repository.dart';
 import '../support/fake_wr_content_repository.dart';
 import '../support/fake_wr_episode_repository.dart';
 import '../support/fake_wr_intelligence_repository.dart';
@@ -132,8 +136,10 @@ Widget _wrap(
   FakeWrMoodContentRepository? moodContent,
   FakeWrEpisodeRepository? episodes,
   FakeWorkshopRepository? workshops,
+  FakeWrChatRepository? chat,
   TtsService? tts,
   bool sttAvailable = false,
+  String? email,
 }) {
   final router = GoRouter(
     initialLocation: '/test',
@@ -160,6 +166,11 @@ Widget _wrap(
         builder: (_, s) =>
             Scaffold(body: Text('THEME ${s.pathParameters['id']}')),
       ),
+      // Đích của nút hành động dưới bong bóng trả lời (mục 5 và mục 8).
+      GoRoute(
+        path: '/wr/flow/energy',
+        builder: (_, __) => const Scaffold(body: Text('LUỒNG REFLECTION')),
+      ),
       for (final p in [
         '/wr/pattern/:code',
         '/wr/mood-library',
@@ -183,10 +194,14 @@ Widget _wrap(
           .overrideWithValue(episodes ?? FakeWrEpisodeRepository()),
       workshopRepositoryProvider
           .overrideWithValue(workshops ?? FakeWorkshopRepository()),
+      wrChatRepositoryProvider
+          .overrideWithValue(chat ?? FakeWrChatRepository()),
       sttServiceProvider
           .overrideWithValue(_FakeStt(available: sttAvailable)),
       if (tts != null) ttsServiceProvider.overrideWithValue(tts),
       currentUserIdProvider.overrideWithValue('u1'),
+      // Quyết định ai được thấy công tắc Premium thử nghiệm.
+      currentUserEmailProvider.overrideWithValue(email),
     ],
     child: MaterialApp.router(
       routerConfig: router,
@@ -796,47 +811,57 @@ void main() {
   });
 
   // -------------------------------------------------------------------------
-  group('Ô hỏi nghề nghiệp', () {
-    testWidgets('gửi xong thì lưu câu hỏi và hứa gửi email', (tester) async {
-      final intel = FakeWrIntelligenceRepository();
+  // Màn này ĐÃ ĐỔI BẢN CHẤT ngày 2026-08-03: từ ô hỏi một chiều chờ trả lời qua
+  // email thành khung chat nhiều lượt do AI trả lời tại chỗ (AI Chatbox System
+  // Prompt v1.0). Đó chính là phần khách hoãn ở họp 2026-07-29 ("cái nói chuyện
+  // qua nói chuyện lại chị nghĩ cái đó nó sẽ chờ sau").
+  //
+  // Những câu hỏi gửi theo cách cũ vẫn đọc lại được, xem nhóm test cuối.
+  group('Trò chuyện với trợ lý phản chiếu', () {
+    testWidgets('gửi xong thì hiện cả câu hỏi lẫn câu trả lời', (tester) async {
+      final chat = FakeWrChatRepository()
+        ..replyText = 'Nghe quen thuộc đấy. Điều gì khiến bạn chọn im lặng?';
 
-      await _pump(tester, _wrap(const WrAskScreen(), intel: intel));
+      await _pump(tester, _wrap(const WrAskScreen(), chat: chat));
 
       await tester.enterText(
         find.byKey(const Key('wr_ask_field')),
-        'Tôi có hợp với vai trò điều phối không?',
+        'Tôi vừa im lặng trong một cuộc họp.',
       );
       await tester.pump();
       await tester.tap(find.byKey(const Key('wr_ask_send')));
       await tester.pumpAndSettle();
 
-      expect(intel.insertCareerQuestionCalls, hasLength(1));
       expect(
-        intel.insertCareerQuestionCalls.single.question,
-        'Tôi có hợp với vai trò điều phối không?',
+        chat.sendCalls.map((c) => c.message),
+        ['Tôi vừa im lặng trong một cuộc họp.'],
       );
-      expect(find.byKey(const Key('wr_ask_sent_notice')), findsOneWidget);
-      expect(find.text(kAskPendingMessage), findsWidgets);
+      expect(find.text('Tôi vừa im lặng trong một cuộc họp.'), findsOneWidget);
+      expect(
+        find.text('Nghe quen thuộc đấy. Điều gì khiến bạn chọn im lặng?'),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('ô trống thì nút gửi vô hiệu', (tester) async {
-      final intel = FakeWrIntelligenceRepository();
+    testWidgets('ô trống thì không gửi', (tester) async {
+      final chat = FakeWrChatRepository();
 
-      await _pump(tester, _wrap(const WrAskScreen(), intel: intel));
+      await _pump(tester, _wrap(const WrAskScreen(), chat: chat));
       await tester.tap(find.byKey(const Key('wr_ask_send')));
       await tester.pumpAndSettle();
 
-      expect(intel.insertCareerQuestionCalls, isEmpty);
+      expect(chat.sendCalls, isEmpty);
     });
 
-    testWidgets('gửi hỏng thì báo lỗi và GIỮ NGUYÊN chữ đã gõ', (tester) async {
-      // Xoá ô lúc gửi hỏng là làm mất câu người ta vừa viết mà chẳng lưu ở đâu.
-      final intel = FakeWrIntelligenceRepository();
+    testWidgets('gửi hỏng thì báo lỗi và GỠ câu chưa gửi được', (tester) async {
+      // Để lại câu đó trên màn hình là dựng một lượt trông như đã gửi mà máy chủ
+      // không hề biết — mở lại màn là nó biến mất, không lời giải thích.
+      final chat = FakeWrChatRepository();
 
-      await _pump(tester, _wrap(const WrAskScreen(), intel: intel));
+      await _pump(tester, _wrap(const WrAskScreen(), chat: chat));
       // Gieo lỗi SAU khi màn đã nạp lịch sử: `nextError` chỉ ném một lần, đặt
       // trước thì lần đọc lịch sử nuốt mất nó và lệnh gửi vẫn thành công.
-      intel.nextError = StateError('mạng hỏng');
+      chat.nextError = const WrChatException('Không kết nối được lúc này.');
       await tester.enterText(
         find.byKey(const Key('wr_ask_field')),
         'Câu hỏi của tôi',
@@ -845,11 +870,257 @@ void main() {
       await tester.tap(find.byKey(const Key('wr_ask_send')));
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('wr_ask_error')), findsOneWidget);
-      expect(find.text('Câu hỏi của tôi'), findsOneWidget);
+      expect(find.byKey(const Key('wr_chat_error')), findsOneWidget);
+      expect(find.text('Không kết nối được lúc này.'), findsOneWidget);
+      expect(find.byKey(const Key('wr_chat_user_bubble')), findsNothing);
     });
 
-    testWidgets('đọc lại được câu đã hỏi và trạng thái của nó', (tester) async {
+    testWidgets('hết lượt thì mời xem gói thay vì mời gửi lại', (tester) async {
+      final chat = FakeWrChatRepository();
+
+      await _pump(tester, _wrap(const WrAskScreen(), chat: chat));
+      chat.nextError = const WrChatException(
+        'Hôm nay bạn đã dùng hết lượt trò chuyện của gói miễn phí.',
+        quotaExhausted: true,
+      );
+      await tester.enterText(find.byKey(const Key('wr_ask_field')), 'Xin chào');
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('wr_ask_send')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('wr_chat_paywall_link')), findsOneWidget);
+    });
+
+    testWidgets('gói miễn phí thấy số lượt còn lại, Premium thì không', (
+      tester,
+    ) async {
+      final chat = FakeWrChatRepository()
+        ..limit = 10
+        ..isPremium = false;
+
+      await _pump(tester, _wrap(const WrAskScreen(), chat: chat));
+      await tester.enterText(find.byKey(const Key('wr_ask_field')), 'Xin chào');
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('wr_ask_send')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('wr_chat_quota_hint')), findsOneWidget);
+      expect(find.text('Còn 9 lượt trò chuyện miễn phí hôm nay.'), findsOneWidget);
+    });
+
+    testWidgets('Premium không bị nhắc về hạn mức', (tester) async {
+      final chat = FakeWrChatRepository()
+        ..isPremium = true
+        ..limit = 100;
+
+      await _pump(tester, _wrap(const WrAskScreen(), chat: chat));
+      await tester.enterText(find.byKey(const Key('wr_ask_field')), 'Xin chào');
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('wr_ask_send')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('wr_chat_quota_hint')), findsNothing);
+    });
+
+    testWidgets('mở màn là vào thẳng cuộc gần nhất, đúng thứ tự', (tester) async {
+      // Vào thẳng cuộc đang dở chứ không bắt qua màn chọn: phần lớn lần mở là
+      // để nói tiếp chuyện dở dang.
+      final chat = FakeWrChatRepository()
+        ..seedConversation(
+          'cũ',
+          const [WrChatMessage(role: WrChatRole.user, content: 'Chuyện tháng trước')],
+          lastMessageAt: DateTime(2026, 7, 1),
+        )
+        ..seedConversation(
+          'mới',
+          const [
+            WrChatMessage(role: WrChatRole.user, content: 'Câu hỏi hôm qua'),
+            WrChatMessage(
+              role: WrChatRole.assistant,
+              content: 'Câu trả lời hôm qua',
+            ),
+          ],
+          lastMessageAt: DateTime(2026, 8, 2),
+        );
+
+      await _pump(tester, _wrap(const WrAskScreen(), chat: chat));
+
+      expect(find.text('Câu hỏi hôm qua'), findsOneWidget);
+      expect(find.text('Câu trả lời hôm qua'), findsOneWidget);
+      // Cuộc cũ KHÔNG được trộn vào — đó là cả lý do tách cuộc trò chuyện ra.
+      expect(find.text('Chuyện tháng trước'), findsNothing);
+      expect(find.byKey(const Key('wr_chat_empty')), findsNothing);
+    });
+
+    testWidgets('lượt đầu gửi conversationId null, lượt sau gửi id đã có', (
+      tester,
+    ) async {
+      final chat = FakeWrChatRepository();
+
+      await _pump(tester, _wrap(const WrAskScreen(), chat: chat));
+      for (final t in ['Câu một', 'Câu hai']) {
+        await tester.enterText(find.byKey(const Key('wr_ask_field')), t);
+        await tester.pump();
+        await tester.tap(find.byKey(const Key('wr_ask_send')));
+        await tester.pumpAndSettle();
+      }
+
+      expect(chat.sendCalls.first.conversationId, isNull);
+      // Không bám lấy id máy chủ trả về thì mỗi lượt lại đẻ một cuộc mới, và
+      // trợ lý mất sạch mạch hội thoại giữa chừng.
+      expect(chat.sendCalls.last.conversationId, isNotNull);
+    });
+
+    testWidgets('nút cuộc trò chuyện mới dọn màn và bỏ id cũ', (tester) async {
+      final chat = FakeWrChatRepository()
+        ..seedConversation(
+          'c-cũ',
+          const [WrChatMessage(role: WrChatRole.user, content: 'Câu cũ')],
+        );
+
+      await _pump(tester, _wrap(const WrAskScreen(), chat: chat));
+      expect(find.text('Câu cũ'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('wr_chat_new')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Câu cũ'), findsNothing);
+      expect(find.byKey(const Key('wr_chat_empty')), findsOneWidget);
+
+      // Gửi sau khi bấm nút phải mở cuộc MỚI, không nối vào cuộc cũ.
+      await tester.enterText(find.byKey(const Key('wr_ask_field')), 'Câu mới');
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('wr_ask_send')));
+      await tester.pumpAndSettle();
+
+      expect(chat.sendCalls.single.conversationId, isNull);
+    });
+
+    testWidgets('mở được cuộc trò chuyện cũ từ màn lịch sử', (tester) async {
+      final chat = FakeWrChatRepository()
+        ..seedConversation(
+          'c-mới',
+          const [WrChatMessage(role: WrChatRole.user, content: 'Chuyện mới')],
+          title: 'Chuyện mới',
+          lastMessageAt: DateTime(2026, 8, 2),
+        )
+        ..seedConversation(
+          'c-cũ',
+          const [WrChatMessage(role: WrChatRole.user, content: 'Chuyện cũ')],
+          title: 'Chuyện cũ',
+          lastMessageAt: DateTime(2026, 7, 1),
+        );
+
+      await _pump(tester, _wrap(const WrAskScreen(), chat: chat));
+      await tester.tap(find.byKey(const Key('wr_chat_menu')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Lịch sử trò chuyện'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('wr_chat_conversation_c-cũ')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Chuyện cũ'), findsOneWidget);
+      expect(find.text('Chuyện mới'), findsNothing);
+    });
+
+    testWidgets('trợ lý mời ghi Reflection thì có nút mở luồng', (tester) async {
+      // Mục 5: trợ lý MỜI vào Reflection. Trước 2026-08-03 nó nói được câu mời
+      // nhưng không có đường đi tới, nên lời mời rơi vào khoảng không.
+      final chat = FakeWrChatRepository()
+        ..replyText = 'Muốn ghi lại thành một Reflection không?'
+        ..replyAction = WrChatAction.reflect;
+
+      await _pump(tester, _wrap(const WrAskScreen(), chat: chat));
+      await tester.enterText(find.byKey(const Key('wr_ask_field')), 'Mình im lặng');
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('wr_ask_send')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('wr_chat_action_reflect')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('wr_chat_action_reflect')));
+      await tester.pumpAndSettle();
+      expect(find.text('LUỒNG REFLECTION'), findsOneWidget);
+    });
+
+    testWidgets('trợ lý đề nghị bài dịu lại thì có nút mở Thư viện', (
+      tester,
+    ) async {
+      // Bước 3 của mục 8. Đây là lượt người dùng đang ở trạng thái tệ nhất, nên
+      // "đề nghị giúp rồi không mở được gì" là kiểu hỏng tệ nhất.
+      final chat = FakeWrChatRepository()
+        ..replyText = 'Mình có một điều nhẹ nhàng có thể giúp bạn dịu lại.'
+        ..replyAction = WrChatAction.calm;
+
+      await _pump(tester, _wrap(const WrAskScreen(), chat: chat));
+      await tester.enterText(find.byKey(const Key('wr_ask_field')), 'Mình mệt quá');
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('wr_ask_send')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('wr_chat_action_calm')), findsOneWidget);
+    });
+
+    testWidgets('lượt không có lời mời thì KHÔNG có nút', (tester) async {
+      final chat = FakeWrChatRepository()..replyAction = null;
+
+      await _pump(tester, _wrap(const WrAskScreen(), chat: chat));
+      await tester.enterText(find.byKey(const Key('wr_ask_field')), 'Xin chào');
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('wr_ask_send')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('wr_chat_action_reflect')), findsNothing);
+      expect(find.byKey(const Key('wr_chat_action_calm')), findsNothing);
+    });
+
+    testWidgets('chưa có gì thì hiện gợi ý mở lời, chạm là điền vào ô', (
+      tester,
+    ) async {
+      await _pump(tester, _wrap(const WrAskScreen()));
+
+      expect(find.byKey(const Key('wr_chat_empty')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('wr_chat_starter_0')));
+      await tester.pumpAndSettle();
+
+      expect(find.text(kChatStarters.first), findsWidgets);
+    });
+
+    testWidgets('lịch sử đọc hỏng thì vẫn trò chuyện được', (tester) async {
+      // Máy chủ mới là nơi giữ ngữ cảnh thật. Khoá màn hình lại vì không tải
+      // được phần đã cuộn qua là chặn người ta khỏi việc họ vào đây để làm.
+      final chat = FakeWrChatRepository()..nextError = StateError('mạng hỏng');
+
+      await _pump(tester, _wrap(const WrAskScreen(), chat: chat));
+      await tester.enterText(find.byKey(const Key('wr_ask_field')), 'Xin chào');
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('wr_ask_send')));
+      await tester.pumpAndSettle();
+
+      expect(chat.sendCalls.map((c) => c.message), ['Xin chào']);
+    });
+
+    testWidgets('xoá cuộc trò chuyện sau khi xác nhận', (tester) async {
+      final chat = FakeWrChatRepository()
+        ..seedConversation(
+          'c-xoá',
+          const [WrChatMessage(role: WrChatRole.user, content: 'Câu cũ')],
+        );
+
+      await _pump(tester, _wrap(const WrAskScreen(), chat: chat));
+      await tester.tap(find.byKey(const Key('wr_chat_menu')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Xoá cuộc trò chuyện này'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('wr_chat_clear_confirm')));
+      await tester.pumpAndSettle();
+
+      expect(chat.deleteCalls, ['c-xoá']);
+      expect(find.text('Câu cũ'), findsNothing);
+    });
+
+    testWidgets('đọc lại được câu đã hỏi theo cách cũ', (tester) async {
+      // Những người đã gửi câu hỏi trước 2026-08-03 được hứa một câu trả lời qua
+      // email. Xoá lối vào phần đó đi là nuốt lời hứa.
       final intel = FakeWrIntelligenceRepository()
         ..seedCareerQuestions([
           CareerQuestion(
@@ -868,6 +1139,10 @@ void main() {
         ]);
 
       await _pump(tester, _wrap(const WrAskScreen(), intel: intel));
+      await tester.tap(find.byKey(const Key('wr_chat_menu')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Câu hỏi đã gửi trước đây'));
+      await tester.pumpAndSettle();
 
       expect(find.text('Câu đã trả lời'), findsOneWidget);
       expect(find.text('Đây là câu trả lời.'), findsOneWidget);
@@ -900,7 +1175,7 @@ void main() {
     // sau"). Widget và màn hỏi giữ nguyên để bật lại — test dưới dựng thẳng
     // widget nên vẫn khoá được hành vi của nó. Chỗ khoá việc "không còn nổi
     // trên tab nào" nằm ở `shell_test.dart`, nơi dựng shell thật.
-    testWidgets('chạm mở màn hỏi', (tester) async {
+    testWidgets('chạm mở màn trò chuyện', (tester) async {
       await _pump(
         tester,
         _wrap(const Scaffold(body: Center(child: WrAskBubble()))),
@@ -910,7 +1185,7 @@ void main() {
       await tester.tap(find.byKey(const Key('wr_ask_bubble')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Bạn muốn hiểu thêm điều gì?'), findsOneWidget);
+      expect(find.text('Trò chuyện'), findsOneWidget);
     });
   });
 
@@ -1224,6 +1499,70 @@ void main() {
         find.textContaining('A paid plan is required'),
         findsOneWidget,
       );
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  group('công tắc Premium thử nghiệm áp cho cả trợ lý', () {
+    // Bản đầu chatbox CỐ Ý bỏ qua công tắc, vì công tắc nằm trên máy nên không
+    // được phép mở hạn mức tiêu tiền thật. Đúng về bảo mật, sai về hậu quả: mọi
+    // màn khác đổi theo công tắc còn riêng trợ lý thì không, nên bật Premium lên
+    // xem thử lại tưởng ranh giới hai gói bị hỏng.
+    //
+    // Máy chủ tự kiểm tra email của người gọi nên gửi cờ lên là an toàn. Phần
+    // dưới khoá đúng phía app: gửi khi được phép, và KHÔNG gửi khi không.
+
+    testWidgets('email được phép: lượt gửi mang theo cờ', (tester) async {
+      SharedPreferences.setMockInitialValues({'wr_dev_premium_override': true});
+      final chat = FakeWrChatRepository();
+
+      await _pump(
+        tester,
+        _wrap(const WrAskScreen(), chat: chat, email: 'thedangs7@gmail.com'),
+      );
+      await tester.enterText(find.byKey(const Key('wr_ask_field')), 'chào');
+      // Nút gửi chỉ bật khi ô đã có chữ, nên phải để khung dựng lại trước khi bấm.
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('wr_ask_send')));
+      await tester.pumpAndSettle();
+
+      expect(chat.sendCalls.single.premiumOverride, isTrue);
+    });
+
+    testWidgets('email KHÔNG được phép: cờ bị bỏ qua', (tester) async {
+      // Một giá trị sót lại trong SharedPreferences không được phép đổi giọng
+      // trợ lý của người dùng thường.
+      SharedPreferences.setMockInitialValues({'wr_dev_premium_override': true});
+      final chat = FakeWrChatRepository();
+
+      await _pump(
+        tester,
+        _wrap(const WrAskScreen(), chat: chat, email: 'nguoila@example.com'),
+      );
+      await tester.enterText(find.byKey(const Key('wr_ask_field')), 'chào');
+      // Nút gửi chỉ bật khi ô đã có chữ, nên phải để khung dựng lại trước khi bấm.
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('wr_ask_send')));
+      await tester.pumpAndSettle();
+
+      expect(chat.sendCalls.single.premiumOverride, isNull);
+    });
+
+    testWidgets('chưa động vào công tắc thì dùng gói thật', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final chat = FakeWrChatRepository();
+
+      await _pump(
+        tester,
+        _wrap(const WrAskScreen(), chat: chat, email: 'thedangs7@gmail.com'),
+      );
+      await tester.enterText(find.byKey(const Key('wr_ask_field')), 'chào');
+      // Nút gửi chỉ bật khi ô đã có chữ, nên phải để khung dựng lại trước khi bấm.
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('wr_ask_send')));
+      await tester.pumpAndSettle();
+
+      expect(chat.sendCalls.single.premiumOverride, isNull);
     });
   });
 }

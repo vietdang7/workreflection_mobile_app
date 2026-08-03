@@ -20,18 +20,29 @@ class ShellScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: WrColors.white,
-      // Bong bóng hỏi TẠM TẮT (khách 2026-07-30: "bỏ cái ô chatbot giúp tôi,
-      // chúng ta sẽ làm cái này sau").
+      // Bong bóng trò chuyện, BẬT LẠI 2026-08-03.
       //
-      // Chỉ gỡ khỏi shell, KHÔNG xoá: `WrAskBubble`, màn `/wr/ask` và bảng câu
-      // hỏi vẫn còn nguyên và vẫn có test. Bật lại là bọc `navigationShell`
-      // trong một Stack rồi thêm:
-      //   const Positioned(right: 18, bottom: 18, child: WrAskBubble())
+      // Khách tắt nó ngày 2026-07-30 ("bỏ cái ô chatbot giúp tôi, chúng ta sẽ
+      // làm cái này sau") vì lúc đó chạm vào chỉ ra một ô hỏi một chiều, câu
+      // trả lời hẹn gửi qua email. Giờ phía sau đã là hội thoại thật nên lối
+      // vào có lý do tồn tại.
       //
-      // Yêu cầu gốc của họp 2026-07-29 vẫn giữ nguyên khi bật lại: bong bóng
-      // nổi trên MỌI tab — "nó sẽ hiển thị trên mọi trang luôn chứ không riêng
-      // trang hành trình".
-      body: navigationShell,
+      // Yêu cầu gốc họp 2026-07-29, giữ nguyên: nổi trên MỌI tab, "nó sẽ hiển
+      // thị trên mọi trang luôn chứ không riêng trang hành trình".
+      body: Stack(
+        children: [
+          navigationShell,
+          // Không dùng `bottom: 18` trần: máy có thanh cử chỉ dưới đáy sẽ đè
+          // lên bong bóng. `viewPadding` chứ không phải `padding` — Scaffold đã
+          // trừ phần thanh tab khỏi `padding`, đọc nhầm cái đó thì bong bóng
+          // tụt xuống đúng chỗ vừa trừ.
+          Positioned(
+            right: 18,
+            bottom: 18 + MediaQuery.of(context).viewPadding.bottom,
+            child: const WrAskBubble(),
+          ),
+        ],
+      ),
       bottomNavigationBar: WrTabBar(
         currentIndex: navigationShell.currentIndex,
         onTap: (index) => navigationShell.goBranch(
@@ -61,7 +72,7 @@ class WrAskBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: 'Hỏi về hành trình nghề nghiệp của bạn',
+      label: 'Trò chuyện với trợ lý phản chiếu',
       child: GestureDetector(
         key: const Key('wr_ask_bubble'),
         behavior: HitTestBehavior.opaque,
