@@ -61,6 +61,29 @@ const FREE_DAILY_LIMIT = Number(Deno.env.get('WR_CHAT_FREE_LIMIT') ?? '10');
 /// đồng loạt — con số đó vẫn nhỏ, nên nâng trần là an toàn.
 const PREMIUM_DAILY_LIMIT = Number(Deno.env.get('WR_CHAT_PREMIUM_LIMIT') ?? '300');
 
+/// Những email được phép tự bật/tắt gói để xem thử, giống công tắc trong app.
+///
+/// VÌ SAO CÓ: bản đầu hàm này cố ý bỏ qua công tắc Premium thử nghiệm, lý do là
+/// công tắc nằm ở SharedPreferences trên máy nên không được phép mở hạn mức tiêu
+/// tiền thật. Đúng về bảo mật, nhưng sai về hậu quả: cả app đổi theo công tắc
+/// còn riêng chatbox thì không, nên chủ sản phẩm bật Premium lên xem thử mà thấy
+/// trợ lý vẫn trả lời y như gói miễn phí, và tưởng ranh giới hai gói bị hỏng.
+///
+/// Cách chữa giữ được cả hai: app CỨ GỬI công tắc lên, nhưng máy chủ chỉ nghe
+/// khi email của người gọi nằm trong danh sách này. Email lấy từ token đã xác
+/// thực, không lấy từ thân yêu cầu, nên người dùng thường có gửi cờ cũng vô ích.
+///
+/// GIỮ ĐỒNG BỘ với `kPremiumTogglePermittedEmails` trong
+/// `lib/core/logic/wr_premium_override.dart`. Đặt secret WR_PREMIUM_TOGGLE_EMAILS
+/// để đổi mà không phải deploy lại.
+const PREMIUM_TOGGLE_EMAILS = new Set(
+  (Deno.env.get('WR_PREMIUM_TOGGLE_EMAILS') ??
+    'thedangs7@gmail.com,ngduythong1412@gmail.com')
+    .split(',')
+    .map((e) => e.trim().toLowerCase())
+    .filter(Boolean),
+);
+
 /// Số lượt gần nhất nạp lại làm ngữ cảnh.
 ///
 /// 20 lượt là đủ để giữ mạch một cuộc trò chuyện mà không kéo cả nhật ký nhiều
@@ -171,9 +194,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // ── 2 · Đọc câu hỏi ─────────────────────────────────────────────────────
   let message: string;
   let requestedConversationId: string | null;
+  /// Công tắc gói do app gửi lên. null = không động vào, dùng gói thật.
+  let premiumOverride: boolean | null = null;
   try {
     const body = await req.json();
     message = String(body?.message ?? '').trim();
+    premiumOverride = typeof body?.premiumOverride === 'boolean'
+      ? body.premiumOverride
+      : null;
     // Rỗng nghĩa là "mở cuộc mới". App gửi null khi người dùng bấm nút cuộc trò
     // chuyện mới, hoặc khi vào màn lần đầu và chưa có cuộc nào.
     const raw = body?.conversationId;
@@ -233,7 +261,20 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }
   }
 
+  // Công tắc thử nghiệm, áp SAU hai nguồn thật và chỉ cho email được phép.
+  //
+  // Email đọc từ token đã xác thực ở bước 1, KHÔNG đọc từ thân yêu cầu: người
+  // dùng thường gửi kèm cờ này thì cờ bị bỏ qua, đúng như trước khi có nó.
+  //
+  // Hạn mức vẫn tính theo gói THẬT. Công tắc để xem trợ lý trả lời khác ra sao,
+  // không phải để mở thêm lượt tiêu tiền — đúng lo ngại ban đầu, chỉ là khoanh
+  // lại đúng phần cần khoanh.
+  const callerEmail = (user.email ?? '').trim().toLowerCase();
+  const mayToggle = PREMIUM_TOGGLE_EMAILS.has(callerEmail);
   const limit = isPremium ? PREMIUM_DAILY_LIMIT : FREE_DAILY_LIMIT;
+  if (premiumOverride !== null && mayToggle) {
+    isPremium = premiumOverride;
+  }
 
   // ── 4 · Hạn mức trong ngày ──────────────────────────────────────────────
   let usedToday = 0;
@@ -398,17 +439,32 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   if (conversationId !== null) {
+    // ĐẶT created_at TƯỜNG MINH, lệch nhau một phần nghìn giây.
+    //
+    // `default now()` trong Postgres tính MỘT LẦN cho cả câu lệnh, nên hai dòng
+    // ghi cùng một lần insert nhận đúng một mốc thời gian. Sắp xếp theo cột đó
+    // thành ra không xác định: test đầu-cuối 2026-08-03 đọc lại thấy lượt trợ lý
+    // đứng TRƯỚC câu hỏi của người dùng.
+    //
+    // Hỏng hai chỗ cùng lúc: người dùng mở lại cuộc cũ thấy câu trả lời nằm trên
+    // câu mình hỏi, và Edge Function nạp lịch sử theo đúng thứ tự lộn ấy để làm
+    // ngữ cảnh, tức là model đọc cuộc trò chuyện ngược.
+    const askedAt = new Date();
+    const answeredAt = new Date(askedAt.getTime() + 1);
+
     // Một lần insert hai dòng để không có khoảnh khắc nào lịch sử chỉ có câu hỏi.
     const { error } = await db.from('wr_chat_messages').insert([
       {
         user_id: user.id,
         conversation_id: conversationId,
+        created_at: askedAt.toISOString(),
         role: 'user',
         content: message,
       },
       {
         user_id: user.id,
         conversation_id: conversationId,
+        created_at: answeredAt.toISOString(),
         role: 'assistant',
         content: shaped.text,
         model: MODEL,

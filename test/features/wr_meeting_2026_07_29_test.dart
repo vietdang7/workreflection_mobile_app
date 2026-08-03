@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workreflection_mobile/core/data/ausynclab_tts_service.dart';
 import 'package:workreflection_mobile/core/data/workshop_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
@@ -138,6 +139,7 @@ Widget _wrap(
   FakeWrChatRepository? chat,
   TtsService? tts,
   bool sttAvailable = false,
+  String? email,
 }) {
   final router = GoRouter(
     initialLocation: '/test',
@@ -198,6 +200,8 @@ Widget _wrap(
           .overrideWithValue(_FakeStt(available: sttAvailable)),
       if (tts != null) ttsServiceProvider.overrideWithValue(tts),
       currentUserIdProvider.overrideWithValue('u1'),
+      // Quyết định ai được thấy công tắc Premium thử nghiệm.
+      currentUserEmailProvider.overrideWithValue(email),
     ],
     child: MaterialApp.router(
       routerConfig: router,
@@ -1495,6 +1499,70 @@ void main() {
         find.textContaining('A paid plan is required'),
         findsOneWidget,
       );
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  group('công tắc Premium thử nghiệm áp cho cả trợ lý', () {
+    // Bản đầu chatbox CỐ Ý bỏ qua công tắc, vì công tắc nằm trên máy nên không
+    // được phép mở hạn mức tiêu tiền thật. Đúng về bảo mật, sai về hậu quả: mọi
+    // màn khác đổi theo công tắc còn riêng trợ lý thì không, nên bật Premium lên
+    // xem thử lại tưởng ranh giới hai gói bị hỏng.
+    //
+    // Máy chủ tự kiểm tra email của người gọi nên gửi cờ lên là an toàn. Phần
+    // dưới khoá đúng phía app: gửi khi được phép, và KHÔNG gửi khi không.
+
+    testWidgets('email được phép: lượt gửi mang theo cờ', (tester) async {
+      SharedPreferences.setMockInitialValues({'wr_dev_premium_override': true});
+      final chat = FakeWrChatRepository();
+
+      await _pump(
+        tester,
+        _wrap(const WrAskScreen(), chat: chat, email: 'thedangs7@gmail.com'),
+      );
+      await tester.enterText(find.byKey(const Key('wr_ask_field')), 'chào');
+      // Nút gửi chỉ bật khi ô đã có chữ, nên phải để khung dựng lại trước khi bấm.
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('wr_ask_send')));
+      await tester.pumpAndSettle();
+
+      expect(chat.sendCalls.single.premiumOverride, isTrue);
+    });
+
+    testWidgets('email KHÔNG được phép: cờ bị bỏ qua', (tester) async {
+      // Một giá trị sót lại trong SharedPreferences không được phép đổi giọng
+      // trợ lý của người dùng thường.
+      SharedPreferences.setMockInitialValues({'wr_dev_premium_override': true});
+      final chat = FakeWrChatRepository();
+
+      await _pump(
+        tester,
+        _wrap(const WrAskScreen(), chat: chat, email: 'nguoila@example.com'),
+      );
+      await tester.enterText(find.byKey(const Key('wr_ask_field')), 'chào');
+      // Nút gửi chỉ bật khi ô đã có chữ, nên phải để khung dựng lại trước khi bấm.
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('wr_ask_send')));
+      await tester.pumpAndSettle();
+
+      expect(chat.sendCalls.single.premiumOverride, isNull);
+    });
+
+    testWidgets('chưa động vào công tắc thì dùng gói thật', (tester) async {
+      SharedPreferences.setMockInitialValues({});
+      final chat = FakeWrChatRepository();
+
+      await _pump(
+        tester,
+        _wrap(const WrAskScreen(), chat: chat, email: 'thedangs7@gmail.com'),
+      );
+      await tester.enterText(find.byKey(const Key('wr_ask_field')), 'chào');
+      // Nút gửi chỉ bật khi ô đã có chữ, nên phải để khung dựng lại trước khi bấm.
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('wr_ask_send')));
+      await tester.pumpAndSettle();
+
+      expect(chat.sendCalls.single.premiumOverride, isNull);
     });
   });
 }

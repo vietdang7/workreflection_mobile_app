@@ -78,12 +78,21 @@ class WrChatState {
 }
 
 class WrChatController extends StateNotifier<WrChatState> {
-  WrChatController(this._repo, this._userId) : super(const WrChatState()) {
+  WrChatController(this._repo, this._userId, this._premiumOverride)
+      : super(const WrChatState()) {
     load();
   }
 
   final WrChatRepository _repo;
   final String? _userId;
+
+  /// Công tắc Premium thử nghiệm, null khi chưa động vào.
+  ///
+  /// Gửi kèm mỗi lượt để trợ lý trả lời theo đúng gói đang xem thử. Trước đây
+  /// chatbox là thứ DUY NHẤT trong app không đổi theo công tắc, nên bật Premium
+  /// lên xem thử thì mọi màn khác đổi còn trợ lý vẫn nói giọng gói miễn phí.
+  /// Máy chủ tự kiểm tra email nên gửi lên đây không mở được gì cho người khác.
+  final bool? _premiumOverride;
 
   /// Mở cuộc gần nhất, hoặc một cuộc trống nếu chưa từng trò chuyện.
   ///
@@ -171,7 +180,11 @@ class WrChatController extends StateNotifier<WrChatState> {
     );
 
     try {
-      final reply = await _repo.send(text, conversationId: state.conversationId);
+      final reply = await _repo.send(
+        text,
+        conversationId: state.conversationId,
+        premiumOverride: _premiumOverride,
+      );
       state = state.copyWith(
         messages: [
           // Bỏ bản `pending` đi và đặt lại bản đã được máy chủ xác nhận.
@@ -245,9 +258,14 @@ class WrChatController extends StateNotifier<WrChatState> {
 
 final wrChatControllerProvider =
     StateNotifierProvider<WrChatController, WrChatState>((ref) {
+  // Chỉ đọc công tắc khi tài khoản này được phép bật, giống hệt điều kiện
+  // `wrEntitlementProvider` dùng — nếu không, một giá trị sót lại trong
+  // SharedPreferences sẽ đổi giọng trợ lý của người không được phép.
+  final canToggle = ref.watch(canTogglePremiumProvider);
   return WrChatController(
     ref.watch(wrChatRepositoryProvider),
     ref.watch(currentUserIdProvider),
+    canToggle ? ref.watch(premiumOverrideProvider) : null,
   );
 });
 

@@ -36,8 +36,16 @@ abstract class WrChatRepository {
   /// [conversationId] null nghĩa là mở cuộc mới; máy chủ tạo và trả id về trong
   /// [WrChatReply.conversationId].
   ///
+  /// [premiumOverride] là trạng thái công tắc Premium thử nghiệm, null khi chưa
+  /// động vào. Máy chủ chỉ nghe cờ này khi email người gọi nằm trong danh sách
+  /// được phép, nên gửi lên từ máy nào cũng an toàn.
+  ///
   /// Ném [WrChatException] kèm câu tiếng Việt hiển thị được cho người dùng.
-  Future<WrChatReply> send(String message, {String? conversationId});
+  Future<WrChatReply> send(
+    String message, {
+    String? conversationId,
+    bool? premiumOverride,
+  });
 
   /// Xoá một cuộc trò chuyện. Lượt bên trong bị xoá theo (cascade).
   Future<void> deleteConversation(String conversationId);
@@ -80,13 +88,18 @@ class SupabaseWrChatRepository implements WrChatRepository {
   }
 
   @override
-  Future<WrChatReply> send(String message, {String? conversationId}) async {
+  Future<WrChatReply> send(
+    String message, {
+    String? conversationId,
+    bool? premiumOverride,
+  }) async {
     try {
       final res = await _client.functions.invoke(
         kWrChatFunction,
         body: {
           'message': message,
           if (conversationId != null) 'conversationId': conversationId,
+          if (premiumOverride != null) 'premiumOverride': premiumOverride,
         },
       );
       final data = res.data;

@@ -109,7 +109,19 @@ thể vừa xảy ra.`;
 const HAS_DATA_RULE = `
 Chỉ dùng đúng những gì liệt kê ở trên. Không suy ra thêm sự kiện, con số, hay
 mẫu hình nào khác. Nếu người dùng hỏi một điều mà dữ liệu trên không trả lời
-được, nói thật là bạn chưa có đủ để nói về điều đó.
+được, nói thật là bạn chưa có đủ để nói về điều đó.`;
+
+/// Luật so sánh thời gian — CHỈ ghép cho gói Premium.
+///
+/// Trước đây nằm chung trong [HAS_DATA_RULE] nên áp cho cả hai gói, và nó ĐÁNH
+/// NHAU với [FREE_GATE_RULE]: người Free hỏi "so sánh tháng này với tháng trước"
+/// thì luật này thắng, trợ lý trả lời "mình chưa có đủ dữ liệu để so sánh".
+///
+/// Câu đó SAI SỰ THẬT về chính người đang hỏi. Họ có dữ liệu; thứ họ không có là
+/// quyền xem phần tổng hợp theo thời gian. Nói "bạn chưa đủ dữ liệu" khiến người
+/// đã ghi lại vài chục lần tưởng app không ghi nhận gì của mình, và đó là cách
+/// tệ nhất để mất một người dùng đang chăm chỉ.
+const TIME_COMPARISON_RULE = `
 
 Về so sánh theo thời gian: chỉ so sánh bằng đúng các mốc tháng đã liệt kê. Nếu
 họ hỏi về một khoảng thời gian không có trong danh sách đó, hoặc hỏi về một thay
@@ -135,10 +147,16 @@ Người này đang dùng gói MIỄN PHÍ, và khối dữ liệu trên đã đ
 gói: bạn KHÔNG có số lần theo từng tháng và KHÔNG có xu hướng thay đổi theo thời
 gian của họ. Đừng dựng một xu hướng lên từ những gì còn lại.
 
+QUAN TRỌNG: khi họ hỏi so sánh giữa các tháng hay hỏi mình đã thay đổi ra sao,
+TUYỆT ĐỐI KHÔNG nói "bạn chưa có đủ dữ liệu" hay "mình chỉ thấy một lần nhìn lại
+của bạn". Họ CÓ dữ liệu, chỉ là phần tổng hợp theo thời gian không nằm trong gói
+của họ. Nói nhầm câu kia là bảo một người đã chăm chỉ ghi lại rằng app không ghi
+nhận gì của họ. Dùng đúng ba nhịp bên dưới thay vì nói về chuyện thiếu dữ liệu.
+
 Khi họ hỏi một điều thuộc trục trí tuệ ở mục 7 (mẫu hình theo thời gian, mấy
 tháng nay họ có thay đổi gì, nên phát triển hướng nào tiếp, nên chọn chủ đề thực
-hành nào, kết quả bài tự đánh giá nói lên điều gì về họ), trả lời đúng ba nhịp
-sau và không hơn:
+hành nào, DIỄN GIẢI SÂU kết quả bài tự đánh giá), trả lời đúng ba nhịp sau và
+không hơn:
 
   1. MỘT câu duy nhất nêu điều bạn để ý thấy, lấy từ khối dữ liệu trên.
   2. Nói rõ phần đầy đủ thuộc gói Premium.
@@ -146,7 +164,43 @@ sau và không hơn:
 
 Không giải thích điều đó nghĩa là gì, không nối thêm nguyên nhân, không suy ra
 nhu cầu nào đang nổi lên, không khuyên họ nên làm gì tiếp. Chính phần diễn giải
-mới là thứ họ chưa mở, nên nói ra là phát không cái đang bán.`;
+mới là thứ họ chưa mở, nên nói ra là phát không cái đang bán.
+
+Ngược lại, ĐỪNG gác quá tay. Những việc sau mục 7 xếp vào trục hành động và họ
+hoàn toàn có quyền: kể một tình huống, nói về cảm xúc lúc này, bắt đầu một lần
+nhìn lại, chọn một chủ đề thực hành để bắt đầu, và xem kết quả TỔNG QUAN của bài
+tự đánh giá. Với những việc này cứ trả lời bình thường, không nhắc gì tới
+Premium.`;
+
+/// Cho người dùng Free: được xem tổng quan, KHÔNG được diễn giải sâu.
+///
+/// Mục 7 xếp "kết quả tổng quan (không diễn giải sâu) của SCA Self-Check" vào
+/// TRỤC HÀNH ĐỘNG, tức Free có quyền. Nhưng "diễn giải sâu kết quả Self-Check"
+/// lại nằm ở trục trí tuệ. Ranh giới đi ngay giữa một bảng điểm, nên phải nói
+/// thật rõ đâu là đọc số và đâu là giải nghĩa số.
+const SELF_CHECK_FREE_RULE = `Người này dùng gói miễn phí nên bạn ĐƯỢC đọc lại các con số trên và nói trục nào đang thấp nhất, đó là kết quả tổng quan họ có quyền xem. Nhưng KHÔNG được giải nghĩa sâu: không nối điểm số với tính cách hay thói quen của họ, không suy ra nguyên nhân vì sao trục đó thấp, không khuyên phải làm gì để nâng nó lên. Phần diễn giải đó thuộc gói Premium, nói rõ như vậy rồi mời họ xem thử.`;
+
+/// Cho người dùng Premium: được diễn giải, vẫn ở thể điều kiện.
+///
+/// "Vẫn ở thể điều kiện" không phải câu khách sáo: mục 4.2 cấm chẩn đoán, và một
+/// bảng điểm là thứ dễ kéo model sang giọng phán quyết nhất trong cả khối này.
+const SELF_CHECK_PREMIUM_RULE = `Người này có gói Premium nên bạn ĐƯỢC diễn giải sâu kết quả trên: nối nó với những gì họ đã nhìn lại, chỉ ra điều kiện làm việc nào đang hỗ trợ hay cản trở họ. Giữ đúng thể điều kiện của mục 4.2, đây là quan sát về điều kiện công việc chứ không phải kết luận về con người họ, và hỏi lại xem họ thấy có đúng không. Bài này đo điều kiện làm việc, KHÔNG đo năng lực hay giá trị của họ.`;
+
+/// Đổi điểm thành một cụm chữ đọc được.
+///
+/// Ngưỡng lấy nguyên từ `bandForScore` trong
+/// `lib/core/logic/wr_self_check_narrative.dart` — cùng một bài, người dùng thấy
+/// một nhãn trên màn hình kết quả rồi trợ lý gọi tên khác thì họ sẽ tưởng có hai
+/// kết quả khác nhau.
+///
+/// Chữ mô tả ĐIỀU KIỆN LÀM VIỆC, không mô tả con người: "đang bị cản nhiều" nói
+/// về hoàn cảnh, còn "bạn đang yếu ở khoản này" là một phán quyết mục 4.2 cấm.
+function bandLabel(score: number): string {
+  if (score >= 4.2) return 'đang khá thuận';
+  if (score >= 3.5) return 'tạm ổn';
+  if (score >= 2.8) return 'đang có vướng';
+  return 'đang bị cản nhiều';
+}
 
 // ---------------------------------------------------------------------------
 
@@ -326,35 +380,140 @@ export async function buildUserContext(
 
   // ── Bài tự đánh giá ────────────────────────────────────────────────────
   //
-  // CỐ Ý chỉ đưa NGÀY, không đưa điểm ba trục. Diễn giải sâu kết quả bài này
-  // thuộc trục trí tuệ ở mục 7; đưa điểm vào là mở sẵn cửa cho model diễn giải
-  // qua đường hội thoại, kể cả với người dùng gói miễn phí.
+  // Trước 2026-08-03 ở đây chỉ đưa NGÀY làm bài, vì sợ điểm rò sang gói miễn
+  // phí. Sai hai đường: mục 7 cho người Free xem "kết quả tổng quan, không diễn
+  // giải sâu" nên giấu hết là thiếu quyền của họ, còn Premium thì chẳng còn gì
+  // để diễn giải sâu. Từ khi ranh giới gác ở tầng dữ liệu, nỗi lo cũ hết hiệu
+  // lực: hai gói nhận hai khối khác nhau ngay từ đầu.
   //
-  // NHƯNG phải NÓI RA là không có kết quả, không được im lặng bỏ trống. Chạy thử
-  // 2026-08-03: chỉ đưa mỗi ngày làm bài thì CẢ HAI gói đều bịa ra kết quả —
-  // "bài tự đánh giá của bạn cho thấy nhu cầu Kết nối nổi lên nhiều nhất" —
-  // trong khi ngữ cảnh không hề có một con điểm nào. Model thấy một cái tên bài
-  // không kèm nội dung thì nó tự điền nội dung, lấy từ phần dữ liệu khác ở gần
-  // đó. Đúng lỗi bịa mẫu hình mà [NO_DATA_RULE] sinh ra để chặn, chỉ là ở một
-  // trường khác.
+  // ⚠ KHÔNG BAO GIỜ đưa tên ba cột (`structure/culture/activity`) vào đây. Ghép
+  // lại đúng là cụm "Structure Culture Activity" mà mục 6 cấm tuyệt đối. Dùng
+  // tên tiếng Việt app đang hiện trên màn hình, xem `SelfCheckPillar.displayName`
+  // trong `lib/core/logic/wr_self_check_questions.dart`.
   try {
     const { data } = await db
       .from('wr_sca_self_check_responses')
-      .select('taken_at')
+      .select('structure_score, culture_score, activity_score, taken_at')
       .eq('user_id', userId)
       .order('taken_at', { ascending: false })
       .limit(1);
-    const takenAt = data?.[0]?.taken_at;
-    if (takenAt) {
-      lines.push(
-        `Họ đã làm bài tự đánh giá ngắn, lần gần nhất ${formatDate(takenAt)}. `
-          + `Bạn KHÔNG có kết quả của bài đó, chỉ biết là họ đã làm. Nếu họ hỏi `
-          + `bài đó nói gì về họ, nói thật là bạn không xem được kết quả ở đây và `
-          + `mời họ mở phần kết quả trong app. Tuyệt đối không đoán kết quả từ các `
-          + `dữ liệu khác ở trên.`,
-      );
+    const row = data?.[0];
+    if (row?.taken_at) {
+      const pillars: [string, unknown][] = [
+        ['Sự rõ ràng', row.structure_score],
+        ['Mối quan hệ', row.culture_score],
+        ['Cách làm việc', row.activity_score],
+      ];
+      // Lọc null TRƯỚC khi ép kiểu. `Number(null)` cho ra 0 chứ không phải NaN,
+      // nên một bản ghi chưa tính được điểm sẽ lọt qua thành "0.0 trên 5, đang
+      // bị cản nhiều" — một kết quả thảm hại hoàn toàn bịa, đọc lên cho đúng
+      // người vừa làm bài. Test bắt được trước khi lên bản chạy.
+      const scored = pillars
+        .filter(([, v]) => v !== null && v !== undefined && v !== '')
+        .map(([name, v]) => [name, Number(v)] as [string, number])
+        .filter(([, v]) => Number.isFinite(v));
+
+      if (scored.length === 0) {
+        // Có bản ghi nhưng chưa tính được điểm. Vẫn phải NÓI RA là không có,
+        // đừng bỏ trống: model thấy tên một bài mà không thấy nội dung thì nó
+        // tự điền, lấy từ phần dữ liệu khác ở gần đó. Đúng lỗi bịa mẫu hình mà
+        // [NO_DATA_RULE] sinh ra để chặn, chỉ là ở một trường khác.
+        lines.push(
+          `Họ đã làm bài tự đánh giá ngắn, lần gần nhất ${formatDate(row.taken_at)}. `
+            + `Bạn KHÔNG có kết quả của bài đó. Nếu họ hỏi bài đó nói gì về họ, nói `
+            + `thật là bạn không xem được kết quả ở đây và mời họ mở trong app. `
+            + `Tuyệt đối không đoán kết quả từ các dữ liệu khác ở trên.`,
+        );
+      } else {
+        lines.push(
+          `Bài tự đánh giá ngắn, làm gần nhất ${formatDate(row.taken_at)}, thang điểm 1 đến 5:`,
+        );
+        for (const [name, v] of scored) {
+          lines.push(`  • ${name}: ${v.toFixed(1)} trên 5 (${bandLabel(v)})`);
+        }
+        const lowest = scored.slice().sort((a, b) => a[1] - b[1])[0];
+        lines.push(`Trục thấp nhất của họ hiện là "${lowest[0]}".`);
+        lines.push(isPremium ? SELF_CHECK_PREMIUM_RULE : SELF_CHECK_FREE_RULE);
+      }
     }
   } catch (_) { /* bỏ qua */ }
+
+  // ── Cơ hội phát triển ──────────────────────────────────────────────────
+  //
+  // CHỈ PREMIUM. Mục 3 nói thẳng đây là gợi ý "chỉ dành cho Premium", và mục 7
+  // xếp Cơ hội phát triển vào trục trí tuệ.
+  //
+  // ⚠ `suggestion_text` và `confidence_note` KHÔNG ĐƯỢC TÁCH RỜI. Ràng buộc
+  // NOT NULL trên hai cột đó (migration 20260728000003) là để không thể tạo ra
+  // một gợi ý thiếu ghi chú độ chính xác ngay từ tầng dữ liệu. Đưa mỗi câu gợi ý
+  // vào đây rồi để model đọc trần ra là phá đúng ràng buộc ấy ở tầng cuối cùng,
+  // nơi không còn hàng rào nào phía sau.
+  if (isPremium) {
+    try {
+      const { data } = await db
+        .from('wr_growth_opportunities')
+        .select('suggestion_text, confidence_note, generated_at')
+        .eq('user_id', userId)
+        .order('generated_at', { ascending: false })
+        .limit(1);
+      const row = data?.[0];
+      const suggestion = String(row?.suggestion_text ?? '').trim();
+      const note = String(row?.confidence_note ?? '').trim();
+      // Thiếu một trong hai thì BỎ HẲN. Nửa cặp còn lại không dùng được: gợi ý
+      // trần là một lời khuyên chắc nịch mà mục 4.2 cấm, còn ghi chú trần thì
+      // chẳng nói về điều gì.
+      if (suggestion && note) {
+        lines.push(
+          `Hướng phát triển hệ thống đã tổng hợp cho họ (${formatDate(row?.generated_at ?? null)}): `
+            + `"${truncate(suggestion, 400)}"`,
+        );
+        lines.push(
+          `Ghi chú độ chính xác đi kèm gợi ý đó: "${truncate(note, 300)}". `
+            + `Nếu bạn nhắc tới gợi ý trên, PHẢI nói kèm ý của ghi chú này trong `
+            + `cùng lượt trả lời, không được tách rời. Gợi ý này luôn ở thể điều `
+            + `kiện, là một hướng đáng cân nhắc chứ không phải kết luận về họ.`,
+        );
+      }
+    } catch (_) { /* bỏ qua */ }
+  }
+
+  // ── Hồ sơ công việc đã tải lên ─────────────────────────────────────────
+  //
+  // Bảng `wr_context_documents` chỉ lưu LOẠI tài liệu và đường dẫn file, không
+  // lưu nội dung đã trích. Nên ở đây chỉ nói được là họ CÓ tải lên, và phải nói
+  // rõ luôn là bạn không đọc được nó.
+  //
+  // Nếu im lặng bỏ qua, model sẽ rơi lại đúng lỗi đã bắt hai lần: thấy một cái
+  // tên không kèm nội dung thì tự điền nội dung từ dữ liệu khác ở gần đó. Với
+  // JD/CV thì kiểu bịa đó đặc biệt tệ, vì người dùng tin rằng trợ lý đang đọc
+  // hồ sơ thật của họ.
+  if (isPremium) {
+    try {
+      const { data } = await db
+        .from('wr_context_documents')
+        .select('doc_type')
+        .eq('user_id', userId)
+        .order('uploaded_at', { ascending: false })
+        .limit(5);
+      const kinds = new Set(
+        (data ?? [])
+          .map((d) => String(d.doc_type ?? '').toLowerCase())
+          .filter((t) => t === 'jd' || t === 'cv'),
+      );
+      if (kinds.size > 0) {
+        const names = [...kinds]
+          .map((t) => (t === 'jd' ? 'mô tả công việc' : 'hồ sơ năng lực'))
+          .join(' và ');
+        lines.push(
+          `Họ đã tải lên ${names} trong app. Bạn KHÔNG đọc được nội dung tài liệu `
+            + `đó ở đây. Nếu họ hỏi về nó, nói thật là bạn chưa xem được nội dung `
+            + `và mời họ kể điều quan trọng nhất trong đó. Tuyệt đối không đoán `
+            + `nội dung, không suy ra chức danh, kỹ năng hay kinh nghiệm của họ từ `
+            + `bất kỳ dữ liệu nào khác ở trên.`,
+        );
+      }
+    } catch (_) { /* bỏ qua */ }
+  }
 
   // ── Ghép ───────────────────────────────────────────────────────────────
   if (lines.length === 0) return NO_DATA_RULE;
@@ -369,7 +528,7 @@ Phần dưới đây lấy từ chính những gì họ đã ghi lại trong app
 khác với các ví dụ minh hoạ ở tài liệu phía trên.
 
 ${lines.join('\n')}
-${HAS_DATA_RULE}${isPremium ? '' : FREE_GATE_RULE}`;
+${HAS_DATA_RULE}${isPremium ? TIME_COMPARISON_RULE : FREE_GATE_RULE}`;
 }
 
 // ---------------------------------------------------------------------------

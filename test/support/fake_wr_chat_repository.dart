@@ -27,7 +27,8 @@ class FakeWrChatRepository implements WrChatRepository {
 
   Object? nextError;
 
-  final List<({String message, String? conversationId})> sendCalls = [];
+  final List<({String message, String? conversationId, bool? premiumOverride})>
+      sendCalls = [];
   final List<String> deleteCalls = [];
 
   /// Gieo một cuộc trò chuyện đã có, kèm các lượt bên trong.
@@ -71,9 +72,17 @@ class FakeWrChatRepository implements WrChatRepository {
   }
 
   @override
-  Future<WrChatReply> send(String message, {String? conversationId}) async {
+  Future<WrChatReply> send(
+    String message, {
+    String? conversationId,
+    bool? premiumOverride,
+  }) async {
     _maybeThrow();
-    sendCalls.add((message: message, conversationId: conversationId));
+    sendCalls.add((
+      message: message,
+      conversationId: conversationId,
+      premiumOverride: premiumOverride,
+    ));
     usedToday += 1;
 
     final id = conversationId ?? 'c${_nextId++}';
