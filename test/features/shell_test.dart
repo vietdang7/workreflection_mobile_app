@@ -96,16 +96,27 @@ void main() {
       expect(find.byType(WrTabBar), findsOneWidget);
     });
 
-    // Khách 2026-07-30: "bỏ cái ô chatbot giúp tôi, chúng ta sẽ làm cái này
-    // sau". Bong bóng chỉ được gỡ khỏi shell — `WrAskBubble` và màn `/wr/ask`
-    // vẫn còn nguyên, nên test này canh đúng một chuyện: nó không tự mọc lại
-    // trên các tab.
-    testWidgets('không có bong bóng hỏi nổi trên tab nào', (tester) async {
+    // Bong bóng bị tắt 2026-07-30 ("bỏ cái ô chatbot giúp tôi, chúng ta sẽ làm
+    // cái này sau") vì lúc đó nó chỉ dẫn tới một ô hỏi một chiều. BẬT LẠI
+    // 2026-08-03, khi phía sau đã là hội thoại thật.
+    //
+    // Yêu cầu gốc họp 2026-07-29: "nó sẽ hiển thị trên mọi trang luôn chứ không
+    // riêng trang hành trình" — nên test đi qua cả bốn tab, không chỉ tab đầu.
+    testWidgets('bong bóng trò chuyện nổi trên MỌI tab', (tester) async {
       await tester.pumpWidget(_wrapWithRouter());
       await tester.pumpAndSettle();
 
-      expect(find.byType(WrAskBubble), findsNothing);
-      expect(find.byKey(const Key('wr_ask_bubble')), findsNothing);
+      expect(find.byType(WrAskBubble), findsOneWidget);
+
+      for (var i = 1; i < 4; i++) {
+        await tester.tap(find.byType(WrTabItem).at(i));
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const Key('wr_ask_bubble')),
+          findsOneWidget,
+          reason: 'mất bong bóng ở tab thứ ${i + 1}',
+        );
+      }
     });
 
     testWidgets('WrTabItem widgets count is 4', (tester) async {

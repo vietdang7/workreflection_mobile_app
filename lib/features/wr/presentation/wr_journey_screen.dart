@@ -487,13 +487,16 @@ class WrJourneyScreen extends ConsumerWidget {
             const WrSectionDivider(),
             const SizedBox(height: 12),
 
-            // Ô hỏi tự do — họp khách 2026-07-29. Đặt ở tab Hành trình vì câu
-            // hỏi người dùng muốn đặt ("tôi có phù hợp với công việc đó không")
-            // chỉ trả lời được từ Career Memory, tức từ chính tab này.
+            // Trò chuyện với trợ lý phản chiếu. Đặt ở tab Hành trình vì câu hỏi
+            // người dùng muốn đặt ("tôi có phù hợp với công việc đó không") chỉ
+            // trả lời được từ Career Memory, tức từ chính tab này.
+            //
+            // Trước 2026-08-03 đây là ô hỏi một chiều chờ trả lời qua email
+            // (họp khách 2026-07-29); giờ là hội thoại nhiều lượt.
             WrLinkRow(
               key: const Key('wr_journey_ask_row'),
-              label: 'Hỏi về hành trình của bạn',
-              hint: 'Câu hỏi tự do',
+              label: 'Trò chuyện về hành trình của bạn',
+              hint: 'Hỏi và trả lời ngay',
               onTap: () => context.push('/wr/ask'),
             ),
 
