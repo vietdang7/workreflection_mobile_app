@@ -55,6 +55,7 @@ import '../../features/wr/presentation/wr_journey_narrative_screen.dart';
 import '../../features/wr/presentation/wr_pattern_detail_screen.dart';
 import '../../features/wr/presentation/wr_patterns_screen.dart';
 import '../../features/wr/presentation/wr_payment_screen.dart';
+import '../logic/wr_pricing.dart';
 import '../../features/wr/presentation/wr_paywall_screen.dart';
 import '../../features/wr/presentation/wr_self_check_screen.dart';
 import '../../features/wr/presentation/wr_tra_chieu_screen.dart';
@@ -453,7 +454,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       GoRoute(
         path: '/wr/payment',
-        builder: (context, state) => const WrPaymentScreen(),
+        // Paywall đẩy kèm gói người dùng vừa chọn (năm hay tháng). Mở thẳng
+        // đường dẫn này thì không có `extra` — màn tự lấy gói chọn sẵn.
+        builder: (context, state) =>
+            WrPaymentScreen(plan: state.extra as WrPremiumPricing?),
       ),
 
       GoRoute(

@@ -8,6 +8,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/data/wr_content_repository.dart';
 import '../../core/data/wr_intelligence_repository.dart';
+import '../../core/logic/wr_dominant_need.dart';
+import '../../core/logic/wr_practice_match.dart';
+import '../../core/logic/wr_repeated_situations.dart';
 import '../../core/logic/wr_skill_formation.dart';
 import '../../core/logic/wr_skill_jd_match.dart';
 import '../../core/models/wr_content.dart';
@@ -103,6 +106,65 @@ final wrPendingPracticeStepProvider =
   // Mọi chủ đề đang theo đều hết bước mở được. Home vẫn giữ khối "Tiếp tục hôm
   // nay" và đổi sang lời mời chọn chủ đề khác.
   return null;
+});
+
+/// Nhu cầu chủ đạo của người dùng — hành vi trước, self-check sau.
+///
+/// Hai hướng khách chốt 2026-07-31: tích luỹ hàng ngày, hoặc làm bộ 15 câu.
+final wrDominantNeedProvider = Provider<HumanNeed?>((ref) {
+  final episodes = ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
+  final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
+  final history =
+      ref.watch(wrSelfCheckHistoryProvider).valueOrNull ?? const [];
+  final latest = history.isNotEmpty ? history.first : null;
+
+  return dominantNeedFromBehaviour(recentSituationIds(episodes), situations) ??
+      (latest != null ? dominantNeedFromSelfCheck(latest) : null);
+});
+
+/// Chủ đề hệ thống đề xuất tiếp theo, kèm lý do — MỘT nguồn cho mọi màn.
+///
+/// null = chưa đủ dữ liệu để nói gì (chưa qua cổng [developmentFlowUnlocked],
+/// chưa suy được nhu cầu chủ đạo), hoặc đã ghi danh hết chủ đề trong thư viện.
+/// Lúc đó màn hình phải nói thẳng là chưa có, KHÔNG được bày một danh sách chủ
+/// đề trần ra cho người dùng tự chọn: chủ đề là thứ phần mềm chuẩn bị dựa trên
+/// những gì họ đã nhìn lại, không phải một thực đơn (yêu cầu khách 2026-08-04).
+final wrPracticeSuggestionProvider = Provider<PracticeSuggestion?>((ref) {
+  final themes = ref.watch(practiceThemesProvider).valueOrNull ?? const [];
+  final enrollments =
+      ref.watch(practiceEnrollmentsProvider).valueOrNull ?? const [];
+  final episodes = ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
+  final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
+  final history =
+      ref.watch(wrSelfCheckHistoryProvider).valueOrNull ?? const [];
+
+  final recent = recentSituationIds(episodes);
+  final need = ref.watch(wrDominantNeedProvider);
+
+  // Chủ đề đã ngưng đề xuất không nằm trong danh sách mời; đã ghi danh (kể cả
+  // đã hoàn thành) cũng vậy — mời lại là mời làm lại việc đã làm.
+  final enrolledIds = enrollments.map((e) => e.themeId).toSet();
+  final candidates = themes
+      .where((t) => !enrolledIds.contains(t.themeId) && !t.isRetired)
+      .toList();
+
+  final unlocked = developmentFlowUnlocked(
+    need: need,
+    recent: recent,
+    situations: situations,
+    hasSelfCheck: history.isNotEmpty,
+  );
+  if (!unlocked || need == null || candidates.isEmpty) return null;
+
+  return suggestPracticeTheme(
+    candidates: candidates,
+    recent: recent,
+    situations: situations,
+    need: need,
+    jobPillars:
+        ref.watch(wrSkillJdMatchProvider).valueOrNull?.matchedPillars ??
+            const [],
+  );
 });
 
 /// Career Memory events — nguồn để đếm số lần đã thực hành.

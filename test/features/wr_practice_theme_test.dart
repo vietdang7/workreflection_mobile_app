@@ -313,10 +313,11 @@ void main() {
       expect(find.byKey(const Key('wr_growth_quota_card')), findsNothing);
     });
 
-    // Premium không có trần, nên phải luôn có đường thêm chủ đề. Thiếu dòng này
-    // thì thư viện chủ đề chỉ vào được từ Home lúc hết bước mở được — premium
-    // ghi danh vài chủ đề xong là kẹt, trông y như bị giới hạn cứng.
-    testWidgets('Premium luôn có dòng thêm chủ đề', (tester) async {
+    // Premium không có trần, nên dưới danh sách phải luôn có thẻ chủ đề tiếp
+    // theo. Thiếu nó thì premium ghi danh vài chủ đề xong là kẹt, trông y như
+    // bị giới hạn cứng. Đây là một THẺ GỢI Ý, không phải dòng dẫn sang danh
+    // sách chủ đề — chủ đề do phần mềm chuẩn bị (khách 2026-08-04).
+    testWidgets('Premium luôn có thẻ chủ đề tiếp theo', (tester) async {
       final intel = _twoThemes();
       intel.seedEnrollments([_enroll('pt-voice'), _enroll('pt-rhythm')]);
       intel.seedEntitlement(
@@ -326,19 +327,19 @@ void main() {
       await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
 
       expect(
-        find.byKey(const Key('wr_growth_add_theme_row')),
+        find.byKey(const Key('wr_growth_suggestion_empty')),
         findsOneWidget,
       );
     });
 
-    testWidgets('Free còn chỗ thì có dòng thêm chủ đề', (tester) async {
+    testWidgets('Free còn chỗ thì có thẻ chủ đề tiếp theo', (tester) async {
       final intel = _twoThemes();
       intel.seedEnrollments([_enroll('pt-voice')]);
 
       await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
 
       expect(
-        find.byKey(const Key('wr_growth_add_theme_row')),
+        find.byKey(const Key('wr_growth_suggestion_empty')),
         findsOneWidget,
       );
     });
@@ -349,7 +350,10 @@ void main() {
 
       await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
 
-      expect(find.byKey(const Key('wr_growth_add_theme_row')), findsNothing);
+      expect(
+        find.byKey(const Key('wr_growth_suggestion_empty')),
+        findsNothing,
+      );
       expect(find.byKey(const Key('wr_growth_quota_card')), findsOneWidget);
     });
 

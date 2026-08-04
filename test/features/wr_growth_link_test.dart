@@ -345,8 +345,43 @@ void main() {
       },
     );
 
+    // Đã theo chủ đề rồi thì chủ đề TIẾP THEO cũng phải do phần mềm chuẩn bị:
+    // dưới danh sách là một thẻ gợi ý kèm lý do, không phải một dòng dẫn sang
+    // thư viện để người dùng tự chọn (khách 2026-08-04).
     testWidgets(
-      'không có pattern + không có self-check → card trống cũ (dù có theme chưa enroll)',
+      'đã theo một chủ đề → dưới danh sách vẫn là thẻ gợi ý kèm lý do',
+      (tester) async {
+        final content = FakeWrContentRepository();
+        content.seedSituations([_sit('s-connect', HumanNeed.ketNoi)]);
+
+        final intel = FakeWrIntelligenceRepository();
+        intel.seedPracticeThemes([
+          _theme('t-done', 'Chủ đề đang theo', dim: ScaDimension.s1),
+          _theme('t-culture', 'Thực hành kết nối', dim: ScaDimension.c1),
+        ]);
+        intel.seedEnrollments([_enrollment('t-done')]);
+
+        await _pumpLarge(
+          tester,
+          _wrapGrowth(
+            content: content,
+            intel: intel,
+            episodes: _episodesFor('s-connect', 3),
+          ),
+        );
+
+        expect(find.text('CHỦ ĐỀ TIẾP THEO CHO BẠN'), findsOneWidget);
+        expect(find.text('Thực hành kết nối'), findsAtLeastNWidgets(1));
+        expect(find.textContaining('Vì bạn đã gặp'), findsOneWidget);
+        expect(
+          find.byKey(const Key('wr_growth_suggestion_start')),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets(
+      'không có pattern + không có self-check → nói thẳng là chưa đủ dữ liệu',
       (tester) async {
         final intel = FakeWrIntelligenceRepository();
         // Seed CÓ theme chưa enroll — nhưng KHÔNG có pattern và KHÔNG có self-check
@@ -358,7 +393,13 @@ void main() {
 
         await _pumpLarge(tester, _wrapGrowth(intel: intel));
 
-        expect(find.text('Chưa có chủ đề nào đang thực hành'), findsOneWidget);
+        // Thư viện CÓ chủ đề, chỉ là chưa đủ căn cứ để chọn cái nào — nói đúng
+        // như thế, và chỉ sang bộ tự đánh giá (hướng 2 của khách 31/7).
+        expect(find.text('Chưa đủ dữ liệu để đề xuất chủ đề'), findsOneWidget);
+        expect(
+          find.byKey(const Key('wr_growth_suggestion_self_check')),
+          findsOneWidget,
+        );
         expect(find.text('GỢI Ý TỪ HIỂU MÌNH'), findsNothing);
         // Nút 'Bắt đầu thực hành' không xuất hiện trong card gợi ý
         expect(find.text('Bắt đầu thực hành'), findsNothing);
@@ -487,6 +528,19 @@ void main() {
   // Task D — Section "THỰC HÀNH KHÁC" + enroll + quota
   // ─────────────────────────────────────────────────────────────────────────────
 
+  /// Xổ hết thư viện chủ đề. Màn này dẫn bằng chủ đề được đề xuất; cả danh sách
+  /// nằm sau một dòng xổ, nên test nào cần đọc danh sách phải mở nó ra.
+  Future<void> showAllThemes(WidgetTester tester) async {
+    // Bấm vào chính chữ: WrActionLink là GestureDetector deferToChild, tâm ô
+    // full-width của nó rơi vào khoảng trống bên phải dòng chữ.
+    final link = find.descendant(
+      of: find.byKey(const Key('wr_growth_themes_show_all')),
+      matching: find.byType(Text),
+    );
+    await tester.tap(link.first);
+    await tester.pumpAndSettle();
+  }
+
   group('Task D — Màn Thực hành khác', () {
     testWidgets('chỉ liệt kê theme chưa enroll', (tester) async {
       final intel = FakeWrIntelligenceRepository();
@@ -498,7 +552,12 @@ void main() {
 
       await _pumpLarge(tester, _wrapThemes(intel: intel));
 
+      // Chưa có dữ liệu để đề xuất thì thư viện nằm sau dòng xổ — màn này không
+      // bày danh sách trần nữa (khách 2026-08-04).
       expect(find.text('THỰC HÀNH KHÁC'), findsOneWidget);
+      expect(find.text('Chủ đề chưa làm'), findsNothing);
+      await showAllThemes(tester);
+
       expect(find.text('Chủ đề chưa làm'), findsOneWidget);
       expect(find.text('Chủ đề đang làm'), findsNothing);
     });
@@ -511,6 +570,7 @@ void main() {
       intel.seedEnrollments([]);
 
       await _pumpLarge(tester, _wrapThemes(intel: intel));
+      await showAllThemes(tester);
 
       expect(find.text('Bắt đầu'), findsOneWidget);
       await tester.tap(find.text('Bắt đầu'));
@@ -537,6 +597,7 @@ void main() {
       await _pumpLarge(tester, _wrapThemes(intel: intel));
 
       expect(find.byKey(const Key('wr_growth_themes_quota')), findsOneWidget);
+      await showAllThemes(tester);
       expect(find.text('⭐ Premium'), findsWidgets);
       expect(find.text('Bắt đầu'), findsNothing);
     });
@@ -551,6 +612,7 @@ void main() {
       intel.seedEnrollments([_enrollment('t1'), _enrollment('t2')]);
 
       await _pumpLarge(tester, _wrapThemes(intel: intel));
+      await showAllThemes(tester);
 
       await tester.tap(find.text('⭐ Premium').first);
       await tester.pumpAndSettle();

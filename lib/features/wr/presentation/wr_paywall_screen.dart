@@ -36,8 +36,12 @@ enum PaywallTrigger {
 ///
 /// Ngược lại, người CHƯA mua quay lại thì Paywall phải ở nguyên đó: đóng nhầm
 /// là cướp mất lối vào duy nhất.
-Future<void> _openPayment(BuildContext context, WidgetRef ref) async {
-  await context.push('/wr/payment');
+Future<void> _openPayment(
+  BuildContext context,
+  WidgetRef ref,
+  WrPremiumPricing plan,
+) async {
+  await context.push('/wr/payment', extra: plan);
   if (!context.mounted) return;
 
   var premium = false;
@@ -51,10 +55,24 @@ Future<void> _openPayment(BuildContext context, WidgetRef ref) async {
   if (premium) context.pop();
 }
 
-class WrPaywallScreen extends ConsumerWidget {
+class WrPaywallScreen extends ConsumerStatefulWidget {
   const WrPaywallScreen({super.key, this.trigger = PaywallTrigger.defaultTrigger});
 
   final PaywallTrigger trigger;
+
+  @override
+  ConsumerState<WrPaywallScreen> createState() => _WrPaywallScreenState();
+}
+
+class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
+  /// `cc_products.id` của gói đang chọn.
+  ///
+  /// Giữ theo id chứ không theo chỉ số: danh sách gói tải về sau khi màn đã
+  /// dựng, mà quản trị cũng có thể đổi thứ tự — bám chỉ số là có ngày chọn nhầm
+  /// gói. null nghĩa là chưa chọn tay, khi đó lấy gói đầu danh sách.
+  String? _selectedProductId;
+
+  PaywallTrigger get trigger => widget.trigger;
 
   ({String title, String sub}) get _headline => switch (trigger) {
         PaywallTrigger.aiInsight => (
@@ -99,13 +117,26 @@ class WrPaywallScreen extends ConsumerWidget {
       };
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final h = _headline;
-    // Giá gói APP (`cc_products.product_type = 'premium_mobile'`, 499.000đ) —
-    // không phải giá gói web 249.000đ. Sửa ở trang quản trị của web là app đổi
-    // theo. Trong lúc chờ tải thì dùng giá mặc định chứ không để trống chỗ giá.
-    final pricing =
-        ref.watch(wrPremiumPricingProvider).valueOrNull ?? WrPremiumPricing.fallback;
+    // Các gói APP (`cc_products.product_type = 'premium_mobile'`) — năm 499.000đ
+    // và tháng 70.000đ, KHÔNG phải gói web 249.000đ. Sửa ở trang quản trị của
+    // web là app đổi theo. Trong lúc chờ tải thì dùng gói mặc định chứ không để
+    // trống chỗ ghi giá.
+    final plans = ref.watch(wrPremiumPlansProvider).valueOrNull ??
+        const [WrPremiumPricing.fallback];
+
+    // Gói đang chọn. Id đã chọn mà biến mất khỏi bảng (quản trị tắt gói giữa
+    // chừng) thì rơi về gói đầu chứ không kẹt ở gói không còn bán.
+    final pricing = plans.firstWhere(
+      (p) => p.productId != null && p.productId == _selectedProductId,
+      orElse: () => plans.first,
+    );
+
+    // Gói ngắn hạn nhất làm mốc quy đổi cho nhãn tiết kiệm.
+    final baseline = plans.reduce(
+      (a, b) => a.durationDays <= b.durationDays ? a : b,
+    );
 
     const premiumHighlights = [
       _Highlight(
@@ -194,7 +225,7 @@ class WrPaywallScreen extends ConsumerWidget {
                             const SizedBox(width: 5),
                           ],
                           Text(
-                            '${pricing.currentLabel} / năm',
+                            '${pricing.currentLabel} / ${pricing.durationSuffix}',
                             style: const TextStyle(
                               fontSize: 10,
                               color: Color(0xB3FFFFFF),
@@ -302,6 +333,20 @@ class WrPaywallScreen extends ConsumerWidget {
                     ),
                   ),
 
+                  // Chọn gói — chỉ dựng khi thật sự có nhiều hơn một gói, để
+                  // trường hợp một gói không phát sinh thêm một cú chạm vô ích.
+                  if (plans.length > 1)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
+                      child: _PlanSelector(
+                        plans: plans,
+                        selected: pricing,
+                        baseline: baseline,
+                        onSelect: (p) =>
+                            setState(() => _selectedProductId = p.productId),
+                      ),
+                    ),
+
                   // Giá — đặt ngay trên nút mua để con số là thứ cuối cùng đọc
                   // được trước khi bấm.
                   Padding(
@@ -316,7 +361,7 @@ class WrPaywallScreen extends ConsumerWidget {
                       width: double.infinity,
                       child: ElevatedButton(
                         key: const Key('wr_paywall_cta'),
-                        onPressed: () => _openPayment(context, ref),
+                        onPressed: () => _openPayment(context, ref, pricing),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: WrColors.coral,
                           foregroundColor: WrColors.navy,
@@ -374,6 +419,174 @@ class WrPaywallScreen extends ConsumerWidget {
   }
 }
 
+/// Chọn gói năm hay gói tháng.
+///
+/// Dựng từ danh sách `cc_products` chứ không viết cứng hai lựa chọn: quản trị
+/// thêm gói 6 tháng là nó tự hiện thêm một hàng.
+class _PlanSelector extends StatelessWidget {
+  const _PlanSelector({
+    required this.plans,
+    required this.selected,
+    required this.baseline,
+    required this.onSelect,
+  });
+
+  final List<WrPremiumPricing> plans;
+  final WrPremiumPricing selected;
+
+  /// Gói ngắn hạn nhất — mốc để tính "tiết kiệm bao nhiêu phần trăm".
+  final WrPremiumPricing baseline;
+
+  final ValueChanged<WrPremiumPricing> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'CHỌN GÓI',
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 1.2,
+            color: Color(0xFF737373),
+          ),
+        ),
+        const SizedBox(height: 8),
+        for (final plan in plans) ...[
+          _PlanOption(
+            plan: plan,
+            isSelected: identical(plan, selected),
+            savingsPercent:
+                identical(plan, baseline) ? null : plan.savingsPercentVs(baseline),
+            onTap: () => onSelect(plan),
+          ),
+          if (plan != plans.last) const SizedBox(height: 8),
+        ],
+      ],
+    );
+  }
+}
+
+class _PlanOption extends StatelessWidget {
+  const _PlanOption({
+    required this.plan,
+    required this.isSelected,
+    required this.savingsPercent,
+    required this.onTap,
+  });
+
+  final WrPremiumPricing plan;
+  final bool isSelected;
+  final int? savingsPercent;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        key: Key('wr_paywall_plan_${plan.durationDays}'),
+        decoration: BoxDecoration(
+          color: WrColors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: isSelected ? WrColors.coral : const Color(0x14000000),
+            width: isSelected ? 2 : 1,
+          ),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        child: Row(
+          children: [
+            // Nút tròn tự vẽ: đây là một dòng chạm được cả hàng, dùng Radio thì
+            // vùng chạm bị bó lại đúng cái chấm.
+            Container(
+              width: 18,
+              height: 18,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected ? WrColors.coral : const Color(0xFFC7C7C7),
+                  width: 2,
+                ),
+              ),
+              child: isSelected
+                  ? Center(
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: WrColors.coral,
+                        ),
+                      ),
+                    )
+                  : null,
+            ),
+            const SizedBox(width: 11),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    // "Một năm" / "Một tháng" — viết hoa chữ đầu.
+                    plan.durationLabel[0].toUpperCase() +
+                        plan.durationLabel.substring(1),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: WrColors.navy,
+                    ),
+                  ),
+                  if (savingsPercent != null) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      '≈ ${formatVndPrice(plan.pricePerMonth, plan.currency)}'
+                      ' mỗi tháng',
+                      style: const TextStyle(
+                        fontSize: 11,
+                        color: Color(0xFF737373),
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            if (savingsPercent != null) ...[
+              Container(
+                decoration: BoxDecoration(
+                  color: const Color(0xFFF0F4F0),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                child: Text(
+                  'TIẾT KIỆM $savingsPercent%',
+                  style: const TextStyle(
+                    fontSize: 9,
+                    fontWeight: FontWeight.w700,
+                    color: Color(0xFF4A6741),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 9),
+            ],
+            Text(
+              plan.currentLabel,
+              style: const TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w700,
+                color: WrColors.navy,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// Giá gốc gạch ngang · giá hiện tại · mức giảm — cùng ba con số mà trang quản
 /// trị Gói dịch vụ của web hiển thị.
 class _PriceBlock extends StatelessWidget {
@@ -426,9 +639,9 @@ class _PriceBlock extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 3),
-                const Text(
-                  'cho một năm Premium',
-                  style: TextStyle(fontSize: 11, color: Color(0xFF737373)),
+                Text(
+                  'cho ${pricing.durationLabel} Premium',
+                  style: const TextStyle(fontSize: 11, color: Color(0xFF737373)),
                 ),
               ],
             ),

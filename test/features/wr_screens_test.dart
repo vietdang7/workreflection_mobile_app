@@ -251,21 +251,21 @@ void main() {
     });
 
     testWidgets(
-      'renders empty card with invite to read story when no active theme',
+      'chưa có chủ đề nào trong thư viện thì nói WorkReflection sẽ đề xuất',
       (tester) async {
         await tester.pumpWidget(_wrap(const WrGrowthScreen()));
         await tester.pumpAndSettle();
 
-        // New design: cream card with eyebrow + invite text, no "Chưa có chủ đề"
         expect(
           find.textContaining('Chưa có chủ đề nào đang thực hành'),
           findsOneWidget,
         );
+        // Chủ đề là thứ phần mềm chuẩn bị từ những gì người dùng đã nhìn lại
+        // (khách 2026-08-04) — không đẩy họ sang màn khác để tự tìm.
         expect(
-          find.textContaining('Đọc story và nhận Insight'),
+          find.textContaining('WorkReflection sẽ đề xuất chủ đề'),
           findsOneWidget,
         );
-        expect(find.textContaining('Khám phá story'), findsOneWidget);
       },
     );
 
@@ -487,8 +487,11 @@ void main() {
         await tester.pumpWidget(_wrap(const WrGrowthScreen(), intel: intel));
         await tester.pumpAndSettle();
 
-        // No themes available → falls through to old card with "Khám phá story"
-        expect(find.textContaining('Khám phá story'), findsOneWidget);
+        // Thư viện rỗng → thẻ nói chưa có chủ đề nào, không dựng danh sách.
+        expect(
+          find.textContaining('Chưa có chủ đề nào đang thực hành'),
+          findsOneWidget,
+        );
         expect(find.text('Bắt đầu chủ đề'), findsNothing);
         expect(find.textContaining('PRACTICES HÔM NAY'), findsNothing);
       },
@@ -1107,7 +1110,9 @@ void main() {
 
       expect(find.text('499.000đ / năm'), findsOneWidget);
       expect(find.text('249.000đ'), findsNothing);
-      expect(find.textContaining('%'), findsNothing);
+      // Không có badge giảm giá "−…%". Nhãn "TIẾT KIỆM …%" của bộ chọn gói là
+      // chuyện khác — nó so gói năm với gói tháng, không phải khuyến mãi.
+      expect(find.textContaining('−'), findsNothing);
     });
 
     // Cơ chế gạch ngang vẫn còn: quản trị điền `original_price` cho dòng
@@ -1146,6 +1151,100 @@ void main() {
 
       expect(find.text('199.000đ / năm'), findsOneWidget);
       expect(find.text('−67%'), findsOneWidget);
+    });
+
+    // Khách chốt 2026-08-04: thêm gói tháng 70.000đ để hạ rào cản, gói năm vẫn
+    // là gói chọn sẵn.
+    group('chọn gói năm / tháng', () {
+      testWidgets('hiện cả hai gói, gói năm chọn sẵn', (tester) async {
+        await tester.pumpWidget(_wrap(const WrPaywallScreen()));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Một năm'), findsOneWidget);
+        expect(find.text('Một tháng'), findsOneWidget);
+        expect(find.text('70.000đ'), findsOneWidget);
+        // Gói năm đang chọn → khối giá và header nói theo gói năm.
+        expect(find.text('499.000đ / năm'), findsOneWidget);
+        expect(find.text('cho một năm Premium'), findsOneWidget);
+      });
+
+      testWidgets('gói năm khoe mức tiết kiệm quy về mỗi tháng', (tester) async {
+        await tester.pumpWidget(_wrap(const WrPaywallScreen()));
+        await tester.pumpAndSettle();
+
+        // 499.000 / 12 = 41.583đ mỗi tháng, so với 70.000đ → rẻ hơn 41%.
+        expect(find.text('TIẾT KIỆM 41%'), findsOneWidget);
+        expect(find.text('≈ 41.583đ mỗi tháng'), findsOneWidget);
+      });
+
+      testWidgets('gói tháng không tự khoe tiết kiệm so với chính nó',
+          (tester) async {
+        await tester.pumpWidget(_wrap(const WrPaywallScreen()));
+        await tester.pumpAndSettle();
+
+        expect(find.textContaining('TIẾT KIỆM'), findsOneWidget);
+      });
+
+      testWidgets('chạm gói tháng thì khối giá và header đổi theo',
+          (tester) async {
+        await tester.pumpWidget(_wrap(const WrPaywallScreen()));
+        await tester.pumpAndSettle();
+
+        // Bộ chọn gói nằm dưới bảng so sánh nên mặc định ngoài khung 800×600.
+        final monthly = find.byKey(const Key('wr_paywall_plan_30'));
+        await tester.ensureVisible(monthly);
+        await tester.pumpAndSettle();
+        await tester.tap(monthly);
+        await tester.pumpAndSettle();
+
+        expect(find.text('70.000đ / tháng'), findsOneWidget);
+        expect(find.text('cho một tháng Premium'), findsOneWidget);
+        expect(find.text('499.000đ / năm'), findsNothing);
+      });
+
+      testWidgets('chỉ có một gói thì không dựng bộ chọn', (tester) async {
+        final repo = FakeWrRepository()
+          ..premiumPlans = const [
+            WrPremiumPricing(
+              currentPrice: 499000,
+              productId: 'prod-1',
+              durationDays: 365,
+            ),
+          ];
+        await tester.pumpWidget(_wrap(const WrPaywallScreen(), repo: repo));
+        await tester.pumpAndSettle();
+
+        expect(find.text('CHỌN GÓI'), findsNothing);
+        expect(find.text('499.000đ / năm'), findsOneWidget);
+      });
+
+      testWidgets('quản trị thêm gói 6 tháng thì tự hiện, không cần build lại',
+          (tester) async {
+        final repo = FakeWrRepository()
+          ..premiumPlans = const [
+            WrPremiumPricing(
+              currentPrice: 499000,
+              productId: 'prod-1',
+              durationDays: 365,
+            ),
+            WrPremiumPricing(
+              currentPrice: 299000,
+              productId: 'prod-6m',
+              durationDays: 180,
+            ),
+            WrPremiumPricing(
+              currentPrice: 70000,
+              productId: 'prod-1m',
+              durationDays: 30,
+            ),
+          ];
+        await tester.pumpWidget(_wrap(const WrPaywallScreen(), repo: repo));
+        await tester.pumpAndSettle();
+
+        expect(find.text('Một năm'), findsOneWidget);
+        expect(find.text('6 tháng'), findsOneWidget);
+        expect(find.text('Một tháng'), findsOneWidget);
+      });
     });
 
     testWidgets('shows 4 premium highlights', (tester) async {

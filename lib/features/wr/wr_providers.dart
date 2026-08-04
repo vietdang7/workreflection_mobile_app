@@ -145,16 +145,29 @@ final wrEntitlementProvider = FutureProvider<WrEntitlement>((ref) async {
   }
 });
 
-/// Giá gói Premium để hiển thị ở Paywall, đọc từ `cc_products` như web.
+/// Các gói Premium bán trong app (năm / tháng), xếp theo `display_order`.
 ///
-/// Không bao giờ ném: hỏng mạng thì rơi về [WrPremiumPricing.fallback] chứ
-/// không để Paywall trống chỗ ghi giá.
-final wrPremiumPricingProvider = FutureProvider<WrPremiumPricing>((ref) async {
+/// Không bao giờ ném và không bao giờ rỗng: hỏng mạng hoặc bảng chưa có gói nào
+/// thì trả đúng một [WrPremiumPricing.fallback] — Paywall vẫn có con số để
+/// hiển thị, còn nút mua tự khoá vì gói mặc định thiếu `productId`.
+final wrPremiumPlansProvider =
+    FutureProvider<List<WrPremiumPricing>>((ref) async {
   try {
-    return await ref.watch(wrRepositoryProvider).getPremiumPricing();
+    final plans = await ref.watch(wrRepositoryProvider).getPremiumPlans();
+    return plans.isEmpty ? const [WrPremiumPricing.fallback] : plans;
   } catch (_) {
-    return WrPremiumPricing.fallback;
+    return const [WrPremiumPricing.fallback];
   }
+});
+
+/// Gói chọn sẵn — phần tử đầu của [wrPremiumPlansProvider], tức gói có
+/// `display_order` nhỏ nhất (hiện là gói năm).
+///
+/// Dùng cho những chỗ chỉ cần MỘT con số: màn thanh toán khi mở thẳng không
+/// kèm gói đã chọn. Suy ra từ danh sách nên không tốn thêm một lượt gọi mạng.
+final wrPremiumPricingProvider = FutureProvider<WrPremiumPricing>((ref) async {
+  final plans = await ref.watch(wrPremiumPlansProvider.future);
+  return plans.first;
 });
 
 /// Fetch today's check-in (nullable). Used by WrHomeScreen to detect saved state.

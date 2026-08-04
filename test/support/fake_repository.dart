@@ -315,24 +315,35 @@ class FakeWrRepository implements WrRepository {
     return Map<String, dynamic>.from(_ccProfile);
   }
 
-  /// Giá gói Premium mà [getPremiumPricing] trả về. Mặc định là giá thật của
-  /// gói APP (`premium_mobile`, 499k, không gạch ngang) để test đọc như
-  /// production — gói web 249k là dòng khác, app không đọc tới.
-  WrPremiumPricing premiumPricing = const WrPremiumPricing(
-    currentPrice: 499000,
-    // Có productId thì mua được — thiếu là màn thanh toán từ chối tạo đơn.
-    productId: 'prod-premium-test',
-    durationDays: 365,
-  );
+  /// Các gói Premium mà [getPremiumPlans] trả về. Mặc định là hai gói thật của
+  /// app (`premium_mobile`: năm 499k, tháng 70k, không gạch ngang) theo đúng
+  /// `display_order` — gói web 249k là dòng khác, app không đọc tới.
+  List<WrPremiumPricing> premiumPlans = const [
+    WrPremiumPricing(
+      currentPrice: 499000,
+      // Có productId thì mua được — thiếu là màn thanh toán từ chối tạo đơn.
+      productId: 'prod-premium-test',
+      durationDays: 365,
+    ),
+    WrPremiumPricing(
+      currentPrice: 70000,
+      productId: 'prod-premium-monthly-test',
+      durationDays: 30,
+    ),
+  ];
 
-  /// Khi khác null, [getPremiumPricing] ném lỗi này thay vì trả giá — để test
+  /// Lối tắt cho test chỉ quan tâm một gói: gán là bảng còn đúng gói đó.
+  set premiumPricing(WrPremiumPricing plan) => premiumPlans = [plan];
+  WrPremiumPricing get premiumPricing => premiumPlans.first;
+
+  /// Khi khác null, [getPremiumPlans] ném lỗi này thay vì trả giá — để test
   /// đường mất mạng.
   Object? premiumPricingError;
 
   @override
-  Future<WrPremiumPricing> getPremiumPricing() async {
+  Future<List<WrPremiumPricing>> getPremiumPlans() async {
     if (premiumPricingError != null) throw premiumPricingError!;
-    return premiumPricing;
+    return premiumPlans;
   }
 
   @override

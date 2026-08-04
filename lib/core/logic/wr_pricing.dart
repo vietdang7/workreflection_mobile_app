@@ -11,13 +11,27 @@
 // Nguồn sự thật vẫn là bảng `cc_products` mà trang quản trị Gói dịch vụ của web
 // ghi vào, chỉ khác dòng:
 //
-//   product_type = 'premium'         → gói web, 249.000đ
-//   product_type = 'premium_mobile'  → gói app, 499.000đ   ← app đọc dòng này
+//   product_type = 'premium'         → gói web
+//   product_type = 'premium_mobile'  → các gói app   ← app đọc nhóm này
 //
 // Tách bằng `product_type` vì bảng không có cột nào chỉ nền tảng, mà web tra
 // giá cũng bằng đúng cột đó (`useProductPrice(productType)` — repo web
 // `src/hooks/useProductPrice.ts`). Sửa giá app ở trang quản trị là app đổi
 // theo, không phải build lại.
+//
+// App bán NHIỀU gói cùng lúc — khách chốt 2026-08-04 thêm gói tháng để hạ rào
+// cản cho người mới:
+//
+//   duration_days = 365, 499.000đ   (display_order 90) ← chọn sẵn
+//   duration_days = 30,   70.000đ   (display_order 91)
+//
+// Mỗi gói là MỘT DÒNG cùng `product_type`, phân biệt bằng `duration_days`. Nên
+// thêm gói 6 tháng sau này chỉ là thêm một dòng trên trang quản trị, không phải
+// build lại app. Thứ tự hiện trên Paywall theo `display_order`, gói đầu tiên là
+// gói chọn sẵn.
+//
+// Không có tự động gia hạn: hạ tầng thanh toán là chuyển khoản VietQR thủ công,
+// hết hạn thì rơi về Free và mua lại.
 //
 // Pure Dart, không phụ thuộc Flutter → test được trực tiếp.
 
@@ -107,14 +121,57 @@ class WrPremiumPricing {
   /// `complete_payment` không biết cấp bao nhiêu ngày.
   bool get canPurchase => productId != null;
 
-  /// "một năm", "6 tháng", "90 ngày" — nói hạn gói cho đúng thay vì đoán.
+  /// "một năm", "một tháng", "6 tháng", "90 ngày" — nói hạn gói cho đúng thay
+  /// vì đoán.
   String get durationLabel {
     if (durationDays % 365 == 0) {
       final years = durationDays ~/ 365;
       return years == 1 ? 'một năm' : '$years năm';
     }
-    if (durationDays % 30 == 0) return '${durationDays ~/ 30} tháng';
+    if (durationDays % 30 == 0) {
+      final months = durationDays ~/ 30;
+      return months == 1 ? 'một tháng' : '$months tháng';
+    }
     return '$durationDays ngày';
+  }
+
+  /// "năm", "tháng", "6 tháng", "90 ngày" — dạng ngắn để ghép sau dấu "/".
+  ///
+  /// Tách khỏi [durationLabel] vì "499.000đ / một năm" đọc lủng củng, mà "cho
+  /// một năm Premium" thì lại cần đủ chữ.
+  String get durationSuffix {
+    if (durationDays % 365 == 0) {
+      final years = durationDays ~/ 365;
+      return years == 1 ? 'năm' : '$years năm';
+    }
+    if (durationDays % 30 == 0) {
+      final months = durationDays ~/ 30;
+      return months == 1 ? 'tháng' : '$months tháng';
+    }
+    return '$durationDays ngày';
+  }
+
+  /// Hạn gói quy ra số tháng, để so hai gói dài ngắn khác nhau trên cùng một
+  /// thước.
+  ///
+  /// Một năm tính tròn 12 tháng chứ không phải 365/30 = 12,17 — người đọc so
+  /// "một năm" với "một tháng" theo lịch, không theo số ngày.
+  double get monthsSpan {
+    if (durationDays % 365 == 0) return (durationDays ~/ 365) * 12;
+    return durationDays / 30;
+  }
+
+  /// Giá quy về một tháng, để so gói năm với gói tháng.
+  num get pricePerMonth => currentPrice / monthsSpan;
+
+  /// Rẻ hơn [perMonthPlan] bao nhiêu phần trăm khi quy về cùng một tháng.
+  ///
+  /// null khi không rẻ hơn — không có gì để khoe thì đừng dán nhãn tiết kiệm.
+  int? savingsPercentVs(WrPremiumPricing perMonthPlan) {
+    final base = perMonthPlan.pricePerMonth;
+    if (base <= 0 || pricePerMonth >= base) return null;
+    final percent = ((base - pricePerMonth) / base * 100).round();
+    return percent <= 0 ? null : percent;
   }
 
   /// True khi có giá gốc cao hơn giá hiện tại — chỉ khi đó mới gạch ngang.

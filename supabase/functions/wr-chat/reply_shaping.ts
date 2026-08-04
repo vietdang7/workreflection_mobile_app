@@ -26,7 +26,7 @@ export type ShapedReply = {
 /// thấy nguyên chuỗi `[[ACTION:calm]]` trên màn hình.
 const ACTION_RE = /\[\[ACTION:(reflect|calm)\]\]/gi;
 
-/// Dấu hiệu model đang chạy nhánh mục 8.
+/// Dấu hiệu model đang chạy nhánh "Xử lý tín hiệu đáng lo ngại".
 ///
 /// Bắt theo câu TỰ GIỚI HẠN của trợ lý, không bắt theo lời người dùng: câu này
 /// do chính model viết ra khi nó nhận ra tình huống nghiêm trọng, nên nó là tín
@@ -36,22 +36,34 @@ const ACTION_RE = /\[\[ACTION:(reflect|calm)\]\]/gi;
 ///
 /// Bản đầu chỉ bắt câu tự giới hạn, và bộ 20 ca ngày 2026-08-03 cho thấy nó bắt
 /// nhầm: lượt TỪ CHỐI jailbreak cũng chứa "mình không phải chuyên gia tâm lý hay
-/// tư vấn nghề nghiệp" — đó là câu minh bạch về bản thân ở mục 4.9, không phải
-/// nhánh mục 8. Kết quả là người dùng vừa bị từ chối một trò nghịch prompt thì
-/// thấy hiện nút "dịu lại", vô duyên và làm nút mất nghĩa.
+/// tư vấn nghề nghiệp" — đó là câu minh bạch về bản thân ở nguyên tắc 11, không
+/// phải nhánh tín hiệu đáng lo ngại. Kết quả là người dùng vừa bị từ chối một
+/// trò nghịch prompt thì thấy hiện nút "dịu lại", vô duyên và làm nút mất nghĩa.
 ///
-/// Phần 2 của mục 8 BUỘC phải hướng về người thật, nên mọi lượt mục 8 thật đều
-/// có cả hai. Đòi cả hai vừa giữ nguyên độ phủ, vừa cắt hẳn lớp bắt nhầm.
+/// Phần 2 của nhánh đó BUỘC phải hướng về người thật, nên mọi lượt thật đều có
+/// cả hai. Đòi cả hai vừa giữ nguyên độ phủ, vừa cắt hẳn lớp bắt nhầm.
 const RISK_SELF_LIMIT_RE = /không phải (là )?(một )?chuyên gia tâm lý/i;
 ///
 /// Phải đòi một ĐỘNG TỪ TÌM ĐẾN đi kèm, không chỉ đòi tên một loại người. Bản
 /// đầu nhận cả "đồng hành" làm dấu hiệu và lập tức bắt nhầm chính câu trợ lý tự
 /// giới thiệu: "chỉ là một người bạn ĐỒNG HÀNH biết lắng nghe". Test bắt được
 /// trước khi lên bản chạy.
+///
+/// NỚI RA Ở v1.2, sau khi đối chiếu từng mẫu của tài liệu Conversation Examples
+/// với chính regex này. Mẫu "tín hiệu diễn đạt kiểu ẩn dụ" KHÔNG khớp bản cũ vì
+/// hai lý do cộng lại: nó viết "ngay lúc này" thay vì "ngay bây giờ", và khoảng
+/// cách từ danh từ tới động từ vượt 50 ký tự. Tức là ca ẩn dụ, đúng loại ca mà
+/// dò từ khoá dễ bỏ sót nhất, lại là ca duy nhất lọt lưới.
+///
+/// Hai thay đổi, đều giữ nguyên yêu cầu "phải có cả danh từ lẫn động từ":
+///   • Nhận thêm các biến thể chỉ thời điểm: "ngay lúc này", "lúc này".
+///   • Nới cửa sổ 50 lên 90 ký tự. Câu tiếng Việt tự nhiên hay chèn một mệnh đề
+///     phụ vào giữa ("nếu có ai đó bạn tin tưởng có thể nói chuyện...").
 const RISK_REDIRECT_RE =
-  /(tìm đến|tìm tới|nói chuyện với|chia sẻ với|liên hệ)[^.?!]{0,50}(người thân|bạn bè|người bạn|chuyên gia)|(người thân|bạn bè|người bạn|ai đó|chuyên gia tâm lý)[^.?!]{0,50}(tìm đến|tìm tới|ngay bây giờ)/i;
+  /(tìm đến|tìm tới|nói chuyện với|chia sẻ với|liên hệ)[^.?!]{0,90}(người thân|bạn bè|người bạn|chuyên gia)|(người thân|bạn bè|người bạn|ai đó|chuyên gia tâm lý)[^.?!]{0,90}(tìm đến|tìm tới|ngay bây giờ|ngay lúc này|lúc này)/i;
 
-/// Lời mời đọc hoặc nghe một nội dung để dịu lại, ở những lượt NHẸ hơn mục 8.
+/// Lời mời đọc hoặc nghe một nội dung để dịu lại, ở những lượt NHẸ hơn nhánh
+/// "Xử lý tín hiệu đáng lo ngại".
 ///
 /// Đo 64 lượt ngày 2026-08-03: có 1 lượt trợ lý hỏi "bạn có muốn thử một bài đọc
 /// ngắn để dịu lại một chút không" mà quên đặt thẻ. Tỉ lệ nhỏ, nhưng hậu quả thì
@@ -71,8 +83,17 @@ const RISK_REDIRECT_RE =
 /// Vòng đo đầu chỉ bắt dạng hỏi nên vẫn lọt 2 lượt dạng trần thuật. Nhắc đúng
 /// tên Thư viện Nội dung Cảm xúc là tín hiệu chắc chắn: trợ lý không có lý do
 /// nào khác để gọi tên một phần của app ra giữa câu.
+///
+/// NỚI RA Ở v1.2. Mẫu "mệt mỏi thông thường" của tài liệu viết "mình có vài
+/// điều nhẹ nhàng có thể giúp bạn dịu lại" — một lời mời rõ ràng, nhưng danh từ
+/// nội dung thì mơ hồ nên bản cũ không bắt được, và lượt đó ra màn hình không có
+/// nút nào. Tài liệu v1.2 đã sửa mẫu để gọi tên "bài đọc ngắn", nhưng model vẫn
+/// tự do diễn đạt, nên nới thêm ở đây là hàng rào thứ hai.
+///
+/// Thêm "điều nhẹ nhàng" và "bài viết" vào nhóm danh từ. VẪN đòi một động từ mời
+/// đi kèm trong 40 ký tự, nên câu chỉ nhắc ngang qua không kích hoạt nhầm.
 const CALM_OFFER_RE =
-  /(muốn|thử|gợi ý|giới thiệu)[^.?!]{0,40}(bài đọc|bài nghe|audio|nội dung nhẹ)|thư viện nội dung cảm xúc/i;
+  /(muốn|thử|gợi ý|giới thiệu|mình có)[^.?!]{0,40}(bài đọc|bài nghe|bài viết|audio|nội dung nhẹ|điều nhẹ nhàng)|thư viện nội dung cảm xúc/i;
 
 /// Trợ lý đang CHỈ VÀO cái nút mở luồng Reflection.
 ///
@@ -83,8 +104,14 @@ const CALM_OFFER_RE =
 ///
 /// Đây là tín hiệu chắc chắn, không cần đoán: trợ lý không có lý do nào khác để
 /// nhắc tới "nút" giữa một cuộc trò chuyện.
+///
+/// NỚI RA Ở v1.2: thêm nhánh "mở luồng". Bản cũ của tài liệu có mẫu "mình mở
+/// luồng Reflection cho bạn ngay" — câu đó không chứa chữ "nút" nên lọt lưới,
+/// và nó còn sai về bản chất vì trợ lý không tự mở được màn nào. Tài liệu v1.2
+/// đã sửa mẫu thành câu chỉ vào nút, nhưng model vẫn có thể diễn đạt theo lối
+/// cũ, nên bắt luôn cả cách nói đó.
 const REFLECT_POINTER_RE =
-  /(nút|bấm vào)[^.?!]{0,50}(reflection|luồng|ngay dưới|bên dưới|phía dưới)|bấm vào (nút|đó)/i;
+  /(nút|bấm vào)[^.?!]{0,50}(reflection|luồng|ngay dưới|bên dưới|phía dưới)|bấm vào (nút|đó)|mở luồng (reflection|nhìn lại)/i;
 
 /// Gỡ thẻ, lột Markdown, và áp luật an toàn.
 export function shapeReply(raw: string): ShapedReply {
@@ -105,8 +132,8 @@ export function shapeReply(raw: string): ShapedReply {
 
   // ── Luật an toàn ────────────────────────────────────────────────────────
   //
-  // Bước 3 của mục 8 buộc phải đề nghị Thư viện Nội dung Cảm xúc. Nếu model
-  // chạy đúng nhánh đó mà QUÊN đặt thẻ, ta tự đặt.
+  // Bước 3 của phần "Xử lý tín hiệu đáng lo ngại" buộc phải đề nghị Thư viện
+  // Nội dung Cảm xúc. Nếu model chạy đúng nhánh đó mà QUÊN đặt thẻ, ta tự đặt.
   //
   // Đây là chỗ duy nhất trong cả hệ thống ép một nút mà model không yêu cầu, và
   // nó đáng: lượt này xảy ra đúng lúc người dùng đang tệ nhất, và thứ tệ nhất
@@ -119,7 +146,7 @@ export function shapeReply(raw: string): ShapedReply {
   }
 
   // Cùng lý lẽ, cho những lượt nhẹ hơn: đã mời đọc gì đó cho dịu lại thì phải
-  // mở được. Đặt SAU luật trên để nhánh mục 8 luôn là nhánh quyết định.
+  // mở được. Đặt SAU luật trên để nhánh tín hiệu đáng lo ngại luôn quyết định.
   if (action === null && CALM_OFFER_RE.test(text)) {
     action = 'calm';
   }

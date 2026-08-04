@@ -1193,6 +1193,20 @@ void main() {
 
   // -------------------------------------------------------------------------
   group('Trà Chiều trong danh sách chủ đề thực hành', () {
+    /// Xổ cả thư viện. Màn này dẫn bằng chủ đề được đề xuất (khách 2026-08-04),
+    /// danh sách đầy đủ nằm sau một dòng xổ.
+    Future<void> showAll(WidgetTester tester) async {
+      await tester.tap(
+        find
+            .descendant(
+              of: find.byKey(const Key('wr_growth_themes_show_all')),
+              matching: find.byType(Text),
+            )
+            .first,
+      );
+      await tester.pumpAndSettle();
+    }
+
     FakeWrIntelligenceRepository themes(List<String> titles) =>
         FakeWrIntelligenceRepository()
           ..seedPracticeThemes([
@@ -1214,6 +1228,8 @@ void main() {
         ),
       );
 
+      await showAll(tester);
+
       final row = find.byKey(const Key('wr_growth_theme_tra_chieu'));
       expect(row, findsOneWidget);
 
@@ -1232,6 +1248,8 @@ void main() {
           intel: themes(['Phong cách hiện diện']),
         ),
       );
+
+      await showAll(tester);
 
       final row = find.byKey(const Key('wr_growth_theme_tra_chieu'));
       expect(row, findsOneWidget);

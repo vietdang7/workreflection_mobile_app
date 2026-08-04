@@ -306,8 +306,22 @@ const rows: Row[] = [];
 /// Chạy một phần, để khỏi tốn 70 lượt gọi model khi chỉ vừa sửa một chỗ:
 ///
 ///   WR_AUDIT_CASES=34,35 deno run ... spec_audit_manual.ts
+///
+/// ⚠ PHẢI LỌC CHUỖI RỖNG TRƯỚC KHI ÉP KIỂU. `Number('')` trả về **0**, không
+/// phải NaN, nên bản đầu để `.map(Number).filter(Number.isFinite)` biến biến môi
+/// trường VẮNG MẶT thành danh sách `[0]`. Không ca nào mang id 0, nên chạy mặc
+/// định không cần cờ thì bộ đo lặng lẽ chạy 0 ca và in ra "ĐẠT 0/0" — trông y
+/// như một lần chạy sạch.
+///
+/// Cùng họ với bẫy `Number(null) === 0` đã bắt được ở bảng điểm bài tự đánh giá:
+/// trong JS, ép kiểu một giá trị rỗng ra số KHÔNG cho ta NaN, nó cho ta một con
+/// số trông hợp lệ.
 const only = (Deno.env.get('WR_AUDIT_CASES') ?? '')
-  .split(',').map((s) => Number(s.trim())).filter(Number.isFinite);
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean)
+  .map(Number)
+  .filter(Number.isFinite);
 const SELECTED = only.length > 0 ? CASES.filter((c) => only.includes(c.id)) : CASES;
 if (only.length > 0) console.log(`Chỉ chạy ca: ${only.join(', ')}\n`);
 
@@ -352,3 +366,19 @@ const lenOnly = bad.filter((r) => r.fails.every((f) => f.startsWith('dài ')));
 console.log('\n' + '#'.repeat(96));
 console.log(`ĐẠT ${rows.length - bad.length}/${rows.length}`);
 console.log(`Hỏng: chỉ vì độ dài ${lenOnly.length}, lý do khác ${bad.length - lenOnly.length}`);
+
+// Không ca nào chạy là HỎNG, không phải sạch.
+//
+// Lỗi `Number('') === 0` ở trên làm bộ đo chạy đúng 0 ca rồi in "ĐẠT 0/0" với
+// 0 lỗi. Đọc lướt thì dòng đó trông y như một lần chạy hoàn hảo, và cái giá của
+// việc tin nhầm là tưởng đã đo trong khi chưa đo gì cả.
+//
+// Mã thoát khác 0 để cả người lẫn CI đều không bỏ qua được.
+if (rows.length === 0) {
+  console.error(
+    '\n⚠ KHÔNG CA NÀO CHẠY. Đây là lỗi, không phải kết quả sạch. '
+      + 'Kiểm tra biến môi trường WR_AUDIT_CASES: nếu nó trỏ tới một id không '
+      + 'tồn tại thì bộ đo lọc sạch danh sách rồi vẫn kết thúc bình thường.',
+  );
+  Deno.exit(2);
+}

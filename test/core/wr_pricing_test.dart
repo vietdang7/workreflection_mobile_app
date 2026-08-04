@@ -23,6 +23,55 @@ void main() {
     });
   });
 
+  // Khách chốt 2026-08-04: gói tháng 70.000đ đứng cạnh gói năm 499.000đ.
+  group('so gói năm với gói tháng', () {
+    const year = WrPremiumPricing(
+      currentPrice: 499000,
+      productId: 'p-year',
+      durationDays: 365,
+    );
+    const month = WrPremiumPricing(
+      currentPrice: 70000,
+      productId: 'p-month',
+      durationDays: 30,
+    );
+
+    test('một năm quy tròn 12 tháng, không phải 365/30', () {
+      expect(year.monthsSpan, 12);
+      expect(month.monthsSpan, 1);
+    });
+
+    test('giá quy về mỗi tháng', () {
+      // 499.000 / 12 = 41.583,33 → hiển thị làm tròn.
+      expect(formatVndPrice(year.pricePerMonth), '41.583đ');
+      expect(formatVndPrice(month.pricePerMonth), '70.000đ');
+    });
+
+    test('gói năm rẻ hơn gói tháng 41% khi quy về cùng một tháng', () {
+      expect(year.savingsPercentVs(month), 41);
+    });
+
+    test('gói tháng không tiết kiệm gì so với chính nó', () {
+      expect(month.savingsPercentVs(month), isNull);
+    });
+
+    test('gói dài hơn mà đắt hơn theo tháng thì không dán nhãn tiết kiệm', () {
+      const badYear = WrPremiumPricing(currentPrice: 900000, durationDays: 365);
+      expect(badYear.savingsPercentVs(month), isNull);
+    });
+
+    test('nhãn hạn: dạng đủ để ghép câu, dạng ngắn để ghép sau dấu gạch', () {
+      expect(year.durationLabel, 'một năm');
+      expect(year.durationSuffix, 'năm');
+      expect(month.durationLabel, 'một tháng');
+      expect(month.durationSuffix, 'tháng');
+
+      const halfYear = WrPremiumPricing(currentPrice: 299000, durationDays: 180);
+      expect(halfYear.durationLabel, '6 tháng');
+      expect(halfYear.durationSuffix, '6 tháng');
+    });
+  });
+
   group('formatVndPrice', () {
     test('chấm ngăn nhóm nghìn và hậu tố đ', () {
       expect(formatVndPrice(499000), '499.000đ');

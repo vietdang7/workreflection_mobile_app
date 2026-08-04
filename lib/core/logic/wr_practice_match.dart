@@ -91,6 +91,44 @@ List<({ScaDimension dim, String situationCode, int count})> _dimensionRanking(
   ];
 }
 
+/// Câu giải thích vì sao lại là chủ đề này.
+///
+/// null = không giải thích được thì im lặng, không bịa một lý do nghe cho có.
+///
+/// Ở chung file với [suggestPracticeTheme] để mọi màn nói CÙNG một câu: trước
+/// 2026-08-04 hàm này nằm private trong màn Phát triển, nên màn thư viện chủ đề
+/// bày ra một danh sách trần không kèm lý do nào — người dùng không hiểu vì sao
+/// lại là những chủ đề đó.
+String? practiceSuggestionReason(
+  PracticeSuggestion? suggestion,
+  List<WrSituation> situations,
+  HumanNeed? need,
+) {
+  switch (suggestion?.kind) {
+    case PracticeMatchKind.dimension:
+      final code = suggestion!.reasonSituationCode;
+      final text = situations.where((s) => s.code == code).firstOrNull?.text;
+      if (text == null) return null;
+      final n = suggestion.reasonCount;
+      return n > 1
+          ? 'Vì bạn đã gặp "$text" $n lần.'
+          : 'Vì bạn đã gặp "$text".';
+    case PracticeMatchKind.jobContext:
+      // Khớp từ JD/CV đã đọc hoặc mô tả vai trò họ tự viết. Nói "công việc bạn
+      // mô tả" chứ không nói "JD của bạn": người dùng có thể chỉ mới gõ vài
+      // dòng chứ chưa tải tài liệu nào.
+      return 'Vì công việc bạn mô tả nghiêng nhiều về phần này.';
+    case PracticeMatchKind.pillar:
+      // Chưa có tình huống nào để chỉ ra — mới chỉ Self-Check chẳng hạn.
+      return need == null
+          ? null
+          : 'Vì bạn đang tìm kiếm ${needSeekingLabel(need)}.';
+    case PracticeMatchKind.fallback:
+    case null:
+      return null;
+  }
+}
+
 /// Chủ đề nên đề xuất, chọn trong [candidates].
 ///
 /// [candidates] phải đã loại chủ đề người dùng đã ghi danh và chủ đề đã ngưng

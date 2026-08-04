@@ -10,12 +10,13 @@
 //    gần đây."
 //
 // Nó chưa từng thấy một dòng dữ liệu nào của người đó. Câu này chép thẳng từ ví
-// dụ mẫu ở mục 7 của chính system prompt và phát biểu như một quan sát thật.
-// Với sản phẩm có mệnh đề nền "con người kiến tạo ý nghĩa, AI nhìn thấy mẫu
-// hình", bịa mẫu hình là kiểu hỏng tệ nhất: người dùng biết mình chưa kể gì.
+// dụ mẫu ở phần "Ranh giới Free và Premium" của chính system prompt, rồi phát
+// biểu như một quan sát thật. Với sản phẩm có mệnh đề nền "con người kiến tạo ý
+// nghĩa, AI nhìn thấy mẫu hình", bịa mẫu hình là kiểu hỏng tệ nhất: người dùng
+// biết mình chưa kể gì.
 //
 // Nên hai việc, cùng lúc:
-//   1. Đưa dữ liệu THẬT vào, để mục 7 có cái mà dựa vào.
+//   1. Đưa dữ liệu THẬT vào, để phần đó có cái mà dựa vào.
 //   2. Khi không có dữ liệu, nói thẳng với model là không có, kèm lệnh cấm suy
 //      diễn. Xem [NO_DATA_RULE].
 //
@@ -35,10 +36,18 @@
 // ---------------------------------------------------------------------------
 // ⚠ TUYỆT ĐỐI KHÔNG ĐƯA MÃ NỘI BỘ VÀO KHỐI NÀY
 //
-// Mục 6 của system prompt cấm model nói ra "S1", "C2", "A3", tên bảng, tên
-// trường. Cách chắc chắn nhất để nó không nói ra là nó không bao giờ nhìn thấy.
-// Vì vậy `situation_code` được đổi sang TIÊU ĐỀ tiếng Việt trước khi ghép vào
-// prompt, và không có tên cột nào xuất hiện trong chuỗi trả về.
+// Phần "Danh sách cấm" của system prompt cấm model nói ra "S1", "C2", "A3", tên
+// bảng, tên trường. Cách chắc chắn nhất để nó không nói ra là nó không bao giờ
+// nhìn thấy. Vì vậy `situation_code` được đổi sang TIÊU ĐỀ tiếng Việt trước khi
+// ghép vào prompt, và không có tên cột nào xuất hiện trong chuỗi trả về.
+//
+// ---------------------------------------------------------------------------
+// ⚠ THAM CHIẾU CHÉO GỌI TÊN PHẦN, KHÔNG GỌI SỐ MỤC
+//
+// File này ghép chữ thẳng vào prompt, nên mọi câu trỏ tới system prompt đều là
+// lệnh thật cho model. Tài liệu gốc lên v1.1 đã chèn hai phần vào giữa và làm
+// dịch toàn bộ số mục từ 5 trở đi; câu "trục trí tuệ ở mục 7" từng viết ở đây
+// khi đó lập tức trỏ sang một mục hoàn toàn khác. Xem đầu `system_prompt.ts`.
 
 import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 
@@ -72,6 +81,28 @@ const DETAIL_EPISODE_COUNT = 3;
 /// Trần ký tự cho mỗi đoạn người dùng tự viết.
 const NOTE_MAX = 400;
 
+/// Cửa sổ đếm mức hoạt động gần đây, tính bằng ngày.
+///
+/// Đặc tả Ngữ cảnh gọi trường này là `recent_reflection_count`. Nó thuộc TRỤC
+/// HÀNH ĐỘNG, tức người dùng miễn phí cũng được biết: đây chỉ là một con số đếm
+/// dữ liệu thô của chính họ. Đừng nhầm với mốc số lần theo TỪNG THÁNG bên dưới,
+/// vốn là một trục thời gian và chỉ dành cho Premium.
+const RECENT_ACTIVITY_DAYS = 30;
+
+/// Số kỹ năng đã hình thành đưa vào ngữ cảnh.
+///
+/// Năm là đủ: đây là dấu mốc, không phải nhật ký. Người dùng lâu năm có thể có
+/// hơn, nhưng năm cái gần nhất đã đủ để trợ lý ghi nhận đúng chỗ.
+const SKILLS_MAX = 5;
+
+/// Mã mảnh ký ức đánh dấu một kỹ năng đã hình thành.
+///
+/// Giữ nguyên chuỗi của `kSkillFormedBehavior` trong
+/// `lib/core/logic/wr_skill_formation.dart`. Tên chủ đề nằm ở `reflection_text`,
+/// ngày đạt nằm ở `created_at`. Đổi chuỗi ở một bên là phần này im lặng trả về
+/// rỗng, nên nếu sửa thì sửa cả hai.
+const SKILL_FORMED_BEHAVIOR = 'skill_certified';
+
 /// Trong bao nhiêu giờ thì coi là "họ vừa nhìn lại xong".
 ///
 /// Đây là bản lề của [JUST_REFLECTED_RULE]. 24 giờ vì người ta hay ghi lại buổi
@@ -81,8 +112,8 @@ const JUST_REFLECTED_HOURS = 24;
 
 /// Nhãn tiếng Việt cho từng đoạn ghi chú trong một lần nhìn lại.
 ///
-/// ⚠ Khoá bên trái là tên bước nội bộ. Mục 6 cấm model nói ra tên mô hình nội
-/// bộ, nên KHÔNG BAO GIỜ ghép khoá vào chuỗi trả về — chỉ ghép cột bên phải.
+/// ⚠ Khoá bên trái là tên bước nội bộ. Phần "Danh sách cấm" cấm model nói ra tên
+/// mô hình nội bộ, nên KHÔNG BAO GIỜ ghép khoá vào chuỗi trả về, chỉ ghép cột phải.
 /// Mã nào không có trong bảng này thì bỏ hẳn đoạn đó.
 const NOTE_LABELS: Record<string, string> = {
   notice: 'Điều họ nhận thấy',
@@ -121,7 +152,7 @@ const ENERGY_LABELS: Record<string, string> = {
 /// chuyện này", trong khi chưa đủ để dựng một mục trên màn hình.
 const REPEATED_MIN_COUNT = 2;
 
-/// Tên tiếng Việt của ba nhu cầu nền tảng, đúng từ mục 3 của system prompt.
+/// Tên tiếng Việt của ba nhu cầu nền tảng, đúng từ phần "Khái niệm bạn cần hiểu".
 ///
 /// Ánh xạ từ giá trị trong database sang chữ người đọc được. Model chỉ thấy cột
 /// bên phải, nên nó không có gì để lỡ miệng.
@@ -183,7 +214,7 @@ theo hướng đó.`;
 /// Luật riêng cho gói miễn phí, đi kèm khối dữ liệu ĐÃ bị lược.
 ///
 /// VÌ SAO CÓ: chạy thử A/B 2026-08-03 với cùng ngữ cảnh, chỉ đổi cờ gói. Câu
-/// "mấy tháng nay tôi có thay đổi gì không" thuộc trục trí tuệ ở mục 7, nhưng
+/// "mấy tháng nay tôi có thay đổi gì không" thuộc trục trí tuệ ở phần "Ranh giới Free và Premium", nhưng
 /// người dùng Free nhận được nguyên một bản phân tích xu hướng, KHÔNG hề bị
 /// chặn. Lý do đơn giản: lúc đó cả hai gói cùng nhận một khối dữ liệu, và ranh
 /// giới chỉ nằm ở một dòng dặn dò. Model đọc thấy số liệu theo tháng thì nó đọc
@@ -203,7 +234,7 @@ của bạn". Họ CÓ dữ liệu, chỉ là phần tổng hợp theo thời gi
 của họ. Nói nhầm câu kia là bảo một người đã chăm chỉ ghi lại rằng app không ghi
 nhận gì của họ. Dùng đúng ba nhịp bên dưới thay vì nói về chuyện thiếu dữ liệu.
 
-Khi họ hỏi một điều thuộc trục trí tuệ ở mục 7 (mẫu hình theo thời gian, mấy
+Khi họ hỏi một điều thuộc trục trí tuệ ở phần "Ranh giới Free và Premium" (mẫu hình theo thời gian, mấy
 tháng nay họ có thay đổi gì, nên phát triển hướng nào tiếp, nên chọn chủ đề thực
 hành nào, DIỄN GIẢI SÂU kết quả bài tự đánh giá), trả lời đúng ba nhịp sau và
 không hơn:
@@ -216,7 +247,7 @@ Không giải thích điều đó nghĩa là gì, không nối thêm nguyên nh�
 nhu cầu nào đang nổi lên, không khuyên họ nên làm gì tiếp. Chính phần diễn giải
 mới là thứ họ chưa mở, nên nói ra là phát không cái đang bán.
 
-Ngược lại, ĐỪNG gác quá tay. Những việc sau mục 7 xếp vào trục hành động và họ
+Ngược lại, ĐỪNG gác quá tay. Những việc sau phần "Ranh giới Free và Premium" xếp vào trục hành động và họ
 hoàn toàn có quyền: kể một tình huống, nói về cảm xúc lúc này, bắt đầu một lần
 nhìn lại, chọn một chủ đề thực hành để bắt đầu, và xem kết quả TỔNG QUAN của bài
 tự đánh giá. Với những việc này cứ trả lời bình thường, không nhắc gì tới
@@ -256,7 +287,7 @@ mời ghi lại một lần nữa.`;
 
 /// Cho người dùng Free: được xem tổng quan, KHÔNG được diễn giải sâu.
 ///
-/// Mục 7 xếp "kết quả tổng quan (không diễn giải sâu) của SCA Self-Check" vào
+/// Phần "Ranh giới Free và Premium" xếp "kết quả tổng quan (không diễn giải sâu) của SCA Self-Check" vào
 /// TRỤC HÀNH ĐỘNG, tức Free có quyền. Nhưng "diễn giải sâu kết quả Self-Check"
 /// lại nằm ở trục trí tuệ. Ranh giới đi ngay giữa một bảng điểm, nên phải nói
 /// thật rõ đâu là đọc số và đâu là giải nghĩa số.
@@ -264,9 +295,9 @@ const SELF_CHECK_FREE_RULE = `Người này dùng gói miễn phí nên bạn Đ
 
 /// Cho người dùng Premium: được diễn giải, vẫn ở thể điều kiện.
 ///
-/// "Vẫn ở thể điều kiện" không phải câu khách sáo: mục 4.2 cấm chẩn đoán, và một
+/// "Vẫn ở thể điều kiện" không phải câu khách sáo: nguyên tắc 4 "không chẩn đoán" cấm chẩn đoán, và một
 /// bảng điểm là thứ dễ kéo model sang giọng phán quyết nhất trong cả khối này.
-const SELF_CHECK_PREMIUM_RULE = `Người này có gói Premium nên bạn ĐƯỢC diễn giải sâu kết quả trên: nối nó với những gì họ đã nhìn lại, chỉ ra điều kiện làm việc nào đang hỗ trợ hay cản trở họ. Giữ đúng thể điều kiện của mục 4.2, đây là quan sát về điều kiện công việc chứ không phải kết luận về con người họ, và hỏi lại xem họ thấy có đúng không. Bài này đo điều kiện làm việc, KHÔNG đo năng lực hay giá trị của họ.`;
+const SELF_CHECK_PREMIUM_RULE = `Người này có gói Premium nên bạn ĐƯỢC diễn giải sâu kết quả trên: nối nó với những gì họ đã nhìn lại, chỉ ra điều kiện làm việc nào đang hỗ trợ hay cản trở họ. Giữ đúng thể điều kiện của nguyên tắc 4 "không chẩn đoán", đây là quan sát về điều kiện công việc chứ không phải kết luận về con người họ, và hỏi lại xem họ thấy có đúng không. Bài này đo điều kiện làm việc, KHÔNG đo năng lực hay giá trị của họ.`;
 
 /// Đổi điểm thành một cụm chữ đọc được.
 ///
@@ -276,7 +307,7 @@ const SELF_CHECK_PREMIUM_RULE = `Người này có gói Premium nên bạn ĐƯ�
 /// kết quả khác nhau.
 ///
 /// Chữ mô tả ĐIỀU KIỆN LÀM VIỆC, không mô tả con người: "đang bị cản nhiều" nói
-/// về hoàn cảnh, còn "bạn đang yếu ở khoản này" là một phán quyết mục 4.2 cấm.
+/// về hoàn cảnh, còn "bạn đang yếu ở khoản này" là một phán quyết nguyên tắc 4 "không chẩn đoán" cấm.
 function bandLabel(score: number): string {
   if (score >= 4.2) return 'đang khá thuận';
   if (score >= 3.5) return 'tạm ổn';
@@ -315,7 +346,7 @@ type EpisodeDetail = {
 /// mất ngữ cảnh thì rơi về [NO_DATA_RULE], tức là im lặng an toàn. Ném lỗi ở
 /// đây sẽ làm hỏng cả lượt trò chuyện vì một thứ chỉ là phần bổ trợ.
 /// [isPremium] KHÔNG chỉ đổi lời dặn, nó đổi chính những gì được ghép vào khối:
-/// mốc thời gian theo tháng là trục trí tuệ ở mục 7 nên chỉ người Premium mới
+/// mốc thời gian theo tháng là trục trí tuệ ở phần "Ranh giới Free và Premium" nên chỉ người Premium mới
 /// được thấy. Xem [FREE_GATE_RULE] để biết vì sao gác bằng lời dặn là không đủ.
 export async function buildUserContext(
   db: SupabaseClient,
@@ -365,7 +396,76 @@ export async function buildUserContext(
     if (firstEver) {
       lines.push(`Lần nhìn lại đầu tiên của họ: ${formatDate(firstEver)}.`);
     }
+
+    // Mức hoạt động gần đây. CHO CẢ HAI GÓI: đây là con số đếm dữ liệu thô của
+    // chính người dùng, thuộc trục hành động. Nó cũng là hàng rào cuối cho lỗi
+    // tệ nhất của nhánh miễn phí — nói với một người đã ghi lại hai chục lần
+    // rằng họ "chưa có đủ dữ liệu" — vì giờ model nhìn thấy con số thật.
+    const recentCount = countRecentEpisodes(episodes);
+    if (recentCount > 0) {
+      lines.push(
+        `Trong ${RECENT_ACTIVITY_DAYS} ngày gần đây họ đã nhìn lại ${recentCount} lần.`,
+      );
+    }
   }
+
+  // ── Dấu vết hoạt động và kỹ năng đã hình thành ─────────────────────────
+  //
+  // Cả hai đọc từ `wr_career_memory_events`, nhưng bằng HAI truy vấn chứ không
+  // một: mốc hoạt động cần mảnh ký ức mới nhất bất kể loại, còn kỹ năng cần
+  // những mảnh mang đúng một mã và có thể nằm rất sâu trong lịch sử. Gộp thành
+  // một truy vấn có trần thì kỹ năng của người dùng lâu năm sẽ rơi ra ngoài
+  // trần, và họ mất đúng phần đáng ghi nhận nhất của mình.
+  //
+  // KHÔNG gác theo gói. Đây là dấu mốc của chính người dùng, thuộc trục hành
+  // động.
+  const skillLines: string[] = [];
+  try {
+    const [latestEvent, skills] = await Promise.all([
+      db
+        .from('wr_career_memory_events')
+        .select('created_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(1),
+      db
+        .from('wr_career_memory_events')
+        .select('reflection_text, created_at')
+        .eq('user_id', userId)
+        .eq('behavior', SKILL_FORMED_BEHAVIOR)
+        .order('created_at', { ascending: false })
+        .limit(SKILLS_MAX),
+    ]);
+
+    const gap = activityGapLine(
+      daysSinceLatest([
+        episodes[0]?.opened_at ?? null,
+        (latestEvent.data?.[0]?.created_at as string | null) ?? null,
+      ]),
+    );
+    if (gap) lines.push(gap);
+
+    // Tên chủ đề nằm ở `reflection_text`. Mảnh nào không có tên thì BỎ HẲN, y
+    // như mọi chỗ khác trong file: một dấu mốc không có tên là một cái tên
+    // trống để model tự điền.
+    const named = (skills.data ?? [])
+      .map((r) => ({
+        title: String(r.reflection_text ?? '').trim(),
+        at: r.created_at as string | null,
+      }))
+      .filter((r) => r.title);
+    if (named.length > 0) {
+      skillLines.push('Kỹ năng họ đã hình thành:');
+      for (const s of named) {
+        skillLines.push(`  • "${s.title}" — từ ${formatDate(s.at)}`);
+      }
+      skillLines.push(
+        'Đây là dấu mốc dài hạn, đáng ghi nhận khi câu chuyện hôm nay chạm vào '
+          + 'nó. Chỉ nhắc đúng những kỹ năng có tên ở trên, không suy ra kỹ năng '
+          + 'nào khác từ phần dữ liệu còn lại.',
+      );
+    }
+  } catch (_) { /* mất phần này thì phần dưới vẫn dựng được */ }
 
   // ── NỘI DUNG các lần nhìn lại gần nhất ─────────────────────────────────
   //
@@ -377,7 +477,7 @@ export async function buildUserContext(
   // Câu đó đọc như một giới hạn về quyền, nhưng thật ra là một khoảng trống
   // trong ngữ cảnh. Dữ liệu vẫn nằm đó, chỉ là chưa ai đưa cho nó.
   //
-  // KHÔNG gác theo gói. Mục 7 xếp "tự xem dữ liệu thô của chính mình" vào TRỤC
+  // KHÔNG gác theo gói. Phần "Ranh giới Free và Premium" xếp "tự xem dữ liệu thô của chính mình" vào TRỤC
   // HÀNH ĐỘNG, tức quyền của cả người dùng miễn phí. Thứ thuộc Premium là phần
   // TỔNG HỢP qua thời gian, và phần đó vẫn gác nguyên ở khối mốc tháng bên dưới.
   let latestFinishedAt: string | null = null;
@@ -426,7 +526,7 @@ export async function buildUserContext(
   // đều không có gì để dựa vào, và model sẽ nống một điều nó biết lên thành một
   // kết luận về tiến bộ. Đúng lỗi đã bắt được ngày 2026-08-03.
   //
-  // CHỈ CHO PREMIUM. Mục 7 xếp "phân tích Pattern sâu theo thời gian" vào trục
+  // CHỈ CHO PREMIUM. Phần "Ranh giới Free và Premium" xếp "phân tích Pattern sâu theo thời gian" vào trục
   // trí tuệ, và chính ví dụ mẫu cho người Free trong tài liệu cũng gọi tên "xu
   // hướng thay đổi theo thời gian" là phần thuộc Premium. Đưa khối này cho gói
   // miễn phí là tự tay phát không thứ đang bán.
@@ -560,16 +660,21 @@ export async function buildUserContext(
     }
   } catch (_) { /* bỏ qua */ }
 
+  // Kỹ năng đặt NGAY SAU chủ đề đang thực hành, vì hai thứ là hai đầu của cùng
+  // một hành trình: chủ đề là việc đang làm, kỹ năng là việc đã thành. Đọc liền
+  // nhau thì model thấy được cả quãng đường.
+  lines.push(...skillLines);
+
   // ── Bài tự đánh giá ────────────────────────────────────────────────────
   //
   // Trước 2026-08-03 ở đây chỉ đưa NGÀY làm bài, vì sợ điểm rò sang gói miễn
-  // phí. Sai hai đường: mục 7 cho người Free xem "kết quả tổng quan, không diễn
+  // phí. Sai hai đường: phần "Ranh giới Free và Premium" cho người Free xem "kết quả tổng quan, không diễn
   // giải sâu" nên giấu hết là thiếu quyền của họ, còn Premium thì chẳng còn gì
   // để diễn giải sâu. Từ khi ranh giới gác ở tầng dữ liệu, nỗi lo cũ hết hiệu
   // lực: hai gói nhận hai khối khác nhau ngay từ đầu.
   //
   // ⚠ KHÔNG BAO GIỜ đưa tên ba cột (`structure/culture/activity`) vào đây. Ghép
-  // lại đúng là cụm "Structure Culture Activity" mà mục 6 cấm tuyệt đối. Dùng
+  // lại đúng là cụm "Structure Culture Activity" mà phần "Danh sách cấm" cấm tuyệt đối. Dùng
   // tên tiếng Việt app đang hiện trên màn hình, xem `SelfCheckPillar.displayName`
   // trong `lib/core/logic/wr_self_check_questions.dart`.
   try {
@@ -622,7 +727,7 @@ export async function buildUserContext(
 
   // ── Cơ hội phát triển ──────────────────────────────────────────────────
   //
-  // CHỈ PREMIUM. Mục 3 nói thẳng đây là gợi ý "chỉ dành cho Premium", và mục 7
+  // CHỈ PREMIUM. Phần "Khái niệm bạn cần hiểu" nói thẳng đây là gợi ý "chỉ dành cho Premium", và phần "Ranh giới Free và Premium"
   // xếp Cơ hội phát triển vào trục trí tuệ.
   //
   // ⚠ `suggestion_text` và `confidence_note` KHÔNG ĐƯỢC TÁCH RỜI. Ràng buộc
@@ -642,7 +747,7 @@ export async function buildUserContext(
       const suggestion = String(row?.suggestion_text ?? '').trim();
       const note = String(row?.confidence_note ?? '').trim();
       // Thiếu một trong hai thì BỎ HẲN. Nửa cặp còn lại không dùng được: gợi ý
-      // trần là một lời khuyên chắc nịch mà mục 4.2 cấm, còn ghi chú trần thì
+      // trần là một lời khuyên chắc nịch mà nguyên tắc 4 "không chẩn đoán" cấm, còn ghi chú trần thì
       // chẳng nói về điều gì.
       if (suggestion && note) {
         lines.push(
@@ -675,6 +780,38 @@ export async function buildUserContext(
   // không kèm nội dung thì tự điền nội dung từ dữ liệu khác ở gần đó. Với JD/CV
   // thì kiểu bịa đó đặc biệt tệ, vì người dùng tin rằng trợ lý đang đọc hồ sơ
   // thật của họ.
+  //
+  // ── Nhánh 0: gói MIỄN PHÍ, chỉ cái CỜ, không có nội dung ────────────────
+  //
+  // Đặc tả Ngữ cảnh liệt kê `has_job_context` không gắn gói, nhưng bản chạy
+  // trước đây bỏ hẳn cả khối này khi không phải Premium. Hai thứ khác nhau và
+  // trộn chúng lại thì hỏng: NỘI DUNG hồ sơ thuộc trục trí tuệ nên phải gác,
+  // còn việc CÓ hay KHÔNG có hồ sơ thì không.
+  //
+  // Hậu quả của bản cũ: người dùng miễn phí tải JD lên xong hỏi về nó, trợ lý
+  // trả lời như thể chưa từng có file nào. Họ sẽ nghĩ app làm mất tài liệu của
+  // mình, và đó là một kết luận tệ hơn nhiều so với việc bị chặn ở một tính
+  // năng trả phí.
+  if (!isPremium) {
+    try {
+      const { data } = await db
+        .from('wr_context_documents')
+        .select('doc_type')
+        .eq('user_id', userId)
+        .limit(1);
+      if ((data ?? []).length > 0) {
+        lines.push(
+          'Họ CÓ tải lên tài liệu công việc của mình. Bạn KHÔNG đọc được nội '
+            + 'dung của nó, vì phần đọc và đối chiếu hồ sơ thuộc gói Premium. '
+            + 'Nếu họ hỏi về tài liệu đó: xác nhận là app có nhận được, nói rõ '
+            + 'phần đọc và đối chiếu thuộc Premium, rồi mời họ xem thử. TUYỆT '
+            + 'ĐỐI không nói như thể họ chưa từng tải gì lên, và không đoán nội '
+            + 'dung, chức danh hay kỹ năng của họ từ bất kỳ dữ liệu nào khác.',
+        );
+      }
+    } catch (_) { /* bỏ qua */ }
+  }
+
   if (isPremium) {
     try {
       const { data } = await db
@@ -786,7 +923,7 @@ ${HAS_DATA_RULE}${isPremium ? TIME_COMPARISON_RULE : FREE_GATE_RULE}${
 /// lần trong file này: model thấy một cái tên không kèm nội dung thì nó tự điền.
 ///
 /// ⚠ Chỉ ghép TIÊU ĐỀ tiếng Việt của tình huống. Mã như "C2-sit-01" nằm trong
-/// danh sách cấm ở mục 6; tra không ra tiêu đề thì bỏ hẳn dòng đó.
+/// danh sách cấm; tra không ra tiêu đề thì bỏ hẳn dòng đó.
 export function describeEpisode(
   d: EpisodeDetail,
   titles: Map<string, string>,
@@ -855,6 +992,76 @@ export function isJustReflected(
   // qua như thể vừa xảy ra — đúng thì cũng may rủi, nên chặn cho tường minh.
   const hours = (now.getTime() - t) / 3_600_000;
   return hours >= 0 && hours <= JUST_REFLECTED_HOURS;
+}
+
+/// Đếm số lần nhìn lại trong [days] ngày gần nhất.
+///
+/// Tính trên toàn bộ danh sách kéo về, KHÔNG tính trên cửa sổ 30 mục gần nhất:
+/// hai đại lượng khác nhau. Cửa sổ 30 trả lời "đang phản chiếu nhiều về điều
+/// gì", còn con số này trả lời "dạo này họ có đều không".
+///
+/// Bỏ qua mốc ở tương lai, cùng lý do đã nêu ở [isJustReflected].
+export function countRecentEpisodes(
+  episodes: Episode[],
+  days = RECENT_ACTIVITY_DAYS,
+  now: Date = new Date(),
+): number {
+  const cutoff = now.getTime() - days * 86_400_000;
+  let n = 0;
+  for (const e of episodes) {
+    if (!e.opened_at) continue;
+    const t = new Date(e.opened_at).getTime();
+    if (Number.isNaN(t)) continue;
+    if (t >= cutoff && t <= now.getTime()) n++;
+  }
+  return n;
+}
+
+/// Khoảng cách từ dấu vết hoạt động gần nhất tới bây giờ, tính bằng ngày.
+///
+/// ⚠ ĐÂY KHÔNG PHẢI "số ngày từ lần mở app gần nhất". Bản v1.0 của Đặc tả Ngữ
+/// cảnh gọi tên như vậy, nhưng hệ thống KHÔNG có bảng ghi lần mở app, nên đòi
+/// đúng con số đó là đòi một thứ không tồn tại. Thay bằng đại lượng đo được và
+/// gần nghĩa nhất: mốc muộn nhất trong các dấu vết người dùng để lại.
+///
+/// Trả null khi không có mốc nào, và khi mốc nằm ở tương lai (lệch giờ máy).
+export function daysSinceLatest(
+  isoList: (string | null)[],
+  now: Date = new Date(),
+): number | null {
+  let latest = -Infinity;
+  for (const iso of isoList) {
+    if (!iso) continue;
+    const t = new Date(iso).getTime();
+    if (Number.isNaN(t)) continue;
+    if (t > latest) latest = t;
+  }
+  if (latest === -Infinity) return null;
+  const days = Math.floor((now.getTime() - latest) / 86_400_000);
+  return days >= 0 ? days : null;
+}
+
+/// Câu mô tả khoảng vắng, viết cho model đọc chứ không phải để đọc ra.
+///
+/// CỐ Ý không đưa con số ngày vào phần dành cho những khoảng vắng dài. Đưa số
+/// vào là mời model nói ra ("bạn đã 47 ngày không vào"), và câu đó đọc như một
+/// lời trách móc từ một thứ đang đếm ngày vắng mặt của mình. Nhóm khoảng thành
+/// chữ thì model chỉ chọn được giọng, không chọn được cách trách.
+export function activityGapLine(days: number | null): string | null {
+  if (days === null) return null;
+  if (days <= 1) return 'Họ vừa có hoạt động trong app hôm nay hoặc hôm qua.';
+  if (days <= 7) {
+    return `Lần gần nhất họ có hoạt động trong app: ${days} ngày trước.`;
+  }
+  if (days <= 30) {
+    return 'Đã vài tuần rồi họ chưa có hoạt động nào trong app. Mở đầu bằng '
+      + 'giọng bình thường và ấm áp. TUYỆT ĐỐI không nhắc tới khoảng vắng đó, '
+      + 'không hỏi vì sao lâu rồi họ không vào, không thúc họ ghi lại gì.';
+  }
+  return 'Đã hơn một tháng họ chưa có hoạt động nào trong app, nên những gì bạn '
+    + 'biết về họ có thể đã cũ. Đón họ như đón một người bạn lâu ngày gặp lại: '
+    + 'hỏi dạo này thế nào trước, đừng dựa vào dữ liệu cũ để nhận xét về hiện '
+    + 'tại, và TUYỆT ĐỐI không nhắc tới việc họ đã vắng bao lâu.';
 }
 
 /// Nhu cầu xuất hiện nhiều nhất, đã đổi sang tên tiếng Việt. Null nếu không có.
