@@ -25,8 +25,11 @@ void main() {
       expect(WrColors.dark, const Color(0xFF2C335D));
     });
 
-    test('muted is #8A95A3', () {
-      expect(WrColors.muted, const Color(0xFF8A95A3));
+    // Spec §01b: chữ phụ không được là xám trung tính, phải là Deep Space pha
+    // alpha (--text-2). #8A95A3 cũ là lỗi.
+    test('muted is text-2 rgba(44,51,93,0.72)', () {
+      expect(WrColors.muted, const Color(0xB82C335D));
+      expect(WrColors.muted, WrColors.text2);
     });
 
     test('white is #FFFFFF', () {
@@ -58,12 +61,21 @@ void main() {
     });
   });
 
+  group('wrTheme', () {
+    // Spec §01: nền toàn màn hình là Cream BG #FBF9F5. Trắng thuần làm thẻ
+    // trắng chìm mất, đây là lỗi cũ đã sửa — giữ chốt để không quay lại.
+    testWidgets('scaffold background is cream, not pure white', (tester) async {
+      expect(wrTheme().scaffoldBackgroundColor, WrColors.pageBg);
+      expect(wrTheme().scaffoldBackgroundColor, const Color(0xFFFBF9F5));
+    });
+  });
+
   group('WrTextStyles', () {
-    test('eyebrow is 11px weight 700 muted', () {
+    test('eyebrow is 11px weight 700 text-3', () {
       final style = WrTextStyles.eyebrow;
       expect(style.fontSize, 11);
       expect(style.fontWeight, FontWeight.w700);
-      expect(style.color, WrColors.muted);
+      expect(style.color, WrColors.text3);
     });
 
     test('hLarge is 22px weight 700 navy', () {

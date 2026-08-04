@@ -143,9 +143,9 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     final isUploadingAvatar = avatarState.isLoading;
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         elevation: 0,
         automaticallyImplyLeading: false,
         leading: widget.setupMode ? null : const BackButton(color: WrColors.navy),

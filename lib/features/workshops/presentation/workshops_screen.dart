@@ -25,9 +25,9 @@ class WorkshopsScreen extends ConsumerWidget {
     final workshopsAsync = ref.watch(activeWorkshopsProvider);
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: WrColors.navy),

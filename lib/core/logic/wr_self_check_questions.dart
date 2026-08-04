@@ -1,4 +1,7 @@
-/// 15 câu Self-Check (type BOTH) từ ASSESSMENT_QUESTIONS.
+/// 15 câu Self-Check, chép đúng nguyên văn từ `SCA_QUESTIONS` trong tài liệu
+/// khách: FileTam/workreflection/WorkReflection_Sprint2_Mockup (2).html.
+/// scq-01..scq-15 khớp 1-1 theo thứ tự id 1..15 của bản gốc.
+/// KHÔNG tự biên tập lại chữ: mọi khác biệt so với mockup đều là lỗi.
 /// Pillar: S = Sự rõ ràng, C = Mối quan hệ, A = Cách làm việc.
 /// Likert 1-5: 1=Hoàn toàn không đúng … 5=Hoàn toàn đúng.
 library;
@@ -30,7 +33,7 @@ class WrSelfCheckQuestion {
 }
 
 const kSelfCheckQuestions = <WrSelfCheckQuestion>[
-  // ── Pillar S (Sự rõ ràng) ── id gốc: 1, 3, 5, 7, 10
+  // ── Pillar S (Sự rõ ràng) ── gốc SCA_QUESTIONS id: 1, 2, 3, 4, 5
   WrSelfCheckQuestion(
     id: 'scq-01',
     pillar: SelfCheckPillar.s,
@@ -41,27 +44,27 @@ const kSelfCheckQuestions = <WrSelfCheckQuestion>[
     id: 'scq-02',
     pillar: SelfCheckPillar.s,
     text:
-        'Khi nhận việc mới, bạn được làm rõ kỳ vọng về kết quả: thời gian hoàn thành, mức độ chất lượng, và ai đánh giá.',
+        'Với các công việc quan trọng, bạn có quy trình và hướng dẫn cụ thể trước khi bắt đầu triển khai.',
   ),
   WrSelfCheckQuestion(
     id: 'scq-03',
     pillar: SelfCheckPillar.s,
     text:
-        'Với các công việc quan trọng, bạn có quy trình và hướng dẫn cụ thể trước khi bắt đầu triển khai.',
+        'Các nguyên tắc phối hợp trong đội ngũ của bạn được thống nhất rõ ràng và cập nhật đầy đủ đến mọi người liên quan.',
   ),
   WrSelfCheckQuestion(
     id: 'scq-04',
     pillar: SelfCheckPillar.s,
     text:
-        'Các nguyên tắc phối hợp trong đội ngũ của bạn được thống nhất rõ ràng và cập nhật đầy đủ đến mọi người liên quan.',
+        'Bạn biết rõ thông tin nào cần chia sẻ qua kênh nào, không bị lạc trong quá nhiều nhóm chat hay email chồng chéo.',
   ),
   WrSelfCheckQuestion(
     id: 'scq-05',
     pillar: SelfCheckPillar.s,
     text:
-        'Bạn biết rõ thông tin nào cần chia sẻ qua kênh nào — không bị lạc trong quá nhiều nhóm chat hay email chồng chéo.',
+        'Khi có thay đổi trong công việc, nhìn chung bạn không bị bất ngờ hay phải tự tìm hiểu thêm.',
   ),
-  // ── Pillar C (Mối quan hệ) ── id gốc: 13, 15, 17, 19, 23
+  // ── Pillar C (Mối quan hệ) ── gốc SCA_QUESTIONS id: 6, 7, 8, 9, 10
   WrSelfCheckQuestion(
     id: 'scq-06',
     pillar: SelfCheckPillar.c,
@@ -72,19 +75,19 @@ const kSelfCheckQuestions = <WrSelfCheckQuestion>[
     id: 'scq-07',
     pillar: SelfCheckPillar.c,
     text:
-        'Những người bạn làm việc cùng thể hiện sự nhất quán giữa lời nói và hành động — bạn có thể tin vào cam kết của họ.',
+        'Những người bạn làm việc cùng thể hiện sự nhất quán giữa lời nói và hành động, bạn có thể tin vào cam kết của họ.',
   ),
   WrSelfCheckQuestion(
     id: 'scq-08',
     pillar: SelfCheckPillar.c,
     text:
-        'Bạn cảm thấy thoải mái khi nêu ý kiến khác biệt với số đông — kể cả khi điều đó tạo ra tranh luận.',
+        'Bạn cảm thấy thoải mái khi nêu ý kiến khác biệt với số đông, kể cả khi điều đó tạo ra tranh luận.',
   ),
   WrSelfCheckQuestion(
     id: 'scq-09',
     pillar: SelfCheckPillar.c,
     text:
-        'Khi bạn nhận thấy rủi ro hoặc vấn đề tiềm ẩn, bạn sẵn sàng lên tiếng — kể cả khi chưa có giải pháp.',
+        'Khi bạn nhận thấy rủi ro hoặc vấn đề tiềm ẩn, bạn sẵn sàng lên tiếng, kể cả khi chưa có giải pháp.',
   ),
   WrSelfCheckQuestion(
     id: 'scq-10',
@@ -92,7 +95,7 @@ const kSelfCheckQuestions = <WrSelfCheckQuestion>[
     text:
         'Khi có bất đồng quan điểm, cuộc trao đổi của bạn tập trung vào tìm giải pháp thay vì tranh luận về ai đúng.',
   ),
-  // ── Pillar A (Cách làm việc) ── id gốc: 25, 27, 30, 31, 34
+  // ── Pillar A (Cách làm việc) ── gốc SCA_QUESTIONS id: 11, 12, 13, 14, 15
   WrSelfCheckQuestion(
     id: 'scq-11',
     pillar: SelfCheckPillar.a,
@@ -103,13 +106,13 @@ const kSelfCheckQuestions = <WrSelfCheckQuestion>[
     id: 'scq-12',
     pillar: SelfCheckPillar.a,
     text:
-        'Khi mục tiêu thay đổi, bạn được thông báo kịp thời và rõ lý do — không phải tự đoán hay phát hiện muộn.',
+        'Khi mục tiêu thay đổi, bạn được thông báo kịp thời và rõ lý do, không phải tự đoán hay phát hiện muộn.',
   ),
   WrSelfCheckQuestion(
     id: 'scq-13',
     pillar: SelfCheckPillar.a,
     text:
-        'Nhịp phối hợp của đội nhóm bạn rõ ràng và ổn định — có check-in đều đặn, cập nhật đúng lúc, không bị lạc nhịp.',
+        'Nhịp phối hợp của đội nhóm bạn rõ ràng và ổn định, có check-in đều đặn, không bị lạc nhịp.',
   ),
   WrSelfCheckQuestion(
     id: 'scq-14',
@@ -121,7 +124,7 @@ const kSelfCheckQuestions = <WrSelfCheckQuestion>[
     id: 'scq-15',
     pillar: SelfCheckPillar.a,
     text:
-        'Những điểm cần điều chỉnh sau khi nhìn lại được chuyển thành hành động cụ thể — có người chịu trách nhiệm theo dõi.',
+        'Những điểm cần điều chỉnh sau khi nhìn lại được chuyển thành hành động cụ thể, có người theo dõi.',
   ),
 ];
 

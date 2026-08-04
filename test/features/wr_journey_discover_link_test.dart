@@ -9,6 +9,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_episode_repository.dart';
@@ -64,8 +65,23 @@ Widget _wrapJourney({
       wrIntelligenceRepositoryProvider.overrideWithValue(intelRepo),
       currentUserIdProvider.overrideWithValue(userId),
     ],
-    child: MaterialApp.router(routerConfig: router),
+    child: MaterialApp.router(
+      builder: wrTextScaleBuilder,routerConfig: router),
   );
+}
+
+/// Mở mốc đầu tiên trên dòng thời gian.
+///
+/// Từ 2026-08-03 mỗi mốc thu gọn sẵn: mặc định chỉ hiện LOẠI mốc, còn điều
+/// người dùng rút ra và tình huống họ chọn nằm sau một cú chạm. Các bài kiểm
+/// dưới đây nói về NỘI DUNG mốc nên phải mở ra trước, không thì chúng đang kiểm
+/// một hàng đã thu.
+Future<void> _expandFirstEntry(WidgetTester tester) async {
+  final arrow = find.byIcon(Icons.keyboard_arrow_down_rounded).first;
+  await tester.ensureVisible(arrow);
+  await tester.pumpAndSettle();
+  await tester.tap(arrow);
+  await tester.pumpAndSettle();
 }
 
 Widget _wrapDiscover({
@@ -87,7 +103,8 @@ Widget _wrapDiscover({
           .overrideWithValue(episodes ?? FakeWrEpisodeRepository()),
       currentUserIdProvider.overrideWithValue(userId),
     ],
-    child: MaterialApp.router(routerConfig: router),
+    child: MaterialApp.router(
+      builder: wrTextScaleBuilder,routerConfig: router),
   );
 }
 
@@ -197,6 +214,7 @@ void main() {
       ]);
 
       await _pumpLarge(tester, _wrapJourney(content: content, premium: true));
+      await _expandFirstEntry(tester);
 
       // Title phải là text tình huống
       expect(find.text('Áp lực deadline'), findsOneWidget);
@@ -220,6 +238,7 @@ void main() {
       ]);
 
       await _pumpLarge(tester, _wrapJourney(content: content, premium: true));
+      await _expandFirstEntry(tester);
 
       // Body phải hiện emotion đã map
       expect(find.text('Mệt mỏi'), findsOneWidget);
@@ -239,6 +258,7 @@ void main() {
       ]);
 
       await _pumpLarge(tester, _wrapJourney(content: content, premium: true));
+      await _expandFirstEntry(tester);
 
       expect(find.text('Ổn'), findsOneWidget);
       expect(find.text('ok'), findsNothing);
@@ -258,6 +278,7 @@ void main() {
       ]);
 
       await _pumpLarge(tester, _wrapJourney(content: content, premium: true));
+      await _expandFirstEntry(tester);
 
       expect(find.text('Vui'), findsOneWidget);
       expect(find.text('good'), findsNothing);
@@ -277,8 +298,72 @@ void main() {
       ]);
 
       await _pumpLarge(tester, _wrapJourney(content: content, premium: true));
+      await _expandFirstEntry(tester);
 
       expect(find.text('Hôm nay tôi học được điều mới'), findsOneWidget);
+    });
+
+    // ── Thu gọn sẵn ────────────────────────────────────────────────────────
+    //
+    // Dòng thời gian là nơi nhìn lại cả một tháng. Mỗi mốc trải ra ba dòng chữ
+    // đậm cộng một dòng phụ thì một tuần bận đã dài hơn màn hình, và tác dụng
+    // "nhìn một cái thấy hết" mất sạch.
+
+    testWidgets('mặc định chỉ hiện LOẠI mốc, nội dung nằm sau một cú chạm',
+        (tester) async {
+      final content = FakeWrContentRepository();
+      content.seedSituations([
+        _situation(code: 'sit-01', text: 'Áp lực deadline'),
+      ]);
+      content.seedMemoryEvents([
+        _event(
+          id: 'e1',
+          userId: 'u1',
+          situationCode: 'sit-01',
+          emotion: 'low',
+          createdAt: DateTime(2026, 7, 20),
+        ),
+      ]);
+
+      await _pumpLarge(tester, _wrapJourney(content: content, premium: true));
+
+      expect(find.text('Áp lực deadline'), findsNothing);
+      expect(find.text('Mệt mỏi'), findsNothing);
+      // Mũi tên phải còn đó: nó là thứ duy nhất báo rằng hàng còn chữ bên
+      // trong. Thiếu nó thì phần nội dung xem như biến mất hẳn.
+      expect(find.byIcon(Icons.keyboard_arrow_down_rounded), findsWidgets);
+
+      await _expandFirstEntry(tester);
+      expect(find.text('Áp lực deadline'), findsOneWidget);
+
+      // Chạm lần nữa thì thu lại — thu được cả hai chiều, không thì mở ra rồi
+      // là trang dài mãi.
+      await _expandFirstEntry(tester);
+      expect(find.text('Áp lực deadline'), findsNothing);
+    });
+
+    testWidgets('mở một mốc KHÔNG kéo theo mốc khác', (tester) async {
+      final content = FakeWrContentRepository();
+      content.seedMemoryEvents([
+        _event(
+          id: 'e1',
+          userId: 'u1',
+          reflectionText: 'Mốc thứ nhất',
+          createdAt: DateTime(2026, 7, 20, 10),
+        ),
+        _event(
+          id: 'e2',
+          userId: 'u1',
+          reflectionText: 'Mốc thứ hai',
+          createdAt: DateTime(2026, 7, 20, 9),
+        ),
+      ]);
+
+      await _pumpLarge(tester, _wrapJourney(content: content, premium: true));
+      await _expandFirstEntry(tester);
+
+      expect(find.text('Mốc thứ nhất'), findsOneWidget);
+      expect(find.text('Mốc thứ hai'), findsNothing);
     });
   });
 

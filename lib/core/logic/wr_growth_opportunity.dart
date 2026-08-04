@@ -55,6 +55,7 @@ GrowthOpportunity? deriveGrowthOpportunity({
   required List<String> recent,
   required List<WrSituation> situations,
   String? roleText,
+  List<String> skillGapTitles = const [],
   required DateTime now,
 }) {
   if (recent.isEmpty) return null;
@@ -91,10 +92,22 @@ GrowthOpportunity? deriveGrowthOpportunity({
   if (suggestion == null) return null;
 
   final role = roleText?.trim();
-  final text = (role == null || role.isEmpty)
+  var text = (role == null || role.isEmpty)
       ? suggestion
-      : '$suggestion Đặt cạnh công việc bạn mô tả — "$role" — đây có thể là '
+      : '$suggestion Đặt cạnh công việc bạn mô tả, "$role", đây có thể là '
           'chỗ đáng thử trước.';
+
+  // Khoảng trống giữa kỹ năng đã hình thành và công việc đang làm là một nguồn
+  // đầu vào của Cơ hội phát triển (spec Kỹ năng đã hình thành). Vẫn ở thể điều
+  // kiện (§11.1), và chỉ nói khi thật sự có khoảng trống — không có thì im.
+  final gaps = skillGapTitles.where((t) => t.trim().isNotEmpty).take(2).toList();
+  if (gaps.isNotEmpty) {
+    final list = gaps.map((t) => '"$t"').join(' và ');
+    final tail = gaps.length == 1
+        ? 'điều bạn chưa thực hành đủ để thành kỹ năng'
+        : 'hai điều bạn chưa thực hành đủ để thành kỹ năng';
+    text = '$text Công việc đó cũng có vẻ cần $list, $tail.';
+  }
 
   return GrowthOpportunity(
     id: '',

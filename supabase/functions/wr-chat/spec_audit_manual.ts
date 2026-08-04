@@ -86,8 +86,41 @@ const CTX = {
   premium: await buildUserContext(fakeDb(ROWS), 'u1', true),
 };
 
+// ── Người vừa đi hết một vòng nhìn lại, cách đây vài giờ ───────────────────
+//
+// Ngữ cảnh RIÊNG, không trộn vào `ROWS`: khi luật "vừa nhìn lại xong" bật lên
+// nó CẤM mời ghi lại và cấm đặt thẻ reflect, nên gắn vào người dùng mẫu chung
+// sẽ làm hỏng các ca §5 vốn kiểm đúng chiều ngược lại.
+const JUST_ROWS: Record<string, unknown[]> = {
+  ...ROWS,
+  wr_reflection_episodes: [
+    {
+      opened_at: new Date(Date.now() - 2 * 3_600_000).toISOString(),
+      state: 'committed',
+      energy: 'low',
+      situation_code: 'S1',
+      human_need: 'ket_noi',
+      intention: 'Muốn hiểu vì sao mình lại im lặng',
+      notes: {
+        notice: 'Mình thấy tim đập nhanh mỗi lần định giơ tay',
+        explore: 'Có lẽ vì lần trước mình bị ngắt lời giữa chừng',
+      },
+      draft_meaning:
+        'Im lặng của mình là để tránh bị đánh giá, không phải vì mình không có ý kiến',
+      tiny_action: 'Chuẩn bị sẵn một câu mở đầu trước cuộc họp tuần sau',
+      reflect_choice: null,
+    },
+    ...eps,
+  ],
+};
+const CTX_JUST = {
+  free: await buildUserContext(fakeDb(JUST_ROWS), 'u1', false),
+  premium: await buildUserContext(fakeDb(JUST_ROWS), 'u1', true),
+};
+
 type Turn = { role: 'user' | 'assistant'; content: string };
-async function run(premium: boolean, script: string[]) {
+async function run(premium: boolean, script: string[], justReflected = false) {
+  const ctxSet = justReflected ? CTX_JUST : CTX;
   const turns: Turn[] = [];
   let last = { text: '', action: null as string | null };
   for (const u of script) {
@@ -98,7 +131,7 @@ async function run(premium: boolean, script: string[]) {
       body: JSON.stringify({
         model: MODEL,
         messages: [
-          { role: 'system', content: buildSystemPrompt(premium, premium ? CTX.premium : CTX.free) },
+          { role: 'system', content: buildSystemPrompt(premium, premium ? ctxSet.premium : ctxSet.free) },
           ...turns,
         ],
         temperature: 0.7,
@@ -128,6 +161,7 @@ type K = { name: string; fn: (t: string, a: string | null) => boolean };
 type Case = {
   id: number; sec: string; desc: string; script: string[];
   checks?: K[]; freeOnly?: K[]; premOnly?: K[]; longOk?: boolean; gateFree?: boolean;
+  justReflected?: boolean;
 };
 
 const CASES: Case[] = [
@@ -217,17 +251,86 @@ const CASES: Case[] = [
     checks: [{ name: 'không phán xử', fn: lacks(/sếp (bạn|của bạn)[^.?!]{0,15}(sai|đúng|quá đáng)/i) }] },
   { id: 33, sec: '§12', desc: 'yêu cầu mơ hồ → hỏi lại cho rõ', script: ['Giúp tôi với.'],
     checks: [{ name: 'hỏi lại', fn: has(/\?/) }] },
+
+  // ── Người VỪA nhìn lại xong ──────────────────────────────────────────────
+  //
+  // Dựng lại đúng ảnh khách gửi 2026-08-03: người dùng đi hết một vòng
+  // Reflection, quay sang khung chat, và nhận về hai câu sai liền nhau — trợ lý
+  // mời họ ghi lại lần nữa, rồi nói nó không có quyền đọc thứ họ vừa viết.
+  {
+    id: 34,
+    sec: '§2',
+    desc: 'vừa làm xong → KHÔNG bắt làm lại',
+    justReflected: true,
+    script: ['tôi vừa làm xong reflection này rồi'],
+    checks: [
+      {
+        name: 'không mời ghi lại',
+        fn: lacks(
+          /(muốn|thử)[^.?!]{0,40}(ghi lại|lưu lại)|ghi lại thành một reflection/i,
+        ),
+      },
+      { name: 'không đặt nút reflect', fn: (_t, a) => a !== 'reflect' },
+    ],
+  },
+  {
+    id: 35,
+    sec: '§2',
+    desc: 'nhờ xem lại → ĐỌC THẬT, không chối là không có quyền',
+    justReflected: true,
+    longOk: true,
+    script: ['bạn xem thử reflection tôi vừa làm để chia sẻ giúp tôi'],
+    checks: [
+      {
+        name: 'không chối là không truy cập được',
+        fn: lacks(
+          /không (có quyền|thể) (truy cập|xem|đọc)|chỉ (có thể )?dựa (vào|trên)[^.?!]{0,40}cuộc trò chuyện này/i,
+        ),
+      },
+      {
+        // Phải nhắc lại một chi tiết CỤ THỂ. Đây là thước đo thật của cả thay
+        // đổi: nói chung chung "mình đã xem rồi" thì không chứng minh được nó
+        // đọc được chữ nào.
+        name: 'nhắc đúng chi tiết họ đã viết',
+        fn: has(
+          /tim đập nhanh|giơ tay|ngắt lời|bị đánh giá|câu mở đầu|im lặng/i,
+        ),
+      },
+    ],
+  },
 ];
 
 type Row = { id: number; sec: string; desc: string; tier: string; fails: string[] };
 const rows: Row[] = [];
 
-await Promise.all(CASES.flatMap((c) =>
+/// Chạy một phần, để khỏi tốn 70 lượt gọi model khi chỉ vừa sửa một chỗ:
+///
+///   WR_AUDIT_CASES=34,35 deno run ... spec_audit_manual.ts
+///
+/// ⚠ PHẢI LỌC CHUỖI RỖNG TRƯỚC KHI ÉP KIỂU. `Number('')` trả về **0**, không
+/// phải NaN, nên bản đầu để `.map(Number).filter(Number.isFinite)` biến biến môi
+/// trường VẮNG MẶT thành danh sách `[0]`. Không ca nào mang id 0, nên chạy mặc
+/// định không cần cờ thì bộ đo lặng lẽ chạy 0 ca và in ra "ĐẠT 0/0" — trông y
+/// như một lần chạy sạch.
+///
+/// Cùng họ với bẫy `Number(null) === 0` đã bắt được ở bảng điểm bài tự đánh giá:
+/// trong JS, ép kiểu một giá trị rỗng ra số KHÔNG cho ta NaN, nó cho ta một con
+/// số trông hợp lệ.
+const only = (Deno.env.get('WR_AUDIT_CASES') ?? '')
+  .split(',')
+  .map((s) => s.trim())
+  .filter(Boolean)
+  .map(Number)
+  .filter(Number.isFinite);
+const SELECTED = only.length > 0 ? CASES.filter((c) => only.includes(c.id)) : CASES;
+if (only.length > 0) console.log(`Chỉ chạy ca: ${only.join(', ')}\n`);
+
+await Promise.all(SELECTED.flatMap((c) =>
   [false, true].map(async (premium) => {
     const tier = premium ? 'PRE' : 'FREE';
     let out;
     try {
-      out = await run(premium, c.script);
+      out = await run(premium, c.script, c.justReflected);
     } catch (e) {
       rows.push({ ...c, tier, fails: [`gọi hỏng ${e}`] });
       return;
@@ -263,3 +366,19 @@ const lenOnly = bad.filter((r) => r.fails.every((f) => f.startsWith('dài ')));
 console.log('\n' + '#'.repeat(96));
 console.log(`ĐẠT ${rows.length - bad.length}/${rows.length}`);
 console.log(`Hỏng: chỉ vì độ dài ${lenOnly.length}, lý do khác ${bad.length - lenOnly.length}`);
+
+// Không ca nào chạy là HỎNG, không phải sạch.
+//
+// Lỗi `Number('') === 0` ở trên làm bộ đo chạy đúng 0 ca rồi in "ĐẠT 0/0" với
+// 0 lỗi. Đọc lướt thì dòng đó trông y như một lần chạy hoàn hảo, và cái giá của
+// việc tin nhầm là tưởng đã đo trong khi chưa đo gì cả.
+//
+// Mã thoát khác 0 để cả người lẫn CI đều không bỏ qua được.
+if (rows.length === 0) {
+  console.error(
+    '\n⚠ KHÔNG CA NÀO CHẠY. Đây là lỗi, không phải kết quả sạch. '
+      + 'Kiểm tra biến môi trường WR_AUDIT_CASES: nếu nó trỏ tới một id không '
+      + 'tồn tại thì bộ đo lọc sạch danh sách rồi vẫn kết thúc bình thường.',
+  );
+  Deno.exit(2);
+}

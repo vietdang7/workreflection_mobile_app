@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/coaching_repository.dart';
 import 'package:workreflection_mobile/core/models/coaching_models.dart';
@@ -46,6 +47,7 @@ Widget _wrapWithRouter(Widget home, FakeCoachingRepository repo) {
   return ProviderScope(
     overrides: [coachingRepositoryProvider.overrideWithValue(repo)],
     child: MaterialApp.router(
+      builder: wrTextScaleBuilder,
       routerConfig: router,
       localizationsDelegates: _locDelegates,
       supportedLocales: _viLocale,
@@ -58,6 +60,7 @@ Widget _wrapSimple(Widget home, FakeCoachingRepository repo) {
   return ProviderScope(
     overrides: [coachingRepositoryProvider.overrideWithValue(repo)],
     child: MaterialApp(
+      builder: wrTextScaleBuilder,
       localizationsDelegates: _locDelegates,
       supportedLocales: _viLocale,
       home: home,

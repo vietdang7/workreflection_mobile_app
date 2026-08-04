@@ -6,6 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/data/seed_service.dart';
 import 'core/router/app_router.dart';
+import 'core/theme/wr_text_scale.dart';
 import 'core/theme/wr_theme.dart';
 import 'features/profile/profile_providers.dart';
 import 'l10n/app_localizations.dart';
@@ -58,6 +59,7 @@ class _WrAppState extends ConsumerState<WrApp> {
     return MaterialApp.router(
       title: 'WorkReflection',
       theme: wrTheme(),
+      builder: wrTextScaleBuilder,
       routerConfig: router,
       locale: Locale(localeCode),
       localizationsDelegates: const [

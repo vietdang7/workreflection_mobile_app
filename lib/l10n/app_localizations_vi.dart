@@ -12,14 +12,14 @@ class AppLocalizationsVi extends AppLocalizations {
   String get appName => 'WorkReflection';
 
   @override
-  String get onb1Tag => 'Reflection';
+  String get onb1Tag => 'Reflect';
 
   @override
   String get onb1Title => 'Hành trình bắt đầu\ntừ một câu hỏi nhỏ.';
 
   @override
   String get onb1Body =>
-      'Mỗi ngày một khoảnh khắc dừng lại.\nĐể nhìn rõ hơn — không phán xét.';
+      'Mỗi ngày một khoảnh khắc dừng lại.\nĐể nhìn rõ hơn, không phán xét.';
 
   @override
   String get onb1Cta => 'Tiếp tục';
@@ -1745,7 +1745,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get voiceInputStopListening => 'Dừng nghe';
 
   @override
-  String get voiceInputNoMatch => 'Không nhận diện được — hãy nhấn để thử lại';
+  String get voiceInputNoMatch => 'Không nhận diện được, hãy nhấn để thử lại';
 
   @override
   String get voiceInputUnavailable =>

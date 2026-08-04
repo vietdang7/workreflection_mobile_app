@@ -8,6 +8,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_episode_repository.dart';
@@ -114,7 +115,8 @@ Widget _wrap(
           .overrideWithValue(episodes ?? FakeWrEpisodeRepository()),
       currentUserIdProvider.overrideWithValue('u1'),
     ],
-    child: MaterialApp.router(routerConfig: router),
+    child: MaterialApp.router(
+      builder: wrTextScaleBuilder,routerConfig: router),
   );
 }
 
@@ -324,7 +326,7 @@ void main() {
 
       // Và đúng bằng số mục thật sự liệt kê bên dưới — chỗ mà người dùng đếm
       // được bằng mắt và bắt được sự mâu thuẫn.
-      expect(find.text('(chưa đặt tên điều nhận ra)'), findsNWidgets(4));
+      expect(find.text('Có gì đó chưa ổn'), findsNWidgets(4));
     });
   });
 
@@ -820,9 +822,29 @@ void main() {
       expect(find.text('Tiến độ lần gần nhất: 12/15'), findsOneWidget);
     });
 
-    testWidgets('quá ngưỡng thì hiện đúng số thật, không chặn ở 15',
-        (tester) async {
-      // Đã nhìn lại 16 lần mà thẻ nói "15/15" là bớt đi công của người dùng.
+    testWidgets('đúng ngưỡng thì thẻ báo đã mở', (tester) async {
+      final episodes = FakeWrEpisodeRepository()
+        ..seed(_episodes({'sit-01': 15}));
+
+      await _pump(
+        tester,
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: FakeWrIntelligenceRepository(),
+          content: FakeWrContentRepository(),
+          episodes: episodes,
+        ),
+      );
+
+      expect(
+        find.textContaining('Bạn đã nhìn lại 15/15 lần'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('quá ngưỡng thì thẻ Career Health biến mất', (tester) async {
+      // Thẻ này chỉ đo đường tới mốc 15. Đi quá rồi thì "40/15" vừa hết việc
+      // vừa đọc như lỗi hiển thị, nên bỏ hẳn khối đó khỏi màn.
       final episodes = FakeWrEpisodeRepository()
         ..seed(_episodes({'sit-01': 16}));
 
@@ -837,8 +859,8 @@ void main() {
       );
 
       expect(
-        find.textContaining('Bạn đã nhìn lại 16/15 lần'),
-        findsOneWidget,
+        find.byKey(const Key('wr_discover_career_health')),
+        findsNothing,
       );
     });
 
@@ -955,13 +977,14 @@ void main() {
       final content = FakeWrContentRepository()..seedSituations([_sit]);
       final episodes = FakeWrEpisodeRepository()
         ..seed([
-          const ReflectionEpisode(
+          ReflectionEpisode(
             id: 'e1',
             userId: 'u1',
             humanMoment: HumanMoment.confusion,
             state: ExperienceState.integrated,
             situationCode: 'sit-01',
             draftMeaning: 'Mình hay im lặng khi chưa chắc chắn',
+            closedAt: DateTime(2026, 7, 20),
           ),
         ]);
 
@@ -975,9 +998,14 @@ void main() {
         ),
       );
 
+      // Mỗi lần chỉ còn tiêu đề khoảnh khắc kèm ngày. Câu nhận ra bị bỏ khỏi
+      // đây vì những lần cùng một tình huống viết gần giống nhau, in đủ cả bốn
+      // câu thì màn đọc như bị lặp nội dung.
+      expect(find.text('Có gì đó chưa ổn'), findsOneWidget);
+      expect(find.text('20/07/2026'), findsOneWidget);
       expect(
         find.text('Mình hay im lặng khi chưa chắc chắn'),
-        findsOneWidget,
+        findsNothing,
       );
     });
   });

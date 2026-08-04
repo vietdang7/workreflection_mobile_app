@@ -148,7 +148,7 @@ class WrHomeScreen extends ConsumerWidget {
       // `giao-dien-chinh.html` §.screen: nền màn TRẮNG, thẻ mới là màu kem. Sắc
       // kem nằm ở thẻ chứ không ở nền — đảo lại thì màn vàng cả mảng và thẻ
       // chìm mất.
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

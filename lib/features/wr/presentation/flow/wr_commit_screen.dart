@@ -241,7 +241,7 @@ class _ChoiceTile extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 9,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF0E7A76),
+                    color: WrColors.pillTealText,
                   ),
                 ),
               ),

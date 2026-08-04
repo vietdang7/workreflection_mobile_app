@@ -9,6 +9,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/payment_repository.dart';
 import 'package:workreflection_mobile/core/logic/wr_entitlement.dart';
@@ -61,9 +62,9 @@ Widget _app(FakePaymentRepository repo, {required bool premiumAfter}) {
     overrides: [
       paymentRepositoryProvider.overrideWithValue(repo),
       wrPremiumPricingProvider.overrideWith(
+        // Giá gói APP (`premium_mobile`), không phải gói web 249.000đ.
         (ref) async => const WrPremiumPricing(
-          currentPrice: 249000,
-          originalPrice: 499000,
+          currentPrice: 499000,
           productId: 'prod-1',
         ),
       ),
@@ -74,7 +75,8 @@ Widget _app(FakePaymentRepository repo, {required bool premiumAfter}) {
         ),
       ),
     ],
-    child: MaterialApp.router(routerConfig: router),
+    child: MaterialApp.router(
+      builder: wrTextScaleBuilder,routerConfig: router),
   );
 }
 

@@ -2,9 +2,9 @@
   "@@locale": "en",
   "appName": "WorkReflection",
 
-  "onb1Tag": "Reflection",
+  "onb1Tag": "Reflect",
   "onb1Title": "The journey starts\nwith a small question.",
-  "onb1Body": "A moment to pause each day.\nTo see more clearly — without judgment.",
+  "onb1Body": "A moment to pause each day.\nTo see more clearly, without judgment.",
   "onb1Cta": "Continue",
 
   "onb2Tag": "Understand",
@@ -752,7 +752,7 @@
   "voiceInputTapToSpeak": "Tap to speak your answer",
   "voiceInputListening": "Listening…",
   "voiceInputStopListening": "Stop listening",
-  "voiceInputNoMatch": "Could not recognise your answer — please tap to try again",
+  "voiceInputNoMatch": "Could not recognise your answer, please tap to try again",
   "voiceInputUnavailable": "Voice input unavailable on this device",
 
   "reportPdfExport": "Export PDF",

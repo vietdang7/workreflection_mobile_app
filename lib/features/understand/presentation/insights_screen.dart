@@ -19,9 +19,9 @@ class InsightsScreen extends ConsumerWidget {
     final insightsAsync = ref.watch(understandInsightsProvider);
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: WrColors.navy),

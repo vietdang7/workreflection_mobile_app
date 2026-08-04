@@ -10,11 +10,11 @@
 //
 // Ba việc chỉ làm được ở phía máy chủ, và là lý do thứ hai để hàm này tồn tại:
 //   • Hạn mức gói miễn phí. Đếm ở máy khách thì máy khách tự quyết.
-//   • Ranh giới Free/Premium ở mục 7 của prompt. Gói được đọc từ database, nếu
+//   • Ranh giới Free/Premium ở phần "Ranh giới Free và Premium" của prompt. Gói được đọc từ database, nếu
 //     để app khai báo thì ai cũng khai mình Premium.
 //   • Lịch sử hội thoại nạp lại cho model. Nếu app gửi lên thì nó gửi được cả
 //     lượt "assistant" bịa ra, tức tiêm chữ thẳng vào ngữ cảnh và vượt qua danh
-//     sách cấm ở mục 6.
+//     sách cấm.
 //
 // ---------------------------------------------------------------------------
 // SECRET CẦN ĐẶT TRƯỚC KHI DEPLOY
@@ -98,10 +98,10 @@ const MAX_MESSAGE_CHARS = 2000;
 /// Trần độ dài câu trả lời.
 ///
 /// Hạ từ 700 xuống 300 ngày 2026-08-03. Đo trên 11 câu trả lời thật: 7 câu dài
-/// hơn ba câu, tức vi phạm mục 9 ở phần lớn lượt. Trần 700 quá rộng nên nó
+/// hơn ba câu, tức vi phạm phần "Giọng văn" ở phần lớn lượt. Trần 700 quá rộng nên nó
 /// không hề cản, và model tự do viết thành bài.
 ///
-/// 300 token đủ cho ba câu tiếng Việt thoải mái, kể cả nhánh mục 8 vốn cần đủ
+/// 300 token đủ cho ba câu tiếng Việt thoải mái, kể cả nhánh tín hiệu đáng lo ngại vốn cần đủ
 /// ba phần. Đây là hàng rào cứng đi kèm luật trong prompt, không thay thế nó:
 /// cắt bằng token có thể cụt câu, nên prompt vẫn phải là thứ dạy model dừng
 /// đúng chỗ.
@@ -135,7 +135,7 @@ function json(body: unknown, status = 200): Response {
 
 /// Câu báo lỗi hiển thị thẳng cho người dùng.
 ///
-/// Tiếng Việt, không có mã lỗi, không có tên nhà cung cấp: mục 6 cấm lộ chi
+/// Tiếng Việt, không có mã lỗi, không có tên nhà cung cấp: phần "Danh sách cấm" cấm lộ chi
 /// tiết hệ thống, và "OpenRouter 502" thì người dùng cũng không làm gì được.
 function fail(userMessage: string, status: number, extra: Record<string, unknown> = {}) {
   return json({ error: userMessage, ...extra }, status);
@@ -430,7 +430,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   // ── 8 · Nắn câu trả lời ─────────────────────────────────────────────────
   //
-  // Gỡ thẻ hành động, lột Markdown, ép nút dịu lại ở nhánh mục 8. Chạy TRƯỚC
+  // Gỡ thẻ hành động, lột Markdown, ép nút dịu lại ở nhánh tín hiệu đáng lo ngại. Chạy TRƯỚC
   // khi ghi vào database: lưu nguyên thẻ `[[ACTION:...]]` thì lần sau nạp lại
   // làm ngữ cảnh, model sẽ học theo và rải thẻ dày hơn.
   const shaped = shapeReply(reply);

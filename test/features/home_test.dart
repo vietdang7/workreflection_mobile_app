@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:intl/date_symbol_data_local.dart';
 import 'package:workreflection_mobile/core/data/survey_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
@@ -26,6 +27,7 @@ Widget _wrap(Widget child, WrRepository repo,
         surveyRepositoryProvider.overrideWithValue(surveyRepo),
     ],
     child: MaterialApp(
+      builder: wrTextScaleBuilder,
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,

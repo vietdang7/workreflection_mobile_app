@@ -20,6 +20,10 @@ import '../../core/logic/wr_situation_picker.dart';
 import '../../core/models/wr_mood_content.dart';
 import '../profile/profile_providers.dart';
 import 'episode_flow_controller.dart';
+// Nhập ngược từ growth_providers (file kia cũng nhập file này). Dart cho phép
+// nhập vòng; giữ như vậy vì Cơ hội phát triển cần khoảng trống kỹ năng, mà
+// nguồn của nó là ghi danh + Career Memory đã gom sẵn ở growth_providers.
+import 'growth_providers.dart';
 
 /// Provides the current authenticated user's id.
 /// Override in tests with a fixed userId string.
@@ -141,16 +145,29 @@ final wrEntitlementProvider = FutureProvider<WrEntitlement>((ref) async {
   }
 });
 
-/// Giá gói Premium để hiển thị ở Paywall, đọc từ `cc_products` như web.
+/// Các gói Premium bán trong app (năm / tháng), xếp theo `display_order`.
 ///
-/// Không bao giờ ném: hỏng mạng thì rơi về [WrPremiumPricing.fallback] chứ
-/// không để Paywall trống chỗ ghi giá.
-final wrPremiumPricingProvider = FutureProvider<WrPremiumPricing>((ref) async {
+/// Không bao giờ ném và không bao giờ rỗng: hỏng mạng hoặc bảng chưa có gói nào
+/// thì trả đúng một [WrPremiumPricing.fallback] — Paywall vẫn có con số để
+/// hiển thị, còn nút mua tự khoá vì gói mặc định thiếu `productId`.
+final wrPremiumPlansProvider =
+    FutureProvider<List<WrPremiumPricing>>((ref) async {
   try {
-    return await ref.watch(wrRepositoryProvider).getPremiumPricing();
+    final plans = await ref.watch(wrRepositoryProvider).getPremiumPlans();
+    return plans.isEmpty ? const [WrPremiumPricing.fallback] : plans;
   } catch (_) {
-    return WrPremiumPricing.fallback;
+    return const [WrPremiumPricing.fallback];
   }
+});
+
+/// Gói chọn sẵn — phần tử đầu của [wrPremiumPlansProvider], tức gói có
+/// `display_order` nhỏ nhất (hiện là gói năm).
+///
+/// Dùng cho những chỗ chỉ cần MỘT con số: màn thanh toán khi mở thẳng không
+/// kèm gói đã chọn. Suy ra từ danh sách nên không tốn thêm một lượt gọi mạng.
+final wrPremiumPricingProvider = FutureProvider<WrPremiumPricing>((ref) async {
+  final plans = await ref.watch(wrPremiumPlansProvider.future);
+  return plans.first;
 });
 
 /// Fetch today's check-in (nullable). Used by WrHomeScreen to detect saved state.
@@ -216,6 +233,56 @@ final wrContextDocumentsProvider =
   if (userId == null) return const [];
   final repo = ref.watch(wrIntelligenceRepositoryProvider);
   return repo.fetchContextDocuments(userId);
+});
+
+/// Bối cảnh công việc dưới dạng CHỮ, gộp từ mọi nguồn đang có.
+///
+/// Thứ tự ưu tiên, và vì sao:
+///   1. Tài liệu đã phân tích xong (JD trước CV) — đây là lời của chính công
+///      việc đó, không phải trí nhớ của người dùng về nó.
+///   2. `role_text` người dùng tự viết — vẫn quý, và là thứ duy nhất có trước
+///      khi họ tải tài liệu lên.
+/// Gộp cả hai chứ không thay thế: một người có thể tải JD của vị trí đang ứng
+/// tuyển nhưng mô tả công việc hiện tại bằng chữ, và cả hai đều là bối cảnh thật.
+///
+/// Null khi không có gì — nơi dùng phải im lặng chứ không bịa.
+final wrJobContextTextProvider = FutureProvider<String?>((ref) async {
+  final parts = <String>[];
+
+  try {
+    final docs = await ref.watch(wrContextDocumentsProvider.future);
+    final ready = docs.where((d) => d.isReady).toList()
+      // JD nói về công việc, CV nói về người. Đối chiếu kỹ năng với công việc
+      // thì JD phải đứng trước.
+      ..sort((a, b) {
+        int rank(String? t) => switch (t) { 'jd' => 0, 'cv' => 1, _ => 2 };
+        return rank(a.docType).compareTo(rank(b.docType));
+      });
+
+    for (final d in ready.take(2)) {
+      final a = d.analysis;
+      if (a != null && !a.isEmpty) {
+        parts.addAll([
+          if (a.title != null) a.title!,
+          a.summary,
+          ...a.responsibilities,
+          ...a.requirements,
+          ...a.skills,
+          ...a.keywords,
+        ].where((s) => s.trim().isNotEmpty));
+      }
+      final raw = d.extractedText;
+      if (raw != null && raw.isNotEmpty) parts.add(raw);
+    }
+  } catch (_) {
+    /* không đọc được tài liệu thì còn `role_text` bên dưới */
+  }
+
+  final role = await ref.watch(wrRoleTextProvider.future);
+  if (role != null && role.trim().isNotEmpty) parts.add(role.trim());
+
+  if (parts.isEmpty) return null;
+  return parts.join('\n');
 });
 
 /// Career Snapshot của người dùng hiện tại (vai trò · mục tiêu · trăn trở).
@@ -390,11 +457,25 @@ final wrGrowthOpportunityProvider =
   final situations = await ref.watch(wrSituationsProvider.future);
   final roleText = await ref.watch(wrRoleTextProvider.future);
 
+  // Khoảng trống giữa công việc đang làm và kỹ năng đã hình thành là một nguồn
+  // đầu vào của Cơ hội phát triển (spec Kỹ năng đã hình thành). Chỉ Premium:
+  // phép đối chiếu với JD là diễn giải, đúng trục đã định ở chương Nguyên tắc
+  // Logic Dữ liệu — phần GHI NHẬN kỹ năng thì vẫn Free.
+  var gapTitles = const <String>[];
+  final entitlement = await ref.watch(wrEntitlementProvider.future);
+  if (entitlement.isPremium) {
+    final match = await ref.watch(wrSkillJdMatchProvider.future);
+    if (match != null) {
+      gapTitles = [for (final t in match.gapThemes) t.title];
+    }
+  }
+
   return deriveGrowthOpportunity(
     userId: userId,
     recent: recentSituationIds(episodes),
     situations: situations,
     roleText: roleText,
+    skillGapTitles: gapTitles,
     now: DateTime.now(),
   );
 });

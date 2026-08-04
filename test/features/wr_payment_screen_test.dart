@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workreflection_mobile/core/data/payment_repository.dart';
 import 'package:workreflection_mobile/core/logic/wr_payment.dart';
@@ -19,8 +20,8 @@ class FakePaymentRepository implements PaymentRepository {
     id: 'order-1',
     code: 'CNCORDER01',
     status: 'pending',
-    originalAmount: 249000,
-    finalAmount: 249000,
+    originalAmount: 499000,
+    finalAmount: 499000,
   );
 
   /// Đơn mà [getOrder] trả về ở lần hỏi tiếp theo. Null thì trả [order].
@@ -75,7 +76,7 @@ class FakePaymentRepository implements PaymentRepository {
     String? orgId,
   }) async {
     if (voucherError != null) throw voucherError!;
-    final updated = order.copyWith(discountAmount: 249000, finalAmount: 0);
+    final updated = order.copyWith(discountAmount: 499000, finalAmount: 0);
     this.order = updated;
     return updated;
   }
@@ -116,15 +117,19 @@ Widget _wrap(FakePaymentRepository repo, {WrPremiumPricing? pricing}) {
       wrPremiumPricingProvider.overrideWith(
         (ref) async =>
             pricing ??
+            // Giá gói APP (`cc_products.product_type = 'premium_mobile'`),
+            // không phải gói web 249.000đ.
             const WrPremiumPricing(
-              currentPrice: 249000,
-              originalPrice: 499000,
+              currentPrice: 499000,
               productId: 'prod-1',
             ),
       ),
       ccProfileProvider.overrideWith((ref) async => {'role': 'user'}),
     ],
-    child: const MaterialApp(home: WrPaymentScreen()),
+    child: MaterialApp(
+        builder: wrTextScaleBuilder,
+        home: const WrPaymentScreen(),
+      ),
   );
 }
 
@@ -153,7 +158,7 @@ void main() {
       await tester.pump();
 
       expect(repo.createdProductId, 'prod-1');
-      expect(repo.createdAmount, 249000);
+      expect(repo.createdAmount, 499000);
     });
 
     testWidgets('hiện số tiền và mã đơn để chuyển khoản tay', (tester) async {
@@ -163,7 +168,7 @@ void main() {
       await tester.pump();
 
       expect(find.byKey(const Key('wr_payment_amount')), findsOneWidget);
-      expect(find.text('249.000đ'), findsOneWidget);
+      expect(find.text('499.000đ'), findsOneWidget);
 
       await _scrollTo(tester, find.text('CNCORDER01'));
       expect(find.text('CNCORDER01'), findsOneWidget);
@@ -316,8 +321,8 @@ void main() {
         id: 'order-cu',
         code: 'CNCCU000001',
         status: 'pending',
-        originalAmount: 249000,
-        finalAmount: 249000,
+        originalAmount: 499000,
+        finalAmount: 499000,
         expiresAt: DateTime.now().toUtc().add(const Duration(minutes: 12)),
       );
 
@@ -339,8 +344,8 @@ void main() {
         id: 'order-cu',
         code: 'CNCCU000001',
         status: 'pending',
-        originalAmount: 249000,
-        finalAmount: 249000,
+        originalAmount: 499000,
+        finalAmount: 499000,
         expiresAt: DateTime.now().toUtc().add(const Duration(minutes: 12)),
       );
 
@@ -379,7 +384,7 @@ void main() {
 
       expect(find.text('Đơn hàng đã hết hạn'), findsOneWidget);
       expect(find.text('CNCORDER01'), findsOneWidget);
-      expect(find.text('249.000đ'), findsOneWidget);
+      expect(find.text('499.000đ'), findsOneWidget);
       expect(find.text('Work Reflection Premium'), findsOneWidget);
     });
 
@@ -496,8 +501,8 @@ void main() {
           id: 'order-free',
           code: 'CNCFREE0001',
           status: 'pending',
-          originalAmount: 249000,
-          discountAmount: 249000,
+          originalAmount: 499000,
+          discountAmount: 499000,
           finalAmount: 0,
           voucherId: 'v1',
           expiresAt: DateTime.now().toUtc().add(const Duration(minutes: 20)),
@@ -562,7 +567,7 @@ void main() {
           paymentRepositoryProvider.overrideWithValue(repo),
           wrPremiumPricingProvider.overrideWith(
             (ref) async => const WrPremiumPricing(
-              currentPrice: 249000,
+              currentPrice: 499000,
               productId: 'prod-1',
             ),
           ),
@@ -578,7 +583,10 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
-          child: const MaterialApp(home: WrPaymentScreen()),
+          child: MaterialApp(
+        builder: wrTextScaleBuilder,
+        home: const WrPaymentScreen(),
+      ),
         ),
       );
       await tester.pump();
@@ -609,7 +617,7 @@ void main() {
           paymentRepositoryProvider.overrideWithValue(repo),
           wrPremiumPricingProvider.overrideWith(
             (ref) async => const WrPremiumPricing(
-              currentPrice: 249000,
+              currentPrice: 499000,
               productId: 'prod-1',
             ),
           ),
@@ -624,7 +632,10 @@ void main() {
       await tester.pumpWidget(
         UncontrolledProviderScope(
           container: container,
-          child: const MaterialApp(home: WrPaymentScreen()),
+          child: MaterialApp(
+        builder: wrTextScaleBuilder,
+        home: const WrPaymentScreen(),
+      ),
         ),
       );
       await tester.pump();

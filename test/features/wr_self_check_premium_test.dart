@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
@@ -52,7 +53,8 @@ Widget _wrap({
           .overrideWithValue(content ?? FakeWrContentRepository()),
       currentUserIdProvider.overrideWithValue('u1'),
     ],
-    child: MaterialApp.router(routerConfig: router),
+    child: MaterialApp.router(
+      builder: wrTextScaleBuilder,routerConfig: router),
   );
 }
 
@@ -65,6 +67,10 @@ Future<void> _completeSurvey(
   await tester.pumpAndSettle();
 
   for (var i = 0; i < kSelfCheckQuestions.length; i++) {
+    // Ô chọn cuối nằm dưới mép màn trên viewport thấp của test — cuộn tới đã
+    // rồi mới chạm, đúng như người dùng phải làm.
+    await tester.ensureVisible(find.text(label));
+    await tester.pumpAndSettle();
     await tester.tap(find.text(label));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
@@ -78,7 +84,7 @@ Future<bool> _seenWhileScrolling(WidgetTester tester, Finder finder) async {
   final scrollable = find.byType(Scrollable).first;
   await tester.drag(scrollable, const Offset(0, 4000));
   await tester.pumpAndSettle();
-  for (var i = 0; i < 16; i++) {
+  for (var i = 0; i < 40; i++) {
     if (finder.evaluate().isNotEmpty) return true;
     await tester.drag(scrollable, const Offset(0, -260));
     await tester.pumpAndSettle();
@@ -92,6 +98,17 @@ Future<void> _expectVisible(WidgetTester tester, Finder f, {String? why}) async 
 
 Future<void> _expectAbsent(WidgetTester tester, Finder f, {String? why}) async {
   expect(await _seenWhileScrolling(tester, f), isFalse, reason: why);
+}
+
+/// Mở một mục thu gọn ở trang kết quả bằng cách chạm vào dòng chữ in hoa.
+Future<void> _openSection(WidgetTester tester, String title) async {
+  final header = find.byKey(Key('self_check_section_$title'));
+  expect(await _seenWhileScrolling(tester, header), isTrue,
+      reason: 'không thấy mục "$title"');
+  await tester.ensureVisible(header);
+  await tester.pumpAndSettle();
+  await tester.tap(header);
+  await tester.pumpAndSettle();
 }
 
 WrEntitlementRecord _premium() => WrEntitlementRecord(
@@ -130,6 +147,10 @@ void main() {
     await _completeSurvey(tester);
     await _expectVisible(tester, find.text('Mở diễn giải sâu'));
 
+    // _expectVisible cuộn hết trang rồi trả về đầu, nên nút lại nằm ngoài
+    // khung — phải kéo nó vào tầm mắt trước khi chạm.
+    await tester.ensureVisible(find.text('Mở diễn giải sâu'));
+    await tester.pumpAndSettle();
     await tester.tap(find.text('Mở diễn giải sâu'));
     await tester.pumpAndSettle();
 
@@ -146,6 +167,10 @@ void main() {
     await _expectVisible(tester, find.text('DIỄN GIẢI SÂU'));
     await _expectAbsent(tester, find.text('Mở diễn giải sâu'));
     await _expectVisible(tester, find.text('XU HƯỚNG THEO THỜI GIAN'));
+
+    // Mục thu gọn sẵn: nội dung chỉ hiện sau khi chạm vào dòng chữ in hoa.
+    await _expectAbsent(tester, find.textContaining('lần tự soi đầu tiên'));
+    await _openSection(tester, 'XU HƯỚNG THEO THỜI GIAN');
     await _expectVisible(tester, find.textContaining('lần tự soi đầu tiên'));
   });
 
@@ -178,6 +203,7 @@ void main() {
     // Hai lần trước đều rất thấp, lần này trả lời cao nhất → xu hướng đi lên.
     await _completeSurvey(tester, label: 'Hoàn toàn đúng');
 
+    await _openSection(tester, 'XU HƯỚNG THEO THỜI GIAN');
     await _expectVisible(tester, find.textContaining('Đã ghi 3 lần tự soi'));
     await _expectVisible(tester, find.textContaining('cải thiện'));
   });
@@ -192,6 +218,26 @@ void main() {
     await _completeSurvey(tester);
 
     await _expectVisible(tester, find.text('MẤT CÂN BẰNG GIỮA CÁC MẶT'));
+  });
+
+  testWidgets('Paid: mục mất cân bằng thu gọn sẵn, chạm mới mở ra',
+      (tester) async {
+    final intel = FakeWrIntelligenceRepository()..seedEntitlement(_premium());
+    await tester.pumpWidget(_wrap(intel: intel));
+    await tester.pumpAndSettle();
+
+    await _completeSurvey(tester);
+
+    // Chỉ dòng chữ in hoa hiện ra, đoạn diễn giải nằm im.
+    await _expectVisible(tester, find.text('MẤT CÂN BẰNG GIỮA CÁC MẶT'));
+    await _expectAbsent(tester, find.textContaining('Cả ba mặt đều đang ở mức thấp'));
+
+    await _openSection(tester, 'MẤT CÂN BẰNG GIỮA CÁC MẶT');
+    await _expectVisible(tester, find.textContaining('Cả ba mặt đều đang ở mức thấp'));
+
+    // Chạm lần nữa thì thu lại.
+    await _openSection(tester, 'MẤT CÂN BẰNG GIỮA CÁC MẶT');
+    await _expectAbsent(tester, find.textContaining('Cả ba mặt đều đang ở mức thấp'));
   });
 
   testWidgets('Paid: đối chiếu với pattern lặp lại của cùng một mặt',
@@ -306,6 +352,10 @@ void main() {
       String first = 'Đôi khi đúng',
       String second = 'Khá đúng',
     }) async {
+      // Kéo cả hai ô vào tầm mắt TRƯỚC khi chạm: giữa hai lượt chạm chỉ được
+      // phép trôi qua dưới 260ms, không còn chỗ cho thao tác cuộn.
+      await tester.ensureVisible(find.text(second));
+      await tester.pumpAndSettle();
       await tester.tap(find.text(first));
       await tester.pump(const Duration(milliseconds: 100)); // < 260ms
       await tester.tap(find.text(second));

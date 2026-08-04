@@ -41,9 +41,9 @@ class SurveyHistoryScreen extends ConsumerWidget {
     final reportsAsync = ref.watch(myReportsProvider);
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close, color: WrColors.navy),

@@ -42,9 +42,9 @@ class _CoachingScreenState extends ConsumerState<CoachingScreen> {
     final coachesAsync = ref.watch(coachesProvider);
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: WrColors.navy),
@@ -498,7 +498,7 @@ class _ReviewsSection extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Icon(Icons.star_rounded,
-                      size: 14, color: WrColors.teal),
+                      size: 14, color: WrColors.pillTealText),
                   const SizedBox(width: 4),
                   Text(
                     '$avg/5.0',

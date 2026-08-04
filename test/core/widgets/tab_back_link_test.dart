@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/widgets/tab_back_link.dart';
 
@@ -40,7 +41,8 @@ GoRouter _makeRouter({required String initialLocation}) => GoRouter(
     );
 
 Widget _wrapWithRouter(String initialLocation) =>
-    MaterialApp.router(routerConfig: _makeRouter(initialLocation: initialLocation));
+    MaterialApp.router(
+      builder: wrTextScaleBuilder,routerConfig: _makeRouter(initialLocation: initialLocation));
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Tests
@@ -102,6 +104,7 @@ void main() {
         (tester) async {
       await tester.pumpWidget(
         MaterialApp(
+          builder: wrTextScaleBuilder,
           home: Scaffold(
             body: WrTabBackLink(currentTab: WrTab.discover),
           ),

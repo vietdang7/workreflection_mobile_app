@@ -104,9 +104,9 @@ class LayerDetailScreen extends ConsumerWidget {
     final reportAsync = ref.watch(_reportForLayerDetailProvider(reportId));
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: WrColors.navy),
@@ -184,7 +184,7 @@ class _LayerDetailBody extends StatelessWidget {
               children: [
                 Text(l10n.layerDetailOverallScore,
                     style: WrTextStyles.eyebrow
-                        .copyWith(color: WrColors.muted, letterSpacing: 0.55)),
+                        .copyWith(color: WrColors.text3, letterSpacing: 0.55)),
                 const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

@@ -19,7 +19,7 @@ class ShellScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       // Bong bóng trò chuyện, BẬT LẠI 2026-08-03.
       //
       // Khách tắt nó ngày 2026-07-30 ("bỏ cái ô chatbot giúp tôi, chúng ta sẽ

@@ -164,7 +164,8 @@ void main() {
   });
 
   group('wrPremiumPricingProvider', () {
-    test('lấy giá từ repo — gốc 499k, hiện tại 249k như trên web', () async {
+    // Gói app 499k, KHÔNG phải gói web 249k (khách chốt 2026-08-04).
+    test('lấy giá gói app từ repo — 499k, không gạch ngang', () async {
       final repo = FakeWrRepository();
       final container = ProviderContainer(
         overrides: [wrRepositoryProvider.overrideWithValue(repo)],
@@ -172,9 +173,9 @@ void main() {
       addTearDown(container.dispose);
 
       final p = await container.read(wrPremiumPricingProvider.future);
-      expect(p.currentLabel, '249.000đ');
-      expect(p.originalLabel, '499.000đ');
-      expect(p.discountPercent, 50);
+      expect(p.currentLabel, '499.000đ');
+      expect(p.originalLabel, isNull);
+      expect(p.discountPercent, 0);
     });
 
     test('repo hỏng thì rơi về giá mặc định chứ không ném', () async {

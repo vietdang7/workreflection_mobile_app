@@ -24,6 +24,10 @@ enum PracticeMatchKind {
   /// Chỉ đúng trụ của nhu cầu chủ đạo — chưa có tình huống nào để bám.
   pillar,
 
+  /// Khớp theo trụ mà công việc của họ nhấn mạnh, đọc từ JD/CV đã phân tích
+  /// hoặc mô tả vai trò họ tự viết.
+  jobContext,
+
   /// Không khớp được gì, lấy chủ đề đầu bể. KHÔNG được giải thích: nói "vì bạn
   /// đang tìm kiếm sự kết nối" cho một chủ đề trụ S là dựng ra một mối liên hệ
   /// không có thật.
@@ -87,6 +91,44 @@ List<({ScaDimension dim, String situationCode, int count})> _dimensionRanking(
   ];
 }
 
+/// Câu giải thích vì sao lại là chủ đề này.
+///
+/// null = không giải thích được thì im lặng, không bịa một lý do nghe cho có.
+///
+/// Ở chung file với [suggestPracticeTheme] để mọi màn nói CÙNG một câu: trước
+/// 2026-08-04 hàm này nằm private trong màn Phát triển, nên màn thư viện chủ đề
+/// bày ra một danh sách trần không kèm lý do nào — người dùng không hiểu vì sao
+/// lại là những chủ đề đó.
+String? practiceSuggestionReason(
+  PracticeSuggestion? suggestion,
+  List<WrSituation> situations,
+  HumanNeed? need,
+) {
+  switch (suggestion?.kind) {
+    case PracticeMatchKind.dimension:
+      final code = suggestion!.reasonSituationCode;
+      final text = situations.where((s) => s.code == code).firstOrNull?.text;
+      if (text == null) return null;
+      final n = suggestion.reasonCount;
+      return n > 1
+          ? 'Vì bạn đã gặp "$text" $n lần.'
+          : 'Vì bạn đã gặp "$text".';
+    case PracticeMatchKind.jobContext:
+      // Khớp từ JD/CV đã đọc hoặc mô tả vai trò họ tự viết. Nói "công việc bạn
+      // mô tả" chứ không nói "JD của bạn": người dùng có thể chỉ mới gõ vài
+      // dòng chứ chưa tải tài liệu nào.
+      return 'Vì công việc bạn mô tả nghiêng nhiều về phần này.';
+    case PracticeMatchKind.pillar:
+      // Chưa có tình huống nào để chỉ ra — mới chỉ Self-Check chẳng hạn.
+      return need == null
+          ? null
+          : 'Vì bạn đang tìm kiếm ${needSeekingLabel(need)}.';
+    case PracticeMatchKind.fallback:
+    case null:
+      return null;
+  }
+}
+
 /// Chủ đề nên đề xuất, chọn trong [candidates].
 ///
 /// [candidates] phải đã loại chủ đề người dùng đã ghi danh và chủ đề đã ngưng
@@ -101,6 +143,7 @@ PracticeSuggestion? suggestPracticeTheme({
   required List<String> recent,
   required List<WrSituation> situations,
   HumanNeed? need,
+  List<String> jobPillars = const [],
 }) {
   if (candidates.isEmpty) return null;
 
@@ -118,7 +161,26 @@ PracticeSuggestion? suggestPracticeTheme({
     }
   }
 
-  // 2 — chưa có hành vi nào để bám: khớp trụ theo nhu cầu chủ đạo.
+  // 2 — chưa có tình huống nào lặp lại, nhưng biết công việc của họ đòi gì.
+  //
+  // Xếp SAU chiều tình huống là có chủ đích: điều họ thật sự đang vướng quan
+  // trọng hơn điều bản mô tả công việc nói. JD chỉ vào cuộc khi chưa có gì để
+  // bám — lúc đó nó vẫn tốt hơn một chủ đề lấy đại đầu danh sách.
+  for (final pillar in jobPillars) {
+    for (final t in candidates) {
+      final dim = t.scaDimension;
+      if (dim != null && dim.isSca && dim.dbValue.startsWith(pillar)) {
+        return (
+          theme: t,
+          kind: PracticeMatchKind.jobContext,
+          reasonSituationCode: null,
+          reasonCount: 0,
+        );
+      }
+    }
+  }
+
+  // 3 — chưa có hành vi nào để bám: khớp trụ theo nhu cầu chủ đạo.
   if (need != null) {
     final pillar = needPillarLetter(need);
     for (final t in candidates) {
@@ -134,7 +196,7 @@ PracticeSuggestion? suggestPracticeTheme({
     }
   }
 
-  // 3 — không khớp được gì thì vẫn mời một chủ đề, nhưng im lặng về lý do.
+  // 4 — không khớp được gì thì vẫn mời một chủ đề, nhưng im lặng về lý do.
   return (
     theme: candidates.first,
     kind: PracticeMatchKind.fallback,

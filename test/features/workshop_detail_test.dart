@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:workreflection_mobile/core/data/workshop_repository.dart';
 import 'package:workreflection_mobile/core/models/workshop_models.dart';
 import 'package:workreflection_mobile/features/workshops/presentation/workshop_detail_screen.dart';
@@ -21,6 +22,7 @@ Widget _wrap(String workshopId, FakeWorkshopRepository repo) {
       workshopRepositoryProvider.overrideWithValue(repo),
     ],
     child: MaterialApp(
+      builder: wrTextScaleBuilder,
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,

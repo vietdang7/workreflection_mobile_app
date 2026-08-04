@@ -17,6 +17,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/workshop_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
@@ -325,6 +326,7 @@ class _Stage {
         currentUserIdProvider.overrideWithValue('u1'),
       ],
       child: MaterialApp.router(
+      builder: wrTextScaleBuilder,
         debugShowCheckedModeBanner: false,
         theme: ThemeData(fontFamily: 'NotoSans', useMaterial3: true),
         routerConfig: router,

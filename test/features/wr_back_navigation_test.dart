@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
@@ -58,7 +59,8 @@ Widget _wrapDiscover(String initialLocation) {
       wrIntelligenceRepositoryProvider.overrideWithValue(intelRepo),
       currentUserIdProvider.overrideWithValue('u1'),
     ],
-    child: MaterialApp.router(routerConfig: router),
+    child: MaterialApp.router(
+      builder: wrTextScaleBuilder,routerConfig: router),
   );
 }
 
@@ -86,7 +88,8 @@ Widget _wrapGrowth(String initialLocation) {
       wrIntelligenceRepositoryProvider.overrideWithValue(intelRepo),
       currentUserIdProvider.overrideWithValue('u1'),
     ],
-    child: MaterialApp.router(routerConfig: router),
+    child: MaterialApp.router(
+      builder: wrTextScaleBuilder,routerConfig: router),
   );
 }
 
@@ -114,7 +117,8 @@ Widget _wrapJourney(String initialLocation) {
       wrIntelligenceRepositoryProvider.overrideWithValue(intelRepo),
       currentUserIdProvider.overrideWithValue('u1'),
     ],
-    child: MaterialApp.router(routerConfig: router),
+    child: MaterialApp.router(
+      builder: wrTextScaleBuilder,routerConfig: router),
   );
 }
 
@@ -145,7 +149,8 @@ Widget _wrapHome(String initialLocation) {
       wrIntelligenceRepositoryProvider.overrideWithValue(intelRepo),
       currentUserIdProvider.overrideWithValue('u1'),
     ],
-    child: MaterialApp.router(routerConfig: router),
+    child: MaterialApp.router(
+      builder: wrTextScaleBuilder,routerConfig: router),
   );
 }
 
@@ -275,7 +280,8 @@ void main() {
             wrIntelligenceRepositoryProvider.overrideWithValue(intelRepo),
             currentUserIdProvider.overrideWithValue('u1'),
           ],
-          child: MaterialApp.router(routerConfig: router),
+          child: MaterialApp.router(
+      builder: wrTextScaleBuilder,routerConfig: router),
         );
 
         await _pumpLarge(tester, app);
@@ -326,7 +332,8 @@ void main() {
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
 
-        await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+        await tester.pumpWidget(MaterialApp.router(
+      builder: wrTextScaleBuilder,routerConfig: router));
         await tester.pumpAndSettle();
 
         // Navigate lên /wr/story bằng push
@@ -365,7 +372,8 @@ void main() {
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
 
-        await tester.pumpWidget(MaterialApp.router(routerConfig: router));
+        await tester.pumpWidget(MaterialApp.router(
+      builder: wrTextScaleBuilder,routerConfig: router));
         await tester.pumpAndSettle();
 
         expect(find.byIcon(Icons.arrow_back_ios_new), findsOneWidget);

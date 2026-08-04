@@ -54,11 +54,11 @@ Deno.test('không có thẻ thì không có nút', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Luật an toàn — mục 8
+// Luật an toàn — nhánh tín hiệu đáng lo ngại
 // ---------------------------------------------------------------------------
 
 Deno.test('nhánh đáng lo ngại QUÊN thẻ thì tự ép nút dịu lại', () => {
-  // Bước 3 của mục 8 buộc phải đề nghị Thư viện Nội dung Cảm xúc. Lượt này xảy
+  // Bước 3 của phần "Xử lý tín hiệu đáng lo ngại" buộc phải đề nghị Thư viện Nội dung Cảm xúc. Lượt này xảy
   // ra đúng lúc người dùng đang tệ nhất; đề nghị giúp rồi không mở được gì là
   // điều tệ nhất ta có thể làm.
   const r = shapeReply(
@@ -156,7 +156,7 @@ Deno.test('gộp khoảng trắng thừa và xuống dòng trong tiêu đề', (
 });
 
 // ---------------------------------------------------------------------------
-// Lời mời dịu lại ở những lượt nhẹ hơn mục 8
+// Lời mời dịu lại ở những lượt nhẹ hơn nhánh tín hiệu đáng lo ngại
 // ---------------------------------------------------------------------------
 
 Deno.test('mời đọc gì đó cho dịu lại mà quên thẻ thì vẫn có nút', () => {
@@ -176,7 +176,7 @@ Deno.test('nhắc ngang qua một bài đọc thì KHÔNG ép nút', () => {
   assertEquals(r.action, null);
 });
 
-Deno.test('nhánh mục 8 vẫn thắng, không bị luật nhẹ hơn ghi đè', () => {
+Deno.test('nhánh tín hiệu đáng lo ngại vẫn thắng, không bị luật nhẹ hơn ghi đè', () => {
   const r = shapeReply(
     'Mình là trợ lý đồng hành sự nghiệp, không phải chuyên gia tâm lý. Nếu có '
       + 'người bạn tin tưởng, hãy tìm đến họ ngay bây giờ nhé.',
@@ -200,8 +200,8 @@ Deno.test('mời dạng trần thuật, gọi tên thư viện, cũng phải có
 });
 
 Deno.test('từ chối jailbreak có câu minh bạch KHÔNG bị ép nút dịu lại', () => {
-  // Mục 4.9 cho phép nhắc "mình không phải chuyên gia tâm lý" ở bất kỳ lượt nào.
-  // Chỉ riêng câu đó không phải nhánh mục 8, và hiện nút dịu lại ngay sau một
+  // Nguyên tắc 11 "minh bạch về bản thân" cho phép nhắc "mình không phải chuyên gia tâm lý" ở bất kỳ lượt nào.
+  // Chỉ riêng câu đó không phải nhánh tín hiệu đáng lo ngại, và hiện nút dịu lại ngay sau một
   // lượt từ chối nghịch prompt làm nút mất nghĩa.
   const r = shapeReply(
     'Mình là trợ lý phản chiếu của WorkReflection. Mình không phải chuyên gia '
@@ -211,7 +211,7 @@ Deno.test('từ chối jailbreak có câu minh bạch KHÔNG bị ép nút dịu
   assertEquals(r.action, null);
 });
 
-Deno.test('nhánh mục 8 thật có đủ hai dấu hiệu thì vẫn được ép nút', () => {
+Deno.test('nhánh tín hiệu đáng lo ngại thật có đủ hai dấu hiệu thì vẫn được ép nút', () => {
   const r = shapeReply(
     'Cảm ơn bạn đã nói điều này với mình. Mình là trợ lý đồng hành sự nghiệp, '
       + 'không phải chuyên gia tâm lý, nên mình không phải nơi tốt nhất để bạn '
@@ -247,10 +247,152 @@ Deno.test('câu thường không nhắc nút thì KHÔNG ép nút reflect', () =
   assertEquals(r.action, null);
 });
 
-Deno.test('nhánh mục 8 vẫn thắng luật chỉ-vào-nút', () => {
+Deno.test('nhánh tín hiệu đáng lo ngại vẫn thắng luật chỉ-vào-nút', () => {
   const r = shapeReply(
     'Mình không phải chuyên gia tâm lý. Hãy tìm đến một người thân bạn tin '
       + 'tưởng ngay bây giờ nhé. Bạn bấm vào đó nếu muốn đọc một chút.',
+  );
+  assertEquals(r.action, 'calm');
+});
+
+// ---------------------------------------------------------------------------
+// Đối chiếu từng mẫu của tài liệu Conversation Examples
+//
+// VÌ SAO CÓ NHÓM NÀY: bộ ví dụ mẫu là thứ đội nội dung sửa thường xuyên nhất, và
+// nó cũng là thứ được nạp thẳng vào prompt làm few-shot. Nếu một mẫu ở đó viết
+// lệch khỏi các cụm mà lưới an toàn dưới đây dò, thì mô hình sẽ học đúng cách
+// viết lọt lưới, và lượt đó ra màn hình không có nút nào.
+//
+// Rà tay ngày 2026-08-04 phát hiện ba mẫu như vậy, đều nằm ở nhóm nhạy cảm
+// nhất. Các test dưới đây chép NGUYÊN VĂN câu chữ của tài liệu sau khi sửa, để
+// lần sau ai đổi chữ mà làm thủng lưới thì test đỏ ngay, không phải chờ người
+// dùng thật gặp.
+// ---------------------------------------------------------------------------
+
+Deno.test('mẫu 6.1 tín hiệu rõ ràng: tự bật nút calm dù thiếu thẻ', () => {
+  const r = shapeReply(
+    'Cảm ơn bạn đã nói điều này với mình. Nghe có vẻ bạn đang mang một điều khá '
+      + 'nặng. Mình là trợ lý đồng hành về công việc và sự nghiệp, không phải '
+      + 'chuyên gia tâm lý, nên mình không phải là nơi tốt nhất để cùng bạn đi '
+      + 'qua cảm giác này một mình. Nếu có một người bạn tin tưởng, người thân, '
+      + 'hoặc một chuyên gia tâm lý bạn có thể tìm đến ngay bây giờ, đó sẽ là '
+      + 'điều tốt nhất lúc này. Trong lúc đó, nếu muốn, mình có một bài đọc ngắn '
+      + 'có thể giúp bạn dịu lại một chút.',
+  );
+  assertEquals(r.action, 'calm');
+});
+
+Deno.test('mẫu 6.2 ẩn dụ: bản CŨ lọt lưới, bản MỚI thì không', () => {
+  // Bản cũ của tài liệu. Hai chỗ lệch cộng lại làm nó trượt: viết "ngay lúc
+  // này" thay vì "ngay bây giờ", và mệnh đề phụ đẩy khoảng cách vượt cửa sổ cũ.
+  // Giữ lại đây làm bằng chứng vì sao regex phải nới, chứ không phải để ai đó
+  // dùng lại câu này.
+  const cu = 'Cảm ơn bạn đã chia sẻ điều này. Nghe như bạn đang rất mệt và muốn '
+    + 'thoát khỏi tất cả. Mình là trợ lý đồng hành về công việc, không phải '
+    + 'chuyên gia tâm lý, nên nếu có ai đó bạn tin tưởng có thể nói chuyện ngay '
+    + 'lúc này, mình mong bạn tìm đến họ. Mình vẫn ở đây nếu bạn muốn nói tiếp.';
+  assertEquals(shapeReply(cu).action, 'calm');
+
+  // Bản đã sửa: đủ ba phần, gọi tên bài đọc, dùng đúng cụm "ngay bây giờ".
+  const moi = 'Cảm ơn bạn đã chia sẻ điều này. Nghe như bạn đang rất mệt và muốn '
+    + 'thoát khỏi tất cả. Mình là trợ lý đồng hành về công việc, không phải '
+    + 'chuyên gia tâm lý, nên nếu có người thân hay một người bạn tin tưởng mà '
+    + 'bạn tìm đến được ngay bây giờ, mình mong bạn làm điều đó. Trong lúc đó '
+    + 'mình có một bài đọc ngắn có thể giúp bạn dịu lại, và mình vẫn ở đây nếu '
+    + 'bạn muốn nói tiếp.';
+  assertEquals(shapeReply(moi).action, 'calm');
+});
+
+Deno.test('mẫu 6.3 mệt mỏi thường: lời mời mơ hồ vẫn phải mở được nút', () => {
+  // Bản cũ nói "vài điều nhẹ nhàng", không có danh từ nội dung nào cụ thể.
+  const cu = 'Nghe như dạo này khá nặng nề với bạn. Mình có vài điều nhẹ nhàng '
+    + 'có thể giúp bạn dịu lại một chút, muốn xem không?';
+  assertEquals(shapeReply(cu).action, 'calm');
+
+  const moi = 'Nghe như dạo này khá nặng nề với bạn. Mình có một bài đọc ngắn '
+    + 'có thể giúp bạn dịu lại một chút, muốn thử không?';
+  assertEquals(shapeReply(moi).action, 'calm');
+});
+
+Deno.test('mẫu 4.5 chủ động muốn ghi: cả hai lối diễn đạt đều mở được nút', () => {
+  // Bản cũ: trợ lý nói như thể tự mở được màn hình. Sai về bản chất, và không
+  // chứa chữ "nút" nên bản regex cũ cũng không đỡ được.
+  const cu = 'Được, mình mở luồng Reflection cho bạn ngay. Chỉ khoảng một phút thôi.';
+  assertEquals(shapeReply(cu).action, 'reflect');
+
+  const moi = 'Được. Nút mở luồng Reflection đang ở ngay dưới câu này, bạn bấm '
+    + 'vào đó nhé, chỉ khoảng một phút thôi.';
+  assertEquals(shapeReply(moi).action, 'reflect');
+});
+
+Deno.test('mẫu 4.6 họ đồng ý: chỉ vào nút, không tự chạy luồng', () => {
+  const r = shapeReply('Được, nút mở luồng đang ở ngay dưới đây nhé.\n[[ACTION:reflect]]');
+  assertEquals(r.action, 'reflect');
+  assertEquals(r.text, 'Được, nút mở luồng đang ở ngay dưới đây nhé.');
+});
+
+Deno.test('nới regex KHÔNG làm lượt từ chối jailbreak bật nút nhầm', () => {
+  // Đây là lý do bản đầu phải đòi HAI dấu hiệu. Nới cửa sổ lên 90 ký tự và nhận
+  // thêm "lúc này" có nguy cơ kéo lại đúng lỗi cũ, nên khoá nó bằng test.
+  const r = shapeReply(
+    'Mình không phải chuyên gia tâm lý hay tư vấn nghề nghiệp, mình chỉ là một '
+      + 'người bạn đồng hành biết lắng nghe thôi. Hôm nay có điều gì bạn muốn '
+      + 'nhìn lại không?',
+  );
+  assertEquals(r.action, null);
+});
+
+Deno.test('nhắc ngang qua một bài đọc thì KHÔNG bật nút', () => {
+  const r = shapeReply(
+    'Hôm trước bạn có nghe một bài rồi đúng không. Hôm nay thì sao?',
+  );
+  assertEquals(r.action, null);
+});
+
+// ---------------------------------------------------------------------------
+// Lời mời ghi lại cũng phải mở được nút
+//
+// Đo qua bản deploy 2026-08-04 bắt được lượt này: trợ lý mời "bạn có muốn ghi
+// lại thành một Reflection không?" mà quên thẻ. Câu đó không chứa chữ "nút" nên
+// luật chỉ-vào-nút không đỡ được, và không có luật nào khác phủ.
+//
+// Tức là lưới an toàn hở đúng ở trường hợp phổ biến nhất: LỜI MỜI ĐẦU TIÊN.
+// ---------------------------------------------------------------------------
+
+Deno.test('mời ghi lại mà quên thẻ thì vẫn hiện nút', () => {
+  const r = shapeReply(
+    'Nghe quen thuộc, bạn đã ghi lại chuyện này vài lần rồi. Có vẻ như việc im '
+      + 'lặng này đang lặp lại và đáng để nhìn kỹ hơn, bạn có muốn ghi lại thành '
+      + 'một Reflection không?',
+  );
+  assertEquals(r.action, 'reflect');
+});
+
+Deno.test('lời mời dạng hỏi ngắn cũng bắt được', () => {
+  const r = shapeReply('Muốn ghi lại thành một Reflection đầy đủ để giữ lại không?');
+  assertEquals(r.action, 'reflect');
+});
+
+Deno.test('trợ lý NÓI KHÔNG về việc ghi thì tuyệt đối không hiện nút', () => {
+  // Hiện nút ở đây là mâu thuẫn thẳng với chính câu vừa nói.
+  const r = shapeReply(
+    'Mình không tự ghi lại thành một Reflection thay bạn được, việc đó phải do '
+      + 'chính bạn xác nhận.',
+  );
+  assertEquals(r.action, null);
+});
+
+Deno.test('kể lại chuyện cũ, không phải lời mời, thì không hiện nút', () => {
+  const r = shapeReply(
+    'Hôm trước bạn đã ghi lại một Reflection về chuyện đó rồi. Hôm nay thì sao?',
+  );
+  assertEquals(r.action, null);
+});
+
+Deno.test('nhánh tín hiệu đáng lo ngại vẫn thắng luật lời-mời', () => {
+  const r = shapeReply(
+    'Mình không phải chuyên gia tâm lý. Hãy tìm đến một người thân bạn tin '
+      + 'tưởng ngay bây giờ nhé. Bạn có muốn ghi lại thành một Reflection không?',
   );
   assertEquals(r.action, 'calm');
 });

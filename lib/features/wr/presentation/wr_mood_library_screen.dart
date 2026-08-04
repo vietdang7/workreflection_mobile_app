@@ -42,9 +42,9 @@ class WrMoodLibraryScreen extends ConsumerWidget {
     final order = todayMood == null ? kMoodLibraryOrder : [todayMood];
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         surfaceTintColor: WrColors.white,
         elevation: 0,
         leading: IconButton(

@@ -28,7 +28,14 @@ import '../../profile/profile_providers.dart';
 import '../wr_providers.dart';
 
 class WrPaymentScreen extends ConsumerStatefulWidget {
-  const WrPaymentScreen({super.key});
+  const WrPaymentScreen({super.key, this.plan});
+
+  /// Gói người dùng đã chọn ở Paywall (năm hay tháng).
+  ///
+  /// null khi màn này được mở thẳng, không đi qua Paywall — khi đó lấy gói chọn
+  /// sẵn (`wrPremiumPricingProvider`) để không có đường nào dẫn tới màn thanh
+  /// toán mà không biết đang bán gói nào.
+  final WrPremiumPricing? plan;
 
   @override
   ConsumerState<WrPaymentScreen> createState() => _WrPaymentScreenState();
@@ -82,7 +89,8 @@ class _WrPaymentScreenState extends ConsumerState<WrPaymentScreen> {
   // ---------------------------------------------------------------------
 
   Future<void> _createOrder() async {
-    final pricing = await ref.read(wrPremiumPricingProvider.future);
+    final WrPremiumPricing pricing = widget.plan ??
+        await ref.read(wrPremiumPricingProvider.future);
 
     // Không có product_id thì không tạo đơn: complete_payment tra
     // `cc_products` bằng id để biết cấp Premium bao nhiêu ngày, thiếu là đơn

@@ -1,7 +1,7 @@
 // Tests phủ Task A–E cho Growth/Discover integration:
 // A: Discover tests hiện có vẫn xanh (helper mới thay hàm private)
-// B: Card gợi ý từ Hiểu mình khi không có active enrollment
-// C: Card "BƯỚC ĐANG CHỜ BẠN" khi có active theme
+// B: Phần mềm tự thêm chủ đề khi người dùng đã tích đủ dữ liệu
+// C: (đã bỏ — thẻ "BƯỚC ĐANG CHỜ BẠN" gỡ khỏi màn Phát triển 2026-08-04)
 // D: Section "THỰC HÀNH KHÁC" + enroll + quota
 // E: Tag bước NHẬN DIỆN/THỬ NGHIỆM/CHUYỂN HÓA + link Discover → Growth
 // Run: flutter test test/features/wr_growth_link_test.dart
@@ -9,6 +9,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
@@ -81,7 +82,8 @@ Widget _wrapGrowth({
       ),
       currentUserIdProvider.overrideWithValue(userId),
     ],
-    child: MaterialApp.router(routerConfig: router),
+    child: MaterialApp.router(
+      builder: wrTextScaleBuilder,routerConfig: router),
   );
 }
 
@@ -122,7 +124,8 @@ Widget _wrapPracticeTheme(
       wrIntelligenceRepositoryProvider.overrideWithValue(intelRepo),
       currentUserIdProvider.overrideWithValue(userId),
     ],
-    child: MaterialApp.router(routerConfig: router),
+    child: MaterialApp.router(
+      builder: wrTextScaleBuilder,routerConfig: router),
   );
 }
 
@@ -140,7 +143,8 @@ Widget _wrapThemes({
       wrIntelligenceRepositoryProvider.overrideWithValue(intelRepo),
       currentUserIdProvider.overrideWithValue(userId),
     ],
-    child: MaterialApp.router(routerConfig: router),
+    child: MaterialApp.router(
+      builder: wrTextScaleBuilder,routerConfig: router),
   );
 }
 
@@ -307,9 +311,21 @@ void main() {
   // Task B — Card gợi ý từ Hiểu mình
   // ─────────────────────────────────────────────────────────────────────────────
 
-  group('Task B — Card gợi ý từ Hiểu mình', () {
+  group('Task B — Phần mềm tự thêm chủ đề', () {
+    /// Bộ tự đánh giá đã làm xong, trụ C thấp nhất → nhu cầu Kết nối.
+    ScaSelfCheckResponse selfCheck({DateTime? at}) => ScaSelfCheckResponse(
+          userId: 'u1',
+          answers: const {},
+          structureScore: 4.0,
+          cultureScore: 2.0,
+          activityScore: 4.0,
+          takenAt: at ?? DateTime(2026, 8, 1),
+        );
+
+    // Hướng 1 — khách chốt 2026-08-04: đủ 15 LẦN nhìn lại là được một chủ đề, và
+    // phần mềm TỰ thêm, không chờ ai bấm nút.
     testWidgets(
-      'patterns → ketNoi + theme scaDimension C → hiện card gợi ý + dòng lý do',
+      'đủ 15 lần nhìn lại → tự thêm chủ đề khớp chiều vào danh sách',
       (tester) async {
         final content = FakeWrContentRepository();
         content.seedSituations([_sit('s-connect', HumanNeed.ketNoi)]);
@@ -325,52 +341,23 @@ void main() {
           _wrapGrowth(
             content: content,
             intel: intel,
-            episodes: _episodesFor('s-connect', 3),
+            episodes: _episodesFor('s-connect', 15),
           ),
         );
 
-        expect(find.text('GỢI Ý TỪ HIỂU MÌNH'), findsOneWidget);
-        expect(find.text('Thực hành kết nối'), findsAtLeastNWidgets(1));
-        // Khớp được đúng chiều của tình huống thì lý do gọi thẳng tên tình huống và
-        // số lần — đó là điều người dùng tự đối chiếu được, khác hẳn một câu chung
-        // chung về nhu cầu (khách chốt 2026-07-31: chủ đề khớp theo tình huống).
-        expect(find.textContaining('Vì bạn đã gặp'), findsOneWidget);
-        expect(find.textContaining('3 lần'), findsOneWidget);
-        expect(find.text('Bắt đầu thực hành'), findsAtLeastNWidgets(1));
-        expect(find.text('Xem trong Hiểu mình'), findsOneWidget);
-      },
-    );
-
-    testWidgets(
-      'không có pattern + không có self-check → card trống cũ (dù có theme chưa enroll)',
-      (tester) async {
-        final intel = FakeWrIntelligenceRepository();
-        // Seed CÓ theme chưa enroll — nhưng KHÔNG có pattern và KHÔNG có self-check
-        // → dominantNeed == null → suggestedTheme phải giữ null → card trống
-        intel.seedPracticeThemes([
-          _theme('t-unused', 'Chủ đề chưa dùng', dim: ScaDimension.c1),
-        ]);
-        intel.seedEnrollments([]);
-
-        await _pumpLarge(tester, _wrapGrowth(intel: intel));
-
-        expect(find.text('Chưa có chủ đề nào đang thực hành'), findsOneWidget);
-        expect(find.text('GỢI Ý TỪ HIỂU MÌNH'), findsNothing);
-        // Nút 'Bắt đầu thực hành' không xuất hiện trong card gợi ý
-        expect(find.text('Bắt đầu thực hành'), findsNothing);
-        // Danh sách chủ đề khác không xổ tại chỗ. Khách 2026-07-30 bỏ luôn dòng
-        // "Thực hành khác" ở màn này — mockup Sprint 2 không có nó, chỗ đó dành cho
-        // thẻ Trà Chiều.
-        expect(find.text('THỰC HÀNH KHÁC'), findsNothing);
-        expect(find.text('Thực hành khác'), findsNothing);
+        expect(intel.enrollThemeCalls, hasLength(1));
+        expect(intel.enrollThemeCalls.first.themeId, 't-culture');
+        // Chủ đề vào thẳng danh sách, không qua thẻ báo tin nào: khách bỏ khối
+        // "BẠN VỪA CÓ CHỦ ĐỀ MỚI" ngày 2026-08-04 vì nó chồng lên thẻ chủ đề
+        // ngay bên dưới.
         expect(
-          find.byKey(const Key('wr_growth_other_themes_row')),
-          findsNothing,
+          find.byKey(const Key('wr_growth_theme_card_t-culture')),
+          findsOneWidget,
         );
       },
     );
 
-    testWidgets('tap Bắt đầu thực hành → enrollThemeCalls có đúng themeId', (
+    testWidgets('14 lần thì chưa thêm gì, và nói còn thiếu bao nhiêu', (
       tester,
     ) async {
       final content = FakeWrContentRepository();
@@ -378,9 +365,148 @@ void main() {
 
       final intel = FakeWrIntelligenceRepository();
       intel.seedPracticeThemes([
-        _theme('t-culture', 'Thực hành kết nối', dim: ScaDimension.c2),
+        _theme('t-culture', 'Thực hành kết nối', dim: ScaDimension.c1),
       ]);
       intel.seedEnrollments([]);
+
+      await _pumpLarge(
+        tester,
+        _wrapGrowth(
+          content: content,
+          intel: intel,
+          episodes: _episodesFor('s-connect', 14),
+        ),
+      );
+
+      expect(intel.enrollThemeCalls, isEmpty);
+      expect(find.text('Chưa đủ dữ liệu để có chủ đề'), findsOneWidget);
+      expect(find.textContaining('14/15 lần'), findsOneWidget);
+    });
+
+    // Hướng 2 — làm xong bộ 15 câu là có chủ đề ngay, không cần lặp lần nào.
+    testWidgets('làm xong tự đánh giá → tự thêm ngay dù chưa nhìn lại lần nào', (
+      tester,
+    ) async {
+      final intel = FakeWrIntelligenceRepository();
+      intel.seedPracticeThemes([
+        _theme('t-culture', 'Thực hành kết nối', dim: ScaDimension.c1),
+      ]);
+      intel.seedEnrollments([]);
+      intel.seedSelfCheckHistory([selfCheck()]);
+
+      await _pumpLarge(tester, _wrapGrowth(intel: intel));
+
+      expect(intel.enrollThemeCalls, hasLength(1));
+      expect(intel.enrollThemeCalls.first.themeId, 't-culture');
+    });
+
+    // Bộ tự đánh giá làm SAU lần nhìn lại gần nhất thì nó là tiếng nói mới nhất.
+    // Bản trước hành vi luôn thắng, nên ai đã nhìn lại vài lần rồi mới ngồi trả
+    // lời 15 câu thì kết quả bộ đó không đổi được gì.
+    testWidgets('tự đánh giá mới hơn hành vi thì thắng hành vi', (tester) async {
+      final content = FakeWrContentRepository();
+      content.seedSituations([_sit('s-struct', HumanNeed.roRang)]);
+
+      final intel = FakeWrIntelligenceRepository();
+      intel.seedPracticeThemes([
+        _theme('t-struct', 'Thực hành cấu trúc', dim: ScaDimension.s1),
+        _theme('t-culture', 'Thực hành kết nối', dim: ScaDimension.c1),
+      ]);
+      intel.seedEnrollments([]);
+      // Episode gieo ở 2026-07-20, bộ tự đánh giá làm sau.
+      intel.seedSelfCheckHistory([selfCheck(at: DateTime(2026, 8, 1))]);
+
+      await _pumpLarge(
+        tester,
+        _wrapGrowth(
+          content: content,
+          intel: intel,
+          episodes: _episodesFor('s-struct', 3),
+        ),
+      );
+
+      // Hành vi nói Rõ ràng (trụ S), bộ tự đánh giá nói Kết nối (trụ C) và mới
+      // hơn — chủ đề phải là chủ đề trụ C.
+      expect(intel.enrollThemeCalls, hasLength(1));
+      expect(intel.enrollThemeCalls.first.themeId, 't-culture');
+    });
+
+    testWidgets('không match trụ vẫn thêm, và không giải thích gì', (
+      tester,
+    ) async {
+      final content = FakeWrContentRepository();
+      content.seedSituations([_sit('s-connect', HumanNeed.ketNoi)]);
+
+      final intel = FakeWrIntelligenceRepository();
+      // Theme có scaDimension S (không phải C)
+      intel.seedPracticeThemes([
+        _theme('t-struct', 'Thực hành cấu trúc', dim: ScaDimension.s1),
+      ]);
+      intel.seedEnrollments([]);
+
+      await _pumpLarge(
+        tester,
+        _wrapGrowth(
+          content: content,
+          intel: intel,
+          episodes: _episodesFor('s-connect', 15),
+        ),
+      );
+
+      expect(intel.enrollThemeCalls, hasLength(1));
+      expect(intel.enrollThemeCalls.first.themeId, 't-struct');
+      // Không match được gì thì TUYỆT ĐỐI không giải thích. Nói "vì bạn đang
+      // tìm kiếm sự kết nối" cho một chủ đề trụ S là dựng ra mối liên hệ không
+      // có thật — người dùng đọc xong sẽ tin hệ thống hiểu mình hơn thực tế.
+      expect(find.textContaining('Vì bạn đang tìm kiếm'), findsNothing);
+    });
+
+    // Nợ nhiều chủ đề cũng chỉ nhận một chủ đề mỗi lượt xem màn: nghỉ một tháng
+    // rồi quay lại mà thấy bốn chủ đề mới đổ ra cùng lúc thì đó là một đống
+    // việc, không phải một lời mời.
+    testWidgets('nợ ba chủ đề vẫn chỉ thêm một trong một lượt', (tester) async {
+      final content = FakeWrContentRepository();
+      content.seedSituations([_sit('s-connect', HumanNeed.ketNoi)]);
+
+      final intel = FakeWrIntelligenceRepository();
+      intel.seedPracticeThemes([
+        _theme('t-c1', 'Kết nối một', dim: ScaDimension.c1),
+        _theme('t-c2', 'Kết nối hai', dim: ScaDimension.c2),
+        _theme('t-c3', 'Kết nối ba', dim: ScaDimension.c3),
+      ]);
+      intel.seedEnrollments([]);
+      intel.seedEntitlement(
+        const WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
+      );
+
+      await _pumpLarge(
+        tester,
+        _wrapGrowth(
+          content: content,
+          intel: intel,
+          // 45 lần = được hưởng 3 chủ đề.
+          episodes: _episodesFor('s-connect', 45),
+        ),
+      );
+
+      expect(intel.enrollThemeCalls, hasLength(1));
+    });
+
+    // Đã theo chủ đề rồi thì màn này chỉ nói việc đang làm. Không mời thêm chủ
+    // đề bằng bất cứ hình thức nào — chủ đề mới là việc phần mềm tự thêm
+    // (khách 2026-08-04, sau khi bác cả dòng dẫn sang thư viện lẫn thẻ gợi ý).
+    testWidgets('đã theo một chủ đề → không có khối mời thêm chủ đề nào', (
+      tester,
+    ) async {
+      final content = FakeWrContentRepository();
+      content.seedSituations([_sit('s-connect', HumanNeed.ketNoi)]);
+
+      final intel = FakeWrIntelligenceRepository();
+      intel.seedPracticeThemes([
+        _theme('t-done', 'Chủ đề đang theo', dim: ScaDimension.s1),
+        _theme('t-culture', 'Thực hành kết nối', dim: ScaDimension.c1),
+      ]);
+      intel.seedEnrollments([_enrollment('t-done')]);
 
       await _pumpLarge(
         tester,
@@ -391,42 +517,33 @@ void main() {
         ),
       );
 
-      await tester.tap(find.text('Bắt đầu thực hành'));
-      await tester.pumpAndSettle();
-
-      expect(intel.enrollThemeCalls, hasLength(1));
-      expect(intel.enrollThemeCalls.first.themeId, 't-culture');
+      expect(find.text('Chủ đề đang theo'), findsAtLeastNWidgets(1));
+      expect(find.text('CHỦ ĐỀ TIẾP THEO CHO BẠN'), findsNothing);
+      expect(find.text('Bắt đầu thực hành'), findsNothing);
+      expect(find.byKey(const Key('wr_growth_add_theme_row')), findsNothing);
     });
 
     testWidgets(
-      'không match trụ → fallback theme chưa-enroll đầu tiên, không có dòng lý do',
+      'không có pattern + không có self-check → nói thẳng là chưa đủ dữ liệu',
       (tester) async {
-        final content = FakeWrContentRepository();
-        content.seedSituations([_sit('s-connect', HumanNeed.ketNoi)]);
-
         final intel = FakeWrIntelligenceRepository();
-        // Theme có scaDimension S (không phải C)
         intel.seedPracticeThemes([
-          _theme('t-struct', 'Thực hành cấu trúc', dim: ScaDimension.s1),
+          _theme('t-unused', 'Chủ đề chưa dùng', dim: ScaDimension.c1),
         ]);
         intel.seedEnrollments([]);
 
-        await _pumpLarge(
-          tester,
-          _wrapGrowth(
-            content: content,
-            intel: intel,
-            episodes: _episodesFor('s-connect', 3),
-          ),
-        );
+        await _pumpLarge(tester, _wrapGrowth(intel: intel));
 
-        expect(find.text('GỢI Ý TỪ HIỂU MÌNH'), findsOneWidget);
-        expect(find.text('Thực hành cấu trúc'), findsAtLeastNWidgets(1));
-        // Không match được gì thì TUYỆT ĐỐI không giải thích. Nói "vì bạn đang tìm
-        // kiếm sự kết nối" cho một chủ đề trụ S là dựng ra mối liên hệ không có
-        // thật — người dùng đọc xong sẽ tin hệ thống hiểu mình hơn thực tế.
+        expect(intel.enrollThemeCalls, isEmpty);
+        expect(find.text('Chưa đủ dữ liệu để có chủ đề'), findsOneWidget);
         expect(
-          find.byKey(const Key('wr_growth_suggestion_reason')),
+          find.byKey(const Key('wr_growth_suggestion_self_check')),
+          findsOneWidget,
+        );
+        // Danh sách chủ đề khác không xổ tại chỗ (khách 2026-07-30).
+        expect(find.text('THỰC HÀNH KHÁC'), findsNothing);
+        expect(
+          find.byKey(const Key('wr_growth_other_themes_row')),
           findsNothing,
         );
       },
@@ -434,54 +551,21 @@ void main() {
   });
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // Task C — Card "BƯỚC ĐANG CHỜ BẠN"
-  // ─────────────────────────────────────────────────────────────────────────────
-
-  group('Task C — Card BƯỚC ĐANG CHỜ BẠN', () {
-    testWidgets('active enrollment 1/3 bước xong → card hiện tên bước 2', (
-      tester,
-    ) async {
-      final intel = FakeWrIntelligenceRepository();
-      intel.seedPracticeThemes([_theme('t1', 'Chủ đề A')]);
-      intel.seedPracticeSteps('t1', [
-        _step('s1', 't1', 1, 'Nhận diện vấn đề'),
-        _step('s2', 't1', 2, 'Thử nghiệm giải pháp'),
-        _step('s3', 't1', 3, 'Chuyển hóa thói quen'),
-      ]);
-      intel.seedEnrollments([
-        _enrollment('t1', completedSteps: ['s1']),
-      ]);
-
-      await _pumpLarge(tester, _wrapGrowth(intel: intel));
-
-      expect(find.text('BƯỚC ĐANG CHỜ BẠN'), findsOneWidget);
-      // Text xuất hiện cả trong card header lẫn practices list
-      expect(
-        find.textContaining('Thử nghiệm giải pháp'),
-        findsAtLeastNWidgets(1),
-      );
-    });
-
-    testWidgets('xong hết bước → ẩn card BƯỚC ĐANG CHỜ BẠN', (tester) async {
-      final intel = FakeWrIntelligenceRepository();
-      intel.seedPracticeThemes([_theme('t1', 'Chủ đề A')]);
-      intel.seedPracticeSteps('t1', [
-        _step('s1', 't1', 1, 'Bước 1'),
-        _step('s2', 't1', 2, 'Bước 2'),
-      ]);
-      intel.seedEnrollments([
-        _enrollment('t1', completedSteps: ['s1', 's2']),
-      ]);
-
-      await _pumpLarge(tester, _wrapGrowth(intel: intel));
-
-      expect(find.text('BƯỚC ĐANG CHỜ BẠN'), findsNothing);
-    });
-  });
-
-  // ─────────────────────────────────────────────────────────────────────────────
   // Task D — Section "THỰC HÀNH KHÁC" + enroll + quota
   // ─────────────────────────────────────────────────────────────────────────────
+
+  /// Xổ hết thư viện chủ đề. Màn này dẫn bằng chủ đề được đề xuất; cả danh sách
+  /// nằm sau một dòng xổ, nên test nào cần đọc danh sách phải mở nó ra.
+  Future<void> showAllThemes(WidgetTester tester) async {
+    // Bấm vào chính chữ: WrActionLink là GestureDetector deferToChild, tâm ô
+    // full-width của nó rơi vào khoảng trống bên phải dòng chữ.
+    final link = find.descendant(
+      of: find.byKey(const Key('wr_growth_themes_show_all')),
+      matching: find.byType(Text),
+    );
+    await tester.tap(link.first);
+    await tester.pumpAndSettle();
+  }
 
   group('Task D — Màn Thực hành khác', () {
     testWidgets('chỉ liệt kê theme chưa enroll', (tester) async {
@@ -494,7 +578,12 @@ void main() {
 
       await _pumpLarge(tester, _wrapThemes(intel: intel));
 
+      // Chưa có dữ liệu để đề xuất thì thư viện nằm sau dòng xổ — màn này không
+      // bày danh sách trần nữa (khách 2026-08-04).
       expect(find.text('THỰC HÀNH KHÁC'), findsOneWidget);
+      expect(find.text('Chủ đề chưa làm'), findsNothing);
+      await showAllThemes(tester);
+
       expect(find.text('Chủ đề chưa làm'), findsOneWidget);
       expect(find.text('Chủ đề đang làm'), findsNothing);
     });
@@ -507,6 +596,7 @@ void main() {
       intel.seedEnrollments([]);
 
       await _pumpLarge(tester, _wrapThemes(intel: intel));
+      await showAllThemes(tester);
 
       expect(find.text('Bắt đầu'), findsOneWidget);
       await tester.tap(find.text('Bắt đầu'));
@@ -533,6 +623,7 @@ void main() {
       await _pumpLarge(tester, _wrapThemes(intel: intel));
 
       expect(find.byKey(const Key('wr_growth_themes_quota')), findsOneWidget);
+      await showAllThemes(tester);
       expect(find.text('⭐ Premium'), findsWidgets);
       expect(find.text('Bắt đầu'), findsNothing);
     });
@@ -547,6 +638,7 @@ void main() {
       intel.seedEnrollments([_enrollment('t1'), _enrollment('t2')]);
 
       await _pumpLarge(tester, _wrapThemes(intel: intel));
+      await showAllThemes(tester);
 
       await tester.tap(find.text('⭐ Premium').first);
       await tester.pumpAndSettle();

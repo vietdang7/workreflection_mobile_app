@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:workreflection_mobile/core/data/workshop_repository.dart';
 import 'package:workreflection_mobile/core/models/workshop_models.dart';
 import 'package:workreflection_mobile/features/workshops/presentation/my_workshops_screen.dart';
@@ -21,6 +22,7 @@ Widget _wrap(FakeWorkshopRepository repo) {
       workshopRepositoryProvider.overrideWithValue(repo),
     ],
     child: const MaterialApp(
+      builder: wrTextScaleBuilder,
       localizationsDelegates: [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -143,7 +145,9 @@ void main() {
       expect(find.text('Retry Workshop'), findsOneWidget);
     });
 
-    testWidgets('fallback title dash when workshop detail is null', (tester) async {
+    // Spec §07: chỗ chưa có dữ liệu phải là một câu tường minh, không phải dấu
+    // gạch ngang dài.
+    testWidgets('fallback title when workshop detail is null', (tester) async {
       // Register for a workshop not in the seed list → getWorkshop returns null
       repo.seedRegistration(_reg(workshopId: 'missing-ws'));
       // No workshops seeded → getWorkshop('missing-ws') returns null
@@ -151,7 +155,7 @@ void main() {
       await tester.pumpWidget(_wrap(repo));
       await tester.pumpAndSettle();
 
-      expect(find.text('—'), findsOneWidget);
+      expect(find.text('Chưa có tên'), findsOneWidget);
     });
 
     testWidgets('cancel button visible when workshop is >48h away', (tester) async {

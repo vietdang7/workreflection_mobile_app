@@ -173,16 +173,16 @@ class _CoachingScheduleScreenState
     // If loading show spinner; if not found show error.
     if (bookingAsync.isLoading) {
       return Scaffold(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     if (booking == null) {
       return Scaffold(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         appBar: AppBar(
-          backgroundColor: WrColors.white,
+          backgroundColor: WrColors.pageBg,
           elevation: 0,
           leading: IconButton(
             icon: const Icon(Icons.arrow_back, color: WrColors.navy),
@@ -204,9 +204,9 @@ class _CoachingScheduleScreenState
     final monthLabel = _monthName(l10n, _month);
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: WrColors.navy),
@@ -397,7 +397,7 @@ class _CoachingScheduleScreenState
                 onPressed: _saving ? null : _submit,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: WrColors.coral,
-                  foregroundColor: WrColors.white,
+                  foregroundColor: WrColors.navy,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(14),
                   ),

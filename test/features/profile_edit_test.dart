@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
 import 'package:workreflection_mobile/core/models/mobile_profile.dart';
 import 'package:workreflection_mobile/features/profile/presentation/profile_edit_screen.dart';
@@ -17,6 +18,7 @@ Widget _wrapEdit(Widget child, WrRepository repo) {
   return ProviderScope(
     overrides: [wrRepositoryProvider.overrideWithValue(repo)],
     child: MaterialApp(
+      builder: wrTextScaleBuilder,
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,

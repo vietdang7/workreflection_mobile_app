@@ -2,8 +2,9 @@
 //
 // Hai màn, đúng bố cục mockup Sprint 2 (`screenTraChieu` + `screenTraChieuCalendar`):
 //
-//   /wr/tra-chieu        buổi sắp tới, vì sao lại là Trà Chiều, ba luật, giá,
-//                        rồi một dòng dẫn sang lịch các buổi
+//   /wr/tra-chieu        vì sao lại là Trà Chiều, buổi sắp tới, một dòng dẫn
+//                        sang lịch các buổi, rồi ba luật (thứ tự khách chốt
+//                        2026-08-03)
 //   /wr/tra-chieu/lich   toàn bộ lịch, mỗi buổi một dòng chữ
 //
 // ⚠ KHÔNG hiển thị ảnh ở bất kỳ đâu trong hai màn này (họp khách 2026-07-29).
@@ -63,15 +64,11 @@ class WrTraChieuScreen extends ConsumerWidget {
         ),
         const SizedBox(height: 22),
 
-        // ── Buổi sắp tới ───────────────────────────────────────────────
-        if (next == null)
-          const _NoSessionCard()
-        else
-          _NextSessionCard(session: next),
-
-        const SizedBox(height: 22),
-
         // ── Vì sao lại là Trà Chiều ────────────────────────────────────
+        //
+        // Thứ tự màn (khách 2026-08-03): vì sao → buổi sắp tới → lịch các buổi
+        // → ba luật. Nói "cái này là gì" trước rồi mới mời một buổi cụ thể;
+        // ba luật là điều kiện tham dự nên đứng cuối, sau khi đã có lý do.
         WrCardMinimal(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -96,7 +93,23 @@ class WrTraChieuScreen extends ConsumerWidget {
             ],
           ),
         ),
-        const SizedBox(height: 14),
+        const SizedBox(height: 22),
+
+        // ── Buổi sắp tới ───────────────────────────────────────────────
+        if (next == null)
+          const _NoSessionCard()
+        else
+          _NextSessionCard(session: next),
+
+        // ── Lịch các buổi ──────────────────────────────────────────────
+        const SizedBox(height: 18),
+        WrLinkRow(
+          key: const Key('wr_tra_chieu_calendar_row'),
+          label: 'Xem lịch các buổi',
+          hint: upcoming.isEmpty ? null : '${upcoming.length} buổi',
+          onTap: () => context.push('/wr/tra-chieu/lich'),
+        ),
+        const SizedBox(height: 18),
 
         // ── Ba luật ────────────────────────────────────────────────────
         WrCardMinimal(
@@ -137,14 +150,6 @@ class WrTraChieuScreen extends ConsumerWidget {
               ],
             ],
           ),
-        ),
-
-        const SizedBox(height: 18),
-        WrLinkRow(
-          key: const Key('wr_tra_chieu_calendar_row'),
-          label: 'Xem lịch các buổi',
-          hint: upcoming.isEmpty ? null : '${upcoming.length} buổi',
-          onTap: () => context.push('/wr/tra-chieu/lich'),
         ),
       ],
     );

@@ -253,7 +253,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                         const SizedBox(height: 12),
                         const Text(
                           'Trả lời thành thật theo cảm nhận thực tế trong môi '
-                          'trường làm việc của bạn — không có câu trả lời đúng '
+                          'trường làm việc của bạn, không có câu trả lời đúng '
                           'hay sai.',
                           style: TextStyle(
                             fontSize: 15,
@@ -674,7 +674,12 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
         children: [
           const WrEyebrow('ĐIỀU ĐÁNG CHÚ Ý NHẤT'),
           const SizedBox(height: 10),
-          _NarrativeCard(title: n.title, text: n.text, pillarName: n.pillarName),
+          _NarrativeCard(
+            title: n.title,
+            text: n.text,
+            pillarName: n.pillarName,
+            collapsible: true,
+          ),
         ],
       ),
     );
@@ -727,6 +732,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                 title: n.title,
                 text: n.text,
                 pillarName: n.pillarName,
+                collapsible: true,
               );
             }),
             const SizedBox(height: 10),
@@ -734,42 +740,44 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
 
           if (imbalance != null) ...[
             const SizedBox(height: 8),
-            const WrEyebrow('MẤT CÂN BẰNG GIỮA CÁC MẶT'),
-            const SizedBox(height: 10),
-            _NarrativeCard(text: imbalanceNarrative(imbalance)),
+            _CollapsibleSection(
+              title: 'MẤT CÂN BẰNG GIỮA CÁC MẶT',
+              child: _NarrativeCard(text: imbalanceNarrative(imbalance)),
+            ),
             const SizedBox(height: 10),
           ],
 
           const SizedBox(height: 8),
-          const WrEyebrow('XU HƯỚNG THEO THỜI GIAN'),
-          const SizedBox(height: 10),
-          if (trend == null)
-            const _NarrativeCard(
-              text: 'Đây là lần tự soi đầu tiên được ghi lại. Làm lại sau vài '
-                  'tuần, WorkReflection sẽ cho bạn thấy điều gì đã đổi và điều '
-                  'gì vẫn ở nguyên đó.',
-            )
-          else
-            _NarrativeCard(
-              title: 'Đã ghi ${trend.takenCount} lần tự soi',
-              text: trend.summary,
-              footer: 'Sự rõ ràng ${_delta(trend.structureDelta)} · '
-                  'Mối quan hệ ${_delta(trend.cultureDelta)} · '
-                  'Cách làm việc ${_delta(trend.activityDelta)}',
-            ),
+          _CollapsibleSection(
+            title: 'XU HƯỚNG THEO THỜI GIAN',
+            child: trend == null
+                ? const _NarrativeCard(
+                    text: 'Đây là lần tự soi đầu tiên được ghi lại. Làm lại '
+                        'sau vài tuần, WorkReflection sẽ cho bạn thấy điều gì '
+                        'đã đổi và điều gì vẫn ở nguyên đó.',
+                  )
+                : _NarrativeCard(
+                    title: 'Đã ghi ${trend.takenCount} lần tự soi',
+                    text: trend.summary,
+                    footer: 'Sự rõ ràng ${_delta(trend.structureDelta)} · '
+                        'Mối quan hệ ${_delta(trend.cultureDelta)} · '
+                        'Cách làm việc ${_delta(trend.activityDelta)}',
+                  ),
+          ),
 
           if (relatedPatterns.isNotEmpty) ...[
             const SizedBox(height: 18),
-            const WrEyebrow('ĐỐI CHIẾU VỚI ĐIỀU BẠN HAY GẶP'),
-            const SizedBox(height: 10),
-            _NarrativeCard(
-              text: 'Những gì bạn ghi lại trong các câu chuyện cũng chỉ về '
-                  'cùng một hướng với "${lowest.displayName}":',
-              footer: relatedPatterns
-                  .map((p) =>
-                      '${sitText[p.situationCode] ?? p.situationCode}'
-                      ' — lần thứ ${p.count}')
-                  .join('\n'),
+            _CollapsibleSection(
+              title: 'ĐỐI CHIẾU VỚI ĐIỀU BẠN HAY GẶP',
+              child: _NarrativeCard(
+                text: 'Những gì bạn ghi lại trong các câu chuyện cũng chỉ về '
+                    'cùng một hướng với "${lowest.displayName}":',
+                footer: relatedPatterns
+                    .map((p) =>
+                        '${sitText[p.situationCode] ?? p.situationCode}'
+                        ' · lần thứ ${p.count}')
+                    .join('\n'),
+              ),
             ),
           ],
         ],
@@ -788,23 +796,111 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
 // Sub-widgets
 // ─────────────────────────────────────────────────────────────────────────────
 
+/// Một mục ở trang kết quả, THU GỌN sẵn: chỉ hiện dòng chữ in hoa của mục, nội
+/// dung nằm im tới khi người dùng chạm vào.
+///
+/// Dùng cho các mục mà thẻ bên trong không có câu chốt riêng để làm đầu đề —
+/// mất cân bằng, xu hướng, đối chiếu pattern. Với các thẻ diễn giải theo trụ thì
+/// [_NarrativeCard.collapsible] lo phần này, vì ở đó câu chốt mới là thứ đáng
+/// đọc trước.
+///
+/// Vùng chạm lấy cả hàng và có đệm dọc: dòng chữ in hoa chỉ cao 10px, chạm đúng
+/// vào nó thì trượt nhiều hơn trúng.
+class _CollapsibleSection extends StatefulWidget {
+  const _CollapsibleSection({required this.title, required this.child});
+
+  final String title;
+  final Widget child;
+
+  @override
+  State<_CollapsibleSection> createState() => _CollapsibleSectionState();
+}
+
+class _CollapsibleSectionState extends State<_CollapsibleSection> {
+  bool _open = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        GestureDetector(
+          key: Key('self_check_section_${widget.title}'),
+          behavior: HitTestBehavior.opaque,
+          onTap: () => setState(() => _open = !_open),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8),
+            child: Row(
+              children: [
+                Expanded(child: WrEyebrow(widget.title)),
+                const SizedBox(width: 8),
+                // Mũi tên là thứ duy nhất báo rằng mục còn nội dung bên trong.
+                AnimatedRotation(
+                  turns: _open ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 160),
+                  child: const Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: 18,
+                    color: WrColors.text3,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        if (_open) ...[
+          const SizedBox(height: 4),
+          widget.child,
+        ],
+      ],
+    );
+  }
+}
+
 /// Khối diễn giải dạng văn xuôi dùng chung cho Free và Paid.
-class _NarrativeCard extends StatelessWidget {
+///
+/// Với [collapsible] bật, thẻ chỉ hiện phần đầu đề — tên mặt và câu chốt, ví dụ
+/// "Cách làm việc · Có nhịp, nhưng chưa đều" — còn đoạn diễn giải nằm im tới khi
+/// người dùng chạm vào.
+///
+/// Trang kết quả có tới bốn đoạn văn xuôi liền nhau, mỗi đoạn năm sáu dòng. Đọc
+/// hết là đúng ý đồ, nhưng đọc hết TRƯỚC KHI biết mình muốn đọc gì thì không:
+/// người vừa trả lời xong 15 câu cần thấy ngay bức tranh tổng thể, rồi mới tự
+/// chọn chỗ nào đáng đào sâu.
+///
+/// Chỉ bật cho các thẻ diễn giải theo trụ, vì chúng có sẵn câu chốt làm đầu đề.
+/// Thẻ mất cân bằng và thẻ đối chiếu pattern không có [title] — thu chúng lại sẽ
+/// chừa ra một ô trống chẳng nói lên điều gì, nên chúng vẫn mở sẵn.
+class _NarrativeCard extends StatefulWidget {
   const _NarrativeCard({
     required this.text,
     this.title,
     this.pillarName,
     this.footer,
+    this.collapsible = false,
   });
 
   final String text;
   final String? title;
   final String? pillarName;
   final String? footer;
+  final bool collapsible;
+
+  @override
+  State<_NarrativeCard> createState() => _NarrativeCardState();
+}
+
+class _NarrativeCardState extends State<_NarrativeCard> {
+  bool _open = false;
+
+  /// Không có đầu đề thì không thu lại được: sẽ chẳng còn gì để đọc.
+  bool get _canCollapse => widget.collapsible && widget.title != null;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final showBody = !_canCollapse || _open;
+
+    final card = Container(
       width: double.infinity,
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
       decoration: BoxDecoration(
@@ -815,9 +911,9 @@ class _NarrativeCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (pillarName != null) ...[
+          if (widget.pillarName != null) ...[
             Text(
-              pillarName!,
+              widget.pillarName!,
               style: const TextStyle(
                 fontSize: 11,
                 fontWeight: FontWeight.w600,
@@ -826,39 +922,83 @@ class _NarrativeCard extends StatelessWidget {
             ),
             const SizedBox(height: 4),
           ],
-          if (title != null) ...[
-            Text(
-              title!,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-                height: 1.4,
-                color: WrColors.dark,
-              ),
+          if (widget.title != null) ...[
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: Text(
+                    widget.title!,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      height: 1.4,
+                      color: WrColors.dark,
+                    ),
+                  ),
+                ),
+                if (_canCollapse) ...[
+                  const SizedBox(width: 8),
+                  // Mũi tên là thứ duy nhất báo rằng thẻ còn chữ bên trong. Bỏ
+                  // nó đi thì phần diễn giải xem như biến mất hẳn: không ai chạm
+                  // vào một đoạn chữ trông đã trọn vẹn.
+                  AnimatedRotation(
+                    turns: _open ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 160),
+                    child: const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      size: 20,
+                      color: Color(0xFFA3A3A3),
+                    ),
+                  ),
+                ],
+              ],
             ),
-            const SizedBox(height: 6),
+            if (showBody) const SizedBox(height: 6),
           ],
-          Text(
-            text,
-            style: const TextStyle(
-              fontSize: 13,
-              height: 1.65,
-              color: Color(0xFF4A5568),
-            ),
-          ),
-          if (footer != null) ...[
-            const SizedBox(height: 10),
+          if (showBody) ...[
             Text(
-              footer!,
+              widget.text,
               style: const TextStyle(
-                fontSize: 12,
-                height: 1.6,
-                fontWeight: FontWeight.w600,
-                color: WrColors.dark,
+                fontSize: 13,
+                height: 1.65,
+                color: Color(0xFF4A5568),
               ),
             ),
+            if (widget.footer != null) ...[
+              const SizedBox(height: 10),
+              Text(
+                widget.footer!,
+                style: const TextStyle(
+                  fontSize: 12,
+                  height: 1.6,
+                  fontWeight: FontWeight.w600,
+                  color: WrColors.dark,
+                ),
+              ),
+            ],
           ],
         ],
+      ),
+    );
+
+    if (!_canCollapse) return card;
+
+    return Semantics(
+      button: true,
+      expanded: _open,
+      label: widget.title,
+      child: GestureDetector(
+        // Cả thẻ là vùng chạm, không riêng mũi tên: mũi tên 20px là mục tiêu
+        // quá nhỏ, và người dùng có xu hướng chạm vào câu chữ họ đang đọc.
+        behavior: HitTestBehavior.opaque,
+        onTap: () => setState(() => _open = !_open),
+        child: AnimatedSize(
+          duration: const Duration(milliseconds: 160),
+          curve: Curves.easeOut,
+          alignment: Alignment.topCenter,
+          child: card,
+        ),
       ),
     );
   }

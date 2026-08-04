@@ -12,6 +12,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workreflection_mobile/core/data/ausynclab_tts_service.dart';
@@ -204,6 +205,7 @@ Widget _wrap(
       currentUserEmailProvider.overrideWithValue(email),
     ],
     child: MaterialApp.router(
+      builder: wrTextScaleBuilder,
       routerConfig: router,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -1191,6 +1193,20 @@ void main() {
 
   // -------------------------------------------------------------------------
   group('Trà Chiều trong danh sách chủ đề thực hành', () {
+    /// Xổ cả thư viện. Màn này dẫn bằng chủ đề được đề xuất (khách 2026-08-04),
+    /// danh sách đầy đủ nằm sau một dòng xổ.
+    Future<void> showAll(WidgetTester tester) async {
+      await tester.tap(
+        find
+            .descendant(
+              of: find.byKey(const Key('wr_growth_themes_show_all')),
+              matching: find.byType(Text),
+            )
+            .first,
+      );
+      await tester.pumpAndSettle();
+    }
+
     FakeWrIntelligenceRepository themes(List<String> titles) =>
         FakeWrIntelligenceRepository()
           ..seedPracticeThemes([
@@ -1212,6 +1228,8 @@ void main() {
         ),
       );
 
+      await showAll(tester);
+
       final row = find.byKey(const Key('wr_growth_theme_tra_chieu'));
       expect(row, findsOneWidget);
 
@@ -1230,6 +1248,8 @@ void main() {
           intel: themes(['Phong cách hiện diện']),
         ),
       );
+
+      await showAll(tester);
 
       final row = find.byKey(const Key('wr_growth_theme_tra_chieu'));
       expect(row, findsOneWidget);
@@ -1281,9 +1301,10 @@ void main() {
         find.byKey(const Key('wr_growth_other_themes_row')),
         findsNothing,
       );
-      // Hai lối rẽ còn lại không bị đụng tới.
+      // Lối rẽ còn lại không bị đụng tới. "Chặng đường phát triển" đã bỏ khỏi
+      // màn này (2026-08-03).
       expect(find.text('Kỹ năng đã hình thành'), findsOneWidget);
-      expect(find.text('Chặng đường phát triển'), findsOneWidget);
+      expect(find.text('Chặng đường phát triển'), findsNothing);
     });
 
     testWidgets('thẻ nói pill, chủ đề buổi, khuôn buổi và Xem chi tiết',

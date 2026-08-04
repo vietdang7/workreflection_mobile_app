@@ -12,6 +12,23 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/wr_intelligence.dart';
 import '../models/wr_mood_content.dart';
 
+/// Tên Edge Function đọc tài liệu bối cảnh bằng AI.
+const String kWrDocAnalyzeFunction = 'wr-doc-analyze';
+
+/// Lỗi khi đọc tài liệu — [message] là câu tiếng Việt để hiện thẳng cho người
+/// dùng, không phải mã lỗi kỹ thuật.
+class WrDocAnalysisException implements Exception {
+  const WrDocAnalysisException(this.message, {this.needsPremium = false});
+
+  final String message;
+
+  /// Máy chủ từ chối vì gói: màn hình đổi sang mời nâng cấp thay vì báo lỗi.
+  final bool needsPremium;
+
+  @override
+  String toString() => message;
+}
+
 // ---------------------------------------------------------------------------
 // Abstract interface
 // ---------------------------------------------------------------------------
@@ -82,11 +99,21 @@ abstract class WrIntelligenceRepository {
   /// Mark a theme enrollment as completed for [userId]/[themeId].
   Future<void> completeTheme({required String userId, required String themeId});
 
-  /// Insert a context document record.
-  Future<void> insertContextDocument(WrContextDocument d);
+  /// Insert a context document record. Trả về id vừa tạo (null nếu không lấy
+  /// được) — cần id để gọi phân tích ngay sau khi tải lên.
+  Future<String?> insertContextDocument(WrContextDocument d);
 
   /// Fetch context documents for [userId].
   Future<List<WrContextDocument>> fetchContextDocuments(String userId);
+
+  /// Nhờ Edge Function `wr-doc-analyze` đọc tài liệu [documentId] bằng AI.
+  ///
+  /// Trả về bản ghi đã cập nhật. Ném [WrDocAnalysisException] với câu tiếng
+  /// Việt do máy chủ soạn khi hỏng — đây là thứ hiện thẳng lên màn hình.
+  Future<WrContextDocument> analyzeContextDocument(String documentId);
+
+  /// Xoá một tài liệu bối cảnh (kèm file trong Storage nếu xoá được).
+  Future<void> deleteContextDocument(WrContextDocument doc);
 
   /// Fetch pattern narratives for [userId].
   Future<List<PatternNarrative>> fetchPatternNarratives(String userId);
@@ -333,8 +360,80 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
   }
 
   @override
-  Future<void> insertContextDocument(WrContextDocument d) async {
-    await _client.from('wr_context_documents').insert(d.toInsert());
+  Future<String?> insertContextDocument(WrContextDocument d) async {
+    final row = await _client
+        .from('wr_context_documents')
+        .insert(d.toInsert())
+        .select('id')
+        .maybeSingle();
+    return row?['id'] as String?;
+  }
+
+  @override
+  Future<WrContextDocument> analyzeContextDocument(String documentId) async {
+    try {
+      final res = await _client.functions.invoke(
+        kWrDocAnalyzeFunction,
+        body: {'documentId': documentId},
+      );
+      final data = res.data;
+      if (data is! Map || data['status'] != 'ready') {
+        throw const WrDocAnalysisException(
+          'Chưa đọc được tài liệu này. Bạn thử lại sau nhé.',
+        );
+      }
+    } on FunctionException catch (e) {
+      throw _docFailure(e);
+    } on WrDocAnalysisException {
+      rethrow;
+    } catch (_) {
+      throw const WrDocAnalysisException(
+        'Không kết nối được lúc này. Bạn kiểm tra mạng rồi thử lại nhé.',
+      );
+    }
+
+    // Đọc lại từ bảng thay vì tin thân phản hồi: nguồn sự thật là dòng dữ liệu,
+    // và app còn cần đúng những trường khác (ngày phân tích, model) mà hàm
+    // không trả về hết.
+    final row = await _client
+        .from('wr_context_documents')
+        .select()
+        .eq('id', documentId)
+        .maybeSingle();
+    if (row == null) {
+      throw const WrDocAnalysisException('Không tìm thấy tài liệu này.');
+    }
+    return WrContextDocument.fromJson(row);
+  }
+
+  @override
+  Future<void> deleteContextDocument(WrContextDocument doc) async {
+    final id = doc.id;
+    if (id == null) return;
+    await _client.from('wr_context_documents').delete().eq('id', id);
+    try {
+      await _client.storage.from('context-docs').remove([doc.filePath]);
+    } catch (_) {
+      // Dòng đã xoá rồi thì tài liệu coi như biến mất với người dùng. File mồ
+      // côi trong Storage là việc của người vận hành, không đáng để báo lỗi.
+    }
+  }
+
+  /// Lấy câu báo lỗi tiếng Việt Edge Function đã soạn sẵn.
+  WrDocAnalysisException _docFailure(FunctionException e) {
+    final d = e.details;
+    if (d is Map) {
+      final msg = d['error'];
+      if (msg is String && msg.trim().isNotEmpty) {
+        return WrDocAnalysisException(
+          msg.trim(),
+          needsPremium: d['needsPremium'] == true,
+        );
+      }
+    }
+    return const WrDocAnalysisException(
+      'Chưa đọc được tài liệu này. Bạn thử lại sau nhé.',
+    );
   }
 
   @override

@@ -267,10 +267,11 @@ class VideoSceneView extends StatelessWidget {
         const SizedBox(height: 12),
         Center(
           child: Text(
-            esi == null ? '—' : esi.toStringAsFixed(1),
-            style: const TextStyle(
+            esi == null ? 'Chưa có dữ liệu' : esi.toStringAsFixed(1),
+            style: TextStyle(
               color: _kInk,
-              fontSize: 56,
+              // Câu "chưa có dữ liệu" không đọc được ở cỡ của một con số.
+              fontSize: esi == null ? 20 : 56,
               fontWeight: FontWeight.w800,
               height: 1,
             ),
@@ -307,10 +308,10 @@ class VideoSceneView extends StatelessWidget {
         const SizedBox(height: 12),
         Center(
           child: Text(
-            enps == null ? '—' : '$enps',
-            style: const TextStyle(
+            enps == null ? 'Chưa có dữ liệu' : '$enps',
+            style: TextStyle(
               color: _kInk,
-              fontSize: 56,
+              fontSize: enps == null ? 20 : 56,
               fontWeight: FontWeight.w800,
               height: 1,
             ),
