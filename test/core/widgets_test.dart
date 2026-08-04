@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:workreflection_mobile/core/theme/wr_colors.dart';
 import 'package:workreflection_mobile/core/widgets/eyebrow.dart';
 import 'package:workreflection_mobile/core/widgets/wr_card.dart';
@@ -8,7 +9,10 @@ import 'package:workreflection_mobile/core/widgets/pill_button.dart';
 import 'package:workreflection_mobile/core/widgets/action_link.dart';
 import 'package:workreflection_mobile/core/widgets/section_divider.dart';
 
-Widget wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
+Widget wrap(Widget child) => MaterialApp(
+      builder: wrTextScaleBuilder,
+      home: Scaffold(body: child),
+    );
 
 void main() {
   group('WrEyebrow', () {

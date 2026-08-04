@@ -323,10 +323,72 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
   }
 
   @override
-  Future<void> insertContextDocument(WrContextDocument d) async {
+  Future<String?> insertContextDocument(WrContextDocument d) async {
     _maybeThrow();
     insertContextDocumentCalls.add(d);
-    _contextDocuments.add(d);
+    final id = d.id ?? 'doc-${_contextDocuments.length + 1}';
+    _contextDocuments.add(WrContextDocument(
+      id: id,
+      userId: d.userId,
+      docType: d.docType,
+      filePath: d.filePath,
+      uploadedAt: d.uploadedAt ?? DateTime.now(),
+      analysisStatus: d.analysisStatus,
+    ));
+    return id;
+  }
+
+  /// Kết quả `analyzeContextDocument` sẽ trả về. Chưa gieo thì fake tự dựng một
+  /// bản phân tích tối thiểu — đủ để màn hình đổi trạng thái sang "Đã đọc".
+  WrDocAnalysis? nextAnalysis;
+
+  /// Lỗi ném ra ở lần gọi phân tích kế tiếp, ném một lần rồi tự xoá.
+  Object? nextAnalysisError;
+
+  final List<String> analyzeContextDocumentCalls = [];
+
+  @override
+  Future<WrContextDocument> analyzeContextDocument(String documentId) async {
+    analyzeContextDocumentCalls.add(documentId);
+    if (nextAnalysisError != null) {
+      final err = nextAnalysisError!;
+      nextAnalysisError = null;
+      // ignore: only_throw_errors
+      throw err;
+    }
+    final i = _contextDocuments.indexWhere((d) => d.id == documentId);
+    if (i < 0) {
+      throw const WrDocAnalysisException('Không tìm thấy tài liệu này.');
+    }
+    final old = _contextDocuments[i];
+    final analysis = nextAnalysis ??
+        const WrDocAnalysis(
+          title: 'Chuyên viên nhân sự',
+          summary: 'Tuyển dụng và đào tạo nhân sự.',
+          responsibilities: ['Tuyển dụng nhân sự mới'],
+          pillars: {'S': 1, 'C': 4, 'A': 1},
+        );
+    final updated = WrContextDocument(
+      id: old.id,
+      userId: old.userId,
+      docType: old.docType,
+      filePath: old.filePath,
+      uploadedAt: old.uploadedAt,
+      analysisStatus: DocAnalysisStatus.ready,
+      extractedText: 'Chữ đọc được từ tài liệu.',
+      analysis: analysis,
+      analyzedAt: DateTime.now(),
+    );
+    _contextDocuments[i] = updated;
+    return updated;
+  }
+
+  @override
+  Future<void> deleteContextDocument(WrContextDocument doc) async {
+    _maybeThrow();
+    _contextDocuments.removeWhere(
+      (d) => d.id == doc.id && d.filePath == doc.filePath,
+    );
   }
 
   @override

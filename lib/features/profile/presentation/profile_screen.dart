@@ -24,7 +24,7 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       body: SafeArea(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),

@@ -174,7 +174,7 @@ class _TraChieuRow extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
-                      color: Color(0xFF0E7A76),
+                      color: WrColors.pillTealText,
                     ),
                   ),
                 ),

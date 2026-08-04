@@ -128,9 +128,9 @@ class _MyWorkshopsScreenState extends ConsumerState<MyWorkshopsScreen> {
     final myAsync = ref.watch(myWorkshopsProvider);
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: WrColors.navy),
@@ -251,7 +251,7 @@ class _MyWorkshopRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final title = workshop?.title ?? '—';
+    final title = workshop?.title ?? 'Chưa có tên';
     final date = workshop?.date;
     final status = _status();
     final isAttended = status == _RowStatus.attended;
@@ -473,7 +473,7 @@ class _CancelDialog extends StatelessWidget {
                 key: const Key('cancel_confirm'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: WrColors.coral,
-                  foregroundColor: WrColors.white,
+                  foregroundColor: WrColors.navy,
                 ),
                 onPressed: cancelling ? null : onConfirm,
                 child: cancelling

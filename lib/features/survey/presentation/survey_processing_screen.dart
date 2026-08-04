@@ -50,7 +50,7 @@ class SurveyProcessingScreen extends ConsumerWidget {
     final submitAsync = ref.watch(_submitProvider);
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       body: SafeArea(
         child: submitAsync.when(
           loading: () => Center(

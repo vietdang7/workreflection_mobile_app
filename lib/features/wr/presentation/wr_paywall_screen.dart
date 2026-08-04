@@ -101,8 +101,9 @@ class WrPaywallScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final h = _headline;
-    // Giá lấy từ `cc_products` — sửa ở trang quản trị của web là app đổi theo.
-    // Trong lúc chờ tải thì dùng giá mặc định chứ không để trống chỗ ghi giá.
+    // Giá gói APP (`cc_products.product_type = 'premium_mobile'`, 499.000đ) —
+    // không phải giá gói web 249.000đ. Sửa ở trang quản trị của web là app đổi
+    // theo. Trong lúc chờ tải thì dùng giá mặc định chứ không để trống chỗ giá.
     final pricing =
         ref.watch(wrPremiumPricingProvider).valueOrNull ?? WrPremiumPricing.fallback;
 

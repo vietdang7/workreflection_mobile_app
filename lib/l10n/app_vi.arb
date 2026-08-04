@@ -3,9 +3,9 @@
   "appName": "WorkReflection",
   "@appName": {"description": "App name"},
 
-  "onb1Tag": "Reflection",
+  "onb1Tag": "Reflect",
   "onb1Title": "Hành trình bắt đầu\ntừ một câu hỏi nhỏ.",
-  "onb1Body": "Mỗi ngày một khoảnh khắc dừng lại.\nĐể nhìn rõ hơn — không phán xét.",
+  "onb1Body": "Mỗi ngày một khoảnh khắc dừng lại.\nĐể nhìn rõ hơn, không phán xét.",
   "onb1Cta": "Tiếp tục",
 
   "onb2Tag": "Understand",
@@ -753,7 +753,7 @@
   "voiceInputTapToSpeak": "Nhấn để nói câu trả lời",
   "voiceInputListening": "Đang nghe…",
   "voiceInputStopListening": "Dừng nghe",
-  "voiceInputNoMatch": "Không nhận diện được — hãy nhấn để thử lại",
+  "voiceInputNoMatch": "Không nhận diện được, hãy nhấn để thử lại",
   "voiceInputUnavailable": "Thiết bị không hỗ trợ nhập bằng giọng nói",
 
   "reportPdfExport": "Xuất PDF",

@@ -176,7 +176,7 @@ NeedReading needReading(HumanNeed need) => switch (need) {
           expectedOutcome:
               'Biết mình đang ở đâu và việc nào đáng làm trước.',
           coreNeed:
-              'Sự rõ ràng — rõ vai trò của mình, rõ điều người khác chờ đợi.',
+              'Sự rõ ràng, rõ vai trò của mình, rõ điều người khác chờ đợi.',
           perspectiveLabel: 'Sự rõ ràng',
           perspectiveText:
               'Điều làm bạn mệt nhiều khả năng không phải vì nhiều việc, mà '
@@ -186,7 +186,7 @@ NeedReading needReading(HumanNeed need) => switch (need) {
           expectedOutcome:
               'Nói được điều mình nghĩ mà vẫn thấy an toàn.',
           coreNeed:
-              'Sự kết nối — được lắng nghe, và được nhìn thấy đúng như mình.',
+              'Sự kết nối, được lắng nghe, và được nhìn thấy đúng như mình.',
           perspectiveLabel: 'Mối quan hệ',
           perspectiveText:
               'Điều giữ bạn im lặng thường không phải vì thiếu ý kiến, mà vì '
@@ -196,7 +196,7 @@ NeedReading needReading(HumanNeed need) => switch (need) {
           expectedOutcome:
               'Giữ được nhịp của mình khi mọi thứ đổi thay.',
           coreNeed:
-              'Sự thích nghi — đổi cách làm mà không đánh mất chính mình.',
+              'Sự thích nghi, đổi cách làm mà không đánh mất chính mình.',
           perspectiveLabel: 'Cách làm việc',
           perspectiveText:
               'Cảm giác đuối sức thường đến từ một cách làm cũ đặt vào hoàn '
@@ -206,7 +206,7 @@ NeedReading needReading(HumanNeed need) => switch (need) {
           expectedOutcome:
               'Thấy rõ mình đang đi về phía trước.',
           coreNeed:
-              'Sự phát triển — làm được điều hôm qua mình chưa làm được.',
+              'Sự phát triển, làm được điều hôm qua mình chưa làm được.',
           perspectiveLabel: 'Cách làm việc',
           perspectiveText:
               'Cảm giác mắc kẹt thường không phải vì bạn đứng yên, mà vì chưa '

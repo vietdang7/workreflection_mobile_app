@@ -12,14 +12,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appName => 'WorkReflection';
 
   @override
-  String get onb1Tag => 'Reflection';
+  String get onb1Tag => 'Reflect';
 
   @override
   String get onb1Title => 'The journey starts\nwith a small question.';
 
   @override
   String get onb1Body =>
-      'A moment to pause each day.\nTo see more clearly — without judgment.';
+      'A moment to pause each day.\nTo see more clearly, without judgment.';
 
   @override
   String get onb1Cta => 'Continue';
@@ -1748,7 +1748,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voiceInputNoMatch =>
-      'Could not recognise your answer — please tap to try again';
+      'Could not recognise your answer, please tap to try again';
 
   @override
   String get voiceInputUnavailable => 'Voice input unavailable on this device';

@@ -101,7 +101,7 @@ const _narratives =
       'Bạn đang phải giữ ý nhiều hơn mức đáng phải giữ',
       'Bạn cân nhắc trước khi nói, tránh vài cuộc trò chuyện, và không chắc ý '
           'kiến của mình có được xem xét thật không. Đây không phải bạn thiếu '
-          'dũng cảm — đó là phản ứng hợp lý với một môi trường chưa đủ an toàn. '
+          'dũng cảm. Đó là phản ứng hợp lý với một môi trường chưa đủ an toàn. '
           'Cái giá là bạn và nhóm mất dần khả năng học từ nhau.'
     ),
     SelfCheckBand.blocked: (
@@ -221,7 +221,7 @@ PillarImbalance? detectPillarImbalance(double? s, double? c, double? a) {
 String imbalanceNarrative(PillarImbalance key) => switch (key) {
       PillarImbalance.allLow =>
         'Cả ba mặt đều đang ở mức thấp cùng lúc. Khi mọi thứ cùng khó, rất dễ '
-            'kết luận rằng vấn đề nằm ở mình. Thường thì không phải vậy — đó là '
+            'kết luận rằng vấn đề nằm ở mình. Thường thì không phải vậy. Đó là '
             'dấu hiệu điều kiện xung quanh đang thiếu nhiều thứ nền tảng cùng '
             'lúc. Đừng cố sửa hết. Chọn một mặt duy nhất và bắt đầu từ đó.',
       PillarImbalance.sNotablyLow =>
@@ -236,7 +236,7 @@ String imbalanceNarrative(PillarImbalance key) => switch (key) {
             'phải giữ ý liên tục. Nó hiếm khi tự tốt lên theo thời gian.',
       PillarImbalance.aNotablyLow =>
         'Sự rõ ràng và quan hệ đang tốt hơn hẳn cách bạn làm việc. Nghĩa là bối '
-            'cảnh xung quanh không phải vấn đề chính — chỗ nghẽn nằm ở nhịp làm '
+            'cảnh xung quanh không phải vấn đề chính, chỗ nghẽn nằm ở nhịp làm '
             'việc và ở việc thiếu khoảng dừng để nhìn lại. Đây cũng là mặt bạn '
             'có nhiều quyền chủ động nhất để thay đổi.',
       PillarImbalance.aHighScLow =>
@@ -288,7 +288,7 @@ class SelfCheckTrend {
     final d = averageDelta;
     if (d.abs() < 0.15) {
       return 'So với lần trước, bức tranh của bạn gần như không đổi. Điều đó '
-          'không xấu — nó cho thấy những gì bạn đang gặp là điều kiện ổn định '
+          'không xấu, nó cho thấy những gì bạn đang gặp là điều kiện ổn định '
           'chứ không phải một tuần tồi tệ.';
     }
     if (d > 0) {
@@ -297,7 +297,7 @@ class SelfCheckTrend {
           'lại được.';
     }
     return 'So với lần trước, bức tranh của bạn đi xuống. Đây là lúc nên nhìn '
-        'kỹ điều gì đã khác đi — thường sẽ có một thay đổi cụ thể nào đó ở '
+        'kỹ điều gì đã khác đi, thường sẽ có một thay đổi cụ thể nào đó ở '
         'công việc hoặc ở nhóm đứng phía sau.';
   }
 }

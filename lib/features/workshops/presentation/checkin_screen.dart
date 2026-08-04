@@ -175,9 +175,9 @@ class _CheckinScreenState extends ConsumerState<CheckinScreen> {
     final scannerEnabled = ref.watch(checkinScannerEnabledProvider);
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         elevation: 0,
         title: Text(l10n.wsCheckinTitle, style: WrTextStyles.hMedium),
       ),
@@ -247,7 +247,7 @@ class _CheckinScreenState extends ConsumerState<CheckinScreen> {
                   : () => _handleCode(_controller.text),
               style: ElevatedButton.styleFrom(
                 backgroundColor: WrColors.coral,
-                foregroundColor: WrColors.white,
+                foregroundColor: WrColors.navy,
               ),
               child: Text(l10n.wsCheckinSubmit),
             ),

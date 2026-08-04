@@ -24,6 +24,10 @@ enum PracticeMatchKind {
   /// Chỉ đúng trụ của nhu cầu chủ đạo — chưa có tình huống nào để bám.
   pillar,
 
+  /// Khớp theo trụ mà công việc của họ nhấn mạnh, đọc từ JD/CV đã phân tích
+  /// hoặc mô tả vai trò họ tự viết.
+  jobContext,
+
   /// Không khớp được gì, lấy chủ đề đầu bể. KHÔNG được giải thích: nói "vì bạn
   /// đang tìm kiếm sự kết nối" cho một chủ đề trụ S là dựng ra một mối liên hệ
   /// không có thật.
@@ -101,6 +105,7 @@ PracticeSuggestion? suggestPracticeTheme({
   required List<String> recent,
   required List<WrSituation> situations,
   HumanNeed? need,
+  List<String> jobPillars = const [],
 }) {
   if (candidates.isEmpty) return null;
 
@@ -118,7 +123,26 @@ PracticeSuggestion? suggestPracticeTheme({
     }
   }
 
-  // 2 — chưa có hành vi nào để bám: khớp trụ theo nhu cầu chủ đạo.
+  // 2 — chưa có tình huống nào lặp lại, nhưng biết công việc của họ đòi gì.
+  //
+  // Xếp SAU chiều tình huống là có chủ đích: điều họ thật sự đang vướng quan
+  // trọng hơn điều bản mô tả công việc nói. JD chỉ vào cuộc khi chưa có gì để
+  // bám — lúc đó nó vẫn tốt hơn một chủ đề lấy đại đầu danh sách.
+  for (final pillar in jobPillars) {
+    for (final t in candidates) {
+      final dim = t.scaDimension;
+      if (dim != null && dim.isSca && dim.dbValue.startsWith(pillar)) {
+        return (
+          theme: t,
+          kind: PracticeMatchKind.jobContext,
+          reasonSituationCode: null,
+          reasonCount: 0,
+        );
+      }
+    }
+  }
+
+  // 3 — chưa có hành vi nào để bám: khớp trụ theo nhu cầu chủ đạo.
   if (need != null) {
     final pillar = needPillarLetter(need);
     for (final t in candidates) {
@@ -134,7 +158,7 @@ PracticeSuggestion? suggestPracticeTheme({
     }
   }
 
-  // 3 — không khớp được gì thì vẫn mời một chủ đề, nhưng im lặng về lý do.
+  // 4 — không khớp được gì thì vẫn mời một chủ đề, nhưng im lặng về lý do.
   return (
     theme: candidates.first,
     kind: PracticeMatchKind.fallback,

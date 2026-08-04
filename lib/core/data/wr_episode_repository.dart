@@ -319,7 +319,7 @@ class SupabaseWrEpisodeRepository implements WrEpisodeRepository {
   ) async {
     final id = episode.id;
     if (id == null) {
-      throw StateError('Episode chưa có id — gọi openEpisode trước.');
+      throw StateError('Episode chưa có id, gọi openEpisode trước.');
     }
     final row = await _client
         .from(_table)

@@ -315,11 +315,11 @@ class FakeWrRepository implements WrRepository {
     return Map<String, dynamic>.from(_ccProfile);
   }
 
-  /// Giá gói Premium mà [getPremiumPricing] trả về. Mặc định là giá thật đang
-  /// bán trên web (gốc 499k, còn 249k) để test đọc như production.
+  /// Giá gói Premium mà [getPremiumPricing] trả về. Mặc định là giá thật của
+  /// gói APP (`premium_mobile`, 499k, không gạch ngang) để test đọc như
+  /// production — gói web 249k là dòng khác, app không đọc tới.
   WrPremiumPricing premiumPricing = const WrPremiumPricing(
-    currentPrice: 249000,
-    originalPrice: 499000,
+    currentPrice: 499000,
     // Có productId thì mua được — thiếu là màn thanh toán từ chối tạo đơn.
     productId: 'prod-premium-test',
     durationDays: 365,

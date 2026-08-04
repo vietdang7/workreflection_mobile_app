@@ -1,21 +1,37 @@
-// Giá gói Premium — lấy từ cùng một nguồn với web.
+// Giá gói Premium bán trong app.
 //
-// Khách chốt 2026-08-01: "giá premium trên app cũng canh theo web luôn". Nguồn
-// sự thật là bảng `cc_products` (product_type = 'premium', is_active = true),
-// đúng bảng mà trang quản trị Gói dịch vụ của web ghi vào — sửa giá ở đó là app
-// đổi theo, không phải build lại.
+// Khách chốt 2026-08-04: web và app bán HAI GÓI KHÁC NHAU, khác giá — web
+// 249.000đ, app 499.000đ — nhưng thanh toán xong thì cả hai cùng cấp một
+// `role = 'premium'`. Nên khác nhau đúng ở dòng sản phẩm và con số, không khác
+// ở quyền.
 //
-// Web đọc bảng này qua `useProductPrice` (repo web:
-// `src/hooks/useProductPrice.ts`), lấy `current_price` / `original_price` và
-// rơi về 499.000 khi không có hàng nào. Bản mobile giữ đúng quy ước đó để hai
-// đầu không bao giờ báo hai con số khác nhau.
+// (Luật 2026-08-01 "giá app canh theo web" đã hết hiệu lực. Quyền Premium thì
+// vẫn dùng chung như luật đó nói — xem `wrEntitlementProvider`.)
+//
+// Nguồn sự thật vẫn là bảng `cc_products` mà trang quản trị Gói dịch vụ của web
+// ghi vào, chỉ khác dòng:
+//
+//   product_type = 'premium'         → gói web, 249.000đ
+//   product_type = 'premium_mobile'  → gói app, 499.000đ   ← app đọc dòng này
+//
+// Tách bằng `product_type` vì bảng không có cột nào chỉ nền tảng, mà web tra
+// giá cũng bằng đúng cột đó (`useProductPrice(productType)` — repo web
+// `src/hooks/useProductPrice.ts`). Sửa giá app ở trang quản trị là app đổi
+// theo, không phải build lại.
 //
 // Pure Dart, không phụ thuộc Flutter → test được trực tiếp.
 
-/// Giá đã rơi về mặc định nếu `cc_products` không trả hàng nào.
+/// `cc_products.product_type` của gói app.
 ///
-/// Cùng con số với `FALLBACK_PRICES.premium` bên web — nếu một ngày web đổi
-/// mặc định thì đổi cả ở đây.
+/// KHÔNG phải `cc_orders.product_type` — đơn hàng vẫn ghi
+/// [kPremiumOrderProductType] (`premium_survey`), vì RPC `complete_payment`
+/// chỉ cấp role premium khi chuỗi đó kết thúc bằng `_survey`.
+const String kPremiumMobileProductType = 'premium_mobile';
+
+/// Giá đã rơi về mặc định nếu `cc_products` không có dòng
+/// [kPremiumMobileProductType] nào đang bật.
+///
+/// 499.000đ — đúng giá gói app, cũng trùng `FALLBACK_PRICES.premium` bên web.
 const num kPremiumFallbackPrice = 499000;
 
 /// Số ngày Premium khi `cc_products.duration_days` bỏ trống.

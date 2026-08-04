@@ -34,7 +34,7 @@ class WrJourneyNarrativeScreen extends ConsumerWidget {
             key: Key('wr_journey_narrative_lock'),
             description:
                 'Bản đầy đủ kể lại những mẫu hình của bạn đã đổi thế nào qua '
-                'từng giai đoạn — điều gì đang nhạt dần và điều gì vẫn quay lại.',
+                'từng giai đoạn, điều gì đang nhạt dần và điều gì vẫn quay lại.',
             ctaLabel: 'Mở diễn biến theo thời gian',
             paywallTrigger: 'pattern_advanced',
           )

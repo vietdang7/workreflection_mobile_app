@@ -322,11 +322,251 @@ Deno.test('thiếu ghi chú độ chính xác thì BỎ HẲN cả gợi ý', as
   assertEquals(ctx.includes('dẫn dắt một nhóm nhỏ'), false);
 });
 
-Deno.test('hồ sơ công việc: nói CÓ tải lên nhưng KHÔNG đọc được nội dung', async () => {
+Deno.test('hồ sơ công việc CHƯA phân tích: nói thẳng là không biết nội dung', async () => {
   const { buildUserContext } = await import('./user_context.ts');
   const ctx = await buildUserContext(fakeDb(GROWTH_ROWS), 'u1', true);
   assertEquals(ctx.includes('mô tả công việc và hồ sơ năng lực'), true);
-  assertEquals(ctx.includes('KHÔNG đọc được nội dung'), true);
+  assertEquals(ctx.includes('KHÔNG biết nội dung'), true);
   // Không được lộ đường dẫn file — đó là tên trường dữ liệu, mục 6 cấm.
   assertEquals(/file_path|storage|\.pdf|\.docx/i.test(ctx), false);
+});
+
+// ---------------------------------------------------------------------------
+// Hồ sơ công việc ĐÃ phân tích (từ 2026-08-04)
+//
+// `wr-doc-analyze` đọc JD/CV rồi lưu chữ vào `extracted_text` và bản phân tích
+// vào `analysis`. Đây là chỗ nội dung thật đi vào ngữ cảnh của trợ lý.
+// ---------------------------------------------------------------------------
+
+const READY_JD_ROWS = {
+  ...ROWS,
+  wr_context_documents: [
+    {
+      doc_type: 'jd',
+      uploaded_at: ISO_NOW,
+      analyzed_at: ISO_NOW,
+      analysis_status: 'ready',
+      extracted_text:
+        'Chuyên viên nhân sự. Phối hợp với trưởng bộ phận để tuyển dụng và '
+        + 'đào tạo nhân sự mới. Yêu cầu 2 năm kinh nghiệm.',
+      analysis: {
+        title: 'Chuyên viên nhân sự',
+        organization: 'Công ty ABC',
+        summary: 'Vị trí phụ trách tuyển dụng và đào tạo nhân sự.',
+        responsibilities: ['Tuyển dụng nhân sự mới', 'Đào tạo hội nhập'],
+        requirements: ['2 năm kinh nghiệm nhân sự'],
+        skills: ['Giao tiếp', 'Phỏng vấn'],
+        pillars: { S: 2, C: 4, A: 1 },
+      },
+    },
+  ],
+};
+
+Deno.test('hồ sơ ĐÃ phân tích: đưa nội dung thật vào ngữ cảnh', async () => {
+  const { buildUserContext } = await import('./user_context.ts');
+  const ctx = await buildUserContext(fakeDb(READY_JD_ROWS), 'u1', true);
+
+  assertEquals(ctx.includes('Chuyên viên nhân sự'), true);
+  assertEquals(ctx.includes('Tuyển dụng nhân sự mới'), true);
+  assertEquals(ctx.includes('Trích nguyên văn'), true);
+  // Đã đọc được rồi thì KHÔNG được kèm câu "bạn không biết nội dung" của nhánh
+  // kia — hai câu ngược nhau trong cùng một prompt là chỗ model chọn bừa.
+  assertEquals(ctx.includes('KHÔNG biết nội dung'), false);
+});
+
+Deno.test('hồ sơ đã phân tích vẫn bị cấm suy diễn ngoài phần đọc được', async () => {
+  const { buildUserContext } = await import('./user_context.ts');
+  const ctx = await buildUserContext(fakeDb(READY_JD_ROWS), 'u1', true);
+  assertEquals(ctx.includes('CHỈ những gì có trong đoạn trên'), true);
+});
+
+Deno.test('gói miễn phí KHÔNG thấy nội dung hồ sơ dù đã phân tích', async () => {
+  const { buildUserContext } = await import('./user_context.ts');
+  const ctx = await buildUserContext(fakeDb(READY_JD_ROWS), 'u1', false);
+  assertEquals(ctx.includes('Chuyên viên nhân sự'), false);
+});
+
+// ---------------------------------------------------------------------------
+// Nội dung lần nhìn lại — chữ của chính người dùng
+//
+// VÌ SAO CÓ NHÓM NÀY: khách chụp màn 2026-08-03. Người dùng vừa đi hết một vòng
+// Reflection, nói "bạn xem thử reflection tôi vừa làm để chia sẻ giúp tôi", và
+// trợ lý trả lời "mình không có quyền truy cập vào nội dung cụ thể của từng
+// Reflection".
+//
+// Câu đó đọc như một giới hạn về quyền, nhưng thật ra là khoảng trống trong
+// ngữ cảnh: khối dữ liệu lúc ấy chỉ có NGÀY và SỐ ĐẾM, không có một chữ nào
+// người dùng đã viết. Dữ liệu vẫn nằm nguyên trong database.
+//
+// Đây là loại lỗi tệ nhất với sản phẩm này, vì nó phủ nhận đúng lời hứa nền:
+// những gì bạn ghi lại sẽ được nhìn thấy.
+// ---------------------------------------------------------------------------
+
+const ISO_YESTERDAY = new Date(Date.now() - 20 * 3_600_000).toISOString();
+const ISO_LAST_WEEK = new Date(Date.now() - 8 * 86_400_000).toISOString();
+
+/// Một Episode đã đi hết vòng, kèm đủ các trường người dùng tự viết.
+function fullEpisode(openedAt: string, state = 'committed') {
+  return {
+    opened_at: openedAt,
+    state,
+    energy: 'low',
+    situation_code: 'S1',
+    human_need: 'ket_noi',
+    intention: 'Muốn hiểu vì sao mình im lặng',
+    notes: {
+      notice: 'Mình thấy tim đập nhanh khi định giơ tay',
+      explore: 'Có lẽ vì lần trước bị ngắt lời giữa chừng',
+      commit: 'Lần sau sẽ nói ngay câu đầu tiên',
+    },
+    draft_meaning: 'Im lặng của mình là để tránh bị đánh giá, không phải vì không có ý kiến',
+    tiny_action: 'Chuẩn bị sẵn một câu mở đầu trước cuộc họp',
+    reflect_choice: null,
+  };
+}
+
+const REFLECTION_ROWS = {
+  wr_reflection_episodes: [fullEpisode(ISO_YESTERDAY)],
+  wr_situations: [{ code: 'S1', text: 'Im lặng trong cuộc họp' }],
+};
+
+Deno.test('trợ lý ĐỌC ĐƯỢC chữ người dùng viết trong lần nhìn lại', async () => {
+  const { buildUserContext } = await import('./user_context.ts');
+  const ctx = await buildUserContext(fakeDb(REFLECTION_ROWS), 'u1', false);
+
+  assertEquals(ctx.includes('tim đập nhanh khi định giơ tay'), true);
+  assertEquals(ctx.includes('bị ngắt lời giữa chừng'), true);
+  assertEquals(ctx.includes('để tránh bị đánh giá'), true);
+  assertEquals(ctx.includes('Chuẩn bị sẵn một câu mở đầu'), true);
+  assertEquals(ctx.includes('Muốn hiểu vì sao mình im lặng'), true);
+});
+
+Deno.test('gói MIỄN PHÍ cũng đọc được — mục 7 xếp vào trục hành động', async () => {
+  // "Tự xem dữ liệu thô của chính mình" là quyền của cả người dùng miễn phí.
+  // Gác chỗ này là gác quá tay: thứ thuộc Premium là phần TỔNG HỢP theo thời
+  // gian, không phải chính chữ họ vừa viết ra.
+  const { buildUserContext } = await import('./user_context.ts');
+  const free = await buildUserContext(fakeDb(REFLECTION_ROWS), 'u1', false);
+  const paid = await buildUserContext(fakeDb(REFLECTION_ROWS), 'u1', true);
+
+  for (const ctx of [free, paid]) {
+    assertEquals(ctx.includes('chính chữ họ tự viết'), true);
+    assertEquals(ctx.includes('tim đập nhanh khi định giơ tay'), true);
+  }
+});
+
+Deno.test('KHÔNG lộ mã tình huống lẫn tên bước nội bộ', async () => {
+  // Mục 6 cấm mã chiều và tên mô hình nội bộ. Cách chắc chắn nhất để model
+  // không nói ra là nó không bao giờ nhìn thấy.
+  const { buildUserContext } = await import('./user_context.ts');
+  const ctx = await buildUserContext(fakeDb(REFLECTION_ROWS), 'u1', true);
+
+  assertEquals(ctx.includes('S1-'), false);
+  assertEquals(/"S1"|\bnotice\b|\breframe\b|\bpreserve\b|draft_meaning|tiny_action/.test(ctx), false);
+  // Tiêu đề tiếng Việt thì phải có.
+  assertEquals(ctx.includes('Im lặng trong cuộc họp'), true);
+});
+
+Deno.test('vừa nhìn lại xong thì CẤM mời ghi lại lần nữa', async () => {
+  const { buildUserContext } = await import('./user_context.ts');
+  const ctx = await buildUserContext(fakeDb(REFLECTION_ROWS), 'u1', false);
+
+  assertEquals(ctx.includes('VỪA đi qua một lần nhìn lại'), true);
+  assertEquals(ctx.includes('[[ACTION:reflect]]'), true);
+  assertEquals(ctx.includes('không có quyền truy cập'), true);
+});
+
+Deno.test('lần nhìn lại đã lâu thì KHÔNG bật luật đó', async () => {
+  // Người tuần trước mới ghi một lần thì mời họ ghi tiếp là đúng việc.
+  const { buildUserContext } = await import('./user_context.ts');
+  const ctx = await buildUserContext(
+    fakeDb({
+      ...REFLECTION_ROWS,
+      wr_reflection_episodes: [fullEpisode(ISO_LAST_WEEK)],
+    }),
+    'u1',
+    false,
+  );
+
+  assertEquals(ctx.includes('VỪA đi qua một lần nhìn lại'), false);
+  // Nội dung thì vẫn phải đọc được.
+  assertEquals(ctx.includes('tim đập nhanh khi định giơ tay'), true);
+});
+
+Deno.test('phiên bỏ dở KHÔNG tính là vừa nhìn lại xong', async () => {
+  // Mở luồng rồi thoát giữa chừng thì mời họ quay lại làm nốt mới là việc đúng.
+  const { buildUserContext } = await import('./user_context.ts');
+  const ctx = await buildUserContext(
+    fakeDb({
+      ...REFLECTION_ROWS,
+      wr_reflection_episodes: [fullEpisode(ISO_YESTERDAY, 'exploring')],
+    }),
+    'u1',
+    false,
+  );
+
+  assertEquals(ctx.includes('VỪA đi qua một lần nhìn lại'), false);
+  assertEquals(ctx.includes('còn dở, chưa đi hết vòng'), true);
+});
+
+Deno.test('mở luồng rồi thoát ngay, chưa viết chữ nào → BỎ HẲN mục đó', async () => {
+  // Một mục chỉ có ngày tháng mà không có nội dung là mời model tự điền, đúng
+  // cái bẫy đã sập ba lần trong file này.
+  const { buildUserContext } = await import('./user_context.ts');
+  const ctx = await buildUserContext(
+    fakeDb({
+      wr_reflection_episodes: [{
+        opened_at: ISO_YESTERDAY,
+        state: 'captured',
+        energy: null,
+        situation_code: null,
+        human_need: null,
+        intention: null,
+        notes: {},
+        draft_meaning: null,
+        tiny_action: null,
+        reflect_choice: null,
+      }],
+    }),
+    'u1',
+    false,
+  );
+
+  assertEquals(ctx.includes('chính chữ họ tự viết'), false);
+});
+
+Deno.test('câu đã chọn trùng việc nhỏ thì không lặp lại hai lần', async () => {
+  const { buildUserContext } = await import('./user_context.ts');
+  const same = 'Chuẩn bị sẵn một câu mở đầu trước cuộc họp';
+  const ctx = await buildUserContext(
+    fakeDb({
+      ...REFLECTION_ROWS,
+      wr_reflection_episodes: [
+        { ...fullEpisode(ISO_YESTERDAY), reflect_choice: same },
+      ],
+    }),
+    'u1',
+    false,
+  );
+
+  assertEquals(ctx.split(same).length - 1, 1);
+});
+
+Deno.test('điều tự rút ra đọc từ CẢ HAI bảng insight', async () => {
+  // Luồng Reflection v2.0 ghi vào `wr_reflection_insights`; bản đầu của file này
+  // chỉ đọc bảng cũ `wr_insights`, nên phần chắt lọc nhất của những lần nhìn lại
+  // gần đây chưa bao giờ tới được trợ lý.
+  const { buildUserContext } = await import('./user_context.ts');
+  const ctx = await buildUserContext(
+    fakeDb({
+      ...REFLECTION_ROWS,
+      wr_reflection_insights: [
+        { content: 'Mình cần được nghe hết câu', created_at: ISO_YESTERDAY },
+      ],
+    }),
+    'u1',
+    false,
+  );
+
+  assertEquals(ctx.includes('Mình cần được nghe hết câu'), true);
 });

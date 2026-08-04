@@ -107,7 +107,7 @@ abstract class AppLocalizations {
   /// No description provided for @onb1Tag.
   ///
   /// In vi, this message translates to:
-  /// **'Reflection'**
+  /// **'Reflect'**
   String get onb1Tag;
 
   /// No description provided for @onb1Title.
@@ -119,7 +119,7 @@ abstract class AppLocalizations {
   /// No description provided for @onb1Body.
   ///
   /// In vi, this message translates to:
-  /// **'Mỗi ngày một khoảnh khắc dừng lại.\nĐể nhìn rõ hơn — không phán xét.'**
+  /// **'Mỗi ngày một khoảnh khắc dừng lại.\nĐể nhìn rõ hơn, không phán xét.'**
   String get onb1Body;
 
   /// No description provided for @onb1Cta.
@@ -3359,7 +3359,7 @@ abstract class AppLocalizations {
   /// No description provided for @voiceInputNoMatch.
   ///
   /// In vi, this message translates to:
-  /// **'Không nhận diện được — hãy nhấn để thử lại'**
+  /// **'Không nhận diện được, hãy nhấn để thử lại'**
   String get voiceInputNoMatch;
 
   /// No description provided for @voiceInputUnavailable.

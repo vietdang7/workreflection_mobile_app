@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:workreflection_mobile/core/models/survey_models.dart';
 import 'package:workreflection_mobile/features/survey/presentation/survey_history_screen.dart';
 import 'package:workreflection_mobile/features/survey/survey_providers.dart';
@@ -21,6 +22,7 @@ Widget _wrap(FakeSurveyRepository repo) {
       surveyRepositoryProvider.overrideWithValue(repo),
     ],
     child: const MaterialApp(
+      builder: wrTextScaleBuilder,
       localizationsDelegates: [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,

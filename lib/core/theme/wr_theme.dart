@@ -19,7 +19,9 @@ ThemeData wrTheme() {
   return ThemeData(
     useMaterial3: true,
     colorScheme: wrColorScheme(),
-    scaffoldBackgroundColor: WrColors.white,
+    // Spec §01: nền toàn màn hình là Cream BG, không phải trắng thuần — thẻ
+    // trắng nổi lên được là nhờ nền này.
+    scaffoldBackgroundColor: WrColors.pageBg,
     textTheme: GoogleFonts.beVietnamProTextTheme(),
   );
 }
@@ -29,7 +31,8 @@ abstract final class WrTextStyles {
         fontSize: 11,
         fontWeight: FontWeight.w700,
         letterSpacing: 0.55,
-        color: WrColors.muted,
+        // Spec §01b: eyebrow/tiny dùng text-3, không phải text-2.
+        color: WrColors.text3,
       );
 
   static TextStyle get hLarge => const TextStyle(

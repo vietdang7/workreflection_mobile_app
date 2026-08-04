@@ -62,6 +62,56 @@ const EPISODE_FETCH_LIMIT = 400;
 /// Số tình huống lặp lại đưa vào ngữ cảnh (v2.0 §4.3: ba tình huống cao nhất).
 const TOP_REPEATED = 3;
 
+/// Số lần nhìn lại được kéo về KÈM NỘI DUNG người dùng đã viết.
+///
+/// Ba, không nhiều hơn. Mỗi lần nhìn lại có thể mang theo sáu đoạn ghi chú tự
+/// viết cộng một câu ý nghĩa và một việc nhỏ; mười lần là đủ đẩy phần dữ liệu
+/// dài hơn cả system prompt, và thứ bị chen mất sẽ là các luật an toàn.
+const DETAIL_EPISODE_COUNT = 3;
+
+/// Trần ký tự cho mỗi đoạn người dùng tự viết.
+const NOTE_MAX = 400;
+
+/// Trong bao nhiêu giờ thì coi là "họ vừa nhìn lại xong".
+///
+/// Đây là bản lề của [JUST_REFLECTED_RULE]. 24 giờ vì người ta hay ghi lại buổi
+/// tối rồi mở app nói chuyện sáng hôm sau — hai mốc đó phải nằm cùng một cửa sổ,
+/// nếu không trợ lý sẽ mời họ làm lại đúng việc họ vừa làm tối qua.
+const JUST_REFLECTED_HOURS = 24;
+
+/// Nhãn tiếng Việt cho từng đoạn ghi chú trong một lần nhìn lại.
+///
+/// ⚠ Khoá bên trái là tên bước nội bộ. Mục 6 cấm model nói ra tên mô hình nội
+/// bộ, nên KHÔNG BAO GIỜ ghép khoá vào chuỗi trả về — chỉ ghép cột bên phải.
+/// Mã nào không có trong bảng này thì bỏ hẳn đoạn đó.
+const NOTE_LABELS: Record<string, string> = {
+  notice: 'Điều họ nhận thấy',
+  name: 'Cách họ gọi tên cảm giác đó',
+  explore: 'Điều họ thấy khi nghĩ sâu hơn',
+  reframe: 'Cách họ nhìn lại theo hướng khác',
+  commit: 'Điều họ định làm',
+  preserve: 'Điều họ muốn giữ lại',
+};
+
+/// Thứ tự đọc các đoạn ghi chú, theo đúng thứ tự người dùng đã đi qua.
+///
+/// `notes` là jsonb nên thứ tự khoá do database trả về, không đảm bảo. Đọc lộn
+/// thứ tự thì một lần nhìn lại mạch lạc biến thành một mớ rời rạc.
+const NOTE_ORDER = ['notice', 'name', 'explore', 'reframe', 'commit', 'preserve'];
+
+/// Trạng thái nghĩa là người dùng đã đi hết một vòng nhìn lại.
+const FINISHED_STATES = new Set([
+  'meaning_confirmed',
+  'committed',
+  'integrated',
+]);
+
+const ENERGY_LABELS: Record<string, string> = {
+  good: 'đang khoẻ',
+  ok: 'tạm ổn',
+  low: 'đang xuống sức',
+};
+
 /// Số lần tối thiểu để gọi là "trở đi trở lại".
 ///
 /// CỐ Ý là 2, không phải 3 như ngưỡng hiển thị ở tab Hiểu
@@ -172,6 +222,38 @@ nhìn lại, chọn một chủ đề thực hành để bắt đầu, và xem k
 tự đánh giá. Với những việc này cứ trả lời bình thường, không nhắc gì tới
 Premium.`;
 
+/// Họ VỪA nhìn lại xong — đừng mời họ làm lại lần nữa.
+///
+/// VÌ SAO CÓ: khách chụp màn ngày 2026-08-03. Người dùng vừa đi hết một vòng
+/// Reflection, quay sang khung chat nói "tôi vừa làm xong reflection này rồi",
+/// và trợ lý vẫn mời họ ghi lại thành một Reflection. Rồi khi họ nói "bạn xem
+/// thử reflection tôi vừa làm", trợ lý trả lời nó không có quyền đọc.
+///
+/// Cả hai câu đều sai, và sai theo cách làm hỏng niềm tin nhanh nhất: bảo một
+/// người hãy làm việc họ vừa làm xong, rồi nói mình không thấy được thứ họ vừa
+/// bỏ công viết. Với sản phẩm mà toàn bộ giá trị nằm ở chỗ "những gì bạn ghi lại
+/// sẽ được nhìn thấy", đó là phủ nhận đúng lời hứa nền tảng.
+///
+/// Chữa ở tầng dữ liệu trước — nội dung lần nhìn lại giờ nằm ngay trong khối
+/// trên — rồi mới tới lời dặn này cho phần model tự quyết.
+const JUST_REFLECTED_RULE = `
+Họ VỪA đi qua một lần nhìn lại trong vòng một ngày nay, và nội dung của lần đó
+nằm ngay trong khối dữ liệu trên.
+
+Vì vậy trong lượt này:
+  • KHÔNG mời họ "ghi lại thành một Reflection" nữa, và KHÔNG đặt thẻ
+    [[ACTION:reflect]]. Họ vừa làm xong việc đó. Mời lại là bảo họ làm hai lần
+    cùng một việc, và cho thấy bạn không nhìn ra thứ họ vừa bỏ công viết.
+  • Nếu họ bảo bạn xem lại lần nhìn lại vừa rồi, hãy XEM THẬT: nội dung ở trên
+    chính là nó. TUYỆT ĐỐI KHÔNG nói "mình không có quyền truy cập" hay "mình chỉ
+    dựa được vào những gì bạn chia sẻ trong cuộc trò chuyện này". Câu đó sai sự
+    thật, vì bạn đang cầm chính những chữ họ đã viết.
+  • Cách trả lời đúng: nhắc lại một chi tiết CỤ THỂ họ đã viết, để họ biết bạn
+    đọc thật, rồi hỏi một câu mở về chính chi tiết đó.
+
+Chỉ khi họ kể một chuyện MỚI, khác hẳn với lần nhìn lại ở trên, thì mới cân nhắc
+mời ghi lại một lần nữa.`;
+
 /// Cho người dùng Free: được xem tổng quan, KHÔNG được diễn giải sâu.
 ///
 /// Mục 7 xếp "kết quả tổng quan (không diễn giải sâu) của SCA Self-Check" vào
@@ -208,6 +290,23 @@ type Episode = {
   situation_code: string | null;
   human_need: string | null;
   opened_at: string | null;
+};
+
+/// Một lần nhìn lại KÈM những gì người dùng đã tự viết trong đó.
+///
+/// Tách khỏi [Episode] vì hai truy vấn khác nhau: [Episode] kéo về tới 400 dòng
+/// để dựng mốc tháng nên chỉ được lấy ba cột, còn kiểu này chỉ lấy ba dòng nên
+/// mới gánh nổi phần chữ.
+type EpisodeDetail = {
+  opened_at: string | null;
+  state: string | null;
+  energy: string | null;
+  situation_code: string | null;
+  intention: string | null;
+  notes: Record<string, unknown> | null;
+  draft_meaning: string | null;
+  tiny_action: string | null;
+  reflect_choice: string | null;
 };
 
 /// Đọc và dựng khối ngữ cảnh cho [userId].
@@ -267,6 +366,59 @@ export async function buildUserContext(
       lines.push(`Lần nhìn lại đầu tiên của họ: ${formatDate(firstEver)}.`);
     }
   }
+
+  // ── NỘI DUNG các lần nhìn lại gần nhất ─────────────────────────────────
+  //
+  // Trước bản này khối ngữ cảnh chỉ có NGÀY, MÃ TÌNH HUỐNG và SỐ ĐẾM — tức là
+  // trợ lý biết người ta đã nhìn lại bao nhiêu lần, nhưng không biết một chữ nào
+  // họ đã viết. Nên khi được hỏi thẳng "xem thử reflection tôi vừa làm", nó trả
+  // lời đúng theo những gì nó có: "mình không có quyền truy cập nội dung".
+  //
+  // Câu đó đọc như một giới hạn về quyền, nhưng thật ra là một khoảng trống
+  // trong ngữ cảnh. Dữ liệu vẫn nằm đó, chỉ là chưa ai đưa cho nó.
+  //
+  // KHÔNG gác theo gói. Mục 7 xếp "tự xem dữ liệu thô của chính mình" vào TRỤC
+  // HÀNH ĐỘNG, tức quyền của cả người dùng miễn phí. Thứ thuộc Premium là phần
+  // TỔNG HỢP qua thời gian, và phần đó vẫn gác nguyên ở khối mốc tháng bên dưới.
+  let latestFinishedAt: string | null = null;
+  try {
+    const { data } = await db
+      .from('wr_reflection_episodes')
+      .select(
+        'opened_at, state, energy, situation_code, intention, notes, '
+          + 'draft_meaning, tiny_action, reflect_choice',
+      )
+      .eq('user_id', userId)
+      .order('opened_at', { ascending: false })
+      .limit(DETAIL_EPISODE_COUNT);
+
+    const details = (data ?? []) as unknown as EpisodeDetail[];
+    const titles = await resolveTitles(
+      db,
+      details.map((d) => d.situation_code).filter((c): c is string => !!c),
+    );
+
+    const blocks = details
+      .map((d) => describeEpisode(d, titles))
+      .filter((b): b is string => b !== null);
+
+    if (blocks.length > 0) {
+      lines.push(
+        'Nội dung những lần nhìn lại gần nhất của họ, chính chữ họ tự viết:',
+      );
+      lines.push(...blocks);
+    }
+
+    // Mốc cho [JUST_REFLECTED_RULE]. Chỉ tính lần đã ĐI HẾT vòng: một phiên mở
+    // ra rồi bỏ giữa chừng không phải là "vừa làm xong", và mời người đó quay
+    // lại hoàn thành nốt mới là việc đúng.
+    for (const d of details) {
+      if (d.opened_at && FINISHED_STATES.has(String(d.state ?? ''))) {
+        latestFinishedAt = d.opened_at;
+        break;
+      }
+    }
+  } catch (_) { /* mất phần này thì phần dưới vẫn dựng được */ }
 
   // ── Mốc thời gian ──────────────────────────────────────────────────────
   //
@@ -331,20 +483,50 @@ export async function buildUserContext(
   // Đây là chữ của CHÍNH người dùng, không phải của hệ thống. Nó là chất liệu
   // quý nhất trong cả khối này, và cũng là thứ trợ lý được phép nhắc lại
   // nguyên văn mà không sợ diễn giải sai ý ai.
+  //
+  // HAI BẢNG, không phải một. Bản đầu chỉ đọc `wr_insights`, là bảng của luồng
+  // cũ. Luồng Reflection v2.0 ghi điều người dùng xác nhận vào
+  // `wr_reflection_insights` (xem `insertInsight` trong
+  // `lib/core/data/wr_intelligence_repository.dart`), nên toàn bộ phần chắt lọc
+  // nhất của những lần nhìn lại gần đây chưa bao giờ tới được trợ lý.
+  //
+  // Đọc cả hai và trộn theo thời gian. Bỏ bảng cũ đi thì mất dữ liệu của người
+  // đã dùng app từ trước; giữ mỗi bảng cũ thì đúng lỗi đang chữa.
   try {
-    const { data } = await db
-      .from('wr_insights')
-      .select('content, saved_at')
-      .eq('user_id', userId)
-      .order('saved_at', { ascending: false })
-      .limit(2);
-    for (const row of data ?? []) {
-      const content = String(row.content ?? '').trim();
-      if (content) {
-        lines.push(
-          `Điều họ tự rút ra (${formatDate(row.saved_at)}): "${truncate(content, 300)}"`,
-        );
-      }
+    const [fresh, legacy] = await Promise.all([
+      db
+        .from('wr_reflection_insights')
+        .select('content, created_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(2),
+      db
+        .from('wr_insights')
+        .select('content, saved_at')
+        .eq('user_id', userId)
+        .order('saved_at', { ascending: false })
+        .limit(2),
+    ]);
+
+    const merged = [
+      ...(fresh.data ?? []).map((r) => ({
+        content: r.content,
+        at: r.created_at as string | null,
+      })),
+      ...(legacy.data ?? []).map((r) => ({
+        content: r.content,
+        at: r.saved_at as string | null,
+      })),
+    ]
+      .filter((r) => String(r.content ?? '').trim())
+      .sort((a, b) => (b.at ?? '').localeCompare(a.at ?? ''))
+      .slice(0, 2);
+
+    for (const row of merged) {
+      lines.push(
+        `Điều họ tự rút ra (${formatDate(row.at)}): `
+          + `"${truncate(String(row.content).trim(), 300)}"`,
+      );
     }
   } catch (_) { /* bỏ qua */ }
 
@@ -479,35 +661,97 @@ export async function buildUserContext(
 
   // ── Hồ sơ công việc đã tải lên ─────────────────────────────────────────
   //
-  // Bảng `wr_context_documents` chỉ lưu LOẠI tài liệu và đường dẫn file, không
-  // lưu nội dung đã trích. Nên ở đây chỉ nói được là họ CÓ tải lên, và phải nói
-  // rõ luôn là bạn không đọc được nó.
+  // Từ 2026-08-04, Edge Function `wr-doc-analyze` đọc JD/CV bằng model nhìn
+  // được hình và lưu chữ đã trích vào `extracted_text` + bản phân tích có cấu
+  // trúc vào `analysis`. Nên ở đây có hai nhánh KHÁC HẲN nhau, và phải tách
+  // rạch ròi:
   //
-  // Nếu im lặng bỏ qua, model sẽ rơi lại đúng lỗi đã bắt hai lần: thấy một cái
-  // tên không kèm nội dung thì tự điền nội dung từ dữ liệu khác ở gần đó. Với
-  // JD/CV thì kiểu bịa đó đặc biệt tệ, vì người dùng tin rằng trợ lý đang đọc
-  // hồ sơ thật của họ.
+  //   • Tài liệu đã phân tích xong → đưa nội dung thật cho model đọc.
+  //   • Tài liệu chưa phân tích (đang chờ, hoặc hỏng) → nói thẳng là chưa đọc
+  //     được, y như trước.
+  //
+  // Không được nhập nhèm hai nhánh. Nếu chỉ nói "họ có tải JD lên" mà không
+  // kèm nội dung, model sẽ rơi lại đúng lỗi đã bắt hai lần: thấy một cái tên
+  // không kèm nội dung thì tự điền nội dung từ dữ liệu khác ở gần đó. Với JD/CV
+  // thì kiểu bịa đó đặc biệt tệ, vì người dùng tin rằng trợ lý đang đọc hồ sơ
+  // thật của họ.
   if (isPremium) {
     try {
       const { data } = await db
         .from('wr_context_documents')
-        .select('doc_type')
+        .select('doc_type, analysis_status, extracted_text, analysis, analyzed_at')
         .eq('user_id', userId)
         .order('uploaded_at', { ascending: false })
         .limit(5);
-      const kinds = new Set(
-        (data ?? [])
-          .map((d) => String(d.doc_type ?? '').toLowerCase())
-          .filter((t) => t === 'jd' || t === 'cv'),
-      );
-      if (kinds.size > 0) {
-        const names = [...kinds]
-          .map((t) => (t === 'jd' ? 'mô tả công việc' : 'hồ sơ năng lực'))
-          .join(' và ');
+      const rows = data ?? [];
+
+      const docName = (t: unknown) => {
+        const s = String(t ?? '').toLowerCase();
+        return s === 'jd' ? 'mô tả công việc' : s === 'cv' ? 'hồ sơ năng lực' : 'tài liệu công việc';
+      };
+
+      // ── Nhánh 1: đã đọc được ──────────────────────────────────────────
+      const ready = rows.filter((d) => String(d.analysis_status ?? '') === 'ready');
+      for (const d of ready.slice(0, 2)) {
+        const a = (d.analysis ?? {}) as Record<string, unknown>;
+        const name = docName(d.doc_type);
+        const parts: string[] = [];
+
+        const title = String(a.title ?? '').trim();
+        const org = String(a.organization ?? '').trim();
+        if (title) parts.push(`chức danh: ${title}`);
+        if (org) parts.push(`nơi làm việc: ${org}`);
+
+        const summary = String(a.summary ?? '').trim();
+        if (summary) parts.push(`tóm tắt: ${truncate(summary, 400)}`);
+
+        const listOf = (key: string, label: string, max: number) => {
+          const arr = Array.isArray(a[key]) ? (a[key] as unknown[]) : [];
+          const items = arr
+            .map((x) => String(x ?? '').trim())
+            .filter(Boolean)
+            .slice(0, max);
+          if (items.length > 0) parts.push(`${label}: ${items.join('; ')}`);
+        };
+        listOf('responsibilities', 'trách nhiệm chính', 6);
+        listOf('requirements', 'yêu cầu', 6);
+        listOf('skills', 'kỹ năng được nêu', 8);
+
+        if (parts.length > 0) {
+          lines.push(
+            `${name.charAt(0).toUpperCase() + name.slice(1)} họ đã tải lên `
+              + `(đọc ngày ${formatDate(d.analyzed_at ?? null)}) — ${parts.join(' · ')}.`,
+          );
+        }
+
+        // Chữ nguyên văn, cắt ngắn. Có bản tóm tắt rồi vẫn cần đoạn này: người
+        // dùng hay hỏi về một dòng cụ thể trong JD ("chỗ này nói gì"), mà bản
+        // tóm tắt thì không giữ được câu chữ của họ.
+        const rawText = String(d.extracted_text ?? '').trim();
+        if (rawText) {
+          lines.push(
+            `Trích nguyên văn từ ${name} đó: "${truncate(rawText, 1500)}". `
+              + `Đây là chữ đọc được từ chính tài liệu của họ, bạn được phép nhắc `
+              + `lại và bàn về nó. Nhưng CHỈ những gì có trong đoạn trên — không `
+              + `suy ra thêm phần tài liệu bị cắt, không đoán mức lương, tên công `
+              + `ty hay kinh nghiệm nếu chúng không xuất hiện ở đây.`,
+          );
+        }
+      }
+
+      // ── Nhánh 2: chưa đọc được ────────────────────────────────────────
+      const pending = rows.filter((d) => {
+        const s = String(d.analysis_status ?? '');
+        return s !== 'ready';
+      });
+      if (pending.length > 0) {
+        const names = [...new Set(pending.map((d) => docName(d.doc_type)))].join(' và ');
+        const failed = pending.some((d) => String(d.analysis_status ?? '') === 'failed');
         lines.push(
-          `Họ đã tải lên ${names} trong app. Bạn KHÔNG đọc được nội dung tài liệu `
-            + `đó ở đây. Nếu họ hỏi về nó, nói thật là bạn chưa xem được nội dung `
-            + `và mời họ kể điều quan trọng nhất trong đó. Tuyệt đối không đoán `
+          `Họ có tải lên ${names} nhưng bản đó ${
+            failed ? 'chưa đọc được' : 'đang được đọc, chưa xong'
+          }. Bạn KHÔNG biết nội dung của nó. Nếu họ hỏi, nói thật là bạn chưa xem `
+            + `được và mời họ kể điều quan trọng nhất trong đó. Tuyệt đối không đoán `
             + `nội dung, không suy ra chức danh, kỹ năng hay kinh nghiệm của họ từ `
             + `bất kỳ dữ liệu nào khác ở trên.`,
         );
@@ -528,10 +772,90 @@ Phần dưới đây lấy từ chính những gì họ đã ghi lại trong app
 khác với các ví dụ minh hoạ ở tài liệu phía trên.
 
 ${lines.join('\n')}
-${HAS_DATA_RULE}${isPremium ? TIME_COMPARISON_RULE : FREE_GATE_RULE}`;
+${HAS_DATA_RULE}${isPremium ? TIME_COMPARISON_RULE : FREE_GATE_RULE}${
+    isJustReflected(latestFinishedAt) ? JUST_REFLECTED_RULE : ''
+  }`;
 }
 
 // ---------------------------------------------------------------------------
+
+/// Dựng một lần nhìn lại thành mấy dòng chữ đọc được. Null nếu rỗng ruột.
+///
+/// Trả null khi người dùng chưa viết chữ nào — mở luồng rồi thoát ngay chẳng
+/// hạn. Một mục chỉ có ngày tháng mà không có nội dung là đúng cái bẫy đã sập ba
+/// lần trong file này: model thấy một cái tên không kèm nội dung thì nó tự điền.
+///
+/// ⚠ Chỉ ghép TIÊU ĐỀ tiếng Việt của tình huống. Mã như "C2-sit-01" nằm trong
+/// danh sách cấm ở mục 6; tra không ra tiêu đề thì bỏ hẳn dòng đó.
+export function describeEpisode(
+  d: EpisodeDetail,
+  titles: Map<string, string>,
+): string | null {
+  const parts: string[] = [];
+
+  const title = d.situation_code ? titles.get(d.situation_code) : null;
+  if (title) parts.push(`  tình huống họ chọn: "${title}"`);
+
+  const energy = ENERGY_LABELS[String(d.energy ?? '')];
+  if (energy) parts.push(`  lúc đó họ ${energy}`);
+
+  const intention = String(d.intention ?? '').trim();
+  if (intention) {
+    parts.push(`  điều họ muốn nhìn rõ hơn: "${truncate(intention, NOTE_MAX)}"`);
+  }
+
+  // `notes` là jsonb: thứ tự khoá do database quyết, nên phải tự sắp lại theo
+  // đúng thứ tự người dùng đã đi qua.
+  const notes = (d.notes ?? {}) as Record<string, unknown>;
+  for (const key of NOTE_ORDER) {
+    const label = NOTE_LABELS[key];
+    const value = String(notes[key] ?? '').trim();
+    if (label && value) {
+      parts.push(`  ${label}: "${truncate(value, NOTE_MAX)}"`);
+    }
+  }
+
+  const meaning = String(d.draft_meaning ?? '').trim();
+  if (meaning) {
+    parts.push(`  điều họ rút ra: "${truncate(meaning, NOTE_MAX)}"`);
+  }
+
+  const action = String(d.tiny_action ?? '').trim();
+  if (action) {
+    parts.push(`  việc nhỏ họ nhận sẽ làm: "${truncate(action, NOTE_MAX)}"`);
+  }
+
+  // `reflect_choice` chỉ ghép khi KHÁC `tiny_action`. Hai trường này trùng nhau
+  // ở phần lớn trường hợp, và lặp lại cùng một câu hai lần trong ngữ cảnh khiến
+  // model tưởng đó là hai việc riêng biệt.
+  const choice = String(d.reflect_choice ?? '').trim();
+  if (choice && choice !== action) {
+    parts.push(`  câu họ chọn từ các gợi ý: "${truncate(choice, NOTE_MAX)}"`);
+  }
+
+  if (parts.length === 0) return null;
+
+  const when = formatDate(d.opened_at);
+  const done = FINISHED_STATES.has(String(d.state ?? ''))
+    ? 'đã đi hết vòng'
+    : 'còn dở, chưa đi hết vòng';
+  return [`• Lần nhìn lại ngày ${when} (${done}):`, ...parts].join('\n');
+}
+
+/// Lần nhìn lại đã xong có nằm trong [JUST_REFLECTED_HOURS] giờ vừa qua không.
+export function isJustReflected(
+  iso: string | null,
+  now: Date = new Date(),
+): boolean {
+  if (!iso) return false;
+  const t = new Date(iso).getTime();
+  if (Number.isNaN(t)) return false;
+  // Chặn cả mốc ở TƯƠNG LAI. Lệch giờ máy người dùng có thể đẩy `opened_at` lên
+  // trước hiện tại vài phút, và một hiệu số âm vẫn nhỏ hơn ngưỡng nên sẽ lọt
+  // qua như thể vừa xảy ra — đúng thì cũng may rủi, nên chặn cho tường minh.
+  const hours = (now.getTime() - t) / 3_600_000;
+  return hours >= 0 && hours <= JUST_REFLECTED_HOURS;
+}
 
 /// Nhu cầu xuất hiện nhiều nhất, đã đổi sang tên tiếng Việt. Null nếu không có.
 function dominantNeed(episodes: Episode[]): string | null {

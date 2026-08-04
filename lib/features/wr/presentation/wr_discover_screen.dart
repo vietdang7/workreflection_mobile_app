@@ -130,7 +130,7 @@ class WrDiscoverScreen extends ConsumerWidget {
         repeated.fold<int>(1, (m, p) => p.count > m ? p.count : m);
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 80),
@@ -245,7 +245,12 @@ class WrDiscoverScreen extends ConsumerWidget {
             // ngay trên câu "Chưa có lần nhìn lại nào được ghi" chỉ nói lại
             // đúng điều vừa nói, bằng một hình dạng nặng hơn — và biến màn mời
             // bắt đầu thành màn báo cáo một con số bằng không.
-            if (reflectionCount > 0) ...[
+            //
+            // Đi QUÁ ngưỡng thì cũng bỏ luôn: thẻ chỉ có việc đo đường tới mốc
+            // 15, mà "40/15" thì vừa hết việc vừa đọc như lỗi hiển thị. Đúng
+            // mốc (15/15) vẫn giữ một lần để báo tin đã mở, sau đó thôi.
+            if (reflectionCount > 0 &&
+                reflectionCount <= kCareerHealthThreshold) ...[
               const SizedBox(height: 14),
               _CareerHealthCard(reflectionCount: reflectionCount),
             ],
@@ -754,7 +759,7 @@ class _SelfCheckInviteCard extends StatelessWidget {
               onPressed: onStart,
               style: ElevatedButton.styleFrom(
                 backgroundColor: WrColors.coral,
-                foregroundColor: WrColors.white,
+                foregroundColor: WrColors.navy,
                 padding: const EdgeInsets.symmetric(vertical: 14),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),

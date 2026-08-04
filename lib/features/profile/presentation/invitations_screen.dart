@@ -186,9 +186,9 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen>
     final actionState = ref.watch(invitationActionProvider);
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         elevation: 0,
         leading: const BackButton(color: WrColors.navy),
         title: Text(l10n.invitationsTitle, style: WrTextStyles.hMedium),
@@ -423,7 +423,7 @@ class _InvitationCard extends StatelessWidget {
                                 : l10n.invitationsExpiresAt(
                                     formatDate(expiresAt)),
                             style: WrTextStyles.body.copyWith(
-                                fontSize: 11, color: WrColors.muted),
+                                fontSize: 11, color: WrColors.text3),
                           ),
                         ],
                       ),
@@ -458,7 +458,7 @@ class _InvitationCard extends StatelessWidget {
                     onPressed: () => onAccept(invitation),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: WrColors.coral,
-                      foregroundColor: WrColors.white,
+                      foregroundColor: WrColors.navy,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8)),
                       elevation: 0,

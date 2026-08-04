@@ -16,6 +16,22 @@ import '../models/sca_report.dart';
 import '../models/timeline_event.dart';
 import '../models/workshop.dart';
 
+/// Những đuôi file người dùng được chọn cho tài liệu bối cảnh.
+///
+/// Ảnh chụp và PDF là hai thứ JD/CV thật sự tồn tại dưới dạng đó. Word thì chưa:
+/// bộ đọc phía máy chủ chưa bóc được `.docx`, cho chọn rồi báo hỏng còn tệ hơn
+/// là không cho chọn.
+const List<String> kContextDocExtensions = ['pdf', 'png', 'jpg', 'jpeg', 'webp'];
+
+/// Kiểu MIME theo đuôi file, dùng lúc đẩy lên Storage.
+String contextDocMimeType(String ext) => switch (ext.toLowerCase()) {
+      'pdf' => 'application/pdf',
+      'png' => 'image/png',
+      'webp' => 'image/webp',
+      'heic' => 'image/heic',
+      _ => 'image/jpeg',
+    };
+
 // ---------------------------------------------------------------------------
 // Abstract interface
 // ---------------------------------------------------------------------------
@@ -76,9 +92,12 @@ abstract class WrRepository {
   Future<void> updateCcProfile(Map<String, dynamic> fields);
   Future<void> updateDisplayName(String displayName);
 
-  /// Giá gói Premium đang bán, đọc từ `cc_products` — cùng bảng mà trang quản
-  /// trị Gói dịch vụ của web ghi vào (khách chốt 2026-08-01: giá app canh theo
-  /// web). Trả về [WrPremiumPricing.fallback] khi không có gói nào đang bật.
+  /// Giá gói Premium **của app**, đọc từ `cc_products` — cùng bảng mà trang
+  /// quản trị Gói dịch vụ của web ghi vào, nhưng lấy dòng
+  /// [kPremiumMobileProductType] chứ không lấy dòng `premium` của web: khách
+  /// chốt 2026-08-04 hai bên bán hai gói khác giá.
+  ///
+  /// Trả về [WrPremiumPricing.fallback] khi không có dòng nào đang bật.
   Future<WrPremiumPricing> getPremiumPricing();
 
   // --- Avatar ---
@@ -90,6 +109,11 @@ abstract class WrRepository {
   /// Upload [bytes] vào `context-docs/{userId}/{docType}-{timestamp}.{ext}`
   /// và trả về đường dẫn trong bucket để lưu vào
   /// `wr_context_documents.file_path`.
+  ///
+  /// [ext] quyết định kiểu file lưu trong Storage. Bản trước ghi cứng
+  /// `image/$ext` cho mọi thứ, nên một file PDF nằm trong bucket dưới nhãn
+  /// `image/pdf` — Edge Function đọc tài liệu phải bỏ qua nhãn đó và tự suy từ
+  /// đuôi file.
   Future<String> uploadContextDocument(
     List<int> bytes,
     String ext,
@@ -452,15 +476,16 @@ class SupabaseWrRepository implements WrRepository {
 
   @override
   Future<WrPremiumPricing> getPremiumPricing() async {
-    // Cùng truy vấn với web (`useProductPrice`): gói premium đang bật, lấy cái
-    // display_order nhỏ nhất. Không lọc theo user — bảng giá là chung.
+    // Cùng dạng truy vấn với web (`useProductPrice`) — gói đang bật, lấy cái
+    // display_order nhỏ nhất, không lọc theo user vì bảng giá là chung — chỉ
+    // khác product_type: app bán gói riêng, đắt hơn gói web.
     final rows = await _client
         .from('cc_products')
         .select(
           'id, name, description, product_type, current_price, original_price, '
           'currency, duration_days',
         )
-        .eq('product_type', 'premium')
+        .eq('product_type', kPremiumMobileProductType)
         .eq('is_active', true)
         .order('display_order', ascending: true)
         .limit(1);
@@ -486,11 +511,15 @@ class SupabaseWrRepository implements WrRepository {
   ) async {
     final uid = _uid;
     final stamp = DateTime.now().millisecondsSinceEpoch;
-    final filePath = '$uid/$docType-$stamp.$ext';
+    final safeExt = ext.toLowerCase().replaceAll(RegExp(r'[^a-z0-9]'), '');
+    final filePath = '$uid/$docType-$stamp.$safeExt';
     await _client.storage.from('context-docs').uploadBinary(
           filePath,
           Uint8List.fromList(bytes),
-          fileOptions: FileOptions(upsert: true, contentType: 'image/$ext'),
+          fileOptions: FileOptions(
+            upsert: true,
+            contentType: contextDocMimeType(safeExt),
+          ),
         );
     return filePath;
   }

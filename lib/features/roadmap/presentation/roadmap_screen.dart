@@ -143,7 +143,7 @@ String _reportLabel(PremiumReport r) {
   final d = r.createdAt;
   final day = d.day.toString().padLeft(2, '0');
   final month = d.month.toString().padLeft(2, '0');
-  return '${d.scoreTotal(r)} — $day/$month/${d.year}';
+  return '${d.scoreTotal(r)} · $day/$month/${d.year}';
 }
 
 extension _ReportLabelExt on DateTime {
@@ -173,9 +173,9 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
     final localeCode = ref.watch(appLocaleProvider);
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: WrColors.navy),
@@ -283,7 +283,7 @@ class _EmptyState extends StatelessWidget {
                   context.push('/survey/guide'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: WrColors.coral,
-                foregroundColor: WrColors.white,
+                foregroundColor: WrColors.navy,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -792,7 +792,7 @@ class _LayerSection extends ConsumerWidget {
               if (focus != null) ...[
                 const Spacer(),
                 Text(
-                  '${focus!.label} — ${focus!.score.toStringAsFixed(1)}',
+                  '${focus!.label} · ${focus!.score.toStringAsFixed(1)}',
                   style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 12,
@@ -818,7 +818,7 @@ class _LayerSection extends ConsumerWidget {
                       Border.all(color: color.withValues(alpha: 0.3)),
                 ),
                 child: Text(
-                  '${focus!.score.toStringAsFixed(1)} — ${_scoreLabel(focus!.score, l10n)}',
+                  '${focus!.score.toStringAsFixed(1)} · ${_scoreLabel(focus!.score, l10n)}',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -1190,7 +1190,7 @@ class _CustomTaskRow extends StatelessWidget {
                       Text(
                         task.dueDate!,
                         style: WrTextStyles.body.copyWith(
-                            fontSize: 11, color: WrColors.muted),
+                            fontSize: 11, color: WrColors.text3),
                       ),
                     ],
                   ),
@@ -1255,10 +1255,14 @@ class _AddTaskButton extends ConsumerWidget {
         children: [
           const Icon(Icons.add, size: 16, color: WrColors.muted),
           const SizedBox(width: 4),
-          Text(
-            l10n.roadmapAddCustomTask,
-            style: WrTextStyles.body.copyWith(
-                fontSize: 12, color: WrColors.muted),
+          // Ô ngày trong lưới lộ trình hẹp cố định; ở cỡ chữ lớn nhãn này tràn
+          // viền nên phải cho phép xuống dòng thay vì giữ nguyên một hàng.
+          Flexible(
+            child: Text(
+              l10n.roadmapAddCustomTask,
+              style: WrTextStyles.body.copyWith(
+                  fontSize: 12, color: WrColors.muted),
+            ),
           ),
         ],
       ),
@@ -1789,7 +1793,7 @@ class _ActivityEntryTile extends StatelessWidget {
                       Text(
                         entry.date!.substring(0, 10),
                         style: WrTextStyles.body
-                            .copyWith(fontSize: 11, color: WrColors.muted),
+                            .copyWith(fontSize: 11, color: WrColors.text3),
                       ),
                     ],
                   ],

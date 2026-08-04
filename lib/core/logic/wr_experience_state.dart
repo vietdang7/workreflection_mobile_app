@@ -71,7 +71,7 @@ void assertTransition(ExperienceState from, ExperienceState to) {
   if (!canTransition(from, to)) {
     throw StateError(
       'Transition bất hợp lệ: ${from.dbValue} → ${to.dbValue}. '
-      'WXS §4.4 — Reflection không có đường tắt.',
+      'WXS §4.4, Reflection không có đường tắt.',
     );
   }
 }
@@ -202,7 +202,7 @@ const Map<HumanMoment, Map<ReflectionPattern, String>> _momentPrompts = {
   HumanMoment.growth: {
     ReflectionPattern.notice: 'Bạn muốn mình khá hơn ở điều gì?',
     ReflectionPattern.explore:
-        'Kể lại một lần bạn làm được điều đó — chuyện gì đã xảy ra?',
+        'Kể lại một lần bạn làm được điều đó. Chuyện gì đã xảy ra?',
     ReflectionPattern.commit:
         'Tuần này, trong tình huống nào bạn có thể thử lại điều đó?',
     ReflectionPattern.preserve: 'Điều gì trong lần làm được đó bạn muốn nhớ?',

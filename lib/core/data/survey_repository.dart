@@ -395,7 +395,7 @@ class SupabaseSurveyRepository implements SurveyRepository {
         'target_type': 'admin',
         'type': 'survey_completed',
         'title': 'Khảo sát mới hoàn thành',
-        'description': '${type.toJson()} — $_userEmail',
+        'description': '${type.toJson()} · $_userEmail',
         'icon': 'survey',
         'reference_id': surveyId,
         'reference_url': '/admin/reports',

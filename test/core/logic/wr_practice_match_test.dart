@@ -125,6 +125,59 @@ void main() {
     expect(pick().toSet().length, 1);
   });
 
+  // ───────────────────────────────────────────────────────────────────────
+  // Bối cảnh công việc (JD/CV đã đọc, hoặc mô tả vai trò tự viết)
+  // ───────────────────────────────────────────────────────────────────────
+
+  group('jobPillars', () {
+    test('chưa có tình huống nào lặp thì khớp theo trụ công việc đòi hỏi', () {
+      final s = suggestPracticeTheme(
+        candidates: themes,
+        recent: const [],
+        situations: situations,
+        need: null,
+        jobPillars: const ['C'],
+      )!;
+      expect(s.kind, PracticeMatchKind.jobContext);
+      expect(s.theme.themeId, 'pt-c1');
+    });
+
+    test('tình huống đang lặp VẪN thắng bối cảnh công việc', () {
+      // Điều họ đang thật sự vướng quan trọng hơn điều bản mô tả công việc nói.
+      final s = suggestPracticeTheme(
+        candidates: themes,
+        recent: _p('s1-01', 3),
+        situations: situations,
+        need: null,
+        jobPillars: const ['C'],
+      )!;
+      expect(s.kind, PracticeMatchKind.dimension);
+      expect(s.theme.themeId, 'pt-s1');
+    });
+
+    test('bối cảnh công việc đứng TRƯỚC nhu cầu chủ đạo', () {
+      final s = suggestPracticeTheme(
+        candidates: [_theme('pt-s1', ScaDimension.s1), _theme('pt-c2', ScaDimension.c2)],
+        recent: const [],
+        situations: situations,
+        need: HumanNeed.ketNoi,
+        jobPillars: const ['S'],
+      )!;
+      expect(s.kind, PracticeMatchKind.jobContext);
+      expect(s.theme.themeId, 'pt-s1');
+    });
+
+    test('không truyền gì thì hành vi cũ giữ nguyên', () {
+      final s = suggestPracticeTheme(
+        candidates: themes,
+        recent: const [],
+        situations: situations,
+        need: HumanNeed.ketNoi,
+      )!;
+      expect(s.kind, PracticeMatchKind.pillar);
+    });
+  });
+
   group('PracticeTheme.retiredAt', () {
     test('đọc được từ JSON', () {
       final t = PracticeTheme.fromJson({

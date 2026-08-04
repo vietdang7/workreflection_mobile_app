@@ -122,32 +122,12 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     }
   }
 
-  Future<void> _googleSignIn() async {
-    setState(() {
-      _isLoading = true;
-      _errorMessage = null;
-    });
-    final repo = ref.read(authRepositoryProvider);
-    try {
-      await repo.signInWithGoogle();
-      // OAuth flow opens browser; deep-link callback handles the redirect.
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _errorMessage = e.toString().replaceFirst('Exception: ', '');
-        });
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final l10n = context.l10n;
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -273,68 +253,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 24),
-
-                // "hoặc" divider
-                Row(
-                  children: [
-                    const Expanded(child: Divider()),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Text(
-                        l10n.authOrDivider,
-                        style: WrTextStyles.body,
-                      ),
-                    ),
-                    const Expanded(child: Divider()),
-                  ],
-                ),
-                const SizedBox(height: 24),
-
-                // Google OAuth button
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: _isLoading ? null : _googleSignIn,
-                    style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      shape: const StadiumBorder(),
-                      side: const BorderSide(color: WrColors.muted),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Simple G icon placeholder (real app would use google_sign_in asset)
-                        Container(
-                          width: 20,
-                          height: 20,
-                          decoration: BoxDecoration(
-                            color: WrColors.coral.withValues(alpha: 0.15),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Center(
-                            child: Text(
-                              'G',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w800,
-                                color: WrColors.coral,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 10),
-                        Text(
-                          l10n.authGoogleBtn,
-                          style: WrTextStyles.body.copyWith(
-                            fontWeight: FontWeight.w600,
-                            color: WrColors.dark,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                // Đăng nhập Google tạm gỡ khỏi UI (chưa xử lý deep-link OAuth).
+                // authRepository.signInWithGoogle() vẫn giữ nguyên để bật lại sau.
                 const SizedBox(height: 40),
               ],
             ),

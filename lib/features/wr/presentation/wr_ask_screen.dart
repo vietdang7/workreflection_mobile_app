@@ -107,9 +107,9 @@ class _WrAskScreenState extends ConsumerState<WrAskScreen> {
     });
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         surfaceTintColor: WrColors.white,
         elevation: 0,
         leading: IconButton(
@@ -640,7 +640,7 @@ class _Composer extends StatelessWidget {
                   ? 'Hôm nay bạn đã dùng hết lượt trò chuyện miễn phí.'
                   : 'Còn $remaining lượt trò chuyện miễn phí hôm nay.',
               key: const Key('wr_chat_quota_hint'),
-              style: const TextStyle(fontSize: 11.5, color: WrColors.muted),
+              style: const TextStyle(fontSize: 11.5, color: WrColors.text3),
             ),
           ],
         ],

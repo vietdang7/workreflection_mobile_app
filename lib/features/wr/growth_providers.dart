@@ -8,6 +8,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/data/wr_content_repository.dart';
 import '../../core/data/wr_intelligence_repository.dart';
+import '../../core/logic/wr_skill_formation.dart';
+import '../../core/logic/wr_skill_jd_match.dart';
 import '../../core/models/wr_content.dart';
 import '../../core/models/wr_intelligence.dart';
 import 'wr_providers.dart';
@@ -112,4 +114,44 @@ final practiceMemoryEventsProvider =
   } catch (_) {
     return const [];
   }
+});
+
+/// Ngưỡng số lần thực hành để một chủ đề thành kỹ năng.
+///
+/// Đi qua provider chứ không đọc thẳng hằng số ở màn hình: spec yêu cầu ngưỡng
+/// phải chỉnh được. Hôm nay nguồn là build flag `WR_SKILL_THRESHOLD`; mai đổi
+/// sang remote config thì chỉ sửa đúng chỗ này, và test vẫn override được.
+final wrSkillThresholdProvider = Provider<int>((ref) => kSkillThreshold);
+
+/// Trạng thái hình thành kỹ năng của mọi chủ đề đang theo.
+///
+/// Một nguồn duy nhất cho màn Kỹ năng, màn chủ đề và khoảnh khắc ăn mừng — ba
+/// nơi này mà tự đếm riêng thì sẽ có ngày nói ba con số khác nhau.
+final wrSkillFormationsProvider = Provider<List<SkillFormation>>((ref) {
+  final themes = ref.watch(practiceThemesProvider).valueOrNull ?? const [];
+  final enrollments =
+      ref.watch(practiceEnrollmentsProvider).valueOrNull ?? const [];
+  final events = ref.watch(practiceMemoryEventsProvider).valueOrNull ?? const [];
+  return skillFormations(
+    themes: themes,
+    enrollments: enrollments,
+    events: events,
+    threshold: ref.watch(wrSkillThresholdProvider),
+  );
+});
+
+/// Đối chiếu kỹ năng đã hình thành với mô tả công việc (Premium).
+///
+/// Null = chưa có mô tả vai trò, hoặc mô tả không đủ để nói gì chắc chắn.
+/// Nguồn chữ là [wrJobContextTextProvider]: JD/CV đã được AI đọc nếu có, cộng
+/// mô tả vai trò người dùng tự viết. Trước 2026-08-04 chỉ có `role_text`, vì
+/// tài liệu tải lên chưa ai đọc.
+final wrSkillJdMatchProvider = FutureProvider<SkillJdMatch?>((ref) async {
+  final contextText = await ref.watch(wrJobContextTextProvider.future);
+  final themes = await ref.watch(practiceThemesProvider.future);
+  return matchSkillsToContext(
+    contextText: contextText,
+    formations: ref.watch(wrSkillFormationsProvider),
+    allThemes: themes,
+  );
 });

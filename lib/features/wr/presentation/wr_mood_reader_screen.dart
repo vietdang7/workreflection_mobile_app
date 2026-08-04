@@ -45,7 +45,7 @@ class WrMoodReaderScreen extends ConsumerWidget {
     final library = ref.watch(wrMoodLibraryProvider);
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       body: SafeArea(
         child: library.when(
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -82,7 +82,7 @@ class _ReaderBody extends StatelessWidget {
           key: const Key('wr_mood_reader_header'),
           pinned: true,
           expandedHeight: 148,
-          backgroundColor: WrColors.white,
+          backgroundColor: WrColors.pageBg,
           surfaceTintColor: WrColors.white,
           elevation: 0,
           scrolledUnderElevation: 0.5,

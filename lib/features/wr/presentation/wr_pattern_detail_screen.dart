@@ -12,6 +12,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/logic/wr_repeated_situations.dart';
+import '../../../core/models/wr_episode.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
@@ -19,6 +20,18 @@ import '../../../core/widgets/section_divider.dart';
 import '../../../core/widgets/wr_premium_lock.dart';
 import '../wr_providers.dart';
 import 'wr_discover_screen.dart' show kInsightThreshold, situationLabel;
+
+/// Ngày của một lần nhìn lại, dạng `dd/MM/yyyy`. null khi Episode chưa có mốc
+/// thời gian nào — lúc đó dòng chỉ còn tiêu đề, không bịa ra ngày.
+///
+/// Thứ tự ưu tiên giống màn một lần nhìn lại và dòng thời gian: lúc khép lại
+/// mới là lúc người dùng thật sự "đã nhìn lại xong".
+String? _dayOf(ReflectionEpisode e) {
+  final at = e.closedAt ?? e.updatedAt ?? e.openedAt;
+  if (at == null) return null;
+  return '${at.day.toString().padLeft(2, '0')}/'
+      '${at.month.toString().padLeft(2, '0')}/${at.year}';
+}
 
 class WrPatternDetailScreen extends ConsumerWidget {
   const WrPatternDetailScreen({super.key, required this.situationCode});
@@ -50,9 +63,9 @@ class WrPatternDetailScreen extends ConsumerWidget {
         entitlement.canUseFeature(WrPremiumFeature.patternAdvanced);
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         surfaceTintColor: WrColors.white,
         elevation: 0,
         leading: IconButton(
@@ -108,28 +121,36 @@ class WrPatternDetailScreen extends ConsumerWidget {
                 ),
               )
             else
+              // Chỉ tiêu đề khoảnh khắc kèm ngày. Trước đây mỗi mục còn in cả
+              // `draftMeaning`, mà những lần nhìn lại cùng một tình huống
+              // thường viết gần giống nhau — bốn khối chữ dài lặp lại đọc như
+              // lỗi hiển thị. Câu đầy đủ vẫn nằm ở màn một lần nhìn lại.
               ...related.take(10).map(
                     (e) => Padding(
-                      padding: const EdgeInsets.only(bottom: 18),
-                      child: Column(
+                      padding: const EdgeInsets.only(bottom: 14),
+                      child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            e.humanMoment.label,
-                            style: const TextStyle(
-                              fontSize: 12,
-                              color: WrColors.muted,
+                          Expanded(
+                            child: Text(
+                              e.humanMoment.label,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                color: WrColors.navy,
+                                height: 1.4,
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 6),
-                          Text(
-                            e.draftMeaning ?? '(chưa đặt tên điều nhận ra)',
-                            style: const TextStyle(
-                              fontSize: 15,
-                              color: WrColors.navy,
-                              height: 1.55,
+                          if (_dayOf(e) case final day?) ...[
+                            const SizedBox(width: 12),
+                            Text(
+                              day,
+                              style: const TextStyle(
+                                fontSize: 13,
+                                color: WrColors.text3,
+                              ),
                             ),
-                          ),
+                          ],
                         ],
                       ),
                     ),

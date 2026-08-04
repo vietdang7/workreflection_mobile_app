@@ -74,9 +74,9 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
     }
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         elevation: 0,
         foregroundColor: WrColors.navy,
         title: const Text(

@@ -7,8 +7,10 @@ import 'package:go_router/go_router.dart';
 // Phát triển — Practice Surface (WXS §8.6).
 //
 // Màn này chỉ giữ đúng một việc: chủ đề đang thực hành và bước kế tiếp.
-// "Thực hành khác", "Kỹ năng đã hình thành" và "Chặng đường phát triển" đã
-// tách thành màn riêng — bấm vào dòng mới mở, không xổ tại chỗ.
+// "Thực hành khác" và "Kỹ năng đã hình thành" đã tách thành màn riêng — bấm
+// vào dòng mới mở, không xổ tại chỗ. Dòng "Chặng đường phát triển" đã bỏ khỏi
+// màn này (2026-08-03); màn `/wr/growth/journey` vẫn còn nhưng không còn lối
+// vào từ tab Phát triển.
 
 import '../../../core/data/wr_intelligence_repository.dart';
 import '../../../core/logic/wr_dominant_need.dart';
@@ -43,9 +45,19 @@ class WrGrowthScreen extends ConsumerStatefulWidget {
   ConsumerState<WrGrowthScreen> createState() => _WrGrowthScreenState();
 }
 
+/// Số thẻ chủ đề hiện sẵn trước khi phải bấm "Xem thêm".
+///
+/// Không phải một trần: danh sách KHÔNG bị cắt, phần dôi ra nằm sau nút xổ.
+/// Ai theo mười chủ đề vẫn đọc được cả mười.
+const kGrowthThemesPreview = 3;
+
 class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
   // Guard chống double-tap khi đang enroll
   final Set<String> _enrollingThemeIds = {};
+
+  /// Đã bấm "Xem thêm" chưa. Đặt ở State chứ không phải provider: đây là trạng
+  /// thái của một lần xem màn, mở lại tab thì thu gọn về như cũ là đúng.
+  bool _showAllThemes = false;
 
   Future<void> _enroll(String themeId) async {
     if (_enrollingThemeIds.contains(themeId)) return;
@@ -86,7 +98,7 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
       // Nền TRẮNG như ba tab kia — xem `wr_card.dart`. Trước đây màn này dùng
       // #FBFBF9, một sắc ngà không có trong hệ màu nào cả: đứng riêng thì không
       // ai thấy, nhưng chuyển tab từ Home sang là thấy màn tối đi một chút.
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       body: SafeArea(
         child: themesAsync.when(
           loading: () => const Center(child: CircularProgressIndicator()),
@@ -181,24 +193,56 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
         recent: recent,
         situations: situations,
         need: dominantNeed,
+        // Trụ mà công việc của họ nhấn mạnh, đọc từ JD/CV đã phân tích hoặc mô
+        // tả vai trò tự viết. Chỉ vào cuộc khi tình huống đang lặp không khớp
+        // được chủ đề nào — xem thứ tự trong `suggestPracticeTheme`.
+        jobPillars:
+            ref.watch(wrSkillJdMatchProvider).valueOrNull?.matchedPillars ??
+                const [],
       );
     }
 
     // Quota
     final activeCount = enrollments.where((e) => e.completedAt == null).length;
 
-    // Thẻ chủ đề: đang thực hành trước, đã hoàn thành xếp sau. Ghi danh trỏ
-    // tới một chủ đề không còn trong thư viện thì bỏ qua — không dựng thẻ rỗng.
-    final enrolledCards = <(PracticeTheme, PracticeEnrollment)>[
-      for (final e in enrollments.where((e) => e.completedAt == null))
-        if (themes.where((t) => t.themeId == e.themeId).firstOrNull
-            case final t?)
-          (t, e),
-      for (final e in enrollments.where((e) => e.completedAt != null))
-        if (themes.where((t) => t.themeId == e.themeId).firstOrNull
-            case final t?)
-          (t, e),
+    // Thẻ chủ đề: đang thực hành trước, đã hoàn thành xếp sau; trong mỗi nhóm
+    // thì CHỦ ĐỀ MỚI NHẤT LÊN ĐẦU (yêu cầu khách 2026-08-04). Ghi danh trỏ tới
+    // một chủ đề không còn trong thư viện thì bỏ qua — không dựng thẻ rỗng.
+    //
+    // Vẫn tách hai nhóm chứ không xếp thuần theo ngày: một chủ đề vừa hoàn
+    // thành sẽ mới hơn mọi chủ đề đang dở, xếp thuần ngày là đẩy việc đang làm
+    // xuống dưới việc đã xong.
+    List<(PracticeTheme, PracticeEnrollment)> cardsOf(
+      Iterable<PracticeEnrollment> source,
+    ) {
+      final list = <(PracticeTheme, PracticeEnrollment)>[
+        for (final e in source)
+          if (themes.where((t) => t.themeId == e.themeId).firstOrNull
+              case final t?)
+            (t, e),
+      ];
+      // Ghi danh chưa có `startedAt` xuống cuối: không có mốc thì không thể
+      // coi là mới.
+      list.sort((a, b) {
+        final sa = a.$2.startedAt;
+        final sb = b.$2.startedAt;
+        if (sa == null && sb == null) return 0;
+        if (sa == null) return 1;
+        if (sb == null) return -1;
+        return sb.compareTo(sa);
+      });
+      return list;
+    }
+
+    final enrolledCards = [
+      ...cardsOf(enrollments.where((e) => e.completedAt == null)),
+      ...cardsOf(enrollments.where((e) => e.completedAt != null)),
     ];
+    final hiddenThemeCount =
+        (enrolledCards.length - kGrowthThemesPreview).clamp(0, 1 << 30);
+    final visibleCards = _showAllThemes || hiddenThemeCount == 0
+        ? enrolledCards
+        : enrolledCards.take(kGrowthThemesPreview).toList();
 
 
     return CustomScrollView(
@@ -278,11 +322,40 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
                     children: [
                       const WrEyebrow('CHỦ ĐỀ CỦA BẠN'),
                       const SizedBox(height: 12),
-                      for (final pair in enrolledCards)
+                      for (final pair in visibleCards)
                         WrPracticeThemeCard(
                           key: Key('wr_growth_theme_card_${pair.$1.themeId}'),
                           theme: pair.$1,
                           enrollment: pair.$2,
+                        ),
+                      if (hiddenThemeCount > 0)
+                        Padding(
+                          padding: const EdgeInsets.only(bottom: 4),
+                          child: WrActionLink(
+                            key: const Key('wr_growth_themes_more'),
+                            label: _showAllThemes
+                                ? 'Thu gọn'
+                                : 'Xem thêm $hiddenThemeCount chủ đề',
+                            onTap: () => setState(
+                              () => _showAllThemes = !_showAllThemes,
+                            ),
+                          ),
+                        ),
+                      // Đường thêm chủ đề. Chỉ hiện khi còn chỗ trong quota —
+                      // premium thì luôn còn, free thì hết 2 chỗ là nhường
+                      // cho _QuotaCard bên dưới nói lý do và dẫn sang paywall.
+                      //
+                      // Trước 2026-08-04 màn này không có dòng nào dẫn sang thư
+                      // viện chủ đề (bỏ theo yêu cầu 30/7). Lối vào duy nhất
+                      // còn lại là khối "Tiếp tục hôm nay" ở Home, mà khối đó
+                      // chỉ trỏ sang thư viện khi MỌI chủ đề đang theo đều hết
+                      // bước mở được. Hệ quả: premium ghi danh vài chủ đề xong
+                      // là kẹt luôn, nhìn ra ngoài y như bị giới hạn cứng.
+                      if (entitlement.canEnrollPracticeTheme(activeCount))
+                        WrLinkRow(
+                          key: const Key('wr_growth_add_theme_row'),
+                          label: 'Thêm chủ đề thực hành',
+                          onTap: () => context.push('/wr/growth/themes'),
                         ),
                       _QuotaCard(
                         quota: entitlement.maxActivePracticeThemes,
@@ -305,7 +378,10 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
         // ── Cơ hội phát triển — workshop gần nhất sắp diễn ra ────────────
         const _OpportunitySliver(),
 
-        // ── Ba lối rẽ, mỗi lối một màn riêng ────────────────────────────
+        // ── Lối rẽ còn lại, mở thành màn riêng ──────────────────────────
+        //
+        // "Chặng đường phát triển" đã bỏ khỏi màn này (yêu cầu 2026-08-03).
+        // Màn `/wr/growth/journey` vẫn còn, chỉ là không còn lối vào từ đây.
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(22, 0, 22, 0),
@@ -317,11 +393,6 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
                   key: const Key('wr_growth_skills_row'),
                   label: 'Kỹ năng đã hình thành',
                   onTap: () => context.push('/wr/growth/skills'),
-                ),
-                WrLinkRow(
-                  key: const Key('wr_growth_journey_row'),
-                  label: 'Chặng đường phát triển',
-                  onTap: () => context.push('/wr/growth/journey'),
                 ),
               ],
             ),
@@ -351,6 +422,11 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
         return n > 1
             ? 'Vì bạn đã gặp "$text" $n lần.'
             : 'Vì bạn đã gặp "$text".';
+      case PracticeMatchKind.jobContext:
+        // Khớp từ JD/CV đã đọc hoặc mô tả vai trò họ tự viết. Nói "công việc
+        // bạn mô tả" chứ không nói "JD của bạn": người dùng có thể chỉ mới gõ
+        // vài dòng chứ chưa tải tài liệu nào.
+        return 'Vì công việc bạn mô tả nghiêng nhiều về phần này.';
       case PracticeMatchKind.pillar:
         // Chưa có tình huống nào để chỉ ra — mới chỉ Self-Check chẳng hạn.
         return need == null
@@ -392,7 +468,7 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
             ),
             const SizedBox(height: 6),
             const Text(
-              'Đọc story và nhận Insight — WorkReflection sẽ đề xuất thực hành phù hợp với bạn.',
+              'Đọc story và nhận Insight. WorkReflection sẽ đề xuất thực hành phù hợp với bạn.',
               style: TextStyle(
                 fontSize: 13,
                 color: WrColors.muted,
@@ -554,7 +630,7 @@ class _OpportunitySliver extends ConsumerWidget {
                         vertical: 3,
                       ),
                       decoration: BoxDecoration(
-                        color: WrColors.teal.withValues(alpha: 0.22),
+                        color: WrColors.teal.withValues(alpha: 0.14),
                         borderRadius: BorderRadius.circular(100),
                       ),
                       child: Text(
@@ -562,7 +638,7 @@ class _OpportunitySliver extends ConsumerWidget {
                         style: const TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w700,
-                          color: WrColors.teal,
+                          color: WrColors.pillTealText,
                           letterSpacing: 0.2,
                         ),
                       ),
@@ -703,7 +779,7 @@ class _NextStepCardSliver extends ConsumerWidget {
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          '"${theme.title}" — ${nextStep.title}',
+                          '"${theme.title}" · ${nextStep.title}',
                           style: const TextStyle(
                             fontSize: 12,
                             fontWeight: FontWeight.w500,

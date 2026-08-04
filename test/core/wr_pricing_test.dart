@@ -1,10 +1,28 @@
-// Giá gói Premium — khách chốt 2026-08-01 rằng giá trên app canh theo web:
-// giá gốc 499.000đ, giá hiện tại 249.000đ, lấy từ `cc_products`.
+// Giá gói Premium — khách chốt 2026-08-04: web và app bán hai gói khác nhau,
+// khác giá (web 249.000đ, app 499.000đ), cùng cấp một role premium. App đọc
+// dòng `cc_products.product_type = 'premium_mobile'`.
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:workreflection_mobile/core/logic/wr_pricing.dart';
 
 void main() {
+  group('gói app tách khỏi gói web', () {
+    // Chốt chặn hồi quy: đổi hằng này là app quay về đọc gói web 249.000đ và
+    // bán rẻ đi một nửa. Đổi thì phải có khách chốt lại.
+    test('app đọc dòng sản phẩm riêng, không phải dòng premium của web', () {
+      expect(kPremiumMobileProductType, 'premium_mobile');
+      expect(kPremiumMobileProductType, isNot('premium'));
+    });
+
+    test('giá mặc định khi chưa có dòng nào là giá gói app', () {
+      expect(kPremiumFallbackPrice, 499000);
+      expect(WrPremiumPricing.fallback.currentLabel, '499.000đ');
+      // Rơi về mặc định thì không có productId → màn thanh toán từ chối tạo
+      // đơn, chứ không âm thầm bán bằng giá đoán.
+      expect(WrPremiumPricing.fallback.canPurchase, isFalse);
+    });
+  });
+
   group('formatVndPrice', () {
     test('chấm ngăn nhóm nghìn và hậu tố đ', () {
       expect(formatVndPrice(499000), '499.000đ');

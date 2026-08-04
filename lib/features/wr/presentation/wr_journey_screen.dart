@@ -393,7 +393,7 @@ class WrJourneyScreen extends ConsumerWidget {
     final hasMore = !locked && all.length > shown.length;
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 80),
@@ -456,7 +456,7 @@ class WrJourneyScreen extends ConsumerWidget {
                 key: Key('wr_journey_memory_lock'),
                 description:
                     'Bản đầy đủ mở lại từng mảnh ký ức nghề nghiệp bạn đã để '
-                    'lại — đọc lại được bất cứ lúc nào, theo đúng dòng thời gian.',
+                    'lại, đọc lại được bất cứ lúc nào, theo đúng dòng thời gian.',
                 ctaLabel: 'Mở toàn bộ Career Memory',
                 paywallTrigger: 'career_memory',
               ),
@@ -567,7 +567,7 @@ class _NarrativeCard extends ConsumerWidget {
                     ? 'Chưa đủ dữ liệu để kể lại diễn biến. Ghi thêm vài lần '
                         'nữa, WorkReflection sẽ chỉ ra điều gì đang đổi.'
                     : 'Bản đầy đủ kể lại những mẫu hình của bạn đã đổi thế nào '
-                        'qua từng giai đoạn — điều gì đang nhạt dần và điều gì '
+                        'qua từng giai đoạn, điều gì đang nhạt dần và điều gì '
                         'vẫn quay lại.',
             style: TextStyle(
               fontSize: 15,
@@ -643,7 +643,7 @@ class _GrowthOpportunitySection extends ConsumerWidget {
               key: Key('wr_journey_growth_opportunity_lock'),
               description:
                   'Từ những gì bạn đã nhìn lại, bản đầy đủ chỉ ra một hướng '
-                  'năng lực đáng phát triển tiếp — kèm lý do vì sao là hướng đó.',
+                  'năng lực đáng phát triển tiếp, kèm lý do vì sao là hướng đó.',
               ctaLabel: 'Mở Cơ hội phát triển',
               paywallTrigger: 'growth_opportunity',
             )
@@ -851,7 +851,7 @@ class _WrCareerMemoryScreenState extends ConsumerState<WrCareerMemoryScreen> {
             key: Key('wr_career_memory_lock'),
             description:
                 'Bản đầy đủ mở lại từng mảnh ký ức nghề nghiệp bạn đã để '
-                'lại — đọc lại được bất cứ lúc nào, theo đúng dòng thời gian.',
+                'lại, đọc lại được bất cứ lúc nào, theo đúng dòng thời gian.',
             ctaLabel: 'Mở toàn bộ Career Memory',
             paywallTrigger: 'career_memory',
           )
@@ -991,7 +991,21 @@ class _Chip extends StatelessWidget {
   }
 }
 
-class _EntryRow extends StatelessWidget {
+/// Một mốc trên dòng thời gian, THU GỌN sẵn.
+///
+/// Mặc định chỉ hiện loại mốc ("PHẢN TƯ", "CHECK-IN"…). Điều người dùng rút ra
+/// và tình huống họ đã chọn chỉ hiện ra khi họ chạm vào.
+///
+/// Dòng thời gian là nơi nhìn lại cả một tháng. Mỗi mốc trải ra ba dòng chữ đậm
+/// cộng một dòng phụ thì một tuần bận đã dài hơn cả màn hình, và tác dụng "nhìn
+/// một cái thấy hết" mất sạch. Thu lại thì cả tháng nằm gọn trong một lần cuộn,
+/// còn chi tiết vẫn ở nguyên đó, cách một cú chạm.
+///
+/// Chạm vào hàng để mở ra hoặc thu lại; mở màn đọc riêng thì qua "Xem chi tiết"
+/// bên trong. Trước bản này chạm vào hàng là đi thẳng sang màn khác — giữ nguyên
+/// vậy thì không còn cử chỉ nào để mở ra tại chỗ, mà nhét việc mở ra vào cái
+/// mũi tên 13px thì mục tiêu chạm nhỏ tới mức khó trúng.
+class _EntryRow extends StatefulWidget {
   const _EntryRow({
     required this.entry,
     required this.isLast,
@@ -1001,6 +1015,8 @@ class _EntryRow extends StatelessWidget {
 
   final JourneyEntry entry;
   final bool isLast;
+
+  /// Mở màn đọc riêng của mốc này. Null khi mốc không có màn riêng.
   final VoidCallback? onTap;
 
   /// Tắt khi ngày đã nằm ở tiêu đề nhóm ngày — in lại "01/08" ngay dưới dòng
@@ -1008,7 +1024,18 @@ class _EntryRow extends StatelessWidget {
   final bool showDate;
 
   @override
+  State<_EntryRow> createState() => _EntryRowState();
+}
+
+class _EntryRowState extends State<_EntryRow> {
+  bool _open = false;
+
+  @override
   Widget build(BuildContext context) {
+    final entry = widget.entry;
+    final isLast = widget.isLast;
+    final onTap = widget.onTap;
+    final showDate = widget.showDate;
     final at = entry.at;
     final dateStr = (at == null || !showDate)
         ? ''
@@ -1017,8 +1044,12 @@ class _EntryRow extends StatelessWidget {
             '${at.month.toString().padLeft(2, '0')}';
 
     return InkWell(
-      onTap: onTap,
-      child: Stack(
+      onTap: () => setState(() => _open = !_open),
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 160),
+        curve: Curves.easeOut,
+        alignment: Alignment.topCenter,
+        child: Stack(
         children: [
           // Đường nối các mốc — dòng thời gian phải trông liền mạch, không
           // phải một danh sách chấm rời.
@@ -1061,32 +1092,9 @@ class _EntryRow extends StatelessWidget {
                             color: WrColors.muted,
                           ),
                         ),
-                      const SizedBox(height: 4),
-                      Text(
-                        entry.title,
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: WrColors.navy,
-                          height: 1.45,
-                        ),
-                      ),
-                      if (entry.subtitle != null &&
-                          entry.subtitle!.isNotEmpty &&
-                          entry.subtitle != entry.title) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          entry.subtitle!,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: WrColors.muted,
-                            height: 1.5,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 6),
+                      // Loại mốc luôn hiện — thu gọn lại thì đây là thứ DUY
+                      // NHẤT còn đọc được, nên nó gánh cả việc phân biệt các
+                      // mốc với nhau.
                       Text(
                         entry.label,
                         style: TextStyle(
@@ -1096,24 +1104,83 @@ class _EntryRow extends StatelessWidget {
                           letterSpacing: 0.4,
                         ),
                       ),
+                      if (_open) ...[
+                        const SizedBox(height: 6),
+                        Text(
+                          entry.title,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: WrColors.navy,
+                            height: 1.45,
+                          ),
+                        ),
+                        if (entry.subtitle != null &&
+                            entry.subtitle!.isNotEmpty &&
+                            entry.subtitle != entry.title) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            entry.subtitle!,
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: WrColors.muted,
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
+                        // Mở màn đọc riêng nằm ở đây chứ không ở cú chạm vào
+                        // hàng: cú chạm đó giờ dùng để mở ra và thu lại.
+                        if (onTap != null) ...[
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            behavior: HitTestBehavior.opaque,
+                            onTap: onTap,
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Xem chi tiết',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w600,
+                                    color: entry.color,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Icon(
+                                  Icons.arrow_forward_ios,
+                                  size: 11,
+                                  color: entry.color,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ],
                     ],
                   ),
                 ),
-                if (onTap != null) ...[
-                  const SizedBox(width: 8),
-                  const Padding(
-                    padding: EdgeInsets.only(top: 4),
-                    child: Icon(
-                      Icons.arrow_forward_ios,
-                      size: 13,
+                // Mũi tên là thứ duy nhất báo rằng hàng này còn chữ bên trong.
+                // Bỏ đi thì phần nội dung xem như biến mất hẳn: không ai chạm
+                // vào một dòng nhãn trông đã trọn vẹn.
+                const SizedBox(width: 8),
+                Padding(
+                  padding: const EdgeInsets.only(top: 2),
+                  child: AnimatedRotation(
+                    turns: _open ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 160),
+                    child: const Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      size: 20,
                       color: WrColors.muted,
                     ),
                   ),
-                ],
+                ),
               ],
             ),
           ),
-        ],
+          ],
+        ),
       ),
     );
   }

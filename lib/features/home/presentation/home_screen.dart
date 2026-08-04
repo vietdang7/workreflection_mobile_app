@@ -25,7 +25,7 @@ class HomeScreen extends ConsumerWidget {
     final profileAsync = ref.watch(mobileProfileProvider);
     final displayName = profileAsync.valueOrNull?.displayName ?? 'bạn';
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       body: SafeArea(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
@@ -265,7 +265,7 @@ class _SurveyCta extends ConsumerWidget {
               label: Text(l10n.homeStartReflection),
               style: ElevatedButton.styleFrom(
                 backgroundColor: WrColors.coral,
-                foregroundColor: WrColors.white,
+                foregroundColor: WrColors.navy,
                 minimumSize: const Size.fromHeight(52),
                 padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
                 shape: RoundedRectangleBorder(

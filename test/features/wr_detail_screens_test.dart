@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_episode_repository.dart';
@@ -50,7 +51,8 @@ Widget _wrap(
           .overrideWithValue(episodes ?? FakeWrEpisodeRepository()),
       currentUserIdProvider.overrideWithValue(userId),
     ],
-    child: MaterialApp.router(routerConfig: router),
+    child: MaterialApp.router(
+      builder: wrTextScaleBuilder,routerConfig: router),
   );
 }
 
@@ -283,9 +285,45 @@ void main() {
         _wrap(const WrGrowthSkillsScreen(), intel: intel, content: content),
       );
 
-      expect(find.byKey(const Key('wr_skills_empty')), findsOneWidget);
-      expect(find.text('ĐANG TRÊN ĐƯỜNG'), findsOneWidget);
-      expect(find.textContaining('Còn 4 lần thực hành nữa'), findsOneWidget);
+      expect(find.byKey(const Key('wr_skill_t1')), findsNothing);
+      expect(find.text('ĐANG HÌNH THÀNH'), findsOneWidget);
+      expect(
+        find.textContaining('1/5 lần thực hành · còn 4 lần nữa'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('xong ba bước làm quen vẫn chưa phải kỹ năng', (tester) async {
+      // Luật đổi theo spec Skill Formation: ba bước là giai đoạn LÀM QUEN.
+      // Bản cũ chứng nhận ngay khi ghi danh khép lại, nên ngưỡng 5 lần không
+      // bao giờ có ý nghĩa.
+      final intel = FakeWrIntelligenceRepository()
+        ..seedPracticeThemes([_theme('t1', 'Lên tiếng trong họp')])
+        ..seedEnrollments([
+          _enrollment('t1', completedAt: DateTime(2026, 7, 20)),
+        ]);
+      final content = FakeWrContentRepository()
+        ..seedMemoryEvents([
+          for (var i = 0; i < 3; i++)
+            _event(
+              id: 'p$i',
+              behavior: 'practice_step_done',
+              reflectionText: 'Lên tiếng trong họp — Bước $i',
+            ),
+        ]);
+
+      await _pumpLarge(
+        tester,
+        _wrap(const WrGrowthSkillsScreen(), intel: intel, content: content),
+      );
+
+      expect(find.byKey(const Key('wr_skill_t1')), findsNothing);
+      expect(
+        find.textContaining('3/5 lần thực hành · còn 2 lần nữa'),
+        findsOneWidget,
+      );
+      // Đã xong làm quen thì mở nút duy trì.
+      expect(find.byKey(const Key('wr_practice_maintain_t1')), findsOneWidget);
     });
 
     testWidgets('lặp đủ 5 lần → chứng nhận kỹ năng', (tester) async {
@@ -319,14 +357,76 @@ void main() {
         ..seedEnrollments([
           _enrollment('t1', completedAt: DateTime(2026, 7, 20)),
         ]);
+      final content = FakeWrContentRepository()
+        ..seedMemoryEvents([
+          for (var i = 0; i < 5; i++)
+            _event(
+              id: 'p$i',
+              behavior: 'practice_step_done',
+              reflectionText: 'Lên tiếng trong họp — Bước $i',
+            ),
+        ]);
+
+      await _pumpLarge(
+        tester,
+        _wrap(const WrGrowthSkillsScreen(), intel: intel, content: content),
+      );
+
+      expect(find.byKey(const Key('wr_skill_t1')), findsOneWidget);
+      expect(find.text('PAYWALL'), findsNothing);
+    });
+
+    testWidgets('bấm duy trì lần thứ 5 → ghi dấu mốc và ăn mừng', (
+      tester,
+    ) async {
+      final intel = FakeWrIntelligenceRepository()
+        ..seedPracticeThemes([_theme('t1', 'Lên tiếng trong họp')])
+        ..seedEnrollments([
+          _enrollment('t1', completedAt: DateTime(2026, 7, 20)),
+        ]);
+      final content = FakeWrContentRepository()
+        ..seedMemoryEvents([
+          for (var i = 0; i < 4; i++)
+            _event(
+              id: 'p$i',
+              behavior: 'practice_step_done',
+              reflectionText: 'Lên tiếng trong họp — Bước $i',
+            ),
+        ]);
+
+      await _pumpLarge(
+        tester,
+        _wrap(const WrGrowthSkillsScreen(), intel: intel, content: content),
+      );
+
+      await tester.tap(find.byKey(const Key('wr_practice_maintain_t1')));
+      await tester.pumpAndSettle();
+
+      final behaviors =
+          content.insertMemoryEventCalls.map((e) => e.behavior).toList();
+      expect(behaviors, contains('practice_maintained'));
+      expect(behaviors, contains('skill_certified'));
+      expect(
+        find.byKey(const Key('wr_skill_formed_celebration')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('wr_skill_formed_title')), findsOneWidget);
+    });
+
+    testWidgets('đối chiếu với công việc là phần Premium', (tester) async {
+      final intel = FakeWrIntelligenceRepository()
+        ..seedEntitlement(null)
+        ..seedPracticeThemes([_theme('t1', 'Lên tiếng trong họp')])
+        ..seedEnrollments([_enrollment('t1')]);
 
       await _pumpLarge(
         tester,
         _wrap(const WrGrowthSkillsScreen(), intel: intel),
       );
 
-      expect(find.byKey(const Key('wr_skill_t1')), findsOneWidget);
-      expect(find.text('PAYWALL'), findsNothing);
+      // Ghi nhận nỗ lực: Free. Diễn giải nó cạnh JD: Premium.
+      expect(find.byKey(const Key('wr_skills_jd_lock')), findsOneWidget);
+      expect(find.byKey(const Key('wr_skills_jd_match')), findsNothing);
     });
   });
 }

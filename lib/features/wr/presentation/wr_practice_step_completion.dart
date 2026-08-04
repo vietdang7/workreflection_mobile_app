@@ -11,13 +11,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/data/wr_content_repository.dart';
 import '../../../core/data/wr_intelligence_repository.dart';
-import '../../../core/logic/wr_skill_certification.dart';
 import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/models/wr_mood_content.dart';
 import '../growth_providers.dart';
 import '../wr_providers.dart';
 import 'wr_practice_note_sheet.dart';
+import 'wr_skill_moment.dart';
 
 /// Đánh dấu [stepId] của [theme] là xong, kèm mọi dấu vết đi theo nó.
 ///
@@ -60,7 +60,7 @@ Future<void> completePracticeStep({
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       userId: userId,
       behavior: 'practice_step_done',
-      reflectionText: '${theme.title} — ${stepTitle ?? stepId}',
+      reflectionText: '${theme.title} · ${stepTitle ?? stepId}',
     ),
   );
 
@@ -88,28 +88,6 @@ Future<void> completePracticeStep({
     }
   }
 
-  // Chứng nhận kỹ năng: lặp lại đủ nhiều thì ghi một dấu mốc, đúng một lần.
-  try {
-    final events = await contentRepo.fetchMemoryEvents(limit: 200);
-    final certified = certifiedSkills(
-      themes: [theme],
-      enrollments: [enrollment.copyWith(completedSteps: newCompleted)],
-      events: events,
-    );
-    for (final skill in newlyCertified(certified: certified, events: events)) {
-      await contentRepo.insertMemoryEvent(
-        CareerMemoryEvent(
-          id: '',
-          userId: userId,
-          behavior: kSkillCertifiedBehavior,
-          reflectionText: skill.title,
-        ),
-      );
-    }
-  } catch (_) {
-    /* best-effort: dấu mốc sẽ được ghi ở lần thực hành sau */
-  }
-
   final allStepIds = allSteps.map((s) => s.stepId).toSet();
   final hasCompletedAll = allStepIds.every((id) => newCompleted.contains(id));
 
@@ -126,6 +104,13 @@ Future<void> completePracticeStep({
   }
 
   ref.invalidate(practiceEnrollmentsProvider);
+  ref.invalidate(practiceMemoryEventsProvider);
+
+  // Xong ba bước KHÔNG còn nghĩa là đã thành kỹ năng — đó mới là giai đoạn làm
+  // quen. Kỹ năng hình thành khi bộ đếm chạm ngưỡng, kể cả những lần duy trì
+  // sau này. Ở đây chỉ kiểm tra xem lần thực hành vừa rồi có chạm ngưỡng không.
+  if (!context.mounted) return;
+  await recordSkillMilestones(context: context, ref: ref, theme: theme);
 }
 
 /// Nhãn giai đoạn theo thứ tự bước — giao diện mẫu Sprint 2.

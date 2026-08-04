@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:workreflection_mobile/features/auth/data/auth_repository.dart';
 import 'package:workreflection_mobile/features/auth/presentation/auth_screen.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
@@ -72,6 +73,7 @@ Widget _wrap(Widget child, {AuthRepository? repo}) {
       authRepositoryProvider.overrideWithValue(fake),
     ],
     child: MaterialApp(
+      builder: wrTextScaleBuilder,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       locale: const Locale('vi'),
@@ -110,18 +112,12 @@ void main() {
       expect(find.widgetWithText(TextFormField, 'Tên của bạn'), findsOneWidget);
     });
 
-    testWidgets('shows Google button with correct label', (tester) async {
+    testWidgets('does not show Google sign-in (tạm gỡ khỏi UI)', (tester) async {
       await tester.pumpWidget(_wrap(const AuthScreen()));
       await tester.pump();
 
-      expect(find.text('Tiếp tục với Google'), findsOneWidget);
-    });
-
-    testWidgets('shows divider "hoặc"', (tester) async {
-      await tester.pumpWidget(_wrap(const AuthScreen()));
-      await tester.pump();
-
-      expect(find.text('hoặc'), findsOneWidget);
+      expect(find.text('Tiếp tục với Google'), findsNothing);
+      expect(find.text('hoặc'), findsNothing);
     });
 
     testWidgets('calls signIn with typed email and password', (tester) async {
@@ -222,17 +218,6 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Đã xảy ra lỗi. Vui lòng thử lại.'), findsOneWidget);
-    });
-
-    testWidgets('Google button calls signInWithGoogle on repository', (tester) async {
-      final fake = FakeAuthRepository();
-      await tester.pumpWidget(_wrap(const AuthScreen(), repo: fake));
-      await tester.pump();
-
-      await tester.tap(find.text('Tiếp tục với Google'));
-      await tester.pumpAndSettle();
-
-      expect(fake.signInWithGoogleCalls, 1);
     });
 
     testWidgets('register mode calls signUp with name email password', (tester) async {

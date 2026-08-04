@@ -42,9 +42,9 @@ class _VouchersScreenState extends ConsumerState<VouchersScreen> {
   }
 
   String _formatDate(String? raw) {
-    if (raw == null) return '—';
+    if (raw == null) return 'Chưa có';
     final d = DateTime.tryParse(raw);
-    if (d == null) return '—';
+    if (d == null) return 'Chưa có';
     return '${d.day.toString().padLeft(2, '0')}/'
         '${d.month.toString().padLeft(2, '0')}/'
         '${d.year}';
@@ -56,9 +56,9 @@ class _VouchersScreenState extends ConsumerState<VouchersScreen> {
     final async = ref.watch(vouchersProvider);
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         elevation: 0,
         leading: const BackButton(color: WrColors.navy),
         title: Text(l10n.vouchersTitle, style: WrTextStyles.hMedium),
@@ -315,7 +315,7 @@ class _VoucherCard extends StatelessWidget {
                     child: Text(
                       labels[s] ?? s,
                       style: WrTextStyles.body.copyWith(
-                          fontSize: 10, color: WrColors.coral),
+                          fontSize: 10, color: WrColors.pillCoralText),
                     ),
                   );
                 }).toList(),
@@ -362,7 +362,7 @@ class _VoucherCard extends StatelessWidget {
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: WrColors.coral,
-                      foregroundColor: WrColors.white,
+                      foregroundColor: WrColors.navy,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 8),
                       shape: RoundedRectangleBorder(

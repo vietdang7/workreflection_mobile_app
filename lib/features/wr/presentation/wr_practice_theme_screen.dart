@@ -19,6 +19,7 @@ import '../../../core/widgets/wr_detail_scaffold.dart';
 import '../growth_providers.dart';
 import '../wr_providers.dart';
 import 'wr_practice_step_completion.dart';
+import 'wr_skill_moment.dart';
 
 class WrPracticeThemeScreen extends ConsumerWidget {
   const WrPracticeThemeScreen({super.key, required this.themeId});
@@ -58,10 +59,14 @@ class WrPracticeThemeScreen extends ConsumerWidget {
     final doneCount = steps.where((s) => completed.contains(s.stepId)).length;
 
     return WrDetailScaffold(
+      // Xong ba bước KHÔNG phải là hết chuyện — chủ đề chuyển sang giai đoạn
+      // duy trì. Gọi nó là "ĐÃ HOÀN THÀNH" thì người dùng đóng màn này lại và
+      // không bao giờ quay lại, trong khi phần lặp lại mới là phần làm nên kỹ
+      // năng.
       eyebrow: enrollment == null
           ? 'CHƯA BẮT ĐẦU'
           : (enrollment.completedAt != null
-              ? 'ĐÃ HOÀN THÀNH'
+              ? 'ĐANG DUY TRÌ'
               : 'ĐANG THỰC HÀNH'),
       title: theme.title,
       children: [
@@ -107,7 +112,69 @@ class WrPracticeThemeScreen extends ConsumerWidget {
               allSteps: steps,
             ),
           ),
+        if (enrollment?.completedAt != null) _MaintainBlock(theme: theme),
       ],
+    );
+  }
+}
+
+/// Giai đoạn duy trì — mở ra sau khi ba bước làm quen đã xong.
+///
+/// Ba bước là làm quen với một hành vi, làm một lần. Cái biến hành vi ấy thành
+/// phản xạ là những lần lặp lại sau đó; đây là chỗ ghi nhận chúng.
+class _MaintainBlock extends ConsumerWidget {
+  const _MaintainBlock({required this.theme});
+
+  final PracticeTheme theme;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final formation = ref
+        .watch(wrSkillFormationsProvider)
+        .where((f) => f.themeId == theme.themeId)
+        .firstOrNull;
+    if (formation == null) return const SizedBox.shrink();
+
+    return Container(
+      key: const Key('wr_practice_maintain_block'),
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      decoration: BoxDecoration(
+        color: WrColors.navy.withValues(alpha: 0.04),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            formation.skillFormed
+                ? 'ĐÃ THÀNH KỸ NĂNG'
+                : 'GIAI ĐOẠN DUY TRÌ',
+            style: const TextStyle(
+              fontSize: 10.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 1.1,
+              color: WrColors.muted,
+            ),
+          ),
+          const SizedBox(height: 9),
+          Text(
+            formation.skillFormed
+                ? 'Bạn đã thực hành điều này ${formation.practiceCount} lần. '
+                    'Ghi nhận tiếp mỗi khi bạn dùng tới nó.'
+                : 'Đã ${formation.practiceCount}/${formation.threshold} lần. '
+                    'Còn ${formation.remaining} lần nữa là điều này thành kỹ '
+                    'năng của bạn.',
+            key: const Key('wr_practice_maintain_count'),
+            style: const TextStyle(
+              fontSize: 13.5,
+              color: WrColors.navy,
+              height: 1.6,
+            ),
+          ),
+          const SizedBox(height: 14),
+          WrMaintainPracticeAction(theme: theme),
+        ],
+      ),
     );
   }
 }

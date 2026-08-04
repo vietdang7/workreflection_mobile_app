@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
@@ -81,6 +82,7 @@ Widget _wrap(
       currentUserIdProvider.overrideWithValue('u1'),
     ],
     child: MaterialApp.router(
+      builder: wrTextScaleBuilder,
       routerConfig: router,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
@@ -113,12 +115,15 @@ PracticeStep _step(String id, String themeId, int order, String title,
     );
 
 PracticeEnrollment _enroll(String themeId,
-        {List<String> done = const [], DateTime? completedAt}) =>
+        {List<String> done = const [],
+        DateTime? completedAt,
+        DateTime? startedAt}) =>
     PracticeEnrollment(
       userId: 'u1',
       themeId: themeId,
       completedSteps: done,
       completedAt: completedAt,
+      startedAt: startedAt,
     );
 
 /// Hai chủ đề, mỗi chủ đề ba bước, bước cuối Premium — đúng dữ liệu đang gieo
@@ -196,6 +201,73 @@ void main() {
       expect(active.dy, lessThan(done.dy));
     });
 
+    // Yêu cầu khách 2026-08-04: hiện HẾT chủ đề, dài quá thì bỏ vào "Xem thêm",
+    // chủ đề mới nhất nằm ở đầu.
+    testWidgets('chủ đề mới nhất nằm trên cùng', (tester) async {
+      final intel = _twoThemes();
+      intel.seedEnrollments([
+        _enroll('pt-voice', startedAt: DateTime(2026, 7, 1)),
+        _enroll('pt-rhythm', startedAt: DateTime(2026, 8, 1)),
+      ]);
+
+      await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
+
+      final moiNhat = tester
+          .getTopLeft(find.byKey(const Key('wr_growth_theme_card_pt-rhythm')));
+      final cuHon = tester
+          .getTopLeft(find.byKey(const Key('wr_growth_theme_card_pt-voice')));
+      expect(moiNhat.dy, lessThan(cuHon.dy));
+    });
+
+    testWidgets('quá $kGrowthThemesPreview chủ đề thì phần dôi nằm sau Xem thêm',
+        (tester) async {
+      final intel = FakeWrIntelligenceRepository();
+      final ids = ['pt-1', 'pt-2', 'pt-3', 'pt-4', 'pt-5'];
+      intel.seedPracticeThemes([
+        for (final id in ids) _theme(id, 'Chủ đề $id'),
+      ]);
+      for (final id in ids) {
+        intel.seedPracticeSteps(id, [_step('$id-1', id, 1, 'Nhận diện')]);
+      }
+      // pt-5 mới nhất, pt-1 cũ nhất.
+      intel.seedEnrollments([
+        for (var i = 0; i < ids.length; i++)
+          _enroll(ids[i], startedAt: DateTime(2026, 7, i + 1)),
+      ]);
+
+      await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
+
+      // Ba thẻ mới nhất hiện sẵn, hai thẻ cũ nhất nằm sau nút.
+      expect(find.byKey(const Key('wr_growth_theme_card_pt-5')), findsOneWidget);
+      expect(find.byKey(const Key('wr_growth_theme_card_pt-3')), findsOneWidget);
+      expect(find.byKey(const Key('wr_growth_theme_card_pt-2')), findsNothing);
+      expect(find.byKey(const Key('wr_growth_theme_card_pt-1')), findsNothing);
+      expect(find.text('Xem thêm 2 chủ đề'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('wr_growth_themes_more')));
+      await tester.pumpAndSettle();
+
+      // Không có chủ đề nào bị cắt mất — bấm là ra đủ cả năm.
+      for (final id in ids) {
+        expect(
+          find.byKey(Key('wr_growth_theme_card_$id')),
+          findsOneWidget,
+          reason: '$id phải hiện sau khi xổ',
+        );
+      }
+      expect(find.text('Thu gọn'), findsOneWidget);
+    });
+
+    testWidgets('đúng $kGrowthThemesPreview chủ đề thì không có nút Xem thêm',
+        (tester) async {
+      final intel = _twoThemes();
+      intel.seedEnrollments([_enroll('pt-voice'), _enroll('pt-rhythm')]);
+
+      await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
+
+      expect(find.byKey(const Key('wr_growth_themes_more')), findsNothing);
+    });
+
     testWidgets('bấm thẻ chủ đề mở màn chủ đề đó', (tester) async {
       final intel = _twoThemes();
       intel.seedEnrollments([_enroll('pt-rhythm')]);
@@ -239,6 +311,46 @@ void main() {
       await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
 
       expect(find.byKey(const Key('wr_growth_quota_card')), findsNothing);
+    });
+
+    // Premium không có trần, nên phải luôn có đường thêm chủ đề. Thiếu dòng này
+    // thì thư viện chủ đề chỉ vào được từ Home lúc hết bước mở được — premium
+    // ghi danh vài chủ đề xong là kẹt, trông y như bị giới hạn cứng.
+    testWidgets('Premium luôn có dòng thêm chủ đề', (tester) async {
+      final intel = _twoThemes();
+      intel.seedEnrollments([_enroll('pt-voice'), _enroll('pt-rhythm')]);
+      intel.seedEntitlement(
+        WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
+      );
+
+      await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
+
+      expect(
+        find.byKey(const Key('wr_growth_add_theme_row')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('Free còn chỗ thì có dòng thêm chủ đề', (tester) async {
+      final intel = _twoThemes();
+      intel.seedEnrollments([_enroll('pt-voice')]);
+
+      await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
+
+      expect(
+        find.byKey(const Key('wr_growth_add_theme_row')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('Free hết 2/2 chỗ thì nhường cho thẻ quota', (tester) async {
+      final intel = _twoThemes();
+      intel.seedEnrollments([_enroll('pt-voice'), _enroll('pt-rhythm')]);
+
+      await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
+
+      expect(find.byKey(const Key('wr_growth_add_theme_row')), findsNothing);
+      expect(find.byKey(const Key('wr_growth_quota_card')), findsOneWidget);
     });
 
     testWidgets('chưa ghi danh chủ đề nào thì không dựng danh sách rỗng', (
@@ -320,8 +432,16 @@ void main() {
         _wrap(const WrPracticeThemeScreen(themeId: 'pt-voice'), intel: intel),
       );
 
-      expect(find.text('ĐÃ HOÀN THÀNH'), findsOneWidget);
+      // Xong ba bước = xong giai đoạn làm quen, chủ đề chuyển sang duy trì —
+      // không phải "đã hoàn thành" rồi thôi (spec Skill Formation).
+      expect(find.text('ĐANG DUY TRÌ'), findsOneWidget);
       expect(find.text('Đánh dấu hoàn thành'), findsNothing);
+      expect(find.byKey(const Key('wr_practice_maintain_block')),
+          findsOneWidget);
+      expect(
+        find.byKey(const Key('wr_practice_maintain_pt-voice')),
+        findsOneWidget,
+      );
     });
 
     testWidgets('chưa ghi danh thì đọc được nội dung nhưng chưa bấm được', (

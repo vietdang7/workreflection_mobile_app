@@ -17,7 +17,7 @@ class OnboardingScreen extends ConsumerWidget {
     final notifier = ref.read(onboardingNotifierProvider.notifier);
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       body: SafeArea(
         child: Padding(
           // HTML .ob-screen uses padding: 24px 36px 36px

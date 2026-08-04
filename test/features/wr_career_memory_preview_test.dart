@@ -9,6 +9,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
@@ -111,7 +112,8 @@ Widget _wrap({
       wrIntelligenceRepositoryProvider.overrideWithValue(intel),
       currentUserIdProvider.overrideWithValue('u1'),
     ],
-    child: MaterialApp.router(routerConfig: router),
+    child: MaterialApp.router(
+      builder: wrTextScaleBuilder,routerConfig: router),
   );
 }
 
@@ -126,12 +128,26 @@ Future<void> _pumpTall(WidgetTester tester, Widget widget) async {
   await tester.pumpAndSettle();
 }
 
-int _visibleEntries(WidgetTester tester, int total) {
-  var found = 0;
-  for (var i = 1; i <= total; i++) {
-    if (find.text('Mảnh ký ức số $i').evaluate().isNotEmpty) found++;
+/// Đếm số mốc đang hiện trên dòng thời gian.
+///
+/// Đếm theo MŨI TÊN thu gọn, không theo tiêu đề mốc. Từ 2026-08-03 mỗi mốc thu
+/// gọn sẵn nên tiêu đề không hiện cho tới khi người dùng chạm vào, còn mũi tên
+/// thì mỗi mốc đúng một cái — nó mới là thứ tương ứng một-một với "có bao nhiêu
+/// mảnh đang bày ra", chính là điều các bài kiểm này muốn nói.
+int _visibleEntries(WidgetTester tester, int total) =>
+    find.byIcon(Icons.keyboard_arrow_down_rounded).evaluate().length;
+
+/// Mở hết mọi mốc đang hiện, để kiểm được NỘI DUNG bên trong.
+///
+/// Chạm từ mốc cuối ngược lên đầu: mở một mốc làm trang dài ra và đẩy mọi mốc
+/// phía dưới xuống, nên đi xuôi thì từ mốc thứ hai trở đi toạ độ đã lệch.
+Future<void> _expandAll(WidgetTester tester) async {
+  final arrows = find.byIcon(Icons.keyboard_arrow_down_rounded);
+  for (var i = arrows.evaluate().length - 1; i >= 0; i--) {
+    await tester.tap(arrows.at(i), warnIfMissed: false);
+    await tester.pump();
   }
-  return found;
+  await tester.pumpAndSettle();
 }
 
 void main() {
@@ -265,6 +281,7 @@ void main() {
       await tester
           .tap(find.byKey(const Key('wr_career_memory_filter_QUYẾT ĐỊNH')));
       await tester.pumpAndSettle();
+      await _expandAll(tester);
 
       expect(find.text('Quyết định 1'), findsOneWidget);
       expect(find.text('Nhận ra 1'), findsNothing);
@@ -300,6 +317,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Tất cả 7 mảnh ký ức'), findsOneWidget);
+      await _expandAll(tester);
       expect(find.text('Nhận ra 1'), findsOneWidget);
     });
 

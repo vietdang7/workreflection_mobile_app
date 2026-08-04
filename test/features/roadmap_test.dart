@@ -19,6 +19,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:workreflection_mobile/features/roadmap/presentation/roadmap_screen.dart';
 import 'package:workreflection_mobile/features/roadmap/roadmap_providers.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
@@ -38,6 +39,7 @@ Widget _wrap(
       roadmapRepositoryProvider.overrideWithValue(repo),
     ],
     child: MaterialApp(
+      builder: wrTextScaleBuilder,
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/features/shell/shell_screen.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
@@ -71,6 +72,7 @@ Widget _wrapWithRouter() {
 
   return ProviderScope(
     child: MaterialApp.router(
+      builder: wrTextScaleBuilder,
       routerConfig: router,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,

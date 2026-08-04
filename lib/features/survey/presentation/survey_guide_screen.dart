@@ -18,9 +18,9 @@ class SurveyGuideScreen extends ConsumerWidget {
     final typeAsync = ref.watch(surveyTypeProvider);
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: WrColors.navy),
