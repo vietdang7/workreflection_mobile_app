@@ -22,17 +22,39 @@ import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/logic/wr_skill_formation.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
+import '../../../core/widgets/action_link.dart';
 import '../../../core/widgets/wr_detail_scaffold.dart';
 import '../../../core/widgets/wr_premium_lock.dart';
 import '../growth_providers.dart';
 import '../wr_providers.dart';
 import 'wr_skill_moment.dart';
 
-class WrGrowthSkillsScreen extends ConsumerWidget {
+/// Số chủ đề đang hình thành hiện sẵn trước khi phải bấm "Xem thêm".
+///
+/// Không phải một trần: danh sách KHÔNG bị cắt, phần dôi ra nằm sau nút xổ.
+/// Cùng con số với thẻ chủ đề ở tab Phát triển (`kGrowthThemesPreview`) để hai
+/// màn cạnh nhau cắt cùng một chỗ.
+///
+/// Vì sao cần: ai theo sáu, bảy chủ đề thì mục "Đang hình thành" đẩy phần đối
+/// chiếu với công việc xuống tận đáy, và mỗi dòng lại lặp đúng một câu nhắc
+/// giống nhau — dài mà không thêm thông tin nào.
+const int kSkillsFormingPreview = 3;
+
+class WrGrowthSkillsScreen extends ConsumerStatefulWidget {
   const WrGrowthSkillsScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<WrGrowthSkillsScreen> createState() =>
+      _WrGrowthSkillsScreenState();
+}
+
+class _WrGrowthSkillsScreenState extends ConsumerState<WrGrowthSkillsScreen> {
+  /// Đã bấm "Xem thêm" chưa. Ở State chứ không phải provider: đây là trạng thái
+  /// của một lần xem màn, mở lại thì thu gọn về như cũ là đúng.
+  bool _showAllForming = false;
+
+  @override
+  Widget build(BuildContext context) {
     final threshold = ref.watch(wrSkillThresholdProvider);
     final formations = ref.watch(wrSkillFormationsProvider);
     final themes = ref.watch(practiceThemesProvider).valueOrNull ?? const [];
@@ -42,6 +64,14 @@ class WrGrowthSkillsScreen extends ConsumerWidget {
     final formed = formedSkills(formations);
     final forming = formingSkills(formations);
     final themeById = {for (final t in themes) t.themeId: t};
+
+    // Gần đích nhất đứng đầu (đã sắp trong `formingSkills`), nên ba dòng hiện
+    // sẵn cũng là ba chủ đề sát ngưỡng nhất — phần đáng nhìn nhất của danh sách.
+    final hiddenForming =
+        (forming.length - kSkillsFormingPreview).clamp(0, 1 << 30);
+    final visibleForming = _showAllForming || hiddenForming == 0
+        ? forming
+        : forming.take(kSkillsFormingPreview).toList();
 
     return WrDetailScaffold(
       eyebrow: 'KỸ NĂNG ĐÃ HÌNH THÀNH',
@@ -60,12 +90,27 @@ class WrGrowthSkillsScreen extends ConsumerWidget {
           const SizedBox(height: 26),
           const _SectionLabel('ĐANG HÌNH THÀNH'),
           const SizedBox(height: 14),
-          ...forming.map(
+          ...visibleForming.map(
             (f) => _FormingSkillTile(
               formation: f,
               theme: themeById[f.themeId],
             ),
           ),
+          if (hiddenForming > 0)
+            // Align để vùng chạm bó đúng vào chữ. WrActionLink là một Row
+            // mainAxisSize.min và GestureDetector của nó không đặt
+            // hitTestBehavior, nên nếu để nó chiếm trọn bề ngang thì nửa phải
+            // của dòng nhìn thì trống mà chạm vào lại không ăn.
+            Align(
+              alignment: Alignment.centerLeft,
+              child: WrActionLink(
+                key: const Key('wr_skills_forming_more'),
+                label: _showAllForming
+                    ? 'Thu gọn'
+                    : 'Xem thêm $hiddenForming chủ đề',
+                onTap: () => setState(() => _showAllForming = !_showAllForming),
+              ),
+            ),
         ],
         const SizedBox(height: 30),
         _JdSection(isPremium: entitlement.isPremium),

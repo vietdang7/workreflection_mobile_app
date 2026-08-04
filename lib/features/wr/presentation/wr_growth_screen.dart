@@ -15,6 +15,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/data/wr_intelligence_repository.dart';
 import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/logic/wr_practice_match.dart';
+import '../../../core/logic/wr_practice_theme_grant.dart';
 import '../../../core/logic/wr_repeated_situations.dart';
 import '../../../core/logic/wr_tra_chieu.dart';
 import '../../../core/models/wr_content.dart';
@@ -51,34 +52,104 @@ class WrGrowthScreen extends ConsumerStatefulWidget {
 const kGrowthThemesPreview = 3;
 
 class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
-  // Guard chống double-tap khi đang enroll
-  final Set<String> _enrollingThemeIds = {};
-
   /// Đã bấm "Xem thêm" chưa. Đặt ở State chứ không phải provider: đây là trạng
   /// thái của một lần xem màn, mở lại tab thì thu gọn về như cũ là đúng.
   bool _showAllThemes = false;
 
-  Future<void> _enroll(String themeId) async {
-    if (_enrollingThemeIds.contains(themeId)) return;
+  /// Chủ đề phần mềm vừa tự thêm trong lần xem màn này, và lý do. null = lần
+  /// này không thêm gì. Chỉ để báo tin một lần, không phải trạng thái cần lưu.
+  (String, String?)? _justAdded;
+
+  /// Đang tự thêm chủ đề — chặn chạy chồng khi build lại giữa chừng.
+  bool _autoEnrolling = false;
+
+  /// Lượt xem màn này đã tự thêm một chủ đề rồi. Thêm xong là màn dựng lại và
+  /// gọi lại `_maybeAutoEnroll`; không có cờ này thì ai nợ bốn chủ đề sẽ nhận
+  /// cả bốn trong một nhịp.
+  bool _addedThisVisit = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Chạy sau frame đầu: `build` không được phép có tác dụng phụ, mà đây là
+    // ghi vào DB.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeAutoEnroll());
+  }
+
+  /// Tự thêm chủ đề khi người dùng đã tích đủ dữ liệu.
+  ///
+  /// Khách chốt 2026-08-04: "chủ đề là do phần mềm tự thêm sau khi tổng hợp đủ
+  /// dữ liệu từ người dùng". Hai hướng đổi ra chủ đề nằm trong
+  /// [earnedPracticeThemes]; ở đây chỉ so số được hưởng với số đã ghi danh.
+  ///
+  /// So SỐ chứ không nhớ "đã thêm lần nào chưa": phép so ấy chạy lại bao nhiêu
+  /// lần cũng ra cùng kết quả, nên vào ra tab mấy lượt cũng không thêm trùng, và
+  /// không cần cột mới nào trong DB.
+  ///
+  /// Thêm ĐÚNG MỘT chủ đề mỗi lượt, kể cả khi còn nợ nhiều hơn: người dùng nghỉ
+  /// một tháng rồi quay lại mà thấy bốn chủ đề mới đổ ra cùng lúc thì đó là một
+  /// đống việc, không phải một lời mời. Còn nợ thì lượt sau thêm tiếp.
+  ///
+  /// Im lặng khi lỗi: đây là việc phần mềm tự làm, người dùng không yêu cầu gì
+  /// nên cũng không có gì để báo hỏng. Lần mở màn sau thử lại.
+  Future<void> _maybeAutoEnroll() async {
+    if (_autoEnrolling || _addedThisVisit || !mounted) return;
+
     final userId = ref.read(currentUserIdProvider);
-    if (userId == null) return;
-    setState(() => _enrollingThemeIds.add(themeId));
+    final enrollments = ref.read(practiceEnrollmentsProvider).valueOrNull;
+    final episodes = ref.read(wrEpisodeHistoryProvider).valueOrNull;
+    final history = ref.read(wrSelfCheckHistoryProvider).valueOrNull;
+    final entitlement = ref.read(wrEntitlementProvider).valueOrNull;
+    // Thiếu bất cứ nguồn nào thì chờ, đừng đoán: đoán thiếu là thêm chủ đề trùng.
+    if (userId == null ||
+        enrollments == null ||
+        episodes == null ||
+        history == null ||
+        entitlement == null) {
+      return;
+    }
+
+    final earned = earnedPracticeThemes(
+      reflectionCount: episodes.length,
+      selfCheckCount: history.length,
+    );
+    if (enrollments.length >= earned) return;
+
+    // Hết quota thì dừng, thẻ quota bên dưới đã nói lý do và dẫn sang paywall.
+    final activeCount = enrollments.where((e) => e.completedAt == null).length;
+    if (!entitlement.canEnrollPracticeTheme(activeCount)) return;
+
+    final suggestion = ref.read(wrPracticeSuggestionProvider);
+    if (suggestion == null) return;
+
+    _autoEnrolling = true;
     try {
-      final repo = ref.read(wrIntelligenceRepositoryProvider);
-      await repo.enrollTheme(PracticeEnrollment(
-        userId: userId,
-        themeId: themeId,
-        completedSteps: const [],
-      ));
+      await ref.read(wrIntelligenceRepositoryProvider).enrollTheme(
+            PracticeEnrollment(
+              userId: userId,
+              themeId: suggestion.theme.themeId,
+              completedSteps: const [],
+            ),
+          );
       ref.invalidate(practiceEnrollmentsProvider);
-    } catch (_) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không bắt đầu được. Thử lại.')),
+      _addedThisVisit = true;
+      if (!mounted) return;
+      final situations =
+          ref.read(wrSituationsProvider).valueOrNull ?? const <WrSituation>[];
+      setState(() {
+        _justAdded = (
+          suggestion.theme.title,
+          practiceSuggestionReason(
+            suggestion,
+            situations,
+            ref.read(wrDominantNeedProvider),
+          ),
         );
-      }
+      });
+    } catch (_) {
+      // Im lặng — xem doc ở trên.
     } finally {
-      if (mounted) setState(() => _enrollingThemeIds.remove(themeId));
+      _autoEnrolling = false;
     }
   }
 
@@ -111,6 +182,11 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
             latestSelfCheck: null,
           ),
           data: (themes) {
+            // Dữ liệu về muộn hơn frame đầu, nên thử lại sau mỗi lần dựng.
+            // `_maybeAutoEnroll` chỉ so số nên chạy thừa không hại gì.
+            WidgetsBinding.instance.addPostFrameCallback(
+              (_) => _maybeAutoEnroll(),
+            );
             final enrollments = enrollmentsAsync.valueOrNull ?? const [];
             final entitlement = entitlementAsync.valueOrNull ??
                 WrEntitlement(plan: WrPlan.free);
@@ -158,12 +234,11 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
         .where((t) => !enrolledThemeIds.contains(t.themeId) && !t.isRetired)
         .toList();
 
-    // Nhu cầu chủ đạo và chủ đề gợi ý đều đọc từ provider dùng chung, để màn
-    // này và màn thư viện chủ đề không bao giờ đề xuất hai thứ khác nhau.
-    // Hai hướng mở khoá (khách 2026-07-31 — tích luỹ hàng ngày / Self-Check 15
-    // câu) và thứ tự khớp theo CHIỀU tình huống nằm trong provider đó.
-    final dominantNeed = ref.watch(wrDominantNeedProvider);
-    final suggestion = ref.watch(wrPracticeSuggestionProvider);
+    // Số lần đã nhìn lại — cùng con số với câu "Bạn đã nhìn lại N lần" ở tab
+    // Hiểu mình, và là một trong hai đường đổi ra chủ đề (xem
+    // `wr_practice_theme_grant.dart`).
+    final reflectionCount =
+        ref.watch(wrEpisodeHistoryProvider).valueOrNull?.length ?? 0;
 
     // Quota
     final activeCount = enrollments.where((e) => e.completedAt == null).length;
@@ -272,21 +347,22 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
           child: Padding(
             padding: const EdgeInsets.fromLTRB(22, 0, 22, 20),
             child: enrolledCards.isEmpty
-                ? _buildSuggestionCard(
+                ? _buildEmptyThemeCard(
                     context,
-                    eyebrow: 'GỢI Ý TỪ HIỂU MÌNH',
-                    emptyEyebrow: 'TRỌNG TÂM HIỆN TẠI',
-                    suggestion: suggestion,
-                    dominantNeed: dominantNeed,
-                    situations: situations,
-                    canEnroll:
-                        entitlement.canEnrollPracticeTheme(activeCount),
+                    eyebrow: 'TRỌNG TÂM HIỆN TẠI',
                     hasAnyTheme: themes.isNotEmpty,
                     hasCandidates: unenrolledThemes.isNotEmpty,
+                    reflectionCount: reflectionCount,
                   )
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // Chủ đề vừa được thêm tự động. Không thêm mà im lặng:
+                      // người dùng phải biết vì sao danh sách của mình dài ra.
+                      if (_justAdded case (final title, final reason)) ...[
+                        _JustAddedNotice(title: title, reason: reason),
+                        const SizedBox(height: 18),
+                      ],
                       const WrEyebrow('CHỦ ĐỀ CỦA BẠN'),
                       const SizedBox(height: 12),
                       for (final pair in visibleCards)
@@ -308,33 +384,15 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
                             ),
                           ),
                         ),
-                      // Chủ đề tiếp theo. Chỉ hiện khi còn chỗ trong quota —
-                      // premium thì luôn còn, free thì hết 2 chỗ là nhường
-                      // cho _QuotaCard bên dưới nói lý do và dẫn sang paywall.
+                      // KHÔNG có khối mời thêm chủ đề ở đây (khách 2026-08-04).
+                      // Đã theo chủ đề rồi thì màn này chỉ nói việc đang làm.
+                      // Chủ đề mới là việc của phần mềm: nó tự thêm khi đã tổng
+                      // hợp đủ dữ liệu người dùng, không hỏi han gì thêm.
                       //
-                      // Đây là một THẺ GỢI Ý kèm lý do, không phải một dòng dẫn
-                      // sang danh sách chủ đề. Chủ đề là thứ phần mềm chuẩn bị
-                      // từ những gì người dùng đã nhìn lại và từ bộ tự đánh giá
-                      // — bày cả thư viện ra cho họ tự chọn thì họ không có căn
-                      // cứ nào để chọn (khách 2026-08-04).
-                      //
-                      // Trước đó màn này không có lối nào để theo thêm chủ đề
-                      // (bỏ theo yêu cầu 30/7), nên premium ghi danh vài chủ đề
-                      // xong là kẹt, nhìn ra ngoài y như bị giới hạn cứng.
-                      if (entitlement.canEnrollPracticeTheme(activeCount))
-                        Padding(
-                          padding: const EdgeInsets.only(top: 4),
-                          child: _buildSuggestionCard(
-                            context,
-                            eyebrow: 'CHỦ ĐỀ TIẾP THEO CHO BẠN',
-                            suggestion: suggestion,
-                            dominantNeed: dominantNeed,
-                            situations: situations,
-                            canEnroll: true,
-                            hasAnyTheme: themes.isNotEmpty,
-                            hasCandidates: unenrolledThemes.isNotEmpty,
-                          ),
-                        ),
+                      // Đã thử hai bản khác và khách bác cả hai: dòng dẫn sang
+                      // thư viện chủ đề (danh sách trần, không ai biết dựa vào
+                      // đâu mà chọn), rồi thẻ "CHỦ ĐỀ TIẾP THEO CHO BẠN" (vẫn
+                      // bắt người dùng bấm để nhận thứ đáng lẽ tự đến).
                       _QuotaCard(
                         quota: entitlement.maxActivePracticeThemes,
                         activeCount: activeCount,
@@ -382,126 +440,136 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
     );
   }
 
-  // ── Thẻ gợi ý chủ đề ──────────────────────────────────────────────────────
+  // ── Thẻ trạng thái khi chưa có chủ đề nào ────────────────────────────────
 
-  /// Thẻ "chủ đề phần mềm chuẩn bị cho bạn".
+  /// Thẻ nói vì sao chưa có chủ đề nào, và còn thiếu gì để có.
   ///
-  /// Dùng ở hai chỗ trên màn này: khi chưa theo chủ đề nào (thay cho danh sách),
-  /// và ngay dưới danh sách khi còn chỗ trong quota. Cùng một thẻ để hai chỗ nói
-  /// cùng một câu — chủ đề đến từ những gì người dùng đã nhìn lại, kèm lý do.
+  /// KHÔNG có nút "Bắt đầu thực hành" ở đây nữa (khách 2026-08-04): chủ đề là
+  /// việc phần mềm tự thêm khi người dùng đã tích đủ dữ liệu, bắt họ bấm để
+  /// nhận thứ đáng lẽ tự đến là thừa một bước.
   ///
-  /// Ba trạng thái rỗng khác nhau, ba câu khác nhau — [hasAnyTheme] = thư viện
-  /// có chủ đề nào không, [hasCandidates] = còn chủ đề nào chưa ghi danh không.
-  /// Gộp cả ba thành một câu là nói sai với ít nhất hai nhóm người dùng.
-  Widget _buildSuggestionCard(
+  /// Bốn trạng thái, bốn câu khác nhau — [hasAnyTheme] = thư viện có chủ đề nào
+  /// không, [hasCandidates] = còn chủ đề nào chưa ghi danh không,
+  /// [reflectionCount] = số lần đã nhìn lại. Gộp lại thành một câu là nói sai
+  /// với ít nhất hai nhóm người dùng.
+  Widget _buildEmptyThemeCard(
     BuildContext context, {
     required String eyebrow,
-    String? emptyEyebrow,
-    required PracticeSuggestion? suggestion,
-    required HumanNeed? dominantNeed,
-    required List<WrSituation> situations,
-    required bool canEnroll,
     required bool hasAnyTheme,
     required bool hasCandidates,
+    required int reflectionCount,
   }) {
-    final suggestedTheme = suggestion?.theme;
-    if (suggestedTheme == null) {
-      // Chưa đề xuất được. Nói thẳng vì sao và chỉ ra việc cần làm để có đề
-      // xuất, thay vì mở một danh sách chủ đề cho người dùng tự đoán.
-      final (title, body) = switch ((hasAnyTheme, hasCandidates)) {
-        // Thư viện chưa có chủ đề nào — không phải lỗi của người dùng, đừng bảo
-        // họ đi nhìn lại thêm.
-        (false, _) => (
-            'Chưa có chủ đề nào đang thực hành',
-            'WorkReflection sẽ đề xuất chủ đề dựa trên những gì bạn đã nhìn lại.',
-          ),
-        // Còn chủ đề để mời, chỉ là chưa đủ căn cứ để chọn cái nào.
-        (true, true) => (
-            'Chưa đủ dữ liệu để đề xuất chủ đề',
-            'Chủ đề thực hành được chọn từ những tình huống bạn gặp lại nhiều '
-                'lần. Bạn nhìn lại thêm vài lần nữa, hoặc làm bộ tự đánh giá '
-                'để có ngay một chủ đề.',
-          ),
-        (true, false) => (
-            'Bạn đã bắt đầu tất cả chủ đề hiện có',
-            'Hoàn thành một chủ đề đang theo, rồi quay lại đây.',
-          ),
-      };
-      final canSelfCheck = hasAnyTheme && hasCandidates;
-
-      return WrCardMinimal(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            WrEyebrow(emptyEyebrow ?? eyebrow, color: WrColors.muted),
-            const SizedBox(height: 10),
-            Text(
-              title,
-              key: const Key('wr_growth_suggestion_empty'),
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-                color: WrColors.dark,
-                height: 1.3,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              body,
-              style: const TextStyle(
-                fontSize: 13,
-                color: WrColors.muted,
-                height: 1.6,
-              ),
-            ),
-            if (canSelfCheck) ...[
-              const SizedBox(height: 14),
-              WrActionLink(
-                key: const Key('wr_growth_suggestion_self_check'),
-                label: 'Làm bộ tự đánh giá',
-                onTap: () => context.push('/wr/self-check'),
-              ),
-            ],
-          ],
+    final (title, body) = switch ((hasAnyTheme, hasCandidates)) {
+      // Thư viện chưa có chủ đề nào — không phải lỗi của người dùng, đừng bảo
+      // họ đi nhìn lại thêm.
+      (false, _) => (
+          'Chưa có chủ đề nào đang thực hành',
+          'WorkReflection sẽ đề xuất chủ đề dựa trên những gì bạn đã nhìn lại.',
         ),
-      );
-    }
+      // Còn chủ đề để mời, chỉ là chưa tích đủ. Nói đúng quãng đường còn lại
+      // thay vì bảo họ chờ một điều không đo được.
+      (true, true) => (
+          'Chưa đủ dữ liệu để có chủ đề',
+          'Bạn đã nhìn lại $reflectionCount/$kReflectionsPerPracticeTheme lần. '
+              'Đủ $kReflectionsPerPracticeTheme lần là WorkReflection tự thêm '
+              'một chủ đề hợp với bạn. Hoặc làm bộ tự đánh giá để có ngay.',
+        ),
+      (true, false) => (
+          'Bạn đã bắt đầu tất cả chủ đề hiện có',
+          'Hoàn thành một chủ đề đang theo, rồi quay lại đây.',
+        ),
+    };
 
     return WrCardMinimal(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          WrEyebrow(eyebrow),
+          WrEyebrow(eyebrow, color: WrColors.muted),
           const SizedBox(height: 10),
           Text(
-            suggestedTheme.title,
+            title,
+            key: const Key('wr_growth_suggestion_empty'),
             style: const TextStyle(
               fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: WrColors.dark,
+              height: 1.3,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            body,
+            style: const TextStyle(
+              fontSize: 13,
+              color: WrColors.muted,
+              height: 1.6,
+            ),
+          ),
+          if (hasAnyTheme && hasCandidates) ...[
+            const SizedBox(height: 14),
+            WrActionLink(
+              key: const Key('wr_growth_suggestion_self_check'),
+              label: 'Làm bộ tự đánh giá',
+              onTap: () => context.push('/wr/self-check'),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _JustAddedNotice — báo chủ đề phần mềm vừa tự thêm.
+//
+// Thêm chủ đề vào danh sách của một người mà không nói gì là để họ tự phát hiện
+// ra danh sách của mình dài hơn hôm qua. Dòng này nói đúng hai điều: vừa thêm
+// cái gì, và vì sao lại là cái đó.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _JustAddedNotice extends StatelessWidget {
+  const _JustAddedNotice({required this.title, required this.reason});
+
+  final String title;
+  final String? reason;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: const Key('wr_growth_just_added'),
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
+      decoration: BoxDecoration(
+        color: WrColors.teal.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'BẠN VỪA CÓ CHỦ ĐỀ MỚI',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.8,
+              color: WrColors.pillTealText,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 16,
               fontWeight: FontWeight.w700,
               color: WrColors.navy,
               height: 1.3,
             ),
           ),
-          if (suggestedTheme.description != null) ...[
-            const SizedBox(height: 6),
+          if (reason case final r?) ...[
+            const SizedBox(height: 4),
             Text(
-              suggestedTheme.description!,
-              style: const TextStyle(
-                fontSize: 13,
-                color: WrColors.muted,
-                height: 1.5,
-              ),
-            ),
-          ],
-          // Lý do — nói ĐÚNG cái đã dẫn tới chủ đề này. Khớp được theo tình
-          // huống thì gọi thẳng tên tình huống và số lần: đó là điều người dùng
-          // tự nhận ra được, khác hẳn một câu chung chung về nhu cầu.
-          if (practiceSuggestionReason(suggestion, situations, dominantNeed)
-              case final reason?) ...[
-            const SizedBox(height: 6),
-            Text(
-              reason,
-              key: const Key('wr_growth_suggestion_reason'),
+              r,
+              key: const Key('wr_growth_just_added_reason'),
               style: const TextStyle(
                 fontSize: 12,
                 color: WrColors.muted,
@@ -510,36 +578,6 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
               ),
             ),
           ],
-          const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            child: TextButton(
-              key: const Key('wr_growth_suggestion_start'),
-              onPressed: canEnroll
-                  ? () => _enroll(suggestedTheme.themeId)
-                  : () => context.push('/wr/paywall'),
-              style: TextButton.styleFrom(
-                backgroundColor: WrColors.navy,
-                foregroundColor: WrColors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              child: const Text(
-                'Bắt đầu thực hành',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 8),
-          WrActionLink(
-            label: 'Xem trong Hiểu mình',
-            onTap: () => context.go('/wr/discover?from=growth'),
-          ),
         ],
       ),
     );

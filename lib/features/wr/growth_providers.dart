@@ -10,6 +10,7 @@ import '../../core/data/wr_content_repository.dart';
 import '../../core/data/wr_intelligence_repository.dart';
 import '../../core/logic/wr_dominant_need.dart';
 import '../../core/logic/wr_practice_match.dart';
+import '../../core/logic/wr_practice_theme_grant.dart';
 import '../../core/logic/wr_repeated_situations.dart';
 import '../../core/logic/wr_skill_formation.dart';
 import '../../core/logic/wr_skill_jd_match.dart';
@@ -108,24 +109,53 @@ final wrPendingPracticeStepProvider =
   return null;
 });
 
-/// Nhu cầu chủ đạo của người dùng — hành vi trước, self-check sau.
+/// Nhu cầu chủ đạo của người dùng — nguồn NÀO MỚI HƠN thì nguồn đó thắng.
 ///
 /// Hai hướng khách chốt 2026-07-31: tích luỹ hàng ngày, hoặc làm bộ 15 câu.
+///
+/// Bản trước luôn ưu tiên hành vi, self-check chỉ là dự phòng khi chưa nhìn lại
+/// lần nào. Hệ quả: người đã nhìn lại vài lần rồi mới ngồi trả lời 15 câu thì
+/// kết quả bộ đó không đổi được gì — họ vừa nói thẳng mình đang vướng ở đâu mà
+/// phần mềm vẫn đọc theo hành vi cũ (khách chỉ ra 2026-08-04).
+///
+/// Giờ so mốc thời gian: bộ tự đánh giá làm sau lần nhìn lại gần nhất thì nó là
+/// tiếng nói mới nhất và nó thắng; nhìn lại tiếp sau đó thì hành vi thắng lại.
 final wrDominantNeedProvider = Provider<HumanNeed?>((ref) {
   final episodes = ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
   final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
   final history =
       ref.watch(wrSelfCheckHistoryProvider).valueOrNull ?? const [];
-  final latest = history.isNotEmpty ? history.first : null;
 
-  return dominantNeedFromBehaviour(recentSituationIds(episodes), situations) ??
-      (latest != null ? dominantNeedFromSelfCheck(latest) : null);
+  final behaviour =
+      dominantNeedFromBehaviour(recentSituationIds(episodes), situations);
+  final latest = history.isNotEmpty ? history.first : null;
+  if (latest == null) return behaviour;
+
+  final fromSelfCheck = dominantNeedFromSelfCheck(latest);
+  if (behaviour == null) return fromSelfCheck;
+
+  // Mốc của hành vi = lần nhìn lại gần nhất. Không tin thứ tự danh sách, tự lấy
+  // mốc lớn nhất: Episode bỏ dở vẫn đếm nên thứ tự không phải lúc nào cũng theo
+  // thời gian.
+  DateTime? lastReflectionAt;
+  for (final e in episodes) {
+    final at = e.closedAt ?? e.updatedAt ?? e.openedAt;
+    if (at == null) continue;
+    if (lastReflectionAt == null || at.isAfter(lastReflectionAt)) {
+      lastReflectionAt = at;
+    }
+  }
+
+  // Không biết mốc hành vi thì nhường cho self-check: nó có mốc rõ ràng.
+  if (lastReflectionAt == null) return fromSelfCheck;
+  return latest.takenAt.isAfter(lastReflectionAt) ? fromSelfCheck : behaviour;
 });
 
 /// Chủ đề hệ thống đề xuất tiếp theo, kèm lý do — MỘT nguồn cho mọi màn.
 ///
-/// null = chưa đủ dữ liệu để nói gì (chưa qua cổng [developmentFlowUnlocked],
-/// chưa suy được nhu cầu chủ đạo), hoặc đã ghi danh hết chủ đề trong thư viện.
+/// null = chưa đủ dữ liệu để nói gì (chưa được hưởng chủ đề nào theo
+/// [earnedPracticeThemes], chưa suy được nhu cầu chủ đạo), hoặc đã ghi danh hết
+/// chủ đề trong thư viện.
 /// Lúc đó màn hình phải nói thẳng là chưa có, KHÔNG được bày một danh sách chủ
 /// đề trần ra cho người dùng tự chọn: chủ đề là thứ phần mềm chuẩn bị dựa trên
 /// những gì họ đã nhìn lại, không phải một thực đơn (yêu cầu khách 2026-08-04).
@@ -148,13 +178,11 @@ final wrPracticeSuggestionProvider = Provider<PracticeSuggestion?>((ref) {
       .where((t) => !enrolledIds.contains(t.themeId) && !t.isRetired)
       .toList();
 
-  final unlocked = developmentFlowUnlocked(
-    need: need,
-    recent: recent,
-    situations: situations,
-    hasSelfCheck: history.isNotEmpty,
+  final earned = earnedPracticeThemes(
+    reflectionCount: episodes.length,
+    selfCheckCount: history.length,
   );
-  if (!unlocked || need == null || candidates.isEmpty) return null;
+  if (earned < 1 || need == null || candidates.isEmpty) return null;
 
   return suggestPracticeTheme(
     candidates: candidates,

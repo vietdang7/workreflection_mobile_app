@@ -348,3 +348,51 @@ Deno.test('nhắc ngang qua một bài đọc thì KHÔNG bật nút', () => {
   );
   assertEquals(r.action, null);
 });
+
+// ---------------------------------------------------------------------------
+// Lời mời ghi lại cũng phải mở được nút
+//
+// Đo qua bản deploy 2026-08-04 bắt được lượt này: trợ lý mời "bạn có muốn ghi
+// lại thành một Reflection không?" mà quên thẻ. Câu đó không chứa chữ "nút" nên
+// luật chỉ-vào-nút không đỡ được, và không có luật nào khác phủ.
+//
+// Tức là lưới an toàn hở đúng ở trường hợp phổ biến nhất: LỜI MỜI ĐẦU TIÊN.
+// ---------------------------------------------------------------------------
+
+Deno.test('mời ghi lại mà quên thẻ thì vẫn hiện nút', () => {
+  const r = shapeReply(
+    'Nghe quen thuộc, bạn đã ghi lại chuyện này vài lần rồi. Có vẻ như việc im '
+      + 'lặng này đang lặp lại và đáng để nhìn kỹ hơn, bạn có muốn ghi lại thành '
+      + 'một Reflection không?',
+  );
+  assertEquals(r.action, 'reflect');
+});
+
+Deno.test('lời mời dạng hỏi ngắn cũng bắt được', () => {
+  const r = shapeReply('Muốn ghi lại thành một Reflection đầy đủ để giữ lại không?');
+  assertEquals(r.action, 'reflect');
+});
+
+Deno.test('trợ lý NÓI KHÔNG về việc ghi thì tuyệt đối không hiện nút', () => {
+  // Hiện nút ở đây là mâu thuẫn thẳng với chính câu vừa nói.
+  const r = shapeReply(
+    'Mình không tự ghi lại thành một Reflection thay bạn được, việc đó phải do '
+      + 'chính bạn xác nhận.',
+  );
+  assertEquals(r.action, null);
+});
+
+Deno.test('kể lại chuyện cũ, không phải lời mời, thì không hiện nút', () => {
+  const r = shapeReply(
+    'Hôm trước bạn đã ghi lại một Reflection về chuyện đó rồi. Hôm nay thì sao?',
+  );
+  assertEquals(r.action, null);
+});
+
+Deno.test('nhánh tín hiệu đáng lo ngại vẫn thắng luật lời-mời', () => {
+  const r = shapeReply(
+    'Mình không phải chuyên gia tâm lý. Hãy tìm đến một người thân bạn tin '
+      + 'tưởng ngay bây giờ nhé. Bạn có muốn ghi lại thành một Reflection không?',
+  );
+  assertEquals(r.action, 'calm');
+});

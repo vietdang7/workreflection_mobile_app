@@ -313,11 +313,10 @@ void main() {
       expect(find.byKey(const Key('wr_growth_quota_card')), findsNothing);
     });
 
-    // Premium không có trần, nên dưới danh sách phải luôn có thẻ chủ đề tiếp
-    // theo. Thiếu nó thì premium ghi danh vài chủ đề xong là kẹt, trông y như
-    // bị giới hạn cứng. Đây là một THẺ GỢI Ý, không phải dòng dẫn sang danh
-    // sách chủ đề — chủ đề do phần mềm chuẩn bị (khách 2026-08-04).
-    testWidgets('Premium luôn có thẻ chủ đề tiếp theo', (tester) async {
+    // Đã theo chủ đề rồi thì màn này không mời thêm chủ đề, kể cả premium:
+    // chủ đề mới do phần mềm tự thêm khi đã tổng hợp đủ dữ liệu (khách
+    // 2026-08-04). Premium chỉ khác free ở chỗ không bị thẻ quota chặn.
+    testWidgets('Premium không thấy khối mời thêm chủ đề', (tester) async {
       final intel = _twoThemes();
       intel.seedEnrollments([_enroll('pt-voice'), _enroll('pt-rhythm')]);
       intel.seedEntitlement(
@@ -328,11 +327,12 @@ void main() {
 
       expect(
         find.byKey(const Key('wr_growth_suggestion_empty')),
-        findsOneWidget,
+        findsNothing,
       );
+      expect(find.byKey(const Key('wr_growth_add_theme_row')), findsNothing);
     });
 
-    testWidgets('Free còn chỗ thì có thẻ chủ đề tiếp theo', (tester) async {
+    testWidgets('Free còn chỗ cũng không thấy khối mời thêm', (tester) async {
       final intel = _twoThemes();
       intel.seedEnrollments([_enroll('pt-voice')]);
 
@@ -340,8 +340,9 @@ void main() {
 
       expect(
         find.byKey(const Key('wr_growth_suggestion_empty')),
-        findsOneWidget,
+        findsNothing,
       );
+      expect(find.byKey(const Key('wr_growth_add_theme_row')), findsNothing);
     });
 
     testWidgets('Free hết 2/2 chỗ thì nhường cho thẻ quota', (tester) async {

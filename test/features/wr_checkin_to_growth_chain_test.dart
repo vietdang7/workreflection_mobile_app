@@ -293,10 +293,13 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(WrGrowthScreen), findsOneWidget);
 
-    // Chủ đề gợi ra phải là chủ đề CÙNG CHIỀU với tình huống đang lặp — đây là
-    // đầu ra cuối cùng của cả chuỗi (§XIII).
-    expect(find.text(_theme.title), findsOneWidget);
-    expect(find.byKey(const Key('wr_growth_suggestion_reason')), findsOneWidget);
+    // Ba lần chưa đổi được chủ đề: ngưỡng hướng 1 là 15 LẦN nhìn lại (khách
+    // chốt 2026-08-04). Màn phải nói đúng quãng đường còn lại, và tuyệt đối
+    // chưa tự thêm chủ đề nào.
+    expect(find.text('Chưa đủ dữ liệu để có chủ đề'), findsOneWidget);
+    expect(find.textContaining('3/15 lần'), findsOneWidget);
+    expect(stage.intel.enrollThemeCalls, isEmpty);
+    expect(find.text(_theme.title), findsNothing);
   });
 
   // ---------------------------------------------------------------------------

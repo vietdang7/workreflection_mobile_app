@@ -113,6 +113,31 @@ const CALM_OFFER_RE =
 const REFLECT_POINTER_RE =
   /(nút|bấm vào)[^.?!]{0,50}(reflection|luồng|ngay dưới|bên dưới|phía dưới)|bấm vào (nút|đó)|mở luồng (reflection|nhìn lại)/i;
 
+/// Chính LỜI MỜI ghi lại, chứ không phải câu chỉ vào nút.
+///
+/// VÌ SAO PHẢI CÓ THÊM: đo thật qua bản deploy ngày 2026-08-04 bắt được một lượt
+/// trợ lý viết "có vẻ như việc im lặng này đang lặp lại và đáng để nhìn kỹ hơn,
+/// bạn có muốn ghi lại thành một Reflection không?" mà KHÔNG đặt thẻ. Câu đó
+/// không chứa chữ "nút" nên [REFLECT_POINTER_RE] không đỡ được, và cũng không có
+/// luật nào khác phủ.
+///
+/// Tức là lưới an toàn đang có một lỗ đúng ở trường hợp PHỔ BIẾN NHẤT: lời mời
+/// đầu tiên. Nó chỉ vá được cái đến SAU lời mời, còn chính lời mời thì không.
+///
+/// Neo vào cụm "ghi lại ... Reflection" vì đó là cách nói của đúng một việc. Vẫn
+/// đòi một dấu hiệu MỜI đi kèm (từ để hỏi hoặc dấu hỏi) để câu kể lại chuyện cũ
+/// không kích hoạt nhầm.
+const REFLECT_INVITE_RE =
+  /(muốn|thử)[^.?!]{0,60}ghi lại[^.?!]{0,60}reflection|ghi lại thành (một )?reflection[^.?!]{0,40}\?/i;
+
+/// Trợ lý đang NÓI KHÔNG về việc ghi lại, không phải đang mời.
+///
+/// Chặn [REFLECT_INVITE_RE] bắt nhầm những câu như "mình không tự ghi lại thành
+/// một Reflection thay bạn được". Hiện nút ở đó là mâu thuẫn thẳng với chính câu
+/// vừa nói.
+const REFLECT_REFUSAL_RE =
+  /(không|chưa) (thể |tự |được )?(ghi|lưu)|không có quyền (ghi|lưu)/i;
+
 /// Gỡ thẻ, lột Markdown, và áp luật an toàn.
 export function shapeReply(raw: string): ShapedReply {
   let action: ChatAction | null = null;
@@ -155,6 +180,16 @@ export function shapeReply(raw: string): ShapedReply {
   // có thật. Đặt cuối cùng: hai luật trên nói về nội dung cảm xúc, luật này chỉ
   // dọn nốt trường hợp trợ lý nhắc tới nút mà quên đặt thẻ.
   if (action === null && REFLECT_POINTER_RE.test(text)) {
+    action = 'reflect';
+  }
+
+  // Và chính lời mời cũng phải mở được. Đặt CUỐI CÙNG, sau cả luật chỉ-vào-nút:
+  // hai luật trên nói về nội dung cảm xúc và về cái nút đã được nhắc tên, còn
+  // luật này rộng hơn nên để nó quyết định sau cùng.
+  if (
+    action === null &&
+    REFLECT_INVITE_RE.test(text) && !REFLECT_REFUSAL_RE.test(text)
+  ) {
     action = 'reflect';
   }
 

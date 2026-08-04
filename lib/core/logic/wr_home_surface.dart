@@ -19,7 +19,13 @@ import 'wr_repeated_situations.dart';
 
 /// Số lần lặp tối thiểu để hệ thống dám nói "đây là lần thứ N".
 /// Một lần chưa phải mẫu hình (WXS §3.12 Inv.6).
-const int kSystemNoticeThreshold = kDevelopmentFlowThreshold;
+///
+/// Trước 2026-08-04 hằng này lấy theo `kDevelopmentFlowThreshold` — cổng mở chủ
+/// đề thực hành. Hai việc khác nhau, chỉ tình cờ cùng con số: đây là ngưỡng để
+/// NÓI một điều đã lặp, còn kia là ngưỡng để GIAO một chủ đề (giờ là 15 lần
+/// nhìn lại, xem `wr_practice_theme_grant.dart`). Buộc chúng vào nhau thì đổi
+/// ngưỡng bên kia là câu "lần thứ N" ở Hôm nay im lặng theo.
+const int kSystemNoticeThreshold = 2;
 
 /// Tốc độ đọc tiếng Việt dùng để ước lượng thời lượng story.
 const int kWordsPerMinute = 180;

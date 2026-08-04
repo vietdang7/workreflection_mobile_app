@@ -42,7 +42,27 @@ def pg_literal(v) -> str:
     return "'" + str(v).replace("'", "''") + "'"
 
 
-def gen_inserts(rows: list) -> list[str]:
+ON_CONFLICT = {
+    # Seed lần đầu: bảng vừa tạo, không được đè lên nội dung đã có.
+    "insert": "on conflict (mood, sort_order) do nothing;",
+    # Cập nhật nội dung: các hàng cũ đã nằm sẵn trên cơ sở dữ liệu thật, nên
+    # phải ghi đè theo (mood, sort_order). Giữ nguyên id để đường dẫn sâu
+    # /wr/mood-content/<id> đang lưu ở đâu đó không chết.
+    "upsert": (
+        "on conflict (mood, sort_order) do update set\n"
+        "  title       = excluded.title,\n"
+        "  kind        = excluded.kind,\n"
+        "  duration    = excluded.duration,\n"
+        "  type        = excluded.type,\n"
+        "  body        = excluded.body,\n"
+        "  script      = excluded.script,\n"
+        "  placeholder = excluded.placeholder,\n"
+        "  updated_at  = now();"
+    ),
+}
+
+
+def gen_inserts(rows: list, mode: str = "insert") -> list[str]:
     lines = [
         "insert into public.wr_mood_content",
         "  (mood, sort_order, title, kind, duration, type, body, script, placeholder)",
@@ -62,7 +82,7 @@ def gen_inserts(rows: list) -> list[str]:
             f"{pg_literal(r['placeholder'])})"
         )
     lines.append(",\n".join(body_rows))
-    lines.append("on conflict (mood, sort_order) do nothing;")
+    lines.append(ON_CONFLICT[mode])
     return lines
 
 
@@ -72,9 +92,18 @@ def validate(rows: list) -> None:
 
     for mood in MOODS:
         group = [r for r in rows if r["mood"] == mood]
-        # §8.2: đủ 5 mục mỗi cảm xúc. Thiếu thì màn Thư viện hụt nhóm.
-        if len(group) != 5:
-            errors.append(f"{mood}: có {len(group)} mục, phải đủ 5 (§8.2)")
+        readings = [r for r in group if r["type"] == "reading"]
+        # Toàn văn v2: đúng 5 BÀI ĐỌC mỗi cảm xúc, và chúng phải nằm ở
+        # sort_order 1..5. Home chỉ hiện mục đầu nhóm (§8.3), nên nếu một mục
+        # audio còn nháp lọt lên slot 1 thì bản release lọc nó đi và Home mất
+        # hẳn thẻ gợi ý.
+        if len(readings) != 5:
+            errors.append(f"{mood}: có {len(readings)} bài đọc, phải đủ 5")
+        reading_orders = sorted(r["sort_order"] for r in readings)
+        if reading_orders != list(range(1, len(readings) + 1)):
+            errors.append(
+                f"{mood}: bài đọc phải chiếm sort_order 1..5, đang là {reading_orders}"
+            )
         orders = sorted(r["sort_order"] for r in group)
         if orders != list(range(1, len(group) + 1)):
             errors.append(f"{mood}: sort_order phải liên tục từ 1, đang là {orders}")
@@ -105,12 +134,15 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--json", default=str(JSON_DEFAULT))
     parser.add_argument("--migration", default=str(MIGRATION_DEFAULT))
+    parser.add_argument("--mode", default="insert", choices=sorted(ON_CONFLICT))
     args = parser.parse_args()
 
     rows = json.loads(Path(args.json).read_text(encoding="utf-8"))
     validate(rows)
 
-    sql_block = "\n".join([SEED_START, ""] + gen_inserts(rows) + ["", SEED_END])
+    sql_block = "\n".join(
+        [SEED_START, ""] + gen_inserts(rows, args.mode) + ["", SEED_END]
+    )
 
     migration_path = Path(args.migration)
     if not migration_path.exists():

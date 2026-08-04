@@ -38,57 +38,6 @@ HumanNeed? dominantNeedFromBehaviour(
 }
 
 // ---------------------------------------------------------------------------
-// Development Flow gate — WXS §3.12 Invariant 6
-// ---------------------------------------------------------------------------
-
-/// Số lần lặp tối thiểu trước khi Development Flow được phép xuất hiện.
-/// WXS §3.12 Inv.6: "Development Flow chỉ xuất hiện khi đã có Pattern đủ
-/// mạnh — ít nhất hai Episode cùng chủ đề."
-const int kDevelopmentFlowThreshold = 2;
-
-/// Số lần các tình huống thuộc [need] xuất hiện trong recentSituationIds.
-int occurrencesForNeed(
-  HumanNeed need,
-  List<String> recent,
-  List<WrSituation> situations,
-) {
-  final codeToNeed = <String, HumanNeed>{
-    for (final s in situations)
-      if (s.humanNeed != null) s.code: s.humanNeed!,
-  };
-  var total = 0;
-  for (final code in recent) {
-    if (codeToNeed[code] == need) total++;
-  }
-  return total;
-}
-
-/// Đã đủ dữ liệu để đề xuất thực hành chưa?
-///
-/// Hai đường mở khoá, đúng hai hướng khách chốt 2026-07-31:
-///
-///   1. Tích luỹ hàng ngày — một lần gặp chưa phải Pattern, nên đường này vẫn
-///      giữ nguyên ngưỡng lặp của WXS §3.12 Inv.6: hệ thống không tự đẩy người
-///      dùng vào Development Flow khi mới thấy một lần.
-///   2. Tự đánh giá — người dùng CHỦ ĐỘNG ngồi trả lời 15 câu Self-Check thì
-///      mở ngay, không phải chờ lặp. Inv.6 sinh ra để chặn hệ thống suy diễn
-///      vội từ một lần gặp, không phải để chặn chính người dùng nói ra mình
-///      đang vướng ở đâu.
-///
-/// [hasSelfCheck] = người dùng đã hoàn tất ít nhất một lần Self-Check.
-bool developmentFlowUnlocked({
-  required HumanNeed? need,
-  required List<String> recent,
-  required List<WrSituation> situations,
-  bool hasSelfCheck = false,
-}) {
-  if (need == null) return false;
-  if (hasSelfCheck) return true;
-  return occurrencesForNeed(need, recent, situations) >=
-      kDevelopmentFlowThreshold;
-}
-
-// ---------------------------------------------------------------------------
 // dominantNeedFromSelfCheck
 // ---------------------------------------------------------------------------
 

@@ -265,6 +265,58 @@ void main() {
   // ─────────────────────────────────────────────────────────────────────────
 
   group('WrGrowthSkillsScreen', () {
+    testWidgets('danh sách đang hình thành chỉ hiện 3, còn lại sau Xem thêm', (
+      tester,
+    ) async {
+      // Khách 2026-08-04: đang theo sáu chủ đề thì mục này dài tới mức đẩy phần
+      // đối chiếu với công việc xuống tận đáy màn.
+      final intel = FakeWrIntelligenceRepository()
+        ..seedPracticeThemes([
+          for (var i = 1; i <= 6; i++) _theme('t$i', 'Chủ đề số $i'),
+        ])
+        ..seedEnrollments([for (var i = 1; i <= 6; i++) _enrollment('t$i')]);
+
+      await _pumpLarge(
+        tester,
+        _wrap(const WrGrowthSkillsScreen(), intel: intel),
+      );
+
+      expect(find.byKey(const Key('wr_skill_forming_t1')), findsOneWidget);
+      expect(find.byKey(const Key('wr_skill_forming_t4')), findsNothing);
+      expect(find.text('Xem thêm 3 chủ đề'), findsOneWidget);
+
+      // Bấm vào chữ, không bấm vào giữa dòng: WrActionLink là một Row
+      // mainAxisSize.min nên nửa phải của dòng là khoảng trống không nhận chạm.
+      await tester.tap(find.text('Xem thêm 3 chủ đề'));
+      await tester.pumpAndSettle();
+
+      // Xổ ra là thấy ĐỦ, không phải một trần cắt mất dữ liệu. Phải cuộn tới
+      // vì ListView chỉ dựng phần đang trong tầm nhìn.
+      await tester.scrollUntilVisible(
+        find.byKey(const Key('wr_skill_forming_t6')),
+        300,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(find.byKey(const Key('wr_skill_forming_t6')), findsOneWidget);
+      expect(find.text('Thu gọn'), findsOneWidget);
+    });
+
+    testWidgets('ít chủ đề thì không có nút Xem thêm', (tester) async {
+      final intel = FakeWrIntelligenceRepository()
+        ..seedPracticeThemes([
+          for (var i = 1; i <= 3; i++) _theme('t$i', 'Chủ đề số $i'),
+        ])
+        ..seedEnrollments([for (var i = 1; i <= 3; i++) _enrollment('t$i')]);
+
+      await _pumpLarge(
+        tester,
+        _wrap(const WrGrowthSkillsScreen(), intel: intel),
+      );
+
+      expect(find.byKey(const Key('wr_skills_forming_more')), findsNothing);
+      expect(find.byKey(const Key('wr_skill_forming_t3')), findsOneWidget);
+    });
+
     testWidgets('chưa đủ ngưỡng → chưa chứng nhận, nêu còn bao nhiêu lần', (
       tester,
     ) async {
