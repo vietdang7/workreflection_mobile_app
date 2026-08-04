@@ -14,7 +14,6 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/data/wr_intelligence_repository.dart';
 import '../../../core/logic/wr_entitlement.dart';
-import '../../../core/logic/wr_practice_match.dart';
 import '../../../core/logic/wr_practice_theme_grant.dart';
 import '../../../core/logic/wr_repeated_situations.dart';
 import '../../../core/logic/wr_tra_chieu.dart';
@@ -55,10 +54,6 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
   /// Đã bấm "Xem thêm" chưa. Đặt ở State chứ không phải provider: đây là trạng
   /// thái của một lần xem màn, mở lại tab thì thu gọn về như cũ là đúng.
   bool _showAllThemes = false;
-
-  /// Chủ đề phần mềm vừa tự thêm trong lần xem màn này, và lý do. null = lần
-  /// này không thêm gì. Chỉ để báo tin một lần, không phải trạng thái cần lưu.
-  (String, String?)? _justAdded;
 
   /// Đang tự thêm chủ đề — chặn chạy chồng khi build lại giữa chừng.
   bool _autoEnrolling = false;
@@ -133,19 +128,6 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
           );
       ref.invalidate(practiceEnrollmentsProvider);
       _addedThisVisit = true;
-      if (!mounted) return;
-      final situations =
-          ref.read(wrSituationsProvider).valueOrNull ?? const <WrSituation>[];
-      setState(() {
-        _justAdded = (
-          suggestion.theme.title,
-          practiceSuggestionReason(
-            suggestion,
-            situations,
-            ref.read(wrDominantNeedProvider),
-          ),
-        );
-      });
     } catch (_) {
       // Im lặng — xem doc ở trên.
     } finally {
@@ -330,13 +312,9 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
           ),
         ),
 
-        // ── Task C: Card "Bước đang chờ bạn" (khi có active theme) ─────────
-        if (activeTheme != null)
-          _NextStepCardSliver(
-            theme: activeTheme,
-            enrollment: activeEnrollment!,
-            entitlement: entitlement,
-          ),
+        // Thẻ "BƯỚC ĐANG CHỜ BẠN" đã bỏ (khách 2026-08-04): nó nhắc lại đúng
+        // thứ mà thẻ chủ đề ngay bên dưới đã nói, chỉ khác cách gọi tên, nên
+        // đọc thành hai việc khác nhau. Bước kế tiếp nằm trong màn chủ đề.
 
         // ── Danh sách chủ đề, hoặc lời mời khi chưa có chủ đề nào ──────────
         //
@@ -357,12 +335,6 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Chủ đề vừa được thêm tự động. Không thêm mà im lặng:
-                      // người dùng phải biết vì sao danh sách của mình dài ra.
-                      if (_justAdded case (final title, final reason)) ...[
-                        _JustAddedNotice(title: title, reason: reason),
-                        const SizedBox(height: 18),
-                      ],
                       const WrEyebrow('CHỦ ĐỀ CỦA BẠN'),
                       const SizedBox(height: 12),
                       for (final pair in visibleCards)
@@ -520,71 +492,6 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// _JustAddedNotice — báo chủ đề phần mềm vừa tự thêm.
-//
-// Thêm chủ đề vào danh sách của một người mà không nói gì là để họ tự phát hiện
-// ra danh sách của mình dài hơn hôm qua. Dòng này nói đúng hai điều: vừa thêm
-// cái gì, và vì sao lại là cái đó.
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _JustAddedNotice extends StatelessWidget {
-  const _JustAddedNotice({required this.title, required this.reason});
-
-  final String title;
-  final String? reason;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      key: const Key('wr_growth_just_added'),
-      width: double.infinity,
-      padding: const EdgeInsets.fromLTRB(16, 14, 16, 16),
-      decoration: BoxDecoration(
-        color: WrColors.teal.withValues(alpha: 0.10),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Text(
-            'BẠN VỪA CÓ CHỦ ĐỀ MỚI',
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.8,
-              color: WrColors.pillTealText,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            title,
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: WrColors.navy,
-              height: 1.3,
-            ),
-          ),
-          if (reason case final r?) ...[
-            const SizedBox(height: 4),
-            Text(
-              r,
-              key: const Key('wr_growth_just_added_reason'),
-              style: const TextStyle(
-                fontSize: 12,
-                color: WrColors.muted,
-                fontStyle: FontStyle.italic,
-                height: 1.4,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────────────
 // _OpportunitySliver — thẻ mời buổi Trà Chiều Nghề Nghiệp sắp tới.
 //
 // Họp khách 2026-07-29 thu hẹp thẻ này lại: trước đây nó gợi buổi workshop gần
@@ -714,113 +621,6 @@ class _OpportunitySliver extends ConsumerWidget {
     );
   }
 }
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Task C: _NextStepCardSliver — card "BƯỚC ĐANG CHỜ BẠN"
-// ─────────────────────────────────────────────────────────────────────────────
-
-class _NextStepCardSliver extends ConsumerWidget {
-  const _NextStepCardSliver({
-    required this.theme,
-    required this.enrollment,
-    required this.entitlement,
-  });
-
-  final PracticeTheme theme;
-  final PracticeEnrollment enrollment;
-  final WrEntitlement entitlement;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final stepsAsync = ref.watch(practiceStepsProvider(theme.themeId));
-
-    return SliverToBoxAdapter(
-      child: stepsAsync.when(
-        loading: () => const SizedBox.shrink(),
-        error: (_, __) => const SizedBox.shrink(),
-        data: (rawSteps) {
-          final steps = List.of(rawSteps)
-            ..sort((a, b) => a.stepOrder.compareTo(b.stepOrder));
-          final completed = enrollment.completedSteps;
-
-          // Bước tiếp theo: chưa xong, không bị premium lock
-          final nextStep = steps
-              .where(
-                (s) =>
-                    !completed.contains(s.stepId) &&
-                    !(s.isPremium &&
-                        !entitlement.canAccessPracticeStep(isPremiumStep: true)),
-              )
-              .firstOrNull;
-
-          if (nextStep == null) return const SizedBox.shrink();
-
-          return Padding(
-            padding: const EdgeInsets.fromLTRB(22, 0, 22, 12),
-            child: GestureDetector(
-              key: const Key('wr_growth_next_step_card'),
-              behavior: HitTestBehavior.opaque,
-              onTap: () =>
-                  context.push('/wr/growth/theme/${theme.themeId}'),
-              child: WrCardMinimal(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                children: [
-                  // Ô vuông trắng với icon — ô lồng trong thẻ kem thì trắng, y
-                  // như ô icon của thẻ "Gợi ý" và ô "Tiếp tục hôm nay" ở Home.
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: BoxDecoration(
-                      color: WrColors.white,
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    // Icon, không phải chữ '◎': glyph đó không có trong mọi font
-                    // và máy nào thiếu thì hiện ra ô vuông rỗng.
-                    child: const Icon(
-                      Icons.adjust,
-                      size: 17,
-                      color: WrColors.coral,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Text(
-                          'BƯỚC ĐANG CHỜ BẠN',
-                          style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w700,
-                            color: WrColors.coral,
-                            letterSpacing: 0.8,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          '"${theme.title}" · ${nextStep.title}',
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: WrColors.navy,
-                            height: 1.4,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-              ),
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WrPracticeThemeCard — một chủ đề trên tab Phát triển (giao diện mẫu Sprint 2)

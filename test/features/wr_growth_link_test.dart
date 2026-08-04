@@ -1,7 +1,7 @@
 // Tests phủ Task A–E cho Growth/Discover integration:
 // A: Discover tests hiện có vẫn xanh (helper mới thay hàm private)
-// B: Card gợi ý từ Hiểu mình khi không có active enrollment
-// C: Card "BƯỚC ĐANG CHỜ BẠN" khi có active theme
+// B: Phần mềm tự thêm chủ đề khi người dùng đã tích đủ dữ liệu
+// C: (đã bỏ — thẻ "BƯỚC ĐANG CHỜ BẠN" gỡ khỏi màn Phát triển 2026-08-04)
 // D: Section "THỰC HÀNH KHÁC" + enroll + quota
 // E: Tag bước NHẬN DIỆN/THỬ NGHIỆM/CHUYỂN HÓA + link Discover → Growth
 // Run: flutter test test/features/wr_growth_link_test.dart
@@ -325,7 +325,7 @@ void main() {
     // Hướng 1 — khách chốt 2026-08-04: đủ 15 LẦN nhìn lại là được một chủ đề, và
     // phần mềm TỰ thêm, không chờ ai bấm nút.
     testWidgets(
-      'đủ 15 lần nhìn lại → tự thêm chủ đề khớp chiều, kèm dòng báo và lý do',
+      'đủ 15 lần nhìn lại → tự thêm chủ đề khớp chiều vào danh sách',
       (tester) async {
         final content = FakeWrContentRepository();
         content.seedSituations([_sit('s-connect', HumanNeed.ketNoi)]);
@@ -347,13 +347,13 @@ void main() {
 
         expect(intel.enrollThemeCalls, hasLength(1));
         expect(intel.enrollThemeCalls.first.themeId, 't-culture');
+        // Chủ đề vào thẳng danh sách, không qua thẻ báo tin nào: khách bỏ khối
+        // "BẠN VỪA CÓ CHỦ ĐỀ MỚI" ngày 2026-08-04 vì nó chồng lên thẻ chủ đề
+        // ngay bên dưới.
         expect(
-          find.byKey(const Key('wr_growth_just_added')),
+          find.byKey(const Key('wr_growth_theme_card_t-culture')),
           findsOneWidget,
         );
-        // Khớp đúng chiều của tình huống thì lý do gọi thẳng tên tình huống và
-        // số lần — điều người dùng tự đối chiếu được.
-        expect(find.textContaining('Vì bạn đã gặp'), findsOneWidget);
       },
     );
 
@@ -431,7 +431,9 @@ void main() {
       expect(intel.enrollThemeCalls.first.themeId, 't-culture');
     });
 
-    testWidgets('không match trụ → không bịa ra dòng lý do', (tester) async {
+    testWidgets('không match trụ vẫn thêm, và không giải thích gì', (
+      tester,
+    ) async {
       final content = FakeWrContentRepository();
       content.seedSituations([_sit('s-connect', HumanNeed.ketNoi)]);
 
@@ -452,14 +454,11 @@ void main() {
       );
 
       expect(intel.enrollThemeCalls, hasLength(1));
-      expect(find.byKey(const Key('wr_growth_just_added')), findsOneWidget);
+      expect(intel.enrollThemeCalls.first.themeId, 't-struct');
       // Không match được gì thì TUYỆT ĐỐI không giải thích. Nói "vì bạn đang
       // tìm kiếm sự kết nối" cho một chủ đề trụ S là dựng ra mối liên hệ không
       // có thật — người dùng đọc xong sẽ tin hệ thống hiểu mình hơn thực tế.
-      expect(
-        find.byKey(const Key('wr_growth_just_added_reason')),
-        findsNothing,
-      );
+      expect(find.textContaining('Vì bạn đang tìm kiếm'), findsNothing);
     });
 
     // Nợ nhiều chủ đề cũng chỉ nhận một chủ đề mỗi lượt xem màn: nghỉ một tháng
