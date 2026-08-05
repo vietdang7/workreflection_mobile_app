@@ -25,6 +25,7 @@ import 'package:workreflection_mobile/l10n/app_localizations.dart';
 import '../support/fake_wr_content_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
 import 'package:workreflection_mobile/core/logic/wr_pricing.dart';
+import 'package:workreflection_mobile/core/logic/wr_store_policy.dart';
 
 import '../support/fake_repository.dart';
 import '../support/fake_wr_intelligence_repository.dart';
@@ -83,6 +84,10 @@ Widget _wrap(
   );
   return ProviderScope(
     overrides: [
+      // Bản `open` (web/desktop) — nhóm test Paywall ở file này kiểm nút mua
+      // TRONG APP. Bản phát hành qua kho ứng dụng khoá nút đó theo policy của
+      // Apple/Google; phần ấy có test riêng ở `wr_store_policy_test.dart`.
+      wrStorePolicyProvider.overrideWithValue(WrStorePolicy.open),
       wrIntelligenceRepositoryProvider.overrideWithValue(intelRepo),
       wrContentRepositoryProvider.overrideWithValue(contentRepo),
       wrRepositoryProvider.overrideWithValue(wrRepo),

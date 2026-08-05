@@ -16,6 +16,7 @@ import 'package:workreflection_mobile/core/logic/wr_entitlement.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 import 'package:workreflection_mobile/core/logic/wr_payment.dart';
 import 'package:workreflection_mobile/core/logic/wr_pricing.dart';
+import 'package:workreflection_mobile/core/logic/wr_store_policy.dart';
 import 'package:workreflection_mobile/features/profile/profile_providers.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_payment_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_paywall_screen.dart';
@@ -60,6 +61,11 @@ Widget _app(FakePaymentRepository repo, {required bool premiumAfter}) {
 
   return ProviderScope(
     overrides: [
+      // Test này kiểm chính luồng mua TRONG APP, tức bản `open` (web/desktop).
+      // Không khai thì `flutter test` chạy dưới nền tảng Android, mà bản
+      // Android phát hành đã khoá màn thanh toán theo Play Payments policy —
+      // xem `wr_store_policy.dart`.
+      wrStorePolicyProvider.overrideWithValue(WrStorePolicy.open),
       paymentRepositoryProvider.overrideWithValue(repo),
       wrPremiumPricingProvider.overrideWith(
         // Giá gói APP (`premium_mobile`), không phải gói web 249.000đ.

@@ -63,6 +63,8 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   _LogoutButton(),
+                  const SizedBox(height: 8),
+                  _DeleteAccountButton(),
                   const SizedBox(height: 80),
                 ]),
               ),
@@ -906,5 +908,123 @@ class _LogoutButton extends ConsumerWidget {
         );
       }
     }
+  }
+}
+
+/// Xoá tài khoản — App Store Review Guideline 5.1.1(v).
+///
+/// Apple bắt buộc app nào cho tạo tài khoản thì phải cho xoá NGAY TRONG APP,
+/// không được đẩy sang email hay trang web. Thiếu là bị từ chối thẳng.
+///
+/// Cố ý làm nút chữ mờ nằm dưới nút đăng xuất chứ không phải nút đỏ nổi bật:
+/// đây là việc không hoàn tác được, không nên mời gọi. Nhưng cũng KHÔNG được
+/// giấu vào tầng thiết lập sâu — Apple xem việc chôn nút này là vi phạm.
+class _DeleteAccountButton extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    return TextButton(
+      key: const Key('profile_delete_account_btn'),
+      onPressed: () => _confirmThenDelete(context, ref),
+      style: TextButton.styleFrom(
+        foregroundColor: WrColors.muted,
+        padding: const EdgeInsets.symmetric(vertical: 10),
+      ),
+      child: Text(
+        l10n.profileDeleteAccount,
+        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+      ),
+    );
+  }
+
+  Future<void> _confirmThenDelete(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => const _DeleteAccountDialog(),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      await ref.read(authRepositoryProvider).deleteAccount();
+      // Không tự điều hướng: `deleteAccount` đã signOut, router thấy mất phiên
+      // là tự đá về /auth. Tự `go` thêm ở đây là đua với redirect của router.
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.profileDeleteAccountError)),
+        );
+      }
+    }
+  }
+}
+
+/// Hộp xác nhận: phải gõ đúng chữ mới bấm được nút xoá.
+///
+/// Một cú chạm "Đồng ý" là quá rẻ cho hành động không hoàn tác được — gõ tay
+/// buộc người dùng đọc xong mới làm được tiếp.
+class _DeleteAccountDialog extends StatefulWidget {
+  const _DeleteAccountDialog();
+
+  @override
+  State<_DeleteAccountDialog> createState() => _DeleteAccountDialogState();
+}
+
+class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    // So khớp bỏ qua hoa/thường và khoảng trắng thừa: người dùng gõ đúng ý rồi
+    // mà bị chặn vì cái dấu cách cuối dòng thì vô lý.
+    final ok = _controller.text.trim().toUpperCase() ==
+        l10n.profileDeleteAccountConfirmWord.toUpperCase();
+
+    return AlertDialog(
+      title: Text(l10n.profileDeleteAccountTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.profileDeleteAccountBody,
+            style: const TextStyle(fontSize: 13.5, height: 1.6),
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            key: const Key('profile_delete_confirm_field'),
+            controller: _controller,
+            autocorrect: false,
+            textCapitalization: TextCapitalization.characters,
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              hintText: l10n.profileDeleteAccountHint,
+              border: const OutlineInputBorder(),
+              isDense: true,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          key: const Key('profile_delete_cancel_btn'),
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(l10n.profileDeleteAccountCancel),
+        ),
+        TextButton(
+          key: const Key('profile_delete_confirm_btn'),
+          onPressed: ok ? () => Navigator.of(context).pop(true) : null,
+          style: TextButton.styleFrom(foregroundColor: WrColors.coral),
+          child: Text(l10n.profileDeleteAccountCta),
+        ),
+      ],
+    );
   }
 }

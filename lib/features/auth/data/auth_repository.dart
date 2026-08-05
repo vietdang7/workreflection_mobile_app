@@ -9,6 +9,7 @@ abstract class AuthRepository {
   Future<void> signOut();
   Future<void> resetPassword(String email);
   Future<void> changePassword(String newPassword);
+  Future<void> deleteAccount();
 }
 
 /// Live implementation backed by Supabase.
@@ -77,6 +78,28 @@ class SupabaseAuthRepository implements AuthRepository {
     );
     if (response.user == null) {
       throw Exception('changePassword: no user returned');
+    }
+  }
+
+  /// Xoá vĩnh viễn tài khoản đang đăng nhập và toàn bộ dữ liệu của nó.
+  ///
+  /// App Store Guideline 5.1.1(v) bắt buộc phải xoá được ngay trong app.
+  ///
+  /// Việc xoá nằm ở RPC `wr_delete_own_account` (migration
+  /// 20260805140000): hàm đó chạy `security definer`, chỉ đụng tới
+  /// `auth.uid()` của phiên gọi nên không có đường xoá nhầm tài khoản khác.
+  ///
+  /// Gọi `signOut` ngay sau đó: phiên vẫn còn access token hợp lệ tới lúc hết
+  /// hạn dù user đã biến mất, để nguyên thì app tưởng còn đăng nhập và mọi
+  /// truy vấn tiếp theo đều lỗi khó hiểu.
+  @override
+  Future<void> deleteAccount() async {
+    await _client.rpc<void>('wr_delete_own_account');
+    try {
+      await _client.auth.signOut();
+    } catch (_) {
+      // Token của tài khoản vừa xoá có thể bị từ chối — không sao, dữ liệu đã
+      // xoá xong rồi. Đừng ném lỗi làm người dùng tưởng xoá hụt.
     }
   }
 }

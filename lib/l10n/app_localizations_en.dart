@@ -326,6 +326,32 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileLanguageValue => 'English';
 
   @override
+  String get profileDeleteAccount => 'Delete account';
+
+  @override
+  String get profileDeleteAccountTitle => 'Permanently delete your account?';
+
+  @override
+  String get profileDeleteAccountBody =>
+      'All your data will be erased and cannot be recovered: your reflections, Career Memory, practice themes, self-check results and profile. If you have the full version, the remaining time goes with it.';
+
+  @override
+  String get profileDeleteAccountHint => 'Type DELETE to confirm';
+
+  @override
+  String get profileDeleteAccountConfirmWord => 'DELETE';
+
+  @override
+  String get profileDeleteAccountCta => 'Delete permanently';
+
+  @override
+  String get profileDeleteAccountCancel => 'Keep my account';
+
+  @override
+  String get profileDeleteAccountError =>
+      'Could not delete the account. Check your connection and try again.';
+
+  @override
   String get understandStatusNeedsAttention => 'Needs attention';
 
   @override

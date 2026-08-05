@@ -327,6 +327,32 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profileLanguageValue => 'Tiếng Việt';
 
   @override
+  String get profileDeleteAccount => 'Xoá tài khoản';
+
+  @override
+  String get profileDeleteAccountTitle => 'Xoá tài khoản vĩnh viễn?';
+
+  @override
+  String get profileDeleteAccountBody =>
+      'Toàn bộ dữ liệu của bạn sẽ bị xoá và không lấy lại được: những lần nhìn lại, Career Memory, chủ đề thực hành, kết quả self-check và hồ sơ. Nếu bạn đang có bản đầy đủ, phần thời hạn còn lại cũng mất theo.';
+
+  @override
+  String get profileDeleteAccountHint => 'Gõ XOÁ để xác nhận';
+
+  @override
+  String get profileDeleteAccountConfirmWord => 'XOÁ';
+
+  @override
+  String get profileDeleteAccountCta => 'Xoá vĩnh viễn';
+
+  @override
+  String get profileDeleteAccountCancel => 'Giữ tài khoản';
+
+  @override
+  String get profileDeleteAccountError =>
+      'Không xoá được tài khoản. Kiểm tra mạng rồi thử lại.';
+
+  @override
   String get understandStatusNeedsAttention => 'Cần chú ý';
 
   @override

@@ -17,6 +17,7 @@ import '../../core/logic/wr_premium_override.dart';
 import '../../core/logic/wr_pricing.dart';
 import '../../core/logic/wr_repeated_situations.dart';
 import '../../core/logic/wr_situation_picker.dart';
+import '../../core/logic/wr_store_policy.dart';
 import '../../core/models/wr_mood_content.dart';
 import '../profile/profile_providers.dart';
 import 'episode_flow_controller.dart';
@@ -169,6 +170,14 @@ final wrPremiumPricingProvider = FutureProvider<WrPremiumPricing>((ref) async {
   final plans = await ref.watch(wrPremiumPlansProvider.future);
   return plans.first;
 });
+
+/// Bản build này có được bán Premium ngay trong app không.
+///
+/// Ghi đè trong test để dựng được cả hai bản mà không phải giả lập nền tảng:
+/// `wrStorePolicyProvider.overrideWithValue(WrStorePolicy.webLinkOnly)`.
+final wrStorePolicyProvider = Provider<WrStorePolicy>(
+  (ref) => WrStorePolicy.forThisBuild(),
+);
 
 /// Fetch today's check-in (nullable). Used by WrHomeScreen to detect saved state.
 final todayCheckinProvider = FutureProvider<Checkin?>((ref) async {

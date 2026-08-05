@@ -147,6 +147,15 @@
   "profileSettingLogout": "Log out",
   "profileLanguageValue": "English",
 
+  "profileDeleteAccount": "Delete account",
+  "profileDeleteAccountTitle": "Permanently delete your account?",
+  "profileDeleteAccountBody": "All your data will be erased and cannot be recovered: your reflections, Career Memory, practice themes, self-check results and profile. If you have the full version, the remaining time goes with it.",
+  "profileDeleteAccountHint": "Type DELETE to confirm",
+  "profileDeleteAccountConfirmWord": "DELETE",
+  "profileDeleteAccountCta": "Delete permanently",
+  "profileDeleteAccountCancel": "Keep my account",
+  "profileDeleteAccountError": "Could not delete the account. Check your connection and try again.",
+
   "understandStatusNeedsAttention": "Needs attention",
   "understandNeedSuffix": "· Dominant need",
   "understandNoSituations": "No situations recorded yet.",

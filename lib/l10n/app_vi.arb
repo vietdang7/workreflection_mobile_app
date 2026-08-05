@@ -148,6 +148,15 @@
   "profileSettingLogout": "Đăng xuất",
   "profileLanguageValue": "Tiếng Việt",
 
+  "profileDeleteAccount": "Xoá tài khoản",
+  "profileDeleteAccountTitle": "Xoá tài khoản vĩnh viễn?",
+  "profileDeleteAccountBody": "Toàn bộ dữ liệu của bạn sẽ bị xoá và không lấy lại được: những lần nhìn lại, Career Memory, chủ đề thực hành, kết quả self-check và hồ sơ. Nếu bạn đang có bản đầy đủ, phần thời hạn còn lại cũng mất theo.",
+  "profileDeleteAccountHint": "Gõ XOÁ để xác nhận",
+  "profileDeleteAccountConfirmWord": "XOÁ",
+  "profileDeleteAccountCta": "Xoá vĩnh viễn",
+  "profileDeleteAccountCancel": "Giữ tài khoản",
+  "profileDeleteAccountError": "Không xoá được tài khoản. Kiểm tra mạng rồi thử lại.",
+
   "understandStatusNeedsAttention": "Cần chú ý",
   "understandNeedSuffix": "· Nhu cầu chủ đạo",
   "understandNoSituations": "Chưa có tình huống nào được ghi nhận.",
