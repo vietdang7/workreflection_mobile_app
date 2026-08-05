@@ -29,7 +29,7 @@ workflows:
       vars:
         # Apple ID của app record (dãy số ~10 chữ số), dùng để hỏi build number
         # mới nhất trên App Store Connect rồi +1 — tránh trùng số khi nộp.
-        APP_STORE_APPLE_ID: 0000000000
+        APP_STORE_APPLE_ID: 6798188505
       # Ghim đúng phiên bản máy dev đang dùng để bản build trên CI không lệch.
       flutter: 3.41.4
       xcode: latest
