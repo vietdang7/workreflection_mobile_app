@@ -1536,7 +1536,12 @@ void main() {
     // dưới khoá đúng phía app: gửi khi được phép, và KHÔNG gửi khi không.
 
     testWidgets('email được phép: lượt gửi mang theo cờ', (tester) async {
-      SharedPreferences.setMockInitialValues({'wr_dev_premium_override': true});
+      // Hai key: giá trị và CHỦ công tắc. Thiếu chủ thì công tắc bị bỏ — xem
+      // `overrideForAccount`.
+      SharedPreferences.setMockInitialValues({
+        'wr_dev_premium_override': true,
+        'wr_dev_premium_override_owner': 'thedangs7@gmail.com',
+      });
       final chat = FakeWrChatRepository();
 
       await _pump(

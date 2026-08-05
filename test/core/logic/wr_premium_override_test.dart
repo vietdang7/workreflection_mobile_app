@@ -52,6 +52,77 @@ void main() {
     });
   });
 
+  group('overrideForAccount', () {
+    const owner = 'thedangs7@gmail.com';
+
+    test('chủ công tắc đọc lại được đúng giá trị mình đã bật', () {
+      for (final v in [true, false]) {
+        expect(
+          overrideForAccount(stored: v, storedOwner: owner, current: owner),
+          v,
+        );
+      }
+    });
+
+    test('người khác đăng nhập trên cùng máy thì công tắc vô hiệu', () {
+      // Đây là lỗ hổng phải bịt: SharedPreferences lưu theo MÁY. Bật một lần
+      // rồi đưa máy cho người khác đăng nhập là họ thành Premium.
+      expect(
+        overrideForAccount(
+          stored: true,
+          storedOwner: owner,
+          current: 'nguoikhac@gmail.com',
+        ),
+        isNull,
+      );
+    });
+
+    test('email nội bộ KHÁC cũng không dùng được công tắc của nhau', () {
+      expect(
+        overrideForAccount(
+          stored: true,
+          storedOwner: owner,
+          current: 'ngduythong1412@gmail.com',
+        ),
+        isNull,
+      );
+    });
+
+    test('dữ liệu bản cũ (không ghi chủ) bị bỏ', () {
+      // Bản trước chỉ lưu true/false. Giữ lại là cấp Premium cho bất kỳ ai đăng
+      // nhập sau đó trên máy đã từng bật.
+      expect(
+        overrideForAccount(stored: true, storedOwner: null, current: owner),
+        isNull,
+      );
+    });
+
+    test('chưa đăng nhập thì vô hiệu', () {
+      expect(
+        overrideForAccount(stored: true, storedOwner: owner, current: null),
+        isNull,
+      );
+    });
+
+    test('chưa từng bật thì trả null', () {
+      expect(
+        overrideForAccount(stored: null, storedOwner: null, current: owner),
+        isNull,
+      );
+    });
+
+    test('bỏ qua hoa thường khi đối chiếu chủ công tắc', () {
+      expect(
+        overrideForAccount(
+          stored: true,
+          storedOwner: 'TheDangS7@Gmail.com',
+          current: '  thedangs7@gmail.com ',
+        ),
+        isTrue,
+      );
+    });
+  });
+
   group('resolvePremium', () {
     test('chưa động vào công tắc thì trả gói thật', () {
       for (final actual in [true, false]) {
