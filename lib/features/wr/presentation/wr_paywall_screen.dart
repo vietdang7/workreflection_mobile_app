@@ -1,15 +1,19 @@
+import 'package:flutter/foundation.dart' show defaultTargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/logic/wr_pricing.dart';
+import '../../../core/logic/wr_store_policy.dart';
+import '../../../core/logic/wr_tra_chieu.dart' show kWebAppBaseUrl;
 import '../../../core/theme/wr_colors.dart';
 import '../wr_providers.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 /// Trigger cho các headline khác nhau của Paywall.
 enum PaywallTrigger {
   defaultTrigger,
   aiInsight,
-  report,
   trialEnd,
   benchmark,
 
@@ -55,6 +59,123 @@ Future<void> _openPayment(
   if (premium) context.pop();
 }
 
+/// Có hiện con số giá không.
+///
+/// Chỉ giấu ở bản im lặng: bản dẫn-sang-web vẫn phải cho biết giá, không thì
+/// người dùng bấm sang trình duyệt trong tình trạng mù thông tin.
+bool _showsPrice(WrStorePolicy policy) =>
+    policy.allowsInAppPurchase || policy.allowsWebPurchaseLink;
+
+/// Mở trang mua Premium trên web (bản iOS).
+///
+/// Mở bằng trình duyệt ngoài chứ không WebView trong app: Apple coi WebView
+/// bọc trang thanh toán là "mua trong app trá hình". Ra hẳn Safari thì rành
+/// mạch là giao dịch xảy ra ngoài app.
+///
+/// Không mở được thì nói ra — người dùng vừa bấm một nút, im lặng là tệ nhất.
+Future<void> _openWebPurchase(
+  BuildContext context,
+  WrPremiumPricing plan,
+) async {
+  final url = wrWebPremiumUrl(
+    baseUrl: kWebAppBaseUrl,
+    planProductId: plan.productId,
+    source: switch (defaultTargetPlatform) {
+      TargetPlatform.iOS => 'ios_app',
+      TargetPlatform.android => 'android_app',
+      _ => 'app',
+    },
+  );
+  var opened = false;
+  try {
+    opened = await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.externalApplication,
+    );
+  } catch (_) {
+    opened = false;
+  }
+  if (!opened && context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Không mở được trang nâng cấp.')),
+    );
+  }
+}
+
+/// Nút cuối paywall. Ba dáng ứng với ba chính sách bán hàng.
+class _PaywallCta extends ConsumerWidget {
+  const _PaywallCta({required this.policy, required this.pricing});
+
+  final WrStorePolicy policy;
+  final WrPremiumPricing pricing;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (policy.allowsInAppPurchase) {
+      return SizedBox(
+        width: double.infinity,
+        child: ElevatedButton(
+          key: const Key('wr_paywall_cta'),
+          onPressed: () => _openPayment(context, ref, pricing),
+          style: _ctaStyle,
+          child: const Text(
+            'Bắt đầu Premium →',
+            style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w700),
+          ),
+        ),
+      );
+    }
+
+    if (policy.allowsWebPurchaseLink) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ElevatedButton(
+            key: const Key('wr_paywall_cta_web'),
+            onPressed: () => _openWebPurchase(context, pricing),
+            style: _ctaStyle,
+            child: const Text(
+              'Nâng cấp trên web →',
+              style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w700),
+            ),
+          ),
+          const SizedBox(height: 8),
+          const WrParagraph(
+            'Bạn sẽ được đưa sang trang WorkReflection để đăng nhập và hoàn '
+            'tất. Xong quay lại app là bản đầy đủ đã mở.',
+            style: TextStyle(fontSize: 11.5, color: WrColors.muted, height: 1.6),
+          ),
+        ],
+      );
+    }
+
+    // Bản im lặng: không nút, không giá, chỉ nói cho người dùng biết bản đầy đủ
+    // đến từ tài khoản của họ chứ không phải thứ mua trong app.
+    return Container(
+      key: const Key('wr_paywall_cta_silent'),
+      decoration: BoxDecoration(
+        color: WrColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: WrColors.line),
+      ),
+      padding: const EdgeInsets.all(14),
+      child: const WrParagraph(
+        'Bản đầy đủ đi theo tài khoản WorkReflection của bạn. Khi tài khoản đã '
+        'có quyền, những phần trên tự mở trong app.',
+        style: TextStyle(fontSize: 12.5, color: WrColors.muted, height: 1.6),
+      ),
+    );
+  }
+
+  static final ButtonStyle _ctaStyle = ElevatedButton.styleFrom(
+    backgroundColor: WrColors.coral,
+    foregroundColor: WrColors.navy,
+    padding: const EdgeInsets.symmetric(vertical: 14),
+    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+    elevation: 0,
+  );
+}
+
 class WrPaywallScreen extends ConsumerStatefulWidget {
   const WrPaywallScreen({super.key, this.trigger = PaywallTrigger.defaultTrigger});
 
@@ -78,10 +199,6 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
         PaywallTrigger.aiInsight => (
             title: 'AI Insight dành riêng cho bạn',
             sub: 'Nhận insight cá nhân hoá từ Career Memory của bạn.',
-          ),
-        PaywallTrigger.report => (
-            title: 'Báo cáo chuyên sâu đang chờ bạn',
-            sub: 'Xem đầy đủ bức tranh nghề nghiệp của bạn.',
           ),
         PaywallTrigger.trialEnd => (
             title: 'Tháng trải nghiệm của bạn kết thúc',
@@ -119,6 +236,9 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
   @override
   Widget build(BuildContext context) {
     final h = _headline;
+    // Bản iOS không được bán trong app (Guideline 3.1.1) — xem
+    // `wr_store_policy.dart`.
+    final policy = ref.watch(wrStorePolicyProvider);
     // Các gói APP (`cc_products.product_type = 'premium_mobile'`) — năm 499.000đ
     // và tháng 70.000đ, KHÔNG phải gói web 249.000đ. Sửa ở trang quản trị của
     // web là app đổi theo. Trong lúc chờ tải thì dùng gói mặc định chứ không để
@@ -145,11 +265,6 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
         desc: 'Phát hiện mô thức từ Career Memory của bạn. Ngày càng chính xác hơn.',
       ),
       _Highlight(
-        icon: '📊',
-        title: 'Báo cáo chuyên sâu',
-        desc: '49 câu phân tích đầy đủ 3 chiều Sự rõ ràng · Mối quan hệ · Cách làm việc.',
-      ),
-      _Highlight(
         icon: '📈',
         title: 'Career Pattern',
         desc: 'Nhìn thấy các mô thức lặp lại trong hành trình nghề nghiệp theo thời gian.',
@@ -168,7 +283,6 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
       _FeatureRow(label: '15 câu phản chiếu', avail: true),
       _FeatureRow(label: '3 chủ đề Thực hành', avail: true),
       _FeatureRow(label: 'AI Insight', avail: false),
-      _FeatureRow(label: 'Báo cáo chuyên sâu 49 câu', avail: false),
       _FeatureRow(label: 'Career Pattern Analysis', avail: false),
       _FeatureRow(label: 'Career Benchmark', avail: false),
       _FeatureRow(label: 'Không giới hạn Thực hành', avail: false),
@@ -212,7 +326,7 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          if (pricing.hasDiscount) ...[
+                          if (_showsPrice(policy) && pricing.hasDiscount) ...[
                             Text(
                               pricing.originalLabel!,
                               style: const TextStyle(
@@ -224,18 +338,19 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                             ),
                             const SizedBox(width: 5),
                           ],
-                          Text(
-                            '${pricing.currentLabel} / ${pricing.durationSuffix}',
-                            style: const TextStyle(
-                              fontSize: 11.5,
-                              color: Color(0xB3FFFFFF),
-                              fontWeight: FontWeight.w700,
+                          if (_showsPrice(policy))
+                            Text(
+                              '${pricing.currentLabel} / ${pricing.durationSuffix}',
+                              style: const TextStyle(
+                                fontSize: 11.5,
+                                color: Color(0xB3FFFFFF),
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
-                          ),
                         ],
                       ),
                       const SizedBox(height: 8),
-                      Text(
+                      WrParagraph(
                         h.title,
                         style: const TextStyle(
                           fontSize: 20,
@@ -243,9 +358,10 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                           color: WrColors.white,
                           height: 1.35,
                         ),
+                        textAlign: TextAlign.start,
                       ),
                       const SizedBox(height: 5),
-                      Text(
+                      WrParagraph(
                         h.sub,
                         style: const TextStyle(
                           fontSize: 14.5,
@@ -335,7 +451,10 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
 
                   // Chọn gói — chỉ dựng khi thật sự có nhiều hơn một gói, để
                   // trường hợp một gói không phát sinh thêm một cú chạm vô ích.
-                  if (plans.length > 1)
+                  //
+                  // Bản im lặng (Apple bắt bẻ anti-steering) không hiện gói lẫn
+                  // giá: nhắc tới con số là đã gợi chuyện mua bán.
+                  if (_showsPrice(policy) && plans.length > 1)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
                       child: _PlanSelector(
@@ -349,32 +468,17 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
 
                   // Giá — đặt ngay trên nút mua để con số là thứ cuối cùng đọc
                   // được trước khi bấm.
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
-                    child: _PriceBlock(pricing: pricing),
-                  ),
+                  if (_showsPrice(policy))
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
+                      child: _PriceBlock(pricing: pricing),
+                    ),
 
-                  // CTA
+                  // CTA — ba dáng tuỳ chính sách của bản build, xem
+                  // `wr_store_policy.dart`.
                   Padding(
                     padding: const EdgeInsets.fromLTRB(22, 10, 22, 8),
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        key: const Key('wr_paywall_cta'),
-                        onPressed: () => _openPayment(context, ref, pricing),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: WrColors.coral,
-                          foregroundColor: WrColors.navy,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                          elevation: 0,
-                        ),
-                        child: const Text(
-                          'Bắt đầu Premium →',
-                          style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w700),
-                        ),
-                      ),
-                    ),
+                    child: _PaywallCta(policy: policy, pricing: pricing),
                   ),
 
                   // Guarantee
@@ -401,7 +505,7 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                             ),
                           ),
                           SizedBox(height: 3),
-                          Text(
+                          WrParagraph(
                             'Nếu không hài lòng trong 7 ngày đầu, chúng tôi hoàn tiền toàn bộ. Không câu hỏi.',
                             style: TextStyle(fontSize: 11.5, color: WrColors.muted, height: 1.6),
                           ),
@@ -716,7 +820,7 @@ class _HighlightCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 3),
-                Text(
+                WrParagraph(
                   highlight.desc,
                   style: const TextStyle(fontSize: 12.5, color: WrColors.muted, height: 1.6),
                 ),

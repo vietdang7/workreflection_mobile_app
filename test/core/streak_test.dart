@@ -1,8 +1,71 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:workreflection_mobile/core/logic/streak.dart';
 import 'package:workreflection_mobile/core/logic/vn_date.dart';
+import 'package:workreflection_mobile/core/models/wr_episode.dart';
+
+ReflectionEpisode _episode({DateTime? closedAt}) => ReflectionEpisode(
+      userId: 'u1',
+      humanMoment: HumanMoment.confusion,
+      closedAt: closedAt,
+    );
 
 void main() {
+  // Con số ở màn Hồ sơ đổi từ chuỗi ngày liên tiếp sang tổng số ngày đã nhìn
+  // lại (yêu cầu 05/08).
+  group('reflectionDayCount', () {
+    test('chưa nhìn lại lần nào thì bằng 0', () {
+      expect(reflectionDayCount([]), 0);
+    });
+
+    test('nhiều lần trong cùng một ngày vẫn tính là một ngày', () {
+      expect(
+        reflectionDayCount([
+          _episode(closedAt: DateTime(2026, 8, 5, 9)),
+          _episode(closedAt: DateTime(2026, 8, 5, 21)),
+        ]),
+        1,
+      );
+    });
+
+    test('đếm cả những ngày rời rạc, không cần liên tiếp', () {
+      // Đây chính là chỗ khác chuỗi streak: nghỉ ba ngày ở giữa vẫn đếm đủ.
+      expect(
+        reflectionDayCount([
+          _episode(closedAt: DateTime(2026, 8, 1)),
+          _episode(closedAt: DateTime(2026, 8, 5)),
+          _episode(closedAt: DateTime(2026, 7, 20)),
+        ]),
+        3,
+      );
+    });
+
+    test('Episode bỏ dở giữa chừng không tính là một ngày đã nhìn lại', () {
+      expect(
+        reflectionDayCount([
+          _episode(),
+          _episode(closedAt: DateTime(2026, 8, 5)),
+        ]),
+        1,
+      );
+    });
+
+    test('con số không tụt khi người dùng nghỉ vài ngày', () {
+      // Khác hẳn `computeStreak`: cùng dữ liệu này, chuỗi liên tiếp về 0.
+      final episodes = [
+        _episode(closedAt: DateTime(2026, 7, 1)),
+        _episode(closedAt: DateTime(2026, 7, 2)),
+      ];
+      expect(reflectionDayCount(episodes), 2);
+      expect(
+        computeStreak(
+          [DateTime(2026, 7, 1), DateTime(2026, 7, 2)],
+          DateTime(2026, 8, 5),
+        ),
+        0,
+      );
+    });
+  });
+
   group('computeStreak', () {
     test('empty list returns 0', () {
       expect(computeStreak([], DateTime(2026, 7, 17)), 0);

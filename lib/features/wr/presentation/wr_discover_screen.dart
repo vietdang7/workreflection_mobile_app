@@ -36,6 +36,7 @@ import '../../../core/widgets/wr_profile_avatar.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../core/widgets/wr_premium_lock.dart';
 import '../wr_providers.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 /// Số lần lặp tối thiểu để hệ thống dám đọc ra nguyên nhân sâu.
 /// Yêu cầu khách: "người dùng lặp lại một vấn đề 5 lần".
@@ -197,7 +198,7 @@ class WrDiscoverScreen extends ConsumerWidget {
             // phải nói rõ là đã ghi nhận, chỉ chưa điều nào lặp tới ngưỡng.
             if (top.isEmpty)
               if (recent.isEmpty)
-                const Text(
+                const WrParagraph(
                   'Sau vài lần nhìn lại có chọn tình huống, những điều lặp lại '
                   'sẽ hiện ra ở đây.',
                   key: Key('wr_discover_patterns_empty'),
@@ -208,7 +209,7 @@ class WrDiscoverScreen extends ConsumerWidget {
                   ),
                 )
               else
-                Text(
+                WrParagraph(
                   'Bạn đã chọn tình huống ${recent.length} lần, nhưng chưa '
                   'điều nào trở lại đủ $kRepeatedSituationsMinCount lần. Khi '
                   'một điều quay lại tới đó, nó sẽ hiện ở đây.',
@@ -356,8 +357,10 @@ class _SeekingBlock extends StatelessWidget {
         children: [
           const WrEyebrow('ĐIỀU BẠN ĐANG TÌM KIẾM', center: true),
           const SizedBox(height: 16),
-          Text(
+          WrParagraph(
             '"$text"',
+            // Câu trích canh giữa là có chủ ý — căn đều sẽ phá dáng khối này.
+            // Vẫn cần giữ cụm cuối câu để dòng chót không còn trơ một chữ.
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: fontSize,
@@ -417,8 +420,11 @@ class WrPatternRow extends StatelessWidget {
             Row(
               children: [
                 Expanded(
-                  child: Text(
+                  // Tên tình huống hay dài hơn một dòng; canh trái như cũ,
+                  // chỉ chặn chỗ ngắt cuối để không còn "…nhưng đi / đâu?".
+                  child: WrParagraph(
                     label,
+                    textAlign: TextAlign.start,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -654,7 +660,7 @@ class _CareerHealthCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          Text(
+          WrParagraph(
             unlocked
                 ? 'Bạn đã nhìn lại $reflectionCount/$kCareerHealthThreshold '
                     'lần. Bức tranh tổng thể đã mở.'
@@ -712,7 +718,7 @@ class _SelfCheckInviteCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          WrParagraph(
             '$total câu hỏi tình huống ngắn, giúp phác thảo điều kiện làm việc '
             'đang hỗ trợ hoặc cản trở bạn. Có thể làm lại bất kỳ lúc nào.',
             style: const TextStyle(

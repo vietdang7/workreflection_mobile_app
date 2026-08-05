@@ -18,6 +18,7 @@ import '../../wr/org_survey_providers.dart';
 import '../../wr/wr_providers.dart';
 import '../profile_providers.dart';
 import 'change_password_dialog.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -62,6 +63,8 @@ class ProfileScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 12),
                   _LogoutButton(),
+                  const SizedBox(height: 8),
+                  _DeleteAccountButton(),
                   const SizedBox(height: 80),
                 ]),
               ),
@@ -205,7 +208,7 @@ class _AvatarSection extends ConsumerWidget {
                   ),
           ),
           const SizedBox(height: 12),
-          Text(
+          WrParagraph(
             name,
             textAlign: TextAlign.center,
             style: const TextStyle(
@@ -355,7 +358,10 @@ class _StatsCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final streak = ref.watch(streakProvider).valueOrNull ?? 0;
+    // Tổng số ngày đã nhìn lại, KHÔNG phải chuỗi ngày liên tiếp (yêu cầu
+    // 05/08). Chuỗi liên tiếp nghỉ một ngày là về 0; con số tích luỹ thì
+    // không bao giờ lấy đi thứ người dùng đã làm được.
+    final reflectDays = ref.watch(reflectionDayCountProvider).valueOrNull ?? 0;
     final insights = ref.watch(insightCountProvider).valueOrNull ?? 0;
     final milestones = ref.watch(milestoneCountProvider).valueOrNull ?? 0;
 
@@ -371,7 +377,10 @@ class _StatsCard extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           Expanded(
-            child: _StatBlock(number: streak, label: l10n.profileStatStreak),
+            child: _StatBlock(
+              number: reflectDays,
+              label: l10n.profileStatReflectDays,
+            ),
           ),
           Expanded(
             child:
@@ -408,7 +417,7 @@ class _StatBlock extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        Text(
+        WrParagraph(
           label,
           style: const TextStyle(
             fontSize: 12.5,
@@ -535,7 +544,7 @@ class _OrgSurveyCard extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 6),
-            const Text(
+            const WrParagraph(
               'Đánh giá đãi ngộ, phát triển và mức sẵn lòng giới thiệu nơi bạn '
               'làm việc.',
               style: TextStyle(
@@ -692,27 +701,8 @@ class _SettingsSection extends ConsumerWidget {
           ),
         ),
 
-        // Sửa hồ sơ — tên, ảnh, và các trường hồ sơ dạng nhập chữ.
-        _SettingRow(
-          key: const Key('profile_edit_profile_btn'),
-          icon: Icons.person_outline,
-          label: l10n.profileSettingEditProfile,
-          onTap: () => context.push('/profile/edit'),
-          trailing:
-              const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
-        ),
-
-        // Thông tin công việc — Hai Lớp v1.6 §XI. Màn này gom cả mô tả tự viết
-        // lẫn lối vào Tài liệu bối cảnh (JD/CV) của v1.2 §III, nên không còn
-        // dòng riêng cho tài liệu nữa.
-        _SettingRow(
-          key: const Key('profile_work_info_btn'),
-          icon: Icons.work_outline,
-          label: 'Thông tin công việc',
-          onTap: () => context.push('/wr/work-info'),
-          trailing:
-              const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
-        ),
+        // Đã bỏ hai dòng "Chỉnh sửa hồ sơ" và "Thông tin công việc" ở đây.
+        // Thông tin công việc đi vào từ màn "Thông tin của bạn" phía trên.
 
         // Đăng ký Premium
         _SettingRow(
@@ -918,5 +908,123 @@ class _LogoutButton extends ConsumerWidget {
         );
       }
     }
+  }
+}
+
+/// Xoá tài khoản — App Store Review Guideline 5.1.1(v).
+///
+/// Apple bắt buộc app nào cho tạo tài khoản thì phải cho xoá NGAY TRONG APP,
+/// không được đẩy sang email hay trang web. Thiếu là bị từ chối thẳng.
+///
+/// Cố ý làm nút chữ mờ nằm dưới nút đăng xuất chứ không phải nút đỏ nổi bật:
+/// đây là việc không hoàn tác được, không nên mời gọi. Nhưng cũng KHÔNG được
+/// giấu vào tầng thiết lập sâu — Apple xem việc chôn nút này là vi phạm.
+class _DeleteAccountButton extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    return TextButton(
+      key: const Key('profile_delete_account_btn'),
+      onPressed: () => _confirmThenDelete(context, ref),
+      style: TextButton.styleFrom(
+        foregroundColor: WrColors.muted,
+        padding: const EdgeInsets.symmetric(vertical: 10),
+      ),
+      child: Text(
+        l10n.profileDeleteAccount,
+        style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+      ),
+    );
+  }
+
+  Future<void> _confirmThenDelete(BuildContext context, WidgetRef ref) async {
+    final l10n = AppLocalizations.of(context)!;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (_) => const _DeleteAccountDialog(),
+    );
+    if (confirmed != true || !context.mounted) return;
+
+    try {
+      await ref.read(authRepositoryProvider).deleteAccount();
+      // Không tự điều hướng: `deleteAccount` đã signOut, router thấy mất phiên
+      // là tự đá về /auth. Tự `go` thêm ở đây là đua với redirect của router.
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(l10n.profileDeleteAccountError)),
+        );
+      }
+    }
+  }
+}
+
+/// Hộp xác nhận: phải gõ đúng chữ mới bấm được nút xoá.
+///
+/// Một cú chạm "Đồng ý" là quá rẻ cho hành động không hoàn tác được — gõ tay
+/// buộc người dùng đọc xong mới làm được tiếp.
+class _DeleteAccountDialog extends StatefulWidget {
+  const _DeleteAccountDialog();
+
+  @override
+  State<_DeleteAccountDialog> createState() => _DeleteAccountDialogState();
+}
+
+class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context)!;
+    // So khớp bỏ qua hoa/thường và khoảng trắng thừa: người dùng gõ đúng ý rồi
+    // mà bị chặn vì cái dấu cách cuối dòng thì vô lý.
+    final ok = _controller.text.trim().toUpperCase() ==
+        l10n.profileDeleteAccountConfirmWord.toUpperCase();
+
+    return AlertDialog(
+      title: Text(l10n.profileDeleteAccountTitle),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            l10n.profileDeleteAccountBody,
+            style: const TextStyle(fontSize: 13.5, height: 1.6),
+          ),
+          const SizedBox(height: 14),
+          TextField(
+            key: const Key('profile_delete_confirm_field'),
+            controller: _controller,
+            autocorrect: false,
+            textCapitalization: TextCapitalization.characters,
+            onChanged: (_) => setState(() {}),
+            decoration: InputDecoration(
+              hintText: l10n.profileDeleteAccountHint,
+              border: const OutlineInputBorder(),
+              isDense: true,
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          key: const Key('profile_delete_cancel_btn'),
+          onPressed: () => Navigator.of(context).pop(false),
+          child: Text(l10n.profileDeleteAccountCancel),
+        ),
+        TextButton(
+          key: const Key('profile_delete_confirm_btn'),
+          onPressed: ok ? () => Navigator.of(context).pop(true) : null,
+          style: TextButton.styleFrom(foregroundColor: WrColors.coral),
+          child: Text(l10n.profileDeleteAccountCta),
+        ),
+      ],
+    );
   }
 }

@@ -644,11 +644,11 @@ abstract class AppLocalizations {
   /// **'Thành viên'**
   String get profileBadgeMember;
 
-  /// No description provided for @profileStatStreak.
+  /// No description provided for @profileStatReflectDays.
   ///
   /// In vi, this message translates to:
-  /// **'Ngày streak'**
-  String get profileStatStreak;
+  /// **'ngày Reflect'**
+  String get profileStatReflectDays;
 
   /// No description provided for @profileStatInsights.
   ///
@@ -697,6 +697,54 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Tiếng Việt'**
   String get profileLanguageValue;
+
+  /// No description provided for @profileDeleteAccount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá tài khoản'**
+  String get profileDeleteAccount;
+
+  /// No description provided for @profileDeleteAccountTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá tài khoản vĩnh viễn?'**
+  String get profileDeleteAccountTitle;
+
+  /// No description provided for @profileDeleteAccountBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'Toàn bộ dữ liệu của bạn sẽ bị xoá và không lấy lại được: những lần nhìn lại, Career Memory, chủ đề thực hành, kết quả self-check và hồ sơ. Nếu bạn đang có bản đầy đủ, phần thời hạn còn lại cũng mất theo.'**
+  String get profileDeleteAccountBody;
+
+  /// No description provided for @profileDeleteAccountHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gõ XOÁ để xác nhận'**
+  String get profileDeleteAccountHint;
+
+  /// No description provided for @profileDeleteAccountConfirmWord.
+  ///
+  /// In vi, this message translates to:
+  /// **'XOÁ'**
+  String get profileDeleteAccountConfirmWord;
+
+  /// No description provided for @profileDeleteAccountCta.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá vĩnh viễn'**
+  String get profileDeleteAccountCta;
+
+  /// No description provided for @profileDeleteAccountCancel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giữ tài khoản'**
+  String get profileDeleteAccountCancel;
+
+  /// No description provided for @profileDeleteAccountError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không xoá được tài khoản. Kiểm tra mạng rồi thử lại.'**
+  String get profileDeleteAccountError;
 
   /// No description provided for @understandStatusNeedsAttention.
   ///

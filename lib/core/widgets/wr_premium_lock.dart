@@ -8,6 +8,7 @@ import 'package:go_router/go_router.dart';
 
 import '../theme/wr_colors.dart';
 import 'wr_card.dart';
+import 'wr_paragraph.dart';
 
 class WrPremiumLock extends StatelessWidget {
   const WrPremiumLock({
@@ -60,7 +61,7 @@ class WrPremiumLock extends StatelessWidget {
           ),
           if (title != null) ...[
             const SizedBox(height: 10),
-            Text(
+            WrParagraph(
               title!,
               style: const TextStyle(
                 fontSize: 17,
@@ -68,10 +69,11 @@ class WrPremiumLock extends StatelessWidget {
                 color: WrColors.navy,
                 height: 1.35,
               ),
+              textAlign: TextAlign.start,
             ),
           ],
           const SizedBox(height: 10),
-          Text(
+          WrParagraph(
             description,
             style: const TextStyle(
               fontSize: 14.5,

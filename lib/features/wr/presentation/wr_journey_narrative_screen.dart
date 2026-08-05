@@ -12,6 +12,7 @@ import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/wr_detail_scaffold.dart';
 import '../../../core/widgets/wr_premium_lock.dart';
 import '../wr_providers.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 class WrJourneyNarrativeScreen extends ConsumerWidget {
   const WrJourneyNarrativeScreen({super.key});
@@ -39,7 +40,7 @@ class WrJourneyNarrativeScreen extends ConsumerWidget {
             paywallTrigger: 'pattern_advanced',
           )
         else if (narratives.isEmpty)
-          const Text(
+          const WrParagraph(
             'Chưa đủ dữ liệu để kể lại diễn biến. Ghi thêm vài lần nữa, '
             'WorkReflection sẽ chỉ ra điều gì đang đổi và điều gì vẫn ở nguyên đó.',
             key: Key('wr_journey_narrative_empty'),
@@ -80,7 +81,7 @@ class _NarrativeBlock extends StatelessWidget {
             ),
             const SizedBox(height: 8),
           ],
-          Text(
+          WrParagraph(
             narrative.narrative,
             style: const TextStyle(
               fontSize: 16,

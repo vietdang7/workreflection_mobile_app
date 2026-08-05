@@ -27,6 +27,14 @@ class _FakeAuthRepository implements AuthRepository {
   String? lastChangedPassword;
   bool changeShouldFail = false;
   bool changeSessionExpired = false;
+  int deleteAccountCalls = 0;
+  bool deleteShouldFail = false;
+
+  @override
+  Future<void> deleteAccount() async {
+    deleteAccountCalls++;
+    if (deleteShouldFail) throw Exception('Xoá không được');
+  }
 
   @override Future<void> signIn(String e, String p) async {}
   @override Future<void> signUp(String e, String p, String n) async {}
@@ -207,7 +215,9 @@ void main() {
       ]);
       await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
 
-      expect(find.textContaining('Ngày streak'), findsOneWidget);
+      // Tổng số ngày đã nhìn lại thay cho chuỗi ngày liên tiếp (yêu cầu 05/08).
+      expect(find.textContaining('ngày Reflect'), findsOneWidget);
+      expect(find.textContaining('Ngày streak'), findsNothing);
       expect(find.textContaining('Insight lưu'), findsOneWidget);
       expect(find.textContaining('Milestone'), findsOneWidget);
       // insight count = 2
@@ -264,8 +274,6 @@ void main() {
       for (final key in const [
         'profile_my_info_btn',
         'profile_language_row',
-        'profile_edit_profile_btn',
-        'profile_work_info_btn',
         'profile_paywall_btn',
         'profile_change_password_btn',
         'profile_export_btn',
@@ -381,8 +389,6 @@ void main() {
       expect(find.textContaining('Xuất dữ liệu'), findsOneWidget);
 
       for (final key in const [
-        'profile_edit_profile_btn',
-        'profile_work_info_btn',
         'profile_paywall_btn',
         'profile_change_password_btn',
       ]) {
@@ -448,8 +454,6 @@ void main() {
       for (final key in const [
         'profile_my_info_btn',
         'profile_language_row',
-        'profile_edit_profile_btn',
-        'profile_work_info_btn',
         'profile_paywall_btn',
         'profile_change_password_btn',
         'profile_export_btn',
@@ -578,14 +582,20 @@ void main() {
       expect(find.textContaining('Phiên đăng nhập'), findsOneWidget);
     });
 
-    testWidgets('shows edit-profile row in settings section', (tester) async {
+    // Hai dòng "Chỉnh sửa hồ sơ" và "Thông tin công việc" đã được bỏ khỏi thẻ
+    // cài đặt theo yêu cầu; thẻ chỉ còn các lối vào còn lại.
+    testWidgets('không còn dòng chỉnh sửa hồ sơ và thông tin công việc', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       repo.seedProfile(_profile());
       repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
       await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
 
-      expect(find.byKey(const Key('profile_edit_profile_btn')), findsOneWidget);
-      expect(find.textContaining('Chỉnh sửa hồ sơ'), findsOneWidget);
+      expect(find.byKey(const Key('profile_edit_profile_btn')), findsNothing);
+      expect(find.byKey(const Key('profile_work_info_btn')), findsNothing);
+      expect(find.textContaining('Chỉnh sửa hồ sơ'), findsNothing);
+      expect(find.text('Thông tin công việc'), findsNothing);
     });
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -657,9 +667,8 @@ void main() {
       // Đây là màn "Tôi" duy nhất — sửa hồ sơ, đổi mật khẩu, đăng xuất đều ở
       // đây, không tan vào tab Hành trình.
       for (final key in [
-        'profile_edit_profile_btn',
+        'profile_my_info_btn',
         'profile_change_password_btn',
-        'profile_work_info_btn',
         'profile_export_btn',
         'profile_logout_btn',
       ]) {
@@ -799,6 +808,127 @@ void main() {
 
       expect(find.text('Thành viên'), findsOneWidget);
       expect(find.byKey(const Key('profile_premium_card')), findsOneWidget);
+    });
+  });
+
+  // App Store Review Guideline 5.1.1(v): app cho tạo tài khoản thì phải cho
+  // xoá tài khoản ngay trong app. Thiếu nút này là bị từ chối thẳng, nên nó
+  // được kiểm như một ràng buộc phát hành chứ không phải một tính năng thường.
+  group('Xoá tài khoản', () {
+    Future<_FakeAuthRepository> openDialog(WidgetTester tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile());
+      repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
+      final auth = _FakeAuthRepository();
+      await _pumpLarge(
+        tester,
+        _wrap(const ProfileScreen(), repo, authRepo: auth),
+      );
+
+      final btn = find.byKey(const Key('profile_delete_account_btn'));
+      await tester.scrollUntilVisible(btn, 200);
+      await tester.tap(btn);
+      await tester.pumpAndSettle();
+      return auth;
+    }
+
+    testWidgets('có nút xoá tài khoản ngay trên màn Tôi', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile());
+      repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
+      await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
+
+      expect(
+        find.byKey(const Key('profile_delete_account_btn')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('chưa gõ đúng chữ thì nút xoá còn khoá', (tester) async {
+      final auth = await openDialog(tester);
+
+      final confirm = tester.widget<TextButton>(
+        find.byKey(const Key('profile_delete_confirm_btn')),
+      );
+      expect(confirm.onPressed, isNull);
+      expect(auth.deleteAccountCalls, 0);
+    });
+
+    testWidgets('gõ sai chữ vẫn không mở được nút', (tester) async {
+      await openDialog(tester);
+
+      await tester.enterText(
+        find.byKey(const Key('profile_delete_confirm_field')),
+        'xoa tai khoan',
+      );
+      await tester.pumpAndSettle();
+
+      final confirm = tester.widget<TextButton>(
+        find.byKey(const Key('profile_delete_confirm_btn')),
+      );
+      expect(confirm.onPressed, isNull);
+    });
+
+    testWidgets('gõ đúng rồi xác nhận thì gọi deleteAccount đúng một lần',
+        (tester) async {
+      final auth = await openDialog(tester);
+
+      await tester.enterText(
+        find.byKey(const Key('profile_delete_confirm_field')),
+        'XOÁ',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('profile_delete_confirm_btn')));
+      await tester.pumpAndSettle();
+
+      expect(auth.deleteAccountCalls, 1);
+    });
+
+    // Gõ đúng nhưng lỡ tay dính dấu cách / gõ thường — chặn ở đây là hành hạ
+    // người dùng chứ không bảo vệ được gì thêm.
+    testWidgets('chữ thường kèm khoảng trắng vẫn được chấp nhận',
+        (tester) async {
+      final auth = await openDialog(tester);
+
+      await tester.enterText(
+        find.byKey(const Key('profile_delete_confirm_field')),
+        '  xoá ',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('profile_delete_confirm_btn')));
+      await tester.pumpAndSettle();
+
+      expect(auth.deleteAccountCalls, 1);
+    });
+
+    testWidgets('bấm Giữ tài khoản thì không xoá gì', (tester) async {
+      final auth = await openDialog(tester);
+
+      await tester.enterText(
+        find.byKey(const Key('profile_delete_confirm_field')),
+        'XOÁ',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('profile_delete_cancel_btn')));
+      await tester.pumpAndSettle();
+
+      expect(auth.deleteAccountCalls, 0);
+    });
+
+    testWidgets('xoá lỗi thì báo cho người dùng chứ không im lặng',
+        (tester) async {
+      final auth = await openDialog(tester);
+      auth.deleteShouldFail = true;
+
+      await tester.enterText(
+        find.byKey(const Key('profile_delete_confirm_field')),
+        'XOÁ',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('profile_delete_confirm_btn')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(SnackBar), findsOneWidget);
     });
   });
 }

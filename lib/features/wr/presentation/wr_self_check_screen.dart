@@ -13,6 +13,7 @@ import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../wr_providers.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Route: /wr/self-check
@@ -108,7 +109,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
             color: WrColors.dark,
           ),
         ),
-        content: Text(
+        content: WrParagraph(
           '${_answers.length} câu bạn đã trả lời sẽ không được giữ lại. '
           'Bộ câu hỏi chỉ được lưu khi bạn trả lời xong cả '
           '${kSelfCheckQuestions.length} câu.',
@@ -251,7 +252,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        const Text(
+                        const WrParagraph(
                           'Trả lời thành thật theo cảm nhận thực tế trong môi '
                           'trường làm việc của bạn, không có câu trả lời đúng '
                           'hay sai.',
@@ -927,7 +928,7 @@ class _NarrativeCardState extends State<_NarrativeCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Expanded(
-                  child: Text(
+                  child: WrParagraph(
                     widget.title!,
                     style: const TextStyle(
                       fontSize: 17,
@@ -935,6 +936,7 @@ class _NarrativeCardState extends State<_NarrativeCard> {
                       height: 1.4,
                       color: WrColors.dark,
                     ),
+                    textAlign: TextAlign.start,
                   ),
                 ),
                 if (_canCollapse) ...[
@@ -1046,7 +1048,7 @@ class _DeepDiveLocked extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 10),
-                const Text(
+                const WrParagraph(
                   'Bản đầy đủ đọc kỹ từng mặt theo khoảng điểm của bạn, chỉ ra '
                   'chỗ mất cân bằng giữa ba mặt, so với những lần tự soi trước '
                   'và đối chiếu với những tình huống bạn hay gặp.',

@@ -24,6 +24,7 @@ import '../../mood_content_providers.dart';
 import '../../wr_providers.dart';
 import '../../../../core/logic/wr_flow_error.dart';
 import 'wr_flow_scaffold.dart';
+import '../../../../core/widgets/wr_paragraph.dart';
 
 class WrCommitScreen extends ConsumerStatefulWidget {
   const WrCommitScreen({super.key});
@@ -215,7 +216,7 @@ class _ChoiceTile extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              child: Text(
+              child: WrParagraph(
                 label,
                 style: TextStyle(
                   fontSize: 15,
@@ -223,6 +224,7 @@ class _ChoiceTile extends StatelessWidget {
                   color: WrColors.navy,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
                 ),
+                textAlign: TextAlign.start,
               ),
             ),
             if (suggested) ...[

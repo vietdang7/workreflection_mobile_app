@@ -64,6 +64,15 @@ class FakeAuthRepository implements AuthRepository {
     lastChangedPassword = newPassword;
     if (changeShouldFail) throw Exception('Session expired');
   }
+
+  int deleteAccountCalls = 0;
+  bool deleteShouldFail = false;
+
+  @override
+  Future<void> deleteAccount() async {
+    deleteAccountCalls++;
+    if (deleteShouldFail) throw Exception('Network error');
+  }
 }
 
 Widget _wrap(Widget child, {AuthRepository? repo}) {

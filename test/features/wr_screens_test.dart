@@ -25,6 +25,7 @@ import 'package:workreflection_mobile/l10n/app_localizations.dart';
 import '../support/fake_wr_content_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
 import 'package:workreflection_mobile/core/logic/wr_pricing.dart';
+import 'package:workreflection_mobile/core/logic/wr_store_policy.dart';
 
 import '../support/fake_repository.dart';
 import '../support/fake_wr_intelligence_repository.dart';
@@ -83,6 +84,10 @@ Widget _wrap(
   );
   return ProviderScope(
     overrides: [
+      // Bản `open` (web/desktop) — nhóm test Paywall ở file này kiểm nút mua
+      // TRONG APP. Bản phát hành qua kho ứng dụng khoá nút đó theo policy của
+      // Apple/Google; phần ấy có test riêng ở `wr_store_policy_test.dart`.
+      wrStorePolicyProvider.overrideWithValue(WrStorePolicy.open),
       wrIntelligenceRepositoryProvider.overrideWithValue(intelRepo),
       wrContentRepositoryProvider.overrideWithValue(contentRepo),
       wrRepositoryProvider.overrideWithValue(wrRepo),
@@ -1044,15 +1049,6 @@ void main() {
       expect(find.text('AI Insight dành riêng cho bạn'), findsOneWidget);
     });
 
-    testWidgets('report trigger shows correct headline', (tester) async {
-      await tester.pumpWidget(
-        _wrap(const WrPaywallScreen(trigger: PaywallTrigger.report)),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Báo cáo chuyên sâu đang chờ bạn'), findsOneWidget);
-    });
-
     testWidgets('trial_end trigger shows correct headline', (tester) async {
       await tester.pumpWidget(
         _wrap(const WrPaywallScreen(trigger: PaywallTrigger.trialEnd)),
@@ -1247,17 +1243,18 @@ void main() {
       });
     });
 
-    testWidgets('shows 4 premium highlights', (tester) async {
+    testWidgets('shows 3 premium highlights', (tester) async {
       await tester.pumpWidget(_wrap(const WrPaywallScreen()));
       await tester.pumpAndSettle();
 
       expect(find.text('AI Insight cá nhân hoá'), findsOneWidget);
-      expect(find.text('Báo cáo chuyên sâu'), findsOneWidget);
       expect(find.text('Career Pattern'), findsOneWidget);
       expect(find.text('Không giới hạn'), findsOneWidget);
+      // Mục "Báo cáo chuyên sâu 49 câu" đã bỏ khỏi paywall.
+      expect(find.textContaining('Báo cáo chuyên sâu'), findsNothing);
     });
 
-    testWidgets('shows free vs premium comparison table with 10 rows', (
+    testWidgets('shows free vs premium comparison table with 9 rows', (
       tester,
     ) async {
       await tester.pumpWidget(_wrap(const WrPaywallScreen()));
@@ -1269,7 +1266,6 @@ void main() {
       expect(find.text('15 câu phản chiếu'), findsOneWidget);
       expect(find.text('3 chủ đề Thực hành'), findsOneWidget);
       expect(find.text('AI Insight'), findsOneWidget);
-      expect(find.text('Báo cáo chuyên sâu 49 câu'), findsOneWidget);
       expect(find.text('Career Pattern Analysis'), findsOneWidget);
       expect(find.text('Career Benchmark'), findsOneWidget);
       expect(find.text('Không giới hạn Thực hành'), findsOneWidget);

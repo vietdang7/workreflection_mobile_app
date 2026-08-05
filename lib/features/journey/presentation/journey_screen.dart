@@ -9,6 +9,7 @@ import '../../../core/theme/wr_theme.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../l10n/app_localizations.dart';
 import '../journey_providers.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 class JourneyScreen extends ConsumerWidget {
   const JourneyScreen({super.key});
@@ -84,11 +85,12 @@ class _StoryQuoteBlock extends ConsumerWidget {
           children: [
             WrEyebrow(l10n.journeyEyebrowStory),
             const SizedBox(height: 12),
-            Text(
+            WrParagraph(
               insight != null
                   ? '"${insight.content}"'
                   : '"Hành trình của bạn đang được ghi nhớ..."',
               style: WrTextStyles.insightQuote,
+              textAlign: TextAlign.start,
             ),
             const SizedBox(height: 12),
             Text(

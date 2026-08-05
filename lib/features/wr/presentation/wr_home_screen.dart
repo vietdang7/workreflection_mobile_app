@@ -73,6 +73,7 @@ import '../mood_content_providers.dart';
 import '../wr_providers.dart';
 import 'wr_mood_library_screen.dart' show WrDraftBadge;
 import 'wr_practice_step_completion.dart' show practiceStageLabel;
+import '../../../core/widgets/wr_paragraph.dart';
 
 final _mobileProfileProvider = FutureProvider<MobileProfile?>((ref) async {
   final repo = ref.watch(wrRepositoryProvider);
@@ -374,7 +375,7 @@ class _CheckinTile extends ConsumerWidget {
             width: 1.5,
           ),
         ),
-        child: Text(
+        child: WrParagraph(
           option.label,
           textAlign: TextAlign.center,
           style: const TextStyle(
@@ -715,7 +716,7 @@ class _MoodContentSection extends ConsumerWidget {
                             Row(
                               children: [
                                 Flexible(
-                                  child: Text(
+                                  child: WrParagraph(
                                     item.title,
                                     style: const TextStyle(
                                       fontSize: 14.5,
@@ -723,6 +724,7 @@ class _MoodContentSection extends ConsumerWidget {
                                       color: WrColors.navy,
                                       height: 1.35,
                                     ),
+                                    textAlign: TextAlign.start,
                                   ),
                                 ),
                                 if (item.placeholder) ...[
@@ -816,7 +818,7 @@ class _LatestInsightSection extends ConsumerWidget {
             children: [
               WrEyebrow('INSIGHT GẦN NHẤT'),
               SizedBox(height: 6),
-              Text(
+              WrParagraph(
                 'Chưa có Insight nào. Bắt đầu một lần nhìn lại để lưu Insight '
                 'đầu tiên.',
                 style: TextStyle(
@@ -962,7 +964,7 @@ class _ContinueTodaySection extends ConsumerWidget {
                       child: Text(
                         // Mockup: `"Dám lên tiếng": bước Thử nghiệm đang chờ`.
                         // Home nói TÊN GIAI ĐOẠN chứ không nói tên việc cụ thể —
-                        // tên việc thuộc màn chủ đề, nơi người dùng thật sự làm
+                        // tên việc thuộc màn chủ đềtên việc thuộc màn chủ đề, nơi người dùng thật sự làm
                         // nó. Ở đây chỉ cần đủ để nhớ mình đang dở tới đâu.
                         //
                         // Bước thứ tư trở đi không có tên giai đoạn thì lùi về

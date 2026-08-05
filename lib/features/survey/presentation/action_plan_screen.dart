@@ -174,10 +174,9 @@ class _PhaseCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       task.label,
+                      // Xong rồi thì dấu tick nói đủ, không gạch ngang chữ
+                      // (yêu cầu 05/08).
                       style: WrTextStyles.body.copyWith(
-                        decoration: completed
-                            ? TextDecoration.lineThrough
-                            : null,
                         color: completed
                             ? WrColors.muted
                             : null,

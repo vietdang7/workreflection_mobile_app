@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/wr_colors.dart';
+import 'wr_paragraph.dart';
 
 /// Một dòng dẫn sang màn khác.
 ///
@@ -27,7 +28,7 @@ class WrLinkRow extends StatelessWidget {
         child: Row(
           children: [
             Expanded(
-              child: Text(
+              child: WrParagraph(
                 label,
                 style: const TextStyle(
                   fontSize: 16,
@@ -35,6 +36,7 @@ class WrLinkRow extends StatelessWidget {
                   color: WrColors.navy,
                   height: 1.4,
                 ),
+                textAlign: TextAlign.start,
               ),
             ),
             if (hint != null) ...[

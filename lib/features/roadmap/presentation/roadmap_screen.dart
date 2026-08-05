@@ -1092,11 +1092,10 @@ class _ActionRow extends StatelessWidget {
                   onTap: () => onToggle(!isCompleted),
                   child: Text(
                     action.titleVi,
+                    // Xong rồi thì dấu tick nói đủ, không gạch ngang chữ
+                    // (yêu cầu 05/08).
                     style: WrTextStyles.hMedium.copyWith(
                       fontSize: 14.5,
-                      decoration: isCompleted
-                          ? TextDecoration.lineThrough
-                          : null,
                       color: isCompleted ? WrColors.muted : null,
                     ),
                   ),
@@ -1168,11 +1167,10 @@ class _CustomTaskRow extends StatelessWidget {
                         onTap: () => onToggle(!isCompleted),
                         child: Text(
                           task.title,
+                          // Xong rồi thì dấu tick nói đủ, không gạch ngang chữ
+                          // (yêu cầu 05/08).
                           style: WrTextStyles.body.copyWith(
                             fontSize: 14.5,
-                            decoration: isCompleted
-                                ? TextDecoration.lineThrough
-                                : null,
                             color: isCompleted ? WrColors.muted : null,
                           ),
                         ),

@@ -18,6 +18,7 @@ import '../../../core/models/wr_org_survey.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../org_survey_providers.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 class WrOrgSurveyFlowScreen extends ConsumerStatefulWidget {
   const WrOrgSurveyFlowScreen({super.key});
@@ -369,7 +370,7 @@ class _EnpsStep extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(22, 22, 22, 22),
       children: [
-        const Text(
+        const WrParagraph(
           'Trên thang từ 0 đến 10, bạn sẽ giới thiệu nơi mình đang làm việc cho '
           'bạn bè hoặc người quen ở mức nào?',
           style: TextStyle(

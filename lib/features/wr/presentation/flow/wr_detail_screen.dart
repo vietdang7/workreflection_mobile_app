@@ -25,6 +25,7 @@ import '../../../../core/widgets/wr_voice_field.dart';
 import '../../episode_flow_controller.dart';
 import '../../wr_providers.dart';
 import 'wr_flow_scaffold.dart';
+import '../../../../core/widgets/wr_paragraph.dart';
 
 class WrDetailScreen extends ConsumerStatefulWidget {
   const WrDetailScreen({super.key});
@@ -118,7 +119,7 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: WrColors.line),
               ),
-              child: Text(
+              child: WrParagraph(
                 storyText,
                 style: const TextStyle(
                   fontSize: 16,

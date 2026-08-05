@@ -238,13 +238,11 @@ class _PracticeRow extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Xong rồi thì dấu tick và độ mờ nói đủ, không gạch ngang
+                    // chữ (yêu cầu 05/08).
                     Text(
                       practice.title,
-                      style: isDone
-                          ? WrTextStyles.hMedium.copyWith(
-                              decoration: TextDecoration.lineThrough,
-                            )
-                          : WrTextStyles.hMedium,
+                      style: WrTextStyles.hMedium,
                     ),
                     const SizedBox(height: 2),
                     Text(

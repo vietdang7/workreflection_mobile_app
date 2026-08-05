@@ -20,6 +20,7 @@ import '../../../core/widgets/section_divider.dart';
 import '../../../core/widgets/wr_premium_lock.dart';
 import '../wr_providers.dart';
 import 'wr_discover_screen.dart' show kInsightThreshold, situationLabel;
+import '../../../core/widgets/wr_paragraph.dart';
 
 /// Ngày của một lần nhìn lại, dạng `dd/MM/yyyy`. null khi Episode chưa có mốc
 /// thời gian nào — lúc đó dòng chỉ còn tiêu đề, không bịa ra ngày.
@@ -80,7 +81,7 @@ class WrPatternDetailScreen extends ConsumerWidget {
           children: [
             const WrEyebrow('ĐIỀU LẶP LẠI'),
             const SizedBox(height: 14),
-            Text(
+            WrParagraph(
               label,
               style: const TextStyle(
                 fontSize: 26,
@@ -89,9 +90,10 @@ class WrPatternDetailScreen extends ConsumerWidget {
                 height: 1.3,
                 letterSpacing: -0.5,
               ),
+              textAlign: TextAlign.start,
             ),
             const SizedBox(height: 16),
-            Text(
+            WrParagraph(
               switch (count) {
                 0 => 'Bạn chưa ghi lại điều này lần nào.',
                 1 => 'Bạn mới ghi lại điều này một lần.',
@@ -132,13 +134,14 @@ class WrPatternDetailScreen extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Expanded(
-                            child: Text(
+                            child: WrParagraph(
                               e.humanMoment.label,
                               style: const TextStyle(
                                 fontSize: 16.5,
                                 color: WrColors.navy,
                                 height: 1.4,
                               ),
+                              textAlign: TextAlign.start,
                             ),
                           ),
                           if (_dayOf(e) case final day?) ...[
@@ -164,7 +167,7 @@ class WrPatternDetailScreen extends ConsumerWidget {
             const WrEyebrow('ĐIỀU ĐỨNG SAU SỰ LẶP LẠI'),
             const SizedBox(height: 14),
             if (!hasEnoughData)
-              Text(
+              WrParagraph(
                 'Cần thêm ${kInsightThreshold - count} lần nữa để hệ thống đủ '
                 'dữ liệu đọc ra điều đứng sau.',
                 key: const Key('wr_pattern_not_enough_data'),
@@ -184,7 +187,7 @@ class WrPatternDetailScreen extends ConsumerWidget {
                 paywallTrigger: 'pattern_advanced',
               )
             else
-              Text(
+              WrParagraph(
                 narratives.isNotEmpty
                     ? narratives.first.narrative
                     : 'Hệ thống đang tổng hợp phần diễn giải cho điều này.',

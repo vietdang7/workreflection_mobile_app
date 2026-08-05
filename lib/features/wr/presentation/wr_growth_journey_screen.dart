@@ -12,6 +12,7 @@ import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/wr_detail_scaffold.dart';
 import '../../../core/widgets/wr_premium_lock.dart';
 import '../wr_providers.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 class WrGrowthJourneyScreen extends ConsumerWidget {
   const WrGrowthJourneyScreen({super.key});
@@ -38,7 +39,7 @@ class WrGrowthJourneyScreen extends ConsumerWidget {
             paywallTrigger: 'growth_journey',
           )
         else if (snapshots.isEmpty)
-          const Text(
+          const WrParagraph(
             'Chưa có chặng nào được tổng kết. Sau vài tuần thực hành đều, '
             'WorkReflection sẽ dựng lại chặng đường của bạn ở đây.',
             key: Key('wr_growth_journey_empty'),

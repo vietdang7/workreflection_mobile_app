@@ -14,6 +14,7 @@ import '../../../core/data/wr_repository.dart';
 import '../../../core/logic/wr_career_profile.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../wr_providers.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 class WrCareerSetupScreen extends ConsumerStatefulWidget {
   const WrCareerSetupScreen({super.key, this.onDone});
@@ -170,7 +171,7 @@ class _WrCareerSetupScreenState extends ConsumerState<WrCareerSetupScreen> {
                     ),
                   ),
                   const SizedBox(height: 10),
-                  Text(
+                  WrParagraph(
                     question,
                     style: const TextStyle(
                       fontSize: 20,
@@ -178,9 +179,10 @@ class _WrCareerSetupScreenState extends ConsumerState<WrCareerSetupScreen> {
                       height: 1.45,
                       color: WrColors.white,
                     ),
+                    textAlign: TextAlign.start,
                   ),
                   const SizedBox(height: 6),
-                  Text(
+                  WrParagraph(
                     subtitle,
                     style: TextStyle(
                       fontSize: 13.5,

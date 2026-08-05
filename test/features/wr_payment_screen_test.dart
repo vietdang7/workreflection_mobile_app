@@ -572,8 +572,11 @@ void main() {
             ),
           ),
           ccProfileProvider.overrideWith((ref) async => {'role': 'admin'}),
-          // Máy này thuộc danh sách được bật/tắt gói.
+          // Máy này thuộc danh sách được bật/tắt gói. Phải khai cả email: từ
+          // 2026-08-05 công tắc ghi kèm chủ sở hữu, `set` từ chối khi không
+          // biết ai đang bật.
           canTogglePremiumProvider.overrideWithValue(true),
+          currentUserEmailProvider.overrideWithValue('thedangs7@gmail.com'),
         ],
       );
       addTearDown(container.dispose);
@@ -645,8 +648,9 @@ void main() {
       await tester.pump(kPaymentPollInterval);
       await tester.pump();
 
-      // Công tắc của máy này vốn không có hiệu lực, đụng vào chỉ thừa.
-      expect(container.read(premiumOverrideProvider), isFalse);
+      // Tài khoản này không được phép: `set` bị từ chối ngay từ đầu, nên công
+      // tắc không bao giờ có giá trị để mà phải xoá.
+      expect(container.read(premiumOverrideProvider), isNull);
     });
   });
 

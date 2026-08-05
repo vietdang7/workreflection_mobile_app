@@ -34,6 +34,7 @@ import '../../../core/widgets/wr_card.dart';
 import '../../../core/widgets/wr_voice_field.dart';
 import '../chat_providers.dart';
 import '../wr_providers.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 /// Câu người dùng thấy cho những câu hỏi gửi theo cách cũ, chưa được trả lời.
 ///
@@ -247,7 +248,7 @@ class _WrAskScreenState extends ConsumerState<WrAskScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: WrColors.white,
         title: const Text('Xoá cuộc trò chuyện?'),
-        content: const Text(
+        content: const WrParagraph(
           'Toàn bộ lượt trò chuyện sẽ bị xoá và không lấy lại được. '
           'Những gì bạn đã ghi trong Hành trình không bị ảnh hưởng.',
           style: TextStyle(height: 1.6),
@@ -339,7 +340,7 @@ class _Bubble extends StatelessWidget {
                 ),
                 border: Border.all(color: WrColors.line),
               ),
-              child: Text(
+              child: WrParagraph(
                 message.content,
                 style: TextStyle(
                   fontSize: 16,
@@ -482,7 +483,7 @@ class _EmptyState extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        const Text(
+        const WrParagraph(
           'Một tình huống vừa xảy ra, một cảm giác khó gọi tên, hay một điều '
           'bạn muốn hiểu thêm về chính mình. Viết một câu là đủ.',
           style: TextStyle(fontSize: 15.5, color: WrColors.muted, height: 1.75),
@@ -522,7 +523,7 @@ class _EmptyState extends StatelessWidget {
         const SizedBox(height: 18),
         // Mục 4.9 của system prompt: minh bạch về bản thân. Nói trước một lần ở
         // đây thay vì để trợ lý phải tự nhắc giữa cuộc trò chuyện.
-        const Text(
+        const WrParagraph(
           'Mình là trợ lý AI hỗ trợ bạn nhìn lại công việc, không thay thế '
           'chuyên gia tâm lý hay tư vấn nghề nghiệp.',
           style: TextStyle(fontSize: 14, color: WrColors.muted, height: 1.65),

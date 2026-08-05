@@ -28,6 +28,7 @@ import '../../../core/widgets/wr_card.dart';
 import '../../../core/widgets/wr_detail_scaffold.dart';
 import '../growth_providers.dart';
 import '../wr_providers.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 class WrGrowthThemesScreen extends ConsumerStatefulWidget {
   const WrGrowthThemesScreen({super.key});
@@ -114,7 +115,7 @@ class _WrGrowthThemesScreenState extends ConsumerState<WrGrowthThemesScreen> {
         if (quota != null)
           Padding(
             padding: const EdgeInsets.only(bottom: 20),
-            child: Text(
+            child: WrParagraph(
               canEnroll
                   ? 'Bạn đang mở $activeCount/$quota chủ đề.'
                   : 'Bản miễn phí mở tối đa $quota chủ đề cùng lúc. '
@@ -158,7 +159,7 @@ class _WrGrowthThemesScreenState extends ConsumerState<WrGrowthThemesScreen> {
         else
           const Padding(
             padding: EdgeInsets.only(bottom: 26),
-            child: Text(
+            child: WrParagraph(
               'Chủ đề thực hành được chọn từ những tình huống bạn gặp lại nhiều '
               'lần. Bạn nhìn lại thêm vài lần nữa, hoặc làm bộ tự đánh giá, rồi '
               'WorkReflection sẽ chỉ ra chủ đề hợp với bạn. Trong lúc chờ, bạn '
@@ -239,7 +240,7 @@ class _SuggestionCard extends StatelessWidget {
         children: [
           const WrEyebrow('CHỦ ĐỀ ĐƯỢC ĐỀ XUẤT'),
           const SizedBox(height: 10),
-          Text(
+          WrParagraph(
             theme.title,
             style: const TextStyle(
               fontSize: 17,
@@ -247,10 +248,11 @@ class _SuggestionCard extends StatelessWidget {
               color: WrColors.navy,
               height: 1.3,
             ),
+            textAlign: TextAlign.start,
           ),
           if (theme.description != null) ...[
             const SizedBox(height: 6),
-            Text(
+            WrParagraph(
               theme.description!,
               style: const TextStyle(
                 fontSize: 14.5,
@@ -360,7 +362,7 @@ class _TraChieuRow extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 6),
-            const Text(
+            const WrParagraph(
               '10 đến 12 người ngồi quanh một bàn trà, cùng trả lời một câu hỏi '
               'duy nhất. Phản chiếu như trong app, chỉ khác là nói thành lời.',
               style: TextStyle(
@@ -415,7 +417,7 @@ class _ThemeRow extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          WrParagraph(
             theme.title,
             style: const TextStyle(
               fontSize: 17,
@@ -423,10 +425,11 @@ class _ThemeRow extends StatelessWidget {
               color: WrColors.navy,
               height: 1.35,
             ),
+            textAlign: TextAlign.start,
           ),
           if (theme.description != null) ...[
             const SizedBox(height: 6),
-            Text(
+            WrParagraph(
               theme.description!,
               style: const TextStyle(
                 fontSize: 15.5,

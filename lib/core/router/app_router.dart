@@ -61,6 +61,7 @@ import '../../features/wr/presentation/wr_pattern_detail_screen.dart';
 import '../../features/wr/presentation/wr_patterns_screen.dart';
 import '../../features/wr/presentation/wr_payment_screen.dart';
 import '../logic/wr_pricing.dart';
+import '../../features/wr/wr_providers.dart' show wrStorePolicyProvider;
 import '../../features/wr/presentation/wr_paywall_screen.dart';
 import '../../features/wr/presentation/wr_self_check_screen.dart';
 import '../../features/wr/presentation/wr_tra_chieu_screen.dart';
@@ -466,6 +467,14 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/wr/payment',
         // Paywall đẩy kèm gói người dùng vừa chọn (năm hay tháng). Mở thẳng
         // đường dẫn này thì không có `extra` — màn tự lấy gói chọn sẵn.
+        //
+        // Bản iOS chặn ngay ở đây chứ không chỉ ẩn nút: màn QR là thứ Apple
+        // cấm (Guideline 3.1.1), mà deep link `workreflection://wr/payment`
+        // hay một `push` sót lại ở đâu đó vẫn tới được nếu chỉ ẩn nút.
+        redirect: (context, state) =>
+            ref.read(wrStorePolicyProvider).allowsInAppPurchase
+                ? null
+                : '/wr/paywall',
         builder: (context, state) =>
             WrPaymentScreen(plan: state.extra as WrPremiumPricing?),
       ),
@@ -476,7 +485,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final triggerStr = state.uri.queryParameters['trigger'];
           final trigger = switch (triggerStr) {
             'ai_insight' => PaywallTrigger.aiInsight,
-            'report' => PaywallTrigger.report,
             'trial_end' => PaywallTrigger.trialEnd,
             'benchmark' => PaywallTrigger.benchmark,
             'growth_opportunity' => PaywallTrigger.growthOpportunity,

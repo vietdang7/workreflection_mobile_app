@@ -24,10 +24,12 @@ import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/action_link.dart';
 import '../../../core/widgets/wr_detail_scaffold.dart';
+import '../../../core/widgets/wr_list_card.dart';
 import '../../../core/widgets/wr_premium_lock.dart';
 import '../growth_providers.dart';
 import '../wr_providers.dart';
 import 'wr_skill_moment.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 /// Số chủ đề đang hình thành hiện sẵn trước khi phải bấm "Xem thêm".
 ///
@@ -87,17 +89,22 @@ class _WrGrowthSkillsScreenState extends ConsumerState<WrGrowthSkillsScreen> {
           const SizedBox(height: 26),
           const _SectionLabel('ĐÃ HÌNH THÀNH'),
           const SizedBox(height: 14),
-          ...formed.map((s) => _FormedSkillTile(skill: s)),
+          WrListCard(
+            children: [for (final s in formed) _FormedSkillTile(skill: s)],
+          ),
         ],
         if (forming.isNotEmpty) ...[
           const SizedBox(height: 26),
           const _SectionLabel('ĐANG HÌNH THÀNH'),
           const SizedBox(height: 14),
-          ...visibleForming.map(
-            (f) => _FormingSkillTile(
-              formation: f,
-              theme: themeById[f.themeId],
-            ),
+          WrListCard(
+            children: [
+              for (final f in visibleForming)
+                _FormingSkillTile(
+                  formation: f,
+                  theme: themeById[f.themeId],
+                ),
+            ],
           ),
           if (hiddenForming > 0)
             // Align chỉ để dòng nằm sát mép trái như mọi liên kết khác.
@@ -135,17 +142,21 @@ class _HowItWorks extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Thẻ trắng có viền, KHÔNG phải khối màu phẳng: bản đối chiếu UX/UI
+    // 05/08 chỉ ra nền xám phẳng `#EDEFF3` không nằm trong bảng màu, và mọi
+    // thẻ trong app đều là nền trắng viền `--line` bo 18 (spec mục 05).
     return Container(
       key: const Key('wr_skills_how_it_works'),
       padding: const EdgeInsets.fromLTRB(16, 15, 16, 16),
       decoration: BoxDecoration(
-        color: WrColors.navy.withValues(alpha: 0.04),
-        borderRadius: BorderRadius.circular(14),
+        color: WrColors.white,
+        border: Border.all(color: WrColors.line),
+        borderRadius: BorderRadius.circular(kWrCardRadius),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          WrParagraph(
             hasAny
                 ? 'Một kỹ năng được ghi nhận khi bạn thực hành nó $threshold lần.'
                 : 'Chưa có gì ở đây là bình thường, kỹ năng cần thời gian.',
@@ -155,11 +166,12 @@ class _HowItWorks extends StatelessWidget {
               color: WrColors.navy,
               height: 1.45,
             ),
+            textAlign: TextAlign.start,
           ),
           const SizedBox(height: 8),
-          Text(
+          WrParagraph(
             'Mỗi chủ đề bắt đầu bằng ba bước làm quen: Nhận diện, Thử nghiệm, '
-            'Chuyển hoá. Xong ba bước, chủ đề chuyển sang giai đoạn duy trì — '
+            'Chuyển hoá. Xong ba bước, chủ đề chuyển sang giai đoạn duy trì, '
             'mỗi ngày bạn thực hành lại, bấm ghi nhận một lần. Đủ $threshold '
             'lần, WorkReflection ghi nó thành kỹ năng của bạn.',
             style: const TextStyle(
@@ -205,9 +217,9 @@ class _FormedSkillTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final date = skill.skillFormedDate;
-    return Padding(
+    // Khoảng cách giữa các dòng do [WrListCard] lo, không phải việc của dòng.
+    return KeyedSubtree(
       key: Key('wr_skill_${skill.themeId}'),
-      padding: const EdgeInsets.only(bottom: 20),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -217,7 +229,7 @@ class _FormedSkillTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                WrParagraph(
                   skill.title,
                   style: const TextStyle(
                     fontSize: 16,
@@ -225,13 +237,14 @@ class _FormedSkillTile extends StatelessWidget {
                     color: WrColors.navy,
                     height: 1.4,
                   ),
+                  textAlign: TextAlign.start,
                 ),
                 const SizedBox(height: 5),
-                Text(
+                WrParagraph(
                   date == null
                       ? 'Đã thực hành ${skill.practiceCount} lần.'
-                      : 'Hình thành ngày ${DateFormat('dd/MM/yyyy').format(date)} '
-                          '· đã thực hành ${skill.practiceCount} lần.',
+                      : 'Hình thành ngày ${DateFormat('dd/MM/yyyy').format(date)}, '
+                          'đã thực hành ${skill.practiceCount} lần.',
                   key: Key('wr_skill_meta_${skill.themeId}'),
                   style: const TextStyle(
                     fontSize: 14.5,
@@ -261,13 +274,12 @@ class _FormingSkillTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = theme;
-    return Padding(
+    return KeyedSubtree(
       key: Key('wr_skill_forming_${formation.themeId}'),
-      padding: const EdgeInsets.only(bottom: 22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          WrParagraph(
             formation.title,
             style: const TextStyle(
               fontSize: 17,
@@ -275,6 +287,7 @@ class _FormingSkillTile extends StatelessWidget {
               color: WrColors.navy,
               height: 1.4,
             ),
+            textAlign: TextAlign.start,
           ),
           const SizedBox(height: 9),
           // MỘT trạng thái tại một thời điểm (Phần C mục 2).
@@ -290,8 +303,9 @@ class _FormingSkillTile extends StatelessWidget {
             _ProgressBar(progress: formation.progress),
             const SizedBox(height: 7),
             Text(
-              '${formation.practiceCount}/${formation.threshold} lần thực hành '
-              '· còn ${formation.remaining} lần nữa',
+              // Dấu phẩy, không phải dấu chấm giữa (bản đối chiếu UX/UI 05/08).
+              '${formation.practiceCount}/${formation.threshold} lần thực hành, '
+              'còn ${formation.remaining} lần nữa',
               key: Key('wr_skill_progress_${formation.themeId}'),
               style: const TextStyle(fontSize: 14, color: WrColors.muted),
             ),
@@ -381,7 +395,7 @@ class _JdSection extends ConsumerWidget {
         children: [
           const _SectionLabel('ĐỐI CHIẾU VỚI CÔNG VIỆC'),
           const SizedBox(height: 12),
-          const Text(
+          const WrParagraph(
             'Chưa đối chiếu được. Viết một dòng mô tả công việc bạn đang làm, '
             'WorkReflection sẽ chỉ ra kỹ năng nào của bạn đang hợp với nó và '
             'chỗ nào còn trống.',
@@ -437,12 +451,15 @@ class _JdSection extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 8),
-          ...match.matchedSkills.map(
-            (s) => _BulletLine(
-              icon: Icons.check_circle_outline,
-              color: WrColors.teal,
-              text: s.title,
-            ),
+          WrListCard(
+            children: [
+              for (final s in match.matchedSkills)
+                _BulletLine(
+                  icon: Icons.check_circle_outline,
+                  color: WrColors.teal,
+                  text: s.title,
+                ),
+            ],
           ),
           const SizedBox(height: 16),
         ],
@@ -459,21 +476,27 @@ class _JdSection extends ConsumerWidget {
           // Đã xếp theo bảng B.2 trong `matchSkillsToContext`, nên bốn dòng
           // hiện ra cũng là bốn khoảng trống liên quan nhất với cấp bậc của
           // người dùng.
-          ...match.gapThemes.take(4).map(
-                (t) => _BulletLine(
-                  icon: Icons.radio_button_unchecked,
-                  color: WrColors.amber,
+          //
+          // KHÔNG còn chấm tròn vàng: bản đối chiếu UX/UI 05/08 chỉ ra màu đó
+          // là `WrColors.amber`, token dành riêng cho nhãn Premium — dùng nó ở
+          // đây là nói với người dùng "khoảng trống này là hàng trả phí". Thay
+          // bằng pill navy mang đúng mức độ liên quan của bảng B.2.
+          WrListCard(
+            children: [
+              for (final t in match.gapThemes.take(4))
+                _BulletLine(
                   text: t.title,
                   badge: match.gapRelevance[t.themeId]?.label,
                   onTap: () => context.push('/wr/growth/theme/${t.themeId}'),
                 ),
-              ),
+            ],
+          ),
           const SizedBox(height: 14),
         ],
         // Nguyên tắc 3 (B.1) đã kéo nhóm Kết nối vào dù mô tả không nhắc tới.
         // Nói thẳng ra, không để người dùng tưởng nó đến từ chữ họ viết.
         if (match.autoRaisedDimensions.isNotEmpty) ...[
-          const Text(
+          const WrParagraph(
             'Ở vị trí quản lý, phần Mối quan hệ được tính là cần dù mô tả công '
             'việc không nhắc tới — những điều đó thường được ngầm hiểu.',
             key: Key('wr_skills_jd_auto_raised'),
@@ -484,7 +507,7 @@ class _JdSection extends ConsumerWidget {
         // §11.2 của Cơ hội phát triển: mọi diễn giải đều phải kèm ghi chú giới
         // hạn. Phép đối chiếu này đọc từ khoá trong mô tả bạn viết, nó không
         // đọc được ngành nghề hay bối cảnh của bạn.
-        Text(
+        WrParagraph(
           'Đối chiếu dựa trên mô tả công việc bạn đã viết '
           '(${match.basedOnKeywords.take(4).join(', ')}…), độ chính xác còn '
           'giới hạn.',
@@ -501,18 +524,23 @@ class _JdSection extends ConsumerWidget {
   }
 }
 
+/// Một dòng trong danh sách đối chiếu.
+///
+/// Dẫn đầu dòng là [badge] (pill navy mang mức độ liên quan) nếu có, không thì
+/// mới tới [icon]. Không bao giờ cả hai: hai vật dẫn đầu cạnh nhau thì mắt
+/// không biết bám vào đâu.
 class _BulletLine extends StatelessWidget {
   const _BulletLine({
-    required this.icon,
-    required this.color,
     required this.text,
+    this.icon,
+    this.color,
     this.badge,
     this.onTap,
   });
 
-  final IconData icon;
-  final Color color;
   final String text;
+  final IconData? icon;
+  final Color? color;
 
   /// Mức độ liên quan theo cấp bậc (bảng B.2). Null khi chưa biết cấp bậc.
   final String? badge;
@@ -521,45 +549,69 @@ class _BulletLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final row = Padding(
-      padding: const EdgeInsets.only(bottom: 9),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 16, color: color),
+    final row = Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        if (badge != null) ...[
+          _RelevancePill(label: badge!),
           const SizedBox(width: 10),
-          Expanded(
-            child: Text(
-              text,
-              style: const TextStyle(
-                fontSize: 15.5,
-                color: WrColors.navy,
-                height: 1.5,
-              ),
+        ] else if (icon != null) ...[
+          Icon(icon, size: 16, color: color ?? WrColors.navy),
+          const SizedBox(width: 10),
+        ],
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(
+              fontSize: 15.5,
+              fontWeight: FontWeight.w600,
+              color: WrColors.navy,
+              height: 1.5,
             ),
           ),
-          if (badge != null) ...[
-            const SizedBox(width: 8),
-            Text(
-              badge!,
-              style: const TextStyle(
-                fontSize: 12.5,
-                fontWeight: FontWeight.w700,
-                color: WrColors.muted,
-              ),
-            ),
-            const SizedBox(width: 8),
-          ],
-          if (onTap != null)
-            const Icon(Icons.arrow_forward_ios, size: 11, color: WrColors.muted),
-        ],
-      ),
+        ),
+        if (onTap != null)
+          const Padding(
+            padding: EdgeInsets.only(left: 8, top: 4),
+            child:
+                Icon(Icons.arrow_forward_ios, size: 11, color: WrColors.muted),
+          ),
+      ],
     );
     if (onTap == null) return row;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: onTap,
       child: row,
+    );
+  }
+}
+
+/// Pill navy — đúng bảng pill mục 04 của Đặc tả UX/UI: nền màu gốc pha 8%,
+/// chữ đúng bằng [WrColors.navy], bo tròn hoàn toàn.
+class _RelevancePill extends StatelessWidget {
+  const _RelevancePill({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+      decoration: BoxDecoration(
+        color: WrColors.navy.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(100),
+      ),
+      child: WrParagraph(
+        label,
+        style: const TextStyle(
+          fontSize: 11.5,
+          fontWeight: FontWeight.w700,
+          color: WrColors.navy,
+          height: 1.35,
+        ),
+        textAlign: TextAlign.start,
+      ),
     );
   }
 }

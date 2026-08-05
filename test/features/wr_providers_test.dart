@@ -3,6 +3,8 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:workreflection_mobile/features/profile/profile_providers.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
@@ -160,6 +162,92 @@ void main() {
       addTearDown(container.dispose);
 
       expect((await container.read(wrEntitlementProvider.future)).isPremium, isTrue);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Công tắc Premium nghiệm thu — đường đi thật, qua SharedPreferences.
+  //
+  // Lỗi phải chặn: công tắc lưu theo MÁY. Chủ sản phẩm bật một lần, rồi bất kỳ
+  // ai đăng nhập trên máy đó cũng thành Premium — kể cả khi cc_profiles.role
+  // của họ là 'free'.
+  // -------------------------------------------------------------------------
+  group('premiumOverrideProvider — theo tài khoản, không theo máy', () {
+    ProviderContainer containerFor(String? email) {
+      final c = ProviderContainer(
+        overrides: [
+          currentUserEmailProvider.overrideWithValue(email),
+          currentUserIdProvider.overrideWithValue('u1'),
+          wrIntelligenceRepositoryProvider.overrideWithValue(
+            FakeWrIntelligenceRepository()..seedEntitlement(null),
+          ),
+          ccProfileProvider.overrideWith((ref) async => {'role': 'free'}),
+        ],
+      );
+      addTearDown(c.dispose);
+      return c;
+    }
+
+    test('chủ công tắc bật rồi mở lại app thì vẫn còn', () async {
+      SharedPreferences.setMockInitialValues({
+        'wr_dev_premium_override': true,
+        'wr_dev_premium_override_owner': 'thedangs7@gmail.com',
+      });
+      final c = containerFor('thedangs7@gmail.com');
+
+      expect(c.read(premiumOverrideProvider), isNull, reason: 'chưa đọc xong');
+      await Future<void>.delayed(Duration.zero);
+      expect(c.read(premiumOverrideProvider), isTrue);
+      expect((await c.read(wrEntitlementProvider.future)).isPremium, isTrue);
+    });
+
+    test('người khác đăng nhập trên máy đã bật: KHÔNG Premium', () async {
+      SharedPreferences.setMockInitialValues({
+        'wr_dev_premium_override': true,
+        'wr_dev_premium_override_owner': 'thedangs7@gmail.com',
+      });
+      final c = containerFor('nguoila@example.com');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(c.read(premiumOverrideProvider), isNull);
+      expect(c.read(canTogglePremiumProvider), isFalse,
+          reason: 'không được thấy cả nút bật/tắt');
+      expect((await c.read(wrEntitlementProvider.future)).isPremium, isFalse);
+
+      // Và cờ bị dọn khỏi máy, không nằm chờ ai đó nữa.
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.containsKey('wr_dev_premium_override'), isFalse);
+    });
+
+    test('cờ của bản cũ (không ghi chủ) không cấp Premium cho ai', () async {
+      SharedPreferences.setMockInitialValues({
+        'wr_dev_premium_override': true,
+      });
+      final c = containerFor('thedangs7@gmail.com');
+      await Future<void>.delayed(Duration.zero);
+
+      expect(c.read(premiumOverrideProvider), isNull);
+    });
+
+    test('người không được phép gọi set() cũng không bật được', () async {
+      SharedPreferences.setMockInitialValues({});
+      final c = containerFor('nguoila@example.com');
+      await c.read(premiumOverrideProvider.notifier).set(true);
+
+      expect(c.read(premiumOverrideProvider), isNull);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.containsKey('wr_dev_premium_override'), isFalse);
+    });
+
+    test('bật xong thì ghi kèm email chủ công tắc', () async {
+      SharedPreferences.setMockInitialValues({});
+      final c = containerFor('thedangs7@gmail.com');
+      await c.read(premiumOverrideProvider.notifier).set(true);
+
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool('wr_dev_premium_override'), isTrue);
+      expect(prefs.getString('wr_dev_premium_override_owner'),
+          'thedangs7@gmail.com');
     });
   });
 

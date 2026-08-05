@@ -12,6 +12,7 @@ import '../../../core/widgets/wr_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../survey/survey_providers.dart';
 import '../understand_providers.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 class UnderstandScreen extends ConsumerWidget {
   const UnderstandScreen({super.key});
@@ -95,7 +96,7 @@ class _DominantNeedBlock extends ConsumerWidget {
             children: [
               WrEyebrow(l10n.understandEyebrowNeed),
               const SizedBox(height: 16),
-              Text(
+              WrParagraph(
                 quote,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
