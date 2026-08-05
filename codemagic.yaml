@@ -1,0 +1,87 @@
+# Cấu hình build máy Mac trên Codemagic — dùng để nộp bản iOS lên App Store.
+#
+# Vì sao cần file này: máy dev đang là Linux, không archive được IPA. Codemagic
+# cho mượn máy Mac có sẵn Xcode + Flutter, ký bằng chứng chỉ lấy tự động từ
+# App Store Connect API key, rồi đẩy thẳng lên TestFlight.
+#
+# Trước khi chạy lần đầu phải làm 3 việc ngoài repo (xem hướng dẫn kèm theo):
+#   1. Tạo App Store Connect API key (quyền App Manager), nạp vào Codemagic
+#      team settings với tên integration là "workreflection-asc".
+#   2. Tạo app record trên App Store Connect với bundle id bên dưới.
+#   3. Điền APP_STORE_APPLE_ID (số Apple ID của app, xem ở App Information).
+
+workflows:
+  ios-release:
+    name: iOS · TestFlight
+    instance_type: mac_mini_m2
+    max_build_duration: 60
+
+    integrations:
+      # Tên này phải trùng tên API key đã lưu trong Codemagic > Team integrations.
+      app_store_connect: workreflection-asc
+
+    environment:
+      ios_signing:
+        # distribution_type + bundle_identifier => Codemagic tự tạo/tải chứng chỉ
+        # và provisioning profile từ Apple, không cần up tay file .p12.
+        distribution_type: app_store
+        bundle_identifier: app.workreflection.workreflectionMobile
+      vars:
+        # Apple ID của app record (dãy số ~10 chữ số), dùng để hỏi build number
+        # mới nhất trên App Store Connect rồi +1 — tránh trùng số khi nộp.
+        APP_STORE_APPLE_ID: 0000000000
+      # Ghim đúng phiên bản máy dev đang dùng để bản build trên CI không lệch.
+      flutter: 3.41.4
+      xcode: latest
+      cocoapods: default
+
+    scripts:
+      - name: Get Flutter packages
+        script: flutter pub get
+
+      - name: Install pods
+        script: find . -name "Podfile" -execdir pod install \;
+
+      - name: Set up code signing settings on Xcode project
+        script: xcode-project use-profiles
+
+      - name: Flutter analyze
+        script: flutter analyze
+
+      - name: Flutter test
+        script: flutter test
+
+      - name: Build IPA
+        script: |
+          flutter build ipa --release \
+            --build-name=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1) \
+            --build-number=$(($(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID") + 1)) \
+            --export-options-plist=/Users/builder/export_options.plist
+
+    artifacts:
+      - build/ios/ipa/*.ipa
+      - /tmp/xcodebuild_logs/*.log
+
+    publishing:
+      email:
+        recipients:
+          - thedangs7@gmail.com
+        notify:
+          success: true
+          failure: true
+      app_store_connect:
+        auth: integration
+        # Đẩy lên TestFlight mỗi lần build xanh. Khi nào muốn nộp bản chính thức
+        # thì bật submit_to_app_store, đừng bật sớm kẻo tốn lượt review.
+        submit_to_testflight: true
+        submit_to_app_store: false
+
+    triggering:
+      # Chưa bật tự động: bấm "Start new build" trên web cho chủ động.
+      # Muốn tự chạy khi gắn tag thì mở khối events bên dưới.
+      # events:
+      #   - tag
+      # tag_patterns:
+      #   - pattern: 'v*'
+      #     include: true
+      cancel_previous_builds: true
