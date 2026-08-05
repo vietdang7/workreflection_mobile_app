@@ -35,6 +35,30 @@ enum WrPremiumFeature {
   deepReport,
 }
 
+/// Vai trò trên web được coi là đã có Premium.
+///
+/// Khách chốt 2026-08-01: Premium web và Premium app là MỘT — ai là Premium
+/// trên web thì mở khoá luôn trên app. Đây là danh sách vai trò tương ứng, giữ
+/// khớp với web (`userRole === "premium" || userRole === "admin"`, repo web:
+/// `src/pages/Index.tsx`).
+const Set<String> kWebPremiumRoles = {'premium', 'admin'};
+
+/// True khi [role] đọc từ `cc_profiles.role` là một vai trò có Premium.
+///
+/// Vì sao chỉ đọc `cc_profiles.role` mà không đọc `user_roles` như web: enum
+/// `app_role` của `user_roles` chỉ có admin/moderator/user — nó KHÔNG mang được
+/// giá trị 'premium'. Trang quản trị Người dùng của web cấp Premium bằng cách
+/// ghi `cc_profiles.role`. Nên `cc_profiles.role` mới là nơi Premium thật sự
+/// nằm, còn `user_roles` chỉ thêm được nhánh admin mà cột role kia gần như luôn
+/// nói cùng một điều.
+///
+/// So sánh sau khi cắt khoảng trắng và hạ chữ thường — role nhập tay từ trang
+/// quản trị, một chữ hoa lạc chỗ không nên làm mất gói của người ta.
+bool isWebPremiumRole(String? role) {
+  if (role == null) return false;
+  return kWebPremiumRoles.contains(role.trim().toLowerCase());
+}
+
 /// Encapsulates a user's entitlement state and enforces all 3 gating levels.
 class WrEntitlement {
   final WrPlan plan;
@@ -78,8 +102,9 @@ class WrEntitlement {
   // -------------------------------------------------------------------------
 
   /// Max active (non-completed) practice theme enrollments.
-  /// Free: 3. Premium: null (unlimited).
-  int? get maxActivePracticeThemes => isPremium ? null : 3;
+  /// Free: 2 — yêu cầu khách 2026-07-27 ("free chỉ được chọn thực hành tối đa
+  /// 2 chủ đề cùng lúc"). Premium: null (unlimited).
+  int? get maxActivePracticeThemes => isPremium ? null : 2;
 
   /// Returns true if user can enroll in another practice theme.
   /// [activeCount] = count of enrollments where completedAt == null.

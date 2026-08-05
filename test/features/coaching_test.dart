@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:workreflection_mobile/core/data/coaching_repository.dart';
 import 'package:workreflection_mobile/core/models/coaching_models.dart';
 import 'package:workreflection_mobile/features/coaching/presentation/coaching_screen.dart';
@@ -21,6 +22,7 @@ Widget _wrap(FakeCoachingRepository repo) {
       coachingRepositoryProvider.overrideWithValue(repo),
     ],
     child: const MaterialApp(
+      builder: wrTextScaleBuilder,
       localizationsDelegates: [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,

@@ -104,9 +104,9 @@ class LayerDetailScreen extends ConsumerWidget {
     final reportAsync = ref.watch(_reportForLayerDetailProvider(reportId));
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: WrColors.navy),
@@ -184,7 +184,7 @@ class _LayerDetailBody extends StatelessWidget {
               children: [
                 Text(l10n.layerDetailOverallScore,
                     style: WrTextStyles.eyebrow
-                        .copyWith(color: WrColors.muted, letterSpacing: 0.55)),
+                        .copyWith(color: WrColors.text3, letterSpacing: 0.55)),
                 const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -198,7 +198,7 @@ class _LayerDetailBody extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 WrProgressTrack(
-                    value: overallScore / 5.0, color: WrColors.coral),
+                    value: overallScore / 5.0, color: WrColors.navy),
               ],
             ),
           ),
@@ -267,7 +267,7 @@ class _SubComponentCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          WrProgressTrack(value: subScore.score / 5.0, color: WrColors.coral),
+          WrProgressTrack(value: subScore.score / 5.0, color: WrColors.navy),
           const SizedBox(height: 10),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -318,7 +318,7 @@ class _InlineBadge extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 12,
+          fontSize: 13.5,
           fontWeight: FontWeight.w700,
           color: color,
         ),

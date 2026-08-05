@@ -25,8 +25,11 @@ void main() {
       expect(WrColors.dark, const Color(0xFF2C335D));
     });
 
-    test('muted is #8A95A3', () {
-      expect(WrColors.muted, const Color(0xFF8A95A3));
+    // Spec §01b: chữ phụ không được là xám trung tính, phải là Deep Space pha
+    // alpha (--text-2). #8A95A3 cũ là lỗi.
+    test('muted is text-2 rgba(44,51,93,0.72)', () {
+      expect(WrColors.muted, const Color(0xB82C335D));
+      expect(WrColors.muted, WrColors.text2);
     });
 
     test('white is #FFFFFF', () {
@@ -58,12 +61,22 @@ void main() {
     });
   });
 
+  group('wrTheme', () {
+    // Brand identity mới (04/8): nền toàn màn hình là xám #F4F4F6, thay nền kem
+    // #FBF9F5 cũ. Trắng thuần làm thẻ trắng chìm mất, đây là lỗi cũ đã sửa —
+    // giữ chốt để không quay lại.
+    testWidgets('scaffold background is grey, not pure white', (tester) async {
+      expect(wrTheme().scaffoldBackgroundColor, WrColors.pageBg);
+      expect(wrTheme().scaffoldBackgroundColor, const Color(0xFFF4F4F6));
+    });
+  });
+
   group('WrTextStyles', () {
-    test('eyebrow is 11px weight 700 muted', () {
+    test('eyebrow is 12.5px weight 700 text-3', () {
       final style = WrTextStyles.eyebrow;
-      expect(style.fontSize, 11);
+      expect(style.fontSize, 12.5);
       expect(style.fontWeight, FontWeight.w700);
-      expect(style.color, WrColors.muted);
+      expect(style.color, WrColors.text3);
     });
 
     test('hLarge is 22px weight 700 navy', () {
@@ -80,9 +93,9 @@ void main() {
       expect(style.color, WrColors.dark);
     });
 
-    test('body is 14px height 1.5', () {
+    test('body is 15.5px height 1.5', () {
       final style = WrTextStyles.body;
-      expect(style.fontSize, 14);
+      expect(style.fontSize, 15.5);
       expect(style.height, 1.5);
     });
 
@@ -101,9 +114,9 @@ void main() {
       expect(style.color, WrColors.navy);
     });
 
-    test('greeting is 14px muted', () {
+    test('greeting is 15.5px muted', () {
       final style = WrTextStyles.greeting;
-      expect(style.fontSize, 14);
+      expect(style.fontSize, 15.5);
       expect(style.color, WrColors.muted);
     });
   });

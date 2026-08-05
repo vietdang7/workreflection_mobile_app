@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:workreflection_mobile/features/onboarding/onboarding_state.dart';
 import 'package:workreflection_mobile/features/onboarding/presentation/onboarding_screen.dart';
+import 'package:workreflection_mobile/features/onboarding/presentation/wr_logo.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
 
 Widget _wrap(Widget child) {
   return ProviderScope(
     child: MaterialApp(
+      builder: wrTextScaleBuilder,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       locale: const Locale('vi'),
@@ -71,7 +74,7 @@ void main() {
       await tester.pump();
 
       // Step 1 tag
-      expect(find.text('Reflection'), findsOneWidget);
+      expect(find.text('Reflect'), findsOneWidget);
       // Step 1 CTA
       expect(find.text('Tiếp tục'), findsOneWidget);
       // Step 1 body text fragment
@@ -81,8 +84,8 @@ void main() {
     testWidgets('renders WrLogo on step 1', (tester) async {
       await tester.pumpWidget(_wrap(const OnboardingScreen()));
       await tester.pump();
-      // WrLogo uses CustomPaint for icon mark + RichText for wordmark
-      expect(find.byType(CustomPaint), findsWidgets);
+      // WrLogo nhúng thẳng file logo chuẩn assets/images/wr_logo.png
+      expect(find.byType(WrLogo), findsOneWidget);
     });
 
     testWidgets('progress dots row shows 3 dot containers', (tester) async {

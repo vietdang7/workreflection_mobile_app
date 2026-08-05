@@ -10,6 +10,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../models/wr_intelligence.dart';
+import '../models/wr_mood_content.dart';
+
+/// Tên Edge Function đọc tài liệu bối cảnh bằng AI.
+const String kWrDocAnalyzeFunction = 'wr-doc-analyze';
+
+/// Lỗi khi đọc tài liệu — [message] là câu tiếng Việt để hiện thẳng cho người
+/// dùng, không phải mã lỗi kỹ thuật.
+class WrDocAnalysisException implements Exception {
+  const WrDocAnalysisException(this.message, {this.needsPremium = false});
+
+  final String message;
+
+  /// Máy chủ từ chối vì gói: màn hình đổi sang mời nâng cấp thay vì báo lỗi.
+  final bool needsPremium;
+
+  @override
+  String toString() => message;
+}
 
 // ---------------------------------------------------------------------------
 // Abstract interface
@@ -81,17 +99,48 @@ abstract class WrIntelligenceRepository {
   /// Mark a theme enrollment as completed for [userId]/[themeId].
   Future<void> completeTheme({required String userId, required String themeId});
 
-  /// Insert a context document record.
-  Future<void> insertContextDocument(WrContextDocument d);
+  /// Insert a context document record. Trả về id vừa tạo (null nếu không lấy
+  /// được) — cần id để gọi phân tích ngay sau khi tải lên.
+  Future<String?> insertContextDocument(WrContextDocument d);
 
   /// Fetch context documents for [userId].
   Future<List<WrContextDocument>> fetchContextDocuments(String userId);
+
+  /// Nhờ Edge Function `wr-doc-analyze` đọc tài liệu [documentId] bằng AI.
+  ///
+  /// Trả về bản ghi đã cập nhật. Ném [WrDocAnalysisException] với câu tiếng
+  /// Việt do máy chủ soạn khi hỏng — đây là thứ hiện thẳng lên màn hình.
+  Future<WrContextDocument> analyzeContextDocument(String documentId);
+
+  /// Xoá một tài liệu bối cảnh (kèm file trong Storage nếu xoá được).
+  Future<void> deleteContextDocument(WrContextDocument doc);
 
   /// Fetch pattern narratives for [userId].
   Future<List<PatternNarrative>> fetchPatternNarratives(String userId);
 
   /// Fetch growth journey snapshots for [userId].
   Future<List<GrowthJourneySnapshot>> fetchGrowthSnapshots(String userId);
+
+  // --- Hai Lớp v1.6 ---
+
+  /// Cơ hội phát triển mới nhất của [userId] (§XI). Null khi chưa tổng hợp lần
+  /// nào — khi đó UI im lặng thay vì bịa nội dung.
+  Future<GrowthOpportunity?> fetchLatestGrowthOpportunity(String userId);
+
+  /// Lưu một gợi ý Cơ hội phát triển đã tổng hợp (§11.5).
+  Future<void> insertGrowthOpportunity(GrowthOpportunity opportunity);
+
+  /// Ghi chú tùy chọn khi hoàn thành một bước Thực hành (§VII).
+  ///
+  /// Trả về id của dòng vừa ghi, để nối với mục Career Memory sinh ra từ nó.
+  /// Ghi lại cùng một bước thì cập nhật chính dòng cũ.
+  Future<String?> upsertPracticeStepNote(PracticeStepNote note);
+
+  /// Ghi một câu hỏi nghề nghiệp người dùng vừa gửi.
+  Future<void> insertCareerQuestion(CareerQuestion question);
+
+  /// Câu hỏi nghề nghiệp của [userId], mới nhất trước.
+  Future<List<CareerQuestion>> fetchCareerQuestions(String userId);
 }
 
 // ---------------------------------------------------------------------------
@@ -267,10 +316,16 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
 
   @override
   Future<List<PracticeEnrollment>> fetchEnrollments(String userId) async {
+    // `order` không phải trang trí: không có nó, Postgres được phép trả về thứ
+    // tự bất kỳ, mà cả Home ("chủ đề đang dở") lẫn tab Phát triển ("chủ đề trọng
+    // tâm") đều lấy phần tử ĐẦU của danh sách này. Không sắp thì hai màn có thể
+    // nói về hai chủ đề khác nhau, và cùng một màn đổi chủ đề giữa hai lần mở.
+    // Ghi danh sớm nhất lên trước — thứ tự người dùng đã thấy từ đầu.
     final rows = await _client
         .from('wr_practice_enrollments')
         .select()
-        .eq('user_id', userId);
+        .eq('user_id', userId)
+        .order('started_at', ascending: true);
     return rows.map(PracticeEnrollment.fromJson).toList();
   }
 
@@ -305,8 +360,80 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
   }
 
   @override
-  Future<void> insertContextDocument(WrContextDocument d) async {
-    await _client.from('wr_context_documents').insert(d.toInsert());
+  Future<String?> insertContextDocument(WrContextDocument d) async {
+    final row = await _client
+        .from('wr_context_documents')
+        .insert(d.toInsert())
+        .select('id')
+        .maybeSingle();
+    return row?['id'] as String?;
+  }
+
+  @override
+  Future<WrContextDocument> analyzeContextDocument(String documentId) async {
+    try {
+      final res = await _client.functions.invoke(
+        kWrDocAnalyzeFunction,
+        body: {'documentId': documentId},
+      );
+      final data = res.data;
+      if (data is! Map || data['status'] != 'ready') {
+        throw const WrDocAnalysisException(
+          'Chưa đọc được tài liệu này. Bạn thử lại sau nhé.',
+        );
+      }
+    } on FunctionException catch (e) {
+      throw _docFailure(e);
+    } on WrDocAnalysisException {
+      rethrow;
+    } catch (_) {
+      throw const WrDocAnalysisException(
+        'Không kết nối được lúc này. Bạn kiểm tra mạng rồi thử lại nhé.',
+      );
+    }
+
+    // Đọc lại từ bảng thay vì tin thân phản hồi: nguồn sự thật là dòng dữ liệu,
+    // và app còn cần đúng những trường khác (ngày phân tích, model) mà hàm
+    // không trả về hết.
+    final row = await _client
+        .from('wr_context_documents')
+        .select()
+        .eq('id', documentId)
+        .maybeSingle();
+    if (row == null) {
+      throw const WrDocAnalysisException('Không tìm thấy tài liệu này.');
+    }
+    return WrContextDocument.fromJson(row);
+  }
+
+  @override
+  Future<void> deleteContextDocument(WrContextDocument doc) async {
+    final id = doc.id;
+    if (id == null) return;
+    await _client.from('wr_context_documents').delete().eq('id', id);
+    try {
+      await _client.storage.from('context-docs').remove([doc.filePath]);
+    } catch (_) {
+      // Dòng đã xoá rồi thì tài liệu coi như biến mất với người dùng. File mồ
+      // côi trong Storage là việc của người vận hành, không đáng để báo lỗi.
+    }
+  }
+
+  /// Lấy câu báo lỗi tiếng Việt Edge Function đã soạn sẵn.
+  WrDocAnalysisException _docFailure(FunctionException e) {
+    final d = e.details;
+    if (d is Map) {
+      final msg = d['error'];
+      if (msg is String && msg.trim().isNotEmpty) {
+        return WrDocAnalysisException(
+          msg.trim(),
+          needsPremium: d['needsPremium'] == true,
+        );
+      }
+    }
+    return const WrDocAnalysisException(
+      'Chưa đọc được tài liệu này. Bạn thử lại sau nhé.',
+    );
   }
 
   @override
@@ -337,5 +464,52 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
         .eq('user_id', userId)
         .order('created_at', ascending: false);
     return rows.map(GrowthJourneySnapshot.fromJson).toList();
+  }
+
+  // --- Hai Lớp v1.6 ---
+
+  @override
+  Future<GrowthOpportunity?> fetchLatestGrowthOpportunity(String userId) async {
+    final rows = await _client
+        .from('wr_growth_opportunities')
+        .select()
+        .eq('user_id', userId)
+        .order('generated_at', ascending: false)
+        .limit(1);
+    if (rows.isEmpty) return null;
+    return GrowthOpportunity.fromJson(rows.first);
+  }
+
+  @override
+  Future<void> insertGrowthOpportunity(GrowthOpportunity opportunity) async {
+    await _client
+        .from('wr_growth_opportunities')
+        .insert(opportunity.toInsert());
+  }
+
+  @override
+  Future<String?> upsertPracticeStepNote(PracticeStepNote note) async {
+    final rows = await _client
+        .from('wr_practice_step_notes')
+        .upsert(note.toInsert(), onConflict: 'user_id,step_id')
+        .select('id');
+    if (rows.isEmpty) return null;
+    return rows.first['id'] as String?;
+  }
+
+  @override
+  Future<void> insertCareerQuestion(CareerQuestion question) async {
+    await _client.from('wr_career_questions').insert(question.toInsert());
+  }
+
+  @override
+  Future<List<CareerQuestion>> fetchCareerQuestions(String userId) async {
+    final rows = await _client
+        .from('wr_career_questions')
+        .select()
+        .eq('user_id', userId)
+        .order('created_at', ascending: false)
+        .limit(20);
+    return rows.map(CareerQuestion.fromJson).toList();
   }
 }

@@ -16,6 +16,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../features/profile/profile_providers.dart';
 import '../../../features/survey/survey_providers.dart';
 import '../home_providers.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -25,7 +26,7 @@ class HomeScreen extends ConsumerWidget {
     final profileAsync = ref.watch(mobileProfileProvider);
     final displayName = profileAsync.valueOrNull?.displayName ?? 'bạn';
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       body: SafeArea(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
@@ -172,18 +173,19 @@ class _MoodButton extends ConsumerWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: isSelected ? WrColors.coral : WrColors.cream,
+          color: isSelected ? WrColors.coral : WrColors.white,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: WrColors.line),
         ),
         alignment: Alignment.center,
         padding: const EdgeInsets.all(12),
-        child: Text(
+        child: WrParagraph(
           label,
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 13,
+            fontSize: 14.5,
             fontWeight: FontWeight.w600,
-            color: isSelected ? WrColors.white : WrColors.dark,
+            color: isSelected ? WrColors.navy : WrColors.dark,
             height: 1.4,
           ),
         ),
@@ -214,12 +216,13 @@ class _SystemNoticeCard extends ConsumerWidget {
             children: [
               WrEyebrow(l10n.homeEyebrowSystem),
               const SizedBox(height: 12),
-              Text(
+              WrParagraph(
                 l10n.homeSystemNoticeQuote(top.occurrenceCount, top.label),
                 style: WrTextStyles.insightQuote.copyWith(
                   fontSize: 16,
                   color: WrColors.white,
                 ),
+                textAlign: TextAlign.start,
               ),
               const SizedBox(height: 16),
               WrActionLink(
@@ -265,7 +268,7 @@ class _SurveyCta extends ConsumerWidget {
               label: Text(l10n.homeStartReflection),
               style: ElevatedButton.styleFrom(
                 backgroundColor: WrColors.coral,
-                foregroundColor: WrColors.white,
+                foregroundColor: WrColors.navy,
                 minimumSize: const Size.fromHeight(52),
                 padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
                 shape: RoundedRectangleBorder(
@@ -362,7 +365,7 @@ class _SuggestionSection extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           l10n.homeSuggestionMeta,
-                          style: WrTextStyles.body.copyWith(fontSize: 13),
+                          style: WrTextStyles.body.copyWith(fontSize: 14.5),
                         ),
                       ],
                     ),
@@ -377,12 +380,12 @@ class _SuggestionSection extends StatelessWidget {
                 children: [
                   Text(
                     l10n.homeSuggestionProgress,
-                    style: WrTextStyles.body.copyWith(fontSize: 12),
+                    style: WrTextStyles.body.copyWith(fontSize: 13.5),
                   ),
                   Text(
                     l10n.homeSuggestionStatus,
                     style: const TextStyle(
-                      fontSize: 12,
+                      fontSize: 13.5,
                       fontWeight: FontWeight.w600,
                       color: WrColors.coral,
                     ),
@@ -464,7 +467,7 @@ class _InsightContent extends StatelessWidget {
         const SizedBox(height: 10),
         Text(
           l10n.homeInsightSavedDate(dateStr),
-          style: WrTextStyles.body.copyWith(fontSize: 12),
+          style: WrTextStyles.body.copyWith(fontSize: 13.5),
         ),
       ],
     );

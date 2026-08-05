@@ -32,9 +32,9 @@ class CoachingSessionsScreen extends ConsumerWidget {
     final bookingsAsync = ref.watch(myBookingsProvider);
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: WrColors.navy),
@@ -120,7 +120,7 @@ class _SessionRow extends StatelessWidget {
   final CoachingBooking booking;
 
   String _formatScheduledAt(DateTime? dt) {
-    if (dt == null) return '—';
+    if (dt == null) return 'Chưa có lịch';
     return DateFormat('HH:mm dd/MM/yyyy').format(dt);
   }
 
@@ -136,8 +136,9 @@ class _SessionRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: WrColors.cream,
+          color: WrColors.white,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: WrColors.line),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -261,7 +262,7 @@ class _StatusChip extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 12,
+          fontSize: 13.5,
           fontWeight: FontWeight.w600,
           color: color,
         ),

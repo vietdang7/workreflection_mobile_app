@@ -1,0 +1,36 @@
+-- Lùi lại migration `20260731160000_backfill_wr_entitlements_from_cc_profiles.sql`.
+--
+-- ---------------------------------------------------------------------------
+-- Vì sao lùi
+-- ---------------------------------------------------------------------------
+--
+-- Migration đó xuất phát từ một tiền đề SAI: rằng `cc_profiles` và
+-- `wr_entitlements` mô tả cùng một thứ, chỉ lệch nhau vì thiếu đồng bộ.
+--
+-- Khách đính chính ngày 2026-07-31: "premium trên app mobile khác với web nên
+-- không có nên dùng chung đâu". Hai bảng là HAI SẢN PHẨM khác nhau —
+-- `cc_profiles.subscription_expires_at` là thuê bao của web app, còn
+-- `wr_entitlements` là gói của WorkReflection mobile. Người mua gói web không
+-- vì thế mà mua gói mobile.
+--
+-- Nên `wr_entitlements` rỗng KHÔNG phải lỗi dữ liệu; nó phản ánh đúng sự thật
+-- là chưa ai mua gói mobile. Đổ 9 hàng từ web sang là cấp gói mobile cho 9
+-- người chưa từng trả tiền cho nó.
+--
+-- ---------------------------------------------------------------------------
+-- Phạm vi
+-- ---------------------------------------------------------------------------
+--
+-- Chỉ xoá đúng những hàng do migration kia sinh ra — đó là lý do nó đánh dấu
+-- `source`. Hàng nào về sau do đường thanh toán mobile ghi sẽ mang `source`
+-- khác và không bị đụng tới.
+--
+-- Muốn dựng lại trạng thái trước khi xoá thì chạy lại đúng câu insert của
+-- migration 20260731160000.
+--
+-- ⚠ Đừng dựng trigger đồng bộ `cc_profiles` → `wr_entitlements`. Đó là hướng
+-- tôi đã đề xuất trước khi biết hai gói là hai sản phẩm; nó sẽ tái lập chính
+-- cái lỗi này và tự động hoá nó.
+
+delete from public.wr_entitlements
+ where source = 'cc_profiles_backfill';

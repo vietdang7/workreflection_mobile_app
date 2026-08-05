@@ -64,9 +64,9 @@ class _WorkshopSurveyScreenState extends ConsumerState<WorkshopSurveyScreen> {
     final surveyAsync = ref.watch(workshopSurveySetProvider(widget.workshopId));
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         elevation: 0,
         title: Text(l10n.wsSurveyTitle, style: WrTextStyles.hMedium),
       ),
@@ -155,7 +155,7 @@ class _WorkshopSurveyScreenState extends ConsumerState<WorkshopSurveyScreen> {
                                 selectedColor: WrColors.coral,
                                 labelStyle: TextStyle(
                                   color: isSelected
-                                      ? WrColors.white
+                                      ? WrColors.navy
                                       : WrColors.dark,
                                 ),
                               );

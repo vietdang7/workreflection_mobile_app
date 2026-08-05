@@ -1,0 +1,89 @@
+// Công tắc Premium thử nghiệm — giới hạn theo tài khoản.
+//
+// Hai luật phải giữ bằng test, vì hỏng cái nào cũng biến một công cụ nội bộ
+// thành đường vòng qua thanh toán:
+//   1. chỉ đúng một email thấy công tắc
+//   2. công tắc lưu trên MÁY, nên mỗi lần đọc phải hỏi lại người đang đăng
+//      nhập có phải chủ công tắc không
+
+import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/logic/wr_premium_override.dart';
+
+void main() {
+  group('canTogglePremium', () {
+    test('đúng danh sách tài khoản nội bộ được phép', () {
+      expect(kPremiumTogglePermittedEmails, {
+        'thedangs7@gmail.com',
+        'ngduythong1412@gmail.com',
+      });
+      for (final e in kPremiumTogglePermittedEmails) {
+        expect(canTogglePremium(e), isTrue, reason: 'chặn nhầm $e');
+      }
+    });
+
+    test('danh sách viết sẵn chữ thường', () {
+      // canTogglePremium hạ email về chữ thường rồi mới tra Set. Một mục viết
+      // hoa trong danh sách sẽ không bao giờ khớp — hỏng lặng lẽ.
+      for (final e in kPremiumTogglePermittedEmails) {
+        expect(e, e.toLowerCase(), reason: '$e phải viết thường');
+      }
+    });
+
+    test('bỏ qua hoa thường và khoảng trắng thừa', () {
+      // Supabase trả email đúng như lúc đăng ký; một chữ hoa lạc chỗ không nên
+      // làm mất công tắc.
+      expect(canTogglePremium('TheDangS7@Gmail.com'), isTrue);
+      expect(canTogglePremium('  thedangs7@gmail.com  '), isTrue);
+    });
+
+    test('mọi tài khoản khác đều không', () {
+      for (final other in [
+        'yumi.cloudncoral@gmail.com',
+        // Những biến thể gần giống — chặn được kiểu email na ná.
+        'ngduythong141414@gmail.com',
+        'thedangs7@gmail.com.vn',
+        'xthedangs7@gmail.com',
+        'thedangs7@gmail.co',
+        '',
+        null,
+      ]) {
+        expect(canTogglePremium(other), isFalse, reason: 'lọt: $other');
+      }
+    });
+  });
+
+  group('resolvePremium', () {
+    test('chưa động vào công tắc thì trả gói thật', () {
+      for (final actual in [true, false]) {
+        expect(
+          resolvePremium(actual: actual, override: null, allowed: true),
+          actual,
+        );
+      }
+    });
+
+    test('công tắc ép được cả hai chiều', () {
+      expect(resolvePremium(actual: false, override: true, allowed: true),
+          isTrue);
+      // Chiều ngược lại quan trọng ngang chiều bật: người đang có Premium thật
+      // vẫn phải xem được bản miễn phí trông ra sao.
+      expect(resolvePremium(actual: true, override: false, allowed: true),
+          isFalse);
+    });
+
+    test('KHÔNG được phép thì công tắc vô hiệu, kể cả đang bật', () {
+      // Đây là cái chốt. Công tắc lưu trên máy chứ không theo tài khoản — đăng
+      // xuất rồi người khác đăng nhập trên cùng máy mà cờ cũ còn hiệu lực thì
+      // công cụ thử nghiệm thành lỗ hổng.
+      expect(
+        resolvePremium(actual: false, override: true, allowed: false),
+        isFalse,
+      );
+      expect(
+        resolvePremium(actual: true, override: false, allowed: false),
+        isTrue,
+        reason: 'người khác không được phép bị công tắc hạ gói thật xuống',
+      );
+    });
+  });
+}

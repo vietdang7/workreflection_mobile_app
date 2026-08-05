@@ -42,9 +42,9 @@ class _VouchersScreenState extends ConsumerState<VouchersScreen> {
   }
 
   String _formatDate(String? raw) {
-    if (raw == null) return '—';
+    if (raw == null) return 'Chưa có';
     final d = DateTime.tryParse(raw);
-    if (d == null) return '—';
+    if (d == null) return 'Chưa có';
     return '${d.day.toString().padLeft(2, '0')}/'
         '${d.month.toString().padLeft(2, '0')}/'
         '${d.year}';
@@ -56,9 +56,9 @@ class _VouchersScreenState extends ConsumerState<VouchersScreen> {
     final async = ref.watch(vouchersProvider);
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         elevation: 0,
         leading: const BackButton(color: WrColors.navy),
         title: Text(l10n.vouchersTitle, style: WrTextStyles.hMedium),
@@ -117,7 +117,7 @@ class _VouchersList extends StatelessWidget {
                 child: Text(
                   l10n.voucherWebNote,
                   style: WrTextStyles.body
-                      .copyWith(fontSize: 12, color: WrColors.coral),
+                      .copyWith(fontSize: 13.5, color: WrColors.coral),
                 ),
               ),
             ],
@@ -281,7 +281,7 @@ class _VoucherCard extends StatelessWidget {
                             : l10n.voucherDiscountAmount(
                                 discountAmount.toStringAsFixed(0)),
                         style: WrTextStyles.body
-                            .copyWith(fontSize: 12, color: WrColors.muted),
+                            .copyWith(fontSize: 13.5, color: WrColors.muted),
                       ),
                     ],
                   ),
@@ -315,7 +315,7 @@ class _VoucherCard extends StatelessWidget {
                     child: Text(
                       labels[s] ?? s,
                       style: WrTextStyles.body.copyWith(
-                          fontSize: 10, color: WrColors.coral),
+                          fontSize: 11.5, color: WrColors.pillCoralText),
                     ),
                   );
                 }).toList(),
@@ -336,14 +336,14 @@ class _VoucherCard extends StatelessWidget {
                       Text(
                         l10n.voucherExpiry(formatDate(validTo)),
                         style: WrTextStyles.body
-                            .copyWith(fontSize: 12, color: WrColors.muted),
+                            .copyWith(fontSize: 13.5, color: WrColors.muted),
                       ),
                       if (maxUses > 0)
                         Text(
                           l10n.voucherUsesLeft(
                               maxUses - usedCount, maxUses),
                           style: WrTextStyles.body.copyWith(
-                              fontSize: 12, color: WrColors.muted),
+                              fontSize: 13.5, color: WrColors.muted),
                         ),
                     ],
                   ),
@@ -358,11 +358,11 @@ class _VoucherCard extends StatelessWidget {
                     ),
                     label: Text(
                       isCopied ? l10n.voucherCopied : l10n.voucherCopy,
-                      style: const TextStyle(fontSize: 12),
+                      style: const TextStyle(fontSize: 13.5),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: WrColors.coral,
-                      foregroundColor: WrColors.white,
+                      foregroundColor: WrColors.navy,
                       padding: const EdgeInsets.symmetric(
                           horizontal: 14, vertical: 8),
                       shape: RoundedRectangleBorder(
@@ -417,7 +417,7 @@ class _StatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(label,
-          style: WrTextStyles.body.copyWith(fontSize: 11, color: fg)),
+          style: WrTextStyles.body.copyWith(fontSize: 12.5, color: fg)),
     );
   }
 }

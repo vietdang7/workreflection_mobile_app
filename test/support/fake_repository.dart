@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:workreflection_mobile/core/logic/wr_career_profile.dart';
+import 'package:workreflection_mobile/core/logic/wr_pricing.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
 import 'package:workreflection_mobile/core/models/checkin.dart';
 import 'package:workreflection_mobile/core/models/development_theme.dart';
@@ -40,6 +41,9 @@ class FakeWrRepository implements WrRepository {
   final List<String> updateLanguageCalls = [];
   final List<CareerSnapshot> saveCareerSnapshotCalls = [];
   bool failSaveCareerSnapshot = false;
+  final List<List<String>> saveRecentSituationIdsCalls = [];
+  final List<String?> saveRoleTextCalls = [];
+  final List<Map<String, String?>> saveMyInfoCalls = [];
   final List<({String ext, String docType})> uploadContextDocumentCalls = [];
   final List<String?> ensureSeededCalls = [];
   final List<String> saveOnboardingSituationCalls = [];
@@ -272,6 +276,36 @@ class FakeWrRepository implements WrRepository {
   }
 
   @override
+  Future<void> saveRecentSituationIds(List<String> codes) async {
+    saveRecentSituationIdsCalls.add(List.unmodifiable(codes));
+    if (_profile != null) {
+      _profile = _profile!.copyWith(recentSituationIds: codes);
+    }
+  }
+
+  @override
+  Future<void> saveRoleText(String? roleText) async {
+    final trimmed = roleText?.trim();
+    final normalised =
+        (trimmed == null || trimmed.isEmpty) ? null : trimmed;
+    saveRoleTextCalls.add(normalised);
+    if (_profile != null) {
+      _profile = _profile!.copyWith(roleText: normalised);
+    }
+  }
+
+  @override
+  Future<void> saveMyInfo(Map<String, String?> fields) async {
+    saveMyInfoCalls.add(Map.of(fields));
+    if (_profile == null) return;
+    _profile = _profile!.copyWith(
+      city: fields['city'],
+      orgIndustry: fields['org_industry'],
+      orgCompanyType: fields['org_company_type'],
+    );
+  }
+
+  @override
   Future<void> updateLanguage(String lang) async {
     updateLanguageCalls.add(lang);
     if (_profile != null) {
@@ -291,6 +325,37 @@ class FakeWrRepository implements WrRepository {
       return _ccProfileCompleter!.future;
     }
     return Map<String, dynamic>.from(_ccProfile);
+  }
+
+  /// Các gói Premium mà [getPremiumPlans] trả về. Mặc định là hai gói thật của
+  /// app (`premium_mobile`: năm 499k, tháng 70k, không gạch ngang) theo đúng
+  /// `display_order` — gói web 249k là dòng khác, app không đọc tới.
+  List<WrPremiumPricing> premiumPlans = const [
+    WrPremiumPricing(
+      currentPrice: 499000,
+      // Có productId thì mua được — thiếu là màn thanh toán từ chối tạo đơn.
+      productId: 'prod-premium-test',
+      durationDays: 365,
+    ),
+    WrPremiumPricing(
+      currentPrice: 70000,
+      productId: 'prod-premium-monthly-test',
+      durationDays: 30,
+    ),
+  ];
+
+  /// Lối tắt cho test chỉ quan tâm một gói: gán là bảng còn đúng gói đó.
+  set premiumPricing(WrPremiumPricing plan) => premiumPlans = [plan];
+  WrPremiumPricing get premiumPricing => premiumPlans.first;
+
+  /// Khi khác null, [getPremiumPlans] ném lỗi này thay vì trả giá — để test
+  /// đường mất mạng.
+  Object? premiumPricingError;
+
+  @override
+  Future<List<WrPremiumPricing>> getPremiumPlans() async {
+    if (premiumPricingError != null) throw premiumPricingError!;
+    return premiumPlans;
   }
 
   @override

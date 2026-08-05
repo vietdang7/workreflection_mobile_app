@@ -5,7 +5,7 @@
     <uses-permission android:name="android.permission.BLUETOOTH"/>
     <uses-permission android:name="android.permission.BLUETOOTH_CONNECT"/>
     <application
-        android:label="workreflection_mobile"
+        android:label="WorkReflection"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -52,6 +52,18 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- url_launcher: từ Android 11 (API 30), không khai báo ở đây thì
+             canLaunchUrl/launchUrl trả false và nút "Xem chi tiết" của Trà Chiều
+             sẽ im lặng không mở trình duyệt. -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
+        </intent>
+        <!-- speech_to_text: cần thấy dịch vụ nhận dạng giọng nói thì nút mic
+             trong các ô nhập mới hiện ra. -->
+        <intent>
+            <action android:name="android.speech.RecognitionService"/>
         </intent>
     </queries>
 </manifest>

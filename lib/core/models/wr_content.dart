@@ -33,11 +33,22 @@ enum HumanNeed {
 // ScaDimension enum
 // ---------------------------------------------------------------------------
 
-/// 10 chiều SCA. dbValue matches wr_situations.sca_dimension check constraint.
+/// 10 chiều SCA + 2 nhóm tình huống tích cực.
+/// dbValue matches wr_situations.sca_dimension check constraint.
+///
 /// Wave mapping (read-only, not stored on enum):
 ///   wave1 = C2, A1, A3, C1
 ///   wave2 = A4, A2, S1
 ///   wave3 = C3, S2, S3
+///
+/// [pAchieve] và [pSteady] KHÔNG phải chiều SCA. Kiến trúc Dữ liệu v1.6 §2.3:
+/// Career Situation Library chỉ có tình huống dạng vấn đề, vì nguồn gốc là công
+/// cụ chẩn đoán tổ chức. Người dùng check-in "khá ổn" / "đang vui" mà vẫn nhận
+/// tình huống vấn đề thì thấy gượng ép, nên hai nhóm này được soạn thêm và dùng
+/// chung một trường `dim` với SCA (§2.2).
+///
+/// Mọi thống kê SCA phải lọc bằng [isSca] trước, nếu không hai nhóm tích cực sẽ
+/// lẫn vào điểm số của một trụ mà chúng không thuộc về.
 enum ScaDimension {
   s1,
   s2,
@@ -48,7 +59,9 @@ enum ScaDimension {
   a1,
   a2,
   a3,
-  a4;
+  a4,
+  pAchieve,
+  pSteady;
 
   String get dbValue => switch (this) {
         ScaDimension.s1 => 'S1',
@@ -61,7 +74,16 @@ enum ScaDimension {
         ScaDimension.a2 => 'A2',
         ScaDimension.a3 => 'A3',
         ScaDimension.a4 => 'A4',
+        ScaDimension.pAchieve => 'P-ACHIEVE',
+        ScaDimension.pSteady => 'P-STEADY',
       };
+
+  /// True cho 10 chiều SCA thật; false cho hai nhóm tình huống tích cực.
+  bool get isSca => !isPositive;
+
+  /// True cho nhóm tình huống tích cực tự soạn (§2.3).
+  bool get isPositive =>
+      this == ScaDimension.pAchieve || this == ScaDimension.pSteady;
 
   static ScaDimension fromDb(String value) => switch (value) {
         'S1' => ScaDimension.s1,
@@ -74,6 +96,8 @@ enum ScaDimension {
         'A2' => ScaDimension.a2,
         'A3' => ScaDimension.a3,
         'A4' => ScaDimension.a4,
+        'P-ACHIEVE' => ScaDimension.pAchieve,
+        'P-STEADY' => ScaDimension.pSteady,
         _ => throw ArgumentError('Unknown ScaDimension db value: $value'),
       };
 }
@@ -93,6 +117,7 @@ class WrSituation {
     this.expectedOutcome,
     this.scaPerspective,
     this.createdAt,
+    this.retiredAt,
   });
 
   final String code;
@@ -103,6 +128,20 @@ class WrSituation {
   final String? scaPerspective;
   final int wave;
   final DateTime? createdAt;
+
+  /// Khác null = ngưng đề xuất cho phiên mới.
+  ///
+  /// Dùng cho 60 chip Tầng 1 cũ (`<DIM>-sit-NN`), đã được thay bằng 100 mục của
+  /// Career Situation Library có mã trùng `wr_stories.story_id`.
+  ///
+  /// KHÔNG xoá khỏi bảng: `wr_reflection_episodes`, `wr_pattern_counts` và
+  /// `wr_career_memory_events` còn tham chiếu những mã này, và tab Hiểu mình
+  /// tra ngược ra nhãn từ đó. Xoá là làm trống nhãn của toàn bộ lịch sử.
+  /// Chỉ những chỗ CHÀO MỜI một tình huống mới phải lọc — xem
+  /// [pickSituationChoices].
+  final DateTime? retiredAt;
+
+  bool get isRetired => retiredAt != null;
 
   factory WrSituation.fromJson(Map<String, dynamic> json) {
     final rawNeed = json['human_need'] as String?;
@@ -116,6 +155,9 @@ class WrSituation {
       wave: json['wave'] as int,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
+          : null,
+      retiredAt: json['retired_at'] != null
+          ? DateTime.parse(json['retired_at'] as String)
           : null,
     );
   }
@@ -209,6 +251,7 @@ class CareerMemoryEvent {
     this.intensity,
     this.reflectionText,
     this.careerStage,
+    this.themeId,
     this.createdAt,
   });
 
@@ -223,6 +266,15 @@ class CareerMemoryEvent {
   final int? intensity;
   final String? reflectionText;
   final String? careerStage;
+
+  /// Chủ đề thực hành sinh ra mảnh ký ức này.
+  ///
+  /// Null với mọi hàng ghi trước 05/08/2026 — lúc đó cột chưa tồn tại. Bộ đếm
+  /// thực hành phải chấp nhận cả hai: có `themeId` thì so theo nó (chính xác
+  /// tuyệt đối), không có thì lùi về so theo tên chủ đề như cũ để người dùng
+  /// không mất tiến độ đã tích luỹ.
+  final String? themeId;
+
   final DateTime? createdAt;
 
   factory CareerMemoryEvent.fromJson(Map<String, dynamic> json) {
@@ -240,6 +292,7 @@ class CareerMemoryEvent {
       intensity: json['intensity'] as int?,
       reflectionText: json['reflection_text'] as String?,
       careerStage: json['career_stage'] as String?,
+      themeId: json['theme_id'] as String?,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
@@ -259,5 +312,6 @@ class CareerMemoryEvent {
         if (intensity != null) 'intensity': intensity,
         if (reflectionText != null) 'reflection_text': reflectionText,
         if (careerStage != null) 'career_stage': careerStage,
+        if (themeId != null) 'theme_id': themeId,
       };
 }

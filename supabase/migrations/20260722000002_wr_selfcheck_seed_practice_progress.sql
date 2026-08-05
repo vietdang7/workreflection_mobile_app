@@ -9,39 +9,39 @@
 insert into public.wr_sca_self_check_questions
   (question_id, pillar, display_order, question_text)
 values
-  -- Pillar S (Sự rõ ràng) — original ids: 1, 3, 5, 7, 10
+  -- Pillar S (Sự rõ ràng), gốc SCA_QUESTIONS id: 1, 2, 3, 4, 5
   ('scq-01', 'S', 1,
    'Trước khi bắt đầu một công việc mới, bạn thường được làm rõ về trách nhiệm của mình và người phối hợp cùng.'),
   ('scq-02', 'S', 2,
-   'Khi nhận việc mới, bạn được làm rõ kỳ vọng về kết quả: thời gian hoàn thành, mức độ chất lượng, và ai đánh giá.'),
-  ('scq-03', 'S', 3,
    'Với các công việc quan trọng, bạn có quy trình và hướng dẫn cụ thể trước khi bắt đầu triển khai.'),
-  ('scq-04', 'S', 4,
+  ('scq-03', 'S', 3,
    'Các nguyên tắc phối hợp trong đội ngũ của bạn được thống nhất rõ ràng và cập nhật đầy đủ đến mọi người liên quan.'),
+  ('scq-04', 'S', 4,
+   'Bạn biết rõ thông tin nào cần chia sẻ qua kênh nào, không bị lạc trong quá nhiều nhóm chat hay email chồng chéo.'),
   ('scq-05', 'S', 5,
-   'Bạn biết rõ thông tin nào cần chia sẻ qua kênh nào — không bị lạc trong quá nhiều nhóm chat hay email chồng chéo.'),
-  -- Pillar C (Mối quan hệ) — original ids: 13, 15, 17, 19, 23
+   'Khi có thay đổi trong công việc, nhìn chung bạn không bị bất ngờ hay phải tự tìm hiểu thêm.'),
+  -- Pillar C (Mối quan hệ), gốc SCA_QUESTIONS id: 6, 7, 8, 9, 10
   ('scq-06', 'C', 6,
    'Bạn nhận thấy cấp quản lý của mình nhất quán giữa những gì nói và những gì làm trong thực tế công việc.'),
   ('scq-07', 'C', 7,
-   'Những người bạn làm việc cùng thể hiện sự nhất quán giữa lời nói và hành động — bạn có thể tin vào cam kết của họ.'),
+   'Những người bạn làm việc cùng thể hiện sự nhất quán giữa lời nói và hành động, bạn có thể tin vào cam kết của họ.'),
   ('scq-08', 'C', 8,
-   'Bạn cảm thấy thoải mái khi nêu ý kiến khác biệt với số đông — kể cả khi điều đó tạo ra tranh luận.'),
+   'Bạn cảm thấy thoải mái khi nêu ý kiến khác biệt với số đông, kể cả khi điều đó tạo ra tranh luận.'),
   ('scq-09', 'C', 9,
-   'Khi bạn nhận thấy rủi ro hoặc vấn đề tiềm ẩn, bạn sẵn sàng lên tiếng — kể cả khi chưa có giải pháp.'),
+   'Khi bạn nhận thấy rủi ro hoặc vấn đề tiềm ẩn, bạn sẵn sàng lên tiếng, kể cả khi chưa có giải pháp.'),
   ('scq-10', 'C', 10,
    'Khi có bất đồng quan điểm, cuộc trao đổi của bạn tập trung vào tìm giải pháp thay vì tranh luận về ai đúng.'),
-  -- Pillar A (Cách làm việc) — original ids: 25, 27, 30, 31, 34
+  -- Pillar A (Cách làm việc), gốc SCA_QUESTIONS id: 11, 12, 13, 14, 15
   ('scq-11', 'A', 11,
    'Trong công việc hàng ngày, bạn hiểu rõ công việc của mình kết nối với mục tiêu chung của đội nhóm như thế nào.'),
   ('scq-12', 'A', 12,
-   'Khi mục tiêu thay đổi, bạn được thông báo kịp thời và rõ lý do — không phải tự đoán hay phát hiện muộn.'),
+   'Khi mục tiêu thay đổi, bạn được thông báo kịp thời và rõ lý do, không phải tự đoán hay phát hiện muộn.'),
   ('scq-13', 'A', 13,
-   'Nhịp phối hợp của đội nhóm bạn rõ ràng và ổn định — có check-in đều đặn, cập nhật đúng lúc, không bị lạc nhịp.'),
+   'Nhịp phối hợp của đội nhóm bạn rõ ràng và ổn định, có check-in đều đặn, không bị lạc nhịp.'),
   ('scq-14', 'A', 14,
    'Sau mỗi giai đoạn hoặc dự án, nhóm của bạn có thời gian chính thức để nhìn lại và đánh giá những gì đã làm.'),
   ('scq-15', 'A', 15,
-   'Những điểm cần điều chỉnh sau khi nhìn lại được chuyển thành hành động cụ thể — có người chịu trách nhiệm theo dõi.')
+   'Những điểm cần điều chỉnh sau khi nhìn lại được chuyển thành hành động cụ thể, có người theo dõi.')
 on conflict (question_id) do nothing;
 
 -- ─────────────────────────────────────────────────────────────────────────────

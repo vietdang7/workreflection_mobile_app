@@ -117,9 +117,9 @@ class _SurveyIntroScreenState extends ConsumerState<SurveyIntroScreen> {
     }
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.close, color: WrColors.navy),
@@ -250,9 +250,9 @@ class _BadgeChip extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 11,
+          fontSize: 12.5,
           fontWeight: FontWeight.w700,
-          color: isPremium ? WrColors.teal : WrColors.navy,
+          color: isPremium ? WrColors.pillTealText : WrColors.navy,
           letterSpacing: 0.5,
         ),
       ),
@@ -282,7 +282,7 @@ class _DropdownField<T> extends StatelessWidget {
       children: [
         Text(
           label,
-          style: WrTextStyles.body.copyWith(color: WrColors.muted, fontSize: 12),
+          style: WrTextStyles.body.copyWith(color: WrColors.muted, fontSize: 13.5),
         ),
         const SizedBox(height: 6),
         Container(

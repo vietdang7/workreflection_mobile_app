@@ -20,7 +20,7 @@ class DevelopScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       body: SafeArea(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
@@ -89,8 +89,9 @@ class _ThemeFocusSection extends ConsumerWidget {
             key: const Key('develop_no_theme'),
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: WrColors.cream,
+              color: WrColors.white,
               borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: WrColors.line),
             ),
             child: Text(
               l10n.developNoTheme,
@@ -129,7 +130,7 @@ class _ThemeCard extends StatelessWidget {
           Text(
             theme.title,
             style: const TextStyle(
-              fontSize: 14,
+              fontSize: 15.5,
               color: Color(0xB3FFFFFF), // white 70%
             ),
           ),
@@ -143,7 +144,7 @@ class _ThemeCard extends StatelessWidget {
           Text(
             l10n.developStage(theme.stage, theme.totalStages),
             style: const TextStyle(
-              fontSize: 12,
+              fontSize: 13.5,
               color: Color(0x80FFFFFF), // white 50%
             ),
           ),
@@ -237,19 +238,17 @@ class _PracticeRow extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // Xong rồi thì dấu tick và độ mờ nói đủ, không gạch ngang
+                    // chữ (yêu cầu 05/08).
                     Text(
                       practice.title,
-                      style: isDone
-                          ? WrTextStyles.hMedium.copyWith(
-                              decoration: TextDecoration.lineThrough,
-                            )
-                          : WrTextStyles.hMedium,
+                      style: WrTextStyles.hMedium,
                     ),
                     const SizedBox(height: 2),
                     Text(
                       statusLabel,
                       style: TextStyle(
-                        fontSize: 12,
+                        fontSize: 13.5,
                         fontWeight: FontWeight.w600,
                         color: statusColor,
                       ),
@@ -302,8 +301,9 @@ class _OpportunityCard extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: WrColors.cream,
+            color: WrColors.white,
             borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: WrColors.line),
           ),
           child: Row(
             children: [
@@ -328,15 +328,15 @@ class _OpportunityCard extends StatelessWidget {
                     Text(
                       l10n.developWorkshopTag.toUpperCase(),
                       style: const TextStyle(
-                        fontSize: 11,
+                        fontSize: 12.5,
                         fontWeight: FontWeight.w700,
-                        color: WrColors.teal,
+                        color: WrColors.navy,
                         letterSpacing: 0.04 * 11,
                       ),
                     ),
                     const SizedBox(height: 4),
                     Text(workshop.title,
-                        style: WrTextStyles.hMedium.copyWith(fontSize: 15)),
+                        style: WrTextStyles.hMedium.copyWith(fontSize: 16.5)),
                     const SizedBox(height: 6),
                     WrActionLink(
                       label: l10n.developWorkshopLink,

@@ -143,9 +143,9 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     final isUploadingAvatar = avatarState.isLoading;
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         elevation: 0,
         automaticallyImplyLeading: false,
         leading: widget.setupMode ? null : const BackButton(color: WrColors.navy),
@@ -250,7 +250,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                                             padding: EdgeInsets.all(4),
                                             child: CircularProgressIndicator(
                                               strokeWidth: 2,
-                                              color: WrColors.white,
+                                              color: WrColors.navy,
                                             ),
                                           )
                                         : const Icon(Icons.camera_alt,
@@ -266,7 +266,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                                 ? l10n.avatarUploading
                                 : l10n.avatarChangeBtn,
                             style: WrTextStyles.body.copyWith(
-                              fontSize: 12,
+                              fontSize: 13.5,
                               color: WrColors.coral,
                             ),
                             textAlign: TextAlign.center,
@@ -462,7 +462,7 @@ class _SelectField<T> extends StatelessWidget {
       children: [
         Text(
           label,
-          style: WrTextStyles.body.copyWith(color: WrColors.muted, fontSize: 12),
+          style: WrTextStyles.body.copyWith(color: WrColors.muted, fontSize: 13.5),
         ),
         const SizedBox(height: 6),
         Container(

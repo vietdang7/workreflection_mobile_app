@@ -107,7 +107,7 @@ abstract class AppLocalizations {
   /// No description provided for @onb1Tag.
   ///
   /// In vi, this message translates to:
-  /// **'Reflection'**
+  /// **'Reflect'**
   String get onb1Tag;
 
   /// No description provided for @onb1Title.
@@ -119,7 +119,7 @@ abstract class AppLocalizations {
   /// No description provided for @onb1Body.
   ///
   /// In vi, this message translates to:
-  /// **'Mỗi ngày một khoảnh khắc dừng lại.\nĐể nhìn rõ hơn — không phán xét.'**
+  /// **'Mỗi ngày một khoảnh khắc dừng lại.\nĐể nhìn rõ hơn, không phán xét.'**
   String get onb1Body;
 
   /// No description provided for @onb1Cta.
@@ -247,6 +247,30 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Tạo tài khoản'**
   String get authRegisterTitle;
+
+  /// No description provided for @authLoginSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng nhập để tiếp tục hành trình của bạn'**
+  String get authLoginSubtitle;
+
+  /// No description provided for @authRegisterSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vài bước ngắn để bắt đầu cùng WorkReflection'**
+  String get authRegisterSubtitle;
+
+  /// No description provided for @authPasswordShow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiện mật khẩu'**
+  String get authPasswordShow;
+
+  /// No description provided for @authPasswordHide.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ẩn mật khẩu'**
+  String get authPasswordHide;
 
   /// No description provided for @authEmailLabel.
   ///
@@ -419,7 +443,7 @@ abstract class AppLocalizations {
   /// No description provided for @understandEyebrowSca.
   ///
   /// In vi, this message translates to:
-  /// **'Trải nghiệm hiện tại (SCA)'**
+  /// **'Trải nghiệm hiện tại'**
   String get understandEyebrowSca;
 
   /// No description provided for @understandEyebrowHealth.
@@ -515,7 +539,7 @@ abstract class AppLocalizations {
   /// No description provided for @developEyebrowOpportunity.
   ///
   /// In vi, this message translates to:
-  /// **'Cơ hội phát triển'**
+  /// **'Mở rộng offline'**
   String get developEyebrowOpportunity;
 
   /// No description provided for @developStage.
@@ -620,11 +644,11 @@ abstract class AppLocalizations {
   /// **'Thành viên'**
   String get profileBadgeMember;
 
-  /// No description provided for @profileStatStreak.
+  /// No description provided for @profileStatReflectDays.
   ///
   /// In vi, this message translates to:
-  /// **'Ngày streak'**
-  String get profileStatStreak;
+  /// **'ngày Reflect'**
+  String get profileStatReflectDays;
 
   /// No description provided for @profileStatInsights.
   ///
@@ -659,7 +683,7 @@ abstract class AppLocalizations {
   /// No description provided for @profileSettingExport.
   ///
   /// In vi, this message translates to:
-  /// **'Xuất dữ liệu'**
+  /// **'Xuất dữ liệu của tôi'**
   String get profileSettingExport;
 
   /// No description provided for @profileSettingLogout.
@@ -673,6 +697,54 @@ abstract class AppLocalizations {
   /// In vi, this message translates to:
   /// **'Tiếng Việt'**
   String get profileLanguageValue;
+
+  /// No description provided for @profileDeleteAccount.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá tài khoản'**
+  String get profileDeleteAccount;
+
+  /// No description provided for @profileDeleteAccountTitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá tài khoản vĩnh viễn?'**
+  String get profileDeleteAccountTitle;
+
+  /// No description provided for @profileDeleteAccountBody.
+  ///
+  /// In vi, this message translates to:
+  /// **'Toàn bộ dữ liệu của bạn sẽ bị xoá và không lấy lại được: những lần nhìn lại, Career Memory, chủ đề thực hành, kết quả self-check và hồ sơ. Nếu bạn đang có bản đầy đủ, phần thời hạn còn lại cũng mất theo.'**
+  String get profileDeleteAccountBody;
+
+  /// No description provided for @profileDeleteAccountHint.
+  ///
+  /// In vi, this message translates to:
+  /// **'Gõ XOÁ để xác nhận'**
+  String get profileDeleteAccountHint;
+
+  /// No description provided for @profileDeleteAccountConfirmWord.
+  ///
+  /// In vi, this message translates to:
+  /// **'XOÁ'**
+  String get profileDeleteAccountConfirmWord;
+
+  /// No description provided for @profileDeleteAccountCta.
+  ///
+  /// In vi, this message translates to:
+  /// **'Xoá vĩnh viễn'**
+  String get profileDeleteAccountCta;
+
+  /// No description provided for @profileDeleteAccountCancel.
+  ///
+  /// In vi, this message translates to:
+  /// **'Giữ tài khoản'**
+  String get profileDeleteAccountCancel;
+
+  /// No description provided for @profileDeleteAccountError.
+  ///
+  /// In vi, this message translates to:
+  /// **'Không xoá được tài khoản. Kiểm tra mạng rồi thử lại.'**
+  String get profileDeleteAccountError;
 
   /// No description provided for @understandStatusNeedsAttention.
   ///
@@ -1835,7 +1907,7 @@ abstract class AppLocalizations {
   /// No description provided for @developWorkshopSection.
   ///
   /// In vi, this message translates to:
-  /// **'Cơ hội phát triển'**
+  /// **'Mở rộng offline'**
   String get developWorkshopSection;
 
   /// No description provided for @developViewWorkshops.
@@ -3359,7 +3431,7 @@ abstract class AppLocalizations {
   /// No description provided for @voiceInputNoMatch.
   ///
   /// In vi, this message translates to:
-  /// **'Không nhận diện được — hãy nhấn để thử lại'**
+  /// **'Không nhận diện được, hãy nhấn để thử lại'**
   String get voiceInputNoMatch;
 
   /// No description provided for @voiceInputUnavailable.

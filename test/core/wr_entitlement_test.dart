@@ -93,24 +93,25 @@ void main() {
   // Level 3: Quota gating — practice themes
   // ---------------------------------------------------------------------------
   group('Level 3 - practice theme quota', () {
-    test('free user has max 3 active themes', () {
-      expect(freePlan().maxActivePracticeThemes, 3);
+    // Yêu cầu khách 2026-07-27: free tối đa 2 chủ đề cùng lúc.
+    test('free user has max 2 active themes', () {
+      expect(freePlan().maxActivePracticeThemes, 2);
     });
 
     test('premium user has unlimited (null) themes', () {
       expect(activePremium().maxActivePracticeThemes, isNull);
     });
 
-    test('free user can enroll when activeCount < 3', () {
+    test('free user can enroll when activeCount < 2', () {
       expect(freePlan().canEnrollPracticeTheme(0), isTrue);
-      expect(freePlan().canEnrollPracticeTheme(2), isTrue);
+      expect(freePlan().canEnrollPracticeTheme(1), isTrue);
     });
 
-    test('free user cannot enroll when activeCount == 3', () {
-      expect(freePlan().canEnrollPracticeTheme(3), isFalse);
+    test('free user cannot enroll when activeCount == 2', () {
+      expect(freePlan().canEnrollPracticeTheme(2), isFalse);
     });
 
-    test('free user cannot enroll when activeCount > 3', () {
+    test('free user cannot enroll when activeCount > 2', () {
       expect(freePlan().canEnrollPracticeTheme(4), isFalse);
     });
 
@@ -178,6 +179,35 @@ void main() {
       );
       final e = WrEntitlement.fromRecord(record);
       expect(e.isPremium, isTrue);
+    });
+  });
+
+  // Premium web ↔ Premium app là MỘT (khách chốt 2026-08-01: "nếu trên web
+  // role Premium thì trên app cũng Premium luôn"). Nguồn là `cc_profiles.role`.
+  group('isWebPremiumRole', () {
+    test('role premium và admin đều mở khoá', () {
+      expect(isWebPremiumRole('premium'), isTrue);
+      expect(isWebPremiumRole('admin'), isTrue);
+    });
+
+    test('không phân biệt hoa thường và khoảng trắng thừa', () {
+      // Role nhập tay từ trang quản trị của web.
+      expect(isWebPremiumRole('Premium'), isTrue);
+      expect(isWebPremiumRole('  PREMIUM  '), isTrue);
+    });
+
+    test('các role còn lại không phải Premium', () {
+      expect(isWebPremiumRole('user'), isFalse);
+      expect(isWebPremiumRole('free'), isFalse);
+      expect(isWebPremiumRole('moderator'), isFalse);
+      expect(isWebPremiumRole('coach'), isFalse);
+      expect(isWebPremiumRole('coordinator'), isFalse);
+    });
+
+    test('null và chuỗi rỗng không phải Premium', () {
+      expect(isWebPremiumRole(null), isFalse);
+      expect(isWebPremiumRole(''), isFalse);
+      expect(isWebPremiumRole('   '), isFalse);
     });
   });
 }

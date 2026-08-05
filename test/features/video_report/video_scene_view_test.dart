@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:workreflection_mobile/core/models/survey_models.dart';
 import 'package:workreflection_mobile/features/video_report/models/video_report_models.dart';
 import 'package:workreflection_mobile/features/video_report/presentation/scenes/video_scene_view.dart';
@@ -38,6 +39,7 @@ void main() {
         testWidgets('scene ${id.name} @ progress $p does not throw',
             (tester) async {
           await tester.pumpWidget(MaterialApp(
+            builder: wrTextScaleBuilder,
             home: Scaffold(
               body: VideoSceneView(
                 sceneId: id,
@@ -60,6 +62,7 @@ void main() {
   testWidgets('overall scene @ progress 1.0 shows total score text',
       (tester) async {
     await tester.pumpWidget(MaterialApp(
+      builder: wrTextScaleBuilder,
       home: Scaffold(
         body: VideoSceneView(
           sceneId: VideoSceneId.overall,
@@ -103,6 +106,7 @@ void main() {
     );
 
     await tester.pumpWidget(MaterialApp(
+      builder: wrTextScaleBuilder,
       home: Scaffold(
         body: VideoSceneView(
           sceneId: VideoSceneId.structure,
@@ -141,6 +145,7 @@ void main() {
     );
 
     await tester.pumpWidget(MaterialApp(
+      builder: wrTextScaleBuilder,
       home: Scaffold(
         body: VideoSceneView(
           sceneId: VideoSceneId.bottleneck,
@@ -163,6 +168,7 @@ void main() {
     // must be strictly greater than at progress 0.0 (where it is 0).
     Future<double> maxWidthFactorAt(double progress) async {
       await tester.pumpWidget(MaterialApp(
+        builder: wrTextScaleBuilder,
         home: Scaffold(
           body: VideoSceneView(
             sceneId: VideoSceneId.overall,
@@ -215,6 +221,7 @@ void main() {
       VideoSceneId.overall,
     ]) {
       await tester.pumpWidget(MaterialApp(
+        builder: wrTextScaleBuilder,
         home: Scaffold(
           body: VideoSceneView(
             sceneId: id,

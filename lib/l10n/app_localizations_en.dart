@@ -12,14 +12,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get appName => 'WorkReflection';
 
   @override
-  String get onb1Tag => 'Reflection';
+  String get onb1Tag => 'Reflect';
 
   @override
   String get onb1Title => 'The journey starts\nwith a small question.';
 
   @override
   String get onb1Body =>
-      'A moment to pause each day.\nTo see more clearly — without judgment.';
+      'A moment to pause each day.\nTo see more clearly, without judgment.';
 
   @override
   String get onb1Cta => 'Continue';
@@ -84,6 +84,19 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authRegisterTitle => 'Create account';
+
+  @override
+  String get authLoginSubtitle => 'Log in to continue your journey';
+
+  @override
+  String get authRegisterSubtitle =>
+      'A few short steps to start with WorkReflection';
+
+  @override
+  String get authPasswordShow => 'Show password';
+
+  @override
+  String get authPasswordHide => 'Hide password';
 
   @override
   String get authEmailLabel => 'Email';
@@ -174,7 +187,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get understandEyebrowSituations => 'Recurring situations';
 
   @override
-  String get understandEyebrowSca => 'Current experience (SCA)';
+  String get understandEyebrowSca => 'Current experience';
 
   @override
   String get understandEyebrowHealth => 'Career Health Check';
@@ -226,7 +239,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get developEyebrowPractices => 'Today\'s practices';
 
   @override
-  String get developEyebrowOpportunity => 'Growth opportunity';
+  String get developEyebrowOpportunity => 'Offline extensions';
 
   @override
   String developStage(int x, int y) {
@@ -286,7 +299,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileBadgeMember => 'Member';
 
   @override
-  String get profileStatStreak => 'Streak days';
+  String get profileStatReflectDays => 'Days reflected';
 
   @override
   String get profileStatInsights => 'Saved insights';
@@ -304,13 +317,39 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileSettingLanguage => 'Language';
 
   @override
-  String get profileSettingExport => 'Export data';
+  String get profileSettingExport => 'Export my data';
 
   @override
   String get profileSettingLogout => 'Log out';
 
   @override
   String get profileLanguageValue => 'English';
+
+  @override
+  String get profileDeleteAccount => 'Delete account';
+
+  @override
+  String get profileDeleteAccountTitle => 'Permanently delete your account?';
+
+  @override
+  String get profileDeleteAccountBody =>
+      'All your data will be erased and cannot be recovered: your reflections, Career Memory, practice themes, self-check results and profile. If you have the full version, the remaining time goes with it.';
+
+  @override
+  String get profileDeleteAccountHint => 'Type DELETE to confirm';
+
+  @override
+  String get profileDeleteAccountConfirmWord => 'DELETE';
+
+  @override
+  String get profileDeleteAccountCta => 'Delete permanently';
+
+  @override
+  String get profileDeleteAccountCancel => 'Keep my account';
+
+  @override
+  String get profileDeleteAccountError =>
+      'Could not delete the account. Check your connection and try again.';
 
   @override
   String get understandStatusNeedsAttention => 'Needs attention';
@@ -931,7 +970,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileMyCoaching => 'My Coaching';
 
   @override
-  String get developWorkshopSection => 'Development opportunities';
+  String get developWorkshopSection => 'Offline extensions';
 
   @override
   String get developViewWorkshops => 'View all workshops';
@@ -1748,7 +1787,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get voiceInputNoMatch =>
-      'Could not recognise your answer — please tap to try again';
+      'Could not recognise your answer, please tap to try again';
 
   @override
   String get voiceInputUnavailable => 'Voice input unavailable on this device';

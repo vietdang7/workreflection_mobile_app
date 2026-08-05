@@ -9,6 +9,7 @@ import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../wr_providers.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 // Phase order cho story flow
 enum _StoryPhase { story, aha, confidence, reflection, practice, memory }
@@ -174,7 +175,7 @@ class _WrStoryFlowScreenState extends ConsumerState<WrStoryFlowScreen> {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFBF9),
+      backgroundColor: WrColors.pageBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -197,13 +198,13 @@ class _WrStoryFlowScreenState extends ConsumerState<WrStoryFlowScreen> {
                       children: [
                         LinearProgressIndicator(
                           value: _progress,
-                          backgroundColor: const Color(0xFFE5E7EB),
+                          backgroundColor: WrColors.line,
                           color: WrColors.navy,
                           minHeight: 3,
                         ),
                         const SizedBox(height: 4),
                         Text(_phaseLabel,
-                            style: const TextStyle(fontSize: 10, color: Color(0xFFA3A3A3), fontWeight: FontWeight.w500)),
+                            style: const TextStyle(fontSize: 11.5, color: WrColors.text3, fontWeight: FontWeight.w500)),
                       ],
                     ),
                   ),
@@ -292,7 +293,7 @@ class _PhaseStory extends StatelessWidget {
         const SizedBox(height: 12),
         TextButton(
           onPressed: onNotResonates,
-          child: const Text('Câu chuyện này không quen với tôi', style: TextStyle(color: Color(0xFF737373))),
+          child: const Text('Câu chuyện này không quen với tôi', style: TextStyle(color: WrColors.muted)),
         ),
       ],
     );
@@ -310,7 +311,7 @@ class _PhaseAha extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
       children: [
         if (story.ahaMessage != null)
-          Text(story.ahaMessage!,
+          WrParagraph(story.ahaMessage!,
               style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: WrColors.dark, height: 1.5)),
         if (story.selfReflection != null) ...[
           const SizedBox(height: 20),
@@ -318,11 +319,11 @@ class _PhaseAha extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               border: Border(left: BorderSide(color: WrColors.coral, width: 3)),
-              color: const Color(0xFFFFF8F0),
+              color: WrColors.navy.withValues(alpha: 0.04),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Text(story.selfReflection!,
-                style: const TextStyle(fontSize: 14, color: Color(0xFF4B5563), height: 1.6)),
+            child: WrParagraph(story.selfReflection!,
+                style: const TextStyle(fontSize: 15.5, color: WrColors.muted, height: 1.6)),
           ),
         ],
         const SizedBox(height: 32),
@@ -378,7 +379,7 @@ class _ConfidenceOption extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: const Color(0x1A2C335D)),
         ),
-        child: Text(label, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: WrColors.dark)),
+        child: Text(label, style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w500, color: WrColors.dark)),
       ),
     );
   }
@@ -406,7 +407,16 @@ class _PhaseReflectionState extends State<_PhaseReflection> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
       children: [
-        Text(question, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: WrColors.dark, height: 1.4)),
+        WrParagraph(
+          question,
+          textAlign: TextAlign.start,
+          style: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            color: WrColors.dark,
+            height: 1.4,
+          ),
+        ),
         const SizedBox(height: 16),
         TextField(
           controller: _ctrl,
@@ -428,7 +438,7 @@ class _PhaseReflectionState extends State<_PhaseReflection> {
           child: const Text('Lưu và tiếp tục', style: TextStyle(fontWeight: FontWeight.w600)),
         ),
         const SizedBox(height: 10),
-        TextButton(onPressed: widget.onSkip, child: const Text('Bỏ qua', style: TextStyle(color: Color(0xFF737373)))),
+        TextButton(onPressed: widget.onSkip, child: const Text('Bỏ qua', style: TextStyle(color: WrColors.muted))),
       ],
     );
   }
@@ -453,7 +463,7 @@ class _PhasePractice extends StatelessWidget {
               border: Border.all(color: const Color(0x1A2C335D)),
             ),
             child: Text(story.practiceAction!,
-                style: const TextStyle(fontSize: 15, color: WrColors.dark, height: 1.5)),
+                style: const TextStyle(fontSize: 16.5, color: WrColors.dark, height: 1.5)),
           ),
         const SizedBox(height: 24),
         ElevatedButton(
@@ -466,7 +476,7 @@ class _PhasePractice extends StatelessWidget {
           child: const Text('Thêm vào lịch thực hành', style: TextStyle(fontWeight: FontWeight.w600)),
         ),
         const SizedBox(height: 10),
-        TextButton(onPressed: onSkip, child: const Text('Lần này bỏ qua', style: TextStyle(color: Color(0xFF737373)))),
+        TextButton(onPressed: onSkip, child: const Text('Lần này bỏ qua', style: TextStyle(color: WrColors.muted))),
       ],
     );
   }
@@ -522,7 +532,7 @@ class _MemoryTypeBtn extends StatelessWidget {
           border: Border.all(color: const Color(0x1A2C335D)),
         ),
         child: Text(label, textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: WrColors.dark)),
+            style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600, color: WrColors.dark)),
       ),
     );
   }

@@ -12,6 +12,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
 import 'package:workreflection_mobile/core/data/survey_repository.dart';
 import 'package:workreflection_mobile/core/models/survey_models.dart';
@@ -169,6 +170,7 @@ Widget _buildApp({
       ),
     ],
     child: const MaterialApp(
+      builder: wrTextScaleBuilder,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
       home: VideoReportScreen(reportId: 'report-1'),

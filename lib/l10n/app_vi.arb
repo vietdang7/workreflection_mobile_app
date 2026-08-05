@@ -3,9 +3,9 @@
   "appName": "WorkReflection",
   "@appName": {"description": "App name"},
 
-  "onb1Tag": "Reflection",
+  "onb1Tag": "Reflect",
   "onb1Title": "Hành trình bắt đầu\ntừ một câu hỏi nhỏ.",
-  "onb1Body": "Mỗi ngày một khoảnh khắc dừng lại.\nĐể nhìn rõ hơn — không phán xét.",
+  "onb1Body": "Mỗi ngày một khoảnh khắc dừng lại.\nĐể nhìn rõ hơn, không phán xét.",
   "onb1Cta": "Tiếp tục",
 
   "onb2Tag": "Understand",
@@ -30,6 +30,10 @@
 
   "authLoginTitle": "Chào mừng trở lại",
   "authRegisterTitle": "Tạo tài khoản",
+  "authLoginSubtitle": "Đăng nhập để tiếp tục hành trình của bạn",
+  "authRegisterSubtitle": "Vài bước ngắn để bắt đầu cùng WorkReflection",
+  "authPasswordShow": "Hiện mật khẩu",
+  "authPasswordHide": "Ẩn mật khẩu",
   "authEmailLabel": "Email",
   "authPasswordLabel": "Mật khẩu",
   "authNameLabel": "Tên của bạn",
@@ -70,7 +74,7 @@
   "understandTitle": "Hiểu mình",
   "understandEyebrowNeed": "Điều bạn đang tìm kiếm",
   "understandEyebrowSituations": "Tình huống lặp lại",
-  "understandEyebrowSca": "Trải nghiệm hiện tại (SCA)",
+  "understandEyebrowSca": "Trải nghiệm hiện tại",
   "understandEyebrowHealth": "Career Health Check",
   "understandScaRole": "Minh bạch vai trò",
   "understandScaVoice": "An toàn khi lên tiếng",
@@ -97,7 +101,7 @@
   "developTitle": "Phát triển",
   "developEyebrowFocus": "Trọng tâm hiện tại",
   "developEyebrowPractices": "Practices hôm nay",
-  "developEyebrowOpportunity": "Cơ hội phát triển",
+  "developEyebrowOpportunity": "Mở rộng offline",
   "developStage": "Giai đoạn {x} / {y}",
   "@developStage": {
     "placeholders": {
@@ -134,15 +138,24 @@
   "profileGreeting": "Tài khoản",
   "profileBadgePremium": "PREMIUM MEMBER",
   "profileBadgeMember": "Thành viên",
-  "profileStatStreak": "Ngày streak",
+  "profileStatReflectDays": "ngày Reflect",
   "profileStatInsights": "Insight lưu",
   "profileStatMilestones": "Milestone",
   "profileEyebrowSettings": "Cài đặt",
   "profileSettingReminder": "Nhắc nhở hằng ngày",
   "profileSettingLanguage": "Ngôn ngữ",
-  "profileSettingExport": "Xuất dữ liệu",
+  "profileSettingExport": "Xuất dữ liệu của tôi",
   "profileSettingLogout": "Đăng xuất",
   "profileLanguageValue": "Tiếng Việt",
+
+  "profileDeleteAccount": "Xoá tài khoản",
+  "profileDeleteAccountTitle": "Xoá tài khoản vĩnh viễn?",
+  "profileDeleteAccountBody": "Toàn bộ dữ liệu của bạn sẽ bị xoá và không lấy lại được: những lần nhìn lại, Career Memory, chủ đề thực hành, kết quả self-check và hồ sơ. Nếu bạn đang có bản đầy đủ, phần thời hạn còn lại cũng mất theo.",
+  "profileDeleteAccountHint": "Gõ XOÁ để xác nhận",
+  "profileDeleteAccountConfirmWord": "XOÁ",
+  "profileDeleteAccountCta": "Xoá vĩnh viễn",
+  "profileDeleteAccountCancel": "Giữ tài khoản",
+  "profileDeleteAccountError": "Không xoá được tài khoản. Kiểm tra mạng rồi thử lại.",
 
   "understandStatusNeedsAttention": "Cần chú ý",
   "understandNeedSuffix": "· Nhu cầu chủ đạo",
@@ -424,7 +437,7 @@
 
   "profileMyWorkshops": "Workshop của tôi",
   "profileMyCoaching": "Coaching của tôi",
-  "developWorkshopSection": "Cơ hội phát triển",
+  "developWorkshopSection": "Mở rộng offline",
   "developViewWorkshops": "Xem tất cả workshop",
   "developViewCoaching": "Khám phá coaching",
 
@@ -753,7 +766,7 @@
   "voiceInputTapToSpeak": "Nhấn để nói câu trả lời",
   "voiceInputListening": "Đang nghe…",
   "voiceInputStopListening": "Dừng nghe",
-  "voiceInputNoMatch": "Không nhận diện được — hãy nhấn để thử lại",
+  "voiceInputNoMatch": "Không nhận diện được, hãy nhấn để thử lại",
   "voiceInputUnavailable": "Thiết bị không hỗ trợ nhập bằng giọng nói",
 
   "reportPdfExport": "Xuất PDF",

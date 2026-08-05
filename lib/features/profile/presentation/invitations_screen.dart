@@ -186,9 +186,9 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen>
     final actionState = ref.watch(invitationActionProvider);
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         elevation: 0,
         leading: const BackButton(color: WrColors.navy),
         title: Text(l10n.invitationsTitle, style: WrTextStyles.hMedium),
@@ -198,7 +198,7 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen>
           labelColor: WrColors.coral,
           unselectedLabelColor: WrColors.muted,
           indicatorColor: WrColors.coral,
-          labelStyle: WrTextStyles.body.copyWith(fontSize: 13),
+          labelStyle: WrTextStyles.body.copyWith(fontSize: 14.5),
           tabs: [
             Tab(text: l10n.invitationsPending),
             Tab(text: l10n.invitationsExpired),
@@ -406,7 +406,7 @@ class _InvitationCard extends StatelessWidget {
                             const SizedBox(width: 6),
                             Text('• $department',
                                 style: WrTextStyles.body.copyWith(
-                                    fontSize: 12, color: WrColors.muted)),
+                                    fontSize: 13.5, color: WrColors.muted)),
                           ],
                         ],
                       ),
@@ -423,7 +423,7 @@ class _InvitationCard extends StatelessWidget {
                                 : l10n.invitationsExpiresAt(
                                     formatDate(expiresAt)),
                             style: WrTextStyles.body.copyWith(
-                                fontSize: 11, color: WrColors.muted),
+                                fontSize: 12.5, color: WrColors.text3),
                           ),
                         ],
                       ),
@@ -458,7 +458,7 @@ class _InvitationCard extends StatelessWidget {
                     onPressed: () => onAccept(invitation),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: WrColors.coral,
-                      foregroundColor: WrColors.white,
+                      foregroundColor: WrColors.navy,
                       shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8)),
                       elevation: 0,
@@ -489,7 +489,7 @@ class _Chip extends StatelessWidget {
       ),
       child: Text(label,
           style: WrTextStyles.body
-              .copyWith(fontSize: 11, color: WrColors.navy)),
+              .copyWith(fontSize: 12.5, color: WrColors.navy)),
     );
   }
 }
@@ -543,7 +543,7 @@ class _StatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(label,
-          style: WrTextStyles.body.copyWith(fontSize: 11, color: fg)),
+          style: WrTextStyles.body.copyWith(fontSize: 12.5, color: fg)),
     );
   }
 }

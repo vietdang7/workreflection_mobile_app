@@ -50,7 +50,7 @@ class WrTabBackLink extends StatelessWidget {
             Text(
               'Quay lại',
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 14.5,
                 fontWeight: FontWeight.w500,
                 color: WrColors.muted,
               ),

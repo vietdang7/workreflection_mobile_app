@@ -19,9 +19,9 @@ class ActionPlanScreen extends ConsumerWidget {
     final typeAsync = ref.watch(surveyTypeProvider);
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: WrColors.navy),
@@ -174,10 +174,9 @@ class _PhaseCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       task.label,
+                      // Xong rồi thì dấu tick nói đủ, không gạch ngang chữ
+                      // (yêu cầu 05/08).
                       style: WrTextStyles.body.copyWith(
-                        decoration: completed
-                            ? TextDecoration.lineThrough
-                            : null,
                         color: completed
                             ? WrColors.muted
                             : null,

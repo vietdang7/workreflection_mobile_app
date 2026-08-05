@@ -401,14 +401,35 @@ class PracticeTheme {
     required this.title,
     this.scaDimension,
     this.description,
+    this.formedLine,
     this.createdAt,
+    this.retiredAt,
   });
 
   final String themeId;
   final String title;
   final ScaDimension? scaDimension;
+
+  /// Mô tả mở đầu — hiện ngay dưới tên chủ đề, trước ba bước (bảng A.2).
   final String? description;
+
+  /// Câu hiện ở màn ăn mừng khi chủ đề này chạm ngưỡng (bảng A.2).
+  ///
+  /// Viết ở thì hiện tại, ngắn, không lặp lại chữ "kỹ năng" hay "ngưỡng" — chỉ
+  /// nói về điều đã đổi. Null thì màn ăn mừng dùng câu chung.
+  final String? formedLine;
+
   final DateTime? createdAt;
+
+  /// Khác null = chủ đề ngưng đề xuất cho người mới.
+  ///
+  /// Không xoá khỏi bảng vì người đã ghi danh vẫn phải đi tiếp được chuỗi bước
+  /// của mình — xoá là làm hỏng `completedSteps` của họ. Chỉ những nơi CHÀO MỜI
+  /// một chủ đề mới mới phải lọc: gợi ý ở màn Phát triển và danh sách "Chủ đề
+  /// bạn có thể bắt đầu".
+  final DateTime? retiredAt;
+
+  bool get isRetired => retiredAt != null;
 
   factory PracticeTheme.fromJson(Map<String, dynamic> json) {
     final rawDim = json['sca_dimension'] as String?;
@@ -417,8 +438,12 @@ class PracticeTheme {
       title: json['title'] as String,
       scaDimension: rawDim != null ? ScaDimension.fromDb(rawDim) : null,
       description: json['description'] as String?,
+      formedLine: json['formed_line'] as String?,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
+          : null,
+      retiredAt: json['retired_at'] != null
+          ? DateTime.parse(json['retired_at'] as String)
           : null,
     );
   }
@@ -528,6 +553,95 @@ class PracticeEnrollment {
 // WrContextDocument
 // ---------------------------------------------------------------------------
 
+/// Trạng thái đọc tài liệu bằng AI (migration 20260804090000).
+enum DocAnalysisStatus {
+  /// Vừa tải lên, chưa gọi phân tích.
+  pending,
+
+  /// Edge Function đang đọc.
+  processing,
+
+  /// Đã có chữ và bản phân tích.
+  ready,
+
+  /// Đọc hỏng — xem [WrContextDocument.analysisError].
+  failed;
+
+  String get dbValue => name;
+
+  static DocAnalysisStatus fromDb(String? value) => switch (value) {
+        'processing' => DocAnalysisStatus.processing,
+        'ready' => DocAnalysisStatus.ready,
+        'failed' => DocAnalysisStatus.failed,
+        // Cột mới có default 'pending', nhưng dòng cũ tạo trước migration có
+        // thể về null. Coi như chưa phân tích, không ném lỗi giữa màn hình.
+        _ => DocAnalysisStatus.pending,
+      };
+}
+
+/// Bản phân tích tài liệu do `wr-doc-analyze` sinh ra.
+///
+/// Đọc từ cột jsonb `analysis`. Mọi trường đều có thể thiếu: model trả về gì
+/// thì Edge Function đã chuẩn hoá một lần, nhưng dòng cũ trong database vẫn có
+/// thể rỗng.
+class WrDocAnalysis {
+  const WrDocAnalysis({
+    this.title,
+    this.organization,
+    this.summary = '',
+    this.responsibilities = const [],
+    this.requirements = const [],
+    this.skills = const [],
+    this.keywords = const [],
+    this.pillars = const {},
+  });
+
+  final String? title;
+  final String? organization;
+  final String summary;
+  final List<String> responsibilities;
+  final List<String> requirements;
+  final List<String> skills;
+  final List<String> keywords;
+
+  /// Trọng số ba trụ 'S' | 'C' | 'A', thang 0-5, theo mức tài liệu nhấn mạnh.
+  final Map<String, int> pillars;
+
+  bool get isEmpty =>
+      summary.isEmpty &&
+      responsibilities.isEmpty &&
+      requirements.isEmpty &&
+      skills.isEmpty;
+
+  static List<String> _list(dynamic raw) {
+    if (raw is! List) return const [];
+    return [
+      for (final e in raw)
+        if (e != null && e.toString().trim().isNotEmpty) e.toString().trim(),
+    ];
+  }
+
+  factory WrDocAnalysis.fromJson(Map<String, dynamic> json) {
+    final rawPillars = json['pillars'];
+    return WrDocAnalysis(
+      title: (json['title'] as String?)?.trim(),
+      organization: (json['organization'] as String?)?.trim(),
+      summary: (json['summary'] as String?)?.trim() ?? '',
+      responsibilities: _list(json['responsibilities']),
+      requirements: _list(json['requirements']),
+      skills: _list(json['skills']),
+      keywords: _list(json['keywords']),
+      pillars: rawPillars is Map
+          ? {
+              for (final e in rawPillars.entries)
+                e.key.toString().toUpperCase():
+                    int.tryParse(e.value.toString()) ?? 0,
+            }
+          : const {},
+    );
+  }
+}
+
 /// Maps to public.wr_context_documents.
 class WrContextDocument {
   const WrContextDocument({
@@ -536,6 +650,11 @@ class WrContextDocument {
     this.id,
     this.docType,
     this.uploadedAt,
+    this.analysisStatus = DocAnalysisStatus.pending,
+    this.extractedText,
+    this.analysis,
+    this.analysisError,
+    this.analyzedAt,
   });
 
   final String? id;
@@ -544,7 +663,22 @@ class WrContextDocument {
   final String filePath;
   final DateTime? uploadedAt;
 
+  final DocAnalysisStatus analysisStatus;
+
+  /// Chữ đọc được từ tài liệu. Nguồn cho đối chiếu kỹ năng và cho trợ lý.
+  final String? extractedText;
+
+  final WrDocAnalysis? analysis;
+
+  /// Vì sao đọc hỏng, viết cho người vận hành đọc.
+  final String? analysisError;
+
+  final DateTime? analyzedAt;
+
+  bool get isReady => analysisStatus == DocAnalysisStatus.ready;
+
   factory WrContextDocument.fromJson(Map<String, dynamic> json) {
+    final rawAnalysis = json['analysis'];
     return WrContextDocument(
       id: json['id'] as String?,
       userId: json['user_id'] as String,
@@ -552,6 +686,16 @@ class WrContextDocument {
       filePath: json['file_path'] as String,
       uploadedAt: json['uploaded_at'] != null
           ? DateTime.parse(json['uploaded_at'] as String)
+          : null,
+      analysisStatus:
+          DocAnalysisStatus.fromDb(json['analysis_status'] as String?),
+      extractedText: (json['extracted_text'] as String?)?.trim(),
+      analysis: rawAnalysis is Map
+          ? WrDocAnalysis.fromJson(Map<String, dynamic>.from(rawAnalysis))
+          : null,
+      analysisError: json['analysis_error'] as String?,
+      analyzedAt: json['analyzed_at'] != null
+          ? DateTime.parse(json['analyzed_at'] as String)
           : null,
     );
   }

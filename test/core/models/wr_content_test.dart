@@ -57,11 +57,30 @@ void main() {
       expect(ScaDimension.a4.dbValue, 'A4');
     });
 
-    test('has exactly 10 values', () {
-      expect(ScaDimension.values.length, 10);
+    test('has 10 SCA dimensions plus 2 positive groups', () {
+      // v1.6 §2.2: trường `dim` nhận cả chiều SCA lẫn hai nhóm tình huống tích
+      // cực. §2.3: hai nhóm đó KHÔNG phải chiều SCA, nên mọi thống kê SCA phải
+      // lọc qua isSca trước.
+      expect(ScaDimension.values.length, 12);
+      expect(ScaDimension.values.where((d) => d.isSca).length, 10);
+      expect(ScaDimension.values.where((d) => d.isPositive).length, 2);
     });
 
-    test('fromDb parses all 10 valid values', () {
+    test('isPositive chỉ đúng với P-ACHIEVE và P-STEADY', () {
+      expect(ScaDimension.pAchieve.isPositive, isTrue);
+      expect(ScaDimension.pSteady.isPositive, isTrue);
+      expect(ScaDimension.c2.isPositive, isFalse);
+      expect(ScaDimension.a3.isPositive, isFalse);
+    });
+
+    test('dbValue của hai nhóm tích cực khớp check constraint', () {
+      expect(ScaDimension.pAchieve.dbValue, 'P-ACHIEVE');
+      expect(ScaDimension.pSteady.dbValue, 'P-STEADY');
+    });
+
+    test('fromDb parses all valid values', () {
+      expect(ScaDimension.fromDb('P-ACHIEVE'), ScaDimension.pAchieve);
+      expect(ScaDimension.fromDb('P-STEADY'), ScaDimension.pSteady);
       expect(ScaDimension.fromDb('S1'), ScaDimension.s1);
       expect(ScaDimension.fromDb('S2'), ScaDimension.s2);
       expect(ScaDimension.fromDb('S3'), ScaDimension.s3);

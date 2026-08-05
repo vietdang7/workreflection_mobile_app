@@ -38,9 +38,9 @@ class WorkshopSurveyResultsScreen extends ConsumerWidget {
         ref.watch(workshopSurveyResultsProvider(workshopId));
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: WrColors.navy),
@@ -219,7 +219,7 @@ class _EngagementBar extends StatelessWidget {
           style: WrTextStyles.body.copyWith(
             color: color,
             fontWeight: FontWeight.w600,
-            fontSize: 13,
+            fontSize: 14.5,
           ),
         ),
       ],
@@ -245,7 +245,7 @@ class _LayerRow extends StatelessWidget {
   Color get _scoreColor {
     if (score >= 4.2) return WrColors.teal;
     if (score >= 3.5) return WrColors.navy;
-    if (score >= 2.8) return const Color(0xFFF59E0B); // amber
+    if (score >= 2.8) return WrColors.amber; // amber
     return WrColors.coral;
   }
 

@@ -21,6 +21,7 @@ import '../data/video_report_repository.dart';
 import '../models/video_report_models.dart';
 import '../video_report_providers.dart';
 import 'scenes/video_scene_view.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 const _kBg = Color(0xFF0B1121);
 
@@ -275,10 +276,10 @@ class _SubtitleOverlay extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
       color: Colors.black.withValues(alpha: 0.55),
-      child: Text(
+      child: WrParagraph(
         text,
         textAlign: TextAlign.center,
-        style: const TextStyle(color: Colors.white, fontSize: 15, height: 1.3),
+        style: const TextStyle(color: Colors.white, fontSize: 16.5, height: 1.3),
       ),
     );
   }

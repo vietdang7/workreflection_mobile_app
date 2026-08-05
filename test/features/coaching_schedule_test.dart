@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/coaching_repository.dart';
 import 'package:workreflection_mobile/core/models/coaching_models.dart';
@@ -46,6 +47,7 @@ Widget _wrapWithRouter(Widget home, FakeCoachingRepository repo) {
   return ProviderScope(
     overrides: [coachingRepositoryProvider.overrideWithValue(repo)],
     child: MaterialApp.router(
+      builder: wrTextScaleBuilder,
       routerConfig: router,
       localizationsDelegates: _locDelegates,
       supportedLocales: _viLocale,
@@ -58,11 +60,25 @@ Widget _wrapSimple(Widget home, FakeCoachingRepository repo) {
   return ProviderScope(
     overrides: [coachingRepositoryProvider.overrideWithValue(repo)],
     child: MaterialApp(
+      builder: wrTextScaleBuilder,
       localizationsDelegates: _locDelegates,
       supportedLocales: _viLocale,
       home: home,
     ),
   );
+}
+
+/// Cuộn tới nút gửi rồi mới bấm.
+///
+/// Nút nằm dưới đáy màn hình giả lập: cả trang là một `SingleChildScrollView`
+/// nên trên máy thật người dùng cuộn xuống là thấy, nhưng trong test thì tâm nút
+/// rơi ra ngoài khung 800×1400 và cú `tap` bắn vào khoảng không — không có gì
+/// nhận sự kiện, và bài test đỏ ở chỗ chẳng liên quan gì tới thứ nó muốn kiểm.
+Future<void> _tapSubmit(WidgetTester tester) async {
+  final btn = find.byKey(const Key('scheduleSubmitBtn'));
+  await tester.ensureVisible(btn);
+  await tester.pumpAndSettle();
+  await tester.tap(btn);
 }
 
 CoachingBooking _pendingBooking({
@@ -159,7 +175,7 @@ void main() {
           _wrapSimple(const CoachingScheduleScreen(bookingId: 'b-1'), repo));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('scheduleSubmitBtn')));
+      await _tapSubmit(tester);
       await tester.pump(); // let snackbar render
       await tester.pump(const Duration(milliseconds: 300));
 
@@ -203,7 +219,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // Submit
-      await tester.tap(find.byKey(const Key('scheduleSubmitBtn')));
+      await _tapSubmit(tester);
       await tester.pumpAndSettle();
 
       // Confirm dialog
@@ -248,7 +264,7 @@ void main() {
       // Set error before submit
       repo.nextError = Exception('network');
 
-      await tester.tap(find.byKey(const Key('scheduleSubmitBtn')));
+      await _tapSubmit(tester);
       await tester.pumpAndSettle();
 
       await tester.tap(find.byKey(const Key('scheduleConfirmBtn')));

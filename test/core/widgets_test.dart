@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:workreflection_mobile/core/theme/wr_colors.dart';
 import 'package:workreflection_mobile/core/widgets/eyebrow.dart';
 import 'package:workreflection_mobile/core/widgets/wr_card.dart';
@@ -8,7 +9,10 @@ import 'package:workreflection_mobile/core/widgets/pill_button.dart';
 import 'package:workreflection_mobile/core/widgets/action_link.dart';
 import 'package:workreflection_mobile/core/widgets/section_divider.dart';
 
-Widget wrap(Widget child) => MaterialApp(home: Scaffold(body: child));
+Widget wrap(Widget child) => MaterialApp(
+      builder: wrTextScaleBuilder,
+      home: Scaffold(body: child),
+    );
 
 void main() {
   group('WrEyebrow', () {
@@ -18,10 +22,11 @@ void main() {
       expect(find.text('HELLO WORLD'), findsOneWidget);
     });
 
-    testWidgets('uses muted color', (tester) async {
+    testWidgets('dùng màu --text-3 của mockup', (tester) async {
       await tester.pumpWidget(wrap(const WrEyebrow('test')));
       final text = tester.widget<Text>(find.byType(Text));
-      expect(text.style?.color, WrColors.muted);
+      expect(text.style?.color, WrColors.text3);
+      expect(text.style?.fontSize, 11.5);
     });
   });
 
@@ -33,13 +38,17 @@ void main() {
       expect(find.text('content'), findsOneWidget);
     });
 
-    testWidgets('has cream background', (tester) async {
+    // Brand identity 04/8: thẻ thường là TRẮNG viền mảnh trên nền xám, không
+    // còn là mảng kem. Kem chỉ còn dùng làm chữ trên nền navy.
+    testWidgets('has white background and hairline border', (tester) async {
       await tester.pumpWidget(wrap(
         const WrCardMinimal(child: Text('x')),
       ));
       final container = tester.widget<Container>(find.byType(Container).first);
       final decoration = container.decoration as BoxDecoration;
-      expect(decoration.color, WrColors.cream);
+      expect(decoration.color, WrColors.white);
+      expect(decoration.border, Border.all(color: WrColors.line));
+      expect(decoration.boxShadow, isNull);
     });
 
     testWidgets('has radius 20', (tester) async {

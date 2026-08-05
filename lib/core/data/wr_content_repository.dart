@@ -49,7 +49,7 @@ abstract class WrContentRepository {
 
   /// Delete all career memory events for [userId] and [situationCode] that
   /// fall on the same Vietnam-local date as [day].
-  /// Used by commitTodaySituation when user changes situation within a day.
+  /// Dùng khi người dùng đổi tình huống trong cùng một ngày.
   Future<void> deleteTodayMemoryEventsForSituation({
     required String userId,
     required String situationCode,

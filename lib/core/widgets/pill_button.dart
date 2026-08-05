@@ -37,7 +37,7 @@ class WrPillButton extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 18),
           shape: const StadiumBorder(),
           textStyle: const TextStyle(
-            fontSize: 15,
+            fontSize: 16.5,
             fontWeight: FontWeight.w600,
           ),
           elevation: 0,

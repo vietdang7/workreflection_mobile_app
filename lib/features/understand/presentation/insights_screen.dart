@@ -19,9 +19,9 @@ class InsightsScreen extends ConsumerWidget {
     final insightsAsync = ref.watch(understandInsightsProvider);
 
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.white,
+        backgroundColor: WrColors.pageBg,
         elevation: 0,
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: WrColors.navy),
@@ -88,7 +88,7 @@ class InsightsScreen extends ConsumerWidget {
                       const SizedBox(height: 8),
                       Text(
                         l10n.insightSavedDate(dateStr),
-                        style: WrTextStyles.body.copyWith(fontSize: 12),
+                        style: WrTextStyles.body.copyWith(fontSize: 13.5),
                       ),
                     ],
                   ),

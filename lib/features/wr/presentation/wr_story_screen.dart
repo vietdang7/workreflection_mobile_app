@@ -9,7 +9,7 @@ class WrStoryScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFBF9),
+      backgroundColor: WrColors.pageBg,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -44,8 +44,8 @@ class WrStoryScreen extends StatelessWidget {
                     Text(
                       'Trải nghiệm của tôi',
                       style: TextStyle(
-                        fontSize: 10,
-                        color: Color(0xFFA3A3A3),
+                        fontSize: 11.5,
+                        color: WrColors.text3,
                         letterSpacing: 0.02,
                       ),
                     ),
@@ -62,8 +62,8 @@ class WrStoryScreen extends StatelessWidget {
                     Text(
                       'Câu chuyện từ Career Memory của bạn sẽ hiện ra tại đây.',
                       style: TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF737373),
+                        fontSize: 14.5,
+                        color: WrColors.muted,
                         height: 1.6,
                       ),
                     ),
@@ -80,8 +80,8 @@ class WrStoryScreen extends StatelessWidget {
                     const Text(
                       'Đọc câu chuyện phù hợp với bạn lúc này.',
                       style: TextStyle(
-                        fontSize: 13,
-                        color: Color(0xFF737373),
+                        fontSize: 14.5,
+                        color: WrColors.muted,
                         height: 1.6,
                       ),
                       textAlign: TextAlign.center,

@@ -538,5 +538,95 @@
     "expected_outcome": "Tôi muốn có đủ dữ liệu cần thiết để quyết định mà không phải phỏng đoán",
     "sca_perspective": "Quyết định trong thiếu thốn dữ liệu luôn để lại cảm giác bất an, dù kết quả có tốt đi nữa. Đó không phải bạn thiếu quyết đoán mà là chưa có ai chịu trách nhiệm đưa dữ liệu đến tay người cần quyết định.",
     "wave": 3
+  },
+  {
+    "code": "P-01",
+    "text": "Tôi vừa hoàn thành một việc khó hơn mong đợi",
+    "sca_dimension": "P-ACHIEVE",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn giữ lại cách mình đã vượt qua việc này, để lần sau lặp lại được",
+    "sca_perspective": "Thành công trôi qua nhanh hơn khó khăn trong trí nhớ. Dừng lại ghi nhận một lần làm tốt cũng là phản chiếu, không phải tự mãn.",
+    "wave": 1
+  },
+  {
+    "code": "P-02",
+    "text": "Tôi được ghi nhận tích cực từ cấp trên",
+    "sca_dimension": "P-ACHIEVE",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn tin vào lời ghi nhận đó thay vì gạt đi",
+    "sca_perspective": "Ghi nhận từ bên ngoài chỉ đọng lại khi người nhận cũng tự công nhận điều đó cho mình. Nếu không, nó trôi qua như một câu xã giao.",
+    "wave": 1
+  },
+  {
+    "code": "P-03",
+    "text": "Tôi giúp được đồng nghiệp gỡ một vấn đề khó",
+    "sca_dimension": "P-ACHIEVE",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn hiểu rõ hơn giá trị mình mang lại cho người khác",
+    "sca_perspective": "Giá trị lớn nhất trong hỗ trợ thường không phải câu trả lời, mà là sự có mặt đủ lâu để người kia tự tìm ra câu trả lời của họ.",
+    "wave": 1
+  },
+  {
+    "code": "P-04",
+    "text": "Tôi được tăng lương hoặc thăng chức",
+    "sca_dimension": "P-ACHIEVE",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn cho phép mình vui trọn vẹn trước khi nghĩ đến áp lực tiếp theo",
+    "sca_perspective": "Kết quả tốt kéo theo kỳ vọng mới rất nhanh. Dừng lại ăn mừng là một phần của hành trình, không phải sự xao nhãng.",
+    "wave": 1
+  },
+  {
+    "code": "P-05",
+    "text": "Tôi nhận được lời cảm ơn bất ngờ từ ai đó",
+    "sca_dimension": "P-ACHIEVE",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn nhìn thấy giá trị của những đóng góp mình vẫn cho là nhỏ",
+    "sca_perspective": "Những điều mình cho là bình thường đôi khi lại là điều người khác nhớ lâu nhất.",
+    "wave": 1
+  },
+  {
+    "code": "P-06",
+    "text": "Công việc hôm nay diễn ra đúng như tôi mong đợi",
+    "sca_dimension": "P-STEADY",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn biết điều gì đã khiến hôm nay suôn sẻ, để giữ lại",
+    "sca_perspective": "Sự ổn định thường bị xem là hiển nhiên, trong khi nó là kết quả của rất nhiều điều đã được làm đúng phía sau.",
+    "wave": 1
+  },
+  {
+    "code": "P-07",
+    "text": "Tôi cảm thấy làm chủ được nhịp độ công việc của mình",
+    "sca_dimension": "P-STEADY",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn giữ được nhịp độ này lâu hơn một ngày",
+    "sca_perspective": "Làm chủ nhịp độ không phải làm ít hơn, mà là biết điều gì thực sự cần sự chú ý của mình lúc này.",
+    "wave": 1
+  },
+  {
+    "code": "P-08",
+    "text": "Tôi vừa học được một điều nhỏ nhưng hữu ích",
+    "sca_dimension": "P-STEADY",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn giữ lại bài học nhỏ này thay vì để nó trôi qua",
+    "sca_perspective": "Phần lớn sự tiến bộ không đến từ những bước ngoặt lớn, mà từ rất nhiều điều nhỏ được tích lũy.",
+    "wave": 1
+  },
+  {
+    "code": "P-09",
+    "text": "Tôi có một cuộc trò chuyện tốt với đồng nghiệp",
+    "sca_dimension": "P-STEADY",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn dành đủ chỗ cho những kết nối nhẹ nhàng như vậy",
+    "sca_perspective": "Quan hệ tốt trong công việc hiếm khi được xây từ những cuộc họp lớn, mà từ rất nhiều cuộc trò chuyện nhỏ.",
+    "wave": 1
+  },
+  {
+    "code": "P-10",
+    "text": "Hôm nay không có gì đặc biệt, nhưng tôi thấy ổn",
+    "sca_dimension": "P-STEADY",
+    "human_need": "phat_trien",
+    "expected_outcome": "Tôi muốn công nhận cả những ngày bình thường, không chỉ những ngày biến động",
+    "sca_perspective": "Không phải mọi trải nghiệm đáng ghi nhớ đều kịch tính. Đôi khi sự bình yên cũng là một dữ liệu quan trọng.",
+    "wave": 1
   }
 ]

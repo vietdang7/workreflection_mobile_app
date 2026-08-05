@@ -9,6 +9,7 @@ import '../../../core/theme/wr_theme.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../l10n/app_localizations.dart';
 import '../journey_providers.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 class JourneyScreen extends ConsumerWidget {
   const JourneyScreen({super.key});
@@ -16,7 +17,7 @@ class JourneyScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: WrColors.white,
+      backgroundColor: WrColors.pageBg,
       body: SafeArea(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
@@ -84,17 +85,18 @@ class _StoryQuoteBlock extends ConsumerWidget {
           children: [
             WrEyebrow(l10n.journeyEyebrowStory),
             const SizedBox(height: 12),
-            Text(
+            WrParagraph(
               insight != null
                   ? '"${insight.content}"'
                   : '"Hành trình của bạn đang được ghi nhớ..."',
               style: WrTextStyles.insightQuote,
+              textAlign: TextAlign.start,
             ),
             const SizedBox(height: 12),
             Text(
               l10n.journeyCaption(now.month, now.year),
               style: WrTextStyles.body.copyWith(
-                fontSize: 12,
+                fontSize: 13.5,
                 color: WrColors.muted,
               ),
             ),
@@ -245,7 +247,7 @@ class _TimelineItem extends StatelessWidget {
                 Text(
                   dateStr,
                   style: WrTextStyles.body.copyWith(
-                    fontSize: 12,
+                    fontSize: 13.5,
                     color: WrColors.muted,
                   ),
                 ),
@@ -259,7 +261,7 @@ class _TimelineItem extends StatelessWidget {
                 Text(
                   typeLabel,
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 12.5,
                     fontWeight: FontWeight.w700,
                     color: dotColor,
                     letterSpacing: 0.03 * 11,

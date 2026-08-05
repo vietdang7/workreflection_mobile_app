@@ -19,17 +19,20 @@ ThemeData wrTheme() {
   return ThemeData(
     useMaterial3: true,
     colorScheme: wrColorScheme(),
-    scaffoldBackgroundColor: WrColors.white,
+    // Spec §01: nền toàn màn hình là Cream BG, không phải trắng thuần — thẻ
+    // trắng nổi lên được là nhờ nền này.
+    scaffoldBackgroundColor: WrColors.pageBg,
     textTheme: GoogleFonts.beVietnamProTextTheme(),
   );
 }
 
 abstract final class WrTextStyles {
   static TextStyle get eyebrow => const TextStyle(
-        fontSize: 11,
+        fontSize: 12.5,
         fontWeight: FontWeight.w700,
         letterSpacing: 0.55,
-        color: WrColors.muted,
+        // Spec §01b: eyebrow/tiny dùng text-3, không phải text-2.
+        color: WrColors.text3,
       );
 
   static TextStyle get hLarge => const TextStyle(
@@ -45,7 +48,7 @@ abstract final class WrTextStyles {
       );
 
   static TextStyle get body => TextStyle(
-        fontSize: 14,
+        fontSize: 15.5,
         color: WrColors.dark.withValues(alpha: 0.8),
         height: 1.5,
       );
@@ -64,7 +67,7 @@ abstract final class WrTextStyles {
       );
 
   static TextStyle get greeting => const TextStyle(
-        fontSize: 14,
+        fontSize: 15.5,
         color: WrColors.muted,
       );
 }

@@ -2,9 +2,13 @@
 // TDD: model round-trip fromJson/toInsert + enum error handling.
 // Run: flutter test test/core/models/wr_intelligence_test.dart
 
+import 'dart:io';
+
 import 'package:flutter_test/flutter_test.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
+
+import '../../support/fake_wr_intelligence_repository.dart';
 
 void main() {
   // ---------------------------------------------------------------------------
@@ -334,4 +338,104 @@ void main() {
       expect(insert.containsKey('uploaded_at'), isFalse);
     });
   });
+
+  // Bắt được khi chạy thật 2026-07-28: migration 20260728000000 nới check
+  // constraint sca_dimension cho bốn bảng nhưng sót wr_reflection_insights, nên
+  // phản tư trên tình huống tích cực bị Supabase trả 400. Không test nào thấy
+  // vì fake repository nhận mọi giá trị.
+  group('Hợp đồng với check constraint của DB', () {
+    test('mọi ScaDimension đều nằm trong miền giá trị DB chấp nhận', () {
+      for (final dim in ScaDimension.values) {
+        expect(
+          kAllowedScaDimensions,
+          contains(dim.dbValue),
+          reason: '${dim.dbValue} có trong enum nhưng chưa được thêm vào check '
+              'constraint — thêm chiều mới thì phải nới constraint kèm theo, '
+              'nếu không mọi lần ghi chiều đó sẽ bị DB từ chối.',
+        );
+      }
+    });
+
+    test('hai nhóm tích cực của v1.6 §2.2 nằm trong miền giá trị', () {
+      expect(kAllowedScaDimensions, containsAll(['P-ACHIEVE', 'P-STEADY']));
+    });
+
+    test('luồng Episode ghi source mà DB chấp nhận', () {
+      // Giá trị này là thứ EpisodeFlowController.confirmMeaning gửi đi.
+      expect(kAllowedInsightSources, contains('episode'));
+    });
+
+    // Đọc thẳng file SQL chứ không chép tay danh sách bảng vào test: chép tay
+    // thì test chỉ xác nhận chính nó, đúng loại test đã KHÔNG bắt được hai lỗi
+    // 400 hôm nay.
+    test('mọi bảng app có ghi sca_dimension đều đã nới cho nhóm tích cực', () {
+      // Bảng app thực sự INSERT/UPDATE sca_dimension xuống.
+      // wr_practice_themes và wr_situations/wr_stories không có ở đây vì app
+      // chỉ đọc chúng — nội dung do migration seed.
+      const written = [
+        'wr_reflection_episodes',
+        'wr_reflection_insights',
+        'wr_career_memory_events',
+        'wr_pattern_counts',
+      ];
+
+      final files = Directory('supabase/migrations').listSync()
+        ..sort((a, b) => a.path.compareTo(b.path));
+      final sql = [
+        for (final f in files)
+          if (f.path.endsWith('.sql')) File(f.path).readAsStringSync(),
+      ].join('\n');
+
+      for (final table in written) {
+        final scoped = _lastScaConstraintFor(sql, table);
+        expect(
+          scoped,
+          isNotNull,
+          reason: 'không tìm thấy constraint sca_dimension nào cho $table',
+        );
+        for (final dim in ScaDimension.values.where((d) => d.isPositive)) {
+          expect(
+            scoped,
+            contains("'${dim.dbValue}'"),
+            reason: '$table chưa nhận ${dim.dbValue} — phản tư trên tình huống '
+                'tích cực sẽ bị Supabase trả 400.',
+          );
+        }
+      }
+    });
+  });
+}
+
+/// Miền giá trị `sca_dimension` đang có hiệu lực cho [table].
+///
+/// Một bảng có thể được khai báo ở migration này rồi nới constraint ở migration
+/// khác, nên cái có hiệu lực là lần khai báo CUỐI CÙNG theo thứ tự file. Trả về
+/// null khi không tìm thấy khai báo nào.
+String? _lastScaConstraintFor(String sql, String table) {
+  String? found;
+
+  // 1. Khai báo trong CREATE TABLE.
+  final created = RegExp(
+    'create table if not exists public\\.$table\\s*\\((.*?)\\n\\);',
+    dotAll: true,
+    caseSensitive: false,
+  ).firstMatch(sql);
+  if (created != null) {
+    final inline = RegExp(r'sca_dimension[^,]*?check \(sca_dimension in \(([^)]*)\)')
+        .firstMatch(created.group(1)!);
+    if (inline != null) found = inline.group(1);
+  }
+
+  // 2. Mọi ALTER … ADD CONSTRAINT sau đó — cái sau đè cái trước.
+  final altered = RegExp(
+    'alter table public\\.$table\\s+add constraint \\w+\\s+'
+    r'check \(sca_dimension in \(([^)]*)\)',
+    dotAll: true,
+    caseSensitive: false,
+  ).allMatches(sql);
+  for (final m in altered) {
+    found = m.group(1);
+  }
+
+  return found;
 }

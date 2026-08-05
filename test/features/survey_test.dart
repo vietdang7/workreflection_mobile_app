@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
 import 'package:workreflection_mobile/core/models/survey_models.dart';
@@ -25,6 +26,7 @@ Widget _wrap(Widget child, {required FakeSurveyRepository repo}) {
       surveyRepositoryProvider.overrideWithValue(repo),
     ],
     child: MaterialApp(
+      builder: wrTextScaleBuilder,
       localizationsDelegates: const [
         AppLocalizations.delegate,
         GlobalMaterialLocalizations.delegate,
@@ -340,6 +342,7 @@ void main() {
             surveyRepositoryProvider.overrideWithValue(repo),
           ],
           child: MaterialApp(
+            builder: wrTextScaleBuilder,
             localizationsDelegates: const [
               AppLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
@@ -473,6 +476,7 @@ void main() {
             ),
           ],
           child: MaterialApp(
+            builder: wrTextScaleBuilder,
             localizationsDelegates: const [
               AppLocalizations.delegate,
               GlobalMaterialLocalizations.delegate,
@@ -557,11 +561,14 @@ void main() {
             ],
             supportedLocales: const [Locale('vi')],
             locale: const Locale('vi'),
-            builder: (context, child) => Consumer(
-              builder: (context, ref, _) {
-                capturedRef = ref;
-                return child ?? const SizedBox.shrink();
-              },
+            builder: (context, child) => wrTextScaleBuilder(
+              context,
+              Consumer(
+                builder: (context, ref, _) {
+                  capturedRef = ref;
+                  return child ?? const SizedBox.shrink();
+                },
+              ),
             ),
           ),
         ),
@@ -743,11 +750,14 @@ void main() {
             ],
             supportedLocales: const [Locale('vi')],
             locale: const Locale('vi'),
-            builder: (context, child) => Consumer(
-              builder: (context, ref, _) {
-                capturedRef = ref;
-                return child ?? const SizedBox.shrink();
-              },
+            builder: (context, child) => wrTextScaleBuilder(
+              context,
+              Consumer(
+                builder: (context, ref, _) {
+                  capturedRef = ref;
+                  return child ?? const SizedBox.shrink();
+                },
+              ),
             ),
           ),
         ),

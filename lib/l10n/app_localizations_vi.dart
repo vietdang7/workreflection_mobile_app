@@ -12,14 +12,14 @@ class AppLocalizationsVi extends AppLocalizations {
   String get appName => 'WorkReflection';
 
   @override
-  String get onb1Tag => 'Reflection';
+  String get onb1Tag => 'Reflect';
 
   @override
   String get onb1Title => 'Hành trình bắt đầu\ntừ một câu hỏi nhỏ.';
 
   @override
   String get onb1Body =>
-      'Mỗi ngày một khoảnh khắc dừng lại.\nĐể nhìn rõ hơn — không phán xét.';
+      'Mỗi ngày một khoảnh khắc dừng lại.\nĐể nhìn rõ hơn, không phán xét.';
 
   @override
   String get onb1Cta => 'Tiếp tục';
@@ -85,6 +85,19 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get authRegisterTitle => 'Tạo tài khoản';
+
+  @override
+  String get authLoginSubtitle => 'Đăng nhập để tiếp tục hành trình của bạn';
+
+  @override
+  String get authRegisterSubtitle =>
+      'Vài bước ngắn để bắt đầu cùng WorkReflection';
+
+  @override
+  String get authPasswordShow => 'Hiện mật khẩu';
+
+  @override
+  String get authPasswordHide => 'Ẩn mật khẩu';
 
   @override
   String get authEmailLabel => 'Email';
@@ -175,7 +188,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get understandEyebrowSituations => 'Tình huống lặp lại';
 
   @override
-  String get understandEyebrowSca => 'Trải nghiệm hiện tại (SCA)';
+  String get understandEyebrowSca => 'Trải nghiệm hiện tại';
 
   @override
   String get understandEyebrowHealth => 'Career Health Check';
@@ -227,7 +240,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get developEyebrowPractices => 'Practices hôm nay';
 
   @override
-  String get developEyebrowOpportunity => 'Cơ hội phát triển';
+  String get developEyebrowOpportunity => 'Mở rộng offline';
 
   @override
   String developStage(int x, int y) {
@@ -287,7 +300,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profileBadgeMember => 'Thành viên';
 
   @override
-  String get profileStatStreak => 'Ngày streak';
+  String get profileStatReflectDays => 'ngày Reflect';
 
   @override
   String get profileStatInsights => 'Insight lưu';
@@ -305,13 +318,39 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profileSettingLanguage => 'Ngôn ngữ';
 
   @override
-  String get profileSettingExport => 'Xuất dữ liệu';
+  String get profileSettingExport => 'Xuất dữ liệu của tôi';
 
   @override
   String get profileSettingLogout => 'Đăng xuất';
 
   @override
   String get profileLanguageValue => 'Tiếng Việt';
+
+  @override
+  String get profileDeleteAccount => 'Xoá tài khoản';
+
+  @override
+  String get profileDeleteAccountTitle => 'Xoá tài khoản vĩnh viễn?';
+
+  @override
+  String get profileDeleteAccountBody =>
+      'Toàn bộ dữ liệu của bạn sẽ bị xoá và không lấy lại được: những lần nhìn lại, Career Memory, chủ đề thực hành, kết quả self-check và hồ sơ. Nếu bạn đang có bản đầy đủ, phần thời hạn còn lại cũng mất theo.';
+
+  @override
+  String get profileDeleteAccountHint => 'Gõ XOÁ để xác nhận';
+
+  @override
+  String get profileDeleteAccountConfirmWord => 'XOÁ';
+
+  @override
+  String get profileDeleteAccountCta => 'Xoá vĩnh viễn';
+
+  @override
+  String get profileDeleteAccountCancel => 'Giữ tài khoản';
+
+  @override
+  String get profileDeleteAccountError =>
+      'Không xoá được tài khoản. Kiểm tra mạng rồi thử lại.';
 
   @override
   String get understandStatusNeedsAttention => 'Cần chú ý';
@@ -930,7 +969,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profileMyCoaching => 'Coaching của tôi';
 
   @override
-  String get developWorkshopSection => 'Cơ hội phát triển';
+  String get developWorkshopSection => 'Mở rộng offline';
 
   @override
   String get developViewWorkshops => 'Xem tất cả workshop';
@@ -1745,7 +1784,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get voiceInputStopListening => 'Dừng nghe';
 
   @override
-  String get voiceInputNoMatch => 'Không nhận diện được — hãy nhấn để thử lại';
+  String get voiceInputNoMatch => 'Không nhận diện được, hãy nhấn để thử lại';
 
   @override
   String get voiceInputUnavailable =>
