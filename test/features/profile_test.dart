@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
+import 'package:workreflection_mobile/core/theme/wr_colors.dart';
 import 'package:workreflection_mobile/core/models/insight.dart';
 import 'package:workreflection_mobile/core/models/mobile_profile.dart';
 import 'package:workreflection_mobile/core/models/timeline_event.dart';
@@ -90,7 +91,12 @@ Future<void> _pumpLarge(WidgetTester tester, Widget widget) async {
   await tester.pumpAndSettle();
 }
 
-MobileProfile _profile({bool reminder = true, String lang = 'vi'}) =>
+MobileProfile _profile({
+  bool reminder = true,
+  String lang = 'vi',
+  String? city,
+  String? orgIndustry,
+}) =>
     MobileProfile(
       userId: 'u1',
       displayName: 'Yumi Trần',
@@ -98,6 +104,8 @@ MobileProfile _profile({bool reminder = true, String lang = 'vi'}) =>
       language: lang,
       createdAt: DateTime(2026, 1, 1),
       updatedAt: DateTime(2026, 6, 1),
+      city: city,
+      orgIndustry: orgIndustry,
     );
 
 void main() {
@@ -254,13 +262,13 @@ void main() {
       await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
 
       for (final key in const [
+        'profile_my_info_btn',
         'profile_language_row',
         'profile_edit_profile_btn',
         'profile_work_info_btn',
         'profile_paywall_btn',
         'profile_change_password_btn',
         'profile_export_btn',
-        'profile_logout_btn',
       ]) {
         final row = find.byKey(Key(key));
         expect(row, findsOneWidget, reason: 'thiếu dòng $key');
@@ -272,6 +280,42 @@ void main() {
           reason: 'dòng $key không bấm được',
         );
       }
+    });
+
+    // "Thông tin của bạn" — mockup Sprint 2 bản (4), `screenProfile`.
+    testWidgets('dòng Thông tin của bạn đếm gộp cả hai bảng', (tester) async {
+      // Ba trường đã điền nằm ở HAI bảng khác nhau. Đếm mỗi một bảng thì con số
+      // vẫn trông hợp lý nên không ai để ý là nó thiếu.
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile(city: 'hcm', orgIndustry: 'tech'));
+      repo.seedCcProfile({
+        'full_name': 'Y',
+        'email': 'y@y.com',
+        'position': 'manager',
+      });
+      await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
+
+      expect(find.text('Thông tin của bạn'), findsOneWidget);
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('profile_my_info_count')))
+            .data,
+        '3/7',
+      );
+    });
+
+    testWidgets('chưa điền gì thì đếm 0/7', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile());
+      repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
+      await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
+
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('profile_my_info_count')))
+            .data,
+        '0/7',
+      );
     });
 
     testWidgets('avatar shows initials from display name', (tester) async {
@@ -321,33 +365,104 @@ void main() {
       expect(find.byKey(const Key('profile_checkin_history')), findsNothing);
     });
 
-    testWidgets('settings has exactly 6 items in order: reminder/language/edit/password/export/logout', (tester) async {
+    // Ảnh khách gửi 04/8 rút danh sách còn bốn dòng, nhưng khách chốt lại ngay
+    // sau đó là GIỮ đủ mục. Test này canh đúng chỗ dễ mất nhất: bốn mục dưới
+    // đây không có lối vào nào khác trong app — cắt khỏi đây là mất hẳn.
+    testWidgets('danh sách cài đặt giữ đủ mọi mục có lối vào duy nhất',
+        (tester) async {
       final repo = FakeWrRepository();
       repo.seedProfile(_profile());
       repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
       await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
 
+      expect(find.textContaining('Thông tin của bạn'), findsOneWidget);
       expect(find.textContaining('Nhắc nhở hằng ngày'), findsOneWidget);
       expect(find.textContaining('Ngôn ngữ'), findsOneWidget);
-      expect(find.textContaining('Chỉnh sửa hồ sơ'), findsOneWidget);
-      expect(find.textContaining('Đổi mật khẩu'), findsOneWidget);
       expect(find.textContaining('Xuất dữ liệu'), findsOneWidget);
-      expect(find.textContaining('Đăng xuất'), findsOneWidget);
+
+      for (final key in const [
+        'profile_edit_profile_btn',
+        'profile_work_info_btn',
+        'profile_paywall_btn',
+        'profile_change_password_btn',
+      ]) {
+        expect(find.byKey(Key(key)), findsOneWidget, reason: 'thiếu $key');
+      }
     });
 
-    testWidgets('logout text uses destructive color 0xFFFF3B30', (tester) async {
+    // Mockup Sprint 2 bản (4): Đăng xuất là NÚT viền riêng dưới cùng, ngoài
+    // thẻ cài đặt — không còn là một dòng chữ đỏ lẫn trong danh sách.
+    testWidgets('Đăng xuất là nút viền riêng, nằm ngoài thẻ cài đặt',
+        (tester) async {
       final repo = FakeWrRepository();
       repo.seedProfile(_profile());
       repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
       await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
 
-      // Find the logout GestureDetector by key, then verify text color
       final logoutBtn = find.byKey(const Key('profile_logout_btn'));
       expect(logoutBtn, findsOneWidget);
-      final textWidget = tester.widget<Text>(
-        find.descendant(of: logoutBtn, matching: find.byType(Text)),
-      );
-      expect(textWidget.style?.color, const Color(0xFFFF3B30));
+      expect(tester.widget(logoutBtn), isA<OutlinedButton>());
+      // Nằm DƯỚI thẻ Khảo sát tổ chức, tức đã ra khỏi danh sách cài đặt (dòng
+      // "Thông tin của bạn" là dòng đầu của danh sách đó).
+      final my = tester.getTopLeft(find.byKey(const Key('profile_my_info_btn')));
+      final org = tester.getTopLeft(find.byKey(const Key('profile_org_survey_btn')));
+      final out = tester.getTopLeft(logoutBtn);
+      expect(out.dy, greaterThan(my.dy));
+      expect(out.dy, greaterThan(org.dy));
+    });
+
+    // Mockup Sprint 2 bản (4): mọi khối của màn là THẺ TRẮNG trên nền xám —
+    // số liệu, danh sách cài đặt, khảo sát tổ chức. Không còn vạch kẻ ngang nào.
+    testWidgets('số liệu và danh sách cài đặt đều nằm trong thẻ trắng',
+        (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile());
+      repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
+      await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
+
+      // Dòng đầu của danh sách cài đặt phải có một thẻ trắng viền mảnh bọc nó.
+      final cards = tester
+          .widgetList<Container>(
+            find.ancestor(
+              of: find.byKey(const Key('profile_my_info_btn')),
+              matching: find.byType(Container),
+            ),
+          )
+          .where((c) {
+            final d = c.decoration;
+            return d is BoxDecoration &&
+                d.color == WrColors.white &&
+                d.border == Border.all(color: WrColors.line);
+          });
+      expect(cards, isNotEmpty, reason: 'danh sách cài đặt không nằm trong thẻ');
+    });
+
+    // Mỗi dòng cài đặt có icon bên trái — mắt bắt được dòng cần tìm mà không
+    // phải đọc hết các nhãn.
+    testWidgets('mỗi dòng cài đặt đều có icon bên trái', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile());
+      repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
+      await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
+
+      for (final key in const [
+        'profile_my_info_btn',
+        'profile_language_row',
+        'profile_edit_profile_btn',
+        'profile_work_info_btn',
+        'profile_paywall_btn',
+        'profile_change_password_btn',
+        'profile_export_btn',
+      ]) {
+        expect(
+          find.descendant(
+            of: find.byKey(Key(key)),
+            matching: find.byType(Icon),
+          ),
+          findsWidgets,
+          reason: 'dòng $key thiếu icon',
+        );
+      }
     });
 
     testWidgets('shows change-password row', (tester) async {
@@ -506,7 +621,18 @@ void main() {
       await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
 
       expect(find.byKey(const Key('profile_premium_card')), findsOneWidget);
-      expect(find.text('Mở khoá bản đầy đủ'), findsOneWidget);
+      // Nguyên văn mockup bản (4), và nền coral ĐẶC — đây là CTA chính duy nhất
+      // của màn, tô 12% thì nó chìm ngang hàng mọi thẻ trắng khác.
+      expect(find.text('Mở khoá Premium'), findsOneWidget);
+      final card = tester.widget<Container>(
+        find
+            .descendant(
+              of: find.byKey(const Key('profile_premium_card')),
+              matching: find.byType(Container),
+            )
+            .first,
+      );
+      expect((card.decoration as BoxDecoration).color, WrColors.coral);
     });
 
     testWidgets('Premium bên web không bị mời nâng cấp thêm lần nữa', (tester) async {
@@ -574,8 +700,8 @@ void main() {
         find.byKey(const Key('profile_premium_override_row')),
         findsNothing,
       );
-      // Dòng "Bản Premium" thường thì vẫn còn — công tắc không thay nó.
-      expect(find.byKey(const Key('profile_paywall_btn')), findsOneWidget);
+      // Lời mời Premium bình thường thì vẫn còn — công tắc không thay nó.
+      expect(find.byKey(const Key('profile_premium_card')), findsOneWidget);
     });
 
     testWidgets('đúng tài khoản thì thấy công tắc', (tester) async {

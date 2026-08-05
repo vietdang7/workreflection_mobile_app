@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/data/wr_content_repository.dart';
 import '../../../core/data/wr_intelligence_repository.dart';
+import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/models/wr_mood_content.dart';
@@ -35,6 +36,8 @@ Future<void> completePracticeStep({
   if (userId == null) return;
   final repo = ref.read(wrIntelligenceRepositoryProvider);
   final contentRepo = ref.read(wrContentRepositoryProvider);
+  final entitlement = ref.read(wrEntitlementProvider).valueOrNull ??
+      WrEntitlement(plan: WrPlan.free);
 
   final stepTitle = allSteps
       .where((s) => s.stepId == stepId)
@@ -60,6 +63,8 @@ Future<void> completePracticeStep({
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       userId: userId,
       behavior: 'practice_step_done',
+      // Bộ đếm thực hành đọc `themeId`, không đọc tên (Phần C mục 1).
+      themeId: theme.themeId,
       reflectionText: '${theme.title} · ${stepTitle ?? stepId}',
     ),
   );
@@ -88,16 +93,33 @@ Future<void> completePracticeStep({
     }
   }
 
-  final allStepIds = allSteps.map((s) => s.stepId).toSet();
-  final hasCompletedAll = allStepIds.every((id) => newCompleted.contains(id));
+  // Xong giai đoạn làm quen = xong mọi bước NGƯỜI NÀY MỞ ĐƯỢC, không phải mọi
+  // bước tồn tại.
+  //
+  // Cả 13 chủ đề đều khoá bước "Chuyển hóa". Nếu đòi đủ ba bước thì người dùng
+  // miễn phí dừng ở bước 2 vĩnh viễn, mà nút "Tôi vừa thực hành điều này hôm
+  // nay" lại chỉ mở sau khi khép giai đoạn làm quen — nghĩa là họ kẹt ở 2/5 và
+  // KHÔNG BAO GIỜ hình thành được kỹ năng nào. Cái bị khoá ở đó là việc ghi
+  // nhận, trong khi ranh giới của mình là "ghi nhận miễn phí, diễn giải mới
+  // Premium". Bước "Chuyển hóa" vẫn khoá; chỉ có đường đi tiếp là mở.
+  final reachable = allSteps
+      .where((s) => entitlement.canAccessPracticeStep(isPremiumStep: s.isPremium))
+      .map((s) => s.stepId)
+      .toSet();
+  final hasCompletedAll =
+      reachable.isNotEmpty && reachable.every(newCompleted.contains);
 
-  if (hasCompletedAll) {
+  // `completedAt != null` là cái mốc khép giai đoạn làm quen. Đã khép rồi thì
+  // thôi — nâng cấp lên Premium xong đi nốt bước "Chuyển hóa" không được phép
+  // sinh thêm một dòng "đã hoàn thành chủ đề" thứ hai trong Hành trình.
+  if (hasCompletedAll && enrollment.completedAt == null) {
     await repo.completeTheme(userId: userId, themeId: theme.themeId);
     await contentRepo.insertMemoryEvent(
       CareerMemoryEvent(
         id: '${DateTime.now().millisecondsSinceEpoch}t',
         userId: userId,
         behavior: 'practice_theme_done',
+        themeId: theme.themeId,
         reflectionText: theme.title,
       ),
     );

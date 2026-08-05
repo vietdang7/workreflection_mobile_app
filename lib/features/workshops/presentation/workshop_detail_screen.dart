@@ -226,7 +226,7 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
                 ? l10n.wsFree
                 : _formatPrice(w.price, w.currency),
             style: WrTextStyles.hMedium.copyWith(
-              color: w.isFree ? WrColors.teal : WrColors.navy,
+              color: WrColors.navy,
             ),
           ),
 
@@ -365,7 +365,7 @@ class _StatusChip extends StatelessWidget {
       child: Text(
         chipLabel,
         style: TextStyle(
-          fontSize: 13,
+          fontSize: 14.5,
           fontWeight: FontWeight.w600,
           color: color,
         ),

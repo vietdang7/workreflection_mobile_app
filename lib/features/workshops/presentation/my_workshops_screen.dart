@@ -417,7 +417,7 @@ class _StatusChip extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 12,
+          fontSize: 13.5,
           fontWeight: FontWeight.w600,
           color: color,
         ),
@@ -482,7 +482,7 @@ class _CancelDialog extends StatelessWidget {
                         height: 16,
                         child: CircularProgressIndicator(
                           strokeWidth: 2,
-                          color: WrColors.white,
+                          color: WrColors.navy,
                         ),
                       )
                     : Text(l10n.commonConfirm),

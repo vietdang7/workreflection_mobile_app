@@ -27,6 +27,7 @@ import '../../features/workshops/presentation/my_workshops_screen.dart';
 import '../../features/coaching/presentation/coaching_schedule_screen.dart';
 import '../../features/coaching/presentation/coaching_screen.dart';
 import '../../features/coaching/presentation/coaching_sessions_screen.dart';
+import '../../features/profile/presentation/my_info_screen.dart';
 import '../../features/profile/presentation/profile_edit_screen.dart';
 import '../../features/profile/presentation/vouchers_screen.dart';
 import '../../features/profile/presentation/invitations_screen.dart';
@@ -41,6 +42,10 @@ import '../../features/wr/presentation/wr_career_setup_screen.dart';
 import '../../features/wr/presentation/wr_context_doc_screen.dart';
 import '../../features/wr/presentation/wr_story_flow_screen.dart';
 import '../../features/wr/presentation/wr_mood_library_screen.dart';
+import '../../features/wr/presentation/wr_org_survey_flow_screen.dart';
+import '../../features/wr/presentation/wr_org_survey_intro_screen.dart';
+import '../../features/wr/presentation/wr_org_survey_result_screen.dart';
+import '../models/wr_org_survey.dart';
 import '../../features/wr/presentation/wr_mood_reader_screen.dart';
 import '../../features/wr/presentation/wr_story_screen.dart';
 import '../../features/wr/presentation/wr_discover_screen.dart';
@@ -266,6 +271,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile/setup',
         builder: (context, state) => const ProfileEditScreen(setupMode: true),
+      ),
+      // "Thông tin của bạn" — mockup Sprint 2 bản (4), `screenMyInfo`.
+      GoRoute(
+        path: '/profile/my-info',
+        builder: (context, state) => const MyInfoScreen(),
       ),
       GoRoute(
         path: '/vouchers',
@@ -545,6 +555,29 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/wr/work-info',
         builder: (context, state) => const WrWorkInfoScreen(),
+      ),
+
+      // Khảo sát tổ chức (ESI + eNPS) — mockup Sprint 2, mở từ màn Hồ sơ.
+      //
+      // Ba màn tách rời chứ không một màn nhiều bước: màn kết quả phải mở lại
+      // được từ Hồ sơ mà không phải đi qua bài khảo sát.
+      GoRoute(
+        path: '/wr/org-survey',
+        builder: (context, state) => const WrOrgSurveyIntroScreen(),
+      ),
+      GoRoute(
+        path: '/wr/org-survey/flow',
+        builder: (context, state) => const WrOrgSurveyFlowScreen(),
+      ),
+      GoRoute(
+        path: '/wr/org-survey/result',
+        // `extra` là bản vừa gửi xong, để không phải chờ một vòng đọc lại. Mở
+        // từ Hồ sơ thì không có extra và màn tự đọc bản gần nhất.
+        builder: (context, state) => WrOrgSurveyResultScreen(
+          response: state.extra is OrgSurveyResponse
+              ? state.extra! as OrgSurveyResponse
+              : null,
+        ),
       ),
 
       // Thư viện Nội dung Cảm xúc — Hai Lớp v1.6 §VIII.

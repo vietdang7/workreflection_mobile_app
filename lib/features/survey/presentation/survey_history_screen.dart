@@ -104,8 +104,9 @@ class _ReportRow extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: BoxDecoration(
-          color: WrColors.cream,
+          color: WrColors.white,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: WrColors.line),
         ),
         padding: const EdgeInsets.all(16),
         child: Row(
@@ -117,7 +118,7 @@ class _ReportRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(dateStr,
-                      style: WrTextStyles.hMedium.copyWith(fontSize: 14)),
+                      style: WrTextStyles.hMedium.copyWith(fontSize: 15.5)),
                   const SizedBox(height: 4),
                   // Free / Premium chip
                   _TypeChip(isPremium: report.isPremium, l10n: l10n),
@@ -140,7 +141,7 @@ class _ReportRow extends StatelessWidget {
                   ),
                   Text(
                     l10n.surveyHistoryScoreLabel,
-                    style: WrTextStyles.body.copyWith(fontSize: 11),
+                    style: WrTextStyles.body.copyWith(fontSize: 12.5),
                   ),
                 ],
               ),
@@ -163,7 +164,7 @@ class _ReportRow extends StatelessWidget {
                       child: Text(
                         levelLabel,
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 12.5,
                           fontWeight: FontWeight.w700,
                           color: color,
                         ),
@@ -209,7 +210,7 @@ class _TypeChip extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 10,
+          fontSize: 11.5,
           fontWeight: FontWeight.w700,
           color: color,
           letterSpacing: 0.3,

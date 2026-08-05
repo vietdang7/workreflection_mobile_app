@@ -13,10 +13,11 @@ abstract final class WrColors {
   static const white = Color(0xFFFFFFFF);
 
   // Token lấy nguyên từ `:root` của mockup Sprint 2 — đừng đoán lại bằng mắt.
-  //   --cream-bg:#FBF9F5 · --line:rgba(9,55,116,0.10)
+  //   --line:rgba(9,55,116,0.10)
   //   --text-2:rgba(44,51,93,0.72) · --text-3:rgba(44,51,93,0.45)
-  /// Nền màn hình (`--cream-bg`). Thẻ trắng nổi lên được là nhờ nền này.
-  static const pageBg = Color(0xFFFBF9F5);
+  /// Nền màn hình. Brand identity mới (chốt 04/8) thay nền kem `--cream-bg`
+  /// #FBF9F5 bằng xám trung tính; thẻ vẫn trắng thuần nên vẫn nổi trên nền.
+  static const pageBg = Color(0xFFF4F4F6);
 
   /// Viền thẻ (`--line`).
   static const line = Color(0x1A093774);

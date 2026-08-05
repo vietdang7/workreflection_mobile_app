@@ -172,8 +172,9 @@ class _MoodButton extends ConsumerWidget {
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         decoration: BoxDecoration(
-          color: isSelected ? WrColors.coral : WrColors.cream,
+          color: isSelected ? WrColors.coral : WrColors.white,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: WrColors.line),
         ),
         alignment: Alignment.center,
         padding: const EdgeInsets.all(12),
@@ -181,9 +182,9 @@ class _MoodButton extends ConsumerWidget {
           label,
           textAlign: TextAlign.center,
           style: TextStyle(
-            fontSize: 13,
+            fontSize: 14.5,
             fontWeight: FontWeight.w600,
-            color: isSelected ? WrColors.white : WrColors.dark,
+            color: isSelected ? WrColors.navy : WrColors.dark,
             height: 1.4,
           ),
         ),
@@ -362,7 +363,7 @@ class _SuggestionSection extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           l10n.homeSuggestionMeta,
-                          style: WrTextStyles.body.copyWith(fontSize: 13),
+                          style: WrTextStyles.body.copyWith(fontSize: 14.5),
                         ),
                       ],
                     ),
@@ -377,12 +378,12 @@ class _SuggestionSection extends StatelessWidget {
                 children: [
                   Text(
                     l10n.homeSuggestionProgress,
-                    style: WrTextStyles.body.copyWith(fontSize: 12),
+                    style: WrTextStyles.body.copyWith(fontSize: 13.5),
                   ),
                   Text(
                     l10n.homeSuggestionStatus,
                     style: const TextStyle(
-                      fontSize: 12,
+                      fontSize: 13.5,
                       fontWeight: FontWeight.w600,
                       color: WrColors.coral,
                     ),
@@ -464,7 +465,7 @@ class _InsightContent extends StatelessWidget {
         const SizedBox(height: 10),
         Text(
           l10n.homeInsightSavedDate(dateStr),
-          style: WrTextStyles.body.copyWith(fontSize: 12),
+          style: WrTextStyles.body.copyWith(fontSize: 13.5),
         ),
       ],
     );

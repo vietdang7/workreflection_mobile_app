@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
 import '../theme/wr_colors.dart';
 
-// Hệ thẻ dùng chung cho cả bốn tab (chốt với khách 2026-07-30).
+// Hệ thẻ dùng chung cho cả bốn tab. Brand identity mới, chốt với khách
+// 2026-08-04, thay hệ kem-cam của bản 2026-07-30:
 //
-// Nền màn là TRẮNG, thẻ nội dung là KEM, thẻ "đọc chậm" là NAVY, ô lồng trong
-// thẻ kem thì trắng. Mockup Sprint 2 dùng hệ ngược lại — nền kem #FBF9F5, thẻ
-// trắng viền mảnh — và bản đó đã bị bỏ: khách chốt lấy bố cục Sprint 2 nhưng
-// giữ hệ màu kem-cam của `giao-dien-chinh.html`.
+// Nền màn là XÁM #F4F4F6, thẻ nội dung là TRẮNG viền mảnh `--line`, thẻ
+// "đọc chậm" vẫn là NAVY. Kem #FFF3E6 trở lại đúng một vai duy nhất của spec
+// §01: CHỮ trên nền navy. Không còn mảng kem nào làm nền.
 //
-// ⚠ Không dựng lại thẻ trắng-viền-mảnh cho một màn lẻ. Thẻ trắng trên nền trắng
-//   chỉ còn thấy được nhờ viền, nên một màn đổi là màn đó lệch hẳn khỏi ba màn
-//   kia — đúng lỗi khách đã báo.
+// ⚠ Không dựng lại thẻ kem cho một màn lẻ, và không thêm đổ bóng. Nền xám là
+//   thứ làm thẻ trắng nổi lên; một màn đổi mặt phẳng là màn đó lệch hẳn khỏi
+//   ba màn kia — đúng lỗi khách đã báo với hệ cũ.
 
 class WrCardMinimal extends StatelessWidget {
   const WrCardMinimal({super.key, required this.child, this.padding});
@@ -22,8 +22,9 @@ class WrCardMinimal extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: WrColors.cream,
+        color: WrColors.white,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: WrColors.line),
       ),
       padding: padding ?? const EdgeInsets.all(20),
       child: child,

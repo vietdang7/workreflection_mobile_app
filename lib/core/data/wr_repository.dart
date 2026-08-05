@@ -18,14 +18,27 @@ import '../models/workshop.dart';
 
 /// Những đuôi file người dùng được chọn cho tài liệu bối cảnh.
 ///
-/// Ảnh chụp và PDF là hai thứ JD/CV thật sự tồn tại dưới dạng đó. Word thì chưa:
-/// bộ đọc phía máy chủ chưa bóc được `.docx`, cho chọn rồi báo hỏng còn tệ hơn
-/// là không cho chọn.
-const List<String> kContextDocExtensions = ['pdf', 'png', 'jpg', 'jpeg', 'webp'];
+/// JD và CV người Việt gửi nhau phần lớn là file Word, sau đó mới tới PDF và
+/// ảnh chụp. `.docx` đọc được từ 04/08 — máy chủ tự bóc chữ trong file, không
+/// qua model (`wr-doc-analyze/docx.ts`).
+///
+/// `.doc` bản cũ thì KHÔNG: nó là định dạng nhị phân đời khác, không phải ZIP,
+/// bóc được nó là một việc riêng. Cho chọn rồi báo hỏng còn tệ hơn không cho
+/// chọn.
+const List<String> kContextDocExtensions = [
+  'pdf',
+  'docx',
+  'png',
+  'jpg',
+  'jpeg',
+  'webp',
+];
 
 /// Kiểu MIME theo đuôi file, dùng lúc đẩy lên Storage.
 String contextDocMimeType(String ext) => switch (ext.toLowerCase()) {
       'pdf' => 'application/pdf',
+      'docx' =>
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       'png' => 'image/png',
       'webp' => 'image/webp',
       'heic' => 'image/heic',
@@ -84,6 +97,16 @@ abstract class WrRepository {
 
   /// Ghi mô tả tự do về vai trò hiện tại (§11.3). Tùy chọn, có thể để trống.
   Future<void> saveRoleText(String? roleText);
+
+  /// Ghi ba trường riêng của app ở màn "Thông tin của bạn".
+  ///
+  /// Chỉ những khoá có mặt trong [fields] mới bị ghi đè — màn kia sửa mỗi lần
+  /// một trường, nên gửi cả ba sẽ xoá mất hai trường người dùng không đụng tới.
+  /// Khoá hợp lệ: `city`, `org_industry`, `org_company_type`.
+  ///
+  /// Bốn trường còn lại của màn đó đi qua [updateCcProfile] vì chúng dùng chung
+  /// cột với web.
+  Future<void> saveMyInfo(Map<String, String?> fields);
 
   // --- CC tables (web-app shared) ---
   Future<ScaReport?> getLatestScaReport();
@@ -424,6 +447,29 @@ class SupabaseWrRepository implements WrRepository {
           'role_text': (trimmed == null || trimmed.isEmpty) ? null : trimmed,
           'updated_at': DateTime.now().toIso8601String(),
         })
+        .eq('user_id', _uid);
+  }
+
+  /// Ba cột riêng của app. Chỉ khoá nào được truyền vào mới đi vào câu UPDATE —
+  /// xem ghi chú ở khai báo trong [WrRepository].
+  static const _myInfoColumns = {'city', 'org_industry', 'org_company_type'};
+
+  @override
+  Future<void> saveMyInfo(Map<String, String?> fields) async {
+    final patch = <String, dynamic>{
+      for (final e in fields.entries)
+        if (_myInfoColumns.contains(e.key))
+          e.key: (e.value == null || e.value!.trim().isEmpty)
+              ? null
+              : e.value!.trim(),
+    };
+    // Không có khoá hợp lệ nào thì đừng gửi một UPDATE chỉ đụng `updated_at`:
+    // nó làm hàng "vừa được sửa" trong khi thật ra không có gì đổi.
+    if (patch.isEmpty) return;
+    patch['updated_at'] = DateTime.now().toIso8601String();
+    await _client
+        .from('wr_mobile_profiles')
+        .update(patch)
         .eq('user_id', _uid);
   }
 

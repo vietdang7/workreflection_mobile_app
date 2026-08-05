@@ -28,7 +28,7 @@ ThemeData wrTheme() {
 
 abstract final class WrTextStyles {
   static TextStyle get eyebrow => const TextStyle(
-        fontSize: 11,
+        fontSize: 12.5,
         fontWeight: FontWeight.w700,
         letterSpacing: 0.55,
         // Spec §01b: eyebrow/tiny dùng text-3, không phải text-2.
@@ -48,7 +48,7 @@ abstract final class WrTextStyles {
       );
 
   static TextStyle get body => TextStyle(
-        fontSize: 14,
+        fontSize: 15.5,
         color: WrColors.dark.withValues(alpha: 0.8),
         height: 1.5,
       );
@@ -67,7 +67,7 @@ abstract final class WrTextStyles {
       );
 
   static TextStyle get greeting => const TextStyle(
-        fontSize: 14,
+        fontSize: 15.5,
         color: WrColors.muted,
       );
 }

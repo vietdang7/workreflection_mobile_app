@@ -50,7 +50,7 @@ class WrPremiumLock extends StatelessWidget {
               Text(
                 'Premium',
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 12.5,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.5,
                   color: WrColors.amber,
@@ -74,7 +74,7 @@ class WrPremiumLock extends StatelessWidget {
           Text(
             description,
             style: const TextStyle(
-              fontSize: 13,
+              fontSize: 14.5,
               height: 1.65,
               color: WrColors.muted,
             ),
@@ -101,7 +101,7 @@ class WrPremiumLock extends StatelessWidget {
               child: Text(
                 ctaLabel,
                 style: const TextStyle(
-                  fontSize: 13,
+                  fontSize: 14.5,
                   fontWeight: FontWeight.w600,
                 ),
               ),

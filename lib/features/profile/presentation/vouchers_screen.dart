@@ -117,7 +117,7 @@ class _VouchersList extends StatelessWidget {
                 child: Text(
                   l10n.voucherWebNote,
                   style: WrTextStyles.body
-                      .copyWith(fontSize: 12, color: WrColors.coral),
+                      .copyWith(fontSize: 13.5, color: WrColors.coral),
                 ),
               ),
             ],
@@ -281,7 +281,7 @@ class _VoucherCard extends StatelessWidget {
                             : l10n.voucherDiscountAmount(
                                 discountAmount.toStringAsFixed(0)),
                         style: WrTextStyles.body
-                            .copyWith(fontSize: 12, color: WrColors.muted),
+                            .copyWith(fontSize: 13.5, color: WrColors.muted),
                       ),
                     ],
                   ),
@@ -315,7 +315,7 @@ class _VoucherCard extends StatelessWidget {
                     child: Text(
                       labels[s] ?? s,
                       style: WrTextStyles.body.copyWith(
-                          fontSize: 10, color: WrColors.pillCoralText),
+                          fontSize: 11.5, color: WrColors.pillCoralText),
                     ),
                   );
                 }).toList(),
@@ -336,14 +336,14 @@ class _VoucherCard extends StatelessWidget {
                       Text(
                         l10n.voucherExpiry(formatDate(validTo)),
                         style: WrTextStyles.body
-                            .copyWith(fontSize: 12, color: WrColors.muted),
+                            .copyWith(fontSize: 13.5, color: WrColors.muted),
                       ),
                       if (maxUses > 0)
                         Text(
                           l10n.voucherUsesLeft(
                               maxUses - usedCount, maxUses),
                           style: WrTextStyles.body.copyWith(
-                              fontSize: 12, color: WrColors.muted),
+                              fontSize: 13.5, color: WrColors.muted),
                         ),
                     ],
                   ),
@@ -358,7 +358,7 @@ class _VoucherCard extends StatelessWidget {
                     ),
                     label: Text(
                       isCopied ? l10n.voucherCopied : l10n.voucherCopy,
-                      style: const TextStyle(fontSize: 12),
+                      style: const TextStyle(fontSize: 13.5),
                     ),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: WrColors.coral,
@@ -417,7 +417,7 @@ class _StatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(label,
-          style: WrTextStyles.body.copyWith(fontSize: 11, color: fg)),
+          style: WrTextStyles.body.copyWith(fontSize: 12.5, color: fg)),
     );
   }
 }

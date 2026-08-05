@@ -43,7 +43,7 @@ class WrGrowthJourneyScreen extends ConsumerWidget {
             'WorkReflection sẽ dựng lại chặng đường của bạn ở đây.',
             key: Key('wr_growth_journey_empty'),
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 16.5,
               color: WrColors.muted,
               height: 1.65,
             ),
@@ -73,7 +73,7 @@ class _SnapshotBlock extends StatelessWidget {
             Text(
               period,
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: 13.5,
                 fontWeight: FontWeight.w600,
                 color: WrColors.muted,
               ),
@@ -101,13 +101,13 @@ class _SnapshotBlock extends StatelessWidget {
                       vertical: 5,
                     ),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFF4F4F1),
+                      color: WrColors.pageBg,
                       borderRadius: BorderRadius.circular(100),
                     ),
                     child: Text(
                       '${e.key}: ${e.value}',
                       style: const TextStyle(
-                        fontSize: 12,
+                        fontSize: 13.5,
                         fontWeight: FontWeight.w600,
                         color: WrColors.dark,
                       ),

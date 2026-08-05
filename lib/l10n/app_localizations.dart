@@ -248,6 +248,30 @@ abstract class AppLocalizations {
   /// **'Tạo tài khoản'**
   String get authRegisterTitle;
 
+  /// No description provided for @authLoginSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Đăng nhập để tiếp tục hành trình của bạn'**
+  String get authLoginSubtitle;
+
+  /// No description provided for @authRegisterSubtitle.
+  ///
+  /// In vi, this message translates to:
+  /// **'Vài bước ngắn để bắt đầu cùng WorkReflection'**
+  String get authRegisterSubtitle;
+
+  /// No description provided for @authPasswordShow.
+  ///
+  /// In vi, this message translates to:
+  /// **'Hiện mật khẩu'**
+  String get authPasswordShow;
+
+  /// No description provided for @authPasswordHide.
+  ///
+  /// In vi, this message translates to:
+  /// **'Ẩn mật khẩu'**
+  String get authPasswordHide;
+
   /// No description provided for @authEmailLabel.
   ///
   /// In vi, this message translates to:
@@ -659,7 +683,7 @@ abstract class AppLocalizations {
   /// No description provided for @profileSettingExport.
   ///
   /// In vi, this message translates to:
-  /// **'Xuất dữ liệu'**
+  /// **'Xuất dữ liệu của tôi'**
   String get profileSettingExport;
 
   /// No description provided for @profileSettingLogout.

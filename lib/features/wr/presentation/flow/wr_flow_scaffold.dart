@@ -73,7 +73,7 @@ class WrFlowScaffold extends StatelessWidget {
                       Text(
                         eyebrow!.toUpperCase(),
                         style: const TextStyle(
-                          fontSize: 11,
+                          fontSize: 12.5,
                           fontWeight: FontWeight.w700,
                           letterSpacing: 1.2,
                           color: WrColors.muted,
@@ -96,7 +96,7 @@ class WrFlowScaffold extends StatelessWidget {
                       Text(
                         subtitle!,
                         style: const TextStyle(
-                          fontSize: 14,
+                          fontSize: 15.5,
                           color: WrColors.muted,
                           height: 1.55,
                         ),
@@ -122,7 +122,7 @@ class WrFlowScaffold extends StatelessWidget {
                           style: ElevatedButton.styleFrom(
                             backgroundColor: WrColors.navy,
                             foregroundColor: WrColors.white,
-                            disabledBackgroundColor: WrColors.cream,
+                            disabledBackgroundColor: WrColors.line,
                             disabledForegroundColor: WrColors.muted,
                             minimumSize: const Size.fromHeight(52),
                             shape: RoundedRectangleBorder(
@@ -141,7 +141,7 @@ class WrFlowScaffold extends StatelessWidget {
                               : Text(
                                   primaryLabel!,
                                   style: const TextStyle(
-                                    fontSize: 15,
+                                    fontSize: 16.5,
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),
@@ -155,7 +155,7 @@ class WrFlowScaffold extends StatelessWidget {
                         child: Text(
                           secondaryLabel!,
                           style: const TextStyle(
-                            fontSize: 14,
+                            fontSize: 15.5,
                             color: WrColors.muted,
                             fontWeight: FontWeight.w500,
                           ),
@@ -204,8 +204,10 @@ class _FlowHeader extends StatelessWidget {
                     child: LinearProgressIndicator(
                       value: progress!.clamp(0.0, 1.0),
                       minHeight: 3,
-                      backgroundColor: WrColors.cream,
-                      color: WrColors.coral,
+                      // Rãnh thanh tiến trình là `--line`, không phải mảng kem:
+                      // kem chỉ còn dùng làm chữ trên nền navy.
+                      backgroundColor: WrColors.line,
+                      color: WrColors.navy,
                     ),
                   ),
           ),
@@ -265,6 +267,10 @@ class WrBigChoiceTile extends StatelessWidget {
   final String label;
   final bool selected;
   final VoidCallback onTap;
+
+  /// Chiều cao TỐI THIỂU, không phải chiều cao cố định: nhãn tình huống dài hai
+  /// dòng, và từ khi cỡ chữ tăng theo brand identity mới thì một ô cao cứng cắt
+  /// mất dòng thứ hai. Ô nào cần cao hơn thì tự cao lên.
   final double height;
 
   /// Dòng chữ nhỏ phía trên nhãn. Dùng cho ô neo ở bước Notice ("Lần trước"),
@@ -274,7 +280,8 @@ class WrBigChoiceTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final fg = selected ? WrColors.white : WrColors.navy;
+    // §03: chữ trên nền Coral là Navy, không phải trắng.
+    const fg = WrColors.navy;
     final text = Text(
       label,
       style: TextStyle(
@@ -290,12 +297,13 @@ class WrBigChoiceTile extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        height: height,
+        constraints: BoxConstraints(minHeight: height),
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
         alignment: Alignment.centerLeft,
         decoration: BoxDecoration(
-          color: selected ? WrColors.coral : WrColors.cream,
+          color: selected ? WrColors.coral : WrColors.white,
           borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: WrColors.line),
         ),
         child: badge == null
             ? text
@@ -306,12 +314,12 @@ class WrBigChoiceTile extends StatelessWidget {
                   Text(
                     badge!.toUpperCase(),
                     style: TextStyle(
-                      fontSize: 10.5,
+                      fontSize: 12,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.8,
                       color: selected
-                          ? WrColors.white.withValues(alpha: 0.85)
-                          : WrColors.teal,
+                          ? WrColors.navy.withValues(alpha: 0.75)
+                          : WrColors.navy,
                     ),
                   ),
                   const SizedBox(height: 5),

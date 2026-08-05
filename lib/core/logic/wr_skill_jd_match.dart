@@ -18,6 +18,7 @@
 
 import '../models/wr_content.dart';
 import '../models/wr_intelligence.dart';
+import 'wr_seniority.dart';
 import 'wr_skill_formation.dart';
 
 /// Ba trụ, tên hiển thị lấy đúng bộ chữ của Self-Check để người dùng không gặp
@@ -96,6 +97,9 @@ class SkillJdMatch {
     required this.matchedSkills,
     required this.gapThemes,
     required this.basedOnKeywords,
+    this.tier,
+    this.gapRelevance = const {},
+    this.autoRaisedDimensions = const [],
   });
 
   /// Trụ được xem là liên quan tới Context Document hiện tại.
@@ -115,6 +119,19 @@ class SkillJdMatch {
   /// Từ khoá đã bắt được trong mô tả — để nói ra mình dựa vào đâu (minh bạch),
   /// không phán một kết luận từ hộp đen.
   final List<String> basedOnKeywords;
+
+  /// Cấp bậc người dùng đã khai. Null = chưa biết, và khi chưa biết thì phép
+  /// đối chiếu chạy y như trước: không xếp hạng, không nâng trọng số.
+  final SeniorityTier? tier;
+
+  /// Mức độ liên quan của từng khoảng trống theo bảng B.2, khoá theo `theme_id`.
+  /// Rỗng khi chưa biết cấp bậc.
+  final Map<String, SkillRelevance> gapRelevance;
+
+  /// Những chiều được Nguyên tắc 3 (B.1) kéo vào dù JD không nhắc tới.
+  ///
+  /// Giữ lại để nói thật với người dùng: chỗ này không đến từ mô tả họ viết.
+  final List<String> autoRaisedDimensions;
 
   bool get isEmpty => matchedSkills.isEmpty && gapThemes.isEmpty;
 
@@ -138,10 +155,14 @@ class SkillJdMatch {
 ///
 /// [formations] là trạng thái của các chủ đề đang theo; [allThemes] là toàn bộ
 /// chủ đề còn đề xuất, dùng để tìm khoảng trống (kể cả chủ đề chưa ghi danh).
+/// [tier] là cấp bậc người dùng đã khai (`cc_profiles.position`). Có thì bật
+/// hai luật của Phần B: nâng trọng số nhóm Kết nối (Nguyên tắc 3) và xếp hạng
+/// khoảng trống theo bảng B.2. Null thì mọi thứ chạy như trước.
 SkillJdMatch? matchSkillsToContext({
   required String? contextText,
   required List<SkillFormation> formations,
   required List<PracticeTheme> allThemes,
+  SeniorityTier? tier,
 }) {
   final text = contextText?.trim().toLowerCase();
   if (text == null || text.isEmpty) return null;
@@ -156,6 +177,22 @@ SkillJdMatch? matchSkillsToContext({
     }
   }
   if (hits.isEmpty) return null;
+
+  // Nguyên tắc 3 (B.1): từ mức quản lý nhóm nhỏ trở lên, trụ Kết nối luôn được
+  // tính là "cần", kể cả khi JD không có một từ khoá nào thuộc trụ đó. JD vị
+  // trí quản lý hiếm khi ghi "cần biết tin tưởng đội" — nó được ngầm hiểu là
+  // đương nhiên, và chính vì ngầm nên phép so từ khoá không bao giờ thấy.
+  final autoRaised = <String>[];
+  if (tier != null && tier.isManaging) {
+    for (final d in kConnectionDimensions) {
+      autoRaised.add(d.dbValue);
+    }
+    autoRaised.sort();
+    // Thêm chứ không ghi đè: trụ nào JD nói thẳng vẫn giữ nguyên thứ hạng của
+    // nó. Trụ C thêm vào ở cuối để không đẩy trụ mà mô tả thật sự xoay quanh
+    // xuống dưới.
+    hits.putIfAbsent('C', () => 0);
+  }
 
   // Trụ nhiều từ khoá nhất trước; hoà thì giữ thứ tự S → C → A cho ổn định.
   final pillars = hits.keys.toList()
@@ -191,11 +228,34 @@ SkillJdMatch? matchSkillsToContext({
         t,
   ];
 
+  // B.2: cùng một khoảng trống, người ở cấp cao hơn nên thấy nó xếp trên, vì
+  // phạm vi ảnh hưởng rộng hơn. Chưa biết cấp bậc thì giữ nguyên thứ tự cũ —
+  // đoán một cấp bậc rồi đảo thứ tự là nói với người dùng một mức ưu tiên
+  // không có căn cứ.
+  final relevance = <String, SkillRelevance>{};
+  if (tier != null) {
+    for (final t in gaps) {
+      final r = relevanceOf(t.scaDimension, tier);
+      if (r != null) relevance[t.themeId] = r;
+    }
+    gaps.sort((a, b) {
+      final ra = relevance[a.themeId];
+      final rb = relevance[b.themeId];
+      // Chiều ngoài bộ 10 (không có trong bảng) xếp cuối, không xếp đầu.
+      final byRank = (rb?.rank ?? -1).compareTo(ra?.rank ?? -1);
+      if (byRank != 0) return byRank;
+      return a.themeId.compareTo(b.themeId);
+    });
+  }
+
   return SkillJdMatch(
     matchedPillars: pillars,
     matchedDimensions: matchedDims,
     matchedSkills: matchedSkills,
     gapThemes: gaps,
     basedOnKeywords: keywords,
+    tier: tier,
+    gapRelevance: relevance,
+    autoRaisedDimensions: autoRaised,
   );
 }

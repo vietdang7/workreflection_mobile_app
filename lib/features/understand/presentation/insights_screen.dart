@@ -88,7 +88,7 @@ class InsightsScreen extends ConsumerWidget {
                       const SizedBox(height: 8),
                       Text(
                         l10n.insightSavedDate(dateStr),
-                        style: WrTextStyles.body.copyWith(fontSize: 12),
+                        style: WrTextStyles.body.copyWith(fontSize: 13.5),
                       ),
                     ],
                   ),

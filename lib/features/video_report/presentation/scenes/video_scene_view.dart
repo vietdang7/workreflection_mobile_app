@@ -131,7 +131,7 @@ class VideoSceneView extends StatelessWidget {
               ? 'Here is your team snapshot.'
               : 'Đây là bức tranh nhanh về đội nhóm của bạn.',
           textAlign: TextAlign.center,
-          style: const TextStyle(color: _kInkMuted, fontSize: 15),
+          style: const TextStyle(color: _kInkMuted, fontSize: 16.5),
         ),
       ],
     );
@@ -343,7 +343,7 @@ class VideoSceneView extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             _isEn ? 'Bottleneck' : 'Điểm nghẽn',
-            style: const TextStyle(color: _kInkMuted, fontSize: 15),
+            style: const TextStyle(color: _kInkMuted, fontSize: 16.5),
           ),
           const SizedBox(height: 6),
           Text(
@@ -388,7 +388,7 @@ class VideoSceneView extends StatelessWidget {
               Expanded(
                 child: Text(
                   tip,
-                  style: const TextStyle(color: _kInk, fontSize: 15, height: 1.3),
+                  style: const TextStyle(color: _kInk, fontSize: 16.5, height: 1.3),
                 ),
               ),
             ],
@@ -555,7 +555,7 @@ class _Chip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(color: color, fontSize: 15, fontWeight: FontWeight.w700),
+        style: TextStyle(color: color, fontSize: 16.5, fontWeight: FontWeight.w700),
       ),
     );
   }

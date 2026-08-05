@@ -110,7 +110,7 @@ class _DominantNeedBlock extends ConsumerWidget {
               const SizedBox(height: 12),
               Text(
                 '$source ${l10n.understandNeedSuffix}',
-                style: WrTextStyles.body.copyWith(fontSize: 13),
+                style: WrTextStyles.body.copyWith(fontSize: 14.5),
               ),
               const SizedBox(height: 12),
               _ViewAllInsightsLink(hasInsight: insight != null),
@@ -185,7 +185,7 @@ class _SituationRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final ratio = maxCount > 0 ? situation.occurrenceCount / maxCount : 0.0;
-    final countColor = isTop ? WrColors.coral : WrColors.teal;
+    final countColor = isTop ? WrColors.coral : WrColors.navy;
     final fillColor = isTop ? WrColors.coral : WrColors.navy;
 
     return Column(
@@ -197,7 +197,7 @@ class _SituationRow extends StatelessWidget {
             Text(
               l10n.understandSituationCount(situation.occurrenceCount),
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 14.5,
                 fontWeight: isTop ? FontWeight.w700 : FontWeight.w600,
                 color: countColor,
               ),
@@ -312,7 +312,7 @@ class _ScaRow extends StatelessWidget {
           child: Text(
             badge,
             style: TextStyle(
-              fontSize: 12,
+              fontSize: 13.5,
               fontWeight: FontWeight.w700,
               color: badgeColor,
             ),
@@ -325,7 +325,7 @@ class _ScaRow extends StatelessWidget {
         Text(
           status,
           style: TextStyle(
-            fontSize: 13,
+            fontSize: 14.5,
             fontWeight: FontWeight.w600,
             color: statusColor,
           ),

@@ -30,6 +30,10 @@
 
   "authLoginTitle": "Chào mừng trở lại",
   "authRegisterTitle": "Tạo tài khoản",
+  "authLoginSubtitle": "Đăng nhập để tiếp tục hành trình của bạn",
+  "authRegisterSubtitle": "Vài bước ngắn để bắt đầu cùng WorkReflection",
+  "authPasswordShow": "Hiện mật khẩu",
+  "authPasswordHide": "Ẩn mật khẩu",
   "authEmailLabel": "Email",
   "authPasswordLabel": "Mật khẩu",
   "authNameLabel": "Tên của bạn",
@@ -140,7 +144,7 @@
   "profileEyebrowSettings": "Cài đặt",
   "profileSettingReminder": "Nhắc nhở hằng ngày",
   "profileSettingLanguage": "Ngôn ngữ",
-  "profileSettingExport": "Xuất dữ liệu",
+  "profileSettingExport": "Xuất dữ liệu của tôi",
   "profileSettingLogout": "Đăng xuất",
   "profileLanguageValue": "Tiếng Việt",
 

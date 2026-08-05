@@ -150,7 +150,7 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
                   padding: EdgeInsets.symmetric(vertical: 6),
                   child: Text(
                     'Chưa cần bước nào',
-                    style: TextStyle(fontSize: 12, color: WrColors.muted),
+                    style: TextStyle(fontSize: 13.5, color: WrColors.muted),
                   ),
                 ),
               ),
@@ -168,7 +168,7 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
             const SizedBox(height: 16),
             Text(
               _error!,
-              style: const TextStyle(fontSize: 13, color: WrColors.coral),
+              style: const TextStyle(fontSize: 14.5, color: WrColors.coral),
             ),
           ],
         ],
@@ -218,7 +218,7 @@ class _ChoiceTile extends StatelessWidget {
               child: Text(
                 label,
                 style: TextStyle(
-                  fontSize: 13.5,
+                  fontSize: 15,
                   height: 1.45,
                   color: WrColors.navy,
                   fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
@@ -239,7 +239,7 @@ class _ChoiceTile extends StatelessWidget {
                 child: const Text(
                   'Gợi ý',
                   style: TextStyle(
-                    fontSize: 9,
+                    fontSize: 10.5,
                     fontWeight: FontWeight.w700,
                     color: WrColors.pillTealText,
                   ),

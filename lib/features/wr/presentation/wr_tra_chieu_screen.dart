@@ -60,7 +60,7 @@ class WrTraChieuScreen extends ConsumerWidget {
       children: [
         const Text(
           '$kTraChieuFormatLabel.',
-          style: TextStyle(fontSize: 14, color: WrColors.muted, height: 1.6),
+          style: TextStyle(fontSize: 15.5, color: WrColors.muted, height: 1.6),
         ),
         const SizedBox(height: 22),
 
@@ -85,7 +85,7 @@ class WrTraChieuScreen extends ConsumerWidget {
               Text(
                 kTraChieuWhy,
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 15.5,
                   color: WrColors.dark,
                   height: 1.75,
                 ),
@@ -139,7 +139,7 @@ class WrTraChieuScreen extends ConsumerWidget {
                       child: Text(
                         rule,
                         style: const TextStyle(
-                          fontSize: 14,
+                          fontSize: 15.5,
                           color: WrColors.dark,
                           height: 1.7,
                         ),
@@ -198,7 +198,7 @@ class _NextSessionCard extends StatelessWidget {
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 15.5,
                 height: 1.7,
                 color: WrColors.cream.withValues(alpha: 0.85),
               ),
@@ -232,7 +232,7 @@ class _NextSessionCard extends StatelessWidget {
               ),
               child: const Text(
                 'Xem chi tiết và đăng ký',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700),
               ),
             ),
           ),
@@ -258,7 +258,7 @@ class _NextSessionCard extends StatelessWidget {
                 ),
                 child: const Text(
                   'Nhắn Zalo để giữ một ghế',
-                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -281,7 +281,7 @@ class _DarkLine extends StatelessWidget {
       child: Text(
         text,
         style: TextStyle(
-          fontSize: 14,
+          fontSize: 15.5,
           height: 1.6,
           color: WrColors.cream.withValues(alpha: 0.85),
         ),
@@ -300,7 +300,7 @@ class _NoSessionCard extends StatelessWidget {
       child: Text(
         'Chưa có buổi nào được mở. Lịch Trà Chiều thường được công bố trước '
         'khoảng hai tuần.',
-        style: TextStyle(fontSize: 14, color: WrColors.muted, height: 1.7),
+        style: TextStyle(fontSize: 15.5, color: WrColors.muted, height: 1.7),
       ),
     );
   }
@@ -326,7 +326,7 @@ class WrTraChieuCalendarScreen extends ConsumerWidget {
           const Text(
             'Chưa có buổi nào được mở.',
             key: Key('wr_tra_chieu_calendar_empty'),
-            style: TextStyle(fontSize: 14, color: WrColors.muted, height: 1.7),
+            style: TextStyle(fontSize: 15.5, color: WrColors.muted, height: 1.7),
           )
         else
           for (final s in sessions) ...[
@@ -336,7 +336,7 @@ class WrTraChieuCalendarScreen extends ConsumerWidget {
         const SizedBox(height: 22),
         const Text(
           'Chủ đề đổi mỗi buổi. Định kỳ hai tuần một lần, chiều thứ Bảy.',
-          style: TextStyle(fontSize: 13, color: WrColors.muted, height: 1.7),
+          style: TextStyle(fontSize: 14.5, color: WrColors.muted, height: 1.7),
         ),
       ],
     );
@@ -379,7 +379,7 @@ class _SessionRow extends StatelessWidget {
             child: Text(
               traChieuWhenLabel(session),
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: 13.5,
                 fontWeight: FontWeight.w700,
                 color: WrColors.coral,
               ),
@@ -402,7 +402,7 @@ class _SessionRow extends StatelessWidget {
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                fontSize: 13,
+                fontSize: 14.5,
                 color: WrColors.muted,
                 height: 1.6,
               ),
@@ -433,7 +433,7 @@ class _SessionRow extends StatelessWidget {
               ),
               child: const Text(
                 'Xem chi tiết và đăng ký',
-                style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
+                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
               ),
             ),
           ),
@@ -466,7 +466,7 @@ class _MetaLine extends StatelessWidget {
             child: Text(
               text,
               style: const TextStyle(
-                fontSize: 13,
+                fontSize: 14.5,
                 color: WrColors.dark,
                 height: 1.5,
               ),

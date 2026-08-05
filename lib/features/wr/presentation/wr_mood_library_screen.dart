@@ -88,7 +88,7 @@ class WrMoodLibraryScreen extends ConsumerWidget {
                       child: Text(
                         moodLabel(mood),
                         style: const TextStyle(
-                          fontSize: 13,
+                          fontSize: 14.5,
                           fontWeight: FontWeight.w700,
                           color: WrColors.navy,
                         ),
@@ -127,8 +127,9 @@ class WrMoodContentRow extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: WrColors.cream,
+                color: WrColors.white,
                 borderRadius: BorderRadius.circular(11),
+                border: Border.all(color: WrColors.line),
               ),
               child: Icon(
                 item.type == MoodContentType.audio
@@ -149,7 +150,7 @@ class WrMoodContentRow extends StatelessWidget {
                         child: Text(
                           item.title,
                           style: const TextStyle(
-                            fontSize: 13.5,
+                            fontSize: 15,
                             fontWeight: FontWeight.w600,
                             color: WrColors.navy,
                           ),
@@ -165,7 +166,7 @@ class WrMoodContentRow extends StatelessWidget {
                   Text(
                     '${item.kind} · ${item.duration}',
                     style: const TextStyle(
-                      fontSize: 11,
+                      fontSize: 12.5,
                       color: WrColors.muted,
                     ),
                   ),
@@ -198,7 +199,7 @@ class WrDraftBadge extends StatelessWidget {
       child: const Text(
         'Nháp',
         style: TextStyle(
-          fontSize: 9,
+          fontSize: 10.5,
           fontWeight: FontWeight.w700,
           color: WrColors.navy,
         ),
@@ -219,7 +220,7 @@ class _LibraryEmpty extends StatelessWidget {
         child: Text(
           'Chưa có nội dung nào trong thư viện.',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 13.5, color: WrColors.muted),
+          style: TextStyle(fontSize: 15, color: WrColors.muted),
         ),
       ),
     );

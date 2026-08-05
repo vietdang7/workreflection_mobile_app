@@ -278,7 +278,7 @@ class _SubtitleOverlay extends StatelessWidget {
       child: Text(
         text,
         textAlign: TextAlign.center,
-        style: const TextStyle(color: Colors.white, fontSize: 15, height: 1.3),
+        style: const TextStyle(color: Colors.white, fontSize: 16.5, height: 1.3),
       ),
     );
   }

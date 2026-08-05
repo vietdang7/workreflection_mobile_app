@@ -29,6 +29,10 @@
 
   "authLoginTitle": "Welcome back",
   "authRegisterTitle": "Create account",
+  "authLoginSubtitle": "Log in to continue your journey",
+  "authRegisterSubtitle": "A few short steps to start with WorkReflection",
+  "authPasswordShow": "Show password",
+  "authPasswordHide": "Hide password",
   "authEmailLabel": "Email",
   "authPasswordLabel": "Password",
   "authNameLabel": "Your name",
@@ -139,7 +143,7 @@
   "profileEyebrowSettings": "Settings",
   "profileSettingReminder": "Daily reminder",
   "profileSettingLanguage": "Language",
-  "profileSettingExport": "Export data",
+  "profileSettingExport": "Export my data",
   "profileSettingLogout": "Log out",
   "profileLanguageValue": "English",
 

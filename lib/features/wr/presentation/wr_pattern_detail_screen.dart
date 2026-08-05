@@ -98,7 +98,7 @@ class WrPatternDetailScreen extends ConsumerWidget {
                 _ => 'Bạn đã ghi lại điều này $count lần.',
               },
               style: const TextStyle(
-                fontSize: 15,
+                fontSize: 16.5,
                 color: WrColors.muted,
                 height: 1.6,
               ),
@@ -115,7 +115,7 @@ class WrPatternDetailScreen extends ConsumerWidget {
               const Text(
                 'Chưa có lần nhìn lại nào gắn với điều này.',
                 style: TextStyle(
-                  fontSize: 14,
+                  fontSize: 15.5,
                   color: WrColors.muted,
                   height: 1.6,
                 ),
@@ -135,7 +135,7 @@ class WrPatternDetailScreen extends ConsumerWidget {
                             child: Text(
                               e.humanMoment.label,
                               style: const TextStyle(
-                                fontSize: 15,
+                                fontSize: 16.5,
                                 color: WrColors.navy,
                                 height: 1.4,
                               ),
@@ -146,7 +146,7 @@ class WrPatternDetailScreen extends ConsumerWidget {
                             Text(
                               day,
                               style: const TextStyle(
-                                fontSize: 13,
+                                fontSize: 14.5,
                                 color: WrColors.text3,
                               ),
                             ),
@@ -169,7 +169,7 @@ class WrPatternDetailScreen extends ConsumerWidget {
                 'dữ liệu đọc ra điều đứng sau.',
                 key: const Key('wr_pattern_not_enough_data'),
                 style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 15.5,
                   color: WrColors.muted,
                   height: 1.6,
                 ),

@@ -48,4 +48,85 @@ void main() {
       expect(edited.isPublishable, isTrue);
     });
   });
+
+  group('MoodContent.releasable — mục audio chưa có bản thu', () {
+    final reading = fakeMoodContent(
+      id: 'reading',
+      mood: Mood.okay,
+      sortOrder: 1,
+      placeholder: false,
+    );
+    final silentAudio = fakeMoodContent(
+      id: 'silent',
+      mood: Mood.okay,
+      sortOrder: 6,
+      type: MoodContentType.audio,
+      placeholder: true,
+    );
+    final recordedAudio = fakeMoodContent(
+      id: 'recorded',
+      mood: Mood.okay,
+      sortOrder: 7,
+      type: MoodContentType.audio,
+      placeholder: false,
+      audioUrl: 'https://cdn.example/mot-khoang-lang.mp3',
+    );
+
+    test('bản debug cũng ẩn mục audio chưa có bản thu', () {
+      // Khác với nội dung nháp: mục nháp còn chữ để đọc thử, còn mục audio
+      // không có bản thu thì mở ra chỉ có một khối trình phát rỗng.
+      final result = MoodContent.releasable(
+        [reading, silentAudio],
+        isRelease: false,
+      );
+
+      expect(result.map((c) => c.id), ['reading']);
+    });
+
+    test('bản release cũng vậy', () {
+      final result = MoodContent.releasable(
+        [reading, silentAudio],
+        isRelease: true,
+      );
+
+      expect(result.map((c) => c.id), ['reading']);
+    });
+
+    test('có bản thu rồi thì mục audio hiện lại, không cần sửa code', () {
+      final result = MoodContent.releasable(
+        [reading, silentAudio, recordedAudio],
+        isRelease: true,
+      );
+
+      expect(result.map((c) => c.id), ['reading', 'recorded']);
+    });
+
+    test('audio_url rỗng hoặc toàn khoảng trắng vẫn tính là chưa có bản thu',
+        () {
+      final blank = fakeMoodContent(
+        id: 'blank',
+        mood: Mood.okay,
+        sortOrder: 8,
+        type: MoodContentType.audio,
+        placeholder: false,
+        audioUrl: '   ',
+      );
+
+      expect(blank.isUsable, isFalse);
+      expect(MoodContent.releasable([blank], isRelease: false), isEmpty);
+    });
+
+    test('bài đọc không bị ràng buộc bản thu', () {
+      expect(reading.isUsable, isTrue);
+      expect(draftReading.isUsable, isTrue);
+    });
+  });
 }
+
+/// Bài đọc còn nháp — vẫn có toàn văn nên vẫn dùng được.
+final draftReading = fakeMoodContent(
+  id: 'draft_reading',
+  mood: Mood.stressed,
+  sortOrder: 1,
+  placeholder: true,
+);

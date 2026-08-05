@@ -401,6 +401,7 @@ class PracticeTheme {
     required this.title,
     this.scaDimension,
     this.description,
+    this.formedLine,
     this.createdAt,
     this.retiredAt,
   });
@@ -408,7 +409,16 @@ class PracticeTheme {
   final String themeId;
   final String title;
   final ScaDimension? scaDimension;
+
+  /// Mô tả mở đầu — hiện ngay dưới tên chủ đề, trước ba bước (bảng A.2).
   final String? description;
+
+  /// Câu hiện ở màn ăn mừng khi chủ đề này chạm ngưỡng (bảng A.2).
+  ///
+  /// Viết ở thì hiện tại, ngắn, không lặp lại chữ "kỹ năng" hay "ngưỡng" — chỉ
+  /// nói về điều đã đổi. Null thì màn ăn mừng dùng câu chung.
+  final String? formedLine;
+
   final DateTime? createdAt;
 
   /// Khác null = chủ đề ngưng đề xuất cho người mới.
@@ -428,6 +438,7 @@ class PracticeTheme {
       title: json['title'] as String,
       scaDimension: rawDim != null ? ScaDimension.fromDb(rawDim) : null,
       description: json['description'] as String?,
+      formedLine: json['formed_line'] as String?,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,

@@ -94,7 +94,7 @@ class _StoryQuoteBlock extends ConsumerWidget {
             Text(
               l10n.journeyCaption(now.month, now.year),
               style: WrTextStyles.body.copyWith(
-                fontSize: 12,
+                fontSize: 13.5,
                 color: WrColors.muted,
               ),
             ),
@@ -245,7 +245,7 @@ class _TimelineItem extends StatelessWidget {
                 Text(
                   dateStr,
                   style: WrTextStyles.body.copyWith(
-                    fontSize: 12,
+                    fontSize: 13.5,
                     color: WrColors.muted,
                   ),
                 ),
@@ -259,7 +259,7 @@ class _TimelineItem extends StatelessWidget {
                 Text(
                   typeLabel,
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 12.5,
                     fontWeight: FontWeight.w700,
                     color: dotColor,
                     letterSpacing: 0.03 * 11,

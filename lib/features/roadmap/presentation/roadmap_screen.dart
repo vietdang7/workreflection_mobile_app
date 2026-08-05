@@ -512,7 +512,7 @@ class _ReportPickerRow extends ConsumerWidget {
                   Expanded(
                     child: Text(
                       _reportLabel(selectedReport),
-                      style: WrTextStyles.hMedium.copyWith(fontSize: 14),
+                      style: WrTextStyles.hMedium.copyWith(fontSize: 15.5),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -563,7 +563,7 @@ class _ReportPickerRow extends ConsumerWidget {
                   title: Text(
                     _reportLabel(r),
                     style: WrTextStyles.hMedium.copyWith(
-                      fontSize: 14,
+                      fontSize: 15.5,
                       color:
                           isSelected ? WrColors.coral : null,
                     ),
@@ -715,7 +715,7 @@ class _ProgressBar extends StatelessWidget {
             Text(l10n.roadmapProgressLabel, style: WrTextStyles.hMedium),
             Text(
               '$completed/$total ($pct%)',
-              style: WrTextStyles.body.copyWith(fontSize: 13),
+              style: WrTextStyles.body.copyWith(fontSize: 14.5),
             ),
           ],
         ),
@@ -785,7 +785,7 @@ class _LayerSection extends ConsumerWidget {
                 style: const TextStyle(
                   color: WrColors.white,
                   fontWeight: FontWeight.w700,
-                  fontSize: 13,
+                  fontSize: 14.5,
                   letterSpacing: 0.04 * 13,
                 ),
               ),
@@ -795,7 +795,7 @@ class _LayerSection extends ConsumerWidget {
                   '${focus!.label} · ${focus!.score.toStringAsFixed(1)}',
                   style: const TextStyle(
                     color: Colors.white70,
-                    fontSize: 12,
+                    fontSize: 13.5,
                   ),
                 ),
               ],
@@ -820,7 +820,7 @@ class _LayerSection extends ConsumerWidget {
                 child: Text(
                   '${focus!.score.toStringAsFixed(1)} · ${_scoreLabel(focus!.score, l10n)}',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 13.5,
                     fontWeight: FontWeight.w600,
                     color: _scoreColor(focus!.score),
                   ),
@@ -926,7 +926,7 @@ class _DayCell extends ConsumerWidget {
           Text(
             _dayHeader(day, l10n).toUpperCase(),
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 12.5,
               fontWeight: FontWeight.w700,
               color: WrColors.muted,
               letterSpacing: 0.04 * 11,
@@ -1093,7 +1093,7 @@ class _ActionRow extends StatelessWidget {
                   child: Text(
                     action.titleVi,
                     style: WrTextStyles.hMedium.copyWith(
-                      fontSize: 13,
+                      fontSize: 14.5,
                       decoration: isCompleted
                           ? TextDecoration.lineThrough
                           : null,
@@ -1106,7 +1106,7 @@ class _ActionRow extends StatelessWidget {
                   Text(
                     action.descriptionVi,
                     style: WrTextStyles.body.copyWith(
-                      fontSize: 12,
+                      fontSize: 13.5,
                       color: WrColors.muted,
                     ),
                   ),
@@ -1169,7 +1169,7 @@ class _CustomTaskRow extends StatelessWidget {
                         child: Text(
                           task.title,
                           style: WrTextStyles.body.copyWith(
-                            fontSize: 13,
+                            fontSize: 14.5,
                             decoration: isCompleted
                                 ? TextDecoration.lineThrough
                                 : null,
@@ -1190,7 +1190,7 @@ class _CustomTaskRow extends StatelessWidget {
                       Text(
                         task.dueDate!,
                         style: WrTextStyles.body.copyWith(
-                            fontSize: 11, color: WrColors.text3),
+                            fontSize: 12.5, color: WrColors.text3),
                       ),
                     ],
                   ),
@@ -1201,7 +1201,7 @@ class _CustomTaskRow extends StatelessWidget {
                   Text(
                     task.description!,
                     style: WrTextStyles.body.copyWith(
-                        fontSize: 12, color: WrColors.muted),
+                        fontSize: 13.5, color: WrColors.muted),
                   ),
                 ],
               ],
@@ -1261,7 +1261,7 @@ class _AddTaskButton extends ConsumerWidget {
             child: Text(
               l10n.roadmapAddCustomTask,
               style: WrTextStyles.body.copyWith(
-                  fontSize: 12, color: WrColors.muted),
+                  fontSize: 13.5, color: WrColors.muted),
             ),
           ),
         ],
@@ -1369,7 +1369,7 @@ class _CustomTaskDialogState extends State<_CustomTaskDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(l10n.roadmapTaskTitleLabel,
-                style: WrTextStyles.body.copyWith(fontSize: 12)),
+                style: WrTextStyles.body.copyWith(fontSize: 13.5)),
             const SizedBox(height: 4),
             TextField(
               key: const Key('roadmap_task_title_field'),
@@ -1385,7 +1385,7 @@ class _CustomTaskDialogState extends State<_CustomTaskDialog> {
             ),
             const SizedBox(height: 12),
             Text(l10n.roadmapTaskDescLabel,
-                style: WrTextStyles.body.copyWith(fontSize: 12)),
+                style: WrTextStyles.body.copyWith(fontSize: 13.5)),
             const SizedBox(height: 4),
             TextField(
               key: const Key('roadmap_task_desc_field'),
@@ -1402,7 +1402,7 @@ class _CustomTaskDialogState extends State<_CustomTaskDialog> {
             ),
             const SizedBox(height: 12),
             Text(l10n.roadmapTaskDueDateLabel,
-                style: WrTextStyles.body.copyWith(fontSize: 12)),
+                style: WrTextStyles.body.copyWith(fontSize: 13.5)),
             const SizedBox(height: 4),
             TextField(
               key: const Key('roadmap_task_due_field'),
@@ -1568,11 +1568,11 @@ class _CoachAccessTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(entry.coachName ?? 'Coach',
-                    style: WrTextStyles.hMedium.copyWith(fontSize: 13)),
+                    style: WrTextStyles.hMedium.copyWith(fontSize: 14.5)),
                 if (entry.coachTitle != null)
                   Text(entry.coachTitle!,
                       style: WrTextStyles.body
-                          .copyWith(fontSize: 12, color: WrColors.muted)),
+                          .copyWith(fontSize: 13.5, color: WrColors.muted)),
               ],
             ),
           ),
@@ -1585,7 +1585,7 @@ class _CoachAccessTile extends StatelessWidget {
             child: Text(
               _statusLabel(l10n),
               style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 13.5,
                   fontWeight: FontWeight.w600,
                   color: _statusColor()),
             ),
@@ -1645,11 +1645,11 @@ class _InviteCoachDialog extends ConsumerWidget {
                     ),
                   ),
                   title: Text(coach.fullName,
-                      style: WrTextStyles.hMedium.copyWith(fontSize: 14)),
+                      style: WrTextStyles.hMedium.copyWith(fontSize: 15.5)),
                   subtitle: coach.title != null
                       ? Text(coach.title!,
                           style: WrTextStyles.body
-                              .copyWith(fontSize: 12))
+                              .copyWith(fontSize: 13.5))
                       : null,
                   onTap: () => onInvite(coach.id),
                 );
@@ -1769,7 +1769,7 @@ class _ActivityEntryTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(entry.content,
-                    style: WrTextStyles.body.copyWith(fontSize: 13)),
+                    style: WrTextStyles.body.copyWith(fontSize: 14.5)),
                 const SizedBox(height: 2),
                 Row(
                   children: [
@@ -1783,7 +1783,7 @@ class _ActivityEntryTile extends StatelessWidget {
                       child: Text(
                         entry.layer,
                         style: TextStyle(
-                            fontSize: 10,
+                            fontSize: 11.5,
                             fontWeight: FontWeight.w700,
                             color: color),
                       ),
@@ -1793,7 +1793,7 @@ class _ActivityEntryTile extends StatelessWidget {
                       Text(
                         entry.date!.substring(0, 10),
                         style: WrTextStyles.body
-                            .copyWith(fontSize: 11, color: WrColors.text3),
+                            .copyWith(fontSize: 12.5, color: WrColors.text3),
                       ),
                     ],
                   ],

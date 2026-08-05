@@ -172,7 +172,7 @@ class CertificatePdfBuilder {
                 'Cloud & Coral',
                 style: pw.TextStyle(
                   font: bold,
-                  fontSize: 14,
+                  fontSize: 15.5,
                   color: _navy,
                   letterSpacing: 2,
                 ),
@@ -196,7 +196,7 @@ class CertificatePdfBuilder {
                     'Chứng nhận tham dự',
                     style: pw.TextStyle(
                       font: regular,
-                      fontSize: 12,
+                      fontSize: 13.5,
                       color: _muted,
                     ),
                     textAlign: pw.TextAlign.center,
@@ -208,7 +208,7 @@ class CertificatePdfBuilder {
               pw.Text(
                 certifiesLine,
                 style: pw.TextStyle(
-                    font: regular, fontSize: 10, color: _muted),
+                    font: regular, fontSize: 11.5, color: _muted),
                 textAlign: pw.TextAlign.center,
               ),
 
@@ -237,7 +237,7 @@ class CertificatePdfBuilder {
               pw.Text(
                 attendedLine,
                 style: pw.TextStyle(
-                    font: regular, fontSize: 10, color: _muted),
+                    font: regular, fontSize: 11.5, color: _muted),
                 textAlign: pw.TextAlign.center,
               ),
 
@@ -259,7 +259,7 @@ class CertificatePdfBuilder {
                   pw.Text(
                     dateStr,
                     style: pw.TextStyle(
-                        font: regular, fontSize: 10, color: _muted),
+                        font: regular, fontSize: 11.5, color: _muted),
                     textAlign: pw.TextAlign.center,
                   ),
                   if (d.workshopLocation != null) ...[
@@ -267,7 +267,7 @@ class CertificatePdfBuilder {
                     pw.Text(
                       d.workshopLocation!,
                       style: pw.TextStyle(
-                          font: regular, fontSize: 10, color: _muted),
+                          font: regular, fontSize: 11.5, color: _muted),
                       textAlign: pw.TextAlign.center,
                     ),
                   ],
@@ -287,7 +287,7 @@ class CertificatePdfBuilder {
               pw.Text(
                 '$footerText\n$issuedLabel: $issueDateStr',
                 style: pw.TextStyle(
-                    font: regular, fontSize: 7.5, color: _muted),
+                    font: regular, fontSize: 9, color: _muted),
                 textAlign: pw.TextAlign.center,
               ),
             ],
@@ -305,7 +305,7 @@ class CertificatePdfBuilder {
         pw.SizedBox(height: 4),
         pw.Text(
           label,
-          style: pw.TextStyle(font: regular, fontSize: 9, color: _textDark),
+          style: pw.TextStyle(font: regular, fontSize: 10.5, color: _textDark),
         ),
       ],
     );

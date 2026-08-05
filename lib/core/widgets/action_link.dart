@@ -13,17 +13,25 @@ class WrActionLink extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // `behavior: opaque` không phải trang trí. Row này là `mainAxisSize.min`,
+    // nên khi widget được đặt ở chỗ chiếm trọn bề ngang (trong Column chẳng
+    // hạn), phần trống bên phải chữ vẫn thuộc vùng của GestureDetector nhưng
+    // KHÔNG có gì để bắt chạm — nhìn thì như bấm được, chạm vào lại không ăn.
+    // Chỉ lộ ra lúc viết widget test bấm vào tâm dòng.
     return GestureDetector(
       onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: WrColors.coral,
+          Flexible(
+            child: Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14.5,
+                fontWeight: FontWeight.w600,
+                color: WrColors.coral,
+              ),
             ),
           ),
           const SizedBox(width: 4),

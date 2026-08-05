@@ -38,6 +38,9 @@ Future<void> logPracticeMaintained({
         userId: userId,
         behavior: kPracticeMaintainedBehavior,
         scaDimension: theme.scaDimension,
+        // `themeId` là thứ bộ đếm đọc; `reflectionText` chỉ còn để hiện chữ ở
+        // tab Hành trình (Phần C mục 1).
+        themeId: theme.themeId,
         reflectionText: '${theme.title} · Duy trì',
       ),
     );
@@ -81,6 +84,7 @@ Future<void> recordSkillMilestones({
         threshold: threshold,
       ),
       events: events,
+      themes: [theme],
     );
 
     for (final skill in justFormed) {
@@ -90,6 +94,7 @@ Future<void> recordSkillMilestones({
           userId: userId,
           behavior: kSkillFormedBehavior,
           scaDimension: skill.scaDimension,
+          themeId: skill.themeId,
           reflectionText: skill.title,
         ),
       );
@@ -150,12 +155,12 @@ Future<void> showSkillFormedCelebration(
             ),
             const SizedBox(height: 22),
             const Text(
-              'MỘT KỸ NĂNG VỪA HÌNH THÀNH',
+              'MỘT KỸ NĂNG CỦA BẠN',
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 12.5,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 1.2,
-                color: WrColors.teal,
+                color: WrColors.navy,
               ),
             ),
             const SizedBox(height: 10),
@@ -171,11 +176,25 @@ Future<void> showSkillFormedCelebration(
               ),
             ),
             const SizedBox(height: 12),
+            // Câu riêng của chủ đề (bảng A.2) thay cho câu chung chung. Chủ đề
+            // chưa có câu riêng — ba chủ đề đời đầu, hoặc migration nội dung
+            // chưa chạy — thì lùi về đúng câu chốt ở mục A.1.
+            Text(
+              skill.formedLine ?? '"${skill.title}" giờ là một kỹ năng của bạn.',
+              key: const Key('wr_skill_formed_line'),
+              style: const TextStyle(
+                fontSize: 16.5,
+                fontWeight: FontWeight.w700,
+                color: WrColors.navy,
+                height: 1.55,
+              ),
+            ),
+            const SizedBox(height: 10),
             Text(
               'Bạn đã thực hành điều này ${skill.practiceCount} lần. '
               'Nó không còn là một việc bạn phải nhớ để làm nữa.',
               style: const TextStyle(
-                fontSize: 14,
+                fontSize: 15.5,
                 color: WrColors.muted,
                 height: 1.65,
               ),
@@ -184,7 +203,7 @@ Future<void> showSkillFormedCelebration(
             const Text(
               'Dấu mốc này đã được ghi vào hành trình của bạn.',
               style: TextStyle(
-                fontSize: 12.5,
+                fontSize: 14,
                 color: WrColors.muted,
                 height: 1.6,
                 fontStyle: FontStyle.italic,
@@ -207,7 +226,7 @@ Future<void> showSkillFormedCelebration(
                 ),
                 child: const Text(
                   'Ghi nhận điều này',
-                  style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 ),
               ),
             ),
@@ -247,7 +266,7 @@ class WrMaintainPracticeAction extends ConsumerWidget {
           const Expanded(
             child: Text(
               'Đã ghi nhận hôm nay. Hẹn bạn lần thực hành sau.',
-              style: TextStyle(fontSize: 13, color: WrColors.muted, height: 1.5),
+              style: TextStyle(fontSize: 14.5, color: WrColors.muted, height: 1.5),
             ),
           ),
         ],
@@ -276,7 +295,7 @@ class WrMaintainPracticeAction extends ConsumerWidget {
         ),
         child: const Text(
           'Tôi vừa thực hành điều này hôm nay',
-          style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700),
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),
     );

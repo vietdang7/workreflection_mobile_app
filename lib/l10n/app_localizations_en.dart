@@ -86,6 +86,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authRegisterTitle => 'Create account';
 
   @override
+  String get authLoginSubtitle => 'Log in to continue your journey';
+
+  @override
+  String get authRegisterSubtitle =>
+      'A few short steps to start with WorkReflection';
+
+  @override
+  String get authPasswordShow => 'Show password';
+
+  @override
+  String get authPasswordHide => 'Hide password';
+
+  @override
   String get authEmailLabel => 'Email';
 
   @override
@@ -304,7 +317,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileSettingLanguage => 'Language';
 
   @override
-  String get profileSettingExport => 'Export data';
+  String get profileSettingExport => 'Export my data';
 
   @override
   String get profileSettingLogout => 'Log out';

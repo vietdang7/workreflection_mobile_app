@@ -199,7 +199,102 @@ void main() {
       expect(find.byKey(const Key('wr_discover_need_reading')), findsNothing);
     });
 
-    testWidgets('premium đọc đủ ba lớp, không lộ mã hay chữ SCA',
+    testWidgets('premium đọc MỘT câu lấy từ tình huống thật, bỏ ba khối cũ',
+        (tester) async {
+      final intel = FakeWrIntelligenceRepository()
+        ..seedEntitlement(
+          WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
+        );
+      final content = FakeWrContentRepository()
+        ..seedSituations([
+          const WrSituation(
+            code: 'sit-01',
+            text: 'Không được lắng nghe trong họp',
+            scaDimension: ScaDimension.c1,
+            wave: 1,
+            humanNeed: HumanNeed.ketNoi,
+            expectedOutcome: 'Tôi muốn nói ra mà vẫn thấy an toàn',
+          ),
+        ]);
+      final episodes = FakeWrEpisodeRepository()
+        ..seed(_episodes({'sit-01': 3}));
+
+      await _pump(
+        tester,
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: intel,
+          content: content,
+          episodes: episodes,
+        ),
+      );
+
+      expect(find.byKey(const Key('wr_discover_need_lock')), findsNothing);
+      expect(find.byKey(const Key('wr_discover_need_reading')), findsOneWidget);
+
+      // Câu hiện lên là nội dung của CHÍNH tình huống đang lặp, không phải câu
+      // định nghĩa nhu cầu gán cứng theo HumanNeed.
+      expect(
+        find.text('"Tôi muốn nói ra mà vẫn thấy an toàn"'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('"Được lắng nghe và thể hiện quan điểm."'),
+        findsNothing,
+      );
+
+      // Ba khối diễn giải gán cứng đã bỏ.
+      expect(find.text('MONG ĐỢI KẾT QUẢ'), findsNothing);
+      expect(find.text('NHU CẦU CỐT LÕI'), findsNothing);
+      expect(find.textContaining('GÓC NHÌN'), findsNothing);
+
+      expect(find.textContaining('SCA'), findsNothing);
+      expect(find.textContaining('sit-01'), findsNothing);
+    });
+
+    testWidgets('không có expected_outcome thì lấy aha_message của story',
+        (tester) async {
+      final intel = FakeWrIntelligenceRepository()
+        ..seedEntitlement(
+          WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
+        );
+      // Đúng hình dạng 100 chip đang chạy: chip lấy từ Career Situation
+      // Library không có expected_outcome, nội dung nằm ở story trùng mã.
+      final content = FakeWrContentRepository()
+        ..seedSituations([_sit])
+        ..seedStories([
+          const WrStory(
+            storyId: 'sit-01',
+            title: 'Không được lắng nghe trong họp',
+            scaDimension: ScaDimension.c1,
+            storyContent: 'nội dung',
+            emotionTags: [],
+            behaviorTags: [],
+            careerStages: [],
+            ahaMessage: 'Im lặng không phải vì bạn\nkhông có gì để nói.',
+          ),
+        ]);
+      final episodes = FakeWrEpisodeRepository()
+        ..seed(_episodes({'sit-01': 3}));
+
+      await _pump(
+        tester,
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: intel,
+          content: content,
+          episodes: episodes,
+        ),
+      );
+
+      // Xuống dòng của DB được gộp lại — câu này hiện canh giữa một dòng lớn.
+      expect(
+        find.text('"Im lặng không phải vì bạn không có gì để nói."'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('không có nội dung nào thì vẫn còn câu định nghĩa nhu cầu',
         (tester) async {
       final intel = FakeWrIntelligenceRepository()
         ..seedEntitlement(
@@ -219,18 +314,10 @@ void main() {
         ),
       );
 
-      expect(find.byKey(const Key('wr_discover_need_lock')), findsNothing);
-      expect(find.byKey(const Key('wr_discover_need_reading')), findsOneWidget);
-      expect(find.text('MONG ĐỢI KẾT QUẢ'), findsOneWidget);
-      expect(find.text('NHU CẦU CỐT LÕI'), findsOneWidget);
-      // Trụ được gọi bằng tên đời thường, không phải chữ cái.
-      expect(find.text('GÓC NHÌN · MỐI QUAN HỆ'), findsOneWidget);
       expect(
-        find.textContaining('chưa chắc nói ra thì có an toàn'),
+        find.text('"Được lắng nghe và thể hiện quan điểm."'),
         findsOneWidget,
       );
-      expect(find.textContaining('SCA'), findsNothing);
-      expect(find.textContaining('sit-01'), findsNothing);
     });
 
     testWidgets('đếm số lần đã nhìn lại từ lịch sử Episode', (tester) async {

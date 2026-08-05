@@ -317,9 +317,12 @@ void main() {
       expect(find.byKey(const Key('wr_skill_forming_t3')), findsOneWidget);
     });
 
-    testWidgets('chưa đủ ngưỡng → chưa chứng nhận, nêu còn bao nhiêu lần', (
+    testWidgets('chưa xong ba bước làm quen thì KHÔNG hiện bộ đếm 5 lần', (
       tester,
     ) async {
+      // Ma trận Cấp bậc v1.0, Phần C mục 2: hai câu "còn N lần thực hành" và
+      // "đi hết ba bước làm quen trước đã" phủ định nhau. Chưa khép giai đoạn
+      // làm quen thì bộ đếm chưa phải chuyện của người dùng.
       final intel = FakeWrIntelligenceRepository()
         ..seedPracticeThemes([_theme('t1', 'Lên tiếng trong họp')])
         ..seedEnrollments([_enrollment('t1')]);
@@ -339,8 +342,10 @@ void main() {
 
       expect(find.byKey(const Key('wr_skill_t1')), findsNothing);
       expect(find.text('ĐANG HÌNH THÀNH'), findsOneWidget);
+      expect(find.byKey(const Key('wr_skill_progress_t1')), findsNothing);
+      expect(find.textContaining('lần thực hành'), findsNothing);
       expect(
-        find.textContaining('1/5 lần thực hành · còn 4 lần nữa'),
+        find.text('Đi hết ba bước làm quen của chủ đề này trước đã.'),
         findsOneWidget,
       );
     });

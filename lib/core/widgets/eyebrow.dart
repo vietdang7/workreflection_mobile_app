@@ -17,7 +17,7 @@ class WrEyebrow extends StatelessWidget {
       textAlign: center ? TextAlign.center : null,
       // `.eyebrow` của mockup: 10px / 700 / letter-spacing .08em / --text-3.
       style: TextStyle(
-        fontSize: 10,
+        fontSize: 11.5,
         fontWeight: FontWeight.w700,
         letterSpacing: 0.8,
         color: color ?? WrColors.text3,

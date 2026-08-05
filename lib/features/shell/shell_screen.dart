@@ -61,8 +61,15 @@ class ShellScreen extends StatelessWidget {
 // sẽ bị thanh tab đẩy lên và đổi chỗ theo bàn phím, còn đây phải luôn ở đúng
 // một chỗ trên cả bốn tab.
 //
-// Cố tình nhỏ và không có nhãn chữ: đây là lối vào phụ, không được cạnh tranh
-// với hành động chính của từng tab.
+// Cố tình nhỏ và không có nhãn chữ. Trước 2026-08-05 bong bóng còn là nền navy
+// vì được xem là lối vào phụ; khách chốt đổi sang Human Coral để trợ lý phản
+// chiếu nổi lên như một lối vào chính.
+//
+// ⚠ Chữ và icon trên nền Coral phải là NAVY, không phải trắng hay cream. Đặc tả
+//   UX/UI §01 và §03 nói thẳng: "Chữ trên nút này là Navy, không phải trắng" và
+//   gọi trắng-trên-coral là "lỗi dễ mắc nhất vì trực giác thường mặc định nút
+//   màu là chữ trắng" — nó biến nút ấm của thương hiệu thành một nút cảnh báo
+//   kiểu hệ thống.
 // ---------------------------------------------------------------------------
 
 class WrAskBubble extends StatelessWidget {
@@ -81,11 +88,13 @@ class WrAskBubble extends StatelessWidget {
           width: 52,
           height: 52,
           decoration: BoxDecoration(
-            color: WrColors.navy,
+            color: WrColors.coral,
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: WrColors.navy.withValues(alpha: 0.28),
+                // Bóng đổ theo đúng màu nền bong bóng. Giữ bóng navy dưới một
+                // khối coral sẽ ra một quầng tím bẩn ở rìa.
+                color: WrColors.coral.withValues(alpha: 0.28),
                 blurRadius: 16,
                 offset: const Offset(0, 6),
               ),
@@ -94,7 +103,7 @@ class WrAskBubble extends StatelessWidget {
           child: const Icon(
             Icons.chat_bubble_outline_rounded,
             size: 22,
-            color: WrColors.cream,
+            color: WrColors.navy,
           ),
         ),
       ),
@@ -204,7 +213,7 @@ class WrTabItem extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: TextStyle(
-                fontSize: 9,
+                fontSize: 10.5,
                 fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
                 letterSpacing: 0.09,
                 color: color,

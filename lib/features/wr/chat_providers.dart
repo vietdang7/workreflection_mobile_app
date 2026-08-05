@@ -3,6 +3,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/data/wr_chat_repository.dart';
+import '../../core/logic/wr_chat_starters.dart';
+import '../../core/logic/wr_repeated_situations.dart';
 import '../../core/models/wr_chat.dart';
 import 'wr_providers.dart';
 
@@ -278,4 +280,25 @@ final wrConversationsProvider =
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return const [];
   return ref.watch(wrChatRepositoryProvider).fetchConversations(userId);
+});
+
+/// Gợi ý mở lời cho màn trò chuyện trống.
+///
+/// Dựng từ chính những tình huống người dùng hay chọn khi nhìn lại, thay cho
+/// danh sách gán cứng trước đây. Xem `wr_chat_starters.dart` để biết vì sao.
+///
+/// Đọc hai nguồn đã có sẵn trong app, KHÔNG thêm truy vấn mới:
+///   • [wrEpisodeHistoryProvider] — chính là recentSituationIds (v2.0 §4.3).
+///   • [wrSituationsProvider] — bảng tra mã sang tiêu đề tiếng Việt.
+///
+/// `valueOrNull ?? const []` chứ không `await`: màn chat phải mở được ngay cả
+/// khi hai nguồn kia còn đang tải hoặc đã hỏng. Thiếu dữ liệu thì
+/// [chatStarters] tự rơi về danh sách dự phòng, tức là vẫn có ba ô bấm được.
+final wrChatStartersProvider = Provider<List<String>>((ref) {
+  final episodes = ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
+  final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
+  return chatStarters(
+    recent: recentSituationIds(episodes),
+    situations: situations,
+  );
 });

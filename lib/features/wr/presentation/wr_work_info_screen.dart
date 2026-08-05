@@ -96,9 +96,9 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
               'Bạn đang làm công việc gì? Một dòng thôi cũng đủ để những gợi ý '
               'phát triển bám sát hơn vào việc thật của bạn.',
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 14.5,
                 height: 1.65,
-                color: Color(0xFF6B7280),
+                color: WrColors.muted,
               ),
             ),
             const SizedBox(height: 20),
@@ -108,8 +108,9 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
-                color: WrColors.cream,
+                color: WrColors.white,
                 borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: WrColors.line),
               ),
               child: TextField(
                 key: const Key('wr_work_info_field'),
@@ -117,7 +118,7 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
                 minLines: 3,
                 maxLines: 6,
                 style: const TextStyle(
-                  fontSize: 15,
+                  fontSize: 16.5,
                   color: WrColors.navy,
                   height: 1.6,
                 ),
@@ -126,7 +127,7 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
                   hintText:
                       'Ví dụ: trưởng nhóm nội dung, quản lý 4 bạn, làm việc '
                       'nhiều với phòng kinh doanh',
-                  hintStyle: TextStyle(fontSize: 14, color: WrColors.muted),
+                  hintStyle: TextStyle(fontSize: 15.5, color: WrColors.muted),
                 ),
                 onChanged: (_) => setState(() => _saved = false),
               ),
@@ -149,7 +150,7 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
                 child: Text(
                   _busy ? 'Đang lưu…' : 'Lưu',
                   style: const TextStyle(
-                    fontSize: 13,
+                    fontSize: 14.5,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -160,14 +161,14 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
               const Text(
                 'Đã lưu.',
                 key: Key('wr_work_info_saved'),
-                style: TextStyle(fontSize: 12, color: WrColors.teal),
+                style: TextStyle(fontSize: 13.5, color: WrColors.teal),
               ),
             ],
             if (_error != null) ...[
               const SizedBox(height: 10),
               Text(
                 _error!,
-                style: const TextStyle(fontSize: 12, color: WrColors.coral),
+                style: const TextStyle(fontSize: 13.5, color: WrColors.coral),
               ),
             ],
 
@@ -177,9 +178,9 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
             const Text(
               'Có JD hoặc CV thì tải lên để bối cảnh đầy đủ hơn. Tuỳ chọn.',
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 14.5,
                 height: 1.65,
-                color: Color(0xFF6B7280),
+                color: WrColors.muted,
               ),
             ),
             WrLinkRow(

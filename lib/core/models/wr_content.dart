@@ -251,6 +251,7 @@ class CareerMemoryEvent {
     this.intensity,
     this.reflectionText,
     this.careerStage,
+    this.themeId,
     this.createdAt,
   });
 
@@ -265,6 +266,15 @@ class CareerMemoryEvent {
   final int? intensity;
   final String? reflectionText;
   final String? careerStage;
+
+  /// Chủ đề thực hành sinh ra mảnh ký ức này.
+  ///
+  /// Null với mọi hàng ghi trước 05/08/2026 — lúc đó cột chưa tồn tại. Bộ đếm
+  /// thực hành phải chấp nhận cả hai: có `themeId` thì so theo nó (chính xác
+  /// tuyệt đối), không có thì lùi về so theo tên chủ đề như cũ để người dùng
+  /// không mất tiến độ đã tích luỹ.
+  final String? themeId;
+
   final DateTime? createdAt;
 
   factory CareerMemoryEvent.fromJson(Map<String, dynamic> json) {
@@ -282,6 +292,7 @@ class CareerMemoryEvent {
       intensity: json['intensity'] as int?,
       reflectionText: json['reflection_text'] as String?,
       careerStage: json['career_stage'] as String?,
+      themeId: json['theme_id'] as String?,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
@@ -301,5 +312,6 @@ class CareerMemoryEvent {
         if (intensity != null) 'intensity': intensity,
         if (reflectionText != null) 'reflection_text': reflectionText,
         if (careerStage != null) 'career_stage': careerStage,
+        if (themeId != null) 'theme_id': themeId,
       };
 }

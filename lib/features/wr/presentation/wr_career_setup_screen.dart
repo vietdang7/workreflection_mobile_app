@@ -163,7 +163,7 @@ class _WrCareerSetupScreenState extends ConsumerState<WrCareerSetupScreen> {
                   Text(
                     'THIẾT LẬP HỒ SƠ · ${_step + 1}/3',
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: 11.5,
                       fontWeight: FontWeight.w700,
                       letterSpacing: 0.8,
                       color: WrColors.white.withValues(alpha: 0.4),
@@ -183,7 +183,7 @@ class _WrCareerSetupScreenState extends ConsumerState<WrCareerSetupScreen> {
                   Text(
                     subtitle,
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 13.5,
                       height: 1.6,
                       color: WrColors.white.withValues(alpha: 0.45),
                     ),
@@ -193,7 +193,7 @@ class _WrCareerSetupScreenState extends ConsumerState<WrCareerSetupScreen> {
                     Text(
                       _errorMsg!,
                       style: const TextStyle(
-                        fontSize: 11,
+                        fontSize: 12.5,
                         color: WrColors.coral,
                       ),
                     ),
@@ -230,7 +230,7 @@ class _WrCareerSetupScreenState extends ConsumerState<WrCareerSetupScreen> {
                   child: Text(
                     _step < 2 ? 'Bỏ qua bước này' : 'Bỏ qua, vào app',
                     style: TextStyle(
-                      fontSize: 12,
+                      fontSize: 13.5,
                       color: WrColors.white.withValues(alpha: 0.35),
                     ),
                   ),
@@ -284,7 +284,7 @@ class _OptionTile extends StatelessWidget {
                 child: Text(
                   label,
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 15.5,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
                     color: selected
                         ? WrColors.white

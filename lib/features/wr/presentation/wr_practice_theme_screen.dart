@@ -47,7 +47,7 @@ class WrPracticeThemeScreen extends ConsumerWidget {
           Text(
             'Chủ đề này không còn nữa. Quay lại tab Phát triển để chọn chủ đề khác.',
             key: Key('wr_practice_theme_gone'),
-            style: TextStyle(fontSize: 15, color: WrColors.muted, height: 1.6),
+            style: TextStyle(fontSize: 16.5, color: WrColors.muted, height: 1.6),
           ),
         ],
       );
@@ -74,7 +74,7 @@ class WrPracticeThemeScreen extends ConsumerWidget {
           Text(
             theme.description!,
             style: const TextStyle(
-              fontSize: 14,
+              fontSize: 15.5,
               color: WrColors.muted,
               height: 1.6,
             ),
@@ -88,7 +88,7 @@ class WrPracticeThemeScreen extends ConsumerWidget {
               ? 'Chủ đề này chưa có bước nào.'
               : '$doneCount/${steps.length} bước hoàn thành',
           key: const Key('wr_practice_theme_progress'),
-          style: const TextStyle(fontSize: 13, color: WrColors.muted),
+          style: const TextStyle(fontSize: 14.5, color: WrColors.muted),
         ),
         const SizedBox(height: 24),
         for (int i = 0; i < steps.length; i++)
@@ -102,7 +102,11 @@ class WrPracticeThemeScreen extends ConsumerWidget {
             // theo thứ tự, không nhảy cóc.
             isNext: !completed.contains(steps[i].stepId) &&
                 completed.length == steps[i].stepOrder - 1,
-            canAct: enrollment != null && enrollment.completedAt == null,
+            // Không chặn theo `completedAt`: người dùng miễn phí khép giai đoạn
+            // làm quen ở bước 2 (bước 3 khoá). Nâng cấp lên Premium rồi thì
+            // bước "Chuyển hóa" phải bấm được, chứ không phải khoá vĩnh viễn
+            // chỉ vì hôm trước đã khép chủ đề. Thứ tự vẫn do `isNext` giữ.
+            canAct: enrollment != null,
             onDone: () => completePracticeStep(
               context: context,
               ref: ref,
@@ -150,7 +154,7 @@ class _MaintainBlock extends ConsumerWidget {
                 ? 'ĐÃ THÀNH KỸ NĂNG'
                 : 'GIAI ĐOẠN DUY TRÌ',
             style: const TextStyle(
-              fontSize: 10.5,
+              fontSize: 12,
               fontWeight: FontWeight.w700,
               letterSpacing: 1.1,
               color: WrColors.muted,
@@ -166,7 +170,7 @@ class _MaintainBlock extends ConsumerWidget {
                     'năng của bạn.',
             key: const Key('wr_practice_maintain_count'),
             style: const TextStyle(
-              fontSize: 13.5,
+              fontSize: 15,
               color: WrColors.navy,
               height: 1.6,
             ),
@@ -259,7 +263,7 @@ class _StepBlock extends StatelessWidget {
                   : Text(
                       '${index + 1}',
                       style: const TextStyle(
-                        fontSize: 12,
+                        fontSize: 13.5,
                         fontWeight: FontWeight.w700,
                         color: WrColors.navy,
                       ),
@@ -280,7 +284,7 @@ class _StepBlock extends StatelessWidget {
                         Text(
                           'Premium',
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 12.5,
                             fontWeight: FontWeight.w700,
                             letterSpacing: 0.5,
                             color: WrColors.amber,
@@ -294,7 +298,7 @@ class _StepBlock extends StatelessWidget {
                     Text(
                       tag,
                       style: const TextStyle(
-                        fontSize: 10,
+                        fontSize: 11.5,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.6,
                         color: WrColors.muted,
@@ -318,7 +322,7 @@ class _StepBlock extends StatelessWidget {
                     Text(
                       step.content!,
                       style: const TextStyle(
-                        fontSize: 13.5,
+                        fontSize: 15,
                         color: WrColors.muted,
                         height: 1.6,
                       ),
@@ -343,7 +347,7 @@ class _StepBlock extends StatelessWidget {
                     const SizedBox(height: 8),
                     const Text(
                       'Xong bước trước rồi mở tiếp',
-                      style: TextStyle(fontSize: 12, color: WrColors.muted),
+                      style: TextStyle(fontSize: 13.5, color: WrColors.muted),
                     ),
                   ],
                 ],
@@ -376,7 +380,7 @@ class _StepButton extends StatelessWidget {
         child: Text(
           label,
           style: const TextStyle(
-            fontSize: 12.5,
+            fontSize: 14,
             fontWeight: FontWeight.w700,
             color: WrColors.white,
           ),

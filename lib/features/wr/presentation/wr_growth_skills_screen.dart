@@ -74,9 +74,12 @@ class _WrGrowthSkillsScreenState extends ConsumerState<WrGrowthSkillsScreen> {
         : forming.take(kSkillsFormingPreview).toList();
 
     return WrDetailScaffold(
-      eyebrow: 'KỸ NĂNG ĐÃ HÌNH THÀNH',
+      // A.1: giữ nguyên chữ "kỹ năng", chỉ bỏ chữ "hình thành" ở tên gọi chính.
+      // Nhãn nhóm "Đang hình thành" phía dưới thì giữ — đó là mô tả một trạng
+      // thái đang diễn ra, không phải một phần của tên gọi.
+      eyebrow: 'KỸ NĂNG CỦA BẠN',
       title: formed.isEmpty
-          ? 'Chưa có kỹ năng nào hình thành'
+          ? 'Chưa có kỹ năng nào'
           : 'Bạn đã hình thành ${formed.length} kỹ năng',
       children: [
         _HowItWorks(threshold: threshold, hasAny: formed.isNotEmpty),
@@ -97,10 +100,7 @@ class _WrGrowthSkillsScreenState extends ConsumerState<WrGrowthSkillsScreen> {
             ),
           ),
           if (hiddenForming > 0)
-            // Align để vùng chạm bó đúng vào chữ. WrActionLink là một Row
-            // mainAxisSize.min và GestureDetector của nó không đặt
-            // hitTestBehavior, nên nếu để nó chiếm trọn bề ngang thì nửa phải
-            // của dòng nhìn thì trống mà chạm vào lại không ăn.
+            // Align chỉ để dòng nằm sát mép trái như mọi liên kết khác.
             Align(
               alignment: Alignment.centerLeft,
               child: WrActionLink(
@@ -148,9 +148,9 @@ class _HowItWorks extends StatelessWidget {
           Text(
             hasAny
                 ? 'Một kỹ năng được ghi nhận khi bạn thực hành nó $threshold lần.'
-                : 'Chưa có gì ở đây là bình thường — kỹ năng cần thời gian.',
+                : 'Chưa có gì ở đây là bình thường, kỹ năng cần thời gian.',
             style: const TextStyle(
-              fontSize: 14.5,
+              fontSize: 16,
               fontWeight: FontWeight.w700,
               color: WrColors.navy,
               height: 1.45,
@@ -163,7 +163,7 @@ class _HowItWorks extends StatelessWidget {
             'mỗi ngày bạn thực hành lại, bấm ghi nhận một lần. Đủ $threshold '
             'lần, WorkReflection ghi nó thành kỹ năng của bạn.',
             style: const TextStyle(
-              fontSize: 13,
+              fontSize: 14.5,
               color: WrColors.muted,
               height: 1.65,
             ),
@@ -184,7 +184,7 @@ class _SectionLabel extends StatelessWidget {
     return Text(
       text,
       style: const TextStyle(
-        fontSize: 11,
+        fontSize: 12.5,
         fontWeight: FontWeight.w700,
         color: WrColors.muted,
         letterSpacing: 1.2,
@@ -234,7 +234,7 @@ class _FormedSkillTile extends StatelessWidget {
                           '· đã thực hành ${skill.practiceCount} lần.',
                   key: Key('wr_skill_meta_${skill.themeId}'),
                   style: const TextStyle(
-                    fontSize: 13,
+                    fontSize: 14.5,
                     color: WrColors.muted,
                     height: 1.55,
                   ),
@@ -270,26 +270,34 @@ class _FormingSkillTile extends StatelessWidget {
           Text(
             formation.title,
             style: const TextStyle(
-              fontSize: 15.5,
+              fontSize: 17,
               fontWeight: FontWeight.w700,
               color: WrColors.navy,
               height: 1.4,
             ),
           ),
           const SizedBox(height: 9),
-          _ProgressBar(progress: formation.progress),
-          const SizedBox(height: 7),
-          Text(
-            '${formation.practiceCount}/${formation.threshold} lần thực hành '
-            '· còn ${formation.remaining} lần nữa',
-            key: Key('wr_skill_progress_${formation.themeId}'),
-            style: const TextStyle(fontSize: 12.5, color: WrColors.muted),
-          ),
-          const SizedBox(height: 10),
+          // MỘT trạng thái tại một thời điểm (Phần C mục 2).
+          //
+          // Bản trước hiện đồng thời "2/5 lần thực hành, còn 3 lần nữa" và "Đi
+          // hết ba bước làm quen của chủ đề này trước đã" — hai câu phủ định
+          // nhau: một câu bảo đang đếm tới ngưỡng, câu kia bảo còn chưa xong
+          // giai đoạn trước đó. Chưa xong ba bước thì bộ đếm 5 lần chưa phải
+          // chuyện của người dùng, nên không hiện số, không hiện dải tiến độ.
           if (formation.stage == SkillStage.onboarding)
             _OnboardingHint(themeId: formation.themeId)
-          else if (t != null)
-            WrMaintainPracticeAction(theme: t),
+          else ...[
+            _ProgressBar(progress: formation.progress),
+            const SizedBox(height: 7),
+            Text(
+              '${formation.practiceCount}/${formation.threshold} lần thực hành '
+              '· còn ${formation.remaining} lần nữa',
+              key: Key('wr_skill_progress_${formation.themeId}'),
+              style: const TextStyle(fontSize: 14, color: WrColors.muted),
+            ),
+            const SizedBox(height: 10),
+            if (t != null) WrMaintainPracticeAction(theme: t),
+          ],
         ],
       ),
     );
@@ -311,7 +319,7 @@ class _OnboardingHint extends StatelessWidget {
           const Expanded(
             child: Text(
               'Đi hết ba bước làm quen của chủ đề này trước đã.',
-              style: TextStyle(fontSize: 13, color: WrColors.muted, height: 1.5),
+              style: TextStyle(fontSize: 14.5, color: WrColors.muted, height: 1.5),
             ),
           ),
           const Icon(Icons.arrow_forward_ios, size: 12, color: WrColors.navy),
@@ -377,7 +385,7 @@ class _JdSection extends ConsumerWidget {
             'Chưa đối chiếu được. Viết một dòng mô tả công việc bạn đang làm, '
             'WorkReflection sẽ chỉ ra kỹ năng nào của bạn đang hợp với nó và '
             'chỗ nào còn trống.',
-            style: TextStyle(fontSize: 13.5, color: WrColors.muted, height: 1.65),
+            style: TextStyle(fontSize: 15, color: WrColors.muted, height: 1.65),
           ),
           const SizedBox(height: 12),
           GestureDetector(
@@ -389,7 +397,7 @@ class _JdSection extends ConsumerWidget {
                 Text(
                   'Thêm mô tả công việc',
                   style: TextStyle(
-                    fontSize: 13.5,
+                    fontSize: 15,
                     fontWeight: FontWeight.w700,
                     color: WrColors.navy,
                   ),
@@ -412,7 +420,7 @@ class _JdSection extends ConsumerWidget {
         Text(
           'Công việc bạn mô tả xoay quanh ${match.pillarSentence.toLowerCase()}.',
           style: const TextStyle(
-            fontSize: 14.5,
+            fontSize: 16,
             fontWeight: FontWeight.w700,
             color: WrColors.navy,
             height: 1.5,
@@ -423,7 +431,7 @@ class _JdSection extends ConsumerWidget {
           const Text(
             'Bạn đã có sẵn',
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 14.5,
               fontWeight: FontWeight.w700,
               color: WrColors.navy,
             ),
@@ -442,21 +450,36 @@ class _JdSection extends ConsumerWidget {
           const Text(
             'Công việc này còn cần, bạn chưa hình thành',
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 14.5,
               fontWeight: FontWeight.w700,
               color: WrColors.navy,
             ),
           ),
           const SizedBox(height: 8),
+          // Đã xếp theo bảng B.2 trong `matchSkillsToContext`, nên bốn dòng
+          // hiện ra cũng là bốn khoảng trống liên quan nhất với cấp bậc của
+          // người dùng.
           ...match.gapThemes.take(4).map(
                 (t) => _BulletLine(
                   icon: Icons.radio_button_unchecked,
                   color: WrColors.amber,
                   text: t.title,
+                  badge: match.gapRelevance[t.themeId]?.label,
                   onTap: () => context.push('/wr/growth/theme/${t.themeId}'),
                 ),
               ),
           const SizedBox(height: 14),
+        ],
+        // Nguyên tắc 3 (B.1) đã kéo nhóm Kết nối vào dù mô tả không nhắc tới.
+        // Nói thẳng ra, không để người dùng tưởng nó đến từ chữ họ viết.
+        if (match.autoRaisedDimensions.isNotEmpty) ...[
+          const Text(
+            'Ở vị trí quản lý, phần Mối quan hệ được tính là cần dù mô tả công '
+            'việc không nhắc tới — những điều đó thường được ngầm hiểu.',
+            key: Key('wr_skills_jd_auto_raised'),
+            style: TextStyle(fontSize: 13.5, color: WrColors.muted, height: 1.6),
+          ),
+          const SizedBox(height: 12),
         ],
         // §11.2 của Cơ hội phát triển: mọi diễn giải đều phải kèm ghi chú giới
         // hạn. Phép đối chiếu này đọc từ khoá trong mô tả bạn viết, nó không
@@ -467,7 +490,7 @@ class _JdSection extends ConsumerWidget {
           'giới hạn.',
           key: const Key('wr_skills_jd_note'),
           style: const TextStyle(
-            fontSize: 12,
+            fontSize: 13.5,
             color: WrColors.muted,
             height: 1.6,
             fontStyle: FontStyle.italic,
@@ -483,12 +506,17 @@ class _BulletLine extends StatelessWidget {
     required this.icon,
     required this.color,
     required this.text,
+    this.badge,
     this.onTap,
   });
 
   final IconData icon;
   final Color color;
   final String text;
+
+  /// Mức độ liên quan theo cấp bậc (bảng B.2). Null khi chưa biết cấp bậc.
+  final String? badge;
+
   final VoidCallback? onTap;
 
   @override
@@ -504,12 +532,24 @@ class _BulletLine extends StatelessWidget {
             child: Text(
               text,
               style: const TextStyle(
-                fontSize: 14,
+                fontSize: 15.5,
                 color: WrColors.navy,
                 height: 1.5,
               ),
             ),
           ),
+          if (badge != null) ...[
+            const SizedBox(width: 8),
+            Text(
+              badge!,
+              style: const TextStyle(
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+                color: WrColors.muted,
+              ),
+            ),
+            const SizedBox(width: 8),
+          ],
           if (onTap != null)
             const Icon(Icons.arrow_forward_ios, size: 11, color: WrColors.muted),
         ],

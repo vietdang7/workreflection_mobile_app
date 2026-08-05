@@ -41,7 +41,7 @@ class WrLinkRow extends StatelessWidget {
               const SizedBox(width: 12),
               Text(
                 hint!,
-                style: const TextStyle(fontSize: 14, color: WrColors.muted),
+                style: const TextStyle(fontSize: 15.5, color: WrColors.muted),
               ),
             ],
             const SizedBox(width: 8),
