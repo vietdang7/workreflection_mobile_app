@@ -22,6 +22,7 @@ import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../l10n/app_localizations.dart';
 import '../profile_providers.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 class MyInfoScreen extends ConsumerStatefulWidget {
   const MyInfoScreen({super.key});
@@ -100,7 +101,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            const WrParagraph(
               'Gộp lại toàn bộ thông tin bạn đã chia sẻ ở Hồ sơ, Khảo sát tổ '
               'chức, và Thông tin công việc, để xem hoặc sửa lại ở đúng một chỗ.',
               style: TextStyle(
@@ -126,7 +127,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                       size: 16, color: WrColors.pillTealText),
                   SizedBox(width: 8),
                   Expanded(
-                    child: Text(
+                    child: WrParagraph(
                       'Đây cũng là thứ giúp trợ lý trò chuyện AI hiểu đúng '
                       'hoàn cảnh của bạn hơn, thay vì trả lời chung chung.',
                       style: TextStyle(

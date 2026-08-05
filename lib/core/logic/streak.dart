@@ -1,3 +1,26 @@
+import '../models/wr_episode.dart';
+
+/// Số NGÀY người dùng đã nhìn lại — thay cho chuỗi ngày liên tiếp ở màn Hồ sơ
+/// (yêu cầu 05/08).
+///
+/// Vì sao đổi: chuỗi liên tiếp là một con số biết tụt. Nghỉ đúng một ngày là nó
+/// về 0, và cái người dùng nhìn thấy ở màn Hồ sơ của chính mình là "bạn vừa mất
+/// hết" — trong khi mọi lần nhìn lại họ đã làm vẫn còn nguyên đó. Đếm tổng số
+/// ngày thì con số chỉ đi lên, đúng với bản chất của việc tích luỹ.
+///
+/// Chỉ đếm Episode đã KHÉP (`closedAt`), tức là đã đi hết luồng và có một mảnh
+/// ký ức thật. Mở luồng rồi bỏ dở giữa chừng không phải một ngày đã nhìn lại.
+/// Nhiều lần trong cùng một ngày vẫn tính là một ngày.
+int reflectionDayCount(List<ReflectionEpisode> episodes) {
+  final days = <DateTime>{};
+  for (final e in episodes) {
+    final at = e.closedAt;
+    if (at == null) continue;
+    days.add(DateTime(at.year, at.month, at.day));
+  }
+  return days.length;
+}
+
 /// Computes the current streak given a list of check-in dates and today's date.
 ///
 /// Rules:

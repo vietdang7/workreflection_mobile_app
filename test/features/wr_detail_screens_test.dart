@@ -376,7 +376,8 @@ void main() {
 
       expect(find.byKey(const Key('wr_skill_t1')), findsNothing);
       expect(
-        find.textContaining('3/5 lần thực hành · còn 2 lần nữa'),
+        // Dấu phẩy thay dấu chấm giữa — bản đối chiếu UX/UI 05/08.
+        find.textContaining('3/5 lần thực hành, còn 2 lần nữa'),
         findsOneWidget,
       );
       // Đã xong làm quen thì mở nút duy trì.

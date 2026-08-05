@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/data/wr_episode_repository.dart';
 import '../../core/data/wr_repository.dart';
 import '../../core/logic/checkin_history.dart';
 import '../../core/logic/streak.dart';
@@ -7,6 +8,7 @@ import '../../core/logic/vn_date.dart';
 import '../../core/logic/wr_my_info.dart';
 import '../../core/models/mobile_profile.dart';
 import '../../l10n/app_localizations.dart';
+import '../wr/wr_providers.dart';
 
 // ---------------------------------------------------------------------------
 // App locale provider — drives WrApp locale live
@@ -51,6 +53,24 @@ final milestoneCountProvider = FutureProvider<int>((ref) async {
 final streakProvider = FutureProvider<int>((ref) async {
   final dates = await ref.watch(wrRepositoryProvider).getCheckinDates();
   return computeStreak(dates, todayVn());
+});
+
+/// Số ngày người dùng đã nhìn lại — con số ở màn Hồ sơ (yêu cầu 05/08).
+///
+/// Đọc TOÀN BỘ Episode, không đặt `limit`: đây là một phép đếm tích luỹ, cắt
+/// bớt là báo một con số thấp hơn sự thật cho đúng những người dùng lâu năm
+/// nhất. [wrEpisodeHistoryProvider] có giới hạn 50 nên không dùng lại được.
+final reflectionDayCountProvider = FutureProvider<int>((ref) async {
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null) return 0;
+  try {
+    final episodes = await ref.watch(wrEpisodeRepositoryProvider).fetchEpisodes(
+          userId,
+        );
+    return reflectionDayCount(episodes);
+  } catch (_) {
+    return 0;
+  }
 });
 
 /// 30-element list: index 0 = today−29, index 29 = today.

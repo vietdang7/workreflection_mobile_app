@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../theme/wr_colors.dart';
 import 'eyebrow.dart';
+import 'wr_paragraph.dart';
 
 /// Khung chung cho các màn đọc mở từ một dòng danh sách.
 ///
@@ -41,7 +42,7 @@ class WrDetailScaffold extends StatelessWidget {
           children: [
             WrEyebrow(eyebrow),
             const SizedBox(height: 14),
-            Text(
+            WrParagraph(
               title,
               style: const TextStyle(
                 fontSize: 26,
@@ -50,6 +51,7 @@ class WrDetailScaffold extends StatelessWidget {
                 height: 1.3,
                 letterSpacing: -0.5,
               ),
+              textAlign: TextAlign.start,
             ),
             const SizedBox(height: 24),
             ...children,

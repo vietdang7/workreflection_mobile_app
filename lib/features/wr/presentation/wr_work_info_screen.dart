@@ -20,6 +20,7 @@ import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_link_row.dart';
 import '../wr_providers.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 class WrWorkInfoScreen extends ConsumerStatefulWidget {
   const WrWorkInfoScreen({super.key});
@@ -92,7 +93,7 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(22, 8, 22, 32),
           children: [
-            const Text(
+            const WrParagraph(
               'Bạn đang làm công việc gì? Một dòng thôi cũng đủ để những gợi ý '
               'phát triển bám sát hơn vào việc thật của bạn.',
               style: TextStyle(

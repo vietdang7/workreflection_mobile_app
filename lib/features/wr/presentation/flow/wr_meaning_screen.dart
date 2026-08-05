@@ -18,6 +18,7 @@ import '../../episode_flow_controller.dart';
 import '../../wr_providers.dart';
 import '../../../../core/logic/wr_flow_error.dart';
 import 'wr_flow_scaffold.dart';
+import '../../../../core/widgets/wr_paragraph.dart';
 
 class WrMeaningScreen extends ConsumerStatefulWidget {
   const WrMeaningScreen({super.key});
@@ -144,7 +145,7 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: WrColors.line),
               ),
-              child: Text(
+              child: WrParagraph(
                 selfReflection,
                 style: const TextStyle(
                   fontSize: 16,
@@ -288,13 +289,14 @@ class _RecapItemState extends State<_RecapItem> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
+        WrParagraph(
           widget.item.prompt,
           style: const TextStyle(
             fontSize: 14.5,
             color: WrColors.muted,
             height: 1.45,
           ),
+          textAlign: TextAlign.start,
         ),
         const SizedBox(height: 4),
         if (_editing) _buildEditor() else _buildAnswer(),

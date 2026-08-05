@@ -476,7 +476,6 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           final triggerStr = state.uri.queryParameters['trigger'];
           final trigger = switch (triggerStr) {
             'ai_insight' => PaywallTrigger.aiInsight,
-            'report' => PaywallTrigger.report,
             'trial_end' => PaywallTrigger.trialEnd,
             'benchmark' => PaywallTrigger.benchmark,
             'growth_opportunity' => PaywallTrigger.growthOpportunity,

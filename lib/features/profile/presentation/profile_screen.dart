@@ -18,6 +18,7 @@ import '../../wr/org_survey_providers.dart';
 import '../../wr/wr_providers.dart';
 import '../profile_providers.dart';
 import 'change_password_dialog.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -205,7 +206,7 @@ class _AvatarSection extends ConsumerWidget {
                   ),
           ),
           const SizedBox(height: 12),
-          Text(
+          WrParagraph(
             name,
             textAlign: TextAlign.center,
             style: const TextStyle(
@@ -355,7 +356,10 @@ class _StatsCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final streak = ref.watch(streakProvider).valueOrNull ?? 0;
+    // Tổng số ngày đã nhìn lại, KHÔNG phải chuỗi ngày liên tiếp (yêu cầu
+    // 05/08). Chuỗi liên tiếp nghỉ một ngày là về 0; con số tích luỹ thì
+    // không bao giờ lấy đi thứ người dùng đã làm được.
+    final reflectDays = ref.watch(reflectionDayCountProvider).valueOrNull ?? 0;
     final insights = ref.watch(insightCountProvider).valueOrNull ?? 0;
     final milestones = ref.watch(milestoneCountProvider).valueOrNull ?? 0;
 
@@ -371,7 +375,10 @@ class _StatsCard extends ConsumerWidget {
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           Expanded(
-            child: _StatBlock(number: streak, label: l10n.profileStatStreak),
+            child: _StatBlock(
+              number: reflectDays,
+              label: l10n.profileStatReflectDays,
+            ),
           ),
           Expanded(
             child:
@@ -408,7 +415,7 @@ class _StatBlock extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        Text(
+        WrParagraph(
           label,
           style: const TextStyle(
             fontSize: 12.5,
@@ -535,7 +542,7 @@ class _OrgSurveyCard extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 6),
-            const Text(
+            const WrParagraph(
               'Đánh giá đãi ngộ, phát triển và mức sẵn lòng giới thiệu nơi bạn '
               'làm việc.',
               style: TextStyle(
@@ -692,27 +699,8 @@ class _SettingsSection extends ConsumerWidget {
           ),
         ),
 
-        // Sửa hồ sơ — tên, ảnh, và các trường hồ sơ dạng nhập chữ.
-        _SettingRow(
-          key: const Key('profile_edit_profile_btn'),
-          icon: Icons.person_outline,
-          label: l10n.profileSettingEditProfile,
-          onTap: () => context.push('/profile/edit'),
-          trailing:
-              const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
-        ),
-
-        // Thông tin công việc — Hai Lớp v1.6 §XI. Màn này gom cả mô tả tự viết
-        // lẫn lối vào Tài liệu bối cảnh (JD/CV) của v1.2 §III, nên không còn
-        // dòng riêng cho tài liệu nữa.
-        _SettingRow(
-          key: const Key('profile_work_info_btn'),
-          icon: Icons.work_outline,
-          label: 'Thông tin công việc',
-          onTap: () => context.push('/wr/work-info'),
-          trailing:
-              const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
-        ),
+        // Đã bỏ hai dòng "Chỉnh sửa hồ sơ" và "Thông tin công việc" ở đây.
+        // Thông tin công việc đi vào từ màn "Thông tin của bạn" phía trên.
 
         // Đăng ký Premium
         _SettingRow(

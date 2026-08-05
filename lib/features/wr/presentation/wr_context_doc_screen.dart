@@ -25,6 +25,7 @@ import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_premium_lock.dart';
 import '../wr_providers.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 const _kDocTypes = <(String, String)>[
   ('jd', 'Mô tả công việc (JD)'),
@@ -221,7 +222,7 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(22, 8, 22, 32),
           children: [
-            const Text(
+            const WrParagraph(
               'Thêm JD hoặc CV để WorkReflection đọc và hiểu công việc của bạn. '
               'Nội dung đọc được sẽ dùng cho phần trò chuyện, gợi ý chủ đề thực '
               'hành và đối chiếu kỹ năng.',
@@ -462,7 +463,7 @@ class _DocRow extends StatelessWidget {
           if (doc.isReady && a != null && !a.isEmpty) ...[
             const SizedBox(height: 12),
             if (a.title != null)
-              Text(
+              WrParagraph(
                 a.title!,
                 style: const TextStyle(
                   fontSize: 16,
@@ -470,6 +471,7 @@ class _DocRow extends StatelessWidget {
                   color: WrColors.navy,
                   height: 1.4,
                 ),
+                textAlign: TextAlign.start,
               ),
             if (a.organization != null)
               Text(
@@ -478,7 +480,7 @@ class _DocRow extends StatelessWidget {
               ),
             if (a.summary.isNotEmpty) ...[
               const SizedBox(height: 7),
-              Text(
+              WrParagraph(
                 a.summary,
                 style: const TextStyle(
                   fontSize: 14.5,

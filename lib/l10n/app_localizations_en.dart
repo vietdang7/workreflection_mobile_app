@@ -299,7 +299,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileBadgeMember => 'Member';
 
   @override
-  String get profileStatStreak => 'Streak days';
+  String get profileStatReflectDays => 'Days reflected';
 
   @override
   String get profileStatInsights => 'Saved insights';

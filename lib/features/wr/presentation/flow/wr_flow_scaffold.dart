@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/wr_colors.dart';
+import '../../../../core/widgets/wr_paragraph.dart';
 
 class WrFlowScaffold extends StatelessWidget {
   const WrFlowScaffold({
@@ -81,7 +82,7 @@ class WrFlowScaffold extends StatelessWidget {
                       ),
                       const SizedBox(height: 14),
                     ],
-                    Text(
+                    WrParagraph(
                       title,
                       style: const TextStyle(
                         fontSize: 26,
@@ -90,10 +91,11 @@ class WrFlowScaffold extends StatelessWidget {
                         height: 1.3,
                         letterSpacing: -0.5,
                       ),
+                      textAlign: TextAlign.start,
                     ),
                     if (subtitle != null) ...[
                       const SizedBox(height: 12),
-                      Text(
+                      WrParagraph(
                         subtitle!,
                         style: const TextStyle(
                           fontSize: 15.5,
@@ -282,7 +284,7 @@ class WrBigChoiceTile extends StatelessWidget {
   Widget build(BuildContext context) {
     // §03: chữ trên nền Coral là Navy, không phải trắng.
     const fg = WrColors.navy;
-    final text = Text(
+    final text = WrParagraph(
       label,
       style: TextStyle(
         fontSize: 16,
@@ -290,6 +292,7 @@ class WrBigChoiceTile extends StatelessWidget {
         height: 1.35,
         color: fg,
       ),
+      textAlign: TextAlign.start,
     );
 
     return GestureDetector(

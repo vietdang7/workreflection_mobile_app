@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/wr_voice_field.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 /// Kết quả người dùng chọn trên tấm ghi chú.
 enum PracticeNoteAction {
@@ -110,7 +111,7 @@ class _PracticeNoteSheetState extends State<_PracticeNoteSheet> {
               ),
             ),
             const SizedBox(height: 14),
-            const Text(
+            const WrParagraph(
               'Có điều gì đáng nhớ khi bạn làm bước này không? '
               'Không viết cũng không sao.',
               style: TextStyle(

@@ -28,6 +28,7 @@ import '../../../core/widgets/wr_card.dart';
 import '../../../core/widgets/wr_detail_scaffold.dart';
 import '../../../core/widgets/wr_link_row.dart';
 import '../../workshops/workshops_providers.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 /// Ba luật của mọi buổi — nguyên văn theo mockup, không rút gọn.
 const List<String> kTraChieuRules = [
@@ -297,7 +298,7 @@ class _NoSessionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return const WrCardMinimal(
       key: Key('wr_tra_chieu_empty'),
-      child: Text(
+      child: WrParagraph(
         'Chưa có buổi nào được mở. Lịch Trà Chiều thường được công bố trước '
         'khoảng hai tuần.',
         style: TextStyle(fontSize: 15.5, color: WrColors.muted, height: 1.7),
@@ -397,7 +398,7 @@ class _SessionRow extends StatelessWidget {
           ),
           if (description != null && description.isNotEmpty) ...[
             const SizedBox(height: 6),
-            Text(
+            WrParagraph(
               description,
               maxLines: 3,
               overflow: TextOverflow.ellipsis,

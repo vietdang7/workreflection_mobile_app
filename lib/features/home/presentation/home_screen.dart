@@ -16,6 +16,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../features/profile/profile_providers.dart';
 import '../../../features/survey/survey_providers.dart';
 import '../home_providers.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -178,7 +179,7 @@ class _MoodButton extends ConsumerWidget {
         ),
         alignment: Alignment.center,
         padding: const EdgeInsets.all(12),
-        child: Text(
+        child: WrParagraph(
           label,
           textAlign: TextAlign.center,
           style: TextStyle(
@@ -215,12 +216,13 @@ class _SystemNoticeCard extends ConsumerWidget {
             children: [
               WrEyebrow(l10n.homeEyebrowSystem),
               const SizedBox(height: 12),
-              Text(
+              WrParagraph(
                 l10n.homeSystemNoticeQuote(top.occurrenceCount, top.label),
                 style: WrTextStyles.insightQuote.copyWith(
                   fontSize: 16,
                   color: WrColors.white,
                 ),
+                textAlign: TextAlign.start,
               ),
               const SizedBox(height: 16),
               WrActionLink(

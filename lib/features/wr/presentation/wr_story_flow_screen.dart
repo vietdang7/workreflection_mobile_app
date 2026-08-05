@@ -9,6 +9,7 @@ import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../wr_providers.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 // Phase order cho story flow
 enum _StoryPhase { story, aha, confidence, reflection, practice, memory }
@@ -310,7 +311,7 @@ class _PhaseAha extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
       children: [
         if (story.ahaMessage != null)
-          Text(story.ahaMessage!,
+          WrParagraph(story.ahaMessage!,
               style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: WrColors.dark, height: 1.5)),
         if (story.selfReflection != null) ...[
           const SizedBox(height: 20),
@@ -321,7 +322,7 @@ class _PhaseAha extends StatelessWidget {
               color: WrColors.navy.withValues(alpha: 0.04),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Text(story.selfReflection!,
+            child: WrParagraph(story.selfReflection!,
                 style: const TextStyle(fontSize: 15.5, color: WrColors.muted, height: 1.6)),
           ),
         ],
@@ -406,7 +407,16 @@ class _PhaseReflectionState extends State<_PhaseReflection> {
     return ListView(
       padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
       children: [
-        Text(question, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: WrColors.dark, height: 1.4)),
+        WrParagraph(
+          question,
+          textAlign: TextAlign.start,
+          style: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+            color: WrColors.dark,
+            height: 1.4,
+          ),
+        ),
         const SizedBox(height: 16),
         TextField(
           controller: _ctrl,

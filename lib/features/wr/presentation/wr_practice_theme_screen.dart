@@ -16,10 +16,12 @@ import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/wr_detail_scaffold.dart';
+import '../../../core/widgets/wr_list_card.dart';
 import '../growth_providers.dart';
 import '../wr_providers.dart';
 import 'wr_practice_step_completion.dart';
 import 'wr_skill_moment.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 class WrPracticeThemeScreen extends ConsumerWidget {
   const WrPracticeThemeScreen({super.key, required this.themeId});
@@ -44,7 +46,7 @@ class WrPracticeThemeScreen extends ConsumerWidget {
         eyebrow: 'THỰC HÀNH',
         title: 'Không tìm thấy chủ đề',
         children: [
-          Text(
+          WrParagraph(
             'Chủ đề này không còn nữa. Quay lại tab Phát triển để chọn chủ đề khác.',
             key: Key('wr_practice_theme_gone'),
             style: TextStyle(fontSize: 16.5, color: WrColors.muted, height: 1.6),
@@ -71,7 +73,7 @@ class WrPracticeThemeScreen extends ConsumerWidget {
       title: theme.title,
       children: [
         if (theme.description != null) ...[
-          Text(
+          WrParagraph(
             theme.description!,
             style: const TextStyle(
               fontSize: 15.5,
@@ -91,21 +93,33 @@ class WrPracticeThemeScreen extends ConsumerWidget {
           style: const TextStyle(fontSize: 14.5, color: WrColors.muted),
         ),
         const SizedBox(height: 24),
-        for (int i = 0; i < steps.length; i++)
+        // MỖI bước một thẻ riêng, nối nhau bằng một đoạn kẻ dọc (yêu cầu
+        // 05/08). Ba bước là ba việc làm ở ba lúc khác nhau, nên chúng cần
+        // ranh giới thật; nhưng chúng cũng là một chuỗi, nên phải có thứ nối
+        // chúng lại — nếu không thì trông như ba việc rời rạc.
+        //
+        // Đoạn nối chuyển sang xanh khi bước phía trên đã xong: người dùng
+        // nhìn dọc theo đường kẻ là thấy mình đang ở đâu trong chuỗi.
+        for (int i = 0; i < steps.length; i++) ...[
+          if (i > 0)
+            _StepConnector(
+              isPassed: completed.contains(steps[i - 1].stepId),
+            ),
           _StepBlock(
             step: steps[i],
             index: i,
             isDone: completed.contains(steps[i].stepId),
             isLocked: steps[i].isPremium &&
                 !entitlement.canAccessPracticeStep(isPremiumStep: true),
-            // Chỉ bước liền sau bước đã xong mới bấm được: chuỗi thực hành đi
-            // theo thứ tự, không nhảy cóc.
+            // Chỉ bước liền sau bước đã xong mới bấm được: chuỗi thực hành
+            // đi theo thứ tự, không nhảy cóc.
             isNext: !completed.contains(steps[i].stepId) &&
                 completed.length == steps[i].stepOrder - 1,
-            // Không chặn theo `completedAt`: người dùng miễn phí khép giai đoạn
-            // làm quen ở bước 2 (bước 3 khoá). Nâng cấp lên Premium rồi thì
-            // bước "Chuyển hóa" phải bấm được, chứ không phải khoá vĩnh viễn
-            // chỉ vì hôm trước đã khép chủ đề. Thứ tự vẫn do `isNext` giữ.
+            // Không chặn theo `completedAt`: người dùng miễn phí khép giai
+            // đoạn làm quen ở bước 2 (bước 3 khoá). Nâng cấp lên Premium
+            // rồi thì bước "Chuyển hóa" phải bấm được, chứ không phải khoá
+            // vĩnh viễn chỉ vì hôm trước đã khép chủ đề. Thứ tự vẫn do
+            // `isNext` giữ.
             canAct: enrollment != null,
             onDone: () => completePracticeStep(
               context: context,
@@ -116,7 +130,11 @@ class WrPracticeThemeScreen extends ConsumerWidget {
               allSteps: steps,
             ),
           ),
-        if (enrollment?.completedAt != null) _MaintainBlock(theme: theme),
+        ],
+        if (enrollment?.completedAt != null) ...[
+          const SizedBox(height: 20),
+          _MaintainBlock(theme: theme),
+        ],
       ],
     );
   }
@@ -161,7 +179,7 @@ class _MaintainBlock extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 9),
-          Text(
+          WrParagraph(
             formation.skillFormed
                 ? 'Bạn đã thực hành điều này ${formation.practiceCount} lần. '
                     'Ghi nhận tiếp mỗi khi bạn dùng tới nó.'
@@ -217,6 +235,41 @@ class WrPracticeProgressDots extends StatelessWidget {
   }
 }
 
+/// Đoạn kẻ dọc nối hai thẻ bước liền nhau.
+///
+/// Ba thẻ rời nhau nói rõ ranh giới, nhưng cũng làm mất cảm giác đây là MỘT
+/// chuỗi. Đoạn kẻ này trả lại điều đó. Nó nằm thẳng dưới vòng tròn số thứ tự
+/// (16 lề thẻ + 13 nửa vòng tròn = 29), nên mắt đi dọc từ vòng tròn này xuống
+/// vòng tròn kia.
+///
+/// [isPassed] = bước phía trên đã xong: đoạn kẻ chuyển sang xanh, thành một
+/// thanh tiến độ dọc đọc được bằng liếc mắt.
+class _StepConnector extends StatelessWidget {
+  const _StepConnector({required this.isPassed});
+
+  final bool isPassed;
+
+  @override
+  Widget build(BuildContext context) {
+    // [Align] là thứ bắt buộc, không phải trang trí: màn này dựng bằng
+    // `ListView`, mà ListView ép con chiếm trọn bề ngang. Không có Align thì
+    // `width: 2` bị bỏ qua và đoạn kẻ dọc biến thành một thanh ngang dày chắn
+    // giữa hai thẻ.
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Padding(
+        padding: const EdgeInsets.only(left: 28),
+        child: Container(
+          key: const Key('wr_practice_step_connector'),
+          width: 2,
+          height: 18,
+          color: isPassed ? WrColors.teal : WrColors.line,
+        ),
+      ),
+    );
+  }
+}
+
 class _StepBlock extends StatelessWidget {
   const _StepBlock({
     required this.step,
@@ -240,11 +293,24 @@ class _StepBlock extends StatelessWidget {
   Widget build(BuildContext context) {
     final tag = practiceStageTag(step.stepOrder);
 
+    // Xong rồi thì thẻ mờ hẳn đi (yêu cầu 05/08): việc đã làm lùi lại phía
+    // sau, nhường chỗ cho bước đang chờ. Vẫn đọc được, chỉ là thôi tranh mắt.
+    // Bước khoá mờ nhẹ hơn — nó chưa làm được, nhưng cũng chưa xong.
     return Opacity(
-      opacity: isLocked ? 0.72 : 1,
-      child: Padding(
+      opacity: isDone
+          ? 0.55
+          : isLocked
+              ? 0.72
+              : 1,
+      child: Container(
         key: Key('wr_practice_step_${step.stepId}'),
-        padding: const EdgeInsets.only(bottom: 26),
+        width: double.infinity,
+        padding: const EdgeInsets.fromLTRB(16, 18, 16, 18),
+        decoration: BoxDecoration(
+          color: WrColors.white,
+          border: Border.all(color: WrColors.line),
+          borderRadius: BorderRadius.circular(kWrCardRadius),
+        ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -306,20 +372,24 @@ class _StepBlock extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                   ],
-                  Text(
+                  // Xong rồi thì dấu tick nói đủ. KHÔNG gạch ngang chữ (yêu
+                  // cầu 05/08): gạch ngang là cách đánh dấu một việc bị huỷ
+                  // hay một câu viết sai, không phải một việc vừa làm được —
+                  // và nó làm chính dòng chữ người dùng vừa hoàn thành trở
+                  // thành thứ khó đọc nhất màn hình.
+                  WrParagraph(
                     step.title,
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w700,
                       height: 1.35,
                       color: isDone ? WrColors.muted : WrColors.navy,
-                      decoration: isDone ? TextDecoration.lineThrough : null,
-                      decorationColor: WrColors.muted,
                     ),
+                    textAlign: TextAlign.start,
                   ),
                   if (step.content != null && step.content!.isNotEmpty) ...[
                     const SizedBox(height: 6),
-                    Text(
+                    WrParagraph(
                       step.content!,
                       style: const TextStyle(
                         fontSize: 15,

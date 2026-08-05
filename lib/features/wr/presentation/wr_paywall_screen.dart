@@ -4,12 +4,12 @@ import 'package:go_router/go_router.dart';
 import '../../../core/logic/wr_pricing.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../wr_providers.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 /// Trigger cho các headline khác nhau của Paywall.
 enum PaywallTrigger {
   defaultTrigger,
   aiInsight,
-  report,
   trialEnd,
   benchmark,
 
@@ -79,10 +79,6 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
             title: 'AI Insight dành riêng cho bạn',
             sub: 'Nhận insight cá nhân hoá từ Career Memory của bạn.',
           ),
-        PaywallTrigger.report => (
-            title: 'Báo cáo chuyên sâu đang chờ bạn',
-            sub: 'Xem đầy đủ bức tranh nghề nghiệp của bạn.',
-          ),
         PaywallTrigger.trialEnd => (
             title: 'Tháng trải nghiệm của bạn kết thúc',
             sub: 'Tiếp tục hành trình với Premium.',
@@ -145,11 +141,6 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
         desc: 'Phát hiện mô thức từ Career Memory của bạn. Ngày càng chính xác hơn.',
       ),
       _Highlight(
-        icon: '📊',
-        title: 'Báo cáo chuyên sâu',
-        desc: '49 câu phân tích đầy đủ 3 chiều Sự rõ ràng · Mối quan hệ · Cách làm việc.',
-      ),
-      _Highlight(
         icon: '📈',
         title: 'Career Pattern',
         desc: 'Nhìn thấy các mô thức lặp lại trong hành trình nghề nghiệp theo thời gian.',
@@ -168,7 +159,6 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
       _FeatureRow(label: '15 câu phản chiếu', avail: true),
       _FeatureRow(label: '3 chủ đề Thực hành', avail: true),
       _FeatureRow(label: 'AI Insight', avail: false),
-      _FeatureRow(label: 'Báo cáo chuyên sâu 49 câu', avail: false),
       _FeatureRow(label: 'Career Pattern Analysis', avail: false),
       _FeatureRow(label: 'Career Benchmark', avail: false),
       _FeatureRow(label: 'Không giới hạn Thực hành', avail: false),
@@ -235,7 +225,7 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                         ],
                       ),
                       const SizedBox(height: 8),
-                      Text(
+                      WrParagraph(
                         h.title,
                         style: const TextStyle(
                           fontSize: 20,
@@ -243,9 +233,10 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                           color: WrColors.white,
                           height: 1.35,
                         ),
+                        textAlign: TextAlign.start,
                       ),
                       const SizedBox(height: 5),
-                      Text(
+                      WrParagraph(
                         h.sub,
                         style: const TextStyle(
                           fontSize: 14.5,
@@ -401,7 +392,7 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                             ),
                           ),
                           SizedBox(height: 3),
-                          Text(
+                          WrParagraph(
                             'Nếu không hài lòng trong 7 ngày đầu, chúng tôi hoàn tiền toàn bộ. Không câu hỏi.',
                             style: TextStyle(fontSize: 11.5, color: WrColors.muted, height: 1.6),
                           ),
@@ -716,7 +707,7 @@ class _HighlightCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 3),
-                Text(
+                WrParagraph(
                   highlight.desc,
                   style: const TextStyle(fontSize: 12.5, color: WrColors.muted, height: 1.6),
                 ),

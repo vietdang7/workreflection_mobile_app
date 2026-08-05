@@ -29,6 +29,7 @@ import '../../../core/widgets/wr_link_row.dart';
 import '../../../core/widgets/wr_premium_lock.dart';
 import '../../../core/widgets/wr_profile_avatar.dart';
 import '../wr_providers.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 /// Bản ghi hiển thị trên dòng thời gian — Episode hoặc Career Memory event.
 class JourneyEntry {
@@ -438,7 +439,7 @@ class WrJourneyScreen extends ConsumerWidget {
 
             const WrEyebrow('CAREER MEMORY'),
             const SizedBox(height: 14),
-            Text(
+            WrParagraph(
               all.isEmpty
                   ? 'Chưa có mảnh ký ức nào. Mỗi lần nhìn lại sẽ để lại một dấu ở đây.'
                   : 'Bạn đã để lại ${all.length} mảnh ký ức nghề nghiệp.',
@@ -448,6 +449,7 @@ class WrJourneyScreen extends ConsumerWidget {
                 color: WrColors.navy,
                 height: 1.4,
               ),
+              textAlign: TextAlign.start,
             ),
 
             if (all.isNotEmpty && locked) ...[
@@ -560,7 +562,7 @@ class _NarrativeCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Text(
+          WrParagraph(
             canRead && latest != null
                 ? latest
                 : canRead
@@ -858,7 +860,7 @@ class _WrCareerMemoryScreenState extends ConsumerState<WrCareerMemoryScreen> {
             paywallTrigger: 'career_memory',
           )
         else if (all.isEmpty)
-          const Text(
+          const WrParagraph(
             'Chưa có mảnh ký ức nào. Mỗi lần nhìn lại sẽ để lại một dấu ở đây.',
             key: Key('wr_career_memory_empty'),
             style: TextStyle(
@@ -1108,7 +1110,7 @@ class _EntryRowState extends State<_EntryRow> {
                       ),
                       if (_open) ...[
                         const SizedBox(height: 6),
-                        Text(
+                        WrParagraph(
                           entry.title,
                           style: const TextStyle(
                             fontSize: 16,
@@ -1116,12 +1118,13 @@ class _EntryRowState extends State<_EntryRow> {
                             color: WrColors.navy,
                             height: 1.45,
                           ),
+                          textAlign: TextAlign.start,
                         ),
                         if (entry.subtitle != null &&
                             entry.subtitle!.isNotEmpty &&
                             entry.subtitle != entry.title) ...[
                           const SizedBox(height: 4),
-                          Text(
+                          WrParagraph(
                             entry.subtitle!,
                             style: const TextStyle(
                               fontSize: 14.5,

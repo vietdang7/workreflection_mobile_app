@@ -16,6 +16,7 @@ import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../growth_providers.dart';
 import '../wr_providers.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 /// Ghi nhận một lần duy trì: "Tôi vừa thực hành điều này hôm nay".
 ///
@@ -190,7 +191,7 @@ Future<void> showSkillFormedCelebration(
               ),
             ),
             const SizedBox(height: 10),
-            Text(
+            WrParagraph(
               'Bạn đã thực hành điều này ${skill.practiceCount} lần. '
               'Nó không còn là một việc bạn phải nhớ để làm nữa.',
               style: const TextStyle(

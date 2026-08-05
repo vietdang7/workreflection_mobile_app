@@ -644,11 +644,11 @@ abstract class AppLocalizations {
   /// **'Thành viên'**
   String get profileBadgeMember;
 
-  /// No description provided for @profileStatStreak.
+  /// No description provided for @profileStatReflectDays.
   ///
   /// In vi, this message translates to:
-  /// **'Ngày streak'**
-  String get profileStatStreak;
+  /// **'Ngày nhìn lại'**
+  String get profileStatReflectDays;
 
   /// No description provided for @profileStatInsights.
   ///

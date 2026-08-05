@@ -207,7 +207,9 @@ void main() {
       ]);
       await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
 
-      expect(find.textContaining('Ngày streak'), findsOneWidget);
+      // Tổng số ngày đã nhìn lại thay cho chuỗi ngày liên tiếp (yêu cầu 05/08).
+      expect(find.textContaining('Ngày nhìn lại'), findsOneWidget);
+      expect(find.textContaining('Ngày streak'), findsNothing);
       expect(find.textContaining('Insight lưu'), findsOneWidget);
       expect(find.textContaining('Milestone'), findsOneWidget);
       // insight count = 2
@@ -264,8 +266,6 @@ void main() {
       for (final key in const [
         'profile_my_info_btn',
         'profile_language_row',
-        'profile_edit_profile_btn',
-        'profile_work_info_btn',
         'profile_paywall_btn',
         'profile_change_password_btn',
         'profile_export_btn',
@@ -381,8 +381,6 @@ void main() {
       expect(find.textContaining('Xuất dữ liệu'), findsOneWidget);
 
       for (final key in const [
-        'profile_edit_profile_btn',
-        'profile_work_info_btn',
         'profile_paywall_btn',
         'profile_change_password_btn',
       ]) {
@@ -448,8 +446,6 @@ void main() {
       for (final key in const [
         'profile_my_info_btn',
         'profile_language_row',
-        'profile_edit_profile_btn',
-        'profile_work_info_btn',
         'profile_paywall_btn',
         'profile_change_password_btn',
         'profile_export_btn',
@@ -578,14 +574,20 @@ void main() {
       expect(find.textContaining('Phiên đăng nhập'), findsOneWidget);
     });
 
-    testWidgets('shows edit-profile row in settings section', (tester) async {
+    // Hai dòng "Chỉnh sửa hồ sơ" và "Thông tin công việc" đã được bỏ khỏi thẻ
+    // cài đặt theo yêu cầu; thẻ chỉ còn các lối vào còn lại.
+    testWidgets('không còn dòng chỉnh sửa hồ sơ và thông tin công việc', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       repo.seedProfile(_profile());
       repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
       await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
 
-      expect(find.byKey(const Key('profile_edit_profile_btn')), findsOneWidget);
-      expect(find.textContaining('Chỉnh sửa hồ sơ'), findsOneWidget);
+      expect(find.byKey(const Key('profile_edit_profile_btn')), findsNothing);
+      expect(find.byKey(const Key('profile_work_info_btn')), findsNothing);
+      expect(find.textContaining('Chỉnh sửa hồ sơ'), findsNothing);
+      expect(find.text('Thông tin công việc'), findsNothing);
     });
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -657,9 +659,8 @@ void main() {
       // Đây là màn "Tôi" duy nhất — sửa hồ sơ, đổi mật khẩu, đăng xuất đều ở
       // đây, không tan vào tab Hành trình.
       for (final key in [
-        'profile_edit_profile_btn',
+        'profile_my_info_btn',
         'profile_change_password_btn',
-        'profile_work_info_btn',
         'profile_export_btn',
         'profile_logout_btn',
       ]) {

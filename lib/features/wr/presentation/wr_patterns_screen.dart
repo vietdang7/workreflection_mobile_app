@@ -13,6 +13,7 @@ import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/wr_detail_scaffold.dart';
 import '../wr_providers.dart';
 import 'wr_discover_screen.dart' show WrPatternRow, situationLabelFor;
+import '../../../core/widgets/wr_paragraph.dart';
 
 class WrPatternsScreen extends ConsumerWidget {
   const WrPatternsScreen({super.key});
@@ -39,7 +40,7 @@ class WrPatternsScreen extends ConsumerWidget {
       title: 'Những điều đang trở đi trở lại',
       children: [
         if (repeated.isEmpty)
-          Text(
+          WrParagraph(
             recentSituationIds(episodes).isEmpty
                 ? 'Sau vài lần nhìn lại có chọn tình huống, những điều lặp lại '
                     'sẽ hiện ra ở đây.'

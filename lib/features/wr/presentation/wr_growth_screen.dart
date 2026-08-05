@@ -32,6 +32,7 @@ import '../../workshops/workshops_providers.dart';
 import '../growth_providers.dart';
 import '../wr_providers.dart';
 import 'wr_practice_theme_screen.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WrGrowthScreen — ConsumerStatefulWidget for enroll double-tap guard
@@ -478,7 +479,7 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
             ),
           ),
           const SizedBox(height: 6),
-          Text(
+          WrParagraph(
             body,
             style: const TextStyle(
               fontSize: 14.5,
@@ -703,7 +704,7 @@ class WrPracticeThemeCard extends ConsumerWidget {
                 ],
               ),
               const SizedBox(height: 8),
-              Text(
+              WrParagraph(
                 theme.title,
                 style: const TextStyle(
                   fontSize: 19,
@@ -711,6 +712,7 @@ class WrPracticeThemeCard extends ConsumerWidget {
                   color: WrColors.navy,
                   height: 1.25,
                 ),
+                textAlign: TextAlign.start,
               ),
               if (total > 0) ...[
                 const SizedBox(height: 12),

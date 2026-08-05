@@ -26,6 +26,7 @@ import '../../../core/logic/wr_pricing.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../profile/profile_providers.dart';
 import '../wr_providers.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 class WrPaymentScreen extends ConsumerStatefulWidget {
   const WrPaymentScreen({super.key, this.plan});
@@ -1014,10 +1015,11 @@ class _BankCard extends StatelessWidget {
           _row('Số tiền', order.finalAmount.round().toString(), 'amount'),
           _row('Nội dung', order.code, 'code'),
           const SizedBox(height: 10),
-          const Text(
+          const WrParagraph(
             'Giữ nguyên nội dung chuyển khoản. Sai nội dung là hệ thống không '
             'nhận ra đơn của bạn.',
             style: TextStyle(fontSize: 14, color: WrColors.coral, height: 1.4),
+            textAlign: TextAlign.start,
           ),
         ],
       ),
@@ -1089,10 +1091,11 @@ class _InvoiceCard extends StatelessWidget {
           ),
           if (form.requested) ...[
             const SizedBox(height: 4),
-            const Text(
+            const WrParagraph(
               'Hoá đơn phát hành sau khi thanh toán thành công và gửi vào email '
               'bạn điền ở đây.',
               style: TextStyle(fontSize: 14, color: WrColors.text3, height: 1.4),
+              textAlign: TextAlign.start,
             ),
             const SizedBox(height: 12),
             _field('Tên người mua', 'invoice_buyer', form.buyerName,

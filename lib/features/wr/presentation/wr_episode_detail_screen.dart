@@ -15,6 +15,7 @@ import '../../../core/widgets/section_divider.dart';
 import '../../../core/widgets/wr_detail_scaffold.dart';
 import '../episode_flow_controller.dart';
 import '../wr_providers.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 
 class WrEpisodeDetailScreen extends ConsumerWidget {
   const WrEpisodeDetailScreen({super.key, required this.episodeId});
@@ -31,7 +32,7 @@ class WrEpisodeDetailScreen extends ConsumerWidget {
         eyebrow: 'MỘT LẦN NHÌN LẠI',
         title: 'Không mở được lần nhìn lại này',
         children: const [
-          Text(
+          WrParagraph(
             'Có thể nó đã bị xoá, hoặc thiết bị đang mất kết nối.',
             key: Key('wr_episode_detail_missing'),
             style: TextStyle(fontSize: 16.5, color: WrColors.muted, height: 1.65),
@@ -101,7 +102,7 @@ class WrEpisodeDetailScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 6),
-                  Text(
+                  WrParagraph(
                     note.trim(),
                     style: const TextStyle(
                       fontSize: 16,
