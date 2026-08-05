@@ -4,11 +4,16 @@
 # cho mượn máy Mac có sẵn Xcode + Flutter, ký bằng chứng chỉ lấy tự động từ
 # App Store Connect API key, rồi đẩy thẳng lên TestFlight.
 #
-# Trước khi chạy lần đầu phải làm 3 việc ngoài repo (xem hướng dẫn kèm theo):
+# Trước khi chạy lần đầu phải làm 4 việc ngoài repo (xem hướng dẫn kèm theo):
 #   1. Tạo App Store Connect API key (quyền App Manager), nạp vào Codemagic
 #      team settings với tên integration là "workreflection-asc".
 #   2. Tạo app record trên App Store Connect với bundle id bên dưới.
 #   3. Điền APP_STORE_APPLE_ID (số Apple ID của app, xem ở App Information).
+#   4. Tạo biến bí mật CERTIFICATE_PRIVATE_KEY trong nhóm "appstore_credentials"
+#      trên Codemagic — nội dung là private key RSA sinh bằng:
+#         ssh-keygen -t rsa -b 2048 -m PEM -f ios_distribution_private_key -q -N ""
+#      Apple ký chứng chỉ phân phối lên đúng key này, nên phải giữ nguyên một key
+#      qua các lần build; đổi key là sinh chứng chỉ mới, mà Apple chỉ cho 3 cái.
 
 workflows:
   ios-release:
@@ -21,12 +26,14 @@ workflows:
       app_store_connect: workreflection-asc
 
     environment:
-      ios_signing:
-        # distribution_type + bundle_identifier => Codemagic tự tạo/tải chứng chỉ
-        # và provisioning profile từ Apple, không cần up tay file .p12.
-        distribution_type: app_store
-        bundle_identifier: app.workreflection.workreflectionMobile
+      # Không dùng khối ios_signing: nó chỉ TÌM provisioning profile đã có sẵn
+      # trong Codemagic, không tạo mới — mà tài khoản Apple này chưa có profile
+      # nào. Thay bằng bước "Fetch signing files" ở dưới, có cờ --create.
+      groups:
+        # Nhóm biến khai trên Codemagic UI, chứa CERTIFICATE_PRIVATE_KEY.
+        - appstore_credentials
       vars:
+        BUNDLE_ID: app.workreflection.workreflectionMobile
         # Apple ID của app record (dãy số ~10 chữ số), dùng để hỏi build number
         # mới nhất trên App Store Connect rồi +1 — tránh trùng số khi nộp.
         APP_STORE_APPLE_ID: 6798188505
@@ -41,6 +48,21 @@ workflows:
 
       - name: Install pods
         script: find . -name "Podfile" -execdir pod install \;
+
+      - name: Set up keychain
+        script: keychain initialize
+
+      - name: Fetch signing files
+        # --create: chưa có chứng chỉ/profile trên Developer Portal thì tạo mới.
+        # Xác thực lấy từ integration app_store_connect ở trên, chỉ riêng private
+        # key của chứng chỉ là phải tự cấp qua CERTIFICATE_PRIVATE_KEY.
+        script: |
+          app-store-connect fetch-signing-files "$BUNDLE_ID" \
+            --type IOS_APP_STORE \
+            --create
+
+      - name: Add certificates to keychain
+        script: keychain add-certificates
 
       - name: Set up code signing settings on Xcode project
         script: xcode-project use-profiles
