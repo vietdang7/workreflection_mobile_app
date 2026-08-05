@@ -208,7 +208,7 @@ void main() {
       await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
 
       // Tổng số ngày đã nhìn lại thay cho chuỗi ngày liên tiếp (yêu cầu 05/08).
-      expect(find.textContaining('Ngày nhìn lại'), findsOneWidget);
+      expect(find.textContaining('ngày Reflect'), findsOneWidget);
       expect(find.textContaining('Ngày streak'), findsNothing);
       expect(find.textContaining('Insight lưu'), findsOneWidget);
       expect(find.textContaining('Milestone'), findsOneWidget);

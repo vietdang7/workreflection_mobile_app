@@ -647,7 +647,7 @@ abstract class AppLocalizations {
   /// No description provided for @profileStatReflectDays.
   ///
   /// In vi, this message translates to:
-  /// **'Ngày nhìn lại'**
+  /// **'ngày Reflect'**
   String get profileStatReflectDays;
 
   /// No description provided for @profileStatInsights.

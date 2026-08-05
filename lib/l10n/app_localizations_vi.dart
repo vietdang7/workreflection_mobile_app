@@ -300,7 +300,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profileBadgeMember => 'Thành viên';
 
   @override
-  String get profileStatReflectDays => 'Ngày nhìn lại';
+  String get profileStatReflectDays => 'ngày Reflect';
 
   @override
   String get profileStatInsights => 'Insight lưu';
