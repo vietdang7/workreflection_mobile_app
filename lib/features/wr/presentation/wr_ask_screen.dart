@@ -26,6 +26,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/logic/wr_chat_starters.dart';
 import '../../../core/models/wr_chat.dart';
 import '../../../core/models/wr_mood_content.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -42,17 +43,17 @@ const String kAskPendingMessage =
     'Hệ thống đã ghi nhận câu hỏi của bạn. Phần gợi ý chi tiết sẽ được gửi vào '
     'email của bạn.';
 
-/// Gợi ý mở lời cho màn trống.
+/// Gợi ý mở lời cho màn trống, bản DỰ PHÒNG.
 ///
-/// Chọn theo mục 5 của system prompt: đều là tình huống cụ thể đã xảy ra, tức
-/// loại chất liệu trợ lý có thể dẫn tiếp vào một Reflection thật. Cố ý không có
-/// câu nào kiểu "phân tích tôi đi" — câu đó thuộc trục Premium ở mục 7 và mời
-/// người dùng gõ nó ra là tự dựng một cánh cửa rồi đóng vào mặt họ.
-const List<String> kChatStarters = [
-  'Hôm nay mình im lặng trong một cuộc họp dù có ý kiến khác.',
-  'Mình vừa nhận một phản hồi khó nghe từ cấp trên.',
-  'Mình làm xong một việc khó hơn mình tưởng.',
-];
+/// ⚠ ĐÂY KHÔNG CÒN LÀ THỨ NGƯỜI DÙNG THẤY trong đa số trường hợp. Từ 2026-08-04
+/// gợi ý được dựng từ chính những tình huống họ hay chọn khi nhìn lại, qua
+/// [wrChatStartersProvider]. Danh sách này chỉ còn là phần bù khi họ chưa chọn
+/// tình huống nào, hoặc khi hai nguồn dữ liệu kia còn đang tải.
+///
+/// Giữ tên cũ vì đây là điểm neo của test màn trống. Nội dung nằm ở
+/// `wr_chat_starters.dart` cùng chỗ với phần logic, để không có hai danh sách
+/// dự phòng ở hai nơi rồi trôi khỏi nhau.
+const List<String> kChatStarters = kDefaultChatStarters;
 
 class WrAskScreen extends ConsumerStatefulWidget {
   const WrAskScreen({super.key});
@@ -181,10 +182,13 @@ class _WrAskScreenState extends ConsumerState<WrAskScreen> {
                       ),
                     )
                   : state.isEmpty && !state.sending
-                      ? _EmptyState(onPick: (text) {
-                          _controller.text = text;
-                          setState(() {});
-                        })
+                      ? _EmptyState(
+                          starters: ref.watch(wrChatStartersProvider),
+                          onPick: (text) {
+                            _controller.text = text;
+                            setState(() {});
+                          },
+                        )
                       : ListView(
                           key: const Key('wr_chat_list'),
                           controller: _scrollController,
@@ -326,18 +330,19 @@ class _Bubble extends StatelessWidget {
               ),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                color: isUser ? WrColors.navy : WrColors.cream,
+                color: isUser ? WrColors.navy : WrColors.white,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(18),
                   topRight: const Radius.circular(18),
                   bottomLeft: Radius.circular(isUser ? 18 : 6),
                   bottomRight: Radius.circular(isUser ? 6 : 18),
                 ),
+                border: Border.all(color: WrColors.line),
               ),
               child: Text(
                 message.content,
                 style: TextStyle(
-                  fontSize: 14.5,
+                  fontSize: 16,
                   height: 1.65,
                   color: isUser ? WrColors.white : WrColors.dark,
                 ),
@@ -373,7 +378,7 @@ class _ActionButton extends StatelessWidget {
         ),
         label: Text(
           action.label,
-          style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
         ),
         style: OutlinedButton.styleFrom(
           foregroundColor: WrColors.navy,
@@ -401,14 +406,15 @@ class _TypingBubble extends StatelessWidget {
           Container(
             key: const Key('wr_chat_typing'),
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
-            decoration: const BoxDecoration(
-              color: WrColors.cream,
+            decoration: BoxDecoration(
+              color: WrColors.white,
               borderRadius: BorderRadius.only(
                 topLeft: Radius.circular(18),
                 topRight: Radius.circular(18),
                 bottomLeft: Radius.circular(6),
                 bottomRight: Radius.circular(18),
               ),
+              border: Border.all(color: WrColors.line),
             ),
             child: const SizedBox(
               width: 18,
@@ -448,7 +454,14 @@ class _Dot extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.onPick});
+  const _EmptyState({required this.starters, required this.onPick});
+
+  /// Gợi ý mở lời, dựng từ tình huống người dùng hay chọn khi nhìn lại.
+  ///
+  /// Truyền VÀO chứ không tự đọc provider: widget này thuần hiển thị, và nhận
+  /// danh sách từ ngoài thì test dựng được đúng từng trường hợp (có dữ liệu,
+  /// chưa có dữ liệu) mà không phải dựng cả tầng dữ liệu phía sau.
+  final List<String> starters;
 
   final ValueChanged<String> onPick;
 
@@ -472,14 +485,17 @@ class _EmptyState extends StatelessWidget {
         const Text(
           'Một tình huống vừa xảy ra, một cảm giác khó gọi tên, hay một điều '
           'bạn muốn hiểu thêm về chính mình. Viết một câu là đủ.',
-          style: TextStyle(fontSize: 14, color: WrColors.muted, height: 1.75),
+          style: TextStyle(fontSize: 15.5, color: WrColors.muted, height: 1.75),
         ),
         const SizedBox(height: 24),
-        for (final s in kChatStarters)
+        for (final (i, s) in starters.indexed)
           Padding(
             padding: const EdgeInsets.only(bottom: 10),
             child: InkWell(
-              key: Key('wr_chat_starter_${kChatStarters.indexOf(s)}'),
+              // Khoá theo VỊ TRÍ, không theo `indexOf`. Gợi ý giờ dựng từ dữ
+              // liệu thật nên hai ô hoàn toàn có thể trùng chữ; `indexOf` trả
+              // về vị trí đầu tiên và hai ô sẽ mang cùng một khoá.
+              key: Key('wr_chat_starter_$i'),
               onTap: () => onPick(s),
               borderRadius: BorderRadius.circular(14),
               child: WrCardMinimal(
@@ -489,7 +505,7 @@ class _EmptyState extends StatelessWidget {
                       child: Text(
                         s,
                         style: const TextStyle(
-                          fontSize: 14,
+                          fontSize: 15.5,
                           color: WrColors.dark,
                           height: 1.55,
                         ),
@@ -509,7 +525,7 @@ class _EmptyState extends StatelessWidget {
         const Text(
           'Mình là trợ lý AI hỗ trợ bạn nhìn lại công việc, không thay thế '
           'chuyên gia tâm lý hay tư vấn nghề nghiệp.',
-          style: TextStyle(fontSize: 12.5, color: WrColors.muted, height: 1.65),
+          style: TextStyle(fontSize: 14, color: WrColors.muted, height: 1.65),
         ),
       ],
     );
@@ -543,7 +559,7 @@ class _ErrorBar extends StatelessWidget {
           Text(
             message,
             style: const TextStyle(
-              fontSize: 13,
+              fontSize: 14.5,
               color: WrColors.dark,
               height: 1.6,
             ),
@@ -563,7 +579,7 @@ class _ErrorBar extends StatelessWidget {
               child: const Text(
                 'Xem gói Premium',
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 14.5,
                   fontWeight: FontWeight.w600,
                   color: WrColors.navy,
                 ),
@@ -612,7 +628,7 @@ class _Composer extends StatelessWidget {
       ),
       decoration: const BoxDecoration(
         color: WrColors.white,
-        border: Border(top: BorderSide(color: WrColors.cream, width: 1)),
+        border: Border(top: BorderSide(color: WrColors.line, width: 1)),
       ),
       child: Column(
         children: [
@@ -640,7 +656,7 @@ class _Composer extends StatelessWidget {
                   ? 'Hôm nay bạn đã dùng hết lượt trò chuyện miễn phí.'
                   : 'Còn $remaining lượt trò chuyện miễn phí hôm nay.',
               key: const Key('wr_chat_quota_hint'),
-              style: const TextStyle(fontSize: 11.5, color: WrColors.text3),
+              style: const TextStyle(fontSize: 13, color: WrColors.text3),
             ),
           ],
         ],
@@ -715,7 +731,7 @@ class _ConversationsSheet extends ConsumerWidget {
             const Text(
               'LỊCH SỬ TRÒ CHUYỆN',
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 12.5,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.55,
                 color: WrColors.muted,
@@ -737,7 +753,7 @@ class _ConversationsSheet extends ConsumerWidget {
                 padding: EdgeInsets.only(bottom: 12),
                 child: Text(
                   'Chưa đọc được lịch sử. Bạn thử lại sau nhé.',
-                  style: TextStyle(fontSize: 14, color: WrColors.muted),
+                  style: TextStyle(fontSize: 15.5, color: WrColors.muted),
                 ),
               ),
               data: (items) => items.isEmpty
@@ -747,7 +763,7 @@ class _ConversationsSheet extends ConsumerWidget {
                       child: Text(
                         'Chưa có cuộc trò chuyện nào được lưu.',
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 15.5,
                           color: WrColors.muted,
                           height: 1.65,
                         ),
@@ -808,7 +824,7 @@ class _ConversationRow extends StatelessWidget {
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
-                      fontSize: 14.5,
+                      fontSize: 16,
                       fontWeight: FontWeight.w600,
                       color: isCurrent ? WrColors.muted : WrColors.navy,
                       height: 1.5,
@@ -819,7 +835,7 @@ class _ConversationRow extends StatelessWidget {
                     '${at.day.toString().padLeft(2, '0')}/'
                     '${at.month.toString().padLeft(2, '0')}/${at.year}'
                     '${isCurrent ? '  ·  đang mở' : ''}',
-                    style: const TextStyle(fontSize: 12, color: WrColors.muted),
+                    style: const TextStyle(fontSize: 13.5, color: WrColors.muted),
                   ),
                 ],
               ),
@@ -857,7 +873,7 @@ class _OldQuestionsSheet extends ConsumerWidget {
             const Text(
               'BẠN ĐÃ HỎI',
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 12.5,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.55,
                 color: WrColors.muted,
@@ -871,7 +887,7 @@ class _OldQuestionsSheet extends ConsumerWidget {
                 child: Text(
                   'Bạn chưa gửi câu hỏi nào theo cách cũ.',
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 15.5,
                     color: WrColors.muted,
                     height: 1.65,
                   ),
@@ -915,13 +931,13 @@ class _QuestionRow extends StatelessWidget {
               child: Text(
                 '${at.day.toString().padLeft(2, '0')}/'
                 '${at.month.toString().padLeft(2, '0')}',
-                style: const TextStyle(fontSize: 12, color: WrColors.muted),
+                style: const TextStyle(fontSize: 13.5, color: WrColors.muted),
               ),
             ),
           Text(
             question.question,
             style: const TextStyle(
-              fontSize: 15,
+              fontSize: 16.5,
               fontWeight: FontWeight.w600,
               color: WrColors.navy,
               height: 1.5,
@@ -931,7 +947,7 @@ class _QuestionRow extends StatelessWidget {
           Text(
             question.isAnswered ? question.answer! : kAskPendingMessage,
             style: TextStyle(
-              fontSize: 13.5,
+              fontSize: 15,
               height: 1.7,
               color: question.isAnswered ? WrColors.dark : WrColors.muted,
               fontStyle:

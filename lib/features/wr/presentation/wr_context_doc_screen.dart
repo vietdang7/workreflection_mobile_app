@@ -226,7 +226,7 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
               'Nội dung đọc được sẽ dùng cho phần trò chuyện, gợi ý chủ đề thực '
               'hành và đối chiếu kỹ năng.',
               style: TextStyle(
-                fontSize: 13,
+                fontSize: 14.5,
                 height: 1.65,
                 color: WrColors.muted,
               ),
@@ -255,7 +255,7 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
               Text(
                 _errorMsg!,
                 key: const Key('wr_context_doc_error'),
-                style: const TextStyle(fontSize: 12, color: WrColors.coral),
+                style: const TextStyle(fontSize: 13.5, color: WrColors.coral),
               ),
             ],
 
@@ -276,7 +276,7 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
                 child: Text(
                   _busy ? 'Đang tải lên…' : 'Thêm tài liệu',
                   style: const TextStyle(
-                    fontSize: 13,
+                    fontSize: 14.5,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -284,8 +284,8 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Nhận file PDF hoặc ảnh chụp (PNG, JPG, WEBP).',
-              style: TextStyle(fontSize: 12, height: 1.55, color: WrColors.muted),
+              'Nhận file PDF, Word (.docx) hoặc ảnh chụp (PNG, JPG, WEBP).',
+              style: TextStyle(fontSize: 13.5, height: 1.55, color: WrColors.muted),
             ),
 
             if (!canUpload && maxDocs != null) ...[
@@ -293,12 +293,12 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
               Text(
                 'Bản miễn phí lưu được $maxDocs tài liệu. Nâng cấp để thêm '
                 'không giới hạn.',
-                style: const TextStyle(fontSize: 12, color: WrColors.muted),
+                style: const TextStyle(fontSize: 13.5, color: WrColors.muted),
               ),
             ],
 
             const SizedBox(height: 26),
-            const WrEyebrow('AI ĐỌC TÀI LIỆU'),
+            const WrEyebrow('TRỢ LÝ ĐỌC TÀI LIỆU'),
             const SizedBox(height: 10),
             if (!canAnalyze)
               const WrPremiumLock(
@@ -349,7 +349,7 @@ class _WhatAiDoes extends StatelessWidget {
                   child: Text(
                     t,
                     style: const TextStyle(
-                      fontSize: 13,
+                      fontSize: 14.5,
                       height: 1.6,
                       color: WrColors.muted,
                     ),
@@ -380,7 +380,7 @@ class _EmptyDocs extends StatelessWidget {
       ),
       child: const Text(
         'Chưa có tài liệu nào.',
-        style: TextStyle(fontSize: 13, color: WrColors.muted),
+        style: TextStyle(fontSize: 14.5, color: WrColors.muted),
       ),
     );
   }
@@ -412,7 +412,7 @@ class _DocRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: WrColors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0x0F000000)),
+        border: Border.all(color: WrColors.line),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -429,7 +429,7 @@ class _DocRow extends StatelessWidget {
                     Text(
                       docTypeLabel(doc.docType),
                       style: const TextStyle(
-                        fontSize: 13,
+                        fontSize: 14.5,
                         fontWeight: FontWeight.w600,
                         color: WrColors.dark,
                       ),
@@ -438,7 +438,7 @@ class _DocRow extends StatelessWidget {
                       Text(
                         '${at.day}/${at.month}/${at.year}',
                         style: const TextStyle(
-                          fontSize: 11,
+                          fontSize: 12.5,
                           color: WrColors.muted,
                         ),
                       ),
@@ -465,7 +465,7 @@ class _DocRow extends StatelessWidget {
               Text(
                 a.title!,
                 style: const TextStyle(
-                  fontSize: 14.5,
+                  fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: WrColors.navy,
                   height: 1.4,
@@ -474,14 +474,14 @@ class _DocRow extends StatelessWidget {
             if (a.organization != null)
               Text(
                 a.organization!,
-                style: const TextStyle(fontSize: 12.5, color: WrColors.muted),
+                style: const TextStyle(fontSize: 14, color: WrColors.muted),
               ),
             if (a.summary.isNotEmpty) ...[
               const SizedBox(height: 7),
               Text(
                 a.summary,
                 style: const TextStyle(
-                  fontSize: 13,
+                  fontSize: 14.5,
                   height: 1.6,
                   color: WrColors.muted,
                 ),
@@ -505,7 +505,7 @@ class _DocRow extends StatelessWidget {
             const SizedBox(height: 10),
             const Text(
               'Chưa đọc được tài liệu này.',
-              style: TextStyle(fontSize: 12.5, color: WrColors.coral),
+              style: TextStyle(fontSize: 14, color: WrColors.coral),
             ),
             const SizedBox(height: 6),
             _TextButtonRow(
@@ -545,7 +545,7 @@ class _MiniList extends StatelessWidget {
           Text(
             label.toUpperCase(),
             style: const TextStyle(
-              fontSize: 10,
+              fontSize: 11.5,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.8,
               color: WrColors.muted,
@@ -559,7 +559,7 @@ class _MiniList extends StatelessWidget {
               child: Text(
                 '· $t',
                 style: const TextStyle(
-                  fontSize: 12.5,
+                  fontSize: 14,
                   height: 1.55,
                   color: WrColors.dark,
                 ),
@@ -568,7 +568,7 @@ class _MiniList extends StatelessWidget {
           if (items.length > 4)
             Text(
               '… và ${items.length - 4} mục nữa',
-              style: const TextStyle(fontSize: 11.5, color: WrColors.muted),
+              style: const TextStyle(fontSize: 13, color: WrColors.muted),
             ),
         ],
       ),
@@ -598,7 +598,7 @@ class _TextButtonRow extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
-              fontSize: 12.5,
+              fontSize: 14,
               fontWeight: FontWeight.w700,
               color: onTap == null ? WrColors.muted : WrColors.navy,
             ),
@@ -634,14 +634,14 @@ class _StatusChip extends StatelessWidget {
           SizedBox(width: 7),
           Text(
             'Đang đọc',
-            style: TextStyle(fontSize: 11.5, color: WrColors.muted),
+            style: TextStyle(fontSize: 13, color: WrColors.muted),
           ),
         ],
       );
     }
 
     final (label, color) = switch (status) {
-      DocAnalysisStatus.ready => ('Đã đọc', WrColors.teal),
+      DocAnalysisStatus.ready => ('Đã đọc', WrColors.pillTealText),
       DocAnalysisStatus.failed => ('Chưa đọc được', WrColors.coral),
       _ => ('Chưa đọc', WrColors.muted),
     };
@@ -655,7 +655,7 @@ class _StatusChip extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 10.5,
+          fontSize: 12,
           fontWeight: FontWeight.w700,
           color: color,
         ),

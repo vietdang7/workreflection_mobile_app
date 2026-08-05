@@ -175,7 +175,7 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
     ];
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F3EE),
+      backgroundColor: WrColors.pageBg,
       body: Column(
         children: [
           // Header — navy background
@@ -205,7 +205,7 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                             child: const Text(
                               'PREMIUM',
                               style: TextStyle(
-                                fontSize: 10,
+                                fontSize: 11.5,
                                 fontWeight: FontWeight.w700,
                                 color: WrColors.navy,
                               ),
@@ -216,7 +216,7 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                             Text(
                               pricing.originalLabel!,
                               style: const TextStyle(
-                                fontSize: 10,
+                                fontSize: 11.5,
                                 color: Color(0x66FFFFFF),
                                 decoration: TextDecoration.lineThrough,
                                 decorationColor: Color(0x66FFFFFF),
@@ -227,7 +227,7 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                           Text(
                             '${pricing.currentLabel} / ${pricing.durationSuffix}',
                             style: const TextStyle(
-                              fontSize: 10,
+                              fontSize: 11.5,
                               color: Color(0xB3FFFFFF),
                               fontWeight: FontWeight.w700,
                             ),
@@ -248,7 +248,7 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                       Text(
                         h.sub,
                         style: const TextStyle(
-                          fontSize: 13,
+                          fontSize: 14.5,
                           color: Color(0x8CFFFFFF),
                           height: 1.6,
                         ),
@@ -288,9 +288,9 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                         const Text(
                           'BẠN NHẬN ĐƯỢC',
                           style: TextStyle(
-                            fontSize: 9,
+                            fontSize: 10.5,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF737373),
+                            color: WrColors.muted,
                             letterSpacing: 0.08,
                           ),
                         ),
@@ -312,9 +312,9 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                         const Text(
                           'SO SÁNH GÓI',
                           style: TextStyle(
-                            fontSize: 9,
+                            fontSize: 10.5,
                             fontWeight: FontWeight.w700,
-                            color: Color(0xFF737373),
+                            color: WrColors.muted,
                             letterSpacing: 0.08,
                           ),
                         ),
@@ -323,7 +323,7 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                           decoration: BoxDecoration(
                             color: WrColors.white,
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: const Color(0x0F000000)),
+                            border: Border.all(color: WrColors.line),
                           ),
                           child: const Column(
                             children: freeFeatures,
@@ -371,7 +371,7 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                         ),
                         child: const Text(
                           'Bắt đầu Premium →',
-                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                          style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w700),
                         ),
                       ),
                     ),
@@ -382,10 +382,10 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                     padding: const EdgeInsets.fromLTRB(22, 0, 22, 20),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF0F4F0),
+                        color: WrColors.teal.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(12),
                         border: const Border(
-                          left: BorderSide(color: Color(0xFF91A88D), width: 3),
+                          left: BorderSide(color: WrColors.pillTealText, width: 3),
                         ),
                       ),
                       padding: const EdgeInsets.all(14),
@@ -395,15 +395,15 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                           Text(
                             'Bảo đảm hoàn tiền 7 ngày',
                             style: TextStyle(
-                              fontSize: 11,
+                              fontSize: 12.5,
                               fontWeight: FontWeight.w700,
-                              color: Color(0xFF4A6741),
+                              color: WrColors.pillTealText,
                             ),
                           ),
                           SizedBox(height: 3),
                           Text(
                             'Nếu không hài lòng trong 7 ngày đầu, chúng tôi hoàn tiền toàn bộ. Không câu hỏi.',
-                            style: TextStyle(fontSize: 10, color: Color(0xFF737373), height: 1.6),
+                            style: TextStyle(fontSize: 11.5, color: WrColors.muted, height: 1.6),
                           ),
                         ],
                       ),
@@ -447,10 +447,10 @@ class _PlanSelector extends StatelessWidget {
         const Text(
           'CHỌN GÓI',
           style: TextStyle(
-            fontSize: 10,
+            fontSize: 11.5,
             fontWeight: FontWeight.w700,
             letterSpacing: 1.2,
-            color: Color(0xFF737373),
+            color: WrColors.muted,
           ),
         ),
         const SizedBox(height: 8),
@@ -493,7 +493,7 @@ class _PlanOption extends StatelessWidget {
           color: WrColors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: isSelected ? WrColors.coral : const Color(0x14000000),
+            color: isSelected ? WrColors.coral : WrColors.line,
             width: isSelected ? 2 : 1,
           ),
         ),
@@ -508,7 +508,7 @@ class _PlanOption extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isSelected ? WrColors.coral : const Color(0xFFC7C7C7),
+                  color: isSelected ? WrColors.coral : WrColors.line,
                   width: 2,
                 ),
               ),
@@ -535,7 +535,7 @@ class _PlanOption extends StatelessWidget {
                     plan.durationLabel[0].toUpperCase() +
                         plan.durationLabel.substring(1),
                     style: const TextStyle(
-                      fontSize: 14,
+                      fontSize: 15.5,
                       fontWeight: FontWeight.w700,
                       color: WrColors.navy,
                     ),
@@ -546,8 +546,8 @@ class _PlanOption extends StatelessWidget {
                       '≈ ${formatVndPrice(plan.pricePerMonth, plan.currency)}'
                       ' mỗi tháng',
                       style: const TextStyle(
-                        fontSize: 11,
-                        color: Color(0xFF737373),
+                        fontSize: 12.5,
+                        color: WrColors.muted,
                       ),
                     ),
                   ],
@@ -557,16 +557,16 @@ class _PlanOption extends StatelessWidget {
             if (savingsPercent != null) ...[
               Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF0F4F0),
+                  color: WrColors.teal.withValues(alpha: 0.08),
                   borderRadius: BorderRadius.circular(6),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                 child: Text(
                   'TIẾT KIỆM $savingsPercent%',
                   style: const TextStyle(
-                    fontSize: 9,
+                    fontSize: 10.5,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF4A6741),
+                    color: WrColors.pillTealText,
                   ),
                 ),
               ),
@@ -575,7 +575,7 @@ class _PlanOption extends StatelessWidget {
             Text(
               plan.currentLabel,
               style: const TextStyle(
-                fontSize: 15,
+                fontSize: 16.5,
                 fontWeight: FontWeight.w700,
                 color: WrColors.navy,
               ),
@@ -600,7 +600,7 @@ class _PriceBlock extends StatelessWidget {
       decoration: BoxDecoration(
         color: WrColors.white,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0x0F000000)),
+        border: Border.all(color: WrColors.line),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       child: Row(
@@ -629,10 +629,10 @@ class _PriceBlock extends StatelessWidget {
                         child: Text(
                           pricing.originalLabel!,
                           style: const TextStyle(
-                            fontSize: 13,
-                            color: Color(0xFF9A9A9A),
+                            fontSize: 14.5,
+                            color: WrColors.text3,
                             decoration: TextDecoration.lineThrough,
-                            decorationColor: Color(0xFF9A9A9A),
+                            decorationColor: WrColors.text3,
                           ),
                         ),
                       ),
@@ -641,7 +641,7 @@ class _PriceBlock extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   'cho ${pricing.durationLabel} Premium',
-                  style: const TextStyle(fontSize: 11, color: Color(0xFF737373)),
+                  style: const TextStyle(fontSize: 12.5, color: WrColors.muted),
                 ),
               ],
             ),
@@ -656,7 +656,7 @@ class _PriceBlock extends StatelessWidget {
               child: Text(
                 '−${pricing.discountPercent}%',
                 style: const TextStyle(
-                  fontSize: 12,
+                  fontSize: 13.5,
                   fontWeight: FontWeight.w700,
                   color: WrColors.navy,
                 ),
@@ -685,7 +685,7 @@ class _HighlightCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: WrColors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0x0F000000)),
+        border: Border.all(color: WrColors.line),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Row(
@@ -695,7 +695,7 @@ class _HighlightCard extends StatelessWidget {
             width: 34,
             height: 34,
             decoration: BoxDecoration(
-              color: const Color(0xFFEEF2F8),
+              color: WrColors.navy.withValues(alpha: 0.06),
               borderRadius: BorderRadius.circular(9),
             ),
             child: Center(
@@ -710,7 +710,7 @@ class _HighlightCard extends StatelessWidget {
                 Text(
                   highlight.title,
                   style: const TextStyle(
-                    fontSize: 13,
+                    fontSize: 14.5,
                     fontWeight: FontWeight.w700,
                     color: WrColors.navy,
                   ),
@@ -718,7 +718,7 @@ class _HighlightCard extends StatelessWidget {
                 const SizedBox(height: 3),
                 Text(
                   highlight.desc,
-                  style: const TextStyle(fontSize: 11, color: Color(0xFF737373), height: 1.6),
+                  style: const TextStyle(fontSize: 12.5, color: WrColors.muted, height: 1.6),
                 ),
               ],
             ),
@@ -738,7 +738,7 @@ class _FeatureRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: Color(0x0D000000))),
+        border: Border(bottom: BorderSide(color: WrColors.line)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
       child: Row(
@@ -747,15 +747,15 @@ class _FeatureRow extends StatelessWidget {
             child: Text(
               label,
               style: TextStyle(
-                fontSize: 12,
-                color: avail ? WrColors.dark : const Color(0xFF737373),
+                fontSize: 13.5,
+                color: avail ? WrColors.dark : WrColors.muted,
               ),
             ),
           ),
           Icon(
             avail ? Icons.check_circle_rounded : Icons.cancel_rounded,
             size: 16,
-            color: avail ? WrColors.teal : const Color(0xFFD1D5DB),
+            color: avail ? WrColors.teal : WrColors.text3,
           ),
         ],
       ),

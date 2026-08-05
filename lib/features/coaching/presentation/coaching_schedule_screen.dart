@@ -262,7 +262,7 @@ class _CoachingScheduleScreenState
                               textAlign: TextAlign.center,
                               style: WrTextStyles.body.copyWith(
                                 color: WrColors.muted,
-                                fontSize: 12,
+                                fontSize: 13.5,
                               ),
                             ),
                           ),
@@ -298,7 +298,7 @@ class _CoachingScheduleScreenState
                           child: Text(
                             '${cell.date.day}',
                             style: TextStyle(
-                              fontSize: 13,
+                              fontSize: 14.5,
                               fontWeight: FontWeight.w500,
                               color: !cell.isSelectable
                                   ? WrColors.muted.withValues(alpha: 0.4)
@@ -342,16 +342,17 @@ class _CoachingScheduleScreenState
                     onTap: () => setState(() => _selectedTime = slot),
                     child: Container(
                       decoration: BoxDecoration(
-                        color: isSelected ? WrColors.coral : WrColors.cream,
+                        color: isSelected ? WrColors.coral : WrColors.white,
                         borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: WrColors.line),
                       ),
                       alignment: Alignment.center,
                       child: Text(
                         slot,
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 15.5,
                           fontWeight: FontWeight.w600,
-                          color: isSelected ? WrColors.white : WrColors.navy,
+                          color: WrColors.navy,
                         ),
                       ),
                     ),
@@ -375,7 +376,7 @@ class _CoachingScheduleScreenState
                       WrTextStyles.body.copyWith(color: WrColors.muted),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
-                    borderSide: const BorderSide(color: WrColors.cream),
+                    borderSide: const BorderSide(color: WrColors.line),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -499,7 +500,7 @@ class _SectionCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: WrColors.white,
-        border: Border.all(color: WrColors.cream),
+        border: Border.all(color: WrColors.line),
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(

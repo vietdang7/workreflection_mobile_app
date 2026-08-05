@@ -87,6 +87,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get authRegisterTitle => 'Tạo tài khoản';
 
   @override
+  String get authLoginSubtitle => 'Đăng nhập để tiếp tục hành trình của bạn';
+
+  @override
+  String get authRegisterSubtitle =>
+      'Vài bước ngắn để bắt đầu cùng WorkReflection';
+
+  @override
+  String get authPasswordShow => 'Hiện mật khẩu';
+
+  @override
+  String get authPasswordHide => 'Ẩn mật khẩu';
+
+  @override
   String get authEmailLabel => 'Email';
 
   @override
@@ -305,7 +318,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profileSettingLanguage => 'Ngôn ngữ';
 
   @override
-  String get profileSettingExport => 'Xuất dữ liệu';
+  String get profileSettingExport => 'Xuất dữ liệu của tôi';
 
   @override
   String get profileSettingLogout => 'Đăng xuất';

@@ -160,7 +160,7 @@ void main() {
       expect(find.text('Tài liệu bối cảnh'), findsOneWidget);
       expect(find.text('Chưa có tài liệu nào.'), findsOneWidget);
       expect(find.text('Thêm tài liệu'), findsOneWidget);
-      expect(find.text('AI ĐỌC TÀI LIỆU'), findsOneWidget);
+      expect(find.text('TRỢ LÝ ĐỌC TÀI LIỆU'), findsOneWidget);
       expect(find.byKey(const Key('wr_context_doc_lock')), findsOneWidget);
     });
 

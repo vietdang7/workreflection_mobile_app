@@ -238,6 +238,55 @@ void main() {
       expect(formingSkills(all).single.remaining, 3);
     });
 
+    test('hai chủ đề trùng tên chỉ ra một kỹ năng', () {
+      // pt-voice (bản cũ, đã ngưng đề xuất) và pt-c2 đều tên "Dám lên tiếng".
+      // Ghi danh cả hai từng làm màn Kỹ năng hiện hai dòng y hệt nhau.
+      final all = skillFormations(
+        themes: [
+          PracticeTheme(
+            themeId: 'pt-voice',
+            title: 'Dám lên tiếng',
+            retiredAt: DateTime(2026, 7, 31),
+          ),
+          const PracticeTheme(themeId: 'pt-c2', title: 'Dám lên tiếng'),
+        ],
+        enrollments: const [
+          PracticeEnrollment(userId: 'u1', themeId: 'pt-voice'),
+          PracticeEnrollment(userId: 'u1', themeId: 'pt-c2'),
+        ],
+        events: _steps('Dám lên tiếng', 2),
+        threshold: _threshold,
+      );
+
+      expect(all, hasLength(1));
+      // Không ai xong ba bước, nên giữ chủ đề còn đang đề xuất.
+      expect(all.single.themeId, 'pt-c2');
+      expect(all.single.practiceCount, 2);
+    });
+
+    test('trùng tên thì giữ chủ đề đã xong ba bước làm quen', () {
+      final all = skillFormations(
+        themes: [
+          PracticeTheme(
+            themeId: 'pt-voice',
+            title: 'Dám lên tiếng',
+            retiredAt: DateTime(2026, 7, 31),
+          ),
+          const PracticeTheme(themeId: 'pt-c2', title: 'Dám lên tiếng'),
+        ],
+        enrollments: [
+          _enrollment(completedAt: DateTime(2026, 8, 1)),
+          const PracticeEnrollment(userId: 'u1', themeId: 'pt-c2'),
+        ],
+        events: _steps('Dám lên tiếng', 2),
+        threshold: _threshold,
+      );
+
+      expect(all, hasLength(1));
+      expect(all.single.themeId, 'pt-voice');
+      expect(all.single.canMaintain, isTrue);
+    });
+
     test('không ghi danh chủ đề nào thì danh sách rỗng', () {
       expect(
         skillFormations(
@@ -288,6 +337,105 @@ void main() {
         threshold: _threshold,
       );
       expect(newlyFormed(formations: formations, events: const []), isEmpty);
+    });
+
+    test('dấu mốc ghi theo theme_id cũng chặn được lần ăn mừng thứ hai', () {
+      final events = [
+        for (var i = 1; i <= 5; i++)
+          CareerMemoryEvent(
+            id: 'e$i',
+            userId: 'u1',
+            behavior: kPracticeStepBehavior,
+            themeId: 'pt-voice',
+            reflectionText: 'Dám lên tiếng · Bước $i',
+          ),
+        const CareerMemoryEvent(
+          id: 'm1',
+          userId: 'u1',
+          behavior: kSkillFormedBehavior,
+          themeId: 'pt-voice',
+          // Cố ý để tên khác: dấu mốc phải nhận theo theme_id, không theo chữ.
+          reflectionText: 'Một cái tên đã đổi',
+        ),
+      ];
+      final formations = skillFormations(
+        themes: const [_theme],
+        enrollments: [_enrollment()],
+        events: events,
+        threshold: _threshold,
+      );
+
+      expect(
+        newlyFormed(
+          formations: formations,
+          events: events,
+          themes: const [_theme],
+        ),
+        isEmpty,
+      );
+    });
+  });
+
+  // ---------------------------------------------------------------------------
+  // Ma trận Cấp bậc v1.0, Phần C mục 1 — bộ đếm nhận theo theme_id
+  // ---------------------------------------------------------------------------
+
+  group('bộ đếm khớp theo theme_id', () {
+    const voiceOld = PracticeTheme(themeId: 'pt-voice', title: 'Dám lên tiếng');
+    const voiceNew = PracticeTheme(themeId: 'pt-c2', title: 'Dám lên tiếng');
+
+    CareerMemoryEvent tagged(String themeId, int i) => CareerMemoryEvent(
+          id: 't$themeId$i',
+          userId: 'u1',
+          behavior: kPracticeStepBehavior,
+          themeId: themeId,
+          reflectionText: 'Dám lên tiếng · Bước $i',
+        );
+
+    test('hai chủ đề TRÙNG TÊN không còn cộng chung một bộ đếm', () {
+      final events = [
+        tagged('pt-voice', 1),
+        tagged('pt-voice', 2),
+        tagged('pt-c2', 1),
+      ];
+
+      expect(practiceCountForTheme(voiceOld, events), 2);
+      expect(practiceCountForTheme(voiceNew, events), 1);
+    });
+
+    test('dữ liệu cũ chưa có theme_id vẫn được nhận theo tên', () {
+      // Không có luật lùi này thì mọi người đang theo dở mất sạch tiến độ ngay
+      // lần mở app kế tiếp.
+      final legacy = _steps('Dám lên tiếng', 3);
+      expect(practiceCountForTheme(voiceOld, legacy), 3);
+      expect(practiceCountForTheme(voiceNew, legacy), 3);
+    });
+
+    test('sự kiện có theme_id KHÔNG bao giờ lùi về so tên', () {
+      // Cùng tên chủ đề trong `reflection_text`, nhưng theme_id nói khác.
+      final events = [tagged('pt-c2', 1)];
+      expect(practiceCountForTheme(voiceOld, events), 0);
+    });
+
+    test('mốc ngày hình thành cũng nhận theo theme_id', () {
+      final events = [
+        CareerMemoryEvent(
+          id: 'm1',
+          userId: 'u1',
+          behavior: kSkillFormedBehavior,
+          themeId: 'pt-c2',
+          reflectionText: 'Dám lên tiếng',
+          createdAt: DateTime(2026, 8, 4),
+        ),
+      ];
+      expect(
+        skillFormedDateFor(voiceNew, events, threshold: _threshold),
+        DateTime(2026, 8, 4),
+      );
+      expect(
+        skillFormedDateFor(voiceOld, events, threshold: _threshold),
+        isNull,
+      );
     });
   });
 }

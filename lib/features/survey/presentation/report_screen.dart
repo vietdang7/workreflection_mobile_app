@@ -407,7 +407,7 @@ class _ScoreLevelBadge extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 13,
+          fontSize: 14.5,
           fontWeight: FontWeight.w700,
           color: color,
         ),
@@ -462,7 +462,7 @@ class _LayerCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          WrProgressTrack(value: score / 5.0, color: WrColors.coral),
+          WrProgressTrack(value: score / 5.0, color: WrColors.navy),
           if (_narrativeText != null) ...[
             const SizedBox(height: 10),
             Text(_narrativeText!, style: WrTextStyles.body),
@@ -521,7 +521,7 @@ class _BottleneckCard extends StatelessWidget {
         children: [
           Text(
             l10n.reportBottleneckTitle.toUpperCase(),
-            style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, letterSpacing: 0.55, color: WrColors.white.withValues(alpha: 0.6)),
+            style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, letterSpacing: 0.55, color: WrColors.white.withValues(alpha: 0.6)),
           ),
           const SizedBox(height: 12),
           Text(
@@ -641,8 +641,9 @@ class _PremiumUpsellCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: WrColors.cream,
+        color: WrColors.white,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: WrColors.line),
       ),
       child: Text(l10n.reportPremiumUpsell, style: WrTextStyles.body),
     );
@@ -684,7 +685,7 @@ class _ScaRadarPainter extends CustomPainter {
     final gridPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.8
-      ..color = const Color(0xFFE5E5E5);
+      ..color = WrColors.line;
 
     for (int level = 1; level <= 5; level++) {
       final r = level / 5.0;
@@ -704,7 +705,7 @@ class _ScaRadarPainter extends CustomPainter {
     final axisPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 0.8
-      ..color = const Color(0xFFE5E5E5);
+      ..color = WrColors.line;
 
     for (int i = 0; i < 3; i++) {
       final tip = axisPoint(i, 1.0);
@@ -1092,7 +1093,7 @@ class ScaRadarChart extends StatelessWidget {
                         l10n.reportLayerStructure,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
-                          fontSize: 11,
+                          fontSize: 12.5,
                           fontWeight: FontWeight.w700,
                           color: WrColors.dark,
                         ),
@@ -1101,7 +1102,7 @@ class ScaRadarChart extends StatelessWidget {
                         structure.toStringAsFixed(1),
                         textAlign: TextAlign.center,
                         style: const TextStyle(
-                          fontSize: 11,
+                          fontSize: 12.5,
                           fontWeight: FontWeight.w500,
                           color: WrColors.coral,
                         ),
@@ -1119,7 +1120,7 @@ class ScaRadarChart extends StatelessWidget {
                       Text(
                         l10n.reportLayerCulture,
                         style: const TextStyle(
-                          fontSize: 11,
+                          fontSize: 12.5,
                           fontWeight: FontWeight.w700,
                           color: WrColors.dark,
                         ),
@@ -1127,7 +1128,7 @@ class ScaRadarChart extends StatelessWidget {
                       Text(
                         culture.toStringAsFixed(1),
                         style: const TextStyle(
-                          fontSize: 11,
+                          fontSize: 12.5,
                           fontWeight: FontWeight.w500,
                           color: WrColors.coral,
                         ),
@@ -1145,7 +1146,7 @@ class ScaRadarChart extends StatelessWidget {
                       Text(
                         l10n.reportLayerActivity,
                         style: const TextStyle(
-                          fontSize: 11,
+                          fontSize: 12.5,
                           fontWeight: FontWeight.w700,
                           color: WrColors.dark,
                         ),
@@ -1153,7 +1154,7 @@ class ScaRadarChart extends StatelessWidget {
                       Text(
                         activity.toStringAsFixed(1),
                         style: const TextStyle(
-                          fontSize: 11,
+                          fontSize: 12.5,
                           fontWeight: FontWeight.w500,
                           color: WrColors.coral,
                         ),

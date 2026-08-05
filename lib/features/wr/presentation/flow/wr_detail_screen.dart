@@ -114,13 +114,14 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
               key: const Key('wr_detail_story'),
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
               decoration: BoxDecoration(
-                color: WrColors.cream,
+                color: WrColors.white,
                 borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: WrColors.line),
               ),
               child: Text(
                 storyText,
                 style: const TextStyle(
-                  fontSize: 14.5,
+                  fontSize: 16,
                   fontStyle: FontStyle.italic,
                   color: WrColors.navy,
                   height: 1.7,
@@ -145,7 +146,7 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
             const SizedBox(height: 16),
             Text(
               _error!,
-              style: const TextStyle(fontSize: 13, color: WrColors.coral),
+              style: const TextStyle(fontSize: 14.5, color: WrColors.coral),
             ),
           ],
         ],

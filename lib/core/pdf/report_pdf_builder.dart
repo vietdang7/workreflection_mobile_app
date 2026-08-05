@@ -182,7 +182,7 @@ class ReportPdfBuilder {
             tier,
             style: pw.TextStyle(
               font: regular,
-              fontSize: 14,
+              fontSize: 15.5,
               color: _coral,
             ),
           ),
@@ -197,7 +197,7 @@ class ReportPdfBuilder {
             preparedFor,
             style: pw.TextStyle(
               font: regular,
-              fontSize: 11,
+              fontSize: 12.5,
               color: _muted,
             ),
           ),
@@ -215,7 +215,7 @@ class ReportPdfBuilder {
             '$dateLabel: $dateStr',
             style: pw.TextStyle(
               font: regular,
-              fontSize: 12,
+              fontSize: 13.5,
               color: _muted,
             ),
           ),
@@ -272,7 +272,7 @@ class ReportPdfBuilder {
                     pw.Text(
                       totalLabel,
                       style: pw.TextStyle(
-                          font: regular, fontSize: 11, color: _muted),
+                          font: regular, fontSize: 12.5, color: _muted),
                     ),
                     pw.SizedBox(height: 4),
                     pw.Container(
@@ -287,7 +287,7 @@ class ReportPdfBuilder {
                         levelLabel,
                         style: pw.TextStyle(
                           font: bold,
-                          fontSize: 11,
+                          fontSize: 12.5,
                           color: PdfColors.white,
                         ),
                       ),
@@ -349,7 +349,7 @@ class ReportPdfBuilder {
                   pw.Text(
                     d.bottleneckNarrative!,
                     style: pw.TextStyle(
-                        font: regular, fontSize: 12, color: _textDark),
+                        font: regular, fontSize: 13.5, color: _textDark),
                   ),
                 ],
               ],
@@ -444,10 +444,10 @@ class ReportPdfBuilder {
             children: [
               pw.Text(label,
                   style:
-                      pw.TextStyle(font: bold, fontSize: 13, color: _navy)),
+                      pw.TextStyle(font: bold, fontSize: 14.5, color: _navy)),
               pw.Text(
                 score.toStringAsFixed(1),
-                style: pw.TextStyle(font: bold, fontSize: 13, color: _coral),
+                style: pw.TextStyle(font: bold, fontSize: 14.5, color: _coral),
               ),
             ],
           ),
@@ -456,7 +456,7 @@ class ReportPdfBuilder {
             pw.Text(
               narrative,
               style:
-                  pw.TextStyle(font: regular, fontSize: 11, color: _muted),
+                  pw.TextStyle(font: regular, fontSize: 12.5, color: _muted),
             ),
           ],
         ],
@@ -481,7 +481,7 @@ class ReportPdfBuilder {
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           pw.Text(label,
-              style: pw.TextStyle(font: regular, fontSize: 11, color: _muted)),
+              style: pw.TextStyle(font: regular, fontSize: 12.5, color: _muted)),
           pw.SizedBox(height: 8),
           pw.Row(
             crossAxisAlignment: pw.CrossAxisAlignment.end,
@@ -492,7 +492,7 @@ class ReportPdfBuilder {
               pw.SizedBox(width: 4),
               pw.Text(suffix,
                   style: pw.TextStyle(
-                      font: regular, fontSize: 14, color: _muted)),
+                      font: regular, fontSize: 15.5, color: _muted)),
             ],
           ),
         ],
@@ -512,7 +512,7 @@ class ReportPdfBuilder {
         pw.Text(
           text,
           style: pw.TextStyle(
-              font: regular, fontSize: 8, color: _muted),
+              font: regular, fontSize: 9.5, color: _muted),
           textAlign: pw.TextAlign.center,
         ),
       ],

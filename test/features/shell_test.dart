@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/theme/wr_colors.dart';
 import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/features/shell/shell_screen.dart';
@@ -119,6 +120,34 @@ void main() {
           reason: 'mất bong bóng ở tab thứ ${i + 1}',
         );
       }
+    });
+
+    // Đặc tả UX/UI §01 + §03. Khoá lại cả hai vế vì vế thứ hai là chỗ trực giác
+    // hay dẫn sai: nút màu thì mặc định nghĩ là chữ trắng, mà đúng đặc tả thì
+    // trắng-trên-coral là "lỗi dễ mắc nhất" — nó biến nút ấm của thương hiệu
+    // thành một nút cảnh báo kiểu hệ thống.
+    testWidgets('bong bóng là Coral #FF6859 với icon NAVY, không phải trắng',
+        (tester) async {
+      await tester.pumpWidget(_wrapWithRouter());
+      await tester.pumpAndSettle();
+
+      final box = tester.widget<Container>(
+        find.descendant(
+          of: find.byKey(const Key('wr_ask_bubble')),
+          matching: find.byType(Container),
+        ),
+      );
+      expect((box.decoration! as BoxDecoration).color, WrColors.coral);
+
+      final icon = tester.widget<Icon>(
+        find.descendant(
+          of: find.byKey(const Key('wr_ask_bubble')),
+          matching: find.byType(Icon),
+        ),
+      );
+      expect(icon.color, WrColors.navy);
+      expect(icon.color, isNot(WrColors.white));
+      expect(icon.color, isNot(WrColors.cream));
     });
 
     testWidgets('WrTabItem widgets count is 4', (tester) async {

@@ -140,13 +140,14 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
                 vertical: 14,
               ),
               decoration: BoxDecoration(
-                color: WrColors.cream,
+                color: WrColors.white,
                 borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: WrColors.line),
               ),
               child: Text(
                 selfReflection,
                 style: const TextStyle(
-                  fontSize: 14.5,
+                  fontSize: 16,
                   fontStyle: FontStyle.italic,
                   color: WrColors.navy,
                   height: 1.6,
@@ -160,7 +161,7 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
               'BẠN VỪA VIẾT',
               key: Key('wr_meaning_recap'),
               style: TextStyle(
-                fontSize: 11,
+                fontSize: 12.5,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.55,
                 color: WrColors.muted,
@@ -192,7 +193,7 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
             const SizedBox(height: 16),
             Text(
               _error!,
-              style: const TextStyle(fontSize: 13, color: WrColors.coral),
+              style: const TextStyle(fontSize: 14.5, color: WrColors.coral),
             ),
           ],
         ],
@@ -290,7 +291,7 @@ class _RecapItemState extends State<_RecapItem> {
         Text(
           widget.item.prompt,
           style: const TextStyle(
-            fontSize: 13,
+            fontSize: 14.5,
             color: WrColors.muted,
             height: 1.45,
           ),
@@ -342,8 +343,9 @@ class _RecapItemState extends State<_RecapItem> {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           decoration: BoxDecoration(
-            color: WrColors.cream,
+            color: WrColors.white,
             borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: WrColors.line),
           ),
           child: TextField(
             key: Key('wr_meaning_recap_field_${widget.item.pattern.dbValue}'),
@@ -369,7 +371,7 @@ class _RecapItemState extends State<_RecapItem> {
               onPressed: _saving ? null : () => setState(() => _editing = false),
               child: const Text(
                 'Bỏ qua',
-                style: TextStyle(fontSize: 13, color: WrColors.muted),
+                style: TextStyle(fontSize: 14.5, color: WrColors.muted),
               ),
             ),
             TextButton(
@@ -378,7 +380,7 @@ class _RecapItemState extends State<_RecapItem> {
               child: const Text(
                 'Lưu',
                 style: TextStyle(
-                  fontSize: 13,
+                  fontSize: 14.5,
                   fontWeight: FontWeight.w700,
                   color: WrColors.coral,
                 ),

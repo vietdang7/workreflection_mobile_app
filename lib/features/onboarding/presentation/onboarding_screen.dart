@@ -282,7 +282,7 @@ class _StepTag extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 12,
+          fontSize: 13.5,
           fontWeight: FontWeight.w700,
           color: color,
           letterSpacing: 0.5,
@@ -312,10 +312,10 @@ class _SituationCard extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: isSelected ? WrColors.coral.withValues(alpha: 0.08) : WrColors.cream,
+          color: isSelected ? WrColors.coral.withValues(alpha: 0.08) : WrColors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? WrColors.coral : Colors.transparent,
+            color: isSelected ? WrColors.coral : WrColors.line,
             width: 1.5,
           ),
         ),
@@ -358,8 +358,9 @@ class _PromiseCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: WrColors.cream,
+        color: WrColors.white,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: WrColors.line),
       ),
       child: Row(
         children: [
@@ -381,7 +382,7 @@ class _PromiseCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: WrTextStyles.body.copyWith(fontSize: 13),
+                  style: WrTextStyles.body.copyWith(fontSize: 14.5),
                 ),
               ],
             ),

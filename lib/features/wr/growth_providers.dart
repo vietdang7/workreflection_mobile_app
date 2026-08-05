@@ -12,10 +12,12 @@ import '../../core/logic/wr_dominant_need.dart';
 import '../../core/logic/wr_practice_match.dart';
 import '../../core/logic/wr_practice_theme_grant.dart';
 import '../../core/logic/wr_repeated_situations.dart';
+import '../../core/logic/wr_seniority.dart';
 import '../../core/logic/wr_skill_formation.dart';
 import '../../core/logic/wr_skill_jd_match.dart';
 import '../../core/models/wr_content.dart';
 import '../../core/models/wr_intelligence.dart';
+import '../profile/profile_providers.dart';
 import 'wr_providers.dart';
 
 final practiceThemesProvider =
@@ -32,10 +34,28 @@ final practiceEnrollmentsProvider =
   return repo.fetchEnrollments(userId);
 });
 
+/// Cấp bậc của người dùng, suy từ `cc_profiles.position`.
+///
+/// Null khi chưa khai hoặc mã không nói lên cấp bậc nào — mọi chỗ dùng đều phải
+/// giữ nguyên bản mặc định khi null (Phần B.3).
+final wrSeniorityTierProvider = Provider<SeniorityTier?>((ref) {
+  final cc = ref.watch(ccProfileProvider).valueOrNull;
+  return seniorityFromPosition(cc?['position'] as String?);
+});
+
+/// Chuỗi bước của một chủ đề, đã cá nhân hoá bước Chuyển hoá theo cấp bậc.
+///
+/// Cá nhân hoá LÚC ĐỌC (§XIV Kiến trúc Dữ liệu): dữ liệu gốc trong DB không
+/// đổi, người dùng đổi vị trí thì nội dung đổi theo ngay lần mở tới.
 final practiceStepsProvider =
     FutureProvider.family<List<PracticeStep>, String>((ref, themeId) async {
   final repo = ref.watch(wrIntelligenceRepositoryProvider);
-  return repo.fetchPracticeSteps(themeId);
+  final steps = await repo.fetchPracticeSteps(themeId);
+  return personalizePracticeSteps(
+    themeId: themeId,
+    steps: steps,
+    tier: ref.watch(wrSeniorityTierProvider),
+  );
 });
 
 /// Một bước thực hành đang chờ người dùng — chủ đề nào, bước nào.
@@ -243,5 +263,6 @@ final wrSkillJdMatchProvider = FutureProvider<SkillJdMatch?>((ref) async {
     contextText: contextText,
     formations: ref.watch(wrSkillFormationsProvider),
     allThemes: themes,
+    tier: ref.watch(wrSeniorityTierProvider),
   );
 });

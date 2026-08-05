@@ -262,16 +262,20 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      'Xem tình huống khác',
-                      style: TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
-                        color: WrColors.teal,
+                    // Flexible: cỡ chữ đã tăng theo brand identity mới, dòng
+                    // này chạm mép ở màn hẹp nếu để Text tự do.
+                    Flexible(
+                      child: Text(
+                        'Xem tình huống khác',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                          color: WrColors.navy,
+                        ),
                       ),
                     ),
                     SizedBox(width: 4),
-                    Icon(Icons.arrow_forward, size: 14, color: WrColors.teal),
+                    Icon(Icons.arrow_forward, size: 14, color: WrColors.navy),
                   ],
                 ),
               ),
@@ -287,7 +291,7 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
                   padding: EdgeInsets.symmetric(vertical: 6),
                   child: Text(
                     'Xem tất cả, không chỉ theo cảm xúc',
-                    style: TextStyle(fontSize: 12, color: WrColors.muted),
+                    style: TextStyle(fontSize: 13.5, color: WrColors.muted),
                   ),
                 ),
               ),
@@ -296,7 +300,7 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
             const SizedBox(height: 16),
             Text(
               _error!,
-              style: const TextStyle(fontSize: 13, color: WrColors.coral),
+              style: const TextStyle(fontSize: 14.5, color: WrColors.coral),
             ),
           ],
         ],

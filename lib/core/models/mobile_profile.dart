@@ -13,6 +13,9 @@ class MobileProfile {
     this.careerSnapshot = const CareerSnapshot(),
     this.recentSituationIds = const [],
     this.roleText,
+    this.city,
+    this.orgIndustry,
+    this.orgCompanyType,
   });
 
   final String userId;
@@ -41,6 +44,18 @@ class MobileProfile {
   /// Hoàn toàn tùy chọn.
   final String? roleText;
 
+  /// Ba trường của màn "Thông tin của bạn" chưa có cột nào bên `cc_profiles`.
+  ///
+  /// Bốn trường còn lại của màn đó (số năm kinh nghiệm, quy mô công ty, mảng
+  /// công việc, vị trí) KHÔNG nằm ở đây — chúng dùng chung cột với web ở
+  /// `cc_profiles`, đọc qua [WrRepository.getCcProfile]. Chép chúng sang đây
+  /// là tạo bản thứ hai của cùng một sự thật.
+  ///
+  /// Tất cả đều tuỳ chọn: người dùng bỏ trống bao nhiêu trường cũng được.
+  final String? city;
+  final String? orgIndustry;
+  final String? orgCompanyType;
+
   factory MobileProfile.fromJson(Map<String, dynamic> json) {
     return MobileProfile(
       userId: json['user_id'] as String,
@@ -54,6 +69,9 @@ class MobileProfile {
       recentSituationIds:
           (json['recent_situation_ids'] as List?)?.cast<String>() ?? const [],
       roleText: json['role_text'] as String?,
+      city: json['city'] as String?,
+      orgIndustry: json['org_industry'] as String?,
+      orgCompanyType: json['org_company_type'] as String?,
     );
   }
 
@@ -66,6 +84,9 @@ class MobileProfile {
     CareerSnapshot? careerSnapshot,
     List<String>? recentSituationIds,
     String? roleText,
+    String? city,
+    String? orgIndustry,
+    String? orgCompanyType,
   }) {
     return MobileProfile(
       userId: userId,
@@ -78,6 +99,9 @@ class MobileProfile {
       careerSnapshot: careerSnapshot ?? this.careerSnapshot,
       recentSituationIds: recentSituationIds ?? this.recentSituationIds,
       roleText: roleText ?? this.roleText,
+      city: city ?? this.city,
+      orgIndustry: orgIndustry ?? this.orgIndustry,
+      orgCompanyType: orgCompanyType ?? this.orgCompanyType,
     );
   }
 }

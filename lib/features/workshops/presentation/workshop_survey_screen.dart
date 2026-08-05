@@ -155,7 +155,7 @@ class _WorkshopSurveyScreenState extends ConsumerState<WorkshopSurveyScreen> {
                                 selectedColor: WrColors.coral,
                                 labelStyle: TextStyle(
                                   color: isSelected
-                                      ? WrColors.white
+                                      ? WrColors.navy
                                       : WrColors.dark,
                                 ),
                               );

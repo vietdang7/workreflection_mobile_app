@@ -88,15 +88,30 @@ class MoodContent {
   /// §XII.3: "không phát hành nội dung placeholder true ra bản production."
   bool get isPublishable => !placeholder;
 
+  /// True khi mục này có thứ để người dùng dùng ngay khi mở ra.
+  ///
+  /// BÀI ĐỌC luôn có: toàn văn nằm sẵn ở [body]. HEALING AUDIO thì không —
+  /// [body] của mục audio chỉ là một hai câu mô tả dưới khối trình phát, nên
+  /// mục audio chưa có bản thu mở ra là một màn hình trống rỗng.
+  ///
+  /// Khách chốt 04/08/2026: ẩn hết mục audio chưa có nội dung, mốt có thì mở
+  /// lại. Điều kiện buộc vào chính [audioUrl] nên việc "mở lại" không cần sửa
+  /// code: đội vận hành ghi bản thu vào `wr_mood_content.audio_url` là mục tự
+  /// hiện trở lại.
+  bool get isUsable => type != MoodContentType.audio || hasAudio;
+
   /// Lọc danh sách theo đúng §XII.3, tuỳ chế độ build.
   ///
   /// Bản release chỉ được thấy nội dung đã biên tập xong. Bản debug thì giữ
-  /// nguyên cả nội dung nháp: hiện cả 20 mục còn `placeholder = true`, lọc ở
-  /// debug sẽ để lại thư viện rỗng và không ai thử được luồng.
+  /// nguyên nội dung nháp, để còn thử được luồng.
   ///
-  /// Đây là cổng chặn thật, không phải quy ước: seed hiện tại toàn bộ là nháp,
-  /// nên nếu thiếu hàm này thì bản production sẽ phát hành đúng thứ tài liệu
-  /// cấm phát hành.
+  /// Riêng [isUsable] lọc ở CẢ HAI chế độ, không theo `isRelease`: một mục
+  /// audio không có bản thu thì trên bản debug cũng chẳng thử được gì ngoài
+  /// thông báo lỗi dựng giọng đọc.
+  ///
+  /// Đây là cổng chặn thật, không phải quy ước: 10 mục audio trong seed đều
+  /// còn nháp và chưa có bản thu, nên nếu thiếu hàm này thì bản production sẽ
+  /// phát hành đúng thứ tài liệu cấm phát hành.
   /// Đúng bằng `kReleaseMode`, viết lại bằng hằng của dart:core để file này
   /// giữ lời hứa ở đầu file: không phụ thuộc Flutter.
   static const bool kIsRelease = bool.fromEnvironment('dart.vm.product');
@@ -105,8 +120,10 @@ class MoodContent {
     List<MoodContent> items, {
     bool isRelease = kIsRelease,
   }) {
-    if (!isRelease) return items;
-    return items.where((item) => item.isPublishable).toList();
+    return items
+        .where((item) => item.isUsable)
+        .where((item) => !isRelease || item.isPublishable)
+        .toList();
   }
 
   /// Các đoạn của [body], tách theo dòng trống — dùng để dựng khối văn bản.

@@ -93,9 +93,9 @@ class _PracticeNoteSheetState extends State<_PracticeNoteSheet> {
             const Text(
               'BẠN VỪA HOÀN THÀNH',
               style: TextStyle(
-                fontSize: 9,
+                fontSize: 10.5,
                 fontWeight: FontWeight.w700,
-                color: WrColors.teal,
+                color: WrColors.navy,
                 letterSpacing: 0.8,
               ),
             ),
@@ -114,7 +114,7 @@ class _PracticeNoteSheetState extends State<_PracticeNoteSheet> {
               'Có điều gì đáng nhớ khi bạn làm bước này không? '
               'Không viết cũng không sao.',
               style: TextStyle(
-                fontSize: 13.5,
+                fontSize: 15,
                 color: WrColors.muted,
                 height: 1.5,
               ),
@@ -156,7 +156,7 @@ class _PracticeNoteSheetState extends State<_PracticeNoteSheet> {
                     child: Text(
                       'Lưu và hoàn thành',
                       style: TextStyle(
-                        fontSize: 14.5,
+                        fontSize: 16,
                         fontWeight: FontWeight.w700,
                         color: WrColors.white,
                       ),
@@ -177,7 +177,7 @@ class _PracticeNoteSheetState extends State<_PracticeNoteSheet> {
                   padding: EdgeInsets.symmetric(vertical: 12),
                   child: Text(
                     'Bỏ qua, chỉ đánh dấu xong',
-                    style: TextStyle(fontSize: 13, color: WrColors.muted),
+                    style: TextStyle(fontSize: 14.5, color: WrColors.muted),
                   ),
                 ),
               ),

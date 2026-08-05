@@ -89,6 +89,9 @@ class WrDiscoverScreen extends ConsumerWidget {
     final episodes = ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
     final selfChecks =
         ref.watch(wrSelfCheckHistoryProvider).valueOrNull ?? const [];
+    // Nội dung của khối "Điều bạn đang tìm kiếm" đọc từ đây (aha_message trùng
+    // mã chip theo v2.0 §2.2) khi tình huống không có expected_outcome riêng.
+    final stories = ref.watch(wrStoriesProvider).valueOrNull ?? const [];
 
     // Nguồn sự thật duy nhất của cả màn này (Kiến trúc v2.0 §4.3). Không còn
     // đọc `wr_pattern_counts` ở đâu trên màn Hiểu mình.
@@ -145,7 +148,7 @@ class WrDiscoverScreen extends ConsumerWidget {
                     children: [
                       Text(
                         'Career Snapshot',
-                        style: TextStyle(fontSize: 14, color: WrColors.muted),
+                        style: TextStyle(fontSize: 15.5, color: WrColors.muted),
                       ),
                       SizedBox(height: 2),
                       Text(
@@ -171,7 +174,14 @@ class WrDiscoverScreen extends ConsumerWidget {
             // im lặng, không đoán bừa (WXS Orch. Inv.5).
             if (need != null) ...[
               const SizedBox(height: 24),
-              _NeedReadingBlock(need: need),
+              _NeedReadingBlock(
+                need: need,
+                insight: seekingInsight(
+                  recent: recent,
+                  situations: situations,
+                  stories: stories,
+                ),
+              ),
             ],
 
             const SizedBox(height: 28),
@@ -192,7 +202,7 @@ class WrDiscoverScreen extends ConsumerWidget {
                   'sẽ hiện ra ở đây.',
                   key: Key('wr_discover_patterns_empty'),
                   style: TextStyle(
-                    fontSize: 14,
+                    fontSize: 15.5,
                     color: WrColors.muted,
                     height: 1.6,
                   ),
@@ -204,7 +214,7 @@ class WrDiscoverScreen extends ConsumerWidget {
                   'một điều quay lại tới đó, nó sẽ hiện ở đây.',
                   key: const Key('wr_discover_patterns_below_threshold'),
                   style: const TextStyle(
-                    fontSize: 14,
+                    fontSize: 15.5,
                     color: WrColors.muted,
                     height: 1.6,
                   ),
@@ -286,9 +296,13 @@ class WrDiscoverScreen extends ConsumerWidget {
 // ---------------------------------------------------------------------------
 
 class _NeedReadingBlock extends ConsumerWidget {
-  const _NeedReadingBlock({required this.need});
+  const _NeedReadingBlock({required this.need, required this.insight});
 
   final HumanNeed need;
+
+  /// Câu đọc từ tình huống người dùng lặp nhiều nhất. Null = nội dung DB không
+  /// có gì cho tình huống đó, rơi về câu định nghĩa nhu cầu.
+  final String? insight;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -305,54 +319,13 @@ class _NeedReadingBlock extends ConsumerWidget {
       );
     }
 
-    final reading = needReading(need);
-    return Column(
+    // Một câu, hết. Ba khối "MONG ĐỢI KẾT QUẢ / NHU CẦU CỐT LÕI / GÓC NHÌN" đã
+    // bỏ (khách 2026-08-04): chúng là chữ gán cứng theo nhu cầu, nói lại cùng
+    // một ý bằng ba giọng, và kéo màn Hiểu mình thành một trang đọc dài.
+    return _SeekingBlock(
       key: const Key('wr_discover_need_reading'),
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _SeekingBlock(need: need),
-        const SizedBox(height: 24),
-        _ReadingLayer(
-          eyebrow: 'MONG ĐỢI KẾT QUẢ',
-          text: reading.expectedOutcome,
-        ),
-        const SizedBox(height: 18),
-        _ReadingLayer(
-          eyebrow: 'NHU CẦU CỐT LÕI',
-          text: reading.coreNeed,
-        ),
-        const SizedBox(height: 18),
-        _ReadingLayer(
-          eyebrow: 'GÓC NHÌN · ${reading.perspectiveLabel.toUpperCase()}',
-          text: reading.perspectiveText,
-        ),
-      ],
-    );
-  }
-}
-
-class _ReadingLayer extends StatelessWidget {
-  const _ReadingLayer({required this.eyebrow, required this.text});
-
-  final String eyebrow;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        WrEyebrow(eyebrow),
-        const SizedBox(height: 8),
-        Text(
-          text,
-          style: const TextStyle(
-            fontSize: 15,
-            color: WrColors.navy,
-            height: 1.65,
-          ),
-        ),
-      ],
+      need: need,
+      insight: insight,
     );
   }
 }
@@ -362,12 +335,19 @@ class _ReadingLayer extends StatelessWidget {
 // ---------------------------------------------------------------------------
 
 class _SeekingBlock extends StatelessWidget {
-  const _SeekingBlock({required this.need});
+  const _SeekingBlock({super.key, required this.need, required this.insight});
 
   final HumanNeed need;
+  final String? insight;
 
   @override
   Widget build(BuildContext context) {
+    // Nội dung thật trước, câu định nghĩa nhu cầu chỉ là lưới an toàn.
+    final text = insight ?? needSeekingSentence(need);
+    // Câu lấy từ DB dài ngắn không đều — aha_message thường là hai vế. Cỡ chữ
+    // mockup (26) chỉ vừa cho câu ngắn; câu dài để nguyên sẽ tràn kín màn.
+    final fontSize = text.length > 90 ? 20.0 : 26.0;
+
     return Padding(
       key: const Key('wr_discover_seeking'),
       padding: const EdgeInsets.symmetric(vertical: 12),
@@ -377,10 +357,10 @@ class _SeekingBlock extends StatelessWidget {
           const WrEyebrow('ĐIỀU BẠN ĐANG TÌM KIẾM', center: true),
           const SizedBox(height: 16),
           Text(
-            '"${needSeekingSentence(need)}"',
+            '"$text"',
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 26,
+            style: TextStyle(
+              fontSize: fontSize,
               fontWeight: FontWeight.w400,
               fontStyle: FontStyle.italic,
               color: WrColors.navy,
@@ -392,7 +372,7 @@ class _SeekingBlock extends StatelessWidget {
           Text(
             '${needLabel(need).toUpperCase()} · Nhu cầu chủ đạo',
             textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 13, color: WrColors.muted),
+            style: const TextStyle(fontSize: 14.5, color: WrColors.muted),
           ),
         ],
       ),
@@ -451,11 +431,11 @@ class WrPatternRow extends StatelessWidget {
                 Text(
                   '$count lần',
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 14.5,
                     fontWeight: _isStrong ? FontWeight.w700 : FontWeight.w600,
                     color: _isStrong
                         ? WrColors.coral
-                        : (_isFaint ? WrColors.muted : WrColors.teal),
+                        : (_isFaint ? WrColors.muted : WrColors.navy),
                   ),
                 ),
                 const SizedBox(width: 6),
@@ -498,13 +478,13 @@ class _SeeMoreLink extends StatelessWidget {
             Text(
               'Xem thêm $count điều lặp lại',
               style: const TextStyle(
-                fontSize: 13,
+                fontSize: 14.5,
                 fontWeight: FontWeight.w700,
-                color: WrColors.teal,
+                color: WrColors.navy,
               ),
             ),
             const SizedBox(width: 4),
-            const Icon(Icons.arrow_forward, size: 14, color: WrColors.teal),
+            const Icon(Icons.arrow_forward, size: 14, color: WrColors.navy),
           ],
         ),
       ),
@@ -572,7 +552,7 @@ class _ScaCard extends StatelessWidget {
             Text(
               'Đọc từ $kCareerHealthThreshold lần nhìn lại của bạn',
               key: const Key('wr_discover_sca_source'),
-              style: const TextStyle(fontSize: 13, color: WrColors.muted),
+              style: const TextStyle(fontSize: 14.5, color: WrColors.muted),
             ),
           ],
         ],
@@ -608,7 +588,7 @@ class _ScaRow extends StatelessWidget {
             child: Text(
               pillar.displayName,
               style: const TextStyle(
-                fontSize: 15,
+                fontSize: 16.5,
                 fontWeight: FontWeight.w600,
                 color: WrColors.navy,
               ),
@@ -617,7 +597,7 @@ class _ScaRow extends StatelessWidget {
           Text(
             status.$1,
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 14.5,
               fontWeight: FontWeight.w600,
               color: status.$2,
             ),
@@ -683,7 +663,7 @@ class _CareerHealthCard extends StatelessWidget {
                     'sẽ mở ra.',
             key: const Key('wr_discover_career_health_text'),
             style: const TextStyle(
-              fontSize: 13,
+              fontSize: 14.5,
               color: WrColors.muted,
               height: 1.6,
             ),
@@ -736,7 +716,7 @@ class _SelfCheckInviteCard extends StatelessWidget {
             '$total câu hỏi tình huống ngắn, giúp phác thảo điều kiện làm việc '
             'đang hỗ trợ hoặc cản trở bạn. Có thể làm lại bất kỳ lúc nào.',
             style: const TextStyle(
-              fontSize: 13,
+              fontSize: 14.5,
               height: 1.65,
               color: WrColors.muted,
             ),
@@ -745,7 +725,7 @@ class _SelfCheckInviteCard extends StatelessWidget {
           Text(
             'Tiến độ lần gần nhất: $shown/$total',
             key: const Key('wr_discover_self_check_progress'),
-            style: const TextStyle(fontSize: 12, color: WrColors.muted),
+            style: const TextStyle(fontSize: 13.5, color: WrColors.muted),
           ),
           const SizedBox(height: 8),
           WrProgressTrack(
@@ -769,7 +749,7 @@ class _SelfCheckInviteCard extends StatelessWidget {
               child: Text(
                 shown > 0 ? 'Làm lại Self-Check' : 'Bắt đầu Self-Check',
                 style: const TextStyle(
-                  fontSize: 14,
+                  fontSize: 15.5,
                   fontWeight: FontWeight.w700,
                 ),
               ),

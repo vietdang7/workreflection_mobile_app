@@ -94,7 +94,7 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
             Text(
               'Đây là lần thứ $count bạn ghi lại tình huống này.',
               style: const TextStyle(
-                fontSize: 14,
+                fontSize: 15.5,
                 color: WrColors.muted,
                 height: 1.55,
               ),

@@ -27,6 +27,7 @@
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { buildExtractionPrompt, normalizeAnalysis } from './analysis.ts';
+import { extractDocxText } from './docx.ts';
 
 /// Model đọc tài liệu.
 ///
@@ -46,6 +47,15 @@ const ANALYSIS_FREE =
 /// Trần mỗi người mỗi ngày. Chống lạm bấm "Phân tích lại", không phải hạn mức
 /// bán hàng.
 const DAILY_LIMIT = Number(Deno.env.get('WR_DOC_DAILY_LIMIT') ?? '10');
+
+/// Kiểu MIME của file Word. Dài dòng là chuẩn OOXML, không phải gõ nhầm.
+const DOCX_MIME =
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document';
+
+/// Ít hơn ngần này ký tự thì coi như không đọc được chữ nào: ảnh mờ, ảnh chụp
+/// nghiêng, hoặc file Word rỗng ruột. Thà nói thẳng còn hơn lưu một bản phân
+/// tích rỗng rồi để mọi tính năng phía sau nói chuyện trên không khí.
+const MIN_TEXT_CHARS = 40;
 
 /// Tài liệu lớn hơn ngần này thì từ chối trước khi tốn tiền gọi model.
 const MAX_FILE_BYTES = 12 * 1024 * 1024;
@@ -94,6 +104,8 @@ function mimeOf(path: string): string | null {
       return 'image/heic';
     case 'pdf':
       return 'application/pdf';
+    case 'docx':
+      return DOCX_MIME;
     default:
       return null;
   }
@@ -262,7 +274,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       })
       .eq('id', documentId);
     return fail(
-      'Định dạng tài liệu này chưa đọc được. Bạn thử ảnh chụp hoặc file PDF nhé.',
+      'Định dạng tài liệu này chưa đọc được. Bạn thử file PDF, Word (.docx) hoặc ảnh chụp nhé.',
       415,
     );
   }
@@ -282,22 +294,23 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return fail(userMessage, status);
   };
 
-  let base64: string;
+  const isDocx = mime === DOCX_MIME;
+
+  let fileBytes: Uint8Array;
   try {
     const { data: blob, error } = await db.storage.from(BUCKET).download(filePath);
     if (error || !blob) throw error ?? new Error('file rỗng');
-    const buf = new Uint8Array(await blob.arrayBuffer());
-    if (buf.byteLength === 0) {
+    fileBytes = new Uint8Array(await blob.arrayBuffer());
+    if (fileBytes.byteLength === 0) {
       return await failAndMark('Tài liệu này rỗng.', 'file rỗng', 422);
     }
-    if (buf.byteLength > MAX_FILE_BYTES) {
+    if (fileBytes.byteLength > MAX_FILE_BYTES) {
       return await failAndMark(
         'Tài liệu này nặng quá. Bạn thử bản nhẹ hơn nhé.',
-        `file ${buf.byteLength} byte, quá ${MAX_FILE_BYTES}`,
+        `file ${fileBytes.byteLength} byte, quá ${MAX_FILE_BYTES}`,
         413,
       );
     }
-    base64 = toBase64(buf);
   } catch (e) {
     console.error(`Tải file từ Storage lỗi: ${e}`);
     return await failAndMark(
@@ -307,21 +320,42 @@ Deno.serve(async (req: Request): Promise<Response> => {
     );
   }
 
+  // File Word: chữ nằm sẵn trong file, bóc tại chỗ rồi gửi model dạng chữ.
+  // Không gửi cả file như PDF — bộ đọc file của OpenRouter chỉ nhận PDF.
+  let docxText: string | null = null;
+  if (isDocx) {
+    docxText = await extractDocxText(fileBytes);
+    if (!docxText || docxText.length < MIN_TEXT_CHARS) {
+      return await failAndMark(
+        'Chưa đọc được chữ trong file Word này. Bạn thử lưu lại thành PDF rồi tải lên nhé.',
+        docxText === null
+          ? 'không mở được docx'
+          : `docx chỉ có ${docxText.length} ký tự`,
+        422,
+      );
+    }
+  }
+
   // ── 6 · Gọi model ───────────────────────────────────────────────────────
-  const dataUrl = `data:${mime};base64,${base64}`;
   const isPdf = mime === 'application/pdf';
-  const content = [
-    { type: 'text', text: buildExtractionPrompt(String(doc.doc_type ?? 'other')) },
-    isPdf
-      ? {
-        type: 'file',
-        file: {
-          filename: filePath.split('/').pop() ?? 'tai-lieu.pdf',
-          file_data: dataUrl,
+  const prompt = buildExtractionPrompt(String(doc.doc_type ?? 'other'));
+  const content = isDocx
+    ? [{ type: 'text', text: `${prompt}\n\nNỘI DUNG TÀI LIỆU:\n${docxText}` }]
+    : [
+      { type: 'text', text: prompt },
+      isPdf
+        ? {
+          type: 'file',
+          file: {
+            filename: filePath.split('/').pop() ?? 'tai-lieu.pdf',
+            file_data: `data:${mime};base64,${toBase64(fileBytes)}`,
+          },
+        }
+        : {
+          type: 'image_url',
+          image_url: { url: `data:${mime};base64,${toBase64(fileBytes)}` },
         },
-      }
-      : { type: 'image_url', image_url: { url: dataUrl } },
-  ];
+    ];
 
   const callUpstream = () => {
     const controller = new AbortController();
@@ -409,7 +443,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // Không đọc ra chữ nào = ảnh mờ, ảnh chụp nghiêng, hoặc không phải tài liệu.
   // Nói thẳng để người dùng chụp lại, thay vì lưu một bản phân tích rỗng ruột
   // rồi để mọi tính năng phía sau nói chuyện trên không khí.
-  if (extractedText.trim().length < 40) {
+  if (extractedText.trim().length < MIN_TEXT_CHARS) {
     return await failAndMark(
       'Mình chưa đọc được chữ trong tài liệu này. Bạn thử chụp rõ hơn nhé.',
       'không trích được chữ',

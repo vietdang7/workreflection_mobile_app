@@ -254,9 +254,18 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
       return list;
     }
 
+    // Một cái TÊN là một chủ đề, dù thư viện có hai hàng. `pt-voice` và `pt-c2`
+    // đều tên "Dám lên tiếng"; ai ghi danh cả hai sẽ thấy hai thẻ y hệt nhau,
+    // và vì bộ đếm thực hành nhận sự kiện theo tên (Career Memory không lưu
+    // theme_id) thì hai thẻ ấy cũng luôn hiện cùng một tiến độ. Giữ thẻ đầu
+    // tiên theo thứ tự trên: đang thực hành trước, mới nhất trước.
+    final seenTitles = <String>{};
     final enrolledCards = [
-      ...cardsOf(enrollments.where((e) => e.completedAt == null)),
-      ...cardsOf(enrollments.where((e) => e.completedAt != null)),
+      for (final card in [
+        ...cardsOf(enrollments.where((e) => e.completedAt == null)),
+        ...cardsOf(enrollments.where((e) => e.completedAt != null)),
+      ])
+        if (seenTitles.add(card.$1.title)) card,
     ];
     final hiddenThemeCount =
         (enrolledCards.length - kGrowthThemesPreview).clamp(0, 1 << 30);
@@ -285,7 +294,7 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
                           Text(
                             'Phát triển',
                             style: TextStyle(
-                              fontSize: 14,
+                              fontSize: 15.5,
                               color: WrColors.muted,
                               fontWeight: FontWeight.w400,
                             ),
@@ -399,7 +408,7 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
                 if (activeTheme == null) const WrSectionDivider(),
                 WrLinkRow(
                   key: const Key('wr_growth_skills_row'),
-                  label: 'Kỹ năng đã hình thành',
+                  label: 'Kỹ năng của bạn',
                   onTap: () => context.push('/wr/growth/skills'),
                 ),
               ],
@@ -472,7 +481,7 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
           Text(
             body,
             style: const TextStyle(
-              fontSize: 13,
+              fontSize: 14.5,
               color: WrColors.muted,
               height: 1.6,
             ),
@@ -563,7 +572,7 @@ class _OpportunitySliver extends ConsumerWidget {
                       child: Text(
                         'Offline · $kTraChieuLabel',
                         style: const TextStyle(
-                          fontSize: 10,
+                          fontSize: 11.5,
                           fontWeight: FontWeight.w700,
                           color: WrColors.pillTealText,
                           letterSpacing: 0.2,
@@ -580,7 +589,7 @@ class _OpportunitySliver extends ConsumerWidget {
                       ? 'Chưa có buổi nào được mở.'
                       : '"${next.title}"',
                   style: WrText.serifQuote(
-                    fontSize: 14,
+                    fontSize: 15.5,
                     color: WrColors.cream,
                   ),
                 ),
@@ -590,7 +599,7 @@ class _OpportunitySliver extends ConsumerWidget {
                       ? kTraChieuFormatLabel
                       : '${traChieuWhenLabel(next)} · $kTraChieuFormatLabel',
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 12.5,
                     height: 1.5,
                     color: WrColors.cream.withValues(alpha: 0.6),
                   ),
@@ -602,7 +611,7 @@ class _OpportunitySliver extends ConsumerWidget {
                     Text(
                       'Xem chi tiết',
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 12.5,
                         color: WrColors.cream.withValues(alpha: 0.55),
                       ),
                     ),
@@ -663,7 +672,7 @@ class WrPracticeThemeCard extends ConsumerWidget {
                     child: Text(
                       finished ? 'Đã hoàn thành' : 'Đang thực hành',
                       style: const TextStyle(
-                        fontSize: 12,
+                        fontSize: 13.5,
                         color: WrColors.muted,
                       ),
                     ),
@@ -685,7 +694,7 @@ class WrPracticeThemeCard extends ConsumerWidget {
                             ? 'Trọn chuỗi'
                             : 'Giai đoạn ${min(done + 1, total)}/$total',
                         style: const TextStyle(
-                          fontSize: 11,
+                          fontSize: 12.5,
                           fontWeight: FontWeight.w700,
                           color: WrColors.navy,
                         ),
@@ -709,7 +718,7 @@ class WrPracticeThemeCard extends ConsumerWidget {
                 const SizedBox(height: 10),
                 Text(
                   '$done/$total bước hoàn thành',
-                  style: const TextStyle(fontSize: 12.5, color: WrColors.muted),
+                  style: const TextStyle(fontSize: 14, color: WrColors.muted),
                 ),
               ],
             ],
@@ -758,7 +767,7 @@ class _QuotaCard extends StatelessWidget {
               '(đang mở $activeCount/$max).',
               textAlign: TextAlign.center,
               style: const TextStyle(
-                fontSize: 13,
+                fontSize: 14.5,
                 color: WrColors.muted,
                 height: 1.55,
               ),
@@ -767,7 +776,7 @@ class _QuotaCard extends StatelessWidget {
             const Text(
               'Premium: không giới hạn',
               style: TextStyle(
-                fontSize: 12.5,
+                fontSize: 14,
                 fontWeight: FontWeight.w700,
                 color: WrColors.coral,
               ),

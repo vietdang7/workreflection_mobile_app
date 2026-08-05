@@ -198,7 +198,7 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen>
           labelColor: WrColors.coral,
           unselectedLabelColor: WrColors.muted,
           indicatorColor: WrColors.coral,
-          labelStyle: WrTextStyles.body.copyWith(fontSize: 13),
+          labelStyle: WrTextStyles.body.copyWith(fontSize: 14.5),
           tabs: [
             Tab(text: l10n.invitationsPending),
             Tab(text: l10n.invitationsExpired),
@@ -406,7 +406,7 @@ class _InvitationCard extends StatelessWidget {
                             const SizedBox(width: 6),
                             Text('• $department',
                                 style: WrTextStyles.body.copyWith(
-                                    fontSize: 12, color: WrColors.muted)),
+                                    fontSize: 13.5, color: WrColors.muted)),
                           ],
                         ],
                       ),
@@ -423,7 +423,7 @@ class _InvitationCard extends StatelessWidget {
                                 : l10n.invitationsExpiresAt(
                                     formatDate(expiresAt)),
                             style: WrTextStyles.body.copyWith(
-                                fontSize: 11, color: WrColors.text3),
+                                fontSize: 12.5, color: WrColors.text3),
                           ),
                         ],
                       ),
@@ -489,7 +489,7 @@ class _Chip extends StatelessWidget {
       ),
       child: Text(label,
           style: WrTextStyles.body
-              .copyWith(fontSize: 11, color: WrColors.navy)),
+              .copyWith(fontSize: 12.5, color: WrColors.navy)),
     );
   }
 }
@@ -543,7 +543,7 @@ class _StatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(label,
-          style: WrTextStyles.body.copyWith(fontSize: 11, color: fg)),
+          style: WrTextStyles.body.copyWith(fontSize: 12.5, color: fg)),
     );
   }
 }

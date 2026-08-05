@@ -137,9 +137,9 @@ class _WorkshopCard extends StatelessWidget {
                                 workshop.price, workshop.currency),
                         backgroundColor: workshop.isFree
                             ? WrColors.teal.withValues(alpha: 0.1)
-                            : WrColors.cream,
+                            : WrColors.navy.withValues(alpha: 0.08),
                         textColor:
-                            workshop.isFree ? WrColors.teal : WrColors.dark,
+                            workshop.isFree ? WrColors.pillTealText : WrColors.dark,
                       ),
 
                       // Full badge
@@ -195,7 +195,7 @@ class _Chip extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 12,
+          fontSize: 13.5,
           fontWeight: FontWeight.w600,
           color: textColor,
         ),

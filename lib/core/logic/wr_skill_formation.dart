@@ -97,11 +97,18 @@ class SkillFormation {
     required this.skillFormedDate,
     this.scaDimension,
     this.lastPracticedAt,
+    this.formedLine,
   });
 
   final String themeId;
   final String title;
   final ScaDimension? scaDimension;
+
+  /// Câu nói riêng của chủ đề này khi chạm ngưỡng (bảng A.2).
+  ///
+  /// Ví dụ "Bạn không còn phải đoán, bạn hỏi." Null với ba chủ đề đời đầu và
+  /// khi cột chưa được cập nhật — lúc đó màn ăn mừng dùng câu chung.
+  final String? formedLine;
 
   /// Số lần thực hành thật đã ghi nhận: hoàn thành bước + ghi nhận duy trì.
   final int practiceCount;
@@ -149,24 +156,39 @@ class SkillFormation {
 // Đếm từ Career Memory
 // ---------------------------------------------------------------------------
 
-/// Sự kiện [e] có phải một lần thực hành của [theme] không?
+/// Sự kiện [e] có thuộc [theme] không, bất kể loại sự kiện.
+///
+/// Một sự kiện có `theme_id` thì `theme_id` là câu trả lời cuối cùng — không
+/// bao giờ lùi về so tên nữa (Phần C mục 1). So theo tên là nguồn gốc của lỗi
+/// cộng chung bộ đếm giữa các chủ đề trùng tên hoặc trùng chiều (`pt-voice`
+/// với `pt-c2`, `pt-rhythm` với `pt-a2`, `pt-feedback` với `pt-c3`).
+///
+/// Chỉ những mảnh ký ức ghi trước 05/08/2026 mới không có `theme_id`; với
+/// riêng chúng vẫn so theo tên, nếu không người dùng mất sạch tiến độ đã có.
+bool _belongsTo(CareerMemoryEvent e, PracticeTheme theme) {
+  final id = e.themeId;
+  if (id != null && id.isNotEmpty) return id == theme.themeId;
+  return _titleMatches(e.reflectionText, theme.title);
+}
+
+/// So theo tên — chỉ dùng cho dữ liệu cũ chưa có `theme_id`.
 ///
 /// Sự kiện được ghi dạng "&lt;tên chủ đề&gt; · &lt;tên bước&gt;". Không so
 /// bằng `startsWith` trần: chủ đề "Lắng nghe" sẽ nuốt luôn sự kiện của chủ đề
 /// "Lắng nghe chủ động". Ký tự ngay sau tên phải là dấu phân cách, không phải
 /// chữ.
-bool _isPracticeOf(CareerMemoryEvent e, PracticeTheme theme) {
-  if (!kPracticeBehaviors.contains(e.behavior)) return false;
-  final text = e.reflectionText;
+bool _titleMatches(String? text, String title) {
   if (text == null) return false;
-  final title = theme.title;
   if (!text.startsWith(title)) return false;
   final rest = text.substring(title.length).trimLeft();
-  // Hết chuỗi, hoặc phần còn lại mở đầu bằng đúng dấu phân cách. Không nhận
-  // chữ đi liền: chủ đề "Lắng nghe" sẽ nuốt mọi sự kiện của "Lắng nghe chủ
-  // động" và báo một con số không có thật.
   if (rest.isEmpty) return true;
   return _kTitleSeparators.contains(rest[0]);
+}
+
+/// Sự kiện [e] có phải một lần thực hành của [theme] không?
+bool _isPracticeOf(CareerMemoryEvent e, PracticeTheme theme) {
+  if (!kPracticeBehaviors.contains(e.behavior)) return false;
+  return _belongsTo(e, theme);
 }
 
 /// Dấu ngăn giữa tên chủ đề và phần sau nó trong `reflection_text`.
@@ -229,7 +251,7 @@ DateTime? skillFormedDateFor(
 }) {
   for (final e in events) {
     if (e.behavior == kSkillFormedBehavior &&
-        e.reflectionText == theme.title &&
+        _belongsTo(e, theme) &&
         e.createdAt != null) {
       return e.createdAt;
     }
@@ -262,6 +284,7 @@ SkillFormation? skillFormationFor({
     themeId: theme.themeId,
     title: theme.title,
     scaDimension: theme.scaDimension,
+    formedLine: theme.formedLine,
     practiceCount: count,
     threshold: threshold,
     onboardingDone: enrollment.completedAt != null,
@@ -285,7 +308,10 @@ List<SkillFormation> skillFormations({
   final byTheme = <String, PracticeEnrollment>{
     for (final e in enrollments) e.themeId: e,
   };
-  final result = <SkillFormation>[];
+  // Gộp theo TÊN, không theo theme_id — xem `_keepsOver`.
+  final byTitle = <String, SkillFormation>{};
+  final retiredOf = <String, bool>{};
+  final order = <String>[];
   for (final theme in themes) {
     final f = skillFormationFor(
       theme: theme,
@@ -293,9 +319,43 @@ List<SkillFormation> skillFormations({
       events: events,
       threshold: threshold,
     );
-    if (f != null) result.add(f);
+    if (f == null) continue;
+    final kept = byTitle[f.title];
+    if (kept == null) {
+      order.add(f.title);
+      byTitle[f.title] = f;
+      retiredOf[f.title] = theme.isRetired;
+    } else if (_keepsOver(f, theme.isRetired, kept, retiredOf[f.title]!)) {
+      byTitle[f.title] = f;
+      retiredOf[f.title] = theme.isRetired;
+    }
   }
-  return result;
+  return [for (final t in order) byTitle[t]!];
+}
+
+/// Trong hai chủ đề cùng tên, chủ đề nào đại diện cho kỹ năng đó.
+///
+/// Vì sao phải gộp: thư viện có hai chủ đề trùng tên — `pt-voice` (bản cũ) và
+/// `pt-c2` (bản theo chiều SCA) đều tên "Dám lên tiếng". Ai ghi danh cả hai sẽ
+/// thấy hai dòng y hệt nhau ở màn Kỹ năng, và vì bộ đếm nhận sự kiện THEO TÊN
+/// (Career Memory không lưu theme_id), hai dòng ấy luôn hiện cùng một con số.
+/// Tệ hơn: chạm ngưỡng là ăn mừng hai lần và ghi hai dấu mốc cho cùng một kỹ
+/// năng. Một cái tên là một kỹ năng — gộp ở đây thì mọi màn đọc chung đều sạch.
+///
+/// Giữ chủ đề đã xong ba bước làm quen trước: đó là chỗ người dùng thực sự có
+/// tiến độ, và cũng là chỗ mở nút "vừa thực hành hôm nay". Hoà thì giữ chủ đề
+/// còn đang đề xuất (chưa `retired_at`), vì nội dung bước của nó mới hơn.
+bool _keepsOver(
+  SkillFormation candidate,
+  bool candidateRetired,
+  SkillFormation kept,
+  bool keptRetired,
+) {
+  if (candidate.onboardingDone != kept.onboardingDone) {
+    return candidate.onboardingDone;
+  }
+  if (candidateRetired != keptRetired) return !candidateRetired;
+  return false;
 }
 
 /// Chỉ những kỹ năng đã hình thành, mới nhất trước.
@@ -322,17 +382,33 @@ List<SkillFormation> formingSkills(List<SkillFormation> all) {
 /// Kỹ năng vừa hình thành mà Career Memory chưa có dấu mốc.
 ///
 /// Dùng để ghi dấu mốc và ăn mừng ĐÚNG MỘT LẦN.
+/// [themes] là chính những chủ đề đã dựng nên [formations] — cần để nhận dấu
+/// mốc theo `theme_id`, vì [SkillFormation] không mang theo tên chủ đề gốc của
+/// dữ liệu cũ.
 List<SkillFormation> newlyFormed({
   required List<SkillFormation> formations,
   required List<CareerMemoryEvent> events,
+  List<PracticeTheme> themes = const [],
 }) {
-  final announced = <String>{
-    for (final e in events)
-      if (e.behavior == kSkillFormedBehavior && e.reflectionText != null)
-        e.reflectionText!,
-  };
+  final themeById = {for (final t in themes) t.themeId: t};
+  final milestones =
+      events.where((e) => e.behavior == kSkillFormedBehavior).toList();
+
+  // Dữ liệu cũ chỉ có tên; dữ liệu mới có `theme_id`. Một kỹ năng coi là đã ăn
+  // mừng nếu khớp một trong hai — bỏ sót một dấu mốc cũ là ăn mừng lần thứ hai
+  // cho cùng một kỹ năng, và tab Hành trình sẽ có hai dòng cho một chuyện.
+  bool announced(SkillFormation f) {
+    final theme = themeById[f.themeId];
+    for (final e in milestones) {
+      if (theme != null && _belongsTo(e, theme)) return true;
+      if (e.themeId == f.themeId) return true;
+      if (e.themeId == null && e.reflectionText == f.title) return true;
+    }
+    return false;
+  }
+
   return [
     for (final f in formations)
-      if (f.skillFormed && !announced.contains(f.title)) f,
+      if (f.skillFormed && !announced(f)) f,
   ];
 }

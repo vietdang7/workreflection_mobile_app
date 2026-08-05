@@ -111,8 +111,9 @@ class _WrVoiceFieldState extends ConsumerState<WrVoiceField> {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 8, 8, 8),
       decoration: BoxDecoration(
-        color: WrColors.cream,
+        color: WrColors.white,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: WrColors.line),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -134,7 +135,7 @@ class _WrVoiceFieldState extends ConsumerState<WrVoiceField> {
                 border: InputBorder.none,
                 hintText: widget.hintText,
                 hintStyle:
-                    const TextStyle(fontSize: 15, color: WrColors.muted),
+                    const TextStyle(fontSize: 16.5, color: WrColors.muted),
               ),
               onChanged: (_) => widget.onChanged?.call(),
             ),
@@ -178,7 +179,7 @@ class _MicButton extends StatelessWidget {
           child: Icon(
             listening ? Icons.stop_rounded : Icons.mic_none_rounded,
             size: 20,
-            color: listening ? WrColors.white : WrColors.navy,
+            color: WrColors.navy,
           ),
         ),
       ),

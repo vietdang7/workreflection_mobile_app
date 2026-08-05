@@ -66,6 +66,7 @@ import '../../../core/theme/wr_text.dart';
 import '../../../core/widgets/wr_profile_avatar.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_card.dart';
+import '../../profile/profile_providers.dart';
 import '../episode_flow_controller.dart';
 import '../growth_providers.dart';
 import '../mood_content_providers.dart';
@@ -169,7 +170,7 @@ class WrHomeScreen extends ConsumerWidget {
                         Text(
                           _dateLabel(),
                           style: const TextStyle(
-                            fontSize: 11,
+                            fontSize: 12.5,
                             color: WrColors.text3,
                           ),
                         ),
@@ -210,6 +211,11 @@ class WrHomeScreen extends ConsumerWidget {
                   // thế nào thì phải bấm thêm một nút nữa — hỏi xong rồi giấu
                   // mất chỗ trả lời.
                   const _CheckinQuestion(),
+                  // Thẻ nhắc điền hồ sơ nằm NGAY dưới lưới check-in, trên các
+                  // khối nội dung — mockup bản (4) đặt nó ở đó vì nó là lời mời
+                  // duy nhất trong màn có thời hạn: hỏi muộn hơn thì mấy chục
+                  // Insight đầu đã sinh ra trong lúc app còn đoán mò bối cảnh.
+                  const _ProfileNudgeCard(),
                   // Thứ tự lấy nguyên từ `screenHome()`: check-in (cố định) →
                   // Hệ thống nhận ra → Gợi ý → Insight gần nhất → Tiếp tục hôm
                   // nay. Hai khối giữa nằm trong nhánh `state.checkedInToday`
@@ -249,23 +255,27 @@ class _CheckinQuestion extends ConsumerWidget {
               .map((o) => o.id)
               .firstOrNull;
 
-    // KHÔNG bọc trong thẻ: `giao-dien-chinh.html` đặt lưới check-in thẳng trên
-    // nền trắng của màn, và ô check-in mới là thứ màu kem. Bọc thêm một thẻ kem
-    // thì ô kem đứng trên nền kem — biến mất luôn đường ranh giữa hai thứ.
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+    // Cả khối nằm TRONG một thẻ trắng — `<div class="card card-pad">` của
+    // mockup bản (4). Trước đây lưới đứng trần trên nền màn: hồi nền màn còn
+    // TRẮNG và ô check-in màu kem thì cách đó đúng, nhưng từ khi nền màn thành
+    // xám và ô check-in thành trắng (brand identity 04/8) thì khối quan trọng
+    // nhất của Home lại là khối duy nhất không có mặt phẳng riêng — nó trôi
+    // giữa nền xám trong khi ba khối dưới đều là thẻ.
+    return WrCardMinimal(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
         const Text(
           // Nguyên văn mockup Sprint 2 §screenHome, cỡ chữ `.h2` = 15.5px.
           'Ngày hôm nay của bạn như thế nào?',
           style: TextStyle(
-            fontSize: 15.5,
+            fontSize: 17,
             fontWeight: FontWeight.w700,
             color: WrColors.navy,
             height: 1.35,
           ),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: 12),
         for (var i = 0; i < kCheckinOptions.length; i += 2) ...[
           if (i > 0) const SizedBox(height: 12),
             // IntrinsicHeight để hai ô cùng hàng cao bằng nhau như lưới CSS —
@@ -301,13 +311,14 @@ class _CheckinQuestion extends ConsumerWidget {
             'Chạm để bắt đầu một Reflection, dựa trên đúng cảm giác lúc này.',
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 12.5,
               color: WrColors.text3,
               height: 1.5,
             ),
           ),
         ),
-      ],
+        ],
+      ),
     );
   }
 }
@@ -340,34 +351,209 @@ class _CheckinTile extends ConsumerWidget {
             );
         context.push('/wr/flow/step');
       },
-      // `giao-dien-chinh.html` §.checkin-btn: ô nền KEM, không viền, bo 16; ô
-      // đang chọn tô ĐẶC coral và chữ đảo sang trắng.
+      // Mockup bản (4) §screenHome: ô là VIỀN 1.5px, bo 13, chữ luôn navy. Ô
+      // đang chọn đổi viền sang coral và tô nền coral 7% — không tô đặc.
       //
-      // Khách 2026-07-30 chọn giữ hệ màu này thay vì kiểu viền mảnh của Sprint 2
-      // ("không giống ban đầu là nền kem và màu cam nữa"). Ô kem đứng trên thẻ
-      // kem vẫn tách ra được vì thẻ chứa nó là màn trắng — xem `_CheckinQuestion`
-      // dùng nền trắng cho riêng khối này.
+      // Bản trước tô đặc coral, lấy từ `giao-dien-chinh.html`. Cách đó hợp lý
+      // khi ô nằm trần trên nền màn; giờ ô nằm TRONG một thẻ trắng, một mảng
+      // coral đặc trong thẻ đọc ra như nút bấm chính của màn — mà nút chính thì
+      // spec §01 dành riêng cho một chỗ duy nhất, và đây không phải chỗ đó.
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: selected ? WrColors.coral : WrColors.cream,
-          borderRadius: BorderRadius.circular(16),
+          color: selected
+              ? WrColors.coral.withValues(alpha: 0.07)
+              : WrColors.white,
+          borderRadius: BorderRadius.circular(13),
+          border: Border.all(
+            color: selected
+                ? WrColors.coral
+                : WrColors.navy.withValues(alpha: 0.14),
+            width: 1.5,
+          ),
         ),
         child: Text(
           option.label,
           textAlign: TextAlign.center,
-          style: TextStyle(
-            fontSize: 13,
+          style: const TextStyle(
+            fontSize: 13.5,
             fontWeight: FontWeight.w600,
             height: 1.4,
-            color: selected ? WrColors.white : WrColors.navy,
+            color: WrColors.navy,
           ),
         ),
       ),
     );
   }
+}
+
+// ---------------------------------------------------------------------------
+// 2b · Thẻ nhắc điền hồ sơ — mockup Sprint 2 bản (4), `showProfileNudge`.
+//
+// Ba điều kiện, đúng mockup: đã lưu ít nhất 3 Insight, chưa khai số năm kinh
+// nghiệm, và chưa bấm "Bỏ qua".
+//
+// Ngưỡng 3 Insight là phần quan trọng nhất và cũng dễ bỏ sót nhất: KHÔNG hỏi
+// người mới. Người vừa cài app chưa có lý do gì để tin app, và một biểu mẫu
+// dựng ngay trước mặt ở lần mở thứ hai chỉ đọc ra là "app này muốn lấy dữ liệu".
+// Sau ba lần nhìn lại thì họ đã thấy app làm được gì, và câu hỏi lúc đó đọc ra
+// đúng nghĩa của nó: để gợi ý bám sát hơn.
+//
+// Chỉ hỏi MỘT trường (số năm kinh nghiệm) chứ không hỏi cả bảy — đây là lời
+// nhắc, không phải biểu mẫu. Sáu trường còn lại nằm ở màn "Thông tin của bạn",
+// nơi người dùng tự đến khi muốn.
+// ---------------------------------------------------------------------------
+
+/// Số Insight tối thiểu trước khi app được phép hỏi thêm về người dùng.
+const int kProfileNudgeInsightThreshold = 3;
+
+class _ProfileNudgeCard extends ConsumerWidget {
+  const _ProfileNudgeCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (ref.watch(profileNudgeDismissedProvider)) {
+      return const SizedBox.shrink();
+    }
+
+    // Cả hai nguồn chưa về thì im lặng: hiện thẻ rồi rút lại khi dữ liệu tới
+    // là màn nhảy ngay dưới tay người dùng.
+    final insights = ref.watch(insightCountProvider).valueOrNull;
+    final cc = ref.watch(ccProfileProvider).valueOrNull;
+    if (insights == null || cc == null) return const SizedBox.shrink();
+
+    if (insights < kProfileNudgeInsightThreshold) {
+      return const SizedBox.shrink();
+    }
+    final experience = cc['total_work_experience'] as String?;
+    if (experience != null && experience.trim().isNotEmpty) {
+      return const SizedBox.shrink();
+    }
+
+    return Padding(
+      key: const Key('wr_home_profile_nudge'),
+      padding: const EdgeInsets.only(top: 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Viền ĐỨT, đúng mockup: thẻ này khác mọi thẻ khác trên màn ở chỗ nó
+          // sẽ biến mất sau khi được trả lời. Viền đứt là cách nói "chỗ này còn
+          // trống" mà không cần thêm chữ nào.
+          DottedBorderBox(
+            child: Text(
+              'Cho mình biết bạn đi làm được bao lâu để những gợi ý sát hơn nhé',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: WrColors.navy,
+                height: 1.5,
+              ),
+            ),
+          ),
+          // Mockup kéo hàng nút lên sát thẻ (`margin-top:-8px`) — hai nút là
+          // phần trả lời của chính câu hỏi trong thẻ, không phải một khối rời.
+          const SizedBox(height: 6),
+          Row(
+            children: [
+              Expanded(
+                child: ElevatedButton(
+                  key: const Key('wr_home_profile_nudge_fill'),
+                  onPressed: () => context.push('/profile/my-info'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: WrColors.navy,
+                    foregroundColor: WrColors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Điền ngay',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton(
+                  key: const Key('wr_home_profile_nudge_dismiss'),
+                  onPressed: () =>
+                      ref.read(profileNudgeDismissedProvider.notifier).dismiss(),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: WrColors.muted,
+                    side: const BorderSide(color: WrColors.line),
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    'Bỏ qua',
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Thẻ trắng viền ĐỨT — `border-style:dashed` của mockup.
+///
+/// Flutter không có kiểu viền đứt sẵn, nên vẽ bằng [CustomPaint]. Giữ riêng ở
+/// đây thay vì cho vào `wr_card.dart`: hệ thẻ chung cố ý chỉ có ba mặt phẳng,
+/// và đây là ngoại lệ của đúng một thẻ.
+class DottedBorderBox extends StatelessWidget {
+  const DottedBorderBox({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return CustomPaint(
+      painter: _DashedRRectPainter(),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        child: child,
+      ),
+    );
+  }
+}
+
+class _DashedRRectPainter extends CustomPainter {
+  static const double _radius = 20;
+  static const double _dash = 5;
+  static const double _gap = 4;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final rrect = RRect.fromRectAndRadius(
+      Offset.zero & size,
+      const Radius.circular(_radius),
+    );
+    final paint = Paint()
+      ..color = WrColors.line
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+
+    for (final metric in (Path()..addRRect(rrect)).computeMetrics()) {
+      var d = 0.0;
+      while (d < metric.length) {
+        final end = (d + _dash).clamp(0.0, metric.length);
+        canvas.drawPath(metric.extractPath(d, end), paint);
+        d = end + _gap;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 // ---------------------------------------------------------------------------
@@ -425,7 +611,7 @@ class _SystemNoticeCard extends ConsumerWidget {
                 // `.muted.serif` + italic — câu này là hệ thống đang trích lại
                 // điều lặp lại của chính người dùng, không phải chữ giao diện.
                 style: WrText.serifQuote(
-                  fontSize: 14,
+                  fontSize: 15.5,
                   color: WrColors.cream,
                 ),
               ),
@@ -443,7 +629,7 @@ class _SystemNoticeCard extends ConsumerWidget {
                 child: const Text(
                   'Pattern cơ bản · miễn phí',
                   style: TextStyle(
-                    fontSize: 9,
+                    fontSize: 10.5,
                     fontWeight: FontWeight.w700,
                     letterSpacing: 0.27,
                     color: WrColors.cream,
@@ -506,9 +692,11 @@ class _MoodContentSection extends ConsumerWidget {
                         width: 44,
                         height: 44,
                         decoration: BoxDecoration(
-                          // Trắng, không phải navy 6%: thẻ chứa nó giờ là kem,
-                          // mà navy 6% trên kem thì chỉ ra một vệt xám bẩn.
-                          color: WrColors.white,
+                          // Navy 6%, đúng mockup. Bản trước tô trắng vì thẻ chứa
+                          // nó còn là kem; từ khi thẻ thành TRẮNG (brand identity
+                          // 04/8) thì ô trắng trên thẻ trắng biến mất, icon nằm
+                          // trơ không ra hình một ô.
+                          color: WrColors.navy.withValues(alpha: 0.06),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
@@ -530,7 +718,7 @@ class _MoodContentSection extends ConsumerWidget {
                                   child: Text(
                                     item.title,
                                     style: const TextStyle(
-                                      fontSize: 13,
+                                      fontSize: 14.5,
                                       fontWeight: FontWeight.w600,
                                       color: WrColors.navy,
                                       height: 1.35,
@@ -547,7 +735,7 @@ class _MoodContentSection extends ConsumerWidget {
                             Text(
                               '${item.kind} · ${item.duration}',
                               style: const TextStyle(
-                                fontSize: 11,
+                                fontSize: 12.5,
                                 color: WrColors.text3,
                                 height: 1.5,
                               ),
@@ -583,13 +771,13 @@ class _MoodContentSection extends ConsumerWidget {
                     Text(
                       'Xem thêm gợi ý trong thư viện',
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 12.5,
                         fontWeight: FontWeight.w700,
-                        color: WrColors.teal,
+                        color: WrColors.navy,
                       ),
                     ),
                     SizedBox(width: 4),
-                    Icon(Icons.arrow_forward, size: 12, color: WrColors.teal),
+                    Icon(Icons.arrow_forward, size: 12, color: WrColors.navy),
                   ],
                 ),
               ),
@@ -611,7 +799,37 @@ class _LatestInsightSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final insight = ref.watch(wrLatestInsightProvider).valueOrNull;
-    if (insight == null) return const SizedBox.shrink();
+
+    // Chưa có Insight nào thì thẻ VẪN đứng đây, chỉ đổi lời — mockup bản (4)
+    // thay nhánh ẩn cũ bằng một câu mời.
+    //
+    // Lý do giống hệt khối "Tiếp tục hôm nay" ngay dưới: người dùng mới nhất là
+    // người cần thấy nhất rằng Home sẽ có gì. Ẩn đi thì màn của họ chỉ còn lưới
+    // check-in, và chỗ này im lặng cho tới tận lần phản tư đầu tiên.
+    if (insight == null) {
+      return const Padding(
+        key: Key('wr_home_latest_insight_empty'),
+        padding: EdgeInsets.only(top: 14),
+        child: WrCardMinimal(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              WrEyebrow('INSIGHT GẦN NHẤT'),
+              SizedBox(height: 6),
+              Text(
+                'Chưa có Insight nào. Bắt đầu một lần nhìn lại để lưu Insight '
+                'đầu tiên.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: WrColors.text2,
+                  height: 1.6,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
     final at = insight.createdAt;
     final saved = at == null
@@ -640,7 +858,7 @@ class _LatestInsightSection extends ConsumerWidget {
               // `.muted.serif` italic 13.5px của mockup — cùng giọng với thẻ
               // "Hệ thống nhận ra", vì cả hai đều là câu trích về người dùng.
               style: WrText.serifQuote(
-                fontSize: 13.5,
+                fontSize: 15,
                 color: WrColors.cream,
               ),
             ),
@@ -649,7 +867,7 @@ class _LatestInsightSection extends ConsumerWidget {
               Text(
                 saved,
                 style: TextStyle(
-                  fontSize: 11,
+                  fontSize: 12.5,
                   color: WrColors.cream.withValues(alpha: 0.6),
                 ),
               ),
@@ -721,15 +939,16 @@ class _ContinueTodaySection extends ConsumerWidget {
               key: const Key('wr_home_continue_today_card'),
               behavior: HitTestBehavior.opaque,
               onTap: () => context.push(route),
-              // Dòng bên trong là một ô NỔI trên thẻ kem, tô trắng. Bản trước tô
-              // navy 3% để chìm xuống nền trắng; trên nền kem thì sắc đó mất
-              // hẳn, dòng chữ nằm trơ không ra hình một ô bấm được.
+              // Ô lồng tô navy 3%, đúng mockup `rgba(9,55,116,0.03)`. Bản trước
+              // tô trắng vì thẻ chứa nó là kem; thẻ giờ đã TRẮNG nên ô trắng
+              // trong thẻ trắng không còn ranh giới nào, dòng chữ nằm trơ không
+              // ra hình một ô bấm được.
               child: Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
                 decoration: BoxDecoration(
-                  color: WrColors.white,
-                  borderRadius: BorderRadius.circular(12),
+                  color: WrColors.navy.withValues(alpha: 0.03),
+                  borderRadius: BorderRadius.circular(11),
                 ),
                 child: Row(
                   children: [
@@ -750,7 +969,7 @@ class _ContinueTodaySection extends ConsumerWidget {
                         // tên việc, thà dài còn hơn để trống một nửa câu.
                         label,
                         style: const TextStyle(
-                          fontSize: 12.5,
+                          fontSize: 14,
                           color: WrColors.navy,
                           height: 1.5,
                         ),

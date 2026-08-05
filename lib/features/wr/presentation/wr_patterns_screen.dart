@@ -47,7 +47,7 @@ class WrPatternsScreen extends ConsumerWidget {
                     'Những gì bạn đã ghi vẫn còn nguyên trong Hành trình.',
             key: const Key('wr_patterns_empty'),
             style: const TextStyle(
-                fontSize: 14, color: WrColors.muted, height: 1.6),
+                fontSize: 15.5, color: WrColors.muted, height: 1.6),
           )
         else ...[
           const Text(
@@ -59,7 +59,7 @@ class WrPatternsScreen extends ConsumerWidget {
             '$kRepeatedSituationsMinCount lần.',
             key: Key('wr_patterns_window_note'),
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 14.5,
               color: WrColors.muted,
               height: 1.6,
             ),

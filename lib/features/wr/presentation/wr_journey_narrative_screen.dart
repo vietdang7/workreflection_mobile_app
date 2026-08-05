@@ -44,7 +44,7 @@ class WrJourneyNarrativeScreen extends ConsumerWidget {
             'WorkReflection sẽ chỉ ra điều gì đang đổi và điều gì vẫn ở nguyên đó.',
             key: Key('wr_journey_narrative_empty'),
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 16.5,
               color: WrColors.muted,
               height: 1.65,
             ),
@@ -73,7 +73,7 @@ class _NarrativeBlock extends StatelessWidget {
             Text(
               period,
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: 13.5,
                 fontWeight: FontWeight.w600,
                 color: WrColors.muted,
               ),

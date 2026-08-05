@@ -12,11 +12,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/data/wr_repository.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
-import '../../../core/widgets/eyebrow.dart';
 import '../../../features/auth/data/auth_repository.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../wr/org_survey_providers.dart';
 import '../../wr/wr_providers.dart';
 import '../profile_providers.dart';
+import 'change_password_dialog.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -35,13 +36,32 @@ class ProfileScreen extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 24),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
+                  // Thứ tự và mặt phẳng lấy nguyên từ mockup Sprint 2 bản (4)
+                  // §screenProfile: khối nhận diện căn giữa → THẺ số liệu → thẻ
+                  // mời Premium → THẺ danh sách cài đặt → thẻ Khảo sát tổ chức
+                  // → nút đăng xuất.
+                  //
+                  // Không còn đường kẻ ngang nào: mockup phân đoạn bằng thẻ chứ
+                  // không bằng vạch. Ba vạch cũ chia màn thành các dải rời rạc
+                  // trong khi mọi màn khác của app đã là hệ thẻ.
                   _AvatarSection(),
-                  const SizedBox(height: 1),
-                  _Divider(),
-                  _StatsRow(),
-                  _Divider(),
+                  const SizedBox(height: 20),
+                  _StatsCard(),
+                  const SizedBox(height: 12),
                   _PremiumCard(),
                   _SettingsSection(),
+                  const SizedBox(height: 12),
+                  _OrgSurveyCard(),
+                  // Công tắc nghiệm thu — nút chữ mờ, ngay trên nút đăng xuất,
+                  // đúng vị trí mockup. Chỉ tài khoản nội bộ thấy.
+                  Consumer(
+                    builder: (context, ref, _) =>
+                        ref.watch(canTogglePremiumProvider)
+                            ? _PremiumOverrideRow()
+                            : const SizedBox.shrink(),
+                  ),
+                  const SizedBox(height: 12),
+                  _LogoutButton(),
                   const SizedBox(height: 80),
                 ]),
               ),
@@ -84,7 +104,7 @@ class _ProfileHeader extends StatelessWidget {
                     Text(
                       'Quay lại',
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 14.5,
                         fontWeight: FontWeight.w500,
                         color: WrColors.muted,
                       ),
@@ -200,7 +220,7 @@ class _AvatarSection extends ConsumerWidget {
             Text(
               email,
               textAlign: TextAlign.center,
-              style: WrTextStyles.body.copyWith(fontSize: 13),
+              style: WrTextStyles.body.copyWith(fontSize: 14.5),
             ),
           ],
           const SizedBox(height: 10),
@@ -217,7 +237,7 @@ class _AvatarSection extends ConsumerWidget {
             child: Text(
               isPremium ? l10n.profileBadgePremium : l10n.profileBadgeMember,
               style: TextStyle(
-                fontSize: 11.5,
+                fontSize: 13,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.5,
                 color: isPremium ? WrColors.coral : WrColors.navy,
@@ -243,55 +263,76 @@ class _PremiumCard extends ConsumerWidget {
         ref.watch(wrEntitlementProvider).valueOrNull?.isPremium ?? false;
     if (isPremium) return const SizedBox.shrink();
 
+    // Giá đọc từ `cc_products` chứ không ghi cứng "499.000đ/năm" như mockup:
+    // khách bán hai gói (năm / tháng) và đổi giá ở trang quản trị của web. Một
+    // con số ghi cứng ở đây sẽ nói khác Paywall ngay lần đầu khách đổi giá.
+    final plan = ref.watch(wrPremiumPricingProvider).valueOrNull;
+    final price = plan == null
+        ? ''
+        : '${plan.currentLabel}/${plan.durationSuffix}, ';
+
     return Padding(
-      padding: const EdgeInsets.only(top: 8, bottom: 20),
+      padding: const EdgeInsets.only(top: 12),
       child: GestureDetector(
         key: const Key('profile_premium_card'),
         behavior: HitTestBehavior.opaque,
         onTap: () => context.push('/wr/paywall'),
+        // Nền CORAL ĐẶC, chữ navy — mockup bản (4) `background:var(--coral)`.
+        // Đây là chỗ duy nhất trên màn được dùng coral đặc, đúng spec §01: một
+        // CTA chính mỗi màn. Bản trước tô coral 12% nên nó chìm ngang hàng với
+        // mọi thẻ trắng khác và không còn đọc ra là lời mời.
         child: Container(
           width: double.infinity,
           padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
-            color: WrColors.coral.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(14),
+            color: WrColors.coral,
+            borderRadius: BorderRadius.circular(18),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Mở khoá bản đầy đủ',
+                'Mở khoá Premium',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
                   color: WrColors.navy,
                 ),
               ),
-              const SizedBox(height: 6),
-              const Text(
-                'Phần đọc vị nhu cầu, diễn biến theo thời gian, toàn bộ '
-                'Career Memory và thực hành không giới hạn.',
+              const SizedBox(height: 4),
+              Text(
+                // §03: chữ trên nền coral là navy, pha loãng cho dòng phụ chứ
+                // không đổi sang trắng hay xám.
+                '${price}Diễn giải sâu, Pattern nâng cao, Career Memory đầy đủ.',
                 style: TextStyle(
-                  fontSize: 13,
-                  color: WrColors.muted,
+                  fontSize: 13.5,
+                  color: WrColors.navy.withValues(alpha: 0.75),
                   height: 1.55,
                 ),
               ),
               const SizedBox(height: 12),
-              const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'Xem chi tiết',
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: WrColors.coral,
-                    ),
+              ElevatedButton(
+                key: const Key('profile_premium_cta'),
+                onPressed: () => context.push('/wr/paywall'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: WrColors.navy,
+                  foregroundColor: WrColors.white,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 18,
+                    vertical: 10,
                   ),
-                  SizedBox(width: 5),
-                  Icon(Icons.arrow_forward, size: 14, color: WrColors.coral),
-                ],
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                child: const Text(
+                  'Xem chi tiết',
+                  style: TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
               ),
             ],
           ),
@@ -305,27 +346,43 @@ class _PremiumCard extends ConsumerWidget {
 // Stats row
 // ---------------------------------------------------------------------------
 
-class _StatsRow extends ConsumerWidget {
+/// Ba con số trong MỘT thẻ trắng — `<div class="card card-pad">` của mockup.
+///
+/// Trước đây là ba cột trần ngăn nhau bằng vạch dọc, cỡ số 36px. Mockup dùng cỡ
+/// `.h2` và đặt cả ba trong một thẻ: chúng là một câu ("bạn đã đi được tới đâu"),
+/// không phải ba mục riêng.
+class _StatsCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final streakAsync = ref.watch(streakProvider);
-    final insightAsync = ref.watch(insightCountProvider);
-    final milestoneAsync = ref.watch(milestoneCountProvider);
+    final streak = ref.watch(streakProvider).valueOrNull ?? 0;
+    final insights = ref.watch(insightCountProvider).valueOrNull ?? 0;
+    final milestones = ref.watch(milestoneCountProvider).valueOrNull ?? 0;
 
-    final streak = streakAsync.valueOrNull ?? 0;
-    final insights = insightAsync.valueOrNull ?? 0;
-    final milestones = milestoneAsync.valueOrNull ?? 0;
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 20),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
+      decoration: BoxDecoration(
+        color: WrColors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: WrColors.line),
+      ),
       child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
-          Expanded(child: _StatBlock(number: streak, label: l10n.profileStatStreak)),
-          _StatDivider(),
-          Expanded(child: _StatBlock(number: insights, label: l10n.profileStatInsights)),
-          _StatDivider(),
-          Expanded(child: _StatBlock(number: milestones, label: l10n.profileStatMilestones)),
+          Expanded(
+            child: _StatBlock(number: streak, label: l10n.profileStatStreak),
+          ),
+          Expanded(
+            child:
+                _StatBlock(number: insights, label: l10n.profileStatInsights),
+          ),
+          Expanded(
+            child: _StatBlock(
+              number: milestones,
+              label: l10n.profileStatMilestones,
+            ),
+          ),
         ],
       ),
     );
@@ -344,36 +401,23 @@ class _StatBlock extends StatelessWidget {
         Text(
           '$number',
           style: const TextStyle(
-            fontSize: 36,
+            fontSize: 24,
             fontWeight: FontWeight.w800,
             color: WrColors.navy,
+            height: 1.2,
           ),
         ),
         const SizedBox(height: 4),
         Text(
           label,
-          style: WrTextStyles.body.copyWith(fontSize: 13),
+          style: const TextStyle(
+            fontSize: 12.5,
+            color: WrColors.text3,
+            height: 1.4,
+          ),
           textAlign: TextAlign.center,
         ),
       ],
-    );
-  }
-}
-
-class _StatDivider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(width: 1, height: 48, color: WrColors.navy.withValues(alpha: 0.1));
-  }
-}
-
-class _Divider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      height: 1,
-      color: WrColors.coral.withValues(alpha: 0.1),
-      margin: const EdgeInsets.symmetric(vertical: 8),
     );
   }
 }
@@ -393,36 +437,23 @@ class _PremiumOverrideRow extends ConsumerWidget {
     final entitlement = ref.watch(wrEntitlementProvider).valueOrNull;
     final on = entitlement?.isPremium ?? false;
 
+    // Mockup bản (4) để nó là NÚT CHỮ MỜ dưới thẻ Khảo sát tổ chức, không phải
+    // một dòng trong danh sách cài đặt. Đúng chỗ: bảy dòng kia là thiết lập
+    // thật của người dùng, dòng này là đồ nghề nghiệm thu. Để lẫn vào nhau thì
+    // công cụ nội bộ trông y hệt một tính năng.
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        _SettingRow(
+        TextButton(
           key: const Key('profile_premium_override_row'),
-          label: 'Bật Premium (thử nghiệm)',
-          onTap: () =>
-              ref.read(premiumOverrideProvider.notifier).set(!on),
-          trailing: AnimatedContainer(
-            key: const Key('profile_premium_override_toggle'),
-            duration: const Duration(milliseconds: 200),
-            width: 40,
-            height: 22,
-            decoration: BoxDecoration(
-              color: on ? WrColors.coral : WrColors.muted,
-              borderRadius: BorderRadius.circular(11),
-            ),
-            child: AnimatedAlign(
-              duration: const Duration(milliseconds: 200),
-              alignment: on ? Alignment.centerRight : Alignment.centerLeft,
-              child: Container(
-                width: 16,
-                height: 16,
-                margin: const EdgeInsets.all(3),
-                decoration: const BoxDecoration(
-                  color: WrColors.white,
-                  shape: BoxShape.circle,
-                ),
-              ),
-            ),
+          onPressed: () => ref.read(premiumOverrideProvider.notifier).set(!on),
+          style: TextButton.styleFrom(
+            foregroundColor: WrColors.text3,
+            padding: const EdgeInsets.symmetric(vertical: 12),
+          ),
+          child: Text(
+            '(Demo) Chuyển trạng thái Premium: ${on ? 'Tắt' : 'Bật'}',
+            style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w500),
           ),
         ),
 
@@ -441,7 +472,7 @@ class _PremiumOverrideRow extends ConsumerWidget {
                 'Đang ép ${override ? 'Premium' : 'miễn phí'} trên máy này · '
                 'chạm để dùng lại gói thật',
                 style: TextStyle(
-                  fontSize: 11.5,
+                  fontSize: 13,
                   height: 1.5,
                   color: WrColors.coral.withValues(alpha: 0.9),
                 ),
@@ -449,6 +480,96 @@ class _PremiumOverrideRow extends ConsumerWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Khảo sát tổ chức (ESI + eNPS) — mockup Sprint 2, `screenProfile`
+// ---------------------------------------------------------------------------
+
+/// Lối vào duy nhất của Khảo sát tổ chức.
+///
+/// Là một THẺ riêng chứ không phải một dòng trong danh sách Cài đặt, đúng như
+/// mockup. Bài này không phải một thiết lập của app: nó là một lời mời tham
+/// gia, kèm chữ "tuỳ chọn" ngay trên tiêu đề, và người dùng cần thấy đủ để
+/// quyết định có bấm hay không.
+///
+/// Không có cổng Premium ở đây. Màn giới thiệu hứa "không đổi lấy quyền lợi hay
+/// tính năng nào trong ứng dụng" — gắn nó vào gói trả tiền theo bất kỳ chiều
+/// nào cũng là phá lời hứa đó.
+class _OrgSurveyCard extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Đã làm rồi thì đổi chữ nút. Mời "tham gia" một người vừa trả lời xong 13
+    // câu là cho thấy app không nhớ gì về họ.
+    final done = ref.watch(wrOrgSurveyLatestProvider).valueOrNull != null;
+
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 24),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(18),
+        decoration: BoxDecoration(
+          color: WrColors.white,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: WrColors.line),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Row(
+              children: [
+                Icon(Icons.apartment_outlined, size: 16, color: WrColors.navy),
+                SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    'Khảo sát tổ chức (tuỳ chọn)',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: WrColors.navy,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              'Đánh giá đãi ngộ, phát triển và mức sẵn lòng giới thiệu nơi bạn '
+              'làm việc.',
+              style: TextStyle(
+                fontSize: 12.5,
+                height: 1.6,
+                color: WrColors.text2,
+              ),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton(
+              key: const Key('profile_org_survey_btn'),
+              onPressed: () => context.push(
+                done ? '/wr/org-survey/result' : '/wr/org-survey',
+              ),
+              style: OutlinedButton.styleFrom(
+                foregroundColor: WrColors.navy,
+                side: const BorderSide(color: WrColors.line),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              child: Text(
+                done ? 'Xem lại kết quả' : 'Tìm hiểu & tham gia',
+                style: const TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
@@ -464,14 +585,65 @@ class _SettingsSection extends ConsumerWidget {
     final reminderAsync = ref.watch(reminderProvider);
     final reminderEnabled = reminderAsync.valueOrNull ?? true;
 
-    return Column(
+    // Cả danh sách nằm trong MỘT thẻ trắng, mỗi dòng có icon bên trái và ngăn
+    // nhau bằng vạch `--line-soft` — `<div class="card">` của mockup bản (4).
+    //
+    // Bản trước là các dòng trần trên nền màn, không icon. Trên nền TRẮNG cũ nó
+    // còn đọc được; từ khi nền màn thành xám (brand identity 04/8) thì danh sách
+    // này là mảng duy nhất của màn không có mặt phẳng, nằm lọt thỏm giữa ba thẻ
+    // trắng — đúng chỗ khách nói "nhìn chưa giống".
+    //
+    // Nhãn mục "CÀI ĐẶT" bỏ đi theo mockup: thẻ đã tự tách khối, thêm một dòng
+    // chữ hoa nữa chỉ là nói lại điều mắt đã thấy.
+    //
+    // Ảnh khách gửi 04/8 chỉ có bốn dòng, nhưng khách chốt lại ngay sau đó là
+    // GIỮ đủ mục: đổi mật khẩu, sửa hồ sơ, thông tin công việc, bản Premium đều
+    // là lối vào duy nhất của chúng — cắt đi là mất hẳn đường tới.
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: WrColors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: WrColors.line),
+      ),
+      child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        WrEyebrow(l10n.profileEyebrowSettings),
-        const SizedBox(height: 12),
+        // "Thông tin của bạn" — mockup Sprint 2 bản (4). Đứng ĐẦU danh sách,
+        // trên cả nhắc nhở hằng ngày: đây là thứ duy nhất trong danh sách này
+        // nói về người dùng, phần còn lại là thiết lập của app.
+        //
+        // Con số n/7 không phải để giục. Nó trả lời câu người dùng thật sự hỏi
+        // khi nhìn một dòng như thế này — "trong đó có gì, mình khai tới đâu
+        // rồi" — mà không bắt mở màn ra mới biết.
+        _SettingRow(
+          key: const Key('profile_my_info_btn'),
+          icon: Icons.badge_outlined,
+          label: 'Thông tin của bạn',
+          onTap: () => context.push('/profile/my-info'),
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Builder(
+                builder: (context) {
+                  final status = ref.watch(myInfoStatusProvider(l10n));
+                  return Text(
+                    '${status.filled}/${status.total}',
+                    key: const Key('profile_my_info_count'),
+                    style: WrTextStyles.body.copyWith(fontSize: 14.5),
+                  );
+                },
+              ),
+              const SizedBox(width: 4),
+              const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
+            ],
+          ),
+        ),
 
         // Reminder toggle — bấm đâu trên dòng cũng bật/tắt được.
         _SettingRow(
+          icon: Icons.notifications_none_outlined,
           label: l10n.profileSettingReminder,
           onTap: () => ref.read(reminderProvider.notifier).toggle(),
           trailing: AnimatedContainer(
@@ -504,6 +676,7 @@ class _SettingsSection extends ConsumerWidget {
         // Language
         _SettingRow(
           key: const Key('profile_language_row'),
+          icon: Icons.language_outlined,
           label: l10n.profileSettingLanguage,
           onTap: () => _showLanguageDialog(context, ref),
           trailing: Row(
@@ -511,7 +684,7 @@ class _SettingsSection extends ConsumerWidget {
             children: [
               Text(
                 l10n.profileLanguageValue,
-                style: WrTextStyles.body.copyWith(fontSize: 13),
+                style: WrTextStyles.body.copyWith(fontSize: 14.5),
               ),
               const SizedBox(width: 4),
               const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
@@ -519,9 +692,10 @@ class _SettingsSection extends ConsumerWidget {
           ),
         ),
 
-        // Edit profile
+        // Sửa hồ sơ — tên, ảnh, và các trường hồ sơ dạng nhập chữ.
         _SettingRow(
           key: const Key('profile_edit_profile_btn'),
+          icon: Icons.person_outline,
           label: l10n.profileSettingEditProfile,
           onTap: () => context.push('/profile/edit'),
           trailing:
@@ -533,6 +707,7 @@ class _SettingsSection extends ConsumerWidget {
         // dòng riêng cho tài liệu nữa.
         _SettingRow(
           key: const Key('profile_work_info_btn'),
+          icon: Icons.work_outline,
           label: 'Thông tin công việc',
           onTap: () => context.push('/wr/work-info'),
           trailing:
@@ -542,80 +717,35 @@ class _SettingsSection extends ConsumerWidget {
         // Đăng ký Premium
         _SettingRow(
           key: const Key('profile_paywall_btn'),
+          icon: Icons.star_outline,
           label: 'Bản Premium',
           onTap: () => context.push('/wr/paywall'),
           trailing:
               const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
         ),
 
-        // Công tắc thử nghiệm — chỉ hiện với tài khoản nội bộ. Đặt ngay dưới
-        // "Bản Premium" để hai thứ nói về cùng một chuyện nằm cạnh nhau.
-        if (ref.watch(canTogglePremiumProvider)) _PremiumOverrideRow(),
-
-        // Change password
+        // Đổi mật khẩu
         _SettingRow(
           key: const Key('profile_change_password_btn'),
+          icon: Icons.lock_outline,
           label: l10n.profileSettingChangePassword,
-          onTap: () => _showChangePasswordDialog(context, ref),
+          onTap: () => showChangePasswordDialog(context, ref),
           trailing:
               const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
         ),
 
-        // Export data
+        // Xuất dữ liệu là dòng CUỐI của thẻ, nên không kẻ vạch dưới — vạch
+        // cuối cùng sẽ nằm sát mép thẻ và đọc ra như một đường viền thừa.
         _SettingRow(
           key: const Key('profile_export_btn'),
+          icon: Icons.download_outlined,
           label: l10n.profileSettingExport,
-          onTap: () => _exportData(context, ref),
-          trailing: const Icon(
-            Icons.download_outlined,
-            color: WrColors.coral,
-            size: 18,
-          ),
-        ),
-
-        // Logout — dòng cuối, không kẻ vạch dưới
-        _SettingRow(
-          key: const Key('profile_logout_btn'),
-          label: l10n.profileSettingLogout,
-          labelColor: WrColors.destructive,
           showBorder: false,
-          onTap: () => _logout(context, ref),
-          trailing: const SizedBox.shrink(),
+          onTap: () => _exportData(context, ref),
+          trailing:
+              const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
         ),
       ],
-    );
-  }
-
-  void _showChangePasswordDialog(BuildContext context, WidgetRef ref) {
-    final l10n = AppLocalizations.of(context)!;
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => _ChangePasswordDialog(
-        l10n: l10n,
-        onSubmit: (String newPassword) async {
-          Navigator.of(ctx).pop();
-          try {
-            await ref
-                .read(authRepositoryProvider)
-                .changePassword(newPassword);
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.changePasswordSuccess)),
-              );
-            }
-          } catch (e) {
-            if (context.mounted) {
-              final msg = e.toString().toLowerCase();
-              final text = msg.contains('session') || msg.contains('expired')
-                  ? l10n.changePasswordErrorSessionExpired
-                  : l10n.changePasswordErrorGeneric;
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(text)),
-              );
-            }
-          }
-        },
-        onCancel: () => Navigator.of(ctx).pop(),
       ),
     );
   }
@@ -689,18 +819,6 @@ class _SettingsSection extends ConsumerWidget {
     }
   }
 
-  Future<void> _logout(BuildContext context, WidgetRef ref) async {
-    try {
-      await ref.read(authRepositoryProvider).signOut();
-      // Router redirect handles navigation to /auth
-    } catch (e) {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không thể đăng xuất.')),
-        );
-      }
-    }
-  }
 }
 
 /// Một dòng cài đặt.
@@ -712,15 +830,18 @@ class _SettingRow extends StatelessWidget {
     super.key,
     required this.label,
     required this.trailing,
+    this.icon,
     this.onTap,
-    this.labelColor,
     this.showBorder = true,
   });
 
   final String label;
   final Widget trailing;
+
+  /// Icon bên trái, đúng mockup. Mỗi dòng một hình để mắt bắt được dòng cần tìm
+  /// mà không phải đọc hết bảy nhãn.
+  final IconData? icon;
   final VoidCallback? onTap;
-  final Color? labelColor;
   final bool showBorder;
 
   @override
@@ -729,25 +850,23 @@ class _SettingRow extends StatelessWidget {
       onTap: onTap,
       child: Container(
         decoration: showBorder
-            ? BoxDecoration(
+            ? const BoxDecoration(
                 border: Border(
-                  bottom: BorderSide(
-                    color: WrColors.navy.withValues(alpha: 0.05),
-                    width: 1,
-                  ),
+                  bottom: BorderSide(color: WrColors.lineSoft, width: 1),
                 ),
               )
             : null,
-        padding: const EdgeInsets.symmetric(vertical: 16),
+        padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 16),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            if (icon != null) ...[
+              Icon(icon, size: 18, color: WrColors.navy),
+              const SizedBox(width: 10),
+            ],
             Expanded(
               child: Text(
                 label,
-                style: labelColor == null
-                    ? WrTextStyles.hMedium
-                    : WrTextStyles.hMedium.copyWith(color: labelColor),
+                style: WrTextStyles.hMedium,
               ),
             ),
             trailing,
@@ -758,124 +877,46 @@ class _SettingRow extends StatelessWidget {
   }
 }
 
-// ---------------------------------------------------------------------------
-// Change-password dialog (stateful so it can show/hide passwords)
-// ---------------------------------------------------------------------------
-
-class _ChangePasswordDialog extends StatefulWidget {
-  const _ChangePasswordDialog({
-    required this.l10n,
-    required this.onSubmit,
-    required this.onCancel,
-  });
-
-  final AppLocalizations l10n;
-  /// Called with the validated new password when the user taps submit.
-  final void Function(String newPassword) onSubmit;
-  final VoidCallback onCancel;
-
+/// Đăng xuất — NÚT viền riêng dưới cùng, ngoài thẻ cài đặt.
+///
+/// Mockup bản (4) tách nó ra khỏi danh sách vì nó không phải một thiết lập: sáu
+/// dòng kia mở ra một màn khác, dòng này kết thúc phiên. Để lẫn trong danh sách
+/// thì một cú chạm trượt sẽ đá người dùng ra ngoài.
+class _LogoutButton extends ConsumerWidget {
   @override
-  State<_ChangePasswordDialog> createState() => _ChangePasswordDialogState();
-}
-
-class _ChangePasswordDialogState extends State<_ChangePasswordDialog> {
-  final _formKey = GlobalKey<FormState>();
-  final _newPasswordCtrl = TextEditingController();
-  final _confirmPasswordCtrl = TextEditingController();
-  bool _obscureNew = true;
-  bool _obscureConfirm = true;
-
-  @override
-  void dispose() {
-    _newPasswordCtrl.dispose();
-    _confirmPasswordCtrl.dispose();
-    super.dispose();
-  }
-
-  void _submit() {
-    if (!(_formKey.currentState?.validate() ?? false)) return;
-    widget.onSubmit(_newPasswordCtrl.text);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = widget.l10n;
-    return AlertDialog(
-      title: Text(l10n.changePasswordTitle),
-      content: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // New password
-            TextFormField(
-              key: const Key('change_password_new_field'),
-              controller: _newPasswordCtrl,
-              obscureText: _obscureNew,
-              decoration: InputDecoration(
-                labelText: l10n.changePasswordNewLabel,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscureNew ? Icons.visibility_off : Icons.visibility,
-                    size: 18,
-                  ),
-                  onPressed: () => setState(() => _obscureNew = !_obscureNew),
-                ),
-              ),
-              validator: (v) {
-                if (v == null || v.isEmpty) return l10n.authValidatorPassword;
-                if (v.length < 6) return l10n.changePasswordErrorTooShort;
-                return null;
-              },
-            ),
-            const SizedBox(height: 16),
-            // Confirm password
-            TextFormField(
-              key: const Key('change_password_confirm_field'),
-              controller: _confirmPasswordCtrl,
-              obscureText: _obscureConfirm,
-              decoration: InputDecoration(
-                labelText: l10n.changePasswordConfirmLabel,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                suffixIcon: IconButton(
-                  icon: Icon(
-                    _obscureConfirm ? Icons.visibility_off : Icons.visibility,
-                    size: 18,
-                  ),
-                  onPressed: () =>
-                      setState(() => _obscureConfirm = !_obscureConfirm),
-                ),
-              ),
-              validator: (v) {
-                if (v == null || v.isEmpty) return l10n.authValidatorPassword;
-                if (v != _newPasswordCtrl.text) {
-                  return l10n.changePasswordErrorMismatch;
-                }
-                return null;
-              },
-            ),
-          ],
-        ),
-      ),
-      actions: [
-        TextButton(
-          onPressed: widget.onCancel,
-          child: Text(l10n.commonCancel),
-        ),
-        TextButton(
-          key: const Key('change_password_submit'),
-          onPressed: _submit,
-          child: Text(
-            l10n.changePasswordSubmit,
-            style: const TextStyle(color: WrColors.coral),
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    return SizedBox(
+      width: double.infinity,
+      child: OutlinedButton(
+        key: const Key('profile_logout_btn'),
+        onPressed: () => _logout(context, ref),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: WrColors.navy,
+          side: const BorderSide(color: WrColors.line),
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
-      ],
+        child: Text(
+          l10n.profileSettingLogout,
+          style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600),
+        ),
+      ),
     );
+  }
+
+  Future<void> _logout(BuildContext context, WidgetRef ref) async {
+    try {
+      await ref.read(authRepositoryProvider).signOut();
+      // Router redirect handles navigation to /auth
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Không thể đăng xuất.')),
+        );
+      }
+    }
   }
 }

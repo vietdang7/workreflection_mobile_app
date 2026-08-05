@@ -34,7 +34,7 @@ class WrEpisodeDetailScreen extends ConsumerWidget {
           Text(
             'Có thể nó đã bị xoá, hoặc thiết bị đang mất kết nối.',
             key: Key('wr_episode_detail_missing'),
-            style: TextStyle(fontSize: 15, color: WrColors.muted, height: 1.65),
+            style: TextStyle(fontSize: 16.5, color: WrColors.muted, height: 1.65),
           ),
         ],
       );
@@ -53,7 +53,7 @@ class WrEpisodeDetailScreen extends ConsumerWidget {
         if (dateStr.isNotEmpty)
           Text(
             dateStr,
-            style: const TextStyle(fontSize: 14, color: WrColors.muted),
+            style: const TextStyle(fontSize: 15.5, color: WrColors.muted),
           ),
         const SizedBox(height: 24),
 
@@ -79,7 +79,7 @@ class WrEpisodeDetailScreen extends ConsumerWidget {
         if (episode.patternsDone.isEmpty)
           const Text(
             'Lần này bạn chưa ghi lại gì.',
-            style: TextStyle(fontSize: 15, color: WrColors.muted, height: 1.6),
+            style: TextStyle(fontSize: 16.5, color: WrColors.muted, height: 1.6),
           )
         else
           ...episode.patternsDone.map((p) {
@@ -95,7 +95,7 @@ class WrEpisodeDetailScreen extends ConsumerWidget {
                   Text(
                     promptFor(episode.humanMoment, p),
                     style: const TextStyle(
-                      fontSize: 13,
+                      fontSize: 14.5,
                       color: WrColors.muted,
                       height: 1.5,
                     ),
@@ -170,7 +170,7 @@ class _ReopenButton extends ConsumerWidget {
         ),
         child: const Text(
           'Hiểu lại chuyện này',
-          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+          style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w600),
         ),
       ),
     );
@@ -189,7 +189,7 @@ class _Label extends StatelessWidget {
       child: Text(
         text,
         style: const TextStyle(
-          fontSize: 11,
+          fontSize: 12.5,
           fontWeight: FontWeight.w700,
           color: WrColors.muted,
           letterSpacing: 1.2,

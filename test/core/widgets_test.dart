@@ -26,7 +26,7 @@ void main() {
       await tester.pumpWidget(wrap(const WrEyebrow('test')));
       final text = tester.widget<Text>(find.byType(Text));
       expect(text.style?.color, WrColors.text3);
-      expect(text.style?.fontSize, 10);
+      expect(text.style?.fontSize, 11.5);
     });
   });
 
@@ -38,13 +38,17 @@ void main() {
       expect(find.text('content'), findsOneWidget);
     });
 
-    testWidgets('has cream background', (tester) async {
+    // Brand identity 04/8: thẻ thường là TRẮNG viền mảnh trên nền xám, không
+    // còn là mảng kem. Kem chỉ còn dùng làm chữ trên nền navy.
+    testWidgets('has white background and hairline border', (tester) async {
       await tester.pumpWidget(wrap(
         const WrCardMinimal(child: Text('x')),
       ));
       final container = tester.widget<Container>(find.byType(Container).first);
       final decoration = container.decoration as BoxDecoration;
-      expect(decoration.color, WrColors.cream);
+      expect(decoration.color, WrColors.white);
+      expect(decoration.border, Border.all(color: WrColors.line));
+      expect(decoration.boxShadow, isNull);
     });
 
     testWidgets('has radius 20', (tester) async {

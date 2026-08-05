@@ -136,8 +136,9 @@ class _SessionRow extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: WrColors.cream,
+          color: WrColors.white,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: WrColors.line),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -261,7 +262,7 @@ class _StatusChip extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(
-          fontSize: 12,
+          fontSize: 13.5,
           fontWeight: FontWeight.w600,
           color: color,
         ),

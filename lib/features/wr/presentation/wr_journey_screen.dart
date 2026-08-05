@@ -408,7 +408,7 @@ class WrJourneyScreen extends ConsumerWidget {
                     children: [
                       Text(
                         'Career Memory',
-                        style: TextStyle(fontSize: 14, color: WrColors.muted),
+                        style: TextStyle(fontSize: 15.5, color: WrColors.muted),
                       ),
                       SizedBox(height: 2),
                       Text(
@@ -551,7 +551,7 @@ class _NarrativeCard extends ConsumerWidget {
               Text(
                 canRead ? 'DIỄN BIẾN THEO THỜI GIAN' : 'PREMIUM',
                 style: const TextStyle(
-                  fontSize: 11,
+                  fontSize: 12.5,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 0.6,
                   color: WrColors.coral,
@@ -570,7 +570,7 @@ class _NarrativeCard extends ConsumerWidget {
                         'qua từng giai đoạn, điều gì đang nhạt dần và điều gì '
                         'vẫn quay lại.',
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 16.5,
               height: 1.65,
               // Kem, không phải trắng mờ: chữ trên thẻ navy ở cả bốn tab là kem.
               color: WrColors.cream,
@@ -590,7 +590,7 @@ class _NarrativeCard extends ConsumerWidget {
                 Text(
                   canRead ? 'Đọc toàn bộ diễn biến' : 'Xem bản đầy đủ có gì',
                   style: const TextStyle(
-                    fontSize: 13,
+                    fontSize: 14.5,
                     fontWeight: FontWeight.w700,
                     color: WrColors.coral,
                   ),
@@ -655,8 +655,9 @@ class _GrowthOpportunitySection extends ConsumerWidget {
                 children: [
                   Text(
                     opportunity.suggestionText,
+                    textAlign: TextAlign.justify,
                     style: const TextStyle(
-                      fontSize: 15,
+                      fontSize: 16.5,
                       height: 1.6,
                       color: WrColors.navy,
                       fontWeight: FontWeight.w500,
@@ -666,8 +667,9 @@ class _GrowthOpportunitySection extends ConsumerWidget {
                   Text(
                     opportunity.confidenceNote,
                     key: const Key('wr_journey_growth_confidence'),
+                    textAlign: TextAlign.justify,
                     style: const TextStyle(
-                      fontSize: 12,
+                      fontSize: 13.5,
                       height: 1.55,
                       color: WrColors.muted,
                       fontStyle: FontStyle.italic,
@@ -758,7 +760,7 @@ List<Widget> buildJourneyTimeline(
             child: Text(
               week.label,
               style: TextStyle(
-                fontSize: 10,
+                fontSize: 11.5,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.06,
                 color: WrColors.navy.withValues(alpha: 0.45),
@@ -775,7 +777,7 @@ List<Widget> buildJourneyTimeline(
             child: Text(
               day.label,
               style: const TextStyle(
-                fontSize: 13,
+                fontSize: 14.5,
                 fontWeight: FontWeight.w700,
                 color: WrColors.navy,
               ),
@@ -860,7 +862,7 @@ class _WrCareerMemoryScreenState extends ConsumerState<WrCareerMemoryScreen> {
             'Chưa có mảnh ký ức nào. Mỗi lần nhìn lại sẽ để lại một dấu ở đây.',
             key: Key('wr_career_memory_empty'),
             style: TextStyle(
-              fontSize: 15,
+              fontSize: 16.5,
               color: WrColors.muted,
               height: 1.65,
             ),
@@ -882,7 +884,7 @@ class _WrCareerMemoryScreenState extends ConsumerState<WrCareerMemoryScreen> {
               'Không có mảnh nào thuộc loại này.',
               key: Key('wr_career_memory_filter_empty'),
               style: TextStyle(
-                fontSize: 15,
+                fontSize: 16.5,
                 color: WrColors.muted,
                 height: 1.65,
               ),
@@ -979,7 +981,7 @@ class _Chip extends StatelessWidget {
           child: Text(
             '$label $count',
             style: TextStyle(
-              fontSize: 11,
+              fontSize: 12.5,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.04,
               color: active ? WrColors.white : WrColors.navy,
@@ -1088,7 +1090,7 @@ class _EntryRowState extends State<_EntryRow> {
                         Text(
                           dateStr,
                           style: const TextStyle(
-                            fontSize: 12,
+                            fontSize: 13.5,
                             color: WrColors.muted,
                           ),
                         ),
@@ -1098,7 +1100,7 @@ class _EntryRowState extends State<_EntryRow> {
                       Text(
                         entry.label,
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 12.5,
                           fontWeight: FontWeight.w700,
                           color: entry.color,
                           letterSpacing: 0.4,
@@ -1122,7 +1124,7 @@ class _EntryRowState extends State<_EntryRow> {
                           Text(
                             entry.subtitle!,
                             style: const TextStyle(
-                              fontSize: 13,
+                              fontSize: 14.5,
                               color: WrColors.muted,
                               height: 1.5,
                             ),
@@ -1141,7 +1143,7 @@ class _EntryRowState extends State<_EntryRow> {
                                 Text(
                                   'Xem chi tiết',
                                   style: TextStyle(
-                                    fontSize: 13,
+                                    fontSize: 14.5,
                                     fontWeight: FontWeight.w600,
                                     color: entry.color,
                                   ),

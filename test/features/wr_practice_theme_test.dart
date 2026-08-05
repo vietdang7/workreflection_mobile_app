@@ -173,6 +173,37 @@ void main() {
       expect(find.text('0/3 bước hoàn thành'), findsOneWidget);
     });
 
+    testWidgets('hai chủ đề trùng tên chỉ hiện một thẻ', (tester) async {
+      // Thư viện thật có `pt-voice` (đời đầu) và `pt-c2` cùng tên "Dám lên
+      // tiếng". Ghi danh cả hai thì hai thẻ hiện y hệt nhau, và vì bộ đếm nhận
+      // sự kiện theo tên nên tiến độ cũng luôn trùng khít.
+      final intel = FakeWrIntelligenceRepository();
+      intel.seedPracticeThemes([
+        _theme('pt-voice', 'Dám lên tiếng'),
+        _theme('pt-c2', 'Dám lên tiếng'),
+      ]);
+      for (final t in ['pt-voice', 'pt-c2']) {
+        intel.seedPracticeSteps(t, [_step('$t-1', t, 1, 'Nhận diện')]);
+      }
+      intel.seedEnrollments([
+        _enroll('pt-voice', startedAt: DateTime(2026, 7, 1)),
+        _enroll('pt-c2', startedAt: DateTime(2026, 8, 1)),
+      ]);
+
+      await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
+
+      expect(find.text('Dám lên tiếng'), findsOneWidget);
+      // Giữ chủ đề mới hơn — nội dung bước của nó là bản đang dùng.
+      expect(
+        find.byKey(const Key('wr_growth_theme_card_pt-c2')),
+        findsOneWidget,
+      );
+      expect(
+        find.byKey(const Key('wr_growth_theme_card_pt-voice')),
+        findsNothing,
+      );
+    });
+
     testWidgets('chủ đề đã hoàn thành xếp sau và mang nhãn riêng', (
       tester,
     ) async {
@@ -420,14 +451,17 @@ void main() {
       expect(find.text('Paywall practice_step'), findsOneWidget);
     });
 
-    testWidgets('chủ đề đã khép không còn bấm hoàn thành được nữa', (
+    testWidgets('đi hết bước rồi thì không còn gì để bấm, chuyển sang duy trì', (
       tester,
     ) async {
       final intel = _twoThemes();
+      intel.seedEntitlement(
+        WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
+      );
       intel.seedEnrollments([
         _enroll(
           'pt-voice',
-          done: ['pt-voice-1'],
+          done: ['pt-voice-1', 'pt-voice-2', 'pt-voice-3'],
           completedAt: DateTime(2026, 7, 1),
         ),
       ]);
@@ -445,6 +479,66 @@ void main() {
           findsOneWidget);
       expect(
         find.byKey(const Key('wr_practice_maintain_pt-voice')),
+        findsOneWidget,
+      );
+    });
+
+    // Cả 13 chủ đề thật đều khoá bước "Chuyển hóa". Nếu người dùng miễn phí
+    // khép giai đoạn làm quen ở bước 2 mà nút duy trì không mở, họ kẹt ở 2/5 và
+    // KHÔNG BAO GIỜ hình thành được kỹ năng nào.
+    testWidgets('miễn phí khép ở bước 2 vẫn mở được giai đoạn duy trì', (
+      tester,
+    ) async {
+      final intel = _twoThemes();
+      intel.seedEnrollments([
+        _enroll(
+          'pt-voice',
+          done: ['pt-voice-1', 'pt-voice-2'],
+          completedAt: DateTime(2026, 7, 1),
+        ),
+      ]);
+
+      await _pumpLarge(
+        tester,
+        _wrap(const WrPracticeThemeScreen(themeId: 'pt-voice'), intel: intel),
+      );
+
+      expect(find.text('ĐANG DUY TRÌ'), findsOneWidget);
+      expect(
+        find.byKey(const Key('wr_practice_maintain_pt-voice')),
+        findsOneWidget,
+      );
+      // Bước "Chuyển hóa" vẫn khoá — mở đường đi tiếp không phải là cho không.
+      expect(
+        find.byKey(const Key('wr_practice_step_unlock_pt-voice-3')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('nâng cấp Premium rồi thì bước cuối bấm được, dù đã khép', (
+      tester,
+    ) async {
+      final intel = _twoThemes();
+      intel.seedEntitlement(
+        WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
+      );
+      intel.seedEnrollments([
+        _enroll(
+          'pt-voice',
+          done: ['pt-voice-1', 'pt-voice-2'],
+          completedAt: DateTime(2026, 7, 1),
+        ),
+      ]);
+
+      await _pumpLarge(
+        tester,
+        _wrap(const WrPracticeThemeScreen(themeId: 'pt-voice'), intel: intel),
+      );
+
+      // Khoá vĩnh viễn bước 3 chỉ vì hôm còn miễn phí đã khép chủ đề là ăn quỵt
+      // đúng thứ người ta vừa trả tiền để mở.
+      expect(
+        find.byKey(const Key('wr_practice_step_done_pt-voice-3')),
         findsOneWidget,
       );
     });
@@ -510,6 +604,74 @@ void main() {
         expect(
           content.insertMemoryEventCalls.map((e) => e.behavior),
           contains('practice_theme_done'),
+        );
+      },
+    );
+
+    testWidgets(
+      'miễn phí: xong bước 2 là khép giai đoạn làm quen, không đợi bước khoá',
+      (tester) async {
+        final intel = _twoThemes();
+        final content = FakeWrContentRepository();
+        intel.seedEnrollments([_enroll('pt-voice', done: ['pt-voice-1'])]);
+
+        await _pumpLarge(
+          tester,
+          _wrap(
+            const WrPracticeThemeScreen(themeId: 'pt-voice'),
+            intel: intel,
+            content: content,
+          ),
+        );
+
+        await tester
+            .tap(find.byKey(const Key('wr_practice_step_done_pt-voice-2')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('wr_practice_note_skip')));
+        await tester.pumpAndSettle();
+
+        // Bước 3 khoá, nên bước 2 là bước cuối NGƯỜI NÀY đi được. Đòi đủ ba
+        // bước thì nút duy trì không bao giờ mở cho bản miễn phí.
+        expect(intel.completeThemeCalls, isNotEmpty);
+      },
+    );
+
+    testWidgets(
+      'Premium đi nốt bước cuối không sinh thêm dòng "hoàn thành" thứ hai',
+      (tester) async {
+        final intel = _twoThemes();
+        final content = FakeWrContentRepository();
+        intel.seedEntitlement(
+          WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
+        );
+        // Đã khép hồi còn miễn phí (hai bước), giờ nâng cấp và đi nốt bước 3.
+        intel.seedEnrollments([
+          _enroll(
+            'pt-voice',
+            done: ['pt-voice-1', 'pt-voice-2'],
+            completedAt: DateTime(2026, 7, 1),
+          ),
+        ]);
+
+        await _pumpLarge(
+          tester,
+          _wrap(
+            const WrPracticeThemeScreen(themeId: 'pt-voice'),
+            intel: intel,
+            content: content,
+          ),
+        );
+
+        await tester
+            .tap(find.byKey(const Key('wr_practice_step_done_pt-voice-3')));
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('wr_practice_note_skip')));
+        await tester.pumpAndSettle();
+
+        expect(intel.completeThemeCalls, isEmpty);
+        expect(
+          content.insertMemoryEventCalls.map((e) => e.behavior),
+          isNot(contains('practice_theme_done')),
         );
       },
     );

@@ -90,78 +90,82 @@ String needSeekingLabel(HumanNeed need) => switch (need) {
     };
 
 // ---------------------------------------------------------------------------
-// Đọc vị nhu cầu — ba lớp, bằng ngôn ngữ đời thường (yêu cầu khách 2026-07-29)
+// Câu insight ở khối "Điều bạn đang tìm kiếm"
+//
+// Trước 2026-08-04 chỗ này là ba khối chữ (`NeedReading`) gán cứng: đúng bốn bộ
+// text viết sẵn trong một switch trên HumanNeed. Hệ quả là mọi người rơi vào
+// cùng một nhu cầu đọc y hệt nhau, và nội dung không nhúc nhích dù người dùng
+// đã nhìn lại bao nhiêu lần hay lặp lại tình huống nào. Khách bác: màn Hiểu
+// mình phải phản chiếu dữ liệu thật, và chỉ cần MỘT câu chính chứ không phải ba
+// khối diễn giải.
+//
+// Bản này đọc từ nội dung của chính tình huống người dùng đang lặp nhiều nhất
+// trong recentSituationIds. Nội dung đó đã có sẵn trong DB, per-situation:
+//
+//   • wr_situations.expected_outcome — "Tôi muốn…", đúng nghĩa của nhãn
+//     "ĐIỀU BẠN ĐANG TÌM KIẾM". Có ở 60 chip Tầng 1 và 10 tình huống tích cực.
+//   • wr_stories.aha_message — câu đọc vị ngắn, mã trùng chip (v2.0 §2.2), nên
+//     phủ được cả 100 chip đang hoạt động của Career Situation Library.
+//
+// Chỉ khi cả hai đều trống mới rơi về [needSeekingSentence] — định nghĩa của
+// nhu cầu, vẫn là câu chung nhưng chỉ còn là lưới an toàn khi nội dung thiếu,
+// không còn là đường đi mặc định.
 // ---------------------------------------------------------------------------
 
-/// Ba lớp diễn giải của một nhu cầu, viết bằng lời thường.
+/// Mã tình huống xuất hiện nhiều nhất trong [recent].
 ///
-/// Không lớp nào được nhắc tới mã nội bộ (S1, C2, A3…) hay chữ "SCA": người
-/// dùng đọc điều họ đang trải qua, không đọc bộ khung phân loại của hệ thống.
-class NeedReading {
-  const NeedReading({
-    required this.expectedOutcome,
-    required this.coreNeed,
-    required this.perspectiveLabel,
-    required this.perspectiveText,
-  });
-
-  /// Lớp 1 — điều người dùng đang mong tới.
-  final String expectedOutcome;
-
-  /// Lớp 2 — nhu cầu đứng sau mong đợi đó.
-  final String coreNeed;
-
-  /// Lớp 3 — mặt nào của công việc đang bị chạm tới (tên đời thường của trụ).
-  final String perspectiveLabel;
-
-  /// Lớp 3 — câu đọc vị: điều người dùng tưởng là nguyên nhân, và điều thật sự
-  /// đứng sau. Đây là phần khách gọi là "diễn giải thấu cảm".
-  final String perspectiveText;
+/// Hoà thì lấy cái GẦN ĐÂY nhất — [recent] xếp mới nhất đứng đầu, nên chỉ cần
+/// giữ mã gặp trước. Không có ngưỡng [kRepeatedSituationsMinCount] ở đây: ngưỡng
+/// đó chỉ chặn phần hiển thị "Tình huống lặp lại", còn khối này đọc từ lần đầu.
+String? topSituationCode(List<String> recent) {
+  if (recent.isEmpty) return null;
+  final tally = <String, int>{};
+  for (final code in recent) {
+    tally[code] = (tally[code] ?? 0) + 1;
+  }
+  String? best;
+  var bestCount = 0;
+  for (final code in recent) {
+    final count = tally[code]!;
+    if (count > bestCount) {
+      best = code;
+      bestCount = count;
+    }
+  }
+  return best;
 }
 
-/// Ba lớp diễn giải cho [need].
-NeedReading needReading(HumanNeed need) => switch (need) {
-      HumanNeed.roRang => const NeedReading(
-          expectedOutcome:
-              'Biết mình đang ở đâu và việc nào đáng làm trước.',
-          coreNeed:
-              'Sự rõ ràng, rõ vai trò của mình, rõ điều người khác chờ đợi.',
-          perspectiveLabel: 'Sự rõ ràng',
-          perspectiveText:
-              'Điều làm bạn mệt nhiều khả năng không phải vì nhiều việc, mà '
-              'vì chưa rõ vai trò, kỳ vọng và thứ tự ưu tiên.',
-        ),
-      HumanNeed.ketNoi => const NeedReading(
-          expectedOutcome:
-              'Nói được điều mình nghĩ mà vẫn thấy an toàn.',
-          coreNeed:
-              'Sự kết nối, được lắng nghe, và được nhìn thấy đúng như mình.',
-          perspectiveLabel: 'Mối quan hệ',
-          perspectiveText:
-              'Điều giữ bạn im lặng thường không phải vì thiếu ý kiến, mà vì '
-              'chưa chắc nói ra thì có an toàn hay không.',
-        ),
-      HumanNeed.thichNghi => const NeedReading(
-          expectedOutcome:
-              'Giữ được nhịp của mình khi mọi thứ đổi thay.',
-          coreNeed:
-              'Sự thích nghi, đổi cách làm mà không đánh mất chính mình.',
-          perspectiveLabel: 'Cách làm việc',
-          perspectiveText:
-              'Cảm giác đuối sức thường đến từ một cách làm cũ đặt vào hoàn '
-              'cảnh đã khác, chứ không phải từ việc bạn kém đi.',
-        ),
-      HumanNeed.phatTrien => const NeedReading(
-          expectedOutcome:
-              'Thấy rõ mình đang đi về phía trước.',
-          coreNeed:
-              'Sự phát triển, làm được điều hôm qua mình chưa làm được.',
-          perspectiveLabel: 'Cách làm việc',
-          perspectiveText:
-              'Cảm giác mắc kẹt thường không phải vì bạn đứng yên, mà vì chưa '
-              'có gì đánh dấu lại những bước bạn đã đi.',
-        ),
-    };
+/// Câu insight đọc từ dữ liệu thật, hoặc null khi không có nội dung nào.
+///
+/// [recent] là recentSituationIds — lịch sử Reflect thật của người dùng.
+String? seekingInsight({
+  required List<String> recent,
+  required List<WrSituation> situations,
+  required List<WrStory> stories,
+}) {
+  final code = topSituationCode(recent);
+  if (code == null) return null;
+
+  for (final s in situations) {
+    if (s.code != code) continue;
+    final text = _clean(s.expectedOutcome);
+    if (text != null) return text;
+    break;
+  }
+  for (final story in stories) {
+    if (story.storyId != code) continue;
+    return _clean(story.ahaMessage);
+  }
+  return null;
+}
+
+/// Bỏ khoảng trắng thừa và gộp xuống dòng — câu này hiện canh giữa một dòng
+/// lớn, giữ nguyên `\n` của nội dung DB sẽ vỡ bố cục.
+String? _clean(String? raw) {
+  if (raw == null) return null;
+  final text = raw.replaceAll(RegExp(r'\s+'), ' ').trim();
+  return text.isEmpty ? null : text;
+}
 
 /// Câu đọc lên ở khối "Điều bạn đang tìm kiếm" của màn Hiểu mình.
 ///

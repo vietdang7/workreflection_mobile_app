@@ -397,7 +397,7 @@ class _QuestionViewState extends ConsumerState<_QuestionView> {
                       value: questions.isEmpty
                           ? 0
                           : (safeIndex + 1) / questions.length,
-                      color: WrColors.coral,
+                      color: WrColors.navy,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -679,9 +679,9 @@ class _LikertPills extends StatelessWidget {
                 opt.label,
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  fontSize: 15,
+                  fontSize: 16.5,
                   fontWeight: FontWeight.w600,
-                  color: selected ? WrColors.white : WrColors.dark,
+                  color: selected ? WrColors.navy : WrColors.dark,
                 ),
               ),
             ),
@@ -731,7 +731,7 @@ class _EnpsGrid extends StatelessWidget {
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
-                color: selected ? WrColors.white : WrColors.dark,
+                color: selected ? WrColors.navy : WrColors.dark,
               ),
             ),
           ),

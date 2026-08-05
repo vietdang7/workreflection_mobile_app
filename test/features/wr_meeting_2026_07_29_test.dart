@@ -1303,7 +1303,9 @@ void main() {
       );
       // Lối rẽ còn lại không bị đụng tới. "Chặng đường phát triển" đã bỏ khỏi
       // màn này (2026-08-03).
-      expect(find.text('Kỹ năng đã hình thành'), findsOneWidget);
+      // Đổi tên theo Ma trận Cấp bậc v1.0 mục A.1: giữ chữ "kỹ năng", bỏ chữ
+      // "hình thành" ở tên gọi chính.
+      expect(find.text('Kỹ năng của bạn'), findsOneWidget);
       expect(find.text('Chặng đường phát triển'), findsNothing);
     });
 

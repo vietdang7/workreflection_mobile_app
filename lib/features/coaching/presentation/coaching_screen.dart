@@ -241,7 +241,7 @@ class _AudienceToggle extends StatelessWidget {
         color: isSelected ? WrColors.white : WrColors.dark,
         fontWeight: FontWeight.w600,
       ),
-      backgroundColor: WrColors.cream,
+      backgroundColor: WrColors.navy.withValues(alpha: 0.08),
       side: BorderSide.none,
       shape: const StadiumBorder(),
     );
@@ -375,7 +375,7 @@ class _PackageCardState extends ConsumerState<_PackageCard> {
                 ? l10n.wsFree
                 : _formatPrice(pkg.price, pkg.currency),
             style: WrTextStyles.hMedium.copyWith(
-              color: pkg.isFree ? WrColors.teal : WrColors.navy,
+              color: WrColors.navy,
             ),
           ),
           const SizedBox(height: 16),
@@ -503,9 +503,9 @@ class _ReviewsSection extends StatelessWidget {
                   Text(
                     '$avg/5.0',
                     style: const TextStyle(
-                      fontSize: 12,
+                      fontSize: 13.5,
                       fontWeight: FontWeight.w700,
-                      color: WrColors.teal,
+                      color: WrColors.pillTealText,
                     ),
                   ),
                 ],
@@ -536,8 +536,9 @@ class _ReviewCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: WrColors.cream,
+        color: WrColors.white,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: WrColors.line),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -573,7 +574,7 @@ class _ReviewCard extends StatelessWidget {
                       ? review.reviewerName[0].toUpperCase()
                       : '?',
                   style: const TextStyle(
-                    fontSize: 10,
+                    fontSize: 11.5,
                     fontWeight: FontWeight.w700,
                     color: WrColors.navy,
                   ),

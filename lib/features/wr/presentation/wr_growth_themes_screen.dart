@@ -80,9 +80,21 @@ class _WrGrowthThemesScreenState extends ConsumerState<WrGrowthThemesScreen> {
 
     // Chủ đề đã ngưng đề xuất không nằm trong danh sách mời — người đã ghi danh
     // vẫn thấy nó ở "CHỦ ĐỀ CỦA BẠN" bên màn Phát triển và đi tiếp bình thường.
+    //
+    // Lọc cả theo TÊN chứ không chỉ theo id: thư viện có hai hàng cùng tên
+    // "Dám lên tiếng" (`pt-voice` đời đầu và `pt-c2`), và bộ đếm thực hành nhận
+    // sự kiện theo tên. Mời một chủ đề trùng tên chủ đề đang theo là mời vào
+    // đúng cái đang làm, với một bộ đếm dùng chung.
     final enrolledIds = enrollments.map((e) => e.themeId).toSet();
+    final enrolledTitles = {
+      for (final t in themes)
+        if (enrolledIds.contains(t.themeId)) t.title,
+    };
     final available = themes
-        .where((t) => !enrolledIds.contains(t.themeId) && !t.isRetired)
+        .where((t) =>
+            !enrolledIds.contains(t.themeId) &&
+            !enrolledTitles.contains(t.title) &&
+            !t.isRetired)
         .toList();
     final activeCount = enrollments.where((e) => e.completedAt == null).length;
     final canEnroll = entitlement.canEnrollPracticeTheme(activeCount);
@@ -109,7 +121,7 @@ class _WrGrowthThemesScreenState extends ConsumerState<WrGrowthThemesScreen> {
                       'Hoàn thành một chủ đề để mở chỗ mới.',
               key: const Key('wr_growth_themes_quota'),
               style: const TextStyle(
-                fontSize: 14,
+                fontSize: 15.5,
                 color: WrColors.muted,
                 height: 1.6,
               ),
@@ -137,7 +149,7 @@ class _WrGrowthThemesScreenState extends ConsumerState<WrGrowthThemesScreen> {
             child: Text(
               'Bạn đã bắt đầu tất cả chủ đề hiện có.',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 15.5,
                 color: WrColors.muted,
                 height: 1.6,
               ),
@@ -152,7 +164,7 @@ class _WrGrowthThemesScreenState extends ConsumerState<WrGrowthThemesScreen> {
               'WorkReflection sẽ chỉ ra chủ đề hợp với bạn. Trong lúc chờ, bạn '
               'vẫn tự chọn được ở danh sách bên dưới.',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 15.5,
                 color: WrColors.muted,
                 height: 1.6,
               ),
@@ -241,7 +253,7 @@ class _SuggestionCard extends StatelessWidget {
             Text(
               theme.description!,
               style: const TextStyle(
-                fontSize: 13,
+                fontSize: 14.5,
                 color: WrColors.muted,
                 height: 1.5,
               ),
@@ -254,7 +266,7 @@ class _SuggestionCard extends StatelessWidget {
               reason,
               key: const Key('wr_growth_themes_reason'),
               style: const TextStyle(
-                fontSize: 12,
+                fontSize: 13.5,
                 color: WrColors.muted,
                 fontStyle: FontStyle.italic,
                 height: 1.4,
@@ -287,7 +299,7 @@ class _SuggestionCard extends StatelessWidget {
                   : Text(
                       canEnroll ? 'Bắt đầu' : 'Mở với Premium',
                       style: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 15.5,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -339,7 +351,7 @@ class _TraChieuRow extends StatelessWidget {
                   child: const Text(
                     'Offline',
                     style: TextStyle(
-                      fontSize: 10,
+                      fontSize: 11.5,
                       fontWeight: FontWeight.w700,
                       color: WrColors.pillTealText,
                     ),
@@ -352,7 +364,7 @@ class _TraChieuRow extends StatelessWidget {
               '10 đến 12 người ngồi quanh một bàn trà, cùng trả lời một câu hỏi '
               'duy nhất. Phản chiếu như trong app, chỉ khác là nói thành lời.',
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 15.5,
                 color: WrColors.muted,
                 height: 1.6,
               ),
@@ -364,7 +376,7 @@ class _TraChieuRow extends StatelessWidget {
                 Text(
                   'Xem lịch các buổi',
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 14.5,
                     fontWeight: FontWeight.w700,
                     color: WrColors.coral,
                   ),
@@ -417,7 +429,7 @@ class _ThemeRow extends StatelessWidget {
             Text(
               theme.description!,
               style: const TextStyle(
-                fontSize: 14,
+                fontSize: 15.5,
                 color: WrColors.muted,
                 height: 1.6,
               ),
@@ -449,7 +461,7 @@ class _ThemeRow extends StatelessWidget {
                     : const Text(
                         'Bắt đầu',
                         style: TextStyle(
-                          fontSize: 14,
+                          fontSize: 15.5,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
@@ -461,7 +473,7 @@ class _ThemeRow extends StatelessWidget {
               child: const Text(
                 '⭐ Premium',
                 style: TextStyle(
-                  fontSize: 12,
+                  fontSize: 13.5,
                   fontWeight: FontWeight.w700,
                   color: Color(0xFFD4A017),
                 ),

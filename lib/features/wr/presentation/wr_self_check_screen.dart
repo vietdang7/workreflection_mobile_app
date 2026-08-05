@@ -113,7 +113,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
           'Bộ câu hỏi chỉ được lưu khi bạn trả lời xong cả '
           '${kSelfCheckQuestions.length} câu.',
           style: const TextStyle(
-            fontSize: 14,
+            fontSize: 15.5,
             height: 1.6,
             color: WrColors.text2,
           ),
@@ -256,7 +256,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                           'trường làm việc của bạn, không có câu trả lời đúng '
                           'hay sai.',
                           style: TextStyle(
-                            fontSize: 15,
+                            fontSize: 16.5,
                             color: WrColors.text2,
                             height: 1.7,
                           ),
@@ -369,7 +369,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                         'Câu ${_questionIndex + 1} / '
                         '${kSelfCheckQuestions.length}',
                         style: const TextStyle(
-                          fontSize: 13,
+                          fontSize: 14.5,
                           fontWeight: FontWeight.w600,
                           color: WrColors.text2,
                         ),
@@ -389,7 +389,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                         child: const Text(
                           'Đóng',
                           style: TextStyle(
-                            fontSize: 14,
+                            fontSize: 15.5,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -421,7 +421,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                       child: Text(
                         q.pillar.displayName,
                         style: TextStyle(
-                          fontSize: 11,
+                          fontSize: 12.5,
                           fontWeight: FontWeight.w700,
                           color: pillarColor,
                         ),
@@ -520,7 +520,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
 
   Widget _buildResult() {
     return Scaffold(
-      backgroundColor: const Color(0xFFFBFBF9),
+      backgroundColor: WrColors.pageBg,
       body: SafeArea(
         child: CustomScrollView(
           slivers: [
@@ -533,7 +533,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                     const Text(
                       'Bức tranh của bạn',
                       style: TextStyle(
-                        fontSize: 22,
+                        fontSize: 26,
                         fontWeight: FontWeight.w700,
                         color: WrColors.dark,
                       ),
@@ -541,18 +541,18 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                     const SizedBox(height: 4),
                     const Text(
                       'Dựa trên 15 câu phản chiếu',
-                      style: TextStyle(fontSize: 12, color: Color(0xFFA3A3A3)),
+                      style: TextStyle(fontSize: 15.5, color: WrColors.muted),
                     ),
                     if (_saving) ...[
                       const SizedBox(height: 10),
-                      const LinearProgressIndicator(color: WrColors.teal),
+                      const LinearProgressIndicator(color: WrColors.navy),
                     ],
                     if (_errorMsg != null) ...[
                       const SizedBox(height: 8),
                       Text(
                         _errorMsg!,
                         style: const TextStyle(
-                          fontSize: 11,
+                          fontSize: 14.5,
                           color: WrColors.coral,
                         ),
                       ),
@@ -617,7 +617,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                         child: const Text(
                           'Vào Thực hành',
                           style: TextStyle(
-                            fontSize: 13,
+                            fontSize: 16.5,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -629,7 +629,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                         onPressed: () => context.go('/wr/journey'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: const Color(0xFFE6F7F7),
-                          foregroundColor: WrColors.teal,
+                          foregroundColor: WrColors.navy,
                           padding: const EdgeInsets.symmetric(vertical: 13),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
@@ -639,7 +639,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                         child: const Text(
                           'Xem Hành trình',
                           style: TextStyle(
-                            fontSize: 13,
+                            fontSize: 16.5,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
@@ -906,7 +906,7 @@ class _NarrativeCardState extends State<_NarrativeCard> {
       decoration: BoxDecoration(
         color: WrColors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0x0F000000)),
+        border: Border.all(color: WrColors.line),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -915,9 +915,9 @@ class _NarrativeCardState extends State<_NarrativeCard> {
             Text(
               widget.pillarName!,
               style: const TextStyle(
-                fontSize: 11,
+                fontSize: 14.5,
                 fontWeight: FontWeight.w600,
-                color: Color(0xFFA3A3A3),
+                color: WrColors.text3,
               ),
             ),
             const SizedBox(height: 4),
@@ -930,7 +930,7 @@ class _NarrativeCardState extends State<_NarrativeCard> {
                   child: Text(
                     widget.title!,
                     style: const TextStyle(
-                      fontSize: 14,
+                      fontSize: 17,
                       fontWeight: FontWeight.w700,
                       height: 1.4,
                       color: WrColors.dark,
@@ -948,7 +948,7 @@ class _NarrativeCardState extends State<_NarrativeCard> {
                     child: const Icon(
                       Icons.keyboard_arrow_down_rounded,
                       size: 20,
-                      color: Color(0xFFA3A3A3),
+                      color: WrColors.text3,
                     ),
                   ),
                 ],
@@ -960,9 +960,9 @@ class _NarrativeCardState extends State<_NarrativeCard> {
             Text(
               widget.text,
               style: const TextStyle(
-                fontSize: 13,
+                fontSize: 16,
                 height: 1.65,
-                color: Color(0xFF4A5568),
+                color: WrColors.muted,
               ),
             ),
             if (widget.footer != null) ...[
@@ -970,7 +970,7 @@ class _NarrativeCardState extends State<_NarrativeCard> {
               Text(
                 widget.footer!,
                 style: const TextStyle(
-                  fontSize: 12,
+                  fontSize: 15.5,
                   height: 1.6,
                   fontWeight: FontWeight.w600,
                   color: WrColors.dark,
@@ -1022,9 +1022,9 @@ class _DeepDiveLocked extends StatelessWidget {
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
             decoration: BoxDecoration(
-              color: const Color(0xFFF4F4F1),
+              color: WrColors.pageBg,
               borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0x14000000)),
+              border: Border.all(color: WrColors.line),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -1037,7 +1037,7 @@ class _DeepDiveLocked extends StatelessWidget {
                     Text(
                       'Premium',
                       style: TextStyle(
-                        fontSize: 11,
+                        fontSize: 13.5,
                         fontWeight: FontWeight.w700,
                         letterSpacing: 0.5,
                         color: WrColors.amber,
@@ -1051,9 +1051,9 @@ class _DeepDiveLocked extends StatelessWidget {
                   'chỗ mất cân bằng giữa ba mặt, so với những lần tự soi trước '
                   'và đối chiếu với những tình huống bạn hay gặp.',
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 16.5,
                     height: 1.65,
-                    color: Color(0xFF6B7280),
+                    color: WrColors.muted,
                   ),
                 ),
                 const SizedBox(height: 14),
@@ -1073,7 +1073,7 @@ class _DeepDiveLocked extends StatelessWidget {
                     child: const Text(
                       'Mở diễn giải sâu',
                       style:
-                          TextStyle(fontSize: 13, fontWeight: FontWeight.w600),
+                          TextStyle(fontSize: 16.5, fontWeight: FontWeight.w600),
                     ),
                   ),
                 ),
@@ -1099,7 +1099,7 @@ class _InfoRow extends StatelessWidget {
         const SizedBox(width: 12),
         Text(
           text,
-          style: const TextStyle(fontSize: 15, color: WrColors.text2),
+          style: const TextStyle(fontSize: 16.5, color: WrColors.text2),
         ),
       ],
     );
@@ -1126,7 +1126,7 @@ class _PillarScoreCard extends StatelessWidget {
   }
 
   Color get _badgeColor =>
-      score >= 3.8 ? const Color(0xFF1A7A6A) : const Color(0xFF8B3A2F);
+      score >= 3.8 ? WrColors.pillTealText : WrColors.pillCoralText;
   Color get _badgeBg =>
       score >= 3.8 ? const Color(0xFFE6F7F7) : const Color(0xFFFFEEEB);
 
@@ -1136,7 +1136,7 @@ class _PillarScoreCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: WrColors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0x0F000000)),
+        border: Border.all(color: WrColors.line),
       ),
       padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
       child: Column(
@@ -1144,14 +1144,20 @@ class _PillarScoreCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Text(
-                pillarName,
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: WrColors.dark,
+              // Flexible chứ không phải Text trần: từ 2026-08-04 tên trụ là
+              // 17px, đứng cạnh nhãn trạng thái trong một Row có Spacer thì
+              // máy chỉnh cỡ chữ lớn là tràn hàng.
+              Flexible(
+                child: Text(
+                  pillarName,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w600,
+                    color: WrColors.dark,
+                  ),
                 ),
               ),
+              const SizedBox(width: 10),
               const Spacer(),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
@@ -1162,7 +1168,7 @@ class _PillarScoreCard extends StatelessWidget {
                 child: Text(
                   _badge,
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: 13.5,
                     fontWeight: FontWeight.w600,
                     color: _badgeColor,
                   ),
@@ -1176,7 +1182,7 @@ class _PillarScoreCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: _percent,
               minHeight: 4,
-              backgroundColor: const Color(0x0F000000),
+              backgroundColor: WrColors.line,
               color: color,
             ),
           ),
@@ -1184,8 +1190,8 @@ class _PillarScoreCard extends StatelessWidget {
           Text(
             '${(score * 20).round()}%',
             style: const TextStyle(
-              fontSize: 11,
-              color: Color(0xFFA3A3A3),
+              fontSize: 14.5,
+              color: WrColors.text3,
             ),
           ),
         ],

@@ -83,7 +83,7 @@ class _WrMomentScreenState extends ConsumerState<WrMomentScreen> {
             const SizedBox(height: 16),
             Text(
               _error!,
-              style: const TextStyle(fontSize: 13, color: WrColors.coral),
+              style: const TextStyle(fontSize: 14.5, color: WrColors.coral),
             ),
           ],
         ],

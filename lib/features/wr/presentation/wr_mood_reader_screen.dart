@@ -316,7 +316,7 @@ class _AudioPlayerBlockState extends ConsumerState<_AudioPlayerBlock> {
             key: const Key('wr_mood_audio_status'),
             textAlign: TextAlign.center,
             style: TextStyle(
-              fontSize: 12.5,
+              fontSize: 14,
               height: 1.6,
               color: _error != null
                   ? WrColors.coral
@@ -338,12 +338,13 @@ class _DraftNotice extends StatelessWidget {
       key: const Key('wr_mood_draft_notice'),
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
-        color: WrColors.cream,
+        color: WrColors.white,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: WrColors.line),
       ),
       child: const Text(
         'Nội dung nháp, chưa thu âm hoặc biên tập chính thức.',
-        style: TextStyle(fontSize: 12.5, color: WrColors.navy, height: 1.6),
+        style: TextStyle(fontSize: 14, color: WrColors.navy, height: 1.6),
       ),
     );
   }
@@ -360,7 +361,7 @@ class _ReaderMissing extends StatelessWidget {
         child: Text(
           'Không mở được nội dung này.',
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 13.5, color: WrColors.muted),
+          style: TextStyle(fontSize: 15, color: WrColors.muted),
         ),
       ),
     );
