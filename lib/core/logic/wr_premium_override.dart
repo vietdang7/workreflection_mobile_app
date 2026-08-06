@@ -44,6 +44,36 @@ bool canTogglePremium(String? email) {
   return kPremiumTogglePermittedEmails.contains(email.trim().toLowerCase());
 }
 
+/// Giá trị công tắc còn hiệu lực hay không, xét theo NGƯỜI ĐANG ĐĂNG NHẬP.
+///
+/// Công tắc lưu trong SharedPreferences — tức là theo MÁY, không theo tài
+/// khoản. Nếu chỉ lưu mỗi true/false thì một lần bật của chủ sản phẩm sẽ còn
+/// nguyên khi người khác đăng nhập trên chính máy đó, và app sẽ mở Premium cho
+/// họ. Vì vậy lúc lưu phải ghi kèm email chủ công tắc, lúc đọc phải đối chiếu
+/// lại.
+///
+/// [stored]      giá trị đọc từ SharedPreferences (null = chưa từng bật).
+/// [storedOwner] email đã ghi kèm lúc bật; null với dữ liệu của bản cũ.
+/// [current]     email người đang đăng nhập.
+///
+/// Trả null — tức "dùng gói thật" — trong mọi trường hợp còn nghi ngờ: chưa
+/// đăng nhập, email không thuộc danh sách, hoặc công tắc là của tài khoản
+/// khác. Dữ liệu bản cũ (không có [storedOwner]) cũng bị bỏ: thà chủ sản phẩm
+/// phải bật lại một lần còn hơn để nó cấp Premium nhầm.
+bool? overrideForAccount({
+  required bool? stored,
+  required String? storedOwner,
+  required String? current,
+}) {
+  if (stored == null) return null;
+  if (!canTogglePremium(current)) return null;
+  if (storedOwner == null) return null;
+  if (storedOwner.trim().toLowerCase() != current!.trim().toLowerCase()) {
+    return null;
+  }
+  return stored;
+}
+
 /// Gói cuối cùng sau khi áp công tắc.
 ///
 /// [actual]   gói thật, đọc từ `wr_entitlements` hoặc `cc_profiles`.

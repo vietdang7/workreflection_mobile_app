@@ -49,44 +49,112 @@ final currentUserEmailProvider = Provider<String?>((ref) {
   }
 });
 
+/// Email đọc THẲNG từ phiên Supabase ngay lúc gọi, không qua provider nào.
+///
+/// [currentUserEmailProvider] là `Provider` thuần: nó chụp email đúng một lần
+/// rồi giữ cho tới khi bị `invalidate`. Nếu vì bất cứ lý do gì việc xoá cache
+/// lúc đổi tài khoản không chạy (listener chưa gắn, sự kiện đến trước khi
+/// widget dựng…), giá trị cũ sẽ còn nguyên — và với công tắc Premium thì cái
+/// giá của một lần sót là người khác được Premium. Nên chỗ nhạy cảm hỏi lại
+/// nguồn gốc.
+///
+/// Trả null khi Supabase chưa khởi tạo (đúng trong test thuần) — chỗ gọi coi
+/// null là "không biết" và rơi về giá trị của provider.
+String? liveAuthEmail() {
+  try {
+    return Supabase.instance.client.auth.currentUser?.email;
+  } catch (_) {
+    return null;
+  }
+}
+
 /// True khi người đang đăng nhập được phép bật/tắt gói ngay trong app.
-final canTogglePremiumProvider = Provider<bool>(
-  (ref) => canTogglePremium(ref.watch(currentUserEmailProvider)),
-);
+///
+/// Hỏi hai nguồn và CẢ HAI phải đồng ý: giá trị của provider (test override
+/// được) và phiên Supabase thật. Chỉ cần phiên thật nói "không phải tài khoản
+/// nội bộ" là tắt, kể cả provider còn nhớ email của người trước.
+final canTogglePremiumProvider = Provider<bool>((ref) {
+  final live = liveAuthEmail();
+  if (live != null && !canTogglePremium(live)) return false;
+  return canTogglePremium(ref.watch(currentUserEmailProvider));
+});
 
 /// Trạng thái công tắc Premium thử nghiệm, lưu trên máy.
 ///
 /// null = chưa động vào, dùng gói thật. Xem `wr_premium_override.dart`.
 final premiumOverrideProvider =
     StateNotifierProvider<PremiumOverrideNotifier, bool?>(
-  (ref) => PremiumOverrideNotifier()..load(),
+  (ref) => PremiumOverrideNotifier(email: ref.watch(currentUserEmailProvider))
+    ..load(),
 );
 
 class PremiumOverrideNotifier extends StateNotifier<bool?> {
-  PremiumOverrideNotifier() : super(null);
+  /// [email] là email người đang đăng nhập theo provider; notifier vẫn hỏi lại
+  /// [liveAuthEmail] và ưu tiên câu trả lời của phiên thật.
+  PremiumOverrideNotifier({String? email})
+      : _providerEmail = email,
+        super(null);
+
+  final String? _providerEmail;
 
   static const String _key = 'wr_dev_premium_override';
+
+  /// Email của người đã bật công tắc. Không có nó thì công tắc là của MÁY chứ
+  /// không của TÀI KHOẢN, và người tiếp theo đăng nhập trên máy này thừa hưởng
+  /// Premium của chủ sản phẩm.
+  static const String _ownerKey = 'wr_dev_premium_override_owner';
+
+  /// Email dùng để xét quyền: phiên Supabase thật nếu có, không thì giá trị
+  /// provider (đường dùng trong test).
+  String? get _email => liveAuthEmail() ?? _providerEmail;
+
+  /// Đã có thao tác bật/tắt trong phiên này chưa.
+  ///
+  /// [load] chạy bất đồng bộ ngay lúc dựng notifier. Nếu người dùng kịp chạm
+  /// công tắc trước khi nó đọc xong SharedPreferences, kết quả đọc — vốn là
+  /// trạng thái CŨ — sẽ đè lên thao tác vừa rồi và nút trông như không ăn.
+  bool _touched = false;
 
   Future<void> load() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       // containsKey chứ không phải getBool ?? false: "chưa động vào" và "đã ép
       // về miễn phí" là hai trạng thái khác nhau.
-      if (prefs.containsKey(_key)) state = prefs.getBool(_key);
+      final stored = prefs.containsKey(_key) ? prefs.getBool(_key) : null;
+      final resolved = overrideForAccount(
+        stored: stored,
+        storedOwner: prefs.getString(_ownerKey),
+        current: _email,
+      );
+      if (!_touched) state = resolved;
+      // Công tắc không thuộc về người đang đăng nhập thì xoá hẳn khỏi máy, đừng
+      // để nằm đó chờ chủ nó đăng nhập lại. Nghiệm thu xong là hết chuyện.
+      if (!_touched && resolved == null && stored != null) {
+        await prefs.remove(_key);
+        await prefs.remove(_ownerKey);
+      }
     } catch (_) {
       /* không đọc được thì coi như chưa động vào — dùng gói thật */
     }
   }
 
   /// [value] null nghĩa là trả về gói thật.
+  ///
+  /// Người không thuộc danh sách nội bộ gọi hàm này thì không có gì xảy ra —
+  /// nút vốn đã bị ẩn, đây là chốt chặn thứ hai cho trường hợp UI hiện nhầm.
   Future<void> set(bool? value) async {
+    final email = _email;
+    if (value != null && !canTogglePremium(email)) return;
+    _touched = true;
     state = value;
     try {
       final prefs = await SharedPreferences.getInstance();
       if (value == null) {
         await prefs.remove(_key);
+        await prefs.remove(_ownerKey);
       } else {
         await prefs.setBool(_key, value);
+        await prefs.setString(_ownerKey, email!.trim().toLowerCase());
       }
     } catch (_) {
       /* best-effort: đổi được trong phiên này, mở lại app thì mất */
