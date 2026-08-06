@@ -593,6 +593,8 @@ class _SettingsSection extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final reminderAsync = ref.watch(reminderProvider);
     final reminderEnabled = reminderAsync.valueOrNull ?? true;
+    final isPremium =
+        ref.watch(wrEntitlementProvider).valueOrNull?.isPremium ?? false;
 
     // Cả danh sách nằm trong MỘT thẻ trắng, mỗi dòng có icon bên trái và ngăn
     // nhau bằng vạch `--line-soft` — `<div class="card">` của mockup bản (4).
@@ -704,14 +706,31 @@ class _SettingsSection extends ConsumerWidget {
         // Đã bỏ hai dòng "Chỉnh sửa hồ sơ" và "Thông tin công việc" ở đây.
         // Thông tin công việc đi vào từ màn "Thông tin của bạn" phía trên.
 
-        // Đăng ký Premium
+        // Bản Premium. Với người đã có quyền, dòng này là chỗ tra trạng thái
+        // chứ không phải lối vào trang bán hàng — nói luôn "Đang dùng" ở đây
+        // để không ai phải bấm vào mới biết mình đang có gì.
         _SettingRow(
           key: const Key('profile_paywall_btn'),
-          icon: Icons.star_outline,
+          icon: isPremium ? Icons.star : Icons.star_outline,
           label: 'Bản Premium',
           onTap: () => context.push('/wr/paywall'),
-          trailing:
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (isPremium)
+                Text(
+                  'Đang dùng',
+                  key: const Key('profile_premium_active_label'),
+                  style: WrTextStyles.body.copyWith(
+                    fontSize: 14.5,
+                    color: WrColors.pillTealText,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              if (isPremium) const SizedBox(width: 4),
               const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
+            ],
+          ),
         ),
 
         // Đổi mật khẩu
