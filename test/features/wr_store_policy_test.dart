@@ -12,7 +12,10 @@ import 'package:flutter/foundation.dart'
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/logic/wr_entitlement.dart';
 import 'package:workreflection_mobile/core/logic/wr_pricing.dart';
+import 'package:workreflection_mobile/core/models/wr_intelligence.dart'
+    show WrPlan;
 import 'package:workreflection_mobile/core/logic/wr_store_policy.dart';
 import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_paywall_screen.dart';
@@ -31,10 +34,15 @@ const _plans = [
   ),
 ];
 
-Widget _paywall(WrStorePolicy policy) => ProviderScope(
+Widget _paywall(WrStorePolicy policy, {bool premium = false}) => ProviderScope(
       overrides: [
         wrStorePolicyProvider.overrideWithValue(policy),
         wrPremiumPlansProvider.overrideWith((ref) async => _plans),
+        wrEntitlementProvider.overrideWith(
+          (ref) async => WrEntitlement(
+            plan: premium ? WrPlan.premium : WrPlan.free,
+          ),
+        ),
       ],
       child: MaterialApp(
         builder: wrTextScaleBuilder,
@@ -141,6 +149,33 @@ void main() {
       expect(find.byKey(const Key('wr_paywall_cta_silent')), findsOneWidget);
       expect(find.textContaining('499.000đ'), findsNothing);
       expect(find.textContaining('70.000đ'), findsNothing);
+    });
+  });
+
+  // Người duyệt app của Apple dùng tài khoản demo đã có Premium. Nếu màn này
+  // vẫn chào bán, họ thấy ngay nút dẫn ra trình duyệt — đúng thứ Guideline
+  // 3.1.3 (anti-steering) cấm. Người thật đã trả tiền bị mời mua lại cũng vô
+  // lý y như vậy.
+  group('Đã có quyền thì Paywall thôi chào bán', () {
+    testWidgets('Kho ứng dụng: không còn lối sang web, không còn giá',
+        (tester) async {
+      await tester.pumpWidget(
+        _paywall(WrStorePolicy.webLinkOnly, premium: true),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('wr_paywall_cta_owned')), findsOneWidget);
+      expect(find.byKey(const Key('wr_paywall_cta_web')), findsNothing);
+      expect(find.textContaining('499.000đ'), findsNothing);
+      expect(find.textContaining('70.000đ'), findsNothing);
+    });
+
+    testWidgets('Bản mở: nút mua trong app cũng biến mất', (tester) async {
+      await tester.pumpWidget(_paywall(WrStorePolicy.open, premium: true));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('wr_paywall_cta_owned')), findsOneWidget);
+      expect(find.byKey(const Key('wr_paywall_cta')), findsNothing);
     });
   });
 }
