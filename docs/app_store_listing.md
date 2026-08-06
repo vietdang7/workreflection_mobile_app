@@ -136,7 +136,7 @@ Phiên bản đầu tiên của WorkReflection trên iPhone.
 | Thiết bị | Kích thước | Bắt buộc? |
 |---|---|---|
 | iPhone 6.9" | 1290 × 2796 hoặc 1320 × 2868 | **Có** |
-| iPad 13" | 2064 × 2752 hoặc 2048 × 2732 | **Có, nếu vẫn khai hỗ trợ iPad** — xem mục 8 |
+| iPad 13" | 2064 × 2752 hoặc 2048 × 2732 | Không — bản 1.0 chỉ nhận iPhone, xem mục 8 |
 
 Tối đa 10 ảnh mỗi loại, nộp 5–6 là đủ. Ảnh **đầu tiên** quan trọng nhất: trong
 kết quả tìm kiếm người ta chỉ thấy 2–3 ảnh đầu.
@@ -192,25 +192,19 @@ khe hơn hẳn.
 
 ---
 
-## 8. Việc phải quyết trước khi chụp ảnh: iPad
+## 8. iPad — bản 1.0 không nhận (đã chốt 06/08/2026)
 
-`ios/Runner.xcodeproj/project.pbxproj` đang khai
-`TARGETED_DEVICE_FAMILY = "1,2"`, tức app nhận cả iPhone lẫn iPad. Hệ quả:
+`TARGETED_DEVICE_FAMILY` đổi từ `"1,2"` sang `"1"`, và gỡ khoá
+`UISupportedInterfaceOrientations~ipad` khỏi `Info.plist`.
 
-1. **Bắt buộc nộp thêm bộ ảnh iPad 13"** — thiếu là không submit được.
-2. **Người duyệt sẽ chạy app trên iPad.** Giao diện dựng theo mockup điện thoại,
-   trên màn 13 inch nhiều khả năng chữ và thẻ giãn ra xấu. Apple từ chối với lý
-   do này khá thường xuyên.
+Lý do: khai hỗ trợ iPad thì App Store **bắt buộc** nộp thêm bộ ảnh iPad 13",
+và người duyệt sẽ chạy app trên iPad. Giao diện dựng theo mockup điện thoại,
+trên màn 13 inch chữ và thẻ giãn ra xấu — Apple từ chối vì lý do này khá
+thường xuyên.
 
-Hai đường đi:
-
-- **Chỉ iPhone cho bản 1.0** — đổi `TARGETED_DEVICE_FAMILY` thành `"1"`. Bớt
-  một bộ ảnh, bớt hẳn một loại rủi ro bị từ chối. Sau này muốn thêm iPad thì
-  ra bản cập nhật, không mất gì.
-- **Giữ iPad** — phải mở app trên iPad Simulator kiểm từng màn và chụp thêm 5–6
-  ảnh nữa.
-
-Tôi nghiêng hẳn về đường thứ nhất cho lần nộp đầu.
+Muốn thêm iPad sau thì đổi lại `"1,2"` và ra bản cập nhật, không mất gì. Lưu ý
+chiều ngược lại thì khó: đã phát hành có iPad rồi mà bỏ đi là gỡ thiết bị khỏi
+tay người đã cài.
 
 ---
 
