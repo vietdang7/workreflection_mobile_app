@@ -58,11 +58,20 @@ import '../support/fake_wr_mood_content_repository.dart';
 /// lẫn trong `flutter test` thường ngày.
 final bool _enabled = Platform.environment['WR_SCREENSHOTS'] == '1';
 
-/// Khổ ảnh App Store bắt buộc: iPhone 6.9" = 1290×2796.
+/// Hai khổ ảnh iPhone của App Store Connect, kèm thư mục tương ứng.
 ///
-/// 430×932 là kích thước logic của iPhone 16 Pro Max; nhân devicePixelRatio 3
-/// ra đúng số pixel Apple đòi. Sai một pixel là App Store Connect từ chối file.
-const _iPhone69 = Size(430, 932);
+/// Kích thước ở đây là kích thước LOGIC; nhân devicePixelRatio 3 ra đúng số
+/// pixel Apple đòi. Sai một pixel là bị từ chối file.
+///
+///   6.9" → 430×932 ×3 = 1290×2796  (iPhone 16 Pro Max)
+///   6.5" → 428×926 ×3 = 1284×2778  (iPhone 14 Pro Max)
+///
+/// Phải nộp cả hai: ô 6.5" không nhận ảnh của ô 6.9", để nó kế thừa thì App
+/// Store Connect báo lỗi đỏ và chặn Add for Review.
+const _appStoreSizes = <String, Size>{
+  'iphone_6_9': Size(430, 932),
+  'iphone_6_5': Size(428, 926),
+};
 
 // ---------------------------------------------------------------------------
 // Nạp font
@@ -309,23 +318,29 @@ class _Stage {
   }
 }
 
-/// Chụp một màn ở đúng khổ App Store.
+/// Chụp một màn ở cả hai khổ App Store đòi.
 ///
 /// Nội dung dài hơn màn hình thì bị cắt đúng như trên máy thật — đó là điều
 /// mình muốn: ảnh phải giống cái người ta thấy khi mở app, không phải một
 /// trang web dài cuộn hết cỡ.
+///
+/// Hai khổ chứ không một: App Store Connect có hai ô ảnh iPhone, và ô 6.5"
+/// KHÔNG nhận ảnh 6.9". Để ô đó ở chế độ kế thừa từ 6.9" thì nó báo lỗi đỏ
+/// "dimensions are wrong" và chặn Add for Review.
 Future<void> _shoot(WidgetTester tester, Widget app, String name) async {
-  tester.view.physicalSize = _iPhone69 * 3;
-  tester.view.devicePixelRatio = 3.0;
-  addTearDown(tester.view.reset);
+  for (final size in _appStoreSizes.entries) {
+    tester.view.physicalSize = size.value * 3;
+    tester.view.devicePixelRatio = 3.0;
+    addTearDown(tester.view.reset);
 
-  await tester.pumpWidget(app);
-  await tester.pumpAndSettle();
+    await tester.pumpWidget(app);
+    await tester.pumpAndSettle();
 
-  await expectLater(
-    find.byType(MaterialApp),
-    matchesGoldenFile('../../screenshots/app_store/$name.png'),
-  );
+    await expectLater(
+      find.byType(MaterialApp),
+      matchesGoldenFile('../../screenshots/app_store/${size.key}/$name.png'),
+    );
+  }
 }
 
 void main() {

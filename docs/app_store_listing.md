@@ -135,7 +135,8 @@ Phiên bản đầu tiên của WorkReflection trên iPhone.
 
 | Thiết bị | Kích thước | Bắt buộc? |
 |---|---|---|
-| iPhone 6.9" | 1290 × 2796 hoặc 1320 × 2868 | **Có** |
+| iPhone 6.9" | 1290 × 2796 | **Có** |
+| iPhone 6.5" | 1284 × 2778 | **Có** — ô này KHÔNG nhận ảnh 6.9"; để nó kế thừa là báo lỗi đỏ và chặn Add for Review |
 | iPad 13" | 2064 × 2752 hoặc 2048 × 2732 | Không — bản 1.0 chỉ nhận iPhone, xem mục 8 |
 
 Tối đa 10 ảnh mỗi loại, nộp 5–6 là đủ. Ảnh **đầu tiên** quan trọng nhất: trong
@@ -143,7 +144,11 @@ kết quả tìm kiếm người ta chỉ thấy 2–3 ảnh đầu.
 
 ### Ảnh đã có sẵn — `screenshots/app_store/`
 
-Năm ảnh đã dựng xong, đúng 1290×2796, sẵn sàng tải lên:
+Mười ảnh đã dựng xong — cùng năm màn, hai khổ, sẵn sàng tải lên:
+
+- `screenshots/app_store/iphone_6_9/` — 1290×2796
+- `screenshots/app_store/iphone_6_5/` — 1284×2778
+
 
 | File | Màn |
 |---|---|
