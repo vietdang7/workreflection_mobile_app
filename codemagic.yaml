@@ -75,9 +75,35 @@ workflows:
 
       - name: Build IPA
         script: |
+          set -e
+
+          # Số build phải LỚN HƠN mọi bản đã đẩy lên Apple, kể cả bản mới chỉ
+          # nằm ở TestFlight chứ chưa phát hành.
+          #
+          # Bản đầu dùng `get-latest-app-store-build-number`, và nó chỉ đếm
+          # build đã lên App Store. Bản hôm 05/8 mới ở TestFlight nên lệnh trả
+          # về RỖNG, mà trong bash `$(( + 1))` cho ra 1 — đúng số đã dùng. Kết
+          # quả: build xanh, archive xong, chết ở bước upload với
+          # ENTITY_ERROR.ATTRIBUTE.INVALID.DUPLICATE.
+          #
+          # Nay hỏi cả hai nơi rồi lấy số lớn hơn.
+          APP_STORE_NUM=$(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || true)
+          TESTFLIGHT_NUM=$(app-store-connect get-latest-testflight-build-number "$APP_STORE_APPLE_ID" 2>/dev/null || true)
+
+          LATEST=0
+          for n in "$APP_STORE_NUM" "$TESTFLIGHT_NUM"; do
+            case "$n" in
+              ''|*[!0-9]*) continue ;;
+            esac
+            [ "$n" -gt "$LATEST" ] && LATEST="$n"
+          done
+
+          BUILD_NUMBER=$((LATEST + 1))
+          echo "Số build đã dùng trên Apple: App Store='$APP_STORE_NUM' TestFlight='$TESTFLIGHT_NUM' → dùng $BUILD_NUMBER"
+
           flutter build ipa --release \
             --build-name=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1) \
-            --build-number=$(($(app-store-connect get-latest-app-store-build-number "$APP_STORE_APPLE_ID") + 1)) \
+            --build-number="$BUILD_NUMBER" \
             --export-options-plist=/Users/builder/export_options.plist
 
     artifacts:
