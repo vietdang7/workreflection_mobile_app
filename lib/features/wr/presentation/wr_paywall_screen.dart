@@ -40,31 +40,41 @@ enum PaywallTrigger {
 ///
 /// Ngược lại, người CHƯA mua quay lại thì Paywall phải ở nguyên đó: đóng nhầm
 /// là cướp mất lối vào duy nhất.
+/// Cả router lẫn container đều lấy TRƯỚC khi đi, và không đụng lại `context`
+/// sau đó. Lý do: trả tiền xong thì quyền đổi, mà quyền đổi thì chính cái nút
+/// gọi hàm này bị gỡ khỏi cây (Paywall chuyển sang dáng "đã có bản đầy đủ").
+/// Bám vào `context` của nút là bám vào thứ vừa chết — người dùng bấm quay lại
+/// sẽ kẹt ở Paywall đúng như lúc chưa sửa.
 Future<void> _openPayment(
   BuildContext context,
   WidgetRef ref,
   WrPremiumPricing plan,
 ) async {
-  await context.push('/wr/payment', extra: plan);
-  if (!context.mounted) return;
+  final router = GoRouter.of(context);
+  final container = ProviderScope.containerOf(context, listen: false);
+
+  await router.push('/wr/payment', extra: plan);
 
   var premium = false;
   try {
-    premium = (await ref.read(wrEntitlementProvider.future)).isPremium;
+    premium = (await container.read(wrEntitlementProvider.future)).isPremium;
   } catch (_) {
     /* không đọc được thì cứ để nguyên Paywall, không đoán bừa */
   }
 
-  if (!context.mounted) return;
-  if (premium) context.pop();
+  if (premium && router.canPop()) router.pop();
 }
 
 /// Có hiện con số giá không.
 ///
-/// Chỉ giấu ở bản im lặng: bản dẫn-sang-web vẫn phải cho biết giá, không thì
-/// người dùng bấm sang trình duyệt trong tình trạng mù thông tin.
-bool _showsPrice(WrStorePolicy policy) =>
-    policy.allowsInAppPurchase || policy.allowsWebPurchaseLink;
+/// Giấu ở hai trường hợp. Một là bản im lặng: bản dẫn-sang-web vẫn phải cho
+/// biết giá, không thì người dùng bấm sang trình duyệt trong tình trạng mù
+/// thông tin. Hai là người đã có quyền — chào giá cho người vừa trả tiền là
+/// vô duyên, và với người duyệt app của Apple (dùng tài khoản demo Premium)
+/// thì cái nút dẫn ra web nằm ngay đó chính là thứ Guideline 3.1.3 cấm.
+bool _showsPrice(WrStorePolicy policy, {required bool alreadyPremium}) =>
+    !alreadyPremium &&
+    (policy.allowsInAppPurchase || policy.allowsWebPurchaseLink);
 
 /// Mở trang mua Premium trên web (bản iOS).
 ///
@@ -104,13 +114,51 @@ Future<void> _openWebPurchase(
 
 /// Nút cuối paywall. Ba dáng ứng với ba chính sách bán hàng.
 class _PaywallCta extends ConsumerWidget {
-  const _PaywallCta({required this.policy, required this.pricing});
+  const _PaywallCta({
+    required this.policy,
+    required this.pricing,
+    required this.alreadyPremium,
+  });
 
   final WrStorePolicy policy;
   final WrPremiumPricing pricing;
 
+  /// Tài khoản đã có quyền đầy đủ. Khi đó màn này không còn là trang bán hàng
+  /// mà là trang xác nhận — không nút mua, không nút dẫn sang web.
+  final bool alreadyPremium;
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    if (alreadyPremium) {
+      return Container(
+        key: const Key('wr_paywall_cta_owned'),
+        decoration: BoxDecoration(
+          color: WrColors.teal.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: WrColors.pillTealText),
+        ),
+        padding: const EdgeInsets.all(14),
+        child: const Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Icon(Icons.check_circle, color: WrColors.pillTealText, size: 18),
+            SizedBox(width: 10),
+            Expanded(
+              child: WrParagraph(
+                'Tài khoản của bạn đang dùng bản đầy đủ. Mọi phần ở trên đã mở '
+                'sẵn, không cần làm gì thêm.',
+                style: TextStyle(
+                  fontSize: 12.5,
+                  color: WrColors.navy,
+                  height: 1.6,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
     if (policy.allowsInAppPurchase) {
       return SizedBox(
         width: double.infinity,
@@ -235,10 +283,23 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final h = _headline;
     // Bản iOS không được bán trong app (Guideline 3.1.1) — xem
     // `wr_store_policy.dart`.
     final policy = ref.watch(wrStorePolicyProvider);
+    // Người đã có quyền vẫn vào được màn này từ dòng "Bản Premium" ở tab Tôi.
+    // Chưa đọc xong quyền thì coi như chưa có: đoán nhầm theo hướng "đã mua"
+    // sẽ giấu mất lối mua của người thật sự cần.
+    final alreadyPremium =
+        ref.watch(wrEntitlementProvider).valueOrNull?.isPremium ?? false;
+    final showsPrice = _showsPrice(policy, alreadyPremium: alreadyPremium);
+    // Đầu đề của các trigger đều là lời mời mua. Người đã có quyền vào đây để
+    // xem mình đang có gì, nên đổi sang lời xác nhận.
+    final h = alreadyPremium
+        ? (
+            title: 'Bạn đang dùng bản đầy đủ',
+            sub: 'Tất cả tính năng dưới đây đã mở sẵn trong tài khoản của bạn.',
+          )
+        : _headline;
     // Các gói APP (`cc_products.product_type = 'premium_mobile'`) — năm 499.000đ
     // và tháng 70.000đ, KHÔNG phải gói web 249.000đ. Sửa ở trang quản trị của
     // web là app đổi theo. Trong lúc chờ tải thì dùng gói mặc định chứ không để
@@ -326,7 +387,7 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          if (_showsPrice(policy) && pricing.hasDiscount) ...[
+                          if (showsPrice && pricing.hasDiscount) ...[
                             Text(
                               pricing.originalLabel!,
                               style: const TextStyle(
@@ -338,7 +399,7 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                             ),
                             const SizedBox(width: 5),
                           ],
-                          if (_showsPrice(policy))
+                          if (showsPrice)
                             Text(
                               '${pricing.currentLabel} / ${pricing.durationSuffix}',
                               style: const TextStyle(
@@ -454,7 +515,7 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                   //
                   // Bản im lặng (Apple bắt bẻ anti-steering) không hiện gói lẫn
                   // giá: nhắc tới con số là đã gợi chuyện mua bán.
-                  if (_showsPrice(policy) && plans.length > 1)
+                  if (showsPrice && plans.length > 1)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
                       child: _PlanSelector(
@@ -468,7 +529,7 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
 
                   // Giá — đặt ngay trên nút mua để con số là thứ cuối cùng đọc
                   // được trước khi bấm.
-                  if (_showsPrice(policy))
+                  if (showsPrice)
                     Padding(
                       padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
                       child: _PriceBlock(pricing: pricing),
@@ -478,7 +539,11 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                   // `wr_store_policy.dart`.
                   Padding(
                     padding: const EdgeInsets.fromLTRB(22, 10, 22, 8),
-                    child: _PaywallCta(policy: policy, pricing: pricing),
+                    child: _PaywallCta(
+                      policy: policy,
+                      pricing: pricing,
+                      alreadyPremium: alreadyPremium,
+                    ),
                   ),
 
                   // Guarantee

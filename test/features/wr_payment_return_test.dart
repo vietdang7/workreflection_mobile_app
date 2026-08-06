@@ -24,9 +24,20 @@ import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 
 import 'wr_payment_screen_test.dart' show FakePaymentRepository;
 
+/// Quyền của tài khoản, đổi được giữa chừng bài test.
+///
+/// Không thể khai cứng "đã premium" ngay từ đầu: Paywall giờ nhận ra người đã
+/// có quyền và bỏ hẳn nút mua ([[wr_paywall_screen.dart]]), nên khai cứng thì
+/// không còn nút nào để bấm vào màn thanh toán. Đúng trình tự thật là: mở
+/// Paywall lúc còn free → trả tiền → màn thanh toán `invalidate` provider này
+/// → lần đọc sau mới ra premium.
+class _Grant {
+  bool premium = false;
+}
+
 /// Dựng đúng chồng màn hình thật: trang gốc → Paywall → Thanh toán, cộng Home
 /// để kiểm được đích đến sau khi mua.
-Widget _app(FakePaymentRepository repo, {required bool premiumAfter}) {
+Widget _app(FakePaymentRepository repo, {required _Grant grant}) {
   final router = GoRouter(
     initialLocation: '/goc',
     routes: [
@@ -77,7 +88,7 @@ Widget _app(FakePaymentRepository repo, {required bool premiumAfter}) {
       ccProfileProvider.overrideWith((ref) async => {'role': 'user'}),
       wrEntitlementProvider.overrideWith(
         (ref) async => WrEntitlement(
-          plan: premiumAfter ? WrPlan.premium : WrPlan.free,
+          plan: grant.premium ? WrPlan.premium : WrPlan.free,
         ),
       ),
     ],
@@ -104,14 +115,16 @@ void main() {
     tester,
   ) async {
     final repo = FakePaymentRepository();
-    await tester.pumpWidget(_app(repo, premiumAfter: true));
+    final grant = _Grant();
+    await tester.pumpWidget(_app(repo, grant: grant));
     await tester.pumpAndSettle();
 
     await _goToPayment(tester);
     expect(find.byKey(const Key('wr_payment_countdown')), findsOneWidget);
 
-    // Webhook xác nhận.
+    // Webhook xác nhận — tiền vào thì quyền cũng mở.
     repo.nextPolled = repo.order.copyWith(status: 'paid');
+    grant.premium = true;
     await tester.pump(kPaymentPollInterval);
     await tester.pump();
     expect(find.byKey(const Key('wr_payment_success')), findsOneWidget);
@@ -130,12 +143,14 @@ void main() {
     // Không bấm nút trên màn thành công mà bấm back — push trả về null, nên
     // Paywall phải tự hỏi lại quyền chứ không thể chỉ tin vào kết quả pop.
     final repo = FakePaymentRepository();
-    await tester.pumpWidget(_app(repo, premiumAfter: true));
+    final grant = _Grant();
+    await tester.pumpWidget(_app(repo, grant: grant));
     await tester.pumpAndSettle();
 
     await _goToPayment(tester);
 
     repo.nextPolled = repo.order.copyWith(status: 'paid');
+    grant.premium = true;
     await tester.pump(kPaymentPollInterval);
     await tester.pump();
 
@@ -148,7 +163,7 @@ void main() {
   testWidgets('chưa mua mà quay lại thì Paywall vẫn còn', (tester) async {
     // Đóng nhầm Paywall của người chưa mua là cướp mất lối vào duy nhất.
     final repo = FakePaymentRepository();
-    await tester.pumpWidget(_app(repo, premiumAfter: false));
+    await tester.pumpWidget(_app(repo, grant: _Grant()));
     await tester.pumpAndSettle();
 
     await _goToPayment(tester);
