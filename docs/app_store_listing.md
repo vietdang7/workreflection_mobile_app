@@ -141,7 +141,35 @@ Phiên bản đầu tiên của WorkReflection trên iPhone.
 Tối đa 10 ảnh mỗi loại, nộp 5–6 là đủ. Ảnh **đầu tiên** quan trọng nhất: trong
 kết quả tìm kiếm người ta chỉ thấy 2–3 ảnh đầu.
 
-### Sáu màn nên chụp, theo thứ tự
+### Ảnh đã có sẵn — `screenshots/app_store/`
+
+Năm ảnh đã dựng xong, đúng 1290×2796, sẵn sàng tải lên:
+
+| File | Màn |
+|---|---|
+| `01_home.png` | Home — lưới tâm trạng, gợi ý hôm nay, Insight gần nhất |
+| `02_hieu_minh.png` | Tình huống lặp lại (5 lần / 3 lần) + ba chiều trải nghiệm |
+| `03_phat_trien.png` | Hai chủ đề thực hành đang chạy |
+| `04_hanh_trinh.png` | Career Memory theo dòng thời gian |
+| `05_tro_ly_ai.png` | Trợ lý AI trả lời dựa trên ghi chép của chính người dùng |
+
+Sinh lại khi giao diện đổi:
+
+```bash
+WR_SCREENSHOTS=1 flutter test test/screenshots/app_store_test.dart \
+  --update-goldens
+```
+
+Chúng được render bằng chính widget của app ở surface 430×932 với
+devicePixelRatio 3 (`test/screenshots/app_store_test.dart`), nên không cần
+iPhone, không dính dải DEBUG, và dữ liệu bên trong là dữ liệu dựng sẵn chứ
+không phải của tài khoản thật nào.
+
+Tài khoản trong ảnh được đặt là bản đầy đủ — không phải để khoe gói, mà vì ở
+bản free màn Hành trình là ba khối "Premium" khoá xếp chồng, chụp ra thì người
+xem không thấy sản phẩm làm được gì.
+
+### Nếu muốn chụp tay thay vì dùng bộ trên
 
 1. **Home + lưới tâm trạng** — thứ người dùng thấy mỗi ngày. Chọn tâm trạng
    trung tính, đừng chọn cái tiêu cực nhất.
