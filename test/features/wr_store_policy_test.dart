@@ -126,6 +126,8 @@ void main() {
 
       expect(find.byKey(const Key('wr_paywall_cta')), findsOneWidget);
       expect(find.byKey(const Key('wr_paywall_cta_web')), findsNothing);
+      // Bản bán trong app thì lời hứa hoàn tiền là của chính giao dịch này.
+      expect(find.textContaining('hoàn tiền'), findsWidgets);
     });
 
     testWidgets('Kho ứng dụng: nút mua trong app biến mất, thay bằng lối sang web',
@@ -137,6 +139,9 @@ void main() {
       expect(find.byKey(const Key('wr_paywall_cta_web')), findsOneWidget);
       // Vẫn phải cho biết giá — bấm sang trình duyệt mà mù thông tin thì tệ.
       expect(find.textContaining('499.000đ'), findsWidgets);
+      // Nhưng KHÔNG hứa hoàn tiền: điều khoản của giao dịch xảy ra trên web,
+      // đặt cạnh nút dẫn ra trình duyệt là tự nộp bằng chứng anti-steering.
+      expect(find.textContaining('hoàn tiền'), findsNothing);
     });
 
     testWidgets('Bản im lặng: không nút, không con số giá nào',
@@ -168,6 +173,7 @@ void main() {
       expect(find.byKey(const Key('wr_paywall_cta_web')), findsNothing);
       expect(find.textContaining('499.000đ'), findsNothing);
       expect(find.textContaining('70.000đ'), findsNothing);
+      expect(find.textContaining('hoàn tiền'), findsNothing);
     });
 
     testWidgets('Bản mở: nút mua trong app cũng biến mất', (tester) async {

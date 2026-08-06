@@ -546,7 +546,14 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                     ),
                   ),
 
-                  // Guarantee
+                  // Bảo đảm hoàn tiền — chỉ ở bản bán trong app.
+                  //
+                  // Đây là điều khoản thương mại của một giao dịch. Ở bản phát
+                  // hành qua kho, giao dịch đó xảy ra trên web, nên để lời hứa
+                  // hoàn tiền nằm cạnh nút dẫn ra trình duyệt là tự nộp bằng
+                  // chứng anti-steering (Guideline 3.1.3). Với người đã mua
+                  // rồi thì nó cũng chẳng còn nghĩa gì.
+                  if (policy.allowsInAppPurchase && !alreadyPremium)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(22, 0, 22, 20),
                     child: Container(
