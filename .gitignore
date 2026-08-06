@@ -47,3 +47,6 @@ app.*.map.json
 
 # Claude Code transient agent worktrees (should never be committed)
 .claude/worktrees/
+
+# Git worktree của nhánh main — bản sao repo, không thuộc về lịch sử repo.
+main-wt/
