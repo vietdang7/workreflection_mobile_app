@@ -368,6 +368,73 @@ void main() {
         'Cảm giác không được nghe',
       );
     });
+
+    // Nhánh "Điều khác" để `situation_code` trống, nên phiên đó biến mất khỏi
+    // mọi thống kê theo tình huống (14/59 Episode trên DB thật, 2026-08-22).
+    // Màn này hỏi thêm một chạm để phiên tự mô tả vẫn có chỗ đứng.
+    group('nhánh Điều khác — hỏi lại điều gần nhất', () {
+      _Harness customHarness() {
+        final h = _Harness();
+        h.content.seedSituations(_someSituations);
+        h.seedOpenEpisode(
+          moment: HumanMoment.recovery,
+          state: ExperienceState.exploring,
+          patternsDone: const [ReflectionPattern.notice],
+          // Đúng dấu vết của nhánh "Điều khác".
+          situationCode: null,
+        );
+        return h;
+      }
+
+      testWidgets('phiên đã có mã thì không hỏi lại', (tester) async {
+        final h = _Harness();
+        h.content.seedSituations(_someSituations);
+        h.seedOpenEpisode(
+          moment: HumanMoment.recovery,
+          state: ExperienceState.exploring,
+          patternsDone: const [ReflectionPattern.notice],
+          situationCode: 'A3-sit-01',
+        );
+        await _pump(tester, h.app());
+        await _resume(tester, stopAtDetail: true);
+
+        expect(find.text('GẦN NHẤT VỚI ĐIỀU NÀO?'), findsNothing);
+      });
+
+      testWidgets('chọn một chip thì phiên được vá mã và vào lịch sử',
+          (tester) async {
+        final h = customHarness();
+        await _pump(tester, h.app());
+        await _resume(tester, stopAtDetail: true);
+
+        expect(find.text('GẦN NHẤT VỚI ĐIỀU NÀO?'), findsOneWidget);
+
+        final chip = find.byKey(const Key('wr_detail_link_A3-sit-01'));
+        await tester.ensureVisible(chip);
+        await tester.tap(chip);
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('wr_flow_primary')));
+        await tester.pumpAndSettle();
+
+        final saved = h.episodes.episodes.single;
+        expect(saved.situationCode, 'A3-sit-01');
+        expect(h.wr.saveRecentSituationIdsCalls.last.first, 'A3-sit-01');
+      });
+
+      testWidgets('bỏ qua vẫn đi tiếp được, phiên giữ nguyên không mã',
+          (tester) async {
+        final h = customHarness();
+        await _pump(tester, h.app());
+        await _resume(tester, stopAtDetail: true);
+
+        await tester.tap(find.byKey(const Key('wr_flow_primary')));
+        await tester.pumpAndSettle();
+
+        expect(find.byType(WrMeaningScreen), findsOneWidget);
+        expect(h.episodes.episodes.single.situationCode, isNull);
+      });
+    });
   });
 
   group('Ý nghĩa và ký ức', () {

@@ -83,12 +83,8 @@
 	     Connect chặn lại hỏi export compliance. -->
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
-	<key>UISupportedInterfaceOrientations~ipad</key>
-	<array>
-		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
-	</array>
+	<!-- Không khai hướng màn hình cho iPad: bản 1.0 chỉ nhận iPhone
+	     (TARGETED_DEVICE_FAMILY = "1"). Khoá này còn lại chỉ gây hiểu nhầm là
+	     app có hỗ trợ iPad. -->
 </dict>
 </plist>

@@ -54,12 +54,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../core/data/wr_repository.dart';
 import '../../../core/logic/vn_date.dart';
 import '../../../core/logic/wr_home_surface.dart';
 import '../../../core/logic/wr_repeated_situations.dart';
 import '../../../core/models/checkin.dart';
-import '../../../core/models/mobile_profile.dart';
 import '../../../core/models/wr_mood_content.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_text.dart';
@@ -75,10 +73,11 @@ import 'wr_mood_library_screen.dart' show WrDraftBadge;
 import 'wr_practice_step_completion.dart' show practiceStageLabel;
 import '../../../core/widgets/wr_paragraph.dart';
 
-final _mobileProfileProvider = FutureProvider<MobileProfile?>((ref) async {
-  final repo = ref.watch(wrRepositoryProvider);
-  return repo.getMobileProfile();
-});
+// Hồ sơ đọc qua `mobileProfileProvider` dùng chung ở `profile_providers.dart`.
+// Trước 2026-08-22 màn này khai một FutureProvider riêng cùng nội dung, nên
+// avatar trên Home và avatar do widget tự đọc ở ba màn tab còn lại nằm trên hai
+// provider khác nhau — hai lần gọi repository cho cùng một hồ sơ, và hai lần
+// đó có thể lệch nhau một nhịp sau khi người dùng đổi tên.
 
 // ---------------------------------------------------------------------------
 // Lưới check-in — bốn ô như bản thiết kế, mỗi ô là một mức năng lượng.
@@ -144,7 +143,7 @@ class WrHomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final displayName =
-        ref.watch(_mobileProfileProvider).valueOrNull?.displayName ?? '';
+        ref.watch(mobileProfileProvider).valueOrNull?.displayName ?? '';
 
     return Scaffold(
       // `giao-dien-chinh.html` §.screen: nền màn TRẮNG, thẻ mới là màu kem. Sắc
@@ -217,6 +216,10 @@ class WrHomeScreen extends ConsumerWidget {
                   // duy nhất trong màn có thời hạn: hỏi muộn hơn thì mấy chục
                   // Insight đầu đã sinh ra trong lúc app còn đoán mò bối cảnh.
                   const _ProfileNudgeCard(),
+                  // Lời nhắc "còn dở" đứng ngay dưới lưới check-in: nó nói về
+                  // chính việc người dùng vừa làm ở lưới đó, và phải đọc được
+                  // trước khi mắt trôi xuống các khối nội dung.
+                  const _UnfinishedReflectionCard(),
                   // Thứ tự lấy nguyên từ `screenHome()`: check-in (cố định) →
                   // Hệ thống nhận ra → Gợi ý → Insight gần nhất → Tiếp tục hôm
                   // nay. Hai khối giữa nằm trong nhánh `state.checkedInToday`
@@ -558,6 +561,88 @@ class _DashedRRectPainter extends CustomPainter {
 }
 
 // ---------------------------------------------------------------------------
+// 2c · "Còn dở" — check-in rồi mà chưa chọn điều muốn nhìn lại.
+//
+// Khách báo 2026-08-22: chị check-in "đang căng thẳng" ngày 21/08 rồi rời màn
+// chọn tình huống, và tin rằng mình đã ghi lại xong. Trên DB ngày đó có đúng
+// một dòng `wr_checkins` và KHÔNG có Episode nào — nên mọi khối đọc tình huống
+// im lặng, còn app thì không hề nói gì về việc còn dở.
+//
+// Episode chỉ sinh ra khi người dùng chạm một tình huống (`wr_step_screen.dart`)
+// và đó là chủ ý — không để lại phiên rỗng. Nhưng "không tạo phiên" không có
+// nghĩa là "không có gì để nhắc": chính lần check-in là dấu vết cho thấy người
+// dùng đã bắt đầu.
+//
+// Khối này bù đúng khoảng trống đó, và chỉ khoảng trống đó:
+//   • đã check-in hôm nay VÀ chưa mở phiên nào trong ngày → mời đi tiếp
+//   • có phiên chưa khép (kể cả từ hôm trước)             → mời quay lại
+// Không rơi vào hai trường hợp trên thì khối biến mất hẳn — WXS Orch. Inv.5.
+// ---------------------------------------------------------------------------
+
+class _UnfinishedReflectionCard extends ConsumerWidget {
+  const _UnfinishedReflectionCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final checkedIn = ref.watch(todayCheckinProvider).valueOrNull != null;
+    if (!checkedIn) return const SizedBox.shrink();
+
+    final open = ref.watch(wrOpenEpisodeProvider).valueOrNull;
+    final episodes = ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
+
+    final today = todayVn();
+    bool isToday(DateTime? at) {
+      if (at == null) return false;
+      final vn = at.toUtc().add(const Duration(hours: 7));
+      return vn.year == today.year &&
+          vn.month == today.month &&
+          vn.day == today.day;
+    }
+
+    final startedToday = episodes.any((e) => isToday(e.openedAt));
+    if (open == null && startedToday) return const SizedBox.shrink();
+
+    // Phiên dở được ưu tiên nói tới: nó đã có nội dung người dùng viết, còn lần
+    // check-in trống thì chưa.
+    final line = open != null
+        ? 'Bạn còn một lần nhìn lại đang dở. Đi tiếp từ chỗ đang đứng.'
+        : 'Bạn đã ghi cảm xúc hôm nay, nhưng chưa chọn điều muốn nhìn lại.';
+
+    return Padding(
+      key: const Key('wr_home_unfinished_reflection'),
+      padding: const EdgeInsets.only(top: 12),
+      child: GestureDetector(
+        key: const Key('wr_home_unfinished_link'),
+        behavior: HitTestBehavior.opaque,
+        onTap: () async {
+          if (open != null) {
+            await ref.read(episodeFlowProvider.notifier).resume(open);
+          }
+          if (context.mounted) context.push('/wr/flow/step');
+        },
+        child: WrCardMinimal(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const WrEyebrow('CÒN DỞ'),
+              const SizedBox(height: 6),
+              WrParagraph(
+                line,
+                style: const TextStyle(
+                  fontSize: 15.5,
+                  color: WrColors.navy,
+                  height: 1.5,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // 3 · Thẻ navy "Hệ thống nhận ra" — đọc lại chính con số của người dùng.
 //
 // Chỉ hiện SAU khi đã check-in hôm nay (họp khách 2026-07-29). Trước đó màn
@@ -572,8 +657,8 @@ class _SystemNoticeCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // Cùng một điều kiện với khối "Gợi ý khi …" ngay dưới: hai khối này là một
     // cặp, cùng xuất hiện sau check-in.
-    final checkedIn = ref.watch(todayCheckinProvider).valueOrNull != null;
-    if (!checkedIn) return const SizedBox.shrink();
+    final checkin = ref.watch(todayCheckinProvider).valueOrNull;
+    if (checkin == null) return const SizedBox.shrink();
 
     // recentSituationIds, không phải `wr_pattern_counts` (v2.0 §4.3). Trước bản
     // 2026-07-31 thẻ này nói "Đây là lần thứ 4 bạn gặp tình huống X" trong khi
@@ -583,6 +668,10 @@ class _SystemNoticeCard extends ConsumerWidget {
     final notice = systemNotice(
       recent: recentSituationIds(episodes),
       situations: situations,
+      // Cảm xúc vừa check-in là bộ lọc, không phải thông tin phụ: khách
+      // 2026-08-22 nói rõ "hệ thống nhận ra là nhận diện tình huống vừa
+      // check-in". Bỏ tham số này là thẻ quay về đọc chuyện tuần trước.
+      mood: checkin.mood,
     );
 
     // Chưa lặp lại lần nào thì hệ thống chưa có gì để nhận ra — im lặng.
