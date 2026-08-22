@@ -183,13 +183,67 @@ void main() {
       );
     });
 
-    test('chọn tình huống lặp nhiều nhất', () {
+    test('tình huống vừa chọn chưa đủ ngưỡng thì lấy cái lặp nhiều nhất', () {
       final n = systemNotice(
-        recent: [..._pattern('s1', 3), ..._pattern('s2', 7)],
+        // s1 đứng đầu = vừa chọn, nhưng mới một lần.
+        recent: ['s1', ..._pattern('s2', 7)],
         situations: [...situations, _sit('s2', 'Bị giao việc gấp')],
       );
       expect(n!.situationCode, 's2');
       expect(n.count, 7);
+    });
+
+    // Khách 2026-08-22: check-in xong, ghi tiếp một tình huống, mà thẻ vẫn đọc
+    // tình huống của tuần trước chỉ vì nó nhiều lần hơn.
+    test('tình huống vừa chọn đủ ngưỡng thì được ưu tiên dù ít lần hơn', () {
+      final n = systemNotice(
+        recent: ['s1', ..._pattern('s1', 1), ..._pattern('s2', 7)],
+        situations: [...situations, _sit('s2', 'Bị giao việc gấp')],
+      );
+      expect(n!.situationCode, 's1');
+      expect(n.count, 2);
+    });
+
+    // Nguyên tắc khách nói thẳng 2026-08-22: "hệ thống nhận ra là nhận diện
+    // tình huống VỪA CHECK-IN". Dựng lại đúng dữ liệu tài khoản khách hôm đó.
+    group('lọc theo cảm xúc vừa check-in', () {
+      // P-08 trụ P-STEADY, ghi 3 lần tuần trước. C2-03 vừa ghi hôm nay, 1 lần.
+      final khach = [
+        _sit('C2-03', 'Tôi đồng ý dù trong lòng không đồng ý',
+            dim: ScaDimension.c2),
+        _sit('P-08', 'Tôi vừa học được một điều nhỏ nhưng hữu ích',
+            dim: ScaDimension.pSteady),
+      ];
+      final lichSu = ['C2-03', ..._pattern('P-08', 3)];
+
+      test('check-in căng thẳng thì im lặng, không đọc chuyện trụ P tuần trước',
+          () {
+        expect(
+          systemNotice(
+            recent: lichSu,
+            situations: khach,
+            mood: Mood.stressed,
+          ),
+          isNull,
+          reason: 'stressed → A3+C2; trong cụm đó chưa mã nào lặp đủ 2 lần, '
+              'nên im lặng đúng hơn là nói một chuyện ngược cảm xúc',
+        );
+      });
+
+      test('check-in khá ổn thì đọc đúng tình huống trụ P đã lặp', () {
+        final n = systemNotice(
+          recent: lichSu,
+          situations: khach,
+          mood: Mood.okay,
+        );
+        expect(n!.situationCode, 'P-08');
+        expect(n.count, 3);
+      });
+
+      test('không truyền cảm xúc thì giữ nguyên hành vi cũ', () {
+        final n = systemNotice(recent: lichSu, situations: khach);
+        expect(n!.situationCode, 'P-08');
+      });
     });
   });
 
@@ -283,10 +337,72 @@ void main() {
       expect(find.byKey(const Key('wr_home_system_notice')), findsNothing);
     });
 
+    // Khách báo 2026-08-22: check-in "đang căng thẳng" ngày 21/08 rồi rời màn
+    // chọn tình huống, tin là đã ghi xong. DB ngày đó có check-in và không có
+    // Episode nào, còn Home thì không nói gì.
+    group('Còn dở', () {
+      testWidgets('check-in rồi mà chưa mở phiên nào hôm nay thì Home nhắc',
+          (tester) async {
+        final repo = FakeWrRepository()
+          ..seedTodayCheckin(_checkin(Mood.stressed));
+
+        // `_episodes` mở ngày 2026-07-01 — có lịch sử, nhưng không phải hôm nay.
+        final episodes = FakeWrEpisodeRepository()..seed(_episodes('s1', 3));
+
+        await _pump(tester, _wrap(repo: repo, episodes: episodes));
+
+        expect(
+          find.byKey(const Key('wr_home_unfinished_reflection')),
+          findsOneWidget,
+        );
+        expect(
+          find.textContaining('chưa chọn điều muốn nhìn lại'),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('chưa check-in thì không nhắc', (tester) async {
+        await _pump(tester, _wrap());
+
+        expect(
+          find.byKey(const Key('wr_home_unfinished_reflection')),
+          findsNothing,
+        );
+      });
+
+      testWidgets('đã mở phiên hôm nay thì thôi nhắc', (tester) async {
+        final repo = FakeWrRepository()
+          ..seedTodayCheckin(_checkin(Mood.stressed));
+        final episodes = FakeWrEpisodeRepository()
+          ..seed([
+            ReflectionEpisode(
+              id: 'hom-nay',
+              userId: 'u1',
+              humanMoment: HumanMoment.confusion,
+              state: ExperienceState.integrated,
+              situationCode: 's1',
+              openedAt: DateTime.now().toUtc(),
+            ),
+          ]);
+
+        await _pump(tester, _wrap(repo: repo, episodes: episodes));
+
+        expect(
+          find.byKey(const Key('wr_home_unfinished_reflection')),
+          findsNothing,
+        );
+      });
+    });
+
     testWidgets('Hệ thống nhận ra hiện đúng câu từ dữ liệu thật',
         (tester) async {
       final content = FakeWrContentRepository()
-        ..seedSituations([_sit('s1', 'Ngại phản biện với đồng nghiệp')]);
+        // C2 để khớp cụm chiều của "căng thẳng" (A3+C2, §III) — từ 2026-08-22
+        // thẻ chỉ đọc tình huống thuộc cảm xúc vừa check-in. Chiều này cũng
+        // đúng với nội dung câu: né tránh lên tiếng.
+        ..seedSituations([
+          _sit('s1', 'Ngại phản biện với đồng nghiệp', dim: ScaDimension.c2),
+        ]);
       final episodes = FakeWrEpisodeRepository()..seed(_episodes('s1', 5));
       final repo = FakeWrRepository()..seedTodayCheckin(_checkin(Mood.stressed));
 
@@ -306,7 +422,9 @@ void main() {
     testWidgets('Tìm hiểu thêm mở đúng màn chi tiết của tình huống đó',
         (tester) async {
       final content = FakeWrContentRepository()
-        ..seedSituations([_sit('s1', 'Ngại phản biện')]);
+        ..seedSituations([
+          _sit('s1', 'Ngại phản biện', dim: ScaDimension.c2),
+        ]);
       final episodes = FakeWrEpisodeRepository()..seed(_episodes('s1', 4));
       final repo = FakeWrRepository()..seedTodayCheckin(_checkin(Mood.stressed));
 

@@ -11,9 +11,11 @@
 // người dùng cần nhận ra cùng một lối vào ở cùng một góc.
 
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:go_router/go_router.dart';
 
+import '../../features/profile/profile_providers.dart';
 import '../theme/wr_colors.dart';
 
 /// Chữ cái đầu của tên, tối đa hai ký tự. Rỗng thì trả 'WR'.
@@ -26,20 +28,33 @@ String profileInitials(String name) {
       .toUpperCase();
 }
 
-class WrProfileAvatar extends StatelessWidget {
+class WrProfileAvatar extends ConsumerWidget {
   const WrProfileAvatar({
     super.key,
-    this.displayName = '',
+    this.displayName,
     this.size = 36,
   });
 
-  /// Tên hiển thị để lấy chữ cái đầu. Rỗng thì hiện 'WR'.
-  final String displayName;
+  /// Tên hiển thị để lấy chữ cái đầu.
+  ///
+  /// Bỏ trống — mặc định ở cả bốn màn tab — thì widget tự đọc hồ sơ qua
+  /// [mobileProfileProvider]. Trước 2026-08-22 tham số này bắt buộc phải được
+  /// truyền vào, và chỉ màn Hôm nay truyền: ba màn còn lại gọi
+  /// `const WrProfileAvatar()` nên luôn hiện 'WR' trong khi Hôm nay hiện chữ
+  /// cái đầu của người dùng. Cùng một lối vào, cùng một góc màn, hai mặt chữ
+  /// khác nhau — khách báo lỗi này 2026-08-22.
+  ///
+  /// Vẫn giữ tham số để test dựng được avatar mà không cần cả tầng repository.
+  final String? displayName;
 
   final double size;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final name = displayName ??
+        ref.watch(mobileProfileProvider).valueOrNull?.displayName ??
+        '';
+
     return Semantics(
       label: 'Tôi',
       button: true,
@@ -56,7 +71,7 @@ class WrProfileAvatar extends StatelessWidget {
             shape: BoxShape.circle,
           ),
           child: Text(
-            profileInitials(displayName),
+            profileInitials(name),
             style: TextStyle(
               fontSize: size * 0.39,
               fontWeight: FontWeight.w700,
