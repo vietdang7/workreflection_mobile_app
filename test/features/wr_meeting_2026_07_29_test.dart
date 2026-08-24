@@ -27,6 +27,7 @@ import 'package:workreflection_mobile/core/logic/wr_tra_chieu.dart';
 import 'package:workreflection_mobile/core/data/wr_chat_repository.dart';
 import 'package:workreflection_mobile/core/models/checkin.dart';
 import 'package:workreflection_mobile/core/models/wr_chat.dart';
+import 'package:workreflection_mobile/core/models/wr_content.dart';
 import 'package:workreflection_mobile/core/models/wr_episode.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 import 'package:workreflection_mobile/core/models/wr_mood_content.dart';
@@ -233,6 +234,23 @@ void main() {
     ///
     /// Gieo EPISODE chứ không gieo `wr_pattern_counts`: từ 2026-07-31 thẻ "Hệ
     /// thống nhận ra" đọc recentSituationIds (Kiến trúc v2.0 §4.3).
+    /// Tình huống `s1` ở chiều C2 — cùng cụm với cảm xúc "căng thẳng" mà các
+    /// test dưới đây gieo (§III: stressed → A3+C2).
+    ///
+    /// Từ 2026-08-22 thẻ "Hệ thống nhận ra" chỉ xét tình huống thuộc cụm chiều
+    /// của cảm xúc vừa check-in — khách nói rõ "nhận diện tình huống vừa
+    /// check-in". Không gieo bảng tình huống thì không mã nào tra ra được chiều,
+    /// và thẻ im lặng đúng theo luật đó.
+    FakeWrContentRepository contentWithSituation() => FakeWrContentRepository()
+      ..seedSituations(const [
+        WrSituation(
+          code: 's1',
+          text: 'Ngại phản biện với đồng nghiệp',
+          scaDimension: ScaDimension.c2,
+          wave: 1,
+        ),
+      ]);
+
     FakeWrEpisodeRepository episodesWithPattern() => FakeWrEpisodeRepository()
       ..seed([
         for (var i = 0; i < 5; i++)
@@ -277,6 +295,7 @@ void main() {
           repo: FakeWrRepository()..seedTodayCheckin(_checkin(Mood.stressed)),
           intel: intelWithPattern(),
           episodes: episodesWithPattern(),
+          content: contentWithSituation(),
           moodContent: moodContent,
         ),
       );
@@ -324,6 +343,7 @@ void main() {
           repo: FakeWrRepository()..seedTodayCheckin(_checkin(Mood.stressed)),
           intel: intel,
           episodes: episodesWithPattern(),
+          content: contentWithSituation(),
           moodContent: moodContent,
         ),
       );

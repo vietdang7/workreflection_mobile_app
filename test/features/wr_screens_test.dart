@@ -11,6 +11,7 @@ import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
+import 'package:workreflection_mobile/core/models/mobile_profile.dart';
 import 'package:workreflection_mobile/core/models/wr_mood_content.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_discover_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_growth_screen.dart';
@@ -189,6 +190,40 @@ void main() {
 
       expect(find.byKey(const Key('wr_home_profile_button')), findsOneWidget);
     });
+  });
+
+  // Khách báo 2026-08-22: cùng một avatar mà màn Hôm nay hiện "C" còn màn Hiểu
+  // mình hiện "WR". Nguyên nhân: chỉ Home truyền `displayName`, ba màn tab còn
+  // lại gọi `const WrProfileAvatar()` nên rơi về chữ mặc định. Widget giờ tự
+  // đọc hồ sơ, nên bốn màn phải cho CÙNG một mặt chữ.
+  group('Avatar bốn màn tab', () {
+    FakeWrRepository repoWithName() => FakeWrRepository()
+      ..seedProfile(
+        MobileProfile(
+          userId: 'fake-user',
+          displayName: 'Yumi Trần',
+          reminderEnabled: true,
+          language: 'vi',
+          createdAt: DateTime(2026, 8, 1),
+          updatedAt: DateTime(2026, 8, 1),
+        ),
+      );
+
+    for (final tab in <(String, Widget)>[
+      ('Hôm nay', const WrHomeScreen()),
+      ('Hiểu mình', const WrDiscoverScreen()),
+      ('Phát triển', const WrGrowthScreen()),
+      ('Hành trình', const WrJourneyScreen()),
+    ]) {
+      testWidgets('${tab.$1} hiện chữ cái đầu của hồ sơ, không phải WR',
+          (tester) async {
+        await tester.pumpWidget(_wrap(tab.$2, repo: repoWithName()));
+        await tester.pumpAndSettle();
+
+        expect(find.text('YT'), findsOneWidget);
+        expect(find.text('WR'), findsNothing);
+      });
+    }
   });
 
   group('WrStoryScreen', () {
