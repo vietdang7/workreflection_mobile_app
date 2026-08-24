@@ -365,6 +365,22 @@ Color eventColor(CareerMemoryEvent e) {
 /// do) coi như không ai thấy. Phần còn lại nằm ở màn riêng.
 const int kJourneyPreviewCount = 5;
 
+/// Tách con số "mảnh ký ức" thành các phần hợp thành nó.
+///
+/// Đọc từ CHÍNH danh sách đang hiển thị chứ không đếm lại từ provider: đếm lại
+/// là mở đúng cái cửa vừa đóng — hai phép đếm theo hai luật rồi lệch nhau, và
+/// dòng giải thích lại thành một con số thứ ba cần giải thích.
+String _memoryBreakdown(List<JourneyEntry> all) {
+  final reflections = all.where((e) => e.label == 'PHẢN TƯ').length;
+  final others = all.length - reflections;
+
+  final parts = StringBuffer('Gồm $reflections lần nhìn lại đã khép');
+  if (others > 0) parts.write(' và $others dấu mốc thực hành');
+  parts.write('. Lần nhìn lại còn dở chưa vào đây, nên con số ở tab Hiểu mình '
+      'có thể lớn hơn.');
+  return parts.toString();
+}
+
 /// Dựng dòng thời gian từ các provider — dùng chung giữa tab Hành trình và màn
 /// Career Memory đầy đủ, để hai nơi không bao giờ liệt kê khác nhau.
 List<JourneyEntry> watchJourneyEntries(WidgetRef ref) {
@@ -452,6 +468,29 @@ class WrJourneyScreen extends ConsumerWidget {
               textAlign: TextAlign.start,
             ),
 
+            // Con số này phải TỰ GIẢI THÍCH, nếu không nó là một con số lạ.
+            //
+            // Khách mở đầu phản hồi 2026-08-24 bằng "dữ liệu trong app chưa
+            // được kết nối với nhau", và đây là ví dụ rõ nhất: màn này nói "21
+            // mảnh ký ức" trong khi tab Hiểu mình ngay bên cạnh nói "15 lần
+            // nhìn lại". Hai con số đo hai thứ khác nhau VÀ lọc khác nhau —
+            // mảnh ký ức gộp cả dấu mốc thực hành nhưng bỏ những lần còn dở,
+            // còn "lần nhìn lại" đếm mọi Episode. Không nơi nào nói ra điều đó,
+            // nên người dùng chỉ còn cách kết luận là app đếm sai.
+            if (all.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              WrParagraph(
+                _memoryBreakdown(all),
+                key: const Key('wr_journey_memory_breakdown'),
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: WrColors.muted,
+                  height: 1.6,
+                ),
+                textAlign: TextAlign.start,
+              ),
+            ],
+
             if (all.isNotEmpty && locked) ...[
               const SizedBox(height: 24),
               const WrPremiumLock(
@@ -524,6 +563,38 @@ class WrJourneyScreen extends ConsumerWidget {
 /// Đây là DIỄN GIẢI nên thuộc Premium (Hai Lớp v1.2 §III). Bản miễn phí thấy
 /// thẻ và biết mình đang bỏ lỡ gì, nhưng không thấy một chữ nào của nội dung —
 /// khác với làm mờ, vì chữ mờ vẫn là chữ đã gửi xuống máy người dùng.
+/// Câu hiện ra khi chưa có bản kể nào.
+///
+/// Bản cũ luôn nói đúng một câu: "Ghi thêm vài lần nữa". Câu đó sai ở hai điểm
+/// cùng lúc — nó không đếm ngược được nên người ghi lần thứ 30 vẫn đọc y hệt
+/// người ghi lần thứ hai, và nó hứa rằng ghi thêm sẽ có, trong khi thứ đứng sau
+/// lời hứa ấy chưa hề tồn tại.
+///
+/// [refresh] null nghĩa là chưa hỏi xong máy chủ — giữ câu trung tính, đừng nói
+/// "chưa đủ" khi chưa biết có đủ hay không.
+///
+/// NÓI RÕ "có chọn tình huống". `wr-narrative` chỉ đếm Episode CÓ
+/// `situation_code` (nó so hai giai đoạn theo tình huống, không có mã thì không
+/// có gì để so), trong khi thẻ Career Health ở tab Hiểu mình đếm MỌI Episode.
+/// Bỏ mấy chữ này là hai màn nói hai con số cho cùng một chữ "lần nhìn lại" —
+/// đúng cái khách gọi tên là "dữ liệu trong app chưa được kết nối với nhau".
+String _waitingLine(WrNarrativeRefresh? refresh) {
+  final needed = refresh?.needed;
+  return switch (refresh?.status) {
+    WrNarrativeStatus.notEnoughData when needed != null && needed > 0 =>
+      'Còn $needed lần nhìn lại có chọn tình huống nữa là WorkReflection kể '
+          'lại được diễn biến của bạn.',
+    WrNarrativeStatus.notEnoughData =>
+      'Chưa đủ dữ liệu để kể lại diễn biến. Ghi thêm vài lần nữa nhé.',
+    // Đã kể rồi mà `latest` rỗng thì bản kể chưa kịp về tới màn — nói vậy còn
+    // hơn nói "chưa đủ dữ liệu", vì dữ liệu thì đủ rồi.
+    WrNarrativeStatus.upToDate =>
+      'Diễn biến của bạn đang được đọc lại. Mở lại tab này sau một lát nhé.',
+    _ => 'Chưa đủ dữ liệu để kể lại diễn biến. Ghi thêm vài lần nữa, '
+        'WorkReflection sẽ chỉ ra điều gì đang đổi.',
+  };
+}
+
 class _NarrativeCard extends ConsumerWidget {
   const _NarrativeCard();
 
@@ -536,6 +607,15 @@ class _NarrativeCard extends ConsumerWidget {
     final canRead =
         entitlement.canUseFeature(WrPremiumFeature.patternAdvanced);
     final latest = narratives.isNotEmpty ? narratives.first.narrative : null;
+
+    // Đánh thức `wr-narrative`. Chỉ `watch` để provider chạy — giá trị dùng
+    // đúng một việc: nói còn thiếu bao nhiêu lần nữa.
+    //
+    // Trước bản 2026-08-24 KHÔNG có dòng này, và cũng không có gì khác trong
+    // toàn hệ thống ghi vào `wr_pattern_narratives`. Thẻ đọc một cái bảng không
+    // ai ghi, nên nó nói "Chưa đủ dữ liệu" mãi mãi, kể cả với người đã để lại
+    // hàng chục mảnh ký ức.
+    final refresh = ref.watch(wrNarrativeRefreshProvider).valueOrNull;
 
     return WrCardNavy(
       key: const Key('wr_journey_narrative_card'),
@@ -566,8 +646,7 @@ class _NarrativeCard extends ConsumerWidget {
             canRead && latest != null
                 ? latest
                 : canRead
-                    ? 'Chưa đủ dữ liệu để kể lại diễn biến. Ghi thêm vài lần '
-                        'nữa, WorkReflection sẽ chỉ ra điều gì đang đổi.'
+                    ? _waitingLine(refresh)
                     : 'Bản đầy đủ kể lại những mẫu hình của bạn đã đổi thế nào '
                         'qua từng giai đoạn, điều gì đang nhạt dần và điều gì '
                         'vẫn quay lại.',

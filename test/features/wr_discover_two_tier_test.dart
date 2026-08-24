@@ -909,7 +909,35 @@ void main() {
       expect(find.text('Tiến độ lần gần nhất: 12/15'), findsOneWidget);
     });
 
-    testWidgets('đúng ngưỡng thì thẻ báo đã mở', (tester) async {
+    testWidgets('còn đang đếm thì nói rõ cái gì được tính là một lần',
+        (tester) async {
+      // Khách 2026-08-24: "chị đã check in 15 lần" nhưng thẻ ghi 14/15. Đơn vị
+      // ở đây là Episode — chỉ sinh ra khi đã CHỌN tình huống — nên chạm ô cảm
+      // xúc rồi rời đi thì lần ấy không vào. Thẻ phải tự nói ra luật đó.
+      final episodes = FakeWrEpisodeRepository()
+        ..seed(_episodes({'sit-01': 14}));
+
+      await _pump(
+        tester,
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: FakeWrIntelligenceRepository(),
+          content: FakeWrContentRepository(),
+          episodes: episodes,
+        ),
+      );
+
+      expect(find.textContaining('Bạn đã nhìn lại 14/15 lần'), findsOneWidget);
+      expect(
+        find.byKey(const Key('wr_discover_career_health_unit_note')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('đúng ngưỡng thì thẻ báo đã mở và có lối đi chạm được',
+        (tester) async {
+      // Lỗi khách báo 2026-08-24: đủ số lần rồi mà "không có nút để click vào
+      // xem bức tranh". Trạng thái đã mở phải mang theo một đường đi thật.
       final episodes = FakeWrEpisodeRepository()
         ..seed(_episodes({'sit-01': 15}));
 
@@ -924,14 +952,32 @@ void main() {
       );
 
       expect(
-        find.textContaining('Bạn đã nhìn lại 15/15 lần'),
+        find.textContaining('Bức tranh tổng thể đã mở'),
         findsOneWidget,
       );
+      // Chưa từng tự đánh giá → ba trụ đọc từ chính hành vi, thẻ phải nói vậy.
+      // Neo vào thẻ: khối SCA phía trên cũng có dòng "Đọc từ 15 lần nhìn lại".
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('wr_discover_career_health')),
+          matching: find.textContaining('15 lần nhìn lại của bạn'),
+        ),
+        findsOneWidget,
+      );
+
+      await tester.tap(
+        find.byKey(const Key('wr_discover_career_health_open')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(find.byType(WrPatternsScreen), findsOneWidget);
     });
 
-    testWidgets('quá ngưỡng thì thẻ Career Health biến mất', (tester) async {
-      // Thẻ này chỉ đo đường tới mốc 15. Đi quá rồi thì "40/15" vừa hết việc
-      // vừa đọc như lỗi hiển thị, nên bỏ hẳn khối đó khỏi màn.
+    testWidgets('quá ngưỡng thì thẻ ở lại nhưng bỏ hẳn phân số',
+        (tester) async {
+      // Bản trước ẩn thẻ khi vượt 15, với lý do "40/15 đọc như lỗi hiển thị".
+      // Lý do đúng với PHÂN SỐ, nhưng cách chữa thì lấy mất luôn lối vào bức
+      // tranh — đúng thứ khách đi tìm. Nay bỏ phân số, giữ thẻ.
       final episodes = FakeWrEpisodeRepository()
         ..seed(_episodes({'sit-01': 16}));
 
@@ -947,7 +993,49 @@ void main() {
 
       expect(
         find.byKey(const Key('wr_discover_career_health')),
-        findsNothing,
+        findsOneWidget,
+      );
+      expect(find.textContaining('16/15'), findsNothing);
+      expect(
+        find.byKey(const Key('wr_discover_career_health_open')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('đã tự đánh giá thì thẻ nói bức tranh đọc từ Self-Check',
+        (tester) async {
+      // Người đã làm Self-Check không dùng đường hành vi (`behaviourShares` chỉ
+      // chạy khi chưa có bản tự đánh giá nào). Thẻ mà vẫn nói "ba trụ giờ đọc
+      // từ N lần nhìn lại" là hứa một thứ đang không xảy ra với chính họ — đây
+      // là trường hợp của khách hôm 24/8.
+      final episodes = FakeWrEpisodeRepository()
+        ..seed(_episodes({'sit-01': 15}));
+      final intel = FakeWrIntelligenceRepository()
+        ..seedSelfCheckHistory([
+          ScaSelfCheckResponse(
+            userId: 'u1',
+            answers: {for (var i = 1; i <= 15; i++) 'q$i': 3},
+            structureScore: 3,
+            cultureScore: 3,
+            activityScore: 3,
+            takenAt: DateTime(2026, 8, 20),
+          ),
+        ]);
+
+      await _pump(
+        tester,
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: intel,
+          content: FakeWrContentRepository(),
+          episodes: episodes,
+        ),
+      );
+
+      expect(find.textContaining('bộ Self-Check'), findsOneWidget);
+      expect(
+        find.byKey(const Key('wr_discover_career_health_open')),
+        findsOneWidget,
       );
     });
 

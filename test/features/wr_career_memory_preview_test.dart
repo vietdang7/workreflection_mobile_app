@@ -12,13 +12,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
+import 'package:workreflection_mobile/core/data/wr_episode_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
+import 'package:workreflection_mobile/core/models/wr_episode.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_journey_screen.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 
 import '../support/fake_wr_content_repository.dart';
+import '../support/fake_wr_episode_repository.dart';
 import '../support/fake_wr_intelligence_repository.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -62,8 +65,10 @@ Widget _wrap({
   required Widget home,
   required List<CareerMemoryEvent> events,
   bool premium = true,
+  List<ReflectionEpisode> episodes = const [],
 }) {
   final content = FakeWrContentRepository()..seedMemoryEvents(events);
+  final episodeRepo = FakeWrEpisodeRepository()..seed(episodes);
   final intel = FakeWrIntelligenceRepository();
   if (premium) {
     intel.seedEntitlement(
@@ -110,6 +115,7 @@ Widget _wrap({
     overrides: [
       wrContentRepositoryProvider.overrideWithValue(content),
       wrIntelligenceRepositoryProvider.overrideWithValue(intel),
+      wrEpisodeRepositoryProvider.overrideWithValue(episodeRepo),
       currentUserIdProvider.overrideWithValue('u1'),
     ],
     child: MaterialApp.router(
@@ -151,6 +157,82 @@ Future<void> _expandAll(WidgetTester tester) async {
 }
 
 void main() {
+  // ---------------------------------------------------------------------------
+  // "Dữ liệu trong app chưa được kết nối với nhau" — câu mở đầu phản hồi của
+  // khách 2026-08-24.
+  //
+  // Dựng lại ĐÚNG dữ liệu của chị trên DB hôm đó: 15 Episode, trong đó 13 đã
+  // khép, cộng 8 dấu mốc thực hành. Tab Hiểu mình nói "15 lần nhìn lại"; tab
+  // này nói "21 mảnh ký ức". Cả hai đều đúng, nhưng không nơi nào nói ra vì sao
+  // chúng khác nhau, nên người dùng chỉ còn cách kết luận là app đếm sai.
+  // ---------------------------------------------------------------------------
+  group('Mảnh ký ức tự giải thích con số của mình', () {
+    List<ReflectionEpisode> episodesFor({required int total, required int closed}) => [
+          for (var i = 1; i <= total; i++)
+            ReflectionEpisode(
+              id: 'ep$i',
+              userId: 'u1',
+              humanMoment: HumanMoment.confusion,
+              state: i <= closed
+                  ? ExperienceState.integrated
+                  : ExperienceState.exploring,
+              situationCode: 'C1-sit-01',
+              openedAt: DateTime(2026, 8, 1).add(Duration(hours: i)),
+              closedAt: DateTime(2026, 8, 1).add(Duration(hours: i)),
+            ),
+        ];
+
+    testWidgets('tách con số thành các phần hợp thành nó', (tester) async {
+      await _pumpTall(
+        tester,
+        _wrap(
+          home: const WrJourneyScreen(),
+          events: _events(8),
+          episodes: episodesFor(total: 15, closed: 13),
+        ),
+      );
+
+      // 13 Episode đã khép + 8 dấu mốc = 21, đúng con số trên ảnh khách gửi.
+      expect(
+        find.text('Bạn đã để lại 21 mảnh ký ức nghề nghiệp.'),
+        findsOneWidget,
+        reason: 'phép cộng phải khớp dữ liệu thật của khách',
+      );
+      expect(
+        find.textContaining('Gồm 13 lần nhìn lại đã khép và 8 dấu mốc'),
+        findsOneWidget,
+      );
+      // Và phải nói thẳng vì sao tab Hiểu mình hiện một con số khác.
+      expect(find.textContaining('tab Hiểu mình'), findsOneWidget);
+    });
+
+    testWidgets('chưa có dấu mốc nào thì không bịa vế thứ hai', (tester) async {
+      await _pumpTall(
+        tester,
+        _wrap(
+          home: const WrJourneyScreen(),
+          events: const [],
+          episodes: episodesFor(total: 6, closed: 6),
+        ),
+      );
+
+      expect(find.textContaining('Gồm 6 lần nhìn lại đã khép.'), findsOneWidget);
+      expect(find.textContaining('dấu mốc thực hành'), findsNothing);
+    });
+
+    testWidgets('chưa có gì thì không hiện dòng giải thích', (tester) async {
+      await _pumpTall(
+        tester,
+        _wrap(home: const WrJourneyScreen(), events: const []),
+      );
+
+      expect(
+        find.byKey(const Key('wr_journey_memory_breakdown')),
+        findsNothing,
+      );
+    });
+  });
+
   group('Tab Hành trình — Career Memory rút gọn', () {
     testWidgets('nhiều hơn ngưỡng thì chỉ hiện $kJourneyPreviewCount mảnh',
         (tester) async {

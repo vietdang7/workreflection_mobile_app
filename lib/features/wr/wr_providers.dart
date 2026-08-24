@@ -293,6 +293,41 @@ final wrPatternNarrativesProvider =
   return repo.fetchPatternNarratives(userId);
 });
 
+/// Xin máy chủ kể lại "Diễn biến theo thời gian" — chạy nền, không chặn tab.
+///
+/// ---------------------------------------------------------------------------
+/// VÌ SAO CÓ PROVIDER NÀY
+/// ---------------------------------------------------------------------------
+///
+/// `wr_pattern_narratives` chỉ được ghi bởi Edge Function `wr-narrative`, và
+/// hàm đó phải có ai gọi. Không có provider này thì bảng vĩnh viễn rỗng và thẻ
+/// navy ở tab Hành trình vĩnh viễn nói "Chưa đủ dữ liệu để kể lại diễn biến" —
+/// đúng lỗi khách báo 2026-08-24 sau 21 mảnh ký ức.
+///
+/// TÁCH KHỎI [wrPatternNarrativesProvider] chứ không gộp vào. Gộp thì mỗi lần
+/// mở tab Hành trình phải chờ một lượt gọi model (tới 60 giây) mới thấy được
+/// nội dung CŨ vốn đã nằm sẵn trong database. Ở đây: nội dung hiện ra ngay, còn
+/// bản kể mới tới sau và thay chữ khi có.
+///
+/// KHÔNG watch [wrPatternNarrativesProvider] — đó là chốt chặn vòng lặp. Provider
+/// này `invalidate` provider kia; nếu nó cũng đọc provider kia thì hai bên đánh
+/// thức nhau vô hạn, mỗi vòng một lượt gọi model trả tiền thật.
+final wrNarrativeRefreshProvider =
+    FutureProvider<WrNarrativeRefresh>((ref) async {
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null) return const WrNarrativeRefresh.unavailable();
+
+  // Diễn giải qua thời gian là Premium (Hai Lớp v1.2 §III). Máy chủ cũng kiểm
+  // tra lại — chặn ở đây chỉ để khỏi tốn một vòng mạng cho câu trả lời đã biết.
+  final entitlement = await ref.watch(wrEntitlementProvider.future);
+  if (!entitlement.isPremium) return const WrNarrativeRefresh.unavailable();
+
+  final repo = ref.watch(wrIntelligenceRepositoryProvider);
+  final result = await repo.refreshPatternNarrative();
+  if (result.generated) ref.invalidate(wrPatternNarrativesProvider);
+  return result;
+});
+
 /// Growth Journey snapshots (Progress, Direction). Hai Lớp v1.2 §III: Paid.
 final wrGrowthSnapshotsProvider =
     FutureProvider<List<GrowthJourneySnapshot>>((ref) async {

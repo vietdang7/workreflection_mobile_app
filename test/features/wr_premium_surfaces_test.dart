@@ -115,6 +115,95 @@ void main() {
       );
     });
 
+    // -----------------------------------------------------------------------
+    // Nguồn ghi của bảng — lỗi khách báo 2026-08-24
+    //
+    // `wr_pattern_narratives` chỉ được ghi bởi Edge Function `wr-narrative`, và
+    // trước bản này không có gì trong app gọi hàm đó. Bảng rỗng vĩnh viễn, nên
+    // khách Premium với 21 mảnh ký ức vẫn đọc "Chưa đủ dữ liệu để kể lại diễn
+    // biến". Ba test dưới đây khoá lại cả ba mặt của đường dây ấy.
+    // -----------------------------------------------------------------------
+
+    testWidgets('Paid: mở màn là xin máy chủ kể lại', (tester) async {
+      final intel = FakeWrIntelligenceRepository()..seedEntitlement(_premium());
+      await tester.pumpWidget(
+          _wrap(const WrJourneyNarrativeScreen(), intel: intel));
+      await tester.pumpAndSettle();
+
+      expect(
+        intel.refreshNarrativeCalls,
+        1,
+        reason: 'không ai gọi `wr-narrative` thì bảng không bao giờ có dòng nào',
+      );
+    });
+
+    testWidgets('Free: KHÔNG gọi máy chủ', (tester) async {
+      // Nội dung này Premium mới đọc được, và mỗi lượt gọi là tiền trả cho
+      // model. Gọi hộ người không được đọc là đốt tiền cho một màn khoá.
+      final intel = FakeWrIntelligenceRepository()..seedEntitlement(null);
+      await tester.pumpWidget(
+          _wrap(const WrJourneyNarrativeScreen(), intel: intel));
+      await tester.pumpAndSettle();
+
+      expect(intel.refreshNarrativeCalls, 0);
+    });
+
+    testWidgets('Paid: máy chủ kể xong thì màn tự thay chữ', (tester) async {
+      // Đường dây đầy đủ: gọi hàm → hàm ghi vào bảng → provider đọc lại → màn
+      // hình đổi. Đứt ở bất kỳ mắt nào là quay về đúng lỗi cũ, nên test đi hết
+      // cả bốn mắt thay vì chỉ khẳng định hàm được gọi.
+      final intel = FakeWrIntelligenceRepository()
+        ..seedEntitlement(_premium())
+        ..nextNarrativeRefresh =
+            const WrNarrativeRefresh(status: WrNarrativeStatus.generated)
+        ..narrativeToGenerate = PatternNarrative(
+          userId: 'u1',
+          narrative: 'Gần đây bạn ít quay lại chuyện họp hành hơn trước.',
+          periodStart: DateTime(2026, 8, 1),
+          periodEnd: DateTime(2026, 8, 24),
+        );
+
+      await tester.pumpWidget(
+          _wrap(const WrJourneyNarrativeScreen(), intel: intel));
+      await tester.pumpAndSettle();
+
+      expect(
+        await _seenWhileScrolling(
+          tester,
+          find.text('Gần đây bạn ít quay lại chuyện họp hành hơn trước.'),
+        ),
+        isTrue,
+      );
+    });
+
+    testWidgets('Paid nhưng chưa đủ: nói còn thiếu bao nhiêu lần',
+        (tester) async {
+      // Câu cũ ("Ghi thêm vài lần nữa") giống hệt nhau ở lần nhìn lại thứ hai
+      // và thứ ba mươi — nó không đếm ngược được, nên không ai biết mình đang ở
+      // đâu trên đường tới đó.
+      final intel = FakeWrIntelligenceRepository()
+        ..seedEntitlement(_premium())
+        ..nextNarrativeRefresh = const WrNarrativeRefresh(
+          status: WrNarrativeStatus.notEnoughData,
+          needed: 2,
+        );
+
+      await tester.pumpWidget(
+          _wrap(const WrJourneyNarrativeScreen(), intel: intel));
+      await tester.pumpAndSettle();
+
+      // "có chọn tình huống" là phần bắt buộc của câu: hàm chỉ đếm Episode có
+      // `situation_code`, còn thẻ Career Health đếm mọi Episode. Thiếu mấy chữ
+      // này là hai màn nói hai con số cho cùng một chữ "lần nhìn lại".
+      expect(
+        await _seenWhileScrolling(
+          tester,
+          find.textContaining('Còn 2 lần nhìn lại có chọn tình huống nữa'),
+        ),
+        isTrue,
+      );
+    });
+
     testWidgets('Paid nhưng chưa có dữ liệu: hiện thông điệp mời quay lại',
         (tester) async {
       final intel = FakeWrIntelligenceRepository()

@@ -290,6 +290,55 @@ void main() {
       expect(h.wr.saveRecentSituationIdsCalls.last.first, shown);
     });
 
+    testWidgets('check-in lần hai luôn mở phiên mới, kể cả khi còn phiên dở',
+        (tester) async {
+      // Khách báo 2026-08-24: "các check in lặp lại 2 lần không được count".
+      //
+      // Đường đi sinh ra lỗi: chọn tình huống xong rồi rời luồng bằng thanh tab
+      // (không phải nút Xong, nên `leave()` không chạy) — phiên vẫn nằm trong
+      // `episodeFlowProvider`. Lần chạm ô cảm xúc kế tiếp bị `wr_step_screen`
+      // kéo thẳng về bước dở của phiên cũ, không Episode nào được mở, và bộ đếm
+      // Career Health đứng yên trong khi người dùng đã check-in hai lần.
+      final h = _Harness();
+      h.content.seedSituations(_someSituations);
+      await _pump(tester, h.app());
+
+      await tester.tap(find.byKey(const Key('wr_home_checkin_tired')));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(Key('wr_situation_${_firstVisibleSituationCode()}')),
+      );
+      await tester.pumpAndSettle();
+      expect(h.episodes.openEpisodeCalls, hasLength(1));
+
+      // Rời luồng bằng thanh tab: không đóng phiên, không gọi `leave()`.
+      GoRouter.of(tester.element(find.byType(WrDetailScreen))).go('/home');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('wr_home_checkin_tired')));
+      await tester.pumpAndSettle();
+
+      // Phải hỏi lại tình huống, không nhảy thẳng vào bước dở của phiên cũ.
+      expect(
+        find.byType(WrStepScreen),
+        findsOneWidget,
+        reason: 'check-in mới phải bắt đầu từ bước chọn tình huống',
+      );
+
+      await tester.tap(
+        find.byKey(Key('wr_situation_${_firstVisibleSituationCode()}')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        h.episodes.openEpisodeCalls,
+        hasLength(2),
+        reason: 'hai lần check-in phải thành hai lần nhìn lại được đếm',
+      );
+      // Phiên cũ không bị xoá — nó vẫn nằm đó để thẻ "Còn dở" mời quay lại.
+      expect(h.episodes.episodes, hasLength(2));
+    });
+
     testWidgets('thoát giữa chừng thì phiên ngủ, không mất', (tester) async {
       final h = _Harness();
       h.content.seedSituations(_someSituations);

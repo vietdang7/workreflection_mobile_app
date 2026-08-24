@@ -349,6 +349,28 @@ class _CheckinTile extends ConsumerWidget {
       onTap: () {
         ref.read(pendingEnergyProvider.notifier).state = option.energy;
         ref.read(pendingMoodProvider.notifier).state = option.mood;
+
+        // Chạm ô cảm xúc là BẮT ĐẦU MỘT LẦN NHÌN LẠI MỚI — buông phiên mà
+        // controller còn đang giữ, trước khi đi tiếp.
+        //
+        // Khách báo 2026-08-24: "các check in lặp lại 2 lần không được count".
+        // Đúng, và đây là chỗ sinh ra nó. Bỏ dở một phiên bằng thanh tab hay
+        // nút Back của hệ thống thì phiên ấy vẫn nằm nguyên trong
+        // `episodeFlowProvider` — chỉ nút "Xong" mới gọi `leave()`. Lần check-in
+        // kế tiếp bị `wr_step_screen` kéo thẳng về bước còn dở của phiên cũ:
+        // không Episode mới, bộ đếm Career Health đứng yên.
+        //
+        // Tệ hơn cả việc đếm thiếu là việc nó KHÔNG NHẤT QUÁN: đóng app rồi mở
+        // lại thì state rỗng và đúng thao tác ấy lại được đếm. Cùng một hành vi,
+        // hai kết quả, không ai đối chiếu được.
+        //
+        // Phiên cũ không mất gì: nó vẫn mở trong DB, và thẻ "Còn dở" ngay dưới
+        // lưới này vẫn mời quay lại — đường đó gọi `resume()` với Episode đọc
+        // thẳng từ `wrOpenEpisodeProvider`, không phụ thuộc state ở đây. Khác
+        // biệt duy nhất: người dùng chọn quay lại phiên cũ, thay vì bị đưa vào
+        // một phiên họ không nhớ mình đang dở.
+        ref.read(episodeFlowProvider.notifier).leave();
+
         ref.read(episodeFlowProvider.notifier).saveCheckin(
               energy: option.energy,
               mood: option.mood,

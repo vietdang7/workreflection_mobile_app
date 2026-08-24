@@ -257,13 +257,23 @@ class WrDiscoverScreen extends ConsumerWidget {
             // đúng điều vừa nói, bằng một hình dạng nặng hơn — và biến màn mời
             // bắt đầu thành màn báo cáo một con số bằng không.
             //
-            // Đi QUÁ ngưỡng thì cũng bỏ luôn: thẻ chỉ có việc đo đường tới mốc
-            // 15, mà "40/15" thì vừa hết việc vừa đọc như lỗi hiển thị. Đúng
-            // mốc (15/15) vẫn giữ một lần để báo tin đã mở, sau đó thôi.
-            if (reflectionCount > 0 &&
-                reflectionCount <= kCareerHealthThreshold) ...[
+            // Qua ngưỡng thì thẻ Ở LẠI, chỉ đổi vai (khách 2026-08-24). Bản
+            // trước ẩn hẳn thẻ khi vượt 15, với lý do "40/15 đọc như lỗi hiển
+            // thị" — lý do đó đúng với PHÂN SỐ, nhưng cách chữa thì sai: nó lấy
+            // đi luôn thứ duy nhất trên màn nói rằng bức tranh đã mở. Khách đủ
+            // 15 lần, thấy thẻ biến mất, và báo lại đúng như vậy: "không có nút
+            // để click vào xem bức tranh". Nay trạng thái đã mở bỏ phân số và
+            // mang một lối đi chạm được.
+            if (reflectionCount > 0) ...[
               const SizedBox(height: 14),
-              _CareerHealthCard(reflectionCount: reflectionCount),
+              _CareerHealthCard(
+                reflectionCount: reflectionCount,
+                // Bức tranh phía trên đọc từ đâu — xem `behaviourShares` ở đầu
+                // `build`. Thẻ phải nói đúng nguồn, nếu không nó hứa một thứ
+                // đang không xảy ra với chính người đang đọc nó.
+                readsFromSelfCheck: latestCheck != null,
+                onOpen: () => context.push('/wr/patterns'),
+              ),
             ],
 
             // ── Lời mời làm Self-Check ──────────────────────────────────
@@ -624,15 +634,53 @@ class _ScaRow extends StatelessWidget {
 // "5/15 Reflection" và bản đầu đếm NGÀY theo đó, nhưng hai con số đo hai đơn vị
 // đứng cách nhau một màn hình thì không ai đoán ra — khách chốt gộp về một.
 //
-// Con số hiện ra KHÔNG bị chặn ở 15: đã nhìn lại 16 lần thì thẻ nói 16/15, vì
-// nói "15/15" là mâu thuẫn ngay với câu "16 lần" bên dưới. Chỉ thanh tiến độ
-// mới chặn — nó không vẽ quá đầy được.
+// Con số hiện ra KHÔNG bị chặn ở 15 khi còn đang đếm: 14/15 là 14/15. Nhưng qua
+// ngưỡng rồi thì thẻ BỎ HẲN phân số — "40/15" không đo gì nữa, nó chỉ đọc như
+// một lỗi hiển thị.
+//
+// ---------------------------------------------------------------------------
+// Hai trạng thái, và vì sao trạng thái đã mở phải có lối đi
+// ---------------------------------------------------------------------------
+//
+// Khách báo 2026-08-24: "chị đã check in 15 lần mà không có nút để click vào
+// xem bức tranh". Hai lỗi nằm chồng lên nhau ở thẻ này:
+//
+//   • Thẻ hứa "bức tranh tổng thể sẽ mở ra" nhưng thứ thật sự mở ra chỉ là
+//     nhãn ba trụ ở khối "Trải nghiệm hiện tại" phía trên, VÀ chỉ với người
+//     chưa từng làm Self-Check (xem `behaviourShares` ở đầu `build`). Người đã
+//     tự đánh giá — như khách — thì đủ 15 lần cũng không có gì đổi trên màn.
+//   • Bản trước còn ẩn luôn thẻ khi vượt ngưỡng, nên đúng lúc "mở ra" thì thứ
+//     duy nhất nói tới bức tranh biến mất khỏi màn hình.
+//
+// Nên: trạng thái đã mở nói ĐÚNG bức tranh đang đọc từ đâu, và luôn mang theo
+// một dòng chạm được dẫn sang danh sách đầy đủ những điều đang trở đi trở lại.
+//
+// ---------------------------------------------------------------------------
+// Đơn vị: một lần nhìn lại ≠ một lần chạm ô cảm xúc
+// ---------------------------------------------------------------------------
+//
+// `reflectionCount` đếm Episode, mà Episode chỉ sinh ra khi người dùng đã CHỌN
+// một tình huống (`wr_step_screen.dart`). Chạm ô cảm xúc rồi thoát ở màn sau thì
+// không có Episode nào — đó chính là chỗ 15 lần check-in của khách hiện ra thành
+// 14. Thẻ phải tự nói ra luật này; để người dùng tự đoán là để họ kết luận app
+// nuốt mất dữ liệu.
 // ---------------------------------------------------------------------------
 
 class _CareerHealthCard extends StatelessWidget {
-  const _CareerHealthCard({required this.reflectionCount});
+  const _CareerHealthCard({
+    required this.reflectionCount,
+    required this.readsFromSelfCheck,
+    required this.onOpen,
+  });
 
   final int reflectionCount;
+
+  /// Khối "Trải nghiệm hiện tại" phía trên đang đọc từ bộ Self-Check, không
+  /// phải từ hành vi. Quyết định câu chữ của trạng thái đã mở.
+  final bool readsFromSelfCheck;
+
+  /// Mở danh sách đầy đủ những điều đang trở đi trở lại.
+  final VoidCallback onOpen;
 
   @override
   Widget build(BuildContext context) {
@@ -662,8 +710,13 @@ class _CareerHealthCard extends StatelessWidget {
           const SizedBox(height: 6),
           WrParagraph(
             unlocked
-                ? 'Bạn đã nhìn lại $reflectionCount/$kCareerHealthThreshold '
-                    'lần. Bức tranh tổng thể đã mở.'
+                ? readsFromSelfCheck
+                    ? 'Bức tranh tổng thể đã mở sau $reflectionCount lần nhìn '
+                        'lại. Ba trụ phía trên đang đọc từ bộ Self-Check bạn tự '
+                        'trả lời — sát hơn số lần nhìn lại, nên nó được ưu tiên.'
+                    : 'Bức tranh tổng thể đã mở. Ba trụ ở "Trải nghiệm hiện tại" '
+                        'phía trên giờ đọc từ chính $reflectionCount lần nhìn '
+                        'lại của bạn.'
                 : 'Bạn đã nhìn lại $reflectionCount/$kCareerHealthThreshold '
                     'lần. Đủ $kCareerHealthThreshold lần, bức tranh tổng thể '
                     'sẽ mở ra.',
@@ -674,11 +727,53 @@ class _CareerHealthCard extends StatelessWidget {
               height: 1.6,
             ),
           ),
-          const SizedBox(height: 12),
-          WrProgressTrack(
-            value: unlocked ? 1 : reflectionCount / kCareerHealthThreshold,
-            color: unlocked ? WrColors.teal : WrColors.coral,
-          ),
+
+          // Còn đang đếm thì nói luôn cái gì được tính — câu hỏi này chỉ có
+          // nghĩa khi người dùng đang nhìn một con số nhỏ hơn kỳ vọng của họ.
+          if (!unlocked) ...[
+            const SizedBox(height: 8),
+            const WrParagraph(
+              'Một lần được tính khi bạn đã chọn một tình huống. Chạm ô cảm xúc '
+              'rồi rời đi thì lần đó chưa vào đây.',
+              key: Key('wr_discover_career_health_unit_note'),
+              style: TextStyle(
+                fontSize: 13.5,
+                color: WrColors.muted,
+                height: 1.55,
+              ),
+            ),
+            const SizedBox(height: 12),
+            WrProgressTrack(
+              value: reflectionCount / kCareerHealthThreshold,
+              color: WrColors.coral,
+            ),
+          ],
+
+          if (unlocked) ...[
+            const SizedBox(height: 4),
+            GestureDetector(
+              key: const Key('wr_discover_career_health_open'),
+              behavior: HitTestBehavior.opaque,
+              onTap: onOpen,
+              child: const Padding(
+                padding: EdgeInsets.symmetric(vertical: 10),
+                child: Row(
+                  children: [
+                    Text(
+                      'Xem những điều đang trở đi trở lại',
+                      style: TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w700,
+                        color: WrColors.navy,
+                      ),
+                    ),
+                    SizedBox(width: 4),
+                    Icon(Icons.arrow_forward, size: 14, color: WrColors.navy),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ],
       ),
     );
