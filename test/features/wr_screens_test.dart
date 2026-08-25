@@ -828,9 +828,12 @@ void main() {
   // Quyết định của khách 2026-07-29: Career Memory khoá HOÀN TOÀN với Free.
   // Bản trước cho xem 10 mục gần nhất rồi mới cắt.
   group('WrJourneyScreen — with events (free user)', () {
-    testWidgets('free không thấy mảnh ký ức nào, chỉ thấy khối khoá', (
+    testWidgets('free: nội dung tuần cũ bị khoá, khối mời mở khoá vẫn ở đó', (
       tester,
     ) async {
+      // Khoá theo TUẦN (mockup v16 `!g.current && !isPremium`). Các mốc dưới
+      // đây đều thuộc tháng 7/2026 — quá khứ so với lúc chạy test — nên toàn bộ
+      // nằm ngoài tuần hiện tại và không chữ nào lọt ra ngoài paywall.
       final content = FakeWrContentRepository();
       content.seedMemoryEvents(
         List.generate(
@@ -842,6 +845,13 @@ void main() {
           ),
         ),
       );
+
+      // Khối mời nằm DƯỚI dòng thời gian (mockup v16), mà ListView dựng lười —
+      // ở khung 600px mặc định nó chưa được dựng, `skipOffstage: false` cũng
+      // không tìm ra thứ chưa tồn tại. Cho khung cao để cả màn nằm trong tầm.
+      tester.view.physicalSize = const Size(1080, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
 
       await tester.pumpWidget(_wrap(const WrJourneyScreen(), content: content));
       await tester.pumpAndSettle();

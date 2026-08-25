@@ -244,19 +244,23 @@ void main() {
       expect(_visibleEntries(tester, 38), kJourneyPreviewCount);
     });
 
-    testWidgets('hiện nút xem tất cả kèm tổng số và số còn lại', (tester) async {
+    testWidgets('hiện nút xem toàn bộ kèm số mảnh còn lại', (tester) async {
       await _pumpTall(
         tester,
         _wrap(home: const WrJourneyScreen(), events: _events(38)),
       );
 
       expect(find.byKey(const Key('wr_journey_memory_see_all')), findsOneWidget);
-      expect(find.text('Xem tất cả 38 mảnh ký ức'), findsOneWidget);
-      expect(find.text('Còn 33 mảnh nữa'), findsOneWidget);
+      expect(find.text('Xem toàn bộ Career Memory'), findsOneWidget);
+      // 38 − 4 = 34. Thẻ xem trước lấy BỐN mục gần nhất, đúng mockup v16 §8.1
+      // ("thẻ xem trước lấy 4 mục gần nhất"); bản trước lấy 5.
+      expect(find.text('Còn 34 mảnh nữa'), findsOneWidget);
     });
 
-    testWidgets('vừa đúng ngưỡng thì không có nút — không giấu gì cả',
-        (tester) async {
+    // Changelog 24/08 §8.1: nút này giờ LUÔN hiện. Trước đây nó biến mất khi
+    // màn đã bày hết, và người có đúng vài mảnh ký ức không bao giờ thấy lối
+    // sang màn đầy đủ — nơi duy nhất có bộ lọc theo loại.
+    testWidgets('vừa đúng ngưỡng vẫn còn lối sang màn đầy đủ', (tester) async {
       await _pumpTall(
         tester,
         _wrap(
@@ -266,11 +270,15 @@ void main() {
       );
 
       expect(_visibleEntries(tester, kJourneyPreviewCount), kJourneyPreviewCount);
-      expect(find.byKey(const Key('wr_journey_memory_see_all')), findsNothing);
+      expect(find.byKey(const Key('wr_journey_memory_see_all')), findsOneWidget);
+      expect(find.text('Lọc theo loại, mở rộng từng mảnh'), findsOneWidget);
     });
 
-    testWidgets('bản miễn phí vẫn bị khoá, không lòi nút xem tất cả',
+    testWidgets('bản miễn phí thấy dòng thời gian, vẫn có khối mời mở khoá',
         (tester) async {
+      // Mockup v16 khoá theo TUẦN: `!g.current && !state.isPremium`. Quyết định
+      // 2026-07-29 ("khoá hoàn toàn với Free") bị bản 24/08 thay thế — dựng một
+      // khung trống rồi mời trả tiền thì không ai biết mình đang mua gì.
       await _pumpTall(
         tester,
         _wrap(
@@ -281,8 +289,13 @@ void main() {
       );
 
       expect(find.byKey(const Key('wr_journey_memory_lock')), findsOneWidget);
-      expect(find.byKey(const Key('wr_journey_memory_see_all')), findsNothing);
-      expect(_visibleEntries(tester, 38), 0);
+      expect(
+        find.byKey(const Key('wr_journey_memory_see_all')),
+        findsOneWidget,
+      );
+      // Dòng thời gian có mặt; những tuần cũ hiện dưới dạng đã khoá.
+      expect(find.textContaining('THÁNG '), findsWidgets);
+      expect(find.text('Nội dung đã khoá'), findsWidgets);
     });
 
     testWidgets('bấm nút thì sang màn Career Memory đầy đủ', (tester) async {
@@ -294,7 +307,10 @@ void main() {
       await tester.tap(find.byKey(const Key('wr_journey_memory_see_all')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Tất cả 38 mảnh ký ức'), findsOneWidget);
+      expect(
+        find.text('Bạn đã để lại 38 mảnh ký ức nghề nghiệp.'),
+        findsOneWidget,
+      );
     });
   });
 
@@ -398,8 +414,10 @@ void main() {
       await tester.tap(chip);
       await tester.pumpAndSettle();
 
-      expect(find.text('Tất cả 7 mảnh ký ức'), findsOneWidget);
-      await _expandAll(tester);
+      expect(
+        find.text('Bạn đã để lại 7 mảnh ký ức nghề nghiệp.'),
+        findsOneWidget,
+      );
       expect(find.text('Nhận ra 1'), findsOneWidget);
     });
 
@@ -412,8 +430,11 @@ void main() {
       expect(find.byKey(const Key('wr_career_memory_filter_bar')), findsNothing);
     });
 
-    testWidgets('bản miễn phí bị khoá — mở thẳng đường dẫn không đi vòng được',
+    testWidgets('bản miễn phí: tuần cũ khoá nội dung, khối mời vẫn ở đó',
         (tester) async {
+      // `_events(38)` trải ngược về quá khứ từ hôm nay, nên phần lớn nằm ngoài
+      // tuần hiện tại. Mockup v16 khoá NỘI DUNG những tuần đó, không xoá chúng
+      // khỏi màn: người dùng vẫn thấy mình đã để lại bao nhiêu.
       await _pumpTall(
         tester,
         _wrap(
@@ -424,7 +445,12 @@ void main() {
       );
 
       expect(find.byKey(const Key('wr_career_memory_lock')), findsOneWidget);
-      expect(_visibleEntries(tester, 38), 0);
+      expect(find.text('Nội dung đã khoá'), findsWidgets);
+      // Con số tổng vẫn nói ra — đó là việc của chính người dùng đã làm.
+      expect(
+        find.text('Bạn đã để lại 38 mảnh ký ức nghề nghiệp.'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('chưa có mảnh nào thì nói rõ, không để trang trắng',
