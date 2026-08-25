@@ -1,11 +1,13 @@
-// Coverage test — assets/seed/wr_mood_content.json phải khớp bản toàn văn
-// Thư viện Nội dung Cảm xúc v2 (Cloud & Coral, 28/07/2026), theo Mục VIII
-// Kiến trúc Dữ liệu Hai Lớp.
+// Coverage test — assets/seed/wr_mood_content.json phải khớp hai nguồn nội dung
+// đang hợp lệ cùng lúc:
 //
-// Nguồn spec: ~/Desktop/FileTam/workreflection/
-//             WorkReflection_HealingLibrary_ToanVan_v2.md
-// Bóc bằng tool/extract_wr_mood_readings.py, dịch sang SQL bằng
-// tool/gen_wr_mood_content_sql.py.
+//   · 20 bài của bốn nhóm cũ  → WorkReflection_HealingLibrary_ToanVan_v2.md
+//                               (Cloud & Coral, 28/07, biên tập xong 04/08)
+//   · 10 bài của hai nhóm mới → WorkReflection_Sprint2_Mockup_v16.html
+//                               `CONTENT_LIBRARY` (changelog 24/08 §3, §4)
+//
+// Bóc bằng tool/extract_wr_mood_readings.py và tool/extract_wr_mood_readings_v3.py,
+// dịch sang SQL bằng tool/gen_wr_mood_content_sql.py.
 //
 // Vì sao cần test này: seed JSON là nguồn chuẩn, còn khối SQL trong migration
 // chỉ là bản dịch. Sai ở JSON thì sai xuống tận cơ sở dữ liệu mà không màn hình
@@ -17,7 +19,12 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 
-const _moods = ['stress', 'tired', 'ok', 'happy'];
+/// Sáu nhóm, đúng thứ tự lưới check-in ở Home (`kCheckinOptions`).
+const _moods = ['stress', 'tired', 'foggy', 'outofsync', 'ok', 'happy'];
+
+/// Hai nhóm thêm 25/08/2026. Nội dung lấy nguyên văn từ mockup và changelog §4
+/// ghi rõ chúng CÒN LÀ NHÁP, chưa qua biên tập lần cuối.
+const _draftMoods = ['foggy', 'outofsync'];
 
 void main() {
   late List<Map<String, dynamic>> rows;
@@ -32,9 +39,11 @@ void main() {
   });
 
   group('Thư viện Nội dung Cảm xúc — seed', () {
-    test('đủ 20 bài đọc, 5 bài mỗi cảm xúc', () {
+    test('đủ 30 bài đọc, 5 bài mỗi cảm xúc', () {
+      // §4: "Hoàn thiện toàn văn cho cả 30 bài (5 bài × 6 mood, gồm cả 2 mood
+      // mới ở mục 3)".
       final readings = rows.where((r) => r['type'] == 'reading').toList();
-      expect(readings.length, 20);
+      expect(readings.length, 30);
       for (final mood in _moods) {
         expect(
           readings.where((r) => r['mood'] == mood).length,
@@ -44,9 +53,18 @@ void main() {
       }
     });
 
+    test('không còn mục HEALING AUDIO nào', () {
+      // §4: "Chuyển toàn bộ mục trước đây là HEALING AUDIO sang BÀI ĐỌC — vì
+      // giai đoạn hiện tại chỉ sản xuất được nội dung dạng bài đọc, chưa thu
+      // âm." Ba mục âm thanh nền thuần tuý (mưa, nhạc tập trung, nhạc ăn mừng)
+      // không chuyển được nên bị bỏ hẳn, đúng ghi chú cho dev trong §4.
+      expect(rows.where((r) => r['type'] == 'audio'), isEmpty);
+      expect(rows.where((r) => r['kind'] == 'HEALING AUDIO'), isEmpty);
+    });
+
     test('bài đọc chiếm sort_order 1..5 của mỗi nhóm', () {
-      // Home hiện đúng mục ĐẦU nhóm (§8.3). Nếu một mục audio còn nháp lọt lên
-      // slot 1, bản release lọc nó đi (§XII.3) và Home mất hẳn thẻ gợi ý.
+      // Home hiện đúng mục ĐẦU nhóm (§8.3). Slot 1 phải luôn là một bài đọc
+      // thật, nếu không bản release lọc nó đi và Home mất hẳn thẻ gợi ý.
       for (final mood in _moods) {
         final orders = ofMood(mood)
             .where((r) => r['type'] == 'reading')
@@ -69,57 +87,110 @@ void main() {
       }
     });
 
-    test('mọi bài đọc đã biên tập xong, phát hành được', () {
-      for (final r in rows.where((r) => r['type'] == 'reading')) {
+    test('cả 30 bài đều phát hành được, không còn cờ nháp', () {
+      // §4, ghi chú cho dev: "Toàn bộ 30 bài vẫn giữ cờ placeholder:true...
+      // Nếu chốt xong nội dung, cần đổi cờ này thành false trước khi lên bản
+      // chính thức."
+      //
+      // Owner chốt 25/08: đổi thành false ngay. Lý do là một ràng buộc của
+      // chính app chứ không phải sốt ruột — `MoodContent.releasable` LỌC BỎ mọi
+      // mục còn nháp ở bản release (§XII.3). Giữ cờ nháp thì hai ô check-in mới
+      // lên store thành hai ô bấm vào không có bài nào, tức §3 và §4 triệt tiêu
+      // nhau. Nội dung 10 bài đã đủ toàn văn nên điều kiện "chốt xong nội dung"
+      // đã thoả.
+      for (final r in rows) {
         expect(
           r['placeholder'],
           false,
-          reason: '${r['title']}: bài đọc toàn văn không còn là nháp',
+          reason: '${r['title']}: còn cờ nháp thì bản release sẽ lọc mất',
         );
       }
     });
 
     test('bài đọc là toàn văn, không phải đoạn giới thiệu', () {
-      // Tài liệu quy định 3 phút = 350–450 từ, 4 phút = 450–550 từ. Ngưỡng 250
-      // đủ rộng để không vỡ vì biên tập lặt vặt, nhưng vẫn chặn được trường hợp
-      // body tụt về một đoạn tóm tắt hai câu như bản seed cũ.
-      for (final r in rows.where((r) => r['type'] == 'reading')) {
+      // Hai ngưỡng khác nhau vì hai nguồn viết theo hai độ dài khác nhau:
+      //   · nhóm cũ  — tài liệu quy định 3 phút = 350–450 từ, 4 phút = 450–550
+      //   · nhóm mới — mockup viết loại 2–3 phút, khoảng 170–200 từ
+      // Ngưỡng ở đây chỉ để bắt body tụt về một đoạn tóm tắt hai câu như bản
+      // seed đầu tiên, không phải để áp một độ dài tối thiểu lên nội dung.
+      for (final r in rows) {
         final words = (r['body'] as String).split(RegExp(r'\s+')).length;
+        final floor = _draftMoods.contains(r['mood']) ? 140 : 250;
         expect(
           words,
-          greaterThan(250),
+          greaterThan(floor),
           reason: '${r['title']}: chỉ $words từ, nghi là bản tóm tắt',
         );
       }
     });
 
+    test('10 bài nhóm mới kết bằng câu hỏi mở', () {
+      // §4: "kết bằng một câu hỏi mở thay vì câu mệnh lệnh (đúng nguyên tắc
+      // brand: nội dung luôn kết bằng câu hỏi mở)".
+      for (final r in rows.where((r) => _draftMoods.contains(r['mood']))) {
+        expect(
+          (r['body'] as String).trimRight().endsWith('?'),
+          isTrue,
+          reason: r['title'] as String,
+        );
+      }
+    });
+
+    test('bài mẫu gốc đã được chỉnh câu kết', () {
+      // §4 nêu ĐÍCH DANH bài này: "Bài mẫu gốc 'Khi áp lực đến từ việc muốn
+      // kiểm soát mọi thứ' cũng được chỉnh lại câu kết cho khớp nguyên tắc
+      // này." Đối chiếu với mockup v16 thì sửa đổi gồm đúng hai chỗ: một dấu
+      // hai chấm đổi thành dấu phẩy, và một câu hỏi mở nối vào cuối.
+      final r = rows.firstWhere(
+        (r) => r['title'] == 'Khi áp lực đến từ việc muốn kiểm soát mọi thứ',
+      );
+      final body = r['body'] as String;
+      expect(
+        body.trimRight(),
+        endsWith(
+          'Trong những điều đang khiến bạn lo lắng lúc này, đâu là phần bạn '
+          'thực sự có thể tác động?',
+        ),
+      );
+      expect(body, contains('Một ví dụ nhỏ và quen thuộc, khi giao'));
+    });
+
+    test('19 bài còn lại của bốn nhóm cũ vẫn kết bằng câu khẳng định', () {
+      // ĐANG CHỜ ĐỘI NỘI DUNG QUYẾT, không phải một khẳng định rằng như vậy là
+      // đúng.
+      //
+      // §4 phát biểu nguyên tắc brand ở dạng phổ quát ("nội dung luôn kết bằng
+      // câu hỏi mở") nhưng chỉ ghi lại MỘT bài đã được chỉnh. 19 bài toàn văn
+      // còn lại, bóc từ HealingLibrary_ToanVan_v2.md, đều kết bằng câu khẳng
+      // định. Tự viết thêm 19 câu hỏi kết là viết nội dung mới rồi phát hành
+      // dưới danh nghĩa bản đã duyệt — việc đó thuộc đội nội dung.
+      //
+      // Test này khoá con số 19 lại để khi nào đội nội dung chỉnh xong, người
+      // sửa buộc phải đi qua đây và cập nhật, thay vì nguyên tắc brand cứ trôi
+      // đi trong im lặng.
+      final open = rows
+          .where((r) => (r['body'] as String).trimRight().endsWith('?'))
+          .length;
+      expect(
+        open,
+        11,
+        reason: '10 bài nhóm mới + 1 bài mẫu gốc đã chỉnh. Nếu con số này tăng '
+            'nghĩa là đội nội dung đã chỉnh thêm — cập nhật lại test.',
+      );
+    });
+
     test('bài đọc không mang kịch bản lồng tiếng', () {
-      // §8.1: cột script chỉ dành cho HEALING AUDIO. Ràng buộc này cũng có ở
-      // tầng cơ sở dữ liệu, nhưng chặn từ seed thì không phải chờ tới lúc
-      // migration đổ vỡ mới biết.
-      for (final r in rows.where((r) => r['type'] == 'reading')) {
+      // §8.1: cột script chỉ dành cho HEALING AUDIO. Không còn hàng audio nào
+      // thì cũng không được còn script nào.
+      for (final r in rows) {
         expect(r['script'], isNull, reason: r['title'] as String);
       }
     });
 
     test('nhãn kind khớp với type', () {
       for (final r in rows) {
-        expect(
-          r['kind'],
-          r['type'] == 'reading' ? 'BÀI ĐỌC' : 'HEALING AUDIO',
-          reason: r['title'] as String,
-        );
-      }
-    });
-
-    test('mục audio còn nguyên, vẫn ở trạng thái chờ thu âm', () {
-      // Khách chốt: audio cập nhật sau. Giữ 10 mục phụ lục để kịch bản lồng
-      // tiếng đã viết không mất, và để luồng audio còn đường thử trên bản debug.
-      final audios = rows.where((r) => r['type'] == 'audio').toList();
-      expect(audios.length, 10);
-      for (final r in audios) {
-        expect(r['placeholder'], true, reason: r['title'] as String);
-        expect(r['sort_order'] as int, greaterThan(5), reason: r['title'] as String);
+        expect(r['kind'], 'BÀI ĐỌC', reason: r['title'] as String);
+        expect(r['type'], 'reading', reason: r['title'] as String);
       }
     });
 

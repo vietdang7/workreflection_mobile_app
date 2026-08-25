@@ -62,7 +62,7 @@
     "career_stages": [],
     "difficulty_level": null,
     "story_content": "Bạn hoàn thành mọi việc cần làm.\nNhưng cuối tuần nhìn lại.\nBạn khó trả lời câu hỏi:\n\"Tuần này mình đã tạo ra điều gì có ý nghĩa?\"",
-    "reflection_question": "Điều gì làm bạn cảm thấy công việc của mình đáng để tiếp tục?",
+    "reflection_question": "Nếu cố tìm, điều gì trong tuần này có thể là một phần ý nghĩa mà bạn chưa kịp nhận ra?",
     "self_reflection": "Lần gần nhất bạn cảm thấy tự hào về công việc là khi nào?",
     "aha_message": "Động lực bền vững thường đến từ ý nghĩa chứ không chỉ từ thành tích.",
     "practice_action": "Ghi lại một khoảnh khắc bạn cảm thấy công việc của mình tạo ra giá trị."
@@ -126,7 +126,7 @@
     "career_stages": [],
     "difficulty_level": null,
     "story_content": "Lịch làm việc của bạn kín hơn bao giờ hết.\nNhưng khi nhìn lại 6 tháng qua.\nBạn không chắc mình đang trưởng thành hay chỉ đang làm nhiều hơn.",
-    "reflection_question": "Điều gì cho bạn thấy mình đang phát triển?",
+    "reflection_question": "Nếu cố tìm, điều gì có thể là một dấu hiệu nhỏ cho thấy bạn đang trưởng thành, dù chưa thật rõ ràng?",
     "self_reflection": "Bạn học được điều gì mới trong 90 ngày gần đây?",
     "aha_message": "Khối lượng công việc không phải lúc nào cũng phản ánh sự phát triển.",
     "practice_action": "Ghi lại 3 kỹ năng bạn đã cải thiện trong năm nay."
@@ -516,7 +516,7 @@
     "career_stages": [],
     "difficulty_level": null,
     "story_content": "Bạn làm rất nhiều.\nNhưng khi nhìn lại 6 tháng qua.\nBạn không biết mình đã thay đổi điều gì.",
-    "reflection_question": "Nếu phải kể một thay đổi tích cực của mình trong năm nay, bạn sẽ kể điều gì?",
+    "reflection_question": "Nếu cố nhớ lại, điều gì có thể là một thay đổi nhỏ mà bạn đã không để ý?",
     "self_reflection": "Bạn đang đo sự phát triển bằng điều gì?",
     "aha_message": "Những điều không được ghi nhận thường rất khó được nhìn thấy.",
     "practice_action": "Ghi lại 3 điều bạn làm tốt hơn so với 6 tháng trước."
@@ -2165,8 +2165,8 @@
     "career_stages": [],
     "difficulty_level": null,
     "story_content": "Tôi đã lo lắng trước khi bắt đầu.\nDeadline gấp.\nYêu cầu không rõ ràng lúc đầu.\nNhưng tôi đã hoàn thành, và kết quả tốt hơn tôi nghĩ.",
-    "reflection_question": "Điều gì đã giúp tôi vượt qua được việc này?",
-    "self_reflection": "Tôi có thường dừng lại để ghi nhận những lúc mình làm tốt không?",
+    "reflection_question": "Điều gì đã giúp bạn vượt qua được việc này?",
+    "self_reflection": "Bạn có thường dừng lại để ghi nhận những lúc mình làm tốt không?",
     "aha_message": "Thành công dễ trôi qua nhanh hơn khó khăn trong trí nhớ. Dừng lại một chút để giữ nó lại cũng là một hình thức phản chiếu.",
     "practice_action": "Ghi lại điều cụ thể tôi đã làm đúng trong việc này, để lần sau có thể lặp lại."
   },
@@ -2188,8 +2188,8 @@
     "career_stages": [],
     "difficulty_level": null,
     "story_content": "Tôi không mong đợi điều đó.\nNhưng trong một cuộc trò chuyện ngắn, quản lý của tôi nói rằng họ đánh giá cao cách tôi xử lý công việc gần đây.",
-    "reflection_question": "Lời ghi nhận đó chạm vào điều gì ở tôi?",
-    "self_reflection": "Tôi có tin vào điều đó, hay có phần nào trong tôi vẫn nghi ngờ?",
+    "reflection_question": "Lời ghi nhận đó chạm vào điều gì ở bạn?",
+    "self_reflection": "Bạn có tin vào điều đó, hay có phần nào trong bạn vẫn nghi ngờ?",
     "aha_message": "Ghi nhận từ người khác có giá trị, nhưng ý nghĩa thật sự đến khi tôi cũng tự công nhận điều đó cho chính mình.",
     "practice_action": "Viết lại chính xác lời ghi nhận đó, và một câu tôi tự nói với mình để giữ lại cảm giác này."
   },
@@ -2212,7 +2212,7 @@
     "career_stages": [],
     "difficulty_level": null,
     "story_content": "Họ đã mắc kẹt một thời gian.\nTôi không có câu trả lời hoàn hảo, nhưng đặt vài câu hỏi và cùng họ nhìn lại vấn đề.\nCuối cùng họ tự tìm ra hướng đi.",
-    "reflection_question": "Điều gì khiến tôi sẵn sàng dừng lại để giúp, dù có thể mình cũng đang bận?",
+    "reflection_question": "Điều gì khiến bạn sẵn sàng dừng lại để giúp, dù có thể mình cũng đang bận?",
     "self_reflection": "Cảm giác sau khi giúp được ai đó khác gì với việc tự mình hoàn thành một việc?",
     "aha_message": "Đôi khi giá trị lớn nhất mình mang lại không phải là câu trả lời, mà là sự có mặt đủ lâu để người khác tự tìm ra câu trả lời của họ.",
     "practice_action": "Nhắn cho người đó một câu hỏi thăm xem hướng đi đó có thực sự hiệu quả không."
@@ -2235,8 +2235,8 @@
     "career_stages": [],
     "difficulty_level": null,
     "story_content": "Sau một thời gian dài làm việc, điều đó cuối cùng cũng đến.\nTôi vui, nhưng cũng có chút ngỡ ngàng, như thể chưa kịp tin.",
-    "reflection_question": "Điều gì trong hành trình vừa qua khiến tôi xứng đáng với điều này?",
-    "self_reflection": "Tôi có đang cho phép mình thật sự vui với điều này không, hay đã vội nghĩ đến áp lực tiếp theo?",
+    "reflection_question": "Điều gì trong hành trình vừa qua đã dẫn bạn đến điều này?",
+    "self_reflection": "Bạn có đang cho phép mình thật sự vui với điều này không, hay đã vội nghĩ đến áp lực tiếp theo?",
     "aha_message": "Kết quả tốt thường kéo theo kỳ vọng mới rất nhanh. Nhưng cho phép mình dừng lại ăn mừng cũng là một phần của hành trình, không phải sự xao nhãng.",
     "practice_action": "Làm một điều nhỏ để tự thưởng cho mình trước khi nghĩ đến bước tiếp theo."
   },
@@ -2257,8 +2257,8 @@
     "career_stages": [],
     "difficulty_level": null,
     "story_content": "Tôi không nghĩ việc mình làm đáng để nhắc đến.\nNhưng ai đó chủ động nói lời cảm ơn, và điều đó khiến tôi bất ngờ.",
-    "reflection_question": "Việc gì tôi làm mà tưởng là nhỏ, nhưng lại có ý nghĩa với người khác?",
-    "self_reflection": "Tôi có hay đánh giá thấp những đóng góp thầm lặng của chính mình không?",
+    "reflection_question": "Việc gì bạn làm mà tưởng là nhỏ, nhưng lại có ý nghĩa với người khác?",
+    "self_reflection": "Bạn có hay đánh giá thấp những đóng góp thầm lặng của chính mình không?",
     "aha_message": "Những điều mình cho là bình thường đôi khi lại là điều người khác nhớ lâu nhất.",
     "practice_action": "Ghi lại việc đó, để nhắc mình rằng những đóng góp nhỏ vẫn có giá trị thật."
   },
@@ -2279,8 +2279,8 @@
     "career_stages": [],
     "difficulty_level": null,
     "story_content": "Không có gì bất ngờ.\nKhông có khủng hoảng.\nMọi việc tôi lên kế hoạch đều diễn ra như dự tính.",
-    "reflection_question": "Những ngày như thế này có thường xảy ra với tôi không?",
-    "self_reflection": "Tôi có coi trọng những ngày ổn định, hay chỉ chú ý khi có chuyện xảy ra?",
+    "reflection_question": "Những ngày như thế này có thường xảy ra với bạn không?",
+    "self_reflection": "Bạn có coi trọng những ngày ổn định, hay chỉ chú ý khi có chuyện xảy ra?",
     "aha_message": "Sự ổn định thường bị xem là hiển nhiên, trong khi nó là kết quả của rất nhiều điều đã được làm đúng phía sau.",
     "practice_action": "Ghi lại một điều đã góp phần khiến hôm nay suôn sẻ."
   },
@@ -2302,8 +2302,8 @@
     "career_stages": [],
     "difficulty_level": null,
     "story_content": "Tôi không chạy theo deadline.\nTôi biết việc gì cần làm trước, việc gì có thể chờ.\nCảm giác này khá hiếm.",
-    "reflection_question": "Điều gì khác biệt hôm nay so với những ngày tôi cảm thấy bị cuốn đi?",
-    "self_reflection": "Tôi có thể giữ được nhịp độ này trong bao lâu?",
+    "reflection_question": "Điều gì khác biệt hôm nay so với những ngày bạn cảm thấy bị cuốn đi?",
+    "self_reflection": "Bạn có thể giữ được nhịp độ này trong bao lâu?",
     "aha_message": "Làm chủ nhịp độ không có nghĩa là làm ít hơn, mà là biết điều gì thực sự cần sự chú ý của mình lúc này.",
     "practice_action": "Ghi lại cách tôi đã sắp xếp công việc hôm nay, để thử lặp lại vào ngày khác."
   },
@@ -2325,8 +2325,8 @@
     "career_stages": [],
     "difficulty_level": null,
     "story_content": "Không phải điều gì lớn lao.\nNhưng nó giúp tôi làm một việc quen thuộc theo cách hiệu quả hơn.",
-    "reflection_question": "Điều nhỏ này có thể thay đổi cách tôi làm việc về lâu dài không?",
-    "self_reflection": "Tôi có thường bỏ qua những bài học nhỏ vì chúng không đủ lớn để ghi nhớ không?",
+    "reflection_question": "Điều nhỏ này có thể thay đổi cách bạn làm việc về lâu dài không?",
+    "self_reflection": "Bạn có thường bỏ qua những bài học nhỏ vì chúng không đủ lớn để ghi nhớ không?",
     "aha_message": "Phần lớn sự tiến bộ không đến từ những bước ngoặt lớn, mà từ rất nhiều điều nhỏ được tích lũy.",
     "practice_action": "Viết lại điều mình vừa học, bằng chính lời của mình."
   },
@@ -2349,7 +2349,7 @@
     "difficulty_level": null,
     "story_content": "Không phải một cuộc họp quan trọng.\nChỉ là một cuộc trò chuyện ngắn, nhưng tôi rời đi với cảm giác dễ chịu.",
     "reflection_question": "Điều gì khiến cuộc trò chuyện đó khác với những cuộc trao đổi thường ngày?",
-    "self_reflection": "Tôi có đang dành đủ thời gian cho những kết nối như vậy không?",
+    "self_reflection": "Bạn có đang dành đủ thời gian cho những kết nối như vậy không?",
     "aha_message": "Những mối quan hệ tốt trong công việc thường không được xây từ những cuộc họp lớn, mà từ rất nhiều cuộc trò chuyện nhỏ như thế này.",
     "practice_action": "Chủ động tạo thêm một cuộc trò chuyện tương tự trong tuần này."
   },
@@ -2370,8 +2370,8 @@
     "career_stages": [],
     "difficulty_level": null,
     "story_content": "Nếu phải kể lại, tôi sẽ không nhớ nhiều chi tiết.\nNhưng cảm giác chung là nhẹ nhàng, không có gì đè nặng.",
-    "reflection_question": "Tôi có công nhận những ngày không có gì đặc biệt này không, hay chỉ nhớ những ngày nhiều biến động?",
-    "self_reflection": "Điều gì đang diễn ra tốt mà tôi ít khi để ý tới?",
+    "reflection_question": "Bạn có công nhận những ngày không có gì đặc biệt này không, hay chỉ nhớ những ngày nhiều biến động?",
+    "self_reflection": "Điều gì đang diễn ra tốt mà bạn ít khi để ý tới?",
     "aha_message": "Không phải mọi trải nghiệm đáng ghi nhớ đều kịch tính. Đôi khi sự bình yên cũng là một dữ liệu quan trọng.",
     "practice_action": "Ghi một câu ngắn về cảm giác hôm nay, dù không có gì đặc biệt để kể."
   }

@@ -4,10 +4,10 @@
 // Mở từ "Xem thêm gợi ý trong thư viện" ở Home. Chỉ liệt kê nhóm ĐÚNG cảm xúc
 // vừa check-in (khách chốt 2026-07-29): "nút xem thêm gợi ý trong thư viện thì
 // nó cũng hiển thị theo cảm xúc của khách hàng chọn thôi chứ không hiển thị hết
-// 1 list như vậy". Đang mệt mà phải lướt qua bốn nhóm mới tới nhóm của mình là
+// 1 list như vậy". Đang mệt mà phải lướt qua năm nhóm mới tới nhóm của mình là
 // bắt người ta làm việc đúng lúc họ ít sức nhất.
 //
-// Chưa check-in (vào bằng đường khác) thì mới bày cả bốn nhóm — lúc đó không có
+// Chưa check-in (vào bằng đường khác) thì mới bày cả sáu nhóm — lúc đó không có
 // cảm xúc nào để lọc, giấu bớt là giấu mất nội dung.
 //
 // §8.3: MIỄN PHÍ toàn bộ, không phân lớp Free/Paid. Không có khoá, không có
@@ -24,13 +24,11 @@ import '../../../core/widgets/eyebrow.dart';
 import '../mood_content_providers.dart';
 import '../wr_providers.dart';
 
-/// Thứ tự nhóm cố định, khớp thứ tự bốn ô check-in ở Home.
-const List<Mood> kMoodLibraryOrder = [
-  Mood.stressed,
-  Mood.tired,
-  Mood.okay,
-  Mood.happy,
-];
+/// Thứ tự nhóm cố định, khớp thứ tự sáu ô check-in ở Home
+/// (`kCheckinOptions`). Đọc từ `Mood.values` chứ không liệt kê tay: enum đã
+/// khai đúng thứ tự đó, và chép lại một lần nữa ở đây là mở đường cho hai danh
+/// sách lệch nhau lần tới có thêm cảm xúc.
+const List<Mood> kMoodLibraryOrder = Mood.values;
 
 class WrMoodLibraryScreen extends ConsumerWidget {
   const WrMoodLibraryScreen({super.key});
