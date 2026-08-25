@@ -136,7 +136,14 @@ void main() {
       await tester.pumpAndSettle();
 
       // Home → chạm ô cảm xúc → THẲNG vào bước chọn tình huống.
-      await tester.tap(find.byKey(Key('wr_home_checkin_${option.id}')));
+      //
+      // Cuộn tới trước khi chạm: từ changelog 24/08 §3 lưới có SÁU ô xếp ba
+      // hàng, và §5 thêm hình minh hoạ mở đầu phía trên — hai hàng dưới nằm
+      // ngoài khung 600px mặc định của flutter_test.
+      final cell = find.byKey(Key('wr_home_checkin_${option.id}'));
+      await tester.ensureVisible(cell);
+      await tester.pumpAndSettle();
+      await tester.tap(cell);
       await tester.pumpAndSettle();
 
       expect(find.byType(WrStepScreen), findsOneWidget,
@@ -184,14 +191,31 @@ void main() {
       await tester.tap(find.byKey(const Key('wr_flow_primary')));
       await tester.pumpAndSettle();
 
-      // Bước 2 — Ý nghĩa, ô nhập đã điền sẵn một câu Aha để sửa (§V).
+      // Bước 2 — Ý nghĩa. Từ changelog 24/08 §1.2 bước này có HAI LỚP, và
+      // Lớp 1 mở bằng ô chữ TRỐNG nối tiếp câu mở dở.
+      //
+      // Kỳ vọng cũ ở đây là ngược lại ("phải mở bằng câu Aha có sẵn, không bao
+      // giờ bằng ô trống") — đó chính là cơ chế §1.2 thay: câu trả lời có mặt
+      // trước khi câu hỏi kịp đọng lại.
       expect(find.byType(WrMeaningScreen), findsOneWidget);
+      expect(find.text(kInsightStemPrompt), findsOneWidget,
+          reason: '${option.id}: Lớp 1 phải hiện câu mở dở');
       final field = tester.widget<TextField>(
         find.byKey(const Key('wr_meaning_field')),
       );
-      expect(field.controller!.text.trim(), isNotEmpty,
-          reason: '${option.id}: bước Insight phải mở bằng câu Aha có sẵn, '
-              'không bao giờ bằng ô trống');
+      expect(field.controller!.text, isEmpty,
+          reason: '${option.id}: Lớp 1 mở bằng ô trống, câu Aha để dành Lớp 2');
+      expect(find.byKey(const Key('wr_meaning_aha')), findsNothing,
+          reason: '${option.id}: chưa viết gì mà đã thấy câu Aha là hỏng đúng '
+              'cái §1.2 chữa');
+
+      // Bỏ qua vẫn sang được Lớp 2 — lối thoát của §1.2.
+      await tester.tap(find.byKey(const Key('wr_flow_secondary')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('wr_meaning_aha')), findsOneWidget,
+          reason: '${option.id}: Lớp 2 phải hiện câu Aha');
+      expect(find.byKey(const Key('wr_meaning_your_words')), findsNothing,
+          reason: '${option.id}: bỏ qua thì không có "điều bạn vừa viết"');
     });
   }
 
@@ -264,21 +288,46 @@ void main() {
       episodes.episodes.single.notes[ReflectionPattern.explore.dbValue],
       'chuyện xảy ra trong cuộc họp sáng nay',
     );
-    // §V: không có tình huống thì Aha dùng câu mặc định cố định.
+    // Lớp 1 mở bằng ô trống, kể cả nhánh "Điều khác".
     final field = tester.widget<TextField>(
       find.byKey(const Key('wr_meaning_field')),
     );
-    expect(field.controller!.text, kDefaultAha);
+    expect(field.controller!.text, isEmpty);
+
+    // Viết một câu rồi sang Lớp 2: chữ vừa viết phải hiện lại nguyên vẹn dưới
+    // nhãn "Điều bạn vừa viết", và §V vẫn giữ — không có tình huống thì Aha
+    // dùng câu mặc định cố định.
+    await tester.enterText(
+      find.byKey(const Key('wr_meaning_field')),
+      'mình chưa từng nói ra',
+    );
+    await tester.tap(find.byKey(const Key('wr_flow_primary')));
+    await tester.pumpAndSettle();
+
+    expect(
+      find.text('$kInsightStemPrefix mình chưa từng nói ra'),
+      findsOneWidget,
+    );
+    expect(find.text(kDefaultAha), findsOneWidget);
+    expect(
+      episodes.episodes.single.notes[ReflectionPattern.reframe.dbValue],
+      '$kInsightStemPrefix mình chưa từng nói ra',
+      reason: 'chữ ở Lớp 1 phải ghi ngay, không đợi tới lúc xác nhận',
+    );
   });
 
-  testWidgets('bốn cảm xúc check-in ánh xạ đủ bốn archetype, không trùng',
-      (tester) async {
+  testWidgets('sáu cảm xúc check-in ánh xạ đúng bốn archetype', (tester) async {
     final moments = {
       for (final o in kCheckinOptions) o.mood: momentForMood(o.mood),
     };
+    // Bốn chứ không phải sáu: hai cảm xúc thêm 24/08 cùng rơi vào Confusion —
+    // "có điều gì đó không ổn, chưa gọi tên được" (HXA §2.5). Phần phân biệt
+    // giữa chúng nằm ở cụm chiều S1/S2, không ở nhãn archetype.
     expect(moments.values.toSet(), hasLength(4));
     expect(moments[Mood.stressed], HumanMoment.confusion);
     expect(moments[Mood.tired], HumanMoment.recovery);
+    expect(moments[Mood.foggy], HumanMoment.confusion);
+    expect(moments[Mood.outofsync], HumanMoment.confusion);
     expect(moments[Mood.okay], HumanMoment.arrival);
     expect(moments[Mood.happy], HumanMoment.celebration);
   });

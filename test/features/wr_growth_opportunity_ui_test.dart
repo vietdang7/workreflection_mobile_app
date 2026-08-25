@@ -86,6 +86,10 @@ Widget _wrap(
         path: '/wr/context-docs',
         builder: (_, __) => const Scaffold(body: Text('ContextDocs')),
       ),
+      GoRoute(
+        path: '/wr/jd-builder',
+        builder: (_, __) => const Scaffold(body: Text('JdBuilder')),
+      ),
     ],
   );
 
@@ -331,6 +335,23 @@ void main() {
       );
       await tester.pumpAndSettle();
       expect(find.text('ContextDocs'), findsOneWidget);
+    });
+
+    // Changelog 24/08/2026 §6 — lối vào duy nhất của "Viết JD cùng app".
+    testWidgets('có lối sang Viết JD cùng app', (tester) async {
+      await tester.pumpWidget(_wrap(const WrWorkInfoScreen(), repo: _repo()));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('Công ty chưa có JD? Cùng viết trong 5 buổi ngắn'),
+        findsOneWidget,
+      );
+      final card = find.byKey(const Key('wr_work_info_jd_builder_card'));
+      await tester.ensureVisible(card);
+      await tester.pumpAndSettle();
+      await tester.tap(card);
+      await tester.pumpAndSettle();
+      expect(find.text('JdBuilder'), findsOneWidget);
     });
   });
 }

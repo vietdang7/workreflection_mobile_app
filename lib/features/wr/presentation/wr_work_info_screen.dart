@@ -19,7 +19,9 @@ import '../../../core/data/wr_repository.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_link_row.dart';
+import '../../../core/logic/wr_jd_builder.dart';
 import '../wr_providers.dart';
+import 'wr_jd_builder_screen.dart' show wrJdDraftProvider;
 import '../../../core/widgets/wr_paragraph.dart';
 
 class WrWorkInfoScreen extends ConsumerStatefulWidget {
@@ -188,6 +190,109 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
               key: const Key('wr_work_info_context_docs_row'),
               label: 'Tài liệu bối cảnh (JD · CV)',
               onTap: () => context.push('/wr/context-docs'),
+            ),
+
+            // Lối vào DUY NHẤT của "Viết JD cùng app" (changelog 24/08 §6).
+            //
+            // Đặt ngay dưới ô tải tài liệu là có chủ đích: hai thẻ này trả lời
+            // cùng một câu hỏi ("làm sao app biết công việc thật của tôi"), chỉ
+            // khác ở chỗ người dùng đã có sẵn JD hay chưa. Tách xa nhau thì ai
+            // không có JD sẽ dừng lại ở thẻ tải lên và nghĩ mình không dùng
+            // được phần này.
+            const SizedBox(height: 18),
+            const _JdBuilderCard(),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Thẻ dẫn sang luồng viết JD 5 buổi.
+///
+/// Câu mời đổi theo tiến độ đang có: chưa viết gì thì "Cùng viết trong 5 buổi
+/// ngắn" (nguyên văn mockup), viết dở rồi thì mời viết tiếp và nói rõ đang ở
+/// buổi nào. Giữ nguyên câu mời ban đầu cho người đã viết ba buổi là để họ tự
+/// hỏi mình đã làm hay chưa.
+class _JdBuilderCard extends ConsumerWidget {
+  const _JdBuilderCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final draft = ref.watch(wrJdDraftProvider).valueOrNull;
+    final done = draft?.completedDays.length ?? 0;
+    final complete = draft?.isComplete ?? false;
+
+    final title = switch ((complete, done)) {
+      (true, _) => 'JD bạn đã viết',
+      (_, 0) => 'Công ty chưa có JD? Cùng viết trong 5 buổi ngắn',
+      _ => 'Viết tiếp JD của bạn',
+    };
+    final hint = switch ((complete, done)) {
+      (true, _) => 'Đã xong cả 5 buổi. Mở lại để đọc và sửa.',
+      (_, 0) => 'Mỗi buổi khoảng 2-3 phút, không cần làm hết trong một lần',
+      _ => 'Đã xong $done trên $kJdDayCount buổi',
+    };
+
+    return GestureDetector(
+      key: const Key('wr_work_info_jd_builder_card'),
+      behavior: HitTestBehavior.opaque,
+      onTap: () => context.push('/wr/jd-builder'),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        decoration: BoxDecoration(
+          color: WrColors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: WrColors.line),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: WrColors.teal.withValues(alpha: 0.1),
+                borderRadius: BorderRadius.circular(11),
+              ),
+              child: const Icon(
+                Icons.auto_awesome_outlined,
+                size: 19,
+                color: WrColors.teal,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  WrParagraph(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 15.5,
+                      fontWeight: FontWeight.w600,
+                      color: WrColors.navy,
+                      height: 1.35,
+                    ),
+                    textAlign: TextAlign.start,
+                  ),
+                  const SizedBox(height: 3),
+                  WrParagraph(
+                    hint,
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      color: WrColors.muted,
+                      height: 1.45,
+                    ),
+                    textAlign: TextAlign.start,
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(
+              Icons.chevron_right,
+              size: 20,
+              color: WrColors.muted,
             ),
           ],
         ),

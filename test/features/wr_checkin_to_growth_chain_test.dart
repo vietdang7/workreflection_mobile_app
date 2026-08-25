@@ -203,7 +203,10 @@ class _Stage {
     await tester.tap(find.byKey(const Key('wr_flow_primary')));
     await tester.pumpAndSettle();
 
-    // 4 · Insight — nhận câu Aha có sẵn.
+    // 4 · Insight — HAI LỚP từ changelog 24/08 §1.2. Bỏ qua phần tự viết
+    // (lối thoát của Lớp 1) rồi tiếp tục qua Lớp 2.
+    await tester.tap(find.byKey(const Key('wr_flow_secondary')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('wr_flow_primary')));
     await tester.pumpAndSettle();
 
@@ -241,21 +244,21 @@ void main() {
 
     final only = find.byKey(const Key('wr_situation_C2-sit-01'));
     await stage.reflectOnce(tester, chip: only);
-    await stage.reflectOnce(tester, chip: only);
 
-    // Hai lần chưa tới ngưỡng (yêu cầu khách 2026-07-31): chưa lên bảng, nhưng
-    // phải nói rõ là đã ghi nhận — không được rơi về câu "sau vài lần nhìn lại"
-    // như thể app chưa thấy gì.
+    // MỘT lần chưa tới ngưỡng (họp 26_1 hạ ngưỡng xuống 2): chưa lên bảng,
+    // nhưng phải nói rõ là đã ghi nhận — không được rơi về câu "sau vài lần
+    // nhìn lại" như thể app chưa thấy gì.
     stage.router.go('/wr/discover');
     await tester.pumpAndSettle();
     expect(find.text(_situationText), findsNothing,
-        reason: 'lặp 2 lần chưa đủ ngưỡng $kRepeatedSituationsMinCount');
+        reason: 'lặp 1 lần chưa đủ ngưỡng $kRepeatedSituationsMinCount');
     expect(find.byKey(const Key('wr_discover_patterns_empty')), findsNothing);
     expect(
       find.byKey(const Key('wr_discover_patterns_below_threshold')),
       findsOneWidget,
     );
 
+    await stage.reflectOnce(tester, chip: only);
     await stage.reflectOnce(tester, chip: only);
 
     // Ba Episode, cả ba đều mang mã tình huống — mắt xích từng đứt.
@@ -344,7 +347,11 @@ void main() {
 
       await tester.tap(find.byType(WrBigChoiceTile).first);
       await tester.pumpAndSettle();
+      // Meaning — bỏ trống, đi tiếp.
       await tester.tap(find.byKey(const Key('wr_flow_primary')));
+      await tester.pumpAndSettle();
+      // Insight hai lớp (§1.2): bỏ qua phần tự viết rồi tiếp tục.
+      await tester.tap(find.byKey(const Key('wr_flow_secondary')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('wr_flow_primary')));
       await tester.pumpAndSettle();

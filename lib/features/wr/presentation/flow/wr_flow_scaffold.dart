@@ -9,12 +9,26 @@ import 'package:flutter/material.dart';
 import '../../../../core/theme/wr_colors.dart';
 import '../../../../core/widgets/wr_paragraph.dart';
 
+/// Dáng chữ của câu hỏi lớn trong luồng.
+///
+/// Tách ra khỏi [WrFlowScaffold] để màn nào tự dựng câu hỏi bên trong `child`
+/// vẫn viết đúng một dáng chữ với các màn còn lại — hai chỗ gõ lại cùng một
+/// TextStyle là hai chỗ sẽ lệch nhau.
+const TextStyle wrFlowTitleStyle = TextStyle(
+  fontSize: 26,
+  fontWeight: FontWeight.w700,
+  color: WrColors.navy,
+  height: 1.3,
+  letterSpacing: -0.5,
+);
+
 class WrFlowScaffold extends StatelessWidget {
   const WrFlowScaffold({
     super.key,
-    required this.title,
+    this.title,
     required this.child,
     this.eyebrow,
+    this.eyebrowNote,
     this.subtitle,
     this.progress,
     this.onBack,
@@ -27,10 +41,23 @@ class WrFlowScaffold extends StatelessWidget {
   });
 
   /// Câu hỏi hoặc lời mời — chữ lớn, là thứ đầu tiên người dùng đọc.
-  final String title;
+  ///
+  /// Null khi màn tự dựng câu hỏi bên trong [child]. Chỉ một màn cần thế: bước
+  /// "Một câu chuyện quen thuộc" phải để STORY đọc trước rồi mới tới câu hỏi
+  /// (họp 26_1), mà chỗ này thì luôn nằm trên [child].
+  final String? title;
 
   /// Nhãn nhỏ phía trên tiêu đề.
   final String? eyebrow;
+
+  /// Đoạn giải thích ngắn ngay DƯỚI [eyebrow], TRÊN [title].
+  ///
+  /// Khác [subtitle] ở vị trí, và vị trí ở đây là ý nghĩa: nó nói bước này là
+  /// bước gì, nên phải đọc được TRƯỚC khi mắt chạm vào nội dung của bước.
+  /// [subtitle] thì ngược lại — nó hướng dẫn cách trả lời, nên đứng sau câu hỏi.
+  ///
+  /// Thêm 24/08/2026 cho bước "Một câu chuyện quen thuộc" (changelog §1.1).
+  final String? eyebrowNote;
 
   /// Một dòng phụ, tối đa một câu. Để null nếu không thật sự cần.
   final String? subtitle;
@@ -80,19 +107,27 @@ class WrFlowScaffold extends StatelessWidget {
                           color: WrColors.muted,
                         ),
                       ),
-                      const SizedBox(height: 14),
+                      SizedBox(height: eyebrowNote == null ? 14 : 8),
                     ],
-                    WrParagraph(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w700,
-                        color: WrColors.navy,
-                        height: 1.3,
-                        letterSpacing: -0.5,
+                    if (eyebrowNote != null) ...[
+                      WrParagraph(
+                        eyebrowNote!,
+                        key: const Key('wr_flow_eyebrow_note'),
+                        style: const TextStyle(
+                          fontSize: 15,
+                          color: WrColors.muted,
+                          height: 1.55,
+                        ),
+                        textAlign: TextAlign.start,
                       ),
-                      textAlign: TextAlign.start,
-                    ),
+                      const SizedBox(height: 18),
+                    ],
+                    if (title != null)
+                      WrParagraph(
+                        title!,
+                        style: wrFlowTitleStyle,
+                        textAlign: TextAlign.start,
+                      ),
                     if (subtitle != null) ...[
                       const SizedBox(height: 12),
                       WrParagraph(
@@ -104,7 +139,8 @@ class WrFlowScaffold extends StatelessWidget {
                         ),
                       ),
                     ],
-                    const SizedBox(height: 36),
+                    if (title != null || subtitle != null)
+                      const SizedBox(height: 36),
                     child,
                   ],
                 ),

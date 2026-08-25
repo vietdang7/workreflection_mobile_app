@@ -181,8 +181,18 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
 
     return WrFlowScaffold(
       eyebrow: hasStory ? 'Một câu chuyện quen thuộc' : 'Chi tiết cụ thể',
-      title: detailPrompt(story?.reflectionQuestion),
-      subtitle: kDetailOptionalNote,
+      // Changelog §1.1: đoạn giải thích chỉ có ở nhánh CÓ câu chuyện. Nhánh
+      // "Điều khác" không mượn chuyện của ai nên không có gì để chuẩn hoá.
+      eyebrowNote: hasStory ? kFamiliarStoryIntro : null,
+      // CÓ câu chuyện thì câu hỏi KHÔNG nằm ở đây.
+      //
+      // Họp 26_1: "giao diện hiện tại đang để câu hỏi trước câu chuyện khiến
+      // người dùng bị đứt mạch và không hiểu vì sao lại có câu hỏi đó". Câu hỏi
+      // là câu hỏi VỀ câu chuyện, nên nó phải đứng sau khi đã đọc chuyện — mà
+      // `title` của khung thì luôn nằm trên `child`. Nhánh "Điều khác" không có
+      // chuyện nào để đọc trước, giữ nguyên như cũ.
+      title: hasStory ? null : detailPrompt(story?.reflectionQuestion),
+      subtitle: hasStory ? null : kCustomDetailNote,
       progress: reflectProgress(1),
       onBack: () => context.pop(),
       onClose: _leave,
@@ -213,16 +223,40 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 28),
+            // Câu hỏi, SAU câu chuyện và canh giữa (họp 26_1).
+            //
+            // Canh giữa là để nó tách hẳn khỏi khối chuyện phía trên: hai khối
+            // chữ cùng canh trái, cùng cỡ gần nhau thì đọc ra như một đoạn văn
+            // dài, và câu hỏi chìm mất.
+            WrParagraph(
+              detailPrompt(story?.reflectionQuestion),
+              key: const Key('wr_detail_question'),
+              style: wrFlowTitleStyle,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 14),
+            const WrParagraph(
+              kStoryDetailInvite,
+              key: Key('wr_detail_invite'),
+              style: TextStyle(
+                fontSize: 15.5,
+                color: WrColors.muted,
+                height: 1.55,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
           ],
           // Nút mic ngay trong ô (họp khách 2026-07-29): trên điện thoại, bắt
           // gõ là cách chắc chắn nhất để không ai viết gì.
           WrVoiceField(
             fieldKey: const Key('wr_detail_field'),
             controller: _controller,
-            hintText: hasStory
-                ? 'Viết nếu muốn, bỏ trống cũng không sao…'
-                : 'Ví dụ: trong cuộc họp sáng nay…',
+            // Changelog §1.1: gợi ý đổi từ câu chung chung sang một ví dụ có
+            // cấu trúc thời gian – nhân vật – sự kiện. Ba dấu chấm lửng để
+            // trống đúng ba chỗ người viết cần điền.
+            hintText: hasStory ? kStoryDetailHint : kCustomDetailHint,
             minLines: 4,
             maxLines: 6,
             onChanged: () {},

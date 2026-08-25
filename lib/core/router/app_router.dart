@@ -65,6 +65,8 @@ import '../../features/wr/wr_providers.dart' show wrStorePolicyProvider;
 import '../../features/wr/presentation/wr_paywall_screen.dart';
 import '../../features/wr/presentation/wr_self_check_screen.dart';
 import '../../features/wr/presentation/wr_tra_chieu_screen.dart';
+import '../../features/wr/presentation/wr_jd_builder_screen.dart';
+import '../../features/wr/presentation/wr_sca_deep_dive_screen.dart';
 import '../../features/wr/presentation/wr_work_info_screen.dart';
 import '../../features/wr/presentation/flow/wr_commit_screen.dart';
 import '../../features/wr/presentation/flow/wr_done_screen.dart';
@@ -563,6 +565,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/wr/work-info',
         builder: (context, state) => const WrWorkInfoScreen(),
+      ),
+      // "Viết JD cùng app" — 5 buổi ngắn (changelog 24/08 §6). Mở từ thẻ dẫn
+      // ở màn Thông tin công việc, không có lối vào nào khác.
+      GoRoute(
+        path: '/wr/jd-builder',
+        builder: (context, state) => const WrJdBuilderScreen(),
+      ),
+
+      // Diễn giải sâu & xu hướng (changelog 24/08 §7). Trước bản này, nút "Mở
+      // khoá" của tính năng chỉ dẫn tới Paywall chung — mua xong không có màn
+      // đích nào. Đây là màn đích đó.
+      GoRoute(
+        path: '/wr/sca-deep-dive',
+        builder: (context, state) => const WrScaDeepDiveScreen(),
       ),
 
       // Khảo sát tổ chức (ESI + eNPS) — mockup Sprint 2, mở từ màn Hồ sơ.

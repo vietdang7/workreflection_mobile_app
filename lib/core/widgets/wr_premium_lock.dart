@@ -17,6 +17,7 @@ class WrPremiumLock extends StatelessWidget {
     required this.ctaLabel,
     this.title,
     this.paywallTrigger,
+    this.onPressed,
   });
 
   /// Tên của thứ đang khoá, một dòng. Tuỳ chọn: phần lớn khối khoá nằm ngay
@@ -32,6 +33,13 @@ class WrPremiumLock extends StatelessWidget {
 
   /// Giá trị `?trigger=` truyền sang `/wr/paywall` để paywall nói đúng ngữ cảnh.
   final String? paywallTrigger;
+
+  /// Thay hẳn hành vi của nút.
+  ///
+  /// Mặc định (null) là mở Paywall — đúng cho hầu hết khối khoá. Chỉ những
+  /// tính năng có MÀN ĐÍCH riêng mới cần cái này, để mua xong đi thẳng vào màn
+  /// đó thay vì rơi lại chỗ cũ (changelog 24/08 §7, Diễn giải sâu).
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
@@ -85,11 +93,12 @@ class WrPremiumLock extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: () => context.push(
-                paywallTrigger == null
-                    ? '/wr/paywall'
-                    : '/wr/paywall?trigger=$paywallTrigger',
-              ),
+              onPressed: onPressed ??
+                  () => context.push(
+                        paywallTrigger == null
+                            ? '/wr/paywall'
+                            : '/wr/paywall?trigger=$paywallTrigger',
+                      ),
               style: ElevatedButton.styleFrom(
                 // Navy như mọi nút đặc khác trong app (nút "Bắt đầu thực hành").
                 backgroundColor: WrColors.navy,
