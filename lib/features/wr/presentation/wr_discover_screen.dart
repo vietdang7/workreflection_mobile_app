@@ -35,6 +35,8 @@ import '../../../core/widgets/tab_back_link.dart';
 import '../../../core/widgets/wr_profile_avatar.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../core/widgets/wr_premium_lock.dart';
+import '../../../core/widgets/wr_link_row.dart';
+import 'wr_sca_deep_dive_screen.dart' show openScaDeepDive;
 import '../wr_providers.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 
@@ -90,10 +92,6 @@ class WrDiscoverScreen extends ConsumerWidget {
     final episodes = ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
     final selfChecks =
         ref.watch(wrSelfCheckHistoryProvider).valueOrNull ?? const [];
-    // Nội dung của khối "Điều bạn đang tìm kiếm" đọc từ đây (aha_message trùng
-    // mã chip theo v2.0 §2.2) khi tình huống không có expected_outcome riêng.
-    final stories = ref.watch(wrStoriesProvider).valueOrNull ?? const [];
-
     // Nguồn sự thật duy nhất của cả màn này (Kiến trúc v2.0 §4.3). Không còn
     // đọc `wr_pattern_counts` ở đâu trên màn Hiểu mình.
     final recent = recentSituationIds(episodes);
@@ -104,15 +102,30 @@ class WrDiscoverScreen extends ConsumerWidget {
     final latestCheck = selfChecks.isEmpty ? null : selfChecks.first;
 
     // Hướng 1 — đủ 15 LẦN nhìn lại thì bức tranh tổng thể mở ra, và ba trụ đọc
-    // được từ chính hành vi mà không cần bộ Self-Check. Chưa từng tự đánh giá
-    // mới dùng đường này: có điểm tự đánh giá thì điểm đó chính xác hơn.
+    // được từ chính hành vi mà không cần bộ Self-Check.
     //
     // Dùng thẳng `reflectionCount` — cùng một biến với câu "Bạn đã nhìn lại N
     // lần" ở cuối màn, nên hai chỗ không thể nói hai con số khác nhau.
-    final behaviourShares =
-        latestCheck == null && careerHealthUnlocked(reflectionCount)
-            ? pillarShares(recent, situations)
-            : null;
+    //
+    // KHÔNG còn điều kiện `latestCheck == null` (khách báo lại ở họp 26_1).
+    // Bản 24/08 chỉ tính bức tranh cho người CHƯA từng tự đánh giá, với lý do
+    // "có điểm tự đánh giá thì điểm đó chính xác hơn". Lý do ấy đúng cho khối
+    // "Trải nghiệm hiện tại" — và khối đó vẫn ưu tiên điểm tự đánh giá, xem
+    // `_ScaCard._statusOf`. Nhưng nó biến lời hứa "đủ 15 lần, bức tranh tổng
+    // thể sẽ mở ra" thành một lời hứa suông với đúng nhóm người dùng chăm nhất:
+    // ai đã làm Self-Check thì cán mốc 15 xong màn hình không đổi lấy một chữ.
+    //
+    // Hai đường đo hai thứ khác nhau và cùng có ích:
+    //   Self-Check    → điều kiện làm việc, do bạn tự đánh giá
+    //   15 lần nhìn lại → trụ nào đang bị chạm nhiều, đọc từ hành vi
+    // Nên giờ tính luôn, rồi bày ra thành một khối riêng có tên nguồn rõ ràng.
+    //
+    // `scaTouchedCount == 0` thì để null: ba số 0 sẽ đọc ra thành ba nhãn
+    // "Đang phát triển" — một bức tranh đẹp dựng từ chỗ không có dữ liệu.
+    final behaviourShares = careerHealthUnlocked(reflectionCount) &&
+            scaTouchedCount(recent, situations) > 0
+        ? pillarShares(recent, situations)
+        : null;
 
     // "Tình huống lặp lại" — v2.0 §4.3: đếm số lần xuất hiện của từng
     // situationId trong recentSituationIds, lấy ba tình huống nhiều nhất.
@@ -175,14 +188,7 @@ class WrDiscoverScreen extends ConsumerWidget {
             // im lặng, không đoán bừa (WXS Orch. Inv.5).
             if (need != null) ...[
               const SizedBox(height: 24),
-              _NeedReadingBlock(
-                need: need,
-                insight: seekingInsight(
-                  recent: recent,
-                  situations: situations,
-                  stories: stories,
-                ),
-              ),
+              _NeedReadingBlock(need: need),
             ],
 
             const SizedBox(height: 28),
@@ -272,6 +278,8 @@ class WrDiscoverScreen extends ConsumerWidget {
                 // `build`. Thẻ phải nói đúng nguồn, nếu không nó hứa một thứ
                 // đang không xảy ra với chính người đang đọc nó.
                 readsFromSelfCheck: latestCheck != null,
+                // Chính bức tranh, bày ngay trong thẻ đã hứa nó.
+                behaviourShares: behaviourShares,
                 onOpen: () => context.push('/wr/patterns'),
               ),
             ],
@@ -307,13 +315,9 @@ class WrDiscoverScreen extends ConsumerWidget {
 // ---------------------------------------------------------------------------
 
 class _NeedReadingBlock extends ConsumerWidget {
-  const _NeedReadingBlock({required this.need, required this.insight});
+  const _NeedReadingBlock({required this.need});
 
   final HumanNeed need;
-
-  /// Câu đọc từ tình huống người dùng lặp nhiều nhất. Null = nội dung DB không
-  /// có gì cho tình huống đó, rơi về câu định nghĩa nhu cầu.
-  final String? insight;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -336,7 +340,6 @@ class _NeedReadingBlock extends ConsumerWidget {
     return _SeekingBlock(
       key: const Key('wr_discover_need_reading'),
       need: need,
-      insight: insight,
     );
   }
 }
@@ -346,17 +349,17 @@ class _NeedReadingBlock extends ConsumerWidget {
 // ---------------------------------------------------------------------------
 
 class _SeekingBlock extends StatelessWidget {
-  const _SeekingBlock({super.key, required this.need, required this.insight});
+  const _SeekingBlock({super.key, required this.need});
 
   final HumanNeed need;
-  final String? insight;
 
   @override
   Widget build(BuildContext context) {
-    // Nội dung thật trước, câu định nghĩa nhu cầu chỉ là lưới an toàn.
-    final text = insight ?? needSeekingSentence(need);
-    // Câu lấy từ DB dài ngắn không đều — aha_message thường là hai vế. Cỡ chữ
-    // mockup (26) chỉ vừa cho câu ngắn; câu dài để nguyên sẽ tràn kín màn.
+    // Câu NHU CẦU, không phải câu Insight (họp 26_1). Nhãn của khối hứa "điều
+    // bạn đang tìm kiếm"; câu aha đọc vị một tình huống cụ thể thì trả lời một
+    // câu hỏi khác, và người dùng đọc xong không biết nó liên quan gì tới nhãn.
+    final text = needSeekingSentence(need);
+    // Bốn câu nhu cầu đều ngắn, nhưng giữ luật co chữ phòng khi nội dung đổi.
     final fontSize = text.length > 90 ? 20.0 : 26.0;
 
     return Padding(
@@ -578,7 +581,7 @@ class _ScaCard extends StatelessWidget {
 }
 
 class _ScaRow extends StatelessWidget {
-  const _ScaRow({required this.pillar, required this.status});
+  const _ScaRow({super.key, required this.pillar, required this.status});
 
   final SelfCheckPillar pillar;
 
@@ -671,6 +674,7 @@ class _CareerHealthCard extends StatelessWidget {
     required this.reflectionCount,
     required this.readsFromSelfCheck,
     required this.onOpen,
+    this.behaviourShares,
   });
 
   final int reflectionCount;
@@ -679,12 +683,19 @@ class _CareerHealthCard extends StatelessWidget {
   /// phải từ hành vi. Quyết định câu chữ của trạng thái đã mở.
   final bool readsFromSelfCheck;
 
+  /// Tỉ trọng bị chạm của ba trụ, đọc từ chính [reflectionCount] lần nhìn lại.
+  ///
+  /// null có hai nghĩa và thẻ phải nói khác nhau cho từng nghĩa: chưa đủ ngưỡng
+  /// (còn thanh tiến độ), hoặc đủ rồi mà chưa lần nào rơi vào một trụ SCA.
+  final Map<SelfCheckPillar, double>? behaviourShares;
+
   /// Mở danh sách đầy đủ những điều đang trở đi trở lại.
   final VoidCallback onOpen;
 
   @override
   Widget build(BuildContext context) {
     final unlocked = careerHealthUnlocked(reflectionCount);
+    final shares = behaviourShares;
     return Container(
       key: const Key('wr_discover_career_health'),
       padding: const EdgeInsets.all(20),
@@ -709,17 +720,26 @@ class _CareerHealthCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           WrParagraph(
-            unlocked
-                ? readsFromSelfCheck
-                    ? 'Bức tranh tổng thể đã mở sau $reflectionCount lần nhìn '
-                        'lại. Ba trụ phía trên đang đọc từ bộ Self-Check bạn tự '
-                        'trả lời — sát hơn số lần nhìn lại, nên nó được ưu tiên.'
-                    : 'Bức tranh tổng thể đã mở. Ba trụ ở "Trải nghiệm hiện tại" '
-                        'phía trên giờ đọc từ chính $reflectionCount lần nhìn '
-                        'lại của bạn.'
-                : 'Bạn đã nhìn lại $reflectionCount/$kCareerHealthThreshold '
+            !unlocked
+                ? 'Bạn đã nhìn lại $reflectionCount/$kCareerHealthThreshold '
                     'lần. Đủ $kCareerHealthThreshold lần, bức tranh tổng thể '
-                    'sẽ mở ra.',
+                    'sẽ mở ra.'
+                : shares == null
+                    // Đủ lần rồi mà chưa lần nào rơi vào một trụ. Nói thẳng còn
+                    // thiếu gì, đừng để thẻ đứng im như chưa có chuyện gì.
+                    ? 'Bức tranh tổng thể đã mở sau $reflectionCount lần nhìn '
+                        'lại, nhưng chưa lần nào của bạn rơi vào một trong ba '
+                        'trụ — những lần bạn tự mô tả không có tình huống nào '
+                        'để đối chiếu. Vài lần có chọn tình huống nữa là đọc ra.'
+                    : readsFromSelfCheck
+                        ? 'Bức tranh tổng thể đã mở sau $reflectionCount lần '
+                            'nhìn lại. Đây là trụ nào đang bị chạm nhiều nhất '
+                            'trong chính những lần đó — khác với "Trải nghiệm '
+                            'hiện tại" phía trên, chỗ đọc từ bộ Self-Check bạn '
+                            'tự trả lời.'
+                        : 'Bức tranh tổng thể đã mở sau $reflectionCount lần '
+                            'nhìn lại. Đây là trụ nào đang bị chạm nhiều nhất '
+                            'trong chính những lần đó.',
             key: const Key('wr_discover_career_health_text'),
             style: const TextStyle(
               fontSize: 14.5,
@@ -727,6 +747,27 @@ class _CareerHealthCard extends StatelessWidget {
               height: 1.6,
             ),
           ),
+
+          // ── Chính bức tranh ────────────────────────────────────────────
+          //
+          // Khách báo hai vòng liền (24/08 rồi 26_1): "check in 15 lần mà không
+          // thấy kết quả đâu". Vòng trước chỉ thêm một câu giải thích và một
+          // dòng dẫn sang màn khác — vẫn không có KẾT QUẢ nào hiện ra tại chỗ.
+          // Nay ba nhãn nằm ngay trong thẻ đã hứa chúng.
+          if (unlocked && shares != null) ...[
+            const SizedBox(height: 6),
+            for (final pillar in SelfCheckPillar.values)
+              _ScaRow(
+                key: Key('wr_discover_health_pillar_${pillar.name}'),
+                pillar: pillar,
+                status: (
+                  behaviourPillarLabel(shares[pillar] ?? 0),
+                  behaviourPillarIsHealthy(shares[pillar] ?? 0)
+                      ? WrColors.teal
+                      : WrColors.coral,
+                ),
+              ),
+          ],
 
           // Còn đang đếm thì nói luôn cái gì được tính — câu hỏi này chỉ có
           // nghĩa khi người dùng đang nhìn một con số nhỏ hơn kỳ vọng của họ.
@@ -868,8 +909,10 @@ class _SelfCheckInviteCard extends StatelessWidget {
 // Ranh giới giống mọi chỗ khác trên màn này: Free thấy CON SỐ của lần gần nhất,
 // Premium mới thấy nó đang đi theo hướng nào và vì sao.
 //
-// Người đã Premium thì thẻ này biến mất chứ không đổi thành nút — phần diễn
-// giải nằm ở màn kết quả Self-Check, mời họ mua lại thứ đã mua là vô nghĩa.
+// Người đã Premium KHÔNG còn thấy thẻ khoá, nhưng vẫn thấy một dòng dẫn sang
+// màn Diễn giải sâu. Trước changelog 24/08 §7 thì thẻ này biến mất hẳn với họ,
+// nghĩa là người đã trả tiền không còn lối nào vào tính năng mình vừa mua từ
+// tab Hiểu mình — chỗ tự nhiên nhất để tìm nó.
 // ---------------------------------------------------------------------------
 
 class _SelfCheckDeepLock extends ConsumerWidget {
@@ -880,7 +923,11 @@ class _SelfCheckDeepLock extends ConsumerWidget {
     final entitlement = ref.watch(wrEntitlementProvider).valueOrNull ??
         WrEntitlement(plan: WrPlan.free);
     if (entitlement.canUseFeature(WrPremiumFeature.selfCheckDeepDive)) {
-      return const SizedBox.shrink();
+      return WrLinkRow(
+        key: const Key('wr_discover_sca_deep_open'),
+        label: 'Diễn giải sâu & xu hướng',
+        onTap: () => openScaDeepDive(context, ref),
+      );
     }
     return WrPremiumLock(
       key: const Key('wr_discover_sca_deep_lock'),
@@ -891,6 +938,8 @@ class _SelfCheckDeepLock extends ConsumerWidget {
           'với những điều lặp lại bạn đã ghi.',
       ctaLabel: 'Mở khoá',
       paywallTrigger: 'sca_deep',
+      // Mua xong đi thẳng vào màn đích, không rơi lại tab Hiểu mình (§7).
+      onPressed: () => openScaDeepDive(context, ref),
     );
   }
 }
