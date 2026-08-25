@@ -49,6 +49,19 @@ final currentUserEmailProvider = Provider<String?>((ref) {
   }
 });
 
+/// Metadata của tài khoản đang đăng nhập. Override trong test.
+///
+/// Nguồn thứ ba của cái tên, sau `cc_profiles.full_name` và
+/// `wr_mobile_profiles.display_name`: đăng nhập bằng Google thì tên chỉ có ở
+/// đây, và hồ sơ trong hai bảng kia có thể chưa kịp dựng.
+final currentUserMetadataProvider = Provider<Map<String, dynamic>?>((ref) {
+  try {
+    return Supabase.instance.client.auth.currentUser?.userMetadata;
+  } catch (_) {
+    return null;
+  }
+});
+
 /// Email đọc THẲNG từ phiên Supabase ngay lúc gọi, không qua provider nào.
 ///
 /// [currentUserEmailProvider] là `Provider` thuần: nó chụp email đúng một lần

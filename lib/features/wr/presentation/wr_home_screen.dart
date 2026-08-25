@@ -17,8 +17,9 @@
 // trắng). Sửa màu ở đây là sửa cả bốn tab — đọc ghi chú ở `wr_card.dart` trước.
 //
 // Các khối, đúng thứ tự của bản thiết kế:
+//   0. minh hoạ theo khung giờ — "một chiếc ghế đang chờ bạn" (§5, 24/08)
 //   1. lời chào + ngày
-//   2. "Bạn đang trải qua điều gì?" + lưới check-in 2×2
+//   2. "Bạn đang trải qua điều gì?" + lưới check-in 3×2
 //   3. thẻ navy "Hệ thống nhận ra"  → dẫn sang màn chi tiết điều lặp lại
 //   4. "Gợi ý khi …" + thẻ Thư viện Nội dung Cảm xúc → dẫn sang màn đọc/nghe
 //   5. "Insight gần nhất"
@@ -55,6 +56,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/logic/vn_date.dart';
+import '../../../core/logic/wr_display_name.dart';
 import '../../../core/logic/wr_home_surface.dart';
 import '../../../core/logic/wr_repeated_situations.dart';
 import '../../../core/models/checkin.dart';
@@ -64,6 +66,7 @@ import '../../../core/theme/wr_text.dart';
 import '../../../core/widgets/wr_profile_avatar.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_card.dart';
+import '../../../core/widgets/wr_hero_scene.dart';
 import '../../profile/profile_providers.dart';
 import '../episode_flow_controller.dart';
 import '../growth_providers.dart';
@@ -80,10 +83,13 @@ import '../../../core/widgets/wr_paragraph.dart';
 // đó có thể lệch nhau một nhịp sau khi người dùng đổi tên.
 
 // ---------------------------------------------------------------------------
-// Lưới check-in — bốn ô như bản thiết kế, mỗi ô là một mức năng lượng.
+// Lưới check-in — sáu ô như bản thiết kế mới nhất, mỗi ô là một cách nói về
+// ngày hôm nay.
 //
 // Khách yêu cầu bỏ bước "trạng thái" tách rời khỏi "năng lượng"; ở đây chỉ còn
-// MỘT câu hỏi, bốn cách nói của cùng một thang năng lượng.
+// MỘT câu hỏi. Bốn ô đầu tiên (2026-07) là bốn mức của cùng một thang năng
+// lượng; hai ô thêm 24/08 (§3) nói về sự rõ ràng và sự ăn khớp, không phải về
+// năng lượng — xem ghi chú `energy` ở từng ô.
 // ---------------------------------------------------------------------------
 
 typedef CheckinOption = ({
@@ -93,9 +99,17 @@ typedef CheckinOption = ({
   Mood mood,
 });
 
-/// Bốn ô check-in. [mood] KHÔNG suy được từ [energy]: "căng thẳng" và "mệt mỏi"
-/// dùng chung `CheckinEnergy.low`, nhưng Kiến trúc Dữ liệu v1.6 §III lọc tình
-/// huống theo hai cụm chiều khác nhau cho hai cảm xúc đó. Giữ cả hai trường.
+/// Sáu ô check-in. [mood] KHÔNG suy được từ [energy]: bốn cảm xúc đầu dùng
+/// chung `CheckinEnergy.low`, nhưng Kiến trúc Dữ liệu v1.6 §III lọc tình huống
+/// theo những cụm chiều khác nhau cho từng cảm xúc. Giữ cả hai trường.
+///
+/// THỨ TỰ LÀ DỮ LIỆU, không phải chuyện trình bày. Changelog mockup 24/08/2026
+/// §3: hai ô mới chèn NGAY SAU "Mệt mỏi", TRƯỚC "Khá ổn" — nhóm cảm xúc khó
+/// khăn đứng trước, nhóm tích cực đứng sau. Đảo lại thì người đang mệt phải đọc
+/// qua hai ô vui vẻ mới tới ô của mình.
+///
+/// Lưới ở `_CheckinQuestion` cắt hai ô một hàng nên sáu ô tự thành 3×2, không
+/// cần đổi gì ở đó.
 const List<CheckinOption> kCheckinOptions = [
   (
     id: 'stress',
@@ -108,6 +122,21 @@ const List<CheckinOption> kCheckinOptions = [
     label: 'Tôi mệt mỏi\ncần nghỉ ngơi',
     energy: CheckinEnergy.low,
     mood: Mood.tired,
+  ),
+  (
+    id: 'foggy',
+    label: 'Tôi thấy\nmơ hồ',
+    // Mơ hồ không phải mệt: người không rõ việc mình đang làm vẫn có thể còn
+    // đủ sức. Ghi `ok` để thẻ năng lượng không tụt oan mỗi lần họ nói ra điều
+    // này.
+    energy: CheckinEnergy.ok,
+    mood: Mood.foggy,
+  ),
+  (
+    id: 'outofsync',
+    label: 'Tôi thấy mọi\nthứ lệch nhau',
+    energy: CheckinEnergy.ok,
+    mood: Mood.outofsync,
   ),
   (id: 'ok', label: 'Tôi\nkhá ổn', energy: CheckinEnergy.ok, mood: Mood.okay),
   (
@@ -142,8 +171,12 @@ class WrHomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final displayName =
-        ref.watch(mobileProfileProvider).valueOrNull?.displayName ?? '';
+    // Tên đọc qua `greetingNameProvider`, không đọc thẳng `display_name`:
+    // hàng hồ sơ cũ có thể đang chứa EMAIL ở ô tên (khách báo họp 26_1, xem
+    // `wr_display_name.dart`), và tài khoản đăng ký từ web thì tên nằm ở
+    // `cc_profiles.full_name` chứ không ở bảng của app di động.
+    final greetingName = ref.watch(greetingNameProvider);
+    final displayName = greetingName ?? '';
 
     return Scaffold(
       // `giao-dien-chinh.html` §.screen: nền màn TRẮNG, thẻ mới là màu kem. Sắc
@@ -176,9 +209,7 @@ class WrHomeScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          displayName.isNotEmpty
-                              ? 'Chào $displayName'
-                              : 'Chào bạn',
+                          wrGreeting(greetingName),
                           style: const TextStyle(
                             fontSize: 21,
                             fontWeight: FontWeight.w800,
@@ -205,8 +236,15 @@ class WrHomeScreen extends ConsumerWidget {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(22, 0, 22, 34),
                 children: [
+                  // Minh hoạ mở đầu — changelog 24/08 §5: "đặt ở đầu Home,
+                  // ngay trên card chọn mood". Một khối tĩnh, không bấm được,
+                  // và đổi theo khung giờ hệ thống chứ không theo dữ liệu người
+                  // dùng — nên nó ở đây được kể cả trước lần check-in đầu tiên,
+                  // khác ba khối nội dung phía dưới.
+                  WrHeroScene(period: WrDayPeriod.fromHour(nowVn().hour)),
+                  const SizedBox(height: 14),
                   // Lưới check-in là khối CỐ ĐỊNH của mockup: luôn ở đây, luôn
-                  // bày sẵn bốn câu trả lời. Trước đây phiên đang dở thay chỗ
+                  // bày sẵn sáu câu trả lời. Trước đây phiên đang dở thay chỗ
                   // nó bằng một nút "Tiếp tục", nghĩa là muốn nói hôm nay mình
                   // thế nào thì phải bấm thêm một nút nữa — hỏi xong rồi giấu
                   // mất chỗ trả lời.
@@ -240,7 +278,7 @@ class WrHomeScreen extends ConsumerWidget {
 }
 
 // ---------------------------------------------------------------------------
-// 2 · "Bạn đang trải qua điều gì?" + lưới 2×2
+// 2 · "Bạn đang trải qua điều gì?" + lưới 3×2
 // ---------------------------------------------------------------------------
 
 class _CheckinQuestion extends ConsumerWidget {
@@ -364,7 +402,7 @@ class _CheckinTile extends ConsumerWidget {
         // lại thì state rỗng và đúng thao tác ấy lại được đếm. Cùng một hành vi,
         // hai kết quả, không ai đối chiếu được.
         //
-        // Phiên cũ không mất gì: nó vẫn mở trong DB, và thẻ "Còn dở" ngay dưới
+        // Phiên cũ không mất gì: nó vẫn mở trong DB, và thẻ "Đang bỏ ngỏ" dưới
         // lưới này vẫn mời quay lại — đường đó gọi `resume()` với Episode đọc
         // thẳng từ `wrOpenEpisodeProvider`, không phụ thuộc state ở đây. Khác
         // biệt duy nhất: người dùng chọn quay lại phiên cũ, thay vì bị đưa vào
@@ -583,7 +621,7 @@ class _DashedRRectPainter extends CustomPainter {
 }
 
 // ---------------------------------------------------------------------------
-// 2c · "Còn dở" — check-in rồi mà chưa chọn điều muốn nhìn lại.
+// 2c · "Đang bỏ ngỏ" — check-in rồi mà chưa chọn điều muốn nhìn lại.
 //
 // Khách báo 2026-08-22: chị check-in "đang căng thẳng" ngày 21/08 rồi rời màn
 // chọn tình huống, và tin rằng mình đã ghi lại xong. Trên DB ngày đó có đúng
@@ -597,9 +635,24 @@ class _DashedRRectPainter extends CustomPainter {
 //
 // Khối này bù đúng khoảng trống đó, và chỉ khoảng trống đó:
 //   • đã check-in hôm nay VÀ chưa mở phiên nào trong ngày → mời đi tiếp
-//   • có phiên chưa khép (kể cả từ hôm trước)             → mời quay lại
+//   • có phiên chưa khép, mới rời trong vòng một ngày     → mời quay lại
 // Không rơi vào hai trường hợp trên thì khối biến mất hẳn — WXS Orch. Inv.5.
+//
+// VÌ SAO CÓ HẠN NGÀY (khách 2026-08-25: "tự nhiên còn dở là sao"). Trên DB thật
+// tài khoản của khách có TÁM Episode chưa khép, cái mới nhất từ 04/08 — hai
+// mươi mốt ngày trước hôm khách chụp màn hình. `fetchOpenEpisode` không có mốc
+// thời gian nào, nên nó cứ trả về phiên cũ nhất-còn-mở ấy mãi mãi: mỗi lần
+// check-in, Home lại nhắc về một phiên người dùng không còn nhớ, và chạm vào là
+// bị kéo ngược vào giữa chừng nó.
+//
+// Phiên cũ KHÔNG mất: nó vẫn mở trong DB và vẫn quay lại được từ tab Hành trình
+// → chi tiết Episode → "Hiểu lại chuyện này" (WPA Inv.4). Chỉ có lời nhắc trên
+// Home là im — vì lời nhắc chỉ đúng khi người ta còn nhớ mình đang dở dở dang.
 // ---------------------------------------------------------------------------
+
+/// Phiên bỏ dở cách đây quá bao nhiêu ngày thì Home thôi nhắc. 1 = hôm nay và
+/// hôm qua còn nhắc, từ hôm kia trở đi thì không.
+const int kUnfinishedReflectionMaxDaysAgo = 1;
 
 class _UnfinishedReflectionCard extends ConsumerWidget {
   const _UnfinishedReflectionCard();
@@ -609,7 +662,17 @@ class _UnfinishedReflectionCard extends ConsumerWidget {
     final checkedIn = ref.watch(todayCheckinProvider).valueOrNull != null;
     if (!checkedIn) return const SizedBox.shrink();
 
-    final open = ref.watch(wrOpenEpisodeProvider).valueOrNull;
+    // `updatedAt` chứ không phải `openedAt`: câu hỏi ở đây là "rời khỏi nó bao
+    // lâu rồi", không phải "bắt đầu nó bao lâu rồi". Phiên mở tuần trước nhưng
+    // hôm qua vừa viết thêm thì vẫn còn trong trí nhớ người dùng.
+    final openRaw = ref.watch(wrOpenEpisodeProvider).valueOrNull;
+    final touchedAt = openRaw?.updatedAt ?? openRaw?.openedAt;
+    final open = openRaw == null ||
+            (touchedAt != null &&
+                daysAgoVn(touchedAt) > kUnfinishedReflectionMaxDaysAgo)
+        ? null
+        : openRaw;
+
     final episodes = ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
 
     final today = todayVn();
@@ -626,9 +689,20 @@ class _UnfinishedReflectionCard extends ConsumerWidget {
 
     // Phiên dở được ưu tiên nói tới: nó đã có nội dung người dùng viết, còn lần
     // check-in trống thì chưa.
-    final line = open != null
-        ? 'Bạn còn một lần nhìn lại đang dở. Đi tiếp từ chỗ đang đứng.'
-        : 'Bạn đã ghi cảm xúc hôm nay, nhưng chưa chọn điều muốn nhìn lại.';
+    //
+    // Nhãn cũ là "CÒN DỞ" — khách bác 2026-08-25 vì "dùng từ chưa phù hợp".
+    // Đúng: trong tiếng Việt "dở" tự nó là DỞ/TỆ, phải đi cặp thành "dở dang"
+    // mới mang nghĩa chưa xong. Đặt một mình trên thẻ nói về chính lần nhìn lại
+    // của người dùng, nó đọc thành lời chê. Giọng của app là mời, không chấm.
+    final (eyebrow, line) = open != null
+        ? (
+            'ĐANG BỎ NGỎ',
+            'Có một lần nhìn lại bạn chưa khép lại. Mở tiếp từ chỗ đang đứng.',
+          )
+        : (
+            'CÒN MỘT BƯỚC NỮA',
+            'Bạn đã ghi cảm xúc hôm nay, nhưng chưa chọn điều muốn nhìn lại.',
+          );
 
     return Padding(
       key: const Key('wr_home_unfinished_reflection'),
@@ -646,7 +720,7 @@ class _UnfinishedReflectionCard extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const WrEyebrow('CÒN DỞ'),
+              WrEyebrow(eyebrow),
               const SizedBox(height: 6),
               WrParagraph(
                 line,
@@ -727,27 +801,12 @@ class _SystemNoticeCard extends ConsumerWidget {
                   color: WrColors.cream,
                 ),
               ),
-              const SizedBox(height: 10),
-              // `.pill` của mockup: nói rõ đây là lớp Pattern cơ bản và nó miễn
-              // phí — để người dùng không tưởng mình đang xem thử một tính năng
-              // trả tiền rồi mất hứng.
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                decoration: BoxDecoration(
-                  color: WrColors.white.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(100),
-                ),
-                child: const Text(
-                  'Pattern cơ bản · miễn phí',
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.27,
-                    color: WrColors.cream,
-                  ),
-                ),
-              ),
+              // ĐÃ BỎ nhãn "Pattern cơ bản · miễn phí" (họp 26_1).
+              //
+              // Nó có trong mockup để trấn an rằng khối này không phải hàng
+              // trả tiền. Nhưng người dùng thật đọc xong không biết "Pattern cơ
+              // bản" là gì — chữ sinh ra để giải toả lo lắng lại tạo thêm một
+              // câu hỏi. Khối này vốn miễn phí cho mọi người, im lặng là đủ.
             ],
           ),
         ),

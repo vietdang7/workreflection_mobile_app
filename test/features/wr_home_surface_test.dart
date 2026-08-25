@@ -370,6 +370,78 @@ void main() {
         );
       });
 
+      // Khách 2026-08-25: "tự nhiên còn dở là sao". Trên DB thật tài khoản của
+      // khách có tám Episode chưa khép, mới nhất cách hôm đó hai mươi mốt ngày —
+      // `fetchOpenEpisode` không có mốc thời gian nên nhắc mãi về một phiên
+      // không ai còn nhớ.
+      testWidgets('phiên bỏ dở hôm qua thì vẫn mời quay lại', (tester) async {
+        final repo = FakeWrRepository()
+          ..seedTodayCheckin(_checkin(Mood.stressed));
+        final episodes = FakeWrEpisodeRepository()
+          ..seed([
+            ReflectionEpisode(
+              id: 'hom-qua',
+              userId: 'u1',
+              humanMoment: HumanMoment.confusion,
+              state: ExperienceState.exploring,
+              situationCode: 's1',
+              openedAt:
+                  DateTime.now().toUtc().subtract(const Duration(days: 1)),
+              updatedAt:
+                  DateTime.now().toUtc().subtract(const Duration(days: 1)),
+            ),
+          ]);
+
+        await _pump(tester, _wrap(repo: repo, episodes: episodes));
+
+        expect(find.text('ĐANG BỎ NGỎ'), findsOneWidget);
+        expect(find.textContaining('chưa khép lại'), findsOneWidget);
+      });
+
+      testWidgets('phiên bỏ dở ba tuần trước thì Home thôi nhắc về nó',
+          (tester) async {
+        final repo = FakeWrRepository()
+          ..seedTodayCheckin(_checkin(Mood.stressed));
+        final episodes = FakeWrEpisodeRepository()
+          ..seed([
+            ReflectionEpisode(
+              id: 'ba-tuan-truoc',
+              userId: 'u1',
+              humanMoment: HumanMoment.confusion,
+              state: ExperienceState.exploring,
+              situationCode: 's1',
+              openedAt:
+                  DateTime.now().toUtc().subtract(const Duration(days: 21)),
+              updatedAt:
+                  DateTime.now().toUtc().subtract(const Duration(days: 21)),
+            ),
+          ]);
+
+        await _pump(tester, _wrap(repo: repo, episodes: episodes));
+
+        // Phiên cũ không còn được nhắc tới. Thẻ vẫn ở đó nhưng nói về việc hôm
+        // nay — đã ghi cảm xúc, chưa chọn điều muốn nhìn lại.
+        expect(find.text('ĐANG BỎ NGỎ'), findsNothing);
+        expect(find.textContaining('chưa khép lại'), findsNothing);
+        expect(
+          find.textContaining('chưa chọn điều muốn nhìn lại'),
+          findsOneWidget,
+        );
+      });
+
+      testWidgets('nhãn cũ "CÒN DỞ" không còn ở đâu trên Home',
+          (tester) async {
+        // "dở" một mình trong tiếng Việt là DỞ/TỆ — khách đọc ra thành lời chê.
+        final repo = FakeWrRepository()
+          ..seedTodayCheckin(_checkin(Mood.stressed));
+        final episodes = FakeWrEpisodeRepository()..seed(_episodes('s1', 3));
+
+        await _pump(tester, _wrap(repo: repo, episodes: episodes));
+
+        expect(find.text('CÒN DỞ'), findsNothing);
+        expect(find.textContaining('đang dở'), findsNothing);
+      });
+
       testWidgets('đã mở phiên hôm nay thì thôi nhắc', (tester) async {
         final repo = FakeWrRepository()
           ..seedTodayCheckin(_checkin(Mood.stressed));

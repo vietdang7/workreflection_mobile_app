@@ -142,12 +142,13 @@ class _AvatarSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final ccAsync = ref.watch(ccProfileProvider);
-    final profileAsync = ref.watch(mobileProfileProvider);
 
     final ccData = ccAsync.valueOrNull ?? {};
-    final profile = profileAsync.valueOrNull;
 
-    final name = ccData['full_name'] as String? ?? profile?.displayName ?? 'bạn';
+    // Cùng một nguồn tên với màn Hôm nay, và cùng một luật loại email ra khỏi ô
+    // tên — xem `wr_display_name.dart`. Email vẫn hiện, nhưng ở dòng email ngay
+    // bên dưới, đúng chỗ của nó.
+    final name = ref.watch(greetingNameProvider) ?? 'bạn';
     final email = ccData['email'] as String? ?? '';
     // Nhãn gói đọc thẳng từ `wrEntitlementProvider` — đúng cái quyết định mọi
     // cổng Premium trong app, nên nhãn và khoá không bao giờ nói hai điều khác

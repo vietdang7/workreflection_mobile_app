@@ -90,91 +90,52 @@ String needSeekingLabel(HumanNeed need) => switch (need) {
     };
 
 // ---------------------------------------------------------------------------
-// Câu insight ở khối "Điều bạn đang tìm kiếm"
+// Câu đọc lên ở khối "Điều bạn đang tìm kiếm"
 //
-// Trước 2026-08-04 chỗ này là ba khối chữ (`NeedReading`) gán cứng: đúng bốn bộ
-// text viết sẵn trong một switch trên HumanNeed. Hệ quả là mọi người rơi vào
-// cùng một nhu cầu đọc y hệt nhau, và nội dung không nhúc nhích dù người dùng
-// đã nhìn lại bao nhiêu lần hay lặp lại tình huống nào. Khách bác: màn Hiểu
-// mình phải phản chiếu dữ liệu thật, và chỉ cần MỘT câu chính chứ không phải ba
-// khối diễn giải.
+// LỊCH SỬ, vì chỗ này đã đổi hai lần theo hai hướng ngược nhau:
 //
-// Bản này đọc từ nội dung của chính tình huống người dùng đang lặp nhiều nhất
-// trong recentSituationIds. Nội dung đó đã có sẵn trong DB, per-situation:
+//   · Trước 04/08 là ba khối chữ gán cứng theo nhu cầu. Khách bác vì ai rơi vào
+//     cùng một nhu cầu thì đọc y hệt nhau.
+//   · Từ 04/08 đổi sang đọc `expected_outcome` / `aha_message` của tình huống
+//     lặp nhiều nhất — tức nội dung riêng theo từng chip.
+//   · Họp 26_1: khách bác bản đó. Khối này đang hiện câu Insight (ví dụ "Sự
+//     đồng thuận không phải lúc nào cũng là dấu hiệu của sự đồng lòng…"), trong
+//     khi nhãn của nó hứa NHU CẦU. Khách gọi thẳng tên câu mình muốn thấy:
+//     "được lắng nghe và thể hiện quan điểm" — chính là [needSeekingSentence].
 //
-//   • wr_situations.expected_outcome — "Tôi muốn…", đúng nghĩa của nhãn
-//     "ĐIỀU BẠN ĐANG TÌM KIẾM". Có ở 60 chip Tầng 1 và 10 tình huống tích cực.
-//   • wr_stories.aha_message — câu đọc vị ngắn, mã trùng chip (v2.0 §2.2), nên
-//     phủ được cả 100 chip đang hoạt động của Career Situation Library.
+// Nên khối này quay về đọc NHU CẦU. Điều đó KHÔNG kéo lại lỗi của bản trước
+// 04/08: cái sai hồi đó là ba khối diễn giải gán cứng chồng lên nhau, còn ở đây
+// là một câu duy nhất, và nhu cầu thì vẫn suy từ dữ liệu thật
+// ([dominantNeedFromBehaviour] đọc recentSituationIds).
 //
-// Chỉ khi cả hai đều trống mới rơi về [needSeekingSentence] — định nghĩa của
-// nhu cầu, vẫn là câu chung nhưng chỉ còn là lưới an toàn khi nội dung thiếu,
-// không còn là đường đi mặc định.
+// Phần đọc vị riêng theo từng tình huống không mất đi — nó nằm ở màn chi tiết
+// một điều lặp lại, đúng chỗ người dùng đang hỏi về CHÍNH tình huống đó.
 // ---------------------------------------------------------------------------
-
-/// Mã tình huống xuất hiện nhiều nhất trong [recent].
-///
-/// Hoà thì lấy cái GẦN ĐÂY nhất — [recent] xếp mới nhất đứng đầu, nên chỉ cần
-/// giữ mã gặp trước. Không có ngưỡng [kRepeatedSituationsMinCount] ở đây: ngưỡng
-/// đó chỉ chặn phần hiển thị "Tình huống lặp lại", còn khối này đọc từ lần đầu.
-String? topSituationCode(List<String> recent) {
-  if (recent.isEmpty) return null;
-  final tally = <String, int>{};
-  for (final code in recent) {
-    tally[code] = (tally[code] ?? 0) + 1;
-  }
-  String? best;
-  var bestCount = 0;
-  for (final code in recent) {
-    final count = tally[code]!;
-    if (count > bestCount) {
-      best = code;
-      bestCount = count;
-    }
-  }
-  return best;
-}
-
-/// Câu insight đọc từ dữ liệu thật, hoặc null khi không có nội dung nào.
-///
-/// [recent] là recentSituationIds — lịch sử Reflect thật của người dùng.
-String? seekingInsight({
-  required List<String> recent,
-  required List<WrSituation> situations,
-  required List<WrStory> stories,
-}) {
-  final code = topSituationCode(recent);
-  if (code == null) return null;
-
-  for (final s in situations) {
-    if (s.code != code) continue;
-    final text = _clean(s.expectedOutcome);
-    if (text != null) return text;
-    break;
-  }
-  for (final story in stories) {
-    if (story.storyId != code) continue;
-    return _clean(story.ahaMessage);
-  }
-  return null;
-}
-
-/// Bỏ khoảng trắng thừa và gộp xuống dòng — câu này hiện canh giữa một dòng
-/// lớn, giữ nguyên `\n` của nội dung DB sẽ vỡ bố cục.
-String? _clean(String? raw) {
-  if (raw == null) return null;
-  final text = raw.replaceAll(RegExp(r'\s+'), ' ').trim();
-  return text.isEmpty ? null : text;
-}
 
 /// Câu đọc lên ở khối "Điều bạn đang tìm kiếm" của màn Hiểu mình.
 ///
 /// Đây là định nghĩa của chính nhu cầu, không phải diễn giải riêng cho một
 /// người — phần diễn giải nằm ở màn chi tiết. Nhu cầu nào được chọn mới là
 /// dữ liệu thật: nó suy ra từ những tình huống đang lặp lại của người dùng.
+///
+/// CẢ BỐN CÂU ĐỀU MỞ BẰNG "ĐƯỢC" — và đó là điều kiện, không phải nhịp văn.
+///
+/// Khách hỏi 2026-08-25: "người đó không có ai lắng nghe thì hiển thị là CẦN
+/// được lắng nghe hay sao đó". Bản trước có hai câu viết ở thể trần thuật —
+/// "Thấy mình đang đi về phía trước", "Biết rõ mình đang ở đâu" — nên đọc ra
+/// thành MÔ TẢ một trạng thái người dùng đang có. Với chính người vừa mười một
+/// lần chọn "Tôi đang đi rất nhanh, nhưng đi đâu?", đó là câu nói ngược lại
+/// điều họ vừa kể. Nhãn "Điều bạn đang tìm kiếm" cứu được nghĩa, nhưng bắt
+/// người đọc phải ghép lại mới hiểu đúng.
+///
+/// Câu duy nhất khách đã duyệt (họp 26_1, và cũng là câu in trong mockup v16)
+/// là "Được lắng nghe và thể hiện quan điểm." — thể bị động, đọc ra ngay thành
+/// điều còn thiếu. Ba câu kia nay kéo về đúng khuôn ấy; câu của khách giữ
+/// nguyên từng chữ.
 String needSeekingSentence(HumanNeed need) => switch (need) {
-      HumanNeed.roRang => 'Biết rõ mình đang ở đâu và được chờ đợi điều gì.',
+      HumanNeed.roRang =>
+        'Được biết rõ mình đang ở đâu và người khác chờ đợi điều gì.',
       HumanNeed.ketNoi => 'Được lắng nghe và thể hiện quan điểm.',
-      HumanNeed.thichNghi => 'Giữ được mình khi mọi thứ đổi thay.',
-      HumanNeed.phatTrien => 'Thấy mình đang đi về phía trước.',
+      HumanNeed.thichNghi => 'Được là chính mình khi mọi thứ đổi thay.',
+      HumanNeed.phatTrien => 'Được thấy mình đang đi về phía trước.',
     };
