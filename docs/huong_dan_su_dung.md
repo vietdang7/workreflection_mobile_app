@@ -177,6 +177,11 @@ Chạm ảnh đại diện góc trên bên phải:
 
 ## 9. Bản miễn phí và bản đầy đủ
 
+> **Mục này KHÔNG dựng vào app** (quyết định 26/08/2026). Bảng kê tính năng trả
+> tiền nằm trong màn hướng dẫn là đúng thứ App Review soi theo Guideline 3.1.1,
+> nhất là khi luồng mua đang ẩn trên cả hai kho. Trong app, chỗ nói về gói chỉ
+> có màn Paywall. Bảng dưới đây giữ cho bản tài liệu đọc ngoài app.
+
 | | Miễn phí | Đầy đủ |
 |---|---|---|
 | Nhìn lại mỗi ngày | ✓ | ✓ |

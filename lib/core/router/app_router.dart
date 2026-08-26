@@ -27,6 +27,7 @@ import '../../features/workshops/presentation/my_workshops_screen.dart';
 import '../../features/coaching/presentation/coaching_schedule_screen.dart';
 import '../../features/coaching/presentation/coaching_screen.dart';
 import '../../features/coaching/presentation/coaching_sessions_screen.dart';
+import '../../features/profile/presentation/guide_screen.dart';
 import '../../features/profile/presentation/my_info_screen.dart';
 import '../../features/profile/presentation/profile_edit_screen.dart';
 import '../../features/profile/presentation/vouchers_screen.dart';
@@ -279,6 +280,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile/my-info',
         builder: (context, state) => const MyInfoScreen(),
+      ),
+      // "Hướng dẫn sử dụng" — yêu cầu §4 họp 26_1. Route riêng chứ không phải
+      // hộp thoại: nội dung dài hơn một màn, và người dùng cần quay lại đọc
+      // tiếp mà không mất chỗ đang đứng trong Hồ sơ.
+      GoRoute(
+        path: '/profile/guide',
+        builder: (context, state) => const GuideScreen(),
       ),
       GoRoute(
         path: '/vouchers',
