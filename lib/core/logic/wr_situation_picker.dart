@@ -21,18 +21,28 @@ import '../models/wr_content.dart';
 /// Cụm chiều (dims) tương ứng với từng cảm xúc check-in, theo bảng §III.
 ///
 /// Lý do từng cặp, giữ nguyên theo tài liệu:
-///   stressed → A3 (phản ứng cảm xúc, mất cân bằng) + C2 (né tránh lên tiếng,
-///              thường đi kèm căng thẳng giao tiếp)
-///   tired    → A3 (kiệt sức, mắc kẹt) + A1 (mất phương hướng, thường xuất
-///              hiện cùng mệt mỏi kéo dài)
-///   okay     → P-STEADY (tình huống ổn định tự soạn, không dùng chiều vấn đề)
-///   happy    → P-ACHIEVE (tình huống thành tựu tự soạn)
+///   stressed  → A3 (phản ứng cảm xúc, mất cân bằng) + C2 (né tránh lên tiếng,
+///               thường đi kèm căng thẳng giao tiếp)
+///   tired     → A3 (kiệt sức, mắc kẹt) + A1 (mất phương hướng, thường xuất
+///               hiện cùng mệt mỏi kéo dài)
+///   foggy     → S1 (rõ ràng vai trò & trách nhiệm)
+///   outofsync → S2 (luồng thông tin & phối hợp)
+///   okay      → P-STEADY (tình huống ổn định tự soạn, không dùng chiều vấn đề)
+///   happy     → P-ACHIEVE (tình huống thành tựu tự soạn)
 ///
 /// Hai cảm xúc tích cực cố tình KHÔNG trỏ vào chiều S/C/A nào: thư viện gốc chỉ
 /// có tình huống dạng vấn đề, nên lọc vào đó sẽ ra gợi ý gượng ép (§2.3).
+///
+/// Hai dòng `foggy`/`outofsync` thêm 24/08/2026 (changelog mockup §2 và §3).
+/// Chúng chỉ có MỘT chiều mỗi cảm xúc, khác hai dòng đầu — cố ý: nhóm Structure
+/// đủ 6 tình huống mỗi chiều trong thư viện, thừa cho 5 chip của bước Notice,
+/// nên không cần ghép thêm chiều thứ hai để lấp chỗ. Ghép thêm chỉ làm loãng
+/// đúng cái mà người dùng vừa nói ra.
 const Map<Mood, List<ScaDimension>> kMoodDimensions = {
   Mood.stressed: [ScaDimension.a3, ScaDimension.c2],
   Mood.tired: [ScaDimension.a3, ScaDimension.a1],
+  Mood.foggy: [ScaDimension.s1],
+  Mood.outofsync: [ScaDimension.s2],
   Mood.okay: [ScaDimension.pSteady],
   Mood.happy: [ScaDimension.pAchieve],
 };

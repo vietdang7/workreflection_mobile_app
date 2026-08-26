@@ -76,6 +76,28 @@ Map<SelfCheckPillar, double> pillarShares(
   };
 }
 
+/// Số lần trong [recent] thật sự rơi vào một trụ SCA.
+///
+/// `pillarShares` trả về ba số 0 cho hai trường hợp KHÁC HẲN nhau: chưa ghi
+/// nhận gì, và đã ghi nhận nhiều nhưng toàn tình huống tích cực (P-ACHIEVE,
+/// P-STEADY) hoặc tình huống tự viết không có mã. Cả ba số 0 đọc ra thành ba
+/// nhãn "Đang phát triển" — một lời khen bịa ra từ chỗ không có dữ liệu.
+///
+/// Đủ 15 lần nhìn lại mà bức tranh vẫn phải im lặng thì màn hình phải NÓI RA
+/// điều đó, chứ không được bịa. Hàm này để nơi gọi phân biệt được hai trường
+/// hợp trước khi dựng nhãn.
+int scaTouchedCount(List<String> recent, List<WrSituation> situations) {
+  final codeToDim = {for (final s in situations) s.code: s.scaDimension};
+  var total = 0;
+  for (final code in recent) {
+    final dim = codeToDim[code];
+    if (dim == null) continue;
+    if (pillarOfDimension(dim) == null) continue;
+    total++;
+  }
+  return total;
+}
+
 /// Nhãn trạng thái một trụ, suy từ tỉ trọng bị chạm.
 ///
 /// Ba trụ chia đều thì mỗi trụ khoảng 0.33. Trên 0.45 là lệch hẳn về một phía;

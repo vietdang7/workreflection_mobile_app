@@ -6,12 +6,15 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/data/wr_intelligence_repository.dart';
 import '../../../core/logic/wr_entitlement.dart';
+import '../../../core/logic/wr_sca_deep_dive.dart';
 import '../../../core/logic/wr_self_check_narrative.dart';
 import '../../../core/logic/wr_repeated_situations.dart';
 import '../../../core/logic/wr_self_check_questions.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
+import '../../../core/widgets/wr_link_row.dart';
+import 'wr_sca_deep_dive_screen.dart' show openScaDeepDive;
 import '../wr_providers.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 
@@ -781,6 +784,17 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
               ),
             ),
           ],
+
+          // Lối vào màn Diễn giải sâu (changelog 24/08 §7).
+          //
+          // Khối ở trên chỉ đối chiếu Pattern cho trụ THẤP NHẤT. §7 muốn cả ba
+          // trụ đều có lớp đối chiếu riêng, vì lệch pha hay xảy ra ở trụ người
+          // dùng tự chấm cao — đúng trụ mà khối này bỏ qua.
+          WrLinkRow(
+            key: const Key('wr_self_check_deep_dive_link'),
+            label: 'Diễn giải sâu & xu hướng',
+            onTap: () => openScaDeepDive(context, ref),
+          ),
         ],
       ),
     );
@@ -1008,11 +1022,11 @@ class _NarrativeCardState extends State<_NarrativeCard> {
 
 /// Khối Premium bị khoá — hiện mờ kèm nút nâng cấp (Hai Lớp v1.2 §IV,
 /// khoá cấp tính năng: "ẩn hoặc hiện dạng mờ kèm nút nâng cấp").
-class _DeepDiveLocked extends StatelessWidget {
+class _DeepDiveLocked extends ConsumerWidget {
   const _DeepDiveLocked();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(22, 24, 22, 0),
       child: Column(
@@ -1062,7 +1076,9 @@ class _DeepDiveLocked extends StatelessWidget {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () => context.push('/wr/paywall'),
+                    // Mua xong đi thẳng vào màn Diễn giải sâu (§7), không rơi
+                    // lại đúng cái khối khoá vừa bấm.
+                    onPressed: () => openScaDeepDive(context, ref),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: WrColors.dark,
                       foregroundColor: WrColors.white,
@@ -1121,16 +1137,19 @@ class _PillarScoreCard extends StatelessWidget {
 
   double get _percent => score <= 0 ? 0 : ((score - 1) / 4).clamp(0.0, 1.0);
 
-  String get _badge {
-    if (score >= 3.8) return 'Đang phát triển';
-    if (score >= 2.5) return 'Cần chú ý';
-    return 'Ưu tiên cải thiện';
-  }
+  // Nhãn và ngưỡng nằm ở wr_sca_deep_dive.dart, không ở đây: từ changelog
+  // 24/08 §7, màn Diễn giải sâu phải hiện ĐÚNG nhãn này. Hai màn chép cùng một
+  // ngưỡng là bắt đầu đếm ngược tới ngày chúng lệch nhau.
+  ScaPillarStatus get _status => scaPillarStatus(score);
 
-  Color get _badgeColor =>
-      score >= 3.8 ? WrColors.pillTealText : WrColors.pillCoralText;
-  Color get _badgeBg =>
-      score >= 3.8 ? const Color(0xFFE6F7F7) : const Color(0xFFFFEEEB);
+  String get _badge => _status.label;
+
+  Color get _badgeColor => _status.isReassuring
+      ? WrColors.pillTealText
+      : WrColors.pillCoralText;
+  Color get _badgeBg => _status.isReassuring
+      ? const Color(0xFFE6F7F7)
+      : const Color(0xFFFFEEEB);
 
   @override
   Widget build(BuildContext context) {

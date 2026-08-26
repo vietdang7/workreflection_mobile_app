@@ -142,12 +142,13 @@ class _AvatarSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final ccAsync = ref.watch(ccProfileProvider);
-    final profileAsync = ref.watch(mobileProfileProvider);
 
     final ccData = ccAsync.valueOrNull ?? {};
-    final profile = profileAsync.valueOrNull;
 
-    final name = ccData['full_name'] as String? ?? profile?.displayName ?? 'bạn';
+    // Cùng một nguồn tên với màn Hôm nay, và cùng một luật loại email ra khỏi ô
+    // tên — xem `wr_display_name.dart`. Email vẫn hiện, nhưng ở dòng email ngay
+    // bên dưới, đúng chỗ của nó.
+    final name = ref.watch(greetingNameProvider) ?? 'bạn';
     final email = ccData['email'] as String? ?? '';
     // Nhãn gói đọc thẳng từ `wrEntitlementProvider` — đúng cái quyết định mọi
     // cổng Premium trong app, nên nhãn và khoá không bao giờ nói hai điều khác
@@ -743,14 +744,27 @@ class _SettingsSection extends ConsumerWidget {
               const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
         ),
 
-        // Xuất dữ liệu là dòng CUỐI của thẻ, nên không kẻ vạch dưới — vạch
-        // cuối cùng sẽ nằm sát mép thẻ và đọc ra như một đường viền thừa.
         _SettingRow(
           key: const Key('profile_export_btn'),
           icon: Icons.download_outlined,
           label: l10n.profileSettingExport,
-          showBorder: false,
           onTap: () => _exportData(context, ref),
+          trailing:
+              const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
+        ),
+
+        // Hướng dẫn sử dụng — yêu cầu §4 họp 26_1. Đứng CUỐI theo quy ước quen
+        // thuộc của mọi màn thiết lập (trợ giúp nằm dưới cùng), nên không kẻ
+        // vạch dưới: vạch cuối sẽ nằm sát mép thẻ và đọc ra như viền thừa.
+        //
+        // Là dòng trong danh sách chứ không phải thẻ riêng: nó không phải lời
+        // mời như Khảo sát tổ chức hay Premium, mà là chỗ để tra khi cần.
+        _SettingRow(
+          key: const Key('profile_guide_btn'),
+          icon: Icons.help_outline,
+          label: 'Hướng dẫn sử dụng',
+          showBorder: false,
+          onTap: () => context.push('/profile/guide'),
           trailing:
               const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
         ),

@@ -203,11 +203,14 @@ void main() {
 
       expect(h.episodes.episodes.single.state, ExperienceState.reactivated);
 
-      // Và bước xác nhận ý nghĩa lưu được, không báo lỗi.
+      // Và bước xác nhận ý nghĩa lưu được, không báo lỗi. Hai lớp (§1.2) nên
+      // phải bấm hai lần; `draft_meaning` nhận bản GỘP hai vế.
       await tester.enterText(
         find.byKey(const Key('wr_meaning_field')),
-        'Tôi cần nói ra sớm hơn.',
+        'mình chưa nói ra sớm hơn',
       );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('wr_flow_primary')));
       await tester.pumpAndSettle();
@@ -215,7 +218,7 @@ void main() {
       expect(find.textContaining('Không lưu được'), findsNothing);
       expect(
         h.episodes.episodes.single.draftMeaning,
-        'Tôi cần nói ra sớm hơn.',
+        mergeInsight(stem: 'mình chưa nói ra sớm hơn', aha: kDefaultAha),
       );
     });
   });
@@ -288,6 +291,55 @@ void main() {
       expect(saved.patternsDone, contains(ReflectionPattern.notice));
       // §4.1: mã vừa chọn được đẩy lên đầu lịch sử chống lặp.
       expect(h.wr.saveRecentSituationIdsCalls.last.first, shown);
+    });
+
+    testWidgets('check-in lần hai luôn mở phiên mới, kể cả khi còn phiên dở',
+        (tester) async {
+      // Khách báo 2026-08-24: "các check in lặp lại 2 lần không được count".
+      //
+      // Đường đi sinh ra lỗi: chọn tình huống xong rồi rời luồng bằng thanh tab
+      // (không phải nút Xong, nên `leave()` không chạy) — phiên vẫn nằm trong
+      // `episodeFlowProvider`. Lần chạm ô cảm xúc kế tiếp bị `wr_step_screen`
+      // kéo thẳng về bước dở của phiên cũ, không Episode nào được mở, và bộ đếm
+      // Career Health đứng yên trong khi người dùng đã check-in hai lần.
+      final h = _Harness();
+      h.content.seedSituations(_someSituations);
+      await _pump(tester, h.app());
+
+      await tester.tap(find.byKey(const Key('wr_home_checkin_tired')));
+      await tester.pumpAndSettle();
+      await tester.tap(
+        find.byKey(Key('wr_situation_${_firstVisibleSituationCode()}')),
+      );
+      await tester.pumpAndSettle();
+      expect(h.episodes.openEpisodeCalls, hasLength(1));
+
+      // Rời luồng bằng thanh tab: không đóng phiên, không gọi `leave()`.
+      GoRouter.of(tester.element(find.byType(WrDetailScreen))).go('/home');
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('wr_home_checkin_tired')));
+      await tester.pumpAndSettle();
+
+      // Phải hỏi lại tình huống, không nhảy thẳng vào bước dở của phiên cũ.
+      expect(
+        find.byType(WrStepScreen),
+        findsOneWidget,
+        reason: 'check-in mới phải bắt đầu từ bước chọn tình huống',
+      );
+
+      await tester.tap(
+        find.byKey(Key('wr_situation_${_firstVisibleSituationCode()}')),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        h.episodes.openEpisodeCalls,
+        hasLength(2),
+        reason: 'hai lần check-in phải thành hai lần nhìn lại được đếm',
+      );
+      // Phiên cũ không bị xoá — nó vẫn nằm đó để thẻ "Còn dở" mời quay lại.
+      expect(h.episodes.episodes, hasLength(2));
     });
 
     testWidgets('thoát giữa chừng thì phiên ngủ, không mất', (tester) async {
@@ -438,10 +490,11 @@ void main() {
   });
 
   group('Ý nghĩa và ký ức', () {
-    // Câu trả lời tách khỏi câu hỏi thì vô nghĩa. Bước Insight phải đọc lại đủ
-    // cặp hỏi–đáp. Ô nhập thì mở sẵn bằng câu Aha (§V) — không có tình huống
-    // thì dùng câu mặc định, không bao giờ để trống.
-    testWidgets('đọc lại đủ câu hỏi lẫn câu trả lời, ô nhập mở sẵn câu Aha',
+    // Họp 26_1 BỎ khối "BẠN VỪA VIẾT" đọc lại cặp hỏi–đáp của bước trước:
+    // "đoạn văn bị lặp và dư thừa … gây rối mắt và khó hiểu logic". Người dùng
+    // vừa trả lời câu đó hai màn trước, thấy lại nguyên văn thì tưởng bị hỏi
+    // lại. Ô nhập vẫn mở TRỐNG (§1.2) và câu Aha vẫn chỉ hiện ở Lớp 2.
+    testWidgets('không đọc lại cặp hỏi–đáp cũ, ô nhập mở trống',
         (tester) async {
       final h = _Harness();
       h.seedOpenEpisode(
@@ -457,23 +510,27 @@ void main() {
       await _resume(tester);
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('wr_meaning_recap')), findsOneWidget);
-      expect(find.text(kCustomDetailPrompt), findsOneWidget);
+      expect(find.byKey(const Key('wr_meaning_recap')), findsNothing);
+      expect(find.text(kCustomDetailPrompt), findsNothing);
       expect(
         find.text('Mình đã dám trình bày trước cả phòng'),
-        findsOneWidget,
+        findsNothing,
       );
 
+      // §1.2: Lớp 1 mở bằng ô TRỐNG. Câu Aha chỉ hiện sang Lớp 2.
       final field = tester.widget<TextField>(
         find.byKey(const Key('wr_meaning_field')),
       );
-      expect(field.controller!.text, kDefaultAha);
+      expect(field.controller!.text, isEmpty);
+      expect(find.text(kDefaultAha), findsNothing);
+
+      await tester.tap(find.byKey(const Key('wr_flow_secondary')));
+      await tester.pumpAndSettle();
+      expect(find.text(kDefaultAha), findsOneWidget);
     });
 
-    // Đọc lại mà không sửa được thì vô ích: người dùng nhìn lại mới thấy mình
-    // vừa trả lời cụt, lúc đó phải viết lại được ngay (WPA Inv.4).
-    testWidgets('sửa lại được câu trả lời ngay trên màn Ý nghĩa',
-        (tester) async {
+    // Ô chữ đứng ĐẦU màn, gợi ý nằm dưới và chạm được để mượn chữ (họp 26_1).
+    testWidgets('chạm một gợi ý thì điền thẳng vào ô chữ', (tester) async {
       final h = _Harness();
       h.seedOpenEpisode(
         moment: HumanMoment.celebration,
@@ -488,30 +545,27 @@ void main() {
       await _resume(tester);
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('wr_meaning_recap_explore')), findsOneWidget);
-      final answer = find.text('hôm nay');
-      await tester.ensureVisible(answer);
+      expect(find.byKey(const Key('wr_meaning_suggestions')), findsOneWidget);
+
+      final chip = find.byKey(const Key('wr_meaning_suggestion_0'));
+      await tester.ensureVisible(chip);
       await tester.pumpAndSettle();
-      await tester.tap(answer);
+      await tester.tap(chip);
       await tester.pumpAndSettle();
 
-      await tester.enterText(
-        find.byKey(const Key('wr_meaning_recap_field_explore')),
-        'Mình đã dám trình bày trước cả phòng',
+      final field = tester.widget<TextField>(
+        find.byKey(const Key('wr_meaning_field')),
       );
-      await tester.tap(find.byKey(const Key('wr_meaning_recap_save_explore')));
-      await tester.pumpAndSettle();
+      expect(field.controller!.text, kInsightStemSuggestions.first);
 
-      expect(
-        h.episodes.episodes.single.notes['explore'],
-        'Mình đã dám trình bày trước cả phòng',
-      );
-      // Sửa xong quay về dạng đọc, chữ mới hiện ngay.
-      expect(
-        find.text('Mình đã dám trình bày trước cả phòng'),
-        findsOneWidget,
-      );
-      expect(find.text('hôm nay'), findsNothing);
+      // Chạm gợi ý thứ hai là GHI ĐÈ, không nối thêm — nối thêm ra một câu
+      // không ai đọc được, mà người dùng lại không thấy vì ô đang cuộn.
+      final second = find.byKey(const Key('wr_meaning_suggestion_1'));
+      await tester.ensureVisible(second);
+      await tester.pumpAndSettle();
+      await tester.tap(second);
+      await tester.pumpAndSettle();
+      expect(field.controller!.text, kInsightStemSuggestions[1]);
     });
 
     testWidgets('chỉ người dùng xác nhận mới sinh Insight', (tester) async {
@@ -529,23 +583,30 @@ void main() {
       await _resume(tester);
       await tester.pumpAndSettle();
 
-      // Chưa viết gì thì chưa xác nhận được.
+      // Mới ở Lớp 1 thì chưa xác nhận được — sang Lớp 2 cũng chưa: chỉ nút
+      // "Tiếp tục" của Lớp 2 mới sinh Insight.
       expect(h.intel.insertInsightCalls, isEmpty);
 
       await tester.enterText(
         find.byKey(const Key('wr_meaning_field')),
-        'Tôi lên tiếng được khi thấy an toàn.',
+        'mình thấy an toàn khi được lắng nghe',
       );
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('wr_flow_primary')));
       await tester.pumpAndSettle();
+      expect(h.intel.insertInsightCalls, isEmpty,
+          reason: 'sang Lớp 2 chưa phải là xác nhận');
 
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
+      await tester.pumpAndSettle();
+
+      final merged = mergeInsight(
+        stem: 'mình thấy an toàn khi được lắng nghe',
+        aha: kDefaultAha,
+      );
       expect(h.episodes.confirmMeaningCalls, hasLength(1));
       expect(h.intel.insertInsightCalls, hasLength(1));
-      expect(
-        h.intel.insertInsightCalls.first.content,
-        'Tôi lên tiếng được khi thấy an toàn.',
-      );
+      expect(h.intel.insertInsightCalls.first.content, merged);
     });
 
     // Owner gặp trên bản debug 2026-07-28: màn Lựa chọn mở bằng push, bấm Back
@@ -627,7 +688,10 @@ void main() {
       await tester.pumpAndSettle();
       await tester.binding.handlePopRoute();
       await tester.pumpAndSettle();
-      expect(find.byKey(const Key('wr_meaning_field')), findsOneWidget);
+      // Phiên đã có ý nghĩa chốt nên màn mở thẳng ở Lớp 2 (§1.2) — bắt viết
+      // lại câu mở dở là hỏi lại một câu đã được trả lời.
+      expect(find.byKey(const Key('wr_meaning_aha')), findsOneWidget);
+      expect(find.byKey(const Key('wr_meaning_field')), findsNothing);
 
       await tester.tap(find.byKey(const Key('wr_flow_primary')));
       await tester.pumpAndSettle();
@@ -643,17 +707,28 @@ void main() {
         (tester) async {
       final h = await backToMeaningAfterConfirm(tester);
 
+      // Màn mở ở Lớp 2; lùi một nhịp để sửa lại chữ của mình. Nút lùi ở đây
+      // KHÔNG rời màn — hai lớp là một bước (§1.2).
+      await tester.tap(find.byKey(const Key('wr_flow_back')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('wr_meaning_field')), findsOneWidget);
+
       await tester.enterText(
         find.byKey(const Key('wr_meaning_field')),
-        'Câu mới sau khi nghĩ lại.',
+        'nghĩ lại thì lý do khác',
       );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('wr_flow_primary')));
       await tester.pumpAndSettle();
 
       expect(h.episodes.reviseMeaningCalls, hasLength(1));
       final saved = h.episodes.episodes.single;
-      expect(saved.draftMeaning, 'Câu mới sau khi nghĩ lại.');
+      expect(
+        saved.draftMeaning,
+        mergeInsight(stem: 'nghĩ lại thì lý do khác', aha: kDefaultAha),
+      );
       expect(saved.state, ExperienceState.meaningConfirmed);
       expect(find.textContaining('Transition bất hợp lệ'), findsNothing);
     });
@@ -678,8 +753,10 @@ void main() {
 
       await tester.enterText(
         find.byKey(const Key('wr_meaning_field')),
-        'Mình đã dám trình bày',
+        'mình đã dám trình bày',
       );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('wr_flow_primary')));
       await tester.pumpAndSettle();
@@ -695,10 +772,17 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(h.episodes.integrateCalls, hasLength(1));
-      expect(h.content.insertMemoryEventCalls, hasLength(1));
+
+      // STORY đứng đầu, đúng một mảnh cho một lượt. Các mảnh sau nó là lớp
+      // diễn giải sinh thêm (changelog 24/08 §8.2) — lượt đầu tiên của một
+      // người luôn kèm ít nhất một Cột mốc.
+      final stories = h.content.insertMemoryEventCalls
+          .where((e) => e.behavior == 'reflection_episode')
+          .toList();
+      expect(stories, hasLength(1));
       expect(
-        h.content.insertMemoryEventCalls.first.reflectionText,
-        'Mình đã dám trình bày',
+        stories.single.reflectionText,
+        mergeInsight(stem: 'mình đã dám trình bày', aha: kDefaultAha),
       );
       expect(
         h.content.insertMemoryEventCalls.first.behavior,
@@ -769,7 +853,10 @@ void main() {
     testWidgets('lùi về màn Đóng lần nữa không ghi trùng Career Memory',
         (tester) async {
       final h = await backToChoiceAfterCommit(tester);
-      expect(h.content.insertMemoryEventCalls, hasLength(1));
+      // Cả STORY lẫn các mảnh sinh thêm đều phải đứng yên ở lần hai — chốt số
+      // đếm ở đây thay vì chốt riêng STORY, để một mảnh Cột mốc bị ghi trùng
+      // cũng bị bắt.
+      final eventsAfterFirst = h.content.insertMemoryEventCalls.length;
       final stepsAfterFirst = h.intel.insertReflectionStepCalls.length;
 
       // Tới lại màn Đóng: initState gọi integrate() lần hai.
@@ -777,7 +864,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(h.episodes.integrateCalls, hasLength(1));
-      expect(h.content.insertMemoryEventCalls, hasLength(1));
+      expect(h.content.insertMemoryEventCalls, hasLength(eventsAfterFirst));
       expect(h.intel.insertReflectionStepCalls, hasLength(stepsAfterFirst));
     });
 
@@ -1021,8 +1108,12 @@ void main() {
     });
   });
 
-  group('v1.6 · Aha gợi sẵn ở bước Ý nghĩa (§V)', () {
-    testWidgets('ô nhập điền sẵn câu Aha, kèm câu Self Reflection',
+  // Nhóm này từng tên là "Aha gợi sẵn ở bước Ý nghĩa (§V)" và kiểm đúng điều
+  // ngược lại: ô nhập mở ra ĐÃ có sẵn câu Aha. Changelog 24/08 §1.2 bỏ hẳn cơ
+  // chế đó — câu Aha chuyển sang Lớp 2, sau khi người dùng đã tự viết hoặc chọn
+  // bỏ qua.
+  group('§1.2 · Aha chuyển sang Lớp 2', () {
+    testWidgets('Lớp 1 chỉ có câu Self Reflection, Lớp 2 mới có Aha',
         (tester) async {
       final h = _Harness();
       h.content
@@ -1074,10 +1165,32 @@ void main() {
       final field = tester.widget<TextField>(
         find.byKey(const Key('wr_meaning_field')),
       );
-      expect(field.controller!.text, 'Nhiều tổ chức không thiếu ý tưởng.');
+      expect(field.controller!.text, isEmpty);
+      expect(find.text('Nhiều tổ chức không thiếu ý tưởng.'), findsNothing,
+          reason: 'Lớp 1 không được để lộ câu Aha');
+
+      // Viết một câu rồi sang Lớp 2: nhãn chuẩn hoá và câu Aha cùng xuất hiện.
+      await tester.enterText(
+        find.byKey(const Key('wr_meaning_field')),
+        'mình sợ nói ra thì bị đánh giá',
+      );
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Nhiều tổ chức không thiếu ý tưởng.'), findsOneWidget);
+      expect(
+        find.byKey(const Key('wr_meaning_normalizing_label')),
+        findsOneWidget,
+      );
+      expect(
+        find.text('$kInsightStemPrefix mình sợ nói ra thì bị đánh giá'),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('bản nháp của người dùng thắng câu Aha', (tester) async {
+    testWidgets('chữ người dùng đã viết còn nguyên khi mở lại phiên',
+        (tester) async {
       // WIA Inv.2: hệ thống chỉ đề xuất. Đè lên chữ người dùng đã viết là
       // vượt quyền.
       final h = _Harness();
@@ -1111,7 +1224,13 @@ void main() {
           ReflectionPattern.explore,
         ],
         situationCode: 'C2-sit-01',
-        draftMeaning: 'Chữ của chính tôi.',
+        // Chữ của Lớp 1 nằm ở `notes['reframe']`, KHÔNG ở `draft_meaning`:
+        // draft là bản đã gộp với câu Aha, đổ nguyên nó vào ô chữ thì người
+        // dùng thấy chữ của mình dính liền một câu họ chưa từng viết.
+        notes: {
+          ReflectionPattern.reframe.dbValue:
+              '$kInsightStemPrefix chữ của chính tôi',
+        },
       );
 
       await _pump(tester, h.app());
@@ -1120,7 +1239,9 @@ void main() {
       final field = tester.widget<TextField>(
         find.byKey(const Key('wr_meaning_field')),
       );
-      expect(field.controller!.text, 'Chữ của chính tôi.');
+      expect(field.controller!.text, 'chữ của chính tôi',
+          reason: 'ô chữ hiện phần người dùng viết, không kèm vế mở dở');
+      expect(find.text('Câu Aha có sẵn.'), findsNothing);
     });
   });
 }
@@ -1154,14 +1275,23 @@ extension on _Harness {
   }
 }
 
-/// Bấm "Tiếp tục" trên Home để vào đúng màn của trạng thái hiện tại.
-/// Xác nhận ý nghĩa để sang bước Lựa chọn.
+/// Đi hết bước Ý nghĩa để sang bước Lựa chọn.
+///
+/// Từ changelog 24/08 §1.2 bước này có HAI LỚP nên phải bấm hai lần: Lớp 1 viết
+/// câu mở dở rồi "Xem một góc nhìn khác", Lớp 2 đọc câu Aha rồi "Tiếp tục".
+///
+/// Đã đứng sẵn ở Lớp 2 (mở lại một phiên đã có draft_meaning) thì ô chữ không
+/// còn — bỏ qua nửa đầu.
 Future<void> _confirmMeaning(WidgetTester tester) async {
-  await tester.enterText(
-    find.byKey(const Key('wr_meaning_field')),
-    'Điều tôi muốn giữ lại.',
-  );
-  await tester.pumpAndSettle();
+  if (find.byKey(const Key('wr_meaning_field')).evaluate().isNotEmpty) {
+    await tester.enterText(
+      find.byKey(const Key('wr_meaning_field')),
+      'đây không phải lần đầu',
+    );
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('wr_flow_primary')));
+    await tester.pumpAndSettle();
+  }
   await tester.tap(find.byKey(const Key('wr_flow_primary')));
   await tester.pumpAndSettle();
 }

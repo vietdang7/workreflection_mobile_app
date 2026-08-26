@@ -158,16 +158,23 @@ class MoodContent {
 Mood _moodFromContentKey(String value) => switch (value) {
       'stress' => Mood.stressed,
       'tired' => Mood.tired,
+      'foggy' => Mood.foggy,
+      'outofsync' => Mood.outofsync,
       'ok' => Mood.okay,
       'happy' => Mood.happy,
       _ => throw ArgumentError('Unknown mood_content mood: $value'),
     };
 
 /// Chiều ngược lại của [_moodFromContentKey] — dùng khi truy vấn theo cảm xúc.
+///
+/// Hai cảm xúc thêm 24/08/2026 dùng CÙNG một chuỗi ở cả hai bảng (`foggy`,
+/// `outofsync`), nên chỗ lệch tên chỉ còn đúng hai cặp cũ.
 extension MoodContentKey on Mood {
   String get moodContentKey => switch (this) {
         Mood.stressed => 'stress',
         Mood.tired => 'tired',
+        Mood.foggy => 'foggy',
+        Mood.outofsync => 'outofsync',
         Mood.okay => 'ok',
         Mood.happy => 'happy',
       };

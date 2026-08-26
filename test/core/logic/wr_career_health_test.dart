@@ -81,6 +81,38 @@ void main() {
     });
   });
 
+  // `pillarShares` trả ba số 0 cho hai trường hợp khác hẳn nhau, và ba số 0
+  // đọc ra thành ba nhãn "Đang phát triển" — một lời khen dựng từ chỗ không có
+  // dữ liệu. Hàm này để màn hình phân biệt được trước khi dựng nhãn.
+  group('scaTouchedCount', () {
+    final situations = [
+      _sit('s-a', ScaDimension.s1),
+      _sit('c-a', ScaDimension.c2),
+      _sit('pos', ScaDimension.pAchieve),
+    ];
+
+    test('đếm đúng số lần rơi vào một trụ', () {
+      expect(scaTouchedCount([..._p('s-a', 3), ..._p('c-a', 2)], situations), 5);
+    });
+
+    test('tình huống tích cực không tính — nó không thuộc trụ nào', () {
+      expect(scaTouchedCount(_p('pos', 20), situations), 0);
+    });
+
+    test('mã không có trong danh mục thì không tính', () {
+      expect(scaTouchedCount(_p('khong-ton-tai', 20), situations), 0);
+    });
+
+    test('danh mục rỗng thì không tra được trụ nào', () {
+      // Đây là trạng thái thật lúc thư viện tình huống chưa tải xong.
+      expect(scaTouchedCount(_p('s-a', 15), const []), 0);
+    });
+
+    test('rỗng thì 0', () {
+      expect(scaTouchedCount(const [], situations), 0);
+    });
+  });
+
   group('behaviourPillarLabel', () {
     test('lệch hẳn về một trụ thì ưu tiên cải thiện', () {
       expect(behaviourPillarLabel(0.6), 'Ưu tiên cải thiện');

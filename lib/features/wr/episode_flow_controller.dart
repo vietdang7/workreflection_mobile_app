@@ -13,9 +13,11 @@ import '../../core/data/wr_content_repository.dart';
 import '../../core/data/wr_episode_repository.dart';
 import '../../core/data/wr_intelligence_repository.dart';
 import '../../core/data/wr_repository.dart';
+import '../../core/logic/wr_career_memory_rules.dart';
 import '../../core/logic/wr_experience_state.dart';
 import '../../core/logic/wr_flow_error.dart';
 import '../../core/logic/wr_reflect_flow.dart';
+import '../../core/logic/wr_sca_deep_dive.dart';
 import '../../core/models/checkin.dart';
 import '../../core/models/wr_content.dart';
 import '../../core/models/wr_episode.dart';
@@ -64,6 +66,10 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
   WrIntelligenceRepository get _intel =>
       _ref.read(wrIntelligenceRepositoryProvider);
   WrContentRepository get _content => _ref.read(wrContentRepositoryProvider);
+
+  /// Lịch sử Self-Check — nguồn thứ hai của khung "Lệch pha tự nhận thức" (§9).
+  WrIntelligenceRepository get _intelligence =>
+      _ref.read(wrIntelligenceRepositoryProvider);
 
   /// Nạp lại một Episode để đi tiếp (nút "Tiếp tục" ở Home).
   ///
@@ -390,9 +396,78 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
 
     state = await _repo.integrate(episode: ep);
 
+    // (4) Cột mốc · Chủ đề · Insight — §8.2 của changelog 24/08.
+    //
+    // Chạy SAU integrate: hai câu hỏi của §8.2 hỏi về STORY vừa tạo, mà STORY
+    // chỉ tồn tại khi Episode đã khép. Chạy trước thì lượt này không nằm trong
+    // danh sách và ngưỡng 3-lần-trong-14-ngày luôn thiếu đúng một.
+    await _writeDerivedMemory(state ?? ep);
+
     _ref.invalidate(wrPatternCountsProvider);
     _ref.invalidate(wrOpenEpisodeProvider);
     _ref.invalidate(wrEpisodeHistoryProvider);
+    _ref.invalidate(wrMemoryEventsProvider);
+  }
+
+  /// Ghi các mảnh ký ức được SINH THÊM từ lượt vừa khép (§8.2).
+  ///
+  /// Cả khối nằm trong try: đây là lớp diễn giải, hỏng thì mất một dòng trên
+  /// dòng thời gian. Để nó ném ra ngoài là làm hỏng cả việc khép Episode — thứ
+  /// người dùng vừa bỏ công làm xong.
+  Future<void> _writeDerivedMemory(ReflectionEpisode story) async {
+    try {
+      final userId = story.userId;
+      final episodes = await _repo.fetchEpisodes(userId, limit: 200);
+      final events = await _content.fetchMemoryEventsForUser(userId);
+      final situations = await _content.fetchSituations();
+
+      final now = DateTime.now();
+      final closed = closedStories(episodes);
+
+      // Khung "Lệch pha tự nhận thức" — §9, khung thứ ba.
+      //
+      // Trước bản này tham số `selfAwarenessGapText` có mặt trong chữ ký nhưng
+      // KHÔNG ai truyền, nên một trong bốn khung của §9 chưa bao giờ chạy. Câu
+      // được dựng bên `wr_sca_deep_dive.dart` chứ không tính lại ở đây: §9 nói
+      // thẳng là "tái dùng logic đã có ở Diễn giải sâu", và tính lại là dựng
+      // nguồn sự thật thứ hai cho cùng một chênh lệch.
+      //
+      // Tự nó im lặng khi chưa có Self-Check nào — không phải lỗi, chỉ là chưa
+      // đủ hai nguồn để so.
+      List<ScaSelfCheckResponse> selfChecks = const [];
+      try {
+        selfChecks = await _intelligence.fetchSelfCheckHistory(userId);
+      } catch (e, s) {
+        logFlowError('selfCheckHistoryForInsight', e, s);
+      }
+
+      final drafts = memoryFragmentsAfterStory(
+        stories: closed,
+        pastEvents: events,
+        situationLabels: {for (final s in situations) s.code: s.text},
+        now: now,
+        selfAwarenessGapText: selfAwarenessGapNarrative(
+          history: selfChecks,
+          episodes: episodes,
+          situations: situations,
+          now: now,
+        ),
+      );
+
+      for (final d in drafts) {
+        await _content.insertMemoryEvent(CareerMemoryEvent(
+          id: '',
+          userId: userId,
+          humanNeed: d.need,
+          scaDimension: d.scaDimension,
+          situationCode: d.situationCode,
+          behavior: d.behavior,
+          reflectionText: d.text,
+        ));
+      }
+    } catch (e, s) {
+      logFlowError('writeDerivedMemory', e, s);
+    }
   }
 
   /// Tạm dừng Episode — giữ nguyên tiến trình (WXS §4.5).

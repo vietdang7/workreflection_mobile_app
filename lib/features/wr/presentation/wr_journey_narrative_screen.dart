@@ -26,6 +26,11 @@ class WrJourneyNarrativeScreen extends ConsumerWidget {
     final canRead =
         entitlement.canUseFeature(WrPremiumFeature.patternAdvanced);
 
+    // Vào thẳng màn này (từ thông báo, hoặc mở lại app ở đúng route) mà không đi
+    // qua tab Hành trình thì không có ai đánh thức `wr-narrative`. Watch ở cả
+    // hai nơi — provider chỉ chạy một lần cho cả hai, Riverpod lo phần đó.
+    final refresh = ref.watch(wrNarrativeRefreshProvider).valueOrNull;
+
     return WrDetailScaffold(
       eyebrow: 'DIỄN BIẾN THEO THỜI GIAN',
       title: 'Điều gì đang đổi trong bạn',
@@ -40,11 +45,10 @@ class WrJourneyNarrativeScreen extends ConsumerWidget {
             paywallTrigger: 'pattern_advanced',
           )
         else if (narratives.isEmpty)
-          const WrParagraph(
-            'Chưa đủ dữ liệu để kể lại diễn biến. Ghi thêm vài lần nữa, '
-            'WorkReflection sẽ chỉ ra điều gì đang đổi và điều gì vẫn ở nguyên đó.',
-            key: Key('wr_journey_narrative_empty'),
-            style: TextStyle(
+          WrParagraph(
+            _emptyLine(refresh),
+            key: const Key('wr_journey_narrative_empty'),
+            style: const TextStyle(
               fontSize: 16.5,
               color: WrColors.muted,
               height: 1.65,
@@ -55,6 +59,27 @@ class WrJourneyNarrativeScreen extends ConsumerWidget {
       ],
     );
   }
+}
+
+/// Câu khi chưa có bản kể nào — nói ĐÚNG còn thiếu bao nhiêu.
+///
+/// Cùng lý do với `_waitingLine` ở tab Hành trình: câu cũ không đếm ngược được
+/// nên nó giống hệt nhau ở lần nhìn lại thứ hai và thứ ba mươi. Chữ ở đây dài
+/// hơn một chút vì đây là màn đọc, không phải một thẻ tóm tắt.
+String _emptyLine(WrNarrativeRefresh? refresh) {
+  final needed = refresh?.needed;
+  return switch (refresh?.status) {
+    // "có chọn tình huống": cùng lý do với `_waitingLine` ở tab Hành trình —
+    // hàm chỉ đếm Episode có `situation_code`, còn thẻ Career Health đếm tất.
+    WrNarrativeStatus.notEnoughData when needed != null && needed > 0 =>
+      'Còn $needed lần nhìn lại có chọn tình huống nữa là đủ để kể. Diễn biến '
+          'so các tình huống ở hai giai đoạn với nhau, nên những lần bạn tự mô '
+          'tả không có tình huống nào để đối chiếu.',
+    WrNarrativeStatus.upToDate =>
+      'Diễn biến của bạn đang được đọc lại. Quay lại màn này sau một lát nhé.',
+    _ => 'Chưa đủ dữ liệu để kể lại diễn biến. Ghi thêm vài lần nữa, '
+        'WorkReflection sẽ chỉ ra điều gì đang đổi và điều gì vẫn ở nguyên đó.',
+  };
 }
 
 class _NarrativeBlock extends StatelessWidget {

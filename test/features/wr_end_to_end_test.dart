@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/logic/wr_reflect_flow.dart';
 import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
@@ -291,9 +292,14 @@ void main() {
     // và bắn điều hướng đè mất màn đang xem — xem test riêng bên dưới.
     expect(find.byType(WrStepScreen, skipOffstage: false), findsNothing);
 
+    // Bước Ý nghĩa có HAI LỚP từ changelog 24/08 §1.2: viết câu mở dở → xem
+    // góc nhìn chung → mới tiếp tục.
     await tester.enterText(find.byKey(const Key('wr_meaning_field')),
-        'Mình lên tiếng được khi thấy an toàn.');
+        'mình chỉ lên tiếng khi thấy an toàn');
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('wr_flow_primary')));
+    await tester.pumpAndSettle();
+    expect(find.byKey(const Key('wr_meaning_aha')), findsOneWidget);
     await tester.tap(find.byKey(const Key('wr_flow_primary')));
     await tester.pumpAndSettle();
 
@@ -307,10 +313,25 @@ void main() {
     expect(find.byType(WrDoneScreen), findsOneWidget);
     final saved = stage.episodes.episodes.single;
     expect(saved.state, ExperienceState.integrated);
-    expect(saved.draftMeaning, 'Mình lên tiếng được khi thấy an toàn.');
+    // §1.2: `draft_meaning` là bản GỘP hai vế — lý do riêng của người dùng
+    // trước, góc nhìn chung sau. Giữ cả hai để Career Memory đọc lại được cả
+    // hai, thay vì chỉ giữ một câu đã viết sẵn.
+    expect(
+      saved.draftMeaning,
+      mergeInsight(
+        stem: 'mình chỉ lên tiếng khi thấy an toàn',
+        aha: kDefaultAha,
+      ),
+    );
     expect(saved.tinyAction, isNotNull);
-    // Đúng một mảnh Career Memory cho một phiên.
-    expect(stage.content.insertMemoryEventCalls, hasLength(1));
+    // Đúng một STORY cho một phiên. Mảnh sinh thêm (Cột mốc · Chủ đề ·
+    // Insight, changelog 24/08 §8.2) là LỚP DIỄN GIẢI trên STORY, không phải
+    // một phiên thứ hai — nên chúng được lọc ra khỏi phép đếm này.
+    expect(
+      stage.content.insertMemoryEventCalls
+          .where((e) => e.behavior == 'reflection_episode'),
+      hasLength(1),
+    );
     expect(stage.intel.insertInsightCalls, hasLength(1));
 
     // Không màn nào trong cả vòng ném lỗi ra mặt người dùng.
@@ -371,7 +392,9 @@ void main() {
     await _walkToMeaning(tester);
 
     await tester.enterText(
-        find.byKey(const Key('wr_meaning_field')), 'Điều tôi muốn giữ lại.');
+        find.byKey(const Key('wr_meaning_field')), 'đây không phải lần đầu');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('wr_flow_primary')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('wr_flow_primary')));
     await tester.pumpAndSettle();

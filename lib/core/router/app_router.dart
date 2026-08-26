@@ -27,6 +27,7 @@ import '../../features/workshops/presentation/my_workshops_screen.dart';
 import '../../features/coaching/presentation/coaching_schedule_screen.dart';
 import '../../features/coaching/presentation/coaching_screen.dart';
 import '../../features/coaching/presentation/coaching_sessions_screen.dart';
+import '../../features/profile/presentation/guide_screen.dart';
 import '../../features/profile/presentation/my_info_screen.dart';
 import '../../features/profile/presentation/profile_edit_screen.dart';
 import '../../features/profile/presentation/vouchers_screen.dart';
@@ -65,6 +66,8 @@ import '../../features/wr/wr_providers.dart' show wrStorePolicyProvider;
 import '../../features/wr/presentation/wr_paywall_screen.dart';
 import '../../features/wr/presentation/wr_self_check_screen.dart';
 import '../../features/wr/presentation/wr_tra_chieu_screen.dart';
+import '../../features/wr/presentation/wr_jd_builder_screen.dart';
+import '../../features/wr/presentation/wr_sca_deep_dive_screen.dart';
 import '../../features/wr/presentation/wr_work_info_screen.dart';
 import '../../features/wr/presentation/flow/wr_commit_screen.dart';
 import '../../features/wr/presentation/flow/wr_done_screen.dart';
@@ -277,6 +280,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/profile/my-info',
         builder: (context, state) => const MyInfoScreen(),
+      ),
+      // "Hướng dẫn sử dụng" — yêu cầu §4 họp 26_1. Route riêng chứ không phải
+      // hộp thoại: nội dung dài hơn một màn, và người dùng cần quay lại đọc
+      // tiếp mà không mất chỗ đang đứng trong Hồ sơ.
+      GoRoute(
+        path: '/profile/guide',
+        builder: (context, state) => const GuideScreen(),
       ),
       GoRoute(
         path: '/vouchers',
@@ -563,6 +573,20 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/wr/work-info',
         builder: (context, state) => const WrWorkInfoScreen(),
+      ),
+      // "Viết JD cùng app" — 5 buổi ngắn (changelog 24/08 §6). Mở từ thẻ dẫn
+      // ở màn Thông tin công việc, không có lối vào nào khác.
+      GoRoute(
+        path: '/wr/jd-builder',
+        builder: (context, state) => const WrJdBuilderScreen(),
+      ),
+
+      // Diễn giải sâu & xu hướng (changelog 24/08 §7). Trước bản này, nút "Mở
+      // khoá" của tính năng chỉ dẫn tới Paywall chung — mua xong không có màn
+      // đích nào. Đây là màn đích đó.
+      GoRoute(
+        path: '/wr/sca-deep-dive',
+        builder: (context, state) => const WrScaDeepDiveScreen(),
       ),
 
       // Khảo sát tổ chức (ESI + eNPS) — mockup Sprint 2, mở từ màn Hồ sơ.

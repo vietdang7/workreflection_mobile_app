@@ -277,6 +277,7 @@ void main() {
         'profile_paywall_btn',
         'profile_change_password_btn',
         'profile_export_btn',
+        'profile_guide_btn',
       ]) {
         final row = find.byKey(Key(key));
         expect(row, findsOneWidget, reason: 'thiếu dòng $key');
@@ -417,6 +418,32 @@ void main() {
       expect(out.dy, greaterThan(org.dy));
     });
 
+    // "Hướng dẫn sử dụng" — yêu cầu §4 họp 26_1. Đây là lối vào DUY NHẤT của
+    // màn hướng dẫn, nên mất dòng này là mất luôn cả trang.
+    testWidgets('dòng Hướng dẫn sử dụng nằm cuối danh sách cài đặt',
+        (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile());
+      repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
+      await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
+
+      final guide = find.byKey(const Key('profile_guide_btn'));
+      expect(guide, findsOneWidget);
+      expect(find.text('Hướng dẫn sử dụng'), findsOneWidget);
+
+      // Dưới mọi dòng khác của thẻ, nhưng vẫn TRONG thẻ — tức trên nút đăng
+      // xuất. Quy ước quen thuộc của màn thiết lập: phần trợ giúp nằm cuối.
+      final export = tester.getTopLeft(
+        find.byKey(const Key('profile_export_btn')),
+      );
+      final logout = tester.getTopLeft(
+        find.byKey(const Key('profile_logout_btn')),
+      );
+      final at = tester.getTopLeft(guide);
+      expect(at.dy, greaterThan(export.dy));
+      expect(at.dy, lessThan(logout.dy));
+    });
+
     // Mockup Sprint 2 bản (4): mọi khối của màn là THẺ TRẮNG trên nền xám —
     // số liệu, danh sách cài đặt, khảo sát tổ chức. Không còn vạch kẻ ngang nào.
     testWidgets('số liệu và danh sách cài đặt đều nằm trong thẻ trắng',
@@ -457,6 +484,7 @@ void main() {
         'profile_paywall_btn',
         'profile_change_password_btn',
         'profile_export_btn',
+        'profile_guide_btn',
       ]) {
         expect(
           find.descendant(

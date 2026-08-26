@@ -32,7 +32,21 @@ class SupabaseAuthRepository implements AuthRepository {
     await _client.auth.signUp(
       email: email,
       password: password,
-      data: {'display_name': displayName},
+      // BA khoá cho cùng một cái tên, và cả ba đều cần thiết:
+      //
+      //   full_name    trigger `handle_new_user` bên Postgres đọc đúng khoá này
+      //                (rồi mới tới `name`) để dựng `cc_profiles.full_name`.
+      //                Thiếu nó thì hàng cc_profiles của mọi tài khoản tạo từ
+      //                app di động có tên NULL — đã kiểm chứng trên DB thật
+      //                (khách báo "app chào bằng email", họp 26_1).
+      //   name         một số nơi bên web đọc khoá này.
+      //   display_name khoá app di động vẫn dùng; giữ để bản cũ đang chạy trên
+      //                máy người dùng không mất tên sau khi cập nhật.
+      data: {
+        'full_name': displayName,
+        'name': displayName,
+        'display_name': displayName,
+      },
     );
     // Upsert profile row (best-effort; wr_mobile_profiles may not exist yet in dev)
     final uid = _client.auth.currentUser?.id;

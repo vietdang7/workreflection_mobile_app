@@ -1,16 +1,31 @@
 /// Mood enum matching the wr_checkins.mood check constraint in the migration.
+///
+/// Sáu giá trị từ 24/08/2026 (changelog mockup §3): `foggy` và `outofsync` chèn
+/// GIỮA `tired` và `okay` — nhóm cảm xúc khó khăn đứng trước, nhóm tích cực
+/// đứng sau. Thứ tự khai báo ở đây là thứ tự đọc của lưới check-in trên Home.
+///
+/// ⚠ Thêm giá trị mới ở đây thôi là chưa đủ: `wr_checkins.mood` có CHECK
+/// constraint, nên thiếu migration đi kèm thì mọi lần check-in bằng cảm xúc mới
+/// sẽ trả 400 — và lỗi đó KHÔNG lộ ra trong test vì fake repository không có
+/// constraint. Migration tương ứng:
+/// `20260825000000_wr_two_new_moods.sql`.
 enum Mood {
   stressed,
   tired,
+  foggy,
+  outofsync,
   okay,
   happy;
 
-  String get dbValue => name; // 'stressed' | 'tired' | 'okay' | 'happy'
+  /// 'stressed' | 'tired' | 'foggy' | 'outofsync' | 'okay' | 'happy'
+  String get dbValue => name;
 
   static Mood fromDb(String value) {
     return switch (value) {
       'stressed' => Mood.stressed,
       'tired' => Mood.tired,
+      'foggy' => Mood.foggy,
+      'outofsync' => Mood.outofsync,
       'okay' => Mood.okay,
       'happy' => Mood.happy,
       _ => throw ArgumentError('Unknown mood db value: $value'),

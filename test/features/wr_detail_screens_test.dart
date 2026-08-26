@@ -139,7 +139,25 @@ void main() {
 
       expect(entries, hasLength(1));
       expect(entries.first.episodeId, 'a');
-      expect(entries.first.label, 'PHẢN TƯ');
+      // Lượt nhìn lại đầu tiên mang nhãn CỘT MỐC — changelog 24/08 §8.2 xếp
+      // cột mốc là CỜ trên chính STORY, không phải mảnh ký ức thứ hai.
+      expect(entries.first.label, 'CỘT MỐC');
+    });
+
+    test('lượt không phải lần đầu mang nhãn CÂU CHUYỆN', () {
+      // §8.1 changelog 24/08 chốt bộ nhãn dùng chung cho cả hai màn: Cột mốc /
+      // Câu chuyện / Chủ đề / Insight. "PHẢN TƯ" của bản cũ không thuộc bộ nào,
+      // và là từ chuyên môn người dùng phải tra nghĩa.
+      final entries = buildJourneyEntries(
+        episodes: [
+          _episode(id: 'a', closedAt: DateTime(2026, 7, 10)),
+          _episode(id: 'b', closedAt: DateTime(2026, 7, 20)),
+        ],
+        events: const [],
+        situationLabels: const {},
+      );
+
+      expect(entries.map((e) => e.label), ['CÂU CHUYỆN', 'CỘT MỐC']);
     });
 
     test('bỏ event do Episode sinh ra để không đếm hai lần', () {
@@ -168,7 +186,7 @@ void main() {
 
       expect(entries, hasLength(1));
       expect(entries.first.title, 'X');
-      expect(entries.first.label, 'PHẢN TƯ');
+      expect(entries.first.label, 'CÂU CHUYỆN');
     });
 
     test('sắp xếp mới nhất trước', () {
@@ -184,14 +202,39 @@ void main() {
       expect(entries.last.episodeId, 'a');
     });
 
-    test('dùng nhãn tình huống khi Episode có situation_code', () {
+    test('dùng nhãn tình huống làm TIÊU ĐỀ khi Episode có situation_code', () {
+      // Mockup v16: `title` là tên gọi của mảnh ("Reflection: Cuộc họp bị ngắt
+      // lời"), `excerpt` mới là nội dung. Bản trước đặt điều-nhận-ra lên làm
+      // tiêu đề và đẩy tình huống xuống dưới, nên hai mảnh cùng một tình huống
+      // trông không liên quan gì tới nhau trên dòng thời gian.
       final entries = buildJourneyEntries(
-        episodes: [_episode(situationCode: 'sit-01')],
+        episodes: [
+          _episode(id: 'cũ', closedAt: DateTime(2026, 7, 1)),
+          _episode(
+            id: 'mới',
+            situationCode: 'sit-01',
+            closedAt: DateTime(2026, 7, 20),
+          ),
+        ],
         events: const [],
         situationLabels: const {'sit-01': 'Áp lực deadline'},
       );
 
-      expect(entries.first.subtitle, 'Áp lực deadline');
+      expect(entries.first.episodeId, 'mới');
+      expect(entries.first.title, 'Nhìn lại: Áp lực deadline');
+    });
+
+    test('mỗi mảnh mang theo dòng "vì sao mảnh này có mặt"', () {
+      // Tầng chữ thứ ba của mockup v16 (`detail`). Không có nó thì ba loại do
+      // hệ thống tự gắn hiện lên như những dòng không rõ từ đâu ra.
+      final entries = buildJourneyEntries(
+        episodes: [_episode(id: 'a')],
+        events: const [],
+        situationLabels: const {},
+      );
+
+      expect(entries.first.detail, isNotNull);
+      expect(entries.first.detail, contains('Cột mốc được gắn tự động'));
     });
   });
 

@@ -15,6 +15,9 @@ import '../models/wr_mood_content.dart';
 /// Tên Edge Function đọc tài liệu bối cảnh bằng AI.
 const String kWrDocAnalyzeFunction = 'wr-doc-analyze';
 
+/// Edge Function sinh "Diễn biến theo thời gian" cho tab Hành trình.
+const String kWrNarrativeFunction = 'wr-narrative';
+
 /// Lỗi khi đọc tài liệu — [message] là câu tiếng Việt để hiện thẳng cho người
 /// dùng, không phải mã lỗi kỹ thuật.
 class WrDocAnalysisException implements Exception {
@@ -117,6 +120,18 @@ abstract class WrIntelligenceRepository {
 
   /// Fetch pattern narratives for [userId].
   Future<List<PatternNarrative>> fetchPatternNarratives(String userId);
+
+  /// Xin Edge Function `wr-narrative` kể lại "Diễn biến theo thời gian".
+  ///
+  /// KHÔNG BAO GIỜ NÉM: không ai đang ngồi chờ câu này. App gọi lúc mở tab Hành
+  /// trình rồi để đó; hỏng thì thẻ vẫn hiện bản kể trước đó, và lần mở sau thử
+  /// lại. Mọi thứ không rơi vào ba trạng thái đã biết đều trả về
+  /// [WrNarrativeStatus.unavailable].
+  ///
+  /// Máy chủ tự quyết có sinh hay không (đủ số lần chưa, chuyện đã đổi chưa) —
+  /// xem `supabase/functions/wr-narrative/regeneration.ts`. App không được đoán
+  /// hộ: đoán sai về phía rộng là mỗi lần mở tab một lượt gọi model.
+  Future<WrNarrativeRefresh> refreshPatternNarrative();
 
   /// Fetch growth journey snapshots for [userId].
   Future<List<GrowthJourneySnapshot>> fetchGrowthSnapshots(String userId);
@@ -454,6 +469,21 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
         .eq('user_id', userId)
         .order('created_at', ascending: false);
     return rows.map(PatternNarrative.fromJson).toList();
+  }
+
+  @override
+  Future<WrNarrativeRefresh> refreshPatternNarrative() async {
+    try {
+      final res = await _client.functions.invoke(kWrNarrativeFunction);
+      final data = res.data;
+      if (data is! Map) return const WrNarrativeRefresh.unavailable();
+      return WrNarrativeRefresh.fromJson(Map<String, dynamic>.from(data));
+    } catch (_) {
+      // Kể cả FunctionException: hàm chỉ ném khi thật sự hỏng (thiếu secret,
+      // token hết hạn), và cả hai đều không phải thứ để nói với người dùng ở
+      // một thẻ họ không hề bấm vào.
+      return const WrNarrativeRefresh.unavailable();
+    }
   }
 
   @override

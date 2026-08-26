@@ -53,20 +53,28 @@ final wrChoicePoolProvider = FutureProvider<List<String>>((ref) async {
 });
 
 /// Nhãn hiển thị của từng cảm xúc trên màn Thư viện.
+///
+/// Nguyên văn `MOOD_LABELS` của mockup v16 — hai nhãn thêm 24/08/2026 cố ý ngắn
+/// ("Mơ hồ", "Lệch nhau") vì chúng còn được ghép vào câu ở thẻ "Hệ thống nhận
+/// ra".
 String moodLabel(Mood mood) => switch (mood) {
       Mood.stressed => 'Căng thẳng',
       Mood.tired => 'Mệt mỏi',
+      Mood.foggy => 'Mơ hồ',
+      Mood.outofsync => 'Lệch nhau',
       Mood.okay => 'Khá ổn',
       Mood.happy => 'Đang vui',
     };
 
 /// Tiêu đề thẻ gợi ý trên Home, đổi theo cảm xúc vừa check-in.
 ///
-/// Bốn câu khác nhau chứ không phải một câu chung: người vừa chọn "đang vui"
+/// Sáu câu khác nhau chứ không phải một câu chung: người vừa chọn "đang vui"
 /// mà thấy "Gợi ý khi căng thẳng" thì thẻ mất hết ý nghĩa.
 String moodSuggestionTitle(Mood mood) => switch (mood) {
       Mood.stressed => 'GỢI Ý KHI CĂNG THẲNG',
       Mood.tired => 'GỢI Ý KHI MỆT MỎI',
+      Mood.foggy => 'GỢI Ý KHI MỌI THỨ CHƯA RÕ RÀNG',
+      Mood.outofsync => 'GỢI Ý KHI MỌI THỨ LỆCH NHAU',
       Mood.okay => 'GỢI Ý CHO HÔM NAY',
       Mood.happy => 'GIỮ LẠI CẢM XÚC NÀY',
     };

@@ -89,6 +89,19 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
       ..addAll(narratives);
   }
 
+  /// Kết quả `wr-narrative` trả về ở lần gọi tới.
+  ///
+  /// Mặc định [WrNarrativeStatus.unavailable] — đúng thứ mọi test cũ đang giả
+  /// định mà không biết: không có Edge Function nào chạy trong test.
+  WrNarrativeRefresh nextNarrativeRefresh =
+      const WrNarrativeRefresh.unavailable();
+
+  /// Bản kể mà máy chủ giả lập sẽ ghi vào khi lần gọi tới sinh được nội dung.
+  PatternNarrative? narrativeToGenerate;
+
+  /// Số lần app đã xin kể lại — dùng để chứng minh app KHÔNG gọi khi không nên.
+  int refreshNarrativeCalls = 0;
+
   void seedGrowthSnapshots(List<GrowthJourneySnapshot> snapshots) {
     _growthSnapshots
       ..clear()
@@ -405,6 +418,18 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
     return List.unmodifiable(
       _patternNarratives.where((n) => n.userId == userId),
     );
+  }
+
+  @override
+  Future<WrNarrativeRefresh> refreshPatternNarrative() async {
+    refreshNarrativeCalls++;
+    // Máy chủ thật ghi thẳng vào bảng rồi app đọc lại; giả lập đúng thứ tự đó
+    // để test bắt được lỗi "báo generated nhưng màn hình không đổi".
+    final generated = narrativeToGenerate;
+    if (nextNarrativeRefresh.generated && generated != null) {
+      _patternNarratives.insert(0, generated);
+    }
+    return nextNarrativeRefresh;
   }
 
   @override

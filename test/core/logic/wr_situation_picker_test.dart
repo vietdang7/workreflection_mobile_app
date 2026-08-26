@@ -20,7 +20,12 @@ List<WrSituation> _library() => [
       for (var i = 1; i <= 6; i++) _sit('A3-$i', ScaDimension.a3),
       for (var i = 1; i <= 6; i++) _sit('C2-$i', ScaDimension.c2),
       for (var i = 1; i <= 6; i++) _sit('A1-$i', ScaDimension.a1),
+      // S1 và S2 là cụm của hai cảm xúc thêm 25/08 ("mơ hồ", "lệch nhau").
+      // Thiếu một trong hai thì cụm không đủ 5, `pickSituationChoices` lùi về
+      // toàn thư viện và bài test lọc-theo-cảm-xúc mất hết ý nghĩa: nó sẽ báo
+      // xanh cả khi ánh xạ sai.
       for (var i = 1; i <= 6; i++) _sit('S1-$i', ScaDimension.s1),
+      for (var i = 1; i <= 6; i++) _sit('S2-$i', ScaDimension.s2),
       for (var i = 1; i <= 5; i++) _sit('P-A$i', ScaDimension.pAchieve),
       for (var i = 1; i <= 5; i++) _sit('P-S$i', ScaDimension.pSteady),
     ];

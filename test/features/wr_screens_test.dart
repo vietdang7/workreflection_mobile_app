@@ -157,8 +157,34 @@ CareerMemoryEvent _event({
 ///
 /// Từ 2026-08-03 mỗi mốc thu gọn sẵn: mặc định chỉ hiện LOẠI mốc, nội dung nằm
 /// sau một cú chạm.
+/// Cuộn cho tới khi [finder] có mặt trong cây widget.
+///
+/// Cần vì tab Hành trình là một ListView: những gì nằm dưới khung chưa được
+/// dựng, nên `expect(..., findsOneWidget)` ngay sau `pumpAndSettle` chỉ đúng
+/// chừng nào phần đầu màn còn đủ ngắn. Đó là một giả định về BỐ CỤC lẫn vào
+/// những bài kiểm vốn nói về nội dung.
+Future<void> _scrollUntilFound(WidgetTester tester, Finder finder) async {
+  final scrollable = find.byType(Scrollable).first;
+  for (var i = 0; i < 20 && finder.evaluate().isEmpty; i++) {
+    await tester.drag(scrollable, const Offset(0, -220));
+    await tester.pumpAndSettle();
+  }
+}
+
 Future<void> _expandFirstJourneyEntry(WidgetTester tester) async {
-  final arrow = find.byIcon(Icons.keyboard_arrow_down_rounded).first;
+  // CUỘN TỚI trước, đừng giả định mốc đã nằm sẵn trong cây widget: dòng thời
+  // gian nằm dưới phần đầu màn, và ListView chỉ dựng những gì lọt vào khung.
+  // Thêm một dòng chữ ở phần đầu là đủ đẩy mốc đầu tiên ra ngoài khung, và khi
+  // đó helper cũ ném "Bad state: No element" — một thất bại nói về bố cục chứ
+  // không nói gì về điều bài kiểm định kiểm.
+  final arrows = find.byIcon(Icons.keyboard_arrow_down_rounded);
+  final scrollable = find.byType(Scrollable).first;
+  for (var i = 0; i < 20 && arrows.evaluate().isEmpty; i++) {
+    await tester.drag(scrollable, const Offset(0, -220));
+    await tester.pumpAndSettle();
+  }
+
+  final arrow = arrows.first;
   await tester.ensureVisible(arrow);
   await tester.pumpAndSettle();
   await tester.tap(arrow);
@@ -776,6 +802,7 @@ void main() {
       await tester.pumpWidget(_wrap(const WrJourneyScreen(), intel: premiumIntel(), content: content));
       await tester.pumpAndSettle();
 
+      await _scrollUntilFound(tester, find.text('THỰC HÀNH'));
       expect(find.text('THỰC HÀNH'), findsOneWidget);
     });
 
@@ -793,6 +820,7 @@ void main() {
       await tester.pumpWidget(_wrap(const WrJourneyScreen(), intel: premiumIntel(), content: content));
       await tester.pumpAndSettle();
 
+      await _scrollUntilFound(tester, find.text('QUYẾT ĐỊNH'));
       expect(find.text('QUYẾT ĐỊNH'), findsOneWidget);
     });
   });
@@ -800,9 +828,12 @@ void main() {
   // Quyết định của khách 2026-07-29: Career Memory khoá HOÀN TOÀN với Free.
   // Bản trước cho xem 10 mục gần nhất rồi mới cắt.
   group('WrJourneyScreen — with events (free user)', () {
-    testWidgets('free không thấy mảnh ký ức nào, chỉ thấy khối khoá', (
+    testWidgets('free: nội dung tuần cũ bị khoá, khối mời mở khoá vẫn ở đó', (
       tester,
     ) async {
+      // Khoá theo TUẦN (mockup v16 `!g.current && !isPremium`). Các mốc dưới
+      // đây đều thuộc tháng 7/2026 — quá khứ so với lúc chạy test — nên toàn bộ
+      // nằm ngoài tuần hiện tại và không chữ nào lọt ra ngoài paywall.
       final content = FakeWrContentRepository();
       content.seedMemoryEvents(
         List.generate(
@@ -814,6 +845,13 @@ void main() {
           ),
         ),
       );
+
+      // Khối mời nằm DƯỚI dòng thời gian (mockup v16), mà ListView dựng lười —
+      // ở khung 600px mặc định nó chưa được dựng, `skipOffstage: false` cũng
+      // không tìm ra thứ chưa tồn tại. Cho khung cao để cả màn nằm trong tầm.
+      tester.view.physicalSize = const Size(1080, 3000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.reset);
 
       await tester.pumpWidget(_wrap(const WrJourneyScreen(), content: content));
       await tester.pumpAndSettle();

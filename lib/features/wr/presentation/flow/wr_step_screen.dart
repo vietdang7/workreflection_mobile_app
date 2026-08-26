@@ -30,6 +30,14 @@
 // dùng thật sự chạm một tình huống — ai mở lên rồi thoát ngay không để lại một
 // phiên rỗng nào trong `wr_reflection_episodes`, và con số Career Health Check
 // (đếm Episode) không bị thổi phồng bởi những lần chỉ ghé qua.
+//
+// Đi kèm điều đó là một luật ở đầu kia (khách 2026-08-24): mỗi lần chạm ô cảm
+// xúc ở Home đều gọi `leave()`, nên màn này LUÔN bắt đầu với controller rỗng và
+// luôn mở một Episode mới. Trước đó, một phiên bỏ dở còn nằm trong controller
+// sẽ hút lần check-in kế tiếp về bước dở của nó (khối chuyển tiếp cuối
+// `build`), và lần ấy không được đếm. Từ nay chỉ hai đường được phép nạp sẵn
+// một phiên vào controller: thẻ "Còn dở" ở Home và nút "Hiểu lại chuyện này" ở
+// chi tiết Episode — cả hai đều là lời mời quay lại có chủ đích của người dùng.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

@@ -5,6 +5,7 @@ import '../../core/data/wr_repository.dart';
 import '../../core/logic/checkin_history.dart';
 import '../../core/logic/streak.dart';
 import '../../core/logic/vn_date.dart';
+import '../../core/logic/wr_display_name.dart';
 import '../../core/logic/wr_my_info.dart';
 import '../../core/models/mobile_profile.dart';
 import '../../l10n/app_localizations.dart';
@@ -40,6 +41,28 @@ final mobileProfileProvider = FutureProvider<MobileProfile?>((ref) async {
 
 final ccProfileProvider = FutureProvider<Map<String, dynamic>>((ref) async {
   return ref.watch(wrRepositoryProvider).getCcProfile();
+});
+
+/// Tên để chào người dùng, `null` khi chưa biết tên.
+///
+/// Một provider cho MỌI chỗ chào hỏi. Trước đây màn Hôm nay đọc mỗi
+/// `wr_mobile_profiles.display_name` còn màn Hồ sơ đọc `cc_profiles.full_name`
+/// trước, nên cùng một tài khoản hiện hai cái tên khác nhau ở hai màn — và
+/// người đăng ký từ app di động thì màn Hồ sơ luôn rỗng vì cột kia là NULL
+/// (xem `wr_display_name.dart` để biết vì sao).
+///
+/// KHÔNG dùng `.valueOrNull ?? ...` với `ccProfileProvider` rồi bỏ qua trạng
+/// thái đang tải: lần dựng đầu tiên nào cũng rơi vào nhánh "chưa biết tên", nên
+/// màn hình chào "Chào bạn" một nhịp rồi mới đổi thành tên thật. Cứ để nó là
+/// `AsyncValue` và nơi gọi tự quyết định hiện gì trong lúc chờ.
+final greetingNameProvider = Provider<String?>((ref) {
+  final cc = ref.watch(ccProfileProvider).valueOrNull;
+  final profile = ref.watch(mobileProfileProvider).valueOrNull;
+  return wrGreetingName(
+    ccFullName: cc?['full_name'] as String?,
+    displayName: profile?.displayName,
+    userMetadata: ref.watch(currentUserMetadataProvider),
+  );
 });
 
 final insightCountProvider = FutureProvider<int>((ref) async {

@@ -46,20 +46,21 @@ const int kRepeatedSituationsTop = 3;
 
 /// Số lần tối thiểu để một tình huống được gọi là "đang trở đi trở lại".
 ///
-/// Yêu cầu khách 2026-07-31: "phần tình huống lặp lại chỉ hiện từ 3 lần trở
-/// lên, cái nào được chọn nhiều thì hiển thị lên".
+/// HAI LẦN chứ không phải ba. Khách chốt 3 hôm 2026-07-31, rồi đảo lại ở họp
+/// 26_1: "giai đoạn đầu người dùng check-in ít, để 3 lần thì màn hình bị trống
+/// trải". Ngưỡng 3 đúng với người đã dùng vài tháng, nhưng người mới thì tuần
+/// đầu chỉ thấy một câu "chưa điều nào lặp đủ 3 lần" — và họ bỏ app trước khi
+/// kịp chạm tới cái ngưỡng đó.
 ///
-/// Vì sao cần ngưỡng, dù §4.3 không nói tới: gặp một lần là một chuyện đã xảy
-/// ra, chưa phải một nếp. Không chặn thì màn "Những điều đang trở đi trở lại"
-/// dài ra bằng đúng số tình huống khác nhau người dùng từng chạm, toàn dòng
-/// "1 lần" — và cái đang thật sự trở đi trở lại chìm giữa chúng, đúng ngược
-/// với việc màn này sinh ra để làm.
+/// Vì sao vẫn cần một ngưỡng: gặp một lần là một chuyện đã xảy ra, chưa phải
+/// một nếp. Bỏ hẳn thì màn "Những điều đang trở đi trở lại" dài ra bằng đúng số
+/// tình huống khác nhau người dùng từng chạm, toàn dòng "1 lần".
 ///
 /// PHẠM VI: chỉ chặn phần HIỂN THỊ "Tình huống lặp lại" (tab Hiểu mình và màn
 /// đầy đủ). Mọi thứ khác đọc recentSituationIds — nhu cầu chủ đạo, tỉ trọng ba
 /// trụ, gợi ý Practice Theme, thẻ "Hệ thống nhận ra" ở Hôm nay — vẫn đếm từ
 /// lần đầu tiên. Đưa ngưỡng này xuống tầng dữ liệu là làm mù luôn những chỗ đó.
-const int kRepeatedSituationsMinCount = 3;
+const int kRepeatedSituationsMinCount = 2;
 
 /// Một tình huống trong recentSituationIds, kèm số lần xuất hiện.
 class RepeatedSituation {

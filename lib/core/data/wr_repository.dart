@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../logic/wr_career_profile.dart';
+import '../logic/wr_display_name.dart';
 import '../logic/wr_pricing.dart';
 import '../models/checkin.dart';
 import '../models/development_theme.dart';
@@ -748,12 +749,22 @@ class SupabaseWrRepository implements WrRepository {
         .limit(1);
 
     if (existing.isEmpty) {
-      // First-time insert: populate display_name from Google metadata or email.
-      final displayName =
-          (user.userMetadata?['display_name'] as String?) ?? user.email ?? '';
+      // Tên lấy từ metadata tài khoản — KHÔNG bao giờ lấy email.
+      //
+      // Bản trước là `userMetadata['display_name'] ?? user.email ?? ''`, tức là
+      // không đọc được tên thì ghi thẳng email vào ô tên. Hai hệ quả:
+      //   • Đăng nhập bằng Google rơi đúng vào nhánh đó (Google trả `name` /
+      //     `full_name`, không trả `display_name`), nên người dùng Google bị
+      //     app chào bằng email — chính điều khách báo ở họp 26_1.
+      //   • Email nằm trong DB rồi thì mọi màn đọc ô tên đều sai theo, và không
+      //     màn nào có cách nào biết đó không phải tên thật.
+      //
+      // Nay: không có tên thì để trống, và màn hình nói "bạn". Đọc cả ba khoá
+      // vì ba nguồn đăng nhập ghi ba khoá khác nhau.
+      final displayName = wrGreetingName(userMetadata: user.userMetadata);
       await _client.from('wr_mobile_profiles').insert({
         'user_id': _uid,
-        'display_name': displayName,
+        if (displayName != null) 'display_name': displayName,
         if (onboardingSituation != null)
           'onboarding_situation': onboardingSituation,
         'updated_at': DateTime.now().toIso8601String(),
@@ -766,9 +777,22 @@ class SupabaseWrRepository implements WrRepository {
       }).eq('user_id', _uid);
     }
 
-    // Idempotent — seed function checks internally and returns early if
-    // sample data already exists for this user.
-    await _client.rpc('seed_wr_sample_data');
+    // KHÔNG gọi `seed_wr_sample_data` nữa.
+    //
+    // Changelog 24/08/2026 §7, ghi chú cho dev: "Dữ liệu demo … hiện đang được
+    // seed sẵn để xem trước màn hình — cần loại bỏ seed này khi triển khai
+    // thật, để mỗi user bắt đầu từ trạng thái rỗng."
+    //
+    // Hàm RPC đó chèn chủ đề phát triển, bước thực hành, tình huống lặp lại và
+    // insight BỊA cho mọi tài khoản thật ngay lần đầu đăng nhập. Hệ quả nặng
+    // hơn một màn xem trước sai: từ hôm nay màn Diễn giải sâu (§7) đối chiếu
+    // điểm Self-Check với tần suất Reflection, và Career Memory (§8) sinh Cột
+    // mốc · Chủ đề · Insight từ chính lịch sử đó — dữ liệu bịa sẽ chảy thẳng
+    // vào những kết luận app nói với người dùng về đời họ.
+    //
+    // Chỉ gỡ ở phía app, không đụng vào hàm trong DB: backend này dùng chung
+    // với bản web, và việc bên đó còn cần hàm hay không không phải chuyện của
+    // app di động.
   }
 
   @override

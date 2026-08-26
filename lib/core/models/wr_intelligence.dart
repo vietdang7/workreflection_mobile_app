@@ -308,6 +308,62 @@ class PatternNarrative {
 }
 
 // ---------------------------------------------------------------------------
+// WrNarrativeRefresh — kết quả một lần xin máy chủ kể lại diễn biến
+// ---------------------------------------------------------------------------
+
+/// Vì sao lần gọi `wr-narrative` này không sinh ra bản kể mới.
+///
+/// Ba trạng thái đầu là chuyện BÌNH THƯỜNG, không phải lỗi — Edge Function trả
+/// chúng kèm mã 200. Gộp chúng vào một nhánh "hỏng" là quay lại đúng chỗ cũ:
+/// thẻ chỉ còn một câu chung chung và không bao giờ đếm ngược được.
+enum WrNarrativeStatus {
+  /// Vừa sinh ra một bản kể mới.
+  generated,
+
+  /// Chưa đủ số lần nhìn lại để kể lần đầu.
+  notEnoughData,
+
+  /// Đã kể rồi và chưa có đủ lần mới để kể lại.
+  upToDate,
+
+  /// Gói miễn phí, mất mạng, model hỏng… — app im lặng, giữ nguyên màn hình.
+  unavailable,
+}
+
+class WrNarrativeRefresh {
+  const WrNarrativeRefresh({required this.status, this.needed});
+
+  const WrNarrativeRefresh.unavailable()
+      : status = WrNarrativeStatus.unavailable,
+        needed = null;
+
+  final WrNarrativeStatus status;
+
+  /// Còn thiếu bao nhiêu lần nữa — nghĩa của nó đổi theo [status]: với
+  /// [WrNarrativeStatus.notEnoughData] là số lần để kể LẦN ĐẦU, với
+  /// [WrNarrativeStatus.upToDate] là số lần MỚI để kể lại. Null khi máy chủ
+  /// không nói được con số.
+  final int? needed;
+
+  bool get generated => status == WrNarrativeStatus.generated;
+
+  factory WrNarrativeRefresh.fromJson(Map<String, dynamic> json) {
+    if (json['generated'] == true) {
+      return const WrNarrativeRefresh(status: WrNarrativeStatus.generated);
+    }
+    final needed = json['needed'];
+    return WrNarrativeRefresh(
+      status: switch (json['reason']) {
+        'not_enough_data' => WrNarrativeStatus.notEnoughData,
+        'up_to_date' => WrNarrativeStatus.upToDate,
+        _ => WrNarrativeStatus.unavailable,
+      },
+      needed: needed is int ? needed : null,
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // GrowthJourneySnapshot
 // ---------------------------------------------------------------------------
 

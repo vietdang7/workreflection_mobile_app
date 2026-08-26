@@ -116,17 +116,22 @@ void main() {
     });
 
     test('minCount cắt bỏ những tình huống chưa lặp đủ', () {
-      // Yêu cầu khách 2026-07-31: bảng "Tình huống lặp lại" chỉ hiện từ
-      // kRepeatedSituationsMinCount lần trở lên, nhiều nhất đứng trước.
-      expect(kRepeatedSituationsMinCount, 3);
+      // Bảng "Tình huống lặp lại" chỉ hiện từ kRepeatedSituationsMinCount lần
+      // trở lên, nhiều nhất đứng trước.
+      //
+      // Ngưỡng là HAI. Khách chốt 3 hôm 2026-07-31 rồi đảo lại ở họp 26_1:
+      // người mới check-in ít, để 3 thì tuần đầu màn này luôn trống.
+      expect(kRepeatedSituationsMinCount, 2);
 
       final result = rankSituations(
         ['a', 'a', 'a', 'a', 'b', 'b', 'b', 'c', 'c', 'd'],
         minCount: kRepeatedSituationsMinCount,
       );
 
-      expect(result.map((r) => r.situationCode), ['a', 'b']);
+      expect(result.map((r) => r.situationCode), ['a', 'b', 'c']);
       expect(result.first.count, 4);
+      // 'd' mới một lần — một chuyện đã xảy ra, chưa phải một nếp.
+      expect(result.map((r) => r.situationCode), isNot(contains('d')));
     });
 
     test('minCount không đổi thứ tự — nhiều lần nhất vẫn đứng đầu', () {
@@ -182,7 +187,7 @@ void main() {
       final result = repeatedSituations(
         [
           ..._many('du', 3, from: DateTime(2026, 7, 1)),
-          ..._many('thieu', 2, from: DateTime(2026, 7, 5)),
+          ..._many('thieu', 1, from: DateTime(2026, 7, 5)),
         ],
         minCount: kRepeatedSituationsMinCount,
       );
