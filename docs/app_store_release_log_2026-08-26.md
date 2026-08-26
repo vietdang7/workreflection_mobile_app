@@ -103,6 +103,9 @@ hạng mục, phân loại độ tuổi, ảnh chụp màn hình đều trống 
 | Support URL | `https://www.workreflection.app/contact` |
 | Content Rights | Không chứa nội dung của bên thứ ba |
 | Phân loại độ tuổi | **9+** (172 nước) · 12+ Việt Nam · A10 Brazil · ALL Hàn Quốc |
+| Giá | **Free** ($0.00), gốc United States (USD), 175 nước |
+| Phạm vi phát hành | All Countries or Regions (175), *Available on App Release* |
+| Ghi chú cho reviewer | Đã viết, xem mục "Ghi chú gửi App Review" |
 
 Ba chỗ dễ đi sai khi làm lại:
 
@@ -136,16 +139,34 @@ Ba chỗ dễ đi sai khi làm lại:
 
 2. **Add for Review** — mọi ô bắt buộc đã đầy. Vào trang phiên bản 1.0
    (`/apps/6805322970/distribution/ios/version/inflight`), bấm **Add for Review**
-   rồi **Submit to App Review** ở trang xác nhận. Chọn *Manually release this
-   version* nếu muốn tự quyết ngày lên kệ.
-3. **Tài khoản demo**: kiểm lại `demo.review@workreflection.app` còn dữ liệu mẫu
-   và còn `role = 'premium'` hay không, trước khi để reviewer mở.
+   rồi **Submit to App Review** ở trang xác nhận.
+3. Bản 1.0 đang để **Automatically release this version** — Apple duyệt xong là
+   app lên kệ ngay. Muốn tự chọn ngày ra mắt thì đổi sang *Manually release*.
 4. Muốn cài lên iPhone thật ngay thì tạo nhóm **Internal Testing** — không cần
    Apple duyệt, không cần Test Information.
 
 Đã xong: App Privacy (6 loại dữ liệu, Published), Free Apps Agreement **Active**
 (19/8/2026 – 15/8/2027). Paid Apps Agreement vẫn ở trạng thái *New* — không sao,
 app phát hành miễn phí, tiền thu trên web.
+
+Tài khoản demo kiểm 26/08: `role = 'premium'`, và có dữ liệu thật để reviewer
+nhìn thấy màn hình không rỗng — 9 episode, 5 check-in, 3 tình huống lặp, 1 chủ đề
+thực hành, 1 lượt self-check, 4 tin nhắn chat, 3 mốc dòng thời gian.
+
+## Ghi chú gửi App Review
+
+Nội dung đã điền ở ô Notes trang phiên bản 1.0 (tiếng Anh). Nói rõ bốn điều, để
+chặn trước mấy hướng reviewer hay hỏi:
+
+1. App miễn phí hoàn toàn, **không có in-app purchase, không có luồng mua nào**,
+   và không có chỗ nào trong app quảng cáo/dẫn sang gói trả tiền.
+2. Đăng nhập **chỉ bằng email/mật khẩu của hệ thống mình** — Google Sign-In đã gỡ
+   khỏi giao diện (`auth_screen.dart` còn ghi chú, `signInWithGoogle()` vẫn nằm
+   trong repository nhưng không nút nào gọi tới). Nhờ vậy **Guideline 4.8 không
+   còn áp**, khác với đánh giá rủi ro ghi ở nhật ký 05/08.
+3. Tài khoản demo là tài khoản thường, cờ premium bật ở server.
+4. Ô chat AI gửi chữ người dùng sang backend của mình rồi mới gọi mô hình ngôn
+   ngữ bên thứ ba; không bán dữ liệu, không dùng cho quảng cáo.
 
 ## Rủi ro còn treo
 
@@ -155,4 +176,10 @@ app phát hành miễn phí, tiền thu trên web.
 - Key cũ `workreflection-asc` (Key `F78K35S54P`, team cá nhân) vẫn còn trong
   Codemagic. Giữ để đối chiếu, **không dùng** — nó không đọc được app bên team
   khách.
-- Các rủi ro Guideline 4.8 và 3.1.1 ghi ở nhật ký 05/08 vẫn còn nguyên.
+- **Guideline 4.8 đã hết rủi ro** (kiểm code 26/08): Google Sign-In không còn nút
+  nào trong giao diện, app chỉ dùng hệ tài khoản email/mật khẩu của mình nên rơi
+  vào diện miễn trừ. Nhật ký 05/08 ghi phải làm Sign in with Apple — nay không
+  cần nữa. Nếu sau này bật lại nút Google thì rủi ro quay lại ngay.
+- **Guideline 3.1.1** vẫn cần canh: hiện trong app không có chỗ nào bán, báo giá
+  hay dẫn sang gói trả tiền (đã grep `lib/`, chỉ còn link đổi avatar và link đặt
+  lại mật khẩu). Thêm bất kỳ lời mời mua nào vào app là vi phạm.
