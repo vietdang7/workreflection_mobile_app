@@ -117,12 +117,27 @@ Ba chỗ dễ đi sai khi làm lại:
 
 ## Còn phải làm
 
-1. **DSA trader status** — đã chọn "I'm a trader", điền địa chỉ công ty (Apple lấy
-   sẵn từ Dun & Bradstreet, không sửa được tại chỗ) + `+84 866883047` +
-   `info@cloudncoral.com`. **Đang dừng ở bước Apple gửi mã 6 số về
-   `info@cloudncoral.com`** — cần người mở được hộp thư đó nhập mã. Ba thông tin
-   này sẽ hiện công khai trên trang App Store.
-2. **Add for Review** — mọi ô bắt buộc đã đầy, chỉ còn chờ bấm nộp.
+1. **DSA trader status** — cần làm khi có mặt người mở được hộp thư
+   `info@cloudncoral.com`, vì Apple gửi mã xác minh 6 số về đó và mã chỉ sống vài
+   phút. Đường đi:
+
+   1. Vào `appstoreconnect.apple.com/business`, bấm **Complete Compliance
+      Requirements** trên banner đỏ.
+   2. Chọn **I'm a trader under the DSA** → Next.
+   3. Địa chỉ công ty Apple lấy sẵn từ Dun & Bradstreet, để nguyên (muốn sửa phải
+      liên hệ D&B, không sửa tại chỗ được). Điền phần còn thiếu:
+      Country Calling Code **+84 (Việt Nam)** · Contact Phone Number
+      **866883047** · Contact Email **info@cloudncoral.com** → Next.
+   4. Mở `info@cloudncoral.com`, lấy mã 6 số, nhập vào → xong.
+
+   Ba thông tin này sẽ **hiện công khai** trên trang App Store — đó là yêu cầu
+   của DSA, không phải lộ dữ liệu ngoài ý muốn. Bỏ qua bước này thì app vẫn nộp
+   review và phát hành bình thường, chỉ là **không bán được ở EU**.
+
+2. **Add for Review** — mọi ô bắt buộc đã đầy. Vào trang phiên bản 1.0
+   (`/apps/6805322970/distribution/ios/version/inflight`), bấm **Add for Review**
+   rồi **Submit to App Review** ở trang xác nhận. Chọn *Manually release this
+   version* nếu muốn tự quyết ngày lên kệ.
 3. **Tài khoản demo**: kiểm lại `demo.review@workreflection.app` còn dữ liệu mẫu
    và còn `role = 'premium'` hay không, trước khi để reviewer mở.
 4. Muốn cài lên iPhone thật ngay thì tạo nhóm **Internal Testing** — không cần
