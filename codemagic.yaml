@@ -16,10 +16,12 @@
 # không ràng buộc nhau.
 #
 # Trước khi chạy lần đầu phải làm 4 việc ngoài repo (xem hướng dẫn kèm theo):
-#   1. Tạo App Store Connect API key (quyền App Manager) TRONG TÀI KHOẢN KHÁCH,
-#      nạp vào Codemagic team settings với tên integration "workreflection-asc".
+#   1. Tạo App Store Connect API key (Access = Admin, vì bước fetch-signing-files
+#      còn phải TẠO chứng chỉ phân phối) TRONG TÀI KHOẢN KHÁCH, rồi nạp vào
+#      Codemagic với tên integration "workreflection-asc-cloudcoral".
 #      Chỉ Account Holder/Admin tạo được key này; vai trò App Manager không thấy
-#      mục Team Keys trong Users and Access > Integrations.
+#      mục Team Keys trong Users and Access > Integrations — kiểm 26/08/2026,
+#      trang /access/integrations/api đá thẳng về danh sách People.
 #   2. Tạo app record trên App Store Connect với bundle id bên dưới.
 #   3. Điền APP_STORE_APPLE_ID (số Apple ID của app, xem ở App Information).
 #   4. Tạo biến bí mật CERTIFICATE_PRIVATE_KEY trong nhóm "appstore_credentials"
@@ -35,8 +37,14 @@ workflows:
     max_build_duration: 60
 
     integrations:
-      # Tên này phải trùng tên API key đã lưu trong Codemagic > Team integrations.
-      app_store_connect: workreflection-asc
+      # Tên này phải trùng ĐÚNG TỪNG KÝ TỰ tên key đã lưu ở Codemagic >
+      # Settings > Integrations > Developer Portal. Sai tên thì build chết ngay
+      # từ đầu với "integration not found", chứ không phải lỗi ký.
+      #
+      # Key cũ tên "workreflection-asc" (Key F78K35S54P) vẫn nằm đó nhưng thuộc
+      # team cá nhân — giữ lại để đối chiếu, KHÔNG dùng. Key của team khách nạp
+      # dưới tên riêng bên dưới cho khỏi lẫn hai team.
+      app_store_connect: workreflection-asc-cloudcoral
 
     environment:
       # Không dùng khối ios_signing: nó chỉ TÌM provisioning profile đã có sẵn
