@@ -143,6 +143,32 @@ Ba chỗ dễ đi sai khi làm lại:
 3. Muốn cài lên iPhone thật ngay thì tạo nhóm **Internal Testing** — không cần
    Apple duyệt, không cần Test Information.
 
+## TestFlight — người test
+
+Chép 4 người từ app cũ sang, thêm thẳng vào build 1.0.0 (2) dưới dạng
+**Individual Testers**:
+
+| Email | Tên |
+|---|---|
+| `vuducphuong16032004@gmail.com` | Phuong Duc |
+| `ndt20071998@gmail.com` | Thông Duy |
+| `dung.tran@cloudncoral.com` | Dung Tran |
+| `thuynhi1703@icloud.com` | Thuỳ Nhi Nguyễn Nhật |
+
+Bên app cũ họ nằm trong hai nhóm "Cloud & Coral" (internal) và "Cloud & Coral
+Test External". Sang team khách **không dùng lại được nhóm internal**: người test
+internal bắt buộc phải là user trong Users and Access của team đó, tức là phải
+mời họ vào tài khoản Apple của khách. Nên chọn đường external — thêm bằng email,
+không đụng gì tới quyền tài khoản.
+
+Team khách chưa hiện mục **External Testing** trong thanh bên TestFlight (chỉ có
+Internal Testing). Đường vòng: mở thẳng trang build → **Individual Testers → Add
+New Testers**, chỗ đó thêm được email ngoài, tối đa 10.000 người.
+
+Hiện cả 4 đều ở trạng thái *No Builds Available* vì build 2 còn đang Beta App
+Review. Duyệt xong họ mới nhận được thư mời. Ô **What to Test** đã điền tiếng
+Việt, thư mời sẽ kèm nội dung đó.
+
 ## Đã nộp review — 16:30 ngày 26/08/2026
 
 Bản **1.0 (build 2)** đang ở trạng thái *Waiting for Review*. Apple báo tối đa 48
