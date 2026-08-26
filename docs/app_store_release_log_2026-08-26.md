@@ -137,13 +137,24 @@ Ba chỗ dễ đi sai khi làm lại:
    của DSA, không phải lộ dữ liệu ngoài ý muốn. Bỏ qua bước này thì app vẫn nộp
    review và phát hành bình thường, chỉ là **không bán được ở EU**.
 
-2. **Add for Review** — mọi ô bắt buộc đã đầy. Vào trang phiên bản 1.0
-   (`/apps/6805322970/distribution/ios/version/inflight`), bấm **Add for Review**
-   rồi **Submit to App Review** ở trang xác nhận.
-3. Bản 1.0 đang để **Automatically release this version** — Apple duyệt xong là
-   app lên kệ ngay. Muốn tự chọn ngày ra mắt thì đổi sang *Manually release*.
-4. Muốn cài lên iPhone thật ngay thì tạo nhóm **Internal Testing** — không cần
+2. Bản 1.0 để **Automatically release this version** — Apple duyệt xong là app
+   lên kệ ngay. Muốn tự chọn ngày ra mắt thì đổi sang *Manually release* trước
+   khi có kết quả.
+3. Muốn cài lên iPhone thật ngay thì tạo nhóm **Internal Testing** — không cần
    Apple duyệt, không cần Test Information.
+
+## Đã nộp review — 16:30 ngày 26/08/2026
+
+Bản **1.0 (build 2)** đang ở trạng thái *Waiting for Review*. Apple báo tối đa 48
+giờ, có email khi xong.
+
+Ô cuối cùng chặn nút Add for Review là **Copyright** — nó không nằm trong danh
+sách "bắt buộc" nào hiện rõ trên trang, chỉ lộ ra khi bấm Add for Review. Đã điền
+`2026 CLOUD & CORAL COMPANY LIMITED`.
+
+Cách kiểm nhanh còn thiếu gì: cứ bấm **Add for Review**. Nút đó không nộp gì cả —
+nó chạy kiểm tra rồi liệt kê ô còn trống trong khung đỏ, hoặc mở khung *Draft
+Submission* bên phải. Nộp thật là nút **Submit for Review** trong khung đó.
 
 Đã xong: App Privacy (6 loại dữ liệu, Published), Free Apps Agreement **Active**
 (19/8/2026 – 15/8/2027). Paid Apps Agreement vẫn ở trạng thái *New* — không sao,
