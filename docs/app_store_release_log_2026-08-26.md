@@ -91,21 +91,46 @@ chắc chắn không rơi chữ nào.
 Beta App Description chứa luôn phần "What to Test" trong cùng một ô — không phải
 hai trường riêng.
 
+## Trang bán hàng — giá trị đang dùng
+
+Điền xong chiều 26/08. App record mới nên không chép được gì từ app cũ: bên đó
+hạng mục, phân loại độ tuổi, ảnh chụp màn hình đều trống từ đầu.
+
+| Mục | Giá trị |
+|---|---|
+| Hạng mục | Chính **Productivity**, phụ **Lifestyle** |
+| Ảnh chụp màn hình | 5 ảnh khổ iPhone 6.5" (1284×2778), sinh lại từ `test/screenshots/app_store_test.dart` |
+| Support URL | `https://www.workreflection.app/contact` |
+| Content Rights | Không chứa nội dung của bên thứ ba |
+| Phân loại độ tuổi | **9+** (172 nước) · 12+ Việt Nam · A10 Brazil · ALL Hàn Quốc |
+
+Ba chỗ dễ đi sai khi làm lại:
+
+- App Store Connect **chỉ còn một ô ảnh iPhone 6.5"** và tự dùng bộ đó cho mọi cỡ
+  máy. Không phải nộp riêng khổ 6.9" như tài liệu cũ nói.
+- Nạp nhiều ảnh một lượt thì **thứ tự chạy theo lúc upload xong, không theo tên
+  file** — kéo thả để sắp lại cũng không ăn. Nạp từng file một thì đúng thứ tự.
+- Bộ câu hỏi độ tuổi tách "Medical or Treatment Information" (chẩn đoán, quản lý
+  bệnh → **None**) khỏi "Health or Wellness Topics" (tự chăm sóc, lối sống →
+  **Yes**). Chọn Health & Fitness làm hạng mục chính sẽ kéo theo thủ tục khai
+  *Regulated Medical Device*; Productivity thì không.
+
 ## Còn phải làm
 
-1. **Trader status** (banner đỏ trên đầu App Store Connect) — thiếu là không phân
-   phối được ở EU. Nay đã có quyền Admin nên tự khai được, ở mục Business.
-2. **Business → Agreements** phải ở trạng thái Active.
-3. **Trang bán hàng** (Distribution → App Information + phiên bản 1.0): ảnh chụp
-   màn hình, mô tả, từ khoá, URL hỗ trợ, phân loại độ tuổi, hạng mục — app record
-   mới nên toàn bộ đang trống.
-4. **App Privacy**: khai lại 6 loại dữ liệu như bản cũ (Name, Email,
-   Photos/Videos, Other User Content, User ID, Product Interaction — tất cả
-   `App Functionality` + `Linked` + `No tracking`).
-5. **Tài khoản demo**: kiểm lại `demo.review@workreflection.app` còn dữ liệu mẫu
+1. **DSA trader status** — đã chọn "I'm a trader", điền địa chỉ công ty (Apple lấy
+   sẵn từ Dun & Bradstreet, không sửa được tại chỗ) + `+84 866883047` +
+   `info@cloudncoral.com`. **Đang dừng ở bước Apple gửi mã 6 số về
+   `info@cloudncoral.com`** — cần người mở được hộp thư đó nhập mã. Ba thông tin
+   này sẽ hiện công khai trên trang App Store.
+2. **Add for Review** — mọi ô bắt buộc đã đầy, chỉ còn chờ bấm nộp.
+3. **Tài khoản demo**: kiểm lại `demo.review@workreflection.app` còn dữ liệu mẫu
    và còn `role = 'premium'` hay không, trước khi để reviewer mở.
-6. Muốn cài lên iPhone thật ngay thì tạo nhóm **Internal Testing** — không cần
+4. Muốn cài lên iPhone thật ngay thì tạo nhóm **Internal Testing** — không cần
    Apple duyệt, không cần Test Information.
+
+Đã xong: App Privacy (6 loại dữ liệu, Published), Free Apps Agreement **Active**
+(19/8/2026 – 15/8/2027). Paid Apps Agreement vẫn ở trạng thái *New* — không sao,
+app phát hành miễn phí, tiền thu trên web.
 
 ## Rủi ro còn treo
 
