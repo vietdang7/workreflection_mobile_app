@@ -145,18 +145,23 @@ app nằm chờ, tự bấm mới lên kệ.
 
 ## TestFlight — người test
 
-Chép 4 người từ app cũ sang, thêm thẳng vào build 1.0.0 (2) dưới dạng
+Chép người từ team cũ sang, thêm thẳng vào build 1.0.0 (2) dưới dạng
 **Individual Testers**:
 
-| Email | Tên |
-|---|---|
-| `vuducphuong16032004@gmail.com` | Phuong Duc |
-| `ndt20071998@gmail.com` | Thông Duy |
-| `dung.tran@cloudncoral.com` | Dung Tran |
-| `thuynhi1703@icloud.com` | Thuỳ Nhi Nguyễn Nhật |
+| Email | Tên | Nguồn |
+|---|---|---|
+| `vuducphuong16032004@gmail.com` | Phuong Duc | TestFlight app cũ |
+| `ndt20071998@gmail.com` | Thông Duy | TestFlight app cũ |
+| `dung.tran@cloudncoral.com` | Dung Tran | TestFlight app cũ |
+| `thuynhi1703@icloud.com` | Thuỳ Nhi Nguyễn Nhật | TestFlight app cũ |
+| `anhtran8129@gmail.com` | Anh Tran Duy | Users and Access team cũ |
 
-Bên app cũ họ nằm trong hai nhóm "Cloud & Coral" (internal) và "Cloud & Coral
-Test External".
+Bên app cũ 4 người đầu nằm trong hai nhóm "Cloud & Coral" (internal) và
+"Cloud & Coral Test External". Trần Duy Anh **không có trong danh sách TestFlight**
+— chỉ nằm ở Users and Access của team cũ, và bên đó cũng đang chờ nhận lời mời.
+
+Users and Access team cũ còn hai người nữa **chưa chép sang**, chưa ai yêu cầu:
+`thuyha27122015@gmail.com` (Hà Thuý) và `vudaonhatminh2495@gmail.com` (Minh Vũ).
 
 Team khách ban đầu **không hiện mục External Testing** trong thanh bên TestFlight,
 chỉ có Internal Testing. Đường vòng lúc đó: mở thẳng trang build →
@@ -173,9 +178,9 @@ phải là user trong Users and Access của team khách. Ngày 26/08 làm như 
 - Tạo nhóm internal **"Cloud & Coral"**, thêm 2 người đã có sẵn trong tài khoản:
   `thedangs7@gmail.com` và `dung.tran@cloudncoral.com` → nhận thư mời TestFlight
   ngay, cài được luôn.
-- Mời 3 người còn lại vào tài khoản Apple của khách, vai trò **Developer**, quyền
+- Mời 4 người còn lại vào tài khoản Apple của khách, vai trò **Developer**, quyền
   chỉ trên app WorkReflection: `vuducphuong16032004@gmail.com`,
-  `ndt20071998@gmail.com`, `thuynhi1703@icloud.com`.
+  `ndt20071998@gmail.com`, `thuynhi1703@icloud.com`, `anhtran8129@gmail.com`.
 
 **Chưa xong**: thư họ nhận lúc này là lời mời vào App Store Connect, *chưa phải*
 thư mời TestFlight. Người đang chờ nhận lời mời **không hiện trong danh sách chọn
