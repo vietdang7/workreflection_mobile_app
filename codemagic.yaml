@@ -4,9 +4,22 @@
 # cho mượn máy Mac có sẵn Xcode + Flutter, ký bằng chứng chỉ lấy tự động từ
 # App Store Connect API key, rồi đẩy thẳng lên TestFlight.
 #
+# Từ 26/08/2026 mọi thứ nằm trong tài khoản của khách: team Apple
+# CLOUD & CORAL COMPANY LIMITED (ZZDTT3X3VJ). Team cá nhân "Quoc Viet Dang"
+# (4BFVKGCMCQ) là bản dựng cũ, KHÔNG dùng nữa.
+#
+# Vì bundle id là duy nhất trên toàn Apple, chuỗi cũ
+# app.workreflection.workreflectionMobile đang bị team cá nhân giữ và không
+# mang sang được — kể cả xoá bên đó Apple cũng không cho đăng ký lại. Nên team
+# khách dùng chuỗi mới app.workreflection.mobile. Chuỗi này TRÙNG với URL scheme
+# đăng nhập trong ios/Runner/Info.plist, đó là trùng lành: hai thứ khác họ,
+# không ràng buộc nhau.
+#
 # Trước khi chạy lần đầu phải làm 4 việc ngoài repo (xem hướng dẫn kèm theo):
-#   1. Tạo App Store Connect API key (quyền App Manager), nạp vào Codemagic
-#      team settings với tên integration là "workreflection-asc".
+#   1. Tạo App Store Connect API key (quyền App Manager) TRONG TÀI KHOẢN KHÁCH,
+#      nạp vào Codemagic team settings với tên integration "workreflection-asc".
+#      Chỉ Account Holder/Admin tạo được key này; vai trò App Manager không thấy
+#      mục Team Keys trong Users and Access > Integrations.
 #   2. Tạo app record trên App Store Connect với bundle id bên dưới.
 #   3. Điền APP_STORE_APPLE_ID (số Apple ID của app, xem ở App Information).
 #   4. Tạo biến bí mật CERTIFICATE_PRIVATE_KEY trong nhóm "appstore_credentials"
@@ -33,10 +46,12 @@ workflows:
         # Nhóm biến khai trên Codemagic UI, chứa CERTIFICATE_PRIVATE_KEY.
         - appstore_credentials
       vars:
-        BUNDLE_ID: app.workreflection.workreflectionMobile
+        BUNDLE_ID: app.workreflection.mobile
         # Apple ID của app record (dãy số ~10 chữ số), dùng để hỏi build number
         # mới nhất trên App Store Connect rồi +1 — tránh trùng số khi nộp.
-        APP_STORE_APPLE_ID: 6798188505
+        # 6805322970 = app "WorkReflection" trong team khách, tạo 26/08/2026.
+        # (Số cũ 6798188505 thuộc app bên team cá nhân, đã bỏ.)
+        APP_STORE_APPLE_ID: 6805322970
       # Ghim đúng phiên bản máy dev đang dùng để bản build trên CI không lệch.
       flutter: 3.41.4
       xcode: latest
