@@ -137,11 +137,11 @@ Ba chỗ dễ đi sai khi làm lại:
    của DSA, không phải lộ dữ liệu ngoài ý muốn. Bỏ qua bước này thì app vẫn nộp
    review và phát hành bình thường, chỉ là **không bán được ở EU**.
 
-2. Bản 1.0 để **Automatically release this version** — Apple duyệt xong là app
-   lên kệ ngay. Muốn tự chọn ngày ra mắt thì đổi sang *Manually release* trước
-   khi có kết quả.
-3. Muốn cài lên iPhone thật ngay thì tạo nhóm **Internal Testing** — không cần
-   Apple duyệt, không cần Test Information.
+2. **Ba người test chờ nhận lời mời tài khoản** — xem mục TestFlight bên dưới.
+   Khi họ bấm nhận, vào nhóm internal "Cloud & Coral" thêm họ vào là xong.
+
+Bản 1.0 đã đổi sang **Manually release this version** (26/08) — Apple duyệt xong
+app nằm chờ, tự bấm mới lên kệ.
 
 ## TestFlight — người test
 
@@ -156,18 +156,33 @@ Chép 4 người từ app cũ sang, thêm thẳng vào build 1.0.0 (2) dưới d
 | `thuynhi1703@icloud.com` | Thuỳ Nhi Nguyễn Nhật |
 
 Bên app cũ họ nằm trong hai nhóm "Cloud & Coral" (internal) và "Cloud & Coral
-Test External". Sang team khách **không dùng lại được nhóm internal**: người test
-internal bắt buộc phải là user trong Users and Access của team đó, tức là phải
-mời họ vào tài khoản Apple của khách. Nên chọn đường external — thêm bằng email,
-không đụng gì tới quyền tài khoản.
+Test External".
 
-Team khách chưa hiện mục **External Testing** trong thanh bên TestFlight (chỉ có
-Internal Testing). Đường vòng: mở thẳng trang build → **Individual Testers → Add
-New Testers**, chỗ đó thêm được email ngoài, tối đa 10.000 người.
+Team khách ban đầu **không hiện mục External Testing** trong thanh bên TestFlight,
+chỉ có Internal Testing. Đường vòng lúc đó: mở thẳng trang build →
+**Individual Testers → Add New Testers**. Sau khi tạo nhóm internal đầu tiên thì
+mục External Testing tự hiện ra — hoá ra nó bị ẩn khi app chưa có nhóm nào.
 
-Hiện cả 4 đều ở trạng thái *No Builds Available* vì build 2 còn đang Beta App
-Review. Duyệt xong họ mới nhận được thư mời. Ô **What to Test** đã điền tiếng
-Việt, thư mời sẽ kèm nội dung đó.
+Cả 4 người ở diện external đều đứng ở trạng thái *No Builds Available*, vì
+**external luôn phải chờ Beta App Review duyệt build** mới gửi thư mời. Build 2
+đang trong hàng đợi đó.
+
+Muốn có thư mời **ngay**, chỉ còn đường internal — mà internal bắt buộc tester
+phải là user trong Users and Access của team khách. Ngày 26/08 làm như sau:
+
+- Tạo nhóm internal **"Cloud & Coral"**, thêm 2 người đã có sẵn trong tài khoản:
+  `thedangs7@gmail.com` và `dung.tran@cloudncoral.com` → nhận thư mời TestFlight
+  ngay, cài được luôn.
+- Mời 3 người còn lại vào tài khoản Apple của khách, vai trò **Developer**, quyền
+  chỉ trên app WorkReflection: `vuducphuong16032004@gmail.com`,
+  `ndt20071998@gmail.com`, `thuynhi1703@icloud.com`.
+
+**Chưa xong**: thư họ nhận lúc này là lời mời vào App Store Connect, *chưa phải*
+thư mời TestFlight. Người đang chờ nhận lời mời **không hiện trong danh sách chọn
+tester của nhóm internal** — phải đợi họ bấm nhận rồi mới thêm vào nhóm được, lúc
+đó TestFlight mới gửi thư thứ hai.
+
+Ô **What to Test** đã điền tiếng Việt, thư mời sẽ kèm nội dung đó.
 
 ## Đã nộp review — 16:30 ngày 26/08/2026
 
