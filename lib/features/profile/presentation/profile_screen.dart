@@ -16,6 +16,7 @@ import '../../../features/auth/data/auth_repository.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../wr/org_survey_providers.dart';
 import '../../wr/wr_providers.dart';
+import '../avatar_providers.dart';
 import '../profile_providers.dart';
 import 'change_password_dialog.dart';
 import '../../../core/widgets/wr_paragraph.dart';
@@ -129,6 +130,31 @@ class _ProfileHeader extends StatelessWidget {
 // Avatar + email + badge
 // ---------------------------------------------------------------------------
 
+/// Chọn ảnh từ thư viện rồi tải lên, dùng chung cho vòng tròn ảnh và dòng
+/// "Đổi ảnh đại diện" trong danh sách thiết lập.
+///
+/// Trước 2026-08-27 màn Hồ sơ **không có lối nào tới đây**: ô đổi ảnh chỉ nằm
+/// trong `ProfileEditScreen`, mà màn đó chỉ mở ra qua `/profile/setup` (ngay sau
+/// khi đăng ký). Route `/profile/edit` có khai trong `app_router.dart` nhưng
+/// không widget nào gọi tới — nên người đã có tài khoản không đổi được ảnh.
+///
+/// Ở đây gọi thẳng `avatarUploadProvider` chứ không mở lại `ProfileEditScreen`:
+/// các trường hồ sơ của màn đó đã dời sang "Thông tin của bạn" (xem ghi chú
+/// trong [_SettingsSection]), mở lại là có hai màn sửa cùng một dữ liệu.
+Future<void> _pickAvatar(BuildContext context, WidgetRef ref) async {
+  final l10n = AppLocalizations.of(context)!;
+  final messenger = ScaffoldMessenger.of(context);
+  final url = await ref.read(avatarUploadProvider.notifier).pickAndUpload();
+  if (!context.mounted) return;
+  // `null` cũng là kết quả của việc người dùng bấm huỷ trong bộ chọn ảnh —
+  // im lặng trong trường hợp đó, chỉ báo khi provider thật sự lỗi.
+  if (url != null) {
+    messenger.showSnackBar(SnackBar(content: Text(l10n.avatarUploadSuccess)));
+  } else if (ref.read(avatarUploadProvider).hasError) {
+    messenger.showSnackBar(SnackBar(content: Text(l10n.avatarUploadError)));
+  }
+}
+
 class _AvatarSection extends ConsumerWidget {
   /// Extract initials from a full name (up to 2 chars).
   static String _initials(String name) {
@@ -163,6 +189,7 @@ class _AvatarSection extends ConsumerWidget {
         ref.watch(wrEntitlementProvider).valueOrNull?.isPremium ?? false;
 
     final avatarUrl = ccData['avatar_url'] as String?;
+    final isUploadingAvatar = ref.watch(avatarUploadProvider).isLoading;
 
     // Giao diện mẫu Sprint 2 (screenProfile): khối nhận diện căn giữa —
     // ảnh, tên, email, rồi mới tới nhãn gói. Bố cục hàng ngang cũ đẩy email
@@ -173,40 +200,83 @@ class _AvatarSection extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Avatar circle — network image when available, else initials
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: WrColors.navy.withValues(alpha: 0.08),
-              shape: BoxShape.circle,
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: avatarUrl != null && avatarUrl.isNotEmpty
-                ? Image.network(
-                    avatarUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Center(
-                      child: Text(
-                        _initials(name),
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: WrColors.navy,
-                        ),
-                      ),
+          // Avatar circle — network image when available, else initials.
+          // Chạm vào là đổi ảnh: đây là cử chỉ ai cũng thử trước tiên. Huy hiệu
+          // máy ảnh ở góc để người dùng biết nó bấm được, vì một vòng tròn
+          // trơn không tự nói lên điều đó.
+          GestureDetector(
+            key: const Key('profile_avatar_tap'),
+            behavior: HitTestBehavior.opaque,
+            onTap: isUploadingAvatar ? null : () => _pickAvatar(context, ref),
+            child: Stack(
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: WrColors.navy.withValues(alpha: 0.08),
+                    shape: BoxShape.circle,
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: isUploadingAvatar
+                      ? const Center(
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: WrColors.coral,
+                            ),
+                          ),
+                        )
+                      : avatarUrl != null && avatarUrl.isNotEmpty
+                          ? Image.network(
+                              avatarUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Center(
+                                child: Text(
+                                  _initials(name),
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                    color: WrColors.navy,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Center(
+                              child: Text(
+                                _initials(name),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: WrColors.navy,
+                                ),
+                              ),
+                            ),
+                ),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 22,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      color: WrColors.coral,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: WrColors.pageBg, width: 2),
                     ),
-                  )
-                : Center(
-                    child: Text(
-                      _initials(name),
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: WrColors.navy,
-                      ),
+                    // Icon trên nền Coral là Navy — đặc tả UX/UI §01, không
+                    // phải trắng.
+                    child: const Icon(
+                      Icons.photo_camera_outlined,
+                      size: 11,
+                      color: WrColors.navy,
                     ),
                   ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 12),
           WrParagraph(
@@ -651,6 +721,27 @@ class _SettingsSection extends ConsumerWidget {
               const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
             ],
           ),
+        ),
+
+        // Đổi ảnh đại diện. Vòng tròn ảnh phía trên cũng bấm được, nhưng một
+        // dòng chữ rõ ràng ở đây mới là thứ người dùng tìm thấy khi họ đi dò
+        // danh sách thiết lập — và trước 27/08 màn này không có lối nào tới ô
+        // đổi ảnh cả (xem ghi chú ở [_pickAvatar]).
+        _SettingRow(
+          key: const Key('profile_change_avatar_btn'),
+          icon: Icons.photo_camera_outlined,
+          label: 'Đổi ảnh đại diện',
+          onTap: ref.watch(avatarUploadProvider).isLoading
+              ? null
+              : () => _pickAvatar(context, ref),
+          trailing: ref.watch(avatarUploadProvider).isLoading
+              ? Text(
+                  l10n.avatarUploading,
+                  key: const Key('profile_avatar_uploading_label'),
+                  style: WrTextStyles.body.copyWith(fontSize: 14.5),
+                )
+              : const Icon(Icons.chevron_right,
+                  color: WrColors.muted, size: 16),
         ),
 
         // Reminder toggle — bấm đâu trên dòng cũng bật/tắt được.

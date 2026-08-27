@@ -9,6 +9,8 @@ import 'package:image_picker/image_picker.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
 import 'package:workreflection_mobile/features/profile/avatar_providers.dart';
 import 'package:workreflection_mobile/features/profile/presentation/profile_edit_screen.dart';
+import 'package:workreflection_mobile/features/profile/presentation/profile_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workreflection_mobile/core/models/mobile_profile.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
 
@@ -215,6 +217,63 @@ void main() {
       await repo.uploadAvatar([0], 'jpg');
       final profile = await repo.getCcProfile();
       expect(profile['avatar_url'], contains('avatar.jpg'));
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Lối vào từ màn Hồ sơ.
+  //
+  // Suốt một thời gian ô đổi ảnh CHỈ nằm trong `ProfileEditScreen`, mà màn đó
+  // chỉ mở ra qua `/profile/setup` — ngay sau khi đăng ký. Route
+  // `/profile/edit` có khai trong `app_router.dart` nhưng không widget nào gọi
+  // tới, nên người đã có tài khoản không có đường nào đổi ảnh. Hai test dưới
+  // đây khoá lại lối vào mới để lần sau sắp xếp lại màn Hồ sơ không làm rơi nó
+  // lần nữa.
+  // -------------------------------------------------------------------------
+  group('ProfileScreen — lối đổi ảnh đại diện', () {
+    setUp(() => SharedPreferences.setMockInitialValues({}));
+
+    Future<void> pumpProfile(
+      WidgetTester tester,
+      WrRepository repo,
+      AvatarPickerService picker,
+    ) async {
+      tester.view.physicalSize = const Size(1080, 6000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(() {
+        tester.view.resetPhysicalSize();
+        tester.view.resetDevicePixelRatio();
+      });
+      await tester.pumpWidget(_wrap(const ProfileScreen(), repo, picker));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('có cả dòng thiết lập lẫn vòng tròn ảnh bấm được',
+        (tester) async {
+      await pumpProfile(
+          tester, _seedRepo(), _FakePickerService(result: null));
+
+      expect(find.byKey(const Key('profile_change_avatar_btn')), findsOneWidget);
+      expect(find.byKey(const Key('profile_avatar_tap')), findsOneWidget);
+    });
+
+    testWidgets('chạm dòng đổi ảnh thì mở bộ chọn và tải ảnh lên',
+        (tester) async {
+      final repo = _seedRepo();
+      final picker = _FakePickerService(
+        result: XFile.fromData(
+          Uint8List.fromList([0xFF, 0xD8, 0xFF]),
+          name: 'photo.jpg',
+          mimeType: 'image/jpeg',
+        ),
+      );
+      await pumpProfile(tester, repo, picker);
+
+      await tester.tap(find.byKey(const Key('profile_change_avatar_btn')));
+      await tester.pumpAndSettle();
+
+      expect(picker.callCount, 1);
+      expect(repo.uploadAvatarCalls, hasLength(1));
     });
   });
 }
