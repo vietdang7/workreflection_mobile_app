@@ -26,7 +26,7 @@ Thư từ chối liệt kê rõ. Đối chiếu để không thiếu cảnh nào
 | **Xoá tài khoản** | Cảnh 5 |
 | Luồng mua / nội dung trả tiền | *không có trong app* — Cảnh 13 cho thấy điều đó |
 | Nội dung người dùng tạo, cơ chế báo cáo/chặn | *không có* — app là nhật ký riêng tư, không có mạng xã hội, không ai xem được bài của ai |
-| **Hộp xin quyền nhạy cảm** (vị trí, danh bạ, camera, ATT…) | Cảnh 3 (thư viện ảnh) và Cảnh 9 (micro + nhận dạng giọng nói) |
+| **Hộp xin quyền nhạy cảm** (vị trí, danh bạ, camera, ATT…) | Cảnh 3 (kho ảnh) và Cảnh 9 (micro + nhận dạng giọng nói) |
 
 App **không** dùng vị trí, danh bạ, App Tracking Transparency, không có quảng
 cáo, không có bộ đo lường bên thứ ba. Không cần quay gì cho mấy mục đó.
@@ -37,7 +37,7 @@ cáo, không có bộ đo lường bên thứ ba. Không cần quay gì cho mấ
 
 | Việc | Vì sao |
 |---|---|
-| **Xoá app khỏi iPhone rồi cài lại từ TestFlight** (bản 1.0 build 2) | Đây là bước dễ quên nhất. Xoá app thì iOS quên hết quyền đã cấp, nhờ vậy **hộp xin quyền mới hiện lại** trong video. App còn trên máy từ trước thì micro và thư viện ảnh đã được cấp rồi, quay không ra hộp nào — mà đó là mục Apple hỏi thẳng |
+| **Xoá app khỏi iPhone rồi cài lại từ TestFlight** (bản 1.0 build 2) | Đây là bước dễ quên nhất. Xoá app thì iOS quên hết quyền đã cấp, nhờ vậy **hộp xin quyền kho ảnh, micro và nhận dạng giọng nói hiện lại** trong video. App còn trên máy từ trước thì ba quyền đó đã cấp rồi, quay không ra hộp nào — mà đó là mục Apple hỏi thẳng |
 | Máy chạy **iOS mới nhất** | Apple ghi rõ "latest operating system". Vào Cài đặt → Cài đặt chung → Cập nhật phần mềm, cập nhật trước khi quay |
 | Quay bằng **iPhone 15 Pro Max, iOS 26.6** | Đây là máy đã khai ở mục 2 của hồ sơ (ô Notes trên App Store Connect, điền 27/08). Quay bằng máy khác thì phải sửa lại dòng đó cho khớp — Apple đối chiếu |
 | Chuẩn bị **một email thật chưa từng đăng ký**, dùng để quay cảnh đăng ký | Tài khoản này sẽ bị xoá thật ngay trong video ở Cảnh 5. Gợi ý: dạng `ten+test1@gmail.com` |
@@ -90,11 +90,11 @@ Bắt đầu từ màn hình chính iPhone, thấy rõ biểu tượng WorkRefle
 Chạm mục chuyển sang **Đăng ký**. Gõ chậm: tên, email test, mật khẩu. Chạm nút
 đăng ký, chờ.
 
-**Cảnh 3 · Thiết lập hồ sơ, có xin quyền thư viện ảnh (0:50 – 1:20)**
+**Cảnh 3 · Thiết lập hồ sơ, có xin quyền kho ảnh (0:50 – 1:20)**
 Sau đăng ký app đi thẳng vào màn thiết lập hồ sơ.
 
-1. Chạm **vòng tròn ảnh đại diện** ở đầu màn → iOS mở bộ chọn ảnh, và có thể hiện
-   hộp xin quyền **thư viện ảnh** → cho phép → chọn một ảnh. Chờ ảnh hiện lên.
+1. Chạm **vòng tròn ảnh đại diện** ở đầu màn → iOS hiện hộp xin quyền **kho
+   ảnh** → chạm cho phép → bộ chọn mở ra → chọn một ảnh. Chờ ảnh hiện lên.
 2. Điền vài ô còn lại, chạm tiếp tục cho tới khi vào tab **Hôm nay**. Dừng 3 giây
    cho thấy tài khoản mới thì màn hình trống — bình thường, không phải lỗi.
 
@@ -103,9 +103,15 @@ Sau đăng ký app đi thẳng vào màn thiết lập hồ sơ.
 > `/profile/edit` có khai trong `app_router.dart` nhưng không nút nào gọi tới.
 > Nên đừng để dành cảnh này xuống cuối video.
 >
-> Nếu iOS **không** hiện hộp xin quyền (từ iOS 14 bộ chọn ảnh mới thường không
-> cần hỏi) thì cứ quay tiếp, không sao — hộp micro ở Cảnh 9 là đủ để đáp yêu cầu
-> "quay cảnh xin quyền" của Apple.
+> **Phải quay bằng bản có bước xin quyền kho ảnh** (thêm 27/08). Bản cũ hơn
+> chạm vào là vào thẳng kho ảnh, không hộp nào hiện: từ iOS 14 `image_picker`
+> dùng `PHPickerViewController`, bộ chọn chạy ngoài tiến trình app nên iOS
+> không cần hỏi. Nay app chủ động xin quyền trước khi mở bộ chọn, nên hộp mới
+> hiện ra. Quay bằng build cũ là cảnh này không có gì để thấy.
+>
+> Nếu lỡ bấm "Không cho phép": app hiện dòng nhắc kèm nút **Mở Cài đặt**, và
+> iOS **không hỏi lại lần hai** cho tới khi cài lại app. Lỡ tay thì xoá app,
+> cài lại từ TestFlight rồi quay lại từ Cảnh 1.
 
 **Cảnh 4 · Vào Hồ sơ (1:20 – 1:30)**
 Chạm ảnh đại diện góc trên phải. Cuộn chậm hết trang cho thấy các mục: thông tin,

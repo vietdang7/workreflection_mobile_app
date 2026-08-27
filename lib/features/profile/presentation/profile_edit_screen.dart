@@ -67,6 +67,9 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
 
   Future<void> _pickAvatar(BuildContext context) async {
     final l10n = AppLocalizations.of(context)!;
+    // Giữ sẵn trước khi `await`: SnackBar sống lâu hơn màn hình, rời màn rồi
+    // mới chạm "Mở Cài đặt" thì `ref` đã bị huỷ.
+    final permission = ref.read(photoPermissionServiceProvider);
     final url = await ref
         .read(avatarUploadProvider.notifier)
         .pickAndUpload();
@@ -75,7 +78,22 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.avatarUploadSuccess)),
       );
-    } else if (ref.read(avatarUploadProvider).hasError) {
+      return;
+    }
+    // Cùng cách xử lý với màn Hồ sơ: từ chối quyền thì mời sang Cài đặt, vì
+    // iOS chỉ hỏi đúng một lần cho mỗi lần cài app.
+    final error = ref.read(avatarUploadProvider).error;
+    if (error is AvatarPermissionDeniedException) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(l10n.avatarPermissionDenied),
+          action: SnackBarAction(
+            label: l10n.avatarPermissionOpenSettings,
+            onPressed: permission.openSettings,
+          ),
+        ),
+      );
+    } else if (error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(l10n.avatarUploadError)),
       );

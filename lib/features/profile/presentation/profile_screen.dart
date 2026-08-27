@@ -144,13 +144,29 @@ class _ProfileHeader extends StatelessWidget {
 Future<void> _pickAvatar(BuildContext context, WidgetRef ref) async {
   final l10n = AppLocalizations.of(context)!;
   final messenger = ScaffoldMessenger.of(context);
+  // Giữ sẵn service trước khi `await`. SnackBar sống lâu hơn màn hình: rời màn
+  // rồi mới chạm "Mở Cài đặt" thì `ref` đã bị huỷ và `ref.read` ném lỗi.
+  final permission = ref.read(photoPermissionServiceProvider);
   final url = await ref.read(avatarUploadProvider.notifier).pickAndUpload();
   if (!context.mounted) return;
   // `null` cũng là kết quả của việc người dùng bấm huỷ trong bộ chọn ảnh —
   // im lặng trong trường hợp đó, chỉ báo khi provider thật sự lỗi.
   if (url != null) {
     messenger.showSnackBar(SnackBar(content: Text(l10n.avatarUploadSuccess)));
-  } else if (ref.read(avatarUploadProvider).hasError) {
+    return;
+  }
+  final error = ref.read(avatarUploadProvider).error;
+  if (error is AvatarPermissionDeniedException) {
+    // Từ chối quyền không phải sự cố — người dùng chỉ không đổi được ảnh cho
+    // tới khi bật lại, mà bật lại thì phải sang Cài đặt vì iOS chỉ hỏi một lần.
+    messenger.showSnackBar(SnackBar(
+      content: Text(l10n.avatarPermissionDenied),
+      action: SnackBarAction(
+        label: l10n.avatarPermissionOpenSettings,
+        onPressed: permission.openSettings,
+      ),
+    ));
+  } else if (error != null) {
     messenger.showSnackBar(SnackBar(content: Text(l10n.avatarUploadError)));
   }
 }

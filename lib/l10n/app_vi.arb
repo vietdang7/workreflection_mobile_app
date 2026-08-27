@@ -662,6 +662,8 @@
   "avatarPickerTitle": "Chọn ảnh đại diện",
   "avatarChangeBtn": "Đổi ảnh",
   "avatarUploading": "Đang tải lên…",
+  "avatarPermissionDenied": "Cần quyền vào kho ảnh thì mới chọn được ảnh đại diện.",
+  "avatarPermissionOpenSettings": "Mở Cài đặt",
 
   "vouchersTitle": "Voucher của tôi",
   "vouchersSubtitle": "Sao chép mã voucher và dùng khi thanh toán trên web",
