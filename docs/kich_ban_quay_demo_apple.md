@@ -26,7 +26,7 @@ Thư từ chối liệt kê rõ. Đối chiếu để không thiếu cảnh nào
 | **Xoá tài khoản** | Cảnh 5 |
 | Luồng mua / nội dung trả tiền | *không có trong app* — Cảnh 13 cho thấy điều đó |
 | Nội dung người dùng tạo, cơ chế báo cáo/chặn | *không có* — app là nhật ký riêng tư, không có mạng xã hội, không ai xem được bài của ai |
-| **Hộp xin quyền nhạy cảm** (vị trí, danh bạ, camera, ATT…) | Cảnh 9 (micro) và Cảnh 12 (thư viện ảnh) |
+| **Hộp xin quyền nhạy cảm** (vị trí, danh bạ, camera, ATT…) | Cảnh 3 (thư viện ảnh) và Cảnh 9 (micro + nhận dạng giọng nói) |
 
 App **không** dùng vị trí, danh bạ, App Tracking Transparency, không có quảng
 cáo, không có bộ đo lường bên thứ ba. Không cần quay gì cho mấy mục đó.
@@ -39,7 +39,7 @@ cáo, không có bộ đo lường bên thứ ba. Không cần quay gì cho mấ
 |---|---|
 | **Xoá app khỏi iPhone rồi cài lại từ TestFlight** (bản 1.0 build 2) | Đây là bước dễ quên nhất. Xoá app thì iOS quên hết quyền đã cấp, nhờ vậy **hộp xin quyền mới hiện lại** trong video. App còn trên máy từ trước thì micro và thư viện ảnh đã được cấp rồi, quay không ra hộp nào — mà đó là mục Apple hỏi thẳng |
 | Máy chạy **iOS mới nhất** | Apple ghi rõ "latest operating system". Vào Cài đặt → Cài đặt chung → Cập nhật phần mềm, cập nhật trước khi quay |
-| Ghi lại **tên máy + phiên bản iOS** đang dùng | Phải khai ở mục 2 của bài trả lời. Xem tại Cài đặt → Cài đặt chung → Giới thiệu |
+| Quay bằng **iPhone 15 Pro Max, iOS 26.6** | Đây là máy đã khai ở mục 2 của hồ sơ (ô Notes trên App Store Connect, điền 27/08). Quay bằng máy khác thì phải sửa lại dòng đó cho khớp — Apple đối chiếu |
 | Chuẩn bị **một email thật chưa từng đăng ký**, dùng để quay cảnh đăng ký | Tài khoản này sẽ bị xoá thật ngay trong video ở Cảnh 5. Gợi ý: dạng `ten+test1@gmail.com` |
 | Tài khoản demo đã có sẵn dữ liệu và đang là **Premium** | Kiểm 26/08: 9 episode, 5 check-in, 3 tình huống lặp, 1 chủ đề thực hành, 1 lượt self-check, 4 tin nhắn chat, 3 mốc dòng thời gian. Nếu màn nào rỗng thì dùng thêm ~15 phút cho đầy trước khi quay |
 | Wi-Fi ổn định | Chatbot và phần đọc tài liệu gọi máy chủ; mạng chập là video treo giữa chừng |
@@ -72,7 +72,7 @@ tiếng sau, hoặc bỏ luôn — xem mục "Thuyết minh".
 
 ---
 
-## Kịch bản — 14 cảnh, khoảng 6–7 phút
+## Kịch bản — 13 cảnh, khoảng 6–7 phút
 
 Quay **một mạch từ đầu đến cuối**, không dừng giữa chừng. Mỗi bước dừng 2 giây
 trước khi chạm để reviewer kịp nhìn.
@@ -90,17 +90,29 @@ Bắt đầu từ màn hình chính iPhone, thấy rõ biểu tượng WorkRefle
 Chạm mục chuyển sang **Đăng ký**. Gõ chậm: tên, email test, mật khẩu. Chạm nút
 đăng ký, chờ.
 
-**Cảnh 3 · Thiết lập hồ sơ (0:50 – 1:10)**
-Sau đăng ký app đi thẳng vào màn "Thông tin của bạn". Điền vài ô, chạm tiếp tục
-cho tới khi vào tab **Hôm nay**. Dừng 3 giây cho thấy tài khoản mới thì màn hình
-trống — đây là điều bình thường, không phải lỗi.
+**Cảnh 3 · Thiết lập hồ sơ, có xin quyền thư viện ảnh (0:50 – 1:20)**
+Sau đăng ký app đi thẳng vào màn thiết lập hồ sơ.
 
-**Cảnh 4 · Vào Hồ sơ (1:10 – 1:20)**
+1. Chạm **vòng tròn ảnh đại diện** ở đầu màn → iOS mở bộ chọn ảnh, và có thể hiện
+   hộp xin quyền **thư viện ảnh** → cho phép → chọn một ảnh. Chờ ảnh hiện lên.
+2. Điền vài ô còn lại, chạm tiếp tục cho tới khi vào tab **Hôm nay**. Dừng 3 giây
+   cho thấy tài khoản mới thì màn hình trống — bình thường, không phải lỗi.
+
+> **Chỉ có ở đây mới đổi được ảnh đại diện.** Vào từ tab Hồ sơ của một tài khoản
+> đã dùng lâu thì không có đường nào tới ô ảnh — kiểm code 27/08: route
+> `/profile/edit` có khai trong `app_router.dart` nhưng không nút nào gọi tới.
+> Nên đừng để dành cảnh này xuống cuối video.
+>
+> Nếu iOS **không** hiện hộp xin quyền (từ iOS 14 bộ chọn ảnh mới thường không
+> cần hỏi) thì cứ quay tiếp, không sao — hộp micro ở Cảnh 9 là đủ để đáp yêu cầu
+> "quay cảnh xin quyền" của Apple.
+
+**Cảnh 4 · Vào Hồ sơ (1:20 – 1:30)**
 Chạm ảnh đại diện góc trên phải. Cuộn chậm hết trang cho thấy các mục: thông tin,
 nhắc nhở hằng ngày, ngôn ngữ, đổi mật khẩu, xuất dữ liệu, đăng xuất, và dưới cùng
 là **Xoá tài khoản**.
 
-**Cảnh 5 · Xoá tài khoản thật (1:20 – 1:40)**
+**Cảnh 5 · Xoá tài khoản thật (1:30 – 1:50)**
 Chạm **Xoá tài khoản** → hộp xác nhận hiện ra → gõ đúng chữ **XOÁ** vào ô → chạm
 nút xoá. Chờ app tự đá về màn đăng nhập.
 
@@ -143,6 +155,10 @@ vài chữ, rồi chạm nút kết thúc. Chờ về tab Hôm nay.
 
 **Cảnh 11 · Ba tab còn lại (4:00 – 5:10)**
 
+> Thanh tab dưới cùng **chỉ có icon, không có chữ**: con mắt (Hôm nay), bóng đèn
+> (Hiểu mình), tia chớp (Phát triển), nhịp sóng (Hành trình). Chạm từng cái theo
+> đúng thứ tự đó, đừng nhảy cóc — reviewer đang dò xem app có mấy màn.
+
 - **Hiểu mình**: cuộn chậm từ trên xuống hết màn. Dừng ở "Tình huống lặp lại" cho
   thấy có số lần thật, và thẻ **Career Health Check** cho thấy ba nhãn kết quả.
   Chạm "Xem những điều đang trở đi trở lại" → xem màn đầy đủ → quay lại.
@@ -160,11 +176,7 @@ Gửi, **chờ trả lời xong**, để câu trả lời hiện đủ trên mà
 > ngoài tầm kiểm soát không. Phải thấy rõ nó chỉ nói về công việc của chính người
 > dùng.
 
-**Cảnh 13 · Đổi ảnh đại diện — xin quyền thư viện ảnh (5:55 – 6:15)**
-Chạm ảnh đại diện góc trên phải → chạm vào ảnh để đổi → iOS hiện hộp xin quyền
-**thư viện ảnh** → chạm cho phép → chọn một ảnh bất kỳ. Chờ ảnh mới hiện lên.
-
-**Cảnh 14 · Cho thấy app không bán gì (6:15 – 6:30)**
+**Cảnh 13 · Cho thấy app không bán gì (5:55 – 6:15)**
 Vẫn ở màn Hồ sơ, cuộn chậm **hết trang từ trên xuống dưới một lượt nữa**, không
 chạm gì. Mục đích: cho reviewer thấy không có nút mua, không có bảng giá, không
 có gói nâng cấp ở đâu cả (**Guideline 3.1.1**). Dừng quay.
@@ -173,7 +185,7 @@ có gói nâng cấp ở đâu cả (**Guideline 3.1.1**). Dừng quay.
 
 ## Sau khi quay xong
 
-1. Xem lại toàn bộ video, kiểm **ba điều cấm** ở trên. Đặc biệt soi Cảnh 11 và 14
+1. Xem lại toàn bộ video, kiểm **ba điều cấm** ở trên. Đặc biệt soi Cảnh 11 và 13
    xem có mẩu giá tiền nào lọt vào không.
 2. Kiểm đủ **9 dòng** trong bảng "Apple đòi gì trong video".
 3. Xuất `.mp4` hoặc `.mov`, dưới 500 MB.

@@ -14,6 +14,23 @@ từ 25/08 nhưng **chưa quay, chưa nộp**. Đó là khoản thiếu chính.
 Không phải sửa dòng code nào. Không cần build lại. Chỉ trả lời trong App Store
 Connect (Resolution Center) rồi bấm nộp lại bản build 2 đang có.
 
+## Đã làm trên App Store Connect — 27/08
+
+Ô **App Review Information → Notes** của bản 1.0 đã ghi đè bằng bản đủ 7 mục
+(3.996/4.000 ký tự — ô này giới hạn 4.000, đây là lý do bài trong Resolution
+Center dài hơn bài trong Notes). Đã bấm Save, chưa nộp gì cho Apple.
+
+Dòng đầu mục 1 để nguyên chữ `>>> PASTE VIDEO LINK HERE BEFORE SUBMITTING <<<`.
+**Phải thay bằng link Drive trước khi bấm nộp lại** — để nguyên là Apple đọc được.
+
+Hai chỗ đã điền theo dữ liệu bạn cho: máy test **iPhone 15 Pro Max (iOS 26.6)**.
+
+Trong lúc đối chiếu code phát hiện thêm: **thanh tab dưới cùng chỉ có icon, không
+có chữ** (`shell_screen.dart:116` ghi rõ "NO text label"). Bài đầu tiên viết "Four
+bottom tabs: Hôm nay, Hiểu mình…" là chỉ reviewer đi tìm nhãn chữ không tồn tại;
+đã sửa thành mô tả theo icon — mắt (Hôm nay), bóng đèn (Hiểu mình), tia chớp
+(Phát triển), nhịp sóng (Hành trình).
+
 ## Năm việc phải làm, theo thứ tự
 
 1. **Chuẩn bị máy**: cập nhật iPhone lên iOS mới nhất, **xoá app rồi cài lại từ
@@ -24,8 +41,9 @@ Connect (Resolution Center) rồi bấm nộp lại bản build 2 đang có.
    khoản, xoá tài khoản, hộp xin quyền.
 3. **Tải video lên Google Drive**, đặt quyền "Bất kỳ ai có đường liên kết", tự
    kiểm bằng cửa sổ ẩn danh.
-4. **Điền hai chỗ trống** trong bài trả lời dưới đây: link video và tên máy +
-   phiên bản iOS đã test.
+4. **Điền link video** vào bài trả lời dưới đây, và thay dòng
+   `>>> PASTE VIDEO LINK HERE BEFORE SUBMITTING <<<` trong ô Notes trên App Store
+   Connect. Máy test đã điền sẵn (iPhone 15 Pro Max, iOS 26.6).
 5. **Dán bài trả lời** vào Resolution Center, đồng thời chép luôn vào ô App Review
    Information → Notes cho các lần nộp sau.
 
@@ -60,15 +78,15 @@ không có.
 >   to the sign-in screen)
 > - signing in with the demo account listed below
 > - the full five-step daily reflection flow, which is the core feature
-> - the microphone and speech-recognition permission prompts (voice input is
->   offered inside that flow) and the photo library permission prompt (changing
->   the profile picture)
+> - the photo library picker on the profile setup screen, and the microphone and
+>   speech-recognition permission prompts (voice input is offered inside the
+>   reflection flow)
 > - the Understand, Develop and Journey tabs, and the AI chat
 > - a slow pass over the whole profile screen, showing that the app contains no
 >   purchase, price or upgrade offer anywhere
 >
 > **2. Devices and operating systems tested**
-> `<ĐIỀN: ví dụ "iPhone 13 (iOS 18.6), iPhone SE 3rd generation (iOS 18.5)">`
+> iPhone 15 Pro Max (iOS 26.6).
 > All testing was done on physical devices, with builds distributed through
 > TestFlight. The app targets iPhone only and supports iOS 13.0 and later.
 >
@@ -98,10 +116,11 @@ không có.
 > empty. You may also create your own account with any email address; sign-up
 > is immediate and requires no invitation or approval.
 >
-> The interface is in Vietnamese. After signing in you land on the "Hôm nay"
-> (Today) tab. There are four bottom tabs — Hôm nay (Today), Hiểu mình
-> (Understand), Phát triển (Develop), Hành trình (Journey) — plus the profile
-> avatar at the top right.
+> The interface is in Vietnamese. After signing in you land on the Today tab.
+> The four bottom tabs are icons with no text label: eye (Hôm nay / Today),
+> lightbulb (Hiểu mình / Understand), bolt (Phát triển / Develop), wave
+> (Hành trình / Journey). The profile avatar is at the top right, and a coral
+> bubble button opens the AI assistant from any tab.
 > - Core feature: on the Today tab, tap any mood tile. This starts the
 >   five-step reflection flow: mood → situation → familiar story → what you
 >   noticed → finish. It takes about a minute. Any text field in this flow can
@@ -160,7 +179,8 @@ không có.
 > permission is denied:
 > - Microphone and speech recognition — to dictate a reflection answer instead
 >   of typing it.
-> - Photo library — to choose a profile picture.
+> - Photo library — to set a profile picture on the profile setup screen shown
+>   right after registration.
 > - Camera — to scan a QR code when checking in to an in-person workshop.
 > The app does not request location, contacts, calendar, health data, or
 > notifications-based tracking.
@@ -181,10 +201,26 @@ không có.
 - [ ] Video có đủ: mở app · đăng ký · xoá tài khoản · đăng nhập demo · luồng nhìn
       lại · hộp xin quyền micro · hộp xin quyền thư viện ảnh · chat AI
 - [ ] Video **không** có giá tiền, QR thanh toán, nút đăng nhập Google
-- [ ] Hai chỗ `<...>` trong bài trả lời đã điền
+- [ ] Ô Notes trên App Store Connect **không còn dòng** `>>> PASTE VIDEO LINK
+      HERE BEFORE SUBMITTING <<<` — đã thay bằng link thật
 - [ ] Tài khoản demo đăng nhập được, vẫn là Premium, dữ liệu vẫn còn
 - [ ] Đã chép bài trả lời sang App Review Information → Notes, không chỉ dán ở
       Resolution Center
+
+## Lỗi phát hiện 27/08 — đổi ảnh đại diện không vào được
+
+Màn "Chỉnh sửa hồ sơ" (`ProfileEditScreen`, nơi duy nhất có ô đổi ảnh đại diện)
+khai route `/profile/edit` trong `app_router.dart:272` nhưng **không có chỗ nào
+trong `lib/` gọi `push('/profile/edit')`** — route mồ côi. Nó chỉ mở ra được qua
+`/profile/setup`, tức màn thiết lập ngay sau khi đăng ký.
+
+Hệ quả: người dùng đã có tài khoản **không có đường nào đổi ảnh đại diện, cũng
+không sửa được tên và các trường hồ sơ khác** trên màn đó.
+
+Với hồ sơ Apple thì không sao — quay cảnh chọn ảnh ở màn thiết lập sau đăng ký là
+đủ, và ô Notes đã sửa thành "during profile setup". Nhưng đây là **lỗi sản phẩm
+thật**, nên đưa vào bản sau: thêm một mục trong màn Hồ sơ trỏ tới `/profile/edit`.
+Sửa được trong vài phút nhưng phải dựng lại IPA, nên không làm trước lần nộp này.
 
 ## Việc phụ, không chặn lần nộp này
 
