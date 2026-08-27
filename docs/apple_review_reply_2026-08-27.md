@@ -207,6 +207,30 @@ không có.
 - [ ] Đã chép bài trả lời sang App Review Information → Notes, không chỉ dán ở
       Resolution Center
 
+## Hai câu SAI trong hồ sơ, phát hiện 27/08 khi soi video
+
+Cả hai đều do tin vào tài liệu cũ thay vì đọc thứ app thật sự dựng ra. Đã sửa
+trong ô Notes.
+
+**1. "Thanh tab chỉ có icon, không có nhãn chữ" — sai.** Tab có chữ: Hôm nay ·
+Hiểu mình · Phát triển · Hành trình. `shell_screen.dart` còn hai dòng ghi chú cũ
+viết "NO text label", nhưng `WrTabItem` ngay bên dưới vẫn dựng nhãn 9px.
+
+**2. "App miễn phí, không có giá hay gói trả tiền ở bất kỳ đâu" — sai.** Màn Tài
+khoản của **tài khoản miễn phí** hiện thẻ "Mở khoá Premium — 499.000đ/năm" dẫn
+sang Paywall, và Paywall có nút mua trên web. Nhật ký 26/08 ghi "không có chỗ nào
+bán" là đúng theo cách kiểm lúc đó: tài khoản demo là Premium nên `_PremiumCard`
+bị ẩn, người kiểm không bao giờ thấy nó.
+
+Đây không chỉ là câu chữ trong hồ sơ — bán tính năng số ngoài IAP là **Guideline
+3.1.1**, cộng thêm chuyện dẫn người dùng ra web mà kho Việt Nam không nằm trong
+diện được miễn (phân tích sẵn trong `lib/core/logic/wr_store_policy.dart`).
+
+**Đã xử lý:** `_PremiumCard` nay đọc `WrStorePolicy`, và `codemagic.yaml` dựng
+bản nộp kho bằng `--dart-define=HIDE_WEB_PURCHASE_LINK=true`. Bản đó không báo
+giá, không nút mua, không dẫn sang web ở bất kỳ màn nào — lúc ấy câu trong Notes
+mới thành đúng. **Phải quay video bằng bản này.**
+
 ## Lỗi phát hiện 27/08 — đổi ảnh đại diện không vào được
 
 Màn "Chỉnh sửa hồ sơ" (`ProfileEditScreen`, nơi duy nhất có ô đổi ảnh đại diện)
