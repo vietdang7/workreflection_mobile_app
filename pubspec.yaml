@@ -28,6 +28,15 @@ dependencies:
   pdf: ^3.12.0
   printing: ^5.14.3
   file_picker: ^11.0.3
+  # Chỉ dùng cho MỘT việc: xin quyền kho ảnh trước khi đổi ảnh đại diện trên
+  # iOS. Xem `lib/features/profile/avatar_providers.dart` và danh sách macro
+  # PERMISSION_* trong `ios/Podfile`.
+  #
+  # GHIM Ở 11.x, đừng nâng lên 13/14: permission_handler_android 14.0.0 dùng
+  # `compilerOptions`/`jvmTarget` trong build.gradle.kts, cần Kotlin Gradle
+  # plugin mới hơn bản dự án đang dùng — `flutter build apk` gãy ngay ở bước
+  # biên dịch script Gradle (thử 27/08). Muốn nâng thì nâng Kotlin/AGP trước.
+  permission_handler: ^11.3.0
 
 dev_dependencies:
   flutter_test:

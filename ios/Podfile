@@ -46,6 +46,41 @@ target 'Runner' do
   end
 end
 
+# permission_handler_apple biên dịch SẴN mọi loại quyền trừ khi được bảo đừng.
+# Để mặc định thì file nhị phân có tham chiếu tới API vị trí, danh bạ, lịch,
+# Bluetooth… — những thứ app không dùng và không khai chuỗi mô tả trong
+# Info.plist, đúng thứ Apple soi ở Guideline 5.1.1.
+#
+# App chỉ xin đúng MỘT quyền qua gói này: kho ảnh (đổi ảnh đại diện). Micro,
+# nhận dạng giọng nói và camera do plugin riêng của chúng tự xin, không đi qua
+# đây, nên vẫn để 0.
+#
+# Danh sách này phải phủ HẾT macro mà pod nhận biết — macro nào không khai thì
+# mặc định là 1, tức vẫn biên dịch vào. Đối chiếu 27/08 với
+# permission_handler_apple 9.x (grep PERMISSION_* trong ios/ của pod); nâng
+# phiên bản pod thì đối chiếu lại.
+PERMISSION_MACROS = [
+  'PERMISSION_PHOTOS=1',
+  'PERMISSION_EVENTS=0',
+  'PERMISSION_EVENTS_FULL_ACCESS=0',
+  'PERMISSION_REMINDERS=0',
+  'PERMISSION_CONTACTS=0',
+  'PERMISSION_CAMERA=0',
+  'PERMISSION_MICROPHONE=0',
+  'PERMISSION_SPEECH_RECOGNIZER=0',
+  'PERMISSION_PHOTOS_ADD_ONLY=0',
+  'PERMISSION_LOCATION=0',
+  'PERMISSION_LOCATION_ALWAYS=0',
+  'PERMISSION_LOCATION_WHENINUSE=0',
+  'PERMISSION_NOTIFICATIONS=0',
+  'PERMISSION_MEDIA_LIBRARY=0',
+  'PERMISSION_SENSORS=0',
+  'PERMISSION_BLUETOOTH=0',
+  'PERMISSION_APP_TRACKING_TRANSPARENCY=0',
+  'PERMISSION_CRITICAL_ALERTS=0',
+  'PERMISSION_ASSISTANT=0',
+].freeze
+
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
@@ -54,6 +89,16 @@ post_install do |installer|
       # Vài pod phụ thuộc còn để target 11/12 → Xcode cảnh báo hàng loạt lúc
       # archive. Kéo tất cả lên bằng app.
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+
+      # Gộp thêm chứ không gán đè: `flutter_additional_ios_build_settings` ở
+      # trên đã đặt sẵn khoá này cho vài target, dùng `=` là xoá mất phần đó.
+      existing = config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||
+                 ['$(inherited)']
+      existing = [existing] if existing.is_a?(String)
+      unless existing.include?('PERMISSION_PHOTOS=1')
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] =
+          existing + PERMISSION_MACROS
+      end
     end
   end
 end

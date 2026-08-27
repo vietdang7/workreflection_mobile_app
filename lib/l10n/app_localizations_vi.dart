@@ -1616,6 +1616,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get avatarUploading => 'Đang tải lên…';
 
   @override
+  String get avatarPermissionDenied =>
+      'Cần quyền vào kho ảnh thì mới chọn được ảnh đại diện.';
+
+  @override
+  String get avatarPermissionOpenSettings => 'Mở Cài đặt';
+
+  @override
   String get vouchersTitle => 'Voucher của tôi';
 
   @override

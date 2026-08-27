@@ -70,14 +70,19 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<!-- Chuỗi mục đích — Guideline 5.1.1: phải nói rõ dùng để làm gì, kèm ví dụ.
+	     Người dùng đọc đúng những dòng này trong hộp xin quyền, và App Review
+	     soi chúng. Hai chuỗi micro trước 27/08 còn viết "câu trả lời khảo sát"
+	     theo bản khảo sát cũ, trong khi ô nhập giọng nói nay nằm trong luồng
+	     nhìn lại một ngày làm việc. -->
 	<key>NSCameraUsageDescription</key>
-	<string>Quét mã QR để check-in workshop</string>
+	<string>Dùng camera để quét mã QR khi bạn check-in tại một buổi workshop.</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>Nhập câu trả lời khảo sát bằng giọng nói</string>
+	<string>Dùng micro để bạn nói thay vì gõ chữ, ví dụ khi ghi lại một tình huống trong ngày làm việc.</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
-	<string>Nhận dạng giọng nói để chọn câu trả lời khảo sát</string>
+	<string>Chuyển lời bạn nói thành chữ để điền vào ô ghi chú, ví dụ khi bạn kể lại một tình huống thay vì gõ tay.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
-	<string>Chọn ảnh từ thư viện để làm ảnh đại diện</string>
+	<string>Cho phép bạn chọn một ảnh trong thư viện để làm ảnh đại diện cho hồ sơ của mình.</string>
 	<!-- App chỉ dùng HTTPS và mã hoá chuẩn của hệ điều hành nên được miễn khai
 	     báo xuất khẩu. Khai sẵn ở đây để mỗi lần nộp build khỏi bị App Store
 	     Connect chặn lại hỏi export compliance. -->
