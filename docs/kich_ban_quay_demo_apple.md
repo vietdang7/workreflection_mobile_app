@@ -57,6 +57,27 @@ tiếng sau, hoặc bỏ luôn — xem mục "Thuyết minh".
 
 ---
 
+## Rút từ lần quay hỏng 27/08
+
+Bản quay đầu (8:02) phải bỏ vì ba lỗi. Đọc kỹ trước khi quay lại:
+
+1. **Kho ảnh của máy lộ nguyên trong bộ chọn ảnh ở Cảnh 3.** Khung hình có biên
+   lai chuyển khoản 1.000.000đ, hai mã QR thanh toán, danh sách điểm danh có tên
+   thật, ảnh chụp tin nhắn riêng. Vừa dính điều cấm số 1 (QR/giá tiền) vừa dính
+   điều cấm số 3 (dữ liệu người thật) — mà video này còn để công khai trên Drive.
+   → **Trước khi quay: dọn kho ảnh.** Chuyển mọi ảnh nhạy cảm sang album Ẩn
+   (PHPicker không hiện album Ẩn), hoặc quay bằng máy có kho ảnh sạch. Mở sẵn bộ
+   chọn ảnh xem thử một lượt **trước khi bấm ghi**.
+2. **Thẻ "Mở khoá Premium — 499.000đ/năm" nằm đầu màn Tài khoản** của tài khoản
+   vừa đăng ký. Thẻ này chỉ hiện với tài khoản miễn phí nên trước giờ không ai
+   thấy — tài khoản demo là Premium. Đã sửa: bản dựng nộp kho không còn báo giá
+   ở bất kỳ đâu. → **Quay bằng build 27/08 trở đi**; thấy thẻ đỏ có giá nghĩa là
+   đang cài nhầm bản, dừng lại.
+3. **Hai lần đăng nhập sai**, màn hình hiện "Email hoặc mật khẩu không đúng".
+   Reviewer đang nghi tài khoản demo không dùng được, cho họ xem cảnh đó là tự
+   chuốc. → Chép sẵn email và mật khẩu vào Ghi chú của máy, gõ chậm, xem kỹ
+   trước khi chạm Đăng nhập.
+
 ## Ba điều TUYỆT ĐỐI không được có trong video
 
 1. **Không quay bất kỳ màn nào nhắc tới mua hàng, giá tiền, QR thanh toán,
@@ -114,9 +135,13 @@ Sau đăng ký app đi thẳng vào màn thiết lập hồ sơ.
 > cài lại từ TestFlight rồi quay lại từ Cảnh 1.
 
 **Cảnh 4 · Vào Hồ sơ (1:20 – 1:30)**
-Chạm ảnh đại diện góc trên phải. Cuộn chậm hết trang cho thấy các mục: thông tin,
-nhắc nhở hằng ngày, ngôn ngữ, đổi mật khẩu, xuất dữ liệu, đăng xuất, và dưới cùng
-là **Xoá tài khoản**.
+Chạm ảnh đại diện góc trên phải. Cuộn chậm hết trang cho thấy các mục: thông tin
+của bạn, **đổi ảnh đại diện**, nhắc nhở hằng ngày, ngôn ngữ, bản Premium, đổi mật
+khẩu, xuất dữ liệu, đăng xuất, và dưới cùng là **Xoá tài khoản**.
+
+> Dòng "Đổi ảnh đại diện" chỉ có từ build 27/08 trở đi. Nếu quay bằng build cũ
+> mà không thấy nó thì bạn đang cài nhầm bản — dừng lại, cài đúng bản mới rồi
+> quay lại từ Cảnh 1.
 
 **Cảnh 5 · Xoá tài khoản thật (1:30 – 1:50)**
 Chạm **Xoá tài khoản** → hộp xác nhận hiện ra → gõ đúng chữ **XOÁ** vào ô → chạm
@@ -161,9 +186,9 @@ vài chữ, rồi chạm nút kết thúc. Chờ về tab Hôm nay.
 
 **Cảnh 11 · Ba tab còn lại (4:00 – 5:10)**
 
-> Thanh tab dưới cùng **chỉ có icon, không có chữ**: con mắt (Hôm nay), bóng đèn
-> (Hiểu mình), tia chớp (Phát triển), nhịp sóng (Hành trình). Chạm từng cái theo
-> đúng thứ tự đó, đừng nhảy cóc — reviewer đang dò xem app có mấy màn.
+> Thanh tab dưới cùng có icon **kèm nhãn chữ**: Hôm nay · Hiểu mình · Phát triển
+> · Hành trình. Chạm từng cái theo đúng thứ tự đó, đừng nhảy cóc — reviewer đang
+> dò xem app có mấy màn.
 
 - **Hiểu mình**: cuộn chậm từ trên xuống hết màn. Dừng ở "Tình huống lặp lại" cho
   thấy có số lần thật, và thẻ **Career Health Check** cho thấy ba nhãn kết quả.

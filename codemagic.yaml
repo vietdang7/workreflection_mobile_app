@@ -124,7 +124,17 @@ workflows:
           BUILD_NUMBER=$((LATEST + 1))
           echo "Số build đã dùng trên Apple: App Store='$APP_STORE_NUM' TestFlight='$TESTFLIGHT_NUM' → dùng $BUILD_NUMBER"
 
+          # HIDE_WEB_PURCHASE_LINK=true → `WrStorePolicy.silent`: app không báo
+          # giá, không có nút mua, không dẫn sang trang mua trên web ở bất kỳ
+          # màn nào. Bản nộp kho phải dựng bằng cờ này.
+          #
+          # Thiếu cờ thì mặc định là `webLinkOnly`: màn Tài khoản của tài khoản
+          # thường hiện thẻ "Mở khoá Premium — 499.000đ/năm" và Paywall có nút
+          # sang web. Đó là bán hàng số ngoài IAP (Guideline 3.1.1) cộng thêm
+          # chuyện dẫn-dụ-ra-ngoài, mà kho Việt Nam không nằm trong diện được
+          # miễn — xem `lib/core/logic/wr_store_policy.dart`.
           flutter build ipa --release \
+            --dart-define=HIDE_WEB_PURCHASE_LINK=true \
             --build-name=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1) \
             --build-number="$BUILD_NUMBER" \
             --export-options-plist=/Users/builder/export_options.plist

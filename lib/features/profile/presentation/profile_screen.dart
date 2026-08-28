@@ -353,6 +353,18 @@ class _PremiumCard extends ConsumerWidget {
         ref.watch(wrEntitlementProvider).valueOrNull?.isPremium ?? false;
     if (isPremium) return const SizedBox.shrink();
 
+    // Bản dựng "silent" (`--dart-define=HIDE_WEB_PURCHASE_LINK=true`) không
+    // được nhắc tới chuyện mua ở bất kỳ đâu — kể cả một con số.
+    //
+    // Trước 27/08 thẻ này không đọc `WrStorePolicy`, nên cờ đó chỉ bịt giá ở
+    // màn Paywall (xem `_showsPrice`) còn màn Tài khoản vẫn dán "499.000đ/năm"
+    // ngay đầu trang. Hai chỗ nói hai đằng, và chính con số đó lọt vào video
+    // demo gửi App Review trong khi hồ sơ khai là app không bán gì.
+    final policy = ref.watch(wrStorePolicyProvider);
+    if (!policy.allowsInAppPurchase && !policy.allowsWebPurchaseLink) {
+      return const SizedBox.shrink();
+    }
+
     // Giá đọc từ `cc_products` chứ không ghi cứng "499.000đ/năm" như mockup:
     // khách bán hai gói (năm / tháng) và đổi giá ở trang quản trị của web. Một
     // con số ghi cứng ở đây sẽ nói khác Paywall ngay lần đầu khách đổi giá.
