@@ -135,6 +135,7 @@ class WrGuideQaItem {
 class WrGuideSection {
   const WrGuideSection({
     required this.id,
+    required this.group,
     required this.title,
     required this.summary,
     required this.blocks,
@@ -144,6 +145,17 @@ class WrGuideSection {
   /// Mã ổn định — dùng làm `Key` của widget và làm mỏ neo cho test. Không đổi
   /// theo tiêu đề, vì tiêu đề là chữ khách còn sửa.
   final String id;
+
+  /// Nhãn nhóm hiện phía trên mục đầu tiên của nhóm.
+  ///
+  /// Tám thẻ trắng giống hệt nhau xếp thẳng một cột đọc ra là một danh sách
+  /// không có hình dạng — mắt không bám vào đâu để biết mình đang ở đoạn nào.
+  /// Ba nhãn nhóm chia nó thành ba chặng có nghĩa, mà không phải gập thêm một
+  /// tầng nữa.
+  ///
+  /// Là CHỮ nên nằm ở đây cùng bộ chữ, không nằm trong widget. Các mục cùng
+  /// nhóm phải đứng LIỀN NHAU — màn hình chỉ in nhãn khi nhóm đổi.
+  final String group;
 
   final String title;
 
@@ -206,6 +218,7 @@ const String kGuideChatRoute = '/wr/ask';
 List<WrGuideSection> wrGuideSections() => [
       WrGuideSection(
         id: 'what',
+        group: 'Bắt đầu',
         title: 'WorkReflection là gì',
         summary: 'Một hai phút mỗi ngày, không phải app ghi chú',
         openByDefault: true,
@@ -227,6 +240,7 @@ List<WrGuideSection> wrGuideSections() => [
       ),
       WrGuideSection(
         id: 'tabs',
+        group: 'Bắt đầu',
         title: 'Bốn tab, mỗi tab một câu hỏi',
         summary: 'Hôm nay · Hiểu mình · Phát triển · Hành trình',
         blocks: const [
@@ -245,6 +259,7 @@ List<WrGuideSection> wrGuideSections() => [
       ),
       WrGuideSection(
         id: 'daily',
+        group: 'Bắt đầu',
         title: 'Nhìn lại mỗi ngày',
         summary: '$kReflectStepCount bước, bắt đầu từ tab Hôm nay',
         blocks: const [
@@ -286,6 +301,7 @@ List<WrGuideSection> wrGuideSections() => [
       ),
       WrGuideSection(
         id: 'understand',
+        group: 'Từng tab một',
         title: 'Hiểu mình',
         summary: 'Điều gì đang lặp lại ở bạn',
         blocks: [
@@ -320,6 +336,7 @@ List<WrGuideSection> wrGuideSections() => [
       ),
       WrGuideSection(
         id: 'growth',
+        group: 'Từng tab một',
         title: 'Phát triển',
         summary: 'Chủ đề thực hành phần mềm tự thêm cho bạn',
         blocks: [
@@ -349,6 +366,7 @@ List<WrGuideSection> wrGuideSections() => [
       ),
       WrGuideSection(
         id: 'journey',
+        group: 'Từng tab một',
         title: 'Hành trình',
         summary: 'Career Memory và diễn biến theo thời gian',
         blocks: const [
@@ -373,6 +391,7 @@ List<WrGuideSection> wrGuideSections() => [
       ),
       WrGuideSection(
         id: 'profile',
+        group: 'Tài khoản & thắc mắc',
         title: 'Hồ sơ của bạn',
         summary: 'Thông tin, gói, dữ liệu và tài khoản',
         blocks: const [
@@ -396,6 +415,7 @@ List<WrGuideSection> wrGuideSections() => [
       ),
       WrGuideSection(
         id: 'faq',
+        group: 'Tài khoản & thắc mắc',
         title: 'Vài câu hay được hỏi',
         summary: 'Bỏ vài ngày · riêng tư · viết ngắn',
         blocks: const [
