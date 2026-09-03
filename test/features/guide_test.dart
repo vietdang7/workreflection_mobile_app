@@ -229,6 +229,39 @@ void main() {
       expect(find.text(growth.summary), findsNothing);
     });
 
+    // Nhãn nhóm là thứ giữ tám thẻ trắng khỏi đọc thành một danh sách không có
+    // hình dạng. Khoá hai điều: nhãn có ra màn hình, và các mục CÙNG NHÓM đứng
+    // liền nhau — màn hình chỉ in nhãn khi nhóm đổi, nên nhóm bị xen kẽ sẽ in
+    // một nhãn hai lần và `findsOneWidget` bắt được.
+    testWidgets('mỗi nhóm in nhãn đúng một lần, ở mục đầu nhóm', (t) async {
+      await t.pumpWidget(_wrap());
+      await t.pumpAndSettle();
+
+      final groups = <String>[];
+      for (final s in wrGuideSections()) {
+        if (groups.isEmpty || groups.last != s.group) groups.add(s.group);
+      }
+
+      expect(groups.toSet().length, groups.length,
+          reason: 'các mục cùng nhóm phải đứng liền nhau');
+
+      for (final g in groups) {
+        expect(find.text(g.toUpperCase()), findsOneWidget, reason: g);
+      }
+    });
+
+    // Người đọc hết tám mục mà vẫn chưa thấy câu trả lời là người cần Chatbot
+    // nhất, nhưng lúc đó thẻ coral đã trôi khỏi màn từ lâu.
+    testWidgets('dòng chốt cuối màn cũng mở được Chatbot', (t) async {
+      await t.pumpWidget(_wrap());
+      await t.pumpAndSettle();
+
+      await t.tap(find.byKey(const Key('guide_chat_footer')));
+      await t.pumpAndSettle();
+
+      expect(find.text('CHATBOT'), findsOneWidget);
+    });
+
     testWidgets('mục đầu mở sẵn — vào màn là đã đọc được ngay', (t) async {
       await t.pumpWidget(_wrap());
       await t.pumpAndSettle();

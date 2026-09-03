@@ -129,6 +129,17 @@ void main() {
     testWidgets('một mục đã mở', (tester) async {
       await _shoot(tester, '41_huong_dan_muc_mo', open: const ['daily']);
     });
+
+    // Bảng "bốn tab" — khối hai cột duy nhất của bộ chữ, và là chỗ icon mục
+    // trùng icon thanh tab thật.
+    testWidgets('bảng bốn tab', (tester) async {
+      await _shoot(tester, '42_huong_dan_bang_tab', open: const ['tabs']);
+    });
+
+    // Cuối màn: nhóm thứ ba và dòng chốt — hai thứ các ảnh trên không chạm tới.
+    testWidgets('cuối màn — nhóm cuối và dòng chốt', (tester) async {
+      await _shoot(tester, '43_huong_dan_cuoi_man', open: const ['faq']);
+    });
   });
 
   test('bộ chữ có đủ mục để chụp', () {
