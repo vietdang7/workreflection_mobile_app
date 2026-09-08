@@ -110,6 +110,33 @@ export interface AppleTransaction {
   environment?: string;
 }
 
+/// Phần "còn gia hạn nữa hay không" của một thuê bao.
+///
+/// Nội dung này **không nằm trong biên lai giao dịch**: biên lai chỉ nói kỳ vừa
+/// mua kết thúc lúc nào, không nói người dùng đã tắt gia hạn hay chưa. Chỉ App
+/// Store Server Notifications V2 mang nó tới. Thiếu nó thì thẻ nhắc trong app
+/// buộc phải nói nước đôi, mà nói "sắp hết hạn" với người vẫn đang bật gia hạn
+/// là nói sai — với họ câu đúng là "sắp bị trừ tiền kỳ tiếp".
+export interface AppleRenewalInfo {
+  originalTransactionId: string;
+
+  /// `true` khi Apple sẽ tự trừ tiền kỳ tiếp.
+  autoRenew: boolean;
+
+  /// Product id của kỳ tiếp. Khác `productId` hiện tại khi người dùng vừa đổi
+  /// gói (tháng ↔ năm) — kỳ này vẫn chạy hết theo gói cũ.
+  autoRenewProductId?: string;
+
+  /// Mốc gia hạn kế tiếp, mili-giây epoch.
+  renewalDate?: number;
+
+  /// Vì sao thuê bao sẽ dừng: 1 người dùng tự huỷ · 2 lỗi thanh toán ·
+  /// 3 không đồng ý giá mới · 4 sản phẩm không còn bán.
+  expirationIntent?: number;
+
+  environment?: string;
+}
+
 export class AppleReceiptError extends Error {}
 
 function base64ToBytes(b64: string): Uint8Array {
@@ -215,14 +242,20 @@ async function verifySignature(
   );
 }
 
-/// Kiểm một JWS giao dịch và trả về nội dung đã tin được.
+/// Kiểm chữ ký của một JWS do Apple ký và trả về payload thô.
 ///
-/// Ném [AppleReceiptError] với câu hiển thị được cho người dùng khi biên lai
-/// không qua được bất kỳ lớp nào.
-export async function verifyAppleTransaction(
+/// Dùng chung cho cả hai thứ Apple ký: biên lai giao dịch mà app gửi lên, và
+/// thông báo máy-chủ-tới-máy-chủ (App Store Server Notifications V2) mà Apple
+/// gọi thẳng vào ta. Hai đường đó khác nhau ở nội dung chứ **không khác gì ở
+/// phần chữ ký** — cùng ES256, cùng chuỗi `x5c` bắc về Apple Root CA G3.
+///
+/// Hàm này chỉ trả lời đúng một câu: "Apple có ký cái này không". Nội dung bên
+/// trong nói gì thì bên gọi tự đọc và tự kiểm — đặc biệt là `bundleId`, vì một
+/// JWS của app Apple khác cũng do Apple ký thật.
+export async function verifyAppleJws(
   jws: string,
   now: Date = new Date(),
-): Promise<AppleTransaction> {
+): Promise<Record<string, unknown>> {
   const parts = jws.split('.');
   if (parts.length !== 3) {
     throw new AppleReceiptError('Biên lai không đúng định dạng.');
@@ -255,7 +288,18 @@ export async function verifyAppleTransaction(
     throw new AppleReceiptError('Chữ ký của biên lai không khớp.');
   }
 
-  const payload = decodeJsonPart(parts[1]);
+  return decodeJsonPart(parts[1]);
+}
+
+/// Kiểm một JWS giao dịch và trả về nội dung đã tin được.
+///
+/// Ném [AppleReceiptError] với câu hiển thị được cho người dùng khi biên lai
+/// không qua được bất kỳ lớp nào.
+export async function verifyAppleTransaction(
+  jws: string,
+  now: Date = new Date(),
+): Promise<AppleTransaction> {
+  const payload = await verifyAppleJws(jws, now);
   const transactionId = payload.transactionId;
   const bundleId = payload.bundleId;
   const productId = payload.productId;
@@ -286,6 +330,44 @@ export async function verifyAppleTransaction(
     appAccountToken:
       typeof payload.appAccountToken === 'string'
         ? payload.appAccountToken
+        : undefined,
+    environment:
+      typeof payload.environment === 'string' ? payload.environment : undefined,
+  };
+}
+
+/// Kiểm một JWS `signedRenewalInfo` và trả về nội dung đã tin được.
+export async function verifyAppleRenewalInfo(
+  jws: string,
+  now: Date = new Date(),
+): Promise<AppleRenewalInfo> {
+  const payload = await verifyAppleJws(jws, now);
+
+  const originalTransactionId = payload.originalTransactionId;
+  if (typeof originalTransactionId !== 'string') {
+    throw new AppleReceiptError('Thông báo thiếu mã thuê bao.');
+  }
+
+  // `autoRenewStatus` là số 0/1 chứ không phải boolean. So `=== 1` chứ đừng ép
+  // kiểu: thiếu trường thì `undefined` ép thành `false` một cách im lặng, mà ở
+  // đây "không biết" và "đã tắt gia hạn" là hai chuyện phải phân biệt được.
+  const autoRenewStatus = payload.autoRenewStatus;
+  if (autoRenewStatus !== 0 && autoRenewStatus !== 1) {
+    throw new AppleReceiptError('Thông báo thiếu trạng thái gia hạn.');
+  }
+
+  return {
+    originalTransactionId,
+    autoRenew: autoRenewStatus === 1,
+    autoRenewProductId:
+      typeof payload.autoRenewProductId === 'string'
+        ? payload.autoRenewProductId
+        : undefined,
+    renewalDate:
+      typeof payload.renewalDate === 'number' ? payload.renewalDate : undefined,
+    expirationIntent:
+      typeof payload.expirationIntent === 'number'
+        ? payload.expirationIntent
         : undefined,
     environment:
       typeof payload.environment === 'string' ? payload.environment : undefined,

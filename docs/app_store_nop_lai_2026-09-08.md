@@ -107,9 +107,12 @@ quả là bị từ chối lại đúng lý do 3.1.1.
 
 ---
 
-## 2. Tự động gia hạn — người dùng huỷ thế nào
+## 2. Tự động gia hạn — CHỐT, kèm lời nhắc trước hạn
 
-Câu hỏi đặt ra ngày 08/09: nếu để tự động gia hạn thì khách có quyền từ chối gia
+**Khách chốt 08/09/2026: khai Auto-Renewable Subscription**, kèm yêu cầu "phải
+thông báo nếu gần hết hạn". Phần nhắc đã dựng xong, xem mục 2b.
+
+Câu hỏi đặt ra cùng ngày: nếu để tự động gia hạn thì khách có quyền từ chối gia
 hạn không, và từ chối bằng cách nào.
 
 **Có, và đó là quyền Apple bắt buộc phải có.** Người dùng tự tắt gia hạn, không
@@ -129,14 +132,101 @@ Ba điểm nên biết kèm theo:
   quyền còn hiệu lực nữa và tài khoản trở về Free.
 - **Hoàn tiền cũng do Apple xử.** Người dùng khiếu nại thẳng với Apple, mình
   không cầm tiền nên không hoàn được.
-- Đáng thêm một dòng **"Quản lý gói đăng ký"** trong màn Tài khoản trỏ tới
-  `https://apps.apple.com/account/subscriptions` — không bắt buộc, nhưng người
-  duyệt và người dùng đều thích lối đi ngắn. **Chưa làm.**
+- Lối **"Quản lý gói đăng ký"** trỏ thẳng tới
+  `https://apps.apple.com/account/subscriptions` đã nằm trong thẻ nhắc ở mục 2b.
 
 So sánh với lựa chọn còn lại: **Non-Renewing Subscription** thì hết hạn là tự
 dừng, người dùng muốn dùng tiếp phải mua lại. Khớp đúng mô hình VietQR bên web
 (không auto-renew), nhưng đổi lại doanh thu rơi hết sau mỗi kỳ và phải sửa đoạn
 chữ công bố trên Paywall. Mã backend đã xử lý được cả hai loại.
+
+---
+
+## 2b. Nhắc trước khi kỳ thuê bao kết thúc
+
+Apple **không** tự nhắc trước mỗi kỳ gia hạn thường. Thông báo 27/7 ngày mà Apple
+gửi là dành cho **đổi giá**; kỳ gia hạn bình thường chỉ có email biên lai gửi
+*sau* khi đã trừ tiền. Nên muốn nhắc thì phải tự làm.
+
+### Vì sao phải có webhook chứ không chỉ một cái `if`
+
+Cùng một ngày trên lịch mang hai nghĩa ngược nhau:
+
+| Trạng thái | Ngày đó nghĩa là | Câu phải nói |
+|---|---|---|
+| còn bật gia hạn | bị trừ tiền kỳ tiếp | "Gói tự động gia hạn ngày …" |
+| đã tắt gia hạn | mất quyền | "Gói hết hạn ngày …" |
+
+Biên lai giao dịch **không** chứa trạng thái gia hạn — nó chỉ nói kỳ vừa mua kết
+thúc lúc nào. Chỗ duy nhất mang thông tin đó tới là **App Store Server
+Notifications V2**.
+
+Cái đó còn vá một lỗ khác, nặng hơn cả chuyện câu chữ: `wr_entitlements
+.valid_until` chỉ được cập nhật khi app nhận được giao dịch mới từ StoreKit, tức
+là khi người dùng **mở app**. Người mua gói năm, tới hạn gia hạn mà một tuần sau
+mới mở app thì suốt tuần đó bị coi là hết hạn dù đã trả tiền.
+
+### Đã dựng
+
+| Phần | Tệp |
+|---|---|
+| Webhook nhận thông báo của Apple | `supabase/functions/wr-apple-notifications/` |
+| Tách phần kiểm chữ ký dùng chung | `supabase/functions/_shared/apple_jws.ts` |
+| Cột trạng thái gia hạn | `supabase/migrations/20260908000000_wr_iap_renewal_state.sql` |
+| Quyết định nói gì, khi nào | `lib/core/logic/wr_iap_renewal.dart` |
+| Thẻ nhắc (Home + Tài khoản) | `lib/core/widgets/wr_renewal_notice_card.dart` |
+| Test | `test/features/wr_iap_renewal_test.dart` (15 test) |
+
+Migration **đã push**. `wr-apple-notifications` **đã deploy**, `wr-verify-iap`
+**đã deploy lại** vì đường dẫn `apple_jws.ts` đổi chỗ.
+
+Ba trạng thái chứ không hai: `auto_renew` để `null` khi Apple chưa gửi thông báo
+nào. Với gói tháng thì "chưa biết" là trạng thái của **cả tháng đầu** — trường
+hợp thường gặp nhất, không phải ngoại lệ. Lúc đó thẻ nói cả hai vế thay vì đoán
+bừa. Cửa sổ nhắc: 7 ngày cho người sắp bị trừ tiền, 14 ngày cho người sắp mất
+quyền — người phải quyết định mua tiếp hay không thì cần nhiều thời gian hơn
+người chỉ cần biết để tắt nếu muốn.
+
+Hàm này là hàm **duy nhất** của dự án chạy với `verify_jwt = false`: Apple gọi
+vào bằng một POST trần, không mang token của ai. Niềm tin nằm ở chữ ký trong
+thân yêu cầu chứ không ở người gọi — cùng chuỗi `x5c` bắc về Apple Root CA G3 mà
+`wr-verify-iap` đang dùng.
+
+### Đã chạy thử trên bản deploy thật
+
+| Trường hợp | Kết quả |
+|---|---|
+| POST không kèm Authorization | qua được — đúng ý, Apple không có token |
+| Thân rỗng | 400 `missing_signed_payload` |
+| Chuỗi chứng thư bịa | 400 `invalid_signature` |
+| `alg: none` | 400 `invalid_signature` |
+| GET | 405 |
+
+Nhánh **chấp nhận** chưa chạy thử được: nó cần một thông báo do Apple ký thật, mà
+nút "Request a Test Notification" lại thuộc App Store Server API — đúng thứ cần
+API key `.p8`. Nhánh này sẽ tự chạy ở bước sandbox trên máy thật: mua thử xong là
+Apple gửi `SUBSCRIBED`, huỷ gia hạn là gửi `DID_CHANGE_RENEWAL_STATUS`. Phần mật
+mã thì đã được chứng minh qua `wr-verify-iap` — hai hàm dùng chung đúng một tệp.
+
+### Việc tay: khai địa chỉ webhook
+
+App Store Connect → WorkReflection → **App Information** → *App Store Server
+Notifications*, khai **Version 2** cho cả hai môi trường:
+
+```
+https://sukpcxevcjnhiuyaoqxi.supabase.co/functions/v1/wr-apple-notifications
+```
+
+| Ô | Giá trị |
+|---|---|
+| Production Server URL | đường dẫn trên |
+| Sandbox Server URL | **cùng** đường dẫn |
+
+Dùng chung một địa chỉ được: hàm ghi `environment` của từng giao dịch nên vẫn
+phân biệt được giao dịch sandbox với giao dịch thật lúc đối chiếu doanh thu.
+
+Không khai thì mọi thứ vẫn chạy, chỉ là thẻ nhắc luôn nói vế "chưa biết", và
+`valid_until` lại phụ thuộc vào việc người dùng mở app.
 
 ---
 
@@ -248,8 +338,9 @@ Account > Xử lý dữ liệu bằng AI.
 2. Merge PR #50 repo web → deploy → mở
    `workreflection.app/privacy-policy` kiểm bằng mắt.
 3. Merge PR #16 repo app.
-4. Khai Subscription Group + 2 gói, đủ ảnh và mô tả, tới trạng thái
-   **Ready to Submit**.
+4. Khai Subscription Group + 2 gói (**Auto-Renewable**), đủ ảnh và mô tả, tới
+   trạng thái **Ready to Submit**. Khai luôn địa chỉ App Store Server
+   Notifications V2 ở mục 2b — làm cùng lúc cho khỏi quên.
 5. Gỡ Premium khỏi tài khoản demo, xoá hàng consent của tài khoản đó.
 6. Chạy Codemagic bản `FORCE_STORE_POLICY=app_store` → TestFlight.
 7. **Chạy thử sandbox trên máy thật** — bước duy nhất kiểm được biên lai Apple
@@ -261,6 +352,12 @@ Account > Xử lý dữ liệu bằng AI.
    - gỡ app, cài lại, bấm **Khôi phục giao dịch** — quyền phải trở lại
    - mở Trò chuyện lần đầu: màn xin phép phải hiện; bấm "Để sau" thì không gửi
      gì; bật lại ở Tài khoản thì các phần AI sống lại
+   - **tắt gia hạn trong Cài đặt → Thuê bao**, rồi kiểm
+     `wr_iap_transactions.auto_renew` đã thành `false` và
+     `last_notification_type` có `DID_CHANGE_RENEWAL_STATUS` — đây là lần duy
+     nhất kiểm được nhánh chấp nhận của `wr-apple-notifications` trước khi phát
+     hành. Sandbox chạy nhanh hơn thật: gói tháng gia hạn sau 5 phút, gói năm sau
+     1 tiếng, nên ngồi đợi một lát là thấy cả `DID_RENEW`.
 8. Nộp bản build mới **kèm cả hai gói**, dán thư trả lời ở mục 3.
 
 ---
@@ -298,9 +395,8 @@ Chỉ Account Holder làm được phần này, nên gửi luôn hôm nay:
 > dưới 1 triệu USD/năm thì Apple lấy 15% thay vì 30%. Đăng ký luôn một thể, chỉ
 > mất mấy phút và giữ lại được 15% doanh thu mỗi gói bán ra.
 >
-> Ngoài ra em cần chị chốt một chuyện: gói Premium trên iPhone để **tự động gia
-> hạn** hay **không tự động**? Tự động gia hạn thì khách vẫn tự tắt được bất cứ
-> lúc nào trong Cài đặt → Thuê bao, tắt rồi vẫn dùng hết kỳ đã trả; đây là loại
-> Apple ưu tiên. Không tự động thì hết hạn là dừng hẳn, giống mô hình chuyển
-> khoản bên web, nhưng khách phải nhớ mua lại mỗi kỳ. Em làm được cả hai, chỉ
-> cần chị chốt để em khai đúng loại.
+> Gói thì em khai loại **tự động gia hạn** như đã chốt. Người mua vẫn tự tắt
+> được bất cứ lúc nào trong Cài đặt → Thuê bao, tắt rồi vẫn dùng hết kỳ đã trả
+> tiền. Và app sẽ nhắc trước khi tới hạn — còn bật gia hạn thì nhắc "sắp bị trừ
+> tiền kỳ tiếp", đã tắt rồi thì nhắc "sắp hết hạn", kèm lối bấm thẳng sang trang
+> quản lý gói của Apple.

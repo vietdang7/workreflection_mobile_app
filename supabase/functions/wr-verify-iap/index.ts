@@ -30,7 +30,7 @@ import { createClient } from 'jsr:@supabase/supabase-js@2';
 import {
   AppleReceiptError,
   verifyAppleTransaction,
-} from './apple_jws.ts';
+} from '../_shared/apple_jws.ts';
 
 // ---------------------------------------------------------------------------
 // Cấu hình

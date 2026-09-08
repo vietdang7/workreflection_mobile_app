@@ -21,6 +21,8 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/data/wr_iap_repository.dart';
+import '../../core/data/wr_iap_subscription_repository.dart';
+import '../../core/logic/wr_iap_renewal.dart';
 import 'wr_providers.dart';
 
 /// Các gói đang bày bán, đã hỏi giá kho ứng dụng.
@@ -277,4 +279,39 @@ const Duration kWrIapRestoreWindow = Duration(seconds: 6);
 final wrIapControllerProvider =
     StateNotifierProvider<WrIapController, WrIapState>((ref) {
   return WrIapController(ref);
+});
+
+// ---------------------------------------------------------------------------
+// Nhắc trước khi kỳ thuê bao kết thúc
+// ---------------------------------------------------------------------------
+
+/// Thuê bao App Store của người đang đăng nhập, hoặc `null`.
+///
+/// Không bao giờ ném: đây là thứ nuôi một lời nhắc phụ, hỏng mạng thì im lặng
+/// chứ không được làm hỏng màn hình đang mở.
+final wrIapSubscriptionProvider =
+    FutureProvider<WrIapSubscription?>((ref) async {
+  // Bản không bán bằng IAP thì không có gì để nhắc, và cũng không nên bắn một
+  // truy vấn thừa ở mỗi lần mở Home.
+  if (!ref.watch(wrStorePolicyProvider).allowsNativeIap) return null;
+
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null) return null;
+
+  try {
+    return await ref
+        .watch(wrIapSubscriptionRepositoryProvider)
+        .fetchSubscription(userId);
+  } catch (_) {
+    return null;
+  }
+});
+
+/// Lời nhắc cần hiện lúc này, hoặc `null` khi chưa tới lúc nói gì.
+///
+/// Mốc thời gian lấy ở đây chứ không lấy trong widget: widget dựng lại nhiều
+/// lần và mỗi lần lại có một "bây giờ" khác nhau, làm test không đứng yên được.
+final wrRenewalNoticeProvider = Provider<WrRenewalNotice?>((ref) {
+  final sub = ref.watch(wrIapSubscriptionProvider).valueOrNull;
+  return wrRenewalNotice(sub, now: DateTime.now());
 });

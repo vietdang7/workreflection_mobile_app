@@ -13,6 +13,7 @@ import '../../../core/data/wr_repository.dart';
 import '../../../core/logic/wr_ai_disclosure.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
+import '../../../core/widgets/wr_renewal_notice_card.dart';
 import '../../../features/auth/data/auth_repository.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../wr/org_survey_providers.dart';
@@ -51,6 +52,10 @@ class ProfileScreen extends ConsumerWidget {
                   const SizedBox(height: 20),
                   _StatsCard(),
                   const SizedBox(height: 12),
+                  // Nhắc kỳ thuê bao sắp kết thúc. Đứng NGAY TRÊN thẻ mời nâng
+                  // cấp vì hai thẻ này loại trừ nhau: người đang có gói thấy
+                  // lời nhắc, người chưa có thấy lời mời.
+                  const WrRenewalNoticeCard(),
                   _PremiumCard(),
                   _SettingsSection(),
                   const SizedBox(height: 12),
