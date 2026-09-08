@@ -208,25 +208,21 @@ API key `.p8`. Nhánh này sẽ tự chạy ở bước sandbox trên máy thậ
 Apple gửi `SUBSCRIBED`, huỷ gia hạn là gửi `DID_CHANGE_RENEWAL_STATUS`. Phần mật
 mã thì đã được chứng minh qua `wr-verify-iap` — hai hàm dùng chung đúng một tệp.
 
-### Việc tay: khai địa chỉ webhook
+### Địa chỉ webhook — ĐÃ KHAI 08/09/2026
 
 App Store Connect → WorkReflection → **App Information** → *App Store Server
-Notifications*, khai **Version 2** cho cả hai môi trường:
-
-```
-https://sukpcxevcjnhiuyaoqxi.supabase.co/functions/v1/wr-apple-notifications
-```
+Notifications*. Cả hai ô đã điền, kiểm lại sau khi tải lại trang:
 
 | Ô | Giá trị |
 |---|---|
-| Production Server URL | đường dẫn trên |
+| Production Server URL | `https://sukpcxevcjnhiuyaoqxi.supabase.co/functions/v1/wr-apple-notifications` |
 | Sandbox Server URL | **cùng** đường dẫn |
 
 Dùng chung một địa chỉ được: hàm ghi `environment` của từng giao dịch nên vẫn
 phân biệt được giao dịch sandbox với giao dịch thật lúc đối chiếu doanh thu.
 
-Không khai thì mọi thứ vẫn chạy, chỉ là thẻ nhắc luôn nói vế "chưa biết", và
-`valid_until` lại phụ thuộc vào việc người dùng mở app.
+Apple chỉ bắt đầu gọi vào đây khi có thuê bao thật — nên còn phải chờ tới bước
+sandbox mới thấy thông báo đầu tiên.
 
 ---
 
@@ -339,8 +335,8 @@ Account > Xử lý dữ liệu bằng AI.
    `workreflection.app/privacy-policy` kiểm bằng mắt.
 3. Merge PR #16 repo app.
 4. Khai Subscription Group + 2 gói (**Auto-Renewable**), đủ ảnh và mô tả, tới
-   trạng thái **Ready to Submit**. Khai luôn địa chỉ App Store Server
-   Notifications V2 ở mục 2b — làm cùng lúc cho khỏi quên.
+   trạng thái **Ready to Submit**. *(Địa chỉ App Store Server Notifications ở
+   mục 2b đã khai xong 08/09.)*
 5. Gỡ Premium khỏi tài khoản demo, xoá hàng consent của tài khoản đó.
 6. Chạy Codemagic bản `FORCE_STORE_POLICY=app_store` → TestFlight.
 7. **Chạy thử sandbox trên máy thật** — bước duy nhất kiểm được biên lai Apple
