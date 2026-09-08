@@ -3,10 +3,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../../../core/data/wr_iap_repository.dart';
 import '../../../core/logic/wr_pricing.dart';
 import '../../../core/logic/wr_store_policy.dart';
 import '../../../core/logic/wr_tra_chieu.dart' show kWebAppBaseUrl;
 import '../../../core/theme/wr_colors.dart';
+import '../iap_providers.dart';
 import '../wr_providers.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 
@@ -65,16 +67,23 @@ Future<void> _openPayment(
   if (premium && router.canPop()) router.pop();
 }
 
-/// Có hiện con số giá không.
+/// Có hiện khối giá lấy từ `cc_products` không.
 ///
-/// Giấu ở hai trường hợp. Một là bản im lặng: bản dẫn-sang-web vẫn phải cho
-/// biết giá, không thì người dùng bấm sang trình duyệt trong tình trạng mù
-/// thông tin. Hai là người đã có quyền — chào giá cho người vừa trả tiền là
-/// vô duyên, và với người duyệt app của Apple (dùng tài khoản demo Premium)
-/// thì cái nút dẫn ra web nằm ngay đó chính là thứ Guideline 3.1.3 cấm.
+/// Giấu ở ba trường hợp:
+///
+///   • Bản im lặng. (Bản dẫn-sang-web thì vẫn phải cho biết giá, không thì
+///     người dùng bấm sang trình duyệt trong tình trạng mù thông tin.)
+///   • Người đã có quyền — chào giá cho người vừa trả tiền là vô duyên, và với
+///     người duyệt app của Apple (dùng tài khoản demo Premium) thì cái nút dẫn
+///     ra web nằm ngay đó chính là thứ Guideline 3.1.3 cấm.
+///   • Bản bán bằng IAP. Giá phải là giá StoreKit trả về cho đúng kho của người
+///     dùng, không phải con số VND trong `cc_products` — hai số này khác nhau
+///     và Apple bắt hiện đúng số của họ. Khối giá riêng của IAP nằm trong
+///     [_NativeIapCta].
 bool _showsPrice(WrStorePolicy policy, {required bool alreadyPremium}) =>
     !alreadyPremium &&
-    (policy.allowsInAppPurchase || policy.allowsWebPurchaseLink);
+    !policy.allowsNativeIap &&
+    (policy.allowsVietQrCheckout || policy.allowsWebPurchaseLink);
 
 /// Mở trang mua Premium trên web (bản iOS).
 ///
@@ -159,7 +168,14 @@ class _PaywallCta extends ConsumerWidget {
       );
     }
 
-    if (policy.allowsInAppPurchase) {
+    // Bán bằng IAP của kho ứng dụng — đặt TRƯỚC nhánh QR: hai nhánh loại trừ
+    // nhau theo chính sách, nhưng thứ tự này nói rõ nhánh nào là đường phát
+    // hành thật.
+    if (policy.allowsNativeIap) {
+      return const _NativeIapCta();
+    }
+
+    if (policy.allowsVietQrCheckout) {
       return SizedBox(
         width: double.infinity,
         child: ElevatedButton(
@@ -222,6 +238,289 @@ class _PaywallCta extends ConsumerWidget {
     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
     elevation: 0,
   );
+}
+
+/// Trang Điều khoản sử dụng.
+///
+/// Dùng EULA mẫu của Apple vì WorkReflection chưa có trang điều khoản riêng
+/// trên web. Apple chấp nhận đường dẫn này, và nó CÓ BẮT BUỘC phải nằm trong
+/// app khi bán gói đăng ký — thiếu là một lý do từ chối riêng.
+const String kAppleStandardEulaUrl =
+    'https://www.apple.com/legal/internet-services/itunes/dev/stdeula/';
+
+/// Trang Chính sách quyền riêng tư, đúng đường dẫn đã khai với App Store.
+const String kPrivacyPolicyUrl =
+    'https://www.workreflection.app/privacy-policy';
+
+/// Mở một trang pháp lý bằng trình duyệt ngoài.
+Future<void> _openLegal(BuildContext context, String url) async {
+  var opened = false;
+  try {
+    opened = await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.externalApplication,
+    );
+  } catch (_) {
+    opened = false;
+  }
+  if (!opened && context.mounted) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Không mở được trang này.')),
+    );
+  }
+}
+
+/// Phần mua Premium bằng In-App Purchase.
+///
+/// Ba thứ Apple BẮT BUỘC phải có khi bán gói đăng ký, thiếu thứ nào cũng là một
+/// lý do từ chối riêng biệt:
+///   • Giá và thời hạn từng gói, lấy từ StoreKit chứ không phải từ `cc_products`.
+///   • Nút khôi phục giao dịch đã mua.
+///   • Đường dẫn tới Điều khoản sử dụng và Chính sách quyền riêng tư.
+class _NativeIapCta extends ConsumerWidget {
+  const _NativeIapCta();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final state = ref.watch(wrIapControllerProvider);
+
+    // Lỗi và tin báo hiện bằng SnackBar rồi xoá ngay, để nó không dính lại khi
+    // người dùng thử tiếp lần nữa.
+    ref.listen<WrIapState>(wrIapControllerProvider, (prev, next) {
+      final messenger = ScaffoldMessenger.maybeOf(context);
+      if (messenger == null) return;
+      if (next.error != null && next.error != prev?.error) {
+        messenger.showSnackBar(SnackBar(content: Text(next.error!)));
+        ref.read(wrIapControllerProvider.notifier).clearMessages();
+      } else if (next.restoredNothing && !(prev?.restoredNothing ?? false)) {
+        messenger.showSnackBar(
+          const SnackBar(
+            content: Text(
+              'Không tìm thấy gói nào đã mua trên tài khoản Apple này.',
+            ),
+          ),
+        );
+        ref.read(wrIapControllerProvider.notifier).clearMessages();
+      }
+    });
+
+    return ref.watch(wrIapOffersProvider).when(
+          loading: () => const Padding(
+            key: Key('wr_paywall_iap_loading'),
+            padding: EdgeInsets.symmetric(vertical: 18),
+            child: Center(
+              child: SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          ),
+          // Provider này đã nuốt mọi lỗi và trả danh sách rỗng, nên nhánh error
+          // gần như không xảy ra. Vẫn vẽ đúng như nhánh rỗng thay vì để màn hình
+          // đỏ: người dùng không sửa được gì từ một thông báo lỗi ở đây.
+          error: (_, __) => const _IapUnavailable(),
+          data: (offers) => offers.isEmpty
+              ? const _IapUnavailable()
+              : _IapOfferList(offers: offers, state: state),
+        );
+  }
+}
+
+/// Khi kho ứng dụng không trả về gói nào.
+///
+/// Gặp ở giả lập chưa đăng nhập Apple, ở máy bị khoá mua hàng, và ở giai đoạn
+/// gói còn đang chờ duyệt bên App Store Connect. Không phải lỗi của người dùng
+/// nên không báo đỏ.
+class _IapUnavailable extends StatelessWidget {
+  const _IapUnavailable();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: const Key('wr_paywall_iap_unavailable'),
+      decoration: BoxDecoration(
+        color: WrColors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: WrColors.line),
+      ),
+      padding: const EdgeInsets.all(14),
+      child: const WrParagraph(
+        'Chưa mở bán được trên thiết bị này. Nếu tài khoản của bạn đã có bản '
+        'đầy đủ, những phần ở trên vẫn tự mở.',
+        style: TextStyle(fontSize: 12.5, color: WrColors.muted, height: 1.6),
+      ),
+    );
+  }
+}
+
+/// Danh sách gói bán qua kho ứng dụng, kèm nút khôi phục và liên kết pháp lý.
+class _IapOfferList extends ConsumerWidget {
+  const _IapOfferList({required this.offers, required this.state});
+
+  final List<WrIapOffer> offers;
+  final WrIapState state;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final controller = ref.read(wrIapControllerProvider.notifier);
+    final busy = state.busy;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < offers.length; i++) ...[
+          if (i > 0) const SizedBox(height: 10),
+          _IapOfferButton(
+            offer: offers[i],
+            // Gói đầu danh sách là gói năm — làm nút chính, các gói sau là nút
+            // viền. Thứ tự do `kWrIapProducts` quyết định, không do kho trả về.
+            primary: i == 0,
+            enabled: !busy,
+            onPressed: () => controller.buy(offers[i].id),
+          ),
+        ],
+        const SizedBox(height: 6),
+        if (busy)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 8),
+            child: Center(
+              child: SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ),
+          ),
+        if (state.phase == WrIapPhase.awaitingApproval)
+          const Padding(
+            padding: EdgeInsets.only(bottom: 4),
+            child: WrParagraph(
+              'Giao dịch đang chờ được duyệt. Bạn cứ dùng app bình thường, khi '
+              'nào duyệt xong bản đầy đủ sẽ tự mở.',
+              style:
+                  TextStyle(fontSize: 11.5, color: WrColors.muted, height: 1.6),
+            ),
+          ),
+        TextButton(
+          key: const Key('wr_paywall_iap_restore'),
+          onPressed: busy ? null : controller.restore,
+          child: const Text(
+            'Khôi phục giao dịch đã mua',
+            style: TextStyle(fontSize: 13, color: WrColors.pillTealText),
+          ),
+        ),
+        const SizedBox(height: 2),
+        const WrParagraph(
+          'Gói tự động gia hạn cho tới khi bạn tắt. Tiền được trừ vào tài khoản '
+          'Apple của bạn, và kỳ tiếp theo sẽ được trừ trong vòng 24 giờ trước '
+          'khi kỳ hiện tại kết thúc. Bạn tắt gia hạn bất cứ lúc nào trong phần '
+          'Cài đặt tài khoản Apple.',
+          style: TextStyle(fontSize: 11, color: WrColors.muted, height: 1.6),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            _LegalLink(
+              key: const Key('wr_paywall_terms_link'),
+              label: 'Điều khoản sử dụng',
+              url: kAppleStandardEulaUrl,
+            ),
+            const Text(
+              '  ·  ',
+              style: TextStyle(fontSize: 11, color: WrColors.muted),
+            ),
+            _LegalLink(
+              key: const Key('wr_paywall_privacy_link'),
+              label: 'Chính sách quyền riêng tư',
+              url: kPrivacyPolicyUrl,
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+/// Một nút mua, hiện giá đúng như kho ứng dụng trả về.
+class _IapOfferButton extends StatelessWidget {
+  const _IapOfferButton({
+    required this.offer,
+    required this.primary,
+    required this.enabled,
+    required this.onPressed,
+  });
+
+  final WrIapOffer offer;
+  final bool primary;
+  final bool enabled;
+  final VoidCallback onPressed;
+
+  @override
+  Widget build(BuildContext context) {
+    // Dán thẳng `priceLabel` của StoreKit, không tự định dạng lại: chuỗi đó đã
+    // đúng tiền tệ và đúng quy tắc dấu phân cách của kho người dùng.
+    final label = '${offer.title} — ${offer.priceLabel}/${offer.durationSuffix}';
+
+    if (primary) {
+      return ElevatedButton(
+        key: Key('wr_paywall_iap_buy_${offer.id}'),
+        onPressed: enabled ? onPressed : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: WrColors.coral,
+          foregroundColor: WrColors.navy,
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          elevation: 0,
+        ),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700),
+        ),
+      );
+    }
+
+    return OutlinedButton(
+      key: Key('wr_paywall_iap_buy_${offer.id}'),
+      onPressed: enabled ? onPressed : null,
+      style: OutlinedButton.styleFrom(
+        foregroundColor: WrColors.navy,
+        padding: const EdgeInsets.symmetric(vertical: 13),
+        side: const BorderSide(color: WrColors.line),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+      ),
+      child: Text(
+        label,
+        textAlign: TextAlign.center,
+        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+      ),
+    );
+  }
+}
+
+class _LegalLink extends StatelessWidget {
+  const _LegalLink({super.key, required this.label, required this.url});
+
+  final String label;
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => _openLegal(context, url),
+      child: Text(
+        label,
+        style: const TextStyle(
+          fontSize: 11,
+          color: WrColors.pillTealText,
+          decoration: TextDecoration.underline,
+        ),
+      ),
+    );
+  }
 }
 
 class WrPaywallScreen extends ConsumerStatefulWidget {
@@ -553,7 +852,7 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                   // hoàn tiền nằm cạnh nút dẫn ra trình duyệt là tự nộp bằng
                   // chứng anti-steering (Guideline 3.1.3). Với người đã mua
                   // rồi thì nó cũng chẳng còn nghĩa gì.
-                  if (policy.allowsInAppPurchase && !alreadyPremium)
+                  if (policy.allowsVietQrCheckout && !alreadyPremium)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(22, 0, 22, 20),
                     child: Container(
