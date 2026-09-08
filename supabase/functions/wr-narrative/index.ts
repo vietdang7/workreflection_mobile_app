@@ -37,6 +37,7 @@
 // ---------------------------------------------------------------------------
 
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
+import { hasAiConsent } from '../_shared/ai_consent.ts';
 import { buildNarrativePrompt, type NarrativeInput } from './prompt.ts';
 import {
   MIN_EPISODES,
@@ -138,6 +139,20 @@ Deno.serve(async (req: Request): Promise<Response> => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     { auth: { persistSession: false } },
   );
+
+  // ── 1b · Chưa cho phép gửi sang AI thì dừng ─────────────────────────────
+  //
+  // Hàm này đọc `wr_reflection_episodes` — chính những tình huống người dùng đã
+  // ghi lại — rồi gửi sang DeepSeek qua OpenRouter. Guideline 5.1.1(i), xem
+  // `_shared/ai_consent.ts`.
+  //
+  // Trả `skip` chứ KHÔNG phải `fail`: app gọi hàm này tự động khi mở mục Diễn
+  // biến, không phải do người dùng bấm gì. Một lỗi 403 ở đây sẽ nổi lên thành
+  // thông báo đỏ ở màn hình họ vừa mở ra để đọc. Lời mời bật lên đã nằm sẵn
+  // trên chính màn đó (`wr_journey_narrative_screen`).
+  if (!(await hasAiConsent(db, user.id))) {
+    return skip('ai_consent_required');
+  }
 
   // ── 2 · Gói ─────────────────────────────────────────────────────────────
   //

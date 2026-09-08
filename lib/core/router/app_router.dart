@@ -57,6 +57,8 @@ import '../../features/wr/presentation/wr_growth_journey_screen.dart';
 import '../../features/wr/presentation/wr_growth_skills_screen.dart';
 import '../../features/wr/presentation/wr_growth_themes_screen.dart';
 import '../../features/wr/presentation/wr_practice_theme_screen.dart';
+import '../../features/wr/presentation/wr_ai_consent_screen.dart';
+import '../logic/wr_ai_disclosure.dart';
 import '../../features/wr/presentation/wr_journey_narrative_screen.dart';
 import '../../features/wr/presentation/wr_pattern_detail_screen.dart';
 import '../../features/wr/presentation/wr_patterns_screen.dart';
@@ -402,6 +404,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/wr/journey/narrative',
         builder: (context, state) => const WrJourneyNarrativeScreen(),
       ),
+      // Xử lý dữ liệu bằng AI — xem lại bản công bố và bật/tắt.
+      //
+      // Đường dẫn phải khớp `kWrAiRevokePath` trong `wr_ai_disclosure.dart`:
+      // bản công bố nói với người dùng chỗ này nằm ở đâu, và Apple đọc chính
+      // câu đó khi duyệt Guideline 5.1.1(i).
+      GoRoute(
+        path: kWrAiRevokePath,
+        builder: (context, state) => const WrAiConsentScreen(),
+      ),
       // Career Memory đầy đủ — tab Hành trình chỉ hiện vài mảnh gần nhất.
       GoRoute(
         path: '/wr/career-memory',
@@ -482,7 +493,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         // cấm (Guideline 3.1.1), mà deep link `workreflection://wr/payment`
         // hay một `push` sót lại ở đâu đó vẫn tới được nếu chỉ ẩn nút.
         redirect: (context, state) =>
-            ref.read(wrStorePolicyProvider).allowsInAppPurchase
+            ref.read(wrStorePolicyProvider).allowsVietQrCheckout
                 ? null
                 : '/wr/paywall',
         builder: (context, state) =>

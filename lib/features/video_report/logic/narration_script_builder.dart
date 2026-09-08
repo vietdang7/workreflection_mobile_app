@@ -7,6 +7,24 @@ import 'package:workreflection_mobile/features/video_report/models/video_report_
 ///
 /// Pure and framework-agnostic (no Flutter imports). Text is Vietnamese when
 /// [locale] != 'en', otherwise English.
+///
+/// ---------------------------------------------------------------------------
+/// ⚠️ CHỮ Ở ĐÂY RỜI KHỎI MÁY. KHÔNG ĐƯỢC CHÈN TÊN HAY EMAIL VÀO.
+///
+/// Kết quả của lớp này đi thẳng sang Ausynclab để đọc thành tiếng
+/// (`video_report_providers.dart` → `tts-proxy`). Nó KHÔNG phải là chữ hiện
+/// trên màn hình — phần hiển thị do `VideoSceneView` tự dựng tại máy và vẫn
+/// chào bằng tên bình thường.
+///
+/// Trước 07/09/2026 lớp này nhận `userName` và ghép thẳng vào câu mở đầu:
+/// "Xin chào {tên thật}, đây là báo cáo phản chiếu của bạn." Mà `userName` lại
+/// rơi về ĐỊA CHỈ EMAIL khi hồ sơ chưa có tên. Nghĩa là tên và email của người
+/// dùng đang được gửi sang một nhà cung cấp bên thứ ba — trong khi bản công bố
+/// quyền riêng tư (`wr_ai_disclosure.dart` và trang /privacy-policy) hứa với họ
+/// rằng hai thứ đó KHÔNG BAO GIỜ được gửi đi.
+///
+/// Nên tham số `userName` đã bị gỡ khỏi đây hẳn, không phải chỉ ngừng dùng: bỏ
+/// tham số đi thì không ai chèn lại được mà không nhận ra mình đang làm gì.
 class NarrationScriptBuilder {
   const NarrationScriptBuilder();
 
@@ -15,7 +33,6 @@ class NarrationScriptBuilder {
     // Reserved for future narrative-based enrichment; current scenes are
     // score-based text only, so [narratives] is intentionally unused for now.
     required List<CcNarrative> narratives,
-    required String userName,
     required String locale,
     required SurveyType surveyType,
   }) {
@@ -24,7 +41,7 @@ class NarrationScriptBuilder {
 
     scenes.add(NarrationScene(
       id: VideoSceneId.intro,
-      text: _intro(userName, en),
+      text: _intro(en),
     ));
     scenes.add(NarrationScene(
       id: VideoSceneId.overall,
@@ -71,11 +88,11 @@ class NarrationScriptBuilder {
     return scenes;
   }
 
-  String _intro(String userName, bool en) {
-    final name = userName.trim().isEmpty ? (en ? 'there' : 'bạn') : userName;
+  /// Câu mở đầu, xưng hô chung chứ không gọi tên — xem ghi chú đầu lớp.
+  String _intro(bool en) {
     return en
-        ? 'Hello $name, this is your work reflection report.'
-        : 'Xin chào $name, đây là báo cáo phản chiếu của bạn.';
+        ? 'Hello there, this is your work reflection report.'
+        : 'Xin chào bạn, đây là báo cáo phản chiếu của bạn.';
   }
 
   String _overall(CcReportFull report, bool en) {

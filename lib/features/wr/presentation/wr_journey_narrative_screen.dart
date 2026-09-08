@@ -9,8 +9,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
+import '../../../core/widgets/wr_ai_consent_sheet.dart';
 import '../../../core/widgets/wr_detail_scaffold.dart';
 import '../../../core/widgets/wr_premium_lock.dart';
+import '../ai_consent_providers.dart';
 import '../wr_providers.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 
@@ -25,6 +27,7 @@ class WrJourneyNarrativeScreen extends ConsumerWidget {
         ref.watch(wrPatternNarrativesProvider).valueOrNull ?? const [];
     final canRead =
         entitlement.canUseFeature(WrPremiumFeature.patternAdvanced);
+    final aiAllowed = ref.watch(wrAiConsentGrantedProvider);
 
     // Vào thẳng màn này (từ thông báo, hoặc mở lại app ở đúng route) mà không đi
     // qua tab Hành trình thì không có ai đánh thức `wr-narrative`. Watch ở cả
@@ -44,6 +47,14 @@ class WrJourneyNarrativeScreen extends ConsumerWidget {
             ctaLabel: 'Mở diễn biến theo thời gian',
             paywallTrigger: 'pattern_advanced',
           )
+        // Chưa cho phép gửi dữ liệu sang AI thì mục này không chạy được — phần
+        // kể lại do model viết. Đặt lời mời ở ĐÂY vì luồng đó tự động, không có
+        // nút nào để cổng chặn bám vào (xem `wrNarrativeRefreshProvider`).
+        //
+        // Đứng SAU cổng Premium: người chưa mua gói thì mời họ bật AI là mời
+        // một thứ họ vẫn chưa dùng được.
+        else if (!aiAllowed)
+          const _AiConsentInvite()
         else if (narratives.isEmpty)
           WrParagraph(
             _emptyLine(refresh),
@@ -57,6 +68,58 @@ class WrJourneyNarrativeScreen extends ConsumerWidget {
         else
           ...narratives.take(6).map((n) => _NarrativeBlock(narrative: n)),
       ],
+    );
+  }
+}
+
+/// Lời mời bật xử lý bằng AI, cho mục Diễn biến.
+///
+/// Không tự bật hộ và cũng không tự mở màn xin phép lúc vào màn: mở một hộp
+/// thoại xin phép vào mặt người vừa chạm một mục để ĐỌC là ép buộc. Ở đây chỉ
+/// nói vì sao mục này trống và để họ chủ động bấm.
+class _AiConsentInvite extends ConsumerWidget {
+  const _AiConsentInvite();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Container(
+      key: const Key('wr_journey_narrative_ai_invite'),
+      decoration: BoxDecoration(
+        color: WrColors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: WrColors.line),
+      ),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const WrParagraph(
+            'Phần này do AI viết từ những tình huống bạn đã ghi lại, nên cần '
+            'bạn cho phép gửi dữ liệu đó đi thì mới chạy được.',
+            style: TextStyle(
+              fontSize: 15,
+              color: WrColors.navy,
+              height: 1.6,
+            ),
+          ),
+          const SizedBox(height: 12),
+          OutlinedButton(
+            key: const Key('wr_journey_narrative_ai_cta'),
+            onPressed: () => ensureAiConsent(context, ref),
+            style: OutlinedButton.styleFrom(
+              foregroundColor: WrColors.navy,
+              side: const BorderSide(color: WrColors.line),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: const Text(
+              'Xem app gửi những gì',
+              style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

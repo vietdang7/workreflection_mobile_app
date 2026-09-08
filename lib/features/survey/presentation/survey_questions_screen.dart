@@ -11,6 +11,7 @@ import '../../../core/models/survey_models.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
 import '../../../core/widgets/eyebrow.dart';
+import '../../../core/widgets/wr_ai_consent_sheet.dart';
 import '../../../core/widgets/pill_button.dart';
 import '../../../core/widgets/progress_track.dart';
 import '../../../l10n/app_localizations.dart';
@@ -497,7 +498,13 @@ class _TtsButton extends ConsumerWidget {
               state.isPlaying ? Icons.pause_circle_outline : Icons.volume_up_outlined,
               color: state.isPlaying ? WrColors.coral : WrColors.navy,
             ),
-      onPressed: () {
+      onPressed: () async {
+        // Đọc thành tiếng nghĩa là gửi đoạn chữ sang Ausynclab. Ít riêng tư hơn
+        // ba luồng AI kia — đây là câu hỏi khảo sát, không phải điều người dùng
+        // viết ra — nhưng vẫn là dữ liệu rời khỏi máy sang một bên thứ ba, nên
+        // vẫn phải hỏi. Apple không phân loại "ít riêng tư thì thôi".
+        if (!await ensureAiConsent(context, ref)) return;
+        if (!context.mounted) return;
         ref
             .read(_ttsPlaybackProvider.notifier)
             .toggle(questionText, language, questionId: questionId);
