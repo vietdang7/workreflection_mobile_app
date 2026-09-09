@@ -4,6 +4,8 @@
 // đi qua Edge Function `wr-chat`, nơi giữ khoá OpenRouter và áp hạn mức. Vì vậy
 // ở đây không có `toInsert()` — không có chỗ nào trong app cần nó.
 
+import 'checkin.dart';
+
 /// Ai nói câu này.
 enum WrChatRole {
   user,
@@ -45,9 +47,21 @@ enum WrChatAction {
   /// `reflect` vào bước đầu của luồng năm bước chứ không vào giữa: bước năng
   /// lượng là nơi luồng khởi động, nhảy thẳng vào giữa sẽ để lại một Episode
   /// thiếu dữ liệu của các bước trước.
-  String get route => switch (this) {
+  ///
+  /// [mood] là cảm xúc máy chủ đọc được từ chính cuộc trò chuyện. Có thì thư
+  /// viện mở thẳng nhóm đó; không có thì bày cả sáu nhóm như cũ.
+  ///
+  /// Khách 2026-09-09: bấm nút từ chat mà thư viện bày hết mọi nhóm, dù vừa nói
+  /// mình đang căng thẳng. Cảm xúc lúc ấy chỉ nằm trong cuộc trò chuyện — người
+  /// vào từ chat thường chưa check-in, nên màn thư viện không có gì để bám.
+  ///
+  /// Nhận `Mood?` chứ không nhận chuỗi: đường dẫn ghép tay là chỗ dễ gõ sai tên
+  /// cảm xúc, và sai thì thư viện im lặng bày lại cả sáu nhóm chứ không báo lỗi.
+  String routeFor(Mood? mood) => switch (this) {
         WrChatAction.reflect => '/wr/flow/energy',
-        WrChatAction.calm => '/wr/mood-library',
+        WrChatAction.calm => mood == null
+            ? '/wr/mood-library'
+            : '/wr/mood-library?mood=${mood.dbValue}',
       };
 }
 
@@ -60,6 +74,7 @@ class WrChatMessage {
     this.createdAt,
     this.pending = false,
     this.action,
+    this.actionMood,
   });
 
   final String? id;
@@ -74,6 +89,12 @@ class WrChatMessage {
   /// vẫn thấy nút cũ nằm giữa lịch sử là mời người ta ghi lại một chuyện họ
   /// không còn nhớ.
   final WrChatAction? action;
+
+  /// Cảm xúc máy chủ đọc được từ cuộc trò chuyện, đi kèm nút `calm`.
+  ///
+  /// Cũng KHÔNG lưu vào database, cùng lý do với [action]: nó là ảnh chụp cảm
+  /// giác của đúng lượt này.
+  final Mood? actionMood;
 
   /// True khi lượt này chỉ đang nằm trên màn hình, chưa được máy chủ xác nhận.
   ///
@@ -102,6 +123,7 @@ class WrChatReply {
     required this.limit,
     this.conversationId,
     this.action,
+    this.actionMood,
     this.persisted = true,
   });
 
@@ -118,6 +140,10 @@ class WrChatReply {
 
   final WrChatAction? action;
 
+  /// Cảm xúc đi kèm [action] khi nó là `calm`. Null ở mọi trường hợp khác, kể cả
+  /// khi máy chủ không đọc được cảm xúc nào từ cuộc trò chuyện.
+  final Mood? actionMood;
+
   /// False khi máy chủ trả lời được nhưng không ghi được lượt vào lịch sử.
   /// Mở lại màn hình thì lượt này sẽ biến mất, nên phải nói ra.
   final bool persisted;
@@ -131,6 +157,10 @@ class WrChatReply {
         limit: (json['limit'] as num?)?.toInt() ?? 0,
         conversationId: json['conversationId'] as String?,
         action: WrChatAction.fromWire(json['action'] as String?),
+        // `tryFromDb` chứ không `fromDb`: một bản app cũ gặp cảm xúc mới thêm
+        // sẽ ném lỗi giữa lúc người dùng đang chờ, và mất luôn câu trả lời vì
+        // một chi tiết phụ.
+        actionMood: Mood.tryFromDb(json['actionMood'] as String?),
         persisted: json['persisted'] as bool? ?? true,
       );
 }

@@ -36,6 +36,7 @@ import '../../features/roadmap/presentation/roadmap_screen.dart';
 import '../../features/survey/presentation/survey_history_screen.dart';
 import '../../features/understand/presentation/insights_screen.dart';
 import '../../features/survey/presentation/survey_guide_screen.dart';
+import '../models/checkin.dart';
 import '../models/wr_content.dart';
 import '../../features/wr/presentation/wr_ask_screen.dart';
 import '../../features/wr/presentation/wr_home_screen.dart';
@@ -627,7 +628,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // §8.3: miễn phí cho mọi người dùng, không phân lớp Free/Paid.
       GoRoute(
         path: '/wr/mood-library',
-        builder: (context, state) => const WrMoodLibraryScreen(),
+        // `?mood=stressed` khi vào từ nút "Xem điều gì đó nhẹ nhàng" trong chat:
+        // cảm xúc lúc ấy chỉ nằm trong cuộc trò chuyện, không có check-in nào để
+        // màn thư viện bám vào (khách 2026-09-09).
+        //
+        // Giá trị lạ thì bỏ qua chứ không ném lỗi — một đường dẫn gõ tay sai
+        // không đáng làm sập màn hình.
+        builder: (context, state) => WrMoodLibraryScreen(
+          mood: Mood.tryFromDb(state.uri.queryParameters['mood']),
+        ),
       ),
       GoRoute(
         path: '/wr/mood-content/:id',

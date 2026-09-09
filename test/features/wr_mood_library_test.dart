@@ -28,7 +28,11 @@ Widget _wrap({
     routes: [
       GoRoute(
         path: '/wr/mood-library',
-        builder: (_, __) => const WrMoodLibraryScreen(),
+        // Cùng một dòng với `app_router.dart` — đường vào từ chat truyền cảm
+        // xúc qua `?mood=`.
+        builder: (_, s) => WrMoodLibraryScreen(
+          mood: Mood.tryFromDb(s.uri.queryParameters['mood']),
+        ),
       ),
       GoRoute(
         path: '/wr/mood-content/:id',
@@ -119,6 +123,70 @@ void main() {
       expect(find.text('Của vui'), findsNothing);
       expect(find.text('Của căng'), findsNothing);
       expect(find.text('Căng thẳng'), findsNothing);
+    });
+
+    testWidgets('vào từ chat với ?mood= thì CHỈ hiện nhóm đó, dù chưa check-in',
+        (tester) async {
+      // Khách 2026-09-09: trong chat họ vừa nói "khá là căng thẳng", bấm nút
+      // "Xem điều gì đó nhẹ nhàng", và màn thư viện bày cả sáu nhóm. Người vào
+      // từ chat thường chưa check-in, nên không có gì để màn này bám vào —
+      // cảm xúc lúc ấy chỉ nằm trong cuộc trò chuyện.
+      final repo = FakeWrMoodContentRepository()
+        ..seedContent([
+          fakeMoodContent(id: 'a', mood: Mood.happy, title: 'Của vui'),
+          fakeMoodContent(id: 'b', mood: Mood.stressed, title: 'Của căng'),
+          fakeMoodContent(id: 'd', mood: Mood.tired, title: 'Của mệt'),
+        ]);
+
+      await _pump(
+        tester,
+        _wrap(moodContent: repo, initial: '/wr/mood-library?mood=stressed'),
+      );
+
+      expect(find.text('Của căng'), findsOneWidget);
+      expect(find.text('Của vui'), findsNothing);
+      expect(find.text('Của mệt'), findsNothing);
+      expect(find.text('Mệt mỏi'), findsNothing);
+    });
+
+    testWidgets('?mood= thắng check-in hôm nay', (tester) async {
+      // Ô check-in bấm lúc 8 giờ sáng là chuyện của buổi sáng; câu vừa gõ trong
+      // chat lúc 3 giờ chiều đang nói về bây giờ.
+      final repo = FakeWrMoodContentRepository()
+        ..seedContent([
+          fakeMoodContent(id: 'b', mood: Mood.stressed, title: 'Của căng'),
+          fakeMoodContent(id: 'd', mood: Mood.tired, title: 'Của mệt'),
+        ]);
+
+      await _pump(
+        tester,
+        _wrap(
+          moodContent: repo,
+          checkedInMood: Mood.tired,
+          initial: '/wr/mood-library?mood=stressed',
+        ),
+      );
+
+      expect(find.text('Của căng'), findsOneWidget);
+      expect(find.text('Của mệt'), findsNothing);
+    });
+
+    testWidgets('?mood= giá trị lạ thì bỏ qua, không làm vỡ màn',
+        (tester) async {
+      final repo = FakeWrMoodContentRepository()
+        ..seedContent([
+          fakeMoodContent(id: 'b', mood: Mood.stressed, title: 'Của căng'),
+          fakeMoodContent(id: 'd', mood: Mood.tired, title: 'Của mệt'),
+        ]);
+
+      await _pump(
+        tester,
+        _wrap(moodContent: repo, initial: '/wr/mood-library?mood=xyz'),
+      );
+
+      // Quay về cách cũ: bày cả các nhóm, chứ không phải màn trắng.
+      expect(find.text('Của căng'), findsOneWidget);
+      expect(find.text('Của mệt'), findsOneWidget);
     });
 
     testWidgets('cảm xúc đó chưa có nội dung thì nói rỗng, không bày lại '

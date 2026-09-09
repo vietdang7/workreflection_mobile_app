@@ -174,9 +174,16 @@ Widget _wrap(
         path: '/wr/flow/energy',
         builder: (_, __) => const Scaffold(body: Text('LUỒNG REFLECTION')),
       ),
+      // Hiện `?mood=` ra chữ để test đọc được: nút "Xem điều gì đó nhẹ nhàng"
+      // phải mang theo cảm xúc, nếu không thư viện bày cả sáu nhóm.
+      GoRoute(
+        path: '/wr/mood-library',
+        builder: (_, s) => Scaffold(
+          body: Text('THƯ VIỆN ${s.uri.queryParameters['mood'] ?? 'ALL'}'),
+        ),
+      ),
       for (final p in [
         '/wr/pattern/:code',
-        '/wr/mood-library',
         '/wr/mood-content/:id',
         '/wr/flow/moment',
       ])
@@ -1091,6 +1098,49 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('wr_chat_action_calm')), findsOneWidget);
+    });
+
+    testWidgets('nút Thư viện mang theo cảm xúc máy chủ đọc được',
+        (tester) async {
+      // Khách 2026-09-09: bấm nút xong thấy thư viện bày TOÀN BỘ các nhóm, dù
+      // vừa nói mình đang căng thẳng. Người vào từ chat thường chưa check-in,
+      // nên cảm xúc phải đi cùng đường dẫn — không có nguồn nào khác.
+      final chat = FakeWrChatRepository()
+        ..replyText = 'Mình có một điều nhẹ nhàng có thể giúp bạn dịu lại.'
+        ..replyAction = WrChatAction.calm
+        ..replyActionMood = Mood.stressed;
+
+      await _pump(tester, _wrap(const WrAskScreen(), chat: chat));
+      await tester.enterText(
+          find.byKey(const Key('wr_ask_field')), 'khá là căng thẳng');
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('wr_ask_send')));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('wr_chat_action_calm')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('THƯ VIỆN stressed'), findsOneWidget);
+    });
+
+    testWidgets('máy chủ không đọc được cảm xúc thì vẫn mở được Thư viện',
+        (tester) async {
+      // Không đoán bừa một nhóm. Mở cả sáu vẫn hơn mở đúng một nhóm sai.
+      final chat = FakeWrChatRepository()
+        ..replyText = 'Mình có một điều nhẹ nhàng có thể giúp bạn dịu lại.'
+        ..replyAction = WrChatAction.calm
+        ..replyActionMood = null;
+
+      await _pump(tester, _wrap(const WrAskScreen(), chat: chat));
+      await tester.enterText(find.byKey(const Key('wr_ask_field')), 'ừ');
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('wr_ask_send')));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('wr_chat_action_calm')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('THƯ VIỆN ALL'), findsOneWidget);
     });
 
     testWidgets('lượt không có lời mời thì KHÔNG có nút', (tester) async {

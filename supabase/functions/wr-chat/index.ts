@@ -57,6 +57,7 @@ import {
 import { buildSystemPrompt } from './system_prompt.ts';
 import { buildUserContext } from './user_context.ts';
 import { conversationTitle, shapeReply } from './reply_shaping.ts';
+import { detectMood } from './mood_detect.ts';
 
 // ---------------------------------------------------------------------------
 // Cấu hình
@@ -481,6 +482,24 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return fail('Mình chưa trả lời được lúc này. Bạn thử gửi lại nhé.', 502);
   }
 
+  // Cảm xúc để nút "Xem điều gì đó nhẹ nhàng" mở ĐÚNG nhóm trong thư viện.
+  //
+  // Chỉ tính ở nhánh `calm`: nút `reflect` mở luồng năm bước, nơi người dùng tự
+  // chọn cảm xúc ở bước đầu. Gửi kèm một cảm xúc mà không chỗ nào dùng thì lần
+  // sau sẽ có người tưởng nó có nghĩa.
+  //
+  // Câu vừa gõ đứng đầu, rồi tới các lượt trước của chính người dùng trong cuộc
+  // này. Cảm xúc thường được nói ra ở lượt trước lượt bấm nút — trợ lý nghe
+  // "khá là căng thẳng", trả lời an ủi, rồi mới mời xem nội dung nhẹ nhàng.
+  const actionMood = shaped.action === 'calm'
+    ? detectMood(
+      [message, ...history.filter((m) => m.role === 'user').reverse().map((m) =>
+        m.content
+      )],
+      shaped.text,
+    )
+    : null;
+
   // ── 9 · Ghi lại cả hai lượt ─────────────────────────────────────────────
   //
   // Ghi SAU khi đã có câu trả lời, không phải trước. Ghi trước thì một lần gọi
@@ -554,6 +573,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   return json({
     reply: shaped.text,
     action: shaped.action,
+    actionMood,
     conversationId,
     model: MODEL,
     isPremium,

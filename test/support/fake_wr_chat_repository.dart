@@ -1,4 +1,5 @@
 import 'package:workreflection_mobile/core/data/wr_chat_repository.dart';
+import 'package:workreflection_mobile/core/models/checkin.dart';
 import 'package:workreflection_mobile/core/models/wr_chat.dart';
 
 /// WrChatRepository giả, không chạm mạng.
@@ -16,6 +17,9 @@ class FakeWrChatRepository implements WrChatRepository {
 
   /// Nút đi kèm câu trả lời kế tiếp.
   WrChatAction? replyAction;
+
+  /// Cảm xúc máy chủ đọc được từ cuộc trò chuyện, đi kèm nút `calm`.
+  Mood? replyActionMood;
 
   bool isPremium = false;
   int limit = 10;
@@ -107,6 +111,7 @@ class FakeWrChatRepository implements WrChatRepository {
       limit: limit,
       conversationId: id,
       action: replyAction,
+      actionMood: replyActionMood,
       persisted: persisted,
     );
   }

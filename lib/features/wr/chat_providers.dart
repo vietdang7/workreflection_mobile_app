@@ -196,6 +196,7 @@ class WrChatController extends StateNotifier<WrChatState> {
             role: WrChatRole.assistant,
             content: reply.reply,
             action: reply.action,
+            actionMood: reply.actionMood,
           ),
         ],
         // Lượt đầu của một cuộc mới là lúc máy chủ trả id về.

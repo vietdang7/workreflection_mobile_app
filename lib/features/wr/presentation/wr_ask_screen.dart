@@ -27,6 +27,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/logic/wr_chat_starters.dart';
+import '../../../core/models/checkin.dart';
 import '../../../core/models/wr_chat.dart';
 import '../../../core/models/wr_mood_content.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -315,7 +316,8 @@ class _Bubble extends StatelessWidget {
         // Nút mở đúng việc trợ lý vừa mời. Mục 5 và bước 3 của mục 8 đều yêu cầu
         // lời mời này; trước 2026-08-03 trợ lý nói được nhưng không có đường đi
         // tới, nên người dùng gật đầu xong phải tự thoát ra tự tìm.
-        if (!isUser && action != null) _ActionButton(action: action),
+        if (!isUser && action != null)
+          _ActionButton(action: action, mood: message.actionMood),
       ],
     );
   }
@@ -364,9 +366,12 @@ class _Bubble extends StatelessWidget {
 
 /// Nút mở luồng Reflection hoặc Thư viện Nội dung Cảm xúc.
 class _ActionButton extends StatelessWidget {
-  const _ActionButton({required this.action});
+  const _ActionButton({required this.action, this.mood});
 
   final WrChatAction action;
+
+  /// Cảm xúc máy chủ đọc được từ cuộc trò chuyện, để thư viện mở đúng nhóm.
+  final Mood? mood;
 
   @override
   Widget build(BuildContext context) {
@@ -376,7 +381,7 @@ class _ActionButton extends StatelessWidget {
         key: Key('wr_chat_action_${action.name}'),
         // `push` chứ không phải `go`: người dùng phải quay lại được đúng cuộc
         // trò chuyện đang dở sau khi ghi xong hoặc đọc xong.
-        onPressed: () => context.push(action.route),
+        onPressed: () => context.push(action.routeFor(mood)),
         icon: Icon(
           action == WrChatAction.reflect
               ? Icons.edit_note_outlined

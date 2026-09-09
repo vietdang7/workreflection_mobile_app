@@ -31,6 +31,24 @@ enum Mood {
       _ => throw ArgumentError('Unknown mood db value: $value'),
     };
   }
+
+  /// Như [fromDb] nhưng trả null thay vì ném lỗi.
+  ///
+  /// Dùng cho dữ liệu KHÔNG do bảng của mình bảo đảm: tham số `?mood=` trên
+  /// đường dẫn, và cảm xúc Edge Function `wr-chat` gửi kèm câu trả lời. Ở hai
+  /// chỗ đó một giá trị lạ là chuyện có thể xảy ra — đường dẫn thì ai gõ cũng
+  /// được, còn một bản app cũ thì chưa biết cảm xúc mới thêm sau này.
+  ///
+  /// Ném lỗi ở đó là đổi một chi tiết phụ (mở thư viện đúng nhóm) lấy một hỏng
+  /// hóc thật (màn hình trắng, hoặc mất luôn câu trả lời người dùng đang chờ).
+  static Mood? tryFromDb(String? value) {
+    if (value == null) return null;
+    try {
+      return fromDb(value);
+    } on ArgumentError {
+      return null;
+    }
+  }
 }
 
 /// Energy level for the new check-in UI (Phase 2).

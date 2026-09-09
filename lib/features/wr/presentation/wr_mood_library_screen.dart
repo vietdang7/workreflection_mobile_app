@@ -7,8 +7,14 @@
 // 1 list như vậy". Đang mệt mà phải lướt qua năm nhóm mới tới nhóm của mình là
 // bắt người ta làm việc đúng lúc họ ít sức nhất.
 //
-// Chưa check-in (vào bằng đường khác) thì mới bày cả sáu nhóm — lúc đó không có
-// cảm xúc nào để lọc, giấu bớt là giấu mất nội dung.
+// Từ 2026-09-09 còn một đường vào nữa: nút "Xem điều gì đó nhẹ nhàng" dưới một
+// bong bóng trả lời trong Trò chuyện. Đường đó truyền cảm xúc qua `?mood=`, vì
+// người vào từ chat thường CHƯA check-in — họ mở app, gõ thẳng "khá là căng
+// thẳng", rồi bấm nút. Khách gặp đúng ca này: vừa nói mình căng thẳng xong thì
+// màn thư viện bày cả sáu nhóm.
+//
+// Chưa check-in và cũng không có `?mood=` thì mới bày cả sáu nhóm — lúc đó không
+// có cảm xúc nào để lọc, giấu bớt là giấu mất nội dung.
 //
 // §8.3: MIỄN PHÍ toàn bộ, không phân lớp Free/Paid. Không có khoá, không có
 // paywall trên màn này.
@@ -31,13 +37,22 @@ import '../wr_providers.dart';
 const List<Mood> kMoodLibraryOrder = Mood.values;
 
 class WrMoodLibraryScreen extends ConsumerWidget {
-  const WrMoodLibraryScreen({super.key});
+  const WrMoodLibraryScreen({super.key, this.mood});
+
+  /// Cảm xúc do đường dẫn chỉ định, đọc từ `?mood=`.
+  ///
+  /// Null khi vào từ Home hoặc gõ thẳng đường dẫn — khi đó dùng check-in hôm nay.
+  final Mood? mood;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final library = ref.watch(wrMoodLibraryProvider);
     final todayMood = ref.watch(todayCheckinProvider).valueOrNull?.mood;
-    final order = todayMood == null ? kMoodLibraryOrder : [todayMood];
+    // Đường dẫn thắng check-in. Người vừa gõ "đang căng thẳng" trong chat lúc 3
+    // giờ chiều đang nói về BÂY GIỜ; ô check-in họ bấm lúc 8 giờ sáng là chuyện
+    // của buổi sáng. Lấy cái mới hơn và cụ thể hơn.
+    final focus = mood ?? todayMood;
+    final order = focus == null ? kMoodLibraryOrder : [focus];
 
     return Scaffold(
       backgroundColor: WrColors.pageBg,
