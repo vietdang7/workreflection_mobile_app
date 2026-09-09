@@ -20,6 +20,7 @@ import '../../core/logic/wr_situation_picker.dart';
 import '../../core/logic/wr_store_policy.dart';
 import '../../core/models/wr_mood_content.dart';
 import '../profile/profile_providers.dart';
+import 'ai_consent_providers.dart';
 import 'episode_flow_controller.dart';
 // Nhập ngược từ growth_providers (file kia cũng nhập file này). Dart cho phép
 // nhập vòng; giữ như vậy vì Cơ hội phát triển cần khoảng trống kỹ năng, mà
@@ -329,6 +330,18 @@ final wrNarrativeRefreshProvider =
     FutureProvider<WrNarrativeRefresh>((ref) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return const WrNarrativeRefresh.unavailable();
+
+  // Chưa được phép gửi dữ liệu sang AI thì DỪNG Ở ĐÂY.
+  //
+  // Provider này khác ba luồng AI kia ở một điểm quyết định: nó chạy TỰ ĐỘNG
+  // khi người dùng mở mục Diễn biến, không có nút nào để đặt cổng chặn trước.
+  // Nên chốt chặn phải nằm ngay trong chính provider. Thiếu dòng này là dữ liệu
+  // nhìn lại của người dùng bay sang OpenRouter mà họ chưa hề được hỏi — đúng
+  // thứ Guideline 5.1.1(i) cấm và là lý do bản 1.0 (6) bị từ chối.
+  //
+  // Lời mời bật lên nằm ở chính màn Diễn biến, xem `wr_journey_narrative_screen`.
+  final consent = await ref.watch(wrAiConsentProvider.future);
+  if (!consent.isGranted) return const WrNarrativeRefresh.unavailable();
 
   // Diễn giải qua thời gian là Premium (Hai Lớp v1.2 §III). Máy chủ cũng kiểm
   // tra lại — chặn ở đây chỉ để khỏi tốn một vòng mạng cho câu trả lời đã biết.

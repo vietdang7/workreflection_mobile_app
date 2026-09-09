@@ -64,6 +64,7 @@ import '../../../core/models/wr_mood_content.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_text.dart';
 import '../../../core/widgets/wr_profile_avatar.dart';
+import '../../../core/widgets/wr_renewal_notice_card.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../core/widgets/wr_hero_scene.dart';
@@ -243,6 +244,12 @@ class WrHomeScreen extends ConsumerWidget {
                   // khác ba khối nội dung phía dưới.
                   WrHeroScene(period: WrDayPeriod.fromHour(nowVn().hour)),
                   const SizedBox(height: 14),
+                  // Nhắc trước khi kỳ thuê bao kết thúc (khách chốt 08/09).
+                  // Tự biến mất khi không có gì để nói, nên nó không chiếm chỗ
+                  // của lưới check-in trong đời sống thường ngày. Đặt trên lưới
+                  // vì đây là loại tin có hạn chót — đọc sau khi cuộn hết màn
+                  // thì đã trôi mất mấy ngày cuối.
+                  const WrRenewalNoticeCard(),
                   // Lưới check-in là khối CỐ ĐỊNH của mockup: luôn ở đây, luôn
                   // bày sẵn sáu câu trả lời. Trước đây phiên đang dở thay chỗ
                   // nó bằng một nút "Tiếp tục", nghĩa là muốn nói hôm nay mình

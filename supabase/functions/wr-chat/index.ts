@@ -25,6 +25,10 @@
 // ---------------------------------------------------------------------------
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import {
+  AI_CONSENT_REQUIRED_MESSAGE,
+  hasAiConsent,
+} from '../_shared/ai_consent.ts';
 import { buildSystemPrompt } from './system_prompt.ts';
 import { buildUserContext } from './user_context.ts';
 import { conversationTitle, shapeReply } from './reply_shaping.ts';
@@ -190,6 +194,16 @@ Deno.serve(async (req: Request): Promise<Response> => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     { auth: { persistSession: false } },
   );
+
+  // ── 1b · Chưa cho phép gửi sang AI thì dừng ─────────────────────────────
+  //
+  // Đặt TRƯỚC khi đọc câu hỏi và trước `buildUserContext` — hàm đó nạp Episode,
+  // Career Memory, insight, chủ đề thực hành và kết quả tự đánh giá của người
+  // dùng. Kiểm sau khi nạp là đã gom sẵn cả đống dữ liệu riêng tư cho một yêu
+  // cầu lẽ ra bị từ chối. Guideline 5.1.1(i) — xem `_shared/ai_consent.ts`.
+  if (!await hasAiConsent(db, user.id)) {
+    return fail(AI_CONSENT_REQUIRED_MESSAGE, 403);
+  }
 
   // ── 2 · Đọc câu hỏi ─────────────────────────────────────────────────────
   let message: string;

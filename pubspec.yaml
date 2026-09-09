@@ -37,6 +37,13 @@ dependencies:
   # plugin mới hơn bản dự án đang dùng — `flutter build apk` gãy ngay ở bước
   # biên dịch script Gradle (thử 27/08). Muốn nâng thì nâng Kotlin/AGP trước.
   permission_handler: ^11.3.0
+  # Mua Premium bằng In-App Purchase của kho ứng dụng.
+  #
+  # Vì sao có: App Store từ chối bản 1.0 (6) theo Guideline 3.1.1 — app cho
+  # dùng Premium đã mua ngoài app mà chính gói đó lại không mua được bằng IAP.
+  # Guideline 3.1.3(b) cho phép dùng chéo nền tảng, nhưng CHỈ KHI trong app
+  # cũng bán được. Xem `lib/core/logic/wr_iap_catalog.dart`.
+  in_app_purchase: ^3.2.0
 
 dev_dependencies:
   flutter_test:

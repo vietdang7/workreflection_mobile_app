@@ -10,8 +10,10 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/data/wr_repository.dart';
+import '../../../core/logic/wr_ai_disclosure.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
+import '../../../core/widgets/wr_renewal_notice_card.dart';
 import '../../../features/auth/data/auth_repository.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../wr/org_survey_providers.dart';
@@ -50,6 +52,10 @@ class ProfileScreen extends ConsumerWidget {
                   const SizedBox(height: 20),
                   _StatsCard(),
                   const SizedBox(height: 12),
+                  // Nhắc kỳ thuê bao sắp kết thúc. Đứng NGAY TRÊN thẻ mời nâng
+                  // cấp vì hai thẻ này loại trừ nhau: người đang có gói thấy
+                  // lời nhắc, người chưa có thấy lời mời.
+                  const WrRenewalNoticeCard(),
                   _PremiumCard(),
                   _SettingsSection(),
                   const SizedBox(height: 12),
@@ -361,14 +367,24 @@ class _PremiumCard extends ConsumerWidget {
     // ngay đầu trang. Hai chỗ nói hai đằng, và chính con số đó lọt vào video
     // demo gửi App Review trong khi hồ sơ khai là app không bán gì.
     final policy = ref.watch(wrStorePolicyProvider);
-    if (!policy.allowsInAppPurchase && !policy.allowsWebPurchaseLink) {
+    if (!policy.allowsVietQrCheckout &&
+        !policy.allowsWebPurchaseLink &&
+        !policy.allowsNativeIap) {
       return const SizedBox.shrink();
     }
 
     // Giá đọc từ `cc_products` chứ không ghi cứng "499.000đ/năm" như mockup:
     // khách bán hai gói (năm / tháng) và đổi giá ở trang quản trị của web. Một
     // con số ghi cứng ở đây sẽ nói khác Paywall ngay lần đầu khách đổi giá.
-    final plan = ref.watch(wrPremiumPricingProvider).valueOrNull;
+    //
+    // Bản bán bằng IAP thì KHÔNG hiện giá ở đây. Giá thật là giá StoreKit trả
+    // về cho kho của người dùng, mà con số đó chỉ có sau khi hỏi kho — hỏi kho
+    // ngay tại màn Tài khoản là bắt mọi người chờ một lượt gọi mạng chỉ để đọc
+    // một dòng mời. Dán số VND của `cc_products` vào đây thì thẻ này lại nói
+    // một giá, Paywall nói một giá khác.
+    final plan = policy.allowsNativeIap
+        ? null
+        : ref.watch(wrPremiumPricingProvider).valueOrNull;
     final price = plan == null
         ? ''
         : '${plan.currentLabel}/${plan.durationSuffix}, ';
@@ -868,6 +884,22 @@ class _SettingsSection extends ConsumerWidget {
           icon: Icons.download_outlined,
           label: l10n.profileSettingExport,
           onTap: () => _exportData(context, ref),
+          trailing:
+              const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
+        ),
+
+        // Xử lý dữ liệu bằng AI.
+        //
+        // Bản công bố hứa với người dùng là chỗ này nằm "trong Tài khoản → Xử
+        // lý dữ liệu bằng AI" (`kWrAiRevokeNote`), nên NHÃN PHẢI ĐÚNG NGUYÊN
+        // VĂN như thế — người đọc câu hứa rồi đi tìm mà không thấy đúng chữ đó
+        // sẽ tưởng mình nhớ nhầm. Apple cũng dò theo đúng đường này khi duyệt
+        // Guideline 5.1.1(i).
+        _SettingRow(
+          key: const Key('profile_ai_consent_btn'),
+          icon: Icons.privacy_tip_outlined,
+          label: 'Xử lý dữ liệu bằng AI',
+          onTap: () => context.push(kWrAiRevokePath),
           trailing:
               const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
         ),

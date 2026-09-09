@@ -29,6 +29,7 @@ import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../../core/data/ausynclab_tts_service.dart';
+import '../../../core/widgets/wr_ai_consent_sheet.dart';
 import '../../../core/models/wr_mood_content.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
@@ -235,6 +236,16 @@ class _AudioPlayerBlockState extends ConsumerState<_AudioPlayerBlock> {
 
   Future<void> _toggle() async {
     if (_busy) return;
+
+    // Dựng bản thu nghĩa là gửi đoạn chữ thẳng sang Ausynclab — màn này gọi
+    // `AusynclabTtsService` trực tiếp, không đi qua Edge Function nào, nên
+    // không có chốt chặn phía máy chủ nào đỡ cho nó. Cổng chặn ở đây là chốt
+    // DUY NHẤT của luồng này.
+    //
+    // Hỏi trước cả `_url` đã có sẵn hay chưa: lần phát lại không gửi gì thêm,
+    // nhưng lần đầu thì có, và người dùng cần biết trước lần đầu đó.
+    if (_url == null && !await ensureAiConsent(context, ref)) return;
+
     setState(() {
       _busy = true;
       _error = null;

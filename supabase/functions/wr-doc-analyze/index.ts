@@ -26,6 +26,10 @@
 // ---------------------------------------------------------------------------
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
+import {
+  AI_CONSENT_REQUIRED_MESSAGE,
+  hasAiConsent,
+} from '../_shared/ai_consent.ts';
 import { buildExtractionPrompt, normalizeAnalysis } from './analysis.ts';
 import { extractDocxText } from './docx.ts';
 
@@ -183,6 +187,15 @@ Deno.serve(async (req: Request): Promise<Response> => {
     Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!,
     { auth: { persistSession: false } },
   );
+
+  // ── 1b · Chưa cho phép gửi sang AI thì dừng ─────────────────────────────
+  //
+  // Hàm này gửi đi NHIỀU dữ liệu riêng tư nhất trong cả app: toàn văn JD hoặc
+  // CV, sang Google Gemini qua OpenRouter. Guideline 5.1.1(i) — xem
+  // `_shared/ai_consent.ts`.
+  if (!await hasAiConsent(db, user.id)) {
+    return fail(AI_CONSENT_REQUIRED_MESSAGE, 403);
+  }
 
   // ── 2 · Tài liệu nào ────────────────────────────────────────────────────
   let documentId: string;
