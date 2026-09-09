@@ -31,6 +31,15 @@
 //   `supabase/functions/wr-doc-analyze/index.ts`   — đọc JD/CV
 //   `supabase/functions/wr-narrative/index.ts`     — sinh Diễn biến
 //   `lib/features/video_report/data/…`             — đọc thành tiếng
+//   `ai-personalize` (Edge Function, không nằm trong repo này) — viết lại phần
+//                                                    nhận định của Báo cáo
+//
+// Luồng `ai-personalize` LỌT khỏi lần rà 07/09/2026 và chỉ lộ ra ngày
+// 09/09 khi soát lại trước lúc nộp. Bài học: lần đó chỉ đọc
+// `supabase/functions/` của repo này, mà hàm kia là di sản từ bản web — deploy
+// trên cùng project Supabase, `verify_jwt=false`, không có tệp nguồn ở đây.
+// Muốn biết app gửi gì đi đâu thì phải quét theo ĐIỂM GỌI trong `lib/`
+// (`functions.invoke`, URL ngoài), không phải theo thư mục mã nguồn có sẵn.
 //
 // Đối chiếu 07/09/2026 cho thấy `cc_profiles` chỉ được đọc đúng cột `role` để
 // biết gói Free hay Premium, và cột đó KHÔNG đi kèm sang model. Nên câu "không
@@ -47,7 +56,7 @@
 /// KHÔNG nâng khi chỉ sửa câu chữ cho dễ đọc: hỏi lại vì một dấu phẩy là dạy
 /// người dùng bấm "Đồng ý" mà không đọc, và như thế thì lần hỏi nào cũng vô
 /// nghĩa.
-const int kWrAiDisclosureVersion = 1;
+const int kWrAiDisclosureVersion = 2;
 
 /// Một việc app làm có gửi dữ liệu ra ngoài.
 class WrAiDataFlow {
@@ -150,6 +159,14 @@ const List<WrAiDataFlow> kWrAiDataFlows = [
     trigger: 'Khi bạn bật nghe đọc thành tiếng',
     data: 'Đoạn chữ đang được đọc.',
     recipient: 'Ausynclab',
+  ),
+  WrAiDataFlow(
+    trigger: 'Khi bạn mở Báo cáo khảo sát',
+    data: 'Vị trí công việc, thâm niên và phòng ban bạn đã khai, cùng điểm ba '
+        'lớp, điểm tổng, chỉ số ESI và lớp đang yếu nhất. Dùng để viết lại phần '
+        'nhận định cho hợp với hoàn cảnh của bạn. Việc này chạy tự động khi bạn '
+        'mở báo cáo, không cần bạn bấm gì.',
+    recipient: 'OpenRouter → Google (Gemini)',
   ),
 ];
 

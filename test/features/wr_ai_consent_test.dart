@@ -91,11 +91,17 @@ void main() {
       }
     });
 
-    test('kể đủ CẢ BỐN luồng gửi dữ liệu đang có trong app', () {
-      // Bốn luồng, đối chiếu mã nguồn 07/09/2026: chat, đọc JD/CV, sinh Diễn
-      // biến, đọc thành tiếng. Thêm một luồng AI mới mà quên khai ở đây thì bản
-      // công bố thành lời khai thiếu.
-      expect(kWrAiDataFlows.length, 4);
+    test('kể đủ CẢ NĂM luồng gửi dữ liệu đang có trong app', () {
+      // Năm luồng, đối chiếu mã nguồn 09/09/2026: chat, đọc JD/CV, sinh Diễn
+      // biến, đọc thành tiếng, và cá nhân hoá Báo cáo khảo sát
+      // (`ai-personalize` → Gemini). Thêm một luồng AI mới mà quên khai ở đây
+      // thì bản công bố thành lời khai thiếu.
+      //
+      // Luồng thứ năm từng bị bỏ sót vì nó gọi một Edge Function có sẵn từ bản
+      // web, không nằm trong `supabase/functions/` của repo này. Muốn soát lại
+      // cho đủ thì quét theo điểm gọi trong `lib/` — `functions.invoke(` và các
+      // URL ngoài — chứ đừng quét theo thư mục mã nguồn.
+      expect(kWrAiDataFlows.length, 5);
       for (final f in kWrAiDataFlows) {
         expect(f.trigger.trim(), isNotEmpty);
         expect(f.data.trim(), isNotEmpty);
