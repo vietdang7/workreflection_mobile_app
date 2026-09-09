@@ -78,10 +78,15 @@ void main() {
       final names = kWrAiRecipients.map((r) => r.name).toList();
       // Apple: "identify who the data is sent to". "Các đối tác công nghệ" là
       // cách nói tránh và không qua được điều kiện đó.
-      expect(names, contains('OpenRouter'));
-      expect(names, contains('DeepSeek'));
+      //
+      // Từ 09/09/2026 chỉ còn hai bên: các Edge Function gọi thẳng Google, bỏ
+      // OpenRouter (bên trung chuyển) và DeepSeek khỏi đường đi. Danh sách này
+      // phải khớp mã nguồn Edge Function — đổi nhà cung cấp mà quên sửa bản
+      // công bố là khai sai.
       expect(names, contains('Google (Gemini)'));
       expect(names, contains('Ausynclab'));
+      expect(names, isNot(contains('OpenRouter')));
+      expect(names, isNot(contains('DeepSeek')));
     });
 
     test('mỗi bên nhận đều kèm link chính sách để tự kiểm', () {

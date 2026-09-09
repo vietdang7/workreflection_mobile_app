@@ -287,13 +287,13 @@ Terms of Service or Privacy Policy.
 The screen states exactly what is sent and to whom:
 
 - Chat with the reflection assistant: the message, earlier turns of the same
-  conversation, and a summary of the user's recent reflections -> OpenRouter ->
-  DeepSeek
-- Uploaded job description / CV: the full text of the document -> OpenRouter ->
-  Google (Gemini)
+  conversation, and a summary of the user's recent reflections -> Google (Gemini)
+- Uploaded job description / CV: the full text of the document -> Google (Gemini)
 - The "Diễn biến" (timeline narrative) section: the situations the user has
-  recorded -> OpenRouter -> DeepSeek
+  recorded -> Google (Gemini)
 - Text-to-speech playback: the text being read aloud -> Ausynclab
+- The survey report: the job title, tenure and department the user entered, plus
+  their survey scores, used to rephrase the commentary -> Google (Gemini)
 
 The user's name, email address, password, payment details and profile photo are
 never included in any of these requests.
@@ -387,6 +387,44 @@ Account > Xử lý dữ liệu bằng AI.
      hành. Sandbox chạy nhanh hơn thật: gói tháng gia hạn sau 5 phút, gói năm sau
      1 tiếng, nên ngồi đợi một lát là thấy cả `DID_RENEW`.
 8. Nộp bản build mới **kèm cả hai gói**, dán thư trả lời ở mục 3.
+
+---
+
+## 4b. Đổi nhà cung cấp AI — 09/09/2026
+
+Tài khoản OpenRouter hết credit và chưa nạp lại được, nên cả bốn Edge Function
+chuyển sang **gọi thẳng Google (Gemini)**:
+
+| Hàm | Trước | Sau |
+|---|---|---|
+| `wr-chat` | `deepseek-v4-flash-0731` qua OpenRouter | `gemini-3.1-flash-lite` |
+| `wr-narrative` | `deepseek-v4-flash-0731` qua OpenRouter | `gemini-3.1-flash-lite` |
+| `ai-personalize` | `gemini-3.1-flash-lite-preview` qua OpenRouter | `gemini-3.1-flash-lite` |
+| `wr-doc-analyze` | `gemini-2.5-flash` qua OpenRouter | `gemini-2.5-flash` (endpoint gốc) |
+
+Ba điều đáng ghi lại:
+
+**Giá hai bên bằng nhau đúng từng cent.** OpenRouter bán lại đúng giá gốc của
+Google ($0.30/$2.50 cho 2.5-flash, $0.25/$1.50 cho 3.1-flash-lite); họ chỉ ăn
+phí lúc nạp tiền. Nên đây là chuyện dòng tiền, không phải tối ưu chi phí.
+
+**Gemini 3.x "nghĩ trước khi trả lời", và phần nghĩ ĐẾM VÀO `max_tokens`.**
+Để nguyên `max_tokens: 300` của `wr-chat` mà không tắt thì model tiêu sạch ngân
+sách vào phần người dùng không bao giờ đọc rồi trả về **chuỗi rỗng** — hỏng im
+lặng, không ném lỗi. Phải đặt `reasoning_effort: 'none'` (bản tương thích
+OpenAI) hoặc `thinkingConfig.thinkingBudget: 0` (endpoint gốc).
+
+**PDF không mất.** `wr-doc-analyze` từng nhờ bộ đọc PDF của OpenRouter
+(`plugins: file-parser`), thứ đó là của riêng họ. Nhưng Gemini tự đọc PDF qua
+`inline_data` ở endpoint gốc, đọc được cả bản scan vì nó nhìn trang giấy như
+hình — đã thử thật với một PDF một trang, trả đúng tên và chức danh. Đổi lại,
+hàm này là nơi duy nhất trong dự án phải nói tiếng Google thay vì tiếng OpenAI.
+
+Kèm theo: bản công bố trong app lên **version 3**, danh sách bên nhận rút từ bốn
+tên xuống còn **Google (Gemini)** và **Ausynclab**. Thư trả lời ở mục 3 đã sửa
+theo. Trang privacy web cũng phải sửa cho khớp — nếu không là khai sai.
+
+Secret cần đặt trước khi deploy: `GEMINI_API_KEY`.
 
 ---
 

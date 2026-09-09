@@ -31,7 +31,7 @@
 // ---------------------------------------------------------------------------
 // SECRET CẦN ĐẶT TRƯỚC KHI DEPLOY
 //
-//   supabase secrets set OPENROUTER_API_KEY=sk-or-v1-...   (dùng chung wr-chat)
+//   supabase secrets set GEMINI_API_KEY=AIza...   (dùng chung wr-chat)
 //
 // SUPABASE_URL / SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY do nền tảng cấp.
 // ---------------------------------------------------------------------------
@@ -51,10 +51,10 @@ import {
 // Cấu hình
 // ---------------------------------------------------------------------------
 
-/// Ghim đúng bản có ngày, cùng model với `wr-chat` — xem ghi chú dài ở
-/// `wr-chat/index.ts` về việc vì sao không dùng alias `-latest`.
-const MODEL = Deno.env.get('WR_NARRATIVE_MODEL') ??
-  'deepseek/deepseek-v4-flash-0731';
+/// Cùng model với `wr-chat` — xem ghi chú dài ở `wr-chat/index.ts` về việc
+/// 09/09/2026 đổi từ DeepSeek qua OpenRouter sang Gemini gọi thẳng, và vì sao
+/// không dùng bản `-preview`.
+const MODEL = Deno.env.get('WR_NARRATIVE_MODEL') ?? 'gemini-3.1-flash-lite';
 
 /// Số Episode nạp làm nguyên liệu.
 ///
@@ -69,7 +69,9 @@ const MAX_OUTPUT_TOKENS = 420;
 
 const UPSTREAM_TIMEOUT_MS = 60_000;
 
-const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+/// Endpoint tương thích OpenAI của Google — giữ nguyên được thân yêu cầu cũ.
+const GEMINI_URL =
+  'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -109,9 +111,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return fail('Yêu cầu không hợp lệ.', 405);
   }
 
-  const openRouterKey = Deno.env.get('OPENROUTER_API_KEY');
-  if (!openRouterKey) {
-    console.error('THIẾU secret OPENROUTER_API_KEY — hàm không thể chạy.');
+  const geminiKey = Deno.env.get('GEMINI_API_KEY');
+  if (!geminiKey) {
+    console.error('THIẾU secret GEMINI_API_KEY — hàm không thể chạy.');
     return fail('Chưa kể lại được lúc này.', 503);
   }
 
@@ -217,10 +219,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // ── 5 · Gọi model ───────────────────────────────────────────────────────
   let narrative: string;
   try {
-    narrative = await callModel(openRouterKey, buildNarrativePrompt(input));
+    narrative = await callModel(geminiKey, buildNarrativePrompt(input));
   } catch (e) {
     const aborted = e instanceof DOMException && e.name === 'AbortError';
-    console.error(aborted ? 'OpenRouter quá hạn chờ' : `OpenRouter lỗi: ${e}`);
+    console.error(aborted ? 'Gemini quá hạn chờ' : `Gemini lỗi: ${e}`);
     // Không ai đang ngồi chờ câu này, nên hỏng thì im lặng bỏ qua: lần mở tab
     // sau sẽ thử lại, và tới lúc đó thẻ vẫn đang hiện bản kể trước đó.
     return skip('upstream_error');
@@ -316,14 +318,12 @@ async function callModel(apiKey: string, messages: unknown[]): Promise<string> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
   try {
-    const res = await fetch(OPENROUTER_URL, {
+    const res = await fetch(GEMINI_URL, {
       method: 'POST',
       signal: controller.signal,
       headers: {
         Authorization: `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://workreflection.app',
-        'X-Title': 'WorkReflection Mobile',
       },
       body: JSON.stringify({
         model: MODEL,
@@ -332,13 +332,15 @@ async function callModel(apiKey: string, messages: unknown[]): Promise<string> {
         // chuyện. Nhiệt độ cao ở đây đọc ra thành bịa thêm chi tiết.
         temperature: 0.4,
         max_tokens: MAX_OUTPUT_TOKENS,
-        reasoning: { enabled: false },
+        // Xem `wr-chat/index.ts`: với Gemini 3.x phần "nghĩ" đếm vào
+        // max_tokens, không tắt là câu trả lời có thể về rỗng.
+        reasoning_effort: 'none',
       }),
     });
 
     if (!res.ok) {
       const detail = await res.text();
-      console.error(`OpenRouter ${res.status}: ${detail.slice(0, 500)}`);
+      console.error(`Gemini ${res.status}: ${detail.slice(0, 500)}`);
       return '';
     }
     const payload = await res.json();

@@ -56,7 +56,7 @@
 /// KHÔNG nâng khi chỉ sửa câu chữ cho dễ đọc: hỏi lại vì một dấu phẩy là dạy
 /// người dùng bấm "Đồng ý" mà không đọc, và như thế thì lần hỏi nào cũng vô
 /// nghĩa.
-const int kWrAiDisclosureVersion = 2;
+const int kWrAiDisclosureVersion = 3;
 
 /// Một việc app làm có gửi dữ liệu ra ngoài.
 class WrAiDataFlow {
@@ -98,26 +98,19 @@ class WrAiRecipient {
 
 /// Các bên nhận dữ liệu.
 ///
-/// OpenRouter là bên TRUNG CHUYỂN, không phải nơi cuối cùng — nên phải kể cả
-/// hai tầng. Chỉ ghi "gửi cho OpenRouter" là giấu mất chuyện dữ liệu đi tiếp
-/// sang DeepSeek và Google.
+/// Từ 09/09/2026 chỉ còn MỘT bên: các Edge Function gọi thẳng Google, không đi
+/// qua OpenRouter nữa, và DeepSeek không còn nằm trên đường đi. Trước đó phải
+/// kể ba tên vì OpenRouter chỉ là bên trung chuyển — ghi mỗi "gửi cho
+/// OpenRouter" là giấu mất chuyện dữ liệu đi tiếp sang DeepSeek và Google.
+///
+/// Danh sách này phải khớp với mã nguồn của cả bốn Edge Function. Đổi nhà cung
+/// cấp mà quên sửa đây là biến bản công bố thành lời khai sai — với người dùng
+/// và với Apple.
 const List<WrAiRecipient> kWrAiRecipients = [
   WrAiRecipient(
-    name: 'OpenRouter',
-    role: 'Nhận và chuyển tiếp yêu cầu tới hai mô hình AI bên dưới.',
-    privacyUrl: 'https://openrouter.ai/privacy',
-  ),
-  WrAiRecipient(
-    name: 'DeepSeek',
-    role: 'Mô hình trả lời trong phần Trò chuyện và viết phần Diễn biến.',
-    // KHÔNG phải `deepseek.com/privacy` — đường đó trả 404 (kiểm 07/09/2026).
-    // Một liên kết chết ngay trong công bố quyền riêng tư còn tệ hơn không có.
-    privacyUrl:
-        'https://cdn.deepseek.com/policies/en-US/deepseek-privacy-policy.html',
-  ),
-  WrAiRecipient(
     name: 'Google (Gemini)',
-    role: 'Mô hình đọc nội dung tài liệu JD và CV bạn tải lên.',
+    role: 'Mô hình trả lời trong phần Trò chuyện, viết phần Diễn biến, đọc tài '
+        'liệu JD/CV bạn tải lên và viết lại phần nhận định của Báo cáo.',
     privacyUrl: 'https://policies.google.com/privacy',
   ),
   WrAiRecipient(
@@ -141,19 +134,19 @@ const List<WrAiDataFlow> kWrAiDataFlows = [
     data: 'Câu bạn vừa viết, các lượt trước trong cùng cuộc trò chuyện, và tóm '
         'tắt những điều bạn đã nhìn lại gần đây: tình huống bạn ghi, insight, '
         'chủ đề đang thực hành, kết quả tự đánh giá.',
-    recipient: 'OpenRouter → DeepSeek',
+    recipient: 'Google (Gemini)',
   ),
   WrAiDataFlow(
     trigger: 'Khi bạn tải JD hoặc CV lên để đọc',
     data: 'Toàn bộ nội dung tài liệu đó, kể cả phần bạn không nhắc tới trong '
         'app.',
-    recipient: 'OpenRouter → Google (Gemini)',
+    recipient: 'Google (Gemini)',
   ),
   WrAiDataFlow(
     trigger: 'Khi phần mềm viết mục Diễn biến',
     data: 'Các tình huống bạn đã ghi lại theo thời gian. Việc này chạy tự động '
         'khi bạn mở mục đó, không cần bạn bấm gì.',
-    recipient: 'OpenRouter → DeepSeek',
+    recipient: 'Google (Gemini)',
   ),
   WrAiDataFlow(
     trigger: 'Khi bạn bật nghe đọc thành tiếng',
@@ -166,7 +159,7 @@ const List<WrAiDataFlow> kWrAiDataFlows = [
         'lớp, điểm tổng, chỉ số ESI và lớp đang yếu nhất. Dùng để viết lại phần '
         'nhận định cho hợp với hoàn cảnh của bạn. Việc này chạy tự động khi bạn '
         'mở báo cáo, không cần bạn bấm gì.',
-    recipient: 'OpenRouter → Google (Gemini)',
+    recipient: 'Google (Gemini)',
   ),
 ];
 

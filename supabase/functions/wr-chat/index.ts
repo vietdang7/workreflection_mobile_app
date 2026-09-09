@@ -1,10 +1,35 @@
-// Edge Function `wr-chat` — cầu nối giữa app và OpenRouter cho tính năng
+// Edge Function `wr-chat` — cầu nối giữa app và Gemini cho tính năng
 // Trò chuyện (AI Chatbox System Prompt v1.0).
 //
 // ---------------------------------------------------------------------------
-// VÌ SAO CÓ HÀM NÀY THAY VÌ APP GỌI THẲNG OPENROUTER
+// 09/09/2026 — ĐỔI TỪ OPENROUTER SANG GEMINI GỌI THẲNG
 //
-// Khoá OpenRouter gắn với ví tiền thật. Nhúng vào APK thì bất kỳ ai giải nén
+// Tài khoản OpenRouter hết credit và chưa nạp lại được, trong khi key Gemini
+// của khách còn hạn mức. Giá token hai bên bằng nhau đúng từng cent (OpenRouter
+// bán lại đúng giá gốc của Google), nên đây là chuyện dòng tiền chứ không phải
+// tối ưu chi phí.
+//
+// Đi qua endpoint tương thích OpenAI của Google
+// (`/v1beta/openai/chat/completions`) nên thân yêu cầu giữ nguyên. Hai chỗ khác:
+//
+//   • `reasoning: { enabled: false }` là tham số riêng của OpenRouter, Google
+//     không hiểu. Thay bằng `reasoning_effort: 'none'`.
+//
+//   • Gemini 3.x mặc định "nghĩ trước khi trả lời", và phần nghĩ ĐẾM VÀO
+//     max_tokens. Để nguyên `max_tokens: 300` mà không tắt nghĩ thì model tiêu
+//     hết ngân sách vào phần người dùng không bao giờ đọc rồi trả về CHUỖI
+//     RỖNG — kiểm ngày 09/09: 8 token đầu ra thành `finishReason: MAX_TOKENS`,
+//     content rỗng. Đây là kiểu hỏng im lặng, không ném lỗi.
+//
+// Bên nhận dữ liệu vì thế chỉ còn Google, và bản công bố trong app
+// (`lib/core/logic/wr_ai_disclosure.dart`) đã sửa theo — bỏ OpenRouter lẫn
+// DeepSeek. Đổi ngược lại thì phải sửa cả bản công bố lẫn trang privacy web,
+// nếu không là khai sai với người dùng và với Apple.
+//
+// ---------------------------------------------------------------------------
+// VÌ SAO CÓ HÀM NÀY THAY VÌ APP GỌI THẲNG MODEL
+//
+// Khoá gắn với ví tiền thật. Nhúng vào APK thì bất kỳ ai giải nén
 // bản cài cũng lấy được và tiêu tiền của khách, và đổi khoá sẽ phải phát hành
 // lại app. Ở đây khoá là một secret của Supabase, app không bao giờ thấy nó.
 //
@@ -19,7 +44,7 @@
 // ---------------------------------------------------------------------------
 // SECRET CẦN ĐẶT TRƯỚC KHI DEPLOY
 //
-//   supabase secrets set OPENROUTER_API_KEY=sk-or-v1-...
+//   supabase secrets set GEMINI_API_KEY=AIza...
 //
 // SUPABASE_URL và SUPABASE_SERVICE_ROLE_KEY do nền tảng tự cấp, không cần đặt.
 // ---------------------------------------------------------------------------
@@ -39,15 +64,16 @@ import { conversationTitle, shapeReply } from './reply_shaping.ts';
 
 /// Model chạy tính năng này.
 ///
-/// Ghim đúng bản có ngày, CỐ Ý không dùng alias `~deepseek/deepseek-v4-flash-latest`.
-/// Alias sẽ tự trỏ sang model khác khi DeepSeek phát hành bản mới, và system
-/// prompt v1.0 đã được thử nghiệm theo hành vi của đúng bản này. Đổi model là
-/// một quyết định có kiểm chứng, không phải một việc xảy ra lúc nửa đêm.
+/// 09/09/2026: `deepseek/deepseek-v4-flash-0731` (qua OpenRouter) →
+/// `gemini-3.1-flash-lite` (Google gọi thẳng). Không dùng đuôi `-preview`: bản
+/// preview có thể bị Google rút bất cứ lúc nào, mà đây là đường chạy của tính
+/// năng đang bán tiền.
 ///
-/// So sánh 2026-08-03 giữa `deepseek-v4-flash` (24/04) và bản 0731: cùng cửa sổ
-/// 1M token, cùng bộ tham số, nhưng 0731 mới hơn, đã re-post-train, và rẻ hơn
-/// 36% ($0.09/$0.18 so với $0.14/$0.28 mỗi triệu token).
-const MODEL = Deno.env.get('WR_CHAT_MODEL') ?? 'deepseek/deepseek-v4-flash-0731';
+/// System prompt v1.0 vốn được thử nghiệm trên DeepSeek, nên đổi model là đổi
+/// giọng văn trả lời. Đã chạy thử lại từng luồng sau khi đổi; giọng khác đi đôi
+/// chút là chuyện phải chấp nhận để tính năng còn sống khi OpenRouter hết
+/// credit.
+const MODEL = Deno.env.get('WR_CHAT_MODEL') ?? 'gemini-3.1-flash-lite';
 
 /// Số lượt hỏi mỗi ngày của gói miễn phí (giờ VN, xem `wr_chat_used_today`).
 const FREE_DAILY_LIMIT = Number(Deno.env.get('WR_CHAT_FREE_LIMIT') ?? '10');
@@ -115,7 +141,9 @@ const MAX_OUTPUT_TOKENS = 300;
 /// chờ lâu hơn nữa thì thà báo lỗi để họ gửi lại.
 const UPSTREAM_TIMEOUT_MS = 45_000;
 
-const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+/// Endpoint tương thích OpenAI của Google — giữ nguyên được thân yêu cầu cũ.
+const GEMINI_URL =
+  'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -155,12 +183,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return fail('Yêu cầu không hợp lệ.', 405);
   }
 
-  const openRouterKey = Deno.env.get('OPENROUTER_API_KEY');
-  if (!openRouterKey) {
+  const geminiKey = Deno.env.get('GEMINI_API_KEY');
+  if (!geminiKey) {
     // Cấu hình thiếu là lỗi của người vận hành, không phải của người dùng. Ghi
     // ra log để người vận hành thấy, còn người dùng chỉ cần biết là chưa dùng
     // được.
-    console.error('THIẾU secret OPENROUTER_API_KEY — hàm không thể chạy.');
+    console.error('THIẾU secret GEMINI_API_KEY — hàm không thể chạy.');
     return fail('Tính năng trò chuyện đang tạm nghỉ. Bạn thử lại sau nhé.', 503);
   }
 
@@ -369,30 +397,30 @@ Deno.serve(async (req: Request): Promise<Response> => {
     { role: 'user', content: message },
   ];
 
-  /// Gọi OpenRouter một lần.
+  /// Gọi Gemini một lần.
   const callUpstream = () => {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
-    return fetch(OPENROUTER_URL, {
+    return fetch(GEMINI_URL, {
       method: 'POST',
       signal: controller.signal,
       headers: {
-        Authorization: `Bearer ${openRouterKey}`,
+        Authorization: `Bearer ${geminiKey}`,
         'Content-Type': 'application/json',
-        // OpenRouter dùng hai header này để gắn nhãn nguồn gọi trên trang thống
-        // kê. Không bắt buộc, nhưng có thì đọc hoá đơn mới biết tiền đi đâu.
-        'HTTP-Referer': 'https://workreflection.app',
-        'X-Title': 'WorkReflection Mobile',
       },
       body: JSON.stringify({
         model: MODEL,
         messages,
         temperature: 0.7,
         max_tokens: MAX_OUTPUT_TOKENS,
-        // Tắt reasoning: đây là trò chuyện ngắn có giọng văn quy định sẵn,
-        // không phải bài toán suy luận. Bật lên chỉ thêm độ trễ và token trả
-        // tiền cho phần người dùng không bao giờ đọc.
-        reasoning: { enabled: false },
+        // Tắt phần "nghĩ trước khi trả lời": đây là trò chuyện ngắn có giọng
+        // văn quy định sẵn, không phải bài toán suy luận. Bật lên chỉ thêm độ
+        // trễ và token trả tiền cho phần người dùng không bao giờ đọc.
+        //
+        // Với Gemini 3.x còn nguy hiểm hơn thế: phần nghĩ ĐẾM VÀO max_tokens,
+        // nên để mặc định thì 300 token có thể tiêu sạch vào đó và câu trả lời
+        // về rỗng. Không phải tinh chỉnh cho vui — thiếu dòng này là hỏng.
+        reasoning_effort: 'none',
       }),
     }).finally(() => clearTimeout(timer));
   };
@@ -414,26 +442,26 @@ Deno.serve(async (req: Request): Promise<Response> => {
     // 45 giây liên tiếp thì thà báo lỗi để họ gửi lại còn hơn.
     let res = await callUpstream();
     if (res.status === 429 || res.status >= 500) {
-      console.warn(`OpenRouter ${res.status}, thử lại một lần.`);
+      console.warn(`Gemini ${res.status}, thử lại một lần.`);
       await new Promise((r) => setTimeout(r, 600));
       res = await callUpstream();
     }
 
     if (!res.ok) {
       const detail = await res.text();
-      console.error(`OpenRouter ${res.status}: ${detail.slice(0, 500)}`);
+      console.error(`Gemini ${res.status}: ${detail.slice(0, 500)}`);
       return fail('Mình chưa trả lời được lúc này. Bạn thử gửi lại nhé.', 502);
     }
 
     const payload = await res.json();
     reply = (payload?.choices?.[0]?.message?.content ?? '').trim();
     if (!reply) {
-      console.error('OpenRouter trả về nội dung rỗng:', JSON.stringify(payload).slice(0, 500));
+      console.error("Gemini trả về nội dung rỗng:", JSON.stringify(payload).slice(0, 500));
       return fail('Mình chưa trả lời được lúc này. Bạn thử gửi lại nhé.', 502);
     }
   } catch (e) {
     const aborted = e instanceof DOMException && e.name === 'AbortError';
-    console.error(aborted ? 'OpenRouter quá hạn chờ' : `OpenRouter lỗi: ${e}`);
+    console.error(aborted ? "Gemini quá hạn chờ" : `Gemini lỗi: ${e}`);
     return fail(
       aborted
         ? 'Mình nghĩ hơi lâu và chưa kịp trả lời. Bạn gửi lại giúp mình nhé.'

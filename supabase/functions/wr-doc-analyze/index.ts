@@ -9,7 +9,7 @@
 // bối cảnh không nói được gì hơn ngoài ngày tải lên. Hàm này là bước còn thiếu.
 //
 // Đặt ở máy chủ vì ba lý do, cùng lý do của `wr-chat`:
-//   • Khoá OpenRouter gắn với ví tiền thật, không được nằm trong APK.
+//   • Khoá Gemini gắn với ví tiền thật, không được nằm trong APK.
 //   • Ranh giới Free/Premium đọc từ database; để app khai thì ai cũng khai
 //     mình Premium.
 //   • File nằm trong bucket riêng tư `context-docs`; tải nó về cần service role.
@@ -17,7 +17,7 @@
 // ---------------------------------------------------------------------------
 // SECRET
 //
-//   supabase secrets set OPENROUTER_API_KEY=sk-or-v1-...
+//   supabase secrets set GEMINI_API_KEY=AIza...
 //
 // Tuỳ chọn:
 //   WR_DOC_MODEL            model đọc tài liệu (mặc định google/gemini-2.5-flash)
@@ -35,10 +35,13 @@ import { extractDocxText } from './docx.ts';
 
 /// Model đọc tài liệu.
 ///
-/// KHÁC model của `wr-chat`: DeepSeek chỉ nhận chữ, mà thứ người dùng tải lên
-/// là ảnh chụp hoặc PDF. Đây phải là model đọc được hình. Ghim bản cụ thể qua
-/// secret khi cần; mặc định chọn bản rẻ, nhanh, đọc tốt tiếng Việt.
-const MODEL = Deno.env.get('WR_DOC_MODEL') ?? 'google/gemini-2.5-flash';
+/// KHÁC model của `wr-chat`: thứ người dùng tải lên là ảnh chụp hoặc PDF, nên
+/// đây phải là model đọc được hình. Ghim bản cụ thể qua secret khi cần; mặc
+/// định chọn bản rẻ, nhanh, đọc tốt tiếng Việt.
+///
+/// 09/09/2026 bỏ tiền tố `google/` vì gọi thẳng Google chứ không qua OpenRouter
+/// nữa — tên model ở hai nơi viết khác nhau, để nguyên là 404.
+const MODEL = Deno.env.get('WR_DOC_MODEL') ?? 'gemini-2.5-flash';
 
 /// Mở phân tích cho gói miễn phí.
 ///
@@ -67,7 +70,8 @@ const MAX_FILE_BYTES = 12 * 1024 * 1024;
 /// Đọc một trang tài liệu lâu hơn trả lời một câu chat.
 const UPSTREAM_TIMEOUT_MS = 90_000;
 
-const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+/// Endpoint GỐC của Google (không phải bản tương thích OpenAI) — cần cho PDF.
+const GEMINI_BASE = 'https://generativelanguage.googleapis.com/v1beta';
 const BUCKET = 'context-docs';
 
 const CORS_HEADERS = {
@@ -158,9 +162,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return fail('Yêu cầu không hợp lệ.', 405);
   }
 
-  const openRouterKey = Deno.env.get('OPENROUTER_API_KEY');
-  if (!openRouterKey) {
-    console.error('THIẾU secret OPENROUTER_API_KEY — hàm không thể chạy.');
+  const geminiKey = Deno.env.get('GEMINI_API_KEY');
+  if (!geminiKey) {
+    console.error('THIẾU secret GEMINI_API_KEY — hàm không thể chạy.');
     return fail('Phân tích tài liệu đang tạm nghỉ. Bạn thử lại sau nhé.', 503);
   }
 
@@ -191,7 +195,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // ── 1b · Chưa cho phép gửi sang AI thì dừng ─────────────────────────────
   //
   // Hàm này gửi đi NHIỀU dữ liệu riêng tư nhất trong cả app: toàn văn JD hoặc
-  // CV, sang Google Gemini qua OpenRouter. Guideline 5.1.1(i) — xem
+  // CV, sang Google Gemini. Guideline 5.1.1(i) — xem
   // `_shared/ai_consent.ts`.
   if (!await hasAiConsent(db, user.id)) {
     return fail(AI_CONSENT_REQUIRED_MESSAGE, 403);
@@ -334,7 +338,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   // File Word: chữ nằm sẵn trong file, bóc tại chỗ rồi gửi model dạng chữ.
-  // Không gửi cả file như PDF — bộ đọc file của OpenRouter chỉ nhận PDF.
+  // Không gửi cả file như PDF: Gemini không đọc được .docx dạng nhị phân,
+  // còn chữ thì bóc ra được ngay tại đây.
   let docxText: string | null = null;
   if (isDocx) {
     docxText = await extractDocxText(fileBytes);
@@ -350,54 +355,55 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
 
   // ── 6 · Gọi model ───────────────────────────────────────────────────────
+  //
+  // Dùng endpoint GỐC của Gemini chứ không phải bản tương thích OpenAI như
+  // `wr-chat`: chỉ đường gốc mới nhận thẳng PDF qua `inline_data`. Đổi lại
+  // đây là nơi duy nhất trong dự án phải nói tiếng của Google.
+  //
+  // Trước 09/09/2026 chỗ này nhờ bộ đọc PDF của OpenRouter
+  // (`plugins: [{id:'file-parser', pdf:{engine:'pdf-text'}}]`). Bỏ OpenRouter
+  // thì mất luôn bộ đọc đó — nhưng Gemini tự đọc PDF được, và đọc được cả bản
+  // scan vì nó nhìn trang giấy như hình. Đã thử thật ngày 09/09 với một PDF
+  // một trang: trả đúng tên và chức danh.
   const isPdf = mime === 'application/pdf';
   const prompt = buildExtractionPrompt(String(doc.doc_type ?? 'other'));
-  const content = isDocx
-    ? [{ type: 'text', text: `${prompt}\n\nNỘI DUNG TÀI LIỆU:\n${docxText}` }]
+  const parts = isDocx
+    ? [{ text: `${prompt}\n\nNỘI DUNG TÀI LIỆU:\n${docxText}` }]
     : [
-      { type: 'text', text: prompt },
-      isPdf
-        ? {
-          type: 'file',
-          file: {
-            filename: filePath.split('/').pop() ?? 'tai-lieu.pdf',
-            file_data: `data:${mime};base64,${toBase64(fileBytes)}`,
-          },
-        }
-        : {
-          type: 'image_url',
-          image_url: { url: `data:${mime};base64,${toBase64(fileBytes)}` },
+      { text: prompt },
+      {
+        inline_data: {
+          mime_type: isPdf ? 'application/pdf' : mime,
+          data: toBase64(fileBytes),
         },
+      },
     ];
 
   const callUpstream = () => {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
-    return fetch(OPENROUTER_URL, {
-      method: 'POST',
-      signal: controller.signal,
-      headers: {
-        Authorization: `Bearer ${openRouterKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://workreflection.app',
-        'X-Title': 'WorkReflection Mobile',
+    return fetch(
+      `${GEMINI_BASE}/models/${MODEL}:generateContent?key=${geminiKey}`,
+      {
+        method: 'POST',
+        signal: controller.signal,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts }],
+          generationConfig: {
+            // Nhiệt độ thấp: đây là việc ĐỌC một tài liệu có sẵn, không phải
+            // viết sáng tạo. Sáng tạo ở đây nghĩa là bịa thêm dòng không có
+            // trong JD.
+            temperature: 0.1,
+            maxOutputTokens: 2400,
+            responseMimeType: 'application/json',
+            // Phần "nghĩ" của Gemini 3.x đếm vào maxOutputTokens; tắt đi để
+            // 2400 token đều dành cho bản JSON trích ra.
+            thinkingConfig: { thinkingBudget: 0 },
+          },
+        }),
       },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [{ role: 'user', content }],
-        // Nhiệt độ thấp: đây là việc ĐỌC một tài liệu có sẵn, không phải viết
-        // sáng tạo. Sáng tạo ở đây nghĩa là bịa thêm dòng không có trong JD.
-        temperature: 0.1,
-        max_tokens: 2400,
-        response_format: { type: 'json_object' },
-        // PDF đi qua bộ đọc chữ của OpenRouter. `pdf-text` là engine miễn phí,
-        // đọc được PDF có lớp chữ; PDF scan (ảnh) sẽ rơi về đường đọc hình của
-        // chính model.
-        ...(isPdf
-          ? { plugins: [{ id: 'file-parser', pdf: { engine: 'pdf-text' } }] }
-          : {}),
-      }),
-    }).finally(() => clearTimeout(timer));
+    ).finally(() => clearTimeout(timer));
   };
 
   let raw: string;
@@ -406,13 +412,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
     // Thử lại đúng một lần với lỗi có thể tự khỏi — cùng lý do đã ghi trong
     // `wr-chat`: nhà cung cấp vấp một nhịp không nên thành lỗi của người dùng.
     if (res.status === 429 || res.status >= 500) {
-      console.warn(`OpenRouter ${res.status}, thử lại một lần.`);
+      console.warn(`Gemini ${res.status}, thử lại một lần.`);
       await new Promise((r) => setTimeout(r, 800));
       res = await callUpstream();
     }
     if (!res.ok) {
       const detail = await res.text();
-      console.error(`OpenRouter ${res.status}: ${detail.slice(0, 500)}`);
+      console.error(`Gemini ${res.status}: ${detail.slice(0, 500)}`);
       return await failAndMark(
         'Chưa đọc được tài liệu này. Bạn thử lại sau nhé.',
         `nhà cung cấp trả ${res.status}`,
@@ -420,7 +426,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
       );
     }
     const payload = await res.json();
-    raw = String(payload?.choices?.[0]?.message?.content ?? '').trim();
+    // Dạng phản hồi của endpoint gốc khác bản tương thích OpenAI: chữ nằm ở
+    // `candidates[0].content.parts[*].text`, có thể bị chẻ làm nhiều mảnh.
+    raw = String(
+      (payload?.candidates?.[0]?.content?.parts ?? [])
+        .map((p: { text?: string }) => p?.text ?? '')
+        .join(''),
+    ).trim();
     if (!raw) {
       return await failAndMark(
         'Chưa đọc được tài liệu này. Bạn thử lại sau nhé.',
@@ -430,7 +442,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }
   } catch (e) {
     const aborted = e instanceof DOMException && e.name === 'AbortError';
-    console.error(aborted ? 'OpenRouter quá hạn chờ' : `OpenRouter lỗi: ${e}`);
+    console.error(aborted ? 'Gemini quá hạn chờ' : `Gemini lỗi: ${e}`);
     return await failAndMark(
       aborted
         ? 'Tài liệu này đọc lâu quá. Bạn thử lại giúp mình nhé.'

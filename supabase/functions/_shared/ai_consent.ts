@@ -16,7 +16,7 @@
 //     đi qua app.
 //
 // Chặn ở đây thì không đường nào vòng: đây là nơi duy nhất dữ liệu thật sự rời
-// khỏi hạ tầng của mình để sang OpenRouter.
+// khỏi hạ tầng của mình để sang Google.
 //
 // ---------------------------------------------------------------------------
 // ĐẶT Ở ĐÂU TRONG HÀM
@@ -32,12 +32,11 @@ import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 /// PHẢI khớp `kWrAiDisclosureVersion` trong
 /// `lib/core/logic/wr_ai_disclosure.dart`. Lệch số là lệch luôn ý nghĩa của
 /// chữ "đã đồng ý": app nghĩ người dùng đã đọc bản mới, máy chủ nghĩ chưa.
-/// Phải khớp `kWrAiDisclosureVersion` trong `lib/core/logic/wr_ai_disclosure.dart`.
 ///
-/// Lên 2 ngày 09/09/2026: bản công bố thêm luồng Báo cáo khảo sát gửi hồ sơ
-/// nghề nghiệp + điểm sang Gemini. Ai đồng ý bản 1 sẽ được hỏi lại — đó là ý
-/// đồ, vì họ đồng ý cho một danh sách ngắn hơn.
-export const AI_DISCLOSURE_VERSION = 2;
+/// Lên 3 ngày 09/09/2026, hai lần trong một ngày: (2) bản công bố thêm luồng
+/// Báo cáo khảo sát; (3) bỏ OpenRouter và DeepSeek, mọi thứ gọi thẳng Google.
+/// Đổi danh sách bên nhận là đổi thứ người dùng đã đồng ý, nên phải hỏi lại.
+export const AI_DISCLOSURE_VERSION = 3;
 
 /// Câu báo cho người dùng khi chưa đồng ý.
 ///

@@ -36,15 +36,19 @@ import { createClient } from "jsr:@supabase/supabase-js@2";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
+const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY");
 
-const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1/chat/completions";
-const MODEL_NAME = "google/gemini-3.1-flash-lite-preview";
+// 09/09/2026: gọi thẳng Google thay vì qua OpenRouter — tài khoản OpenRouter
+// hết credit. Endpoint tương thích OpenAI nên thân yêu cầu giữ nguyên.
+const GEMINI_BASE_URL =
+  "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
+const MODEL_NAME = "gemini-3.1-flash-lite";
 const REQUEST_TIMEOUT_MS = 30_000;
 
 /// Phải khớp `kWrAiDisclosureVersion` trong `lib/core/logic/wr_ai_disclosure.dart`.
-/// Lên 2 ngày 09/09/2026 khi bản công bố thêm chính luồng này.
-const AI_DISCLOSURE_VERSION = 2;
+/// Lên 3 ngày 09/09/2026: thêm luồng này, rồi bỏ OpenRouter/DeepSeek khỏi danh
+/// sách bên nhận vì đã gọi thẳng Google.
+const AI_DISCLOSURE_VERSION = 3;
 
 const AI_CONSENT_REQUIRED_MESSAGE =
   "Bạn chưa cho phép gửi dữ liệu sang dịch vụ AI. Vào Tài khoản → Xử lý dữ " +
@@ -280,16 +284,19 @@ async function handleGenerate(
   try {
     const userPrompt = buildUserPrompt(section, userContext, scoreContext, defaultContent);
 
-    const openRouterRes = await fetch(OPENROUTER_BASE_URL, {
+    const openRouterRes = await fetch(GEMINI_BASE_URL, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+        Authorization: `Bearer ${GEMINI_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
         model: MODEL_NAME,
         response_format: { type: "json_object" },
         temperature: 0.7,
+        // Tắt phần "nghĩ trước khi trả lời" của Gemini 3.x: nó đếm vào
+        // max_tokens và ở đây chỉ là việc viết lại câu chữ có sẵn.
+        reasoning_effort: "none",
         messages: [
           { role: "system", content: SYSTEM_PROMPT },
           { role: "user", content: userPrompt },
@@ -302,13 +309,13 @@ async function handleGenerate(
 
     if (!openRouterRes.ok) {
       const errorBody = await openRouterRes.text();
-      console.error("[ai-personalize] OpenRouter error:", errorBody);
+      console.error("[ai-personalize] Gemini error:", errorBody);
 
       await supabaseAdmin
         .from("cc_ai_personalization_cache")
         .update({
           status: "failed",
-          error_message: `OpenRouter API error: ${openRouterRes.status}`,
+          error_message: `Gemini API error: ${openRouterRes.status}`,
           updated_at: new Date().toISOString(),
         })
         .eq("report_id", reportId)
@@ -324,7 +331,7 @@ async function handleGenerate(
     const rawContent = openRouterData?.choices?.[0]?.message?.content;
 
     if (!rawContent) {
-      console.error("[ai-personalize] No content in OpenRouter response:", openRouterData);
+      console.error("[ai-personalize] No content in Gemini response:", openRouterData);
 
       await supabaseAdmin
         .from("cc_ai_personalization_cache")
@@ -442,8 +449,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    if (!OPENROUTER_API_KEY) {
-      return jsonResponse({ error: "OPENROUTER_API_KEY is not configured" }, 500);
+    if (!GEMINI_API_KEY) {
+      return jsonResponse({ error: "GEMINI_API_KEY is not configured" }, 500);
     }
 
     const body = await req.json();

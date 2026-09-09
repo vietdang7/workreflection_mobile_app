@@ -6,7 +6,7 @@
 // ---------------------------------------------------------------------------
 // CÁCH CHẠY
 //
-//   OPENROUTER_API_KEY=sk-or-v1-... \
+//   GEMINI_API_KEY=AIza... \
 //     deno run --allow-net --allow-env --allow-read \
 //     supabase/functions/wr-chat/spec_audit_manual.ts
 //
@@ -28,12 +28,12 @@ const { buildSystemPrompt } = await import(`${HERE}system_prompt.ts`);
 const { buildUserContext } = await import(`${HERE}user_context.ts`);
 const { shapeReply } = await import(`${HERE}reply_shaping.ts`);
 
-const KEY = Deno.env.get('OPENROUTER_API_KEY');
+const KEY = Deno.env.get('GEMINI_API_KEY');
 if (!KEY) {
-  console.error('Thiếu OPENROUTER_API_KEY.');
+  console.error('Thiếu GEMINI_API_KEY.');
   Deno.exit(2);
 }
-const MODEL = Deno.env.get('WR_CHAT_MODEL') ?? 'deepseek/deepseek-v4-flash-0731';
+const MODEL = Deno.env.get('WR_CHAT_MODEL') ?? 'gemini-3.1-flash-lite';
 
 // ── Người dùng mẫu, đủ chất liệu cho cả hai gói ────────────────────────────
 function daysAgo(n: number) {
@@ -125,7 +125,7 @@ async function run(premium: boolean, script: string[], justReflected = false) {
   let last = { text: '', action: null as string | null };
   for (const u of script) {
     turns.push({ role: 'user', content: u });
-    const r = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    const r = await fetch('https://generativelanguage.googleapis.com/v1beta/openai/chat/completions', {
       method: 'POST',
       headers: { Authorization: `Bearer ${KEY}`, 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -136,7 +136,7 @@ async function run(premium: boolean, script: string[], justReflected = false) {
         ],
         temperature: 0.7,
         max_tokens: 400,
-        reasoning: { enabled: false },
+        reasoning_effort: 'none',
       }),
     });
     if (!r.ok) throw new Error(`HTTP ${r.status}`);
