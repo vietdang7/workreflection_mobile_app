@@ -11,7 +11,13 @@ chữ nghĩa để dán vào.
 
 ---
 
-## 0. Đường găng: Paid Apps Agreement đang là `New`
+## 0. Đường găng: Paid Apps Agreement — ĐÃ XONG 09/09/2026
+
+> **Cập nhật 09/09/2026:** mở lại Business → Agreements thấy **Paid Apps
+> Agreement Active** (hiệu lực 8/9/2026 – 15/8/2027). Ngân hàng CONG TY TNHH
+> CLOUD & CORAL (0979) VND Active, W-8BEN-E + Substitute W-8BEN-E nộp 8/9
+> Active, Digital Services Act Active. Chặn cứng dưới đây đã gỡ; phần còn lại
+> giữ nguyên để tra cứu.
 
 Mở Business → Agreements ngày 08/09/2026 thấy:
 
@@ -42,7 +48,26 @@ dài nhất trong toàn bộ danh sách — nên bắt đầu trước mọi vi�
 
 ---
 
-## 1. Khai hai gói trên App Store Connect
+## 1. Khai hai gói trên App Store Connect — ĐÃ KHAI 09/09/2026
+
+> **Đã làm 09/09:** nhóm `WorkReflection Premium` (Group ID `22370264`) và hai
+> gói bên dưới. Trạng thái cả hai: **Prepare for Submission**.
+>
+> | Gói | Apple ID | Product ID | Duration | Giá VN | Phạm vi |
+> |---|---|---|---|---|---|
+> | Premium 1 nam | `6810036011` | `…premium.yearly` | 1 year | ₫499.000 | 175 nước |
+> | Premium 1 thang | `6810037556` | `…premium.monthly` | 1 month | ₫70.000 | 175 nước |
+>
+> Cả hai bậc giá có sẵn **đúng số** — không phải chọn bậc gần đúng. Giá các nước
+> khác Apple tự quy đổi (US $14.99/năm · $1.99/tháng). Localization Vietnamese
+> đã khai cho cả hai; mô tả phải rút còn **≤55 ký tự** (ô Description của Apple
+> giới hạn vậy), nên dùng câu ngắn chứ không phải đoạn dài ghi ở dưới. Reference
+> Name để không dấu (`Premium 1 nam`/`Premium 1 thang`) vì đó là tên nội bộ; tên
+> người dùng thấy nằm ở Localization và có dấu đầy đủ.
+>
+> **Còn thiếu đúng một thứ: ảnh chụp màn Paywall** ở mục Review Information của
+> *mỗi* gói. Không có ảnh thì gói không lên được "Ready to Submit". Phải chụp
+> trên máy thật hoặc Simulator — xem mục "Ảnh chụp màn hình để duyệt" bên dưới.
 
 Hiện **chưa có Subscription Group nào** (kiểm 08/09). Đường đi:
 App Store Connect → WorkReflection → Distribution → Subscriptions.
@@ -329,16 +354,23 @@ Account > Xử lý dữ liệu bằng AI.
 
 ## 4. Thứ tự làm, không đảo được
 
-1. Khách ký **Paid Apps Agreement** + khai thuế + khai ngân hàng → chờ Active.
-   *(Bắt đầu ngay hôm nay; các bước sau đứng chờ bước này.)*
-2. Merge PR #50 repo web → deploy → mở
-   `workreflection.app/privacy-policy` kiểm bằng mắt.
-3. Merge PR #16 repo app.
+1. ~~Khách ký **Paid Apps Agreement** + khai thuế + khai ngân hàng~~ → **Active
+   09/09/2026.**
+2. ~~Merge PR #50 repo web → deploy → mở
+   `workreflection.app/privacy-policy` kiểm bằng mắt.~~ **Xong 09/09 qua PR #51.**
+   PR #50 merge rồi phải revert: Vercel **chặn deploy khi người merge không có
+   vai trò contributing trong project** — commit vào được `main` nhưng bản deploy
+   đứng ở trạng thái `Blocked`, trang live vẫn là bản cũ mà GitHub không báo gì.
+   Mở lại thành PR #51 cho người có quyền merge; deploy `55f8d89` success, đã
+   kiểm tận mắt hai câu mới trên trang.
+3. ~~Merge PR #16 repo app~~ → **đã merge 09/09** (commit `4029004`).
 4. Khai Subscription Group + 2 gói (**Auto-Renewable**), đủ ảnh và mô tả, tới
    trạng thái **Ready to Submit**. *(Địa chỉ App Store Server Notifications ở
-   mục 2b đã khai xong 08/09.)*
+   mục 2b đã khai xong 08/09.)* — **khai xong 09/09 trừ ảnh Paywall**, xem mục 1.
 5. Gỡ Premium khỏi tài khoản demo, xoá hàng consent của tài khoản đó.
-6. Chạy Codemagic bản `FORCE_STORE_POLICY=app_store` → TestFlight.
+6. ~~Chạy Codemagic bản `FORCE_STORE_POLICY=app_store` → TestFlight.~~ **Xong
+   09/09:** build #7 (`iOS · TestFlight`, main, commit `4029004`) xanh hết bước,
+   IPA 32.57 MB, đã đẩy lên TestFlight thành **1.0.0 (7)**.
 7. **Chạy thử sandbox trên máy thật** — bước duy nhất kiểm được biên lai Apple
    thật, chưa ai làm được từ xa:
    - tạo Sandbox Tester, cài bản TestFlight, đăng nhập tài khoản sandbox
@@ -360,10 +392,9 @@ Account > Xử lý dữ liệu bằng AI.
 
 ## 5. Việc ngoài lần từ chối này, nhưng nên biết
 
-Trang Business đang có băng đỏ: **chưa khai thông tin trader theo Digital
-Services Act**. Không liên quan lần từ chối này, nhưng chưa khai thì app không
-bán được ở Liên minh châu Âu. Nếu chỉ nhắm thị trường Việt Nam thì để sau cũng
-được.
+~~Trang Business đang có băng đỏ: **chưa khai thông tin trader theo Digital
+Services Act**.~~ **Đã khai xong** — kiểm 09/09, Digital Services Act (27 nước)
+trạng thái Active.
 
 Mục **App Privacy** đã publish (7 loại dữ liệu, đều "App Functionality", không
 có mục theo dõi quảng cáo) — kiểm 08/09, không phải sửa gì.

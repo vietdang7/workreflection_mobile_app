@@ -32,7 +32,12 @@ import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 /// PHẢI khớp `kWrAiDisclosureVersion` trong
 /// `lib/core/logic/wr_ai_disclosure.dart`. Lệch số là lệch luôn ý nghĩa của
 /// chữ "đã đồng ý": app nghĩ người dùng đã đọc bản mới, máy chủ nghĩ chưa.
-export const AI_DISCLOSURE_VERSION = 1;
+/// Phải khớp `kWrAiDisclosureVersion` trong `lib/core/logic/wr_ai_disclosure.dart`.
+///
+/// Lên 2 ngày 09/09/2026: bản công bố thêm luồng Báo cáo khảo sát gửi hồ sơ
+/// nghề nghiệp + điểm sang Gemini. Ai đồng ý bản 1 sẽ được hỏi lại — đó là ý
+/// đồ, vì họ đồng ý cho một danh sách ngắn hơn.
+export const AI_DISCLOSURE_VERSION = 2;
 
 /// Câu báo cho người dùng khi chưa đồng ý.
 ///
