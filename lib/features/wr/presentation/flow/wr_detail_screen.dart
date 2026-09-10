@@ -18,6 +18,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/data/wr_repository.dart';
+import '../../../../core/l10n/wr_tr.dart';
 import '../../../../core/logic/wr_flow_error.dart';
 import '../../../../core/logic/wr_reflect_flow.dart';
 import '../../../../core/logic/wr_situation_picker.dart';
@@ -96,7 +97,7 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
     } catch (e, s) {
       logFlowError('submitDetail', e, s);
       if (mounted) {
-        setState(() => _error = flowErrorMessage('Không lưu được. Thử lại.', e));
+        setState(() => _error = flowErrorMessage(tr('Không lưu được. Thử lại.', 'Could not save. Try again.'), e));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -180,7 +181,7 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
     }
 
     return WrFlowScaffold(
-      eyebrow: hasStory ? 'Một câu chuyện quen thuộc' : 'Chi tiết cụ thể',
+      eyebrow: hasStory ? tr('Một câu chuyện quen thuộc', 'A familiar story') : tr('Chi tiết cụ thể', 'The specifics'),
       // Changelog §1.1: đoạn giải thích chỉ có ở nhánh CÓ câu chuyện. Nhánh
       // "Điều khác" không mượn chuyện của ai nên không có gì để chuẩn hoá.
       eyebrowNote: hasStory ? kFamiliarStoryIntro : null,
@@ -201,7 +202,7 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
       onClose: _leave,
       // Luôn bật. §V: bước này không bắt buộc, nên khoá nút khi ô trống là biến
       // một bước tuỳ chọn thành bắt buộc.
-      primaryLabel: 'Tiếp tục',
+      primaryLabel: tr('Tiếp tục', 'Continue'),
       busy: _busy,
       onPrimary: _continue,
       child: Column(
@@ -241,7 +242,7 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 14),
-            const WrParagraph(
+            WrParagraph(
               kStoryDetailInvite,
               key: Key('wr_detail_invite'),
               style: TextStyle(
@@ -268,13 +269,14 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
           ),
           if (needsLink && (_fallbackChoices?.isNotEmpty ?? false)) ...[
             const SizedBox(height: 24),
-            const WrEyebrow('GẦN NHẤT VỚI ĐIỀU NÀO?'),
+            WrEyebrow(tr('GẦN NHẤT VỚI ĐIỀU NÀO?', 'CLOSEST TO WHICH ONE?')),
             const SizedBox(height: 6),
-            const WrParagraph(
+            WrParagraph(
               // Nói thẳng chọn để làm gì. Một câu hỏi không có lý do thì đọc ra
               // như phần mềm đang ép phân loại điều vừa kể.
-              'Chọn một điều để lần này được tính vào phần lặp lại của bạn. '
-              'Bỏ qua cũng không sao.',
+              tr('Chọn một điều để lần này được tính vào phần lặp lại của bạn. '
+              'Bỏ qua cũng không sao.', 'Pick one so this time counts towards what repeats for you. '
+              'Skipping is fine too.'),
               style: TextStyle(
                 fontSize: 13.5,
                 color: WrColors.text3,

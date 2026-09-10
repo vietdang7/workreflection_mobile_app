@@ -16,6 +16,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/data/wr_repository.dart';
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_link_row.dart';
@@ -59,7 +60,7 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
       ref.invalidate(wrGrowthOpportunityProvider);
       if (mounted) setState(() => _saved = true);
     } catch (_) {
-      if (mounted) setState(() => _error = 'Không lưu được. Thử lại.');
+      if (mounted) setState(() => _error = tr('Không lưu được. Thử lại.', 'Could not save. Try again.'));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -82,8 +83,8 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
         backgroundColor: WrColors.pageBg,
         elevation: 0,
         foregroundColor: WrColors.navy,
-        title: const Text(
-          'Thông tin công việc',
+        title: Text(
+          tr('Thông tin công việc', 'Work details'),
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w700,
@@ -95,9 +96,10 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(22, 8, 22, 32),
           children: [
-            const WrParagraph(
-              'Chia sẻ vai trò hiện tại của bạn. Dựa vào đây, các bài thực hành '
-              'sẽ được phác thảo riêng cho công việc của bạn.',
+            WrParagraph(
+              tr('Chia sẻ vai trò hiện tại của bạn. Dựa vào đây, các bài thực hành '
+              'sẽ được phác thảo riêng cho công việc của bạn.', 'Tell us about your current role. From this, the practice exercises '
+              'are shaped around the job you actually do.'),
               style: TextStyle(
                 fontSize: 14.5,
                 height: 1.65,
@@ -106,7 +108,7 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
             ),
             const SizedBox(height: 20),
 
-            const WrEyebrow('VỊ TRÍ / CHỨC DANH HIỆN TẠI'),
+            WrEyebrow(tr('VỊ TRÍ / CHỨC DANH HIỆN TẠI', 'CURRENT ROLE / JOB TITLE')),
             const SizedBox(height: 10),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -125,11 +127,12 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
                   color: WrColors.navy,
                   height: 1.6,
                 ),
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   border: InputBorder.none,
                   hintText:
-                      'Ví dụ: trưởng nhóm nội dung, quản lý 4 bạn, làm việc '
-                      'nhiều với phòng kinh doanh',
+                      tr('Ví dụ: trưởng nhóm nội dung, quản lý 4 bạn, làm việc '
+                      'nhiều với phòng kinh doanh', 'For example: content team lead, managing 4 people, '
+                      'working closely with sales'),
                   hintStyle: TextStyle(fontSize: 15.5, color: WrColors.muted),
                 ),
                 onChanged: (_) => setState(() => _saved = false),
@@ -151,7 +154,7 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
                   elevation: 0,
                 ),
                 child: Text(
-                  _busy ? 'Đang lưu…' : 'Lưu',
+                  _busy ? tr('Đang lưu…', 'Saving…') : tr('Lưu', 'Save'),
                   style: const TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w600,
@@ -161,8 +164,8 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
             ),
             if (_saved) ...[
               const SizedBox(height: 10),
-              const Text(
-                'Đã lưu.',
+              Text(
+                tr('Đã lưu.', 'Saved.'),
                 key: Key('wr_work_info_saved'),
                 style: TextStyle(fontSize: 13.5, color: WrColors.teal),
               ),
@@ -176,11 +179,12 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
             ],
 
             const SizedBox(height: 28),
-            const WrEyebrow('TÀI LIỆU CHI TIẾT'),
+            WrEyebrow(tr('TÀI LIỆU CHI TIẾT', 'DETAILED DOCUMENTS')),
             const SizedBox(height: 6),
-            const Text(
-              'Tải lên file JD (Mô tả công việc) hoặc CV để hệ thống có thêm dữ '
-              'liệu phân tích. (Không bắt buộc)',
+            Text(
+              tr('Tải lên file JD (Mô tả công việc) hoặc CV để hệ thống có thêm dữ '
+              'liệu phân tích. (Không bắt buộc)', 'Upload a JD (job description) or CV so the app has more to work '
+              'with. (Optional)'),
               style: TextStyle(
                 fontSize: 14.5,
                 height: 1.65,
@@ -189,7 +193,7 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
             ),
             WrLinkRow(
               key: const Key('wr_work_info_context_docs_row'),
-              label: 'Tải lên JD hoặc CV của bạn',
+              label: tr('Tải lên JD hoặc CV của bạn', 'Upload your JD or CV'),
               onTap: () => context.push('/wr/context-docs'),
             ),
 
@@ -225,16 +229,17 @@ class _JdBuilderCard extends ConsumerWidget {
     final complete = draft?.isComplete ?? false;
 
     final title = switch ((complete, done)) {
-      (true, _) => 'JD bạn đã viết',
-      (_, 0) => 'Nếu chưa có sẵn JD, bạn có thể tự phác thảo nhanh theo 5 bước '
-          'hướng dẫn',
-      _ => 'Viết tiếp JD của bạn',
+      (true, _) => tr('JD bạn đã viết', 'The JD you wrote'),
+      (_, 0) => tr('Nếu chưa có sẵn JD, bạn có thể tự phác thảo nhanh theo 5 bước '
+          'hướng dẫn', 'No JD to hand? You can sketch one quickly in 5 guided steps'),
+      _ => tr('Viết tiếp JD của bạn', 'Carry on writing your JD'),
     };
     final hint = switch ((complete, done)) {
-      (true, _) => 'Đã xong cả 5 bước. Mở lại để đọc và sửa.',
-      (_, 0) => 'Mỗi bước chỉ mất 2–3 phút, bạn có thể dừng lại và quay lại làm '
-          'tiếp bất cứ lúc nào.',
-      _ => 'Đã xong $done trên $kJdDayCount bước',
+      (true, _) => tr('Đã xong cả 5 bước. Mở lại để đọc và sửa.', 'All 5 steps done. Reopen it to read and edit.'),
+      (_, 0) => tr('Mỗi bước chỉ mất 2–3 phút, bạn có thể dừng lại và quay lại làm '
+          'tiếp bất cứ lúc nào.', 'Each step takes 2–3 minutes, and you can stop and come back at '
+          'any time.'),
+      _ => tr('Đã xong $done trên $kJdDayCount bước', '$done of $kJdDayCount steps done'),
     };
 
     return GestureDetector(

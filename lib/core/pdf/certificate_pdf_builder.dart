@@ -101,11 +101,11 @@ class CertificatePdfBuilder {
     final isVi = d.locale == 'vi';
 
     // Localised strings
-    final certifiesLine = 'This is to certify that / Chứng nhận rằng';
-    final attendedLine =
+    const certifiesLine = 'This is to certify that / Chứng nhận rằng';
+    const attendedLine =
         'has successfully completed the workshop / Đã tham dự thành công';
-    final facilitator = 'Facilitator';
-    final orgName = 'Cloud & Coral';
+    const facilitator = 'Facilitator';
+    const orgName = 'Cloud & Coral';
     final footerText = isVi
         ? 'Cloud & Coral  |  Nền tảng phát triển tổ chức  |  www.cloudandcoral.com'
         : 'Cloud & Coral  |  Work Reflection Platform  |  www.cloudandcoral.com';

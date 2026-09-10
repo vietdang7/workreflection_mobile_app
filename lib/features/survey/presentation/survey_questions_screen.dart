@@ -535,10 +535,10 @@ class _MicButton extends ConsumerWidget {
       icon: AnimatedSwitcher(
         duration: const Duration(milliseconds: 200),
         child: isListening
-            ? _PulsingMicIcon(key: const ValueKey('listening'))
-            : Icon(
+            ? const _PulsingMicIcon(key: ValueKey('listening'))
+            : const Icon(
                 Icons.mic_none_outlined,
-                key: const ValueKey('idle'),
+                key: ValueKey('idle'),
                 color: WrColors.navy,
               ),
       ),

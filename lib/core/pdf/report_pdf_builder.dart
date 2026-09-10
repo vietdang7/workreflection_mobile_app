@@ -250,9 +250,9 @@ class ReportPdfBuilder {
           // Total score box
           pw.Container(
             padding: const pw.EdgeInsets.all(20),
-            decoration: pw.BoxDecoration(
+            decoration: const pw.BoxDecoration(
               color: _navyLight,
-              borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
+              borderRadius: pw.BorderRadius.all(pw.Radius.circular(8)),
             ),
             child: pw.Row(
               crossAxisAlignment: pw.CrossAxisAlignment.center,
@@ -473,9 +473,9 @@ class ReportPdfBuilder {
   }) {
     return pw.Container(
       padding: const pw.EdgeInsets.all(16),
-      decoration: pw.BoxDecoration(
+      decoration: const pw.BoxDecoration(
         color: _navyLight,
-        borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
+        borderRadius: pw.BorderRadius.all(pw.Radius.circular(8)),
       ),
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,

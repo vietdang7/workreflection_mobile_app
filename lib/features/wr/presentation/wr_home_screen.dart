@@ -55,6 +55,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/vn_date.dart';
 import '../../../core/logic/wr_display_name.dart';
 import '../../../core/logic/wr_home_surface.dart';
@@ -110,22 +111,26 @@ typedef CheckinOption = ({
 ///
 /// Lưới ở `_CheckinQuestion` cắt hai ô một hàng nên sáu ô tự thành 3×2, không
 /// cần đổi gì ở đó.
-const List<CheckinOption> kCheckinOptions = [
+/// KHÔNG còn `const`: nhãn đi qua `tr()`, mà `tr()` đọc ngôn ngữ hiện tại nên
+/// không phải hằng biên dịch. Đổi thành getter chứ không thành biến `final` ở
+/// tầng file: biến `final` chốt ngôn ngữ tại lần đọc ĐẦU TIÊN, nên người đổi
+/// ngôn ngữ trong Tài khoản sẽ thấy sáu ô check-in vẫn nguyên tiếng cũ.
+List<CheckinOption> get kCheckinOptions => [
   (
     id: 'stress',
-    label: 'Tôi đang\ncăng thẳng',
+    label: tr('Tôi đang\ncăng thẳng', 'I feel\ntense'),
     energy: CheckinEnergy.low,
     mood: Mood.stressed,
   ),
   (
     id: 'tired',
-    label: 'Tôi mệt mỏi\ncần nghỉ ngơi',
+    label: tr('Tôi mệt mỏi\ncần nghỉ ngơi', 'I am tired\nand need rest'),
     energy: CheckinEnergy.low,
     mood: Mood.tired,
   ),
   (
     id: 'foggy',
-    label: 'Tôi thấy\nmơ hồ',
+    label: tr('Tôi thấy\nmơ hồ', 'I feel\nunclear'),
     // Mơ hồ không phải mệt: người không rõ việc mình đang làm vẫn có thể còn
     // đủ sức. Ghi `ok` để thẻ năng lượng không tụt oan mỗi lần họ nói ra điều
     // này.
@@ -134,14 +139,14 @@ const List<CheckinOption> kCheckinOptions = [
   ),
   (
     id: 'outofsync',
-    label: 'Tôi thấy mọi\nthứ lệch nhau',
+    label: tr('Tôi thấy mọi\nthứ lệch nhau', 'Things feel\nout of sync'),
     energy: CheckinEnergy.ok,
     mood: Mood.outofsync,
   ),
-  (id: 'ok', label: 'Tôi\nkhá ổn', energy: CheckinEnergy.ok, mood: Mood.okay),
+  (id: 'ok', label: tr('Tôi\nkhá ổn', 'I am\ndoing okay'), energy: CheckinEnergy.ok, mood: Mood.okay),
   (
     id: 'happy',
-    label: 'Tôi\nđang vui',
+    label: tr('Tôi\nđang vui', 'I am\nfeeling good'),
     energy: CheckinEnergy.good,
     mood: Mood.happy,
   ),
@@ -150,14 +155,24 @@ const List<CheckinOption> kCheckinOptions = [
 class WrHomeScreen extends ConsumerWidget {
   const WrHomeScreen({super.key});
 
-  static const _weekdays = [
-    'Thứ Hai',
-    'Thứ Ba',
-    'Thứ Tư',
-    'Thứ Năm',
-    'Thứ Sáu',
-    'Thứ Bảy',
-    'Chủ Nhật',
+  static List<String> get _weekdays => [
+        tr('Thứ Hai', 'Monday'),
+        tr('Thứ Ba', 'Tuesday'),
+        tr('Thứ Tư', 'Wednesday'),
+        tr('Thứ Năm', 'Thursday'),
+        tr('Thứ Sáu', 'Friday'),
+        tr('Thứ Bảy', 'Saturday'),
+        tr('Chủ Nhật', 'Sunday'),
+      ];
+
+  /// Tên tháng cho bản tiếng Anh.
+  ///
+  /// Dòng này là LỜI CHÀO, đọc thành câu — nên bản tiếng Anh cũng phải là
+  /// "Tuesday, June 24", không phải "Tuesday, 24/6". Dạng gạch chéo là ngôn
+  /// ngữ của bảng dữ liệu, để dành cho "Saved 20/06" ở thẻ Insight.
+  static const _monthsEn = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December',
   ];
 
   /// `Thứ Ba, 24 tháng 6` — nguyên văn khuôn ngày của mockup.
@@ -166,7 +181,11 @@ class WrHomeScreen extends ConsumerWidget {
   /// ngôn ngữ của bảng dữ liệu, để dành cho "Lưu ngày 20/06" ở thẻ Insight.
   String _dateLabel() {
     final now = todayVn();
-    return '${_weekdays[now.weekday - 1]}, ${now.day} tháng ${now.month}';
+    final day = _weekdays[now.weekday - 1];
+    return tr(
+      '$day, ${now.day} tháng ${now.month}',
+      '$day, ${_monthsEn[now.month - 1]} ${now.day}',
+    );
   }
 
   @override
@@ -307,10 +326,10 @@ class _CheckinQuestion extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-        const Text(
+        Text(
           // Nguyên văn mockup Sprint 2 §screenHome, cỡ chữ `.h2` = 15.5px.
-          'Ngày hôm nay của bạn như thế nào?',
-          style: TextStyle(
+          tr('Ngày hôm nay của bạn như thế nào?', 'How has your day been?'),
+          style: const TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w700,
             color: WrColors.navy,
@@ -347,13 +366,14 @@ class _CheckinQuestion extends ConsumerWidget {
           ),
         ],
         const SizedBox(height: 12),
-        const SizedBox(
+        SizedBox(
           width: double.infinity,
           child: Text(
-            'Chọn cảm xúc sát nhất với bạn lúc này để bắt đầu nhìn lại '
-            '(Reflection).',
+            tr('Chọn cảm xúc sát nhất với bạn lúc này để bắt đầu nhìn lại '
+            '(Reflection).', 'Pick the feeling closest to you right now to start looking back '
+            '(Reflection).'),
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 12.5,
               color: WrColors.text3,
               height: 1.5,
@@ -508,7 +528,7 @@ class _ProfileNudgeCard extends ConsumerWidget {
           // trống" mà không cần thêm chữ nào.
           DottedBorderBox(
             child: Text(
-              'Cho mình biết bạn đi làm được bao lâu để những gợi ý sát hơn nhé',
+              tr('Cho mình biết bạn đi làm được bao lâu để những gợi ý sát hơn nhé', 'Tell us how long you have been working so the prompts fit you better'),
               style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
@@ -535,9 +555,9 @@ class _ProfileNudgeCard extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Điền ngay',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  child: Text(
+                    tr('Điền ngay', 'Fill in now'),
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -555,9 +575,9 @@ class _ProfileNudgeCard extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
-                    'Bỏ qua',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+                  child: Text(
+                    tr('Bỏ qua', 'Skip'),
+                    style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
                   ),
                 ),
               ),
@@ -697,13 +717,14 @@ class _UnfinishedReflectionCard extends ConsumerWidget {
     // của người dùng, nó đọc thành lời chê. Giọng của app là mời, không chấm.
     final (eyebrow, line) = open != null
         ? (
-            'ĐANG BỎ NGỎ',
-            'Bạn đang có một câu chuyện chưa hoàn thành. Tiếp tục viết tiếp '
-            'từ chỗ dừng lại nhé!',
+            tr('ĐANG BỎ NGỎ', 'STILL OPEN'),
+            tr('Bạn đang có một câu chuyện chưa hoàn thành. Tiếp tục viết tiếp '
+            'từ chỗ dừng lại nhé!', 'You have a story you never finished. Pick it up from where you '
+            'left off.'),
           )
         : (
-            'CÒN MỘT BƯỚC NỮA',
-            'Bạn đã ghi cảm xúc hôm nay, nhưng chưa chọn điều muốn nhìn lại.',
+            tr('CÒN MỘT BƯỚC NỮA', 'ONE STEP LEFT'),
+            tr('Bạn đã ghi cảm xúc hôm nay, nhưng chưa chọn điều muốn nhìn lại.', 'You logged how you feel today, but have not chosen what to look back on.'),
           );
 
     return Padding(
@@ -790,7 +811,7 @@ class _SystemNoticeCard extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               WrEyebrow(
-                'HỆ THỐNG NHẬN RA',
+                tr('HỆ THỐNG NHẬN RA', 'WHAT THE APP NOTICED'),
                 color: WrColors.cream.withValues(alpha: 0.55),
               ),
               const SizedBox(height: 6),
@@ -937,21 +958,21 @@ class _MoodContentSection extends ConsumerWidget {
               onTap: () => context.push('/wr/mood-library'),
               // Mũi tên dùng Icon chứ không dùng ký tự "→": font chữ của app
               // không chắc có glyph U+2192, thiếu là ra ô vuông rỗng.
-              child: const Padding(
-                padding: EdgeInsets.symmetric(vertical: 10),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Xem thêm gợi ý trong thư viện',
-                      style: TextStyle(
+                      tr('Xem thêm gợi ý trong thư viện', 'See more prompts in the library'),
+                      style: const TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w700,
                         color: WrColors.navy,
                       ),
                     ),
-                    SizedBox(width: 4),
-                    Icon(Icons.arrow_forward, size: 12, color: WrColors.navy),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.arrow_forward, size: 12, color: WrColors.navy),
                   ],
                 ),
               ),
@@ -981,19 +1002,20 @@ class _LatestInsightSection extends ConsumerWidget {
     // người cần thấy nhất rằng Home sẽ có gì. Ẩn đi thì màn của họ chỉ còn lưới
     // check-in, và chỗ này im lặng cho tới tận lần phản tư đầu tiên.
     if (insight == null) {
-      return const Padding(
-        key: Key('wr_home_latest_insight_empty'),
-        padding: EdgeInsets.only(top: 14),
+      return Padding(
+        key: const Key('wr_home_latest_insight_empty'),
+        padding: const EdgeInsets.only(top: 14),
         child: WrCardMinimal(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              WrEyebrow('INSIGHT GẦN NHẤT'),
-              SizedBox(height: 6),
+              WrEyebrow(tr('INSIGHT GẦN NHẤT', 'LATEST INSIGHT')),
+              const SizedBox(height: 6),
               WrParagraph(
-                'Hãy bắt đầu với check-in cảm xúc để chia sẻ câu chuyện '
-                'đầu tiên',
-                style: TextStyle(
+                tr('Hãy bắt đầu với check-in cảm xúc để chia sẻ câu chuyện '
+                'đầu tiên', 'Start with an emotion check-in to share your first '
+                'story'),
+                style: const TextStyle(
                   fontSize: 14,
                   color: WrColors.text2,
                   height: 1.6,
@@ -1008,8 +1030,9 @@ class _LatestInsightSection extends ConsumerWidget {
     final at = insight.createdAt;
     final saved = at == null
         ? null
-        : 'Lưu ngày ${at.day.toString().padLeft(2, '0')}/'
-              '${at.month.toString().padLeft(2, '0')}';
+        : tr('Lưu ngày ${at.day.toString().padLeft(2, '0')}/'
+              '${at.month.toString().padLeft(2, '0')}', 'Saved ${at.day.toString().padLeft(2, '0')}/'
+              '${at.month.toString().padLeft(2, '0')}');
 
     return Padding(
       key: const Key('wr_home_latest_insight'),
@@ -1023,7 +1046,7 @@ class _LatestInsightSection extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             WrEyebrow(
-              'INSIGHT GẦN NHẤT',
+              tr('INSIGHT GẦN NHẤT', 'LATEST INSIGHT'),
               color: WrColors.cream.withValues(alpha: 0.55),
             ),
             const SizedBox(height: 6),
@@ -1078,8 +1101,8 @@ class _LatestInsightSection extends ConsumerWidget {
 /// Dòng mời tiếp tục, đúng khuôn câu của mockup.
 String _continueLabel(PendingPracticeStep pending) {
   final stage = practiceStageLabel(pending.step.stepOrder);
-  final tail = stage == null ? pending.step.title : 'bước $stage đang chờ';
-  return 'Chủ đề "${pending.theme.title}": $tail';
+  final tail = stage == null ? pending.step.title : tr('bước $stage đang chờ', 'step $stage waiting');
+  return tr('Chủ đề "${pending.theme.title}": $tail', 'Theme "${pending.theme.title}": $tail');
 }
 
 class _ContinueTodaySection extends ConsumerWidget {
@@ -1092,7 +1115,7 @@ class _ContinueTodaySection extends ConsumerWidget {
     // Chưa theo chủ đề nào: cùng một khối, cùng một chỗ, đổi lời và đổi điểm
     // đến sang danh sách chủ đề.
     final label = pending == null
-        ? 'Chưa có chủ đề nào đang theo. Chọn một chủ đề để bắt đầu.'
+        ? tr('Chưa có chủ đề nào đang theo. Chọn một chủ đề để bắt đầu.', 'No theme in progress yet. Pick one to get started.')
         : _continueLabel(pending);
     final route = pending == null
         ? '/wr/growth/themes'
@@ -1107,7 +1130,7 @@ class _ContinueTodaySection extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const WrEyebrow('TIẾP TỤC HÔM NAY'),
+            WrEyebrow(tr('TIẾP TỤC HÔM NAY', 'CONTINUE TODAY')),
             const SizedBox(height: 6),
             GestureDetector(
               key: const Key('wr_home_continue_today_card'),

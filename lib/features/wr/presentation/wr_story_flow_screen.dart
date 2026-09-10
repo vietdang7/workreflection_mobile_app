@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/data/wr_content_repository.dart';
 import '../../../core/data/wr_intelligence_repository.dart';
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_career_profile.dart';
 import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_intelligence.dart';
@@ -14,13 +15,13 @@ import '../../../core/widgets/wr_paragraph.dart';
 // Phase order cho story flow
 enum _StoryPhase { story, aha, confidence, reflection, practice, memory }
 
-const _phaseLabels = {
-  _StoryPhase.story: 'Bạn có bao giờ?',
-  _StoryPhase.aha: 'Điều WorkReflection nhận ra',
-  _StoryPhase.confidence: 'Mức độ nhận ra',
-  _StoryPhase.reflection: 'Ghi lại suy nghĩ',
-  _StoryPhase.practice: 'Thực hành nhỏ',
-  _StoryPhase.memory: 'Phân loại trải nghiệm',
+dynamic get _phaseLabels => {
+  _StoryPhase.story: tr('Bạn có bao giờ?', 'Have you ever?'),
+  _StoryPhase.aha: tr('Điều WorkReflection nhận ra', 'What WorkReflection noticed'),
+  _StoryPhase.confidence: tr('Mức độ nhận ra', 'How much it lands'),
+  _StoryPhase.reflection: tr('Ghi lại suy nghĩ', 'Note your thoughts'),
+  _StoryPhase.practice: tr('Thực hành nhỏ', 'A small practice'),
+  _StoryPhase.memory: tr('Phân loại trải nghiệm', 'Name the experience'),
 };
 
 class WrStoryFlowScreen extends ConsumerStatefulWidget {
@@ -167,8 +168,8 @@ class _WrStoryFlowScreenState extends ConsumerState<WrStoryFlowScreen> {
       return Scaffold(
         body: Center(
           child: Column(mainAxisSize: MainAxisSize.min, children: [
-            const Text('Không có câu chuyện nào.'),
-            TextButton(onPressed: () => context.go('/home'), child: const Text('Về trang chủ')),
+            Text(tr('Không có câu chuyện nào.', 'No stories here.')),
+            TextButton(onPressed: () => context.go('/home'), child: Text(tr('Về trang chủ', 'Back to home'))),
           ]),
         ),
       );
@@ -288,12 +289,12 @@ class _PhaseStory extends StatelessWidget {
             minimumSize: const Size.fromHeight(48),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
-          child: const Text('Tôi cũng từng như vậy', style: TextStyle(fontWeight: FontWeight.w600)),
+          child: Text(tr('Tôi cũng từng như vậy', 'I have been there too'), style: TextStyle(fontWeight: FontWeight.w600)),
         ),
         const SizedBox(height: 12),
         TextButton(
           onPressed: onNotResonates,
-          child: const Text('Câu chuyện này không quen với tôi', style: TextStyle(color: WrColors.muted)),
+          child: Text(tr('Câu chuyện này không quen với tôi', 'This story is not familiar to me'), style: TextStyle(color: WrColors.muted)),
         ),
       ],
     );
@@ -318,7 +319,7 @@ class _PhaseAha extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: Border(left: BorderSide(color: WrColors.coral, width: 3)),
+              border: const Border(left: BorderSide(color: WrColors.coral, width: 3)),
               color: WrColors.navy.withValues(alpha: 0.04),
               borderRadius: BorderRadius.circular(8),
             ),
@@ -334,7 +335,7 @@ class _PhaseAha extends StatelessWidget {
             minimumSize: const Size.fromHeight(48),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
-          child: const Text('Tiếp tục', style: TextStyle(fontWeight: FontWeight.w600)),
+          child: Text(tr('Tiếp tục', 'Continue'), style: TextStyle(fontWeight: FontWeight.w600)),
         ),
       ],
     );
@@ -350,14 +351,14 @@ class _PhaseConfidence extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
       children: [
-        const Text('Điều này có liên quan đến bạn không?',
+        Text(tr('Điều này có liên quan đến bạn không?', 'Does this relate to you?'),
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: WrColors.dark, height: 1.4)),
         const SizedBox(height: 24),
-        _ConfidenceOption(label: 'Rất liên quan', onTap: () => onSelect(3)),
+        _ConfidenceOption(label: tr('Rất liên quan', 'Very much'), onTap: () => onSelect(3)),
         const SizedBox(height: 10),
-        _ConfidenceOption(label: 'Hơi liên quan', onTap: () => onSelect(2)),
+        _ConfidenceOption(label: tr('Hơi liên quan', 'Somewhat'), onTap: () => onSelect(2)),
         const SizedBox(height: 10),
-        _ConfidenceOption(label: 'Không liên quan', onTap: () => onSelect(1)),
+        _ConfidenceOption(label: tr('Không liên quan', 'Not really'), onTap: () => onSelect(1)),
       ],
     );
   }
@@ -403,7 +404,7 @@ class _PhaseReflectionState extends State<_PhaseReflection> {
 
   @override
   Widget build(BuildContext context) {
-    final question = widget.story.reflectionQuestion ?? 'Điều này gợi lên điều gì với bạn?';
+    final question = widget.story.reflectionQuestion ?? tr('Điều này gợi lên điều gì với bạn?', 'What does this bring up for you?');
     return ListView(
       padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
       children: [
@@ -422,7 +423,7 @@ class _PhaseReflectionState extends State<_PhaseReflection> {
           controller: _ctrl,
           maxLines: 5,
           decoration: InputDecoration(
-            hintText: 'Viết suy nghĩ của bạn...',
+            hintText: tr('Viết suy nghĩ của bạn...', 'Write what you are thinking...'),
             border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0x1A2C335D))),
             filled: true, fillColor: WrColors.white,
           ),
@@ -435,10 +436,10 @@ class _PhaseReflectionState extends State<_PhaseReflection> {
             minimumSize: const Size.fromHeight(48),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
-          child: const Text('Lưu và tiếp tục', style: TextStyle(fontWeight: FontWeight.w600)),
+          child: Text(tr('Lưu và tiếp tục', 'Save and continue'), style: TextStyle(fontWeight: FontWeight.w600)),
         ),
         const SizedBox(height: 10),
-        TextButton(onPressed: widget.onSkip, child: const Text('Bỏ qua', style: TextStyle(color: WrColors.muted))),
+        TextButton(onPressed: widget.onSkip, child: Text(tr('Bỏ qua', 'Skip'), style: TextStyle(color: WrColors.muted))),
       ],
     );
   }
@@ -473,10 +474,10 @@ class _PhasePractice extends StatelessWidget {
             minimumSize: const Size.fromHeight(48),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
-          child: const Text('Thêm vào lịch thực hành', style: TextStyle(fontWeight: FontWeight.w600)),
+          child: Text(tr('Thêm vào lịch thực hành', 'Add to my practice schedule'), style: TextStyle(fontWeight: FontWeight.w600)),
         ),
         const SizedBox(height: 10),
-        TextButton(onPressed: onSkip, child: const Text('Lần này bỏ qua', style: TextStyle(color: WrColors.muted))),
+        TextButton(onPressed: onSkip, child: Text(tr('Lần này bỏ qua', 'Skip this time'), style: TextStyle(color: WrColors.muted))),
       ],
     );
   }
@@ -487,11 +488,11 @@ class _PhaseMemory extends StatelessWidget {
   final bool saving;
   final ValueChanged<String> onSelect;
 
-  static const _options = [
-    ('reflection', 'Nhận ra điều gì đó'),
-    ('insight', 'Góc nhìn mới'),
-    ('discovery', 'Khám phá về mình'),
-    ('decision', 'Quyết định đã rõ'),
+  static List<(String, String)> get _options => [
+    ('reflection', tr('Nhận ra điều gì đó', 'Noticed something')),
+    ('insight', tr('Góc nhìn mới', 'A new angle')),
+    ('discovery', tr('Khám phá về mình', 'Learned about myself')),
+    ('decision', tr('Quyết định đã rõ', 'A decision became clear')),
   ];
 
   @override
@@ -500,7 +501,7 @@ class _PhaseMemory extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
       children: [
-        const Text('Trải nghiệm này thuộc loại nào?',
+        Text(tr('Trải nghiệm này thuộc loại nào?', 'What kind of experience was this?'),
             style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: WrColors.dark, height: 1.4)),
         const SizedBox(height: 20),
         GridView.count(

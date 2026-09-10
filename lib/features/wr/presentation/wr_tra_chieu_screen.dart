@@ -20,6 +20,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_tra_chieu.dart';
 import '../../../core/models/workshop_models.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -31,18 +32,21 @@ import '../../workshops/workshops_providers.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 
 /// Ba nguyên tắc cốt lõi — nguyên văn theo mockup, không rút gọn.
-const List<String> kTraChieuRules = [
-  'Điều gì nói ở đây, ở lại đây. Mọi trích dẫn ra ngoài đều ẩn danh và cần '
-      'người nói đồng ý.',
-  'Không lời khuyên khi chưa được hỏi. Chỉ lắng nghe và hỏi lại.',
-  'Được quyền im lặng. Có thể xin qua lượt bất kỳ lúc nào, không cần lý do.',
+List<String> get kTraChieuRules => [
+  tr('Điều gì nói ở đây, ở lại đây. Mọi trích dẫn ra ngoài đều ẩn danh và cần '
+      'người nói đồng ý.', 'What is said here stays here. Anything quoted outside is anonymous and '
+      'needs the speaker\'s consent.'),
+  tr('Không lời khuyên khi chưa được hỏi. Chỉ lắng nghe và hỏi lại.', 'No advice unless it is asked for. Just listen, and ask back.'),
+  tr('Được quyền im lặng. Có thể xin qua lượt bất kỳ lúc nào, không cần lý do.', 'You may stay silent. You can pass at any point, no reason needed.'),
 ];
 
-const String kTraChieuWhy =
-    'Trà Chiều là một không gian tự do được kết nối bởi chính những người đi '
+String get kTraChieuWhy => tr('Trà Chiều là một không gian tự do được kết nối bởi chính những người đi '
     'làm. Bằng việc cùng đào sâu bằng phản chiếu, chúng ta mượn trải nghiệm của '
     'người khác và gỡ rối cho chính mình. Giá trị lớn nhất ở khoảnh khắc bạn '
-    'nhận ra: Hóa ra mình không hề đơn độc trên hành trình này.';
+    'nhận ra: Hóa ra mình không hề đơn độc trên hành trình này.', 'Tea Time is an open space held together by working people themselves. '
+    'By going deeper through reflection, we borrow other people\'s experience '
+    'to untangle our own. The greatest value is the moment you realise you are '
+    'not alone on this road.');
 
 // ---------------------------------------------------------------------------
 
@@ -59,7 +63,7 @@ class WrTraChieuScreen extends ConsumerWidget {
       eyebrow: 'OFFLINE · $kTraChieuLabel',
       title: kTraChieuLabel,
       children: [
-        const Text(
+        Text(
           kTraChieuFormatLabel,
           style: TextStyle(fontSize: 15.5, color: WrColors.muted, height: 1.6),
         ),
@@ -73,9 +77,9 @@ class WrTraChieuScreen extends ConsumerWidget {
         WrCardMinimal(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
-            children: const [
+            children: [
               Text(
-                'Tinh thần của buổi Trà Chiều',
+                tr('Tinh thần của buổi Trà Chiều', 'The spirit of Tea Time'),
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -106,8 +110,8 @@ class WrTraChieuScreen extends ConsumerWidget {
         const SizedBox(height: 18),
         WrLinkRow(
           key: const Key('wr_tra_chieu_calendar_row'),
-          label: 'Xem lịch các buổi',
-          hint: upcoming.isEmpty ? null : '${upcoming.length} buổi',
+          label: tr('Xem lịch các buổi', 'See the schedule'),
+          hint: upcoming.isEmpty ? null : tr('${upcoming.length} buổi', '${upcoming.length} sessions'),
           onTap: () => context.push('/wr/tra-chieu/lich'),
         ),
         const SizedBox(height: 18),
@@ -117,8 +121,8 @@ class WrTraChieuScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                '3 nguyên tắc cốt lõi',
+              Text(
+                tr('3 nguyên tắc cốt lõi', '3 core principles'),
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -174,7 +178,7 @@ class _NextSessionCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           WrEyebrow(
-            'BUỔI SẮP TỚI',
+            tr('BUỔI SẮP TỚI', 'NEXT SESSION'),
             color: WrColors.cream.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 10),
@@ -231,8 +235,8 @@ class _NextSessionCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              child: const Text(
-                'Xem chi tiết và đăng ký',
+              child: Text(
+                tr('Xem chi tiết và đăng ký', 'See details and sign up'),
                 style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700),
               ),
             ),
@@ -257,8 +261,8 @@ class _NextSessionCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                child: const Text(
-                  'Nhắn Zalo để giữ một ghế',
+                child: Text(
+                  tr('Nhắn Zalo để giữ một ghế', 'Message on Zalo to hold a seat'),
                   style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w600),
                 ),
               ),
@@ -296,11 +300,12 @@ class _NoSessionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const WrCardMinimal(
+    return WrCardMinimal(
       key: Key('wr_tra_chieu_empty'),
       child: WrParagraph(
-        'Hiện chưa có lịch sự kiện mới. Lịch tổ chức Trà Chiều thường sẽ được '
-        'thông báo trước hai tuần để bạn tiện sắp xếp công việc.',
+        tr('Hiện chưa có lịch sự kiện mới. Lịch tổ chức Trà Chiều thường sẽ được '
+        'thông báo trước hai tuần để bạn tiện sắp xếp công việc.', 'No sessions scheduled yet. Tea Time dates are usually announced two '
+        'weeks ahead so you can plan around work.'),
         style: TextStyle(fontSize: 15.5, color: WrColors.muted, height: 1.7),
       ),
     );
@@ -321,11 +326,11 @@ class WrTraChieuCalendarScreen extends ConsumerWidget {
 
     return WrDetailScaffold(
       eyebrow: kTraChieuLabel.toUpperCase(),
-      title: 'Lịch các buổi',
+      title: tr('Lịch các buổi', 'Session schedule'),
       children: [
         if (sessions.isEmpty)
-          const Text(
-            'Hiện chưa có lịch sự kiện mới.',
+          Text(
+            tr('Hiện chưa có lịch sự kiện mới.', 'No sessions scheduled yet.'),
             key: Key('wr_tra_chieu_calendar_empty'),
             style: TextStyle(fontSize: 15.5, color: WrColors.muted, height: 1.7),
           )
@@ -335,8 +340,8 @@ class WrTraChieuCalendarScreen extends ConsumerWidget {
             if (s != sessions.last) const SizedBox(height: 12),
           ],
         const SizedBox(height: 22),
-        const Text(
-          'Chủ đề đổi mỗi buổi. Định kỳ hai tuần một lần, chiều thứ Bảy.',
+        Text(
+          tr('Chủ đề đổi mỗi buổi. Định kỳ hai tuần một lần, chiều thứ Bảy.', 'A new topic each time. Every two weeks, Saturday afternoon.'),
           style: TextStyle(fontSize: 14.5, color: WrColors.muted, height: 1.7),
         ),
       ],
@@ -432,8 +437,8 @@ class _SessionRow extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: const Text(
-                'Xem chi tiết và đăng ký',
+              child: Text(
+                tr('Xem chi tiết và đăng ký', 'See details and sign up'),
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
               ),
             ),
@@ -486,11 +491,11 @@ class _MetaLine extends StatelessWidget {
 /// Không mở được (không có trình duyệt, không mạng) thì nói ra chứ không im
 /// lặng: người dùng vừa bấm một nút và phải biết vì sao không có gì xảy ra.
 Future<void> openTraChieuOnWeb(BuildContext context, String workshopId) =>
-    _open(context, traChieuWebUrl(workshopId), 'Không mở được trang chi tiết.');
+    _open(context, traChieuWebUrl(workshopId), tr('Không mở được trang chi tiết.', 'Could not open the details page.'));
 
 /// Mở Zalo để giữ chỗ. Chỉ gọi khi [kTraChieuZaloUrl] có giá trị.
 Future<void> openTraChieuZalo(BuildContext context) =>
-    _open(context, kTraChieuZaloUrl, 'Không mở được Zalo.');
+    _open(context, kTraChieuZaloUrl, tr('Không mở được Zalo.', 'Could not open Zalo.'));
 
 Future<void> _open(BuildContext context, String url, String failure) async {
   var opened = false;

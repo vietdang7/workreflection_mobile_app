@@ -230,8 +230,8 @@ class _CheckinScreenState extends ConsumerState<CheckinScreen> {
             // Manual entry field.
             TextField(
               controller: _controller,
-              decoration: InputDecoration(
-                border: const OutlineInputBorder(),
+              decoration: const InputDecoration(
+                border: OutlineInputBorder(),
                 hintText: 'AB12CD34',
               ),
               textCapitalization: TextCapitalization.characters,

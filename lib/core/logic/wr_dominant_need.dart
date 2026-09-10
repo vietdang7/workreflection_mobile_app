@@ -2,6 +2,7 @@
 // Used by WrDiscoverScreen and WrGrowthScreen.
 // Pure Dart — no Flutter dependencies.
 
+import '../l10n/wr_tr.dart';
 import '../models/wr_content.dart';
 import '../models/wr_intelligence.dart';
 
@@ -75,18 +76,18 @@ String needPillarLetter(HumanNeed need) => switch (need) {
 
 /// Tên ngắn của nhu cầu — dùng làm nhãn phân loại nội dung.
 String needLabel(HumanNeed need) => switch (need) {
-      HumanNeed.roRang => 'Rõ ràng',
-      HumanNeed.ketNoi => 'Kết nối',
-      HumanNeed.thichNghi => 'Thích nghi',
-      HumanNeed.phatTrien => 'Phát triển',
+      HumanNeed.roRang => tr('Rõ ràng', 'Clarity'),
+      HumanNeed.ketNoi => tr('Kết nối', 'Connection'),
+      HumanNeed.thichNghi => tr('Thích nghi', 'Adapting'),
+      HumanNeed.phatTrien => tr('Phát triển', 'Growth'),
     };
 
 /// Vietnamese label for what the user is seeking, used in suggestion card reason.
 String needSeekingLabel(HumanNeed need) => switch (need) {
-      HumanNeed.roRang => 'sự rõ ràng',
-      HumanNeed.ketNoi => 'sự kết nối',
-      HumanNeed.thichNghi => 'sự thích nghi',
-      HumanNeed.phatTrien => 'sự phát triển',
+      HumanNeed.roRang => tr('sự rõ ràng', 'clarity'),
+      HumanNeed.ketNoi => tr('sự kết nối', 'connection'),
+      HumanNeed.thichNghi => tr('sự thích nghi', 'adapting'),
+      HumanNeed.phatTrien => tr('sự phát triển', 'growth'),
     };
 
 // ---------------------------------------------------------------------------
@@ -134,8 +135,8 @@ String needSeekingLabel(HumanNeed need) => switch (need) {
 /// nguyên từng chữ.
 String needSeekingSentence(HumanNeed need) => switch (need) {
       HumanNeed.roRang =>
-        'Được biết rõ mình đang ở đâu và người khác chờ đợi điều gì.',
-      HumanNeed.ketNoi => 'Được lắng nghe và thể hiện quan điểm.',
-      HumanNeed.thichNghi => 'Được là chính mình khi mọi thứ đổi thay.',
-      HumanNeed.phatTrien => 'Được thấy mình đang đi về phía trước.',
+        tr('Được biết rõ mình đang ở đâu và người khác chờ đợi điều gì.', 'To know where you stand and what others expect.'),
+      HumanNeed.ketNoi => tr('Được lắng nghe và thể hiện quan điểm.', 'To be heard and to say what you think.'),
+      HumanNeed.thichNghi => tr('Được là chính mình khi mọi thứ đổi thay.', 'To stay yourself while everything shifts.'),
+      HumanNeed.phatTrien => tr('Được thấy mình đang đi về phía trước.', 'To see yourself moving forward.'),
     };

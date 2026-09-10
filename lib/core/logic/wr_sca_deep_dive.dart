@@ -28,6 +28,7 @@
 //     30 ngày lịch như nội dung hiển thị đang mô tả". Episode đã có `openedAt`
 //     nên ở đây lọc theo 30 NGÀY LỊCH thật, đúng như dòng chú thích cuối màn.
 
+import '../l10n/wr_tr.dart';
 import '../models/wr_content.dart';
 import '../models/wr_episode.dart';
 import '../models/wr_intelligence.dart';
@@ -70,9 +71,9 @@ enum ScaPillarStatus {
   /// của mockup sang đây là mọi người dùng cũ mở app lên thấy đánh giá của mình
   /// tự nhiên khác đi mà không ai chạm vào dữ liệu của họ.
   String get label => switch (this) {
-        ScaPillarStatus.developing => 'Đang hỗ trợ tốt',
-        ScaPillarStatus.needsAttention => 'Ổn, còn dư địa',
-        ScaPillarStatus.priority => 'Đang cản trở',
+        ScaPillarStatus.developing => tr('Đang hỗ trợ tốt', 'Supporting you well'),
+        ScaPillarStatus.needsAttention => tr('Ổn, còn dư địa', 'Fine, room to grow'),
+        ScaPillarStatus.priority => tr('Đang cản trở', 'Holding you back'),
       };
 
   /// Dạng nhúng giữa câu — "bạn tự đánh giá phần này {inlineLabel}, nhưng…".
@@ -81,9 +82,9 @@ enum ScaPillarStatus {
   /// phẩy, nên "tự đánh giá ổn, còn dư địa, vừa là nơi…" đọc ra thành hai mệnh
   /// đề rời. Mức giữa cần một dạng liền câu riêng.
   String get inlineLabel => switch (this) {
-        ScaPillarStatus.developing => 'đang hỗ trợ tốt',
-        ScaPillarStatus.needsAttention => 'ổn nhưng còn dư địa',
-        ScaPillarStatus.priority => 'đang cản trở',
+        ScaPillarStatus.developing => tr('đang hỗ trợ tốt', 'supporting you well'),
+        ScaPillarStatus.needsAttention => tr('ổn nhưng còn dư địa', 'fine but with room to grow'),
+        ScaPillarStatus.priority => tr('đang cản trở', 'holding you back'),
       };
 
   /// Người dùng đang tự chấm trụ này là ỔN.
@@ -148,17 +149,18 @@ String? scaTrendText({
   final date = scaDateLabel(previous.takenAt);
   final diff = score - prev;
   if (diff.abs() < kScaTrendEpsilon) {
-    return 'Gần như không đổi so với lần trước ($date).';
+    return tr('Gần như không đổi so với lần trước ($date).', 'Almost unchanged from last time ($date).');
   }
   return diff > 0
-      ? 'Tăng nhẹ so với lần trước ($date).'
-      : 'Giảm nhẹ so với lần trước ($date).';
+      ? tr('Tăng nhẹ so với lần trước ($date).', 'Slightly up from last time ($date).')
+      : tr('Giảm nhẹ so với lần trước ($date).', 'Slightly down from last time ($date).');
 }
 
 /// Câu thay thế khi đây là lần Self-Check đầu tiên được ghi lại.
-const String kScaNoTrendText =
-    'Đây là lần tự soi đầu tiên được ghi lại, nên chưa có gì để so. Làm lại sau '
-    'vài tuần, phần này sẽ cho bạn thấy điều gì đã đổi.';
+String get kScaNoTrendText => tr('Đây là lần tự soi đầu tiên được ghi lại, nên chưa có gì để so. Làm lại sau '
+    'vài tuần, phần này sẽ cho bạn thấy điều gì đã đổi.', 'This is the first self-check on record, so there is nothing to compare '
+    'against yet. Take it again in a few weeks and this part will show you '
+    'what has shifted.');
 
 // ---------------------------------------------------------------------------
 // Lớp 3 — đối chiếu Pattern Reflection
@@ -272,27 +274,35 @@ String scaPatternText({
 }) {
   final count = counts[pillar] ?? 0;
   if (count == 0) {
-    return 'Chưa có đủ tín hiệu từ Reflection gần đây để đối chiếu thêm cho '
-        'nhóm này.';
+    return tr('Chưa có đủ tín hiệu từ Reflection gần đây để đối chiếu thêm cho '
+        'nhóm này.', 'Not enough signal from recent Reflections to add anything for '
+        'this group yet.');
   }
 
   if (dominant != pillar) {
-    return 'Nhóm này xuất hiện $count lần trong Reflection gần đây, chưa phải '
-        'nhóm chiếm ưu thế nhất.';
+    return tr('Nhóm này xuất hiện $count lần trong Reflection gần đây, chưa phải '
+        'nhóm chiếm ưu thế nhất.', 'This group came up $count times in recent Reflections, not the '
+        'most prominent one.');
   }
 
   // Đây là chỗ §7 gọi là "lệch pha giữa tự nhận thức và trải nghiệm thực tế".
   if (status.isReassuring) {
-    return 'Bạn tự đánh giá phần này ${status.inlineLabel}, nhưng đây '
+    return tr('Bạn tự đánh giá phần này ${status.inlineLabel}, nhưng đây '
         'lại là nhóm tình huống bạn quay lại nhiều nhất trong Reflection gần '
         'đây ($count lần). Sự chênh lệch này thường đáng chú ý hơn bản thân '
         'điểm số, có thể bạn đã quen đến mức không còn nhận ra ảnh hưởng của '
-        'nó nữa.';
+        'nó nữa.', 'You rate this part as ${status.inlineLabel}, yet it is the '
+        'group of situations you return to most in recent Reflections '
+        '($count times). That gap is usually worth more attention than the '
+        'score itself; you may have grown so used to it that you no longer '
+        'notice its effect.');
   }
 
-  return 'Nhóm này vừa được bạn tự đánh giá ${status.inlineLabel}, vừa '
+  return tr('Nhóm này vừa được bạn tự đánh giá ${status.inlineLabel}, vừa '
       'là nơi bạn quay lại nhiều nhất trong Reflection ($count lần). Hai nguồn '
-      'dữ liệu đang xác nhận lẫn nhau.';
+      'dữ liệu đang xác nhận lẫn nhau.', 'You rate this group as ${status.inlineLabel}, and it is also '
+      'where you return most in Reflection ($count times). Both sources are '
+      'confirming each other.');
 }
 
 // ---------------------------------------------------------------------------
@@ -335,17 +345,22 @@ String? selfAwarenessGapNarrative({
   if (!status.isReassuring) return null;
 
   final count = counts[dominant] ?? 0;
-  return 'Bạn tự đánh giá ${dominant.displayName.toLowerCase()} là '
+  return tr('Bạn tự đánh giá ${dominant.displayName.toLowerCase()} là '
       '${status.inlineLabel}, nhưng $kScaPatternWindowDays ngày qua đây '
       'lại là nhóm bạn quay lại nhiều nhất khi nhìn lại ($count lần). Chênh '
-      'lệch giữa hai điều đó thường đáng nhìn kỹ hơn bản thân điểm số.';
+      'lệch giữa hai điều đó thường đáng nhìn kỹ hơn bản thân điểm số.', 'You rate ${dominant.displayName.toLowerCase()} as '
+      '${status.inlineLabel}, yet over the past $kScaPatternWindowDays days it '
+      'is the group you return to most when looking back ($count times). That '
+      'gap is usually worth a closer look than the score itself.');
 }
 
 /// Dòng chú thích cuối màn.
 String scaDeepDiveFootnote(ScaSelfCheckResponse? previous) =>
-    'Pattern được tính từ $kScaPatternWindowDays ngày Reflection gần nhất. '
+    tr('Pattern được tính từ $kScaPatternWindowDays ngày Reflection gần nhất. '
     'Self-Check trước đó: '
-    '${previous == null ? 'chưa có' : scaDateLabel(previous.takenAt)}.';
+    '${previous == null ? 'chưa có' : scaDateLabel(previous.takenAt)}.', 'Patterns are drawn from the last $kScaPatternWindowDays days of '
+    'Reflection. Previous Self-Check: '
+    '${previous == null ? 'none yet' : scaDateLabel(previous.takenAt)}.');
 
 // ---------------------------------------------------------------------------
 // Gói dữ liệu một trụ, để màn hình chỉ việc dựng

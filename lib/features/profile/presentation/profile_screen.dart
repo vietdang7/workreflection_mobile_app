@@ -1,3 +1,4 @@
+import '../../../core/l10n/wr_tr.dart';
 import 'dart:convert';
 import 'dart:io';
 
@@ -96,7 +97,7 @@ class _ProfileHeader extends StatelessWidget {
               key: const Key('profile_back'),
               behavior: HitTestBehavior.opaque,
               onTap: () => context.pop(),
-              child: const Padding(
+              child: Padding(
                 padding: EdgeInsets.only(bottom: 8),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -105,7 +106,7 @@ class _ProfileHeader extends StatelessWidget {
                         size: 14, color: WrColors.muted),
                     SizedBox(width: 6),
                     Text(
-                      'Quay lại',
+                      tr('Quay lại', 'Back'),
                       style: TextStyle(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w500,
@@ -148,7 +149,7 @@ class _AvatarSection extends ConsumerWidget {
     // Cùng một nguồn tên với màn Hôm nay, và cùng một luật loại email ra khỏi ô
     // tên — xem `wr_display_name.dart`. Email vẫn hiện, nhưng ở dòng email ngay
     // bên dưới, đúng chỗ của nó.
-    final name = ref.watch(greetingNameProvider) ?? 'bạn';
+    final name = ref.watch(greetingNameProvider) ?? tr('bạn', 'you');
     final email = ccData['email'] as String? ?? '';
     // Nhãn gói đọc thẳng từ `wrEntitlementProvider` — đúng cái quyết định mọi
     // cổng Premium trong app, nên nhãn và khoá không bao giờ nói hai điều khác
@@ -295,8 +296,8 @@ class _PremiumCard extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
-                'Mở khoá Premium',
+              Text(
+                tr('Mở khoá Premium', 'Unlock Premium'),
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w800,
@@ -307,7 +308,7 @@ class _PremiumCard extends ConsumerWidget {
               Text(
                 // §03: chữ trên nền coral là navy, pha loãng cho dòng phụ chứ
                 // không đổi sang trắng hay xám.
-                '${price}Diễn giải sâu, Pattern nâng cao, Career Memory đầy đủ.',
+                tr('${price}Diễn giải sâu, Pattern nâng cao, Career Memory đầy đủ.', '${price}Deep readings, advanced Patterns, the full Career Memory.'),
                 style: TextStyle(
                   fontSize: 13.5,
                   color: WrColors.navy.withValues(alpha: 0.75),
@@ -330,8 +331,8 @@ class _PremiumCard extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                child: const Text(
-                  'Xem chi tiết',
+                child: Text(
+                  tr('Xem chi tiết', 'See details'),
                   style: TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w600,
@@ -462,7 +463,7 @@ class _PremiumOverrideRow extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(vertical: 12),
           ),
           child: Text(
-            '(Demo) Chuyển trạng thái Premium: ${on ? 'Tắt' : 'Bật'}',
+            tr('(Demo) Chuyển trạng thái Premium: ${on ? 'Tắt' : 'Bật'}', '(Demo) Premium switched: ${on ? 'Off' : 'On'}'),
             style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w500),
           ),
         ),
@@ -479,8 +480,9 @@ class _PremiumOverrideRow extends ConsumerWidget {
               onTap: () =>
                   ref.read(premiumOverrideProvider.notifier).set(null),
               child: Text(
-                'Đang ép ${override ? 'Premium' : 'miễn phí'} trên máy này · '
-                'chạm để dùng lại gói thật',
+                tr('Đang ép ${override ? 'Premium' : 'miễn phí'} trên máy này · '
+                'chạm để dùng lại gói thật', 'Forcing ${override ? 'Premium' : 'free'} on this device · '
+                'tap to go back to the real plan'),
                 style: TextStyle(
                   fontSize: 13,
                   height: 1.5,
@@ -528,13 +530,13 @@ class _OrgSurveyCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Row(
+            Row(
               children: [
                 Icon(Icons.apartment_outlined, size: 16, color: WrColors.navy),
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Khảo sát tổ chức (tuỳ chọn)',
+                    tr('Khảo sát tổ chức (tuỳ chọn)', 'Organisation survey (optional)'),
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -545,9 +547,10 @@ class _OrgSurveyCard extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 6),
-            const WrParagraph(
-              'Đánh giá đãi ngộ, phát triển và mức sẵn lòng giới thiệu nơi bạn '
-              'làm việc.',
+            WrParagraph(
+              tr('Đánh giá đãi ngộ, phát triển và mức sẵn lòng giới thiệu nơi bạn '
+              'làm việc.', 'Rate the pay, the growth and how likely you are to recommend where '
+              'you work.'),
               style: TextStyle(
                 fontSize: 12.5,
                 height: 1.6,
@@ -570,7 +573,7 @@ class _OrgSurveyCard extends ConsumerWidget {
                 ),
               ),
               child: Text(
-                done ? 'Xem lại kết quả' : 'Tìm hiểu & tham gia',
+                done ? tr('Xem lại kết quả', 'See your results') : tr('Tìm hiểu & tham gia', 'Find out & take part'),
                 style: const TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w600,
@@ -632,7 +635,7 @@ class _SettingsSection extends ConsumerWidget {
         _SettingRow(
           key: const Key('profile_my_info_btn'),
           icon: Icons.badge_outlined,
-          label: 'Thông tin của bạn',
+          label: tr('Thông tin của bạn', 'Your details'),
           onTap: () => context.push('/profile/my-info'),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
@@ -720,14 +723,14 @@ class _SettingsSection extends ConsumerWidget {
           icon: isPremium
               ? Icons.workspace_premium_outlined
               : Icons.star_outline,
-          label: 'Bản Premium',
+          label: tr('Bản Premium', 'Premium'),
           onTap: () => context.push('/wr/paywall'),
           trailing: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (isPremium)
                 Text(
-                  'Đang dùng',
+                  tr('Đang dùng', 'Active'),
                   key: const Key('profile_premium_active_label'),
                   style: WrTextStyles.body.copyWith(
                     fontSize: 14.5,
@@ -769,7 +772,7 @@ class _SettingsSection extends ConsumerWidget {
         _SettingRow(
           key: const Key('profile_guide_btn'),
           icon: Icons.help_outline,
-          label: 'Hướng dẫn sử dụng',
+          label: tr('Hướng dẫn sử dụng', 'User guide'),
           showBorder: false,
           onTap: () => context.push('/profile/guide'),
           trailing:
@@ -826,7 +829,7 @@ class _SettingsSection extends ConsumerWidget {
         await Clipboard.setData(ClipboardData(text: json));
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Đã chép dữ liệu vào clipboard.')),
+            SnackBar(content: Text(tr('Đã chép dữ liệu vào clipboard.', 'Copied your data to the clipboard.'))),
           );
         }
         return;
@@ -837,13 +840,13 @@ class _SettingsSection extends ConsumerWidget {
       await file.writeAsString(json);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Đã xuất dữ liệu: ${file.path}')),
+          SnackBar(content: Text(tr('Đã xuất dữ liệu: ${file.path}', 'Data exported: ${file.path}'))),
         );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không thể xuất dữ liệu.')),
+          SnackBar(content: Text(tr('Không thể xuất dữ liệu.', 'Could not export your data.'))),
         );
       }
     }
@@ -944,7 +947,7 @@ class _LogoutButton extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không thể đăng xuất.')),
+          SnackBar(content: Text(tr('Không thể đăng xuất.', 'Could not sign out.'))),
         );
       }
     }

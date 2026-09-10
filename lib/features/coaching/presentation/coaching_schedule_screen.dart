@@ -172,9 +172,9 @@ class _CoachingScheduleScreenState
 
     // If loading show spinner; if not found show error.
     if (bookingAsync.isLoading) {
-      return Scaffold(
+      return const Scaffold(
         backgroundColor: WrColors.pageBg,
-        body: const Center(child: CircularProgressIndicator()),
+        body: Center(child: CircularProgressIndicator()),
       );
     }
 
@@ -349,7 +349,7 @@ class _CoachingScheduleScreenState
                       alignment: Alignment.center,
                       child: Text(
                         slot,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 15.5,
                           fontWeight: FontWeight.w600,
                           color: WrColors.navy,

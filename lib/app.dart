@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/data/seed_service.dart';
+import 'core/l10n/wr_tr.dart';
 import 'core/data/user_session_scope.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/wr_text_scale.dart';
@@ -70,6 +71,13 @@ class _WrAppState extends ConsumerState<WrApp> {
   Widget build(BuildContext context) {
     final router = ref.watch(appRouterProvider);
     final localeCode = ref.watch(appLocaleProvider);
+
+    // Phần WorkReflection lấy chữ qua `tr()` chứ không qua `AppLocalizations`
+    // (lý do ở `core/l10n/wr_tr.dart`). Ghi ở ĐẦU build, trước khi cây widget
+    // dựng, nên mọi màn trong khung hình này đọc cùng một ngôn ngữ. `build`
+    // chạy lại mỗi lần `appLocaleProvider` đổi, nên nút đổi ngôn ngữ trong Tài
+    // khoản cũng đi qua đây.
+    wrSetLocale(localeCode);
 
     return MaterialApp.router(
       title: 'WorkReflection',

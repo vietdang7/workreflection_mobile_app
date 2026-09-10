@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/l10n/wr_tr.dart';
 import '../../../../core/logic/wr_reflect_flow.dart';
 import '../../../../core/logic/wr_situation_picker.dart';
 import '../../../../core/theme/wr_colors.dart';
@@ -74,7 +75,7 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
       logFlowError('commitAction', e, s);
       if (mounted) {
         setState(() =>
-            _error = flowErrorMessage('Không lưu được. Thử lại.', e));
+            _error = flowErrorMessage(tr('Không lưu được. Thử lại.', 'Could not save. Try again.'), e));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -101,14 +102,14 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
         : _controller.text.trim().isNotEmpty;
 
     return WrFlowScaffold(
-      eyebrow: 'Bước tiếp theo',
-      title: 'Sau góc nhìn này, bước tiếp theo của bạn sẽ là gì?',
-      subtitle: 'Mỗi lần nhìn lại luôn mang đến cho bạn một cơ hội để chủ động '
-          'thay đổi.',
+      eyebrow: tr('Bước tiếp theo', 'Your next step'),
+      title: tr('Sau góc nhìn này, bước tiếp theo của bạn sẽ là gì?', 'After this way of seeing it, what will your next step be?'),
+      subtitle: tr('Mỗi lần nhìn lại luôn mang đến cho bạn một cơ hội để chủ động '
+          'thay đổi.', 'Every look back hands you a chance to change something on purpose.'),
       progress: reflectProgress(3),
       onBack: () => context.pop(),
       onClose: () => context.push('/wr/flow/done'),
-      primaryLabel: 'Lưu lựa chọn này',
+      primaryLabel: tr('Lưu lựa chọn này', 'Save this choice'),
       busy: _busy,
       onPrimary: canSave
           ? () => showChoices
@@ -118,7 +119,7 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
               : _save(_controller.text)
           : null,
       // Hai lối ra phụ, tuỳ đang ở chế độ nào.
-      secondaryLabel: showChoices ? 'Tự viết' : 'Chưa cần bước nào',
+      secondaryLabel: showChoices ? tr('Tự viết', 'Write my own') : tr('Chưa cần bước nào', 'No step needed yet'),
       onSecondary: showChoices
           ? () => setState(() {
                 _writing = true;
@@ -148,10 +149,10 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
                 key: const Key('wr_commit_skip'),
                 behavior: HitTestBehavior.opaque,
                 onTap: () => context.push('/wr/flow/done'),
-                child: const Padding(
+                child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 6),
                   child: Text(
-                    'Chưa cần bước nào',
+                    tr('Chưa cần bước nào', 'No step needed yet'),
                     style: TextStyle(fontSize: 13.5, color: WrColors.muted),
                   ),
                 ),
@@ -161,7 +162,7 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
             WrVoiceField(
               fieldKey: const Key('wr_commit_field'),
               controller: _controller,
-              hintText: 'Mình sẽ thử…',
+              hintText: tr('Mình sẽ thử…', 'I will try…'),
               minLines: 3,
               maxLines: 4,
               onChanged: () => setState(() {}),
@@ -239,8 +240,8 @@ class _ChoiceTile extends StatelessWidget {
                   color: WrColors.teal.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(100),
                 ),
-                child: const Text(
-                  'Gợi ý',
+                child: Text(
+                  tr('Gợi ý', 'Suggestions'),
                   style: TextStyle(
                     fontSize: 10.5,
                     fontWeight: FontWeight.w700,

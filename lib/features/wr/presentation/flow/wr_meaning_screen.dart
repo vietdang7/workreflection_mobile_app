@@ -37,6 +37,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/l10n/wr_tr.dart';
 import '../../../../core/logic/wr_reflect_flow.dart';
 import '../../../../core/models/wr_episode.dart';
 import '../../../../core/theme/wr_colors.dart';
@@ -110,7 +111,7 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
     } catch (e, s) {
       logFlowError('saveInsightStem', e, s);
       if (mounted) {
-        setState(() => _error = flowErrorMessage('Không lưu được. Thử lại.', e));
+        setState(() => _error = flowErrorMessage(tr('Không lưu được. Thử lại.', 'Could not save. Try again.'), e));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -155,7 +156,7 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
       _goCommit();
     } catch (e, s) {
       logFlowError('confirmMeaning', e, s);
-      if (mounted) setState(() => _error = flowErrorMessage('Không lưu được. Thử lại.', e));
+      if (mounted) setState(() => _error = flowErrorMessage(tr('Không lưu được. Thử lại.', 'Could not save. Try again.'), e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -223,7 +224,7 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
   ) {
     return WrFlowScaffold(
       eyebrow: kInsightStemEyebrow,
-      title: 'Nếu chọn ra một bài học cho lúc này, bạn sẽ viết gì?',
+      title: tr('Nếu chọn ra một bài học cho lúc này, bạn sẽ viết gì?', 'If you picked one lesson for right now, what would you write?'),
       subtitle: kInsightStemNote,
       progress: reflectProgress(2),
       onBack: () => context.pop(),
@@ -253,7 +254,7 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const WrParagraph(
+                WrParagraph(
                   kInsightStemPrompt,
                   style: TextStyle(
                     fontSize: 16,
@@ -314,7 +315,7 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
 
     return WrFlowScaffold(
       eyebrow: kInsightAhaEyebrow,
-      title: 'Thêm một cách tiếp cận khác để bạn tham khảo',
+      title: tr('Thêm một cách tiếp cận khác để bạn tham khảo', 'One more angle, in case it helps'),
       subtitle: kInsightAhaNote,
       progress: reflectProgress(2),
       // Back về Lớp 1, không rời màn: hai lớp là một bước, nên nút lùi phải lùi
@@ -330,7 +331,7 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
       // "Không đồng ý" là lối phụ. Không phải vì lối phụ kém giá trị hơn, mà vì
       // đồng ý là điều xảy ra ở phần lớn phiên, và hai nút đặc cạnh nhau thì
       // không nút nào dẫn mắt.
-      primaryLabel: _disagreed ? 'Tiếp tục' : kInsightAgreeLabel,
+      primaryLabel: _disagreed ? tr('Tiếp tục', 'Continue') : kInsightAgreeLabel,
       busy: _busy,
       onPrimary: _disagreed ? _goCommit : () => _confirm(agreed: true),
       secondaryLabel: _disagreed ? null : kInsightDisagreeLabel,
@@ -339,8 +340,8 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (yours != null) ...[
-            const Text(
-              'ĐIỀU BẠN VỪA VIẾT',
+            Text(
+              tr('ĐIỀU BẠN VỪA VIẾT', 'WHAT YOU JUST WROTE'),
               key: Key('wr_meaning_your_words_label'),
               style: TextStyle(
                 fontSize: 12.5,
@@ -417,7 +418,7 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
                 color: WrColors.navy.withValues(alpha: 0.04),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const WrParagraph(
+              child: WrParagraph(
                 kInsightDisagreeAck,
                 style: TextStyle(
                   fontSize: 15.5,

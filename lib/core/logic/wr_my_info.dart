@@ -15,6 +15,7 @@
 //   của những người đã điền, và họ sẽ thấy "Chưa có" ở một trường mình đã khai.
 
 import '../../l10n/app_localizations.dart';
+import '../l10n/wr_tr.dart';
 import 'profile_options.dart';
 
 /// Trường này lưu ở bảng nào. Quyết định luôn đường ghi: [ccProfile] đi qua
@@ -31,84 +32,84 @@ typedef MyInfoField = ({
 });
 
 // Ba nhóm, đúng thứ tự của mockup.
-const String kMyInfoGroupAboutYou = 'Về bạn';
-const String kMyInfoGroupCompany = 'Công ty của bạn';
-const String kMyInfoGroupWork = 'Công việc hiện tại';
+String get kMyInfoGroupAboutYou => tr('Về bạn', 'About you');
+String get kMyInfoGroupCompany => tr('Công ty của bạn', 'Your company');
+String get kMyInfoGroupWork => tr('Công việc hiện tại', 'Your current role');
 
 /// Thành phố đang làm việc. Trường của riêng app.
-List<ProfileOption> myInfoCityOptions() => const [
+List<ProfileOption> myInfoCityOptions() => [
   (value: 'hcm', label: 'TP.HCM'),
-  (value: 'hanoi', label: 'Hà Nội'),
-  (value: 'other', label: 'Tỉnh thành khác'),
+  (value: 'hanoi', label: tr('Hà Nội', 'Hanoi')),
+  (value: 'other', label: tr('Tỉnh thành khác', 'Another province or city')),
 ];
 
 /// Ngành của công ty — nguyên văn tám lựa chọn của mockup (`ORG_QUESTIONS[0]`).
-List<ProfileOption> myInfoIndustryOptions() => const [
-  (value: 'tech', label: 'Công nghệ'),
-  (value: 'finance', label: 'Tài chính, ngân hàng'),
-  (value: 'manufacturing', label: 'Sản xuất'),
-  (value: 'retail', label: 'Bán lẻ, dịch vụ'),
-  (value: 'education', label: 'Giáo dục'),
-  (value: 'healthcare', label: 'Y tế'),
-  (value: 'construction', label: 'Xây dựng, bất động sản'),
-  (value: 'other', label: 'Khác'),
+List<ProfileOption> myInfoIndustryOptions() => [
+  (value: 'tech', label: tr('Công nghệ', 'Technology')),
+  (value: 'finance', label: tr('Tài chính, ngân hàng', 'Finance and banking')),
+  (value: 'manufacturing', label: tr('Sản xuất', 'Manufacturing')),
+  (value: 'retail', label: tr('Bán lẻ, dịch vụ', 'Retail and services')),
+  (value: 'education', label: tr('Giáo dục', 'Education')),
+  (value: 'healthcare', label: tr('Y tế', 'Healthcare')),
+  (value: 'construction', label: tr('Xây dựng, bất động sản', 'Construction and property')),
+  (value: 'other', label: tr('Khác', 'Other')),
 ];
 
 /// Loại hình công ty (`ORG_QUESTIONS[2]`).
-List<ProfileOption> myInfoCompanyTypeOptions() => const [
-  (value: 'vn', label: 'Doanh nghiệp Việt Nam'),
-  (value: 'fdi', label: 'Công ty nước ngoài (FDI)'),
+List<ProfileOption> myInfoCompanyTypeOptions() => [
+  (value: 'vn', label: tr('Doanh nghiệp Việt Nam', 'Vietnamese company')),
+  (value: 'fdi', label: tr('Công ty nước ngoài (FDI)', 'Foreign-invested company (FDI)')),
   (value: 'startup', label: 'Startup'),
-  (value: 'state', label: 'Nhà nước'),
+  (value: 'state', label: tr('Nhà nước', 'State-owned')),
 ];
 
 /// Bảy trường, đúng thứ tự và đúng nhóm của mockup.
 List<MyInfoField> myInfoFields(AppLocalizations l10n) => [
   (
     column: 'total_work_experience',
-    label: 'Số năm kinh nghiệm',
+    label: tr('Số năm kinh nghiệm', 'Years of experience'),
     group: kMyInfoGroupAboutYou,
     store: MyInfoStore.ccProfile,
     options: workExperienceOptions(l10n),
   ),
   (
     column: 'city',
-    label: 'Thành phố',
+    label: tr('Thành phố', 'City'),
     group: kMyInfoGroupAboutYou,
     store: MyInfoStore.mobileProfile,
     options: myInfoCityOptions(),
   ),
   (
     column: 'org_industry',
-    label: 'Ngành',
+    label: tr('Ngành', 'Industry'),
     group: kMyInfoGroupCompany,
     store: MyInfoStore.mobileProfile,
     options: myInfoIndustryOptions(),
   ),
   (
     column: 'company_size',
-    label: 'Quy mô công ty',
+    label: tr('Quy mô công ty', 'Company size'),
     group: kMyInfoGroupCompany,
     store: MyInfoStore.ccProfile,
     options: companySizeOptions(l10n),
   ),
   (
     column: 'org_company_type',
-    label: 'Loại hình công ty',
+    label: tr('Loại hình công ty', 'Company type'),
     group: kMyInfoGroupCompany,
     store: MyInfoStore.mobileProfile,
     options: myInfoCompanyTypeOptions(),
   ),
   (
     column: 'department',
-    label: 'Mảng công việc',
+    label: tr('Mảng công việc', 'Function'),
     group: kMyInfoGroupWork,
     store: MyInfoStore.ccProfile,
     options: departmentOptions(l10n),
   ),
   (
     column: 'position',
-    label: 'Vị trí',
+    label: tr('Vị trí', 'Position'),
     group: kMyInfoGroupWork,
     store: MyInfoStore.ccProfile,
     options: positionOptions(l10n),

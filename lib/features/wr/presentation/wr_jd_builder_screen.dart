@@ -456,7 +456,7 @@ class _CompletionBanner extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          const WrParagraph(
+          WrParagraph(
             kJdCompletionNote,
             style: TextStyle(
               fontSize: 15,

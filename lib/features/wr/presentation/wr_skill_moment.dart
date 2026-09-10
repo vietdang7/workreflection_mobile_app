@@ -261,10 +261,10 @@ class WrMaintainPracticeAction extends ConsumerWidget {
     if (doneToday) {
       return Row(
         key: Key('wr_practice_maintained_today_${theme.themeId}'),
-        children: [
-          const Icon(Icons.check_circle_outlined, size: 17, color: WrColors.teal),
-          const SizedBox(width: 8),
-          const Expanded(
+        children: const [
+          Icon(Icons.check_circle_outlined, size: 17, color: WrColors.teal),
+          SizedBox(width: 8),
+          Expanded(
             child: Text(
               'Đã ghi nhận hôm nay. Hẹn bạn lần thực hành sau.',
               style: TextStyle(fontSize: 14.5, color: WrColors.muted, height: 1.5),

@@ -18,6 +18,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/logic/wr_skill_formation.dart';
 import '../../../core/models/wr_intelligence.dart';
@@ -79,15 +80,15 @@ class _WrGrowthSkillsScreenState extends ConsumerState<WrGrowthSkillsScreen> {
       // A.1: giữ nguyên chữ "kỹ năng", chỉ bỏ chữ "hình thành" ở tên gọi chính.
       // Nhãn nhóm "Đang hình thành" phía dưới thì giữ — đó là mô tả một trạng
       // thái đang diễn ra, không phải một phần của tên gọi.
-      eyebrow: 'KỸ NĂNG CỦA BẠN',
+      eyebrow: tr('KỸ NĂNG CỦA BẠN', 'YOUR SKILLS'),
       title: formed.isEmpty
-          ? 'Chưa có kỹ năng nào'
-          : 'Bạn đã hình thành ${formed.length} kỹ năng',
+          ? tr('Chưa có kỹ năng nào', 'No skills yet')
+          : tr('Bạn đã hình thành ${formed.length} kỹ năng', 'You have formed ${formed.length} skills'),
       children: [
         _HowItWorks(threshold: threshold, hasAny: formed.isNotEmpty),
         if (formed.isNotEmpty) ...[
           const SizedBox(height: 26),
-          const _SectionLabel('ĐÃ HÌNH THÀNH'),
+          _SectionLabel(tr('ĐÃ HÌNH THÀNH', 'FORMED')),
           const SizedBox(height: 14),
           WrListCard(
             children: [for (final s in formed) _FormedSkillTile(skill: s)],
@@ -95,7 +96,7 @@ class _WrGrowthSkillsScreenState extends ConsumerState<WrGrowthSkillsScreen> {
         ],
         if (forming.isNotEmpty) ...[
           const SizedBox(height: 26),
-          const _SectionLabel('THÓI QUEN ĐANG RÈN LUYỆN'),
+          _SectionLabel(tr('THÓI QUEN ĐANG RÈN LUYỆN', 'HABITS IN TRAINING')),
           const SizedBox(height: 14),
           WrListCard(
             children: [
@@ -113,8 +114,8 @@ class _WrGrowthSkillsScreenState extends ConsumerState<WrGrowthSkillsScreen> {
               child: WrActionLink(
                 key: const Key('wr_skills_forming_more'),
                 label: _showAllForming
-                    ? 'Thu gọn'
-                    : 'Xem thêm $hiddenForming chủ đề',
+                    ? tr('Thu gọn', 'Show less')
+                    : tr('Xem thêm $hiddenForming chủ đề', 'See $hiddenForming more themes'),
                 onTap: () => setState(() => _showAllForming = !_showAllForming),
               ),
             ),
@@ -158,8 +159,8 @@ class _HowItWorks extends StatelessWidget {
         children: [
           WrParagraph(
             hasAny
-                ? 'Một kỹ năng được ghi nhận khi bạn thực hành nó $threshold lần.'
-                : 'Chưa có gì ở đây là bình thường, kỹ năng cần thời gian.',
+                ? tr('Một kỹ năng được ghi nhận khi bạn thực hành nó $threshold lần.', 'A skill is recorded once you have practised it $threshold times.')
+                : tr('Chưa có gì ở đây là bình thường, kỹ năng cần thời gian.', 'Nothing here yet is normal. Skills take time.'),
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
@@ -170,10 +171,13 @@ class _HowItWorks extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           WrParagraph(
-            'Mỗi chủ đề bắt đầu bằng ba bước làm quen: Nhận diện, Thử nghiệm, '
+            tr('Mỗi chủ đề bắt đầu bằng ba bước làm quen: Nhận diện, Thử nghiệm, '
             'Chuyển hoá. Xong ba bước, chủ đề chuyển sang giai đoạn duy trì, '
             'mỗi ngày bạn thực hành lại, bấm ghi nhận một lần. Đủ $threshold '
-            'lần, WorkReflection ghi nó thành kỹ năng của bạn.',
+            'lần, WorkReflection ghi nó thành kỹ năng của bạn.', 'Every theme starts with three getting-familiar steps: Notice, Try, '
+            'Shift. After those three, the theme moves into upkeep: practise '
+            'it again each day and tap to record it once. Reach $threshold and '
+            'WorkReflection records it as a skill of yours.'),
             style: const TextStyle(
               fontSize: 14.5,
               color: WrColors.muted,
@@ -242,9 +246,10 @@ class _FormedSkillTile extends StatelessWidget {
                 const SizedBox(height: 5),
                 WrParagraph(
                   date == null
-                      ? 'Đã thực hành ${skill.practiceCount} lần.'
-                      : 'Hình thành ngày ${DateFormat('dd/MM/yyyy').format(date)}, '
-                          'đã thực hành ${skill.practiceCount} lần.',
+                      ? tr('Đã thực hành ${skill.practiceCount} lần.', 'Practised ${skill.practiceCount} times.')
+                      : tr('Hình thành ngày ${DateFormat('dd/MM/yyyy').format(date)}, '
+                          'đã thực hành ${skill.practiceCount} lần.', 'Formed on ${DateFormat('dd/MM/yyyy').format(date)}, '
+                          'practised ${skill.practiceCount} times.'),
                   key: Key('wr_skill_meta_${skill.themeId}'),
                   style: const TextStyle(
                     fontSize: 14.5,
@@ -304,8 +309,9 @@ class _FormingSkillTile extends StatelessWidget {
             const SizedBox(height: 7),
             Text(
               // Dấu phẩy, không phải dấu chấm giữa (bản đối chiếu UX/UI 05/08).
-              '${formation.practiceCount}/${formation.threshold} lần thực hành, '
-              'còn ${formation.remaining} lần nữa',
+              tr('${formation.practiceCount}/${formation.threshold} lần thực hành, '
+              'còn ${formation.remaining} lần nữa', '${formation.practiceCount}/${formation.threshold} practices, '
+              '${formation.remaining} to go'),
               key: Key('wr_skill_progress_${formation.themeId}'),
               style: const TextStyle(fontSize: 14, color: WrColors.muted),
             ),
@@ -330,13 +336,13 @@ class _OnboardingHint extends StatelessWidget {
       onTap: () => context.push('/wr/growth/theme/$themeId'),
       child: Row(
         children: [
-          const Expanded(
+          Expanded(
             child: Text(
-              'Đi hết ba bước làm quen của chủ đề này trước đã.',
+              tr('Đi hết ba bước làm quen của chủ đề này trước đã.', 'Finish the three getting-familiar steps of this theme first.'),
               style: TextStyle(fontSize: 14.5, color: WrColors.muted, height: 1.5),
             ),
           ),
-          const Icon(Icons.arrow_forward_ios, size: 12, color: WrColors.navy),
+          Icon(Icons.arrow_forward_ios, size: 12, color: WrColors.navy),
         ],
       ),
     );
@@ -374,13 +380,14 @@ class _JdSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (!isPremium) {
-      return const WrPremiumLock(
+      return WrPremiumLock(
         key: Key('wr_skills_jd_lock'),
-        title: 'Đối chiếu với công việc của bạn',
+        title: tr('Đối chiếu với công việc của bạn', 'Set against your job'),
         description:
-            'Xem kỹ năng bạn đã hình thành hợp với công việc mình đang làm ở '
-            'đâu, và công việc đó còn cần điều gì bạn chưa thực hành.',
-        ctaLabel: 'Mở khoá đối chiếu',
+            tr('Xem kỹ năng bạn đã hình thành hợp với công việc mình đang làm ở '
+            'đâu, và công việc đó còn cần điều gì bạn chưa thực hành.', 'See where the skills you have formed fit the work you actually do, '
+            'and what that work still needs that you have not practised.'),
+        ctaLabel: tr('Mở khoá đối chiếu', 'Unlock the comparison'),
         paywallTrigger: 'skill_jd_match',
       );
     }
@@ -393,12 +400,14 @@ class _JdSection extends ConsumerWidget {
         key: const Key('wr_skills_jd_empty'),
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _SectionLabel('MỨC ĐỘ TƯƠNG THÍCH VỚI CÔNG VIỆC'),
+          _SectionLabel(tr('MỨC ĐỘ TƯƠNG THÍCH VỚI CÔNG VIỆC', 'HOW WELL IT FITS YOUR JOB')),
           const SizedBox(height: 12),
-          const WrParagraph(
-            'Thêm vài dòng mô tả công việc (JD) bạn đang làm, hệ thống sẽ giúp '
+          WrParagraph(
+            tr('Thêm vài dòng mô tả công việc (JD) bạn đang làm, hệ thống sẽ giúp '
             'bạn nhìn rõ những kỹ năng đang phát huy tốt và đâu là những khoảng '
-            'trống cần hoàn thiện thêm.',
+            'trống cần hoàn thiện thêm.', 'Add a few lines of the job description you work to, and the app '
+            'will help you see which skills are paying off and where the gaps '
+            'still are.'),
             style: TextStyle(fontSize: 15, color: WrColors.muted, height: 1.65),
           ),
           const SizedBox(height: 12),
@@ -406,10 +415,10 @@ class _JdSection extends ConsumerWidget {
             key: const Key('wr_skills_jd_add_role'),
             behavior: HitTestBehavior.opaque,
             onTap: () => context.push('/wr/work-info'),
-            child: const Row(
+            child: Row(
               children: [
                 Text(
-                  'Thêm mô tả công việc',
+                  tr('Thêm mô tả công việc', 'Add a job description'),
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
@@ -429,10 +438,10 @@ class _JdSection extends ConsumerWidget {
       key: const Key('wr_skills_jd_match'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionLabel('MỨC ĐỘ TƯƠNG THÍCH VỚI CÔNG VIỆC'),
+        _SectionLabel(tr('MỨC ĐỘ TƯƠNG THÍCH VỚI CÔNG VIỆC', 'HOW WELL IT FITS YOUR JOB')),
         const SizedBox(height: 12),
         Text(
-          'Công việc bạn mô tả xoay quanh ${match.pillarSentence.toLowerCase()}.',
+          tr('Công việc bạn mô tả xoay quanh ${match.pillarSentence.toLowerCase()}.', 'The job you describe centres on ${match.pillarSentence.toLowerCase()}.'),
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w700,
@@ -442,8 +451,8 @@ class _JdSection extends ConsumerWidget {
         ),
         const SizedBox(height: 16),
         if (match.matchedSkills.isNotEmpty) ...[
-          const Text(
-            'Bạn đã có sẵn',
+          Text(
+            tr('Bạn đã có sẵn', 'You already have'),
             style: TextStyle(
               fontSize: 14.5,
               fontWeight: FontWeight.w700,
@@ -464,8 +473,8 @@ class _JdSection extends ConsumerWidget {
           const SizedBox(height: 16),
         ],
         if (match.gapThemes.isNotEmpty) ...[
-          const Text(
-            'Công việc này còn cần, bạn chưa hình thành',
+          Text(
+            tr('Công việc này còn cần, bạn chưa hình thành', 'This job also needs, and you have not formed'),
             style: TextStyle(
               fontSize: 14.5,
               fontWeight: FontWeight.w700,
@@ -496,9 +505,11 @@ class _JdSection extends ConsumerWidget {
         // Nguyên tắc 3 (B.1) đã kéo nhóm Kết nối vào dù mô tả không nhắc tới.
         // Nói thẳng ra, không để người dùng tưởng nó đến từ chữ họ viết.
         if (match.autoRaisedDimensions.isNotEmpty) ...[
-          const WrParagraph(
-            'Ở vị trí quản lý, phần Mối quan hệ được tính là cần dù mô tả công '
-            'việc không nhắc tới — những điều đó thường được ngầm hiểu.',
+          WrParagraph(
+            tr('Ở vị trí quản lý, phần Mối quan hệ được tính là cần dù mô tả công '
+            'việc không nhắc tới — những điều đó thường được ngầm hiểu.', 'In a management role, Relationships counts as needed even when the '
+            'job description does not mention it — that part is usually taken '
+            'as read.'),
             key: Key('wr_skills_jd_auto_raised'),
             style: TextStyle(fontSize: 13.5, color: WrColors.muted, height: 1.6),
           ),
@@ -508,9 +519,11 @@ class _JdSection extends ConsumerWidget {
         // hạn. Phép đối chiếu này đọc từ khoá trong mô tả bạn viết, nó không
         // đọc được ngành nghề hay bối cảnh của bạn.
         WrParagraph(
-          'Đối chiếu dựa trên mô tả công việc bạn đã viết '
+          tr('Đối chiếu dựa trên mô tả công việc bạn đã viết '
           '(${match.basedOnKeywords.take(4).join(', ')}…), độ chính xác còn '
-          'giới hạn.',
+          'giới hạn.', 'Compared against the job description you wrote '
+          '(${match.basedOnKeywords.take(4).join(', ')}…), so accuracy is '
+          'limited.'),
           key: const Key('wr_skills_jd_note'),
           style: const TextStyle(
             fontSize: 13.5,

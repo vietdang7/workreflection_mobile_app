@@ -10,6 +10,7 @@
 //
 // Pure Dart, không phụ thuộc Flutter.
 
+import '../l10n/wr_tr.dart';
 import '../models/wr_content.dart';
 import '../models/wr_intelligence.dart';
 
@@ -72,9 +73,9 @@ enum SkillRelevance {
 
   /// Chữ hiện cho người dùng. Ngắn, không diễn giải thêm.
   String get label => switch (this) {
-        SkillRelevance.nice => 'Nên có',
-        SkillRelevance.needed => 'Cần',
-        SkillRelevance.critical => 'Cần, ưu tiên cao',
+        SkillRelevance.nice => tr('Nên có', 'Nice to have'),
+        SkillRelevance.needed => tr('Cần', 'Needed'),
+        SkillRelevance.critical => tr('Cần, ưu tiên cao', 'Needed, high priority'),
       };
 
   /// Càng lớn càng xếp trước.
@@ -178,114 +179,140 @@ const int kTransformStepOrder = 3;
 ///
 /// Khoá theo `theme_id`, KHÔNG theo tên hiển thị — cùng lý do với bộ đếm thực
 /// hành (Phần C.1): thư viện có những chủ đề trùng tên.
-const Map<String, Map<SeniorityTier, String>> kTransformByTier = {
+Map<String, Map<SeniorityTier, String>> get kTransformByTier => {
   'pt-s1': {
     SeniorityTier.individual:
-        'Với mọi việc mới, luôn làm rõ kết quả tốt trông như thế nào trước khi '
-            'bắt đầu.',
+        tr('Với mọi việc mới, luôn làm rõ kết quả tốt trông như thế nào trước khi '
+            'bắt đầu.', 'For anything new, make clear what a good outcome looks like before you '
+            'start.'),
     SeniorityTier.leadTeam:
-        'Đặt rõ kỳ vọng cho từng người trong nhóm, không giả định họ tự hiểu '
-            'như bạn.',
+        tr('Đặt rõ kỳ vọng cho từng người trong nhóm, không giả định họ tự hiểu '
+            'như bạn.', 'Set expectations for each person on the team; do not assume they read '
+            'it the way you do.'),
     SeniorityTier.leadOrg:
-        'Giữ kỳ vọng nhất quán giữa các nhóm, để không ai nhận hai tiêu chuẩn '
-            'khác nhau cho cùng một việc.',
+        tr('Giữ kỳ vọng nhất quán giữa các nhóm, để không ai nhận hai tiêu chuẩn '
+            'khác nhau cho cùng một việc.', 'Keep expectations consistent across teams, so nobody gets two different '
+            'standards for the same work.'),
   },
   'pt-s2': {
     SeniorityTier.individual:
-        'Xây một cách phân loại việc theo mức độ bạn thực sự cần quyết định, '
-            'dùng lại mỗi tuần.',
+        tr('Xây một cách phân loại việc theo mức độ bạn thực sự cần quyết định, '
+            'dùng lại mỗi tuần.', 'Build a way of sorting work by how much you genuinely need to decide, '
+            'and reuse it weekly.'),
     SeniorityTier.leadTeam:
-        'Giúp từng người trong nhóm tự phân biệt việc quan trọng và việc gấp, '
-            'không quyết định thay họ mọi lúc.',
+        tr('Giúp từng người trong nhóm tự phân biệt việc quan trọng và việc gấp, '
+            'không quyết định thay họ mọi lúc.', 'Help each person tell important from urgent themselves, rather than '
+            'deciding for them every time.'),
     SeniorityTier.leadOrg:
-        'Phân bổ ưu tiên giữa nhiều nhóm dựa trên mục tiêu chung, không theo '
-            'người nào lên tiếng to nhất.',
+        tr('Phân bổ ưu tiên giữa nhiều nhóm dựa trên mục tiêu chung, không theo '
+            'người nào lên tiếng to nhất.', 'Allocate priority across teams from shared goals, not from whoever is '
+            'loudest.'),
   },
   'pt-s3': {
     SeniorityTier.individual:
-        'Xây thói quen xác nhận lại thông tin quan trọng trước khi hành động '
-            'theo đó.',
+        tr('Xây thói quen xác nhận lại thông tin quan trọng trước khi hành động '
+            'theo đó.', 'Make it a habit to confirm important information before acting on it.'),
     SeniorityTier.leadTeam:
-        'Chủ động truyền đạt lý do đằng sau một thay đổi cho nhóm, trước khi họ '
-            'phải tự đoán.',
+        tr('Chủ động truyền đạt lý do đằng sau một thay đổi cho nhóm, trước khi họ '
+            'phải tự đoán.', 'Tell the team the reasoning behind a change before they have to guess '
+            'at it.'),
     SeniorityTier.leadOrg:
-        'Dẫn dắt nhiều nhóm qua một thay đổi lớn, giữ thông tin nhất quán ở mọi '
-            'cấp truyền đạt.',
+        tr('Dẫn dắt nhiều nhóm qua một thay đổi lớn, giữ thông tin nhất quán ở mọi '
+            'cấp truyền đạt.', 'Lead several teams through a large change, keeping the message '
+            'consistent at every level it passes through.'),
   },
   'pt-c1': {
     SeniorityTier.individual:
-        'Giữ việc giao trọn vẹn, không kiểm soát chi tiết, như một thói quen '
-            'chứ không phải ngoại lệ.',
+        tr('Giữ việc giao trọn vẹn, không kiểm soát chi tiết, như một thói quen '
+            'chứ không phải ngoại lệ.', 'Hand work over whole, without managing the detail, as a habit rather '
+            'than an exception.'),
     SeniorityTier.leadTeam:
-        'Học cách giao việc và thật sự buông, thay vì giao rồi vẫn kiểm tra như '
-            'chưa từng giao.',
+        tr('Học cách giao việc và thật sự buông, thay vì giao rồi vẫn kiểm tra như '
+            'chưa từng giao.', 'Learn to delegate and actually let go, instead of handing over and '
+            'still checking as though you had not.'),
     SeniorityTier.leadOrg:
-        'Xây một văn hóa tin tưởng áp dụng nhất quán cho nhiều nhóm, không chỉ '
-            'ở người bạn thân cận nhất.',
+        tr('Xây một văn hóa tin tưởng áp dụng nhất quán cho nhiều nhóm, không chỉ '
+            'ở người bạn thân cận nhất.', 'Build a culture of trust applied consistently across teams, not just '
+            'with the people closest to you.'),
   },
   'pt-c2': {
     SeniorityTier.individual:
-        'Chủ động chia sẻ một góc nhìn của riêng bạn, không chỉ trả lời khi '
-            'được hỏi.',
+        tr('Chủ động chia sẻ một góc nhìn của riêng bạn, không chỉ trả lời khi '
+            'được hỏi.', 'Offer a view of your own, rather than only answering when asked.'),
     SeniorityTier.leadTeam:
-        'Tạo một khoảng an toàn rõ ràng để từng người trong nhóm dám nói, không '
-            'chỉ chờ họ tự dũng cảm.',
+        tr('Tạo một khoảng an toàn rõ ràng để từng người trong nhóm dám nói, không '
+            'chỉ chờ họ tự dũng cảm.', 'Create clear room for each person to speak up, rather than waiting for '
+            'them to find the courage.'),
     SeniorityTier.leadOrg:
-        'Đảm bảo tiếng nói từ các nhóm phía dưới thật sự đến được nơi ra quyết '
-            'định, không bị lọc mất giữa đường.',
+        tr('Đảm bảo tiếng nói từ các nhóm phía dưới thật sự đến được nơi ra quyết '
+            'định, không bị lọc mất giữa đường.', 'Make sure voices from the teams below genuinely reach where decisions '
+            'are made, without being filtered out on the way.'),
   },
   'pt-c3': {
     SeniorityTier.individual:
-        'Đưa phản hồi trở thành nhịp thường xuyên trong đội, không chỉ khi có '
-            'vấn đề.',
+        tr('Đưa phản hồi trở thành nhịp thường xuyên trong đội, không chỉ khi có '
+            'vấn đề.', 'Make feedback a regular rhythm in the team, not something that only '
+            'appears when there is a problem.'),
     SeniorityTier.leadTeam:
-        'Đưa phản hồi đều đặn cho từng người, không dồn lại đến kỳ đánh giá mới '
-            'nói.',
+        tr('Đưa phản hồi đều đặn cho từng người, không dồn lại đến kỳ đánh giá mới '
+            'nói.', 'Give each person feedback steadily, rather than saving it all for '
+            'review season.'),
     SeniorityTier.leadOrg:
-        'Xây một quy trình phản hồi hai chiều cho toàn bộ phạm vi phụ trách, '
-            'không chỉ từ trên xuống.',
+        tr('Xây một quy trình phản hồi hai chiều cho toàn bộ phạm vi phụ trách, '
+            'không chỉ từ trên xuống.', 'Build a two-way feedback process across everything you cover, not just '
+            'top-down.'),
   },
   'pt-a1': {
     SeniorityTier.individual:
-        'Đặt một nhịp định kỳ để tự hỏi lại mục tiêu, thay vì làm theo quán '
-            'tính.',
+        tr('Đặt một nhịp định kỳ để tự hỏi lại mục tiêu, thay vì làm theo quán '
+            'tính.', 'Set a regular rhythm for questioning the goal, instead of running on '
+            'momentum.'),
     SeniorityTier.leadTeam:
-        'Kết nối mục tiêu của từng người trong nhóm với mục tiêu chung, để không '
-            'ai chỉ làm vì được giao.',
+        tr('Kết nối mục tiêu của từng người trong nhóm với mục tiêu chung, để không '
+            'ai chỉ làm vì được giao.', 'Connect each person\'s goals to the shared one, so nobody is working '
+            'only because they were told to.'),
     SeniorityTier.leadOrg:
-        'Giữ định hướng chiến lược rõ ràng và nhất quán, để nhiều nhóm không đi '
-            'lệch nhau theo thời gian.',
+        tr('Giữ định hướng chiến lược rõ ràng và nhất quán, để nhiều nhóm không đi '
+            'lệch nhau theo thời gian.', 'Keep strategic direction clear and consistent, so teams do not drift '
+            'apart over time.'),
   },
   'pt-a2': {
     SeniorityTier.individual:
-        'Đặt một nhịp nghỉ cố định, không đợi đến khi kiệt sức mới nghỉ.',
+        tr('Đặt một nhịp nghỉ cố định, không đợi đến khi kiệt sức mới nghỉ.', 'Set a fixed rhythm of rest, rather than waiting until you are spent.'),
     SeniorityTier.leadTeam:
-        'Chủ động bảo vệ nhịp làm việc của nhóm, không để deadline gấp trở thành '
-            'trạng thái bình thường.',
+        tr('Chủ động bảo vệ nhịp làm việc của nhóm, không để deadline gấp trở thành '
+            'trạng thái bình thường.', 'Protect the team\'s working rhythm, so rushed deadlines do not become '
+            'the normal state.'),
     SeniorityTier.leadOrg:
-        'Xây văn hóa làm việc bền vững ở quy mô rộng, để kiệt sức không trở '
-            'thành cái giá ngầm định của hiệu suất.',
+        tr('Xây văn hóa làm việc bền vững ở quy mô rộng, để kiệt sức không trở '
+            'thành cái giá ngầm định của hiệu suất.', 'Build sustainable ways of working at scale, so burnout is not the '
+            'unspoken price of performance.'),
   },
   'pt-a3': {
     SeniorityTier.individual:
-        'Học cách nhận ra sớm dấu hiệu của phản ứng, trước khi đã lỡ nói ra.',
+        tr('Học cách nhận ra sớm dấu hiệu của phản ứng, trước khi đã lỡ nói ra.', 'Learn to catch the signs of a reaction early, before it is already said.'),
     SeniorityTier.leadTeam:
-        'Giữ bình tĩnh khi cả nhóm đang căng thẳng, vì phản ứng của bạn lúc đó '
-            'ảnh hưởng đến tất cả.',
+        tr('Giữ bình tĩnh khi cả nhóm đang căng thẳng, vì phản ứng của bạn lúc đó '
+            'ảnh hưởng đến tất cả.', 'Stay steady when the team is under strain, because how you react then '
+            'lands on everyone.'),
     SeniorityTier.leadOrg:
-        'Ra quyết định bình tĩnh ở những tình huống có phạm vi ảnh hưởng lớn, '
-            'khi áp lực dồn về một người.',
+        tr('Ra quyết định bình tĩnh ở những tình huống có phạm vi ảnh hưởng lớn, '
+            'khi áp lực dồn về một người.', 'Decide calmly in situations with wide consequences, when the pressure '
+            'lands on one person.'),
   },
   'pt-a4': {
     SeniorityTier.individual:
-        'Đặt một nhịp nhìn lại định kỳ (retro cá nhân), để việc học không chỉ là '
-            'tình cờ.',
+        tr('Đặt một nhịp nhìn lại định kỳ (retro cá nhân), để việc học không chỉ là '
+            'tình cờ.', 'Set a regular look-back rhythm for yourself, so learning is not just '
+            'accidental.'),
     SeniorityTier.leadTeam:
-        'Xây một nhịp nhìn lại định kỳ cho cả nhóm, để bài học không chỉ nằm lại '
-            'ở một người.',
+        tr('Xây một nhịp nhìn lại định kỳ cho cả nhóm, để bài học không chỉ nằm lại '
+            'ở một người.', 'Build a regular look-back rhythm for the team, so the lesson does not '
+            'stay with one person.'),
     SeniorityTier.leadOrg:
-        'Xây một hệ thống ghi nhận và chia sẻ bài học cho toàn bộ phạm vi phụ '
-            'trách, để cùng một sai lầm không lặp lại ở nhóm khác.',
+        tr('Xây một hệ thống ghi nhận và chia sẻ bài học cho toàn bộ phạm vi phụ '
+            'trách, để cùng một sai lầm không lặp lại ở nhóm khác.', 'Build a way of capturing and sharing lessons across everything you '
+            'cover, so the same mistake does not repeat in another team.'),
   },
 };
 

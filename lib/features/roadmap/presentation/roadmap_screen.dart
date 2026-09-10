@@ -925,7 +925,7 @@ class _DayCell extends ConsumerWidget {
           // Day header
           Text(
             _dayHeader(day, l10n).toUpperCase(),
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 12.5,
               fontWeight: FontWeight.w700,
               color: WrColors.muted,
@@ -1760,7 +1760,7 @@ class _ActivityEntryTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.check_circle_outlined, color: WrColors.teal, size: 18),
+          const Icon(Icons.check_circle_outlined, color: WrColors.teal, size: 18),
           const SizedBox(width: 10),
           Expanded(
             child: Column(

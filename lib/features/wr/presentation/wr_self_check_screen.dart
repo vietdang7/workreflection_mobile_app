@@ -1,3 +1,4 @@
+import '../../../core/l10n/wr_tr.dart';
 import 'dart:async';
 
 import 'package:flutter/material.dart';
@@ -53,12 +54,12 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
   double _cScore = 0;
   double _aScore = 0;
 
-  static const _likertLabels = [
-    'Hoàn toàn không đúng',
-    'Không đúng lắm',
-    'Đôi khi đúng',
-    'Khá đúng',
-    'Hoàn toàn đúng',
+  static List<String> get _likertLabels => [
+    tr('Hoàn toàn không đúng', 'Not true at all'),
+    tr('Không đúng lắm', 'Not really true'),
+    tr('Đôi khi đúng', 'Sometimes true'),
+    tr('Khá đúng', 'Fairly true'),
+    tr('Hoàn toàn đúng', 'Completely true'),
   ];
 
   int get _questionIndex => _step - 1; // 0-based
@@ -104,8 +105,8 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: WrColors.white,
-        title: const Text(
-          'Thoát khỏi bộ câu hỏi?',
+        title: Text(
+          tr('Thoát khỏi bộ câu hỏi?', 'Leave the questions?'),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -113,9 +114,11 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
           ),
         ),
         content: WrParagraph(
-          '${_answers.length} câu bạn đã trả lời sẽ không được giữ lại. '
+          tr('${_answers.length} câu bạn đã trả lời sẽ không được giữ lại. '
           'Bộ câu hỏi chỉ được lưu khi bạn trả lời xong cả '
-          '${kSelfCheckQuestions.length} câu.',
+          '${kSelfCheckQuestions.length} câu.', 'The ${_answers.length} answers you have given will not be kept. '
+          'The set is only saved once you answer all '
+          '${kSelfCheckQuestions.length} questions.'),
           style: const TextStyle(
             fontSize: 15.5,
             height: 1.6,
@@ -127,13 +130,13 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
           // đóng đúng hộp thoại, không phải đóng cả màn.
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Làm tiếp'),
+            child: Text(tr('Làm tiếp', 'Keep going')),
           ),
           TextButton(
             key: const Key('wr_self_check_close_confirm'),
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: WrColors.destructive),
-            child: const Text('Thoát'),
+            child: Text(tr('Thoát', 'Leave')),
           ),
         ],
       ),
@@ -175,7 +178,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
         ref.invalidate(wrSelfCheckHistoryProvider);
       }
     } catch (e) {
-      if (mounted) setState(() => _errorMsg = 'Lưu không thành công: $e');
+      if (mounted) setState(() => _errorMsg = tr('Lưu không thành công: $e', 'Could not save: $e'));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -205,7 +208,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                 onPressed: () => context.pop(),
                 icon: const Icon(Icons.arrow_back_ios_new, size: 18),
                 color: WrColors.dark,
-                tooltip: 'Quay lại',
+                tooltip: tr('Quay lại', 'Back'),
                 constraints: const BoxConstraints.tightFor(
                   width: 44,
                   height: 44,
@@ -228,7 +231,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                       children: [
                         // Khách 09/09/2026 (§15.1): bỏ chấm tròn ◉ ở đầu màn.
                         Text(
-                          '${kSelfCheckQuestions.length} câu hỏi phản chiếu',
+                          tr('${kSelfCheckQuestions.length} câu hỏi phản chiếu', '${kSelfCheckQuestions.length} reflection questions'),
                           style: const TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.w800,
@@ -238,9 +241,9 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        const WrParagraph(
-                          'Hãy trả lời dựa trên trải nghiệm thực tế của bạn tại '
-                          'nơi làm việc.',
+                        WrParagraph(
+                          tr('Hãy trả lời dựa trên trải nghiệm thực tế của bạn tại '
+                          'nơi làm việc.', 'Answer from what actually happens for you at work.'),
                           style: TextStyle(
                             fontSize: 16.5,
                             color: WrColors.text2,
@@ -251,19 +254,19 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                         // Khách 09/09/2026 (§15.4): bỏ emoji ⏱🔒↺, dùng icon
                         // line art. Emoji đổi dáng theo từng máy và không nhận
                         // màu của brand.
-                        const _InfoRow(
+                        _InfoRow(
                           icon: Icons.schedule_outlined,
-                          text: 'Thời gian: Khoảng 3–4 phút hoàn thành',
+                          text: tr('Thời gian: Khoảng 3–4 phút hoàn thành', 'Takes about 3–4 minutes'),
                         ),
                         const SizedBox(height: 12),
-                        const _InfoRow(
+                        _InfoRow(
                           icon: Icons.lock_outline,
-                          text: 'Bảo mật tuyệt đối. Chỉ bạn mới thấy kết quả',
+                          text: tr('Bảo mật tuyệt đối. Chỉ bạn mới thấy kết quả', 'Completely private. Only you see the results'),
                         ),
                         const SizedBox(height: 12),
-                        const _InfoRow(
+                        _InfoRow(
                           icon: Icons.refresh_outlined,
-                          text: 'Có thể làm lại bất cứ lúc nào bạn muốn',
+                          text: tr('Có thể làm lại bất cứ lúc nào bạn muốn', 'Retake it any time you like'),
                         ),
                       ],
                     ),
@@ -283,8 +286,8 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                     ),
                     elevation: 0,
                   ),
-                  child: const Text(
-                    'Bắt đầu →',
+                  child: Text(
+                    tr('Bắt đầu →', 'Start →'),
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
                   ),
                 ),
@@ -352,7 +355,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                         },
                         icon: const Icon(Icons.arrow_back_ios_new, size: 18),
                         color: WrColors.dark,
-                        tooltip: 'Câu trước',
+                        tooltip: tr('Câu trước', 'Previous'),
                         constraints: const BoxConstraints.tightFor(
                           width: 44,
                           height: 44,
@@ -361,8 +364,9 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                       ),
                       const Spacer(),
                       Text(
-                        'Câu ${_questionIndex + 1} / '
-                        '${kSelfCheckQuestions.length}',
+                        tr('Câu ${_questionIndex + 1} / '
+                        '${kSelfCheckQuestions.length}', 'Question ${_questionIndex + 1} / '
+                        '${kSelfCheckQuestions.length}'),
                         style: const TextStyle(
                           fontSize: 14.5,
                           fontWeight: FontWeight.w600,
@@ -381,8 +385,8 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                           minimumSize: const Size(44, 44),
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                         ),
-                        child: const Text(
-                          'Đóng',
+                        child: Text(
+                          tr('Đóng', 'Close'),
                           style: TextStyle(
                             fontSize: 15.5,
                             fontWeight: FontWeight.w600,
@@ -525,8 +529,8 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Bức tranh của bạn',
+                    Text(
+                      tr('Bức tranh của bạn', 'Your picture'),
                       style: TextStyle(
                         fontSize: 26,
                         fontWeight: FontWeight.w700,
@@ -534,8 +538,8 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
-                      'Dựa trên 15 câu hỏi phản chiếu',
+                    Text(
+                      tr('Dựa trên 15 câu hỏi phản chiếu', 'Based on 15 reflection questions'),
                       style: TextStyle(fontSize: 15.5, color: WrColors.muted),
                     ),
                     if (_saving) ...[
@@ -609,8 +613,8 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                           ),
                           elevation: 0,
                         ),
-                        child: const Text(
-                          'Vào Thực hành',
+                        child: Text(
+                          tr('Vào Thực hành', 'Go to Practice'),
                           style: TextStyle(
                             fontSize: 16.5,
                             fontWeight: FontWeight.w600,
@@ -631,8 +635,8 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                           ),
                           elevation: 0,
                         ),
-                        child: const Text(
-                          'Xem Hành trình',
+                        child: Text(
+                          tr('Xem Hành trình', 'See my Journey'),
                           style: TextStyle(
                             fontSize: 16.5,
                             fontWeight: FontWeight.w600,
@@ -667,7 +671,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const WrEyebrow('ĐIỀU ĐÁNG CHÚ Ý NHẤT'),
+          WrEyebrow(tr('ĐIỀU ĐÁNG CHÚ Ý NHẤT', 'MOST WORTH NOTICING')),
           const SizedBox(height: 10),
           _NarrativeCard(
             title: n.title,
@@ -714,7 +718,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const WrEyebrow('DIỄN GIẢI SÂU'),
+          WrEyebrow(tr('DIỄN GIẢI SÂU', 'DEEP READING')),
           const SizedBox(height: 10),
           for (final (pillar, score) in [
             (SelfCheckPillar.s, _sScore),
@@ -736,7 +740,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
           if (imbalance != null) ...[
             const SizedBox(height: 8),
             _CollapsibleSection(
-              title: 'MẤT CÂN BẰNG GIỮA CÁC MẶT',
+              title: tr('MẤT CÂN BẰNG GIỮA CÁC MẶT', 'OUT OF BALANCE ACROSS THE THREE'),
               child: _NarrativeCard(text: imbalanceNarrative(imbalance)),
             ),
             const SizedBox(height: 10),
@@ -744,33 +748,39 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
 
           const SizedBox(height: 8),
           _CollapsibleSection(
-            title: 'XU HƯỚNG THEO THỜI GIAN',
+            title: tr('XU HƯỚNG THEO THỜI GIAN', 'HOW IT MOVES OVER TIME'),
             child: trend == null
-                ? const _NarrativeCard(
-                    text: 'Đây là lần tự soi đầu tiên được ghi lại. Làm lại '
+                ? _NarrativeCard(
+                    text: tr('Đây là lần tự soi đầu tiên được ghi lại. Làm lại '
                         'sau vài tuần, WorkReflection sẽ cho bạn thấy điều gì '
-                        'đã đổi và điều gì vẫn ở nguyên đó.',
+                        'đã đổi và điều gì vẫn ở nguyên đó.', 'This is the first self-check on record. Take it again '
+                        'in a few weeks and WorkReflection will show you what '
+                        'has shifted and what has stayed put.'),
                   )
                 : _NarrativeCard(
-                    title: 'Đã ghi ${trend.takenCount} lần tự soi',
+                    title: tr('Đã ghi ${trend.takenCount} lần tự soi', '${trend.takenCount} self-checks recorded'),
                     text: trend.summary,
-                    footer: 'Sự rõ ràng ${_delta(trend.structureDelta)} · '
+                    footer: tr('Sự rõ ràng ${_delta(trend.structureDelta)} · '
                         'Mối quan hệ ${_delta(trend.cultureDelta)} · '
-                        'Cách làm việc ${_delta(trend.activityDelta)}',
+                        'Cách làm việc ${_delta(trend.activityDelta)}', 'Clarity ${_delta(trend.structureDelta)} · '
+                        'Relationships ${_delta(trend.cultureDelta)} · '
+                        'Ways of working ${_delta(trend.activityDelta)}'),
                   ),
           ),
 
           if (relatedPatterns.isNotEmpty) ...[
             const SizedBox(height: 18),
             _CollapsibleSection(
-              title: 'ĐỐI CHIẾU VỚI ĐIỀU BẠN HAY GẶP',
+              title: tr('ĐỐI CHIẾU VỚI ĐIỀU BẠN HAY GẶP', 'SET AGAINST WHAT YOU KEEP MEETING'),
               child: _NarrativeCard(
-                text: 'Những gì bạn ghi lại trong các câu chuyện cũng chỉ về '
-                    'cùng một hướng với "${lowest.displayName}":',
+                text: tr('Những gì bạn ghi lại trong các câu chuyện cũng chỉ về '
+                    'cùng một hướng với "${lowest.displayName}":', 'What you wrote in your stories points the same way as '
+                    '"${lowest.displayName}":'),
                 footer: relatedPatterns
                     .map((p) =>
-                        '${sitText[p.situationCode] ?? p.situationCode}'
-                        ' · lần thứ ${p.count}')
+                        tr('${sitText[p.situationCode] ?? p.situationCode}'
+                        ' · lần thứ ${p.count}', '${sitText[p.situationCode] ?? p.situationCode}'
+                        ' · time ${p.count}'))
                     .join('\n'),
               ),
             ),
@@ -783,7 +793,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
           // dùng tự chấm cao — đúng trụ mà khối này bỏ qua.
           WrLinkRow(
             key: const Key('wr_self_check_deep_dive_link'),
-            label: 'Diễn giải sâu & xu hướng',
+            label: tr('Diễn giải sâu & xu hướng', 'Deep reading & trends'),
             onTap: () => openScaDeepDive(context, ref),
           ),
         ],
@@ -792,7 +802,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
   }
 
   static String _delta(double d) {
-    if (d.abs() < 0.05) return 'giữ nguyên';
+    if (d.abs() < 0.05) return tr('giữ nguyên', 'unchanged');
     final sign = d > 0 ? '+' : '−';
     return '$sign${d.abs().toStringAsFixed(1)}';
   }
@@ -1023,7 +1033,7 @@ class _DeepDiveLocked extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const WrEyebrow('DIỄN GIẢI SÂU'),
+          WrEyebrow(tr('DIỄN GIẢI SÂU', 'DEEP READING')),
           const SizedBox(height: 10),
           Container(
             width: double.infinity,
@@ -1036,11 +1046,11 @@ class _DeepDiveLocked extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
+                const Row(
                   children: [
-                    const Icon(Icons.lock_outline,
+                    Icon(Icons.lock_outline,
                         size: 15, color: WrColors.amber),
-                    const SizedBox(width: 6),
+                    SizedBox(width: 6),
                     Text(
                       'Premium',
                       style: TextStyle(
@@ -1053,11 +1063,14 @@ class _DeepDiveLocked extends ConsumerWidget {
                   ],
                 ),
                 const SizedBox(height: 10),
-                const WrParagraph(
-                  'Mở khóa báo cáo đầy đủ để phân tích chi tiết từng khía cạnh, '
+                WrParagraph(
+                  tr('Mở khóa báo cáo đầy đủ để phân tích chi tiết từng khía cạnh, '
                   'nhận diện điểm mất cân bằng giữa các nhóm trải nghiệm, đồng '
                   'thời so sánh với lịch sử nhìn lại và các tình huống bạn '
-                  'thường gặp.',
+                  'thường gặp.', 'Unlock the full report to break down each side in detail, spot '
+                  'where the three fall out of balance, and set it against '
+                  'your history of looking back and the situations you meet '
+                  'most.'),
                   style: TextStyle(
                     fontSize: 16.5,
                     height: 1.65,
@@ -1080,8 +1093,8 @@ class _DeepDiveLocked extends ConsumerWidget {
                       ),
                       elevation: 0,
                     ),
-                    child: const Text(
-                      'Mở diễn giải sâu',
+                    child: Text(
+                      tr('Mở diễn giải sâu', 'Open the deep reading'),
                       style:
                           TextStyle(fontSize: 16.5, fontWeight: FontWeight.w600),
                     ),

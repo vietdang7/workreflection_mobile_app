@@ -294,9 +294,9 @@ class _BodyState extends ConsumerState<_Body> {
           const SizedBox(height: 22),
           WrParagraph(
             kDeepOneSelfCheckOnly,
-            key: const Key('wr_deep_no_self_check_yet'),
+            key: Key('wr_deep_no_self_check_yet'),
             textAlign: TextAlign.start,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14.5,
               height: 1.65,
               color: WrColors.text3,

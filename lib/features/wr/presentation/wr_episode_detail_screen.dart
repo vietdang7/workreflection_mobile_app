@@ -28,10 +28,10 @@ class WrEpisodeDetailScreen extends ConsumerWidget {
     final episode = async.valueOrNull;
 
     if (episode == null) {
-      return WrDetailScaffold(
+      return const WrDetailScaffold(
         eyebrow: 'MỘT LẦN NHÌN LẠI',
         title: 'Không mở được lần nhìn lại này',
-        children: const [
+        children: [
           WrParagraph(
             'Có thể nó đã bị xoá, hoặc thiết bị đang mất kết nối.',
             key: Key('wr_episode_detail_missing'),

@@ -1,3 +1,4 @@
+import '../../../core/l10n/wr_tr.dart';
 import 'dart:math' show min;
 
 import 'package:flutter/material.dart';
@@ -280,20 +281,20 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
         // ── Top area ────────────────────────────────────────────────────────
         SliverToBoxAdapter(
           child: Padding(
-            padding: const EdgeInsets.fromLTRB(22, 16, 22, 20),
+            padding: EdgeInsets.fromLTRB(22, 16, 22, 20),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const WrTabBackLink(currentTab: WrTab.growth),
+                WrTabBackLink(currentTab: WrTab.growth),
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Phát triển',
+                            tr('Phát triển', 'Grow'),
                             style: TextStyle(
                               fontSize: 15.5,
                               color: WrColors.muted,
@@ -302,7 +303,7 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
                           ),
                           SizedBox(height: 4),
                           Text(
-                            'Thực hành',
+                            tr('Thực hành', 'Practice'),
                             style: TextStyle(
                               fontSize: 32,
                               fontWeight: FontWeight.w800,
@@ -314,7 +315,7 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
                       ),
                     ),
                     // v1.6 §9.1: "Tôi" là avatar ở mọi màn tab.
-                    const WrProfileAvatar(),
+                    WrProfileAvatar(),
                   ],
                 ),
               ],
@@ -337,7 +338,7 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
             child: enrolledCards.isEmpty
                 ? _buildEmptyThemeCard(
                     context,
-                    eyebrow: 'TRỌNG TÂM HIỆN TẠI',
+                    eyebrow: tr('TRỌNG TÂM HIỆN TẠI', 'YOUR CURRENT FOCUS'),
                     hasAnyTheme: themes.isNotEmpty,
                     hasCandidates: unenrolledThemes.isNotEmpty,
                     reflectionCount: reflectionCount,
@@ -345,7 +346,7 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
                 : Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const WrEyebrow('CHỦ ĐỀ CỦA BẠN'),
+                      WrEyebrow(tr('CHỦ ĐỀ CỦA BẠN', 'YOUR THEMES')),
                       const SizedBox(height: 12),
                       for (final pair in visibleCards)
                         WrPracticeThemeCard(
@@ -359,8 +360,8 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
                           child: WrActionLink(
                             key: const Key('wr_growth_themes_more'),
                             label: _showAllThemes
-                                ? 'Thu gọn'
-                                : 'Xem thêm $hiddenThemeCount chủ đề',
+                                ? tr('Thu gọn', 'Show less')
+                                : tr('Xem thêm $hiddenThemeCount chủ đề', 'See $hiddenThemeCount more themes'),
                             onTap: () => setState(
                               () => _showAllThemes = !_showAllThemes,
                             ),
@@ -409,7 +410,7 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
                 if (activeTheme == null) const WrSectionDivider(),
                 WrLinkRow(
                   key: const Key('wr_growth_skills_row'),
-                  label: 'Kỹ năng của bạn',
+                  label: tr('Kỹ năng của bạn', 'Your skills'),
                   onTap: () => context.push('/wr/growth/skills'),
                 ),
               ],
@@ -445,21 +446,24 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
       // Thư viện chưa có chủ đề nào — không phải lỗi của người dùng, đừng bảo
       // họ đi nhìn lại thêm.
       (false, _) => (
-          'Chưa có chủ đề nào đang thực hành',
-          'WorkReflection sẽ đề xuất chủ đề dựa trên những gì bạn đã nhìn lại.',
+          tr('Chưa có chủ đề nào đang thực hành', 'No theme in practice yet'),
+          tr('WorkReflection sẽ đề xuất chủ đề dựa trên những gì bạn đã nhìn lại.', 'WorkReflection will suggest a theme based on what you have looked back on.'),
         ),
       // Còn chủ đề để mời, chỉ là chưa tích đủ. Nói đúng quãng đường còn lại
       // thay vì bảo họ chờ một điều không đo được.
       (true, true) => (
-          'Chưa xác định chủ đề trọng tâm',
-          'Bạn đã tích lũy $reflectionCount/$kReflectionsPerPracticeTheme lượt '
+          tr('Chưa xác định chủ đề trọng tâm', 'No focus theme yet'),
+          tr('Bạn đã tích lũy $reflectionCount/$kReflectionsPerPracticeTheme lượt '
               'nhìn lại. Khi đạt mốc $kReflectionsPerPracticeTheme lượt, ứng '
               'dụng sẽ tự động gợi ý chủ đề phù hợp nhất với bạn. Bạn cũng có '
-              'thể hoàn thành Self-Check để mở khóa ngay.',
+              'thể hoàn thành Self-Check để mở khóa ngay.', 'You have $reflectionCount of $kReflectionsPerPracticeTheme look-backs so '
+              'far. At $kReflectionsPerPracticeTheme the app will suggest the '
+              'theme that fits you best. You can also finish the Self-Check to '
+              'unlock it now.'),
         ),
       (true, false) => (
-          'Bạn đã bắt đầu tất cả chủ đề hiện có',
-          'Hoàn thành một chủ đề đang theo, rồi quay lại đây.',
+          tr('Bạn đã bắt đầu tất cả chủ đề hiện có', 'You have started every theme available'),
+          tr('Hoàn thành một chủ đề đang theo, rồi quay lại đây.', 'Finish one you are already on, then come back here.'),
         ),
     };
 
@@ -492,7 +496,7 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
             const SizedBox(height: 14),
             WrActionLink(
               key: const Key('wr_growth_suggestion_self_check'),
-              label: 'Làm Self-Check ngay',
+              label: tr('Làm Self-Check ngay', 'Take the Self-Check now'),
               onTap: () => context.push('/wr/self-check'),
             ),
           ],
@@ -573,7 +577,7 @@ class _OpportunitySliver extends ConsumerWidget {
                       ),
                       child: Text(
                         'Offline · $kTraChieuLabel',
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 11.5,
                           fontWeight: FontWeight.w700,
                           color: WrColors.pillTealText,
@@ -588,7 +592,7 @@ class _OpportunitySliver extends ConsumerWidget {
                 // buổi cũ đã diễn ra để thẻ trông có nội dung.
                 Text(
                   next == null
-                      ? 'Hiện chưa có lịch sự kiện mới.'
+                      ? tr('Hiện chưa có lịch sự kiện mới.', 'No sessions scheduled yet.')
                       : '"${next.title}"',
                   style: WrText.serifQuote(
                     fontSize: 15.5,
@@ -611,7 +615,7 @@ class _OpportunitySliver extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      'Xem chi tiết',
+                      tr('Xem chi tiết', 'See details'),
                       style: TextStyle(
                         fontSize: 12.5,
                         color: WrColors.cream.withValues(alpha: 0.55),
@@ -672,7 +676,7 @@ class WrPracticeThemeCard extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      finished ? 'Đã hoàn thành' : 'Đang thực hành',
+                      finished ? tr('Đã hoàn thành', 'Completed') : tr('Đang thực hành', 'In practice'),
                       style: const TextStyle(
                         fontSize: 13.5,
                         color: WrColors.muted,
@@ -693,8 +697,8 @@ class WrPracticeThemeCard extends ConsumerWidget {
                       ),
                       child: Text(
                         finished
-                            ? 'Trọn chuỗi'
-                            : 'Giai đoạn ${min(done + 1, total)}/$total',
+                            ? tr('Trọn chuỗi', 'Whole series')
+                            : tr('Giai đoạn ${min(done + 1, total)}/$total', 'Stage ${min(done + 1, total)}/$total'),
                         style: const TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w700,
@@ -720,7 +724,7 @@ class WrPracticeThemeCard extends ConsumerWidget {
                 WrPracticeProgressDots(total: total, done: done),
                 const SizedBox(height: 10),
                 Text(
-                  '$done/$total bước hoàn thành',
+                  tr('$done/$total bước hoàn thành', '$done/$total steps done'),
                   style: const TextStyle(fontSize: 14, color: WrColors.muted),
                 ),
               ],
@@ -766,8 +770,9 @@ class _QuotaCard extends StatelessWidget {
         child: Column(
           children: [
             Text(
-              'Bản miễn phí mở tối đa $max chủ đề cùng lúc '
-              '(đang mở $activeCount/$max).',
+              tr('Bản miễn phí mở tối đa $max chủ đề cùng lúc '
+              '(đang mở $activeCount/$max).', 'The free version opens up to $max themes at once '
+              '(you have $activeCount/$max open).'),
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 14.5,
@@ -776,8 +781,8 @@ class _QuotaCard extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Premium: không giới hạn',
+            Text(
+              tr('Premium: không giới hạn', 'Premium: no limit'),
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w700,

@@ -373,7 +373,7 @@ class _SuggestionSection extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              WrProgressTrack(value: 0.35, color: WrColors.navy),
+              const WrProgressTrack(value: 0.35, color: WrColors.navy),
               const SizedBox(height: 6),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,

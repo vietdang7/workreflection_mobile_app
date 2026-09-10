@@ -92,7 +92,7 @@ class _GuideScreenState extends State<GuideScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            const WrParagraph(
+            WrParagraph(
               kGuideIntro,
               style: TextStyle(
                 fontSize: 14.5,
@@ -116,7 +116,7 @@ class _GuideScreenState extends State<GuideScreen> {
             const SizedBox(height: 8),
             // Dòng chốt: hướng dẫn không phải hợp đồng, và người đọc tới đây
             // vẫn còn thắc mắc thì đã có sẵn chỗ hỏi — chính Chatbot ở trên.
-            Center(
+            const Center(
               child: WrParagraph(
                 'Còn điều gì chưa rõ, cứ hỏi thẳng Chatbot.',
                 textAlign: TextAlign.center,
@@ -154,7 +154,7 @@ class _ChatbotCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               Icon(Icons.chat_bubble_outline_rounded,
                   size: 18, color: WrColors.navy),
@@ -174,7 +174,7 @@ class _ChatbotCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           // §03: chữ trên nền coral là navy pha loãng, không đổi sang trắng.
-          const WrParagraph(
+          WrParagraph(
             kGuideChatLead,
             style: TextStyle(
               fontSize: 13,
@@ -183,7 +183,7 @@ class _ChatbotCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 6),
-          const WrParagraph(
+          WrParagraph(
             kGuideChatWhy,
             style: TextStyle(
               fontSize: 13,
@@ -223,7 +223,7 @@ class _ChatbotCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 10),
-          const WrParagraph(
+          WrParagraph(
             kGuideChatCaveat,
             style: TextStyle(
               fontSize: 12,

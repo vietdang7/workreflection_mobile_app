@@ -44,6 +44,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/data/wr_repository.dart';
+import '../../../../core/l10n/wr_tr.dart';
 import '../../../../core/logic/wr_flow_error.dart';
 import '../../../../core/logic/wr_reflect_flow.dart';
 import '../../../../core/logic/wr_situation_picker.dart';
@@ -183,7 +184,7 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
       logFlowError('pickSituation', e, s);
       if (mounted) {
         setState(() => _error = flowErrorMessage(
-              'Không mở được phiên phản tư. Thử lại.',
+              tr('Không mở được phiên phản tư. Thử lại.', 'Could not open the reflection session. Try again.'),
               e,
             ));
       }
@@ -218,7 +219,7 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
     final moodLabel = filtered ? moodCheckinLabel(_mood!) : null;
 
     return WrFlowScaffold(
-      eyebrow: 'Bắt đầu',
+      eyebrow: tr('Bắt đầu', 'Start'),
       title: kNoticePrompt,
       subtitle: noticeSubtitle(moodLabel),
       progress: reflectProgress(0),
@@ -265,7 +266,7 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
               onTap: () => _reshuffle(dropMoodFilter: false),
               // Mũi tên dùng Icon, không dùng ký tự "→" — font chữ của app
               // không chắc có glyph U+2192.
-              child: const Padding(
+              child: Padding(
                 padding: EdgeInsets.symmetric(vertical: 6),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -274,7 +275,7 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
                     // này chạm mép ở màn hẹp nếu để Text tự do.
                     Flexible(
                       child: Text(
-                        'Xem tình huống khác',
+                        tr('Xem tình huống khác', 'See other situations'),
                         style: TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
@@ -295,10 +296,10 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
                 key: const Key('wr_step_show_all'),
                 behavior: HitTestBehavior.opaque,
                 onTap: () => _reshuffle(dropMoodFilter: true),
-                child: const Padding(
+                child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 6),
                   child: Text(
-                    'Xem tất cả, không chỉ theo cảm xúc',
+                    tr('Xem tất cả, không chỉ theo cảm xúc', 'See everything, not just by feeling'),
                     style: TextStyle(fontSize: 13.5, color: WrColors.muted),
                   ),
                 ),
