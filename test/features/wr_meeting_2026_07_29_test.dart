@@ -712,11 +712,11 @@ void main() {
         _wrap(const WrTraChieuScreen(), workshops: workshops),
       );
 
-      expect(find.text('Ba luật của mọi buổi'), findsOneWidget);
+      expect(find.text('3 nguyên tắc cốt lõi'), findsOneWidget);
       for (final rule in kTraChieuRules) {
         expect(find.text(rule), findsOneWidget);
       }
-      expect(find.text('Vì sao lại là Trà Chiều'), findsOneWidget);
+      expect(find.text('Tinh thần của buổi Trà Chiều'), findsOneWidget);
     });
 
     testWidgets('chưa mở buổi nào thì nói thẳng, không dựng thẻ rỗng', (
@@ -1304,7 +1304,7 @@ void main() {
       await tester.tap(find.byKey(const Key('wr_growth_theme_tra_chieu')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Ba luật của mọi buổi'), findsOneWidget);
+      expect(find.text('3 nguyên tắc cốt lõi'), findsOneWidget);
       expect(intel.enrollThemeCalls, isEmpty);
     });
   });
@@ -1368,7 +1368,7 @@ void main() {
       await tester.tap(find.byKey(const Key('wr_growth_opportunity')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Ba luật của mọi buổi'), findsOneWidget);
+      expect(find.text('3 nguyên tắc cốt lõi'), findsOneWidget);
     });
 
     // Khách 2026-07-30: "tôi không còn thấy cái mục giao diện trà chiều đâu
@@ -1380,7 +1380,7 @@ void main() {
 
       expect(find.byKey(const Key('wr_growth_opportunity')), findsOneWidget);
       expect(find.text('Offline · $kTraChieuLabel'), findsOneWidget);
-      expect(find.text('Chưa có buổi nào được mở.'), findsOneWidget);
+      expect(find.text('Hiện chưa có lịch sự kiện mới.'), findsOneWidget);
       expect(find.text(kTraChieuFormatLabel), findsOneWidget);
       expect(find.text('Xem chi tiết'), findsOneWidget);
     });
@@ -1390,7 +1390,7 @@ void main() {
       await tester.tap(find.byKey(const Key('wr_growth_opportunity')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Ba luật của mọi buổi'), findsOneWidget);
+      expect(find.text('3 nguyên tắc cốt lõi'), findsOneWidget);
       expect(find.byKey(const Key('wr_tra_chieu_empty')), findsOneWidget);
     });
 
@@ -1410,7 +1410,7 @@ void main() {
       );
 
       expect(find.textContaining('Buổi tháng trước'), findsNothing);
-      expect(find.text('Chưa có buổi nào được mở.'), findsOneWidget);
+      expect(find.text('Hiện chưa có lịch sự kiện mới.'), findsOneWidget);
     });
   });
 

@@ -173,10 +173,13 @@ class _Step2 extends StatelessWidget {
       l10n.onb2Opt4,
     ];
     return _StepScaffold(
+      // Nút navy giống trang 1, không còn coral "Bắt đầu ngay". Khách 09/09:
+      // sắc coral + chữ "Bắt đầu ngay" là ngôn ngữ của bước CUỐI, đặt ở giữa
+      // luồng thì người dùng tưởng onboarding đã xong.
       cta: WrPillButton(
         label: l10n.onb2Cta,
         onPressed: onNext,
-        variant: WrPillVariant.coral,
+        variant: WrPillVariant.navy,
       ),
       children: [
         const WrLogo(),
@@ -200,7 +203,6 @@ class _Step2 extends StatelessWidget {
               label: opt,
               isSelected: selectedSituation == opt,
               onTap: () => onSelect(opt),
-              dotColor: opt == l10n.onb2Opt4 ? WrColors.teal : WrColors.coral,
             ),
           ),
         ),
@@ -297,12 +299,10 @@ class _SituationCard extends StatelessWidget {
     required this.label,
     required this.isSelected,
     required this.onTap,
-    required this.dotColor,
   });
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
-  final Color dotColor;
 
   @override
   Widget build(BuildContext context) {
@@ -321,11 +321,15 @@ class _SituationCard extends StatelessWidget {
         ),
         child: Row(
           children: [
+            // Chấm chỉ để canh lề chữ, không mang thông tin gì. Bản trước tô
+            // coral (teal cho lựa chọn 4) nên nhìn như bốn cảnh báo — khách
+            // 09/09 yêu cầu chuyển sang xám. Viền + dấu tick vẫn là chỗ báo
+            // lựa chọn đang chọn.
             Container(
               width: 8,
               height: 8,
               decoration: BoxDecoration(
-                color: dotColor,
+                color: isSelected ? WrColors.coral : WrColors.text3,
                 shape: BoxShape.circle,
               ),
             ),

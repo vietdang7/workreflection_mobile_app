@@ -588,7 +588,7 @@ class _OpportunitySliver extends ConsumerWidget {
                 // buổi cũ đã diễn ra để thẻ trông có nội dung.
                 Text(
                   next == null
-                      ? 'Chưa có buổi nào được mở.'
+                      ? 'Hiện chưa có lịch sự kiện mới.'
                       : '"${next.title}"',
                   style: WrText.serifQuote(
                     fontSize: 15.5,

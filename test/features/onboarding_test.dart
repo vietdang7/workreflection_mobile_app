@@ -97,16 +97,24 @@ void main() {
       expect(find.byType(CustomPaint), findsWidgets);
     });
 
+    // Khách 09/09 đổi nhãn nút bước 2 từ "Bắt đầu ngay" (coral) sang "Tiếp tục"
+    // (navy) — cả ba bước giờ dùng cùng một nhãn cho hai bước đầu. Nên các bài
+    // dưới đây khoá VỊ TRÍ BƯỚC bằng nhãn tag (Reflect · Understand · Grow),
+    // thứ không đổi theo câu chữ, chứ không bằng nhãn nút.
+    Future<void> advance(WidgetTester tester) async {
+      await tester.tap(find.text('Tiếp tục'));
+      await tester.pump();
+    }
+
     testWidgets('tapping CTA on step 1 advances to step 2', (tester) async {
       await tester.pumpWidget(_wrap(const OnboardingScreen()));
       await tester.pump();
 
-      await tester.tap(find.text('Tiếp tục'));
-      await tester.pump();
+      await advance(tester);
 
       // Now step 2
       expect(find.text('Understand'), findsOneWidget);
-      expect(find.text('Bắt đầu ngay'), findsOneWidget);
+      expect(find.text('Reflect'), findsNothing);
     });
 
     testWidgets('step 2 shows situation options', (tester) async {
@@ -114,28 +122,32 @@ void main() {
       await tester.pump();
 
       // Advance to step 2
-      await tester.tap(find.text('Tiếp tục'));
-      await tester.pump();
+      await advance(tester);
 
-      expect(find.text('Mệt nhưng không biết tại sao'), findsOneWidget);
-      expect(find.text('Cố gắng nhưng không thấy tiến'), findsOneWidget);
-      expect(find.text('Muốn thay đổi, chưa biết bắt đầu từ đâu'), findsOneWidget);
-      expect(find.text('Đang khá ổn, muốn hiểu mình hơn'), findsOneWidget);
+      expect(find.text('Mệt mỏi nhưng không rõ lý do.'), findsOneWidget);
+      expect(find.text('Nỗ lực nhiều nhưng chưa thấy bước tiến.'), findsOneWidget);
+      expect(
+        find.text('Khao khát thay đổi nhưng chưa biết bắt đầu từ đâu.'),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Mọi thứ đang ổn, nhưng muốn thấu hiểu mình sâu hơn.'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('selecting situation on step 2 toggles selection', (tester) async {
       await tester.pumpWidget(_wrap(const OnboardingScreen()));
       await tester.pump();
 
-      await tester.tap(find.text('Tiếp tục'));
-      await tester.pump();
+      await advance(tester);
 
       // Tap option 1 — should appear selected (check via _SituationCard internal state)
-      await tester.tap(find.text('Mệt nhưng không biết tại sao'));
+      await tester.tap(find.text('Mệt mỏi nhưng không rõ lý do.'));
       await tester.pump();
 
       // Tapping again should deselect (the state tracks selectedSituation in notifier)
-      await tester.tap(find.text('Mệt nhưng không biết tại sao'));
+      await tester.tap(find.text('Mệt mỏi nhưng không rõ lý do.'));
       await tester.pump();
       // Widget did not crash
     });
@@ -144,30 +156,24 @@ void main() {
       await tester.pumpWidget(_wrap(const OnboardingScreen()));
       await tester.pump();
 
-      // Step 1 → 2
-      await tester.tap(find.text('Tiếp tục'));
-      await tester.pump();
-
-      // Step 2 → 3
-      await tester.tap(find.text('Bắt đầu ngay'));
-      await tester.pump();
+      // Step 1 → 2 → 3
+      await advance(tester);
+      await advance(tester);
 
       expect(find.text('Grow'), findsOneWidget);
-      expect(find.text('Vào WorkReflection'), findsOneWidget);
+      expect(find.text('Bắt đầu hành trình'), findsOneWidget);
     });
 
     testWidgets('step 3 shows all three promise cards', (tester) async {
       await tester.pumpWidget(_wrap(const OnboardingScreen()));
       await tester.pump();
 
-      await tester.tap(find.text('Tiếp tục'));
-      await tester.pump();
-      await tester.tap(find.text('Bắt đầu ngay'));
-      await tester.pump();
+      await advance(tester);
+      await advance(tester);
 
       expect(find.text('5–15 phút mỗi ngày'), findsOneWidget);
       expect(find.text('Riêng tư hoàn toàn'), findsOneWidget);
-      expect(find.text('Không phán xét'), findsOneWidget);
+      expect(find.text('Góc nhìn khách quan'), findsOneWidget);
     });
   });
 }

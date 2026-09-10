@@ -107,7 +107,7 @@ class _WrGrowthThemesScreenState extends ConsumerState<WrGrowthThemesScreen> {
     final rest = available.where((t) => t.themeId != suggestedId).toList();
 
     return WrDetailScaffold(
-      eyebrow: 'THỰC HÀNH KHÁC',
+      eyebrow: 'HOẠT ĐỘNG KHÁC',
       title: suggestion != null
           ? 'Chủ đề dành cho bạn'
           : 'Chủ đề bạn có thể bắt đầu',
@@ -363,8 +363,10 @@ class _TraChieuRow extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             const WrParagraph(
-              '10 đến 12 người ngồi quanh một bàn trà, cùng trả lời một câu hỏi '
-              'duy nhất. Phản chiếu như trong app, chỉ khác là nói thành lời.',
+              'Đưa trải nghiệm "Nhìn lại" bước ra đời thực. Không chỉ là một bàn '
+              'trà, đây là không gian để bạn mượn câu chuyện của những người đi '
+              'làm khác soi chiếu lại mình, và nhận ra bản thân không hề đơn độc '
+              'trong những trăn trở hiện tại.',
               style: TextStyle(
                 fontSize: 15.5,
                 color: WrColors.muted,

@@ -220,6 +220,76 @@ Icon ✦ ở nhãn Premium khoá thì **giữ** ổ khoá `Icons.lock_outline`: 
 
 ---
 
+## ĐỢT 1B — BẢN DOCX CẬP NHẬT NGÀY 10/09 (ĐÃ XONG)
+
+Khách gửi lại chính file `Các nội dung cần điều chỉnh_ 090926.docx` với **các
+trang mới ở cuối**. Dò lại toàn bộ 71 cặp "Cũ → Sửa thành": **48 cặp đã nằm sẵn
+trong mã** (đợt 1), phần còn lại chia như bảng dưới.
+
+### Ba màn mới — 14/14 ✅
+
+| # | Đổi thành | File |
+|---|-----------|------|
+| 18.1 | Mỗi ngày, hãy dành một khoảnh khắc dừng lại… | `app_vi.arb` `onb1Body` |
+| 18.2 | 4 lựa chọn trang 2 viết lại (Mệt mỏi nhưng không rõ lý do. …) | `onb2Opt1–4` |
+| 18.3 | Chấm màu trước mỗi lựa chọn: coral/teal → **xám** (`text3`) | `onboarding_screen.dart` `_SituationCard` |
+| 18.4 | Nút trang 2: "Bắt đầu ngay" (coral) → **"Tiếp tục" (navy)** như trang 1 | `onb2Cta` + `_Step2` |
+| 18.5 | Đồng hành cùng **bước tiến** sự nghiệp của bạn. | `onb3Title` |
+| 18.6 | WorkReflection lưu giữ hành trình… | `onb3Body` |
+| 18.7 | Góc nhìn khách quan / Ghi nhận và phản chiếu chân thực. | `onb3Promise3Title/Sub` |
+| 18.8 | Bắt đầu hành trình | `onb3Cta` |
+| 19.1 | HOẠT ĐỘNG KHÁC | `wr_growth_themes_screen.dart` |
+| 19.2 | Đưa trải nghiệm "Nhìn lại" bước ra đời thực… | `wr_growth_themes_screen.dart` (thẻ mời Trà Chiều) |
+| 19.3 | 10–12 người · 2 giờ chia sẻ | `wr_tra_chieu.dart` `kTraChieuFormatLabel` |
+| 19.4 | Tinh thần của buổi Trà Chiều | `wr_tra_chieu_screen.dart` |
+| 19.5 | Trà Chiều là một không gian tự do… | `kTraChieuWhy` |
+| 19.6 | Hiện chưa có lịch sự kiện mới. Lịch tổ chức Trà Chiều thường sẽ được thông báo trước hai tuần… | `wr_tra_chieu_screen.dart` (2 chỗ) + `wr_growth_screen.dart` |
+| 19.7 | 3 nguyên tắc cốt lõi | `wr_tra_chieu_screen.dart` |
+
+**19.6 sửa ở BA chỗ, không phải một.** Câu "chưa có buổi nào" sống trên ba màn
+khác nhau (thẻ Trà Chiều ở tab Phát triển · thẻ rỗng màn Trà Chiều · màn Lịch
+các buổi). Docx chỉ chỉ vào một; để nguyên hai chỗ kia thì cùng một tình trạng
+nói bằng hai giọng.
+
+### Một chỗ đợt 1 làm THIẾU, nay đã bù
+
+| # | Đổi thành | File |
+|---|-----------|------|
+| 11.1b | `Bước N **trên** 5` → `Bước N **/** 5` (5 chỗ) | `wr_jd_builder.dart` |
+
+Đợt 1 đổi "buổi" → "bước" nhưng bỏ sót phần định dạng `1 / 5` của cùng dòng đó.
+
+### Ba mục CỐ Ý không làm theo docx
+
+1. **Dòng 57** — "Bức tranh tổng quan sau 27 lần nhìn lại…" (mục 7.1). Câu này
+   sống trong `_CareerHealthCard`, mà `WorkReflection_Changelog_CareerSnapshot.docx`
+   (khách gửi cùng ngày, mới hơn) yêu cầu **gộp thẻ đó vào Career Snapshot**.
+   Nhóm A đã gộp, thẻ cũ không còn. Lời dẫn mới của thẻ gộp thay chỗ nó.
+2. **Dòng 110** — "Nhật ký sự nghiệp của bạn chưa ghi nhận **cột mốc** nào".
+   Chính khách bác lại chữ "cột mốc" ở §9.1 của changelog. Đang là
+   **"chưa có ghi nhận nào"** — xem ghi chú đảo chiều ở §12 bên trên.
+3. **Dòng 41** — "Tiếp tục" → "Đồng ý / Không đồng ý". Đây là **đổi hành vi**
+   (chỉ "Đồng ý" mới ghi Insight), không phải đổi chữ. Thuộc **nhóm D** của
+   `docs/ke_hoach_career_snapshot_100926.md`, chưa làm.
+
+### Cổng chất lượng đợt 1B
+
+| Cổng | Kết quả |
+|------|---------|
+| `flutter analyze` | **No issues found** |
+| `flutter test` | **2266 pass · 24 skip · 1 đỏ** |
+| APK debug | dựng được |
+
+Nền trước khi sửa cũng là 2266 · 24 · 1 → **0 hồi quy**. Một đỏ vẫn là bài Trà
+Chiều "Buổi A" đã hỏng sẵn trên `main`.
+
+10 bài đỏ theo câu chữ đã sửa. Đáng ghi: `onboarding_test.dart` trước đây phân
+biệt trang 1 với trang 2 **bằng nhãn nút** ("Tiếp tục" vs "Bắt đầu ngay"). Hai
+nhãn nay bằng nhau nên cách đó chết. Đã chuyển sang khoá bằng **nhãn tag**
+(Reflect · Understand · Grow) — thứ không đổi theo câu chữ.
+
+---
+
 ## CỔNG CHẤT LƯỢNG ĐỢT 1
 
 | Cổng | Kết quả |

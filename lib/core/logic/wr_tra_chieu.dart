@@ -60,7 +60,7 @@ const String kTraChieuLabel = 'Trà Chiều Nghề Nghiệp';
 ///
 /// Đây là quy ước của chương trình, không phải dữ liệu từng buổi: mọi buổi đều
 /// cùng số người, cùng thời lượng, cùng một câu hỏi.
-const String kTraChieuFormatLabel = '10 đến 12 người · 2 tiếng · 1 câu hỏi';
+const String kTraChieuFormatLabel = '10–12 người · 2 giờ chia sẻ';
 
 /// Các giá trị `category` được coi là Trà Chiều.
 ///

@@ -119,7 +119,7 @@ abstract class AppLocalizations {
   /// No description provided for @onb1Body.
   ///
   /// In vi, this message translates to:
-  /// **'Mỗi ngày một khoảnh khắc dừng lại.\nĐể nhìn rõ hơn, không phán xét.'**
+  /// **'Mỗi ngày, hãy dành một khoảnh khắc dừng lại.\nĐể nhìn rõ bản thân hơn trong một không gian\nan toàn của riêng bạn.'**
   String get onb1Body;
 
   /// No description provided for @onb1Cta.
@@ -149,31 +149,31 @@ abstract class AppLocalizations {
   /// No description provided for @onb2Opt1.
   ///
   /// In vi, this message translates to:
-  /// **'Mệt nhưng không biết tại sao'**
+  /// **'Mệt mỏi nhưng không rõ lý do.'**
   String get onb2Opt1;
 
   /// No description provided for @onb2Opt2.
   ///
   /// In vi, this message translates to:
-  /// **'Cố gắng nhưng không thấy tiến'**
+  /// **'Nỗ lực nhiều nhưng chưa thấy bước tiến.'**
   String get onb2Opt2;
 
   /// No description provided for @onb2Opt3.
   ///
   /// In vi, this message translates to:
-  /// **'Muốn thay đổi, chưa biết bắt đầu từ đâu'**
+  /// **'Khao khát thay đổi nhưng chưa biết bắt đầu từ đâu.'**
   String get onb2Opt3;
 
   /// No description provided for @onb2Opt4.
   ///
   /// In vi, this message translates to:
-  /// **'Đang khá ổn, muốn hiểu mình hơn'**
+  /// **'Mọi thứ đang ổn, nhưng muốn thấu hiểu mình sâu hơn.'**
   String get onb2Opt4;
 
   /// No description provided for @onb2Cta.
   ///
   /// In vi, this message translates to:
-  /// **'Bắt đầu ngay'**
+  /// **'Tiếp tục'**
   String get onb2Cta;
 
   /// No description provided for @onb3Tag.
@@ -185,13 +185,13 @@ abstract class AppLocalizations {
   /// No description provided for @onb3Title.
   ///
   /// In vi, this message translates to:
-  /// **'Đồng hành cùng\nsự nghiệp của bạn.'**
+  /// **'Đồng hành cùng bước tiến\nsự nghiệp của bạn.'**
   String get onb3Title;
 
   /// No description provided for @onb3Body.
   ///
   /// In vi, this message translates to:
-  /// **'WorkReflection ghi nhớ hành trình,\ntích lũy insight thành\ncareer intelligence của riêng bạn.'**
+  /// **'WorkReflection lưu giữ hành trình, giúp những\ntrải nghiệm được nhìn lại trở thành trí tuệ\nnghề nghiệp mang đậm bản sắc của riêng bạn.'**
   String get onb3Body;
 
   /// No description provided for @onb3Promise1Title.
@@ -221,19 +221,19 @@ abstract class AppLocalizations {
   /// No description provided for @onb3Promise3Title.
   ///
   /// In vi, this message translates to:
-  /// **'Không phán xét'**
+  /// **'Góc nhìn khách quan'**
   String get onb3Promise3Title;
 
   /// No description provided for @onb3Promise3Sub.
   ///
   /// In vi, this message translates to:
-  /// **'Chỉ lắng nghe và phản chiếu'**
+  /// **'Ghi nhận và phản chiếu chân thực.'**
   String get onb3Promise3Sub;
 
   /// No description provided for @onb3Cta.
   ///
   /// In vi, this message translates to:
-  /// **'Vào WorkReflection'**
+  /// **'Bắt đầu hành trình'**
   String get onb3Cta;
 
   /// No description provided for @authLoginTitle.

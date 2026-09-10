@@ -30,7 +30,7 @@ import '../../../core/widgets/wr_link_row.dart';
 import '../../workshops/workshops_providers.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 
-/// Ba luật của mọi buổi — nguyên văn theo mockup, không rút gọn.
+/// Ba nguyên tắc cốt lõi — nguyên văn theo mockup, không rút gọn.
 const List<String> kTraChieuRules = [
   'Điều gì nói ở đây, ở lại đây. Mọi trích dẫn ra ngoài đều ẩn danh và cần '
       'người nói đồng ý.',
@@ -39,10 +39,10 @@ const List<String> kTraChieuRules = [
 ];
 
 const String kTraChieuWhy =
-    'Không phải hội thảo, không có sân khấu. Mười đến mười hai người ngồi quanh '
-    'một bàn trà, cùng trả lời một câu hỏi duy nhất. Đây là chính trải nghiệm '
-    'phản chiếu của WorkReflection, chỉ khác là được nói thành lời, trong một '
-    'không gian an toàn.';
+    'Trà Chiều là một không gian tự do được kết nối bởi chính những người đi '
+    'làm. Bằng việc cùng đào sâu bằng phản chiếu, chúng ta mượn trải nghiệm của '
+    'người khác và gỡ rối cho chính mình. Giá trị lớn nhất ở khoảnh khắc bạn '
+    'nhận ra: Hóa ra mình không hề đơn độc trên hành trình này.';
 
 // ---------------------------------------------------------------------------
 
@@ -60,7 +60,7 @@ class WrTraChieuScreen extends ConsumerWidget {
       title: kTraChieuLabel,
       children: [
         const Text(
-          '$kTraChieuFormatLabel.',
+          kTraChieuFormatLabel,
           style: TextStyle(fontSize: 15.5, color: WrColors.muted, height: 1.6),
         ),
         const SizedBox(height: 22),
@@ -75,7 +75,7 @@ class WrTraChieuScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: const [
               Text(
-                'Vì sao lại là Trà Chiều',
+                'Tinh thần của buổi Trà Chiều',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -118,7 +118,7 @@ class WrTraChieuScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const Text(
-                'Ba luật của mọi buổi',
+                '3 nguyên tắc cốt lõi',
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -299,8 +299,8 @@ class _NoSessionCard extends StatelessWidget {
     return const WrCardMinimal(
       key: Key('wr_tra_chieu_empty'),
       child: WrParagraph(
-        'Chưa có buổi nào được mở. Lịch Trà Chiều thường được công bố trước '
-        'khoảng hai tuần.',
+        'Hiện chưa có lịch sự kiện mới. Lịch tổ chức Trà Chiều thường sẽ được '
+        'thông báo trước hai tuần để bạn tiện sắp xếp công việc.',
         style: TextStyle(fontSize: 15.5, color: WrColors.muted, height: 1.7),
       ),
     );
@@ -325,7 +325,7 @@ class WrTraChieuCalendarScreen extends ConsumerWidget {
       children: [
         if (sessions.isEmpty)
           const Text(
-            'Chưa có buổi nào được mở.',
+            'Hiện chưa có lịch sự kiện mới.',
             key: Key('wr_tra_chieu_calendar_empty'),
             style: TextStyle(fontSize: 15.5, color: WrColors.muted, height: 1.7),
           )

@@ -112,7 +112,7 @@ const List<WrJdDay> kJdDays = [
   WrJdDay(
     number: 1,
     title: 'Khởi động',
-    eyebrow: 'Bước 1 trên 5 · khoảng 2 phút',
+    eyebrow: 'Bước 1 / 5 · khoảng 2 phút',
     intro: 'Đừng áp lực phải viết đúng chuẩn. Hãy thoải mái trả lời những câu '
         'hỏi, chia sẻ của bạn sẽ là chất liệu để tạo nên bản JD hoàn chỉnh.',
     fields: [
@@ -139,7 +139,7 @@ const List<WrJdDay> kJdDays = [
   WrJdDay(
     number: 2,
     title: 'Vị trí & mục tiêu',
-    eyebrow: 'Bước 2 trên 5 · khoảng 3 phút',
+    eyebrow: 'Bước 2 / 5 · khoảng 3 phút',
     fields: [
       WrJdField(
         column: 'job_title',
@@ -178,7 +178,7 @@ const List<WrJdDay> kJdDays = [
   WrJdDay(
     number: 3,
     title: 'Nhiệm vụ chính',
-    eyebrow: 'Bước 3 trên 5 · khoảng 3 phút',
+    eyebrow: 'Bước 3 / 5 · khoảng 3 phút',
     fields: [
       WrJdField(
         column: 'main_tasks',
@@ -199,7 +199,7 @@ const List<WrJdDay> kJdDays = [
   WrJdDay(
     number: 4,
     title: 'Kết quả & kỹ năng',
-    eyebrow: 'Bước 4 trên 5 · khoảng 3 phút',
+    eyebrow: 'Bước 4 / 5 · khoảng 3 phút',
     fields: [
       WrJdField(
         column: 'outcomes',
@@ -222,7 +222,7 @@ const List<WrJdDay> kJdDays = [
   WrJdDay(
     number: 5,
     title: 'Mối quan hệ & điều kiện làm việc',
-    eyebrow: 'Bước 5 trên 5 · khoảng 2 phút',
+    eyebrow: 'Bước 5 / 5 · khoảng 2 phút',
     fields: [
       WrJdField(
         column: 'collaborators',
