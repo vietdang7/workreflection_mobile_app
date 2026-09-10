@@ -6,19 +6,43 @@
 // thuần Dart hơn là bằng widget test.
 //
 // ---------------------------------------------------------------------------
-// Hai quyết định về bố cục
+// Ba quyết định về bố cục
 // ---------------------------------------------------------------------------
 //
 // 1. GẬP/MỞ, không phải một trang chữ dài. Bản Word đọc một mạch từ trên xuống
 //    được vì người đọc đang ngồi đọc tài liệu. Người mở màn này thì đang mắc ở
-//    một chỗ cụ thể ("cái Career Health Check kia là gì") — tám tiêu đề nhìn
-//    thấy hết trong một màn là cách nhanh nhất để họ tới đúng chỗ. Mỗi tiêu đề
-//    kèm một dòng tóm tắt, nên gập lại vẫn đọc được bên trong có gì.
+//    một chỗ cụ thể ("cái Career Snapshot kia là gì") — các tiêu đề nhìn thấy
+//    hết trong một màn là cách nhanh nhất để họ tới đúng chỗ. Mỗi tiêu đề kèm
+//    một dòng tóm tắt, nên gập lại vẫn đọc được bên trong có gì.
 //
-// 2. CHATBOT NẰM NGOÀI DANH SÁCH. Khách chốt hướng dẫn phải "làm nổi bật
-//    Chatbot"; một mục thứ tư trong tám mục thì không nổi bật. Nó là thẻ coral
-//    đặc, luôn mở, có nút mở thẳng Chatbot — và là chỗ DUY NHẤT trên màn dùng
-//    coral đặc, đúng spec §01 "một CTA chính mỗi màn".
+// 2. TRỢ LÝ AI NẰM NGOÀI DANH SÁCH. Khách chốt hướng dẫn phải làm nổi bật trợ
+//    lý; một mục thứ tư trong mười một mục thì không nổi bật. Nó là thẻ riêng,
+//    luôn mở, có nút mở thẳng trợ lý.
+//
+// 3. CHIA CỤM BẰNG NHÃN NHỎ. Mười một mục xếp thẳng một hàng đọc ra là một
+//    danh sách dài; bản v4 chia thành bốn cụm (Bắt đầu · Bốn tab chính ·
+//    Thông tin công việc · Tài khoản và hỗ trợ) và mắt biết mình đang ở đâu.
+//
+// ---------------------------------------------------------------------------
+// Màu: theo bản v4 về CÁCH DÙNG, theo brand identity về HEX
+// ---------------------------------------------------------------------------
+//
+// Bản mockup v4 dùng một dải xám trung tính (#1F2937 · #6B7280 · #5B6472 ·
+// #8A93A3) mà spec §01b cấm — chữ phụ của WorkReflection luôn là Deep Space
+// #2C335D pha alpha để giữ tông ấm cùng Navy, xem `wr_colors.dart`. Nên chỗ
+// nào v4 chỉ định một sắc xám thì ở đây là `text2`/`text3` tương ứng, không
+// chép hex.
+//
+// Còn CÁCH dùng màu thì theo v4 sát:
+//   • gạch coral 48×4 dưới tiêu đề màn;
+//   • callout có viền trái 4px — teal cho mẹo dùng, coral cho phần Premium
+//     (trước đây chỉ có một tông teal cho cả hai);
+//   • số thứ tự là chấm navy ĐẶC chữ trắng, không phải navy pha loãng;
+//   • thẻ trợ lý là panel navy nhạt với ô biểu tượng coral, thay cho thẻ coral
+//     đặc của bản 26/08. `#F1F4F9` của v4 là xám ngả xanh, tức navy pha rất
+//     loãng — chép thẳng hex đó lên nền `#F4F4F6` thì thẻ biến mất, nên dựng
+//     bằng `navy` pha alpha;
+//   • thẻ chốt màn cùng họ navy nhạt, bấm được để mở trợ lý.
 
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -50,6 +74,38 @@ class _GuideScreenState extends State<GuideScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Nhãn cụm chỉ in ở mục ĐẦU của cụm. So với mục liền trước chứ không đếm
+    // trước thành từng nhóm: thứ tự mục là thứ tự hiển thị, nên so hàng xóm là
+    // đủ và không phải dựng thêm một cấu trúc lồng.
+    //
+    // Dựng bằng vòng lặp thường chứ không phải `collection-for` trong
+    // `children`: biến `previousGroup` phải nhích theo lúc DỰNG DANH SÁCH, mà
+    // trong collection-for thì không đặt được câu lệnh gán.
+    final sectionWidgets = <Widget>[];
+    String? previousGroup;
+    for (final section in _sections) {
+      if (section.group != previousGroup) {
+        if (previousGroup != null) sectionWidgets.add(const SizedBox(height: 10));
+        sectionWidgets.add(
+          Padding(
+            padding: const EdgeInsets.only(left: 4, bottom: 10),
+            child: WrEyebrow(section.group),
+          ),
+        );
+        previousGroup = section.group;
+      }
+      sectionWidgets.add(
+        _SectionCard(
+          section: section,
+          expanded: _open.contains(section.id),
+          onTap: () => setState(() {
+            if (!_open.remove(section.id)) _open.add(section.id);
+          }),
+        ),
+      );
+      sectionWidgets.add(const SizedBox(height: 10));
+    }
+
     return Scaffold(
       backgroundColor: WrColors.pageBg,
       body: SafeArea(
@@ -62,16 +118,16 @@ class _GuideScreenState extends State<GuideScreen> {
                 behavior: HitTestBehavior.opaque,
                 onTap: () => context.pop(),
                 child: Padding(
-                  padding: EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.only(bottom: 10),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.arrow_back_ios_new,
+                      const Icon(Icons.arrow_back_ios_new,
                           size: 14, color: WrColors.muted),
-                      SizedBox(width: 6),
+                      const SizedBox(width: 6),
                       Text(
                         tr('Quay lại', 'Back'),
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 14.5,
                           fontWeight: FontWeight.w500,
                           color: WrColors.muted,
@@ -85,7 +141,7 @@ class _GuideScreenState extends State<GuideScreen> {
             const SizedBox(height: 8),
             Text(
               tr('Hướng dẫn sử dụng', 'User guide'),
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.w800,
                 color: WrColors.navy,
@@ -93,41 +149,32 @@ class _GuideScreenState extends State<GuideScreen> {
               ),
             ),
             const SizedBox(height: 8),
+            // Gạch coral dưới tiêu đề (`.rule` của v4).
+            Container(
+              width: 48,
+              height: 4,
+              decoration: BoxDecoration(
+                color: WrColors.coral,
+                borderRadius: BorderRadius.circular(99),
+              ),
+            ),
+            const SizedBox(height: 14),
             WrParagraph(
               kGuideIntro,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 14.5,
                 color: WrColors.text2,
                 height: 1.6,
               ),
             ),
-            const SizedBox(height: 16),
-            const _ChatbotCard(),
-            const SizedBox(height: 16),
-            for (final section in _sections) ...[
-              _SectionCard(
-                section: section,
-                expanded: _open.contains(section.id),
-                onTap: () => setState(() {
-                  if (!_open.remove(section.id)) _open.add(section.id);
-                }),
-              ),
-              const SizedBox(height: 10),
-            ],
+            const SizedBox(height: 18),
+            const _AssistantCard(),
+            const SizedBox(height: 20),
+            ...sectionWidgets,
             const SizedBox(height: 8),
-            // Dòng chốt: hướng dẫn không phải hợp đồng, và người đọc tới đây
-            // vẫn còn thắc mắc thì đã có sẵn chỗ hỏi — chính Chatbot ở trên.
-            Center(
-              child: WrParagraph(
-                tr('Còn điều gì chưa rõ, cứ hỏi thẳng Chatbot.', 'Anything still unclear, just ask the Chatbot directly.'),
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: WrColors.text3,
-                  height: 1.6,
-                ),
-              ),
-            ),
+            // Thẻ chốt: hướng dẫn không phải hợp đồng, và người đọc tới đây vẫn
+            // còn thắc mắc thì đã có sẵn chỗ hỏi — chính trợ lý ở trên.
+            const _ClosingCta(),
           ],
         ),
       ),
@@ -136,11 +183,11 @@ class _GuideScreenState extends State<GuideScreen> {
 }
 
 // ---------------------------------------------------------------------------
-// Thẻ Chatbot
+// Thẻ Trợ lý AI
 // ---------------------------------------------------------------------------
 
-class _ChatbotCard extends StatelessWidget {
-  const _ChatbotCard();
+class _AssistantCard extends StatelessWidget {
+  const _AssistantCard();
 
   @override
   Widget build(BuildContext context) {
@@ -149,50 +196,76 @@ class _ChatbotCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(18),
       decoration: BoxDecoration(
-        color: WrColors.coral,
+        color: WrColors.navy.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: WrColors.line),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.chat_bubble_outline_rounded,
-                  size: 18, color: WrColors.navy),
-              SizedBox(width: 8),
+              // Ô biểu tượng coral — chỗ DUY NHẤT trên màn dùng coral đặc,
+              // đúng spec §01 "một CTA chính mỗi màn".
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: WrColors.coral,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Icon(Icons.chat_bubble_outline_rounded,
+                    size: 20, color: WrColors.white),
+              ),
+              const SizedBox(width: 12),
               Expanded(
-                child: Text(
-                  kGuideChatTitle,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: WrColors.navy,
-                    height: 1.3,
-                  ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      kGuideChatTitle,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        color: WrColors.navy,
+                        height: 1.25,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      kGuideChatSubtitle,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: WrColors.text3,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 6),
-          // §03: chữ trên nền coral là navy pha loãng, không đổi sang trắng.
+          const SizedBox(height: 14),
           WrParagraph(
             kGuideChatLead,
-            style: TextStyle(
-              fontSize: 13,
-              color: Color(0xBF093774),
-              height: 1.55,
+            style: const TextStyle(
+              fontSize: 13.5,
+              color: WrColors.text2,
+              height: 1.6,
             ),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 8),
           WrParagraph(
             kGuideChatWhy,
-            style: TextStyle(
-              fontSize: 13,
-              color: Color(0xBF093774),
-              height: 1.55,
+            style: const TextStyle(
+              fontSize: 13.5,
+              color: WrColors.text2,
+              height: 1.6,
             ),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
+          WrEyebrow(kGuideChatExamplesLabel),
+          const SizedBox(height: 8),
           // Ví dụ câu hỏi thật, không phải lời mời chung chung: "hỏi bất cứ
           // điều gì" là lời mời khó nhận nhất — người dùng không biết bắt đầu
           // từ đâu nên không bắt đầu.
@@ -207,51 +280,111 @@ class _ChatbotCard extends StatelessWidget {
               for (final q in kGuideChatExamples)
                 Container(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
                   decoration: BoxDecoration(
-                    color: WrColors.white.withValues(alpha: 0.55),
+                    color: WrColors.white,
                     borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: WrColors.line),
                   ),
                   child: Text(
                     '“$q”',
                     style: const TextStyle(
                       fontSize: 12.5,
-                      color: WrColors.navy,
+                      color: WrColors.text2,
                       height: 1.4,
                     ),
                   ),
                 ),
             ],
           ),
-          const SizedBox(height: 10),
-          WrParagraph(
-            kGuideChatCaveat,
-            style: TextStyle(
-              fontSize: 12,
-              color: Color(0x99093774),
-              height: 1.55,
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              key: const Key('guide_chat_cta'),
+              onPressed: () => context.push(kGuideChatRoute),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: WrColors.navy,
+                foregroundColor: WrColors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    kGuideChatCta,
+                    style: const TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(Icons.arrow_forward_rounded, size: 16),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 12),
-          ElevatedButton(
-            key: const Key('guide_chat_cta'),
-            onPressed: () => context.push(kGuideChatRoute),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: WrColors.navy,
-              foregroundColor: WrColors.white,
-              elevation: 0,
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-            ),
-            child: Text(
-              tr('Mở Chatbot', 'Open the Chatbot'),
-              style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
+          WrParagraph(
+            kGuideChatCaveat,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 12,
+              color: WrColors.text3,
+              height: 1.55,
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Thẻ chốt màn
+// ---------------------------------------------------------------------------
+
+class _ClosingCta extends StatelessWidget {
+  const _ClosingCta();
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      key: const Key('guide_closing_cta'),
+      onTap: () => context.push(kGuideChatRoute),
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: WrColors.navy.withValues(alpha: 0.07),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: WrColors.navy.withValues(alpha: 0.16)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.chat_bubble_outline_rounded,
+                size: 18, color: WrColors.navy),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                kGuideClosingCta,
+                style: const TextStyle(
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w600,
+                  color: WrColors.navy,
+                  height: 1.4,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(Icons.arrow_forward_rounded,
+                size: 17, color: WrColors.navy),
+          ],
+        ),
       ),
     );
   }
@@ -278,7 +411,7 @@ class _SectionCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: WrColors.white,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: WrColors.line),
       ),
       child: Column(
@@ -294,6 +427,8 @@ class _SectionCard extends StatelessWidget {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  _SectionIcon(icon: section.icon),
+                  const SizedBox(width: 13),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -304,7 +439,7 @@ class _SectionCard extends StatelessWidget {
                             fontSize: 15.5,
                             fontWeight: FontWeight.w700,
                             color: WrColors.navy,
-                            height: 1.3,
+                            height: 1.35,
                           ),
                         ),
                         // Tóm tắt chỉ hiện khi mục đang đóng. Mở ra rồi thì nó
@@ -316,7 +451,7 @@ class _SectionCard extends StatelessWidget {
                             style: const TextStyle(
                               fontSize: 12.5,
                               color: WrColors.text3,
-                              height: 1.5,
+                              height: 1.45,
                             ),
                           ),
                         ],
@@ -330,7 +465,7 @@ class _SectionCard extends StatelessWidget {
                     child: const Icon(
                       Icons.keyboard_arrow_down_rounded,
                       size: 20,
-                      color: WrColors.muted,
+                      color: WrColors.text3,
                     ),
                   ),
                 ],
@@ -339,7 +474,7 @@ class _SectionCard extends StatelessWidget {
           ),
           if (expanded)
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 18),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -352,6 +487,49 @@ class _SectionCard extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+/// Vòng tròn biểu tượng bên trái tiêu đề mục (`.ico` của bản v4).
+///
+/// Hai tông đúng như v4: nền navy nhạt cho hầu hết mục, nền coral nhạt cho hai
+/// mục "Ba bước để bắt đầu" và "Gói Premium có gì" — một cái là lối vào, một
+/// cái là thứ phải trả tiền, cả hai đều muốn mắt dừng lại.
+class _SectionIcon extends StatelessWidget {
+  const _SectionIcon({required this.icon});
+
+  final WrGuideIcon icon;
+
+  @override
+  Widget build(BuildContext context) {
+    // `switch` vét cạn: thêm một giá trị vào `WrGuideIcon` mà quên chọn glyph
+    // thì compiler chặn ngay, không để lại một ô trống trên màn.
+    final (glyph, coral) = switch (icon) {
+      WrGuideIcon.compass => (Icons.explore_outlined, false),
+      WrGuideIcon.flag => (Icons.flag_outlined, true),
+      WrGuideIcon.eye => (Icons.visibility_outlined, false),
+      WrGuideIcon.bulb => (Icons.lightbulb_outline_rounded, false),
+      WrGuideIcon.bolt => (Icons.bolt_outlined, false),
+      WrGuideIcon.trend => (Icons.trending_up_rounded, false),
+      WrGuideIcon.briefcase => (Icons.work_outline_rounded, false),
+      WrGuideIcon.person => (Icons.person_outline_rounded, false),
+      // Cùng glyph Premium với phần còn lại của app (§17.2): vương miện, không
+      // phải ngôi sao.
+      WrGuideIcon.crown => (Icons.workspace_premium_outlined, true),
+      WrGuideIcon.question => (Icons.help_outline_rounded, false),
+    };
+
+    final accent = coral ? WrColors.coral : WrColors.navy;
+
+    return Container(
+      width: 40,
+      height: 40,
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: coral ? 0.12 : 0.10),
+        shape: BoxShape.circle,
+      ),
+      child: Icon(glyph, size: 21, color: accent),
     );
   }
 }
@@ -370,6 +548,15 @@ class _GuideBlockView extends StatelessWidget {
     // `switch` vét cạn trên sealed class: thêm một kiểu khối mà quên dựng
     // widget thì compiler chặn ngay, không để lại khoảng trống trên màn.
     return switch (block) {
+      WrGuideHeading(:final text) => Text(
+          text,
+          style: const TextStyle(
+            fontSize: 14.5,
+            fontWeight: FontWeight.w700,
+            color: WrColors.dark,
+            height: 1.4,
+          ),
+        ),
       WrGuideText(:final text) => WrParagraph(
           text,
           style: const TextStyle(
@@ -378,20 +565,47 @@ class _GuideBlockView extends StatelessWidget {
             height: 1.7,
           ),
         ),
-      WrGuideNote(:final text) => Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-          decoration: BoxDecoration(
-            color: WrColors.teal.withValues(alpha: 0.08),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: WrParagraph(
-            text,
-            style: const TextStyle(
-              fontSize: 13,
-              color: WrColors.dark,
-              height: 1.65,
-            ),
-          ),
+      WrGuideNote(:final text, :final tone) => _NoteBox(text: text, tone: tone),
+      WrGuideChecks(:final items, :final footnote) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final item in items)
+              Padding(
+                padding: const EdgeInsets.only(bottom: 10),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.only(top: 3, right: 10),
+                      child: Icon(Icons.check_rounded,
+                          size: 16, color: WrColors.teal),
+                    ),
+                    Expanded(
+                      child: WrParagraph(
+                        item,
+                        style: const TextStyle(
+                          fontSize: 13.5,
+                          color: WrColors.text2,
+                          height: 1.65,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            if (footnote != null)
+              Padding(
+                padding: const EdgeInsets.only(top: 4),
+                child: WrParagraph(
+                  footnote,
+                  style: const TextStyle(
+                    fontSize: 13,
+                    color: WrColors.text3,
+                    height: 1.6,
+                  ),
+                ),
+              ),
+          ],
         ),
       WrGuideBullets(:final items) => Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -410,42 +624,6 @@ class _GuideBlockView extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: _StepRow(index: i + 1, step: items[i]),
-              ),
-          ],
-        ),
-      WrGuideTwoColumn(:final rows) => Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (final row in rows)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(
-                      width: 92,
-                      child: Text(
-                        row.left,
-                        style: const TextStyle(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w700,
-                          color: WrColors.navy,
-                          height: 1.5,
-                        ),
-                      ),
-                    ),
-                    Expanded(
-                      child: Text(
-                        row.right,
-                        style: const TextStyle(
-                          fontSize: 13.5,
-                          color: WrColors.text2,
-                          height: 1.5,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
               ),
           ],
         ),
@@ -485,6 +663,46 @@ class _GuideBlockView extends StatelessWidget {
   }
 }
 
+/// Callout viền trái 4px — teal cho mẹo dùng, coral cho phần Premium.
+class _NoteBox extends StatelessWidget {
+  const _NoteBox({required this.text, required this.tone});
+
+  final String text;
+  final WrGuideNoteTone tone;
+
+  @override
+  Widget build(BuildContext context) {
+    final accent = switch (tone) {
+      WrGuideNoteTone.teal => WrColors.teal,
+      WrGuideNoteTone.coral => WrColors.coral,
+    };
+    final textColor = switch (tone) {
+      WrGuideNoteTone.teal => WrColors.dark,
+      WrGuideNoteTone.coral => WrColors.pillCoralText,
+    };
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 11, 14, 11),
+      decoration: BoxDecoration(
+        color: accent.withValues(alpha: 0.09),
+        borderRadius: const BorderRadius.only(
+          topRight: Radius.circular(12),
+          bottomRight: Radius.circular(12),
+        ),
+        border: Border(left: BorderSide(color: accent, width: 4)),
+      ),
+      child: WrParagraph(
+        text,
+        style: TextStyle(
+          fontSize: 13,
+          color: textColor,
+          height: 1.65,
+        ),
+      ),
+    );
+  }
+}
+
 class _BulletRow extends StatelessWidget {
   const _BulletRow({required this.item});
 
@@ -496,13 +714,13 @@ class _BulletRow extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         const Padding(
-          padding: EdgeInsets.only(top: 7, right: 8),
+          padding: EdgeInsets.only(top: 7, right: 10),
           child: SizedBox(
-            width: 5,
-            height: 5,
+            width: 7,
+            height: 7,
             child: DecoratedBox(
               decoration: BoxDecoration(
-                color: WrColors.teal,
+                color: WrColors.navy,
                 shape: BoxShape.circle,
               ),
             ),
@@ -512,15 +730,12 @@ class _BulletRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Không có nhãn gói cạnh tên tính năng (bỏ 26/08/2026, cùng lý do
-              // với bảng so sánh gói — xem đầu `wr_user_guide.dart`). Màn này
-              // chỉ nói tính năng làm gì; chuyện gói nào có nằm ở Paywall.
               Text(
                 item.label,
                 style: const TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w700,
-                  color: WrColors.navy,
+                  color: WrColors.dark,
                   height: 1.5,
                 ),
               ),
@@ -555,22 +770,23 @@ class _StepRow extends StatelessWidget {
         Container(
           width: 24,
           height: 24,
-          decoration: BoxDecoration(
-            color: WrColors.navy.withValues(alpha: 0.06),
+          margin: const EdgeInsets.only(top: 2),
+          decoration: const BoxDecoration(
+            color: WrColors.navy,
             shape: BoxShape.circle,
           ),
           child: Center(
             child: Text(
               '$index',
               style: const TextStyle(
-                fontSize: 12.5,
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
-                color: WrColors.navy,
+                color: WrColors.white,
               ),
             ),
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -584,7 +800,7 @@ class _StepRow extends StatelessWidget {
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
-                        color: WrColors.navy,
+                        color: WrColors.dark,
                         height: 1.45,
                       ),
                     ),
@@ -604,7 +820,7 @@ class _StepRow extends StatelessWidget {
                       ),
                       child: Text(
                         tr('bỏ qua được', 'skippable'),
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
                           color: WrColors.text3,

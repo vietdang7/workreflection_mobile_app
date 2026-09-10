@@ -119,19 +119,19 @@ void main() {
   });
 
   group('Hướng dẫn sử dụng', skip: !_enabled, () {
-    testWidgets('đầu màn — thẻ Chatbot và danh sách mục', (tester) async {
+    testWidgets('đầu màn — thẻ Trợ lý AI và danh sách mục', (tester) async {
       await _shoot(tester, '40_huong_dan_dau_man');
     });
 
     // Một mục đã mở, để duyệt cả kiểu chữ bên trong chứ không chỉ danh sách
-    // tiêu đề. Chọn "Nhìn lại mỗi ngày" vì nó có đủ bước đánh số, nhãn "bỏ qua
-    // được" và khối lưu ý.
+    // tiêu đề. Chọn "Hôm nay" vì nó có đủ tiêu đề nhỏ, bước đánh số, nhãn "bỏ
+    // qua được" và khối lưu ý teal.
     testWidgets('một mục đã mở', (tester) async {
-      await _shoot(tester, '41_huong_dan_muc_mo', open: const ['daily']);
+      await _shoot(tester, '41_huong_dan_muc_mo', open: const ['today']);
     });
   });
 
   test('bộ chữ có đủ mục để chụp', () {
-    expect(wrGuideSections().map((s) => s.id), contains('daily'));
+    expect(wrGuideSections().map((s) => s.id), contains('today'));
   });
 }

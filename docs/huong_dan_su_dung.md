@@ -1,6 +1,16 @@
 # Hướng dẫn sử dụng WorkReflection
 
-> **BẢN NHÁP — CHỜ DUYỆT.**
+> ⚠️ **ĐÃ CŨ (10/09/2026) — ĐỪNG DÙNG LÀM NGUỒN.**
+> Bộ chữ đang chạy trong app lấy theo
+> `FileTam/workreflection/WorkReflection_HDSD_InApp_v4.html` và nằm ở
+> `lib/core/logic/wr_user_guide.dart`. Bản v4 chia lại mục, đổi "Chatbot" thành
+> "Trợ lý AI", tách "Chọn cảm xúc" khỏi luồng nhìn lại (bốn bước chứ không phải
+> năm) và đưa lại mục "Gói Premium có gì". Trang này giữ nguyên làm bản nháp
+> lịch sử; sửa chữ thì sửa ở file Dart.
+>
+> ---
+>
+> **BẢN NHÁP — CHỜ DUYỆT.** *(ghi chú gốc 25/08/2026)*
 > Soạn theo yêu cầu §4 họp 26_1: "thêm phần hướng dẫn sử dụng trong mục Hồ sơ,
 > làm nổi bật Chatbot". Chưa dựng màn hình nào trong app cho tới khi bản chữ này
 > được duyệt — chỉnh chữ ở đây rẻ hơn chỉnh chữ đã nằm trong code nhiều lần.
