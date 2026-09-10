@@ -194,19 +194,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get understandEyebrowHealth => 'Career Health Check';
 
   @override
-  String get understandScaRole => 'Minh bạch vai trò';
+  String get understandScaRole => 'Sự rõ ràng';
 
   @override
-  String get understandScaVoice => 'An toàn khi lên tiếng';
+  String get understandScaVoice => 'Mối quan hệ';
 
   @override
-  String get understandScaMeaning => 'Định hướng ý nghĩa';
+  String get understandScaMeaning => 'Cách làm việc';
 
   @override
-  String get understandStatusStable => 'Ổn định';
+  String get understandStatusStable => 'Đang hỗ trợ tốt';
 
   @override
-  String get understandStatusImproving => 'Đang cải thiện';
+  String get understandStatusImproving => 'Ổn, còn dư địa';
 
   @override
   String get understandStatusUnrated => 'Chưa đánh giá';
@@ -353,7 +353,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không xoá được tài khoản. Kiểm tra mạng rồi thử lại.';
 
   @override
-  String get understandStatusNeedsAttention => 'Cần chú ý';
+  String get understandStatusNeedsAttention => 'Đang cản trở';
 
   @override
   String get understandNeedSuffix => '· Nhu cầu chủ đạo';

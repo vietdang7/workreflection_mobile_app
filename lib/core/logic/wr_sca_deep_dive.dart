@@ -57,17 +57,40 @@ enum ScaPillarStatus {
   needsAttention,
   priority;
 
+  /// Nhãn hiển thị trên huy hiệu (A7, khách chốt 10/09/2026).
+  ///
+  /// Bộ chữ này là bộ THỨ BA trong ba bộ từng cùng tồn tại. Hai bộ kia:
+  /// "Đang phát triển / Cần chú ý / Ưu tiên cải thiện" (bản dev cũ) và "Ổn định
+  /// / Đang cải thiện / Cần chú ý" (changelog bảng 2). Chọn bộ này vì cả thư
+  /// viện câu Diễn giải sâu (`WorkReflection_DienGiaiSau_NoiDung.docx`) rẽ
+  /// nhánh theo đúng ba chữ đó — nhánh A đọc "Đang hỗ trợ tốt", nhánh B/D đọc
+  /// "Đang cản trở" và "Ổn, còn dư địa".
+  ///
+  /// **Ngưỡng KHÔNG đổi theo.** Mockup chấm Likert 1–4, app chấm 1–5; bê ngưỡng
+  /// của mockup sang đây là mọi người dùng cũ mở app lên thấy đánh giá của mình
+  /// tự nhiên khác đi mà không ai chạm vào dữ liệu của họ.
   String get label => switch (this) {
-        ScaPillarStatus.developing => 'Đang phát triển',
-        ScaPillarStatus.needsAttention => 'Cần chú ý',
-        ScaPillarStatus.priority => 'Ưu tiên cải thiện',
+        ScaPillarStatus.developing => 'Đang hỗ trợ tốt',
+        ScaPillarStatus.needsAttention => 'Ổn, còn dư địa',
+        ScaPillarStatus.priority => 'Đang cản trở',
+      };
+
+  /// Dạng nhúng giữa câu — "bạn tự đánh giá phần này {inlineLabel}, nhưng…".
+  ///
+  /// Không dùng `label.toLowerCase()` được nữa: nhãn giữa mang sẵn một dấu
+  /// phẩy, nên "tự đánh giá ổn, còn dư địa, vừa là nơi…" đọc ra thành hai mệnh
+  /// đề rời. Mức giữa cần một dạng liền câu riêng.
+  String get inlineLabel => switch (this) {
+        ScaPillarStatus.developing => 'đang hỗ trợ tốt',
+        ScaPillarStatus.needsAttention => 'ổn nhưng còn dư địa',
+        ScaPillarStatus.priority => 'đang cản trở',
       };
 
   /// Người dùng đang tự chấm trụ này là ỔN.
   ///
-  /// Chỉ mức cao nhất mới tính. "Cần chú ý" nằm giữa thang 1–5 và người tự chấm
-  /// như vậy KHÔNG nói rằng mình ổn — gộp nó vào đây thì câu "bạn tự đánh giá
-  /// phần này ổn, nhưng…" sẽ bịa lại lời của họ.
+  /// Chỉ mức cao nhất mới tính. "Ổn, còn dư địa" nằm giữa thang 1–5 và người tự
+  /// chấm như vậy KHÔNG nói rằng mình ổn — gộp nó vào đây thì câu "bạn tự đánh
+  /// giá phần này ổn, nhưng…" sẽ bịa lại lời của họ.
   bool get isReassuring => this == ScaPillarStatus.developing;
 }
 
@@ -260,14 +283,14 @@ String scaPatternText({
 
   // Đây là chỗ §7 gọi là "lệch pha giữa tự nhận thức và trải nghiệm thực tế".
   if (status.isReassuring) {
-    return 'Bạn tự đánh giá phần này ${status.label.toLowerCase()}, nhưng đây '
+    return 'Bạn tự đánh giá phần này ${status.inlineLabel}, nhưng đây '
         'lại là nhóm tình huống bạn quay lại nhiều nhất trong Reflection gần '
         'đây ($count lần). Sự chênh lệch này thường đáng chú ý hơn bản thân '
         'điểm số, có thể bạn đã quen đến mức không còn nhận ra ảnh hưởng của '
         'nó nữa.';
   }
 
-  return 'Nhóm này vừa được bạn tự đánh giá ${status.label.toLowerCase()}, vừa '
+  return 'Nhóm này vừa được bạn tự đánh giá ${status.inlineLabel}, vừa '
       'là nơi bạn quay lại nhiều nhất trong Reflection ($count lần). Hai nguồn '
       'dữ liệu đang xác nhận lẫn nhau.';
 }
@@ -313,7 +336,7 @@ String? selfAwarenessGapNarrative({
 
   final count = counts[dominant] ?? 0;
   return 'Bạn tự đánh giá ${dominant.displayName.toLowerCase()} là '
-      '${status.label.toLowerCase()}, nhưng $kScaPatternWindowDays ngày qua đây '
+      '${status.inlineLabel}, nhưng $kScaPatternWindowDays ngày qua đây '
       'lại là nhóm bạn quay lại nhiều nhất khi nhìn lại ($count lần). Chênh '
       'lệch giữa hai điều đó thường đáng nhìn kỹ hơn bản thân điểm số.';
 }

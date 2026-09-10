@@ -291,7 +291,7 @@ DeepGapStatus? _gapStatus({
     if (dom == null) return 0;
     final score = scaScoreOf(check, dom);
     if (score == null) return 0;
-    // Mức "Đang phát triển" (index 0) là chỗ lệch pha lớn nhất: tự chấm ổn mà
+    // Mức "Đang hỗ trợ tốt" (index 0) là chỗ lệch pha lớn nhất: tự chấm ổn mà
     // vẫn quay lại nhiều nhất. Đảo chỉ số để số càng lớn = lệch càng rộng.
     final reassurance = 2 - scaPillarStatus(score).index;
     return reassurance * ((c[dom] ?? 0) / t);

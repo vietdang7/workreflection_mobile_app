@@ -82,7 +82,7 @@ Map<SelfCheckPillar, double> pillarShares(
 /// `pillarShares` trả về ba số 0 cho hai trường hợp KHÁC HẲN nhau: chưa ghi
 /// nhận gì, và đã ghi nhận nhiều nhưng toàn tình huống tích cực (P-ACHIEVE,
 /// P-STEADY) hoặc tình huống tự viết không có mã. Cả ba số 0 đọc ra thành ba
-/// nhãn "Đang phát triển" — một lời khen bịa ra từ chỗ không có dữ liệu.
+/// nhãn "Đang hỗ trợ tốt" — một lời khen bịa ra từ chỗ không có dữ liệu.
 ///
 /// Đủ 15 lần nhìn lại mà bức tranh vẫn phải im lặng thì màn hình phải NÓI RA
 /// điều đó, chứ không được bịa. Hàm này để nơi gọi phân biệt được hai trường
@@ -103,13 +103,13 @@ int scaTouchedCount(List<String> recent, List<WrSituation> situations) {
 // ĐÃ BỎ: behaviourPillarLabel / behaviourPillarIsHealthy
 // ---------------------------------------------------------------------------
 //
-// Hai hàm đó gán nhãn ĐÁNH GIÁ ("Ưu tiên cải thiện" / "Cần chú ý" / "Đang phát
-// triển") cho một con số TẦN SUẤT. `Changelog_CareerSnapshot.docx` §2 yêu cầu
+// Hai hàm đó gán nhãn ĐÁNH GIÁ ("Đang cản trở" / "Ổn, còn dư địa" / "Đang hỗ
+// trợ tốt") cho một con số TẦN SUẤT. `Changelog_CareerSnapshot.docx` §2 yêu cầu
 // bỏ hoàn toàn:
 //
 //   "Tần suất cao KHÔNG đồng nghĩa với 'tệ'. Một người quay lại nhóm Mối quan
 //    hệ 14 lần có thể vì đang gặp vấn đề, nhưng cũng có thể vì đang chủ động
-//    làm việc với nó. Gán nhãn đánh giá kiểu 'Ưu tiên cải thiện' cho một con số
+//    làm việc với nó. Gán nhãn đánh giá kiểu 'Đang cản trở' cho một con số
 //    tần suất là suy diễn vượt quá dữ liệu."
 //
 // Còn tệ hơn: bộ chữ đó CỐ Ý trùng với `pillarStatusLabel` của đường tự đánh
@@ -152,7 +152,7 @@ Map<SelfCheckPillar, int> pillarReflectionCounts(
 ///
 /// Ba tháng. §5: "Self-Check là ảnh chụp tại một thời điểm, còn Reflection là
 /// dòng chảy liên tục. Nếu một người làm Self-Check hồi tháng 3, rồi phản chiếu
-/// đều đặn đến tháng 9, việc hiển thị 'Bạn đánh giá: Cần chú ý' như thể đó là
+/// đều đặn đến tháng 9, việc hiển thị 'Bạn đánh giá: Ổn, còn dư địa' như thể đó là
 /// đánh giá hiện tại là sai lệch."
 ///
 /// Nguy hiểm hơn cái nhãn cũ: hệ thống lấy chính con số cũ đó đối chiếu với

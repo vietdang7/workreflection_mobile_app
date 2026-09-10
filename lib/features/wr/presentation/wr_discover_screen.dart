@@ -24,6 +24,8 @@ import '../../../core/logic/wr_dominant_need.dart';
 import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/logic/wr_career_health.dart';
 import '../../../core/logic/wr_repeated_situations.dart';
+import '../../../core/logic/wr_sca_deep_dive.dart'
+    show ScaPillarStatus, scaPillarStatus;
 import '../../../core/logic/wr_self_check_questions.dart';
 import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_intelligence.dart';
@@ -64,11 +66,14 @@ const int kDiscoverPatternPreview = 3;
 // ---------------------------------------------------------------------------
 
 /// null = chưa từng tự đánh giá trụ này.
+///
+/// Ngưỡng và bộ chữ đều UỶ LẠI `scaPillarStatus` / `ScaPillarStatus.label`, chứ
+/// không chép lại. Bản trước chép — và A7 lộ ra đúng cái giá của việc chép: đổi
+/// bộ nhãn phải nhớ đổi ở hai chỗ, quên một chỗ thì hai màn cùng nói về một
+/// điểm số bằng hai giọng, đúng lỗi §7.2 changelog đang bắt sửa.
 String pillarStatusLabel(double? score) {
   if (score == null || score <= 0) return 'Chưa đánh giá';
-  if (score >= 3.8) return 'Đang phát triển';
-  if (score >= 2.5) return 'Cần chú ý';
-  return 'Ưu tiên cải thiện';
+  return scaPillarStatus(score).label;
 }
 
 /// Điểm một trụ trong một lần tự đánh giá.
@@ -94,10 +99,15 @@ bool snapshotHasSelfCheck(ScaSelfCheckResponse? latest) =>
 /// Người dùng đang tự chấm trụ này là ỔN.
 ///
 /// Chỉ mức cao nhất mới tính, đúng luật `ScaPillarStatus.isReassuring` của màn
-/// Diễn giải sâu: "Cần chú ý" nằm giữa thang 1–5 và người tự chấm như vậy KHÔNG
-/// nói rằng mình ổn — gộp nó vào đây thì câu "bạn tự đánh giá phần này ổn,
-/// nhưng…" sẽ bịa lại lời của họ.
-bool pillarStatusIsReassuring(String label) => label == 'Đang phát triển';
+/// Diễn giải sâu: "Ổn, còn dư địa" nằm giữa thang 1–5 và người tự chấm như vậy
+/// KHÔNG nói rằng mình ổn — gộp nó vào đây thì câu "bạn tự đánh giá phần này
+/// ổn, nhưng…" sẽ bịa lại lời của họ.
+///
+/// So với chính `ScaPillarStatus.developing.label` chứ không viết thẳng chuỗi:
+/// đợt sau đổi chữ lần nữa thì hàm này đi theo, không âm thầm trả về false cho
+/// mọi trụ.
+bool pillarStatusIsReassuring(String label) =>
+    label == ScaPillarStatus.developing.label;
 
 Color pillarStatusColor(double? score) {
   if (score == null || score <= 0) return WrColors.muted;
@@ -519,9 +529,9 @@ class _SeeMoreLink extends StatelessWidget {
 // VÌ SAO PHẢI GỘP. Sau khi Career Health Check mở khoá, CÙNG ba trụ xuất hiện
 // hai lần trong một màn hình, cách nhau vài dòng, với kết luận ngược nhau:
 //
-//     Sự rõ ràng      Cần chú ý   |   Đang phát triển
-//     Mối quan hệ     Cần chú ý   |   Ưu tiên cải thiện
-//     Cách làm việc   Cần chú ý   |   Cần chú ý
+//     Sự rõ ràng      Ổn, còn dư địa   |   Đang hỗ trợ tốt
+//     Mối quan hệ     Ổn, còn dư địa   |   Đang cản trở
+//     Cách làm việc   Ổn, còn dư địa   |   Ổn, còn dư địa
 //
 // Người dùng đọc đây là lỗi hệ thống, không phải hai góc nhìn bổ sung nhau. §1
 // chỉ đúng dấu hiệu: khi giao diện cần một đoạn văn để giải thích vì sao hai

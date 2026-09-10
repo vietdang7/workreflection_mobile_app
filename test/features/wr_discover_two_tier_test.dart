@@ -14,6 +14,7 @@ import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_episode_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
 
+import 'package:workreflection_mobile/core/logic/wr_sca_deep_dive.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 import 'package:workreflection_mobile/core/models/wr_episode.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
@@ -758,9 +759,9 @@ void main() {
         ),
       );
 
-      expect(find.text('Đang phát triển'), findsOneWidget); // S = 4.2
-      expect(find.text('Cần chú ý'), findsOneWidget); //       C = 3.0
-      expect(find.text('Ưu tiên cải thiện'), findsOneWidget); // A = 1.8
+      expect(find.text(ScaPillarStatus.developing.label), findsOneWidget); // 4.2
+      expect(find.text(ScaPillarStatus.needsAttention.label), findsOneWidget); // 3.0
+      expect(find.text(ScaPillarStatus.priority.label), findsOneWidget); // 1.8
 
       // §5 — Self-Check là ảnh chụp tại một thời điểm, nên LUÔN hiện thời điểm
       // kèm cột đánh giá. Không có ngày thì con số cũ đội lốt đánh giá hiện tại.
@@ -792,7 +793,7 @@ void main() {
       );
 
       expect(find.text('Chưa có'), findsNWidgets(3));
-      expect(find.text('Đang phát triển'), findsNothing);
+      expect(find.text(ScaPillarStatus.developing.label), findsNothing);
     });
 
     testWidgets('đủ ngưỡng thì cột phải nói SỐ LẦN, không nhãn đánh giá nào',
@@ -817,12 +818,12 @@ void main() {
       expect(find.text('0 / 16 lần'), findsNWidgets(2));
       // Không nhãn đánh giá nào rơi vào cột phải: chưa làm Self-Check nên cột
       // trái trống, và cả màn không được có chữ nào của thang đánh giá.
-      for (final label in const [
-        'Đang phát triển',
-        'Cần chú ý',
-        'Ưu tiên cải thiện',
-      ]) {
-        expect(find.text(label), findsNothing, reason: 'tần suất bị gán $label');
+      for (final status in ScaPillarStatus.values) {
+        expect(
+          find.text(status.label),
+          findsNothing,
+          reason: 'tần suất bị gán ${status.label}',
+        );
       }
     });
 
@@ -996,7 +997,7 @@ void main() {
       );
 
       expect(find.text('Khoảng lệch đáng chú ý'), findsOneWidget);
-      // Nhánh lệch pha: tự chấm 4.2 là "Đang phát triển", mà chính trụ đó lại
+      // Nhánh lệch pha: tự chấm 4.2 là "Đang hỗ trợ tốt", mà chính trụ đó lại
       // quay lại nhiều nhất. Câu phải dựng từ đúng hai con số đang hiện.
       expect(
         find.textContaining('20 trong 20 lần'),
@@ -1047,9 +1048,24 @@ void main() {
     test('ngưỡng trạng thái trụ giữ đúng như màn Tự đánh giá', () {
       expect(pillarStatusLabel(null), 'Chưa đánh giá');
       expect(pillarStatusLabel(0), 'Chưa đánh giá');
-      expect(pillarStatusLabel(1.8), 'Ưu tiên cải thiện');
-      expect(pillarStatusLabel(2.5), 'Cần chú ý');
-      expect(pillarStatusLabel(3.8), 'Đang phát triển');
+      expect(pillarStatusLabel(1.8), 'Đang cản trở');
+      expect(pillarStatusLabel(2.5), 'Ổn, còn dư địa');
+      expect(pillarStatusLabel(3.8), 'Đang hỗ trợ tốt');
+    });
+
+    // A7 đổi bộ nhãn, và trước đó màn này CHÉP lại cả ngưỡng lẫn chữ. Khoá
+    // bằng chính enum: chép lại lần nữa thì bài này đỏ ngay, thay vì để hai màn
+    // âm thầm nói về cùng một điểm số bằng hai giọng.
+    test('lấy thẳng từ ScaPillarStatus, không chép lại', () {
+      for (final score in [1.0, 2.5, 3.0, 3.8, 4.6, 5.0]) {
+        expect(pillarStatusLabel(score), scaPillarStatus(score).label);
+      }
+      expect(
+        pillarStatusIsReassuring(pillarStatusLabel(3.8)),
+        isTrue,
+      );
+      expect(pillarStatusIsReassuring(pillarStatusLabel(3.79)), isFalse);
+      expect(pillarStatusIsReassuring('Chưa đánh giá'), isFalse);
     });
   });
 

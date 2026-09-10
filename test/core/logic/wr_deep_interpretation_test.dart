@@ -182,7 +182,7 @@ void main() {
     // D nằm TRỌN trong điều kiện của B, nên nếu xét B trước thì D không bao giờ
     // chạy tới — mà §3.4 lại viết hẳn ba biến thể câu cho nó.
     test('D · trụ nổi trội không trùng trụ tự đánh giá thấp nhất', () {
-      // C nổi trội ở mức giữa ("Cần chú ý"), còn A mới là chỗ người dùng thấy
+      // C nổi trội ở mức giữa ("Ổn, còn dư địa"), còn A mới là chỗ người dùng thấy
       // khó nhất. 21 lượt → biến thể 0, biến thể gọi tên cả hai trụ.
       final f = withPillars(s: 4.2, c: 3.0, a: 1.8, count: 21);
       expect(deepGapBranch(f), DeepGapBranch.mismatch);

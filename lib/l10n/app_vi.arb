@@ -76,11 +76,11 @@
   "understandEyebrowSituations": "Những vòng lặp quen thuộc",
   "understandEyebrowSca": "Trải nghiệm hiện tại",
   "understandEyebrowHealth": "Career Health Check",
-  "understandScaRole": "Minh bạch vai trò",
-  "understandScaVoice": "An toàn khi lên tiếng",
-  "understandScaMeaning": "Định hướng ý nghĩa",
-  "understandStatusStable": "Ổn định",
-  "understandStatusImproving": "Đang cải thiện",
+  "understandScaRole": "Sự rõ ràng",
+  "understandScaVoice": "Mối quan hệ",
+  "understandScaMeaning": "Cách làm việc",
+  "understandStatusStable": "Đang hỗ trợ tốt",
+  "understandStatusImproving": "Ổn, còn dư địa",
   "understandStatusUnrated": "Chưa đánh giá",
   "understandHealthReady": "Bạn đã có đủ {n} reflection.",
   "@understandHealthReady": {
@@ -157,7 +157,7 @@
   "profileDeleteAccountCancel": "Giữ tài khoản",
   "profileDeleteAccountError": "Không xoá được tài khoản. Kiểm tra mạng rồi thử lại.",
 
-  "understandStatusNeedsAttention": "Cần chú ý",
+  "understandStatusNeedsAttention": "Đang cản trở",
   "understandNeedSuffix": "· Nhu cầu chủ đạo",
   "understandNoSituations": "Chưa có tình huống nào được ghi nhận.",
 

@@ -455,31 +455,31 @@ abstract class AppLocalizations {
   /// No description provided for @understandScaRole.
   ///
   /// In vi, this message translates to:
-  /// **'Minh bạch vai trò'**
+  /// **'Sự rõ ràng'**
   String get understandScaRole;
 
   /// No description provided for @understandScaVoice.
   ///
   /// In vi, this message translates to:
-  /// **'An toàn khi lên tiếng'**
+  /// **'Mối quan hệ'**
   String get understandScaVoice;
 
   /// No description provided for @understandScaMeaning.
   ///
   /// In vi, this message translates to:
-  /// **'Định hướng ý nghĩa'**
+  /// **'Cách làm việc'**
   String get understandScaMeaning;
 
   /// No description provided for @understandStatusStable.
   ///
   /// In vi, this message translates to:
-  /// **'Ổn định'**
+  /// **'Đang hỗ trợ tốt'**
   String get understandStatusStable;
 
   /// No description provided for @understandStatusImproving.
   ///
   /// In vi, this message translates to:
-  /// **'Đang cải thiện'**
+  /// **'Ổn, còn dư địa'**
   String get understandStatusImproving;
 
   /// No description provided for @understandStatusUnrated.
@@ -749,7 +749,7 @@ abstract class AppLocalizations {
   /// No description provided for @understandStatusNeedsAttention.
   ///
   /// In vi, this message translates to:
-  /// **'Cần chú ý'**
+  /// **'Đang cản trở'**
   String get understandStatusNeedsAttention;
 
   /// No description provided for @understandNeedSuffix.

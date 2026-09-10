@@ -93,7 +93,7 @@ void main() {
   });
 
   // `pillarShares` trả ba số 0 cho hai trường hợp khác hẳn nhau, và ba số 0
-  // đọc ra thành ba nhãn "Đang phát triển" — một lời khen dựng từ chỗ không có
+  // đọc ra thành ba nhãn "Đang hỗ trợ tốt" — một lời khen dựng từ chỗ không có
   // dữ liệu. Hàm này để màn hình phân biệt được trước khi dựng nhãn.
   group('scaTouchedCount', () {
     final situations = [

@@ -159,6 +159,15 @@ void main() {
       expect(find.byKey(Key('wr_sca_deep_dive_trend_$p')), findsOneWidget);
       expect(find.byKey(Key('wr_sca_deep_dive_pattern_$p')), findsOneWidget);
     }
+    // Mở cả ba trụ xong thì màn dài hơn khung máy, và `ListView` không dựng
+    // phần chưa tới lượt — nên phải cuộn tới, không được đòi nó có sẵn. Bản
+    // trước lọt vì bộ nhãn cũ ngắn hơn: A7 đổi "Cần chú ý" thành "Ổn, còn dư
+    // địa" là đủ đẩy dòng chú thích ra khỏi vùng đã dựng.
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('wr_sca_deep_dive_footnote')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.byKey(const Key('wr_sca_deep_dive_footnote')), findsOneWidget);
   });
 

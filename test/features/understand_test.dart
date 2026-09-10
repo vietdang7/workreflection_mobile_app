@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
+import 'package:workreflection_mobile/core/logic/wr_sca_deep_dive.dart';
+import 'package:workreflection_mobile/core/logic/wr_self_check_questions.dart';
 import 'package:workreflection_mobile/core/models/insight.dart';
 import 'package:workreflection_mobile/core/models/recurring_situation.dart';
 import 'package:workreflection_mobile/core/models/sca_report.dart';
@@ -95,37 +97,47 @@ void main() {
       expect(find.textContaining('4 lần'), findsOneWidget);
     });
 
-    testWidgets('SCA card shows "Ổn định" for score >= 4', (tester) async {
+    // A7 (khách chốt 10/09/2026) đổi bộ nhãn cho CẢ màn này. Trước đó màn
+    // /understand cắt ở 4.0 còn màn Hiểu mình cắt ở 3.8 — nên một điểm 3.9 đọc
+    // ra hai kết luận ngược nhau. Nay cả hai đi qua `scaPillarStatus`, và ba bài
+    // dưới đây khoá đúng ba mức của hàm đó.
+    testWidgets('nhãn mức cao: điểm >= 3.8', (tester) async {
       final repo = FakeWrRepository();
       repo.seedScaReport(ScaReport(
         id: 'r1',
         userId: 'u1',
         scoreStructure: 4.5,
         scoreCulture: 4.1,
-        scoreActivity: 4.0,
+        scoreActivity: 3.8,
         createdAt: DateTime(2026, 6, 1),
       ));
       await _pumpLarge(tester, _wrap(const UnderstandScreen(), repo));
 
-      expect(find.textContaining('Ổn định'), findsWidgets);
+      expect(
+        find.textContaining(ScaPillarStatus.developing.label),
+        findsWidgets,
+      );
     });
 
-    testWidgets('SCA card shows "Đang cải thiện" for score 2.5–3.9', (tester) async {
+    testWidgets('nhãn mức giữa: điểm 2.5–3.79', (tester) async {
       final repo = FakeWrRepository();
       repo.seedScaReport(ScaReport(
         id: 'r1',
         userId: 'u1',
         scoreStructure: 2.5,
         scoreCulture: 3.0,
-        scoreActivity: 2.6,
+        scoreActivity: 3.79,
         createdAt: DateTime(2026, 6, 1),
       ));
       await _pumpLarge(tester, _wrap(const UnderstandScreen(), repo));
 
-      expect(find.textContaining('Đang cải thiện'), findsWidgets);
+      expect(
+        find.textContaining(ScaPillarStatus.needsAttention.label),
+        findsWidgets,
+      );
     });
 
-    testWidgets('SCA card shows "Cần chú ý" for score < 2.5', (tester) async {
+    testWidgets('nhãn mức thấp: điểm < 2.5', (tester) async {
       final repo = FakeWrRepository();
       repo.seedScaReport(ScaReport(
         id: 'r1',
@@ -137,7 +149,10 @@ void main() {
       ));
       await _pumpLarge(tester, _wrap(const UnderstandScreen(), repo));
 
-      expect(find.textContaining('Cần chú ý'), findsWidgets);
+      expect(
+        find.textContaining(ScaPillarStatus.priority.label),
+        findsWidgets,
+      );
     });
 
     testWidgets('SCA card shows "Chưa đánh giá" when no report', (tester) async {
@@ -160,13 +175,21 @@ void main() {
       expect(find.textContaining('Bắt đầu kiểm tra'), findsOneWidget);
     });
 
-    testWidgets('shows SCA row labels', (tester) async {
+    // A8: bộ tên ba trụ duy nhất là bộ ngắn của `SelfCheckPillar.displayName` —
+    // cùng bộ mockup v18 và bản dev đang chạy dùng. Màn này từng mang bộ riêng
+    // ("Minh bạch vai trò / An toàn khi lên tiếng / Định hướng ý nghĩa"), là bộ
+    // thứ hai trong ba bộ §7.2 changelog bắt gộp.
+    testWidgets('tên ba trụ dùng chung bộ với màn Self-Check', (tester) async {
       final repo = FakeWrRepository();
       await _pumpLarge(tester, _wrap(const UnderstandScreen(), repo));
 
-      expect(find.textContaining('Minh bạch vai trò'), findsOneWidget);
-      expect(find.textContaining('An toàn khi lên tiếng'), findsOneWidget);
-      expect(find.textContaining('Định hướng ý nghĩa'), findsOneWidget);
+      for (final p in SelfCheckPillar.values) {
+        expect(
+          find.textContaining(p.displayName),
+          findsWidgets,
+          reason: p.name,
+        );
+      }
     });
 
     testWidgets('Career Health Check counts checkins + insights combined', (tester) async {
