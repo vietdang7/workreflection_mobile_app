@@ -50,3 +50,7 @@ app.*.map.json
 
 # Git worktree của nhánh main — bản sao repo, không thuộc về lịch sử repo.
 main-wt/
+
+# Build output của Gradle — lọt vào repo hôm 10/09 do pathspec loại trừ chạy
+# sai thư mục. Không phải mã nguồn, và mỗi lần build lại là một diff rác.
+android/build/
