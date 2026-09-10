@@ -119,7 +119,7 @@ SystemNotice? systemNotice({
       : SystemNotice(
           situationCode: r.situationCode,
           situationText:
-              (labels[r.situationCode] ?? r.situationCode).toLowerCase(),
+              midSentence(labels[r.situationCode] ?? r.situationCode),
           count: r.count,
         );
 

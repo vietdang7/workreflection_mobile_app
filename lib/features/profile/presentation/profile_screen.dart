@@ -783,6 +783,40 @@ class _SettingsSection extends ConsumerWidget {
     );
   }
 
+  /// Đổi ngôn ngữ. Đổi màn hình TRƯỚC, ghi xuống server SAU.
+  ///
+  /// Bản trước `await` lượt ghi `cc_profiles.language` rồi mới đặt
+  /// `appLocaleProvider`. Nghĩa là từ lúc bấm đến lúc chữ đổi, người dùng phải
+  /// chờ trọn một vòng gọi Supabase — trên mạng 4G chập chờn là vài giây nhìn
+  /// vào một màn hình không phản ứng gì. Khách gọi đúng tên nó: "chuyển đổi
+  /// ngôn ngữ rất chậm".
+  ///
+  /// Không có gì bắt phải chờ: ngôn ngữ là lựa chọn hiển thị, nguồn sự thật của
+  /// nó nằm ở máy (`SharedPreferences`, chỗ `main()` đọc lúc khởi động). Dòng
+  /// trên server chỉ để máy khác của cùng người đó biết theo.
+  ///
+  /// Nên thứ tự là: đổi state (màn hình đổi ngay trong khung hình kế tiếp) → ghi
+  /// vào máy → gửi lên server không chờ. Ghi hỏng thì lần đăng nhập sau đồng bộ
+  /// lại; nuốt lỗi ở đây là có chủ đích, đổi ngôn ngữ hỏng không đáng để ném một
+  /// thông báo lỗi chắn ngang màn Tài khoản.
+  Future<void> _applyLanguage(WidgetRef ref, String code) async {
+    // Giữ repository TRƯỚC khi đổi state: đổi xong là `localeScopedProviders`
+    // xoá `wrRepositoryProvider`, `ref.read` sau đó sẽ dựng một cái mới cho một
+    // lượt ghi vốn đã sẵn sàng đi.
+    final repo = ref.read(wrRepositoryProvider);
+
+    ref.read(appLocaleProvider.notifier).state = code;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('app_language', code);
+
+    try {
+      await repo.updateLanguage(code);
+    } catch (_) {
+      // Máy đã nhớ lựa chọn rồi. Server bắt kịp ở lần đổi sau.
+    }
+  }
+
   void _showLanguageDialog(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     showDialog<void>(
@@ -794,22 +828,16 @@ class _SettingsSection extends ConsumerWidget {
           children: [
             ListTile(
               title: Text(l10n.languageOptionVietnamese),
-              onTap: () async {
+              onTap: () {
                 Navigator.of(ctx).pop();
-                await ref.read(wrRepositoryProvider).updateLanguage('vi');
-                ref.read(appLocaleProvider.notifier).state = 'vi';
-                final prefs = await SharedPreferences.getInstance();
-                await prefs.setString('app_language', 'vi');
+                _applyLanguage(ref, 'vi');
               },
             ),
             ListTile(
               title: Text(l10n.languageOptionEnglish),
-              onTap: () async {
+              onTap: () {
                 Navigator.of(ctx).pop();
-                await ref.read(wrRepositoryProvider).updateLanguage('en');
-                ref.read(appLocaleProvider.notifier).state = 'en';
-                final prefs = await SharedPreferences.getInstance();
-                await prefs.setString('app_language', 'en');
+                _applyLanguage(ref, 'en');
               },
             ),
           ],

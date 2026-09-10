@@ -72,6 +72,8 @@ MoodContent fakeMoodContent({
   String body = 'Đoạn một.\n\nĐoạn hai.',
   bool placeholder = false,
   String? audioUrl,
+  String? titleEn,
+  String? bodyEn,
 }) {
   return MoodContent(
     id: id,
@@ -84,5 +86,7 @@ MoodContent fakeMoodContent({
     body: body,
     placeholder: placeholder,
     audioUrl: audioUrl,
+    titleEn: titleEn,
+    bodyEn: bodyEn,
   );
 }

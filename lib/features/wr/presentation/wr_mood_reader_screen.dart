@@ -124,7 +124,7 @@ class _ReaderBody extends StatelessWidget {
                     color: WrColors.teal,
                   ),
                   const SizedBox(width: 7),
-                  Flexible(child: WrEyebrow('${item.kind} · ${item.duration}')),
+                  Flexible(child: WrEyebrow('${item.kindLabel} · ${item.durationLabel}')),
                   if (item.placeholder) ...[
                     const SizedBox(width: 8),
                     const WrDraftBadge(),
@@ -312,7 +312,7 @@ class _AudioPlayerBlockState extends ConsumerState<_AudioPlayerBlock> {
                 (_busy
                     ? tr('Đang dựng bản thu bằng giọng đọc AI…', 'Building the recording with the AI voice…')
                     : _url != null
-                        ? widget.item.duration
+                        ? widget.item.durationLabel
                         : tr('Nghe bằng giọng đọc AI', 'Listen with the AI voice')),
             key: const Key('wr_mood_audio_status'),
             textAlign: TextAlign.center,

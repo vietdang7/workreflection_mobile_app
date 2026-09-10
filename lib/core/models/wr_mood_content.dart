@@ -43,14 +43,17 @@ class MoodContent {
     required this.id,
     required this.mood,
     required this.sortOrder,
-    required this.title,
+    required String title,
     required this.kind,
     required this.duration,
     required this.type,
-    required this.body,
+    required String body,
     required this.placeholder,
     this.audioUrl,
-  });
+    this.titleEn,
+    this.bodyEn,
+  })  : titleVi = title,
+        bodyVi = body;
 
   final String id;
 
@@ -60,18 +63,61 @@ class MoodContent {
   /// §8.3: Home hiện đúng mục đầu tiên của nhóm, nên thứ tự là dữ liệu.
   final int sortOrder;
 
-  final String title;
+  /// Tiêu đề, hai bản đặt cạnh nhau. Đọc qua [title].
+  final String titleVi;
+  final String? titleEn;
 
-  /// Nhãn hiển thị: "BÀI ĐỌC" hoặc "HEALING AUDIO".
+  /// Tiêu đề theo ngôn ngữ đang bật.
+  ///
+  /// Là GETTER chứ không phải trường: đọc lại mỗi lần dựng, nên đổi ngôn ngữ
+  /// giữa chừng là chữ đổi theo mà không phải hỏi lại server. Chốt ngôn ngữ
+  /// ngay trong `fromJson` thì bản ghi trong cache đóng băng ở ngôn ngữ lúc tải
+  /// về, và người dùng đổi sang tiếng Anh vẫn đọc bài tiếng Việt.
+  String get title => trDb(titleVi, titleEn);
+
+  /// Nhãn hiển thị, ví dụ "BÀI ĐỌC".
+  ///
+  /// KHÔNG có cột `kind_en`: cả bảng chỉ có duy nhất một giá trị, nên thêm cột
+  /// là bắt người biên tập gõ lại cùng một chữ ba mươi lần và tạo ba mươi cơ
+  /// hội gõ lệch. Dịch ở đây, một chỗ, phủ cả bảng — xem [kindLabel].
   final String kind;
 
-  /// Thời lượng hiển thị, ví dụ "3 phút đọc" hoặc "5 phút".
+  /// Thời lượng hiển thị, ví dụ "3 phút đọc".
+  ///
+  /// Cũng không có cột `_en`, cùng lý do với [kind] — xem [durationLabel].
   final String duration;
 
   final MoodContentType type;
 
+  /// Toàn văn bài đọc, hai bản đặt cạnh nhau. Đọc qua [body].
+  final String bodyVi;
+  final String? bodyEn;
+
   /// BÀI ĐỌC: toàn văn. HEALING AUDIO: mô tả ngắn dưới khối trình phát.
-  final String body;
+  String get body => trDb(bodyVi, bodyEn);
+
+  /// [kind] theo ngôn ngữ đang bật.
+  ///
+  /// Dịch theo BẢNG TRA chứ không dịch tự do: giá trị nào không có trong bảng
+  /// thì trả nguyên văn. Đội nội dung thêm một loại mới mà quên báo thì người
+  /// dùng tiếng Anh thấy một nhãn tiếng Việt — dở, nhưng vẫn hơn một ô trống
+  /// hay một nhãn bịa.
+  String get kindLabel => switch (kind.trim().toUpperCase()) {
+        'BÀI ĐỌC' => tr('BÀI ĐỌC', 'READING'),
+        'HEALING AUDIO' => tr('HEALING AUDIO', 'HEALING AUDIO'),
+        _ => kind,
+      };
+
+  /// [duration] theo ngôn ngữ đang bật.
+  ///
+  /// Bảng chỉ chứa dạng "N phút đọc", nên bóc lấy con số rồi dựng lại câu. Dạng
+  /// nào không khớp thì trả nguyên văn, cùng lý do với [kindLabel].
+  String get durationLabel {
+    final match = RegExp(r'^(\d+)\s*phút đọc$').firstMatch(duration.trim());
+    if (match == null) return duration;
+    final minutes = match.group(1)!;
+    return tr('$minutes phút đọc', '$minutes min read');
+  }
 
   /// §8.2: true = còn nháp, chưa thu âm hoặc biên tập chính thức.
   final bool placeholder;
@@ -145,6 +191,10 @@ class MoodContent {
       duration: json['duration'] as String,
       type: MoodContentType.fromDb(json['type'] as String),
       body: json['body'] as String,
+      // Cột mới (migration 20260910190000). Đọc mềm như `audio_url`: bản app
+      // mới vẫn phải chạy được với một cơ sở dữ liệu chưa kịp chạy migration.
+      titleEn: json['title_en'] as String?,
+      bodyEn: json['body_en'] as String?,
       placeholder: json['placeholder'] as bool,
       // Cột mới (migration 20260729000000). Đọc mềm để bản app mới vẫn chạy
       // được với một cơ sở dữ liệu chưa kịp chạy migration.

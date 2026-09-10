@@ -163,7 +163,7 @@ class WrMoodContentRow extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${item.kind} · ${item.duration}',
+                    '${item.kindLabel} · ${item.durationLabel}',
                     style: const TextStyle(
                       fontSize: 12.5,
                       color: WrColors.muted,

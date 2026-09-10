@@ -816,7 +816,12 @@ class _SystemNoticeCard extends ConsumerWidget {
               ),
               const SizedBox(height: 6),
               Text(
-                '"${notice.sentence}"',
+                // KHÔNG bọc thêm một cặp ngoặc kép nữa. [SystemNotice.sentence]
+                // đã tự đóng ngoặc quanh tên tình huống, nên bọc lần hai cho ra
+                // `"Bạn đã gặp tình huống "…" 2 lần"` — bốn dấu ngoặc trong một
+                // dòng, và người đọc mất một nhịp để biết cái nào đóng cái nào.
+                // Chữ nghiêng serif đã đủ nói đây là câu trích.
+                notice.sentence,
                 // `.muted.serif` + italic — câu này là hệ thống đang trích lại
                 // điều lặp lại của chính người dùng, không phải chữ giao diện.
                 style: WrText.serifQuote(
@@ -928,7 +933,7 @@ class _MoodContentSection extends ConsumerWidget {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              '${item.kind} · ${item.duration}',
+                              '${item.kindLabel} · ${item.durationLabel}',
                               style: const TextStyle(
                                 fontSize: 12.5,
                                 color: WrColors.text3,

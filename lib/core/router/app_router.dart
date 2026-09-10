@@ -1,3 +1,42 @@
+// Bảng route.
+//
+// ---------------------------------------------------------------------------
+// VÌ SAO KHÔNG MÀN NÀO Ở ĐÂY ĐƯỢC DỰNG BẰNG `const`
+// ---------------------------------------------------------------------------
+//
+// Đây là chỗ duy nhất trong repo cố ý đi ngược `prefer_const_constructors`, và
+// nó có một lý do rất cụ thể: ĐỔI NGÔN NGỮ.
+//
+// Phần WorkReflection lấy chữ qua `tr()`, đọc biến toàn cục `wrEnglish` (lý do
+// ở `core/l10n/wr_tr.dart`). Đổi biến toàn cục không báo cho Flutter, nên một
+// màn chỉ đổi chữ khi có ai đó gọi lại `build` của nó.
+//
+// `const WrHomeScreen()` là MỘT thực thể duy nhất dùng đi dùng lại. Khi
+// `MaterialApp` dựng lại vì nhận `locale` mới, Router dựng lại bảng trang, mỗi
+// builder trả về đúng thực thể `const` cũ — và `Element.updateChild` thấy
+// widget mới bằng widget cũ nên trả về ngay, KHÔNG gọi `build`. Cả nhánh màn
+// hình đứng im với chữ của ngôn ngữ trước.
+//
+// Đó là toàn bộ nguyên nhân khách báo 10/09: "chuyển đổi ngôn ngữ rất chậm,
+// thậm chí không chuyển đổi hoàn toàn, cứ xen kẽ tiếng Anh với tiếng Việt".
+// Không có gì hỏng — chỉ là không có gì ra lệnh dựng lại. Màn nào tình cờ phải
+// dựng lại vì một lý do khác (một provider vừa xong, đi qua màn khác rồi quay
+// lại) thì đổi chữ; màn còn lại giữ nguyên tiếng cũ cho tới khi bị đụng vào.
+//
+// Bỏ `const` là mỗi lần dựng cho ra một thực thể mới, `==` sai, element cập
+// nhật và `build` chạy — chữ đọc lại theo ngôn ngữ hiện hành. Giá phải trả là
+// một phép cấp phát cho mỗi màn mỗi lần Router dựng lại, tức là không đáng kể;
+// còn cái mua được là app đổi ngôn ngữ trọn vẹn trong một khung hình.
+//
+// ⚠ Đừng thêm `const` lại vào các builder dưới đây. Trình phân tích sẽ gợi ý
+//   làm vậy — nó không biết chuyện `tr()`.
+//
+// Xoá cache provider khi đổi ngôn ngữ (`localeScopedProviders`) là việc KHÁC và
+// vẫn cần: nó lo phần chữ đã được dịch sẵn nằm trong cache, thứ mà dựng lại bao
+// nhiêu lần cũng không chữa được.
+//
+// ignore_for_file: prefer_const_constructors
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -161,33 +200,33 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     routes: [
       GoRoute(
         path: '/splash',
-        builder: (context, state) => const SplashScreen(),
+        builder: (context, state) => SplashScreen(),
       ),
       GoRoute(
         path: '/onboarding',
-        builder: (context, state) => const OnboardingScreen(),
+        builder: (context, state) => OnboardingScreen(),
       ),
       GoRoute(
         path: '/auth',
-        builder: (context, state) => const AuthScreen(),
+        builder: (context, state) => AuthScreen(),
       ),
 
       // Survey flow (fullscreen, outside shell)
       GoRoute(
         path: '/survey',
-        builder: (context, state) => const SurveyIntroScreen(),
+        builder: (context, state) => SurveyIntroScreen(),
       ),
       GoRoute(
         path: '/survey/guide',
-        builder: (context, state) => const SurveyGuideScreen(),
+        builder: (context, state) => SurveyGuideScreen(),
       ),
       GoRoute(
         path: '/survey/questions',
-        builder: (context, state) => const SurveyQuestionsScreen(),
+        builder: (context, state) => SurveyQuestionsScreen(),
       ),
       GoRoute(
         path: '/survey/processing',
-        builder: (context, state) => const SurveyProcessingScreen(),
+        builder: (context, state) => SurveyProcessingScreen(),
       ),
       GoRoute(
         path: '/survey/report/:id',
@@ -218,7 +257,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/survey/history',
-        builder: (context, state) => const SurveyHistoryScreen(),
+        builder: (context, state) => SurveyHistoryScreen(),
       ),
 
       // Workshop + coaching routes (fullscreen, outside shell)
@@ -228,11 +267,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // any future generic '/coaching/:id' route.
       GoRoute(
         path: '/workshops',
-        builder: (context, state) => const WorkshopsScreen(),
+        builder: (context, state) => WorkshopsScreen(),
       ),
       GoRoute(
         path: '/workshops/checkin',
-        builder: (context, state) => const CheckinScreen(),
+        builder: (context, state) => CheckinScreen(),
       ),
       GoRoute(
         path: '/workshops/:id',
@@ -252,15 +291,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/my-workshops',
-        builder: (context, state) => const MyWorkshopsScreen(),
+        builder: (context, state) => MyWorkshopsScreen(),
       ),
       GoRoute(
         path: '/coaching',
-        builder: (context, state) => const CoachingScreen(),
+        builder: (context, state) => CoachingScreen(),
       ),
       GoRoute(
         path: '/coaching/sessions',
-        builder: (context, state) => const CoachingSessionsScreen(),
+        builder: (context, state) => CoachingSessionsScreen(),
       ),
       GoRoute(
         path: '/coaching/schedule/:bookingId',
@@ -270,35 +309,35 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/profile/edit',
-        builder: (context, state) => const ProfileEditScreen(),
+        builder: (context, state) => ProfileEditScreen(),
       ),
       GoRoute(
         path: '/profile/setup',
-        builder: (context, state) => const ProfileEditScreen(setupMode: true),
+        builder: (context, state) => ProfileEditScreen(setupMode: true),
       ),
       // "Thông tin của bạn" — mockup Sprint 2 bản (4), `screenMyInfo`.
       GoRoute(
         path: '/profile/my-info',
-        builder: (context, state) => const MyInfoScreen(),
+        builder: (context, state) => MyInfoScreen(),
       ),
       // "Hướng dẫn sử dụng" — yêu cầu §4 họp 26_1. Route riêng chứ không phải
       // hộp thoại: nội dung dài hơn một màn, và người dùng cần quay lại đọc
       // tiếp mà không mất chỗ đang đứng trong Hồ sơ.
       GoRoute(
         path: '/profile/guide',
-        builder: (context, state) => const GuideScreen(),
+        builder: (context, state) => GuideScreen(),
       ),
       GoRoute(
         path: '/vouchers',
-        builder: (context, state) => const VouchersScreen(),
+        builder: (context, state) => VouchersScreen(),
       ),
       GoRoute(
         path: '/invitations',
-        builder: (context, state) => const InvitationsScreen(),
+        builder: (context, state) => InvitationsScreen(),
       ),
       GoRoute(
         path: '/insights',
-        builder: (context, state) => const InsightsScreen(),
+        builder: (context, state) => InsightsScreen(),
       ),
       GoRoute(
         path: '/roadmap',
@@ -310,32 +349,32 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // Legacy tab screens — preserved as fullscreen routes (not in shell anymore)
       GoRoute(
         path: '/understand',
-        builder: (context, state) => const UnderstandScreen(),
+        builder: (context, state) => UnderstandScreen(),
       ),
       GoRoute(
         path: '/develop',
-        builder: (context, state) => const DevelopScreen(),
+        builder: (context, state) => DevelopScreen(),
       ),
       GoRoute(
         path: '/journey',
-        builder: (context, state) => const JourneyScreen(),
+        builder: (context, state) => JourneyScreen(),
       ),
       // NOTE: /profile is now a shell branch (Tab 4). Removed standalone route
       // to avoid GoRouter duplicate-path error.
 
       GoRoute(
         path: '/wr/self-check',
-        builder: (context, state) => const WrSelfCheckScreen(),
+        builder: (context, state) => WrSelfCheckScreen(),
       ),
 
       GoRoute(
         path: '/wr/career-setup',
-        builder: (context, state) => const WrCareerSetupScreen(),
+        builder: (context, state) => WrCareerSetupScreen(),
       ),
 
       GoRoute(
         path: '/wr/context-docs',
-        builder: (context, state) => const WrContextDocScreen(),
+        builder: (context, state) => WrContextDocScreen(),
       ),
 
       // Luồng Reflect 5 bước — Kiến trúc Dữ liệu v2.0 §V, một bước một màn
@@ -352,36 +391,36 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // check-in, và cũng dẫn về `step`.
       GoRoute(
         path: '/wr/flow/energy',
-        builder: (context, state) => const WrEnergyScreen(),
+        builder: (context, state) => WrEnergyScreen(),
       ),
       GoRoute(
         path: '/wr/flow/moment',
-        builder: (context, state) => const WrMomentScreen(),
+        builder: (context, state) => WrMomentScreen(),
       ),
       GoRoute(
         path: '/wr/flow/step',
-        builder: (context, state) => const WrStepScreen(),
+        builder: (context, state) => WrStepScreen(),
       ),
       GoRoute(
         path: '/wr/flow/detail',
-        builder: (context, state) => const WrDetailScreen(),
+        builder: (context, state) => WrDetailScreen(),
       ),
       GoRoute(
         path: '/wr/flow/meaning',
-        builder: (context, state) => const WrMeaningScreen(),
+        builder: (context, state) => WrMeaningScreen(),
       ),
       GoRoute(
         path: '/wr/flow/commit',
-        builder: (context, state) => const WrCommitScreen(),
+        builder: (context, state) => WrCommitScreen(),
       ),
       GoRoute(
         path: '/wr/flow/done',
-        builder: (context, state) => const WrDoneScreen(),
+        builder: (context, state) => WrDoneScreen(),
       ),
 
       GoRoute(
         path: '/wr/patterns',
-        builder: (context, state) => const WrPatternsScreen(),
+        builder: (context, state) => WrPatternsScreen(),
       ),
 
       GoRoute(
@@ -400,16 +439,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/wr/journey/narrative',
-        builder: (context, state) => const WrJourneyNarrativeScreen(),
+        builder: (context, state) => WrJourneyNarrativeScreen(),
       ),
       // Career Memory đầy đủ — tab Hành trình chỉ hiện vài mảnh gần nhất.
       GoRoute(
         path: '/wr/career-memory',
-        builder: (context, state) => const WrCareerMemoryScreen(),
+        builder: (context, state) => WrCareerMemoryScreen(),
       ),
       GoRoute(
         path: '/wr/growth/themes',
-        builder: (context, state) => const WrGrowthThemesScreen(),
+        builder: (context, state) => WrGrowthThemesScreen(),
       ),
       // Một chủ đề thực hành và toàn bộ chuỗi bước của nó.
       // Đặt SAU /wr/growth/themes để đường tĩnh không bị nuốt bởi :id.
@@ -421,29 +460,29 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/wr/growth/skills',
-        builder: (context, state) => const WrGrowthSkillsScreen(),
+        builder: (context, state) => WrGrowthSkillsScreen(),
       ),
 
       // Ô hỏi về hành trình nghề nghiệp (họp khách 2026-07-29). Mở từ bong
       // bóng nổi ở mọi tab và từ một dòng dẫn trong tab Hành trình.
       GoRoute(
         path: '/wr/ask',
-        builder: (context, state) => const WrAskScreen(),
+        builder: (context, state) => WrAskScreen(),
       ),
 
       // Trà Chiều Nghề Nghiệp — chương trình offline riêng (họp khách
       // 2026-07-29). Đường tĩnh '/lich' đặt trước để không đụng route khác.
       GoRoute(
         path: '/wr/tra-chieu',
-        builder: (context, state) => const WrTraChieuScreen(),
+        builder: (context, state) => WrTraChieuScreen(),
       ),
       GoRoute(
         path: '/wr/tra-chieu/lich',
-        builder: (context, state) => const WrTraChieuCalendarScreen(),
+        builder: (context, state) => WrTraChieuCalendarScreen(),
       ),
       GoRoute(
         path: '/wr/growth/journey',
-        builder: (context, state) => const WrGrowthJourneyScreen(),
+        builder: (context, state) => WrGrowthJourneyScreen(),
       ),
 
       // `/wr/situation` (WrSituationFlowScreen, Sprint 1) đã bỏ 2026-07-31.
@@ -526,7 +565,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/home',
-                builder: (context, state) => const WrHomeScreen(),
+                builder: (context, state) => WrHomeScreen(),
               ),
             ],
           ),
@@ -534,7 +573,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/wr/discover',
-                builder: (context, state) => const WrDiscoverScreen(),
+                builder: (context, state) => WrDiscoverScreen(),
               ),
             ],
           ),
@@ -542,7 +581,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/wr/growth',
-                builder: (context, state) => const WrGrowthScreen(),
+                builder: (context, state) => WrGrowthScreen(),
               ),
             ],
           ),
@@ -550,7 +589,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             routes: [
               GoRoute(
                 path: '/wr/journey',
-                builder: (context, state) => const WrJourneyScreen(),
+                builder: (context, state) => WrJourneyScreen(),
               ),
             ],
           ),
@@ -560,25 +599,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // /profile — màn đẩy toàn màn hình, mở từ avatar (v1.6 §9.1).
       GoRoute(
         path: '/profile',
-        builder: (context, state) => const ProfileScreen(),
+        builder: (context, state) => ProfileScreen(),
       ),
 
       // /wr/story — fullscreen push, uses root navigator implicitly (not nested in shell).
       GoRoute(
         path: '/wr/story',
-        builder: (context, state) => const WrStoryScreen(),
+        builder: (context, state) => WrStoryScreen(),
       ),
 
       // Thông tin công việc hiện tại — Hai Lớp v1.6 §XI.
       GoRoute(
         path: '/wr/work-info',
-        builder: (context, state) => const WrWorkInfoScreen(),
+        builder: (context, state) => WrWorkInfoScreen(),
       ),
       // "Cùng tạo JD của bạn" — 5 bước ngắn (changelog 24/08 §6). Mở từ thẻ dẫn
       // ở màn Thông tin công việc, không có lối vào nào khác.
       GoRoute(
         path: '/wr/jd-builder',
-        builder: (context, state) => const WrJdBuilderScreen(),
+        builder: (context, state) => WrJdBuilderScreen(),
       ),
 
       // Diễn giải sâu & xu hướng (changelog 24/08 §7). Trước bản này, nút "Mở
@@ -586,7 +625,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // đích nào. Đây là màn đích đó.
       GoRoute(
         path: '/wr/sca-deep-dive',
-        builder: (context, state) => const WrScaDeepDiveScreen(),
+        builder: (context, state) => WrScaDeepDiveScreen(),
       ),
 
       // Khảo sát tổ chức (ESI + eNPS) — mockup Sprint 2, mở từ màn Hồ sơ.
@@ -595,11 +634,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // được từ Hồ sơ mà không phải đi qua bài khảo sát.
       GoRoute(
         path: '/wr/org-survey',
-        builder: (context, state) => const WrOrgSurveyIntroScreen(),
+        builder: (context, state) => WrOrgSurveyIntroScreen(),
       ),
       GoRoute(
         path: '/wr/org-survey/flow',
-        builder: (context, state) => const WrOrgSurveyFlowScreen(),
+        builder: (context, state) => WrOrgSurveyFlowScreen(),
       ),
       GoRoute(
         path: '/wr/org-survey/result',
@@ -616,7 +655,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // §8.3: miễn phí cho mọi người dùng, không phân lớp Free/Paid.
       GoRoute(
         path: '/wr/mood-library',
-        builder: (context, state) => const WrMoodLibraryScreen(),
+        builder: (context, state) => WrMoodLibraryScreen(),
       ),
       GoRoute(
         path: '/wr/mood-content/:id',

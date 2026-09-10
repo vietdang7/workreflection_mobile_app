@@ -292,6 +292,20 @@ String get kInsightAhaEyebrow => tr('Một góc nhìn khác', 'Another way to se
 /// Vế đầu của câu mở dở. Người dùng viết tiếp phần sau chữ "vì".
 String get kInsightStemPrefix => tr('Với tôi, điều này xảy ra vì', 'To me, this happens because');
 
+/// Mọi vế mở dở ĐÃ TỪNG được ghi xuống, không riêng vế của ngôn ngữ đang bật.
+///
+/// `notes['reframe']` giữ nguyên văn câu lúc người dùng bấm lưu — kể cả vế mở
+/// dở. Đổi ngôn ngữ không viết lại những dòng đã ghi, nên một tài khoản dùng lâu
+/// sẽ có cả hai vế nằm lẫn nhau trong lịch sử.
+///
+/// [stemFromNote] phải nhận ra CẢ HAI, nếu không thì mở lại một phiên ghi bằng
+/// ngôn ngữ kia sẽ đổ nguyên vế mở dở cũ vào ô chữ, và người dùng đọc thấy
+/// "Với tôi, điều này xảy ra vì Với tôi, điều này xảy ra vì …".
+const List<String> kInsightStemPrefixes = [
+  'Với tôi, điều này xảy ra vì',
+  'To me, this happens because',
+];
+
 /// Câu mở dở hiển thị nguyên vẹn (có dấu ba chấm) ở Lớp 1.
 String get kInsightStemPrompt => '$kInsightStemPrefix...';
 
@@ -398,9 +412,40 @@ String mergeInsight({required String stem, required String aha}) {
 String stemFromNote(String? note) {
   final text = note?.trim();
   if (text == null || text.isEmpty) return '';
-  if (!text.startsWith(kInsightStemPrefix)) return text;
-  return text.substring(kInsightStemPrefix.length).trim();
+  for (final prefix in kInsightStemPrefixes) {
+    if (text.startsWith(prefix)) return text.substring(prefix.length).trim();
+  }
+  return text;
 }
+
+/// Câu ý nghĩa dựng LẠI từ nguồn, thay cho `draft_meaning` đã đóng băng.
+///
+/// ---------------------------------------------------------------------------
+/// VÌ SAO KHÔNG ĐỌC THẲNG `draft_meaning`
+///
+/// `draft_meaning` là bản GỘP mà [mergeInsight] tạo ra lúc bấm lưu: một nửa là
+/// chữ người dùng viết, một nửa là câu aha của app. Gộp xong thì hai nửa không
+/// còn tách ra được nữa, và cả hai bị đóng băng ở ngôn ngữ đang bật LÚC ĐÓ.
+///
+/// Hệ quả nhìn thấy trên Hành trình: tiêu đề dòng đọc từ `wr_situations.text_en`
+/// nên dịch được, còn dòng ngay dưới nó vẫn là tiếng Việt của tháng trước. Một
+/// dòng hai ngôn ngữ.
+///
+/// Dựng lại từ hai nguồn còn phân biệt được thì chữa được nửa thuộc về app:
+///   • `notes['reframe']` — chữ của chính người dùng. KHÔNG dịch, không bao giờ.
+///     Chỉ bóc vế mở dở cũ ra rồi lắp lại vế của ngôn ngữ đang bật.
+///   • [storyAha] — câu aha của story, đã đi qua `trDb` nên tự đúng ngôn ngữ.
+///
+/// Phần còn lại tiếng Việt sau khi dựng lại đúng là phần người dùng tự gõ. Đó
+/// là chữ của họ; dịch nó đi mới là sai.
+String liveMeaning({
+  required Map<String, String> notes,
+  required String? storyAha,
+}) =>
+    mergeInsight(
+      stem: stemFromNote(notes[ReflectionPattern.reframe.dbValue]),
+      aha: ahaFor(storyAha),
+    );
 
 // ---------------------------------------------------------------------------
 // Nhãn tình huống để ghi vào `notes`

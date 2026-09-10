@@ -75,6 +75,23 @@ String trDb(String vi, String? en) {
   return trimmed.isEmpty ? vi : trimmed;
 }
 
+/// Hạ chữ hoa đầu câu khi một câu độc lập bị nhúng vào GIỮA một câu khác.
+///
+/// Tình huống trong `wr_situations` được viết như câu đứng một mình ("Tôi cứ ra
+/// quyết định theo cảm xúc"), rồi thẻ "Hệ thống nhận ra" nhúng nó vào giữa:
+/// *Bạn đã gặp tình huống "…" 2 lần*. Tiếng Việt không viết hoa giữa câu, nên
+/// bản trước hạ chữ đầu xuống — đúng cho tiếng Việt.
+///
+/// Sang tiếng Anh thì cùng phép ấy hỏng ngay ở ca thường gặp nhất: đại từ **I**
+/// viết hoa ở MỌI vị trí trong câu. `"I keep deciding…"` hoá `"i keep deciding…"`
+/// và đọc ra như lỗi chính tả — nó xuất hiện đúng trên thẻ trang trọng nhất của
+/// màn Hôm nay.
+///
+/// Nên chỉ hạ khi đang chạy tiếng Việt. Tiếng Anh giữ nguyên chữ tác giả viết:
+/// một câu bắt đầu bằng chữ hoa nằm trong ngoặc kép giữa câu là cách viết bình
+/// thường của tiếng Anh, không phải lỗi.
+String midSentence(String text) => wrEnglish ? text : text.toLowerCase();
+
 /// Mã ngôn ngữ đang bật, dạng gửi được lên máy chủ.
 String get wrLocaleCode => wrEnglish ? 'en' : 'vi';
 

@@ -17,6 +17,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_career_memory_rules.dart';
 import '../../../core/logic/wr_dominant_need.dart';
+import '../../../core/logic/wr_reflect_flow.dart';
 import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_episode.dart';
@@ -79,6 +80,23 @@ class JourneyEntry {
 /// Mã behavior mà Episode ghi vào Career Memory khi khép lại.
 const String kEpisodeBehavior = 'reflection_episode';
 
+/// Câu trích của một Episode trên dòng thời gian, dựng lại theo ngôn ngữ đang
+/// bật. Null khi Episode không có gì để trích.
+///
+/// Ưu tiên bản dựng lại; chỉ khi Episode không có ghi chú `reframe` NÀO và cũng
+/// không tra được câu aha thì mới đọc `draft_meaning` — những Episode ghi từ
+/// trước lúc tách `notes` ra khỏi bản gộp.
+String? _episodeExcerpt(ReflectionEpisode e, String? aha) {
+  final hasNote =
+      e.notes[ReflectionPattern.reframe.dbValue]?.trim().isNotEmpty == true;
+  if (hasNote || aha != null) {
+    final live = liveMeaning(notes: e.notes, storyAha: aha).trim();
+    if (live.isNotEmpty) return live;
+  }
+  final frozen = e.draftMeaning?.trim();
+  return frozen == null || frozen.isEmpty ? null : frozen;
+}
+
 /// Dựng dòng thời gian từ Episode + Career Memory event, mới nhất trước.
 ///
 /// Chỉ Episode đã khép lại mới vào Hành trình — WDA Inv.6: chưa có ý nghĩa
@@ -87,6 +105,7 @@ List<JourneyEntry> buildJourneyEntries({
   required List<ReflectionEpisode> episodes,
   required List<CareerMemoryEvent> events,
   required Map<String, String> situationLabels,
+  Map<String, String> ahaByCode = const {},
 }) {
   final entries = <JourneyEntry>[];
 
@@ -112,9 +131,19 @@ List<JourneyEntry> buildJourneyEntries({
       title: situation != null && situation.trim().isNotEmpty
           ? tr('Nhìn lại: ${situation.trim()}', 'Looking back: ${situation.trim()}')
           : e.humanMoment.label,
-      subtitle: e.draftMeaning?.trim().isNotEmpty == true
-          ? e.draftMeaning!.trim()
-          : situation ?? e.humanMoment.label,
+      // Dựng LẠI câu ý nghĩa thay vì đọc `draft_meaning` đã đóng băng.
+      //
+      // `draft_meaning` được ghi bằng ngôn ngữ đang bật lúc bấm lưu và không bao
+      // giờ đổi nữa. Tiêu đề ngay trên nó thì đọc `wr_situations.text_en` nên
+      // dịch được — thành ra bật tiếng Anh lên là mỗi dòng trên Hành trình có
+      // một nửa tiếng Anh, một nửa tiếng Việt. Đó là chỗ khách chỉ ra 10/09.
+      //
+      // [liveMeaning] ghép lại từ chữ người dùng (giữ nguyên) và câu aha của
+      // story (đọc lại theo ngôn ngữ đang bật). Rơi về `draft_meaning` khi
+      // Episode không có ghi chú lẫn story — dữ liệu cũ trước lúc tách notes.
+      subtitle: _episodeExcerpt(e, ahaByCode[e.situationCode]) ??
+          situation ??
+          e.humanMoment.label,
       detail: memoryDetailForStory(
         story: e,
         countThisMonth: needCountThisMonth(e, closed),
@@ -485,10 +514,16 @@ List<JourneyEntry> watchJourneyEntries(WidgetRef ref) {
   final episodes = ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
   final events = ref.watch(wrMemoryEventsProvider).valueOrNull ?? const [];
   final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
+  final stories = ref.watch(wrStoriesProvider).valueOrNull ?? const [];
   return buildJourneyEntries(
     episodes: episodes,
     events: events,
     situationLabels: {for (final s in situations) s.code: s.text},
+    // `story.ahaMessage` đi qua `trDb` nên map này tự đúng ngôn ngữ đang bật.
+    ahaByCode: {
+      for (final s in stories)
+        if (s.ahaMessage != null) s.storyId: s.ahaMessage!,
+    },
   );
 }
 

@@ -72,6 +72,28 @@ class _WrAppState extends ConsumerState<WrApp> {
     final router = ref.watch(appRouterProvider);
     final localeCode = ref.watch(appLocaleProvider);
 
+    // Đổi ngôn ngữ là xoá cache dữ liệu, cùng cơ chế với đổi tài khoản.
+    //
+    // Không phải để tải lại dữ liệu — mà để BUỘC màn hình dựng lại. Mọi màn
+    // WorkReflection nằm trong bảng route dưới dạng `const`, nên `MaterialApp`
+    // dựng lại vì đổi `locale` không kéo theo chúng: Flutter thấy widget cũ và
+    // widget mới là một thực thể `const` duy nhất rồi bỏ qua cả nhánh. Lý do
+    // đầy đủ ở `localeScopedProviders`.
+    //
+    // Đặt trong `build` chứ không trong `initState`: `ref.listen` ở đây chỉ đăng
+    // ký MỘT lần cho suốt đời state, nhưng nó cần `ref` của Consumer nên phải
+    // nằm trong build. Callback chạy ngoài lúc dựng nên `invalidate` an toàn.
+    // `wrSetLocale` lặp lại ở đây tuy phía dưới `build` cũng gọi: listener chạy
+    // NGAY lúc state đổi, còn `build` phải chờ khung hình sau. Provider nào bị
+    // xoá mà tính lại trong khoảng giữa hai mốc đó sẽ đọc `wrEnglish` — nó phải
+    // đã đúng rồi, nếu không nó chở lại đúng chữ tiếng cũ và Riverpod coi như
+    // "không có gì đổi", không báo cho màn nào cả.
+    ref.listen<String>(appLocaleProvider, (previous, next) {
+      if (previous == next) return;
+      wrSetLocale(next);
+      resetLocaleScopedProviders(ref.invalidate);
+    });
+
     // Phần WorkReflection lấy chữ qua `tr()` chứ không qua `AppLocalizations`
     // (lý do ở `core/l10n/wr_tr.dart`). Ghi ở ĐẦU build, trước khi cây widget
     // dựng, nên mọi màn trong khung hình này đọc cùng một ngôn ngữ. `build`
