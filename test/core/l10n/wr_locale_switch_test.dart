@@ -242,4 +242,67 @@ void main() {
       expect(e.draftMeaning, contains('Câu aha tiếng Việt.'));
     });
   });
+
+  group('Insight đã đóng băng trong DB', () {
+    // Thẻ "Insight gần nhất" ở màn Hôm nay đọc `wr_reflection_insights.content`
+    // — bản GỘP lúc bấm lưu, không có đường lần ngược về Episode nên
+    // `liveMeaning` không dùng được. Khách báo 10/09: cả màn Hôm nay tiếng Anh,
+    // riêng thẻ này nguyên khối tiếng Việt.
+    const ahaVi = 'Sự phối hợp yếu thường tạo ra lãng phí vô hình.';
+    const ahaEn = 'Weak coordination often creates invisible waste.';
+    const map = {ahaVi: ahaEn};
+
+    test('đổi vế mở dở và câu aha, GIỮ NGUYÊN chữ người dùng', () {
+      const frozen =
+          'Với tôi, điều này xảy ra vì mình chưa rõ mình đang mong đợi gì. $ahaVi';
+
+      wrSetLocale('en');
+      final out = relocaliseInsight(frozen, ahaEnByVi: map);
+
+      expect(out, startsWith('To me, this happens because '));
+      expect(out, endsWith(ahaEn));
+      // Chữ người dùng tự gõ ở nguyên ngôn ngữ họ đã viết. Dịch nó đi mới là
+      // sai — thẻ nửa Anh nửa Việt ở đây là đúng.
+      expect(out, contains('mình chưa rõ mình đang mong đợi gì'));
+    });
+
+    test('chiều ngược lại cũng đúng', () {
+      const frozen =
+          'To me, this happens because I never said what I needed. $ahaEn';
+
+      wrSetLocale('vi');
+      final out = relocaliseInsight(frozen, ahaEnByVi: map);
+
+      expect(out, startsWith('Với tôi, điều này xảy ra vì '));
+      expect(out, endsWith(ahaVi));
+      expect(out, contains('I never said what I needed'));
+    });
+
+    test('câu aha mặc định đổi được mà không cần bản đồ story', () {
+      wrSetLocale('en');
+      expect(
+        relocaliseInsight('Với tôi, điều này xảy ra vì A. $kDefaultAhaVi'),
+        'To me, this happens because A. $kDefaultAhaEn',
+      );
+    });
+
+    test('không nhận ra câu aha thì giữ nguyên, không cắt bừa chữ nào', () {
+      // Người dùng bỏ qua Lớp 1 và tự viết trọn câu. Không mảnh nào là của app.
+      const mine = 'Tôi chỉ đang mệt, không có gì sâu xa hơn.';
+      wrSetLocale('en');
+      expect(relocaliseInsight(mine, ahaEnByVi: map), mine);
+    });
+
+    test('bản đồ có dòng rỗng hay trùng nhau thì bỏ qua, không xoá đuôi câu', () {
+      // `aha_message_en` bằng đúng bản tiếng Việt (chưa dịch, chép tạm) từng
+      // làm mọi câu bị cắt đuôi rồi nối lại y nguyên — vô hại nhưng che mất
+      // dòng dịch thật đứng sau nó trong vòng lặp.
+      const frozen = 'Với tôi, điều này xảy ra vì B. $ahaVi';
+      wrSetLocale('en');
+      expect(
+        relocaliseInsight(frozen, ahaEnByVi: {'': '', ahaVi: ahaVi, ...map}),
+        'To me, this happens because B. $ahaEn',
+      );
+    });
+  });
 }

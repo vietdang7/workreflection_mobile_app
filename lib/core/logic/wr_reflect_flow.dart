@@ -249,9 +249,16 @@ String get kCustomDetailHint => tr('Ví dụ: Sáng nay, trong cuộc họp vớ
 /// §V: "Aha dùng câu mặc định cố định thay vì theo tình huống". Có một câu cố
 /// định là có chủ đích — bước Insight của mockup luôn mở bằng một câu đã viết
 /// sẵn để người dùng sửa, không bao giờ mở bằng ô trống.
-String get kDefaultAha => tr('Dừng lại để gọi tên một trải nghiệm cụ thể đã là bước phản chiếu quan '
-    'trọng nhất, dù tôi chưa chắc chắn về ý nghĩa của nó.', 'Stopping to name one specific experience is already the most important '
-    'part of reflecting, even if I am not sure yet what it means.');
+String get kDefaultAha => tr(kDefaultAhaVi, kDefaultAhaEn);
+
+/// Hai bản của [kDefaultAha], tách riêng để [relocaliseInsight] so được với
+/// những câu đã ghi xuống database bằng ngôn ngữ kia.
+const String kDefaultAhaVi =
+    'Dừng lại để gọi tên một trải nghiệm cụ thể đã là bước phản chiếu quan '
+    'trọng nhất, dù tôi chưa chắc chắn về ý nghĩa của nó.';
+const String kDefaultAhaEn =
+    'Stopping to name one specific experience is already the most important '
+    'part of reflecting, even if I am not sure yet what it means.';
 
 /// Câu Aha của bước Insight.
 ///
@@ -446,6 +453,67 @@ String liveMeaning({
       stem: stemFromNote(notes[ReflectionPattern.reframe.dbValue]),
       aha: ahaFor(storyAha),
     );
+
+/// Dịch lại phần APP viết trong một câu ý nghĩa ĐÃ ĐÓNG BĂNG trong database.
+///
+/// ---------------------------------------------------------------------------
+/// DÙNG KHI NÀO — VÀ VÌ SAO KHÔNG DÙNG [liveMeaning]
+///
+/// [liveMeaning] dựng lại câu từ hai nguồn còn phân biệt được, nên chính xác
+/// hơn — nhưng nó cần Episode. Bảng `wr_reflection_insights` chỉ có một cột
+/// `content` là bản gộp, không có đường nào lần ngược về Episode. Thẻ "Insight
+/// gần nhất" ở màn Hôm nay đọc đúng bảng đó.
+///
+/// Nên ở đây làm ngược lại: nhận bản gộp, nhận ra hai mảnh do APP viết, thay
+/// từng mảnh bằng bản của ngôn ngữ đang bật.
+///
+///   • VẾ MỞ DỞ đứng đầu câu ("Với tôi, điều này xảy ra vì" /
+///     "To me, this happens because") — danh sách đầy đủ ở [kInsightStemPrefixes].
+///   • CÂU AHA luôn đứng CUỐI câu, do [mergeInsight] ghép vào sau cùng. Nhận ra
+///     nó bằng cách so nguyên văn với những câu aha đã biết.
+///
+/// Chữ nằm GIỮA hai mảnh đó là chữ người dùng tự gõ. Nó ở nguyên ngôn ngữ họ đã
+/// viết — dịch chữ của người dùng mới là sai. Một thẻ nửa Anh nửa Việt ở đây là
+/// đúng, và nửa tiếng Việt đó là câu của chính họ.
+///
+/// [ahaEnByVi] là bản đồ câu aha tiếng Việt → tiếng Anh, lấy từ `wr_stories`.
+/// Thiếu bản đồ thì vẫn chạy: câu aha mặc định luôn được thử trước.
+///
+/// So NGUYÊN VĂN chứ không so gần đúng: nhận nhầm một câu người dùng tự gõ
+/// thành câu của app rồi thay nó đi thì đó là xoá chữ của họ. Không nhận ra thì
+/// tệ nhất là câu giữ nguyên tiếng cũ — đúng hiện trạng, không tệ hơn.
+String relocaliseInsight(
+  String content, {
+  Map<String, String> ahaEnByVi = const {},
+}) {
+  var text = content.trim();
+  if (text.isEmpty) return text;
+
+  final wantedStem = kInsightStemPrefix;
+  for (final prefix in kInsightStemPrefixes) {
+    if (prefix != wantedStem && text.startsWith(prefix)) {
+      text = '$wantedStem${text.substring(prefix.length)}';
+      break;
+    }
+  }
+
+  for (final entry in <MapEntry<String, String>>[
+    const MapEntry(kDefaultAhaVi, kDefaultAhaEn),
+    ...ahaEnByVi.entries,
+  ]) {
+    final vi = entry.key.trim();
+    final en = entry.value.trim();
+    if (vi.isEmpty || en.isEmpty || vi == en) continue;
+    final current = wrEnglish ? vi : en;
+    final wanted = wrEnglish ? en : vi;
+    if (text.endsWith(current)) {
+      text = '${text.substring(0, text.length - current.length)}$wanted';
+      break;
+    }
+  }
+
+  return text;
+}
 
 // ---------------------------------------------------------------------------
 // Nhãn tình huống để ghi vào `notes`

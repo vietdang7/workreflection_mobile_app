@@ -59,6 +59,7 @@ import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/vn_date.dart';
 import '../../../core/logic/wr_display_name.dart';
 import '../../../core/logic/wr_home_surface.dart';
+import '../../../core/logic/wr_reflect_flow.dart';
 import '../../../core/logic/wr_repeated_situations.dart';
 import '../../../core/models/checkin.dart';
 import '../../../core/models/wr_mood_content.dart';
@@ -1032,6 +1033,15 @@ class _LatestInsightSection extends ConsumerWidget {
       );
     }
 
+    // Bản đồ câu aha Việt → Anh, để nhận ra nửa câu do app viết trong bản gộp
+    // đã đóng băng. Rỗng cũng không sao: câu aha mặc định vẫn được thử.
+    final stories = ref.watch(wrStoriesProvider).valueOrNull ?? const [];
+    final ahaEnByVi = {
+      for (final s in stories)
+        if (s.ahaMessageVi != null && s.ahaMessageEn != null)
+          s.ahaMessageVi!: s.ahaMessageEn!,
+    };
+
     final at = insight.createdAt;
     final saved = at == null
         ? null
@@ -1056,7 +1066,14 @@ class _LatestInsightSection extends ConsumerWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              '"${insight.content}"',
+              // `content` là bản GỘP đóng băng lúc bấm lưu — nửa chữ người
+              // dùng, nửa chữ app, cả hai kẹt ở ngôn ngữ hôm đó. Cùng câu này
+              // ở tab Hành trình đã dựng lại được (`liveMeaning`), nên nếu ở
+              // đây để nguyên thì hai màn nói hai thứ tiếng về cùng một câu.
+              //
+              // `relocaliseInsight` chỉ đụng vào hai mảnh do APP viết. Phần
+              // giữa là chữ người dùng tự gõ và ở nguyên ngôn ngữ họ đã viết.
+              '"${relocaliseInsight(insight.content, ahaEnByVi: ahaEnByVi)}"',
               // `.muted.serif` italic 13.5px của mockup — cùng giọng với thẻ
               // "Hệ thống nhận ra", vì cả hai đều là câu trích về người dùng.
               style: WrText.serifQuote(
