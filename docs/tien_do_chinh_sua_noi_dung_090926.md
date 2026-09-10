@@ -598,10 +598,16 @@ C, D, E. Còn lại đúng ba loại.
 - ⚠️ **Sửa mô tả sản phẩm trên App Store Connect** cho khớp câu chữ IAP mới
   (16.6 / 16.7). Apple đã từ chối một lần vì Guideline 3.1.1. **Chặn cứng việc
   nộp bản mới.**
-- ⚠️ **Push 2 migration:** `20260910000000_wr_insight_feedback.sql`,
-  `20260910000001_wr_polished_text.sql`. Chưa push thì nhóm D ghi log hỏng (âm
-  thầm, best-effort) và lớp 3 không đệm được.
-- ⚠️ **Deploy Edge Function `wr-polish`** — chỉ cần khi bật lớp 3.
+- ~~**Push 2 migration**~~ — **XONG 10/09.** `supabase db push` chặn lại vì
+  remote có 3 version không có file local (đợt IAP + xin phép AI làm thẳng trên
+  remote). CLI gợi ý `migration repair --status reverted` — **không làm thế**:
+  ba cái đó chạy thật và đang giữ schema hiện tại, đánh dấu reverted là ghi sai
+  vào bảng lịch sử. Dùng đúng nếp repo: thêm file rỗng `*_remote_stub.sql`. Đã
+  kiểm trên DB: RLS bật, `wr_insight_feedback` chỉ có insert+select (không
+  update/delete — đúng thiết kế nhật ký sự kiện), `wr_polished_text` chỉ select.
+- ~~**Deploy `wr-polish`**~~ — **XONG 10/09**, ACTIVE v1, `verify_jwt=true`,
+  dùng chung `OPENROUTER_API_KEY` với `wr-chat` nên không cần thêm secret. Chưa
+  ai gọi tới: lớp 3 vẫn TẮT theo mặc định `WR_AI_POLISH`.
 
 ### 3 · Việc lớn, nên tách riêng
 - ~~**17.5 bản tiếng Anh**~~ — **XONG 10/09**, xem phần riêng phía trên. Không
