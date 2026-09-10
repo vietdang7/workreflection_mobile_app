@@ -31,6 +31,7 @@
 import '../models/wr_content.dart';
 import '../models/wr_episode.dart';
 import '../models/wr_intelligence.dart';
+import 'wr_career_health.dart' show selfCheckDateLabel;
 import 'wr_repeated_situations.dart';
 import 'wr_self_check_narrative.dart';
 import 'wr_self_check_questions.dart';
@@ -104,9 +105,11 @@ List<ScaSelfCheckResponse> scoredSelfChecks(
       ..sort((a, b) => b.takenAt.compareTo(a.takenAt));
 
 /// Ngày dạng dd/MM/yyyy — dạng mockup dùng trong câu "so với lần trước (…)".
-String scaDateLabel(DateTime d) =>
-    '${d.day.toString().padLeft(2, '0')}/'
-    '${d.month.toString().padLeft(2, '0')}/${d.year}';
+///
+/// Uỷ lại cho `wr_career_health.dart`: màn Hiểu mình cũng phải in ngày
+/// Self-Check gần nhất (Changelog CareerSnapshot §5), và hai màn cùng nói về
+/// một lần tự đánh giá thì không được định dạng ngày theo hai luật.
+String scaDateLabel(DateTime d) => selfCheckDateLabel(d);
 
 /// Câu Lớp 2. Null khi chưa có lần Self-Check nào trước đó để so.
 String? scaTrendText({

@@ -18,6 +18,7 @@
 //     không bao giờ trả về một con số giả vờ tương đương điểm tự đánh giá.
 
 import '../models/wr_content.dart';
+import '../models/wr_episode.dart';
 import 'wr_self_check_questions.dart';
 
 /// Số lần nhìn lại để "bức tranh tổng thể" mở ra.
@@ -98,16 +99,98 @@ int scaTouchedCount(List<String> recent, List<WrSituation> situations) {
   return total;
 }
 
-/// Nhãn trạng thái một trụ, suy từ tỉ trọng bị chạm.
+// ---------------------------------------------------------------------------
+// ĐÃ BỎ: behaviourPillarLabel / behaviourPillarIsHealthy
+// ---------------------------------------------------------------------------
+//
+// Hai hàm đó gán nhãn ĐÁNH GIÁ ("Ưu tiên cải thiện" / "Cần chú ý" / "Đang phát
+// triển") cho một con số TẦN SUẤT. `Changelog_CareerSnapshot.docx` §2 yêu cầu
+// bỏ hoàn toàn:
+//
+//   "Tần suất cao KHÔNG đồng nghĩa với 'tệ'. Một người quay lại nhóm Mối quan
+//    hệ 14 lần có thể vì đang gặp vấn đề, nhưng cũng có thể vì đang chủ động
+//    làm việc với nó. Gán nhãn đánh giá kiểu 'Ưu tiên cải thiện' cho một con số
+//    tần suất là suy diễn vượt quá dữ liệu."
+//
+// Còn tệ hơn: bộ chữ đó CỐ Ý trùng với `pillarStatusLabel` của đường tự đánh
+// giá, để "hai nơi không nói khác nhau". Kết quả ngược lại — dùng chung một
+// thang từ vựng khiến người đọc mặc định hai khối đang đo cùng một thứ, nên hai
+// kết quả khác nhau bị đọc thành lỗi hệ thống. Đó chính là màn hình khách chụp
+// lại: cùng ba trụ, hai lần, hai kết luận ngược nhau.
+//
+// Nay cột tần suất chỉ nói SỐ LẦN TRÊN TỔNG, không nhãn, không màu cảnh báo.
+
+/// Số lần mỗi trụ bị chạm, đếm trên TOÀN BỘ [episodes].
 ///
-/// Ba trụ chia đều thì mỗi trụ khoảng 0.33. Trên 0.45 là lệch hẳn về một phía;
-/// dưới 0.20 là gần như không xuất hiện suốt 15 ngày. Bộ chữ giữ đúng như
-/// `pillarStatusLabel` của đường tự đánh giá để hai nơi không nói khác nhau.
-String behaviourPillarLabel(double share) {
-  if (share >= 0.45) return 'Ưu tiên cải thiện';
-  if (share >= 0.20) return 'Cần chú ý';
-  return 'Đang phát triển';
+/// Cố tình KHÔNG đi qua `recentSituationIds`: hàm đó chặn ở 30 mục gần nhất
+/// (v2.0 §4.1), nên lấy nó làm nguồn cho cột "Xuất hiện" thì người đã nhìn lại
+/// 80 lần vẫn đọc được "14 / 30 lần" — đúng cái bẫy §8 của changelog cảnh báo.
+///
+/// Hai nhóm tình huống tích cực (P-ACHIEVE, P-STEADY) và những lượt tự viết
+/// không có mã đều không thuộc trụ nào, nên tổng ba số ở đây NHỎ HƠN tổng số
+/// lần nhìn lại. Đó là sự thật, không phải sai số: mẫu số của cột là tổng số
+/// lần, và không phải lần nào cũng rơi vào một trụ.
+Map<SelfCheckPillar, int> pillarReflectionCounts(
+  List<ReflectionEpisode> episodes,
+  List<WrSituation> situations,
+) {
+  final codeToDim = {for (final s in situations) s.code: s.scaDimension};
+  final counts = {for (final p in SelfCheckPillar.values) p: 0};
+  for (final e in episodes) {
+    final code = e.situationCode;
+    if (code == null || code.isEmpty) continue;
+    final dim = codeToDim[code];
+    if (dim == null) continue;
+    final pillar = pillarOfDimension(dim);
+    if (pillar == null) continue;
+    counts[pillar] = counts[pillar]! + 1;
+  }
+  return counts;
 }
 
-/// True khi nhãn của [share] là nhãn "ổn" — dùng để chọn màu.
-bool behaviourPillarIsHealthy(double share) => share < 0.20;
+/// Sau bao nhiêu ngày thì một lần Self-Check được coi là đã cũ (§5).
+///
+/// Ba tháng. §5: "Self-Check là ảnh chụp tại một thời điểm, còn Reflection là
+/// dòng chảy liên tục. Nếu một người làm Self-Check hồi tháng 3, rồi phản chiếu
+/// đều đặn đến tháng 9, việc hiển thị 'Bạn đánh giá: Cần chú ý' như thể đó là
+/// đánh giá hiện tại là sai lệch."
+///
+/// Nguy hiểm hơn cái nhãn cũ: hệ thống lấy chính con số cũ đó đối chiếu với
+/// hành vi mới, nên kết luận về khoảng lệch cũng sai theo.
+const int kSelfCheckStaleDays = 90;
+
+/// Lần tự đánh giá này đã cũ tới mức nên mời làm lại chưa?
+bool selfCheckIsStale(DateTime takenAt, DateTime now) =>
+    now.difference(takenAt).inDays >= kSelfCheckStaleDays;
+
+/// Ngày dạng dd/MM/yyyy — dạng §5 yêu cầu hiện kèm cột đánh giá.
+String selfCheckDateLabel(DateTime d) =>
+    '${d.day.toString().padLeft(2, '0')}/'
+    '${d.month.toString().padLeft(2, '0')}/${d.year}';
+
+/// Tỉ trọng tối thiểu để một trụ được gọi là nổi trội (Diễn giải sâu §2).
+const double kDominantPillarShare = 0.40;
+
+/// Trụ nổi trội, hoặc null khi phân bố tương đối đều.
+///
+/// `Diễn giải sâu §2`: "dominantPillar phải trả về null khi phân bố tương đối
+/// đều (không trụ nào vượt 40%). Nếu cứ lấy trụ cao nhất bất kể chênh lệch, hệ
+/// thống sẽ khẳng định một xu hướng không thật, ví dụ 10 / 9 / 8 lần mà vẫn
+/// tuyên bố có một trụ nổi trội."
+///
+/// Mẫu số là [total] — tổng số lần nhìn lại, đúng con số đang hiện ở cột
+/// "Xuất hiện". Chia cho tổng ba trụ thay vì tổng số lần sẽ ra một tỉ lệ không
+/// khớp với bất kỳ con số nào người dùng nhìn thấy trên màn.
+SelfCheckPillar? dominantPillar(Map<SelfCheckPillar, int> counts, int total) {
+  if (total <= 0) return null;
+  SelfCheckPillar? best;
+  var bestCount = 0;
+  for (final e in counts.entries) {
+    if (e.value > bestCount) {
+      bestCount = e.value;
+      best = e.key;
+    }
+  }
+  if (best == null || bestCount / total <= kDominantPillarShare) return null;
+  return best;
+}

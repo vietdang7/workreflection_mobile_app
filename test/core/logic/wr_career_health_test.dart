@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:workreflection_mobile/core/logic/wr_career_health.dart';
 import 'package:workreflection_mobile/core/logic/wr_self_check_questions.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
+import 'package:workreflection_mobile/core/models/wr_episode.dart';
 
 WrSituation _sit(String code, ScaDimension dim) => WrSituation(
       code: code,
@@ -15,6 +16,16 @@ WrSituation _sit(String code, ScaDimension dim) => WrSituation(
 
 /// [count] lần xuất hiện của [code] trong recentSituationIds.
 List<String> _p(String code, int count) => List.filled(count, code);
+
+ReflectionEpisode _episode(String? code) => ReflectionEpisode(
+      userId: 'u',
+      humanMoment: HumanMoment.arrival,
+      situationCode: code,
+    );
+
+/// [count] lượt nhìn lại đã chọn tình huống [code].
+List<ReflectionEpisode> _e(String code, int count) =>
+    List.generate(count, (_) => _episode(code));
 
 void main() {
   group('careerHealthUnlocked', () {
@@ -113,22 +124,109 @@ void main() {
     });
   });
 
-  group('behaviourPillarLabel', () {
-    test('lệch hẳn về một trụ thì ưu tiên cải thiện', () {
-      expect(behaviourPillarLabel(0.6), 'Ưu tiên cải thiện');
-      expect(behaviourPillarLabel(0.45), 'Ưu tiên cải thiện');
+  // `behaviourPillarLabel` / `behaviourPillarIsHealthy` ĐÃ BỎ, cùng cả nhóm
+  // test của chúng. Changelog CareerSnapshot §2 cấm gán nhãn đánh giá cho một
+  // con số tần suất — quay lại nhóm Mối quan hệ 14 lần có thể vì đang gặp vấn
+  // đề, cũng có thể vì đang chủ động làm việc với nó. Cột "Xuất hiện" nay chỉ
+  // nói số lần trên tổng.
+
+  group('pillarReflectionCounts', () {
+    final situations = [
+      _sit('s-a', ScaDimension.s1),
+      _sit('c-a', ScaDimension.c2),
+      _sit('a-a', ScaDimension.a2),
+      _sit('pos', ScaDimension.pAchieve),
+    ];
+
+    test('đếm đúng số lần từng trụ', () {
+      final counts = pillarReflectionCounts(
+        [..._e('s-a', 5), ..._e('c-a', 14), ..._e('a-a', 8)],
+        situations,
+      );
+      expect(counts[SelfCheckPillar.s], 5);
+      expect(counts[SelfCheckPillar.c], 14);
+      expect(counts[SelfCheckPillar.a], 8);
     });
 
-    test('quanh mức chia đều thì cần chú ý', () {
-      expect(behaviourPillarLabel(0.33), 'Cần chú ý');
-      expect(behaviourPillarLabel(0.20), 'Cần chú ý');
+    test('tình huống tích cực không thuộc trụ nào', () {
+      final counts = pillarReflectionCounts(_e('pos', 20), situations);
+      for (final p in SelfCheckPillar.values) {
+        expect(counts[p], 0);
+      }
     });
 
-    test('gần như không xuất hiện thì đang phát triển', () {
-      expect(behaviourPillarLabel(0.19), 'Đang phát triển');
-      expect(behaviourPillarLabel(0), 'Đang phát triển');
-      expect(behaviourPillarIsHealthy(0), isTrue);
-      expect(behaviourPillarIsHealthy(0.5), isFalse);
+    test('lượt không có mã tình huống thì bỏ qua', () {
+      final counts = pillarReflectionCounts(
+        [..._e('s-a', 3), _episode(null)],
+        situations,
+      );
+      expect(counts[SelfCheckPillar.s], 3);
+    });
+
+    // Chính cái bẫy §8 của changelog: `recentSituationIds` chặn ở 30 mục gần
+    // nhất, nên đi qua nó thì người đã nhìn lại 80 lần vẫn đọc được "14 / 30".
+    test('KHÔNG bị chặn ở cửa sổ 30 mục gần nhất', () {
+      final counts = pillarReflectionCounts(_e('c-a', 80), situations);
+      expect(counts[SelfCheckPillar.c], 80);
+    });
+  });
+
+  group('dominantPillar', () {
+    Map<SelfCheckPillar, int> counts(int s, int c, int a) => {
+          SelfCheckPillar.s: s,
+          SelfCheckPillar.c: c,
+          SelfCheckPillar.a: a,
+        };
+
+    test('vượt 40% tổng thì là trụ nổi trội', () {
+      // 14/27 = 51.9%
+      expect(dominantPillar(counts(5, 14, 8), 27), SelfCheckPillar.c);
+    });
+
+    // Diễn giải sâu §2 nêu đích danh ví dụ này: 10/9/8 mà vẫn tuyên bố có một
+    // trụ nổi trội là khẳng định một xu hướng không thật.
+    test('phân bố tương đối đều thì trả null', () {
+      expect(dominantPillar(counts(10, 9, 8), 27), isNull);
+    });
+
+    test('đúng 40% chưa đủ, phải VƯỢT', () {
+      expect(dominantPillar(counts(4, 4, 2), 10), isNull);
+      expect(dominantPillar(counts(4, 5, 1), 10), SelfCheckPillar.c);
+    });
+
+    // Mẫu số là tổng số lần nhìn lại, không phải tổng ba trụ: nếu phần lớn lượt
+    // là tình huống tích cực hoặc tự viết, thì không trụ nào thật sự nổi trội
+    // trong bức tranh mà người dùng đang nhìn.
+    test('nhiều lượt không thuộc trụ nào thì không ai nổi trội', () {
+      expect(dominantPillar(counts(0, 15, 0), 100), isNull);
+    });
+
+    test('chưa nhìn lại lần nào thì trả null', () {
+      expect(dominantPillar(counts(0, 0, 0), 0), isNull);
+    });
+  });
+
+  group('selfCheckIsStale', () {
+    final now = DateTime(2026, 9, 10);
+
+    test('ngưỡng là 90 ngày', () {
+      expect(kSelfCheckStaleDays, 90);
+    });
+
+    test('vừa làm hôm qua thì chưa cũ', () {
+      expect(selfCheckIsStale(now.subtract(const Duration(days: 1)), now),
+          isFalse);
+    });
+
+    test('89 ngày chưa cũ, 90 ngày là cũ', () {
+      expect(selfCheckIsStale(now.subtract(const Duration(days: 89)), now),
+          isFalse);
+      expect(
+          selfCheckIsStale(now.subtract(const Duration(days: 90)), now), isTrue);
+    });
+
+    test('ngày in ra dạng dd/MM/yyyy', () {
+      expect(selfCheckDateLabel(DateTime(2026, 5, 20)), '20/05/2026');
     });
   });
 }
