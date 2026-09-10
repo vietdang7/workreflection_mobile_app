@@ -716,6 +716,62 @@ dòng đó đổi ngay trên máy người dùng.
 thừa, không lặp. Bước này cần thiết vì `UPDATE ... WHERE id = 'sai'` chạy trúng
 0 dòng mà **không báo lỗi** — migration vẫn xanh, chữ vẫn tiếng Việt.
 
+#### Ba lỗi khách bắt được khi test trên máy thật (10/09)
+
+Chạy bản tiếng Anh trên OnePlus Ace 5. Ba lỗi, bản chất khác hẳn nhau:
+
+**1 · `WrLinkRow` vỡ bố cục, chữ đổ dọc mỗi ký tự một dòng.**
+Nhãn nằm trong `Expanded`, còn câu gợi ý là `Text` trần. `Text` trần không co
+được nên nó lấy trọn bề rộng nó cần, `Expanded` nhận phần thừa — bao nhiêu cũng
+được, kể cả vài pixel. Tiếng Việt "Để gợi ý chính xác hơn" đủ ngắn nên lọt;
+tiếng Anh "So the prompts fit better" rộng hơn hẳn và bóp nát cột nhãn.
+
+Đây là lỗi **chỉ lộ khi đổi ngôn ngữ**, vì nó không phụ thuộc chữ nghĩa mà phụ
+thuộc BỀ RỘNG của chữ. Chữa bằng cách đo lúc dựng: đủ chỗ thì giữ một hàng như
+cũ, không đủ thì xếp câu gợi ý xuống dưới nhãn.
+
+> ⚠ Không đo được bằng `flutter test`: ở đó phông mặc định là Ahem, mọi ký tự
+> rộng bằng nhau và bằng cỡ chữ, nên số đo sai hoàn toàn so với lúc chạy thật.
+> Bài test phải tìm chữ, đừng khoá vào hình dạng hàng.
+
+**2 · Nhãn "LOOK BACK ALONG THE TIMELINE" tràn khỏi mép thẻ, mất chữ cuối.**
+Cùng một nguyên nhân: `Text` trần trong `Row`. Đã bọc `Flexible`. Nhãn cùng nội
+dung ở màn đầy đủ thì không sao vì nó nằm trong `ListView`.
+
+**3 · Thẻ Diễn biến vẫn là một đoạn tiếng Việt.**
+`wr_pattern_narratives` giữ văn xuôi model sinh ra. Mọi dòng đang có đều sinh
+trước khi `wr-narrative` biết tới ngôn ngữ. Luật kể lại chỉ xét "đã có đủ lần
+nhìn lại mới chưa", nên người bật tiếng Anh còn phải ghi thêm **ba lần nữa** mới
+được kể lại — tức tính năng hỏng suốt quãng đó.
+
+Đã thêm cột `locale` (`20260910160000`), và `decideRegeneration` kể lại ngay khi
+ngôn ngữ khác, đứng TRƯỚC phép đếm lần mới. Dòng cũ thiếu cột được coi là `vi` —
+coi là "khớp mọi ngôn ngữ" thì đúng người đang gặp lỗi lại không bao giờ được
+chữa. 4 test mới.
+
+Bắt thêm được một lỗi câm khi làm: truy vấn dòng kể trước **không lấy cột
+`locale`**, nên phép so sánh luôn thấy `undefined` và không bao giờ kích hoạt.
+Không ném ngoại lệ nào.
+
+Tiện thể: `resolveTitles` giờ lấy `text_en` khi đang kể tiếng Anh. Tên tình
+huống là nội dung đã có bản dịch duyệt; để model tự dịch thì mỗi lần một kiểu,
+mà đó là chữ người dùng đã nhìn thấy trên chip.
+
+#### KHÔNG phải lỗi: dòng mô tả dưới tiêu đề truyện còn tiếng Việt
+
+Ảnh chụp cho thấy tiêu đề đã sang tiếng Anh ("Looking back: We did the same work
+without knowing") nhưng dòng dưới vẫn tiếng Việt. Hai thứ đó đến từ hai nguồn
+khác nhau:
+
+- tiêu đề dựng từ `wr_situations` — nội dung của sản phẩm, đã dịch;
+- dòng dưới là `wr_reflection_episodes.draft_meaning` — **chữ người dùng tự
+  viết** ở bước 2 của Reflect. Hiện có 81/107 Episode có chữ.
+
+Giữ nguyên ngôn ngữ người dùng đã viết là cố ý, cùng nguyên tắc với
+`wr_practices.title`: dịch nhật ký của một người là viết lại lời của họ. Chính
+luật ngôn ngữ tôi đặt cho trợ lý cũng nói vậy — *"When you quote the user, keep
+their words in the language they wrote them."*
+
 #### Bốn dòng dữ liệu hỏng — ĐÃ DỌN 10/09
 
 `wr_stories.practice_action` của **A1-10, A3-10, S1-10, S2-10** — đều là dòng

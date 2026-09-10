@@ -776,13 +776,22 @@ class _NarrativeCardState extends ConsumerState<_NarrativeCard> {
                 ),
                 const SizedBox(width: 6),
               ],
-              Text(
-                canRead ? tr('NHÌN LẠI DÒNG THỜI GIAN', 'LOOK BACK ALONG THE TIMELINE') : 'PREMIUM',
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.6,
-                  color: WrColors.coral,
+              // `Flexible` chứ không phải `Text` trần: nhãn tiếng Anh dài hơn
+              // hẳn bản tiếng Việt, cộng thêm `letterSpacing`, nên nó tràn khỏi
+              // mép thẻ và bị cắt mất chữ cuối. Cho phép xuống dòng thay vì cắt
+              // — đây là nhãn nói thẻ này là gì, mất chữ là mất nghĩa.
+              Flexible(
+                child: Text(
+                  canRead
+                      ? tr('NHÌN LẠI DÒNG THỜI GIAN',
+                          'LOOK BACK ALONG THE TIMELINE')
+                      : 'PREMIUM',
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.6,
+                    color: WrColors.coral,
+                  ),
                 ),
               ),
             ],

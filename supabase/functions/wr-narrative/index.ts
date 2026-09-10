@@ -172,7 +172,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
       .limit(EPISODE_WINDOW),
     db
       .from('wr_pattern_narratives')
-      .select('id, narrative, period_start, period_end, created_at')
+      // `locale` PHẢI có ở đây: thiếu nó thì `previous.locale` luôn undefined,
+      // `decideRegeneration` mặc định coi là 'vi', và người dùng tiếng Anh
+      // không bao giờ được kể lại. Lỗi kiểu này không ném ngoại lệ nào.
+      .select('id, narrative, period_start, period_end, created_at, locale')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(1),
@@ -189,7 +192,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const episodes = (episodesResult.data ?? []) as EpisodeRow[];
   const previous = (lastResult.data?.[0] ?? null) as NarrativeRow | null;
 
-  const decision = decideRegeneration(episodes, previous);
+  const decision = decideRegeneration(episodes, previous, locale);
   if (!decision.regenerate) {
     return skip(decision.reason, {
       episodeCount: episodes.length,
@@ -206,6 +209,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const titles = await resolveTitles(
     db,
     episodes.map((e) => e.situation_code).filter((c): c is string => !!c),
+    locale,
   );
 
   const input: NarrativeInput = {
@@ -240,6 +244,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
     period_start: decision.periodStart,
     period_end: decision.periodEnd,
     narrative,
+    // Ghi kèm ngôn ngữ đã viết, để lần sau `decideRegeneration` biết đoạn này
+    // có còn dùng được cho người đang đọc hay không.
+    locale,
   });
 
   if (writeError) {
@@ -291,10 +298,11 @@ async function isPremium(db: SupabaseClient, userId: string): Promise<boolean> {
   return false;
 }
 
-/// Tra tiêu đề tiếng Việt của các mã tình huống.
+/// Tra tiêu đề của các mã tình huống, theo ngôn ngữ đang kể.
 async function resolveTitles(
   db: SupabaseClient,
   codes: string[],
+  locale: WrLocale,
 ): Promise<Map<string, string>> {
   const out = new Map<string, string>();
   const unique = [...new Set(codes)];
@@ -302,10 +310,19 @@ async function resolveTitles(
   try {
     const { data } = await db
       .from('wr_situations')
-      .select('code, text')
+      .select('code, text, text_en')
       .in('code', unique);
     for (const row of data ?? []) {
-      const text = String(row.text ?? '').trim();
+      // Tên tình huống là nội dung ĐÃ CÓ BẢN DỊCH DUYỆT trong bảng. Đưa bản
+      // tiếng Anh vào prompt khi đang kể tiếng Anh thì model khỏi phải tự dịch
+      // — nó dịch thì mỗi lần một kiểu, và tên tình huống là thứ người dùng đã
+      // nhìn thấy trên chip, lệch chữ là đọc ra như hai chuyện khác nhau.
+      //
+      // Khác với `draft_meaning`: cái đó là chữ người dùng tự viết và cố ý giữ
+      // nguyên ngôn ngữ họ đã viết.
+      const vi = String(row.text ?? '').trim();
+      const en = String(row.text_en ?? '').trim();
+      const text = locale === 'en' && en.length > 0 ? en : vi;
       if (text) out.set(row.code as string, text);
     }
   } catch (_) { /* không tra được thì prompt dùng mã, vẫn kể được */ }

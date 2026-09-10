@@ -32,6 +32,9 @@ export type NarrativeRow = {
   period_start: string | null;
   period_end: string | null;
   created_at: string;
+  /// Ngôn ngữ đoạn kể đã viết. Dòng cũ hơn migration `narrative_locale` không
+  /// có cột này; coi như 'vi', đúng thứ chúng thật sự đang chứa.
+  locale?: string | null;
 };
 
 export type Decision =
@@ -62,9 +65,15 @@ export function vnDate(iso: string | null | undefined): string | null {
 }
 
 /// [episodes] sắp MỚI NHẤT TRƯỚC (đúng thứ tự truy vấn ở `index.ts`).
+///
+/// [locale] là ngôn ngữ app đang chạy. Lần kể trước viết bằng ngôn ngữ khác thì
+/// KỂ LẠI, kể cả khi chưa có lần nhìn lại nào mới: người vừa bật tiếng Anh mà
+/// thẻ vẫn là một đoạn tiếng Việt thì với họ tính năng đang hỏng, và ngưỡng ba
+/// lần nghĩa là nó còn hỏng thêm ba lần nhìn lại nữa.
 export function decideRegeneration(
   episodes: EpisodeRow[],
   previous: NarrativeRow | null,
+  locale: 'vi' | 'en' = 'vi',
 ): Decision {
   if (episodes.length < MIN_EPISODES) {
     return {
@@ -84,6 +93,16 @@ export function decideRegeneration(
   const periodEnd = dates[dates.length - 1] ?? null;
 
   if (previous === null) {
+    return { regenerate: true, periodStart, periodEnd };
+  }
+
+  // Đổi ngôn ngữ là lý do kể lại, đứng TRƯỚC phép đếm lần mới bên dưới.
+  //
+  // Cột `locale` chỉ có từ migration `narrative_locale`; dòng cũ hơn thiếu nó,
+  // và những dòng ấy đều là tiếng Việt vì hàm sinh ra chúng chưa biết tới ngôn
+  // ngữ. Nên thiếu thì coi là 'vi' chứ không coi là "khớp mọi thứ" — coi là
+  // khớp thì đúng người dùng đang gặp lỗi lại không bao giờ được chữa.
+  if ((previous.locale ?? 'vi') !== locale) {
     return { regenerate: true, periodStart, periodEnd };
   }
 
