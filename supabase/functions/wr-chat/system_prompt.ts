@@ -448,10 +448,49 @@ TUYỆT ĐỐI KHÔNG nhắc tới Premium, Pattern nâng cao, hay bất kỳ l�
 ///      liệu. Đặt SAU cả ví dụ mẫu để nó ghi đè được mọi câu minh hoạ, vốn là
 ///      thứ model hay mượn làm quan sát về người thật.
 ///   5. Xưng hô và các luật tầng chạy — chốt cuối, chỗ model bám chắc nhất.
+/// Luật ngôn ngữ, dán CUỐI CÙNG khi app đang chạy tiếng Anh.
+///
+/// Vì sao một khối riêng thay vì dịch cả prompt: toàn bộ tài liệu trên kia là
+/// phần đã được duyệt nội dung, và phần lớn luật của nó — ba câu, một đoạn,
+/// không gạch ngang dài, cách xử lý tín hiệu đáng lo ngại — không phụ thuộc
+/// ngôn ngữ. Dịch cả prompt là mở ra một bản thứ hai phải duyệt lại từ đầu, và
+/// từ đó trở đi mỗi lần đổi một luật phải sửa song song hai nơi.
+///
+/// Đặt SAU [VOICE_REMINDER] vì luật xưng hô ở đó viết cho tiếng Việt ("mình" /
+/// "bạn"), mà tiếng Anh không có cặp đại từ tương đương. Khối này phải ghi đè
+/// được, nên nó phải đứng sau.
+///
+/// [userContext] vẫn là dữ liệu tiếng Việt và cố ý để nguyên: đó là chữ người
+/// dùng tự viết và tên tình huống họ đã chọn. Dịch nó trước khi đưa vào prompt
+/// là để model đọc một bản đã tam sao.
+export const ENGLISH_MODE = `
+
+---
+
+LANGUAGE, THIS OVERRIDES THE VIETNAMESE PRONOUN RULES ABOVE:
+
+1. The user has set the app to English. Write every reply in English, even
+   though this document and the user's own notes are in Vietnamese. Do not
+   apologise for the switch and do not mention it.
+
+2. Rule 1 of the reminder above tells you to say "minh" and "ban". In English,
+   the equivalent register is a plain, warm "I" and "you", a friend who listens
+   rather than a consultant writing a report. Keep contractions. Avoid corporate
+   coaching vocabulary such as leverage, actionable, unpack, or journey.
+
+3. Every other rule above still applies unchanged, including the three sentence
+   limit, the single paragraph, no long dashes, and the handling of concerning
+   signals.
+
+4. Quote the user's own words in the language they wrote them. If they wrote in
+   Vietnamese, keep their phrase in Vietnamese inside your English sentence.
+   Translating what someone just told you back at them reads as correcting them.`;
+
 export function buildSystemPrompt(
   isPremium: boolean,
   userContext = '',
+  locale = 'vi',
 ): string {
   return SYSTEM_PROMPT + FEW_SHOT_EXAMPLES + planLine(isPremium) + userContext +
-    VOICE_REMINDER;
+    VOICE_REMINDER + (locale === 'en' ? ENGLISH_MODE : '');
 }

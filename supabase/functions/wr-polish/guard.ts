@@ -124,8 +124,20 @@ Chỉ trả về đoạn văn đã viết lại. Không thêm lời dẫn, khôn
 /// có thể ra cùng một câu, và cùng một người mở lại màn hình mà dữ liệu chưa đổi
 /// thì câu gốc y hệt. Câu đổi thì khoá đổi, tức là bộ đệm tự hết hạn đúng lúc
 /// cần hết hạn, không cần một cột thời gian nào.
-export async function sourceHash(original: string): Promise<string> {
-  const data = new TextEncoder().encode(original.trim());
+export async function sourceHash(
+  original: string,
+  locale: 'vi' | 'en' = 'vi',
+): Promise<string> {
+  // Ngôn ngữ PHẢI nằm trong khoá đệm. Cùng một câu gốc cho ra hai bản trau
+  // chuốt khác nhau tuỳ app đang chạy ngôn ngữ nào; khoá chỉ theo câu gốc thì
+  // người đổi sang tiếng Anh sẽ nhận lại đúng bản tiếng Việt đã đệm trước đó,
+  // và không có cách nào làm nó mới lại.
+  //
+  // Tiếng Việt CỐ Ý không thêm tiền tố: thêm là đổi băm của mọi dòng đã đệm,
+  // tức vứt sạch bộ đệm hiện có và bắt trả tiền model lại từ đầu cho những câu
+  // đã trau chuốt xong.
+  const keyed = locale === 'en' ? `en ${original.trim()}` : original.trim();
+  const data = new TextEncoder().encode(keyed);
   const digest = await crypto.subtle.digest('SHA-256', data);
   return [...new Uint8Array(digest)]
     .map((b) => b.toString(16).padStart(2, '0'))

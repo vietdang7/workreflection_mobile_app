@@ -40,6 +40,7 @@
 // ---------------------------------------------------------------------------
 
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
+import { languageRule, readLocale, WrLocale } from '../_shared/locale.ts';
 import { stripMarkdown } from '../_shared/strip_markdown.ts';
 import {
   POLISH_SYSTEM_PROMPT,
@@ -73,7 +74,7 @@ const MAX_INPUT_CHARS = 2000;
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
-    'authorization, x-client-info, apikey, content-type',
+    'authorization, x-client-info, apikey, content-type, x-wr-locale',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
@@ -142,8 +143,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   // ── 3 · Câu gốc ─────────────────────────────────────────────────────────
   let original = '';
+  let locale: WrLocale = 'vi';
   try {
     const body = await req.json();
+    locale = readLocale(body);
     original = String(body?.text ?? '').trim();
   } catch (_) {
     return plain('bad_request');
@@ -151,7 +154,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (original.length === 0) return plain('empty_input');
   if (original.length > MAX_INPUT_CHARS) return plain('input_too_long');
 
-  const hash = await sourceHash(original);
+  const hash = await sourceHash(original, locale);
 
   // ── 4 · Bộ nhớ đệm ──────────────────────────────────────────────────────
   const cached = await db
@@ -181,7 +184,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
       body: JSON.stringify({
         model: MODEL,
         messages: [
-          { role: 'system', content: POLISH_SYSTEM_PROMPT },
+          { role: 'system', content: POLISH_SYSTEM_PROMPT + languageRule(locale) },
           { role: 'user', content: original },
         ],
         // Thấp nhất trong ba hàm. Đây là biên tập câu chữ, không phải sáng tác:

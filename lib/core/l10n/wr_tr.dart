@@ -56,6 +56,39 @@ bool wrEnglish = false;
 /// [vi] là bản gốc — luôn là bản được duyệt nội dung. [en] là bản dịch.
 String tr(String vi, String en) => wrEnglish ? en : vi;
 
+/// Như [tr] nhưng cho chữ lấy từ database, nơi bản dịch có thể CHƯA có.
+///
+/// Khác [tr] ở đúng một điểm, và điểm đó là lý do nó tồn tại: [tr] nhận hai câu
+/// do lập trình viên viết nên cả hai chắc chắn có mặt, còn ở đây [en] là một ô
+/// trong bảng mà đội nội dung điền dần. Nên chưa điền thì **rơi về tiếng Việt**,
+/// không hiện ô trống.
+///
+/// Coi chuỗi trắng ngang với null: một cột `text` vừa thêm bằng migration có
+/// thể mang `''` thay vì NULL tuỳ cách nhập liệu, và người dùng nhìn thấy chip
+/// trắng chữ thì không phân biệt được đó là lỗi hay là hết nội dung.
+///
+/// Nhờ vậy dịch được tới đâu dùng tới đó — không phải chờ dịch xong cả bảng
+/// mới bật được lên.
+String trDb(String vi, String? en) {
+  if (!wrEnglish || en == null) return vi;
+  final trimmed = en.trim();
+  return trimmed.isEmpty ? vi : trimmed;
+}
+
+/// Mã ngôn ngữ đang bật, dạng gửi được lên máy chủ.
+String get wrLocaleCode => wrEnglish ? 'en' : 'vi';
+
+/// Header đính kèm mọi lượt gọi Edge Function.
+///
+/// Vì sao gửi CẢ header lẫn một trường trong thân yêu cầu: một nửa số câu lỗi
+/// mà hàm trả về xảy ra trước lúc nó đọc được thân — sai method, thiếu
+/// Authorization, hết phiên. Chỉ gửi trong thân thì đúng những câu lỗi hay gặp
+/// nhất lại là những câu không bao giờ dịch được. Còn `wr-narrative` thì không
+/// có thân nào cả, nó được gọi bằng POST rỗng.
+///
+/// Giữ đồng bộ với `WR_LOCALE_HEADER` trong `supabase/functions/_shared/locale.ts`.
+Map<String, String> get wrLocaleHeaders => {'x-wr-locale': wrLocaleCode};
+
 /// Đồng bộ [wrEnglish] từ mã ngôn ngữ của `appLocaleProvider` ('vi' / 'en').
 ///
 /// Nhận mã chuỗi chứ không nhận `Locale`: `appLocaleProvider` giữ chuỗi, và

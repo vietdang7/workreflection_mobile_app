@@ -2,6 +2,7 @@
 // Plain immutable classes + fromJson/toInsert, mirroring wr_content.dart style.
 // No Flutter dependencies.
 
+import 'package:workreflection_mobile/core/l10n/wr_tr.dart';
 import 'package:workreflection_mobile/core/logic/wr_plain_text.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 
@@ -458,26 +459,40 @@ class ScaSelfCheckResponse {
 class PracticeTheme {
   const PracticeTheme({
     required this.themeId,
-    required this.title,
+    required String title,
     this.scaDimension,
-    this.description,
-    this.formedLine,
+    String? description,
+    String? formedLine,
+    this.titleEn,
+    this.descriptionEn,
+    this.formedLineEn,
     this.createdAt,
     this.retiredAt,
-  });
+  })  : titleVi = title,
+        descriptionVi = description,
+        formedLineVi = formedLine;
 
   final String themeId;
-  final String title;
   final ScaDimension? scaDimension;
 
+  final String titleVi;
+  final String? titleEn;
+  String get title => trDb(titleVi, titleEn);
+
   /// Mô tả mở đầu — hiện ngay dưới tên chủ đề, trước ba bước (bảng A.2).
-  final String? description;
+  final String? descriptionVi;
+  final String? descriptionEn;
+  String? get description =>
+      descriptionVi == null ? null : trDb(descriptionVi!, descriptionEn);
 
   /// Câu hiện ở màn ăn mừng khi chủ đề này chạm ngưỡng (bảng A.2).
   ///
   /// Viết ở thì hiện tại, ngắn, không lặp lại chữ "kỹ năng" hay "ngưỡng" — chỉ
   /// nói về điều đã đổi. Null thì màn ăn mừng dùng câu chung.
-  final String? formedLine;
+  final String? formedLineVi;
+  final String? formedLineEn;
+  String? get formedLine =>
+      formedLineVi == null ? null : trDb(formedLineVi!, formedLineEn);
 
   final DateTime? createdAt;
 
@@ -496,9 +511,12 @@ class PracticeTheme {
     return PracticeTheme(
       themeId: json['theme_id'] as String,
       title: json['title'] as String,
+      titleEn: json['title_en'] as String?,
       scaDimension: rawDim != null ? ScaDimension.fromDb(rawDim) : null,
       description: json['description'] as String?,
+      descriptionEn: json['description_en'] as String?,
       formedLine: json['formed_line'] as String?,
+      formedLineEn: json['formed_line_en'] as String?,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
@@ -519,19 +537,28 @@ class PracticeStep {
     required this.stepId,
     required this.themeId,
     required this.stepOrder,
-    required this.title,
+    required String title,
     required this.isPremium,
-    this.content,
+    String? content,
+    this.titleEn,
+    this.contentEn,
     this.createdAt,
-  });
+  })  : titleVi = title,
+        contentVi = content;
 
   final String stepId;
   final String themeId;
   final int stepOrder;
-  final String title;
-  final String? content;
   final bool isPremium;
   final DateTime? createdAt;
+
+  final String titleVi;
+  final String? titleEn;
+  String get title => trDb(titleVi, titleEn);
+
+  final String? contentVi;
+  final String? contentEn;
+  String? get content => contentVi == null ? null : trDb(contentVi!, contentEn);
 
   factory PracticeStep.fromJson(Map<String, dynamic> json) {
     return PracticeStep(
@@ -539,7 +566,9 @@ class PracticeStep {
       themeId: json['theme_id'] as String,
       stepOrder: json['step_order'] as int,
       title: json['title'] as String,
+      titleEn: json['title_en'] as String?,
       content: json['content'] as String?,
+      contentEn: json['content_en'] as String?,
       isPremium: json['is_premium'] as bool,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)

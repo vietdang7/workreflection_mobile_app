@@ -97,8 +97,10 @@ class SupabaseWrChatRepository implements WrChatRepository {
     try {
       final res = await _client.functions.invoke(
         kWrChatFunction,
+        headers: wrLocaleHeaders,
         body: {
           'message': message,
+          'locale': wrLocaleCode,
           if (conversationId != null) 'conversationId': conversationId,
           if (premiumOverride != null) 'premiumOverride': premiumOverride,
         },

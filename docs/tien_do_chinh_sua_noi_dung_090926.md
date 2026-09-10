@@ -610,8 +610,81 @@ C, D, E. Còn lại đúng ba loại.
   ai gọi tới: lớp 3 vẫn TẮT theo mặc định `WR_AI_POLISH`.
 
 ### 3 · Việc lớn, nên tách riêng
-- ~~**17.5 bản tiếng Anh**~~ — **XONG 10/09**, xem phần riêng phía trên. Không
-  đi đường `.arb`; lý do ghi ở đó.
+- ~~**17.5 bản tiếng Anh — phần MÃ**~~ — **XONG 10/09**, xem phần riêng phía
+  trên. Không đi đường `.arb`; lý do ghi ở đó.
+- **17.5 bản tiếng Anh — phần NỘI DUNG** — chỗ trống đã mở, còn chờ bản dịch.
+
+---
+
+## Bản tiếng Anh: phần kỹ thuật XONG 10/09, còn chờ câu chữ
+
+Rà lại sau khi xong phần mã mới thấy: **bản tiếng Anh lúc đó mới là cái vỏ.**
+Mã Dart đã bọc 1.863/1.891 nhóm chuỗi và `.arb` đủ 581 key, nhưng chữ người
+dùng đọc nhiều nhất không nằm trong mã — nó nằm trong database, mỗi bảng đúng
+một cột tiếng Việt.
+
+### Đã dựng xong
+
+**Migration `20260910120000_content_en_columns`** — 14 cột `*_en` trên 6 bảng,
+đã push và kiểm trên DB thật. Kèm hàm `wr_translation_progress()` để đếm còn
+bao nhiêu dòng chưa dịch.
+
+**Tầng `trDb(vi, en)`** trong `wr_tr.dart` — khác `tr()` ở đúng một điểm: `en`
+ở đây là ô trong bảng mà đội nội dung điền dần, nên **chưa điền thì rơi về
+tiếng Việt**, và chuỗi trắng cũng tính là chưa điền. Dịch tới đâu dùng tới đó,
+không phải chờ xong cả bảng mới bật được.
+
+Các model giữ bản gốc ở trường `…Vi`, bản dịch ở `…En`, mở ra ngoài bằng
+**getter mang đúng tên cũ**. Nhờ vậy 190 chỗ đang dựng và đọc model không phải
+sửa dòng nào mà tất cả cùng lúc biết nghe theo ngôn ngữ.
+
+**Bốn Edge Function** nhận `locale` và có luật ngôn ngữ trong prompt, đã
+deploy. Trước đợt này chatbot trả lời tiếng Việt bất kể app đang chạy ngôn ngữ
+nào, vì `system_prompt.ts` viết thuần tiếng Việt và app không gửi locale sang.
+
+### Ba điều đáng ghi lại
+
+**Cột `question_text_en` đã có sẵn trong model — nhưng ở nhầm bảng.**
+`CcQuestion` đọc nó và màn khảo sát đã có nhánh `localeCode == 'en'` từ trước.
+Nhưng cột chỉ tồn tại ở `cc_reflection_questions` (bảng của bản web, app mobile
+không đọc), còn `cc_questions` thì không có. Nhánh đó luôn nhận null và **im
+lặng** rơi về tiếng Việt. Nhìn mã tưởng đã xong song ngữ — chưa hề.
+
+**Bộ đệm của `wr-polish` phải tách theo ngôn ngữ.** Nó khoá theo băm của câu
+gốc; không thêm ngôn ngữ vào khoá thì người đổi sang tiếng Anh nhận lại đúng
+bản tiếng Việt đã đệm, và không có cách nào làm nó mới lại. Tiếng Việt cố ý
+không đổi băm, để không vứt sạch bộ đệm đang có.
+
+**Ngôn ngữ đi bằng CẢ header lẫn thân yêu cầu.** Một nửa số câu lỗi của Edge
+Function xảy ra trước lúc đọc được thân — sai method, thiếu Authorization, hết
+phiên. Chỉ gửi trong thân thì đúng những câu lỗi hay gặp nhất lại là những câu
+không bao giờ dịch được. `wr-narrative` thì còn không có thân nào cả.
+
+### Ba chỗ CỐ Ý không mở cột
+
+- `wr_practices` — bảng của người dùng, `title` là bản chụp lúc tạo. Dịch ngược
+  là viết lại lịch sử của chính họ.
+- `wr_situations.expected_outcome` · `sca_perspective`, `wr_stories.situation` ·
+  `emotion_tags` · `behavior_tags` — có trong bảng và trong model, nhưng không
+  chỗ nào đưa lên màn hình.
+- `wr_stories.career_stages` — dùng để xếp thứ tự, là dữ liệu đem so khớp.
+
+### Còn lại: 436 dòng chờ dịch
+
+`wr_translation_progress()` trên DB thật (chỉ đếm dòng đang dùng):
+
+| Nguồn | Đã dịch / Tổng |
+|---|---|
+| `wr_situations` (chip bước 0 của Reflect) | 0 / 110 |
+| `wr_stories.title` | 0 / 110 |
+| `wr_stories.story_content` | 0 / 110 |
+| `cc_questions` (câu hỏi Career Health Check) | 0 / 49 |
+| `wr_practice_steps` | 0 / 39 |
+| `wr_practice_themes` | 0 / 10 |
+| `wr_choice_pool` | 0 / 8 |
+
+Đây là câu chữ khách duyệt, không phải việc lập trình. Dịch được dòng nào là
+dòng đó hiện ra ngay, không cần deploy lại.
 
 ### Bốn câu hỏi §19 — nay còn một
 | # | Câu hỏi | Trạng thái |

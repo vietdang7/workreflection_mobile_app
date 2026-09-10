@@ -348,7 +348,11 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
       // vào bộ đệm, nên lần mở màn SAU đọc được ngay — bỏ cuộc ở đây không phải
       // là bỏ luôn lượt gọi.
       final res = await _client.functions
-          .invoke(kWrPolishFunction, body: {'text': original})
+          .invoke(
+            kWrPolishFunction,
+            headers: wrLocaleHeaders,
+            body: {'text': original, 'locale': wrLocaleCode},
+          )
           .timeout(kPolishTimeout);
       final data = res.data;
       if (data is! Map) return null;
@@ -457,7 +461,8 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
     try {
       final res = await _client.functions.invoke(
         kWrDocAnalyzeFunction,
-        body: {'documentId': documentId},
+        headers: wrLocaleHeaders,
+        body: {'documentId': documentId, 'locale': wrLocaleCode},
       );
       final data = res.data;
       if (data is! Map || data['status'] != 'ready') {
@@ -542,7 +547,11 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
   @override
   Future<WrNarrativeRefresh> refreshPatternNarrative() async {
     try {
-      final res = await _client.functions.invoke(kWrNarrativeFunction);
+      // POST rỗng — không có thân, nên ngôn ngữ chỉ đi được bằng header.
+      final res = await _client.functions.invoke(
+        kWrNarrativeFunction,
+        headers: wrLocaleHeaders,
+      );
       final data = res.data;
       if (data is! Map) return const WrNarrativeRefresh.unavailable();
       return WrNarrativeRefresh.fromJson(Map<String, dynamic>.from(data));

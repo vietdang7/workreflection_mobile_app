@@ -7,6 +7,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/wr_tr.dart';
 import '../models/checkin.dart';
 import '../models/wr_mood_content.dart';
 
@@ -82,11 +83,15 @@ class SupabaseWrMoodContentRepository implements WrMoodContentRepository {
 
   @override
   Future<List<String>> fetchChoicePool() async {
+    // Chọn ngôn ngữ ngay ở đây chứ không ở màn hình: hàm này trả về
+    // `List<String>` trần, không có model nào chở được cặp Việt–Anh đi tiếp.
     final rows = await _client
         .from('wr_choice_pool')
-        .select('text')
+        .select('text, text_en')
         .eq('active', true)
         .order('id', ascending: true);
-    return rows.map((r) => r['text'] as String).toList();
+    return rows
+        .map((r) => trDb(r['text'] as String, r['text_en'] as String?))
+        .toList();
   }
 }
