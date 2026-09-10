@@ -191,9 +191,10 @@ class WrPatternDetailScreen extends ConsumerWidget {
               )
             else
               WrParagraph(
-                narratives.isNotEmpty
-                    ? narratives.first.narrative
-                    : tr('Hệ thống đang tổng hợp phần diễn giải cho điều này.', 'The reading for this is being put together.'),
+                // Chỉ nhận đoạn đúng ngôn ngữ đang bật — bản tiếng kia đang
+                // được viết lại (xem `currentLocaleNarrative`).
+                currentLocaleNarrative(narratives)?.narrative ??
+                    tr('Hệ thống đang tổng hợp phần diễn giải cho điều này.', 'The reading for this is being put together.'),
                 key: const Key('wr_pattern_narrative'),
                 style: const TextStyle(
                   fontSize: 16,

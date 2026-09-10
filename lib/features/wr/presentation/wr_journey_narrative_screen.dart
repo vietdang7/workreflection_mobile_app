@@ -22,8 +22,13 @@ class WrJourneyNarrativeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final entitlement = ref.watch(wrEntitlementProvider).valueOrNull ??
         WrEntitlement(plan: WrPlan.free);
-    final narratives =
-        ref.watch(wrPatternNarrativesProvider).valueOrNull ?? const [];
+    final all = ref.watch(wrPatternNarrativesProvider).valueOrNull ??
+        const <PatternNarrative>[];
+    // Lọc theo ngôn ngữ đang bật, cùng lý do với thẻ ở tab Hành trình: đây là
+    // màn ĐỌC, một trang tiếng Anh xen mấy khối tiếng Việt còn khó chịu hơn là
+    // chờ. Bản đang được viết lại sẽ hiện ở lần mở sau.
+    final narratives = all.where((n) => n.matchesCurrentLocale).toList();
+    final rewriting = narratives.isEmpty && all.isNotEmpty;
     final canRead =
         entitlement.canUseFeature(WrPremiumFeature.patternAdvanced);
 
@@ -48,7 +53,7 @@ class WrJourneyNarrativeScreen extends ConsumerWidget {
           )
         else if (narratives.isEmpty)
           WrParagraph(
-            _emptyLine(refresh),
+            _emptyLine(refresh, rewriting: rewriting),
             key: const Key('wr_journey_narrative_empty'),
             style: const TextStyle(
               fontSize: 16.5,
@@ -68,7 +73,13 @@ class WrJourneyNarrativeScreen extends ConsumerWidget {
 /// Cùng lý do với `_waitingLine` ở tab Hành trình: câu cũ không đếm ngược được
 /// nên nó giống hệt nhau ở lần nhìn lại thứ hai và thứ ba mươi. Chữ ở đây dài
 /// hơn một chút vì đây là màn đọc, không phải một thẻ tóm tắt.
-String _emptyLine(WrNarrativeRefresh? refresh) {
+String _emptyLine(WrNarrativeRefresh? refresh, {bool rewriting = false}) {
+  if (rewriting) {
+    return tr('Đang viết lại diễn biến của bạn bằng ngôn ngữ vừa chọn. Bản kể '
+        'cần vài chục giây để hoàn thành — bạn mở lại màn này sau một lát '
+        'nhé.', 'Your story is being rewritten in the language you just picked. It '
+        'takes up to a minute — open this screen again in a moment.');
+  }
   final needed = refresh?.needed;
   return switch (refresh?.status) {
     // "có chọn tình huống": cùng lý do với `_waitingLine` ở tab Hành trình —

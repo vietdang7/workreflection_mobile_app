@@ -1,46 +1,55 @@
 // Bảng route.
 //
 // ---------------------------------------------------------------------------
-// VÌ SAO KHÔNG MÀN NÀO Ở ĐÂY ĐƯỢC DỰNG BẰNG `const`
+// VÌ SAO MỌI ROUTE DÙNG `wrRoute(...)` CHỨ KHÔNG DÙNG `GoRoute(...)`
 // ---------------------------------------------------------------------------
-//
-// Đây là chỗ duy nhất trong repo cố ý đi ngược `prefer_const_constructors`, và
-// nó có một lý do rất cụ thể: ĐỔI NGÔN NGỮ.
 //
 // Phần WorkReflection lấy chữ qua `tr()`, đọc biến toàn cục `wrEnglish` (lý do
 // ở `core/l10n/wr_tr.dart`). Đổi biến toàn cục không báo cho Flutter, nên một
-// màn chỉ đổi chữ khi có ai đó gọi lại `build` của nó.
+// màn chỉ đổi chữ khi có ai đó gọi lại `build` của nó — và trong go_router,
+// KHÔNG có ai làm việc đó.
 //
-// `const WrHomeScreen()` là MỘT thực thể duy nhất dùng đi dùng lại. Khi
-// `MaterialApp` dựng lại vì nhận `locale` mới, Router dựng lại bảng trang, mỗi
-// builder trả về đúng thực thể `const` cũ — và `Element.updateChild` thấy
-// widget mới bằng widget cũ nên trả về ngay, KHÔNG gọi `build`. Cả nhánh màn
-// hình đứng im với chữ của ngôn ngữ trước.
+// go_router giữ danh sách `Page` đã dựng trong `_CustomNavigatorState._pages`
+// và chỉ vứt đi khi đường dẫn đổi. Cha dựng lại bao nhiêu lần cũng vậy: cùng
+// một `Page`, cùng một widget màn hình, `Element.updateChild` trả về ngay. Với
+// bốn tab (`StatefulShellRoute.indexedStack`) còn nặng hơn — nhánh không hoạt
+// động được giữ nguyên widget đã dựng từ trước lúc đổi ngôn ngữ.
 //
 // Đó là toàn bộ nguyên nhân khách báo 10/09: "chuyển đổi ngôn ngữ rất chậm,
 // thậm chí không chuyển đổi hoàn toàn, cứ xen kẽ tiếng Anh với tiếng Việt".
-// Không có gì hỏng — chỉ là không có gì ra lệnh dựng lại. Màn nào tình cờ phải
-// dựng lại vì một lý do khác (một provider vừa xong, đi qua màn khác rồi quay
-// lại) thì đổi chữ; màn còn lại giữ nguyên tiếng cũ cho tới khi bị đụng vào.
+// Không có gì hỏng — chỉ là không có gì ra lệnh dựng lại.
 //
-// Bỏ `const` là mỗi lần dựng cho ra một thực thể mới, `==` sai, element cập
-// nhật và `build` chạy — chữ đọc lại theo ngôn ngữ hiện hành. Giá phải trả là
-// một phép cấp phát cho mỗi màn mỗi lần Router dựng lại, tức là không đáng kể;
-// còn cái mua được là app đổi ngôn ngữ trọn vẹn trong một khung hình.
+// [wrRoute] bọc `builder` bằng `wrLocaleAware`, thứ đăng ký route làm bên phụ
+// thuộc của `WrLocaleScope`. Đó là đường DUY NHẤT đi xuyên qua cache của
+// go_router: `Builder` bọc mỗi route dựng lại khi InheritedWidget đổi, kể cả
+// khi `Page` bọc ngoài vẫn là `Page` cũ và kể cả khi nhánh tab đang nằm ngoài
+// màn hình. Chi tiết đầy đủ ở `core/l10n/wr_locale_scope.dart`.
+//
+// ⚠ Thêm route mới thì dùng `wrRoute(...)`. Một `GoRoute(...)` trần sẽ đứng yên
+//   ở ngôn ngữ của lần dựng đầu tiên — lỗi chỉ lộ khi có người đổi ngôn ngữ rồi
+//   đi qua đúng màn đó.
+//
+// ---------------------------------------------------------------------------
+// VÌ SAO KHÔNG MÀN NÀO Ở ĐÂY ĐƯỢC DỰNG BẰNG `const`
+// ---------------------------------------------------------------------------
+//
+// Đây là chỗ duy nhất trong repo cố ý đi ngược `prefer_const_constructors`.
+// `wrLocaleAware` đã đủ để mọi màn dựng lại, nhưng `const` thì thừa ra một cái
+// bẫy: `const WrHomeScreen()` là MỘT thực thể duy nhất, nên nếu ai đó gỡ
+// `wrRoute` đi thì lỗi cũ quay lại im lặng. Bỏ `const` là hàng phòng thủ thứ
+// hai, giá phải trả chỉ là một phép cấp phát mỗi lần dựng.
 //
 // ⚠ Đừng thêm `const` lại vào các builder dưới đây. Trình phân tích sẽ gợi ý
 //   làm vậy — nó không biết chuyện `tr()`.
 //
-// Xoá cache provider khi đổi ngôn ngữ (`localeScopedProviders`) là việc KHÁC và
-// vẫn cần: nó lo phần chữ đã được dịch sẵn nằm trong cache, thứ mà dựng lại bao
-// nhiêu lần cũng không chữa được.
-//
 // ignore_for_file: prefer_const_constructors
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../l10n/wr_locale_scope.dart';
 import '../../features/auth/presentation/auth_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/shell/shell_screen.dart';
@@ -175,6 +184,40 @@ final authChangeNotifierProvider = Provider<AuthChangeNotifier>((ref) {
 });
 
 // ---------------------------------------------------------------------------
+// wrRoute — GoRoute có gắn cầu dao ngôn ngữ
+// ---------------------------------------------------------------------------
+
+/// [GoRoute] mà màn hình bên trong dựng lại khi người dùng đổi ngôn ngữ.
+///
+/// Chỉ khác `GoRoute` đúng một chỗ: `builder` được bọc bằng `wrLocaleAware`.
+/// Lý do vì sao cần bọc — và vì sao mọi cách hiển nhiên hơn đều không tới được
+/// màn hình — nằm ở đầu file này và ở `core/l10n/wr_locale_scope.dart`.
+///
+/// Route chỉ để chuyển hướng (`redirect` mà không có `builder`) đi qua đây
+/// nguyên vẹn: không có màn nào để dựng thì không có gì để bọc.
+GoRoute wrRoute({
+  required String path,
+  String? name,
+  GoRouterWidgetBuilder? builder,
+  GlobalKey<NavigatorState>? parentNavigatorKey,
+  GoRouterRedirect? redirect,
+  ExitCallback? onExit,
+  List<RouteBase> routes = const <RouteBase>[],
+}) {
+  return GoRoute(
+    path: path,
+    name: name,
+    parentNavigatorKey: parentNavigatorKey,
+    redirect: redirect,
+    onExit: onExit,
+    routes: routes,
+    builder: builder == null
+        ? null
+        : (context, state) => wrLocaleAware(context, builder(context, state)),
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Router
 // ---------------------------------------------------------------------------
 
@@ -198,64 +241,64 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       );
     },
     routes: [
-      GoRoute(
+      wrRoute(
         path: '/splash',
         builder: (context, state) => SplashScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/onboarding',
         builder: (context, state) => OnboardingScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/auth',
         builder: (context, state) => AuthScreen(),
       ),
 
       // Survey flow (fullscreen, outside shell)
-      GoRoute(
+      wrRoute(
         path: '/survey',
         builder: (context, state) => SurveyIntroScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/survey/guide',
         builder: (context, state) => SurveyGuideScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/survey/questions',
         builder: (context, state) => SurveyQuestionsScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/survey/processing',
         builder: (context, state) => SurveyProcessingScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/survey/report/:id',
         builder: (context, state) =>
             ReportScreen(reportId: state.pathParameters['id']!),
       ),
-      GoRoute(
+      wrRoute(
         path: '/survey/action-plan/:id',
         builder: (context, state) =>
             ActionPlanScreen(reportId: state.pathParameters['id']!),
       ),
-      GoRoute(
+      wrRoute(
         path: '/survey/report/:id/layer/:layer',
         builder: (context, state) => LayerDetailScreen(
           reportId: state.pathParameters['id']!,
           layer: state.pathParameters['layer']!,
         ),
       ),
-      GoRoute(
+      wrRoute(
         path: '/survey/report/:id/esi',
         builder: (context, state) =>
             EsiAnalysisScreen(reportId: state.pathParameters['id']!),
       ),
-      GoRoute(
+      wrRoute(
         path: '/survey/report/:id/video',
         builder: (context, state) =>
             VideoReportScreen(reportId: state.pathParameters['id']!),
       ),
-      GoRoute(
+      wrRoute(
         path: '/survey/history',
         builder: (context, state) => SurveyHistoryScreen(),
       ),
@@ -265,81 +308,81 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // so the literal segment 'checkin' is not captured as the :id parameter.
       // Similarly, '/coaching/sessions' and '/coaching/schedule/:id' MUST precede
       // any future generic '/coaching/:id' route.
-      GoRoute(
+      wrRoute(
         path: '/workshops',
         builder: (context, state) => WorkshopsScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/workshops/checkin',
         builder: (context, state) => CheckinScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/workshops/:id',
         builder: (context, state) =>
             WorkshopDetailScreen(workshopId: state.pathParameters['id']!),
       ),
-      GoRoute(
+      wrRoute(
         path: '/workshops/:id/survey',
         builder: (context, state) =>
             WorkshopSurveyScreen(workshopId: state.pathParameters['id']!),
       ),
-      GoRoute(
+      wrRoute(
         path: '/workshops/:id/survey-results',
         builder: (context, state) => WorkshopSurveyResultsScreen(
           workshopId: state.pathParameters['id']!,
         ),
       ),
-      GoRoute(
+      wrRoute(
         path: '/my-workshops',
         builder: (context, state) => MyWorkshopsScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/coaching',
         builder: (context, state) => CoachingScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/coaching/sessions',
         builder: (context, state) => CoachingSessionsScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/coaching/schedule/:bookingId',
         builder: (context, state) => CoachingScheduleScreen(
           bookingId: state.pathParameters['bookingId']!,
         ),
       ),
-      GoRoute(
+      wrRoute(
         path: '/profile/edit',
         builder: (context, state) => ProfileEditScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/profile/setup',
         builder: (context, state) => ProfileEditScreen(setupMode: true),
       ),
       // "Thông tin của bạn" — mockup Sprint 2 bản (4), `screenMyInfo`.
-      GoRoute(
+      wrRoute(
         path: '/profile/my-info',
         builder: (context, state) => MyInfoScreen(),
       ),
       // "Hướng dẫn sử dụng" — yêu cầu §4 họp 26_1. Route riêng chứ không phải
       // hộp thoại: nội dung dài hơn một màn, và người dùng cần quay lại đọc
       // tiếp mà không mất chỗ đang đứng trong Hồ sơ.
-      GoRoute(
+      wrRoute(
         path: '/profile/guide',
         builder: (context, state) => GuideScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/vouchers',
         builder: (context, state) => VouchersScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/invitations',
         builder: (context, state) => InvitationsScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/insights',
         builder: (context, state) => InsightsScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/roadmap',
         builder: (context, state) => RoadmapScreen(
           initialReportId: state.uri.queryParameters['report'],
@@ -347,32 +390,32 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
 
       // Legacy tab screens — preserved as fullscreen routes (not in shell anymore)
-      GoRoute(
+      wrRoute(
         path: '/understand',
         builder: (context, state) => UnderstandScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/develop',
         builder: (context, state) => DevelopScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/journey',
         builder: (context, state) => JourneyScreen(),
       ),
       // NOTE: /profile is now a shell branch (Tab 4). Removed standalone route
       // to avoid GoRouter duplicate-path error.
 
-      GoRoute(
+      wrRoute(
         path: '/wr/self-check',
         builder: (context, state) => WrSelfCheckScreen(),
       ),
 
-      GoRoute(
+      wrRoute(
         path: '/wr/career-setup',
         builder: (context, state) => WrCareerSetupScreen(),
       ),
 
-      GoRoute(
+      wrRoute(
         path: '/wr/context-docs',
         builder: (context, state) => WrContextDocScreen(),
       ),
@@ -389,41 +432,41 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // Hai route `energy` và `moment` KHÔNG nằm trong luồng của §V. Home đi
       // thẳng vào `step`; chúng chỉ còn là lối vào phụ cho phiên mở ngoài
       // check-in, và cũng dẫn về `step`.
-      GoRoute(
+      wrRoute(
         path: '/wr/flow/energy',
         builder: (context, state) => WrEnergyScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/wr/flow/moment',
         builder: (context, state) => WrMomentScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/wr/flow/step',
         builder: (context, state) => WrStepScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/wr/flow/detail',
         builder: (context, state) => WrDetailScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/wr/flow/meaning',
         builder: (context, state) => WrMeaningScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/wr/flow/commit',
         builder: (context, state) => WrCommitScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/wr/flow/done',
         builder: (context, state) => WrDoneScreen(),
       ),
 
-      GoRoute(
+      wrRoute(
         path: '/wr/patterns',
         builder: (context, state) => WrPatternsScreen(),
       ),
 
-      GoRoute(
+      wrRoute(
         path: '/wr/pattern/:code',
         builder: (context, state) => WrPatternDetailScreen(
           situationCode: state.pathParameters['code'] ?? '',
@@ -431,56 +474,56 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
 
       // ── Màn đọc tách khỏi tab (một màn – một hành động) ────────────────
-      GoRoute(
+      wrRoute(
         path: '/wr/episode/:id',
         builder: (context, state) => WrEpisodeDetailScreen(
           episodeId: state.pathParameters['id'] ?? '',
         ),
       ),
-      GoRoute(
+      wrRoute(
         path: '/wr/journey/narrative',
         builder: (context, state) => WrJourneyNarrativeScreen(),
       ),
       // Career Memory đầy đủ — tab Hành trình chỉ hiện vài mảnh gần nhất.
-      GoRoute(
+      wrRoute(
         path: '/wr/career-memory',
         builder: (context, state) => WrCareerMemoryScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/wr/growth/themes',
         builder: (context, state) => WrGrowthThemesScreen(),
       ),
       // Một chủ đề thực hành và toàn bộ chuỗi bước của nó.
       // Đặt SAU /wr/growth/themes để đường tĩnh không bị nuốt bởi :id.
-      GoRoute(
+      wrRoute(
         path: '/wr/growth/theme/:id',
         builder: (context, state) => WrPracticeThemeScreen(
           themeId: state.pathParameters['id']!,
         ),
       ),
-      GoRoute(
+      wrRoute(
         path: '/wr/growth/skills',
         builder: (context, state) => WrGrowthSkillsScreen(),
       ),
 
       // Ô hỏi về hành trình nghề nghiệp (họp khách 2026-07-29). Mở từ bong
       // bóng nổi ở mọi tab và từ một dòng dẫn trong tab Hành trình.
-      GoRoute(
+      wrRoute(
         path: '/wr/ask',
         builder: (context, state) => WrAskScreen(),
       ),
 
       // Trà Chiều Nghề Nghiệp — chương trình offline riêng (họp khách
       // 2026-07-29). Đường tĩnh '/lich' đặt trước để không đụng route khác.
-      GoRoute(
+      wrRoute(
         path: '/wr/tra-chieu',
         builder: (context, state) => WrTraChieuScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/wr/tra-chieu/lich',
         builder: (context, state) => WrTraChieuCalendarScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/wr/growth/journey',
         builder: (context, state) => WrGrowthJourneyScreen(),
       ),
@@ -496,7 +539,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // nào, nên mỗi lần mở bằng deep link là một lần làm lệch con số của mọi
       // khối đọc recentSituationIds. Đây là nguồn ghi thứ ba trong ba nguồn
       // §4.3 cấm — xoá route là cách duy nhất đóng nó lại.
-      GoRoute(
+      wrRoute(
         path: '/wr/story/flow',
         builder: (context, state) {
           final dimStr = state.uri.queryParameters['dimension'];
@@ -512,7 +555,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         },
       ),
 
-      GoRoute(
+      wrRoute(
         path: '/wr/payment',
         // Paywall đẩy kèm gói người dùng vừa chọn (năm hay tháng). Mở thẳng
         // đường dẫn này thì không có `extra` — màn tự lấy gói chọn sẵn.
@@ -528,7 +571,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
             WrPaymentScreen(plan: state.extra as WrPremiumPricing?),
       ),
 
-      GoRoute(
+      wrRoute(
         path: '/wr/paywall',
         builder: (context, state) {
           final triggerStr = state.uri.queryParameters['trigger'];
@@ -558,12 +601,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       //
       // /wr/story is NOT a shell branch anymore — it is a fullscreen route below.
       StatefulShellRoute.indexedStack(
-        builder: (context, state, navigationShell) =>
-            ShellScreen(navigationShell: navigationShell),
+        // Vỏ bốn tab cũng phải qua cầu dao: nhãn tab ("Hôm nay", "Hành trình")
+        // cũng là `tr()`, và vỏ này nằm ở navigator gốc chứ không nằm trong
+        // nhánh nào nên `wrRoute` bên dưới không với tới.
+        builder: (context, state, navigationShell) => wrLocaleAware(
+          context,
+          ShellScreen(navigationShell: navigationShell),
+        ),
         branches: [
           StatefulShellBranch(
             routes: [
-              GoRoute(
+              wrRoute(
                 path: '/home',
                 builder: (context, state) => WrHomeScreen(),
               ),
@@ -571,7 +619,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(
+              wrRoute(
                 path: '/wr/discover',
                 builder: (context, state) => WrDiscoverScreen(),
               ),
@@ -579,7 +627,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(
+              wrRoute(
                 path: '/wr/growth',
                 builder: (context, state) => WrGrowthScreen(),
               ),
@@ -587,7 +635,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           ),
           StatefulShellBranch(
             routes: [
-              GoRoute(
+              wrRoute(
                 path: '/wr/journey',
                 builder: (context, state) => WrJourneyScreen(),
               ),
@@ -597,25 +645,25 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
 
       // /profile — màn đẩy toàn màn hình, mở từ avatar (v1.6 §9.1).
-      GoRoute(
+      wrRoute(
         path: '/profile',
         builder: (context, state) => ProfileScreen(),
       ),
 
       // /wr/story — fullscreen push, uses root navigator implicitly (not nested in shell).
-      GoRoute(
+      wrRoute(
         path: '/wr/story',
         builder: (context, state) => WrStoryScreen(),
       ),
 
       // Thông tin công việc hiện tại — Hai Lớp v1.6 §XI.
-      GoRoute(
+      wrRoute(
         path: '/wr/work-info',
         builder: (context, state) => WrWorkInfoScreen(),
       ),
       // "Cùng tạo JD của bạn" — 5 bước ngắn (changelog 24/08 §6). Mở từ thẻ dẫn
       // ở màn Thông tin công việc, không có lối vào nào khác.
-      GoRoute(
+      wrRoute(
         path: '/wr/jd-builder',
         builder: (context, state) => WrJdBuilderScreen(),
       ),
@@ -623,7 +671,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // Diễn giải sâu & xu hướng (changelog 24/08 §7). Trước bản này, nút "Mở
       // khoá" của tính năng chỉ dẫn tới Paywall chung — mua xong không có màn
       // đích nào. Đây là màn đích đó.
-      GoRoute(
+      wrRoute(
         path: '/wr/sca-deep-dive',
         builder: (context, state) => WrScaDeepDiveScreen(),
       ),
@@ -632,15 +680,15 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       //
       // Ba màn tách rời chứ không một màn nhiều bước: màn kết quả phải mở lại
       // được từ Hồ sơ mà không phải đi qua bài khảo sát.
-      GoRoute(
+      wrRoute(
         path: '/wr/org-survey',
         builder: (context, state) => WrOrgSurveyIntroScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/wr/org-survey/flow',
         builder: (context, state) => WrOrgSurveyFlowScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/wr/org-survey/result',
         // `extra` là bản vừa gửi xong, để không phải chờ một vòng đọc lại. Mở
         // từ Hồ sơ thì không có extra và màn tự đọc bản gần nhất.
@@ -653,11 +701,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // Thư viện Nội dung Cảm xúc — Hai Lớp v1.6 §VIII.
       // §8.3: miễn phí cho mọi người dùng, không phân lớp Free/Paid.
-      GoRoute(
+      wrRoute(
         path: '/wr/mood-library',
         builder: (context, state) => WrMoodLibraryScreen(),
       ),
-      GoRoute(
+      wrRoute(
         path: '/wr/mood-content/:id',
         builder: (context, state) => WrMoodReaderScreen(
           contentId: state.pathParameters['id']!,

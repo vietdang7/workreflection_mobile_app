@@ -13,12 +13,14 @@
 // Run: flutter test test/core/l10n/wr_locale_switch_test.dart
 
 import 'package:flutter_test/flutter_test.dart';
-import 'package:workreflection_mobile/core/data/user_session_scope.dart';
 import 'package:workreflection_mobile/core/l10n/wr_tr.dart';
 import 'package:workreflection_mobile/core/logic/wr_home_surface.dart';
 import 'package:workreflection_mobile/core/logic/wr_reflect_flow.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 import 'package:workreflection_mobile/core/models/wr_episode.dart';
+import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
+import 'package:workreflection_mobile/core/models/wr_mood_content.dart';
+import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 
 WrSituation _sit(String code, String text, String? textEn) => WrSituation(
       code: code,
@@ -144,28 +146,74 @@ void main() {
     });
   });
 
-  group('xoá cache khi đổi ngôn ngữ', () {
-    test('xoá đúng danh sách repository, không đụng định danh hay phiên', () {
-      final invalidated = <Object>[];
-      resetLocaleScopedProviders(invalidated.add);
+  group('đổi ngôn ngữ không cần hỏi lại server', () {
+    // Đây là điều kiện để đổi ngôn ngữ diễn ra trong MỘT khung hình. Hễ một
+    // repository trả về chuỗi đã dịch sẵn thì giá trị đó nằm lì trong cache
+    // bằng tiếng cũ, và cách duy nhất chữa được là xoá cache — tức là hàng chục
+    // lượt mạng, mỗi lượt về một lúc, đúng cảnh "xen kẽ" khách báo 10/09.
+    test('ChoicePoolLine đổi tiếng ngay trên cùng một đối tượng đã tải', () {
+      const line = ChoicePoolLine(
+        textVi: 'Mình sẽ hỏi lại cho rõ trước khi bắt tay vào làm',
+        textEn: 'I will ask for clarity before I start',
+      );
 
-      // Repository là gốc: mọi provider dữ liệu đều watch một cái trong đó, nên
-      // xoá gốc là cả cây tự dựng lại. Đây cũng là thứ buộc màn hình `const`
-      // trong bảng route phải chạy lại `build` — không có bước này thì `tr()`
-      // không bao giờ được đọc lại và app "đổi ngôn ngữ rất chậm, cứ xen kẽ".
-      expect(invalidated, containsAll(userDataProviders));
+      wrSetLocale('vi');
+      expect(line.text, 'Mình sẽ hỏi lại cho rõ trước khi bắt tay vào làm');
 
-      // Người dùng vẫn là người đó — xoá định danh chỉ tạo ra một vòng tải lại
-      // vô cớ.
-      for (final p in userIdentityProviders) {
-        expect(invalidated, isNot(contains(p)));
-      }
+      wrSetLocale('en');
+      expect(line.text, 'I will ask for clarity before I start');
+    });
 
-      // Và một buổi nhìn lại đang viết dở không được biến mất chỉ vì người dùng
-      // bấm đổi ngôn ngữ giữa chừng.
-      for (final p in userSessionStateProviders) {
-        expect(invalidated, isNot(contains(p)));
-      }
+    test('chưa dịch thì rơi về tiếng Việt, không để ô trống', () {
+      const line = ChoicePoolLine(textVi: 'Câu chưa có bản tiếng Anh');
+      wrSetLocale('en');
+      expect(line.text, 'Câu chưa có bản tiếng Anh');
+    });
+  });
+
+  group('Diễn biến do AI viết — ngoại lệ duy nhất', () {
+    PatternNarrative n(String locale, String text) => PatternNarrative(
+          userId: 'u1',
+          narrative: text,
+          locale: locale,
+        );
+
+    test('chỉ nhận đoạn đúng tiếng đang bật, không rơi về tiếng kia', () {
+      final list = [n('vi', 'Đoạn tiếng Việt')];
+
+      wrSetLocale('vi');
+      expect(currentLocaleNarrative(list)?.narrative, 'Đoạn tiếng Việt');
+
+      // Đây là lỗi khách chụp màn 10/09: chọn tiếng Anh mà thẻ vẫn nguyên khối
+      // tiếng Việt. Thà im lặng chờ model viết lại còn hơn hiện sai tiếng.
+      wrSetLocale('en');
+      expect(currentLocaleNarrative(list), isNull);
+    });
+
+    test('có cả hai tiếng thì lấy đúng bản của tiếng đang bật', () {
+      // Danh sách xếp mới-nhất-trước, như truy vấn của repository.
+      final list = [n('en', 'English version'), n('vi', 'Bản tiếng Việt')];
+
+      wrSetLocale('vi');
+      expect(currentLocaleNarrative(list)?.narrative, 'Bản tiếng Việt');
+
+      wrSetLocale('en');
+      expect(currentLocaleNarrative(list)?.narrative, 'English version');
+    });
+
+    test('dòng ghi trước migration narrative_locale được coi là tiếng Việt', () {
+      // Cùng quy ước với `wr-narrative/regeneration.ts`. Coi nhầm là tiếng Anh
+      // thì mọi bài cũ biến mất khỏi màn của người dùng tiếng Việt.
+      final old = PatternNarrative.fromJson({
+        'user_id': 'u1',
+        'narrative': 'Bài cũ không có cột locale',
+      });
+      expect(old.locale, 'vi');
+
+      wrSetLocale('vi');
+      expect(old.matchesCurrentLocale, isTrue);
+      wrSetLocale('en');
+      expect(old.matchesCurrentLocale, isFalse);
     });
   });
 

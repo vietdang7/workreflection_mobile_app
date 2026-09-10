@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/data/seed_service.dart';
+import 'core/l10n/wr_locale_scope.dart';
 import 'core/l10n/wr_tr.dart';
 import 'core/data/user_session_scope.dart';
 import 'core/router/app_router.dart';
@@ -12,6 +13,23 @@ import 'core/theme/wr_text_scale.dart';
 import 'core/theme/wr_theme.dart';
 import 'features/profile/profile_providers.dart';
 import 'l10n/app_localizations.dart';
+
+/// Bọc cây widget của app: cỡ chữ, và ngôn ngữ đang bật.
+///
+/// [WrLocaleScope] phải nằm TRÊN `Router` — nó là thứ duy nhất đi xuyên được
+/// cache `Page` của go_router để bảo màn hình dựng lại khi đổi ngôn ngữ. Vì sao
+/// mọi cách hiển nhiên hơn đều không tới nơi: `core/l10n/wr_locale_scope.dart`.
+///
+/// Đọc [wrLocaleCode] chứ không đọc `Localizations.localeOf(context)`: đây đúng
+/// là biến mà `tr()` dùng, nên scope không bao giờ lệch pha với chữ đang hiển
+/// thị. `_WrAppState.build` gọi `wrSetLocale` ngay trước khi dựng cây, nên giá
+/// trị ở đây luôn là ngôn ngữ của khung hình này.
+Widget wrLocaleAwareBuilder(BuildContext context, Widget? child) {
+  return WrLocaleScope(
+    localeCode: wrLocaleCode,
+    child: wrTextScaleBuilder(context, child),
+  );
+}
 
 class WrApp extends ConsumerStatefulWidget {
   const WrApp({super.key});
@@ -72,26 +90,14 @@ class _WrAppState extends ConsumerState<WrApp> {
     final router = ref.watch(appRouterProvider);
     final localeCode = ref.watch(appLocaleProvider);
 
-    // Đổi ngôn ngữ là xoá cache dữ liệu, cùng cơ chế với đổi tài khoản.
-    //
-    // Không phải để tải lại dữ liệu — mà để BUỘC màn hình dựng lại. Mọi màn
-    // WorkReflection nằm trong bảng route dưới dạng `const`, nên `MaterialApp`
-    // dựng lại vì đổi `locale` không kéo theo chúng: Flutter thấy widget cũ và
-    // widget mới là một thực thể `const` duy nhất rồi bỏ qua cả nhánh. Lý do
-    // đầy đủ ở `localeScopedProviders`.
-    //
-    // Đặt trong `build` chứ không trong `initState`: `ref.listen` ở đây chỉ đăng
-    // ký MỘT lần cho suốt đời state, nhưng nó cần `ref` của Consumer nên phải
-    // nằm trong build. Callback chạy ngoài lúc dựng nên `invalidate` an toàn.
-    // `wrSetLocale` lặp lại ở đây tuy phía dưới `build` cũng gọi: listener chạy
-    // NGAY lúc state đổi, còn `build` phải chờ khung hình sau. Provider nào bị
-    // xoá mà tính lại trong khoảng giữa hai mốc đó sẽ đọc `wrEnglish` — nó phải
-    // đã đúng rồi, nếu không nó chở lại đúng chữ tiếng cũ và Riverpod coi như
-    // "không có gì đổi", không báo cho màn nào cả.
+    // `wrSetLocale` chạy ngay ở listener chứ không đợi `build` phía dưới:
+    // listener chạy ĐÚNG LÚC state đổi, còn `build` phải chờ khung hình sau.
+    // Bất cứ thứ gì đọc `wrEnglish` trong khoảng giữa hai mốc đó — một
+    // `FutureProvider` vừa xong, một callback đang chạy dở — phải đọc được
+    // ngôn ngữ MỚI, nếu không nó chở lại đúng chữ tiếng cũ vào cache.
     ref.listen<String>(appLocaleProvider, (previous, next) {
       if (previous == next) return;
       wrSetLocale(next);
-      resetLocaleScopedProviders(ref.invalidate);
     });
 
     // Phần WorkReflection lấy chữ qua `tr()` chứ không qua `AppLocalizations`
@@ -104,7 +110,7 @@ class _WrAppState extends ConsumerState<WrApp> {
     return MaterialApp.router(
       title: 'WorkReflection',
       theme: wrTheme(),
-      builder: wrTextScaleBuilder,
+      builder: wrLocaleAwareBuilder,
       routerConfig: router,
       locale: Locale(localeCode),
       localizationsDelegates: const [

@@ -324,6 +324,20 @@ final wrPatternNarrativesProvider =
   return repo.fetchPatternNarratives(userId);
 });
 
+/// Đoạn Diễn biến mới nhất ĐÚNG ngôn ngữ đang bật, hoặc `null`.
+///
+/// Trả `null` thay vì rơi về đoạn tiếng khác là cố ý. Hiện đoạn tiếng Việt trên
+/// một màn tiếng Anh không phải "có còn hơn không": người dùng vừa chọn tiếng
+/// Anh, thấy nguyên một khối tiếng Việt thì kết luận app không đổi được ngôn
+/// ngữ — chính là điều khách báo 10/09. Im lặng vài chục giây rồi hiện đúng
+/// tiếng thì trung thực hơn, và câu chờ nói rõ đang chờ gì.
+PatternNarrative? currentLocaleNarrative(List<PatternNarrative> narratives) {
+  for (final n in narratives) {
+    if (n.matchesCurrentLocale) return n;
+  }
+  return null;
+}
+
 /// Xin máy chủ kể lại "Diễn biến theo thời gian" — chạy nền, không chặn tab.
 ///
 /// ---------------------------------------------------------------------------
@@ -345,6 +359,12 @@ final wrPatternNarrativesProvider =
 /// thức nhau vô hạn, mỗi vòng một lượt gọi model trả tiền thật.
 final wrNarrativeRefreshProvider =
     FutureProvider<WrNarrativeRefresh>((ref) async {
+  // Đổi ngôn ngữ là phải xin viết lại. Đây là chỗ DUY NHẤT trong app mà đổi
+  // ngôn ngữ kéo theo một lượt gọi server — chữ do model viết, không getter nào
+  // dịch hộ được. Mọi thứ khác chỉ dựng lại widget là xong (xem
+  // `user_session_scope.dart`).
+  ref.watch(appLocaleProvider);
+
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return const WrNarrativeRefresh.unavailable();
 

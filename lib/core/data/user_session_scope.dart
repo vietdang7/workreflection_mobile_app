@@ -89,50 +89,34 @@ final List<ProviderOrFamily> userScopedProviders = [
   ...userSessionStateProviders,
 ];
 
-/// Provider phải xoá khi người dùng ĐỔI NGÔN NGỮ.
-///
-/// ---------------------------------------------------------------------------
-/// VÌ SAO ĐỔI NGÔN NGỮ CŨNG PHẢI XOÁ CACHE
-///
-/// `wrEnglish` là biến toàn cục, đổi nó KHÔNG báo cho ai cả. Cây widget chỉ dựng
-/// lại khi Riverpod bảo dựng lại, và mọi màn WorkReflection đều được dựng từ
-/// `const WrHomeScreen()` trong bảng route. Widget `const` là một thực thể duy
-/// nhất dùng lại mãi, nên khi `MaterialApp` dựng lại vì đổi `locale`, Flutter so
-/// widget cũ với widget mới thấy chúng là MỘT và bỏ qua cả nhánh — `build` của
-/// màn không chạy, `tr()` không được đọc lại.
-///
-/// Đó là lý do khách thấy app "đổi ngôn ngữ rất chậm và cứ xen kẽ": mỗi màn chỉ
-/// đổi chữ vào lần nó tình cờ phải dựng lại vì một lý do khác (kéo màn hình, một
-/// provider vừa xong, đi qua màn khác rồi quay lại). Không có gì hỏng — chỉ là
-/// không có gì ra lệnh cho chúng dựng lại.
-///
-/// Xoá provider thì có: element của `ConsumerWidget` nghe thẳng provider, không
-/// đi qua phép so widget của cha, nên nó dựng lại kể cả khi widget là `const`.
-///
-/// ---------------------------------------------------------------------------
-/// VÌ SAO XOÁ CẢ REPOSITORY CHỨ KHÔNG CHỈ PROVIDER NỘI DUNG
-///
-/// Còn một nửa vấn đề nữa: chữ lấy từ database. Phần lớn model chọn ngôn ngữ ở
-/// GETTER (`WrSituation.text` gọi `trDb`) nên chỉ cần dựng lại là đúng — nhưng
-/// không phải tất cả. `fetchChoicePool` chốt ngôn ngữ ngay trong repository và
-/// trả về `List<String>` đã dịch xong; giá trị đó nằm trong cache thì có dựng
-/// lại bao nhiêu lần cũng vẫn là tiếng cũ. Chỉ hỏi lại server mới chữa được.
-///
-/// Nên dùng lại đúng [userDataProviders]: mọi provider dữ liệu đều `ref.watch`
-/// một repository trong đó, nên xoá gốc là cả cây dữ liệu tự dựng lại. Liệt kê
-/// tay từng provider nội dung mới là thứ chắc chắn thiếu sót khi thêm màn mới.
-///
-/// KHÔNG đụng vào [userIdentityProviders] (người dùng vẫn là người đó) và
-/// [userSessionStateProviders] (đổi ngôn ngữ giữa chừng không được phép xoá một
-/// buổi nhìn lại đang viết dở).
-final List<ProviderOrFamily> localeScopedProviders = userDataProviders;
-
-/// Xoá cache gắn với ngôn ngữ cũ. Gọi khi `appLocaleProvider` đổi giá trị.
-void resetLocaleScopedProviders(void Function(ProviderOrFamily) invalidate) {
-  for (final provider in localeScopedProviders) {
-    invalidate(provider);
-  }
-}
+// ---------------------------------------------------------------------------
+// ĐỔI NGÔN NGỮ THÌ KHÔNG XOÁ GÌ CẢ — CỐ Ý
+//
+// Bản trước xoá đúng [userDataProviders] mỗi lần người dùng đổi ngôn ngữ, để
+// buộc màn hình dựng lại. Nó chữa được triệu chứng nhưng trả giá đắt: xoá
+// repository là mọi `FutureProvider` đọc qua nó phải hỏi lại server. Hàng chục
+// lượt mạng, mỗi lượt về một lúc, mỗi lượt thay chữ một mảng màn hình. Đó đúng
+// là thứ khách mô tả 10/09: "chuyển đổi rất chậm… cứ xen kẽ giữa tiếng anh và
+// tiếng việt".
+//
+// Và nó vẫn KHÔNG đủ: chỉ widget nào tình cờ nghe một provider vừa bị xoá mới
+// dựng lại. Dòng ngày ở đầu màn Hôm nay đọc `greetingNameProvider` — không nằm
+// trong danh sách — nên nó ở lại tiếng Việt giữa một màn đã sang tiếng Anh.
+//
+// Giờ việc dựng lại do `_localeAwareBuilder` trong `app.dart` lo: đổi `Key`
+// theo ngôn ngữ thì Flutter dựng lại TOÀN BỘ cây trong một khung hình, không
+// cần provider nào bị xoá. Xoá cache không còn tác dụng gì ngoài việc làm chậm.
+//
+// ⚠ Điều kiện để giữ được như vậy: KHÔNG chốt ngôn ngữ vào lúc gọi server.
+//   Model phải chở cả hai bản và chọn ở GETTER (`WrSituation.text`,
+//   `MoodContent.title`, `ChoicePoolLine.text` — tất cả đều gọi `trDb`). Một
+//   repository trả về chuỗi đã dịch sẵn sẽ nằm lì trong cache bằng tiếng cũ,
+//   và lúc đó lại phải xoá cache — quay về đúng chỗ cũ.
+//
+//   Ngoại lệ hợp lệ duy nhất là chữ do AI viết (`wr_pattern_narratives`): nó
+//   phải nhờ model viết lại, không getter nào dịch hộ được. Chỗ đó
+//   `wrNarrativeRefreshProvider` tự `watch` ngôn ngữ.
+// ---------------------------------------------------------------------------
 
 /// Có phải phiên vừa đổi sang người khác không.
 ///

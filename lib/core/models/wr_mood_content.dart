@@ -414,3 +414,33 @@ class PracticeStepNote {
         if (memoryEventId != null) 'memory_event_id': memoryEventId,
       };
 }
+
+// ---------------------------------------------------------------------------
+// ChoicePoolLine — §VI
+// ---------------------------------------------------------------------------
+
+/// Một câu trong Bể Lựa chọn, chở CẢ hai ngôn ngữ.
+///
+/// Trước đây `fetchChoicePool` trả thẳng `List<String>` đã dịch xong ngay trong
+/// repository. Đọc thì gọn, nhưng nó chốt ngôn ngữ vào lúc GỌI SERVER: giá trị
+/// nằm trong cache của Riverpod là tiếng Việt thì có dựng lại màn bao nhiêu lần
+/// cũng vẫn là tiếng Việt, phải hỏi lại server mới đổi được. Một lượt mạng chỉ
+/// để đổi chữ — và trong lúc chờ, màn Cam kết là ô duy nhất còn tiếng cũ giữa
+/// một màn đã sang tiếng mới.
+///
+/// Chở cả hai rồi chọn ở GETTER thì cache dùng được cho cả hai ngôn ngữ, và
+/// việc đổi ngôn ngữ chỉ còn là dựng lại widget — không có lượt mạng nào.
+class ChoicePoolLine {
+  const ChoicePoolLine({required this.textVi, this.textEn});
+
+  final String textVi;
+  final String? textEn;
+
+  /// Câu hiển thị theo ngôn ngữ đang bật. Chưa dịch thì rơi về tiếng Việt.
+  String get text => trDb(textVi, textEn);
+
+  factory ChoicePoolLine.fromJson(Map<String, dynamic> json) => ChoicePoolLine(
+        textVi: json['text'] as String,
+        textEn: json['text_en'] as String?,
+      );
+}

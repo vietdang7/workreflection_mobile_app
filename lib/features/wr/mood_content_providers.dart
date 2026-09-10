@@ -44,7 +44,7 @@ final wrMoodLibraryProvider =
 /// Tám câu trong Bể Lựa chọn (§VI).
 ///
 /// Đọc một lần rồi giữ: đây là bảng tĩnh 8 dòng, không đổi giữa các phiên.
-final wrChoicePoolProvider = FutureProvider<List<String>>((ref) async {
+final wrChoicePoolProvider = FutureProvider<List<ChoicePoolLine>>((ref) async {
   final repo = ref.watch(wrMoodContentRepositoryProvider);
   try {
     return await repo.fetchChoicePool();

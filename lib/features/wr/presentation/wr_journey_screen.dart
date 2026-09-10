@@ -733,7 +733,15 @@ class WrJourneyScreen extends ConsumerWidget {
 /// có gì để so), trong khi thẻ Career Health ở tab Hiểu mình đếm MỌI Episode.
 /// Bỏ mấy chữ này là hai màn nói hai con số cho cùng một chữ "lần nhìn lại" —
 /// đúng cái khách gọi tên là "dữ liệu trong app chưa được kết nối với nhau".
-String _waitingLine(WrNarrativeRefresh? refresh) {
+String _waitingLine(WrNarrativeRefresh? refresh, {bool rewriting = false}) {
+  // Đã có bản kể, chỉ là bằng tiếng kia. Nói đúng chuyện đang xảy ra: nếu dùng
+  // câu "chưa đủ dữ liệu" ở đây thì người vừa đổi ngôn ngữ tưởng mình mất hết
+  // dữ liệu, còn nếu hiện đại đoạn tiếng cũ thì tưởng app không đổi được tiếng.
+  if (rewriting) {
+    return tr('Đang viết lại diễn biến của bạn bằng ngôn ngữ vừa chọn. Mở lại '
+        'tab này sau một lát nhé.', 'Your story is being rewritten in the language you just picked. '
+        'Come back to this tab in a moment.');
+  }
   final needed = refresh?.needed;
   return switch (refresh?.status) {
     WrNarrativeStatus.notEnoughData when needed != null && needed > 0 =>
@@ -782,7 +790,9 @@ class _NarrativeCardState extends ConsumerState<_NarrativeCard> {
         ref.watch(wrPatternNarrativesProvider).valueOrNull ?? const [];
     final canRead =
         entitlement.canUseFeature(WrPremiumFeature.patternAdvanced);
-    final latest = narratives.isNotEmpty ? narratives.first.narrative : null;
+    // Chỉ nhận đoạn ĐÚNG ngôn ngữ đang bật — xem `currentLocaleNarrative`.
+    final latest = currentLocaleNarrative(narratives)?.narrative;
+    final rewriting = latest == null && narratives.isNotEmpty;
 
     // Đánh thức `wr-narrative`. Chỉ `watch` để provider chạy — giá trị dùng
     // đúng một việc: nói còn thiếu bao nhiêu lần nữa.
@@ -844,7 +854,7 @@ class _NarrativeCardState extends ConsumerState<_NarrativeCard> {
               canRead && latest != null
                   ? latest
                   : canRead
-                      ? _waitingLine(refresh)
+                      ? _waitingLine(refresh, rewriting: rewriting)
                       : tr('Mở khóa bản đầy đủ để nhìn lại toàn bộ bức tranh thay '
                           'đổi của bạn qua từng giai đoạn.', 'Unlock the full version to see the whole picture of how '
                           'you have changed, stage by stage.'),

@@ -56,7 +56,13 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
     if (pool.isEmpty) return const [];
     final practice =
         ref.watch(wrEpisodeStoryProvider)?.practiceAction?.trim();
-    return _options ??= pickChoiceOptions(practice: practice, pool: pool);
+    // `.text` chọn ngôn ngữ ở đây, lúc dựng màn — không phải lúc gọi server.
+    // Đổi ngôn ngữ dựng lại cả cây widget nên `_options` cũng được tính lại
+    // theo, chứ không kẹt lại bốn câu tiếng cũ.
+    return _options ??= pickChoiceOptions(
+      practice: practice,
+      pool: pool.map((line) => line.text).toList(),
+    );
   }
 
   /// [choice] chỉ có khi câu này được chạm từ bể Lựa chọn (v1.6 §V · §VI).

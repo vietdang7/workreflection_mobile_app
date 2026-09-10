@@ -7,7 +7,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../l10n/wr_tr.dart';
 import '../models/checkin.dart';
 import '../models/wr_mood_content.dart';
 
@@ -26,7 +25,11 @@ abstract class WrMoodContentRepository {
   Future<Map<Mood, List<MoodContent>>> fetchAllGrouped();
 
   /// Tám câu trong Bể Lựa chọn (§VI), chỉ lấy dòng còn hiệu lực.
-  Future<List<String>> fetchChoicePool();
+  ///
+  /// Trả về [ChoicePoolLine] chứ không trả `List<String>` đã dịch: xem lý do ở
+  /// chính lớp đó — chốt ngôn ngữ ở đây là buộc phải gọi lại server mỗi lần
+  /// người dùng đổi ngôn ngữ.
+  Future<List<ChoicePoolLine>> fetchChoicePool();
 }
 
 // ---------------------------------------------------------------------------
@@ -82,16 +85,12 @@ class SupabaseWrMoodContentRepository implements WrMoodContentRepository {
   }
 
   @override
-  Future<List<String>> fetchChoicePool() async {
-    // Chọn ngôn ngữ ngay ở đây chứ không ở màn hình: hàm này trả về
-    // `List<String>` trần, không có model nào chở được cặp Việt–Anh đi tiếp.
+  Future<List<ChoicePoolLine>> fetchChoicePool() async {
     final rows = await _client
         .from('wr_choice_pool')
         .select('text, text_en')
         .eq('active', true)
         .order('id', ascending: true);
-    return rows
-        .map((r) => trDb(r['text'] as String, r['text_en'] as String?))
-        .toList();
+    return rows.map(ChoicePoolLine.fromJson).toList();
   }
 }
