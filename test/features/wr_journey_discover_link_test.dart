@@ -417,7 +417,7 @@ void main() {
 
       await _pumpLarge(tester, _wrapJourney(content: content, premium: true));
 
-      expect(find.textContaining('2 cột mốc'), findsOneWidget);
+      expect(find.textContaining('2 ghi nhận'), findsOneWidget);
       // Dòng thời gian gom theo tháng — hai mục cùng tháng 7 nằm chung một cụm.
       expect(find.text('THÁNG 7, 2026'), findsOneWidget);
     });
@@ -425,7 +425,7 @@ void main() {
     testWidgets('0 events → lời mời, không có dòng thời gian', (tester) async {
       await _pumpLarge(tester, _wrapJourney());
 
-      expect(find.textContaining('chưa ghi nhận cột mốc nào'), findsOneWidget);
+      expect(find.textContaining('chưa có ghi nhận nào'), findsOneWidget);
       expect(find.textContaining('THÁNG '), findsNothing);
     });
 

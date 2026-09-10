@@ -360,8 +360,8 @@ List<WrGuideSection> wrGuideSections() => [
             ),
             WrGuideBullet(
               'Career Memory',
-              'dòng thời gian những cột mốc trên hành trình sự nghiệp: câu '
-                  'chuyện, dấu mốc, chủ đề, insight. Chạm một mục để đọc vì '
+              'dòng thời gian những ghi nhận trên hành trình sự nghiệp: câu '
+                  'chuyện, cột mốc, chủ đề, insight. Chạm một mục để đọc vì '
                   'sao nó được ghi lại.',
             ),
             WrGuideBullet(

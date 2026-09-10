@@ -728,7 +728,7 @@ void main() {
       await tester.pumpWidget(_wrap(const WrJourneyScreen(), content: content));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('2 cột mốc'), findsOneWidget);
+      expect(find.textContaining('2 ghi nhận'), findsOneWidget);
     });
   });
 
@@ -737,7 +737,7 @@ void main() {
       await tester.pumpWidget(_wrap(const WrJourneyScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('chưa ghi nhận cột mốc nào'), findsOneWidget);
+      expect(find.textContaining('chưa có ghi nhận nào'), findsOneWidget);
     });
   });
 
@@ -866,7 +866,7 @@ void main() {
       }
       // Con số tổng vẫn nói ra — đó là việc chính người dùng đã làm.
       expect(
-        find.textContaining('3 cột mốc', skipOffstage: false),
+        find.textContaining('3 ghi nhận', skipOffstage: false),
         findsOneWidget,
       );
     });

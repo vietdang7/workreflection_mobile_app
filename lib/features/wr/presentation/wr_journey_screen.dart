@@ -560,10 +560,10 @@ class WrJourneyScreen extends ConsumerWidget {
             const SizedBox(height: 14),
             WrParagraph(
               all.isEmpty
-                  ? 'Nhật ký sự nghiệp của bạn chưa ghi nhận cột mốc nào. Hãy '
+                  ? 'Nhật ký sự nghiệp của bạn chưa có ghi nhận nào. Hãy '
                       'bắt đầu một lần nhìn lại để lưu giữ những dấu ấn của '
                       'riêng bạn.'
-                  : 'Bạn đã ghi lại ${all.length} cột mốc trên hành trình sự '
+                  : 'Bạn đã có ${all.length} ghi nhận trên hành trình sự '
                       'nghiệp.',
               style: const TextStyle(
                 fontSize: 20,
@@ -611,7 +611,7 @@ class WrJourneyScreen extends ConsumerWidget {
                 const WrPremiumLock(
                   key: Key('wr_journey_memory_lock'),
                   description:
-                      'Bản đầy đủ mở lại từng cột mốc bạn đã ghi trên hành '
+                      'Bản đầy đủ mở lại từng ghi nhận bạn đã lưu trên hành '
                       'trình sự nghiệp, đọc lại được bất cứ lúc nào, theo đúng '
                       'dòng thời gian.',
                   ctaLabel: 'Mở toàn bộ Career Memory',
@@ -629,8 +629,8 @@ class WrJourneyScreen extends ConsumerWidget {
                 key: const Key('wr_journey_memory_see_all'),
                 label: 'Xem toàn bộ Career Memory',
                 hint: hasMore
-                    ? 'Còn ${all.length - shown.length} mảnh nữa'
-                    : 'Lọc theo loại, mở rộng từng mảnh',
+                    ? 'Còn ${all.length - shown.length} ghi nhận nữa'
+                    : 'Lọc theo loại, mở rộng từng ghi nhận',
                 onTap: () => context.push('/wr/career-memory'),
               ),
             ],
@@ -1124,17 +1124,22 @@ class _WrCareerMemoryScreenState extends ConsumerState<WrCareerMemoryScreen> {
       eyebrow: 'CAREER MEMORY',
       // Mockup v16: "Bạn đã để lại N mảnh ký ức nghề nghiệp." — con số TỔNG,
       // kể cả với bản miễn phí. Việc mình đã làm thì luôn được nói ra; cái bị
-      // khoá là nội dung từng mảnh. Khách 09/09/2026 (§12.2) đổi từ hiển thị
-      // "mảnh ký ức" → "cột mốc"; luật đếm không đổi.
+      // khoá là nội dung từng mục.
+      //
+      // Từ dùng cho VẬT CHỨA là "ghi nhận" (Changelog CareerSnapshot §9). Đợt 1
+      // đổi sang "cột mốc" theo §12.2, và §9.1 bác lại chính cách đó: "Cột mốc"
+      // là tên của MỘT trong bốn loại (Câu chuyện · Cột mốc · Chủ đề · Insight),
+      // nên gọi vật chứa như vậy sẽ ra "42 cột mốc" ở tiêu đề trong khi bên dưới
+      // chỉ vài mục thật sự mang nhãn đó. Luật đếm không đổi.
       title: all.isEmpty
           ? 'Career Memory'
           : _type == null
-              ? 'Bạn đã ghi lại ${all.length} cột mốc trên hành trình sự nghiệp.'
-              : '${shown.length} cột mốc · ${_type!.toLowerCase()}',
+              ? 'Bạn đã có ${all.length} ghi nhận trên hành trình sự nghiệp.'
+              : '${shown.length} ghi nhận · ${_type!.toLowerCase()}',
       children: [
         if (all.isEmpty)
           const WrParagraph(
-            'Nhật ký sự nghiệp của bạn chưa ghi nhận cột mốc nào. Hãy bắt đầu '
+            'Nhật ký sự nghiệp của bạn chưa có ghi nhận nào. Hãy bắt đầu '
             'một lần nhìn lại để lưu giữ những dấu ấn của riêng bạn.',
             key: Key('wr_career_memory_empty'),
             style: TextStyle(
@@ -1157,7 +1162,7 @@ class _WrCareerMemoryScreenState extends ConsumerState<WrCareerMemoryScreen> {
           ],
           if (shown.isEmpty)
             const Text(
-              'Không có mảnh nào thuộc loại này.',
+              'Không có ghi nhận nào thuộc loại này.',
               key: Key('wr_career_memory_filter_empty'),
               style: TextStyle(
                 fontSize: 16.5,
@@ -1174,10 +1179,10 @@ class _WrCareerMemoryScreenState extends ConsumerState<WrCareerMemoryScreen> {
             WrPremiumLock(
               key: const Key('wr_career_memory_lock'),
               description: shown.length > readable
-                  ? 'Còn ${shown.length - readable} cột mốc nữa, thuộc các '
-                      'tuần và tháng trước đó. Bản đầy đủ mở lại từng cột mốc, '
+                  ? 'Còn ${shown.length - readable} ghi nhận nữa, thuộc các '
+                      'tuần và tháng trước đó. Bản đầy đủ mở lại từng ghi nhận, '
                       'đọc lại được bất cứ lúc nào.'
-                  : 'Bản đầy đủ mở lại từng cột mốc bạn đã ghi trên hành trình '
+                  : 'Bản đầy đủ mở lại từng ghi nhận bạn đã lưu trên hành trình '
                       'sự nghiệp, đọc lại được bất cứ lúc nào, theo đúng dòng '
                       'thời gian.',
               ctaLabel: 'Mở khoá toàn bộ Career Memory',
@@ -1185,7 +1190,7 @@ class _WrCareerMemoryScreenState extends ConsumerState<WrCareerMemoryScreen> {
             )
           else
             Text(
-              'Đã hiện ${shown.length}/${all.length} cột mốc gần nhất.',
+              'Đã hiện ${shown.length}/${all.length} ghi nhận gần nhất.',
               key: const Key('wr_career_memory_shown_count'),
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 13.5, color: WrColors.muted),
@@ -1429,7 +1434,7 @@ class _EntryRowState extends State<_EntryRow> {
                       if (locked) ...[
                         const SizedBox(height: 4),
                         const WrParagraph(
-                          'Mở bản đầy đủ để đọc lại cột mốc này.',
+                          'Mở bản đầy đủ để đọc lại ghi nhận này.',
                           style: TextStyle(
                             fontSize: 14.5,
                             color: WrColors.muted,

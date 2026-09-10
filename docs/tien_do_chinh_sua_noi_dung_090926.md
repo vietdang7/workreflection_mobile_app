@@ -149,19 +149,29 @@ việc khác hẳn.
 | # | Đổi thành | File |
 |---|-----------|------|
 | 12.1 | NHÌN LẠI DÒNG THỜI GIAN + bỏ icon ✦ | `wr_journey_screen.dart`, `wr_journey_narrative_screen.dart` |
-| 12.2 | Bạn đã ghi lại N cột mốc trên hành trình sự nghiệp. (6 chỗ) | `wr_journey_screen.dart`, `wr_user_guide.dart` |
+| 12.2 | ~~Bạn đã ghi lại N cột mốc…~~ → **Bạn đã có N ghi nhận trên hành trình sự nghiệp.** (10 chỗ) — xem ghi chú đảo chiều bên dưới | `wr_journey_screen.dart`, `wr_user_guide.dart` |
 | 12.3 | GÓC NHÌN PHÁT TRIỂN | `wr_journey_screen.dart` |
 | 12.4 | Gợi ý này được đúc kết từ hoạt động nhìn lại của bạn… | `wr_mood_content.dart` `kConfidenceNote` |
 | 12.5 | Cập nhật bối cảnh công việc | `wr_journey_screen.dart` |
 | 12.6 | Để gợi ý chính xác hơn | `wr_journey_screen.dart` |
 | 12.7 | Mở khóa bản đầy đủ để nhìn lại toàn bộ bức tranh thay đổi… | `wr_journey_screen.dart`, `wr_journey_narrative_screen.dart` |
-| 12.8 | Nhật ký sự nghiệp của bạn chưa ghi nhận cột mốc nào… | `wr_journey_screen.dart` (2 chỗ) |
+| 12.8 | Nhật ký sự nghiệp của bạn chưa có ghi nhận nào… | `wr_journey_screen.dart` (2 chỗ) |
 
-> ⚠ **Xung đột từ vựng, cần biết trước khi sửa tiếp.** Trong mã, "cột mốc" đã
-> có nghĩa hẹp sẵn: **một CỜ trên STORY**, không phải bản ghi riêng (changelog
-> 24/08). Khách nay dùng "cột mốc" cho MỌI mảnh Career Memory. Cách xử lý đã
-> chọn: **đổi chữ trên màn hình, giữ nguyên từ "mảnh ký ức" trong chú thích và
-> tên biến**. Đừng đổi tên biến theo — sẽ không phân biệt được hai khái niệm nữa.
+> ⚠ **12.2 và 12.8 đã ĐẢO CHIỀU ngày 10/09 — khách tự bác lại.**
+>
+> Lúc làm đợt 1 tôi ghi lại một xung đột từ vựng: trong mã, "cột mốc" đã có
+> nghĩa hẹp sẵn là **một CỜ trên STORY** (changelog 24/08), trong khi khách dùng
+> nó cho MỌI mảnh Career Memory. Cách xử lý khi đó: đổi chữ trên màn hình, giữ
+> "mảnh ký ức" trong tên biến và chú thích.
+>
+> `WorkReflection_Changelog_CareerSnapshot.docx` §9.1 (khách gửi 10/09) bác đúng
+> cách đó, bằng đúng lý do trên: "Cột mốc" là tên của MỘT trong bốn loại (Câu
+> chuyện · Cột mốc · Chủ đề · Insight), nên gọi vật chứa như vậy sẽ ra "42 cột
+> mốc" ở tiêu đề trong khi bên dưới chỉ vài mục thật sự mang nhãn đó.
+>
+> **Chốt hiện hành: "ghi nhận" cho vật chứa, "Cột mốc" giữ riêng cho loại
+> MILESTONE.** Đã sửa lại 10 chỗ hiển thị + 9 khẳng định test trong cùng nhánh
+> này, trước khi PR #19 được merge. Tên biến vẫn để nguyên "mảnh ký ức".
 
 Icon ✦ ở nhãn Premium khoá thì **giữ** ổ khoá `Icons.lock_outline`: nó nói một
 điều có thật, không phải trang trí.
