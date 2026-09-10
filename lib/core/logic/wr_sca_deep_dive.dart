@@ -31,7 +31,8 @@
 import '../models/wr_content.dart';
 import '../models/wr_episode.dart';
 import '../models/wr_intelligence.dart';
-import 'wr_career_health.dart' show selfCheckDateLabel;
+import 'wr_career_health.dart'
+    show dominantPillar, pillarOfDimension, selfCheckDateLabel;
 import 'wr_repeated_situations.dart';
 import 'wr_self_check_narrative.dart';
 import 'wr_self_check_questions.dart';
@@ -148,16 +149,26 @@ const String kScaNoTrendText =
 ///
 /// Episode thiếu `openedAt` bị loại. Không có ngày thì không thể nói nó thuộc
 /// cửa sổ nào — giữ lại là để một lượt Reflect cũ đội lốt lượt vừa xong.
+///
+/// CHẶN CẢ HAI ĐẦU. Bản trước chỉ chặn đầu dưới, vì `now` lúc chạy thật luôn là
+/// bây giờ nên không có gì đứng sau nó. Nhưng tầng 2 của Diễn giải sâu cần một
+/// cửa sổ LIỀN TRƯỚC, và nó lấy cửa sổ đó bằng cách truyền một `now` lùi lại
+/// một cửa sổ — không chặn đầu trên thì "cửa sổ trước" nuốt luôn cả cửa sổ hiện
+/// tại, hai cửa sổ thành một, và mọi câu xu hướng đều đọc ra "ổn định".
 List<ReflectionEpisode> episodesWithinDays(
   List<ReflectionEpisode> episodes, {
   required DateTime now,
   int days = kScaPatternWindowDays,
 }) {
-  final cutoff = DateTime(now.year, now.month, now.day)
-      .subtract(Duration(days: days - 1));
+  final endOfDay = DateTime(now.year, now.month, now.day)
+      .add(const Duration(days: 1));
+  final cutoff = endOfDay.subtract(Duration(days: days));
   return [
     for (final e in episodes)
-      if (e.openedAt != null && !e.openedAt!.isBefore(cutoff)) e,
+      if (e.openedAt != null &&
+          !e.openedAt!.isBefore(cutoff) &&
+          e.openedAt!.isBefore(endOfDay))
+        e,
   ];
 }
 
@@ -165,6 +176,12 @@ List<ReflectionEpisode> episodesWithinDays(
 ///
 /// Đếm theo LƯỢT, không theo tình huống khác nhau: §7 hỏi "bạn quay lại nhóm
 /// này bao nhiêu lần", nên chọn lại cùng một tình huống năm lần là năm lần.
+///
+/// LỖI ĐÃ SỬA 10/09: `pillarOfDimension` trước đây lấy từ
+/// `wr_self_check_narrative.dart`, bản có `_ => SelfCheckPillar.a`. Mọi lượt
+/// thuộc hai nhóm tình huống TÍCH CỰC (P-ACHIEVE, P-STEADY) bị dồn hết vào trụ
+/// A, nên "Cách làm việc" phồng lên bằng đúng số lần người dùng ghi lại điều
+/// hay — và có thể thành trụ nổi trội giả, kéo theo cả câu diễn giải sai.
 Map<SelfCheckPillar, int> pillarPatternCounts(
   List<ReflectionEpisode> episodes,
   List<WrSituation> situations, {
@@ -182,29 +199,46 @@ Map<SelfCheckPillar, int> pillarPatternCounts(
     final dim = codeToDim[code];
     if (dim == null) continue;
     final pillar = pillarOfDimension(dim);
+    if (pillar == null) continue;
     counts[pillar] = counts[pillar]! + 1;
   }
   return counts;
 }
 
-/// Trụ được quay lại nhiều nhất. Null khi chưa có lượt nào, hoặc khi HOÀ —
-/// không có "nhóm chiếm ưu thế" thì đừng chỉ tay vào một nhóm bất kỳ.
-SelfCheckPillar? dominantPatternPillar(Map<SelfCheckPillar, int> counts) {
-  var best = 0;
-  SelfCheckPillar? winner;
-  var tied = false;
-  for (final e in counts.entries) {
-    if (e.value > best) {
-      best = e.value;
-      winner = e.key;
-      tied = false;
-    } else if (e.value == best && best > 0) {
-      tied = true;
-    }
-  }
-  if (best == 0 || tied) return null;
-  return winner;
-}
+/// Tổng số lần Reflection trong cửa sổ — MẪU SỐ của mọi câu "{count} / {total}".
+///
+/// Đếm mọi Episode trong cửa sổ, kể cả lượt không thuộc trụ nào. `DienGiaiSau`
+/// bảng 2 định nghĩa `totalReflection` là "tổng số Reflection trong cùng cửa
+/// sổ", không phải tổng ba trụ — nên tổng ba `pillarPatternCounts` thường NHỎ
+/// HƠN con số này, và đó là sự thật chứ không phải sai số.
+int totalReflectionInWindow(
+  List<ReflectionEpisode> episodes, {
+  required DateTime now,
+  int days = kScaPatternWindowDays,
+}) =>
+    episodesWithinDays(episodes, now: now, days: days).length;
+
+/// Trụ được quay lại nhiều nhất. Null khi chưa đủ chênh lệch để gọi là nổi trội.
+///
+/// Uỷ lại cho [dominantPillar] của `wr_career_health.dart` — cùng một luật với
+/// khối Career Snapshot ở tab Hiểu mình, để hai màn không bao giờ nói khác nhau
+/// về việc trụ nào đang nổi lên.
+///
+/// LUẬT ĐÃ ĐỔI. Bản cũ chỉ loại trường hợp HOÀ tuyệt đối, nên 10 / 9 / 8 lần vẫn
+/// tuyên bố có một trụ nổi trội. `DienGiaiSau §2` nêu đích danh ví dụ đó: "Nếu
+/// cứ lấy trụ cao nhất bất kể chênh lệch, hệ thống sẽ khẳng định một xu hướng
+/// không thật." Nay trụ cao nhất phải VƯỢT 40% tổng.
+///
+/// [total] là tổng số lần Reflection trong cùng cửa sổ. Không truyền thì lấy
+/// tổng ba trụ — giữ đúng hành vi của những nơi gọi chỉ có mỗi bảng đếm.
+SelfCheckPillar? dominantPatternPillar(
+  Map<SelfCheckPillar, int> counts, {
+  int? total,
+}) =>
+    dominantPillar(
+      counts,
+      total ?? counts.values.fold<int>(0, (s, v) => s + v),
+    );
 
 /// Câu Lớp 3 — ba nhánh template của §7.
 String scaPatternText({
@@ -265,7 +299,10 @@ String? selfAwarenessGapNarrative({
   if (scored.isEmpty) return null;
 
   final counts = pillarPatternCounts(episodes, situations, now: now);
-  final dominant = dominantPatternPillar(counts);
+  final dominant = dominantPatternPillar(
+    counts,
+    total: totalReflectionInWindow(episodes, now: now),
+  );
   if (dominant == null) return null;
 
   final score = scaScoreOf(scored.first, dominant);
@@ -335,7 +372,10 @@ List<ScaDeepDivePillar> buildScaDeepDive({
   final latest = scored.first;
   final previous = scored.length > 1 ? scored[1] : null;
   final counts = pillarPatternCounts(episodes, situations, now: now);
-  final dominant = dominantPatternPillar(counts);
+  final dominant = dominantPatternPillar(
+    counts,
+    total: totalReflectionInWindow(episodes, now: now),
+  );
 
   return [
     for (final pillar in SelfCheckPillar.values)

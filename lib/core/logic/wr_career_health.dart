@@ -181,16 +181,24 @@ const double kDominantPillarShare = 0.40;
 /// Mẫu số là [total] — tổng số lần nhìn lại, đúng con số đang hiện ở cột
 /// "Xuất hiện". Chia cho tổng ba trụ thay vì tổng số lần sẽ ra một tỉ lệ không
 /// khớp với bất kỳ con số nào người dùng nhìn thấy trên màn.
+/// HAI điều kiện, không phải một. Trụ cao nhất phải vượt 40% VÀ phải là duy
+/// nhất. Hoà 3–3–0 thì tỉ trọng của trụ đầu là 50%, vượt ngưỡng, nhưng gọi nó
+/// là trụ nổi trội thì chỉ là chọn theo thứ tự khai báo enum.
 SelfCheckPillar? dominantPillar(Map<SelfCheckPillar, int> counts, int total) {
   if (total <= 0) return null;
   SelfCheckPillar? best;
   var bestCount = 0;
+  var tied = false;
   for (final e in counts.entries) {
     if (e.value > bestCount) {
       bestCount = e.value;
       best = e.key;
+      tied = false;
+    } else if (e.value == bestCount && bestCount > 0) {
+      tied = true;
     }
   }
-  if (best == null || bestCount / total <= kDominantPillarShare) return null;
+  if (best == null || tied) return null;
+  if (bestCount / total <= kDominantPillarShare) return null;
   return best;
 }

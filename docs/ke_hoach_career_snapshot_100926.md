@@ -19,17 +19,41 @@ Tài liệu này nối tiếp `tien_do_chinh_sua_noi_dung_090926.md` (đợt 1 �
 **Vì sao khách bấm mãi không ra:** cả hai màn chỉ nằm trên MỘT lối vào duy nhất, và
 đó không phải lối chính.
 
+### Lối DUY NHẤT đi qua hai màn — qua trợ lý trò chuyện
+
+1. Chạm **bong bóng tròn màu coral** ở góc dưới bên phải (`WrAskBubble`, nổi trên
+   cả bốn tab, không phải một tab riêng) → `/wr/ask`.
+2. Nhắn cho trợ lý một chuyện đang gặp.
+3. Nếu thấy nên ghi lại, model gắn thẻ `[[ACTION:reflect]]` vào cuối câu trả lời.
+   Edge Function `wr-chat` bóc thẻ ra (`reply_shaping.ts`) và trả về `action`.
+   App dựng nút **"Ghi lại thành một Reflection"** (`wr_ask_screen.dart:_ActionButton`).
+4. Bấm nút → `/wr/flow/energy` — **"LÚC NÀY · Năng lượng của bạn thế nào?"**
+5. Chọn một trong ba → `/wr/flow/moment` — **"KHOẢNH KHẮC · Điều gì đang diễn ra
+   với bạn?"** (`wr_energy_screen.dart:46`)
+6. Chọn một trong sáu → `/wr/flow/step`, tức luồng nhìn lại bình thường.
+
+> Bước 3 là chỗ dễ hiểu nhầm nhất: **nút đó không phải lúc nào cũng có.** Model tự
+> quyết định có mời hay không tuỳ câu chuyện. Nên vào đúng màn Trò chuyện rồi vẫn
+> có thể không thấy nút, và không có nút thì không có đường nào tới hai màn kia.
+
+### Lối chính — bỏ qua cả hai màn
+
 ```
-Home  →  chạm ô cảm xúc 2×2  →  /wr/flow/step        ← lối chính, BỎ QUA cả hai màn
-Hỏi (chatbox) → AI gợi ý "Ghi lại thành một Reflection"
-      →  /wr/flow/energy  →  /wr/flow/moment  →  /wr/flow/step   ← lối duy nhất đi qua
+Hôm nay  →  chạm một ô cảm xúc trên lưới  →  /wr/flow/step
+Hôm nay  →  thẻ "Đang bỏ ngỏ" / "Còn một bước nữa"  →  /wr/flow/step
 ```
 
-- `wr_home_screen.dart:389` đặt sẵn `pendingEnergy` + `pendingMood` từ ô cảm xúc rồi
-  nhảy thẳng `/wr/flow/step` (dòng 417).
-- `wr_step_screen.dart:168` tự suy khoảnh khắc bằng `momentForMood(mood)`, nên luồng
-  chính không cần hỏi.
-- `wr_chat.dart:49` là chỗ duy nhất còn trỏ tới `/wr/flow/energy`.
+- `wr_home_screen.dart:389` đặt sẵn `pendingEnergy` + `pendingMood` từ chính ô cảm
+  xúc, rồi nhảy thẳng `/wr/flow/step` (dòng 417). Năng lượng đã có nên không hỏi lại.
+- `wr_step_screen.dart:168` tự suy khoảnh khắc bằng `momentForMood(mood)`.
+- `wr_home_screen.dart:719` — thẻ phiên còn dở cũng vào thẳng `step`.
+- `wr_chat.dart:49` là chỗ **duy nhất** trong toàn bộ `lib/` còn trỏ tới
+  `/wr/flow/energy`.
+
+Đây là quyết định có chủ đích, không phải sót: Kiến trúc v2.0 §9.1 — "Home dẫn thẳng
+vào luồng 5 bước ngay sau khi người dùng chạm chọn cảm xúc check-in". Chính
+`app_router.dart` cũng đã ghi lại: "Hai route `energy` và `moment` KHÔNG nằm trong
+luồng của §V… chúng chỉ còn là lối vào phụ cho phiên mở ngoài check-in."
 
 **Hệ quả cần khách quyết:** màn Khoảnh khắc gần như đã chết. Với lối chính, giá trị
 `human_moment` của Episode luôn là giá trị suy ra từ mood, không phải điều người dùng
@@ -136,30 +160,59 @@ ngày công gần bằng không, nhưng chọn sai thì phải sửa lại trên
 
 ---
 
-## 3. Nhóm B — Diễn giải sâu, lớp 1 và lớp 2 (3.0 ngày)
+## 3. Nhóm B — Diễn giải sâu, lớp 1 và lớp 2 (3.0 ngày) — **XONG 10/09**
 
 `wr_sca_deep_dive.dart` đã có sẵn khung ba lớp nhưng nội dung là bản 24/08, mỗi
 nhánh đúng một câu. Tài liệu mới thay toàn bộ bằng thư viện 25 câu.
 
-| # | Việc | Ngày |
-|---|---|---|
-| B1 | Lớp 1 dữ kiện: `dominantPillar` trả null khi **không trụ nào vượt 40%** | 0.3 |
-| B2 | Tầng 1 Khoảng lệch — 4 nhánh A/B/C/D × 3 biến thể = 11 câu, xoay vòng | 0.8 |
-| B3 | Tầng 2 Xu hướng Reflection — 2 cửa sổ liền kề, mỗi cửa sổ ≥ 10 lần, 5 câu | 0.7 |
-| B4 | Tầng 3 Xu hướng Self-Check — ≥ 2 lần cách nhau ≥ 6 tuần, 6 câu | 0.5 |
-| B5 | Ba câu "chưa đủ dữ liệu" theo giọng mời gọi, cấm mọi câu báo lỗi | 0.2 |
-| B6 | Dựng lại màn: MỘT insight dẫn dắt + xu hướng + hai trụ còn lại rút gọn | 0.5 |
+Thư viện mới nằm ở **`lib/core/logic/wr_deep_interpretation.dart`**; file cũ giữ
+nguyên vai trò "ba lớp cho từng trụ" vì màn vẫn cần nó cho phần rút gọn.
+
+| # | Việc | Ngày | |
+|---|---|---|---|
+| B1 | Lớp 1 dữ kiện: `dominantPillar` trả null khi **không trụ nào vượt 40%** | 0.3 | ✅ |
+| B2 | Tầng 1 Khoảng lệch — 4 nhánh A/B/C/D × 3 biến thể = 12 câu, xoay vòng | 0.8 | ✅ |
+| B3 | Tầng 2 Xu hướng Reflection — 2 cửa sổ liền kề, mỗi cửa sổ ≥ 10 lần, 5 câu | 0.7 | ✅ |
+| B4 | Tầng 3 Xu hướng Self-Check — ≥ 2 lần cách nhau ≥ 6 tuần, 6 câu | 0.5 | ✅ |
+| B5 | Ba câu "chưa đủ dữ liệu" theo giọng mời gọi, cấm mọi câu báo lỗi | 0.2 | ✅ |
+| B6 | Dựng lại màn: MỘT insight dẫn dắt + xu hướng + ba trụ rút gọn | 0.5 | ✅ |
+
+### Bốn chỗ phải quyết khác tài liệu, và vì sao
+
+**Nhánh D nằm TRỌN trong nhánh B.** §8 xếp thứ tự ưu tiên A → B → D → C. Nhưng
+điều kiện của D ("nổi trội ở mức Ổn còn dư địa, mà có trụ khác đang cản trở")
+là tập con của B ("nổi trội ở mức Đang cản trở hoặc Ổn còn dư địa". Xét B trước
+thì D không bao giờ chạy tới, trong khi §3.4 viết hẳn ba biến thể câu cho nó.
+Thứ tự thật trong code: **A → D → B → C**. §8 nói về ưu tiên chọn insight dẫn
+dắt, không phải về thứ tự xét nhánh.
+
+**Luật 40% một mình không đủ — phải cộng thêm luật HOÀ.** Phân bố 3–3–0 thì trụ
+đầu chiếm 50%, vượt ngưỡng, nhưng gọi nó là trụ nổi trội chỉ là chọn theo thứ tự
+khai báo enum. `dominantPillar` loại cả hai trường hợp.
+
+**`episodesWithinDays` trước đây chỉ chặn ĐẦU DƯỚI.** Chạy thật thì `now` luôn là
+bây giờ nên không có gì đứng sau. Nhưng tầng 2 cần một cửa sổ LIỀN TRƯỚC, và nó
+lấy cửa sổ đó bằng cách truyền một `now` lùi lại 30 ngày — không chặn đầu trên
+thì "cửa sổ trước" nuốt luôn cửa sổ hiện tại, hai cửa sổ thành một, và **mọi câu
+xu hướng đều đọc ra "ổn định"**. Nay chặn cả hai đầu.
+
+**Tầng 2 không cần Self-Check, nên màn không được chặn ở cửa Self-Check.** §4 nói
+rõ: "Nếu xu hướng chỉ dựa vào Self-Check, người vừa mua Premium mà mới làm
+Self-Check một lần sẽ phải chờ nhiều tháng mới thấy được gì." Bản trước trả
+`_Empty` ngay khi `pillars.isEmpty`, nên người đã nhìn lại đều hai tháng mà chưa
+làm 15 câu vừa trả tiền xong là gặp màn hình rỗng. Nay chỉ mời làm Self-Check khi
+thật sự không có gì để nói.
 
 **B1 khác hẳn luật đang chạy.** `dominantPatternPillar` hiện chỉ loại trường hợp HOÀ
 tuyệt đối, nên 10 / 9 / 8 lần vẫn tuyên bố có một trụ nổi trội — đúng cái tài liệu
 cảnh báo. Luật mới: trụ cao nhất phải chiếm > 40% tổng, không thì trả null và đi
 nhánh C.
 
-> Luật 40% **đã có sẵn** ở `dominantPillar()` trong `wr_career_health.dart` (làm
-> cùng nhóm A). B1 chỉ còn việc cho màn Diễn giải sâu dùng chung hàm đó thay vì
-> `dominantPatternPillar` của riêng nó.
+> `dominantPatternPillar` nay uỷ lại cho `dominantPillar()` của
+> `wr_career_health.dart`, nên tab Hiểu mình và màn Diễn giải sâu không thể nói
+> khác nhau về việc trụ nào đang nổi lên.
 
-**⚠️ Một lỗi có sẵn phải sửa trong B1, chưa ai báo.** Có HAI hàm cùng tên
+**⚠️ Một lỗi có sẵn, chưa ai báo — ĐÃ SỬA.** Có HAI hàm cùng tên
 `pillarOfDimension`:
 
 - `wr_career_health.dart` — trả `null` cho hai nhóm tình huống tích cực
@@ -167,10 +220,14 @@ nhánh C.
 - `wr_self_check_narrative.dart:328` — `_ => SelfCheckPillar.a`, tức **nuốt cả
   hai nhóm tích cực vào trụ A**.
 
-`wr_sca_deep_dive.dart` import bản thứ hai, nên `pillarPatternCounts` đang cộng
-mọi lượt "vừa làm được điều hay" vào "Cách làm việc". Hệ quả: trụ A bị thổi
-phồng và có thể thành trụ nổi trội giả, rồi cả câu diễn giải dựng trên đó đều
-sai. Career Snapshot không dính vì nó dùng bản đúng.
+`wr_sca_deep_dive.dart` import bản thứ hai, nên `pillarPatternCounts` cộng mọi
+lượt "vừa làm được điều hay" vào "Cách làm việc". Hệ quả: trụ A phồng lên bằng
+đúng số lần người dùng ghi lại điều hay, có thể thành trụ nổi trội giả, rồi cả
+câu diễn giải dựng trên đó đều sai. Career Snapshot không dính vì dùng bản đúng.
+
+Đã xoá bản sai, `wr_self_check_narrative.dart` nay re-export bản đúng.
+(Còn một `pillarOfDimension` thứ ba ở `wr_skill_jd_match.dart`, trả `String?` và
+xử lý đúng nhóm tích cực — khác kiểu, khác file, không đụng nhau.)
 
 **B6 là thay đổi lớn nhất về hình.** Bản hiện tại in 3 trụ × 3 lớp = 9 khối văn bản.
 Tài liệu gọi thẳng đó là một bản báo cáo và người dùng sẽ lướt qua. Thứ tự ưu tiên

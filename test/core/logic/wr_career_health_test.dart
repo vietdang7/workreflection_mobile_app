@@ -204,6 +204,13 @@ void main() {
     test('chưa nhìn lại lần nào thì trả null', () {
       expect(dominantPillar(counts(0, 0, 0), 0), isNull);
     });
+
+    // Ngưỡng 40% một mình không đủ: hoà 3–3–0 thì trụ đầu chiếm 50%, vượt
+    // ngưỡng, nhưng chọn nó chỉ là chọn theo thứ tự khai báo enum.
+    test('hoà thì trả null dù có vượt 40%', () {
+      expect(dominantPillar(counts(3, 3, 0), 6), isNull);
+      expect(dominantPillar(counts(5, 5, 5), 15), isNull);
+    });
   });
 
   group('selfCheckIsStale', () {

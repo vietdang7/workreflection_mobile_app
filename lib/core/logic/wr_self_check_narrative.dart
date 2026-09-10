@@ -15,8 +15,11 @@
 
 import '../models/wr_content.dart';
 import '../models/wr_intelligence.dart';
+import 'wr_career_health.dart';
 import 'wr_repeated_situations.dart';
 import 'wr_self_check_questions.dart';
+
+export 'wr_career_health.dart' show pillarOfDimension;
 
 // ---------------------------------------------------------------------------
 // Khoảng điểm
@@ -324,14 +327,17 @@ SelfCheckTrend? trendFromHistory(List<ScaSelfCheckResponse> history) {
 // Đối chiếu chéo với Pattern (Paid)
 // ---------------------------------------------------------------------------
 
-/// Chiều SCA thuộc về trụ nào.
-SelfCheckPillar pillarOfDimension(ScaDimension d) => switch (d) {
-      ScaDimension.s1 || ScaDimension.s2 || ScaDimension.s3 =>
-        SelfCheckPillar.s,
-      ScaDimension.c1 || ScaDimension.c2 || ScaDimension.c3 =>
-        SelfCheckPillar.c,
-      _ => SelfCheckPillar.a,
-    };
+// `pillarOfDimension` ĐÃ BỎ ở đây — nay dùng bản duy nhất của
+// `wr_career_health.dart`.
+//
+// Bản cũ ở file này kết thúc bằng `_ => SelfCheckPillar.a`, tức NUỐT cả hai
+// nhóm tình huống tích cực (P-ACHIEVE, P-STEADY) vào trụ A. Hậu quả không nằm ở
+// đây mà ở `wr_sca_deep_dive.dart`, nơi import bản này: mỗi lượt "vừa làm được
+// điều hay" bị cộng vào "Cách làm việc", nên trụ A phồng lên và có thể thành
+// trụ nổi trội GIẢ — rồi cả câu diễn giải dựng trên đó đều sai theo.
+//
+// Bản đúng trả `null` cho hai nhóm ấy. `patternsForPillar` ngay dưới vẫn chạy
+// đúng vì `null != pillar`, nên tình huống tích cực bị loại thay vì rơi vào A.
 
 /// Các pattern lặp lại thuộc [pillar], nhiều lần nhất trước.
 /// Đọc recentSituationIds, không đọc `wr_pattern_counts`. Khối "Đối chiếu với
