@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_deep_interpretation.dart';
 import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/logic/wr_polish_guard.dart';
@@ -69,8 +70,8 @@ class WrScaDeepDiveScreen extends ConsumerWidget {
         backgroundColor: WrColors.pageBg,
         elevation: 0,
         foregroundColor: WrColors.navy,
-        title: const Text(
-          'Diễn giải sâu & xu hướng',
+        title: Text(
+          tr('Diễn giải sâu & xu hướng', 'Deep reading & trends'),
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w700,
@@ -99,10 +100,12 @@ class _Locked extends StatelessWidget {
       children: [
         const WrEyebrow('PREMIUM'),
         const SizedBox(height: 10),
-        const WrParagraph(
-          'Phần này đọc kỹ từng mặt theo khoảng điểm của bạn, so với những lần '
+        WrParagraph(
+          tr('Phần này đọc kỹ từng mặt theo khoảng điểm của bạn, so với những lần '
           'tự soi trước, và đối chiếu với những tình huống bạn hay gặp khi nhìn '
-          'lại.',
+          'lại.', 'This reads each side closely against your score band, sets it beside '
+          'your earlier self-checks, and compares it with the situations you '
+          'meet most when looking back.'),
           style: TextStyle(
             fontSize: 16.5,
             height: 1.65,
@@ -121,8 +124,8 @@ class _Locked extends StatelessWidget {
             ),
             elevation: 0,
           ),
-          child: const Text(
-            'Mở diễn giải sâu',
+          child: Text(
+            tr('Mở diễn giải sâu', 'Open the deep reading'),
             style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w600),
           ),
         ),
@@ -243,7 +246,7 @@ class _BodyState extends ConsumerState<_Body> {
 
         // ── 2 · Xu hướng ────────────────────────────────────────────────
         const SizedBox(height: 26),
-        const WrEyebrow('XU HƯỚNG'),
+        WrEyebrow(tr('XU HƯỚNG', 'TRENDS')),
         const SizedBox(height: 12),
         WrParagraph(
           _polished(
@@ -278,7 +281,7 @@ class _BodyState extends ConsumerState<_Body> {
         // vì hiện ba thẻ "Chưa đánh giá".
         if (pillars.isNotEmpty) ...[
           const SizedBox(height: 26),
-          const WrEyebrow('TỪNG TRỤ MỘT'),
+          WrEyebrow(tr('TỪNG TRỤ MỘT', 'ONE PILLAR AT A TIME')),
           const SizedBox(height: 12),
           for (final p in pillars) ...[
             _PillarCard(
@@ -315,8 +318,8 @@ class _BodyState extends ConsumerState<_Body> {
               ),
               elevation: 0,
             ),
-            child: const Text(
-              'Làm Self-Check',
+            child: Text(
+              tr('Làm Self-Check', 'Take the Self-Check'),
               style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w600),
             ),
           ),
@@ -362,8 +365,8 @@ class _LeadCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (highlight) ...[
-            const Text(
-              'Khoảng lệch đáng chú ý',
+            Text(
+              tr('Khoảng lệch đáng chú ý', 'A gap worth noticing'),
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
@@ -397,9 +400,10 @@ class _Empty extends StatelessWidget {
       key: const Key('wr_sca_deep_dive_empty'),
       padding: const EdgeInsets.fromLTRB(22, 12, 22, 32),
       children: [
-        const WrParagraph(
-          'Phần này đọc từ kết quả Self-Check của bạn, mà bạn thì chưa làm lần '
-          'nào. Trả lời 15 câu một lượt, rồi quay lại đây.',
+        WrParagraph(
+          tr('Phần này đọc từ kết quả Self-Check của bạn, mà bạn thì chưa làm lần '
+          'nào. Trả lời 15 câu một lượt, rồi quay lại đây.', 'This reads from your Self-Check results, and you have not taken it '
+          'yet. Answer the 15 questions in one go, then come back here.'),
           style: TextStyle(
             fontSize: 16.5,
             height: 1.65,
@@ -419,8 +423,8 @@ class _Empty extends StatelessWidget {
             ),
             elevation: 0,
           ),
-          child: const Text(
-            'Làm Self-Check',
+          child: Text(
+            tr('Làm Self-Check', 'Take the Self-Check'),
             style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w600),
           ),
         ),

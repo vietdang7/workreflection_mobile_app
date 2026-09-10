@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../l10n/wr_tr.dart';
 import '../theme/wr_colors.dart';
 
 /// Tab identity for WrTabBackLink — which shell tab the host screen is.
@@ -40,7 +41,7 @@ class WrTabBackLink extends StatelessWidget {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
       onTap: () => context.go(fromTab.path),
-      child: const Padding(
+      child: Padding(
         padding: EdgeInsets.symmetric(vertical: 12),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -48,7 +49,7 @@ class WrTabBackLink extends StatelessWidget {
             Icon(Icons.arrow_back_ios_new, size: 14, color: WrColors.muted),
             SizedBox(width: 6),
             Text(
-              'Quay lại',
+              tr('Quay lại', 'Back'),
               style: TextStyle(
                 fontSize: 14.5,
                 fontWeight: FontWeight.w500,

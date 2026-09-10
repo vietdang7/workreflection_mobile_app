@@ -4,6 +4,7 @@
 // Plain immutable classes + fromJson, cùng style với wr_content.dart.
 // Không phụ thuộc Flutter.
 
+import '../l10n/wr_tr.dart';
 import '../logic/wr_plain_text.dart';
 import 'checkin.dart';
 
@@ -222,9 +223,9 @@ class GrowthOpportunity {
   /// nó chưa đủ sát. Chỉ đổi cách nói phần thứ hai — từ "độ chính xác còn giới
   /// hạn" (nghe như lời chối trách nhiệm) sang một lối đi ("cung cấp thêm bối
   /// cảnh").
-  static const String kConfidenceNote =
-      'Gợi ý này được đúc kết từ hoạt động nhìn lại của bạn. Bạn có thể cung '
-      'cấp thêm bối cảnh để nhận phân tích "may đo" sát hơn';
+  static String get kConfidenceNote => tr('Gợi ý này được đúc kết từ hoạt động nhìn lại của bạn. Bạn có thể cung '
+      'cấp thêm bối cảnh để nhận phân tích "may đo" sát hơn', 'This suggestion is drawn from your own looking back. Add more context '
+      'and the reading can be tailored more closely to you');
 
   factory GrowthOpportunity.fromJson(Map<String, dynamic> json) {
     return GrowthOpportunity(

@@ -7,6 +7,7 @@
 // không phải chờ một vòng đọc lại. Cả hai phải cho cùng một con số, nên luật
 // loại câu trả lời ngoài thang 0..4 được viết giống hệt ở hai nơi.
 
+import '../l10n/wr_tr.dart';
 import '../models/wr_org_survey.dart';
 
 /// Khoảng coi là "ngang mặt bằng chung", tính theo phần trăm.
@@ -63,19 +64,30 @@ int orgSurveyPercent(double value, {int max = kOrgSurveyMaxScore}) {
 
 /// Kết quả so sánh một mảng với mặt bằng chung.
 enum OrgSurveyStanding {
-  above('Cao hơn mặt bằng chung'),
-  equal('Ngang mặt bằng chung'),
-  below('Thấp hơn mặt bằng chung'),
+  above,
+  equal,
+  below,
 
   /// Người dùng chưa trả lời mảng này.
-  unanswered('Chưa trả lời'),
+  unanswered,
 
   /// Có câu trả lời của người dùng, nhưng chưa có mặt bằng chung để đối chiếu.
-  noBenchmark('Chưa đủ dữ liệu để so sánh');
+  noBenchmark;
 
-  const OrgSurveyStanding(this.label);
+  /// GETTER, không phải trường của hàm tạo: đối số hàm tạo của enum bắt buộc
+  /// là hằng biên dịch, mà `tr()` là lời gọi hàm đọc ngôn ngữ đang bật.
+  String get label => switch (this) {
+        OrgSurveyStanding.above =>
+          tr('Cao hơn mặt bằng chung', 'Above the wider picture'),
+        OrgSurveyStanding.equal =>
+          tr('Ngang mặt bằng chung', 'In line with the wider picture'),
+        OrgSurveyStanding.below =>
+          tr('Thấp hơn mặt bằng chung', 'Below the wider picture'),
+        OrgSurveyStanding.unanswered => tr('Chưa trả lời', 'Not answered'),
+        OrgSurveyStanding.noBenchmark =>
+          tr('Chưa đủ dữ liệu để so sánh', 'Not enough data to compare'),
+      };
 
-  final String label;
 }
 
 /// So [mine] với [benchmark] trên cùng một thang [max].

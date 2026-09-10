@@ -1,3 +1,4 @@
+import '../l10n/wr_tr.dart';
 // Tên để gọi người dùng — một nguồn duy nhất cho mọi chỗ chào hỏi.
 //
 // Khách báo ở họp 26_1: "app đang chào bằng email chứ không chào bằng tên".
@@ -63,4 +64,4 @@ String? wrGreetingName({
 }
 
 /// Câu chào đầu màn Hôm nay.
-String wrGreeting(String? name) => name == null ? 'Chào bạn' : 'Chào $name';
+String wrGreeting(String? name) => name == null ? tr('Chào bạn', 'Hello there') : tr('Chào $name', 'Hello $name');

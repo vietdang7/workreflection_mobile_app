@@ -9,6 +9,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/wr_tr.dart';
 import '../logic/wr_polish_guard.dart';
 import '../models/wr_intelligence.dart';
 import '../models/wr_mood_content.dart';
@@ -460,8 +461,8 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
       );
       final data = res.data;
       if (data is! Map || data['status'] != 'ready') {
-        throw const WrDocAnalysisException(
-          'Chưa đọc được tài liệu này. Bạn thử lại sau nhé.',
+        throw WrDocAnalysisException(
+          tr('Chưa đọc được tài liệu này. Bạn thử lại sau nhé.', 'Could not read this document. Please try again later.'),
         );
       }
     } on FunctionException catch (e) {
@@ -469,8 +470,8 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
     } on WrDocAnalysisException {
       rethrow;
     } catch (_) {
-      throw const WrDocAnalysisException(
-        'Không kết nối được lúc này. Bạn kiểm tra mạng rồi thử lại nhé.',
+      throw WrDocAnalysisException(
+        tr('Không kết nối được lúc này. Bạn kiểm tra mạng rồi thử lại nhé.', 'No connection right now. Check your network and try again.'),
       );
     }
 
@@ -483,7 +484,7 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
         .eq('id', documentId)
         .maybeSingle();
     if (row == null) {
-      throw const WrDocAnalysisException('Không tìm thấy tài liệu này.');
+      throw WrDocAnalysisException(tr('Không tìm thấy tài liệu này.', 'This document could not be found.'));
     }
     return WrContextDocument.fromJson(row);
   }
@@ -513,8 +514,8 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
         );
       }
     }
-    return const WrDocAnalysisException(
-      'Chưa đọc được tài liệu này. Bạn thử lại sau nhé.',
+    return WrDocAnalysisException(
+      tr('Chưa đọc được tài liệu này. Bạn thử lại sau nhé.', 'Could not read this document. Please try again later.'),
     );
   }
 

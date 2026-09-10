@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_my_info.dart';
 import '../../../core/logic/profile_options.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -69,7 +70,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                 key: const Key('my_info_back'),
                 behavior: HitTestBehavior.opaque,
                 onTap: () => context.pop(),
-                child: const Padding(
+                child: Padding(
                   padding: EdgeInsets.only(bottom: 10),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -78,7 +79,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                           size: 14, color: WrColors.muted),
                       SizedBox(width: 6),
                       Text(
-                        'Quay lại',
+                        tr('Quay lại', 'Back'),
                         style: TextStyle(
                           fontSize: 14.5,
                           fontWeight: FontWeight.w500,
@@ -89,10 +90,10 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                   ),
                 ),
               ),
-            const WrEyebrow('HỒ SƠ'),
+            WrEyebrow(tr('HỒ SƠ', 'PROFILE')),
             const SizedBox(height: 8),
-            const Text(
-              'Thông tin của bạn',
+            Text(
+              tr('Thông tin của bạn', 'Your details'),
               style: TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.w800,
@@ -101,9 +102,10 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            const WrParagraph(
-              'Tổng hợp toàn bộ bối cảnh cá nhân, môi trường và công việc của '
-              'bạn. Bạn có thể kiểm tra hoặc cập nhật lại bất cứ lúc nào tại đây.',
+            WrParagraph(
+              tr('Tổng hợp toàn bộ bối cảnh cá nhân, môi trường và công việc của '
+              'bạn. Bạn có thể kiểm tra hoặc cập nhật lại bất cứ lúc nào tại đây.', 'Everything about you, your environment and your work in one place. '
+              'Check or update it here any time.'),
               style: TextStyle(
                 fontSize: 14.5,
                 color: WrColors.text2,
@@ -122,13 +124,14 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
               ),
               // Khách 09/09/2026 (§13.2): bỏ biểu tượng ✦ ở đầu dòng. Ô vẫn
               // giữ nền teal nhạt — đó mới là thứ tách nó khỏi chữ xung quanh.
-              child: const Row(
+              child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
                     child: WrParagraph(
-                      'Thông tin càng sát thực tế, trợ lý AI càng đưa ra những '
-                      'tư vấn "may đo" chính xác cho bối cảnh của bạn',
+                      tr('Thông tin càng sát thực tế, trợ lý AI càng đưa ra những '
+                      'tư vấn "may đo" chính xác cho bối cảnh của bạn', 'The closer this is to reality, the more the AI assistant can '
+                      'tailor what it says to your situation'),
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -162,8 +165,8 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
               ),
             ],
             const SizedBox(height: 20),
-            const Text(
-              'Công việc hiện tại (chi tiết)',
+            Text(
+              tr('Công việc hiện tại (chi tiết)', 'Current role (details)'),
               style: TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w700,
@@ -174,8 +177,9 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
             _WorkInfoRow(hasRoleText: (profile?.roleText ?? '').isNotEmpty),
             const SizedBox(height: 16),
             Text(
-              '$filled/${fields.length} mục đã điền. Tất cả đều tuỳ chọn, sửa '
-              'lại bất cứ lúc nào.',
+              tr('$filled/${fields.length} mục đã điền. Tất cả đều tuỳ chọn, sửa '
+              'lại bất cứ lúc nào.', '$filled/${fields.length} filled in. All optional, editable any '
+              'time.'),
               key: const Key('my_info_filled_count'),
               textAlign: TextAlign.center,
               style: const TextStyle(
@@ -199,7 +203,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
       // Ghi hỏng mà im lặng thì dòng vẫn hiện giá trị cũ và người dùng tưởng
       // mình bấm trượt, bấm lại lần nữa.
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Chưa lưu được, thử lại giúp mình nhé.')),
+        SnackBar(content: Text(tr('Chưa lưu được, thử lại giúp mình nhé.', 'Could not save, please try again.'))),
       );
     }
   }
@@ -300,7 +304,7 @@ class _FieldRow extends StatelessWidget {
                   child: Text(
                     // "Chưa có" chứ không phải để trống: một dòng trống trông
                     // như lỗi tải, còn chữ này nói rõ đây là chỗ chờ người dùng.
-                    label ?? 'Chưa có',
+                    label ?? tr('Chưa có', 'Not set'),
                     textAlign: TextAlign.right,
                     style: TextStyle(
                       fontSize: 13,
@@ -402,15 +406,15 @@ class _WorkInfoRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Vai trò, và JD hoặc CV',
+                  Text(
+                    tr('Vai trò, và JD hoặc CV', 'Role, and JD or CV'),
                     style: TextStyle(fontSize: 14.5, color: WrColors.navy),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     hasRoleText
-                        ? 'Đã có, chạm để xem hoặc sửa'
-                        : 'Chưa có, chạm để thêm',
+                        ? tr('Đã có, chạm để xem hoặc sửa', 'Added, tap to view or edit')
+                        : tr('Chưa có, chạm để thêm', 'Not added, tap to add'),
                     style: const TextStyle(
                       fontSize: 12.5,
                       color: WrColors.text3,

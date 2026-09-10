@@ -16,6 +16,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/data/coaching_repository.dart';
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/coaching_schedule_logic.dart';
 import '../../../core/models/coaching_models.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -430,20 +431,20 @@ class _CoachingScheduleScreenState
   }
 
   String _monthName(AppLocalizations l10n, int month) {
-    const names = [
+    final List<dynamic> names = [
       '', // index 0 unused
-      'Tháng 1',
-      'Tháng 2',
-      'Tháng 3',
-      'Tháng 4',
-      'Tháng 5',
-      'Tháng 6',
-      'Tháng 7',
-      'Tháng 8',
-      'Tháng 9',
-      'Tháng 10',
-      'Tháng 11',
-      'Tháng 12',
+      tr('Tháng 1', 'January'),
+      tr('Tháng 2', 'February'),
+      tr('Tháng 3', 'March'),
+      tr('Tháng 4', 'April'),
+      tr('Tháng 5', 'May'),
+      tr('Tháng 6', 'June'),
+      tr('Tháng 7', 'July'),
+      tr('Tháng 8', 'August'),
+      tr('Tháng 9', 'September'),
+      tr('Tháng 10', 'October'),
+      tr('Tháng 11', 'November'),
+      tr('Tháng 12', 'December'),
     ];
     return names[month];
   }

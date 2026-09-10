@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_sca_deep_dive.dart'
     show ScaPillarStatus, scaPillarStatus;
 import '../../../core/models/recurring_situation.dart';
@@ -90,7 +91,7 @@ class _DominantNeedBlock extends ConsumerWidget {
       data: (insight) {
         final quote = insight != null
             ? '"${insight.content}"'
-            : '"Đang tải hành trình của bạn..."';
+            : tr('"Đang tải hành trình của bạn..."', '"Loading your journey..."');
         final source = insight?.source ?? 'VOICE';
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 12),

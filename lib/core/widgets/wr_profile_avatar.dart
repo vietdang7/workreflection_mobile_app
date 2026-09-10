@@ -16,6 +16,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/profile/profile_providers.dart';
+import '../l10n/wr_tr.dart';
 import '../theme/wr_colors.dart';
 
 /// Chữ cái đầu của tên, tối đa hai ký tự. Rỗng thì trả 'WR'.
@@ -56,7 +57,7 @@ class WrProfileAvatar extends ConsumerWidget {
         '';
 
     return Semantics(
-      label: 'Tôi',
+      label: tr('Tôi', 'Me'),
       button: true,
       child: GestureDetector(
         behavior: HitTestBehavior.opaque,

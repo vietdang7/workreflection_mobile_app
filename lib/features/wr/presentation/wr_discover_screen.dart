@@ -1212,13 +1212,13 @@ String situationLabel(List<WrSituation> situations, String? code) {
   for (final s in situations) {
     if (s.code == code) return s.text;
   }
-  return 'Tình huống';
+  return tr('Tình huống', 'Situation');
 }
 
 /// Bản dùng map — cùng luật với [situationLabel].
 String situationLabelFor(Map<String, String> labels, String? code) {
   if (code == null) return tr('Tình huống', 'Situation');
-  return labels[code] ?? 'Tình huống';
+  return labels[code] ?? tr('Tình huống', 'Situation');
 }
 
 /// Số lần đã gặp một tình huống.

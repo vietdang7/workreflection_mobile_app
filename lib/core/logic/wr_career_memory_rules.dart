@@ -25,6 +25,7 @@
 //
 // Pure Dart, không phụ thuộc Flutter → test được trực tiếp.
 
+import '../l10n/wr_tr.dart';
 import '../models/wr_content.dart';
 import '../models/wr_episode.dart';
 import 'wr_dominant_need.dart';
@@ -133,14 +134,14 @@ String? milestoneTextForStory({
   required List<ReflectionEpisode> previousStories,
 }) {
   if (previousStories.isEmpty) {
-    return 'Lần đầu tiên bạn dừng lại và nhìn lại một chuyện ở công việc.';
+    return tr('Lần đầu tiên bạn dừng lại và nhìn lại một chuyện ở công việc.', 'The first time you stopped and looked back at something at work.');
   }
 
   final need = story.humanNeed;
   if (need == null) return null;
   if (previousStories.any((e) => e.humanNeed == need)) return null;
 
-  return 'Lần đầu bạn nhìn vào một chuyện thuộc về ${needSeekingLabel(need)}.';
+  return tr('Lần đầu bạn nhìn vào một chuyện thuộc về ${needSeekingLabel(need)}.', 'The first time you looked at something to do with ${needSeekingLabel(need)}.');
 }
 
 /// Cột mốc của TỪNG STORY trong [stories], khoá theo `id`.
@@ -199,15 +200,16 @@ String memoryDetailForStory({
     parts.add(milestoneText.trim());
     // Nói rõ đây không phải thứ người dùng tự đánh dấu. Không có câu này thì
     // "Cột mốc" đọc như một nhãn họ quên là mình đã gắn.
-    parts.add('Cột mốc được gắn tự động, bạn không phải tự đánh dấu.');
+    parts.add(tr('Cột mốc được gắn tự động, bạn không phải tự đánh dấu.', 'Milestones are marked automatically. You do not have to flag them.'));
   }
 
   final need = story.humanNeed;
   if (need != null) {
-    parts.add('Tình huống thuộc nhóm ${needSeekingLabel(need)}.');
+    parts.add(tr('Tình huống thuộc nhóm ${needSeekingLabel(need)}.', 'A situation in the ${needSeekingLabel(need)} group.'));
     if (countThisMonth > 1) {
-      parts.add('Trong tháng này bạn đã nhìn vào một chuyện thuộc nhóm này '
-          '$countThisMonth lần.');
+      parts.add(tr('Trong tháng này bạn đã nhìn vào một chuyện thuộc nhóm này '
+          '$countThisMonth lần.', 'This month you have looked at something in this group '
+          '$countThisMonth times.'));
     }
   }
 
@@ -241,27 +243,31 @@ int needCountThisMonth(
 }
 
 /// Chi tiết của một mảnh CHỦ ĐỀ. Luật §8.2, viết cho người dùng đọc.
-const String kThemeDetail =
-    'Khi một nhóm lặp lại từ $kThemeMinCount lần trở lên trong '
+String get kThemeDetail => tr('Khi một nhóm lặp lại từ $kThemeMinCount lần trở lên trong '
     '$kThemeWindowDays ngày, hệ thống tự gọi tên nó thành một chủ đề riêng. '
-    'Bạn không phải tự đặt tên.';
+    'Bạn không phải tự đặt tên.', 'When a group repeats $kThemeMinCount times or more within '
+    '$kThemeWindowDays days, the app names it as a theme of its own. You do not '
+    'have to name it yourself.');
 
 /// Chi tiết của một mảnh INSIGHT. Luật §8.2 + §9.
-const String kInsightDetail =
-    'Insight được tổng hợp từ nhiều lần nhìn lại gần nhất, không phải từ một '
+String get kInsightDetail => tr('Insight được tổng hợp từ nhiều lần nhìn lại gần nhất, không phải từ một '
     'lần duy nhất. Nó sinh định kỳ mỗi $kInsightEveryDays ngày, hoặc sau mỗi '
-    '$kInsightEveryStories lượt nhìn lại mới.';
+    '$kInsightEveryStories lượt nhìn lại mới.', 'Insights are drawn from several recent look-backs, not from a single '
+    'one. They appear every $kInsightEveryDays days, or after every '
+    '$kInsightEveryStories new look-backs.');
 
 // ---------------------------------------------------------------------------
 // Chủ đề — §8.2
 // ---------------------------------------------------------------------------
 
-const List<String> _kThemeEmerging = [
+List<String> get _kThemeEmerging => [
   // §9, khung "Chủ đề vừa nổi lên" — câu mẫu của tài liệu.
-  '{n} lần Reflection gần đây của bạn đều xoay quanh {need}. Đây có thể là '
-      'điều đáng để nhìn kỹ hơn.',
-  'Trong {days} ngày qua, {n} lần bạn nhìn lại đều dẫn về {need}. Một chủ đề '
-      'đang hình thành.',
+  tr('{n} lần Reflection gần đây của bạn đều xoay quanh {need}. Đây có thể là '
+      'điều đáng để nhìn kỹ hơn.', 'Your last {n} Reflections all circle around {need}. This may be worth a '
+      'closer look.'),
+  tr('Trong {days} ngày qua, {n} lần bạn nhìn lại đều dẫn về {need}. Một chủ đề '
+      'đang hình thành.', 'Over the past {days} days, {n} of your look-backs led back to {need}. A '
+      'theme is forming.'),
 ];
 
 /// Số lượt thuộc [need] trong [days] ngày gần nhất.
@@ -377,19 +383,23 @@ List<CareerMemoryDraft> themesDue({
 // Insight — §9, các khung câu chuyện
 // ---------------------------------------------------------------------------
 
-const List<String> _kThemeProgress = [
+List<String> get _kThemeProgress => [
   // §9, khung "Chuyển biến trong một chủ đề".
-  'Trong {days} ngày qua, bạn đang học cách {need}, từ {first}, đến {last}.',
-  'Cùng một mạch {need} chạy suốt {days} ngày qua: bắt đầu ở {first}, và gần '
-      'nhất là {last}.',
+  tr('Trong {days} ngày qua, bạn đang học cách {need}, từ {first}, đến {last}.', 'Over the past {days} days you have been learning to {need}, from '
+      '{first} through to {last}.'),
+  tr('Cùng một mạch {need} chạy suốt {days} ngày qua: bắt đầu ở {first}, và gần '
+      'nhất là {last}.', 'The same thread of {need} runs across the past {days} days: starting at '
+      '{first}, and most recently {last}.'),
 ];
 
-const List<String> _kQuietGap = [
+List<String> get _kQuietGap => [
   // §9, khung "Một khoảng lặng đáng chú ý".
-  'Nhóm {need} từng xuất hiện thường xuyên, nhưng {days} ngày gần đây bạn '
-      'không quay lại tình huống nào thuộc nhóm này.',
-  '{days} ngày rồi bạn chưa nhìn lại chuyện nào thuộc {need}, dù trước đó đây '
-      'là nhóm trở đi trở lại.',
+  tr('Nhóm {need} từng xuất hiện thường xuyên, nhưng {days} ngày gần đây bạn '
+      'không quay lại tình huống nào thuộc nhóm này.', 'The {need} group used to come up often, but in the past {days} days you '
+      'have not returned to any situation in it.'),
+  tr('{days} ngày rồi bạn chưa nhìn lại chuyện nào thuộc {need}, dù trước đó đây '
+      'là nhóm trở đi trở lại.', 'It has been {days} days since you looked back at anything to do with '
+      '{need}, though before that it kept returning.'),
 ];
 
 /// Khung "Chuyển biến trong một chủ đề".

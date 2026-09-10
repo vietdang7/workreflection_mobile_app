@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/profile_options.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
@@ -135,7 +136,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     final ccData = ccAsync.valueOrNull ?? {};
     final name = (ccData['full_name'] as String?) ??
         profileAsync.valueOrNull?.displayName ??
-        'bạn';
+        tr('bạn', 'you');
     final initials = _computeInitials(name);
     final avatarUrl = ccData['avatar_url'] as String?;
 

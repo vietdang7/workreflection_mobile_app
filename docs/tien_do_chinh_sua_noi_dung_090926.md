@@ -478,23 +478,121 @@ tiếng Anh). **Chưa sửa** — để riêng, không trộn vào đợt câu c
 
 ---
 
+## A7 · A8 · B1 — ĐÃ XONG (10/09/2026, khách chốt)
+
+### A7 — bộ nhãn thang đánh giá
+
+Khách chọn **bộ thứ ba**: `Đang hỗ trợ tốt` / `Ổn, còn dư địa` / `Đang cản trở`.
+Bộ này là bộ cả thư viện câu Diễn giải sâu rẽ nhánh theo.
+
+**Ngưỡng KHÔNG đổi (3.8 / 2.5).** Mockup chấm Likert 1–4 còn app chấm 1–5; bê
+ngưỡng mockup sang là mọi người dùng cũ mở app lên thấy đánh giá của mình tự
+nhiên khác đi mà không ai chạm vào dữ liệu của họ.
+
+Gộp về MỘT nguồn thay vì sửa chữ ở từng chỗ:
+
+| Chỗ | Trước | Sau |
+|---|---|---|
+| `ScaPillarStatus.label` | bộ chữ cũ | bộ mới, là nguồn duy nhất |
+| `pillarStatusLabel` (Hiểu mình) | **chép** cả ngưỡng lẫn chữ | uỷ lại `scaPillarStatus().label` |
+| `_scaStatus` (`/understand`) | cắt ở **4.0**, bộ chữ riêng | đi qua `scaPillarStatus` (3.8) |
+
+Màn `/understand` cắt ở 4.0 trong khi màn Hiểu mình cắt ở 3.8 — cùng một điểm
+3.9 đọc ra hai kết luận ngược nhau ở hai màn, đúng lỗi §7.2 changelog bắt sửa.
+
+Thêm `ScaPillarStatus.inlineLabel` cho dạng nhúng giữa câu: nhãn mức giữa mang
+sẵn một dấu phẩy, nên `label.toLowerCase()` làm câu "tự đánh giá ổn, còn dư địa,
+vừa là nơi…" vỡ thành hai mệnh đề rời.
+
+### A8 — tên ba trụ
+
+Chốt **bộ ngắn**: `Sự rõ ràng` / `Mối quan hệ` / `Cách làm việc`. Ba lý do: đó
+là bộ mockup v18 dùng, bộ bản dev đang chạy, và bộ của nguồn 15 câu
+`SCA_QUESTIONS`. Chọn nó nghĩa là **0 thay đổi trên lối chính** — không có rủi
+ro áp một nửa.
+
+Gỡ bộ thứ hai còn sót ở màn `/understand` (Minh bạch vai trò / An toàn khi lên
+tiếng / Định hướng ý nghĩa).
+
+### B1 — nguyên tắc gộp "Trải nghiệm hiện tại"
+
+Đã xong từ nhóm A: `_CareerSnapshotCard` thay hẳn hai khối cũ. Khách gửi lại ba
+file sáng 10/09 chính là nguồn của nhóm A–E, đã làm hết.
+
+---
+
+## BẢN TIẾNG ANH — ĐÃ XONG (10/09/2026)
+
+1.891 nhóm chuỗi tiếng Việt viết thẳng trong mã, trải trên 99 file. Đã bọc
+**1.863 nhóm**; 28 nhóm còn lại cố ý không dịch (bên dưới).
+
+### Vì sao không dùng `.arb` như nửa còn lại của app
+
+App có sẵn `AppLocalizations` sinh từ `app_vi.arb`, và onboarding · đăng nhập ·
+khảo sát đi qua nó. Nhưng 49 file của phần WorkReflection không gọi nó lần nào,
+và **khoảng một nửa câu chữ của phần WR không dựng trong widget** mà dựng trong
+`lib/core/logic/*.dart` — thư viện câu Diễn giải sâu, câu Self-Check, câu tường
+thuật Story, câu luồng Reflect. Đó là hàm THUẦN, không có `BuildContext`.
+
+Dùng `.arb` nghĩa là luồn một tham số localizations qua khoảng một trăm hàm
+thuần và toàn bộ bài test đang khoá chúng — sửa chữ ký của mọi hàm sinh câu chỉ
+để đổi chỗ lấy chuỗi.
+
+Nên: `tr('bản gốc', 'translation')` đặt ngay tại chỗ dùng
+(`lib/core/l10n/wr_tr.dart`). Hàm thuần dùng được, widget cũng dùng được; đội
+nội dung rà bản dịch ngay cạnh bản gốc; mặc định tiếng Việt nên **không phải sửa
+bài test nào** trong 2.316 bài đang khoá chuỗi tiếng Việt.
+
+Phần ĐÃ nằm trong `.arb` giữ nguyên ở `.arb`.
+
+### Hai cái bẫy phải biết trước khi dịch thêm file mới
+
+**1 · Hằng chở `tr()` phải thành GETTER, không phải `final`.** `final kFoo =
+tr(…)` ở tầng file chốt ngôn ngữ tại lần đọc ĐẦU TIÊN, nên người đổi ngôn ngữ
+giữa phiên vẫn thấy chữ cũ tới khi khởi động lại app. Không bài test nào đọc
+hằng đúng một lần bắt được lỗi này — nên `wr_english_build_test.dart` đọc HAI
+lần, hai bên một lần đổi ngôn ngữ.
+
+**2 · Đối số hàm tạo của `enum` bắt buộc là hằng biên dịch.** Ba enum phải
+chuyển nhãn sang getter: `ScaPillarStatus`, `OrgSurveyArea`, `OrgSurveyStanding`.
+
+### Bốn file CỐ Ý không dịch
+
+Không phải chữ trên màn hình mà là **dữ liệu đem đi SO KHỚP** với tiếng Việt của
+người dùng. Dịch là làm hỏng chức năng:
+
+| File | Là gì |
+|---|---|
+| `voice_answer_matcher.dart` | từ khoá nhận dạng giọng nói |
+| `wr_skill_jd_match.dart` (dòng 39–82) | từ khoá dò trong JD người dùng tải lên |
+| `wr_tra_chieu.dart` (dòng 89–95) | bảng bỏ dấu tiếng Việt |
+| `wr_polish_guard.dart` | từ cấm của lớp 3 (lớp 3 đang TẮT, prompt tiếng Việt) |
+
+Cùng lý do: regex đổi "tôi"→"mình" ở `wr_chat_starters.dart`, và các chuỗi chỉ
+đi vào log/assert (`wr_flow_error.dart`, `wr_episode_repository.dart`).
+
+### Ngôn ngữ được đặt ở đâu
+
+`appLocaleProvider` (đã có sẵn, kèm nút đổi trong Tài khoản) → `wrSetLocale()`
+gọi ở `main()` trước khung hình đầu tiên và ở đầu `WrApp.build` mỗi lần đổi.
+
+---
+
 ## CÒN LẠI
 
 Toàn bộ phần **làm được mà không chờ ai** đã xong: đợt 1, 1B, 2, 3, nhóm A, B,
 C, D, E. Còn lại đúng ba loại.
 
 ### 1 · Chờ khách chốt câu chữ
-- **A7** bộ nhãn thang đánh giá — đề xuất `Đang hỗ trợ tốt / Ổn, còn dư địa /
-  Đang cản trở`. **Giữ ngưỡng app 3.8 / 2.5, chỉ đổi chữ** (mockup chấm Likert
-  1–4, app chấm 1–5 — bê thẳng ngưỡng là mọi người dùng cũ thức dậy thấy đánh
-  giá của mình tự nhiên khác đi).
-- **A8 / E2** tên ba trụ — tài liệu §7.2 tự ghi "cần chị Yumi chốt".
+- ~~**A7** bộ nhãn thang đánh giá~~ — **XONG 10/09**, khách chọn bộ thứ ba.
+- ~~**A8 / E2** tên ba trụ~~ — **XONG 10/09**, chốt bộ ngắn.
 - **Hai màn Khoảnh khắc / Năng lượng** — giữ làm nhánh phụ của chatbox, bỏ hẳn,
   hay đưa vào lối chính? (Xem §0 của `ke_hoach_career_snapshot_100926.md`.)
 - **Bật lớp 3 AI hay không** — đã dựng xong, mặc định TẮT. Cần khách đọc một mẻ
   bản viết lại rồi đồng ý với giọng đó.
-- **B1 · B2 · B3** của đợt 4 (nguyên tắc gộp, file 22 màn, ảnh lỗi chính tả).
-- **17.4** rà lỗi chính tả — chờ B3.
+- ~~**B1** nguyên tắc gộp~~ — **XONG**: chính là `Changelog_CareerSnapshot.docx`
+  khách gửi sáng 10/09, đã làm trọn ở nhóm A (`_CareerSnapshotCard`).
+- **17.4** rà lỗi chính tả — vẫn chờ khách gửi ảnh chụp chỗ sai.
 
 ### 2 · Việc NGOÀI MÃ, phải làm bằng tay
 - ⚠️ **Sửa mô tả sản phẩm trên App Store Connect** cho khớp câu chữ IAP mới
@@ -506,10 +604,8 @@ C, D, E. Còn lại đúng ba loại.
 - ⚠️ **Deploy Edge Function `wr-polish`** — chỉ cần khi bật lớp 3.
 
 ### 3 · Việc lớn, nên tách riêng
-- **17.5 bản tiếng Anh.** ~1.500 chuỗi tiếng Việt viết thẳng trong mã, trải trên
-  83 file; 49 file của phần WorkReflection **không gọi `AppLocalizations` một
-  lần nào**. Phải tách `.arb` trước. Đây không phải một mục của đợt câu chữ mà là
-  một hạng mục riêng.
+- ~~**17.5 bản tiếng Anh**~~ — **XONG 10/09**, xem phần riêng phía trên. Không
+  đi đường `.arb`; lý do ghi ở đó.
 
 ### Bốn câu hỏi §19 — nay còn một
 | # | Câu hỏi | Trạng thái |
@@ -517,4 +613,4 @@ C, D, E. Còn lại đúng ba loại.
 | 1 | Đếm tổng số lần: cửa sổ 30 hay trọn đời? | **Đã giải** ở A5 — đếm thật, trần nâng lên 500 (`kEpisodeHistoryLimit`) |
 | 2 | "Không đồng ý" khi chưa viết gì | **Đã làm** theo phương án tài liệu đề nghị, có test riêng |
 | 3 | Câu gợi mở cố định | **Khách tự xác nhận** trong docx cập nhật ("sửa thành câu cố định") |
-| 4 | Bản tiếng Anh: toàn app hay chỉ màn App Review? | **Còn chờ** — quyết định phạm vi của một hạng mục nhiều tuần |
+| 4 | Bản tiếng Anh: toàn app hay chỉ màn App Review? | **Đã giải** — khách chốt làm toàn app, đã xong 10/09 |

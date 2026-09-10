@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/data/wr_content_repository.dart';
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_skill_formation.dart';
 import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_intelligence.dart';
@@ -42,12 +43,12 @@ Future<void> logPracticeMaintained({
         // `themeId` là thứ bộ đếm đọc; `reflectionText` chỉ còn để hiện chữ ở
         // tab Hành trình (Phần C mục 1).
         themeId: theme.themeId,
-        reflectionText: '${theme.title} · Duy trì',
+        reflectionText: tr('${theme.title} · Duy trì', '${theme.title} · Upkeep'),
       ),
     );
   } catch (_) {
     messenger.showSnackBar(
-      const SnackBar(content: Text('Chưa ghi nhận được. Thử lại.')),
+      SnackBar(content: Text(tr('Chưa ghi nhận được. Thử lại.', 'Could not record it. Try again.'))),
     );
     return;
   }
@@ -155,8 +156,8 @@ Future<void> showSkillFormedCelebration(
               ),
             ),
             const SizedBox(height: 22),
-            const Text(
-              'MỘT KỸ NĂNG CỦA BẠN',
+            Text(
+              tr('MỘT KỸ NĂNG CỦA BẠN', 'A SKILL OF YOURS'),
               style: TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w700,
@@ -181,7 +182,7 @@ Future<void> showSkillFormedCelebration(
             // chưa có câu riêng — ba chủ đề đời đầu, hoặc migration nội dung
             // chưa chạy — thì lùi về đúng câu chốt ở mục A.1.
             Text(
-              skill.formedLine ?? '"${skill.title}" giờ là một kỹ năng của bạn.',
+              skill.formedLine ?? tr('"${skill.title}" giờ là một kỹ năng của bạn.', '"${skill.title}" is now a skill of yours.'),
               key: const Key('wr_skill_formed_line'),
               style: const TextStyle(
                 fontSize: 16.5,
@@ -192,8 +193,9 @@ Future<void> showSkillFormedCelebration(
             ),
             const SizedBox(height: 10),
             WrParagraph(
-              'Bạn đã thực hành điều này ${skill.practiceCount} lần. '
-              'Nó không còn là một việc bạn phải nhớ để làm nữa.',
+              tr('Bạn đã thực hành điều này ${skill.practiceCount} lần. '
+              'Nó không còn là một việc bạn phải nhớ để làm nữa.', 'You have practised this ${skill.practiceCount} times. '
+              'It is no longer something you have to remember to do.'),
               style: const TextStyle(
                 fontSize: 15.5,
                 color: WrColors.muted,
@@ -201,8 +203,8 @@ Future<void> showSkillFormedCelebration(
               ),
             ),
             const SizedBox(height: 10),
-            const Text(
-              'Dấu mốc này đã được ghi vào hành trình của bạn.',
+            Text(
+              tr('Dấu mốc này đã được ghi vào hành trình của bạn.', 'This marker has been written into your journey.'),
               style: TextStyle(
                 fontSize: 14,
                 color: WrColors.muted,
@@ -225,8 +227,8 @@ Future<void> showSkillFormedCelebration(
                   ),
                   elevation: 0,
                 ),
-                child: const Text(
-                  'Ghi nhận điều này',
+                child: Text(
+                  tr('Ghi nhận điều này', 'Record this'),
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 ),
               ),
@@ -261,12 +263,12 @@ class WrMaintainPracticeAction extends ConsumerWidget {
     if (doneToday) {
       return Row(
         key: Key('wr_practice_maintained_today_${theme.themeId}'),
-        children: const [
+        children: [
           Icon(Icons.check_circle_outlined, size: 17, color: WrColors.teal),
           SizedBox(width: 8),
           Expanded(
             child: Text(
-              'Đã ghi nhận hôm nay. Hẹn bạn lần thực hành sau.',
+              tr('Đã ghi nhận hôm nay. Hẹn bạn lần thực hành sau.', 'Recorded for today. See you at the next practice.'),
               style: TextStyle(fontSize: 14.5, color: WrColors.muted, height: 1.5),
             ),
           ),
@@ -294,8 +296,8 @@ class WrMaintainPracticeAction extends ConsumerWidget {
             borderRadius: BorderRadius.circular(12),
           ),
         ),
-        child: const Text(
-          'Tôi vừa thực hành điều này hôm nay',
+        child: Text(
+          tr('Tôi vừa thực hành điều này hôm nay', 'I practised this today'),
           style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),

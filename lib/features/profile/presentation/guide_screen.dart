@@ -23,6 +23,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_user_guide.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
@@ -60,7 +61,7 @@ class _GuideScreenState extends State<GuideScreen> {
                 key: const Key('guide_back'),
                 behavior: HitTestBehavior.opaque,
                 onTap: () => context.pop(),
-                child: const Padding(
+                child: Padding(
                   padding: EdgeInsets.only(bottom: 10),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -69,7 +70,7 @@ class _GuideScreenState extends State<GuideScreen> {
                           size: 14, color: WrColors.muted),
                       SizedBox(width: 6),
                       Text(
-                        'Quay lại',
+                        tr('Quay lại', 'Back'),
                         style: TextStyle(
                           fontSize: 14.5,
                           fontWeight: FontWeight.w500,
@@ -80,10 +81,10 @@ class _GuideScreenState extends State<GuideScreen> {
                   ),
                 ),
               ),
-            const WrEyebrow('HỒ SƠ'),
+            WrEyebrow(tr('HỒ SƠ', 'PROFILE')),
             const SizedBox(height: 8),
-            const Text(
-              'Hướng dẫn sử dụng',
+            Text(
+              tr('Hướng dẫn sử dụng', 'User guide'),
               style: TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.w800,
@@ -116,9 +117,9 @@ class _GuideScreenState extends State<GuideScreen> {
             const SizedBox(height: 8),
             // Dòng chốt: hướng dẫn không phải hợp đồng, và người đọc tới đây
             // vẫn còn thắc mắc thì đã có sẵn chỗ hỏi — chính Chatbot ở trên.
-            const Center(
+            Center(
               child: WrParagraph(
-                'Còn điều gì chưa rõ, cứ hỏi thẳng Chatbot.',
+                tr('Còn điều gì chưa rõ, cứ hỏi thẳng Chatbot.', 'Anything still unclear, just ask the Chatbot directly.'),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 13,
@@ -245,8 +246,8 @@ class _ChatbotCard extends StatelessWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
-            child: const Text(
-              'Mở Chatbot',
+            child: Text(
+              tr('Mở Chatbot', 'Open the Chatbot'),
               style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
             ),
           ),
@@ -601,8 +602,8 @@ class _StepRow extends StatelessWidget {
                         color: WrColors.navy.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(20),
                       ),
-                      child: const Text(
-                        'bỏ qua được',
+                      child: Text(
+                        tr('bỏ qua được', 'skippable'),
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,

@@ -13,6 +13,7 @@
 // WXS Orch. Inv.5 — Silence là lựa chọn hợp lệ: chưa đủ dữ liệu thì khối
 // tương ứng biến mất hẳn, không hiện chỗ trống hay câu mời chào rỗng.
 
+import '../l10n/wr_tr.dart';
 import '../models/checkin.dart';
 import '../models/wr_content.dart';
 import 'wr_dominant_need.dart';
@@ -49,7 +50,7 @@ class SystemNotice {
 
   /// Câu hiển thị trên thẻ navy — đúng một sự kiện, không kết luận gì thêm.
   String get sentence =>
-      'Bạn đã gặp tình huống "$situationText" $count lần';
+      tr('Bạn đã gặp tình huống "$situationText" $count lần', 'You have met "$situationText" $count times');
 }
 
 /// Điều hệ thống nhận ra, đọc từ [recent] — mới nhất đứng đầu.

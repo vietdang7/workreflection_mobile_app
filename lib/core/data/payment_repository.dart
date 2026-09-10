@@ -14,6 +14,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/wr_tr.dart';
 import '../logic/wr_payment.dart';
 
 /// Trạng thái một đơn hàng đang theo dõi.
@@ -266,7 +267,7 @@ class SupabasePaymentRepository implements PaymentRepository {
     String? orgId,
   }) async {
     final trimmed = code.trim();
-    if (trimmed.isEmpty) throw const WrVoucherException('Chưa nhập mã');
+    if (trimmed.isEmpty) throw WrVoucherException(tr('Chưa nhập mã', 'No code entered'));
 
     final row = await _client
         .from('cc_vouchers')
@@ -281,7 +282,7 @@ class SupabasePaymentRepository implements PaymentRepository {
         .maybeSingle();
 
     if (row == null) {
-      throw const WrVoucherException('Mã giảm giá không tồn tại');
+      throw WrVoucherException(tr('Mã giảm giá không tồn tại', 'That discount code does not exist'));
     }
 
     final voucher = WrVoucher.fromJson(Map<String, dynamic>.from(row));

@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/data/wr_repository.dart';
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_career_profile.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../wr_providers.dart';
@@ -36,18 +37,18 @@ class _WrCareerSetupScreenState extends ConsumerState<WrCareerSetupScreen> {
   bool _saving = false;
   String? _errorMsg;
 
-  static const _questions = <(String, String)>[
+  static List<(String, String)> get _questions => <(String, String)>[
     (
-      'Vai trò hiện tại của bạn là gì?',
-      'Điều này giúp WorkReflection hiểu rõ hơn về bối cảnh công việc của bạn.'
+      tr('Vai trò hiện tại của bạn là gì?', 'What is your current role?'),
+      tr('Điều này giúp WorkReflection hiểu rõ hơn về bối cảnh công việc của bạn.', 'This helps WorkReflection understand the context you work in.')
     ),
     (
-      'Điều bạn đang quan tâm nhất trong sự nghiệp hiện tại?',
-      'Bạn có thể thay đổi bất cứ lúc nào.'
+      tr('Điều bạn đang quan tâm nhất trong sự nghiệp hiện tại?', 'What matters most to you in your career right now?'),
+      tr('Bạn có thể thay đổi bất cứ lúc nào.', 'You can change this any time.')
     ),
     (
-      'Điều khiến bạn trăn trở nhất gần đây?',
-      'Không có câu trả lời đúng hay sai.'
+      tr('Điều khiến bạn trăn trở nhất gần đây?', 'What has been weighing on you lately?'),
+      tr('Không có câu trả lời đúng hay sai.', 'There is no right or wrong answer.')
     ),
   ];
 
@@ -108,7 +109,7 @@ class _WrCareerSetupScreenState extends ConsumerState<WrCareerSetupScreen> {
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _errorMsg = 'Chưa lưu được hồ sơ. Bạn có thể thử lại sau.';
+        _errorMsg = tr('Chưa lưu được hồ sơ. Bạn có thể thử lại sau.', 'Could not save your profile. You can try again later.');
       });
       return;
     }
@@ -162,7 +163,7 @@ class _WrCareerSetupScreenState extends ConsumerState<WrCareerSetupScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'THIẾT LẬP HỒ SƠ · ${_step + 1}/3',
+                    tr('THIẾT LẬP HỒ SƠ · ${_step + 1}/3', 'SETTING UP · ${_step + 1}/3'),
                     style: TextStyle(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w700,
@@ -230,7 +231,7 @@ class _WrCareerSetupScreenState extends ConsumerState<WrCareerSetupScreen> {
                 child: TextButton(
                   onPressed: _saving ? null : _advance,
                   child: Text(
-                    _step < 2 ? 'Bỏ qua bước này' : 'Bỏ qua, vào app',
+                    _step < 2 ? tr('Bỏ qua bước này', 'Skip this step') : tr('Bỏ qua, vào app', 'Skip, go to the app'),
                     style: TextStyle(
                       fontSize: 13.5,
                       color: WrColors.white.withValues(alpha: 0.35),

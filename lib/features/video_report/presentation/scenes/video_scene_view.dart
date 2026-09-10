@@ -11,6 +11,7 @@ import 'package:flutter/material.dart';
 
 import 'package:workreflection_mobile/core/models/survey_models.dart';
 import 'package:workreflection_mobile/features/video_report/models/video_report_models.dart';
+import '../../../../core/l10n/wr_tr.dart';
 
 // Colors mirroring the web video renderer, keyed off `.toJson()` strings.
 const _kScoreLevelColors = <String, Color>{
@@ -114,7 +115,7 @@ class VideoSceneView extends StatelessWidget {
   Widget _intro() {
     final greeting = _isEn
         ? (userName.isEmpty ? 'Hello!' : 'Hello, $userName!')
-        : (userName.isEmpty ? 'Xin chào!' : 'Xin chào, $userName!');
+        : (userName.isEmpty ? tr('Xin chào!', 'Hello!') : tr('Xin chào, $userName!', 'Hello, $userName!'));
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -129,7 +130,7 @@ class VideoSceneView extends StatelessWidget {
         Text(
           _isEn
               ? 'Here is your team snapshot.'
-              : 'Đây là bức tranh nhanh về đội nhóm của bạn.',
+              : tr('Đây là bức tranh nhanh về đội nhóm của bạn.', 'Here is a quick picture of your team.'),
           textAlign: TextAlign.center,
           style: const TextStyle(color: _kInkMuted, fontSize: 16.5),
         ),
@@ -144,7 +145,7 @@ class VideoSceneView extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          _isEn ? 'Overall score' : 'Điểm tổng quan',
+          _isEn ? 'Overall score' : tr('Điểm tổng quan', 'Scores at a glance'),
           style: const TextStyle(color: _kInkMuted, fontSize: 16),
         ),
         const SizedBox(height: 12),
@@ -225,7 +226,7 @@ class VideoSceneView extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         _LayerBar(
-          label: _isEn ? 'Score' : 'Điểm',
+          label: _isEn ? 'Score' : tr('Điểm', 'Score'),
           value: value,
           color: color,
           progress: progress,
@@ -267,7 +268,7 @@ class VideoSceneView extends StatelessWidget {
         const SizedBox(height: 12),
         Center(
           child: Text(
-            esi == null ? 'Chưa có dữ liệu' : esi.toStringAsFixed(1),
+            esi == null ? tr('Chưa có dữ liệu', 'No data yet') : esi.toStringAsFixed(1),
             style: TextStyle(
               color: _kInk,
               // Câu "chưa có dữ liệu" không đọc được ở cỡ của một con số.
@@ -279,7 +280,7 @@ class VideoSceneView extends StatelessWidget {
         ),
         const SizedBox(height: 20),
         _LayerBar(
-          label: _isEn ? 'Engagement' : 'Gắn kết',
+          label: _isEn ? 'Engagement' : tr('Gắn kết', 'Engagement'),
           value: esi ?? 0,
           color: const Color(0xFF14B8A6),
           progress: progress,
@@ -308,7 +309,7 @@ class VideoSceneView extends StatelessWidget {
         const SizedBox(height: 12),
         Center(
           child: Text(
-            enps == null ? 'Chưa có dữ liệu' : '$enps',
+            enps == null ? tr('Chưa có dữ liệu', 'No data yet') : '$enps',
             style: TextStyle(
               color: _kInk,
               fontSize: enps == null ? 20 : 56,
@@ -342,7 +343,7 @@ class VideoSceneView extends StatelessWidget {
           Icon(Icons.warning_amber_rounded, color: color, size: 40),
           const SizedBox(height: 10),
           Text(
-            _isEn ? 'Bottleneck' : 'Điểm nghẽn',
+            _isEn ? 'Bottleneck' : tr('Điểm nghẽn', 'Bottleneck'),
             style: const TextStyle(color: _kInkMuted, fontSize: 16.5),
           ),
           const SizedBox(height: 6),
@@ -368,7 +369,7 @@ class VideoSceneView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          _isEn ? 'Recommendations' : 'Khuyến nghị',
+          _isEn ? 'Recommendations' : tr('Khuyến nghị', 'Recommendation'),
           style: const TextStyle(
             color: _kInk,
             fontSize: 22,
@@ -404,7 +405,7 @@ class VideoSceneView extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          _isEn ? 'Thank you!' : 'Cảm ơn!',
+          _isEn ? 'Thank you!' : tr('Cảm ơn!', 'Thank you!'),
           style: const TextStyle(
             color: _kInk,
             fontSize: 34,
@@ -446,13 +447,13 @@ class VideoSceneView extends StatelessWidget {
   String _layerName(String key) {
     switch (key) {
       case 'STRUCTURE':
-        return _isEn ? 'Structure' : 'Cấu trúc';
+        return _isEn ? 'Structure' : tr('Cấu trúc', 'Structure');
       case 'CULTURE':
-        return _isEn ? 'Culture' : 'Văn hóa';
+        return _isEn ? 'Culture' : tr('Văn hóa', 'Culture');
       case 'ACTIVITY':
-        return _isEn ? 'Activity' : 'Hoạt động';
+        return _isEn ? 'Activity' : tr('Hoạt động', 'Activity');
       case 'ESI':
-        return _isEn ? 'Engagement' : 'Gắn kết';
+        return _isEn ? 'Engagement' : tr('Gắn kết', 'Engagement');
       case 'ENPS':
         return 'eNPS';
       default:
@@ -465,11 +466,11 @@ class VideoSceneView extends StatelessWidget {
       case ScoreLevel.high:
         return _isEn ? 'High' : 'Cao';
       case ScoreLevel.good:
-        return _isEn ? 'Good' : 'Tốt';
+        return _isEn ? 'Good' : tr('Tốt', 'Good');
       case ScoreLevel.warning:
-        return _isEn ? 'Warning' : 'Cảnh báo';
+        return _isEn ? 'Warning' : tr('Cảnh báo', 'Warning');
       case ScoreLevel.critical:
-        return _isEn ? 'Critical' : 'Nghiêm trọng';
+        return _isEn ? 'Critical' : tr('Nghiêm trọng', 'Serious');
     }
   }
 
@@ -498,22 +499,22 @@ class VideoSceneView extends StatelessWidget {
     }
     switch (key) {
       case 'STRUCTURE':
-        return const [
-          'Làm rõ vai trò và quyền quyết định.',
-          'Tinh gọn các quy trình chồng chéo.',
-          'Thiết lập kênh giao tiếp rõ ràng.',
+        return [
+          tr('Làm rõ vai trò và quyền quyết định.', 'Clarify roles and decision rights.'),
+          tr('Tinh gọn các quy trình chồng chéo.', 'Trim overlapping processes.'),
+          tr('Thiết lập kênh giao tiếp rõ ràng.', 'Set up clear channels of communication.'),
         ];
       case 'CULTURE':
-        return const [
-          'Xây dựng an toàn tâm lý trong họp.',
-          'Ghi nhận đóng góp thường xuyên.',
-          'Khuyến khích phản hồi cởi mở.',
+        return [
+          tr('Xây dựng an toàn tâm lý trong họp.', 'Build psychological safety in meetings.'),
+          tr('Ghi nhận đóng góp thường xuyên.', 'Acknowledge contributions regularly.'),
+          tr('Khuyến khích phản hồi cởi mở.', 'Encourage open feedback.'),
         ];
       default:
-        return const [
-          'Gắn mục tiêu với ưu tiên rõ ràng.',
-          'Duy trì nhịp thực thi ổn định.',
-          'Rà soát tiến độ theo chu kỳ ngắn.',
+        return [
+          tr('Gắn mục tiêu với ưu tiên rõ ràng.', 'Tie goals to clear priorities.'),
+          tr('Duy trì nhịp thực thi ổn định.', 'Keep a steady delivery rhythm.'),
+          tr('Rà soát tiến độ theo chu kỳ ngắn.', 'Review progress in short cycles.'),
         ];
     }
   }

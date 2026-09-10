@@ -4,6 +4,7 @@
 // đi qua Edge Function `wr-chat`, nơi giữ khoá OpenRouter và áp hạn mức. Vì vậy
 // ở đây không có `toInsert()` — không có chỗ nào trong app cần nó.
 
+import '../l10n/wr_tr.dart';
 import '../logic/wr_plain_text.dart';
 
 /// Ai nói câu này.
@@ -38,8 +39,8 @@ enum WrChatAction {
 
   /// Chữ trên nút.
   String get label => switch (this) {
-        WrChatAction.reflect => 'Ghi lại thành một Reflection',
-        WrChatAction.calm => 'Xem điều gì đó nhẹ nhàng',
+        WrChatAction.reflect => tr('Ghi lại thành một Reflection', 'Record it as a Reflection'),
+        WrChatAction.calm => tr('Xem điều gì đó nhẹ nhàng', 'See something gentler'),
       };
 
   /// Đường dẫn mở ra.
@@ -168,7 +169,7 @@ class WrConversation {
 
   String get displayTitle {
     final t = title?.trim();
-    return (t == null || t.isEmpty) ? 'Cuộc trò chuyện' : t;
+    return (t == null || t.isEmpty) ? tr('Cuộc trò chuyện', 'Conversation') : t;
   }
 
   factory WrConversation.fromJson(Map<String, dynamic> json) => WrConversation(

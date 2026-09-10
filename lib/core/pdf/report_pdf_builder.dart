@@ -18,6 +18,7 @@ import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
+import '../l10n/wr_tr.dart';
 import '../models/survey_models.dart';
 
 // ---------------------------------------------------------------------------
@@ -147,12 +148,12 @@ class ReportPdfBuilder {
   static pw.Page _coverPage(
       ReportPdfData d, pw.Font regular, pw.Font bold) {
     final isVi = d.locale == 'vi';
-    final title = isVi ? 'Báo cáo Work Reflection' : 'Work Reflection Report';
+    final title = isVi ? tr('Báo cáo Work Reflection', 'Work Reflection report') : 'Work Reflection Report';
     final tier = d.isPremium
-        ? (isVi ? 'Báo cáo Premium' : 'Premium Report')
-        : (isVi ? 'Báo cáo Miễn phí' : 'Free Report');
-    final preparedFor = isVi ? 'Báo cáo dành cho' : 'Prepared for';
-    final dateLabel = isVi ? 'Ngày báo cáo' : 'Report date';
+        ? (isVi ? tr('Báo cáo Premium', 'Premium report') : 'Premium Report')
+        : (isVi ? tr('Báo cáo Miễn phí', 'Free report') : 'Free Report');
+    final preparedFor = isVi ? tr('Báo cáo dành cho', 'Report for') : 'Prepared for';
+    final dateLabel = isVi ? tr('Ngày báo cáo', 'Report date') : 'Report date';
     final dateStr = _formatDate(d.reportDate, isVi);
 
     return pw.Page(
@@ -232,11 +233,11 @@ class ReportPdfBuilder {
       ReportPdfData d, pw.Font regular, pw.Font bold) {
     final isVi = d.locale == 'vi';
     final totalLabel =
-        isVi ? 'Điểm tổng' : 'Total Score';
+        isVi ? tr('Điểm tổng', 'Overall score') : 'Total Score';
     final levelLabel = _scoreLevelLabel(d.scoreLevel, isVi);
-    final sLabel = isVi ? 'Cấu trúc tổ chức' : 'Organisational Structure';
-    final cLabel = isVi ? 'Văn hóa làm việc' : 'Work Culture';
-    final aLabel = isVi ? 'Hoạt động hàng ngày' : 'Daily Activity';
+    final sLabel = isVi ? tr('Cấu trúc tổ chức', 'Organisational structure') : 'Organisational Structure';
+    final cLabel = isVi ? tr('Văn hóa làm việc', 'Working culture') : 'Work Culture';
+    final aLabel = isVi ? tr('Hoạt động hàng ngày', 'Day-to-day activity') : 'Daily Activity';
 
     return pw.Page(
       pageFormat: PdfPageFormat.a4,
@@ -244,7 +245,7 @@ class ReportPdfBuilder {
       build: (ctx) => pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          _pageHeader(isVi ? 'Điểm số tổng quan' : 'Score Overview', bold),
+          _pageHeader(isVi ? tr('Điểm số tổng quan', 'Scores at a glance') : 'Score Overview', bold),
           pw.SizedBox(height: 24),
 
           // Total score box
@@ -317,7 +318,7 @@ class ReportPdfBuilder {
       ReportPdfData d, pw.Font regular, pw.Font bold) {
     final isVi = d.locale == 'vi';
     final headingLabel = isVi
-        ? 'Điểm cần cải thiện nhất'
+        ? tr('Điểm cần cải thiện nhất', 'Most in need of improvement')
         : 'Area Needing Most Improvement';
 
     return pw.Page(
@@ -367,10 +368,10 @@ class ReportPdfBuilder {
       ReportPdfData d, pw.Font regular, pw.Font bold) {
     final isVi = d.locale == 'vi';
     final esiLabel = isVi
-        ? 'Chỉ số hài lòng nhân viên (ESI)'
+        ? tr('Chỉ số hài lòng nhân viên (ESI)', 'Employee satisfaction index (ESI)')
         : 'Employee Satisfaction Index (ESI)';
     final enpsLabel = isVi
-        ? 'Mức độ gắn kết (eNPS)'
+        ? tr('Mức độ gắn kết (eNPS)', 'Engagement (eNPS)')
         : 'Employee Engagement (eNPS)';
 
     return pw.Page(
@@ -503,7 +504,7 @@ class ReportPdfBuilder {
   static pw.Widget _footer(String locale, pw.Font regular) {
     final isVi = locale == 'vi';
     final text = isVi
-        ? 'Cloud & Coral  |  Nền tảng Work Reflection  |  www.cloudandcoral.com'
+        ? tr('Cloud & Coral  |  Nền tảng Work Reflection  |  www.cloudandcoral.com', 'Cloud & Coral  |  Work Reflection platform  |  www.cloudandcoral.com')
         : 'Cloud & Coral  |  Work Reflection Platform  |  www.cloudandcoral.com';
     return pw.Column(
       children: [
@@ -522,9 +523,9 @@ class ReportPdfBuilder {
   static String _formatDate(DateTime d, bool isVi) {
     final months = isVi
         ? [
-            '', 'tháng 1', 'tháng 2', 'tháng 3', 'tháng 4',
-            'tháng 5', 'tháng 6', 'tháng 7', 'tháng 8',
-            'tháng 9', 'tháng 10', 'tháng 11', 'tháng 12'
+            '', tr('tháng 1', 'January'), tr('tháng 2', 'February'), tr('tháng 3', 'March'), tr('tháng 4', 'April'),
+            tr('tháng 5', 'May'), tr('tháng 6', 'June'), tr('tháng 7', 'July'), tr('tháng 8', 'August'),
+            tr('tháng 9', 'September'), tr('tháng 10', 'October'), tr('tháng 11', 'November'), tr('tháng 12', 'December')
           ]
         : [
             '', 'January', 'February', 'March', 'April',
@@ -540,11 +541,11 @@ class ReportPdfBuilder {
 
   static String _scoreLevelLabel(ScoreLevel level, bool isVi) {
     return switch (level) {
-      ScoreLevel.high => isVi ? 'Xuất sắc' : 'Excellent',
-      ScoreLevel.good => isVi ? 'Tốt' : 'Good',
-      ScoreLevel.warning => isVi ? 'Cần chú ý' : 'Needs Attention',
+      ScoreLevel.high => isVi ? tr('Xuất sắc', 'Excellent') : 'Excellent',
+      ScoreLevel.good => isVi ? tr('Tốt', 'Good') : 'Good',
+      ScoreLevel.warning => isVi ? tr('Cần chú ý', 'Needs attention') : 'Needs Attention',
       ScoreLevel.critical =>
-        isVi ? 'Cần cải thiện' : 'Needs Improvement',
+        isVi ? tr('Cần cải thiện', 'Needs improvement') : 'Needs Improvement',
     };
   }
 

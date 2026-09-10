@@ -2,6 +2,7 @@
 
 import 'package:workreflection_mobile/core/models/survey_models.dart';
 import 'package:workreflection_mobile/features/video_report/models/video_report_models.dart';
+import '../../../core/l10n/wr_tr.dart';
 
 /// Turns report data into an ordered, deterministic list of narration scenes.
 ///
@@ -72,10 +73,10 @@ class NarrationScriptBuilder {
   }
 
   String _intro(String userName, bool en) {
-    final name = userName.trim().isEmpty ? (en ? 'there' : 'bạn') : userName;
+    final name = userName.trim().isEmpty ? (en ? 'there' : tr('bạn', 'you')) : userName;
     return en
         ? 'Hello $name, this is your work reflection report.'
-        : 'Xin chào $name, đây là báo cáo phản chiếu của bạn.';
+        : tr('Xin chào $name, đây là báo cáo phản chiếu của bạn.', 'Hello $name, here is your reflection report.');
   }
 
   String _overall(CcReportFull report, bool en) {
@@ -83,7 +84,7 @@ class NarrationScriptBuilder {
     final level = _levelName(report.scoreLevel, en);
     return en
         ? 'Your overall score is $total out of 5, at the $level level.'
-        : 'Điểm tổng của bạn là $total trên 5, ở mức $level.';
+        : tr('Điểm tổng của bạn là $total trên 5, ở mức $level.', 'Your overall score is $total out of 5, which is $level.');
   }
 
   String _layer(SurveyLayer layer, double score, bool en) {
@@ -91,40 +92,40 @@ class NarrationScriptBuilder {
     final name = _layerName(layer, en);
     return en
         ? 'The $name layer scored $s out of 5.'
-        : 'Lớp $name đạt $s trên 5.';
+        : tr('Lớp $name đạt $s trên 5.', 'The $name layer scored $s out of 5.');
   }
 
   String _esi(double esi, bool en) {
     final s = esi.toStringAsFixed(1);
     return en
         ? 'Your employee satisfaction index is $s out of 5.'
-        : 'Chỉ số hài lòng nhân viên đạt $s trên 5.';
+        : tr('Chỉ số hài lòng nhân viên đạt $s trên 5.', 'Employee satisfaction scored $s out of 5.');
   }
 
   String _enps(int enps, bool en) {
     return en
         ? 'Your eNPS score is $enps.'
-        : 'Chỉ số eNPS của bạn là $enps.';
+        : tr('Chỉ số eNPS của bạn là $enps.', 'Your eNPS is $enps.');
   }
 
   String _bottleneck(SurveyLayer layer, bool en) {
     final name = _layerName(layer, en);
     return en
         ? 'Your biggest bottleneck is in the $name layer. This is where you should focus your improvements.'
-        : 'Điểm nghẽn lớn nhất nằm ở lớp $name. Đây là nơi nên tập trung cải thiện.';
+        : tr('Điểm nghẽn lớn nhất nằm ở lớp $name. Đây là nơi nên tập trung cải thiện.', 'The biggest bottleneck is in the $name layer. That is where to focus.');
   }
 
   String _recommendations(SurveyLayer layer, bool en) {
     final name = _layerName(layer, en);
     return en
         ? 'Three suggested actions will help you improve the $name layer over the next 30 days.'
-        : 'Ba hành động gợi ý sẽ giúp bạn cải thiện lớp $name trong 30 ngày tới.';
+        : tr('Ba hành động gợi ý sẽ giúp bạn cải thiện lớp $name trong 30 ngày tới.', 'Three suggested actions will help you improve the $name layer over the next 30 days.');
   }
 
   String _closing(bool en) {
     return en
         ? 'Thank you for listening. Start your growth journey today.'
-        : 'Cảm ơn bạn đã lắng nghe. Hãy bắt đầu hành trình phát triển của mình.';
+        : tr('Cảm ơn bạn đã lắng nghe. Hãy bắt đầu hành trình phát triển của mình.', 'Thank you for listening. Now start your own path forward.');
   }
 
   String _layerName(SurveyLayer layer, bool en) {
@@ -138,9 +139,9 @@ class NarrationScriptBuilder {
       };
     }
     return switch (layer) {
-      SurveyLayer.structure => 'Cấu trúc',
-      SurveyLayer.culture => 'Văn hoá',
-      SurveyLayer.activity => 'Hoạt động',
+      SurveyLayer.structure => tr('Cấu trúc', 'Structure'),
+      SurveyLayer.culture => tr('Văn hoá', 'Culture'),
+      SurveyLayer.activity => tr('Hoạt động', 'Activity'),
       SurveyLayer.esi => 'ESI',
       SurveyLayer.enps => 'eNPS',
     };
@@ -157,9 +158,9 @@ class NarrationScriptBuilder {
     }
     return switch (level) {
       ScoreLevel.high => 'cao',
-      ScoreLevel.good => 'tốt',
-      ScoreLevel.warning => 'cảnh báo',
-      ScoreLevel.critical => 'nghiêm trọng',
+      ScoreLevel.good => tr('tốt', 'good'),
+      ScoreLevel.warning => tr('cảnh báo', 'a warning'),
+      ScoreLevel.critical => tr('nghiêm trọng', 'serious'),
     };
   }
 }

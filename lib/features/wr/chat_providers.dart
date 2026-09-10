@@ -3,6 +3,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/data/wr_chat_repository.dart';
+import '../../core/l10n/wr_tr.dart';
 import '../../core/logic/wr_chat_starters.dart';
 import '../../core/logic/wr_repeated_situations.dart';
 import '../../core/models/wr_chat.dart';
@@ -106,7 +107,7 @@ class WrChatController extends StateNotifier<WrChatState> {
     if (userId == null) {
       state = state.copyWith(
         loading: false,
-        error: 'Cần đăng nhập để trò chuyện.',
+        error: tr('Cần đăng nhập để trò chuyện.', 'You need to be signed in to chat.'),
       );
       return;
     }
@@ -159,7 +160,7 @@ class WrChatController extends StateNotifier<WrChatState> {
     } catch (_) {
       state = state.copyWith(
         loading: false,
-        error: 'Chưa mở được cuộc trò chuyện này. Bạn thử lại nhé.',
+        error: tr('Chưa mở được cuộc trò chuyện này. Bạn thử lại nhé.', 'Could not open this conversation. Please try again.'),
       );
     }
   }
@@ -218,7 +219,7 @@ class WrChatController extends StateNotifier<WrChatState> {
       state = state.copyWith(
         messages: state.messages.where((m) => !m.pending).toList(),
         sending: false,
-        error: 'Mình chưa trả lời được lúc này. Bạn thử gửi lại nhé.',
+        error: tr('Mình chưa trả lời được lúc này. Bạn thử gửi lại nhé.', 'I cannot answer right now. Please send it again.'),
       );
     }
   }
@@ -245,7 +246,7 @@ class WrChatController extends StateNotifier<WrChatState> {
       state = state.copyWith(
         messages: previous,
         conversationId: id,
-        error: 'Chưa xoá được cuộc trò chuyện. Bạn thử lại nhé.',
+        error: tr('Chưa xoá được cuộc trò chuyện. Bạn thử lại nhé.', 'Could not delete the conversation. Please try again.'),
       );
     }
   }

@@ -32,6 +32,7 @@
 // giờ mà không phải đổi đồng hồ hệ thống — không có màn nào cho người dùng đổi.
 
 import 'package:flutter/material.dart';
+import '../l10n/wr_tr.dart';
 
 /// Bốn khung giờ của §5.
 enum WrDayPeriod {
@@ -182,7 +183,7 @@ class WrHeroScene extends StatelessWidget {
           // hình trang trí không tên thì với họ màn Home mở đầu bằng khoảng
           // trống.
           child: Semantics(
-            label: 'Minh hoạ: một chỗ ngồi đang chờ bạn',
+            label: tr('Minh hoạ: một chỗ ngồi đang chờ bạn', 'Illustration: a seat waiting for you'),
             image: true,
             child: const SizedBox.expand(),
           ),

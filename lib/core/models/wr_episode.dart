@@ -7,6 +7,7 @@
 
 import 'package:workreflection_mobile/core/models/checkin.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
+import '../l10n/wr_tr.dart';
 
 // ---------------------------------------------------------------------------
 // HumanMoment — HXA §2.5, sáu Archetype. Không được thêm giá trị thứ bảy.
@@ -34,22 +35,22 @@ enum HumanMoment {
 
   /// Nhãn hiển thị trên thẻ chọn khoảnh khắc.
   String get label => switch (this) {
-        HumanMoment.arrival => 'Muốn dừng lại một chút',
-        HumanMoment.confusion => 'Có gì đó chưa ổn',
-        HumanMoment.decision => 'Đang phải chọn',
-        HumanMoment.growth => 'Muốn tiến bộ hơn',
-        HumanMoment.recovery => 'Vừa mất năng lượng',
-        HumanMoment.celebration => 'Vừa làm được điều hay',
+        HumanMoment.arrival => tr('Muốn dừng lại một chút', 'I want to stop for a moment'),
+        HumanMoment.confusion => tr('Có gì đó chưa ổn', 'Something is off'),
+        HumanMoment.decision => tr('Đang phải chọn', 'I have a choice to make'),
+        HumanMoment.growth => tr('Muốn tiến bộ hơn', 'I want to get better'),
+        HumanMoment.recovery => tr('Vừa mất năng lượng', 'I have just lost energy'),
+        HumanMoment.celebration => tr('Vừa làm được điều hay', 'I have just done something good'),
       };
 
   /// Reflection Tension — HXA §2.5, câu hỏi nội tâm của archetype.
   String get tension => switch (this) {
-        HumanMoment.arrival => 'Điều gì đang diễn ra trong mình lúc này?',
-        HumanMoment.confusion => 'Điều gì mình chưa nhìn thấy?',
-        HumanMoment.decision => 'Giá trị nào đang dẫn dắt lựa chọn này?',
-        HumanMoment.growth => 'Điều gì giúp phiên bản tiếp theo của mình hình thành?',
-        HumanMoment.recovery => 'Điều gì đang cần được lắng nghe?',
-        HumanMoment.celebration => 'Điều gì mình muốn giữ lại từ trải nghiệm này?',
+        HumanMoment.arrival => tr('Điều gì đang diễn ra trong mình lúc này?', 'What is going on inside me right now?'),
+        HumanMoment.confusion => tr('Điều gì mình chưa nhìn thấy?', 'What am I not seeing?'),
+        HumanMoment.decision => tr('Giá trị nào đang dẫn dắt lựa chọn này?', 'Which value is guiding this choice?'),
+        HumanMoment.growth => tr('Điều gì giúp phiên bản tiếp theo của mình hình thành?', 'What helps the next version of me take shape?'),
+        HumanMoment.recovery => tr('Điều gì đang cần được lắng nghe?', 'What needs to be heard?'),
+        HumanMoment.celebration => tr('Điều gì mình muốn giữ lại từ trải nghiệm này?', 'What do I want to keep from this?'),
       };
 
   /// Human Need mà archetype này thường chạm tới — dùng để lọc gợi ý.

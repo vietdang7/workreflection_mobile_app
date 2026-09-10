@@ -14,6 +14,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../l10n/wr_tr.dart';
 import '../logic/stt_service.dart';
 import '../theme/wr_colors.dart';
 
@@ -162,7 +163,7 @@ class _MicButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: listening ? 'Dừng thu âm' : 'Nói thay vì gõ',
+      label: listening ? tr('Dừng thu âm', 'Stop recording') : tr('Nói thay vì gõ', 'Speak instead of typing'),
       child: GestureDetector(
         key: const Key('wr_voice_mic'),
         behavior: HitTestBehavior.opaque,

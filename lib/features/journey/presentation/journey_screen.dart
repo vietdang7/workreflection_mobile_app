@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import '../../../core/l10n/l10n_ext.dart';
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/models/timeline_event.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
@@ -88,7 +89,7 @@ class _StoryQuoteBlock extends ConsumerWidget {
             WrParagraph(
               insight != null
                   ? '"${insight.content}"'
-                  : '"Hành trình của bạn đang được ghi nhớ..."',
+                  : tr('"Hành trình của bạn đang được ghi nhớ..."', '"Your journey is being remembered..."'),
               style: WrTextStyles.insightQuote,
               textAlign: TextAlign.start,
             ),
@@ -125,7 +126,7 @@ class _TimelineSection extends ConsumerWidget {
           return Container(
             key: const Key('journey_timeline_empty'),
             child: Text(
-              'Chưa có sự kiện nào trong hành trình.',
+              tr('Chưa có sự kiện nào trong hành trình.', 'Nothing in your journey yet.'),
               style: WrTextStyles.body,
             ),
           );

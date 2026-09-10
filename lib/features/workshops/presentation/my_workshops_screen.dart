@@ -18,6 +18,7 @@ import 'package:intl/intl.dart';
 import 'package:printing/printing.dart';
 
 import '../../../core/data/workshop_repository.dart';
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/models/workshop_models.dart';
 import '../../../core/pdf/certificate_pdf_builder.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -251,7 +252,7 @@ class _MyWorkshopRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final title = workshop?.title ?? 'Chưa có tên';
+    final title = workshop?.title ?? tr('Chưa có tên', 'Unnamed');
     final date = workshop?.date;
     final status = _status();
     final isAttended = status == _RowStatus.attended;

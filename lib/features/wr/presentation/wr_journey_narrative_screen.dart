@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -32,16 +33,17 @@ class WrJourneyNarrativeScreen extends ConsumerWidget {
     final refresh = ref.watch(wrNarrativeRefreshProvider).valueOrNull;
 
     return WrDetailScaffold(
-      eyebrow: 'NHÌN LẠI DÒNG THỜI GIAN',
-      title: 'Điều gì đang đổi trong bạn',
+      eyebrow: tr('NHÌN LẠI DÒNG THỜI GIAN', 'LOOK BACK ALONG THE TIMELINE'),
+      title: tr('Điều gì đang đổi trong bạn', 'What is changing in you'),
       children: [
         if (!canRead)
-          const WrPremiumLock(
+          WrPremiumLock(
             key: Key('wr_journey_narrative_lock'),
             description:
-                'Mở khóa bản đầy đủ để nhìn lại toàn bộ bức tranh thay đổi của '
-                'bạn qua từng giai đoạn.',
-            ctaLabel: 'Mở phần nhìn lại dòng thời gian',
+                tr('Mở khóa bản đầy đủ để nhìn lại toàn bộ bức tranh thay đổi của '
+                'bạn qua từng giai đoạn.', 'Unlock the full version to see the whole picture of how you '
+                'have changed, stage by stage.'),
+            ctaLabel: tr('Mở phần nhìn lại dòng thời gian', 'Open the timeline look-back'),
             paywallTrigger: 'pattern_advanced',
           )
         else if (narratives.isEmpty)
@@ -72,13 +74,17 @@ String _emptyLine(WrNarrativeRefresh? refresh) {
     // "có chọn tình huống": cùng lý do với `_waitingLine` ở tab Hành trình —
     // hàm chỉ đếm Episode có `situation_code`, còn thẻ Career Health đếm tất.
     WrNarrativeStatus.notEnoughData when needed != null && needed > 0 =>
-      'Còn $needed lần nhìn lại có chọn tình huống nữa là đủ để kể. Diễn biến '
+      tr('Còn $needed lần nhìn lại có chọn tình huống nữa là đủ để kể. Diễn biến '
           'so các tình huống ở hai giai đoạn với nhau, nên những lần bạn tự mô '
-          'tả không có tình huống nào để đối chiếu.',
+          'tả không có tình huống nào để đối chiếu.', '$needed more look-backs with a situation picked and there is enough to '
+          'tell. The story compares situations across two stretches, so the '
+          'times you wrote your own have nothing to compare against.'),
     WrNarrativeStatus.upToDate =>
-      'Diễn biến của bạn đang được đọc lại. Quay lại màn này sau một lát nhé.',
-    _ => 'Chưa đủ dữ liệu để kể lại diễn biến. Ghi thêm vài lần nữa, '
-        'WorkReflection sẽ chỉ ra điều gì đang đổi và điều gì vẫn ở nguyên đó.',
+      tr('Diễn biến của bạn đang được đọc lại. Quay lại màn này sau một lát nhé.', 'Your story is being read. Come back to this screen in a moment.'),
+    _ => tr('Chưa đủ dữ liệu để kể lại diễn biến. Ghi thêm vài lần nữa, '
+        'WorkReflection sẽ chỉ ra điều gì đang đổi và điều gì vẫn ở nguyên đó.', 'Not enough yet to tell the story. Record a few more and '
+        'WorkReflection will point out what is changing and what has stayed '
+        'put.'),
   };
 }
 

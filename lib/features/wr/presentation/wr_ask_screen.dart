@@ -55,7 +55,7 @@ String get kAskPendingMessage => tr('Hệ thống đã ghi nhận câu hỏi c�
 /// Giữ tên cũ vì đây là điểm neo của test màn trống. Nội dung nằm ở
 /// `wr_chat_starters.dart` cùng chỗ với phần logic, để không có hai danh sách
 /// dự phòng ở hai nơi rồi trôi khỏi nhau.
-const List<String> kChatStarters = kDefaultChatStarters;
+List<String> get kChatStarters => kDefaultChatStarters;
 
 class WrAskScreen extends ConsumerStatefulWidget {
   const WrAskScreen({super.key});

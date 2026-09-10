@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/data/wr_content_repository.dart';
 import '../../../core/data/wr_intelligence_repository.dart';
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_intelligence.dart';
@@ -46,7 +47,7 @@ Future<void> completePracticeStep({
 
   final noteResult = await showPracticeNoteSheet(
     context,
-    stepTitle: stepTitle ?? 'Bước thực hành',
+    stepTitle: stepTitle ?? tr('Bước thực hành', 'Practice step'),
   );
   if (noteResult == null) return;
 
@@ -140,9 +141,9 @@ Future<void> completePracticeStep({
 /// Ba giai đoạn là ngôn ngữ của người dùng ("Nhận diện → Thử nghiệm → Chuyển
 /// hoá"), không phải số thứ tự trần.
 String? practiceStageTag(int stepOrder) => switch (stepOrder) {
-      1 => 'NHẬN DIỆN',
-      2 => 'THỬ NGHIỆM',
-      3 => 'CHUYỂN HOÁ',
+      1 => tr('NHẬN DIỆN', 'NOTICE'),
+      2 => tr('THỬ NGHIỆM', 'TRY'),
+      3 => tr('CHUYỂN HOÁ', 'SHIFT'),
       _ => null,
     };
 
@@ -152,8 +153,8 @@ String? practiceStageTag(int stepOrder) => switch (stepOrder) {
 /// triển, và dạng câu ở dòng "Tiếp tục hôm nay" của Home ("bước Thử nghiệm đang
 /// chờ"). Giữ chung một nguồn để hai nơi không lệch tên giai đoạn.
 String? practiceStageLabel(int stepOrder) => switch (stepOrder) {
-      1 => 'Nhận diện',
-      2 => 'Thử nghiệm',
-      3 => 'Chuyển hoá',
+      1 => tr('Nhận diện', 'Notice'),
+      2 => tr('Thử nghiệm', 'Try'),
+      3 => tr('Chuyển hoá', 'Shift'),
       _ => null,
     };

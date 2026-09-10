@@ -1,3 +1,4 @@
+import '../l10n/wr_tr.dart';
 // Giá gói Premium bán trong app.
 //
 // Khách chốt 2026-08-04: web và app bán HAI GÓI KHÁC NHAU, khác giá — web
@@ -126,13 +127,13 @@ class WrPremiumPricing {
   String get durationLabel {
     if (durationDays % 365 == 0) {
       final years = durationDays ~/ 365;
-      return years == 1 ? 'một năm' : '$years năm';
+      return years == 1 ? tr('một năm', 'one year') : tr('$years năm', '$years years');
     }
     if (durationDays % 30 == 0) {
       final months = durationDays ~/ 30;
-      return months == 1 ? 'một tháng' : '$months tháng';
+      return months == 1 ? tr('một tháng', 'one month') : tr('$months tháng', '$months months');
     }
-    return '$durationDays ngày';
+    return tr('$durationDays ngày', '$durationDays days');
   }
 
   /// "năm", "tháng", "6 tháng", "90 ngày" — dạng ngắn để ghép sau dấu "/".
@@ -142,13 +143,13 @@ class WrPremiumPricing {
   String get durationSuffix {
     if (durationDays % 365 == 0) {
       final years = durationDays ~/ 365;
-      return years == 1 ? 'năm' : '$years năm';
+      return years == 1 ? tr('năm', 'year') : tr('$years năm', '$years years');
     }
     if (durationDays % 30 == 0) {
       final months = durationDays ~/ 30;
-      return months == 1 ? 'tháng' : '$months tháng';
+      return months == 1 ? tr('tháng', 'month') : tr('$months tháng', '$months months');
     }
-    return '$durationDays ngày';
+    return tr('$durationDays ngày', '$durationDays days');
   }
 
   /// Hạn gói quy ra số tháng, để so hai gói dài ngắn khác nhau trên cùng một
