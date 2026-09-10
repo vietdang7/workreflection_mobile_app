@@ -716,19 +716,38 @@ dòng đó đổi ngay trên máy người dùng.
 thừa, không lặp. Bước này cần thiết vì `UPDATE ... WHERE id = 'sai'` chạy trúng
 0 dòng mà **không báo lỗi** — migration vẫn xanh, chữ vẫn tiếng Việt.
 
-#### ⚠ Bốn dòng dữ liệu tiếng Việt đang hỏng
+#### Bốn dòng dữ liệu hỏng — ĐÃ DỌN 10/09
 
-`wr_stories.practice_action` của **A1-10, A3-10, S1-10, S2-10** bị dán thêm đuôi
-tiêu đề mục kế tiếp lúc nhập liệu từ tài liệu gốc. Ví dụ A1-10 kết thúc bằng:
+`wr_stories.practice_action` của **A1-10, A3-10, S1-10, S2-10** — đều là dòng
+CUỐI của một nhóm — bị dán thêm phần mở đầu của nhóm kế tiếp lúc nhập liệu từ
+tài liệu gốc. A1-10 từng kết thúc bằng:
 
 > …trong 30 ngày tới.
 > **A2 – Execution Rhythm / Human Need / Adaptability / SCA Dimension / A2 –
 > Execution Rhythm / Câu hỏi cốt lõi / Tôi có đang biến điều mình biết thành
 > điều mình làm không?**
 
-Rác đó **đang hiện lên màn hình** ở bản tiếng Việt. Bản tiếng Anh chỉ dịch câu
-thật. Cố ý **không** tự sửa bản tiếng Việt — đó là nội dung của khách. Bốn lệnh
-dọn đã viết sẵn ở cuối migration, dạng chú thích, bỏ dấu `--` là chạy được.
+Rác đó **đang hiện lên màn hình** trong luồng đọc truyện. Đã dọn bằng migration
+`20260910150000_fix_practice_action_junk` (khách chốt 10/09).
+
+**Cắt theo mốc, không ghi đè bằng câu chép tay.** Chép tay là đưa thêm một bản
+chép nữa vào chuỗi, sai một dấu thì không ai phát hiện. Cắt tại mốc thì câu
+thật đi thẳng từ dữ liệu cũ sang dữ liệu mới, không qua tay ai. Đã xem trước
+kết quả cắt trên DB thật trước khi ghi: 219→62, 215→67, 242→63, 237→50 ký tự,
+câu thật nguyên vẹn kể cả dấu xuống dòng và ngoặc kép của A3-10.
+
+Hai chi tiết đáng nhớ nếu phải làm lại việc tương tự:
+
+- Dấu gạch trong mốc là **gạch ngang dài** (`–`, U+2013), không phải gạch nối.
+  Gõ nhầm thì `split_part` không khớp và trả về nguyên chuỗi cũ — migration vẫn
+  xanh, rác vẫn còn.
+- Có **chốt chặn** cuối migration đếm lại và `raise exception` nếu còn dòng nào
+  chở siêu dữ liệu. Cần thiết vì `UPDATE` khớp 0 dòng không báo lỗi.
+
+Đã quét cả 6 cột chữ của `wr_stories` cộng `wr_situations`, `wr_practice_steps`,
+`wr_practice_themes` theo 'Human Need' / 'SCA Dimension' / 'Câu hỏi cốt lõi':
+chỉ đúng 4 chỗ đó dính, không lan sang đâu khác. Cột `practice_action_en` không
+phải đụng — bản tiếng Anh ngay từ đầu chỉ dịch câu thật.
 
 ### Bốn câu hỏi §19 — nay còn một
 | # | Câu hỏi | Trạng thái |
