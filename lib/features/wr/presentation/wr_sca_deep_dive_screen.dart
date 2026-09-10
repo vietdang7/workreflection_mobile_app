@@ -14,6 +14,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/logic/wr_deep_interpretation.dart';
 import '../../../core/logic/wr_entitlement.dart';
+import '../../../core/logic/wr_polish_guard.dart';
 import '../../../core/logic/wr_sca_deep_dive.dart';
 import '../../../core/logic/vn_date.dart';
 import '../../../core/models/wr_intelligence.dart';
@@ -158,6 +159,22 @@ class _Body extends ConsumerStatefulWidget {
 class _BodyState extends ConsumerState<_Body> {
   final Set<String> _open = {};
 
+  /// Lớp 3 — câu AI viết lại, nếu có; không thì chính câu gốc (§7).
+  ///
+  /// [allowed] false là câu chỉ dẫn của mục 6: §7.3 cấm nhờ AI viết lại chúng.
+  ///
+  /// KHÔNG chờ, KHÔNG hiện vòng xoay. §7.2 rào chắn 3 nói rõ người dùng không
+  /// bao giờ được thấy màn hình trống ở đây; nên lượt dựng đầu tiên hiện câu
+  /// gốc, và nếu bản viết lại về kịp thì Riverpod dựng lại với câu mới. Người
+  /// dùng thấy chữ ngay từ khung đầu tiên trong mọi trường hợp.
+  ///
+  /// Cờ tắt (mặc định) thì provider trả null ngay, không đi mạng.
+  String _polished(String original, {required bool allowed}) {
+    if (!allowed || !kPolishEnabled) return original;
+    final polished = ref.watch(wrPolishedTextProvider(original)).valueOrNull;
+    return polishedOrOriginal(original: original, polished: polished);
+  }
+
   @override
   Widget build(BuildContext context) {
     final history =
@@ -205,7 +222,7 @@ class _BodyState extends ConsumerState<_Body> {
       children: [
         // ── 1 · Một insight dẫn dắt ─────────────────────────────────────
         _LeadCard(
-          text: content.leadText,
+          text: _polished(content.leadText, allowed: content.branch != null),
           highlight: content.branch == DeepGapBranch.outOfSync,
         ),
 
@@ -229,7 +246,10 @@ class _BodyState extends ConsumerState<_Body> {
         const WrEyebrow('XU HƯỚNG'),
         const SizedBox(height: 12),
         WrParagraph(
-          content.trendText,
+          _polished(
+            content.trendText,
+            allowed: !deepTextIsGuidance(content.trendText),
+          ),
           key: const Key('wr_deep_trend'),
           textAlign: TextAlign.start,
           style: const TextStyle(
@@ -241,7 +261,7 @@ class _BodyState extends ConsumerState<_Body> {
         if (content.selfCheckTrendText case final String t) ...[
           const SizedBox(height: 14),
           WrParagraph(
-            t,
+            _polished(t, allowed: !deepTextIsGuidance(t)),
             key: const Key('wr_deep_self_check_trend'),
             textAlign: TextAlign.start,
             style: const TextStyle(

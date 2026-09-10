@@ -206,12 +206,12 @@ class _PracticeRow extends ConsumerWidget {
     switch (practice.status) {
       case PracticeStatus.done:
         iconColor = WrColors.teal;
-        iconData = Icons.check_circle_outline;
+        iconData = Icons.check_circle_outlined;
         statusLabel = l10n.developStatusDone;
         statusColor = WrColors.teal;
       case PracticeStatus.doing:
         iconColor = WrColors.coral;
-        iconData = Icons.play_circle_outline;
+        iconData = Icons.play_circle_outlined;
         statusLabel = l10n.developStatusDoing;
         statusColor = WrColors.coral;
       case PracticeStatus.todo:

@@ -2,6 +2,17 @@
 // Mirror of web's types/ai-personalize.ts.
 // All classes are immutable. No Flutter dependencies.
 
+import '../logic/wr_plain_text.dart';
+
+/// Mọi trường ở file này là chữ do model `ai-personalize` viết ra, và màn Báo
+/// cáo dựng bằng `Text` thuần — dấu sao Markdown lọt qua là hiện nguyên hình
+/// (mục 17.1, khách 09/09).
+///
+/// Lọc Ở ĐÂY chứ không ở Edge Function vì `ai-personalize` **không nằm trong
+/// repo này** (nó là hàm của phần web/Khảo sát). Đây là chỗ duy nhất trong tầm
+/// với.
+String _plain(dynamic v) => stripMarkdown(v as String);
+
 // ---------------------------------------------------------------------------
 // Content shapes (mirror SECTION_SCHEMAS in the edge function)
 // ---------------------------------------------------------------------------
@@ -22,11 +33,11 @@ class AiModelContent {
   final String activityDesc;
 
   factory AiModelContent.fromJson(Map<String, dynamic> j) => AiModelContent(
-        quote: j['quote'] as String,
-        intro: j['intro'] as String,
-        structureDesc: j['structure_desc'] as String,
-        cultureDesc: j['culture_desc'] as String,
-        activityDesc: j['activity_desc'] as String,
+        quote: _plain(j['quote']),
+        intro: _plain(j['intro']),
+        structureDesc: _plain(j['structure_desc']),
+        cultureDesc: _plain(j['culture_desc']),
+        activityDesc: _plain(j['activity_desc']),
       );
 }
 
@@ -53,14 +64,14 @@ class AiReflectionContent {
 
   factory AiReflectionContent.fromJson(Map<String, dynamic> j) =>
       AiReflectionContent(
-        intro: j['intro'] as String,
-        item1Desc: j['item1_desc'] as String,
-        item2Desc: j['item2_desc'] as String,
-        item3Desc: j['item3_desc'] as String,
-        pausesIntro: j['pauses_intro'] as String,
-        pause1: j['pause1'] as String,
-        pause2: j['pause2'] as String,
-        pause3: j['pause3'] as String,
+        intro: _plain(j['intro']),
+        item1Desc: _plain(j['item1_desc']),
+        item2Desc: _plain(j['item2_desc']),
+        item3Desc: _plain(j['item3_desc']),
+        pausesIntro: _plain(j['pauses_intro']),
+        pause1: _plain(j['pause1']),
+        pause2: _plain(j['pause2']),
+        pause3: _plain(j['pause3']),
       );
 }
 
@@ -89,15 +100,15 @@ class AiRelationshipContent {
 
   factory AiRelationshipContent.fromJson(Map<String, dynamic> j) =>
       AiRelationshipContent(
-        headerQuote: j['header_quote'] as String,
-        misconceptionText: j['misconception_text'] as String,
-        misconceptionQuote: j['misconception_quote'] as String,
-        asset1Desc: j['asset1_desc'] as String,
-        asset2Desc: j['asset2_desc'] as String,
-        asset3Desc: j['asset3_desc'] as String,
-        asset4Desc: j['asset4_desc'] as String,
-        asset5Desc: j['asset5_desc'] as String,
-        closingQuote: j['closing_quote'] as String,
+        headerQuote: _plain(j['header_quote']),
+        misconceptionText: _plain(j['misconception_text']),
+        misconceptionQuote: _plain(j['misconception_quote']),
+        asset1Desc: _plain(j['asset1_desc']),
+        asset2Desc: _plain(j['asset2_desc']),
+        asset3Desc: _plain(j['asset3_desc']),
+        asset4Desc: _plain(j['asset4_desc']),
+        asset5Desc: _plain(j['asset5_desc']),
+        closingQuote: _plain(j['closing_quote']),
       );
 }
 

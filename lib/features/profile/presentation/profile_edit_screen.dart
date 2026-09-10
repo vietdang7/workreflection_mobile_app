@@ -253,7 +253,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                                               color: WrColors.navy,
                                             ),
                                           )
-                                        : const Icon(Icons.camera_alt,
+                                        : const Icon(Icons.camera_alt_outlined,
                                             size: 14, color: WrColors.white),
                                   ),
                                 ),

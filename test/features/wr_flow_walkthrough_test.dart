@@ -272,7 +272,7 @@ void main() {
     // xảy ra?" — và mã tình huống vẫn để trống, vì "khác" không trả lời được
     // câu hỏi "người này đang phản chiếu nhiều về điều gì" (§4.3).
     expect(find.byType(WrDetailScreen), findsOneWidget);
-    expect(find.text(kCustomDetailPrompt), findsOneWidget);
+    expect(find.text(kDetailPrompt), findsOneWidget);
     expect(find.byKey(const Key('wr_detail_story')), findsNothing);
     expect(episodes.episodes.single.situationCode, isNull);
 

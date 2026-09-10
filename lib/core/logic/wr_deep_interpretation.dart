@@ -618,7 +618,35 @@ class DeepInterpretation {
 
   /// Chỉ khác null khi lần Self-Check gần nhất đã quá 3 tháng.
   final String? staleSelfCheckText;
+
+  /// Những câu ĐƯỢC PHÉP nhờ AI viết lại ở lớp 3 (§7.3).
+  ///
+  /// §7.3: "Chỉ áp dụng cho tầng 1 đến tầng 3, không áp dụng cho các câu ở mục 6
+  /// (trạng thái chưa đủ dữ liệu), vì các câu đó đã ngắn và cần chính xác về mặt
+  /// hướng dẫn."
+  ///
+  /// Đúng như vậy: câu mục 6 nói cho người dùng biết còn thiếu bao nhiêu lần và
+  /// làm gì để mở khoá. Nhờ AI viết lại một chỉ dẫn là mở cửa cho nó đổi con số
+  /// ngưỡng hay đổi tên việc cần làm — rào chắn 1 chặn được số, không chặn được
+  /// "làm bộ 15 câu" thành "hoàn thành bài đánh giá".
+  ///
+  /// Câu nhắc Self-Check đã cũ cũng KHÔNG vào đây, cùng một lý do.
+  List<String> get polishableTexts => [
+        if (branch != null) leadText,
+        if (!deepTextIsGuidance(trendText)) trendText,
+        if (selfCheckTrendText case final String t)
+          if (!deepTextIsGuidance(t)) t,
+      ];
 }
+
+/// True khi [text] là một câu CHỈ DẪN của mục 6, không phải một câu diễn giải.
+///
+/// So sánh bằng chính hằng thay vì dò từ khoá: ba câu đó là hằng, nên so đúng
+/// bằng là chính xác tuyệt đối và không lệch khi ai đó sửa câu chữ.
+bool deepTextIsGuidance(String text) =>
+    text == kDeepNoTrendYet ||
+    text == kDeepOneSelfCheckOnly ||
+    text == kDeepNotEnoughReflection;
 
 DeepInterpretation buildDeepInterpretation({
   required List<ScaSelfCheckResponse> history,

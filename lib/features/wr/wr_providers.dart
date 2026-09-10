@@ -13,6 +13,7 @@ import '../../core/models/wr_content.dart';
 import '../../core/models/wr_episode.dart';
 import '../../core/models/wr_intelligence.dart';
 import '../../core/logic/wr_growth_opportunity.dart';
+import '../../core/logic/wr_polish_guard.dart';
 import '../../core/logic/wr_premium_override.dart';
 import '../../core/logic/wr_pricing.dart';
 import '../../core/logic/wr_repeated_situations.dart';
@@ -280,6 +281,23 @@ final wrSelfCheckHistoryProvider = FutureProvider<List<ScaSelfCheckResponse>>((r
   if (userId == null) return const [];
   final repo = ref.watch(wrIntelligenceRepositoryProvider);
   return repo.fetchSelfCheckHistory(userId);
+});
+
+/// Lớp 3 — bản AI viết lại của một câu Diễn giải sâu (§7).
+///
+/// Khoá theo CHÍNH CÂU GỐC, không theo userId: câu đổi thì khoá đổi, nên
+/// `.family` tự nhớ đúng một bản cho mỗi câu và không gọi lại khi màn hình dựng
+/// lại. Đây là nửa còn lại của §7.3 ("không gọi mỗi lần mở màn hình"); nửa kia
+/// là bộ đệm trong `wr_polished_text` ở phía máy chủ.
+///
+/// `AsyncValue.loading` KHÔNG được hiện vòng xoay ở tầng UI — §7.2 rào chắn 3:
+/// "Người dùng không bao giờ nhìn thấy màn hình trống hay vòng xoay chờ ở màn
+/// này." Tầng UI đọc `valueOrNull` rồi lùi về câu gốc.
+final wrPolishedTextProvider =
+    FutureProvider.family<String?, String>((ref, original) async {
+  if (!kPolishEnabled) return null;
+  final repo = ref.watch(wrIntelligenceRepositoryProvider);
+  return repo.polishText(original);
 });
 
 /// Fetch latest insight for current user.

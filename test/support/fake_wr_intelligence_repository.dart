@@ -28,6 +28,8 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
   final List<ReflectionStep> insertReflectionStepCalls = [];
   final List<ScaSelfCheckResponse> insertSelfCheckResponseCalls = [];
   final List<WrInsight> insertInsightCalls = [];
+  final List<({String userId, String? situationCode, bool agreed})>
+      insertInsightFeedbackCalls = [];
   final List<PracticeEnrollment> enrollThemeCalls = [];
   final List<({String userId, String themeId, List<String> completedSteps})>
       updateEnrollmentStepsCalls = [];
@@ -261,6 +263,29 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
     _assertInsightConstraints(i);
     insertInsightCalls.add(i);
     _insights.add(i);
+  }
+
+  /// Bản AI "viết lại" mà fake trả về. Null = lớp 3 tắt hoặc bị huỷ, tức là
+  /// tầng UI phải hiện câu gốc.
+  String? polishResult;
+  final List<String> polishTextCalls = [];
+
+  @override
+  Future<String?> polishText(String text) async {
+    _maybeThrow();
+    polishTextCalls.add(text);
+    return polishResult;
+  }
+
+  @override
+  Future<void> insertInsightFeedback({
+    required String userId,
+    required String? situationCode,
+    required bool agreed,
+  }) async {
+    _maybeThrow();
+    insertInsightFeedbackCalls
+        .add((userId: userId, situationCode: situationCode, agreed: agreed));
   }
 
   @override

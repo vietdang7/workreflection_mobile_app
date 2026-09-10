@@ -4,6 +4,8 @@
 // đi qua Edge Function `wr-chat`, nơi giữ khoá OpenRouter và áp hạn mức. Vì vậy
 // ở đây không có `toInsert()` — không có chỗ nào trong app cần nó.
 
+import '../logic/wr_plain_text.dart';
+
 /// Ai nói câu này.
 enum WrChatRole {
   user,
@@ -82,14 +84,27 @@ class WrChatMessage {
   /// coi là đã lưu.
   final bool pending;
 
-  factory WrChatMessage.fromJson(Map<String, dynamic> json) => WrChatMessage(
-        id: json['id'] as String?,
-        role: WrChatRole.fromDb(json['role'] as String),
-        content: json['content'] as String,
-        createdAt: json['created_at'] != null
-            ? DateTime.parse(json['created_at'] as String)
-            : null,
-      );
+  factory WrChatMessage.fromJson(Map<String, dynamic> json) {
+    final role = WrChatRole.fromDb(json['role'] as String);
+    final content = json['content'] as String;
+    return WrChatMessage(
+      id: json['id'] as String?,
+      role: role,
+      // Mục 17.1 — chỉ lột Markdown ở lượt của TRỢ LÝ.
+      //
+      // `content` chở cả hai vai. Lột cả lượt người dùng là âm thầm sửa chữ của
+      // họ: người ta gõ `*` thật, dán một đoạn JD có gạch đầu dòng. Ở đây phân
+      // biệt được bằng `role`, nên phân biệt.
+      //
+      // Lượt trợ lý đã được `reply_shaping.ts` lọc ở máy chủ từ 2026-08-03;
+      // tầng này phủ những lượt lưu TRƯỚC ngày đó, vì lịch sử chat đọc lại
+      // nguyên văn từ database.
+      content: role == WrChatRole.assistant ? stripMarkdown(content) : content,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : null,
+    );
+  }
 }
 
 /// Kết quả một lượt gửi, kèm trạng thái hạn mức để màn hình nói được còn bao
@@ -125,7 +140,7 @@ class WrChatReply {
   int get remaining => (limit - usedToday).clamp(0, limit);
 
   factory WrChatReply.fromJson(Map<String, dynamic> json) => WrChatReply(
-        reply: json['reply'] as String,
+        reply: stripMarkdown(json['reply'] as String),
         isPremium: json['isPremium'] as bool? ?? false,
         usedToday: (json['usedToday'] as num?)?.toInt() ?? 0,
         limit: (json['limit'] as num?)?.toInt() ?? 0,

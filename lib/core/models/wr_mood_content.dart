@@ -4,6 +4,7 @@
 // Plain immutable classes + fromJson, cùng style với wr_content.dart.
 // Không phụ thuộc Flutter.
 
+import '../logic/wr_plain_text.dart';
 import 'checkin.dart';
 
 // ---------------------------------------------------------------------------
@@ -229,7 +230,9 @@ class GrowthOpportunity {
     return GrowthOpportunity(
       id: json['id'] as String,
       userId: json['user_id'] as String,
-      suggestionText: json['suggestion_text'] as String,
+      // Mục 17.1 — câu gợi ý do AI viết, thẻ "Góc nhìn phát triển" dựng bằng
+      // `Text` thuần.
+      suggestionText: stripMarkdown(json['suggestion_text'] as String),
       confidenceNote: json['confidence_note'] as String,
       basedOn: (json['based_on'] as List?)?.cast<String>() ?? const [],
       generatedAt: DateTime.parse(json['generated_at'] as String),

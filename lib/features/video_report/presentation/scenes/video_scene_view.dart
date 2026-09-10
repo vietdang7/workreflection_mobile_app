@@ -382,7 +382,7 @@ class VideoSceneView extends StatelessWidget {
             children: [
               Padding(
                 padding: const EdgeInsets.only(top: 3),
-                child: Icon(Icons.check_circle, color: color, size: 18),
+                child: Icon(Icons.check_circle_outlined, color: color, size: 18),
               ),
               const SizedBox(width: 10),
               Expanded(

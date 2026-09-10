@@ -186,7 +186,7 @@ void main() {
       await tester.pump(); // optimistic update
 
       // check_circle appears
-      expect(find.byIcon(Icons.check_circle), findsWidgets);
+      expect(find.byIcon(Icons.check_circle_outlined), findsWidgets);
       expect(repo.toggleActionCalls.length, 1);
       expect(repo.toggleActionCalls.first['actionRefId'], 'a-1');
       expect(repo.toggleActionCalls.first['isCompleted'], true);

@@ -262,7 +262,7 @@ class WrMaintainPracticeAction extends ConsumerWidget {
       return Row(
         key: Key('wr_practice_maintained_today_${theme.themeId}'),
         children: [
-          const Icon(Icons.check_circle_outline, size: 17, color: WrColors.teal),
+          const Icon(Icons.check_circle_outlined, size: 17, color: WrColors.teal),
           const SizedBox(width: 8),
           const Expanded(
             child: Text(

@@ -290,6 +290,151 @@ nhãn nay bằng nhau nên cách đó chết. Đã chuyển sang khoá bằng **
 
 ---
 
+## ĐỢT 2 + 3 + NHÓM C, D — ĐÃ XONG (10/09/2026)
+
+### Đợt 2 — 4/4 ✅
+
+| # | Việc | File |
+|---|------|------|
+| 3.2 | Câu gợi mở CỐ ĐỊNH "Viết ra bất cứ điều gì vừa xuất hiện trong đầu bạn lúc này." + cỡ chữ **70%** | `wr_reflect_flow.dart` (`kDetailPrompt`, `kDetailPromptScale`), `wr_detail_screen.dart` |
+| 4.3 | Bỏ thẻ `selfReflection` ("Bạn đang đo sự phát triển bằng điều gì?") | `wr_meaning_screen.dart` |
+| 4.4 | Bỏ khối "CHƯA BIẾT VIẾT GÌ?" + 4 thẻ gợi ý, xoá `_StemSuggestion`, `_useSuggestion` | `wr_meaning_screen.dart` |
+| 5.4 | Hai nút Đồng ý / Không đồng ý → **nhóm D** bên dưới | |
+
+**3.2 giữ dữ liệu, chỉ ngừng hiện.** `detailPrompt()` vẫn nhận
+`reflectionQuestion` nhưng không dùng tới, nên cột `reflection_question` (hàng
+trăm câu trong DB) không phải xoá — đảo lại sau này tốn một dòng.
+
+**Câu hỏi §19 số 3 đã có trả lời trong chính docx cập nhật:** khách viết "sửa
+thành câu cố định", tức là xác nhận bỏ câu riêng của từng tình huống.
+
+### Một lỗi ĐỢT 1 để lọt, phát hiện khi làm 4.4
+
+Mục 5.3 đổi nhãn thành **"Đúc kết phổ biến"**. Đợt 1 sửa đúng hằng
+`kInsightNormalizingLabel`, nhưng `wr_meaning_screen.dart:381` **ghi cứng chuỗi
+cũ** `'NHIỀU NGƯỜI KHÁC CŨNG TỪNG THẤY ĐIỀU NÀY'`. Hằng thành mã chết và câu mới
+chưa bao giờ lên màn hình. Nay màn đọc từ hằng.
+
+> Bài học: sửa một hằng KHÔNG chứng minh câu đó đang được dùng. Phải grep chính
+> chuỗi CŨ trên toàn `lib/`, không phải grep tên hằng.
+
+### Nhóm D — Đồng ý / Không đồng ý — 6/6 ✅
+
+| # | Việc | Ở đâu |
+|---|------|-------|
+| D1 | Hai nút thay CTA "Tiếp tục" | `wr_meaning_screen.dart` `_buildAhaLayer` |
+| D2 | Chỉ "Đồng ý" mới ghi Insight | `confirmMeaning(..., recordInsight:)` |
+| D3 | Không đồng ý VẪN chốt Episode → STORY vẫn sinh | cùng chỗ |
+| D4 | Trạng thái xác nhận sau khi từ chối | `_disagreed` + thẻ `wr_meaning_disagree_ack` |
+| D5 | Ghi log tỷ lệ theo `situation_code` | bảng mới `wr_insight_feedback` |
+| D6 | Test khoá: phép đếm tần suất **không** loại lần bị từ chối | `wr_reflection_flow_test.dart` |
+
+**Không đồng ý vẫn giữ chữ người dùng tự viết.** Câu lưu lại là phần họ tự viết,
+không kèm câu aha. Từ chối một góc nhìn được ĐỀ XUẤT không có nghĩa là vứt bỏ chữ
+của chính mình — tài liệu không nói, nhưng làm ngược lại là phạt người dùng vì đã
+trả lời thật.
+
+**§10.2 làm bằng một NHỊP DỪNG, không bằng thanh thông báo.** Bản đầu tôi dùng
+`SnackBar` rồi đẩy sang bước sau ngay — nhưng nó trôi qua trong lúc màn sau đang
+dựng, tức là vẫn "im lặng chuyển sang bước sau" đúng cái §10.2 cấm. Nay màn đổi
+sang lời xác nhận, và chính người dùng bấm "Tiếp tục".
+
+**Câu hỏi §19 số 2** ("Không đồng ý khi chưa viết gì") — làm theo phương án tài
+liệu đề nghị: cho đi tiếp, không lưu Insight. Có test riêng.
+
+**⚠️ Hai migration CHƯA push:** `20260910000000_wr_insight_feedback.sql`,
+`20260910000001_wr_polished_text.sql`.
+
+### Đợt 3 — 3/3 ✅
+
+**17.1 lọc dấu sao.** Bộ lọc dùng chung mới ở
+`supabase/functions/_shared/strip_markdown.ts` (chuyển nguyên vẹn từ
+`wr-chat/reply_shaping.ts`, đã chạy thật từ 03/08). Nay `wr-narrative` và
+`wr-doc-analyze` cùng gọi. **Cộng thêm một tầng Dart** ở
+`lib/core/logic/wr_plain_text.dart`, đặt tại `fromJson` của từng model AI —
+`PatternNarrative`, `WrDocAnalysis`, `GrowthOpportunity`, `WrChatMessage`,
+`WrChatReply`, và cả 22 trường của `ai_personalization_models.dart`.
+
+Ba lý do phải có tầng thứ hai, không phải để chắc ăn cho vui:
+
+1. `ai-personalize` **không nằm trong repo này** — không sửa được ở phía hàm.
+2. Dữ liệu lưu TRƯỚC hôm nay vẫn còn nguyên dấu sao trong database.
+3. Hàm mới thêm sau sẽ quên gọi bộ lọc — đã xảy ra đúng ba lần với ba hàm.
+
+**Chỗ dễ làm sai nhất:** `wr_chat_messages.content` chở CẢ HAI vai. Lọc cả lượt
+người dùng là âm thầm sửa chữ của họ (họ gõ `*` thật, dán JD có gạch đầu dòng).
+Phân biệt bằng `role`. `raw_text` của `wr-doc-analyze` cũng KHÔNG lọc, cùng lý do.
+
+**17.2 icon line art.** Quét toàn bộ `Icons.` trong `lib/`. Đổi:
+`check_circle` (15 chỗ) · `star` · `visibility`/`visibility_off` · `camera_alt` ·
+`card_giftcard` · `auto_awesome` · `play_arrow`/`pause` · `check_circle_rounded`
+→ biến thể `_outlined`. Gộp luôn hai bí danh `_outline`/`_outlined` về một.
+
+> **Hai chỗ độ ĐẶC đang chở THÔNG TIN, không phải trang trí.** Đổi cả hai nhánh
+> về viền là mất thông tin. Nên đổi GLYPH thay vì đổi độ đặc:
+> - Premium: `star` → **`workspace_premium_outlined`**, free giữ `star_outline`.
+> - Đang nghe (STT): `mic` → **`stop_circle_outlined`**, nghỉ giữ
+>   `mic_none_outlined`. Cùng cách `wr_voice_field.dart:180` đang dùng.
+>
+> Bốn bài test đỏ vì đúng chuyện này — chúng khoá đúng cái phân biệt trạng thái.
+
+**17.3 test onboarding.** `router_test.dart` đã khoá logic thuần của
+`computeRedirect`. Chỗ còn hở là mắt xích giữa hai đầu: trang 3 có GHI cờ không,
+cờ đã ghi có được ĐỌC RA không, và ghép lại có đóng cửa onboarding không. 6 bài
+mới ở `test/core/onboarding_once_only_test.dart`, kể cả vế ngược ("chưa xem thì
+VẪN phải đi qua") — thiếu vế đó thì một lần sửa làm cờ luôn true sẽ đi lọt.
+
+### Nhóm C — lớp 3 AI diễn đạt lại — 5/5 ✅
+
+| # | Việc | Ở đâu |
+|---|------|-------|
+| C1 | Edge Function + prompt §7.1 nguyên văn 8 quy tắc | `supabase/functions/wr-polish/` |
+| C2 | Rào chắn 1 — con số | `inspectPolished` (Dart + Deno) |
+| C3 | Rào chắn 2 — từ cấm | cùng chỗ |
+| C4 | Rào chắn 3 — 2 giây thì dùng câu gốc | `kPolishTimeout` |
+| C5 | Gọi một lần rồi đệm; cờ bật/tắt | bảng `wr_polished_text` · `kPolishEnabled` |
+
+**MẶC ĐỊNH TẮT** (`--dart-define=WR_AI_POLISH=true` để bật). Có chủ đích: lớp 3
+làm câu chữ **không còn định trước được** — hai người cùng dữ liệu đọc ra hai
+câu khác nhau. Đội nội dung cần đọc một mẻ và khách cần đồng ý với giọng đó
+trước khi bật cho người dùng thật.
+
+**Rào chắn 1 phải đổi luật ngay khi viết test.** Bản đầu so hai dãy số theo THỨ
+TỰ XUẤT HIỆN. Nghe thì chặt, nhưng nó huỷ đúng cái việc model được giao:
+
+```
+gốc:      "Bạn đã nhìn lại 21 lần trong 30 ngày qua, tăng so với 12 lần…"
+viết lại: "Trong 30 ngày qua bạn nhìn lại 21 lần, nhiều hơn 12 lần…"
+```
+
+Không con số nào đổi — chỉ đảo mệnh đề, mà đảo mệnh đề CHÍNH LÀ cách viết lại
+một câu cho tự nhiên hơn. So theo thứ tự thì phần lớn bản viết lại tốt đều bị
+huỷ và lớp 3 không bao giờ hiện. So TẬP HỢP trần thì lại lọt ca nguy hiểm nhất
+("3 lần trong 14 ngày" → "14 lần trong 3 ngày"). **Luật cuối: so các cặp SỐ +
+ĐƠN VỊ đã sắp xếp** — đảo mệnh đề thì cặp y nguyên, tráo số giữa hai đơn vị thì
+cặp đổi và bị bắt.
+
+**Một hạn chế cố ý:** model viết "ba mươi" thay cho "30" thì bị huỷ. Chấp nhận
+được — nhận ca đó nghĩa là phải phân giải số viết bằng chữ, tức là mở một tầng
+ĐOÁN mới ngay giữa cái tầng sinh ra để chặn việc đoán. Có test ghi rõ.
+
+**§7.3 cấm nhờ AI viết lại câu chỉ dẫn của mục 6.** `deepTextIsGuidance()` so
+đúng bằng ba hằng. Rào chắn 1 chặn được con số nhưng không chặn được "làm bộ 15
+câu" thành "hoàn thành bài đánh giá".
+
+### Cổng chất lượng
+
+| Cổng | Kết quả |
+|------|---------|
+| `flutter analyze` | **No issues found** |
+| `flutter test` | **2310 pass · 24 skip · 1 đỏ** |
+| `deno test supabase/functions/` | **123 passed · 0 failed** |
+| APK debug | dựng được |
+
+Nền trước đợt này: 2266 · 24 · 1 → **+44 bài mới, 0 hồi quy**.
+
+---
+
 ## CỔNG CHẤT LƯỢNG ĐỢT 1
 
 | Cổng | Kết quả |
@@ -335,26 +480,41 @@ tiếng Anh). **Chưa sửa** — để riêng, không trộn vào đợt câu c
 
 ## CÒN LẠI
 
-### Đợt 2 — đụng luồng và dữ liệu
-- 3.2 câu hỏi gợi mở cố định + cỡ chữ 70% (dùng `titleScale` đã có)
-- 4.3 bỏ thẻ "Bạn đang đo sự phát triển bằng điều gì?"
-- 4.4 bỏ khối "CHƯA BIẾT VIẾT GÌ?" + 4 thẻ gợi ý
-- 5.4 hai nút Đồng ý / Không đồng ý (đổi hành vi, cần chốt ca "bỏ qua rồi Không
-  đồng ý")
+Toàn bộ phần **làm được mà không chờ ai** đã xong: đợt 1, 1B, 2, 3, nhóm A, B,
+C, D, E. Còn lại đúng ba loại.
 
-### Đợt 3 — toàn app
-- 17.1 lọc dấu `*`/`**` do model sinh ra (4 Edge Function + một lớp phía app)
-- 17.2 quét toàn bộ icon về line art
-- 17.3 thêm test khoá hành vi onboarding 3 trang
+### 1 · Chờ khách chốt câu chữ
+- **A7** bộ nhãn thang đánh giá — đề xuất `Đang hỗ trợ tốt / Ổn, còn dư địa /
+  Đang cản trở`. **Giữ ngưỡng app 3.8 / 2.5, chỉ đổi chữ** (mockup chấm Likert
+  1–4, app chấm 1–5 — bê thẳng ngưỡng là mọi người dùng cũ thức dậy thấy đánh
+  giá của mình tự nhiên khác đi).
+- **A8 / E2** tên ba trụ — tài liệu §7.2 tự ghi "cần chị Yumi chốt".
+- **Hai màn Khoảnh khắc / Năng lượng** — giữ làm nhánh phụ của chatbox, bỏ hẳn,
+  hay đưa vào lối chính? (Xem §0 của `ke_hoach_career_snapshot_100926.md`.)
+- **Bật lớp 3 AI hay không** — đã dựng xong, mặc định TẮT. Cần khách đọc một mẻ
+  bản viết lại rồi đồng ý với giọng đó.
+- **B1 · B2 · B3** của đợt 4 (nguyên tắc gộp, file 22 màn, ảnh lỗi chính tả).
+- **17.4** rà lỗi chính tả — chờ B3.
 
-### Đợt 4 — chờ khách
-- B1 nguyên tắc gộp "Trải nghiệm hiện tại" vào Career Health Check
-- B2 file 22 màn hình
-- B3 ảnh chụp lỗi "tình thường"
+### 2 · Việc NGOÀI MÃ, phải làm bằng tay
+- ⚠️ **Sửa mô tả sản phẩm trên App Store Connect** cho khớp câu chữ IAP mới
+  (16.6 / 16.7). Apple đã từ chối một lần vì Guideline 3.1.1. **Chặn cứng việc
+  nộp bản mới.**
+- ⚠️ **Push 2 migration:** `20260910000000_wr_insight_feedback.sql`,
+  `20260910000001_wr_polished_text.sql`. Chưa push thì nhóm D ghi log hỏng (âm
+  thầm, best-effort) và lớp 3 không đệm được.
+- ⚠️ **Deploy Edge Function `wr-polish`** — chỉ cần khi bật lớp 3.
 
-### Đợt 5
-- 17.5 bản tiếng Anh (~1.500 chuỗi trên 83 file, phải tách `.arb` trước)
+### 3 · Việc lớn, nên tách riêng
+- **17.5 bản tiếng Anh.** ~1.500 chuỗi tiếng Việt viết thẳng trong mã, trải trên
+  83 file; 49 file của phần WorkReflection **không gọi `AppLocalizations` một
+  lần nào**. Phải tách `.arb` trước. Đây không phải một mục của đợt câu chữ mà là
+  một hạng mục riêng.
 
-### Bốn câu hỏi khách chưa trả lời
-Xem §19 của `docs/chinh_sua_noi_dung_2026-09-09.md`. Đợt 1 không phụ thuộc câu
-nào trong số đó.
+### Bốn câu hỏi §19 — nay còn một
+| # | Câu hỏi | Trạng thái |
+|---|---------|-----------|
+| 1 | Đếm tổng số lần: cửa sổ 30 hay trọn đời? | **Đã giải** ở A5 — đếm thật, trần nâng lên 500 (`kEpisodeHistoryLimit`) |
+| 2 | "Không đồng ý" khi chưa viết gì | **Đã làm** theo phương án tài liệu đề nghị, có test riêng |
+| 3 | Câu gợi mở cố định | **Khách tự xác nhận** trong docx cập nhật ("sửa thành câu cố định") |
+| 4 | Bản tiếng Anh: toàn app hay chỉ màn App Review? | **Còn chờ** — quyết định phạm vi của một hạng mục nhiều tuần |

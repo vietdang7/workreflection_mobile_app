@@ -712,7 +712,14 @@ class _SettingsSection extends ConsumerWidget {
         // để không ai phải bấm vào mới biết mình đang có gì.
         _SettingRow(
           key: const Key('profile_paywall_btn'),
-          icon: isPremium ? Icons.star : Icons.star_outline,
+          // Mục 17.2 — không dùng icon tô đặc. Bản trước phân biệt Premium bằng
+          // ngôi sao ĐẶC so với ngôi sao viền; đổi cả hai về viền thì hai nhánh
+          // giống nhau và mất thông tin. Nên đổi GLYPH thay vì đổi độ đặc: cả
+          // hai đều là line art, và huy hiệu vs ngôi sao đọc ra khác nhau rõ
+          // hơn cả đặc-vs-viền.
+          icon: isPremium
+              ? Icons.workspace_premium_outlined
+              : Icons.star_outline,
           label: 'Bản Premium',
           onTap: () => context.push('/wr/paywall'),
           trailing: Row(

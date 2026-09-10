@@ -194,8 +194,8 @@ void main() {
       find.byWidgetPredicate((w) =>
           w is IconButton &&
           (w.icon is Icon) &&
-          ((w.icon as Icon).icon == Icons.pause ||
-              (w.icon as Icon).icon == Icons.play_arrow)),
+          ((w.icon as Icon).icon == Icons.pause_circle_outlined ||
+              (w.icon as Icon).icon == Icons.play_circle_outlined)),
       findsOneWidget,
     );
 

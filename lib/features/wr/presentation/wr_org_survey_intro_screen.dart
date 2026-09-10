@@ -100,7 +100,7 @@ class WrOrgSurveyIntroScreen extends ConsumerWidget {
                     child: const Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.auto_awesome,
+                        Icon(Icons.auto_awesome_outlined,
                             size: 14, color: WrColors.pillTealText),
                         SizedBox(width: 8),
                         Expanded(

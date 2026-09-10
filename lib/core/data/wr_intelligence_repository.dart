@@ -9,6 +9,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../logic/wr_polish_guard.dart';
 import '../models/wr_intelligence.dart';
 import '../models/wr_mood_content.dart';
 
@@ -17,6 +18,9 @@ const String kWrDocAnalyzeFunction = 'wr-doc-analyze';
 
 /// Edge Function sinh "Diễn biến theo thời gian" cho tab Hành trình.
 const String kWrNarrativeFunction = 'wr-narrative';
+
+/// Edge Function lớp 3 — viết lại câu Diễn giải sâu cho mượt hơn (§7).
+const String kWrPolishFunction = 'wr-polish';
 
 /// Lỗi khi đọc tài liệu — [message] là câu tiếng Việt để hiện thẳng cho người
 /// dùng, không phải mã lỗi kỹ thuật.
@@ -79,6 +83,29 @@ abstract class WrIntelligenceRepository {
 
   /// Insert an insight record.
   Future<void> insertInsight(WrInsight i);
+
+  /// Lớp 3 — nhờ AI viết lại [text] cho mượt hơn (§7).
+  ///
+  /// Trả null nghĩa là dùng câu gốc: hàm tắt, hết hạn chờ, hoặc bản viết lại bị
+  /// một trong ba rào chắn huỷ. §7.2 — "Cả ba rào chắn đều rơi về cùng một hành
+  /// vi dự phòng."
+  ///
+  /// KHÔNG bao giờ ném. Đây là lớp tuỳ chọn; bỏ hẳn nó thì sản phẩm vẫn chạy
+  /// đúng, nên nó không có quyền làm hỏng một màn hình.
+  Future<String?> polishText(String text);
+
+  /// Ghi một lần bấm Đồng ý / Không đồng ý ở bước "Góc nhìn khác" (§10.3).
+  ///
+  /// Ghi CẢ HAI vế, không riêng vế từ chối: vắng mặt trong `wr_insights` không
+  /// phân biệt được "không đồng ý" với "thoát app giữa chừng", nên chỉ đếm được
+  /// tỷ lệ khi cả hai vế đều thành sự kiện.
+  ///
+  /// [situationCode] null là nhánh "Điều khác" — vẫn phải đếm.
+  Future<void> insertInsightFeedback({
+    required String userId,
+    required String? situationCode,
+    required bool agreed,
+  });
 
   /// Fetch all practice themes.
   Future<List<PracticeTheme>> fetchPracticeThemes();
@@ -308,6 +335,46 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
   @override
   Future<void> insertInsight(WrInsight i) async {
     await _client.from('wr_reflection_insights').insert(i.toInsert());
+  }
+
+  @override
+  Future<String?> polishText(String text) async {
+    if (!kPolishEnabled) return null;
+    final original = text.trim();
+    if (original.isEmpty) return null;
+    try {
+      // Rào chắn 3 (§7.2): 2 giây là hết. Máy chủ vẫn chạy nốt lượt đó và ghi
+      // vào bộ đệm, nên lần mở màn SAU đọc được ngay — bỏ cuộc ở đây không phải
+      // là bỏ luôn lượt gọi.
+      final res = await _client.functions
+          .invoke(kWrPolishFunction, body: {'text': original})
+          .timeout(kPolishTimeout);
+      final data = res.data;
+      if (data is! Map) return null;
+      final polished = data['polished'];
+      if (polished is! String) return null;
+      // Soi LẠI ở phía app dù máy chủ đã soi. Câu gốc chỉ có ở đây, nên đây là
+      // phía duy nhất kiểm được rào chắn 1 và 2 trên đúng cặp câu.
+      return inspectPolished(original: original, polished: polished) == null
+          ? polished.trim()
+          : null;
+    } catch (_) {
+      // Hết hạn chờ, mất mạng, hàm chưa deploy — tất cả cùng một hành vi.
+      return null;
+    }
+  }
+
+  @override
+  Future<void> insertInsightFeedback({
+    required String userId,
+    required String? situationCode,
+    required bool agreed,
+  }) async {
+    await _client.from('wr_insight_feedback').insert({
+      'user_id': userId,
+      'situation_code': situationCode,
+      'agreed': agreed,
+    });
   }
 
   @override

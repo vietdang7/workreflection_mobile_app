@@ -455,7 +455,7 @@ class _JdSection extends ConsumerWidget {
             children: [
               for (final s in match.matchedSkills)
                 _BulletLine(
-                  icon: Icons.check_circle_outline,
+                  icon: Icons.check_circle_outlined,
                   color: WrColors.teal,
                   text: s.title,
                 ),

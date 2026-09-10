@@ -37,6 +37,7 @@
 // ---------------------------------------------------------------------------
 
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
+import { stripMarkdown } from '../_shared/strip_markdown.ts';
 import { buildNarrativePrompt, type NarrativeInput } from './prompt.ts';
 import {
   MIN_EPISODES,
@@ -327,7 +328,11 @@ async function callModel(apiKey: string, messages: unknown[]): Promise<string> {
       return '';
     }
     const payload = await res.json();
-    return String(payload?.choices?.[0]?.message?.content ?? '').trim();
+    // Lột Markdown ngay tại cửa ra (mục 17.1, khách 09/09). Bài Diễn biến dựng
+    // bằng `Text` thuần trên màn Hành trình, nên một cụm `**...**` lọt qua là
+    // hiện nguyên hình. Prompt đã dặn viết chữ thuần; đây là hàng rào thứ hai.
+    const content = String(payload?.choices?.[0]?.message?.content ?? '');
+    return stripMarkdown(content).trim();
   } finally {
     clearTimeout(timer);
   }

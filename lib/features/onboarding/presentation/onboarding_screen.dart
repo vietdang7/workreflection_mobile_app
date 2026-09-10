@@ -344,7 +344,7 @@ class _SituationCard extends StatelessWidget {
               ),
             ),
             if (isSelected)
-              const Icon(Icons.check_circle, color: WrColors.coral, size: 18),
+              const Icon(Icons.check_circle_outlined, color: WrColors.coral, size: 18),
           ],
         ),
       ),

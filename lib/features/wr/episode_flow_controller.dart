@@ -196,14 +196,15 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
   /// chuỗi của `arrival` và `celebration` không có `explore` — đọc theo
   /// archetype sẽ nuốt mất phần chi tiết của ai check-in "khá ổn"/"đang vui".
   ///
-  /// [detailPrompt] là câu Reflection của chính tình huống đã chọn; tầng UI đọc
-  /// từ story rồi truyền vào, vì controller không xem được provider nội dung.
+  /// [detailPrompt] là câu hỏi gợi mở của bước Chi tiết. Từ mục 3.2 (khách
+  /// 09/09) câu đó là MỘT câu cố định, nên tham số này chỉ còn để tầng UI truyền
+  /// đúng chuỗi nó đang hiện; bỏ trống thì lùi về chính hằng đó.
   List<ReflectionRecapItem> recap({String? detailPrompt}) {
     final ep = state;
     if (ep == null) return const [];
     final prompts = <ReflectionPattern, String>{
       ReflectionPattern.notice: kNoticePrompt,
-      ReflectionPattern.explore: detailPrompt ?? kCustomDetailPrompt,
+      ReflectionPattern.explore: detailPrompt ?? kDetailPrompt,
     };
     final items = <ReflectionRecapItem>[];
     for (final pattern in kReflectCapturePatterns) {
@@ -244,7 +245,22 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
   }
 
   /// Người dùng xác nhận ý nghĩa. Chỉ ở đây Insight mới được tạo.
-  Future<void> confirmMeaning(String meaning) async {
+  ///
+  /// [recordInsight] false là người dùng bấm **Không đồng ý** ở bước Góc nhìn
+  /// khác (§10, khách 10/09). Khi đó:
+  ///
+  /// - KHÔNG ghi hàng nào vào bảng Insight — đúc kết bị từ chối không được lưu.
+  /// - Episode VẪN đi tiếp sang `meaning_confirmed`. §10.1 nói rõ: "lần
+  ///   Reflection đó VẪN tạo ra một Câu chuyện (STORY) bình thường, chỉ là không
+  ///   kèm đúc kết. Không bỏ luôn cả lần Reflection."
+  /// - [meaning] lúc đó chỉ còn phần người dùng TỰ viết, không kèm câu aha. Từ
+  ///   chối một góc nhìn được đề xuất không có nghĩa là vứt bỏ chữ của chính
+  ///   mình.
+  ///
+  /// Phép đếm tần suất theo trụ **không** đọc bảng Insight mà đọc Episode, nên
+  /// lần bị từ chối vẫn được đếm — đúng §10.1: "Tần suất đo việc người dùng GẶP
+  /// tình huống đó, không đo việc họ ĐỒNG Ý với cách diễn giải."
+  Future<void> confirmMeaning(String meaning, {bool recordInsight = true}) async {
     var ep = state;
     if (ep == null) return;
 
@@ -272,23 +288,44 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
     final userId = ep.userId;
     // insertInsight không trả id — Episode vẫn truy vết được qua draft_meaning
     // và memory event, nên confirmed_insight_id để trống ở bản này.
-    try {
-      await _intel.insertInsight(WrInsight(
-        userId: userId,
-        source: 'episode',
-        scaDimension: ep.scaDimension,
-        humanNeed: ep.humanNeed,
-        content: meaning.trim(),
-      ));
-    } catch (e, s) {
-      // Đúng chỗ đã giấu lỗi 400 `source = 'episode'` suốt từ 2026-07-27:
-      // Episode vẫn giữ draft_meaning nên màn hình đi tiếp như không có gì,
-      // trong khi bảng Insight rỗng. Best-effort thì được, nhưng phải kêu.
-      logFlowError('insertInsight', e, s);
+    if (recordInsight && meaning.trim().isNotEmpty) {
+      try {
+        await _intel.insertInsight(WrInsight(
+          userId: userId,
+          source: 'episode',
+          scaDimension: ep.scaDimension,
+          humanNeed: ep.humanNeed,
+          content: meaning.trim(),
+        ));
+      } catch (e, s) {
+        // Đúng chỗ đã giấu lỗi 400 `source = 'episode'` suốt từ 2026-07-27:
+        // Episode vẫn giữ draft_meaning nên màn hình đi tiếp như không có gì,
+        // trong khi bảng Insight rỗng. Best-effort thì được, nhưng phải kêu.
+        logFlowError('insertInsight', e, s);
+      }
     }
 
     state = await _repo.confirmMeaning(episode: ep, meaning: meaning);
     _ref.invalidate(wrLatestInsightProvider);
+  }
+
+  /// Ghi lại người dùng đã Đồng ý hay Không đồng ý với đúc kết (§10.3).
+  ///
+  /// Best-effort: đây là số liệu cho đội nội dung, không phải dữ liệu của người
+  /// dùng. Ghi hỏng thì kêu lên log chứ không được chặn họ đi tiếp — bước Góc
+  /// nhìn khác là một bước tuỳ chọn của chính họ.
+  Future<void> recordInsightFeedback({required bool agreed}) async {
+    final ep = state;
+    if (ep == null) return;
+    try {
+      await _intel.insertInsightFeedback(
+        userId: ep.userId,
+        situationCode: ep.situationCode,
+        agreed: agreed,
+      );
+    } catch (e, s) {
+      logFlowError('insertInsightFeedback', e, s);
+    }
   }
 
   // -------------------------------------------------------------------------

@@ -489,7 +489,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                                   if (selected) ...[
                                     const SizedBox(width: 12),
                                     const Icon(
-                                      Icons.check_circle,
+                                      Icons.check_circle_outlined,
                                       size: 20,
                                       color: WrColors.coral,
                                     ),

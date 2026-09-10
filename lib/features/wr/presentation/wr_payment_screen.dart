@@ -648,7 +648,7 @@ class _VoucherCard extends StatelessWidget {
           if (applied != null)
             Row(
               children: [
-                const Icon(Icons.check_circle, size: 18, color: WrColors.teal),
+                const Icon(Icons.check_circle_outlined, size: 18, color: WrColors.teal),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text('Đã áp dụng $applied',
@@ -726,7 +726,7 @@ class _FreeOrderCard extends StatelessWidget {
       key: const Key('wr_payment_free_card'),
       child: Column(
         children: [
-          const Icon(Icons.card_giftcard, size: 34, color: WrColors.teal),
+          const Icon(Icons.card_giftcard_outlined, size: 34, color: WrColors.teal),
           const SizedBox(height: 10),
           const Text('Đơn này miễn phí',
               style: TextStyle(
@@ -1285,7 +1285,7 @@ class _SuccessView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.check_circle, size: 64, color: WrColors.teal),
+            const Icon(Icons.check_circle_outlined, size: 64, color: WrColors.teal),
             const SizedBox(height: 18),
             const Text('Đã nhận được thanh toán',
                 style: TextStyle(

@@ -494,7 +494,7 @@ class _TtsButton extends ConsumerWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : Icon(
-              state.isPlaying ? Icons.pause_circle_outline : Icons.volume_up_outlined,
+              state.isPlaying ? Icons.pause_circle_outlined : Icons.volume_up_outlined,
               color: state.isPlaying ? WrColors.coral : WrColors.navy,
             ),
       onPressed: () {
@@ -598,7 +598,13 @@ class _PulsingMicIconState extends State<_PulsingMicIcon>
   Widget build(BuildContext context) {
     return ScaleTransition(
       scale: _scale,
-      child: const Icon(Icons.mic, color: WrColors.coral),
+      // Mục 17.2 — không dùng icon tô đặc. Bản trước phân biệt "đang nghe" bằng
+      // mic ĐẶC so với mic viền ở trạng thái nghỉ; đổi cả hai về viền thì hai
+      // trạng thái giống hệt nhau, chỉ còn nhịp phóng to thu nhỏ để phân biệt.
+      //
+      // Nên đổi GLYPH: đang nghe là nút DỪNG, đúng việc chạm vào sẽ làm. Cùng
+      // cách `wr_voice_field.dart:180` đang dùng.
+      child: const Icon(Icons.stop_circle_outlined, color: WrColors.coral),
     );
   }
 }

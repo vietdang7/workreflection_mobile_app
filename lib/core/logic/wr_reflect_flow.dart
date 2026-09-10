@@ -172,17 +172,27 @@ String noticeSubtitle(String? moodLabel) {
 // Bước 1 — Meaning
 // ---------------------------------------------------------------------------
 
-/// Câu hỏi bước Ý nghĩa cho nhánh "Điều khác" (mockup i===1, `s.custom`).
-const String kCustomDetailPrompt = 'Chuyện gì cụ thể đã xảy ra?';
-
-/// Câu hỏi bước Ý nghĩa: câu Reflection của tình huống đã chọn.
+/// Câu hỏi gợi mở của bước Chi tiết — MỘT câu cho mọi tình huống.
 ///
-/// [reflectionQuestion] null nghĩa là nhánh "Điều khác" hoặc thư viện chưa nối
-/// được sang story — cả hai đều lùi về câu hỏi chung, KHÔNG bịa một câu riêng.
-String detailPrompt(String? reflectionQuestion) {
-  final q = reflectionQuestion?.trim();
-  return (q == null || q.isEmpty) ? kCustomDetailPrompt : q;
-}
+/// Mục 3.2 của file khách 09/09: bỏ câu hỏi riêng của từng tình huống, dùng
+/// chung đúng câu này. Trước đây câu hỏi đọc từ `reflection_question` của tình
+/// huống trong thư viện, nên mỗi tình huống hỏi một kiểu.
+const String kDetailPrompt =
+    'Viết ra bất cứ điều gì vừa xuất hiện trong đầu bạn lúc này.';
+
+/// Hệ số cỡ chữ của [kDetailPrompt] — mục 3.2 yêu cầu giảm còn 70%.
+///
+/// Câu này không còn là câu hỏi riêng của tình huống nữa mà là một lời mời viết
+/// chung, nên để nó to bằng tiêu đề bước thì nó tranh chỗ với chính câu chuyện
+/// phía trên.
+const double kDetailPromptScale = 0.7;
+
+/// Câu hỏi bước Chi tiết.
+///
+/// Vẫn nhận [reflectionQuestion] nhưng **không dùng tới**: mục 3.2 chốt một câu
+/// cố định. Giữ tham số để cột `reflection_question` trong DB không phải xoá —
+/// hàng trăm câu ở đó chỉ ngừng hiển thị, đảo lại sau này tốn một dòng.
+String detailPrompt(String? reflectionQuestion) => kDetailPrompt;
 
 /// Đoạn giải thích đặt NGAY DƯỚI nhãn bước, TRƯỚC khi vào câu chuyện.
 ///
@@ -331,6 +341,24 @@ const String kInsightYourWordsLabel = 'Điều bạn vừa viết';
 /// người dùng phải nghĩ như vậy, còn khung này chỉ nói có người khác cũng nghĩ
 /// vậy.
 const String kInsightNormalizingLabel = 'Đúc kết phổ biến';
+
+// ---------------------------------------------------------------------------
+// Đồng ý / Không đồng ý ở Lớp 2 — §10 changelog Career Snapshot (khách 10/09)
+// ---------------------------------------------------------------------------
+
+/// Nhãn nút chính ở Lớp 2 — thay cho "Tiếp tục".
+const String kInsightAgreeLabel = 'Đồng ý';
+
+/// Nhãn nút phụ ở Lớp 2.
+const String kInsightDisagreeLabel = 'Không đồng ý';
+
+/// Lời xác nhận sau khi bấm Không đồng ý (§10.2, nguyên văn gợi ý của khách).
+///
+/// §10.2: "Không nên im lặng chuyển sang bước sau như thể không có gì xảy ra,
+/// vì người dùng vừa thực hiện một hành động có chủ đích và cần được phản hồi."
+const String kInsightDisagreeAck =
+    'Cảm ơn bạn đã cho biết. Góc nhìn này sẽ không được lưu lại. Bạn vẫn có thể '
+    'tiếp tục với bước sau nhé.';
 
 /// Câu chốt dưới khối aha ở Lớp 2.
 const String kInsightAhaNote =

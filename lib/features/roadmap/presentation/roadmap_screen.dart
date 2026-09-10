@@ -1077,7 +1077,7 @@ class _ActionRow extends StatelessWidget {
             onTap: () => onToggle(!isCompleted),
             child: Icon(
               isCompleted
-                  ? Icons.check_circle
+                  ? Icons.check_circle_outlined
                   : Icons.radio_button_unchecked,
               color: isCompleted ? WrColors.teal : WrColors.muted,
               size: 20,
@@ -1149,7 +1149,7 @@ class _CustomTaskRow extends StatelessWidget {
             onTap: () => onToggle(!isCompleted),
             child: Icon(
               isCompleted
-                  ? Icons.check_circle
+                  ? Icons.check_circle_outlined
                   : Icons.radio_button_unchecked,
               color: isCompleted ? WrColors.teal : WrColors.muted,
               size: 20,
@@ -1760,7 +1760,7 @@ class _ActivityEntryTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.check_circle, color: WrColors.teal, size: 18),
+          Icon(Icons.check_circle_outlined, color: WrColors.teal, size: 18),
           const SizedBox(width: 10),
           Expanded(
             child: Column(

@@ -2,6 +2,7 @@
 // Plain immutable classes + fromJson/toInsert, mirroring wr_content.dart style.
 // No Flutter dependencies.
 
+import 'package:workreflection_mobile/core/logic/wr_plain_text.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 
 // ---------------------------------------------------------------------------
@@ -299,7 +300,10 @@ class PatternNarrative {
       periodEnd: json['period_end'] != null
           ? DateTime.parse(json['period_end'] as String)
           : null,
-      narrative: json['narrative'] as String,
+      // Mục 17.1 — bài Diễn biến do model viết, màn Hành trình dựng bằng `Text`
+      // thuần. Lột ở đây phủ luôn những bài đã sinh trước khi bật bộ lọc ở
+      // Edge Function.
+      narrative: stripMarkdown(json['narrative'] as String),
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
@@ -673,16 +677,21 @@ class WrDocAnalysis {
     if (raw is! List) return const [];
     return [
       for (final e in raw)
-        if (e != null && e.toString().trim().isNotEmpty) e.toString().trim(),
+        if (e != null && e.toString().trim().isNotEmpty)
+          stripMarkdown(e.toString()).trim(),
     ];
   }
 
   factory WrDocAnalysis.fromJson(Map<String, dynamic> json) {
     final rawPillars = json['pillars'];
+    // Mục 17.1 — lột Markdown ở CỬA VÀO của model, không rải ở từng widget.
+    // Bản phân tích này do model viết; những hàng lưu trước hôm bật bộ lọc phía
+    // Edge Function vẫn còn nguyên dấu sao trong database.
     return WrDocAnalysis(
-      title: (json['title'] as String?)?.trim(),
-      organization: (json['organization'] as String?)?.trim(),
-      summary: (json['summary'] as String?)?.trim() ?? '',
+      title: stripMarkdownOrNull(json['title'] as String?)?.trim(),
+      organization:
+          stripMarkdownOrNull(json['organization'] as String?)?.trim(),
+      summary: stripMarkdownOrNull(json['summary'] as String?)?.trim() ?? '',
       responsibilities: _list(json['responsibilities']),
       requirements: _list(json['requirements']),
       skills: _list(json['skills']),

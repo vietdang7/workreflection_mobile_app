@@ -141,7 +141,7 @@ class _PaywallCta extends ConsumerWidget {
         child: const Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Icon(Icons.check_circle, color: WrColors.pillTealText, size: 18),
+            Icon(Icons.check_circle_outlined, color: WrColors.pillTealText, size: 18),
             SizedBox(width: 10),
             Expanded(
               child: WrParagraph(
@@ -933,7 +933,7 @@ class _FeatureRow extends StatelessWidget {
             ),
           ),
           Icon(
-            avail ? Icons.check_circle_rounded : Icons.cancel_rounded,
+            avail ? Icons.check_circle_outlined : Icons.cancel_outlined,
             size: 16,
             color: avail ? WrColors.teal : WrColors.text3,
           ),

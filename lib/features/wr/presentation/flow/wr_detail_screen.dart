@@ -191,7 +191,10 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
       // là câu hỏi VỀ câu chuyện, nên nó phải đứng sau khi đã đọc chuyện — mà
       // `title` của khung thì luôn nằm trên `child`. Nhánh "Điều khác" không có
       // chuyện nào để đọc trước, giữ nguyên như cũ.
-      title: hasStory ? null : detailPrompt(story?.reflectionQuestion),
+      title: hasStory ? null : kDetailPrompt,
+      // Mục 3.2 giảm cỡ chữ câu gợi mở còn 70%. Áp cả ở nhánh "Điều khác" vì
+      // hai nhánh dùng đúng một câu, để chữ hai bên không lệch cỡ nhau.
+      titleScale: kDetailPromptScale,
       subtitle: hasStory ? null : kCustomDetailNote,
       progress: reflectProgress(1),
       onBack: () => context.pop(),
@@ -230,9 +233,11 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
             // chữ cùng canh trái, cùng cỡ gần nhau thì đọc ra như một đoạn văn
             // dài, và câu hỏi chìm mất.
             WrParagraph(
-              detailPrompt(story?.reflectionQuestion),
+              kDetailPrompt,
               key: const Key('wr_detail_question'),
-              style: wrFlowTitleStyle,
+              style: wrFlowTitleStyle.copyWith(
+                fontSize: wrFlowTitleStyle.fontSize! * kDetailPromptScale,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 14),
