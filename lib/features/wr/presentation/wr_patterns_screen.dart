@@ -36,8 +36,8 @@ class WrPatternsScreen extends ConsumerWidget {
         repeated.fold<int>(1, (m, p) => p.count > m ? p.count : m);
 
     return WrDetailScaffold(
-      eyebrow: 'TÌNH HUỐNG LẶP LẠI',
-      title: 'Những điều đang trở đi trở lại',
+      eyebrow: 'NHỮNG VÒNG LẶP QUEN THUỘC',
+      title: 'Những câu chuyện lặp lại',
       children: [
         if (repeated.isEmpty)
           WrParagraph(
@@ -52,12 +52,13 @@ class WrPatternsScreen extends ConsumerWidget {
           )
         else ...[
           const Text(
-            // Nói rõ ba điều người dùng không đoán được: cửa sổ chỉ 30 lần gần
-            // nhất, phải lặp đủ ngưỡng mới vào bảng, và lượt tự viết không có
-            // mã nào để đếm nên không bao giờ vào.
-            'Đếm trên $kRecentSituationsWindow lần nhìn lại gần nhất có chọn '
-            'tình huống, hiện những điều đã trở lại từ '
-            '$kRepeatedSituationsMinCount lần.',
+            // Vẫn nói rõ cửa sổ chỉ $kRecentSituationsWindow lần gần nhất —
+            // đó là điều người dùng không đoán được. Ngưỡng lặp và luật "lượt
+            // tự viết không có mã nên không vào bảng" thì khách 09/09/2026
+            // (§8.3) bỏ khỏi câu này cho nhẹ; luật vẫn nguyên trong mã.
+            'Trong $kRecentSituationsWindow ghi chép gần đây, có một vài tình '
+            'huống thường xuyên quay trở lại. Hãy cùng xem lại để hiểu rõ hơn '
+            'những gì bạn đang thực sự trải qua nhé.',
             key: Key('wr_patterns_window_note'),
             style: TextStyle(
               fontSize: 14.5,

@@ -221,7 +221,7 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
         elevation: 0,
         foregroundColor: WrColors.dark,
         title: const Text(
-          'Tài liệu bối cảnh',
+          'Tải lên JD hoặc CV của bạn',
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ),
       ),

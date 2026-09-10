@@ -228,14 +228,14 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Ô neo — điều gần nhất người dùng đã chọn trong cụm này, luôn có mặt
-          // và luôn đứng đầu (xem `pickSituationChoices`). Không gắn nhãn thì
-          // nó trông y hệt bốn gợi ý mới, và người dùng không biết rằng chọn
-          // lại chính nó mới là cách để "Tình huống lặp lại" đếm lên.
+          // và luôn đứng đầu (xem `pickSituationChoices`). Khách 09/09/2026
+          // (§2.2) bỏ nhãn "Lần trước": nhãn nói sai khi người dùng đổi cảm xúc
+          // check-in sang cụm khác. Chỗ đứng đầu + ô cao hơn vẫn giữ, đó mới là
+          // phần chỉ đúng trong mọi trường hợp.
           for (final sit in choices) ...[
             WrBigChoiceTile(
               key: Key('wr_situation_${sit.code}'),
               label: sit.text,
-              badge: sit.code == anchor?.code ? kAnchorBadge : null,
               height: sit.code == anchor?.code ? 92 : 76,
               selected: _selectedCode == sit.code,
               onTap: () => _pick(sit),

@@ -178,8 +178,7 @@ void main() {
       expect(n!.count, 5);
       expect(
         n.sentence,
-        'Đây là lần thứ 5 bạn gặp tình huống '
-        'ngại phản biện với đồng nghiệp.',
+        'Bạn đã gặp tình huống "ngại phản biện với đồng nghiệp" 5 lần',
       );
     });
 
@@ -395,7 +394,7 @@ void main() {
         await _pump(tester, _wrap(repo: repo, episodes: episodes));
 
         expect(find.text('ĐANG BỎ NGỎ'), findsOneWidget);
-        expect(find.textContaining('chưa khép lại'), findsOneWidget);
+        expect(find.textContaining('chưa hoàn thành'), findsOneWidget);
       });
 
       testWidgets('phiên bỏ dở ba tuần trước thì Home thôi nhắc về nó',
@@ -422,7 +421,7 @@ void main() {
         // Phiên cũ không còn được nhắc tới. Thẻ vẫn ở đó nhưng nói về việc hôm
         // nay — đã ghi cảm xúc, chưa chọn điều muốn nhìn lại.
         expect(find.text('ĐANG BỎ NGỎ'), findsNothing);
-        expect(find.textContaining('chưa khép lại'), findsNothing);
+        expect(find.textContaining('chưa hoàn thành'), findsNothing);
         expect(
           find.textContaining('chưa chọn điều muốn nhìn lại'),
           findsOneWidget,
@@ -486,7 +485,7 @@ void main() {
       expect(find.byKey(const Key('wr_home_system_notice')), findsOneWidget);
       expect(find.text('HỆ THỐNG NHẬN RA'), findsOneWidget);
       expect(
-        find.textContaining('lần thứ 5 bạn gặp tình huống'),
+        find.textContaining('Bạn đã gặp tình huống'),
         findsOneWidget,
       );
     });

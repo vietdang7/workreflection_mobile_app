@@ -9,9 +9,9 @@
 //   1. ĐÃ HÌNH THÀNH — ghi nhận nỗ lực thật. FREE, không khoá. Khoá phần này
 //      sau Premium là "thu phí người dùng để họ được biết chính nỗ lực của
 //      mình".
-//   2. ĐANG HÌNH THÀNH — bộ đếm, còn bao xa, và hành động tiếp theo (ba bước
-//      làm quen, hay nút duy trì).
-//   3. ĐỐI CHIẾU VỚI CÔNG VIỆC — tổng hợp và diễn giải, PREMIUM.
+//   2. THÓI QUEN ĐANG RÈN LUYỆN — bộ đếm, còn bao xa, và hành động tiếp theo
+//      (ba bước làm quen, hay nút duy trì).
+//   3. MỨC ĐỘ TƯƠNG THÍCH VỚI CÔNG VIỆC — tổng hợp và diễn giải, PREMIUM.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -95,7 +95,7 @@ class _WrGrowthSkillsScreenState extends ConsumerState<WrGrowthSkillsScreen> {
         ],
         if (forming.isNotEmpty) ...[
           const SizedBox(height: 26),
-          const _SectionLabel('ĐANG HÌNH THÀNH'),
+          const _SectionLabel('THÓI QUEN ĐANG RÈN LUYỆN'),
           const SizedBox(height: 14),
           WrListCard(
             children: [
@@ -393,12 +393,12 @@ class _JdSection extends ConsumerWidget {
         key: const Key('wr_skills_jd_empty'),
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const _SectionLabel('ĐỐI CHIẾU VỚI CÔNG VIỆC'),
+          const _SectionLabel('MỨC ĐỘ TƯƠNG THÍCH VỚI CÔNG VIỆC'),
           const SizedBox(height: 12),
           const WrParagraph(
-            'Chưa đối chiếu được. Viết một dòng mô tả công việc bạn đang làm, '
-            'WorkReflection sẽ chỉ ra kỹ năng nào của bạn đang hợp với nó và '
-            'chỗ nào còn trống.',
+            'Thêm vài dòng mô tả công việc (JD) bạn đang làm, hệ thống sẽ giúp '
+            'bạn nhìn rõ những kỹ năng đang phát huy tốt và đâu là những khoảng '
+            'trống cần hoàn thiện thêm.',
             style: TextStyle(fontSize: 15, color: WrColors.muted, height: 1.65),
           ),
           const SizedBox(height: 12),
@@ -429,7 +429,7 @@ class _JdSection extends ConsumerWidget {
       key: const Key('wr_skills_jd_match'),
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const _SectionLabel('ĐỐI CHIẾU VỚI CÔNG VIỆC'),
+        const _SectionLabel('MỨC ĐỘ TƯƠNG THÍCH VỚI CÔNG VIỆC'),
         const SizedBox(height: 12),
         Text(
           'Công việc bạn mô tả xoay quanh ${match.pillarSentence.toLowerCase()}.',

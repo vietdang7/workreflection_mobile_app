@@ -358,7 +358,7 @@ void main() {
     // Free: Career Memory khoá hoàn toàn, con số tổng vẫn nói ra.
     expect(find.byKey(const Key('wr_journey_memory_lock'), skipOffstage: false),
         findsOneWidget);
-    expect(find.textContaining('1 mảnh ký ức', skipOffstage: false),
+    expect(find.textContaining('1 ghi nhận', skipOffstage: false),
         findsOneWidget);
 
     stage.router.go('/wr/growth');

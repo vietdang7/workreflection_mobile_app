@@ -35,16 +35,16 @@ class WrJourneyNarrativeScreen extends ConsumerWidget {
     final refresh = ref.watch(wrNarrativeRefreshProvider).valueOrNull;
 
     return WrDetailScaffold(
-      eyebrow: 'DIỄN BIẾN THEO THỜI GIAN',
+      eyebrow: 'NHÌN LẠI DÒNG THỜI GIAN',
       title: 'Điều gì đang đổi trong bạn',
       children: [
         if (!canRead)
           const WrPremiumLock(
             key: Key('wr_journey_narrative_lock'),
             description:
-                'Bản đầy đủ kể lại những mẫu hình của bạn đã đổi thế nào qua '
-                'từng giai đoạn, điều gì đang nhạt dần và điều gì vẫn quay lại.',
-            ctaLabel: 'Mở diễn biến theo thời gian',
+                'Mở khóa bản đầy đủ để nhìn lại toàn bộ bức tranh thay đổi của '
+                'bạn qua từng giai đoạn.',
+            ctaLabel: 'Mở phần nhìn lại dòng thời gian',
             paywallTrigger: 'pattern_advanced',
           )
         // Chưa cho phép gửi dữ liệu sang AI thì mục này không chạy được — phần

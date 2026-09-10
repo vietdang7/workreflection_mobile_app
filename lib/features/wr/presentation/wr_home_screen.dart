@@ -357,7 +357,8 @@ class _CheckinQuestion extends ConsumerWidget {
         const SizedBox(
           width: double.infinity,
           child: Text(
-            'Chạm để bắt đầu một Reflection, dựa trên đúng cảm giác lúc này.',
+            'Chọn cảm xúc sát nhất với bạn lúc này để bắt đầu nhìn lại '
+            '(Reflection).',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 12.5,
@@ -704,7 +705,8 @@ class _UnfinishedReflectionCard extends ConsumerWidget {
     final (eyebrow, line) = open != null
         ? (
             'ĐANG BỎ NGỎ',
-            'Có một lần nhìn lại bạn chưa khép lại. Mở tiếp từ chỗ đang đứng.',
+            'Bạn đang có một câu chuyện chưa hoàn thành. Tiếp tục viết tiếp '
+            'từ chỗ dừng lại nhé!',
           )
         : (
             'CÒN MỘT BƯỚC NỮA',
@@ -996,8 +998,8 @@ class _LatestInsightSection extends ConsumerWidget {
               WrEyebrow('INSIGHT GẦN NHẤT'),
               SizedBox(height: 6),
               WrParagraph(
-                'Chưa có Insight nào. Bắt đầu một lần nhìn lại để lưu Insight '
-                'đầu tiên.',
+                'Hãy bắt đầu với check-in cảm xúc để chia sẻ câu chuyện '
+                'đầu tiên',
                 style: TextStyle(
                   fontSize: 14,
                   color: WrColors.text2,
@@ -1084,7 +1086,7 @@ class _LatestInsightSection extends ConsumerWidget {
 String _continueLabel(PendingPracticeStep pending) {
   final stage = practiceStageLabel(pending.step.stepOrder);
   final tail = stage == null ? pending.step.title : 'bước $stage đang chờ';
-  return '"${pending.theme.title}": $tail';
+  return 'Chủ đề "${pending.theme.title}": $tail';
 }
 
 class _ContinueTodaySection extends ConsumerWidget {

@@ -102,8 +102,8 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
             ),
             const SizedBox(height: 8),
             const WrParagraph(
-              'Gộp lại toàn bộ thông tin bạn đã chia sẻ ở Hồ sơ, Khảo sát tổ '
-              'chức, và Thông tin công việc, để xem hoặc sửa lại ở đúng một chỗ.',
+              'Tổng hợp toàn bộ bối cảnh cá nhân, môi trường và công việc của '
+              'bạn. Bạn có thể kiểm tra hoặc cập nhật lại bất cứ lúc nào tại đây.',
               style: TextStyle(
                 fontSize: 14.5,
                 color: WrColors.text2,
@@ -120,16 +120,15 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                 color: WrColors.teal.withValues(alpha: 0.08),
                 borderRadius: BorderRadius.circular(11),
               ),
+              // Khách 09/09/2026 (§13.2): bỏ biểu tượng ✦ ở đầu dòng. Ô vẫn
+              // giữ nền teal nhạt — đó mới là thứ tách nó khỏi chữ xung quanh.
               child: const Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.auto_awesome_outlined,
-                      size: 16, color: WrColors.pillTealText),
-                  SizedBox(width: 8),
                   Expanded(
                     child: WrParagraph(
-                      'Đây cũng là thứ giúp trợ lý trò chuyện AI hiểu đúng '
-                      'hoàn cảnh của bạn hơn, thay vì trả lời chung chung.',
+                      'Thông tin càng sát thực tế, trợ lý AI càng đưa ra những '
+                      'tư vấn "may đo" chính xác cho bối cảnh của bạn',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,

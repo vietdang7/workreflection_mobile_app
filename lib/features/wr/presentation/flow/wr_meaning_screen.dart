@@ -203,7 +203,7 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
   ) {
     return WrFlowScaffold(
       eyebrow: kInsightStemEyebrow,
-      title: 'Nếu giữ lại một điều từ lần nhìn lại này, đó là gì?',
+      title: 'Nếu chọn ra một bài học cho lúc này, bạn sẽ viết gì?',
       subtitle: kInsightStemNote,
       progress: reflectProgress(2),
       onBack: () => context.pop(),
@@ -331,7 +331,7 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
 
     return WrFlowScaffold(
       eyebrow: kInsightAhaEyebrow,
-      title: 'Nhiều người cũng dừng lại ở đúng chỗ này',
+      title: 'Thêm một cách tiếp cận khác để bạn tham khảo',
       subtitle: kInsightAhaNote,
       progress: reflectProgress(2),
       // Back về Lớp 1, không rời màn: hai lớp là một bước, nên nút lùi phải lùi

@@ -379,8 +379,8 @@ void main() {
       );
 
       expect(intel.enrollThemeCalls, isEmpty);
-      expect(find.text('Chưa đủ dữ liệu để có chủ đề'), findsOneWidget);
-      expect(find.textContaining('14/15 lần'), findsOneWidget);
+      expect(find.text('Chưa xác định chủ đề trọng tâm'), findsOneWidget);
+      expect(find.textContaining('14/15 lượt'), findsOneWidget);
     });
 
     // Hướng 2 — làm xong bộ 15 câu là có chủ đề ngay, không cần lặp lần nào.
@@ -535,7 +535,7 @@ void main() {
         await _pumpLarge(tester, _wrapGrowth(intel: intel));
 
         expect(intel.enrollThemeCalls, isEmpty);
-        expect(find.text('Chưa đủ dữ liệu để có chủ đề'), findsOneWidget);
+        expect(find.text('Chưa xác định chủ đề trọng tâm'), findsOneWidget);
         expect(
           find.byKey(const Key('wr_growth_suggestion_self_check')),
           findsOneWidget,

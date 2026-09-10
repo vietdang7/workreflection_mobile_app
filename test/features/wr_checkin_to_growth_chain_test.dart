@@ -28,7 +28,6 @@ import 'package:workreflection_mobile/core/data/wr_episode_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_mood_content_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
-import 'package:workreflection_mobile/core/logic/wr_reflect_flow.dart';
 import 'package:workreflection_mobile/core/logic/wr_repeated_situations.dart';
 import 'package:workreflection_mobile/core/models/mobile_profile.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
@@ -299,8 +298,8 @@ void main() {
     // Ba lần chưa đổi được chủ đề: ngưỡng hướng 1 là 15 LẦN nhìn lại (khách
     // chốt 2026-08-04). Màn phải nói đúng quãng đường còn lại, và tuyệt đối
     // chưa tự thêm chủ đề nào.
-    expect(find.text('Chưa đủ dữ liệu để có chủ đề'), findsOneWidget);
-    expect(find.textContaining('3/15 lần'), findsOneWidget);
+    expect(find.text('Chưa xác định chủ đề trọng tâm'), findsOneWidget);
+    expect(find.textContaining('3/15 lượt'), findsOneWidget);
     expect(stage.intel.enrollThemeCalls, isEmpty);
     expect(find.text(_theme.title), findsNothing);
   });
@@ -326,7 +325,11 @@ void main() {
     final chosen = stage.episodes.episodes.single.situationCode;
     expect(chosen, isNotNull);
 
-    // Vòng 2 và 3: ô đầu phải là chính điều vừa chọn, có nhãn "Lần trước".
+    // Vòng 2 và 3: ô đầu phải là chính điều vừa chọn.
+    //
+    // Trước 09/09/2026 chỗ này khoá bằng nhãn "Lần trước" (`kAnchorBadge`).
+    // Khách bỏ nhãn (§2.2), nên khoá bằng thứ thật sự quan trọng: ô neo là ô
+    // ĐẦU TIÊN, và nó cao hơn các ô khác.
     for (var round = 2; round <= 3; round++) {
       stage.router.go('/home');
       await tester.pumpAndSettle();
@@ -337,10 +340,16 @@ void main() {
         find.byType(WrBigChoiceTile).first,
       );
       expect(
-        first.badge,
-        kAnchorBadge,
+        first.key,
+        Key('wr_situation_$chosen'),
         reason: 'vòng $round: ô đầu không phải ô neo — người dùng lại bị khoá '
             'không chạm lại được điều mình đang gặp',
+      );
+      expect(
+        first.height,
+        92,
+        reason: 'vòng $round: ô neo mất chiều cao riêng — bỏ nhãn "Lần trước" '
+            'rồi thì đây là dấu hiệu duy nhất còn lại để nhận ra nó',
       );
       expect(find.byKey(Key('wr_situation_$chosen')), findsOneWidget,
           reason: 'vòng $round: điều đã chọn biến mất khỏi danh sách');

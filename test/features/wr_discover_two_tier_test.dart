@@ -768,9 +768,9 @@ void main() {
       );
       expect(find.text('Tiến độ lần gần nhất: 0/15'), findsOneWidget);
       expect(find.text('Bắt đầu Self-Check'), findsOneWidget);
-      expect(find.text('Làm lại Self-Check'), findsNothing);
+      expect(find.text('Cập nhật lại Self-Check'), findsNothing);
       expect(
-        find.textContaining('15 câu hỏi tình huống ngắn'),
+        find.textContaining('15 câu hỏi ngắn giúp hệ thống hiểu rõ hơn'),
         findsOneWidget,
       );
     });
@@ -798,7 +798,7 @@ void main() {
       );
 
       expect(find.text('Tiến độ lần gần nhất: 15/15'), findsOneWidget);
-      expect(find.text('Làm lại Self-Check'), findsOneWidget);
+      expect(find.text('Cập nhật lại Self-Check'), findsOneWidget);
       expect(find.text('Bắt đầu Self-Check'), findsNothing);
     });
 
@@ -963,7 +963,7 @@ void main() {
       );
 
       expect(
-        find.textContaining('Bức tranh tổng thể đã mở'),
+        find.textContaining('Bức tranh tổng quan sau'),
         findsOneWidget,
       );
 
@@ -1047,7 +1047,7 @@ void main() {
       );
     });
 
-    testWidgets('đã tự đánh giá thì VẪN có bức tranh, và nói rõ hai nguồn khác nhau',
+    testWidgets('đã tự đánh giá thì VẪN có bức tranh riêng từ hành vi',
         (tester) async {
       // Đây là tài khoản của khách: đã làm Self-Check, đã đủ 15 lần nhìn lại.
       //
@@ -1079,10 +1079,15 @@ void main() {
         ),
       );
 
-      // Thẻ vẫn phải phân biệt hai nguồn — người dùng không được để hiểu nhầm
-      // rằng ba nhãn này chính là điểm họ tự chấm.
-      expect(find.textContaining('bộ Self-Check'), findsOneWidget);
-      // …nhưng bức tranh thì có thật, không còn là một câu giải thích suông.
+      // KHÔNG còn khoá vế "khác với Trải nghiệm hiện tại… đọc từ bộ Self-Check".
+      //
+      // Trước 09/09/2026 thẻ nói rõ hai nguồn khác nhau, và test này khoá đúng
+      // câu đó. Khách bỏ vế so sánh (§7.1) — họ đọc thấy nó rối hơn là rõ. Việc
+      // thật sự cần khoá không nằm ở câu chữ mà ở HÀNH VI: người đã tự đánh giá
+      // vẫn phải có bức tranh riêng tính từ hành vi, chứ không rơi lại về một
+      // câu giải thích suông. Đó là lỗi khách báo ở họp 26_1, và nó vẫn được
+      // khoá nguyên bằng ba khối pillar dưới đây.
+      expect(find.textContaining('Bức tranh tổng quan sau'), findsOneWidget);
       for (final p in SelfCheckPillar.values) {
         expect(
           find.byKey(Key('wr_discover_health_pillar_${p.name}')),

@@ -79,12 +79,12 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        await _seenWhileScrolling(tester, find.text('DIỄN BIẾN THEO THỜI GIAN')),
+        await _seenWhileScrolling(tester, find.text('NHÌN LẠI DÒNG THỜI GIAN')),
         isTrue,
       );
       expect(
         await _seenWhileScrolling(
-            tester, find.text('Mở diễn biến theo thời gian')),
+            tester, find.text('Mở phần nhìn lại dòng thời gian')),
         isTrue,
       );
     });
@@ -112,7 +112,7 @@ void main() {
       );
       expect(
         await _seenWhileScrolling(
-            tester, find.text('Mở diễn biến theo thời gian')),
+            tester, find.text('Mở phần nhìn lại dòng thời gian')),
         isFalse,
       );
     });
@@ -248,7 +248,7 @@ void main() {
       await tester.pumpWidget(_wrap(const WrContextDocScreen(), intel: intel));
       await tester.pumpAndSettle();
 
-      expect(find.text('Tài liệu bối cảnh'), findsOneWidget);
+      expect(find.text('Tải lên JD hoặc CV của bạn'), findsOneWidget);
       expect(find.text('Chưa có tài liệu nào.'), findsOneWidget);
       expect(find.text('Thêm tài liệu'), findsOneWidget);
       expect(find.text('TRỢ LÝ ĐỌC TÀI LIỆU'), findsOneWidget);

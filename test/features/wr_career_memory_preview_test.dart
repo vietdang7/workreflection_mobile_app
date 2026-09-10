@@ -194,7 +194,7 @@ void main() {
 
       // 13 Episode đã khép + 8 dấu mốc = 21, đúng con số trên ảnh khách gửi.
       expect(
-        find.text('Bạn đã để lại 21 mảnh ký ức nghề nghiệp.'),
+        find.text('Bạn đã có 21 ghi nhận trên hành trình sự nghiệp.'),
         findsOneWidget,
         reason: 'phép cộng phải khớp dữ liệu thật của khách',
       );
@@ -254,7 +254,7 @@ void main() {
       expect(find.text('Xem toàn bộ Career Memory'), findsOneWidget);
       // 38 − 4 = 34. Thẻ xem trước lấy BỐN mục gần nhất, đúng mockup v16 §8.1
       // ("thẻ xem trước lấy 4 mục gần nhất"); bản trước lấy 5.
-      expect(find.text('Còn 34 mảnh nữa'), findsOneWidget);
+      expect(find.text('Còn 34 ghi nhận nữa'), findsOneWidget);
     });
 
     // Changelog 24/08 §8.1: nút này giờ LUÔN hiện. Trước đây nó biến mất khi
@@ -271,7 +271,7 @@ void main() {
 
       expect(_visibleEntries(tester, kJourneyPreviewCount), kJourneyPreviewCount);
       expect(find.byKey(const Key('wr_journey_memory_see_all')), findsOneWidget);
-      expect(find.text('Lọc theo loại, mở rộng từng mảnh'), findsOneWidget);
+      expect(find.text('Lọc theo loại, mở rộng từng ghi nhận'), findsOneWidget);
     });
 
     testWidgets('bản miễn phí thấy dòng thời gian, vẫn có khối mời mở khoá',
@@ -308,7 +308,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('Bạn đã để lại 38 mảnh ký ức nghề nghiệp.'),
+        find.text('Bạn đã có 38 ghi nhận trên hành trình sự nghiệp.'),
         findsOneWidget,
       );
     });
@@ -384,7 +384,7 @@ void main() {
       expect(find.text('Quyết định 1'), findsOneWidget);
       expect(find.text('Nhận ra 1'), findsNothing);
       // Tiêu đề nói đúng số đang xem, không giữ nguyên tổng.
-      expect(find.text('2 mảnh · quyết định'), findsOneWidget);
+      expect(find.text('2 ghi nhận · quyết định'), findsOneWidget);
     });
 
     testWidgets('mọi chip vẫn còn sau khi lọc — luôn có đường quay lại',
@@ -415,7 +415,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('Bạn đã để lại 7 mảnh ký ức nghề nghiệp.'),
+        find.text('Bạn đã có 7 ghi nhận trên hành trình sự nghiệp.'),
         findsOneWidget,
       );
       expect(find.text('Nhận ra 1'), findsOneWidget);
@@ -448,7 +448,7 @@ void main() {
       expect(find.text('Nội dung đã khoá'), findsWidgets);
       // Con số tổng vẫn nói ra — đó là việc của chính người dùng đã làm.
       expect(
-        find.text('Bạn đã để lại 38 mảnh ký ức nghề nghiệp.'),
+        find.text('Bạn đã có 38 ghi nhận trên hành trình sự nghiệp.'),
         findsOneWidget,
       );
     });

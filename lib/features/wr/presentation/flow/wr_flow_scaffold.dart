@@ -26,6 +26,7 @@ class WrFlowScaffold extends StatelessWidget {
   const WrFlowScaffold({
     super.key,
     this.title,
+    this.titleScale = 1.0,
     required this.child,
     this.eyebrow,
     this.eyebrowNote,
@@ -46,6 +47,13 @@ class WrFlowScaffold extends StatelessWidget {
   /// "Một câu chuyện quen thuộc" phải để STORY đọc trước rồi mới tới câu hỏi
   /// (họp 26_1), mà chỗ này thì luôn nằm trên [child].
   final String? title;
+
+  /// Hệ số cỡ chữ cho [title], nhân vào `fontSize` của [wrFlowTitleStyle].
+  ///
+  /// Mặc định 1.0 — mọi màn giữ nguyên dáng chữ chung. Khách 09/09/2026 xin
+  /// một vài câu đọc nhẹ hơn (màn Xong 80%); đưa thành tham số thay vì gõ lại
+  /// TextStyle tại chỗ để các màn không lệch nhau về màu, weight, letterSpacing.
+  final double titleScale;
 
   /// Nhãn nhỏ phía trên tiêu đề.
   final String? eyebrow;
@@ -125,7 +133,12 @@ class WrFlowScaffold extends StatelessWidget {
                     if (title != null)
                       WrParagraph(
                         title!,
-                        style: wrFlowTitleStyle,
+                        style: titleScale == 1.0
+                            ? wrFlowTitleStyle
+                            : wrFlowTitleStyle.copyWith(
+                                fontSize:
+                                    wrFlowTitleStyle.fontSize! * titleScale,
+                              ),
                         textAlign: TextAlign.start,
                       ),
                     if (subtitle != null) ...[

@@ -185,7 +185,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get understandEyebrowNeed => 'Điều bạn đang tìm kiếm';
 
   @override
-  String get understandEyebrowSituations => 'Tình huống lặp lại';
+  String get understandEyebrowSituations => 'Những vòng lặp quen thuộc';
 
   @override
   String get understandEyebrowSca => 'Trải nghiệm hiện tại';

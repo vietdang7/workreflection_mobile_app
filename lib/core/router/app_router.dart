@@ -585,7 +585,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/wr/work-info',
         builder: (context, state) => const WrWorkInfoScreen(),
       ),
-      // "Viết JD cùng app" — 5 buổi ngắn (changelog 24/08 §6). Mở từ thẻ dẫn
+      // "Cùng tạo JD của bạn" — 5 bước ngắn (changelog 24/08 §6). Mở từ thẻ dẫn
       // ở màn Thông tin công việc, không có lối vào nào khác.
       GoRoute(
         path: '/wr/jd-builder',

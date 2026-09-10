@@ -680,12 +680,13 @@ void main() {
 
       expect(
         memoryDetailForStory(story: s, countThisMonth: 3),
-        contains('lần thứ 3 trong tháng'),
+        contains('Trong tháng này bạn đã nhìn vào một chuyện thuộc nhóm này '
+            '3 lần.'),
       );
     });
 
-    test('lần đầu trong tháng thì KHÔNG nói "lần thứ 1"', () {
-      // "Lần thứ 1" không nói lên điều gì, chỉ làm câu dài thêm.
+    test('lần đầu trong tháng thì KHÔNG nói ra số lần', () {
+      // "1 lần" không nói lên điều gì, chỉ làm câu dài thêm.
       final s = _story(
         id: 'x',
         need: HumanNeed.ketNoi,
@@ -694,7 +695,7 @@ void main() {
 
       expect(
         memoryDetailForStory(story: s, countThisMonth: 1),
-        isNot(contains('lần thứ')),
+        isNot(contains('Trong tháng này')),
       );
     });
 
