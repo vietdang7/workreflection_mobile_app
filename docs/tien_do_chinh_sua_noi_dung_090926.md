@@ -213,10 +213,8 @@ Icon ✦ ở nhãn Premium khoá thì **giữ** ổ khoá `Icons.lock_outline`: 
 | 16.6 | Truy cập không giới hạn | `wr_paywall_screen.dart` |
 | 16.7 | Mở khóa trọn vẹn kho bài viết, bài tập Thực hành và toàn bộ Career Memory. | `wr_paywall_screen.dart` |
 
-> ⚠ **16.6 / 16.7 phải đối chiếu lại App Store Connect.** Đây là câu chữ mô tả
-> gói bán hàng trên màn IAP. Apple đã từ chối một lần vì Guideline 3.1.1 — mô tả
-> trong app và trong kho phải khớp. **Việc này CHƯA làm**, cần vào App Store
-> Connect sửa mô tả sản phẩm cho khớp trước khi nộp bản mới.
+> ✅ **16.6 / 16.7 đã đối chiếu lại App Store Connect (10/09).** Mô tả hai gói
+> trên kho đã đổi cho khớp màn IAP — chi tiết ở mục "Việc NGOÀI MÃ" cuối file.
 
 ---
 
@@ -595,9 +593,15 @@ C, D, E. Còn lại đúng ba loại.
 - **17.4** rà lỗi chính tả — vẫn chờ khách gửi ảnh chụp chỗ sai.
 
 ### 2 · Việc NGOÀI MÃ, phải làm bằng tay
-- ⚠️ **Sửa mô tả sản phẩm trên App Store Connect** cho khớp câu chữ IAP mới
-  (16.6 / 16.7). Apple đã từ chối một lần vì Guideline 3.1.1. **Chặn cứng việc
-  nộp bản mới.**
+- ~~**Sửa mô tả sản phẩm trên App Store Connect**~~ — **XONG 10/09.** Cả hai gói
+  đổi Description sang `Mở trọn Thực hành và Career Memory trong 12 tháng.` /
+  `… trong 1 tháng.` cho khớp thẻ "Truy cập không giới hạn" ở màn Paywall
+  (16.6 / 16.7). Hai điều chỉ lộ khi làm thật: gói **đang ở trong Draft
+  Submission thì mọi trường bị khoá** — phải "remove the item" khỏi submission,
+  sửa, rồi `Add for Review` → chọn lại đúng *Draft Submission (1)* (đừng bấm
+  *Create New Submission*, sẽ tách thành hai lần duyệt). Và ô Description đếm
+  **55 ký tự**, câu dài soạn sẵn trong `app_store_nop_lai_2026-09-08.md` không
+  dán vừa. Đã kiểm lại: cả hai về `Ready for Review`, submission có đủ 2 mục.
 - ~~**Push 2 migration**~~ — **XONG 10/09.** `supabase db push` chặn lại vì
   remote có 3 version không có file local (đợt IAP + xin phép AI làm thẳng trên
   remote). CLI gợi ý `migration repair --status reverted` — **không làm thế**:
@@ -669,22 +673,62 @@ không bao giờ dịch được. `wr-narrative` thì còn không có thân nào
   chỗ nào đưa lên màn hình.
 - `wr_stories.career_stages` — dùng để xếp thứ tự, là dữ liệu đem so khớp.
 
-### Còn lại: 436 dòng chờ dịch
+### 436 dòng nội dung — ĐÃ DỊCH XONG 10/09
 
-`wr_translation_progress()` trên DB thật (chỉ đếm dòng đang dùng):
+Migration `20260910140000_content_en_translations` — 326 lệnh UPDATE, đã push.
+`wr_translation_progress()` trên DB thật:
 
 | Nguồn | Đã dịch / Tổng |
 |---|---|
-| `wr_situations` (chip bước 0 của Reflect) | 0 / 110 |
-| `wr_stories.title` | 0 / 110 |
-| `wr_stories.story_content` | 0 / 110 |
-| `cc_questions` (câu hỏi Career Health Check) | 0 / 49 |
-| `wr_practice_steps` | 0 / 39 |
-| `wr_practice_themes` | 0 / 10 |
-| `wr_choice_pool` | 0 / 8 |
+| `wr_situations` (chip bước 0 của Reflect) | **110 / 110** |
+| `wr_stories.title` | **110 / 110** |
+| `wr_stories.story_content` | **110 / 110** |
+| `cc_questions` (câu hỏi Career Health Check) | **49 / 49** |
+| `wr_practice_steps` | **39 / 39** |
+| `wr_practice_themes` | **10 / 10** |
+| `wr_choice_pool` | **8 / 8** |
 
-Đây là câu chữ khách duyệt, không phải việc lập trình. Dịch được dòng nào là
-dòng đó hiện ra ngay, không cần deploy lại.
+Cộng cả năm cột phụ của `wr_stories` là **935 ô, ~57.000 ký tự**. Không cột
+nào còn sót: đã đếm riêng từng cột nullable, tất cả về 0.
+
+**Đây là bản nháp chờ khách duyệt.** Máy dịch, chưa qua người bản ngữ. Đưa vào
+migration chính vì thế — nằm trong Git thì khách rà được trên diff của PR, và
+sửa một câu là sửa một dòng có lịch sử, không phải một lệnh UPDATE gõ tay.
+
+**Không cần build lại app.** Nội dung đọc từ DB lúc chạy, nên sửa một dòng là
+dòng đó đổi ngay trên máy người dùng.
+
+#### Ba quy tắc đã theo khi dịch
+
+1. **Giữ ngôi.** `wr_situations` viết ngôi thứ nhất, phần lớn `wr_stories` viết
+   ngôi thứ hai, riêng P-01..P-10 lại quay về ngôi thứ nhất ở `story_content`.
+   Đây là lý do 9 dòng nhóm C2 phải có hai bản dịch riêng cho `text` và cho
+   `title`, dù bản tiếng Việt của chúng chỉ khác nhau đúng một chữ.
+2. **Giữ xuống dòng.** `story_content` là các câu ngắn xếp thành khối, mỗi câu
+   một dòng. Gộp thành đoạn văn là đổi nhịp đọc của cả màn hình.
+3. **Tên ba giai đoạn dùng đúng bộ đã có trong mã** (`practiceStageLabel`):
+   Notice / Try / Shift. Đặt tên khác là để nhãn trên thẻ và tiêu đề bước gọi
+   cùng một giai đoạn bằng hai cái tên.
+
+#### Đối chiếu khoá trước khi push
+
+326 khoá trong file SQL đã đối chiếu với khoá thật trên DB: không thiếu, không
+thừa, không lặp. Bước này cần thiết vì `UPDATE ... WHERE id = 'sai'` chạy trúng
+0 dòng mà **không báo lỗi** — migration vẫn xanh, chữ vẫn tiếng Việt.
+
+#### ⚠ Bốn dòng dữ liệu tiếng Việt đang hỏng
+
+`wr_stories.practice_action` của **A1-10, A3-10, S1-10, S2-10** bị dán thêm đuôi
+tiêu đề mục kế tiếp lúc nhập liệu từ tài liệu gốc. Ví dụ A1-10 kết thúc bằng:
+
+> …trong 30 ngày tới.
+> **A2 – Execution Rhythm / Human Need / Adaptability / SCA Dimension / A2 –
+> Execution Rhythm / Câu hỏi cốt lõi / Tôi có đang biến điều mình biết thành
+> điều mình làm không?**
+
+Rác đó **đang hiện lên màn hình** ở bản tiếng Việt. Bản tiếng Anh chỉ dịch câu
+thật. Cố ý **không** tự sửa bản tiếng Việt — đó là nội dung của khách. Bốn lệnh
+dọn đã viết sẵn ở cuối migration, dạng chú thích, bỏ dấu `--` là chạy được.
 
 ### Bốn câu hỏi §19 — nay còn một
 | # | Câu hỏi | Trạng thái |
