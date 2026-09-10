@@ -461,6 +461,18 @@ final wrEpisodeByIdProvider =
   }
 });
 
+/// Trần số Episode tải về một lần.
+///
+/// 500, không phải 50. Con số cũ đủ cho tab Hành trình — chỗ nó sinh ra — nhưng
+/// từ khi Career Snapshot lấy `episodes.length` làm MẪU SỐ của cột "Xuất hiện"
+/// thì nó thành một cái trần đội lốt sự thật: người đã nhìn lại 200 lần đọc
+/// được "14 / 50 lần". `Changelog_CareerSnapshot.docx` §8 đòi con số thật.
+///
+/// Vẫn giữ một trần thay vì bỏ hẳn: không có trần thì một tài khoản dùng nhiều
+/// năm kéo về một danh sách không giới hạn ngay lúc mở app. 500 lượt nhìn lại
+/// là quãng vài năm dùng đều đặn, và mỗi hàng Episode rất nhẹ.
+const int kEpisodeHistoryLimit = 500;
+
 /// Lịch sử Episode, mới nhất trước — nguồn cho tab Hành trình.
 final wrEpisodeHistoryProvider =
     FutureProvider<List<ReflectionEpisode>>((ref) async {
@@ -468,7 +480,7 @@ final wrEpisodeHistoryProvider =
   if (userId == null) return const [];
   final repo = ref.watch(wrEpisodeRepositoryProvider);
   try {
-    return await repo.fetchEpisodes(userId, limit: 50);
+    return await repo.fetchEpisodes(userId, limit: kEpisodeHistoryLimit);
   } catch (_) {
     return const [];
   }

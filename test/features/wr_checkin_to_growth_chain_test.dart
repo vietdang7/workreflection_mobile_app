@@ -284,11 +284,16 @@ void main() {
     // "Điều bạn đang tìm kiếm" — nhu cầu chủ đạo đọc từ chính ba lần đó.
     expect(find.byKey(const Key('wr_discover_need_reading')), findsOneWidget);
 
-    // Thẻ Trải nghiệm hiện tại (SCA rút gọn) dựng được.
-    expect(find.byKey(const Key('wr_discover_selfcheck_row')), findsOneWidget);
-
-    // Career Health Check đếm đúng số lần nhìn lại.
-    expect(find.textContaining('Bạn đã nhìn lại 3/15 lần'), findsOneWidget);
+    // Khối Career Snapshot dựng được, và nói đúng còn thiếu bao nhiêu lần nữa
+    // thì cột "Xuất hiện" mở ra — 15 − 3 = 12.
+    expect(
+      find.byKey(const Key('wr_discover_career_snapshot')),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('sẽ mở sau 12 lần nhìn lại nữa'),
+      findsOneWidget,
+    );
 
     // ── Tab Phát triển ───────────────────────────────────────────────────
     stage.router.go('/wr/growth');

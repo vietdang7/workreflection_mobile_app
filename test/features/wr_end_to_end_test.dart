@@ -348,7 +348,11 @@ void main() {
     stage.router.go('/wr/discover');
     await tester.pumpAndSettle();
     expect(find.byType(WrDiscoverScreen), findsOneWidget);
-    expect(find.textContaining('Bạn đã nhìn lại 1/15 lần'), findsOneWidget);
+    // Career Snapshot: mới một lần nhìn lại nên cột "Xuất hiện" còn thiếu 14.
+    expect(
+      find.textContaining('sẽ mở sau 14 lần nhìn lại nữa'),
+      findsOneWidget,
+    );
     // Free: mọi diễn giải nằm sau paywall.
     expect(find.byKey(const Key('wr_discover_need_lock')), findsOneWidget);
 
