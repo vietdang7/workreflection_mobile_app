@@ -40,6 +40,11 @@ import '../models/wr_episode.dart';
 /// mục gần nhất, mới nhất đứng đầu").
 const int kRecentSituationsWindow = 30;
 
+// TÊN HIỂN THỊ ĐÃ ĐỔI (khách 09/09/2026, §8.1–8.2). Những chỗ trong file này
+// viết "Tình huống lặp lại" / "Những điều đang trở đi trở lại" là trích nguyên
+// văn Kiến trúc v2.0 §4.3 nên giữ nguyên — nhưng trên màn hình bây giờ là
+// "NHỮNG VÒNG LẶP QUEN THUỘC" / "Những câu chuyện lặp lại". Cùng một thứ.
+
 /// Số dòng "Tình huống lặp lại" hiện ở tab Hiểu (v2.0 §4.3: "lấy ba tình huống
 /// có số lần cao nhất").
 const int kRepeatedSituationsTop = 3;

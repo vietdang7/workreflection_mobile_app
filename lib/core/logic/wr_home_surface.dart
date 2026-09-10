@@ -49,7 +49,7 @@ class SystemNotice {
 
   /// Câu hiển thị trên thẻ navy — đúng một sự kiện, không kết luận gì thêm.
   String get sentence =>
-      'Đây là lần thứ $count bạn gặp tình huống $situationText.';
+      'Bạn đã gặp tình huống "$situationText" $count lần';
 }
 
 /// Điều hệ thống nhận ra, đọc từ [recent] — mới nhất đứng đầu.

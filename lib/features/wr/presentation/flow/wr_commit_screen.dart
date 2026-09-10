@@ -101,9 +101,10 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
         : _controller.text.trim().isNotEmpty;
 
     return WrFlowScaffold(
-      eyebrow: 'Lựa chọn',
-      title: 'Nếu hiểu như vậy, bạn sẽ chọn điều gì?',
-      subtitle: 'Reflection luôn mở ra một lựa chọn khác.',
+      eyebrow: 'Bước tiếp theo',
+      title: 'Sau góc nhìn này, bước tiếp theo của bạn sẽ là gì?',
+      subtitle: 'Mỗi lần nhìn lại luôn mang đến cho bạn một cơ hội để chủ động '
+          'thay đổi.',
       progress: reflectProgress(3),
       onBack: () => context.pop(),
       onClose: () => context.push('/wr/flow/done'),

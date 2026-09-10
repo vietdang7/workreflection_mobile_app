@@ -206,8 +206,8 @@ String memoryDetailForStory({
   if (need != null) {
     parts.add('Tình huống thuộc nhóm ${needSeekingLabel(need)}.');
     if (countThisMonth > 1) {
-      parts.add('Đây là lần thứ $countThisMonth trong tháng bạn nhìn vào một '
-          'chuyện thuộc nhóm này.');
+      parts.add('Trong tháng này bạn đã nhìn vào một chuyện thuộc nhóm này '
+          '$countThisMonth lần.');
     }
   }
 

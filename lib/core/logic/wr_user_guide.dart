@@ -296,7 +296,7 @@ List<WrGuideSection> wrGuideSections() => [
                   'viết sẵn: phần mềm đếm từng tình huống bạn đã chọn.',
             ),
             WrGuideBullet(
-              'Tình huống lặp lại',
+              'Những vòng lặp quen thuộc',
               'điều nào đã quay lại từ $kRepeatedSituationsMinCount lần trở '
                   'lên. Hiện $kRepeatedSituationsTop dòng, còn lại nằm sau '
                   '"Xem thêm".',
@@ -360,9 +360,9 @@ List<WrGuideSection> wrGuideSections() => [
             ),
             WrGuideBullet(
               'Career Memory',
-              'dòng thời gian những mảnh ký ức nghề nghiệp: câu chuyện, cột '
-                  'mốc, chủ đề, insight. Chạm một mục để đọc vì sao nó được '
-                  'ghi lại.',
+              'dòng thời gian những cột mốc trên hành trình sự nghiệp: câu '
+                  'chuyện, dấu mốc, chủ đề, insight. Chạm một mục để đọc vì '
+                  'sao nó được ghi lại.',
             ),
             WrGuideBullet(
               'Trò chuyện về hành trình',

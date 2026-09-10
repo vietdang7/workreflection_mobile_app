@@ -728,7 +728,7 @@ void main() {
       await tester.pumpWidget(_wrap(const WrJourneyScreen(), content: content));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('2 mảnh ký ức'), findsOneWidget);
+      expect(find.textContaining('2 cột mốc'), findsOneWidget);
     });
   });
 
@@ -737,7 +737,7 @@ void main() {
       await tester.pumpWidget(_wrap(const WrJourneyScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Chưa có mảnh ký ức nào'), findsOneWidget);
+      expect(find.textContaining('chưa ghi nhận cột mốc nào'), findsOneWidget);
     });
   });
 
@@ -866,7 +866,7 @@ void main() {
       }
       // Con số tổng vẫn nói ra — đó là việc chính người dùng đã làm.
       expect(
-        find.textContaining('3 mảnh ký ức', skipOffstage: false),
+        find.textContaining('3 cột mốc', skipOffstage: false),
         findsOneWidget,
       );
     });
@@ -1322,7 +1322,7 @@ void main() {
 
       expect(find.text('AI Insight cá nhân hoá'), findsOneWidget);
       expect(find.text('Career Pattern'), findsOneWidget);
-      expect(find.text('Không giới hạn'), findsOneWidget);
+      expect(find.text('Truy cập không giới hạn'), findsOneWidget);
       // Mục "Báo cáo chuyên sâu 49 câu" đã bỏ khỏi paywall.
       expect(find.textContaining('Báo cáo chuyên sâu'), findsNothing);
     });
@@ -1336,7 +1336,7 @@ void main() {
       expect(find.text('Story Reflection hàng ngày'), findsOneWidget);
       expect(find.text('Check-in nhanh'), findsOneWidget);
       expect(find.text('Career Memory Timeline'), findsOneWidget);
-      expect(find.text('15 câu phản chiếu'), findsOneWidget);
+      expect(find.text('15 câu hỏi phản chiếu'), findsOneWidget);
       expect(find.text('3 chủ đề Thực hành'), findsOneWidget);
       expect(find.text('AI Insight'), findsOneWidget);
       expect(find.text('Career Pattern Analysis'), findsOneWidget);

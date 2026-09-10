@@ -384,7 +384,7 @@ void main() {
       );
 
       expect(find.byKey(const Key('wr_skill_t1')), findsNothing);
-      expect(find.text('ĐANG HÌNH THÀNH'), findsOneWidget);
+      expect(find.text('THÓI QUEN ĐANG RÈN LUYỆN'), findsOneWidget);
       expect(find.byKey(const Key('wr_skill_progress_t1')), findsNothing);
       expect(find.textContaining('lần thực hành'), findsNothing);
       expect(

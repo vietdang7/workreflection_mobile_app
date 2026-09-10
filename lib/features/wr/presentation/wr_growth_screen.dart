@@ -451,10 +451,11 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
       // Còn chủ đề để mời, chỉ là chưa tích đủ. Nói đúng quãng đường còn lại
       // thay vì bảo họ chờ một điều không đo được.
       (true, true) => (
-          'Chưa đủ dữ liệu để có chủ đề',
-          'Bạn đã nhìn lại $reflectionCount/$kReflectionsPerPracticeTheme lần. '
-              'Đủ $kReflectionsPerPracticeTheme lần là WorkReflection tự thêm '
-              'một chủ đề hợp với bạn. Hoặc làm bộ tự đánh giá để có ngay.',
+          'Chưa xác định chủ đề trọng tâm',
+          'Bạn đã tích lũy $reflectionCount/$kReflectionsPerPracticeTheme lượt '
+              'nhìn lại. Khi đạt mốc $kReflectionsPerPracticeTheme lượt, ứng '
+              'dụng sẽ tự động gợi ý chủ đề phù hợp nhất với bạn. Bạn cũng có '
+              'thể hoàn thành Self-Check để mở khóa ngay.',
         ),
       (true, false) => (
           'Bạn đã bắt đầu tất cả chủ đề hiện có',
@@ -491,7 +492,7 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
             const SizedBox(height: 14),
             WrActionLink(
               key: const Key('wr_growth_suggestion_self_check'),
-              label: 'Làm bộ tự đánh giá',
+              label: 'Làm Self-Check ngay',
               onTap: () => context.push('/wr/self-check'),
             ),
           ],

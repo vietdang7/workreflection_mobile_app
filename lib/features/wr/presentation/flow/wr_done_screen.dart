@@ -66,8 +66,11 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
     final count = _occurrenceCount();
 
     return WrFlowScaffold(
-      eyebrow: 'Đã lưu',
-      title: _integrating ? 'Đang lưu lại…' : 'Điều này đã thuộc về bạn.',
+      eyebrow: 'Lưu vào hành trình',
+      title: _integrating
+          ? 'Đang lưu lại…'
+          : 'Góc nhìn này đã được kết nối vào hành trình sự nghiệp của bạn.',
+      titleScale: 0.8,
       progress: 1,
       primaryLabel: 'Xong',
       busy: _integrating,
@@ -92,7 +95,7 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
           if (count != null && count >= 2) ...[
             const SizedBox(height: 28),
             Text(
-              'Đây là lần thứ $count bạn ghi lại tình huống này.',
+              'Bạn đã ghi lại tình huống này $count lần',
               style: const TextStyle(
                 fontSize: 15.5,
                 color: WrColors.muted,

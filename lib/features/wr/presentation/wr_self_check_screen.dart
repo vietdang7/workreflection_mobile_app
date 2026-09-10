@@ -226,26 +226,9 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Container(
-                          width: 56,
-                          height: 56,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFEEF3FA),
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          child: const Center(
-                            child: Text(
-                              '◉',
-                              style: TextStyle(
-                                fontSize: 26,
-                                color: WrColors.navy,
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 22),
+                        // Khách 09/09/2026 (§15.1): bỏ chấm tròn ◉ ở đầu màn.
                         Text(
-                          '${kSelfCheckQuestions.length} câu phản chiếu',
+                          '${kSelfCheckQuestions.length} câu hỏi phản chiếu',
                           style: const TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.w800,
@@ -256,9 +239,8 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                         ),
                         const SizedBox(height: 12),
                         const WrParagraph(
-                          'Trả lời thành thật theo cảm nhận thực tế trong môi '
-                          'trường làm việc của bạn, không có câu trả lời đúng '
-                          'hay sai.',
+                          'Hãy trả lời dựa trên trải nghiệm thực tế của bạn tại '
+                          'nơi làm việc.',
                           style: TextStyle(
                             fontSize: 16.5,
                             color: WrColors.text2,
@@ -266,13 +248,22 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                           ),
                         ),
                         const SizedBox(height: 26),
-                        _InfoRow(icon: '⏱', text: 'Khoảng 3–4 phút'),
+                        // Khách 09/09/2026 (§15.4): bỏ emoji ⏱🔒↺, dùng icon
+                        // line art. Emoji đổi dáng theo từng máy và không nhận
+                        // màu của brand.
+                        const _InfoRow(
+                          icon: Icons.schedule_outlined,
+                          text: 'Thời gian: Khoảng 3–4 phút hoàn thành',
+                        ),
                         const SizedBox(height: 12),
-                        _InfoRow(icon: '🔒', text: 'Chỉ bạn thấy kết quả'),
+                        const _InfoRow(
+                          icon: Icons.lock_outline,
+                          text: 'Bảo mật tuyệt đối. Chỉ bạn mới thấy kết quả',
+                        ),
                         const SizedBox(height: 12),
-                        _InfoRow(
-                          icon: '↺',
-                          text: 'Có thể làm lại bất cứ lúc nào',
+                        const _InfoRow(
+                          icon: Icons.refresh_outlined,
+                          text: 'Có thể làm lại bất cứ lúc nào bạn muốn',
                         ),
                       ],
                     ),
@@ -544,7 +535,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                     ),
                     const SizedBox(height: 4),
                     const Text(
-                      'Dựa trên 15 câu phản chiếu',
+                      'Dựa trên 15 câu hỏi phản chiếu',
                       style: TextStyle(fontSize: 15.5, color: WrColors.muted),
                     ),
                     if (_saving) ...[
@@ -1063,9 +1054,10 @@ class _DeepDiveLocked extends ConsumerWidget {
                 ),
                 const SizedBox(height: 10),
                 const WrParagraph(
-                  'Bản đầy đủ đọc kỹ từng mặt theo khoảng điểm của bạn, chỉ ra '
-                  'chỗ mất cân bằng giữa ba mặt, so với những lần tự soi trước '
-                  'và đối chiếu với những tình huống bạn hay gặp.',
+                  'Mở khóa báo cáo đầy đủ để phân tích chi tiết từng khía cạnh, '
+                  'nhận diện điểm mất cân bằng giữa các nhóm trải nghiệm, đồng '
+                  'thời so sánh với lịch sử nhìn lại và các tình huống bạn '
+                  'thường gặp.',
                   style: TextStyle(
                     fontSize: 16.5,
                     height: 1.65,
@@ -1106,18 +1098,23 @@ class _DeepDiveLocked extends ConsumerWidget {
 
 class _InfoRow extends StatelessWidget {
   const _InfoRow({required this.icon, required this.text});
-  final String icon;
+  final IconData icon;
   final String text;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Text(icon, style: const TextStyle(fontSize: 17)),
+        Icon(icon, size: 18, color: WrColors.muted),
         const SizedBox(width: 12),
-        Text(
-          text,
-          style: const TextStyle(fontSize: 16.5, color: WrColors.text2),
+        // Expanded, không phải Text trần: Row cho con KHÔNG co giãn chiều rộng
+        // vô hạn, nên chữ không bao giờ tự xuống dòng và tràn ra ngoài. Ba câu
+        // của §15.4 dài hơn ba câu emoji cũ nên chạm đúng cái bẫy đó.
+        Expanded(
+          child: Text(
+            text,
+            style: const TextStyle(fontSize: 16.5, color: WrColors.text2),
+          ),
         ),
       ],
     );

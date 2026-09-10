@@ -1,20 +1,20 @@
-// "Viết JD cùng app" — 5 buổi ngắn.
+// "Cùng tạo JD của bạn" — 5 bước ngắn.
 //
 // Nguồn: WorkReflection_Changelog_20260824.docx §6, mockup v16 `screenJdBuilder`.
 //
-// Lối vào: thẻ "Công ty chưa có JD? Cùng viết trong 5 buổi ngắn" ở màn Thông
-// tin công việc hiện tại (`wr_work_info_screen.dart`).
+// Lối vào: thẻ "Nếu chưa có sẵn JD, bạn có thể tự phác thảo nhanh theo 5 bước
+// hướng dẫn" ở màn Thông tin công việc (`wr_work_info_screen.dart`).
 //
 // ---------------------------------------------------------------------------
 // Ba chỗ bản thật KHÁC mockup, đúng ba ghi chú cho dev ở §6
 // ---------------------------------------------------------------------------
 //
-//   1. KHÔNG có dãy nút "Buổi 1–5" ở cuối màn. Đó là công cụ xem trước cho
-//      demo. Ở đây thanh tiến trình trên đầu bấm được, nhưng chỉ những buổi
+//   1. KHÔNG có dãy nút "Bước 1–5" ở cuối màn. Đó là công cụ xem trước cho
+//      demo. Ở đây thanh tiến trình trên đầu bấm được, nhưng chỉ những bước
 //      [canOpenJdDay] cho phép — không nhảy cóc.
 //
 //   2. "Dừng ở đây, làm tiếp sau" LƯU THẬT nội dung đang gõ, không đánh dấu
-//      buổi là xong. Ở mockup nút này vứt hết chữ vừa viết.
+//      bước là xong. Ở mockup nút này vứt hết chữ vừa viết.
 //
 //   3. Dữ liệu vào bảng `wr_jd_drafts`, không phải local state — để Career
 //      Memory, gợi ý Reflection và Cơ hội phát triển đọc lại được.
@@ -37,7 +37,7 @@ final wrJdDraftProvider = FutureProvider<WrJdDraft?>((ref) async {
   try {
     return await ref.watch(wrJdRepositoryProvider).fetch();
   } catch (_) {
-    // Chưa chạy migration, hoặc mất mạng. Trả null để màn mở ở buổi 1 với ô
+    // Chưa chạy migration, hoặc mất mạng. Trả null để màn mở ở bước 1 với ô
     // trống, thay vì chặn người dùng bằng một màn lỗi.
     return null;
   }
@@ -96,7 +96,7 @@ class _WrJdBuilderScreenState extends ConsumerState<WrJdBuilderScreen> {
       ref.invalidate(wrJdDraftProvider);
       if (!mounted) return;
       if (markDayDone && (_day ?? 1) >= kJdDayCount) {
-        // Xong buổi cuối: về lại màn Thông tin công việc.
+        // Xong bước cuối: về lại màn Thông tin công việc.
         context.pop();
         return;
       }
@@ -124,7 +124,7 @@ class _WrJdBuilderScreenState extends ConsumerState<WrJdBuilderScreen> {
     final draft = ref.watch(wrJdDraftProvider);
 
     // Chốt một lần, và chỉ khi dữ liệu đã về: chốt lúc còn loading sẽ khoá màn
-    // ở buổi 1 với ô trống, và người dùng tưởng mình chưa từng viết gì.
+    // ở bước 1 với ô trống, và người dùng tưởng mình chưa từng viết gì.
     if (!_seeded && !draft.isLoading) {
       final d = draft.valueOrNull ?? WrJdDraft.empty();
       _completed = d.completedDays;
@@ -152,7 +152,7 @@ class _WrJdBuilderScreenState extends ConsumerState<WrJdBuilderScreen> {
         elevation: 0,
         foregroundColor: WrColors.navy,
         title: const Text(
-          'Viết JD cùng app',
+          'Cùng tạo JD của bạn',
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w700,
@@ -268,10 +268,10 @@ class _WrJdBuilderScreenState extends ConsumerState<WrJdBuilderScreen> {
   }
 }
 
-/// Năm vạch tiến trình. Bấm được, nhưng chỉ vào buổi đã mở khoá.
+/// Năm vạch tiến trình. Bấm được, nhưng chỉ vào bước đã mở khoá.
 ///
-/// Thay cho dãy nút "Buổi 1–5" của mockup — thứ §6 nói rõ là chỉ để demo. Ở đây
-/// vạch vừa là chỉ báo vừa là lối đi, và buổi bị khoá thì không nhận chạm.
+/// Thay cho dãy nút "Bước 1–5" của mockup — thứ §6 nói rõ là chỉ để demo. Ở đây
+/// vạch vừa là chỉ báo vừa là lối đi, và bước bị khoá thì không nhận chạm.
 class _ProgressBar extends StatelessWidget {
   const _ProgressBar({
     required this.current,
@@ -292,8 +292,8 @@ class _ProgressBar extends StatelessWidget {
           Expanded(
             child: Semantics(
               label: canOpenJdDay(n, completed)
-                  ? 'Buổi $n'
-                  : 'Buổi $n, chưa mở khoá',
+                  ? 'Bước $n'
+                  : 'Bước $n, chưa mở khoá',
               button: true,
               child: GestureDetector(
                 key: Key('wr_jd_step_$n'),
@@ -430,7 +430,7 @@ class _Field extends StatelessWidget {
   }
 }
 
-/// Banner cuối buổi 5 — §6: "kết thúc bằng banner xác nhận hoàn tất, giải thích
+/// Banner cuối bước 5 — §6: "kết thúc bằng banner xác nhận hoàn tất, giải thích
 /// dữ liệu sẽ được dùng để cá nhân hoá gợi ý sau này".
 class _CompletionBanner extends StatelessWidget {
   @override

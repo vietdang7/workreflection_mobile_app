@@ -216,8 +216,8 @@ void main() {
       final repo = FakeWrJdRepository();
       await _openBuilder(tester, repo);
 
-      expect(find.bySemanticsLabel('Buổi 1'), findsOneWidget);
-      expect(find.bySemanticsLabel('Buổi 3, chưa mở khoá'), findsOneWidget);
+      expect(find.bySemanticsLabel('Bước 1'), findsOneWidget);
+      expect(find.bySemanticsLabel('Bước 3, chưa mở khoá'), findsOneWidget);
       handle.dispose();
     });
   });

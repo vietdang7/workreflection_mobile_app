@@ -215,10 +215,15 @@ class GrowthOpportunity {
 
   final DateTime generatedAt;
 
-  /// Câu ghi chú bắt buộc, nguyên văn theo §11.2.
+  /// Câu ghi chú bắt buộc theo §11.2, viết lại theo khách 09/09/2026 (§12.4).
+  ///
+  /// Vẫn giữ đúng chức năng §11.2 đòi: nói ra gợi ý này dựa trên đâu, và nói ra
+  /// nó chưa đủ sát. Chỉ đổi cách nói phần thứ hai — từ "độ chính xác còn giới
+  /// hạn" (nghe như lời chối trách nhiệm) sang một lối đi ("cung cấp thêm bối
+  /// cảnh").
   static const String kConfidenceNote =
-      'Gợi ý này dựa trên dữ liệu bạn đã chia sẻ qua Reflection, '
-      'độ chính xác còn giới hạn.';
+      'Gợi ý này được đúc kết từ hoạt động nhìn lại của bạn. Bạn có thể cung '
+      'cấp thêm bối cảnh để nhận phân tích "may đo" sát hơn';
 
   factory GrowthOpportunity.fromJson(Map<String, dynamic> json) {
     return GrowthOpportunity(

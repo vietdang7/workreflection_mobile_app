@@ -194,7 +194,7 @@ void main() {
 
       // 13 Episode đã khép + 8 dấu mốc = 21, đúng con số trên ảnh khách gửi.
       expect(
-        find.text('Bạn đã để lại 21 mảnh ký ức nghề nghiệp.'),
+        find.text('Bạn đã ghi lại 21 cột mốc trên hành trình sự nghiệp.'),
         findsOneWidget,
         reason: 'phép cộng phải khớp dữ liệu thật của khách',
       );
@@ -308,7 +308,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('Bạn đã để lại 38 mảnh ký ức nghề nghiệp.'),
+        find.text('Bạn đã ghi lại 38 cột mốc trên hành trình sự nghiệp.'),
         findsOneWidget,
       );
     });
@@ -384,7 +384,7 @@ void main() {
       expect(find.text('Quyết định 1'), findsOneWidget);
       expect(find.text('Nhận ra 1'), findsNothing);
       // Tiêu đề nói đúng số đang xem, không giữ nguyên tổng.
-      expect(find.text('2 mảnh · quyết định'), findsOneWidget);
+      expect(find.text('2 cột mốc · quyết định'), findsOneWidget);
     });
 
     testWidgets('mọi chip vẫn còn sau khi lọc — luôn có đường quay lại',
@@ -415,7 +415,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('Bạn đã để lại 7 mảnh ký ức nghề nghiệp.'),
+        find.text('Bạn đã ghi lại 7 cột mốc trên hành trình sự nghiệp.'),
         findsOneWidget,
       );
       expect(find.text('Nhận ra 1'), findsOneWidget);
@@ -448,7 +448,7 @@ void main() {
       expect(find.text('Nội dung đã khoá'), findsWidgets);
       // Con số tổng vẫn nói ra — đó là việc của chính người dùng đã làm.
       expect(
-        find.text('Bạn đã để lại 38 mảnh ký ức nghề nghiệp.'),
+        find.text('Bạn đã ghi lại 38 cột mốc trên hành trình sự nghiệp.'),
         findsOneWidget,
       );
     });

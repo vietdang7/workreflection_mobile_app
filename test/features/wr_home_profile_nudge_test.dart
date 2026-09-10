@@ -219,7 +219,7 @@ void main() {
       );
       expect(find.text('INSIGHT GẦN NHẤT'), findsOneWidget);
       expect(
-        find.textContaining('Chưa có Insight nào'),
+        find.textContaining('Hãy bắt đầu với check-in cảm xúc'),
         findsOneWidget,
       );
     });

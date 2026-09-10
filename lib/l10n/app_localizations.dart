@@ -437,7 +437,7 @@ abstract class AppLocalizations {
   /// No description provided for @understandEyebrowSituations.
   ///
   /// In vi, this message translates to:
-  /// **'Tình huống lặp lại'**
+  /// **'Những vòng lặp quen thuộc'**
   String get understandEyebrowSituations;
 
   /// No description provided for @understandEyebrowSca.

@@ -343,7 +343,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('Công ty chưa có JD? Cùng viết trong 5 buổi ngắn'),
+        find.text('Nếu chưa có sẵn JD, bạn có thể tự phác thảo nhanh theo 5 bước hướng dẫn'),
         findsOneWidget,
       );
       final card = find.byKey(const Key('wr_work_info_jd_builder_card'));

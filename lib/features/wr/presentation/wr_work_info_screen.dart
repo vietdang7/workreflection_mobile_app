@@ -96,8 +96,8 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
           padding: const EdgeInsets.fromLTRB(22, 8, 22, 32),
           children: [
             const WrParagraph(
-              'Bạn đang làm công việc gì? Một dòng thôi cũng đủ để những gợi ý '
-              'phát triển bám sát hơn vào việc thật của bạn.',
+              'Chia sẻ vai trò hiện tại của bạn. Dựa vào đây, các bài thực hành '
+              'sẽ được phác thảo riêng cho công việc của bạn.',
               style: TextStyle(
                 fontSize: 14.5,
                 height: 1.65,
@@ -106,7 +106,7 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
             ),
             const SizedBox(height: 20),
 
-            const WrEyebrow('MÔ TẢ CỦA BẠN'),
+            const WrEyebrow('VỊ TRÍ / CHỨC DANH HIỆN TẠI'),
             const SizedBox(height: 10),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -179,7 +179,8 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
             const WrEyebrow('TÀI LIỆU CHI TIẾT'),
             const SizedBox(height: 6),
             const Text(
-              'Có JD hoặc CV thì tải lên để bối cảnh đầy đủ hơn. Tuỳ chọn.',
+              'Tải lên file JD (Mô tả công việc) hoặc CV để hệ thống có thêm dữ '
+              'liệu phân tích. (Không bắt buộc)',
               style: TextStyle(
                 fontSize: 14.5,
                 height: 1.65,
@@ -188,11 +189,11 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
             ),
             WrLinkRow(
               key: const Key('wr_work_info_context_docs_row'),
-              label: 'Tài liệu bối cảnh (JD · CV)',
+              label: 'Tải lên JD hoặc CV của bạn',
               onTap: () => context.push('/wr/context-docs'),
             ),
 
-            // Lối vào DUY NHẤT của "Viết JD cùng app" (changelog 24/08 §6).
+            // Lối vào DUY NHẤT của "Cùng tạo JD của bạn" (changelog 24/08 §6).
             //
             // Đặt ngay dưới ô tải tài liệu là có chủ đích: hai thẻ này trả lời
             // cùng một câu hỏi ("làm sao app biết công việc thật của tôi"), chỉ
@@ -225,13 +226,15 @@ class _JdBuilderCard extends ConsumerWidget {
 
     final title = switch ((complete, done)) {
       (true, _) => 'JD bạn đã viết',
-      (_, 0) => 'Công ty chưa có JD? Cùng viết trong 5 buổi ngắn',
+      (_, 0) => 'Nếu chưa có sẵn JD, bạn có thể tự phác thảo nhanh theo 5 bước '
+          'hướng dẫn',
       _ => 'Viết tiếp JD của bạn',
     };
     final hint = switch ((complete, done)) {
-      (true, _) => 'Đã xong cả 5 buổi. Mở lại để đọc và sửa.',
-      (_, 0) => 'Mỗi buổi khoảng 2-3 phút, không cần làm hết trong một lần',
-      _ => 'Đã xong $done trên $kJdDayCount buổi',
+      (true, _) => 'Đã xong cả 5 bước. Mở lại để đọc và sửa.',
+      (_, 0) => 'Mỗi bước chỉ mất 2–3 phút, bạn có thể dừng lại và quay lại làm '
+          'tiếp bất cứ lúc nào.',
+      _ => 'Đã xong $done trên $kJdDayCount bước',
     };
 
     return GestureDetector(

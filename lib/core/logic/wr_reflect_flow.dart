@@ -121,7 +121,8 @@ HumanMoment momentForMood(Mood mood) => switch (mood) {
 ///
 /// Ranh giới mới nằm ở chỗ khác: câu HỎI dùng "bạn", còn giọng KỂ (story, aha,
 /// nhãn "Điều khác") vẫn giữ "tôi" — xem [kOtherSituationLabel].
-const String kNoticePrompt = 'Điều gì gần giống với ngày hôm nay của bạn nhất?';
+const String kNoticePrompt =
+    'Điều gì đang mô tả đúng nhất trạng thái công việc của bạn?';
 
 /// Nhãn của mục "Điều khác", nguyên văn mockup v16 (`SITUATIONS` id `other`).
 ///
@@ -130,9 +131,15 @@ const String kNoticePrompt = 'Điều gì gần giống với ngày hôm nay c�
 /// này sau khi đã đổi ngôi toàn bộ phần còn lại.
 const String kOtherSituationLabel = 'Điều khác, để tôi tự mô tả';
 
-/// Nhãn nhỏ trên ô neo ở bước Notice — điều gần nhất người dùng đã chọn trong
-/// cụm cảm xúc này. Xem `anchorSituation` để hiểu vì sao ô này phải luôn có.
-const String kAnchorBadge = 'Lần trước';
+// Ô neo ở bước Notice KHÔNG còn nhãn — khách 09/09/2026 (§2.2). Hằng
+// `kAnchorBadge = 'Lần trước'` đã bỏ hẳn ở đây.
+//
+// Lý do: chip neo vẫn là tình huống gần nhất người dùng đã chọn, nhưng chỉ
+// trong cụm cảm xúc đang xét. Đổi cảm xúc check-in sang cụm khác thì nó là một
+// lựa chọn cũ hơn, mà nhãn vẫn ghi "Lần trước" — sai thật. Bỏ nhãn, giữ chip:
+// chip vẫn đứng đầu và vẫn cao hơn (92 vs 76) nên vẫn phân biệt được bằng mắt.
+//
+// Xem `anchorSituation` để hiểu vì sao ô này phải luôn có.
 
 /// Nhãn cảm xúc check-in ở dạng một dòng, để ghép vào câu văn.
 ///
@@ -183,9 +190,9 @@ String detailPrompt(String? reflectionQuestion) {
 /// từng gặp, và hiểu vai trò của bước này trong luồng phản chiếu. Không có đoạn
 /// này thì màn mở thẳng bằng một câu chuyện lạ, không rõ của ai và để làm gì.
 const String kFamiliarStoryIntro =
-    'Đây là tình huống mà nhiều người ở vị trí tương tự cũng từng gặp, không '
-    'chỉ riêng bạn. Đọc thử, nếu thấy quen thì đây sẽ là điểm bắt đầu để cùng '
-    'nhìn sâu hơn ở các bước tiếp theo.';
+    'Rất nhiều người đi làm cũng từng trải qua giai đoạn những cảm xúc giống '
+    'bạn. Thử xem tình huống dưới đây có quen thuộc không nhé. Đây có thể sẽ '
+    'là điểm bắt đầu giúp bạn nhìn sâu hơn';
 
 /// Lời mời viết, đặt dưới câu Reflection ở nhánh CÓ tình huống.
 ///
@@ -202,9 +209,8 @@ const String kFamiliarStoryIntro =
 /// không chắc bỏ trống có đi tiếp được không, nên ngồi cố nghĩ ra một câu.
 /// "Có thể bỏ trống cũng không sao" là nguyên văn khách đọc trong họp.
 const String kStoryDetailInvite =
-    'Nếu điều này giống với chuyện của bạn, hãy kể lại khoảnh khắc đó theo '
-    'cách của riêng bạn. Có thể bắt đầu từ lúc nào, với ai, chuyện gì đã xảy '
-    'ra. Có thể bỏ trống cũng không sao.';
+    'Kể lại khoảnh khắc đó theo cách riêng của bạn. Để trống cũng không sao, '
+    'miễn là bạn đã dành 1 phút để nghĩ về nó.';
 
 /// Dòng phụ của nhánh "Điều khác", nguyên văn mockup v16 i===1 `s.custom`.
 ///
@@ -287,7 +293,8 @@ const String kInsightStemNote =
 
 /// Gợi ý trong ô chữ ở Lớp 1, nguyên văn mockup v16.
 const String kInsightStemHint =
-    '...vì đây không phải lần đầu / vì mình chưa từng nói ra / ...';
+    '...có thể do mình đang ôm đồm quá nhiều / do thiếu giao tiếp với sếp / '
+    'do chưa biết cách từ chối...';
 
 /// Nhãn của khối gợi ý nằm DƯỚI ô chữ ở Lớp 1.
 const String kInsightSuggestionsLabel = 'CHƯA BIẾT VIẾT GÌ? THỬ MỘT TRONG SỐ NÀY';
@@ -309,7 +316,7 @@ const List<String> kInsightStemSuggestions = [
 ];
 
 /// Nhãn của lối thoát ở Lớp 1.
-const String kInsightSkipLabel = 'Chưa muốn viết, bỏ qua bước này';
+const String kInsightSkipLabel = 'Tạm thời bỏ qua, bạn muốn suy nghĩ thêm';
 
 /// Nhãn nút chính ở Lớp 1.
 const String kInsightRevealLabel = 'Xem một góc nhìn khác';
@@ -323,12 +330,13 @@ const String kInsightYourWordsLabel = 'Điều bạn vừa viết';
 /// một câu chuẩn hoá/xã hội hoá. Cùng một câu aha, khung "tôi nhận ra…" bảo
 /// người dùng phải nghĩ như vậy, còn khung này chỉ nói có người khác cũng nghĩ
 /// vậy.
-const String kInsightNormalizingLabel = 'Nhiều người khác cũng từng thấy điều này';
+const String kInsightNormalizingLabel = 'Đúc kết phổ biến';
 
 /// Câu chốt dưới khối aha ở Lớp 2.
 const String kInsightAhaNote =
-    'Điều này không phải để đúng hay sai, chỉ là một cách nhìn khác bạn có thể '
-    'mang theo.';
+    'Một vấn đề luôn có thể được giải nghĩa theo nhiều cách. Đây là một lăng '
+    'kính bổ sung, mở ra thêm không gian để bạn đối chiếu với công việc hiện '
+    'tại.';
 
 /// Câu người dùng vừa viết, đã ghép với vế mở dở.
 ///

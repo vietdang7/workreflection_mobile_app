@@ -560,8 +560,11 @@ class WrJourneyScreen extends ConsumerWidget {
             const SizedBox(height: 14),
             WrParagraph(
               all.isEmpty
-                  ? 'Chưa có mảnh ký ức nào. Mỗi lần nhìn lại sẽ để lại một dấu ở đây.'
-                  : 'Bạn đã để lại ${all.length} mảnh ký ức nghề nghiệp.',
+                  ? 'Nhật ký sự nghiệp của bạn chưa ghi nhận cột mốc nào. Hãy '
+                      'bắt đầu một lần nhìn lại để lưu giữ những dấu ấn của '
+                      'riêng bạn.'
+                  : 'Bạn đã ghi lại ${all.length} cột mốc trên hành trình sự '
+                      'nghiệp.',
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -608,8 +611,9 @@ class WrJourneyScreen extends ConsumerWidget {
                 const WrPremiumLock(
                   key: Key('wr_journey_memory_lock'),
                   description:
-                      'Bản đầy đủ mở lại từng mảnh ký ức nghề nghiệp bạn đã để '
-                      'lại, đọc lại được bất cứ lúc nào, theo đúng dòng thời gian.',
+                      'Bản đầy đủ mở lại từng cột mốc bạn đã ghi trên hành '
+                      'trình sự nghiệp, đọc lại được bất cứ lúc nào, theo đúng '
+                      'dòng thời gian.',
                   ctaLabel: 'Mở toàn bộ Career Memory',
                   paywallTrigger: 'career_memory',
                 ),
@@ -754,14 +758,19 @@ class _NarrativeCardState extends ConsumerState<_NarrativeCard> {
         children: [
           Row(
             children: [
-              Icon(
-                canRead ? Icons.auto_awesome : Icons.lock_outline,
-                size: 14,
-                color: WrColors.coral,
-              ),
-              const SizedBox(width: 6),
+              // Khách 09/09/2026 (§12.1): bỏ biểu tượng ✦ ở đầu nhãn AI. Ổ
+              // khoá thì GIỮ — nó nói một điều có thật (chưa mở khoá), không
+              // phải trang trí.
+              if (!canRead) ...[
+                const Icon(
+                  Icons.lock_outline,
+                  size: 14,
+                  color: WrColors.coral,
+                ),
+                const SizedBox(width: 6),
+              ],
               Text(
-                canRead ? 'DIỄN BIẾN THEO THỜI GIAN' : 'PREMIUM',
+                canRead ? 'NHÌN LẠI DÒNG THỜI GIAN' : 'PREMIUM',
                 style: const TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
@@ -785,9 +794,8 @@ class _NarrativeCardState extends ConsumerState<_NarrativeCard> {
                   ? latest
                   : canRead
                       ? _waitingLine(refresh)
-                      : 'Bản đầy đủ kể lại những mẫu hình của bạn đã đổi thế nào '
-                          'qua từng giai đoạn, điều gì đang nhạt dần và điều gì '
-                          'vẫn quay lại.',
+                      : 'Mở khóa bản đầy đủ để nhìn lại toàn bộ bức tranh thay '
+                          'đổi của bạn qua từng giai đoạn.',
               // Chỉ kẹp bản kể của AI. Câu chờ và câu quảng cáo Premium đều do
               // mình viết, độ dài đã biết trước, kẹp thêm chỉ tổ cắt cụt.
               maxLines: canRead && latest != null && !_expanded
@@ -891,7 +899,7 @@ class _GrowthOpportunitySection extends ConsumerWidget {
         children: [
           const WrSectionDivider(),
           const SizedBox(height: 24),
-          const WrEyebrow('CƠ HỘI PHÁT TRIỂN'),
+          const WrEyebrow('GÓC NHÌN PHÁT TRIỂN'),
           const SizedBox(height: 14),
           if (!entitlement.isPremium)
             const WrPremiumLock(
@@ -936,8 +944,8 @@ class _GrowthOpportunitySection extends ConsumerWidget {
           const SizedBox(height: 12),
           WrLinkRow(
             key: const Key('wr_journey_work_info_row'),
-            label: 'Thông tin công việc hiện tại',
-            hint: 'Gợi ý sát hơn',
+            label: 'Cập nhật bối cảnh công việc',
+            hint: 'Để gợi ý chính xác hơn',
             onTap: () => context.push('/wr/work-info'),
           ),
         ],
@@ -1116,16 +1124,18 @@ class _WrCareerMemoryScreenState extends ConsumerState<WrCareerMemoryScreen> {
       eyebrow: 'CAREER MEMORY',
       // Mockup v16: "Bạn đã để lại N mảnh ký ức nghề nghiệp." — con số TỔNG,
       // kể cả với bản miễn phí. Việc mình đã làm thì luôn được nói ra; cái bị
-      // khoá là nội dung từng mảnh.
+      // khoá là nội dung từng mảnh. Khách 09/09/2026 (§12.2) đổi từ hiển thị
+      // "mảnh ký ức" → "cột mốc"; luật đếm không đổi.
       title: all.isEmpty
           ? 'Career Memory'
           : _type == null
-              ? 'Bạn đã để lại ${all.length} mảnh ký ức nghề nghiệp.'
-              : '${shown.length} mảnh · ${_type!.toLowerCase()}',
+              ? 'Bạn đã ghi lại ${all.length} cột mốc trên hành trình sự nghiệp.'
+              : '${shown.length} cột mốc · ${_type!.toLowerCase()}',
       children: [
         if (all.isEmpty)
           const WrParagraph(
-            'Chưa có mảnh ký ức nào. Mỗi lần nhìn lại sẽ để lại một dấu ở đây.',
+            'Nhật ký sự nghiệp của bạn chưa ghi nhận cột mốc nào. Hãy bắt đầu '
+            'một lần nhìn lại để lưu giữ những dấu ấn của riêng bạn.',
             key: Key('wr_career_memory_empty'),
             style: TextStyle(
               fontSize: 16.5,
@@ -1164,18 +1174,18 @@ class _WrCareerMemoryScreenState extends ConsumerState<WrCareerMemoryScreen> {
             WrPremiumLock(
               key: const Key('wr_career_memory_lock'),
               description: shown.length > readable
-                  ? 'Còn ${shown.length - readable} mảnh ký ức nữa, thuộc các '
-                      'tuần và tháng trước đó. Bản đầy đủ mở lại từng mảnh, '
+                  ? 'Còn ${shown.length - readable} cột mốc nữa, thuộc các '
+                      'tuần và tháng trước đó. Bản đầy đủ mở lại từng cột mốc, '
                       'đọc lại được bất cứ lúc nào.'
-                  : 'Bản đầy đủ mở lại từng mảnh ký ức nghề nghiệp bạn đã để '
-                      'lại, đọc lại được bất cứ lúc nào, theo đúng dòng thời '
-                      'gian.',
+                  : 'Bản đầy đủ mở lại từng cột mốc bạn đã ghi trên hành trình '
+                      'sự nghiệp, đọc lại được bất cứ lúc nào, theo đúng dòng '
+                      'thời gian.',
               ctaLabel: 'Mở khoá toàn bộ Career Memory',
               paywallTrigger: 'career_memory',
             )
           else
             Text(
-              'Đã hiện ${shown.length}/${all.length} mảnh ký ức gần nhất.',
+              'Đã hiện ${shown.length}/${all.length} cột mốc gần nhất.',
               key: const Key('wr_career_memory_shown_count'),
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 13.5, color: WrColors.muted),
@@ -1419,7 +1429,7 @@ class _EntryRowState extends State<_EntryRow> {
                       if (locked) ...[
                         const SizedBox(height: 4),
                         const WrParagraph(
-                          'Mở bản đầy đủ để đọc lại mảnh ký ức này.',
+                          'Mở bản đầy đủ để đọc lại cột mốc này.',
                           style: TextStyle(
                             fontSize: 14.5,
                             color: WrColors.muted,

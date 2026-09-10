@@ -274,10 +274,6 @@ class WrDiscoverScreen extends ConsumerWidget {
               const SizedBox(height: 14),
               _CareerHealthCard(
                 reflectionCount: reflectionCount,
-                // Bức tranh phía trên đọc từ đâu — xem `behaviourShares` ở đầu
-                // `build`. Thẻ phải nói đúng nguồn, nếu không nó hứa một thứ
-                // đang không xảy ra với chính người đang đọc nó.
-                readsFromSelfCheck: latestCheck != null,
                 // Chính bức tranh, bày ngay trong thẻ đã hứa nó.
                 behaviourShares: behaviourShares,
                 onOpen: () => context.push('/wr/patterns'),
@@ -672,16 +668,11 @@ class _ScaRow extends StatelessWidget {
 class _CareerHealthCard extends StatelessWidget {
   const _CareerHealthCard({
     required this.reflectionCount,
-    required this.readsFromSelfCheck,
     required this.onOpen,
     this.behaviourShares,
   });
 
   final int reflectionCount;
-
-  /// Khối "Trải nghiệm hiện tại" phía trên đang đọc từ bộ Self-Check, không
-  /// phải từ hành vi. Quyết định câu chữ của trạng thái đã mở.
-  final bool readsFromSelfCheck;
 
   /// Tỉ trọng bị chạm của ba trụ, đọc từ chính [reflectionCount] lần nhìn lại.
   ///
@@ -731,15 +722,13 @@ class _CareerHealthCard extends StatelessWidget {
                         'lại, nhưng chưa lần nào của bạn rơi vào một trong ba '
                         'trụ — những lần bạn tự mô tả không có tình huống nào '
                         'để đối chiếu. Vài lần có chọn tình huống nữa là đọc ra.'
-                    : readsFromSelfCheck
-                        ? 'Bức tranh tổng thể đã mở sau $reflectionCount lần '
-                            'nhìn lại. Đây là trụ nào đang bị chạm nhiều nhất '
-                            'trong chính những lần đó — khác với "Trải nghiệm '
-                            'hiện tại" phía trên, chỗ đọc từ bộ Self-Check bạn '
-                            'tự trả lời.'
-                        : 'Bức tranh tổng thể đã mở sau $reflectionCount lần '
-                            'nhìn lại. Đây là trụ nào đang bị chạm nhiều nhất '
-                            'trong chính những lần đó.',
+                    // Khách 09/09/2026 (§7.1): một câu duy nhất, KHÔNG còn vế
+                    // so sánh với "Trải nghiệm hiện tại" phía trên. Đó là lý do
+                    // nhánh `readsFromSelfCheck` đã bỏ — hai nhánh cũ chỉ khác
+                    // nhau ở đúng vế đó.
+                    : 'Bức tranh tổng quan sau $reflectionCount lần nhìn lại. '
+                        'Dựa trên những ghi nhận của bạn, hệ thống đã đúc kết '
+                        'ra trạng thái trải nghiệm của bạn trong thời gian qua.',
             key: const Key('wr_discover_career_health_text'),
             style: const TextStyle(
               fontSize: 14.5,
@@ -801,7 +790,7 @@ class _CareerHealthCard extends StatelessWidget {
                 child: Row(
                   children: [
                     Text(
-                      'Xem những điều đang trở đi trở lại',
+                      'Xem các vấn đề thường lặp lại',
                       style: TextStyle(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w700,
@@ -855,8 +844,9 @@ class _SelfCheckInviteCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           WrParagraph(
-            '$total câu hỏi tình huống ngắn, giúp phác thảo điều kiện làm việc '
-            'đang hỗ trợ hoặc cản trở bạn. Có thể làm lại bất kỳ lúc nào.',
+            'Chỉ với $total câu hỏi ngắn giúp hệ thống hiểu rõ hơn trạng thái '
+            'hiện tại của bạn. Đừng quên cập nhật lại bất cứ khi nào bạn thấy '
+            'có sự thay đổi trong công việc nhé.',
             style: const TextStyle(
               fontSize: 14.5,
               height: 1.65,
@@ -889,7 +879,7 @@ class _SelfCheckInviteCard extends StatelessWidget {
                 elevation: 0,
               ),
               child: Text(
-                shown > 0 ? 'Làm lại Self-Check' : 'Bắt đầu Self-Check',
+                shown > 0 ? 'Cập nhật lại Self-Check' : 'Bắt đầu Self-Check',
                 style: const TextStyle(
                   fontSize: 15.5,
                   fontWeight: FontWeight.w700,
@@ -933,9 +923,8 @@ class _SelfCheckDeepLock extends ConsumerWidget {
       key: const Key('wr_discover_sca_deep_lock'),
       title: 'Diễn giải sâu & theo dõi xu hướng',
       description:
-          'Cùng ${kSelfCheckQuestions.length} câu này, chạy lại theo thời gian '
-          'để thấy điều kiện làm việc của bạn thay đổi ra sao, và đối chiếu '
-          'với những điều lặp lại bạn đã ghi.',
+          'So sánh kết quả theo thời gian để thấy điều kiện làm việc của bạn đã '
+          'thay đổi ra sao và đối chiếu với các ghi chú trước đó.',
       ctaLabel: 'Mở khoá',
       paywallTrigger: 'sca_deep',
       // Mua xong đi thẳng vào màn đích, không rơi lại tab Hiểu mình (§7).

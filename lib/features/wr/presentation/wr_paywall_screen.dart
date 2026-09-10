@@ -271,9 +271,10 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
             sub: 'Mở lại từng mảnh bạn đã để lại, theo đúng dòng thời gian.',
           ),
         PaywallTrigger.selfCheckDeep => (
-            title: 'Điều kiện quanh bạn đang đổi thế nào',
-            sub: 'Cùng 15 câu đó, chạy lại theo thời gian để thấy xu hướng, và '
-                'đối chiếu với những gì bạn đã nhìn lại.',
+            title: 'Môi trường làm việc của bạn đang thay đổi ra sao?',
+            sub: 'Theo dõi sự thay đổi qua thời gian từ bộ 15 câu hỏi đánh giá, '
+                'giúp bạn nhận diện xu hướng và đối chiếu với các góc nhìn '
+                'trước đó.',
           ),
         PaywallTrigger.defaultTrigger => (
             title: 'Mở khoá toàn bộ hành trình',
@@ -323,17 +324,20 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
       _Highlight(
         icon: '◈',
         title: 'AI Insight cá nhân hoá',
-        desc: 'Phát hiện mô thức từ Career Memory của bạn. Ngày càng chính xác hơn.',
+        desc: 'Tự động phân tích dữ liệu từ Career Memory, mang lại những góc '
+            'nhìn ngày càng sát với thực tế của bạn.',
       ),
       _Highlight(
         icon: '📈',
         title: 'Career Pattern',
-        desc: 'Nhìn thấy các mô thức lặp lại trong hành trình nghề nghiệp theo thời gian.',
+        desc: 'Nhận diện các mẫu hình hành vi và cảm xúc lặp lại trong suốt '
+            'hành trình phát triển.',
       ),
       _Highlight(
         icon: '◎',
-        title: 'Không giới hạn',
-        desc: 'Story không giới hạn, Thực hành không giới hạn, Career Memory đầy đủ.',
+        title: 'Truy cập không giới hạn',
+        desc: 'Mở khóa trọn vẹn kho bài viết, bài tập Thực hành và toàn bộ '
+            'Career Memory.',
       ),
     ];
 
@@ -341,7 +345,7 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
       _FeatureRow(label: 'Story Reflection hàng ngày', avail: true),
       _FeatureRow(label: 'Check-in nhanh', avail: true),
       _FeatureRow(label: 'Career Memory Timeline', avail: true),
-      _FeatureRow(label: '15 câu phản chiếu', avail: true),
+      _FeatureRow(label: '15 câu hỏi phản chiếu', avail: true),
       _FeatureRow(label: '3 chủ đề Thực hành', avail: true),
       _FeatureRow(label: 'AI Insight', avail: false),
       _FeatureRow(label: 'Career Pattern Analysis', avail: false),
