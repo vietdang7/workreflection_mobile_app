@@ -637,6 +637,23 @@ String get kDeepOneSelfCheckOnly => tr('Sau lần cập nhật Self-Check tiếp
     'công việc có gì khác đi.', 'After your next Self-Check update, you will see how your sense of things '
     'has shifted since today. Update it whenever work feels different.');
 
+/// Câu thay cho tầng 3 khi ĐÃ có hai lần Self-Check nhưng cách nhau chưa đủ
+/// [kDeepSelfCheckMinGapDays].
+///
+/// Phải là một câu RIÊNG. Người đã làm hai lần mà đọc [kDeepOneSelfCheckOnly]
+/// sẽ hiểu là cứ làm thêm một lần nữa là mở ra, rồi làm ngay hôm sau và vẫn gặp
+/// đúng câu đó — câu chữ hoá ra chỉ đường sai. Thứ còn thiếu ở đây là KHOẢNG
+/// CÁCH giữa hai lần, không phải số lần.
+///
+/// Vẫn theo §6: nói cái sắp mở ra và lý do, không nói "chưa đủ dữ liệu" cũng
+/// không đếm ngược "còn N ngày nữa".
+String get kDeepSelfChecksTooClose => tr('Cảm nhận về công việc thường đổi theo tháng chứ không theo tuần, nên phần '
+    'so sánh này chờ hai lần Self-Check cách nhau một quãng đủ dài. Khi bạn cập '
+    'nhật lại sau một thời gian nữa, bạn sẽ thấy được điều gì đã dịch chuyển so '
+    'với hôm nay.', 'How work feels tends to shift over months rather than weeks, so this '
+    'comparison waits for two Self-Checks a good stretch apart. When you update '
+    'again after a while, you will see what has moved since today.');
+
 /// Câu mời cập nhật khi lần Self-Check gần nhất đã quá 3 tháng.
 String deepStaleSelfCheckText(DateTime takenAt) =>
     tr('Lần Self-Check gần nhất của bạn là vào ${selfCheckDateLabel(takenAt)}. '
@@ -714,6 +731,7 @@ class DeepInterpretation {
 bool deepTextIsGuidance(String text) =>
     text == kDeepNoTrendYet ||
     text == kDeepOneSelfCheckOnly ||
+    text == kDeepSelfChecksTooClose ||
     text == kDeepNotEnoughReflection;
 
 DeepInterpretation buildDeepInterpretation({
@@ -737,7 +755,10 @@ DeepInterpretation buildDeepInterpretation({
     trendText: deepReflectionTrendText(f) ?? kDeepNoTrendYet,
     selfCheckTrendText: !f.hasScoredSelfCheck
         ? null
-        : (deepSelfCheckTrendText(f) ?? kDeepOneSelfCheckOnly),
+        : (deepSelfCheckTrendText(f) ??
+            (f.previousSelfCheckDate == null
+                ? kDeepOneSelfCheckOnly
+                : kDeepSelfChecksTooClose)),
     staleSelfCheckText: takenAt != null && selfCheckIsStale(takenAt, now)
         ? deepStaleSelfCheckText(takenAt)
         : null,
