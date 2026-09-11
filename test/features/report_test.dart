@@ -365,7 +365,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 50));
       await tester.pumpAndSettle();
 
-      expect(find.byIcon(Icons.check_circle), findsOneWidget);
+      expect(find.byIcon(Icons.check_circle_outlined), findsOneWidget);
     });
 
     testWidgets('tapping uncompleted task calls toggleTask', (tester) async {

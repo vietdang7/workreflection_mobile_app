@@ -19,6 +19,8 @@
 
 import type { EpisodeRow } from './regeneration.ts';
 
+import { languageRule, WrLocale } from '../_shared/locale.ts';
+
 export type NarrativeInput = {
   /// Mới nhất trước.
   episodes: EpisodeRow[];
@@ -124,7 +126,10 @@ TUYỆT ĐỐI KHÔNG
 • Không nêu con số thô kiểu "4 lần" nếu nó làm câu đọc như báo cáo; nói bằng lời ("trở lại nhiều nhất", "thưa dần").
 • Nếu hai giai đoạn gần như giống nhau, hãy nói thẳng là chưa có gì đổi rõ rệt. Đó là một câu trả lời đúng, và tốt hơn một chuyển biến bịa ra.`;
 
-export function buildNarrativePrompt(input: NarrativeInput): unknown[] {
+export function buildNarrativePrompt(
+  input: NarrativeInput,
+  locale: WrLocale = 'vi',
+): unknown[] {
   const parts = [buildFacts(input)];
 
   if (input.previousNarrative) {
@@ -136,7 +141,10 @@ export function buildNarrativePrompt(input: NarrativeInput): unknown[] {
   }
 
   return [
-    { role: 'system', content: SYSTEM },
+    // Dữ liệu thật ở `parts` cố ý GIỮ NGUYÊN tiếng Việt kể cả khi kể bằng tiếng
+    // Anh: đó là chữ người dùng tự viết và tên tình huống họ đã chọn. Dịch nó
+    // trước khi đưa vào prompt là để model đọc một bản đã tam sao.
+    { role: 'system', content: SYSTEM + languageRule(locale) },
     { role: 'user', content: parts.join('\n') },
   ];
 }

@@ -75,11 +75,11 @@
   "understandEyebrowSituations": "Recurring situations",
   "understandEyebrowSca": "Current experience",
   "understandEyebrowHealth": "Career Health Check",
-  "understandScaRole": "Role clarity",
-  "understandScaVoice": "Safety to speak up",
-  "understandScaMeaning": "Sense of direction",
-  "understandStatusStable": "Stable",
-  "understandStatusImproving": "Improving",
+  "understandScaRole": "Clarity",
+  "understandScaVoice": "Relationships",
+  "understandScaMeaning": "Ways of working",
+  "understandStatusStable": "Supporting you well",
+  "understandStatusImproving": "Fine, room to grow",
   "understandStatusUnrated": "Unrated",
   "understandHealthReady": "You have {n} reflections.",
   "@understandHealthReady": {
@@ -156,7 +156,7 @@
   "profileDeleteAccountCancel": "Keep my account",
   "profileDeleteAccountError": "Could not delete the account. Check your connection and try again.",
 
-  "understandStatusNeedsAttention": "Needs attention",
+  "understandStatusNeedsAttention": "Holding you back",
   "understandNeedSuffix": "· Dominant need",
   "understandNoSituations": "No situations recorded yet.",
 

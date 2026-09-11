@@ -541,7 +541,7 @@ void main() {
           findsOneWidget,
         );
         // Danh sách chủ đề khác không xổ tại chỗ (khách 2026-07-30).
-        expect(find.text('THỰC HÀNH KHÁC'), findsNothing);
+        expect(find.text('HOẠT ĐỘNG KHÁC'), findsNothing);
         expect(
           find.byKey(const Key('wr_growth_other_themes_row')),
           findsNothing,
@@ -580,7 +580,7 @@ void main() {
 
       // Chưa có dữ liệu để đề xuất thì thư viện nằm sau dòng xổ — màn này không
       // bày danh sách trần nữa (khách 2026-08-04).
-      expect(find.text('THỰC HÀNH KHÁC'), findsOneWidget);
+      expect(find.text('HOẠT ĐỘNG KHÁC'), findsOneWidget);
       expect(find.text('Chủ đề chưa làm'), findsNothing);
       await showAllThemes(tester);
 

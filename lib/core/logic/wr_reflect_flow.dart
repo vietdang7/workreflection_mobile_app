@@ -38,6 +38,7 @@
 // phải một màn hình. Nó được suy ra từ cảm xúc check-in ở [momentForMood] và
 // vẫn ghi xuống `wr_reflection_episodes.human_moment` như cũ.
 
+import '../l10n/wr_tr.dart';
 import '../models/checkin.dart';
 import '../models/wr_content.dart';
 import '../models/wr_episode.dart';
@@ -121,15 +122,14 @@ HumanMoment momentForMood(Mood mood) => switch (mood) {
 ///
 /// Ranh giới mới nằm ở chỗ khác: câu HỎI dùng "bạn", còn giọng KỂ (story, aha,
 /// nhãn "Điều khác") vẫn giữ "tôi" — xem [kOtherSituationLabel].
-const String kNoticePrompt =
-    'Điều gì đang mô tả đúng nhất trạng thái công việc của bạn?';
+String get kNoticePrompt => tr('Điều gì đang mô tả đúng nhất trạng thái công việc của bạn?', 'What best describes where you are at work right now?');
 
 /// Nhãn của mục "Điều khác", nguyên văn mockup v16 (`SITUATIONS` id `other`).
 ///
 /// GIỮ ngôi "tôi" dù §1.3 đã đổi mọi câu hỏi sang "bạn": đây không phải câu hỏi
 /// mà là một lựa chọn người dùng tự nói ra. Mockup v16 cũng giữ nguyên chuỗi
 /// này sau khi đã đổi ngôi toàn bộ phần còn lại.
-const String kOtherSituationLabel = 'Điều khác, để tôi tự mô tả';
+String get kOtherSituationLabel => tr('Điều khác, để tôi tự mô tả', 'Something else, let me describe it');
 
 // Ô neo ở bước Notice KHÔNG còn nhãn — khách 09/09/2026 (§2.2). Hằng
 // `kAnchorBadge = 'Lần trước'` đã bỏ hẳn ở đây.
@@ -147,12 +147,12 @@ const String kOtherSituationLabel = 'Điều khác, để tôi tự mô tả';
 /// vì bốn ô vuông cần chữ xuống dòng đúng chỗ. Ở đây phải là một dòng liền:
 /// nhãn này nằm GIỮA một câu, không đứng riêng trong một ô.
 String moodCheckinLabel(Mood mood) => switch (mood) {
-      Mood.stressed => 'Tôi đang căng thẳng',
-      Mood.tired => 'Tôi mệt mỏi cần nghỉ ngơi',
-      Mood.foggy => 'Tôi thấy mơ hồ',
-      Mood.outofsync => 'Tôi thấy mọi thứ lệch nhau',
-      Mood.okay => 'Tôi khá ổn',
-      Mood.happy => 'Tôi đang vui',
+      Mood.stressed => tr('Tôi đang căng thẳng', 'I feel tense'),
+      Mood.tired => tr('Tôi mệt mỏi cần nghỉ ngơi', 'I am tired and need rest'),
+      Mood.foggy => tr('Tôi thấy mơ hồ', 'I feel unclear'),
+      Mood.outofsync => tr('Tôi thấy mọi thứ lệch nhau', 'Things feel out of sync'),
+      Mood.okay => tr('Tôi khá ổn', 'I am doing okay'),
+      Mood.happy => tr('Tôi đang vui', 'I am feeling good'),
     };
 
 /// Dòng phụ dưới câu hỏi bước Notice.
@@ -162,37 +162,48 @@ String moodCheckinLabel(Mood mood) => switch (mood) {
 /// mình đang gặp.
 String noticeSubtitle(String? moodLabel) {
   if (moodLabel == null || moodLabel.isEmpty) {
-    return 'Chọn điều gần đúng nhất, không cần hoàn hảo.';
+    return tr('Chọn điều gần đúng nhất, không cần hoàn hảo.', 'Pick the closest one. It does not have to be perfect.');
   }
-  return 'Những tình huống dưới đây thường xuất hiện khi ai đó chọn '
-      '"$moodLabel".';
+  return tr('Những tình huống dưới đây thường xuất hiện khi ai đó chọn '
+      '"$moodLabel".', 'These situations often come up for people who pick '
+      '"$moodLabel".');
 }
 
 // ---------------------------------------------------------------------------
 // Bước 1 — Meaning
 // ---------------------------------------------------------------------------
 
-/// Câu hỏi bước Ý nghĩa cho nhánh "Điều khác" (mockup i===1, `s.custom`).
-const String kCustomDetailPrompt = 'Chuyện gì cụ thể đã xảy ra?';
-
-/// Câu hỏi bước Ý nghĩa: câu Reflection của tình huống đã chọn.
+/// Câu hỏi gợi mở của bước Chi tiết — MỘT câu cho mọi tình huống.
 ///
-/// [reflectionQuestion] null nghĩa là nhánh "Điều khác" hoặc thư viện chưa nối
-/// được sang story — cả hai đều lùi về câu hỏi chung, KHÔNG bịa một câu riêng.
-String detailPrompt(String? reflectionQuestion) {
-  final q = reflectionQuestion?.trim();
-  return (q == null || q.isEmpty) ? kCustomDetailPrompt : q;
-}
+/// Mục 3.2 của file khách 09/09: bỏ câu hỏi riêng của từng tình huống, dùng
+/// chung đúng câu này. Trước đây câu hỏi đọc từ `reflection_question` của tình
+/// huống trong thư viện, nên mỗi tình huống hỏi một kiểu.
+String get kDetailPrompt => tr('Viết ra bất cứ điều gì vừa xuất hiện trong đầu bạn lúc này.', 'Write whatever just came to mind.');
+
+/// Hệ số cỡ chữ của [kDetailPrompt] — mục 3.2 yêu cầu giảm còn 70%.
+///
+/// Câu này không còn là câu hỏi riêng của tình huống nữa mà là một lời mời viết
+/// chung, nên để nó to bằng tiêu đề bước thì nó tranh chỗ với chính câu chuyện
+/// phía trên.
+const double kDetailPromptScale = 0.7;
+
+/// Câu hỏi bước Chi tiết.
+///
+/// Vẫn nhận [reflectionQuestion] nhưng **không dùng tới**: mục 3.2 chốt một câu
+/// cố định. Giữ tham số để cột `reflection_question` trong DB không phải xoá —
+/// hàng trăm câu ở đó chỉ ngừng hiển thị, đảo lại sau này tốn một dòng.
+String detailPrompt(String? reflectionQuestion) => kDetailPrompt;
 
 /// Đoạn giải thích đặt NGAY DƯỚI nhãn bước, TRƯỚC khi vào câu chuyện.
 ///
 /// Changelog §1.1: người dùng cần hiểu đây là tình huống nhiều người khác cũng
 /// từng gặp, và hiểu vai trò của bước này trong luồng phản chiếu. Không có đoạn
 /// này thì màn mở thẳng bằng một câu chuyện lạ, không rõ của ai và để làm gì.
-const String kFamiliarStoryIntro =
-    'Rất nhiều người đi làm cũng từng trải qua giai đoạn những cảm xúc giống '
+String get kFamiliarStoryIntro => tr('Rất nhiều người đi làm cũng từng trải qua giai đoạn những cảm xúc giống '
     'bạn. Thử xem tình huống dưới đây có quen thuộc không nhé. Đây có thể sẽ '
-    'là điểm bắt đầu giúp bạn nhìn sâu hơn';
+    'là điểm bắt đầu giúp bạn nhìn sâu hơn', 'Plenty of working people have been through stretches that feel like '
+    'yours. See whether the situation below rings a bell. It can be a place '
+    'to start looking a little deeper');
 
 /// Lời mời viết, đặt dưới câu Reflection ở nhánh CÓ tình huống.
 ///
@@ -208,28 +219,26 @@ const String kFamiliarStoryIntro =
 /// ý đó — nhưng lời mời có điều kiện thôi thì chưa đủ: người dùng đọc xong vẫn
 /// không chắc bỏ trống có đi tiếp được không, nên ngồi cố nghĩ ra một câu.
 /// "Có thể bỏ trống cũng không sao" là nguyên văn khách đọc trong họp.
-const String kStoryDetailInvite =
-    'Kể lại khoảnh khắc đó theo cách riêng của bạn. Để trống cũng không sao, '
-    'miễn là bạn đã dành 1 phút để nghĩ về nó.';
+String get kStoryDetailInvite => tr('Kể lại khoảnh khắc đó theo cách riêng của bạn. Để trống cũng không sao, '
+    'miễn là bạn đã dành 1 phút để nghĩ về nó.', 'Tell that moment in your own words. Leaving it blank is fine too, as '
+    'long as you gave it a minute of thought.');
 
 /// Dòng phụ của nhánh "Điều khác", nguyên văn mockup v16 i===1 `s.custom`.
 ///
 /// Nhánh này không có câu chuyện nào để đối chiếu nên vẫn cần nói thẳng bắt đầu
 /// từ đâu.
-const String kCustomDetailNote =
-    'Không cần đầy đủ, chỉ cần bắt đầu từ: ai, khi nào, và chuyện gì đã xảy ra.';
+String get kCustomDetailNote => tr('Không cần đầy đủ, chỉ cần bắt đầu từ: ai, khi nào, và chuyện gì đã xảy ra.', 'It does not have to be complete. Just start with who, when, and what happened.');
 
 /// Gợi ý trong ô chữ ở nhánh CÓ tình huống.
 ///
 /// Changelog §1.1: đổi từ gợi ý chung chung sang ví dụ có cấu trúc thời gian –
 /// nhân vật – sự kiện. Ba dấu chấm lửng là chủ đích: chúng để trống đúng ba chỗ
 /// người viết cần điền.
-const String kStoryDetailHint = 'Ví dụ: Sáng nay, trong cuộc họp với..., lúc...';
+String get kStoryDetailHint => tr('Ví dụ: Sáng nay, trong cuộc họp với..., lúc...', 'For example: This morning, in the meeting with..., when...');
 
 /// Gợi ý trong ô chữ ở nhánh "Điều khác" — dài hơn vì không có câu chuyện nào
 /// đứng trước làm mẫu.
-const String kCustomDetailHint =
-    'Ví dụ: Sáng nay, trong cuộc họp với anh Nam, lúc mình vừa nêu ý kiến thì...';
+String get kCustomDetailHint => tr('Ví dụ: Sáng nay, trong cuộc họp với anh Nam, lúc mình vừa nêu ý kiến thì...', 'For example: This morning, in the meeting with Nam, right after I gave my view...');
 
 // ---------------------------------------------------------------------------
 // Bước 2 — Insight
@@ -240,9 +249,16 @@ const String kCustomDetailHint =
 /// §V: "Aha dùng câu mặc định cố định thay vì theo tình huống". Có một câu cố
 /// định là có chủ đích — bước Insight của mockup luôn mở bằng một câu đã viết
 /// sẵn để người dùng sửa, không bao giờ mở bằng ô trống.
-const String kDefaultAha =
+String get kDefaultAha => tr(kDefaultAhaVi, kDefaultAhaEn);
+
+/// Hai bản của [kDefaultAha], tách riêng để [relocaliseInsight] so được với
+/// những câu đã ghi xuống database bằng ngôn ngữ kia.
+const String kDefaultAhaVi =
     'Dừng lại để gọi tên một trải nghiệm cụ thể đã là bước phản chiếu quan '
     'trọng nhất, dù tôi chưa chắc chắn về ý nghĩa của nó.';
+const String kDefaultAhaEn =
+    'Stopping to name one specific experience is already the most important '
+    'part of reflecting, even if I am not sure yet what it means.';
 
 /// Câu Aha của bước Insight.
 ///
@@ -275,29 +291,42 @@ String ahaFor(String? situationAha) {
 // dùng vừa tự nghĩ ra.
 
 /// Nhãn bước ở Lớp 1 — chính là vế đầu của câu mở dở.
-const String kInsightStemEyebrow = 'Với tôi, điều này...';
+String get kInsightStemEyebrow => tr('Với tôi, điều này...', 'To me, this...');
 
 /// Nhãn bước ở Lớp 2.
-const String kInsightAhaEyebrow = 'Một góc nhìn khác';
+String get kInsightAhaEyebrow => tr('Một góc nhìn khác', 'Another way to see it');
 
 /// Vế đầu của câu mở dở. Người dùng viết tiếp phần sau chữ "vì".
-const String kInsightStemPrefix = 'Với tôi, điều này xảy ra vì';
+String get kInsightStemPrefix => tr('Với tôi, điều này xảy ra vì', 'To me, this happens because');
+
+/// Mọi vế mở dở ĐÃ TỪNG được ghi xuống, không riêng vế của ngôn ngữ đang bật.
+///
+/// `notes['reframe']` giữ nguyên văn câu lúc người dùng bấm lưu — kể cả vế mở
+/// dở. Đổi ngôn ngữ không viết lại những dòng đã ghi, nên một tài khoản dùng lâu
+/// sẽ có cả hai vế nằm lẫn nhau trong lịch sử.
+///
+/// [stemFromNote] phải nhận ra CẢ HAI, nếu không thì mở lại một phiên ghi bằng
+/// ngôn ngữ kia sẽ đổ nguyên vế mở dở cũ vào ô chữ, và người dùng đọc thấy
+/// "Với tôi, điều này xảy ra vì Với tôi, điều này xảy ra vì …".
+const List<String> kInsightStemPrefixes = [
+  'Với tôi, điều này xảy ra vì',
+  'To me, this happens because',
+];
 
 /// Câu mở dở hiển thị nguyên vẹn (có dấu ba chấm) ở Lớp 1.
-const String kInsightStemPrompt = '$kInsightStemPrefix...';
+String get kInsightStemPrompt => '$kInsightStemPrefix...';
 
 /// Dòng phụ ở Lớp 1 — nói rõ không có đáp án đúng, để ô chữ không đọc ra như
 /// một bài kiểm tra.
-const String kInsightStemNote =
-    'Không có câu trả lời đúng, chỉ cần viết điều bạn đang thực sự nghĩ.';
+String get kInsightStemNote => tr('Không có câu trả lời đúng, chỉ cần viết điều bạn đang thực sự nghĩ.', 'There is no right answer. Just write what you actually think.');
 
 /// Gợi ý trong ô chữ ở Lớp 1, nguyên văn mockup v16.
-const String kInsightStemHint =
-    '...có thể do mình đang ôm đồm quá nhiều / do thiếu giao tiếp với sếp / '
-    'do chưa biết cách từ chối...';
+String get kInsightStemHint => tr('...có thể do mình đang ôm đồm quá nhiều / do thiếu giao tiếp với sếp / '
+    'do chưa biết cách từ chối...', '...maybe I am taking on too much / there is not enough talk with my '
+    'manager / I have not learned to say no...');
 
 /// Nhãn của khối gợi ý nằm DƯỚI ô chữ ở Lớp 1.
-const String kInsightSuggestionsLabel = 'CHƯA BIẾT VIẾT GÌ? THỬ MỘT TRONG SỐ NÀY';
+String get kInsightSuggestionsLabel => tr('CHƯA BIẾT VIẾT GÌ? THỬ MỘT TRONG SỐ NÀY', 'NOT SURE WHAT TO WRITE? TRY ONE OF THESE');
 
 /// Những vế viết tiếp có thể chạm để điền thẳng vào ô.
 ///
@@ -308,21 +337,21 @@ const String kInsightSuggestionsLabel = 'CHƯA BIẾT VIẾT GÌ? THỬ MỘT TR
 /// tức là mất đúng lúc người ta cần nó nhất.
 ///
 /// Chạm vào là ĐIỀN, không phải chèn thêm: người dùng sửa tiếp ngay trong ô.
-const List<String> kInsightStemSuggestions = [
-  'đây không phải lần đầu',
-  'mình chưa từng nói ra điều đó',
-  'mình chưa rõ mình đang mong đợi gì',
-  'mình sợ nói ra sẽ làm mọi thứ căng hơn',
+List<String> get kInsightStemSuggestions => [
+  tr('đây không phải lần đầu', 'this is not the first time'),
+  tr('mình chưa từng nói ra điều đó', 'I have never said that out loud'),
+  tr('mình chưa rõ mình đang mong đợi gì', 'I am not clear what I am hoping for'),
+  tr('mình sợ nói ra sẽ làm mọi thứ căng hơn', 'I am afraid saying it will make things tenser'),
 ];
 
 /// Nhãn của lối thoát ở Lớp 1.
-const String kInsightSkipLabel = 'Tạm thời bỏ qua, bạn muốn suy nghĩ thêm';
+String get kInsightSkipLabel => tr('Tạm thời bỏ qua, bạn muốn suy nghĩ thêm', 'Skip for now, you want to think it over');
 
 /// Nhãn nút chính ở Lớp 1.
-const String kInsightRevealLabel = 'Xem một góc nhìn khác';
+String get kInsightRevealLabel => tr('Xem một góc nhìn khác', 'See another way to look at it');
 
 /// Nhãn khối "điều bạn vừa viết" ở Lớp 2.
-const String kInsightYourWordsLabel = 'Điều bạn vừa viết';
+String get kInsightYourWordsLabel => tr('Điều bạn vừa viết', 'What you just wrote');
 
 /// Nhãn khối câu aha ở Lớp 2.
 ///
@@ -330,13 +359,31 @@ const String kInsightYourWordsLabel = 'Điều bạn vừa viết';
 /// một câu chuẩn hoá/xã hội hoá. Cùng một câu aha, khung "tôi nhận ra…" bảo
 /// người dùng phải nghĩ như vậy, còn khung này chỉ nói có người khác cũng nghĩ
 /// vậy.
-const String kInsightNormalizingLabel = 'Đúc kết phổ biến';
+String get kInsightNormalizingLabel => tr('Đúc kết phổ biến', 'A common thread');
+
+// ---------------------------------------------------------------------------
+// Đồng ý / Không đồng ý ở Lớp 2 — §10 changelog Career Snapshot (khách 10/09)
+// ---------------------------------------------------------------------------
+
+/// Nhãn nút chính ở Lớp 2 — thay cho "Tiếp tục".
+String get kInsightAgreeLabel => tr('Đồng ý', 'Agree');
+
+/// Nhãn nút phụ ở Lớp 2.
+String get kInsightDisagreeLabel => tr('Không đồng ý', 'Disagree');
+
+/// Lời xác nhận sau khi bấm Không đồng ý (§10.2, nguyên văn gợi ý của khách).
+///
+/// §10.2: "Không nên im lặng chuyển sang bước sau như thể không có gì xảy ra,
+/// vì người dùng vừa thực hiện một hành động có chủ đích và cần được phản hồi."
+String get kInsightDisagreeAck => tr('Cảm ơn bạn đã cho biết. Góc nhìn này sẽ không được lưu lại. Bạn vẫn có thể '
+    'tiếp tục với bước sau nhé.', 'Thanks for telling us. This view will not be saved. You can still carry '
+    'on to the next step.');
 
 /// Câu chốt dưới khối aha ở Lớp 2.
-const String kInsightAhaNote =
-    'Một vấn đề luôn có thể được giải nghĩa theo nhiều cách. Đây là một lăng '
+String get kInsightAhaNote => tr('Một vấn đề luôn có thể được giải nghĩa theo nhiều cách. Đây là một lăng '
     'kính bổ sung, mở ra thêm không gian để bạn đối chiếu với công việc hiện '
-    'tại.';
+    'tại.', 'A problem can always be read more than one way. This is one more lens, '
+    'opening a bit more room to hold it against your work as it is now.');
 
 /// Câu người dùng vừa viết, đã ghép với vế mở dở.
 ///
@@ -372,8 +419,100 @@ String mergeInsight({required String stem, required String aha}) {
 String stemFromNote(String? note) {
   final text = note?.trim();
   if (text == null || text.isEmpty) return '';
-  if (!text.startsWith(kInsightStemPrefix)) return text;
-  return text.substring(kInsightStemPrefix.length).trim();
+  for (final prefix in kInsightStemPrefixes) {
+    if (text.startsWith(prefix)) return text.substring(prefix.length).trim();
+  }
+  return text;
+}
+
+/// Câu ý nghĩa dựng LẠI từ nguồn, thay cho `draft_meaning` đã đóng băng.
+///
+/// ---------------------------------------------------------------------------
+/// VÌ SAO KHÔNG ĐỌC THẲNG `draft_meaning`
+///
+/// `draft_meaning` là bản GỘP mà [mergeInsight] tạo ra lúc bấm lưu: một nửa là
+/// chữ người dùng viết, một nửa là câu aha của app. Gộp xong thì hai nửa không
+/// còn tách ra được nữa, và cả hai bị đóng băng ở ngôn ngữ đang bật LÚC ĐÓ.
+///
+/// Hệ quả nhìn thấy trên Hành trình: tiêu đề dòng đọc từ `wr_situations.text_en`
+/// nên dịch được, còn dòng ngay dưới nó vẫn là tiếng Việt của tháng trước. Một
+/// dòng hai ngôn ngữ.
+///
+/// Dựng lại từ hai nguồn còn phân biệt được thì chữa được nửa thuộc về app:
+///   • `notes['reframe']` — chữ của chính người dùng. KHÔNG dịch, không bao giờ.
+///     Chỉ bóc vế mở dở cũ ra rồi lắp lại vế của ngôn ngữ đang bật.
+///   • [storyAha] — câu aha của story, đã đi qua `trDb` nên tự đúng ngôn ngữ.
+///
+/// Phần còn lại tiếng Việt sau khi dựng lại đúng là phần người dùng tự gõ. Đó
+/// là chữ của họ; dịch nó đi mới là sai.
+String liveMeaning({
+  required Map<String, String> notes,
+  required String? storyAha,
+}) =>
+    mergeInsight(
+      stem: stemFromNote(notes[ReflectionPattern.reframe.dbValue]),
+      aha: ahaFor(storyAha),
+    );
+
+/// Dịch lại phần APP viết trong một câu ý nghĩa ĐÃ ĐÓNG BĂNG trong database.
+///
+/// ---------------------------------------------------------------------------
+/// DÙNG KHI NÀO — VÀ VÌ SAO KHÔNG DÙNG [liveMeaning]
+///
+/// [liveMeaning] dựng lại câu từ hai nguồn còn phân biệt được, nên chính xác
+/// hơn — nhưng nó cần Episode. Bảng `wr_reflection_insights` chỉ có một cột
+/// `content` là bản gộp, không có đường nào lần ngược về Episode. Thẻ "Insight
+/// gần nhất" ở màn Hôm nay đọc đúng bảng đó.
+///
+/// Nên ở đây làm ngược lại: nhận bản gộp, nhận ra hai mảnh do APP viết, thay
+/// từng mảnh bằng bản của ngôn ngữ đang bật.
+///
+///   • VẾ MỞ DỞ đứng đầu câu ("Với tôi, điều này xảy ra vì" /
+///     "To me, this happens because") — danh sách đầy đủ ở [kInsightStemPrefixes].
+///   • CÂU AHA luôn đứng CUỐI câu, do [mergeInsight] ghép vào sau cùng. Nhận ra
+///     nó bằng cách so nguyên văn với những câu aha đã biết.
+///
+/// Chữ nằm GIỮA hai mảnh đó là chữ người dùng tự gõ. Nó ở nguyên ngôn ngữ họ đã
+/// viết — dịch chữ của người dùng mới là sai. Một thẻ nửa Anh nửa Việt ở đây là
+/// đúng, và nửa tiếng Việt đó là câu của chính họ.
+///
+/// [ahaEnByVi] là bản đồ câu aha tiếng Việt → tiếng Anh, lấy từ `wr_stories`.
+/// Thiếu bản đồ thì vẫn chạy: câu aha mặc định luôn được thử trước.
+///
+/// So NGUYÊN VĂN chứ không so gần đúng: nhận nhầm một câu người dùng tự gõ
+/// thành câu của app rồi thay nó đi thì đó là xoá chữ của họ. Không nhận ra thì
+/// tệ nhất là câu giữ nguyên tiếng cũ — đúng hiện trạng, không tệ hơn.
+String relocaliseInsight(
+  String content, {
+  Map<String, String> ahaEnByVi = const {},
+}) {
+  var text = content.trim();
+  if (text.isEmpty) return text;
+
+  final wantedStem = kInsightStemPrefix;
+  for (final prefix in kInsightStemPrefixes) {
+    if (prefix != wantedStem && text.startsWith(prefix)) {
+      text = '$wantedStem${text.substring(prefix.length)}';
+      break;
+    }
+  }
+
+  for (final entry in <MapEntry<String, String>>[
+    const MapEntry(kDefaultAhaVi, kDefaultAhaEn),
+    ...ahaEnByVi.entries,
+  ]) {
+    final vi = entry.key.trim();
+    final en = entry.value.trim();
+    if (vi.isEmpty || en.isEmpty || vi == en) continue;
+    final current = wrEnglish ? vi : en;
+    final wanted = wrEnglish ? en : vi;
+    if (text.endsWith(current)) {
+      text = '${text.substring(0, text.length - current.length)}$wanted';
+      break;
+    }
+  }
+
+  return text;
 }
 
 // ---------------------------------------------------------------------------

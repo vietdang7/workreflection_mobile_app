@@ -10,6 +10,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/l10n/wr_tr.dart';
 import '../../../../core/theme/wr_colors.dart';
 import '../../episode_flow_controller.dart';
 import '../../wr_providers.dart';
@@ -66,10 +67,10 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
     final count = _occurrenceCount();
 
     return WrFlowScaffold(
-      eyebrow: 'Lưu vào hành trình',
+      eyebrow: tr('Lưu vào hành trình', 'Save to my journey'),
       title: _integrating
-          ? 'Đang lưu lại…'
-          : 'Góc nhìn này đã được kết nối vào hành trình sự nghiệp của bạn.',
+          ? tr('Đang lưu lại…', 'Saving…')
+          : tr('Góc nhìn này đã được kết nối vào hành trình sự nghiệp của bạn.', 'This way of seeing it is now part of your career journey.'),
       titleScale: 0.8,
       progress: 1,
       primaryLabel: 'Xong',
@@ -95,7 +96,7 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
           if (count != null && count >= 2) ...[
             const SizedBox(height: 28),
             Text(
-              'Bạn đã ghi lại tình huống này $count lần',
+              tr('Bạn đã ghi lại tình huống này $count lần', 'You have recorded this situation $count times'),
               style: const TextStyle(
                 fontSize: 15.5,
                 color: WrColors.muted,

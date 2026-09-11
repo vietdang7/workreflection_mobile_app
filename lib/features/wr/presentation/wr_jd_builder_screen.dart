@@ -24,6 +24,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/data/wr_jd_repository.dart';
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_jd_builder.dart';
 import '../../../core/models/wr_jd_draft.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -106,7 +107,7 @@ class _WrJdBuilderScreenState extends ConsumerState<WrJdBuilderScreen> {
       });
     } catch (e) {
       if (mounted) {
-        setState(() => _error = 'Không lưu được. Thử lại.');
+        setState(() => _error = tr('Không lưu được. Thử lại.', 'Could not save. Try again.'));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -151,8 +152,8 @@ class _WrJdBuilderScreenState extends ConsumerState<WrJdBuilderScreen> {
         backgroundColor: WrColors.pageBg,
         elevation: 0,
         foregroundColor: WrColors.navy,
-        title: const Text(
-          'Cùng tạo JD của bạn',
+        title: Text(
+          tr('Cùng tạo JD của bạn', 'Let us build your JD'),
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w700,
@@ -238,7 +239,7 @@ class _WrJdBuilderScreenState extends ConsumerState<WrJdBuilderScreen> {
                         elevation: 0,
                       ),
                       child: Text(
-                        isLast ? 'Hoàn tất, lưu vào hồ sơ' : 'Lưu và tiếp tục',
+                        isLast ? tr('Hoàn tất, lưu vào hồ sơ', 'Finish and save to my profile') : tr('Lưu và tiếp tục', 'Save and continue'),
                         style: const TextStyle(
                           fontSize: 16.5,
                           fontWeight: FontWeight.w600,
@@ -249,8 +250,8 @@ class _WrJdBuilderScreenState extends ConsumerState<WrJdBuilderScreen> {
                   TextButton(
                     key: const Key('wr_jd_pause'),
                     onPressed: _busy ? null : _pauseAndLeave,
-                    child: const Text(
-                      'Dừng ở đây, làm tiếp sau',
+                    child: Text(
+                      tr('Dừng ở đây, làm tiếp sau', 'Stop here, carry on later'),
                       style: TextStyle(
                         fontSize: 15.5,
                         color: WrColors.muted,
@@ -292,8 +293,8 @@ class _ProgressBar extends StatelessWidget {
           Expanded(
             child: Semantics(
               label: canOpenJdDay(n, completed)
-                  ? 'Bước $n'
-                  : 'Bước $n, chưa mở khoá',
+                  ? tr('Bước $n', 'Step $n')
+                  : tr('Bước $n, chưa mở khoá', 'Step $n, not unlocked yet'),
               button: true,
               child: GestureDetector(
                 key: Key('wr_jd_step_$n'),
@@ -447,7 +448,7 @@ class _CompletionBanner extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'HOÀN TẤT',
+            tr('HOÀN TẤT', 'DONE'),
             style: TextStyle(
               fontSize: 12.5,
               fontWeight: FontWeight.w700,
@@ -456,7 +457,7 @@ class _CompletionBanner extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          const WrParagraph(
+          WrParagraph(
             kJdCompletionNote,
             style: TextStyle(
               fontSize: 15,

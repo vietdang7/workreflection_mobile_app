@@ -168,7 +168,20 @@ class SkillFormation {
 bool _belongsTo(CareerMemoryEvent e, PracticeTheme theme) {
   final id = e.themeId;
   if (id != null && id.isNotEmpty) return id == theme.themeId;
-  return _titleMatches(e.reflectionText, theme.title);
+
+  // So với CẢ HAI bản tên, không so với `theme.title`.
+  //
+  // `theme.title` đi qua `trDb` nên nó trả về tên theo ngôn ngữ ĐANG BẬT, còn
+  // `reflection_text` thì đóng băng bằng ngôn ngữ lúc ghi. Đem hai thứ đó so
+  // nhau nghĩa là: người dùng bật tiếng Anh lên thì mọi mảnh ký ức cũ (ghi
+  // bằng tiếng Việt) thôi khớp, và bộ đếm thực hành của họ tụt về 0.
+  //
+  // Đây không phải lỗi hiển thị — nó ăn vào NGƯỠNG hình thành kỹ năng, tức là
+  // đổi ngôn ngữ có thể lấy mất một kỹ năng đã được ghi nhận. Và nó tự lành
+  // khi đổi ngôn ngữ về, nên rất khó lần ra từ báo cáo của người dùng.
+  return _titleMatches(e.reflectionText, theme.titleVi) ||
+      (theme.titleEn != null &&
+          _titleMatches(e.reflectionText, theme.titleEn!));
 }
 
 /// So theo tên — chỉ dùng cho dữ liệu cũ chưa có `theme_id`.

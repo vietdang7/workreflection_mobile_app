@@ -17,6 +17,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/models/checkin.dart';
 import '../../../core/models/wr_mood_content.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -66,10 +67,10 @@ class WrMoodLibraryScreen extends ConsumerWidget {
             return ListView(
               padding: const EdgeInsets.fromLTRB(24, 0, 24, 40),
               children: [
-                const WrEyebrow('THƯ VIỆN'),
+                WrEyebrow(tr('THƯ VIỆN', 'LIBRARY')),
                 const SizedBox(height: 14),
-                const Text(
-                  'Gợi ý theo cảm xúc',
+                Text(
+                  tr('Gợi ý theo cảm xúc', 'Ideas by feeling'),
                   style: TextStyle(
                     fontSize: 26,
                     fontWeight: FontWeight.w700,
@@ -162,7 +163,7 @@ class WrMoodContentRow extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    '${item.kind} · ${item.duration}',
+                    '${item.kindLabel} · ${item.durationLabel}',
                     style: const TextStyle(
                       fontSize: 12.5,
                       color: WrColors.muted,
@@ -194,8 +195,8 @@ class WrDraftBadge extends StatelessWidget {
         color: WrColors.navy.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(100),
       ),
-      child: const Text(
-        'Nháp',
+      child: Text(
+        tr('Nháp', 'Draft'),
         style: TextStyle(
           fontSize: 10.5,
           fontWeight: FontWeight.w700,
@@ -212,11 +213,11 @@ class _LibraryEmpty extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // WXS Orch. Inv.5: im lặng là lựa chọn hợp lệ, không bịa nội dung mẫu.
-    return const Center(
+    return Center(
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 40),
         child: Text(
-          'Chưa có nội dung nào trong thư viện.',
+          tr('Chưa có nội dung nào trong thư viện.', 'Nothing in the library yet.'),
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 15, color: WrColors.muted),
         ),

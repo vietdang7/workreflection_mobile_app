@@ -19,7 +19,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get onb1Body =>
-      'Mỗi ngày một khoảnh khắc dừng lại.\nĐể nhìn rõ hơn, không phán xét.';
+      'Mỗi ngày, hãy dành một khoảnh khắc dừng lại.\nĐể nhìn rõ bản thân hơn trong một không gian\nan toàn của riêng bạn.';
 
   @override
   String get onb1Cta => 'Tiếp tục';
@@ -35,29 +35,29 @@ class AppLocalizationsVi extends AppLocalizations {
       'Hãy gọi tên nó.\nSự rõ ràng là bước đầu tiên\nđể thay đổi.';
 
   @override
-  String get onb2Opt1 => 'Mệt nhưng không biết tại sao';
+  String get onb2Opt1 => 'Mệt mỏi nhưng không rõ lý do.';
 
   @override
-  String get onb2Opt2 => 'Cố gắng nhưng không thấy tiến';
+  String get onb2Opt2 => 'Nỗ lực nhiều nhưng chưa thấy bước tiến.';
 
   @override
-  String get onb2Opt3 => 'Muốn thay đổi, chưa biết bắt đầu từ đâu';
+  String get onb2Opt3 => 'Khao khát thay đổi nhưng chưa biết bắt đầu từ đâu.';
 
   @override
-  String get onb2Opt4 => 'Đang khá ổn, muốn hiểu mình hơn';
+  String get onb2Opt4 => 'Mọi thứ đang ổn, nhưng muốn thấu hiểu mình sâu hơn.';
 
   @override
-  String get onb2Cta => 'Bắt đầu ngay';
+  String get onb2Cta => 'Tiếp tục';
 
   @override
   String get onb3Tag => 'Grow';
 
   @override
-  String get onb3Title => 'Đồng hành cùng\nsự nghiệp của bạn.';
+  String get onb3Title => 'Đồng hành cùng bước tiến\nsự nghiệp của bạn.';
 
   @override
   String get onb3Body =>
-      'WorkReflection ghi nhớ hành trình,\ntích lũy insight thành\ncareer intelligence của riêng bạn.';
+      'WorkReflection lưu giữ hành trình, giúp những\ntrải nghiệm được nhìn lại trở thành trí tuệ\nnghề nghiệp mang đậm bản sắc của riêng bạn.';
 
   @override
   String get onb3Promise1Title => '5–15 phút mỗi ngày';
@@ -72,13 +72,13 @@ class AppLocalizationsVi extends AppLocalizations {
   String get onb3Promise2Sub => 'Chỉ bạn mới thấy hành trình của mình';
 
   @override
-  String get onb3Promise3Title => 'Không phán xét';
+  String get onb3Promise3Title => 'Góc nhìn khách quan';
 
   @override
-  String get onb3Promise3Sub => 'Chỉ lắng nghe và phản chiếu';
+  String get onb3Promise3Sub => 'Ghi nhận và phản chiếu chân thực.';
 
   @override
-  String get onb3Cta => 'Vào WorkReflection';
+  String get onb3Cta => 'Bắt đầu hành trình';
 
   @override
   String get authLoginTitle => 'Chào mừng trở lại';
@@ -194,19 +194,19 @@ class AppLocalizationsVi extends AppLocalizations {
   String get understandEyebrowHealth => 'Career Health Check';
 
   @override
-  String get understandScaRole => 'Minh bạch vai trò';
+  String get understandScaRole => 'Sự rõ ràng';
 
   @override
-  String get understandScaVoice => 'An toàn khi lên tiếng';
+  String get understandScaVoice => 'Mối quan hệ';
 
   @override
-  String get understandScaMeaning => 'Định hướng ý nghĩa';
+  String get understandScaMeaning => 'Cách làm việc';
 
   @override
-  String get understandStatusStable => 'Ổn định';
+  String get understandStatusStable => 'Đang hỗ trợ tốt';
 
   @override
-  String get understandStatusImproving => 'Đang cải thiện';
+  String get understandStatusImproving => 'Ổn, còn dư địa';
 
   @override
   String get understandStatusUnrated => 'Chưa đánh giá';
@@ -353,7 +353,7 @@ class AppLocalizationsVi extends AppLocalizations {
       'Không xoá được tài khoản. Kiểm tra mạng rồi thử lại.';
 
   @override
-  String get understandStatusNeedsAttention => 'Cần chú ý';
+  String get understandStatusNeedsAttention => 'Đang cản trở';
 
   @override
   String get understandNeedSuffix => '· Nhu cầu chủ đạo';

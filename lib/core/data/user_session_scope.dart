@@ -89,6 +89,35 @@ final List<ProviderOrFamily> userScopedProviders = [
   ...userSessionStateProviders,
 ];
 
+// ---------------------------------------------------------------------------
+// ĐỔI NGÔN NGỮ THÌ KHÔNG XOÁ GÌ CẢ — CỐ Ý
+//
+// Bản trước xoá đúng [userDataProviders] mỗi lần người dùng đổi ngôn ngữ, để
+// buộc màn hình dựng lại. Nó chữa được triệu chứng nhưng trả giá đắt: xoá
+// repository là mọi `FutureProvider` đọc qua nó phải hỏi lại server. Hàng chục
+// lượt mạng, mỗi lượt về một lúc, mỗi lượt thay chữ một mảng màn hình. Đó đúng
+// là thứ khách mô tả 10/09: "chuyển đổi rất chậm… cứ xen kẽ giữa tiếng anh và
+// tiếng việt".
+//
+// Và nó vẫn KHÔNG đủ: chỉ widget nào tình cờ nghe một provider vừa bị xoá mới
+// dựng lại. Dòng ngày ở đầu màn Hôm nay đọc `greetingNameProvider` — không nằm
+// trong danh sách — nên nó ở lại tiếng Việt giữa một màn đã sang tiếng Anh.
+//
+// Giờ việc dựng lại do `_localeAwareBuilder` trong `app.dart` lo: đổi `Key`
+// theo ngôn ngữ thì Flutter dựng lại TOÀN BỘ cây trong một khung hình, không
+// cần provider nào bị xoá. Xoá cache không còn tác dụng gì ngoài việc làm chậm.
+//
+// ⚠ Điều kiện để giữ được như vậy: KHÔNG chốt ngôn ngữ vào lúc gọi server.
+//   Model phải chở cả hai bản và chọn ở GETTER (`WrSituation.text`,
+//   `MoodContent.title`, `ChoicePoolLine.text` — tất cả đều gọi `trDb`). Một
+//   repository trả về chuỗi đã dịch sẵn sẽ nằm lì trong cache bằng tiếng cũ,
+//   và lúc đó lại phải xoá cache — quay về đúng chỗ cũ.
+//
+//   Ngoại lệ hợp lệ duy nhất là chữ do AI viết (`wr_pattern_narratives`): nó
+//   phải nhờ model viết lại, không getter nào dịch hộ được. Chỗ đó
+//   `wrNarrativeRefreshProvider` tự `watch` ngôn ngữ.
+// ---------------------------------------------------------------------------
+
 /// Có phải phiên vừa đổi sang người khác không.
 ///
 /// Tách riêng khỏi listener của `app.dart` để kiểm được bằng test thuần: chính

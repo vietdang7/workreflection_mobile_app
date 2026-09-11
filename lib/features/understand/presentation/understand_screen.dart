@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/l10n/wr_tr.dart';
+import '../../../core/logic/wr_sca_deep_dive.dart'
+    show ScaPillarStatus, scaPillarStatus;
 import '../../../core/models/recurring_situation.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
@@ -88,7 +91,7 @@ class _DominantNeedBlock extends ConsumerWidget {
       data: (insight) {
         final quote = insight != null
             ? '"${insight.content}"'
-            : '"Đang tải hành trình của bạn..."';
+            : tr('"Đang tải hành trình của bạn..."', '"Loading your journey..."');
         final source = insight?.source ?? 'VOICE';
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -218,17 +221,29 @@ class _SituationRow extends StatelessWidget {
 
 /// Maps a numeric SCA score to a status label + color.
 /// Returns null when report is null (→ "Chưa đánh giá" muted).
+///
+/// Ngưỡng đi qua `scaPillarStatus` chứ không viết lại (A7, 10/09/2026). Màn này
+/// nằm ngoài thanh điều hướng nhưng vẫn mở được bằng `/understand`, và trước đó
+/// nó cắt ở 4.0 trong khi màn Hiểu mình cắt ở 3.8 — cùng một điểm 3.9 đọc ra
+/// hai kết luận ngược nhau ở hai màn, đúng lỗi §7.2 changelog bắt sửa.
 ({String label, Color color}) _scaStatus(double? score, AppLocalizations l10n) {
   if (score == null) {
     return (label: l10n.understandStatusUnrated, color: WrColors.muted);
   }
-  if (score >= 4) {
-    return (label: l10n.understandStatusStable, color: WrColors.teal);
-  }
-  if (score >= 2.5) {
-    return (label: l10n.understandStatusImproving, color: WrColors.coral);
-  }
-  return (label: l10n.understandStatusNeedsAttention, color: WrColors.coral);
+  return switch (scaPillarStatus(score)) {
+    ScaPillarStatus.developing => (
+        label: l10n.understandStatusStable,
+        color: WrColors.teal
+      ),
+    ScaPillarStatus.needsAttention => (
+        label: l10n.understandStatusImproving,
+        color: WrColors.coral
+      ),
+    ScaPillarStatus.priority => (
+        label: l10n.understandStatusNeedsAttention,
+        color: WrColors.coral
+      ),
+  };
 }
 
 class _ScaCard extends ConsumerWidget {

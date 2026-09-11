@@ -5,6 +5,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/wr_tr.dart';
 import '../logic/survey_scoring.dart';
 import '../models/ai_personalization_models.dart';
 import '../models/survey_models.dart';
@@ -394,7 +395,7 @@ class SupabaseSurveyRepository implements SurveyRepository {
       await _client.from('cc_notifications').insert({
         'target_type': 'admin',
         'type': 'survey_completed',
-        'title': 'Khảo sát mới hoàn thành',
+        'title': tr('Khảo sát mới hoàn thành', 'Survey just completed'),
         'description': '${type.toJson()} · $_userEmail',
         'icon': 'survey',
         'reference_id': surveyId,
@@ -403,7 +404,7 @@ class SupabaseSurveyRepository implements SurveyRepository {
       await _client.from('cc_notifications').insert({
         'target_type': 'admin',
         'type': 'report_generated',
-        'title': 'Báo cáo mới được tạo',
+        'title': tr('Báo cáo mới được tạo', 'New report created'),
         'description': 'Score: ${scores.scoreTotal}',
         'icon': 'survey',
         'reference_id': reportId,

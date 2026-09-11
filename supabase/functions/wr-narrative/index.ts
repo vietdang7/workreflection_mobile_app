@@ -38,6 +38,8 @@
 
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 import { hasAiConsent } from '../_shared/ai_consent.ts';
+import { stripMarkdown } from '../_shared/strip_markdown.ts';
+import { pick, readLocaleHeader, WrLocale } from '../_shared/locale.ts';
 import { buildNarrativePrompt, type NarrativeInput } from './prompt.ts';
 import {
   MIN_EPISODES,
@@ -74,7 +76,7 @@ const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
-    'authorization, x-client-info, apikey, content-type',
+    'authorization, x-client-info, apikey, content-type, x-wr-locale',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
@@ -105,20 +107,27 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: CORS_HEADERS });
   }
+  // Hàm này được gọi bằng POST RỖNG — không có thân để mà đọc ngôn ngữ ra.
+  // Header là đường duy nhất.
+  const locale: WrLocale = readLocaleHeader(req);
+
   if (req.method !== 'POST') {
-    return fail('Yêu cầu không hợp lệ.', 405);
+    return fail(pick(locale, 'Yêu cầu không hợp lệ.', 'Invalid request.'), 405);
   }
 
   const openRouterKey = Deno.env.get('OPENROUTER_API_KEY');
   if (!openRouterKey) {
     console.error('THIẾU secret OPENROUTER_API_KEY — hàm không thể chạy.');
-    return fail('Chưa kể lại được lúc này.', 503);
+    return fail(
+      pick(locale, 'Chưa kể lại được lúc này.', 'Cannot retell this right now.'),
+      503,
+    );
   }
 
   // ── 1 · Xác thực ────────────────────────────────────────────────────────
   const authHeader = req.headers.get('Authorization') ?? '';
   if (!authHeader.startsWith('Bearer ')) {
-    return fail('Cần đăng nhập.', 401);
+    return fail(pick(locale, 'Cần đăng nhập.', 'Please sign in.'), 401);
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -131,7 +140,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const { data: userData, error: authError } = await authClient.auth.getUser();
   const user = userData?.user;
   if (authError || !user) {
-    return fail('Phiên đăng nhập đã hết hạn.', 401);
+    return fail(
+      pick(locale, 'Phiên đăng nhập đã hết hạn.', 'Your session has expired.'),
+      401,
+    );
   }
 
   const db = createClient(
@@ -175,7 +187,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
       .limit(EPISODE_WINDOW),
     db
       .from('wr_pattern_narratives')
-      .select('id, narrative, period_start, period_end, created_at')
+      // `locale` PHẢI có ở đây: thiếu nó thì `previous.locale` luôn undefined,
+      // `decideRegeneration` mặc định coi là 'vi', và người dùng tiếng Anh
+      // không bao giờ được kể lại. Lỗi kiểu này không ném ngoại lệ nào.
+      .select('id, narrative, period_start, period_end, created_at, locale')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
       .limit(1),
@@ -183,13 +198,16 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   if (episodesResult.error) {
     console.error('Đọc Episode lỗi:', episodesResult.error.message);
-    return fail('Chưa kể lại được lúc này.', 503);
+    return fail(
+      pick(locale, 'Chưa kể lại được lúc này.', 'Cannot retell this right now.'),
+      503,
+    );
   }
 
   const episodes = (episodesResult.data ?? []) as EpisodeRow[];
   const previous = (lastResult.data?.[0] ?? null) as NarrativeRow | null;
 
-  const decision = decideRegeneration(episodes, previous);
+  const decision = decideRegeneration(episodes, previous, locale);
   if (!decision.regenerate) {
     return skip(decision.reason, {
       episodeCount: episodes.length,
@@ -206,6 +224,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const titles = await resolveTitles(
     db,
     episodes.map((e) => e.situation_code).filter((c): c is string => !!c),
+    locale,
   );
 
   const input: NarrativeInput = {
@@ -217,7 +236,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // ── 5 · Gọi model ───────────────────────────────────────────────────────
   let narrative: string;
   try {
-    narrative = await callModel(openRouterKey, buildNarrativePrompt(input));
+    narrative = await callModel(openRouterKey, buildNarrativePrompt(input, locale));
   } catch (e) {
     const aborted = e instanceof DOMException && e.name === 'AbortError';
     console.error(aborted ? 'OpenRouter quá hạn chờ' : `OpenRouter lỗi: ${e}`);
@@ -240,6 +259,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
     period_start: decision.periodStart,
     period_end: decision.periodEnd,
     narrative,
+    // Ghi kèm ngôn ngữ đã viết, để lần sau `decideRegeneration` biết đoạn này
+    // có còn dùng được cho người đang đọc hay không.
+    locale,
   });
 
   if (writeError) {
@@ -291,10 +313,11 @@ async function isPremium(db: SupabaseClient, userId: string): Promise<boolean> {
   return false;
 }
 
-/// Tra tiêu đề tiếng Việt của các mã tình huống.
+/// Tra tiêu đề của các mã tình huống, theo ngôn ngữ đang kể.
 async function resolveTitles(
   db: SupabaseClient,
   codes: string[],
+  locale: WrLocale,
 ): Promise<Map<string, string>> {
   const out = new Map<string, string>();
   const unique = [...new Set(codes)];
@@ -302,10 +325,19 @@ async function resolveTitles(
   try {
     const { data } = await db
       .from('wr_situations')
-      .select('code, text')
+      .select('code, text, text_en')
       .in('code', unique);
     for (const row of data ?? []) {
-      const text = String(row.text ?? '').trim();
+      // Tên tình huống là nội dung ĐÃ CÓ BẢN DỊCH DUYỆT trong bảng. Đưa bản
+      // tiếng Anh vào prompt khi đang kể tiếng Anh thì model khỏi phải tự dịch
+      // — nó dịch thì mỗi lần một kiểu, và tên tình huống là thứ người dùng đã
+      // nhìn thấy trên chip, lệch chữ là đọc ra như hai chuyện khác nhau.
+      //
+      // Khác với `draft_meaning`: cái đó là chữ người dùng tự viết và cố ý giữ
+      // nguyên ngôn ngữ họ đã viết.
+      const vi = String(row.text ?? '').trim();
+      const en = String(row.text_en ?? '').trim();
+      const text = locale === 'en' && en.length > 0 ? en : vi;
       if (text) out.set(row.code as string, text);
     }
   } catch (_) { /* không tra được thì prompt dùng mã, vẫn kể được */ }
@@ -342,7 +374,11 @@ async function callModel(apiKey: string, messages: unknown[]): Promise<string> {
       return '';
     }
     const payload = await res.json();
-    return String(payload?.choices?.[0]?.message?.content ?? '').trim();
+    // Lột Markdown ngay tại cửa ra (mục 17.1, khách 09/09). Bài Diễn biến dựng
+    // bằng `Text` thuần trên màn Hành trình, nên một cụm `**...**` lọt qua là
+    // hiện nguyên hình. Prompt đã dặn viết chữ thuần; đây là hàng rào thứ hai.
+    const content = String(payload?.choices?.[0]?.message?.content ?? '');
+    return stripMarkdown(content).trim();
   } finally {
     clearTimeout(timer);
   }

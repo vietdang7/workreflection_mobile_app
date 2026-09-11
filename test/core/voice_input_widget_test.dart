@@ -122,7 +122,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byIcon(Icons.mic_none_outlined), findsNothing);
-      expect(find.byIcon(Icons.mic), findsNothing);
+      expect(find.byIcon(Icons.stop_circle_outlined), findsNothing);
     });
   });
 
@@ -145,7 +145,7 @@ void main() {
       await tester.pump();
 
       // Pulsing mic icon shown while listening.
-      expect(find.byIcon(Icons.mic), findsOneWidget);
+      expect(find.byIcon(Icons.stop_circle_outlined), findsOneWidget);
     });
 
     testWidgets('matched transcript → listening stops, idle icon returns', (tester) async {
@@ -162,7 +162,7 @@ void main() {
 
       // After match, listening stops → idle icon returns.
       expect(find.byIcon(Icons.mic_none_outlined), findsOneWidget);
-      expect(find.byIcon(Icons.mic), findsNothing);
+      expect(find.byIcon(Icons.stop_circle_outlined), findsNothing);
     });
 
     testWidgets('no-match final transcript → snackbar, idle icon returns', (tester) async {
@@ -190,10 +190,10 @@ void main() {
 
       await tester.tap(find.byIcon(Icons.mic_none_outlined));
       await tester.pump();
-      expect(find.byIcon(Icons.mic), findsOneWidget);
+      expect(find.byIcon(Icons.stop_circle_outlined), findsOneWidget);
 
       // Tap again to stop.
-      await tester.tap(find.byIcon(Icons.mic));
+      await tester.tap(find.byIcon(Icons.stop_circle_outlined));
       await tester.pump();
       expect(find.byIcon(Icons.mic_none_outlined), findsOneWidget);
     });

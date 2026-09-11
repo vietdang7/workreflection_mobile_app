@@ -3,6 +3,8 @@
 // Tách khỏi `index.ts` để test được không cần mạng: `analysis_test.ts` bơm thẳng
 // JSON model từng trả để kiểm tra bộ chuẩn hoá.
 
+import { stripMarkdown } from '../_shared/strip_markdown.ts';
+
 /// Ba trụ SCA, dùng chung tên với Self-Check trong app.
 ///   S = Sự rõ ràng · C = Mối quan hệ · A = Cách làm việc
 export type Pillar = 'S' | 'C' | 'A';
@@ -72,11 +74,22 @@ function asString(v: unknown): string | null {
   return t.length > 0 ? t : null;
 }
 
+/// Chữ do MODEL viết ra — lột Markdown trước khi lưu (mục 17.1, khách 09/09).
+///
+/// Tách riêng khỏi [asString] vì `raw_text` KHÔNG được đi qua đây: đó là chữ
+/// của chính tài liệu người dùng tải lên, và một bản JD hoàn toàn có thể dùng
+/// gạch đầu dòng `- ` hay dấu sao thật. Lột ở đó là âm thầm sửa tài liệu của
+/// họ, chứ không phải dọn thói quen của model.
+function asProse(v: unknown): string | null {
+  const s = asString(v);
+  return s == null ? null : (asString(stripMarkdown(s)) ?? null);
+}
+
 function asStringList(v: unknown, max = 30): string[] {
   if (!Array.isArray(v)) return [];
   const out: string[] = [];
   for (const item of v) {
-    const s = asString(item);
+    const s = asProse(item);
     // Bỏ trùng: model hay lặp lại một yêu cầu ở cả `requirements` lẫn `skills`,
     // và danh sách hiển thị lên màn hình thì lặp trông như lỗi.
     if (s && !out.includes(s)) out.push(s);
@@ -103,9 +116,9 @@ export function normalizeAnalysis(
 
   const analysis: DocAnalysis = {
     doc_type: asString(parsed.doc_type) ?? 'other',
-    title: asString(parsed.title),
-    organization: asString(parsed.organization),
-    summary: asString(parsed.summary) ?? '',
+    title: asProse(parsed.title),
+    organization: asProse(parsed.organization),
+    summary: asProse(parsed.summary) ?? '',
     responsibilities: asStringList(parsed.responsibilities),
     requirements: asStringList(parsed.requirements),
     skills: asStringList(parsed.skills),

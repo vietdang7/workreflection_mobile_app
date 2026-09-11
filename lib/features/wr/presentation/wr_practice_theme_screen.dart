@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -42,12 +43,12 @@ class WrPracticeThemeScreen extends ConsumerWidget {
         enrollments.where((e) => e.themeId == themeId).firstOrNull;
 
     if (theme == null) {
-      return const WrDetailScaffold(
-        eyebrow: 'THỰC HÀNH',
-        title: 'Không tìm thấy chủ đề',
+      return WrDetailScaffold(
+        eyebrow: tr('THỰC HÀNH', 'PRACTICE'),
+        title: tr('Không tìm thấy chủ đề', 'Theme not found'),
         children: [
           WrParagraph(
-            'Chủ đề này không còn nữa. Quay lại tab Phát triển để chọn chủ đề khác.',
+            tr('Chủ đề này không còn nữa. Quay lại tab Phát triển để chọn chủ đề khác.', 'This theme is gone. Go back to the Grow tab and pick another.'),
             key: Key('wr_practice_theme_gone'),
             style: TextStyle(fontSize: 16.5, color: WrColors.muted, height: 1.6),
           ),
@@ -66,10 +67,10 @@ class WrPracticeThemeScreen extends ConsumerWidget {
       // không bao giờ quay lại, trong khi phần lặp lại mới là phần làm nên kỹ
       // năng.
       eyebrow: enrollment == null
-          ? 'CHƯA BẮT ĐẦU'
+          ? tr('CHƯA BẮT ĐẦU', 'NOT STARTED')
           : (enrollment.completedAt != null
-              ? 'ĐANG DUY TRÌ'
-              : 'ĐANG THỰC HÀNH'),
+              ? tr('ĐANG DUY TRÌ', 'IN UPKEEP')
+              : tr('ĐANG THỰC HÀNH', 'IN PRACTICE')),
       title: theme.title,
       children: [
         if (theme.description != null) ...[
@@ -87,8 +88,8 @@ class WrPracticeThemeScreen extends ConsumerWidget {
         const SizedBox(height: 8),
         Text(
           steps.isEmpty
-              ? 'Chủ đề này chưa có bước nào.'
-              : '$doneCount/${steps.length} bước hoàn thành',
+              ? tr('Chủ đề này chưa có bước nào.', 'This theme has no steps yet.')
+              : tr('$doneCount/${steps.length} bước hoàn thành', '$doneCount/${steps.length} steps done'),
           key: const Key('wr_practice_theme_progress'),
           style: const TextStyle(fontSize: 14.5, color: WrColors.muted),
         ),
@@ -169,8 +170,8 @@ class _MaintainBlock extends ConsumerWidget {
         children: [
           Text(
             formation.skillFormed
-                ? 'ĐÃ THÀNH KỸ NĂNG'
-                : 'GIAI ĐOẠN DUY TRÌ',
+                ? tr('ĐÃ THÀNH KỸ NĂNG', 'NOW A SKILL')
+                : tr('GIAI ĐOẠN DUY TRÌ', 'UPKEEP STAGE'),
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w700,
@@ -181,11 +182,14 @@ class _MaintainBlock extends ConsumerWidget {
           const SizedBox(height: 9),
           WrParagraph(
             formation.skillFormed
-                ? 'Bạn đã thực hành điều này ${formation.practiceCount} lần. '
-                    'Ghi nhận tiếp mỗi khi bạn dùng tới nó.'
-                : 'Đã ${formation.practiceCount}/${formation.threshold} lần. '
+                ? tr('Bạn đã thực hành điều này ${formation.practiceCount} lần. '
+                    'Ghi nhận tiếp mỗi khi bạn dùng tới nó.', 'You have practised this ${formation.practiceCount} times. '
+                    'Keep recording it whenever you use it.')
+                : tr('Đã ${formation.practiceCount}/${formation.threshold} lần. '
                     'Còn ${formation.remaining} lần nữa là điều này thành kỹ '
-                    'năng của bạn.',
+                    'năng của bạn.', '${formation.practiceCount}/${formation.threshold} so far. '
+                    '${formation.remaining} more and this becomes a skill of '
+                    'yours.'),
             key: const Key('wr_practice_maintain_count'),
             style: const TextStyle(
               fontSize: 15,
@@ -402,7 +406,7 @@ class _StepBlock extends StatelessWidget {
                     const SizedBox(height: 12),
                     _StepButton(
                       key: Key('wr_practice_step_unlock_${step.stepId}'),
-                      label: 'Mở khoá bước này',
+                      label: tr('Mở khoá bước này', 'Unlock this step'),
                       onTap: () =>
                           context.push('/wr/paywall?trigger=practice_step'),
                     ),
@@ -410,13 +414,13 @@ class _StepBlock extends StatelessWidget {
                     const SizedBox(height: 12),
                     _StepButton(
                       key: Key('wr_practice_step_done_${step.stepId}'),
-                      label: 'Đánh dấu hoàn thành',
+                      label: tr('Đánh dấu hoàn thành', 'Mark as done'),
                       onTap: onDone,
                     ),
                   ] else if (!isDone && !isNext) ...[
                     const SizedBox(height: 8),
-                    const Text(
-                      'Xong bước trước rồi mở tiếp',
+                    Text(
+                      tr('Xong bước trước rồi mở tiếp', 'Finish the previous step to open this one'),
                       style: TextStyle(fontSize: 13.5, color: WrColors.muted),
                     ),
                   ],

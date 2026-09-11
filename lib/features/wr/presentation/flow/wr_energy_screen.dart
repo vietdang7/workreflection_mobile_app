@@ -10,14 +10,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/l10n/wr_tr.dart';
 import '../../../../core/models/checkin.dart';
 import '../../episode_flow_controller.dart';
 import 'wr_flow_scaffold.dart';
 
 String energyLabel(CheckinEnergy energy) => switch (energy) {
-      CheckinEnergy.good => 'Có năng lượng',
-      CheckinEnergy.ok => 'Bình thường',
-      CheckinEnergy.low => 'Mệt mỏi',
+      CheckinEnergy.good => tr('Có năng lượng', 'Energised'),
+      CheckinEnergy.ok => tr('Bình thường', 'Steady'),
+      CheckinEnergy.low => tr('Mệt mỏi', 'Drained'),
     };
 
 class WrEnergyScreen extends ConsumerWidget {
@@ -26,8 +27,8 @@ class WrEnergyScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return WrFlowScaffold(
-      eyebrow: 'Lúc này',
-      title: 'Năng lượng của bạn thế nào?',
+      eyebrow: tr('Lúc này', 'Right now'),
+      title: tr('Năng lượng của bạn thế nào?', 'How is your energy?'),
       progress: 0.2,
       onClose: () => context.go('/home'),
       child: Column(

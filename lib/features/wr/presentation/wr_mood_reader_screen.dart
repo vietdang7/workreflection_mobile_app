@@ -29,6 +29,7 @@ import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../../core/data/ausynclab_tts_service.dart';
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/widgets/wr_ai_consent_sheet.dart';
 import '../../../core/models/wr_mood_content.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -124,7 +125,7 @@ class _ReaderBody extends StatelessWidget {
                     color: WrColors.teal,
                   ),
                   const SizedBox(width: 7),
-                  Flexible(child: WrEyebrow('${item.kind} · ${item.duration}')),
+                  Flexible(child: WrEyebrow('${item.kindLabel} · ${item.durationLabel}')),
                   if (item.placeholder) ...[
                     const SizedBox(width: 8),
                     const WrDraftBadge(),
@@ -268,7 +269,7 @@ class _AudioPlayerBlockState extends ConsumerState<_AudioPlayerBlock> {
     } on TtsException catch (e) {
       if (mounted) setState(() => _error = e.message);
     } catch (_) {
-      if (mounted) setState(() => _error = 'Không phát được bản thu này.');
+      if (mounted) setState(() => _error = tr('Không phát được bản thu này.', 'Could not play this recording.'));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -320,10 +321,10 @@ class _AudioPlayerBlockState extends ConsumerState<_AudioPlayerBlock> {
           Text(
             _error ??
                 (_busy
-                    ? 'Đang dựng bản thu bằng giọng đọc AI…'
+                    ? tr('Đang dựng bản thu bằng giọng đọc AI…', 'Building the recording with the AI voice…')
                     : _url != null
-                        ? widget.item.duration
-                        : 'Nghe bằng giọng đọc AI'),
+                        ? widget.item.durationLabel
+                        : tr('Nghe bằng giọng đọc AI', 'Listen with the AI voice')),
             key: const Key('wr_mood_audio_status'),
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -353,8 +354,8 @@ class _DraftNotice extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: WrColors.line),
       ),
-      child: const Text(
-        'Nội dung nháp, chưa thu âm hoặc biên tập chính thức.',
+      child: Text(
+        tr('Nội dung nháp, chưa thu âm hoặc biên tập chính thức.', 'Draft content, not yet recorded or properly edited.'),
         style: TextStyle(fontSize: 14, color: WrColors.navy, height: 1.6),
       ),
     );
@@ -366,11 +367,11 @@ class _ReaderMissing extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 40),
         child: Text(
-          'Không mở được nội dung này.',
+          tr('Không mở được nội dung này.', 'Could not open this content.'),
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 15, color: WrColors.muted),
         ),

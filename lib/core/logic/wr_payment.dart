@@ -1,3 +1,4 @@
+import '../l10n/wr_tr.dart';
 // Logic thanh toán Premium — bản dịch sang Dart của luồng web.
 //
 // Nguồn đối chiếu (repo web `workreflection`):
@@ -172,21 +173,21 @@ String? validateVoucher(
   String? orgId,
   String productType = kPremiumOrderProductType,
 }) {
-  if (!voucher.isActive) return 'Mã giảm giá đã ngừng hoạt động';
+  if (!voucher.isActive) return tr('Mã giảm giá đã ngừng hoạt động', 'This discount code is no longer active');
 
   final validTo = voucher.validTo;
   if (validTo != null && validTo.isBefore(now)) {
-    return 'Mã giảm giá đã hết hạn';
+    return tr('Mã giảm giá đã hết hạn', 'This discount code has expired');
   }
 
   final validFrom = voucher.validFrom;
   if (validFrom != null && validFrom.isAfter(now)) {
-    return 'Mã giảm giá chưa đến ngày sử dụng';
+    return tr('Mã giảm giá chưa đến ngày sử dụng', 'This discount code is not valid yet');
   }
 
   final maxUses = voucher.maxUses;
   if (maxUses != null && maxUses > 0 && voucher.usedCount >= maxUses) {
-    return 'Mã giảm giá đã hết lượt sử dụng';
+    return tr('Mã giảm giá đã hết lượt sử dụng', 'This discount code has no uses left');
   }
 
   // Quyền dùng theo nhóm người dùng. Admin và điều phối viên bỏ qua vòng này,
@@ -203,22 +204,22 @@ String? validateVoucher(
         userId != null && voucher.assignedUsers.contains(userId),
       _ => true,
     };
-    if (!eligible) return 'Mã giảm giá không áp dụng cho tài khoản của bạn';
+    if (!eligible) return tr('Mã giảm giá không áp dụng cho tài khoản của bạn', 'This discount code does not apply to your account');
   }
 
   // Giới hạn theo dịch vụ.
   if (voucher.applicableProducts.isNotEmpty) {
     final service = serviceKeyForProductType(productType);
     if (!voucher.applicableProducts.contains(service)) {
-      const labels = {
-        'premium': 'Bài test Premium',
+      final dynamic labels = {
+        'premium': tr('Bài test Premium', 'Premium assessment'),
         'workshop': 'Workshop',
         'coaching': 'Coaching',
       };
       final allowed = voucher.applicableProducts
           .map((s) => labels[s] ?? s)
           .join(', ');
-      return 'Mã giảm giá chỉ áp dụng cho $allowed';
+      return tr('Mã giảm giá chỉ áp dụng cho $allowed', 'This discount code only applies to $allowed');
     }
   }
 
@@ -271,15 +272,15 @@ List<WrVoucher> selectableVouchers(
 /// `checkVoucherEligibility` bên web xét khi vẽ danh sách.
 String? voucherIneligibleReason(WrVoucher voucher, {required DateTime now}) {
   final validTo = voucher.validTo;
-  if (validTo != null && validTo.isBefore(now)) return 'Hết hạn';
+  if (validTo != null && validTo.isBefore(now)) return tr('Hết hạn', 'Expired');
 
   final maxUses = voucher.maxUses;
   if (maxUses != null && maxUses > 0 && voucher.usedCount >= maxUses) {
-    return 'Hết lượt';
+    return tr('Hết lượt', 'No uses left');
   }
 
   final validFrom = voucher.validFrom;
-  if (validFrom != null && validFrom.isAfter(now)) return 'Chưa hiệu lực';
+  if (validFrom != null && validFrom.isAfter(now)) return tr('Chưa hiệu lực', 'Not active yet');
 
   return null;
 }
@@ -289,9 +290,9 @@ String voucherDiscountLabel(WrVoucher voucher) {
   if (voucher.discountType == 'percentage') {
     final p = voucher.discountPercent;
     final text = p == p.roundToDouble() ? p.round().toString() : p.toString();
-    return 'Giảm $text%';
+    return tr('Giảm $text%', '$text% off');
   }
-  return 'Giảm ${formatVndAmount(voucher.discountAmount ?? 0)}';
+  return tr('Giảm ${formatVndAmount(voucher.discountAmount ?? 0)}', '${formatVndAmount(voucher.discountAmount ?? 0)} off');
 }
 
 /// "249.000đ" — nhóm nghìn bằng dấu chấm.
@@ -377,12 +378,12 @@ class WrInvoiceForm {
   /// thì cơ quan thuế không nhận.
   String? get validationError {
     if (!requested) return null;
-    if (buyerName.trim().isEmpty) return 'Chưa điền tên người mua';
-    if (address.trim().isEmpty) return 'Chưa điền địa chỉ';
+    if (buyerName.trim().isEmpty) return tr('Chưa điền tên người mua', 'Buyer name is missing');
+    if (address.trim().isEmpty) return tr('Chưa điền địa chỉ', 'Address is missing');
     final hasTax = taxCode.trim().isNotEmpty;
     final hasLegal = legalName.trim().isNotEmpty;
-    if (hasTax && !hasLegal) return 'Có mã số thuế thì phải có tên đơn vị';
-    if (hasLegal && !hasTax) return 'Có tên đơn vị thì phải có mã số thuế';
+    if (hasTax && !hasLegal) return tr('Có mã số thuế thì phải có tên đơn vị', 'A tax code needs a company name');
+    if (hasLegal && !hasTax) return tr('Có tên đơn vị thì phải có mã số thuế', 'A company name needs a tax code');
     return null;
   }
 

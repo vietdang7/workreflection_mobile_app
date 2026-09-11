@@ -165,7 +165,7 @@ class _PhaseCard extends StatelessWidget {
                 children: [
                   Icon(
                     completed
-                        ? Icons.check_circle
+                        ? Icons.check_circle_outlined
                         : Icons.radio_button_unchecked,
                     color: completed ? WrColors.teal : WrColors.muted,
                     size: 20,

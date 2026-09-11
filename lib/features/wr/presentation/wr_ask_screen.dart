@@ -26,6 +26,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_chat_starters.dart';
 import '../../../core/models/wr_chat.dart';
 import '../../../core/models/wr_mood_content.dart';
@@ -41,9 +42,9 @@ import '../../../core/widgets/wr_paragraph.dart';
 ///
 /// Giữ nguyên hằng số và nguyên văn: nó là lời hứa đã đưa ra với những người đã
 /// gửi câu hỏi trước khi có màn chat này.
-const String kAskPendingMessage =
-    'Hệ thống đã ghi nhận câu hỏi của bạn. Phần gợi ý chi tiết sẽ được gửi vào '
-    'email của bạn.';
+String get kAskPendingMessage => tr('Hệ thống đã ghi nhận câu hỏi của bạn. Phần gợi ý chi tiết sẽ được gửi vào '
+    'email của bạn.', 'We have recorded your question. The detailed suggestions will be sent to '
+    'your email.');
 
 /// Gợi ý mở lời cho màn trống, bản DỰ PHÒNG.
 ///
@@ -55,7 +56,7 @@ const String kAskPendingMessage =
 /// Giữ tên cũ vì đây là điểm neo của test màn trống. Nội dung nằm ở
 /// `wr_chat_starters.dart` cùng chỗ với phần logic, để không có hai danh sách
 /// dự phòng ở hai nơi rồi trôi khỏi nhau.
-const List<String> kChatStarters = kDefaultChatStarters;
+List<String> get kChatStarters => kDefaultChatStarters;
 
 class WrAskScreen extends ConsumerStatefulWidget {
   const WrAskScreen({super.key});
@@ -126,8 +127,8 @@ class _WrAskScreenState extends ConsumerState<WrAskScreen> {
           color: WrColors.navy,
           onPressed: () => context.pop(),
         ),
-        title: const Text(
-          'Trò chuyện',
+        title: Text(
+          tr('Trò chuyện', 'Chat'),
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w700,
@@ -139,7 +140,7 @@ class _WrAskScreenState extends ConsumerState<WrAskScreen> {
           // hành động thường xuyên thứ hai ở màn này, sau việc gõ và gửi.
           IconButton(
             key: const Key('wr_chat_new'),
-            tooltip: 'Cuộc trò chuyện mới',
+            tooltip: tr('Cuộc trò chuyện mới', 'New conversation'),
             icon: const Icon(Icons.add_comment_outlined, size: 20),
             color: WrColors.navy,
             onPressed: state.sending
@@ -159,17 +160,17 @@ class _WrAskScreenState extends ConsumerState<WrAskScreen> {
               if (value == 'clear') _confirmClear();
             },
             itemBuilder: (_) => [
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'conversations',
-                child: Text('Lịch sử trò chuyện'),
+                child: Text(tr('Lịch sử trò chuyện', 'Chat history')),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'history',
-                child: Text('Câu hỏi đã gửi trước đây'),
+                child: Text(tr('Câu hỏi đã gửi trước đây', 'Questions you sent before')),
               ),
-              const PopupMenuItem(
+              PopupMenuItem(
                 value: 'clear',
-                child: Text('Xoá cuộc trò chuyện này'),
+                child: Text(tr('Xoá cuộc trò chuyện này', 'Delete this conversation')),
               ),
             ],
           ),
@@ -253,21 +254,22 @@ class _WrAskScreenState extends ConsumerState<WrAskScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: WrColors.white,
-        title: const Text('Xoá cuộc trò chuyện?'),
-        content: const WrParagraph(
-          'Toàn bộ lượt trò chuyện sẽ bị xoá và không lấy lại được. '
-          'Những gì bạn đã ghi trong Hành trình không bị ảnh hưởng.',
+        title: Text(tr('Xoá cuộc trò chuyện?', 'Delete this conversation?')),
+        content: WrParagraph(
+          tr('Toàn bộ lượt trò chuyện sẽ bị xoá và không lấy lại được. '
+          'Những gì bạn đã ghi trong Hành trình không bị ảnh hưởng.', 'Every turn in it will be deleted and cannot be recovered. '
+          'Nothing you saved in your Journey is affected.'),
           style: TextStyle(height: 1.6),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Giữ lại'),
+            child: Text(tr('Giữ lại', 'Keep it')),
           ),
           TextButton(
             key: const Key('wr_chat_clear_confirm'),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Xoá', style: TextStyle(color: WrColors.coral)),
+            child: Text(tr('Xoá', 'Delete'), style: TextStyle(color: WrColors.coral)),
           ),
         ],
       ),
@@ -415,7 +417,7 @@ class _TypingBubble extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
             decoration: BoxDecoration(
               color: WrColors.white,
-              borderRadius: BorderRadius.only(
+              borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(18),
                 topRight: Radius.circular(18),
                 bottomLeft: Radius.circular(6),
@@ -478,8 +480,8 @@ class _EmptyState extends StatelessWidget {
       key: const Key('wr_chat_empty'),
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
       children: [
-        const Text(
-          'Kể mình nghe một chuyện trong công việc',
+        Text(
+          tr('Kể mình nghe một chuyện trong công việc', 'Tell me something from work'),
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w700,
@@ -489,9 +491,10 @@ class _EmptyState extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-        const WrParagraph(
-          'Một tình huống vừa xảy ra, một cảm giác khó gọi tên, hay một điều '
-          'bạn muốn hiểu thêm về chính mình. Viết một câu là đủ.',
+        WrParagraph(
+          tr('Một tình huống vừa xảy ra, một cảm giác khó gọi tên, hay một điều '
+          'bạn muốn hiểu thêm về chính mình. Viết một câu là đủ.', 'Something that just happened, a feeling you cannot quite name, or '
+          'something you want to understand about yourself. One line is enough.'),
           style: TextStyle(fontSize: 15.5, color: WrColors.muted, height: 1.75),
         ),
         const SizedBox(height: 24),
@@ -529,9 +532,10 @@ class _EmptyState extends StatelessWidget {
         const SizedBox(height: 18),
         // Mục 4.9 của system prompt: minh bạch về bản thân. Nói trước một lần ở
         // đây thay vì để trợ lý phải tự nhắc giữa cuộc trò chuyện.
-        const WrParagraph(
-          'Mình là trợ lý AI hỗ trợ bạn nhìn lại công việc, không thay thế '
-          'chuyên gia tâm lý hay tư vấn nghề nghiệp.',
+        WrParagraph(
+          tr('Mình là trợ lý AI hỗ trợ bạn nhìn lại công việc, không thay thế '
+          'chuyên gia tâm lý hay tư vấn nghề nghiệp.', 'I am an AI assistant that helps you look back at work. I am not a '
+          'replacement for a therapist or a career adviser.'),
           style: TextStyle(fontSize: 14, color: WrColors.muted, height: 1.65),
         ),
       ],
@@ -583,8 +587,8 @@ class _ErrorBar extends StatelessWidget {
                 minimumSize: const Size(0, 32),
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              child: const Text(
-                'Xem gói Premium',
+              child: Text(
+                tr('Xem gói Premium', 'See Premium'),
                 style: TextStyle(
                   fontSize: 14.5,
                   fontWeight: FontWeight.w600,
@@ -646,7 +650,7 @@ class _Composer extends StatelessWidget {
                 child: WrVoiceField(
                   fieldKey: const Key('wr_ask_field'),
                   controller: controller,
-                  hintText: 'Viết điều bạn đang nghĩ…',
+                  hintText: tr('Viết điều bạn đang nghĩ…', 'Write what is on your mind…'),
                   minLines: 1,
                   maxLines: 5,
                   onChanged: onChanged,
@@ -660,8 +664,8 @@ class _Composer extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               remaining == 0
-                  ? 'Hôm nay bạn đã dùng hết lượt trò chuyện miễn phí.'
-                  : 'Còn $remaining lượt trò chuyện miễn phí hôm nay.',
+                  ? tr('Hôm nay bạn đã dùng hết lượt trò chuyện miễn phí.', 'You have used up your free chats for today.')
+                  : tr('Còn $remaining lượt trò chuyện miễn phí hôm nay.', '$remaining free chats left today.'),
               key: const Key('wr_chat_quota_hint'),
               style: const TextStyle(fontSize: 13, color: WrColors.text3),
             ),
@@ -735,8 +739,8 @@ class _ConversationsSheet extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'LỊCH SỬ TRÒ CHUYỆN',
+            Text(
+              tr('LỊCH SỬ TRÒ CHUYỆN', 'CHAT HISTORY'),
               style: TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w700,
@@ -756,19 +760,19 @@ class _ConversationsSheet extends ConsumerWidget {
                   ),
                 ),
               ),
-              error: (_, __) => const Padding(
+              error: (_, __) => Padding(
                 padding: EdgeInsets.only(bottom: 12),
                 child: Text(
-                  'Chưa đọc được lịch sử. Bạn thử lại sau nhé.',
+                  tr('Chưa đọc được lịch sử. Bạn thử lại sau nhé.', 'Could not load the history. Please try again later.'),
                   style: TextStyle(fontSize: 15.5, color: WrColors.muted),
                 ),
               ),
               data: (items) => items.isEmpty
-                  ? const Padding(
+                  ? Padding(
                       key: Key('wr_chat_conversations_empty'),
                       padding: EdgeInsets.only(bottom: 12),
                       child: Text(
-                        'Chưa có cuộc trò chuyện nào được lưu.',
+                        tr('Chưa có cuộc trò chuyện nào được lưu.', 'No conversations saved yet.'),
                         style: TextStyle(
                           fontSize: 15.5,
                           color: WrColors.muted,
@@ -839,9 +843,11 @@ class _ConversationRow extends StatelessWidget {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    '${at.day.toString().padLeft(2, '0')}/'
+                    tr('${at.day.toString().padLeft(2, '0')}/'
                     '${at.month.toString().padLeft(2, '0')}/${at.year}'
-                    '${isCurrent ? '  ·  đang mở' : ''}',
+                    '${isCurrent ? '  ·  đang mở' : ''}', '${at.day.toString().padLeft(2, '0')}/'
+                    '${at.month.toString().padLeft(2, '0')}/${at.year}'
+                    '${isCurrent ? '  ·  open' : ''}'),
                     style: const TextStyle(fontSize: 13.5, color: WrColors.muted),
                   ),
                 ],
@@ -877,8 +883,8 @@ class _OldQuestionsSheet extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
-              'BẠN ĐÃ HỎI',
+            Text(
+              tr('BẠN ĐÃ HỎI', 'YOU ASKED'),
               style: TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w700,
@@ -888,11 +894,11 @@ class _OldQuestionsSheet extends ConsumerWidget {
             ),
             const SizedBox(height: 14),
             if (history.isEmpty)
-              const Padding(
+              Padding(
                 key: Key('wr_ask_history_empty'),
                 padding: EdgeInsets.only(bottom: 12),
                 child: Text(
-                  'Bạn chưa gửi câu hỏi nào theo cách cũ.',
+                  tr('Bạn chưa gửi câu hỏi nào theo cách cũ.', 'You have not sent any questions the old way.'),
                   style: TextStyle(
                     fontSize: 15.5,
                     color: WrColors.muted,

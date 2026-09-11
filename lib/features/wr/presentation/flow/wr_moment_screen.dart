@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/l10n/wr_tr.dart';
 import '../../../../core/models/wr_episode.dart';
 import '../../../../core/theme/wr_colors.dart';
 import '../../episode_flow_controller.dart';
@@ -47,7 +48,7 @@ class _WrMomentScreenState extends ConsumerState<WrMomentScreen> {
     } catch (e, s) {
       logFlowError('openEpisode', e, s);
       if (mounted) {
-        setState(() => _error = flowErrorMessage('Không mở được phiên phản tư. Thử lại.', e));
+        setState(() => _error = flowErrorMessage(tr('Không mở được phiên phản tư. Thử lại.', 'Could not open the reflection session. Try again.'), e));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -57,8 +58,8 @@ class _WrMomentScreenState extends ConsumerState<WrMomentScreen> {
   @override
   Widget build(BuildContext context) {
     return WrFlowScaffold(
-      eyebrow: 'Khoảnh khắc',
-      title: 'Điều gì đang diễn ra với bạn?',
+      eyebrow: tr('Khoảnh khắc', 'The moment'),
+      title: tr('Điều gì đang diễn ra với bạn?', 'What is going on for you?'),
       progress: 0.4,
       onBack: () => context.pop(),
       onClose: () => context.go('/home'),

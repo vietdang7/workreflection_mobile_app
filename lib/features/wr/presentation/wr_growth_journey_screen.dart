@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -26,22 +27,24 @@ class WrGrowthJourneyScreen extends ConsumerWidget {
     final canRead = entitlement.canUseFeature(WrPremiumFeature.growthJourney);
 
     return WrDetailScaffold(
-      eyebrow: 'CHẶNG ĐƯỜNG PHÁT TRIỂN',
-      title: 'Bạn đã đi được tới đâu',
+      eyebrow: tr('CHẶNG ĐƯỜNG PHÁT TRIỂN', 'YOUR PATH SO FAR'),
+      title: tr('Bạn đã đi được tới đâu', 'How far you have come'),
       children: [
         if (!canRead)
-          const WrPremiumLock(
+          WrPremiumLock(
             key: Key('wr_growth_journey_lock'),
             description:
-                'Bản đầy đủ tổng kết từng chặng: bạn đã đi được bao xa và '
-                'hướng nào đang mở ra tiếp theo.',
-            ctaLabel: 'Mở chặng đường phát triển',
+                tr('Bản đầy đủ tổng kết từng chặng: bạn đã đi được bao xa và '
+                'hướng nào đang mở ra tiếp theo.', 'The full version sums up each stage: how far you have come '
+                'and which direction is opening up next.'),
+            ctaLabel: tr('Mở chặng đường phát triển', 'Open your growth path'),
             paywallTrigger: 'growth_journey',
           )
         else if (snapshots.isEmpty)
-          const WrParagraph(
-            'Chưa có chặng nào được tổng kết. Sau vài tuần thực hành đều, '
-            'WorkReflection sẽ dựng lại chặng đường của bạn ở đây.',
+          WrParagraph(
+            tr('Chưa có chặng nào được tổng kết. Sau vài tuần thực hành đều, '
+            'WorkReflection sẽ dựng lại chặng đường của bạn ở đây.', 'No stage has been summed up yet. After a few weeks of steady '
+            'practice, WorkReflection will lay out your path here.'),
             key: Key('wr_growth_journey_empty'),
             style: TextStyle(
               fontSize: 16.5,
@@ -82,7 +85,7 @@ class _SnapshotBlock extends StatelessWidget {
             const SizedBox(height: 8),
           ],
           Text(
-            snapshot.direction ?? 'Chặng này chưa có ghi chú hướng đi.',
+            snapshot.direction ?? tr('Chặng này chưa có ghi chú hướng đi.', 'No direction notes for this stage yet.'),
             style: const TextStyle(
               fontSize: 16,
               color: WrColors.navy,

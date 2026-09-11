@@ -1,3 +1,4 @@
+import '../l10n/wr_tr.dart';
 // Khảo sát tổ chức (ESI + eNPS) — mockup Sprint 2, màn Hồ sơ.
 //
 // Bài này CỐ Ý không dính vào Reflection: màn giới thiệu hứa với người dùng
@@ -11,18 +12,26 @@
 
 /// Bốn mảng của Khảo sát tổ chức.
 enum OrgSurveyArea {
-  compensation('compensation', 'Đãi ngộ'),
-  growth('growth', 'Phát triển'),
-  fairness('fairness', 'Công bằng'),
-  support('support', 'Hỗ trợ');
+  compensation('compensation'),
+  growth('growth'),
+  fairness('fairness'),
+  support('support');
 
-  const OrgSurveyArea(this.code, this.label);
+  const OrgSurveyArea(this.code);
 
   /// Mã dùng ở tầng dữ liệu. Không bao giờ hiện ra màn hình.
   final String code;
 
-  /// Nhãn tiếng Việt hiện trên bản so sánh.
-  final String label;
+  /// Nhãn hiện trên bản so sánh.
+  ///
+  /// GETTER, không phải trường của hàm tạo: đối số hàm tạo của enum bắt buộc
+  /// là hằng biên dịch, mà `tr()` là lời gọi hàm đọc ngôn ngữ đang bật.
+  String get label => switch (this) {
+        OrgSurveyArea.compensation => tr('Đãi ngộ', 'Pay and benefits'),
+        OrgSurveyArea.growth => tr('Phát triển', 'Growth'),
+        OrgSurveyArea.fairness => tr('Công bằng', 'Fairness'),
+        OrgSurveyArea.support => tr('Hỗ trợ', 'Support'),
+      };
 
   static OrgSurveyArea? fromCode(String? code) {
     for (final a in OrgSurveyArea.values) {
@@ -33,12 +42,12 @@ enum OrgSurveyArea {
 }
 
 /// Thang 5 mức hài lòng. Chỉ số 0..4, đúng thứ tự hiện trên màn hình.
-const List<String> kOrgSurveyScale = [
-  'Hoàn toàn không hài lòng',
-  'Không hài lòng',
-  'Bình thường',
-  'Hài lòng',
-  'Hoàn toàn hài lòng',
+List<String> get kOrgSurveyScale => [
+  tr('Hoàn toàn không hài lòng', 'Not satisfied at all'),
+  tr('Không hài lòng', 'Not satisfied'),
+  tr('Bình thường', 'Neutral'),
+  tr('Hài lòng', 'Satisfied'),
+  tr('Hoàn toàn hài lòng', 'Completely satisfied'),
 ];
 
 /// Giá trị lớn nhất của thang hài lòng (4 = chỉ số cuối của [kOrgSurveyScale]).

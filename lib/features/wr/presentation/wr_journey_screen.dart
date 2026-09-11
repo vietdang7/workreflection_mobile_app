@@ -14,8 +14,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_career_memory_rules.dart';
 import '../../../core/logic/wr_dominant_need.dart';
+import '../../../core/logic/wr_reflect_flow.dart';
 import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_episode.dart';
@@ -30,6 +32,7 @@ import '../../../core/widgets/wr_detail_scaffold.dart';
 import '../../../core/widgets/wr_link_row.dart';
 import '../../../core/widgets/wr_premium_lock.dart';
 import '../../../core/widgets/wr_profile_avatar.dart';
+import '../growth_providers.dart';
 import '../wr_providers.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 
@@ -78,14 +81,67 @@ class JourneyEntry {
 /// Mã behavior mà Episode ghi vào Career Memory khi khép lại.
 const String kEpisodeBehavior = 'reflection_episode';
 
+/// Câu trích của một Episode trên dòng thời gian, dựng lại theo ngôn ngữ đang
+/// bật. Null khi Episode không có gì để trích.
+///
+/// Ưu tiên bản dựng lại; chỉ khi Episode không có ghi chú `reframe` NÀO và cũng
+/// không tra được câu aha thì mới đọc `draft_meaning` — những Episode ghi từ
+/// trước lúc tách `notes` ra khỏi bản gộp.
+String? _episodeExcerpt(ReflectionEpisode e, String? aha) {
+  final hasNote =
+      e.notes[ReflectionPattern.reframe.dbValue]?.trim().isNotEmpty == true;
+  if (hasNote || aha != null) {
+    final live = liveMeaning(notes: e.notes, storyAha: aha).trim();
+    if (live.isNotEmpty) return live;
+  }
+  final frozen = e.draftMeaning?.trim();
+  return frozen == null || frozen.isEmpty ? null : frozen;
+}
+
 /// Dựng dòng thời gian từ Episode + Career Memory event, mới nhất trước.
 ///
 /// Chỉ Episode đã khép lại mới vào Hành trình — WDA Inv.6: chưa có ý nghĩa
 /// thì chưa phải ký ức nghề nghiệp.
+/// Đọc lại một dòng chữ đã ĐÓNG BĂNG theo ngôn ngữ đang bật.
+///
+/// [frozen] là `reflection_text` của mảnh ký ức thực hành, ghép sẵn lúc người
+/// dùng bấm xong bước. Ba dạng nó có thể mang:
+///
+///   "‹chủ đề› · ‹bước›"      — xong một bước
+///   "‹chủ đề›"                — xong cả chủ đề
+///   "‹bước›: ‹lời người dùng›" — điều mình ghi lại
+///
+/// Chỉ phần TÊN được tra lại; lời người dùng viết giữ nguyên văn.
+///
+/// Dạng thứ ba không tách được bằng cách cắt ở dấu hai chấm ĐẦU TIÊN: chính tên
+/// bước đã chứa dấu hai chấm ("Thử nghiệm: Chủ động hỏi lý do thay đổi"). Nên
+/// đi theo chiều ngược lại — thử khớp tên DÀI NHẤT mà đoạn chữ mở đầu bằng nó.
+String localizeFrozenPracticeText(String frozen, Map<String, String> labels) {
+  if (labels.isEmpty) return frozen;
+
+  String segment(String raw) {
+    final s = raw.trim();
+    final exact = labels[s];
+    if (exact != null) return exact;
+
+    String? bestKey;
+    for (final key in labels.keys) {
+      if (!s.startsWith('$key: ')) continue;
+      if (bestKey == null || key.length > bestKey.length) bestKey = key;
+    }
+    if (bestKey == null) return raw;
+    return '${labels[bestKey]}${s.substring(bestKey.length)}';
+  }
+
+  return frozen.split(' · ').map(segment).join(' · ');
+}
+
 List<JourneyEntry> buildJourneyEntries({
   required List<ReflectionEpisode> episodes,
   required List<CareerMemoryEvent> events,
   required Map<String, String> situationLabels,
+  Map<String, String> ahaByCode = const {},
+  Map<String, String> practiceLabels = const {},
 }) {
   final entries = <JourneyEntry>[];
 
@@ -109,11 +165,21 @@ List<JourneyEntry> buildJourneyEntries({
       // rồi nhét tình huống xuống dưới, nên hai mảnh cùng một tình huống trông
       // không liên quan gì tới nhau trên dòng thời gian.
       title: situation != null && situation.trim().isNotEmpty
-          ? 'Nhìn lại: ${situation.trim()}'
+          ? tr('Nhìn lại: ${situation.trim()}', 'Looking back: ${situation.trim()}')
           : e.humanMoment.label,
-      subtitle: e.draftMeaning?.trim().isNotEmpty == true
-          ? e.draftMeaning!.trim()
-          : situation ?? e.humanMoment.label,
+      // Dựng LẠI câu ý nghĩa thay vì đọc `draft_meaning` đã đóng băng.
+      //
+      // `draft_meaning` được ghi bằng ngôn ngữ đang bật lúc bấm lưu và không bao
+      // giờ đổi nữa. Tiêu đề ngay trên nó thì đọc `wr_situations.text_en` nên
+      // dịch được — thành ra bật tiếng Anh lên là mỗi dòng trên Hành trình có
+      // một nửa tiếng Anh, một nửa tiếng Việt. Đó là chỗ khách chỉ ra 10/09.
+      //
+      // [liveMeaning] ghép lại từ chữ người dùng (giữ nguyên) và câu aha của
+      // story (đọc lại theo ngôn ngữ đang bật). Rơi về `draft_meaning` khi
+      // Episode không có ghi chú lẫn story — dữ liệu cũ trước lúc tách notes.
+      subtitle: _episodeExcerpt(e, ahaByCode[e.situationCode]) ??
+          situation ??
+          e.humanMoment.label,
       detail: memoryDetailForStory(
         story: e,
         countThisMonth: needCountThisMonth(e, closed),
@@ -144,9 +210,9 @@ List<JourneyEntry> buildJourneyEntries({
         label: eventTypeLabel(ev),
         title: isTheme
             ? (need != null
-                ? 'Chủ đề mới xuất hiện: ${needSeekingLabel(need)}'
-                : 'Một chủ đề mới xuất hiện')
-            : 'Điều hệ thống đọc ra',
+                ? tr('Chủ đề mới xuất hiện: ${needSeekingLabel(need)}', 'A new theme appeared: ${needSeekingLabel(need)}')
+                : tr('Một chủ đề mới xuất hiện', 'A new theme appeared'))
+            : tr('Điều hệ thống đọc ra', 'What the app read'),
         subtitle: hasText ? text : null,
         detail: isTheme ? kThemeDetail : kInsightDetail,
         color: eventColor(ev),
@@ -154,12 +220,21 @@ List<JourneyEntry> buildJourneyEntries({
       continue;
     }
 
+    // Ba loại mảnh ký ức thực hành mang chữ GHÉP SẴN từ tên chủ đề và tên bước
+    // — tra lại theo ngôn ngữ đang bật, xem `localizeFrozenPracticeText`.
+    final isPracticeText = ev.behavior == 'practice_step_done' ||
+        ev.behavior == 'practice_theme_done' ||
+        ev.behavior == kPracticeStepNoteBehavior;
+    final shownText = hasText && isPracticeText
+        ? localizeFrozenPracticeText(text, practiceLabels)
+        : text;
+
     // Không rơi về chính cái mã: `C2-sit-01` là thuật ngữ nội bộ, không phải
     // thứ để người dùng đọc trên dòng thời gian của đời mình (v1.6 §XII.5).
     final title = ev.situationCode != null
         ? (situationLabels[ev.situationCode] ??
-            (hasText ? text : 'Một lần nhìn lại'))
-        : (hasText ? text : emotionLabel(ev.emotion));
+            (hasText ? shownText! : tr('Một lần nhìn lại', 'One look back')))
+        : (hasText ? shownText! : emotionLabel(ev.emotion));
     final mood =
         ev.emotion?.isNotEmpty == true ? emotionLabel(ev.emotion) : null;
     entries.add(JourneyEntry(
@@ -230,14 +305,14 @@ class JourneyMonthDetailed {
   final List<JourneyWeek> weeks;
 }
 
-const List<String> _kWeekdayVi = [
-  'Thứ Hai',
-  'Thứ Ba',
-  'Thứ Tư',
-  'Thứ Năm',
-  'Thứ Sáu',
-  'Thứ Bảy',
-  'Chủ Nhật',
+List<String> get _kWeekdayVi => [
+  tr('Thứ Hai', 'Monday'),
+  tr('Thứ Ba', 'Tuesday'),
+  tr('Thứ Tư', 'Wednesday'),
+  tr('Thứ Năm', 'Thursday'),
+  tr('Thứ Sáu', 'Friday'),
+  tr('Thứ Bảy', 'Saturday'),
+  tr('Chủ Nhật', 'Sunday'),
 ];
 
 String _dd(int n) => n.toString().padLeft(2, '0');
@@ -279,7 +354,7 @@ List<JourneyMonthDetailed> groupJourneyByWeekAndDay(
       undated.add(e);
       continue;
     }
-    final key = 'THÁNG ${at.month}, ${at.year}';
+    final key = tr('THÁNG ${at.month}, ${at.year}', '${at.month}/${at.year}');
     if (!byMonth.containsKey(key)) {
       monthOrder.add(key);
       byMonth[key] = [];
@@ -336,15 +411,15 @@ List<JourneyMonthDetailed> groupJourneyByWeekAndDay(
       }
 
       weeks.add(JourneyWeek(
-        label: 'TUẦN ${weekNumber[monday]} · $range',
+        label: tr('TUẦN ${weekNumber[monday]} · $range', 'WEEK ${weekNumber[monday]} · $range'),
         isCurrent: monday == _mondayOf(now),
         days: [
           for (final day in dayOrder)
             JourneyDay(
               date: day,
               label: switch (day) {
-                _ when day == today => 'Hôm nay',
-                _ when day == yesterday => 'Hôm qua',
+                _ when day == today => tr('Hôm nay', 'Today'),
+                _ when day == yesterday => tr('Hôm qua', 'Yesterday'),
                 _ => '${_kWeekdayVi[day.weekday - 1]}, '
                     '${_dd(day.day)}/${_dd(day.month)}',
               },
@@ -359,7 +434,7 @@ List<JourneyMonthDetailed> groupJourneyByWeekAndDay(
 
   if (undated.isNotEmpty) {
     months.add(JourneyMonthDetailed(
-      label: 'CHƯA RÕ THỜI GIAN',
+      label: tr('CHƯA RÕ THỜI GIAN', 'NO DATE'),
       weeks: [
         JourneyWeek(
           label: '',
@@ -379,10 +454,10 @@ List<JourneyMonthDetailed> groupJourneyByWeekAndDay(
 }
 
 String emotionLabel(String? emotion) => switch (emotion) {
-      'low' => 'Mệt mỏi',
-      'ok' => 'Ổn',
+      'low' => tr('Mệt mỏi', 'Drained'),
+      'ok' => tr('Ổn', 'Okay'),
       'good' => 'Vui',
-      _ => emotion ?? 'Ghi chú',
+      _ => emotion ?? tr('Ghi chú', 'Note'),
     };
 
 /// Bốn nhãn của Career Memory — `TYPE_META` trong mockup v16, §8.1 changelog.
@@ -394,9 +469,9 @@ String emotionLabel(String? emotion) => switch (emotion) {
 /// `CÂU CHUYỆN` chứ không phải `PHẢN TƯ`: hai chữ cũ không nằm trong bộ nhãn nào
 /// của tài liệu, và "phản tư" là từ chuyên môn — người dùng đọc dòng thời gian
 /// của chính đời mình không nên phải tra nghĩa.
-const String kStoryLabel = 'CÂU CHUYỆN';
-const String kMilestoneLabel = 'CỘT MỐC';
-const String kThemeLabel = 'CHỦ ĐỀ';
+String get kStoryLabel => tr('CÂU CHUYỆN', 'STORY');
+String get kMilestoneLabel => tr('CỘT MỐC', 'MILESTONE');
+String get kThemeLabel => tr('CHỦ ĐỀ', 'THEME');
 const String kInsightLabel = 'INSIGHT';
 
 /// Nhãn loại của một mốc trên timeline Hành trình.
@@ -411,17 +486,17 @@ String eventTypeLabel(CareerMemoryEvent e) {
   if (e.behavior == kMilestoneBehavior) return kMilestoneLabel;
   if (e.behavior == kThemeBehavior) return kThemeLabel;
   if (e.behavior == kInsightBehavior) return kInsightLabel;
-  if (e.behavior == 'skill_certified') return 'KỸ NĂNG';
-  if (e.behavior == kPracticeStepNoteBehavior) return 'ĐIỀU MÌNH GHI LẠI';
+  if (e.behavior == 'skill_certified') return tr('KỸ NĂNG', 'SKILL');
+  if (e.behavior == kPracticeStepNoteBehavior) return tr('ĐIỀU MÌNH GHI LẠI', 'WHAT I WROTE DOWN');
   if (e.behavior == 'practice_step_done' ||
       e.behavior == 'practice_theme_done') {
-    return 'THỰC HÀNH';
+    return tr('THỰC HÀNH', 'PRACTICE');
   }
-  if (e.behavior == 'insight') return 'NHẬN RA';
-  if (e.behavior == 'decision') return 'QUYẾT ĐỊNH';
-  if (e.storyId != null) return 'PHẢN CHIẾU';
-  if (e.situationCode != null) return 'TRẢI NGHIỆM';
-  return 'GHI CHÚ';
+  if (e.behavior == 'insight') return tr('NHẬN RA', 'NOTICED');
+  if (e.behavior == 'decision') return tr('QUYẾT ĐỊNH', 'DECISION');
+  if (e.storyId != null) return tr('PHẢN CHIẾU', 'REFLECTION');
+  if (e.situationCode != null) return tr('TRẢI NGHIỆM', 'EXPERIENCE');
+  return tr('GHI CHÚ', 'NOTE');
 }
 
 Color eventColor(CareerMemoryEvent e) {
@@ -470,10 +545,11 @@ String _memoryBreakdown(List<JourneyEntry> all) {
       .length;
   final others = all.length - reflections;
 
-  final parts = StringBuffer('Gồm $reflections lần nhìn lại đã khép');
-  if (others > 0) parts.write(' và $others dấu mốc thực hành');
-  parts.write('. Lần nhìn lại còn dở chưa vào đây, nên con số ở tab Hiểu mình '
-      'có thể lớn hơn.');
+  final parts = StringBuffer(tr('Gồm $reflections lần nhìn lại đã khép', 'Includes $reflections closed look-backs'));
+  if (others > 0) parts.write(tr(' và $others dấu mốc thực hành', ' and $others practice markers'));
+  parts.write(tr('. Lần nhìn lại còn dở chưa vào đây, nên con số ở tab Hiểu mình '
+      'có thể lớn hơn.', '. Unfinished look-backs are not counted here, so the number on the '
+      'Understand tab may be higher.'));
   return parts.toString();
 }
 
@@ -483,10 +559,17 @@ List<JourneyEntry> watchJourneyEntries(WidgetRef ref) {
   final episodes = ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
   final events = ref.watch(wrMemoryEventsProvider).valueOrNull ?? const [];
   final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
+  final stories = ref.watch(wrStoriesProvider).valueOrNull ?? const [];
   return buildJourneyEntries(
     episodes: episodes,
     events: events,
     situationLabels: {for (final s in situations) s.code: s.text},
+    // `story.ahaMessage` đi qua `trDb` nên map này tự đúng ngôn ngữ đang bật.
+    ahaByCode: {
+      for (final s in stories)
+        if (s.ahaMessage != null) s.storyId: s.ahaMessage!,
+    },
+    practiceLabels: ref.watch(wrPracticeLabelMapProvider),
   );
 }
 
@@ -522,7 +605,7 @@ class WrJourneyScreen extends ConsumerWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Expanded(
+                Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -532,7 +615,7 @@ class WrJourneyScreen extends ConsumerWidget {
                       ),
                       SizedBox(height: 2),
                       Text(
-                        'Hành trình',
+                        tr('Hành trình', 'Journey'),
                         style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.w800,
@@ -545,7 +628,7 @@ class WrJourneyScreen extends ConsumerWidget {
                   ),
                 ),
                 // v1.6 §9.1: "Tôi" là avatar ở mọi màn tab, không còn tab riêng.
-                const WrProfileAvatar(),
+                WrProfileAvatar(),
               ],
             ),
             const SizedBox(height: 28),
@@ -560,11 +643,13 @@ class WrJourneyScreen extends ConsumerWidget {
             const SizedBox(height: 14),
             WrParagraph(
               all.isEmpty
-                  ? 'Nhật ký sự nghiệp của bạn chưa có ghi nhận nào. Hãy '
+                  ? tr('Nhật ký sự nghiệp của bạn chưa có ghi nhận nào. Hãy '
                       'bắt đầu một lần nhìn lại để lưu giữ những dấu ấn của '
-                      'riêng bạn.'
-                  : 'Bạn đã có ${all.length} ghi nhận trên hành trình sự '
-                      'nghiệp.',
+                      'riêng bạn.', 'Your career journal has nothing in it yet. Start a look '
+                      'back to keep the marks that are yours.')
+                  : tr('Bạn đã có ${all.length} ghi nhận trên hành trình sự '
+                      'nghiệp.', 'You have ${all.length} entries on your career '
+                      'journey.'),
               style: const TextStyle(
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
@@ -608,13 +693,14 @@ class WrJourneyScreen extends ConsumerWidget {
               ),
               if (locked) ...[
                 const SizedBox(height: 16),
-                const WrPremiumLock(
+                WrPremiumLock(
                   key: Key('wr_journey_memory_lock'),
                   description:
-                      'Bản đầy đủ mở lại từng ghi nhận bạn đã lưu trên hành '
+                      tr('Bản đầy đủ mở lại từng ghi nhận bạn đã lưu trên hành '
                       'trình sự nghiệp, đọc lại được bất cứ lúc nào, theo đúng '
-                      'dòng thời gian.',
-                  ctaLabel: 'Mở toàn bộ Career Memory',
+                      'dòng thời gian.', 'The full version reopens every entry you have saved on your '
+                      'career journey, readable any time, in order.'),
+                  ctaLabel: tr('Mở toàn bộ Career Memory', 'Open all of Career Memory'),
                   paywallTrigger: 'career_memory',
                 ),
                 const SizedBox(height: 8),
@@ -627,10 +713,10 @@ class WrJourneyScreen extends ConsumerWidget {
               // mảnh ký ức thì không bao giờ thấy lối sang đó.
               WrLinkRow(
                 key: const Key('wr_journey_memory_see_all'),
-                label: 'Xem toàn bộ Career Memory',
+                label: tr('Xem toàn bộ Career Memory', 'See all of Career Memory'),
                 hint: hasMore
-                    ? 'Còn ${all.length - shown.length} ghi nhận nữa'
-                    : 'Lọc theo loại, mở rộng từng ghi nhận',
+                    ? tr('Còn ${all.length - shown.length} ghi nhận nữa', '${all.length - shown.length} more entries')
+                    : tr('Lọc theo loại, mở rộng từng ghi nhận', 'Filter by type, expand any entry'),
                 onTap: () => context.push('/wr/career-memory'),
               ),
             ],
@@ -651,15 +737,15 @@ class WrJourneyScreen extends ConsumerWidget {
             // (họp khách 2026-07-29); giờ là hội thoại nhiều lượt.
             WrLinkRow(
               key: const Key('wr_journey_ask_row'),
-              label: 'Trò chuyện về hành trình của bạn',
-              hint: 'Hỏi và trả lời ngay',
+              label: tr('Trò chuyện về hành trình của bạn', 'Talk about your journey'),
+              hint: tr('Hỏi và trả lời ngay', 'Ask and get an answer now'),
               onTap: () => context.push('/wr/ask'),
             ),
 
             if (patterns.isNotEmpty)
               WrLinkRow(
                 key: const Key('wr_journey_discover_row'),
-                label: 'Xem trong Hiểu mình',
+                label: tr('Xem trong Hiểu mình', 'See it in Understand'),
                 onTap: () => context.go('/wr/discover?from=journey'),
               ),
           ],
@@ -693,20 +779,30 @@ class WrJourneyScreen extends ConsumerWidget {
 /// có gì để so), trong khi thẻ Career Health ở tab Hiểu mình đếm MỌI Episode.
 /// Bỏ mấy chữ này là hai màn nói hai con số cho cùng một chữ "lần nhìn lại" —
 /// đúng cái khách gọi tên là "dữ liệu trong app chưa được kết nối với nhau".
-String _waitingLine(WrNarrativeRefresh? refresh) {
+String _waitingLine(WrNarrativeRefresh? refresh, {bool rewriting = false}) {
+  // Đã có bản kể, chỉ là bằng tiếng kia. Nói đúng chuyện đang xảy ra: nếu dùng
+  // câu "chưa đủ dữ liệu" ở đây thì người vừa đổi ngôn ngữ tưởng mình mất hết
+  // dữ liệu, còn nếu hiện đại đoạn tiếng cũ thì tưởng app không đổi được tiếng.
+  if (rewriting) {
+    return tr('Đang viết lại diễn biến của bạn bằng ngôn ngữ vừa chọn. Mở lại '
+        'tab này sau một lát nhé.', 'Your story is being rewritten in the language you just picked. '
+        'Come back to this tab in a moment.');
+  }
   final needed = refresh?.needed;
   return switch (refresh?.status) {
     WrNarrativeStatus.notEnoughData when needed != null && needed > 0 =>
-      'Còn $needed lần nhìn lại có chọn tình huống nữa là WorkReflection kể '
-          'lại được diễn biến của bạn.',
+      tr('Còn $needed lần nhìn lại có chọn tình huống nữa là WorkReflection kể '
+          'lại được diễn biến của bạn.', '$needed more look-backs with a situation picked and WorkReflection can '
+          'tell you how things have been moving.'),
     WrNarrativeStatus.notEnoughData =>
-      'Chưa đủ dữ liệu để kể lại diễn biến. Ghi thêm vài lần nữa nhé.',
+      tr('Chưa đủ dữ liệu để kể lại diễn biến. Ghi thêm vài lần nữa nhé.', 'Not enough yet to tell the story. Record a few more.'),
     // Đã kể rồi mà `latest` rỗng thì bản kể chưa kịp về tới màn — nói vậy còn
     // hơn nói "chưa đủ dữ liệu", vì dữ liệu thì đủ rồi.
     WrNarrativeStatus.upToDate =>
-      'Diễn biến của bạn đang được đọc lại. Mở lại tab này sau một lát nhé.',
-    _ => 'Chưa đủ dữ liệu để kể lại diễn biến. Ghi thêm vài lần nữa, '
-        'WorkReflection sẽ chỉ ra điều gì đang đổi.',
+      tr('Diễn biến của bạn đang được đọc lại. Mở lại tab này sau một lát nhé.', 'Your story is being read. Come back to this tab in a moment.'),
+    _ => tr('Chưa đủ dữ liệu để kể lại diễn biến. Ghi thêm vài lần nữa, '
+        'WorkReflection sẽ chỉ ra điều gì đang đổi.', 'Not enough yet to tell the story. Record a few more and '
+        'WorkReflection will point out what is shifting.'),
   };
 }
 
@@ -740,7 +836,9 @@ class _NarrativeCardState extends ConsumerState<_NarrativeCard> {
         ref.watch(wrPatternNarrativesProvider).valueOrNull ?? const [];
     final canRead =
         entitlement.canUseFeature(WrPremiumFeature.patternAdvanced);
-    final latest = narratives.isNotEmpty ? narratives.first.narrative : null;
+    // Chỉ nhận đoạn ĐÚNG ngôn ngữ đang bật — xem `currentLocaleNarrative`.
+    final latest = currentLocaleNarrative(narratives)?.narrative;
+    final rewriting = latest == null && narratives.isNotEmpty;
 
     // Đánh thức `wr-narrative`. Chỉ `watch` để provider chạy — giá trị dùng
     // đúng một việc: nói còn thiếu bao nhiêu lần nữa.
@@ -769,13 +867,22 @@ class _NarrativeCardState extends ConsumerState<_NarrativeCard> {
                 ),
                 const SizedBox(width: 6),
               ],
-              Text(
-                canRead ? 'NHÌN LẠI DÒNG THỜI GIAN' : 'PREMIUM',
-                style: const TextStyle(
-                  fontSize: 12.5,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.6,
-                  color: WrColors.coral,
+              // `Flexible` chứ không phải `Text` trần: nhãn tiếng Anh dài hơn
+              // hẳn bản tiếng Việt, cộng thêm `letterSpacing`, nên nó tràn khỏi
+              // mép thẻ và bị cắt mất chữ cuối. Cho phép xuống dòng thay vì cắt
+              // — đây là nhãn nói thẻ này là gì, mất chữ là mất nghĩa.
+              Flexible(
+                child: Text(
+                  canRead
+                      ? tr('NHÌN LẠI DÒNG THỜI GIAN',
+                          'LOOK BACK ALONG THE TIMELINE')
+                      : 'PREMIUM',
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.6,
+                    color: WrColors.coral,
+                  ),
                 ),
               ),
             ],
@@ -793,9 +900,10 @@ class _NarrativeCardState extends ConsumerState<_NarrativeCard> {
               canRead && latest != null
                   ? latest
                   : canRead
-                      ? _waitingLine(refresh)
-                      : 'Mở khóa bản đầy đủ để nhìn lại toàn bộ bức tranh thay '
-                          'đổi của bạn qua từng giai đoạn.',
+                      ? _waitingLine(refresh, rewriting: rewriting)
+                      : tr('Mở khóa bản đầy đủ để nhìn lại toàn bộ bức tranh thay '
+                          'đổi của bạn qua từng giai đoạn.', 'Unlock the full version to see the whole picture of how '
+                          'you have changed, stage by stage.'),
               // Chỉ kẹp bản kể của AI. Câu chờ và câu quảng cáo Premium đều do
               // mình viết, độ dài đã biết trước, kẹp thêm chỉ tổ cắt cụt.
               maxLines: canRead && latest != null && !_expanded
@@ -825,7 +933,7 @@ class _NarrativeCardState extends ConsumerState<_NarrativeCard> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    _expanded ? 'Thu gọn' : 'Mở rộng',
+                    _expanded ? tr('Thu gọn', 'Collapse') : tr('Mở rộng', 'Expand'),
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
@@ -851,7 +959,7 @@ class _NarrativeCardState extends ConsumerState<_NarrativeCard> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  canRead ? 'Đọc toàn bộ diễn biến' : 'Xem bản đầy đủ có gì',
+                  canRead ? tr('Đọc toàn bộ diễn biến', 'Read the whole story') : tr('Xem bản đầy đủ có gì', 'See what the full version holds'),
                   style: const TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w700,
@@ -899,15 +1007,16 @@ class _GrowthOpportunitySection extends ConsumerWidget {
         children: [
           const WrSectionDivider(),
           const SizedBox(height: 24),
-          const WrEyebrow('GÓC NHÌN PHÁT TRIỂN'),
+          WrEyebrow(tr('GÓC NHÌN PHÁT TRIỂN', 'A VIEW ON GROWTH')),
           const SizedBox(height: 14),
           if (!entitlement.isPremium)
-            const WrPremiumLock(
+            WrPremiumLock(
               key: Key('wr_journey_growth_opportunity_lock'),
               description:
-                  'Từ những gì bạn đã nhìn lại, bản đầy đủ chỉ ra một hướng '
-                  'năng lực đáng phát triển tiếp, kèm lý do vì sao là hướng đó.',
-              ctaLabel: 'Mở Cơ hội phát triển',
+                  tr('Từ những gì bạn đã nhìn lại, bản đầy đủ chỉ ra một hướng '
+                  'năng lực đáng phát triển tiếp, kèm lý do vì sao là hướng đó.', 'From what you have looked back on, the full version points to '
+                  'one skill worth growing next, and why that one.'),
+              ctaLabel: tr('Mở Cơ hội phát triển', 'Open Growth opportunities'),
               paywallTrigger: 'growth_opportunity',
             )
           else
@@ -944,8 +1053,8 @@ class _GrowthOpportunitySection extends ConsumerWidget {
           const SizedBox(height: 12),
           WrLinkRow(
             key: const Key('wr_journey_work_info_row'),
-            label: 'Cập nhật bối cảnh công việc',
-            hint: 'Để gợi ý chính xác hơn',
+            label: tr('Cập nhật bối cảnh công việc', 'Update your work context'),
+            hint: tr('Để gợi ý chính xác hơn', 'So the prompts fit better'),
             onTap: () => context.push('/wr/work-info'),
           ),
         ],
@@ -1134,13 +1243,14 @@ class _WrCareerMemoryScreenState extends ConsumerState<WrCareerMemoryScreen> {
       title: all.isEmpty
           ? 'Career Memory'
           : _type == null
-              ? 'Bạn đã có ${all.length} ghi nhận trên hành trình sự nghiệp.'
-              : '${shown.length} ghi nhận · ${_type!.toLowerCase()}',
+              ? tr('Bạn đã có ${all.length} ghi nhận trên hành trình sự nghiệp.', 'You have ${all.length} entries on your career journey.')
+              : tr('${shown.length} ghi nhận · ${_type!.toLowerCase()}', '${shown.length} entries · ${_type!.toLowerCase()}'),
       children: [
         if (all.isEmpty)
-          const WrParagraph(
-            'Nhật ký sự nghiệp của bạn chưa có ghi nhận nào. Hãy bắt đầu '
-            'một lần nhìn lại để lưu giữ những dấu ấn của riêng bạn.',
+          WrParagraph(
+            tr('Nhật ký sự nghiệp của bạn chưa có ghi nhận nào. Hãy bắt đầu '
+            'một lần nhìn lại để lưu giữ những dấu ấn của riêng bạn.', 'Your career journal has nothing in it yet. Start a look back '
+            'to keep the marks that are yours.'),
             key: Key('wr_career_memory_empty'),
             style: TextStyle(
               fontSize: 16.5,
@@ -1161,8 +1271,8 @@ class _WrCareerMemoryScreenState extends ConsumerState<WrCareerMemoryScreen> {
             const SizedBox(height: 20),
           ],
           if (shown.isEmpty)
-            const Text(
-              'Không có ghi nhận nào thuộc loại này.',
+            Text(
+              tr('Không có ghi nhận nào thuộc loại này.', 'No entries of this type.'),
               key: Key('wr_career_memory_filter_empty'),
               style: TextStyle(
                 fontSize: 16.5,
@@ -1179,18 +1289,21 @@ class _WrCareerMemoryScreenState extends ConsumerState<WrCareerMemoryScreen> {
             WrPremiumLock(
               key: const Key('wr_career_memory_lock'),
               description: shown.length > readable
-                  ? 'Còn ${shown.length - readable} ghi nhận nữa, thuộc các '
+                  ? tr('Còn ${shown.length - readable} ghi nhận nữa, thuộc các '
                       'tuần và tháng trước đó. Bản đầy đủ mở lại từng ghi nhận, '
-                      'đọc lại được bất cứ lúc nào.'
-                  : 'Bản đầy đủ mở lại từng ghi nhận bạn đã lưu trên hành trình '
+                      'đọc lại được bất cứ lúc nào.', '${shown.length - readable} more entries, from earlier weeks '
+                      'and months. The full version reopens each one, readable '
+                      'any time.')
+                  : tr('Bản đầy đủ mở lại từng ghi nhận bạn đã lưu trên hành trình '
                       'sự nghiệp, đọc lại được bất cứ lúc nào, theo đúng dòng '
-                      'thời gian.',
-              ctaLabel: 'Mở khoá toàn bộ Career Memory',
+                      'thời gian.', 'The full version reopens every entry you have saved on your '
+                      'career journey, readable any time, in order.'),
+              ctaLabel: tr('Mở khoá toàn bộ Career Memory', 'Unlock all of Career Memory'),
               paywallTrigger: 'career_memory',
             )
           else
             Text(
-              'Đã hiện ${shown.length}/${all.length} ghi nhận gần nhất.',
+              tr('Đã hiện ${shown.length}/${all.length} ghi nhận gần nhất.', 'Showing the ${shown.length} most recent of ${all.length}.'),
               key: const Key('wr_career_memory_shown_count'),
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 13.5, color: WrColors.muted),
@@ -1228,7 +1341,7 @@ class _TypeFilterBar extends StatelessWidget {
         padding: EdgeInsets.zero,
         children: [
           _Chip(
-            label: 'Tất cả',
+            label: tr('Tất cả', 'All'),
             count: total,
             active: selected == null,
             onTap: () => onSelect(null),
@@ -1422,7 +1535,7 @@ class _EntryRowState extends State<_EntryRow> {
                       // chỉ còn nhãn loại đọc như một lỗi tải dở.
                       const SizedBox(height: 6),
                       WrParagraph(
-                        locked ? 'Nội dung đã khoá' : entry.title,
+                        locked ? tr('Nội dung đã khoá', 'Locked') : entry.title,
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -1433,8 +1546,8 @@ class _EntryRowState extends State<_EntryRow> {
                       ),
                       if (locked) ...[
                         const SizedBox(height: 4),
-                        const WrParagraph(
-                          'Mở bản đầy đủ để đọc lại ghi nhận này.',
+                        WrParagraph(
+                          tr('Mở bản đầy đủ để đọc lại ghi nhận này.', 'Open the full version to read this entry again.'),
                           style: TextStyle(
                             fontSize: 14.5,
                             color: WrColors.muted,
@@ -1486,7 +1599,7 @@ class _EntryRowState extends State<_EntryRow> {
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  'Xem chi tiết',
+                                  tr('Xem chi tiết', 'See details'),
                                   style: TextStyle(
                                     fontSize: 14.5,
                                     fontWeight: FontWeight.w600,

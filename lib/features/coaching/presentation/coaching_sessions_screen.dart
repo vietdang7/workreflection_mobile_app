@@ -16,6 +16,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/models/coaching_models.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
@@ -120,7 +121,7 @@ class _SessionRow extends StatelessWidget {
   final CoachingBooking booking;
 
   String _formatScheduledAt(DateTime? dt) {
-    if (dt == null) return 'Chưa có lịch';
+    if (dt == null) return tr('Chưa có lịch', 'No sessions scheduled');
     return DateFormat('HH:mm dd/MM/yyyy').format(dt);
   }
 

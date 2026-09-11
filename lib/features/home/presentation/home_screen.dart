@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/models/checkin.dart';
 import '../../../core/models/insight.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -24,7 +25,7 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(mobileProfileProvider);
-    final displayName = profileAsync.valueOrNull?.displayName ?? 'bạn';
+    final displayName = profileAsync.valueOrNull?.displayName ?? tr('bạn', 'you');
     return Scaffold(
       backgroundColor: WrColors.pageBg,
       body: SafeArea(
@@ -373,7 +374,7 @@ class _SuggestionSection extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: 16),
-              WrProgressTrack(value: 0.35, color: WrColors.navy),
+              const WrProgressTrack(value: 0.35, color: WrColors.navy),
               const SizedBox(height: 6),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,

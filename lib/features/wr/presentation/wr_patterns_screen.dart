@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_repeated_situations.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/wr_detail_scaffold.dart';
@@ -36,29 +37,33 @@ class WrPatternsScreen extends ConsumerWidget {
         repeated.fold<int>(1, (m, p) => p.count > m ? p.count : m);
 
     return WrDetailScaffold(
-      eyebrow: 'NHỮNG VÒNG LẶP QUEN THUỘC',
-      title: 'Những câu chuyện lặp lại',
+      eyebrow: tr('NHỮNG VÒNG LẶP QUEN THUỘC', 'FAMILIAR LOOPS'),
+      title: tr('Những câu chuyện lặp lại', 'Stories that repeat'),
       children: [
         if (repeated.isEmpty)
           WrParagraph(
             recentSituationIds(episodes).isEmpty
-                ? 'Sau vài lần nhìn lại có chọn tình huống, những điều lặp lại '
-                    'sẽ hiện ra ở đây.'
-                : 'Chưa điều nào trở lại đủ $kRepeatedSituationsMinCount lần. '
-                    'Những gì bạn đã ghi vẫn còn nguyên trong Hành trình.',
+                ? tr('Sau vài lần nhìn lại có chọn tình huống, những điều lặp lại '
+                    'sẽ hiện ra ở đây.', 'After a few look-backs where you pick a situation, the things '
+                    'that repeat will show up here.')
+                : tr('Chưa điều nào trở lại đủ $kRepeatedSituationsMinCount lần. '
+                    'Những gì bạn đã ghi vẫn còn nguyên trong Hành trình.', 'Nothing has come back $kRepeatedSituationsMinCount times yet. '
+                    'Everything you recorded is still there in your Journey.'),
             key: const Key('wr_patterns_empty'),
             style: const TextStyle(
                 fontSize: 15.5, color: WrColors.muted, height: 1.6),
           )
         else ...[
-          const Text(
+          Text(
             // Vẫn nói rõ cửa sổ chỉ $kRecentSituationsWindow lần gần nhất —
             // đó là điều người dùng không đoán được. Ngưỡng lặp và luật "lượt
             // tự viết không có mã nên không vào bảng" thì khách 09/09/2026
             // (§8.3) bỏ khỏi câu này cho nhẹ; luật vẫn nguyên trong mã.
-            'Trong $kRecentSituationsWindow ghi chép gần đây, có một vài tình '
+            tr('Trong $kRecentSituationsWindow ghi chép gần đây, có một vài tình '
             'huống thường xuyên quay trở lại. Hãy cùng xem lại để hiểu rõ hơn '
-            'những gì bạn đang thực sự trải qua nhé.',
+            'những gì bạn đang thực sự trải qua nhé.', 'Across your last $kRecentSituationsWindow entries, a few situations '
+            'keep coming back. Have a look at them to understand better what '
+            'you are actually going through.'),
             key: Key('wr_patterns_window_note'),
             style: TextStyle(
               fontSize: 14.5,

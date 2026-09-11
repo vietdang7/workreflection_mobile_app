@@ -9,6 +9,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/wr_voice_field.dart';
 import '../../../core/widgets/wr_paragraph.dart';
@@ -91,8 +92,8 @@ class _PracticeNoteSheetState extends State<_PracticeNoteSheet> {
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
-              'BẠN VỪA HOÀN THÀNH',
+            Text(
+              tr('BẠN VỪA HOÀN THÀNH', 'YOU HAVE JUST FINISHED'),
               style: TextStyle(
                 fontSize: 10.5,
                 fontWeight: FontWeight.w700,
@@ -111,9 +112,10 @@ class _PracticeNoteSheetState extends State<_PracticeNoteSheet> {
               ),
             ),
             const SizedBox(height: 14),
-            const WrParagraph(
-              'Có điều gì đáng nhớ khi bạn làm bước này không? '
-              'Không viết cũng không sao.',
+            WrParagraph(
+              tr('Có điều gì đáng nhớ khi bạn làm bước này không? '
+              'Không viết cũng không sao.', 'Anything worth remembering from this step? '
+              'Not writing is fine too.'),
               style: TextStyle(
                 fontSize: 15,
                 color: WrColors.muted,
@@ -124,7 +126,7 @@ class _PracticeNoteSheetState extends State<_PracticeNoteSheet> {
             WrVoiceField(
               fieldKey: const Key('wr_practice_note_field'),
               controller: _controller,
-              hintText: 'Điều mình nhận ra khi thử…',
+              hintText: tr('Điều mình nhận ra khi thử…', 'What I noticed when I tried…'),
               minLines: 3,
               maxLines: 5,
               onChanged: () => setState(() {}),
@@ -153,9 +155,9 @@ class _PracticeNoteSheetState extends State<_PracticeNoteSheet> {
                         : WrColors.dark,
                     borderRadius: BorderRadius.circular(14),
                   ),
-                  child: const Center(
+                  child: Center(
                     child: Text(
-                      'Lưu và hoàn thành',
+                      tr('Lưu và hoàn thành', 'Save and finish'),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -174,10 +176,10 @@ class _PracticeNoteSheetState extends State<_PracticeNoteSheet> {
                 onTap: () => Navigator.of(context).pop(
                   const PracticeNoteResult(action: PracticeNoteAction.skip),
                 ),
-                child: const Padding(
+                child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
                   child: Text(
-                    'Bỏ qua, chỉ đánh dấu xong',
+                    tr('Bỏ qua, chỉ đánh dấu xong', 'Skip, just mark it done'),
                     style: TextStyle(fontSize: 14.5, color: WrColors.muted),
                   ),
                 ),

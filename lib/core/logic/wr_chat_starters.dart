@@ -31,6 +31,7 @@
 // Áp ngưỡng 3 vào đây sẽ làm phần lớn người dùng mới không bao giờ thấy gợi ý
 // của riêng mình, tức là đúng nhóm cần được giữ lại nhất lại nhận bản gán cứng.
 
+import '../l10n/wr_tr.dart';
 import '../models/wr_content.dart';
 import 'wr_repeated_situations.dart';
 
@@ -48,10 +49,10 @@ const int kChatStarterCount = 3;
 ///
 /// Cũng cố ý phủ ba nhu cầu nền tảng khác nhau, để người chưa có dữ liệu vẫn
 /// gặp được ít nhất một câu chạm đúng.
-const List<String> kDefaultChatStarters = [
-  'Hôm nay mình im lặng trong một cuộc họp dù có ý kiến khác.',
-  'Mình vừa nhận một phản hồi khó nghe từ cấp trên.',
-  'Mình làm xong một việc khó hơn mình tưởng.',
+List<String> get kDefaultChatStarters => [
+  tr('Hôm nay mình im lặng trong một cuộc họp dù có ý kiến khác.', 'Today I stayed quiet in a meeting even though I saw it differently.'),
+  tr('Mình vừa nhận một phản hồi khó nghe từ cấp trên.', 'I have just had some hard feedback from my manager.'),
+  tr('Mình làm xong một việc khó hơn mình tưởng.', 'I finished something that turned out harder than I expected.'),
 ];
 
 /// Đổi ngôi "tôi" thành "mình" trong một câu.
@@ -86,8 +87,11 @@ List<String> chatStarters({
   required List<String> recent,
   required List<WrSituation> situations,
   int count = kChatStarterCount,
-  List<String> fallback = kDefaultChatStarters,
+  // Không đặt mặc định ở chữ ký được nữa: `kDefaultChatStarters` chở tr() nên
+  // hết là hằng biên dịch. Null ở đây nghĩa là "dùng danh sách dự phòng".
+  List<String>? fallback,
 }) {
+  fallback ??= kDefaultChatStarters;
   final labels = {for (final s in situations) s.code: s.text};
   final out = <String>[];
 

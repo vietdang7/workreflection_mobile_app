@@ -94,7 +94,7 @@ class _GuideBody extends StatelessWidget {
                     key: Key('guide_benefit_${e.key}'),
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.check_circle,
+                      const Icon(Icons.check_circle_outlined,
                           size: 18, color: WrColors.teal),
                       const SizedBox(width: 10),
                       Expanded(
@@ -117,7 +117,7 @@ class _GuideBody extends StatelessWidget {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.check_circle,
+                        const Icon(Icons.check_circle_outlined,
                             size: 18, color: WrColors.coral),
                         const SizedBox(width: 10),
                         Expanded(

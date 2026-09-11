@@ -5,6 +5,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/wr_tr.dart';
 import '../models/coaching_models.dart';
 
 // Static time slots mirroring the web (CoachingSchedule.tsx TIME_SLOTS).
@@ -215,7 +216,7 @@ class SupabaseCoachingRepository implements CoachingRepository {
       if (text != null && text.isNotEmpty) {
         allReviews.add(CoachReview(
           rating: rating,
-          reviewerName: (r['reviewer_name'] as String?) ?? 'Khách hàng',
+          reviewerName: (r['reviewer_name'] as String?) ?? tr('Khách hàng', 'Client'),
           comment: text,
         ));
       }
@@ -231,7 +232,7 @@ class SupabaseCoachingRepository implements CoachingRepository {
           .inFilter('id', userIds);
       final nameMap = <String, String>{
         for (final p in profileRows)
-          p['id'] as String: (p['full_name'] as String?) ?? 'Khách hàng',
+          p['id'] as String: (p['full_name'] as String?) ?? tr('Khách hàng', 'Client'),
       };
       for (final r in userRows) {
         final rating = (r['rating'] as num?) ?? 5;
@@ -240,7 +241,7 @@ class SupabaseCoachingRepository implements CoachingRepository {
         if (comment != null && comment.isNotEmpty) {
           allReviews.add(CoachReview(
             rating: rating,
-            reviewerName: nameMap[r['user_id'] as String] ?? 'Khách hàng',
+            reviewerName: nameMap[r['user_id'] as String] ?? tr('Khách hàng', 'Client'),
             comment: comment,
           ));
         }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/l10n/wr_tr.dart';
 import '../../core/theme/wr_colors.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -79,7 +80,7 @@ class WrAskBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: 'Trò chuyện với trợ lý phản chiếu',
+      label: tr('Trò chuyện với trợ lý phản chiếu', 'Chat with the reflection assistant'),
       child: GestureDetector(
         key: const Key('wr_ask_bubble'),
         behavior: HitTestBehavior.opaque,

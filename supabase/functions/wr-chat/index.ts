@@ -29,6 +29,7 @@ import {
   AI_CONSENT_REQUIRED_MESSAGE,
   hasAiConsent,
 } from '../_shared/ai_consent.ts';
+import { pick, readLocale, readLocaleHeader, WrLocale } from '../_shared/locale.ts';
 import { buildSystemPrompt } from './system_prompt.ts';
 import { buildUserContext } from './user_context.ts';
 import { conversationTitle, shapeReply } from './reply_shaping.ts';
@@ -120,7 +121,7 @@ const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
-    'authorization, x-client-info, apikey, content-type',
+    'authorization, x-client-info, apikey, content-type, x-wr-locale',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
@@ -139,8 +140,12 @@ function json(body: unknown, status = 200): Response {
 
 /// Câu báo lỗi hiển thị thẳng cho người dùng.
 ///
-/// Tiếng Việt, không có mã lỗi, không có tên nhà cung cấp: phần "Danh sách cấm" cấm lộ chi
+/// Không có mã lỗi, không có tên nhà cung cấp: phần "Danh sách cấm" cấm lộ chi
 /// tiết hệ thống, và "OpenRouter 502" thì người dùng cũng không làm gì được.
+///
+/// Câu truyền vào đã được `pick(locale, …)` chọn theo ngôn ngữ ở nơi gọi. Hàm
+/// này cố ý không tự chọn: nó không thấy `locale`, và nhận sẵn một chuỗi thì
+/// mỗi chỗ gọi tự chịu trách nhiệm cho cả hai bản của đúng câu mình viết.
 function fail(userMessage: string, status: number, extra: Record<string, unknown> = {}) {
   return json({ error: userMessage, ...extra }, status);
 }
@@ -151,8 +156,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: CORS_HEADERS });
   }
+  // Lấy từ header NGAY ở đây, trước mọi chốt chặn. Thân yêu cầu chỉ đọc được
+  // một lần và mãi bên dưới mới đọc, nên nếu chỉ dựa vào thân thì bốn câu lỗi
+  // ngay dưới đây — sai method, thiếu khoá, chưa đăng nhập, hết phiên — vĩnh
+  // viễn là tiếng Việt. Thân vẫn ghi đè được ở bước 2.
+  let locale: WrLocale = readLocaleHeader(req);
+
   if (req.method !== 'POST') {
-    return fail('Yêu cầu không hợp lệ.', 405);
+    return fail(pick(locale, 'Yêu cầu không hợp lệ.', 'Invalid request.'), 405);
   }
 
   const openRouterKey = Deno.env.get('OPENROUTER_API_KEY');
@@ -161,13 +172,23 @@ Deno.serve(async (req: Request): Promise<Response> => {
     // ra log để người vận hành thấy, còn người dùng chỉ cần biết là chưa dùng
     // được.
     console.error('THIẾU secret OPENROUTER_API_KEY — hàm không thể chạy.');
-    return fail('Tính năng trò chuyện đang tạm nghỉ. Bạn thử lại sau nhé.', 503);
+    return fail(
+      pick(
+        locale,
+        'Tính năng trò chuyện đang tạm nghỉ. Bạn thử lại sau nhé.',
+        'Chat is taking a short break. Please try again later.',
+      ),
+      503,
+    );
   }
 
   // ── 1 · Xác thực ────────────────────────────────────────────────────────
   const authHeader = req.headers.get('Authorization') ?? '';
   if (!authHeader.startsWith('Bearer ')) {
-    return fail('Cần đăng nhập để trò chuyện.', 401);
+    return fail(
+      pick(locale, 'Cần đăng nhập để trò chuyện.', 'Please sign in to chat.'),
+      401,
+    );
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -184,7 +205,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const { data: userData, error: authError } = await authClient.auth.getUser();
   const user = userData?.user;
   if (authError || !user) {
-    return fail('Phiên đăng nhập đã hết hạn. Bạn đăng nhập lại nhé.', 401);
+    return fail(
+      pick(
+        locale,
+        'Phiên đăng nhập đã hết hạn. Bạn đăng nhập lại nhé.',
+        'Your session has expired. Please sign in again.',
+      ),
+      401,
+    );
   }
 
   // Từ đây trở đi dùng service role: đọc gói, đếm hạn mức, và ghi lượt trò
@@ -212,6 +240,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   let premiumOverride: boolean | null = null;
   try {
     const body = await req.json();
+    locale = readLocale(body);
     message = String(body?.message ?? '').trim();
     premiumOverride = typeof body?.premiumOverride === 'boolean'
       ? body.premiumOverride
@@ -223,15 +252,26 @@ Deno.serve(async (req: Request): Promise<Response> => {
       ? raw
       : null;
   } catch (_) {
-    return fail('Yêu cầu không hợp lệ.', 400);
+    return fail(pick(locale, 'Yêu cầu không hợp lệ.', 'Invalid request.'), 400);
   }
 
   if (message.length === 0) {
-    return fail('Bạn viết vài chữ rồi gửi nhé.', 400);
+    return fail(
+      pick(
+        locale,
+        'Bạn viết vài chữ rồi gửi nhé.',
+        'Write a few words first, then send.',
+      ),
+      400,
+    );
   }
   if (message.length > MAX_MESSAGE_CHARS) {
     return fail(
-      `Câu này dài quá, bạn rút ngắn dưới ${MAX_MESSAGE_CHARS} ký tự giúp mình nhé.`,
+      pick(
+        locale,
+        `Câu này dài quá, bạn rút ngắn dưới ${MAX_MESSAGE_CHARS} ký tự giúp mình nhé.`,
+        `That is a bit long. Could you trim it under ${MAX_MESSAGE_CHARS} characters?`,
+      ),
       400,
     );
   }
@@ -300,7 +340,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
       // Không đếm được thì CHẶN, không cho qua. Cho qua khi hỏng là biến một sự
       // cố database thành một cái vòi credit mở toang.
       console.error('wr_chat_used_today lỗi:', error.message);
-      return fail('Chưa gửi được lúc này. Bạn thử lại sau một chút nhé.', 503);
+      return fail(
+      pick(
+        locale,
+        'Chưa gửi được lúc này. Bạn thử lại sau một chút nhé.',
+        'That did not go through. Please try again in a moment.',
+      ),
+      503,
+    );
     }
     usedToday = Number(data ?? 0);
   }
@@ -308,9 +355,18 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (usedToday >= limit) {
     return fail(
       isPremium
-        ? 'Bạn đã trò chuyện khá nhiều hôm nay. Mai mình tiếp tục nhé.'
-        : 'Hôm nay bạn đã dùng hết lượt trò chuyện của gói miễn phí. '
-          + 'Mai lượt sẽ được làm mới, hoặc bạn xem thử gói Premium để trò chuyện thoải mái hơn.',
+        ? pick(
+          locale,
+          'Bạn đã trò chuyện khá nhiều hôm nay. Mai mình tiếp tục nhé.',
+          'You have talked quite a lot today. Let us pick this up tomorrow.',
+        )
+        : pick(
+          locale,
+          'Hôm nay bạn đã dùng hết lượt trò chuyện của gói miễn phí. '
+            + 'Mai lượt sẽ được làm mới, hoặc bạn xem thử gói Premium để trò chuyện thoải mái hơn.',
+          'You have used up today\u2019s free messages. '
+            + 'They reset tomorrow, or you can look at Premium for unlimited chat.',
+        ),
       429,
       { usedToday, limit, isPremium, quotaExhausted: true },
     );
@@ -331,7 +387,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
       .maybeSingle();
     conversationId = (data?.id as string | undefined) ?? null;
     if (!conversationId) {
-      return fail('Không mở được cuộc trò chuyện này.', 404);
+      return fail(
+        pick(
+          locale,
+          'Không mở được cuộc trò chuyện này.',
+          'That conversation could not be opened.',
+        ),
+        404,
+      );
     }
   }
 
@@ -364,7 +427,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   // ── 6 · Gọi model ───────────────────────────────────────────────────────
   const messages = [
-    { role: 'system', content: buildSystemPrompt(isPremium, userContext) },
+    { role: 'system', content: buildSystemPrompt(isPremium, userContext, locale) },
     ...history.map((m) => ({ role: m.role, content: m.content })),
     { role: 'user', content: message },
   ];
@@ -422,22 +485,44 @@ Deno.serve(async (req: Request): Promise<Response> => {
     if (!res.ok) {
       const detail = await res.text();
       console.error(`OpenRouter ${res.status}: ${detail.slice(0, 500)}`);
-      return fail('Mình chưa trả lời được lúc này. Bạn thử gửi lại nhé.', 502);
+      return fail(
+        pick(
+          locale,
+          'Mình chưa trả lời được lúc này. Bạn thử gửi lại nhé.',
+          'I could not answer just now. Please send it again.',
+        ),
+        502,
+      );
     }
 
     const payload = await res.json();
     reply = (payload?.choices?.[0]?.message?.content ?? '').trim();
     if (!reply) {
       console.error('OpenRouter trả về nội dung rỗng:', JSON.stringify(payload).slice(0, 500));
-      return fail('Mình chưa trả lời được lúc này. Bạn thử gửi lại nhé.', 502);
+      return fail(
+        pick(
+          locale,
+          'Mình chưa trả lời được lúc này. Bạn thử gửi lại nhé.',
+          'I could not answer just now. Please send it again.',
+        ),
+        502,
+      );
     }
   } catch (e) {
     const aborted = e instanceof DOMException && e.name === 'AbortError';
     console.error(aborted ? 'OpenRouter quá hạn chờ' : `OpenRouter lỗi: ${e}`);
     return fail(
       aborted
-        ? 'Mình nghĩ hơi lâu và chưa kịp trả lời. Bạn gửi lại giúp mình nhé.'
-        : 'Mình chưa trả lời được lúc này. Bạn thử gửi lại nhé.',
+        ? pick(
+          locale,
+          'Mình nghĩ hơi lâu và chưa kịp trả lời. Bạn gửi lại giúp mình nhé.',
+          'I took too long thinking and did not get there. Please send it again.',
+        )
+        : pick(
+          locale,
+          'Mình chưa trả lời được lúc này. Bạn thử gửi lại nhé.',
+          'I could not answer just now. Please send it again.',
+        ),
       502,
     );
   }

@@ -6,6 +6,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -23,8 +24,13 @@ class WrJourneyNarrativeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final entitlement = ref.watch(wrEntitlementProvider).valueOrNull ??
         WrEntitlement(plan: WrPlan.free);
-    final narratives =
-        ref.watch(wrPatternNarrativesProvider).valueOrNull ?? const [];
+    final all = ref.watch(wrPatternNarrativesProvider).valueOrNull ??
+        const <PatternNarrative>[];
+    // Lọc theo ngôn ngữ đang bật, cùng lý do với thẻ ở tab Hành trình: đây là
+    // màn ĐỌC, một trang tiếng Anh xen mấy khối tiếng Việt còn khó chịu hơn là
+    // chờ. Bản đang được viết lại sẽ hiện ở lần mở sau.
+    final narratives = all.where((n) => n.matchesCurrentLocale).toList();
+    final rewriting = narratives.isEmpty && all.isNotEmpty;
     final canRead =
         entitlement.canUseFeature(WrPremiumFeature.patternAdvanced);
     final aiAllowed = ref.watch(wrAiConsentGrantedProvider);
@@ -35,16 +41,17 @@ class WrJourneyNarrativeScreen extends ConsumerWidget {
     final refresh = ref.watch(wrNarrativeRefreshProvider).valueOrNull;
 
     return WrDetailScaffold(
-      eyebrow: 'NHÌN LẠI DÒNG THỜI GIAN',
-      title: 'Điều gì đang đổi trong bạn',
+      eyebrow: tr('NHÌN LẠI DÒNG THỜI GIAN', 'LOOK BACK ALONG THE TIMELINE'),
+      title: tr('Điều gì đang đổi trong bạn', 'What is changing in you'),
       children: [
         if (!canRead)
-          const WrPremiumLock(
+          WrPremiumLock(
             key: Key('wr_journey_narrative_lock'),
             description:
-                'Mở khóa bản đầy đủ để nhìn lại toàn bộ bức tranh thay đổi của '
-                'bạn qua từng giai đoạn.',
-            ctaLabel: 'Mở phần nhìn lại dòng thời gian',
+                tr('Mở khóa bản đầy đủ để nhìn lại toàn bộ bức tranh thay đổi của '
+                'bạn qua từng giai đoạn.', 'Unlock the full version to see the whole picture of how you '
+                'have changed, stage by stage.'),
+            ctaLabel: tr('Mở phần nhìn lại dòng thời gian', 'Open the timeline look-back'),
             paywallTrigger: 'pattern_advanced',
           )
         // Chưa cho phép gửi dữ liệu sang AI thì mục này không chạy được — phần
@@ -57,7 +64,7 @@ class WrJourneyNarrativeScreen extends ConsumerWidget {
           const _AiConsentInvite()
         else if (narratives.isEmpty)
           WrParagraph(
-            _emptyLine(refresh),
+            _emptyLine(refresh, rewriting: rewriting),
             key: const Key('wr_journey_narrative_empty'),
             style: const TextStyle(
               fontSize: 16.5,
@@ -129,19 +136,29 @@ class _AiConsentInvite extends ConsumerWidget {
 /// Cùng lý do với `_waitingLine` ở tab Hành trình: câu cũ không đếm ngược được
 /// nên nó giống hệt nhau ở lần nhìn lại thứ hai và thứ ba mươi. Chữ ở đây dài
 /// hơn một chút vì đây là màn đọc, không phải một thẻ tóm tắt.
-String _emptyLine(WrNarrativeRefresh? refresh) {
+String _emptyLine(WrNarrativeRefresh? refresh, {bool rewriting = false}) {
+  if (rewriting) {
+    return tr('Đang viết lại diễn biến của bạn bằng ngôn ngữ vừa chọn. Bản kể '
+        'cần vài chục giây để hoàn thành — bạn mở lại màn này sau một lát '
+        'nhé.', 'Your story is being rewritten in the language you just picked. It '
+        'takes up to a minute — open this screen again in a moment.');
+  }
   final needed = refresh?.needed;
   return switch (refresh?.status) {
     // "có chọn tình huống": cùng lý do với `_waitingLine` ở tab Hành trình —
     // hàm chỉ đếm Episode có `situation_code`, còn thẻ Career Health đếm tất.
     WrNarrativeStatus.notEnoughData when needed != null && needed > 0 =>
-      'Còn $needed lần nhìn lại có chọn tình huống nữa là đủ để kể. Diễn biến '
+      tr('Còn $needed lần nhìn lại có chọn tình huống nữa là đủ để kể. Diễn biến '
           'so các tình huống ở hai giai đoạn với nhau, nên những lần bạn tự mô '
-          'tả không có tình huống nào để đối chiếu.',
+          'tả không có tình huống nào để đối chiếu.', '$needed more look-backs with a situation picked and there is enough to '
+          'tell. The story compares situations across two stretches, so the '
+          'times you wrote your own have nothing to compare against.'),
     WrNarrativeStatus.upToDate =>
-      'Diễn biến của bạn đang được đọc lại. Quay lại màn này sau một lát nhé.',
-    _ => 'Chưa đủ dữ liệu để kể lại diễn biến. Ghi thêm vài lần nữa, '
-        'WorkReflection sẽ chỉ ra điều gì đang đổi và điều gì vẫn ở nguyên đó.',
+      tr('Diễn biến của bạn đang được đọc lại. Quay lại màn này sau một lát nhé.', 'Your story is being read. Come back to this screen in a moment.'),
+    _ => tr('Chưa đủ dữ liệu để kể lại diễn biến. Ghi thêm vài lần nữa, '
+        'WorkReflection sẽ chỉ ra điều gì đang đổi và điều gì vẫn ở nguyên đó.', 'Not enough yet to tell the story. Record a few more and '
+        'WorkReflection will point out what is changing and what has stayed '
+        'put.'),
   };
 }
 

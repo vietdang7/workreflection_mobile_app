@@ -281,14 +281,18 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Hiểu mình'), findsOneWidget);
-      // Chưa nhìn lại lần nào thì thẻ Career Health không dựng (một thanh 0/15
-      // trên màn mời bắt đầu là báo cáo một con số bằng không), và mục "Hành
-      // trình đã đi" đã bỏ hẳn — lời mời còn lại là bộ 15 câu.
+      // Khối Career Snapshot dựng ngay cả khi chưa có gì: cả hai cột đều là
+      // LỜI MỜI, không phải ổ khoá (Changelog CareerSnapshot §4).
       expect(
-        find.byKey(const Key('wr_discover_career_health')),
+        find.byKey(const Key('wr_discover_career_snapshot')),
+        findsOneWidget,
+      );
+      // Hai khối cũ đã biến mất — đó là điều kiện để mâu thuẫn không quay lại.
+      expect(
+        find.byKey(const Key('wr_discover_career_health'), skipOffstage: false),
         findsNothing,
       );
-      expect(find.text('Bắt đầu Self-Check'), findsOneWidget);
+      expect(find.text('Làm Self-Check'), findsOneWidget);
     });
 
     testWidgets('không diễn giải gì khi chưa có dữ liệu', (tester) async {

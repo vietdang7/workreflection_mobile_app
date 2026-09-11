@@ -16,6 +16,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/data/wr_intelligence_repository.dart';
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/logic/wr_practice_match.dart';
 import '../../../core/logic/wr_tra_chieu.dart';
@@ -62,7 +63,7 @@ class _WrGrowthThemesScreenState extends ConsumerState<WrGrowthThemesScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Không bắt đầu được. Thử lại.')),
+          SnackBar(content: Text(tr('Không bắt đầu được. Thử lại.', 'Could not start. Try again.'))),
         );
       }
     } finally {
@@ -107,19 +108,20 @@ class _WrGrowthThemesScreenState extends ConsumerState<WrGrowthThemesScreen> {
     final rest = available.where((t) => t.themeId != suggestedId).toList();
 
     return WrDetailScaffold(
-      eyebrow: 'THỰC HÀNH KHÁC',
+      eyebrow: tr('HOẠT ĐỘNG KHÁC', 'OTHER ACTIVITIES'),
       title: suggestion != null
-          ? 'Chủ đề dành cho bạn'
-          : 'Chủ đề bạn có thể bắt đầu',
+          ? tr('Chủ đề dành cho bạn', 'Themes for you')
+          : tr('Chủ đề bạn có thể bắt đầu', 'Themes you can start'),
       children: [
         if (quota != null)
           Padding(
             padding: const EdgeInsets.only(bottom: 20),
             child: WrParagraph(
               canEnroll
-                  ? 'Bạn đang mở $activeCount/$quota chủ đề.'
-                  : 'Bản miễn phí mở tối đa $quota chủ đề cùng lúc. '
-                      'Hoàn thành một chủ đề để mở chỗ mới.',
+                  ? tr('Bạn đang mở $activeCount/$quota chủ đề.', 'You have $activeCount/$quota themes open.')
+                  : tr('Bản miễn phí mở tối đa $quota chủ đề cùng lúc. '
+                      'Hoàn thành một chủ đề để mở chỗ mới.', 'The free version opens up to $quota themes at once. '
+                      'Finish one to make room.'),
               key: const Key('wr_growth_themes_quota'),
               style: const TextStyle(
                 fontSize: 15.5,
@@ -145,10 +147,10 @@ class _WrGrowthThemesScreenState extends ConsumerState<WrGrowthThemesScreen> {
             ),
           )
         else if (available.isEmpty)
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(bottom: 26),
             child: Text(
-              'Bạn đã bắt đầu tất cả chủ đề hiện có.',
+              tr('Bạn đã bắt đầu tất cả chủ đề hiện có.', 'You have started every theme available.'),
               style: TextStyle(
                 fontSize: 15.5,
                 color: WrColors.muted,
@@ -157,13 +159,16 @@ class _WrGrowthThemesScreenState extends ConsumerState<WrGrowthThemesScreen> {
             ),
           )
         else
-          const Padding(
+          Padding(
             padding: EdgeInsets.only(bottom: 26),
             child: WrParagraph(
-              'Chủ đề thực hành được chọn từ những tình huống bạn gặp lại nhiều '
+              tr('Chủ đề thực hành được chọn từ những tình huống bạn gặp lại nhiều '
               'lần. Bạn nhìn lại thêm vài lần nữa, hoặc làm bộ tự đánh giá, rồi '
               'WorkReflection sẽ chỉ ra chủ đề hợp với bạn. Trong lúc chờ, bạn '
-              'vẫn tự chọn được ở danh sách bên dưới.',
+              'vẫn tự chọn được ở danh sách bên dưới.', 'Practice themes are drawn from the situations you meet again and '
+              'again. Look back a few more times, or take the self-check, and '
+              'WorkReflection will point out the theme that fits you. While '
+              'you wait, you can still pick from the list below.'),
               style: TextStyle(
                 fontSize: 15.5,
                 color: WrColors.muted,
@@ -177,7 +182,7 @@ class _WrGrowthThemesScreenState extends ConsumerState<WrGrowthThemesScreen> {
         if (rest.isNotEmpty) ...[
           WrActionLink(
             key: const Key('wr_growth_themes_show_all'),
-            label: _showAll ? 'Thu gọn' : 'Xem tất cả chủ đề (${rest.length})',
+            label: _showAll ? tr('Thu gọn', 'Show less') : tr('Xem tất cả chủ đề (${rest.length})', 'See all themes (${rest.length})'),
             onTap: () => setState(() => _showAll = !_showAll),
           ),
           const SizedBox(height: 20),
@@ -238,7 +243,7 @@ class _SuggestionCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const WrEyebrow('CHỦ ĐỀ ĐƯỢC ĐỀ XUẤT'),
+          WrEyebrow(tr('CHỦ ĐỀ ĐƯỢC ĐỀ XUẤT', 'SUGGESTED THEME')),
           const SizedBox(height: 10),
           WrParagraph(
             theme.title,
@@ -299,7 +304,7 @@ class _SuggestionCard extends StatelessWidget {
                       ),
                     )
                   : Text(
-                      canEnroll ? 'Bắt đầu' : 'Mở với Premium',
+                      canEnroll ? tr('Bắt đầu', 'Start') : tr('Mở với Premium', 'Open with Premium'),
                       style: const TextStyle(
                         fontSize: 15.5,
                         fontWeight: FontWeight.w600,
@@ -333,7 +338,7 @@ class _TraChieuRow extends StatelessWidget {
                 Expanded(
                   child: Text(
                     kTraChieuLabel,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w700,
                       color: WrColors.navy,
@@ -362,9 +367,14 @@ class _TraChieuRow extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 6),
-            const WrParagraph(
-              '10 đến 12 người ngồi quanh một bàn trà, cùng trả lời một câu hỏi '
-              'duy nhất. Phản chiếu như trong app, chỉ khác là nói thành lời.',
+            WrParagraph(
+              tr('Đưa trải nghiệm "Nhìn lại" bước ra đời thực. Không chỉ là một bàn '
+              'trà, đây là không gian để bạn mượn câu chuyện của những người đi '
+              'làm khác soi chiếu lại mình, và nhận ra bản thân không hề đơn độc '
+              'trong những trăn trở hiện tại.', 'Take the experience of looking back out into real life. This is more '
+              'than a table of tea; it is a space to borrow the stories of '
+              'other working people to see yourself, and to realise you are '
+              'not alone in what you are wrestling with.'),
               style: TextStyle(
                 fontSize: 15.5,
                 color: WrColors.muted,
@@ -372,11 +382,11 @@ class _TraChieuRow extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            const Row(
+            Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Xem lịch các buổi',
+                  tr('Xem lịch các buổi', 'See the schedule'),
                   style: TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w700,
@@ -461,8 +471,8 @@ class _ThemeRow extends StatelessWidget {
                           strokeWidth: 1.5,
                         ),
                       )
-                    : const Text(
-                        'Bắt đầu',
+                    : Text(
+                        tr('Bắt đầu', 'Start'),
                         style: TextStyle(
                           fontSize: 15.5,
                           fontWeight: FontWeight.w600,

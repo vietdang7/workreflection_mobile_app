@@ -28,9 +28,12 @@
 //     30 ngày lịch như nội dung hiển thị đang mô tả". Episode đã có `openedAt`
 //     nên ở đây lọc theo 30 NGÀY LỊCH thật, đúng như dòng chú thích cuối màn.
 
+import '../l10n/wr_tr.dart';
 import '../models/wr_content.dart';
 import '../models/wr_episode.dart';
 import '../models/wr_intelligence.dart';
+import 'wr_career_health.dart'
+    show dominantPillar, pillarOfDimension, selfCheckDateLabel;
 import 'wr_repeated_situations.dart';
 import 'wr_self_check_narrative.dart';
 import 'wr_self_check_questions.dart';
@@ -55,17 +58,40 @@ enum ScaPillarStatus {
   needsAttention,
   priority;
 
+  /// Nhãn hiển thị trên huy hiệu (A7, khách chốt 10/09/2026).
+  ///
+  /// Bộ chữ này là bộ THỨ BA trong ba bộ từng cùng tồn tại. Hai bộ kia:
+  /// "Đang phát triển / Cần chú ý / Ưu tiên cải thiện" (bản dev cũ) và "Ổn định
+  /// / Đang cải thiện / Cần chú ý" (changelog bảng 2). Chọn bộ này vì cả thư
+  /// viện câu Diễn giải sâu (`WorkReflection_DienGiaiSau_NoiDung.docx`) rẽ
+  /// nhánh theo đúng ba chữ đó — nhánh A đọc "Đang hỗ trợ tốt", nhánh B/D đọc
+  /// "Đang cản trở" và "Ổn, còn dư địa".
+  ///
+  /// **Ngưỡng KHÔNG đổi theo.** Mockup chấm Likert 1–4, app chấm 1–5; bê ngưỡng
+  /// của mockup sang đây là mọi người dùng cũ mở app lên thấy đánh giá của mình
+  /// tự nhiên khác đi mà không ai chạm vào dữ liệu của họ.
   String get label => switch (this) {
-        ScaPillarStatus.developing => 'Đang phát triển',
-        ScaPillarStatus.needsAttention => 'Cần chú ý',
-        ScaPillarStatus.priority => 'Ưu tiên cải thiện',
+        ScaPillarStatus.developing => tr('Đang hỗ trợ tốt', 'Supporting you well'),
+        ScaPillarStatus.needsAttention => tr('Ổn, còn dư địa', 'Fine, room to grow'),
+        ScaPillarStatus.priority => tr('Đang cản trở', 'Holding you back'),
+      };
+
+  /// Dạng nhúng giữa câu — "bạn tự đánh giá phần này {inlineLabel}, nhưng…".
+  ///
+  /// Không dùng `label.toLowerCase()` được nữa: nhãn giữa mang sẵn một dấu
+  /// phẩy, nên "tự đánh giá ổn, còn dư địa, vừa là nơi…" đọc ra thành hai mệnh
+  /// đề rời. Mức giữa cần một dạng liền câu riêng.
+  String get inlineLabel => switch (this) {
+        ScaPillarStatus.developing => tr('đang hỗ trợ tốt', 'supporting you well'),
+        ScaPillarStatus.needsAttention => tr('ổn nhưng còn dư địa', 'fine but with room to grow'),
+        ScaPillarStatus.priority => tr('đang cản trở', 'holding you back'),
       };
 
   /// Người dùng đang tự chấm trụ này là ỔN.
   ///
-  /// Chỉ mức cao nhất mới tính. "Cần chú ý" nằm giữa thang 1–5 và người tự chấm
-  /// như vậy KHÔNG nói rằng mình ổn — gộp nó vào đây thì câu "bạn tự đánh giá
-  /// phần này ổn, nhưng…" sẽ bịa lại lời của họ.
+  /// Chỉ mức cao nhất mới tính. "Ổn, còn dư địa" nằm giữa thang 1–5 và người tự
+  /// chấm như vậy KHÔNG nói rằng mình ổn — gộp nó vào đây thì câu "bạn tự đánh
+  /// giá phần này ổn, nhưng…" sẽ bịa lại lời của họ.
   bool get isReassuring => this == ScaPillarStatus.developing;
 }
 
@@ -104,9 +130,11 @@ List<ScaSelfCheckResponse> scoredSelfChecks(
       ..sort((a, b) => b.takenAt.compareTo(a.takenAt));
 
 /// Ngày dạng dd/MM/yyyy — dạng mockup dùng trong câu "so với lần trước (…)".
-String scaDateLabel(DateTime d) =>
-    '${d.day.toString().padLeft(2, '0')}/'
-    '${d.month.toString().padLeft(2, '0')}/${d.year}';
+///
+/// Uỷ lại cho `wr_career_health.dart`: màn Hiểu mình cũng phải in ngày
+/// Self-Check gần nhất (Changelog CareerSnapshot §5), và hai màn cùng nói về
+/// một lần tự đánh giá thì không được định dạng ngày theo hai luật.
+String scaDateLabel(DateTime d) => selfCheckDateLabel(d);
 
 /// Câu Lớp 2. Null khi chưa có lần Self-Check nào trước đó để so.
 String? scaTrendText({
@@ -121,17 +149,18 @@ String? scaTrendText({
   final date = scaDateLabel(previous.takenAt);
   final diff = score - prev;
   if (diff.abs() < kScaTrendEpsilon) {
-    return 'Gần như không đổi so với lần trước ($date).';
+    return tr('Gần như không đổi so với lần trước ($date).', 'Almost unchanged from last time ($date).');
   }
   return diff > 0
-      ? 'Tăng nhẹ so với lần trước ($date).'
-      : 'Giảm nhẹ so với lần trước ($date).';
+      ? tr('Tăng nhẹ so với lần trước ($date).', 'Slightly up from last time ($date).')
+      : tr('Giảm nhẹ so với lần trước ($date).', 'Slightly down from last time ($date).');
 }
 
 /// Câu thay thế khi đây là lần Self-Check đầu tiên được ghi lại.
-const String kScaNoTrendText =
-    'Đây là lần tự soi đầu tiên được ghi lại, nên chưa có gì để so. Làm lại sau '
-    'vài tuần, phần này sẽ cho bạn thấy điều gì đã đổi.';
+String get kScaNoTrendText => tr('Đây là lần tự soi đầu tiên được ghi lại, nên chưa có gì để so. Làm lại sau '
+    'vài tuần, phần này sẽ cho bạn thấy điều gì đã đổi.', 'This is the first self-check on record, so there is nothing to compare '
+    'against yet. Take it again in a few weeks and this part will show you '
+    'what has shifted.');
 
 // ---------------------------------------------------------------------------
 // Lớp 3 — đối chiếu Pattern Reflection
@@ -145,16 +174,26 @@ const String kScaNoTrendText =
 ///
 /// Episode thiếu `openedAt` bị loại. Không có ngày thì không thể nói nó thuộc
 /// cửa sổ nào — giữ lại là để một lượt Reflect cũ đội lốt lượt vừa xong.
+///
+/// CHẶN CẢ HAI ĐẦU. Bản trước chỉ chặn đầu dưới, vì `now` lúc chạy thật luôn là
+/// bây giờ nên không có gì đứng sau nó. Nhưng tầng 2 của Diễn giải sâu cần một
+/// cửa sổ LIỀN TRƯỚC, và nó lấy cửa sổ đó bằng cách truyền một `now` lùi lại
+/// một cửa sổ — không chặn đầu trên thì "cửa sổ trước" nuốt luôn cả cửa sổ hiện
+/// tại, hai cửa sổ thành một, và mọi câu xu hướng đều đọc ra "ổn định".
 List<ReflectionEpisode> episodesWithinDays(
   List<ReflectionEpisode> episodes, {
   required DateTime now,
   int days = kScaPatternWindowDays,
 }) {
-  final cutoff = DateTime(now.year, now.month, now.day)
-      .subtract(Duration(days: days - 1));
+  final endOfDay = DateTime(now.year, now.month, now.day)
+      .add(const Duration(days: 1));
+  final cutoff = endOfDay.subtract(Duration(days: days));
   return [
     for (final e in episodes)
-      if (e.openedAt != null && !e.openedAt!.isBefore(cutoff)) e,
+      if (e.openedAt != null &&
+          !e.openedAt!.isBefore(cutoff) &&
+          e.openedAt!.isBefore(endOfDay))
+        e,
   ];
 }
 
@@ -162,6 +201,12 @@ List<ReflectionEpisode> episodesWithinDays(
 ///
 /// Đếm theo LƯỢT, không theo tình huống khác nhau: §7 hỏi "bạn quay lại nhóm
 /// này bao nhiêu lần", nên chọn lại cùng một tình huống năm lần là năm lần.
+///
+/// LỖI ĐÃ SỬA 10/09: `pillarOfDimension` trước đây lấy từ
+/// `wr_self_check_narrative.dart`, bản có `_ => SelfCheckPillar.a`. Mọi lượt
+/// thuộc hai nhóm tình huống TÍCH CỰC (P-ACHIEVE, P-STEADY) bị dồn hết vào trụ
+/// A, nên "Cách làm việc" phồng lên bằng đúng số lần người dùng ghi lại điều
+/// hay — và có thể thành trụ nổi trội giả, kéo theo cả câu diễn giải sai.
 Map<SelfCheckPillar, int> pillarPatternCounts(
   List<ReflectionEpisode> episodes,
   List<WrSituation> situations, {
@@ -179,29 +224,46 @@ Map<SelfCheckPillar, int> pillarPatternCounts(
     final dim = codeToDim[code];
     if (dim == null) continue;
     final pillar = pillarOfDimension(dim);
+    if (pillar == null) continue;
     counts[pillar] = counts[pillar]! + 1;
   }
   return counts;
 }
 
-/// Trụ được quay lại nhiều nhất. Null khi chưa có lượt nào, hoặc khi HOÀ —
-/// không có "nhóm chiếm ưu thế" thì đừng chỉ tay vào một nhóm bất kỳ.
-SelfCheckPillar? dominantPatternPillar(Map<SelfCheckPillar, int> counts) {
-  var best = 0;
-  SelfCheckPillar? winner;
-  var tied = false;
-  for (final e in counts.entries) {
-    if (e.value > best) {
-      best = e.value;
-      winner = e.key;
-      tied = false;
-    } else if (e.value == best && best > 0) {
-      tied = true;
-    }
-  }
-  if (best == 0 || tied) return null;
-  return winner;
-}
+/// Tổng số lần Reflection trong cửa sổ — MẪU SỐ của mọi câu "{count} / {total}".
+///
+/// Đếm mọi Episode trong cửa sổ, kể cả lượt không thuộc trụ nào. `DienGiaiSau`
+/// bảng 2 định nghĩa `totalReflection` là "tổng số Reflection trong cùng cửa
+/// sổ", không phải tổng ba trụ — nên tổng ba `pillarPatternCounts` thường NHỎ
+/// HƠN con số này, và đó là sự thật chứ không phải sai số.
+int totalReflectionInWindow(
+  List<ReflectionEpisode> episodes, {
+  required DateTime now,
+  int days = kScaPatternWindowDays,
+}) =>
+    episodesWithinDays(episodes, now: now, days: days).length;
+
+/// Trụ được quay lại nhiều nhất. Null khi chưa đủ chênh lệch để gọi là nổi trội.
+///
+/// Uỷ lại cho [dominantPillar] của `wr_career_health.dart` — cùng một luật với
+/// khối Career Snapshot ở tab Hiểu mình, để hai màn không bao giờ nói khác nhau
+/// về việc trụ nào đang nổi lên.
+///
+/// LUẬT ĐÃ ĐỔI. Bản cũ chỉ loại trường hợp HOÀ tuyệt đối, nên 10 / 9 / 8 lần vẫn
+/// tuyên bố có một trụ nổi trội. `DienGiaiSau §2` nêu đích danh ví dụ đó: "Nếu
+/// cứ lấy trụ cao nhất bất kể chênh lệch, hệ thống sẽ khẳng định một xu hướng
+/// không thật." Nay trụ cao nhất phải VƯỢT 40% tổng.
+///
+/// [total] là tổng số lần Reflection trong cùng cửa sổ. Không truyền thì lấy
+/// tổng ba trụ — giữ đúng hành vi của những nơi gọi chỉ có mỗi bảng đếm.
+SelfCheckPillar? dominantPatternPillar(
+  Map<SelfCheckPillar, int> counts, {
+  int? total,
+}) =>
+    dominantPillar(
+      counts,
+      total ?? counts.values.fold<int>(0, (s, v) => s + v),
+    );
 
 /// Câu Lớp 3 — ba nhánh template của §7.
 String scaPatternText({
@@ -212,27 +274,35 @@ String scaPatternText({
 }) {
   final count = counts[pillar] ?? 0;
   if (count == 0) {
-    return 'Chưa có đủ tín hiệu từ Reflection gần đây để đối chiếu thêm cho '
-        'nhóm này.';
+    return tr('Chưa có đủ tín hiệu từ Reflection gần đây để đối chiếu thêm cho '
+        'nhóm này.', 'Not enough signal from recent Reflections to add anything for '
+        'this group yet.');
   }
 
   if (dominant != pillar) {
-    return 'Nhóm này xuất hiện $count lần trong Reflection gần đây, chưa phải '
-        'nhóm chiếm ưu thế nhất.';
+    return tr('Nhóm này xuất hiện $count lần trong Reflection gần đây, chưa phải '
+        'nhóm chiếm ưu thế nhất.', 'This group came up $count times in recent Reflections, not the '
+        'most prominent one.');
   }
 
   // Đây là chỗ §7 gọi là "lệch pha giữa tự nhận thức và trải nghiệm thực tế".
   if (status.isReassuring) {
-    return 'Bạn tự đánh giá phần này ${status.label.toLowerCase()}, nhưng đây '
+    return tr('Bạn tự đánh giá phần này ${status.inlineLabel}, nhưng đây '
         'lại là nhóm tình huống bạn quay lại nhiều nhất trong Reflection gần '
         'đây ($count lần). Sự chênh lệch này thường đáng chú ý hơn bản thân '
         'điểm số, có thể bạn đã quen đến mức không còn nhận ra ảnh hưởng của '
-        'nó nữa.';
+        'nó nữa.', 'You rate this part as ${status.inlineLabel}, yet it is the '
+        'group of situations you return to most in recent Reflections '
+        '($count times). That gap is usually worth more attention than the '
+        'score itself; you may have grown so used to it that you no longer '
+        'notice its effect.');
   }
 
-  return 'Nhóm này vừa được bạn tự đánh giá ${status.label.toLowerCase()}, vừa '
+  return tr('Nhóm này vừa được bạn tự đánh giá ${status.inlineLabel}, vừa '
       'là nơi bạn quay lại nhiều nhất trong Reflection ($count lần). Hai nguồn '
-      'dữ liệu đang xác nhận lẫn nhau.';
+      'dữ liệu đang xác nhận lẫn nhau.', 'You rate this group as ${status.inlineLabel}, and it is also '
+      'where you return most in Reflection ($count times). Both sources are '
+      'confirming each other.');
 }
 
 // ---------------------------------------------------------------------------
@@ -262,7 +332,10 @@ String? selfAwarenessGapNarrative({
   if (scored.isEmpty) return null;
 
   final counts = pillarPatternCounts(episodes, situations, now: now);
-  final dominant = dominantPatternPillar(counts);
+  final dominant = dominantPatternPillar(
+    counts,
+    total: totalReflectionInWindow(episodes, now: now),
+  );
   if (dominant == null) return null;
 
   final score = scaScoreOf(scored.first, dominant);
@@ -272,17 +345,22 @@ String? selfAwarenessGapNarrative({
   if (!status.isReassuring) return null;
 
   final count = counts[dominant] ?? 0;
-  return 'Bạn tự đánh giá ${dominant.displayName.toLowerCase()} là '
-      '${status.label.toLowerCase()}, nhưng $kScaPatternWindowDays ngày qua đây '
+  return tr('Bạn tự đánh giá ${dominant.displayName.toLowerCase()} là '
+      '${status.inlineLabel}, nhưng $kScaPatternWindowDays ngày qua đây '
       'lại là nhóm bạn quay lại nhiều nhất khi nhìn lại ($count lần). Chênh '
-      'lệch giữa hai điều đó thường đáng nhìn kỹ hơn bản thân điểm số.';
+      'lệch giữa hai điều đó thường đáng nhìn kỹ hơn bản thân điểm số.', 'You rate ${dominant.displayName.toLowerCase()} as '
+      '${status.inlineLabel}, yet over the past $kScaPatternWindowDays days it '
+      'is the group you return to most when looking back ($count times). That '
+      'gap is usually worth a closer look than the score itself.');
 }
 
 /// Dòng chú thích cuối màn.
 String scaDeepDiveFootnote(ScaSelfCheckResponse? previous) =>
-    'Pattern được tính từ $kScaPatternWindowDays ngày Reflection gần nhất. '
+    tr('Pattern được tính từ $kScaPatternWindowDays ngày Reflection gần nhất. '
     'Self-Check trước đó: '
-    '${previous == null ? 'chưa có' : scaDateLabel(previous.takenAt)}.';
+    '${previous == null ? 'chưa có' : scaDateLabel(previous.takenAt)}.', 'Patterns are drawn from the last $kScaPatternWindowDays days of '
+    'Reflection. Previous Self-Check: '
+    '${previous == null ? 'none yet' : scaDateLabel(previous.takenAt)}.');
 
 // ---------------------------------------------------------------------------
 // Gói dữ liệu một trụ, để màn hình chỉ việc dựng
@@ -332,7 +410,10 @@ List<ScaDeepDivePillar> buildScaDeepDive({
   final latest = scored.first;
   final previous = scored.length > 1 ? scored[1] : null;
   final counts = pillarPatternCounts(episodes, situations, now: now);
-  final dominant = dominantPatternPillar(counts);
+  final dominant = dominantPatternPillar(
+    counts,
+    total: totalReflectionInWindow(episodes, now: now),
+  );
 
   return [
     for (final pillar in SelfCheckPillar.values)

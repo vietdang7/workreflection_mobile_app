@@ -4,6 +4,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/data/wr_mood_content_repository.dart';
+import '../../core/l10n/wr_tr.dart';
 import '../../core/models/checkin.dart';
 import '../../core/models/wr_mood_content.dart';
 import 'wr_providers.dart';
@@ -43,7 +44,7 @@ final wrMoodLibraryProvider =
 /// Tám câu trong Bể Lựa chọn (§VI).
 ///
 /// Đọc một lần rồi giữ: đây là bảng tĩnh 8 dòng, không đổi giữa các phiên.
-final wrChoicePoolProvider = FutureProvider<List<String>>((ref) async {
+final wrChoicePoolProvider = FutureProvider<List<ChoicePoolLine>>((ref) async {
   final repo = ref.watch(wrMoodContentRepositoryProvider);
   try {
     return await repo.fetchChoicePool();
@@ -58,12 +59,12 @@ final wrChoicePoolProvider = FutureProvider<List<String>>((ref) async {
 /// ("Mơ hồ", "Lệch nhau") vì chúng còn được ghép vào câu ở thẻ "Hệ thống nhận
 /// ra".
 String moodLabel(Mood mood) => switch (mood) {
-      Mood.stressed => 'Căng thẳng',
-      Mood.tired => 'Mệt mỏi',
-      Mood.foggy => 'Mơ hồ',
-      Mood.outofsync => 'Lệch nhau',
-      Mood.okay => 'Khá ổn',
-      Mood.happy => 'Đang vui',
+      Mood.stressed => tr('Căng thẳng', 'Tense'),
+      Mood.tired => tr('Mệt mỏi', 'Drained'),
+      Mood.foggy => tr('Mơ hồ', 'Unclear'),
+      Mood.outofsync => tr('Lệch nhau', 'Out of sync'),
+      Mood.okay => tr('Khá ổn', 'Doing okay'),
+      Mood.happy => tr('Đang vui', 'Feeling good'),
     };
 
 /// Tiêu đề thẻ gợi ý trên Home, đổi theo cảm xúc vừa check-in.
@@ -71,10 +72,10 @@ String moodLabel(Mood mood) => switch (mood) {
 /// Sáu câu khác nhau chứ không phải một câu chung: người vừa chọn "đang vui"
 /// mà thấy "Gợi ý khi căng thẳng" thì thẻ mất hết ý nghĩa.
 String moodSuggestionTitle(Mood mood) => switch (mood) {
-      Mood.stressed => 'GỢI Ý KHI CĂNG THẲNG',
-      Mood.tired => 'GỢI Ý KHI MỆT MỎI',
-      Mood.foggy => 'GỢI Ý KHI MỌI THỨ CHƯA RÕ RÀNG',
-      Mood.outofsync => 'GỢI Ý KHI MỌI THỨ LỆCH NHAU',
-      Mood.okay => 'GỢI Ý CHO HÔM NAY',
-      Mood.happy => 'GIỮ LẠI CẢM XÚC NÀY',
+      Mood.stressed => tr('GỢI Ý KHI CĂNG THẲNG', 'IDEAS WHEN YOU ARE TENSE'),
+      Mood.tired => tr('GỢI Ý KHI MỆT MỎI', 'IDEAS WHEN YOU ARE DRAINED'),
+      Mood.foggy => tr('GỢI Ý KHI MỌI THỨ CHƯA RÕ RÀNG', 'IDEAS WHEN THINGS ARE UNCLEAR'),
+      Mood.outofsync => tr('GỢI Ý KHI MỌI THỨ LỆCH NHAU', 'IDEAS WHEN THINGS ARE OUT OF SYNC'),
+      Mood.okay => tr('GỢI Ý CHO HÔM NAY', 'IDEAS FOR TODAY'),
+      Mood.happy => tr('GIỮ LẠI CẢM XÚC NÀY', 'HOLD ON TO THIS FEELING'),
     };

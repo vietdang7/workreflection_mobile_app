@@ -51,14 +51,25 @@ void main() {
       expect(scaPillarStatus(2.49), ScaPillarStatus.priority);
     });
 
-    test('nhãn đúng nguyên văn màn Kết quả', () {
-      expect(ScaPillarStatus.developing.label, 'Đang phát triển');
-      expect(ScaPillarStatus.needsAttention.label, 'Cần chú ý');
-      expect(ScaPillarStatus.priority.label, 'Ưu tiên cải thiện');
+    test('nhãn đúng bộ khách chốt ở A7', () {
+      expect(ScaPillarStatus.developing.label, 'Đang hỗ trợ tốt');
+      expect(ScaPillarStatus.needsAttention.label, 'Ổn, còn dư địa');
+      expect(ScaPillarStatus.priority.label, 'Đang cản trở');
     });
 
-    // "Cần chú ý" không phải lời tự nhận là ổn — gộp nó vào nhóm ổn thì câu
-    // lệch pha sẽ bịa lại lời người dùng.
+    // Nhãn mức giữa mang sẵn một dấu phẩy, nên dạng nhúng giữa câu KHÔNG được
+    // là `label.toLowerCase()` — nếu là, câu "tự đánh giá ổn, còn dư địa, vừa
+    // là nơi…" vỡ thành hai mệnh đề rời.
+    test('dạng nhúng giữa câu không mang dấu phẩy', () {
+      for (final s in ScaPillarStatus.values) {
+        expect(s.inlineLabel.contains(','), isFalse, reason: s.name);
+        expect(s.inlineLabel, s.inlineLabel.toLowerCase(), reason: s.name);
+      }
+      expect(ScaPillarStatus.needsAttention.inlineLabel, 'ổn nhưng còn dư địa');
+    });
+
+    // "Ổn, còn dư địa" không phải lời tự nhận là ổn — gộp nó vào nhóm ổn thì
+    // câu lệch pha sẽ bịa lại lời người dùng.
     test('chỉ mức cao nhất mới được coi là tự đánh giá ổn', () {
       expect(ScaPillarStatus.developing.isReassuring, isTrue);
       expect(ScaPillarStatus.needsAttention.isReassuring, isFalse);
@@ -253,7 +264,7 @@ void main() {
         counts: counts,
         dominant: SelfCheckPillar.c,
       );
-      expect(t, contains('đang phát triển'));
+      expect(t, contains(ScaPillarStatus.developing.inlineLabel));
       expect(t, contains('quay lại nhiều nhất'));
       expect(t, contains('5 lần'));
       expect(t, contains('chênh lệch'));
@@ -396,7 +407,7 @@ void main() {
 
       expect(text, isNotNull);
       expect(text, contains('4 lần'));
-      expect(text, contains('đang phát triển'));
+      expect(text, contains(ScaPillarStatus.developing.inlineLabel));
     });
 
     test('tự chấm đã thấp thì KHÔNG phải lệch pha', () {

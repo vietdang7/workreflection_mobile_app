@@ -37,6 +37,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../../core/l10n/wr_tr.dart';
 import '../../../../core/logic/wr_reflect_flow.dart';
 import '../../../../core/models/wr_episode.dart';
 import '../../../../core/theme/wr_colors.dart';
@@ -66,6 +67,12 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
   /// Một biến của MÀN chứ không phải của Episode: nó chỉ nói người dùng đang
   /// đứng ở nửa nào của bước, không phải một trạng thái nhận thức cần lưu.
   bool _showAha = false;
+
+  /// true sau khi người dùng bấm **Không đồng ý** ở Lớp 2 (§10.2).
+  ///
+  /// Cũng là một biến của MÀN: Episode đã chốt xong ở thời điểm này, đây chỉ là
+  /// nhịp dừng để nói cho người dùng biết điều họ vừa làm đã được ghi nhận.
+  bool _disagreed = false;
 
   @override
   void dispose() {
@@ -104,40 +111,66 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
     } catch (e, s) {
       logFlowError('saveInsightStem', e, s);
       if (mounted) {
-        setState(() => _error = flowErrorMessage('Không lưu được. Thử lại.', e));
+        setState(() => _error = flowErrorMessage(tr('Không lưu được. Thử lại.', 'Could not save. Try again.'), e));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
 
-  Future<void> _confirm() async {
-    final text = _mergedMeaning();
-    if (text.isEmpty || _busy) return;
+  /// Bấm **Đồng ý** hoặc **Không đồng ý** ở Lớp 2 (§10, khách 10/09).
+  ///
+  /// Khác nhau đúng một chỗ: câu được lưu.
+  ///
+  /// - Đồng ý → bản GỘP (chữ người dùng + câu aha), ghi thành Insight.
+  /// - Không đồng ý → CHỈ chữ người dùng tự viết, không ghi Insight. Từ chối
+  ///   một góc nhìn được đề xuất không có nghĩa là vứt bỏ chữ của chính mình.
+  ///
+  /// Cả hai đều đi tiếp sang bước Lựa chọn và đều chốt Episode: §10.1 —
+  /// "Không bỏ luôn cả lần Reflection."
+  Future<void> _confirm({required bool agreed}) async {
+    if (_busy) return;
+    final text = agreed
+        ? _mergedMeaning()
+        : (insightStemSentence(_controller.text) ?? '');
     setState(() {
       _busy = true;
       _error = null;
     });
     try {
       final notifier = ref.read(episodeFlowProvider.notifier);
-      await notifier.confirmMeaning(text);
+      // Ghi phản hồi TRƯỚC. Ghi sau thì lần bấm nào làm hỏng bước lưu là mất
+      // luôn số liệu của chính lần đó — mà đó chính là lần đáng đếm nhất.
+      await notifier.recordInsightFeedback(agreed: agreed);
+      await notifier.confirmMeaning(text, recordInsight: agreed);
       if (!mounted) return;
-      // Hai Lớp v1.6 §V: MỌI phiên đều đi qua bước Lựa chọn, không riêng
-      // Decision và Growth như trước. Lý do đổi: từ v1.6 bước này không còn bắt
-      // gõ một bước nhỏ, mà đưa sẵn bốn lựa chọn để chạm (§VI) — chi phí gần
-      // như bằng không, trong khi "Reflection luôn mở ra một lựa chọn khác" là
-      // đúng với cả sáu khoảnh khắc.
-      //
-      // Bỏ qua vẫn được: HXA §3.8 giữ nguyên — Reflection kết thúc khi đủ ý
-      // nghĩa, không phải khi đủ bước.
-      context.push('/wr/flow/commit');
+      if (!agreed) {
+        // §10.2: "Không nên im lặng chuyển sang bước sau như thể không có gì
+        // xảy ra, vì người dùng vừa thực hiện một hành động có chủ đích và cần
+        // được phản hồi." Nên DỪNG LẠI ở đây một nhịp: đổi màn thành lời xác
+        // nhận, rồi để chính họ bấm đi tiếp. Không dùng thanh thông báo trôi
+        // qua — nó bay mất trong lúc màn sau đang dựng.
+        setState(() => _disagreed = true);
+        return;
+      }
+      _goCommit();
     } catch (e, s) {
       logFlowError('confirmMeaning', e, s);
-      if (mounted) setState(() => _error = flowErrorMessage('Không lưu được. Thử lại.', e));
+      if (mounted) setState(() => _error = flowErrorMessage(tr('Không lưu được. Thử lại.', 'Could not save. Try again.'), e));
     } finally {
       if (mounted) setState(() => _busy = false);
     }
   }
+
+  // Hai Lớp v1.6 §V: MỌI phiên đều đi qua bước Lựa chọn, không riêng Decision và
+  // Growth như trước. Lý do đổi: từ v1.6 bước này không còn bắt gõ một bước nhỏ,
+  // mà đưa sẵn bốn lựa chọn để chạm (§VI) — chi phí gần như bằng không, trong
+  // khi "Reflection luôn mở ra một lựa chọn khác" là đúng với cả sáu khoảnh
+  // khắc.
+  //
+  // Bỏ qua vẫn được: HXA §3.8 giữ nguyên — Reflection kết thúc khi đủ ý nghĩa,
+  // không phải khi đủ bước.
+  void _goCommit() => context.push('/wr/flow/commit');
 
   /// Câu aha đang dùng cho phiên này. Không bao giờ rỗng ([ahaFor]).
   String _aha() => ahaFor(ref.read(wrEpisodeStoryProvider)?.ahaMessage);
@@ -145,18 +178,6 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
   /// Nội dung ghi vào `draft_meaning` — bản gộp hai vế.
   String _mergedMeaning() =>
       mergeInsight(stem: _controller.text, aha: _aha());
-
-  /// Chạm một gợi ý: ĐIỀN vào ô và đặt con trỏ ở cuối để viết tiếp ngay.
-  ///
-  /// Ghi đè chứ không nối thêm. Nối thêm thì chạm hai gợi ý ra một câu không ai
-  /// đọc được, mà người dùng lại không thấy chuyện đó xảy ra vì ô đang cuộn.
-  void _useSuggestion(String text) {
-    setState(() {
-      _controller.text = text;
-      _controller.selection =
-          TextSelection.collapsed(offset: _controller.text.length);
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -203,7 +224,7 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
   ) {
     return WrFlowScaffold(
       eyebrow: kInsightStemEyebrow,
-      title: 'Nếu chọn ra một bài học cho lúc này, bạn sẽ viết gì?',
+      title: tr('Nếu chọn ra một bài học cho lúc này, bạn sẽ viết gì?', 'If you picked one lesson for right now, what would you write?'),
       subtitle: kInsightStemNote,
       progress: reflectProgress(2),
       onBack: () => context.pop(),
@@ -233,7 +254,7 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const WrParagraph(
+                WrParagraph(
                   kInsightStemPrompt,
                   style: TextStyle(
                     fontSize: 16,
@@ -259,59 +280,22 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
             ),
           ),
 
-          // KHỐI GỢI Ý, nằm dưới ô chữ.
+          // DƯỚI Ô CHỮ KHÔNG CÒN GÌ NỮA — mục 4.3 và 4.4 (khách 09/09).
           //
-          // Chỗ này trước đây là khối "BẠN VỪA VIẾT" đọc lại câu hỏi và câu trả
-          // lời của bước Notice. Khách bỏ ở họp 26_1: "đoạn văn bị lặp và dư
-          // thừa … gây rối mắt và khó hiểu logic" — người dùng vừa trả lời câu
-          // đó hai màn trước, thấy lại nguyên văn thì tưởng mình bị hỏi lại.
-          const SizedBox(height: 24),
-          if (selfReflection != null && selfReflection.isNotEmpty) ...[
-            // §V bước Insight: câu Self Reflection để đào sâu, và nó phải được
-            // đọc TRƯỚC câu aha. Cấu trúc hai lớp đã bảo đảm điều đó, nên ở đây
-            // nó xuống dưới ô chữ được mà không mất thứ tự.
-            Container(
-              key: const Key('wr_meaning_self_reflection'),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 14,
-              ),
-              decoration: BoxDecoration(
-                color: WrColors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: WrColors.line),
-              ),
-              child: WrParagraph(
-                selfReflection,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontStyle: FontStyle.italic,
-                  color: WrColors.navy,
-                  height: 1.6,
-                ),
-              ),
-            ),
-            const SizedBox(height: 20),
-          ],
-          const Text(
-            kInsightSuggestionsLabel,
-            key: Key('wr_meaning_suggestions'),
-            style: TextStyle(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.55,
-              color: WrColors.muted,
-            ),
-          ),
-          const SizedBox(height: 12),
-          for (final s in kInsightStemSuggestions) ...[
-            _StemSuggestion(
-              key: Key('wr_meaning_suggestion_${kInsightStemSuggestions.indexOf(s)}'),
-              text: s,
-              onTap: () => _useSuggestion(s),
-            ),
-            const SizedBox(height: 9),
-          ],
+          // Chỗ này từng đứng ba khối liên tiếp, và mỗi lần khách xem lại là bỏ
+          // thêm một khối:
+          //   - "BẠN VỪA VIẾT" đọc lại câu bước Notice — bỏ ở họp 26_1 vì
+          //     "đoạn văn bị lặp và dư thừa … gây rối mắt".
+          //   - thẻ `selfReflection` "Bạn đang đo sự phát triển bằng điều gì?" —
+          //     bỏ ở mục 4.3.
+          //   - khối "CHƯA BIẾT VIẾT GÌ?" + 4 thẻ gợi ý — bỏ ở mục 4.4.
+          //
+          // Cả ba đều là chữ ĐẶT THÊM quanh một ô chữ đã có lời mời rõ ràng ở
+          // `subtitle`. Bước này chỉ cần một việc: viết, hoặc bỏ qua.
+          //
+          // `story.selfReflection` và `kInsightStemSuggestions` vẫn còn trong dữ
+          // liệu và trong mã — ngừng hiện, không xoá. Màn Đọc truyện
+          // (`wr_story_flow_screen.dart:316`) vẫn dùng `selfReflection`.
           if (_error != null) ...[
             const SizedBox(height: 16),
             Text(
@@ -331,22 +315,33 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
 
     return WrFlowScaffold(
       eyebrow: kInsightAhaEyebrow,
-      title: 'Thêm một cách tiếp cận khác để bạn tham khảo',
+      title: tr('Thêm một cách tiếp cận khác để bạn tham khảo', 'One more angle, in case it helps'),
       subtitle: kInsightAhaNote,
       progress: reflectProgress(2),
       // Back về Lớp 1, không rời màn: hai lớp là một bước, nên nút lùi phải lùi
       // trong bước trước đã.
-      onBack: () => setState(() => _showAha = false),
+      //
+      // Đã bấm Không đồng ý thì Episode đã chốt — lùi về Lớp 1 sửa lại chữ lúc
+      // này là mời người dùng làm một việc không còn tác dụng.
+      onBack: _disagreed ? null : () => setState(() => _showAha = false),
       onClose: _leave,
-      primaryLabel: 'Tiếp tục',
+      // Hai nút thay cho một nút "Tiếp tục" — §10, khách 10/09.
+      //
+      // Dùng đúng hai chỗ nút sẵn có của khung: "Đồng ý" là lối chính (nút đặc),
+      // "Không đồng ý" là lối phụ. Không phải vì lối phụ kém giá trị hơn, mà vì
+      // đồng ý là điều xảy ra ở phần lớn phiên, và hai nút đặc cạnh nhau thì
+      // không nút nào dẫn mắt.
+      primaryLabel: _disagreed ? tr('Tiếp tục', 'Continue') : kInsightAgreeLabel,
       busy: _busy,
-      onPrimary: _confirm,
+      onPrimary: _disagreed ? _goCommit : () => _confirm(agreed: true),
+      secondaryLabel: _disagreed ? null : kInsightDisagreeLabel,
+      onSecondary: _disagreed ? null : () => _confirm(agreed: false),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (yours != null) ...[
-            const Text(
-              'ĐIỀU BẠN VỪA VIẾT',
+            Text(
+              tr('ĐIỀU BẠN VỪA VIẾT', 'WHAT YOU JUST WROTE'),
               key: Key('wr_meaning_your_words_label'),
               style: TextStyle(
                 fontSize: 12.5,
@@ -377,10 +372,13 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
             ),
             const SizedBox(height: 22),
           ],
-          const Text(
-            'NHIỀU NGƯỜI KHÁC CŨNG TỪNG THẤY ĐIỀU NÀY',
-            key: Key('wr_meaning_normalizing_label'),
-            style: TextStyle(
+          // Mục 5.3 đổi nhãn này thành "Đúc kết phổ biến". Đợt 1 sửa đúng hằng
+          // `kInsightNormalizingLabel` nhưng màn lại ghi cứng chuỗi cũ, nên câu
+          // mới chưa bao giờ lên màn hình. Nay đọc từ hằng.
+          Text(
+            kInsightNormalizingLabel.toUpperCase(),
+            key: const Key('wr_meaning_normalizing_label'),
+            style: const TextStyle(
               fontSize: 12.5,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.55,
@@ -398,15 +396,39 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
             ),
             child: WrParagraph(
               _aha(),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16.5,
                 fontStyle: FontStyle.italic,
-                color: WrColors.navy,
+                // Đã từ chối thì câu này mờ đi: nó vẫn ở đó để đọc lại, nhưng
+                // không còn là điều sắp được lưu.
+                color: _disagreed ? WrColors.muted : WrColors.navy,
                 height: 1.65,
               ),
               textAlign: TextAlign.start,
             ),
           ),
+          // §10.2 — lời xác nhận sau khi bấm Không đồng ý.
+          if (_disagreed) ...[
+            const SizedBox(height: 18),
+            Container(
+              key: const Key('wr_meaning_disagree_ack'),
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+              decoration: BoxDecoration(
+                color: WrColors.navy.withValues(alpha: 0.04),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: WrParagraph(
+                kInsightDisagreeAck,
+                style: TextStyle(
+                  fontSize: 15.5,
+                  color: WrColors.navy,
+                  height: 1.6,
+                ),
+                textAlign: TextAlign.start,
+              ),
+            ),
+          ],
           if (_error != null) ...[
             const SizedBox(height: 16),
             Text(
@@ -449,42 +471,4 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
   }
 }
 
-/// Một vế viết tiếp có thể chạm để điền thẳng vào ô chữ (họp 26_1).
-///
-/// Dáng nhẹ hơn chip ở bước Notice — viền mảnh, không nền đặc: đây là gợi ý để
-/// mượn chữ, không phải một lựa chọn được ghi lại.
-class _StemSuggestion extends StatelessWidget {
-  const _StemSuggestion({super.key, required this.text, required this.onTap});
-
-  final String text;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-        decoration: BoxDecoration(
-          color: WrColors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: WrColors.line),
-        ),
-        child: WrParagraph(
-          // Hiện cả vế mở dở để người dùng đọc ra câu hoàn chỉnh mình sắp nhận,
-          // chứ không phải một mẩu chữ lơ lửng.
-          '$kInsightStemPrefix $text',
-          style: const TextStyle(
-            fontSize: 15,
-            fontStyle: FontStyle.italic,
-            color: WrColors.navy,
-            height: 1.5,
-          ),
-          textAlign: TextAlign.start,
-        ),
-      ),
-    );
-  }
-}
+// ĐÃ BỎ `_StemSuggestion` cùng khối "CHƯA BIẾT VIẾT GÌ?" (mục 4.4, khách 09/09).

@@ -14,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/data/wr_org_survey_repository.dart';
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/models/wr_org_survey.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
@@ -82,7 +83,7 @@ class _WrOrgSurveyFlowScreenState extends ConsumerState<WrOrgSurveyFlowScreen> {
       if (!mounted) return;
       setState(() {
         _submitting = false;
-        _error = 'Chưa gửi được câu trả lời. Bạn thử lại nhé.';
+        _error = tr('Chưa gửi được câu trả lời. Bạn thử lại nhé.', 'Could not send your answers. Please try again.');
       });
     }
   }
@@ -94,19 +95,19 @@ class _WrOrgSurveyFlowScreenState extends ConsumerState<WrOrgSurveyFlowScreen> {
       final leave = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: const Text('Thoát khảo sát?'),
-          content: const Text(
-            'Câu trả lời chưa được gửi đi. Thoát bây giờ là mất hết.',
+          title: Text(tr('Thoát khảo sát?', 'Leave the survey?')),
+          content: Text(
+            tr('Câu trả lời chưa được gửi đi. Thoát bây giờ là mất hết.', 'Your answers have not been sent. Leaving now loses them all.'),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
-              child: const Text('Ở lại'),
+              child: Text(tr('Ở lại', 'Stay')),
             ),
             TextButton(
               key: const Key('wr_org_survey_leave_confirm'),
               onPressed: () => Navigator.of(ctx).pop(true),
-              child: const Text('Thoát'),
+              child: Text(tr('Thoát', 'Leave')),
             ),
           ],
         ),
@@ -158,8 +159,8 @@ class _WrOrgSurveyFlowScreenState extends ConsumerState<WrOrgSurveyFlowScreen> {
               padding: const EdgeInsets.fromLTRB(22, 18, 22, 0),
               child: WrEyebrow(
                 isEnps
-                    ? 'CÂU $total / $total, CÂU CUỐI'
-                    : 'CÂU ${_index + 1} / $total',
+                    ? tr('CÂU $total / $total, CÂU CUỐI', 'QUESTION $total / $total, THE LAST ONE')
+                    : tr('CÂU ${_index + 1} / $total', 'QUESTION ${_index + 1} / $total'),
               ),
             ),
             Expanded(
@@ -177,11 +178,11 @@ class _WrOrgSurveyFlowScreenState extends ConsumerState<WrOrgSurveyFlowScreen> {
                     ),
             ),
             if (_submitting)
-              const Padding(
+              Padding(
                 padding: EdgeInsets.only(bottom: 20),
                 child: Center(
                   child: Text(
-                    'Đang gửi…',
+                    tr('Đang gửi…', 'Sending…'),
                     style: TextStyle(fontSize: 14, color: WrColors.muted),
                   ),
                 ),
@@ -204,7 +205,7 @@ class _WrOrgSurveyFlowScreenState extends ConsumerState<WrOrgSurveyFlowScreen> {
                     TextButton(
                       key: const Key('wr_org_survey_retry'),
                       onPressed: _submit,
-                      child: const Text('Gửi lại'),
+                      child: Text(tr('Gửi lại', 'Send again')),
                     ),
                   ],
                 ),
@@ -257,8 +258,8 @@ class _TopBar extends StatelessWidget {
           TextButton(
             key: const Key('wr_org_survey_close'),
             onPressed: onClose,
-            child: const Text(
-              'Đóng',
+            child: Text(
+              tr('Đóng', 'Close'),
               style: TextStyle(fontSize: 14, color: WrColors.muted),
             ),
           ),
@@ -370,9 +371,10 @@ class _EnpsStep extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(22, 22, 22, 22),
       children: [
-        const WrParagraph(
-          'Trên thang từ 0 đến 10, bạn sẽ giới thiệu nơi mình đang làm việc cho '
-          'bạn bè hoặc người quen ở mức nào?',
+        WrParagraph(
+          tr('Trên thang từ 0 đến 10, bạn sẽ giới thiệu nơi mình đang làm việc cho '
+          'bạn bè hoặc người quen ở mức nào?', 'On a scale of 0 to 10, how likely are you to recommend where you work '
+          'to a friend or someone you know?'),
           style: TextStyle(
             fontSize: 17,
             height: 1.55,
@@ -381,8 +383,8 @@ class _EnpsStep extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        const Text(
-          '0 là chắc chắn không, 10 là chắc chắn có.',
+        Text(
+          tr('0 là chắc chắn không, 10 là chắc chắn có.', '0 is definitely not, 10 is definitely yes.'),
           style: TextStyle(fontSize: 14, color: WrColors.muted),
         ),
         const SizedBox(height: 22),

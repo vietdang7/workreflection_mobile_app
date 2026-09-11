@@ -5,14 +5,15 @@
 //
 // Pure Dart, không phụ thuộc Flutter → test được trực tiếp.
 
+import '../l10n/wr_tr.dart';
 import '../models/wr_content.dart';
 
 // ---------------------------------------------------------------------------
 // Danh sách lựa chọn (3 bước thiết lập hồ sơ)
 // ---------------------------------------------------------------------------
 
-const kCareerRoleOptions = <String>[
-  'Chuyên viên',
+List<String> get kCareerRoleOptions => <String>[
+  tr('Chuyên viên', 'Individual contributor'),
   'Senior Specialist',
   'Team Leader',
   'Manager',
@@ -20,22 +21,22 @@ const kCareerRoleOptions = <String>[
   'Founder / Business Owner',
 ];
 
-const kCareerGoalOptions = <String>[
-  'Phát triển năng lực',
-  'Thăng tiến',
-  'Chuyển việc',
-  'Xây dựng đội ngũ',
-  'Cân bằng cuộc sống',
-  'Khởi nghiệp',
+List<String> get kCareerGoalOptions => <String>[
+  tr('Phát triển năng lực', 'Building capability'),
+  tr('Thăng tiến', 'Getting promoted'),
+  tr('Chuyển việc', 'Changing jobs'),
+  tr('Xây dựng đội ngũ', 'Building a team'),
+  tr('Cân bằng cuộc sống', 'Life balance'),
+  tr('Khởi nghiệp', 'Starting something of my own'),
 ];
 
-const kCareerChallengeOptions = <String>[
-  'Thiếu động lực',
-  'Áp lực công việc',
-  'Không rõ hướng đi',
-  'Mâu thuẫn trong công việc',
-  'Thiếu cơ hội phát triển',
-  'Khó cân bằng cuộc sống',
+List<String> get kCareerChallengeOptions => <String>[
+  tr('Thiếu động lực', 'Low motivation'),
+  tr('Áp lực công việc', 'Pressure at work'),
+  tr('Không rõ hướng đi', 'No clear direction'),
+  tr('Mâu thuẫn trong công việc', 'Conflict at work'),
+  tr('Thiếu cơ hội phát triển', 'No room to grow'),
+  tr('Khó cân bằng cuộc sống', 'Hard to keep balance'),
 ];
 
 /// DataSpec v3 Tầng 4 — Đợt 1: những chiều được ưu tiên hiển thị khi chưa
@@ -69,8 +70,8 @@ const kWaveOrderDimensions = <ScaDimension>[
 // Ánh xạ vai trò
 // ---------------------------------------------------------------------------
 
-const _roleToDims = <String, List<ScaDimension>>{
-  'Chuyên viên': [ScaDimension.c2, ScaDimension.a1, ScaDimension.s1],
+dynamic get _roleToDims => <String, List<ScaDimension>>{
+  tr('Chuyên viên', 'Individual contributor'): [ScaDimension.c2, ScaDimension.a1, ScaDimension.s1],
   'Senior Specialist': [ScaDimension.a1, ScaDimension.a3, ScaDimension.s1],
   'Team Leader': [ScaDimension.c1, ScaDimension.c2, ScaDimension.c3],
   'Manager': [ScaDimension.c1, ScaDimension.s2, ScaDimension.a4],
@@ -82,8 +83,8 @@ const _roleToDims = <String, List<ScaDimension>>{
   ],
 };
 
-const _roleToStages = <String, List<String>>{
-  'Chuyên viên': ['Early Career', 'Growth'],
+dynamic get _roleToStages => <String, List<String>>{
+  tr('Chuyên viên', 'Individual contributor'): ['Early Career', 'Growth'],
   'Senior Specialist': ['Growth', 'Mid Career'],
   'Team Leader': ['Mid Career', 'Leadership'],
   'Manager': ['Mid Career', 'Leadership'],

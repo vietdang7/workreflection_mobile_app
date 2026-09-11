@@ -16,6 +16,7 @@
 // đúng hợp đồng của API và sẽ chạy ngay khi khách nâng gói — lỗi hiện tại được
 // truyền nguyên văn lên UI chứ không nuốt, để không ai phải đoán vì sao im.
 
+import '../l10n/wr_tr.dart';
 import 'dart:async';
 import 'dart:convert';
 
@@ -131,7 +132,7 @@ class AusynclabTtsService implements TtsService {
         }),
       );
     } catch (_) {
-      throw const TtsException('Không kết nối được dịch vụ giọng đọc.');
+      throw TtsException(tr('Không kết nối được dịch vụ giọng đọc.', 'Could not reach the voice service.'));
     }
 
     if (res.statusCode != 200) {
@@ -141,7 +142,7 @@ class AusynclabTtsService implements TtsService {
     final body = _decode(res);
     final id = (body['result'] as Map?)?['audio_id'];
     if (id is! int) {
-      throw const TtsException('Dịch vụ giọng đọc trả về dữ liệu không hợp lệ.');
+      throw TtsException(tr('Dịch vụ giọng đọc trả về dữ liệu không hợp lệ.', 'The voice service returned invalid data.'));
     }
     return id;
   }
@@ -161,7 +162,7 @@ class AusynclabTtsService implements TtsService {
           headers: _headers,
         );
       } catch (_) {
-        throw const TtsException('Mất kết nối khi đang dựng bản thu.');
+        throw TtsException(tr('Mất kết nối khi đang dựng bản thu.', 'Connection lost while the recording was being made.'));
       }
 
       if (res.statusCode != 200) throw TtsException(_readableError(res));
@@ -176,15 +177,15 @@ class AusynclabTtsService implements TtsService {
         final state = (result['state'] ?? result['status'])?.toString();
         if (state != null &&
             (state.startsWith('FAIL') || state.startsWith('ERROR'))) {
-          throw const TtsException('Dựng bản thu không thành công.');
+          throw TtsException(tr('Dựng bản thu không thành công.', 'Could not build the recording.'));
         }
       }
 
       await Future<void>.delayed(pollInterval);
     }
 
-    throw const TtsException(
-      'Bản thu đang được dựng lâu hơn bình thường. Thử lại sau ít phút.',
+    throw TtsException(
+      tr('Bản thu đang được dựng lâu hơn bình thường. Thử lại sau ít phút.', 'The recording is taking longer than usual. Try again in a few minutes.'),
     );
   }
 
@@ -205,9 +206,9 @@ class AusynclabTtsService implements TtsService {
   String _readableError(http.Response res) {
     final detail = _decode(res)['detail'];
     if (detail is String && detail.isNotEmpty) {
-      return 'Giọng đọc AI chưa dùng được: $detail';
+      return tr('Giọng đọc AI chưa dùng được: $detail', 'AI voice is unavailable: $detail');
     }
-    return 'Giọng đọc AI chưa dùng được (mã ${res.statusCode}).';
+    return tr('Giọng đọc AI chưa dùng được (mã ${res.statusCode}).', 'AI voice is unavailable (code ${res.statusCode}).');
   }
 }
 

@@ -249,7 +249,7 @@ class _VideoReportScreenState extends ConsumerState<VideoReportScreen> {
               return IconButton(
                 iconSize: 44,
                 color: Colors.white,
-                icon: Icon(playing ? Icons.pause : Icons.play_arrow),
+                icon: Icon(playing ? Icons.pause_circle_outlined : Icons.play_circle_outlined),
                 onPressed: () =>
                     playing ? controller.pause() : controller.play(),
               );

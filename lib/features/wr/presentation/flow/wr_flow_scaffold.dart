@@ -6,6 +6,7 @@
 
 import 'package:flutter/material.dart';
 
+import '../../../../core/l10n/wr_tr.dart';
 import '../../../../core/theme/wr_colors.dart';
 import '../../../../core/widgets/wr_paragraph.dart';
 
@@ -292,9 +293,9 @@ class WrFlowGone extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return WrFlowScaffold(
-      title: 'Phiên phản tư đã khép lại.',
-      subtitle: 'Bạn có thể bắt đầu một lần nhìn lại mới bất cứ lúc nào.',
-      primaryLabel: 'Về trang chủ',
+      title: tr('Phiên phản tư đã khép lại.', 'This reflection session has closed.'),
+      subtitle: tr('Bạn có thể bắt đầu một lần nhìn lại mới bất cứ lúc nào.', 'You can start a new look back any time.'),
+      primaryLabel: tr('Về trang chủ', 'Back to home'),
       onPrimary: onHome,
       child: const SizedBox.shrink(),
     );
@@ -335,7 +336,7 @@ class WrBigChoiceTile extends StatelessWidget {
     const fg = WrColors.navy;
     final text = WrParagraph(
       label,
-      style: TextStyle(
+      style: const TextStyle(
         fontSize: 16,
         fontWeight: FontWeight.w600,
         height: 1.35,

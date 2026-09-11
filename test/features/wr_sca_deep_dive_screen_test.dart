@@ -127,7 +127,12 @@ void main() {
     view.resetPhysicalSize();
   });
 
-  testWidgets('Premium: đủ ba trụ, mỗi trụ đủ ba lớp', (tester) async {
+  // §8 đảo lại cấu trúc màn: bản trước in 3 trụ × 3 lớp = 9 khối văn bản, và
+  // tài liệu gọi thẳng đó là một bản báo cáo người dùng sẽ lướt qua. Nay ba trụ
+  // ở dạng RÚT GỌN — luôn thấy tên và mức, ba lớp chữ chỉ hiện khi bấm mở.
+  //
+  // Việc cần khoá không còn là "ba lớp luôn hiện" mà là "ba lớp vẫn TỚI ĐƯỢC".
+  testWidgets('Premium: ba trụ rút gọn, bấm mở là đủ ba lớp', (tester) async {
     final now = DateTime.now();
     await tester.pumpWidget(_wrap(
       premium: true,
@@ -145,10 +150,46 @@ void main() {
     for (final p in ['s', 'c', 'a']) {
       expect(find.byKey(Key('wr_sca_deep_dive_pillar_$p')), findsOneWidget);
       expect(find.byKey(Key('wr_sca_deep_dive_status_$p')), findsOneWidget);
+
+      // Chưa bấm thì hàng chỉ có tên và mức.
+      if (find.byKey(Key('wr_sca_deep_dive_trend_$p')).evaluate().isEmpty) {
+        await tester.tap(find.byKey(Key('wr_deep_pillar_toggle_$p')));
+        await tester.pumpAndSettle();
+      }
       expect(find.byKey(Key('wr_sca_deep_dive_trend_$p')), findsOneWidget);
       expect(find.byKey(Key('wr_sca_deep_dive_pattern_$p')), findsOneWidget);
     }
+    // Mở cả ba trụ xong thì màn dài hơn khung máy, và `ListView` không dựng
+    // phần chưa tới lượt — nên phải cuộn tới, không được đòi nó có sẵn. Bản
+    // trước lọt vì bộ nhãn cũ ngắn hơn: A7 đổi "Cần chú ý" thành "Ổn, còn dư
+    // địa" là đủ đẩy dòng chú thích ra khỏi vùng đã dựng.
+    await tester.scrollUntilVisible(
+      find.byKey(const Key('wr_sca_deep_dive_footnote')),
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     expect(find.byKey(const Key('wr_sca_deep_dive_footnote')), findsOneWidget);
+  });
+
+  testWidgets('Premium: trụ nói ở đoạn dẫn dắt được mở sẵn', (tester) async {
+    // Người vừa đọc xong một đoạn về trụ đó mà còn phải tự tìm rồi bấm mở lần
+    // nữa để xem chi tiết là bắt họ làm việc thừa.
+    final now = DateTime.now();
+    await tester.pumpWidget(_wrap(
+      premium: true,
+      history: [_check(at: now.subtract(const Duration(days: 1)), c: 4.5)],
+      episodes: [
+        for (var i = 0; i < 20; i++)
+          _ep('C2-01', now.subtract(Duration(days: i % 25))),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('wr_deep_lead')), findsOneWidget);
+    // C là trụ nổi trội → mở sẵn; hai trụ kia vẫn rút gọn.
+    expect(find.byKey(const Key('wr_sca_deep_dive_pattern_c')), findsOneWidget);
+    expect(find.byKey(const Key('wr_sca_deep_dive_pattern_s')), findsNothing);
+    expect(find.byKey(const Key('wr_sca_deep_dive_pattern_a')), findsNothing);
   });
 
   testWidgets('Premium: trụ nổi bật trong Reflection được chỉ ra',
@@ -184,6 +225,10 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
+    // Chưa nhìn lại lần nào nên không trụ nào nổi trội, cả ba đều rút gọn.
+    await tester.tap(find.byKey(const Key('wr_deep_pillar_toggle_s')));
+    await tester.pumpAndSettle();
+
     final trend = tester.widget<Text>(
       find.descendant(
         of: find.byKey(const Key('wr_sca_deep_dive_trend_s')),
@@ -197,8 +242,32 @@ void main() {
     );
   });
 
-  testWidgets('Premium nhưng chưa làm Self-Check: mời đi làm 15 câu',
+  testWidgets('Premium, đã nhìn lại đều mà chưa Self-Check: vẫn có xu hướng',
       (tester) async {
+    // §4 — tầng 2 KHÔNG cần Self-Check. Người vừa trả tiền mà gặp màn hình rỗng
+    // trong khi họ đã nhìn lại đều đặn hai tháng là đúng cái §6 gọi là phần dễ
+    // làm hỏng trải nghiệm nhất.
+    final now = DateTime.now();
+    await tester.pumpWidget(_wrap(
+      premium: true,
+      episodes: [
+        for (var i = 0; i < 12; i++)
+          _ep('C2-01', now.subtract(Duration(days: i))),
+        for (var i = 0; i < 12; i++)
+          _ep('S1-01', now.subtract(Duration(days: 31 + i))),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('wr_sca_deep_dive_empty')), findsNothing);
+    expect(find.byKey(const Key('wr_deep_trend')), findsOneWidget);
+    // Không có mức nào để bày thì phần "TỪNG TRỤ MỘT" vắng mặt, thay bằng lời
+    // mời làm 15 câu.
+    expect(find.byKey(const Key('wr_sca_deep_dive_pillar_s')), findsNothing);
+    expect(find.byKey(const Key('wr_deep_no_self_check_yet')), findsOneWidget);
+  });
+
+  testWidgets('Premium, chưa có gì cả: mời đi làm 15 câu', (tester) async {
     await tester.pumpWidget(_wrap(premium: true));
     await tester.pumpAndSettle();
 

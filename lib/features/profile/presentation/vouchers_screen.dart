@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/data/wr_repository.dart';
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
 import '../../../l10n/app_localizations.dart';
@@ -42,9 +43,9 @@ class _VouchersScreenState extends ConsumerState<VouchersScreen> {
   }
 
   String _formatDate(String? raw) {
-    if (raw == null) return 'Chưa có';
+    if (raw == null) return tr('Chưa có', 'None');
     final d = DateTime.tryParse(raw);
-    if (d == null) return 'Chưa có';
+    if (d == null) return tr('Chưa có', 'None');
     return '${d.day.toString().padLeft(2, '0')}/'
         '${d.month.toString().padLeft(2, '0')}/'
         '${d.year}';

@@ -25,7 +25,11 @@ abstract class WrMoodContentRepository {
   Future<Map<Mood, List<MoodContent>>> fetchAllGrouped();
 
   /// Tám câu trong Bể Lựa chọn (§VI), chỉ lấy dòng còn hiệu lực.
-  Future<List<String>> fetchChoicePool();
+  ///
+  /// Trả về [ChoicePoolLine] chứ không trả `List<String>` đã dịch: xem lý do ở
+  /// chính lớp đó — chốt ngôn ngữ ở đây là buộc phải gọi lại server mỗi lần
+  /// người dùng đổi ngôn ngữ.
+  Future<List<ChoicePoolLine>> fetchChoicePool();
 }
 
 // ---------------------------------------------------------------------------
@@ -81,12 +85,12 @@ class SupabaseWrMoodContentRepository implements WrMoodContentRepository {
   }
 
   @override
-  Future<List<String>> fetchChoicePool() async {
+  Future<List<ChoicePoolLine>> fetchChoicePool() async {
     final rows = await _client
         .from('wr_choice_pool')
-        .select('text')
+        .select('text, text_en')
         .eq('active', true)
         .order('id', ascending: true);
-    return rows.map((r) => r['text'] as String).toList();
+    return rows.map(ChoicePoolLine.fromJson).toList();
   }
 }

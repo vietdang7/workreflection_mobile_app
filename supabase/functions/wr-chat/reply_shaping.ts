@@ -7,6 +7,13 @@
 //
 // Nguyên tắc chung: prompt lo phần model làm ĐÚNG, tầng này lo phần model làm
 // SAI. Chỉ có một trong hai là không đủ.
+//
+// Việc 2 đã tách sang `_shared/strip_markdown.ts` ở mục 17.1 (khách 09/09):
+// `wr-narrative` và `wr-doc-analyze` cũng trả thẳng chữ model ra màn hình mà
+// không có lớp lọc nào. File này vẫn re-export để mọi chỗ đang import từ đây
+// không phải đổi.
+
+import { stripMarkdown } from '../_shared/strip_markdown.ts';
 
 /// Hai hành động app mở được từ một bong bóng trả lời.
 export type ChatAction = 'reflect' | 'calm';
@@ -196,41 +203,8 @@ export function shapeReply(raw: string): ShapedReply {
   return { text: text.trim(), action };
 }
 
-/// Lột ký hiệu Markdown, giữ nguyên chữ.
-///
-/// Bong bóng chat dựng bằng `Text` thuần nên mọi ký hiệu sẽ hiện nguyên hình.
-/// Prompt đã bảo model viết chữ thuần, nhưng nó quên rải rác — quan sát
-/// 2026-08-03: 1 trên 4 câu trả lời dài có `**...**`. Prompt lo phần thường
-/// xuyên, hàm này lo phần còn lại.
-export function stripMarkdown(input: string): string {
-  return input
-    // Đậm và nghiêng. Xử lý `***` trước `**` trước `*`, nếu không `**a**` sẽ bị
-    // luật một-sao ăn mất một lớp và chừa lại `*a*`.
-    .replace(/\*\*\*(.+?)\*\*\*/gs, '$1')
-    .replace(/\*\*(.+?)\*\*/gs, '$1')
-    .replace(/(?<![\w*])\*(?!\s)(.+?)(?<!\s)\*(?![\w*])/gs, '$1')
-    // CỐ Ý KHÔNG lột `__đậm__`.
-    //
-    // Test bắt được: `cột __init__ của tôi` bị biến thành `cột init của tôi`.
-    // Không có cách phân biệt `__đậm__` với một tên có gạch dưới ở hai đầu, vì
-    // xét về cú pháp chúng là một. Phải chọn bên nào sai thì ít hại hơn.
-    //
-    // Model này viết đậm bằng `**`, chưa lần nào thấy nó dùng `__`. Còn chữ
-    // người dùng dán vào thì hoàn toàn có thể chứa gạch dưới. Nên bỏ quy tắc
-    // này: giữ nguyên `__` chỉ để lọt vài dấu gạch dưới hiếm hoi, còn lột nó là
-    // âm thầm sửa chữ của người dùng.
-    // Tiêu đề `# `, `## `, `### ` ở đầu dòng.
-    .replace(/^\s{0,3}#{1,6}\s+/gm, '')
-    // Gạch đầu dòng `- `, `* `, `+ ` ở đầu dòng. Giữ lại chữ, bỏ dấu.
-    .replace(/^\s{0,3}[-*+]\s+/gm, '')
-    // Chữ trong dấu nháy ngược.
-    .replace(/`([^`]+)`/g, '$1')
-    // Liên kết `[chữ](đường-dẫn)` — giữ chữ, bỏ đường dẫn. Trợ lý không có lý
-    // do gì để phát đường dẫn ra ngoài.
-    .replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
-    // Ba dòng trống trở lên gộp còn một dòng trống.
-    .replace(/\n{3,}/g, '\n\n');
-}
+// `stripMarkdown` đã chuyển sang `_shared/strip_markdown.ts` — xem đầu file.
+export { stripMarkdown };
 
 /// Tiêu đề cuộc trò chuyện, lấy từ câu đầu tiên người dùng gõ.
 ///

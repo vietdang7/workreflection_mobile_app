@@ -30,6 +30,8 @@ import {
   AI_CONSENT_REQUIRED_MESSAGE,
   hasAiConsent,
 } from '../_shared/ai_consent.ts';
+import { languageRule, pick, readLocale, readLocaleHeader, WrLocale }
+  from '../_shared/locale.ts';
 import { buildExtractionPrompt, normalizeAnalysis } from './analysis.ts';
 import { extractDocxText } from './docx.ts';
 
@@ -73,7 +75,7 @@ const BUCKET = 'context-docs';
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers':
-    'authorization, x-client-info, apikey, content-type',
+    'authorization, x-client-info, apikey, content-type, x-wr-locale',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
 
@@ -154,20 +156,38 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: CORS_HEADERS });
   }
+  // Header đọc được ngay; thân yêu cầu mãi bước 2 mới đọc và chỉ đọc được một
+  // lần, nên bốn câu lỗi trước đó phải dựa vào header.
+  let locale: WrLocale = readLocaleHeader(req);
+
   if (req.method !== 'POST') {
-    return fail('Yêu cầu không hợp lệ.', 405);
+    return fail(pick(locale, 'Yêu cầu không hợp lệ.', 'Invalid request.'), 405);
   }
 
   const openRouterKey = Deno.env.get('OPENROUTER_API_KEY');
   if (!openRouterKey) {
     console.error('THIẾU secret OPENROUTER_API_KEY — hàm không thể chạy.');
-    return fail('Phân tích tài liệu đang tạm nghỉ. Bạn thử lại sau nhé.', 503);
+    return fail(
+      pick(
+        locale,
+        'Phân tích tài liệu đang tạm nghỉ. Bạn thử lại sau nhé.',
+        'Document analysis is taking a short break. Please try again later.',
+      ),
+      503,
+    );
   }
 
   // ── 1 · Xác thực ────────────────────────────────────────────────────────
   const authHeader = req.headers.get('Authorization') ?? '';
   if (!authHeader.startsWith('Bearer ')) {
-    return fail('Cần đăng nhập để phân tích tài liệu.', 401);
+    return fail(
+      pick(
+        locale,
+        'Cần đăng nhập để phân tích tài liệu.',
+        'Please sign in to analyse a document.',
+      ),
+      401,
+    );
   }
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
@@ -179,7 +199,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
   const { data: userData, error: authError } = await authClient.auth.getUser();
   const user = userData?.user;
   if (authError || !user) {
-    return fail('Phiên đăng nhập đã hết hạn. Bạn đăng nhập lại nhé.', 401);
+    return fail(
+      pick(
+        locale,
+        'Phiên đăng nhập đã hết hạn. Bạn đăng nhập lại nhé.',
+        'Your session has expired. Please sign in again.',
+      ),
+      401,
+    );
   }
 
   const db = createClient(
@@ -201,11 +228,17 @@ Deno.serve(async (req: Request): Promise<Response> => {
   let documentId: string;
   try {
     const body = await req.json();
+    locale = readLocale(body);
     documentId = String(body?.documentId ?? '').trim();
   } catch (_) {
-    return fail('Yêu cầu không hợp lệ.', 400);
+    return fail(pick(locale, 'Yêu cầu không hợp lệ.', 'Invalid request.'), 400);
   }
-  if (!documentId) return fail('Thiếu tài liệu cần phân tích.', 400);
+  if (!documentId) {
+    return fail(
+      pick(locale, 'Thiếu tài liệu cần phân tích.', 'No document to analyse.'),
+      400,
+    );
+  }
 
   // XÁC MINH QUYỀN SỞ HỮU. Service role bỏ qua RLS, nên thiếu `.eq('user_id')`
   // là ai cũng đọc được JD/CV của người khác chỉ bằng cách đoán một uuid.
@@ -215,7 +248,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
     .eq('id', documentId)
     .eq('user_id', user.id)
     .maybeSingle();
-  if (!doc) return fail('Không tìm thấy tài liệu này.', 404);
+  if (!doc) {
+    return fail(
+      pick(locale, 'Không tìm thấy tài liệu này.', 'That document was not found.'),
+      404,
+    );
+  }
 
   // ── 3 · Gói ─────────────────────────────────────────────────────────────
   //
@@ -246,7 +284,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   if (!isPremium && !ANALYSIS_FREE) {
     return fail(
-      'Đọc và phân tích tài liệu nằm trong gói Premium.',
+      pick(
+        locale,
+        'Đọc và phân tích tài liệu nằm trong gói Premium.',
+        'Reading and analysing documents is part of Premium.',
+      ),
       402,
       { needsPremium: true },
     );
@@ -264,11 +306,22 @@ Deno.serve(async (req: Request): Promise<Response> => {
       // Không đếm được thì CHẶN. Cho qua khi hỏng là biến một sự cố database
       // thành một cái vòi credit mở toang.
       console.error('Đếm hạn mức lỗi:', error.message);
-      return fail('Chưa phân tích được lúc này. Bạn thử lại sau nhé.', 503);
+      return fail(
+        pick(
+          locale,
+          'Chưa phân tích được lúc này. Bạn thử lại sau nhé.',
+          'That could not be analysed right now. Please try again later.',
+        ),
+        503,
+      );
     }
     if ((count ?? 0) >= DAILY_LIMIT) {
       return fail(
-        'Hôm nay bạn đã phân tích khá nhiều tài liệu. Mai mình tiếp tục nhé.',
+        pick(
+          locale,
+          'Hôm nay bạn đã phân tích khá nhiều tài liệu. Mai mình tiếp tục nhé.',
+          'You have analysed quite a few documents today. Let us pick this up tomorrow.',
+        ),
         429,
         { quotaExhausted: true },
       );
@@ -287,7 +340,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
       })
       .eq('id', documentId);
     return fail(
-      'Định dạng tài liệu này chưa đọc được. Bạn thử file PDF, Word (.docx) hoặc ảnh chụp nhé.',
+      pick(
+        locale,
+        'Định dạng tài liệu này chưa đọc được. Bạn thử file PDF, Word (.docx) hoặc ảnh chụp nhé.',
+        'That file format cannot be read yet. Try a PDF, a Word (.docx) file, or a photo.',
+      ),
       415,
     );
   }
@@ -315,11 +372,19 @@ Deno.serve(async (req: Request): Promise<Response> => {
     if (error || !blob) throw error ?? new Error('file rỗng');
     fileBytes = new Uint8Array(await blob.arrayBuffer());
     if (fileBytes.byteLength === 0) {
-      return await failAndMark('Tài liệu này rỗng.', 'file rỗng', 422);
+      return await failAndMark(pick(
+        locale,
+        'Tài liệu này rỗng.',
+        'This document is empty.',
+      ), 'file rỗng', 422);
     }
     if (fileBytes.byteLength > MAX_FILE_BYTES) {
       return await failAndMark(
+        pick(
+        locale,
         'Tài liệu này nặng quá. Bạn thử bản nhẹ hơn nhé.',
+        'This file is too large. Try a smaller version.',
+      ),
         `file ${fileBytes.byteLength} byte, quá ${MAX_FILE_BYTES}`,
         413,
       );
@@ -327,7 +392,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
   } catch (e) {
     console.error(`Tải file từ Storage lỗi: ${e}`);
     return await failAndMark(
-      'Chưa mở được tài liệu này. Bạn thử tải lên lại nhé.',
+      pick(
+        locale,
+        'Chưa mở được tài liệu này. Bạn thử tải lên lại nhé.',
+        'This document could not be opened. Try uploading it again.',
+      ),
       'không tải được file từ Storage',
       502,
     );
@@ -340,7 +409,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
     docxText = await extractDocxText(fileBytes);
     if (!docxText || docxText.length < MIN_TEXT_CHARS) {
       return await failAndMark(
+        pick(
+        locale,
         'Chưa đọc được chữ trong file Word này. Bạn thử lưu lại thành PDF rồi tải lên nhé.',
+        'The text in this Word file could not be read. Try saving it as a PDF and uploading that.',
+      ),
         docxText === null
           ? 'không mở được docx'
           : `docx chỉ có ${docxText.length} ký tự`,
@@ -351,7 +424,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   // ── 6 · Gọi model ───────────────────────────────────────────────────────
   const isPdf = mime === 'application/pdf';
-  const prompt = buildExtractionPrompt(String(doc.doc_type ?? 'other'));
+  const prompt = buildExtractionPrompt(String(doc.doc_type ?? 'other')) +
+    languageRule(locale);
   const content = isDocx
     ? [{ type: 'text', text: `${prompt}\n\nNỘI DUNG TÀI LIỆU:\n${docxText}` }]
     : [
@@ -414,7 +488,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
       const detail = await res.text();
       console.error(`OpenRouter ${res.status}: ${detail.slice(0, 500)}`);
       return await failAndMark(
+        pick(
+        locale,
         'Chưa đọc được tài liệu này. Bạn thử lại sau nhé.',
+        'This document could not be read. Please try again later.',
+      ),
         `nhà cung cấp trả ${res.status}`,
         502,
       );
@@ -423,7 +501,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
     raw = String(payload?.choices?.[0]?.message?.content ?? '').trim();
     if (!raw) {
       return await failAndMark(
+        pick(
+        locale,
         'Chưa đọc được tài liệu này. Bạn thử lại sau nhé.',
+        'This document could not be read. Please try again later.',
+      ),
         'model trả về rỗng',
         502,
       );
@@ -434,7 +516,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return await failAndMark(
       aborted
         ? 'Tài liệu này đọc lâu quá. Bạn thử lại giúp mình nhé.'
-        : 'Chưa đọc được tài liệu này. Bạn thử lại sau nhé.',
+        : pick(
+        locale,
+        'Chưa đọc được tài liệu này. Bạn thử lại sau nhé.',
+        'This document could not be read. Please try again later.',
+      ),
       aborted ? 'quá hạn chờ' : 'lỗi mạng tới nhà cung cấp',
       502,
     );
@@ -445,7 +531,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (!parsed) {
     console.error('Không bóc được JSON:', raw.slice(0, 400));
     return await failAndMark(
-      'Chưa đọc được tài liệu này. Bạn thử lại sau nhé.',
+      pick(
+        locale,
+        'Chưa đọc được tài liệu này. Bạn thử lại sau nhé.',
+        'This document could not be read. Please try again later.',
+      ),
       'model trả về không phải JSON',
       502,
     );
@@ -458,7 +548,11 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // rồi để mọi tính năng phía sau nói chuyện trên không khí.
   if (extractedText.trim().length < MIN_TEXT_CHARS) {
     return await failAndMark(
-      'Mình chưa đọc được chữ trong tài liệu này. Bạn thử chụp rõ hơn nhé.',
+      pick(
+        locale,
+        'Mình chưa đọc được chữ trong tài liệu này. Bạn thử chụp rõ hơn nhé.',
+        'I could not read the text in this document. Try a sharper photo.',
+      ),
       'không trích được chữ',
       422,
     );

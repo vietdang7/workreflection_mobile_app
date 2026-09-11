@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/theme/wr_colors.dart';
 
 /// Story tab screen — shows CTA to launch the full WrStoryFlowScreen.
@@ -35,14 +36,14 @@ class WrStoryScreen extends StatelessWidget {
                 ),
               ),
             ),
-            const SliverToBoxAdapter(
+            SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.fromLTRB(22, 12, 22, 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Trải nghiệm của tôi',
+                      tr('Trải nghiệm của tôi', 'My experience'),
                       style: TextStyle(
                         fontSize: 11.5,
                         color: WrColors.text3,
@@ -51,7 +52,7 @@ class WrStoryScreen extends StatelessWidget {
                     ),
                     SizedBox(height: 3),
                     Text(
-                      'Story của tôi',
+                      tr('Story của tôi', 'My Story'),
                       style: TextStyle(
                         fontSize: 21,
                         fontWeight: FontWeight.w700,
@@ -60,7 +61,7 @@ class WrStoryScreen extends StatelessWidget {
                     ),
                     SizedBox(height: 4),
                     Text(
-                      'Câu chuyện từ Career Memory của bạn sẽ hiện ra tại đây.',
+                      tr('Câu chuyện từ Career Memory của bạn sẽ hiện ra tại đây.', 'Stories from your Career Memory will appear here.'),
                       style: TextStyle(
                         fontSize: 14.5,
                         color: WrColors.muted,
@@ -77,8 +78,8 @@ class WrStoryScreen extends StatelessWidget {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Text(
-                      'Đọc câu chuyện phù hợp với bạn lúc này.',
+                    Text(
+                      tr('Đọc câu chuyện phù hợp với bạn lúc này.', 'Read a story that fits where you are right now.'),
                       style: TextStyle(
                         fontSize: 14.5,
                         color: WrColors.muted,
@@ -97,8 +98,8 @@ class WrStoryScreen extends StatelessWidget {
                         ),
                         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
                       ),
-                      child: const Text(
-                        'Bắt đầu đọc',
+                      child: Text(
+                        tr('Bắt đầu đọc', 'Start reading'),
                         style: TextStyle(fontWeight: FontWeight.w600),
                       ),
                     ),

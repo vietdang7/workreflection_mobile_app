@@ -714,11 +714,11 @@ void main() {
         _wrap(const WrTraChieuScreen(), workshops: workshops),
       );
 
-      expect(find.text('Ba luật của mọi buổi'), findsOneWidget);
+      expect(find.text('3 nguyên tắc cốt lõi'), findsOneWidget);
       for (final rule in kTraChieuRules) {
         expect(find.text(rule), findsOneWidget);
       }
-      expect(find.text('Vì sao lại là Trà Chiều'), findsOneWidget);
+      expect(find.text('Tinh thần của buổi Trà Chiều'), findsOneWidget);
     });
 
     testWidgets('chưa mở buổi nào thì nói thẳng, không dựng thẻ rỗng', (
@@ -813,6 +813,9 @@ void main() {
       // Ngày phải nằm ở tương lai so với lúc chạy: màn lịch chỉ hiện buổi chưa
       // diễn ra (`upcomingTraChieu`). Ghi cứng một ngày cụ thể là hẹn giờ cho
       // test hỏng — bản trước ghi 03/09/2026 và hỏng đúng vào 08/09/2026.
+      //
+      // Nhãn dựng lại bằng tay chứ không gọi `traChieuWhenLabel`: gọi hàm của
+      // sản phẩm để kiểm chính nó thì luôn khớp, kể cả khi nó sai.
       final date = DateTime.now().add(const Duration(days: 30));
       const weekdays = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
       final whenLabel = '${weekdays[date.weekday - 1]} '
@@ -1315,7 +1318,7 @@ void main() {
       await tester.tap(find.byKey(const Key('wr_growth_theme_tra_chieu')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Ba luật của mọi buổi'), findsOneWidget);
+      expect(find.text('3 nguyên tắc cốt lõi'), findsOneWidget);
       expect(intel.enrollThemeCalls, isEmpty);
     });
   });
@@ -1379,7 +1382,7 @@ void main() {
       await tester.tap(find.byKey(const Key('wr_growth_opportunity')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Ba luật của mọi buổi'), findsOneWidget);
+      expect(find.text('3 nguyên tắc cốt lõi'), findsOneWidget);
     });
 
     // Khách 2026-07-30: "tôi không còn thấy cái mục giao diện trà chiều đâu
@@ -1391,7 +1394,7 @@ void main() {
 
       expect(find.byKey(const Key('wr_growth_opportunity')), findsOneWidget);
       expect(find.text('Offline · $kTraChieuLabel'), findsOneWidget);
-      expect(find.text('Chưa có buổi nào được mở.'), findsOneWidget);
+      expect(find.text('Hiện chưa có lịch sự kiện mới.'), findsOneWidget);
       expect(find.text(kTraChieuFormatLabel), findsOneWidget);
       expect(find.text('Xem chi tiết'), findsOneWidget);
     });
@@ -1401,7 +1404,7 @@ void main() {
       await tester.tap(find.byKey(const Key('wr_growth_opportunity')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Ba luật của mọi buổi'), findsOneWidget);
+      expect(find.text('3 nguyên tắc cốt lõi'), findsOneWidget);
       expect(find.byKey(const Key('wr_tra_chieu_empty')), findsOneWidget);
     });
 
@@ -1421,7 +1424,7 @@ void main() {
       );
 
       expect(find.textContaining('Buổi tháng trước'), findsNothing);
-      expect(find.text('Chưa có buổi nào được mở.'), findsOneWidget);
+      expect(find.text('Hiện chưa có lịch sự kiện mới.'), findsOneWidget);
     });
   });
 

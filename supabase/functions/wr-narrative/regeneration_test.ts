@@ -138,3 +138,56 @@ Deno.test('vnDate đổi sang ngày theo giờ Việt Nam', () => {
   // dùng đang sống, không theo UTC.
   assertEquals(vnDate('2026-08-19T18:00:00Z'), '2026-08-20');
 });
+
+// ---------------------------------------------------------------------------
+// Đổi ngôn ngữ
+// ---------------------------------------------------------------------------
+//
+// Khách báo 10/09: bật tiếng Anh nhưng thẻ "Nhìn lại dòng thời gian" vẫn là một
+// đoạn tiếng Việt. Nguyên nhân là đoạn đã sinh ra trước khi hàm biết tới ngôn
+// ngữ, mà luật kể lại chỉ đếm số lần nhìn lại MỚI — nên nó còn hỏng thêm ba lần
+// nhìn lại nữa mới tự chữa.
+
+Deno.test('đổi ngôn ngữ thì kể lại ngay, không chờ đủ lần mới', () => {
+  // Không có Episode nào mới sau lần kể trước: theo luật cũ là 'up_to_date'.
+  const episodes = series(MIN_EPISODES, '2026-08-10T10:00:00Z');
+  const previous = { ...narrative('2026-08-20T10:00:00Z'), locale: 'vi' };
+
+  assertEquals(decideRegeneration(episodes, previous, 'vi').regenerate, false);
+  assertEquals(decideRegeneration(episodes, previous, 'en').regenerate, true);
+});
+
+Deno.test('dòng cũ THIẾU cột locale được coi là tiếng Việt', () => {
+  // Dòng ghi trước migration `narrative_locale` không có cột này. Coi là "khớp
+  // mọi ngôn ngữ" thì đúng người đang gặp lỗi lại không bao giờ được chữa.
+  const episodes = series(MIN_EPISODES, '2026-08-10T10:00:00Z');
+  const previous = narrative('2026-08-20T10:00:00Z'); // không có locale
+
+  assertEquals(decideRegeneration(episodes, previous, 'vi').regenerate, false);
+  assertEquals(decideRegeneration(episodes, previous, 'en').regenerate, true);
+});
+
+Deno.test('cùng ngôn ngữ thì vẫn phải đủ số lần mới', () => {
+  // Đổi ngôn ngữ là ngoại lệ, không phải cái cớ bỏ luôn ngưỡng: bỏ ngưỡng là
+  // mỗi lần mở tab một lượt gọi model.
+  const fresh = series(MIN_NEW_EPISODES - 1, '2026-08-25T10:00:00Z');
+  const old = series(MIN_EPISODES, '2026-08-10T10:00:00Z');
+  const previous = { ...narrative('2026-08-20T10:00:00Z'), locale: 'en' };
+
+  const d = decideRegeneration([...fresh, ...old], previous, 'en');
+  assertEquals(d.regenerate, false);
+  if (d.regenerate) return;
+  assertEquals(d.reason, 'up_to_date');
+});
+
+Deno.test('chưa đủ dữ liệu thì đổi ngôn ngữ cũng không kể', () => {
+  // Ngưỡng MIN_EPISODES đứng trước mọi thứ: chưa có gì để kể thì đổi ngôn ngữ
+  // cũng không sinh ra nguyên liệu.
+  const episodes = series(MIN_EPISODES - 1, '2026-08-10T10:00:00Z');
+  const previous = { ...narrative('2026-08-20T10:00:00Z'), locale: 'vi' };
+
+  const d = decideRegeneration(episodes, previous, 'en');
+  assertEquals(d.regenerate, false);
+  if (d.regenerate) return;
+  assertEquals(d.reason, 'not_enough_data');
+});

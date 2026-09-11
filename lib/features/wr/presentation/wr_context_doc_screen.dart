@@ -19,6 +19,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/data/wr_intelligence_repository.dart';
 import '../../../core/data/wr_repository.dart';
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -28,10 +29,10 @@ import '../../../core/widgets/wr_premium_lock.dart';
 import '../wr_providers.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 
-const _kDocTypes = <(String, String)>[
-  ('jd', 'Mô tả công việc (JD)'),
-  ('cv', 'Hồ sơ năng lực (CV)'),
-  ('other', 'Tài liệu khác'),
+List<(String, String)> get _kDocTypes => <(String, String)>[
+  ('jd', tr('Mô tả công việc (JD)', 'Job description (JD)')),
+  ('cv', tr('Hồ sơ năng lực (CV)', 'CV / résumé')),
+  ('other', tr('Tài liệu khác', 'Other document')),
 ];
 
 String docTypeLabel(String? type) =>
@@ -90,7 +91,7 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
         return;
       }
       final userId = ref.read(currentUserIdProvider);
-      if (userId == null) throw StateError('chưa đăng nhập');
+      if (userId == null) throw StateError(tr('chưa đăng nhập', 'not signed in'));
 
       final path = await ref
           .read(wrRepositoryProvider)
@@ -116,7 +117,7 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
       }
     } catch (_) {
       if (mounted) {
-        setState(() => _errorMsg = 'Chưa tải lên được. Bạn thử lại giúp nhé.');
+        setState(() => _errorMsg = tr('Chưa tải lên được. Bạn thử lại giúp nhé.', 'Upload failed. Please try again.'));
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -150,7 +151,7 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
       ref.invalidate(wrContextDocumentsProvider);
     } catch (_) {
       if (mounted) {
-        setState(() => _errorMsg = 'Chưa đọc được tài liệu này. Bạn thử lại nhé.');
+        setState(() => _errorMsg = tr('Chưa đọc được tài liệu này. Bạn thử lại nhé.', 'Could not read this document. Please try again.'));
       }
     } finally {
       if (mounted) setState(() => _analyzingId = null);
@@ -161,20 +162,21 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Xoá tài liệu này?'),
+        title: Text(tr('Xoá tài liệu này?', 'Delete this document?')),
         content: Text(
-          'Nội dung đã đọc từ ${docTypeLabel(doc.docType).toLowerCase()} cũng '
-          'sẽ không còn được dùng cho gợi ý nữa.',
+          tr('Nội dung đã đọc từ ${docTypeLabel(doc.docType).toLowerCase()} cũng '
+          'sẽ không còn được dùng cho gợi ý nữa.', 'What was read from your ${docTypeLabel(doc.docType).toLowerCase()} '
+          'will no longer be used for prompts either.'),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: const Text('Giữ lại'),
+            child: Text(tr('Giữ lại', 'Keep it')),
           ),
           TextButton(
             key: const Key('wr_context_doc_delete_confirm'),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: const Text('Xoá'),
+            child: Text(tr('Xoá', 'Delete')),
           ),
         ],
       ),
@@ -220,8 +222,8 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
         backgroundColor: WrColors.pageBg,
         elevation: 0,
         foregroundColor: WrColors.dark,
-        title: const Text(
-          'Tải lên JD hoặc CV của bạn',
+        title: Text(
+          tr('Tải lên JD hoặc CV của bạn', 'Upload your JD or CV'),
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ),
       ),
@@ -229,10 +231,12 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(22, 8, 22, 32),
           children: [
-            const WrParagraph(
-              'Thêm JD hoặc CV để WorkReflection đọc và hiểu công việc của bạn. '
+            WrParagraph(
+              tr('Thêm JD hoặc CV để WorkReflection đọc và hiểu công việc của bạn. '
               'Nội dung đọc được sẽ dùng cho phần trò chuyện, gợi ý chủ đề thực '
-              'hành và đối chiếu kỹ năng.',
+              'hành và đối chiếu kỹ năng.', 'Add a JD or CV so WorkReflection can read and understand your work. '
+              'What it reads feeds the chat, the practice theme suggestions and '
+              'the skills comparison.'),
               style: TextStyle(
                 fontSize: 14.5,
                 height: 1.65,
@@ -241,7 +245,7 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
             ),
             const SizedBox(height: 18),
 
-            const WrEyebrow('TÀI LIỆU CỦA BẠN'),
+            WrEyebrow(tr('TÀI LIỆU CỦA BẠN', 'YOUR DOCUMENTS')),
             const SizedBox(height: 10),
 
             if (docs.isEmpty)
@@ -282,7 +286,7 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
                   elevation: 0,
                 ),
                 child: Text(
-                  _busy ? 'Đang tải lên…' : 'Thêm tài liệu',
+                  _busy ? tr('Đang tải lên…', 'Uploading…') : tr('Thêm tài liệu', 'Add a document'),
                   style: const TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w600,
@@ -291,31 +295,34 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Nhận file PDF, Word (.docx) hoặc ảnh chụp (PNG, JPG, WEBP).',
+            Text(
+              tr('Nhận file PDF, Word (.docx) hoặc ảnh chụp (PNG, JPG, WEBP).', 'Takes PDF, Word (.docx) or photos (PNG, JPG, WEBP).'),
               style: TextStyle(fontSize: 13.5, height: 1.55, color: WrColors.muted),
             ),
 
             if (!canUpload && maxDocs != null) ...[
               const SizedBox(height: 10),
               Text(
-                'Bản miễn phí lưu được $maxDocs tài liệu. Nâng cấp để thêm '
-                'không giới hạn.',
+                tr('Bản miễn phí lưu được $maxDocs tài liệu. Nâng cấp để thêm '
+                'không giới hạn.', 'The free version stores $maxDocs documents. Upgrade for '
+                'unlimited.'),
                 style: const TextStyle(fontSize: 13.5, color: WrColors.muted),
               ),
             ],
 
             const SizedBox(height: 26),
-            const WrEyebrow('TRỢ LÝ ĐỌC TÀI LIỆU'),
+            WrEyebrow(tr('TRỢ LÝ ĐỌC TÀI LIỆU', 'DOCUMENT READER')),
             const SizedBox(height: 10),
             if (!canAnalyze)
-              const WrPremiumLock(
+              WrPremiumLock(
                 key: Key('wr_context_doc_lock'),
                 description:
-                    'Bản đầy đủ đọc kỹ tài liệu của bạn, rút ra trách nhiệm và '
+                    tr('Bản đầy đủ đọc kỹ tài liệu của bạn, rút ra trách nhiệm và '
                     'yêu cầu của vai trò, rồi chỉ ra khoảng cách giữa những gì '
-                    'công việc đòi hỏi và những gì bạn đang có.',
-                ctaLabel: 'Mở phân tích tài liệu',
+                    'công việc đòi hỏi và những gì bạn đang có.', 'The full version reads your document closely, pulls out the '
+                    'responsibilities and requirements of the role, then shows '
+                    'the gap between what the job asks and what you have.'),
+                ctaLabel: tr('Mở phân tích tài liệu', 'Open document analysis'),
                 paywallTrigger: 'context_doc',
               )
             else
@@ -336,10 +343,10 @@ class _WhatAiDoes extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const items = [
-      'Trợ lý trò chuyện đọc được nội dung tài liệu và bàn cùng bạn về nó.',
-      'Gợi ý chủ đề thực hành bám theo điều công việc của bạn đòi hỏi.',
-      'Đối chiếu kỹ năng bạn đã hình thành với những gì vai trò đó cần.',
+    final items = [
+      tr('Trợ lý trò chuyện đọc được nội dung tài liệu và bàn cùng bạn về nó.', 'The chat assistant can read your document and talk it through with you.'),
+      tr('Gợi ý chủ đề thực hành bám theo điều công việc của bạn đòi hỏi.', 'Practice themes suggested around what your job actually asks for.'),
+      tr('Đối chiếu kỹ năng bạn đã hình thành với những gì vai trò đó cần.', 'Your formed skills set against what the role needs.'),
     ];
     return Column(
       key: const Key('wr_context_doc_what_ai_does'),
@@ -386,8 +393,8 @@ class _EmptyDocs extends StatelessWidget {
           style: BorderStyle.solid,
         ),
       ),
-      child: const Text(
-        'Chưa có tài liệu nào.',
+      child: Text(
+        tr('Chưa có tài liệu nào.', 'No documents yet.'),
         style: TextStyle(fontSize: 14.5, color: WrColors.muted),
       ),
     );
@@ -459,7 +466,7 @@ class _DocRow extends StatelessWidget {
                 icon: const Icon(Icons.close, size: 17),
                 color: WrColors.muted,
                 onPressed: onDelete,
-                tooltip: 'Xoá tài liệu',
+                tooltip: tr('Xoá tài liệu', 'Delete document'),
               ),
             ],
           ),
@@ -497,14 +504,14 @@ class _DocRow extends StatelessWidget {
               ),
             ],
             if (a.responsibilities.isNotEmpty)
-              _MiniList(label: 'Trách nhiệm chính', items: a.responsibilities),
+              _MiniList(label: tr('Trách nhiệm chính', 'Main responsibilities'), items: a.responsibilities),
             if (a.requirements.isNotEmpty)
-              _MiniList(label: 'Yêu cầu', items: a.requirements),
+              _MiniList(label: tr('Yêu cầu', 'Requirements'), items: a.requirements),
             if (a.skills.isNotEmpty)
-              _MiniList(label: 'Kỹ năng được nêu', items: a.skills),
+              _MiniList(label: tr('Kỹ năng được nêu', 'Skills mentioned'), items: a.skills),
             const SizedBox(height: 10),
             _TextButtonRow(
-              label: 'Đọc lại tài liệu này',
+              label: tr('Đọc lại tài liệu này', 'Read this document again'),
               keyValue: 'wr_context_doc_reanalyze_${doc.id ?? ''}',
               onTap: canAnalyze ? onAnalyze : null,
             ),
@@ -512,13 +519,13 @@ class _DocRow extends StatelessWidget {
 
           if (doc.analysisStatus == DocAnalysisStatus.failed) ...[
             const SizedBox(height: 10),
-            const Text(
-              'Chưa đọc được tài liệu này.',
+            Text(
+              tr('Chưa đọc được tài liệu này.', 'Could not read this document.'),
               style: TextStyle(fontSize: 14, color: WrColors.coral),
             ),
             const SizedBox(height: 6),
             _TextButtonRow(
-              label: 'Thử đọc lại',
+              label: tr('Thử đọc lại', 'Try reading again'),
               keyValue: 'wr_context_doc_retry_${doc.id ?? ''}',
               onTap: canAnalyze ? onAnalyze : null,
             ),
@@ -527,7 +534,7 @@ class _DocRow extends StatelessWidget {
           if (doc.analysisStatus == DocAnalysisStatus.pending && !isAnalyzing) ...[
             const SizedBox(height: 10),
             _TextButtonRow(
-              label: canAnalyze ? 'Đọc tài liệu này' : 'Đọc tài liệu (Premium)',
+              label: canAnalyze ? tr('Đọc tài liệu này', 'Read this document') : tr('Đọc tài liệu (Premium)', 'Read document (Premium)'),
               keyValue: 'wr_context_doc_analyze_${doc.id ?? ''}',
               onTap: canAnalyze ? onAnalyze : null,
             ),
@@ -576,7 +583,7 @@ class _MiniList extends StatelessWidget {
             ),
           if (items.length > 4)
             Text(
-              '… và ${items.length - 4} mục nữa',
+              tr('… và ${items.length - 4} mục nữa', '… and ${items.length - 4} more'),
               style: const TextStyle(fontSize: 13, color: WrColors.muted),
             ),
         ],
@@ -633,7 +640,7 @@ class _StatusChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (isAnalyzing || status == DocAnalysisStatus.processing) {
-      return const Row(
+      return Row(
         children: [
           SizedBox(
             width: 12,
@@ -642,7 +649,7 @@ class _StatusChip extends StatelessWidget {
           ),
           SizedBox(width: 7),
           Text(
-            'Đang đọc',
+            tr('Đang đọc', 'Reading'),
             style: TextStyle(fontSize: 13, color: WrColors.muted),
           ),
         ],
@@ -650,9 +657,9 @@ class _StatusChip extends StatelessWidget {
     }
 
     final (label, color) = switch (status) {
-      DocAnalysisStatus.ready => ('Đã đọc', WrColors.pillTealText),
-      DocAnalysisStatus.failed => ('Chưa đọc được', WrColors.coral),
-      _ => ('Chưa đọc', WrColors.muted),
+      DocAnalysisStatus.ready => (tr('Đã đọc', 'Read'), WrColors.pillTealText),
+      DocAnalysisStatus.failed => (tr('Chưa đọc được', 'Could not read'), WrColors.coral),
+      _ => (tr('Chưa đọc', 'Not read yet'), WrColors.muted),
     };
 
     return Container(

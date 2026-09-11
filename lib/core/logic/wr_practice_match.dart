@@ -11,6 +11,7 @@
 // Giờ khớp theo đúng CHIỀU của tình huống người dùng gặp nhiều nhất, và trả về
 // luôn mã tình huống đó để màn hình nói được vì sao lại là chủ đề này.
 
+import '../l10n/wr_tr.dart';
 import '../models/wr_content.dart';
 import '../models/wr_intelligence.dart';
 import 'wr_dominant_need.dart';
@@ -111,18 +112,18 @@ String? practiceSuggestionReason(
       if (text == null) return null;
       final n = suggestion.reasonCount;
       return n > 1
-          ? 'Vì bạn đã gặp "$text" $n lần.'
-          : 'Vì bạn đã gặp "$text".';
+          ? tr('Vì bạn đã gặp "$text" $n lần.', 'Because you have met "$text" $n times.')
+          : tr('Vì bạn đã gặp "$text".', 'Because you have met "$text".');
     case PracticeMatchKind.jobContext:
       // Khớp từ JD/CV đã đọc hoặc mô tả vai trò họ tự viết. Nói "công việc bạn
       // mô tả" chứ không nói "JD của bạn": người dùng có thể chỉ mới gõ vài
       // dòng chứ chưa tải tài liệu nào.
-      return 'Vì công việc bạn mô tả nghiêng nhiều về phần này.';
+      return tr('Vì công việc bạn mô tả nghiêng nhiều về phần này.', 'Because the job you describe leans heavily this way.');
     case PracticeMatchKind.pillar:
       // Chưa có tình huống nào để chỉ ra — mới chỉ Self-Check chẳng hạn.
       return need == null
           ? null
-          : 'Vì bạn đang tìm kiếm ${needSeekingLabel(need)}.';
+          : tr('Vì bạn đang tìm kiếm ${needSeekingLabel(need)}.', 'Because you are looking for ${needSeekingLabel(need)}.');
     case PracticeMatchKind.fallback:
     case null:
       return null;

@@ -16,6 +16,7 @@
 // lớn mô tả xoay quanh mối quan hệ trong công việc" thì đúng với cái đang có.
 // Đây cũng là mức mà Cơ hội phát triển đang dùng.
 
+import '../l10n/wr_tr.dart';
 import '../models/wr_content.dart';
 import '../models/wr_intelligence.dart';
 import 'wr_seniority.dart';
@@ -23,10 +24,10 @@ import 'wr_skill_formation.dart';
 
 /// Ba trụ, tên hiển thị lấy đúng bộ chữ của Self-Check để người dùng không gặp
 /// hai cách gọi cho cùng một thứ.
-const Map<String, String> kPillarNames = {
-  'S': 'Sự rõ ràng',
-  'C': 'Mối quan hệ',
-  'A': 'Cách làm việc',
+Map<String, String> get kPillarNames => {
+  'S': tr('Sự rõ ràng', 'Clarity'),
+  'C': tr('Mối quan hệ', 'Relationships'),
+  'A': tr('Cách làm việc', 'Ways of working'),
 };
 
 /// Từ khoá nhận ra mỗi trụ trong một bản mô tả công việc tiếng Việt.
@@ -143,7 +144,7 @@ class SkillJdMatch {
     ];
     if (names.isEmpty) return '';
     if (names.length == 1) return names.single;
-    return '${names.take(names.length - 1).join(', ')} và ${names.last}';
+    return tr('${names.take(names.length - 1).join(', ')} và ${names.last}', '${names.take(names.length - 1).join(', ')} and ${names.last}');
   }
 }
 

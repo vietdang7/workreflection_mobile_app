@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_experience_state.dart';
 import '../../../core/models/wr_episode.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -29,11 +30,11 @@ class WrEpisodeDetailScreen extends ConsumerWidget {
 
     if (episode == null) {
       return WrDetailScaffold(
-        eyebrow: 'MỘT LẦN NHÌN LẠI',
-        title: 'Không mở được lần nhìn lại này',
-        children: const [
+        eyebrow: tr('MỘT LẦN NHÌN LẠI', 'ONE LOOK BACK'),
+        title: tr('Không mở được lần nhìn lại này', 'Could not open this look back'),
+        children: [
           WrParagraph(
-            'Có thể nó đã bị xoá, hoặc thiết bị đang mất kết nối.',
+            tr('Có thể nó đã bị xoá, hoặc thiết bị đang mất kết nối.', 'It may have been deleted, or the device is offline.'),
             key: Key('wr_episode_detail_missing'),
             style: TextStyle(fontSize: 16.5, color: WrColors.muted, height: 1.65),
           ),
@@ -48,7 +49,7 @@ class WrEpisodeDetailScreen extends ConsumerWidget {
             '${at.month.toString().padLeft(2, '0')}/${at.year}';
 
     return WrDetailScaffold(
-      eyebrow: 'MỘT LẦN NHÌN LẠI',
+      eyebrow: tr('MỘT LẦN NHÌN LẠI', 'ONE LOOK BACK'),
       title: episode.humanMoment.label,
       children: [
         if (dateStr.isNotEmpty)
@@ -60,7 +61,7 @@ class WrEpisodeDetailScreen extends ConsumerWidget {
 
         // ── Điều bạn nhận ra ─────────────────────────────────────────────
         if (episode.draftMeaning?.trim().isNotEmpty == true) ...[
-          const _Label('ĐIỀU BẠN NHẬN RA'),
+          _Label(tr('ĐIỀU BẠN NHẬN RA', 'WHAT YOU NOTICED')),
           Text(
             episode.draftMeaning!.trim(),
             key: const Key('wr_episode_detail_meaning'),
@@ -76,10 +77,10 @@ class WrEpisodeDetailScreen extends ConsumerWidget {
         ],
 
         // ── Từng bước đã đi qua ──────────────────────────────────────────
-        const _Label('BẠN ĐÃ VIẾT'),
+        _Label(tr('BẠN ĐÃ VIẾT', 'WHAT YOU WROTE')),
         if (episode.patternsDone.isEmpty)
-          const Text(
-            'Lần này bạn chưa ghi lại gì.',
+          Text(
+            tr('Lần này bạn chưa ghi lại gì.', 'You did not write anything that time.'),
             style: TextStyle(fontSize: 16.5, color: WrColors.muted, height: 1.6),
           )
         else
@@ -120,7 +121,7 @@ class WrEpisodeDetailScreen extends ConsumerWidget {
           const SizedBox(height: 8),
           const WrSectionDivider(),
           const SizedBox(height: 20),
-          const _Label('BƯỚC NHỎ BẠN CHỌN'),
+          _Label(tr('BƯỚC NHỎ BẠN CHỌN', 'THE SMALL STEP YOU CHOSE')),
           Text(
             episode.tinyAction!.trim(),
             key: const Key('wr_episode_detail_action'),
@@ -169,8 +170,8 @@ class _ReopenButton extends ConsumerWidget {
             borderRadius: BorderRadius.circular(10),
           ),
         ),
-        child: const Text(
-          'Hiểu lại chuyện này',
+        child: Text(
+          tr('Hiểu lại chuyện này', 'Look at this again'),
           style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w600),
         ),
       ),

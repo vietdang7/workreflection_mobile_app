@@ -2,6 +2,8 @@
 // Plain immutable classes + fromJson/toInsert, mirroring wr_content.dart style.
 // No Flutter dependencies.
 
+import 'package:workreflection_mobile/core/l10n/wr_tr.dart';
+import 'package:workreflection_mobile/core/logic/wr_plain_text.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 
 // ---------------------------------------------------------------------------
@@ -280,6 +282,7 @@ class PatternNarrative {
     this.periodStart,
     this.periodEnd,
     this.createdAt,
+    this.locale = 'vi',
   });
 
   final String? id;
@@ -289,17 +292,36 @@ class PatternNarrative {
   final String narrative;
   final DateTime? createdAt;
 
+  /// Ngôn ngữ model đã viết đoạn này.
+  ///
+  /// Đây là chỗ DUY NHẤT trong app mà đổi ngôn ngữ không dịch được tại chỗ: chữ
+  /// do AI viết, muốn có bản tiếng kia thì phải nhờ model viết lại, mất vài
+  /// chục giây. Không có trường này thì màn Hành trình cứ hiện đoạn cũ — và
+  /// người dùng thấy đúng thứ khách báo 10/09: chọn tiếng Anh thì ra tiếng
+  /// Việt, chọn tiếng Việt thì ra tiếng Anh (bản vừa được viết lại lúc trước).
+  ///
+  /// Dòng ghi trước migration `narrative_locale` không có cột này — coi là tiếng
+  /// Việt, cùng quy ước với `supabase/functions/wr-narrative/regeneration.ts`.
+  final String locale;
+
+  /// Đoạn này có đúng ngôn ngữ app đang chạy không.
+  bool get matchesCurrentLocale => locale == wrLocaleCode;
+
   factory PatternNarrative.fromJson(Map<String, dynamic> json) {
     return PatternNarrative(
       id: json['id'] as String?,
       userId: json['user_id'] as String,
+      locale: (json['locale'] as String?) ?? 'vi',
       periodStart: json['period_start'] != null
           ? DateTime.parse(json['period_start'] as String)
           : null,
       periodEnd: json['period_end'] != null
           ? DateTime.parse(json['period_end'] as String)
           : null,
-      narrative: json['narrative'] as String,
+      // Mục 17.1 — bài Diễn biến do model viết, màn Hành trình dựng bằng `Text`
+      // thuần. Lột ở đây phủ luôn những bài đã sinh trước khi bật bộ lọc ở
+      // Edge Function.
+      narrative: stripMarkdown(json['narrative'] as String),
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
@@ -454,26 +476,40 @@ class ScaSelfCheckResponse {
 class PracticeTheme {
   const PracticeTheme({
     required this.themeId,
-    required this.title,
+    required String title,
     this.scaDimension,
-    this.description,
-    this.formedLine,
+    String? description,
+    String? formedLine,
+    this.titleEn,
+    this.descriptionEn,
+    this.formedLineEn,
     this.createdAt,
     this.retiredAt,
-  });
+  })  : titleVi = title,
+        descriptionVi = description,
+        formedLineVi = formedLine;
 
   final String themeId;
-  final String title;
   final ScaDimension? scaDimension;
 
+  final String titleVi;
+  final String? titleEn;
+  String get title => trDb(titleVi, titleEn);
+
   /// Mô tả mở đầu — hiện ngay dưới tên chủ đề, trước ba bước (bảng A.2).
-  final String? description;
+  final String? descriptionVi;
+  final String? descriptionEn;
+  String? get description =>
+      descriptionVi == null ? null : trDb(descriptionVi!, descriptionEn);
 
   /// Câu hiện ở màn ăn mừng khi chủ đề này chạm ngưỡng (bảng A.2).
   ///
   /// Viết ở thì hiện tại, ngắn, không lặp lại chữ "kỹ năng" hay "ngưỡng" — chỉ
   /// nói về điều đã đổi. Null thì màn ăn mừng dùng câu chung.
-  final String? formedLine;
+  final String? formedLineVi;
+  final String? formedLineEn;
+  String? get formedLine =>
+      formedLineVi == null ? null : trDb(formedLineVi!, formedLineEn);
 
   final DateTime? createdAt;
 
@@ -492,9 +528,12 @@ class PracticeTheme {
     return PracticeTheme(
       themeId: json['theme_id'] as String,
       title: json['title'] as String,
+      titleEn: json['title_en'] as String?,
       scaDimension: rawDim != null ? ScaDimension.fromDb(rawDim) : null,
       description: json['description'] as String?,
+      descriptionEn: json['description_en'] as String?,
       formedLine: json['formed_line'] as String?,
+      formedLineEn: json['formed_line_en'] as String?,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
@@ -515,19 +554,28 @@ class PracticeStep {
     required this.stepId,
     required this.themeId,
     required this.stepOrder,
-    required this.title,
+    required String title,
     required this.isPremium,
-    this.content,
+    String? content,
+    this.titleEn,
+    this.contentEn,
     this.createdAt,
-  });
+  })  : titleVi = title,
+        contentVi = content;
 
   final String stepId;
   final String themeId;
   final int stepOrder;
-  final String title;
-  final String? content;
   final bool isPremium;
   final DateTime? createdAt;
+
+  final String titleVi;
+  final String? titleEn;
+  String get title => trDb(titleVi, titleEn);
+
+  final String? contentVi;
+  final String? contentEn;
+  String? get content => contentVi == null ? null : trDb(contentVi!, contentEn);
 
   factory PracticeStep.fromJson(Map<String, dynamic> json) {
     return PracticeStep(
@@ -535,7 +583,9 @@ class PracticeStep {
       themeId: json['theme_id'] as String,
       stepOrder: json['step_order'] as int,
       title: json['title'] as String,
+      titleEn: json['title_en'] as String?,
       content: json['content'] as String?,
+      contentEn: json['content_en'] as String?,
       isPremium: json['is_premium'] as bool,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
@@ -673,16 +723,21 @@ class WrDocAnalysis {
     if (raw is! List) return const [];
     return [
       for (final e in raw)
-        if (e != null && e.toString().trim().isNotEmpty) e.toString().trim(),
+        if (e != null && e.toString().trim().isNotEmpty)
+          stripMarkdown(e.toString()).trim(),
     ];
   }
 
   factory WrDocAnalysis.fromJson(Map<String, dynamic> json) {
     final rawPillars = json['pillars'];
+    // Mục 17.1 — lột Markdown ở CỬA VÀO của model, không rải ở từng widget.
+    // Bản phân tích này do model viết; những hàng lưu trước hôm bật bộ lọc phía
+    // Edge Function vẫn còn nguyên dấu sao trong database.
     return WrDocAnalysis(
-      title: (json['title'] as String?)?.trim(),
-      organization: (json['organization'] as String?)?.trim(),
-      summary: (json['summary'] as String?)?.trim() ?? '',
+      title: stripMarkdownOrNull(json['title'] as String?)?.trim(),
+      organization:
+          stripMarkdownOrNull(json['organization'] as String?)?.trim(),
+      summary: stripMarkdownOrNull(json['summary'] as String?)?.trim() ?? '',
       responsibilities: _list(json['responsibilities']),
       requirements: _list(json['requirements']),
       skills: _list(json['skills']),

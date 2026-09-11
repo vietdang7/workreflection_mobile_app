@@ -13,6 +13,7 @@ import '../../core/models/wr_content.dart';
 import '../../core/models/wr_episode.dart';
 import '../../core/models/wr_intelligence.dart';
 import '../../core/logic/wr_growth_opportunity.dart';
+import '../../core/logic/wr_polish_guard.dart';
 import '../../core/logic/wr_premium_override.dart';
 import '../../core/logic/wr_pricing.dart';
 import '../../core/logic/wr_repeated_situations.dart';
@@ -283,6 +284,23 @@ final wrSelfCheckHistoryProvider = FutureProvider<List<ScaSelfCheckResponse>>((r
   return repo.fetchSelfCheckHistory(userId);
 });
 
+/// Lớp 3 — bản AI viết lại của một câu Diễn giải sâu (§7).
+///
+/// Khoá theo CHÍNH CÂU GỐC, không theo userId: câu đổi thì khoá đổi, nên
+/// `.family` tự nhớ đúng một bản cho mỗi câu và không gọi lại khi màn hình dựng
+/// lại. Đây là nửa còn lại của §7.3 ("không gọi mỗi lần mở màn hình"); nửa kia
+/// là bộ đệm trong `wr_polished_text` ở phía máy chủ.
+///
+/// `AsyncValue.loading` KHÔNG được hiện vòng xoay ở tầng UI — §7.2 rào chắn 3:
+/// "Người dùng không bao giờ nhìn thấy màn hình trống hay vòng xoay chờ ở màn
+/// này." Tầng UI đọc `valueOrNull` rồi lùi về câu gốc.
+final wrPolishedTextProvider =
+    FutureProvider.family<String?, String>((ref, original) async {
+  if (!kPolishEnabled) return null;
+  final repo = ref.watch(wrIntelligenceRepositoryProvider);
+  return repo.polishText(original);
+});
+
 /// Fetch latest insight for current user.
 final wrLatestInsightProvider = FutureProvider<WrInsight?>((ref) async {
   final userId = ref.watch(currentUserIdProvider);
@@ -307,6 +325,20 @@ final wrPatternNarrativesProvider =
   return repo.fetchPatternNarratives(userId);
 });
 
+/// Đoạn Diễn biến mới nhất ĐÚNG ngôn ngữ đang bật, hoặc `null`.
+///
+/// Trả `null` thay vì rơi về đoạn tiếng khác là cố ý. Hiện đoạn tiếng Việt trên
+/// một màn tiếng Anh không phải "có còn hơn không": người dùng vừa chọn tiếng
+/// Anh, thấy nguyên một khối tiếng Việt thì kết luận app không đổi được ngôn
+/// ngữ — chính là điều khách báo 10/09. Im lặng vài chục giây rồi hiện đúng
+/// tiếng thì trung thực hơn, và câu chờ nói rõ đang chờ gì.
+PatternNarrative? currentLocaleNarrative(List<PatternNarrative> narratives) {
+  for (final n in narratives) {
+    if (n.matchesCurrentLocale) return n;
+  }
+  return null;
+}
+
 /// Xin máy chủ kể lại "Diễn biến theo thời gian" — chạy nền, không chặn tab.
 ///
 /// ---------------------------------------------------------------------------
@@ -328,6 +360,12 @@ final wrPatternNarrativesProvider =
 /// thức nhau vô hạn, mỗi vòng một lượt gọi model trả tiền thật.
 final wrNarrativeRefreshProvider =
     FutureProvider<WrNarrativeRefresh>((ref) async {
+  // Đổi ngôn ngữ là phải xin viết lại. Đây là chỗ DUY NHẤT trong app mà đổi
+  // ngôn ngữ kéo theo một lượt gọi server — chữ do model viết, không getter nào
+  // dịch hộ được. Mọi thứ khác chỉ dựng lại widget là xong (xem
+  // `user_session_scope.dart`).
+  ref.watch(appLocaleProvider);
+
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return const WrNarrativeRefresh.unavailable();
 
@@ -474,6 +512,18 @@ final wrEpisodeByIdProvider =
   }
 });
 
+/// Trần số Episode tải về một lần.
+///
+/// 500, không phải 50. Con số cũ đủ cho tab Hành trình — chỗ nó sinh ra — nhưng
+/// từ khi Career Snapshot lấy `episodes.length` làm MẪU SỐ của cột "Xuất hiện"
+/// thì nó thành một cái trần đội lốt sự thật: người đã nhìn lại 200 lần đọc
+/// được "14 / 50 lần". `Changelog_CareerSnapshot.docx` §8 đòi con số thật.
+///
+/// Vẫn giữ một trần thay vì bỏ hẳn: không có trần thì một tài khoản dùng nhiều
+/// năm kéo về một danh sách không giới hạn ngay lúc mở app. 500 lượt nhìn lại
+/// là quãng vài năm dùng đều đặn, và mỗi hàng Episode rất nhẹ.
+const int kEpisodeHistoryLimit = 500;
+
 /// Lịch sử Episode, mới nhất trước — nguồn cho tab Hành trình.
 final wrEpisodeHistoryProvider =
     FutureProvider<List<ReflectionEpisode>>((ref) async {
@@ -481,7 +531,7 @@ final wrEpisodeHistoryProvider =
   if (userId == null) return const [];
   final repo = ref.watch(wrEpisodeRepositoryProvider);
   try {
-    return await repo.fetchEpisodes(userId, limit: 50);
+    return await repo.fetchEpisodes(userId, limit: kEpisodeHistoryLimit);
   } catch (_) {
     return const [];
   }
@@ -579,6 +629,10 @@ final wrCareerQuestionsProvider =
 /// Null nghĩa là chưa đủ dữ liệu — §11.3 yêu cầu im lặng, không bịa.
 final wrGrowthOpportunityProvider =
     FutureProvider<GrowthOpportunity?>((ref) async {
+  // Câu gợi ý dựng bằng `tr()` rồi nằm trong cache — không có dòng này thì đổi
+  // ngôn ngữ xong thẻ vẫn nói tiếng cũ.
+  wrWatchLocale(ref);
+
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return null;
 

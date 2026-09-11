@@ -3,9 +3,11 @@
 // Ba thứ được khoá ở đây:
 //   1. Bộ chữ không được gõ tay các ngưỡng — nó phải đọc từ hằng số app đang
 //      chạy, nếu không hướng dẫn sẽ nói khác phần mềm ngay lần đổi ngưỡng đầu.
-//   2. Chatbot phải NỔI BẬT: nằm ngoài danh sách gập/mở, luôn thấy, và nút mở
-//      thẳng được Chatbot.
+//   2. Trợ lý AI phải NỔI BẬT: nằm ngoài danh sách gập/mở, luôn thấy, và nút
+//      mở thẳng được trợ lý.
 //   3. Gập/mở hoạt động, và có lối vào từ màn Hồ sơ.
+//   4. Mỗi cụm mục in nhãn ĐÚNG MỘT LẦN — bản v4 chia mười một mục thành bốn
+//      cụm, in lại nhãn ở từng mục là hỏng hẳn ý chia cụm.
 //
 // Run: flutter test test/features/guide_test.dart
 
@@ -16,6 +18,7 @@ import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/logic/wr_career_health.dart';
 import 'package:workreflection_mobile/core/logic/wr_practice_theme_grant.dart';
 import 'package:workreflection_mobile/core/logic/wr_repeated_situations.dart';
+import 'package:workreflection_mobile/core/logic/wr_self_check_questions.dart';
 import 'package:workreflection_mobile/core/logic/wr_skill_formation.dart';
 import 'package:workreflection_mobile/core/logic/wr_user_guide.dart';
 import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
@@ -53,10 +56,17 @@ String _flatten(WrGuideSection s) {
   final buf = StringBuffer('${s.title} ${s.summary} ');
   for (final b in s.blocks) {
     switch (b) {
+      case WrGuideHeading(:final text):
+        buf.write('$text ');
       case WrGuideText(:final text):
         buf.write('$text ');
       case WrGuideNote(:final text):
         buf.write('$text ');
+      case WrGuideChecks(:final items, :final footnote):
+        for (final i in items) {
+          buf.write('$i ');
+        }
+        if (footnote != null) buf.write('$footnote ');
       case WrGuideBullets(:final items):
         for (final i in items) {
           buf.write('${i.label} ${i.text} ');
@@ -64,10 +74,6 @@ String _flatten(WrGuideSection s) {
       case WrGuideSteps(:final items):
         for (final i in items) {
           buf.write('${i.title} ${i.text} ');
-        }
-      case WrGuideTwoColumn(:final rows):
-        for (final r in rows) {
-          buf.write('${r.left} ${r.right} ');
         }
       case WrGuideQa(:final items):
         for (final i in items) {
@@ -83,11 +89,11 @@ void main() {
     final view =
         TestWidgetsFlutterBinding.instance.platformDispatcher.views.first;
     view.devicePixelRatio = 1.0;
-    // Màn cao bất thường: tám mục cộng thẻ Chatbot vượt xa một màn điện thoại,
-    // mà `ListView` chỉ dựng phần nằm trong khung nhìn. Khung nhìn thấp thì
-    // `find.byKey` trượt vì widget CHƯA TỪNG được dựng — đọc ra như "không có
-    // mục đó", trong khi lỗi thật chỉ là chưa cuộn tới.
-    view.physicalSize = const Size(420, 6000);
+    // Màn cao bất thường: mười một mục cộng thẻ trợ lý vượt xa một màn điện
+    // thoại, mà `ListView` chỉ dựng phần nằm trong khung nhìn. Khung nhìn thấp
+    // thì `find.byKey` trượt vì widget CHƯA TỪNG được dựng — đọc ra như "không
+    // có mục đó", trong khi lỗi thật chỉ là chưa cuộn tới.
+    view.physicalSize = const Size(420, 9000);
   });
 
   tearDown(() {
@@ -105,6 +111,14 @@ void main() {
     test('mã mục là duy nhất — Key widget và mỏ neo test dựa vào nó', () {
       final ids = wrGuideSections().map((s) => s.id).toList();
       expect(ids.toSet().length, ids.length);
+    });
+
+    // Bản v4 cho mỗi mục một biểu tượng riêng. Dùng lại một glyph cho hai mục
+    // là mất đúng thứ biểu tượng dùng để làm: phân biệt mục này với mục kia
+    // khi lướt qua danh sách đã gập.
+    test('mỗi mục một biểu tượng, không trùng nhau', () {
+      final icons = wrGuideSections().map((s) => s.icon).toList();
+      expect(icons.toSet().length, icons.length);
     });
 
     test('mọi mục đều có tóm tắt và ít nhất một khối', () {
@@ -143,8 +157,27 @@ void main() {
         contains('$kReflectionsPerPracticeTheme lần'),
       );
       expect(byId['growth'], contains('$kSkillThreshold lần'));
+      expect(
+        byId['understand'],
+        contains('${kSelfCheckQuestions.length} câu hỏi'),
+      );
     });
 
+    // Bốn cụm của bản v4, đúng thứ tự. Mục nào rơi sai cụm là nhãn in ra hai
+    // lần trên màn — chính thứ test dưới đây bắt.
+    test('các mục cùng cụm nằm liền nhau', () {
+      final seen = <String>[];
+      String? previous;
+      for (final s in wrGuideSections()) {
+        if (s.group != previous) {
+          expect(seen, isNot(contains(s.group)),
+              reason: 'cụm "${s.group}" bị ngắt quãng ở mục ${s.id}');
+          seen.add(s.group);
+          previous = s.group;
+        }
+      }
+      expect(seen.length, 4);
+    });
   });
 
   // -------------------------------------------------------------------------
@@ -177,7 +210,7 @@ void main() {
       }
     });
 
-    testWidgets('nút trên thẻ Chatbot mở thẳng Chatbot', (t) async {
+    testWidgets('nút trên thẻ Trợ lý AI mở thẳng trợ lý', (t) async {
       await t.pumpWidget(_wrap());
       await t.pumpAndSettle();
 
@@ -185,6 +218,25 @@ void main() {
       await t.pumpAndSettle();
 
       expect(find.text('CHATBOT'), findsOneWidget);
+    });
+
+    testWidgets('thẻ chốt màn cũng mở được trợ lý', (t) async {
+      await t.pumpWidget(_wrap());
+      await t.pumpAndSettle();
+
+      await t.tap(find.byKey(const Key('guide_closing_cta')));
+      await t.pumpAndSettle();
+
+      expect(find.text('CHATBOT'), findsOneWidget);
+    });
+
+    testWidgets('mỗi nhãn cụm chỉ in một lần', (t) async {
+      await t.pumpWidget(_wrap());
+      await t.pumpAndSettle();
+
+      for (final group in wrGuideSections().map((s) => s.group).toSet()) {
+        expect(find.text(group.toUpperCase()), findsOneWidget, reason: group);
+      }
     });
 
     testWidgets('mục đóng hiện tóm tắt; chạm thì mở ra, chạm nữa thì đóng',
@@ -250,13 +302,17 @@ void main() {
       }
     });
 
-    // Người đọc hết tám mục mà vẫn chưa thấy câu trả lời là người cần Chatbot
+    // Người đọc hết các mục mà vẫn chưa thấy câu trả lời là người cần Chatbot
     // nhất, nhưng lúc đó thẻ coral đã trôi khỏi màn từ lâu.
+    //
+    // Khoá đổi từ `guide_chat_footer` sang `guide_closing_cta` khi màn này
+    // được dựng lại theo mockup InApp v4. Chỉ TÊN đổi — dòng chốt cuối màn vẫn
+    // còn và vẫn mở thẳng Chatbot, nên điều bài này canh không suy suyển.
     testWidgets('dòng chốt cuối màn cũng mở được Chatbot', (t) async {
       await t.pumpWidget(_wrap());
       await t.pumpAndSettle();
 
-      await t.tap(find.byKey(const Key('guide_chat_footer')));
+      await t.tap(find.byKey(const Key('guide_closing_cta')));
       await t.pumpAndSettle();
 
       expect(find.text('CHATBOT'), findsOneWidget);
@@ -267,8 +323,7 @@ void main() {
       await t.pumpAndSettle();
 
       expect(
-        find.text('Đây không phải app ghi chú, cũng không phải app chấm điểm '
-            'bạn.'),
+        find.text('WorkReflection không đơn thuần là một ứng dụng ghi chú.'),
         findsOneWidget,
       );
     });

@@ -10,6 +10,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/wr_tr.dart';
 import '../models/wr_chat.dart';
 
 /// Tên Edge Function giữ khoá OpenRouter.
@@ -96,16 +97,18 @@ class SupabaseWrChatRepository implements WrChatRepository {
     try {
       final res = await _client.functions.invoke(
         kWrChatFunction,
+        headers: wrLocaleHeaders,
         body: {
           'message': message,
+          'locale': wrLocaleCode,
           if (conversationId != null) 'conversationId': conversationId,
           if (premiumOverride != null) 'premiumOverride': premiumOverride,
         },
       );
       final data = res.data;
       if (data is! Map || data['reply'] == null) {
-        throw const WrChatException(
-          'Mình chưa trả lời được lúc này. Bạn thử gửi lại nhé.',
+        throw WrChatException(
+          tr('Mình chưa trả lời được lúc này. Bạn thử gửi lại nhé.', 'I cannot answer right now. Please send it again.'),
         );
       }
       return WrChatReply.fromJson(Map<String, dynamic>.from(data));
@@ -116,8 +119,8 @@ class SupabaseWrChatRepository implements WrChatRepository {
     } catch (_) {
       // Mất mạng, DNS hỏng, máy chủ không với tới được. Nói đúng điều người
       // dùng làm được: thử lại.
-      throw const WrChatException(
-        'Không kết nối được lúc này. Bạn kiểm tra mạng rồi gửi lại nhé.',
+      throw WrChatException(
+        tr('Không kết nối được lúc này. Bạn kiểm tra mạng rồi gửi lại nhé.', 'No connection right now. Check your network and send it again.'),
       );
     }
   }
@@ -147,12 +150,12 @@ class SupabaseWrChatRepository implements WrChatRepository {
       }
     }
     if (e.status == 401) {
-      return const WrChatException(
-        'Phiên đăng nhập đã hết hạn. Bạn đăng nhập lại nhé.',
+      return WrChatException(
+        tr('Phiên đăng nhập đã hết hạn. Bạn đăng nhập lại nhé.', 'Your session has expired. Please sign in again.'),
       );
     }
-    return const WrChatException(
-      'Mình chưa trả lời được lúc này. Bạn thử gửi lại nhé.',
+    return WrChatException(
+      tr('Mình chưa trả lời được lúc này. Bạn thử gửi lại nhé.', 'I cannot answer right now. Please send it again.'),
     );
   }
 }

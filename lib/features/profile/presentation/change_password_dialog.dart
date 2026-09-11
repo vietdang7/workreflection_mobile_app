@@ -108,7 +108,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                 ),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscureNew ? Icons.visibility_off : Icons.visibility,
+                    _obscureNew ? Icons.visibility_off_outlined : Icons.visibility_outlined,
                     size: 18,
                   ),
                   onPressed: () => setState(() => _obscureNew = !_obscureNew),
@@ -133,7 +133,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                 ),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscureConfirm ? Icons.visibility_off : Icons.visibility,
+                    _obscureConfirm ? Icons.visibility_off_outlined : Icons.visibility_outlined,
                     size: 18,
                   ),
                   onPressed: () =>

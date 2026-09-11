@@ -9,6 +9,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import '../l10n/wr_tr.dart';
+import '../logic/wr_polish_guard.dart';
 import '../models/wr_intelligence.dart';
 import '../models/wr_mood_content.dart';
 
@@ -17,6 +19,9 @@ const String kWrDocAnalyzeFunction = 'wr-doc-analyze';
 
 /// Edge Function sinh "Diễn biến theo thời gian" cho tab Hành trình.
 const String kWrNarrativeFunction = 'wr-narrative';
+
+/// Edge Function lớp 3 — viết lại câu Diễn giải sâu cho mượt hơn (§7).
+const String kWrPolishFunction = 'wr-polish';
 
 /// Lỗi khi đọc tài liệu — [message] là câu tiếng Việt để hiện thẳng cho người
 /// dùng, không phải mã lỗi kỹ thuật.
@@ -80,11 +85,42 @@ abstract class WrIntelligenceRepository {
   /// Insert an insight record.
   Future<void> insertInsight(WrInsight i);
 
+  /// Lớp 3 — nhờ AI viết lại [text] cho mượt hơn (§7).
+  ///
+  /// Trả null nghĩa là dùng câu gốc: hàm tắt, hết hạn chờ, hoặc bản viết lại bị
+  /// một trong ba rào chắn huỷ. §7.2 — "Cả ba rào chắn đều rơi về cùng một hành
+  /// vi dự phòng."
+  ///
+  /// KHÔNG bao giờ ném. Đây là lớp tuỳ chọn; bỏ hẳn nó thì sản phẩm vẫn chạy
+  /// đúng, nên nó không có quyền làm hỏng một màn hình.
+  Future<String?> polishText(String text);
+
+  /// Ghi một lần bấm Đồng ý / Không đồng ý ở bước "Góc nhìn khác" (§10.3).
+  ///
+  /// Ghi CẢ HAI vế, không riêng vế từ chối: vắng mặt trong `wr_insights` không
+  /// phân biệt được "không đồng ý" với "thoát app giữa chừng", nên chỉ đếm được
+  /// tỷ lệ khi cả hai vế đều thành sự kiện.
+  ///
+  /// [situationCode] null là nhánh "Điều khác" — vẫn phải đếm.
+  Future<void> insertInsightFeedback({
+    required String userId,
+    required String? situationCode,
+    required bool agreed,
+  });
+
   /// Fetch all practice themes.
   Future<List<PracticeTheme>> fetchPracticeThemes();
 
   /// Fetch practice steps for [themeId], ordered by step_order ascending.
   Future<List<PracticeStep>> fetchPracticeSteps(String themeId);
+
+  /// Fetch every practice step, mọi chủ đề, trong MỘT lượt.
+  ///
+  /// Không thay được bằng cách gọi [fetchPracticeSteps] cho từng chủ đề: nơi
+  /// cần nó là màn Hành trình, và ở đó không có sẵn danh sách chủ đề nào để
+  /// lặp — mảnh ký ức thực hành cũ không mang `theme_id`. Lặp qua cả 13 chủ đề
+  /// cũng là 13 lượt mạng cho một màn chỉ cần đọc tên bước.
+  Future<List<PracticeStep>> fetchAllPracticeSteps();
 
   /// Fetch enrollments for [userId].
   Future<List<PracticeEnrollment>> fetchEnrollments(String userId);
@@ -311,6 +347,50 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
   }
 
   @override
+  Future<String?> polishText(String text) async {
+    if (!kPolishEnabled) return null;
+    final original = text.trim();
+    if (original.isEmpty) return null;
+    try {
+      // Rào chắn 3 (§7.2): 2 giây là hết. Máy chủ vẫn chạy nốt lượt đó và ghi
+      // vào bộ đệm, nên lần mở màn SAU đọc được ngay — bỏ cuộc ở đây không phải
+      // là bỏ luôn lượt gọi.
+      final res = await _client.functions
+          .invoke(
+            kWrPolishFunction,
+            headers: wrLocaleHeaders,
+            body: {'text': original, 'locale': wrLocaleCode},
+          )
+          .timeout(kPolishTimeout);
+      final data = res.data;
+      if (data is! Map) return null;
+      final polished = data['polished'];
+      if (polished is! String) return null;
+      // Soi LẠI ở phía app dù máy chủ đã soi. Câu gốc chỉ có ở đây, nên đây là
+      // phía duy nhất kiểm được rào chắn 1 và 2 trên đúng cặp câu.
+      return inspectPolished(original: original, polished: polished) == null
+          ? polished.trim()
+          : null;
+    } catch (_) {
+      // Hết hạn chờ, mất mạng, hàm chưa deploy — tất cả cùng một hành vi.
+      return null;
+    }
+  }
+
+  @override
+  Future<void> insertInsightFeedback({
+    required String userId,
+    required String? situationCode,
+    required bool agreed,
+  }) async {
+    await _client.from('wr_insight_feedback').insert({
+      'user_id': userId,
+      'situation_code': situationCode,
+      'agreed': agreed,
+    });
+  }
+
+  @override
   Future<List<PracticeTheme>> fetchPracticeThemes() async {
     final rows = await _client
         .from('wr_practice_themes')
@@ -325,6 +405,16 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
         .from('wr_practice_steps')
         .select()
         .eq('theme_id', themeId)
+        .order('step_order', ascending: true);
+    return rows.map(PracticeStep.fromJson).toList();
+  }
+
+  @override
+  Future<List<PracticeStep>> fetchAllPracticeSteps() async {
+    final rows = await _client
+        .from('wr_practice_steps')
+        .select()
+        .order('theme_id', ascending: true)
         .order('step_order', ascending: true);
     return rows.map(PracticeStep.fromJson).toList();
   }
@@ -389,12 +479,13 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
     try {
       final res = await _client.functions.invoke(
         kWrDocAnalyzeFunction,
-        body: {'documentId': documentId},
+        headers: wrLocaleHeaders,
+        body: {'documentId': documentId, 'locale': wrLocaleCode},
       );
       final data = res.data;
       if (data is! Map || data['status'] != 'ready') {
-        throw const WrDocAnalysisException(
-          'Chưa đọc được tài liệu này. Bạn thử lại sau nhé.',
+        throw WrDocAnalysisException(
+          tr('Chưa đọc được tài liệu này. Bạn thử lại sau nhé.', 'Could not read this document. Please try again later.'),
         );
       }
     } on FunctionException catch (e) {
@@ -402,8 +493,8 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
     } on WrDocAnalysisException {
       rethrow;
     } catch (_) {
-      throw const WrDocAnalysisException(
-        'Không kết nối được lúc này. Bạn kiểm tra mạng rồi thử lại nhé.',
+      throw WrDocAnalysisException(
+        tr('Không kết nối được lúc này. Bạn kiểm tra mạng rồi thử lại nhé.', 'No connection right now. Check your network and try again.'),
       );
     }
 
@@ -416,7 +507,7 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
         .eq('id', documentId)
         .maybeSingle();
     if (row == null) {
-      throw const WrDocAnalysisException('Không tìm thấy tài liệu này.');
+      throw WrDocAnalysisException(tr('Không tìm thấy tài liệu này.', 'This document could not be found.'));
     }
     return WrContextDocument.fromJson(row);
   }
@@ -446,8 +537,8 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
         );
       }
     }
-    return const WrDocAnalysisException(
-      'Chưa đọc được tài liệu này. Bạn thử lại sau nhé.',
+    return WrDocAnalysisException(
+      tr('Chưa đọc được tài liệu này. Bạn thử lại sau nhé.', 'Could not read this document. Please try again later.'),
     );
   }
 
@@ -474,7 +565,11 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
   @override
   Future<WrNarrativeRefresh> refreshPatternNarrative() async {
     try {
-      final res = await _client.functions.invoke(kWrNarrativeFunction);
+      // POST rỗng — không có thân, nên ngôn ngữ chỉ đi được bằng header.
+      final res = await _client.functions.invoke(
+        kWrNarrativeFunction,
+        headers: wrLocaleHeaders,
+      );
       final data = res.data;
       if (data is! Map) return const WrNarrativeRefresh.unavailable();
       return WrNarrativeRefresh.fromJson(Map<String, dynamic>.from(data));

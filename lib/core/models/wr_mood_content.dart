@@ -4,6 +4,8 @@
 // Plain immutable classes + fromJson, cùng style với wr_content.dart.
 // Không phụ thuộc Flutter.
 
+import '../l10n/wr_tr.dart';
+import '../logic/wr_plain_text.dart';
 import 'checkin.dart';
 
 // ---------------------------------------------------------------------------
@@ -41,14 +43,17 @@ class MoodContent {
     required this.id,
     required this.mood,
     required this.sortOrder,
-    required this.title,
+    required String title,
     required this.kind,
     required this.duration,
     required this.type,
-    required this.body,
+    required String body,
     required this.placeholder,
     this.audioUrl,
-  });
+    this.titleEn,
+    this.bodyEn,
+  })  : titleVi = title,
+        bodyVi = body;
 
   final String id;
 
@@ -58,18 +63,61 @@ class MoodContent {
   /// §8.3: Home hiện đúng mục đầu tiên của nhóm, nên thứ tự là dữ liệu.
   final int sortOrder;
 
-  final String title;
+  /// Tiêu đề, hai bản đặt cạnh nhau. Đọc qua [title].
+  final String titleVi;
+  final String? titleEn;
 
-  /// Nhãn hiển thị: "BÀI ĐỌC" hoặc "HEALING AUDIO".
+  /// Tiêu đề theo ngôn ngữ đang bật.
+  ///
+  /// Là GETTER chứ không phải trường: đọc lại mỗi lần dựng, nên đổi ngôn ngữ
+  /// giữa chừng là chữ đổi theo mà không phải hỏi lại server. Chốt ngôn ngữ
+  /// ngay trong `fromJson` thì bản ghi trong cache đóng băng ở ngôn ngữ lúc tải
+  /// về, và người dùng đổi sang tiếng Anh vẫn đọc bài tiếng Việt.
+  String get title => trDb(titleVi, titleEn);
+
+  /// Nhãn hiển thị, ví dụ "BÀI ĐỌC".
+  ///
+  /// KHÔNG có cột `kind_en`: cả bảng chỉ có duy nhất một giá trị, nên thêm cột
+  /// là bắt người biên tập gõ lại cùng một chữ ba mươi lần và tạo ba mươi cơ
+  /// hội gõ lệch. Dịch ở đây, một chỗ, phủ cả bảng — xem [kindLabel].
   final String kind;
 
-  /// Thời lượng hiển thị, ví dụ "3 phút đọc" hoặc "5 phút".
+  /// Thời lượng hiển thị, ví dụ "3 phút đọc".
+  ///
+  /// Cũng không có cột `_en`, cùng lý do với [kind] — xem [durationLabel].
   final String duration;
 
   final MoodContentType type;
 
+  /// Toàn văn bài đọc, hai bản đặt cạnh nhau. Đọc qua [body].
+  final String bodyVi;
+  final String? bodyEn;
+
   /// BÀI ĐỌC: toàn văn. HEALING AUDIO: mô tả ngắn dưới khối trình phát.
-  final String body;
+  String get body => trDb(bodyVi, bodyEn);
+
+  /// [kind] theo ngôn ngữ đang bật.
+  ///
+  /// Dịch theo BẢNG TRA chứ không dịch tự do: giá trị nào không có trong bảng
+  /// thì trả nguyên văn. Đội nội dung thêm một loại mới mà quên báo thì người
+  /// dùng tiếng Anh thấy một nhãn tiếng Việt — dở, nhưng vẫn hơn một ô trống
+  /// hay một nhãn bịa.
+  String get kindLabel => switch (kind.trim().toUpperCase()) {
+        'BÀI ĐỌC' => tr('BÀI ĐỌC', 'READING'),
+        'HEALING AUDIO' => tr('HEALING AUDIO', 'HEALING AUDIO'),
+        _ => kind,
+      };
+
+  /// [duration] theo ngôn ngữ đang bật.
+  ///
+  /// Bảng chỉ chứa dạng "N phút đọc", nên bóc lấy con số rồi dựng lại câu. Dạng
+  /// nào không khớp thì trả nguyên văn, cùng lý do với [kindLabel].
+  String get durationLabel {
+    final match = RegExp(r'^(\d+)\s*phút đọc$').firstMatch(duration.trim());
+    if (match == null) return duration;
+    final minutes = match.group(1)!;
+    return tr('$minutes phút đọc', '$minutes min read');
+  }
 
   /// §8.2: true = còn nháp, chưa thu âm hoặc biên tập chính thức.
   final bool placeholder;
@@ -143,6 +191,10 @@ class MoodContent {
       duration: json['duration'] as String,
       type: MoodContentType.fromDb(json['type'] as String),
       body: json['body'] as String,
+      // Cột mới (migration 20260910190000). Đọc mềm như `audio_url`: bản app
+      // mới vẫn phải chạy được với một cơ sở dữ liệu chưa kịp chạy migration.
+      titleEn: json['title_en'] as String?,
+      bodyEn: json['body_en'] as String?,
       placeholder: json['placeholder'] as bool,
       // Cột mới (migration 20260729000000). Đọc mềm để bản app mới vẫn chạy
       // được với một cơ sở dữ liệu chưa kịp chạy migration.
@@ -221,15 +273,17 @@ class GrowthOpportunity {
   /// nó chưa đủ sát. Chỉ đổi cách nói phần thứ hai — từ "độ chính xác còn giới
   /// hạn" (nghe như lời chối trách nhiệm) sang một lối đi ("cung cấp thêm bối
   /// cảnh").
-  static const String kConfidenceNote =
-      'Gợi ý này được đúc kết từ hoạt động nhìn lại của bạn. Bạn có thể cung '
-      'cấp thêm bối cảnh để nhận phân tích "may đo" sát hơn';
+  static String get kConfidenceNote => tr('Gợi ý này được đúc kết từ hoạt động nhìn lại của bạn. Bạn có thể cung '
+      'cấp thêm bối cảnh để nhận phân tích "may đo" sát hơn', 'This suggestion is drawn from your own looking back. Add more context '
+      'and the reading can be tailored more closely to you');
 
   factory GrowthOpportunity.fromJson(Map<String, dynamic> json) {
     return GrowthOpportunity(
       id: json['id'] as String,
       userId: json['user_id'] as String,
-      suggestionText: json['suggestion_text'] as String,
+      // Mục 17.1 — câu gợi ý do AI viết, thẻ "Góc nhìn phát triển" dựng bằng
+      // `Text` thuần.
+      suggestionText: stripMarkdown(json['suggestion_text'] as String),
       confidenceNote: json['confidence_note'] as String,
       basedOn: (json['based_on'] as List?)?.cast<String>() ?? const [],
       generatedAt: DateTime.parse(json['generated_at'] as String),
@@ -359,4 +413,34 @@ class PracticeStepNote {
         'note': note,
         if (memoryEventId != null) 'memory_event_id': memoryEventId,
       };
+}
+
+// ---------------------------------------------------------------------------
+// ChoicePoolLine — §VI
+// ---------------------------------------------------------------------------
+
+/// Một câu trong Bể Lựa chọn, chở CẢ hai ngôn ngữ.
+///
+/// Trước đây `fetchChoicePool` trả thẳng `List<String>` đã dịch xong ngay trong
+/// repository. Đọc thì gọn, nhưng nó chốt ngôn ngữ vào lúc GỌI SERVER: giá trị
+/// nằm trong cache của Riverpod là tiếng Việt thì có dựng lại màn bao nhiêu lần
+/// cũng vẫn là tiếng Việt, phải hỏi lại server mới đổi được. Một lượt mạng chỉ
+/// để đổi chữ — và trong lúc chờ, màn Cam kết là ô duy nhất còn tiếng cũ giữa
+/// một màn đã sang tiếng mới.
+///
+/// Chở cả hai rồi chọn ở GETTER thì cache dùng được cho cả hai ngôn ngữ, và
+/// việc đổi ngôn ngữ chỉ còn là dựng lại widget — không có lượt mạng nào.
+class ChoicePoolLine {
+  const ChoicePoolLine({required this.textVi, this.textEn});
+
+  final String textVi;
+  final String? textEn;
+
+  /// Câu hiển thị theo ngôn ngữ đang bật. Chưa dịch thì rơi về tiếng Việt.
+  String get text => trDb(textVi, textEn);
+
+  factory ChoicePoolLine.fromJson(Map<String, dynamic> json) => ChoicePoolLine(
+        textVi: json['text'] as String,
+        textEn: json['text_en'] as String?,
+      );
 }

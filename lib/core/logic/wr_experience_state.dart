@@ -9,6 +9,7 @@
 //      theo được suy ra từ Human Moment Archetype và các Pattern đã đi qua.
 
 import 'package:workreflection_mobile/core/models/wr_episode.dart';
+import '../l10n/wr_tr.dart';
 
 // ---------------------------------------------------------------------------
 // Transition table — WXS §4.4
@@ -156,13 +157,13 @@ int patternCount(HumanMoment moment) =>
 // AI có thể thay thế về sau (WIA Layer 3); đây là bản tĩnh, luôn có sẵn.
 // ---------------------------------------------------------------------------
 
-const Map<ReflectionPattern, String> _defaultPrompts = {
-  ReflectionPattern.notice: 'Điều gì đang chiếm nhiều năng lượng của bạn nhất lúc này?',
-  ReflectionPattern.name: 'Nếu gọi tên điều bạn đang trải qua bằng một câu, bạn sẽ nói gì?',
-  ReflectionPattern.explore: 'Tình huống này làm bạn nhớ đến điều gì?',
-  ReflectionPattern.reframe: 'Nếu một người bạn kể lại chuyện này, bạn sẽ nói gì với họ?',
-  ReflectionPattern.commit: 'Ngày mai bạn muốn thử điều gì?',
-  ReflectionPattern.preserve: 'Điều gì trong hôm nay đáng được giữ lại?',
+Map<ReflectionPattern, String> get _defaultPrompts => {
+  ReflectionPattern.notice: tr('Điều gì đang chiếm nhiều năng lượng của bạn nhất lúc này?', 'What is taking the most out of you right now?'),
+  ReflectionPattern.name: tr('Nếu gọi tên điều bạn đang trải qua bằng một câu, bạn sẽ nói gì?', 'If you named what you are going through in one line, what would it be?'),
+  ReflectionPattern.explore: tr('Tình huống này làm bạn nhớ đến điều gì?', 'What does this situation remind you of?'),
+  ReflectionPattern.reframe: tr('Nếu một người bạn kể lại chuyện này, bạn sẽ nói gì với họ?', 'If a friend told you this story, what would you say to them?'),
+  ReflectionPattern.commit: tr('Ngày mai bạn muốn thử điều gì?', 'What do you want to try tomorrow?'),
+  ReflectionPattern.preserve: tr('Điều gì trong hôm nay đáng được giữ lại?', 'What from today is worth keeping?'),
 };
 
 // Ba luật rút từ mục tiêu của từng Pattern (HXA §3.5). Câu hỏi vi phạm một
@@ -174,51 +175,51 @@ const Map<ReflectionPattern, String> _defaultPrompts = {
 //      phải bám vào tình huống vừa kể, không phải sáng tác một việc mới.
 //   3. Preserve không được trùng bước Ý nghĩa. Bước đó đã hỏi "giữ lại điều
 //      gì"; Preserve giữ một chi tiết cụ thể, không phải bài học.
-const Map<HumanMoment, Map<ReflectionPattern, String>> _momentPrompts = {
+Map<HumanMoment, Map<ReflectionPattern, String>> get _momentPrompts => {
   HumanMoment.arrival: {
-    ReflectionPattern.notice: 'Lúc này trong bạn đang có điều gì?',
+    ReflectionPattern.notice: tr('Lúc này trong bạn đang có điều gì?', 'What is going on inside you right now?'),
     ReflectionPattern.name:
-        'Nếu gọi tên cảm giác đó bằng một câu, bạn sẽ nói gì?',
+        tr('Nếu gọi tên cảm giác đó bằng một câu, bạn sẽ nói gì?', 'If you named that feeling in one line, what would you say?'),
     ReflectionPattern.preserve:
-        'Có chi tiết nào của hôm nay bạn muốn nhớ lại sau này?',
+        tr('Có chi tiết nào của hôm nay bạn muốn nhớ lại sau này?', 'Is there a detail from today you want to remember later?'),
   },
   HumanMoment.confusion: {
-    ReflectionPattern.notice: 'Điều gì đang khiến bạn thấy chưa ổn?',
-    ReflectionPattern.name: 'Nếu phải gọi tên điều chưa ổn đó, bạn gọi là gì?',
+    ReflectionPattern.notice: tr('Điều gì đang khiến bạn thấy chưa ổn?', 'What is making you feel off?'),
+    ReflectionPattern.name: tr('Nếu phải gọi tên điều chưa ổn đó, bạn gọi là gì?', 'If you had to name what feels off, what would you call it?'),
     ReflectionPattern.explore:
-        'Chuyện này làm bạn nhớ tới lần nào trước đây không?',
+        tr('Chuyện này làm bạn nhớ tới lần nào trước đây không?', 'Does this remind you of another time?'),
     ReflectionPattern.preserve:
-        'Chi tiết nào trong chuyện này bạn muốn nhớ lại sau?',
+        tr('Chi tiết nào trong chuyện này bạn muốn nhớ lại sau?', 'Which detail of this do you want to remember later?'),
   },
   HumanMoment.decision: {
-    ReflectionPattern.notice: 'Bạn đang phải chọn giữa những điều gì?',
-    ReflectionPattern.name: 'Điều gì làm lựa chọn này khó với bạn?',
-    ReflectionPattern.explore: 'Điều gì thực sự quan trọng với bạn ở đây?',
+    ReflectionPattern.notice: tr('Bạn đang phải chọn giữa những điều gì?', 'What are you having to choose between?'),
+    ReflectionPattern.name: tr('Điều gì làm lựa chọn này khó với bạn?', 'What makes this choice hard for you?'),
+    ReflectionPattern.explore: tr('Điều gì thực sự quan trọng với bạn ở đây?', 'What actually matters to you here?'),
     ReflectionPattern.reframe:
-        'Ba năm nữa nhìn lại, bạn mong mình đã chọn thế nào?',
+        tr('Ba năm nữa nhìn lại, bạn mong mình đã chọn thế nào?', 'Looking back in three years, how do you hope you chose?'),
     ReflectionPattern.commit:
-        'Tuần này bạn làm được việc nhỏ nào để chọn dễ hơn?',
+        tr('Tuần này bạn làm được việc nhỏ nào để chọn dễ hơn?', 'What small thing could you do this week to make the choice easier?'),
   },
   HumanMoment.growth: {
-    ReflectionPattern.notice: 'Bạn muốn mình khá hơn ở điều gì?',
+    ReflectionPattern.notice: tr('Bạn muốn mình khá hơn ở điều gì?', 'What do you want to get better at?'),
     ReflectionPattern.explore:
-        'Kể lại một lần bạn làm được điều đó. Chuyện gì đã xảy ra?',
+        tr('Kể lại một lần bạn làm được điều đó. Chuyện gì đã xảy ra?', 'Tell me about a time you did it. What happened?'),
     ReflectionPattern.commit:
-        'Tuần này, trong tình huống nào bạn có thể thử lại điều đó?',
-    ReflectionPattern.preserve: 'Điều gì trong lần làm được đó bạn muốn nhớ?',
+        tr('Tuần này, trong tình huống nào bạn có thể thử lại điều đó?', 'Where this week could you try that again?'),
+    ReflectionPattern.preserve: tr('Điều gì trong lần làm được đó bạn muốn nhớ?', 'What from that time do you want to remember?'),
   },
   HumanMoment.recovery: {
-    ReflectionPattern.notice: 'Điều gì đang làm bạn mất năng lượng?',
+    ReflectionPattern.notice: tr('Điều gì đang làm bạn mất năng lượng?', 'What is draining you?'),
     ReflectionPattern.explore:
-        'Điều gì làm chuyện này nặng hơn mức bình thường?',
+        tr('Điều gì làm chuyện này nặng hơn mức bình thường?', 'What makes this heavier than usual?'),
     ReflectionPattern.preserve:
-        'Điều gì đã giúp bạn dễ thở hơn, dù chỉ một chút?',
+        tr('Điều gì đã giúp bạn dễ thở hơn, dù chỉ một chút?', 'What made it easier to breathe, even a little?'),
   },
   HumanMoment.celebration: {
-    ReflectionPattern.notice: 'Bạn vừa làm được điều gì?',
-    ReflectionPattern.name: 'Điều gì làm bạn thấy điều đó đáng tự hào?',
+    ReflectionPattern.notice: tr('Bạn vừa làm được điều gì?', 'What did you just pull off?'),
+    ReflectionPattern.name: tr('Điều gì làm bạn thấy điều đó đáng tự hào?', 'What makes that feel worth being proud of?'),
     ReflectionPattern.preserve:
-        'Khoảnh khắc nào trong chuyện đó bạn muốn nhớ lâu?',
+        tr('Khoảnh khắc nào trong chuyện đó bạn muốn nhớ lâu?', 'Which moment in it do you want to remember for a long time?'),
   },
 };
 
@@ -226,7 +227,7 @@ const Map<HumanMoment, Map<ReflectionPattern, String>> _momentPrompts = {
 String promptFor(HumanMoment moment, ReflectionPattern pattern) {
   return _momentPrompts[moment]?[pattern] ??
       _defaultPrompts[pattern] ??
-      'Bạn đang nghĩ gì?';
+      tr('Bạn đang nghĩ gì?', 'What are you thinking?');
 }
 
 // ---------------------------------------------------------------------------
@@ -237,45 +238,45 @@ String promptFor(HumanMoment moment, ReflectionPattern pattern) {
 // nửa câu có sẵn thì có.
 // ---------------------------------------------------------------------------
 
-const Map<ReflectionPattern, String> _defaultHints = {
-  ReflectionPattern.notice: 'Tôi đang…',
-  ReflectionPattern.name: 'Tôi thấy…',
-  ReflectionPattern.explore: 'Hôm đó…',
-  ReflectionPattern.reframe: 'Có lẽ…',
-  ReflectionPattern.commit: 'Tôi sẽ…',
-  ReflectionPattern.preserve: 'Tôi muốn nhớ…',
+Map<ReflectionPattern, String> get _defaultHints => {
+  ReflectionPattern.notice: tr('Tôi đang…', 'I am…'),
+  ReflectionPattern.name: tr('Tôi thấy…', 'I feel…'),
+  ReflectionPattern.explore: tr('Hôm đó…', 'That day…'),
+  ReflectionPattern.reframe: tr('Có lẽ…', 'Maybe…'),
+  ReflectionPattern.commit: tr('Tôi sẽ…', 'I will…'),
+  ReflectionPattern.preserve: tr('Tôi muốn nhớ…', 'I want to remember…'),
 };
 
-const Map<HumanMoment, Map<ReflectionPattern, String>> _momentHints = {
+Map<HumanMoment, Map<ReflectionPattern, String>> get _momentHints => {
   HumanMoment.arrival: {
-    ReflectionPattern.notice: 'Trong đầu tôi đang…',
-    ReflectionPattern.preserve: 'Lúc…',
+    ReflectionPattern.notice: tr('Trong đầu tôi đang…', 'In my head right now…'),
+    ReflectionPattern.preserve: tr('Lúc…', 'When…'),
   },
   HumanMoment.confusion: {
-    ReflectionPattern.notice: 'Chuyện là…',
-    ReflectionPattern.explore: 'Nó giống lần…',
-    ReflectionPattern.preserve: 'Khoảnh khắc…',
+    ReflectionPattern.notice: tr('Chuyện là…', 'What happened was…'),
+    ReflectionPattern.explore: tr('Nó giống lần…', 'It is like the time…'),
+    ReflectionPattern.preserve: tr('Khoảnh khắc…', 'The moment…'),
   },
   HumanMoment.decision: {
-    ReflectionPattern.notice: 'Một bên là… bên kia là…',
-    ReflectionPattern.name: 'Khó vì…',
-    ReflectionPattern.explore: 'Với tôi, quan trọng nhất là…',
-    ReflectionPattern.reframe: 'Tôi mong mình đã…',
-    ReflectionPattern.commit: 'Tuần này tôi sẽ…',
+    ReflectionPattern.notice: tr('Một bên là… bên kia là…', 'On one side… on the other…'),
+    ReflectionPattern.name: tr('Khó vì…', 'Hard because…'),
+    ReflectionPattern.explore: tr('Với tôi, quan trọng nhất là…', 'For me, what matters most is…'),
+    ReflectionPattern.reframe: tr('Tôi mong mình đã…', 'I hope I will have…'),
+    ReflectionPattern.commit: tr('Tuần này tôi sẽ…', 'This week I will…'),
   },
   HumanMoment.growth: {
-    ReflectionPattern.notice: 'Tôi muốn khá hơn ở…',
-    ReflectionPattern.commit: 'Khi… tôi sẽ…',
+    ReflectionPattern.notice: tr('Tôi muốn khá hơn ở…', 'I want to get better at…'),
+    ReflectionPattern.commit: tr('Khi… tôi sẽ…', 'When… I will…'),
   },
   HumanMoment.recovery: {
-    ReflectionPattern.notice: 'Tôi đang mệt vì…',
-    ReflectionPattern.explore: 'Có lẽ vì…',
-    ReflectionPattern.preserve: 'Tôi thấy nhẹ hơn khi…',
+    ReflectionPattern.notice: tr('Tôi đang mệt vì…', 'I am tired because…'),
+    ReflectionPattern.explore: tr('Có lẽ vì…', 'Maybe because…'),
+    ReflectionPattern.preserve: tr('Tôi thấy nhẹ hơn khi…', 'I felt lighter when…'),
   },
   HumanMoment.celebration: {
-    ReflectionPattern.notice: 'Tôi vừa…',
-    ReflectionPattern.name: 'Vì…',
-    ReflectionPattern.preserve: 'Lúc…',
+    ReflectionPattern.notice: tr('Tôi vừa…', 'I just…'),
+    ReflectionPattern.name: tr('Vì…', 'Because…'),
+    ReflectionPattern.preserve: tr('Lúc…', 'When…'),
   },
 };
 
@@ -283,5 +284,5 @@ const Map<HumanMoment, Map<ReflectionPattern, String>> _momentHints = {
 String promptHintFor(HumanMoment moment, ReflectionPattern pattern) {
   return _momentHints[moment]?[pattern] ??
       _defaultHints[pattern] ??
-      'Viết vài dòng cho riêng bạn…';
+      tr('Viết vài dòng cho riêng bạn…', 'Write a few lines just for you…');
 }

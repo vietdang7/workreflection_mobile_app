@@ -13,6 +13,7 @@
 //
 // Pure Dart, không phụ thuộc Flutter → test được trực tiếp.
 
+import '../l10n/wr_tr.dart';
 import '../models/workshop_models.dart';
 
 /// Địa chỉ web app dùng cho nút "Xem chi tiết".
@@ -54,13 +55,13 @@ const String kTraChieuZaloUrl = String.fromEnvironment(
 );
 
 /// Nhãn hiển thị của chương trình — dùng chung ở mọi nơi nhắc tới nó.
-const String kTraChieuLabel = 'Trà Chiều Nghề Nghiệp';
+String get kTraChieuLabel => tr('Trà Chiều Nghề Nghiệp', 'Career Tea Time');
 
 /// Khuôn buổi — ba con số nói hết định dạng, dùng ở cả thẻ mời và màn chi tiết.
 ///
 /// Đây là quy ước của chương trình, không phải dữ liệu từng buổi: mọi buổi đều
 /// cùng số người, cùng thời lượng, cùng một câu hỏi.
-const String kTraChieuFormatLabel = '10 đến 12 người · 2 tiếng · 1 câu hỏi';
+String get kTraChieuFormatLabel => tr('10–12 người · 2 giờ chia sẻ', '10–12 people · 2 hours of sharing');
 
 /// Các giá trị `category` được coi là Trà Chiều.
 ///
@@ -155,7 +156,7 @@ int traChieuInsertIndex(List<String> titles) {
 ///
 /// Định dạng nghìn bằng dấu chấm theo cách viết tiếng Việt: 99000 → "99.000đ".
 String traChieuPriceLabel(WorkshopDetail workshop) {
-  if (workshop.price == 0) return 'Miễn phí';
+  if (workshop.price == 0) return tr('Miễn phí', 'Free');
   final amount = workshop.price.round().toString();
   final buffer = StringBuffer();
   for (var i = 0; i < amount.length; i++) {
@@ -173,7 +174,7 @@ String traChieuPriceLabel(WorkshopDetail workshop) {
 /// Buổi miễn phí không ghép tiền tố: "Giữ chỗ Miễn phí" là một câu không ai nói.
 String traChieuSeatLabel(WorkshopDetail workshop) => workshop.price == 0
     ? traChieuPriceLabel(workshop)
-    : 'Giữ chỗ ${traChieuPriceLabel(workshop)}';
+    : tr('Giữ chỗ ${traChieuPriceLabel(workshop)}', 'Reserve a spot ${traChieuPriceLabel(workshop)}');
 
 /// Ngày giờ hiển thị: "T7 22/08, 15:30 – 17:30" — bỏ phần nào không có dữ liệu.
 String traChieuWhenLabel(WorkshopDetail workshop) {

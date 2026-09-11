@@ -19,6 +19,7 @@
 import 'package:flutter/services.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
+import '../l10n/wr_tr.dart';
 
 // ---------------------------------------------------------------------------
 // Data class
@@ -101,15 +102,14 @@ class CertificatePdfBuilder {
     final isVi = d.locale == 'vi';
 
     // Localised strings
-    final certifiesLine = 'This is to certify that / Chứng nhận rằng';
-    final attendedLine =
-        'has successfully completed the workshop / Đã tham dự thành công';
-    final facilitator = 'Facilitator';
-    final orgName = 'Cloud & Coral';
+    final dynamic certifiesLine = tr('This is to certify that / Chứng nhận rằng', 'This is to certify that');
+    final dynamic attendedLine = tr('has successfully completed the workshop / Đã tham dự thành công', 'has successfully completed the workshop');
+    const facilitator = 'Facilitator';
+    const orgName = 'Cloud & Coral';
     final footerText = isVi
-        ? 'Cloud & Coral  |  Nền tảng phát triển tổ chức  |  www.cloudandcoral.com'
+        ? tr('Cloud & Coral  |  Nền tảng phát triển tổ chức  |  www.cloudandcoral.com', 'Cloud & Coral  |  Organisational development platform  |  www.cloudandcoral.com')
         : 'Cloud & Coral  |  Work Reflection Platform  |  www.cloudandcoral.com';
-    final issuedLabel = isVi ? 'Ngày cấp' : 'Issued';
+    final issuedLabel = isVi ? tr('Ngày cấp', 'Issued on') : 'Issued';
     final dateStr = _formatDate(d.workshopDate, isVi);
     final issueDateStr = _formatDate(DateTime.now(), isVi);
 
@@ -193,7 +193,7 @@ class CertificatePdfBuilder {
                   ),
                   pw.SizedBox(height: 4),
                   pw.Text(
-                    'Chứng nhận tham dự',
+                    tr('Chứng nhận tham dự', 'Certificate of attendance'),
                     style: pw.TextStyle(
                       font: regular,
                       fontSize: 13.5,
@@ -314,9 +314,9 @@ class CertificatePdfBuilder {
   static String _formatDate(DateTime d, bool isVi) {
     final months = isVi
         ? [
-            '', 'tháng 1', 'tháng 2', 'tháng 3', 'tháng 4',
-            'tháng 5', 'tháng 6', 'tháng 7', 'tháng 8',
-            'tháng 9', 'tháng 10', 'tháng 11', 'tháng 12'
+            '', tr('tháng 1', 'January'), tr('tháng 2', 'February'), tr('tháng 3', 'March'), tr('tháng 4', 'April'),
+            tr('tháng 5', 'May'), tr('tháng 6', 'June'), tr('tháng 7', 'July'), tr('tháng 8', 'August'),
+            tr('tháng 9', 'September'), tr('tháng 10', 'October'), tr('tháng 11', 'November'), tr('tháng 12', 'December')
           ]
         : [
             '', 'January', 'February', 'March', 'April',

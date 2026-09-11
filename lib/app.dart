@@ -5,6 +5,8 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'core/data/seed_service.dart';
+import 'core/l10n/wr_locale_scope.dart';
+import 'core/l10n/wr_tr.dart';
 import 'core/data/user_session_scope.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/wr_text_scale.dart';
@@ -12,6 +14,23 @@ import 'core/theme/wr_theme.dart';
 import 'features/profile/profile_providers.dart';
 import 'features/wr/iap_providers.dart';
 import 'l10n/app_localizations.dart';
+
+/// Bọc cây widget của app: cỡ chữ, và ngôn ngữ đang bật.
+///
+/// [WrLocaleScope] phải nằm TRÊN `Router` — nó là thứ duy nhất đi xuyên được
+/// cache `Page` của go_router để bảo màn hình dựng lại khi đổi ngôn ngữ. Vì sao
+/// mọi cách hiển nhiên hơn đều không tới nơi: `core/l10n/wr_locale_scope.dart`.
+///
+/// Đọc [wrLocaleCode] chứ không đọc `Localizations.localeOf(context)`: đây đúng
+/// là biến mà `tr()` dùng, nên scope không bao giờ lệch pha với chữ đang hiển
+/// thị. `_WrAppState.build` gọi `wrSetLocale` ngay trước khi dựng cây, nên giá
+/// trị ở đây luôn là ngôn ngữ của khung hình này.
+Widget wrLocaleAwareBuilder(BuildContext context, Widget? child) {
+  return WrLocaleScope(
+    localeCode: wrLocaleCode,
+    child: wrTextScaleBuilder(context, child),
+  );
+}
 
 class WrApp extends ConsumerStatefulWidget {
   const WrApp({super.key});
@@ -72,6 +91,23 @@ class _WrAppState extends ConsumerState<WrApp> {
     final router = ref.watch(appRouterProvider);
     final localeCode = ref.watch(appLocaleProvider);
 
+    // `wrSetLocale` chạy ngay ở listener chứ không đợi `build` phía dưới:
+    // listener chạy ĐÚNG LÚC state đổi, còn `build` phải chờ khung hình sau.
+    // Bất cứ thứ gì đọc `wrEnglish` trong khoảng giữa hai mốc đó — một
+    // `FutureProvider` vừa xong, một callback đang chạy dở — phải đọc được
+    // ngôn ngữ MỚI, nếu không nó chở lại đúng chữ tiếng cũ vào cache.
+    ref.listen<String>(appLocaleProvider, (previous, next) {
+      if (previous == next) return;
+      wrSetLocale(next);
+    });
+
+    // Phần WorkReflection lấy chữ qua `tr()` chứ không qua `AppLocalizations`
+    // (lý do ở `core/l10n/wr_tr.dart`). Ghi ở ĐẦU build, trước khi cây widget
+    // dựng, nên mọi màn trong khung hình này đọc cùng một ngôn ngữ. `build`
+    // chạy lại mỗi lần `appLocaleProvider` đổi, nên nút đổi ngôn ngữ trong Tài
+    // khoản cũng đi qua đây.
+    wrSetLocale(localeCode);
+
     // Nghe giao dịch của kho ứng dụng từ lúc app dựng, KHÔNG phải từ lúc mở
     // Paywall.
     //
@@ -81,12 +117,15 @@ class _WrAppState extends ConsumerState<WrApp> {
     // nghe thì những giao dịch đó nằm im cho tới lần người dùng tình cờ mở lại
     // trang bán hàng — mà người vừa trả tiền xong thì không có lý do gì để mở
     // trang bán hàng nữa. Tiền đã trừ, quyền không được cấp.
+    //
+    // Đặt SAU `wrSetLocale`: controller có thể dựng ra thông báo cho người
+    // dùng ngay ở khung hình đầu, và nó phải đọc được ngôn ngữ vừa ghi.
     ref.watch(wrIapControllerProvider);
 
     return MaterialApp.router(
       title: 'WorkReflection',
       theme: wrTheme(),
-      builder: wrTextScaleBuilder,
+      builder: wrLocaleAwareBuilder,
       routerConfig: router,
       locale: Locale(localeCode),
       localizationsDelegates: const [

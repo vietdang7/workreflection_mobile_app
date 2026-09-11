@@ -7,7 +7,7 @@ import 'package:workreflection_mobile/core/models/wr_mood_content.dart';
 /// Nạp trước bằng seed*; đặt [nextError] để giả lập lỗi (ném một lần rồi xoá).
 class FakeWrMoodContentRepository implements WrMoodContentRepository {
   final List<MoodContent> _items = [];
-  final List<String> _choicePool = [];
+  final List<ChoicePoolLine> _choicePool = [];
 
   Object? nextError;
 
@@ -17,7 +17,15 @@ class FakeWrMoodContentRepository implements WrMoodContentRepository {
       ..addAll(items);
   }
 
+  /// Nạp bể bằng câu tiếng Việt. Muốn có cả bản tiếng Anh thì dùng
+  /// [seedChoicePoolLines].
   void seedChoicePool(List<String> pool) {
+    seedChoicePoolLines(
+      pool.map((text) => ChoicePoolLine(textVi: text)).toList(),
+    );
+  }
+
+  void seedChoicePoolLines(List<ChoicePoolLine> pool) {
     _choicePool
       ..clear()
       ..addAll(pool);
@@ -54,7 +62,7 @@ class FakeWrMoodContentRepository implements WrMoodContentRepository {
   }
 
   @override
-  Future<List<String>> fetchChoicePool() async {
+  Future<List<ChoicePoolLine>> fetchChoicePool() async {
     _maybeThrow();
     return List.unmodifiable(_choicePool);
   }
@@ -72,6 +80,8 @@ MoodContent fakeMoodContent({
   String body = 'Đoạn một.\n\nĐoạn hai.',
   bool placeholder = false,
   String? audioUrl,
+  String? titleEn,
+  String? bodyEn,
 }) {
   return MoodContent(
     id: id,
@@ -84,5 +94,7 @@ MoodContent fakeMoodContent({
     body: body,
     placeholder: placeholder,
     audioUrl: audioUrl,
+    titleEn: titleEn,
+    bodyEn: bodyEn,
   );
 }

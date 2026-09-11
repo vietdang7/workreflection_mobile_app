@@ -193,19 +193,19 @@ class AppLocalizationsEn extends AppLocalizations {
   String get understandEyebrowHealth => 'Career Health Check';
 
   @override
-  String get understandScaRole => 'Role clarity';
+  String get understandScaRole => 'Clarity';
 
   @override
-  String get understandScaVoice => 'Safety to speak up';
+  String get understandScaVoice => 'Relationships';
 
   @override
-  String get understandScaMeaning => 'Sense of direction';
+  String get understandScaMeaning => 'Ways of working';
 
   @override
-  String get understandStatusStable => 'Stable';
+  String get understandStatusStable => 'Supporting you well';
 
   @override
-  String get understandStatusImproving => 'Improving';
+  String get understandStatusImproving => 'Fine, room to grow';
 
   @override
   String get understandStatusUnrated => 'Unrated';
@@ -352,7 +352,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Could not delete the account. Check your connection and try again.';
 
   @override
-  String get understandStatusNeedsAttention => 'Needs attention';
+  String get understandStatusNeedsAttention => 'Holding you back';
 
   @override
   String get understandNeedSuffix => '· Dominant need';
