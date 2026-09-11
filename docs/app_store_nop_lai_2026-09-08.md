@@ -349,6 +349,10 @@ Account > Xử lý dữ liệu bằng AI.
 > `wr_ai_consent`, nên màn xin phép sẽ hiện ra đúng lúc người duyệt mở Trò
 > chuyện. Đừng đăng nhập rồi bấm đồng ý thử trên chính tài khoản đó; lỡ bấm thì
 > xoá hàng consent đi trước khi nộp.
+>
+> **Kiểm lại 11/09/2026:** vẫn nguyên `role = 'premium'`, `wr_ai_consent` vẫn 0
+> hàng, `wr_entitlements` cũng 0 hàng. Nghĩa là câu `update` ở trên **chưa
+> chạy** — vẫn còn nợ, và nó là đúng cái đã làm rớt 3.1.1 lần trước.
 
 ---
 

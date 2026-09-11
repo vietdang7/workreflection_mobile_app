@@ -259,6 +259,35 @@ void main() {
       expect(text, isNotNull);
       expect(text, contains('12/07/2026'));
     });
+
+    // Ca khách báo 11/09/2026: hai lần Self-Check (05/09 và 14/08) cách nhau 22
+    // ngày. Bản trước rơi về `kDeepOneSelfCheckOnly` — câu đó bảo "sau lần cập
+    // nhật tiếp theo", nên người đã làm hai lần hiểu là làm thêm lần nữa sẽ mở
+    // ra, làm ngay hôm sau và vẫn gặp đúng câu ấy. Thứ còn thiếu là KHOẢNG CÁCH.
+    test('hai lần Self-Check quá sát nhau thì nói về khoảng cách, không mời '
+        'làm thêm một lần', () {
+      final content = buildDeepInterpretation(
+        history: [
+          _check(at: DateTime(2026, 9, 5)),
+          _check(at: DateTime(2026, 8, 14)),
+        ],
+        episodes: _eps('C2-01', 29, end: _now),
+        situations: _situations,
+        now: _now,
+      );
+      expect(content.selfCheckTrendText, kDeepSelfChecksTooClose);
+      expect(content.selfCheckTrendText, isNot(kDeepOneSelfCheckOnly));
+    });
+
+    test('mới đúng MỘT lần Self-Check thì vẫn là câu mời làm lần tiếp theo', () {
+      final content = buildDeepInterpretation(
+        history: [_check(at: DateTime(2026, 9, 5))],
+        episodes: _eps('C2-01', 29, end: _now),
+        situations: _situations,
+        now: _now,
+      );
+      expect(content.selfCheckTrendText, kDeepOneSelfCheckOnly);
+    });
   });
 
   group('Mục 6 · chưa đủ dữ liệu thì MỜI GỌI, không báo lỗi', () {
@@ -277,6 +306,7 @@ void main() {
       final texts = [
         kDeepNoTrendYet,
         kDeepOneSelfCheckOnly,
+        kDeepSelfChecksTooClose,
         kDeepNotEnoughReflection,
         deepStaleSelfCheckText(DateTime(2026, 5, 20)),
       ];

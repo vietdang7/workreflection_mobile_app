@@ -340,8 +340,10 @@ sang lời xác nhận, và chính người dùng bấm "Tiếp tục".
 **Câu hỏi §19 số 2** ("Không đồng ý khi chưa viết gì") — làm theo phương án tài
 liệu đề nghị: cho đi tiếp, không lưu Insight. Có test riêng.
 
-**⚠️ Hai migration CHƯA push:** `20260910000000_wr_insight_feedback.sql`,
-`20260910000001_wr_polished_text.sql`.
+**Hai migration `20260910000000_wr_insight_feedback.sql` và
+`20260910000001_wr_polished_text.sql` đã push** — đối chiếu `list_migrations`
+trên `sukpcxevcjnhiuyaoqxi` ngày 11/09, cả hai đều có mặt. Dòng cảnh báo cũ ở
+đây nói ngược lại và đã bị bỏ.
 
 ### Đợt 3 — 3/3 ✅
 
