@@ -174,6 +174,21 @@ class WrIapController extends StateNotifier<WrIapState> {
     // Server đã ghi quyền — giờ mới báo kho ứng dụng là đã giao hàng.
     await _finishQuietly(purchase);
 
+    // Bỏ công tắc thử nghiệm nếu đang bật. Nó nằm CAO HƠN mọi nguồn quyền khác
+    // trong `wrEntitlementProvider`, nên một công tắc "ép miễn phí" bỏ quên sẽ
+    // nuốt trọn gói vừa mua: Apple đã trừ tiền, `wr_entitlements` đã cấp
+    // premium, mà app vẫn khoá — và người dùng không có cách nào đoán ra.
+    //
+    // Luồng thanh toán QR đã làm đúng việc này từ đầu
+    // (`wr_payment_screen._onPaid`); luồng App Store thì quên, và nó nổ đúng
+    // lần chạy thử sandbox đầu tiên 11/09/2026.
+    //
+    // Chỉ chạm tới công tắc khi tài khoản thật sự được phép bật nó. Người dùng
+    // thường không bao giờ có giá trị này, nên với họ đây là lệnh rỗng.
+    if (_ref.read(canTogglePremiumProvider)) {
+      _ref.read(premiumOverrideProvider.notifier).set(null);
+    }
+
     // Bắt cả app đọc lại quyền: Paywall, các cổng Premium, màn Tài khoản.
     _ref.invalidate(wrEntitlementProvider);
 
