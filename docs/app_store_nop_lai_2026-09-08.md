@@ -427,6 +427,70 @@ Apple **không bắt buộc** phải có video, nên bỏ hẳn chứ không qua
 xuống dòng thành hai ký tự. Bản đầy đủ lưu ở
 `docs/asc_app_review_notes_2026-09-11.txt`.
 
+Bản build gắn vào hồ sơ lúc đó vẫn là **build 7** (bản 09/09). Đã đổi sang
+**build 9**. Chỗ này không có cảnh báo nào cả — hồ sơ vẫn xanh, vẫn bấm nộp
+được, chỉ là nộp nhầm bản cũ. **Mỗi lần build lại phải vào đổi bằng tay.**
+
+### Đường vào trang nộp lại
+
+Hồ sơ bị từ chối **vẫn mở** và không nằm trong luồng "Add for Review" bình
+thường, nên rất dễ lạc. Đường dẫn cố định:
+
+```
+https://appstoreconnect.apple.com/apps/6805322970/distribution/reviewsubmissions/details/4b138188-fa36-4886-8a47-23fe8a26c3bb
+```
+
+Bấm tay: **Distribution → App Review** (cột trái, có chấm đỏ) → băng đỏ trên
+cùng → **View Submission**.
+
+### Hai hồ sơ tách rời — đọc kỹ trước khi bấm nộp
+
+Tình trạng lúc 11/09:
+
+| Hồ sơ | Chứa | Nút |
+|---|---|---|
+| Bị từ chối 06/09, **vẫn mở** | iOS App 1.0 → `1.0.0 (9)` | Resubmit to App Review |
+| Nháp | **Subscriptions (2)** | Submit **bị khoá** |
+
+Hồ sơ nháp báo *"To submit your items for review, add an app version"* — mà bản
+version đang bị giữ trong hồ sơ cũ, không nằm hai chỗ cùng lúc được.
+
+Bấm Resubmit mà hộp thoại **chỉ liệt kê app version**, không có hai gói, thì
+**đừng bấm tiếp**: Apple đã nói rõ *"first subscription group must be submitted
+with a new app version"*, nộp thiếu là rớt 3.1.1 lần hai. Đường vòng khi đó:
+**Cancel Submission** → version được thả ra → thêm vào hồ sơ nháp → Submit một
+lần đủ ba món.
+
+### Chạy thử sandbox — XONG 11/09/2026, chuỗi thông đầu-cuối
+
+| Tầng | Bằng chứng |
+|---|---|
+| StoreKit | mua gói tháng trên máy thật, bản TestFlight |
+| `wr-verify-iap` | **200** |
+| `wr_iap_transactions` | 1 hàng, `environment = Sandbox` |
+| `wr_entitlements` | `plan = premium`, `source = apple_iap` |
+| `wr-apple-notifications` | **200** ×2 — `SUBSCRIBED/INITIAL_BUY` (sau 19 giây) và `DID_CHANGE_RENEWAL_STATUS/AUTO_RENEW_ENABLED` |
+
+Nhánh **chấp nhận** của `wr-apple-notifications` đến đây mới chạy thật lần đầu —
+trước giờ chỉ kiểm được các nhánh từ chối, vì nó cần một thông báo do Apple ký.
+
+**Rào chắn chống dùng chung cũng đã chạy thật.** Đăng nhập một tài khoản app
+khác trên cùng máy rồi bấm mua: `wr-verify-iap` trả **403**
+*"Giao dịch này đã được dùng cho một tài khoản khác"*. Đúng ý — thuê bao thuộc
+**Apple ID sandbox**, không thuộc tài khoản trong app, nên một lần mua không mở
+khoá được nhiều tài khoản. Muốn thử mua bằng tài khoản thứ hai thì phải tạo
+**Apple ID sandbox thứ hai**.
+
+Còn treo hai nhánh nhỏ: **"Khôi phục giao dịch"** (Apple bắt buộc phải có nút
+này và người duyệt hay bấm thử) và mua gói **năm**. Gói năm rủi ro thấp — cùng
+đoạn code, mã gói đã chứng minh đúng vì nút của nó hiện được giá.
+
+> **Bẫy đã sập một lần, xem [[wr-premium-override-nuot-goi]]:** công tắc Premium
+> nội bộ nằm cao hơn mọi nguồn quyền trong `wrEntitlementProvider`. Muốn tới
+> Paywall để mua thử thì phải gạt nó sang "ép miễn phí", rồi chính nó nuốt gói
+> vừa mua — Apple đã trừ tiền, DB đã cấp quyền, app vẫn hiện Free. Đã vá ở
+> PR #26. Chỉ ảnh hưởng hai tài khoản nội bộ, không ảnh hưởng lần duyệt này.
+
 ---
 
 ## 5. Việc ngoài lần từ chối này, nhưng nên biết
