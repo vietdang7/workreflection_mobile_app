@@ -808,6 +808,21 @@ void main() {
 
     testWidgets('thẻ buổi nói đủ tên, mô tả, giờ, địa điểm và giá',
         (tester) async {
+      // Ngày phải TÍNH TỪ HÔM NAY, không được ghi cứng.
+      //
+      // Bản trước ghi `DateTime(2026, 9, 3)`. Lúc viết thì đó là ngày sắp tới,
+      // nhưng màn lịch chỉ bày buổi CHƯA DIỄN RA — nên qua 03/09/2026 là cái
+      // thẻ này biến mất khỏi cây widget và bài đỏ, dù không ai đụng vào mã.
+      // Bài đỏ theo lịch chứ không theo lỗi là bài không nói lên điều gì.
+      final date = DateTime.now().add(const Duration(days: 7));
+
+      // Nhãn dựng lại bằng tay chứ không gọi `traChieuWhenLabel`: gọi hàm của
+      // sản phẩm để kiểm chính nó thì luôn khớp, kể cả khi nó sai.
+      const weekdays = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+      final expectedWhen = '${weekdays[date.weekday - 1]} '
+          '${date.day.toString().padLeft(2, '0')}/'
+          '${date.month.toString().padLeft(2, '0')}';
+
       final workshops = FakeWorkshopRepository()
         ..seedWorkshops([
           _traChieu(
@@ -815,7 +830,7 @@ void main() {
             title: 'Buổi A',
             description: 'Một câu hỏi duy nhất cho cả bàn.',
             location: '123 Trường Sơn',
-            date: DateTime(2026, 9, 3),
+            date: date,
           ),
         ]);
 
@@ -826,7 +841,7 @@ void main() {
 
       expect(find.text('"Buổi A"'), findsOneWidget);
       expect(find.text('Một câu hỏi duy nhất cho cả bàn.'), findsOneWidget);
-      expect(find.text('T5 03/09'), findsOneWidget);
+      expect(find.text(expectedWhen), findsOneWidget);
       expect(find.text('123 Trường Sơn'), findsOneWidget);
       expect(find.text('Giữ chỗ 99.000đ'), findsOneWidget);
     });
