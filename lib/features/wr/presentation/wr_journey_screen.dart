@@ -32,6 +32,7 @@ import '../../../core/widgets/wr_detail_scaffold.dart';
 import '../../../core/widgets/wr_link_row.dart';
 import '../../../core/widgets/wr_premium_lock.dart';
 import '../../../core/widgets/wr_profile_avatar.dart';
+import '../growth_providers.dart';
 import '../wr_providers.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 
@@ -101,11 +102,46 @@ String? _episodeExcerpt(ReflectionEpisode e, String? aha) {
 ///
 /// Chỉ Episode đã khép lại mới vào Hành trình — WDA Inv.6: chưa có ý nghĩa
 /// thì chưa phải ký ức nghề nghiệp.
+/// Đọc lại một dòng chữ đã ĐÓNG BĂNG theo ngôn ngữ đang bật.
+///
+/// [frozen] là `reflection_text` của mảnh ký ức thực hành, ghép sẵn lúc người
+/// dùng bấm xong bước. Ba dạng nó có thể mang:
+///
+///   "‹chủ đề› · ‹bước›"      — xong một bước
+///   "‹chủ đề›"                — xong cả chủ đề
+///   "‹bước›: ‹lời người dùng›" — điều mình ghi lại
+///
+/// Chỉ phần TÊN được tra lại; lời người dùng viết giữ nguyên văn.
+///
+/// Dạng thứ ba không tách được bằng cách cắt ở dấu hai chấm ĐẦU TIÊN: chính tên
+/// bước đã chứa dấu hai chấm ("Thử nghiệm: Chủ động hỏi lý do thay đổi"). Nên
+/// đi theo chiều ngược lại — thử khớp tên DÀI NHẤT mà đoạn chữ mở đầu bằng nó.
+String localizeFrozenPracticeText(String frozen, Map<String, String> labels) {
+  if (labels.isEmpty) return frozen;
+
+  String segment(String raw) {
+    final s = raw.trim();
+    final exact = labels[s];
+    if (exact != null) return exact;
+
+    String? bestKey;
+    for (final key in labels.keys) {
+      if (!s.startsWith('$key: ')) continue;
+      if (bestKey == null || key.length > bestKey.length) bestKey = key;
+    }
+    if (bestKey == null) return raw;
+    return '${labels[bestKey]}${s.substring(bestKey.length)}';
+  }
+
+  return frozen.split(' · ').map(segment).join(' · ');
+}
+
 List<JourneyEntry> buildJourneyEntries({
   required List<ReflectionEpisode> episodes,
   required List<CareerMemoryEvent> events,
   required Map<String, String> situationLabels,
   Map<String, String> ahaByCode = const {},
+  Map<String, String> practiceLabels = const {},
 }) {
   final entries = <JourneyEntry>[];
 
@@ -184,12 +220,21 @@ List<JourneyEntry> buildJourneyEntries({
       continue;
     }
 
+    // Ba loại mảnh ký ức thực hành mang chữ GHÉP SẴN từ tên chủ đề và tên bước
+    // — tra lại theo ngôn ngữ đang bật, xem `localizeFrozenPracticeText`.
+    final isPracticeText = ev.behavior == 'practice_step_done' ||
+        ev.behavior == 'practice_theme_done' ||
+        ev.behavior == kPracticeStepNoteBehavior;
+    final shownText = hasText && isPracticeText
+        ? localizeFrozenPracticeText(text, practiceLabels)
+        : text;
+
     // Không rơi về chính cái mã: `C2-sit-01` là thuật ngữ nội bộ, không phải
     // thứ để người dùng đọc trên dòng thời gian của đời mình (v1.6 §XII.5).
     final title = ev.situationCode != null
         ? (situationLabels[ev.situationCode] ??
-            (hasText ? text : tr('Một lần nhìn lại', 'One look back')))
-        : (hasText ? text : emotionLabel(ev.emotion));
+            (hasText ? shownText! : tr('Một lần nhìn lại', 'One look back')))
+        : (hasText ? shownText! : emotionLabel(ev.emotion));
     final mood =
         ev.emotion?.isNotEmpty == true ? emotionLabel(ev.emotion) : null;
     entries.add(JourneyEntry(
@@ -524,6 +569,7 @@ List<JourneyEntry> watchJourneyEntries(WidgetRef ref) {
       for (final s in stories)
         if (s.ahaMessage != null) s.storyId: s.ahaMessage!,
     },
+    practiceLabels: ref.watch(wrPracticeLabelMapProvider),
   );
 }
 

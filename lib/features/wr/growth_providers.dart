@@ -26,6 +26,55 @@ final practiceThemesProvider =
   return repo.fetchPracticeThemes();
 });
 
+/// Mọi bước thực hành của mọi chủ đề — nguồn để đọc lại TÊN một bước.
+///
+/// Khác [practiceStepsProvider] ở chỗ không cần biết chủ đề trước: mảnh ký ức
+/// "điều mình ghi lại" chỉ lưu tên bước, không lưu `theme_id`.
+final allPracticeStepsProvider =
+    FutureProvider<List<PracticeStep>>((ref) async {
+  final repo = ref.watch(wrIntelligenceRepositoryProvider);
+  return repo.fetchAllPracticeSteps();
+});
+
+/// Bảng tra: một tên chủ đề / tên bước viết ở BẤT KỲ ngôn ngữ nào → tên ấy
+/// trong ngôn ngữ đang bật.
+///
+/// Sinh ra để chữa chỗ khách chỉ 11/09: bật tiếng Anh mà màn Hành trình vẫn
+/// một nửa tiếng Việt. Gốc rễ là `wr_career_memory.reflection_text` — chuỗi
+/// "‹tên chủ đề› · ‹tên bước›" được GHÉP SẴN lúc bấm xong bước, bằng ngôn ngữ
+/// đang bật khi ấy, rồi đóng băng trong DB. Nhãn loại quanh nó đi qua `tr()`
+/// nên dịch được; câu chữ bên trong thì không.
+///
+/// Cùng một bệnh với `draft_meaning` ở Episode, và chữa cùng một cách: dựng
+/// lại lúc ĐỌC. Khoá cả `titleVi` lẫn `titleEn` vì bản ghi cũ có thể đã đóng
+/// băng bằng một trong hai.
+///
+/// Không đụng vào DB: chữ NGƯỜI DÙNG tự viết vẫn giữ nguyên văn — họ viết
+/// tiếng gì thì đọc lại đúng tiếng ấy, dịch máy lời của người ta là chuyện
+/// khác hẳn.
+final wrPracticeLabelMapProvider = Provider<Map<String, String>>((ref) {
+  final themes = ref.watch(practiceThemesProvider).valueOrNull ?? const [];
+  final steps = ref.watch(allPracticeStepsProvider).valueOrNull ?? const [];
+
+  final map = <String, String>{};
+  void put(String? vi, String? en, String now) {
+    for (final key in [vi, en]) {
+      if (key == null) continue;
+      final k = key.trim();
+      if (k.isEmpty) continue;
+      map[k] = now;
+    }
+  }
+
+  for (final t in themes) {
+    put(t.titleVi, t.titleEn, t.title);
+  }
+  for (final s in steps) {
+    put(s.titleVi, s.titleEn, s.title);
+  }
+  return map;
+});
+
 final practiceEnrollmentsProvider =
     FutureProvider<List<PracticeEnrollment>>((ref) async {
   final userId = ref.watch(currentUserIdProvider);

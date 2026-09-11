@@ -303,6 +303,18 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
   }
 
   @override
+  Future<List<PracticeStep>> fetchAllPracticeSteps() async {
+    _maybeThrow();
+    final steps = [
+      for (final byTheme in _practiceSteps.values) ...byTheme,
+    ]..sort((a, b) {
+        final byThemeId = a.themeId.compareTo(b.themeId);
+        return byThemeId != 0 ? byThemeId : a.stepOrder.compareTo(b.stepOrder);
+      });
+    return List.unmodifiable(steps);
+  }
+
+  @override
   Future<List<PracticeEnrollment>> fetchEnrollments(String userId) async {
     _maybeThrow();
     return List.unmodifiable(

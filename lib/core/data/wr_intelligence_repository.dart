@@ -114,6 +114,14 @@ abstract class WrIntelligenceRepository {
   /// Fetch practice steps for [themeId], ordered by step_order ascending.
   Future<List<PracticeStep>> fetchPracticeSteps(String themeId);
 
+  /// Fetch every practice step, mọi chủ đề, trong MỘT lượt.
+  ///
+  /// Không thay được bằng cách gọi [fetchPracticeSteps] cho từng chủ đề: nơi
+  /// cần nó là màn Hành trình, và ở đó không có sẵn danh sách chủ đề nào để
+  /// lặp — mảnh ký ức thực hành cũ không mang `theme_id`. Lặp qua cả 13 chủ đề
+  /// cũng là 13 lượt mạng cho một màn chỉ cần đọc tên bước.
+  Future<List<PracticeStep>> fetchAllPracticeSteps();
+
   /// Fetch enrollments for [userId].
   Future<List<PracticeEnrollment>> fetchEnrollments(String userId);
 
@@ -397,6 +405,16 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
         .from('wr_practice_steps')
         .select()
         .eq('theme_id', themeId)
+        .order('step_order', ascending: true);
+    return rows.map(PracticeStep.fromJson).toList();
+  }
+
+  @override
+  Future<List<PracticeStep>> fetchAllPracticeSteps() async {
+    final rows = await _client
+        .from('wr_practice_steps')
+        .select()
+        .order('theme_id', ascending: true)
         .order('step_order', ascending: true);
     return rows.map(PracticeStep.fromJson).toList();
   }
