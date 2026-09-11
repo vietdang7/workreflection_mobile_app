@@ -228,59 +228,13 @@ void main() {
     });
   });
 
-  group('Lớp 3 · ba nhánh template', () {
-    const counts = {
-      SelfCheckPillar.s: 0,
-      SelfCheckPillar.c: 5,
-      SelfCheckPillar.a: 2,
-    };
-
-    test('không có lượt nào thuộc trụ thì nói thẳng là chưa đủ tín hiệu', () {
-      final t = scaPatternText(
-        pillar: SelfCheckPillar.s,
-        status: ScaPillarStatus.developing,
-        counts: counts,
-        dominant: SelfCheckPillar.c,
-      );
-      expect(t, contains('Chưa có đủ tín hiệu'));
-    });
-
-    test('có lượt nhưng không nổi bật thì nói đúng số lần', () {
-      final t = scaPatternText(
-        pillar: SelfCheckPillar.a,
-        status: ScaPillarStatus.needsAttention,
-        counts: counts,
-        dominant: SelfCheckPillar.c,
-      );
-      expect(t, contains('2 lần'));
-      expect(t, contains('chưa phải nhóm chiếm ưu thế nhất'));
-    });
-
-    // Đây là nhánh §7 gọi là "lớp giá trị nhất".
-    test('tự chấm ổn mà lại là nhóm quay lại nhiều nhất → nói ra lệch pha', () {
-      final t = scaPatternText(
-        pillar: SelfCheckPillar.c,
-        status: ScaPillarStatus.developing,
-        counts: counts,
-        dominant: SelfCheckPillar.c,
-      );
-      expect(t, contains(ScaPillarStatus.developing.inlineLabel));
-      expect(t, contains('quay lại nhiều nhất'));
-      expect(t, contains('5 lần'));
-      expect(t, contains('chênh lệch'));
-    });
-
-    test('tự chấm không ổn và cũng là nhóm nổi bật → hai nguồn xác nhận nhau', () {
-      final t = scaPatternText(
-        pillar: SelfCheckPillar.c,
-        status: ScaPillarStatus.priority,
-        counts: counts,
-        dominant: SelfCheckPillar.c,
-      );
-      expect(t, contains('xác nhận lẫn nhau'));
-      expect(t, isNot(contains('chênh lệch')));
-    });
-  });
+  // Nhóm test của `scaPatternText` ĐÃ BỎ cùng với chính hàm đó.
+  //
+  // `DienGiaiSau v2` §1.3: ba câu đối chiếu pattern theo trụ lặp lại nguyên si
+  // Career Snapshot và nói gần như giống hệt nhau ba lần. Điều chúng nói đúng —
+  // chỗ lệch pha giữa tự đánh giá và tần suất — nay do khối chính nói đúng MỘT
+  // lần, ở bậc R3 của thang ưu tiên, và được khoá trong
+  // `wr_deep_interpretation_test.dart`.
 
   group('Ghép cả màn', () {
     test('chưa làm Self-Check lần nào thì không dựng thẻ nào', () {
@@ -362,17 +316,21 @@ void main() {
         now: _now,
       );
 
-      for (final p in pillars) {
-        expect(p.patternText.trim(), isNotEmpty, reason: p.pillar.name);
-      }
       final c = pillars.firstWhere((p) => p.pillar == SelfCheckPillar.c);
       expect(c.isDominant, isTrue);
       expect(c.patternCount, 4);
-      expect(c.patternText, contains('chênh lệch'));
 
       final s = pillars.firstWhere((p) => p.pillar == SelfCheckPillar.s);
       expect(s.isDominant, isFalse);
-      expect(s.patternText, contains('Chưa có đủ tín hiệu'));
+      expect(s.patternCount, 0);
+      // Câu xu hướng là thứ duy nhất còn lại trong thẻ, và nó phải luôn có chữ.
+      for (final p in pillars) {
+        expect(
+          (p.trendText ?? kScaNoTrendText).trim(),
+          isNotEmpty,
+          reason: p.pillar.name,
+        );
+      }
     });
 
     test('chú thích cuối màn nói đúng cửa sổ và ngày lần trước', () {

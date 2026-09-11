@@ -68,12 +68,120 @@ const double kDeepTrendEpsilon = 0.08;
 /// xu hướng.
 const int kDeepSelfCheckMinGapDays = 42;
 
+// --- Ngưỡng của thang ưu tiên năm bậc (v2 §4, bảng 2) ----------------------
+//
+// CẢNH BÁO VỀ HIỆU CHỈNH. Đặc tả v2 tính trên một thư viện 46 tình huống (36
+// thách thức + 10 tích cực), vì nó đọc mảng `SITUATIONS` của bản mockup HTML.
+// App thì có 110 tình huống đang hoạt động: 100 mục Career Situation Library
+// cộng 10 mục P. Với 110 lựa chọn, cùng một người sẽ trải mỏng hơn nhiều, nên
+// R1 hiếm khi chạm tới — trên tài khoản khách báo lỗi ngày 11/09/2026, tình
+// huống lặp nhiều nhất chỉ 3 lần và hạng nhì cũng 3.
+//
+// Vẫn giữ đúng ngưỡng của đặc tả thay vì tự nới. Nới xuống là tuyên bố "một
+// điều đang lặp lại với bạn" từ hai lần trùng ngẫu nhiên, mà R5 vốn đã lo đúng
+// trường hợp đó bằng một giọng nhẹ hơn nhiều.
+
+/// R1: tình huống nhiều nhất phải đạt bấy nhiêu lần.
+const int kDeepR1MinCount = 3;
+
+/// R1: và phải hơn tình huống đứng thứ hai bấy nhiêu lần.
+const int kDeepR1MinLead = 2;
+
+/// R2: một cụm gồm nhiều nhất bấy nhiêu tình huống.
+const int kDeepR2MaxMembers = 3;
+
+/// R2: tổng số lần của cụm phải đạt bấy nhiêu.
+const int kDeepR2MinTotal = 5;
+
+/// R4: từ tỉ lệ này trở lên là "tích cực cao".
+const double kDeepR4HighShare = 0.60;
+
+/// R4: từ tỉ lệ này trở xuống là "tích cực thấp".
+const double kDeepR4LowShare = 0.20;
+
 // ---------------------------------------------------------------------------
 // LỚP 1 — dữ kiện
 // ---------------------------------------------------------------------------
 
 /// Một trụ đang tăng lên, lùi lại, hay giữ nguyên giữa hai cửa sổ.
 enum DeepTrend { rising, falling, steady }
+
+/// Một tình huống trong cửa sổ, kèm số lần và mọi thứ cần để gọi tên nó.
+///
+/// `DienGiaiSau v2` §3 gọi đây là thay đổi cốt lõi của cả bản đặc tả: "tình
+/// huống là đơn vị chính, trụ là đơn vị phụ". Lý do ở §1.2 — với chỉ ba trụ và
+/// người dùng tích luỹ đủ nhiều, phân bố tự nhiên tiến về cân bằng, nên "càng
+/// dùng lâu càng khó có trụ nào nổi trội". Tính năng được thiết kế để toả sáng
+/// khi có một trụ chiếm ưu thế, mà cấu trúc dữ liệu lại đẩy mọi người về phía
+/// cân bằng.
+class DeepSituation {
+  const DeepSituation({
+    required this.code,
+    required this.label,
+    required this.pillar,
+    required this.valence,
+    required this.count,
+  });
+
+  final String code;
+
+  /// Chữ đem hiện, đã chọn theo ngôn ngữ đang bật.
+  final String label;
+
+  /// Null khi thư viện chưa gán trụ cho mã này.
+  final SelfCheckPillar? pillar;
+
+  final WrValence valence;
+  final int count;
+}
+
+/// Xếp hạng tình huống trong cửa sổ, nhiều nhất đứng đầu.
+///
+/// PHÁ HOÀ, và vì sao lại theo thứ tự này. Trên dữ liệu thật ngày 11/09/2026 có
+/// ngay một ca hoà: một tình huống thách thức và một tình huống tích cực cùng 3
+/// lần. Ai đứng trước quyết định câu R5 gọi tên điều gì, nên luật phải cố định
+/// chứ không được để tuỳ thứ tự Map trả về.
+///
+///   1. Nhiều lần hơn đứng trước.
+///   2. Hoà thì THÁCH THỨC đứng trước. Người mở màn Diễn giải sâu đang đi tìm
+///      điều gì đang vướng; hoà nhau mà đẩy điều vui lên trước là trả lời lệch
+///      câu hỏi họ mang tới.
+///   3. Vẫn hoà thì theo mã, để hai lần mở app không ra hai kết quả.
+List<DeepSituation> rankDeepSituations(
+  List<ReflectionEpisode> window,
+  List<WrSituation> situations,
+) {
+  final byCode = {for (final s in situations) s.code: s};
+  final counts = <String, int>{};
+  for (final e in window) {
+    final code = e.situationCode;
+    if (code == null || code.isEmpty) continue;
+    if (!byCode.containsKey(code)) continue;
+    counts[code] = (counts[code] ?? 0) + 1;
+  }
+
+  final out = [
+    for (final entry in counts.entries)
+      if (byCode[entry.key] case final WrSituation s)
+        DeepSituation(
+          code: s.code,
+          label: s.text,
+          pillar: pillarOfSituation(s),
+          valence: s.valence,
+          count: entry.value,
+        ),
+  ];
+
+  out.sort((a, b) {
+    final byCount = b.count.compareTo(a.count);
+    if (byCount != 0) return byCount;
+    final byValence = (a.valence.isPositive ? 1 : 0)
+        .compareTo(b.valence.isPositive ? 1 : 0);
+    if (byValence != 0) return byValence;
+    return a.code.compareTo(b.code);
+  });
+  return out;
+}
 
 /// Khoảng lệch giữa tự đánh giá và tần suất đang đi về đâu.
 enum DeepGapStatus { narrowing, unchanged, widening }
@@ -88,11 +196,16 @@ class DeepFacts {
     required this.pillarStatus,
     required this.pillarCount,
     required this.totalReflection,
+    required this.situations,
+    required this.challengeTotal,
+    required this.positiveTotal,
+    required this.classifiedTotal,
     required this.dominant,
     required this.selfCheckDate,
     required this.previousSelfCheckDate,
     required this.pillarTrend,
     required this.reflectionTrend,
+    required this.situationTrend,
     required this.gapStatus,
     required this.hasScoredSelfCheck,
     required this.hasTwoWindows,
@@ -102,11 +215,49 @@ class DeepFacts {
   /// Mức tự đánh giá từng trụ ở lần Self-Check gần nhất. Rỗng khi chưa làm.
   final Map<SelfCheckPillar, ScaPillarStatus> pillarStatus;
 
-  /// Số lần mỗi trụ xuất hiện trong cửa sổ hiện tại.
+  /// Số lần mỗi trụ THÁCH THỨC xuất hiện trong cửa sổ hiện tại.
+  ///
+  /// Chỉ valence thách thức (§2.2): trộn cả tình huống tích cực vào rồi kết
+  /// luận "nhóm này đang là chỗ vướng" là nói ngược lại điều dữ liệu nói.
   final Map<SelfCheckPillar, int> pillarCount;
 
-  /// Mẫu số của mọi câu "{count} trong {total} lần".
+  /// Tổng số lượt Reflection trong cửa sổ, kể cả lượt tự viết không có mã.
+  ///
+  /// Chỉ dùng cho ngưỡng mở tầng 1 và tầng 2 — đó là câu hỏi về công sức người
+  /// dùng bỏ ra. KHÔNG dùng làm mẫu số của câu nào; xem [classifiedTotal].
   final int totalReflection;
+
+  /// Tình huống trong cửa sổ, nhiều lần nhất đứng đầu (§3).
+  final List<DeepSituation> situations;
+
+  /// Mẫu số của mọi phép tính trụ nổi trội và khoảng lệch.
+  final int challengeTotal;
+
+  /// Số lượt ghi nhận điều đang diễn ra tốt. Nuôi bậc R4.
+  final int positiveTotal;
+
+  /// Mẫu số của mọi câu "{count} trong {total} lần".
+  ///
+  /// Số lượt GẮN ĐƯỢC vào một trụ, không phải tổng số lần nhìn lại — §1.1 gọi
+  /// việc lẫn hai con số này là nguyên nhân "làm mọi con số trông nhỏ hơn thực
+  /// tế gấp đôi".
+  final int classifiedTotal;
+
+  /// Tỉ lệ lượt tích cực trên tổng số lượt phân loại được, trong khoảng 0–1.
+  double get positiveShare =>
+      classifiedTotal == 0 ? 0 : positiveTotal / classifiedTotal;
+
+  /// Tình huống quay lại nhiều nhất, hoặc null khi cửa sổ chưa có mã nào.
+  DeepSituation? get topSituation =>
+      situations.isEmpty ? null : situations.first;
+
+  /// Tình huống thuộc một trụ, nhiều lần nhất đứng đầu.
+  ///
+  /// Nuôi khối "Xem chi tiết theo nhóm" — §7 yêu cầu khối ấy phải mang thông
+  /// tin MỚI so với Career Snapshot, và danh sách tình huống cụ thể là thứ
+  /// Career Snapshot không có.
+  List<DeepSituation> situationsOf(SelfCheckPillar pillar) =>
+      [for (final s in situations) if (s.pillar == pillar) s];
 
   /// Trụ nổi trội, hoặc null khi phân bố tương đối đều.
   final SelfCheckPillar? dominant;
@@ -120,6 +271,9 @@ class DeepFacts {
   /// So tỉ trọng từng trụ ở cửa sổ hiện tại với cửa sổ liền trước.
   final Map<SelfCheckPillar, DeepTrend> reflectionTrend;
 
+  /// Tình huống đổi nhiều nhất giữa hai cửa sổ, dày lên đứng trước (§6).
+  final List<DeepSituationShift> situationTrend;
+
   /// Null khi chưa đủ hai lần Self-Check để so khoảng lệch.
   final DeepGapStatus? gapStatus;
 
@@ -131,9 +285,20 @@ class DeepFacts {
   /// Chỉ số xoay vòng biến thể câu.
   final int variantSeed;
 
-  /// Tầng 1 mở được chưa (§3).
-  bool get tier1Unlocked =>
-      hasScoredSelfCheck && totalReflection >= kDeepTier1MinReflections;
+  /// Đủ dữ liệu để dựng khối chính chưa (v2 §4).
+  ///
+  /// CHỈ CẦN SỐ LẦN NHÌN LẠI, không cần Self-Check. Bốn trong năm bậc của thang
+  /// ưu tiên đọc từ tình huống chứ không đọc từ điểm tự đánh giá, và §4 nói
+  /// thẳng: "Miễn là người dùng có từ 15 lần nhìn lại, luôn tồn tại một tình
+  /// huống xuất hiện nhiều nhất, kể cả khi chỉ 2 lần."
+  ///
+  /// Bản v1 buộc phải có Self-Check vì cả tầng 1 của nó là phép đối chiếu tự
+  /// đánh giá với tần suất — không có vế đầu thì không có gì để so. Nay vế đầu
+  /// chỉ còn cần cho một bậc duy nhất, xem [tier1Unlocked].
+  bool get leadUnlocked => totalReflection >= kDeepTier1MinReflections;
+
+  /// Bậc R3 mở được chưa — cần cả hai nguồn (§3 của bản v1).
+  bool get tier1Unlocked => hasScoredSelfCheck && leadUnlocked;
 
   /// Tầng 2 mở được chưa (§4).
   bool get tier2Unlocked => hasTwoWindows;
@@ -182,45 +347,57 @@ DeepFacts buildDeepFacts({
     }
   }
 
-  final counts = pillarPatternCounts(
-    episodes,
-    situations,
-    now: now,
-    days: windowDays,
-  );
-  final total = totalReflectionInWindow(episodes, now: now, days: windowDays);
+  final window = episodesWithinDays(episodes, now: now, days: windowDays);
+  final tally = pillarTally(window, situations);
+  final counts = tally.challenge;
+  final total = window.length;
 
   // Cửa sổ liền trước: cùng độ dài, dịch lùi đúng một cửa sổ.
   final previousWindowEnd = now.subtract(Duration(days: windowDays));
-  final prevCounts = pillarPatternCounts(
-    episodes,
-    situations,
-    now: previousWindowEnd,
-    days: windowDays,
-  );
-  final prevTotal = totalReflectionInWindow(
+  final prevWindow = episodesWithinDays(
     episodes,
     now: previousWindowEnd,
     days: windowDays,
   );
+  final prevTally = pillarTally(prevWindow, situations);
+  final prevCounts = prevTally.challenge;
+  final prevTotal = prevWindow.length;
 
   return DeepFacts(
     pillarStatus: status,
     pillarCount: counts,
     totalReflection: total,
-    dominant: dominantPillar(counts, total),
+    situations: rankDeepSituations(window, situations),
+    challengeTotal: tally.challengeTotal,
+    positiveTotal: tally.positiveTotal,
+    classifiedTotal: tally.classified,
+    // Mẫu số là số lượt THÁCH THỨC, không phải tổng số lượt trong cửa sổ (§2.2
+    // và §2.3). Đây là một dòng đổi, và nó là dòng làm màn hình của khách đi từ
+    // "chưa có nhóm nào nổi trội" sang có: 7/31 = 22% không chạm ngưỡng 40%,
+    // còn 7/17 = 41% thì chạm.
+    dominant: dominantPillar(counts, tally.challengeTotal),
     selfCheckDate: latest?.takenAt,
     previousSelfCheckDate: previous?.takenAt,
     pillarTrend: _scoreTrends(latest, previous),
-    reflectionTrend: _shareTrends(counts, total, prevCounts, prevTotal),
+    // Tỉ trọng và khoảng lệch chia cho số lượt THÁCH THỨC ở cùng cửa sổ, không
+    // chia cho tổng số lượt: tử số là bảng đếm thách thức, nên mẫu số phải cùng
+    // một tập, nếu không tỉ trọng của một trụ tụt xuống mỗi lần người dùng ghi
+    // lại một điều vui.
+    reflectionTrend: _shareTrends(
+      counts,
+      tally.challengeTotal,
+      prevCounts,
+      prevTally.challengeTotal,
+    ),
     gapStatus: _gapStatus(
       latest: latest,
       previous: previous,
       counts: counts,
-      total: total,
+      total: tally.challengeTotal,
       prevCounts: prevCounts,
-      prevTotal: prevTotal,
+      prevTotal: prevTally.challengeTotal,
     ),
+    situationTrend: _situationTrends(window, prevWindow, situations),
     hasScoredSelfCheck: latest != null,
     hasTwoWindows: total >= kDeepTrendMinPerWindow &&
         prevTotal >= kDeepTrendMinPerWindow,
@@ -229,6 +406,72 @@ DeepFacts buildDeepFacts({
     // không phải đoán.
     variantSeed: total,
   );
+}
+
+/// Một tình huống đã dày lên hay thưa đi giữa hai cửa sổ (§6).
+class DeepSituationShift {
+  const DeepSituationShift({
+    required this.code,
+    required this.label,
+    required this.count,
+    required this.previousCount,
+  });
+
+  final String code;
+  final String label;
+  final int count;
+  final int previousCount;
+
+  int get delta => count - previousCount;
+}
+
+/// Số lần thay đổi tối thiểu để gọi một tình huống là đang dày lên hay thưa đi.
+///
+/// HAI LẦN. Một lần chênh nhau là chuyện thường của bất kỳ cửa sổ nào — nói "X
+/// đang xuất hiện dày hơn giai đoạn trước" từ 1 lần thành 2 lần là đọc ra xu
+/// hướng từ nhiễu, đúng cái mà [kDeepTrendEpsilon] chặn ở tầng trụ.
+const int kDeepSituationShiftMin = 2;
+
+/// Tình huống đổi nhiều nhất giữa hai cửa sổ, dày lên đứng trước.
+///
+/// §6 yêu cầu chuyển tầng xu hướng xuống lớp tình huống: "Thay vì 'nhóm Mối
+/// quan hệ đang tăng', nói 'tình huống X đang xuất hiện dày hơn giai đoạn
+/// trước'. Cụ thể hơn và dễ nhận ra hơn nhiều."
+///
+/// So SỐ LẦN chứ không so tỉ trọng, khác với tầng trụ. Ở tầng trụ tỉ trọng là
+/// đúng vì ba trụ chia nhau một tổng cố định; ở tầng tình huống thì con số nhỏ
+/// và người đọc nhìn thấy chính con số đó trong câu, nên so cái họ đọc được.
+List<DeepSituationShift> _situationTrends(
+  List<ReflectionEpisode> window,
+  List<ReflectionEpisode> prevWindow,
+  List<WrSituation> situations,
+) {
+  final now = {
+    for (final s in rankDeepSituations(window, situations)) s.code: s,
+  };
+  final before = {
+    for (final s in rankDeepSituations(prevWindow, situations))
+      s.code: s.count,
+  };
+
+  final out = <DeepSituationShift>[
+    for (final code in {...now.keys, ...before.keys})
+      DeepSituationShift(
+        code: code,
+        // Cửa sổ trước có mà cửa sổ này không thì nhãn phải lấy từ chỗ khác;
+        // `rankDeepSituations` của cửa sổ trước cũng đã tra ra đúng nhãn ấy.
+        label: now[code]?.label ??
+            situations.firstWhere((s) => s.code == code).text,
+        count: now[code]?.count ?? 0,
+        previousCount: before[code] ?? 0,
+      ),
+  ]..removeWhere((s) => s.delta.abs() < kDeepSituationShiftMin);
+
+  out.sort((a, b) {
+    final byDelta = b.delta.compareTo(a.delta);
+    return byDelta != 0 ? byDelta : a.code.compareTo(b.code);
+  });
+  return out;
 }
 
 Map<SelfCheckPillar, DeepTrend> _scoreTrends(
@@ -353,10 +596,36 @@ DeepGapBranch deepGapBranch(DeepFacts f) {
   return DeepGapBranch.aligned;
 }
 
+/// Tình huống thách thức nổi bật nhất thuộc [pillar], hoặc null.
+///
+/// §5.3 yêu cầu bậc R3 "gọi kèm tên tình huống cụ thể thay vì chỉ nói tên trụ".
+/// Chín đoạn văn của nhánh A/B/D là nội dung khách đã duyệt ở v1 §3, nên chúng
+/// giữ nguyên và câu gọi tên được NỐI THÊM vào cuối — viết lại cả chín đoạn để
+/// nhét một cái tên vào giữa là đánh đổi nội dung đã duyệt lấy một chi tiết.
+DeepSituation? deepStandoutOf(DeepFacts f, SelfCheckPillar pillar) {
+  for (final s in f.situations) {
+    if (s.pillar == pillar && !s.valence.isPositive) return s;
+  }
+  return null;
+}
+
 /// Câu tầng 1 — Khoảng lệch. Luôn có chữ khi [DeepFacts.tier1Unlocked].
 String deepGapText(DeepFacts f) {
+  final body = _deepGapBody(f);
+  final dom = f.dominant;
+  if (dom == null) return body;
+
+  final standout = deepStandoutOf(f, dom);
+  if (standout == null) return body;
+
+  return '$body ${tr('Trong nhóm này, điều quay lại với bạn nhiều nhất là '
+      '"${standout.label}", ${standout.count} lần.', 'Within this group, the one that returns most is '
+      '"${standout.label}", ${standout.count} times.')}';
+}
+
+String _deepGapBody(DeepFacts f) {
   final branch = deepGapBranch(f);
-  final total = f.totalReflection;
+  final total = f.classifiedTotal;
   final v = f.variantSeed % 3;
 
   if (branch == DeepGapBranch.even) {
@@ -474,6 +743,309 @@ String deepGapText(DeepFacts f) {
 }
 
 // ---------------------------------------------------------------------------
+// Thang ưu tiên năm bậc (v2 §4)
+// ---------------------------------------------------------------------------
+//
+// Năm quy tắc chạy từ trên xuống, dùng quy tắc ĐẦU TIÊN khớp làm nội dung chính
+// của màn. R5 không có điều kiện nên luôn chạy được.
+//
+// VÌ SAO PHẢI CÓ BẬC R5. Bản v1 kết thúc nhánh "phân bố đều" bằng một câu đại ý
+// "chưa có gì nổi bật" rồi dừng. §8 của v2 nâng điều đó thành nguyên tắc bất
+// biến: "Không tầng nào được kết thúc bằng sự im lặng. Nếu một lớp phân tích
+// không có gì để nói, phải có lớp khác lên tiếng. Người dùng đã trả tiền cho
+// tính năng này."
+//
+// R5 làm được điều đó nhờ đổi đơn vị: hết trụ nào nổi trội thì vẫn còn một tình
+// huống lặp nhiều nhất, kể cả khi chỉ 2 lần. Miễn là người dùng đã nhìn lại đủ
+// [kDeepTier1MinReflections] lần thì luôn tồn tại một cái tên để gọi.
+
+/// Bậc nào của thang đang được dùng làm nội dung chính.
+enum DeepRung {
+  /// R1 · Một tình huống nổi bật hẳn.
+  standoutSituation,
+
+  /// R2 · Một cụm tình huống cùng trụ, cùng valence.
+  situationCluster,
+
+  /// R3 · Khoảng lệch nhận thức — chính là tầng 1 của bản v1.
+  awarenessGap,
+
+  /// R4 · Cán cân tích cực và thách thức.
+  positiveBalance,
+
+  /// R5 · Phân bố đều. Lưới an toàn, luôn chạy được.
+  evenSpread,
+}
+
+/// Một cụm tình huống cùng trụ và cùng valence (R2).
+class DeepCluster {
+  const DeepCluster({required this.members, required this.pillar});
+
+  /// Từ 2 đến [kDeepR2MaxMembers] tình huống, nhiều lần nhất đứng đầu.
+  final List<DeepSituation> members;
+
+  final SelfCheckPillar pillar;
+
+  int get total => members.fold(0, (s, m) => s + m.count);
+
+  bool get isPositive => members.first.valence.isPositive;
+
+  /// Cụm này có mạnh hơn [other] không.
+  ///
+  /// PHÁ HOÀ. Trên dữ liệu thật ngày 11/09/2026 có tới BA cụm cùng tổng 5 lần,
+  /// nên luật phải cố định chứ không được để tuỳ thứ tự Map trả về:
+  ///
+  ///   1. Tổng lớn hơn thắng.
+  ///   2. Hoà thì cụm THÁCH THỨC thắng, cùng lý do với [rankDeepSituations].
+  ///   3. Vẫn hoà thì cụm nhiều thành viên hơn thắng — ba chuyện khác nhau cùng
+  ///      kể một câu chuyện thì thuyết phục hơn một chuyện lặp kèm hai chuyện
+  ///      xảy ra đúng một lần.
+  ///   4. Cuối cùng theo thứ tự trụ, để hai lần mở app ra cùng một kết quả.
+  bool beats(DeepCluster other) {
+    if (total != other.total) return total > other.total;
+    if (isPositive != other.isPositive) return !isPositive;
+    if (members.length != other.members.length) {
+      return members.length > other.members.length;
+    }
+    return pillar.index < other.pillar.index;
+  }
+}
+
+/// Cụm mạnh nhất thoả điều kiện R2, hoặc null.
+///
+/// Gom theo (trụ, valence) rồi lấy tối đa [kDeepR2MaxMembers] tình huống nhiều
+/// nhất của mỗi nhóm; cụm nào tổng lớn nhất và đạt [kDeepR2MinTotal] thì thắng.
+///
+/// CÓ CHO PHÉP THÀNH VIÊN CHỈ 1 LẦN, và đây là một lựa chọn có hệ quả thật.
+/// Đặc tả chỉ nói "từ 2 đến 3 tình huống cùng pillar và cùng valence, tổng từ 5
+/// lần trở lên", không đặt sàn cho từng thành viên. Trên tài khoản khách báo
+/// lỗi ngày 11/09/2026, cụm trụ Sự rõ ràng là 2 + 2 + 1: cho phép thì màn hình
+/// ra R2 và gọi tên ba tình huống, cấm thì tụt xuống R3. Cả hai đều đọc được,
+/// nhưng R2 cụ thể hơn, mà "cụ thể hơn luôn tốt hơn trừu tượng" là nguyên tắc
+/// bất biến thứ hai ở §8.
+DeepCluster? deepCluster(DeepFacts f) {
+  final groups = <String, List<DeepSituation>>{};
+  for (final s in f.situations) {
+    final pillar = s.pillar;
+    if (pillar == null) continue;
+    groups
+        .putIfAbsent('${pillar.name}:${s.valence.name}', () => [])
+        .add(s);
+  }
+
+  DeepCluster? best;
+  for (final members in groups.values) {
+    if (members.length < 2) continue;
+    // `f.situations` đã sắp giảm dần nên phần đầu của mỗi nhóm cũng vậy.
+    final top = members.take(kDeepR2MaxMembers).toList();
+    final cluster = DeepCluster(members: top, pillar: top.first.pillar!);
+    if (cluster.total < kDeepR2MinTotal) continue;
+    if (best == null || cluster.beats(best)) best = cluster;
+  }
+  return best;
+}
+
+/// Bậc đầu tiên khớp điều kiện. Không bao giờ trả về null.
+DeepRung deepRung(DeepFacts f) {
+  final top = f.topSituation;
+
+  // R1 — một tình huống bỏ xa phần còn lại.
+  if (top != null && top.count >= kDeepR1MinCount) {
+    final second = f.situations.length > 1 ? f.situations[1].count : 0;
+    if (top.count - second >= kDeepR1MinLead) {
+      return DeepRung.standoutSituation;
+    }
+  }
+
+  // R2 — một cụm cùng kể một câu chuyện.
+  if (deepCluster(f) != null) return DeepRung.situationCluster;
+
+  // R3 — khoảng lệch. Cần có trụ nổi trội VÀ có Self-Check để đối chiếu.
+  //
+  // `deepGapBranch` trả về `even` đúng khi không có trụ nổi trội, và nhánh ấy
+  // giờ không còn sinh chữ nữa: đó chính là nhánh "không có gì nổi bật rồi
+  // dừng" mà §5.5 loại bỏ. Rơi xuống R4 hoặc R5.
+  if (f.dominant != null &&
+      f.tier1Unlocked &&
+      deepGapBranch(f) != DeepGapBranch.even) {
+    return DeepRung.awarenessGap;
+  }
+
+  // R4 — cán cân lệch hẳn về một phía.
+  //
+  // MỘT MÂU THUẪN TRONG CHÍNH ĐẶC TẢ, và cách chọn.
+  //
+  // Bảng ở §4 viết điều kiện R4 là "tỷ lệ tích cực từ 60 phần trăm trở lên,
+  // HOẶC từ 20 phần trăm trở xuống". Đọc chữ thì 0% cũng là "từ 20 trở xuống",
+  // nên R4 sẽ chạy.
+  //
+  // Nhưng §9 việc 4 lại đưa hai bộ nghiệm thu KHÔNG có lượt tích cực nào —
+  // "phân bố đều 6/5/5" và "đúng 15 lần Reflection rải đều mỗi tình huống 1
+  // lần" — và nói cả hai "phải ra R5". Hai chỗ không thể cùng đúng.
+  //
+  // Chọn theo §9, vì nghiệm thu là định nghĩa của "xong". Và nó cũng hợp với
+  // tên của bậc: R4 nói về CÁN CÂN, mà một cán cân thì cần có cả hai bên. Chưa
+  // ghi lần nào điều đang tốt thì chưa có cán cân nào để nói, chỉ có một bức
+  // tranh chưa đủ vế — và R5 vẫn gọi tên được điều đang lặp.
+  //
+  // ĐÃ BÁO KHÁCH ngày 11/09/2026. Nếu khách muốn 0% cũng chạy R4b, bỏ vế
+  // `positiveTotal > 0` là xong, nhưng phải sửa hai bộ nghiệm thu ở §9 theo.
+  if (f.classifiedTotal > 0) {
+    final share = f.positiveShare;
+    if (share >= kDeepR4HighShare ||
+        (f.positiveTotal > 0 && share <= kDeepR4LowShare)) {
+      return DeepRung.positiveBalance;
+    }
+  }
+
+  return DeepRung.evenSpread;
+}
+
+/// Nội dung chính của màn — một đoạn hoàn chỉnh, luôn có chữ.
+///
+/// Điều kiện nghiệm thu của §9 việc 4: bốn bộ dữ liệu khác nhau, không bộ nào
+/// được trả về rỗng.
+String deepLeadText(DeepFacts f) => switch (deepRung(f)) {
+      DeepRung.standoutSituation => _deepR1Text(f),
+      DeepRung.situationCluster => _deepR2Text(f),
+      DeepRung.awarenessGap => deepGapText(f),
+      DeepRung.positiveBalance => _deepR4Text(f),
+      DeepRung.evenSpread => _deepR5Text(f),
+    };
+
+// --- R1 · Một tình huống nổi bật (§5.1) ------------------------------------
+
+String _deepR1Text(DeepFacts f) {
+  final s = f.topSituation!;
+  final total = f.classifiedTotal;
+  final count = s.count;
+  final name = s.label;
+
+  return switch (f.variantSeed % 3) {
+    0 => tr('Có một tình huống quay lại với bạn nhiều hơn hẳn những tình huống '
+        'khác: "$name", $count lần trong $total lần nhìn lại gần đây. Khi một '
+        'điều lặp lại với tần suất như vậy, nó thường không còn là chuyện ngẫu '
+        'nhiên nữa. Bạn có nhận ra điều gì chung giữa những lần đó không?', 'One situation returns to you far more than the rest: "$name", '
+        '$count times out of your last $total look-backs. When something '
+        'repeats at that rate, it has usually stopped being a coincidence. Can '
+        'you see what those times had in common?'),
+    1 => tr('"$name" là điều bạn quay lại nhiều nhất trong thời gian qua, $count '
+        'lần. Đây là tình huống đang chiếm nhiều tâm trí của bạn hơn cả. Nếu có '
+        'một điều đáng để nhìn kỹ hơn lúc này, nhiều khả năng là nó.', '"$name" is what you have returned to most lately, $count times. '
+        'This is the situation taking up more of your mind than any other. If '
+        'there is one thing worth a closer look right now, it is most likely '
+        'this.'),
+    _ => tr('Trong $total lần bạn dừng lại nhìn lại, có $count lần xoay quanh '
+        'cùng một chuyện: "$name". Những điều lặp lại thường khó nhận ra khi '
+        'đang ở trong đó, nhưng nhìn từ ngoài vào thì khá rõ. Bạn thấy sao về '
+        'điều này?', 'Of the $total times you stopped to look back, $count circled the '
+        'same thing: "$name". What repeats is hard to see from the inside, but '
+        'from the outside it stands out. How does that sit with you?'),
+  };
+}
+
+// --- R2 · Một cụm cùng chủ đề (§5.2) ---------------------------------------
+
+String _deepR2Text(DeepFacts f) {
+  final c = deepCluster(f)!;
+  final pillar = c.pillar.displayName.toLowerCase();
+  final names = [for (final m in c.members) '"${m.label}"'];
+
+  // Biến thể a viết cho ba tình huống, biến thể b cho hai. Chọn theo số thành
+  // viên thật chứ không theo `variantSeed`: câu a có sẵn ba chỗ chèn và ghép
+  // hai cái tên vào đó thì thừa một liên từ.
+  if (c.members.length >= 3) {
+    return tr('Có ba chuyện khác nhau nhưng đang cùng kể một câu chuyện: '
+        '${names[0]}, ${names[1]} và ${names[2]}, tổng cộng ${c.total} lần. '
+        'Nhìn riêng từng cái thì rời rạc, nhưng đặt cạnh nhau thì chúng đều '
+        'liên quan đến $pillar.', 'Three different things are telling one story: ${names[0]}, '
+        '${names[1]} and ${names[2]}, ${c.total} times in all. Each on its own '
+        'looks unrelated, but side by side they all come back to $pillar.');
+  }
+
+  return tr('Những điều bạn nhìn lại gần đây tập trung khá rõ vào một hướng: '
+      '$pillar. Cụ thể là ${names[0]} và ${names[1]}, cộng lại ${c.total} lần. '
+      'Đây có thể là chỗ đáng để bạn dành thêm chú ý.', 'What you have looked back on lately points fairly clearly one way: '
+      '$pillar. Specifically ${names[0]} and ${names[1]}, ${c.total} times '
+      'between them. This may be where a little more attention is worth it.');
+}
+
+// --- R4 · Cán cân tích cực và thách thức (§5.4) -----------------------------
+
+String _deepR4Text(DeepFacts f) {
+  final count = f.positiveTotal;
+  final total = f.classifiedTotal;
+
+  if (f.positiveShare >= kDeepR4HighShare) {
+    return tr('Có một điều dễ bị bỏ qua: $count trong $total lần bạn dừng lại '
+        'nhìn lại là để ghi nhận điều gì đó đang diễn ra tốt. Nhiều người chỉ '
+        'nhìn lại khi gặp khó, nên tỷ lệ này ở bạn là đáng chú ý. Bạn có nhận '
+        'ra điều gì đang giúp mình duy trì được nhịp đó không?', 'Here is something easy to miss: $count of the $total times you '
+        'stopped to look back were to mark something going well. Most people '
+        'only look back when things are hard, so your ratio stands out. Can you '
+        'tell what is helping you hold that rhythm?');
+  }
+
+  return tr('Phần lớn những lần bạn dừng lại nhìn lại đều xoay quanh khó khăn, '
+      'chỉ $count trong $total lần là ghi nhận điều đang diễn ra tốt. Điều này '
+      'không có gì bất thường, vì khó khăn thường thôi thúc ta nhìn lại nhiều '
+      'hơn. Nhưng những điều đang tốt cũng đáng được ghi lại, để bức tranh đầy '
+      'đủ hơn về sau.', 'Most of the times you stop to look back are about something hard; only '
+      '$count of $total mark something going well. Nothing unusual there, since '
+      'difficulty prompts reflection more than ease does. But what is going '
+      'well is worth recording too, so the picture fills out over time.');
+}
+
+// --- R5 · Phân bố đều, lưới an toàn (§5.5) ---------------------------------
+
+String _deepR5Text(DeepFacts f) {
+  final s = f.topSituation;
+
+  // Không một mã tình huống nào trong cửa sổ — người dùng nhìn lại toàn bằng
+  // nhánh tự viết. §8 vẫn cấm im lặng, nhưng ở đây không có cái tên nào để gọi,
+  // nên nói đúng thứ đang thiếu thay vì bịa ra một tình huống.
+  if (s == null) return kDeepAllFreeform;
+
+  final count = s.count;
+  final name = s.label;
+
+  return switch (f.variantSeed % 3) {
+    0 => tr('Những điều bạn nhìn lại gần đây trải khá đều, chưa nhóm nào nổi lên '
+        'hẳn. Nhưng nếu nhìn vào từng tình huống cụ thể, "$name" là điều quay '
+        'lại với bạn nhiều nhất, $count lần. Bạn thấy điều này có đúng với cảm '
+        'nhận của mình không?', 'What you have looked back on lately is spread fairly evenly, with no '
+        'group standing out. But look at the individual situations and "$name" '
+        'is the one that returns most, $count times. Does that match how it '
+        'feels to you?'),
+    1 => tr('Bức tranh của bạn khá cân bằng giữa ba nhóm, không có chỗ nào nổi '
+        'trội rõ rệt. Sự cân bằng này tự nó cũng là một thông tin. Trong số các '
+        'tình huống cụ thể, "$name" xuất hiện nhiều hơn cả với $count lần.', 'Your picture is fairly balanced across the three groups, with nothing '
+        'clearly dominant. That balance is information in itself. Among the '
+        'individual situations, "$name" comes up most, $count times.'),
+    _ => tr('Chưa có nhóm nào chiếm ưu thế trong thời gian qua, mọi thứ khá đều '
+        'nhau. Điều gần nhất với một mẫu hình là "$name", đã quay lại $count '
+        'lần. Bạn cứ tiếp tục nhìn lại đều đặn nhé, bức tranh sẽ dần rõ hơn '
+        'theo thời gian.', 'No group has taken the lead lately; things are fairly even. The '
+        'closest thing to a pattern is "$name", which has come back $count '
+        'times. Keep looking back regularly and the picture will sharpen.'),
+  };
+}
+
+/// Cửa sổ có đủ lượt nhìn lại nhưng không lượt nào gắn được một tình huống.
+///
+/// Xảy ra khi người dùng luôn đi nhánh "Điều khác" của luồng Reflect — nhánh đó
+/// không ghi `situation_code` nào, nên cả năm bậc đều không có cái tên nào để
+/// gọi. Không phải trạng thái "chưa đủ dữ liệu": họ đã nhìn lại đủ nhiều, chỉ
+/// là hệ thống không đọc được nội dung tự viết.
+String get kDeepAllFreeform => tr('Những lần nhìn lại gần đây của bạn phần lớn là chuyện bạn tự kể chứ không '
+    'chọn từ danh sách, nên phần này chưa gọi tên được điều gì đang lặp lại. '
+    'Lần tới, chọn thêm một tình huống gần đúng trước khi viết cũng đủ để bức '
+    'tranh bắt đầu hiện ra.', 'Your recent look-backs are mostly in your own words rather than picked '
+    'from the list, so this part cannot yet name what keeps repeating. Next '
+    'time, picking the closest situation before you write is enough for the '
+    'picture to start forming.');
+
+// ---------------------------------------------------------------------------
 // Tầng 2 — xu hướng từ Reflection (§4)
 // ---------------------------------------------------------------------------
 //
@@ -483,8 +1055,61 @@ String deepGapText(DeepFacts f) {
 // nhiều tháng mới thấy được gì.
 
 /// Câu tầng 2, hoặc null khi chưa đủ hai cửa sổ.
+///
+/// BA LỚP, THỬ TỪ CỤ THỂ TỚI CHUNG CHUNG (§6 điều chỉnh 1 + §8 nguyên tắc 2).
+///
+///   1. Một TÌNH HUỐNG dày lên hoặc thưa đi — gọi thẳng tên nó.
+///   2. Không tình huống nào đổi đủ nhiều thì xét tới lớp TRỤ, dùng nguyên
+///      những câu đã có.
+///   3. Cả hai lớp đều đứng yên thì nói ra chính sự đứng yên đó.
+///
+/// §6: "Thay vì 'nhóm Mối quan hệ đang tăng', nói 'tình huống X đang xuất hiện
+/// dày hơn giai đoạn trước'. Cụ thể hơn và dễ nhận ra hơn nhiều."
 String? deepReflectionTrendText(DeepFacts f) {
   if (!f.tier2Unlocked) return null;
+
+  if (f.situationTrend.isNotEmpty) {
+    final v = f.variantSeed % 2;
+    final up = f.situationTrend.first;
+    if (up.delta > 0) {
+      return v == 0
+          ? tr('So với giai đoạn trước, "${up.label}" đang xuất hiện dày hơn '
+              'trong các lần bạn nhìn lại: ${up.previousCount} lần thành '
+              '${up.count} lần. Điều này có thể đến từ một thay đổi trong công '
+              'việc, hoặc đơn giản là bạn đang chú ý đến nó nhiều hơn trước. '
+              'Bạn có nhận ra điều gì đã khác đi không?', 'Compared with the previous stretch, "${up.label}" is showing up '
+              'more densely in your look-backs: ${up.previousCount} times, now '
+              '${up.count}. That could come from a change at work, or simply '
+              'from you paying it more attention. Can you spot what has become '
+              'different?')
+          : tr('"${up.label}" đang quay lại dày hơn giai đoạn trước, '
+              '${up.count} lần so với ${up.previousCount}. Khi một chuyện dồn '
+              'lại như vậy, thường có điều gì đó trong công việc đang chuyển '
+              'động. Bạn thử nhớ lại xem giai đoạn này có gì khác không nhé.', '"${up.label}" is coming back more often than in the stretch '
+              'before, ${up.count} times against ${up.previousCount}. When '
+              'something bunches up like that, usually something at work is '
+              'moving. Try to recall what has been different in this period.');
+    }
+
+    final down = f.situationTrend.last;
+    return v == 0
+        ? tr('"${down.label}" từng quay lại thường xuyên trong những lần bạn '
+            'nhìn lại, ${down.previousCount} lần ở giai đoạn trước, nay còn '
+            '${down.count}. Đây có thể là dấu hiệu tích cực, cho thấy điều đó '
+            'đã bớt chiếm tâm trí bạn. Bạn có thấy vậy không?', '"${down.label}" used to come back often in your look-backs, '
+            '${down.previousCount} times in the previous stretch, now '
+            '${down.count}. That can be a good sign, showing it takes up less '
+            'of your mind now. Does that match?')
+        : tr('Có một điều đã lùi lại phía sau. "${down.label}" không còn quay '
+            'lại thường xuyên như giai đoạn trước, ${down.count} lần so với '
+            '${down.previousCount}. Những thay đổi kiểu này thường diễn ra âm '
+            'thầm và dễ bị bỏ qua, nên đây là một điều đáng để ghi nhận cho '
+            'chính mình.', 'Something has stepped back. "${down.label}" no longer returns as '
+            'often as before, ${down.count} times against '
+            '${down.previousCount}. Changes like this happen quietly and are '
+            'easy to miss, so it is worth marking for yourself.');
+  }
+
   final v = f.variantSeed % 2;
 
   // Nhóm tăng rõ nhất thắng; không có thì xét nhóm lùi lại.
@@ -680,6 +1305,7 @@ class DeepInterpretation {
   const DeepInterpretation({
     required this.facts,
     required this.leadText,
+    required this.rung,
     required this.branch,
     required this.trendText,
     required this.selfCheckTrendText,
@@ -692,7 +1318,10 @@ class DeepInterpretation {
   /// insight bị lướt qua."
   final String leadText;
 
-  /// Nhánh nào sinh ra [leadText]. Null khi tầng 1 chưa mở.
+  /// Bậc nào của thang sinh ra [leadText]. Null khi chưa đủ số lần nhìn lại.
+  final DeepRung? rung;
+
+  /// Nhánh khoảng lệch. Chỉ khác null khi [rung] là [DeepRung.awarenessGap].
   final DeepGapBranch? branch;
 
   /// Tầng 2, hoặc câu mời gọi thay thế.
@@ -717,11 +1346,59 @@ class DeepInterpretation {
   ///
   /// Câu nhắc Self-Check đã cũ cũng KHÔNG vào đây, cùng một lý do.
   List<String> get polishableTexts => [
-        if (branch != null) leadText,
+        if (rung != null && !deepTextIsGuidance(leadText)) leadText,
         if (!deepTextIsGuidance(trendText)) trendText,
         if (selfCheckTrendText case final String t)
           if (!deepTextIsGuidance(t)) t,
       ];
+
+  /// Câu xu hướng thật, hoặc null khi tầng 2 chưa mở.
+  String? get realTrendText =>
+      deepTextIsGuidance(trendText) ? null : trendText;
+
+  /// Câu xu hướng Self-Check thật, hoặc null khi tầng 3 chưa mở.
+  String? get realSelfCheckTrendText {
+    final t = selfCheckTrendText;
+    if (t == null || deepTextIsGuidance(t)) return null;
+    return t;
+  }
+
+  /// Khối XU HƯỚNG có gì để bày không.
+  bool get hasTrendBlock =>
+      realTrendText != null || realSelfCheckTrendText != null;
+
+  /// MỘT dòng cho những tầng còn đang chờ, hoặc null khi không tầng nào chờ.
+  ///
+  /// §6 điều chỉnh 2: "Hiện tại hai đoạn giải thích dài về việc 'chờ thêm' đang
+  /// chiếm nhiều diện tích hơn cả phần nội dung thật, khiến màn hình trông như
+  /// toàn lời hẹn. Rút hai đoạn chờ hiện tại xuống còn một dòng duy nhất, đặt ở
+  /// cuối màn hình."
+  ///
+  /// Nên đây là MỘT dòng cho cả hai tầng, không phải hai dòng ngắn. Vẫn theo
+  /// luật §6 cũ: nói cái sắp mở ra, không nói "chưa đủ dữ liệu", không đếm
+  /// ngược còn bao nhiêu lần nữa.
+  String? get waitingLine {
+    final waitingTrend = realTrendText == null;
+    final waitingSelfCheck =
+        selfCheckTrendText != null && realSelfCheckTrendText == null;
+
+    if (waitingTrend && waitingSelfCheck) {
+      return tr('Phần so sánh theo thời gian sẽ mở ra khi bạn có thêm một khoảng '
+          'nhìn lại nữa và một lần Self-Check cách lần này đủ xa.', 'The over-time comparison opens once you have another stretch of '
+          'looking back and a Self-Check far enough from this one.');
+    }
+    if (waitingTrend) {
+      return tr('Phần so sánh với giai đoạn trước sẽ mở ra khi bạn có thêm một '
+          'khoảng nhìn lại nữa.', 'The comparison with the previous stretch opens once you have '
+          'another stretch of looking back.');
+    }
+    if (waitingSelfCheck) {
+      return tr('Phần so với lần Self-Check trước sẽ mở ra khi hai lần cách nhau '
+          'đủ xa.', 'The comparison with your previous Self-Check opens once the two are '
+          'far enough apart.');
+    }
+    return null;
+  }
 }
 
 /// True khi [text] là một câu CHỈ DẪN của mục 6, không phải một câu diễn giải.
@@ -732,7 +1409,8 @@ bool deepTextIsGuidance(String text) =>
     text == kDeepNoTrendYet ||
     text == kDeepOneSelfCheckOnly ||
     text == kDeepSelfChecksTooClose ||
-    text == kDeepNotEnoughReflection;
+    text == kDeepNotEnoughReflection ||
+    text == kDeepAllFreeform;
 
 DeepInterpretation buildDeepInterpretation({
   required List<ScaSelfCheckResponse> history,
@@ -748,10 +1426,12 @@ DeepInterpretation buildDeepInterpretation({
   );
 
   final takenAt = f.selfCheckDate;
+  final rung = f.leadUnlocked ? deepRung(f) : null;
   return DeepInterpretation(
     facts: f,
-    leadText: f.tier1Unlocked ? deepGapText(f) : kDeepNotEnoughReflection,
-    branch: f.tier1Unlocked ? deepGapBranch(f) : null,
+    leadText: rung == null ? kDeepNotEnoughReflection : deepLeadText(f),
+    rung: rung,
+    branch: rung == DeepRung.awarenessGap ? deepGapBranch(f) : null,
     trendText: deepReflectionTrendText(f) ?? kDeepNoTrendYet,
     selfCheckTrendText: !f.hasScoredSelfCheck
         ? null

@@ -145,13 +145,24 @@ class WrDiscoverScreen extends ConsumerWidget {
     // Đếm trên TOÀN BỘ `episodes`, không đi qua `recent`: `recentSituationIds`
     // chặn ở 30 mục gần nhất, nên lấy nó làm nguồn thì người đã nhìn lại 80 lần
     // vẫn đọc được "14 / 30 lần" (Changelog CareerSnapshot §8).
-    final pillarCounts = pillarReflectionCounts(episodes, situations);
+    //
+    // MẪU SỐ ĐÃ ĐỔI 11/09/2026 — `DienGiaiSau v2` §2.3 và §9 việc 3. Trước đây
+    // cột này chia cho TỔNG SỐ LẦN NHÌN LẠI, trong khi tử số chỉ đếm những lượt
+    // rơi vào một trụ. Trên tài khoản khách báo lỗi: 6+5+5 = 16 mà mẫu số là 32,
+    // nên mọi con số trông nhỏ hơn thực tế gấp đôi và người đọc kết luận "không
+    // đáng kể". Nay chia cho số lượt PHÂN LOẠI ĐƯỢC, để ba con số cộng lại đúng
+    // bằng mẫu số — đó là điều kiện nghiệm thu của §9 việc 3.
+    final tally = pillarTally(episodes, situations);
 
     // Khối Snapshot có dựng ra dòng khoảng lệch không — quyết định luôn ở đây
     // vì phần dưới màn phải biết để khỏi mời mua Diễn giải sâu lần thứ hai.
+    //
+    // Trụ nổi trội tính trên valence thách thức (§2.2): trộn cả tình huống tích
+    // cực vào rồi tuyên bố "nhóm Mối quan hệ đang nổi trội" là nói ngược, vì
+    // nhóm ấy có thể đang nổi trội theo hướng tốt.
     final snapshotGapShown = snapshotHasSelfCheck(latestCheck) &&
         careerHealthUnlocked(reflectionCount) &&
-        dominantPillar(pillarCounts, reflectionCount) != null;
+        dominantPillar(tally.challenge, tally.challengeTotal) != null;
 
     // "Tình huống lặp lại" — v2.0 §4.3: đếm số lần xuất hiện của từng
     // situationId trong recentSituationIds, lấy ba tình huống nhiều nhất.
@@ -294,8 +305,9 @@ class WrDiscoverScreen extends ConsumerWidget {
             _CareerSnapshotCard(
               key: const Key('wr_discover_career_snapshot'),
               latest: latestCheck,
-              counts: pillarCounts,
+              counts: tally.appearance,
               reflectionTotal: reflectionCount,
+              classifiedTotal: tally.classified,
               onStartSelfCheck: () => context.push('/wr/self-check'),
             ),
 
@@ -589,6 +601,7 @@ class _CareerSnapshotCard extends ConsumerWidget {
     required this.latest,
     required this.counts,
     required this.reflectionTotal,
+    required this.classifiedTotal,
     required this.onStartSelfCheck,
   });
 
@@ -598,8 +611,20 @@ class _CareerSnapshotCard extends ConsumerWidget {
   /// Số lần mỗi trụ bị chạm, đếm trên toàn bộ lịch sử nhìn lại.
   final Map<SelfCheckPillar, int> counts;
 
-  /// Mẫu số của cột "Xuất hiện" — tổng số lần nhìn lại.
+  /// Tổng số lần nhìn lại. Nuôi ngưỡng mở khoá và câu dẫn đầu thẻ.
+  ///
+  /// KHÔNG phải mẫu số của cột "Xuất hiện" nữa — xem [classifiedTotal]. Vẫn
+  /// phải là con số này ở hai chỗ kia, vì đó đúng là con số người dùng nhìn
+  /// thấy ở "Hành trình đã đi" và ở thanh tiến độ 15 lần.
   final int reflectionTotal;
+
+  /// Mẫu số của cột "Xuất hiện" — số lượt gắn được vào một trụ.
+  ///
+  /// Nhỏ hơn [reflectionTotal] đúng bằng số lượt tự viết không có mã tình
+  /// huống. §2.3 của `DienGiaiSau v2` đoán hai con số sẽ bằng nhau sau khi gán
+  /// trụ cho nhóm P; thực tế còn chênh, vì nhánh "Điều khác" của luồng Reflect
+  /// không ghi `situation_code` nào.
+  final int classifiedTotal;
 
   final VoidCallback onStartSelfCheck;
 
@@ -681,7 +706,7 @@ class _CareerSnapshotCard extends ConsumerWidget {
               rating: _hasSelfCheck ? pillarStatusLabel(_scoreOf(pillar)) : null,
               ratingColor: pillarStatusColor(_scoreOf(pillar)),
               count: hasReflection ? counts[pillar] ?? 0 : null,
-              total: reflectionTotal,
+              total: classifiedTotal,
               last: pillar == SelfCheckPillar.values.last,
             ),
 

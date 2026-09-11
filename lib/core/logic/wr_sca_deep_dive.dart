@@ -33,8 +33,7 @@ import '../models/wr_content.dart';
 import '../models/wr_episode.dart';
 import '../models/wr_intelligence.dart';
 import 'wr_career_health.dart'
-    show dominantPillar, pillarOfDimension, selfCheckDateLabel;
-import 'wr_repeated_situations.dart';
+    show PillarTally, dominantPillar, pillarTally, selfCheckDateLabel;
 import 'wr_self_check_narrative.dart';
 import 'wr_self_check_questions.dart';
 
@@ -197,7 +196,7 @@ List<ReflectionEpisode> episodesWithinDays(
   ];
 }
 
-/// Số lần mỗi trụ xuất hiện trong Reflection của cửa sổ đang xét.
+/// Bảng đếm hai valence của cửa sổ đang xét.
 ///
 /// Đếm theo LƯỢT, không theo tình huống khác nhau: §7 hỏi "bạn quay lại nhóm
 /// này bao nhiêu lần", nên chọn lại cùng một tình huống năm lần là năm lần.
@@ -207,35 +206,41 @@ List<ReflectionEpisode> episodesWithinDays(
 /// thuộc hai nhóm tình huống TÍCH CỰC (P-ACHIEVE, P-STEADY) bị dồn hết vào trụ
 /// A, nên "Cách làm việc" phồng lên bằng đúng số lần người dùng ghi lại điều
 /// hay — và có thể thành trụ nổi trội giả, kéo theo cả câu diễn giải sai.
+///
+/// LỖI ĐÃ SỬA 11/09: bản trước trả về MỘT bảng đếm, bỏ hẳn nhóm P, trong khi
+/// mẫu số vẫn là tổng mọi Episode trong cửa sổ. Xem [PillarTally].
+PillarTally patternTally(
+  List<ReflectionEpisode> episodes,
+  List<WrSituation> situations, {
+  required DateTime now,
+  int days = kScaPatternWindowDays,
+}) =>
+    pillarTally(episodesWithinDays(episodes, now: now, days: days), situations);
+
+/// Số lần mỗi trụ THÁCH THỨC xuất hiện trong cửa sổ.
+///
+/// Vẫn còn vì ba nơi chỉ cần đúng bảng này. Trụ nổi trội và khoảng lệch phải
+/// tính trên valence thách thức (`DienGiaiSau v2` §2.2), nên đây là bảng đúng
+/// cho chúng — nhưng mẫu số đi kèm phải là [PillarTally.challengeTotal], KHÔNG
+/// phải tổng số Episode trong cửa sổ.
 Map<SelfCheckPillar, int> pillarPatternCounts(
   List<ReflectionEpisode> episodes,
   List<WrSituation> situations, {
   required DateTime now,
   int days = kScaPatternWindowDays,
-}) {
-  final codeToDim = {for (final s in situations) s.code: s.scaDimension};
-  final counts = <SelfCheckPillar, int>{
-    SelfCheckPillar.s: 0,
-    SelfCheckPillar.c: 0,
-    SelfCheckPillar.a: 0,
-  };
-  final window = episodesWithinDays(episodes, now: now, days: days);
-  for (final code in recentSituationIds(window, window: window.length)) {
-    final dim = codeToDim[code];
-    if (dim == null) continue;
-    final pillar = pillarOfDimension(dim);
-    if (pillar == null) continue;
-    counts[pillar] = counts[pillar]! + 1;
-  }
-  return counts;
-}
+}) =>
+    patternTally(episodes, situations, now: now, days: days).challenge;
 
-/// Tổng số lần Reflection trong cửa sổ — MẪU SỐ của mọi câu "{count} / {total}".
+/// Tổng số lần Reflection trong cửa sổ, kể cả lượt không gắn được trụ nào.
 ///
-/// Đếm mọi Episode trong cửa sổ, kể cả lượt không thuộc trụ nào. `DienGiaiSau`
-/// bảng 2 định nghĩa `totalReflection` là "tổng số Reflection trong cùng cửa
-/// sổ", không phải tổng ba trụ — nên tổng ba `pillarPatternCounts` thường NHỎ
-/// HƠN con số này, và đó là sự thật chứ không phải sai số.
+/// KHÔNG CÒN LÀ MẪU SỐ của câu "{count} / {total}". `DienGiaiSau v1` bảng 2
+/// định nghĩa `totalReflection` là "tổng số Reflection trong cùng cửa sổ" và
+/// dùng nó làm mẫu số; v2 §1.1 chỉ ra đó chính là chỗ hỏng, vì tử số bỏ nhóm P
+/// còn mẫu số thì không. Mẫu số nay lấy từ [PillarTally].
+///
+/// Vẫn giữ hàm này vì tầng 2 cần biết mỗi cửa sổ có bao nhiêu lượt để quyết
+/// định đã đủ [kDeepTrendMinPerWindow] hay chưa — đó là câu hỏi về CÔNG SỨC
+/// người dùng bỏ ra, nên đếm cả lượt tự viết mới đúng.
 int totalReflectionInWindow(
   List<ReflectionEpisode> episodes, {
   required DateTime now,
@@ -265,45 +270,23 @@ SelfCheckPillar? dominantPatternPillar(
       total ?? counts.values.fold<int>(0, (s, v) => s + v),
     );
 
-/// Câu Lớp 3 — ba nhánh template của §7.
-String scaPatternText({
-  required SelfCheckPillar pillar,
-  required ScaPillarStatus status,
-  required Map<SelfCheckPillar, int> counts,
-  required SelfCheckPillar? dominant,
-}) {
-  final count = counts[pillar] ?? 0;
-  if (count == 0) {
-    return tr('Chưa có đủ tín hiệu từ Reflection gần đây để đối chiếu thêm cho '
-        'nhóm này.', 'Not enough signal from recent Reflections to add anything for '
-        'this group yet.');
-  }
-
-  if (dominant != pillar) {
-    return tr('Nhóm này xuất hiện $count lần trong Reflection gần đây, chưa phải '
-        'nhóm chiếm ưu thế nhất.', 'This group came up $count times in recent Reflections, not the '
-        'most prominent one.');
-  }
-
-  // Đây là chỗ §7 gọi là "lệch pha giữa tự nhận thức và trải nghiệm thực tế".
-  if (status.isReassuring) {
-    return tr('Bạn tự đánh giá phần này ${status.inlineLabel}, nhưng đây '
-        'lại là nhóm tình huống bạn quay lại nhiều nhất trong Reflection gần '
-        'đây ($count lần). Sự chênh lệch này thường đáng chú ý hơn bản thân '
-        'điểm số, có thể bạn đã quen đến mức không còn nhận ra ảnh hưởng của '
-        'nó nữa.', 'You rate this part as ${status.inlineLabel}, yet it is the '
-        'group of situations you return to most in recent Reflections '
-        '($count times). That gap is usually worth more attention than the '
-        'score itself; you may have grown so used to it that you no longer '
-        'notice its effect.');
-  }
-
-  return tr('Nhóm này vừa được bạn tự đánh giá ${status.inlineLabel}, vừa '
-      'là nơi bạn quay lại nhiều nhất trong Reflection ($count lần). Hai nguồn '
-      'dữ liệu đang xác nhận lẫn nhau.', 'You rate this group as ${status.inlineLabel}, and it is also '
-      'where you return most in Reflection ($count times). Both sources are '
-      'confirming each other.');
-}
+// ---------------------------------------------------------------------------
+// ĐÃ BỎ: scaPatternText
+// ---------------------------------------------------------------------------
+//
+// Hàm này sinh câu "đối chiếu Pattern" cho TỪNG trụ, và màn hình in cả ba.
+// `DienGiaiSau v2` §1.3 gọi thẳng tên vấn đề: "Mỗi trụ đang hiện nhãn mức đánh
+// giá (đã có ở Career Snapshot) cộng số lần xuất hiện (cũng đã có ở Career
+// Snapshot), cộng một câu gần như giống hệt nhau ba lần. Nói với người dùng ba
+// lần rằng không có gì nổi trội thì đúng về logic nhưng vô nghĩa về trải
+// nghiệm."
+//
+// Điều nó nói đúng — chỗ lệch pha giữa tự đánh giá và tần suất — nay do khối
+// chính nói, đúng MỘT lần, ở bậc R3 của thang ưu tiên. Giữ lại hàm này là để
+// hai nguồn cùng kết luận về một chênh lệch rồi có ngày nói khác nhau.
+//
+// Khung "Lệch pha tự nhận thức" ở Insight Career Memory KHÔNG dùng hàm này —
+// nó gọi [selfAwarenessGapNarrative] bên dưới, và khung đó vẫn còn.
 
 // ---------------------------------------------------------------------------
 // Khung "Lệch pha tự nhận thức" — §9, khung thứ ba của Insight Career Memory
@@ -331,10 +314,11 @@ String? selfAwarenessGapNarrative({
   final scored = scoredSelfChecks(history);
   if (scored.isEmpty) return null;
 
-  final counts = pillarPatternCounts(episodes, situations, now: now);
+  final tally = patternTally(episodes, situations, now: now);
+  final counts = tally.challenge;
   final dominant = dominantPatternPillar(
     counts,
-    total: totalReflectionInWindow(episodes, now: now),
+    total: tally.challengeTotal,
   );
   if (dominant == null) return null;
 
@@ -372,7 +356,6 @@ class ScaDeepDivePillar {
     required this.score,
     required this.status,
     required this.trendText,
-    required this.patternText,
     required this.patternCount,
     required this.isDominant,
   });
@@ -381,13 +364,15 @@ class ScaDeepDivePillar {
   final double score;
   final ScaPillarStatus status;
 
-  /// Lớp 2. Null khi chưa có lần Self-Check nào trước đó.
+  /// So với LẦN SELF-CHECK TRƯỚC. Null khi chưa có lần nào trước đó.
+  ///
+  /// Là thứ duy nhất còn lại của ba lớp cũ, vì là thứ duy nhất Career Snapshot
+  /// không có. Xem chú thích chỗ [ScaDeepDivePillar] cũ có `patternText`.
   final String? trendText;
 
-  /// Lớp 3, luôn có chữ.
-  final String patternText;
-
+  /// Số lần trụ này bị chạm bởi tình huống THÁCH THỨC trong cửa sổ.
   final int patternCount;
+
   final bool isDominant;
 
   String get pillarName => pillar.displayName;
@@ -409,10 +394,11 @@ List<ScaDeepDivePillar> buildScaDeepDive({
 
   final latest = scored.first;
   final previous = scored.length > 1 ? scored[1] : null;
-  final counts = pillarPatternCounts(episodes, situations, now: now);
+  final tally = patternTally(episodes, situations, now: now);
+  final counts = tally.challenge;
   final dominant = dominantPatternPillar(
     counts,
-    total: totalReflectionInWindow(episodes, now: now),
+    total: tally.challengeTotal,
   );
 
   return [
@@ -426,12 +412,6 @@ List<ScaDeepDivePillar> buildScaDeepDive({
             pillar: pillar,
             score: score,
             previous: previous,
-          ),
-          patternText: scaPatternText(
-            pillar: pillar,
-            status: scaPillarStatus(score),
-            counts: counts,
-            dominant: dominant,
           ),
           patternCount: counts[pillar] ?? 0,
           isDominant: dominant == pillar,

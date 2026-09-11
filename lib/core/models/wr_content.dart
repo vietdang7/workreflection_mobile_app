@@ -51,6 +51,13 @@ enum HumanNeed {
 ///
 /// Mọi thống kê SCA phải lọc bằng [isSca] trước, nếu không hai nhóm tích cực sẽ
 /// lẫn vào điểm số của một trụ mà chúng không thuộc về.
+///
+/// TỪ 11/09/2026 CÓ MỘT NGOẠI LỆ, và nó không mâu thuẫn với đoạn trên.
+/// `DienGiaiSau v2` §2.1 gán trụ cho cả 10 tình huống tích cực, nhưng gán vào
+/// một trường RIÊNG ([WrSituation.pillar]) chứ không đụng vào `sca_dimension`.
+/// Hai câu hỏi khác nhau: "tình huống này đo chiều SCA nào" (vẫn chỉ 10 chiều
+/// thật) và "tình huống này thuộc mặt nào của công việc" (46 → nay 110 tình
+/// huống đều trả lời được). Xem [WrValence] về vì sao cần cả hai.
 enum ScaDimension {
   s1,
   s2,
@@ -105,6 +112,35 @@ enum ScaDimension {
 }
 
 // ---------------------------------------------------------------------------
+// WrValence
+// ---------------------------------------------------------------------------
+
+/// Tình huống này là một khó khăn hay một điều thuận lợi.
+///
+/// `DienGiaiSau v2` §2.2 gọi đây là "phần bắt buộc", và lý do nằm gọn trong một
+/// ví dụ: "Nếu nhóm C có 10 lần, hệ thống không phân biệt được đó là 10 lần gặp
+/// khó khăn về quan hệ hay 10 lần có trải nghiệm tốt về quan hệ. Hai điều này
+/// có ý nghĩa trái ngược nhau hoàn toàn."
+///
+/// Nên trụ và valence là HAI TRỤC ĐỘC LẬP, không suy được cái này từ cái kia.
+/// Trụ nói *mặt nào* của công việc, valence nói *chiều nào* của trải nghiệm.
+///
+/// KHÔNG CẦN CỘT DB. §2.2 yêu cầu thêm một trường, nhưng trường ấy đã tồn tại
+/// sẵn dưới một cái tên khác: đúng 10 tình huống P là tích cực, và chúng đã
+/// được tách bằng [ScaDimension.isPositive] từ trước. Dựng thêm một cột nữa là
+/// mở đường cho hai nguồn nói khác nhau về cùng một tình huống.
+enum WrValence {
+  /// 160 tình huống của Career Situation Library — nguồn gốc là công cụ chẩn
+  /// đoán tổ chức nên tất cả đều ở dạng vấn đề.
+  thachThuc,
+
+  /// 10 tình huống P-ACHIEVE / P-STEADY.
+  tichCuc;
+
+  bool get isPositive => this == WrValence.tichCuc;
+}
+
+// ---------------------------------------------------------------------------
 // WrSituation
 // ---------------------------------------------------------------------------
 
@@ -119,6 +155,7 @@ class WrSituation {
     this.humanNeed,
     this.expectedOutcome,
     this.scaPerspective,
+    this.pillarCode,
     this.createdAt,
     this.retiredAt,
   }) : textVi = text;
@@ -163,6 +200,20 @@ class WrSituation {
 
   bool get isRetired => retiredAt != null;
 
+  /// Chữ 'S' / 'C' / 'A' đọc thẳng từ cột `wr_situations.pillar`, hoặc null khi
+  /// đội nội dung chưa điền.
+  ///
+  /// Để thô như vậy — không phải `SelfCheckPillar` — vì model này nằm ở tầng dữ
+  /// liệu và không được biết tới enum của tầng logic Self-Check. Chỗ dịch sang
+  /// enum là `pillarOfSituation` trong `wr_career_health.dart`.
+  final String? pillarCode;
+
+  /// Khó khăn hay thuận lợi (§2.2).
+  ///
+  /// Suy từ [ScaDimension.isPositive] chứ không đọc cột riêng — xem [WrValence].
+  WrValence get valence =>
+      scaDimension.isPositive ? WrValence.tichCuc : WrValence.thachThuc;
+
   factory WrSituation.fromJson(Map<String, dynamic> json) {
     final rawNeed = json['human_need'] as String?;
     return WrSituation(
@@ -173,6 +224,7 @@ class WrSituation {
       humanNeed: rawNeed != null ? HumanNeed.fromDb(rawNeed) : null,
       expectedOutcome: json['expected_outcome'] as String?,
       scaPerspective: json['sca_perspective'] as String?,
+      pillarCode: json['pillar'] as String?,
       wave: json['wave'] as int,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
