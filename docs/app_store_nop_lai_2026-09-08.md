@@ -350,9 +350,9 @@ Account > Xử lý dữ liệu bằng AI.
 > chuyện. Đừng đăng nhập rồi bấm đồng ý thử trên chính tài khoản đó; lỡ bấm thì
 > xoá hàng consent đi trước khi nộp.
 >
-> **Kiểm lại 11/09/2026:** vẫn nguyên `role = 'premium'`, `wr_ai_consent` vẫn 0
-> hàng, `wr_entitlements` cũng 0 hàng. Nghĩa là câu `update` ở trên **chưa
-> chạy** — vẫn còn nợ, và nó là đúng cái đã làm rớt 3.1.1 lần trước.
+> **XONG 11/09/2026:** câu `update` đã chạy. Kiểm lại cùng ngày —
+> `role = 'free'`, `wr_ai_consent` 0 hàng, `wr_entitlements` 0 hàng. Đúng trạng
+> thái cần có lúc nộp.
 
 ---
 
@@ -370,11 +370,17 @@ Account > Xử lý dữ liệu bằng AI.
 3. ~~Merge PR #16 repo app~~ → **đã merge 09/09** (commit `4029004`).
 4. Khai Subscription Group + 2 gói (**Auto-Renewable**), đủ ảnh và mô tả, tới
    trạng thái **Ready to Submit**. *(Địa chỉ App Store Server Notifications ở
-   mục 2b đã khai xong 08/09.)* — **khai xong 09/09 trừ ảnh Paywall**, xem mục 1.
-5. Gỡ Premium khỏi tài khoản demo, xoá hàng consent của tài khoản đó.
+   mục 2b đã khai xong 08/09.)* — **XONG 11/09**: cả hai gói **Ready for
+   Review**, ảnh Paywall và Review Notes đã đính đủ. Giá đối chiếu tận nơi:
+   `₫499.000` gói năm, `₫70.000` gói tháng — **khớp đúng hai hằng**
+   `_kYearlyPriceLabel` / `_kMonthlyPriceLabel` trong
+   `test/screenshots/iap_review_test.dart`, không phải sửa lại ảnh.
+5. ~~Gỡ Premium khỏi tài khoản demo, xoá hàng consent của tài khoản đó.~~
+   **Xong 11/09** — xem cảnh báo ở mục 3.
 6. ~~Chạy Codemagic bản `FORCE_STORE_POLICY=app_store` → TestFlight.~~ **Xong
    09/09:** build #7 (`iOS · TestFlight`, main, commit `4029004`) xanh hết bước,
-   IPA 32.57 MB, đã đẩy lên TestFlight thành **1.0.0 (7)**.
+   IPA 32.57 MB, đã đẩy lên TestFlight thành **1.0.0 (7)**. **Chạy lại 11/09**
+   trên `f311519` để bản nộp có cả bản vá câu Self-Check ở Diễn giải sâu.
 7. **Chạy thử sandbox trên máy thật** — bước duy nhất kiểm được biên lai Apple
    thật, chưa ai làm được từ xa:
    - tạo Sandbox Tester, cài bản TestFlight, đăng nhập tài khoản sandbox
@@ -391,6 +397,35 @@ Account > Xử lý dữ liệu bằng AI.
      hành. Sandbox chạy nhanh hơn thật: gói tháng gia hạn sau 5 phút, gói năm sau
      1 tiếng, nên ngồi đợi một lát là thấy cả `DID_RENEW`.
 8. Nộp bản build mới **kèm cả hai gói**, dán thư trả lời ở mục 3.
+
+### Đã làm trên App Store Connect ngày 11/09/2026
+
+| Việc | Kết quả |
+|---|---|
+| Ảnh App Store (iPhone 6.5") | 5 ảnh cũ xoá, 5 ảnh mới lên, đúng thứ tự 01→05 |
+| Ảnh Paywall cho từng gói | đã có sẵn ở cả hai gói; cả hai **Ready for Review** |
+| Giá | `₫499.000` / `₫70.000` — khớp ảnh |
+| App Review Information → Notes | **viết lại toàn bộ**, xem bên dưới |
+| Attachment video 28/08 | **đã gỡ** |
+
+Notes bản 28/08 không chỉ thừa cái link video — nó nói ngược lại với chính bản
+nộp này. Bốn chỗ sai, tất cả đều là thứ người duyệt đối chiếu đầu tiên:
+
+- *"It is not sold, advertised, or linked to anywhere in the app, and the app
+  offers no way to obtain or pay for it"* — mô tả **đúng cái đã làm rớt 3.1.1**.
+- *"The demo account's profile shows a Premium member badge"* — tài khoản demo
+  đã hạ về free.
+- *"no payment processor"* — nay bán qua Apple IAP.
+- *"iOS 13.0 and later"* và *"Vietnamese only"* — sàn thật là **iOS 15.0**, và
+  app đã có **cả tiếng Anh**.
+
+Video 28/08 gỡ vì Cảnh 13 của nó quay chậm màn Tài khoản để chứng minh *"không
+có chỗ nào mua"*. Nộp kèm là tự đưa cho người duyệt bằng chứng chống lại mình.
+Apple **không bắt buộc** phải có video, nên bỏ hẳn chứ không quay lại.
+
+Ô Notes giới hạn **4000 ký tự**; bản mới 3.933, đã trừ hao trường hợp ASC đếm
+xuống dòng thành hai ký tự. Bản đầy đủ lưu ở
+`docs/asc_app_review_notes_2026-09-11.txt`.
 
 ---
 

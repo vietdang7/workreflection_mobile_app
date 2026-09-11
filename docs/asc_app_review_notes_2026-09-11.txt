@@ -1,0 +1,42 @@
+WorkReflection — App Review Information (11 Sep 2026)
+
+This build answers the 3.1.1 and 5.1.1(i) rejections of 06 Sep 2026. Items 1-2 are what changed.
+
+1. IN-APP PURCHASE (Guideline 3.1.1)
+Premium is now sold in the app with StoreKit 2 auto-renewable subscriptions, submitted with this build:
+- app.workreflection.mobile.premium.yearly (1 year)
+- app.workreflection.mobile.premium.monthly (1 month)
+Where to find it: Account (avatar, top right) > Premium, and from any Premium feature. The paywall shows the App Store price, a "Restore purchases" button, the auto-renewal disclosure, the Apple standard EULA and our privacy policy. The app has no external purchase link, no QR payment flow, and no pricing that points outside the app.
+The demo account below is now a FREE account so the purchase flow can be tested with a Sandbox tester. It previously had Premium granted on our server, which caused the 3.1.1 rejection.
+
+2. AI CONSENT (Guidelines 5.1.1(i) and 5.1.2(i))
+The app sends user content to third-party AI services. A full consent screen is now shown before the first time any data leaves the device. To see it, sign in with the demo account and open "Trò chuyện" (Chat). Consent is enforced in the app and again on our server, so an older build cannot bypass it. It can be reviewed or revoked at any time in Account > Xử lý dữ liệu bằng AI.
+
+3. DEVICES AND OS TESTED
+iPhone 15 Pro Max (iOS 26.6), physical device, installed from TestFlight. iPhone only, iOS 15.0 and later.
+
+4. WHAT THE APP DOES
+A daily work-reflection journal for office workers. Each day the user picks a mood, picks the situation they met at work, and writes a line or two. The app counts which situations repeat, shows the recurring patterns, suggests a practice theme and keeps a career timeline. All content comes from the user's own entries.
+
+5. SETUP AND ACCESS
+No setup needed. Demo account: demo.review@workreflection.app / WrDemo!2026Review - pre-filled with data so no screen appears empty. Any email can register; sign-up is immediate.
+Core feature: Today tab > tap any mood tile > the reflection flow. Data export and account deletion: profile avatar, top right; deletion is immediate, no website step.
+Privacy policy: https://www.workreflection.app/privacy-policy
+
+6. EXTERNAL SERVICES
+- Supabase - authentication (email and password only), database, storage and our serverless functions. All user data is stored here.
+- OpenRouter - the gateway our backend uses for language models: DeepSeek for the chat assistant and pattern summaries, Gemini for reading a CV or job description the user uploads.
+- AusyncLab - Vietnamese text-to-speech, only to read a short passage aloud.
+The app never calls a model provider directly; text goes to our Supabase Edge Functions, which call it. We do not sell user data or use it for advertising or model training. There is no third-party sign-in and no analytics, advertising or tracking SDK. Payments go entirely through Apple In-App Purchase; no other payment processor. The app does not track users across apps or sites, so it shows no ATT prompt.
+
+7. REGIONAL DIFFERENCES
+None. Identical in every region. Vietnamese and English, switchable in Account. No region gating.
+
+8. REGULATED INDUSTRY / THIRD-PARTY MATERIAL
+Not a regulated industry, and not a medical, mental health, financial or legal service - it is a personal journaling tool. All text, questions and artwork are our own.
+
+NO USER-GENERATED CONTENT BETWEEN USERS: every entry is private to its author - no feed, comments or messaging, so nothing to report or block.
+
+PERMISSIONS: microphone and speech recognition (dictate an answer), photo library (profile picture during setup), camera (QR check-in at a workshop). Each is requested only when that feature is tapped and works if denied. No location, contacts or health data.
+
+NO SCREEN RECORDING IS ATTACHED: the 28 Aug one was removed, it shows the old build with no in-app purchase.
