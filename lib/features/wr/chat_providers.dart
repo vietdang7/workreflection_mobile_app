@@ -7,6 +7,7 @@ import '../../core/l10n/wr_tr.dart';
 import '../../core/logic/wr_chat_starters.dart';
 import '../../core/logic/wr_repeated_situations.dart';
 import '../../core/models/wr_chat.dart';
+import '../profile/profile_providers.dart';
 import 'wr_providers.dart';
 
 /// Trạng thái một cuộc trò chuyện đang mở.
@@ -296,6 +297,9 @@ final wrConversationsProvider =
 /// khi hai nguồn kia còn đang tải hoặc đã hỏng. Thiếu dữ liệu thì
 /// [chatStarters] tự rơi về danh sách dự phòng, tức là vẫn có ba ô bấm được.
 final wrChatStartersProvider = Provider<List<String>>((ref) {
+  // Ba ô gợi ý là chuỗi dựng sẵn bằng `tr()` — xem `wrWatchLocale`.
+  wrWatchLocale(ref);
+
   final episodes = ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
   final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
   return chatStarters(

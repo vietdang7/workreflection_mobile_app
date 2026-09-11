@@ -616,6 +616,10 @@ final wrCareerQuestionsProvider =
 /// Null nghĩa là chưa đủ dữ liệu — §11.3 yêu cầu im lặng, không bịa.
 final wrGrowthOpportunityProvider =
     FutureProvider<GrowthOpportunity?>((ref) async {
+  // Câu gợi ý dựng bằng `tr()` rồi nằm trong cache — không có dòng này thì đổi
+  // ngôn ngữ xong thẻ vẫn nói tiếng cũ.
+  wrWatchLocale(ref);
+
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return null;
 

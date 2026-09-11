@@ -31,6 +31,22 @@ Future<String> readPersistedLocale() async {
 /// locale so the correct locale is applied before the first frame.
 final appLocaleProvider = StateProvider<String>((ref) => 'vi');
 
+/// Buộc provider gọi nó TÍNH LẠI mỗi lần người dùng đổi ngôn ngữ.
+///
+/// `tr()` đọc một biến toàn cục, nên nó chỉ đúng TẠI LÚC CHẠY. Widget thì luôn
+/// dựng lại khi đổi ngôn ngữ nên không sao; cache của Riverpod thì không —
+/// provider nào đã dựng sẵn một câu bằng `tr()` rồi giữ chuỗi ấy trong cache sẽ
+/// chở nguyên tiếng cũ sang, dù cả màn quanh nó đã đổi.
+///
+/// Đó là lỗi khách chỉ 11/09: bật tiếng Anh mà thẻ "A VIEW ON GROWTH" vẫn nói
+/// tiếng Việt — nhãn quanh nó đi qua widget nên đổi, còn đoạn văn thì nằm trong
+/// `wrGrowthOpportunityProvider` đã tính từ trước.
+///
+/// Gọi ở ĐẦU thân provider. Chỉ cần thiết khi giá trị trả về CHỞ chữ đã dịch;
+/// provider trả dữ liệu thuần (mã, số, đối tượng có getter đi qua `tr()`) thì
+/// không cần — getter tự đọc lại mỗi lần gọi.
+void wrWatchLocale(Ref ref) => ref.watch(appLocaleProvider);
+
 // ---------------------------------------------------------------------------
 // Profile data
 // ---------------------------------------------------------------------------
