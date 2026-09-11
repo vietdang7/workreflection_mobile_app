@@ -438,4 +438,48 @@ void main() {
       );
     });
   });
+
+  // Bộ đếm KHÔNG được đổi theo ngôn ngữ đang bật.
+  //
+  // Mảnh ký ức ghi trước 05/08/2026 không có `theme_id`, nên chỉ còn cách so
+  // theo tên. Mà `theme.title` đi qua `trDb` — nó trả tên tiếng Anh khi người
+  // dùng bật tiếng Anh, trong khi `reflection_text` đóng băng tiếng Việt từ lúc
+  // ghi. So hai thứ đó với nhau thì đổi ngôn ngữ = mất sạch tiến độ cũ, và
+  // ngưỡng hình thành kỹ năng tụt theo.
+  //
+  // Bài này không bật `wrEnglish`: nó dựng thẳng chủ đề có CẢ HAI tên và đòi
+  // đếm đúng theo tên nào cũng được, nên nó đứng vững bất kể ngôn ngữ nào đang
+  // bật lúc chạy.
+  group('đếm theo tên không phụ thuộc ngôn ngữ', () {
+    const bilingual = PracticeTheme(
+      themeId: 'pt-voice',
+      title: 'Dám lên tiếng',
+      titleEn: 'Speaking up',
+    );
+
+    int countOf(List<CareerMemoryEvent> events) =>
+        practiceCountForTheme(bilingual, events);
+
+    test('mảnh ký ức cũ ghi tiếng Việt vẫn đếm', () {
+      expect(countOf(_steps('Dám lên tiếng', 3)), 3);
+    });
+
+    test('mảnh ký ức ghi tiếng Anh cũng đếm', () {
+      expect(countOf(_steps('Speaking up', 2)), 2);
+    });
+
+    test('trộn hai ngôn ngữ thì cộng cả hai, không bỏ bên nào', () {
+      expect(
+        countOf([
+          ..._steps('Dám lên tiếng', 3),
+          _step('Speaking up', i: 9),
+        ]),
+        4,
+      );
+    });
+
+    test('chủ đề khác tên vẫn không bị đếm nhầm', () {
+      expect(countOf(_steps('Giữ tập trung', 3)), 0);
+    });
+  });
 }
