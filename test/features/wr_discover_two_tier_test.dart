@@ -848,27 +848,79 @@ void main() {
       expect(find.textContaining('/ 30 lần'), findsNothing);
     });
 
-    testWidgets('đủ ngưỡng thì có lối đi chạm được sang danh sách đầy đủ',
+    testWidgets('còn dòng bị giấu thì có lối đi chạm được sang danh sách đầy đủ',
         (tester) async {
       // Lỗi khách báo 2026-08-24: đủ số lần rồi mà "không có nút để click vào
-      // xem bức tranh". Lối đi đó phải sống sót qua lần gộp hai khối.
+      // xem bức tranh". Lối đi đó phải sống sót qua lần gộp hai khối, và qua
+      // cả lần bỏ liên kết trùng ở thẻ Career Snapshot (khách 11/09).
+      //
+      // Bốn tình huống lặp lại, màn chính bày ba — nên có đúng một dòng bị
+      // giấu, tức là màn đầy đủ thật sự có thứ để xem thêm.
       final episodes = FakeWrEpisodeRepository()
-        ..seed(_episodes({'sit-01': 15}));
+        ..seed(_episodes({
+          'sit-01': 5,
+          'sit-02': 4,
+          'sit-03': 3,
+          'sit-04': 3,
+        }));
 
       await _pump(
         tester,
         _wrap(
           const WrDiscoverScreen(),
           intel: FakeWrIntelligenceRepository(),
-          content: FakeWrContentRepository()..seedSituations([_sit]),
+          content: FakeWrContentRepository()
+            ..seedSituations([
+              _sit,
+              _sitOf('sit-02', ScaDimension.c2),
+              _sitOf('sit-03', ScaDimension.a1),
+              _sitOf('sit-04', ScaDimension.s1),
+            ]),
           episodes: episodes,
         ),
       );
 
-      await tester.tap(find.byKey(const Key('wr_snapshot_open_repeated')));
+      await tester.tap(find.byKey(const Key('wr_discover_see_more')));
       await tester.pumpAndSettle();
 
       expect(find.byType(WrPatternsScreen), findsOneWidget);
+    });
+
+    testWidgets('chỉ còn MỘT lối sang danh sách đầy đủ, không phải hai',
+        (tester) async {
+      // Khách 11/09: "bỏ phần xem các vấn đề thường lặp lại ở Career Snapshot,
+      // tránh việc gây trùng lặp 2 lần". Người dưới đây có 4 tình huống lặp
+      // lại — nhiều hơn 3 dòng bày sẵn — nên trước lần sửa này họ thấy CẢ HAI
+      // liên kết cùng trỏ về `/wr/patterns`.
+      final episodes = FakeWrEpisodeRepository()
+        ..seed(_episodes({
+          'sit-01': 5,
+          'sit-02': 4,
+          'sit-03': 3,
+          'sit-04': 3,
+        }));
+
+      await _pump(
+        tester,
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: FakeWrIntelligenceRepository(),
+          content: FakeWrContentRepository()
+            ..seedSituations([
+              _sit,
+              _sitOf('sit-02', ScaDimension.c2),
+              _sitOf('sit-03', ScaDimension.a1),
+              _sitOf('sit-04', ScaDimension.s1),
+            ]),
+          episodes: episodes,
+        ),
+      );
+
+      expect(find.byKey(const Key('wr_discover_see_more')), findsOneWidget);
+      expect(
+        find.byKey(const Key('wr_snapshot_open_repeated')),
+        findsNothing,
+      );
     });
 
     testWidgets('Self-Check quá 3 tháng thì mời cập nhật lại', (tester) async {
@@ -1291,9 +1343,14 @@ void main() {
         find.byKey(const Key('wr_snapshot_invite_reflection')),
         findsNothing,
       );
+      // Cột "Xuất hiện" đã mở, đó mới là thứ khách đi tìm — và nó ở ngay trên
+      // màn, không cần thêm một lối bấm nào nữa. Lối sang danh sách đầy đủ nay
+      // chỉ còn ở mục "Tình huống lặp lại", và chỉ khi còn dòng bị giấu; người
+      // này chỉ có một tình huống nên không có dòng nào giấu cả.
+      expect(find.text('16 / 16 lần'), findsOneWidget);
       expect(
         find.byKey(const Key('wr_snapshot_open_repeated')),
-        findsOneWidget,
+        findsNothing,
       );
     });
 

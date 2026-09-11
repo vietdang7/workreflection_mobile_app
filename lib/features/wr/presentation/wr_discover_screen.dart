@@ -265,6 +265,18 @@ class WrDiscoverScreen extends ConsumerWidget {
                 ),
                 if (p != top.last) const SizedBox(height: 18),
               ],
+              // Lối DUY NHẤT sang danh sách đầy đủ, kể từ 11/09.
+              //
+              // Thẻ Career Snapshot phía dưới từng mang một lối thứ hai đi
+              // cùng chỗ; ai có hơn ba tình huống lặp lại thì thấy hai đường
+              // giống hệt nhau cách nhau một màn hình. Khách yêu cầu bỏ cái
+              // trùng, và cái ở lại là cái này — nó đứng ngay dưới chính danh
+              // sách nó mở rộng.
+              //
+              // Vẫn giữ điều kiện `hidden > 0`, KHÔNG cho luôn hiện: hết dòng
+              // bị giấu nghĩa là màn chính đã bày đủ, và màn đầy đủ lúc ấy
+              // chép lại đúng bấy nhiêu dòng. Một lối đi không dẫn tới điều gì
+              // mới thì không phải lối đi.
               if (hidden > 0) ...[
                 const SizedBox(height: 18),
                 _SeeMoreLink(
@@ -285,7 +297,6 @@ class WrDiscoverScreen extends ConsumerWidget {
               counts: pillarCounts,
               reflectionTotal: reflectionCount,
               onStartSelfCheck: () => context.push('/wr/self-check'),
-              onOpenRepeated: () => context.push('/wr/patterns'),
             ),
 
             // ── Lời mời làm Self-Check ──────────────────────────────────
@@ -579,7 +590,6 @@ class _CareerSnapshotCard extends ConsumerWidget {
     required this.counts,
     required this.reflectionTotal,
     required this.onStartSelfCheck,
-    required this.onOpenRepeated,
   });
 
   /// Lần tự đánh giá gần nhất. Null = chưa từng làm.
@@ -592,7 +602,6 @@ class _CareerSnapshotCard extends ConsumerWidget {
   final int reflectionTotal;
 
   final VoidCallback onStartSelfCheck;
-  final VoidCallback onOpenRepeated;
 
   double? _scoreOf(SelfCheckPillar pillar) => scaScoreFor(latest, pillar);
 
@@ -609,10 +618,26 @@ class _CareerSnapshotCard extends ConsumerWidget {
         children: [
           const WrEyebrow('CAREER SNAPSHOT'),
           const SizedBox(height: 6),
+          // Hai câu dẫn, chọn theo việc cột "Xuất hiện" đã mở hay chưa.
+          //
+          // Câu khi ĐÃ MỞ là nguyên văn khách duyệt (file "Các nội dung cần
+          // điều chỉnh" 09/09). Nó nói "Bức tranh tổng quan sau N lần nhìn
+          // lại" — một lời tổng kết, chỉ đúng khi thật sự đã có bức tranh.
+          //
+          // Chưa đủ ngưỡng thì KHÔNG dùng câu ấy: "Bức tranh tổng quan sau 0
+          // lần nhìn lại" vừa vô nghĩa vừa hứa một thứ màn hình chưa có. Lúc
+          // đó câu dẫn phải làm việc khác — giải thích thẻ này đọc từ HAI
+          // nguồn nào — vì ngay dưới nó là hai lời mời bổ sung từng nguồn.
           WrParagraph(
-            tr('Cùng ba trụ, nhìn từ hai phía: điều bạn tự đánh giá, và điều đang '
-            'thực sự lặp lại trong các lần nhìn lại.', 'The same three pillars, seen from two sides: what you rate yourself, '
-            'and what actually keeps coming back in your look-backs.'),
+            hasReflection
+                ? tr('Bức tranh tổng quan sau $reflectionTotal lần nhìn lại. Dựa '
+                    'trên những ghi nhận của bạn, hệ thống đã đúc kết ra trạng '
+                    'thái trải nghiệm của bạn trong thời gian qua.', 'An overview after $reflectionTotal look-backs. From what you '
+                    'have recorded, the app has drawn out how your experience '
+                    'has been lately.')
+                : tr('Cùng ba trụ, nhìn từ hai phía: điều bạn tự đánh giá, và điều đang '
+                    'thực sự lặp lại trong các lần nhìn lại.', 'The same three pillars, seen from two sides: what you rate yourself, '
+                    'and what actually keeps coming back in your look-backs.'),
             style: TextStyle(fontSize: 14.5, color: WrColors.muted, height: 1.6),
           ),
 
@@ -698,18 +723,21 @@ class _CareerSnapshotCard extends ConsumerWidget {
               ),
             ),
 
-          // Đã mở đủ hai cột thì mang theo một lối đi chạm được sang danh sách
-          // đầy đủ. Khách báo 2026-08-24: đủ 15 lần rồi mà "không có nút để
-          // click vào xem bức tranh" — lối đi đó phải sống sót qua lần gộp này.
-          if (hasReflection)
-            Padding(
-              padding: const EdgeInsets.only(top: 12),
-              child: WrLinkRow(
-                key: const Key('wr_snapshot_open_repeated'),
-                label: tr('Xem các vấn đề thường lặp lại', 'See the problems that keep repeating'),
-                onTap: onOpenRepeated,
-              ),
-            ),
+          // KHÔNG có lối sang danh sách tình huống lặp lại ở đây.
+          //
+          // Thẻ này từng mang một `WrLinkRow` "Xem các vấn đề thường lặp lại",
+          // trong khi mục "Tình huống lặp lại" ngay phía trên cũng có một lối
+          // đi cùng chỗ. Người có nhiều hơn ba tình huống lặp lại thấy hai
+          // đường giống hệt nhau cách nhau một màn hình — khách yêu cầu bỏ cái
+          // trùng (11/09).
+          //
+          // Lối đi không mất, nó dồn về `_SeeMoreLink` ở mục phía trên. Chỗ đó
+          // chỉ hiện khi CÒN dòng bị giấu, và như vậy là đủ: hết dòng bị giấu
+          // thì màn chính đã bày đúng bằng những gì màn đầy đủ có.
+          //
+          // Nói cách khác, lỗi khách báo 24/08 ("đủ 15 lần rồi mà không có nút
+          // để click vào xem bức tranh") không tái phát ở đây — lần đó cả THẺ
+          // bị ẩn nên nội dung mất thật, còn giờ nội dung nằm ngay trên màn.
 
           // ── Dòng diễn giải khoảng lệch — chỉ khi có ĐỦ CẢ HAI nguồn ────
           if (_hasSelfCheck && hasReflection)
@@ -718,7 +746,6 @@ class _CareerSnapshotCard extends ConsumerWidget {
               counts: counts,
               reflectionTotal: reflectionTotal,
               ratingOf: (p) => pillarStatusLabel(_scoreOf(p)),
-              onOpenRepeated: onOpenRepeated,
             ),
         ],
       ),
@@ -961,7 +988,6 @@ class _SnapshotGapLine extends ConsumerWidget {
     required this.counts,
     required this.reflectionTotal,
     required this.ratingOf,
-    required this.onOpenRepeated,
   });
 
   /// Trụ nổi trội, hoặc null khi phân bố tương đối đều.
@@ -969,7 +995,6 @@ class _SnapshotGapLine extends ConsumerWidget {
   final Map<SelfCheckPillar, int> counts;
   final int reflectionTotal;
   final String Function(SelfCheckPillar) ratingOf;
-  final VoidCallback onOpenRepeated;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
