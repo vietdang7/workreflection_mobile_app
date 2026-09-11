@@ -115,7 +115,7 @@ void main() {
 
     test('bản mở phải được khai rõ, không tự dưng có', () {
       debugDefaultTargetPlatformOverride = TargetPlatform.linux;
-      expect(WrStorePolicy.forThisBuild().allowsInAppPurchase, isFalse);
+      expect(WrStorePolicy.forThisBuild().allowsVietQrCheckout, isFalse);
     });
   });
 

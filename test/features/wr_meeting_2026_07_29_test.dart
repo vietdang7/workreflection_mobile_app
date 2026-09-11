@@ -43,6 +43,7 @@ import 'package:workreflection_mobile/features/wr/presentation/wr_tra_chieu_scre
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
 
+import '../support/ai_consent.dart';
 import '../support/fake_repository.dart';
 import '../support/fake_workshop_repository.dart';
 import '../support/fake_wr_chat_repository.dart';
@@ -198,6 +199,7 @@ Widget _wrap(
           .overrideWithValue(workshops ?? FakeWorkshopRepository()),
       wrChatRepositoryProvider
           .overrideWithValue(chat ?? FakeWrChatRepository()),
+      grantedAiConsent(),
       sttServiceProvider
           .overrideWithValue(_FakeStt(available: sttAvailable)),
       if (tts != null) ttsServiceProvider.overrideWithValue(tts),
@@ -808,18 +810,15 @@ void main() {
 
     testWidgets('thẻ buổi nói đủ tên, mô tả, giờ, địa điểm và giá',
         (tester) async {
-      // Ngày phải TÍNH TỪ HÔM NAY, không được ghi cứng.
+      // Ngày phải nằm ở tương lai so với lúc chạy: màn lịch chỉ hiện buổi chưa
+      // diễn ra (`upcomingTraChieu`). Ghi cứng một ngày cụ thể là hẹn giờ cho
+      // test hỏng — bản trước ghi 03/09/2026 và hỏng đúng vào 08/09/2026.
       //
-      // Bản trước ghi `DateTime(2026, 9, 3)`. Lúc viết thì đó là ngày sắp tới,
-      // nhưng màn lịch chỉ bày buổi CHƯA DIỄN RA — nên qua 03/09/2026 là cái
-      // thẻ này biến mất khỏi cây widget và bài đỏ, dù không ai đụng vào mã.
-      // Bài đỏ theo lịch chứ không theo lỗi là bài không nói lên điều gì.
-      final date = DateTime.now().add(const Duration(days: 7));
-
       // Nhãn dựng lại bằng tay chứ không gọi `traChieuWhenLabel`: gọi hàm của
       // sản phẩm để kiểm chính nó thì luôn khớp, kể cả khi nó sai.
+      final date = DateTime.now().add(const Duration(days: 30));
       const weekdays = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
-      final expectedWhen = '${weekdays[date.weekday - 1]} '
+      final whenLabel = '${weekdays[date.weekday - 1]} '
           '${date.day.toString().padLeft(2, '0')}/'
           '${date.month.toString().padLeft(2, '0')}';
 
@@ -841,7 +840,7 @@ void main() {
 
       expect(find.text('"Buổi A"'), findsOneWidget);
       expect(find.text('Một câu hỏi duy nhất cho cả bàn.'), findsOneWidget);
-      expect(find.text(expectedWhen), findsOneWidget);
+      expect(find.text(whenLabel), findsOneWidget);
       expect(find.text('123 Trường Sơn'), findsOneWidget);
       expect(find.text('Giữ chỗ 99.000đ'), findsOneWidget);
     });

@@ -1617,6 +1617,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get avatarUploading => 'Uploading…';
 
   @override
+  String get avatarPermissionDenied =>
+      'Photo library access is needed to choose a profile picture.';
+
+  @override
+  String get avatarPermissionOpenSettings => 'Open Settings';
+
+  @override
   String get vouchersTitle => 'My Vouchers';
 
   @override

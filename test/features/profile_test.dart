@@ -12,6 +12,7 @@ import 'package:workreflection_mobile/features/auth/data/auth_repository.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
 import 'package:workreflection_mobile/core/logic/wr_premium_override.dart';
+import 'package:workreflection_mobile/core/logic/wr_store_policy.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 import 'package:workreflection_mobile/features/profile/presentation/profile_screen.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
@@ -56,10 +57,13 @@ Widget _wrap(
   AuthRepository? authRepo,
   String? signedInEmail,
   FakeWrIntelligenceRepository? intel,
+  WrStorePolicy? storePolicy,
 }) {
   return ProviderScope(
     overrides: [
       wrRepositoryProvider.overrideWithValue(repo),
+      if (storePolicy != null)
+        wrStorePolicyProvider.overrideWithValue(storePolicy),
       if (authRepo != null) authRepositoryProvider.overrideWithValue(authRepo),
       // Không override thì provider hỏi Supabase, chưa khởi tạo nên trả null —
       // tức công tắc ẩn. Đó cũng là điều mọi test cũ đang trông đợi.
@@ -671,6 +675,29 @@ void main() {
             .first,
       );
       expect((card.decoration as BoxDecoration).color, WrColors.coral);
+    });
+
+    // Bản nộp kho ứng dụng dựng với `--dart-define=HIDE_WEB_PURCHASE_LINK=true`
+    // (xem `codemagic.yaml`). Lúc đó app không được nhắc tới chuyện mua ở bất
+    // kỳ đâu — kể cả một con số. Trước 27/08 thẻ này phớt lờ chính sách, nên
+    // "499.000đ/năm" vẫn nằm đầu màn Tài khoản và lọt vào video gửi App Review
+    // trong khi hồ sơ khai app không bán gì.
+    testWidgets('bản dựng silent không hiện thẻ giá', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile());
+      repo.seedCcProfile({
+        'full_name': 'Yumi Trần',
+        'email': 'yumi@workreflection.app',
+        'subscription_expires_at': null,
+      });
+      await _pumpLarge(
+        tester,
+        _wrap(const ProfileScreen(), repo, storePolicy: WrStorePolicy.silent),
+      );
+
+      expect(find.byKey(const Key('profile_premium_card')), findsNothing);
+      expect(find.text('Mở khoá Premium'), findsNothing);
+      expect(find.textContaining('499.000'), findsNothing);
     });
 
     testWidgets('Premium bên web không bị mời nâng cấp thêm lần nữa', (tester) async {

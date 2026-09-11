@@ -24,6 +24,7 @@ import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
+import '../../../core/widgets/wr_ai_consent_sheet.dart';
 import '../../../core/widgets/wr_premium_lock.dart';
 import '../wr_providers.dart';
 import '../../../core/widgets/wr_paragraph.dart';
@@ -126,6 +127,12 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
   /// Nhờ máy chủ đọc tài liệu. Dùng cho cả lần đầu lẫn nút "Đọc lại".
   Future<void> _analyze(String documentId) async {
     if (_analyzingId != null) return;
+
+    // Đây là luồng gửi đi NHIỀU dữ liệu riêng tư nhất của app: toàn bộ nội dung
+    // JD hoặc CV, kể cả những phần người dùng không hề nhắc tới trong app. Nên
+    // cổng chặn đặt ở đây, trước cả khi hiện vòng quay "đang đọc".
+    if (!await ensureAiConsent(context, ref)) return;
+
     setState(() {
       _analyzingId = documentId;
       _errorMsg = null;

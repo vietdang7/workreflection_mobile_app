@@ -124,7 +124,21 @@ workflows:
           BUILD_NUMBER=$((LATEST + 1))
           echo "Số build đã dùng trên Apple: App Store='$APP_STORE_NUM' TestFlight='$TESTFLIGHT_NUM' → dùng $BUILD_NUMBER"
 
+          # FORCE_STORE_POLICY=app_store → `WrStorePolicy.appStore`: bán Premium
+          # bằng In-App Purchase, không màn QR, không nút dẫn sang web.
+          #
+          # Trước 07/09 chỗ này dựng bằng HIDE_WEB_PURCHASE_LINK=true, tức
+          # `WrStorePolicy.silent` — không bán gì cả. Bản đó BỊ TỪ CHỐI ngày
+          # 06/09/2026 theo Guideline 3.1.1: im lặng không gỡ được lỗi, vì tài
+          # khoản demo vẫn dùng được Premium đã mua từ web trong khi trong app
+          # không có cách nào mua. Guideline 3.1.3(b) đòi gói đó phải mua được
+          # bằng IAP thì mới được dùng chéo nền tảng.
+          #
+          # Thiếu cờ thì mặc định là `webLinkOnly`: Paywall có nút sang web và
+          # màn Tài khoản dán "499.000đ/năm". Đó là bán hàng số ngoài IAP cộng
+          # thêm chuyện dẫn-dụ-ra-ngoài — xem `lib/core/logic/wr_store_policy.dart`.
           flutter build ipa --release \
+            --dart-define=FORCE_STORE_POLICY=app_store \
             --build-name=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1) \
             --build-number="$BUILD_NUMBER" \
             --export-options-plist=/Users/builder/export_options.plist

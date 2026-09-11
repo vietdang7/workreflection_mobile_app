@@ -17,6 +17,7 @@ import 'package:workreflection_mobile/features/wr/presentation/wr_context_doc_sc
 import 'package:workreflection_mobile/features/wr/presentation/wr_journey_narrative_screen.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 
+import '../support/ai_consent.dart';
 import '../support/fake_repository.dart';
 import '../support/fake_wr_content_repository.dart';
 import '../support/fake_wr_intelligence_repository.dart';
@@ -51,6 +52,7 @@ Widget _wrap(
           .overrideWithValue(content ?? FakeWrContentRepository()),
       wrRepositoryProvider.overrideWithValue(wr ?? FakeWrRepository()),
       currentUserIdProvider.overrideWithValue('u1'),
+      grantedAiConsent(),
     ],
     child: MaterialApp.router(
       builder: wrTextScaleBuilder,routerConfig: router),

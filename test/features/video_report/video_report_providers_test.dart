@@ -12,6 +12,7 @@ import 'package:workreflection_mobile/features/profile/profile_providers.dart';
 import 'package:workreflection_mobile/features/survey/survey_providers.dart';
 import 'package:workreflection_mobile/features/video_report/data/video_report_repository.dart';
 import 'package:workreflection_mobile/features/video_report/video_report_providers.dart';
+import '../../support/ai_consent.dart';
 
 // ---------------------------------------------------------------------------
 // Fakes
@@ -96,6 +97,7 @@ ProviderContainer _makeContainer({
   return ProviderContainer(
     overrides: [
       videoReportRepositoryProvider.overrideWithValue(videoRepo),
+      grantedAiConsent(),
       surveyRepositoryProvider.overrideWithValue(surveyRepo),
       narrativesProvider.overrideWith((ref) => Future.value(<CcNarrative>[])),
       appLocaleProvider.overrideWith((ref) => 'vi'),

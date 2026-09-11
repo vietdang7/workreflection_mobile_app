@@ -1,13 +1,25 @@
 # Podfile chuẩn của Flutter, có ghim sẵn phiên bản iOS tối thiểu.
 #
 # Vì sao cần commit file này thay vì để Flutter tự sinh trên máy Mac:
-#   • Ghim `platform :ios, '13.0'` cho khớp IPHONEOS_DEPLOYMENT_TARGET trong
+#   • Ghim `platform :ios, '15.0'` cho khớp IPHONEOS_DEPLOYMENT_TARGET trong
 #     project.pbxproj. Không ghim thì CocoaPods lấy mặc định của phiên bản
 #     Flutter đang cài, mỗi máy/CI một kiểu, lúc nộp build mới lộ ra.
 #   • Ép mọi pod cùng deployment target ở post_install — mấy pod cũ đặt target
 #     thấp hơn sẽ làm Xcode 15+ bắn cảnh báo và có khi fail lúc archive.
+#
+# VÌ SAO LÀ 15.0 CHỨ KHÔNG PHẢI 13.0 (nâng 07/09/2026)
+#
+# `in_app_purchase_storekit` 0.4.x bật StoreKit 2 VÔ ĐIỀU KIỆN — `_useStoreKit2`
+# khởi tạo bằng `true` và không hề kiểm phiên bản hệ điều hành lúc chạy. Mà
+# StoreKit 2 đòi iOS 15. Để sàn ở 13.0 thì máy iOS 13/14 cài được app nhưng
+# luồng mua gãy, và tệ hơn: biên lai StoreKit 1 là app receipt base64, không
+# phải JWS, nên `wr-verify-iap` cũng từ chối nốt. Người dùng trả tiền xong
+# không nhận được quyền.
+#
+# Nâng sàn gần như không mất ai: mọi máy chạy được iOS 13 (iPhone 6s trở lên)
+# đều lên được iOS 15. Chỉ những người CHỌN không cập nhật mới bị loại.
 
-platform :ios, '13.0'
+platform :ios, '15.0'
 
 # CocoaPods gửi thống kê đồng bộ, làm chậm mỗi lần build.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
@@ -46,6 +58,41 @@ target 'Runner' do
   end
 end
 
+# permission_handler_apple biên dịch SẴN mọi loại quyền trừ khi được bảo đừng.
+# Để mặc định thì file nhị phân có tham chiếu tới API vị trí, danh bạ, lịch,
+# Bluetooth… — những thứ app không dùng và không khai chuỗi mô tả trong
+# Info.plist, đúng thứ Apple soi ở Guideline 5.1.1.
+#
+# App chỉ xin đúng MỘT quyền qua gói này: kho ảnh (đổi ảnh đại diện). Micro,
+# nhận dạng giọng nói và camera do plugin riêng của chúng tự xin, không đi qua
+# đây, nên vẫn để 0.
+#
+# Danh sách này phải phủ HẾT macro mà pod nhận biết — macro nào không khai thì
+# mặc định là 1, tức vẫn biên dịch vào. Đối chiếu 27/08 với
+# permission_handler_apple 9.x (grep PERMISSION_* trong ios/ của pod); nâng
+# phiên bản pod thì đối chiếu lại.
+PERMISSION_MACROS = [
+  'PERMISSION_PHOTOS=1',
+  'PERMISSION_EVENTS=0',
+  'PERMISSION_EVENTS_FULL_ACCESS=0',
+  'PERMISSION_REMINDERS=0',
+  'PERMISSION_CONTACTS=0',
+  'PERMISSION_CAMERA=0',
+  'PERMISSION_MICROPHONE=0',
+  'PERMISSION_SPEECH_RECOGNIZER=0',
+  'PERMISSION_PHOTOS_ADD_ONLY=0',
+  'PERMISSION_LOCATION=0',
+  'PERMISSION_LOCATION_ALWAYS=0',
+  'PERMISSION_LOCATION_WHENINUSE=0',
+  'PERMISSION_NOTIFICATIONS=0',
+  'PERMISSION_MEDIA_LIBRARY=0',
+  'PERMISSION_SENSORS=0',
+  'PERMISSION_BLUETOOTH=0',
+  'PERMISSION_APP_TRACKING_TRANSPARENCY=0',
+  'PERMISSION_CRITICAL_ALERTS=0',
+  'PERMISSION_ASSISTANT=0',
+].freeze
+
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
@@ -53,7 +100,17 @@ post_install do |installer|
     target.build_configurations.each do |config|
       # Vài pod phụ thuộc còn để target 11/12 → Xcode cảnh báo hàng loạt lúc
       # archive. Kéo tất cả lên bằng app.
-      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '13.0'
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+
+      # Gộp thêm chứ không gán đè: `flutter_additional_ios_build_settings` ở
+      # trên đã đặt sẵn khoá này cho vài target, dùng `=` là xoá mất phần đó.
+      existing = config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||
+                 ['$(inherited)']
+      existing = [existing] if existing.is_a?(String)
+      unless existing.include?('PERMISSION_PHOTOS=1')
+        config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] =
+          existing + PERMISSION_MACROS
+      end
     end
   end
 end

@@ -11,12 +11,15 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/data/wr_repository.dart';
+import '../../../core/logic/wr_ai_disclosure.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
+import '../../../core/widgets/wr_renewal_notice_card.dart';
 import '../../../features/auth/data/auth_repository.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../wr/org_survey_providers.dart';
 import '../../wr/wr_providers.dart';
+import '../avatar_providers.dart';
 import '../profile_providers.dart';
 import 'change_password_dialog.dart';
 import '../../../core/widgets/wr_paragraph.dart';
@@ -50,6 +53,10 @@ class ProfileScreen extends ConsumerWidget {
                   const SizedBox(height: 20),
                   _StatsCard(),
                   const SizedBox(height: 12),
+                  // Nhắc kỳ thuê bao sắp kết thúc. Đứng NGAY TRÊN thẻ mời nâng
+                  // cấp vì hai thẻ này loại trừ nhau: người đang có gói thấy
+                  // lời nhắc, người chưa có thấy lời mời.
+                  const WrRenewalNoticeCard(),
                   _PremiumCard(),
                   _SettingsSection(),
                   const SizedBox(height: 12),
@@ -130,6 +137,47 @@ class _ProfileHeader extends StatelessWidget {
 // Avatar + email + badge
 // ---------------------------------------------------------------------------
 
+/// Chọn ảnh từ thư viện rồi tải lên, dùng chung cho vòng tròn ảnh và dòng
+/// "Đổi ảnh đại diện" trong danh sách thiết lập.
+///
+/// Trước 2026-08-27 màn Hồ sơ **không có lối nào tới đây**: ô đổi ảnh chỉ nằm
+/// trong `ProfileEditScreen`, mà màn đó chỉ mở ra qua `/profile/setup` (ngay sau
+/// khi đăng ký). Route `/profile/edit` có khai trong `app_router.dart` nhưng
+/// không widget nào gọi tới — nên người đã có tài khoản không đổi được ảnh.
+///
+/// Ở đây gọi thẳng `avatarUploadProvider` chứ không mở lại `ProfileEditScreen`:
+/// các trường hồ sơ của màn đó đã dời sang "Thông tin của bạn" (xem ghi chú
+/// trong [_SettingsSection]), mở lại là có hai màn sửa cùng một dữ liệu.
+Future<void> _pickAvatar(BuildContext context, WidgetRef ref) async {
+  final l10n = AppLocalizations.of(context)!;
+  final messenger = ScaffoldMessenger.of(context);
+  // Giữ sẵn service trước khi `await`. SnackBar sống lâu hơn màn hình: rời màn
+  // rồi mới chạm "Mở Cài đặt" thì `ref` đã bị huỷ và `ref.read` ném lỗi.
+  final permission = ref.read(photoPermissionServiceProvider);
+  final url = await ref.read(avatarUploadProvider.notifier).pickAndUpload();
+  if (!context.mounted) return;
+  // `null` cũng là kết quả của việc người dùng bấm huỷ trong bộ chọn ảnh —
+  // im lặng trong trường hợp đó, chỉ báo khi provider thật sự lỗi.
+  if (url != null) {
+    messenger.showSnackBar(SnackBar(content: Text(l10n.avatarUploadSuccess)));
+    return;
+  }
+  final error = ref.read(avatarUploadProvider).error;
+  if (error is AvatarPermissionDeniedException) {
+    // Từ chối quyền không phải sự cố — người dùng chỉ không đổi được ảnh cho
+    // tới khi bật lại, mà bật lại thì phải sang Cài đặt vì iOS chỉ hỏi một lần.
+    messenger.showSnackBar(SnackBar(
+      content: Text(l10n.avatarPermissionDenied),
+      action: SnackBarAction(
+        label: l10n.avatarPermissionOpenSettings,
+        onPressed: permission.openSettings,
+      ),
+    ));
+  } else if (error != null) {
+    messenger.showSnackBar(SnackBar(content: Text(l10n.avatarUploadError)));
+  }
+}
+
 class _AvatarSection extends ConsumerWidget {
   /// Extract initials from a full name (up to 2 chars).
   static String _initials(String name) {
@@ -164,6 +212,7 @@ class _AvatarSection extends ConsumerWidget {
         ref.watch(wrEntitlementProvider).valueOrNull?.isPremium ?? false;
 
     final avatarUrl = ccData['avatar_url'] as String?;
+    final isUploadingAvatar = ref.watch(avatarUploadProvider).isLoading;
 
     // Giao diện mẫu Sprint 2 (screenProfile): khối nhận diện căn giữa —
     // ảnh, tên, email, rồi mới tới nhãn gói. Bố cục hàng ngang cũ đẩy email
@@ -174,40 +223,83 @@ class _AvatarSection extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Avatar circle — network image when available, else initials
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: WrColors.navy.withValues(alpha: 0.08),
-              shape: BoxShape.circle,
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: avatarUrl != null && avatarUrl.isNotEmpty
-                ? Image.network(
-                    avatarUrl,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => Center(
-                      child: Text(
-                        _initials(name),
-                        style: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.w700,
-                          color: WrColors.navy,
-                        ),
-                      ),
+          // Avatar circle — network image when available, else initials.
+          // Chạm vào là đổi ảnh: đây là cử chỉ ai cũng thử trước tiên. Huy hiệu
+          // máy ảnh ở góc để người dùng biết nó bấm được, vì một vòng tròn
+          // trơn không tự nói lên điều đó.
+          GestureDetector(
+            key: const Key('profile_avatar_tap'),
+            behavior: HitTestBehavior.opaque,
+            onTap: isUploadingAvatar ? null : () => _pickAvatar(context, ref),
+            child: Stack(
+              children: [
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: WrColors.navy.withValues(alpha: 0.08),
+                    shape: BoxShape.circle,
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: isUploadingAvatar
+                      ? const Center(
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: WrColors.coral,
+                            ),
+                          ),
+                        )
+                      : avatarUrl != null && avatarUrl.isNotEmpty
+                          ? Image.network(
+                              avatarUrl,
+                              fit: BoxFit.cover,
+                              errorBuilder: (_, __, ___) => Center(
+                                child: Text(
+                                  _initials(name),
+                                  style: const TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w700,
+                                    color: WrColors.navy,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : Center(
+                              child: Text(
+                                _initials(name),
+                                style: const TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w700,
+                                  color: WrColors.navy,
+                                ),
+                              ),
+                            ),
+                ),
+                Positioned(
+                  right: 0,
+                  bottom: 0,
+                  child: Container(
+                    width: 22,
+                    height: 22,
+                    decoration: BoxDecoration(
+                      color: WrColors.coral,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: WrColors.pageBg, width: 2),
                     ),
-                  )
-                : Center(
-                    child: Text(
-                      _initials(name),
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: WrColors.navy,
-                      ),
+                    // Icon trên nền Coral là Navy — đặc tả UX/UI §01, không
+                    // phải trắng.
+                    child: const Icon(
+                      Icons.photo_camera_outlined,
+                      size: 11,
+                      color: WrColors.navy,
                     ),
                   ),
+                ),
+              ],
+            ),
           ),
           const SizedBox(height: 12),
           WrParagraph(
@@ -268,10 +360,32 @@ class _PremiumCard extends ConsumerWidget {
         ref.watch(wrEntitlementProvider).valueOrNull?.isPremium ?? false;
     if (isPremium) return const SizedBox.shrink();
 
+    // Bản dựng "silent" (`--dart-define=HIDE_WEB_PURCHASE_LINK=true`) không
+    // được nhắc tới chuyện mua ở bất kỳ đâu — kể cả một con số.
+    //
+    // Trước 27/08 thẻ này không đọc `WrStorePolicy`, nên cờ đó chỉ bịt giá ở
+    // màn Paywall (xem `_showsPrice`) còn màn Tài khoản vẫn dán "499.000đ/năm"
+    // ngay đầu trang. Hai chỗ nói hai đằng, và chính con số đó lọt vào video
+    // demo gửi App Review trong khi hồ sơ khai là app không bán gì.
+    final policy = ref.watch(wrStorePolicyProvider);
+    if (!policy.allowsVietQrCheckout &&
+        !policy.allowsWebPurchaseLink &&
+        !policy.allowsNativeIap) {
+      return const SizedBox.shrink();
+    }
+
     // Giá đọc từ `cc_products` chứ không ghi cứng "499.000đ/năm" như mockup:
     // khách bán hai gói (năm / tháng) và đổi giá ở trang quản trị của web. Một
     // con số ghi cứng ở đây sẽ nói khác Paywall ngay lần đầu khách đổi giá.
-    final plan = ref.watch(wrPremiumPricingProvider).valueOrNull;
+    //
+    // Bản bán bằng IAP thì KHÔNG hiện giá ở đây. Giá thật là giá StoreKit trả
+    // về cho kho của người dùng, mà con số đó chỉ có sau khi hỏi kho — hỏi kho
+    // ngay tại màn Tài khoản là bắt mọi người chờ một lượt gọi mạng chỉ để đọc
+    // một dòng mời. Dán số VND của `cc_products` vào đây thì thẻ này lại nói
+    // một giá, Paywall nói một giá khác.
+    final plan = policy.allowsNativeIap
+        ? null
+        : ref.watch(wrPremiumPricingProvider).valueOrNull;
     final price = plan == null
         ? ''
         : '${plan.currentLabel}/${plan.durationSuffix}, ';
@@ -656,6 +770,27 @@ class _SettingsSection extends ConsumerWidget {
           ),
         ),
 
+        // Đổi ảnh đại diện. Vòng tròn ảnh phía trên cũng bấm được, nhưng một
+        // dòng chữ rõ ràng ở đây mới là thứ người dùng tìm thấy khi họ đi dò
+        // danh sách thiết lập — và trước 27/08 màn này không có lối nào tới ô
+        // đổi ảnh cả (xem ghi chú ở [_pickAvatar]).
+        _SettingRow(
+          key: const Key('profile_change_avatar_btn'),
+          icon: Icons.photo_camera_outlined,
+          label: 'Đổi ảnh đại diện',
+          onTap: ref.watch(avatarUploadProvider).isLoading
+              ? null
+              : () => _pickAvatar(context, ref),
+          trailing: ref.watch(avatarUploadProvider).isLoading
+              ? Text(
+                  l10n.avatarUploading,
+                  key: const Key('profile_avatar_uploading_label'),
+                  style: WrTextStyles.body.copyWith(fontSize: 14.5),
+                )
+              : const Icon(Icons.chevron_right,
+                  color: WrColors.muted, size: 16),
+        ),
+
         // Reminder toggle — bấm đâu trên dòng cũng bật/tắt được.
         _SettingRow(
           icon: Icons.notifications_none_outlined,
@@ -759,6 +894,22 @@ class _SettingsSection extends ConsumerWidget {
           icon: Icons.download_outlined,
           label: l10n.profileSettingExport,
           onTap: () => _exportData(context, ref),
+          trailing:
+              const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
+        ),
+
+        // Xử lý dữ liệu bằng AI.
+        //
+        // Bản công bố hứa với người dùng là chỗ này nằm "trong Tài khoản → Xử
+        // lý dữ liệu bằng AI" (`kWrAiRevokeNote`), nên NHÃN PHẢI ĐÚNG NGUYÊN
+        // VĂN như thế — người đọc câu hứa rồi đi tìm mà không thấy đúng chữ đó
+        // sẽ tưởng mình nhớ nhầm. Apple cũng dò theo đúng đường này khi duyệt
+        // Guideline 5.1.1(i).
+        _SettingRow(
+          key: const Key('profile_ai_consent_btn'),
+          icon: Icons.privacy_tip_outlined,
+          label: 'Xử lý dữ liệu bằng AI',
+          onTap: () => context.push(kWrAiRevokePath),
           trailing:
               const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
         ),

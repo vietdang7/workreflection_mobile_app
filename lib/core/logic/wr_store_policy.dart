@@ -1,8 +1,8 @@
 // Chính sách bán hàng của bản build.
 //
 // Vì sao có file này: CẢ HAI kho ứng dụng đều cấm bán hàng số bằng cổng thanh
-// toán riêng, mà luồng mua Premium của WorkReflection là chuyển khoản VietQR
-// (`wr_payment.dart`).
+// toán riêng, mà luồng mua Premium đầu tiên của WorkReflection là chuyển khoản
+// VietQR (`wr_payment.dart`).
 //
 //   • Apple — App Store Review Guideline 3.1.1: mọi thứ mở khoá tính năng số
 //     phải đi qua In-App Purchase.
@@ -12,6 +12,19 @@
 // Nên trên cả iOS lẫn Android, app ẩn màn QR và chỉ dẫn người dùng hoàn tất
 // trên web. Vi phạm bên Apple là bị từ chối bản nộp; bên Google nặng hơn — bị
 // gỡ app khỏi kho.
+//
+// ⚠️ ẨN THÔI THÌ KHÔNG ĐỦ — bài học bản 1.0 (6), bị từ chối 06/09/2026.
+//
+// Bản đó build ở chế độ [silent]: không QR, không giá, không nút sang web. Vẫn
+// dính 3.1.1. Lý do: tài khoản demo gửi Apple có `cc_profiles.role = 'premium'`
+// mua từ web, nên người duyệt đăng nhập vào là dùng được đầy đủ tính năng trả
+// tiền — đúng câu Apple viết, "accesses digital content purchased outside the
+// app, but that content isn't available to purchase using In-App Purchase".
+//
+// Guideline 3.1.3(b) CHO PHÉP dùng chéo nền tảng (mua trên web, xài trên app),
+// nhưng kèm điều kiện: gói đó phải mua được bằng IAP ngay trong app. Nên lối
+// thoát duy nhất giữ được giá trị cho khách đã mua web là [nativeIap] — xem
+// `lib/core/logic/wr_iap_catalog.dart`.
 //
 // Phần app KHÔNG dính hai policy này, nên không đụng tới:
 //   • Trà Chiều / workshop offline — sự kiện đời thực, cả hai kho đều miễn.
@@ -38,8 +51,9 @@ import 'package:flutter/foundation.dart';
 @immutable
 class WrStorePolicy {
   const WrStorePolicy({
-    required this.allowsInAppPurchase,
+    required this.allowsVietQrCheckout,
     required this.allowsWebPurchaseLink,
+    this.allowsNativeIap = false,
   });
 
   /// Có được mở màn thanh toán QR ngay trong app không.
@@ -47,13 +61,27 @@ class WrStorePolicy {
   /// Mặc định false ở MỌI bản build: màn `/wr/payment` bị chặn ở tầng route
   /// luôn, không chỉ ẩn nút — deep link hay đoạn code cũ nào còn
   /// `push('/wr/payment')` cũng không lọt được.
-  final bool allowsInAppPurchase;
+  final bool allowsVietQrCheckout;
 
   /// Có được hiện lối dẫn sang trang mua trên web không.
   ///
-  /// Tách khỏi [allowsInAppPurchase] để hạ rủi ro duyệt bằng một cờ build,
+  /// Tách khỏi [allowsVietQrCheckout] để hạ rủi ro duyệt bằng một cờ build,
   /// khỏi phải sửa code nếu kho ứng dụng bắt bẻ chuyện anti-steering.
   final bool allowsWebPurchaseLink;
+
+  /// Có bán Premium bằng In-App Purchase của kho ứng dụng không.
+  ///
+  /// ĐỪNG NHẦM với [allowsVietQrCheckout]. Hai thứ này cùng là "mua ngay trong
+  /// app" nhưng khác nhau ở chỗ tiền chạy qua đâu, và đó đúng là chỗ hai kho
+  /// ứng dụng quan tâm:
+  ///   • [allowsVietQrCheckout] — chuyển khoản VietQR, tiền về thẳng tài khoản
+  ///     công ty. Đây là thứ Guideline 3.1.1 CẤM.
+  ///   • [allowsNativeIap]      — StoreKit/Play Billing, kho ứng dụng thu hộ và
+  ///     giữ lại 15–30%. Đây là thứ Guideline 3.1.1 BẮT BUỘC.
+  ///
+  /// Mặc định false để bản Android và các bản chạy thử không đụng tới StoreKit
+  /// — hiện chỉ bản iOS bật, vì mới chỉ khai gói bên App Store Connect.
+  final bool allowsNativeIap;
 
   /// Mở màn QR trong app. KHÔNG phải mặc định của bản build nào cả.
   ///
@@ -63,13 +91,13 @@ class WrStorePolicy {
   /// React với trang `/premium` riêng. Từng để bản web chạy `open` và hậu quả
   /// là chạy thử `flutter run -d chrome` thấy y nguyên màn QR, tưởng chặn hỏng.
   static const WrStorePolicy open = WrStorePolicy(
-    allowsInAppPurchase: true,
+    allowsVietQrCheckout: true,
     allowsWebPurchaseLink: true,
   );
 
   /// Bản phát hành qua kho ứng dụng: không bán trong app, chỉ dẫn sang web.
   static const WrStorePolicy webLinkOnly = WrStorePolicy(
-    allowsInAppPurchase: false,
+    allowsVietQrCheckout: false,
     allowsWebPurchaseLink: true,
   );
 
@@ -77,9 +105,25 @@ class WrStorePolicy {
   ///
   /// Để dành cho tình huống bị từ chối vì anti-steering — đổi cờ build là nộp
   /// lại được ngay, không phải sửa code.
+  ///
+  /// ⚠️ ĐÂY LÀ CHÍNH SÁCH CỦA BẢN BỊ TỪ CHỐI 06/09/2026. Im lặng không gỡ được
+  /// 3.1.1 khi tài khoản vẫn dùng được Premium mua từ web. Đừng quay lại đây để
+  /// chữa lỗi đó — dùng [appStore].
   static const WrStorePolicy silent = WrStorePolicy(
-    allowsInAppPurchase: false,
+    allowsVietQrCheckout: false,
     allowsWebPurchaseLink: false,
+  );
+
+  /// Bản nộp App Store: bán bằng IAP, không QR, không dẫn ra web.
+  ///
+  /// Bỏ luôn nút sang web chứ không chỉ vì anti-steering: khi trong app đã mua
+  /// được rồi thì một nút "rẻ hơn ở web" ngay cạnh là mời Apple từ chối lần
+  /// nữa. Người đã mua trên web vẫn dùng được bình thường — quyền của họ tới
+  /// từ `cc_profiles.role`, không cần nút nào cả.
+  static const WrStorePolicy appStore = WrStorePolicy(
+    allowsVietQrCheckout: false,
+    allowsWebPurchaseLink: false,
+    allowsNativeIap: true,
   );
 
   /// Cờ build hạ nút dẫn sang web:
@@ -95,6 +139,7 @@ class WrStorePolicy {
   ///   `flutter run --dart-define=FORCE_STORE_POLICY=open`
   ///   `flutter run --dart-define=FORCE_STORE_POLICY=silent`
   ///   `flutter run --dart-define=FORCE_STORE_POLICY=web_link`
+  ///   `flutter run --dart-define=FORCE_STORE_POLICY=app_store`
   static const String _forced = String.fromEnvironment('FORCE_STORE_POLICY');
 
   /// Chính sách của bản build này.
@@ -114,6 +159,8 @@ class WrStorePolicy {
         return silent;
       case 'open':
         return open;
+      case 'app_store':
+        return appStore;
     }
 
     return _hideWebLink ? silent : webLinkOnly;
@@ -122,11 +169,16 @@ class WrStorePolicy {
   @override
   bool operator ==(Object other) =>
       other is WrStorePolicy &&
-      other.allowsInAppPurchase == allowsInAppPurchase &&
-      other.allowsWebPurchaseLink == allowsWebPurchaseLink;
+      other.allowsVietQrCheckout == allowsVietQrCheckout &&
+      other.allowsWebPurchaseLink == allowsWebPurchaseLink &&
+      other.allowsNativeIap == allowsNativeIap;
 
   @override
-  int get hashCode => Object.hash(allowsInAppPurchase, allowsWebPurchaseLink);
+  int get hashCode => Object.hash(
+        allowsVietQrCheckout,
+        allowsWebPurchaseLink,
+        allowsNativeIap,
+      );
 }
 
 /// Đường dẫn web mở thẳng trang mua Premium, kèm gói đã chọn sẵn.

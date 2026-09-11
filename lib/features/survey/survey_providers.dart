@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/data/survey_repository.dart';
 import '../../core/models/ai_personalization_models.dart';
 import '../../core/models/survey_models.dart';
+import '../wr/ai_consent_providers.dart';
 
 // ---------------------------------------------------------------------------
 // Repository provider (overridable in tests)
@@ -198,6 +199,21 @@ final aiPersonalizationProvider = FutureProvider.autoDispose
   final cached = await repo.getCachedAiPersonalization(
       args.reportId, args.section);
   if (cached != null) return cached;
+
+  // Chặn trước khi gọi `ai-personalize`: hàm đó gửi vị trí, thâm niên, phòng
+  // ban và điểm khảo sát sang OpenRouter → Google (Gemini). Màn Báo cáo tự gọi
+  // lúc mở, người dùng không bấm gì, nên nếu không chặn ở đây thì dữ liệu rời
+  // máy trước khi kịp hỏi — đúng thứ Guideline 5.1.1(i) cấm.
+  //
+  // Chỉ chặn nhánh GỌI MỚI. Bản đã nằm trong `cc_ai_personalization_cache` thì
+  // đọc lại không gửi gì đi cả.
+  //
+  // Trả null thay vì ném lỗi: người gọi đã có sẵn nội dung tĩnh để hiện thay,
+  // nên chưa đồng ý thì màn Báo cáo vẫn đầy đủ, chỉ là không được viết lại.
+  // Không mở màn xin phép ở đây — provider không có BuildContext, mà hỏi ngay
+  // lúc người ta vừa mở báo cáo cũng là hỏi sai lúc; thẻ nhắc ở Tài khoản và
+  // các luồng AI khác đã có chỗ hỏi tử tế.
+  if (!(await ref.watch(wrAiConsentProvider.future)).isGranted) return null;
 
   // Step 2: cache miss → call edge function (returns null on any error).
   return repo.invokeAiPersonalize(

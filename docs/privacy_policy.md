@@ -78,4 +78,4 @@ Khi có thay đổi đáng kể, chúng tôi cập nhật trang này và đổi 
 
 ## 9. Liên hệ
 
-Mọi câu hỏi về quyền riêng tư, vui lòng gửi về: **thedangs7@gmail.com**
+Mọi câu hỏi về quyền riêng tư, vui lòng gửi về: **info@cloudncoral.com** · Hotline **086 688 3047**

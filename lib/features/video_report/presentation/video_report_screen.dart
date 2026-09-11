@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
+import '../../../core/widgets/wr_ai_consent_sheet.dart';
 import '../../../core/models/survey_models.dart';
 import '../../profile/profile_providers.dart';
 import '../../survey/survey_providers.dart';
@@ -135,6 +136,31 @@ class _VideoReportScreenState extends ConsumerState<VideoReportScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              // "Chưa cho phép gửi sang AI" KHÔNG phải hỏng — nói đúng chuyện
+              // và mở màn xin phép ngay tại đây, thay vì để người dùng bấm
+              // "Thử lại" mãi cho một thứ sẽ không bao giờ chạy.
+              if (e is VideoReportAiConsentRequired) ...[
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 32),
+                  child: Text(
+                    'Bản đọc thành tiếng cần gửi đoạn chữ sang dịch vụ đọc '
+                    'giọng nói bên ngoài. Bạn xem app gửi những gì rồi quyết '
+                    'định nhé.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white70, height: 1.6),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  key: const Key('video_report_ai_consent_cta'),
+                  onPressed: () async {
+                    if (await ensureAiConsent(context, ref)) {
+                      ref.invalidate(videoReportDataProvider(widget.reportId));
+                    }
+                  },
+                  child: const Text('Xem app gửi những gì'),
+                ),
+              ] else ...[
               Text(
                 l10n.videoReportError,
                 style: const TextStyle(color: Colors.white70),
@@ -145,6 +171,7 @@ class _VideoReportScreenState extends ConsumerState<VideoReportScreen> {
                     .invalidate(videoReportDataProvider(widget.reportId)),
                 child: Text(l10n.videoReportRetry),
               ),
+              ],
             ],
           ),
         ),

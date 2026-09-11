@@ -3134,6 +3134,18 @@ abstract class AppLocalizations {
   /// **'Đang tải lên…'**
   String get avatarUploading;
 
+  /// No description provided for @avatarPermissionDenied.
+  ///
+  /// In vi, this message translates to:
+  /// **'Cần quyền vào kho ảnh thì mới chọn được ảnh đại diện.'**
+  String get avatarPermissionDenied;
+
+  /// No description provided for @avatarPermissionOpenSettings.
+  ///
+  /// In vi, this message translates to:
+  /// **'Mở Cài đặt'**
+  String get avatarPermissionOpenSettings;
+
   /// No description provided for @vouchersTitle.
   ///
   /// In vi, this message translates to:

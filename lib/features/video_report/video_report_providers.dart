@@ -9,10 +9,19 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/models/survey_models.dart';
 import '../profile/profile_providers.dart';
 import '../survey/survey_providers.dart';
+import '../wr/ai_consent_providers.dart';
 import 'data/video_report_repository.dart';
 import 'logic/narration_script_builder.dart';
 import 'logic/scene_timeline.dart';
 import 'models/video_report_models.dart';
+
+/// Chưa được phép gửi dữ liệu sang dịch vụ AI nên chưa dựng được bản đọc.
+///
+/// Kiểu riêng chứ không phải `Exception` chung: màn hình phải phân biệt được
+/// "chưa cho phép" (mời bật lên) với "hỏng thật" (báo lỗi).
+class VideoReportAiConsentRequired implements Exception {
+  const VideoReportAiConsentRequired();
+}
 
 /// Builds the assembled [VideoReportData] for [reportId].
 ///
@@ -28,13 +37,6 @@ final videoReportDataProvider =
   final narratives = await ref.watch(narrativesProvider.future);
   final locale = ref.watch(appLocaleProvider);
 
-  // Await the profile so userName resolves from a stable value (avoids an
-  // extra rebuild when the profile transitions loading → data).
-  final profile = await ref.watch(ccProfileProvider.future);
-  final userName = (profile['full_name'] as String?) ??
-      (profile['email'] as String?) ??
-      '';
-
   final surveyType =
       (report.subScores != null && report.subScores!.isNotEmpty)
           ? SurveyType.premium
@@ -43,7 +45,6 @@ final videoReportDataProvider =
   final scenes = const NarrationScriptBuilder().build(
     report: report,
     narratives: narratives,
-    userName: userName,
     locale: locale,
     surveyType: surveyType,
   );
@@ -51,6 +52,15 @@ final videoReportDataProvider =
   final repo = ref.watch(videoReportRepositoryProvider);
 
   var raw = await repo.findCompletedJob(reportId);
+
+  // Dựng bản đọc mới nghĩa là gửi đoạn chữ sang Ausynclab — phải xin phép
+  // trước. Chỉ chặn ở nhánh DỰNG MỚI: bản thu đã có sẵn trong `cc_video_jobs`
+  // thì đọc lại không gửi gì đi cả, chặn nốt là phạt người dùng vì một lần gửi
+  // đã xảy ra từ trước.
+  if (raw == null && !(await ref.watch(wrAiConsentProvider.future)).isGranted) {
+    throw const VideoReportAiConsentRequired();
+  }
+
   raw ??= await repo.createAndWait(
     reportId: reportId,
     userId: report.userId,

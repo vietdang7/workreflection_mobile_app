@@ -704,6 +704,12 @@ class SupabaseSurveyRepository implements SurveyRepository {
               'userContext': userContext.toJson(),
               'scoreContext': scoreContext.toJson(),
               'defaultContent': defaultContent,
+              // Nói cho máy chủ biết yêu cầu này đến từ app, để nó áp cổng chặn
+              // nghiêm: chưa đồng ý là không gửi gì sang Gemini. Bản web dùng
+              // chung hàm này nhưng không có màn xin phép, nên bên đó chỉ bị
+              // chặn khi người dùng đã chủ động tắt — xem đầu tệp
+              // `supabase/functions/ai-personalize/index.ts`.
+              'source': 'wr_mobile',
             },
           )
           .timeout(const Duration(seconds: 10));

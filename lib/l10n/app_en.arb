@@ -661,6 +661,8 @@
   "avatarPickerTitle": "Choose avatar",
   "avatarChangeBtn": "Change photo",
   "avatarUploading": "Uploading…",
+  "avatarPermissionDenied": "Photo library access is needed to choose a profile picture.",
+  "avatarPermissionOpenSettings": "Open Settings",
 
   "vouchersTitle": "My Vouchers",
   "vouchersSubtitle": "Copy a voucher code and use it at checkout on the web",

@@ -20,13 +20,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
+import 'package:workreflection_mobile/core/data/wr_ai_consent_repository.dart';
+import 'package:workreflection_mobile/core/logic/wr_ai_disclosure.dart';
 import 'package:workreflection_mobile/core/models/ai_personalization_models.dart';
+import 'package:workreflection_mobile/features/wr/ai_consent_providers.dart';
 import 'package:workreflection_mobile/core/models/survey_models.dart';
 import 'package:workreflection_mobile/features/profile/profile_providers.dart';
 import 'package:workreflection_mobile/features/survey/presentation/report_screen.dart';
 import 'package:workreflection_mobile/features/survey/survey_providers.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
 
+import '../support/ai_consent.dart';
 import '../support/fake_repository.dart';
 import '../support/fake_survey_repository.dart';
 
@@ -37,11 +41,17 @@ import '../support/fake_survey_repository.dart';
 Widget _wrap(Widget child,
     {required FakeSurveyRepository repo,
     FakeWrRepository? wrRepo,
-    String locale = 'vi'}) {
+    String locale = 'vi',
+    bool aiConsentGranted = true}) {
   final wr = wrRepo ?? FakeWrRepository();
   return ProviderScope(
     overrides: [
       surveyRepositoryProvider.overrideWithValue(repo),
+      // Từ 09/09/2026 `aiPersonalizationProvider` không gọi `ai-personalize`
+      // nữa nếu chưa được phép gửi dữ liệu sang AI. Mặc định cấp quyền để các
+      // ca cũ vẫn kiểm đúng thứ chúng định kiểm; ca [aiConsentGranted]=false
+      // dưới đây mới là ca kiểm chính cái cổng chặn.
+      if (aiConsentGranted) grantedAiConsent(),
       // wrRepositoryProvider must be overridden so ccProfileProvider
       // (watched by _AiPersonalizedPremiumSection) doesn't hit live Supabase.
       wrRepositoryProvider.overrideWithValue(wr),
@@ -210,6 +220,7 @@ void main() {
 
       final container = ProviderContainer(overrides: [
         surveyRepositoryProvider.overrideWithValue(repo),
+        grantedAiConsent(),
       ]);
       addTearDown(container.dispose);
 
@@ -230,6 +241,72 @@ void main() {
           await container.read(aiPersonalizationProvider(makeArgs('model', 'en')).future);
 
       expect(result, isNull);
+      expect(repo.aiInvokeCalls, isEmpty);
+    });
+
+    // -----------------------------------------------------------------------
+    // Cổng chặn xin phép (09/09/2026)
+    //
+    // `ai-personalize` gửi vị trí, thâm niên, phòng ban và điểm khảo sát sang
+    // OpenRouter → Gemini, mà màn Báo cáo gọi nó TỰ ĐỘNG lúc mở. Chưa được
+    // phép thì không một byte nào được rời máy — đây là điều kiện thứ ba trong
+    // bốn điều Apple đòi ở Guideline 5.1.1(i).
+    // -----------------------------------------------------------------------
+
+    test('chưa đồng ý gửi dữ liệu AI → KHÔNG gọi edge function', () async {
+      repo.seedAiInvokeResult('model', _modelContent);
+
+      final container = ProviderContainer(overrides: [
+        surveyRepositoryProvider.overrideWithValue(repo),
+        // Không override consent → mặc định là chưa trả lời.
+        wrAiConsentProvider.overrideWith((ref) async => WrAiConsent.unknown),
+      ]);
+      addTearDown(container.dispose);
+
+      final result =
+          await container.read(aiPersonalizationProvider(makeArgs('model', 'vi')).future);
+
+      // Trả null để màn Báo cáo hiện nội dung tĩnh — báo cáo vẫn đầy đủ.
+      expect(result, isNull);
+      expect(repo.aiInvokeCalls, isEmpty);
+    });
+
+    test('đã từ chối → vẫn KHÔNG gọi, và không hỏi lại', () async {
+      repo.seedAiInvokeResult('model', _modelContent);
+
+      final container = ProviderContainer(overrides: [
+        surveyRepositoryProvider.overrideWithValue(repo),
+        wrAiConsentProvider.overrideWith(
+          (ref) async => WrAiConsent(
+            version: kWrAiDisclosureVersion,
+            revokedAt: DateTime(2026, 9, 9),
+          ),
+        ),
+      ]);
+      addTearDown(container.dispose);
+
+      final result =
+          await container.read(aiPersonalizationProvider(makeArgs('model', 'vi')).future);
+
+      expect(result, isNull);
+      expect(repo.aiInvokeCalls, isEmpty);
+    });
+
+    test('bản đã có trong cache thì đọc lại được dù chưa đồng ý', () async {
+      // Cache nằm trong bảng của mình, đọc lại không gửi gì cho ai. Chặn nốt
+      // đường này là phạt người dùng vì một lần gửi đã xảy ra từ trước.
+      repo.seedAiCache('r1', 'model', _modelContent);
+
+      final container = ProviderContainer(overrides: [
+        surveyRepositoryProvider.overrideWithValue(repo),
+        wrAiConsentProvider.overrideWith((ref) async => WrAiConsent.unknown),
+      ]);
+      addTearDown(container.dispose);
+
+      final result =
+          await container.read(aiPersonalizationProvider(makeArgs('model', 'vi')).future);
+
+      expect(result, equals(_modelContent));
       expect(repo.aiInvokeCalls, isEmpty);
     });
   });

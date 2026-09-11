@@ -12,6 +12,7 @@ import 'core/router/app_router.dart';
 import 'core/theme/wr_text_scale.dart';
 import 'core/theme/wr_theme.dart';
 import 'features/profile/profile_providers.dart';
+import 'features/wr/iap_providers.dart';
 import 'l10n/app_localizations.dart';
 
 /// Bọc cây widget của app: cỡ chữ, và ngôn ngữ đang bật.
@@ -106,6 +107,20 @@ class _WrAppState extends ConsumerState<WrApp> {
     // chạy lại mỗi lần `appLocaleProvider` đổi, nên nút đổi ngôn ngữ trong Tài
     // khoản cũng đi qua đây.
     wrSetLocale(localeCode);
+
+    // Nghe giao dịch của kho ứng dụng từ lúc app dựng, KHÔNG phải từ lúc mở
+    // Paywall.
+    //
+    // StoreKit đẩy vào luồng này cả những giao dịch không bắt đầu từ màn mua:
+    // giao dịch "Ask to Buy" được cha mẹ duyệt vài giờ sau, và giao dịch đứt
+    // giữa chừng ở phiên trước được dựng lại ngay khi mở app. Nếu chỉ Paywall
+    // nghe thì những giao dịch đó nằm im cho tới lần người dùng tình cờ mở lại
+    // trang bán hàng — mà người vừa trả tiền xong thì không có lý do gì để mở
+    // trang bán hàng nữa. Tiền đã trừ, quyền không được cấp.
+    //
+    // Đặt SAU `wrSetLocale`: controller có thể dựng ra thông báo cho người
+    // dùng ngay ở khung hình đầu, và nó phải đọc được ngôn ngữ vừa ghi.
+    ref.watch(wrIapControllerProvider);
 
     return MaterialApp.router(
       title: 'WorkReflection',

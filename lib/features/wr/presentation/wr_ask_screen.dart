@@ -32,6 +32,7 @@ import '../../../core/models/wr_chat.dart';
 import '../../../core/models/wr_mood_content.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/wr_card.dart';
+import '../../../core/widgets/wr_ai_consent_sheet.dart';
 import '../../../core/widgets/wr_voice_field.dart';
 import '../chat_providers.dart';
 import '../wr_providers.dart';
@@ -78,6 +79,11 @@ class _WrAskScreenState extends ConsumerState<WrAskScreen> {
   Future<void> _send() async {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
+
+    // Xin phép TRƯỚC khi xoá ô nhập. Xoá trước rồi mới hỏi, mà người dùng bấm
+    // "để sau", thì câu họ vừa gõ biến mất không lý do.
+    if (!await ensureAiConsent(context, ref)) return;
+
     _controller.clear();
     setState(() {});
     _scrollToEnd();
