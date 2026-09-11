@@ -854,7 +854,17 @@ class _SnapshotCell extends StatelessWidget {
           style: const TextStyle(fontSize: 13, color: WrColors.muted),
         ),
         const SizedBox(height: 3),
-        WrParagraph(
+        // `Text` chứ KHÔNG phải `WrParagraph`: đây là một GIÁ TRỊ ngắn trong ô
+        // hẹp nửa bề ngang, không phải đoạn đọc.
+        //
+        // `WrParagraph` căn đều hai bên. Căn đều thì dòng nào chưa phải dòng
+        // chót đều bị giãn khoảng trắng cho chạm mép phải — với "Fine, room to
+        // grow" trong một cột hẹp, kết quả là "Fine,⎵⎵⎵⎵⎵room / to grow", một
+        // khoảng trống giữa câu đọc như lỗi hiển thị (ảnh khách 11/09).
+        //
+        // Bản tiếng Việt "Ổn, còn dư địa" ngắn hơn nên vừa một dòng và không
+        // bao giờ lộ.
+        Text(
           value,
           style: TextStyle(
             fontSize: 14.5,

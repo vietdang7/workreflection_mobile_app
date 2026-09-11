@@ -460,7 +460,18 @@ class _CheckinTile extends ConsumerWidget {
             width: 1.5,
           ),
         ),
-        child: WrParagraph(
+        // `Text` chứ KHÔNG phải `WrParagraph`. Nhãn ô check-in là dòng chữ ngắn
+        // trong thẻ — đúng thứ mà chính doc của `WrParagraph` dặn đừng dùng nó.
+        //
+        // Không chỉ là chuyện hình thức: `WrParagraph` nối hai tiếng cuối bằng
+        // U+00A0 để dòng chót không rớt một tiếng cụt. Ở một đoạn văn thì hay,
+        // nhưng ở đây nó biến "feeling good" thành MỘT khối không ngắt được,
+        // rộng hơn lòng ô, và Flutter cắt ngang giữa từ: người dùng bản tiếng
+        // Anh đọc thấy "I am / feeling goo" (ảnh khách gửi 11/09).
+        //
+        // Bản tiếng Việt không lộ vì "đang vui" đủ ngắn, và bộ test cũng không
+        // lộ vì `flutter_test_config.dart` tắt `wrParagraphKeepsTail`.
+        child: Text(
           option.label,
           textAlign: TextAlign.center,
           style: const TextStyle(
