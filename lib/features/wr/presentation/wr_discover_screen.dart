@@ -160,9 +160,17 @@ class WrDiscoverScreen extends ConsumerWidget {
     // Trụ nổi trội tính trên valence thách thức (§2.2): trộn cả tình huống tích
     // cực vào rồi tuyên bố "nhóm Mối quan hệ đang nổi trội" là nói ngược, vì
     // nhóm ấy có thể đang nổi trội theo hướng tốt.
+    //
+    // TÍNH ĐÚNG MỘT LẦN rồi truyền xuống thẻ Snapshot. Bản 11/09 để thẻ tự tính
+    // lại bằng mẫu số cũ, và hai chỗ trả lời khác nhau về cùng một câu hỏi:
+    // màn cha thấy "có trụ nổi trội" nên ẩn thẻ mời, còn thẻ Snapshot thấy
+    // "không" nên không dựng dòng khoảng lệch — hai lối vào Diễn giải sâu cùng
+    // tắt và nút biến mất. Khách báo 12/09/2026.
+    final snapshotDominant =
+        dominantPillar(tally.challenge, tally.challengeTotal);
     final snapshotGapShown = snapshotHasSelfCheck(latestCheck) &&
         careerHealthUnlocked(reflectionCount) &&
-        dominantPillar(tally.challenge, tally.challengeTotal) != null;
+        snapshotDominant != null;
 
     // "Tình huống lặp lại" — v2.0 §4.3: đếm số lần xuất hiện của từng
     // situationId trong recentSituationIds, lấy ba tình huống nhiều nhất.
@@ -308,6 +316,7 @@ class WrDiscoverScreen extends ConsumerWidget {
               counts: tally.appearance,
               reflectionTotal: reflectionCount,
               classifiedTotal: tally.classified,
+              dominant: snapshotDominant,
               onStartSelfCheck: () => context.push('/wr/self-check'),
             ),
 
@@ -602,6 +611,7 @@ class _CareerSnapshotCard extends ConsumerWidget {
     required this.counts,
     required this.reflectionTotal,
     required this.classifiedTotal,
+    required this.dominant,
     required this.onStartSelfCheck,
   });
 
@@ -625,6 +635,16 @@ class _CareerSnapshotCard extends ConsumerWidget {
   /// trụ cho nhóm P; thực tế còn chênh, vì nhánh "Điều khác" của luồng Reflect
   /// không ghi `situation_code` nào.
   final int classifiedTotal;
+
+  /// Trụ nổi trội, hoặc null khi phân bố tương đối đều.
+  ///
+  /// TRUYỀN VÀO, không tự tính. Cột "Xuất hiện" của thẻ này đọc [counts] và
+  /// [classifiedTotal] — hai con số gồm cả tình huống tích cực — còn trụ nổi
+  /// trội thì §2.2 tính trên riêng lượt thách thức. Tự tính lại từ [counts] là
+  /// ra một câu trả lời khác với màn cha, mà màn cha lại dùng câu trả lời của
+  /// nó để quyết định ẩn thẻ mời Diễn giải sâu. Lệch nhau là mất cả hai lối
+  /// vào.
+  final SelfCheckPillar? dominant;
 
   final VoidCallback onStartSelfCheck;
 
@@ -767,9 +787,9 @@ class _CareerSnapshotCard extends ConsumerWidget {
           // ── Dòng diễn giải khoảng lệch — chỉ khi có ĐỦ CẢ HAI nguồn ────
           if (_hasSelfCheck && hasReflection)
             _SnapshotGapLine(
-              dominant: dominantPillar(counts, reflectionTotal),
+              dominant: dominant,
               counts: counts,
-              reflectionTotal: reflectionTotal,
+              classifiedTotal: classifiedTotal,
               ratingOf: (p) => pillarStatusLabel(_scoreOf(p)),
             ),
         ],
@@ -1011,14 +1031,26 @@ class _SnapshotGapLine extends ConsumerWidget {
   const _SnapshotGapLine({
     required this.dominant,
     required this.counts,
-    required this.reflectionTotal,
+    required this.classifiedTotal,
     required this.ratingOf,
   });
 
   /// Trụ nổi trội, hoặc null khi phân bố tương đối đều.
   final SelfCheckPillar? dominant;
   final Map<SelfCheckPillar, int> counts;
-  final int reflectionTotal;
+
+  /// Mẫu số của cột "Xuất hiện" — số lượt gắn được vào một trụ.
+  ///
+  /// CỐ Ý không nhận tổng số lần nhìn lại. Câu trong [_gapText] dựng từ chính
+  /// hai con số đang hiện ở hai cột ngay phía trên nó, nên nó phải chia cho
+  /// đúng mẫu số của cột ấy. Bản 11/09 đổi cột sang mẫu số này mà để câu văn ở
+  /// lại mẫu số cũ: cột hiện "9 / 31 lần" còn câu ngay dưới nói "9 trong 36
+  /// lần" — cùng một tử số, hai mẫu số, cách nhau ba dòng.
+  ///
+  /// Không truyền `reflectionTotal` vào đây nữa để con số sai không còn với
+  /// tới được từ widget này.
+  final int classifiedTotal;
+
   final String Function(SelfCheckPillar) ratingOf;
 
   @override
@@ -1118,14 +1150,14 @@ class _SnapshotGapLine extends ConsumerWidget {
     if (pillarStatusIsReassuring(ratingOf(pillar))) {
       return tr('Bạn tự đánh giá $name ở mức "$rating", nhưng đây lại là trụ xuất '
           'hiện nhiều nhất trong các lần nhìn lại gần đây ($count trong '
-          '$reflectionTotal lần).', 'You rate $name as "$rating", yet this is the pillar that shows up '
+          '$classifiedTotal lần).', 'You rate $name as "$rating", yet this is the pillar that shows up '
           'most in your recent look-backs ($count out of '
-          '$reflectionTotal).');
+          '$classifiedTotal).');
     }
     return tr('${pillar.displayName} là trụ bạn quay lại nhiều nhất ($count trong '
-        '$reflectionTotal lần), và cũng là trụ bạn tự đánh giá ở mức "$rating". '
+        '$classifiedTotal lần), và cũng là trụ bạn tự đánh giá ở mức "$rating". '
         'Hai nguồn đang xác nhận lẫn nhau.', '${pillar.displayName} is the pillar you return to most ($count out of '
-        '$reflectionTotal), and also the one you rate as "$rating". '
+        '$classifiedTotal), and also the one you rate as "$rating". '
         'Both sources are pointing the same way.');
   }
 }
