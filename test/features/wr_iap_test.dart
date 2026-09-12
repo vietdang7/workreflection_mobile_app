@@ -16,6 +16,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workreflection_mobile/core/data/wr_iap_repository.dart';
 import 'package:workreflection_mobile/core/logic/wr_entitlement.dart';
 import 'package:workreflection_mobile/core/logic/wr_iap_catalog.dart';
@@ -289,6 +290,79 @@ void main() {
 
       // Không có id này thì máy chủ không biết biên lai thuộc về ai.
       expect(repo.calls, contains('buy:$kIapYearlyProductId:$_userId'));
+    });
+
+    // LỖI THẬT, lộ ở lần chạy thử sandbox đầu tiên 11/09/2026.
+    //
+    // Công tắc Premium nội bộ nằm CAO HƠN mọi nguồn quyền khác trong
+    // `wrEntitlementProvider`. Muốn tới được Paywall để mua thử, chủ sản phẩm
+    // phải gạt nó sang "ép miễn phí" — rồi mua xong, chính cái công tắc đó nuốt
+    // trọn gói vừa mua: Apple đã trừ tiền, `wr_entitlements` đã ghi
+    // `plan = premium / source = apple_iap`, mà app vẫn hiện Free.
+    //
+    // Luồng QR đã xử lý đúng từ đầu (`wr_payment_screen._onPaid`); luồng App
+    // Store thì quên. Mua thật phải thắng công cụ thử nghiệm.
+    test('mua thành công thì GỠ công tắc ép miễn phí của tài khoản nội bộ',
+        () async {
+      SharedPreferences.setMockInitialValues({
+        'wr_dev_premium_override': false,
+        'wr_dev_premium_override_owner': 'thedangs7@gmail.com',
+      });
+      final repo = _FakeIapRepository();
+      final c = ProviderContainer(
+        overrides: [
+          wrStorePolicyProvider.overrideWithValue(WrStorePolicy.appStore),
+          wrIapRepositoryProvider.overrideWithValue(repo),
+          currentUserIdProvider.overrideWithValue(_userId),
+          currentUserEmailProvider.overrideWithValue('thedangs7@gmail.com'),
+        ],
+      );
+      addTearDown(c.dispose);
+
+      // Đọc một lần để notifier được dựng và bắt đầu `load()`, rồi mới nhả
+      // nhịp cho nó đọc xong SharedPreferences.
+      c.read(premiumOverrideProvider);
+      c.read(wrIapControllerProvider);
+      await Future<void>.delayed(Duration.zero);
+      expect(c.read(canTogglePremiumProvider), isTrue);
+      expect(c.read(premiumOverrideProvider), isFalse,
+          reason: 'đang ép miễn phí — đúng trạng thái để mua thử');
+
+      repo.controller.add(_purchase());
+      await Future<void>.delayed(Duration.zero);
+
+      expect(c.read(wrIapControllerProvider).phase, WrIapPhase.done);
+      expect(c.read(premiumOverrideProvider), isNull,
+          reason: 'công tắc phải trả về "dùng gói thật"');
+    });
+
+    test('mua hỏng thì KHÔNG đụng tới công tắc', () async {
+      SharedPreferences.setMockInitialValues({
+        'wr_dev_premium_override': false,
+        'wr_dev_premium_override_owner': 'thedangs7@gmail.com',
+      });
+      final repo = _FakeIapRepository(verifyFails: true);
+      final c = ProviderContainer(
+        overrides: [
+          wrStorePolicyProvider.overrideWithValue(WrStorePolicy.appStore),
+          wrIapRepositoryProvider.overrideWithValue(repo),
+          currentUserIdProvider.overrideWithValue(_userId),
+          currentUserEmailProvider.overrideWithValue('thedangs7@gmail.com'),
+        ],
+      );
+      addTearDown(c.dispose);
+
+      c.read(premiumOverrideProvider);
+      c.read(wrIapControllerProvider);
+      await Future<void>.delayed(Duration.zero);
+      expect(c.read(premiumOverrideProvider), isFalse, reason: 'trạng thái đầu');
+
+      repo.controller.add(_purchase());
+      await Future<void>.delayed(Duration.zero);
+
+      // Xác minh hỏng nghĩa là chưa có quyền. Gỡ công tắc lúc này là đổi trạng
+      // thái màn hình của người đang nghiệm thu mà chẳng đổi lại được gì.
+      expect(c.read(premiumOverrideProvider), isFalse);
     });
   });
 

@@ -350,9 +350,9 @@ Account > Xử lý dữ liệu bằng AI.
 > chuyện. Đừng đăng nhập rồi bấm đồng ý thử trên chính tài khoản đó; lỡ bấm thì
 > xoá hàng consent đi trước khi nộp.
 >
-> **Kiểm lại 11/09/2026:** vẫn nguyên `role = 'premium'`, `wr_ai_consent` vẫn 0
-> hàng, `wr_entitlements` cũng 0 hàng. Nghĩa là câu `update` ở trên **chưa
-> chạy** — vẫn còn nợ, và nó là đúng cái đã làm rớt 3.1.1 lần trước.
+> **XONG 11/09/2026:** câu `update` đã chạy. Kiểm lại cùng ngày —
+> `role = 'free'`, `wr_ai_consent` 0 hàng, `wr_entitlements` 0 hàng. Đúng trạng
+> thái cần có lúc nộp.
 
 ---
 
@@ -370,11 +370,17 @@ Account > Xử lý dữ liệu bằng AI.
 3. ~~Merge PR #16 repo app~~ → **đã merge 09/09** (commit `4029004`).
 4. Khai Subscription Group + 2 gói (**Auto-Renewable**), đủ ảnh và mô tả, tới
    trạng thái **Ready to Submit**. *(Địa chỉ App Store Server Notifications ở
-   mục 2b đã khai xong 08/09.)* — **khai xong 09/09 trừ ảnh Paywall**, xem mục 1.
-5. Gỡ Premium khỏi tài khoản demo, xoá hàng consent của tài khoản đó.
+   mục 2b đã khai xong 08/09.)* — **XONG 11/09**: cả hai gói **Ready for
+   Review**, ảnh Paywall và Review Notes đã đính đủ. Giá đối chiếu tận nơi:
+   `₫499.000` gói năm, `₫70.000` gói tháng — **khớp đúng hai hằng**
+   `_kYearlyPriceLabel` / `_kMonthlyPriceLabel` trong
+   `test/screenshots/iap_review_test.dart`, không phải sửa lại ảnh.
+5. ~~Gỡ Premium khỏi tài khoản demo, xoá hàng consent của tài khoản đó.~~
+   **Xong 11/09** — xem cảnh báo ở mục 3.
 6. ~~Chạy Codemagic bản `FORCE_STORE_POLICY=app_store` → TestFlight.~~ **Xong
    09/09:** build #7 (`iOS · TestFlight`, main, commit `4029004`) xanh hết bước,
-   IPA 32.57 MB, đã đẩy lên TestFlight thành **1.0.0 (7)**.
+   IPA 32.57 MB, đã đẩy lên TestFlight thành **1.0.0 (7)**. **Chạy lại 11/09**
+   trên `f311519` để bản nộp có cả bản vá câu Self-Check ở Diễn giải sâu.
 7. **Chạy thử sandbox trên máy thật** — bước duy nhất kiểm được biên lai Apple
    thật, chưa ai làm được từ xa:
    - tạo Sandbox Tester, cài bản TestFlight, đăng nhập tài khoản sandbox
@@ -391,6 +397,99 @@ Account > Xử lý dữ liệu bằng AI.
      hành. Sandbox chạy nhanh hơn thật: gói tháng gia hạn sau 5 phút, gói năm sau
      1 tiếng, nên ngồi đợi một lát là thấy cả `DID_RENEW`.
 8. Nộp bản build mới **kèm cả hai gói**, dán thư trả lời ở mục 3.
+
+### Đã làm trên App Store Connect ngày 11/09/2026
+
+| Việc | Kết quả |
+|---|---|
+| Ảnh App Store (iPhone 6.5") | 5 ảnh cũ xoá, 5 ảnh mới lên, đúng thứ tự 01→05 |
+| Ảnh Paywall cho từng gói | đã có sẵn ở cả hai gói; cả hai **Ready for Review** |
+| Giá | `₫499.000` / `₫70.000` — khớp ảnh |
+| App Review Information → Notes | **viết lại toàn bộ**, xem bên dưới |
+| Attachment video 28/08 | **đã gỡ** |
+
+Notes bản 28/08 không chỉ thừa cái link video — nó nói ngược lại với chính bản
+nộp này. Bốn chỗ sai, tất cả đều là thứ người duyệt đối chiếu đầu tiên:
+
+- *"It is not sold, advertised, or linked to anywhere in the app, and the app
+  offers no way to obtain or pay for it"* — mô tả **đúng cái đã làm rớt 3.1.1**.
+- *"The demo account's profile shows a Premium member badge"* — tài khoản demo
+  đã hạ về free.
+- *"no payment processor"* — nay bán qua Apple IAP.
+- *"iOS 13.0 and later"* và *"Vietnamese only"* — sàn thật là **iOS 15.0**, và
+  app đã có **cả tiếng Anh**.
+
+Video 28/08 gỡ vì Cảnh 13 của nó quay chậm màn Tài khoản để chứng minh *"không
+có chỗ nào mua"*. Nộp kèm là tự đưa cho người duyệt bằng chứng chống lại mình.
+Apple **không bắt buộc** phải có video, nên bỏ hẳn chứ không quay lại.
+
+Ô Notes giới hạn **4000 ký tự**; bản mới 3.933, đã trừ hao trường hợp ASC đếm
+xuống dòng thành hai ký tự. Bản đầy đủ lưu ở
+`docs/asc_app_review_notes_2026-09-11.txt`.
+
+Bản build gắn vào hồ sơ lúc đó vẫn là **build 7** (bản 09/09). Đã đổi sang
+**build 9**. Chỗ này không có cảnh báo nào cả — hồ sơ vẫn xanh, vẫn bấm nộp
+được, chỉ là nộp nhầm bản cũ. **Mỗi lần build lại phải vào đổi bằng tay.**
+
+### Đường vào trang nộp lại
+
+Hồ sơ bị từ chối **vẫn mở** và không nằm trong luồng "Add for Review" bình
+thường, nên rất dễ lạc. Đường dẫn cố định:
+
+```
+https://appstoreconnect.apple.com/apps/6805322970/distribution/reviewsubmissions/details/4b138188-fa36-4886-8a47-23fe8a26c3bb
+```
+
+Bấm tay: **Distribution → App Review** (cột trái, có chấm đỏ) → băng đỏ trên
+cùng → **View Submission**.
+
+### Hai hồ sơ tách rời — đọc kỹ trước khi bấm nộp
+
+Tình trạng lúc 11/09:
+
+| Hồ sơ | Chứa | Nút |
+|---|---|---|
+| Bị từ chối 06/09, **vẫn mở** | iOS App 1.0 → `1.0.0 (9)` | Resubmit to App Review |
+| Nháp | **Subscriptions (2)** | Submit **bị khoá** |
+
+Hồ sơ nháp báo *"To submit your items for review, add an app version"* — mà bản
+version đang bị giữ trong hồ sơ cũ, không nằm hai chỗ cùng lúc được.
+
+Bấm Resubmit mà hộp thoại **chỉ liệt kê app version**, không có hai gói, thì
+**đừng bấm tiếp**: Apple đã nói rõ *"first subscription group must be submitted
+with a new app version"*, nộp thiếu là rớt 3.1.1 lần hai. Đường vòng khi đó:
+**Cancel Submission** → version được thả ra → thêm vào hồ sơ nháp → Submit một
+lần đủ ba món.
+
+### Chạy thử sandbox — XONG 11/09/2026, chuỗi thông đầu-cuối
+
+| Tầng | Bằng chứng |
+|---|---|
+| StoreKit | mua gói tháng trên máy thật, bản TestFlight |
+| `wr-verify-iap` | **200** |
+| `wr_iap_transactions` | 1 hàng, `environment = Sandbox` |
+| `wr_entitlements` | `plan = premium`, `source = apple_iap` |
+| `wr-apple-notifications` | **200** ×2 — `SUBSCRIBED/INITIAL_BUY` (sau 19 giây) và `DID_CHANGE_RENEWAL_STATUS/AUTO_RENEW_ENABLED` |
+
+Nhánh **chấp nhận** của `wr-apple-notifications` đến đây mới chạy thật lần đầu —
+trước giờ chỉ kiểm được các nhánh từ chối, vì nó cần một thông báo do Apple ký.
+
+**Rào chắn chống dùng chung cũng đã chạy thật.** Đăng nhập một tài khoản app
+khác trên cùng máy rồi bấm mua: `wr-verify-iap` trả **403**
+*"Giao dịch này đã được dùng cho một tài khoản khác"*. Đúng ý — thuê bao thuộc
+**Apple ID sandbox**, không thuộc tài khoản trong app, nên một lần mua không mở
+khoá được nhiều tài khoản. Muốn thử mua bằng tài khoản thứ hai thì phải tạo
+**Apple ID sandbox thứ hai**.
+
+Còn treo hai nhánh nhỏ: **"Khôi phục giao dịch"** (Apple bắt buộc phải có nút
+này và người duyệt hay bấm thử) và mua gói **năm**. Gói năm rủi ro thấp — cùng
+đoạn code, mã gói đã chứng minh đúng vì nút của nó hiện được giá.
+
+> **Bẫy đã sập một lần, xem [[wr-premium-override-nuot-goi]]:** công tắc Premium
+> nội bộ nằm cao hơn mọi nguồn quyền trong `wrEntitlementProvider`. Muốn tới
+> Paywall để mua thử thì phải gạt nó sang "ép miễn phí", rồi chính nó nuốt gói
+> vừa mua — Apple đã trừ tiền, DB đã cấp quyền, app vẫn hiện Free. Đã vá ở
+> PR #26. Chỉ ảnh hưởng hai tài khoản nội bộ, không ảnh hưởng lần duyệt này.
 
 ---
 
