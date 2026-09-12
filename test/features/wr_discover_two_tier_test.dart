@@ -36,10 +36,14 @@ const _sit = WrSituation(
 );
 
 /// Tình huống thuộc một chiều SCA bất kỳ — dùng cho các ca cần cả ba trụ.
-WrSituation _sitOf(String code, ScaDimension dim) => WrSituation(
+WrSituation _sitOf(String code, ScaDimension dim, {String? pillar}) =>
+    WrSituation(
       code: code,
       text: code,
       scaDimension: dim,
+      // Bảng §2.1 của `DienGiaiSau v2` gán trụ CẮT NGANG hai nhóm P, nên trụ
+      // của tình huống tích cực không suy được từ [dim] — phải nói thẳng ra.
+      pillarCode: pillar,
       wave: 1,
     );
 
@@ -1094,6 +1098,76 @@ void main() {
       expect(
         find.byKey(const Key('wr_discover_sca_deep_lock')),
         findsOneWidget,
+      );
+    });
+
+    // ── Lỗi khách báo 12/09/2026: "phiên bản mới mất nút Diễn giải sâu" ──
+    //
+    // Lối vào Diễn giải sâu có HAI đường và chúng loại trừ nhau: dòng khoảng
+    // lệch trong thẻ Snapshot, hoặc thẻ mời ở cuối màn. Màn cha ẩn thẻ mời khi
+    // nó tin rằng dòng khoảng lệch đã hiện.
+    //
+    // Bản 11/09 để hai chỗ TỰ TÍNH "có trụ nổi trội không" bằng hai mẫu số
+    // khác nhau — màn cha theo §2.2 (riêng lượt thách thức), thẻ Snapshot theo
+    // mẫu số cũ (gồm cả tích cực, chia cho tổng số lần nhìn lại). Gặp đúng
+    // phân bố mà hai công thức trả lời ngược nhau thì màn cha ẩn thẻ mời trong
+    // khi thẻ Snapshot không dựng dòng nào: cả hai lối vào cùng tắt.
+    testWidgets('không bao giờ mất CẢ HAI lối vào Diễn giải sâu',
+        (tester) async {
+      // Chép đúng phân bố 30 ngày của tài khoản khách, đọc từ DB ngày
+      // 12/09/2026. Hai công thức cho hai kết quả ngược nhau trên bộ này:
+      //   §2.2  — thách thức S 9/18 = 50%  → CÓ trụ nổi trội
+      //   cũ    — xuất hiện C 11/33 = 33%  → KHÔNG có trụ nào
+      final episodes = FakeWrEpisodeRepository()
+        ..seed(_episodes({
+          'sit-s': 9, // thách thức, trụ S
+          'sit-c': 5, // thách thức, trụ C
+          'sit-a': 4, // thách thức, trụ A
+          'sit-pc': 6, // TÍCH CỰC, trụ C — đẩy "xuất hiện" của C vượt S
+          'sit-pa': 5, // TÍCH CỰC, trụ A
+          'khong-co-trong-thu-vien': 4, // nhánh "Điều khác", không có mã
+        }));
+      final intel = FakeWrIntelligenceRepository()
+        ..seedSelfCheckHistory([
+          ScaSelfCheckResponse(
+            userId: 'u1',
+            answers: const {},
+            structureScore: 4.2,
+            cultureScore: 3.0,
+            activityScore: 3.0,
+            takenAt: DateTime.now(),
+          ),
+        ]);
+
+      await _pump(
+        tester,
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: intel,
+          content: FakeWrContentRepository()
+            ..seedSituations([
+              _sitOf('sit-s', ScaDimension.s1),
+              _sitOf('sit-c', ScaDimension.c2),
+              _sitOf('sit-a', ScaDimension.a2),
+              _sitOf('sit-pc', ScaDimension.pAchieve, pillar: 'C'),
+              _sitOf('sit-pa', ScaDimension.pSteady, pillar: 'A'),
+            ]),
+          episodes: episodes,
+        ),
+      );
+
+      // Điều kiện bất biến, và là điều duy nhất bài này đòi: PHẢI còn một chỗ
+      // bấm được để vào Diễn giải sâu. Đường nào cũng được.
+      final loiVao = [
+        const Key('wr_snapshot_gap_open'), // Premium, trong dòng khoảng lệch
+        const Key('wr_snapshot_gap_unlock'), // Free, trong dòng khoảng lệch
+        const Key('wr_discover_sca_deep_open'), // Premium, thẻ cuối màn
+        const Key('wr_discover_sca_deep_lock'), // Free, thẻ cuối màn
+      ];
+      expect(
+        loiVao.any((k) => find.byKey(k).evaluate().isNotEmpty),
+        isTrue,
+        reason: 'mất cả hai lối vào Diễn giải sâu — đúng lỗi khách báo 12/09',
       );
     });
 
