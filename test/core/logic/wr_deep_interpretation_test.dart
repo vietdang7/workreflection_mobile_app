@@ -3,6 +3,7 @@
 // Run: flutter test test/core/logic/wr_deep_interpretation_test.dart
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/l10n/wr_tr.dart';
 import 'package:workreflection_mobile/core/logic/wr_deep_interpretation.dart';
 import 'package:workreflection_mobile/core/logic/wr_self_check_questions.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
@@ -742,6 +743,279 @@ void main() {
                   .fold<int>(0, (x, s) => x + s.count),
       ];
       expect(appearance.fold<int>(0, (x, v) => x + v), f.classifiedTotal);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  // Bản tiếng Anh của 12 câu §5 — việc còn lại thứ ba ở §8
+  // -------------------------------------------------------------------------
+  //
+  // `tr()` nhận HAI đối số bắt buộc, nên một câu đã bọc thì không thể thiếu bản
+  // dịch: trình biên dịch bắt trước. Bài ở đây khoá hai chỗ mà trình biên dịch
+  // không với tới:
+  //
+  //   • một câu KHÔNG bọc `tr()` — nó vẫn biên dịch được, chỉ là ở lại tiếng
+  //     Việt trong câu tiếng Anh;
+  //   • nhãn tình huống đọc thẳng `textVi` thay vì getter `text`. Bốn trong
+  //     năm bậc gọi TÊN tình huống, mà tên ấy đến từ DB chứ không từ mã nguồn —
+  //     nên đây là đường rò riêng của bản v2, bản v1 chỉ nói tên trụ.
+  //
+  // Cách bắt: thư viện giả có nhãn Việt CÓ DẤU và nhãn Anh SẠCH DẤU. Một chữ
+  // tiếng Việt sót trong câu tiếng Anh là một dấu thanh mà regex thấy được, bất
+  // kể nó đến từ đường nào.
+  group('Bản tiếng Anh · thang năm bậc', () {
+    tearDown(() => wrSetLocale('vi'));
+
+    final withEn = [
+      for (final s in _wide)
+        WrSituation(
+          code: s.code,
+          text: 'Chuyện ${s.code} cứ quay lại',
+          textEn: 'The ${s.code} matter',
+          scaDimension: s.scaDimension,
+          pillarCode: s.pillarCode,
+          wave: s.wave,
+        ),
+    ];
+
+    DeepFacts en({
+      List<ScaSelfCheckResponse> history = const [],
+      List<ReflectionEpisode> episodes = const [],
+    }) =>
+        buildDeepFacts(
+          history: history,
+          episodes: episodes,
+          situations: withEn,
+          now: _now,
+        );
+
+    final viMark = RegExp(
+      '[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]',
+      caseSensitive: false,
+    );
+
+    /// Dựng cùng một bộ dữ kiện ở hai ngôn ngữ, và khoá phần chung.
+    ///
+    /// Trả về câu tiếng Anh để mỗi bài tự kiểm thêm phần riêng của bậc mình.
+    String bothWays(DeepFacts Function() build, {required DeepRung rung}) {
+      wrSetLocale('vi');
+      final vi = deepLeadText(build());
+      expect(deepRung(build()), rung);
+
+      wrSetLocale('en');
+      final text = deepLeadText(build());
+
+      expect(deepRung(build()), rung, reason: 'bậc không được đổi theo ngôn ngữ');
+      expect(text, isNotEmpty);
+      expect(text, isNot(equals(vi)));
+      expect(
+        viMark.hasMatch(text),
+        isFalse,
+        reason: 'còn chữ tiếng Việt trong câu tiếng Anh: $text',
+      );
+      return text;
+    }
+
+    test('R1 gọi tên tình huống bằng bản dịch của nó', () {
+      final text = bothWays(
+        () => en(episodes: [
+          ..._eps('S-a', 5, end: _now),
+          ..._eps('C-a', 2, end: _now),
+          ..._eps('A-a', 2, end: _now),
+          ..._eps('S-b', 2, end: _now),
+          ..._eps('C-b', 2, end: _now),
+          ..._eps('A-b', 2, end: _now),
+        ]),
+        rung: DeepRung.standoutSituation,
+      );
+
+      expect(text, contains('The S-a matter'));
+      expect(text, contains('5'));
+    });
+
+    test('R2 gọi đủ ba tên và tên trụ cũng đổi theo', () {
+      final text = bothWays(
+        () => en(episodes: [
+          ..._eps('S-a', 2, end: _now),
+          ..._eps('S-b', 2, end: _now),
+          ..._eps('S-c', 1, end: _now),
+          for (var i = 0; i < 5; i++) ..._eps('C-$i', 1, end: _now),
+          for (var i = 0; i < 5; i++) ..._eps('A-$i', 1, end: _now),
+        ]),
+        rung: DeepRung.situationCluster,
+      );
+
+      expect(text, contains('The S-a matter'));
+      expect(text, contains('The S-b matter'));
+      expect(text, contains('The S-c matter'));
+      // Tên trụ bị nhúng giữa câu qua `displayName.toLowerCase()`. Quên đổi thì
+      // câu tiếng Anh mang nguyên "sự rõ ràng" — và đó chính là chỗ regex trên
+      // đã bắt, dòng này chỉ nói rõ chữ nào phải có mặt.
+      expect(text, contains('clarity'));
+    });
+
+    test('R3 nối câu gọi tên tình huống ở bản tiếng Anh', () {
+      final text = bothWays(
+        () => en(
+          history: [_check(at: _now, c: 4.5)],
+          episodes: [
+            for (var i = 0; i < 12; i++) ..._eps('C-$i', 1, end: _now),
+            for (var i = 0; i < 3; i++) ..._eps('S-$i', 1, end: _now),
+          ],
+        ),
+        rung: DeepRung.awarenessGap,
+      );
+
+      expect(text, contains('The C-0 matter'));
+    });
+
+    test('R4 giữ đủ cả hai con số của cán cân', () {
+      final text = bothWays(
+        () => en(episodes: [
+          ..._eps('P-01', 1, end: _now),
+          for (var i = 0; i < 15; i++) ..._eps('S-$i', 1, end: _now),
+        ]),
+        rung: DeepRung.positiveBalance,
+      );
+
+      // Bản dịch viết lại vế câu quanh hai chỗ chèn; hụt một cái là câu tiếng
+      // Anh in ra thiếu đúng con số mà cả đoạn đang nói tới.
+      expect(text, contains('1 of 16'));
+    });
+
+    test('R5 vẫn gọi tên một tình huống, không rơi về câu trống', () {
+      final text = bothWays(
+        () => en(episodes: [
+          for (var i = 0; i < 6; i++) ..._eps('S-$i', 1, end: _now),
+          for (var i = 0; i < 5; i++) ..._eps('C-$i', 1, end: _now),
+          for (var i = 0; i < 5; i++) ..._eps('A-$i', 1, end: _now),
+        ], history: [
+          _check(at: _now, s: 4.5),
+        ]),
+        rung: DeepRung.evenSpread,
+      );
+
+      expect(text, contains('The A-0 matter'));
+    });
+
+    test('quét cả thang: n = 15…40 × 3 hình dạng, không sót chữ Việt nào', () {
+      // Bản song sinh tiếng Anh của bài "KHÔNG BAO GIỜ RỖNG". Cùng ba hình dạng
+      // ấy, nhưng câu hỏi khác: không chỉ có chữ, mà chữ đó phải đúng ngôn ngữ
+      // đang bật. Một biến thể bọc sót chỉ lộ ra ở đúng một vài giá trị n, vì
+      // `variantSeed` chọn biến thể theo số lượt.
+      wrSetLocale('en');
+      for (var n = kDeepTier1MinReflections; n <= 40; n++) {
+        for (final shape in ['deu', 'dai', 'tron']) {
+          final eps = switch (shape) {
+            'deu' => [
+                for (var i = 0; i < n; i++) ..._eps('S-$i', 1, end: _now),
+              ],
+            'dai' => _eps('S-a', n, end: _now),
+            _ => [
+                for (var i = 0; i < n; i++)
+                  ..._eps(i.isEven ? 'P-${i ~/ 2}' : 'C-${i ~/ 2}', 1,
+                      end: _now),
+              ],
+          };
+          final text = deepLeadText(en(episodes: eps));
+
+          expect(text.trim(), isNotEmpty, reason: 'n=$n shape=$shape rỗng');
+          expect(
+            viMark.hasMatch(text),
+            isFalse,
+            reason: 'n=$n shape=$shape còn chữ tiếng Việt: $text',
+          );
+        }
+      }
+    });
+
+    // Câu xu hướng là dòng thứ hai trên màn và nó lấy nhãn qua một đường KHÁC
+    // hẳn đoạn dẫn dắt: `DeepSituationShift.label`, có thêm nhánh tra ngược cho
+    // tình huống chỉ có ở cửa sổ trước. Đường nào cũng phải nghe theo ngôn ngữ.
+    test('câu xu hướng cũng gọi tên bằng bản dịch', () {
+      DeepFacts build() => en(episodes: [
+            ..._eps('C-03', 18, end: _now),
+            ..._eps('S-06', 2, end: _now),
+            ..._eps('S-06', 18, end: _now.subtract(const Duration(days: 30))),
+            ..._eps('C-03', 2, end: _now.subtract(const Duration(days: 30))),
+          ]);
+
+      wrSetLocale('vi');
+      final vi = deepReflectionTrendText(build());
+      wrSetLocale('en');
+      final text = deepReflectionTrendText(build());
+
+      expect(text, isNotNull);
+      expect(text, isNot(equals(vi)));
+      expect(text, contains('The C-03 matter'));
+      expect(
+        viMark.hasMatch(text!),
+        isFalse,
+        reason: 'còn chữ tiếng Việt trong câu xu hướng: $text',
+      );
+    });
+
+    test('nhánh tra ngược nhãn — tình huống chỉ còn ở cửa sổ trước', () {
+      // Đường nhãn thứ ba, và là đường duy nhất KHÔNG đi qua
+      // `rankDeepSituations` của cửa sổ hiện tại: S-06 đã biến mất khỏi 30 ngày
+      // gần nhất, nên nhãn phải tra thẳng từ thư viện. C-03 giữ nguyên 10 lần
+      // nên không có tình huống nào dày lên, câu rơi vào nhánh "đã lùi lại".
+      DeepFacts build() => en(episodes: [
+            ..._eps('C-03', 10, end: _now),
+            ..._eps('C-03', 10, end: _now.subtract(const Duration(days: 30))),
+            ..._eps('S-06', 5, end: _now.subtract(const Duration(days: 30))),
+          ]);
+
+      final f = build();
+      expect(f.situationTrend.map((s) => s.code), ['S-06']);
+      expect(f.situationTrend.first.count, 0);
+
+      wrSetLocale('en');
+      final text = deepReflectionTrendText(build());
+
+      expect(text, contains('The S-06 matter'));
+      expect(
+        viMark.hasMatch(text!),
+        isFalse,
+        reason: 'nhánh tra ngược nhãn không nghe theo ngôn ngữ: $text',
+      );
+    });
+
+    test('§9.1 — phân bố thật của khách, đọc bằng tiếng Anh', () {
+      final text = bothWays(
+        () => en(
+          history: [_check(at: _now, s: 4.2)],
+          episodes: [
+            ..._eps('C-03', 3, end: _now),
+            ..._eps('S-06', 2, end: _now),
+            ..._eps('S-09', 2, end: _now),
+            ..._eps('S-02', 1, end: _now),
+            ..._eps('S-04', 1, end: _now),
+            ..._eps('S-10', 1, end: _now),
+            ..._eps('C-04', 1, end: _now),
+            ..._eps('C-09', 1, end: _now),
+            ..._eps('A-08', 1, end: _now),
+            ..._eps('A-03', 1, end: _now),
+            ..._eps('A-04', 1, end: _now),
+            ..._eps('A-07', 1, end: _now),
+            ..._eps('A-11', 1, end: _now),
+            ..._eps('P-09', 3, end: _now),
+            ..._eps('P-08', 2, end: _now),
+            ..._eps('P-01', 1, end: _now),
+            ..._eps('P-02', 1, end: _now),
+            ..._eps('P-03', 1, end: _now),
+            ..._eps('P-04', 1, end: _now),
+            ..._eps('P-07', 1, end: _now),
+            ..._eps('tu-viet', 4, end: _now),
+          ],
+        ),
+        rung: DeepRung.situationCluster,
+      );
+
+      // Cụm trụ Sự rõ ràng: S-06 hai lần, S-09 hai lần, S-02 một lần.
+      expect(text, contains('The S-06 matter'));
+      expect(text, contains('The S-09 matter'));
+      expect(text, contains('clarity'));
     });
   });
 }

@@ -178,7 +178,7 @@ chiếu; nay vế đó chỉ còn cần cho bậc R3.
 | Cổng | Kết quả |
 |---|---|
 | `flutter analyze` | 0 |
-| `flutter test` | 2483 pass · 27 skip |
+| `flutter test` | 2492 pass · 27 skip |
 | `flutter build apk --debug` | OK |
 | Nghiệm thu §9 việc 4, bốn bộ dữ liệu | pass |
 | Phép thử §9.1 trên phân bố thật | pass |
@@ -194,5 +194,40 @@ chia 4 A · 4 C · 2 S — khớp đúng bảng §2.1.
 
 - Chạy thật trên máy để nhìn màn Diễn giải sâu bằng tài khoản của khách
 - Chờ khách chốt mâu thuẫn R4 ở mục 3
-- Câu chữ 12 biến thể mới ở §5 chép nguyên từ đặc tả, bản tiếng Anh do đội dev
-  dịch — nên rà lại nếu khách có bản EN riêng
+
+### Bản tiếng Anh — đã rà, 12/09
+
+Cả 12 biến thể §5 đều có bản dịch, và không thể thiếu: `tr()` nhận hai đối số
+bắt buộc nên một câu đã bọc thì trình biên dịch bắt trước. DB cũng đủ —
+170/170 dòng `wr_situations` có `text_en`, 0 dòng trống, kể cả 60 dòng đã
+`retired` mà lịch sử còn tra ngược nhãn từ đó.
+
+Chỗ hở không nằm ở bản dịch mà ở **chỗ không ai canh**: 9 bài test mới của v2
+kiểm toàn bộ ở tiếng Việt, không bài nào bật tiếng Anh lên. Hai đường rò mà
+trình biên dịch không với tới:
+
+1. một câu **không bọc** `tr()` — vẫn biên dịch được, chỉ là ở lại tiếng Việt
+   trong câu tiếng Anh;
+2. nhãn tình huống đọc `textVi` thay vì getter `text`. Đây là đường rò riêng
+   của v2: bốn trong năm bậc gọi TÊN tình huống, mà tên ấy đến từ DB chứ không
+   từ mã nguồn — bản v1 chỉ nói tên trụ nên không có cửa này.
+
+Cách bắt: thư viện giả mang nhãn Việt **có dấu** và nhãn Anh **sạch dấu**, rồi
+quét dấu thanh trong câu tiếng Anh. Một chữ Việt sót lại là một dấu thanh thấy
+được, bất kể nó đến từ đường nào. Thêm 9 bài ở nhóm
+`Bản tiếng Anh · thang năm bậc`, phủ cả năm bậc, câu xu hướng, và nhánh tra
+ngược nhãn cho tình huống chỉ còn ở cửa sổ trước.
+
+Ba phép thử ngược — sửa mã cho sai rồi xem bài có đỏ:
+
+| Phá gì | Bài nào bắt |
+|---|---|
+| một biến thể R5 bọc sót `tr()` | chỉ bài **quét n = 15…40** — bài R5 riêng lẻ vẫn xanh vì nó rơi vào biến thể khác |
+| `rankDeepSituations` đọc `textVi` | 6 trong 7 bài; R4 không bắt vì R4 không gọi tên tình huống |
+| nhánh tra ngược nhãn đọc `textVi` | bài nhánh tra ngược |
+
+Dòng đầu của bảng là lý do bài quét phải tồn tại: `variantSeed` chọn biến thể
+theo số lượt, nên một biến thể bọc sót chỉ lộ ở đúng vài giá trị n.
+
+Nếu khách có bản EN riêng cho 12 câu §5 thì vẫn phải chép lại — bản đang dùng
+do đội dev dịch.
