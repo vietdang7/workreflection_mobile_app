@@ -192,8 +192,38 @@ chia 4 A · 4 C · 2 S — khớp đúng bảng §2.1.
 
 ## 8. Còn lại
 
-- Chạy thật trên máy để nhìn màn Diễn giải sâu bằng tài khoản của khách
 - Chờ khách chốt mâu thuẫn R4 ở mục 3
+- Đổi ngôn ngữ **ngay trong app** cho màn này: chưa kiểm được (xem dưới)
+
+### Chạy thật, 12/09 — bản web, tài khoản khách
+
+Bản `flutter build web --release`, đăng nhập đúng
+`3229092a-aeff-42ad-a513-b6bf80ca0b8f`, vào `/#/wr/sca-deep-dive`. Tài khoản này
+role `admin` nên qua được cổng Premium (`kWebPremiumRoles` gồm cả `admin`);
+tài khoản còn lại có đủ dữ liệu thì là `free` nên chỉ thấy `_Locked`.
+
+`WR_AI_POLISH` là cờ biên dịch và bản build này không bật, nên chữ trên màn
+chính là `deepLeadText` chứ không phải bản AI viết lại — đúng cái cần soi.
+
+Màn hình ra **R2**, đúng như phép thử §9.1 đã dự đoán từ trước khi nhìn:
+
+> Có ba chuyện khác nhau nhưng đang cùng kể một câu chuyện: "Tôi không hiểu tại
+> sao mình phải làm việc này", "Chúng tôi phụ thuộc quá nhiều vào một người" và
+> "Tôi không biết nên tìm ai để giải quyết việc này", tổng cộng 5 lần. […] đều
+> liên quan đến sự rõ ràng.
+
+Bản tiếng Anh dựng đủ cả 14 dòng, kể cả tên tình huống lấy từ DB ("I don't
+understand why this is mine to do") — đường `text_en` chạy thật, không chỉ chạy
+trong test.
+
+Đã đối chiếu số trên màn với DB: cụm 2 + 2 + 1 = 5, ba trụ 7 · 6 · 8 tình
+huống, `classifiedTotal` khớp. Dữ liệu đã nhích lên 32 lượt (hôm 11/09 là 31)
+nên con số tuyệt đối sẽ còn đổi, hình dạng thì giữ.
+
+**Chưa kiểm được:** nút đổi ngôn ngữ trong app. `Input.dispatchMouseEvent`
+timeout nên không bấm được; phải ép ngôn ngữ qua `localStorage` rồi nạp lại, tức
+là đi đường `main()` lúc khởi động. Đường đổi giữa phiên là đường có cache
+Riverpod và cache Page của go_router, nên nó vẫn đáng bấm tay một lần.
 
 ### Bản tiếng Anh — đã rà, 12/09
 
