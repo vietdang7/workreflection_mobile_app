@@ -36,6 +36,13 @@ bool careerHealthUnlocked(int reflectionCount) =>
 /// Trụ SCA của một chiều — chữ cái đầu của mã chiều (S1 → s, C2 → c, A3 → a).
 /// Trả về null cho hai nhóm tình huống tích cực (P-ACHIEVE, P-STEADY): chúng
 /// không thuộc trụ nào và không được kéo trạng thái trụ xuống.
+///
+/// ĐỪNG SỬA HÀM NÀY ĐỂ "CHO RA TRỤ VỚI NHÓM P". `DienGiaiSau v2` §2.1 đúng là
+/// gán trụ cho 10 tình huống tích cực, nhưng đường vào của việc đó là
+/// [pillarOfSituation], không phải đây. Hàm này còn nuôi cột "Xuất hiện" của
+/// Career Snapshot, nhu cầu chủ đạo, gợi ý mở chuyện ở Trò chuyện và thẻ ở màn
+/// Hôm nay — mở nhóm P vào đây là bốn màn đó đổi số trong im lặng, mà không màn
+/// nào trong số đó đang hỏi câu hỏi mà §2.1 muốn trả lời.
 SelfCheckPillar? pillarOfDimension(ScaDimension dim) {
   if (!dim.isSca) return null;
   return switch (dim.dbValue[0]) {
@@ -44,6 +51,121 @@ SelfCheckPillar? pillarOfDimension(ScaDimension dim) {
     'A' => SelfCheckPillar.a,
     _ => null,
   };
+}
+
+/// Trụ của một TÌNH HUỐNG — kể cả 10 tình huống tích cực (`DienGiaiSau v2`
+/// §2.1).
+///
+/// Khác [pillarOfDimension] ở đúng một chỗ, nhưng là chỗ quan trọng: bảng §2.1
+/// gán trụ cắt ngang hai nhóm P (P-09 thuộc P-STEADY nhưng trụ C, P-07 cũng
+/// P-STEADY nhưng trụ A), nên không phép biến đổi nào từ `sca_dimension` ra
+/// được bảng đó. Phải đọc từ dữ liệu.
+///
+/// Rơi về ký tự đầu của `sca_dimension` khi cột `pillar` còn trống: đúng với
+/// 160 dòng SCA, và null với dòng P chưa điền — thà thiếu còn hơn đoán sai.
+SelfCheckPillar? pillarOfSituation(WrSituation s) {
+  final code = s.pillarCode;
+  if (code == null || code.isEmpty) return pillarOfDimension(s.scaDimension);
+  return switch (code) {
+    'S' => SelfCheckPillar.s,
+    'C' => SelfCheckPillar.c,
+    'A' => SelfCheckPillar.a,
+    _ => null,
+  };
+}
+
+/// Số lần mỗi trụ bị chạm, tách theo valence (`DienGiaiSau v2` §9 việc 2).
+///
+/// Trả về HAI bảng đếm chứ không một. §2.2: "Mọi phép đếm để tìm trụ nổi trội
+/// và khoảng lệch chỉ tính trên valence = thach-thuc… Nếu trộn chung, kết luận
+/// sẽ ngược hoàn toàn." Mười lần vui về đồng nghiệp và mười lần khổ vì đồng
+/// nghiệp cùng rơi vào trụ C, và gộp lại thì màn hình nói ngược với đời thật.
+class PillarTally {
+  const PillarTally({
+    required this.challenge,
+    required this.positive,
+    required this.classified,
+    required this.unclassified,
+  });
+
+  /// Đếm trên tình huống thách thức. Mẫu số của trụ nổi trội và khoảng lệch.
+  final Map<SelfCheckPillar, int> challenge;
+
+  /// Đếm trên tình huống tích cực. Nuôi bậc R4 của thang ưu tiên.
+  final Map<SelfCheckPillar, int> positive;
+
+  /// Tổng số lượt GẮN ĐƯỢC vào một trụ — mẫu số hiển thị của §2.3.
+  final int classified;
+
+  /// Số lượt không gắn được: tự viết không có mã, hoặc mã không còn trong thư
+  /// viện.
+  ///
+  /// §2.3 dự đoán con số này về 0 sau khi gán trụ cho nhóm P ("mọi lần nhìn lại
+  /// đều có trụ, nên hai con số này sẽ bằng nhau và vấn đề tự hết"). KHÔNG ĐÚNG
+  /// với app: nhánh "Điều khác" của luồng Reflect để `situation_code` trống, và
+  /// trên dữ liệu thật ngày 11/09/2026 nó chiếm 4 trong 31 lượt của một tài
+  /// khoản. Giữ con số này lại để nơi gọi không phải giả định điều đã sai.
+  final int unclassified;
+
+  /// Hai valence cộng lại — số lần mỗi trụ XUẤT HIỆN, bất kể tốt hay khó.
+  ///
+  /// Đây mới là thứ cột "Xuất hiện" của Career Snapshot cần. Cột ấy nói TẦN
+  /// SUẤT và cố ý không mang nhãn đánh giá nào (Changelog CareerSnapshot §2),
+  /// nên một mặt công việc được nhắc tới 9 lần thì là 9, không quan tâm lần nào
+  /// vui lần nào khổ. Ba con số này cộng lại đúng bằng [classified] — điều kiện
+  /// nghiệm thu của `DienGiaiSau v2` §9 việc 3.
+  Map<SelfCheckPillar, int> get appearance => {
+        for (final p in SelfCheckPillar.values)
+          p: (challenge[p] ?? 0) + (positive[p] ?? 0),
+      };
+
+  /// Tổng số lượt thách thức. Mẫu số của mọi phép tính trụ nổi trội.
+  int get challengeTotal => challenge.values.fold(0, (s, v) => s + v);
+
+  /// Tổng số lượt tích cực.
+  int get positiveTotal => positive.values.fold(0, (s, v) => s + v);
+
+  /// Số lượt xét tới, kể cả những lượt không gắn được trụ.
+  int get seen => classified + unclassified;
+
+  /// Tỉ lệ tích cực trên tổng số lượt PHÂN LOẠI ĐƯỢC, trong khoảng 0–1.
+  ///
+  /// Mẫu số là [classified] chứ không phải [seen]: một lượt tự viết không nói
+  /// được nó vui hay khổ, nên để nó vào mẫu số là kéo tỉ lệ tích cực xuống bằng
+  /// những lượt mà hệ thống không biết gì cả.
+  double get positiveShare => classified == 0 ? 0 : positiveTotal / classified;
+}
+
+/// Đếm [episodes] thành một [PillarTally].
+PillarTally pillarTally(
+  List<ReflectionEpisode> episodes,
+  List<WrSituation> situations,
+) {
+  final byCode = {for (final s in situations) s.code: s};
+  final challenge = {for (final p in SelfCheckPillar.values) p: 0};
+  final positive = {for (final p in SelfCheckPillar.values) p: 0};
+  var classified = 0;
+  var unclassified = 0;
+
+  for (final e in episodes) {
+    final code = e.situationCode;
+    final s = code == null || code.isEmpty ? null : byCode[code];
+    final pillar = s == null ? null : pillarOfSituation(s);
+    if (s == null || pillar == null) {
+      unclassified++;
+      continue;
+    }
+    final bucket = s.valence.isPositive ? positive : challenge;
+    bucket[pillar] = bucket[pillar]! + 1;
+    classified++;
+  }
+
+  return PillarTally(
+    challenge: challenge,
+    positive: positive,
+    classified: classified,
+    unclassified: unclassified,
+  );
 }
 
 /// Tỉ trọng mỗi trụ trong recentSituationIds, trong khoảng 0–1.
@@ -120,33 +242,23 @@ int scaTouchedCount(List<String> recent, List<WrSituation> situations) {
 //
 // Nay cột tần suất chỉ nói SỐ LẦN TRÊN TỔNG, không nhãn, không màu cảnh báo.
 
-/// Số lần mỗi trụ bị chạm, đếm trên TOÀN BỘ [episodes].
-///
-/// Cố tình KHÔNG đi qua `recentSituationIds`: hàm đó chặn ở 30 mục gần nhất
-/// (v2.0 §4.1), nên lấy nó làm nguồn cho cột "Xuất hiện" thì người đã nhìn lại
-/// 80 lần vẫn đọc được "14 / 30 lần" — đúng cái bẫy §8 của changelog cảnh báo.
-///
-/// Hai nhóm tình huống tích cực (P-ACHIEVE, P-STEADY) và những lượt tự viết
-/// không có mã đều không thuộc trụ nào, nên tổng ba số ở đây NHỎ HƠN tổng số
-/// lần nhìn lại. Đó là sự thật, không phải sai số: mẫu số của cột là tổng số
-/// lần, và không phải lần nào cũng rơi vào một trụ.
-Map<SelfCheckPillar, int> pillarReflectionCounts(
-  List<ReflectionEpisode> episodes,
-  List<WrSituation> situations,
-) {
-  final codeToDim = {for (final s in situations) s.code: s.scaDimension};
-  final counts = {for (final p in SelfCheckPillar.values) p: 0};
-  for (final e in episodes) {
-    final code = e.situationCode;
-    if (code == null || code.isEmpty) continue;
-    final dim = codeToDim[code];
-    if (dim == null) continue;
-    final pillar = pillarOfDimension(dim);
-    if (pillar == null) continue;
-    counts[pillar] = counts[pillar]! + 1;
-  }
-  return counts;
-}
+// ---------------------------------------------------------------------------
+// ĐÃ BỎ: pillarReflectionCounts
+// ---------------------------------------------------------------------------
+//
+// Hàm đó đếm mỗi trụ trên toàn bộ Episode nhưng BỎ QUA 10 tình huống tích cực,
+// trong khi cột "Xuất hiện" mà nó nuôi lại chia cho tổng số lần nhìn lại. Đúng
+// một nửa dữ liệu rơi ra khỏi tử số mà vẫn nằm trong mẫu số — `DienGiaiSau v2`
+// §1.1 đo được trên màn thật: "6 + 5 + 5 = 16, trong khi tổng hiển thị là 32".
+//
+// Thay bằng [pillarTally], trả về cả hai valence cùng một lượt duyệt và kèm
+// theo mẫu số của chính nó. Gộp làm một hàm là có chủ đích: hai hàm đếm song
+// song, một bỏ nhóm P một không, chính là cách hai màn bắt đầu nói hai con số
+// khác nhau về cùng một người.
+//
+// Điều đúng của hàm cũ được giữ nguyên trong [pillarTally]: đếm trên TOÀN BỘ
+// `episodes`, KHÔNG đi qua `recentSituationIds` — hàm đó chặn ở 30 mục gần nhất
+// (v2.0 §4.1), nên người đã nhìn lại 80 lần sẽ đọc được "14 / 30 lần".
 
 /// Sau bao nhiêu ngày thì một lần Self-Check được coi là đã cũ (§5).
 ///

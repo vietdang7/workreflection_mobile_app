@@ -16,13 +16,16 @@ import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_deep_interpretation.dart';
 import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/logic/wr_polish_guard.dart';
+import '../../../core/logic/wr_repeated_situations.dart';
 import '../../../core/logic/wr_sca_deep_dive.dart';
+import '../../../core/logic/wr_self_check_questions.dart';
 import '../../../core/logic/vn_date.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 import '../wr_providers.dart';
+import 'wr_discover_screen.dart' show WrPatternRow;
 
 /// Đường vào màn này từ bất kỳ nút "Mở khoá" nào của tính năng Self-Check sâu.
 ///
@@ -135,22 +138,37 @@ class _Locked extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Thân màn — MỘT insight dẫn dắt, rồi xu hướng, rồi ba trụ rút gọn
+// Thân màn — MỘT insight dẫn dắt, rồi những vòng lặp, rồi xu hướng
 // ---------------------------------------------------------------------------
 //
-// `DienGiaiSau §8` nói thẳng vì sao phải đảo lại: "Bản Diễn giải sâu hiện tại
-// đang hiển thị 3 trụ nhân 3 lớp thông tin, thành 9 khối văn bản. Đó là một bản
-// báo cáo, và người dùng sẽ đọc lướt rồi bỏ qua."
+// `DienGiaiSau v1 §8` nói thẳng vì sao phải đảo lại: "Bản Diễn giải sâu hiện
+// tại đang hiển thị 3 trụ nhân 3 lớp thông tin, thành 9 khối văn bản. Đó là một
+// bản báo cáo, và người dùng sẽ đọc lướt rồi bỏ qua."
 //
-// Nên thứ tự mới:
-//   1 · Đúng MỘT điều đáng chú ý nhất, viết thành một đoạn hoàn chỉnh.
-//   2 · Xu hướng, nếu đã đủ điều kiện mở.
-//   3 · Ba trụ ở dạng rút gọn, bấm mới mở rộng.
+// Thứ tự của `DienGiaiSau v2 §7`:
+//   1 · Khối chính — đúng một nội dung từ thang ưu tiên năm bậc.
+//   2 · Những vòng lặp quen thuộc — danh sách tình huống kèm số lần.
+//   3 · Xu hướng — chỉ hiện khi đã đủ dữ liệu.
+//   4 · Xem chi tiết theo nhóm — đóng mặc định.
+//   5 · Một dòng duy nhất cho những tầng còn đang chờ.
+//
+// BA ĐIỀU §7 ĐỔI SO VỚI BẢN TRƯỚC, và vì sao.
+//
+//   · Thêm khối "những vòng lặp quen thuộc". Nó là chính lớp dữ liệu mà cả năm
+//     bậc đang đọc, nên bày ra để người dùng kiểm chứng được câu ở khối chính
+//     thay vì phải tin.
+//
+//   · Khối "Từng trụ một" đổi tên thành "Xem chi tiết theo nhóm", đóng mặc
+//     định, và ĐỔI HẲN NỘI DUNG. §1.3: khối cũ hiện nhãn mức đánh giá và số lần
+//     xuất hiện — cả hai đã có nguyên ở Career Snapshot bản miễn phí — cộng một
+//     câu gần như giống hệt nhau ba lần. Nay mỗi trụ liệt kê tình huống cụ thể
+//     của chính nó, là thứ Career Snapshot không có.
+//
+//   · Hai đoạn chờ dài rút thành một dòng ở cuối. §6: "hai đoạn giải thích dài
+//     về việc chờ thêm đang chiếm nhiều diện tích hơn cả phần nội dung thật,
+//     khiến màn hình trông như toàn lời hẹn."
 //
 // "Một insight được đọc kỹ có giá trị hơn chín insight bị lướt qua."
-//
-// Trụ nào sinh ra đoạn dẫn dắt thì mở sẵn — người vừa đọc xong một đoạn về nó
-// mà phải tự tìm rồi bấm mở lần nữa để xem chi tiết là bắt họ làm việc thừa.
 
 class _Body extends ConsumerStatefulWidget {
   const _Body();
@@ -200,32 +218,37 @@ class _BodyState extends ConsumerState<_Body> {
       now: now,
     );
 
-    // Chưa Self-Check thì tầng 1 và tầng 3 đều câm, nhưng tầng 2 KHÔNG cần
-    // Self-Check (§4: "Tầng này dựa vào Reflection chứ không dựa vào
-    // Self-Check… Nếu xu hướng chỉ dựa vào Self-Check, người vừa mua Premium mà
-    // mới làm Self-Check một lần sẽ phải chờ nhiều tháng mới thấy được gì").
+    // Ba nguồn, không nguồn nào có gì để nói: chưa Self-Check lần nào, chưa đủ
+    // 15 lần nhìn lại, và tầng 2 cũng chưa mở. Chỉ lúc đó mới là màn mời gọi.
     //
-    // Nên chỉ mời đi làm 15 câu khi thật sự KHÔNG CÓ GÌ để nói. Người đã nhìn
-    // lại đều đặn hai tháng mà vừa trả tiền xong lại gặp một màn hình rỗng là
-    // đúng cái §6 gọi là phần dễ làm hỏng trải nghiệm nhất.
-    if (pillars.isEmpty && !content.facts.tier2Unlocked) return const _Empty();
-
-    final dominant = content.facts.dominant;
-
-    // Lần đầu dựng: mở sẵn đúng trụ vừa được nói tới ở đoạn dẫn dắt.
-    if (_open.isEmpty && dominant != null) _open.add(dominant.name);
+    // Vế `leadUnlocked` là vế MỚI. Bốn trong năm bậc của thang ưu tiên đọc từ
+    // tình huống chứ không đọc từ điểm Self-Check (v2 §4), nên người đã nhìn lại
+    // đủ nhiều mà chưa tự đánh giá lần nào vẫn có một khối chính đầy đủ để đọc.
+    final f = content.facts;
+    if (pillars.isEmpty && !f.leadUnlocked && !f.tier2Unlocked) {
+      return const _Empty();
+    }
 
     final previous = () {
       final scored = scoredSelfChecks(history);
       return scored.length > 1 ? scored[1] : null;
     }();
 
+    final loops = f.situations
+        .where((s) => s.count >= kRepeatedSituationsMinCount)
+        .toList();
+    final maxLoop = loops.fold<int>(1, (m, s) => s.count > m ? s.count : m);
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(22, 4, 22, 32),
       children: [
-        // ── 1 · Một insight dẫn dắt ─────────────────────────────────────
+        // ── 1 · Khối chính ──────────────────────────────────────────────
         _LeadCard(
-          text: _polished(content.leadText, allowed: content.branch != null),
+          text: _polished(
+            content.leadText,
+            allowed: content.rung != null &&
+                !deepTextIsGuidance(content.leadText),
+          ),
           highlight: content.branch == DeepGapBranch.outOfSync,
         ),
 
@@ -244,48 +267,75 @@ class _BodyState extends ConsumerState<_Body> {
           ),
         ],
 
-        // ── 2 · Xu hướng ────────────────────────────────────────────────
-        const SizedBox(height: 26),
-        WrEyebrow(tr('XU HƯỚNG', 'TRENDS')),
-        const SizedBox(height: 12),
-        WrParagraph(
-          _polished(
-            content.trendText,
-            allowed: !deepTextIsGuidance(content.trendText),
-          ),
-          key: const Key('wr_deep_trend'),
-          textAlign: TextAlign.start,
-          style: const TextStyle(
-            fontSize: 15,
-            height: 1.7,
-            color: WrColors.muted,
-          ),
-        ),
-        if (content.selfCheckTrendText case final String t) ...[
-          const SizedBox(height: 14),
-          WrParagraph(
-            _polished(t, allowed: !deepTextIsGuidance(t)),
-            key: const Key('wr_deep_self_check_trend'),
-            textAlign: TextAlign.start,
-            style: const TextStyle(
-              fontSize: 15,
-              height: 1.7,
-              color: WrColors.muted,
+        // ── 2 · Những vòng lặp quen thuộc ───────────────────────────────
+        //
+        // §7 khối phụ: "dạng danh sách tình huống kèm số lần. Có thể tái dùng
+        // component đã có ở tab Hiểu mình." Dùng đúng `WrPatternRow` của màn
+        // kia, nên hai màn không thể vẽ ra hai kiểu hàng khác nhau.
+        //
+        // Cửa sổ ở đây là $kScaPatternWindowDays NGÀY, còn tab Hiểu mình đếm
+        // trên 30 MỤC gần nhất. Hai đơn vị khác nhau nên hai màn có thể ra hai
+        // con số cho cùng một tình huống — dòng chú thích cuối màn nói rõ cửa sổ
+        // của màn này, và đó là lý do nó phải ở lại.
+        if (loops.isNotEmpty) ...[
+          const SizedBox(height: 26),
+          WrEyebrow(tr('NHỮNG VÒNG LẶP QUEN THUỘC', 'FAMILIAR LOOPS')),
+          const SizedBox(height: 12),
+          for (final s in loops) ...[
+            WrPatternRow(
+              key: Key('wr_deep_loop_${s.code}'),
+              label: s.label,
+              count: s.count,
+              ratio: s.count / maxLoop,
+              onTap: () => context.push('/wr/pattern/${s.code}'),
             ),
-          ),
+            if (s != loops.last) const SizedBox(height: 16),
+          ],
         ],
 
-        // ── 3 · Ba trụ, rút gọn ─────────────────────────────────────────
+        // ── 3 · Xu hướng ────────────────────────────────────────────────
         //
-        // Chưa Self-Check thì không có mức nào để bày — phần này vắng mặt thay
-        // vì hiện ba thẻ "Chưa đánh giá".
+        // Cả khối vắng mặt khi chưa đủ dữ liệu — §6 điều chỉnh 2. Lời hẹn dồn
+        // xuống một dòng ở cuối màn.
+        if (content.hasTrendBlock) ...[
+          const SizedBox(height: 26),
+          WrEyebrow(tr('XU HƯỚNG', 'TRENDS')),
+          const SizedBox(height: 12),
+          if (content.realTrendText case final String t)
+            WrParagraph(
+              _polished(t, allowed: true),
+              key: const Key('wr_deep_trend'),
+              textAlign: TextAlign.start,
+              style: const TextStyle(
+                fontSize: 15,
+                height: 1.7,
+                color: WrColors.muted,
+              ),
+            ),
+          if (content.realSelfCheckTrendText case final String t) ...[
+            if (content.realTrendText != null) const SizedBox(height: 14),
+            WrParagraph(
+              _polished(t, allowed: true),
+              key: const Key('wr_deep_self_check_trend'),
+              textAlign: TextAlign.start,
+              style: const TextStyle(
+                fontSize: 15,
+                height: 1.7,
+                color: WrColors.muted,
+              ),
+            ),
+          ],
+        ],
+
+        // ── 4 · Xem chi tiết theo nhóm, đóng mặc định ───────────────────
         if (pillars.isNotEmpty) ...[
           const SizedBox(height: 26),
-          WrEyebrow(tr('TỪNG TRỤ MỘT', 'ONE PILLAR AT A TIME')),
+          WrEyebrow(tr('XEM CHI TIẾT THEO NHÓM', 'DETAIL BY GROUP')),
           const SizedBox(height: 12),
           for (final p in pillars) ...[
             _PillarCard(
               data: p,
+              situations: f.situationsOf(p.pillar),
               expanded: _open.contains(p.pillar.name),
               onToggle: () => setState(() {
                 if (!_open.remove(p.pillar.name)) _open.add(p.pillar.name);
@@ -294,12 +344,19 @@ class _BodyState extends ConsumerState<_Body> {
             const SizedBox(height: 10),
           ],
         ] else ...[
+          // Chưa Self-Check thì không có mức nào để bày. Lời mời ở đây NGẮN và
+          // đứng cuối, khác hẳn bản trước: khối chính phía trên đã đầy đủ rồi,
+          // nên Self-Check không còn là cửa vào mà là thứ mở thêm bậc R3.
           const SizedBox(height: 22),
           WrParagraph(
-            kDeepOneSelfCheckOnly,
-            key: Key('wr_deep_no_self_check_yet'),
+            tr('Làm bộ Self-Check ${kSelfCheckQuestions.length} câu sẽ thêm một '
+                'lớp nữa vào đây: so điều bạn tự đánh giá với điều đang thực sự '
+                'lặp lại.', 'Taking the ${kSelfCheckQuestions.length}-question Self-Check adds '
+                'another layer here: what you rate yourself against what '
+                'actually keeps repeating.'),
+            key: const Key('wr_deep_no_self_check_yet'),
             textAlign: TextAlign.start,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 14.5,
               height: 1.65,
               color: WrColors.text3,
@@ -320,12 +377,30 @@ class _BodyState extends ConsumerState<_Body> {
             ),
             child: Text(
               tr('Làm Self-Check', 'Take the Self-Check'),
-              style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                fontSize: 16.5,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],
 
-        const SizedBox(height: 6),
+        // ── 5 · Một dòng cho những tầng còn đang chờ ────────────────────
+        if (content.waitingLine case final String line) ...[
+          const SizedBox(height: 22),
+          WrParagraph(
+            line,
+            key: const Key('wr_deep_waiting_line'),
+            textAlign: TextAlign.start,
+            style: const TextStyle(
+              fontSize: 13.5,
+              height: 1.55,
+              color: WrColors.text3,
+            ),
+          ),
+        ],
+
+        const SizedBox(height: 12),
         Text(
           scaDeepDiveFootnote(previous),
           key: const Key('wr_sca_deep_dive_footnote'),
@@ -433,16 +508,32 @@ class _Empty extends StatelessWidget {
   }
 }
 
-/// Một trụ ở dạng rút gọn: luôn thấy tên, mức và số lần; ba lớp chữ chỉ hiện
-/// khi bấm mở (§8).
+/// Một trụ ở dạng rút gọn, đóng mặc định (§7).
+///
+/// HAI THỨ ĐÃ BỎ KHỎI THẺ NÀY, cả hai vì §1.3 và điều kiện nghiệm thu §9 việc 5
+/// ("không có dòng thông tin nào xuất hiện giống hệt ở cả hai màn"):
+///
+///   · Huy hiệu mức đánh giá. Đúng bằng cột "Bạn đánh giá" của Career Snapshot.
+///   · Câu đối chiếu pattern theo trụ. Nó nói lại điều khối chính vừa nói, và
+///     nói ba lần với ba trụ — §1.3: "Nói với người dùng ba lần rằng không có
+///     gì nổi trội thì đúng về logic nhưng vô nghĩa về trải nghiệm."
+///
+/// Thay vào đó là danh sách tình huống cụ thể của chính trụ ấy. Câu xu hướng
+/// điểm số ở lại: nó so với LẦN SELF-CHECK TRƯỚC, và Career Snapshot không có
+/// phép so đó.
 class _PillarCard extends StatelessWidget {
   const _PillarCard({
     required this.data,
+    required this.situations,
     required this.expanded,
     required this.onToggle,
   });
 
   final ScaDeepDivePillar data;
+
+  /// Tình huống thuộc trụ này trong cửa sổ, nhiều lần nhất đứng đầu.
+  final List<DeepSituation> situations;
+
   final bool expanded;
   final VoidCallback onToggle;
 
@@ -455,7 +546,6 @@ class _PillarCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final reassuring = data.status.isReassuring;
     return Container(
       key: Key('wr_sca_deep_dive_pillar_${data.pillar.name}'),
       decoration: BoxDecoration(
@@ -498,25 +588,15 @@ class _PillarCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: reassuring
-                          ? const Color(0xFFE6F7F7)
-                          : const Color(0xFFFFEEEB),
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    child: Text(
-                      data.status.label,
-                      key: Key('wr_sca_deep_dive_status_${data.pillar.name}'),
-                      style: TextStyle(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w600,
-                        color: reassuring
-                            ? WrColors.pillTealText
-                            : WrColors.pillCoralText,
-                      ),
+                  Text(
+                    situations.isEmpty
+                        ? tr('chưa có', 'none yet')
+                        : tr('${situations.length} tình huống',
+                            '${situations.length} situations'),
+                    key: Key('wr_deep_pillar_count_${data.pillar.name}'),
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      color: WrColors.muted,
                     ),
                   ),
                   const SizedBox(width: 6),
@@ -536,7 +616,8 @@ class _PillarCard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Lớp 2 — xu hướng.
+                  // So với LẦN SELF-CHECK TRƯỚC — phép so duy nhất ở thẻ này
+                  // mà Career Snapshot không có.
                   WrParagraph(
                     data.trendText ?? kScaNoTrendText,
                     key: Key('wr_sca_deep_dive_trend_${data.pillar.name}'),
@@ -551,17 +632,52 @@ class _PillarCard extends StatelessWidget {
                   const Divider(height: 1, color: WrColors.line),
                   const SizedBox(height: 10),
 
-                  // Lớp 3 — đối chiếu Pattern Reflection.
-                  WrParagraph(
-                    data.patternText,
-                    key: Key('wr_sca_deep_dive_pattern_${data.pillar.name}'),
-                    textAlign: TextAlign.start,
-                    style: const TextStyle(
-                      fontSize: 14.5,
-                      height: 1.6,
-                      color: WrColors.muted,
-                    ),
-                  ),
+                  // Tình huống cụ thể của trụ này (§7 lưu ý cho dev: "phải thêm
+                  // thông tin mới, ví dụ liệt kê các tình huống cụ thể thuộc
+                  // trụ đó, chứ không lặp lại con số tổng").
+                  if (situations.isEmpty)
+                    WrParagraph(
+                      tr('Chưa lần nhìn lại nào trong cửa sổ này rơi vào nhóm '
+                          'đó.', 'No look-back in this window falls into that group.'),
+                      key: Key('wr_deep_pillar_empty_${data.pillar.name}'),
+                      textAlign: TextAlign.start,
+                      style: const TextStyle(
+                        fontSize: 14.5,
+                        height: 1.6,
+                        color: WrColors.muted,
+                      ),
+                    )
+                  else
+                    for (final s in situations)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: WrParagraph(
+                                s.label,
+                                key: Key('wr_deep_pillar_sit_${s.code}'),
+                                textAlign: TextAlign.start,
+                                style: const TextStyle(
+                                  fontSize: 14.5,
+                                  height: 1.5,
+                                  color: WrColors.navy,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Text(
+                              tr('${s.count} lần', '${s.count}×'),
+                              style: const TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w600,
+                                color: WrColors.muted,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                 ],
               ),
             ),

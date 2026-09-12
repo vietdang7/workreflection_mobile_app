@@ -127,12 +127,12 @@ void main() {
     view.resetPhysicalSize();
   });
 
-  // §8 đảo lại cấu trúc màn: bản trước in 3 trụ × 3 lớp = 9 khối văn bản, và
-  // tài liệu gọi thẳng đó là một bản báo cáo người dùng sẽ lướt qua. Nay ba trụ
-  // ở dạng RÚT GỌN — luôn thấy tên và mức, ba lớp chữ chỉ hiện khi bấm mở.
-  //
-  // Việc cần khoá không còn là "ba lớp luôn hiện" mà là "ba lớp vẫn TỚI ĐƯỢC".
-  testWidgets('Premium: ba trụ rút gọn, bấm mở là đủ ba lớp', (tester) async {
+  // `DienGiaiSau v2 §7` đổi khối "Từng trụ một" thành "Xem chi tiết theo nhóm",
+  // đóng mặc định, và ĐỔI HẲN NỘI DUNG bên trong. §1.3: khối cũ hiện nhãn mức
+  // đánh giá cộng số lần xuất hiện — cả hai đã có nguyên ở Career Snapshot bản
+  // miễn phí — cộng một câu gần như giống hệt nhau ba lần.
+  testWidgets('Premium: ba nhóm đóng sẵn, bấm mở ra tình huống cụ thể',
+      (tester) async {
     final now = DateTime.now();
     await tester.pumpWidget(_wrap(
       premium: true,
@@ -149,20 +149,22 @@ void main() {
 
     for (final p in ['s', 'c', 'a']) {
       expect(find.byKey(Key('wr_sca_deep_dive_pillar_$p')), findsOneWidget);
-      expect(find.byKey(Key('wr_sca_deep_dive_status_$p')), findsOneWidget);
-
-      // Chưa bấm thì hàng chỉ có tên và mức.
-      if (find.byKey(Key('wr_sca_deep_dive_trend_$p')).evaluate().isEmpty) {
-        await tester.tap(find.byKey(Key('wr_deep_pillar_toggle_$p')));
-        await tester.pumpAndSettle();
-      }
-      expect(find.byKey(Key('wr_sca_deep_dive_trend_$p')), findsOneWidget);
-      expect(find.byKey(Key('wr_sca_deep_dive_pattern_$p')), findsOneWidget);
+      // Nhãn mức đánh giá đã bỏ — nó trùng nguyên cột "Bạn đánh giá" của
+      // Career Snapshot (nghiệm thu §9 việc 5).
+      expect(find.byKey(Key('wr_sca_deep_dive_status_$p')), findsNothing);
+      // Đóng mặc định, cả ba.
+      expect(find.byKey(Key('wr_sca_deep_dive_trend_$p')), findsNothing);
     }
-    // Mở cả ba trụ xong thì màn dài hơn khung máy, và `ListView` không dựng
-    // phần chưa tới lượt — nên phải cuộn tới, không được đòi nó có sẵn. Bản
-    // trước lọt vì bộ nhãn cũ ngắn hơn: A7 đổi "Cần chú ý" thành "Ổn, còn dư
-    // địa" là đủ đẩy dòng chú thích ra khỏi vùng đã dựng.
+
+    await tester.tap(find.byKey(const Key('wr_deep_pillar_toggle_c')));
+    await tester.pumpAndSettle();
+
+    // Mở ra: câu so với lần Self-Check trước, cộng tình huống cụ thể của nhóm.
+    expect(find.byKey(const Key('wr_sca_deep_dive_trend_c')), findsOneWidget);
+    expect(find.byKey(const Key('wr_deep_pillar_sit_C2-01')), findsOneWidget);
+    // Và KHÔNG còn câu đối chiếu pattern theo trụ.
+    expect(find.byKey(const Key('wr_sca_deep_dive_pattern_c')), findsNothing);
+
     await tester.scrollUntilVisible(
       find.byKey(const Key('wr_sca_deep_dive_footnote')),
       200,
@@ -171,9 +173,9 @@ void main() {
     expect(find.byKey(const Key('wr_sca_deep_dive_footnote')), findsOneWidget);
   });
 
-  testWidgets('Premium: trụ nói ở đoạn dẫn dắt được mở sẵn', (tester) async {
-    // Người vừa đọc xong một đoạn về trụ đó mà còn phải tự tìm rồi bấm mở lần
-    // nữa để xem chi tiết là bắt họ làm việc thừa.
+  // Phép thử cuối của §9.1, dựng lại đúng hình dạng tài khoản khách báo lỗi.
+  testWidgets('Premium: khối chính gọi tên một tình huống kèm số lần',
+      (tester) async {
     final now = DateTime.now();
     await tester.pumpWidget(_wrap(
       premium: true,
@@ -185,36 +187,34 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    expect(find.byKey(const Key('wr_deep_lead')), findsOneWidget);
-    // C là trụ nổi trội → mở sẵn; hai trụ kia vẫn rút gọn.
-    expect(find.byKey(const Key('wr_sca_deep_dive_pattern_c')), findsOneWidget);
-    expect(find.byKey(const Key('wr_sca_deep_dive_pattern_s')), findsNothing);
-    expect(find.byKey(const Key('wr_sca_deep_dive_pattern_a')), findsNothing);
+    final lead = tester.widget<Text>(
+      find.descendant(
+        of: find.byKey(const Key('wr_deep_lead')),
+        matching: find.byType(Text),
+      ),
+    );
+    expect(lead.data, contains('Không dám nói'));
+    expect(lead.data, contains('20'));
   });
 
-  testWidgets('Premium: trụ nổi bật trong Reflection được chỉ ra',
+  testWidgets('Premium: những vòng lặp quen thuộc bày ngay dưới khối chính',
       (tester) async {
+    // §7 khối phụ. Nó là chính lớp dữ liệu khối chính vừa đọc, nên bày ra để
+    // người dùng kiểm chứng được thay vì phải tin.
     final now = DateTime.now();
     await tester.pumpWidget(_wrap(
       premium: true,
-      // C tự chấm cao nhất, nhưng lại là nhóm quay lại nhiều nhất — đúng thứ
-      // §7 gọi là "lệch pha tự nhận thức".
-      history: [_check(at: now.subtract(const Duration(days: 1)), c: 4.5)],
       episodes: [
-        for (var i = 0; i < 3; i++)
+        for (var i = 0; i < 12; i++)
           _ep('C2-01', now.subtract(Duration(days: i))),
+        for (var i = 0; i < 4; i++)
+          _ep('S1-01', now.subtract(Duration(days: 12 + i))),
       ],
     ));
     await tester.pumpAndSettle();
 
-    final pattern = tester.widget<Text>(
-      find.descendant(
-        of: find.byKey(const Key('wr_sca_deep_dive_pattern_c')),
-        matching: find.byType(Text),
-      ),
-    );
-    expect(pattern.data, contains('quay lại nhiều nhất'));
-    expect(pattern.data, contains('3 lần'));
+    expect(find.byKey(const Key('wr_deep_loop_C2-01')), findsOneWidget);
+    expect(find.byKey(const Key('wr_deep_loop_S1-01')), findsOneWidget);
   });
 
   testWidgets('Premium: lần Self-Check đầu tiên thì nói rõ chưa có gì để so',
@@ -225,7 +225,6 @@ void main() {
     ));
     await tester.pumpAndSettle();
 
-    // Chưa nhìn lại lần nào nên không trụ nào nổi trội, cả ba đều rút gọn.
     await tester.tap(find.byKey(const Key('wr_deep_pillar_toggle_s')));
     await tester.pumpAndSettle();
 
@@ -242,11 +241,11 @@ void main() {
     );
   });
 
-  testWidgets('Premium, đã nhìn lại đều mà chưa Self-Check: vẫn có xu hướng',
+  testWidgets('Premium, đã nhìn lại đều mà chưa Self-Check: vẫn có khối chính',
       (tester) async {
-    // §4 — tầng 2 KHÔNG cần Self-Check. Người vừa trả tiền mà gặp màn hình rỗng
-    // trong khi họ đã nhìn lại đều đặn hai tháng là đúng cái §6 gọi là phần dễ
-    // làm hỏng trải nghiệm nhất.
+    // §4 — bốn trong năm bậc không cần Self-Check. Người vừa trả tiền mà gặp
+    // màn hình rỗng trong khi họ đã nhìn lại đều đặn hai tháng là đúng cái §6
+    // gọi là phần dễ làm hỏng trải nghiệm nhất.
     final now = DateTime.now();
     await tester.pumpWidget(_wrap(
       premium: true,
@@ -260,11 +259,34 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('wr_sca_deep_dive_empty')), findsNothing);
+    expect(find.byKey(const Key('wr_deep_lead')), findsOneWidget);
     expect(find.byKey(const Key('wr_deep_trend')), findsOneWidget);
-    // Không có mức nào để bày thì phần "TỪNG TRỤ MỘT" vắng mặt, thay bằng lời
-    // mời làm 15 câu.
+    // Không có mức nào để bày thì khối "Xem chi tiết theo nhóm" vắng mặt, thay
+    // bằng một lời mời NGẮN ở cuối — Self-Check giờ mở thêm một lớp, không còn
+    // là cửa vào.
     expect(find.byKey(const Key('wr_sca_deep_dive_pillar_s')), findsNothing);
     expect(find.byKey(const Key('wr_deep_no_self_check_yet')), findsOneWidget);
+  });
+
+  testWidgets('Premium: hai đoạn chờ rút thành một dòng ở cuối', (tester) async {
+    // §6 điều chỉnh 2: "hai đoạn giải thích dài về việc chờ thêm đang chiếm
+    // nhiều diện tích hơn cả phần nội dung thật."
+    final now = DateTime.now();
+    await tester.pumpWidget(_wrap(
+      premium: true,
+      history: [_check(at: now.subtract(const Duration(days: 1)))],
+      episodes: [
+        for (var i = 0; i < 16; i++)
+          _ep('C2-01', now.subtract(Duration(days: i))),
+      ],
+    ));
+    await tester.pumpAndSettle();
+
+    // Cả khối XU HƯỚNG vắng mặt, không còn hai đoạn dài giữa màn.
+    expect(find.byKey(const Key('wr_deep_trend')), findsNothing);
+    expect(find.byKey(const Key('wr_deep_self_check_trend')), findsNothing);
+    // Thay bằng ĐÚNG MỘT dòng.
+    expect(find.byKey(const Key('wr_deep_waiting_line')), findsOneWidget);
   });
 
   testWidgets('Premium, chưa có gì cả: mời đi làm 15 câu', (tester) async {

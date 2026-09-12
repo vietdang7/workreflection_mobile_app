@@ -7,10 +7,12 @@ import 'package:workreflection_mobile/core/logic/wr_self_check_questions.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 import 'package:workreflection_mobile/core/models/wr_episode.dart';
 
-WrSituation _sit(String code, ScaDimension dim) => WrSituation(
+WrSituation _sit(String code, ScaDimension dim, {String? pillar}) =>
+    WrSituation(
       code: code,
       text: code,
       scaDimension: dim,
+      pillarCode: pillar,
       wave: 1,
     );
 
@@ -130,44 +132,103 @@ void main() {
   // đề, cũng có thể vì đang chủ động làm việc với nó. Cột "Xuất hiện" nay chỉ
   // nói số lần trên tổng.
 
-  group('pillarReflectionCounts', () {
+  group('pillarOfSituation', () {
+    test('tình huống SCA lấy trụ từ ký tự đầu của chiều', () {
+      expect(pillarOfSituation(_sit('s-a', ScaDimension.s1)),
+          SelfCheckPillar.s);
+      expect(pillarOfSituation(_sit('c-a', ScaDimension.c2)),
+          SelfCheckPillar.c);
+    });
+
+    // §2.1 gán trụ cắt ngang hai nhóm P: P-09 thuộc P-STEADY nhưng trụ C, P-07
+    // cũng P-STEADY nhưng trụ A. Không phép biến đổi nào từ `sca_dimension` ra
+    // được bảng đó, nên cột `pillar` phải thắng.
+    test('cột pillar thắng sca_dimension với tình huống tích cực', () {
+      expect(
+        pillarOfSituation(_sit('P-09', ScaDimension.pSteady, pillar: 'C')),
+        SelfCheckPillar.c,
+      );
+      expect(
+        pillarOfSituation(_sit('P-07', ScaDimension.pSteady, pillar: 'A')),
+        SelfCheckPillar.a,
+      );
+    });
+
+    // Đội nội dung thêm một dòng P mà quên điền cột: thà null còn hơn đoán.
+    test('tình huống tích cực chưa điền cột pillar thì trả null', () {
+      expect(pillarOfSituation(_sit('P-XX', ScaDimension.pAchieve)), isNull);
+    });
+  });
+
+  group('pillarTally', () {
     final situations = [
       _sit('s-a', ScaDimension.s1),
       _sit('c-a', ScaDimension.c2),
       _sit('a-a', ScaDimension.a2),
-      _sit('pos', ScaDimension.pAchieve),
+      _sit('pos', ScaDimension.pAchieve, pillar: 'A'),
     ];
 
-    test('đếm đúng số lần từng trụ', () {
-      final counts = pillarReflectionCounts(
+    test('đếm đúng số lần từng trụ thách thức', () {
+      final t = pillarTally(
         [..._e('s-a', 5), ..._e('c-a', 14), ..._e('a-a', 8)],
         situations,
       );
-      expect(counts[SelfCheckPillar.s], 5);
-      expect(counts[SelfCheckPillar.c], 14);
-      expect(counts[SelfCheckPillar.a], 8);
+      expect(t.challenge[SelfCheckPillar.s], 5);
+      expect(t.challenge[SelfCheckPillar.c], 14);
+      expect(t.challenge[SelfCheckPillar.a], 8);
+      expect(t.challengeTotal, 27);
+      expect(t.positiveTotal, 0);
     });
 
-    test('tình huống tích cực không thuộc trụ nào', () {
-      final counts = pillarReflectionCounts(_e('pos', 20), situations);
-      for (final p in SelfCheckPillar.values) {
-        expect(counts[p], 0);
-      }
+    // §2.2: hai trục độc lập. P-ACHIEVE gán trụ A, nhưng nó vào bảng TÍCH CỰC,
+    // không vào bảng thách thức — 20 lần ghi điều hay không được đọc thành 20
+    // lần vướng ở "Cách làm việc".
+    test('tình huống tích cực vào bảng riêng, đúng trụ của nó', () {
+      final t = pillarTally(_e('pos', 20), situations);
+      expect(t.challengeTotal, 0);
+      expect(t.positive[SelfCheckPillar.a], 20);
+      expect(t.positiveTotal, 20);
     });
 
-    test('lượt không có mã tình huống thì bỏ qua', () {
-      final counts = pillarReflectionCounts(
-        [..._e('s-a', 3), _episode(null)],
+    // ĐÂY LÀ §1.1: "6 + 5 + 5 = 16, trong khi tổng hiển thị là 32."
+    test('ba con số cột Xuất hiện cộng lại đúng bằng mẫu số', () {
+      final t = pillarTally(
+        [..._e('s-a', 6), ..._e('c-a', 5), ..._e('a-a', 5), ..._e('pos', 16)],
         situations,
       );
-      expect(counts[SelfCheckPillar.s], 3);
+      final sum = t.appearance.values.fold<int>(0, (x, v) => x + v);
+      expect(sum, t.classified);
+      expect(t.classified, 32);
+      expect(t.unclassified, 0);
+    });
+
+    // §2.3 đoán con số này về 0 sau khi gán trụ cho nhóm P. Không đúng: nhánh
+    // "Điều khác" của luồng Reflect không ghi `situation_code` nào.
+    test('lượt không có mã tình huống đếm riêng, không lẫn vào trụ nào', () {
+      final t = pillarTally(
+        [..._e('s-a', 3), _episode(null), _episode('khong-ton-tai')],
+        situations,
+      );
+      expect(t.challenge[SelfCheckPillar.s], 3);
+      expect(t.classified, 3);
+      expect(t.unclassified, 2);
+      expect(t.seen, 5);
+    });
+
+    test('tỉ lệ tích cực chia cho số lượt phân loại được', () {
+      final t = pillarTally(
+        [..._e('pos', 6), ..._e('c-a', 4), _episode(null)],
+        situations,
+      );
+      // 6 / 10, KHÔNG phải 6 / 11 — lượt tự viết không nói được nó vui hay khổ.
+      expect(t.positiveShare, closeTo(0.6, 1e-9));
     });
 
     // Chính cái bẫy §8 của changelog: `recentSituationIds` chặn ở 30 mục gần
     // nhất, nên đi qua nó thì người đã nhìn lại 80 lần vẫn đọc được "14 / 30".
     test('KHÔNG bị chặn ở cửa sổ 30 mục gần nhất', () {
-      final counts = pillarReflectionCounts(_e('c-a', 80), situations);
-      expect(counts[SelfCheckPillar.c], 80);
+      final t = pillarTally(_e('c-a', 80), situations);
+      expect(t.challenge[SelfCheckPillar.c], 80);
     });
   });
 
