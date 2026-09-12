@@ -789,7 +789,7 @@ class _CareerSnapshotCard extends ConsumerWidget {
             _SnapshotGapLine(
               dominant: dominant,
               counts: counts,
-              reflectionTotal: reflectionTotal,
+              classifiedTotal: classifiedTotal,
               ratingOf: (p) => pillarStatusLabel(_scoreOf(p)),
             ),
         ],
@@ -1031,14 +1031,26 @@ class _SnapshotGapLine extends ConsumerWidget {
   const _SnapshotGapLine({
     required this.dominant,
     required this.counts,
-    required this.reflectionTotal,
+    required this.classifiedTotal,
     required this.ratingOf,
   });
 
   /// Trụ nổi trội, hoặc null khi phân bố tương đối đều.
   final SelfCheckPillar? dominant;
   final Map<SelfCheckPillar, int> counts;
-  final int reflectionTotal;
+
+  /// Mẫu số của cột "Xuất hiện" — số lượt gắn được vào một trụ.
+  ///
+  /// CỐ Ý không nhận tổng số lần nhìn lại. Câu trong [_gapText] dựng từ chính
+  /// hai con số đang hiện ở hai cột ngay phía trên nó, nên nó phải chia cho
+  /// đúng mẫu số của cột ấy. Bản 11/09 đổi cột sang mẫu số này mà để câu văn ở
+  /// lại mẫu số cũ: cột hiện "9 / 31 lần" còn câu ngay dưới nói "9 trong 36
+  /// lần" — cùng một tử số, hai mẫu số, cách nhau ba dòng.
+  ///
+  /// Không truyền `reflectionTotal` vào đây nữa để con số sai không còn với
+  /// tới được từ widget này.
+  final int classifiedTotal;
+
   final String Function(SelfCheckPillar) ratingOf;
 
   @override
@@ -1138,14 +1150,14 @@ class _SnapshotGapLine extends ConsumerWidget {
     if (pillarStatusIsReassuring(ratingOf(pillar))) {
       return tr('Bạn tự đánh giá $name ở mức "$rating", nhưng đây lại là trụ xuất '
           'hiện nhiều nhất trong các lần nhìn lại gần đây ($count trong '
-          '$reflectionTotal lần).', 'You rate $name as "$rating", yet this is the pillar that shows up '
+          '$classifiedTotal lần).', 'You rate $name as "$rating", yet this is the pillar that shows up '
           'most in your recent look-backs ($count out of '
-          '$reflectionTotal).');
+          '$classifiedTotal).');
     }
     return tr('${pillar.displayName} là trụ bạn quay lại nhiều nhất ($count trong '
-        '$reflectionTotal lần), và cũng là trụ bạn tự đánh giá ở mức "$rating". '
+        '$classifiedTotal lần), và cũng là trụ bạn tự đánh giá ở mức "$rating". '
         'Hai nguồn đang xác nhận lẫn nhau.', '${pillar.displayName} is the pillar you return to most ($count out of '
-        '$reflectionTotal), and also the one you rate as "$rating". '
+        '$classifiedTotal), and also the one you rate as "$rating". '
         'Both sources are pointing the same way.');
   }
 }

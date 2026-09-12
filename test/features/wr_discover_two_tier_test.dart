@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_episode_repository.dart';
@@ -1168,6 +1169,82 @@ void main() {
         loiVao.any((k) => find.byKey(k).evaluate().isNotEmpty),
         isTrue,
         reason: 'mất cả hai lối vào Diễn giải sâu — đúng lỗi khách báo 12/09',
+      );
+    });
+
+    // Cùng đợt 12/09, phát hiện khi soi màn thật: cột "Xuất hiện" hiện
+    // "9 / 31 lần" còn câu khoảng lệch ngay dưới nói "9 trong 36 lần". Cùng
+    // một tử số, hai mẫu số, cách nhau ba dòng.
+    //
+    // §9 việc 3 đổi cột sang `classifiedTotal` nhưng để `_gapText` ở lại
+    // `reflectionTotal`. Chú thích của chính hàm đó ghi "dựng từ chính hai con
+    // số đang hiện ở hai cột" — tức là nó tự nói ra hợp đồng mà nó đang phá.
+    testWidgets('câu khoảng lệch chia CÙNG mẫu số với cột Xuất hiện',
+        (tester) async {
+      // 18 lượt thách thức (S 9 · C 5 · A 4) + 10 lượt tích cực + 5 lượt tự
+      // viết không có mã. classifiedTotal = 28, còn tổng số lần nhìn lại = 33.
+      // Hai con số phải khác nhau, nếu không thì bài này không phân biệt được
+      // đúng với sai.
+      //
+      // Ba cột "Xuất hiện" cũng phải ra ba giá trị KHÁC NHAU (9 · 11 · 8):
+      // để hai trụ trùng số thì `findsOneWidget` bắt được cột của trụ khác và
+      // bài đỏ vì lý do không liên quan.
+      final episodes = FakeWrEpisodeRepository()
+        ..seed(_episodes({
+          'sit-s': 9,
+          'sit-c': 5,
+          'sit-a': 4,
+          'sit-pc': 6,
+          'sit-pa': 4,
+          'khong-co-trong-thu-vien': 5,
+        }));
+      // Premium: câu mang số chỉ dựng cho người đã mua. Bản Free thấy câu mời
+      // mở khoá, không có con số nào để đối chiếu.
+      final intel = FakeWrIntelligenceRepository()
+        ..seedEntitlement(
+          WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
+        )
+        ..seedSelfCheckHistory([
+          ScaSelfCheckResponse(
+            userId: 'u1',
+            answers: const {},
+            structureScore: 4.2, // "Đang hỗ trợ tốt" → nhánh trấn an của §6
+            cultureScore: 3.0,
+            activityScore: 3.0,
+            takenAt: DateTime.now(),
+          ),
+        ]);
+
+      await _pump(
+        tester,
+        _wrap(
+          const WrDiscoverScreen(),
+          intel: intel,
+          content: FakeWrContentRepository()
+            ..seedSituations([
+              _sitOf('sit-s', ScaDimension.s1),
+              _sitOf('sit-c', ScaDimension.c2),
+              _sitOf('sit-a', ScaDimension.a2),
+              _sitOf('sit-pc', ScaDimension.pAchieve, pillar: 'C'),
+              _sitOf('sit-pa', ScaDimension.pSteady, pillar: 'A'),
+            ]),
+          episodes: episodes,
+        ),
+      );
+
+      // Cột "Xuất hiện" của trụ nổi trội.
+      expect(find.textContaining('9 / 28 lần'), findsOneWidget);
+
+      // Câu khoảng lệch phải chở đúng cặp số ấy.
+      final gap = tester
+          .widget<WrParagraph>(find.byKey(const Key('wr_snapshot_gap_text')))
+          .text;
+      expect(gap, contains('9 trong 28 lần'));
+      expect(
+        gap,
+        isNot(contains('33')),
+        reason: 'câu khoảng lệch đang chia cho tổng số lần nhìn lại, '
+            'không phải mẫu số của cột Xuất hiện',
       );
     });
 
