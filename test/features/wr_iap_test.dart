@@ -123,15 +123,14 @@ WrIapPurchase _purchase({
   WrIapStatus status = WrIapStatus.purchased,
   String productId = kIapYearlyProductId,
   String? errorMessage,
-}) =>
-    WrIapPurchase(
-      productId: productId,
-      status: status,
-      serverVerificationData: 'jws...',
-      pendingComplete: true,
-      purchaseId: 'tx-1',
-      errorMessage: errorMessage,
-    );
+}) => WrIapPurchase(
+  productId: productId,
+  status: status,
+  serverVerificationData: 'jws...',
+  pendingComplete: true,
+  purchaseId: 'tx-1',
+  errorMessage: errorMessage,
+);
 
 ProviderContainer _container(_FakeIapRepository repo) {
   final c = ProviderContainer(
@@ -152,23 +151,22 @@ Widget _paywall(
   _FakeIapRepository repo, {
   WrStorePolicy policy = WrStorePolicy.appStore,
   bool premium = false,
-}) =>
-    ProviderScope(
-      overrides: [
-        wrStorePolicyProvider.overrideWithValue(policy),
-        wrIapRepositoryProvider.overrideWithValue(repo),
-        currentUserIdProvider.overrideWithValue(_userId),
-        wrPremiumPlansProvider.overrideWith((ref) async => _webPlans),
-        wrEntitlementProvider.overrideWith(
-          (ref) async =>
-              WrEntitlement(plan: premium ? WrPlan.premium : WrPlan.free),
-        ),
-      ],
-      child: MaterialApp(
-        builder: wrTextScaleBuilder,
-        home: const WrPaywallScreen(),
-      ),
-    );
+}) => ProviderScope(
+  overrides: [
+    wrStorePolicyProvider.overrideWithValue(policy),
+    wrIapRepositoryProvider.overrideWithValue(repo),
+    currentUserIdProvider.overrideWithValue(_userId),
+    wrPremiumPlansProvider.overrideWith((ref) async => _webPlans),
+    wrEntitlementProvider.overrideWith(
+      (ref) async =>
+          WrEntitlement(plan: premium ? WrPlan.premium : WrPlan.free),
+    ),
+  ],
+  child: MaterialApp(
+    builder: wrTextScaleBuilder,
+    home: const WrPaywallScreen(),
+  ),
+);
 
 void main() {
   group('Danh mục gói', () {
@@ -209,7 +207,10 @@ void main() {
       repo.controller.add(_purchase());
       await Future<void>.delayed(Duration.zero);
 
-      expect(repo.calls, ['verify:$kIapYearlyProductId', 'finish:$kIapYearlyProductId']);
+      expect(repo.calls, [
+        'verify:$kIapYearlyProductId',
+        'finish:$kIapYearlyProductId',
+      ]);
       expect(c.read(wrIapControllerProvider).phase, WrIapPhase.done);
     });
 
@@ -278,7 +279,10 @@ void main() {
       repo.controller.add(_purchase(status: WrIapStatus.pending));
       await Future<void>.delayed(Duration.zero);
 
-      expect(c.read(wrIapControllerProvider).phase, WrIapPhase.awaitingApproval);
+      expect(
+        c.read(wrIapControllerProvider).phase,
+        WrIapPhase.awaitingApproval,
+      );
       expect(c.read(wrIapControllerProvider).error, isNull);
     });
 
@@ -302,39 +306,47 @@ void main() {
     //
     // Luồng QR đã xử lý đúng từ đầu (`wr_payment_screen._onPaid`); luồng App
     // Store thì quên. Mua thật phải thắng công cụ thử nghiệm.
-    test('mua thành công thì GỠ công tắc ép miễn phí của tài khoản nội bộ',
-        () async {
-      SharedPreferences.setMockInitialValues({
-        'wr_dev_premium_override': false,
-        'wr_dev_premium_override_owner': 'thedangs7@gmail.com',
-      });
-      final repo = _FakeIapRepository();
-      final c = ProviderContainer(
-        overrides: [
-          wrStorePolicyProvider.overrideWithValue(WrStorePolicy.appStore),
-          wrIapRepositoryProvider.overrideWithValue(repo),
-          currentUserIdProvider.overrideWithValue(_userId),
-          currentUserEmailProvider.overrideWithValue('thedangs7@gmail.com'),
-        ],
-      );
-      addTearDown(c.dispose);
+    test(
+      'mua thành công thì GỠ công tắc ép miễn phí của tài khoản nội bộ',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          'wr_dev_premium_override': false,
+          'wr_dev_premium_override_owner': 'thedangs7@gmail.com',
+        });
+        final repo = _FakeIapRepository();
+        final c = ProviderContainer(
+          overrides: [
+            wrStorePolicyProvider.overrideWithValue(WrStorePolicy.appStore),
+            wrIapRepositoryProvider.overrideWithValue(repo),
+            currentUserIdProvider.overrideWithValue(_userId),
+            currentUserEmailProvider.overrideWithValue('thedangs7@gmail.com'),
+          ],
+        );
+        addTearDown(c.dispose);
 
-      // Đọc một lần để notifier được dựng và bắt đầu `load()`, rồi mới nhả
-      // nhịp cho nó đọc xong SharedPreferences.
-      c.read(premiumOverrideProvider);
-      c.read(wrIapControllerProvider);
-      await Future<void>.delayed(Duration.zero);
-      expect(c.read(canTogglePremiumProvider), isTrue);
-      expect(c.read(premiumOverrideProvider), isFalse,
-          reason: 'đang ép miễn phí — đúng trạng thái để mua thử');
+        // Đọc một lần để notifier được dựng và bắt đầu `load()`, rồi mới nhả
+        // nhịp cho nó đọc xong SharedPreferences.
+        c.read(premiumOverrideProvider);
+        c.read(wrIapControllerProvider);
+        await Future<void>.delayed(Duration.zero);
+        expect(c.read(canTogglePremiumProvider), isTrue);
+        expect(
+          c.read(premiumOverrideProvider),
+          isFalse,
+          reason: 'đang ép miễn phí — đúng trạng thái để mua thử',
+        );
 
-      repo.controller.add(_purchase());
-      await Future<void>.delayed(Duration.zero);
+        repo.controller.add(_purchase());
+        await Future<void>.delayed(Duration.zero);
 
-      expect(c.read(wrIapControllerProvider).phase, WrIapPhase.done);
-      expect(c.read(premiumOverrideProvider), isNull,
-          reason: 'công tắc phải trả về "dùng gói thật"');
-    });
+        expect(c.read(wrIapControllerProvider).phase, WrIapPhase.done);
+        expect(
+          c.read(premiumOverrideProvider),
+          isNull,
+          reason: 'công tắc phải trả về "dùng gói thật"',
+        );
+      },
+    );
 
     test('mua hỏng thì KHÔNG đụng tới công tắc', () async {
       SharedPreferences.setMockInitialValues({
@@ -355,7 +367,11 @@ void main() {
       c.read(premiumOverrideProvider);
       c.read(wrIapControllerProvider);
       await Future<void>.delayed(Duration.zero);
-      expect(c.read(premiumOverrideProvider), isFalse, reason: 'trạng thái đầu');
+      expect(
+        c.read(premiumOverrideProvider),
+        isFalse,
+        reason: 'trạng thái đầu',
+      );
 
       repo.controller.add(_purchase());
       await Future<void>.delayed(Duration.zero);
@@ -367,8 +383,9 @@ void main() {
   });
 
   group('Paywall bản App Store', () {
-    testWidgets('hiện giá của StoreKit, KHÔNG hiện giá VND của cc_products',
-        (tester) async {
+    testWidgets('hiện giá của StoreKit, KHÔNG hiện giá VND của cc_products', (
+      tester,
+    ) async {
       await tester.pumpWidget(_paywall(_FakeIapRepository()));
       await tester.pumpAndSettle();
 
@@ -400,8 +417,9 @@ void main() {
       expect(find.byKey(const Key('wr_paywall_iap_restore')), findsOneWidget);
     });
 
-    testWidgets('có liên kết Điều khoản và Chính sách quyền riêng tư',
-        (tester) async {
+    testWidgets('có liên kết Điều khoản và Chính sách quyền riêng tư', (
+      tester,
+    ) async {
       await tester.pumpWidget(_paywall(_FakeIapRepository()));
       await tester.pumpAndSettle();
 
@@ -409,8 +427,9 @@ void main() {
       expect(find.byKey(const Key('wr_paywall_privacy_link')), findsOneWidget);
     });
 
-    testWidgets('không có nút dẫn sang web — đó là thứ bị từ chối lần trước',
-        (tester) async {
+    testWidgets('không có nút dẫn sang web — đó là thứ bị từ chối lần trước', (
+      tester,
+    ) async {
       await tester.pumpWidget(_paywall(_FakeIapRepository()));
       await tester.pumpAndSettle();
 
@@ -418,11 +437,10 @@ void main() {
       expect(find.byKey(const Key('wr_paywall_cta')), findsNothing);
     });
 
-    testWidgets('kho không trả gói nào thì nói tử tế, không báo lỗi',
-        (tester) async {
-      await tester.pumpWidget(
-        _paywall(_FakeIapRepository(offers: const [])),
-      );
+    testWidgets('kho không trả gói nào thì nói tử tế, không báo lỗi', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_paywall(_FakeIapRepository(offers: const [])));
       await tester.pumpAndSettle();
 
       expect(
@@ -432,11 +450,10 @@ void main() {
       expect(find.textContaining('Chưa mở bán'), findsOneWidget);
     });
 
-    testWidgets('máy không mua được thì cũng không bày nút mua',
-        (tester) async {
-      await tester.pumpWidget(
-        _paywall(_FakeIapRepository(available: false)),
-      );
+    testWidgets('máy không mua được thì cũng không bày nút mua', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_paywall(_FakeIapRepository(available: false)));
       await tester.pumpAndSettle();
 
       expect(
@@ -446,9 +463,7 @@ void main() {
     });
 
     testWidgets('người đã có quyền không bị chào bán lại', (tester) async {
-      await tester.pumpWidget(
-        _paywall(_FakeIapRepository(), premium: true),
-      );
+      await tester.pumpWidget(_paywall(_FakeIapRepository(), premium: true));
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('wr_paywall_cta_owned')), findsOneWidget);
@@ -465,8 +480,9 @@ void main() {
 
       // Paywall dài hơn màn hình nên nút nằm dưới vùng nhìn thấy — không cuộn
       // tới thì cú chạm rơi vào khoảng không và test xanh vì lý do sai.
-      final button =
-          find.byKey(const Key('wr_paywall_iap_buy_$kIapYearlyProductId'));
+      final button = find.byKey(
+        const Key('wr_paywall_iap_buy_$kIapYearlyProductId'),
+      );
       await tester.ensureVisible(button);
       await tester.pumpAndSettle();
       await tester.tap(button);

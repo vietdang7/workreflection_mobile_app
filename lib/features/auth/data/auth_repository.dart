@@ -24,11 +24,7 @@ class SupabaseAuthRepository implements AuthRepository {
   }
 
   @override
-  Future<void> signUp(
-    String email,
-    String password,
-    String displayName,
-  ) async {
+  Future<void> signUp(String email, String password, String displayName) async {
     await _client.auth.signUp(
       email: email,
       password: password,

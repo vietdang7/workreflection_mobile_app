@@ -19,8 +19,8 @@ abstract class WrIapSubscriptionRepository {
 
 final wrIapSubscriptionRepositoryProvider =
     Provider<WrIapSubscriptionRepository>((ref) {
-  return SupabaseWrIapSubscriptionRepository(Supabase.instance.client);
-});
+      return SupabaseWrIapSubscriptionRepository(Supabase.instance.client);
+    });
 
 class SupabaseWrIapSubscriptionRepository
     implements WrIapSubscriptionRepository {

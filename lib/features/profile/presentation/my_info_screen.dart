@@ -75,8 +75,11 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(Icons.arrow_back_ios_new,
-                          size: 14, color: WrColors.muted),
+                      Icon(
+                        Icons.arrow_back_ios_new,
+                        size: 14,
+                        color: WrColors.muted,
+                      ),
                       SizedBox(width: 6),
                       Text(
                         tr('Quay lại', 'Back'),
@@ -103,9 +106,12 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
             ),
             const SizedBox(height: 8),
             WrParagraph(
-              tr('Tổng hợp toàn bộ bối cảnh cá nhân, môi trường và công việc của '
-              'bạn. Bạn có thể kiểm tra hoặc cập nhật lại bất cứ lúc nào tại đây.', 'Everything about you, your environment and your work in one place. '
-              'Check or update it here any time.'),
+              tr(
+                'Tổng hợp toàn bộ bối cảnh cá nhân, môi trường và công việc của '
+                    'bạn. Bạn có thể kiểm tra hoặc cập nhật lại bất cứ lúc nào tại đây.',
+                'Everything about you, your environment and your work in one place. '
+                    'Check or update it here any time.',
+              ),
               style: TextStyle(
                 fontSize: 14.5,
                 color: WrColors.text2,
@@ -129,9 +135,12 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                 children: [
                   Expanded(
                     child: WrParagraph(
-                      tr('Thông tin càng sát thực tế, trợ lý AI càng đưa ra những '
-                      'tư vấn "may đo" chính xác cho bối cảnh của bạn', 'The closer this is to reality, the more the AI assistant can '
-                      'tailor what it says to your situation'),
+                      tr(
+                        'Thông tin càng sát thực tế, trợ lý AI càng đưa ra những '
+                            'tư vấn "may đo" chính xác cho bối cảnh của bạn',
+                        'The closer this is to reality, the more the AI assistant can '
+                            'tailor what it says to your situation',
+                      ),
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
@@ -177,9 +186,12 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
             _WorkInfoRow(hasRoleText: (profile?.roleText ?? '').isNotEmpty),
             const SizedBox(height: 16),
             Text(
-              tr('$filled/${fields.length} mục đã điền. Tất cả đều tuỳ chọn, sửa '
-              'lại bất cứ lúc nào.', '$filled/${fields.length} filled in. All optional, editable any '
-              'time.'),
+              tr(
+                '$filled/${fields.length} mục đã điền. Tất cả đều tuỳ chọn, sửa '
+                    'lại bất cứ lúc nào.',
+                '$filled/${fields.length} filled in. All optional, editable any '
+                    'time.',
+              ),
               key: const Key('my_info_filled_count'),
               textAlign: TextAlign.center,
               style: const TextStyle(
@@ -203,7 +215,14 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
       // Ghi hỏng mà im lặng thì dòng vẫn hiện giá trị cũ và người dùng tưởng
       // mình bấm trượt, bấm lại lần nữa.
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(tr('Chưa lưu được, thử lại giúp mình nhé.', 'Could not save, please try again.'))),
+        SnackBar(
+          content: Text(
+            tr(
+              'Chưa lưu được, thử lại giúp mình nhé.',
+              'Could not save, please try again.',
+            ),
+          ),
+        ),
       );
     }
   }
@@ -308,8 +327,9 @@ class _FieldRow extends StatelessWidget {
                     textAlign: TextAlign.right,
                     style: TextStyle(
                       fontSize: 13,
-                      fontWeight:
-                          label == null ? FontWeight.w400 : FontWeight.w600,
+                      fontWeight: label == null
+                          ? FontWeight.w400
+                          : FontWeight.w600,
                       color: label == null ? WrColors.text3 : WrColors.navy,
                     ),
                   ),
@@ -413,7 +433,10 @@ class _WorkInfoRow extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     hasRoleText
-                        ? tr('Đã có, chạm để xem hoặc sửa', 'Added, tap to view or edit')
+                        ? tr(
+                            'Đã có, chạm để xem hoặc sửa',
+                            'Added, tap to view or edit',
+                          )
                         : tr('Chưa có, chạm để thêm', 'Not added, tap to add'),
                     style: const TextStyle(
                       fontSize: 12.5,

@@ -78,10 +78,15 @@ void main() {
 
       expect(find.byKey(const Key('insights_list')), findsOneWidget);
       expect(find.textContaining('Tôi cần được lắng nghe'), findsOneWidget);
-      expect(find.textContaining('Sự rõ ràng giúp tôi tiến lên'), findsOneWidget);
+      expect(
+        find.textContaining('Sự rõ ràng giúp tôi tiến lên'),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('shows source label and saved date for each insight', (tester) async {
+    testWidgets('shows source label and saved date for each insight', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       repo.seedInsights([
         Insight(

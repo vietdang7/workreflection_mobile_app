@@ -14,6 +14,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
+import 'wr_canonical_catalog.dart';
 import '../models/wr_content.dart';
 
 // ---------------------------------------------------------------------------
@@ -70,9 +71,17 @@ final wrContentRepositoryProvider = Provider<WrContentRepository>((ref) {
 // ---------------------------------------------------------------------------
 
 class SupabaseWrContentRepository implements WrContentRepository {
-  const SupabaseWrContentRepository(this._client);
+  SupabaseWrContentRepository(
+    this._client, {
+    WrCanonicalCatalogLoader? catalogLoader,
+  }) : _catalogLoader = catalogLoader ?? _loadCanonicalCatalog;
 
   final SupabaseClient _client;
+  final WrCanonicalCatalogLoader _catalogLoader;
+  Future<WrCanonicalCatalog>? _catalogFuture;
+
+  Future<WrCanonicalCatalog> _canonicalCatalog() =>
+      _catalogFuture ??= _catalogLoader();
 
   String get _uid {
     final user = _client.auth.currentUser;
@@ -82,33 +91,61 @@ class SupabaseWrContentRepository implements WrContentRepository {
 
   @override
   Future<List<WrSituation>> fetchSituations({ScaDimension? dimension}) async {
-    var query = _client.from('wr_situations').select();
-    if (dimension != null) {
-      query = query.eq('sca_dimension', dimension.dbValue);
+    final catalog = await _canonicalCatalog();
+    var remote = const <WrSituation>[];
+    try {
+      final rows = await _client
+          .from('wr_situations')
+          .select()
+          .order('code', ascending: true);
+      remote = _parseSituations(rows);
+    } catch (_) {
+      // The local catalog is sufficient for a new install or while the remote
+      // migration is rolling out. Historical rows are best-effort when the
+      // network is unavailable.
     }
-    final rows = await query.order('code', ascending: true);
-    return rows.map(WrSituation.fromJson).toList();
+    final merged = catalog.mergeSituations(remote);
+    return dimension == null
+        ? merged
+        : merged.where((s) => s.scaDimension == dimension).toList();
   }
 
   @override
   Future<List<WrStory>> fetchStories({ScaDimension? dimension}) async {
-    var query = _client.from('wr_stories').select();
-    if (dimension != null) {
-      query = query.eq('sca_dimension', dimension.dbValue);
+    final catalog = await _canonicalCatalog();
+    var remote = const <WrStory>[];
+    try {
+      final rows = await _client
+          .from('wr_stories')
+          .select()
+          .order('story_id', ascending: true);
+      remote = _parseStories(rows);
+    } catch (_) {
+      // Canonical local editorial content remains available if Supabase is
+      // unavailable or the new columns have not reached this environment.
     }
-    final rows = await query.order('story_id', ascending: true);
-    return rows.map(WrStory.fromJson).toList();
+    final merged = catalog.mergeStories(remote);
+    return dimension == null
+        ? merged
+        : merged.where((s) => s.scaDimension == dimension).toList();
   }
 
   @override
   Future<WrStory?> fetchStory(String id) async {
+    final catalog = await _canonicalCatalog();
+    final canonical = catalog.storyFor(id);
+    if (canonical != null) return canonical;
+
     final rows = await _client
         .from('wr_stories')
         .select()
         .eq('story_id', id)
         .limit(1);
-    if (rows.isEmpty) return null;
-    return WrStory.fromJson(rows.first);
+    for (final row in rows) {
+      final story = _tryParseStory(row);
+      if (story?.storyId == id) return story;
+    }
+    return null;
   }
 
   @override
@@ -159,7 +196,11 @@ class SupabaseWrContentRepository implements WrContentRepository {
     // Build the UTC equivalent of VN midnight directly from the date components,
     // without calling .toUtc() which would apply the machine's local timezone
     // and cause a double-shift on UTC+7 devices.
-    final vnMidnightUtc = DateTime.utc(day.year, day.month, day.day).subtract(const Duration(hours: 7));
+    final vnMidnightUtc = DateTime.utc(
+      day.year,
+      day.month,
+      day.day,
+    ).subtract(const Duration(hours: 7));
     final vnEndOfDayUtc = vnMidnightUtc.add(const Duration(hours: 24));
     await _client
         .from('wr_career_memory_events')
@@ -169,4 +210,36 @@ class SupabaseWrContentRepository implements WrContentRepository {
         .gte('created_at', vnMidnightUtc.toIso8601String())
         .lt('created_at', vnEndOfDayUtc.toIso8601String());
   }
+
+  static List<WrSituation> _parseSituations(Iterable<dynamic> rows) => [
+    for (final row in rows)
+      if (_tryParseSituation(row) case final situation?) situation,
+  ];
+
+  static WrSituation? _tryParseSituation(dynamic row) {
+    if (row is! Map) return null;
+    try {
+      return WrSituation.fromJson(Map<String, dynamic>.from(row));
+    } on Object {
+      return null;
+    }
+  }
+
+  static List<WrStory> _parseStories(Iterable<dynamic> rows) => [
+    for (final row in rows)
+      if (_tryParseStory(row) case final story?) story,
+  ];
+
+  static WrStory? _tryParseStory(dynamic row) {
+    if (row is! Map) return null;
+    try {
+      return WrStory.fromJson(Map<String, dynamic>.from(row));
+    } on Object {
+      return null;
+    }
+  }
 }
+
+typedef WrCanonicalCatalogLoader = Future<WrCanonicalCatalog> Function();
+
+Future<WrCanonicalCatalog> _loadCanonicalCatalog() => loadWrCanonicalCatalog();

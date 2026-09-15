@@ -49,10 +49,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     super.dispose();
   }
 
-  void _initFromProviders(
-    Map<String, dynamic> ccData,
-    String? displayName,
-  ) {
+  void _initFromProviders(Map<String, dynamic> ccData, String? displayName) {
     if (_loaded) return;
     _loaded = true;
     _displayNameCtrl.text = displayName ?? '';
@@ -71,14 +68,12 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     // Giữ sẵn trước khi `await`: SnackBar sống lâu hơn màn hình, rời màn rồi
     // mới chạm "Mở Cài đặt" thì `ref` đã bị huỷ.
     final permission = ref.read(photoPermissionServiceProvider);
-    final url = await ref
-        .read(avatarUploadProvider.notifier)
-        .pickAndUpload();
+    final url = await ref.read(avatarUploadProvider.notifier).pickAndUpload();
     if (!context.mounted) return;
     if (url != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.avatarUploadSuccess)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.avatarUploadSuccess)));
       return;
     }
     // Cùng cách xử lý với màn Hồ sơ: từ chối quyền thì mời sang Cài đặt, vì
@@ -95,9 +90,9 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
         ),
       );
     } else if (error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.avatarUploadError)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.avatarUploadError)));
     }
   }
 
@@ -105,33 +100,36 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     final l10n = AppLocalizations.of(context)!;
     try {
-      await ref.read(profileEditProvider.notifier).save(
-        displayName: _displayNameCtrl.text.trim(),
-        ccFields: {
-          'full_name': _fullNameCtrl.text.trim(),
-          'phone': _phoneCtrl.text.trim(),
-          'company_name': _companyNameCtrl.text.trim(),
-          if (_position != null) 'position': _position,
-          if (_companySize != null) 'company_size': _companySize,
-          if (_workExperience != null) 'total_work_experience': _workExperience,
-          if (_tenure != null) 'company_tenure': _tenure,
-          if (_department != null) 'department': _department,
-        },
-      );
+      await ref
+          .read(profileEditProvider.notifier)
+          .save(
+            displayName: _displayNameCtrl.text.trim(),
+            ccFields: {
+              'full_name': _fullNameCtrl.text.trim(),
+              'phone': _phoneCtrl.text.trim(),
+              'company_name': _companyNameCtrl.text.trim(),
+              if (_position != null) 'position': _position,
+              if (_companySize != null) 'company_size': _companySize,
+              if (_workExperience != null)
+                'total_work_experience': _workExperience,
+              if (_tenure != null) 'company_tenure': _tenure,
+              if (_department != null) 'department': _department,
+            },
+          );
       if (context.mounted) {
         if (widget.setupMode) {
           context.go('/home');
         } else {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.profileEditSaveSuccess)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.profileEditSaveSuccess)));
         }
       }
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.profileEditSaveError)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.profileEditSaveError)));
       }
     }
   }
@@ -145,14 +143,12 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
 
     // Populate controllers once data arrives
     if (ccAsync.hasValue && profileAsync.hasValue) {
-      _initFromProviders(
-        ccAsync.value ?? {},
-        profileAsync.value?.displayName,
-      );
+      _initFromProviders(ccAsync.value ?? {}, profileAsync.value?.displayName);
     }
 
     final ccData = ccAsync.valueOrNull ?? {};
-    final name = (ccData['full_name'] as String?) ??
+    final name =
+        (ccData['full_name'] as String?) ??
         profileAsync.valueOrNull?.displayName ??
         tr('bạn', 'you');
     final initials = _computeInitials(name);
@@ -167,7 +163,9 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
         backgroundColor: WrColors.pageBg,
         elevation: 0,
         automaticallyImplyLeading: false,
-        leading: widget.setupMode ? null : const BackButton(color: WrColors.navy),
+        leading: widget.setupMode
+            ? null
+            : const BackButton(color: WrColors.navy),
         title: Text(
           widget.setupMode ? l10n.profileSetupTitle : l10n.profileEditTitle,
           style: WrTextStyles.hMedium,
@@ -201,7 +199,9 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                       ),
                     )
                   : Text(
-                      widget.setupMode ? l10n.profileSetupComplete : l10n.profileEditSave,
+                      widget.setupMode
+                          ? l10n.profileSetupComplete
+                          : l10n.profileEditSave,
                       style: const TextStyle(
                         color: WrColors.coral,
                         fontWeight: FontWeight.w700,
@@ -213,7 +213,8 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
       ),
       body: ccAsync.isLoading || profileAsync.isLoading
           ? const Center(
-              child: CircularProgressIndicator(color: WrColors.coral))
+              child: CircularProgressIndicator(color: WrColors.coral),
+            )
           : SingleChildScrollView(
               padding: const EdgeInsets.symmetric(horizontal: 24),
               child: Form(
@@ -238,16 +239,21 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                                   width: 80,
                                   height: 80,
                                   decoration: BoxDecoration(
-                                    color: WrColors.navy.withValues(alpha: 0.08),
+                                    color: WrColors.navy.withValues(
+                                      alpha: 0.08,
+                                    ),
                                     shape: BoxShape.circle,
                                   ),
                                   clipBehavior: Clip.antiAlias,
-                                  child: avatarUrl != null && avatarUrl.isNotEmpty
+                                  child:
+                                      avatarUrl != null && avatarUrl.isNotEmpty
                                       ? Image.network(
                                           avatarUrl,
                                           fit: BoxFit.cover,
                                           errorBuilder: (_, __, ___) =>
-                                              _InitialsCircle(initials: initials),
+                                              _InitialsCircle(
+                                                initials: initials,
+                                              ),
                                         )
                                       : _InitialsCircle(initials: initials),
                                 ),
@@ -262,7 +268,9 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                                       color: WrColors.coral,
                                       shape: BoxShape.circle,
                                       border: Border.all(
-                                          color: WrColors.white, width: 2),
+                                        color: WrColors.white,
+                                        width: 2,
+                                      ),
                                     ),
                                     child: isUploadingAvatar
                                         ? const Padding(
@@ -272,8 +280,11 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                                               color: WrColors.navy,
                                             ),
                                           )
-                                        : const Icon(Icons.camera_alt_outlined,
-                                            size: 14, color: WrColors.white),
+                                        : const Icon(
+                                            Icons.camera_alt_outlined,
+                                            size: 14,
+                                            color: WrColors.white,
+                                          ),
                                   ),
                                 ),
                               ],
@@ -338,7 +349,9 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                       value: _position,
                       hint: l10n.profileEditSelectHint,
                       items: [
-                        ...positionOptions(l10n).map((o) => _opt(o.value, o.label)),
+                        ...positionOptions(
+                          l10n,
+                        ).map((o) => _opt(o.value, o.label)),
                       ],
                       onChanged: (v) => setState(() => _position = v),
                     ),
@@ -351,7 +364,9 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                       value: _companySize,
                       hint: l10n.profileEditSelectHint,
                       items: [
-                        ...companySizeOptions(l10n).map((o) => _opt(o.value, o.label)),
+                        ...companySizeOptions(
+                          l10n,
+                        ).map((o) => _opt(o.value, o.label)),
                       ],
                       onChanged: (v) => setState(() => _companySize = v),
                     ),
@@ -364,7 +379,9 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                       value: _workExperience,
                       hint: l10n.profileEditSelectHint,
                       items: [
-                        ...workExperienceOptions(l10n).map((o) => _opt(o.value, o.label)),
+                        ...workExperienceOptions(
+                          l10n,
+                        ).map((o) => _opt(o.value, o.label)),
                       ],
                       onChanged: (v) => setState(() => _workExperience = v),
                     ),
@@ -377,7 +394,9 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                       value: _tenure,
                       hint: l10n.profileEditSelectHint,
                       items: [
-                        ...companyTenureOptions(l10n).map((o) => _opt(o.value, o.label)),
+                        ...companyTenureOptions(
+                          l10n,
+                        ).map((o) => _opt(o.value, o.label)),
                       ],
                       onChanged: (v) => setState(() => _tenure = v),
                     ),
@@ -390,7 +409,9 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                       value: _department,
                       hint: l10n.profileEditSelectHint,
                       items: [
-                        ...departmentOptions(l10n).map((o) => _opt(o.value, o.label)),
+                        ...departmentOptions(
+                          l10n,
+                        ).map((o) => _opt(o.value, o.label)),
                       ],
                       onChanged: (v) => setState(() => _department = v),
                     ),
@@ -403,8 +424,10 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     );
   }
 
-  DropdownMenuItem<String> _opt(String value, String label) =>
-      DropdownMenuItem(value: value, child: Text(label, style: WrTextStyles.body));
+  DropdownMenuItem<String> _opt(String value, String label) => DropdownMenuItem(
+    value: value,
+    child: Text(label, style: WrTextStyles.body),
+  );
 
   static String _computeInitials(String name) {
     final parts = name.trim().split(RegExp(r'\s+'));
@@ -451,8 +474,10 @@ class _EditField extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: WrColors.coral),
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
     );
   }
@@ -481,14 +506,15 @@ class _SelectField<T> extends StatelessWidget {
       children: [
         Text(
           label,
-          style: WrTextStyles.body.copyWith(color: WrColors.muted, fontSize: 13.5),
+          style: WrTextStyles.body.copyWith(
+            color: WrColors.muted,
+            fontSize: 13.5,
+          ),
         ),
         const SizedBox(height: 6),
         Container(
           decoration: BoxDecoration(
-            border: Border.all(
-              color: WrColors.navy.withValues(alpha: 0.15),
-            ),
+            border: Border.all(color: WrColors.navy.withValues(alpha: 0.15)),
             borderRadius: BorderRadius.circular(12),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -496,12 +522,17 @@ class _SelectField<T> extends StatelessWidget {
             child: DropdownButton<T>(
               isExpanded: true,
               value: value,
-              hint: Text(hint,
-                  style: WrTextStyles.body.copyWith(color: WrColors.muted)),
+              hint: Text(
+                hint,
+                style: WrTextStyles.body.copyWith(color: WrColors.muted),
+              ),
               items: items,
               onChanged: onChanged,
               style: WrTextStyles.body,
-              icon: const Icon(Icons.keyboard_arrow_down, color: WrColors.muted),
+              icon: const Icon(
+                Icons.keyboard_arrow_down,
+                color: WrColors.muted,
+              ),
             ),
           ),
         ),

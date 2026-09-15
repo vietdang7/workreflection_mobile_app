@@ -40,8 +40,8 @@ class _WrAiConsentScreenState extends ConsumerState<WrAiConsentScreen> {
         content: Text(
           ok
               ? (turnOn
-                  ? 'Đã bật. Những phần cần AI dùng được rồi.'
-                  : 'Đã tắt. App sẽ không gửi dữ liệu của bạn đi nữa.')
+                    ? 'Đã bật. Những phần cần AI dùng được rồi.'
+                    : 'Đã tắt. App sẽ không gửi dữ liệu của bạn đi nữa.')
               : 'Chưa lưu được. Bạn kiểm tra mạng rồi thử lại.',
         ),
       ),
@@ -61,9 +61,7 @@ class _WrAiConsentScreenState extends ConsumerState<WrAiConsentScreen> {
         Container(
           key: const Key('wr_ai_consent_status'),
           decoration: BoxDecoration(
-            color: on
-                ? WrColors.teal.withValues(alpha: 0.08)
-                : WrColors.white,
+            color: on ? WrColors.teal.withValues(alpha: 0.08) : WrColors.white,
             borderRadius: BorderRadius.circular(14),
             border: Border.all(
               color: on ? WrColors.pillTealText : WrColors.line,
@@ -88,9 +86,9 @@ class _WrAiConsentScreenState extends ConsumerState<WrAiConsentScreen> {
                     WrParagraph(
                       on
                           ? 'App được phép gửi dữ liệu nêu dưới đây sang các '
-                              'dịch vụ AI để xử lý.'
+                                'dịch vụ AI để xử lý.'
                           : 'App không gửi dữ liệu của bạn đi đâu cả. Những '
-                              'phần cần AI đang ngừng hoạt động.',
+                                'phần cần AI đang ngừng hoạt động.',
                       style: const TextStyle(
                         fontSize: 13,
                         color: WrColors.navy,

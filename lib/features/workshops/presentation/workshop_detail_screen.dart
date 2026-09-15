@@ -120,16 +120,16 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
     try {
       await repo.registerFree(widget.workshopId);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.wsRegisterSuccess)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.wsRegisterSuccess)));
       ref.invalidate(myRegistrationProvider(widget.workshopId));
       ref.invalidate(workshopDetailProvider(widget.workshopId));
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.wsRegisterError)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.wsRegisterError)));
     } finally {
       if (mounted) setState(() => _registering = false);
     }
@@ -208,7 +208,9 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
             _InfoRow(
               icon: Icons.people_outline,
               text: l10n.wsParticipants(
-                  w.currentParticipants, w.maxParticipants!),
+                w.currentParticipants,
+                w.maxParticipants!,
+              ),
             ),
           ],
 
@@ -222,12 +224,8 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
 
           // Price line
           Text(
-            w.isFree
-                ? l10n.wsFree
-                : _formatPrice(w.price, w.currency),
-            style: WrTextStyles.hMedium.copyWith(
-              color: WrColors.navy,
-            ),
+            w.isFree ? l10n.wsFree : _formatPrice(w.price, w.currency),
+            style: WrTextStyles.hMedium.copyWith(color: WrColors.navy),
           ),
 
           const SizedBox(height: 24),
@@ -245,10 +243,7 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
           const SizedBox(height: 32),
 
           // Resources section
-          _ResourcesSection(
-            workshopId: widget.workshopId,
-            registration: reg,
-          ),
+          _ResourcesSection(workshopId: widget.workshopId, registration: reg),
 
           const SizedBox(height: 40),
         ],
@@ -285,10 +280,7 @@ class _CtaArea extends ConsumerWidget {
     // No registration branch
     if (registration == null) {
       if (workshop.isFull) {
-        return WrPillButton(
-          label: l10n.wsFullBadge,
-          onPressed: null,
-        );
+        return WrPillButton(label: l10n.wsFullBadge, onPressed: null);
       }
       if (workshop.isFree) {
         return WrPillButton(
@@ -324,9 +316,7 @@ class _CtaArea extends ConsumerWidget {
           ),
 
         // Survey area (only when checked in)
-        if (isCheckedIn) ...[
-          _SurveyArea(workshopId: workshopId),
-        ],
+        if (isCheckedIn) ...[_SurveyArea(workshopId: workshopId)],
       ],
     );
   }
@@ -351,8 +341,7 @@ class _StatusChip extends StatelessWidget {
 
     String chipLabel = label;
     if (isAttended && registration.checkedInAt != null) {
-      final time =
-          DateFormat('HH:mm dd/MM').format(registration.checkedInAt!);
+      final time = DateFormat('HH:mm dd/MM').format(registration.checkedInAt!);
       chipLabel = l10n.wsCheckedInAt(time);
     }
 
@@ -401,8 +390,8 @@ class _SurveyArea extends ConsumerWidget {
               WrActionLink(
                 key: const Key('ws_detail_view_results'),
                 label: l10n.wsSurveyViewResults,
-                onTap: () => context
-                    .push('/workshops/$workshopId/survey-results'),
+                onTap: () =>
+                    context.push('/workshops/$workshopId/survey-results'),
               ),
             ],
           );
@@ -432,8 +421,7 @@ class _ResourcesSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final attachmentsAsync =
-        ref.watch(workshopAttachmentsProvider(workshopId));
+    final attachmentsAsync = ref.watch(workshopAttachmentsProvider(workshopId));
 
     return attachmentsAsync.when(
       loading: () => const SizedBox.shrink(),
@@ -462,8 +450,7 @@ class _ResourcesSection extends ConsumerWidget {
                   children: [
                     for (final att in attachments) ...[
                       _AttachmentRow(attachment: att),
-                      if (att != attachments.last)
-                        const Divider(height: 1),
+                      if (att != attachments.last) const Divider(height: 1),
                     ],
                   ],
                 ),
@@ -486,10 +473,10 @@ class _AttachmentRow extends StatelessWidget {
   final WorkshopAttachment attachment;
 
   IconData get _icon => switch (attachment.category) {
-        'image' => Icons.image_outlined,
-        'video' => Icons.videocam_outlined,
-        _ => Icons.insert_drive_file_outlined,
-      };
+    'image' => Icons.image_outlined,
+    'video' => Icons.videocam_outlined,
+    _ => Icons.insert_drive_file_outlined,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -501,9 +488,9 @@ class _AttachmentRow extends StatelessWidget {
         final l10n = AppLocalizations.of(context)!;
         await Clipboard.setData(ClipboardData(text: attachment.fileUrl));
         if (context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(l10n.wsLinkCopied)),
-          );
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text(l10n.wsLinkCopied)));
         }
       },
     );

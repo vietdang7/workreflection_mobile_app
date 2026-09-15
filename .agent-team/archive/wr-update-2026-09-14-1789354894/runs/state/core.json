@@ -1,0 +1,18 @@
+{
+  "role": "core",
+  "engine": "codex",
+  "model": "gpt-5.6-luna",
+  "effort": "max",
+  "turns": 1,
+  "session_started": true,
+  "session_id": "01a09dd1-5e2d-7450-8eac-de010f905eb4",
+  "running_since": null,
+  "runner_pid": 60377,
+  "child_pid": null,
+  "last_error": null,
+  "last_status": "TEAM-STATUS: core | WORKING | ready; boot context and SPEC loaded, waiting for TASK",
+  "last_status_at": "2026-09-14T02:49:38.170Z",
+  "last_turn_ended": "2026-09-14T02:49:38.170Z",
+  "last_turn_secs": 39,
+  "last_exit": 0
+}

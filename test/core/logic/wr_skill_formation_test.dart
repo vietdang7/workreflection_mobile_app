@@ -30,25 +30,25 @@ CareerMemoryEvent _maintained(String title, {int i = 1, DateTime? at}) =>
       createdAt: at,
     );
 
-List<CareerMemoryEvent> _steps(String title, int n) =>
-    [for (var i = 1; i <= n; i++) _step(title, i: i)];
+List<CareerMemoryEvent> _steps(String title, int n) => [
+  for (var i = 1; i <= n; i++) _step(title, i: i),
+];
 
 PracticeEnrollment _enrollment({DateTime? completedAt}) => PracticeEnrollment(
-      userId: 'u1',
-      themeId: 'pt-voice',
-      completedAt: completedAt,
-    );
+  userId: 'u1',
+  themeId: 'pt-voice',
+  completedAt: completedAt,
+);
 
 SkillFormation? _formation({
   PracticeEnrollment? enrollment,
   required List<CareerMemoryEvent> events,
-}) =>
-    skillFormationFor(
-      theme: _theme,
-      enrollment: enrollment ?? _enrollment(),
-      events: events,
-      threshold: _threshold,
-    );
+}) => skillFormationFor(
+  theme: _theme,
+  enrollment: enrollment ?? _enrollment(),
+  events: events,
+  threshold: _threshold,
+);
 
 void main() {
   group('practiceCountForTheme', () {
@@ -85,8 +85,7 @@ void main() {
 
     test('tên chủ đề này không nuốt sự kiện của chủ đề tên dài hơn', () {
       const short = PracticeTheme(themeId: 'pt-a', title: 'Lắng nghe');
-      const long =
-          PracticeTheme(themeId: 'pt-b', title: 'Lắng nghe chủ động');
+      const long = PracticeTheme(themeId: 'pt-b', title: 'Lắng nghe chủ động');
       final events = _steps('Lắng nghe chủ động', 4);
       expect(practiceCountForTheme(short, events), 0);
       expect(practiceCountForTheme(long, events), 4);
@@ -106,17 +105,19 @@ void main() {
       );
     });
 
-    test('đi hết ba bước vẫn CHƯA thành kỹ năng — mới xong giai đoạn làm quen',
-        () {
-      final f = _formation(
-        enrollment: _enrollment(completedAt: DateTime(2026, 8, 1)),
-        events: _steps('Dám lên tiếng', 3),
-      )!;
-      expect(f.skillFormed, isFalse);
-      expect(f.stage, SkillStage.maintaining);
-      expect(f.remaining, 2);
-      expect(f.canMaintain, isTrue);
-    });
+    test(
+      'đi hết ba bước vẫn CHƯA thành kỹ năng — mới xong giai đoạn làm quen',
+      () {
+        final f = _formation(
+          enrollment: _enrollment(completedAt: DateTime(2026, 8, 1)),
+          events: _steps('Dám lên tiếng', 3),
+        )!;
+        expect(f.skillFormed, isFalse);
+        expect(f.stage, SkillStage.maintaining);
+        expect(f.remaining, 2);
+        expect(f.canMaintain, isTrue);
+      },
+    );
 
     test('chưa xong ba bước thì chưa mở được giai đoạn duy trì', () {
       final f = _formation(events: _steps('Dám lên tiếng', 2))!;
@@ -185,10 +186,7 @@ void main() {
         for (var i = 1; i <= 3; i++)
           _step('Dám lên tiếng', i: i, at: DateTime(2026, 8, i)),
       ];
-      expect(
-        skillFormedDateFor(_theme, events, threshold: _threshold),
-        isNull,
-      );
+      expect(skillFormedDateFor(_theme, events, threshold: _threshold), isNull);
     });
   });
 
@@ -385,12 +383,12 @@ void main() {
     const voiceNew = PracticeTheme(themeId: 'pt-c2', title: 'Dám lên tiếng');
 
     CareerMemoryEvent tagged(String themeId, int i) => CareerMemoryEvent(
-          id: 't$themeId$i',
-          userId: 'u1',
-          behavior: kPracticeStepBehavior,
-          themeId: themeId,
-          reflectionText: 'Dám lên tiếng · Bước $i',
-        );
+      id: 't$themeId$i',
+      userId: 'u1',
+      behavior: kPracticeStepBehavior,
+      themeId: themeId,
+      reflectionText: 'Dám lên tiếng · Bước $i',
+    );
 
     test('hai chủ đề TRÙNG TÊN không còn cộng chung một bộ đếm', () {
       final events = [
@@ -470,10 +468,7 @@ void main() {
 
     test('trộn hai ngôn ngữ thì cộng cả hai, không bỏ bên nào', () {
       expect(
-        countOf([
-          ..._steps('Dám lên tiếng', 3),
-          _step('Speaking up', i: 9),
-        ]),
+        countOf([..._steps('Dám lên tiếng', 3), _step('Speaking up', i: 9)]),
         4,
       );
     });

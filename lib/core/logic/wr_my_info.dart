@@ -51,14 +51,20 @@ List<ProfileOption> myInfoIndustryOptions() => [
   (value: 'retail', label: tr('Bán lẻ, dịch vụ', 'Retail and services')),
   (value: 'education', label: tr('Giáo dục', 'Education')),
   (value: 'healthcare', label: tr('Y tế', 'Healthcare')),
-  (value: 'construction', label: tr('Xây dựng, bất động sản', 'Construction and property')),
+  (
+    value: 'construction',
+    label: tr('Xây dựng, bất động sản', 'Construction and property'),
+  ),
   (value: 'other', label: tr('Khác', 'Other')),
 ];
 
 /// Loại hình công ty (`ORG_QUESTIONS[2]`).
 List<ProfileOption> myInfoCompanyTypeOptions() => [
   (value: 'vn', label: tr('Doanh nghiệp Việt Nam', 'Vietnamese company')),
-  (value: 'fdi', label: tr('Công ty nước ngoài (FDI)', 'Foreign-invested company (FDI)')),
+  (
+    value: 'fdi',
+    label: tr('Công ty nước ngoài (FDI)', 'Foreign-invested company (FDI)'),
+  ),
   (value: 'startup', label: 'Startup'),
   (value: 'state', label: tr('Nhà nước', 'State-owned')),
 ];

@@ -28,8 +28,10 @@ const _kBg = Color(0xFF0B1121);
 
 /// Fetches the [CcReportFull] the scene widgets render. Kept local to the
 /// screen so we do not touch existing survey providers.
-final _screenReportProvider =
-    FutureProvider.family<CcReportFull?, String>((ref, reportId) async {
+final _screenReportProvider = FutureProvider.family<CcReportFull?, String>((
+  ref,
+  reportId,
+) async {
   return ref.watch(surveyRepositoryProvider).getReport(reportId);
 });
 
@@ -161,16 +163,16 @@ class _VideoReportScreenState extends ConsumerState<VideoReportScreen> {
                   child: const Text('Xem app gửi những gì'),
                 ),
               ] else ...[
-              Text(
-                l10n.videoReportError,
-                style: const TextStyle(color: Colors.white70),
-              ),
-              const SizedBox(height: 12),
-              ElevatedButton(
-                onPressed: () => ref
-                    .invalidate(videoReportDataProvider(widget.reportId)),
-                child: Text(l10n.videoReportRetry),
-              ),
+                Text(
+                  l10n.videoReportError,
+                  style: const TextStyle(color: Colors.white70),
+                ),
+                const SizedBox(height: 12),
+                ElevatedButton(
+                  onPressed: () =>
+                      ref.invalidate(videoReportDataProvider(widget.reportId)),
+                  child: Text(l10n.videoReportRetry),
+                ),
               ],
             ],
           ),
@@ -249,7 +251,11 @@ class _VideoReportScreenState extends ConsumerState<VideoReportScreen> {
               return IconButton(
                 iconSize: 44,
                 color: Colors.white,
-                icon: Icon(playing ? Icons.pause_circle_outlined : Icons.play_circle_outlined),
+                icon: Icon(
+                  playing
+                      ? Icons.pause_circle_outlined
+                      : Icons.play_circle_outlined,
+                ),
                 onPressed: () =>
                     playing ? controller.pause() : controller.play(),
               );
@@ -260,8 +266,7 @@ class _VideoReportScreenState extends ConsumerState<VideoReportScreen> {
             max: sliderMax,
             onChanged: maxMs <= 0
                 ? null
-                : (v) =>
-                    controller.seek(Duration(milliseconds: v.round())),
+                : (v) => controller.seek(Duration(milliseconds: v.round())),
           ),
         ],
       ),
@@ -306,7 +311,11 @@ class _SubtitleOverlay extends StatelessWidget {
       child: WrParagraph(
         text,
         textAlign: TextAlign.center,
-        style: const TextStyle(color: Colors.white, fontSize: 16.5, height: 1.3),
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 16.5,
+          height: 1.3,
+        ),
       ),
     );
   }

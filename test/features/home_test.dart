@@ -18,8 +18,7 @@ import 'package:workreflection_mobile/l10n/app_localizations.dart';
 import '../support/fake_repository.dart';
 import '../support/fake_survey_repository.dart';
 
-Widget _wrap(Widget child, WrRepository repo,
-    {SurveyRepository? surveyRepo}) {
+Widget _wrap(Widget child, WrRepository repo, {SurveyRepository? surveyRepo}) {
   return ProviderScope(
     overrides: [
       wrRepositoryProvider.overrideWithValue(repo),
@@ -54,13 +53,13 @@ Future<void> _pumpLarge(WidgetTester tester, Widget widget) async {
 }
 
 MobileProfile _profile({String? displayName}) => MobileProfile(
-      userId: 'u1',
-      displayName: displayName,
-      reminderEnabled: true,
-      language: 'vi',
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: DateTime(2026, 6, 1),
-    );
+  userId: 'u1',
+  displayName: displayName,
+  reminderEnabled: true,
+  language: 'vi',
+  createdAt: DateTime(2026, 1, 1),
+  updatedAt: DateTime(2026, 6, 1),
+);
 
 void main() {
   setUpAll(() async {
@@ -68,7 +67,9 @@ void main() {
   });
 
   group('HomeScreen widget', () {
-    testWidgets('shows profile displayName from mobileProfileProvider', (tester) async {
+    testWidgets('shows profile displayName from mobileProfileProvider', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       repo.seedProfile(_profile(displayName: 'Yumi'));
       await _pumpLarge(tester, _wrap(const HomeScreen(), repo));
@@ -76,7 +77,9 @@ void main() {
       expect(find.textContaining('Chào Yumi'), findsOneWidget);
     });
 
-    testWidgets('falls back to "bạn" when profile has no displayName', (tester) async {
+    testWidgets('falls back to "bạn" when profile has no displayName', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       repo.seedProfile(_profile(displayName: null));
       await _pumpLarge(tester, _wrap(const HomeScreen(), repo));
@@ -131,7 +134,9 @@ void main() {
       expect(find.byKey(const Key('mood_btn_happy_selected')), findsOneWidget);
     });
 
-    testWidgets('shows INSIGHT eyebrow and content when insight available', (tester) async {
+    testWidgets('shows INSIGHT eyebrow and content when insight available', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       repo.seedInsights([
         Insight(
@@ -157,7 +162,9 @@ void main() {
       expect(find.byKey(const Key('home_insight_empty')), findsOneWidget);
     });
 
-    testWidgets('shows system card eyebrow when situation available', (tester) async {
+    testWidgets('shows system card eyebrow when situation available', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       repo.seedSituations([
         RecurringSituation(
@@ -184,7 +191,9 @@ void main() {
       expect(find.textContaining('GỢI Ý'), findsOneWidget);
     });
 
-    testWidgets('system notice card has a learn-more link with key', (tester) async {
+    testWidgets('system notice card has a learn-more link with key', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       repo.seedSituations([
         RecurringSituation(
@@ -197,7 +206,10 @@ void main() {
       ]);
       await _pumpLarge(tester, _wrap(const HomeScreen(), repo));
 
-      expect(find.byKey(const Key('home_system_notice_learn_more')), findsOneWidget);
+      expect(
+        find.byKey(const Key('home_system_notice_learn_more')),
+        findsOneWidget,
+      );
     });
 
     testWidgets('learn-more link label is "Tìm hiểu thêm"', (tester) async {
@@ -218,43 +230,52 @@ void main() {
 
     group('Survey CTA card', () {
       CcReportSummary makeSummary({String id = 'r1'}) => CcReportSummary(
-            id: id,
-            surveyId: 'sv1',
-            createdAt: DateTime(2026, 7, 18),
-            scoreTotal: 3.8,
-            scoreLevel: ScoreLevel.good,
-          );
+        id: id,
+        surveyId: 'sv1',
+        createdAt: DateTime(2026, 7, 18),
+        scoreTotal: 3.8,
+        scoreLevel: ScoreLevel.good,
+      );
 
       CcReportFull makeFullReport({String id = 'r1'}) => CcReportFull(
-            id: id,
-            surveyId: 'sv1',
-            userId: 'u1',
-            scoreTotal: 3.8,
-            scoreStructure: 4.0,
-            scoreCulture: 3.5,
-            scoreActivity: 3.9,
-            bottleneckLayer: SurveyLayer.culture,
-            scoreLevel: ScoreLevel.good,
-            createdAt: DateTime(2026, 7, 18),
-          );
+        id: id,
+        surveyId: 'sv1',
+        userId: 'u1',
+        scoreTotal: 3.8,
+        scoreStructure: 4.0,
+        scoreCulture: 3.5,
+        scoreActivity: 3.9,
+        bottleneckLayer: SurveyLayer.culture,
+        scoreLevel: ScoreLevel.good,
+        createdAt: DateTime(2026, 7, 18),
+      );
 
-      testWidgets('shows big CTA card when user has no reports', (tester) async {
+      testWidgets('shows big CTA card when user has no reports', (
+        tester,
+      ) async {
         final wr = FakeWrRepository();
         final survey = FakeSurveyRepository();
         survey.seedRole('user');
         survey.seedReportSummaries([]);
 
         await _pumpLarge(
-            tester, _wrap(const HomeScreen(), wr, surveyRepo: survey));
+          tester,
+          _wrap(const HomeScreen(), wr, surveyRepo: survey),
+        );
 
         expect(
-            find.byKey(const Key('home_survey_cta_no_report')), findsOneWidget);
+          find.byKey(const Key('home_survey_cta_no_report')),
+          findsOneWidget,
+        );
         expect(
-            find.byKey(const Key('home_survey_cta_has_report')), findsNothing);
+          find.byKey(const Key('home_survey_cta_has_report')),
+          findsNothing,
+        );
       });
 
-      testWidgets('shows view-latest card when user has reports',
-          (tester) async {
+      testWidgets('shows view-latest card when user has reports', (
+        tester,
+      ) async {
         final wr = FakeWrRepository();
         final survey = FakeSurveyRepository();
         survey.seedRole('user');
@@ -262,12 +283,18 @@ void main() {
         survey.seedLatestReport(makeFullReport(id: 'r1'));
 
         await _pumpLarge(
-            tester, _wrap(const HomeScreen(), wr, surveyRepo: survey));
+          tester,
+          _wrap(const HomeScreen(), wr, surveyRepo: survey),
+        );
 
-        expect(find.byKey(const Key('home_survey_cta_has_report')),
-            findsOneWidget);
         expect(
-            find.byKey(const Key('home_survey_cta_no_report')), findsNothing);
+          find.byKey(const Key('home_survey_cta_has_report')),
+          findsOneWidget,
+        );
+        expect(
+          find.byKey(const Key('home_survey_cta_no_report')),
+          findsNothing,
+        );
       });
 
       testWidgets('CTA card hidden on error (no crash)', (tester) async {
@@ -277,25 +304,37 @@ void main() {
         survey.setMyReportsError(Exception('network error'));
 
         await _pumpLarge(
-            tester, _wrap(const HomeScreen(), wr, surveyRepo: survey));
+          tester,
+          _wrap(const HomeScreen(), wr, surveyRepo: survey),
+        );
 
         expect(
-            find.byKey(const Key('home_survey_cta_no_report')), findsNothing);
+          find.byKey(const Key('home_survey_cta_no_report')),
+          findsNothing,
+        );
         expect(
-            find.byKey(const Key('home_survey_cta_has_report')), findsNothing);
+          find.byKey(const Key('home_survey_cta_has_report')),
+          findsNothing,
+        );
       });
 
-      testWidgets('start button key present in no-report state', (tester) async {
+      testWidgets('start button key present in no-report state', (
+        tester,
+      ) async {
         final wr = FakeWrRepository();
         final survey = FakeSurveyRepository();
         survey.seedRole('user');
         survey.seedReportSummaries([]);
 
         await _pumpLarge(
-            tester, _wrap(const HomeScreen(), wr, surveyRepo: survey));
+          tester,
+          _wrap(const HomeScreen(), wr, surveyRepo: survey),
+        );
 
-        expect(find.byKey(const Key('home_survey_cta_start_btn')),
-            findsOneWidget);
+        expect(
+          find.byKey(const Key('home_survey_cta_start_btn')),
+          findsOneWidget,
+        );
       });
 
       testWidgets('retake link present when user has reports', (tester) async {
@@ -306,10 +345,14 @@ void main() {
         survey.seedLatestReport(makeFullReport(id: 'r1'));
 
         await _pumpLarge(
-            tester, _wrap(const HomeScreen(), wr, surveyRepo: survey));
+          tester,
+          _wrap(const HomeScreen(), wr, surveyRepo: survey),
+        );
 
-        expect(find.byKey(const Key('home_survey_cta_retake_link')),
-            findsOneWidget);
+        expect(
+          find.byKey(const Key('home_survey_cta_retake_link')),
+          findsOneWidget,
+        );
       });
     });
   });

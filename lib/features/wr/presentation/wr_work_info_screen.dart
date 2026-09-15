@@ -60,7 +60,14 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
       ref.invalidate(wrGrowthOpportunityProvider);
       if (mounted) setState(() => _saved = true);
     } catch (_) {
-      if (mounted) setState(() => _error = tr('Không lưu được. Thử lại.', 'Could not save. Try again.'));
+      if (mounted) {
+        setState(
+          () => _error = tr(
+            'Không lưu được. Thử lại.',
+            'Could not save. Try again.',
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -97,9 +104,12 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
           padding: const EdgeInsets.fromLTRB(22, 8, 22, 32),
           children: [
             WrParagraph(
-              tr('Chia sẻ vai trò hiện tại của bạn. Dựa vào đây, các bài thực hành '
-              'sẽ được phác thảo riêng cho công việc của bạn.', 'Tell us about your current role. From this, the practice exercises '
-              'are shaped around the job you actually do.'),
+              tr(
+                'Chia sẻ vai trò hiện tại của bạn. Dựa vào đây, các bài thực hành '
+                    'sẽ được phác thảo riêng cho công việc của bạn.',
+                'Tell us about your current role. From this, the practice exercises '
+                    'are shaped around the job you actually do.',
+              ),
               style: TextStyle(
                 fontSize: 14.5,
                 height: 1.65,
@@ -108,7 +118,9 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
             ),
             const SizedBox(height: 20),
 
-            WrEyebrow(tr('VỊ TRÍ / CHỨC DANH HIỆN TẠI', 'CURRENT ROLE / JOB TITLE')),
+            WrEyebrow(
+              tr('VỊ TRÍ / CHỨC DANH HIỆN TẠI', 'CURRENT ROLE / JOB TITLE'),
+            ),
             const SizedBox(height: 10),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -129,10 +141,12 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
                 ),
                 decoration: InputDecoration(
                   border: InputBorder.none,
-                  hintText:
-                      tr('Ví dụ: trưởng nhóm nội dung, quản lý 4 bạn, làm việc '
-                      'nhiều với phòng kinh doanh', 'For example: content team lead, managing 4 people, '
-                      'working closely with sales'),
+                  hintText: tr(
+                    'Ví dụ: trưởng nhóm nội dung, quản lý 4 bạn, làm việc '
+                        'nhiều với phòng kinh doanh',
+                    'For example: content team lead, managing 4 people, '
+                        'working closely with sales',
+                  ),
                   hintStyle: TextStyle(fontSize: 15.5, color: WrColors.muted),
                 ),
                 onChanged: (_) => setState(() => _saved = false),
@@ -182,9 +196,12 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
             WrEyebrow(tr('TÀI LIỆU CHI TIẾT', 'DETAILED DOCUMENTS')),
             const SizedBox(height: 6),
             Text(
-              tr('Tải lên file JD (Mô tả công việc) hoặc CV để hệ thống có thêm dữ '
-              'liệu phân tích. (Không bắt buộc)', 'Upload a JD (job description) or CV so the app has more to work '
-              'with. (Optional)'),
+              tr(
+                'Tải lên file JD (Mô tả công việc) hoặc CV để hệ thống có thêm dữ '
+                    'liệu phân tích. (Không bắt buộc)',
+                'Upload a JD (job description) or CV so the app has more to work '
+                    'with. (Optional)',
+              ),
               style: TextStyle(
                 fontSize: 14.5,
                 height: 1.65,
@@ -230,16 +247,28 @@ class _JdBuilderCard extends ConsumerWidget {
 
     final title = switch ((complete, done)) {
       (true, _) => tr('JD bạn đã viết', 'The JD you wrote'),
-      (_, 0) => tr('Nếu chưa có sẵn JD, bạn có thể tự phác thảo nhanh theo 5 bước '
-          'hướng dẫn', 'No JD to hand? You can sketch one quickly in 5 guided steps'),
+      (_, 0) => tr(
+        'Nếu chưa có sẵn JD, bạn có thể tự phác thảo nhanh theo 5 bước '
+            'hướng dẫn',
+        'No JD to hand? You can sketch one quickly in 5 guided steps',
+      ),
       _ => tr('Viết tiếp JD của bạn', 'Carry on writing your JD'),
     };
     final hint = switch ((complete, done)) {
-      (true, _) => tr('Đã xong cả 5 bước. Mở lại để đọc và sửa.', 'All 5 steps done. Reopen it to read and edit.'),
-      (_, 0) => tr('Mỗi bước chỉ mất 2–3 phút, bạn có thể dừng lại và quay lại làm '
-          'tiếp bất cứ lúc nào.', 'Each step takes 2–3 minutes, and you can stop and come back at '
-          'any time.'),
-      _ => tr('Đã xong $done trên $kJdDayCount bước', '$done of $kJdDayCount steps done'),
+      (true, _) => tr(
+        'Đã xong cả 5 bước. Mở lại để đọc và sửa.',
+        'All 5 steps done. Reopen it to read and edit.',
+      ),
+      (_, 0) => tr(
+        'Mỗi bước chỉ mất 2–3 phút, bạn có thể dừng lại và quay lại làm '
+            'tiếp bất cứ lúc nào.',
+        'Each step takes 2–3 minutes, and you can stop and come back at '
+            'any time.',
+      ),
+      _ => tr(
+        'Đã xong $done trên $kJdDayCount bước',
+        '$done of $kJdDayCount steps done',
+      ),
     };
 
     return GestureDetector(
@@ -297,11 +326,7 @@ class _JdBuilderCard extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: 8),
-            const Icon(
-              Icons.chevron_right,
-              size: 20,
-              color: WrColors.muted,
-            ),
+            const Icon(Icons.chevron_right, size: 20, color: WrColors.muted),
           ],
         ),
       ),

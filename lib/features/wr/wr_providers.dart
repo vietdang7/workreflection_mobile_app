@@ -99,16 +99,17 @@ final canTogglePremiumProvider = Provider<bool>((ref) {
 /// null = chưa động vào, dùng gói thật. Xem `wr_premium_override.dart`.
 final premiumOverrideProvider =
     StateNotifierProvider<PremiumOverrideNotifier, bool?>(
-  (ref) => PremiumOverrideNotifier(email: ref.watch(currentUserEmailProvider))
-    ..load(),
-);
+      (ref) =>
+          PremiumOverrideNotifier(email: ref.watch(currentUserEmailProvider))
+            ..load(),
+    );
 
 class PremiumOverrideNotifier extends StateNotifier<bool?> {
   /// [email] là email người đang đăng nhập theo provider; notifier vẫn hỏi lại
   /// [liveAuthEmail] và ưu tiên câu trả lời của phiên thật.
   PremiumOverrideNotifier({String? email})
-      : _providerEmail = email,
-        super(null);
+    : _providerEmail = email,
+      super(null);
 
   final String? _providerEmail;
 
@@ -180,10 +181,6 @@ class PremiumOverrideNotifier extends StateNotifier<bool?> {
 /// Fetches WrEntitlement for current user.
 /// Returns WrEntitlement(plan: WrPlan.free) on null/error (safe default).
 ///
-/// Công tắc thử nghiệm được áp ở ĐÂY, tức trước mọi cổng Premium của app —
-/// `canUseFeature`, hạn mức chủ đề thực hành, hạn mức tài liệu bối cảnh đều
-/// đọc qua provider này, nên bật một chỗ là cả app đổi theo.
-///
 /// HAI NGUỒN, HOẶC BÊN NÀO CŨNG ĐƯỢC (khách chốt 2026-08-01: "nếu trên web
 /// role Premium thì trên app cũng Premium luôn"):
 ///   • `cc_profiles.role` ∈ {premium, admin} — gói mua trên web;
@@ -192,14 +189,13 @@ class PremiumOverrideNotifier extends StateNotifier<bool?> {
 /// bộ bằng migration là cách đã làm hỏng một lần rồi (xem migration
 /// `20260731160000` và bản lùi `20260731170000`): nó chép trạng thái tại một
 /// thời điểm, rồi trạng thái đó mốc đi. Hợp lúc đọc thì không bao giờ mốc.
+///
+/// `premiumOverrideProvider` vẫn tồn tại để giữ public/test APIs và đường chat
+/// nội bộ tương thích, nhưng không còn là nguồn entitlement runtime. Quyền
+/// production phải đến từ web role hoặc bản ghi mua trong app, nên một giá trị
+/// demo đã lưu trước khi bỏ công tắc khỏi Profile không thể cấp hoặc thu hồi
+/// quyền thật.
 final wrEntitlementProvider = FutureProvider<WrEntitlement>((ref) async {
-  final override = ref.watch(premiumOverrideProvider);
-  if (override != null && ref.watch(canTogglePremiumProvider)) {
-    // validUntil để null: WrEntitlement.isPremium coi null là còn hạn, đúng ý
-    // "ép cứng", khỏi phải bịa một ngày hết hạn.
-    return WrEntitlement(plan: override ? WrPlan.premium : WrPlan.free);
-  }
-
   // Nguồn 1 — vai trò trên web.
   //
   // `await ... .future` chứ không phải `.valueOrNull`: chờ hồ sơ tải xong rồi
@@ -234,8 +230,9 @@ final wrEntitlementProvider = FutureProvider<WrEntitlement>((ref) async {
 /// Không bao giờ ném và không bao giờ rỗng: hỏng mạng hoặc bảng chưa có gói nào
 /// thì trả đúng một [WrPremiumPricing.fallback] — Paywall vẫn có con số để
 /// hiển thị, còn nút mua tự khoá vì gói mặc định thiếu `productId`.
-final wrPremiumPlansProvider =
-    FutureProvider<List<WrPremiumPricing>>((ref) async {
+final wrPremiumPlansProvider = FutureProvider<List<WrPremiumPricing>>((
+  ref,
+) async {
   try {
     final plans = await ref.watch(wrRepositoryProvider).getPremiumPlans();
     return plans.isEmpty ? const [WrPremiumPricing.fallback] : plans;
@@ -277,7 +274,9 @@ final wrPatternCountsProvider = FutureProvider<List<PatternCount>>((ref) async {
 });
 
 /// Fetch self-check history for current user, newest first.
-final wrSelfCheckHistoryProvider = FutureProvider<List<ScaSelfCheckResponse>>((ref) async {
+final wrSelfCheckHistoryProvider = FutureProvider<List<ScaSelfCheckResponse>>((
+  ref,
+) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return const [];
   final repo = ref.watch(wrIntelligenceRepositoryProvider);
@@ -294,8 +293,10 @@ final wrSelfCheckHistoryProvider = FutureProvider<List<ScaSelfCheckResponse>>((r
 /// `AsyncValue.loading` KHÔNG được hiện vòng xoay ở tầng UI — §7.2 rào chắn 3:
 /// "Người dùng không bao giờ nhìn thấy màn hình trống hay vòng xoay chờ ở màn
 /// này." Tầng UI đọc `valueOrNull` rồi lùi về câu gốc.
-final wrPolishedTextProvider =
-    FutureProvider.family<String?, String>((ref, original) async {
+final wrPolishedTextProvider = FutureProvider.family<String?, String>((
+  ref,
+  original,
+) async {
   if (!kPolishEnabled) return null;
   final repo = ref.watch(wrIntelligenceRepositoryProvider);
   return repo.polishText(original);
@@ -317,8 +318,9 @@ final wrSituationsProvider = FutureProvider<List<WrSituation>>((ref) async {
 
 /// Pattern Nâng cao — bản tường thuật diễn biến thay đổi qua thời gian.
 /// Hai Lớp v1.2 §III: Paid.
-final wrPatternNarrativesProvider =
-    FutureProvider<List<PatternNarrative>>((ref) async {
+final wrPatternNarrativesProvider = FutureProvider<List<PatternNarrative>>((
+  ref,
+) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return const [];
   final repo = ref.watch(wrIntelligenceRepositoryProvider);
@@ -358,8 +360,9 @@ PatternNarrative? currentLocaleNarrative(List<PatternNarrative> narratives) {
 /// KHÔNG watch [wrPatternNarrativesProvider] — đó là chốt chặn vòng lặp. Provider
 /// này `invalidate` provider kia; nếu nó cũng đọc provider kia thì hai bên đánh
 /// thức nhau vô hạn, mỗi vòng một lượt gọi model trả tiền thật.
-final wrNarrativeRefreshProvider =
-    FutureProvider<WrNarrativeRefresh>((ref) async {
+final wrNarrativeRefreshProvider = FutureProvider<WrNarrativeRefresh>((
+  ref,
+) async {
   // Đổi ngôn ngữ là phải xin viết lại. Đây là chỗ DUY NHẤT trong app mà đổi
   // ngôn ngữ kéo theo một lượt gọi server — chữ do model viết, không getter nào
   // dịch hộ được. Mọi thứ khác chỉ dựng lại widget là xong (xem
@@ -393,8 +396,9 @@ final wrNarrativeRefreshProvider =
 });
 
 /// Growth Journey snapshots (Progress, Direction). Hai Lớp v1.2 §III: Paid.
-final wrGrowthSnapshotsProvider =
-    FutureProvider<List<GrowthJourneySnapshot>>((ref) async {
+final wrGrowthSnapshotsProvider = FutureProvider<List<GrowthJourneySnapshot>>((
+  ref,
+) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return const [];
   final repo = ref.watch(wrIntelligenceRepositoryProvider);
@@ -403,8 +407,9 @@ final wrGrowthSnapshotsProvider =
 
 /// Context Document (JD, CV). Hai Lớp v1.2 §III: tải lên Free (giới hạn số
 /// lượng), phân tích sâu Paid.
-final wrContextDocumentsProvider =
-    FutureProvider<List<WrContextDocument>>((ref) async {
+final wrContextDocumentsProvider = FutureProvider<List<WrContextDocument>>((
+  ref,
+) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return const [];
   final repo = ref.watch(wrIntelligenceRepositoryProvider);
@@ -431,21 +436,27 @@ final wrJobContextTextProvider = FutureProvider<String?>((ref) async {
       // JD nói về công việc, CV nói về người. Đối chiếu kỹ năng với công việc
       // thì JD phải đứng trước.
       ..sort((a, b) {
-        int rank(String? t) => switch (t) { 'jd' => 0, 'cv' => 1, _ => 2 };
+        int rank(String? t) => switch (t) {
+          'jd' => 0,
+          'cv' => 1,
+          _ => 2,
+        };
         return rank(a.docType).compareTo(rank(b.docType));
       });
 
     for (final d in ready.take(2)) {
       final a = d.analysis;
       if (a != null && !a.isEmpty) {
-        parts.addAll([
-          if (a.title != null) a.title!,
-          a.summary,
-          ...a.responsibilities,
-          ...a.requirements,
-          ...a.skills,
-          ...a.keywords,
-        ].where((s) => s.trim().isNotEmpty));
+        parts.addAll(
+          [
+            if (a.title != null) a.title!,
+            a.summary,
+            ...a.responsibilities,
+            ...a.requirements,
+            ...a.skills,
+            ...a.keywords,
+          ].where((s) => s.trim().isNotEmpty),
+        );
       }
       final raw = d.extractedText;
       if (raw != null && raw.isNotEmpty) parts.add(raw);
@@ -489,8 +500,9 @@ final wrStoriesProvider = FutureProvider<List<WrStory>>((ref) async {
 
 /// Career Memory events của người dùng — nguồn phụ cho tab Hành trình
 /// (thực hành, kỹ năng, insight rời). Rỗng khi chưa đăng nhập hoặc lỗi đọc.
-final wrMemoryEventsProvider =
-    FutureProvider<List<CareerMemoryEvent>>((ref) async {
+final wrMemoryEventsProvider = FutureProvider<List<CareerMemoryEvent>>((
+  ref,
+) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return const [];
   final repo = ref.watch(wrContentRepositoryProvider);
@@ -502,15 +514,16 @@ final wrMemoryEventsProvider =
 });
 
 /// Một Episode cụ thể — nguồn cho màn đọc chi tiết mở từ Hành trình.
-final wrEpisodeByIdProvider =
-    FutureProvider.family<ReflectionEpisode?, String>((ref, id) async {
-  final repo = ref.watch(wrEpisodeRepositoryProvider);
-  try {
-    return await repo.fetchEpisode(id);
-  } catch (_) {
-    return null;
-  }
-});
+final wrEpisodeByIdProvider = FutureProvider.family<ReflectionEpisode?, String>(
+  (ref, id) async {
+    final repo = ref.watch(wrEpisodeRepositoryProvider);
+    try {
+      return await repo.fetchEpisode(id);
+    } catch (_) {
+      return null;
+    }
+  },
+);
 
 /// Trần số Episode tải về một lần.
 ///
@@ -525,8 +538,9 @@ final wrEpisodeByIdProvider =
 const int kEpisodeHistoryLimit = 500;
 
 /// Lịch sử Episode, mới nhất trước — nguồn cho tab Hành trình.
-final wrEpisodeHistoryProvider =
-    FutureProvider<List<ReflectionEpisode>>((ref) async {
+final wrEpisodeHistoryProvider = FutureProvider<List<ReflectionEpisode>>((
+  ref,
+) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return const [];
   final repo = ref.watch(wrEpisodeRepositoryProvider);
@@ -552,8 +566,7 @@ final wrCareerSnapshotProvider = FutureProvider<CareerSnapshot>((ref) async {
 /// Nguồn cho cơ chế xoay vòng chống lặp ở bước chọn tình huống. Lưu theo Person
 /// trên `wr_mobile_profiles` chứ không theo phiên (§XII.2), nên vẫn còn hiệu lực
 /// sau khi đóng app hoặc đổi thiết bị.
-final wrRecentSituationIdsProvider =
-    FutureProvider<List<String>>((ref) async {
+final wrRecentSituationIdsProvider = FutureProvider<List<String>>((ref) async {
   final repo = ref.watch(wrRepositoryProvider);
   try {
     final profile = await repo.getMobileProfile();
@@ -607,8 +620,9 @@ final wrRoleTextProvider = FutureProvider<String?>((ref) async {
 ///
 /// Rỗng khi chưa đăng nhập hoặc bảng chưa tồn tại — ô hỏi vẫn dùng được, chỉ là
 /// không có lịch sử để đọc lại.
-final wrCareerQuestionsProvider =
-    FutureProvider<List<CareerQuestion>>((ref) async {
+final wrCareerQuestionsProvider = FutureProvider<List<CareerQuestion>>((
+  ref,
+) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return const [];
   try {
@@ -627,8 +641,9 @@ final wrCareerQuestionsProvider =
 /// dùng bản của họ mà không cần sửa gì thêm.
 ///
 /// Null nghĩa là chưa đủ dữ liệu — §11.3 yêu cầu im lặng, không bịa.
-final wrGrowthOpportunityProvider =
-    FutureProvider<GrowthOpportunity?>((ref) async {
+final wrGrowthOpportunityProvider = FutureProvider<GrowthOpportunity?>((
+  ref,
+) async {
   // Câu gợi ý dựng bằng `tr()` rồi nằm trong cache — không có dòng này thì đổi
   // ngôn ngữ xong thẻ vẫn nói tiếng cũ.
   wrWatchLocale(ref);

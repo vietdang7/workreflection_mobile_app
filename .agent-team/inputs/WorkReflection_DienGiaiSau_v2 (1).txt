@@ -1,0 +1,215 @@
+WorkReflection
+Diễn giải sâu & xu hướng, đặc tả v2
+Thay thế hoàn toàn bản đặc tả v1. Dev dùng file này, bỏ file cũ.
+Vì sao viết lại: 
+Bản v1 lấy ba trụ S, C, A làm đơn vị phân tích. Khi chạy trên dữ liệu thật, cách này cho ra màn hình gần như trống. Bản v2 chuyển đơn vị phân tích xuống tình huống cụ thể, và bổ sung cơ chế bảo đảm luôn có nội dung để đọc.
+Phần lớn vấn đề nằm ở bản đặc tả v1, không phải ở phần dev đã làm. Code hiện tại đang chạy đúng theo v1.
+1. Ba nguyên nhân khiến màn hình trống rỗng
+1.1 Một nửa dữ liệu đang bị bỏ rơi, và mẫu số đang sai
+Thư viện cũ có 10 tình huống thuộc nhóm P-ACHIEVE và P-STEADY, gắn với hai cảm xúc "Khá ổn" và "Đang vui". Những tình huống này không thuộc trụ S, C hay A nào cả, nên không được đếm vào bất kỳ cột nào. Thư viện v2 đã gán trụ cho toàn bộ, nên nguyên nhân này đã được xử lý ở tầng dữ liệu.
+Bằng chứng từ màn hình thật: 6 + 5 + 5 = 16, trong khi tổng hiển thị là 32. Đúng một nửa số lần nhìn lại biến mất khỏi phép tính.
+Hệ quả: màn hình hiện "6 / 32 lần", người dùng đọc ra khoảng 19 phần trăm và thấy không đáng kể. Thực tế 6 trên 16 lần phân loại được là gần 38 phần trăm, tức xấp xỉ mức cao nhất có thể khi chia đều ba trụ. Mẫu số hiện tại đang làm mọi con số trông nhỏ hơn thực tế gấp đôi.
+1.2 Ba trụ là đơn vị quá thô để tìm ra mẫu hình
+Khi chỉ có ba nhóm và người dùng tích lũy đủ nhiều lần, phân bố sẽ tự nhiên tiến về mức cân bằng. Con số 6/5/5 không phải dữ liệu xấu, đó là kết quả toán học bình thường của việc chia 16 mẫu vào 3 rổ.
+Nghĩa là càng dùng lâu, càng khó có trụ nào nổi trội, và nhánh "không có gì nổi bật" sẽ càng hay xảy ra. Tính năng được thiết kế để tỏa sáng khi có một trụ chiếm ưu thế, nhưng cấu trúc dữ liệu lại đẩy mọi người về phía cân bằng.
+1.3 Phần "Từng trụ một" lặp lại nguyên si Career Snapshot
+Mỗi trụ đang hiện nhãn mức đánh giá (đã có ở Career Snapshot) cộng số lần xuất hiện (cũng đã có ở Career Snapshot), cộng một câu gần như giống hệt nhau ba lần. Nói với người dùng ba lần rằng không có gì nổi trội thì đúng về logic nhưng vô nghĩa về trải nghiệm.
+2. Hai lỗi dữ liệu phải sửa trước
+Hai việc này phải xong trước khi làm phần nội dung, vì mọi câu diễn giải đều dựa lên số liệu.
+2.1 Gán trụ cho các tình huống tích cực
+Lưu ý cho dev: 
+Bảng dưới đây giữ lại để tham khảo cách suy luận. Việc gán đã hoàn tất trong file SITUATIONS_v2.js cho cả 24 tình huống tích cực, dev không phải làm lại.
+Mã
+Tình huống
+Trụ
+P-06
+Công việc hôm nay diễn ra đúng như tôi mong đợi
+S
+P-10
+Hôm nay không có gì đặc biệt, nhưng tôi thấy ổn
+S
+P-02
+Tôi được ghi nhận tích cực từ cấp trên
+C
+P-03
+Tôi giúp được đồng nghiệp gỡ một vấn đề khó
+C
+P-05
+Tôi nhận được lời cảm ơn bất ngờ từ ai đó
+C
+P-09
+Tôi có một cuộc trò chuyện tốt với đồng nghiệp
+C
+P-01
+Tôi vừa hoàn thành một việc khó hơn mong đợi
+A
+P-04
+Tôi được tăng lương hoặc thăng chức
+A
+P-07
+Tôi cảm thấy làm chủ được nhịp độ công việc của mình
+A
+P-08
+Tôi vừa học được một điều nhỏ nhưng hữu ích
+A
+2.2 Thêm trường valence, đây là phần bắt buộc
+Chỉ gán trụ thôi là chưa đủ và sẽ gây hiểu sai nghiêm trọng. Nếu nhóm C có 10 lần, hệ thống không phân biệt được đó là 10 lần gặp khó khăn về quan hệ hay 10 lần có trải nghiệm tốt về quan hệ. Hai điều này có ý nghĩa trái ngược nhau hoàn toàn.
+Vì vậy mỗi tình huống cần HAI trường độc lập:
+pillar: 
+S, C hoặc A. Nói tình huống thuộc nhóm trải nghiệm nào.
+valence: 
+"thach-thuc" hoặc "tich-cuc". Nói tình huống đó là khó khăn hay thuận lợi. Trong thư viện v2: 48 tình huống thach-thuc (6 tiểu nhóm, mỗi nhóm 8) và 24 tình huống tich-cuc.
+Lưu ý cho dev: 
+Mọi phép đếm để tìm "trụ nổi trội" và "khoảng lệch" chỉ tính trên valence = thach-thuc. Tình huống tích cực được đếm riêng, dùng cho quy tắc R4 ở mục 4. Nếu trộn chung, kết luận sẽ ngược hoàn toàn.
+2.3 Sửa mẫu số hiển thị
+Cột "Xuất hiện" ở Career Snapshot và mọi con số trong Diễn giải sâu phải dùng mẫu số là tổng số lần phân loại được, không phải tổng số lần nhìn lại.
+Cần làm: 
+Sau khi làm xong mục 2.1, mọi lần nhìn lại đều có trụ, nên hai con số này sẽ bằng nhau và vấn đề tự hết. Nhưng vẫn cần một mẫu số riêng cho các phép tính chỉ dựa trên tình huống thách thức.
+3. Thay đổi cốt lõi: tình huống là đơn vị chính, trụ là đơn vị phụ
+Với 72 tình huống thay vì 3 trụ, mẫu hình thật sẽ nổi rõ thay vì bị san phẳng. So sánh trực tiếp:
+Cách cũ, theo trụ
+Cách mới, theo tình huống
+"Nhóm Mối quan hệ chiếm 5 trên 32 lần."
+"Bạn đã 5 lần quay lại tình huống Tôi lại phải làm thay."
+Trừu tượng, khó hình dung
+Cụ thể, người dùng nhớ ngay mình đã trải qua
+Chỉ 3 giá trị, dễ cân bằng
+72 giá trị, mẫu hình khó bị san phẳng
+Dữ liệu này app đã có sẵn, chính là phần "Những vòng lặp quen thuộc" đang hiển thị ở tab Hiểu mình. Diễn giải sâu nên xây trên chính lớp dữ liệu đó.
+Lớp trụ vẫn giữ, nhưng chuyển xuống vai trò phụ: dùng để đối chiếu với Self-Check (vì Self-Check chỉ đo theo trụ), không dùng làm nội dung chính.
+3b. Một ảnh hưởng mới từ hàm chọn tình huống
+Hàm getSituationChoices() trong thư viện v2 đã đổi từ lọc cứng sang ưu tiên mềm: lấy 3 tình huống thuộc đúng cảm xúc người dùng chọn, cộng 2 tình huống từ các cảm xúc khác nhưng cùng sắc thái. Thay đổi này sửa lỗi nhóm C1 không bao giờ xuất hiện, nhưng cũng làm thay đổi dữ liệu đầu vào của Diễn giải sâu theo hai hướng.
+Hướng tốt: 
+phân bố theo trụ không còn bị quyết định gần như hoàn toàn bởi cảm xúc người dùng hay chọn. Trước đây ai hay chọn "Mơ hồ" thì trụ S luôn chiếm ưu thế, không phản ánh trải nghiệm thật. Giờ tín hiệu về trụ nổi trội đáng tin hơn nhiều.
+Hướng cần lưu ý: 
+vẫn còn 60 phần trăm lựa chọn đến từ nhóm khớp cảm xúc, nên phân bố trụ vẫn phần nào phản ánh thói quen chọn cảm xúc chứ không chỉ phản ánh công việc. Đây là giới hạn cần chấp nhận, không nên diễn giải khoảng lệch như một kết luận chắc chắn.
+Lưu ý cho dev: 
+Điều này củng cố lý do vì sao thang ưu tiên ở mục 4 đặt tình huống cụ thể (R1, R2) lên trước trụ (R3). Tình huống cụ thể là thứ người dùng chủ động chọn, không bị thuật toán chi phối.
+4. Kiến trúc mới: thang ưu tiên năm bậc
+Hệ thống chạy năm quy tắc từ trên xuống, dùng quy tắc ĐẦU TIÊN khớp điều kiện làm nội dung chính của màn hình. Bậc R5 luôn chạy được, nên không bao giờ có màn hình trống.
+Bậc
+Điều kiện kích hoạt
+Nội dung chính
+R1
+Một tình huống nổi bật
+Tình huống nhiều nhất có count từ 3 lần trở lên, VÀ nhiều hơn tình huống đứng thứ hai ít nhất 2 lần
+Gọi tên đúng tình huống đó
+R2
+Một cụm cùng chủ đề
+Từ 2 đến 3 tình huống cùng subgroup và cùng valence, tổng từ 5 lần trở lên
+Nêu sợi dây chung giữa chúng
+R3
+Khoảng lệch nhận thức
+Có trụ nổi trội (tính trên valence thach-thuc), và có dữ liệu Self-Check
+Đối chiếu tự đánh giá với thực tế
+R4
+Cán cân tích cực
+Tỷ lệ tích cực từ 60 phần trăm trở lên, hoặc từ 20 phần trăm trở xuống
+Nêu cán cân giữa thuận lợi và khó khăn
+R5
+Phân bố đều
+Luôn đúng khi không bậc nào ở trên khớp
+Nêu tình huống lặp nhiều nhất, dù chỉ 2 lần
+Lưu ý cho dev: 
+Bậc R5 là lưới an toàn. Miễn là người dùng có từ 15 lần nhìn lại, luôn tồn tại một tình huống xuất hiện nhiều nhất, kể cả khi chỉ 2 lần. Không bao giờ được hiển thị câu kiểu "không có gì nổi bật" rồi dừng.
+5. Nội dung từng bậc
+Mỗi bậc có 2 đến 3 biến thể, hệ thống xoay vòng theo thứ tự. Ký hiệu trong ngoặc nhọn là chỗ chèn dữ kiện.
+5.1 Bậc R1: Một tình huống nổi bật
+R1a  
+Có một tình huống quay lại với bạn nhiều hơn hẳn những tình huống khác: "{tên tình huống}", {count} lần trong {tổng} lần nhìn lại gần đây. Khi một điều lặp lại với tần suất như vậy, nó thường không còn là chuyện ngẫu nhiên nữa. Bạn có nhận ra điều gì chung giữa những lần đó không?
+R1b  
+"{tên tình huống}" là điều bạn quay lại nhiều nhất trong thời gian qua, {count} lần. Đây là tình huống đang chiếm nhiều tâm trí của bạn hơn cả. Nếu có một điều đáng để nhìn kỹ hơn lúc này, nhiều khả năng là nó.
+R1c  
+Trong {tổng} lần bạn dừng lại nhìn lại, có {count} lần xoay quanh cùng một chuyện: "{tên tình huống}". Những điều lặp lại thường khó nhận ra khi đang ở trong đó, nhưng nhìn từ ngoài vào thì khá rõ. Bạn thấy sao về điều này?
+5.2 Bậc R2: Một cụm tình huống cùng chủ đề
+R2a  
+Có ba chuyện khác nhau nhưng đang cùng kể một câu chuyện: "{tình huống 1}", "{tình huống 2}" và "{tình huống 3}", tổng cộng {tổng cụm} lần. Nhìn riêng từng cái thì rời rạc, nhưng đặt cạnh nhau thì chúng đều liên quan đến {tên trụ}.
+R2b  
+Những điều bạn nhìn lại gần đây tập trung khá rõ vào một hướng: {tên trụ}. Cụ thể là "{tình huống 1}" và "{tình huống 2}", cộng lại {tổng cụm} lần. Đây có thể là chỗ đáng để bạn dành thêm chú ý.
+5.3 Bậc R3: Khoảng lệch nhận thức
+Giữ nguyên logic bản v1, nhưng phép đếm giờ chỉ tính trên valence = thach-thuc, và nên gọi kèm tên tình huống cụ thể thay vì chỉ nói tên trụ.
+R3a  
+Trong Self-Check gần nhất, bạn đánh giá {tên trụ} đang ở mức khá ổn. Nhưng khi nhìn lại, những khó khăn bạn ghi nhận nhiều nhất lại thuộc chính nhóm này, đặc biệt là "{tình huống nổi bật của trụ đó}". Khoảng cách giữa hai điều đó thường đáng để dừng lại một chút. Có thể đây là điều bạn đã quen đến mức không còn thấy nó ảnh hưởng nữa.
+R3b  
+{tên trụ} vừa là phần bạn tự đánh giá cần được chú ý, vừa là nhóm khó khăn quay lại nhiều nhất trong thời gian qua, {count} lần. Cảm nhận của bạn và những gì đang thực sự diễn ra đang khớp với nhau. Đây thường là dấu hiệu cho thấy bạn đã nhìn khá rõ điều đang xảy ra với mình.
+5.4 Bậc R4: Cán cân tích cực và thách thức
+Đây là bậc hoàn toàn mới, khai thác 10 tình huống tích cực vốn đang bị bỏ rơi.
+R4a (tích cực cao)  
+Có một điều dễ bị bỏ qua: {count tích cực} trong {tổng} lần bạn dừng lại nhìn lại là để ghi nhận điều gì đó đang diễn ra tốt. Nhiều người chỉ nhìn lại khi gặp khó, nên tỷ lệ này ở bạn là đáng chú ý. Bạn có nhận ra điều gì đang giúp mình duy trì được nhịp đó không?
+R4b (tích cực thấp)  
+Phần lớn những lần bạn dừng lại nhìn lại đều xoay quanh khó khăn, chỉ {count tích cực} trong {tổng} lần là ghi nhận điều đang diễn ra tốt. Điều này không có gì bất thường, vì khó khăn thường thôi thúc ta nhìn lại nhiều hơn. Nhưng những điều đang tốt cũng đáng được ghi lại, để bức tranh đầy đủ hơn về sau.
+5.5 Bậc R5: Phân bố đều, lưới an toàn
+Bậc này thay thế hoàn toàn nhánh C của bản v1. Khác biệt then chốt: v1 nói "không có gì nổi bật" rồi dừng, v2 chuyển sang lớp tình huống để vẫn có điều cụ thể để nói.
+R5a  
+Những điều bạn nhìn lại gần đây trải khá đều, chưa nhóm nào nổi lên hẳn. Nhưng nếu nhìn vào từng tình huống cụ thể, "{tình huống nhiều nhất}" là điều quay lại với bạn nhiều nhất, {count} lần. Bạn thấy điều này có đúng với cảm nhận của mình không?
+R5b  
+Bức tranh của bạn khá cân bằng giữa ba nhóm, không có chỗ nào nổi trội rõ rệt. Sự cân bằng này tự nó cũng là một thông tin. Trong số các tình huống cụ thể, "{tình huống nhiều nhất}" xuất hiện nhiều hơn cả với {count} lần.
+R5c  
+Chưa có nhóm nào chiếm ưu thế trong thời gian qua, mọi thứ khá đều nhau. Điều gần nhất với một mẫu hình là "{tình huống nhiều nhất}", đã quay lại {count} lần. Bạn cứ tiếp tục nhìn lại đều đặn nhé, bức tranh sẽ dần rõ hơn theo thời gian.
+6. Tầng xu hướng, giữ nguyên nhưng điều chỉnh hai điểm
+Phần xu hướng theo thời gian giữ nguyên thiết kế cũ (tối thiểu 2 cửa sổ Reflection, mỗi cửa sổ 10 lần; Self-Check tối thiểu 2 lần cách nhau 6 tuần). Hai điều chỉnh:
+Xu hướng cũng phải chuyển xuống lớp tình huống. Thay vì "nhóm Mối quan hệ đang tăng", nói "tình huống X đang xuất hiện dày hơn giai đoạn trước". Cụ thể hơn và dễ nhận ra hơn nhiều.
+Khi chưa đủ dữ liệu xu hướng, phần này phải đóng gọn lại chứ không chiếm một khối lớn giữa màn hình. Hiện tại hai đoạn giải thích dài về việc "chờ thêm" đang chiếm nhiều diện tích hơn cả phần nội dung thật, khiến màn hình trông như toàn lời hẹn.
+Cần làm: 
+Rút hai đoạn chờ hiện tại xuống còn một dòng duy nhất, đặt ở cuối màn hình, không đặt ngay dưới phần nội dung chính.
+7. Cấu trúc màn hình mới
+Khối chính: một nội dung duy nhất từ thang ưu tiên ở mục 4. Đây là phần người dùng đọc kỹ.
+Khối phụ: những vòng lặp quen thuộc, dạng danh sách tình huống kèm số lần. Có thể tái dùng component đã có ở tab Hiểu mình.
+Khối xu hướng: chỉ hiện khi đã đủ dữ liệu. Nếu chưa, rút thành một dòng ở cuối.
+Bỏ hẳn khối "Từng trụ một", hoặc đóng mặc định và đổi tên thành "Xem chi tiết theo nhóm".
+Lưu ý cho dev: 
+Khối "Từng trụ một" hiện tại lặp lại nguyên si Career Snapshot: cùng nhãn mức đánh giá, cùng số lần xuất hiện. Nếu giữ, phải thêm thông tin mới, ví dụ liệt kê các tình huống cụ thể thuộc trụ đó, chứ không lặp lại con số tổng.
+8. Nguyên tắc bất biến
+Ba nguyên tắc này cần được giữ trong mọi thay đổi về sau:
+Không tầng nào được kết thúc bằng sự im lặng. 
+Nếu một lớp phân tích không có gì để nói, phải có lớp khác lên tiếng. Người dùng đã trả tiền cho tính năng này.
+Cụ thể hơn luôn tốt hơn trừu tượng. 
+Tên tình huống thật luôn thắng tên nhóm. Con số thật luôn thắng lời mô tả chung chung.
+Không lặp lại điều màn trước đã nói. 
+Nếu một thông tin đã có ở Career Snapshot bản miễn phí, nó không được là nội dung chính của bản Premium.
+9. Checklist triển khai
+Sáu việc dưới đây đều bắt buộc, không có việc nào là tuỳ chọn. Thứ tự là thứ tự phụ thuộc kỹ thuật, việc sau cần việc trước đã xong. Mỗi việc có tiêu chí nghiệm thu để đánh dấu hoàn thành.
+☐  1. 
+Gán pillar và valence cho toàn bộ thư viện tình huống
+Việc cần làm: 
+Việc này ĐÃ LÀM SẴN. Thay nguyên mảng SITUATIONS hiện tại bằng file SITUATIONS_v2.js được gửi kèm. File đã có đủ bốn trường phân loại (pillar, subgroup, mood, valence) cho cả 72 tình huống, kèm hàm getSituationChoices() viết lại. Lưu ý trường dim cũ đã bỏ hẳn, mọi chỗ đang đọc s.dim phải chuyển sang s.pillar (nếu để đo lường) hoặc s.mood (nếu để lọc theo cảm xúc).
+Nghiệm thu: 
+Tìm trong toàn bộ mã nguồn không còn chỗ nào đọc s.dim. Đếm được 72 tình huống, trong đó 48 thach-thuc (6 tiểu nhóm, mỗi nhóm 8) và 24 tich-cuc (12 cảm xúc ok, 12 cảm xúc happy). Mười một mã đã cắt không còn xuất hiện ở bất kỳ đâu, kể cả trong recentSituationIds của dữ liệu người dùng cũ.
+☐  2. 
+Viết lại hàm đếm, tách riêng hai loại valence
+Việc cần làm: 
+Hàm pillarPatternCounts() hiện dùng dim[0] nên bỏ sót toàn bộ nhóm P. Thay bằng cách đọc trường pillar mới. Đồng thời trả về hai bộ đếm riêng: một cho valence thach-thuc, một cho tich-cuc. Bổ sung thêm một hàm đếm theo từng situationId, đây là dữ liệu nền cho thang ưu tiên ở việc số 4.
+Nghiệm thu: 
+Với dữ liệu thật của một tài khoản bất kỳ: tổng số lần theo pillar (cả hai valence cộng lại) phải bằng đúng tổng số lần Reflection. Không còn chênh lệch kiểu 16 trên 32 như hiện tại.
+☐  3. 
+Sửa mẫu số hiển thị ở Career Snapshot
+Việc cần làm: 
+Cột Xuất hiện phải dùng mẫu số là tổng số lần phân loại được. Sau khi làm xong việc 1 thì con số này bằng tổng số lần Reflection, nhưng vẫn phải kiểm tra lại thay vì mặc định đúng. Riêng các phép tính tìm trụ nổi trội và khoảng lệch thì dùng mẫu số chỉ tính tình huống thach-thuc.
+Nghiệm thu: 
+Mở màn Career Snapshot với tài khoản đã có từ 15 lần Reflection: tổng ba con số ở cột Xuất hiện phải bằng đúng mẫu số hiển thị.
+☐  4. 
+Xây thang ưu tiên năm bậc
+Việc cần làm: 
+Viết một hàm trả về nội dung chính của màn Diễn giải sâu, chạy lần lượt năm điều kiện R1 đến R5 theo đúng bảng ở mục 4 và dừng ở bậc đầu tiên khớp. Bậc R5 không có điều kiện, luôn trả về kết quả.
+Nghiệm thu: 
+Kiểm tra bằng bốn bộ dữ liệu giả: một bộ có tình huống lặp 5 lần (phải ra R1), một bộ phân bố đều 6/5/5 (phải ra R5), một bộ có trên 60 phần trăm tích cực (phải ra R4), một bộ chỉ đúng 15 lần Reflection rải đều mỗi tình huống 1 lần (vẫn phải ra R5 với nội dung hợp lệ, không được trả về rỗng).
+☐  5. 
+Đưa nội dung các bậc vào và sắp xếp lại màn hình
+Việc cần làm: 
+Áp nội dung ở mục 5 vào từng bậc, mỗi bậc xoay vòng các biến thể. Sắp xếp lại màn hình theo mục 7: khối chính, khối những vòng lặp quen thuộc, khối xu hướng. Bỏ hẳn khối Từng trụ một, hoặc nếu giữ thì phải đổi nội dung thành danh sách tình huống cụ thể thuộc trụ đó, không lặp lại con số tổng đã có ở Career Snapshot.
+Nghiệm thu: 
+Mở màn Diễn giải sâu và so sánh trực tiếp với Career Snapshot: không có dòng thông tin nào xuất hiện giống hệt ở cả hai màn.
+☐  6. 
+Điều chỉnh tầng xu hướng
+Việc cần làm: 
+Chuyển nội dung xu hướng xuống lớp tình huống thay vì lớp trụ. Khi chưa đủ dữ liệu, rút hai đoạn giải thích dài hiện tại thành một dòng duy nhất đặt ở cuối màn hình.
+Nghiệm thu: 
+Với tài khoản chưa đủ dữ liệu xu hướng: phần chờ chiếm không quá một dòng, và nằm dưới toàn bộ nội dung thật, không nằm chen giữa màn hình.
+Lưu ý cho dev: 
+Việc 1, 2 và 3 là phần dữ liệu nền. Nếu chưa xong ba việc này mà đã làm việc 4 thì thang ưu tiên sẽ chạy trên số liệu sai, và kết quả kiểm thử sẽ không đáng tin. Không nên đảo thứ tự.
+9.1 Một phép thử cuối trước khi bàn giao
+Lấy đúng tài khoản đang gặp lỗi (32 lần Reflection, phân bố 6/5/5) và mở màn Diễn giải sâu. Kết quả đạt yêu cầu khi:
+Màn hình có ít nhất một câu nêu tên một tình huống cụ thể, kèm số lần.
+Không còn câu nào nói với người dùng rằng không có gì nổi bật rồi dừng lại ở đó.
+Không còn ba đoạn văn gần giống hệt nhau lặp lại cho ba trụ.
+Mọi con số trên màn hình cộng lại khớp với tổng số lần Reflection.

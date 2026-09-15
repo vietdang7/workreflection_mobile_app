@@ -30,11 +30,7 @@ String profileInitials(String name) {
 }
 
 class WrProfileAvatar extends ConsumerWidget {
-  const WrProfileAvatar({
-    super.key,
-    this.displayName,
-    this.size = 36,
-  });
+  const WrProfileAvatar({super.key, this.displayName, this.size = 36});
 
   /// Tên hiển thị để lấy chữ cái đầu.
   ///
@@ -52,7 +48,8 @@ class WrProfileAvatar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final name = displayName ??
+    final name =
+        displayName ??
         ref.watch(mobileProfileProvider).valueOrNull?.displayName ??
         '';
 

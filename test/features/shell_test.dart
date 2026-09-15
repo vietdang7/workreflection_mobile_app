@@ -126,8 +126,9 @@ void main() {
     // hay dẫn sai: nút màu thì mặc định nghĩ là chữ trắng, mà đúng đặc tả thì
     // trắng-trên-coral là "lỗi dễ mắc nhất" — nó biến nút ấm của thương hiệu
     // thành một nút cảnh báo kiểu hệ thống.
-    testWidgets('bong bóng là Coral #FF6859 với icon NAVY, không phải trắng',
-        (tester) async {
+    testWidgets('bong bóng là Coral #FF6859 với icon NAVY, không phải trắng', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrapWithRouter());
       await tester.pumpAndSettle();
 
@@ -174,7 +175,12 @@ void main() {
       final tabBarFinder = find.byType(WrTabBar);
       expect(tabBarFinder, findsOneWidget);
 
-      for (final label in ['Hôm nay', 'Hiểu mình', 'Phát triển', 'Hành trình']) {
+      for (final label in [
+        'Hôm nay',
+        'Hiểu mình',
+        'Phát triển',
+        'Hành trình',
+      ]) {
         expect(
           find.descendant(of: tabBarFinder, matching: find.text(label)),
           findsOneWidget,
@@ -183,8 +189,9 @@ void main() {
       }
     });
 
-    testWidgets('tapping tab index 1 (Hiểu mình) switches to discover branch',
-        (tester) async {
+    testWidgets('tapping tab index 1 (Hiểu mình) switches to discover branch', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrapWithRouter());
       await tester.pumpAndSettle();
 
@@ -196,8 +203,9 @@ void main() {
       expect(find.text('Discover tab'), findsOneWidget);
     });
 
-    testWidgets('tapping tab index 2 (Phát triển) switches to growth branch',
-        (tester) async {
+    testWidgets('tapping tab index 2 (Phát triển) switches to growth branch', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrapWithRouter());
       await tester.pumpAndSettle();
 
@@ -208,8 +216,9 @@ void main() {
       expect(find.text('Growth tab'), findsOneWidget);
     });
 
-    testWidgets('tapping tab index 3 (Hành trình) switches to journey branch',
-        (tester) async {
+    testWidgets('tapping tab index 3 (Hành trình) switches to journey branch', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrapWithRouter());
       await tester.pumpAndSettle();
 
@@ -220,13 +229,16 @@ void main() {
       expect(find.text('Journey tab'), findsOneWidget);
     });
 
-    testWidgets('active tab icon uses coral color, inactive uses muted',
-        (tester) async {
+    testWidgets('active tab icon uses coral color, inactive uses muted', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrapWithRouter());
       await tester.pumpAndSettle();
 
       // At index 0 (home), first WrTabItem is active
-      final tabItems = tester.widgetList<WrTabItem>(find.byType(WrTabItem)).toList();
+      final tabItems = tester
+          .widgetList<WrTabItem>(find.byType(WrTabItem))
+          .toList();
       expect(tabItems[0].isActive, isTrue);
       expect(tabItems[1].isActive, isFalse);
       expect(tabItems[2].isActive, isFalse);

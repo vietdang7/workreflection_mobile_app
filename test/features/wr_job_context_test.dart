@@ -34,22 +34,22 @@ const _otherTheme = PracticeTheme(
 );
 
 WrContextDocument _readyJd() => WrContextDocument(
-      id: 'doc-1',
-      userId: 'u1',
-      docType: 'jd',
-      filePath: 'u1/jd-1.pdf',
-      uploadedAt: DateTime(2026, 8, 1),
-      analysisStatus: DocAnalysisStatus.ready,
-      analyzedAt: DateTime(2026, 8, 2),
-      extractedText: 'Phối hợp với các phòng ban, chăm sóc khách hàng.',
-      analysis: const WrDocAnalysis(
-        title: 'Chuyên viên chăm sóc khách hàng',
-        summary: 'Giao tiếp với khách hàng và phối hợp đội nhóm.',
-        responsibilities: ['Giao tiếp với khách hàng'],
-        skills: ['Đàm phán'],
-        pillars: {'S': 1, 'C': 4, 'A': 1},
-      ),
-    );
+  id: 'doc-1',
+  userId: 'u1',
+  docType: 'jd',
+  filePath: 'u1/jd-1.pdf',
+  uploadedAt: DateTime(2026, 8, 1),
+  analysisStatus: DocAnalysisStatus.ready,
+  analyzedAt: DateTime(2026, 8, 2),
+  extractedText: 'Phối hợp với các phòng ban, chăm sóc khách hàng.',
+  analysis: const WrDocAnalysis(
+    title: 'Chuyên viên chăm sóc khách hàng',
+    summary: 'Giao tiếp với khách hàng và phối hợp đội nhóm.',
+    responsibilities: ['Giao tiếp với khách hàng'],
+    skills: ['Đàm phán'],
+    pillars: {'S': 1, 'C': 4, 'A': 1},
+  ),
+);
 
 ProviderContainer _container({
   required FakeWrIntelligenceRepository intel,
@@ -60,8 +60,9 @@ ProviderContainer _container({
     overrides: [
       wrIntelligenceRepositoryProvider.overrideWithValue(intel),
       wrRepositoryProvider.overrideWithValue(wr ?? FakeWrRepository()),
-      wrContentRepositoryProvider
-          .overrideWithValue(content ?? FakeWrContentRepository()),
+      wrContentRepositoryProvider.overrideWithValue(
+        content ?? FakeWrContentRepository(),
+      ),
       currentUserIdProvider.overrideWithValue('u1'),
     ],
   );
@@ -75,8 +76,9 @@ void main() {
       final intel = FakeWrIntelligenceRepository()
         ..seedContextDocuments([_readyJd()]);
 
-      final text = await _container(intel: intel)
-          .read(wrJobContextTextProvider.future);
+      final text = await _container(
+        intel: intel,
+      ).read(wrJobContextTextProvider.future);
 
       expect(text, isNotNull);
       expect(text, contains('Chuyên viên chăm sóc khách hàng'));
@@ -98,22 +100,25 @@ void main() {
           ),
         ]);
 
-      final text = await _container(intel: intel)
-          .read(wrJobContextTextProvider.future);
+      final text = await _container(
+        intel: intel,
+      ).read(wrJobContextTextProvider.future);
 
       expect(text, isNull);
     });
 
     test('không có tài liệu thì vẫn dùng mô tả vai trò tự viết', () async {
       final wr = FakeWrRepository()
-        ..seedProfile(MobileProfile(
-          userId: 'u1',
-          reminderEnabled: false,
-          language: 'vi',
-          createdAt: DateTime(2026, 8, 1),
-          updatedAt: DateTime(2026, 8, 1),
-          roleText: 'Tôi phụ trách chăm sóc khách hàng.',
-        ));
+        ..seedProfile(
+          MobileProfile(
+            userId: 'u1',
+            reminderEnabled: false,
+            language: 'vi',
+            createdAt: DateTime(2026, 8, 1),
+            updatedAt: DateTime(2026, 8, 1),
+            roleText: 'Tôi phụ trách chăm sóc khách hàng.',
+          ),
+        );
 
       final text = await _container(
         intel: FakeWrIntelligenceRepository(),
@@ -127,17 +132,21 @@ void main() {
       final intel = FakeWrIntelligenceRepository()
         ..seedContextDocuments([_readyJd()]);
       final wr = FakeWrRepository()
-        ..seedProfile(MobileProfile(
-          userId: 'u1',
-          reminderEnabled: false,
-          language: 'vi',
-          createdAt: DateTime(2026, 8, 1),
-          updatedAt: DateTime(2026, 8, 1),
-          roleText: 'Mô tả tôi tự viết.',
-        ));
+        ..seedProfile(
+          MobileProfile(
+            userId: 'u1',
+            reminderEnabled: false,
+            language: 'vi',
+            createdAt: DateTime(2026, 8, 1),
+            updatedAt: DateTime(2026, 8, 1),
+            roleText: 'Mô tả tôi tự viết.',
+          ),
+        );
 
-      final text =
-          await _container(intel: intel, wr: wr).read(wrJobContextTextProvider.future);
+      final text = await _container(
+        intel: intel,
+        wr: wr,
+      ).read(wrJobContextTextProvider.future);
 
       expect(text, contains('Mô tả tôi tự viết.'));
       expect(
@@ -180,7 +189,10 @@ void main() {
       expect(match!.matchedPillars.first, 'C');
       expect(match.matchedSkills.map((s) => s.themeId), ['pt-voice']);
       // Chủ đề trụ A không liên quan tới JD này nên không phải khoảng trống.
-      expect(match.gapThemes.map((t) => t.themeId), isNot(contains('pt-rhythm')));
+      expect(
+        match.gapThemes.map((t) => t.themeId),
+        isNot(contains('pt-rhythm')),
+      );
     });
   });
 }

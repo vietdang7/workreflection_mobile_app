@@ -91,16 +91,14 @@ class _KeyedShell extends ConsumerWidget {
 void main() {
   tearDown(() => wrEnglish = false);
 
-  testWidgets('cha dựng lại nhưng con `const` thì KHÔNG — đây là cái bẫy',
-      (tester) async {
+  testWidgets('cha dựng lại nhưng con `const` thì KHÔNG — đây là cái bẫy', (
+    tester,
+  ) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
 
     await tester.pumpWidget(
-      UncontrolledProviderScope(
-        container: container,
-        child: const _Shell(),
-      ),
+      UncontrolledProviderScope(container: container, child: const _Shell()),
     );
     expect(find.text('Thứ Năm, 10 tháng 9'), findsOneWidget);
 
@@ -115,8 +113,9 @@ void main() {
     expect(find.text('Thursday, September 10'), findsNothing);
   });
 
-  testWidgets('đổi Key theo ngôn ngữ thì con `const` cũng dựng lại',
-      (tester) async {
+  testWidgets('đổi Key theo ngôn ngữ thì con `const` cũng dựng lại', (
+    tester,
+  ) async {
     final container = ProviderContainer();
     addTearDown(container.dispose);
 
@@ -139,8 +138,9 @@ void main() {
     expect(find.text('Thứ Năm, 10 tháng 9'), findsNothing);
   });
 
-  testWidgets('đổi đi rồi đổi lại vẫn đúng, không kẹt ở tiếng thứ hai',
-      (tester) async {
+  testWidgets('đổi đi rồi đổi lại vẫn đúng, không kẹt ở tiếng thứ hai', (
+    tester,
+  ) async {
     // Khách báo cả hai chiều đều chậm. Chiều về là chỗ dễ sót: nếu key được
     // dựng từ thứ gì đó chỉ tăng (số lần đổi chẳng hạn) thì chiều nào cũng chạy
     // — nhưng nếu ai đó "tối ưu" nó thành một cờ bật/tắt một chiều thì chiều về
@@ -165,8 +165,9 @@ void main() {
     expect(find.text('Thursday, September 10'), findsNothing);
   });
 
-  testWidgets('màn đang mở đổi tiếng ngay, và không bị đá về màn đầu',
-      (tester) async {
+  testWidgets('màn đang mở đổi tiếng ngay, và không bị đá về màn đầu', (
+    tester,
+  ) async {
     // Dùng THẲNG `wrRoute` và `wrLocaleAwareBuilder` của app, không chép lại:
     // chép lại thì bài này khoá bản sao chứ không khoá thứ đang chạy thật.
     //
@@ -183,10 +184,8 @@ void main() {
     );
     addTearDown(router.dispose);
 
-    Widget app() => MaterialApp.router(
-          routerConfig: router,
-          builder: wrLocaleAwareBuilder,
-        );
+    Widget app() =>
+        MaterialApp.router(routerConfig: router, builder: wrLocaleAwareBuilder);
 
     await tester.pumpWidget(app());
     router.go('/sau');
@@ -205,8 +204,9 @@ void main() {
     expect(router.state.uri.path, '/sau');
   });
 
-  testWidgets('TAB ĐANG NẰM IM cũng đổi tiếng — đúng ảnh khách chụp 10/09',
-      (tester) async {
+  testWidgets('TAB ĐANG NẰM IM cũng đổi tiếng — đúng ảnh khách chụp 10/09', (
+    tester,
+  ) async {
     // Đây là lỗi trong ảnh: khách đổi sang tiếng Anh ở màn Tài khoản, quay ra
     // tab Hôm nay thì dòng ngày vẫn "Thứ Năm, 10 tháng 9" giữa một màn đã sang
     // tiếng Anh.
@@ -222,22 +222,22 @@ void main() {
           builder: (context, state, shell) =>
               wrLocaleAware(context, _TabShell(shell: shell)),
           branches: [
-            StatefulShellBranch(routes: [
-              wrRoute(path: '/mot', builder: (_, __) => _Screen()),
-            ]),
-            StatefulShellBranch(routes: [
-              wrRoute(path: '/hai', builder: (_, __) => _DeepScreen()),
-            ]),
+            StatefulShellBranch(
+              routes: [wrRoute(path: '/mot', builder: (_, __) => _Screen())],
+            ),
+            StatefulShellBranch(
+              routes: [
+                wrRoute(path: '/hai', builder: (_, __) => _DeepScreen()),
+              ],
+            ),
           ],
         ),
       ],
     );
     addTearDown(router.dispose);
 
-    Widget app() => MaterialApp.router(
-          routerConfig: router,
-          builder: wrLocaleAwareBuilder,
-        );
+    Widget app() =>
+        MaterialApp.router(routerConfig: router, builder: wrLocaleAwareBuilder);
 
     await tester.pumpWidget(app());
     await tester.pumpAndSettle();
@@ -263,9 +263,8 @@ class _DeepScreen extends StatelessWidget {
   const _DeepScreen();
 
   @override
-  Widget build(BuildContext context) => Scaffold(
-        body: Center(child: Text(tr('Màn trong', 'Inner screen'))),
-      );
+  Widget build(BuildContext context) =>
+      Scaffold(body: Center(child: Text(tr('Màn trong', 'Inner screen'))));
 }
 
 class _TabShell extends StatelessWidget {

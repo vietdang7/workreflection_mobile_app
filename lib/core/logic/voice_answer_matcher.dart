@@ -39,18 +39,69 @@ const Map<String, int> _vietNumbers = {
 /// Diacritics → ASCII mapping for characters that appear in _vietNumbers.
 /// Using a top-level (non-const) map to avoid duplicate-key const errors.
 final Map<String, String> _diacriticsMap = {
-  'ộ': 'o', 'ổ': 'o', 'ỗ': 'o', 'ố': 'o', 'ồ': 'o', 'ọ': 'o',
-  'ơ': 'o', 'ớ': 'o', 'ờ': 'o', 'ợ': 'o', 'ở': 'o', 'ỡ': 'o',
-  'ă': 'a', 'ắ': 'a', 'ặ': 'a', 'ằ': 'a', 'ẵ': 'a', 'ẳ': 'a',
-  'â': 'a', 'ấ': 'a', 'ầ': 'a', 'ậ': 'a', 'ẫ': 'a', 'ẩ': 'a',
-  'à': 'a', 'á': 'a', 'ã': 'a', 'ả': 'a', 'ạ': 'a',
-  'è': 'e', 'é': 'e', 'ê': 'e', 'ế': 'e', 'ề': 'e', 'ệ': 'e',
-  'ẹ': 'e', 'ẻ': 'e', 'ẽ': 'e', 'ể': 'e', 'ễ': 'e',
-  'ì': 'i', 'í': 'i', 'ị': 'i', 'ỉ': 'i', 'ĩ': 'i',
-  'ù': 'u', 'ú': 'u', 'ụ': 'u', 'ủ': 'u', 'ũ': 'u',
-  'ư': 'u', 'ứ': 'u', 'ừ': 'u', 'ự': 'u', 'ử': 'u', 'ữ': 'u',
-  'ỳ': 'y', 'ý': 'y', 'ỵ': 'y', 'ỷ': 'y', 'ỹ': 'y',
-  'đ': 'd', 'Đ': 'D',
+  'ộ': 'o',
+  'ổ': 'o',
+  'ỗ': 'o',
+  'ố': 'o',
+  'ồ': 'o',
+  'ọ': 'o',
+  'ơ': 'o',
+  'ớ': 'o',
+  'ờ': 'o',
+  'ợ': 'o',
+  'ở': 'o',
+  'ỡ': 'o',
+  'ă': 'a',
+  'ắ': 'a',
+  'ặ': 'a',
+  'ằ': 'a',
+  'ẵ': 'a',
+  'ẳ': 'a',
+  'â': 'a',
+  'ấ': 'a',
+  'ầ': 'a',
+  'ậ': 'a',
+  'ẫ': 'a',
+  'ẩ': 'a',
+  'à': 'a',
+  'á': 'a',
+  'ã': 'a',
+  'ả': 'a',
+  'ạ': 'a',
+  'è': 'e',
+  'é': 'e',
+  'ê': 'e',
+  'ế': 'e',
+  'ề': 'e',
+  'ệ': 'e',
+  'ẹ': 'e',
+  'ẻ': 'e',
+  'ẽ': 'e',
+  'ể': 'e',
+  'ễ': 'e',
+  'ì': 'i',
+  'í': 'i',
+  'ị': 'i',
+  'ỉ': 'i',
+  'ĩ': 'i',
+  'ù': 'u',
+  'ú': 'u',
+  'ụ': 'u',
+  'ủ': 'u',
+  'ũ': 'u',
+  'ư': 'u',
+  'ứ': 'u',
+  'ừ': 'u',
+  'ự': 'u',
+  'ử': 'u',
+  'ữ': 'u',
+  'ỳ': 'y',
+  'ý': 'y',
+  'ỵ': 'y',
+  'ỷ': 'y',
+  'ỹ': 'y',
+  'đ': 'd',
+  'Đ': 'D',
 };
 
 /// Remove Vietnamese diacritics for fuzzy matching.
@@ -113,7 +164,14 @@ const Map<String, int> _clearNumbers = {
   // 0
   'zero': 0,
   // 1
-  'one': 1, 'won': 1, 'wan': 1, 'run': 1, 'fun': 1, 'sun': 1, 'done': 1, 'gun': 1,
+  'one': 1,
+  'won': 1,
+  'wan': 1,
+  'run': 1,
+  'fun': 1,
+  'sun': 1,
+  'done': 1,
+  'gun': 1,
   // 2
   'two': 2, 'true': 2, 'through': 2, 'who': 2, 'blue': 2, 'clue': 2, 'crew': 2,
   'drew': 2, 'grew': 2, 'knew': 2, 'threw': 2, 'too': 2, 'ooh': 2,
@@ -151,20 +209,55 @@ const Map<String, int> _clearNumbers = {
 const Map<String, int> _strictTokens = {
   'oh': 0,
   'on': 1,
-  'to': 2, 'do': 2, 'due': 2, 'dew': 2, 'you': 2, 'boo': 2,
-  'fo': 4, 'pho': 4,
-  'bye': 5, 'buy': 5, 'by': 5, 'die': 5, 'pie': 5, 'high': 5, 'tie': 5,
+  'to': 2,
+  'do': 2,
+  'due': 2,
+  'dew': 2,
+  'you': 2,
+  'boo': 2,
+  'fo': 4,
+  'pho': 4,
+  'bye': 5,
+  'buy': 5,
+  'by': 5,
+  'die': 5,
+  'pie': 5,
+  'high': 5,
+  'tie': 5,
 };
 
 // Whisper hallucination phrases — whole-transcript or substring.
 const Set<String> _whisperHallucinations = {
-  'thank you', 'thanks for watching', 'thanks', '[music]',
-  'subscribe', 'cube', 'dream', '.', 'uh', 'um', 'hmm',
-  'okay', 'ok', 'cubed', 'thank', "you're",
-  'what', 'what?', 'yeah', 'cray', 'cray!',
-  'you', 'your', 'yours',
-  '(crowd cheering)', '(dramatic music)', '(music)', '(silence)',
-  'no, no, no', 'no, no, no.',
+  'thank you',
+  'thanks for watching',
+  'thanks',
+  '[music]',
+  'subscribe',
+  'cube',
+  'dream',
+  '.',
+  'uh',
+  'um',
+  'hmm',
+  'okay',
+  'ok',
+  'cubed',
+  'thank',
+  "you're",
+  'what',
+  'what?',
+  'yeah',
+  'cray',
+  'cray!',
+  'you',
+  'your',
+  'yours',
+  '(crowd cheering)',
+  '(dramatic music)',
+  '(music)',
+  '(silence)',
+  'no, no, no',
+  'no, no, no.',
 };
 
 const List<String> _hallucinationPhraseFragments = [
@@ -187,7 +280,12 @@ int _levenshtein(String a, String b) {
     for (int j = 1; j <= b.length; j++) {
       curr[j] = a[i - 1] == b[j - 1]
           ? prev[j - 1]
-          : 1 + [prev[j], curr[j - 1], prev[j - 1]].reduce((x, y) => x < y ? x : y);
+          : 1 +
+                [
+                  prev[j],
+                  curr[j - 1],
+                  prev[j - 1],
+                ].reduce((x, y) => x < y ? x : y);
     }
     for (int j = 0; j <= b.length; j++) {
       prev[j] = curr[j];
@@ -256,8 +354,17 @@ int? parseEnglishNumber(String transcript, int maxValue) {
   final singleWord = cleaned.replaceAll(RegExp(r'[^a-z]'), '');
   if (singleWord.length >= 2 && singleWord.length <= 6) {
     const targets = [
-      'zero', 'one', 'two', 'three', 'four', 'five',
-      'six', 'seven', 'eight', 'nine', 'ten',
+      'zero',
+      'one',
+      'two',
+      'three',
+      'four',
+      'five',
+      'six',
+      'seven',
+      'eight',
+      'nine',
+      'ten',
     ];
     int? bestVal;
     int bestDist = 999;
@@ -286,7 +393,11 @@ int? parseEnglishNumber(String transcript, int maxValue) {
 /// [maxValue] is the scale maximum (5 for LIKERT_5/ESI_5, 10 for eNPS).
 ///
 /// Returns null if no match; caller shows a "không nhận diện được" snackbar.
-int? matchVoiceAnswer(String transcript, int maxValue, {required String locale}) {
+int? matchVoiceAnswer(
+  String transcript,
+  int maxValue, {
+  required String locale,
+}) {
   final isVi = locale.startsWith('vi');
   if (isVi) {
     return parseVietnameseNumber(transcript, maxValue);

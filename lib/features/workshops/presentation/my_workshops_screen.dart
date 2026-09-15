@@ -56,15 +56,15 @@ class _MyWorkshopsScreenState extends ConsumerState<MyWorkshopsScreen> {
       await repo.cancelRegistration(regId, wsId);
       ref.invalidate(myWorkshopsProvider);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.wsCancelRegSuccess)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.wsCancelRegSuccess)));
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.wsCancelRegError)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.wsCancelRegError)));
       }
     } finally {
       if (mounted) {
@@ -94,8 +94,8 @@ class _MyWorkshopsScreenState extends ConsumerState<MyWorkshopsScreen> {
     final ccProfile = ref.read(ccProfileProvider).valueOrNull;
     final participantName =
         (ccProfile?['full_name'] as String?)?.isNotEmpty == true
-            ? ccProfile!['full_name'] as String
-            : ccProfile?['email'] as String?;
+        ? ccProfile!['full_name'] as String
+        : ccProfile?['email'] as String?;
 
     try {
       final bytes = await CertificatePdfBuilder.build(
@@ -114,9 +114,9 @@ class _MyWorkshopsScreenState extends ConsumerState<MyWorkshopsScreen> {
       );
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.wsCertificateError)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.wsCertificateError)));
       }
     } finally {
       if (mounted) setState(() => _generatingCertFor.remove(reg.id));
@@ -141,9 +141,8 @@ class _MyWorkshopsScreenState extends ConsumerState<MyWorkshopsScreen> {
       ),
       body: myAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => _ErrorCard(
-          onRetry: () => ref.invalidate(myWorkshopsProvider),
-        ),
+        error: (e, _) =>
+            _ErrorCard(onRetry: () => ref.invalidate(myWorkshopsProvider)),
         data: (pairs) {
           if (pairs.isEmpty) {
             return Center(
@@ -151,8 +150,7 @@ class _MyWorkshopsScreenState extends ConsumerState<MyWorkshopsScreen> {
             );
           }
           return ListView.separated(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
             itemCount: pairs.length,
             separatorBuilder: (_, __) => const SizedBox(height: 16),
             itemBuilder: (context, index) {
@@ -163,16 +161,14 @@ class _MyWorkshopsScreenState extends ConsumerState<MyWorkshopsScreen> {
                 onTap: () => context.push('/workshops/${reg.workshopId}'),
                 onCancel: _canCancel(reg, workshop)
                     ? () => setState(() {
-                          _pendingCancelId = reg.id;
-                          _pendingCancelWorkshopId = reg.workshopId;
-                        })
+                        _pendingCancelId = reg.id;
+                        _pendingCancelWorkshopId = reg.workshopId;
+                      })
                     : null,
-                onDownloadCertificate:
-                    (reg.attended && workshop != null)
-                        ? () => _generateCertificate(reg, workshop)
-                        : null,
-                isGeneratingCertificate:
-                    _generatingCertFor.contains(reg.id),
+                onDownloadCertificate: (reg.attended && workshop != null)
+                    ? () => _generateCertificate(reg, workshop)
+                    : null,
+                isGeneratingCertificate: _generatingCertFor.contains(reg.id),
               );
             },
           );
@@ -354,8 +350,9 @@ class _MyWorkshopRow extends ConsumerWidget {
                           const SizedBox(width: 8),
                           Text(
                             l10n.wsCertificateGenerating,
-                            style: WrTextStyles.body
-                                .copyWith(color: WrColors.coral),
+                            style: WrTextStyles.body.copyWith(
+                              color: WrColors.coral,
+                            ),
                           ),
                         ],
                       )
@@ -451,7 +448,9 @@ class _CancelDialog extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: WrColors.white,
-        border: Border(top: BorderSide(color: WrColors.muted.withValues(alpha: 0.2))),
+        border: Border(
+          top: BorderSide(color: WrColors.muted.withValues(alpha: 0.2)),
+        ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

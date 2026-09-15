@@ -57,8 +57,10 @@ _ScoreStatus _status(double score) {
     switch (status) {
       _ScoreStatus.good => (l10n.layerDetailScoreGood, WrColors.teal),
       _ScoreStatus.warning => (l10n.layerDetailScoreWarning, WrColors.coral),
-      _ScoreStatus.critical =>
-        (l10n.layerDetailScoreCritical, WrColors.destructive),
+      _ScoreStatus.critical => (
+        l10n.layerDetailScoreCritical,
+        WrColors.destructive,
+      ),
     };
 
 // ---------------------------------------------------------------------------
@@ -68,9 +70,9 @@ _ScoreStatus _status(double score) {
 // Provider family for a specific report (local to this file to avoid duplication)
 final _reportForLayerDetailProvider =
     FutureProvider.family<CcReportFull?, String>((ref, reportId) async {
-  final repo = ref.watch(surveyRepositoryProvider);
-  return repo.getReport(reportId);
-});
+      final repo = ref.watch(surveyRepositoryProvider);
+      return repo.getReport(reportId);
+    });
 
 class LayerDetailScreen extends ConsumerWidget {
   const LayerDetailScreen({
@@ -85,18 +87,18 @@ class LayerDetailScreen extends ConsumerWidget {
   final String layer;
 
   String _layerTitle(AppLocalizations l10n) => switch (layer) {
-        'STRUCTURE' => l10n.reportLayerStructure,
-        'CULTURE' => l10n.reportLayerCulture,
-        'ACTIVITY' => l10n.reportLayerActivity,
-        _ => layer,
-      };
+    'STRUCTURE' => l10n.reportLayerStructure,
+    'CULTURE' => l10n.reportLayerCulture,
+    'ACTIVITY' => l10n.reportLayerActivity,
+    _ => layer,
+  };
 
   double _overallScore(CcReportFull report) => switch (layer) {
-        'STRUCTURE' => report.scoreStructure,
-        'CULTURE' => report.scoreCulture,
-        'ACTIVITY' => report.scoreActivity,
-        _ => 0.0,
-      };
+    'STRUCTURE' => report.scoreStructure,
+    'CULTURE' => report.scoreCulture,
+    'ACTIVITY' => report.scoreActivity,
+    _ => 0.0,
+  };
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -125,8 +127,9 @@ class LayerDetailScreen extends ConsumerWidget {
               child: Text(l10n.surveyProcessingError, style: WrTextStyles.body),
             );
           }
-          final subScoresAsync =
-              ref.watch(layerSubScoresProvider((report.surveyId, layer)));
+          final subScoresAsync = ref.watch(
+            layerSubScoresProvider((report.surveyId, layer)),
+          );
           return subScoresAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Center(
@@ -182,9 +185,13 @@ class _LayerDetailBody extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(l10n.layerDetailOverallScore,
-                    style: WrTextStyles.eyebrow
-                        .copyWith(color: WrColors.text3, letterSpacing: 0.55)),
+                Text(
+                  l10n.layerDetailOverallScore,
+                  style: WrTextStyles.eyebrow.copyWith(
+                    color: WrColors.text3,
+                    letterSpacing: 0.55,
+                  ),
+                ),
                 const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -198,7 +205,9 @@ class _LayerDetailBody extends StatelessWidget {
                 ),
                 const SizedBox(height: 10),
                 WrProgressTrack(
-                    value: overallScore / 5.0, color: WrColors.navy),
+                  value: overallScore / 5.0,
+                  color: WrColors.navy,
+                ),
               ],
             ),
           ),
@@ -217,13 +226,12 @@ class _LayerDetailBody extends StatelessWidget {
               ),
             ),
           ] else ...[
-            ...subScores.map((sc) => Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _SubComponentCard(
-                    subScore: sc,
-                    l10n: l10n,
-                  ),
-                )),
+            ...subScores.map(
+              (sc) => Padding(
+                padding: const EdgeInsets.only(bottom: 12),
+                child: _SubComponentCard(subScore: sc, l10n: l10n),
+              ),
+            ),
           ],
 
           const SizedBox(height: 40),
@@ -256,9 +264,7 @@ class _SubComponentCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
-                child: Text(label, style: WrTextStyles.hMedium),
-              ),
+              Expanded(child: Text(label, style: WrTextStyles.hMedium)),
               const SizedBox(width: 8),
               Text(
                 subScore.score.toStringAsFixed(1),

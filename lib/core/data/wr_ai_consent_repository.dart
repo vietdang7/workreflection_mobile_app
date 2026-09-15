@@ -15,11 +15,7 @@ import '../logic/wr_ai_disclosure.dart';
 
 /// Lựa chọn của người dùng về việc gửi dữ liệu sang AI.
 class WrAiConsent {
-  const WrAiConsent({
-    required this.version,
-    this.grantedAt,
-    this.revokedAt,
-  });
+  const WrAiConsent({required this.version, this.grantedAt, this.revokedAt});
 
   /// Phiên bản bản công bố người dùng đã đọc lúc bấm đồng ý.
   final int version;

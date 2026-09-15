@@ -16,31 +16,29 @@ ReflectionEpisode _story({
   String? code,
   ScaDimension? dim,
   ExperienceState state = ExperienceState.integrated,
-}) =>
-    ReflectionEpisode(
-      id: id,
-      userId: 'u1',
-      humanMoment: HumanMoment.confusion,
-      state: state,
-      humanNeed: need,
-      scaDimension: dim,
-      situationCode: code,
-      openedAt: at,
-      closedAt: at,
-    );
+}) => ReflectionEpisode(
+  id: id,
+  userId: 'u1',
+  humanMoment: HumanMoment.confusion,
+  state: state,
+  humanNeed: need,
+  scaDimension: dim,
+  situationCode: code,
+  openedAt: at,
+  closedAt: at,
+);
 
 CareerMemoryEvent _event({
   required String behavior,
   HumanNeed? need,
   DateTime? at,
-}) =>
-    CareerMemoryEvent(
-      id: 'e',
-      userId: 'u1',
-      behavior: behavior,
-      humanNeed: need,
-      createdAt: at,
-    );
+}) => CareerMemoryEvent(
+  id: 'e',
+  userId: 'u1',
+  behavior: behavior,
+  humanNeed: need,
+  createdAt: at,
+);
 
 const _labels = {
   'C2-01': 'Không dám nói ý kiến',
@@ -65,7 +63,11 @@ void main() {
 
     test('mới nhất đứng đầu', () {
       final list = closedStories([
-        _story(id: 'cũ', need: null, at: _now.subtract(const Duration(days: 5))),
+        _story(
+          id: 'cũ',
+          need: null,
+          at: _now.subtract(const Duration(days: 5)),
+        ),
         _story(id: 'mới', need: null, at: _now),
       ]);
       expect(list.map((e) => e.id), ['mới', 'cũ']);
@@ -84,9 +86,7 @@ void main() {
       final s = _story(id: '2', need: HumanNeed.phatTrien, at: _now);
       final text = milestoneTextForStory(
         story: s,
-        previousStories: [
-          _story(id: '1', need: HumanNeed.ketNoi, at: _now),
-        ],
+        previousStories: [_story(id: '1', need: HumanNeed.ketNoi, at: _now)],
       );
       expect(text, contains('sự phát triển'));
     });
@@ -120,9 +120,10 @@ void main() {
       // closedStories trả về mới-trước; luật "lần đầu" phải xét cũ-trước.
       final stories = closedStories([
         _story(
-            id: 'cũ',
-            need: HumanNeed.ketNoi,
-            at: _now.subtract(const Duration(days: 5))),
+          id: 'cũ',
+          need: HumanNeed.ketNoi,
+          at: _now.subtract(const Duration(days: 5)),
+        ),
         _story(id: 'mới', need: HumanNeed.ketNoi, at: _now),
       ]);
       final flags = milestonesByStoryId(stories);
@@ -145,13 +146,13 @@ void main() {
 
   group('§8.2 · Chủ đề — 3 lần trong 14 ngày', () {
     List<ReflectionEpisode> threeIn14() => [
-          for (var i = 0; i < 3; i++)
-            _story(
-              id: 's$i',
-              need: HumanNeed.ketNoi,
-              at: _now.subtract(Duration(days: i * 4)),
-            ),
-        ];
+      for (var i = 0; i < 3; i++)
+        _story(
+          id: 's$i',
+          need: HumanNeed.ketNoi,
+          at: _now.subtract(Duration(days: i * 4)),
+        ),
+    ];
 
     test('đủ ba lần trong cửa sổ thì sinh chủ đề', () {
       final stories = threeIn14();
@@ -185,13 +186,15 @@ void main() {
       final stories = [
         _story(id: 'a', need: HumanNeed.ketNoi, at: _now),
         _story(
-            id: 'b',
-            need: HumanNeed.ketNoi,
-            at: _now.subtract(const Duration(days: 20))),
+          id: 'b',
+          need: HumanNeed.ketNoi,
+          at: _now.subtract(const Duration(days: 20)),
+        ),
         _story(
-            id: 'c',
-            need: HumanNeed.ketNoi,
-            at: _now.subtract(const Duration(days: 30))),
+          id: 'c',
+          need: HumanNeed.ketNoi,
+          at: _now.subtract(const Duration(days: 30)),
+        ),
       ];
       expect(
         themeForStory(
@@ -237,9 +240,10 @@ void main() {
         _story(id: 'a', need: HumanNeed.ketNoi, at: _now),
         _story(id: 'b', need: HumanNeed.roRang, at: _now),
         _story(
-            id: 'c',
-            need: HumanNeed.ketNoi,
-            at: _now.subtract(const Duration(days: 40))),
+          id: 'c',
+          need: HumanNeed.ketNoi,
+          at: _now.subtract(const Duration(days: 40)),
+        ),
       ];
       expect(needCountWithin(stories, HumanNeed.ketNoi, now: _now), 1);
     });
@@ -249,15 +253,17 @@ void main() {
     test('lấy STORY đầu và STORY gần nhất trong cùng nhóm', () {
       final stories = closedStories([
         _story(
-            id: 'a',
-            need: HumanNeed.ketNoi,
-            code: 'C2-01',
-            at: _now.subtract(const Duration(days: 10))),
+          id: 'a',
+          need: HumanNeed.ketNoi,
+          code: 'C2-01',
+          at: _now.subtract(const Duration(days: 10)),
+        ),
         _story(
-            id: 'b',
-            need: HumanNeed.ketNoi,
-            code: 'C2-02',
-            at: _now.subtract(const Duration(days: 5))),
+          id: 'b',
+          need: HumanNeed.ketNoi,
+          code: 'C2-02',
+          at: _now.subtract(const Duration(days: 5)),
+        ),
         _story(id: 'c', need: HumanNeed.ketNoi, code: 'C2-03', at: _now),
       ]);
       final text = themeProgressNarrative(
@@ -367,13 +373,13 @@ void main() {
 
   group('§8.2 · Insight chạy theo lịch riêng', () {
     List<ReflectionEpisode> five() => [
-          for (var i = 0; i < 5; i++)
-            _story(
-              id: 's$i',
-              need: HumanNeed.ketNoi,
-              at: _now.subtract(Duration(days: i)),
-            ),
-        ];
+      for (var i = 0; i < 5; i++)
+        _story(
+          id: 's$i',
+          need: HumanNeed.ketNoi,
+          at: _now.subtract(Duration(days: i)),
+        ),
+    ];
 
     test('chưa có Insight nào: đủ 5 lượt thì tới kỳ', () {
       expect(
@@ -430,19 +436,21 @@ void main() {
       );
     });
 
-    test('tới kỳ nhưng không khung nào nói được gì thì không sinh Insight rỗng',
-        () {
-      expect(
-        periodicInsight(
-          stories: five(),
-          themeNeeds: const {},
-          situationLabels: const {},
-          lastInsightAt: null,
-          now: _now,
-        ),
-        isNull,
-      );
-    });
+    test(
+      'tới kỳ nhưng không khung nào nói được gì thì không sinh Insight rỗng',
+      () {
+        expect(
+          periodicInsight(
+            stories: five(),
+            themeNeeds: const {},
+            situationLabels: const {},
+            lastInsightAt: null,
+            now: _now,
+          ),
+          isNull,
+        );
+      },
+    );
 
     test('khung lệch pha được truyền vào thì dùng lại nguyên văn', () {
       final draft = periodicInsight(
@@ -451,7 +459,8 @@ void main() {
         situationLabels: const {},
         lastInsightAt: null,
         now: _now,
-        selfAwarenessGapText: 'Bạn tự đánh giá phần này đang phát triển, nhưng…',
+        selfAwarenessGapText:
+            'Bạn tự đánh giá phần này đang phát triển, nhưng…',
       );
       expect(draft, isNotNull);
       expect(draft!.behavior, kInsightBehavior);
@@ -461,15 +470,17 @@ void main() {
     test('chủ đề đang chạy được ưu tiên hơn khung lệch pha', () {
       final stories = closedStories([
         _story(
-            id: 'a',
-            need: HumanNeed.ketNoi,
-            code: 'C2-01',
-            at: _now.subtract(const Duration(days: 6))),
+          id: 'a',
+          need: HumanNeed.ketNoi,
+          code: 'C2-01',
+          at: _now.subtract(const Duration(days: 6)),
+        ),
         _story(
-            id: 'b',
-            need: HumanNeed.ketNoi,
-            code: 'C2-02',
-            at: _now.subtract(const Duration(days: 3))),
+          id: 'b',
+          need: HumanNeed.ketNoi,
+          code: 'C2-02',
+          at: _now.subtract(const Duration(days: 3)),
+        ),
         _story(id: 'c', need: HumanNeed.ketNoi, code: 'C2-03', at: _now),
         _story(id: 'd', need: HumanNeed.roRang, at: _now),
         _story(id: 'e', need: HumanNeed.roRang, at: _now),
@@ -519,7 +530,10 @@ void main() {
       );
       expect(drafts.map((d) => d.behavior), contains(kThemeBehavior));
       // Nhóm đã gặp ở hai lượt trước → không còn cột mốc "lần đầu nhóm".
-      expect(drafts.map((d) => d.behavior), isNot(contains(kMilestoneBehavior)));
+      expect(
+        drafts.map((d) => d.behavior),
+        isNot(contains(kMilestoneBehavior)),
+      );
     });
 
     test('không sinh trùng khi chủ đề đã được ghi từ lượt trước', () {
@@ -589,11 +603,11 @@ void main() {
           ),
       ]);
       String? run() => themeProgressNarrative(
-            stories: stories,
-            need: HumanNeed.ketNoi,
-            situationLabels: _labels,
-            now: _now,
-          );
+        stories: stories,
+        need: HumanNeed.ketNoi,
+        situationLabels: _labels,
+        now: _now,
+      );
       expect(run(), run());
     });
 
@@ -680,8 +694,10 @@ void main() {
 
       expect(
         memoryDetailForStory(story: s, countThisMonth: 3),
-        contains('Trong tháng này bạn đã nhìn vào một chuyện thuộc nhóm này '
-            '3 lần.'),
+        contains(
+          'Trong tháng này bạn đã nhìn vào một chuyện thuộc nhóm này '
+          '3 lần.',
+        ),
       );
     });
 
@@ -715,13 +731,13 @@ void main() {
 
   group('themesDue', () {
     List<ReflectionEpisode> fourKetNoi() => [
-          for (var i = 0; i < 4; i++)
-            _story(
-              id: 'k$i',
-              need: HumanNeed.ketNoi,
-              at: _now.subtract(Duration(days: i + 1)),
-            ),
-        ];
+      for (var i = 0; i < 4; i++)
+        _story(
+          id: 'k$i',
+          need: HumanNeed.ketNoi,
+          at: _now.subtract(Duration(days: i + 1)),
+        ),
+    ];
 
     test('nhóm đủ ngưỡng vẫn ra chủ đề dù lượt mới nhất thuộc nhóm khác', () {
       // Đây là trường hợp bị bỏ sót: bốn lượt về "được lắng nghe" rồi một lượt
@@ -787,10 +803,10 @@ void main() {
       ];
 
       List<HumanNeed?> run() => themesDue(
-            stories: stories,
-            existingThemeNeeds: const {},
-            now: _now,
-          ).map((d) => d.need).toList();
+        stories: stories,
+        existingThemeNeeds: const {},
+        now: _now,
+      ).map((d) => d.need).toList();
 
       // Theo thứ tự khai báo enum, không theo thứ tự gặp trong dữ liệu — cùng
       // một lịch sử phải luôn cho ra cùng một thứ tự.
@@ -877,8 +893,9 @@ void main() {
         selfAwarenessGapText: 'Bạn tự đánh giá phần này là ổn, nhưng…',
       );
 
-      final insight =
-          drafts.where((d) => d.behavior == kInsightBehavior).toList();
+      final insight = drafts
+          .where((d) => d.behavior == kInsightBehavior)
+          .toList();
       expect(insight, hasLength(1));
       expect(insight.single.text, contains('tự đánh giá'));
     });

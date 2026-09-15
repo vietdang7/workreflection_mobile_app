@@ -16,11 +16,11 @@ import 'package:workreflection_mobile/features/wr/chat_providers.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 
 ReflectionEpisode _ep(String code, int daysAgo) => ReflectionEpisode(
-      userId: 'u1',
-      humanMoment: HumanMoment.confusion,
-      situationCode: code,
-      openedAt: DateTime.now().subtract(Duration(days: daysAgo)),
-    );
+  userId: 'u1',
+  humanMoment: HumanMoment.confusion,
+  situationCode: code,
+  openedAt: DateTime.now().subtract(Duration(days: daysAgo)),
+);
 
 final _situations = [
   const WrSituation(
@@ -37,12 +37,14 @@ List<String> _read(ProviderContainer c) => c.read(wrChatStartersProvider);
 
 void main() {
   test('gợi ý dựng từ tình huống người dùng hay chọn', () {
-    final c = ProviderContainer(overrides: [
-      wrEpisodeHistoryProvider.overrideWith(
-        (ref) async => [_ep('C3-01', 1), _ep('C3-01', 5)],
-      ),
-      wrSituationsProvider.overrideWith((ref) async => _situations),
-    ]);
+    final c = ProviderContainer(
+      overrides: [
+        wrEpisodeHistoryProvider.overrideWith(
+          (ref) async => [_ep('C3-01', 1), _ep('C3-01', 5)],
+        ),
+        wrSituationsProvider.overrideWith((ref) async => _situations),
+      ],
+    );
     addTearDown(c.dispose);
 
     // Hai nguồn là FutureProvider nên phải chờ chúng xong trước khi đọc.
@@ -60,10 +62,12 @@ void main() {
   });
 
   test('chưa có Episode nào thì vẫn có đủ ba ô dự phòng', () async {
-    final c = ProviderContainer(overrides: [
-      wrEpisodeHistoryProvider.overrideWith((ref) async => const []),
-      wrSituationsProvider.overrideWith((ref) async => _situations),
-    ]);
+    final c = ProviderContainer(
+      overrides: [
+        wrEpisodeHistoryProvider.overrideWith((ref) async => const []),
+        wrSituationsProvider.overrideWith((ref) async => _situations),
+      ],
+    );
     addTearDown(c.dispose);
 
     await c.read(wrEpisodeHistoryProvider.future);
@@ -75,10 +79,16 @@ void main() {
   test('nguồn dữ liệu còn đang tải thì màn chat vẫn mở được', () {
     // `valueOrNull ?? const []` chứ không `await`: màn chat không được chặn lại
     // chờ hai nguồn phụ trợ. Thiếu dữ liệu thì rơi về dự phòng, vẫn bấm được.
-    final c = ProviderContainer(overrides: [
-      wrEpisodeHistoryProvider.overrideWith((ref) => Completer<List<ReflectionEpisode>>().future),
-      wrSituationsProvider.overrideWith((ref) => Completer<List<WrSituation>>().future),
-    ]);
+    final c = ProviderContainer(
+      overrides: [
+        wrEpisodeHistoryProvider.overrideWith(
+          (ref) => Completer<List<ReflectionEpisode>>().future,
+        ),
+        wrSituationsProvider.overrideWith(
+          (ref) => Completer<List<WrSituation>>().future,
+        ),
+      ],
+    );
     addTearDown(c.dispose);
 
     expect(_read(c), kDefaultChatStarters);

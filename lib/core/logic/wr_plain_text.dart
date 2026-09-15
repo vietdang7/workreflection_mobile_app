@@ -38,11 +38,14 @@ String stripMarkdown(String input) {
       // Đậm và nghiêng. Xử lý `***` trước `**` trước `*`, nếu không `**a**` sẽ
       // bị luật một-sao ăn mất một lớp và chừa lại `*a*`.
       .replaceAllMapped(
-          RegExp(r'\*\*\*(.+?)\*\*\*', dotAll: true), (m) => m[1]!)
+        RegExp(r'\*\*\*(.+?)\*\*\*', dotAll: true),
+        (m) => m[1]!,
+      )
       .replaceAllMapped(RegExp(r'\*\*(.+?)\*\*', dotAll: true), (m) => m[1]!)
       .replaceAllMapped(
-          RegExp(r'(?<![\w*])\*(?!\s)(.+?)(?<!\s)\*(?![\w*])', dotAll: true),
-          (m) => m[1]!)
+        RegExp(r'(?<![\w*])\*(?!\s)(.+?)(?<!\s)\*(?![\w*])', dotAll: true),
+        (m) => m[1]!,
+      )
       // CỐ Ý KHÔNG lột `__đậm__` — xem lý do ở bản Deno. Tóm tắt: không phân
       // biệt được `__đậm__` với một tên có gạch dưới ở hai đầu, mà chữ người
       // dùng dán vào thì có thể chứa gạch dưới thật.

@@ -93,12 +93,13 @@ class WrPremiumLock extends StatelessWidget {
           SizedBox(
             width: double.infinity,
             child: ElevatedButton(
-              onPressed: onPressed ??
+              onPressed:
+                  onPressed ??
                   () => context.push(
-                        paywallTrigger == null
-                            ? '/wr/paywall'
-                            : '/wr/paywall?trigger=$paywallTrigger',
-                      ),
+                    paywallTrigger == null
+                        ? '/wr/paywall'
+                        : '/wr/paywall?trigger=$paywallTrigger',
+                  ),
               style: ElevatedButton.styleFrom(
                 // Navy như mọi nút đặc khác trong app (nút "Bắt đầu thực hành").
                 backgroundColor: WrColors.navy,

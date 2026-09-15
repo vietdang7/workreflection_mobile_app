@@ -13,9 +13,36 @@ import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 final _now = DateTime(2026, 9, 10);
 
 const _situations = [
-  WrSituation(code: 'S1-01', text: 'S', scaDimension: ScaDimension.s1, wave: 1),
-  WrSituation(code: 'C2-01', text: 'C', scaDimension: ScaDimension.c2, wave: 1),
-  WrSituation(code: 'A3-01', text: 'A', scaDimension: ScaDimension.a3, wave: 1),
+  WrSituation(
+    code: 'S1-01',
+    text: 'S',
+    scaDimension: ScaDimension.s1,
+    pillarCode: 'S',
+    subgroup: 'S1',
+    mood: 'foggy',
+    valence: WrValence.thachThuc,
+    wave: 1,
+  ),
+  WrSituation(
+    code: 'C2-01',
+    text: 'C',
+    scaDimension: ScaDimension.c2,
+    pillarCode: 'C',
+    subgroup: 'C2',
+    mood: 'stress',
+    valence: WrValence.thachThuc,
+    wave: 1,
+  ),
+  WrSituation(
+    code: 'A3-01',
+    text: 'A',
+    scaDimension: ScaDimension.a3,
+    pillarCode: 'A',
+    subgroup: 'A3',
+    mood: 'tired',
+    valence: WrValence.thachThuc,
+    wave: 1,
+  ),
   // §2.1 gán trụ cho cả tình huống tích cực, qua cột `pillar` chứ không qua
   // `sca_dimension` — nên bộ giả cũng phải có `pillarCode`, y như DB thật sau
   // migration `20260911100000_situation_pillar.sql`.
@@ -24,6 +51,9 @@ const _situations = [
     text: 'Vừa làm được điều hay',
     scaDimension: ScaDimension.pAchieve,
     pillarCode: 'A',
+    subgroup: 'Ap',
+    mood: 'happy',
+    valence: WrValence.tichCuc,
     wave: 1,
   ),
 ];
@@ -33,22 +63,21 @@ ScaSelfCheckResponse _check({
   double s = 3.0,
   double c = 3.0,
   double a = 3.0,
-}) =>
-    ScaSelfCheckResponse(
-      userId: 'u1',
-      answers: const {},
-      structureScore: s,
-      cultureScore: c,
-      activityScore: a,
-      takenAt: at,
-    );
+}) => ScaSelfCheckResponse(
+  userId: 'u1',
+  answers: const {},
+  structureScore: s,
+  cultureScore: c,
+  activityScore: a,
+  takenAt: at,
+);
 
 ReflectionEpisode _ep(String code, DateTime at) => ReflectionEpisode(
-      userId: 'u1',
-      humanMoment: HumanMoment.confusion,
-      situationCode: code,
-      openedAt: at,
-    );
+  userId: 'u1',
+  humanMoment: HumanMoment.confusion,
+  situationCode: code,
+  openedAt: at,
+);
 
 /// [count] lượt mang mã [code], rải trong [withinDays] ngày gần nhất tính từ
 /// [end]. Rải chứ không dồn một ngày: cửa sổ cắt theo ngày lịch.
@@ -57,11 +86,10 @@ List<ReflectionEpisode> _eps(
   int count, {
   required DateTime end,
   int withinDays = 30,
-}) =>
-    [
-      for (var i = 0; i < count; i++)
-        _ep(code, end.subtract(Duration(days: i % withinDays))),
-    ];
+}) => [
+  for (var i = 0; i < count; i++)
+    _ep(code, end.subtract(Duration(days: i % withinDays))),
+];
 
 /// Thư viện giả rộng, đủ chỗ để dựng những hình dạng phân bố của §9.
 ///
@@ -76,38 +104,66 @@ List<ReflectionEpisode> _eps(
 List<WrSituation> _wideLibrary() {
   final out = <WrSituation>[];
   ScaDimension dimOf(String prefix) => switch (prefix) {
-        'S' => ScaDimension.s1,
-        'C' => ScaDimension.c2,
-        _ => ScaDimension.a3,
-      };
+    'S' => ScaDimension.s1,
+    'C' => ScaDimension.c2,
+    _ => ScaDimension.a3,
+  };
 
   for (final prefix in ['S', 'C', 'A']) {
     for (final suffix in [
-      'a', 'b', 'c', 'd', 'e', 'f',
+      'a',
+      'b',
+      'c',
+      'd',
+      'e',
+      'f',
       for (var i = 0; i <= 40; i++) i.toString().padLeft(2, '0'),
       for (var i = 0; i <= 40; i++) i.toString(),
     ]) {
-      out.add(WrSituation(
-        code: '$prefix-$suffix',
-        text: '$prefix-$suffix',
-        scaDimension: dimOf(prefix),
-        pillarCode: prefix,
-        wave: 1,
-      ));
+      final subgroup = switch (prefix) {
+        'S' => 'S1',
+        'C' => 'C2',
+        _ => 'A3',
+      };
+      final mood = switch (subgroup) {
+        'S1' => 'foggy',
+        'C2' => 'stress',
+        _ => 'tired',
+      };
+      out.add(
+        WrSituation(
+          code: '$prefix-$suffix',
+          text: '$prefix-$suffix',
+          scaDimension: dimOf(prefix),
+          pillarCode: prefix,
+          subgroup: subgroup,
+          mood: mood,
+          valence: WrValence.thachThuc,
+          wave: 1,
+        ),
+      );
     }
   }
 
   const rotate = ['S', 'C', 'A'];
   for (var i = 0; i <= 40; i++) {
     for (final suffix in [i.toString().padLeft(2, '0'), i.toString()]) {
-      out.add(WrSituation(
-        code: 'P-$suffix',
-        text: 'P-$suffix',
-        scaDimension:
-            i.isEven ? ScaDimension.pAchieve : ScaDimension.pSteady,
-        pillarCode: rotate[i % 3],
-        wave: 1,
-      ));
+      out.add(
+        WrSituation(
+          code: 'P-$suffix',
+          text: 'P-$suffix',
+          scaDimension: i.isEven ? ScaDimension.pAchieve : ScaDimension.pSteady,
+          pillarCode: rotate[i % 3],
+          subgroup: switch (rotate[i % 3]) {
+            'S' => 'Sp',
+            'C' => 'Cp',
+            _ => 'Ap',
+          },
+          mood: i.isEven ? 'ok' : 'happy',
+          valence: WrValence.tichCuc,
+          wave: 1,
+        ),
+      );
     }
   }
   return out;
@@ -118,34 +174,34 @@ final _wide = _wideLibrary();
 DeepFacts _lib({
   List<ScaSelfCheckResponse> history = const [],
   List<ReflectionEpisode> episodes = const [],
-}) =>
-    buildDeepFacts(
-      history: history,
-      episodes: episodes,
-      situations: _wide,
-      now: _now,
-    );
+}) => buildDeepFacts(
+  history: history,
+  episodes: episodes,
+  situations: _wide,
+  now: _now,
+);
 
 DeepFacts _facts({
   List<ScaSelfCheckResponse> history = const [],
   List<ReflectionEpisode> episodes = const [],
-}) =>
-    buildDeepFacts(
-      history: history,
-      episodes: episodes,
-      situations: _situations,
-      now: _now,
-    );
+}) => buildDeepFacts(
+  history: history,
+  episodes: episodes,
+  situations: _situations,
+  now: _now,
+);
 
 void main() {
   group('Lớp 1 · dữ kiện', () {
     test('ba mẫu số là ba con số khác nhau, và mỗi cái trả lời một câu', () {
       // 10 lượt trụ C thách thức, 6 lượt tích cực, 3 lượt tự viết không có mã.
-      final f = _facts(episodes: [
-        ..._eps('C2-01', 10, end: _now),
-        ..._eps('P-WIN', 6, end: _now),
-        ..._eps('khong-co-trong-thu-vien', 3, end: _now),
-      ]);
+      final f = _facts(
+        episodes: [
+          ..._eps('C2-01', 10, end: _now),
+          ..._eps('P-WIN', 6, end: _now),
+          ..._eps('khong-co-trong-thu-vien', 3, end: _now),
+        ],
+      );
       expect(f.pillarCount[SelfCheckPillar.c], 10);
 
       // Công sức người dùng bỏ ra — nuôi ngưỡng mở tầng.
@@ -177,29 +233,37 @@ void main() {
       // `DienGiaiSau v2` §2.2: "Mọi phép đếm để tìm trụ nổi trội và khoảng lệch
       // chỉ tính trên valence = thach-thuc. Nếu trộn chung, kết luận sẽ ngược
       // hoàn toàn."
-      final f = _facts(episodes: [
-        ..._eps('C2-01', 15, end: _now),
-        ..._eps('P-WIN', 85, end: _now),
-      ]);
+      final f = _facts(
+        episodes: [
+          ..._eps('C2-01', 15, end: _now),
+          ..._eps('P-WIN', 85, end: _now),
+        ],
+      );
       expect(f.challengeTotal, 15);
       expect(f.dominant, SelfCheckPillar.c);
     });
 
-    test('phân bố đều giữa các trụ thách thức thì vẫn không có trụ nổi trội',
-        () {
-      // Ngưỡng 40% vẫn nguyên, chỉ mẫu số đổi. 10/10/10 thì mỗi trụ 33%.
-      final f = _facts(episodes: [
-        ..._eps('S1-01', 10, end: _now),
-        ..._eps('C2-01', 10, end: _now),
-        ..._eps('A3-01', 10, end: _now),
-      ]);
-      expect(f.challengeTotal, 30);
-      expect(f.dominant, isNull);
-    });
+    test(
+      'phân bố đều giữa các trụ thách thức thì vẫn không có trụ nổi trội',
+      () {
+        // Ngưỡng 40% vẫn nguyên, chỉ mẫu số đổi. 10/10/10 thì mỗi trụ 33%.
+        final f = _facts(
+          episodes: [
+            ..._eps('S1-01', 10, end: _now),
+            ..._eps('C2-01', 10, end: _now),
+            ..._eps('A3-01', 10, end: _now),
+          ],
+        );
+        expect(f.challengeTotal, 30);
+        expect(f.dominant, isNull);
+      },
+    );
 
     test('tier1 cần cả Self-Check lẫn 15 lần nhìn lại', () {
-      expect(_facts(episodes: _eps('C2-01', 20, end: _now)).tier1Unlocked,
-          isFalse);
+      expect(
+        _facts(episodes: _eps('C2-01', 20, end: _now)).tier1Unlocked,
+        isFalse,
+      );
       expect(_facts(history: [_check(at: _now)]).tier1Unlocked, isFalse);
       expect(
         _facts(
@@ -212,8 +276,10 @@ void main() {
 
     test('tier2 cần HAI cửa sổ liền kề, mỗi cửa sổ đủ 10 lần', () {
       // Chỉ cửa sổ hiện tại có dữ liệu.
-      expect(_facts(episodes: _eps('C2-01', 20, end: _now)).tier2Unlocked,
-          isFalse);
+      expect(
+        _facts(episodes: _eps('C2-01', 20, end: _now)).tier2Unlocked,
+        isFalse,
+      );
 
       final twoWindows = [
         ..._eps('C2-01', 12, end: _now),
@@ -225,16 +291,20 @@ void main() {
     test('tier3 cần hai lần Self-Check cách nhau ít nhất 6 tuần', () {
       // §5 gọi đây là ràng buộc BẮT BUỘC: hai lần cách nhau vài ngày chỉ phản
       // ánh dao động tâm trạng, không phải thay đổi điều kiện làm việc.
-      final tooClose = _facts(history: [
-        _check(at: _now),
-        _check(at: _now.subtract(const Duration(days: 20))),
-      ]);
+      final tooClose = _facts(
+        history: [
+          _check(at: _now),
+          _check(at: _now.subtract(const Duration(days: 20))),
+        ],
+      );
       expect(tooClose.tier3Unlocked, isFalse);
 
-      final farEnough = _facts(history: [
-        _check(at: _now),
-        _check(at: _now.subtract(const Duration(days: 42))),
-      ]);
+      final farEnough = _facts(
+        history: [
+          _check(at: _now),
+          _check(at: _now.subtract(const Duration(days: 42))),
+        ],
+      );
       expect(farEnough.tier3Unlocked, isTrue);
     });
   });
@@ -246,11 +316,10 @@ void main() {
       required double a,
       String dominantCode = 'C2-01',
       int count = 20,
-    }) =>
-        _facts(
-          history: [_check(at: _now, s: s, c: c, a: a)],
-          episodes: _eps(dominantCode, count, end: _now),
-        );
+    }) => _facts(
+      history: [_check(at: _now, s: s, c: c, a: a)],
+      episodes: _eps(dominantCode, count, end: _now),
+    );
 
     test('A · tự chấm ổn mà lại là trụ quay lại nhiều nhất', () {
       final f = withPillars(s: 3.0, c: 4.2, a: 3.0);
@@ -291,12 +360,20 @@ void main() {
     test('ba biến thể xoay vòng, không lặp lại một câu', () {
       final texts = <String>{};
       for (final n in [15, 16, 17]) {
-        texts.add(deepGapText(_facts(
-          history: [_check(at: _now, c: 4.2)],
-          episodes: _eps('C2-01', n, end: _now),
-        )));
+        texts.add(
+          deepGapText(
+            _facts(
+              history: [_check(at: _now, c: 4.2)],
+              episodes: _eps('C2-01', n, end: _now),
+            ),
+          ),
+        );
       }
-      expect(texts.length, 3, reason: 'ba lần liên tiếp phải ra ba câu khác nhau');
+      expect(
+        texts.length,
+        3,
+        reason: 'ba lần liên tiếp phải ra ba câu khác nhau',
+      );
     });
 
     test('mọi câu tầng 1 đều dựng từ đúng hai con số đang hiện', () {
@@ -317,12 +394,14 @@ void main() {
     test('gọi tên TÌNH HUỐNG dày lên, không gọi tên nhóm', () {
       // §6 điều chỉnh 1: "Thay vì 'nhóm Mối quan hệ đang tăng', nói 'tình huống
       // X đang xuất hiện dày hơn giai đoạn trước'."
-      final f = _facts(episodes: [
-        ..._eps('C2-01', 18, end: _now),
-        ..._eps('S1-01', 2, end: _now),
-        ..._eps('S1-01', 18, end: _now.subtract(const Duration(days: 30))),
-        ..._eps('C2-01', 2, end: _now.subtract(const Duration(days: 30))),
-      ]);
+      final f = _facts(
+        episodes: [
+          ..._eps('C2-01', 18, end: _now),
+          ..._eps('S1-01', 2, end: _now),
+          ..._eps('S1-01', 18, end: _now.subtract(const Duration(days: 30))),
+          ..._eps('C2-01', 2, end: _now.subtract(const Duration(days: 30))),
+        ],
+      );
       final text = deepReflectionTrendText(f);
       expect(text, isNotNull);
       // Nhãn của C2-01 trong bộ giả là chữ "C".
@@ -338,31 +417,37 @@ void main() {
       // nên lớp tình huống im. Tỉ trọng trụ thì đi từ 45% lên 55%, vượt
       // `kDeepTrendEpsilon`, nên lớp trụ lên tiếng thay. §8 nguyên tắc 1: không
       // tầng nào được kết thúc bằng sự im lặng.
-      final f = _facts(episodes: [
-        ..._eps('C2-01', 6, end: _now),
-        ..._eps('A3-01', 5, end: _now),
-        ..._eps('C2-01', 5, end: _now.subtract(const Duration(days: 30))),
-        ..._eps('A3-01', 6, end: _now.subtract(const Duration(days: 30))),
-      ]);
+      final f = _facts(
+        episodes: [
+          ..._eps('C2-01', 6, end: _now),
+          ..._eps('A3-01', 5, end: _now),
+          ..._eps('C2-01', 5, end: _now.subtract(const Duration(days: 30))),
+          ..._eps('A3-01', 6, end: _now.subtract(const Duration(days: 30))),
+        ],
+      );
       expect(f.situationTrend, isEmpty);
-      expect(deepReflectionTrendText(f), contains('ối quan hệ'));
+      expect(deepReflectionTrendText(f), contains('"C"'));
     });
 
     test('không gì đổi rõ thì nói là ổn định, không im lặng', () {
-      final f = _facts(episodes: [
-        ..._eps('C2-01', 12, end: _now),
-        ..._eps('C2-01', 12, end: _now.subtract(const Duration(days: 30))),
-      ]);
+      final f = _facts(
+        episodes: [
+          ..._eps('C2-01', 12, end: _now),
+          ..._eps('C2-01', 12, end: _now.subtract(const Duration(days: 30))),
+        ],
+      );
       expect(deepReflectionTrendText(f), contains('ổn định'));
     });
   });
 
   group('Tầng 3 · xu hướng Self-Check', () {
     test('chưa đủ 6 tuần thì im lặng', () {
-      final f = _facts(history: [
-        _check(at: _now),
-        _check(at: _now.subtract(const Duration(days: 10))),
-      ]);
+      final f = _facts(
+        history: [
+          _check(at: _now),
+          _check(at: _now.subtract(const Duration(days: 10))),
+        ],
+      );
       expect(deepSelfCheckTrendText(f), isNull);
     });
 
@@ -398,15 +483,18 @@ void main() {
       expect(content.selfCheckTrendText, isNot(kDeepOneSelfCheckOnly));
     });
 
-    test('mới đúng MỘT lần Self-Check thì vẫn là câu mời làm lần tiếp theo', () {
-      final content = buildDeepInterpretation(
-        history: [_check(at: DateTime(2026, 9, 5))],
-        episodes: _eps('C2-01', 29, end: _now),
-        situations: _situations,
-        now: _now,
-      );
-      expect(content.selfCheckTrendText, kDeepOneSelfCheckOnly);
-    });
+    test(
+      'mới đúng MỘT lần Self-Check thì vẫn là câu mời làm lần tiếp theo',
+      () {
+        final content = buildDeepInterpretation(
+          history: [_check(at: DateTime(2026, 9, 5))],
+          episodes: _eps('C2-01', 29, end: _now),
+          situations: _situations,
+          now: _now,
+        );
+        expect(content.selfCheckTrendText, kDeepOneSelfCheckOnly);
+      },
+    );
   });
 
   group('Mục 6 · chưa đủ dữ liệu thì MỜI GỌI, không báo lỗi', () {
@@ -444,7 +532,11 @@ void main() {
             ],
             episodes: [
               ..._eps('C2-01', 12, end: _now),
-              ..._eps('C2-01', 12, end: _now.subtract(const Duration(days: 30))),
+              ..._eps(
+                'C2-01',
+                12,
+                end: _now.subtract(const Duration(days: 30)),
+              ),
             ],
             situations: _situations,
             now: _now,
@@ -524,79 +616,93 @@ void main() {
 
   group('Thang ưu tiên · §9 việc 4', () {
     test('R1 — một tình huống lặp 5 lần, bỏ xa phần còn lại', () {
-      final f = _lib(episodes: [
-        ..._eps('S-a', 5, end: _now),
-        ..._eps('C-a', 2, end: _now),
-        ..._eps('A-a', 2, end: _now),
-        ..._eps('S-b', 2, end: _now),
-        ..._eps('C-b', 2, end: _now),
-        ..._eps('A-b', 2, end: _now),
-      ]);
+      final f = _lib(
+        episodes: [
+          ..._eps('S-a', 5, end: _now),
+          ..._eps('C-a', 2, end: _now),
+          ..._eps('A-a', 2, end: _now),
+          ..._eps('S-b', 2, end: _now),
+          ..._eps('C-b', 2, end: _now),
+          ..._eps('A-b', 2, end: _now),
+        ],
+      );
       expect(deepRung(f), DeepRung.standoutSituation);
       final text = deepLeadText(f);
       expect(text, contains('S-a'));
       expect(text, contains('5'));
     });
 
-    test('R5 — phân bố 6/5/5 trên tình huống khác nhau', () {
-      // Chính hình dạng khách báo lỗi ở §1.1. Sáu tình huống S khác nhau, năm
-      // C, năm A, mỗi cái một lần: không tình huống nào nổi bật, không cụm nào
-      // đạt 5, không trụ nào vượt 40%.
-      final f = _lib(episodes: [
-        for (var i = 0; i < 6; i++) ..._eps('S-$i', 1, end: _now),
-        for (var i = 0; i < 5; i++) ..._eps('C-$i', 1, end: _now),
-        for (var i = 0; i < 5; i++) ..._eps('A-$i', 1, end: _now),
-      ], history: [
-        _check(at: _now, s: 4.5),
-      ]);
+    test('R5 — valence hỗn hợp trên 20% nhưng dưới 60%', () {
+      // Six S, five C, five A challenge rows plus five distinct positive rows:
+      // no situation/subgroup cluster qualifies, and the 5/21 positive share
+      // is strictly above 20% and below 60%.
+      final f = _lib(
+        episodes: [
+          for (var i = 0; i < 6; i++) ..._eps('S-$i', 1, end: _now),
+          for (var i = 0; i < 5; i++) ..._eps('C-$i', 1, end: _now),
+          for (var i = 0; i < 5; i++) ..._eps('A-$i', 1, end: _now),
+          for (var i = 0; i < 5; i++) ..._eps('P-$i', 1, end: _now),
+        ],
+        history: [_check(at: _now, s: 4.5)],
+      );
       expect(f.challengeTotal, 16);
+      expect(f.positiveShare, greaterThan(kDeepR4LowShare));
+      expect(f.positiveShare, lessThan(kDeepR4HighShare));
       expect(deepRung(f), DeepRung.evenSpread);
-      // §5.5 điều then chốt: vẫn gọi tên một tình huống kèm số lần, không dừng
-      // ở câu "không có gì nổi bật". Hoà tuyệt đối 1-1-1 thì phá hoà theo mã,
-      // nên tên được gọi là mã đứng đầu bảng chữ cái — cố định giữa hai lần mở
-      // app, đó mới là điều cần khoá.
+      // §5.5 điều then chốt: vẫn gọi tên một tình huống cụ thể, không dừng ở câu
+      // "không có gì nổi bật". Hoà tuyệt đối 1-1-1 thì phá hoà theo mã, nên tên
+      // được gọi là mã đứng đầu bảng chữ cái — cố định giữa hai lần mở app, đó
+      // mới là điều cần khoá.
       expect(f.topSituation!.code, 'A-0');
       expect(deepLeadText(f), contains('"A-0"'));
-      expect(deepLeadText(f), contains('1 lần'));
+      // Ở đây mọi mã mới xuất hiện đúng một lần, nên câu KHÔNG được nói tình
+      // huống ấy "quay lại nhiều nhất, 1 lần" — một lần không phải là lặp lại.
+      expect(f.topSituation!.count, 1);
+      expect(deepLeadText(f), isNot(contains('1 lần')));
+      expect(deepLeadText(f), contains('chưa tình huống nào lặp lại'));
     });
 
-    // Vế `positiveTotal > 0` của R4 — xem chú thích dài trong `deepRung`. Bảng
-    // §4 và nghiệm thu §9 việc 4 mâu thuẫn nhau ở đúng chỗ này; test này khoá
-    // lựa chọn đã chốt để nếu ai đảo lại thì thấy ngay.
-    test('R4 KHÔNG chạy khi chưa từng ghi điều gì đang tốt', () {
-      final f = _lib(episodes: [
-        for (var i = 0; i < 16; i++) ..._eps('S-$i', 1, end: _now),
-      ]);
+    test('R4 chạy ở 0% positive khi có classified data', () {
+      final f = _lib(
+        episodes: [for (var i = 0; i < 16; i++) ..._eps('S-$i', 1, end: _now)],
+      );
       expect(f.positiveTotal, 0);
       expect(f.positiveShare, 0);
-      expect(deepRung(f), DeepRung.evenSpread);
+      expect(deepRung(f), DeepRung.positiveBalance);
     });
 
     test('R4 chạy khi có tích cực nhưng rất ít', () {
-      final f = _lib(episodes: [
-        ..._eps('P-01', 1, end: _now),
-        for (var i = 0; i < 15; i++) ..._eps('S-$i', 1, end: _now),
-      ]);
+      final f = _lib(
+        episodes: [
+          ..._eps('P-01', 1, end: _now),
+          for (var i = 0; i < 15; i++) ..._eps('S-$i', 1, end: _now),
+        ],
+      );
       expect(f.positiveShare, closeTo(1 / 16, 1e-9));
       expect(deepRung(f), DeepRung.positiveBalance);
       expect(deepLeadText(f), contains('1 trong 16'));
     });
 
     test('R4 — trên 60 phần trăm là tình huống tích cực', () {
-      final f = _lib(episodes: [
-        for (var i = 0; i < 12; i++) ..._eps('P-$i', 1, end: _now),
-        for (var i = 0; i < 3; i++) ..._eps('S-$i', 1, end: _now),
-        for (var i = 0; i < 3; i++) ..._eps('C-$i', 1, end: _now),
-      ]);
+      final f = _lib(
+        episodes: [
+          for (var i = 0; i < 12; i++) ..._eps('P-$i', 1, end: _now),
+          for (var i = 0; i < 3; i++) ..._eps('S-$i', 1, end: _now),
+          for (var i = 0; i < 3; i++) ..._eps('C-$i', 1, end: _now),
+        ],
+      );
       expect(f.positiveShare, closeTo(12 / 18, 1e-9));
       expect(deepRung(f), DeepRung.positiveBalance);
       expect(deepLeadText(f), contains('12'));
     });
 
-    test('R5 — đúng 15 lần, mỗi tình huống một lần, vẫn có chữ', () {
-      final f = _lib(episodes: [
-        for (var i = 0; i < 15; i++) ..._eps('S-$i', 1, end: _now),
-      ]);
+    test('R5 — đúng 15 lần, mixed share không chạm R4, vẫn có chữ', () {
+      final f = _lib(
+        episodes: [
+          for (var i = 0; i < 11; i++) ..._eps('S-$i', 1, end: _now),
+          for (var i = 0; i < 4; i++) ..._eps('P-$i', 1, end: _now),
+        ],
+      );
       expect(f.totalReflection, 15);
       expect(f.leadUnlocked, isTrue);
       expect(deepRung(f), DeepRung.evenSpread);
@@ -604,22 +710,75 @@ void main() {
       final text = deepLeadText(f);
       expect(text, isNotEmpty);
       expect(text, contains('S-0'));
-      expect(text, contains('1'));
+      // 15 lượt, mỗi tình huống một lần. Gọi tên thì có, nhưng không được gán
+      // cho nó một số lần lặp mà dữ liệu không có.
+      expect(f.topSituation!.count, 1);
+      expect(text, isNot(contains('1 lần')));
     });
 
     test('R2 — một cụm cùng trụ, cùng valence, tổng đủ 5', () {
-      final f = _lib(episodes: [
-        ..._eps('S-a', 2, end: _now),
-        ..._eps('S-b', 2, end: _now),
-        ..._eps('S-c', 1, end: _now),
-        for (var i = 0; i < 5; i++) ..._eps('C-$i', 1, end: _now),
-        for (var i = 0; i < 5; i++) ..._eps('A-$i', 1, end: _now),
-      ]);
+      final f = _lib(
+        episodes: [
+          ..._eps('S-a', 2, end: _now),
+          ..._eps('S-b', 2, end: _now),
+          ..._eps('S-c', 1, end: _now),
+          for (var i = 0; i < 5; i++) ..._eps('C-$i', 1, end: _now),
+          for (var i = 0; i < 5; i++) ..._eps('A-$i', 1, end: _now),
+        ],
+      );
       expect(deepRung(f), DeepRung.situationCluster);
       final c = deepCluster(f)!;
       expect(c.pillar, SelfCheckPillar.s);
       expect(c.total, 5);
       expect(deepLeadText(f), contains('S-a'));
+    });
+
+    test('R2 — hai thành viên xoay câu theo seed, ổn định và đủ dữ kiện', () {
+      DeepFacts build({required int extraCount}) => _lib(
+        episodes: [
+          ..._eps('S-a', 3, end: _now),
+          ..._eps('S-b', 2, end: _now),
+          ..._eps('C-0', extraCount, end: _now),
+        ],
+      );
+
+      final first = deepLeadText(build(extraCount: 1));
+      final sameSeed = deepLeadText(build(extraCount: 1));
+      final nextSeed = deepLeadText(build(extraCount: 2));
+
+      expect(deepRung(build(extraCount: 1)), DeepRung.situationCluster);
+      expect(first, sameSeed);
+      expect(nextSeed, isNot(first));
+      for (final text in [first, nextSeed]) {
+        expect(text, contains('S-a'));
+        expect(text, contains('S-b'));
+        expect(text, contains('5'));
+      }
+    });
+
+    test('R2 — ba thành viên xoay câu theo seed, ổn định và đủ dữ kiện', () {
+      DeepFacts build({required int extraCount}) => _lib(
+        episodes: [
+          ..._eps('S-a', 2, end: _now),
+          ..._eps('S-b', 2, end: _now),
+          ..._eps('S-c', 1, end: _now),
+          ..._eps('C-0', extraCount, end: _now),
+        ],
+      );
+
+      final first = deepLeadText(build(extraCount: 1));
+      final sameSeed = deepLeadText(build(extraCount: 1));
+      final nextSeed = deepLeadText(build(extraCount: 2));
+
+      expect(deepRung(build(extraCount: 1)), DeepRung.situationCluster);
+      expect(first, sameSeed);
+      expect(nextSeed, isNot(first));
+      for (final text in [first, nextSeed]) {
+        expect(text, contains('S-a'));
+        expect(text, contains('S-b'));
+        expect(text, contains('S-c'));
+        expect(text, contains('5'));
+      }
     });
 
     test('R3 — có trụ nổi trội và có Self-Check, gọi kèm tên tình huống', () {
@@ -635,6 +794,68 @@ void main() {
       expect(deepRung(f), DeepRung.awarenessGap);
       // §5.3: "nên gọi kèm tên tình huống cụ thể thay vì chỉ nói tên trụ".
       expect(deepLeadText(f), contains('C-0'));
+      // Mỗi mã mới một lần: gọi tên thì có, nhưng không được nói nó "quay lại
+      // với bạn nhiều nhất, 1 lần".
+      expect(deepLeadText(f), isNot(contains('1 lần')));
+      expect(deepLeadText(f), contains('chưa cái nào lặp lại'));
+    });
+
+    test('R3 — có tình huống lặp thật thì vẫn nói đúng số lần', () {
+      final f = _lib(
+        history: [_check(at: _now, c: 4.5)],
+        episodes: [
+          // C-0 lặp ĐÚNG 2 lần: dưới ngưỡng R1 (cần 3), và cụm C cộng ba mã
+          // nhiều nhất chỉ được 2+1+1 = 4 nên cũng dưới ngưỡng R2 (cần 5). Nhờ
+          // vậy bậc dừng lại ở R3 mà vẫn có một tình huống lặp thật để gọi tên.
+          ..._eps('C-0', 2, end: _now),
+          for (var i = 1; i < 10; i++) ..._eps('C-$i', 1, end: _now),
+          for (var i = 0; i < 4; i++) ..._eps('S-$i', 1, end: _now),
+        ],
+      );
+      expect(f.dominant, SelfCheckPillar.c);
+      expect(deepRung(f), DeepRung.awarenessGap);
+      expect(deepLeadText(f), contains('"C-0", 2 lần'));
+    });
+
+    test('R5 — nhánh chưa lặp lại chạy đúng ở cả ba biến thể', () {
+      // `variantSeed` là tổng số lượt trong cửa sổ, nên ba tổng liền nhau quét
+      // hết ba cách nói. Không biến thể nào được nói tới chuyện lặp lại.
+      for (final extra in [0, 1, 2]) {
+        final f = _lib(
+          episodes: [
+            for (var i = 0; i < 11; i++) ..._eps('S-$i', 1, end: _now),
+            for (var i = 0; i < 4 + extra; i++) ..._eps('P-$i', 1, end: _now),
+          ],
+        );
+        expect(deepRung(f), DeepRung.evenSpread, reason: 'extra=$extra');
+        final text = deepLeadText(f);
+        expect(text.trim(), isNotEmpty, reason: 'extra=$extra');
+        expect(text, contains('S-0'), reason: 'extra=$extra');
+        expect(text, isNot(contains('1 lần')), reason: 'extra=$extra');
+        expect(text, isNot(contains('quay lại 1')), reason: 'extra=$extra');
+      }
+    });
+
+    test('R3 — mẫu số hiển thị chỉ tính lượt thách thức', () {
+      final f = _lib(
+        history: [_check(at: _now, c: 4.5)],
+        episodes: [
+          for (var i = 0; i < 8; i++) ..._eps('C-$i', 1, end: _now),
+          for (var i = 0; i < 4; i++) ..._eps('S-$i', 1, end: _now),
+          for (var i = 0; i < 6; i++) ..._eps('P-$i', 1, end: _now),
+        ],
+      );
+
+      expect(f.pillarCount[SelfCheckPillar.c], 8);
+      expect(f.challengeTotal, 12);
+      expect(f.classifiedTotal, 18);
+      expect(f.dominant, SelfCheckPillar.c);
+      expect(deepRung(f), DeepRung.awarenessGap);
+
+      final text = deepLeadText(f);
+      expect(text, contains('12'));
+      expect(text, contains('12 lượt thách thức'));
+      expect(text, isNot(contains('18')));
     });
 
     test('KHÔNG BAO GIỜ RỖNG — §8 nguyên tắc bất biến thứ nhất', () {
@@ -644,14 +865,13 @@ void main() {
         for (final shape in ['deu', 'dai', 'tron']) {
           final eps = switch (shape) {
             'deu' => [
-                for (var i = 0; i < n; i++) ..._eps('S-$i', 1, end: _now),
-              ],
+              for (var i = 0; i < n; i++) ..._eps('S-$i', 1, end: _now),
+            ],
             'dai' => _eps('S-a', n, end: _now),
             _ => [
-                for (var i = 0; i < n; i++)
-                  ..._eps(i.isEven ? 'P-${i ~/ 2}' : 'C-${i ~/ 2}', 1,
-                      end: _now),
-              ],
+              for (var i = 0; i < n; i++)
+                ..._eps(i.isEven ? 'P-${i ~/ 2}' : 'C-${i ~/ 2}', 1, end: _now),
+            ],
           };
           final f = _lib(episodes: eps);
           expect(
@@ -676,31 +896,31 @@ void main() {
     // không có mã. Đây là bộ dữ liệu đã làm màn hình kết luận "chưa có nhóm nào
     // nổi trội" và không gọi tên được điều gì.
     DeepFacts real() => _lib(
-          history: [_check(at: _now, s: 4.2)],
-          episodes: [
-            ..._eps('C-03', 3, end: _now),
-            ..._eps('S-06', 2, end: _now),
-            ..._eps('S-09', 2, end: _now),
-            ..._eps('S-02', 1, end: _now),
-            ..._eps('S-04', 1, end: _now),
-            ..._eps('S-10', 1, end: _now),
-            ..._eps('C-04', 1, end: _now),
-            ..._eps('C-09', 1, end: _now),
-            ..._eps('A-08', 1, end: _now),
-            ..._eps('A-03', 1, end: _now),
-            ..._eps('A-04', 1, end: _now),
-            ..._eps('A-07', 1, end: _now),
-            ..._eps('A-11', 1, end: _now),
-            ..._eps('P-09', 3, end: _now),
-            ..._eps('P-08', 2, end: _now),
-            ..._eps('P-01', 1, end: _now),
-            ..._eps('P-02', 1, end: _now),
-            ..._eps('P-03', 1, end: _now),
-            ..._eps('P-04', 1, end: _now),
-            ..._eps('P-07', 1, end: _now),
-            ..._eps('tu-viet', 4, end: _now),
-          ],
-        );
+      history: [_check(at: _now, s: 4.2)],
+      episodes: [
+        ..._eps('C-03', 3, end: _now),
+        ..._eps('S-06', 2, end: _now),
+        ..._eps('S-09', 2, end: _now),
+        ..._eps('S-02', 1, end: _now),
+        ..._eps('S-04', 1, end: _now),
+        ..._eps('S-10', 1, end: _now),
+        ..._eps('C-04', 1, end: _now),
+        ..._eps('C-09', 1, end: _now),
+        ..._eps('A-08', 1, end: _now),
+        ..._eps('A-03', 1, end: _now),
+        ..._eps('A-04', 1, end: _now),
+        ..._eps('A-07', 1, end: _now),
+        ..._eps('A-11', 1, end: _now),
+        ..._eps('P-09', 3, end: _now),
+        ..._eps('P-08', 2, end: _now),
+        ..._eps('P-01', 1, end: _now),
+        ..._eps('P-02', 1, end: _now),
+        ..._eps('P-03', 1, end: _now),
+        ..._eps('P-04', 1, end: _now),
+        ..._eps('P-07', 1, end: _now),
+        ..._eps('tu-viet', 4, end: _now),
+      ],
+    );
 
     test('ba mẫu số khớp đúng dữ liệu thật', () {
       final f = real();
@@ -738,7 +958,8 @@ void main() {
       final appearance = [
         for (final p in SelfCheckPillar.values)
           (f.pillarCount[p] ?? 0) +
-              f.situationsOf(p)
+              f
+                  .situationsOf(p)
                   .where((s) => s.valence.isPositive)
                   .fold<int>(0, (x, s) => x + s.count),
       ];
@@ -774,6 +995,9 @@ void main() {
           textEn: 'The ${s.code} matter',
           scaDimension: s.scaDimension,
           pillarCode: s.pillarCode,
+          subgroup: s.subgroup,
+          mood: s.mood,
+          valence: s.explicitValence,
           wave: s.wave,
         ),
     ];
@@ -781,13 +1005,12 @@ void main() {
     DeepFacts en({
       List<ScaSelfCheckResponse> history = const [],
       List<ReflectionEpisode> episodes = const [],
-    }) =>
-        buildDeepFacts(
-          history: history,
-          episodes: episodes,
-          situations: withEn,
-          now: _now,
-        );
+    }) => buildDeepFacts(
+      history: history,
+      episodes: episodes,
+      situations: withEn,
+      now: _now,
+    );
 
     final viMark = RegExp(
       '[àáảãạăằắẳẵặâầấẩẫậèéẻẽẹêềếểễệìíỉĩịòóỏõọôồốổỗộơờớởỡợùúủũụưừứửữựỳýỷỹỵđ]',
@@ -805,7 +1028,11 @@ void main() {
       wrSetLocale('en');
       final text = deepLeadText(build());
 
-      expect(deepRung(build()), rung, reason: 'bậc không được đổi theo ngôn ngữ');
+      expect(
+        deepRung(build()),
+        rung,
+        reason: 'bậc không được đổi theo ngôn ngữ',
+      );
       expect(text, isNotEmpty);
       expect(text, isNot(equals(vi)));
       expect(
@@ -818,14 +1045,16 @@ void main() {
 
     test('R1 gọi tên tình huống bằng bản dịch của nó', () {
       final text = bothWays(
-        () => en(episodes: [
-          ..._eps('S-a', 5, end: _now),
-          ..._eps('C-a', 2, end: _now),
-          ..._eps('A-a', 2, end: _now),
-          ..._eps('S-b', 2, end: _now),
-          ..._eps('C-b', 2, end: _now),
-          ..._eps('A-b', 2, end: _now),
-        ]),
+        () => en(
+          episodes: [
+            ..._eps('S-a', 5, end: _now),
+            ..._eps('C-a', 2, end: _now),
+            ..._eps('A-a', 2, end: _now),
+            ..._eps('S-b', 2, end: _now),
+            ..._eps('C-b', 2, end: _now),
+            ..._eps('A-b', 2, end: _now),
+          ],
+        ),
         rung: DeepRung.standoutSituation,
       );
 
@@ -835,23 +1064,24 @@ void main() {
 
     test('R2 gọi đủ ba tên và tên trụ cũng đổi theo', () {
       final text = bothWays(
-        () => en(episodes: [
-          ..._eps('S-a', 2, end: _now),
-          ..._eps('S-b', 2, end: _now),
-          ..._eps('S-c', 1, end: _now),
-          for (var i = 0; i < 5; i++) ..._eps('C-$i', 1, end: _now),
-          for (var i = 0; i < 5; i++) ..._eps('A-$i', 1, end: _now),
-        ]),
+        () => en(
+          episodes: [
+            ..._eps('S-a', 2, end: _now),
+            ..._eps('S-b', 2, end: _now),
+            ..._eps('S-c', 1, end: _now),
+            for (var i = 0; i < 5; i++) ..._eps('C-$i', 1, end: _now),
+            for (var i = 0; i < 5; i++) ..._eps('A-$i', 1, end: _now),
+          ],
+        ),
         rung: DeepRung.situationCluster,
       );
 
       expect(text, contains('The S-a matter'));
       expect(text, contains('The S-b matter'));
       expect(text, contains('The S-c matter'));
-      // Tên trụ bị nhúng giữa câu qua `displayName.toLowerCase()`. Quên đổi thì
-      // câu tiếng Anh mang nguyên "sự rõ ràng" — và đó chính là chỗ regex trên
-      // đã bắt, dòng này chỉ nói rõ chữ nào phải có mặt.
-      expect(text, contains('clarity'));
+      // R2 is subgroup-specific in v2, so the rendered topic is the concrete
+      // subgroup label rather than the broader pillar name.
+      expect(text, contains('roles and responsibilities'));
     });
 
     test('R3 nối câu gọi tên tình huống ở bản tiếng Anh', () {
@@ -867,14 +1097,18 @@ void main() {
       );
 
       expect(text, contains('The C-0 matter'));
+      expect(text, contains('15 challenge reflections'));
+      expect(text, startsWith('Within this group'));
     });
 
     test('R4 giữ đủ cả hai con số của cán cân', () {
       final text = bothWays(
-        () => en(episodes: [
-          ..._eps('P-01', 1, end: _now),
-          for (var i = 0; i < 15; i++) ..._eps('S-$i', 1, end: _now),
-        ]),
+        () => en(
+          episodes: [
+            ..._eps('P-01', 1, end: _now),
+            for (var i = 0; i < 15; i++) ..._eps('S-$i', 1, end: _now),
+          ],
+        ),
         rung: DeepRung.positiveBalance,
       );
 
@@ -885,13 +1119,15 @@ void main() {
 
     test('R5 vẫn gọi tên một tình huống, không rơi về câu trống', () {
       final text = bothWays(
-        () => en(episodes: [
-          for (var i = 0; i < 6; i++) ..._eps('S-$i', 1, end: _now),
-          for (var i = 0; i < 5; i++) ..._eps('C-$i', 1, end: _now),
-          for (var i = 0; i < 5; i++) ..._eps('A-$i', 1, end: _now),
-        ], history: [
-          _check(at: _now, s: 4.5),
-        ]),
+        () => en(
+          episodes: [
+            for (var i = 0; i < 6; i++) ..._eps('S-$i', 1, end: _now),
+            for (var i = 0; i < 5; i++) ..._eps('C-$i', 1, end: _now),
+            for (var i = 0; i < 5; i++) ..._eps('A-$i', 1, end: _now),
+            for (var i = 0; i < 5; i++) ..._eps('P-$i', 1, end: _now),
+          ],
+          history: [_check(at: _now, s: 4.5)],
+        ),
         rung: DeepRung.evenSpread,
       );
 
@@ -908,14 +1144,13 @@ void main() {
         for (final shape in ['deu', 'dai', 'tron']) {
           final eps = switch (shape) {
             'deu' => [
-                for (var i = 0; i < n; i++) ..._eps('S-$i', 1, end: _now),
-              ],
+              for (var i = 0; i < n; i++) ..._eps('S-$i', 1, end: _now),
+            ],
             'dai' => _eps('S-a', n, end: _now),
             _ => [
-                for (var i = 0; i < n; i++)
-                  ..._eps(i.isEven ? 'P-${i ~/ 2}' : 'C-${i ~/ 2}', 1,
-                      end: _now),
-              ],
+              for (var i = 0; i < n; i++)
+                ..._eps(i.isEven ? 'P-${i ~/ 2}' : 'C-${i ~/ 2}', 1, end: _now),
+            ],
           };
           final text = deepLeadText(en(episodes: eps));
 
@@ -933,12 +1168,14 @@ void main() {
     // hẳn đoạn dẫn dắt: `DeepSituationShift.label`, có thêm nhánh tra ngược cho
     // tình huống chỉ có ở cửa sổ trước. Đường nào cũng phải nghe theo ngôn ngữ.
     test('câu xu hướng cũng gọi tên bằng bản dịch', () {
-      DeepFacts build() => en(episodes: [
-            ..._eps('C-03', 18, end: _now),
-            ..._eps('S-06', 2, end: _now),
-            ..._eps('S-06', 18, end: _now.subtract(const Duration(days: 30))),
-            ..._eps('C-03', 2, end: _now.subtract(const Duration(days: 30))),
-          ]);
+      DeepFacts build() => en(
+        episodes: [
+          ..._eps('C-03', 18, end: _now),
+          ..._eps('S-06', 2, end: _now),
+          ..._eps('S-06', 18, end: _now.subtract(const Duration(days: 30))),
+          ..._eps('C-03', 2, end: _now.subtract(const Duration(days: 30))),
+        ],
+      );
 
       wrSetLocale('vi');
       final vi = deepReflectionTrendText(build());
@@ -960,11 +1197,13 @@ void main() {
       // `rankDeepSituations` của cửa sổ hiện tại: S-06 đã biến mất khỏi 30 ngày
       // gần nhất, nên nhãn phải tra thẳng từ thư viện. C-03 giữ nguyên 10 lần
       // nên không có tình huống nào dày lên, câu rơi vào nhánh "đã lùi lại".
-      DeepFacts build() => en(episodes: [
-            ..._eps('C-03', 10, end: _now),
-            ..._eps('C-03', 10, end: _now.subtract(const Duration(days: 30))),
-            ..._eps('S-06', 5, end: _now.subtract(const Duration(days: 30))),
-          ]);
+      DeepFacts build() => en(
+        episodes: [
+          ..._eps('C-03', 10, end: _now),
+          ..._eps('C-03', 10, end: _now.subtract(const Duration(days: 30))),
+          ..._eps('S-06', 5, end: _now.subtract(const Duration(days: 30))),
+        ],
+      );
 
       final f = build();
       expect(f.situationTrend.map((s) => s.code), ['S-06']);
@@ -1012,10 +1251,11 @@ void main() {
         rung: DeepRung.situationCluster,
       );
 
-      // Cụm trụ Sự rõ ràng: S-06 hai lần, S-09 hai lần, S-02 một lần.
+      // The fixture is intentionally between the two R4 share thresholds, so
+      // the fallback still names the lexicographically first challenge row.
       expect(text, contains('The S-06 matter'));
       expect(text, contains('The S-09 matter'));
-      expect(text, contains('clarity'));
+      expect(text, contains('roles and responsibilities'));
     });
   });
 }

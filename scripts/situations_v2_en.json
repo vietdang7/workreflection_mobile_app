@@ -1,0 +1,590 @@
+{
+  "_comment": [
+    "English editorial content for SITUATIONS_v2.js, keyed by situation id.",
+    "SITUATIONS_v2.js ships Vietnamese only. The app renders English through",
+    "trDb(vi, en), which falls back to Vietnamese whenever the English column is",
+    "null, so without this file every chip, story, reflection question and aha",
+    "message reads Vietnamese in English mode.",
+    "scripts/import_situations_v2.js merges these strings into the generated",
+    "seed assets and migration, and fails when a live situation has no entry —",
+    "a new content drop therefore cannot silently ship a Vietnamese-only build.",
+    "Field names mirror the editorial source: title, story, reflection,",
+    "selfReflection, aha, practice."
+  ],
+  "A1-01": {
+    "title": "I am moving fast, but where am I going?",
+    "story": "My end-of-cycle review went smoothly and I hit every target I had been given. Near the end, my manager asked where I saw myself in three years. I sat still for a few seconds, then gave an answer that sounded reasonable enough. Walking out, I realised it was not what I actually think, just the easiest thing to say at that moment.",
+    "reflection": "Are you busier than you are headed somewhere?",
+    "selfReflection": "What makes you believe you are moving in the right direction?",
+    "aha": "Losing your direction is not the same as standing still. Sometimes it is moving very fast without knowing why you are running.",
+    "practice": "Write down 3 things I want from my career over the next 3 years."
+  },
+  "A1-02": {
+    "title": "I want to leave, but I do not know what I want instead",
+    "story": "I opened the job boards again over lunch, the way I have most weeks lately. I scrolled for a while, saved a few postings and closed the tab without applying to any of them. The thought of leaving comes back fairly often, but every time I ask myself what I would actually want afterwards, no clear answer arrives.",
+    "reflection": "Are you moving away from something, or towards something?",
+    "selfReflection": "What is making you want a change?",
+    "aha": "Leaving a place is not the same as knowing where you want to arrive.",
+    "practice": "List what I want my next job to have."
+  },
+  "A1-03": {
+    "title": "I do a great deal, and none of it feels meaningful",
+    "story": "On Friday afternoon I ticked off the last items and closed out the week's list. Everything that needed doing was done on time, nothing left over. But when I sat for a moment and tried to name what I had actually created this week, no answer came. All I remembered was being very busy, from Monday morning on.",
+    "reflection": "If you look hard, what part of this week might carry a meaning you have not noticed yet?",
+    "selfReflection": "When did you last feel proud of your work?",
+    "aha": "Lasting motivation tends to come from meaning, not from output alone.",
+    "practice": "Write down one moment when my work clearly created value."
+  },
+  "A1-04": {
+    "title": "Is my success still the thing I want?",
+    "story": "I still remember how it felt while I was working towards this position, clear and strong. I have been sitting in it for a while now. Almost everything matches what I once pictured, except the excitement never showed up. I still do not know what to call this flat feeling.",
+    "reflection": "Is there a goal you are chasing only because you once wanted it?",
+    "selfReflection": "How have you changed over the past few years?",
+    "aha": "An old goal does not always fit the person you are now.",
+    "practice": "Revisit a career goal I set for myself 3 years ago."
+  },
+  "A1-05": {
+    "title": "I do not know what actually matters to me",
+    "story": "I sat with two job offers, each stronger in a different place. One paid better, the other had more to learn. I wrote out two columns, deleted them, then wrote them again from scratch. The problem was not missing information. It was that I wanted both, and did not know what I was willing to give up.",
+    "reflection": "If you could keep only the 3 most important things about your work, what would they be?",
+    "selfReflection": "What are you willing to trade away, and what are you not?",
+    "aha": "Clarity usually arrives once we know what matters most.",
+    "practice": "Rank the 5 career factors that matter most to me."
+  },
+  "A1-07": {
+    "title": "I no longer feel I belong here",
+    "story": "At the all-hands, everyone applauded after the section on where the company is heading. I clapped too, right on cue. I used to find these sessions genuinely exciting, and I believed in what I was helping to build. The work itself has not changed. Only the sense of connection went quiet somewhere along the way.",
+    "reflection": "What changed?",
+    "selfReflection": "Do you still feel you are contributing to something larger?",
+    "aha": "People usually leave the meaning before they leave the job.",
+    "practice": "Write down what my current work contributes to other people."
+  },
+  "A1-09": {
+    "title": "Whose definition of success am I living by?",
+    "story": "Some relatives asked about my work over dinner and I told them a few things. Everyone nodded along and said I was doing well, heading the right way. I smiled and took the compliment easily enough. On the way home I realised I had just described a life that sounds fine to anyone listening, and feels hollow to me.",
+    "reflection": "Is your current goal yours, or someone else's?",
+    "selfReflection": "What are you trying to prove?",
+    "aha": "Not every success is your own success.",
+    "practice": "Rewrite my personal definition of success as it stands today."
+  },
+  "A1-10": {
+    "title": "What if I keep going like this for another 3 years?",
+    "story": "I ran into a former colleague who is still in the same role, still telling the same familiar stories as three years ago. We chatted happily for a while and went our separate ways. On the way home I wondered what stories I would be telling if my own next three years passed without any real change.",
+    "reflection": "Does that picture leave you excited or uneasy?",
+    "selfReflection": "What came to mind first?",
+    "aha": "A future is rarely made in one big decision. It is made by the choices repeated every day.",
+    "practice": "Write down one small change I want to make in the next 30 days."
+  },
+  "A3-01": {
+    "title": "How is this happening again?",
+    "story": "I noticed it mid-conversation, when a familiar line was spoken. Different person. Different project. Completely different circumstances. But the feeling was strangely familiar, and I was disappointed in exactly the old way. I sat with it afterwards, trying to remember when I had last landed in this same feeling.",
+    "reflection": "Is something repeating in your experience of work?",
+    "selfReflection": "How many times have you met a situation like this?",
+    "aha": "When an experience keeps returning, it is sometimes trying to teach us something.",
+    "practice": "Write down one problem that has come up at least 3 times this past year."
+  },
+  "A3-02": {
+    "title": "I know I am tired, I do not know why",
+    "story": "I am sleeping enough, and this week's workload is no heavier than usual. From the outside everything is fine, nothing to complain about. Yet this morning I sat in front of the screen for a long while without starting anything. This empty feeling does not match any reason I can come up with.",
+    "reflection": "What is taking your energy?",
+    "selfReflection": "When did you last genuinely feel full of energy?",
+    "aha": "Burnout does not only come from doing too much. Sometimes it comes from doing something meaningless for too long.",
+    "practice": "Note what gave me energy and what drained it this week."
+  },
+  "A3-03": {
+    "title": "I reacted more strongly than the situation deserved",
+    "story": "It was a short note in an email, two or three lines, in a fairly ordinary tone. I replied politely and moved on to something else. But all afternoon I kept going back to read it, and the discomfort stayed exactly where it was. I knew my reaction was bigger than the event, and still could not shake it off.",
+    "reflection": "What in that situation made you react so strongly?",
+    "selfReflection": "What other experience did it remind you of?",
+    "aha": "Sometimes what hurts is not the present event. It is the meaning we attach to it.",
+    "practice": "Next time a strong feeling shows up, ask: \"What is really being touched here?\""
+  },
+  "A3-04": {
+    "title": "I am always busy and never seem to progress",
+    "story": "I opened my calendar for the past six months, packed solid from top to bottom. Not one empty week, not one genuinely free day. But when I tried to find one specific thing that had changed in that time, nothing came to mind. Six full months sitting there, and I do not know where they took me.",
+    "reflection": "If you think back, what small change might you have overlooked?",
+    "selfReflection": "What are you using to measure your growth?",
+    "aha": "What goes unrecorded is usually very hard to see.",
+    "practice": "Note 3 things I do better than I did 6 months ago."
+  },
+  "A3-05": {
+    "title": "I keep making decisions on feeling",
+    "story": "This morning I nearly sent a message resigning, purely because of one tense meeting. By the afternoon, after a colleague said something kind, everything felt fine again and there was no reason to leave at all. Same job, same day, two opposite conclusions. I am not sure which of the two was real.",
+    "reflection": "What emotional state are you usually in when you make important decisions?",
+    "selfReflection": "When do your best decisions tend to appear?",
+    "aha": "Emotion is data. It should not be the driver.",
+    "practice": "Before a big decision, write down what I am feeling."
+  },
+  "A3-06": {
+    "title": "I cannot remember what I have learned",
+    "story": "In a conversation, someone asked what I had learned over the past year. I opened my mouth to answer, then stopped. I have been through plenty of projects, handled plenty of problems, got through more than a few hard situations. Yet right when I needed to name one specific thing, my mind went blank and I gave a vague answer to move on.",
+    "reflection": "Which lessons are you leaving behind?",
+    "selfReflection": "What deserves to be written down more than the rest?",
+    "aha": "Experience only becomes wisdom once it is looked back on.",
+    "practice": "Write out one important lesson from this past month."
+  },
+  "A3-08": {
+    "title": "I always think I should have done better",
+    "story": "The result was good this time, everyone said so, and the numbers agreed. I read the summary through once. But my eyes stopped for a long time on the two places that fell short, and skimmed straight past everything else. By the end of the day, those two places were all I remembered about the work.",
+    "reflection": "Are you holding yourself to a harsher standard than you hold others?",
+    "selfReflection": "If this were your colleague, what would you say to them?",
+    "aha": "Growth needs honest feedback. It does not need constant criticism.",
+    "practice": "Write down one thing I did well today."
+  },
+  "A3-09": {
+    "title": "What am I avoiding looking at?",
+    "story": "I pushed it to next week again, the third time running. I spotted the problem a while ago, not because it is hard to understand, but because every time I mean to start, something more urgent turns up. There is always an urgent list available. I know I am putting it off, and I know I will do the same next week.",
+    "reflection": "Is there something you know but do not yet want to admit?",
+    "selfReflection": "What makes it difficult?",
+    "aha": "What is hardest to look at is usually what most needs to be seen.",
+    "practice": "Write down one truth I am avoiding."
+  },
+  "C1-01": {
+    "title": "I had to do it myself again",
+    "story": "I handed the work over at the start of the week, agreed a clear deadline, and checked in on progress exactly twice along the way. Every answer I got was that things were fine. On the afternoon it was due, I opened it and knew at once I would be sitting back down with it. I worked late, said nothing more, and told myself I would do it differently next time.",
+    "reflection": "What made trust difficult in this situation?",
+    "selfReflection": "Is this a one-off, or an experience that repeats?",
+    "aha": "Trust is not lost in a single broken promise. It is lost when the breaking becomes a habit.",
+    "practice": "Note one situation where I felt I was carrying someone else's load."
+  },
+  "C1-02": {
+    "title": "I always have to check again",
+    "story": "After handing the work over, I opened the file again at the end of the day, just to look. The next day I messaged to ask about progress, even though nothing was due. The day after that I opened it once more. I know I am being a nuisance, but every time I mean to leave it alone, my head produces a picture of everything going wrong.",
+    "reflection": "What makes it hard for you to let go of control?",
+    "selfReflection": "Are you short on trust, or short on information?",
+    "aha": "Not all control comes from responsibility. Sometimes it comes from a lack of trust.",
+    "practice": "Identify one task I can hand over more fully this week."
+  },
+  "C1-03": {
+    "title": "People say one thing and do another",
+    "story": "The meeting ended in agreement, everyone nodding at the final plan. I wrote it up and sent it round straight afterwards. A week later, once things were moving, I watched it play out in an entirely different way. Nobody objected in the room, and almost nobody did what we had agreed.",
+    "reflection": "How do you react when words and actions do not line up?",
+    "selfReflection": "How does that affect the way you work with people?",
+    "aha": "Trust is built on consistency, not on promises.",
+    "practice": "Watch someone I find dependable and note what they do differently."
+  },
+  "C1-04": {
+    "title": "I do not know who I could ask",
+    "story": "I sat with the problem for a long time, reading it over and over without finding a way through. I opened my contacts, scrolled past every name, and closed it again. Some people would know how, but I was not sure they were free. Some would gladly help, but it is not their field. In the end I worked it out alone, far more slowly.",
+    "reflection": "Do you feel alone in your work?",
+    "selfReflection": "Who can you turn to when things get hard?",
+    "aha": "Trust is not only believing others will do the work. It is also believing you will not have to face it alone.",
+    "practice": "List 3 people I can turn to when I need support."
+  },
+  "C1-05": {
+    "title": "I hold on because I am afraid of being let down",
+    "story": "I could have given part of this to someone else, and I did mean to ask. I drafted the message in my head, even worked out how to phrase it gently. Then I remembered the last time I did that and how it turned out. I dropped the idea, did all of it myself, and left about two hours later than planned.",
+    "reflection": "Are you protecting the quality of the work, or protecting your own feelings?",
+    "selfReflection": "What made you stop expecting things of other people?",
+    "aha": "Sometimes a lack of trust is how we end up isolating ourselves.",
+    "practice": "Identify one small task I can share with someone else."
+  },
+  "C1-06": {
+    "title": "I am not sure my manager will keep their word",
+    "story": "The promise was made clearly enough, in front of several people. I noted it and waited. A few months went by, and nobody mentioned it again, including the person who said it. This is not the first time, so this time I did not ask either. I quietly adjusted the plans I had built on that promise.",
+    "reflection": "What costs you the most trust?",
+    "selfReflection": "Do you still believe those commitments?",
+    "aha": "Trust inside an organisation is usually built or lost in very small things.",
+    "practice": "Note one commitment that was kept and one that was not."
+  },
+  "C1-07": {
+    "title": "I am reluctant to ask for help",
+    "story": "I am carrying more than I can handle, and that is fairly obvious to me. Someone walked past and asked whether I needed any support. I said I was fine, almost by reflex. Not because I did not need it, but because explaining the whole tangle sounded more tiring than just finishing it myself.",
+    "reflection": "What makes you hesitate to look for support?",
+    "selfReflection": "When did you last receive help that genuinely helped?",
+    "aha": "Trust shows up in more than what we give. It also shows up in our ability to accept support.",
+    "practice": "Ask one person to help me with one specific thing this week."
+  },
+  "C1-09": {
+    "title": "I used to trust them, and now I do not",
+    "story": "We still work together and still talk normally. But since that happened, I have started keeping a record of every exchange and checking what they send more carefully. Nobody has noticed the change, not even them. Only I know I am no longer working the old way.",
+    "reflection": "What changed that trust?",
+    "selfReflection": "Are you losing trust in one person, or in a kind of experience?",
+    "aha": "One bad experience can shape how we see many other relationships.",
+    "practice": "Separate the specific person from the specific experience."
+  },
+  "C1-10": {
+    "title": "I feel at ease working with them",
+    "story": "When the assignment list went out, I skimmed it and saw their name on the team. Something in me eased a little, even though the workload had not dropped at all. Not because everything they do is perfect, I know better than that. It is that what they say they will do, they do, and I do not have to check.",
+    "reflection": "Who do you feel most at ease working alongside?",
+    "selfReflection": "What creates that feeling?",
+    "aha": "Trust is not a vague feeling. It is built from very specific, repeated behaviour.",
+    "practice": "Note 3 behaviours that make me trust a person."
+  },
+  "C2-01": {
+    "title": "My idea vanished in the meeting",
+    "story": "I had prepared quite carefully and written the main points down so I would not forget them. When my turn came, I said my idea. Nobody responded. The conversation carried on as if it had never been said. Ten minutes later someone else made almost exactly the same point. This time everyone was enthusiastic, and I sat looking at my own piece of paper.",
+    "reflection": "How familiar is this situation to you?",
+    "selfReflection": "When did you last feel your voice went unseen?",
+    "aha": "Sometimes what keeps us quiet is not a shortage of ideas. It is having spoken up many times without it making any difference.",
+    "practice": "This week, note one time I wanted to speak up and chose silence."
+  },
+  "C2-02": {
+    "title": "The meeting ended and the most important thing went unsaid",
+    "story": "I spotted a sizeable risk in the plan as soon as I heard it presented. I was going to raise my hand, and had even arranged the words in my head. Then I told myself the others had surely seen it too, that I was probably overthinking. The meeting finished on time and everyone was satisfied. Nobody mentioned the thing I had been thinking.",
+    "reflection": "How many times have you held back what you really wanted to say?",
+    "selfReflection": "What usually makes you hesitate to speak up?",
+    "aha": "Many organisations are not short of ideas. They are short of people who feel safe enough to say what they see.",
+    "practice": "Write down one thing I am holding back that I think the team should know."
+  },
+  "C2-03": {
+    "title": "I agreed while disagreeing inside",
+    "story": "By decision time the room was tired and clearly wanted to wrap up. I knew the chosen option was not the best one, and I had specific reasons for thinking so. But everyone was nodding, and I did not want to be the one person extending the meeting. I nodded too, and the group moved on to the next item.",
+    "reflection": "Do you often agree just to avoid an argument?",
+    "selfReflection": "What makes it hard for you to voice a different view?",
+    "aha": "Agreement is not always a sign of alignment. Sometimes it is only a sign of collective silence.",
+    "practice": "Next time I see it differently, try asking a question instead of objecting outright."
+  },
+  "C2-04": {
+    "title": "I was cut off mid-sentence",
+    "story": "I was getting to the most important part when someone cut in and added their own point. The conversation turned that way and travelled quite far. I waited for a gap to come back to it, and the gap never arrived. By the end nobody asked what I had been about to say, and I did not raise it again.",
+    "reflection": "How did that leave you feeling?",
+    "selfReflection": "After experiences like that, does the way you take part in meetings change?",
+    "aha": "A few small experiences, repeated, can reduce participation more than we think.",
+    "practice": "Watch whether anyone gets cut off in a meeting this week."
+  },
+  "C2-05": {
+    "title": "I want to give feedback but I am afraid of offending",
+    "story": "I saw a colleague struggling with something I knew how to unpick. One sentence would have saved them half a day. I stood there for a while, working out how to say it without sounding critical. In the end I could not find a way gentle enough, so I went back to my desk and said nothing.",
+    "reflection": "Do you often hold back feedback to protect a relationship?",
+    "selfReflection": "What did earlier workplaces teach you about feedback?",
+    "aha": "Many people do not avoid feedback because they care too little. They avoid it because they care too much about the relationship.",
+    "practice": "Try giving one specific, positive piece of feedback this week."
+  },
+  "C2-06": {
+    "title": "I took the blame instead of explaining",
+    "story": "The problem came up in the meeting and every eye turned to me. In truth there were several causes, and my part was only a small one. But explaining right then would have sounded like blaming other people. I took responsibility, apologised briefly, and the meeting moved on to the next item very quickly.",
+    "reflection": "Do you often choose silence to avoid being judged?",
+    "selfReflection": "What do you fear most when you make a mistake?",
+    "aha": "When people fear judgement, they tend to protect the image rather than share the truth.",
+    "practice": "Note the last mistake I made and what I learned from it."
+  },
+  "C2-07": {
+    "title": "I had a question and did not ask it",
+    "story": "The presenter asked whether anyone had questions, and the room went quiet. Looking around, everyone seemed to have followed it, and a few nodded to show they understood. I was still unclear on something fairly basic from the very beginning. I was about to raise my hand, then thought everyone else probably knew that already, and let it go.",
+    "reflection": "Do you often pretend to have understood to avoid feeling awkward?",
+    "selfReflection": "What makes it hard for you to ask a question?",
+    "aha": "The questions that go unasked usually produce far more expensive mistakes.",
+    "practice": "This week, deliberately ask about one thing I genuinely do not understand."
+  },
+  "C2-10": {
+    "title": "I used to be very engaged, and I am not anymore",
+    "story": "I happened to reopen the folder of proposals I wrote when I first joined. There are seven or eight of them, each long and full of ideas. The most recent is from over two years ago. I still work hard now and still finish everything I am given. That folder just stopped growing.",
+    "reflection": "What changed?",
+    "selfReflection": "When did you start stepping back?",
+    "aha": "Engagement does not disappear in a day. It fades after enough times of feeling your voice no longer counts.",
+    "practice": "Recall a time I was genuinely proactive. What was different then?"
+  },
+  "P-01": {
+    "title": "I finished something harder than I expected",
+    "story": "I pressed send, breathed out, and stayed looking at the screen for a few more seconds. It started with a tight deadline and vague requirements, and I had genuinely dreaded this one. Yet here it was, finished, and better than I had hoped. What stayed with me was a pleasant surprise: I could not work out why I had let fear inflate the difficulty quite so much.",
+    "reflection": "What helped you get through this?",
+    "selfReflection": "Do you usually stop to acknowledge the times you do well?",
+    "aha": "Successes fade from memory faster than difficulties do. Pausing briefly to keep hold of one is a form of reflection too.",
+    "practice": "Note the specific thing I got right here, so I can repeat it next time."
+  },
+  "P-02": {
+    "title": "My manager recognised my work",
+    "story": "It was only meant to be a routine progress meeting. So when my manager suddenly stopped to praise how I had been handling things lately, I froze for a moment. The compliment arrived so naturally in such an ordinary setting that I was thrown, managed only a short thank you, and went back to my desk carrying a quiet gladness and slight embarrassment at how clipped my own response had been.",
+    "reflection": "What did that recognition touch in you?",
+    "selfReflection": "Do you believe it, or does some part of you still doubt it?",
+    "aha": "Recognition from others has value, but the real meaning arrives when I grant it to myself as well.",
+    "practice": "Write down exactly what was said, and one sentence I tell myself to keep the feeling."
+  },
+  "P-03": {
+    "title": "I helped a colleague untangle a hard problem",
+    "story": "The message asking for help arrived as the working day was ending. My colleague had been going round in circles with it for a while. I did not have a perfect answer either, but as I sat with him and asked a few questions that turned the problem around, he found the key himself. A nice paradox to end the day on: I had just helped someone by doing almost nothing.",
+    "reflection": "What made you willing to stop and help, even while you were busy yourself?",
+    "selfReflection": "How does helping someone feel different from finishing something alone?",
+    "aha": "Sometimes the most valuable thing I bring is not the answer, but staying present long enough for someone to find their own.",
+    "practice": "Message that person to ask whether the approach actually worked."
+  },
+  "P-04": {
+    "title": "I got a raise or a promotion",
+    "story": "I squinted and read the line again to be sure I had not misread it. After a long stretch of effort, the recognition had finally arrived. It felt light and happy. Even so, I held off telling anyone, as though part of me were still waiting for something before I could believe it was real.",
+    "reflection": "What in the journey so far led you here?",
+    "selfReflection": "Are you letting yourself actually enjoy this, or have you already jumped to the next pressure?",
+    "aha": "A good result tends to bring new expectations very quickly. But letting yourself stop and celebrate is part of the journey too, not a distraction from it.",
+    "practice": "Do one small thing to mark this before thinking about the next step."
+  },
+  "P-05": {
+    "title": "Someone thanked me out of the blue",
+    "story": "The message came just as I was tidying my desk to leave. An unprompted, sincere thank you for something I had thought of as minor and not worth much attention. Standing in the middle of the office, I read it over and over, glad and a little flustered, unsure how to answer such appreciation properly.",
+    "reflection": "What have you done that felt small to you and mattered to someone else?",
+    "selfReflection": "Do you tend to undervalue your own quiet contributions?",
+    "aha": "What we treat as ordinary is sometimes what other people remember longest.",
+    "practice": "Note it down, to remind myself that small contributions carry real value."
+  },
+  "P-06": {
+    "title": "Today went smoothly, exactly as expected",
+    "story": "A quiet satisfaction passed through me as I ticked the last box on today's list. Nothing went wrong. No crisis to put out. Everything ran exactly to plan. A perfect working day passed easily and quickly, leaving a paradox behind: the smoothest days are usually the easiest ones to forget.",
+    "reflection": "How often do days like this happen for you?",
+    "selfReflection": "Do you value the steady days, or only notice when something goes wrong?",
+    "aha": "Stability tends to be taken for granted, when it is the result of a great many things quietly done right.",
+    "practice": "Note one thing that helped today go smoothly."
+  },
+  "P-07": {
+    "title": "I felt completely in control of my own pace",
+    "story": "This morning, the moment I opened my task list, I felt a rare clarity. I knew exactly where to start, what came first and what could wait, instead of chasing deadlines. The pace was entirely within my control. It felt excellent, although I still have not worked out what I did differently to arrive at this state.",
+    "reflection": "What was different today compared with the days you feel swept along?",
+    "selfReflection": "How long can you keep this pace?",
+    "aha": "Owning your pace does not mean doing less. It means knowing what genuinely needs your attention right now.",
+    "practice": "Note how I arranged my work today, and try repeating it another day."
+  },
+  "P-08": {
+    "title": "I learned something small and genuinely useful",
+    "story": "I picked this trick up by chance while looking up something else entirely. Nothing grand, just a new way of handling a familiar task far more quickly and cleanly. Handy as it was, it came with a rueful sigh: why had I plodded along the old path all this time without thinking to try anything different?",
+    "reflection": "Could this small thing change how you work over the long run?",
+    "selfReflection": "Do you tend to skip small lessons because they do not feel big enough to keep?",
+    "aha": "Most progress does not come from big turning points. It comes from many small things accumulating.",
+    "practice": "Write down what I just learned, in my own words."
+  },
+  "P-09": {
+    "title": "I had a genuinely good conversation with a colleague",
+    "story": "It happened in a flash by the office water cooler. No agenda, no pressure of a meeting. Only a few minutes of talk, and yet it brought a fresh current of air. Strangely, the pleasant after-effect was enough to lift the tension and keep me light and clear-headed for the whole afternoon.",
+    "reflection": "What made that conversation different from your usual exchanges?",
+    "selfReflection": "Are you making enough room for connections like that?",
+    "aha": "Good working relationships are rarely built in big meetings. They are built in many small conversations like this one.",
+    "practice": "Deliberately create one more conversation like it this week."
+  },
+  "P-10": {
+    "title": "Nothing special happened today, and I feel genuinely fine",
+    "story": "The screen went dark on time. I stood up and carried neither files nor worries home. If I had to recount it, I probably could not name a single standout detail from today. What stayed was a settled, easy feeling, with no invisible pressure weighing on it. A shame, really, that quiet days like this slip out of memory even faster than bad ones.",
+    "reflection": "Do you give the unremarkable days their due, or only remember the turbulent ones?",
+    "selfReflection": "What is going well that you rarely notice?",
+    "aha": "Not every experience worth keeping is dramatic. Sometimes calm is important data too.",
+    "practice": "Write one short line about how today felt, even with nothing to report."
+  },
+  "S1-01": {
+    "title": "I was given new work without a clear scope",
+    "story": "The handover conversation lasted under ten minutes, and I came out with a list of tasks. But the further in I got, the less clear I was about where my responsibility ended and who would decide the rest. I finished the part that was definitely mine and stopped. All that week I kept looking at the remainder and wondering whether to touch it.",
+    "reflection": "What makes the edges of your responsibility hard to see here?",
+    "selfReflection": "What do you usually do when you are unsure of your own scope?",
+    "aha": "Role ambiguity tends to make people do too little for fear of overstepping, or too much for fear of missing something, and rarely the right amount.",
+    "practice": "Write the 3 questions I need to ask next time to pin down the scope."
+  },
+  "S1-02": {
+    "title": "No clear process for something important",
+    "story": "This matters, everyone says so. But when I looked for specific guidance to follow, there was nothing. I leaned on how I had seen other people do it, added a little judgement of my own, and started. The whole way through I worked and hoped I was heading the right way, with no way to check until it was over.",
+    "reflection": "What do you usually do when you have to guess the process for something important?",
+    "selfReflection": "Is there similar work with existing guidance you could draw on?",
+    "aha": "No process does not mean no process is needed. Sometimes it simply has never been written down.",
+    "practice": "Write down how I did this, so next time there is a reference to follow."
+  },
+  "S1-03": {
+    "title": "Two people described the same thing two different ways",
+    "story": "I asked the first person and got a clear, decisive answer. To be sure, I asked someone else and got an entirely different one. Both were confident, both had their own convincing reasons. I sat between the two versions knowing that whichever I followed, one of them would think I had got it wrong.",
+    "reflection": "How does it feel to have to decide for yourself who is right?",
+    "selfReflection": "How do you usually handle conflicting information?",
+    "aha": "When two sources contradict each other, the problem is usually not the people speaking. It is that nobody aligned beforehand.",
+    "practice": "Work out who is best placed to settle this, and ask them directly."
+  },
+  "S1-04": {
+    "title": "I do not know who makes the final call",
+    "story": "The project decision had to be settled today. I sat looking at the screen for a long while, unsure whether it was mine to make, my manager's, or someone else's on the team. I drafted a message asking, deleted it, drafted it again. In the end I decided to wait another day, and only later learned that someone else had been waiting in exactly the same way.",
+    "reflection": "How does that uncertainty change the way you act?",
+    "selfReflection": "Do you tend to wait, or to decide yourself, in situations like this?",
+    "aha": "When it is unclear who decides, organisations usually lose time not through lack of ability, but through lack of definition.",
+    "practice": "Ask one direct question: \"Who signs this off?\""
+  },
+  "S1-05": {
+    "title": "The documentation is old and nobody has updated it",
+    "story": "I opened the guide and felt reassured to have something to follow. Halfway through, a colleague passed by, glanced at it and said that method was dropped ages ago. The process had changed, only nobody had corrected the document. I went back to the start, and this time I had no idea what to rely on.",
+    "reflection": "How does this affect your trust in other documentation?",
+    "selfReflection": "Do you usually verify information before following it?",
+    "aha": "Outdated documentation is sometimes more dangerous than none, because it creates a false sense of certainty.",
+    "practice": "Update the section I just found to be out of date."
+  },
+  "S1-07": {
+    "title": "My responsibilities overlap with a colleague's",
+    "story": "It ran along fine for weeks. Only when something went wrong did I learn my colleague also thought this part was theirs. Each of us assumed the other would handle it. The uncomfortable part was not the incident itself, but that nobody had done anything wrong and it still did not get done.",
+    "reflection": "How does this change the way you work with that colleague from now on?",
+    "selfReflection": "What do you usually do when you spot overlapping responsibility?",
+    "aha": "Overlapping responsibility is rarely one person's fault. It is usually a sign the boundaries were never drawn clearly.",
+    "practice": "Propose a clearer split for the part that is overlapping."
+  },
+  "S1-08": {
+    "title": "I took on work without knowing its priority",
+    "story": "This morning I opened my email and found seven things to handle, every one of them labelled important. I started with the one easiest to picture, since at least it had a clear beginning. By the end of the day, when my manager asked for an update on something else entirely, I realised I had picked the wrong order. Everything is important, and nobody says which must be done first and which can wait until next week.",
+    "reflection": "How do you decide the order yourself when nobody tells you?",
+    "selfReflection": "Does your sense of priority match what the person assigning the work actually expects?",
+    "aha": "Working hard does not guarantee working in the right order. The wrong priority can waste every bit of the effort.",
+    "practice": "Ask whoever assigned the work: \"If I could only do one first, which is it?\""
+  },
+  "S1-10": {
+    "title": "My role has changed and nobody has said so",
+    "story": "I came across my job description again while clearing out an old mailbox. Reading it, it felt oddly unfamiliar. Most of what I do every day now is not in it, and several items listed there I have not touched in a long time. There has been no formal conversation about the shift, and I am not sure how to open one.",
+    "reflection": "How does this quiet change affect the way you see your own work?",
+    "selfReflection": "Do you think you should raise this change with someone?",
+    "aha": "Roles usually change gradually before anyone names the change. Naming it early makes things clearer for both sides.",
+    "practice": "Write down what my current work has become, compared with the original description."
+  },
+  "S2-01": {
+    "title": "I heard important news through the grapevine, not through an announcement",
+    "story": "The story was told while waiting for the lift, in the offhand tone of a minor detail. But it was a major change, something I should have heard from my manager rather than from a colleague by chance. I nodded and pretended I already knew. There has still been no formal announcement. What unsettles me is not really the news itself, but the feeling of standing at the edge of what is happening.",
+    "reflection": "How does this affect your sense of security at work?",
+    "selfReflection": "What do you usually do when news reaches you through an unofficial channel?",
+    "aha": "When important information arrives as rumour rather than through official channels, trust in the organisation usually takes more damage than the news itself does.",
+    "practice": "Confirm the information through an official channel before acting on it."
+  },
+  "S2-02": {
+    "title": "I am lost among too many group chats",
+    "story": "I swiped through the unread list, the count climbing every few minutes I looked away. One topic is discussed in one group, another in a completely different one. I have missed important things purely because they landed in a group I watch less closely. The paradox is that the more channels there are, the less sure I am that I am holding on to anything that actually matters.",
+    "reflection": "What makes you most likely to miss information in an environment with this many channels?",
+    "selfReflection": "Do you have a way of deciding which channel deserves closer attention?",
+    "aha": "Too many channels can create a feeling of constant connection while reducing your grip on what truly matters.",
+    "practice": "Pick one channel I will follow more closely this week."
+  },
+  "S2-03": {
+    "title": "Nobody took notes, and everyone remembers it differently",
+    "story": "We left the room feeling everything was settled. A few days later, starting the work, a colleague and I realised we were holding two different versions of the same agreement. Nobody had written minutes, so there was nothing to check against. The argument that followed was not about who was right, but about how much we had each trusted our own memory.",
+    "reflection": "How does this difference affect the way you work from here?",
+    "selfReflection": "Do you have a habit of recording important decisions in meetings?",
+    "aha": "Individual memory is not always as reliable as one line written down and agreed at the time.",
+    "practice": "Send a short message summarising what I understood was agreed, for others to confirm."
+  },
+  "S2-05": {
+    "title": "I am not sure my information reached the person who needed it",
+    "story": "I wrote it up carefully, set out the problem and a suggested way forward, and sent it. A day passed, then a week, with no response. I do not know whether it reached the right person and is being considered, or got lost somewhere along the way. The silence leaves me wondering whether, next time something like this comes up, I will bother reporting it at all.",
+    "reflection": "What does this silence make you think about reporting things next time?",
+    "selfReflection": "Do you have a way of confirming your information landed where it should?",
+    "aha": "Silence after a report does not always mean it was ignored, but the uncertainty it creates is real all the same.",
+    "practice": "Follow up to confirm what I sent was received."
+  },
+  "S2-06": {
+    "title": "The team's rhythm is uneven, frantic then silent",
+    "story": "Some weeks the messages pile up from early morning until late at night, everyone too busy to breathe. Then a week goes strangely quiet, with almost nobody contacting anyone. I cannot predict the shared rhythm, so I cannot arrange my own work around it. The tiring part is not the frantic weeks, it is never knowing which kind next week will be.",
+    "reflection": "How does this unpredictability affect the way you plan your own work?",
+    "selfReflection": "Can you see any pattern in the unevenness?",
+    "aha": "An uneven working rhythm is rarely random. It usually reflects how the work was planned upstream.",
+    "practice": "Track the team's rhythm over the past 2 weeks to look for a pattern."
+  },
+  "S2-07": {
+    "title": "I have no regular check-in with my manager",
+    "story": "I noticed it while trying to remember the last time the two of us talked about something that was not urgent. No clear answer came. Almost every exchange we have circles around a problem needing immediate attention. I am not short of information to do the job, I am short of a space to talk about things that have not become problems yet.",
+    "reflection": "How does this affect how supported you feel at work?",
+    "selfReflection": "Would you want to propose a more regular rhythm of conversation?",
+    "aha": "Regular conversations, even short ones, usually create more reassurance than long conversations that only happen when something is wrong.",
+    "practice": "Propose a short, regular check-in with my manager."
+  },
+  "S2-08": {
+    "title": "After the project, nobody sat down to look at what happened",
+    "story": "The project ended on Friday afternoon, and by Monday morning everyone was inside a different one. There was no look-back, nobody asked what had run well and what needed attention. The lessons are still there, scattered through individual memories. I wonder whether, next time something similar comes up, we will even remember having been through it.",
+    "reflection": "How does skipping the look-back affect the way the team works on the next project?",
+    "selfReflection": "What do you think most deserves to be drawn out of the project just finished?",
+    "aha": "Without a formal look-back, important lessons usually survive only in scattered individual memories.",
+    "practice": "Write down 2 things I think the team should take forward from this project."
+  },
+  "S2-10": {
+    "title": "I found my organisation clearer than I had assumed",
+    "story": "I spent half a day drafting a new process, because everyone seemed to be doing it differently. Before presenting it, I went looking for the old document just to be sure. There it was, issued over a year ago, almost exactly what I had just written. What stopped me was not the wasted effort, but the question of why something that already existed had made no difference at all to how we work.",
+    "reflection": "What made this experience different from the times information has been hard to come by?",
+    "selfReflection": "Do you usually acknowledge the times things run smoothly, or only notice the breakdowns?",
+    "aha": "Clarity that works well tends to be invisible, and because it causes no trouble we forget to give it credit.",
+    "practice": "Note what made this go smoothly, so I can recognise it and repeat it."
+  },
+  "P-11": {
+    "title": "I found the information I needed in minutes",
+    "story": "I needed an old figure to cross-check and had braced myself to spend half a day digging. It was in the very first folder I opened, correctly named, correct version. I had what I needed and was back on my task in under five minutes. I was mostly surprised that I had simply assumed this would be hard.",
+    "reflection": "What made you assume finding information would be hard?",
+    "selfReflection": "Do you notice when a system runs smoothly, or only remember the breakdowns?",
+    "aha": "Clarity that works is usually invisible. We only see it by comparison with the times we had to ask around in circles.",
+    "practice": "Note where I just found that information, so next time I do not have to guess."
+  },
+  "P-12": {
+    "title": "The handover was clean",
+    "story": "The person leaving sent me a short document listing what was in flight and where to find each thing. I read it once, asked exactly two questions, and could start straight away. Through that first week I never had to message with another query. I still keep that document, even though I no longer need it.",
+    "reflection": "What about this handover let you pick things up so quickly?",
+    "selfReflection": "When it is your turn to hand over, what will you prepare?",
+    "aha": "A good handover saves more time for the person staying than for the person leaving.",
+    "practice": "Start keeping a list of my own work in flight, in case I need to hand it over."
+  },
+  "P-13": {
+    "title": "I was given work with enough information from the start",
+    "story": "The task came with a short description: what it needed to achieve, who approves it, and when it is due. There was nothing to go back and ask. I started that same afternoon, without losing time working out how much I was allowed to decide. It felt completely different from previous times, though I am not sure who did something differently on this one.",
+    "reflection": "What specifically about this handover let you start immediately?",
+    "selfReflection": "When you assign work to other people, how clear do you usually make it?",
+    "aha": "A few clear lines at the start usually save many rounds of back and forth later.",
+    "practice": "Next time I assign work, I will be clear on three things: the result needed, who approves, and the deadline."
+  },
+  "P-14": {
+    "title": "I turned down something unreasonable",
+    "story": "The request arrived when my calendar was already full, and it was not my area either. I answered that I could not take anything more on this week, and suggested someone better suited. They agreed, easily, with no friction at all. Sitting back afterwards, I realised I had worried far more than the situation warranted before pressing send.",
+    "reflection": "What worried you before saying no, given your reasons were fairly clear?",
+    "selfReflection": "Where does saying no usually feel hardest for you?",
+    "aha": "The hard part of refusing is usually the moment before you speak, not the listener's reaction.",
+    "practice": "Note how I phrased this refusal, so I can reuse it when needed."
+  },
+  "P-15": {
+    "title": "I finally cleared something long overdue",
+    "story": "It had been on my list for weeks, pushed to tomorrow every time I saw it. This morning I decided to do it first, before even opening my inbox. It turned out to take about forty minutes. I sat watching the line disappear from the list, a little sorry I had let it drag on so long.",
+    "reflection": "What kept pushing this one back so many times?",
+    "selfReflection": "Is anything else sitting on your list the same way?",
+    "aha": "The weight of an overdue task is usually far heavier than the time it actually takes.",
+    "practice": "Pick one overdue item and do it first thing tomorrow morning."
+  },
+  "P-16": {
+    "title": "Our team worked together seamlessly",
+    "story": "The work split up quickly, each of us knowing our part without a long discussion. Two overlaps came up along the way and were sorted immediately with a few messages. By the end of the session everything fitted together. We never needed another meeting, and I think that is the part worth noticing.",
+    "reflection": "What helped your team work together so smoothly this time?",
+    "selfReflection": "Do you think it came from the people, or from how the work was arranged?",
+    "aha": "Being in sync is usually the result of previous work together, not the luck of one session.",
+    "practice": "Note how the team split the work this time, so it can be repeated."
+  },
+  "P-17": {
+    "title": "I said something difficult and was heard",
+    "story": "I weighed it up for a long time before speaking, and even considered dropping it. But I said it anyway, briefly and directly. The listener did not react as sharply as I had expected, and instead asked a few questions to understand better. The conversation ended far more lightly than the version I had built in my head.",
+    "reflection": "How did the version in your head differ from what actually happened?",
+    "selfReflection": "Is there anything else you are weighing up but have not said?",
+    "aha": "Fear usually describes a conversation as far worse than it turns out to be.",
+    "practice": "Pick one thing I am hesitant to say and try saying it this week."
+  },
+  "P-18": {
+    "title": "I was trusted with something important",
+    "story": "It was handed to me with no careful instructions, and nobody asked whether I could manage it. Just a short sentence, that this part was mine to handle. I took it, and found myself more careful than usual while working on it. That trust arrived very lightly, and carried a weight of its own.",
+    "reflection": "How did that trust change the way you did this work?",
+    "selfReflection": "What do you think it was about you that led to being given this?",
+    "aha": "Being trusted usually drives people further than direct encouragement does.",
+    "practice": "Note what I have just been trusted with, and why I think I was chosen."
+  },
+  "P-19": {
+    "title": "A disagreement was settled easily",
+    "story": "We started quite far apart, and I had braced myself for a long argument. But instead of defending our positions, we each said what we were worried about. It turned out we were worried about two different things, and both were reasonable. The final approach belonged to neither of us.",
+    "reflection": "What sent this exchange in a different direction from the one you expected?",
+    "selfReflection": "Do you usually open a disagreement with your position, or with your worry?",
+    "aha": "Many disagreements are not about the solution. They are about worries that have not been said out loud.",
+    "practice": "Next time we disagree, I will say what worries me before I say my proposal."
+  },
+  "P-20": {
+    "title": "I got feedback that was hard to hear, and I am grateful for it",
+    "story": "The comment came fairly bluntly, and my first instinct was to explain myself right away. I held back, listened to the end, then asked one question for clarity. At home I was still thinking about it, slightly uncomfortable. But the next morning I realised they had been right, and that saying it must have taken a fair amount of thought.",
+    "reflection": "What helped you listen to the end instead of explaining straight away?",
+    "selfReflection": "How long does hard feedback usually take to become useful to you?",
+    "aha": "Honest feedback usually costs the person giving it more than we assume.",
+    "practice": "Thank the person who gave me that feedback, even though it was days ago."
+  },
+  "P-21": {
+    "title": "A small improvement I suggested was adopted",
+    "story": "I raised it fairly casually in a conversation, not expecting it to go anywhere. A few weeks later I saw the new way had become the default, and nobody mentioned whose idea it was. I did not say anything either. But every time I see it running, there is still a small and rather pleasant feeling.",
+    "reflection": "What does that feeling tell you about what makes work meaningful to you?",
+    "selfReflection": "Do you often put forward small ideas like that?",
+    "aha": "Many lasting changes start from small suggestions, not from big initiatives.",
+    "practice": "Put forward one small improvement I have in mind, even if it may not be used."
+  },
+  "P-22": {
+    "title": "I can see I am doing better than before",
+    "story": "I met the same kind of situation that cost me a whole day back at the start of the year. This time I handled it in about an hour without asking anyone. I did not even notice until I shut the laptop. It turns out I have improved at something I never set as a goal.",
+    "reflection": "Where did this progress come from, if you never deliberately practised it?",
+    "selfReflection": "What else have you got better at without noticing?",
+    "aha": "Most progress happens quietly, and only shows itself when we meet an old situation again.",
+    "practice": "Recall something that used to be hard for me and look at how I do it now."
+  },
+  "P-23": {
+    "title": "A process that used to be tangled now runs cleanly",
+    "story": "This used to pass through three or four people, take days each time, and get stuck somewhere along the way. Today I did it again and everything went straight through. I had to check whether I had skipped a step, it felt so quick. No step was missed, the process is simply different now.",
+    "reflection": "Do you know who or what changed this process?",
+    "selfReflection": "Do you usually notice when an old difficulty has been improved?",
+    "aha": "Quiet improvements are rarely announced. They are only noticed by the people who lived with the old way.",
+    "practice": "Find out who improved this process and say thank you."
+  }
+}

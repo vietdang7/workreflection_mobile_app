@@ -17,13 +17,13 @@ import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 import '../support/fake_repository.dart';
 
 MobileProfile _profile(String userId, String name) => MobileProfile(
-      userId: userId,
-      displayName: name,
-      reminderEnabled: true,
-      language: 'vi',
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: DateTime(2026, 1, 1),
-    );
+  userId: userId,
+  displayName: name,
+  reminderEnabled: true,
+  language: 'vi',
+  createdAt: DateTime(2026, 1, 1),
+  updatedAt: DateTime(2026, 1, 1),
+);
 
 void main() {
   group('isUserSwitch', () {
@@ -88,24 +88,26 @@ void main() {
       expect(second?.displayName, 'Duy Thong');
     });
 
-    test('reset kéo theo cả provider chỉ đọc gián tiếp qua repository',
-        () async {
-      final repo = FakeWrRepository()
-        ..seedProfile(_profile('user-a', 'Thedangs'));
-      final container = ProviderContainer(
-        overrides: [wrRepositoryProvider.overrideWithValue(repo)],
-      );
-      addTearDown(container.dispose);
+    test(
+      'reset kéo theo cả provider chỉ đọc gián tiếp qua repository',
+      () async {
+        final repo = FakeWrRepository()
+          ..seedProfile(_profile('user-a', 'Thedangs'));
+        final container = ProviderContainer(
+          overrides: [wrRepositoryProvider.overrideWithValue(repo)],
+        );
+        addTearDown(container.dispose);
 
-      await container.read(insightCountProvider.future);
-      await container.read(latestInsightProvider.future);
+        await container.read(insightCountProvider.future);
+        await container.read(latestInsightProvider.future);
 
-      resetUserScopedProviders(container.invalidate);
+        resetUserScopedProviders(container.invalidate);
 
-      // Sau reset, hai provider này phải ở trạng thái đang tải lại chứ không
-      // giữ nguyên con số đã đọc bằng phiên của người cũ.
-      expect(container.read(insightCountProvider), isA<AsyncLoading<int>>());
-      expect(container.read(latestInsightProvider).isLoading, isTrue);
-    });
+        // Sau reset, hai provider này phải ở trạng thái đang tải lại chứ không
+        // giữ nguyên con số đã đọc bằng phiên của người cũ.
+        expect(container.read(insightCountProvider), isA<AsyncLoading<int>>());
+        expect(container.read(latestInsightProvider).isLoading, isTrue);
+      },
+    );
   });
 }

@@ -25,7 +25,8 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileAsync = ref.watch(mobileProfileProvider);
-    final displayName = profileAsync.valueOrNull?.displayName ?? tr('bạn', 'you');
+    final displayName =
+        profileAsync.valueOrNull?.displayName ?? tr('bạn', 'you');
     return Scaffold(
       backgroundColor: WrColors.pageBg,
       body: SafeArea(
@@ -87,10 +88,7 @@ class _HomeHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            l10n.homeGreeting(displayName),
-            style: WrTextStyles.greeting,
-          ),
+          Text(l10n.homeGreeting(displayName), style: WrTextStyles.greeting),
           const SizedBox(height: 4),
           Text(
             key: const Key('home_date_title'),
@@ -207,7 +205,9 @@ class _SystemNoticeCard extends ConsumerWidget {
 
     return situationsAsync.when(
       loading: () => const _LoadingCard(),
-      error: (e, _) => _ErrorCard(onRetry: () => ref.invalidate(recurringSituationsProvider)),
+      error: (e, _) => _ErrorCard(
+        onRetry: () => ref.invalidate(recurringSituationsProvider),
+      ),
       data: (situations) {
         if (situations.isEmpty) return const SizedBox.shrink();
         final top = situations.first;
@@ -271,7 +271,10 @@ class _SurveyCta extends ConsumerWidget {
                 backgroundColor: WrColors.coral,
                 foregroundColor: WrColors.navy,
                 minimumSize: const Size.fromHeight(52),
-                padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+                padding: const EdgeInsets.symmetric(
+                  vertical: 14,
+                  horizontal: 20,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
@@ -300,8 +303,7 @@ class _SurveyCta extends ConsumerWidget {
                 WrPillButton(
                   key: const Key('home_survey_cta_view_report_btn'),
                   label: l10n.homeCtaReportTitle,
-                  onPressed: () =>
-                      context.push('/survey/report/${latest.id}'),
+                  onPressed: () => context.push('/survey/report/${latest.id}'),
                   variant: WrPillVariant.navy,
                 ),
                 const SizedBox(height: 10),
@@ -418,9 +420,8 @@ class _InsightSection extends ConsumerWidget {
         const SizedBox(height: 12),
         insightAsync.when(
           loading: () => const _LoadingCard(),
-          error: (e, _) => _ErrorCard(
-            onRetry: () => ref.invalidate(latestInsightProvider),
-          ),
+          error: (e, _) =>
+              _ErrorCard(onRetry: () => ref.invalidate(latestInsightProvider)),
           data: (insight) {
             if (insight == null) {
               return const _InsightEmpty();
@@ -441,10 +442,7 @@ class _InsightEmpty extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     return Container(
       key: const Key('home_insight_empty'),
-      child: Text(
-        l10n.homeInsightEmpty,
-        style: WrTextStyles.body,
-      ),
+      child: Text(l10n.homeInsightEmpty, style: WrTextStyles.body),
     );
   }
 }
@@ -461,10 +459,7 @@ class _InsightContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          '"${insight.content}"',
-          style: WrTextStyles.insightQuote,
-        ),
+        Text('"${insight.content}"', style: WrTextStyles.insightQuote),
         const SizedBox(height: 10),
         Text(
           l10n.homeInsightSavedDate(dateStr),
@@ -505,10 +500,7 @@ class _ErrorCard extends StatelessWidget {
       children: [
         Text(l10n.homeErrorLoadData, style: WrTextStyles.body),
         const SizedBox(width: 8),
-        TextButton(
-          onPressed: onRetry,
-          child: Text(l10n.homeRetry),
-        ),
+        TextButton(onPressed: onRetry, child: Text(l10n.homeRetry)),
       ],
     );
   }

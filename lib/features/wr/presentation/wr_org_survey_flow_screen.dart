@@ -83,7 +83,10 @@ class _WrOrgSurveyFlowScreenState extends ConsumerState<WrOrgSurveyFlowScreen> {
       if (!mounted) return;
       setState(() {
         _submitting = false;
-        _error = tr('Chưa gửi được câu trả lời. Bạn thử lại nhé.', 'Could not send your answers. Please try again.');
+        _error = tr(
+          'Chưa gửi được câu trả lời. Bạn thử lại nhé.',
+          'Could not send your answers. Please try again.',
+        );
       });
     }
   }
@@ -97,7 +100,10 @@ class _WrOrgSurveyFlowScreenState extends ConsumerState<WrOrgSurveyFlowScreen> {
         builder: (ctx) => AlertDialog(
           title: Text(tr('Thoát khảo sát?', 'Leave the survey?')),
           content: Text(
-            tr('Câu trả lời chưa được gửi đi. Thoát bây giờ là mất hết.', 'Your answers have not been sent. Leaving now loses them all.'),
+            tr(
+              'Câu trả lời chưa được gửi đi. Thoát bây giờ là mất hết.',
+              'Your answers have not been sent. Leaving now loses them all.',
+            ),
           ),
           actions: [
             TextButton(
@@ -159,8 +165,14 @@ class _WrOrgSurveyFlowScreenState extends ConsumerState<WrOrgSurveyFlowScreen> {
               padding: const EdgeInsets.fromLTRB(22, 18, 22, 0),
               child: WrEyebrow(
                 isEnps
-                    ? tr('CÂU $total / $total, CÂU CUỐI', 'QUESTION $total / $total, THE LAST ONE')
-                    : tr('CÂU ${_index + 1} / $total', 'QUESTION ${_index + 1} / $total'),
+                    ? tr(
+                        'CÂU $total / $total, CÂU CUỐI',
+                        'QUESTION $total / $total, THE LAST ONE',
+                      )
+                    : tr(
+                        'CÂU ${_index + 1} / $total',
+                        'QUESTION ${_index + 1} / $total',
+                      ),
               ),
             ),
             Expanded(
@@ -250,8 +262,7 @@ class _TopBar extends StatelessWidget {
                 value: progress.clamp(0.0, 1.0),
                 minHeight: 4,
                 backgroundColor: WrColors.line,
-                valueColor:
-                    const AlwaysStoppedAnimation<Color>(WrColors.navy),
+                valueColor: const AlwaysStoppedAnimation<Color>(WrColors.navy),
               ),
             ),
           ),
@@ -372,9 +383,12 @@ class _EnpsStep extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(22, 22, 22, 22),
       children: [
         WrParagraph(
-          tr('Trên thang từ 0 đến 10, bạn sẽ giới thiệu nơi mình đang làm việc cho '
-          'bạn bè hoặc người quen ở mức nào?', 'On a scale of 0 to 10, how likely are you to recommend where you work '
-          'to a friend or someone you know?'),
+          tr(
+            'Trên thang từ 0 đến 10, bạn sẽ giới thiệu nơi mình đang làm việc cho '
+                'bạn bè hoặc người quen ở mức nào?',
+            'On a scale of 0 to 10, how likely are you to recommend where you work '
+                'to a friend or someone you know?',
+          ),
           style: TextStyle(
             fontSize: 17,
             height: 1.55,
@@ -384,7 +398,10 @@ class _EnpsStep extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          tr('0 là chắc chắn không, 10 là chắc chắn có.', '0 is definitely not, 10 is definitely yes.'),
+          tr(
+            '0 là chắc chắn không, 10 là chắc chắn có.',
+            '0 is definitely not, 10 is definitely yes.',
+          ),
           style: TextStyle(fontSize: 14, color: WrColors.muted),
         ),
         const SizedBox(height: 22),
@@ -412,8 +429,7 @@ class _EnpsStep extends StatelessWidget {
                           : WrColors.white,
                       border: Border.all(
                         width: 1.5,
-                        color:
-                            selected == n ? WrColors.coral : WrColors.line,
+                        color: selected == n ? WrColors.coral : WrColors.line,
                       ),
                     ),
                     child: Text(

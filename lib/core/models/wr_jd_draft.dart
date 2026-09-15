@@ -37,22 +37,18 @@ class WrJdDraft {
   bool get hasAnyContent =>
       values.values.any((v) => v != null && v.trim().isNotEmpty);
 
-  static WrJdDraft empty() => const WrJdDraft(
-        values: {},
-        currentDay: 1,
-        completedDays: [],
-      );
+  static WrJdDraft empty() =>
+      const WrJdDraft(values: {}, currentDay: 1, completedDays: []);
 
   factory WrJdDraft.fromJson(Map<String, dynamic> json) {
     return WrJdDraft(
-      values: {
-        for (final c in jdColumns()) c: json[c] as String?,
-      },
+      values: {for (final c in jdColumns()) c: json[c] as String?},
       currentDay: (json['current_day'] as num?)?.toInt() ?? 1,
-      completedDays: ((json['completed_days'] as List?) ?? const [])
-          .map((e) => (e as num).toInt())
-          .toList()
-        ..sort(),
+      completedDays:
+          ((json['completed_days'] as List?) ?? const [])
+              .map((e) => (e as num).toInt())
+              .toList()
+            ..sort(),
       completedAt: json['completed_at'] == null
           ? null
           : DateTime.parse(json['completed_at'] as String),

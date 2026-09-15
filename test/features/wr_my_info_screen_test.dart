@@ -20,19 +20,18 @@ MobileProfile _profile({
   String? orgIndustry,
   String? orgCompanyType,
   String? roleText,
-}) =>
-    MobileProfile(
-      userId: 'u1',
-      displayName: 'Thông',
-      reminderEnabled: true,
-      language: 'vi',
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: DateTime(2026, 1, 1),
-      city: city,
-      orgIndustry: orgIndustry,
-      orgCompanyType: orgCompanyType,
-      roleText: roleText,
-    );
+}) => MobileProfile(
+  userId: 'u1',
+  displayName: 'Thông',
+  reminderEnabled: true,
+  language: 'vi',
+  createdAt: DateTime(2026, 1, 1),
+  updatedAt: DateTime(2026, 1, 1),
+  city: city,
+  orgIndustry: orgIndustry,
+  orgCompanyType: orgCompanyType,
+  roleText: roleText,
+);
 
 Widget _wrap(FakeWrRepository repo) {
   final router = GoRouter(
@@ -70,13 +69,15 @@ void main() {
   // mở đầu. Nới khung ra thay vì cuộn từng lần: mọi khẳng định ở đây nói về nội
   // dung, không nói về việc cuộn.
   setUp(() {
-    final view = TestWidgetsFlutterBinding.instance.platformDispatcher.views.first;
+    final view =
+        TestWidgetsFlutterBinding.instance.platformDispatcher.views.first;
     view.devicePixelRatio = 1.0;
     view.physicalSize = const Size(420, 2000);
   });
 
   tearDown(() {
-    final view = TestWidgetsFlutterBinding.instance.platformDispatcher.views.first;
+    final view =
+        TestWidgetsFlutterBinding.instance.platformDispatcher.views.first;
     view.resetDevicePixelRatio();
     view.resetPhysicalSize();
   });
@@ -106,21 +107,23 @@ void main() {
     expect(find.text('Công việc hiện tại'), findsOneWidget);
   });
 
-  testWidgets('trường trống hiện "Chưa có", đã điền hiện NHÃN chứ không hiện mã',
-      (tester) async {
-    final repo = FakeWrRepository()
-      ..seedProfile(_profile(city: 'hcm'))
-      ..seedCcProfile({'position': 'team_lead'});
-    await tester.pumpWidget(_wrap(repo));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'trường trống hiện "Chưa có", đã điền hiện NHÃN chứ không hiện mã',
+    (tester) async {
+      final repo = FakeWrRepository()
+        ..seedProfile(_profile(city: 'hcm'))
+        ..seedCcProfile({'position': 'team_lead'});
+      await tester.pumpWidget(_wrap(repo));
+      await tester.pumpAndSettle();
 
-    expect(find.text('TP.HCM'), findsOneWidget);
-    // Mã thô không được lọt ra màn hình.
-    expect(find.text('hcm'), findsNothing);
-    expect(find.text('team_lead'), findsNothing);
-    // Năm trường còn lại vẫn trống.
-    expect(find.text('Chưa có'), findsNWidgets(5));
-  });
+      expect(find.text('TP.HCM'), findsOneWidget);
+      // Mã thô không được lọt ra màn hình.
+      expect(find.text('hcm'), findsNothing);
+      expect(find.text('team_lead'), findsNothing);
+      // Năm trường còn lại vẫn trống.
+      expect(find.text('Chưa có'), findsNWidgets(5));
+    },
+  );
 
   testWidgets('dòng đếm hợp số từ CẢ hai bảng', (tester) async {
     // Đây là chỗ dễ sai nhất: đếm mỗi một bảng thì con số luôn thiếu, mà vẫn
@@ -132,15 +135,14 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(
-      tester
-          .widget<Text>(find.byKey(const Key('my_info_filled_count')))
-          .data,
+      tester.widget<Text>(find.byKey(const Key('my_info_filled_count'))).data,
       startsWith('3/7'),
     );
   });
 
-  testWidgets('chạm một dòng mới bung danh sách lựa chọn của dòng đó',
-      (tester) async {
+  testWidgets('chạm một dòng mới bung danh sách lựa chọn của dòng đó', (
+    tester,
+  ) async {
     final repo = FakeWrRepository()..seedProfile(_profile());
     await tester.pumpWidget(_wrap(repo));
     await tester.pumpAndSettle();
@@ -166,27 +168,30 @@ void main() {
     expect(find.byKey(const Key('my_info_option_tech')), findsOneWidget);
   });
 
-  testWidgets('trường của app ghi vào wr_mobile_profiles, chỉ gửi ĐÚNG một khoá',
-      (tester) async {
-    final repo = FakeWrRepository()..seedProfile(_profile());
-    await tester.pumpWidget(_wrap(repo));
-    await tester.pumpAndSettle();
+  testWidgets(
+    'trường của app ghi vào wr_mobile_profiles, chỉ gửi ĐÚNG một khoá',
+    (tester) async {
+      final repo = FakeWrRepository()..seedProfile(_profile());
+      await tester.pumpWidget(_wrap(repo));
+      await tester.pumpAndSettle();
 
-    await tester.tap(find.byKey(const Key('my_info_row_city')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('my_info_option_hanoi')));
-    await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('my_info_row_city')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('my_info_option_hanoi')));
+      await tester.pumpAndSettle();
 
-    expect(repo.saveMyInfoCalls, [
-      {'city': 'hanoi'},
-    ]);
-    // Gửi kèm hai khoá kia là xoá trắng hai trường người dùng không đụng tới.
-    expect(repo.saveMyInfoCalls.single.keys, ['city']);
-    expect(repo.updateCcProfileCalls, isEmpty);
-  });
+      expect(repo.saveMyInfoCalls, [
+        {'city': 'hanoi'},
+      ]);
+      // Gửi kèm hai khoá kia là xoá trắng hai trường người dùng không đụng tới.
+      expect(repo.saveMyInfoCalls.single.keys, ['city']);
+      expect(repo.updateCcProfileCalls, isEmpty);
+    },
+  );
 
-  testWidgets('trường dùng chung ghi vào cc_profiles, đúng tên cột của web',
-      (tester) async {
+  testWidgets('trường dùng chung ghi vào cc_profiles, đúng tên cột của web', (
+    tester,
+  ) async {
     final repo = FakeWrRepository()..seedProfile(_profile());
     await tester.pumpWidget(_wrap(repo));
     await tester.pumpAndSettle();
@@ -202,8 +207,9 @@ void main() {
     expect(repo.saveMyInfoCalls, isEmpty);
   });
 
-  testWidgets('chọn xong thì danh sách đóng lại và giá trị mới hiện ra',
-      (tester) async {
+  testWidgets('chọn xong thì danh sách đóng lại và giá trị mới hiện ra', (
+    tester,
+  ) async {
     final repo = FakeWrRepository()..seedProfile(_profile());
     await tester.pumpWidget(_wrap(repo));
     await tester.pumpAndSettle();

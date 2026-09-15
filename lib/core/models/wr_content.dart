@@ -16,19 +16,37 @@ enum HumanNeed {
   phatTrien;
 
   String get dbValue => switch (this) {
-        HumanNeed.roRang => 'ro_rang',
-        HumanNeed.ketNoi => 'ket_noi',
-        HumanNeed.thichNghi => 'thich_nghi',
-        HumanNeed.phatTrien => 'phat_trien',
-      };
+    HumanNeed.roRang => 'ro_rang',
+    HumanNeed.ketNoi => 'ket_noi',
+    HumanNeed.thichNghi => 'thich_nghi',
+    HumanNeed.phatTrien => 'phat_trien',
+  };
 
   static HumanNeed fromDb(String value) => switch (value) {
-        'ro_rang' => HumanNeed.roRang,
-        'ket_noi' => HumanNeed.ketNoi,
-        'thich_nghi' => HumanNeed.thichNghi,
-        'phat_trien' => HumanNeed.phatTrien,
-        _ => throw ArgumentError('Unknown HumanNeed db value: $value'),
-      };
+    'ro_rang' => HumanNeed.roRang,
+    'ket_noi' => HumanNeed.ketNoi,
+    'thich_nghi' => HumanNeed.thichNghi,
+    'phat_trien' => HumanNeed.phatTrien,
+    // Editorial v2 values are kept in the generated seed beside the
+    // database alias. Accepting them here makes a direct JS-shaped payload
+    // safe to inspect without teaching callers about the import mapping.
+    'Structure' => HumanNeed.roRang,
+    'Connection' => HumanNeed.ketNoi,
+    'Adaptability' => HumanNeed.thichNghi,
+    'Phát triển' => HumanNeed.phatTrien,
+    _ => throw ArgumentError('Unknown HumanNeed db value: $value'),
+  };
+
+  /// Nullable parser used at persistence boundaries. A malformed historical
+  /// row should be ignored by aggregation, not take down the whole profile.
+  static HumanNeed? tryFromDb(String? value) {
+    if (value == null || value.isEmpty) return null;
+    try {
+      return fromDb(value);
+    } on ArgumentError {
+      return null;
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -73,19 +91,19 @@ enum ScaDimension {
   pSteady;
 
   String get dbValue => switch (this) {
-        ScaDimension.s1 => 'S1',
-        ScaDimension.s2 => 'S2',
-        ScaDimension.s3 => 'S3',
-        ScaDimension.c1 => 'C1',
-        ScaDimension.c2 => 'C2',
-        ScaDimension.c3 => 'C3',
-        ScaDimension.a1 => 'A1',
-        ScaDimension.a2 => 'A2',
-        ScaDimension.a3 => 'A3',
-        ScaDimension.a4 => 'A4',
-        ScaDimension.pAchieve => 'P-ACHIEVE',
-        ScaDimension.pSteady => 'P-STEADY',
-      };
+    ScaDimension.s1 => 'S1',
+    ScaDimension.s2 => 'S2',
+    ScaDimension.s3 => 'S3',
+    ScaDimension.c1 => 'C1',
+    ScaDimension.c2 => 'C2',
+    ScaDimension.c3 => 'C3',
+    ScaDimension.a1 => 'A1',
+    ScaDimension.a2 => 'A2',
+    ScaDimension.a3 => 'A3',
+    ScaDimension.a4 => 'A4',
+    ScaDimension.pAchieve => 'P-ACHIEVE',
+    ScaDimension.pSteady => 'P-STEADY',
+  };
 
   /// True cho 10 chiều SCA thật; false cho hai nhóm tình huống tích cực.
   bool get isSca => !isPositive;
@@ -95,20 +113,30 @@ enum ScaDimension {
       this == ScaDimension.pAchieve || this == ScaDimension.pSteady;
 
   static ScaDimension fromDb(String value) => switch (value) {
-        'S1' => ScaDimension.s1,
-        'S2' => ScaDimension.s2,
-        'S3' => ScaDimension.s3,
-        'C1' => ScaDimension.c1,
-        'C2' => ScaDimension.c2,
-        'C3' => ScaDimension.c3,
-        'A1' => ScaDimension.a1,
-        'A2' => ScaDimension.a2,
-        'A3' => ScaDimension.a3,
-        'A4' => ScaDimension.a4,
-        'P-ACHIEVE' => ScaDimension.pAchieve,
-        'P-STEADY' => ScaDimension.pSteady,
-        _ => throw ArgumentError('Unknown ScaDimension db value: $value'),
-      };
+    'S1' => ScaDimension.s1,
+    'S2' => ScaDimension.s2,
+    'S3' => ScaDimension.s3,
+    'C1' => ScaDimension.c1,
+    'C2' => ScaDimension.c2,
+    'C3' => ScaDimension.c3,
+    'A1' => ScaDimension.a1,
+    'A2' => ScaDimension.a2,
+    'A3' => ScaDimension.a3,
+    'A4' => ScaDimension.a4,
+    'P-ACHIEVE' => ScaDimension.pAchieve,
+    'P-STEADY' => ScaDimension.pSteady,
+    _ => throw ArgumentError('Unknown ScaDimension db value: $value'),
+  };
+
+  /// Nullable parser for legacy rows that may contain a removed dimension.
+  static ScaDimension? tryFromDb(String? value) {
+    if (value == null || value.isEmpty) return null;
+    try {
+      return fromDb(value);
+    } on ArgumentError {
+      return null;
+    }
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -137,8 +165,64 @@ enum WrValence {
   /// 10 tình huống P-ACHIEVE / P-STEADY.
   tichCuc;
 
+  String get dbValue => switch (this) {
+    WrValence.thachThuc => 'thach-thuc',
+    WrValence.tichCuc => 'tich-cuc',
+  };
+
   bool get isPositive => this == WrValence.tichCuc;
+
+  static WrValence fromDb(String value) => switch (value) {
+    'thach-thuc' => WrValence.thachThuc,
+    'tich-cuc' => WrValence.tichCuc,
+    _ => throw ArgumentError('Unknown WrValence db value: $value'),
+  };
+
+  static WrValence? tryFromDb(String? value) {
+    if (value == null || value.isEmpty) return null;
+    try {
+      return fromDb(value);
+    } on ArgumentError {
+      return null;
+    }
+  }
 }
+
+/// Explicit v2 catalog axes. Keep these values in the data layer so every
+/// consumer (picker, counts, deep reading, and UI) agrees on what is a
+/// classified situation. A legacy row may still be parsed, but it is not a
+/// v2 situation unless all of these axes are valid and explicit.
+const Set<String> kWrV2PillarCodes = {'S', 'C', 'A'};
+const Set<String> kWrV2SubgroupCodes = {
+  'S1',
+  'S2',
+  'C1',
+  'C2',
+  'A1',
+  'A3',
+  'Sp',
+  'Cp',
+  'Ap',
+};
+const Set<String> kWrV2MoodCodes = {
+  'stress',
+  'tired',
+  'foggy',
+  'outofsync',
+  'ok',
+  'happy',
+};
+const Map<String, String> kWrV2SubgroupPillars = {
+  'S1': 'S',
+  'S2': 'S',
+  'C1': 'C',
+  'C2': 'C',
+  'A1': 'A',
+  'A3': 'A',
+  'Sp': 'S',
+  'Cp': 'C',
+  'Ap': 'A',
+};
 
 // ---------------------------------------------------------------------------
 // WrSituation
@@ -156,9 +240,25 @@ class WrSituation {
     this.expectedOutcome,
     this.scaPerspective,
     this.pillarCode,
+    this.subgroup,
+    this.mood,
+    WrValence? valence,
+    this.custom = false,
     this.createdAt,
     this.retiredAt,
-  }) : textVi = text;
+  }) : textVi = text,
+       _explicitValence = valence;
+
+  /// Client-only custom self-description choice. It deliberately carries no
+  /// v2 classification; the compatibility dimension is never used by the v2
+  /// counting/picker paths.
+  static const WrSituation customOption = WrSituation(
+    code: 'other',
+    text: 'Điều khác, để tôi tự mô tả',
+    scaDimension: ScaDimension.pSteady,
+    wave: 1,
+    custom: true,
+  );
 
   final String code;
 
@@ -208,24 +308,81 @@ class WrSituation {
   /// enum là `pillarOfSituation` trong `wr_career_health.dart`.
   final String? pillarCode;
 
+  /// Explicit v2 subgroup, for example `S1`, `C2`, or the positive groups
+  /// `Sp`/`Cp`/`Ap`.
+  final String? subgroup;
+
+  /// Check-in mood code (`stress`, `tired`, `foggy`, `outofsync`, `ok`,
+  /// `happy`).
+  final String? mood;
+
+  /// Whether this is the client-only free-form option.
+  final bool custom;
+
+  final WrValence? _explicitValence;
+
+  /// The v2 value as declared by the catalog. Null for legacy/custom rows.
+  /// Use this property when a caller must distinguish “not classified” from a
+  /// legacy value inferred from [scaDimension].
+  WrValence? get explicitValence => _explicitValence;
+
+  /// Alias that reads naturally at call sites migrating to v2.
+  WrValence? get v2Valence => _explicitValence;
+
+  bool get isCustom => custom || code == 'other';
+
+  /// True only when all four v2 classification axes are valid and explicit.
+  /// The compatibility `scaDimension` never participates in this decision.
+  bool get hasV2Classification =>
+      !isCustom &&
+      kWrV2PillarCodes.contains(pillarCode) &&
+      kWrV2SubgroupCodes.contains(subgroup) &&
+      kWrV2SubgroupPillars[subgroup] == pillarCode &&
+      kWrV2MoodCodes.contains(mood) &&
+      _explicitValence != null;
+
   /// Khó khăn hay thuận lợi (§2.2).
   ///
-  /// Suy từ [ScaDimension.isPositive] chứ không đọc cột riêng — xem [WrValence].
+  /// Public compatibility getter. Canonical v2 rows use the explicit value;
+  /// old rows fall back to their persisted compatibility dimension. For
+  /// custom rows this value is not a classification and must be ignored when
+  /// [isCustom] is true.
   WrValence get valence =>
-      scaDimension.isPositive ? WrValence.tichCuc : WrValence.thachThuc;
+      _explicitValence ??
+      (scaDimension.isPositive ? WrValence.tichCuc : WrValence.thachThuc);
 
   factory WrSituation.fromJson(Map<String, dynamic> json) {
-    final rawNeed = json['human_need'] as String?;
+    final rawNeed = (json['human_need'] ?? json['need']) as String?;
+    final code = (json['code'] ?? json['id']) as String?;
+    if (code == null || code.isEmpty) {
+      throw const FormatException('Situation is missing code/id');
+    }
+    final isCustom = json['custom'] == true || code == 'other';
+    final rawDimension = json['sca_dimension'] as String?;
+    final dimension = rawDimension == null
+        ? (isCustom ? ScaDimension.pSteady : null)
+        : ScaDimension.fromDb(rawDimension);
+    if (dimension == null) {
+      throw FormatException('Situation $code is missing sca_dimension');
+    }
+    final rawText = (json['text'] ?? json['title']) as String?;
+    if (rawText == null) {
+      throw FormatException('Situation $code is missing text/title');
+    }
     return WrSituation(
-      code: json['code'] as String,
-      text: json['text'] as String,
+      code: code,
+      text: rawText,
       textEn: json['text_en'] as String?,
-      scaDimension: ScaDimension.fromDb(json['sca_dimension'] as String),
-      humanNeed: rawNeed != null ? HumanNeed.fromDb(rawNeed) : null,
+      scaDimension: dimension,
+      humanNeed: HumanNeed.tryFromDb(rawNeed),
       expectedOutcome: json['expected_outcome'] as String?,
       scaPerspective: json['sca_perspective'] as String?,
       pillarCode: json['pillar'] as String?,
-      wave: json['wave'] as int,
+      subgroup: json['subgroup'] as String?,
+      mood: json['mood'] as String?,
+      valence: WrValence.tryFromDb(json['valence'] as String?),
+      custom: isCustom,
+      wave: (json['wave'] as num?)?.toInt() ?? 1,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
@@ -235,6 +392,9 @@ class WrSituation {
     );
   }
 }
+
+/// Shared name for the UI's client-only free-form choice.
+const kWrOtherSituation = WrSituation.customOption;
 
 // ---------------------------------------------------------------------------
 // WrStory
@@ -254,6 +414,10 @@ class WrStory {
     this.storyContentEn,
     this.humanNeed,
     this.situation,
+    this.pillarCode,
+    this.subgroup,
+    this.mood,
+    WrValence? valence,
     this.difficultyLevel,
     String? reflectionQuestion,
     String? selfReflection,
@@ -264,12 +428,13 @@ class WrStory {
     this.ahaMessageEn,
     this.practiceActionEn,
     this.createdAt,
-  })  : titleVi = title,
-        storyContentVi = storyContent,
-        reflectionQuestionVi = reflectionQuestion,
-        selfReflectionVi = selfReflection,
-        ahaMessageVi = ahaMessage,
-        practiceActionVi = practiceAction;
+  }) : titleVi = title,
+       storyContentVi = storyContent,
+       reflectionQuestionVi = reflectionQuestion,
+       selfReflectionVi = selfReflection,
+       ahaMessageVi = ahaMessage,
+       practiceActionVi = practiceAction,
+       _explicitValence = valence;
 
   final String storyId;
   final ScaDimension scaDimension;
@@ -278,6 +443,17 @@ class WrStory {
   /// Có trong bảng và trong model, nhưng KHÔNG chỗ nào đưa lên màn hình — nên
   /// cố ý không có bản tiếng Anh. Xem đầu migration `content_en_columns`.
   final String? situation;
+
+  /// Optional v2 classification copied from the matching situation record.
+  /// Stories remain readable for legacy rows where these columns were absent.
+  final String? pillarCode;
+  final String? subgroup;
+  final String? mood;
+  final WrValence? _explicitValence;
+
+  WrValence? get explicitValence => _explicitValence;
+
+  WrValence? get valence => _explicitValence;
 
   final List<String> emotionTags;
   final List<String> behaviorTags;
@@ -302,7 +478,8 @@ class WrStory {
 
   final String? reflectionQuestionVi;
   final String? reflectionQuestionEn;
-  String? get reflectionQuestion => _pick(reflectionQuestionVi, reflectionQuestionEn);
+  String? get reflectionQuestion =>
+      _pick(reflectionQuestionVi, reflectionQuestionEn);
 
   final String? selfReflectionVi;
   final String? selfReflectionEn;
@@ -325,19 +502,35 @@ class WrStory {
       vi == null ? null : trDb(vi, en);
 
   factory WrStory.fromJson(Map<String, dynamic> json) {
-    final rawNeed = json['human_need'] as String?;
+    final rawNeed = (json['human_need'] ?? json['need']) as String?;
+    final storyId = (json['story_id'] ?? json['id']) as String?;
+    if (storyId == null || storyId.isEmpty) {
+      throw const FormatException('Story is missing story_id/id');
+    }
+    final rawTitle = (json['title'] ?? json['text']) as String?;
+    if (rawTitle == null) {
+      throw FormatException('Story $storyId is missing title/text');
+    }
+    final rawContent = (json['story_content'] ?? json['story']) as String?;
+    if (rawContent == null) {
+      throw FormatException('Story $storyId is missing story_content/story');
+    }
     return WrStory(
-      storyId: json['story_id'] as String,
-      title: json['title'] as String,
+      storyId: storyId,
+      title: rawTitle,
       titleEn: json['title_en'] as String?,
       scaDimension: ScaDimension.fromDb(json['sca_dimension'] as String),
-      humanNeed: rawNeed != null ? HumanNeed.fromDb(rawNeed) : null,
+      humanNeed: HumanNeed.tryFromDb(rawNeed),
       situation: json['situation'] as String?,
+      pillarCode: json['pillar'] as String?,
+      subgroup: json['subgroup'] as String?,
+      mood: json['mood'] as String?,
+      valence: WrValence.tryFromDb(json['valence'] as String?),
       emotionTags: _toStringList(json['emotion_tags']),
       behaviorTags: _toStringList(json['behavior_tags']),
       careerStages: _toStringList(json['career_stages']),
       difficultyLevel: json['difficulty_level'] as int?,
-      storyContent: json['story_content'] as String,
+      storyContent: rawContent,
       storyContentEn: json['story_content_en'] as String?,
       reflectionQuestion: json['reflection_question'] as String?,
       reflectionQuestionEn: json['reflection_question_en'] as String?,
@@ -405,15 +598,15 @@ class CareerMemoryEvent {
   final DateTime? createdAt;
 
   factory CareerMemoryEvent.fromJson(Map<String, dynamic> json) {
-    final rawNeed = json['human_need'] as String?;
+    final rawNeed = (json['human_need'] ?? json['need']) as String?;
     final rawDim = json['sca_dimension'] as String?;
     return CareerMemoryEvent(
       id: json['id'] as String,
       userId: json['user_id'] as String,
       storyId: json['story_id'] as String?,
       situationCode: json['situation_code'] as String?,
-      humanNeed: rawNeed != null ? HumanNeed.fromDb(rawNeed) : null,
-      scaDimension: rawDim != null ? ScaDimension.fromDb(rawDim) : null,
+      humanNeed: HumanNeed.tryFromDb(rawNeed),
+      scaDimension: ScaDimension.tryFromDb(rawDim),
       emotion: json['emotion'] as String?,
       behavior: json['behavior'] as String?,
       intensity: json['intensity'] as int?,
@@ -429,16 +622,16 @@ class CareerMemoryEvent {
   /// Returns a map suitable for INSERT into public.wr_career_memory_events.
   /// Excludes server-generated fields: id, created_at.
   Map<String, dynamic> toInsert() => {
-        'user_id': userId,
-        if (storyId != null) 'story_id': storyId,
-        if (situationCode != null) 'situation_code': situationCode,
-        if (humanNeed != null) 'human_need': humanNeed!.dbValue,
-        if (scaDimension != null) 'sca_dimension': scaDimension!.dbValue,
-        if (emotion != null) 'emotion': emotion,
-        if (behavior != null) 'behavior': behavior,
-        if (intensity != null) 'intensity': intensity,
-        if (reflectionText != null) 'reflection_text': reflectionText,
-        if (careerStage != null) 'career_stage': careerStage,
-        if (themeId != null) 'theme_id': themeId,
-      };
+    'user_id': userId,
+    if (storyId != null) 'story_id': storyId,
+    if (situationCode != null) 'situation_code': situationCode,
+    if (humanNeed != null) 'human_need': humanNeed!.dbValue,
+    if (scaDimension != null) 'sca_dimension': scaDimension!.dbValue,
+    if (emotion != null) 'emotion': emotion,
+    if (behavior != null) 'behavior': behavior,
+    if (intensity != null) 'intensity': intensity,
+    if (reflectionText != null) 'reflection_text': reflectionText,
+    if (careerStage != null) 'career_stage': careerStage,
+    if (themeId != null) 'theme_id': themeId,
+  };
 }

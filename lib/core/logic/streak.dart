@@ -48,8 +48,7 @@ int computeStreak(List<DateTime> checkinDates, DateTime today) {
   }
 
   // Walk backwards from the latest anchor (today if present, else yesterday).
-  DateTime cursor =
-      uniqueDays.contains(todayOnly) ? todayOnly : yesterdayOnly;
+  DateTime cursor = uniqueDays.contains(todayOnly) ? todayOnly : yesterdayOnly;
 
   int streak = 0;
   while (uniqueDays.contains(cursor)) {

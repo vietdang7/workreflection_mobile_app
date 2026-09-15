@@ -112,16 +112,14 @@ void main() {
 
   test('hoà số lần thì kết quả ổn định giữa hai lần dựng', () {
     List<String> pick() => [
-          for (var i = 0; i < 5; i++)
-            suggestPracticeTheme(
-              candidates: themes,
-              recent: [..._p('c1-01', 3), ..._p('c3-01', 3)],
-              situations: situations,
-              need: HumanNeed.ketNoi,
-            )!
-                .theme
-                .themeId,
-        ];
+      for (var i = 0; i < 5; i++)
+        suggestPracticeTheme(
+          candidates: themes,
+          recent: [..._p('c1-01', 3), ..._p('c3-01', 3)],
+          situations: situations,
+          need: HumanNeed.ketNoi,
+        )!.theme.themeId,
+    ];
     expect(pick().toSet().length, 1);
   });
 
@@ -157,7 +155,10 @@ void main() {
 
     test('bối cảnh công việc đứng TRƯỚC nhu cầu chủ đạo', () {
       final s = suggestPracticeTheme(
-        candidates: [_theme('pt-s1', ScaDimension.s1), _theme('pt-c2', ScaDimension.c2)],
+        candidates: [
+          _theme('pt-s1', ScaDimension.s1),
+          _theme('pt-c2', ScaDimension.c2),
+        ],
         recent: const [],
         situations: situations,
         need: HumanNeed.ketNoi,

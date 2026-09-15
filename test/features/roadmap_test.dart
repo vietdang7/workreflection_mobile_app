@@ -30,14 +30,9 @@ import '../support/fake_roadmap_repository.dart';
 // Test helpers
 // ---------------------------------------------------------------------------
 
-Widget _wrap(
-  FakeRoadmapRepository repo, {
-  String? initialReportId,
-}) {
+Widget _wrap(FakeRoadmapRepository repo, {String? initialReportId}) {
   return ProviderScope(
-    overrides: [
-      roadmapRepositoryProvider.overrideWithValue(repo),
-    ],
+    overrides: [roadmapRepositoryProvider.overrideWithValue(repo)],
     child: MaterialApp(
       builder: wrTextScaleBuilder,
       localizationsDelegates: const [
@@ -61,23 +56,23 @@ PremiumReport _report({
   double scoreActivity = 3.5,
   String? nickname,
   Map<String, dynamic>? subScores,
-}) =>
-    PremiumReport(
-      id: id,
-      surveyId: surveyId,
-      createdAt: DateTime(2026, 7, 18),
-      scoreTotal: scoreTotal,
-      scoreStructure: scoreStructure,
-      scoreCulture: scoreCulture,
-      scoreActivity: scoreActivity,
-      nickname: nickname,
-      subScores: subScores ??
-          {
-            'role_expectations': {'layer': 'STRUCTURE', 'score': 3.0},
-            'trust': {'layer': 'CULTURE', 'score': 2.8},
-            'goal_alignment': {'layer': 'ACTIVITY', 'score': 3.5},
-          },
-    );
+}) => PremiumReport(
+  id: id,
+  surveyId: surveyId,
+  createdAt: DateTime(2026, 7, 18),
+  scoreTotal: scoreTotal,
+  scoreStructure: scoreStructure,
+  scoreCulture: scoreCulture,
+  scoreActivity: scoreActivity,
+  nickname: nickname,
+  subScores:
+      subScores ??
+      {
+        'role_expectations': {'layer': 'STRUCTURE', 'score': 3.0},
+        'trust': {'layer': 'CULTURE', 'score': 2.8},
+        'goal_alignment': {'layer': 'ACTIVITY', 'score': 3.5},
+      },
+);
 
 RoadmapAction _action({
   String id = 'a-1',
@@ -86,15 +81,14 @@ RoadmapAction _action({
   int day = 7,
   String titleVi = 'Làm rõ kỳ vọng vai trò',
   String descriptionVi = 'Mô tả hành động',
-}) =>
-    RoadmapAction(
-      id: id,
-      layer: layer,
-      subComponent: subComponent,
-      day: day,
-      titleVi: titleVi,
-      descriptionVi: descriptionVi,
-    );
+}) => RoadmapAction(
+  id: id,
+  layer: layer,
+  subComponent: subComponent,
+  day: day,
+  titleVi: titleVi,
+  descriptionVi: descriptionVi,
+);
 
 CustomTask _customTask({
   String id = 'ct-1',
@@ -103,17 +97,16 @@ CustomTask _customTask({
   String layer = 'STRUCTURE',
   int day = 7,
   bool isCompleted = false,
-}) =>
-    CustomTask(
-      id: id,
-      reportId: reportId,
-      title: title,
-      layer: layer,
-      day: day,
-      isCompleted: isCompleted,
-      createdBy: 'user-1',
-      displayOrder: 0,
-    );
+}) => CustomTask(
+  id: id,
+  reportId: reportId,
+  title: title,
+  layer: layer,
+  day: day,
+  isCompleted: isCompleted,
+  createdBy: 'user-1',
+  displayOrder: 0,
+);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -158,7 +151,8 @@ void main() {
       expect(find.byKey(const Key('roadmap_progress_bar')), findsOneWidget);
       // 0% progress
       final bar = tester.widget<LinearProgressIndicator>(
-          find.byKey(const Key('roadmap_progress_bar')));
+        find.byKey(const Key('roadmap_progress_bar')),
+      );
       expect(bar.value, 0.0);
     });
 
@@ -171,8 +165,9 @@ void main() {
       expect(find.text('Làm rõ kỳ vọng vai trò'), findsOneWidget);
     });
 
-    testWidgets('5. tapping action row toggles state optimistically',
-        (tester) async {
+    testWidgets('5. tapping action row toggles state optimistically', (
+      tester,
+    ) async {
       repo.seedReports([_report()]);
       repo.seedActions([_action(id: 'a-1', titleVi: 'Action One')]);
       await tester.pumpWidget(_wrap(repo));
@@ -211,11 +206,13 @@ void main() {
     testWidgets('7. custom task toggle calls repo', (tester) async {
       final task = _customTask(id: 'ct-toggle', title: 'My Custom Task');
       repo.seedReports([_report()]);
-      repo.seedProgress(RoadmapProgressData(
-        completedActionIds: const {},
-        completedActionDates: const {},
-        customTasks: [task],
-      ));
+      repo.seedProgress(
+        RoadmapProgressData(
+          completedActionIds: const {},
+          completedActionDates: const {},
+          customTasks: [task],
+        ),
+      );
       await tester.pumpWidget(_wrap(repo));
       await tester.pumpAndSettle();
 
@@ -243,7 +240,9 @@ void main() {
 
       // Fill title in dialog
       await tester.enterText(
-          find.byKey(const Key('roadmap_task_title_field')), 'New Task Title');
+        find.byKey(const Key('roadmap_task_title_field')),
+        'New Task Title',
+      );
       await tester.pump();
 
       // Tap Add button
@@ -256,18 +255,21 @@ void main() {
       expect(repo.addCustomTaskCalls.first['day'], 7);
     });
 
-    testWidgets('9. delete custom task button calls repo.deleteCustomTask',
-        (tester) async {
+    testWidgets('9. delete custom task button calls repo.deleteCustomTask', (
+      tester,
+    ) async {
       await tester.binding.setSurfaceSize(const Size(800, 1200));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
       final task = _customTask(id: 'ct-del', title: 'Delete Me');
       repo.seedReports([_report()]);
-      repo.seedProgress(RoadmapProgressData(
-        completedActionIds: const {},
-        completedActionDates: const {},
-        customTasks: [task],
-      ));
+      repo.seedProgress(
+        RoadmapProgressData(
+          completedActionIds: const {},
+          completedActionDates: const {},
+          customTasks: [task],
+        ),
+      );
       await tester.pumpWidget(_wrap(repo));
       await tester.pumpAndSettle();
 
@@ -279,8 +281,9 @@ void main() {
       expect(repo.deleteCustomTaskCalls, contains('ct-del'));
     });
 
-    testWidgets('10. coach section shows empty state when no coaches',
-        (tester) async {
+    testWidgets('10. coach section shows empty state when no coaches', (
+      tester,
+    ) async {
       await tester.binding.setSurfaceSize(const Size(800, 6000));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -299,8 +302,9 @@ void main() {
       expect(find.text('Bạn chưa mời coach nào.'), findsOneWidget);
     });
 
-    testWidgets('11. invite coach button opens dialog listing coaches',
-        (tester) async {
+    testWidgets('11. invite coach button opens dialog listing coaches', (
+      tester,
+    ) async {
       await tester.binding.setSurfaceSize(const Size(800, 6000));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
@@ -341,12 +345,12 @@ void main() {
       final container = makeContainer(repo);
       addTearDown(container.dispose);
 
-      final notifier = container
-          .read(roadmapActionToggleNotifierProvider('r-1').notifier);
+      final notifier = container.read(
+        roadmapActionToggleNotifierProvider('r-1').notifier,
+      );
       notifier.init({'a-1', 'a-2'});
 
-      final state =
-          container.read(roadmapActionToggleNotifierProvider('r-1'));
+      final state = container.read(roadmapActionToggleNotifierProvider('r-1'));
       expect(state['a-1'], true);
       expect(state['a-2'], true);
     });
@@ -356,15 +360,17 @@ void main() {
       final container = makeContainer(repo);
       addTearDown(container.dispose);
 
-      final notifier = container
-          .read(roadmapActionToggleNotifierProvider('r-1').notifier);
+      final notifier = container.read(
+        roadmapActionToggleNotifierProvider('r-1').notifier,
+      );
       notifier.init({});
 
       await notifier.toggle('a-1', true);
 
       expect(
-          container.read(roadmapActionToggleNotifierProvider('r-1'))['a-1'],
-          true);
+        container.read(roadmapActionToggleNotifierProvider('r-1'))['a-1'],
+        true,
+      );
       expect(repo.toggleActionCalls.length, 1);
     });
 
@@ -374,16 +380,18 @@ void main() {
       final container = makeContainer(repo);
       addTearDown(container.dispose);
 
-      final notifier = container
-          .read(roadmapActionToggleNotifierProvider('r-1').notifier);
+      final notifier = container.read(
+        roadmapActionToggleNotifierProvider('r-1').notifier,
+      );
       notifier.init({'a-1'}); // start as completed
 
       await notifier.toggle('a-1', false); // try to uncomplete → fails
 
       // should revert to true
       expect(
-          container.read(roadmapActionToggleNotifierProvider('r-1'))['a-1'],
-          true);
+        container.read(roadmapActionToggleNotifierProvider('r-1'))['a-1'],
+        true,
+      );
     });
   });
 
@@ -399,15 +407,15 @@ void main() {
       final container = makeContainer(repo);
       addTearDown(container.dispose);
 
-      final notifier = container
-          .read(customTaskToggleNotifierProvider('r-1').notifier);
+      final notifier = container.read(
+        customTaskToggleNotifierProvider('r-1').notifier,
+      );
       notifier.init([
         _customTask(id: 'ct-1', isCompleted: true),
         _customTask(id: 'ct-2', isCompleted: false),
       ]);
 
-      final state =
-          container.read(customTaskToggleNotifierProvider('r-1'));
+      final state = container.read(customTaskToggleNotifierProvider('r-1'));
       expect(state['ct-1'], true);
       expect(state['ct-2'], false);
     });
@@ -417,15 +425,17 @@ void main() {
       final container = makeContainer(repo);
       addTearDown(container.dispose);
 
-      final notifier = container
-          .read(customTaskToggleNotifierProvider('r-1').notifier);
+      final notifier = container.read(
+        customTaskToggleNotifierProvider('r-1').notifier,
+      );
       notifier.init([_customTask(id: 'ct-x', isCompleted: false)]);
 
       await notifier.toggle('ct-x', true);
 
       expect(
-          container.read(customTaskToggleNotifierProvider('r-1'))['ct-x'],
-          true);
+        container.read(customTaskToggleNotifierProvider('r-1'))['ct-x'],
+        true,
+      );
       expect(repo.toggleCustomTaskCalls.length, 1);
       expect(repo.toggleCustomTaskCalls.first['isCompleted'], true);
     });
@@ -436,15 +446,17 @@ void main() {
       final container = makeContainer(repo);
       addTearDown(container.dispose);
 
-      final notifier = container
-          .read(customTaskToggleNotifierProvider('r-1').notifier);
+      final notifier = container.read(
+        customTaskToggleNotifierProvider('r-1').notifier,
+      );
       notifier.init([_customTask(id: 'ct-y', isCompleted: false)]);
 
       await notifier.toggle('ct-y', true); // fails → rollback to false
 
       expect(
-          container.read(customTaskToggleNotifierProvider('r-1'))['ct-y'],
-          false);
+        container.read(customTaskToggleNotifierProvider('r-1'))['ct-y'],
+        false,
+      );
     });
   });
 
@@ -459,12 +471,12 @@ void main() {
       // Fixture mirrors what web writes to cc_reports.sub_scores
       final subScores = <String, dynamic>{
         'role_expectations': {'layer': 'STRUCTURE', 'score': 3.0},
-        'collab_rules':      {'layer': 'STRUCTURE', 'score': 2.5}, // lowest S
-        'comm_channels':     {'layer': 'STRUCTURE', 'score': 4.0},
-        'trust':             {'layer': 'CULTURE',   'score': 3.8},
-        'psych_safety':      {'layer': 'CULTURE',   'score': 2.8}, // lowest C
-        'goal_alignment':    {'layer': 'ACTIVITY',  'score': 3.5},
-        'execution_rhythm':  {'layer': 'ACTIVITY',  'score': 3.1}, // lowest A
+        'collab_rules': {'layer': 'STRUCTURE', 'score': 2.5}, // lowest S
+        'comm_channels': {'layer': 'STRUCTURE', 'score': 4.0},
+        'trust': {'layer': 'CULTURE', 'score': 3.8},
+        'psych_safety': {'layer': 'CULTURE', 'score': 2.8}, // lowest C
+        'goal_alignment': {'layer': 'ACTIVITY', 'score': 3.5},
+        'execution_rhythm': {'layer': 'ACTIVITY', 'score': 3.1}, // lowest A
       };
       final report = _report(subScores: subScores);
 
@@ -493,32 +505,35 @@ void main() {
       expect(lowestForLayer('ACTIVITY'), 'execution_rhythm');
     });
 
-    test('flat legacy format (enps_* keys) returns null for layers — safe fallback', () {
-      // Old mobile-written sub_scores with flat enps_* keys; _buildLayerFocusMap
-      // skips entries where val is not a Map (or has no layer/score fields).
-      final subScores = <String, dynamic>{
-        'enps_promoters': 5,
-        'enps_passives': 3,
-        'enps_detractors': 2,
-      };
-      final ss = subScores;
+    test(
+      'flat legacy format (enps_* keys) returns null for layers — safe fallback',
+      () {
+        // Old mobile-written sub_scores with flat enps_* keys; _buildLayerFocusMap
+        // skips entries where val is not a Map (or has no layer/score fields).
+        final subScores = <String, dynamic>{
+          'enps_promoters': 5,
+          'enps_passives': 3,
+          'enps_detractors': 2,
+        };
+        final ss = subScores;
 
-      // Replicate the Map-type guard in _buildLayerFocusMap:
-      bool hasLayerEntry(String layer) {
-        for (final e in ss.entries) {
-          final val = e.value;
-          if (val is! Map) continue;
-          final l = (val['layer'] as String?)?.toUpperCase();
-          if (l == layer) return true;
+        // Replicate the Map-type guard in _buildLayerFocusMap:
+        bool hasLayerEntry(String layer) {
+          for (final e in ss.entries) {
+            final val = e.value;
+            if (val is! Map) continue;
+            final l = (val['layer'] as String?)?.toUpperCase();
+            if (l == layer) return true;
+          }
+          return false;
         }
-        return false;
-      }
 
-      // Legacy format: all values are ints, not Maps → no layer entries found
-      expect(hasLayerEntry('STRUCTURE'), isFalse);
-      expect(hasLayerEntry('CULTURE'), isFalse);
-      expect(hasLayerEntry('ACTIVITY'), isFalse);
-    });
+        // Legacy format: all values are ints, not Maps → no layer entries found
+        expect(hasLayerEntry('STRUCTURE'), isFalse);
+        expect(hasLayerEntry('CULTURE'), isFalse);
+        expect(hasLayerEntry('ACTIVITY'), isFalse);
+      },
+    );
 
     test('PremiumReport.fromJson preserves nested sub_scores as-is', () {
       final json = <String, dynamic>{

@@ -19,26 +19,24 @@ ReflectionEpisode _ep(
   String? code, {
   ExperienceState state = ExperienceState.integrated,
   DateTime? openedAt,
-}) =>
-    ReflectionEpisode(
-      id: id,
-      userId: 'u1',
-      humanMoment: HumanMoment.confusion,
-      state: state,
-      situationCode: code,
-      openedAt: openedAt ?? DateTime(2026, 7, 1),
-    );
+}) => ReflectionEpisode(
+  id: id,
+  userId: 'u1',
+  humanMoment: HumanMoment.confusion,
+  state: state,
+  situationCode: code,
+  openedAt: openedAt ?? DateTime(2026, 7, 1),
+);
 
 /// [count] Episode cho cùng một mã, thời điểm mở tăng dần từ [from].
 List<ReflectionEpisode> _many(
   String code,
   int count, {
   required DateTime from,
-}) =>
-    [
-      for (var i = 0; i < count; i++)
-        _ep('$code-$i', code, openedAt: from.add(Duration(hours: i))),
-    ];
+}) => [
+  for (var i = 0; i < count; i++)
+    _ep('$code-$i', code, openedAt: from.add(Duration(hours: i))),
+];
 
 void main() {
   group('recentSituationIds', () {
@@ -123,10 +121,18 @@ void main() {
       // người mới check-in ít, để 3 thì tuần đầu màn này luôn trống.
       expect(kRepeatedSituationsMinCount, 2);
 
-      final result = rankSituations(
-        ['a', 'a', 'a', 'a', 'b', 'b', 'b', 'c', 'c', 'd'],
-        minCount: kRepeatedSituationsMinCount,
-      );
+      final result = rankSituations([
+        'a',
+        'a',
+        'a',
+        'a',
+        'b',
+        'b',
+        'b',
+        'c',
+        'c',
+        'd',
+      ], minCount: kRepeatedSituationsMinCount);
 
       expect(result.map((r) => r.situationCode), ['a', 'b', 'c']);
       expect(result.first.count, 4);
@@ -135,10 +141,16 @@ void main() {
     });
 
     test('minCount không đổi thứ tự — nhiều lần nhất vẫn đứng đầu', () {
-      final result = rankSituations(
-        ['it', 'it', 'it', 'nhieu', 'nhieu', 'nhieu', 'nhieu', 'nhieu'],
-        minCount: 3,
-      );
+      final result = rankSituations([
+        'it',
+        'it',
+        'it',
+        'nhieu',
+        'nhieu',
+        'nhieu',
+        'nhieu',
+        'nhieu',
+      ], minCount: 3);
 
       expect(result.map((r) => r.situationCode), ['nhieu', 'it']);
     });
@@ -151,8 +163,14 @@ void main() {
       // Thứ tự trong `recent` là theo thời gian, không ổn định giữa hai lần
       // dựng màn — danh sách nhảy chỗ mỗi lần mở app là một lỗi hiển thị.
       expect(
-        rankSituations(['zz', 'aa', 'mm', 'zz', 'aa', 'mm'])
-            .map((r) => r.situationCode),
+        rankSituations([
+          'zz',
+          'aa',
+          'mm',
+          'zz',
+          'aa',
+          'mm',
+        ]).map((r) => r.situationCode),
         ['aa', 'mm', 'zz'],
       );
     });
@@ -184,13 +202,10 @@ void main() {
     });
 
     test('minCount đi xuyên tới rankSituations', () {
-      final result = repeatedSituations(
-        [
-          ..._many('du', 3, from: DateTime(2026, 7, 1)),
-          ..._many('thieu', 1, from: DateTime(2026, 7, 5)),
-        ],
-        minCount: kRepeatedSituationsMinCount,
-      );
+      final result = repeatedSituations([
+        ..._many('du', 3, from: DateTime(2026, 7, 1)),
+        ..._many('thieu', 1, from: DateTime(2026, 7, 5)),
+      ], minCount: kRepeatedSituationsMinCount);
 
       expect(result.map((r) => r.situationCode), ['du']);
     });
@@ -231,8 +246,12 @@ void main() {
     test('phiên bỏ dở vẫn được tính — tính từ lúc CHỌN', () {
       final episodes = [
         _ep('e1', 'a', openedAt: DateTime(2026, 7, 1)),
-        _ep('e2', 'a',
-            state: ExperienceState.reactivated, openedAt: DateTime(2026, 7, 2)),
+        _ep(
+          'e2',
+          'a',
+          state: ExperienceState.reactivated,
+          openedAt: DateTime(2026, 7, 2),
+        ),
       ];
 
       expect(countSituation(episodes, 'a'), 2);
@@ -244,10 +263,10 @@ void main() {
         _ep('moi', 'a', openedAt: DateTime(2026, 7, 9)),
       ];
 
-      expect(
-        episodesForSituation(episodes, 'a').map((e) => e.id),
-        ['moi', 'cu'],
-      );
+      expect(episodesForSituation(episodes, 'a').map((e) => e.id), [
+        'moi',
+        'cu',
+      ]);
     });
 
     test('cùng cửa sổ 30 với recentSituationIds', () {

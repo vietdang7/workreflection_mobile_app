@@ -21,7 +21,6 @@ class SeedService {
 
 final seedServiceProvider = Provider<SeedService>((ref) {
   final repo = ref.watch(wrRepositoryProvider);
-  final situation =
-      ref.watch(onboardingNotifierProvider).selectedSituation;
+  final situation = ref.watch(onboardingNotifierProvider).selectedSituation;
   return SeedService(repo, situation);
 });

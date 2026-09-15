@@ -21,8 +21,10 @@ import '../../profile/profile_providers.dart';
 import '../survey_providers.dart';
 
 // Provider family for a specific report
-final _reportProvider =
-    FutureProvider.family<CcReportFull?, String>((ref, reportId) async {
+final _reportProvider = FutureProvider.family<CcReportFull?, String>((
+  ref,
+  reportId,
+) async {
   final repo = ref.watch(surveyRepositoryProvider);
   return repo.getReport(reportId);
 });
@@ -64,12 +66,13 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
       final score = type == 'TOTAL'
           ? report.scoreTotal
           : type == 'BOTTLENECK'
-              ? _layerScore(report, report.bottleneckLayer)
-              : _layerScore(
-                  report,
-                  layer != null
-                      ? SurveyLayer.fromJson(layer)
-                      : SurveyLayer.structure);
+          ? _layerScore(report, report.bottleneckLayer)
+          : _layerScore(
+              report,
+              layer != null
+                  ? SurveyLayer.fromJson(layer)
+                  : SurveyLayer.structure,
+            );
       return selectNarrative(
         narratives,
         type: type,
@@ -88,8 +91,9 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
       scoreCulture: report.scoreCulture,
       scoreActivity: report.scoreActivity,
       bottleneckLayer: _bottleneckLayerLabel(report.bottleneckLayer, l10n),
-      bottleneckNarrative:
-          narrativeText(narrative('BOTTLENECK', layer: report.bottleneckLayer.toJson())),
+      bottleneckNarrative: narrativeText(
+        narrative('BOTTLENECK', layer: report.bottleneckLayer.toJson()),
+      ),
       structureNarrative: narrativeText(narrative('LAYER', layer: 'STRUCTURE')),
       cultureNarrative: narrativeText(narrative('LAYER', layer: 'CULTURE')),
       activityNarrative: narrativeText(narrative('LAYER', layer: 'ACTIVITY')),
@@ -101,15 +105,12 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
     try {
       final bytes = await ReportPdfBuilder.build(data);
       final safeDate = report.createdAt.toIso8601String().substring(0, 10);
-      await Printing.sharePdf(
-        bytes: bytes,
-        filename: 'report-$safeDate.pdf',
-      );
+      await Printing.sharePdf(bytes: bytes, filename: 'report-$safeDate.pdf');
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.reportPdfError)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.reportPdfError)));
       }
     } finally {
       if (mounted) setState(() => _isExporting = false);
@@ -125,11 +126,11 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
       };
 
   double _layerScore(CcReportFull report, SurveyLayer layer) => switch (layer) {
-        SurveyLayer.structure => report.scoreStructure,
-        SurveyLayer.culture => report.scoreCulture,
-        SurveyLayer.activity => report.scoreActivity,
-        _ => 0,
-      };
+    SurveyLayer.structure => report.scoreStructure,
+    SurveyLayer.culture => report.scoreCulture,
+    SurveyLayer.activity => report.scoreActivity,
+    _ => 0,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -138,8 +139,8 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
     final narrativesAsync = ref.watch(narrativesProvider);
 
     // Determine if export is possible (both report and narratives loaded).
-    final canExport = reportAsync.valueOrNull != null &&
-        narrativesAsync.valueOrNull != null;
+    final canExport =
+        reportAsync.valueOrNull != null && narrativesAsync.valueOrNull != null;
 
     return Scaffold(
       backgroundColor: WrColors.pageBg,
@@ -167,39 +168,41 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
                   )
                 : IconButton(
                     key: const Key('report_pdf_export'),
-                    icon: const Icon(Icons.share_outlined, color: WrColors.navy),
-                    tooltip: l10n.reportPdfExport,
-                    onPressed: () => _exportPdf(
-                      reportAsync.value!,
-                      narrativesAsync.value!,
+                    icon: const Icon(
+                      Icons.share_outlined,
+                      color: WrColors.navy,
                     ),
+                    tooltip: l10n.reportPdfExport,
+                    onPressed: () =>
+                        _exportPdf(reportAsync.value!, narrativesAsync.value!),
                   ),
         ],
       ),
       body: reportAsync.when(
-        loading: () =>
-            const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(AppLocalizations.of(context)!.surveyProcessingError)),
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(
+          child: Text(AppLocalizations.of(context)!.surveyProcessingError),
+        ),
         data: (report) {
           if (report == null) {
             return Center(
-                child: Text(l10n.surveyProcessingError,
-                    style: WrTextStyles.body));
+              child: Text(l10n.surveyProcessingError, style: WrTextStyles.body),
+            );
           }
           return narrativesAsync.when(
-            loading: () =>
-                const Center(child: CircularProgressIndicator()),
+            loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
-                child: Text(l10n.surveyProcessingError,
-                    style: WrTextStyles.body, textAlign: TextAlign.center),
+                child: Text(
+                  l10n.surveyProcessingError,
+                  style: WrTextStyles.body,
+                  textAlign: TextAlign.center,
+                ),
               ),
             ),
-            data: (narratives) => _ReportBody(
-              report: report,
-              narratives: narratives,
-            ),
+            data: (narratives) =>
+                _ReportBody(report: report, narratives: narratives),
           );
         },
       ),
@@ -208,15 +211,16 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
 }
 
 class _ReportBody extends ConsumerWidget {
-  const _ReportBody({
-    required this.report,
-    required this.narratives,
-  });
+  const _ReportBody({required this.report, required this.narratives});
 
   final CcReportFull report;
   final List<CcNarrative> narratives;
 
-  CcNarrative? _narrative(String type, {String? layer, required String language}) {
+  CcNarrative? _narrative(
+    String type, {
+    String? layer,
+    required String language,
+  }) {
     return selectNarrative(
       narratives,
       type: type,
@@ -224,19 +228,22 @@ class _ReportBody extends ConsumerWidget {
       score: type == 'TOTAL'
           ? report.scoreTotal
           : type == 'BOTTLENECK'
-              ? _layerScore(report.bottleneckLayer)
-              : _layerScore(
-                  layer != null ? SurveyLayer.fromJson(layer) : SurveyLayer.structure),
+          ? _layerScore(report.bottleneckLayer)
+          : _layerScore(
+              layer != null
+                  ? SurveyLayer.fromJson(layer)
+                  : SurveyLayer.structure,
+            ),
       language: language,
     );
   }
 
   double _layerScore(SurveyLayer layer) => switch (layer) {
-        SurveyLayer.structure => report.scoreStructure,
-        SurveyLayer.culture => report.scoreCulture,
-        SurveyLayer.activity => report.scoreActivity,
-        _ => 0,
-      };
+    SurveyLayer.structure => report.scoreStructure,
+    SurveyLayer.culture => report.scoreCulture,
+    SurveyLayer.activity => report.scoreActivity,
+    _ => 0,
+  };
 
   String _narrativeText(CcNarrative n, String language) {
     if (language == 'en' && n.narrativeTextEn != null) {
@@ -250,8 +257,7 @@ class _ReportBody extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final localeCode = ref.watch(appLocaleProvider);
     final totalNarrative = _narrative('TOTAL', language: localeCode);
-    final isPremium =
-        report.scoreEsi != null || report.scoreEnps != null;
+    final isPremium = report.scoreEsi != null || report.scoreEnps != null;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -298,7 +304,11 @@ class _ReportBody extends ConsumerWidget {
             score: report.scoreStructure,
             layer: 'STRUCTURE',
             reportId: report.id,
-            narrative: _narrative('LAYER', layer: 'STRUCTURE', language: localeCode),
+            narrative: _narrative(
+              'LAYER',
+              layer: 'STRUCTURE',
+              language: localeCode,
+            ),
             localeCode: localeCode,
           ),
           const SizedBox(height: 16),
@@ -307,7 +317,11 @@ class _ReportBody extends ConsumerWidget {
             score: report.scoreCulture,
             layer: 'CULTURE',
             reportId: report.id,
-            narrative: _narrative('LAYER', layer: 'CULTURE', language: localeCode),
+            narrative: _narrative(
+              'LAYER',
+              layer: 'CULTURE',
+              language: localeCode,
+            ),
             localeCode: localeCode,
           ),
           const SizedBox(height: 16),
@@ -316,7 +330,11 @@ class _ReportBody extends ConsumerWidget {
             score: report.scoreActivity,
             layer: 'ACTIVITY',
             reportId: report.id,
-            narrative: _narrative('LAYER', layer: 'ACTIVITY', language: localeCode),
+            narrative: _narrative(
+              'LAYER',
+              layer: 'ACTIVITY',
+              language: localeCode,
+            ),
             localeCode: localeCode,
           ),
           const SizedBox(height: 16),
@@ -324,8 +342,11 @@ class _ReportBody extends ConsumerWidget {
           // Bottleneck card
           _BottleneckCard(
             report: report,
-            narrative: _narrative('BOTTLENECK',
-                layer: report.bottleneckLayer.toJson(), language: localeCode),
+            narrative: _narrative(
+              'BOTTLENECK',
+              layer: report.bottleneckLayer.toJson(),
+              language: localeCode,
+            ),
             l10n: l10n,
             localeCode: localeCode,
           ),
@@ -350,8 +371,7 @@ class _ReportBody extends ConsumerWidget {
           // CTA
           WrPillButton(
             label: l10n.reportActionPlanCta,
-            onPressed: () =>
-                context.push('/survey/action-plan/${report.id}'),
+            onPressed: () => context.push('/survey/action-plan/${report.id}'),
             variant: WrPillVariant.coral,
           ),
 
@@ -359,8 +379,7 @@ class _ReportBody extends ConsumerWidget {
           const SizedBox(height: 12),
           WrPillButton(
             label: l10n.videoReportButton,
-            onPressed: () =>
-                context.push('/survey/report/${report.id}/video'),
+            onPressed: () => context.push('/survey/report/${report.id}/video'),
             variant: WrPillVariant.navy,
           ),
 
@@ -369,8 +388,7 @@ class _ReportBody extends ConsumerWidget {
             const SizedBox(height: 12),
             WrPillButton(
               label: l10n.roadmapEntryLink,
-              onPressed: () =>
-                  context.push('/roadmap?report=${report.id}'),
+              onPressed: () => context.push('/roadmap?report=${report.id}'),
               variant: WrPillVariant.navy,
             ),
           ],
@@ -396,7 +414,10 @@ class _ScoreLevelBadge extends StatelessWidget {
       ScoreLevel.high => (l10n.reportScoreLevelHigh, WrColors.teal),
       ScoreLevel.good => (l10n.reportScoreLevelGood, WrColors.navy),
       ScoreLevel.warning => (l10n.reportScoreLevelWarning, WrColors.coral),
-      ScoreLevel.critical => (l10n.reportScoreLevelCritical, WrColors.destructive),
+      ScoreLevel.critical => (
+        l10n.reportScoreLevelCritical,
+        WrColors.destructive,
+      ),
     };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
@@ -455,10 +476,7 @@ class _LayerCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(label, style: WrTextStyles.hMedium),
-              Text(
-                score.toStringAsFixed(1),
-                style: WrTextStyles.hLarge,
-              ),
+              Text(score.toStringAsFixed(1), style: WrTextStyles.hLarge),
             ],
           ),
           const SizedBox(height: 10),
@@ -471,8 +489,8 @@ class _LayerCard extends StatelessWidget {
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
-              onPressed: () => context.push(
-                  '/survey/report/$reportId/layer/$layer'),
+              onPressed: () =>
+                  context.push('/survey/report/$reportId/layer/$layer'),
               child: Text(l10n.layerDetailViewDetail),
             ),
           ),
@@ -499,11 +517,11 @@ class _BottleneckCard extends StatelessWidget {
   final String localeCode;
 
   String _layerLabel(SurveyLayer layer) => switch (layer) {
-        SurveyLayer.structure => l10n.reportLayerStructure,
-        SurveyLayer.culture => l10n.reportLayerCulture,
-        SurveyLayer.activity => l10n.reportLayerActivity,
-        _ => '',
-      };
+    SurveyLayer.structure => l10n.reportLayerStructure,
+    SurveyLayer.culture => l10n.reportLayerCulture,
+    SurveyLayer.activity => l10n.reportLayerActivity,
+    _ => '',
+  };
 
   String? get _narrativeText {
     if (narrative == null) return null;
@@ -521,7 +539,12 @@ class _BottleneckCard extends StatelessWidget {
         children: [
           Text(
             l10n.reportBottleneckTitle.toUpperCase(),
-            style: TextStyle(fontSize: 12.5, fontWeight: FontWeight.w700, letterSpacing: 0.55, color: WrColors.white.withValues(alpha: 0.6)),
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.55,
+              color: WrColors.white.withValues(alpha: 0.6),
+            ),
           ),
           const SizedBox(height: 12),
           Text(
@@ -532,8 +555,9 @@ class _BottleneckCard extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               _narrativeText!,
-              style: WrTextStyles.body
-                  .copyWith(color: WrColors.white.withValues(alpha: 0.8)),
+              style: WrTextStyles.body.copyWith(
+                color: WrColors.white.withValues(alpha: 0.8),
+              ),
             ),
           ],
         ],
@@ -561,18 +585,14 @@ class _EsiCard extends StatelessWidget {
         children: [
           WrEyebrow(l10n.reportEsiTitle),
           const SizedBox(height: 12),
-          Text(
-            esi.toStringAsFixed(1),
-            style: WrTextStyles.hLarge,
-          ),
+          Text(esi.toStringAsFixed(1), style: WrTextStyles.hLarge),
           const SizedBox(height: 8),
           WrProgressTrack(value: esi / 5.0, color: WrColors.teal),
           const SizedBox(height: 12),
           Align(
             alignment: Alignment.centerRight,
             child: TextButton(
-              onPressed: () =>
-                  context.push('/survey/report/${report.id}/esi'),
+              onPressed: () => context.push('/survey/report/${report.id}/esi'),
               child: Text(l10n.layerDetailViewDetail),
             ),
           ),
@@ -604,10 +624,7 @@ class _EnpsCard extends ConsumerWidget {
         children: [
           WrEyebrow(l10n.reportEnpsTitle),
           const SizedBox(height: 12),
-          Text(
-            '$enps',
-            style: WrTextStyles.hLarge,
-          ),
+          Text('$enps', style: WrTextStyles.hLarge),
           const SizedBox(height: 8),
           if (breakdown != null)
             Text(
@@ -677,9 +694,9 @@ class _ScaRadarPainter extends CustomPainter {
     ];
 
     Offset axisPoint(int axis, double ratio) => Offset(
-          cx + math.cos(angles[axis]) * maxR * ratio,
-          cy + math.sin(angles[axis]) * maxR * ratio,
-        );
+      cx + math.cos(angles[axis]) * maxR * ratio,
+      cy + math.sin(angles[axis]) * maxR * ratio,
+    );
 
     // --- Grid triangles (5 levels) ---
     final gridPaint = Paint()
@@ -859,8 +876,9 @@ class _AiPersonalizedPremiumSection extends ConsumerWidget {
             const SizedBox(width: 10),
             Text(
               l10n.reportAiPersonalizingLabel,
-              style: WrTextStyles.body
-                  .copyWith(color: WrColors.dark.withValues(alpha: 0.6)),
+              style: WrTextStyles.body.copyWith(
+                color: WrColors.dark.withValues(alpha: 0.6),
+              ),
             ),
           ],
         ),
@@ -902,11 +920,16 @@ class _AiPersonalizedPremiumSection extends ConsumerWidget {
     );
 
     final modelAsync = ref.watch(aiPersonalizationProvider(modelArgs));
-    final reflectionAsync = ref.watch(aiPersonalizationProvider(reflectionArgs));
-    final relationshipAsync = ref.watch(aiPersonalizationProvider(relationshipArgs));
+    final reflectionAsync = ref.watch(
+      aiPersonalizationProvider(reflectionArgs),
+    );
+    final relationshipAsync = ref.watch(
+      aiPersonalizationProvider(relationshipArgs),
+    );
 
     // Show a single loading indicator while any section is still resolving.
-    final anyLoading = modelAsync.isLoading ||
+    final anyLoading =
+        modelAsync.isLoading ||
         reflectionAsync.isLoading ||
         relationshipAsync.isLoading;
 
@@ -927,8 +950,9 @@ class _AiPersonalizedPremiumSection extends ConsumerWidget {
             const SizedBox(width: 10),
             Text(
               l10n.reportAiPersonalizingLabel,
-              style: WrTextStyles.body
-                  .copyWith(color: WrColors.dark.withValues(alpha: 0.6)),
+              style: WrTextStyles.body.copyWith(
+                color: WrColors.dark.withValues(alpha: 0.6),
+              ),
             ),
           ],
         ),
@@ -941,7 +965,9 @@ class _AiPersonalizedPremiumSection extends ConsumerWidget {
     final relationshipData = relationshipAsync.valueOrNull;
 
     // If all three returned null (AI unavailable / all errors) → nothing to show.
-    if (modelData == null && reflectionData == null && relationshipData == null) {
+    if (modelData == null &&
+        reflectionData == null &&
+        relationshipData == null) {
       return const SizedBox.shrink();
     }
 

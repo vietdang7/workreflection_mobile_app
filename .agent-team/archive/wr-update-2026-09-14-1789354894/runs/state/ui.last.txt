@@ -1,0 +1,1 @@
+TEAM-STATUS: ui | WORKING | ready; boot files and mission SPEC read, awaiting TASK from lead

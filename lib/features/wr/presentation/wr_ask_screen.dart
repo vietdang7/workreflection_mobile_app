@@ -42,9 +42,12 @@ import '../../../core/widgets/wr_paragraph.dart';
 ///
 /// Giữ nguyên hằng số và nguyên văn: nó là lời hứa đã đưa ra với những người đã
 /// gửi câu hỏi trước khi có màn chat này.
-String get kAskPendingMessage => tr('Hệ thống đã ghi nhận câu hỏi của bạn. Phần gợi ý chi tiết sẽ được gửi vào '
-    'email của bạn.', 'We have recorded your question. The detailed suggestions will be sent to '
-    'your email.');
+String get kAskPendingMessage => tr(
+  'Hệ thống đã ghi nhận câu hỏi của bạn. Phần gợi ý chi tiết sẽ được gửi vào '
+      'email của bạn.',
+  'We have recorded your question. The detailed suggestions will be sent to '
+      'your email.',
+);
 
 /// Gợi ý mở lời cho màn trống, bản DỰ PHÒNG.
 ///
@@ -166,11 +169,15 @@ class _WrAskScreenState extends ConsumerState<WrAskScreen> {
               ),
               PopupMenuItem(
                 value: 'history',
-                child: Text(tr('Câu hỏi đã gửi trước đây', 'Questions you sent before')),
+                child: Text(
+                  tr('Câu hỏi đã gửi trước đây', 'Questions you sent before'),
+                ),
               ),
               PopupMenuItem(
                 value: 'clear',
-                child: Text(tr('Xoá cuộc trò chuyện này', 'Delete this conversation')),
+                child: Text(
+                  tr('Xoá cuộc trò chuyện này', 'Delete this conversation'),
+                ),
               ),
             ],
           ),
@@ -190,22 +197,22 @@ class _WrAskScreenState extends ConsumerState<WrAskScreen> {
                       ),
                     )
                   : state.isEmpty && !state.sending
-                      ? _EmptyState(
-                          starters: ref.watch(wrChatStartersProvider),
-                          onPick: (text) {
-                            _controller.text = text;
-                            setState(() {});
-                          },
-                        )
-                      : ListView(
-                          key: const Key('wr_chat_list'),
-                          controller: _scrollController,
-                          padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-                          children: [
-                            for (final m in state.messages) _Bubble(message: m),
-                            if (state.sending) const _TypingBubble(),
-                          ],
-                        ),
+                  ? _EmptyState(
+                      starters: ref.watch(wrChatStartersProvider),
+                      onPick: (text) {
+                        _controller.text = text;
+                        setState(() {});
+                      },
+                    )
+                  : ListView(
+                      key: const Key('wr_chat_list'),
+                      controller: _scrollController,
+                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                      children: [
+                        for (final m in state.messages) _Bubble(message: m),
+                        if (state.sending) const _TypingBubble(),
+                      ],
+                    ),
             ),
             if (state.error != null)
               _ErrorBar(
@@ -256,9 +263,12 @@ class _WrAskScreenState extends ConsumerState<WrAskScreen> {
         backgroundColor: WrColors.white,
         title: Text(tr('Xoá cuộc trò chuyện?', 'Delete this conversation?')),
         content: WrParagraph(
-          tr('Toàn bộ lượt trò chuyện sẽ bị xoá và không lấy lại được. '
-          'Những gì bạn đã ghi trong Hành trình không bị ảnh hưởng.', 'Every turn in it will be deleted and cannot be recovered. '
-          'Nothing you saved in your Journey is affected.'),
+          tr(
+            'Toàn bộ lượt trò chuyện sẽ bị xoá và không lấy lại được. '
+                'Những gì bạn đã ghi trong Hành trình không bị ảnh hưởng.',
+            'Every turn in it will be deleted and cannot be recovered. '
+                'Nothing you saved in your Journey is affected.',
+          ),
           style: TextStyle(height: 1.6),
         ),
         actions: [
@@ -269,7 +279,10 @@ class _WrAskScreenState extends ConsumerState<WrAskScreen> {
           TextButton(
             key: const Key('wr_chat_clear_confirm'),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(tr('Xoá', 'Delete'), style: TextStyle(color: WrColors.coral)),
+            child: Text(
+              tr('Xoá', 'Delete'),
+              style: TextStyle(color: WrColors.coral),
+            ),
           ),
         ],
       ),
@@ -326,8 +339,9 @@ class _Bubble extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
-        mainAxisAlignment:
-            isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isUser
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         children: [
           Flexible(
             child: Container(
@@ -430,11 +444,7 @@ class _TypingBubble extends StatelessWidget {
               height: 10,
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  _Dot(),
-                  _Dot(),
-                  _Dot(),
-                ],
+                children: [_Dot(), _Dot(), _Dot()],
               ),
             ),
           ),
@@ -449,13 +459,13 @@ class _Dot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Container(
-        width: 4,
-        height: 4,
-        decoration: const BoxDecoration(
-          color: WrColors.muted,
-          shape: BoxShape.circle,
-        ),
-      );
+    width: 4,
+    height: 4,
+    decoration: const BoxDecoration(
+      color: WrColors.muted,
+      shape: BoxShape.circle,
+    ),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -481,7 +491,10 @@ class _EmptyState extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
       children: [
         Text(
-          tr('Kể mình nghe một chuyện trong công việc', 'Tell me something from work'),
+          tr(
+            'Kể mình nghe một chuyện trong công việc',
+            'Tell me something from work',
+          ),
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w700,
@@ -492,9 +505,12 @@ class _EmptyState extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         WrParagraph(
-          tr('Một tình huống vừa xảy ra, một cảm giác khó gọi tên, hay một điều '
-          'bạn muốn hiểu thêm về chính mình. Viết một câu là đủ.', 'Something that just happened, a feeling you cannot quite name, or '
-          'something you want to understand about yourself. One line is enough.'),
+          tr(
+            'Một tình huống vừa xảy ra, một cảm giác khó gọi tên, hay một điều '
+                'bạn muốn hiểu thêm về chính mình. Viết một câu là đủ.',
+            'Something that just happened, a feeling you cannot quite name, or '
+                'something you want to understand about yourself. One line is enough.',
+          ),
           style: TextStyle(fontSize: 15.5, color: WrColors.muted, height: 1.75),
         ),
         const SizedBox(height: 24),
@@ -522,8 +538,11 @@ class _EmptyState extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 10),
-                    const Icon(Icons.north_west,
-                        size: 15, color: WrColors.muted),
+                    const Icon(
+                      Icons.north_west,
+                      size: 15,
+                      color: WrColors.muted,
+                    ),
                   ],
                 ),
               ),
@@ -533,9 +552,12 @@ class _EmptyState extends StatelessWidget {
         // Mục 4.9 của system prompt: minh bạch về bản thân. Nói trước một lần ở
         // đây thay vì để trợ lý phải tự nhắc giữa cuộc trò chuyện.
         WrParagraph(
-          tr('Mình là trợ lý AI hỗ trợ bạn nhìn lại công việc, không thay thế '
-          'chuyên gia tâm lý hay tư vấn nghề nghiệp.', 'I am an AI assistant that helps you look back at work. I am not a '
-          'replacement for a therapist or a career adviser.'),
+          tr(
+            'Mình là trợ lý AI hỗ trợ bạn nhìn lại công việc, không thay thế '
+                'chuyên gia tâm lý hay tư vấn nghề nghiệp.',
+            'I am an AI assistant that helps you look back at work. I am not a '
+                'replacement for a therapist or a career adviser.',
+          ),
           style: TextStyle(fontSize: 14, color: WrColors.muted, height: 1.65),
         ),
       ],
@@ -650,7 +672,10 @@ class _Composer extends StatelessWidget {
                 child: WrVoiceField(
                   fieldKey: const Key('wr_ask_field'),
                   controller: controller,
-                  hintText: tr('Viết điều bạn đang nghĩ…', 'Write what is on your mind…'),
+                  hintText: tr(
+                    'Viết điều bạn đang nghĩ…',
+                    'Write what is on your mind…',
+                  ),
                   minLines: 1,
                   maxLines: 5,
                   onChanged: onChanged,
@@ -664,8 +689,14 @@ class _Composer extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               remaining == 0
-                  ? tr('Hôm nay bạn đã dùng hết lượt trò chuyện miễn phí.', 'You have used up your free chats for today.')
-                  : tr('Còn $remaining lượt trò chuyện miễn phí hôm nay.', '$remaining free chats left today.'),
+                  ? tr(
+                      'Hôm nay bạn đã dùng hết lượt trò chuyện miễn phí.',
+                      'You have used up your free chats for today.',
+                    )
+                  : tr(
+                      'Còn $remaining lượt trò chuyện miễn phí hôm nay.',
+                      '$remaining free chats left today.',
+                    ),
               key: const Key('wr_chat_quota_hint'),
               style: const TextStyle(fontSize: 13, color: WrColors.text3),
             ),
@@ -709,8 +740,11 @@ class _SendButton extends StatelessWidget {
                       strokeWidth: 1.6,
                     ),
                   )
-                : const Icon(Icons.arrow_upward,
-                    size: 19, color: WrColors.white),
+                : const Icon(
+                    Icons.arrow_upward,
+                    size: 19,
+                    color: WrColors.white,
+                  ),
           ),
         ),
       ),
@@ -763,7 +797,10 @@ class _ConversationsSheet extends ConsumerWidget {
               error: (_, __) => Padding(
                 padding: EdgeInsets.only(bottom: 12),
                 child: Text(
-                  tr('Chưa đọc được lịch sử. Bạn thử lại sau nhé.', 'Could not load the history. Please try again later.'),
+                  tr(
+                    'Chưa đọc được lịch sử. Bạn thử lại sau nhé.',
+                    'Could not load the history. Please try again later.',
+                  ),
                   style: TextStyle(fontSize: 15.5, color: WrColors.muted),
                 ),
               ),
@@ -772,7 +809,10 @@ class _ConversationsSheet extends ConsumerWidget {
                       key: Key('wr_chat_conversations_empty'),
                       padding: EdgeInsets.only(bottom: 12),
                       child: Text(
-                        tr('Chưa có cuộc trò chuyện nào được lưu.', 'No conversations saved yet.'),
+                        tr(
+                          'Chưa có cuộc trò chuyện nào được lưu.',
+                          'No conversations saved yet.',
+                        ),
                         style: TextStyle(
                           fontSize: 15.5,
                           color: WrColors.muted,
@@ -843,12 +883,18 @@ class _ConversationRow extends StatelessWidget {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    tr('${at.day.toString().padLeft(2, '0')}/'
-                    '${at.month.toString().padLeft(2, '0')}/${at.year}'
-                    '${isCurrent ? '  ·  đang mở' : ''}', '${at.day.toString().padLeft(2, '0')}/'
-                    '${at.month.toString().padLeft(2, '0')}/${at.year}'
-                    '${isCurrent ? '  ·  open' : ''}'),
-                    style: const TextStyle(fontSize: 13.5, color: WrColors.muted),
+                    tr(
+                      '${at.day.toString().padLeft(2, '0')}/'
+                          '${at.month.toString().padLeft(2, '0')}/${at.year}'
+                          '${isCurrent ? '  ·  đang mở' : ''}',
+                      '${at.day.toString().padLeft(2, '0')}/'
+                          '${at.month.toString().padLeft(2, '0')}/${at.year}'
+                          '${isCurrent ? '  ·  open' : ''}',
+                    ),
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      color: WrColors.muted,
+                    ),
                   ),
                 ],
               ),
@@ -898,7 +944,10 @@ class _OldQuestionsSheet extends ConsumerWidget {
                 key: Key('wr_ask_history_empty'),
                 padding: EdgeInsets.only(bottom: 12),
                 child: Text(
-                  tr('Bạn chưa gửi câu hỏi nào theo cách cũ.', 'You have not sent any questions the old way.'),
+                  tr(
+                    'Bạn chưa gửi câu hỏi nào theo cách cũ.',
+                    'You have not sent any questions the old way.',
+                  ),
                   style: TextStyle(
                     fontSize: 15.5,
                     color: WrColors.muted,
@@ -963,8 +1012,9 @@ class _QuestionRow extends StatelessWidget {
               fontSize: 15,
               height: 1.7,
               color: question.isAnswered ? WrColors.dark : WrColors.muted,
-              fontStyle:
-                  question.isAnswered ? FontStyle.normal : FontStyle.italic,
+              fontStyle: question.isAnswered
+                  ? FontStyle.normal
+                  : FontStyle.italic,
             ),
           ),
         ],

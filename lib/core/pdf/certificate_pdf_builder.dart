@@ -41,9 +41,8 @@ class CertificateData {
   final String? workshopLocation;
   final String locale;
 
-  String get displayName => participantName?.isNotEmpty == true
-      ? participantName!
-      : 'Participant';
+  String get displayName =>
+      participantName?.isNotEmpty == true ? participantName! : 'Participant';
 
   CertificateData copyWith({
     String? participantName,
@@ -71,8 +70,9 @@ class CertificatePdfBuilder {
 
   /// Builds and returns raw PDF bytes for a landscape A4 certificate.
   static Future<Uint8List> build(CertificateData data) async {
-    final regularData =
-        await rootBundle.load('assets/fonts/NotoSans-Regular.ttf');
+    final regularData = await rootBundle.load(
+      'assets/fonts/NotoSans-Regular.ttf',
+    );
     final boldData = await rootBundle.load('assets/fonts/NotoSans-Bold.ttf');
     final regular = pw.Font.ttf(regularData);
     final bold = pw.Font.ttf(boldData);
@@ -81,14 +81,18 @@ class CertificatePdfBuilder {
     final pdf = pw.Document(theme: theme);
 
     // Landscape A4: 297mm wide × 210mm tall
-    const pageFormat =
-        PdfPageFormat(297 * PdfPageFormat.mm, 210 * PdfPageFormat.mm);
+    const pageFormat = PdfPageFormat(
+      297 * PdfPageFormat.mm,
+      210 * PdfPageFormat.mm,
+    );
 
-    pdf.addPage(pw.Page(
-      pageFormat: pageFormat,
-      margin: pw.EdgeInsets.zero,
-      build: (ctx) => _buildCertificate(ctx, data, regular, bold),
-    ));
+    pdf.addPage(
+      pw.Page(
+        pageFormat: pageFormat,
+        margin: pw.EdgeInsets.zero,
+        build: (ctx) => _buildCertificate(ctx, data, regular, bold),
+      ),
+    );
 
     return pdf.save();
   }
@@ -102,12 +106,21 @@ class CertificatePdfBuilder {
     final isVi = d.locale == 'vi';
 
     // Localised strings
-    final dynamic certifiesLine = tr('This is to certify that / Chứng nhận rằng', 'This is to certify that');
-    final dynamic attendedLine = tr('has successfully completed the workshop / Đã tham dự thành công', 'has successfully completed the workshop');
+    final dynamic certifiesLine = tr(
+      'This is to certify that / Chứng nhận rằng',
+      'This is to certify that',
+    );
+    final dynamic attendedLine = tr(
+      'has successfully completed the workshop / Đã tham dự thành công',
+      'has successfully completed the workshop',
+    );
     const facilitator = 'Facilitator';
     const orgName = 'Cloud & Coral';
     final footerText = isVi
-        ? tr('Cloud & Coral  |  Nền tảng phát triển tổ chức  |  www.cloudandcoral.com', 'Cloud & Coral  |  Organisational development platform  |  www.cloudandcoral.com')
+        ? tr(
+            'Cloud & Coral  |  Nền tảng phát triển tổ chức  |  www.cloudandcoral.com',
+            'Cloud & Coral  |  Organisational development platform  |  www.cloudandcoral.com',
+          )
         : 'Cloud & Coral  |  Work Reflection Platform  |  www.cloudandcoral.com';
     final issuedLabel = isVi ? tr('Ngày cấp', 'Issued on') : 'Issued';
     final dateStr = _formatDate(d.workshopDate, isVi);
@@ -184,11 +197,7 @@ class CertificatePdfBuilder {
                 children: [
                   pw.Text(
                     'CERTIFICATE OF ATTENDANCE',
-                    style: pw.TextStyle(
-                      font: bold,
-                      fontSize: 26,
-                      color: _navy,
-                    ),
+                    style: pw.TextStyle(font: bold, fontSize: 26, color: _navy),
                     textAlign: pw.TextAlign.center,
                   ),
                   pw.SizedBox(height: 4),
@@ -208,7 +217,10 @@ class CertificatePdfBuilder {
               pw.Text(
                 certifiesLine,
                 style: pw.TextStyle(
-                    font: regular, fontSize: 11.5, color: _muted),
+                  font: regular,
+                  fontSize: 11.5,
+                  color: _muted,
+                ),
                 textAlign: pw.TextAlign.center,
               ),
 
@@ -217,19 +229,11 @@ class CertificatePdfBuilder {
                 children: [
                   pw.Text(
                     d.displayName,
-                    style: pw.TextStyle(
-                      font: bold,
-                      fontSize: 24,
-                      color: _navy,
-                    ),
+                    style: pw.TextStyle(font: bold, fontSize: 24, color: _navy),
                     textAlign: pw.TextAlign.center,
                   ),
                   pw.SizedBox(height: 4),
-                  pw.Container(
-                    width: 200,
-                    height: 0.6,
-                    color: _coral,
-                  ),
+                  pw.Container(width: 200, height: 0.6, color: _coral),
                 ],
               ),
 
@@ -237,18 +241,17 @@ class CertificatePdfBuilder {
               pw.Text(
                 attendedLine,
                 style: pw.TextStyle(
-                    font: regular, fontSize: 11.5, color: _muted),
+                  font: regular,
+                  fontSize: 11.5,
+                  color: _muted,
+                ),
                 textAlign: pw.TextAlign.center,
               ),
 
               // Workshop title
               pw.Text(
                 d.workshopTitle,
-                style: pw.TextStyle(
-                  font: bold,
-                  fontSize: 16,
-                  color: _textDark,
-                ),
+                style: pw.TextStyle(font: bold, fontSize: 16, color: _textDark),
                 textAlign: pw.TextAlign.center,
                 maxLines: 2,
               ),
@@ -259,7 +262,10 @@ class CertificatePdfBuilder {
                   pw.Text(
                     dateStr,
                     style: pw.TextStyle(
-                        font: regular, fontSize: 11.5, color: _muted),
+                      font: regular,
+                      fontSize: 11.5,
+                      color: _muted,
+                    ),
                     textAlign: pw.TextAlign.center,
                   ),
                   if (d.workshopLocation != null) ...[
@@ -267,7 +273,10 @@ class CertificatePdfBuilder {
                     pw.Text(
                       d.workshopLocation!,
                       style: pw.TextStyle(
-                          font: regular, fontSize: 11.5, color: _muted),
+                        font: regular,
+                        fontSize: 11.5,
+                        color: _muted,
+                      ),
                       textAlign: pw.TextAlign.center,
                     ),
                   ],
@@ -286,8 +295,7 @@ class CertificatePdfBuilder {
               // Footer
               pw.Text(
                 '$footerText\n$issuedLabel: $issueDateStr',
-                style: pw.TextStyle(
-                    font: regular, fontSize: 9, color: _muted),
+                style: pw.TextStyle(font: regular, fontSize: 9, color: _muted),
                 textAlign: pw.TextAlign.center,
               ),
             ],
@@ -298,7 +306,10 @@ class CertificatePdfBuilder {
   }
 
   static pw.Widget _signatureBlock(
-      String label, pw.Font regular, pw.Font bold) {
+    String label,
+    pw.Font regular,
+    pw.Font bold,
+  ) {
     return pw.Column(
       children: [
         pw.Container(width: 100, height: 0.4, color: _navy),
@@ -314,14 +325,34 @@ class CertificatePdfBuilder {
   static String _formatDate(DateTime d, bool isVi) {
     final months = isVi
         ? [
-            '', tr('tháng 1', 'January'), tr('tháng 2', 'February'), tr('tháng 3', 'March'), tr('tháng 4', 'April'),
-            tr('tháng 5', 'May'), tr('tháng 6', 'June'), tr('tháng 7', 'July'), tr('tháng 8', 'August'),
-            tr('tháng 9', 'September'), tr('tháng 10', 'October'), tr('tháng 11', 'November'), tr('tháng 12', 'December')
+            '',
+            tr('tháng 1', 'January'),
+            tr('tháng 2', 'February'),
+            tr('tháng 3', 'March'),
+            tr('tháng 4', 'April'),
+            tr('tháng 5', 'May'),
+            tr('tháng 6', 'June'),
+            tr('tháng 7', 'July'),
+            tr('tháng 8', 'August'),
+            tr('tháng 9', 'September'),
+            tr('tháng 10', 'October'),
+            tr('tháng 11', 'November'),
+            tr('tháng 12', 'December'),
           ]
         : [
-            '', 'January', 'February', 'March', 'April',
-            'May', 'June', 'July', 'August',
-            'September', 'October', 'November', 'December'
+            '',
+            'January',
+            'February',
+            'March',
+            'April',
+            'May',
+            'June',
+            'July',
+            'August',
+            'September',
+            'October',
+            'November',
+            'December',
           ];
     if (isVi) {
       return '${d.day} ${months[d.month]} ${d.year}';

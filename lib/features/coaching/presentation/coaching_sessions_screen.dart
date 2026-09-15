@@ -45,9 +45,8 @@ class CoachingSessionsScreen extends ConsumerWidget {
       ),
       body: bookingsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => _ErrorCard(
-          onRetry: () => ref.invalidate(myBookingsProvider),
-        ),
+        error: (e, _) =>
+            _ErrorCard(onRetry: () => ref.invalidate(myBookingsProvider)),
         data: (bookings) {
           if (bookings.isEmpty) {
             return Center(
@@ -73,10 +72,8 @@ class _BookingsList extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
 
-    final upcoming =
-        bookings.where((b) => b.status == 'scheduled').toList();
-    final pending =
-        bookings.where((b) => b.status == 'pending').toList();
+    final upcoming = bookings.where((b) => b.status == 'scheduled').toList();
+    final pending = bookings.where((b) => b.status == 'pending').toList();
     final history = bookings
         .where((b) => b.status == 'completed' || b.status == 'cancelled')
         .toList();
@@ -162,8 +159,11 @@ class _SessionRow extends StatelessWidget {
             if (b.status == 'scheduled') ...[
               Row(
                 children: [
-                  const Icon(Icons.calendar_today_outlined,
-                      size: 14, color: WrColors.muted),
+                  const Icon(
+                    Icons.calendar_today_outlined,
+                    size: 14,
+                    color: WrColors.muted,
+                  ),
                   const SizedBox(width: 6),
                   Text(
                     _formatScheduledAt(b.scheduledAt),
@@ -180,8 +180,11 @@ class _SessionRow extends StatelessWidget {
                 width: double.infinity,
                 child: OutlinedButton.icon(
                   key: Key('scheduleBtn_${b.id}'),
-                  icon: const Icon(Icons.calendar_today_outlined,
-                      size: 16, color: WrColors.coral),
+                  icon: const Icon(
+                    Icons.calendar_today_outlined,
+                    size: 16,
+                    color: WrColors.coral,
+                  ),
                   label: Text(
                     l10n.coachSchedButton,
                     style: const TextStyle(color: WrColors.coral),
@@ -192,8 +195,7 @@ class _SessionRow extends StatelessWidget {
                       borderRadius: BorderRadius.circular(10),
                     ),
                   ),
-                  onPressed: () =>
-                      context.push('/coaching/schedule/${b.id}'),
+                  onPressed: () => context.push('/coaching/schedule/${b.id}'),
                 ),
               ),
             ],
@@ -208,8 +210,8 @@ class _SessionRow extends StatelessWidget {
                   Clipboard.setData(ClipboardData(text: b.meetingLink!));
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                        content:
-                            Text(AppLocalizations.of(context)!.wsLinkCopied)),
+                      content: Text(AppLocalizations.of(context)!.wsLinkCopied),
+                    ),
                   );
                 },
                 child: Row(

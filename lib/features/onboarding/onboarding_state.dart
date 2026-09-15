@@ -1,10 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 class OnboardingState {
-  const OnboardingState({
-    this.currentStep = 0,
-    this.selectedSituation,
-  });
+  const OnboardingState({this.currentStep = 0, this.selectedSituation});
 
   final int currentStep;
   final String? selectedSituation;
@@ -43,5 +40,5 @@ class OnboardingNotifier extends Notifier<OnboardingState> {
 
 final onboardingNotifierProvider =
     NotifierProvider<OnboardingNotifier, OnboardingState>(
-  OnboardingNotifier.new,
-);
+      OnboardingNotifier.new,
+    );

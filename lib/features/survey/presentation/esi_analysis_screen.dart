@@ -21,46 +21,50 @@ import '../survey_providers.dart';
 /// Each pillar groups one or more sub-components. The pillar score is the
 /// average of all sub-component scores that belong to it.
 class _EsiPillar {
-  const _EsiPillar({
-    required this.key,
-    required this.subComponents,
-  });
+  const _EsiPillar({required this.key, required this.subComponents});
   final String key; // e.g. 'compensation'
   final List<String> subComponents;
 }
 
 const _esiPillars = [
   _EsiPillar(
-      key: 'compensation',
-      subComponents: ['compensation_income', 'compensation_benefits']),
+    key: 'compensation',
+    subComponents: ['compensation_income', 'compensation_benefits'],
+  ),
   _EsiPillar(key: 'growth', subComponents: ['growth_career']),
   _EsiPillar(key: 'fairness', subComponents: ['fairness_evaluation']),
-  _EsiPillar(key: 'support',
-      subComponents: [
-        'support_management',
-        'support_feedback',
-        'support_collaboration',
-        'support_leadership',
-      ]),
-  _EsiPillar(key: 'colleagues',
-      subComponents: ['support_collaboration', 'support_leadership']),
+  _EsiPillar(
+    key: 'support',
+    subComponents: [
+      'support_management',
+      'support_feedback',
+      'support_collaboration',
+      'support_leadership',
+    ],
+  ),
+  _EsiPillar(
+    key: 'colleagues',
+    subComponents: ['support_collaboration', 'support_leadership'],
+  ),
 ];
 
 String _pillarLabel(String key, AppLocalizations l10n) => switch (key) {
-      'compensation' => l10n.esiPillarCompensation,
-      'growth' => l10n.esiPillarGrowth,
-      'fairness' => l10n.esiPillarFairness,
-      'support' => l10n.esiPillarSupport,
-      'colleagues' => l10n.esiPillarColleagues,
-      _ => key,
-    };
+  'compensation' => l10n.esiPillarCompensation,
+  'growth' => l10n.esiPillarGrowth,
+  'fairness' => l10n.esiPillarFairness,
+  'support' => l10n.esiPillarSupport,
+  'colleagues' => l10n.esiPillarColleagues,
+  _ => key,
+};
 
 // ---------------------------------------------------------------------------
 // Provider (local — avoids collision with report_screen's private provider)
 // ---------------------------------------------------------------------------
 
-final _reportForEsiProvider =
-    FutureProvider.family<CcReportFull?, String>((ref, reportId) async {
+final _reportForEsiProvider = FutureProvider.family<CcReportFull?, String>((
+  ref,
+  reportId,
+) async {
   final repo = ref.watch(surveyRepositoryProvider);
   return repo.getReport(reportId);
 });
@@ -106,13 +110,13 @@ class EsiAnalysisScreen extends ConsumerWidget {
             return _EsiNoDataBody(l10n: l10n);
           }
 
-          final pillarScoresAsync =
-              ref.watch(esiPillarScoresProvider(report.surveyId));
+          final pillarScoresAsync = ref.watch(
+            esiPillarScoresProvider(report.surveyId),
+          );
           return pillarScoresAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Center(
-              child:
-                  Text(l10n.surveyProcessingError, style: WrTextStyles.body),
+              child: Text(l10n.surveyProcessingError, style: WrTextStyles.body),
             ),
             data: (pillarScores) => _EsiAnalysisBody(
               report: report,
@@ -232,8 +236,7 @@ class _EsiAnalysisBody extends ConsumerWidget {
                       '${l10n.esiAnalysisEnpsPromoter}: ${breakdown.promoters} · '
                       '${l10n.esiAnalysisEnpsPassive}: ${breakdown.passives} · '
                       '${l10n.esiAnalysisEnpsDetractor}: ${breakdown.detractors}',
-                      style:
-                          WrTextStyles.body.copyWith(color: WrColors.muted),
+                      style: WrTextStyles.body.copyWith(color: WrColors.muted),
                     ),
                   ],
                 ],
@@ -303,9 +306,7 @@ class _PillarCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(
-                child: Text(label, style: WrTextStyles.hMedium),
-              ),
+              Expanded(child: Text(label, style: WrTextStyles.hMedium)),
               if (score != null)
                 Text(score!.toStringAsFixed(1), style: WrTextStyles.hLarge),
             ],
@@ -314,8 +315,10 @@ class _PillarCard extends StatelessWidget {
           if (score != null)
             WrProgressTrack(value: score! / 5.0, color: WrColors.teal)
           else
-            Text(l10n.esiAnalysisNoData,
-                style: WrTextStyles.body.copyWith(color: WrColors.muted)),
+            Text(
+              l10n.esiAnalysisNoData,
+              style: WrTextStyles.body.copyWith(color: WrColors.muted),
+            ),
         ],
       ),
     );

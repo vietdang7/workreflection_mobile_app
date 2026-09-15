@@ -30,23 +30,18 @@ class ActionPlanScreen extends ConsumerWidget {
         title: Text(l10n.actionPlanTitle, style: WrTextStyles.hMedium),
       ),
       body: typeAsync.when(
-        loading: () =>
-            const Center(child: CircularProgressIndicator()),
-        error: (e, _) => Center(child: Text(AppLocalizations.of(context)!.surveyProcessingError)),
-        data: (type) => _ActionPlanBody(
-          reportId: reportId,
-          surveyType: type,
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (e, _) => Center(
+          child: Text(AppLocalizations.of(context)!.surveyProcessingError),
         ),
+        data: (type) => _ActionPlanBody(reportId: reportId, surveyType: type),
       ),
     );
   }
 }
 
 class _ActionPlanBody extends ConsumerWidget {
-  const _ActionPlanBody({
-    required this.reportId,
-    required this.surveyType,
-  });
+  const _ActionPlanBody({required this.reportId, required this.surveyType});
   final String reportId;
   final SurveyType surveyType;
 
@@ -57,17 +52,18 @@ class _ActionPlanBody extends ConsumerWidget {
     final progressAsync = ref.watch(actionProgressProvider);
 
     return planAsync.when(
-      loading: () =>
-          const Center(child: CircularProgressIndicator()),
+      loading: () => const Center(child: CircularProgressIndicator()),
       error: (e, _) => Center(child: Text(l10n.surveyProcessingError)),
       data: (phases) => progressAsync.when(
-        loading: () =>
-            const Center(child: CircularProgressIndicator()),
+        loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
-            child: Text(l10n.surveyProcessingError,
-                style: WrTextStyles.body, textAlign: TextAlign.center),
+            child: Text(
+              l10n.surveyProcessingError,
+              style: WrTextStyles.body,
+              textAlign: TextAlign.center,
+            ),
           ),
         ),
         data: (progress) {
@@ -77,11 +73,7 @@ class _ActionPlanBody extends ConsumerWidget {
                 .read(actionProgressNotifierProvider(reportId).notifier)
                 .init(progress);
           });
-          return _PlanList(
-            phases: phases,
-            reportId: reportId,
-            l10n: l10n,
-          );
+          return _PlanList(phases: phases, reportId: reportId, l10n: l10n);
         },
       ),
     );
@@ -177,9 +169,7 @@ class _PhaseCard extends StatelessWidget {
                       // Xong rồi thì dấu tick nói đủ, không gạch ngang chữ
                       // (yêu cầu 05/08).
                       style: WrTextStyles.body.copyWith(
-                        color: completed
-                            ? WrColors.muted
-                            : null,
+                        color: completed ? WrColors.muted : null,
                       ),
                     ),
                   ),

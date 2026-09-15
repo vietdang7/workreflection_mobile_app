@@ -40,7 +40,9 @@ const _days = [7, 14, 30];
 
 /// Identify the lowest-scoring sub-component per layer from report.subScores.
 Map<String, _LayerFocus> _buildLayerFocusMap(
-    Map<String, dynamic>? subScores, AppLocalizations l10n) {
+  Map<String, dynamic>? subScores,
+  AppLocalizations l10n,
+) {
   if (subScores == null || subScores.isEmpty) return {};
   final result = <String, _LayerFocus>{};
   for (final layer in _layers) {
@@ -115,24 +117,24 @@ class _LayerFocus {
 // ---------------------------------------------------------------------------
 
 Color _layerColor(String layer) => switch (layer) {
-      'STRUCTURE' => const Color(0xFF5b6d8f),
-      'CULTURE' => WrColors.coral,
-      'ACTIVITY' => WrColors.teal,
-      _ => WrColors.muted,
-    };
+  'STRUCTURE' => const Color(0xFF5b6d8f),
+  'CULTURE' => WrColors.coral,
+  'ACTIVITY' => WrColors.teal,
+  _ => WrColors.muted,
+};
 
 String _layerLabel(String layer, AppLocalizations l10n) => switch (layer) {
-      'STRUCTURE' => l10n.roadmapLayerStructure,
-      'CULTURE' => l10n.roadmapLayerCulture,
-      'ACTIVITY' => l10n.roadmapLayerActivity,
-      _ => layer,
-    };
+  'STRUCTURE' => l10n.roadmapLayerStructure,
+  'CULTURE' => l10n.roadmapLayerCulture,
+  'ACTIVITY' => l10n.roadmapLayerActivity,
+  _ => layer,
+};
 
 String _dayHeader(int day, AppLocalizations l10n) => switch (day) {
-      7 => l10n.roadmapDayHeader7,
-      14 => l10n.roadmapDayHeader14,
-      _ => l10n.roadmapDayHeader30,
-    };
+  7 => l10n.roadmapDayHeader7,
+  14 => l10n.roadmapDayHeader14,
+  _ => l10n.roadmapDayHeader30,
+};
 
 // ---------------------------------------------------------------------------
 // Report display label (mirror web reportDisplayLabel)
@@ -147,8 +149,7 @@ String _reportLabel(PremiumReport r) {
 }
 
 extension _ReportLabelExt on DateTime {
-  String scoreTotal(PremiumReport r) =>
-      r.scoreTotal.toStringAsFixed(1);
+  String scoreTotal(PremiumReport r) => r.scoreTotal.toStringAsFixed(1);
 }
 
 // ---------------------------------------------------------------------------
@@ -192,10 +193,17 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.error_outline, color: WrColors.coral, size: 32),
+                const Icon(
+                  Icons.error_outline,
+                  color: WrColors.coral,
+                  size: 32,
+                ),
                 const SizedBox(height: 12),
-                Text(e.toString(), style: WrTextStyles.body,
-                    textAlign: TextAlign.center),
+                Text(
+                  e.toString(),
+                  style: WrTextStyles.body,
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () => ref.invalidate(premiumReportsProvider),
@@ -216,7 +224,8 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               if (mounted) {
                 setState(() {
-                  _selectedReportId = widget.initialReportId != null &&
+                  _selectedReportId =
+                      widget.initialReportId != null &&
                           reports.any((r) => r.id == widget.initialReportId)
                       ? widget.initialReportId
                       : reports.first.id;
@@ -268,19 +277,27 @@ class _EmptyState extends StatelessWidget {
                 color: WrColors.navy.withValues(alpha: 0.06),
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Icon(Icons.map_outlined,
-                  color: WrColors.navy, size: 32),
+              child: const Icon(
+                Icons.map_outlined,
+                color: WrColors.navy,
+                size: 32,
+              ),
             ),
             const SizedBox(height: 20),
-            Text(l10n.roadmapNoPremiumReports,
-                style: WrTextStyles.hMedium, textAlign: TextAlign.center),
+            Text(
+              l10n.roadmapNoPremiumReports,
+              style: WrTextStyles.hMedium,
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 8),
-            Text(l10n.roadmapNoPremiumReportsBody,
-                style: WrTextStyles.body, textAlign: TextAlign.center),
+            Text(
+              l10n.roadmapNoPremiumReportsBody,
+              style: WrTextStyles.body,
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 24),
             ElevatedButton(
-              onPressed: () =>
-                  context.push('/survey/guide'),
+              onPressed: () => context.push('/survey/guide'),
               style: ElevatedButton.styleFrom(
                 backgroundColor: WrColors.coral,
                 foregroundColor: WrColors.navy,
@@ -317,37 +334,40 @@ class _RoadmapBody extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final progressAsync =
-        ref.watch(roadmapProgressProvider(selectedReport.id));
+    final progressAsync = ref.watch(roadmapProgressProvider(selectedReport.id));
     final actionsAsync = ref.watch(roadmapActionsProvider);
 
     return progressAsync.when(
       loading: () =>
           const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-      error: (e, _) => Center(
-        child: Text(e.toString(), style: WrTextStyles.body),
-      ),
+      error: (e, _) =>
+          Center(child: Text(e.toString(), style: WrTextStyles.body)),
       data: (progressData) => actionsAsync.when(
         loading: () =>
             const Center(child: CircularProgressIndicator(strokeWidth: 2)),
-        error: (e, _) => Center(
-          child: Text(e.toString(), style: WrTextStyles.body),
-        ),
+        error: (e, _) =>
+            Center(child: Text(e.toString(), style: WrTextStyles.body)),
         data: (actions) {
           // Init optimistic notifiers once data is available
           WidgetsBinding.instance.addPostFrameCallback((_) {
             ref
-                .read(roadmapActionToggleNotifierProvider(selectedReport.id)
-                    .notifier)
+                .read(
+                  roadmapActionToggleNotifierProvider(
+                    selectedReport.id,
+                  ).notifier,
+                )
                 .init(progressData.completedActionIds);
             ref
-                .read(customTaskToggleNotifierProvider(selectedReport.id)
-                    .notifier)
+                .read(
+                  customTaskToggleNotifierProvider(selectedReport.id).notifier,
+                )
                 .init(progressData.customTasks);
           });
 
-          final layerFocus =
-              _buildLayerFocusMap(selectedReport.subScores, l10n);
+          final layerFocus = _buildLayerFocusMap(
+            selectedReport.subScores,
+            l10n,
+          );
 
           // Build action grid: layer → day → [actions]
           final actionGrid = _buildActionGrid(actions, layerFocus, localeCode);
@@ -360,10 +380,12 @@ class _RoadmapBody extends ConsumerWidget {
           }
 
           // Compute overall progress
-          final actionToggleState = ref
-              .watch(roadmapActionToggleNotifierProvider(selectedReport.id));
-          final customToggleState = ref
-              .watch(customTaskToggleNotifierProvider(selectedReport.id));
+          final actionToggleState = ref.watch(
+            roadmapActionToggleNotifierProvider(selectedReport.id),
+          );
+          final customToggleState = ref.watch(
+            customTaskToggleNotifierProvider(selectedReport.id),
+          );
 
           int totalActions = 0;
           int completedActions = 0;
@@ -456,7 +478,9 @@ class _RoadmapBody extends ConsumerWidget {
 
       // Filter to this layer's lowest sub-component (with fallbacks as on web)
       var layerActions = actions
-          .where((a) => a.layer == layer && a.subComponent == focus.subComponent)
+          .where(
+            (a) => a.layer == layer && a.subComponent == focus.subComponent,
+          )
           .toList();
 
       // Fallback: any action in this layer
@@ -500,11 +524,9 @@ class _ReportPickerRow extends ConsumerWidget {
             key: const Key('roadmap_report_picker'),
             onTap: () => _showPicker(context),
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
               decoration: BoxDecoration(
-                border: Border.all(
-                    color: WrColors.navy.withValues(alpha: 0.2)),
+                border: Border.all(color: WrColors.navy.withValues(alpha: 0.2)),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -516,8 +538,11 @@ class _ReportPickerRow extends ConsumerWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const Icon(Icons.unfold_more,
-                      color: WrColors.muted, size: 18),
+                  const Icon(
+                    Icons.unfold_more,
+                    color: WrColors.muted,
+                    size: 18,
+                  ),
                 ],
               ),
             ),
@@ -527,8 +552,11 @@ class _ReportPickerRow extends ConsumerWidget {
         // Rename button
         IconButton(
           key: const Key('roadmap_rename_btn'),
-          icon: const Icon(Icons.edit_outlined,
-              color: WrColors.muted, size: 20),
+          icon: const Icon(
+            Icons.edit_outlined,
+            color: WrColors.muted,
+            size: 20,
+          ),
           onPressed: () =>
               _showRenameDialog(context, ref, selectedReport, l10n),
         ),
@@ -564,8 +592,7 @@ class _ReportPickerRow extends ConsumerWidget {
                     _reportLabel(r),
                     style: WrTextStyles.hMedium.copyWith(
                       fontSize: 15.5,
-                      color:
-                          isSelected ? WrColors.coral : null,
+                      color: isSelected ? WrColors.coral : null,
                     ),
                   ),
                   trailing: isSelected
@@ -585,8 +612,12 @@ class _ReportPickerRow extends ConsumerWidget {
     );
   }
 
-  void _showRenameDialog(BuildContext context, WidgetRef ref,
-      PremiumReport report, AppLocalizations l10n) {
+  void _showRenameDialog(
+    BuildContext context,
+    WidgetRef ref,
+    PremiumReport report,
+    AppLocalizations l10n,
+  ) {
     showDialog<void>(
       context: context,
       builder: (ctx) => _RenameDialog(
@@ -597,8 +628,7 @@ class _ReportPickerRow extends ConsumerWidget {
           try {
             await ref
                 .read(roadmapRepositoryProvider)
-                .updateReportNickname(
-                    reportId: report.id, nickname: nickname);
+                .updateReportNickname(reportId: report.id, nickname: nickname);
             ref.invalidate(premiumReportsProvider);
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
@@ -663,9 +693,7 @@ class _RenameDialogState extends State<_RenameDialog> {
         decoration: InputDecoration(
           labelText: l10n.roadmapNicknameLabel,
           hintText: l10n.roadmapNicknameHint,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
+          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
         ),
       ),
       actions: [
@@ -678,8 +706,10 @@ class _RenameDialogState extends State<_RenameDialog> {
           onPressed: _ctrl.text.trim().isEmpty
               ? null
               : () => widget.onSave(_ctrl.text.trim()),
-          child: Text(l10n.roadmapTaskSave,
-              style: const TextStyle(color: WrColors.coral)),
+          child: Text(
+            l10n.roadmapTaskSave,
+            style: const TextStyle(color: WrColors.coral),
+          ),
         ),
       ],
     );
@@ -772,8 +802,7 @@ class _LayerSection extends ConsumerWidget {
       children: [
         // Layer header
         Container(
-          padding:
-              const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
             color: color,
             borderRadius: BorderRadius.circular(12),
@@ -793,10 +822,7 @@ class _LayerSection extends ConsumerWidget {
                 const Spacer(),
                 Text(
                   '${focus!.label} · ${focus!.score.toStringAsFixed(1)}',
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 13.5,
-                  ),
+                  style: const TextStyle(color: Colors.white70, fontSize: 13.5),
                 ),
               ],
             ],
@@ -810,12 +836,13 @@ class _LayerSection extends ConsumerWidget {
             children: [
               Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 4),
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(20),
-                  border:
-                      Border.all(color: color.withValues(alpha: 0.3)),
+                  border: Border.all(color: color.withValues(alpha: 0.3)),
                 ),
                 child: Text(
                   '${focus!.score.toStringAsFixed(1)} · ${_scoreLabel(focus!.score, l10n)}',
@@ -841,8 +868,7 @@ class _LayerSection extends ConsumerWidget {
               final actions = actionGrid[key] ?? [];
               final tasks = customTasksByCell[key] ?? [];
               return Padding(
-                padding: EdgeInsets.only(
-                    right: day != _days.last ? 12 : 0),
+                padding: EdgeInsets.only(right: day != _days.last ? 12 : 0),
                 child: SizedBox(
                   width: 260,
                   child: _DayCell(
@@ -900,8 +926,7 @@ class _DayCell extends ConsumerWidget {
         decoration: BoxDecoration(
           color: WrColors.white,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-              color: WrColors.navy.withValues(alpha: 0.08)),
+          border: Border.all(color: WrColors.navy.withValues(alpha: 0.08)),
           boxShadow: [
             BoxShadow(
               color: WrColors.navy.withValues(alpha: 0.04),
@@ -920,65 +945,68 @@ class _DayCell extends ConsumerWidget {
                 child: Padding(
                   padding: const EdgeInsets.all(14),
                   child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Day header
-          Text(
-            _dayHeader(day, l10n).toUpperCase(),
-            style: const TextStyle(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w700,
-              color: WrColors.muted,
-              letterSpacing: 0.04 * 11,
-            ),
-          ),
-          const SizedBox(height: 10),
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Day header
+                      Text(
+                        _dayHeader(day, l10n).toUpperCase(),
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          color: WrColors.muted,
+                          letterSpacing: 0.04 * 11,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
 
-          // Narrative actions
-          for (final action in actions)
-            _ActionRow(
-              action: action,
-              isCompleted: actionToggleState[action.id] ?? false,
-              onToggle: (val) {
-                ref
-                    .read(roadmapActionToggleNotifierProvider(
-                            selectedReport.id)
-                        .notifier)
-                    .toggle(action.id, val);
-              },
-              l10n: l10n,
-            ),
+                      // Narrative actions
+                      for (final action in actions)
+                        _ActionRow(
+                          action: action,
+                          isCompleted: actionToggleState[action.id] ?? false,
+                          onToggle: (val) {
+                            ref
+                                .read(
+                                  roadmapActionToggleNotifierProvider(
+                                    selectedReport.id,
+                                  ).notifier,
+                                )
+                                .toggle(action.id, val);
+                          },
+                          l10n: l10n,
+                        ),
 
-          // Custom tasks
-          if (customTasks.isNotEmpty) ...[
-            const Divider(height: 16),
-            for (final task in customTasks)
-              _CustomTaskRow(
-                task: task,
-                isCompleted: customToggleState[task.id] ?? task.isCompleted,
-                onToggle: (val) {
-                  ref
-                      .read(customTaskToggleNotifierProvider(
-                              selectedReport.id)
-                          .notifier)
-                      .toggle(task.id, val);
-                },
-                onEdit: () =>
-                    _showEditDialog(context, ref, task),
-                onDelete: () =>
-                    _deleteTask(context, ref, task.id),
-              ),
-          ],
+                      // Custom tasks
+                      if (customTasks.isNotEmpty) ...[
+                        const Divider(height: 16),
+                        for (final task in customTasks)
+                          _CustomTaskRow(
+                            task: task,
+                            isCompleted:
+                                customToggleState[task.id] ?? task.isCompleted,
+                            onToggle: (val) {
+                              ref
+                                  .read(
+                                    customTaskToggleNotifierProvider(
+                                      selectedReport.id,
+                                    ).notifier,
+                                  )
+                                  .toggle(task.id, val);
+                            },
+                            onEdit: () => _showEditDialog(context, ref, task),
+                            onDelete: () => _deleteTask(context, ref, task.id),
+                          ),
+                      ],
 
-          // Add custom task button
-          const SizedBox(height: 6),
-          _AddTaskButton(
-            layer: layer,
-            day: day,
-            selectedReport: selectedReport,
-            l10n: l10n,
-          ),
-        ],
+                      // Add custom task button
+                      const SizedBox(height: 6),
+                      _AddTaskButton(
+                        layer: layer,
+                        day: day,
+                        selectedReport: selectedReport,
+                        l10n: l10n,
+                      ),
+                    ],
                   ),
                 ),
               ),
@@ -989,8 +1017,7 @@ class _DayCell extends ConsumerWidget {
     );
   }
 
-  void _showEditDialog(
-      BuildContext context, WidgetRef ref, CustomTask task) {
+  void _showEditDialog(BuildContext context, WidgetRef ref, CustomTask task) {
     showDialog<void>(
       context: context,
       builder: (ctx) => _CustomTaskDialog(
@@ -1010,18 +1037,17 @@ class _DayCell extends ConsumerWidget {
                   description: desc.isEmpty ? null : desc,
                   dueDate: due.isEmpty ? null : due,
                 );
-            ref.invalidate(
-                roadmapProgressProvider(selectedReport.id));
+            ref.invalidate(roadmapProgressProvider(selectedReport.id));
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.roadmapTaskUpdated)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(l10n.roadmapTaskUpdated)));
             }
           } catch (_) {
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.roadmapErrorEdit)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(l10n.roadmapErrorEdit)));
             }
           }
         },
@@ -1030,20 +1056,23 @@ class _DayCell extends ConsumerWidget {
   }
 
   Future<void> _deleteTask(
-      BuildContext context, WidgetRef ref, String taskId) async {
+    BuildContext context,
+    WidgetRef ref,
+    String taskId,
+  ) async {
     try {
       await ref.read(roadmapRepositoryProvider).deleteCustomTask(taskId);
       ref.invalidate(roadmapProgressProvider(selectedReport.id));
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.roadmapTaskDeleted)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.roadmapTaskDeleted)));
       }
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.roadmapErrorDelete)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.roadmapErrorDelete)));
       }
     }
   }
@@ -1182,13 +1211,18 @@ class _CustomTaskRow extends StatelessWidget {
                   const SizedBox(height: 2),
                   Row(
                     children: [
-                      const Icon(Icons.calendar_today,
-                          size: 10, color: WrColors.muted),
+                      const Icon(
+                        Icons.calendar_today,
+                        size: 10,
+                        color: WrColors.muted,
+                      ),
                       const SizedBox(width: 4),
                       Text(
                         task.dueDate!,
                         style: WrTextStyles.body.copyWith(
-                            fontSize: 12.5, color: WrColors.text3),
+                          fontSize: 12.5,
+                          color: WrColors.text3,
+                        ),
                       ),
                     ],
                   ),
@@ -1199,7 +1233,9 @@ class _CustomTaskRow extends StatelessWidget {
                   Text(
                     task.description!,
                     style: WrTextStyles.body.copyWith(
-                        fontSize: 13.5, color: WrColors.muted),
+                      fontSize: 13.5,
+                      color: WrColors.muted,
+                    ),
                   ),
                 ],
               ],
@@ -1207,16 +1243,22 @@ class _CustomTaskRow extends StatelessWidget {
           ),
           // Edit / delete
           IconButton(
-            icon: const Icon(Icons.edit_outlined,
-                size: 16, color: WrColors.muted),
+            icon: const Icon(
+              Icons.edit_outlined,
+              size: 16,
+              color: WrColors.muted,
+            ),
             onPressed: onEdit,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
           ),
           const SizedBox(width: 4),
           IconButton(
-            icon: const Icon(Icons.close,
-                size: 16, color: WrColors.destructive),
+            icon: const Icon(
+              Icons.close,
+              size: 16,
+              color: WrColors.destructive,
+            ),
             onPressed: onDelete,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
@@ -1259,7 +1301,9 @@ class _AddTaskButton extends ConsumerWidget {
             child: Text(
               l10n.roadmapAddCustomTask,
               style: WrTextStyles.body.copyWith(
-                  fontSize: 13.5, color: WrColors.muted),
+                fontSize: 13.5,
+                color: WrColors.muted,
+              ),
             ),
           ),
         ],
@@ -1276,7 +1320,9 @@ class _AddTaskButton extends ConsumerWidget {
         onSave: (title, desc, due) async {
           Navigator.of(ctx).pop();
           try {
-            await ref.read(roadmapRepositoryProvider).addCustomTask(
+            await ref
+                .read(roadmapRepositoryProvider)
+                .addCustomTask(
                   reportId: selectedReport.id,
                   title: title,
                   description: desc.isEmpty ? null : desc,
@@ -1284,18 +1330,17 @@ class _AddTaskButton extends ConsumerWidget {
                   day: day,
                   dueDate: due.isEmpty ? null : due,
                 );
-            ref.invalidate(
-                roadmapProgressProvider(selectedReport.id));
+            ref.invalidate(roadmapProgressProvider(selectedReport.id));
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.roadmapTaskAdded)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(l10n.roadmapTaskAdded)));
             }
           } catch (_) {
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.roadmapErrorAdd)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(l10n.roadmapErrorAdd)));
             }
           }
         },
@@ -1360,14 +1405,17 @@ class _CustomTaskDialogState extends State<_CustomTaskDialog> {
     final l10n = widget.l10n;
     return AlertDialog(
       title: Text(
-          widget.isEdit ? l10n.roadmapEditTaskTitle : l10n.roadmapAddTaskTitle),
+        widget.isEdit ? l10n.roadmapEditTaskTitle : l10n.roadmapAddTaskTitle,
+      ),
       content: SingleChildScrollView(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.roadmapTaskTitleLabel,
-                style: WrTextStyles.body.copyWith(fontSize: 13.5)),
+            Text(
+              l10n.roadmapTaskTitleLabel,
+              style: WrTextStyles.body.copyWith(fontSize: 13.5),
+            ),
             const SizedBox(height: 4),
             TextField(
               key: const Key('roadmap_task_title_field'),
@@ -1376,14 +1424,19 @@ class _CustomTaskDialogState extends State<_CustomTaskDialog> {
               decoration: InputDecoration(
                 hintText: l10n.roadmapTaskTitleHint,
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10)),
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 10),
+                  horizontal: 12,
+                  vertical: 10,
+                ),
               ),
             ),
             const SizedBox(height: 12),
-            Text(l10n.roadmapTaskDescLabel,
-                style: WrTextStyles.body.copyWith(fontSize: 13.5)),
+            Text(
+              l10n.roadmapTaskDescLabel,
+              style: WrTextStyles.body.copyWith(fontSize: 13.5),
+            ),
             const SizedBox(height: 4),
             TextField(
               key: const Key('roadmap_task_desc_field'),
@@ -1393,14 +1446,19 @@ class _CustomTaskDialogState extends State<_CustomTaskDialog> {
               decoration: InputDecoration(
                 hintText: l10n.roadmapTaskDescHint,
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10)),
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 10),
+                  horizontal: 12,
+                  vertical: 10,
+                ),
               ),
             ),
             const SizedBox(height: 12),
-            Text(l10n.roadmapTaskDueDateLabel,
-                style: WrTextStyles.body.copyWith(fontSize: 13.5)),
+            Text(
+              l10n.roadmapTaskDueDateLabel,
+              style: WrTextStyles.body.copyWith(fontSize: 13.5),
+            ),
             const SizedBox(height: 4),
             TextField(
               key: const Key('roadmap_task_due_field'),
@@ -1408,9 +1466,12 @@ class _CustomTaskDialogState extends State<_CustomTaskDialog> {
               decoration: InputDecoration(
                 hintText: 'YYYY-MM-DD',
                 border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(10)),
+                  borderRadius: BorderRadius.circular(10),
+                ),
                 contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 10),
+                  horizontal: 12,
+                  vertical: 10,
+                ),
               ),
             ),
           ],
@@ -1422,16 +1483,16 @@ class _CustomTaskDialogState extends State<_CustomTaskDialog> {
           child: Text(l10n.commonCancel),
         ),
         TextButton(
-          key: Key(widget.isEdit
-              ? 'roadmap_task_save_btn'
-              : 'roadmap_task_add_btn'),
+          key: Key(
+            widget.isEdit ? 'roadmap_task_save_btn' : 'roadmap_task_add_btn',
+          ),
           onPressed: _titleText.trim().isEmpty
               ? null
               : () => widget.onSave(
-                    _titleCtrl.text.trim(),
-                    _descCtrl.text.trim(),
-                    _dueCtrl.text.trim(),
-                  ),
+                  _titleCtrl.text.trim(),
+                  _descCtrl.text.trim(),
+                  _dueCtrl.text.trim(),
+                ),
           child: Text(
             widget.isEdit ? l10n.roadmapTaskSave : l10n.roadmapTaskAdd,
             style: const TextStyle(color: WrColors.coral),
@@ -1460,26 +1521,27 @@ class _CoachSection extends ConsumerWidget {
         WrEyebrow(l10n.roadmapCoachSectionTitle),
         const SizedBox(height: 12),
         coachAccessAsync.when(
-          loading: () =>
-              const SizedBox(height: 40, child: Center(child: CircularProgressIndicator(strokeWidth: 2))),
+          loading: () => const SizedBox(
+            height: 40,
+            child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
+          ),
           error: (_, __) => const SizedBox.shrink(),
           data: (entries) {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 if (entries.isEmpty)
-                  Text(l10n.roadmapNoCoachs,
-                      style: WrTextStyles.body
-                          .copyWith(color: WrColors.muted)),
+                  Text(
+                    l10n.roadmapNoCoachs,
+                    style: WrTextStyles.body.copyWith(color: WrColors.muted),
+                  ),
                 for (final entry in entries)
                   _CoachAccessTile(entry: entry, l10n: l10n),
                 const SizedBox(height: 12),
                 OutlinedButton.icon(
                   key: const Key('roadmap_invite_coach_btn'),
-                  onPressed: () =>
-                      _showInviteDialog(context, ref, entries),
-                  icon: const Icon(Icons.person_add_outlined,
-                      size: 18),
+                  onPressed: () => _showInviteDialog(context, ref, entries),
+                  icon: const Icon(Icons.person_add_outlined, size: 18),
                   label: Text(l10n.roadmapInviteCoach),
                   style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(
@@ -1495,8 +1557,11 @@ class _CoachSection extends ConsumerWidget {
     );
   }
 
-  void _showInviteDialog(BuildContext context, WidgetRef ref,
-      List<CoachAccessEntry> existing) {
+  void _showInviteDialog(
+    BuildContext context,
+    WidgetRef ref,
+    List<CoachAccessEntry> existing,
+  ) {
     final existingIds = existing.map((e) => e.coachId).toSet();
     showDialog<void>(
       context: context,
@@ -1509,9 +1574,9 @@ class _CoachSection extends ConsumerWidget {
             await ref.read(roadmapRepositoryProvider).inviteCoach(coachId);
             ref.invalidate(coachAccessProvider);
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.roadmapCoachInvited)),
-              );
+              ScaffoldMessenger.of(
+                context,
+              ).showSnackBar(SnackBar(content: Text(l10n.roadmapCoachInvited)));
             }
           } catch (_) {
             if (context.mounted) {
@@ -1532,16 +1597,16 @@ class _CoachAccessTile extends StatelessWidget {
   final AppLocalizations l10n;
 
   String _statusLabel(AppLocalizations l10n) => switch (entry.status) {
-        'accepted' => l10n.roadmapCoachAccepted,
-        'revoked' => l10n.roadmapCoachRevoked,
-        _ => l10n.roadmapCoachPending,
-      };
+    'accepted' => l10n.roadmapCoachAccepted,
+    'revoked' => l10n.roadmapCoachRevoked,
+    _ => l10n.roadmapCoachPending,
+  };
 
   Color _statusColor() => switch (entry.status) {
-        'accepted' => WrColors.teal,
-        'revoked' => WrColors.muted,
-        _ => WrColors.coral,
-      };
+    'accepted' => WrColors.teal,
+    'revoked' => WrColors.muted,
+    _ => WrColors.coral,
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -1565,12 +1630,18 @@ class _CoachAccessTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(entry.coachName ?? 'Coach',
-                    style: WrTextStyles.hMedium.copyWith(fontSize: 14.5)),
+                Text(
+                  entry.coachName ?? 'Coach',
+                  style: WrTextStyles.hMedium.copyWith(fontSize: 14.5),
+                ),
                 if (entry.coachTitle != null)
-                  Text(entry.coachTitle!,
-                      style: WrTextStyles.body
-                          .copyWith(fontSize: 13.5, color: WrColors.muted)),
+                  Text(
+                    entry.coachTitle!,
+                    style: WrTextStyles.body.copyWith(
+                      fontSize: 13.5,
+                      color: WrColors.muted,
+                    ),
+                  ),
               ],
             ),
           ),
@@ -1583,9 +1654,10 @@ class _CoachAccessTile extends StatelessWidget {
             child: Text(
               _statusLabel(l10n),
               style: TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w600,
-                  color: _statusColor()),
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+                color: _statusColor(),
+              ),
             ),
           ),
         ],
@@ -1620,11 +1692,14 @@ class _InviteCoachDialog extends ConsumerWidget {
           ),
           error: (_, __) => const SizedBox.shrink(),
           data: (coaches) {
-            final available =
-                coaches.where((c) => !existingCoachIds.contains(c.id)).toList();
+            final available = coaches
+                .where((c) => !existingCoachIds.contains(c.id))
+                .toList();
             if (available.isEmpty) {
-              return Text(l10n.roadmapNoCoachesAvailable,
-                  style: WrTextStyles.body);
+              return Text(
+                l10n.roadmapNoCoachesAvailable,
+                style: WrTextStyles.body,
+              );
             }
             return ListView.builder(
               shrinkWrap: true,
@@ -1633,21 +1708,24 @@ class _InviteCoachDialog extends ConsumerWidget {
                 final coach = available[i];
                 return ListTile(
                   leading: CircleAvatar(
-                    backgroundColor:
-                        WrColors.navy.withValues(alpha: 0.08),
+                    backgroundColor: WrColors.navy.withValues(alpha: 0.08),
                     child: Text(
                       coach.fullName.characters.first.toUpperCase(),
                       style: const TextStyle(
-                          color: WrColors.navy,
-                          fontWeight: FontWeight.w700),
+                        color: WrColors.navy,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
-                  title: Text(coach.fullName,
-                      style: WrTextStyles.hMedium.copyWith(fontSize: 15.5)),
+                  title: Text(
+                    coach.fullName,
+                    style: WrTextStyles.hMedium.copyWith(fontSize: 15.5),
+                  ),
                   subtitle: coach.title != null
-                      ? Text(coach.title!,
-                          style: WrTextStyles.body
-                              .copyWith(fontSize: 13.5))
+                      ? Text(
+                          coach.title!,
+                          style: WrTextStyles.body.copyWith(fontSize: 13.5),
+                        )
                       : null,
                   onTap: () => onInvite(coach.id),
                 );
@@ -1694,11 +1772,13 @@ class _ActivityLog extends StatelessWidget {
     for (final acts in actionGrid.values) {
       for (final action in acts) {
         if (actionToggleState[action.id] ?? false) {
-          entries.add(_ActivityEntry(
-            content: action.titleVi,
-            layer: action.layer,
-            date: progressData.completedActionDates[action.id],
-          ));
+          entries.add(
+            _ActivityEntry(
+              content: action.titleVi,
+              layer: action.layer,
+              date: progressData.completedActionDates[action.id],
+            ),
+          );
         }
       }
     }
@@ -1706,11 +1786,13 @@ class _ActivityLog extends StatelessWidget {
     // Completed custom tasks
     for (final task in progressData.customTasks) {
       if (customToggleState[task.id] ?? task.isCompleted) {
-        entries.add(_ActivityEntry(
-          content: task.title,
-          layer: task.layer,
-          date: task.completedAt,
-        ));
+        entries.add(
+          _ActivityEntry(
+            content: task.title,
+            layer: task.layer,
+            date: task.completedAt,
+          ),
+        );
       }
     }
 
@@ -1727,21 +1809,20 @@ class _ActivityLog extends StatelessWidget {
         WrEyebrow(l10n.roadmapActivityLog),
         const SizedBox(height: 12),
         if (entries.isEmpty)
-          Text(l10n.roadmapActivityEmpty,
-              style: WrTextStyles.body.copyWith(color: WrColors.muted))
+          Text(
+            l10n.roadmapActivityEmpty,
+            style: WrTextStyles.body.copyWith(color: WrColors.muted),
+          )
         else
-          for (final entry in entries) _ActivityEntryTile(entry: entry, l10n: l10n),
+          for (final entry in entries)
+            _ActivityEntryTile(entry: entry, l10n: l10n),
       ],
     );
   }
 }
 
 class _ActivityEntry {
-  const _ActivityEntry({
-    required this.content,
-    required this.layer,
-    this.date,
-  });
+  const _ActivityEntry({required this.content, required this.layer, this.date});
   final String content;
   final String layer;
   final String? date;
@@ -1760,20 +1841,28 @@ class _ActivityEntryTile extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.check_circle_outlined, color: WrColors.teal, size: 18),
+          const Icon(
+            Icons.check_circle_outlined,
+            color: WrColors.teal,
+            size: 18,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(entry.content,
-                    style: WrTextStyles.body.copyWith(fontSize: 14.5)),
+                Text(
+                  entry.content,
+                  style: WrTextStyles.body.copyWith(fontSize: 14.5),
+                ),
                 const SizedBox(height: 2),
                 Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
+                        horizontal: 6,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: color.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(4),
@@ -1781,17 +1870,20 @@ class _ActivityEntryTile extends StatelessWidget {
                       child: Text(
                         entry.layer,
                         style: TextStyle(
-                            fontSize: 11.5,
-                            fontWeight: FontWeight.w700,
-                            color: color),
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          color: color,
+                        ),
                       ),
                     ),
                     if (entry.date != null) ...[
                       const SizedBox(width: 8),
                       Text(
                         entry.date!.substring(0, 10),
-                        style: WrTextStyles.body
-                            .copyWith(fontSize: 12.5, color: WrColors.text3),
+                        style: WrTextStyles.body.copyWith(
+                          fontSize: 12.5,
+                          color: WrColors.text3,
+                        ),
                       ),
                     ],
                   ],

@@ -59,14 +59,8 @@ Widget _app(FakePaymentRepository repo, {required _Grant grant}) {
         path: '/home',
         builder: (_, __) => const Scaffold(body: Center(child: Text('HOME'))),
       ),
-      GoRoute(
-        path: '/wr/paywall',
-        builder: (_, __) => const WrPaywallScreen(),
-      ),
-      GoRoute(
-        path: '/wr/payment',
-        builder: (_, __) => const WrPaymentScreen(),
-      ),
+      GoRoute(path: '/wr/paywall', builder: (_, __) => const WrPaywallScreen()),
+      GoRoute(path: '/wr/payment', builder: (_, __) => const WrPaymentScreen()),
     ],
   );
 
@@ -80,20 +74,19 @@ Widget _app(FakePaymentRepository repo, {required _Grant grant}) {
       paymentRepositoryProvider.overrideWithValue(repo),
       wrPremiumPricingProvider.overrideWith(
         // Giá gói APP (`premium_mobile`), không phải gói web 249.000đ.
-        (ref) async => const WrPremiumPricing(
-          currentPrice: 499000,
-          productId: 'prod-1',
-        ),
+        (ref) async =>
+            const WrPremiumPricing(currentPrice: 499000, productId: 'prod-1'),
       ),
       ccProfileProvider.overrideWith((ref) async => {'role': 'user'}),
       wrEntitlementProvider.overrideWith(
-        (ref) async => WrEntitlement(
-          plan: grant.premium ? WrPlan.premium : WrPlan.free,
-        ),
+        (ref) async =>
+            WrEntitlement(plan: grant.premium ? WrPlan.premium : WrPlan.free),
       ),
     ],
     child: MaterialApp.router(
-      builder: wrTextScaleBuilder,routerConfig: router),
+      builder: wrTextScaleBuilder,
+      routerConfig: router,
+    ),
   );
 }
 

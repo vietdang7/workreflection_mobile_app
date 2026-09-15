@@ -49,9 +49,11 @@ void main() {
   group('§5 · minh hoạ', () {
     testWidgets('dựng được cả bốn bản, mỗi bản một khoá riêng', (tester) async {
       for (final period in WrDayPeriod.values) {
-        await tester.pumpWidget(MaterialApp(
-          home: Scaffold(body: WrHeroScene(period: period)),
-        ));
+        await tester.pumpWidget(
+          MaterialApp(
+            home: Scaffold(body: WrHeroScene(period: period)),
+          ),
+        );
         await tester.pumpAndSettle();
         expect(
           find.byKey(Key('wr_hero_scene_${period.name}')),
@@ -62,9 +64,11 @@ void main() {
     });
 
     testWidgets('có nhãn cho trình đọc màn hình', (tester) async {
-      await tester.pumpWidget(const MaterialApp(
-        home: Scaffold(body: WrHeroScene(period: WrDayPeriod.morning)),
-      ));
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(body: WrHeroScene(period: WrDayPeriod.morning)),
+        ),
+      );
       await tester.pumpAndSettle();
       expect(
         find.bySemanticsLabel('Minh hoạ: một chỗ ngồi đang chờ bạn'),
@@ -72,13 +76,19 @@ void main() {
       );
     });
 
-    testWidgets('giữ đúng tỉ lệ khung 335:170 của bản thiết kế',
-        (tester) async {
-      await tester.pumpWidget(const MaterialApp(
-        home: Scaffold(
-          body: SizedBox(width: 335, child: WrHeroScene(period: WrDayPeriod.evening)),
+    testWidgets('giữ đúng tỉ lệ khung 335:170 của bản thiết kế', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: SizedBox(
+              width: 335,
+              child: WrHeroScene(period: WrDayPeriod.evening),
+            ),
+          ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
       final size = tester.getSize(find.byType(WrHeroScene));
       expect(size.width, 335);

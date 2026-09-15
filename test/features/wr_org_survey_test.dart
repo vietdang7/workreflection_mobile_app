@@ -81,8 +81,10 @@ void main() {
       await _pump(tester, _wrap(FakeWrOrgSurveyRepository()));
 
       expect(find.textContaining('tổng hợp, ẩn danh'), findsOneWidget);
-      expect(find.textContaining('không ảnh hưởng đến Reflection'),
-          findsOneWidget);
+      expect(
+        find.textContaining('không ảnh hưởng đến Reflection'),
+        findsOneWidget,
+      );
       expect(find.textContaining('Không bắt buộc'), findsOneWidget);
       expect(find.textContaining('ngừng tham gia'), findsOneWidget);
     });
@@ -100,8 +102,10 @@ void main() {
         _wrap(FakeWrOrgSurveyRepository(failQuestions: true)),
       );
 
-      expect(find.byKey(const Key('wr_org_survey_questions_error')),
-          findsOneWidget);
+      expect(
+        find.byKey(const Key('wr_org_survey_questions_error')),
+        findsOneWidget,
+      );
       final btn = tester.widget<ElevatedButton>(
         find.byKey(const Key('wr_org_survey_start')),
       );
@@ -127,8 +131,9 @@ void main() {
       expect(repo.submittedEnps, 8);
     });
 
-    testWidgets('câu cuối là eNPS 0..10, không phải thang 5 mức',
-        (tester) async {
+    testWidgets('câu cuối là eNPS 0..10, không phải thang 5 mức', (
+      tester,
+    ) async {
       final repo = FakeWrOrgSurveyRepository();
       await _pump(tester, _wrap(repo, initial: '/wr/org-survey/flow'));
 
@@ -142,8 +147,9 @@ void main() {
       expect(find.byKey(const Key('wr_org_survey_option_0')), findsNothing);
     });
 
-    testWidgets('gửi hỏng thì giữ nguyên câu trả lời và cho gửi lại',
-        (tester) async {
+    testWidgets('gửi hỏng thì giữ nguyên câu trả lời và cho gửi lại', (
+      tester,
+    ) async {
       // Mất mạng ở câu cuối mà mất luôn 13 câu vừa trả lời là cách chắc chắn
       // nhất để không ai làm lại lần hai.
       final repo = FakeWrOrgSurveyRepository(failSubmit: true);
@@ -163,8 +169,9 @@ void main() {
       expect(repo.submittedEnps, 8);
     });
 
-    testWidgets('bấm Đóng giữa chừng thì hỏi lại trước khi mất hết',
-        (tester) async {
+    testWidgets('bấm Đóng giữa chừng thì hỏi lại trước khi mất hết', (
+      tester,
+    ) async {
       final repo = FakeWrOrgSurveyRepository();
       await _pump(tester, _wrap(repo, initial: '/wr/org-survey/flow'));
 
@@ -182,22 +189,29 @@ void main() {
       await _pump(tester, _wrap(repo, initial: '/wr/org-survey/flow'));
       await _answerEverything(tester, 5);
 
-      expect(find.byKey(const Key('wr_org_survey_result_enps')), findsOneWidget);
+      expect(
+        find.byKey(const Key('wr_org_survey_result_enps')),
+        findsOneWidget,
+      );
       expect(find.text('8 / 10'), findsOneWidget);
     });
   });
 
   // -------------------------------------------------------------------------
   group('Màn kết quả', () {
-    testWidgets('CHƯA đủ mẫu thì không vẽ vạch so sánh và nói thẳng vì sao',
-        (tester) async {
+    testWidgets('CHƯA đủ mẫu thì không vẽ vạch so sánh và nói thẳng vì sao', (
+      tester,
+    ) async {
       // Khác mockup có chủ ý: mockup ghi cứng mặt bằng chung bằng số minh hoạ.
       // Dán nhãn "ẩn danh" lên số bịa là nói một điều không có thật.
       final repo = FakeWrOrgSurveyRepository();
       await _pump(tester, _wrap(repo, initial: '/wr/org-survey/flow'));
       await _answerEverything(tester, 5);
 
-      expect(find.byKey(const Key('wr_org_survey_no_benchmark')), findsOneWidget);
+      expect(
+        find.byKey(const Key('wr_org_survey_no_benchmark')),
+        findsOneWidget,
+      );
       expect(find.text('Mặt bằng chung (ẩn danh)'), findsNothing);
       expect(find.text('Kết quả của bạn'), findsOneWidget);
       expect(
@@ -207,7 +221,8 @@ void main() {
       expect(
         tester
             .widget<Text>(
-                find.byKey(const Key('wr_org_survey_standing_compensation')))
+              find.byKey(const Key('wr_org_survey_standing_compensation')),
+            )
             .data,
         OrgSurveyStanding.noBenchmark.label,
       );
@@ -226,19 +241,20 @@ void main() {
       expect(
         tester
             .widget<Text>(
-                find.byKey(const Key('wr_org_survey_standing_compensation')))
+              find.byKey(const Key('wr_org_survey_standing_compensation')),
+            )
             .data,
         'Cao hơn mặt bằng chung',
       );
       expect(find.textContaining('6.4 / 10'), findsOneWidget);
     });
 
-    testWidgets('chưa từng làm thì nói rõ chứ không hiện bản so sánh rỗng',
-        (tester) async {
+    testWidgets('chưa từng làm thì nói rõ chứ không hiện bản so sánh rỗng', (
+      tester,
+    ) async {
       await _pump(
         tester,
-        _wrap(FakeWrOrgSurveyRepository(),
-            initial: '/wr/org-survey/result'),
+        _wrap(FakeWrOrgSurveyRepository(), initial: '/wr/org-survey/result'),
       );
       expect(
         find.byKey(const Key('wr_org_survey_result_empty')),
@@ -246,8 +262,9 @@ void main() {
       );
     });
 
-    testWidgets('ngừng tham gia thì xoá thật, không chỉ đổi chữ',
-        (tester) async {
+    testWidgets('ngừng tham gia thì xoá thật, không chỉ đổi chữ', (
+      tester,
+    ) async {
       // Màn giới thiệu hứa "Có thể ngừng tham gia bất kỳ lúc nào". Một nút chỉ
       // ẩn kết quả đi mà không xoá là lời hứa không giữ.
       final repo = FakeWrOrgSurveyRepository();

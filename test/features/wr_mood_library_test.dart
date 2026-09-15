@@ -39,13 +39,15 @@ Widget _wrap({
   );
   final repo = FakeWrRepository();
   if (checkedInMood != null) {
-    repo.seedTodayCheckin(Checkin(
-      id: 'c1',
-      userId: 'u1',
-      mood: checkedInMood,
-      checkinDate: DateTime(2026, 7, 29),
-      createdAt: DateTime(2026, 7, 29),
-    ));
+    repo.seedTodayCheckin(
+      Checkin(
+        id: 'c1',
+        userId: 'u1',
+        mood: checkedInMood,
+        checkinDate: DateTime(2026, 7, 29),
+        createdAt: DateTime(2026, 7, 29),
+      ),
+    );
   }
 
   return ProviderScope(
@@ -74,8 +76,9 @@ Future<void> _pump(WidgetTester tester, Widget app) async {
 void main() {
   // -------------------------------------------------------------------------
   group('Màn Thư viện', () {
-    testWidgets('nhóm đủ bốn cảm xúc, đúng thứ tự lưới check-in',
-        (tester) async {
+    testWidgets('nhóm đủ bốn cảm xúc, đúng thứ tự lưới check-in', (
+      tester,
+    ) async {
       final repo = FakeWrMoodContentRepository()
         ..seedContent([
           fakeMoodContent(id: 'a', mood: Mood.happy, title: 'Của vui'),
@@ -92,9 +95,12 @@ void main() {
 
       // Thứ tự phải khớp lưới check-in ở Home, nếu không người dùng phải quét
       // mắt tìm nhóm của mình.
-      final positions = ['Căng thẳng', 'Mệt mỏi', 'Khá ổn', 'Đang vui']
-          .map((l) => tester.getTopLeft(find.text(l)).dy)
-          .toList();
+      final positions = [
+        'Căng thẳng',
+        'Mệt mỏi',
+        'Khá ổn',
+        'Đang vui',
+      ].map((l) => tester.getTopLeft(find.text(l)).dy).toList();
       final sorted = [...positions]..sort();
       expect(positions, sorted);
     });
@@ -110,10 +116,7 @@ void main() {
           fakeMoodContent(id: 'd', mood: Mood.tired, title: 'Của mệt'),
         ]);
 
-      await _pump(
-        tester,
-        _wrap(moodContent: repo, checkedInMood: Mood.tired),
-      );
+      await _pump(tester, _wrap(moodContent: repo, checkedInMood: Mood.tired));
 
       expect(find.text('Của mệt'), findsOneWidget);
       expect(find.text('Của vui'), findsNothing);
@@ -128,10 +131,7 @@ void main() {
           fakeMoodContent(id: 'a', mood: Mood.happy, title: 'Của vui'),
         ]);
 
-      await _pump(
-        tester,
-        _wrap(moodContent: repo, checkedInMood: Mood.tired),
-      );
+      await _pump(tester, _wrap(moodContent: repo, checkedInMood: Mood.tired));
 
       expect(find.textContaining('Chưa có nội dung'), findsOneWidget);
       expect(find.text('Của vui'), findsNothing);
@@ -141,11 +141,23 @@ void main() {
       final repo = FakeWrMoodContentRepository()
         ..seedContent([
           fakeMoodContent(
-              id: 'x', mood: Mood.okay, sortOrder: 3, title: 'Bài ba'),
+            id: 'x',
+            mood: Mood.okay,
+            sortOrder: 3,
+            title: 'Bài ba',
+          ),
           fakeMoodContent(
-              id: 'y', mood: Mood.okay, sortOrder: 1, title: 'Bài một'),
+            id: 'y',
+            mood: Mood.okay,
+            sortOrder: 1,
+            title: 'Bài một',
+          ),
           fakeMoodContent(
-              id: 'z', mood: Mood.okay, sortOrder: 2, title: 'Bài hai'),
+            id: 'z',
+            mood: Mood.okay,
+            sortOrder: 2,
+            title: 'Bài hai',
+          ),
         ]);
 
       await _pump(tester, _wrap(moodContent: repo));
@@ -157,14 +169,23 @@ void main() {
       expect(two, lessThan(three));
     });
 
-    testWidgets('nội dung nháp có nhãn, nội dung thật thì không',
-        (tester) async {
+    testWidgets('nội dung nháp có nhãn, nội dung thật thì không', (
+      tester,
+    ) async {
       final repo = FakeWrMoodContentRepository()
         ..seedContent([
           fakeMoodContent(
-              id: 'draft', mood: Mood.okay, sortOrder: 1, placeholder: true),
+            id: 'draft',
+            mood: Mood.okay,
+            sortOrder: 1,
+            placeholder: true,
+          ),
           fakeMoodContent(
-              id: 'real', mood: Mood.okay, sortOrder: 2, placeholder: false),
+            id: 'real',
+            mood: Mood.okay,
+            sortOrder: 2,
+            placeholder: false,
+          ),
         ]);
 
       await _pump(tester, _wrap(moodContent: repo));
@@ -172,14 +193,16 @@ void main() {
       expect(find.text('Nháp'), findsOneWidget);
     });
 
-    testWidgets('thư viện rỗng thì nói thẳng, không hiện khung trống',
-        (tester) async {
+    testWidgets('thư viện rỗng thì nói thẳng, không hiện khung trống', (
+      tester,
+    ) async {
       await _pump(tester, _wrap(moodContent: FakeWrMoodContentRepository()));
       expect(find.textContaining('Chưa có nội dung'), findsOneWidget);
     });
 
     testWidgets('lỗi đọc cũng không làm vỡ màn', (tester) async {
-      final repo = FakeWrMoodContentRepository()..nextError = Exception('mất mạng');
+      final repo = FakeWrMoodContentRepository()
+        ..nextError = Exception('mất mạng');
       await _pump(tester, _wrap(moodContent: repo));
       expect(find.textContaining('Chưa có nội dung'), findsOneWidget);
     });
@@ -204,8 +227,9 @@ void main() {
 
   // -------------------------------------------------------------------------
   group('Màn đọc / nghe', () {
-    testWidgets('BÀI ĐỌC hiện từng đoạn, không có khối trình phát',
-        (tester) async {
+    testWidgets('BÀI ĐỌC hiện từng đoạn, không có khối trình phát', (
+      tester,
+    ) async {
       final repo = FakeWrMoodContentRepository()
         ..seedContent([
           fakeMoodContent(
@@ -264,8 +288,9 @@ void main() {
       expect(find.byKey(const Key('wr_mood_draft_notice')), findsOneWidget);
     });
 
-    testWidgets('màn đọc KHÔNG bao giờ hiện kịch bản lồng tiếng',
-        (tester) async {
+    testWidgets('màn đọc KHÔNG bao giờ hiện kịch bản lồng tiếng', (
+      tester,
+    ) async {
       // §XII.3: script chỉ dùng nội bộ cho đội sản xuất audio, không render ra
       // API trả về cho app. Ràng buộc thật nằm ở view `wr_mood_content_public`
       // (không có cột script) và ở model MoodContent (không có trường script).

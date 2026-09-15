@@ -85,7 +85,9 @@ class _GuideScreenState extends State<GuideScreen> {
     String? previousGroup;
     for (final section in _sections) {
       if (section.group != previousGroup) {
-        if (previousGroup != null) sectionWidgets.add(const SizedBox(height: 10));
+        if (previousGroup != null) {
+          sectionWidgets.add(const SizedBox(height: 10));
+        }
         sectionWidgets.add(
           Padding(
             padding: const EdgeInsets.only(left: 4, bottom: 10),
@@ -122,8 +124,11 @@ class _GuideScreenState extends State<GuideScreen> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.arrow_back_ios_new,
-                          size: 14, color: WrColors.muted),
+                      const Icon(
+                        Icons.arrow_back_ios_new,
+                        size: 14,
+                        color: WrColors.muted,
+                      ),
                       const SizedBox(width: 6),
                       Text(
                         tr('Quay lại', 'Back'),
@@ -214,8 +219,11 @@ class _AssistantCard extends StatelessWidget {
                   color: WrColors.coral,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Icon(Icons.chat_bubble_outline_rounded,
-                    size: 20, color: WrColors.white),
+                child: const Icon(
+                  Icons.chat_bubble_outline_rounded,
+                  size: 20,
+                  color: WrColors.white,
+                ),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -279,8 +287,10 @@ class _AssistantCard extends StatelessWidget {
             children: [
               for (final q in kGuideChatExamples)
                 Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 7,
+                  ),
                   decoration: BoxDecoration(
                     color: WrColors.white,
                     borderRadius: BorderRadius.circular(20),
@@ -366,8 +376,11 @@ class _ClosingCta extends StatelessWidget {
         ),
         child: Row(
           children: [
-            const Icon(Icons.chat_bubble_outline_rounded,
-                size: 18, color: WrColors.navy),
+            const Icon(
+              Icons.chat_bubble_outline_rounded,
+              size: 18,
+              color: WrColors.navy,
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -381,8 +394,11 @@ class _ClosingCta extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            const Icon(Icons.arrow_forward_rounded,
-                size: 17, color: WrColors.navy),
+            const Icon(
+              Icons.arrow_forward_rounded,
+              size: 17,
+              color: WrColors.navy,
+            ),
           ],
         ),
       ),
@@ -549,116 +565,119 @@ class _GuideBlockView extends StatelessWidget {
     // widget thì compiler chặn ngay, không để lại khoảng trống trên màn.
     return switch (block) {
       WrGuideHeading(:final text) => Text(
-          text,
-          style: const TextStyle(
-            fontSize: 14.5,
-            fontWeight: FontWeight.w700,
-            color: WrColors.dark,
-            height: 1.4,
-          ),
+        text,
+        style: const TextStyle(
+          fontSize: 14.5,
+          fontWeight: FontWeight.w700,
+          color: WrColors.dark,
+          height: 1.4,
         ),
+      ),
       WrGuideText(:final text) => WrParagraph(
-          text,
-          style: const TextStyle(
-            fontSize: 14,
-            color: WrColors.text2,
-            height: 1.7,
-          ),
+        text,
+        style: const TextStyle(
+          fontSize: 14,
+          color: WrColors.text2,
+          height: 1.7,
         ),
+      ),
       WrGuideNote(:final text, :final tone) => _NoteBox(text: text, tone: tone),
       WrGuideChecks(:final items, :final footnote) => Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (final item in items)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Padding(
-                      padding: EdgeInsets.only(top: 3, right: 10),
-                      child: Icon(Icons.check_rounded,
-                          size: 16, color: WrColors.teal),
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final item in items)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Padding(
+                    padding: EdgeInsets.only(top: 3, right: 10),
+                    child: Icon(
+                      Icons.check_rounded,
+                      size: 16,
+                      color: WrColors.teal,
                     ),
-                    Expanded(
-                      child: WrParagraph(
-                        item,
-                        style: const TextStyle(
-                          fontSize: 13.5,
-                          color: WrColors.text2,
-                          height: 1.65,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            if (footnote != null)
-              Padding(
-                padding: const EdgeInsets.only(top: 4),
-                child: WrParagraph(
-                  footnote,
-                  style: const TextStyle(
-                    fontSize: 13,
-                    color: WrColors.text3,
-                    height: 1.6,
                   ),
-                ),
-              ),
-          ],
-        ),
-      WrGuideBullets(:final items) => Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (final item in items)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 10),
-                child: _BulletRow(item: item),
-              ),
-          ],
-        ),
-      WrGuideSteps(:final items) => Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (var i = 0; i < items.length; i++)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: _StepRow(index: i + 1, step: items[i]),
-              ),
-          ],
-        ),
-      WrGuideQa(:final items) => Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            for (final item in items)
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      item.question,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w700,
-                        color: WrColors.navy,
-                        height: 1.45,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    WrParagraph(
-                      item.answer,
+                  Expanded(
+                    child: WrParagraph(
+                      item,
                       style: const TextStyle(
                         fontSize: 13.5,
                         color: WrColors.text2,
                         height: 1.65,
                       ),
                     ),
-                  ],
+                  ),
+                ],
+              ),
+            ),
+          if (footnote != null)
+            Padding(
+              padding: const EdgeInsets.only(top: 4),
+              child: WrParagraph(
+                footnote,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: WrColors.text3,
+                  height: 1.6,
                 ),
               ),
-          ],
-        ),
+            ),
+        ],
+      ),
+      WrGuideBullets(:final items) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final item in items)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: _BulletRow(item: item),
+            ),
+        ],
+      ),
+      WrGuideSteps(:final items) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (var i = 0; i < items.length; i++)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _StepRow(index: i + 1, step: items[i]),
+            ),
+        ],
+      ),
+      WrGuideQa(:final items) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final item in items)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.question,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: WrColors.navy,
+                      height: 1.45,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  WrParagraph(
+                    item.answer,
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      color: WrColors.text2,
+                      height: 1.65,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
     };
   }
 }
@@ -693,11 +712,7 @@ class _NoteBox extends StatelessWidget {
       ),
       child: WrParagraph(
         text,
-        style: TextStyle(
-          fontSize: 13,
-          color: textColor,
-          height: 1.65,
-        ),
+        style: TextStyle(fontSize: 13, color: textColor, height: 1.65),
       ),
     );
   }
@@ -813,7 +828,9 @@ class _StepRow extends StatelessWidget {
                     Container(
                       margin: const EdgeInsets.only(top: 2),
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 7, vertical: 2),
+                        horizontal: 7,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: WrColors.navy.withValues(alpha: 0.05),
                         borderRadius: BorderRadius.circular(20),

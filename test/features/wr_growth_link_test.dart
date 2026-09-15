@@ -83,7 +83,9 @@ Widget _wrapGrowth({
       currentUserIdProvider.overrideWithValue(userId),
     ],
     child: MaterialApp.router(
-      builder: wrTextScaleBuilder,routerConfig: router),
+      builder: wrTextScaleBuilder,
+      routerConfig: router,
+    ),
   );
 }
 
@@ -125,7 +127,9 @@ Widget _wrapPracticeTheme(
       currentUserIdProvider.overrideWithValue(userId),
     ],
     child: MaterialApp.router(
-      builder: wrTextScaleBuilder,routerConfig: router),
+      builder: wrTextScaleBuilder,
+      routerConfig: router,
+    ),
   );
 }
 
@@ -144,7 +148,9 @@ Widget _wrapThemes({
       currentUserIdProvider.overrideWithValue(userId),
     ],
     child: MaterialApp.router(
-      builder: wrTextScaleBuilder,routerConfig: router),
+      builder: wrTextScaleBuilder,
+      routerConfig: router,
+    ),
   );
 }
 
@@ -165,7 +171,6 @@ WrSituation _sit(String code, HumanNeed need) => WrSituation(
   scaDimension: ScaDimension.c1,
   wave: 1,
 );
-
 
 PracticeTheme _theme(
   String id,
@@ -314,13 +319,13 @@ void main() {
   group('Task B — Phần mềm tự thêm chủ đề', () {
     /// Bộ tự đánh giá đã làm xong, trụ C thấp nhất → nhu cầu Kết nối.
     ScaSelfCheckResponse selfCheck({DateTime? at}) => ScaSelfCheckResponse(
-          userId: 'u1',
-          answers: const {},
-          structureScore: 4.0,
-          cultureScore: 2.0,
-          activityScore: 4.0,
-          takenAt: at ?? DateTime(2026, 8, 1),
-        );
+      userId: 'u1',
+      answers: const {},
+      structureScore: 4.0,
+      cultureScore: 2.0,
+      activityScore: 4.0,
+      takenAt: at ?? DateTime(2026, 8, 1),
+    );
 
     // Hướng 1 — khách chốt 2026-08-04: đủ 15 LẦN nhìn lại là được một chủ đề, và
     // phần mềm TỰ thêm, không chờ ai bấm nút.
@@ -384,26 +389,29 @@ void main() {
     });
 
     // Hướng 2 — làm xong bộ 15 câu là có chủ đề ngay, không cần lặp lần nào.
-    testWidgets('làm xong tự đánh giá → tự thêm ngay dù chưa nhìn lại lần nào', (
-      tester,
-    ) async {
-      final intel = FakeWrIntelligenceRepository();
-      intel.seedPracticeThemes([
-        _theme('t-culture', 'Thực hành kết nối', dim: ScaDimension.c1),
-      ]);
-      intel.seedEnrollments([]);
-      intel.seedSelfCheckHistory([selfCheck()]);
+    testWidgets(
+      'làm xong tự đánh giá → tự thêm ngay dù chưa nhìn lại lần nào',
+      (tester) async {
+        final intel = FakeWrIntelligenceRepository();
+        intel.seedPracticeThemes([
+          _theme('t-culture', 'Thực hành kết nối', dim: ScaDimension.c1),
+        ]);
+        intel.seedEnrollments([]);
+        intel.seedSelfCheckHistory([selfCheck()]);
 
-      await _pumpLarge(tester, _wrapGrowth(intel: intel));
+        await _pumpLarge(tester, _wrapGrowth(intel: intel));
 
-      expect(intel.enrollThemeCalls, hasLength(1));
-      expect(intel.enrollThemeCalls.first.themeId, 't-culture');
-    });
+        expect(intel.enrollThemeCalls, hasLength(1));
+        expect(intel.enrollThemeCalls.first.themeId, 't-culture');
+      },
+    );
 
     // Bộ tự đánh giá làm SAU lần nhìn lại gần nhất thì nó là tiếng nói mới nhất.
     // Bản trước hành vi luôn thắng, nên ai đã nhìn lại vài lần rồi mới ngồi trả
     // lời 15 câu thì kết quả bộ đó không đổi được gì.
-    testWidgets('tự đánh giá mới hơn hành vi thì thắng hành vi', (tester) async {
+    testWidgets('tự đánh giá mới hơn hành vi thì thắng hành vi', (
+      tester,
+    ) async {
       final content = FakeWrContentRepository();
       content.seedSituations([_sit('s-struct', HumanNeed.roRang)]);
 

@@ -54,8 +54,11 @@ class _CoachingScreenState extends ConsumerState<CoachingScreen> {
         actions: [
           TextButton.icon(
             key: const Key('coachViewMyBtn'),
-            icon: const Icon(Icons.calendar_today_outlined,
-                size: 16, color: WrColors.navy),
+            icon: const Icon(
+              Icons.calendar_today_outlined,
+              size: 16,
+              color: WrColors.navy,
+            ),
             label: Text(
               l10n.coachViewMy,
               style: const TextStyle(color: WrColors.navy),
@@ -114,9 +117,7 @@ class _Body extends ConsumerWidget {
   List<CoachingPackage> _filtered(List<CoachingPackage> all) {
     if (audience == null) return all;
     return all
-        .where((p) =>
-            p.targetAudience == null ||
-            p.targetAudience == audience)
+        .where((p) => p.targetAudience == null || p.targetAudience == audience)
         .toList();
   }
 
@@ -132,10 +133,7 @@ class _Body extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // ── Audience toggle ──────────────────────────────────────────────
-          _AudienceToggle(
-            selected: audience,
-            onChanged: onAudienceChanged,
-          ),
+          _AudienceToggle(selected: audience, onChanged: onAudienceChanged),
           const SizedBox(height: 24),
 
           // ── Package cards ────────────────────────────────────────────────
@@ -165,8 +163,7 @@ class _Body extends ConsumerWidget {
                 children: [
                   for (var i = 0; i < coaches.length; i++) ...[
                     _CoachRow(coach: coaches[i]),
-                    if (i < coaches.length - 1)
-                      const Divider(height: 24),
+                    if (i < coaches.length - 1) const Divider(height: 24),
                   ],
                 ],
               ),
@@ -194,10 +191,7 @@ class _Body extends ConsumerWidget {
 // ---------------------------------------------------------------------------
 
 class _AudienceToggle extends StatelessWidget {
-  const _AudienceToggle({
-    required this.selected,
-    required this.onChanged,
-  });
+  const _AudienceToggle({required this.selected, required this.onChanged});
 
   final String? selected;
   final ValueChanged<String?> onChanged;
@@ -299,15 +293,15 @@ class _PackageCardState extends ConsumerState<_PackageCard> {
       final repo = ref.read(coachingRepositoryProvider);
       await repo.claimFreePackage(widget.pkg);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.coachClaimSuccess)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.coachClaimSuccess)));
       ref.invalidate(myBookingsProvider);
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.coachClaimError)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.coachClaimError)));
     } finally {
       if (mounted) setState(() => _claiming = false);
     }
@@ -359,8 +353,7 @@ class _PackageCardState extends ConsumerState<_PackageCard> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('• ',
-                        style: TextStyle(color: WrColors.muted)),
+                    const Text('• ', style: TextStyle(color: WrColors.muted)),
                     Expanded(child: Text(f, style: WrTextStyles.body)),
                   ],
                 ),
@@ -371,12 +364,8 @@ class _PackageCardState extends ConsumerState<_PackageCard> {
 
           // Price
           Text(
-            pkg.isFree
-                ? l10n.wsFree
-                : _formatPrice(pkg.price, pkg.currency),
-            style: WrTextStyles.hMedium.copyWith(
-              color: WrColors.navy,
-            ),
+            pkg.isFree ? l10n.wsFree : _formatPrice(pkg.price, pkg.currency),
+            style: WrTextStyles.hMedium.copyWith(color: WrColors.navy),
           ),
           const SizedBox(height: 16),
 
@@ -488,8 +477,7 @@ class _ReviewsSection extends StatelessWidget {
           children: [
             Expanded(child: WrEyebrow(l10n.coachReviewsTitle)),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: WrColors.teal.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(100),
@@ -497,8 +485,11 @@ class _ReviewsSection extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.star_rounded,
-                      size: 14, color: WrColors.pillTealText),
+                  const Icon(
+                    Icons.star_rounded,
+                    size: 14,
+                    color: WrColors.pillTealText,
+                  ),
                   const SizedBox(width: 4),
                   Text(
                     '$avg/5.0',
@@ -516,10 +507,12 @@ class _ReviewsSection extends StatelessWidget {
         const SizedBox(height: 12),
 
         // Review cards
-        ...summary.reviews.map((r) => Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _ReviewCard(review: r),
-            )),
+        ...summary.reviews.map(
+          (r) => Padding(
+            padding: const EdgeInsets.only(bottom: 12),
+            child: _ReviewCard(review: r),
+          ),
+        ),
 
         const SizedBox(height: 16),
       ],
@@ -559,8 +552,7 @@ class _ReviewCard extends StatelessWidget {
             const SizedBox(height: 6),
             Text(
               '"${review.comment}"',
-              style:
-                  WrTextStyles.body.copyWith(fontStyle: FontStyle.italic),
+              style: WrTextStyles.body.copyWith(fontStyle: FontStyle.italic),
             ),
           ],
           const SizedBox(height: 8),
@@ -583,8 +575,7 @@ class _ReviewCard extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 review.reviewerName,
-                style: WrTextStyles.body
-                    .copyWith(fontWeight: FontWeight.w600),
+                style: WrTextStyles.body.copyWith(fontWeight: FontWeight.w600),
               ),
             ],
           ),

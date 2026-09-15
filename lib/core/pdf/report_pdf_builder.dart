@@ -110,17 +110,15 @@ class ReportPdfBuilder {
   ///
   /// Loads NotoSans TTF from assets so Vietnamese diacritics render correctly.
   static Future<Uint8List> build(ReportPdfData data) async {
-    final regularData =
-        await rootBundle.load('assets/fonts/NotoSans-Regular.ttf');
+    final regularData = await rootBundle.load(
+      'assets/fonts/NotoSans-Regular.ttf',
+    );
     final boldData = await rootBundle.load('assets/fonts/NotoSans-Bold.ttf');
 
     final regular = pw.Font.ttf(regularData);
     final bold = pw.Font.ttf(boldData);
 
-    final theme = pw.ThemeData.withFont(
-      base: regular,
-      bold: bold,
-    );
+    final theme = pw.ThemeData.withFont(base: regular, bold: bold);
 
     final pdf = pw.Document(theme: theme);
 
@@ -145,14 +143,17 @@ class ReportPdfBuilder {
   // Pages
   // =========================================================================
 
-  static pw.Page _coverPage(
-      ReportPdfData d, pw.Font regular, pw.Font bold) {
+  static pw.Page _coverPage(ReportPdfData d, pw.Font regular, pw.Font bold) {
     final isVi = d.locale == 'vi';
-    final title = isVi ? tr('Báo cáo Work Reflection', 'Work Reflection report') : 'Work Reflection Report';
+    final title = isVi
+        ? tr('Báo cáo Work Reflection', 'Work Reflection report')
+        : 'Work Reflection Report';
     final tier = d.isPremium
         ? (isVi ? tr('Báo cáo Premium', 'Premium report') : 'Premium Report')
         : (isVi ? tr('Báo cáo Miễn phí', 'Free report') : 'Free Report');
-    final preparedFor = isVi ? tr('Báo cáo dành cho', 'Report for') : 'Prepared for';
+    final preparedFor = isVi
+        ? tr('Báo cáo dành cho', 'Report for')
+        : 'Prepared for';
     final dateLabel = isVi ? tr('Ngày báo cáo', 'Report date') : 'Report date';
     final dateStr = _formatDate(d.reportDate, isVi);
 
@@ -163,29 +164,18 @@ class ReportPdfBuilder {
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
           // Top accent bar
-          pw.Container(
-            height: 6,
-            color: _coral,
-          ),
+          pw.Container(height: 6, color: _coral),
           pw.SizedBox(height: 48),
 
           // Title
           pw.Text(
             title,
-            style: pw.TextStyle(
-              font: bold,
-              fontSize: 32,
-              color: _navy,
-            ),
+            style: pw.TextStyle(font: bold, fontSize: 32, color: _navy),
           ),
           pw.SizedBox(height: 8),
           pw.Text(
             tier,
-            style: pw.TextStyle(
-              font: regular,
-              fontSize: 15.5,
-              color: _coral,
-            ),
+            style: pw.TextStyle(font: regular, fontSize: 15.5, color: _coral),
           ),
           pw.SizedBox(height: 48),
 
@@ -196,29 +186,17 @@ class ReportPdfBuilder {
           // User info block
           pw.Text(
             preparedFor,
-            style: pw.TextStyle(
-              font: regular,
-              fontSize: 12.5,
-              color: _muted,
-            ),
+            style: pw.TextStyle(font: regular, fontSize: 12.5, color: _muted),
           ),
           pw.SizedBox(height: 6),
           pw.Text(
             d.userName,
-            style: pw.TextStyle(
-              font: bold,
-              fontSize: 24,
-              color: _navy,
-            ),
+            style: pw.TextStyle(font: bold, fontSize: 24, color: _navy),
           ),
           pw.SizedBox(height: 16),
           pw.Text(
             '$dateLabel: $dateStr',
-            style: pw.TextStyle(
-              font: regular,
-              fontSize: 13.5,
-              color: _muted,
-            ),
+            style: pw.TextStyle(font: regular, fontSize: 13.5, color: _muted),
           ),
           pw.Spacer(),
 
@@ -229,15 +207,19 @@ class ReportPdfBuilder {
     );
   }
 
-  static pw.Page _scorePage(
-      ReportPdfData d, pw.Font regular, pw.Font bold) {
+  static pw.Page _scorePage(ReportPdfData d, pw.Font regular, pw.Font bold) {
     final isVi = d.locale == 'vi';
-    final totalLabel =
-        isVi ? tr('Điểm tổng', 'Overall score') : 'Total Score';
+    final totalLabel = isVi ? tr('Điểm tổng', 'Overall score') : 'Total Score';
     final levelLabel = _scoreLevelLabel(d.scoreLevel, isVi);
-    final sLabel = isVi ? tr('Cấu trúc tổ chức', 'Organisational structure') : 'Organisational Structure';
-    final cLabel = isVi ? tr('Văn hóa làm việc', 'Working culture') : 'Work Culture';
-    final aLabel = isVi ? tr('Hoạt động hàng ngày', 'Day-to-day activity') : 'Daily Activity';
+    final sLabel = isVi
+        ? tr('Cấu trúc tổ chức', 'Organisational structure')
+        : 'Organisational Structure';
+    final cLabel = isVi
+        ? tr('Văn hóa làm việc', 'Working culture')
+        : 'Work Culture';
+    final aLabel = isVi
+        ? tr('Hoạt động hàng ngày', 'Day-to-day activity')
+        : 'Daily Activity';
 
     return pw.Page(
       pageFormat: PdfPageFormat.a4,
@@ -245,7 +227,12 @@ class ReportPdfBuilder {
       build: (ctx) => pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          _pageHeader(isVi ? tr('Điểm số tổng quan', 'Scores at a glance') : 'Score Overview', bold),
+          _pageHeader(
+            isVi
+                ? tr('Điểm số tổng quan', 'Scores at a glance')
+                : 'Score Overview',
+            bold,
+          ),
           pw.SizedBox(height: 24),
 
           // Total score box
@@ -260,11 +247,7 @@ class ReportPdfBuilder {
               children: [
                 pw.Text(
                   d.totalScore.toStringAsFixed(1),
-                  style: pw.TextStyle(
-                    font: bold,
-                    fontSize: 48,
-                    color: _navy,
-                  ),
+                  style: pw.TextStyle(font: bold, fontSize: 48, color: _navy),
                 ),
                 pw.SizedBox(width: 20),
                 pw.Column(
@@ -273,16 +256,22 @@ class ReportPdfBuilder {
                     pw.Text(
                       totalLabel,
                       style: pw.TextStyle(
-                          font: regular, fontSize: 12.5, color: _muted),
+                        font: regular,
+                        fontSize: 12.5,
+                        color: _muted,
+                      ),
                     ),
                     pw.SizedBox(height: 4),
                     pw.Container(
                       padding: const pw.EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: pw.BoxDecoration(
                         color: _scoreLevelColor(d.scoreLevel),
                         borderRadius: const pw.BorderRadius.all(
-                            pw.Radius.circular(100)),
+                          pw.Radius.circular(100),
+                        ),
                       ),
                       child: pw.Text(
                         levelLabel,
@@ -301,11 +290,23 @@ class ReportPdfBuilder {
           pw.SizedBox(height: 24),
 
           // S / C / A layer rows
-          _layerRow(sLabel, d.scoreStructure, d.structureNarrative, regular, bold),
+          _layerRow(
+            sLabel,
+            d.scoreStructure,
+            d.structureNarrative,
+            regular,
+            bold,
+          ),
           pw.SizedBox(height: 16),
           _layerRow(cLabel, d.scoreCulture, d.cultureNarrative, regular, bold),
           pw.SizedBox(height: 16),
-          _layerRow(aLabel, d.scoreActivity, d.activityNarrative, regular, bold),
+          _layerRow(
+            aLabel,
+            d.scoreActivity,
+            d.activityNarrative,
+            regular,
+            bold,
+          ),
 
           pw.Spacer(),
           _footer(d.locale, regular),
@@ -315,7 +316,10 @@ class ReportPdfBuilder {
   }
 
   static pw.Page _bottleneckPage(
-      ReportPdfData d, pw.Font regular, pw.Font bold) {
+    ReportPdfData d,
+    pw.Font regular,
+    pw.Font bold,
+  ) {
     final isVi = d.locale == 'vi';
     final headingLabel = isVi
         ? tr('Điểm cần cải thiện nhất', 'Most in need of improvement')
@@ -335,8 +339,7 @@ class ReportPdfBuilder {
             decoration: pw.BoxDecoration(
               color: const PdfColor.fromInt(0xFFFFF3E0),
               border: pw.Border.all(color: _coral, width: 1),
-              borderRadius:
-                  const pw.BorderRadius.all(pw.Radius.circular(8)),
+              borderRadius: const pw.BorderRadius.all(pw.Radius.circular(8)),
             ),
             child: pw.Column(
               crossAxisAlignment: pw.CrossAxisAlignment.start,
@@ -350,7 +353,10 @@ class ReportPdfBuilder {
                   pw.Text(
                     d.bottleneckNarrative!,
                     style: pw.TextStyle(
-                        font: regular, fontSize: 13.5, color: _textDark),
+                      font: regular,
+                      fontSize: 13.5,
+                      color: _textDark,
+                    ),
                   ),
                 ],
               ],
@@ -364,11 +370,13 @@ class ReportPdfBuilder {
     );
   }
 
-  static pw.Page _premiumPage(
-      ReportPdfData d, pw.Font regular, pw.Font bold) {
+  static pw.Page _premiumPage(ReportPdfData d, pw.Font regular, pw.Font bold) {
     final isVi = d.locale == 'vi';
     final esiLabel = isVi
-        ? tr('Chỉ số hài lòng nhân viên (ESI)', 'Employee satisfaction index (ESI)')
+        ? tr(
+            'Chỉ số hài lòng nhân viên (ESI)',
+            'Employee satisfaction index (ESI)',
+          )
         : 'Employee Satisfaction Index (ESI)';
     final enpsLabel = isVi
         ? tr('Mức độ gắn kết (eNPS)', 'Engagement (eNPS)')
@@ -429,8 +437,13 @@ class ReportPdfBuilder {
     );
   }
 
-  static pw.Widget _layerRow(String label, double score,
-      String? narrative, pw.Font regular, pw.Font bold) {
+  static pw.Widget _layerRow(
+    String label,
+    double score,
+    String? narrative,
+    pw.Font regular,
+    pw.Font bold,
+  ) {
     return pw.Container(
       padding: const pw.EdgeInsets.all(14),
       decoration: pw.BoxDecoration(
@@ -443,9 +456,10 @@ class ReportPdfBuilder {
           pw.Row(
             mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
             children: [
-              pw.Text(label,
-                  style:
-                      pw.TextStyle(font: bold, fontSize: 14.5, color: _navy)),
+              pw.Text(
+                label,
+                style: pw.TextStyle(font: bold, fontSize: 14.5, color: _navy),
+              ),
               pw.Text(
                 score.toStringAsFixed(1),
                 style: pw.TextStyle(font: bold, fontSize: 14.5, color: _coral),
@@ -456,8 +470,7 @@ class ReportPdfBuilder {
             pw.SizedBox(height: 6),
             pw.Text(
               narrative,
-              style:
-                  pw.TextStyle(font: regular, fontSize: 12.5, color: _muted),
+              style: pw.TextStyle(font: regular, fontSize: 12.5, color: _muted),
             ),
           ],
         ],
@@ -481,19 +494,27 @@ class ReportPdfBuilder {
       child: pw.Column(
         crossAxisAlignment: pw.CrossAxisAlignment.start,
         children: [
-          pw.Text(label,
-              style: pw.TextStyle(font: regular, fontSize: 12.5, color: _muted)),
+          pw.Text(
+            label,
+            style: pw.TextStyle(font: regular, fontSize: 12.5, color: _muted),
+          ),
           pw.SizedBox(height: 8),
           pw.Row(
             crossAxisAlignment: pw.CrossAxisAlignment.end,
             children: [
-              pw.Text(value,
-                  style:
-                      pw.TextStyle(font: bold, fontSize: 32, color: _navy)),
+              pw.Text(
+                value,
+                style: pw.TextStyle(font: bold, fontSize: 32, color: _navy),
+              ),
               pw.SizedBox(width: 4),
-              pw.Text(suffix,
-                  style: pw.TextStyle(
-                      font: regular, fontSize: 15.5, color: _muted)),
+              pw.Text(
+                suffix,
+                style: pw.TextStyle(
+                  font: regular,
+                  fontSize: 15.5,
+                  color: _muted,
+                ),
+              ),
             ],
           ),
         ],
@@ -504,7 +525,10 @@ class ReportPdfBuilder {
   static pw.Widget _footer(String locale, pw.Font regular) {
     final isVi = locale == 'vi';
     final text = isVi
-        ? tr('Cloud & Coral  |  Nền tảng Work Reflection  |  www.cloudandcoral.com', 'Cloud & Coral  |  Work Reflection platform  |  www.cloudandcoral.com')
+        ? tr(
+            'Cloud & Coral  |  Nền tảng Work Reflection  |  www.cloudandcoral.com',
+            'Cloud & Coral  |  Work Reflection platform  |  www.cloudandcoral.com',
+          )
         : 'Cloud & Coral  |  Work Reflection Platform  |  www.cloudandcoral.com';
     return pw.Column(
       children: [
@@ -512,8 +536,7 @@ class ReportPdfBuilder {
         pw.SizedBox(height: 4),
         pw.Text(
           text,
-          style: pw.TextStyle(
-              font: regular, fontSize: 9.5, color: _muted),
+          style: pw.TextStyle(font: regular, fontSize: 9.5, color: _muted),
           textAlign: pw.TextAlign.center,
         ),
       ],
@@ -523,14 +546,34 @@ class ReportPdfBuilder {
   static String _formatDate(DateTime d, bool isVi) {
     final months = isVi
         ? [
-            '', tr('tháng 1', 'January'), tr('tháng 2', 'February'), tr('tháng 3', 'March'), tr('tháng 4', 'April'),
-            tr('tháng 5', 'May'), tr('tháng 6', 'June'), tr('tháng 7', 'July'), tr('tháng 8', 'August'),
-            tr('tháng 9', 'September'), tr('tháng 10', 'October'), tr('tháng 11', 'November'), tr('tháng 12', 'December')
+            '',
+            tr('tháng 1', 'January'),
+            tr('tháng 2', 'February'),
+            tr('tháng 3', 'March'),
+            tr('tháng 4', 'April'),
+            tr('tháng 5', 'May'),
+            tr('tháng 6', 'June'),
+            tr('tháng 7', 'July'),
+            tr('tháng 8', 'August'),
+            tr('tháng 9', 'September'),
+            tr('tháng 10', 'October'),
+            tr('tháng 11', 'November'),
+            tr('tháng 12', 'December'),
           ]
         : [
-            '', 'January', 'February', 'March', 'April',
-            'May', 'June', 'July', 'August',
-            'September', 'October', 'November', 'December'
+            '',
+            'January',
+            'February',
+            'March',
+            'April',
+            'May',
+            'June',
+            'July',
+            'August',
+            'September',
+            'October',
+            'November',
+            'December',
           ];
     if (isVi) {
       return '${d.day} ${months[d.month]} ${d.year}';
@@ -543,7 +586,8 @@ class ReportPdfBuilder {
     return switch (level) {
       ScoreLevel.high => isVi ? tr('Xuất sắc', 'Excellent') : 'Excellent',
       ScoreLevel.good => isVi ? tr('Tốt', 'Good') : 'Good',
-      ScoreLevel.warning => isVi ? tr('Cần chú ý', 'Needs attention') : 'Needs Attention',
+      ScoreLevel.warning =>
+        isVi ? tr('Cần chú ý', 'Needs attention') : 'Needs Attention',
       ScoreLevel.critical =>
         isVi ? tr('Cần cải thiện', 'Needs improvement') : 'Needs Improvement',
     };

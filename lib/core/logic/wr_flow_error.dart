@@ -10,7 +10,9 @@ import 'package:flutter/foundation.dart';
 void logFlowError(String step, Object error, [StackTrace? stack]) {
   if (!kDebugMode) return;
   debugPrint('[wr-flow] $step thất bại: $error');
-  if (stack != null) debugPrintStack(stackTrace: stack, label: '[wr-flow] $step');
+  if (stack != null) {
+    debugPrintStack(stackTrace: stack, label: '[wr-flow] $step');
+  }
 }
 
 /// Câu báo lỗi hiện trên màn hình.

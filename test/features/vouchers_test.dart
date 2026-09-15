@@ -37,7 +37,9 @@ FakeWrRepository _repoWithVouchers() {
       'discount_percent': 20,
       'discount_amount': 0,
       'applicable_products': ['premium'],
-      'valid_to': DateTime.now().add(const Duration(days: 30)).toIso8601String(),
+      'valid_to': DateTime.now()
+          .add(const Duration(days: 30))
+          .toIso8601String(),
       'max_uses': 100,
       'used_count': 10,
       'target_type': 'all',
@@ -50,7 +52,9 @@ FakeWrRepository _repoWithVouchers() {
       'discount_percent': 10,
       'discount_amount': 0,
       'applicable_products': <String>[],
-      'valid_to': DateTime.now().subtract(const Duration(days: 1)).toIso8601String(),
+      'valid_to': DateTime.now()
+          .subtract(const Duration(days: 1))
+          .toIso8601String(),
       'max_uses': 0,
       'used_count': 0,
       'target_type': 'all',
@@ -87,8 +91,9 @@ void main() {
       expect(find.byKey(const Key('vouchers_list')), findsNothing);
     });
 
-    testWidgets('copy button triggers snackbar for available voucher',
-        (tester) async {
+    testWidgets('copy button triggers snackbar for available voucher', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1080, 4000);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() {

@@ -41,24 +41,24 @@ enum CheckinEnergy {
   low;
 
   String get dbValue => switch (this) {
-        CheckinEnergy.good => 'good',
-        CheckinEnergy.ok => 'ok',
-        CheckinEnergy.low => 'low',
-      };
+    CheckinEnergy.good => 'good',
+    CheckinEnergy.ok => 'ok',
+    CheckinEnergy.low => 'low',
+  };
 
   static CheckinEnergy fromDb(String value) => switch (value) {
-        'good' => CheckinEnergy.good,
-        'ok' => CheckinEnergy.ok,
-        'low' => CheckinEnergy.low,
-        _ => throw ArgumentError('Unknown CheckinEnergy db value: $value'),
-      };
+    'good' => CheckinEnergy.good,
+    'ok' => CheckinEnergy.ok,
+    'low' => CheckinEnergy.low,
+    _ => throw ArgumentError('Unknown CheckinEnergy db value: $value'),
+  };
 
   /// Maps energy → legacy Mood for backward-compatible upsert.
   Mood toMood() => switch (this) {
-        CheckinEnergy.good => Mood.happy,
-        CheckinEnergy.ok => Mood.okay,
-        CheckinEnergy.low => Mood.tired,
-      };
+    CheckinEnergy.good => Mood.happy,
+    CheckinEnergy.ok => Mood.okay,
+    CheckinEnergy.low => Mood.tired,
+  };
 }
 
 /// Perceived direction — forward/steady/backward.
@@ -69,17 +69,17 @@ enum CheckinDirection {
   backward;
 
   String get dbValue => switch (this) {
-        CheckinDirection.forward => 'forward',
-        CheckinDirection.steady => 'steady',
-        CheckinDirection.backward => 'backward',
-      };
+    CheckinDirection.forward => 'forward',
+    CheckinDirection.steady => 'steady',
+    CheckinDirection.backward => 'backward',
+  };
 
   static CheckinDirection fromDb(String value) => switch (value) {
-        'forward' => CheckinDirection.forward,
-        'steady' => CheckinDirection.steady,
-        'backward' => CheckinDirection.backward,
-        _ => throw ArgumentError('Unknown CheckinDirection db value: $value'),
-      };
+    'forward' => CheckinDirection.forward,
+    'steady' => CheckinDirection.steady,
+    'backward' => CheckinDirection.backward,
+    _ => throw ArgumentError('Unknown CheckinDirection db value: $value'),
+  };
 }
 
 /// Maps to the public.wr_checkins table.

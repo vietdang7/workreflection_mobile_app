@@ -217,8 +217,9 @@ class StoreKitIapRepository implements WrIapRepository {
         WrIapOffer(
           id: details.id,
           title: details.title.isEmpty ? product.title : details.title,
-          description:
-              details.description.isEmpty ? product.blurb : details.description,
+          description: details.description.isEmpty
+              ? product.blurb
+              : details.description,
           priceLabel: details.price,
           rawPrice: details.rawPrice,
           currencyCode: details.currencyCode,
@@ -355,7 +356,7 @@ class StoreKitIapRepository implements WrIapRepository {
       rethrow;
     } catch (_) {
       throw const WrIapException(
-        'Không kết nối được để xác nhận giao dịch. Tiền chưa mất đi đâu — bạn '
+        'Không kết nối được để xác nhận giao dịch. Tiền chưa mất đi đâu: bạn '
         'kiểm tra mạng rồi bấm "Khôi phục giao dịch".',
       );
     }

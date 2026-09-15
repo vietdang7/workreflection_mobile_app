@@ -42,25 +42,25 @@ Future<void> _pumpLarge(WidgetTester tester, Widget widget) async {
 }
 
 Practice _practice(String id, String title, PracticeStatus status) => Practice(
-      id: id,
-      userId: 'u1',
-      title: title,
-      status: status,
-      practiceDate: DateTime(2026, 6, 24),
-      createdAt: DateTime(2026, 6, 24),
-    );
+  id: id,
+  userId: 'u1',
+  title: title,
+  status: status,
+  practiceDate: DateTime(2026, 6, 24),
+  createdAt: DateTime(2026, 6, 24),
+);
 
 DevelopmentTheme _theme() => DevelopmentTheme(
-      id: 't1',
-      userId: 'u1',
-      code: 'VOICE',
-      title: 'Khả năng lên tiếng & phản biện',
-      stage: 2,
-      totalStages: 4,
-      progress: 0.55,
-      isActive: true,
-      createdAt: DateTime(2026, 6, 1),
-    );
+  id: 't1',
+  userId: 'u1',
+  code: 'VOICE',
+  title: 'Khả năng lên tiếng & phản biện',
+  stage: 2,
+  totalStages: 4,
+  progress: 0.55,
+  isActive: true,
+  createdAt: DateTime(2026, 6, 1),
+);
 
 void main() {
   group('DevelopScreen widget', () {
@@ -96,7 +96,9 @@ void main() {
       expect(find.textContaining('Hoàn thành'), findsOneWidget);
     });
 
-    testWidgets('renders doing practice with Đang thực hiện status', (tester) async {
+    testWidgets('renders doing practice with Đang thực hiện status', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       repo.seedActiveTheme(_theme());
       repo.seedPractices([
@@ -108,7 +110,9 @@ void main() {
       expect(find.textContaining('Đang thực hiện'), findsOneWidget);
     });
 
-    testWidgets('renders todo practice with Chưa bắt đầu status', (tester) async {
+    testWidgets('renders todo practice with Chưa bắt đầu status', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       repo.seedActiveTheme(_theme());
       repo.seedPractices([
@@ -120,7 +124,9 @@ void main() {
       expect(find.textContaining('Chưa bắt đầu'), findsOneWidget);
     });
 
-    testWidgets('tapping todo practice advances to doing and calls repo', (tester) async {
+    testWidgets('tapping todo practice advances to doing and calls repo', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       repo.seedActiveTheme(_theme());
       repo.seedPractices([
@@ -131,10 +137,15 @@ void main() {
       await tester.tap(find.textContaining('Chia sẻ một quan điểm').first);
       await tester.pumpAndSettle();
 
-      expect(repo.updatePracticeStatusCalls, contains(('p3', PracticeStatus.doing)));
+      expect(
+        repo.updatePracticeStatusCalls,
+        contains(('p3', PracticeStatus.doing)),
+      );
     });
 
-    testWidgets('tapping doing practice advances to done and calls repo', (tester) async {
+    testWidgets('tapping doing practice advances to done and calls repo', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       repo.seedActiveTheme(_theme());
       repo.seedPractices([
@@ -145,10 +156,15 @@ void main() {
       await tester.tap(find.textContaining('Đặt một câu hỏi').first);
       await tester.pumpAndSettle();
 
-      expect(repo.updatePracticeStatusCalls, contains(('p2', PracticeStatus.done)));
+      expect(
+        repo.updatePracticeStatusCalls,
+        contains(('p2', PracticeStatus.done)),
+      );
     });
 
-    testWidgets('done practice is not tappable (no further status call)', (tester) async {
+    testWidgets('done practice is not tappable (no further status call)', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       repo.seedActiveTheme(_theme());
       repo.seedPractices([
@@ -162,7 +178,9 @@ void main() {
       expect(repo.updatePracticeStatusCalls, isEmpty);
     });
 
-    testWidgets('shows no-theme empty state when theme is null', (tester) async {
+    testWidgets('shows no-theme empty state when theme is null', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       // No theme seeded
       await _pumpLarge(tester, _wrap(const DevelopScreen(), repo));
@@ -173,11 +191,13 @@ void main() {
     testWidgets('shows workshop card when workshop available', (tester) async {
       final repo = FakeWrRepository();
       repo.seedActiveTheme(_theme());
-      repo.seedWorkshop(Workshop(
-        id: 'w1',
-        title: 'Nói để được nghe',
-        date: DateTime(2026, 7, 1),
-      ));
+      repo.seedWorkshop(
+        Workshop(
+          id: 'w1',
+          title: 'Nói để được nghe',
+          date: DateTime(2026, 7, 1),
+        ),
+      );
       await _pumpLarge(tester, _wrap(const DevelopScreen(), repo));
 
       expect(find.textContaining('Nói để được nghe'), findsOneWidget);
@@ -185,19 +205,24 @@ void main() {
       expect(find.textContaining('WORKSHOP'), findsOneWidget);
     });
 
-    testWidgets('opportunity card shows view-workshops and view-coaching links', (tester) async {
-      final repo = FakeWrRepository();
-      repo.seedActiveTheme(_theme());
-      repo.seedWorkshop(Workshop(
-        id: 'w1',
-        title: 'Nói để được nghe',
-        date: DateTime(2026, 7, 1),
-      ));
-      await _pumpLarge(tester, _wrap(const DevelopScreen(), repo));
+    testWidgets(
+      'opportunity card shows view-workshops and view-coaching links',
+      (tester) async {
+        final repo = FakeWrRepository();
+        repo.seedActiveTheme(_theme());
+        repo.seedWorkshop(
+          Workshop(
+            id: 'w1',
+            title: 'Nói để được nghe',
+            date: DateTime(2026, 7, 1),
+          ),
+        );
+        await _pumpLarge(tester, _wrap(const DevelopScreen(), repo));
 
-      expect(find.byKey(const Key('develop_view_workshops')), findsOneWidget);
-      expect(find.byKey(const Key('develop_view_coaching')), findsOneWidget);
-    });
+        expect(find.byKey(const Key('develop_view_workshops')), findsOneWidget);
+        expect(find.byKey(const Key('develop_view_coaching')), findsOneWidget);
+      },
+    );
 
     testWidgets('hides workshop section when no workshop', (tester) async {
       final repo = FakeWrRepository();
@@ -208,7 +233,9 @@ void main() {
       expect(find.textContaining('Nói để được nghe'), findsNothing);
     });
 
-    testWidgets('shows practices from most recent date when today has none', (tester) async {
+    testWidgets('shows practices from most recent date when today has none', (
+      tester,
+    ) async {
       // Seed practices with yesterday's date only (simulates day 2+)
       final yesterday = DateTime.now().subtract(const Duration(days: 1));
       final repo = FakeWrRepository();

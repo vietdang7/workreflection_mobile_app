@@ -129,10 +129,12 @@ class AvatarUploadNotifier extends AsyncNotifier<void> {
       final bytes = await file.readAsBytes();
       final ext = file.name.split('.').last.toLowerCase();
       // Normalise ext to known image types; default to jpg.
-      final safeExt =
-          {'jpg', 'jpeg', 'png', 'webp', 'gif'}.contains(ext) ? ext : 'jpg';
-      final url =
-          await ref.read(wrRepositoryProvider).uploadAvatar(bytes, safeExt);
+      final safeExt = {'jpg', 'jpeg', 'png', 'webp', 'gif'}.contains(ext)
+          ? ext
+          : 'jpg';
+      final url = await ref
+          .read(wrRepositoryProvider)
+          .uploadAvatar(bytes, safeExt);
       // Invalidate cc_profiles so ProfileScreen refreshes.
       ref.invalidate(ccProfileProvider);
       state = const AsyncData(null);
@@ -144,7 +146,6 @@ class AvatarUploadNotifier extends AsyncNotifier<void> {
   }
 }
 
-final avatarUploadProvider =
-    AsyncNotifierProvider<AvatarUploadNotifier, void>(
+final avatarUploadProvider = AsyncNotifierProvider<AvatarUploadNotifier, void>(
   AvatarUploadNotifier.new,
 );

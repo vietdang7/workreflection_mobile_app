@@ -43,8 +43,10 @@ class PremiumReport {
   final Map<String, dynamic>? subScores;
   final String? nickname;
 
-  factory PremiumReport.fromJson(Map<String, dynamic> json,
-      {String? nickname}) {
+  factory PremiumReport.fromJson(
+    Map<String, dynamic> json, {
+    String? nickname,
+  }) {
     final ss = json['sub_scores'];
     return PremiumReport(
       id: json['id'] as String,
@@ -164,7 +166,8 @@ class RoadmapProgressData {
   });
 
   final Set<String> completedActionIds;
-  final Map<String, String> completedActionDates; // action_ref_id → completed_at
+  final Map<String, String>
+  completedActionDates; // action_ref_id → completed_at
   final List<CustomTask> customTasks;
 }
 
@@ -317,15 +320,18 @@ class SupabaseRoadmapRepository implements RoadmapRepository {
     final reports = await _client
         .from('cc_reports')
         .select(
-            'id, created_at, score_total, score_structure, score_culture, score_activity, bottleneck_layer, sub_scores, survey_id')
+          'id, created_at, score_total, score_structure, score_culture, score_activity, bottleneck_layer, sub_scores, survey_id',
+        )
         .eq('user_id', uid)
         .order('created_at', ascending: false);
 
     if (reports.isEmpty) return [];
 
     // 2. Filter to PREMIUM surveys only
-    final surveyIds =
-        (reports as List).map((r) => r['survey_id'] as String).toSet().toList();
+    final surveyIds = (reports as List)
+        .map((r) => r['survey_id'] as String)
+        .toSet()
+        .toList();
     final surveys = await _client
         .from('cc_surveys')
         .select('id, survey_type')
@@ -352,14 +358,16 @@ class SupabaseRoadmapRepository implements RoadmapRepository {
 
     final nicknameMap = <String, String>{
       for (final n in (nicknames as List))
-        (n['report_id'] as String): (n['nickname'] as String)
+        (n['report_id'] as String): (n['nickname'] as String),
     };
 
     return premiumReports
-        .map((r) => PremiumReport.fromJson(
-              Map<String, dynamic>.from(r as Map),
-              nickname: nicknameMap[r['id'] as String],
-            ))
+        .map(
+          (r) => PremiumReport.fromJson(
+            Map<String, dynamic>.from(r as Map),
+            nickname: nicknameMap[r['id'] as String],
+          ),
+        )
         .toList();
   }
 
@@ -376,7 +384,8 @@ class SupabaseRoadmapRepository implements RoadmapRepository {
       _client
           .from('cc_custom_roadmap_tasks')
           .select(
-              'id, report_id, title, description, layer, day, is_completed, completed_at, created_by, display_order, due_date')
+            'id, report_id, title, description, layer, day, is_completed, completed_at, created_by, display_order, due_date',
+          )
           .eq('user_id', uid)
           .eq('report_id', reportId)
           .order('display_order'),
@@ -385,14 +394,15 @@ class SupabaseRoadmapRepository implements RoadmapRepository {
     final progressRows = results[0] as List;
     final customTaskRows = results[1] as List;
 
-    final completedRows =
-        progressRows.where((p) => p['is_completed'] == true).toList();
-    final completedActionIds =
-        completedRows.map((p) => p['action_ref_id'] as String).toSet();
+    final completedRows = progressRows
+        .where((p) => p['is_completed'] == true)
+        .toList();
+    final completedActionIds = completedRows
+        .map((p) => p['action_ref_id'] as String)
+        .toSet();
     final completedActionDates = <String, String>{
-      for (final p in completedRows
-          .where((p) => p['completed_at'] != null))
-        (p['action_ref_id'] as String): (p['completed_at'] as String)
+      for (final p in completedRows.where((p) => p['completed_at'] != null))
+        (p['action_ref_id'] as String): (p['completed_at'] as String),
     };
 
     final customTasks = customTaskRows
@@ -411,7 +421,8 @@ class SupabaseRoadmapRepository implements RoadmapRepository {
     final rows = await _client
         .from('cc_roadmap_actions')
         .select(
-            'id, layer, sub_component, day, title_vi, description_vi, title_en, description_en')
+          'id, layer, sub_component, day, title_vi, description_vi, title_en, description_en',
+        )
         .eq('is_active', true);
 
     return (rows as List)
@@ -426,16 +437,13 @@ class SupabaseRoadmapRepository implements RoadmapRepository {
     required bool isCompleted,
   }) async {
     final uid = _uid;
-    await _client.from('cc_roadmap_progress').upsert(
-      {
-        'user_id': uid,
-        'report_id': reportId,
-        'action_ref_id': actionRefId,
-        'is_completed': isCompleted,
-        'completed_at': isCompleted ? DateTime.now().toIso8601String() : null,
-      },
-      onConflict: 'user_id,report_id,action_ref_id',
-    );
+    await _client.from('cc_roadmap_progress').upsert({
+      'user_id': uid,
+      'report_id': reportId,
+      'action_ref_id': actionRefId,
+      'is_completed': isCompleted,
+      'completed_at': isCompleted ? DateTime.now().toIso8601String() : null,
+    }, onConflict: 'user_id,report_id,action_ref_id');
   }
 
   @override
@@ -443,10 +451,13 @@ class SupabaseRoadmapRepository implements RoadmapRepository {
     required String taskId,
     required bool isCompleted,
   }) async {
-    await _client.from('cc_custom_roadmap_tasks').update({
-      'is_completed': isCompleted,
-      'completed_at': isCompleted ? DateTime.now().toIso8601String() : null,
-    }).eq('id', taskId);
+    await _client
+        .from('cc_custom_roadmap_tasks')
+        .update({
+          'is_completed': isCompleted,
+          'completed_at': isCompleted ? DateTime.now().toIso8601String() : null,
+        })
+        .eq('id', taskId);
   }
 
   @override
@@ -486,12 +497,15 @@ class SupabaseRoadmapRepository implements RoadmapRepository {
     String? description,
     String? dueDate,
   }) async {
-    await _client.from('cc_custom_roadmap_tasks').update({
-      'title': title,
-      'description': description,
-      'due_date': dueDate,
-      'updated_at': DateTime.now().toIso8601String(),
-    }).eq('id', taskId);
+    await _client
+        .from('cc_custom_roadmap_tasks')
+        .update({
+          'title': title,
+          'description': description,
+          'due_date': dueDate,
+          'updated_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', taskId);
   }
 
   @override
@@ -505,14 +519,11 @@ class SupabaseRoadmapRepository implements RoadmapRepository {
     required String nickname,
   }) async {
     final uid = _uid;
-    await _client.from('cc_report_nicknames').upsert(
-      {
-        'user_id': uid,
-        'report_id': reportId,
-        'nickname': nickname,
-      },
-      onConflict: 'user_id,report_id',
-    );
+    await _client.from('cc_report_nicknames').upsert({
+      'user_id': uid,
+      'report_id': reportId,
+      'nickname': nickname,
+    }, onConflict: 'user_id,report_id');
   }
 
   @override
@@ -521,27 +532,26 @@ class SupabaseRoadmapRepository implements RoadmapRepository {
     final rows = await _client
         .from('cc_roadmap_coach_access')
         .select(
-            'id, user_id, coach_id, status, invited_at, accepted_at, coach:cc_coaches(id, full_name, avatar_url, title)')
+          'id, user_id, coach_id, status, invited_at, accepted_at, coach:cc_coaches(id, full_name, avatar_url, title)',
+        )
         .eq('user_id', uid);
 
     return (rows as List)
-        .map((r) =>
-            CoachAccessEntry.fromJson(Map<String, dynamic>.from(r as Map)))
+        .map(
+          (r) => CoachAccessEntry.fromJson(Map<String, dynamic>.from(r as Map)),
+        )
         .toList();
   }
 
   @override
   Future<void> inviteCoach(String coachId) async {
     final uid = _uid;
-    await _client.from('cc_roadmap_coach_access').upsert(
-      {
-        'user_id': uid,
-        'coach_id': coachId,
-        'status': 'pending',
-        'invited_at': DateTime.now().toIso8601String(),
-      },
-      onConflict: 'user_id,coach_id',
-    );
+    await _client.from('cc_roadmap_coach_access').upsert({
+      'user_id': uid,
+      'coach_id': coachId,
+      'status': 'pending',
+      'invited_at': DateTime.now().toIso8601String(),
+    }, onConflict: 'user_id,coach_id');
   }
 
   @override
@@ -553,8 +563,9 @@ class SupabaseRoadmapRepository implements RoadmapRepository {
         .order('full_name');
 
     return (rows as List)
-        .map((r) =>
-            AvailableCoach.fromJson(Map<String, dynamic>.from(r as Map)))
+        .map(
+          (r) => AvailableCoach.fromJson(Map<String, dynamic>.from(r as Map)),
+        )
         .toList();
   }
 }

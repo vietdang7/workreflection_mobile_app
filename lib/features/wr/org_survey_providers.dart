@@ -7,8 +7,9 @@ import '../../core/models/wr_org_survey.dart';
 
 /// 12 câu hỏi. Danh sách rỗng nghĩa là chưa đọc được bảng câu hỏi — màn giới
 /// thiệu phải nói thẳng điều đó thay vì mở một bài khảo sát không có câu nào.
-final wrOrgSurveyQuestionsProvider =
-    FutureProvider<List<OrgSurveyQuestion>>((ref) async {
+final wrOrgSurveyQuestionsProvider = FutureProvider<List<OrgSurveyQuestion>>((
+  ref,
+) async {
   return ref.watch(wrOrgSurveyRepositoryProvider).fetchQuestions();
 });
 
@@ -17,8 +18,9 @@ final wrOrgSurveyQuestionsProvider =
 /// Nuốt lỗi và trả null: thẻ trên màn Hồ sơ chỉ dùng cái này để đổi chữ nút
 /// ("Tìm hiểu & tham gia" hay "Xem lại kết quả"). Không đáng để một lần đọc
 /// hỏng làm cả màn Hồ sơ đỏ lên.
-final wrOrgSurveyLatestProvider =
-    FutureProvider<OrgSurveyResponse?>((ref) async {
+final wrOrgSurveyLatestProvider = FutureProvider<OrgSurveyResponse?>((
+  ref,
+) async {
   try {
     return await ref.watch(wrOrgSurveyRepositoryProvider).fetchLatestResponse();
   } catch (_) {
@@ -33,10 +35,12 @@ final wrOrgSurveyLatestProvider =
 /// so sánh dựng trên số không đọc được là điều tệ nhất màn này có thể làm.
 final wrOrgSurveyBenchmarkProvider =
     FutureProvider<Map<OrgSurveyArea?, OrgSurveyBenchmark>>((ref) async {
-  try {
-    final rows = await ref.watch(wrOrgSurveyRepositoryProvider).fetchBenchmark();
-    return {for (final r in rows) r.area: r};
-  } catch (_) {
-    return const {};
-  }
-});
+      try {
+        final rows = await ref
+            .watch(wrOrgSurveyRepositoryProvider)
+            .fetchBenchmark();
+        return {for (final r in rows) r.area: r};
+      } catch (_) {
+        return const {};
+      }
+    });

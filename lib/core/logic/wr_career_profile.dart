@@ -71,7 +71,11 @@ const kWaveOrderDimensions = <ScaDimension>[
 // ---------------------------------------------------------------------------
 
 dynamic get _roleToDims => <String, List<ScaDimension>>{
-  tr('Chuyên viên', 'Individual contributor'): [ScaDimension.c2, ScaDimension.a1, ScaDimension.s1],
+  tr('Chuyên viên', 'Individual contributor'): [
+    ScaDimension.c2,
+    ScaDimension.a1,
+    ScaDimension.s1,
+  ],
   'Senior Specialist': [ScaDimension.a1, ScaDimension.a3, ScaDimension.s1],
   'Team Leader': [ScaDimension.c1, ScaDimension.c2, ScaDimension.c3],
   'Manager': [ScaDimension.c1, ScaDimension.s2, ScaDimension.a4],
@@ -97,7 +101,8 @@ List<ScaDimension> roleToDimensions(String? role) =>
     _roleToDims[role] ?? kWave1Dimensions;
 
 /// Các giai đoạn sự nghiệp tương ứng [role]. Không xác định → rỗng (không lọc).
-List<String> roleToCareerStages(String? role) => _roleToStages[role] ?? const [];
+List<String> roleToCareerStages(String? role) =>
+    _roleToStages[role] ?? const [];
 
 // ---------------------------------------------------------------------------
 // CareerSnapshot
@@ -111,9 +116,9 @@ class CareerSnapshot {
     String? careerGoal,
     String? currentChallenge,
     this.updatedAt,
-  })  : _currentRole = currentRole,
-        _careerGoal = careerGoal,
-        _currentChallenge = currentChallenge;
+  }) : _currentRole = currentRole,
+       _careerGoal = careerGoal,
+       _currentChallenge = currentChallenge;
 
   final String? _currentRole;
   final String? _careerGoal;
@@ -131,13 +136,13 @@ class CareerSnapshot {
   String? get currentChallenge => _clean(_currentChallenge);
 
   factory CareerSnapshot.fromJson(Map<String, dynamic> json) => CareerSnapshot(
-        currentRole: json['current_role'] as String?,
-        careerGoal: json['career_goal'] as String?,
-        currentChallenge: json['current_challenge'] as String?,
-        updatedAt: json['updated_at'] == null
-            ? null
-            : DateTime.tryParse(json['updated_at'] as String),
-      );
+    currentRole: json['current_role'] as String?,
+    careerGoal: json['career_goal'] as String?,
+    currentChallenge: json['current_challenge'] as String?,
+    updatedAt: json['updated_at'] == null
+        ? null
+        : DateTime.tryParse(json['updated_at'] as String),
+  );
 
   bool get isEmpty =>
       currentRole == null && careerGoal == null && currentChallenge == null;
@@ -148,22 +153,21 @@ class CareerSnapshot {
   /// Payload cho `update()` trên `wr_mobile_profiles`.
   /// Bước bị bỏ qua được ghi null để xoá giá trị cũ.
   Map<String, dynamic> toUpdate() => {
-        'current_role': currentRole,
-        'career_goal': careerGoal,
-        'current_challenge': currentChallenge,
-      };
+    'current_role': currentRole,
+    'career_goal': careerGoal,
+    'current_challenge': currentChallenge,
+  };
 
   CareerSnapshot copyWith({
     String? currentRole,
     String? careerGoal,
     String? currentChallenge,
-  }) =>
-      CareerSnapshot(
-        currentRole: currentRole ?? this.currentRole,
-        careerGoal: careerGoal ?? this.careerGoal,
-        currentChallenge: currentChallenge ?? this.currentChallenge,
-        updatedAt: updatedAt,
-      );
+  }) => CareerSnapshot(
+    currentRole: currentRole ?? this.currentRole,
+    careerGoal: careerGoal ?? this.careerGoal,
+    currentChallenge: currentChallenge ?? this.currentChallenge,
+    updatedAt: updatedAt,
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -176,10 +180,7 @@ class CareerSnapshot {
 /// Với vai trò không xác định, kết quả chính là [kWaveOrderDimensions].
 List<ScaDimension> effectiveDimensionOrder(String? role) {
   final head = roleToDimensions(role);
-  return [
-    ...head,
-    ...kWaveOrderDimensions.where((d) => !head.contains(d)),
-  ];
+  return [...head, ...kWaveOrderDimensions.where((d) => !head.contains(d))];
 }
 
 /// Sắp xếp lại [stories] theo mức phù hợp với [snapshot].
@@ -208,9 +209,9 @@ List<WrStory> rankStoriesForProfile(
   ];
 
   indexed.sort((a, b) {
-    final byDim = dimRank(a.$2.scaDimension).compareTo(
-      dimRank(b.$2.scaDimension),
-    );
+    final byDim = dimRank(
+      a.$2.scaDimension,
+    ).compareTo(dimRank(b.$2.scaDimension));
     if (byDim != 0) return byDim;
 
     final aStage = a.$2.careerStages.any(stages.contains) ? 0 : 1;

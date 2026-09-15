@@ -32,9 +32,8 @@ class InsightsScreen extends ConsumerWidget {
       ),
       body: SafeArea(
         child: insightsAsync.when(
-          loading: () => const Center(
-            child: CircularProgressIndicator(strokeWidth: 2),
-          ),
+          loading: () =>
+              const Center(child: CircularProgressIndicator(strokeWidth: 2)),
           error: (e, _) => Center(
             child: Column(
               mainAxisSize: MainAxisSize.min,
@@ -69,8 +68,9 @@ class InsightsScreen extends ConsumerWidget {
               separatorBuilder: (_, __) => const SizedBox(height: 16),
               itemBuilder: (context, i) {
                 final insight = insights[i];
-                final dateStr =
-                    DateFormat('dd/MM/yyyy').format(insight.savedAt);
+                final dateStr = DateFormat(
+                  'dd/MM/yyyy',
+                ).format(insight.savedAt);
                 return WrCardMinimal(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -81,9 +81,7 @@ class InsightsScreen extends ConsumerWidget {
                       ],
                       Text(
                         '"${insight.content}"',
-                        style: WrTextStyles.insightQuote.copyWith(
-                          fontSize: 16,
-                        ),
+                        style: WrTextStyles.insightQuote.copyWith(fontSize: 16),
                       ),
                       const SizedBox(height: 8),
                       Text(

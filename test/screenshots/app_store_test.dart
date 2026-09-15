@@ -181,7 +181,8 @@ final _moodContent = [
     title: 'Điều gì đang vận hành tốt trong bạn?',
     kind: 'BÀI ĐỌC',
     duration: '4 phút đọc',
-    body: 'Những ngày ổn định là lúc tốt nhất để nhận diện điều gì đang thực '
+    body:
+        'Những ngày ổn định là lúc tốt nhất để nhận diện điều gì đang thực '
         'sự hiệu quả.',
     placeholder: true,
   ),
@@ -227,7 +228,8 @@ final _memoryEvents = <CareerMemoryEvent>[
     situationCode: 'C2-sit-01',
     scaDimension: ScaDimension.c2,
     humanNeed: HumanNeed.ketNoi,
-    reflectionText: 'Lần đầu tôi nói hết ý mình trong cuộc họp dự án, dù tay '
+    reflectionText:
+        'Lần đầu tôi nói hết ý mình trong cuộc họp dự án, dù tay '
         'vẫn run.',
     createdAt: DateTime(2026, 8, 4),
   ),
@@ -237,7 +239,8 @@ final _memoryEvents = <CareerMemoryEvent>[
     situationCode: 'A3-sit-02',
     scaDimension: ScaDimension.a3,
     humanNeed: HumanNeed.thichNghi,
-    reflectionText: 'Nhận ra mình cứ nhận thêm việc vào cuối ngày rồi mang về '
+    reflectionText:
+        'Nhận ra mình cứ nhận thêm việc vào cuối ngày rồi mang về '
         'nhà làm tiếp.',
     createdAt: DateTime(2026, 7, 29),
   ),
@@ -247,7 +250,8 @@ final _memoryEvents = <CareerMemoryEvent>[
     situationCode: 'C2-sit-02',
     scaDimension: ScaDimension.c2,
     humanNeed: HumanNeed.ketNoi,
-    reflectionText: 'Ý tưởng của tôi biến mất trong cuộc họp — lần đầu tôi gọi '
+    reflectionText:
+        'Ý tưởng của tôi biến mất trong cuộc họp — lần đầu tôi gọi '
         'tên được cảm giác đó.',
     createdAt: DateTime(2026, 7, 20),
   ),
@@ -284,10 +288,7 @@ class _Stage {
         GoRoute(path: '/wr/paywall', builder: (_, __) => const Scaffold()),
         GoRoute(path: '/wr/flow/step', builder: (_, __) => const Scaffold()),
         GoRoute(path: '/wr/flow/done', builder: (_, __) => const Scaffold()),
-        GoRoute(
-          path: '/wr/mood-library',
-          builder: (_, __) => const Scaffold(),
-        ),
+        GoRoute(path: '/wr/mood-library', builder: (_, __) => const Scaffold()),
         GoRoute(
           path: '/wr/pattern/:code',
           builder: (_, __) => const Scaffold(),
@@ -355,13 +356,15 @@ void main() {
       ..seedSituations(_situations)
       ..seedStories(_stories);
     s.moodContent.seedContent(_moodContent);
-    s.wr.seedTodayCheckin(Checkin(
-      id: 'ck',
-      userId: 'u1',
-      mood: mood,
-      checkinDate: DateTime(2026, 8, 6),
-      createdAt: DateTime(2026, 8, 6),
-    ));
+    s.wr.seedTodayCheckin(
+      Checkin(
+        id: 'ck',
+        userId: 'u1',
+        mood: mood,
+        checkinDate: DateTime(2026, 8, 6),
+        createdAt: DateTime(2026, 8, 6),
+      ),
+    );
     // Ba nguồn dưới đây quyết định màn Hiểu mình và Hành trình có nội dung hay
     // chỉ hiện câu "chưa có gì". Phải gieo ĐÚNG nguồn từng màn đọc:
     //   - "Tình huống lặp lại" đếm từ lịch sử episode, không từ bảng đếm nào
@@ -369,25 +372,23 @@ void main() {
     //   - Career Memory đọc `fetchMemoryEvents` của content repo.
     //   - Ba chiều "Trải nghiệm hiện tại" đọc lịch sử Self-check.
     // Bộ ảnh đầu gieo nhầm sang FakeWrRepository nên hai màn đó chụp ra trống.
-    s.episodes.seed([
-      for (final e in _episodeHistory) e,
-    ]);
+    s.episodes.seed([for (final e in _episodeHistory) e]);
     s.content.seedMemoryEvents(_memoryEvents);
     // Tài khoản trong ảnh là bản đầy đủ. Không phải để khoe gói: để ảnh không
     // đầy những khối "Premium" khoá kín. Màn Hành trình ở bản free là ba khối
     // mời nâng cấp xếp chồng, chụp ra thì người xem không thấy sản phẩm làm
     // được gì. Trưng bày trải nghiệm đầy đủ là chuyện bình thường trên kho.
-    s.intel.seedEntitlement(const WrEntitlementRecord(
-      userId: 'u1',
-      plan: WrPlan.premium,
-    ));
+    s.intel.seedEntitlement(
+      const WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
+    );
     // Khối "Diễn biến theo thời gian" ở đầu màn Hành trình đọc nguồn này. Không
     // gieo thì nó nói "chưa đủ dữ liệu" ngay giữa ảnh quảng cáo.
     s.intel.seedPatternNarratives([
       PatternNarrative(
         id: 'pn1',
         userId: 'u1',
-        narrative: 'Ba tuần qua, điều lặp lại nhiều nhất ở bạn là chọn im lặng '
+        narrative:
+            'Ba tuần qua, điều lặp lại nhiều nhất ở bạn là chọn im lặng '
             'trong những cuộc họp đông người. Nhưng tuần này đã khác: bạn ghi '
             'lại hai lần nói ra được ý mình, và cả hai lần đều nhẹ hơn bạn '
             'tưởng.',
@@ -493,28 +494,33 @@ void main() {
     return s;
   }
 
-  testWidgets('01 · Home — mở ra là thấy hôm nay', skip: !_enabled,
-      (tester) async {
+  testWidgets('01 · Home — mở ra là thấy hôm nay', skip: !_enabled, (
+    tester,
+  ) async {
     await _shoot(tester, buildStage().app('/home'), '01_home');
   });
 
-  testWidgets('02 · Hiểu mình — những gì cứ lặp lại', skip: !_enabled,
-      (tester) async {
+  testWidgets('02 · Hiểu mình — những gì cứ lặp lại', skip: !_enabled, (
+    tester,
+  ) async {
     await _shoot(tester, buildStage().app('/wr/discover'), '02_hieu_minh');
   });
 
-  testWidgets('03 · Phát triển — chủ đề thực hành', skip: !_enabled,
-      (tester) async {
+  testWidgets('03 · Phát triển — chủ đề thực hành', skip: !_enabled, (
+    tester,
+  ) async {
     await _shoot(tester, buildStage().app('/wr/growth'), '03_phat_trien');
   });
 
-  testWidgets('04 · Hành trình — dòng thời gian nghề nghiệp', skip: !_enabled,
-      (tester) async {
+  testWidgets('04 · Hành trình — dòng thời gian nghề nghiệp', skip: !_enabled, (
+    tester,
+  ) async {
     await _shoot(tester, buildStage().app('/wr/journey'), '04_hanh_trinh');
   });
 
-  testWidgets('05 · Trợ lý AI — hỏi về chính ghi chép của mình',
-      skip: !_enabled, (tester) async {
+  testWidgets('05 · Trợ lý AI — hỏi về chính ghi chép của mình', skip: !_enabled, (
+    tester,
+  ) async {
     final s = buildStage();
     // Một lượt hỏi đáp đã xong, chọn đoạn nói về công việc thuần tuý: không
     // một chữ nào nghe như tư vấn tâm lý hay y tế, đó là thứ App Review soi.
@@ -527,7 +533,8 @@ void main() {
         ),
         WrChatMessage(
           role: WrChatRole.assistant,
-          content: 'Trong ba tuần vừa rồi, bạn ghi lại năm lần thấy mình muốn '
+          content:
+              'Trong ba tuần vừa rồi, bạn ghi lại năm lần thấy mình muốn '
               'lên tiếng nhưng đã chọn im lặng. Bốn lần trong số đó là họp có '
               'mặt cấp trên, và cả bốn lần bạn đều viết rằng ý kiến của mình '
               '"chưa đủ chắc". Có vẻ điều ngăn bạn lại không phải là đám đông, '

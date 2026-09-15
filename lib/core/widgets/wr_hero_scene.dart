@@ -183,7 +183,10 @@ class WrHeroScene extends StatelessWidget {
           // hình trang trí không tên thì với họ màn Home mở đầu bằng khoảng
           // trống.
           child: Semantics(
-            label: tr('Minh hoạ: một chỗ ngồi đang chờ bạn', 'Illustration: a seat waiting for you'),
+            label: tr(
+              'Minh hoạ: một chỗ ngồi đang chờ bạn',
+              'Illustration: a seat waiting for you',
+            ),
             image: true,
             child: const SizedBox.expand(),
           ),
@@ -248,9 +251,7 @@ class _HeroScenePainter extends CustomPainter {
     canvas.drawCircle(
       theme.sunCenter,
       theme.sunRadius,
-      fill(theme.sun.withValues(
-        alpha: theme.hasLampShade ? 1 : 0.6,
-      )),
+      fill(theme.sun.withValues(alpha: theme.hasLampShade ? 1 : 0.6)),
     );
     for (final s in theme.stars) {
       canvas.drawCircle(

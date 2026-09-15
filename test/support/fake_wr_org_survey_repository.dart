@@ -13,8 +13,8 @@ class FakeWrOrgSurveyRepository implements WrOrgSurveyRepository {
     List<OrgSurveyBenchmark>? benchmark,
     this.failQuestions = false,
     this.failSubmit = false,
-  })  : questions = questions ?? defaultQuestions,
-        benchmark = benchmark ?? noBenchmark;
+  }) : questions = questions ?? defaultQuestions,
+       benchmark = benchmark ?? noBenchmark;
 
   List<OrgSurveyQuestion> questions;
   OrgSurveyResponse? latest;
@@ -65,11 +65,7 @@ class FakeWrOrgSurveyRepository implements WrOrgSurveyRepository {
       source: BenchmarkSource.none,
       sampleSize: 2,
     ),
-    OrgSurveyBenchmark(
-      area: null,
-      source: BenchmarkSource.none,
-      sampleSize: 2,
-    ),
+    OrgSurveyBenchmark(area: null, source: BenchmarkSource.none, sampleSize: 2),
   ];
 
   static const liveBenchmark = <OrgSurveyBenchmark>[

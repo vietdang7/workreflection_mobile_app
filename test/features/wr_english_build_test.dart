@@ -21,8 +21,8 @@ import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_home_screen.dart';
 
 Widget _wrap(Widget child) => ProviderScope(
-      child: MaterialApp(builder: wrTextScaleBuilder, home: child),
-    );
+  child: MaterialApp(builder: wrTextScaleBuilder, home: child),
+);
 
 void main() {
   // Mọi bài khác trong repo khoá chuỗi tiếng Việt. Quên trả về là hàng trăm
@@ -32,22 +32,23 @@ void main() {
   group('bật tiếng Anh thì chữ đổi thật', () {
     testWidgets('lưới check-in ở Home', (tester) async {
       wrSetLocale('en');
-      await tester.pumpWidget(_wrap(
-        Scaffold(
-          body: Column(
-            children: [
-              for (final o in kCheckinOptions) Text(o.label),
-            ],
+      await tester.pumpWidget(
+        _wrap(
+          Scaffold(
+            body: Column(
+              children: [for (final o in kCheckinOptions) Text(o.label)],
+            ),
           ),
         ),
-      ));
+      );
 
       expect(find.text('I feel\ntense'), findsOneWidget);
       expect(find.text('Tôi đang\ncăng thẳng'), findsNothing);
     });
 
-    testWidgets('màn Hôm nay dựng được và không còn chữ Việt ở câu chào',
-        (tester) async {
+    testWidgets('màn Hôm nay dựng được và không còn chữ Việt ở câu chào', (
+      tester,
+    ) async {
       wrSetLocale('en');
       await tester.pumpWidget(_wrap(const Scaffold(body: SizedBox())));
       // Chỉ cần biết hằng đã đi qua tr(); dựng cả màn cần nhiều provider giả.
@@ -61,11 +62,17 @@ void main() {
     // vẫn thấy chữ cũ cho tới khi khởi động lại app — và không test nào đọc
     // hằng đúng MỘT lần sẽ bắt được.
     test('đọc lần hai sau khi đổi ngôn ngữ phải ra chữ mới', () {
-      expect(kDetailPrompt, 'Viết ra bất cứ điều gì vừa xuất hiện trong đầu bạn lúc này.');
+      expect(
+        kDetailPrompt,
+        'Viết ra bất cứ điều gì vừa xuất hiện trong đầu bạn lúc này.',
+      );
       wrSetLocale('en');
       expect(kDetailPrompt, 'Write whatever just came to mind.');
       wrSetLocale('vi');
-      expect(kDetailPrompt, 'Viết ra bất cứ điều gì vừa xuất hiện trong đầu bạn lúc này.');
+      expect(
+        kDetailPrompt,
+        'Viết ra bất cứ điều gì vừa xuất hiện trong đầu bạn lúc này.',
+      );
     });
 
     test('danh sách hằng cũng đổi theo, không đông cứng ở lần đầu', () {
@@ -83,8 +90,10 @@ void main() {
     test('ScaPillarStatus', () {
       wrSetLocale('en');
       expect(ScaPillarStatus.developing.label, 'Supporting you well');
-      expect(ScaPillarStatus.needsAttention.inlineLabel,
-          'fine but with room to grow');
+      expect(
+        ScaPillarStatus.needsAttention.inlineLabel,
+        'fine but with room to grow',
+      );
     });
 
     test('SelfCheckPillar', () {
@@ -114,10 +123,16 @@ void main() {
         activityScore: 3.0,
       );
       final vi = scaTrendText(
-          pillar: SelfCheckPillar.s, score: 3.6, previous: res)!;
+        pillar: SelfCheckPillar.s,
+        score: 3.6,
+        previous: res,
+      )!;
       wrSetLocale('en');
       final en = scaTrendText(
-          pillar: SelfCheckPillar.s, score: 3.6, previous: res)!;
+        pillar: SelfCheckPillar.s,
+        score: 3.6,
+        previous: res,
+      )!;
 
       expect(vi.contains('20/07/2026'), isTrue);
       expect(en.contains('20/07/2026'), isTrue);

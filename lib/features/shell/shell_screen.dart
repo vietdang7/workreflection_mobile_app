@@ -80,7 +80,10 @@ class WrAskBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: tr('Trò chuyện với trợ lý phản chiếu', 'Chat with the reflection assistant'),
+      label: tr(
+        'Trò chuyện với trợ lý phản chiếu',
+        'Chat with the reflection assistant',
+      ),
       child: GestureDetector(
         key: const Key('wr_ask_bubble'),
         behavior: HitTestBehavior.opaque,
@@ -127,17 +130,13 @@ List<_TabDef> _buildTabs(AppLocalizations l10n) => [
   // Bốn icon của mockup: con mắt (quan sát) · bóng đèn (hiểu) · tia chớp
   // (hành động) · nhịp sóng (hành trình).
   _TabDef(icon: Icons.visibility_outlined, semanticsLabel: l10n.tabToday),
-  _TabDef(icon: Icons.lightbulb_outline,   semanticsLabel: l10n.tabUnderstand),
-  _TabDef(icon: Icons.bolt_outlined,       semanticsLabel: l10n.tabDevelop),
-  _TabDef(icon: Icons.show_chart,          semanticsLabel: l10n.tabJourney),
+  _TabDef(icon: Icons.lightbulb_outline, semanticsLabel: l10n.tabUnderstand),
+  _TabDef(icon: Icons.bolt_outlined, semanticsLabel: l10n.tabDevelop),
+  _TabDef(icon: Icons.show_chart, semanticsLabel: l10n.tabJourney),
 ];
 
 class WrTabBar extends StatelessWidget {
-  const WrTabBar({
-    super.key,
-    required this.currentIndex,
-    required this.onTap,
-  });
+  const WrTabBar({super.key, required this.currentIndex, required this.onTap});
 
   final int currentIndex;
   final ValueChanged<int> onTap;

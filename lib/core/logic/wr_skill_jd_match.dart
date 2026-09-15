@@ -144,7 +144,10 @@ class SkillJdMatch {
     ];
     if (names.isEmpty) return '';
     if (names.length == 1) return names.single;
-    return tr('${names.take(names.length - 1).join(', ')} và ${names.last}', '${names.take(names.length - 1).join(', ')} and ${names.last}');
+    return tr(
+      '${names.take(names.length - 1).join(', ')} và ${names.last}',
+      '${names.take(names.length - 1).join(', ')} and ${names.last}',
+    );
   }
 }
 

@@ -54,30 +54,30 @@ class _WrAppState extends ConsumerState<WrApp> {
     // ensureSeeded is also called after email signUp/signIn in auth_screen.dart;
     // this listener handles the OAuth case where the session arrives asynchronously
     // via a deep link and auth_screen.dart's _submit() path is not taken.
-    _authSub = Supabase.instance.client.auth.onAuthStateChange.listen(
-      (data) async {
-        // Đổi người (kể cả đăng xuất → null) thì xoá cache của người cũ NGAY,
-        // trước khi báo router chuyển màn. Làm sau sẽ trễ đúng một khung hình
-        // — vừa đủ để màn Home kịp vẽ tên tài khoản trước đó.
-        final newUserId = data.session?.user.id;
-        if (isUserSwitch(previous: _lastUserId, next: newUserId)) {
-          _lastUserId = newUserId;
-          resetUserScopedProviders(ref.invalidate);
-        }
+    _authSub = Supabase.instance.client.auth.onAuthStateChange.listen((
+      data,
+    ) async {
+      // Đổi người (kể cả đăng xuất → null) thì xoá cache của người cũ NGAY,
+      // trước khi báo router chuyển màn. Làm sau sẽ trễ đúng một khung hình
+      // — vừa đủ để màn Home kịp vẽ tên tài khoản trước đó.
+      final newUserId = data.session?.user.id;
+      if (isUserSwitch(previous: _lastUserId, next: newUserId)) {
+        _lastUserId = newUserId;
+        resetUserScopedProviders(ref.invalidate);
+      }
 
-        // Notify the router so redirect guard re-runs on every auth event
-        // (sign-in via Google OAuth deep-link, sign-out, token refresh, etc.).
-        ref.read(authChangeNotifierProvider).notify();
+      // Notify the router so redirect guard re-runs on every auth event
+      // (sign-in via Google OAuth deep-link, sign-out, token refresh, etc.).
+      ref.read(authChangeNotifierProvider).notify();
 
-        if (data.event == AuthChangeEvent.signedIn) {
-          try {
-            await ref.read(seedServiceProvider).ensureSeeded();
-          } catch (_) {
-            // Seeding is best-effort; do not crash the app.
-          }
+      if (data.event == AuthChangeEvent.signedIn) {
+        try {
+          await ref.read(seedServiceProvider).ensureSeeded();
+        } catch (_) {
+          // Seeding is best-effort; do not crash the app.
         }
-      },
-    );
+      }
+    });
   }
 
   @override

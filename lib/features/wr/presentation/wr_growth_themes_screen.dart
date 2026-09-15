@@ -51,7 +51,9 @@ class _WrGrowthThemesScreenState extends ConsumerState<WrGrowthThemesScreen> {
     if (userId == null) return;
     setState(() => _enrolling.add(themeId));
     try {
-      await ref.read(wrIntelligenceRepositoryProvider).enrollTheme(
+      await ref
+          .read(wrIntelligenceRepositoryProvider)
+          .enrollTheme(
             PracticeEnrollment(
               userId: userId,
               themeId: themeId,
@@ -63,7 +65,11 @@ class _WrGrowthThemesScreenState extends ConsumerState<WrGrowthThemesScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(tr('Không bắt đầu được. Thử lại.', 'Could not start. Try again.'))),
+          SnackBar(
+            content: Text(
+              tr('Không bắt đầu được. Thử lại.', 'Could not start. Try again.'),
+            ),
+          ),
         );
       }
     } finally {
@@ -77,7 +83,8 @@ class _WrGrowthThemesScreenState extends ConsumerState<WrGrowthThemesScreen> {
     final enrollments =
         ref.watch(practiceEnrollmentsProvider).valueOrNull ?? const [];
     final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
-    final entitlement = ref.watch(wrEntitlementProvider).valueOrNull ??
+    final entitlement =
+        ref.watch(wrEntitlementProvider).valueOrNull ??
         WrEntitlement(plan: WrPlan.free);
 
     // Chủ đề đã ngưng đề xuất không nằm trong danh sách mời — người đã ghi danh
@@ -93,10 +100,12 @@ class _WrGrowthThemesScreenState extends ConsumerState<WrGrowthThemesScreen> {
         if (enrolledIds.contains(t.themeId)) t.title,
     };
     final available = themes
-        .where((t) =>
-            !enrolledIds.contains(t.themeId) &&
-            !enrolledTitles.contains(t.title) &&
-            !t.isRetired)
+        .where(
+          (t) =>
+              !enrolledIds.contains(t.themeId) &&
+              !enrolledTitles.contains(t.title) &&
+              !t.isRetired,
+        )
         .toList();
     final activeCount = enrollments.where((e) => e.completedAt == null).length;
     final canEnroll = entitlement.canEnrollPracticeTheme(activeCount);
@@ -118,10 +127,16 @@ class _WrGrowthThemesScreenState extends ConsumerState<WrGrowthThemesScreen> {
             padding: const EdgeInsets.only(bottom: 20),
             child: WrParagraph(
               canEnroll
-                  ? tr('Bạn đang mở $activeCount/$quota chủ đề.', 'You have $activeCount/$quota themes open.')
-                  : tr('Bản miễn phí mở tối đa $quota chủ đề cùng lúc. '
-                      'Hoàn thành một chủ đề để mở chỗ mới.', 'The free version opens up to $quota themes at once. '
-                      'Finish one to make room.'),
+                  ? tr(
+                      'Bạn đang mở $activeCount/$quota chủ đề.',
+                      'You have $activeCount/$quota themes open.',
+                    )
+                  : tr(
+                      'Bản miễn phí mở tối đa $quota chủ đề cùng lúc. '
+                          'Hoàn thành một chủ đề để mở chỗ mới.',
+                      'The free version opens up to $quota themes at once. '
+                          'Finish one to make room.',
+                    ),
               key: const Key('wr_growth_themes_quota'),
               style: const TextStyle(
                 fontSize: 15.5,
@@ -150,7 +165,10 @@ class _WrGrowthThemesScreenState extends ConsumerState<WrGrowthThemesScreen> {
           Padding(
             padding: EdgeInsets.only(bottom: 26),
             child: Text(
-              tr('Bạn đã bắt đầu tất cả chủ đề hiện có.', 'You have started every theme available.'),
+              tr(
+                'Bạn đã bắt đầu tất cả chủ đề hiện có.',
+                'You have started every theme available.',
+              ),
               style: TextStyle(
                 fontSize: 15.5,
                 color: WrColors.muted,
@@ -162,13 +180,16 @@ class _WrGrowthThemesScreenState extends ConsumerState<WrGrowthThemesScreen> {
           Padding(
             padding: EdgeInsets.only(bottom: 26),
             child: WrParagraph(
-              tr('Chủ đề thực hành được chọn từ những tình huống bạn gặp lại nhiều '
-              'lần. Bạn nhìn lại thêm vài lần nữa, hoặc làm bộ tự đánh giá, rồi '
-              'WorkReflection sẽ chỉ ra chủ đề hợp với bạn. Trong lúc chờ, bạn '
-              'vẫn tự chọn được ở danh sách bên dưới.', 'Practice themes are drawn from the situations you meet again and '
-              'again. Look back a few more times, or take the self-check, and '
-              'WorkReflection will point out the theme that fits you. While '
-              'you wait, you can still pick from the list below.'),
+              tr(
+                'Chủ đề thực hành được chọn từ những tình huống bạn gặp lại nhiều '
+                    'lần. Bạn nhìn lại thêm vài lần nữa, hoặc làm bộ tự đánh giá, rồi '
+                    'WorkReflection sẽ chỉ ra chủ đề hợp với bạn. Trong lúc chờ, bạn '
+                    'vẫn tự chọn được ở danh sách bên dưới.',
+                'Practice themes are drawn from the situations you meet again and '
+                    'again. Look back a few more times, or take the self-check, and '
+                    'WorkReflection will point out the theme that fits you. While '
+                    'you wait, you can still pick from the list below.',
+              ),
               style: TextStyle(
                 fontSize: 15.5,
                 color: WrColors.muted,
@@ -182,7 +203,12 @@ class _WrGrowthThemesScreenState extends ConsumerState<WrGrowthThemesScreen> {
         if (rest.isNotEmpty) ...[
           WrActionLink(
             key: const Key('wr_growth_themes_show_all'),
-            label: _showAll ? tr('Thu gọn', 'Show less') : tr('Xem tất cả chủ đề (${rest.length})', 'See all themes (${rest.length})'),
+            label: _showAll
+                ? tr('Thu gọn', 'Show less')
+                : tr(
+                    'Xem tất cả chủ đề (${rest.length})',
+                    'See all themes (${rest.length})',
+                  ),
             onTap: () => setState(() => _showAll = !_showAll),
           ),
           const SizedBox(height: 20),
@@ -194,7 +220,7 @@ class _WrGrowthThemesScreenState extends ConsumerState<WrGrowthThemesScreen> {
         // Chiều thay vì có nút "Bắt đầu". Danh sách còn thu gọn thì Trà Chiều
         // vẫn hiện: nó là chương trình offline có thật, không phải một chủ đề
         // nữa để chọn, nên không bị giấu cùng thư viện.
-        ...(){
+        ...() {
           final rows = <Widget>[
             if (_showAll)
               for (final t in rest)
@@ -285,7 +311,9 @@ class _SuggestionCard extends StatelessWidget {
             width: double.infinity,
             child: TextButton(
               key: Key('wr_growth_theme_${theme.themeId}'),
-              onPressed: isEnrolling ? null : (canEnroll ? onEnroll : onPaywall),
+              onPressed: isEnrolling
+                  ? null
+                  : (canEnroll ? onEnroll : onPaywall),
               style: TextButton.styleFrom(
                 backgroundColor: WrColors.navy,
                 foregroundColor: WrColors.white,
@@ -304,7 +332,9 @@ class _SuggestionCard extends StatelessWidget {
                       ),
                     )
                   : Text(
-                      canEnroll ? tr('Bắt đầu', 'Start') : tr('Mở với Premium', 'Open with Premium'),
+                      canEnroll
+                          ? tr('Bắt đầu', 'Start')
+                          : tr('Mở với Premium', 'Open with Premium'),
                       style: const TextStyle(
                         fontSize: 15.5,
                         fontWeight: FontWeight.w600,
@@ -368,13 +398,16 @@ class _TraChieuRow extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             WrParagraph(
-              tr('Đưa trải nghiệm "Nhìn lại" bước ra đời thực. Không chỉ là một bàn '
-              'trà, đây là không gian để bạn mượn câu chuyện của những người đi '
-              'làm khác soi chiếu lại mình, và nhận ra bản thân không hề đơn độc '
-              'trong những trăn trở hiện tại.', 'Take the experience of looking back out into real life. This is more '
-              'than a table of tea; it is a space to borrow the stories of '
-              'other working people to see yourself, and to realise you are '
-              'not alone in what you are wrestling with.'),
+              tr(
+                'Đưa trải nghiệm "Nhìn lại" bước ra đời thực. Không chỉ là một bàn '
+                    'trà, đây là không gian để bạn mượn câu chuyện của những người đi '
+                    'làm khác soi chiếu lại mình, và nhận ra bản thân không hề đơn độc '
+                    'trong những trăn trở hiện tại.',
+                'Take the experience of looking back out into real life. This is more '
+                    'than a table of tea; it is a space to borrow the stories of '
+                    'other working people to see yourself, and to realise you are '
+                    'not alone in what you are wrestling with.',
+              ),
               style: TextStyle(
                 fontSize: 15.5,
                 color: WrColors.muted,

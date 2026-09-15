@@ -4,13 +4,23 @@ import 'package:workreflection_mobile/features/video_report/logic/narration_scri
 import 'package:workreflection_mobile/features/video_report/models/video_report_models.dart';
 
 CcReportFull _report({
-  double esi = 0, int? enps, SurveyType type = SurveyType.premium,
+  double esi = 0,
+  int? enps,
+  SurveyType type = SurveyType.premium,
 }) => CcReportFull(
-  id: 'r1', surveyId: 's1', userId: 'u1',
-  scoreTotal: 3.4, scoreStructure: 3.2, scoreCulture: 3.6, scoreActivity: 3.1,
-  scoreEsi: esi == 0 ? null : esi, scoreEnps: enps,
-  bottleneckLayer: SurveyLayer.activity, scoreLevel: ScoreLevel.warning,
-  subScores: const {}, selectedNarrativeVariants: null,
+  id: 'r1',
+  surveyId: 's1',
+  userId: 'u1',
+  scoreTotal: 3.4,
+  scoreStructure: 3.2,
+  scoreCulture: 3.6,
+  scoreActivity: 3.1,
+  scoreEsi: esi == 0 ? null : esi,
+  scoreEnps: enps,
+  bottleneckLayer: SurveyLayer.activity,
+  scoreLevel: ScoreLevel.warning,
+  subScores: const {},
+  selectedNarrativeVariants: null,
   createdAt: DateTime(2026, 7, 20),
 );
 
@@ -20,19 +30,29 @@ void main() {
   test('premium with esi+enps produces all 10 scenes in order', () {
     final scenes = builder.build(
       report: _report(esi: 3.5, enps: 20),
-      narratives: const [], locale: 'vi', surveyType: SurveyType.premium,
+      narratives: const [],
+      locale: 'vi',
+      surveyType: SurveyType.premium,
     );
     expect(scenes.map((s) => s.id).toList(), [
-      VideoSceneId.intro, VideoSceneId.overall, VideoSceneId.structure,
-      VideoSceneId.culture, VideoSceneId.activity, VideoSceneId.esi,
-      VideoSceneId.enps, VideoSceneId.bottleneck, VideoSceneId.recommendations,
+      VideoSceneId.intro,
+      VideoSceneId.overall,
+      VideoSceneId.structure,
+      VideoSceneId.culture,
+      VideoSceneId.activity,
+      VideoSceneId.esi,
+      VideoSceneId.enps,
+      VideoSceneId.bottleneck,
+      VideoSceneId.recommendations,
       VideoSceneId.closing,
     ]);
   });
 
   test('premium without esi/enps omits those two scenes', () {
     final scenes = builder.build(
-      report: _report(), narratives: const [], locale: 'vi',
+      report: _report(),
+      narratives: const [],
+      locale: 'vi',
       surveyType: SurveyType.premium,
     );
     expect(scenes.any((s) => s.id == VideoSceneId.esi), isFalse);
@@ -42,24 +62,36 @@ void main() {
 
   test('free report omits layer-detail scenes', () {
     final scenes = builder.build(
-      report: _report(type: SurveyType.free), narratives: const [], locale: 'vi', surveyType: SurveyType.free,
+      report: _report(type: SurveyType.free),
+      narratives: const [],
+      locale: 'vi',
+      surveyType: SurveyType.free,
     );
     expect(scenes.map((s) => s.id).toList(), [
-      VideoSceneId.intro, VideoSceneId.overall, VideoSceneId.bottleneck,
-      VideoSceneId.recommendations, VideoSceneId.closing,
+      VideoSceneId.intro,
+      VideoSceneId.overall,
+      VideoSceneId.bottleneck,
+      VideoSceneId.recommendations,
+      VideoSceneId.closing,
     ]);
   });
 
   test('every scene has non-empty text', () {
     final scenes = builder.build(
-      report: _report(esi: 3.5, enps: 20), narratives: const [], locale: 'vi', surveyType: SurveyType.premium,
+      report: _report(esi: 3.5, enps: 20),
+      narratives: const [],
+      locale: 'vi',
+      surveyType: SurveyType.premium,
     );
     expect(scenes.every((s) => s.text.trim().isNotEmpty), isTrue);
   });
 
   test('english locale produces English intro and overall text', () {
     final scenes = builder.build(
-      report: _report(), narratives: const [], locale: 'en', surveyType: SurveyType.premium,
+      report: _report(),
+      narratives: const [],
+      locale: 'en',
+      surveyType: SurveyType.premium,
     );
     final intro = scenes.firstWhere((s) => s.id == VideoSceneId.intro);
     final overall = scenes.firstWhere((s) => s.id == VideoSceneId.overall);
@@ -73,14 +105,22 @@ void main() {
   // chưa có tên — trong khi bản công bố quyền riêng tư hứa không bao giờ gửi hai
   // thứ đó đi. Test này để lần sau ai định "chào cho thân mật" thì gãy ở đây.
   test('câu mở đầu xưng hô chung, không gọi tên', () {
-    final vi = builder.build(
-      report: _report(), narratives: const [],
-      locale: 'vi', surveyType: SurveyType.premium,
-    ).firstWhere((s) => s.id == VideoSceneId.intro);
-    final en = builder.build(
-      report: _report(), narratives: const [],
-      locale: 'en', surveyType: SurveyType.premium,
-    ).firstWhere((s) => s.id == VideoSceneId.intro);
+    final vi = builder
+        .build(
+          report: _report(),
+          narratives: const [],
+          locale: 'vi',
+          surveyType: SurveyType.premium,
+        )
+        .firstWhere((s) => s.id == VideoSceneId.intro);
+    final en = builder
+        .build(
+          report: _report(),
+          narratives: const [],
+          locale: 'en',
+          surveyType: SurveyType.premium,
+        )
+        .firstWhere((s) => s.id == VideoSceneId.intro);
     expect(vi.text, contains('bạn'));
     expect(en.text, contains('there'));
   });
@@ -90,8 +130,10 @@ void main() {
     // vẫn biên dịch được, nên kiểm thêm bằng nội dung: không scene nào chứa một
     // chuỗi trông như tên riêng hay email đến từ hồ sơ.
     final scenes = builder.build(
-      report: _report(), narratives: const [],
-      locale: 'vi', surveyType: SurveyType.premium,
+      report: _report(),
+      narratives: const [],
+      locale: 'vi',
+      surveyType: SurveyType.premium,
     );
     for (final s in scenes) {
       expect(s.text, isNot(contains('@')), reason: 'lộ email: ${s.text}');

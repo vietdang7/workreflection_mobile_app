@@ -57,9 +57,15 @@ void main() {
         ('a2', SurveyLayer.activity, ScaleType.likert5),
       ]);
       final answers = {
-        's1': 1, 's2': 2, 's3': 3,
-        'c1': 1, 'c2': 2, 'c3': 3, 'c4': 4,
-        'a1': 1, 'a2': 3,
+        's1': 1,
+        's2': 2,
+        's3': 3,
+        'c1': 1,
+        'c2': 2,
+        'c3': 3,
+        'c4': 4,
+        'a1': 1,
+        'a2': 3,
       };
       final result = computeSurveyScores(answers: answers, questions: qs);
       expect(result.scoreTotal, 2.2);
@@ -199,86 +205,148 @@ void main() {
 
   group('computeSurveyScores — PREMIUM (ESI + eNPS)', () {
     List<CcQuestion> premiumQs() => makeQs([
-          ('s1', SurveyLayer.structure, ScaleType.likert5),
-          ('s2', SurveyLayer.structure, ScaleType.likert5),
-          ('c1', SurveyLayer.culture, ScaleType.likert5),
-          ('a1', SurveyLayer.activity, ScaleType.likert5),
-          ('e1', SurveyLayer.esi, ScaleType.esi5),
-          ('e2', SurveyLayer.esi, ScaleType.esi5),
-          ('n1', SurveyLayer.enps, ScaleType.enps10),
-          ('n2', SurveyLayer.enps, ScaleType.enps10),
-          ('n3', SurveyLayer.enps, ScaleType.enps10),
-        ]);
+      ('s1', SurveyLayer.structure, ScaleType.likert5),
+      ('s2', SurveyLayer.structure, ScaleType.likert5),
+      ('c1', SurveyLayer.culture, ScaleType.likert5),
+      ('a1', SurveyLayer.activity, ScaleType.likert5),
+      ('e1', SurveyLayer.esi, ScaleType.esi5),
+      ('e2', SurveyLayer.esi, ScaleType.esi5),
+      ('n1', SurveyLayer.enps, ScaleType.enps10),
+      ('n2', SurveyLayer.enps, ScaleType.enps10),
+      ('n3', SurveyLayer.enps, ScaleType.enps10),
+    ]);
 
     test('ESI average computed', () {
       final answers = {
         's1': 4, 's2': 4, 'c1': 4, 'a1': 4,
         'e1': 4, 'e2': 2, // ESI avg = 3.0
-        'n1': 9, 'n2': 8, 'n3': 5, // promoter=1, passive=1, detractor=1 → eNPS=0
+        'n1': 9,
+        'n2': 8,
+        'n3': 5, // promoter=1, passive=1, detractor=1 → eNPS=0
       };
-      final result = computeSurveyScores(answers: answers, questions: premiumQs());
+      final result = computeSurveyScores(
+        answers: answers,
+        questions: premiumQs(),
+      );
       expect(result.scoreEsi, 3.0);
     });
 
     test('ESI NOT included in scoreTotal', () {
       // S=4, C=4, A=4, ESI=1 → total still 4.0 (ESI ignored)
       final answers = {
-        's1': 4, 's2': 4, 'c1': 4, 'a1': 4,
-        'e1': 1, 'e2': 1,
-        'n1': 9, 'n2': 9, 'n3': 9,
+        's1': 4,
+        's2': 4,
+        'c1': 4,
+        'a1': 4,
+        'e1': 1,
+        'e2': 1,
+        'n1': 9,
+        'n2': 9,
+        'n3': 9,
       };
-      final result = computeSurveyScores(answers: answers, questions: premiumQs());
+      final result = computeSurveyScores(
+        answers: answers,
+        questions: premiumQs(),
+      );
       expect(result.scoreTotal, 4.0);
     });
 
     test('eNPS all promoters (>=9) → 100', () {
       final answers = {
-        's1': 4, 's2': 4, 'c1': 4, 'a1': 4,
-        'e1': 3, 'e2': 3,
-        'n1': 9, 'n2': 10, 'n3': 9,
+        's1': 4,
+        's2': 4,
+        'c1': 4,
+        'a1': 4,
+        'e1': 3,
+        'e2': 3,
+        'n1': 9,
+        'n2': 10,
+        'n3': 9,
       };
-      final result = computeSurveyScores(answers: answers, questions: premiumQs());
+      final result = computeSurveyScores(
+        answers: answers,
+        questions: premiumQs(),
+      );
       expect(result.scoreEnps, 100);
     });
 
     test('eNPS all detractors (<7) → -100', () {
       final answers = {
-        's1': 4, 's2': 4, 'c1': 4, 'a1': 4,
-        'e1': 3, 'e2': 3,
-        'n1': 6, 'n2': 3, 'n3': 0,
+        's1': 4,
+        's2': 4,
+        'c1': 4,
+        'a1': 4,
+        'e1': 3,
+        'e2': 3,
+        'n1': 6,
+        'n2': 3,
+        'n3': 0,
       };
-      final result = computeSurveyScores(answers: answers, questions: premiumQs());
+      final result = computeSurveyScores(
+        answers: answers,
+        questions: premiumQs(),
+      );
       expect(result.scoreEnps, -100);
     });
 
     test('eNPS passive only → 0', () {
       // passive: >=7 && <9
       final answers = {
-        's1': 4, 's2': 4, 'c1': 4, 'a1': 4,
-        'e1': 3, 'e2': 3,
-        'n1': 7, 'n2': 7, 'n3': 8,
+        's1': 4,
+        's2': 4,
+        'c1': 4,
+        'a1': 4,
+        'e1': 3,
+        'e2': 3,
+        'n1': 7,
+        'n2': 7,
+        'n3': 8,
       };
-      final result = computeSurveyScores(answers: answers, questions: premiumQs());
+      final result = computeSurveyScores(
+        answers: answers,
+        questions: premiumQs(),
+      );
       expect(result.scoreEnps, 0);
     });
 
-    test('eNPS rounding: 2 promoters, 1 detractor out of 3 → ((2-1)/3*100).round() = 33', () {
-      final answers = {
-        's1': 4, 's2': 4, 'c1': 4, 'a1': 4,
-        'e1': 3, 'e2': 3,
-        'n1': 10, 'n2': 10, 'n3': 6,
-      };
-      final result = computeSurveyScores(answers: answers, questions: premiumQs());
-      expect(result.scoreEnps, 33);
-    });
+    test(
+      'eNPS rounding: 2 promoters, 1 detractor out of 3 → ((2-1)/3*100).round() = 33',
+      () {
+        final answers = {
+          's1': 4,
+          's2': 4,
+          'c1': 4,
+          'a1': 4,
+          'e1': 3,
+          'e2': 3,
+          'n1': 10,
+          'n2': 10,
+          'n3': 6,
+        };
+        final result = computeSurveyScores(
+          answers: answers,
+          questions: premiumQs(),
+        );
+        expect(result.scoreEnps, 33);
+      },
+    );
 
     test('eNPS: 1 promoter, 2 detractors out of 3 → -33', () {
       final answers = {
-        's1': 4, 's2': 4, 'c1': 4, 'a1': 4,
-        'e1': 3, 'e2': 3,
-        'n1': 9, 'n2': 6, 'n3': 5,
+        's1': 4,
+        's2': 4,
+        'c1': 4,
+        'a1': 4,
+        'e1': 3,
+        'e2': 3,
+        'n1': 9,
+        'n2': 6,
+        'n3': 5,
       };
-      final result = computeSurveyScores(answers: answers, questions: premiumQs());
+      final result = computeSurveyScores(
+        answers: answers,
+        questions: premiumQs(),
+      );
       expect(result.scoreEnps, -33);
     });
   });
@@ -482,24 +550,44 @@ void main() {
       expect(result.scoreStructure, 4.0);
     });
 
-    test('M8: eNPS question with layer==ENPS counted regardless of scaleType', () {
-      final qs = [
-        CcQuestion(id: 'n1', layer: SurveyLayer.enps, scaleType: ScaleType.likert5, questionText: 'Q', questionOrder: 1, isActive: true),
-      ];
-      final answers = {'n1': 9}; // value >=9 → promoter
-      final result = computeSurveyScores(answers: answers, questions: qs);
-      // eNPS should be computed because layer==ENPS
-      expect(result.scoreEnps, 100);
-    });
+    test(
+      'M8: eNPS question with layer==ENPS counted regardless of scaleType',
+      () {
+        final qs = [
+          CcQuestion(
+            id: 'n1',
+            layer: SurveyLayer.enps,
+            scaleType: ScaleType.likert5,
+            questionText: 'Q',
+            questionOrder: 1,
+            isActive: true,
+          ),
+        ];
+        final answers = {'n1': 9}; // value >=9 → promoter
+        final result = computeSurveyScores(answers: answers, questions: qs);
+        // eNPS should be computed because layer==ENPS
+        expect(result.scoreEnps, 100);
+      },
+    );
 
-    test('M8: eNPS question with scaleType==enps10 counted regardless of layer', () {
-      final qs = [
-        CcQuestion(id: 'n1', layer: SurveyLayer.structure, scaleType: ScaleType.enps10, questionText: 'Q', questionOrder: 1, isActive: true),
-      ];
-      final answers = {'n1': 6}; // detractor
-      final result = computeSurveyScores(answers: answers, questions: qs);
-      expect(result.scoreEnps, -100);
-    });
+    test(
+      'M8: eNPS question with scaleType==enps10 counted regardless of layer',
+      () {
+        final qs = [
+          CcQuestion(
+            id: 'n1',
+            layer: SurveyLayer.structure,
+            scaleType: ScaleType.enps10,
+            questionText: 'Q',
+            questionOrder: 1,
+            isActive: true,
+          ),
+        ];
+        final answers = {'n1': 6}; // detractor
+        final result = computeSurveyScores(answers: answers, questions: qs);
+        expect(result.scoreEnps, -100);
+      },
+    );
 
     test('M8: all eNPS unanswered → scoreEnps null', () {
       final qs = makeQs([
@@ -515,13 +603,21 @@ void main() {
   group('computeSurveyScores — isPremium ESI', () {
     test('M17: premium with no ESI questions → scoreEsi=0.0 not null', () {
       final qs = makeQs([('s1', SurveyLayer.structure, ScaleType.likert5)]);
-      final result = computeSurveyScores(answers: {'s1': 4}, questions: qs, isPremium: true);
+      final result = computeSurveyScores(
+        answers: {'s1': 4},
+        questions: qs,
+        isPremium: true,
+      );
       expect(result.scoreEsi, 0.0);
     });
 
     test('M17: free with no ESI questions → scoreEsi null', () {
       final qs = makeQs([('s1', SurveyLayer.structure, ScaleType.likert5)]);
-      final result = computeSurveyScores(answers: {'s1': 4}, questions: qs, isPremium: false);
+      final result = computeSurveyScores(
+        answers: {'s1': 4},
+        questions: qs,
+        isPremium: false,
+      );
       expect(result.scoreEsi, isNull);
     });
   });

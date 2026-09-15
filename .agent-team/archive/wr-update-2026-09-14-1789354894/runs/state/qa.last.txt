@@ -1,0 +1,1 @@
+TEAM-STATUS: qa | WORKING | Ready: role, protocol, memory, and SPEC read; awaiting lead TASK before starting QA.

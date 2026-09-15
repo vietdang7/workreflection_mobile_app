@@ -66,7 +66,10 @@ void main() {
       expect(month.durationLabel, 'một tháng');
       expect(month.durationSuffix, 'tháng');
 
-      const halfYear = WrPremiumPricing(currentPrice: 299000, durationDays: 180);
+      const halfYear = WrPremiumPricing(
+        currentPrice: 299000,
+        durationDays: 180,
+      );
       expect(halfYear.durationLabel, '6 tháng');
       expect(halfYear.durationSuffix, '6 tháng');
     });
@@ -122,19 +125,22 @@ void main() {
       expect(p.discountPercent, 0);
     });
 
-    test('giá gốc thấp hơn hoặc bằng giá hiện tại thì không phải khuyến mãi', () {
-      final bang = WrPremiumPricing.fromJson({
-        'current_price': 499000,
-        'original_price': 499000,
-      });
-      final thap = WrPremiumPricing.fromJson({
-        'current_price': 499000,
-        'original_price': 399000,
-      });
+    test(
+      'giá gốc thấp hơn hoặc bằng giá hiện tại thì không phải khuyến mãi',
+      () {
+        final bang = WrPremiumPricing.fromJson({
+          'current_price': 499000,
+          'original_price': 499000,
+        });
+        final thap = WrPremiumPricing.fromJson({
+          'current_price': 499000,
+          'original_price': 399000,
+        });
 
-      expect(bang.hasDiscount, isFalse);
-      expect(thap.hasDiscount, isFalse);
-    });
+        expect(bang.hasDiscount, isFalse);
+        expect(thap.hasDiscount, isFalse);
+      },
+    );
 
     test('current_price null hoặc 0 rơi về giá mặc định của web', () {
       // Cột mặc định 0 bên web; một gói Premium 0đ gần như chắc chắn là dữ
@@ -195,8 +201,10 @@ void main() {
         kPremiumFallbackDurationDays,
       );
       expect(
-        WrPremiumPricing.fromJson({'current_price': 1, 'duration_days': 0})
-            .durationDays,
+        WrPremiumPricing.fromJson({
+          'current_price': 1,
+          'duration_days': 0,
+        }).durationDays,
         365,
       );
     });

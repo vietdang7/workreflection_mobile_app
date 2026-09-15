@@ -92,22 +92,22 @@ class WrRenewalNotice {
       '${date.month.toString().padLeft(2, '0')}/${date.year}';
 
   String get title => switch (kind) {
-        WrRenewalKind.willRenew => 'Gói tự động gia hạn ngày $dateLabel',
-        WrRenewalKind.willEnd => 'Gói hết hạn ngày $dateLabel',
-        WrRenewalKind.unknown => 'Kỳ hiện tại kết thúc ngày $dateLabel',
-      };
+    WrRenewalKind.willRenew => 'Gói tự động gia hạn ngày $dateLabel',
+    WrRenewalKind.willEnd => 'Gói hết hạn ngày $dateLabel',
+    WrRenewalKind.unknown => 'Kỳ hiện tại kết thúc ngày $dateLabel',
+  };
 
   String get body => switch (kind) {
-        WrRenewalKind.willRenew =>
-          'Apple sẽ trừ tiền kỳ tiếp vào ngày này. Không muốn gia hạn nữa thì '
-              'tắt trước ngày đó — bạn vẫn dùng hết kỳ đã trả tiền.',
-        WrRenewalKind.willEnd =>
-          'Bạn đã tắt tự động gia hạn. Sau ngày này tài khoản trở về bản miễn '
-              'phí, những gì bạn đã ghi vẫn còn nguyên.',
-        WrRenewalKind.unknown =>
-          'Nếu bạn chưa tắt tự động gia hạn thì Apple sẽ trừ tiền kỳ tiếp vào '
-              'ngày này. Mở phần quản lý gói để xem và đổi.',
-      };
+    WrRenewalKind.willRenew =>
+      'Apple sẽ trừ tiền kỳ tiếp vào ngày này. Không muốn gia hạn nữa thì '
+          'tắt trước ngày đó: bạn vẫn dùng hết kỳ đã trả tiền.',
+    WrRenewalKind.willEnd =>
+      'Bạn đã tắt tự động gia hạn. Sau ngày này tài khoản trở về bản miễn '
+          'phí, những gì bạn đã ghi vẫn còn nguyên.',
+    WrRenewalKind.unknown =>
+      'Nếu bạn chưa tắt tự động gia hạn thì Apple sẽ trừ tiền kỳ tiếp vào '
+          'ngày này. Mở phần quản lý gói để xem và đổi.',
+  };
 }
 
 /// Cửa sổ nhắc, tính bằng ngày trước lúc hết kỳ.
@@ -147,16 +147,13 @@ WrRenewalNotice? wrRenewalNotice(
 
   // Cửa sổ của vế "chưa biết" đi theo vế nguy hiểm hơn: nếu hoá ra người dùng
   // đã tắt gia hạn mà mình im tới ngày thứ 7 thì họ mất 7 ngày để xoay xở.
-  final window =
-      kind == WrRenewalKind.willRenew ? kRenewNoticeDays : kEndNoticeDays;
+  final window = kind == WrRenewalKind.willRenew
+      ? kRenewNoticeDays
+      : kEndNoticeDays;
 
   final daysLeft = expiresAt.difference(now).inMinutes / (60 * 24);
   final rounded = daysLeft.ceil();
   if (rounded > window) return null;
 
-  return WrRenewalNotice(
-    kind: kind,
-    date: expiresAt,
-    daysLeft: rounded,
-  );
+  return WrRenewalNotice(kind: kind, date: expiresAt, daysLeft: rounded);
 }

@@ -66,8 +66,8 @@ abstract class CoachingRepository {
   /// slot is an admin concern, not enforced client-side on either platform.
   Future<void> scheduleBooking({
     required String bookingId,
-    required String date,   // 'YYYY-MM-DD'
-    required String time,   // 'H:mm' e.g. '9:00'
+    required String date, // 'YYYY-MM-DD'
+    required String time, // 'H:mm' e.g. '9:00'
     String? notes,
   });
 
@@ -165,19 +165,25 @@ class SupabaseCoachingRepository implements CoachingRepository {
     final scheduledAt = '${date}T$time:00';
     final scheduledTime = '$time:00';
 
-    final response = await _client.from('cc_coaching_bookings').update({
-      'scheduled_date': date,
-      'scheduled_time': scheduledTime,
-      'scheduled_at': scheduledAt,
-      'status': 'scheduled',
-      'notes': notes?.trim().isEmpty == true ? null : notes?.trim(),
-    }).eq('id', bookingId).select('id');
+    final response = await _client
+        .from('cc_coaching_bookings')
+        .update({
+          'scheduled_date': date,
+          'scheduled_time': scheduledTime,
+          'scheduled_at': scheduledAt,
+          'status': 'scheduled',
+          'notes': notes?.trim().isEmpty == true ? null : notes?.trim(),
+        })
+        .eq('id', bookingId)
+        .select('id');
 
     // Defensive re-check: if no row was updated the booking no longer exists
     // (or the user doesn't own it). The web does not check this — this is a
     // DEVIATION that adds safety without altering the write path.
     if (response.isEmpty) {
-      throw StateError('scheduleBooking: booking $bookingId not found or already scheduled');
+      throw StateError(
+        'scheduleBooking: booking $bookingId not found or already scheduled',
+      );
     }
   }
 
@@ -214,36 +220,45 @@ class SupabaseCoachingRepository implements CoachingRepository {
       allRatings.add(rating);
       final text = r['review_text'] as String?;
       if (text != null && text.isNotEmpty) {
-        allReviews.add(CoachReview(
-          rating: rating,
-          reviewerName: (r['reviewer_name'] as String?) ?? tr('Khách hàng', 'Client'),
-          comment: text,
-        ));
+        allReviews.add(
+          CoachReview(
+            rating: rating,
+            reviewerName:
+                (r['reviewer_name'] as String?) ?? tr('Khách hàng', 'Client'),
+            comment: text,
+          ),
+        );
       }
     }
 
     // User reviews — fetch profile names if needed
     if (userRows.isNotEmpty) {
-      final userIds =
-          userRows.map((r) => r['user_id'] as String).toSet().toList();
+      final userIds = userRows
+          .map((r) => r['user_id'] as String)
+          .toSet()
+          .toList();
       final profileRows = await _client
           .from('cc_profiles')
           .select('id, full_name')
           .inFilter('id', userIds);
       final nameMap = <String, String>{
         for (final p in profileRows)
-          p['id'] as String: (p['full_name'] as String?) ?? tr('Khách hàng', 'Client'),
+          p['id'] as String:
+              (p['full_name'] as String?) ?? tr('Khách hàng', 'Client'),
       };
       for (final r in userRows) {
         final rating = (r['rating'] as num?) ?? 5;
         allRatings.add(rating);
         final comment = r['comment'] as String?;
         if (comment != null && comment.isNotEmpty) {
-          allReviews.add(CoachReview(
-            rating: rating,
-            reviewerName: nameMap[r['user_id'] as String] ?? tr('Khách hàng', 'Client'),
-            comment: comment,
-          ));
+          allReviews.add(
+            CoachReview(
+              rating: rating,
+              reviewerName:
+                  nameMap[r['user_id'] as String] ?? tr('Khách hàng', 'Client'),
+              comment: comment,
+            ),
+          );
         }
       }
     }
@@ -272,19 +287,23 @@ class SupabaseCoachingRepository implements CoachingRepository {
     final uid = _uid;
 
     // Step 1: Insert the order with a temporary order_code.
-    final orderRow = await _client.from('cc_orders').insert({
-      'order_code': 'TEMP',
-      'user_id': uid, // TEXT column — uid string works as-is
-      'product_type': 'coaching',
-      'product_id': pkg.id,
-      'original_amount': 0,
-      'final_amount': 0,
-      'currency': pkg.currency,
-      // Phải là 'pending'. RLS cc_orders_insert không cho client tự khai một
-      // đơn là 'paid' — chỉ complete_payment (SECURITY DEFINER) mới được đặt
-      // trạng thái đó, ở Step 3 ngay bên dưới.
-      'status': 'pending',
-    }).select('id').single();
+    final orderRow = await _client
+        .from('cc_orders')
+        .insert({
+          'order_code': 'TEMP',
+          'user_id': uid, // TEXT column — uid string works as-is
+          'product_type': 'coaching',
+          'product_id': pkg.id,
+          'original_amount': 0,
+          'final_amount': 0,
+          'currency': pkg.currency,
+          // Phải là 'pending'. RLS cc_orders_insert không cho client tự khai một
+          // đơn là 'paid' — chỉ complete_payment (SECURITY DEFINER) mới được đặt
+          // trạng thái đó, ở Step 3 ngay bên dưới.
+          'status': 'pending',
+        })
+        .select('id')
+        .single();
 
     final orderId = orderRow['id'] as String;
 
@@ -295,7 +314,8 @@ class SupabaseCoachingRepository implements CoachingRepository {
         'CNC${orderId.replaceAll('-', '').substring(0, 8).toUpperCase()}';
     await _client
         .from('cc_orders')
-        .update({'order_code': orderCode}).eq('id', orderId);
+        .update({'order_code': orderCode})
+        .eq('id', orderId);
 
     // Step 3: Call the SECURITY DEFINER RPC which creates N cc_coaching_bookings
     // rows (one per session_number). Mobile must NOT insert bookings directly.

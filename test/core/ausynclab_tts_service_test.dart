@@ -28,8 +28,8 @@ class _FakeClient extends http.BaseClient {
     final res = request.method == 'POST'
         ? postResponse
         : getResponses[_getIndex++ < getResponses.length
-            ? _getIndex - 1
-            : getResponses.length - 1];
+              ? _getIndex - 1
+              : getResponses.length - 1];
     return http.StreamedResponse(
       Stream.value(res.bodyBytes),
       res.statusCode,
@@ -39,18 +39,18 @@ class _FakeClient extends http.BaseClient {
 }
 
 http.Response _json(Object body, {int status = 200}) => http.Response.bytes(
-      utf8.encode(jsonEncode(body)),
-      status,
-      headers: {'content-type': 'application/json; charset=utf-8'},
-    );
+  utf8.encode(jsonEncode(body)),
+  status,
+  headers: {'content-type': 'application/json; charset=utf-8'},
+);
 
 AusynclabTtsService _service(_FakeClient client) => AusynclabTtsService(
-      client: client,
-      apiKey: 'k',
-      // Poll nhanh để test không phải chờ thật.
-      pollInterval: Duration.zero,
-      timeout: const Duration(milliseconds: 300),
-    );
+  client: client,
+  apiKey: 'k',
+  // Poll nhanh để test không phải chờ thật.
+  pollInterval: Duration.zero,
+  timeout: const Duration(milliseconds: 300),
+);
 
 void main() {
   test('POST rồi poll tới khi có audio_url', () async {
@@ -87,20 +87,21 @@ void main() {
     // Đây đúng là phản hồi thật của khoá khách gửi ngày 2026-07-29. Giấu nó sau
     // một câu chung chung là bắt người khác đi dò lại từ đầu.
     final client = _FakeClient(
-      postResponse: _json(
-        {'detail': 'A paid plan is required to use the AusyncLab API.'},
-        status: 403,
-      ),
+      postResponse: _json({
+        'detail': 'A paid plan is required to use the AusyncLab API.',
+      }, status: 403),
       getResponses: const [],
     );
 
     expect(
       () => _service(client).synthesize(text: 't', name: 'n'),
-      throwsA(isA<TtsException>().having(
-        (e) => e.message,
-        'message',
-        contains('A paid plan is required'),
-      )),
+      throwsA(
+        isA<TtsException>().having(
+          (e) => e.message,
+          'message',
+          contains('A paid plan is required'),
+        ),
+      ),
     );
   });
 

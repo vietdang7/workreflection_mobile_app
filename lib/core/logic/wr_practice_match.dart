@@ -69,7 +69,9 @@ List<({ScaDimension dim, String situationCode, int count})> _dimensionRanking(
     final cur = best[dim];
     // Hoà số lần thì giữ mã nhỏ hơn, để hai lần dựng cùng dữ liệu ra cùng câu
     // giải thích — thứ tự trong `recent` là theo thời gian, không ổn định.
-    if (cur == null || n > cur.$2 || (n == cur.$2 && code.compareTo(cur.$1) < 0)) {
+    if (cur == null ||
+        n > cur.$2 ||
+        (n == cur.$2 && code.compareTo(cur.$1) < 0)) {
       best[dim] = (code, n);
     }
   }
@@ -84,11 +86,7 @@ List<({ScaDimension dim, String situationCode, int count})> _dimensionRanking(
 
   return [
     for (final e in ranked)
-      (
-        dim: e.key,
-        situationCode: best[e.key]!.$1,
-        count: best[e.key]!.$2,
-      ),
+      (dim: e.key, situationCode: best[e.key]!.$1, count: best[e.key]!.$2),
   ];
 }
 
@@ -112,18 +110,27 @@ String? practiceSuggestionReason(
       if (text == null) return null;
       final n = suggestion.reasonCount;
       return n > 1
-          ? tr('Vì bạn đã gặp "$text" $n lần.', 'Because you have met "$text" $n times.')
+          ? tr(
+              'Vì bạn đã gặp "$text" $n lần.',
+              'Because you have met "$text" $n times.',
+            )
           : tr('Vì bạn đã gặp "$text".', 'Because you have met "$text".');
     case PracticeMatchKind.jobContext:
       // Khớp từ JD/CV đã đọc hoặc mô tả vai trò họ tự viết. Nói "công việc bạn
       // mô tả" chứ không nói "JD của bạn": người dùng có thể chỉ mới gõ vài
       // dòng chứ chưa tải tài liệu nào.
-      return tr('Vì công việc bạn mô tả nghiêng nhiều về phần này.', 'Because the job you describe leans heavily this way.');
+      return tr(
+        'Vì công việc bạn mô tả nghiêng nhiều về phần này.',
+        'Because the job you describe leans heavily this way.',
+      );
     case PracticeMatchKind.pillar:
       // Chưa có tình huống nào để chỉ ra — mới chỉ Self-Check chẳng hạn.
       return need == null
           ? null
-          : tr('Vì bạn đang tìm kiếm ${needSeekingLabel(need)}.', 'Because you are looking for ${needSeekingLabel(need)}.');
+          : tr(
+              'Vì bạn đang tìm kiếm ${needSeekingLabel(need)}.',
+              'Because you are looking for ${needSeekingLabel(need)}.',
+            );
     case PracticeMatchKind.fallback:
     case null:
       return null;

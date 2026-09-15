@@ -61,7 +61,8 @@ String get kTraChieuLabel => tr('Trà Chiều Nghề Nghiệp', 'Career Tea Time
 ///
 /// Đây là quy ước của chương trình, không phải dữ liệu từng buổi: mọi buổi đều
 /// cùng số người, cùng thời lượng, cùng một câu hỏi.
-String get kTraChieuFormatLabel => tr('10–12 người · 2 giờ chia sẻ', '10–12 people · 2 hours of sharing');
+String get kTraChieuFormatLabel =>
+    tr('10–12 người · 2 giờ chia sẻ', '10–12 people · 2 hours of sharing');
 
 /// Các giá trị `category` được coi là Trà Chiều.
 ///
@@ -124,16 +125,14 @@ List<WorkshopDetail> upcomingTraChieu(
   return workshops.where(isTraChieu).where((w) {
     final d = DateTime(w.date.year, w.date.month, w.date.day);
     return !d.isBefore(today);
-  }).toList()
-    ..sort((a, b) => a.date.compareTo(b.date));
+  }).toList()..sort((a, b) => a.date.compareTo(b.date));
 }
 
 /// Buổi gần nhất sắp diễn ra, hoặc null khi chưa có buổi nào được mở.
 WorkshopDetail? nextTraChieu(
   List<WorkshopDetail> workshops, {
   required DateTime now,
-}) =>
-    upcomingTraChieu(workshops, now: now).firstOrNull;
+}) => upcomingTraChieu(workshops, now: now).firstOrNull;
 
 /// Vị trí chèn mục Trà Chiều vào danh sách chủ đề thực hành.
 ///
@@ -174,13 +173,17 @@ String traChieuPriceLabel(WorkshopDetail workshop) {
 /// Buổi miễn phí không ghép tiền tố: "Giữ chỗ Miễn phí" là một câu không ai nói.
 String traChieuSeatLabel(WorkshopDetail workshop) => workshop.price == 0
     ? traChieuPriceLabel(workshop)
-    : tr('Giữ chỗ ${traChieuPriceLabel(workshop)}', 'Reserve a spot ${traChieuPriceLabel(workshop)}');
+    : tr(
+        'Giữ chỗ ${traChieuPriceLabel(workshop)}',
+        'Reserve a spot ${traChieuPriceLabel(workshop)}',
+      );
 
 /// Ngày giờ hiển thị: "T7 22/08, 15:30 – 17:30" — bỏ phần nào không có dữ liệu.
 String traChieuWhenLabel(WorkshopDetail workshop) {
   const weekdays = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
   final d = workshop.date;
-  final day = '${weekdays[d.weekday - 1]} '
+  final day =
+      '${weekdays[d.weekday - 1]} '
       '${d.day.toString().padLeft(2, '0')}/'
       '${d.month.toString().padLeft(2, '0')}';
 

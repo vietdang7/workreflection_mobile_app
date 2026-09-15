@@ -24,7 +24,8 @@ import '../survey_providers.dart';
 
 final _ttsPlaybackProvider =
     StateNotifierProvider.autoDispose<TtsPlaybackNotifier, TtsPlaybackState>(
-        (ref) => TtsPlaybackNotifier(ref));
+      (ref) => TtsPlaybackNotifier(ref),
+    );
 
 class TtsPlaybackState {
   const TtsPlaybackState({
@@ -45,7 +46,10 @@ class TtsPlaybackState {
   /// Active word index estimated from positionMs / durationMs * wordCount.
   int activeWordIndex(int wordCount) {
     if (durationMs <= 0 || wordCount == 0) return -1;
-    return ((positionMs / durationMs) * wordCount).floor().clamp(0, wordCount - 1);
+    return ((positionMs / durationMs) * wordCount).floor().clamp(
+      0,
+      wordCount - 1,
+    );
   }
 }
 
@@ -59,7 +63,11 @@ class TtsPlaybackNotifier extends StateNotifier<TtsPlaybackState> {
   late final AudioPlayer _player;
   StreamSubscription<Duration>? _posSub;
 
-  Future<void> toggle(String text, String language, {String? questionId}) async {
+  Future<void> toggle(
+    String text,
+    String language, {
+    String? questionId,
+  }) async {
     if (state.isPlaying) {
       await _player.pause();
       state = TtsPlaybackState(
@@ -73,7 +81,9 @@ class TtsPlaybackNotifier extends StateNotifier<TtsPlaybackState> {
     }
 
     // Resume only if same question.
-    if (state.audioUrl != null && !state.isLoading && state.questionId == questionId) {
+    if (state.audioUrl != null &&
+        !state.isLoading &&
+        state.questionId == questionId) {
       await _player.play();
       state = TtsPlaybackState(
         isPlaying: true,
@@ -146,12 +156,15 @@ class SttState {
   final bool isAvailable;
   final String transcript;
 
-  SttState copyWith({bool? isListening, bool? isAvailable, String? transcript}) =>
-      SttState(
-        isListening: isListening ?? this.isListening,
-        isAvailable: isAvailable ?? this.isAvailable,
-        transcript: transcript ?? this.transcript,
-      );
+  SttState copyWith({
+    bool? isListening,
+    bool? isAvailable,
+    String? transcript,
+  }) => SttState(
+    isListening: isListening ?? this.isListening,
+    isAvailable: isAvailable ?? this.isAvailable,
+    transcript: transcript ?? this.transcript,
+  );
 }
 
 class SttNotifier extends StateNotifier<SttState> {
@@ -188,7 +201,11 @@ class SttNotifier extends StateNotifier<SttState> {
         if (!mounted) return;
         state = state.copyWith(transcript: transcript);
         if (isFinal || transcript.isNotEmpty) {
-          final matched = matchVoiceAnswer(transcript, maxValue, locale: localeId);
+          final matched = matchVoiceAnswer(
+            transcript,
+            maxValue,
+            locale: localeId,
+          );
           if (matched != null) {
             _stopAll();
             onAnswer(matched);
@@ -223,8 +240,9 @@ class SttNotifier extends StateNotifier<SttState> {
   }
 }
 
-final _sttProvider =
-    StateNotifierProvider.autoDispose<SttNotifier, SttState>((ref) {
+final _sttProvider = StateNotifierProvider.autoDispose<SttNotifier, SttState>((
+  ref,
+) {
   return SttNotifier(ref.watch(sttServiceProvider));
 });
 
@@ -240,11 +258,12 @@ class SurveyQuestionsScreen extends ConsumerWidget {
     final typeAsync = ref.watch(surveyTypeProvider);
 
     return typeAsync.when(
-      loading: () => const Scaffold(
-        body: Center(child: CircularProgressIndicator()),
-      ),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (e, _) => Scaffold(
-        body: Center(child: Text(AppLocalizations.of(context)!.surveyProcessingError)),
+        body: Center(
+          child: Text(AppLocalizations.of(context)!.surveyProcessingError),
+        ),
       ),
       data: (type) => _QuestionsBody(surveyType: type),
     );
@@ -261,14 +280,21 @@ class _QuestionsBody extends ConsumerWidget {
     final optionsAsync = ref.watch(likertOptionsProvider);
 
     return questionsAsync.when(
-      loading: () => const Scaffold(
-          body: Center(child: CircularProgressIndicator())),
-      error: (e, _) => Scaffold(body: Center(child: Text(AppLocalizations.of(context)!.surveyProcessingError))),
+      loading: () =>
+          const Scaffold(body: Center(child: CircularProgressIndicator())),
+      error: (e, _) => Scaffold(
+        body: Center(
+          child: Text(AppLocalizations.of(context)!.surveyProcessingError),
+        ),
+      ),
       data: (questions) => optionsAsync.when(
-        loading: () => const Scaffold(
-            body: Center(child: CircularProgressIndicator())),
-        error: (e, _) =>
-            Scaffold(body: Center(child: Text(AppLocalizations.of(context)!.surveyProcessingError))),
+        loading: () =>
+            const Scaffold(body: Center(child: CircularProgressIndicator())),
+        error: (e, _) => Scaffold(
+          body: Center(
+            child: Text(AppLocalizations.of(context)!.surveyProcessingError),
+          ),
+        ),
         data: (options) => _QuestionView(
           questions: questions,
           options: options,
@@ -426,15 +452,13 @@ class _QuestionViewState extends ConsumerState<_QuestionView> {
                     if (question.scaleType == ScaleType.enps10)
                       _EnpsGrid(
                         currentAnswer: currentAnswer,
-                        onAnswer: (v) =>
-                            _onAnswer(safeIndex, question.id, v),
+                        onAnswer: (v) => _onAnswer(safeIndex, question.id, v),
                       )
                     else
                       _LikertPills(
                         options: scaleOptions,
                         currentAnswer: currentAnswer,
-                        onAnswer: (v) =>
-                            _onAnswer(safeIndex, question.id, v),
+                        onAnswer: (v) => _onAnswer(safeIndex, question.id, v),
                       ),
 
                     const SizedBox(height: 32),
@@ -445,8 +469,9 @@ class _QuestionViewState extends ConsumerState<_QuestionView> {
                         label: l10n.surveyCompleteCta,
                         onPressed: () {
                           ref
-                              .read(currentQuestionIndexProvider.notifier)
-                              .state = 0;
+                                  .read(currentQuestionIndexProvider.notifier)
+                                  .state =
+                              0;
                           context.pushReplacement('/survey/processing');
                         },
                         variant: WrPillVariant.coral,
@@ -479,7 +504,11 @@ class _QuestionViewState extends ConsumerState<_QuestionView> {
 // ---------------------------------------------------------------------------
 
 class _TtsButton extends ConsumerWidget {
-  const _TtsButton({required this.questionText, required this.language, required this.questionId});
+  const _TtsButton({
+    required this.questionText,
+    required this.language,
+    required this.questionId,
+  });
   final String questionText;
   final String language;
   final String questionId;
@@ -495,7 +524,9 @@ class _TtsButton extends ConsumerWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : Icon(
-              state.isPlaying ? Icons.pause_circle_outlined : Icons.volume_up_outlined,
+              state.isPlaying
+                  ? Icons.pause_circle_outlined
+                  : Icons.volume_up_outlined,
               color: state.isPlaying ? WrColors.coral : WrColors.navy,
             ),
       onPressed: () async {
@@ -538,7 +569,9 @@ class _MicButton extends ConsumerWidget {
     final isListening = sttState.isListening;
 
     return IconButton(
-      tooltip: isListening ? l10n.voiceInputStopListening : l10n.voiceInputTapToSpeak,
+      tooltip: isListening
+          ? l10n.voiceInputStopListening
+          : l10n.voiceInputTapToSpeak,
       icon: AnimatedSwitcher(
         duration: const Duration(milliseconds: 200),
         child: isListening
@@ -550,21 +583,23 @@ class _MicButton extends ConsumerWidget {
               ),
       ),
       onPressed: () {
-        ref.read(_sttProvider.notifier).toggle(
-          localeId: localeId,
-          maxValue: maxValue,
-          onAnswer: onAnswer,
-          onNoMatch: () {
-            if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(l10n.voiceInputNoMatch),
-                  duration: const Duration(seconds: 2),
-                ),
-              );
-            }
-          },
-        );
+        ref
+            .read(_sttProvider.notifier)
+            .toggle(
+              localeId: localeId,
+              maxValue: maxValue,
+              onAnswer: onAnswer,
+              onNoMatch: () {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(l10n.voiceInputNoMatch),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                }
+              },
+            );
       },
     );
   }
@@ -590,9 +625,10 @@ class _PulsingMicIconState extends State<_PulsingMicIcon>
       vsync: this,
       duration: const Duration(milliseconds: 800),
     )..repeat(reverse: true);
-    _scale = Tween<double>(begin: 0.85, end: 1.15).animate(
-      CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut),
-    );
+    _scale = Tween<double>(
+      begin: 0.85,
+      end: 1.15,
+    ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
   }
 
   @override

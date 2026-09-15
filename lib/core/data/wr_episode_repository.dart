@@ -140,8 +140,11 @@ class SupabaseWrEpisodeRepository implements WrEpisodeRepository {
 
   @override
   Future<ReflectionEpisode?> fetchEpisode(String episodeId) async {
-    final row =
-        await _client.from(_table).select().eq('id', episodeId).maybeSingle();
+    final row = await _client
+        .from(_table)
+        .select()
+        .eq('id', episodeId)
+        .maybeSingle();
     if (row == null) return null;
     return ReflectionEpisode.fromJson(row);
   }
@@ -163,8 +166,11 @@ class SupabaseWrEpisodeRepository implements WrEpisodeRepository {
 
   @override
   Future<ReflectionEpisode> openEpisode(ReflectionEpisode episode) async {
-    final row =
-        await _client.from(_table).insert(episode.toInsert()).select().single();
+    final row = await _client
+        .from(_table)
+        .insert(episode.toInsert())
+        .select()
+        .single();
     return ReflectionEpisode.fromJson(row);
   }
 
@@ -176,7 +182,8 @@ class SupabaseWrEpisodeRepository implements WrEpisodeRepository {
     WrSituation? situation,
   }) async {
     // Bước phản tư đầu tiên đưa Episode từ Captured sang Exploring.
-    final nextState = episode.state == ExperienceState.captured ||
+    final nextState =
+        episode.state == ExperienceState.captured ||
             episode.state == ExperienceState.reactivated
         ? ExperienceState.exploring
         : episode.state;

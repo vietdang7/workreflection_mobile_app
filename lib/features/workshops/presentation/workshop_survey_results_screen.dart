@@ -24,18 +24,14 @@ import '../../../l10n/app_localizations.dart';
 import '../workshops_providers.dart';
 
 class WorkshopSurveyResultsScreen extends ConsumerWidget {
-  const WorkshopSurveyResultsScreen({
-    super.key,
-    required this.workshopId,
-  });
+  const WorkshopSurveyResultsScreen({super.key, required this.workshopId});
 
   final String workshopId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final resultsAsync =
-        ref.watch(workshopSurveyResultsProvider(workshopId));
+    final resultsAsync = ref.watch(workshopSurveyResultsProvider(workshopId));
 
     return Scaffold(
       backgroundColor: WrColors.pageBg,
@@ -145,11 +141,7 @@ class _ResultsBody extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   for (final entry in _orderedLayers(results.layerScores)) ...[
-                    _LayerRow(
-                      layer: entry.key,
-                      score: entry.value,
-                      l10n: l10n,
-                    ),
+                    _LayerRow(layer: entry.key, score: entry.value, l10n: l10n),
                     if (entry.key !=
                         _orderedLayers(results.layerScores).last.key)
                       const Divider(height: 24),
@@ -167,14 +159,9 @@ class _ResultsBody extends StatelessWidget {
 
   /// Returns layer entries in canonical display order: SCA first, then ESI/eNPS.
   List<MapEntry<String, double>> _orderedLayers(
-      Map<String, double> layerScores) {
-    const order = [
-      'STRUCTURE',
-      'CULTURE',
-      'ACTIVITY',
-      'ESI',
-      'ENPS',
-    ];
+    Map<String, double> layerScores,
+  ) {
+    const order = ['STRUCTURE', 'CULTURE', 'ACTIVITY', 'ESI', 'ENPS'];
     final result = <MapEntry<String, double>>[];
     for (final key in order) {
       final val = layerScores[key];

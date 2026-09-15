@@ -96,8 +96,9 @@ void main() {
         container.invalidate(seenOnboardingProvider);
 
         // Re-read sau invalidate: phải trả về true
-        final afterInvalidate =
-            await container.read(seenOnboardingProvider.future);
+        final afterInvalidate = await container.read(
+          seenOnboardingProvider.future,
+        );
         expect(
           afterInvalidate,
           true,
@@ -120,8 +121,9 @@ void main() {
 
         // Invalidate để re-fetch
         container.invalidate(seenOnboardingProvider);
-        final seenOnboarding =
-            await container.read(seenOnboardingProvider.future);
+        final seenOnboarding = await container.read(
+          seenOnboardingProvider.future,
+        );
 
         // Router sẽ thấy:
         final redirect = computeRedirect(

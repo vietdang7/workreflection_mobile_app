@@ -94,10 +94,7 @@ void main() {
     });
 
     test('fromDb throws ArgumentError for unknown value', () {
-      expect(
-        () => ScaDimension.fromDb('B1'),
-        throwsA(isA<ArgumentError>()),
-      );
+      expect(() => ScaDimension.fromDb('B1'), throwsA(isA<ArgumentError>()));
     });
 
     test('roundtrip: fromDb(dbValue) returns original enum', () {
@@ -176,7 +173,8 @@ void main() {
       'reflection_question': 'Bạn có đang bận rộn hơn là có định hướng không?',
       'self_reflection': 'Điều gì khiến bạn tin rằng mình đang đi đúng hướng?',
       'aha_message': 'Mất phương hướng không phải là đứng yên.',
-      'practice_action': 'Viết ra 3 điều bạn muốn có trong sự nghiệp 3 năm tới.',
+      'practice_action':
+          'Viết ra 3 điều bạn muốn có trong sự nghiệp 3 năm tới.',
       'created_at': '2026-07-21T00:00:00.000Z',
     };
 
@@ -187,8 +185,14 @@ void main() {
       expect(story.scaDimension, ScaDimension.a1);
       expect(story.humanNeed, HumanNeed.thichNghi);
       expect(story.situation, 'Không biết mình đang đi đúng hướng không');
-      expect(story.emotionTags, containsAll(['hoang mang', 'nghi ngờ', 'mất phương hướng']));
-      expect(story.behaviorTags, containsAll(['tìm kiếm định hướng', 'đổi mục tiêu']));
+      expect(
+        story.emotionTags,
+        containsAll(['hoang mang', 'nghi ngờ', 'mất phương hướng']),
+      );
+      expect(
+        story.behaviorTags,
+        containsAll(['tìm kiếm định hướng', 'đổi mục tiêu']),
+      );
       expect(story.careerStages, isEmpty);
       expect(story.difficultyLevel, isNull);
       expect(story.storyContent, contains('Bạn vẫn hoàn thành công việc'));
@@ -265,7 +269,10 @@ void main() {
       expect(event.emotion, 'lo lắng');
       expect(event.behavior, 'tìm kiếm định hướng');
       expect(event.intensity, 3);
-      expect(event.reflectionText, 'Tôi cần suy nghĩ lại về mục tiêu của mình.');
+      expect(
+        event.reflectionText,
+        'Tôi cần suy nghĩ lại về mục tiêu của mình.',
+      );
       expect(event.careerStage, 'mid');
     });
 
@@ -307,7 +314,10 @@ void main() {
       expect(insert['emotion'], 'lo lắng');
       expect(insert['behavior'], 'tìm kiếm định hướng');
       expect(insert['intensity'], 3);
-      expect(insert['reflection_text'], 'Tôi cần suy nghĩ lại về mục tiêu của mình.');
+      expect(
+        insert['reflection_text'],
+        'Tôi cần suy nghĩ lại về mục tiêu của mình.',
+      );
       expect(insert['career_stage'], 'mid');
     });
 

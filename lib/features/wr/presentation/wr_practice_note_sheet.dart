@@ -113,9 +113,12 @@ class _PracticeNoteSheetState extends State<_PracticeNoteSheet> {
             ),
             const SizedBox(height: 14),
             WrParagraph(
-              tr('Có điều gì đáng nhớ khi bạn làm bước này không? '
-              'Không viết cũng không sao.', 'Anything worth remembering from this step? '
-              'Not writing is fine too.'),
+              tr(
+                'Có điều gì đáng nhớ khi bạn làm bước này không? '
+                    'Không viết cũng không sao.',
+                'Anything worth remembering from this step? '
+                    'Not writing is fine too.',
+              ),
               style: TextStyle(
                 fontSize: 15,
                 color: WrColors.muted,
@@ -126,7 +129,10 @@ class _PracticeNoteSheetState extends State<_PracticeNoteSheet> {
             WrVoiceField(
               fieldKey: const Key('wr_practice_note_field'),
               controller: _controller,
-              hintText: tr('Điều mình nhận ra khi thử…', 'What I noticed when I tried…'),
+              hintText: tr(
+                'Điều mình nhận ra khi thử…',
+                'What I noticed when I tried…',
+              ),
               minLines: 3,
               maxLines: 5,
               onChanged: () => setState(() {}),
@@ -142,11 +148,11 @@ class _PracticeNoteSheetState extends State<_PracticeNoteSheet> {
                 onTap: note.isEmpty
                     ? null
                     : () => Navigator.of(context).pop(
-                          PracticeNoteResult(
-                            action: PracticeNoteAction.saveWithNote,
-                            note: note,
-                          ),
+                        PracticeNoteResult(
+                          action: PracticeNoteAction.saveWithNote,
+                          note: note,
                         ),
+                      ),
                 child: Container(
                   padding: const EdgeInsets.symmetric(vertical: 15),
                   decoration: BoxDecoration(

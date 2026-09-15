@@ -33,9 +33,11 @@ void main() {
           'status': 'failed',
           'error_message': 'boom went the TTS',
         }),
-        throwsA(predicate(
-          (e) => e is Exception && e.toString().contains('boom went the TTS'),
-        )),
+        throwsA(
+          predicate(
+            (e) => e is Exception && e.toString().contains('boom went the TTS'),
+          ),
+        ),
       );
     });
 
@@ -44,18 +46,20 @@ void main() {
       expect(job, isNull);
     });
 
-    test('completed with subtitle_data null returns srt null, durationMs null',
-        () {
-      final job = interpretPollResponse({
-        'status': 'completed',
-        'audio_url': 'https://example.com/audio.mp3',
-        'subtitle_data': null,
-      });
+    test(
+      'completed with subtitle_data null returns srt null, durationMs null',
+      () {
+        final job = interpretPollResponse({
+          'status': 'completed',
+          'audio_url': 'https://example.com/audio.mp3',
+          'subtitle_data': null,
+        });
 
-      expect(job, isNotNull);
-      expect(job!.audioUrl, 'https://example.com/audio.mp3');
-      expect(job.srt, isNull);
-      expect(job.durationMs, isNull);
-    });
+        expect(job, isNotNull);
+        expect(job!.audioUrl, 'https://example.com/audio.mp3');
+        expect(job.srt, isNull);
+        expect(job.durationMs, isNull);
+      },
+    );
   });
 }

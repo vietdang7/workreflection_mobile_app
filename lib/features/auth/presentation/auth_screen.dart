@@ -112,15 +112,15 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     try {
       await ref.read(authRepositoryProvider).resetPassword(email);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.authForgotPasswordSuccess)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.authForgotPasswordSuccess)));
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.authForgotPasswordError)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.authForgotPasswordError)));
       }
     }
   }
@@ -135,9 +135,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     Widget? suffixIcon,
   }) {
     OutlineInputBorder border(Color color, double width) => OutlineInputBorder(
-          borderRadius: BorderRadius.circular(14),
-          borderSide: BorderSide(color: color, width: width),
-        );
+      borderRadius: BorderRadius.circular(14),
+      borderSide: BorderSide(color: color, width: width),
+    );
 
     return InputDecoration(
       labelText: label,
@@ -225,8 +225,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                                     ),
                                     validator: (v) =>
                                         (v == null || v.trim().isEmpty)
-                                            ? l10n.authValidatorName
-                                            : null,
+                                        ? l10n.authValidatorName
+                                        : null,
                                   ),
                                   const SizedBox(height: 14),
                                 ],
@@ -286,7 +286,8 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                                       return l10n.authValidatorPassword;
                                     }
                                     if (v.length < 6) {
-                                      return l10n.authValidatorPasswordMinLength;
+                                      return l10n
+                                          .authValidatorPasswordMinLength;
                                     }
                                     return null;
                                   },
@@ -297,7 +298,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                                   Align(
                                     alignment: Alignment.centerRight,
                                     child: TextButton(
-                                      key: const Key('auth_forgot_password_btn'),
+                                      key: const Key(
+                                        'auth_forgot_password_btn',
+                                      ),
                                       style: TextButton.styleFrom(
                                         padding: const EdgeInsets.symmetric(
                                           horizontal: 8,
@@ -329,8 +332,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                                       vertical: 10,
                                     ),
                                     decoration: BoxDecoration(
-                                      color: WrColors.destructive
-                                          .withValues(alpha: 0.08),
+                                      color: WrColors.destructive.withValues(
+                                        alpha: 0.08,
+                                      ),
                                       borderRadius: BorderRadius.circular(12),
                                     ),
                                     child: Row(
@@ -422,10 +426,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
 // ---------------------------------------------------------------------------
 
 class _ForgotPasswordDialog extends StatefulWidget {
-  const _ForgotPasswordDialog({
-    required this.onSubmit,
-    required this.onCancel,
-  });
+  const _ForgotPasswordDialog({required this.onSubmit, required this.onCancel});
 
   final void Function(String email) onSubmit;
   final VoidCallback onCancel;
@@ -463,9 +464,7 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
           decoration: InputDecoration(
             labelText: l10n.authEmailLabel,
             hintText: l10n.authForgotPasswordDialogHint,
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(12),
-            ),
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
           ),
           validator: (v) {
             if (v == null || v.trim().isEmpty) return l10n.authValidatorEmail;
@@ -477,10 +476,7 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: widget.onCancel,
-          child: Text(l10n.commonCancel),
-        ),
+        TextButton(onPressed: widget.onCancel, child: Text(l10n.commonCancel)),
         TextButton(
           key: const Key('auth_forgot_password_submit'),
           onPressed: _submit,

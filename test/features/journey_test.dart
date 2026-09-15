@@ -46,16 +46,15 @@ TimelineEvent _event(
   String title,
   String? description,
   DateTime occurredAt,
-) =>
-    TimelineEvent(
-      id: id,
-      userId: 'u1',
-      eventType: type,
-      title: title,
-      description: description,
-      occurredAt: occurredAt,
-      createdAt: occurredAt,
-    );
+) => TimelineEvent(
+  id: id,
+  userId: 'u1',
+  eventType: type,
+  title: title,
+  description: description,
+  occurredAt: occurredAt,
+  createdAt: occurredAt,
+);
 
 void main() {
   group('JourneyScreen widget', () {
@@ -86,8 +85,13 @@ void main() {
     testWidgets('renders timeline month eyebrow', (tester) async {
       final repo = FakeWrRepository();
       repo.seedTimelineEvents([
-        _event('e1', TimelineEventType.milestone, 'Insight đầu tiên',
-            'Tôi ngại nói thật vì lo bị đánh giá.', DateTime(2026, 6, 10)),
+        _event(
+          'e1',
+          TimelineEventType.milestone,
+          'Insight đầu tiên',
+          'Tôi ngại nói thật vì lo bị đánh giá.',
+          DateTime(2026, 6, 10),
+        ),
       ]);
       await _pumpLarge(tester, _wrap(const JourneyScreen(), repo));
 
@@ -95,11 +99,18 @@ void main() {
       expect(find.textContaining('THÁNG 6'), findsOneWidget);
     });
 
-    testWidgets('renders MILESTONE event with teal dot color key', (tester) async {
+    testWidgets('renders MILESTONE event with teal dot color key', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       repo.seedTimelineEvents([
-        _event('e1', TimelineEventType.milestone, 'Insight đầu tiên',
-            'Tôi ngại nói.', DateTime(2026, 6, 10)),
+        _event(
+          'e1',
+          TimelineEventType.milestone,
+          'Insight đầu tiên',
+          'Tôi ngại nói.',
+          DateTime(2026, 6, 10),
+        ),
       ]);
       await _pumpLarge(tester, _wrap(const JourneyScreen(), repo));
 
@@ -111,8 +122,13 @@ void main() {
     testWidgets('renders STORY event with coral dot color key', (tester) async {
       final repo = FakeWrRepository();
       repo.seedTimelineEvents([
-        _event('e2', TimelineEventType.story, 'Hoàn thành Story #3',
-            'Khi im lặng trở thành thói quen', DateTime(2026, 6, 15)),
+        _event(
+          'e2',
+          TimelineEventType.story,
+          'Hoàn thành Story #3',
+          'Khi im lặng trở thành thói quen',
+          DateTime(2026, 6, 15),
+        ),
       ]);
       await _pumpLarge(tester, _wrap(const JourneyScreen(), repo));
 
@@ -124,8 +140,13 @@ void main() {
     testWidgets('renders THEME event with navy dot color key', (tester) async {
       final repo = FakeWrRepository();
       repo.seedTimelineEvents([
-        _event('e3', TimelineEventType.theme, 'Voice Journey bắt đầu',
-            'Trọng tâm phát triển được xác định', DateTime(2026, 6, 20)),
+        _event(
+          'e3',
+          TimelineEventType.theme,
+          'Voice Journey bắt đầu',
+          'Trọng tâm phát triển được xác định',
+          DateTime(2026, 6, 20),
+        ),
       ]);
       await _pumpLarge(tester, _wrap(const JourneyScreen(), repo));
 
@@ -137,10 +158,20 @@ void main() {
     testWidgets('groups events by month', (tester) async {
       final repo = FakeWrRepository();
       repo.seedTimelineEvents([
-        _event('e1', TimelineEventType.milestone, 'Event June',
-            null, DateTime(2026, 6, 10)),
-        _event('e2', TimelineEventType.story, 'Event May',
-            null, DateTime(2026, 5, 15)),
+        _event(
+          'e1',
+          TimelineEventType.milestone,
+          'Event June',
+          null,
+          DateTime(2026, 6, 10),
+        ),
+        _event(
+          'e2',
+          TimelineEventType.story,
+          'Event May',
+          null,
+          DateTime(2026, 5, 15),
+        ),
       ]);
       await _pumpLarge(tester, _wrap(const JourneyScreen(), repo));
 

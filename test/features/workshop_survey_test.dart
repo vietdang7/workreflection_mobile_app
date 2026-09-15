@@ -47,25 +47,23 @@ CcQuestion _q({
   String id = 'q-1',
   String questionText = 'Câu hỏi 1',
   String? questionTextEn,
-}) =>
-    CcQuestion(
-      id: id,
-      layer: SurveyLayer.structure,
-      scaleType: ScaleType.likert5,
-      questionText: questionText,
-      questionTextEn: questionTextEn,
-      questionOrder: 1,
-      isActive: true,
-    );
+}) => CcQuestion(
+  id: id,
+  layer: SurveyLayer.structure,
+  scaleType: ScaleType.likert5,
+  questionText: questionText,
+  questionTextEn: questionTextEn,
+  questionOrder: 1,
+  isActive: true,
+);
 
 WorkshopSurveySet _surveySet({
   String questionSetId = 'qs-1',
   List<CcQuestion>? questions,
-}) =>
-    WorkshopSurveySet(
-      questionSetId: questionSetId,
-      questions: questions ?? [_q()],
-    );
+}) => WorkshopSurveySet(
+  questionSetId: questionSetId,
+  questions: questions ?? [_q()],
+);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -90,7 +88,8 @@ void main() {
 
     testWidgets('empty questions list shows wsSurveyNone', (tester) async {
       repo.seedSurveySet(
-          WorkshopSurveySet(questionSetId: 'qs-1', questions: []));
+        WorkshopSurveySet(questionSetId: 'qs-1', questions: []),
+      );
 
       await tester.pumpWidget(_wrap(repo));
       await tester.pumpAndSettle();
@@ -99,10 +98,14 @@ void main() {
     });
 
     testWidgets('questions render with their texts visible', (tester) async {
-      repo.seedSurveySet(_surveySet(questions: [
-        _q(id: 'q-1', questionText: 'Câu hỏi một'),
-        _q(id: 'q-2', questionText: 'Câu hỏi hai'),
-      ]));
+      repo.seedSurveySet(
+        _surveySet(
+          questions: [
+            _q(id: 'q-1', questionText: 'Câu hỏi một'),
+            _q(id: 'q-2', questionText: 'Câu hỏi hai'),
+          ],
+        ),
+      );
 
       await tester.pumpWidget(_wrap(repo));
       await tester.pumpAndSettle();
@@ -112,10 +115,14 @@ void main() {
     });
 
     testWidgets('submit disabled until all questions answered', (tester) async {
-      repo.seedSurveySet(_surveySet(questions: [
-        _q(id: 'q-1', questionText: 'Q1'),
-        _q(id: 'q-2', questionText: 'Q2'),
-      ]));
+      repo.seedSurveySet(
+        _surveySet(
+          questions: [
+            _q(id: 'q-1', questionText: 'Q1'),
+            _q(id: 'q-2', questionText: 'Q2'),
+          ],
+        ),
+      );
 
       await tester.pumpWidget(_wrap(repo));
       await tester.pumpAndSettle();
@@ -144,12 +151,17 @@ void main() {
       expect(repo.submitSurveyCalls, isNotEmpty);
     });
 
-    testWidgets('successful submit records answers and shows wsSurveyThanks',
-        (tester) async {
-      repo.seedSurveySet(_surveySet(questions: [
-        _q(id: 'q-1', questionText: 'Q1'),
-        _q(id: 'q-2', questionText: 'Q2'),
-      ]));
+    testWidgets('successful submit records answers and shows wsSurveyThanks', (
+      tester,
+    ) async {
+      repo.seedSurveySet(
+        _surveySet(
+          questions: [
+            _q(id: 'q-1', questionText: 'Q1'),
+            _q(id: 'q-2', questionText: 'Q2'),
+          ],
+        ),
+      );
 
       await tester.pumpWidget(_wrap(repo));
       await tester.pumpAndSettle();
@@ -166,14 +178,15 @@ void main() {
       expect(repo.submitSurveyCalls, hasLength(1));
       expect(repo.submitSurveyCalls.first['workshopId'], 'ws-1');
       expect(repo.submitSurveyCalls.first['questionSetId'], 'qs-1');
-      expect(repo.submitSurveyCalls.first['answers'],
-          {'q-1': 4, 'q-2': 2});
+      expect(repo.submitSurveyCalls.first['answers'], {'q-1': 4, 'q-2': 2});
 
       expect(find.byKey(const Key('ws_survey_thanks')), findsOneWidget);
       expect(find.text('Cảm ơn bạn đã đánh giá!'), findsOneWidget);
     });
 
-    testWidgets('double-tap guard — submit called exactly once', (tester) async {
+    testWidgets('double-tap guard — submit called exactly once', (
+      tester,
+    ) async {
       repo.seedSurveySet(_surveySet());
 
       await tester.pumpWidget(_wrap(repo));
@@ -194,8 +207,9 @@ void main() {
       expect(find.byType(WrPillButton), findsNothing);
     });
 
-    testWidgets('repo error shows wsSurveyError snackbar and can retry',
-        (tester) async {
+    testWidgets('repo error shows wsSurveyError snackbar and can retry', (
+      tester,
+    ) async {
       repo.seedSurveySet(_surveySet());
 
       await tester.pumpWidget(_wrap(repo));
@@ -214,8 +228,10 @@ void main() {
       await tester.pumpAndSettle();
 
       // After error: snackbar visible, submit calls empty, button still shown.
-      expect(find.text('Gửi đánh giá thất bại. Vui lòng thử lại.'),
-          findsOneWidget);
+      expect(
+        find.text('Gửi đánh giá thất bại. Vui lòng thử lại.'),
+        findsOneWidget,
+      );
       expect(repo.submitSurveyCalls, isEmpty);
 
       // Dismiss the snackbar (default 4s) so it doesn't block the button.
@@ -230,13 +246,17 @@ void main() {
     });
 
     testWidgets('VI locale shows questionText', (tester) async {
-      repo.seedSurveySet(_surveySet(questions: [
-        _q(
-          id: 'q-1',
-          questionText: 'Tiếng Việt',
-          questionTextEn: 'English text',
+      repo.seedSurveySet(
+        _surveySet(
+          questions: [
+            _q(
+              id: 'q-1',
+              questionText: 'Tiếng Việt',
+              questionTextEn: 'English text',
+            ),
+          ],
         ),
-      ]));
+      );
 
       await tester.pumpWidget(_wrap(repo, locale: 'vi'));
       await tester.pumpAndSettle();
@@ -245,14 +265,20 @@ void main() {
       expect(find.text('English text'), findsNothing);
     });
 
-    testWidgets('EN locale shows questionTextEn when available', (tester) async {
-      repo.seedSurveySet(_surveySet(questions: [
-        _q(
-          id: 'q-1',
-          questionText: 'Tiếng Việt',
-          questionTextEn: 'English text',
+    testWidgets('EN locale shows questionTextEn when available', (
+      tester,
+    ) async {
+      repo.seedSurveySet(
+        _surveySet(
+          questions: [
+            _q(
+              id: 'q-1',
+              questionText: 'Tiếng Việt',
+              questionTextEn: 'English text',
+            ),
+          ],
         ),
-      ]));
+      );
 
       await tester.pumpWidget(_wrap(repo, locale: 'en'));
       await tester.pumpAndSettle();

@@ -20,8 +20,8 @@ import 'package:workreflection_mobile/features/wr/ai_consent_providers.dart';
 /// Bản thân cổng chặn có bộ test riêng ở `test/features/wr_ai_consent_test.dart`
 /// — đừng kiểm nó gián tiếp qua các màn khác.
 Override grantedAiConsent() => wrAiConsentProvider.overrideWith(
-      (ref) async => WrAiConsent(
-        version: kWrAiDisclosureVersion,
-        grantedAt: DateTime(2026, 1, 1),
-      ),
-    );
+  (ref) async => WrAiConsent(
+    version: kWrAiDisclosureVersion,
+    grantedAt: DateTime(2026, 1, 1),
+  ),
+);

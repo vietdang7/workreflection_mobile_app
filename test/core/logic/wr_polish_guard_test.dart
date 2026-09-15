@@ -23,7 +23,8 @@ void main() {
       expect(
         inspectPolished(
           original: original,
-          polished: 'Trong 30 ngày qua bạn nhìn lại 21 lần, nhiều hơn 12 lần '
+          polished:
+              'Trong 30 ngày qua bạn nhìn lại 21 lần, nhiều hơn 12 lần '
               'của tháng trước. Điều gì khiến bạn quay lại đều hơn vậy?',
         ),
         isNull,
@@ -34,7 +35,8 @@ void main() {
       expect(
         inspectPolished(
           original: original,
-          polished: 'Bạn đã nhìn lại 20 lần trong 30 ngày qua, tăng so với 12 '
+          polished:
+              'Bạn đã nhìn lại 20 lần trong 30 ngày qua, tăng so với 12 '
               'lần của tháng trước. Điều gì khiến bạn quay lại đều hơn?',
         ),
         PolishRejection.numbersChanged,
@@ -79,15 +81,9 @@ void main() {
     });
 
     test('numberUnitPairs ghép số với đơn vị và sắp xếp', () {
-      expect(
-        numberUnitPairs('21 lần trong 30 ngày'),
-        ['21|lần', '30|ngày'],
-      );
+      expect(numberUnitPairs('21 lần trong 30 ngày'), ['21|lần', '30|ngày']);
       // Đảo chỗ ra cùng một danh sách — đó là điều làm nên khác biệt.
-      expect(
-        numberUnitPairs('30 ngày, 21 lần'),
-        ['21|lần', '30|ngày'],
-      );
+      expect(numberUnitPairs('30 ngày, 21 lần'), ['21|lần', '30|ngày']);
     });
 
     test('đổi dấu thập phân KHÔNG phải đổi số', () {
@@ -149,7 +145,8 @@ void main() {
       expect(
         inspectPolished(
           original: 'Bạn đã nhìn lại đều hơn.',
-          polished: 'Bạn đã nhìn lại đều hơn, và đó là một điều rất đáng ghi '
+          polished:
+              'Bạn đã nhìn lại đều hơn, và đó là một điều rất đáng ghi '
               'nhận trong quãng vừa rồi của bạn.',
         ),
         PolishRejection.lengthDrift,
@@ -188,12 +185,10 @@ void main() {
     });
 
     test('bản qua được cả ba rào thì ra bản đó', () {
-      const good = 'Trong 30 ngày qua bạn nhìn lại 21 lần, nhiều hơn 12 lần '
+      const good =
+          'Trong 30 ngày qua bạn nhìn lại 21 lần, nhiều hơn 12 lần '
           'của tháng trước. Điều gì khiến bạn quay lại đều hơn vậy?';
-      expect(
-        polishedOrOriginal(original: original, polished: good),
-        good,
-      );
+      expect(polishedOrOriginal(original: original, polished: good), good);
     });
   });
 

@@ -70,8 +70,9 @@ Widget _wrap(
     overrides: [
       wrRepositoryProvider.overrideWithValue(repo),
       avatarPickerServiceProvider.overrideWithValue(picker),
-      photoPermissionServiceProvider
-          .overrideWithValue(permission ?? _FakePermissionService()),
+      photoPermissionServiceProvider.overrideWithValue(
+        permission ?? _FakePermissionService(),
+      ),
     ],
     child: MaterialApp(
       builder: wrTextScaleBuilder,
@@ -90,14 +91,16 @@ Widget _wrap(
 
 FakeWrRepository _seedRepo({String? avatarUrl}) {
   final repo = FakeWrRepository();
-  repo.seedProfile(MobileProfile(
-    userId: 'u1',
-    displayName: 'Test User',
-    reminderEnabled: true,
-    language: 'vi',
-    createdAt: DateTime(2026, 1, 1),
-    updatedAt: DateTime(2026, 6, 1),
-  ));
+  repo.seedProfile(
+    MobileProfile(
+      userId: 'u1',
+      displayName: 'Test User',
+      reminderEnabled: true,
+      language: 'vi',
+      createdAt: DateTime(2026, 1, 1),
+      updatedAt: DateTime(2026, 6, 1),
+    ),
+  );
   repo.seedCcProfile({
     'full_name': 'Test User',
     'email': 'test@test.com',
@@ -158,8 +161,9 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      final url =
-          await container.read(avatarUploadProvider.notifier).pickAndUpload();
+      final url = await container
+          .read(avatarUploadProvider.notifier)
+          .pickAndUpload();
 
       expect(url, isNull);
       expect(picker.callCount, 0);
@@ -169,25 +173,27 @@ void main() {
       );
     });
 
-    test('pickAndUpload returns null when user cancels (picker returns null)',
-        () async {
-      final repo = _seedRepo();
-      final picker = _FakePickerService(result: null);
+    test(
+      'pickAndUpload returns null when user cancels (picker returns null)',
+      () async {
+        final repo = _seedRepo();
+        final picker = _FakePickerService(result: null);
 
-      final container = ProviderContainer(
-        overrides: [
-          wrRepositoryProvider.overrideWithValue(repo),
-          avatarPickerServiceProvider.overrideWithValue(picker),
-        ],
-      );
-      addTearDown(container.dispose);
+        final container = ProviderContainer(
+          overrides: [
+            wrRepositoryProvider.overrideWithValue(repo),
+            avatarPickerServiceProvider.overrideWithValue(picker),
+          ],
+        );
+        addTearDown(container.dispose);
 
-      final notifier = container.read(avatarUploadProvider.notifier);
-      final url = await notifier.pickAndUpload();
+        final notifier = container.read(avatarUploadProvider.notifier);
+        final url = await notifier.pickAndUpload();
 
-      expect(url, isNull);
-      expect(repo.uploadAvatarCalls, isEmpty);
-    });
+        expect(url, isNull);
+        expect(repo.uploadAvatarCalls, isEmpty);
+      },
+    );
   });
 
   group('ProfileEditScreen — avatar section', () {
@@ -236,8 +242,7 @@ void main() {
         tester.view.resetDevicePixelRatio();
       });
 
-      final repo =
-          _seedRepo(avatarUrl: 'https://example.com/avatar.jpg');
+      final repo = _seedRepo(avatarUrl: 'https://example.com/avatar.jpg');
       final picker = _FakePickerService(result: null);
 
       await tester.pumpWidget(_wrap(const ProfileEditScreen(), repo, picker));
@@ -295,17 +300,21 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('có cả dòng thiết lập lẫn vòng tròn ảnh bấm được',
-        (tester) async {
-      await pumpProfile(
-          tester, _seedRepo(), _FakePickerService(result: null));
+    testWidgets('có cả dòng thiết lập lẫn vòng tròn ảnh bấm được', (
+      tester,
+    ) async {
+      await pumpProfile(tester, _seedRepo(), _FakePickerService(result: null));
 
-      expect(find.byKey(const Key('profile_change_avatar_btn')), findsOneWidget);
+      expect(
+        find.byKey(const Key('profile_change_avatar_btn')),
+        findsOneWidget,
+      );
       expect(find.byKey(const Key('profile_avatar_tap')), findsOneWidget);
     });
 
-    testWidgets('từ chối quyền thì không mở bộ chọn, và mời mở Cài đặt',
-        (tester) async {
+    testWidgets('từ chối quyền thì không mở bộ chọn, và mời mở Cài đặt', (
+      tester,
+    ) async {
       final repo = _seedRepo();
       final picker = _FakePickerService(result: null);
       final permission = _FakePermissionService(granted: false);
@@ -330,15 +339,18 @@ void main() {
       expect(picker.callCount, 0);
       expect(repo.uploadAvatarCalls, isEmpty);
 
-      expect(find.text('Cần quyền vào kho ảnh thì mới chọn được ảnh đại diện.'),
-          findsOneWidget);
+      expect(
+        find.text('Cần quyền vào kho ảnh thì mới chọn được ảnh đại diện.'),
+        findsOneWidget,
+      );
       await tester.tap(find.text('Mở Cài đặt'));
       await tester.pumpAndSettle();
       expect(permission.openSettingsCount, 1);
     });
 
-    testWidgets('chạm dòng đổi ảnh thì mở bộ chọn và tải ảnh lên',
-        (tester) async {
+    testWidgets('chạm dòng đổi ảnh thì mở bộ chọn và tải ảnh lên', (
+      tester,
+    ) async {
       final repo = _seedRepo();
       final picker = _FakePickerService(
         result: XFile.fromData(

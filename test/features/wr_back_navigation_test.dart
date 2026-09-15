@@ -46,11 +46,26 @@ Widget _wrapDiscover(String initialLocation) {
         path: '/wr/discover',
         builder: (_, __) => const WrDiscoverScreen(),
       ),
-      GoRoute(path: '/home', builder: (_, __) => const Scaffold(body: Text('HOME_STUB'))),
-      GoRoute(path: '/wr/journey', builder: (_, __) => const Scaffold(body: Text('JOURNEY_STUB'))),
-      GoRoute(path: '/wr/growth', builder: (_, __) => const Scaffold(body: Text('GROWTH_STUB'))),
-      GoRoute(path: '/wr/self-check', builder: (_, __) => const Scaffold(body: Text('SELFCHECK'))),
-      GoRoute(path: '/wr/paywall', builder: (_, __) => const Scaffold(body: Text('PAYWALL'))),
+      GoRoute(
+        path: '/home',
+        builder: (_, __) => const Scaffold(body: Text('HOME_STUB')),
+      ),
+      GoRoute(
+        path: '/wr/journey',
+        builder: (_, __) => const Scaffold(body: Text('JOURNEY_STUB')),
+      ),
+      GoRoute(
+        path: '/wr/growth',
+        builder: (_, __) => const Scaffold(body: Text('GROWTH_STUB')),
+      ),
+      GoRoute(
+        path: '/wr/self-check',
+        builder: (_, __) => const Scaffold(body: Text('SELFCHECK')),
+      ),
+      GoRoute(
+        path: '/wr/paywall',
+        builder: (_, __) => const Scaffold(body: Text('PAYWALL')),
+      ),
     ],
   );
   return ProviderScope(
@@ -60,7 +75,9 @@ Widget _wrapDiscover(String initialLocation) {
       currentUserIdProvider.overrideWithValue('u1'),
     ],
     child: MaterialApp.router(
-      builder: wrTextScaleBuilder,routerConfig: router),
+      builder: wrTextScaleBuilder,
+      routerConfig: router,
+    ),
   );
 }
 
@@ -70,16 +87,31 @@ Widget _wrapGrowth(String initialLocation) {
   final router = GoRouter(
     initialLocation: initialLocation,
     routes: [
+      GoRoute(path: '/wr/growth', builder: (_, __) => const WrGrowthScreen()),
       GoRoute(
-        path: '/wr/growth',
-        builder: (_, __) => const WrGrowthScreen(),
+        path: '/home',
+        builder: (_, __) => const Scaffold(body: Text('HOME_STUB')),
       ),
-      GoRoute(path: '/home', builder: (_, __) => const Scaffold(body: Text('HOME_STUB'))),
-      GoRoute(path: '/wr/discover', builder: (_, __) => const Scaffold(body: Text('DISCOVER_STUB'))),
-      GoRoute(path: '/wr/journey', builder: (_, __) => const Scaffold(body: Text('JOURNEY_STUB'))),
-      GoRoute(path: '/wr/self-check', builder: (_, __) => const Scaffold(body: Text('SELFCHECK'))),
-      GoRoute(path: '/wr/paywall', builder: (_, __) => const Scaffold(body: Text('PAYWALL'))),
-      GoRoute(path: '/wr/story', builder: (_, __) => const Scaffold(body: Text('STORY'))),
+      GoRoute(
+        path: '/wr/discover',
+        builder: (_, __) => const Scaffold(body: Text('DISCOVER_STUB')),
+      ),
+      GoRoute(
+        path: '/wr/journey',
+        builder: (_, __) => const Scaffold(body: Text('JOURNEY_STUB')),
+      ),
+      GoRoute(
+        path: '/wr/self-check',
+        builder: (_, __) => const Scaffold(body: Text('SELFCHECK')),
+      ),
+      GoRoute(
+        path: '/wr/paywall',
+        builder: (_, __) => const Scaffold(body: Text('PAYWALL')),
+      ),
+      GoRoute(
+        path: '/wr/story',
+        builder: (_, __) => const Scaffold(body: Text('STORY')),
+      ),
     ],
   );
   return ProviderScope(
@@ -89,7 +121,9 @@ Widget _wrapGrowth(String initialLocation) {
       currentUserIdProvider.overrideWithValue('u1'),
     ],
     child: MaterialApp.router(
-      builder: wrTextScaleBuilder,routerConfig: router),
+      builder: wrTextScaleBuilder,
+      routerConfig: router,
+    ),
   );
 }
 
@@ -99,16 +133,31 @@ Widget _wrapJourney(String initialLocation) {
   final router = GoRouter(
     initialLocation: initialLocation,
     routes: [
+      GoRoute(path: '/wr/journey', builder: (_, __) => const WrJourneyScreen()),
       GoRoute(
-        path: '/wr/journey',
-        builder: (_, __) => const WrJourneyScreen(),
+        path: '/home',
+        builder: (_, __) => const Scaffold(body: Text('HOME_STUB')),
       ),
-      GoRoute(path: '/home', builder: (_, __) => const Scaffold(body: Text('HOME_STUB'))),
-      GoRoute(path: '/wr/discover', builder: (_, __) => const Scaffold(body: Text('DISCOVER_STUB'))),
-      GoRoute(path: '/wr/growth', builder: (_, __) => const Scaffold(body: Text('GROWTH_STUB'))),
-      GoRoute(path: '/wr/self-check', builder: (_, __) => const Scaffold(body: Text('SELFCHECK'))),
-      GoRoute(path: '/wr/paywall', builder: (_, __) => const Scaffold(body: Text('PAYWALL'))),
-      GoRoute(path: '/wr/story', builder: (_, __) => const Scaffold(body: Text('STORY'))),
+      GoRoute(
+        path: '/wr/discover',
+        builder: (_, __) => const Scaffold(body: Text('DISCOVER_STUB')),
+      ),
+      GoRoute(
+        path: '/wr/growth',
+        builder: (_, __) => const Scaffold(body: Text('GROWTH_STUB')),
+      ),
+      GoRoute(
+        path: '/wr/self-check',
+        builder: (_, __) => const Scaffold(body: Text('SELFCHECK')),
+      ),
+      GoRoute(
+        path: '/wr/paywall',
+        builder: (_, __) => const Scaffold(body: Text('PAYWALL')),
+      ),
+      GoRoute(
+        path: '/wr/story',
+        builder: (_, __) => const Scaffold(body: Text('STORY')),
+      ),
     ],
   );
   return ProviderScope(
@@ -118,7 +167,9 @@ Widget _wrapJourney(String initialLocation) {
       currentUserIdProvider.overrideWithValue('u1'),
     ],
     child: MaterialApp.router(
-      builder: wrTextScaleBuilder,routerConfig: router),
+      builder: wrTextScaleBuilder,
+      routerConfig: router,
+    ),
   );
 }
 
@@ -129,17 +180,35 @@ Widget _wrapHome(String initialLocation) {
   final router = GoRouter(
     initialLocation: initialLocation,
     routes: [
+      GoRoute(path: '/home', builder: (_, __) => const WrHomeScreen()),
       GoRoute(
-        path: '/home',
-        builder: (_, __) => const WrHomeScreen(),
+        path: '/wr/discover',
+        builder: (_, __) => const Scaffold(body: Text('DISCOVER_STUB')),
       ),
-      GoRoute(path: '/wr/discover', builder: (_, __) => const Scaffold(body: Text('DISCOVER_STUB'))),
-      GoRoute(path: '/wr/growth', builder: (_, __) => const Scaffold(body: Text('GROWTH_STUB'))),
-      GoRoute(path: '/wr/journey', builder: (_, __) => const Scaffold(body: Text('JOURNEY_STUB'))),
-      GoRoute(path: '/wr/situation', builder: (_, __) => const Scaffold(body: Text('SITUATION'))),
-      GoRoute(path: '/wr/story', builder: (_, __) => const Scaffold(body: Text('STORY'))),
-      GoRoute(path: '/wr/paywall', builder: (_, __) => const Scaffold(body: Text('PAYWALL'))),
-      GoRoute(path: '/wr/self-check', builder: (_, __) => const Scaffold(body: Text('SELFCHECK'))),
+      GoRoute(
+        path: '/wr/growth',
+        builder: (_, __) => const Scaffold(body: Text('GROWTH_STUB')),
+      ),
+      GoRoute(
+        path: '/wr/journey',
+        builder: (_, __) => const Scaffold(body: Text('JOURNEY_STUB')),
+      ),
+      GoRoute(
+        path: '/wr/situation',
+        builder: (_, __) => const Scaffold(body: Text('SITUATION')),
+      ),
+      GoRoute(
+        path: '/wr/story',
+        builder: (_, __) => const Scaffold(body: Text('STORY')),
+      ),
+      GoRoute(
+        path: '/wr/paywall',
+        builder: (_, __) => const Scaffold(body: Text('PAYWALL')),
+      ),
+      GoRoute(
+        path: '/wr/self-check',
+        builder: (_, __) => const Scaffold(body: Text('SELFCHECK')),
+      ),
     ],
   );
   return ProviderScope(
@@ -150,7 +219,9 @@ Widget _wrapHome(String initialLocation) {
       currentUserIdProvider.overrideWithValue('u1'),
     ],
     child: MaterialApp.router(
-      builder: wrTextScaleBuilder,routerConfig: router),
+      builder: wrTextScaleBuilder,
+      routerConfig: router,
+    ),
   );
 }
 
@@ -161,72 +232,51 @@ Widget _wrapHome(String initialLocation) {
 void main() {
   // ── Discover tab ────────────────────────────────────────────────────────────
   group('Discover tab — WrTabBackLink', () {
-    testWidgets(
-      '?from=journey → thấy "Quay lại"',
-      (tester) async {
-        await _pumpLarge(tester, _wrapDiscover('/wr/discover?from=journey'));
-        expect(find.text('Quay lại'), findsOneWidget);
-      },
-    );
+    testWidgets('?from=journey → thấy "Quay lại"', (tester) async {
+      await _pumpLarge(tester, _wrapDiscover('/wr/discover?from=journey'));
+      expect(find.text('Quay lại'), findsOneWidget);
+    });
 
-    testWidgets(
-      'không ?from → không thấy "Quay lại"',
-      (tester) async {
-        await _pumpLarge(tester, _wrapDiscover('/wr/discover'));
-        expect(find.text('Quay lại'), findsNothing);
-      },
-    );
+    testWidgets('không ?from → không thấy "Quay lại"', (tester) async {
+      await _pumpLarge(tester, _wrapDiscover('/wr/discover'));
+      expect(find.text('Quay lại'), findsNothing);
+    });
   });
 
   // ── Growth tab ──────────────────────────────────────────────────────────────
   group('Growth tab — WrTabBackLink', () {
-    testWidgets(
-      '?from=discover → thấy "Quay lại"',
-      (tester) async {
-        await _pumpLarge(tester, _wrapGrowth('/wr/growth?from=discover'));
-        expect(find.text('Quay lại'), findsOneWidget);
-      },
-    );
+    testWidgets('?from=discover → thấy "Quay lại"', (tester) async {
+      await _pumpLarge(tester, _wrapGrowth('/wr/growth?from=discover'));
+      expect(find.text('Quay lại'), findsOneWidget);
+    });
 
-    testWidgets(
-      'không ?from → không thấy "Quay lại"',
-      (tester) async {
-        await _pumpLarge(tester, _wrapGrowth('/wr/growth'));
-        expect(find.text('Quay lại'), findsNothing);
-      },
-    );
+    testWidgets('không ?from → không thấy "Quay lại"', (tester) async {
+      await _pumpLarge(tester, _wrapGrowth('/wr/growth'));
+      expect(find.text('Quay lại'), findsNothing);
+    });
   });
 
   // ── Journey tab ─────────────────────────────────────────────────────────────
   group('Journey tab — WrTabBackLink', () {
-    testWidgets(
-      '?from=discover → thấy "Quay lại"',
-      (tester) async {
-        await _pumpLarge(tester, _wrapJourney('/wr/journey?from=discover'));
-        expect(find.text('Quay lại'), findsOneWidget);
-      },
-    );
+    testWidgets('?from=discover → thấy "Quay lại"', (tester) async {
+      await _pumpLarge(tester, _wrapJourney('/wr/journey?from=discover'));
+      expect(find.text('Quay lại'), findsOneWidget);
+    });
 
-    testWidgets(
-      'không ?from → không thấy "Quay lại"',
-      (tester) async {
-        await _pumpLarge(tester, _wrapJourney('/wr/journey'));
-        expect(find.text('Quay lại'), findsNothing);
-      },
-    );
+    testWidgets('không ?from → không thấy "Quay lại"', (tester) async {
+      await _pumpLarge(tester, _wrapJourney('/wr/journey'));
+      expect(find.text('Quay lại'), findsNothing);
+    });
   });
 
   // ── Home tab ────────────────────────────────────────────────────────────────
   // Home không còn WrTabBackLink: sau khi tối giản, Home chỉ là lời mời và
   // không còn màn nào link chéo tới nó bằng ?from=.
   group('Home tab', () {
-    testWidgets(
-      'không hiện "Quay lại"',
-      (tester) async {
-        await _pumpLarge(tester, _wrapHome('/home'));
-        expect(find.text('Quay lại'), findsNothing);
-      },
-    );
+    testWidgets('không hiện "Quay lại"', (tester) async {
+      await _pumpLarge(tester, _wrapHome('/home'));
+      expect(find.text('Quay lại'), findsNothing);
+    });
   });
 
   // ── RT1: round-trip Journey → Discover → tap Quay lại → về Journey ─────────
@@ -267,11 +317,26 @@ void main() {
               path: '/wr/discover',
               builder: (_, __) => const WrDiscoverScreen(),
             ),
-            GoRoute(path: '/home', builder: (_, __) => const Scaffold(body: Text('HOME_STUB'))),
-            GoRoute(path: '/wr/growth', builder: (_, __) => const Scaffold(body: Text('GROWTH_STUB'))),
-            GoRoute(path: '/wr/self-check', builder: (_, __) => const Scaffold(body: Text('SELFCHECK'))),
-            GoRoute(path: '/wr/paywall', builder: (_, __) => const Scaffold(body: Text('PAYWALL'))),
-            GoRoute(path: '/wr/story', builder: (_, __) => const Scaffold(body: Text('STORY'))),
+            GoRoute(
+              path: '/home',
+              builder: (_, __) => const Scaffold(body: Text('HOME_STUB')),
+            ),
+            GoRoute(
+              path: '/wr/growth',
+              builder: (_, __) => const Scaffold(body: Text('GROWTH_STUB')),
+            ),
+            GoRoute(
+              path: '/wr/self-check',
+              builder: (_, __) => const Scaffold(body: Text('SELFCHECK')),
+            ),
+            GoRoute(
+              path: '/wr/paywall',
+              builder: (_, __) => const Scaffold(body: Text('PAYWALL')),
+            ),
+            GoRoute(
+              path: '/wr/story',
+              builder: (_, __) => const Scaffold(body: Text('STORY')),
+            ),
           ],
         );
         final app = ProviderScope(
@@ -281,7 +346,9 @@ void main() {
             currentUserIdProvider.overrideWithValue('u1'),
           ],
           child: MaterialApp.router(
-      builder: wrTextScaleBuilder,routerConfig: router),
+            builder: wrTextScaleBuilder,
+            routerConfig: router,
+          ),
         );
 
         await _pumpLarge(tester, app);
@@ -332,8 +399,9 @@ void main() {
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
 
-        await tester.pumpWidget(MaterialApp.router(
-      builder: wrTextScaleBuilder,routerConfig: router));
+        await tester.pumpWidget(
+          MaterialApp.router(builder: wrTextScaleBuilder, routerConfig: router),
+        );
         await tester.pumpAndSettle();
 
         // Navigate lên /wr/story bằng push
@@ -372,8 +440,9 @@ void main() {
         addTearDown(tester.view.resetPhysicalSize);
         addTearDown(tester.view.resetDevicePixelRatio);
 
-        await tester.pumpWidget(MaterialApp.router(
-      builder: wrTextScaleBuilder,routerConfig: router));
+        await tester.pumpWidget(
+          MaterialApp.router(builder: wrTextScaleBuilder, routerConfig: router),
+        );
         await tester.pumpAndSettle();
 
         expect(find.byIcon(Icons.arrow_back_ios_new), findsOneWidget);

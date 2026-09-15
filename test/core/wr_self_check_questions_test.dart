@@ -28,16 +28,28 @@ void main() {
       }
     });
 
-    test('no question text contains S1/S2/S3/Structure/Culture/Activity codes', () {
-      for (final q in kSelfCheckQuestions) {
-        expect(q.text, isNot(contains('Structure')),
-            reason: 'id=${q.id} must not contain "Structure"');
-        expect(q.text, isNot(contains('Culture')),
-            reason: 'id=${q.id} must not contain "Culture"');
-        expect(q.text, isNot(contains('Activity')),
-            reason: 'id=${q.id} must not contain "Activity"');
-      }
-    });
+    test(
+      'no question text contains S1/S2/S3/Structure/Culture/Activity codes',
+      () {
+        for (final q in kSelfCheckQuestions) {
+          expect(
+            q.text,
+            isNot(contains('Structure')),
+            reason: 'id=${q.id} must not contain "Structure"',
+          );
+          expect(
+            q.text,
+            isNot(contains('Culture')),
+            reason: 'id=${q.id} must not contain "Culture"',
+          );
+          expect(
+            q.text,
+            isNot(contains('Activity')),
+            reason: 'id=${q.id} must not contain "Activity"',
+          );
+        }
+      },
+    );
 
     test('pillar displayNames are user-friendly Vietnamese (no S/C/A)', () {
       expect(SelfCheckPillar.s.displayName, 'Sự rõ ràng');
@@ -85,8 +97,11 @@ void main() {
 
     test('cả 15 câu đúng từng ký tự so với SCA_QUESTIONS', () {
       for (final q in kSelfCheckQuestions) {
-        expect(q.text, goldenFromMockup[q.id],
-            reason: '${q.id} lệch khỏi bản gốc trong mockup của khách');
+        expect(
+          q.text,
+          goldenFromMockup[q.id],
+          reason: '${q.id} lệch khỏi bản gốc trong mockup của khách',
+        );
       }
     });
 
@@ -159,11 +174,7 @@ void main() {
 
     test('handles partial answers — only uses answered questions', () {
       // Only 3 of 5 S questions answered
-      final answers = {
-        'scq-01': 2,
-        'scq-02': 4,
-        'scq-03': 3,
-      };
+      final answers = {'scq-01': 2, 'scq-02': 4, 'scq-03': 3};
       final score = computePillarScore(SelfCheckPillar.s, answers);
       // average of 2,4,3 = 3.0
       expect(score, closeTo(3.0, 0.001));
@@ -181,9 +192,18 @@ void main() {
         answers['scq-${i.toString().padLeft(2, '0')}'] = 5; // A → 5.0
       }
 
-      expect(computePillarScore(SelfCheckPillar.s, answers), closeTo(3.0, 0.001));
-      expect(computePillarScore(SelfCheckPillar.c, answers), closeTo(4.0, 0.001));
-      expect(computePillarScore(SelfCheckPillar.a, answers), closeTo(5.0, 0.001));
+      expect(
+        computePillarScore(SelfCheckPillar.s, answers),
+        closeTo(3.0, 0.001),
+      );
+      expect(
+        computePillarScore(SelfCheckPillar.c, answers),
+        closeTo(4.0, 0.001),
+      );
+      expect(
+        computePillarScore(SelfCheckPillar.a, answers),
+        closeTo(5.0, 0.001),
+      );
     });
   });
 
@@ -231,6 +251,9 @@ void main() {
   group('scoreToPercent', () {
     test('score=1 → 0%', () => expect(scoreToPercent(1), closeTo(0, 0.001)));
     test('score=3 → 50%', () => expect(scoreToPercent(3), closeTo(50, 0.001)));
-    test('score=5 → 100%', () => expect(scoreToPercent(5), closeTo(100, 0.001)));
+    test(
+      'score=5 → 100%',
+      () => expect(scoreToPercent(5), closeTo(100, 0.001)),
+    );
   });
 }

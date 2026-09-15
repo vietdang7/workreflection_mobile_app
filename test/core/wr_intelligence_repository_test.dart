@@ -80,7 +80,10 @@ void main() {
         scaDimensionDb: 'S1',
       );
       expect(repo.recordSituationOccurrenceCalls, hasLength(1));
-      expect(repo.recordSituationOccurrenceCalls.first.situationCode, 'S1-sit-01');
+      expect(
+        repo.recordSituationOccurrenceCalls.first.situationCode,
+        'S1-sit-01',
+      );
     });
   });
 

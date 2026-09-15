@@ -8,7 +8,12 @@ void main() {
   });
 
   test('TimedScene exposes duration', () {
-    const s = TimedScene(id: VideoSceneId.intro, text: 't', startMs: 0, endMs: 3000);
+    const s = TimedScene(
+      id: VideoSceneId.intro,
+      text: 't',
+      startMs: 0,
+      endMs: 3000,
+    );
     expect(s.durationMs, 3000);
   });
 

@@ -114,14 +114,16 @@ class FakeWorkshopRepository implements WorkshopRepository {
     // Add a new registration.
     _regCounter++;
     final now = DateTime.now();
-    _registrations.add(WorkshopRegistration(
-      id: 'reg-$_regCounter',
-      workshopId: workshopId,
-      userId: 'fake-user',
-      status: 'registered',
-      attended: false,
-      createdAt: now,
-    ));
+    _registrations.add(
+      WorkshopRegistration(
+        id: 'reg-$_regCounter',
+        workshopId: workshopId,
+        userId: 'fake-user',
+        status: 'registered',
+        attended: false,
+        createdAt: now,
+      ),
+    );
 
     // Increment the seeded workshop's currentParticipants.
     final idx = _workshops.indexWhere((w) => w.id == workshopId);
@@ -207,10 +209,9 @@ class FakeWorkshopRepository implements WorkshopRepository {
   @override
   Future<List<WorkshopAttachment>> getAttachments(String workshopId) async {
     _maybeThrow();
-    final filtered = _attachments
-        .where((a) => a.workshopId == workshopId)
-        .toList()
-      ..sort((a, b) => (a.sortOrder).compareTo(b.sortOrder));
+    final filtered =
+        _attachments.where((a) => a.workshopId == workshopId).toList()
+          ..sort((a, b) => (a.sortOrder).compareTo(b.sortOrder));
     return List.unmodifiable(filtered);
   }
 
@@ -268,7 +269,9 @@ class FakeWorkshopRepository implements WorkshopRepository {
 
   @override
   Future<void> cancelRegistration(
-      String registrationId, String workshopId) async {
+    String registrationId,
+    String workshopId,
+  ) async {
     _maybeThrow();
     cancelRegistrationCalls.add((registrationId, workshopId));
 

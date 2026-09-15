@@ -136,8 +136,8 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
   /// lần check-in kế tiếp bị kéo ngược vào phiên cũ thay vì mở phiên mới.
   ReflectionEpisode? _liveEpisode(ReflectionEpisode? episode) =>
       (episode == null || episode.state == ExperienceState.integrated)
-          ? null
-          : episode;
+      ? null
+      : episode;
 
   /// Chạm một chip là đã trả lời — mở Episode nếu chưa có, ghi bước Notice, đi
   /// tiếp. [situation] null nghĩa là nhánh "Điều khác".
@@ -156,7 +156,8 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
       // (§9.1: Home chỉ có bốn ô cảm xúc, không có màn chọn khoảnh khắc).
       if (_liveEpisode(ref.read(episodeFlowProvider)) == null) {
         final mood = _mood;
-        final energy = ref.read(pendingEnergyProvider) ??
+        final energy =
+            ref.read(pendingEnergyProvider) ??
             ref.read(todayCheckinProvider).valueOrNull?.energy;
         if (energy == null || mood == null) {
           // Vào thẳng route mà không qua check-in — không đủ dữ kiện để mở
@@ -183,10 +184,15 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
     } catch (e, s) {
       logFlowError('pickSituation', e, s);
       if (mounted) {
-        setState(() => _error = flowErrorMessage(
-              tr('Không mở được phiên phản tư. Thử lại.', 'Could not open the reflection session. Try again.'),
-              e,
-            ));
+        setState(
+          () => _error = flowErrorMessage(
+            tr(
+              'Không mở được phiên phản tư. Thử lại.',
+              'Could not open the reflection session. Try again.',
+            ),
+            e,
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -299,7 +305,10 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
                 child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 6),
                   child: Text(
-                    tr('Xem tất cả, không chỉ theo cảm xúc', 'See everything, not just by feeling'),
+                    tr(
+                      'Xem tất cả, không chỉ theo cảm xúc',
+                      'See everything, not just by feeling',
+                    ),
                     style: TextStyle(fontSize: 13.5, color: WrColors.muted),
                   ),
                 ),

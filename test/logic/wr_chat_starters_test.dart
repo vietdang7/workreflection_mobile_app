@@ -9,17 +9,16 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:workreflection_mobile/core/logic/wr_chat_starters.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 
-WrSituation sit(String code, String text) => WrSituation(
-      code: code,
-      text: text,
-      scaDimension: ScaDimension.c3,
-      wave: 1,
-    );
+WrSituation sit(String code, String text) =>
+    WrSituation(code: code, text: text, scaDimension: ScaDimension.c3, wave: 1);
 
 final _situations = [
   sit('C3-01', 'Tôi biết có vấn đề nhưng không muốn nói'),
-  sit('C2-02', 'Cuộc họp kết thúc nhưng điều quan trọng nhất vẫn chưa được nói ra'),
-  sit('A1-06', 'Tôi đang phát triển hay chỉ đang bận?'),
+  sit(
+    'C2-02',
+    'Cuộc họp kết thúc nhưng điều quan trọng nhất vẫn chưa được nói ra',
+  ),
+  sit('A1-07', 'Tôi không còn thấy mình thuộc về nơi này'),
 ];
 
 void main() {
@@ -41,7 +40,8 @@ void main() {
     });
 
     test('câu không có đại từ thì giữ nguyên', () {
-      const s = 'Cuộc họp kết thúc nhưng điều quan trọng nhất vẫn chưa được nói ra';
+      const s =
+          'Cuộc họp kết thúc nhưng điều quan trọng nhất vẫn chưa được nói ra';
       expect(vietnameseFirstPerson(s), s);
     });
   });
@@ -56,18 +56,21 @@ void main() {
 
     test('tình huống chọn nhiều nhất lên đầu', () {
       final out = chatStarters(
-        recent: const ['A1-06', 'C3-01', 'C3-01', 'C3-01', 'A1-06'],
+        recent: const ['A1-07', 'C3-01', 'C3-01', 'C3-01', 'A1-07'],
         situations: _situations,
       );
 
       expect(out.first, 'Mình biết có vấn đề nhưng không muốn nói');
-      expect(out[1], 'Mình đang phát triển hay chỉ đang bận?');
+      expect(out[1], 'Mình không còn thấy mình thuộc về nơi này');
     });
 
     test('BÙ cho đủ ba ô, không thay thế hết', () {
       // Người mới có đúng một tình huống vẫn phải thấy đủ ba ô để bấm. Hiện mỗi
       // một ô làm màn hình trông như đang hỏng.
-      final out = chatStarters(recent: const ['C3-01'], situations: _situations);
+      final out = chatStarters(
+        recent: const ['C3-01'],
+        situations: _situations,
+      );
 
       expect(out.length, 3);
       expect(out.first, 'Mình biết có vấn đề nhưng không muốn nói');
@@ -78,33 +81,42 @@ void main() {
       // Ngưỡng đó chỉ dành cho phần hiển thị "Tình huống lặp lại", nơi màn hình
       // khẳng định một điều đang trở đi trở lại. Một gợi ý mở lời không khẳng
       // định gì cả.
-      final out = chatStarters(recent: const ['C3-01'], situations: _situations);
+      final out = chatStarters(
+        recent: const ['C3-01'],
+        situations: _situations,
+      );
       expect(out.first, contains('biết có vấn đề'));
     });
 
-    test('mã không tra được tiêu đề thì BỎ HẲN, không đưa mã thô ra màn hình', () {
-      // "C3-01" nằm trong danh sách cấm của system prompt, và người dùng cũng
-      // chẳng hiểu nó.
-      final out = chatStarters(
-        recent: const ['MÃ-KHÔNG-CÓ', 'MÃ-KHÔNG-CÓ', 'C3-01'],
-        situations: _situations,
-      );
+    test(
+      'mã không tra được tiêu đề thì BỎ HẲN, không đưa mã thô ra màn hình',
+      () {
+        // "C3-01" nằm trong danh sách cấm của system prompt, và người dùng cũng
+        // chẳng hiểu nó.
+        final out = chatStarters(
+          recent: const ['MÃ-KHÔNG-CÓ', 'MÃ-KHÔNG-CÓ', 'C3-01'],
+          situations: _situations,
+        );
 
-      expect(out.any((s) => s.contains('MÃ-KHÔNG-CÓ')), isFalse);
-      expect(out.first, 'Mình biết có vấn đề nhưng không muốn nói');
-    });
+        expect(out.any((s) => s.contains('MÃ-KHÔNG-CÓ')), isFalse);
+        expect(out.first, 'Mình biết có vấn đề nhưng không muốn nói');
+      },
+    );
 
     test('không lặp lại cùng một câu hai lần', () {
       final out = chatStarters(
         recent: const ['C3-01', 'C3-01'],
-        situations: [..._situations, sit('C3-99', 'Tôi biết có vấn đề nhưng không muốn nói')],
+        situations: [
+          ..._situations,
+          sit('C3-99', 'Tôi biết có vấn đề nhưng không muốn nói'),
+        ],
       );
       expect(out.toSet().length, out.length);
     });
 
     test('không bao giờ trả về quá số ô yêu cầu', () {
       final out = chatStarters(
-        recent: const ['C3-01', 'C2-02', 'A1-06'],
+        recent: const ['C3-01', 'C2-02', 'A1-07'],
         situations: _situations,
       );
       expect(out.length, kChatStarterCount);

@@ -8,11 +8,11 @@ import 'package:workreflection_mobile/core/models/wr_mood_content.dart';
 final _now = DateTime(2026, 7, 28);
 
 WrSituation _sit(String code, ScaDimension dim) => WrSituation(
-      code: code,
-      text: 'Tình huống $code',
-      scaDimension: dim,
-      wave: 1,
-    );
+  code: code,
+  text: 'Tình huống $code',
+  scaDimension: dim,
+  wave: 1,
+);
 
 /// [count] lần xuất hiện của [code] trong recentSituationIds.
 ///
@@ -24,14 +24,13 @@ GrowthOpportunity? _derive({
   required List<String> recent,
   required List<WrSituation> situations,
   String? roleText,
-}) =>
-    deriveGrowthOpportunity(
-      userId: 'u1',
-      recent: recent,
-      situations: situations,
-      roleText: roleText,
-      now: _now,
-    );
+}) => deriveGrowthOpportunity(
+  userId: 'u1',
+  recent: recent,
+  situations: situations,
+  roleText: roleText,
+  now: _now,
+);
 
 void main() {
   group('Im lặng khi chưa đủ căn cứ (§11.3)', () {
@@ -66,13 +65,16 @@ void main() {
       expect(_derive(recent: [..._pat('P-01', 9)], situations: sits), isNull);
     });
 
-    test('Pattern trỏ tới mã tình huống không có trong thư viện thì bỏ qua', () {
-      final result = _derive(
-        recent: [..._pat('KHONG-CO', 20)],
-        situations: [_sit('C1-sit-01', ScaDimension.c1)],
-      );
-      expect(result, isNull);
-    });
+    test(
+      'Pattern trỏ tới mã tình huống không có trong thư viện thì bỏ qua',
+      () {
+        final result = _derive(
+          recent: [..._pat('KHONG-CO', 20)],
+          situations: [_sit('C1-sit-01', ScaDimension.c1)],
+        );
+        expect(result, isNull);
+      },
+    );
   });
 
   group('Gợi ý khi trụ đã trội hẳn', () {
@@ -96,30 +98,38 @@ void main() {
 
     test('trụ S trội → nói về năng lực tự định vị', () {
       final sits = [_sit('S1-sit-01', ScaDimension.s1)];
-      final result =
-          _derive(recent: [..._pat('S1-sit-01', 5)], situations: sits);
+      final result = _derive(
+        recent: [..._pat('S1-sit-01', 5)],
+        situations: sits,
+      );
       expect(result!.suggestionText, contains('tự định vị'));
     });
 
     test('trụ A trội → nói về năng lực tự điều phối', () {
       final sits = [_sit('A3-sit-01', ScaDimension.a3)];
-      final result =
-          _derive(recent: [..._pat('A3-sit-01', 4)], situations: sits);
+      final result = _derive(
+        recent: [..._pat('A3-sit-01', 4)],
+        situations: sits,
+      );
       expect(result!.suggestionText, contains('tự điều phối'));
     });
 
     test('§11.1: câu gợi ý ở thể điều kiện, không phán chắc chắn', () {
       final sits = [_sit('S1-sit-01', ScaDimension.s1)];
-      final result =
-          _derive(recent: [..._pat('S1-sit-01', 5)], situations: sits)!;
+      final result = _derive(
+        recent: [..._pat('S1-sit-01', 5)],
+        situations: sits,
+      )!;
       expect(result.suggestionText, contains('Có vẻ'));
       expect(result.suggestionText, contains('có thể'));
     });
 
     test('§11.2: luôn kèm đúng câu ghi chú độ chính xác', () {
       final sits = [_sit('S1-sit-01', ScaDimension.s1)];
-      final result =
-          _derive(recent: [..._pat('S1-sit-01', 5)], situations: sits)!;
+      final result = _derive(
+        recent: [..._pat('S1-sit-01', 5)],
+        situations: sits,
+      )!;
       expect(result.confidenceNote, GrowthOpportunity.kConfidenceNote);
       expect(result.confidenceNote, isNotEmpty);
     });
@@ -167,11 +177,7 @@ void main() {
     });
 
     test('mô tả rỗng hoặc chỉ khoảng trắng thì không bịa thêm câu nào', () {
-      final blank = _derive(
-        recent: recent,
-        situations: sits,
-        roleText: '   ',
-      )!;
+      final blank = _derive(recent: recent, situations: sits, roleText: '   ')!;
       final none = _derive(recent: recent, situations: sits)!;
       expect(blank.suggestionText, none.suggestionText);
       expect(blank.suggestionText, isNot(contains('Đặt cạnh công việc')));

@@ -39,9 +39,9 @@ void main() {
       SharedPreferences.setMockInitialValues({'app_language': 'en'});
       final initialLocale = await readPersistedLocale();
 
-      final container = ProviderContainer(overrides: [
-        appLocaleProvider.overrideWith((ref) => initialLocale),
-      ]);
+      final container = ProviderContainer(
+        overrides: [appLocaleProvider.overrideWith((ref) => initialLocale)],
+      );
       addTearDown(container.dispose);
 
       expect(container.read(appLocaleProvider), 'en');

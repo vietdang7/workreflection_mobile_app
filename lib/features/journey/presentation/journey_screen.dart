@@ -78,7 +78,8 @@ class _StoryQuoteBlock extends ConsumerWidget {
     return insightAsync.when(
       loading: () => const _LoadingCard(),
       error: (e, _) => _ErrorCard(
-          onRetry: () => ref.invalidate(journeyLatestInsightProvider)),
+        onRetry: () => ref.invalidate(journeyLatestInsightProvider),
+      ),
       data: (insight) {
         final now = DateTime.now();
         return Column(
@@ -89,7 +90,10 @@ class _StoryQuoteBlock extends ConsumerWidget {
             WrParagraph(
               insight != null
                   ? '"${insight.content}"'
-                  : tr('"Hành trình của bạn đang được ghi nhớ..."', '"Your journey is being remembered..."'),
+                  : tr(
+                      '"Hành trình của bạn đang được ghi nhớ..."',
+                      '"Your journey is being remembered..."',
+                    ),
               style: WrTextStyles.insightQuote,
               textAlign: TextAlign.start,
             ),
@@ -126,7 +130,10 @@ class _TimelineSection extends ConsumerWidget {
           return Container(
             key: const Key('journey_timeline_empty'),
             child: Text(
-              tr('Chưa có sự kiện nào trong hành trình.', 'Nothing in your journey yet.'),
+              tr(
+                'Chưa có sự kiện nào trong hành trình.',
+                'Nothing in your journey yet.',
+              ),
               style: WrTextStyles.body,
             ),
           );
@@ -149,10 +156,7 @@ class _TimelineSection extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: sortedKeys.map((key) {
             final monthEvents = grouped[key]!;
-            return _MonthGroup(
-              month: key.$2,
-              events: monthEvents,
-            );
+            return _MonthGroup(month: key.$2, events: monthEvents);
           }).toList(),
         );
       },

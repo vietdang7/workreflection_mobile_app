@@ -83,19 +83,17 @@ class WrChatState {
 
 class WrChatController extends StateNotifier<WrChatState> {
   WrChatController(this._repo, this._userId, this._premiumOverride)
-      : super(const WrChatState()) {
+    : super(const WrChatState()) {
     load();
   }
 
   final WrChatRepository _repo;
   final String? _userId;
 
-  /// Công tắc Premium thử nghiệm, null khi chưa động vào.
+  /// Giá trị Premium tuỳ chọn cho các caller/test seam giữ tương thích.
   ///
-  /// Gửi kèm mỗi lượt để trợ lý trả lời theo đúng gói đang xem thử. Trước đây
-  /// chatbox là thứ DUY NHẤT trong app không đổi theo công tắc, nên bật Premium
-  /// lên xem thử thì mọi màn khác đổi còn trợ lý vẫn nói giọng gói miễn phí.
-  /// Máy chủ tự kiểm tra email nên gửi lên đây không mở được gì cho người khác.
+  /// Production [wrChatControllerProvider] cố ý truyền null: quyền thật phải
+  /// do máy chủ trả về, không do một cờ demo còn sót trong bộ nhớ máy.
   final bool? _premiumOverride;
 
   /// Mở cuộc gần nhất, hoặc một cuộc trống nếu chưa từng trò chuyện.
@@ -108,7 +106,10 @@ class WrChatController extends StateNotifier<WrChatState> {
     if (userId == null) {
       state = state.copyWith(
         loading: false,
-        error: tr('Cần đăng nhập để trò chuyện.', 'You need to be signed in to chat.'),
+        error: tr(
+          'Cần đăng nhập để trò chuyện.',
+          'You need to be signed in to chat.',
+        ),
       );
       return;
     }
@@ -161,7 +162,10 @@ class WrChatController extends StateNotifier<WrChatState> {
     } catch (_) {
       state = state.copyWith(
         loading: false,
-        error: tr('Chưa mở được cuộc trò chuyện này. Bạn thử lại nhé.', 'Could not open this conversation. Please try again.'),
+        error: tr(
+          'Chưa mở được cuộc trò chuyện này. Bạn thử lại nhé.',
+          'Could not open this conversation. Please try again.',
+        ),
       );
     }
   }
@@ -220,7 +224,10 @@ class WrChatController extends StateNotifier<WrChatState> {
       state = state.copyWith(
         messages: state.messages.where((m) => !m.pending).toList(),
         sending: false,
-        error: tr('Mình chưa trả lời được lúc này. Bạn thử gửi lại nhé.', 'I cannot answer right now. Please send it again.'),
+        error: tr(
+          'Mình chưa trả lời được lúc này. Bạn thử gửi lại nhé.',
+          'I cannot answer right now. Please send it again.',
+        ),
       );
     }
   }
@@ -247,7 +254,10 @@ class WrChatController extends StateNotifier<WrChatState> {
       state = state.copyWith(
         messages: previous,
         conversationId: id,
-        error: tr('Chưa xoá được cuộc trò chuyện. Bạn thử lại nhé.', 'Could not delete the conversation. Please try again.'),
+        error: tr(
+          'Chưa xoá được cuộc trò chuyện. Bạn thử lại nhé.',
+          'Could not delete the conversation. Please try again.',
+        ),
       );
     }
   }
@@ -262,16 +272,15 @@ class WrChatController extends StateNotifier<WrChatState> {
 
 final wrChatControllerProvider =
     StateNotifierProvider<WrChatController, WrChatState>((ref) {
-  // Chỉ đọc công tắc khi tài khoản này được phép bật, giống hệt điều kiện
-  // `wrEntitlementProvider` dùng — nếu không, một giá trị sót lại trong
-  // SharedPreferences sẽ đổi giọng trợ lý của người không được phép.
-  final canToggle = ref.watch(canTogglePremiumProvider);
-  return WrChatController(
-    ref.watch(wrChatRepositoryProvider),
-    ref.watch(currentUserIdProvider),
-    canToggle ? ref.watch(premiumOverrideProvider) : null,
-  );
-});
+      // Không đọc `premiumOverrideProvider` ở production. Nó vẫn tồn tại cho
+      // public/test injection và các đường tương thích, nhưng quyền thật của chat
+      // phải đến từ phản hồi máy chủ, giống entitlement chính.
+      return WrChatController(
+        ref.watch(wrChatRepositoryProvider),
+        ref.watch(currentUserIdProvider),
+        null,
+      );
+    });
 
 /// Danh sách cuộc trò chuyện cho màn lịch sử.
 ///
@@ -279,10 +288,10 @@ final wrChatControllerProvider =
 /// xong mà danh sách còn giữ thứ tự cũ thì cuộc vừa nói lại không nằm ở đầu.
 final wrConversationsProvider =
     FutureProvider.autoDispose<List<WrConversation>>((ref) async {
-  final userId = ref.watch(currentUserIdProvider);
-  if (userId == null) return const [];
-  return ref.watch(wrChatRepositoryProvider).fetchConversations(userId);
-});
+      final userId = ref.watch(currentUserIdProvider);
+      if (userId == null) return const [];
+      return ref.watch(wrChatRepositoryProvider).fetchConversations(userId);
+    });
 
 /// Gợi ý mở lời cho màn trò chuyện trống.
 ///

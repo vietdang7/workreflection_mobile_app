@@ -57,7 +57,9 @@ SurveyScores computeSurveyScores({
 
   // eNPS ids: layer==ENPS OR scaleType==ENPS_10
   final enpsIds = questions
-      .where((q) => q.layer == SurveyLayer.enps || q.scaleType == ScaleType.enps10)
+      .where(
+        (q) => q.layer == SurveyLayer.enps || q.scaleType == ScaleType.enps10,
+      )
       .map((q) => q.id)
       .toList();
 

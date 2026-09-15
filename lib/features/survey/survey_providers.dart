@@ -30,8 +30,9 @@ class SurveyIntroInfo {
   final String? userDepartment;
 }
 
-final surveyIntroInfoProvider =
-    StateProvider<SurveyIntroInfo>((ref) => const SurveyIntroInfo());
+final surveyIntroInfoProvider = StateProvider<SurveyIntroInfo>(
+  (ref) => const SurveyIntroInfo(),
+);
 
 // Tracks surveyId created in step 1 of submitSurvey so retry can skip it
 final surveyIdInProgressProvider = StateProvider<String?>((ref) => null);
@@ -57,15 +58,15 @@ final surveyTypeProvider = FutureProvider<SurveyType>((ref) async {
 
 final surveyQuestionsProvider =
     FutureProvider.family<List<CcQuestion>, SurveyType>((ref, type) async {
-  final repo = ref.watch(surveyRepositoryProvider);
-  return repo.getQuestions(type);
-});
+      final repo = ref.watch(surveyRepositoryProvider);
+      return repo.getQuestions(type);
+    });
 
 final likertOptionsProvider =
     FutureProvider<Map<ScaleType, List<CcLikertOption>>>((ref) async {
-  final repo = ref.watch(surveyRepositoryProvider);
-  return repo.getLikertOptions();
-});
+      final repo = ref.watch(surveyRepositoryProvider);
+      return repo.getLikertOptions();
+    });
 
 // ---------------------------------------------------------------------------
 // Answers state (question id → answer value)
@@ -73,8 +74,8 @@ final likertOptionsProvider =
 
 final surveyAnswersProvider =
     StateNotifierProvider<SurveyAnswersNotifier, Map<String, int>>((ref) {
-  return SurveyAnswersNotifier();
-});
+      return SurveyAnswersNotifier();
+    });
 
 class SurveyAnswersNotifier extends StateNotifier<Map<String, int>> {
   SurveyAnswersNotifier() : super({});
@@ -125,12 +126,11 @@ final narrativesProvider = FutureProvider<List<CcNarrative>>((ref) async {
 
 final actionPlanProvider =
     FutureProvider.family<List<ActionPlanPhase>, SurveyType>((ref, type) async {
-  final repo = ref.watch(surveyRepositoryProvider);
-  return repo.getActionPlan(type);
-});
+      final repo = ref.watch(surveyRepositoryProvider);
+      return repo.getActionPlan(type);
+    });
 
-final actionProgressProvider =
-    FutureProvider<Map<String, bool>>((ref) async {
+final actionProgressProvider = FutureProvider<Map<String, bool>>((ref) async {
   final repo = ref.watch(surveyRepositoryProvider);
   return repo.getActionProgress();
 });
@@ -140,12 +140,15 @@ final actionProgressProvider =
 // Key: (surveyId, layer) e.g. ('abc', 'STRUCTURE')
 // ---------------------------------------------------------------------------
 
-final layerSubScoresProvider = FutureProvider.family<List<SubComponentScore>,
-    (String, String)>((ref, args) async {
-  final repo = ref.watch(surveyRepositoryProvider);
-  final (surveyId, layer) = args;
-  return repo.getLayerSubScores(surveyId, layer);
-});
+final layerSubScoresProvider =
+    FutureProvider.family<List<SubComponentScore>, (String, String)>((
+      ref,
+      args,
+    ) async {
+      final repo = ref.watch(surveyRepositoryProvider);
+      final (surveyId, layer) = args;
+      return repo.getLayerSubScores(surveyId, layer);
+    });
 
 // ---------------------------------------------------------------------------
 // ESI pillar scores (sub_component → avg score)
@@ -154,17 +157,19 @@ final layerSubScoresProvider = FutureProvider.family<List<SubComponentScore>,
 
 final esiPillarScoresProvider =
     FutureProvider.family<Map<String, double>, String>((ref, surveyId) async {
-  final repo = ref.watch(surveyRepositoryProvider);
-  return repo.getEsiPillarScores(surveyId);
-});
+      final repo = ref.watch(surveyRepositoryProvider);
+      return repo.getEsiPillarScores(surveyId);
+    });
 
 // ---------------------------------------------------------------------------
 // eNPS breakdown (render-time from cc_responses — avoids reading legacy sub_scores)
 // Key: surveyId
 // ---------------------------------------------------------------------------
 
-final enpsBreakdownProvider =
-    FutureProvider.family<EnpsBreakdown?, String>((ref, surveyId) async {
+final enpsBreakdownProvider = FutureProvider.family<EnpsBreakdown?, String>((
+  ref,
+  surveyId,
+) async {
   final repo = ref.watch(surveyRepositoryProvider);
   return repo.getEnpsBreakdown(surveyId);
 });
@@ -188,51 +193,52 @@ typedef AiPersonalizationArgs = ({
 });
 
 final aiPersonalizationProvider = FutureProvider.autoDispose
-    .family<Map<String, dynamic>?, AiPersonalizationArgs>(
-        (ref, args) async {
-  // Web skips AI for EN locale — mirror exactly.
-  if (args.locale != 'vi') return null;
+    .family<Map<String, dynamic>?, AiPersonalizationArgs>((ref, args) async {
+      // Web skips AI for EN locale — mirror exactly.
+      if (args.locale != 'vi') return null;
 
-  final repo = ref.watch(surveyRepositoryProvider);
+      final repo = ref.watch(surveyRepositoryProvider);
 
-  // Step 1: read cache (direct DB query, same as web client).
-  final cached = await repo.getCachedAiPersonalization(
-      args.reportId, args.section);
-  if (cached != null) return cached;
+      // Step 1: read cache (direct DB query, same as web client).
+      final cached = await repo.getCachedAiPersonalization(
+        args.reportId,
+        args.section,
+      );
+      if (cached != null) return cached;
 
-  // Chặn trước khi gọi `ai-personalize`: hàm đó gửi vị trí, thâm niên, phòng
-  // ban và điểm khảo sát sang OpenRouter → Google (Gemini). Màn Báo cáo tự gọi
-  // lúc mở, người dùng không bấm gì, nên nếu không chặn ở đây thì dữ liệu rời
-  // máy trước khi kịp hỏi — đúng thứ Guideline 5.1.1(i) cấm.
-  //
-  // Chỉ chặn nhánh GỌI MỚI. Bản đã nằm trong `cc_ai_personalization_cache` thì
-  // đọc lại không gửi gì đi cả.
-  //
-  // Trả null thay vì ném lỗi: người gọi đã có sẵn nội dung tĩnh để hiện thay,
-  // nên chưa đồng ý thì màn Báo cáo vẫn đầy đủ, chỉ là không được viết lại.
-  // Không mở màn xin phép ở đây — provider không có BuildContext, mà hỏi ngay
-  // lúc người ta vừa mở báo cáo cũng là hỏi sai lúc; thẻ nhắc ở Tài khoản và
-  // các luồng AI khác đã có chỗ hỏi tử tế.
-  if (!(await ref.watch(wrAiConsentProvider.future)).isGranted) return null;
+      // Chặn trước khi gọi `ai-personalize`: hàm đó gửi vị trí, thâm niên, phòng
+      // ban và điểm khảo sát sang OpenRouter → Google (Gemini). Màn Báo cáo tự gọi
+      // lúc mở, người dùng không bấm gì, nên nếu không chặn ở đây thì dữ liệu rời
+      // máy trước khi kịp hỏi — đúng thứ Guideline 5.1.1(i) cấm.
+      //
+      // Chỉ chặn nhánh GỌI MỚI. Bản đã nằm trong `cc_ai_personalization_cache` thì
+      // đọc lại không gửi gì đi cả.
+      //
+      // Trả null thay vì ném lỗi: người gọi đã có sẵn nội dung tĩnh để hiện thay,
+      // nên chưa đồng ý thì màn Báo cáo vẫn đầy đủ, chỉ là không được viết lại.
+      // Không mở màn xin phép ở đây — provider không có BuildContext, mà hỏi ngay
+      // lúc người ta vừa mở báo cáo cũng là hỏi sai lúc; thẻ nhắc ở Tài khoản và
+      // các luồng AI khác đã có chỗ hỏi tử tế.
+      if (!(await ref.watch(wrAiConsentProvider.future)).isGranted) return null;
 
-  // Step 2: cache miss → call edge function (returns null on any error).
-  return repo.invokeAiPersonalize(
-    reportId: args.reportId,
-    section: args.section,
-    userContext: args.userContext,
-    scoreContext: args.scoreContext,
-    defaultContent: args.defaultContent,
-  );
-});
+      // Step 2: cache miss → call edge function (returns null on any error).
+      return repo.invokeAiPersonalize(
+        reportId: args.reportId,
+        section: args.section,
+        userContext: args.userContext,
+        scoreContext: args.scoreContext,
+        defaultContent: args.defaultContent,
+      );
+    });
 
 // ---------------------------------------------------------------------------
 // Optimistic action progress notifier
 // ---------------------------------------------------------------------------
 
-final actionProgressNotifierProvider = StateNotifierProvider.autoDispose.family<
-    ActionProgressNotifier, Map<String, bool>, String>((ref, reportId) {
-  return ActionProgressNotifier(ref, reportId);
-});
+final actionProgressNotifierProvider = StateNotifierProvider.autoDispose
+    .family<ActionProgressNotifier, Map<String, bool>, String>((ref, reportId) {
+      return ActionProgressNotifier(ref, reportId);
+    });
 
 class ActionProgressNotifier extends StateNotifier<Map<String, bool>> {
   // ignore: avoid_unused_constructor_parameters

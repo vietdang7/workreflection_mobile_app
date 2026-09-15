@@ -43,12 +43,19 @@ Future<void> logPracticeMaintained({
         // `themeId` là thứ bộ đếm đọc; `reflectionText` chỉ còn để hiện chữ ở
         // tab Hành trình (Phần C mục 1).
         themeId: theme.themeId,
-        reflectionText: tr('${theme.title} · Duy trì', '${theme.title} · Upkeep'),
+        reflectionText: tr(
+          '${theme.title} · Duy trì',
+          '${theme.title} · Upkeep',
+        ),
       ),
     );
   } catch (_) {
     messenger.showSnackBar(
-      SnackBar(content: Text(tr('Chưa ghi nhận được. Thử lại.', 'Could not record it. Try again.'))),
+      SnackBar(
+        content: Text(
+          tr('Chưa ghi nhận được. Thử lại.', 'Could not record it. Try again.'),
+        ),
+      ),
     );
     return;
   }
@@ -182,7 +189,11 @@ Future<void> showSkillFormedCelebration(
             // chưa có câu riêng — ba chủ đề đời đầu, hoặc migration nội dung
             // chưa chạy — thì lùi về đúng câu chốt ở mục A.1.
             Text(
-              skill.formedLine ?? tr('"${skill.title}" giờ là một kỹ năng của bạn.', '"${skill.title}" is now a skill of yours.'),
+              skill.formedLine ??
+                  tr(
+                    '"${skill.title}" giờ là một kỹ năng của bạn.',
+                    '"${skill.title}" is now a skill of yours.',
+                  ),
               key: const Key('wr_skill_formed_line'),
               style: const TextStyle(
                 fontSize: 16.5,
@@ -193,9 +204,12 @@ Future<void> showSkillFormedCelebration(
             ),
             const SizedBox(height: 10),
             WrParagraph(
-              tr('Bạn đã thực hành điều này ${skill.practiceCount} lần. '
-              'Nó không còn là một việc bạn phải nhớ để làm nữa.', 'You have practised this ${skill.practiceCount} times. '
-              'It is no longer something you have to remember to do.'),
+              tr(
+                'Bạn đã thực hành điều này ${skill.practiceCount} lần. '
+                    'Nó không còn là một việc bạn phải nhớ để làm nữa.',
+                'You have practised this ${skill.practiceCount} times. '
+                    'It is no longer something you have to remember to do.',
+              ),
               style: const TextStyle(
                 fontSize: 15.5,
                 color: WrColors.muted,
@@ -204,7 +218,10 @@ Future<void> showSkillFormedCelebration(
             ),
             const SizedBox(height: 10),
             Text(
-              tr('Dấu mốc này đã được ghi vào hành trình của bạn.', 'This marker has been written into your journey.'),
+              tr(
+                'Dấu mốc này đã được ghi vào hành trình của bạn.',
+                'This marker has been written into your journey.',
+              ),
               style: TextStyle(
                 fontSize: 14,
                 color: WrColors.muted,
@@ -245,11 +262,7 @@ Future<void> showSkillFormedCelebration(
 /// Hiện khi chủ đề đã đi hết ba bước làm quen. Đã bấm hôm nay thì chuyển thành
 /// dòng xác nhận, không phải một nút bấm được nhưng không làm gì.
 class WrMaintainPracticeAction extends ConsumerWidget {
-  const WrMaintainPracticeAction({
-    super.key,
-    required this.theme,
-    this.onDone,
-  });
+  const WrMaintainPracticeAction({super.key, required this.theme, this.onDone});
 
   final PracticeTheme theme;
   final VoidCallback? onDone;
@@ -268,8 +281,15 @@ class WrMaintainPracticeAction extends ConsumerWidget {
           SizedBox(width: 8),
           Expanded(
             child: Text(
-              tr('Đã ghi nhận hôm nay. Hẹn bạn lần thực hành sau.', 'Recorded for today. See you at the next practice.'),
-              style: TextStyle(fontSize: 14.5, color: WrColors.muted, height: 1.5),
+              tr(
+                'Đã ghi nhận hôm nay. Hẹn bạn lần thực hành sau.',
+                'Recorded for today. See you at the next practice.',
+              ),
+              style: TextStyle(
+                fontSize: 14.5,
+                color: WrColors.muted,
+                height: 1.5,
+              ),
             ),
           ),
         ],
@@ -281,11 +301,7 @@ class WrMaintainPracticeAction extends ConsumerWidget {
       child: OutlinedButton(
         key: Key('wr_practice_maintain_${theme.themeId}'),
         onPressed: () async {
-          await logPracticeMaintained(
-            context: context,
-            ref: ref,
-            theme: theme,
-          );
+          await logPracticeMaintained(context: context, ref: ref, theme: theme);
           onDone?.call();
         },
         style: OutlinedButton.styleFrom(

@@ -209,18 +209,18 @@ void main() {
     });
 
     test('bỏ mã của nhóm người dùng khác', () {
-      final list = selectableVouchers(
-        [v('CHUNG'), v('CHOFREE', targetType: 'individual_free')],
-        userRole: 'premium',
-      );
+      final list = selectableVouchers([
+        v('CHUNG'),
+        v('CHOFREE', targetType: 'individual_free'),
+      ], userRole: 'premium');
       expect(list.map((x) => x.code), ['CHUNG']);
     });
 
     test('admin thấy hết', () {
-      final list = selectableVouchers(
-        [v('CHUNG'), v('CHOFREE', targetType: 'individual_free')],
-        userRole: 'admin',
-      );
+      final list = selectableVouchers([
+        v('CHUNG'),
+        v('CHOFREE', targetType: 'individual_free'),
+      ], userRole: 'admin');
       expect(list.length, 2);
     });
 
@@ -259,10 +259,11 @@ void main() {
       expect(
         voucherIneligibleReason(
           WrVoucher(
-              id: 'a',
-              code: 'A',
-              discountType: 'percentage',
-              validTo: DateTime(2026, 7, 1)),
+            id: 'a',
+            code: 'A',
+            discountType: 'percentage',
+            validTo: DateTime(2026, 7, 1),
+          ),
           now: now,
         ),
         'Hết hạn',
@@ -270,11 +271,12 @@ void main() {
       expect(
         voucherIneligibleReason(
           const WrVoucher(
-              id: 'a',
-              code: 'A',
-              discountType: 'percentage',
-              maxUses: 3,
-              usedCount: 3),
+            id: 'a',
+            code: 'A',
+            discountType: 'percentage',
+            maxUses: 3,
+            usedCount: 3,
+          ),
           now: now,
         ),
         'Hết lượt',
@@ -282,10 +284,11 @@ void main() {
       expect(
         voucherIneligibleReason(
           WrVoucher(
-              id: 'a',
-              code: 'A',
-              discountType: 'percentage',
-              validFrom: DateTime(2026, 9, 1)),
+            id: 'a',
+            code: 'A',
+            discountType: 'percentage',
+            validFrom: DateTime(2026, 9, 1),
+          ),
           now: now,
         ),
         'Chưa hiệu lực',
@@ -296,13 +299,21 @@ void main() {
   group('voucherDiscountLabel', () {
     test('phần trăm bỏ đuôi .0', () {
       const v = WrVoucher(
-          id: 'a', code: 'A', discountType: 'percentage', discountPercent: 50);
+        id: 'a',
+        code: 'A',
+        discountType: 'percentage',
+        discountPercent: 50,
+      );
       expect(voucherDiscountLabel(v), 'Giảm 50%');
     });
 
     test('số tiền cố định có nhóm nghìn', () {
       const v = WrVoucher(
-          id: 'a', code: 'A', discountType: 'fixed', discountAmount: 100000);
+        id: 'a',
+        code: 'A',
+        discountType: 'fixed',
+        discountAmount: 100000,
+      );
       expect(voucherDiscountLabel(v), 'Giảm 100.000đ');
     });
   });
@@ -370,8 +381,10 @@ void main() {
     });
 
     test('tắt hoá đơn thì payload xoá sạch cột cũ', () {
-      final p = const WrInvoiceForm(requested: false, buyerName: 'A')
-          .toOrderPayload();
+      final p = const WrInvoiceForm(
+        requested: false,
+        buyerName: 'A',
+      ).toOrderPayload();
       expect(p['invoice_requested'], false);
       expect(p['invoice_buyer_name'], isNull);
       expect(p['invoice_tax_code'], isNull);

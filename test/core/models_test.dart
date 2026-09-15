@@ -52,7 +52,10 @@ void main() {
     });
 
     test('TimelineEventType.fromDb parses all valid values', () {
-      expect(TimelineEventType.fromDb('MILESTONE'), TimelineEventType.milestone);
+      expect(
+        TimelineEventType.fromDb('MILESTONE'),
+        TimelineEventType.milestone,
+      );
       expect(TimelineEventType.fromDb('STORY'), TimelineEventType.story);
       expect(TimelineEventType.fromDb('THEME'), TimelineEventType.theme);
     });
@@ -163,22 +166,25 @@ void main() {
       expect(dt.isActive, false);
     });
 
-    test('progress handles int from JSON (Supabase numeric may return int)', () {
-      final json = {
-        'id': 'dt-3',
-        'user_id': 'user-1',
-        'code': 'X',
-        'title': 'T',
-        'subtitle': null,
-        'stage': 1,
-        'total_stages': 4,
-        'progress': 1, // int not double
-        'is_active': true,
-        'created_at': '2026-07-01T00:00:00.000Z',
-      };
-      final dt = DevelopmentTheme.fromJson(json);
-      expect(dt.progress, 1.0);
-    });
+    test(
+      'progress handles int from JSON (Supabase numeric may return int)',
+      () {
+        final json = {
+          'id': 'dt-3',
+          'user_id': 'user-1',
+          'code': 'X',
+          'title': 'T',
+          'subtitle': null,
+          'stage': 1,
+          'total_stages': 4,
+          'progress': 1, // int not double
+          'is_active': true,
+          'created_at': '2026-07-01T00:00:00.000Z',
+        };
+        final dt = DevelopmentTheme.fromJson(json);
+        expect(dt.progress, 1.0);
+      },
+    );
   });
 
   group('Practice.fromJson', () {
@@ -251,21 +257,24 @@ void main() {
   });
 
   group('ScaReport.fromJson', () {
-    test('maps cc_reports columns (score_structure, score_culture, score_activity)', () {
-      final json = {
-        'id': 'sca-1',
-        'user_id': 'user-1',
-        'score_structure': 3.5,
-        'score_culture': 4.0,
-        'score_activity': 2.0,
-        'created_at': '2026-06-01T00:00:00.000Z',
-      };
-      final report = ScaReport.fromJson(json);
-      expect(report.scoreStructure, 3.5);
-      expect(report.scoreCulture, 4.0);
-      expect(report.scoreActivity, 2.0);
-      expect(report.createdAt, isA<DateTime>());
-    });
+    test(
+      'maps cc_reports columns (score_structure, score_culture, score_activity)',
+      () {
+        final json = {
+          'id': 'sca-1',
+          'user_id': 'user-1',
+          'score_structure': 3.5,
+          'score_culture': 4.0,
+          'score_activity': 2.0,
+          'created_at': '2026-06-01T00:00:00.000Z',
+        };
+        final report = ScaReport.fromJson(json);
+        expect(report.scoreStructure, 3.5);
+        expect(report.scoreCulture, 4.0);
+        expect(report.scoreActivity, 2.0);
+        expect(report.createdAt, isA<DateTime>());
+      },
+    );
 
     test('handles int scores (numeric may return int from Supabase)', () {
       final json = {
@@ -347,6 +356,43 @@ void main() {
       expect(profile.displayName, isNull);
       expect(profile.onboardingSituation, isNull);
       expect(profile.reminderEnabled, false);
+    });
+
+    test('normalizes malformed recent situation history eagerly', () {
+      final json = {
+        'user_id': 'user-3',
+        'reminder_enabled': true,
+        'language': 'vi',
+        'created_at': '2026-07-01T00:00:00.000Z',
+        'updated_at': '2026-07-01T00:00:00.000Z',
+        'recent_situation_ids': ['A1-01', null, 42, {}, 'qa-unknown'],
+      };
+
+      final profile = MobileProfile.fromJson(json);
+
+      expect(profile.recentSituationIds, ['A1-01', 'qa-unknown']);
+      expect(() => profile.recentSituationIds.toSet(), returnsNormally);
+    });
+
+    test('treats malformed recent situation field shapes as empty history', () {
+      for (final malformed in <Object?>[
+        null,
+        'A1-01',
+        {'id': 'A1-01'},
+        42,
+      ]) {
+        final profile = MobileProfile.fromJson({
+          'user_id': 'user-4',
+          'reminder_enabled': true,
+          'language': 'vi',
+          'created_at': '2026-07-01T00:00:00.000Z',
+          'updated_at': '2026-07-01T00:00:00.000Z',
+          'recent_situation_ids': malformed,
+        });
+
+        expect(profile.recentSituationIds, isEmpty, reason: '$malformed');
+        expect(() => profile.recentSituationIds.toSet(), returnsNormally);
+      }
     });
   });
 }

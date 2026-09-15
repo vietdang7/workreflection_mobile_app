@@ -18,15 +18,15 @@ enum MoodContentType {
   audio;
 
   String get dbValue => switch (this) {
-        MoodContentType.reading => 'reading',
-        MoodContentType.audio => 'audio',
-      };
+    MoodContentType.reading => 'reading',
+    MoodContentType.audio => 'audio',
+  };
 
   static MoodContentType fromDb(String value) => switch (value) {
-        'reading' => MoodContentType.reading,
-        'audio' => MoodContentType.audio,
-        _ => throw ArgumentError('Unknown MoodContentType db value: $value'),
-      };
+    'reading' => MoodContentType.reading,
+    'audio' => MoodContentType.audio,
+    _ => throw ArgumentError('Unknown MoodContentType db value: $value'),
+  };
 }
 
 /// Một mục trong Thư viện Nội dung Cảm xúc.
@@ -52,8 +52,8 @@ class MoodContent {
     this.audioUrl,
     this.titleEn,
     this.bodyEn,
-  })  : titleVi = title,
-        bodyVi = body;
+  }) : titleVi = title,
+       bodyVi = body;
 
   final String id;
 
@@ -103,10 +103,10 @@ class MoodContent {
   /// dùng tiếng Anh thấy một nhãn tiếng Việt — dở, nhưng vẫn hơn một ô trống
   /// hay một nhãn bịa.
   String get kindLabel => switch (kind.trim().toUpperCase()) {
-        'BÀI ĐỌC' => tr('BÀI ĐỌC', 'READING'),
-        'HEALING AUDIO' => tr('HEALING AUDIO', 'HEALING AUDIO'),
-        _ => kind,
-      };
+    'BÀI ĐỌC' => tr('BÀI ĐỌC', 'READING'),
+    'HEALING AUDIO' => tr('HEALING AUDIO', 'HEALING AUDIO'),
+    _ => kind,
+  };
 
   /// [duration] theo ngôn ngữ đang bật.
   ///
@@ -208,14 +208,14 @@ class MoodContent {
 /// đời ở hai thời điểm khác nhau nên không khớp chuỗi; ánh xạ nằm gọn ở đây
 /// thay vì rải ra mỗi chỗ đọc dữ liệu.
 Mood _moodFromContentKey(String value) => switch (value) {
-      'stress' => Mood.stressed,
-      'tired' => Mood.tired,
-      'foggy' => Mood.foggy,
-      'outofsync' => Mood.outofsync,
-      'ok' => Mood.okay,
-      'happy' => Mood.happy,
-      _ => throw ArgumentError('Unknown mood_content mood: $value'),
-    };
+  'stress' => Mood.stressed,
+  'tired' => Mood.tired,
+  'foggy' => Mood.foggy,
+  'outofsync' => Mood.outofsync,
+  'ok' => Mood.okay,
+  'happy' => Mood.happy,
+  _ => throw ArgumentError('Unknown mood_content mood: $value'),
+};
 
 /// Chiều ngược lại của [_moodFromContentKey] — dùng khi truy vấn theo cảm xúc.
 ///
@@ -223,13 +223,13 @@ Mood _moodFromContentKey(String value) => switch (value) {
 /// `outofsync`), nên chỗ lệch tên chỉ còn đúng hai cặp cũ.
 extension MoodContentKey on Mood {
   String get moodContentKey => switch (this) {
-        Mood.stressed => 'stress',
-        Mood.tired => 'tired',
-        Mood.foggy => 'foggy',
-        Mood.outofsync => 'outofsync',
-        Mood.okay => 'ok',
-        Mood.happy => 'happy',
-      };
+    Mood.stressed => 'stress',
+    Mood.tired => 'tired',
+    Mood.foggy => 'foggy',
+    Mood.outofsync => 'outofsync',
+    Mood.okay => 'ok',
+    Mood.happy => 'happy',
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -273,9 +273,12 @@ class GrowthOpportunity {
   /// nó chưa đủ sát. Chỉ đổi cách nói phần thứ hai — từ "độ chính xác còn giới
   /// hạn" (nghe như lời chối trách nhiệm) sang một lối đi ("cung cấp thêm bối
   /// cảnh").
-  static String get kConfidenceNote => tr('Gợi ý này được đúc kết từ hoạt động nhìn lại của bạn. Bạn có thể cung '
-      'cấp thêm bối cảnh để nhận phân tích "may đo" sát hơn', 'This suggestion is drawn from your own looking back. Add more context '
-      'and the reading can be tailored more closely to you');
+  static String get kConfidenceNote => tr(
+    'Gợi ý này được đúc kết từ hoạt động nhìn lại của bạn. Bạn có thể cung '
+        'cấp thêm bối cảnh để nhận phân tích "may đo" sát hơn',
+    'This suggestion is drawn from your own looking back. Add more context '
+        'and the reading can be tailored more closely to you',
+  );
 
   factory GrowthOpportunity.fromJson(Map<String, dynamic> json) {
     return GrowthOpportunity(
@@ -291,12 +294,12 @@ class GrowthOpportunity {
   }
 
   Map<String, dynamic> toInsert() => {
-        'user_id': userId,
-        'suggestion_text': suggestionText,
-        'confidence_note': confidenceNote,
-        'based_on': basedOn,
-        'generated_at': generatedAt.toUtc().toIso8601String(),
-      };
+    'user_id': userId,
+    'suggestion_text': suggestionText,
+    'confidence_note': confidenceNote,
+    'based_on': basedOn,
+    'generated_at': generatedAt.toUtc().toIso8601String(),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -353,10 +356,7 @@ class CareerQuestion {
     );
   }
 
-  Map<String, dynamic> toInsert() => {
-        'user_id': userId,
-        'question': question,
-      };
+  Map<String, dynamic> toInsert() => {'user_id': userId, 'question': question};
 }
 
 // ---------------------------------------------------------------------------
@@ -408,11 +408,11 @@ class PracticeStepNote {
   }
 
   Map<String, dynamic> toInsert() => {
-        'user_id': userId,
-        'step_id': stepId,
-        'note': note,
-        if (memoryEventId != null) 'memory_event_id': memoryEventId,
-      };
+    'user_id': userId,
+    'step_id': stepId,
+    'note': note,
+    if (memoryEventId != null) 'memory_event_id': memoryEventId,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -440,7 +440,7 @@ class ChoicePoolLine {
   String get text => trDb(textVi, textEn);
 
   factory ChoicePoolLine.fromJson(Map<String, dynamic> json) => ChoicePoolLine(
-        textVi: json['text'] as String,
-        textEn: json['text_en'] as String?,
-      );
+    textVi: json['text'] as String,
+    textEn: json['text_en'] as String?,
+  );
 }

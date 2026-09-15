@@ -28,46 +28,44 @@ ThemeData wrTheme() {
 
 abstract final class WrTextStyles {
   static TextStyle get eyebrow => const TextStyle(
-        fontSize: 12.5,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 0.55,
-        // Spec §01b: eyebrow/tiny dùng text-3, không phải text-2.
-        color: WrColors.text3,
-      );
+    fontSize: 12.5,
+    fontWeight: FontWeight.w700,
+    letterSpacing: 0.55,
+    // Spec §01b: eyebrow/tiny dùng text-3, không phải text-2.
+    color: WrColors.text3,
+  );
 
   static TextStyle get hLarge => const TextStyle(
-        fontSize: 22,
-        fontWeight: FontWeight.w700,
-        color: WrColors.navy,
-      );
+    fontSize: 22,
+    fontWeight: FontWeight.w700,
+    color: WrColors.navy,
+  );
 
   static TextStyle get hMedium => const TextStyle(
-        fontSize: 16,
-        fontWeight: FontWeight.w600,
-        color: WrColors.dark,
-      );
+    fontSize: 16,
+    fontWeight: FontWeight.w600,
+    color: WrColors.dark,
+  );
 
   static TextStyle get body => TextStyle(
-        fontSize: 15.5,
-        color: WrColors.dark.withValues(alpha: 0.8),
-        height: 1.5,
-      );
+    fontSize: 15.5,
+    color: WrColors.dark.withValues(alpha: 0.8),
+    height: 1.5,
+  );
 
   static TextStyle get insightQuote => const TextStyle(
-        fontSize: 20,
-        fontStyle: FontStyle.italic,
-        color: WrColors.navy,
-        height: 1.45,
-      );
+    fontSize: 20,
+    fontStyle: FontStyle.italic,
+    color: WrColors.navy,
+    height: 1.45,
+  );
 
   static TextStyle get dateTitle => const TextStyle(
-        fontSize: 32,
-        fontWeight: FontWeight.w800,
-        color: WrColors.navy,
-      );
+    fontSize: 32,
+    fontWeight: FontWeight.w800,
+    color: WrColors.navy,
+  );
 
-  static TextStyle get greeting => const TextStyle(
-        fontSize: 15.5,
-        color: WrColors.muted,
-      );
+  static TextStyle get greeting =>
+      const TextStyle(fontSize: 15.5, color: WrColors.muted);
 }

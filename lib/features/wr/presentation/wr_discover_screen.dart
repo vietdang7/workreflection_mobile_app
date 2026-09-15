@@ -117,10 +117,10 @@ Color pillarStatusColor(double? score) {
 
 /// Màu nhận diện của từng trụ — trùng với màn Tự đánh giá.
 Color pillarColor(SelfCheckPillar pillar) => switch (pillar) {
-      SelfCheckPillar.s => const Color(0xFF5B8CC9),
-      SelfCheckPillar.c => WrColors.teal,
-      SelfCheckPillar.a => const Color(0xFF5E7A5A),
-    };
+  SelfCheckPillar.s => const Color(0xFF5B8CC9),
+  SelfCheckPillar.c => WrColors.teal,
+  SelfCheckPillar.a => const Color(0xFF5E7A5A),
+};
 
 class WrDiscoverScreen extends ConsumerWidget {
   const WrDiscoverScreen({super.key});
@@ -128,7 +128,8 @@ class WrDiscoverScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
-    final episodes = ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
+    final episodes =
+        ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
     final selfChecks =
         ref.watch(wrSelfCheckHistoryProvider).valueOrNull ?? const [];
     // Nguồn sự thật duy nhất của cả màn này (Kiến trúc v2.0 §4.3). Không còn
@@ -160,9 +161,20 @@ class WrDiscoverScreen extends ConsumerWidget {
     // Trụ nổi trội tính trên valence thách thức (§2.2): trộn cả tình huống tích
     // cực vào rồi tuyên bố "nhóm Mối quan hệ đang nổi trội" là nói ngược, vì
     // nhóm ấy có thể đang nổi trội theo hướng tốt.
-    final snapshotGapShown = snapshotHasSelfCheck(latestCheck) &&
+    //
+    // TÍNH ĐÚNG MỘT LẦN rồi truyền xuống thẻ Snapshot. Bản 11/09 để thẻ tự tính
+    // lại bằng mẫu số cũ, và hai chỗ trả lời khác nhau về cùng một câu hỏi:
+    // màn cha thấy "có trụ nổi trội" nên ẩn thẻ mời, còn thẻ Snapshot thấy
+    // "không" nên không dựng dòng khoảng lệch — hai lối vào Diễn giải sâu cùng
+    // tắt và nút biến mất. Khách báo 12/09/2026.
+    final snapshotDominant = dominantPillar(
+      tally.challenge,
+      tally.challengeTotal,
+    );
+    final snapshotGapShown =
+        snapshotHasSelfCheck(latestCheck) &&
         careerHealthUnlocked(reflectionCount) &&
-        dominantPillar(tally.challenge, tally.challengeTotal) != null;
+        snapshotDominant != null;
 
     // "Tình huống lặp lại" — v2.0 §4.3: đếm số lần xuất hiện của từng
     // situationId trong recentSituationIds, lấy ba tình huống nhiều nhất.
@@ -172,16 +184,17 @@ class WrDiscoverScreen extends ConsumerWidget {
     // kRepeatedSituationsMinCount lần mới được gọi là đang lặp. Lọc TRƯỚC khi
     // cắt ba dòng, nếu không "Xem thêm N" sẽ hứa một con số mà màn đầy đủ
     // không có.
-    final repeated =
-        rankSituations(recent, minCount: kRepeatedSituationsMinCount);
+    final repeated = rankSituations(
+      recent,
+      minCount: kRepeatedSituationsMinCount,
+    );
     final top = repeated.take(kRepeatedSituationsTop).toList();
     final hidden = repeated.length - top.length;
 
     // Thanh so sánh lấy tình huống lặp nhiều nhất làm mốc — người dùng thấy
     // ngay điều nào đang lớn hơn điều nào. Mốc tính trên TOÀN BỘ danh sách để
     // ba thanh ở đây và danh sách đầy đủ đo cùng một thước.
-    final maxCount =
-        repeated.fold<int>(1, (m, p) => p.count > m ? p.count : m);
+    final maxCount = repeated.fold<int>(1, (m, p) => p.count > m ? p.count : m);
 
     return Scaffold(
       backgroundColor: WrColors.pageBg,
@@ -242,9 +255,12 @@ class WrDiscoverScreen extends ConsumerWidget {
             if (top.isEmpty)
               if (recent.isEmpty)
                 WrParagraph(
-                  tr('Sau vài lần nhìn lại có chọn tình huống, những điều lặp lại '
-                  'sẽ hiện ra ở đây.', 'After a few look-backs where you pick a situation, the things that '
-                  'repeat will show up here.'),
+                  tr(
+                    'Sau vài lần nhìn lại có chọn tình huống, những điều lặp lại '
+                        'sẽ hiện ra ở đây.',
+                    'After a few look-backs where you pick a situation, the things that '
+                        'repeat will show up here.',
+                  ),
                   key: Key('wr_discover_patterns_empty'),
                   style: TextStyle(
                     fontSize: 15.5,
@@ -254,11 +270,14 @@ class WrDiscoverScreen extends ConsumerWidget {
                 )
               else
                 WrParagraph(
-                  tr('Bạn đã chọn tình huống ${recent.length} lần, nhưng chưa '
-                  'điều nào trở lại đủ $kRepeatedSituationsMinCount lần. Khi '
-                  'một điều quay lại tới đó, nó sẽ hiện ở đây.', 'You have picked a situation ${recent.length} times, but none has '
-                  'come back $kRepeatedSituationsMinCount times yet. Once one '
-                  'does, it will appear here.'),
+                  tr(
+                    'Bạn đã chọn tình huống ${recent.length} lần, nhưng chưa '
+                        'điều nào trở lại đủ $kRepeatedSituationsMinCount lần. Khi '
+                        'một điều quay lại tới đó, nó sẽ hiện ở đây.',
+                    'You have picked a situation ${recent.length} times, but none has '
+                        'come back $kRepeatedSituationsMinCount times yet. Once one '
+                        'does, it will appear here.',
+                  ),
                   key: const Key('wr_discover_patterns_below_threshold'),
                   style: const TextStyle(
                     fontSize: 15.5,
@@ -308,6 +327,7 @@ class WrDiscoverScreen extends ConsumerWidget {
               counts: tally.appearance,
               reflectionTotal: reflectionCount,
               classifiedTotal: tally.classified,
+              dominant: snapshotDominant,
               onStartSelfCheck: () => context.push('/wr/self-check'),
             ),
 
@@ -355,15 +375,18 @@ class _NeedReadingBlock extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final entitlement = ref.watch(wrEntitlementProvider).valueOrNull ??
+    final entitlement =
+        ref.watch(wrEntitlementProvider).valueOrNull ??
         WrEntitlement(plan: WrPlan.free);
     if (!entitlement.canUseFeature(WrPremiumFeature.aiInsight)) {
       return WrPremiumLock(
         key: Key('wr_discover_need_lock'),
-        description:
-            tr('Bản đầy đủ đọc ra điều bạn đang thật sự tìm kiếm đứng sau những '
-            'tình huống lặp lại này, bằng lời của đời sống chứ không phải con số.', 'The full version reads what you are really looking for behind these '
-            'repeating situations, in plain language rather than numbers.'),
+        description: tr(
+          'Bản đầy đủ đọc ra điều bạn đang thật sự tìm kiếm đứng sau những '
+              'tình huống lặp lại này, bằng lời của đời sống chứ không phải con số.',
+          'The full version reads what you are really looking for behind these '
+              'repeating situations, in plain language rather than numbers.',
+        ),
         ctaLabel: tr('Mở phần đọc vị', 'Open the reading'),
         paywallTrigger: 'need_reading',
       );
@@ -403,7 +426,10 @@ class _SeekingBlock extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          WrEyebrow(tr('ĐIỀU BẠN ĐANG TÌM KIẾM', 'WHAT YOU ARE LOOKING FOR'), center: true),
+          WrEyebrow(
+            tr('ĐIỀU BẠN ĐANG TÌM KIẾM', 'WHAT YOU ARE LOOKING FOR'),
+            center: true,
+          ),
           const SizedBox(height: 16),
           WrParagraph(
             '"$text"',
@@ -421,7 +447,10 @@ class _SeekingBlock extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            tr('${needLabel(need).toUpperCase()} · Nhu cầu chủ đạo', '${needLabel(need).toUpperCase()} · Core need'),
+            tr(
+              '${needLabel(need).toUpperCase()} · Nhu cầu chủ đạo',
+              '${needLabel(need).toUpperCase()} · Core need',
+            ),
             textAlign: TextAlign.center,
             style: const TextStyle(fontSize: 14.5, color: WrColors.muted),
           ),
@@ -530,7 +559,10 @@ class _SeeMoreLink extends StatelessWidget {
         child: Row(
           children: [
             Text(
-              tr('Xem thêm $count điều lặp lại', 'See $count more repeating situations'),
+              tr(
+                'Xem thêm $count điều lặp lại',
+                'See $count more repeating situations',
+              ),
               style: const TextStyle(
                 fontSize: 14.5,
                 fontWeight: FontWeight.w700,
@@ -602,6 +634,7 @@ class _CareerSnapshotCard extends ConsumerWidget {
     required this.counts,
     required this.reflectionTotal,
     required this.classifiedTotal,
+    required this.dominant,
     required this.onStartSelfCheck,
   });
 
@@ -625,6 +658,16 @@ class _CareerSnapshotCard extends ConsumerWidget {
   /// trụ cho nhóm P; thực tế còn chênh, vì nhánh "Điều khác" của luồng Reflect
   /// không ghi `situation_code` nào.
   final int classifiedTotal;
+
+  /// Trụ nổi trội, hoặc null khi phân bố tương đối đều.
+  ///
+  /// TRUYỀN VÀO, không tự tính. Cột "Xuất hiện" của thẻ này đọc [counts] và
+  /// [classifiedTotal] — hai con số gồm cả tình huống tích cực — còn trụ nổi
+  /// trội thì §2.2 tính trên riêng lượt thách thức. Tự tính lại từ [counts] là
+  /// ra một câu trả lời khác với màn cha, mà màn cha lại dùng câu trả lời của
+  /// nó để quyết định ẩn thẻ mời Diễn giải sâu. Lệch nhau là mất cả hai lối
+  /// vào.
+  final SelfCheckPillar? dominant;
 
   final VoidCallback onStartSelfCheck;
 
@@ -655,15 +698,25 @@ class _CareerSnapshotCard extends ConsumerWidget {
           // nguồn nào — vì ngay dưới nó là hai lời mời bổ sung từng nguồn.
           WrParagraph(
             hasReflection
-                ? tr('Bức tranh tổng quan sau $reflectionTotal lần nhìn lại. Dựa '
-                    'trên những ghi nhận của bạn, hệ thống đã đúc kết ra trạng '
-                    'thái trải nghiệm của bạn trong thời gian qua.', 'An overview after $reflectionTotal look-backs. From what you '
-                    'have recorded, the app has drawn out how your experience '
-                    'has been lately.')
-                : tr('Cùng ba trụ, nhìn từ hai phía: điều bạn tự đánh giá, và điều đang '
-                    'thực sự lặp lại trong các lần nhìn lại.', 'The same three pillars, seen from two sides: what you rate yourself, '
-                    'and what actually keeps coming back in your look-backs.'),
-            style: TextStyle(fontSize: 14.5, color: WrColors.muted, height: 1.6),
+                ? tr(
+                    'Bức tranh tổng quan sau $reflectionTotal lần nhìn lại. Dựa '
+                        'trên những ghi nhận của bạn, hệ thống đã đúc kết ra trạng '
+                        'thái trải nghiệm của bạn trong thời gian qua.',
+                    'An overview after $reflectionTotal look-backs. From what you '
+                        'have recorded, the app has drawn out how your experience '
+                        'has been lately.',
+                  )
+                : tr(
+                    'Cùng ba trụ, nhìn từ hai phía: điều bạn tự đánh giá, và điều đang '
+                        'thực sự lặp lại trong các lần nhìn lại.',
+                    'The same three pillars, seen from two sides: what you rate yourself, '
+                        'and what actually keeps coming back in your look-backs.',
+                  ),
+            style: TextStyle(
+              fontSize: 14.5,
+              color: WrColors.muted,
+              height: 1.6,
+            ),
           ),
 
           // §5 — Self-Check cũ đi theo thời gian, nên LUÔN hiện thời điểm kèm
@@ -674,18 +727,24 @@ class _CareerSnapshotCard extends ConsumerWidget {
           if (_hasSelfCheck && takenAt != null) ...[
             const SizedBox(height: 10),
             Text(
-              tr('Self-Check gần nhất: ${selfCheckDateLabel(takenAt)}', 'Last Self-Check: ${selfCheckDateLabel(takenAt)}'),
+              tr(
+                'Self-Check gần nhất: ${selfCheckDateLabel(takenAt)}',
+                'Last Self-Check: ${selfCheckDateLabel(takenAt)}',
+              ),
               key: const Key('wr_snapshot_self_check_date'),
               style: const TextStyle(fontSize: 13.5, color: WrColors.muted),
             ),
             if (selfCheckIsStale(takenAt, DateTime.now())) ...[
               const SizedBox(height: 6),
               WrParagraph(
-                tr('Đã hơn ${kSelfCheckStaleDays ~/ 30} tháng kể từ lần đó. Công '
-                'việc có thể đã khác đi, bạn thử cập nhật lại để bức tranh sát '
-                'với hiện tại hơn nhé.', 'That was over ${kSelfCheckStaleDays ~/ 30} months ago. Work may have '
-                'changed since, so it is worth updating to keep the picture '
-                'close to now.'),
+                tr(
+                  'Đã hơn ${kSelfCheckStaleDays ~/ 30} tháng kể từ lần đó. Công '
+                      'việc có thể đã khác đi, bạn thử cập nhật lại để bức tranh sát '
+                      'với hiện tại hơn nhé.',
+                  'That was over ${kSelfCheckStaleDays ~/ 30} months ago. Work may have '
+                      'changed since, so it is worth updating to keep the picture '
+                      'close to now.',
+                ),
                 key: const Key('wr_snapshot_self_check_stale'),
                 style: const TextStyle(
                   fontSize: 13.5,
@@ -703,7 +762,9 @@ class _CareerSnapshotCard extends ConsumerWidget {
               pillar: pillar,
               // Nhãn của cột trái vẫn là thang đánh giá đã có (§3: "giữ nguyên
               // thang đánh giá đã có, lấy từ pillarLevelText").
-              rating: _hasSelfCheck ? pillarStatusLabel(_scoreOf(pillar)) : null,
+              rating: _hasSelfCheck
+                  ? pillarStatusLabel(_scoreOf(pillar))
+                  : null,
               ratingColor: pillarStatusColor(_scoreOf(pillar)),
               count: hasReflection ? counts[pillar] ?? 0 : null,
               total: classifiedTotal,
@@ -720,11 +781,14 @@ class _CareerSnapshotCard extends ConsumerWidget {
           if (!_hasSelfCheck)
             _SnapshotInvite(
               key: const Key('wr_snapshot_invite_self_check'),
-              text: tr('Cột "Bạn đánh giá" sẽ hiện sau khi bạn trả lời bộ '
-                  'Self-Check ${kSelfCheckQuestions.length} câu, để so với '
-                  'những gì đang thực sự lặp lại.', 'The "You rate" column appears once you answer the '
-                  '${kSelfCheckQuestions.length}-question Self-Check, so it can '
-                  'sit next to what actually keeps repeating.'),
+              text: tr(
+                'Cột "Bạn đánh giá" sẽ hiện sau khi bạn trả lời bộ '
+                    'Self-Check ${kSelfCheckQuestions.length} câu, để so với '
+                    'những gì đang thực sự lặp lại.',
+                'The "You rate" column appears once you answer the '
+                    '${kSelfCheckQuestions.length}-question Self-Check, so it can '
+                    'sit next to what actually keeps repeating.',
+              ),
               action: _SnapshotButton(
                 label: tr('Làm Self-Check', 'Take the Self-Check'),
                 onTap: onStartSelfCheck,
@@ -733,15 +797,18 @@ class _CareerSnapshotCard extends ConsumerWidget {
           if (!hasReflection)
             _SnapshotInvite(
               key: const Key('wr_snapshot_invite_reflection'),
-              text: tr('Cột "Xuất hiện" sẽ mở sau '
-                  '${kCareerHealthThreshold - reflectionTotal} lần nhìn lại '
-                  'nữa, khi đã đủ dữ liệu để thấy điều gì đang trở đi trở lại. '
-                  'Một lần được tính khi bạn đã chọn một tình huống; chạm ô cảm '
-                  'xúc rồi rời đi thì lần đó chưa vào đây.', 'The "Shows up" column opens after '
-                  '${kCareerHealthThreshold - reflectionTotal} more look-backs, '
-                  'once there is enough to see what keeps returning. One counts '
-                  'when you have picked a situation; tapping a feeling and '
-                  'leaving does not count yet.'),
+              text: tr(
+                'Cột "Xuất hiện" sẽ mở sau '
+                    '${kCareerHealthThreshold - reflectionTotal} lần nhìn lại '
+                    'nữa, khi đã đủ dữ liệu để thấy điều gì đang trở đi trở lại. '
+                    'Một lần được tính khi bạn đã chọn một tình huống; chạm ô cảm '
+                    'xúc rồi rời đi thì lần đó chưa vào đây.',
+                'The "Shows up" column opens after '
+                    '${kCareerHealthThreshold - reflectionTotal} more look-backs, '
+                    'once there is enough to see what keeps returning. One counts '
+                    'when you have picked a situation; tapping a feeling and '
+                    'leaving does not count yet.',
+              ),
               action: WrProgressTrack(
                 value: reflectionTotal / kCareerHealthThreshold,
                 color: WrColors.coral,
@@ -767,9 +834,9 @@ class _CareerSnapshotCard extends ConsumerWidget {
           // ── Dòng diễn giải khoảng lệch — chỉ khi có ĐỦ CẢ HAI nguồn ────
           if (_hasSelfCheck && hasReflection)
             _SnapshotGapLine(
-              dominant: dominantPillar(counts, reflectionTotal),
+              dominant: dominant,
               counts: counts,
-              reflectionTotal: reflectionTotal,
+              classifiedTotal: classifiedTotal,
               ratingOf: (p) => pillarStatusLabel(_scoreOf(p)),
             ),
         ],
@@ -932,11 +999,7 @@ class _SnapshotCell extends StatelessWidget {
 
 /// Lời mời cho nguồn còn trống. Không mờ, không ổ khoá (§4).
 class _SnapshotInvite extends StatelessWidget {
-  const _SnapshotInvite({
-    super.key,
-    required this.text,
-    required this.action,
-  });
+  const _SnapshotInvite({super.key, required this.text, required this.action});
 
   final String text;
   final Widget action;
@@ -1011,14 +1074,26 @@ class _SnapshotGapLine extends ConsumerWidget {
   const _SnapshotGapLine({
     required this.dominant,
     required this.counts,
-    required this.reflectionTotal,
+    required this.classifiedTotal,
     required this.ratingOf,
   });
 
   /// Trụ nổi trội, hoặc null khi phân bố tương đối đều.
   final SelfCheckPillar? dominant;
   final Map<SelfCheckPillar, int> counts;
-  final int reflectionTotal;
+
+  /// Mẫu số của cột "Xuất hiện" — số lượt gắn được vào một trụ.
+  ///
+  /// CỐ Ý không nhận tổng số lần nhìn lại. Câu trong [_gapText] dựng từ chính
+  /// hai con số đang hiện ở hai cột ngay phía trên nó, nên nó phải chia cho
+  /// đúng mẫu số của cột ấy. Bản 11/09 đổi cột sang mẫu số này mà để câu văn ở
+  /// lại mẫu số cũ: cột hiện "9 / 31 lần" còn câu ngay dưới nói "9 trong 36
+  /// lần" — cùng một tử số, hai mẫu số, cách nhau ba dòng.
+  ///
+  /// Không truyền `reflectionTotal` vào đây nữa để con số sai không còn với
+  /// tới được từ widget này.
+  final int classifiedTotal;
+
   final String Function(SelfCheckPillar) ratingOf;
 
   @override
@@ -1029,10 +1104,12 @@ class _SnapshotGapLine extends ConsumerWidget {
     // một xu hướng không có thật, và bán một thứ không tồn tại.
     if (pillar == null) return const SizedBox.shrink();
 
-    final entitlement = ref.watch(wrEntitlementProvider).valueOrNull ??
+    final entitlement =
+        ref.watch(wrEntitlementProvider).valueOrNull ??
         WrEntitlement(plan: WrPlan.free);
-    final premium =
-        entitlement.canUseFeature(WrPremiumFeature.selfCheckDeepDive);
+    final premium = entitlement.canUseFeature(
+      WrPremiumFeature.selfCheckDeepDive,
+    );
 
     return Container(
       key: const Key('wr_snapshot_gap'),
@@ -1047,7 +1124,9 @@ class _SnapshotGapLine extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            premium ? tr('Khoảng lệch đáng chú ý', 'A gap worth noticing') : 'Premium',
+            premium
+                ? tr('Khoảng lệch đáng chú ý', 'A gap worth noticing')
+                : 'Premium',
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
@@ -1058,10 +1137,13 @@ class _SnapshotGapLine extends ConsumerWidget {
           WrParagraph(
             premium
                 ? _gapText(pillar)
-                : tr('Hai cột trên đang cho thấy một khoảng lệch. Mở khoá để đọc '
-                    'ý nghĩa của khoảng lệch đó, và theo dõi nó thay đổi ra sao '
-                    'theo thời gian.', 'The two columns above show a gap. Unlock to read what that gap '
-                    'means, and to follow how it shifts over time.'),
+                : tr(
+                    'Hai cột trên đang cho thấy một khoảng lệch. Mở khoá để đọc '
+                        'ý nghĩa của khoảng lệch đó, và theo dõi nó thay đổi ra sao '
+                        'theo thời gian.',
+                    'The two columns above show a gap. Unlock to read what that gap '
+                        'means, and to follow how it shifts over time.',
+                  ),
             key: const Key('wr_snapshot_gap_text'),
             style: const TextStyle(
               fontSize: 14.5,
@@ -1073,7 +1155,10 @@ class _SnapshotGapLine extends ConsumerWidget {
           if (premium)
             WrLinkRow(
               key: const Key('wr_snapshot_gap_open'),
-              label: tr('Xem diễn giải sâu & xu hướng', 'See the deep reading & trends'),
+              label: tr(
+                'Xem diễn giải sâu & xu hướng',
+                'See the deep reading & trends',
+              ),
               onTap: () => openScaDeepDive(context, ref),
             )
           else
@@ -1116,17 +1201,23 @@ class _SnapshotGapLine extends ConsumerWidget {
     // Tự chấm là ổn nhất, mà lại là trụ quay lại nhiều nhất — đây là nhánh có
     // giá trị cao nhất của cả tính năng.
     if (pillarStatusIsReassuring(ratingOf(pillar))) {
-      return tr('Bạn tự đánh giá $name ở mức "$rating", nhưng đây lại là trụ xuất '
-          'hiện nhiều nhất trong các lần nhìn lại gần đây ($count trong '
-          '$reflectionTotal lần).', 'You rate $name as "$rating", yet this is the pillar that shows up '
-          'most in your recent look-backs ($count out of '
-          '$reflectionTotal).');
+      return tr(
+        'Bạn tự đánh giá $name ở mức "$rating", nhưng đây lại là trụ xuất '
+            'hiện nhiều nhất trong các lần nhìn lại gần đây ($count trong '
+            '$classifiedTotal lần).',
+        'You rate $name as "$rating", yet this is the pillar that shows up '
+            'most in your recent look-backs ($count out of '
+            '$classifiedTotal).',
+      );
     }
-    return tr('${pillar.displayName} là trụ bạn quay lại nhiều nhất ($count trong '
-        '$reflectionTotal lần), và cũng là trụ bạn tự đánh giá ở mức "$rating". '
-        'Hai nguồn đang xác nhận lẫn nhau.', '${pillar.displayName} is the pillar you return to most ($count out of '
-        '$reflectionTotal), and also the one you rate as "$rating". '
-        'Both sources are pointing the same way.');
+    return tr(
+      '${pillar.displayName} là trụ bạn quay lại nhiều nhất ($count trong '
+          '$classifiedTotal lần), và cũng là trụ bạn tự đánh giá ở mức "$rating". '
+          'Hai nguồn đang xác nhận lẫn nhau.',
+      '${pillar.displayName} is the pillar you return to most ($count out of '
+          '$classifiedTotal), and also the one you rate as "$rating". '
+          'Both sources are pointing the same way.',
+    );
   }
 }
 
@@ -1164,11 +1255,14 @@ class _SelfCheckInviteCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           WrParagraph(
-            tr('Chỉ với $total câu hỏi ngắn giúp hệ thống hiểu rõ hơn trạng thái '
-            'hiện tại của bạn. Đừng quên cập nhật lại bất cứ khi nào bạn thấy '
-            'có sự thay đổi trong công việc nhé.', 'Just $total short questions to help the app understand where you are '
-            'right now. Do come back and update it whenever something at work '
-            'shifts.'),
+            tr(
+              'Chỉ với $total câu hỏi ngắn giúp hệ thống hiểu rõ hơn trạng thái '
+                  'hiện tại của bạn. Đừng quên cập nhật lại bất cứ khi nào bạn thấy '
+                  'có sự thay đổi trong công việc nhé.',
+              'Just $total short questions to help the app understand where you are '
+                  'right now. Do come back and update it whenever something at work '
+                  'shifts.',
+            ),
             style: const TextStyle(
               fontSize: 14.5,
               height: 1.65,
@@ -1177,7 +1271,10 @@ class _SelfCheckInviteCard extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            tr('Tiến độ lần gần nhất: $shown/$total', 'Last time you got to: $shown/$total'),
+            tr(
+              'Tiến độ lần gần nhất: $shown/$total',
+              'Last time you got to: $shown/$total',
+            ),
             key: const Key('wr_discover_self_check_progress'),
             style: const TextStyle(fontSize: 13.5, color: WrColors.muted),
           ),
@@ -1234,7 +1331,8 @@ class _SelfCheckDeepLock extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final entitlement = ref.watch(wrEntitlementProvider).valueOrNull ??
+    final entitlement =
+        ref.watch(wrEntitlementProvider).valueOrNull ??
         WrEntitlement(plan: WrPlan.free);
     if (entitlement.canUseFeature(WrPremiumFeature.selfCheckDeepDive)) {
       return WrLinkRow(
@@ -1245,11 +1343,16 @@ class _SelfCheckDeepLock extends ConsumerWidget {
     }
     return WrPremiumLock(
       key: const Key('wr_discover_sca_deep_lock'),
-      title: tr('Diễn giải sâu & theo dõi xu hướng', 'Deep reading & trend tracking'),
-      description:
-          tr('So sánh kết quả theo thời gian để thấy điều kiện làm việc của bạn đã '
-          'thay đổi ra sao và đối chiếu với các ghi chú trước đó.', 'Compare results over time to see how your working conditions have '
-          'changed, and set them against your earlier notes.'),
+      title: tr(
+        'Diễn giải sâu & theo dõi xu hướng',
+        'Deep reading & trend tracking',
+      ),
+      description: tr(
+        'So sánh kết quả theo thời gian để thấy điều kiện làm việc của bạn đã '
+            'thay đổi ra sao và đối chiếu với các ghi chú trước đó.',
+        'Compare results over time to see how your working conditions have '
+            'changed, and set them against your earlier notes.',
+      ),
       ctaLabel: tr('Mở khoá', 'Unlock'),
       paywallTrigger: 'sca_deep',
       // Mua xong đi thẳng vào màn đích, không rơi lại tab Hiểu mình (§7).

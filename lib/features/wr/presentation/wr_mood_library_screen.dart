@@ -217,7 +217,10 @@ class _LibraryEmpty extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 40),
         child: Text(
-          tr('Chưa có nội dung nào trong thư viện.', 'Nothing in the library yet.'),
+          tr(
+            'Chưa có nội dung nào trong thư viện.',
+            'Nothing in the library yet.',
+          ),
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 15, color: WrColors.muted),
         ),

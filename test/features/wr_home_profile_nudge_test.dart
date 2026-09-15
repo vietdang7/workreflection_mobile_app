@@ -31,14 +31,14 @@ import '../support/fake_wr_mood_content_repository.dart';
 /// Hồ sơ. Ngưỡng của thẻ nhắc đọc từ đây, không đọc từ kho intelligence: con số
 /// người dùng nhìn thấy và con số quyết định có hỏi hay không phải là một.
 List<Insight> _insights(int n) => [
-      for (var i = 0; i < n; i++)
-        Insight(
-          id: 'i$i',
-          userId: 'u1',
-          content: 'Insight số $i',
-          savedAt: DateTime(2026, 6, 20).add(Duration(days: i)),
-        ),
-    ];
+  for (var i = 0; i < n; i++)
+    Insight(
+      id: 'i$i',
+      userId: 'u1',
+      content: 'Insight số $i',
+      savedAt: DateTime(2026, 6, 20).add(Duration(days: i)),
+    ),
+];
 
 Widget _wrap(FakeWrRepository repo, {FakeWrIntelligenceRepository? intel}) {
   final router = GoRouter(
@@ -55,10 +55,12 @@ Widget _wrap(FakeWrRepository repo, {FakeWrIntelligenceRepository? intel}) {
   return ProviderScope(
     overrides: [
       wrRepositoryProvider.overrideWithValue(repo),
-      wrIntelligenceRepositoryProvider
-          .overrideWithValue(intel ?? FakeWrIntelligenceRepository()),
-      wrMoodContentRepositoryProvider
-          .overrideWithValue(FakeWrMoodContentRepository()),
+      wrIntelligenceRepositoryProvider.overrideWithValue(
+        intel ?? FakeWrIntelligenceRepository(),
+      ),
+      wrMoodContentRepositoryProvider.overrideWithValue(
+        FakeWrMoodContentRepository(),
+      ),
       currentUserIdProvider.overrideWithValue('u1'),
     ],
     child: MaterialApp.router(
@@ -89,7 +91,9 @@ void main() {
   final nudge = find.byKey(const Key('wr_home_profile_nudge'));
 
   group('thẻ nhắc điền hồ sơ', () {
-    testWidgets('người mới KHÔNG bị hỏi — dưới ba Insight thì im', (tester) async {
+    testWidgets('người mới KHÔNG bị hỏi — dưới ba Insight thì im', (
+      tester,
+    ) async {
       final repo = FakeWrRepository()
         ..seedInsights(_insights(2))
         ..seedCcProfile({});
@@ -97,8 +101,9 @@ void main() {
       expect(nudge, findsNothing);
     });
 
-    testWidgets('đủ ba Insight và chưa khai kinh nghiệm thì hiện',
-        (tester) async {
+    testWidgets('đủ ba Insight và chưa khai kinh nghiệm thì hiện', (
+      tester,
+    ) async {
       final repo = FakeWrRepository()
         ..seedInsights(_insights(kProfileNudgeInsightThreshold))
         ..seedCcProfile({});
@@ -120,8 +125,9 @@ void main() {
       expect(nudge, findsNothing);
     });
 
-    testWidgets('chuỗi trắng trong cột kinh nghiệm vẫn tính là chưa khai',
-        (tester) async {
+    testWidgets('chuỗi trắng trong cột kinh nghiệm vẫn tính là chưa khai', (
+      tester,
+    ) async {
       final repo = FakeWrRepository()
         ..seedInsights(_insights(5))
         ..seedCcProfile({'total_work_experience': '  '});
@@ -155,9 +161,9 @@ void main() {
     });
 
     testWidgets('đã bỏ qua từ lần mở trước thì không hiện lại', (tester) async {
-      SharedPreferences.setMockInitialValues(
-        {'wr_profile_nudge_dismissed': true},
-      );
+      SharedPreferences.setMockInitialValues({
+        'wr_profile_nudge_dismissed': true,
+      });
       final repo = FakeWrRepository()
         ..seedInsights(_insights(9))
         ..seedCcProfile({});
@@ -208,8 +214,9 @@ void main() {
   });
 
   group('Insight gần nhất', () {
-    testWidgets('chưa có Insight nào thì thẻ VẪN đứng đây, đổi thành lời mời',
-        (tester) async {
+    testWidgets('chưa có Insight nào thì thẻ VẪN đứng đây, đổi thành lời mời', (
+      tester,
+    ) async {
       final repo = FakeWrRepository()..seedCcProfile({});
       await _pump(tester, repo);
 
@@ -224,8 +231,9 @@ void main() {
       );
     });
 
-    testWidgets('có Insight thì hiện câu thật, không hiện lời mời',
-        (tester) async {
+    testWidgets('có Insight thì hiện câu thật, không hiện lời mời', (
+      tester,
+    ) async {
       final repo = FakeWrRepository()..seedCcProfile({});
       final intel = FakeWrIntelligenceRepository()
         ..seedInsights([
@@ -242,10 +250,7 @@ void main() {
         findsNothing,
       );
       expect(find.byKey(const Key('wr_home_latest_insight')), findsOneWidget);
-      expect(
-        find.text('"Tôi thường im lặng vì sợ phán xét."'),
-        findsOneWidget,
-      );
+      expect(find.text('"Tôi thường im lặng vì sợ phán xét."'), findsOneWidget);
     });
   });
 }

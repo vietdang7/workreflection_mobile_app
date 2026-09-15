@@ -4,13 +4,19 @@ import 'package:workreflection_mobile/core/models/checkin.dart';
 void main() {
   group('CheckinEnergy', () {
     test('dbValue round-trip good', () {
-      expect(CheckinEnergy.fromDb(CheckinEnergy.good.dbValue), CheckinEnergy.good);
+      expect(
+        CheckinEnergy.fromDb(CheckinEnergy.good.dbValue),
+        CheckinEnergy.good,
+      );
     });
     test('dbValue round-trip ok', () {
       expect(CheckinEnergy.fromDb(CheckinEnergy.ok.dbValue), CheckinEnergy.ok);
     });
     test('dbValue round-trip low', () {
-      expect(CheckinEnergy.fromDb(CheckinEnergy.low.dbValue), CheckinEnergy.low);
+      expect(
+        CheckinEnergy.fromDb(CheckinEnergy.low.dbValue),
+        CheckinEnergy.low,
+      );
     });
     test('fromDb throws on unknown', () {
       expect(() => CheckinEnergy.fromDb('unknown'), throwsArgumentError);
@@ -19,13 +25,22 @@ void main() {
 
   group('CheckinDirection', () {
     test('dbValue round-trip forward', () {
-      expect(CheckinDirection.fromDb(CheckinDirection.forward.dbValue), CheckinDirection.forward);
+      expect(
+        CheckinDirection.fromDb(CheckinDirection.forward.dbValue),
+        CheckinDirection.forward,
+      );
     });
     test('dbValue round-trip steady', () {
-      expect(CheckinDirection.fromDb(CheckinDirection.steady.dbValue), CheckinDirection.steady);
+      expect(
+        CheckinDirection.fromDb(CheckinDirection.steady.dbValue),
+        CheckinDirection.steady,
+      );
     });
     test('dbValue round-trip backward', () {
-      expect(CheckinDirection.fromDb(CheckinDirection.backward.dbValue), CheckinDirection.backward);
+      expect(
+        CheckinDirection.fromDb(CheckinDirection.backward.dbValue),
+        CheckinDirection.backward,
+      );
     });
     test('fromDb throws on unknown', () {
       expect(() => CheckinDirection.fromDb('xyz'), throwsArgumentError);

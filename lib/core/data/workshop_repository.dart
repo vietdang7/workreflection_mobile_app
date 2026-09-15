@@ -213,7 +213,8 @@ class SupabaseWorkshopRepository implements WorkshopRepository {
         : 0;
     await _client
         .from('cc_workshops')
-        .update({'current_participants': current + 1}).eq('id', workshopId);
+        .update({'current_participants': current + 1})
+        .eq('id', workshopId);
   }
 
   // ---------------------------------------------------------------------------
@@ -234,21 +235,27 @@ class SupabaseWorkshopRepository implements WorkshopRepository {
   @override
   Future<void> checkIn(String registrationId) async {
     final now = DateTime.now().toIso8601String();
-    await _client.from('cc_workshop_registrations').update({
-      'checked_in_at': now,
-      'attended': true,
-      'attended_at': now,
-      // NOTE: status is intentionally NOT updated — web check-in does not
-      // change status (verified against web source CheckIn.tsx lines 86-94).
-    }).eq('id', registrationId);
+    await _client
+        .from('cc_workshop_registrations')
+        .update({
+          'checked_in_at': now,
+          'attended': true,
+          'attended_at': now,
+          // NOTE: status is intentionally NOT updated — web check-in does not
+          // change status (verified against web source CheckIn.tsx lines 86-94).
+        })
+        .eq('id', registrationId);
   }
 
   @override
   Future<void> setImageConsent(String registrationId, bool consent) async {
-    await _client.from('cc_workshop_registrations').update({
-      'image_consent': consent,
-      'image_consent_at': DateTime.now().toIso8601String(),
-    }).eq('id', registrationId);
+    await _client
+        .from('cc_workshop_registrations')
+        .update({
+          'image_consent': consent,
+          'image_consent_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', registrationId);
   }
 
   // ---------------------------------------------------------------------------
@@ -358,31 +365,40 @@ class SupabaseWorkshopRepository implements WorkshopRepository {
     final now = DateTime.now().toIso8601String();
 
     // Step 1: insert cc_workshop_surveys and get the generated id.
-    final surveyRow = await _client.from('cc_workshop_surveys').insert({
-      'user_id': uid,
-      'workshop_id': workshopId,
-      'question_set_id': questionSetId,
-      'status': 'in_progress',
-      'started_at': now,
-    }).select('id').single();
+    final surveyRow = await _client
+        .from('cc_workshop_surveys')
+        .insert({
+          'user_id': uid,
+          'workshop_id': workshopId,
+          'question_set_id': questionSetId,
+          'status': 'in_progress',
+          'started_at': now,
+        })
+        .select('id')
+        .single();
 
     final surveyId = surveyRow['id'] as String;
 
     // Step 2: bulk insert responses.
     final responses = answers.entries
-        .map((e) => {
-              'survey_id': surveyId,
-              'question_id': e.key, // stored as text in cc_workshop_responses
-              'answer_value': e.value,
-            })
+        .map(
+          (e) => {
+            'survey_id': surveyId,
+            'question_id': e.key, // stored as text in cc_workshop_responses
+            'answer_value': e.value,
+          },
+        )
         .toList();
     await _client.from('cc_workshop_responses').insert(responses);
 
     // Step 3: mark survey completed.
-    await _client.from('cc_workshop_surveys').update({
-      'status': 'completed',
-      'completed_at': DateTime.now().toIso8601String(),
-    }).eq('id', surveyId);
+    await _client
+        .from('cc_workshop_surveys')
+        .update({
+          'status': 'completed',
+          'completed_at': DateTime.now().toIso8601String(),
+        })
+        .eq('id', surveyId);
   }
 
   // ---------------------------------------------------------------------------
@@ -428,8 +444,10 @@ class SupabaseWorkshopRepository implements WorkshopRepository {
 
     if (responseRows.isEmpty) return null;
 
-    final questionIds =
-        responseRows.map((r) => r['question_id'] as String).toSet().toList();
+    final questionIds = responseRows
+        .map((r) => r['question_id'] as String)
+        .toSet()
+        .toList();
 
     // Fetch question layers from cc_questions.
     final questionRows = await _client
@@ -455,8 +473,7 @@ class SupabaseWorkshopRepository implements WorkshopRepository {
     double avg(List<double> vals) =>
         vals.isEmpty ? 0.0 : vals.reduce((a, b) => a + b) / vals.length;
 
-    double round1(double v) =>
-        (v * 10).round() / 10;
+    double round1(double v) => (v * 10).round() / 10;
 
     final layerScores = {
       for (final e in layerValues.entries) e.key: round1(avg(e.value)),
@@ -488,13 +505,15 @@ class SupabaseWorkshopRepository implements WorkshopRepository {
 
   @override
   Future<void> cancelRegistration(
-      String registrationId, String workshopId) async {
+    String registrationId,
+    String workshopId,
+  ) async {
     // Set status and payment_status to 'cancelled' — matching web MyWorkshops
     // cancelMutation (lines 224-229).
-    await _client.from('cc_workshop_registrations').update({
-      'status': 'cancelled',
-      'payment_status': 'cancelled',
-    }).eq('id', registrationId);
+    await _client
+        .from('cc_workshop_registrations')
+        .update({'status': 'cancelled', 'payment_status': 'cancelled'})
+        .eq('id', registrationId);
 
     // Decrement current_participants, matching web (lines 230-235).
     final workshopRows = await _client
@@ -503,11 +522,11 @@ class SupabaseWorkshopRepository implements WorkshopRepository {
         .eq('id', workshopId)
         .limit(1);
     if (workshopRows.isNotEmpty) {
-      final current =
-          (workshopRows.first['current_participants'] as int?) ?? 0;
-      await _client.from('cc_workshops').update({
-        'current_participants': current > 0 ? current - 1 : 0,
-      }).eq('id', workshopId);
+      final current = (workshopRows.first['current_participants'] as int?) ?? 0;
+      await _client
+          .from('cc_workshops')
+          .update({'current_participants': current > 0 ? current - 1 : 0})
+          .eq('id', workshopId);
     }
   }
 }

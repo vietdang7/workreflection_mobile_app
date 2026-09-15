@@ -97,26 +97,34 @@ class _FakeAuth implements AuthRepository {
 
 class _Stage {
   _Stage()
-      : auth = _FakeAuth(),
-        wr = FakeWrRepository(),
-        episodes = FakeWrEpisodeRepository(),
-        intel = FakeWrIntelligenceRepository(),
-        content = FakeWrContentRepository(),
-        moodContent = FakeWrMoodContentRepository() {
+    : auth = _FakeAuth(),
+      wr = FakeWrRepository(),
+      episodes = FakeWrEpisodeRepository(),
+      intel = FakeWrIntelligenceRepository(),
+      content = FakeWrContentRepository(),
+      moodContent = FakeWrMoodContentRepository() {
     content.seedSituations(const [
       WrSituation(
-        code: 'C2-sit-01',
-        text: 'Không dám lên tiếng trong cuộc họp',
+        code: 'C2-01',
+        text: 'Ý tưởng của tôi biến mất trong cuộc họp',
         scaDimension: ScaDimension.c2,
         wave: 1,
         humanNeed: HumanNeed.ketNoi,
+        pillarCode: 'C',
+        subgroup: 'C2',
+        mood: 'stress',
+        valence: WrValence.thachThuc,
       ),
       WrSituation(
-        code: 'A3-sit-01',
-        text: 'Việc dồn nhiều hơn mình xử lý nổi',
+        code: 'A3-01',
+        text: 'Chuyện này sao lại xảy ra lần nữa?',
         scaDimension: ScaDimension.a3,
         wave: 1,
         humanNeed: HumanNeed.roRang,
+        pillarCode: 'A',
+        subgroup: 'A3',
+        mood: 'tired',
+        valence: WrValence.thachThuc,
       ),
     ]);
     moodContent.seedChoicePool(const [
@@ -144,22 +152,44 @@ class _Stage {
       ),
       GoRoute(path: '/profile', builder: (_, __) => const ProfileEditScreen()),
       GoRoute(path: '/home', builder: (_, __) => const WrHomeScreen()),
-      GoRoute(path: '/wr/discover', builder: (_, __) => const WrDiscoverScreen()),
+      GoRoute(
+        path: '/wr/discover',
+        builder: (_, __) => const WrDiscoverScreen(),
+      ),
       GoRoute(path: '/wr/growth', builder: (_, __) => const WrGrowthScreen()),
       GoRoute(path: '/wr/journey', builder: (_, __) => const WrJourneyScreen()),
-      GoRoute(path: '/wr/patterns', builder: (_, __) => const WrPatternsScreen()),
+      GoRoute(
+        path: '/wr/patterns',
+        builder: (_, __) => const WrPatternsScreen(),
+      ),
       GoRoute(
         path: '/wr/pattern/:code',
-        builder: (_, s) =>
-            WrPatternDetailScreen(situationCode: s.pathParameters['code'] ?? ''),
+        builder: (_, s) => WrPatternDetailScreen(
+          situationCode: s.pathParameters['code'] ?? '',
+        ),
       ),
       GoRoute(path: '/wr/paywall', builder: (_, __) => const WrPaywallScreen()),
-      GoRoute(path: '/wr/flow/energy', builder: (_, __) => const WrEnergyScreen()),
-      GoRoute(path: '/wr/flow/moment', builder: (_, __) => const WrMomentScreen()),
+      GoRoute(
+        path: '/wr/flow/energy',
+        builder: (_, __) => const WrEnergyScreen(),
+      ),
+      GoRoute(
+        path: '/wr/flow/moment',
+        builder: (_, __) => const WrMomentScreen(),
+      ),
       GoRoute(path: '/wr/flow/step', builder: (_, __) => const WrStepScreen()),
-      GoRoute(path: '/wr/flow/detail', builder: (_, __) => const WrDetailScreen()),
-      GoRoute(path: '/wr/flow/meaning', builder: (_, __) => const WrMeaningScreen()),
-      GoRoute(path: '/wr/flow/commit', builder: (_, __) => const WrCommitScreen()),
+      GoRoute(
+        path: '/wr/flow/detail',
+        builder: (_, __) => const WrDetailScreen(),
+      ),
+      GoRoute(
+        path: '/wr/flow/meaning',
+        builder: (_, __) => const WrMeaningScreen(),
+      ),
+      GoRoute(
+        path: '/wr/flow/commit',
+        builder: (_, __) => const WrCommitScreen(),
+      ),
       GoRoute(path: '/wr/flow/done', builder: (_, __) => const WrDoneScreen()),
       GoRoute(
         path: '/wr/self-check',
@@ -169,28 +199,28 @@ class _Stage {
   );
 
   Widget app() => ProviderScope(
-        overrides: [
-          authRepositoryProvider.overrideWithValue(auth),
-          wrRepositoryProvider.overrideWithValue(wr),
-          wrEpisodeRepositoryProvider.overrideWithValue(episodes),
-          wrIntelligenceRepositoryProvider.overrideWithValue(intel),
-          wrContentRepositoryProvider.overrideWithValue(content),
-          wrMoodContentRepositoryProvider.overrideWithValue(moodContent),
-          currentUserIdProvider.overrideWithValue('u1'),
-        ],
-        child: MaterialApp.router(
+    overrides: [
+      authRepositoryProvider.overrideWithValue(auth),
+      wrRepositoryProvider.overrideWithValue(wr),
+      wrEpisodeRepositoryProvider.overrideWithValue(episodes),
+      wrIntelligenceRepositoryProvider.overrideWithValue(intel),
+      wrContentRepositoryProvider.overrideWithValue(content),
+      wrMoodContentRepositoryProvider.overrideWithValue(moodContent),
+      currentUserIdProvider.overrideWithValue('u1'),
+    ],
+    child: MaterialApp.router(
       builder: wrTextScaleBuilder,
-          routerConfig: router,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('vi'),
-        ),
-      );
+      routerConfig: router,
+      localizationsDelegates: const [
+        AppLocalizations.delegate,
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: AppLocalizations.supportedLocales,
+      locale: const Locale('vi'),
+    ),
+  );
 }
 
 Future<void> _pump(WidgetTester tester, Widget app) async {
@@ -212,7 +242,7 @@ Future<void> _walkToMeaning(WidgetTester tester, {String? detail}) async {
   // Bước 0 — CHỌN, không viết. Danh sách trộn ngẫu nhiên nên chạm mã nào đang
   // hiện thì chạm mã đó.
   if (find.byType(WrStepScreen).evaluate().isNotEmpty) {
-    for (final code in const ['C2-sit-01', 'A3-sit-01']) {
+    for (final code in const ['C2-01', 'A3-01']) {
       final chip = find.byKey(Key('wr_situation_$code'));
       if (chip.evaluate().isEmpty) continue;
       await tester.ensureVisible(chip);
@@ -235,8 +265,9 @@ Future<void> _walkToMeaning(WidgetTester tester, {String? detail}) async {
 }
 
 void main() {
-  testWidgets('đăng ký → hồ sơ → phản tư trọn vòng → các tab đều đọc được',
-      (tester) async {
+  testWidgets('đăng ký → hồ sơ → phản tư trọn vòng → các tab đều đọc được', (
+    tester,
+  ) async {
     final stage = _Stage();
     await _pump(tester, stage.app());
 
@@ -246,11 +277,17 @@ void main() {
     await tester.pumpAndSettle();
 
     await tester.enterText(
-        find.widgetWithText(TextFormField, 'Tên của bạn'), 'Duy Thông');
+      find.widgetWithText(TextFormField, 'Tên của bạn'),
+      'Duy Thông',
+    );
     await tester.enterText(
-        find.widgetWithText(TextFormField, 'Email'), 'thong@test.com');
+      find.widgetWithText(TextFormField, 'Email'),
+      'thong@test.com',
+    );
     await tester.enterText(
-        find.widgetWithText(TextFormField, 'Mật khẩu'), 'matkhau123');
+      find.widgetWithText(TextFormField, 'Mật khẩu'),
+      'matkhau123',
+    );
     await tester.tap(find.widgetWithText(ElevatedButton, 'Đăng ký'));
     await tester.pumpAndSettle();
 
@@ -263,7 +300,9 @@ void main() {
 
     // ── 2. Dựng hồ sơ rồi vào Home ───────────────────────────────────────
     await tester.enterText(
-        find.byKey(const Key('profile_edit_display_name')), 'Duy Thông');
+      find.byKey(const Key('profile_edit_display_name')),
+      'Duy Thông',
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('profile_edit_save_btn')));
     await tester.pumpAndSettle();
@@ -294,8 +333,10 @@ void main() {
 
     // Bước Ý nghĩa có HAI LỚP từ changelog 24/08 §1.2: viết câu mở dở → xem
     // góc nhìn chung → mới tiếp tục.
-    await tester.enterText(find.byKey(const Key('wr_meaning_field')),
-        'mình chỉ lên tiếng khi thấy an toàn');
+    await tester.enterText(
+      find.byKey(const Key('wr_meaning_field')),
+      'mình chỉ lên tiếng khi thấy an toàn',
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('wr_flow_primary')));
     await tester.pumpAndSettle();
@@ -328,8 +369,9 @@ void main() {
     // Insight, changelog 24/08 §8.2) là LỚP DIỄN GIẢI trên STORY, không phải
     // một phiên thứ hai — nên chúng được lọc ra khỏi phép đếm này.
     expect(
-      stage.content.insertMemoryEventCalls
-          .where((e) => e.behavior == 'reflection_episode'),
+      stage.content.insertMemoryEventCalls.where(
+        (e) => e.behavior == 'reflection_episode',
+      ),
       hasLength(1),
     );
     expect(stage.intel.insertInsightCalls, hasLength(1));
@@ -360,10 +402,14 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.byType(WrJourneyScreen), findsOneWidget);
     // Free: Career Memory khoá hoàn toàn, con số tổng vẫn nói ra.
-    expect(find.byKey(const Key('wr_journey_memory_lock'), skipOffstage: false),
-        findsOneWidget);
-    expect(find.textContaining('1 ghi nhận', skipOffstage: false),
-        findsOneWidget);
+    expect(
+      find.byKey(const Key('wr_journey_memory_lock'), skipOffstage: false),
+      findsOneWidget,
+    );
+    expect(
+      find.textContaining('1 ghi nhận', skipOffstage: false),
+      findsOneWidget,
+    );
 
     stage.router.go('/wr/growth');
     await tester.pumpAndSettle();
@@ -384,8 +430,9 @@ void main() {
   //
   // Chỉ lộ khi đi TỪNG BƯỚC như người thật; test cũ nào cũng seed sẵn Episode
   // đã đi hết chuỗi nên màn Bước bị thay ngay từ đầu và không bao giờ đè ai.
-  testWidgets('xác nhận Ý nghĩa xong sang Lựa chọn, không bị ném ngược lại',
-      (tester) async {
+  testWidgets('xác nhận Ý nghĩa xong sang Lựa chọn, không bị ném ngược lại', (
+    tester,
+  ) async {
     final stage = _Stage();
     await _pump(tester, stage.app());
     stage.router.go('/home');
@@ -396,7 +443,9 @@ void main() {
     await _walkToMeaning(tester);
 
     await tester.enterText(
-        find.byKey(const Key('wr_meaning_field')), 'đây không phải lần đầu');
+      find.byKey(const Key('wr_meaning_field')),
+      'đây không phải lần đầu',
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('wr_flow_primary')));
     await tester.pumpAndSettle();
@@ -411,15 +460,22 @@ void main() {
         .map((m) => m.matchedLocation)
         .toList();
     expect(stack.last, '/wr/flow/commit', reason: 'stack: $stack');
-    expect(stack.where((l) => l == '/wr/flow/meaning'), hasLength(1),
-        reason: 'màn Ý nghĩa bị đẩy chồng lên chính nó: $stack');
-    expect(stack, isNot(contains('/wr/flow/step')),
-        reason: 'màn Bước còn nằm dưới sẽ đè màn khác: $stack');
+    expect(
+      stack.where((l) => l == '/wr/flow/meaning'),
+      hasLength(1),
+      reason: 'màn Ý nghĩa bị đẩy chồng lên chính nó: $stack',
+    );
+    expect(
+      stack,
+      isNot(contains('/wr/flow/step')),
+      reason: 'màn Bước còn nằm dưới sẽ đè màn khác: $stack',
+    );
     expect(find.textContaining('Transition bất hợp lệ'), findsNothing);
   });
 
-  testWidgets('phiên thứ hai trong ngày vẫn mở được, không đè phiên đã khép',
-      (tester) async {
+  testWidgets('phiên thứ hai trong ngày vẫn mở được, không đè phiên đã khép', (
+    tester,
+  ) async {
     final stage = _Stage();
     await _pump(tester, stage.app());
 
@@ -430,7 +486,7 @@ void main() {
     // Phiên 1 — bỏ dở giữa chừng bằng nút đóng.
     await tester.tap(find.byKey(const Key('wr_home_checkin_tired')));
     await tester.pumpAndSettle();
-    for (final code in const ['C2-sit-01', 'A3-sit-01']) {
+    for (final code in const ['C2-01', 'A3-01']) {
       final chip = find.byKey(Key('wr_situation_$code'));
       if (chip.evaluate().isEmpty) continue;
       await tester.ensureVisible(chip);
@@ -440,7 +496,9 @@ void main() {
       break;
     }
     await tester.enterText(
-        find.byKey(const Key('wr_detail_field')), 'câu trả lời dở dang');
+      find.byKey(const Key('wr_detail_field')),
+      'câu trả lời dở dang',
+    );
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('wr_flow_close')));
     await tester.pumpAndSettle();
@@ -456,8 +514,10 @@ void main() {
 
     expect(find.textContaining('Transition bất hợp lệ'), findsNothing);
     expect(find.textContaining('Không lưu được'), findsNothing);
-    expect(stage.episodes.episodes.single.state,
-        isNot(ExperienceState.dormant));
+    expect(
+      stage.episodes.episodes.single.state,
+      isNot(ExperienceState.dormant),
+    );
 
     // Đi tiếp được tới cuối chuỗi, không bắt trả lời lại từ đầu.
     await _walkToMeaning(tester);
@@ -473,9 +533,13 @@ void main() {
     await _pump(tester, stage.app());
 
     await tester.enterText(
-        find.widgetWithText(TextFormField, 'Email'), 'thong@test.com');
+      find.widgetWithText(TextFormField, 'Email'),
+      'thong@test.com',
+    );
     await tester.enterText(
-        find.widgetWithText(TextFormField, 'Mật khẩu'), 'matkhau123');
+      find.widgetWithText(TextFormField, 'Mật khẩu'),
+      'matkhau123',
+    );
     await tester.tap(find.widgetWithText(ElevatedButton, 'Đăng nhập'));
     await tester.pumpAndSettle();
 

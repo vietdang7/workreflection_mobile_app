@@ -22,8 +22,9 @@ import '../support/fake_wr_content_repository.dart';
 import '../support/fake_wr_intelligence_repository.dart';
 
 void main() {
-  testWidgets('màn hình hiện đúng nguyên văn cả 15 câu, theo đúng thứ tự',
-      (tester) async {
+  testWidgets('màn hình hiện đúng nguyên văn cả 15 câu, theo đúng thứ tự', (
+    tester,
+  ) async {
     tester.view.physicalSize = const Size(1400, 3000);
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.reset);
@@ -54,8 +55,9 @@ void main() {
       ProviderScope(
         overrides: [
           wrIntelligenceRepositoryProvider.overrideWithValue(intel),
-          wrContentRepositoryProvider
-              .overrideWithValue(FakeWrContentRepository()),
+          wrContentRepositoryProvider.overrideWithValue(
+            FakeWrContentRepository(),
+          ),
           currentUserIdProvider.overrideWithValue('u1'),
         ],
         child: MaterialApp.router(
@@ -74,12 +76,21 @@ void main() {
     for (var i = 0; i < kSelfCheckQuestions.length; i++) {
       final q = kSelfCheckQuestions[i];
 
-      expect(find.text('Câu ${i + 1} / 15'), findsOneWidget,
-          reason: 'phải đang ở câu ${i + 1}');
-      expect(find.text(q.text), findsOneWidget,
-          reason: 'câu ${i + 1} (${q.id}) hiển thị sai nguyên văn');
-      expect(find.textContaining('—'), findsNothing,
-          reason: 'câu ${i + 1} không được có dấu gạch ngang dài');
+      expect(
+        find.text('Câu ${i + 1} / 15'),
+        findsOneWidget,
+        reason: 'phải đang ở câu ${i + 1}',
+      );
+      expect(
+        find.text(q.text),
+        findsOneWidget,
+        reason: 'câu ${i + 1} (${q.id}) hiển thị sai nguyên văn',
+      );
+      expect(
+        find.textContaining('—'),
+        findsNothing,
+        reason: 'câu ${i + 1} không được có dấu gạch ngang dài',
+      );
 
       // Trả lời để sang câu kế (màn tự nhảy sau 260ms).
       await tester.tap(find.text('Đôi khi đúng'));

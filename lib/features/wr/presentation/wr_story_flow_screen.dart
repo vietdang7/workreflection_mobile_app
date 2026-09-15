@@ -17,7 +17,10 @@ enum _StoryPhase { story, aha, confidence, reflection, practice, memory }
 
 dynamic get _phaseLabels => {
   _StoryPhase.story: tr('Bạn có bao giờ?', 'Have you ever?'),
-  _StoryPhase.aha: tr('Điều WorkReflection nhận ra', 'What WorkReflection noticed'),
+  _StoryPhase.aha: tr(
+    'Điều WorkReflection nhận ra',
+    'What WorkReflection noticed',
+  ),
   _StoryPhase.confidence: tr('Mức độ nhận ra', 'How much it lands'),
   _StoryPhase.reflection: tr('Ghi lại suy nghĩ', 'Note your thoughts'),
   _StoryPhase.practice: tr('Thực hành nhỏ', 'A small practice'),
@@ -53,14 +56,17 @@ class _WrStoryFlowScreenState extends ConsumerState<WrStoryFlowScreen> {
 
   Future<void> _loadStories() async {
     final contentRepo = ref.read(wrContentRepositoryProvider);
-    final allStories = await contentRepo.fetchStories(dimension: widget.initialDimension);
+    final allStories = await contentRepo.fetchStories(
+      dimension: widget.initialDimension,
+    );
     final events = await contentRepo.fetchMemoryEvents(limit: 200);
     final seenIds = events.map((e) => e.storyId).whereType<String>().toSet();
 
     // Xếp theo Career Snapshot: ba chiều của vai trò trước, phần còn lại theo
     // thứ tự đợt triển khai (DataSpec v3 Tầng 4). Chưa có hồ sơ → thứ tự đợt.
     final snapshot =
-        ref.read(wrCareerSnapshotProvider).valueOrNull ?? const CareerSnapshot();
+        ref.read(wrCareerSnapshotProvider).valueOrNull ??
+        const CareerSnapshot();
     final sorted = rankStoriesForProfile(allStories, snapshot);
 
     // Remove seen, but keep fallback
@@ -102,46 +108,56 @@ class _WrStoryFlowScreenState extends ConsumerState<WrStoryFlowScreen> {
       final story = _story!;
 
       // (a) insert CareerMemoryEvent
-      await contentRepo.insertMemoryEvent(CareerMemoryEvent(
-        id: '',
-        userId: userId,
-        storyId: story.storyId,
-        scaDimension: story.scaDimension,
-        humanNeed: story.humanNeed,
-        intensity: _intensity,
-        reflectionText: _reflectionText.isNotEmpty ? _reflectionText : null,
-        behavior: memType,
-      ));
+      await contentRepo.insertMemoryEvent(
+        CareerMemoryEvent(
+          id: '',
+          userId: userId,
+          storyId: story.storyId,
+          scaDimension: story.scaDimension,
+          humanNeed: story.humanNeed,
+          intensity: _intensity,
+          reflectionText: _reflectionText.isNotEmpty ? _reflectionText : null,
+          behavior: memType,
+        ),
+      );
 
       // (b) insert WrInsight
       if (story.ahaMessage != null) {
-        await intelRepo.insertInsight(WrInsight(
-          userId: userId,
-          source: 'story',
-          scaDimension: story.scaDimension,
-          humanNeed: story.humanNeed,
-          content: story.ahaMessage!,
-        ));
+        await intelRepo.insertInsight(
+          WrInsight(
+            userId: userId,
+            source: 'story',
+            scaDimension: story.scaDimension,
+            humanNeed: story.humanNeed,
+            content: story.ahaMessage!,
+          ),
+        );
       }
 
       // (c) insert ReflectionSteps: insight + action
-      await intelRepo.insertReflectionStep(ReflectionStep(
-        userId: userId,
-        step: ReflectionStepType.insight,
-        content: story.ahaMessage,
-      ));
+      await intelRepo.insertReflectionStep(
+        ReflectionStep(
+          userId: userId,
+          step: ReflectionStepType.insight,
+          content: story.ahaMessage,
+        ),
+      );
       if (_practiceAdded && story.practiceAction != null) {
-        await intelRepo.insertReflectionStep(ReflectionStep(
-          userId: userId,
-          step: ReflectionStepType.action,
-          content: story.practiceAction,
-        ));
+        await intelRepo.insertReflectionStep(
+          ReflectionStep(
+            userId: userId,
+            step: ReflectionStepType.action,
+            content: story.practiceAction,
+          ),
+        );
       } else {
-        await intelRepo.insertReflectionStep(ReflectionStep(
-          userId: userId,
-          step: ReflectionStepType.action,
-          content: null,
-        ));
+        await intelRepo.insertReflectionStep(
+          ReflectionStep(
+            userId: userId,
+            step: ReflectionStepType.action,
+            content: null,
+          ),
+        );
       }
 
       await Future.delayed(const Duration(milliseconds: 800));
@@ -167,10 +183,16 @@ class _WrStoryFlowScreenState extends ConsumerState<WrStoryFlowScreen> {
     if (_story == null) {
       return Scaffold(
         body: Center(
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Text(tr('Không có câu chuyện nào.', 'No stories here.')),
-            TextButton(onPressed: () => context.go('/home'), child: Text(tr('Về trang chủ', 'Back to home'))),
-          ]),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(tr('Không có câu chuyện nào.', 'No stories here.')),
+              TextButton(
+                onPressed: () => context.go('/home'),
+                child: Text(tr('Về trang chủ', 'Back to home')),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -187,12 +209,14 @@ class _WrStoryFlowScreenState extends ConsumerState<WrStoryFlowScreen> {
                 children: [
                   IconButton(
                     icon: const Icon(Icons.arrow_back_ios_new, size: 18),
-                    onPressed: _phase == _StoryPhase.story ? null : () {
-                      setState(() {
-                        final idx = _StoryPhase.values.indexOf(_phase);
-                        if (idx > 0) _phase = _StoryPhase.values[idx - 1];
-                      });
-                    },
+                    onPressed: _phase == _StoryPhase.story
+                        ? null
+                        : () {
+                            setState(() {
+                              final idx = _StoryPhase.values.indexOf(_phase);
+                              if (idx > 0) _phase = _StoryPhase.values[idx - 1];
+                            });
+                          },
                   ),
                   Expanded(
                     child: Column(
@@ -204,8 +228,14 @@ class _WrStoryFlowScreenState extends ConsumerState<WrStoryFlowScreen> {
                           minHeight: 3,
                         ),
                         const SizedBox(height: 4),
-                        Text(_phaseLabel,
-                            style: const TextStyle(fontSize: 11.5, color: WrColors.text3, fontWeight: FontWeight.w500)),
+                        Text(
+                          _phaseLabel,
+                          style: const TextStyle(
+                            fontSize: 11.5,
+                            color: WrColors.text3,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -227,37 +257,40 @@ class _WrStoryFlowScreenState extends ConsumerState<WrStoryFlowScreen> {
     final story = _story!;
     return switch (_phase) {
       _StoryPhase.story => _PhaseStory(
-          story: story,
-          onResonates: () => setState(() => _phase = _StoryPhase.aha),
-          onNotResonates: _nextStory,
-        ),
+        story: story,
+        onResonates: () => setState(() => _phase = _StoryPhase.aha),
+        onNotResonates: _nextStory,
+      ),
       _StoryPhase.aha => _PhaseAha(
-          story: story,
-          onContinue: () => setState(() => _phase = _StoryPhase.confidence),
-        ),
+        story: story,
+        onContinue: () => setState(() => _phase = _StoryPhase.confidence),
+      ),
       _StoryPhase.confidence => _PhaseConfidence(
-          onSelect: (intensity) => setState(() {
-            _intensity = intensity;
-            _phase = _StoryPhase.reflection;
-          }),
-        ),
+        onSelect: (intensity) => setState(() {
+          _intensity = intensity;
+          _phase = _StoryPhase.reflection;
+        }),
+      ),
       _StoryPhase.reflection => _PhaseReflection(
-          story: story,
-          onSave: (text) => setState(() {
-            _reflectionText = text;
-            _phase = _StoryPhase.practice;
-          }),
-          onSkip: () => setState(() => _phase = _StoryPhase.practice),
-        ),
+        story: story,
+        onSave: (text) => setState(() {
+          _reflectionText = text;
+          _phase = _StoryPhase.practice;
+        }),
+        onSkip: () => setState(() => _phase = _StoryPhase.practice),
+      ),
       _StoryPhase.practice => _PhasePractice(
-          story: story,
-          onAdd: () => setState(() {
-            _practiceAdded = true;
-            _phase = _StoryPhase.memory;
-          }),
-          onSkip: () => setState(() => _phase = _StoryPhase.memory),
-        ),
-      _StoryPhase.memory => _PhaseMemory(saving: _saving, onSelect: _saveMemory),
+        story: story,
+        onAdd: () => setState(() {
+          _practiceAdded = true;
+          _phase = _StoryPhase.memory;
+        }),
+        onSkip: () => setState(() => _phase = _StoryPhase.memory),
+      ),
+      _StoryPhase.memory => _PhaseMemory(
+        saving: _saving,
+        onSelect: _saveMemory,
+      ),
     };
   }
 }
@@ -267,7 +300,11 @@ class _WrStoryFlowScreenState extends ConsumerState<WrStoryFlowScreen> {
 // ---------------------------------------------------------------------------
 
 class _PhaseStory extends StatelessWidget {
-  const _PhaseStory({required this.story, required this.onResonates, required this.onNotResonates});
+  const _PhaseStory({
+    required this.story,
+    required this.onResonates,
+    required this.onNotResonates,
+  });
   final WrStory story;
   final VoidCallback onResonates;
   final VoidCallback onNotResonates;
@@ -279,22 +316,39 @@ class _PhaseStory extends StatelessWidget {
       children: [
         Text(
           '"${story.storyContent}"',
-          style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic, color: WrColors.dark, height: 1.7),
+          style: const TextStyle(
+            fontSize: 16,
+            fontStyle: FontStyle.italic,
+            color: WrColors.dark,
+            height: 1.7,
+          ),
         ),
         const SizedBox(height: 32),
         ElevatedButton(
           onPressed: onResonates,
           style: ElevatedButton.styleFrom(
-            backgroundColor: WrColors.navy, foregroundColor: WrColors.white,
+            backgroundColor: WrColors.navy,
+            foregroundColor: WrColors.white,
             minimumSize: const Size.fromHeight(48),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
-          child: Text(tr('Tôi cũng từng như vậy', 'I have been there too'), style: TextStyle(fontWeight: FontWeight.w600)),
+          child: Text(
+            tr('Tôi cũng từng như vậy', 'I have been there too'),
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
         ),
         const SizedBox(height: 12),
         TextButton(
           onPressed: onNotResonates,
-          child: Text(tr('Câu chuyện này không quen với tôi', 'This story is not familiar to me'), style: TextStyle(color: WrColors.muted)),
+          child: Text(
+            tr(
+              'Câu chuyện này không quen với tôi',
+              'This story is not familiar to me',
+            ),
+            style: TextStyle(color: WrColors.muted),
+          ),
         ),
       ],
     );
@@ -312,30 +366,51 @@ class _PhaseAha extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
       children: [
         if (story.ahaMessage != null)
-          WrParagraph(story.ahaMessage!,
-              style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: WrColors.dark, height: 1.5)),
+          WrParagraph(
+            story.ahaMessage!,
+            style: const TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: WrColors.dark,
+              height: 1.5,
+            ),
+          ),
         if (story.selfReflection != null) ...[
           const SizedBox(height: 20),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              border: const Border(left: BorderSide(color: WrColors.coral, width: 3)),
+              border: const Border(
+                left: BorderSide(color: WrColors.coral, width: 3),
+              ),
               color: WrColors.navy.withValues(alpha: 0.04),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: WrParagraph(story.selfReflection!,
-                style: const TextStyle(fontSize: 15.5, color: WrColors.muted, height: 1.6)),
+            child: WrParagraph(
+              story.selfReflection!,
+              style: const TextStyle(
+                fontSize: 15.5,
+                color: WrColors.muted,
+                height: 1.6,
+              ),
+            ),
           ),
         ],
         const SizedBox(height: 32),
         ElevatedButton(
           onPressed: onContinue,
           style: ElevatedButton.styleFrom(
-            backgroundColor: WrColors.navy, foregroundColor: WrColors.white,
+            backgroundColor: WrColors.navy,
+            foregroundColor: WrColors.white,
             minimumSize: const Size.fromHeight(48),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
-          child: Text(tr('Tiếp tục', 'Continue'), style: TextStyle(fontWeight: FontWeight.w600)),
+          child: Text(
+            tr('Tiếp tục', 'Continue'),
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
         ),
       ],
     );
@@ -351,14 +426,33 @@ class _PhaseConfidence extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
       children: [
-        Text(tr('Điều này có liên quan đến bạn không?', 'Does this relate to you?'),
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: WrColors.dark, height: 1.4)),
+        Text(
+          tr(
+            'Điều này có liên quan đến bạn không?',
+            'Does this relate to you?',
+          ),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: WrColors.dark,
+            height: 1.4,
+          ),
+        ),
         const SizedBox(height: 24),
-        _ConfidenceOption(label: tr('Rất liên quan', 'Very much'), onTap: () => onSelect(3)),
+        _ConfidenceOption(
+          label: tr('Rất liên quan', 'Very much'),
+          onTap: () => onSelect(3),
+        ),
         const SizedBox(height: 10),
-        _ConfidenceOption(label: tr('Hơi liên quan', 'Somewhat'), onTap: () => onSelect(2)),
+        _ConfidenceOption(
+          label: tr('Hơi liên quan', 'Somewhat'),
+          onTap: () => onSelect(2),
+        ),
         const SizedBox(height: 10),
-        _ConfidenceOption(label: tr('Không liên quan', 'Not really'), onTap: () => onSelect(1)),
+        _ConfidenceOption(
+          label: tr('Không liên quan', 'Not really'),
+          onTap: () => onSelect(1),
+        ),
       ],
     );
   }
@@ -380,14 +474,25 @@ class _ConfidenceOption extends StatelessWidget {
           borderRadius: BorderRadius.circular(10),
           border: Border.all(color: const Color(0x1A2C335D)),
         ),
-        child: Text(label, style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w500, color: WrColors.dark)),
+        child: Text(
+          label,
+          style: const TextStyle(
+            fontSize: 16.5,
+            fontWeight: FontWeight.w500,
+            color: WrColors.dark,
+          ),
+        ),
       ),
     );
   }
 }
 
 class _PhaseReflection extends StatefulWidget {
-  const _PhaseReflection({required this.story, required this.onSave, required this.onSkip});
+  const _PhaseReflection({
+    required this.story,
+    required this.onSave,
+    required this.onSkip,
+  });
   final WrStory story;
   final ValueChanged<String> onSave;
   final VoidCallback onSkip;
@@ -400,11 +505,19 @@ class _PhaseReflectionState extends State<_PhaseReflection> {
   final _ctrl = TextEditingController();
 
   @override
-  void dispose() { _ctrl.dispose(); super.dispose(); }
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final question = widget.story.reflectionQuestion ?? tr('Điều này gợi lên điều gì với bạn?', 'What does this bring up for you?');
+    final question =
+        widget.story.reflectionQuestion ??
+        tr(
+          'Điều này gợi lên điều gì với bạn?',
+          'What does this bring up for you?',
+        );
     return ListView(
       padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
       children: [
@@ -423,30 +536,53 @@ class _PhaseReflectionState extends State<_PhaseReflection> {
           controller: _ctrl,
           maxLines: 5,
           decoration: InputDecoration(
-            hintText: tr('Viết suy nghĩ của bạn...', 'Write what you are thinking...'),
-            border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: Color(0x1A2C335D))),
-            filled: true, fillColor: WrColors.white,
+            hintText: tr(
+              'Viết suy nghĩ của bạn...',
+              'Write what you are thinking...',
+            ),
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(10),
+              borderSide: const BorderSide(color: Color(0x1A2C335D)),
+            ),
+            filled: true,
+            fillColor: WrColors.white,
           ),
         ),
         const SizedBox(height: 16),
         ElevatedButton(
           onPressed: () => widget.onSave(_ctrl.text),
           style: ElevatedButton.styleFrom(
-            backgroundColor: WrColors.navy, foregroundColor: WrColors.white,
+            backgroundColor: WrColors.navy,
+            foregroundColor: WrColors.white,
             minimumSize: const Size.fromHeight(48),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
-          child: Text(tr('Lưu và tiếp tục', 'Save and continue'), style: TextStyle(fontWeight: FontWeight.w600)),
+          child: Text(
+            tr('Lưu và tiếp tục', 'Save and continue'),
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
         ),
         const SizedBox(height: 10),
-        TextButton(onPressed: widget.onSkip, child: Text(tr('Bỏ qua', 'Skip'), style: TextStyle(color: WrColors.muted))),
+        TextButton(
+          onPressed: widget.onSkip,
+          child: Text(
+            tr('Bỏ qua', 'Skip'),
+            style: TextStyle(color: WrColors.muted),
+          ),
+        ),
       ],
     );
   }
 }
 
 class _PhasePractice extends StatelessWidget {
-  const _PhasePractice({required this.story, required this.onAdd, required this.onSkip});
+  const _PhasePractice({
+    required this.story,
+    required this.onAdd,
+    required this.onSkip,
+  });
   final WrStory story;
   final VoidCallback onAdd;
   final VoidCallback onSkip;
@@ -460,24 +596,43 @@ class _PhasePractice extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: WrColors.white, borderRadius: BorderRadius.circular(12),
+              color: WrColors.white,
+              borderRadius: BorderRadius.circular(12),
               border: Border.all(color: const Color(0x1A2C335D)),
             ),
-            child: Text(story.practiceAction!,
-                style: const TextStyle(fontSize: 16.5, color: WrColors.dark, height: 1.5)),
+            child: Text(
+              story.practiceAction!,
+              style: const TextStyle(
+                fontSize: 16.5,
+                color: WrColors.dark,
+                height: 1.5,
+              ),
+            ),
           ),
         const SizedBox(height: 24),
         ElevatedButton(
           onPressed: onAdd,
           style: ElevatedButton.styleFrom(
-            backgroundColor: WrColors.navy, foregroundColor: WrColors.white,
+            backgroundColor: WrColors.navy,
+            foregroundColor: WrColors.white,
             minimumSize: const Size.fromHeight(48),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
-          child: Text(tr('Thêm vào lịch thực hành', 'Add to my practice schedule'), style: TextStyle(fontWeight: FontWeight.w600)),
+          child: Text(
+            tr('Thêm vào lịch thực hành', 'Add to my practice schedule'),
+            style: TextStyle(fontWeight: FontWeight.w600),
+          ),
         ),
         const SizedBox(height: 10),
-        TextButton(onPressed: onSkip, child: Text(tr('Lần này bỏ qua', 'Skip this time'), style: TextStyle(color: WrColors.muted))),
+        TextButton(
+          onPressed: onSkip,
+          child: Text(
+            tr('Lần này bỏ qua', 'Skip this time'),
+            style: TextStyle(color: WrColors.muted),
+          ),
+        ),
       ],
     );
   }
@@ -501,16 +656,34 @@ class _PhaseMemory extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
       children: [
-        Text(tr('Trải nghiệm này thuộc loại nào?', 'What kind of experience was this?'),
-            style: TextStyle(fontSize: 18, fontWeight: FontWeight.w700, color: WrColors.dark, height: 1.4)),
+        Text(
+          tr(
+            'Trải nghiệm này thuộc loại nào?',
+            'What kind of experience was this?',
+          ),
+          style: TextStyle(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            color: WrColors.dark,
+            height: 1.4,
+          ),
+        ),
         const SizedBox(height: 20),
         GridView.count(
-          crossAxisCount: 2, shrinkWrap: true, physics: const NeverScrollableScrollPhysics(),
-          crossAxisSpacing: 10, mainAxisSpacing: 10, childAspectRatio: 2.5,
-          children: _options.map((opt) => _MemoryTypeBtn(
-            label: opt.$2,
-            onTap: () => onSelect(opt.$1),
-          )).toList(),
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          childAspectRatio: 2.5,
+          children: _options
+              .map(
+                (opt) => _MemoryTypeBtn(
+                  label: opt.$2,
+                  onTap: () => onSelect(opt.$1),
+                ),
+              )
+              .toList(),
         ),
       ],
     );
@@ -529,11 +702,19 @@ class _MemoryTypeBtn extends StatelessWidget {
       child: Container(
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: WrColors.white, borderRadius: BorderRadius.circular(10),
+          color: WrColors.white,
+          borderRadius: BorderRadius.circular(10),
           border: Border.all(color: const Color(0x1A2C335D)),
         ),
-        child: Text(label, textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600, color: WrColors.dark)),
+        child: Text(
+          label,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 14.5,
+            fontWeight: FontWeight.w600,
+            color: WrColors.dark,
+          ),
+        ),
       ),
     );
   }

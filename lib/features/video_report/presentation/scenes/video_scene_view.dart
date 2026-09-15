@@ -74,10 +74,7 @@ class VideoSceneView extends StatelessWidget {
             opacity: opacity,
             child: Transform.translate(
               offset: Offset(0, dy),
-              child: Transform.scale(
-                scale: scale,
-                child: _content(),
-              ),
+              child: Transform.scale(scale: scale, child: _content()),
             ),
           ),
         ),
@@ -115,7 +112,9 @@ class VideoSceneView extends StatelessWidget {
   Widget _intro() {
     final greeting = _isEn
         ? (userName.isEmpty ? 'Hello!' : 'Hello, $userName!')
-        : (userName.isEmpty ? tr('Xin chào!', 'Hello!') : tr('Xin chào, $userName!', 'Hello, $userName!'));
+        : (userName.isEmpty
+              ? tr('Xin chào!', 'Hello!')
+              : tr('Xin chào, $userName!', 'Hello, $userName!'));
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -130,7 +129,10 @@ class VideoSceneView extends StatelessWidget {
         Text(
           _isEn
               ? 'Here is your team snapshot.'
-              : tr('Đây là bức tranh nhanh về đội nhóm của bạn.', 'Here is a quick picture of your team.'),
+              : tr(
+                  'Đây là bức tranh nhanh về đội nhóm của bạn.',
+                  'Here is a quick picture of your team.',
+                ),
           textAlign: TextAlign.center,
           style: const TextStyle(color: _kInkMuted, fontSize: 16.5),
         ),
@@ -268,7 +270,9 @@ class VideoSceneView extends StatelessWidget {
         const SizedBox(height: 12),
         Center(
           child: Text(
-            esi == null ? tr('Chưa có dữ liệu', 'No data yet') : esi.toStringAsFixed(1),
+            esi == null
+                ? tr('Chưa có dữ liệu', 'No data yet')
+                : esi.toStringAsFixed(1),
             style: TextStyle(
               color: _kInk,
               // Câu "chưa có dữ liệu" không đọc được ở cỡ của một con số.
@@ -383,13 +387,21 @@ class VideoSceneView extends StatelessWidget {
             children: [
               Padding(
                 padding: const EdgeInsets.only(top: 3),
-                child: Icon(Icons.check_circle_outlined, color: color, size: 18),
+                child: Icon(
+                  Icons.check_circle_outlined,
+                  color: color,
+                  size: 18,
+                ),
               ),
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
                   tip,
-                  style: const TextStyle(color: _kInk, fontSize: 16.5, height: 1.3),
+                  style: const TextStyle(
+                    color: _kInk,
+                    fontSize: 16.5,
+                    height: 1.3,
+                  ),
                 ),
               ),
             ],
@@ -500,21 +512,45 @@ class VideoSceneView extends StatelessWidget {
     switch (key) {
       case 'STRUCTURE':
         return [
-          tr('Làm rõ vai trò và quyền quyết định.', 'Clarify roles and decision rights.'),
-          tr('Tinh gọn các quy trình chồng chéo.', 'Trim overlapping processes.'),
-          tr('Thiết lập kênh giao tiếp rõ ràng.', 'Set up clear channels of communication.'),
+          tr(
+            'Làm rõ vai trò và quyền quyết định.',
+            'Clarify roles and decision rights.',
+          ),
+          tr(
+            'Tinh gọn các quy trình chồng chéo.',
+            'Trim overlapping processes.',
+          ),
+          tr(
+            'Thiết lập kênh giao tiếp rõ ràng.',
+            'Set up clear channels of communication.',
+          ),
         ];
       case 'CULTURE':
         return [
-          tr('Xây dựng an toàn tâm lý trong họp.', 'Build psychological safety in meetings.'),
-          tr('Ghi nhận đóng góp thường xuyên.', 'Acknowledge contributions regularly.'),
+          tr(
+            'Xây dựng an toàn tâm lý trong họp.',
+            'Build psychological safety in meetings.',
+          ),
+          tr(
+            'Ghi nhận đóng góp thường xuyên.',
+            'Acknowledge contributions regularly.',
+          ),
           tr('Khuyến khích phản hồi cởi mở.', 'Encourage open feedback.'),
         ];
       default:
         return [
-          tr('Gắn mục tiêu với ưu tiên rõ ràng.', 'Tie goals to clear priorities.'),
-          tr('Duy trì nhịp thực thi ổn định.', 'Keep a steady delivery rhythm.'),
-          tr('Rà soát tiến độ theo chu kỳ ngắn.', 'Review progress in short cycles.'),
+          tr(
+            'Gắn mục tiêu với ưu tiên rõ ràng.',
+            'Tie goals to clear priorities.',
+          ),
+          tr(
+            'Duy trì nhịp thực thi ổn định.',
+            'Keep a steady delivery rhythm.',
+          ),
+          tr(
+            'Rà soát tiến độ theo chu kỳ ngắn.',
+            'Review progress in short cycles.',
+          ),
         ];
     }
   }
@@ -556,7 +592,11 @@ class _Chip extends StatelessWidget {
       ),
       child: Text(
         label,
-        style: TextStyle(color: color, fontSize: 16.5, fontWeight: FontWeight.w700),
+        style: TextStyle(
+          color: color,
+          fontSize: 16.5,
+          fontWeight: FontWeight.w700,
+        ),
       ),
     );
   }
@@ -644,7 +684,11 @@ class _GradientBar extends StatelessWidget {
               height: 12,
               decoration: const BoxDecoration(
                 gradient: LinearGradient(
-                  colors: [Color(0xFFEF4444), Color(0xFFF59E0B), Color(0xFF22C55E)],
+                  colors: [
+                    Color(0xFFEF4444),
+                    Color(0xFFF59E0B),
+                    Color(0xFF22C55E),
+                  ],
                 ),
               ),
             ),

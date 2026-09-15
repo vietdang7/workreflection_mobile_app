@@ -29,13 +29,13 @@ final _now = DateTime(2026, 7, 28);
 
 /// Đủ lặp lại để luật §XI dám nói một hướng — bốn lần cùng trụ C.
 List<WrSituation> _situations() => const [
-      WrSituation(
-        code: 'C1-sit-01',
-        text: 'Không được lắng nghe',
-        scaDimension: ScaDimension.c1,
-        wave: 1,
-      ),
-    ];
+  WrSituation(
+    code: 'C1-sit-01',
+    text: 'Không được lắng nghe',
+    scaDimension: ScaDimension.c1,
+    wave: 1,
+  ),
+];
 
 /// Năm lượt nhìn lại cùng chọn `C1-sit-01`.
 ///
@@ -98,8 +98,9 @@ Widget _wrap(
       wrRepositoryProvider.overrideWithValue(repo),
       wrIntelligenceRepositoryProvider.overrideWithValue(intelRepo),
       wrContentRepositoryProvider.overrideWithValue(contentRepo),
-      wrEpisodeRepositoryProvider
-          .overrideWithValue(episodes ?? FakeWrEpisodeRepository()),
+      wrEpisodeRepositoryProvider.overrideWithValue(
+        episodes ?? FakeWrEpisodeRepository(),
+      ),
       currentUserIdProvider.overrideWithValue('u1'),
     ],
     child: MaterialApp.router(
@@ -131,7 +132,8 @@ FakeWrRepository _repo({String? roleText}) {
   FakeWrIntelligenceRepository intel,
   FakeWrContentRepository content,
   FakeWrEpisodeRepository episodes,
-}) _withEnoughPatterns() {
+})
+_withEnoughPatterns() {
   final intel = FakeWrIntelligenceRepository();
   final content = FakeWrContentRepository()..seedSituations(_situations());
   return (intel: intel, content: content, episodes: _episodes());
@@ -189,8 +191,9 @@ void main() {
       expect(find.textContaining('đối thoại'), findsNothing);
     });
 
-    testWidgets('Premium thấy gợi ý, và luôn kèm ghi chú độ chính xác (§XII.7)',
-        (tester) async {
+    testWidgets('Premium thấy gợi ý, và luôn kèm ghi chú độ chính xác (§XII.7)', (
+      tester,
+    ) async {
       // Khung test mặc định 800px không đủ cao: từ khi các test này gieo
       // Episode thật (nguồn của recentSituationIds), dòng thời gian Hành trình
       // dài thêm và đẩy khối Cơ hội phát triển ra ngoài vùng ListView dựng lười.
@@ -253,8 +256,9 @@ void main() {
       expect(find.text('WorkInfo'), findsOneWidget);
     });
 
-    testWidgets('bản đối tác đã tổng hợp thì dùng bản đó, không suy bằng luật',
-        (tester) async {
+    testWidgets('bản đối tác đã tổng hợp thì dùng bản đó, không suy bằng luật', (
+      tester,
+    ) async {
       // Khung test mặc định 800px không đủ cao: từ khi các test này gieo
       // Episode thật (nguồn của recentSituationIds), dòng thời gian Hành trình
       // dài thêm và đẩy khối Cơ hội phát triển ra ngoài vùng ListView dựng lười.
@@ -330,9 +334,7 @@ void main() {
       await tester.pumpWidget(_wrap(const WrWorkInfoScreen(), repo: _repo()));
       await tester.pumpAndSettle();
 
-      await tester.tap(
-        find.byKey(const Key('wr_work_info_context_docs_row')),
-      );
+      await tester.tap(find.byKey(const Key('wr_work_info_context_docs_row')));
       await tester.pumpAndSettle();
       expect(find.text('ContextDocs'), findsOneWidget);
     });
@@ -343,7 +345,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('Nếu chưa có sẵn JD, bạn có thể tự phác thảo nhanh theo 5 bước hướng dẫn'),
+        find.text(
+          'Nếu chưa có sẵn JD, bạn có thể tự phác thảo nhanh theo 5 bước hướng dẫn',
+        ),
         findsOneWidget,
       );
       final card = find.byKey(const Key('wr_work_info_jd_builder_card'));

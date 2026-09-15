@@ -32,16 +32,22 @@ enum WrChatAction {
   calm;
 
   static WrChatAction? fromWire(String? value) => switch (value) {
-        'reflect' => WrChatAction.reflect,
-        'calm' => WrChatAction.calm,
-        _ => null,
-      };
+    'reflect' => WrChatAction.reflect,
+    'calm' => WrChatAction.calm,
+    _ => null,
+  };
 
   /// Chữ trên nút.
   String get label => switch (this) {
-        WrChatAction.reflect => tr('Ghi lại thành một Reflection', 'Record it as a Reflection'),
-        WrChatAction.calm => tr('Xem điều gì đó nhẹ nhàng', 'See something gentler'),
-      };
+    WrChatAction.reflect => tr(
+      'Ghi lại thành một Reflection',
+      'Record it as a Reflection',
+    ),
+    WrChatAction.calm => tr(
+      'Xem điều gì đó nhẹ nhàng',
+      'See something gentler',
+    ),
+  };
 
   /// Đường dẫn mở ra.
   ///
@@ -49,9 +55,9 @@ enum WrChatAction {
   /// lượng là nơi luồng khởi động, nhảy thẳng vào giữa sẽ để lại một Episode
   /// thiếu dữ liệu của các bước trước.
   String get route => switch (this) {
-        WrChatAction.reflect => '/wr/flow/energy',
-        WrChatAction.calm => '/wr/mood-library',
-      };
+    WrChatAction.reflect => '/wr/flow/energy',
+    WrChatAction.calm => '/wr/mood-library',
+  };
 }
 
 /// Một lượt trong cuộc trò chuyện.
@@ -141,14 +147,14 @@ class WrChatReply {
   int get remaining => (limit - usedToday).clamp(0, limit);
 
   factory WrChatReply.fromJson(Map<String, dynamic> json) => WrChatReply(
-        reply: stripMarkdown(json['reply'] as String),
-        isPremium: json['isPremium'] as bool? ?? false,
-        usedToday: (json['usedToday'] as num?)?.toInt() ?? 0,
-        limit: (json['limit'] as num?)?.toInt() ?? 0,
-        conversationId: json['conversationId'] as String?,
-        action: WrChatAction.fromWire(json['action'] as String?),
-        persisted: json['persisted'] as bool? ?? true,
-      );
+    reply: stripMarkdown(json['reply'] as String),
+    isPremium: json['isPremium'] as bool? ?? false,
+    usedToday: (json['usedToday'] as num?)?.toInt() ?? 0,
+    limit: (json['limit'] as num?)?.toInt() ?? 0,
+    conversationId: json['conversationId'] as String?,
+    action: WrChatAction.fromWire(json['action'] as String?),
+    persisted: json['persisted'] as bool? ?? true,
+  );
 }
 
 /// Một cuộc trò chuyện trong danh sách lịch sử.
@@ -173,10 +179,10 @@ class WrConversation {
   }
 
   factory WrConversation.fromJson(Map<String, dynamic> json) => WrConversation(
-        id: json['id'] as String,
-        title: json['title'] as String?,
-        lastMessageAt: DateTime.parse(json['last_message_at'] as String),
-      );
+    id: json['id'] as String,
+    title: json['title'] as String?,
+    lastMessageAt: DateTime.parse(json['last_message_at'] as String),
+  );
 }
 
 /// Lỗi một lượt trò chuyện, kèm sẵn câu để hiển thị thẳng cho người dùng.

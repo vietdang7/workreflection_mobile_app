@@ -28,10 +28,18 @@ const _kHumanNeedCheck = {'ro_rang', 'ket_noi', 'thich_nghi', 'phat_trien'};
 
 /// `wr_career_memory_events_sca_dimension_check`
 const _kScaDimensionCheck = {
-  'S1', 'S2', 'S3',
-  'C1', 'C2', 'C3',
-  'A1', 'A2', 'A3', 'A4',
-  'P-ACHIEVE', 'P-STEADY',
+  'S1',
+  'S2',
+  'S3',
+  'C1',
+  'C2',
+  'C3',
+  'A1',
+  'A2',
+  'A3',
+  'A4',
+  'P-ACHIEVE',
+  'P-STEADY',
 };
 
 void main() {
@@ -41,7 +49,8 @@ void main() {
         expect(
           _kHumanNeedCheck,
           contains(n.dbValue),
-          reason: 'HumanNeed.${n.name} → "${n.dbValue}" bị CHECK từ chối. '
+          reason:
+              'HumanNeed.${n.name} → "${n.dbValue}" bị CHECK từ chối. '
               'Thêm nhu cầu mới thì phải có migration nới CHECK trước.',
         );
       }
@@ -65,18 +74,17 @@ void main() {
       HumanNeed? need,
       ScaDimension? dim,
       int? intensity,
-    }) =>
-        CareerMemoryEvent(
-          id: '',
-          userId: 'u1',
-          situationCode: situationCode,
-          storyId: storyId,
-          humanNeed: need,
-          scaDimension: dim,
-          intensity: intensity,
-          behavior: kThemeBehavior,
-          reflectionText: 'x',
-        );
+    }) => CareerMemoryEvent(
+      id: '',
+      userId: 'u1',
+      situationCode: situationCode,
+      storyId: storyId,
+      humanNeed: need,
+      scaDimension: dim,
+      intensity: intensity,
+      behavior: kThemeBehavior,
+      reflectionText: 'x',
+    );
 
     test('KHÔNG gửi cột id', () {
       // `id` là uuid có `gen_random_uuid()` làm mặc định. Người gọi dựng bản ghi
@@ -114,18 +122,21 @@ void main() {
       expect(event().toInsert()['user_id'], 'u1');
     });
 
-    test('nhu cầu và chiều đi xuống DB ở dạng dbValue, không phải tên enum', () {
-      final row = event(
-        need: HumanNeed.ketNoi,
-        dim: ScaDimension.pAchieve,
-      ).toInsert();
+    test(
+      'nhu cầu và chiều đi xuống DB ở dạng dbValue, không phải tên enum',
+      () {
+        final row = event(
+          need: HumanNeed.ketNoi,
+          dim: ScaDimension.pAchieve,
+        ).toInsert();
 
-      expect(row['human_need'], 'ket_noi');
-      expect(row['sca_dimension'], 'P-ACHIEVE');
-      // Tên enum Dart ("ketNoi", "pAchieve") đều bị CHECK từ chối.
-      expect(_kHumanNeedCheck, contains(row['human_need']));
-      expect(_kScaDimensionCheck, contains(row['sca_dimension']));
-    });
+        expect(row['human_need'], 'ket_noi');
+        expect(row['sca_dimension'], 'P-ACHIEVE');
+        // Tên enum Dart ("ketNoi", "pAchieve") đều bị CHECK từ chối.
+        expect(_kHumanNeedCheck, contains(row['human_need']));
+        expect(_kScaDimensionCheck, contains(row['sca_dimension']));
+      },
+    );
   });
 
   group('behavior của ba loại mảnh ký ức', () {

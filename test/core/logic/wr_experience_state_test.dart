@@ -36,15 +36,18 @@ void main() {
       );
     });
 
-    test('Meaning Confirmed vào thẳng Integrated khi không cam kết hành động', () {
-      expect(
-        canTransition(
-          ExperienceState.meaningConfirmed,
-          ExperienceState.integrated,
-        ),
-        isTrue,
-      );
-    });
+    test(
+      'Meaning Confirmed vào thẳng Integrated khi không cam kết hành động',
+      () {
+        expect(
+          canTransition(
+            ExperienceState.meaningConfirmed,
+            ExperienceState.integrated,
+          ),
+          isTrue,
+        );
+      },
+    );
 
     test('Dormant → Reactivated → Exploring (Backward Flow, WXS §3.5)', () {
       expect(
@@ -82,12 +85,18 @@ void main() {
       );
     });
 
-    test('Emerging → Meaning Forming bị chặn (bỏ qua Captured và Exploring)', () {
-      expect(
-        canTransition(ExperienceState.emerging, ExperienceState.meaningForming),
-        isFalse,
-      );
-    });
+    test(
+      'Emerging → Meaning Forming bị chặn (bỏ qua Captured và Exploring)',
+      () {
+        expect(
+          canTransition(
+            ExperienceState.emerging,
+            ExperienceState.meaningForming,
+          ),
+          isFalse,
+        );
+      },
+    );
 
     test('Exploring → Integrated bị chặn (bỏ qua Meaning Confirmed)', () {
       expect(
@@ -172,12 +181,15 @@ void main() {
       }
     });
 
-    test('Recovery bắt đầu Notice → Explore, không bắt đầu Commit (HXA §3.2)', () {
-      final recovery = patternSequences[HumanMoment.recovery]!;
-      expect(recovery[0], ReflectionPattern.notice);
-      expect(recovery[1], ReflectionPattern.explore);
-      expect(recovery.contains(ReflectionPattern.commit), isFalse);
-    });
+    test(
+      'Recovery bắt đầu Notice → Explore, không bắt đầu Commit (HXA §3.2)',
+      () {
+        final recovery = patternSequences[HumanMoment.recovery]!;
+        expect(recovery[0], ReflectionPattern.notice);
+        expect(recovery[1], ReflectionPattern.explore);
+        expect(recovery.contains(ReflectionPattern.commit), isFalse);
+      },
+    );
 
     test('Decision đi hết tới Commit', () {
       expect(
@@ -221,10 +233,10 @@ void main() {
     test('bỏ qua thứ tự vẫn trả về Pattern còn thiếu sớm nhất', () {
       // Người dùng đã Explore trước Name — hệ thống vẫn quay lại đòi Name.
       expect(
-        nextPattern(
-          HumanMoment.confusion,
-          const [ReflectionPattern.notice, ReflectionPattern.explore],
-        ),
+        nextPattern(HumanMoment.confusion, const [
+          ReflectionPattern.notice,
+          ReflectionPattern.explore,
+        ]),
         ReflectionPattern.name,
       );
     });
@@ -242,8 +254,11 @@ void main() {
         for (final pattern in patternSequences[moment]!) {
           final prompt = promptFor(moment, pattern);
           expect(prompt, isNotEmpty);
-          expect(prompt, isNot('Bạn đang nghĩ gì?'),
-              reason: '${moment.dbValue}/${pattern.dbValue} thiếu câu hỏi riêng');
+          expect(
+            prompt,
+            isNot('Bạn đang nghĩ gì?'),
+            reason: '${moment.dbValue}/${pattern.dbValue} thiếu câu hỏi riêng',
+          );
         }
       }
     });
@@ -259,8 +274,11 @@ void main() {
           continue;
         }
         final prompt = promptFor(moment, ReflectionPattern.explore);
-        expect(prompt.contains('khi nào'), isFalse,
-            reason: '${moment.dbValue}/explore đang hỏi mốc thời gian');
+        expect(
+          prompt.contains('khi nào'),
+          isFalse,
+          reason: '${moment.dbValue}/explore đang hỏi mốc thời gian',
+        );
       }
     });
 
@@ -272,8 +290,11 @@ void main() {
           continue;
         }
         final prompt = promptFor(moment, ReflectionPattern.preserve);
-        expect(prompt.contains('giữ lại'), isFalse,
-            reason: '${moment.dbValue}/preserve trùng bước Ý nghĩa');
+        expect(
+          prompt.contains('giữ lại'),
+          isFalse,
+          reason: '${moment.dbValue}/preserve trùng bước Ý nghĩa',
+        );
       }
     });
 
@@ -282,10 +303,16 @@ void main() {
         for (final pattern in patternSequences[moment]!) {
           final hint = promptHintFor(moment, pattern);
           expect(hint, isNotEmpty);
-          expect(hint, isNot('Viết vài dòng cho riêng bạn…'),
-              reason: '${moment.dbValue}/${pattern.dbValue} thiếu gợi ý');
-          expect(hint.endsWith('…'), isTrue,
-              reason: '$hint phải là nửa câu bỏ lửng');
+          expect(
+            hint,
+            isNot('Viết vài dòng cho riêng bạn…'),
+            reason: '${moment.dbValue}/${pattern.dbValue} thiếu gợi ý',
+          );
+          expect(
+            hint.endsWith('…'),
+            isTrue,
+            reason: '$hint phải là nửa câu bỏ lửng',
+          );
         }
       }
     });

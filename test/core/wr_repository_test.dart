@@ -15,19 +15,25 @@ void main() {
   });
 
   group('FakeWrRepository — checkins', () {
-    test('upsertCheckin stores a checkin and getTodayCheckin returns it', () async {
-      await repo.upsertCheckin(Mood.happy);
-      final checkin = await repo.getTodayCheckin();
-      expect(checkin, isNotNull);
-      expect(checkin!.mood, Mood.happy);
-    });
+    test(
+      'upsertCheckin stores a checkin and getTodayCheckin returns it',
+      () async {
+        await repo.upsertCheckin(Mood.happy);
+        final checkin = await repo.getTodayCheckin();
+        expect(checkin, isNotNull);
+        expect(checkin!.mood, Mood.happy);
+      },
+    );
 
-    test('upsertCheckin with different mood overwrites previous checkin for today', () async {
-      await repo.upsertCheckin(Mood.tired);
-      await repo.upsertCheckin(Mood.okay);
-      final checkin = await repo.getTodayCheckin();
-      expect(checkin!.mood, Mood.okay);
-    });
+    test(
+      'upsertCheckin with different mood overwrites previous checkin for today',
+      () async {
+        await repo.upsertCheckin(Mood.tired);
+        await repo.upsertCheckin(Mood.okay);
+        final checkin = await repo.getTodayCheckin();
+        expect(checkin!.mood, Mood.okay);
+      },
+    );
 
     test('getTodayCheckin returns null when no checkin made', () async {
       final checkin = await repo.getTodayCheckin();
@@ -43,7 +49,10 @@ void main() {
     test('records upsertCheckin calls', () async {
       await repo.upsertCheckin(Mood.stressed);
       await repo.upsertCheckin(Mood.happy);
-      expect(repo.upsertCheckinCalls.map((c) => c.mood), [Mood.stressed, Mood.happy]);
+      expect(repo.upsertCheckinCalls.map((c) => c.mood), [
+        Mood.stressed,
+        Mood.happy,
+      ]);
     });
   });
 
@@ -73,8 +82,18 @@ void main() {
 
     test('getInsights returns all insights', () async {
       repo.seedInsights([
-        Insight(id: 'a', userId: 'u', content: 'A', savedAt: DateTime(2026, 7, 1)),
-        Insight(id: 'b', userId: 'u', content: 'B', savedAt: DateTime(2026, 7, 2)),
+        Insight(
+          id: 'a',
+          userId: 'u',
+          content: 'A',
+          savedAt: DateTime(2026, 7, 1),
+        ),
+        Insight(
+          id: 'b',
+          userId: 'u',
+          content: 'B',
+          savedAt: DateTime(2026, 7, 2),
+        ),
       ]);
       final list = await repo.getInsights();
       expect(list.length, 2);
@@ -82,7 +101,12 @@ void main() {
 
     test('countInsights returns correct count', () async {
       repo.seedInsights([
-        Insight(id: 'x', userId: 'u', content: 'X', savedAt: DateTime(2026, 7, 1)),
+        Insight(
+          id: 'x',
+          userId: 'u',
+          content: 'X',
+          savedAt: DateTime(2026, 7, 1),
+        ),
       ]);
       expect(await repo.countInsights(), 1);
     });
@@ -129,13 +153,15 @@ void main() {
     });
 
     test('getMobileProfile returns seeded profile', () async {
-      repo.seedProfile(MobileProfile(
-        userId: 'u',
-        reminderEnabled: true,
-        language: 'vi',
-        createdAt: DateTime(2026, 7, 1),
-        updatedAt: DateTime(2026, 7, 1),
-      ));
+      repo.seedProfile(
+        MobileProfile(
+          userId: 'u',
+          reminderEnabled: true,
+          language: 'vi',
+          createdAt: DateTime(2026, 7, 1),
+          updatedAt: DateTime(2026, 7, 1),
+        ),
+      );
       final profile = await repo.getMobileProfile();
       expect(profile!.userId, 'u');
       expect(profile.language, 'vi');
@@ -158,14 +184,16 @@ void main() {
     });
 
     test('getLatestScaReport returns seeded report', () async {
-      repo.seedScaReport(ScaReport(
-        id: 'r1',
-        userId: 'u',
-        scoreStructure: 3.5,
-        scoreCulture: 4.0,
-        scoreActivity: 2.0,
-        createdAt: DateTime(2026, 6, 1),
-      ));
+      repo.seedScaReport(
+        ScaReport(
+          id: 'r1',
+          userId: 'u',
+          scoreStructure: 3.5,
+          scoreCulture: 4.0,
+          scoreActivity: 2.0,
+          createdAt: DateTime(2026, 6, 1),
+        ),
+      );
       final report = await repo.getLatestScaReport();
       expect(report!.scoreStructure, 3.5);
     });
@@ -177,11 +205,9 @@ void main() {
     });
 
     test('getUpcomingWorkshop returns seeded workshop', () async {
-      repo.seedWorkshop(Workshop(
-        id: 'w1',
-        title: 'Workshop X',
-        date: DateTime(2026, 8, 1),
-      ));
+      repo.seedWorkshop(
+        Workshop(id: 'w1', title: 'Workshop X', date: DateTime(2026, 8, 1)),
+      );
       final ws = await repo.getUpcomingWorkshop();
       expect(ws!.title, 'Workshop X');
     });
@@ -193,44 +219,57 @@ void main() {
       expect(repo.ensureSeededCalls, ['Mệt mỏi']);
     });
 
-    test('ensureSeeded creates profile with displayName on first call (insert path)', () async {
-      expect(await repo.getMobileProfile(), isNull);
-      await repo.ensureSeeded();
-      final profile = await repo.getMobileProfile();
-      expect(profile, isNotNull);
-      expect(profile!.displayName, isNotNull);
-    });
+    test(
+      'ensureSeeded creates profile with displayName on first call (insert path)',
+      () async {
+        expect(await repo.getMobileProfile(), isNull);
+        await repo.ensureSeeded();
+        final profile = await repo.getMobileProfile();
+        expect(profile, isNotNull);
+        expect(profile!.displayName, isNotNull);
+      },
+    );
 
-    test('ensureSeeded does NOT overwrite displayName when profile already exists', () async {
-      repo.seedProfile(MobileProfile(
-        userId: 'u1',
-        displayName: 'User Edited Name',
-        reminderEnabled: true,
-        language: 'vi',
-        createdAt: DateTime(2026, 1, 1),
-        updatedAt: DateTime(2026, 6, 1),
-      ));
-      // Simulate a second sign-in event (Google OAuth re-triggering ensureSeeded)
-      await repo.ensureSeeded();
-      final profile = await repo.getMobileProfile();
-      // display_name must NOT be overwritten
-      expect(profile!.displayName, 'User Edited Name');
-    });
+    test(
+      'ensureSeeded does NOT overwrite displayName when profile already exists',
+      () async {
+        repo.seedProfile(
+          MobileProfile(
+            userId: 'u1',
+            displayName: 'User Edited Name',
+            reminderEnabled: true,
+            language: 'vi',
+            createdAt: DateTime(2026, 1, 1),
+            updatedAt: DateTime(2026, 6, 1),
+          ),
+        );
+        // Simulate a second sign-in event (Google OAuth re-triggering ensureSeeded)
+        await repo.ensureSeeded();
+        final profile = await repo.getMobileProfile();
+        // display_name must NOT be overwritten
+        expect(profile!.displayName, 'User Edited Name');
+      },
+    );
 
-    test('ensureSeeded updates onboardingSituation on existing profile without touching displayName', () async {
-      repo.seedProfile(MobileProfile(
-        userId: 'u1',
-        displayName: 'My Name',
-        reminderEnabled: true,
-        language: 'vi',
-        createdAt: DateTime(2026, 1, 1),
-        updatedAt: DateTime(2026, 6, 1),
-      ));
-      await repo.ensureSeeded(onboardingSituation: 'Mệt mỏi');
-      final profile = await repo.getMobileProfile();
-      expect(profile!.displayName, 'My Name');
-      expect(profile.onboardingSituation, 'Mệt mỏi');
-    });
+    test(
+      'ensureSeeded updates onboardingSituation on existing profile without touching displayName',
+      () async {
+        repo.seedProfile(
+          MobileProfile(
+            userId: 'u1',
+            displayName: 'My Name',
+            reminderEnabled: true,
+            language: 'vi',
+            createdAt: DateTime(2026, 1, 1),
+            updatedAt: DateTime(2026, 6, 1),
+          ),
+        );
+        await repo.ensureSeeded(onboardingSituation: 'Mệt mỏi');
+        final profile = await repo.getMobileProfile();
+        expect(profile!.displayName, 'My Name');
+        expect(profile.onboardingSituation, 'Mệt mỏi');
+      },
+    );
 
     test('saveOnboardingSituation records calls', () async {
       await repo.saveOnboardingSituation('Muốn thay đổi');

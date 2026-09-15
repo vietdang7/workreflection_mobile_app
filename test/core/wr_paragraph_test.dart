@@ -14,7 +14,8 @@ void main() {
     });
 
     test('xử lý từng câu một trong đoạn nhiều câu', () {
-      const input = 'Thay đổi không đáng sợ bằng cảm giác bị bỏ lại phía sau. '
+      const input =
+          'Thay đổi không đáng sợ bằng cảm giác bị bỏ lại phía sau. '
           'Thực hành này giúp bạn chủ động hỏi, thay vì chờ đợi trong mơ hồ.';
       final out = wrKeepSentenceTailTogether(input);
 

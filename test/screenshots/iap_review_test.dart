@@ -181,14 +181,15 @@ Widget _paywallApp() {
       // nhánh QR, không có link sang web. Đây đúng là thứ người duyệt phải thấy.
       wrStorePolicyProvider.overrideWithValue(WrStorePolicy.appStore),
       wrIapRepositoryProvider.overrideWithValue(_OffersOnlyIapRepository()),
-      wrIntelligenceRepositoryProvider
-          .overrideWithValue(FakeWrIntelligenceRepository()),
+      wrIntelligenceRepositoryProvider.overrideWithValue(
+        FakeWrIntelligenceRepository(),
+      ),
       currentUserIdProvider.overrideWithValue(_kUserId),
       // Tài khoản FREE. Người đã có quyền thì Paywall đổi thành trang xác nhận,
       // không còn nút mua nào — chụp ra là vô nghĩa với App Review.
-      wrEntitlementProvider.overrideWith((ref) async => WrEntitlement(
-            plan: WrPlan.free,
-          )),
+      wrEntitlementProvider.overrideWith(
+        (ref) async => WrEntitlement(plan: WrPlan.free),
+      ),
     ],
     child: MaterialApp.router(
       builder: wrTextScaleBuilder,
@@ -208,8 +209,9 @@ void main() {
     await _loadFonts();
   });
 
-  testWidgets('Paywall — hai gói IAP đang hiện giá', skip: !_enabled,
-      (tester) async {
+  testWidgets('Paywall — hai gói IAP đang hiện giá', skip: !_enabled, (
+    tester,
+  ) async {
     tester.view.physicalSize = _kSurface * 3;
     tester.view.devicePixelRatio = 3.0;
     addTearDown(tester.view.reset);

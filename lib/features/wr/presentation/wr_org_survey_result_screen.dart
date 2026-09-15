@@ -71,8 +71,8 @@ class WrOrgSurveyResultScreen extends ConsumerWidget {
         child: data != null
             ? _Result(response: data)
             : latestAsync.isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : const _Empty(),
+            ? const Center(child: CircularProgressIndicator())
+            : const _Empty(),
       ),
     );
   }
@@ -87,7 +87,10 @@ class _Empty extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.all(32),
         child: Text(
-          tr('Chưa có câu trả lời nào để so sánh.', 'No answers to compare yet.'),
+          tr(
+            'Chưa có câu trả lời nào để so sánh.',
+            'No answers to compare yet.',
+          ),
           key: Key('wr_org_survey_result_empty'),
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 15, color: WrColors.muted),
@@ -115,7 +118,9 @@ class _Result extends ConsumerWidget {
         WrEyebrow(tr('CẢM ƠN BẠN ĐÃ THAM GIA', 'THANK YOU FOR TAKING PART')),
         const SizedBox(height: 10),
         Text(
-          anyComparable ? tr('Bạn so với mặt bằng chung', 'You against the wider picture') : tr('Kết quả của bạn', 'Your results'),
+          anyComparable
+              ? tr('Bạn so với mặt bằng chung', 'You against the wider picture')
+              : tr('Kết quả của bạn', 'Your results'),
           style: const TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w700,
@@ -185,10 +190,16 @@ class _Result extends ConsumerWidget {
               const SizedBox(height: 4),
               Text(
                 enpsBenchmark != null && enpsBenchmark.isComparable
-                    ? tr('Mặt bằng chung ẩn danh: '
-                        '${_fmt(enpsBenchmark.value!)} / $kEnpsMaxScore', 'Anonymous wider picture: '
-                        '${_fmt(enpsBenchmark.value!)} / $kEnpsMaxScore')
-                    : tr('Chưa đủ dữ liệu để so sánh phần này.', 'Not enough data to compare this part yet.'),
+                    ? tr(
+                        'Mặt bằng chung ẩn danh: '
+                            '${_fmt(enpsBenchmark.value!)} / $kEnpsMaxScore',
+                        'Anonymous wider picture: '
+                            '${_fmt(enpsBenchmark.value!)} / $kEnpsMaxScore',
+                      )
+                    : tr(
+                        'Chưa đủ dữ liệu để so sánh phần này.',
+                        'Not enough data to compare this part yet.',
+                      ),
                 style: const TextStyle(fontSize: 13.5, color: WrColors.muted),
               ),
             ],
@@ -200,11 +211,14 @@ class _Result extends ConsumerWidget {
           Padding(
             padding: EdgeInsets.only(bottom: 12),
             child: Text(
-              tr('Bản so sánh với mặt bằng chung sẽ hiện khi đã có đủ người tham '
-              'gia. Chúng tôi không vẽ một đường trung bình khi chưa đo được '
-              'nó.', 'The comparison against the wider picture appears once enough '
-              'people have taken part. We do not draw an average line before '
-              'we can measure one.'),
+              tr(
+                'Bản so sánh với mặt bằng chung sẽ hiện khi đã có đủ người tham '
+                    'gia. Chúng tôi không vẽ một đường trung bình khi chưa đo được '
+                    'nó.',
+                'The comparison against the wider picture appears once enough '
+                    'people have taken part. We do not draw an average line before '
+                    'we can measure one.',
+              ),
               key: Key('wr_org_survey_no_benchmark'),
               textAlign: TextAlign.center,
               style: TextStyle(
@@ -216,9 +230,12 @@ class _Result extends ConsumerWidget {
           ),
 
         Text(
-          tr('Câu trả lời của bạn được gộp vào dữ liệu benchmark ẩn danh, không ảnh '
-          'hưởng đến Reflection hay Career Memory cá nhân.', 'Your answers are pooled into anonymous benchmark data. They do not '
-          'affect your own Reflection or Career Memory.'),
+          tr(
+            'Câu trả lời của bạn được gộp vào dữ liệu benchmark ẩn danh, không ảnh '
+                'hưởng đến Reflection hay Career Memory cá nhân.',
+            'Your answers are pooled into anonymous benchmark data. They do not '
+                'affect your own Reflection or Career Memory.',
+          ),
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 14, height: 1.6, color: WrColors.muted),
         ),
@@ -248,7 +265,9 @@ class _AreaBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final benchValue = benchmark?.isComparable == true ? benchmark!.value : null;
+    final benchValue = benchmark?.isComparable == true
+        ? benchmark!.value
+        : null;
     final standing = orgSurveyStanding(mine: mine, benchmark: benchValue);
     final minePct = mine == null ? 0 : orgSurveyPercent(mine!);
     final benchPct = benchValue == null ? 0 : orgSurveyPercent(benchValue);
@@ -324,8 +343,10 @@ class _Legend extends StatelessWidget {
       children: [
         _dot(WrColors.teal),
         const SizedBox(width: 6),
-        Text(tr('Bạn', 'You'),
-            style: TextStyle(fontSize: 12.5, color: WrColors.muted)),
+        Text(
+          tr('Bạn', 'You'),
+          style: TextStyle(fontSize: 12.5, color: WrColors.muted),
+        ),
         const SizedBox(width: 16),
         _dot(WrColors.navy.withValues(alpha: 0.25)),
         const SizedBox(width: 6),
@@ -342,10 +363,10 @@ class _Legend extends StatelessWidget {
   }
 
   Widget _dot(Color color) => Container(
-        width: 8,
-        height: 8,
-        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-      );
+    width: 8,
+    height: 8,
+    decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -366,9 +387,12 @@ class _WithdrawButtonState extends ConsumerState<_WithdrawButton> {
       builder: (ctx) => AlertDialog(
         title: Text(tr('Ngừng tham gia?', 'Stop taking part?')),
         content: Text(
-          tr('Mọi câu trả lời khảo sát tổ chức của bạn sẽ bị xoá và không còn được '
-          'tính vào dữ liệu tổng hợp. Reflection của bạn không bị ảnh hưởng.', 'All your organisation survey answers will be deleted and no longer '
-          'counted in the pooled data. Your Reflections are unaffected.'),
+          tr(
+            'Mọi câu trả lời khảo sát tổ chức của bạn sẽ bị xoá và không còn được '
+                'tính vào dữ liệu tổng hợp. Reflection của bạn không bị ảnh hưởng.',
+            'All your organisation survey answers will be deleted and no longer '
+                'counted in the pooled data. Your Reflections are unaffected.',
+          ),
         ),
         actions: [
           TextButton(
@@ -400,7 +424,14 @@ class _WithdrawButtonState extends ConsumerState<_WithdrawButton> {
       if (!mounted) return;
       setState(() => _busy = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(tr('Chưa xoá được. Bạn thử lại sau nhé.', 'Could not delete. Please try again later.'))),
+        SnackBar(
+          content: Text(
+            tr(
+              'Chưa xoá được. Bạn thử lại sau nhé.',
+              'Could not delete. Please try again later.',
+            ),
+          ),
+        ),
       );
     }
   }
@@ -411,7 +442,12 @@ class _WithdrawButtonState extends ConsumerState<_WithdrawButton> {
       key: const Key('wr_org_survey_withdraw'),
       onPressed: _busy ? null : _withdraw,
       child: Text(
-        _busy ? tr('Đang xoá…', 'Deleting…') : tr('Ngừng tham gia và xoá câu trả lời', 'Stop taking part and delete my answers'),
+        _busy
+            ? tr('Đang xoá…', 'Deleting…')
+            : tr(
+                'Ngừng tham gia và xoá câu trả lời',
+                'Stop taking part and delete my answers',
+              ),
         style: const TextStyle(fontSize: 14, color: WrColors.destructive),
       ),
     );

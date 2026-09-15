@@ -9,11 +9,8 @@ import 'package:workreflection_mobile/core/models/insight.dart';
 import 'package:workreflection_mobile/core/models/mobile_profile.dart';
 import 'package:workreflection_mobile/core/models/timeline_event.dart';
 import 'package:workreflection_mobile/features/auth/data/auth_repository.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
-import 'package:workreflection_mobile/core/logic/wr_premium_override.dart';
 import 'package:workreflection_mobile/core/logic/wr_store_policy.dart';
-import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 import 'package:workreflection_mobile/features/profile/presentation/profile_screen.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
@@ -37,11 +34,16 @@ class _FakeAuthRepository implements AuthRepository {
     if (deleteShouldFail) throw Exception('Xoá không được');
   }
 
-  @override Future<void> signIn(String e, String p) async {}
-  @override Future<void> signUp(String e, String p, String n) async {}
-  @override Future<void> signInWithGoogle() async {}
-  @override Future<void> signOut() async {}
-  @override Future<void> resetPassword(String email) async {}
+  @override
+  Future<void> signIn(String e, String p) async {}
+  @override
+  Future<void> signUp(String e, String p, String n) async {}
+  @override
+  Future<void> signInWithGoogle() async {}
+  @override
+  Future<void> signOut() async {}
+  @override
+  Future<void> resetPassword(String email) async {}
 
   @override
   Future<void> changePassword(String newPassword) async {
@@ -65,16 +67,16 @@ Widget _wrap(
       if (storePolicy != null)
         wrStorePolicyProvider.overrideWithValue(storePolicy),
       if (authRepo != null) authRepositoryProvider.overrideWithValue(authRepo),
-      // Không override thì provider hỏi Supabase, chưa khởi tạo nên trả null —
-      // tức công tắc ẩn. Đó cũng là điều mọi test cũ đang trông đợi.
+      // Không override thì provider hỏi Supabase, chưa khởi tạo nên trả null.
       if (signedInEmail != null) ...[
         currentUserEmailProvider.overrideWithValue(signedInEmail),
         // Thiếu cái này thì wrEntitlementProvider thoát sớm ở nhánh
         // `userId == null` và luôn trả về miễn phí — công tắc sẽ đọc sai
         // trạng thái ban đầu mà test vẫn xanh vì lý do khác.
         currentUserIdProvider.overrideWithValue('u1'),
-        wrIntelligenceRepositoryProvider
-            .overrideWithValue(intel ?? FakeWrIntelligenceRepository()),
+        wrIntelligenceRepositoryProvider.overrideWithValue(
+          intel ?? FakeWrIntelligenceRepository(),
+        ),
       ],
     ],
     child: MaterialApp(
@@ -108,17 +110,16 @@ MobileProfile _profile({
   String lang = 'vi',
   String? city,
   String? orgIndustry,
-}) =>
-    MobileProfile(
-      userId: 'u1',
-      displayName: 'Yumi Trần',
-      reminderEnabled: reminder,
-      language: lang,
-      createdAt: DateTime(2026, 1, 1),
-      updatedAt: DateTime(2026, 6, 1),
-      city: city,
-      orgIndustry: orgIndustry,
-    );
+}) => MobileProfile(
+  userId: 'u1',
+  displayName: 'Yumi Trần',
+  reminderEnabled: reminder,
+  language: lang,
+  createdAt: DateTime(2026, 1, 1),
+  updatedAt: DateTime(2026, 6, 1),
+  city: city,
+  orgIndustry: orgIndustry,
+);
 
 void main() {
   group('ProfileScreen widget', () {
@@ -139,7 +140,9 @@ void main() {
     // Khách chốt 2026-08-01: Premium web và Premium app là MỘT. Nhãn gói ở màn
     // này đọc `cc_profiles.role` — đúng cột mà trang quản trị của web cấp
     // Premium bằng nó — chứ không còn tự suy ra từ `subscription_expires_at`.
-    testWidgets('hiện nhãn PREMIUM khi role trên web là premium', (tester) async {
+    testWidgets('hiện nhãn PREMIUM khi role trên web là premium', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       repo.seedProfile(_profile());
       repo.seedCcProfile({
@@ -165,7 +168,9 @@ void main() {
       expect(find.textContaining('PREMIUM'), findsOneWidget);
     });
 
-    testWidgets('shows member (not premium) when role is empty', (tester) async {
+    testWidgets('shows member (not premium) when role is empty', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       repo.seedProfile(_profile());
       repo.seedCcProfile({
@@ -182,30 +187,43 @@ void main() {
     // Chốt chặn hồi quy: `subscription_expires_at` KHÔNG còn quyết định gói
     // nữa. Hạn còn dài mà role là 'user' thì vẫn là thành viên thường — nếu ai
     // đó nối lại cột cũ, test này đổ.
-    testWidgets('subscription_expires_at còn hạn nhưng role thường vẫn không Premium',
-        (tester) async {
-      final repo = FakeWrRepository();
-      repo.seedProfile(_profile());
-      repo.seedCcProfile({
-        'full_name': 'Yumi Trần',
-        'email': 'yumi@workreflection.app',
-        'role': 'user',
-        'subscription_expires_at':
-            DateTime.now().add(const Duration(days: 30)).toIso8601String(),
-      });
-      await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
+    testWidgets(
+      'subscription_expires_at còn hạn nhưng role thường vẫn không Premium',
+      (tester) async {
+        final repo = FakeWrRepository();
+        repo.seedProfile(_profile());
+        repo.seedCcProfile({
+          'full_name': 'Yumi Trần',
+          'email': 'yumi@workreflection.app',
+          'role': 'user',
+          'subscription_expires_at': DateTime.now()
+              .add(const Duration(days: 30))
+              .toIso8601String(),
+        });
+        await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
 
-      expect(find.textContaining('PREMIUM'), findsNothing);
-      expect(find.textContaining('Thành viên'), findsOneWidget);
-    });
+        expect(find.textContaining('PREMIUM'), findsNothing);
+        expect(find.textContaining('Thành viên'), findsOneWidget);
+      },
+    );
 
     testWidgets('renders stats row labels', (tester) async {
       final repo = FakeWrRepository();
       repo.seedProfile(_profile());
       repo.seedCcProfile({'full_name': 'Yumi', 'email': 'y@y.com'});
       repo.seedInsights([
-        Insight(id: 'i1', userId: 'u1', content: 'A', savedAt: DateTime(2026, 6, 1)),
-        Insight(id: 'i2', userId: 'u1', content: 'B', savedAt: DateTime(2026, 6, 2)),
+        Insight(
+          id: 'i1',
+          userId: 'u1',
+          content: 'A',
+          savedAt: DateTime(2026, 6, 1),
+        ),
+        Insight(
+          id: 'i2',
+          userId: 'u1',
+          content: 'B',
+          savedAt: DateTime(2026, 6, 2),
+        ),
       ]);
       repo.seedTimelineEvents([
         TimelineEvent(
@@ -242,7 +260,9 @@ void main() {
       expect(find.textContaining('Đăng xuất'), findsOneWidget);
     });
 
-    testWidgets('reminder toggle calls updateReminder when tapped', (tester) async {
+    testWidgets('reminder toggle calls updateReminder when tapped', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       repo.seedProfile(_profile(reminder: true));
       repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
@@ -286,9 +306,11 @@ void main() {
         final row = find.byKey(Key(key));
         expect(row, findsOneWidget, reason: 'thiếu dòng $key');
         expect(
-          tester.widget<InkWell>(
-            find.descendant(of: row, matching: find.byType(InkWell)),
-          ).onTap,
+          tester
+              .widget<InkWell>(
+                find.descendant(of: row, matching: find.byType(InkWell)),
+              )
+              .onTap,
           isNotNull,
           reason: 'dòng $key không bấm được',
         );
@@ -355,21 +377,29 @@ void main() {
     });
 
     // Legacy items must NOT appear after pivot
-    testWidgets('legacy items removed — workshops/coaching/vouchers/invitations/survey/roadmap not in UI', (tester) async {
-      final repo = FakeWrRepository();
-      repo.seedProfile(_profile());
-      repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
-      await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
+    testWidgets(
+      'legacy items removed — workshops/coaching/vouchers/invitations/survey/roadmap not in UI',
+      (tester) async {
+        final repo = FakeWrRepository();
+        repo.seedProfile(_profile());
+        repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
+        await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
 
-      expect(find.byKey(const Key('profile_my_workshops_btn')), findsNothing);
-      expect(find.byKey(const Key('profile_my_coaching_btn')), findsNothing);
-      expect(find.byKey(const Key('profile_vouchers_btn')), findsNothing);
-      expect(find.byKey(const Key('profile_invitations_btn')), findsNothing);
-      expect(find.byKey(const Key('profile_survey_history_btn')), findsNothing);
-      expect(find.byKey(const Key('profile_roadmap_btn')), findsNothing);
-    });
+        expect(find.byKey(const Key('profile_my_workshops_btn')), findsNothing);
+        expect(find.byKey(const Key('profile_my_coaching_btn')), findsNothing);
+        expect(find.byKey(const Key('profile_vouchers_btn')), findsNothing);
+        expect(find.byKey(const Key('profile_invitations_btn')), findsNothing);
+        expect(
+          find.byKey(const Key('profile_survey_history_btn')),
+          findsNothing,
+        );
+        expect(find.byKey(const Key('profile_roadmap_btn')), findsNothing);
+      },
+    );
 
-    testWidgets('check-in history section not shown after pivot', (tester) async {
+    testWidgets('check-in history section not shown after pivot', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       repo.seedProfile(_profile());
       repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
@@ -381,8 +411,9 @@ void main() {
     // Ảnh khách gửi 04/8 rút danh sách còn bốn dòng, nhưng khách chốt lại ngay
     // sau đó là GIỮ đủ mục. Test này canh đúng chỗ dễ mất nhất: bốn mục dưới
     // đây không có lối vào nào khác trong app — cắt khỏi đây là mất hẳn.
-    testWidgets('danh sách cài đặt giữ đủ mọi mục có lối vào duy nhất',
-        (tester) async {
+    testWidgets('danh sách cài đặt giữ đủ mọi mục có lối vào duy nhất', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       repo.seedProfile(_profile());
       repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
@@ -403,8 +434,9 @@ void main() {
 
     // Mockup Sprint 2 bản (4): Đăng xuất là NÚT viền riêng dưới cùng, ngoài
     // thẻ cài đặt — không còn là một dòng chữ đỏ lẫn trong danh sách.
-    testWidgets('Đăng xuất là nút viền riêng, nằm ngoài thẻ cài đặt',
-        (tester) async {
+    testWidgets('Đăng xuất là nút viền riêng, nằm ngoài thẻ cài đặt', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       repo.seedProfile(_profile());
       repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
@@ -415,8 +447,12 @@ void main() {
       expect(tester.widget(logoutBtn), isA<OutlinedButton>());
       // Nằm DƯỚI thẻ Khảo sát tổ chức, tức đã ra khỏi danh sách cài đặt (dòng
       // "Thông tin của bạn" là dòng đầu của danh sách đó).
-      final my = tester.getTopLeft(find.byKey(const Key('profile_my_info_btn')));
-      final org = tester.getTopLeft(find.byKey(const Key('profile_org_survey_btn')));
+      final my = tester.getTopLeft(
+        find.byKey(const Key('profile_my_info_btn')),
+      );
+      final org = tester.getTopLeft(
+        find.byKey(const Key('profile_org_survey_btn')),
+      );
       final out = tester.getTopLeft(logoutBtn);
       expect(out.dy, greaterThan(my.dy));
       expect(out.dy, greaterThan(org.dy));
@@ -424,8 +460,9 @@ void main() {
 
     // "Hướng dẫn sử dụng" — yêu cầu §4 họp 26_1. Đây là lối vào DUY NHẤT của
     // màn hướng dẫn, nên mất dòng này là mất luôn cả trang.
-    testWidgets('dòng Hướng dẫn sử dụng nằm cuối danh sách cài đặt',
-        (tester) async {
+    testWidgets('dòng Hướng dẫn sử dụng nằm cuối danh sách cài đặt', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       repo.seedProfile(_profile());
       repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
@@ -450,8 +487,9 @@ void main() {
 
     // Mockup Sprint 2 bản (4): mọi khối của màn là THẺ TRẮNG trên nền xám —
     // số liệu, danh sách cài đặt, khảo sát tổ chức. Không còn vạch kẻ ngang nào.
-    testWidgets('số liệu và danh sách cài đặt đều nằm trong thẻ trắng',
-        (tester) async {
+    testWidgets('số liệu và danh sách cài đặt đều nằm trong thẻ trắng', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       repo.seedProfile(_profile());
       repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
@@ -471,7 +509,11 @@ void main() {
                 d.color == WrColors.white &&
                 d.border == Border.all(color: WrColors.line);
           });
-      expect(cards, isNotEmpty, reason: 'danh sách cài đặt không nằm trong thẻ');
+      expect(
+        cards,
+        isNotEmpty,
+        reason: 'danh sách cài đặt không nằm trong thẻ',
+      );
     });
 
     // Mỗi dòng cài đặt có icon bên trái — mắt bắt được dòng cần tìm mà không
@@ -507,7 +549,10 @@ void main() {
       repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
       await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
 
-      expect(find.byKey(const Key('profile_change_password_btn')), findsOneWidget);
+      expect(
+        find.byKey(const Key('profile_change_password_btn')),
+        findsOneWidget,
+      );
       expect(find.textContaining('Đổi mật khẩu'), findsOneWidget);
     });
 
@@ -529,7 +574,9 @@ void main() {
       expect(find.byKey(const Key('change_password_submit')), findsOneWidget);
     });
 
-    testWidgets('change-password dialog calls changePassword on repo', (tester) async {
+    testWidgets('change-password dialog calls changePassword on repo', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       repo.seedProfile(_profile());
       repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
@@ -586,7 +633,9 @@ void main() {
       expect(find.textContaining('đã được cập nhật'), findsOneWidget);
     });
 
-    testWidgets('change-password shows session-expired snackbar on error', (tester) async {
+    testWidgets('change-password shows session-expired snackbar on error', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       repo.seedProfile(_profile());
       repo.seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
@@ -700,7 +749,9 @@ void main() {
       expect(find.textContaining('499.000'), findsNothing);
     });
 
-    testWidgets('Premium bên web không bị mời nâng cấp thêm lần nữa', (tester) async {
+    testWidgets('Premium bên web không bị mời nâng cấp thêm lần nữa', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       repo.seedProfile(_profile());
       repo.seedCcProfile({
@@ -730,140 +781,26 @@ void main() {
         expect(find.byKey(Key(key)), findsOneWidget, reason: 'thiếu $key');
       }
     });
-
   });
 
-  // -------------------------------------------------------------------------
-  // Công tắc Premium thử nghiệm — chỉ tài khoản nội bộ. Xem
-  // `lib/core/logic/wr_premium_override.dart` để hiểu vì sao nó nằm ở máy chứ
-  // không ghi vào `wr_entitlements` (RLS bảng đó chỉ cho SELECT).
-  // -------------------------------------------------------------------------
-  group('ProfileScreen — công tắc Premium riêng tài khoản nội bộ', () {
-    setUp(() => SharedPreferences.setMockInitialValues({}));
-
-    FakeWrRepository seeded() => FakeWrRepository()
+  testWidgets('không hiện công cụ chuyển gói nội bộ trên hồ sơ', (
+    tester,
+  ) async {
+    final repo = FakeWrRepository()
       ..seedProfile(_profile())
-      ..seedCcProfile({
-        'full_name': 'The Dang',
-        'email': kPremiumTogglePermittedEmails.first,
-        // Gói THẬT là miễn phí — để chứng minh công tắc tự nó đổi được nhãn.
-        'subscription_expires_at': null,
-      });
+      ..seedCcProfile({'full_name': 'Y', 'email': 'internal@example.com'});
 
-    testWidgets('tài khoản khác không thấy công tắc', (tester) async {
-      final repo = FakeWrRepository()
-        ..seedProfile(_profile())
-        ..seedCcProfile({'full_name': 'Y', 'email': 'y@y.com'});
+    await _pumpLarge(
+      tester,
+      _wrap(const ProfileScreen(), repo, signedInEmail: 'internal@example.com'),
+    );
 
-      await _pumpLarge(
-        tester,
-        _wrap(const ProfileScreen(), repo, signedInEmail: 'y@y.com'),
-      );
-
-      expect(
-        find.byKey(const Key('profile_premium_override_row')),
-        findsNothing,
-      );
-      // Lời mời Premium bình thường thì vẫn còn — công tắc không thay nó.
-      expect(find.byKey(const Key('profile_premium_card')), findsOneWidget);
-    });
-
-    testWidgets('đúng tài khoản thì thấy công tắc', (tester) async {
-      await _pumpLarge(
-        tester,
-        _wrap(const ProfileScreen(), seeded(),
-            signedInEmail: kPremiumTogglePermittedEmails.first),
-      );
-
-      expect(
-        find.byKey(const Key('profile_premium_override_row')),
-        findsOneWidget,
-      );
-      // Chưa chạm thì không có dòng nhắc "đang ép" — mặc định là gói thật.
-      expect(
-        find.byKey(const Key('profile_premium_override_reset')),
-        findsNothing,
-      );
-    });
-
-    testWidgets('bật công tắc thì nhãn gói đổi theo, dù gói thật là miễn phí',
-        (tester) async {
-      await _pumpLarge(
-        tester,
-        _wrap(const ProfileScreen(), seeded(),
-            signedInEmail: kPremiumTogglePermittedEmails.first),
-      );
-
-      expect(find.text('Thành viên'), findsOneWidget);
-
-      await tester.tap(find.byKey(const Key('profile_premium_override_row')));
-      await tester.pumpAndSettle();
-
-      // Nhãn gói và các cổng Premium phải nói cùng một điều — để lệch thì
-      // người thử nghiệm không biết tin cái nào.
-      expect(find.text('PREMIUM MEMBER'), findsOneWidget);
-      expect(
-        find.byKey(const Key('profile_premium_override_reset')),
-        findsOneWidget,
-      );
-      // Thẻ mời nâng cấp phải biến mất, đúng như người Premium thật thấy.
-      expect(find.byKey(const Key('profile_premium_card')), findsNothing);
-    });
-
-    testWidgets('chạm dòng nhắc thì quay về gói thật', (tester) async {
-      await _pumpLarge(
-        tester,
-        _wrap(const ProfileScreen(), seeded(),
-            signedInEmail: kPremiumTogglePermittedEmails.first),
-      );
-
-      await tester.tap(find.byKey(const Key('profile_premium_override_row')));
-      await tester.pumpAndSettle();
-      expect(find.text('PREMIUM MEMBER'), findsOneWidget);
-
-      await tester.tap(find.byKey(const Key('profile_premium_override_reset')));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Thành viên'), findsOneWidget);
-      expect(
-        find.byKey(const Key('profile_premium_override_reset')),
-        findsNothing,
-      );
-    });
-
-    testWidgets('tắt được cả chiều ngược lại: Premium thật xem bản miễn phí',
-        (tester) async {
-      final repo = FakeWrRepository()
-        ..seedProfile(_profile())
-        ..seedCcProfile({
-          'full_name': 'The Dang',
-          'email': kPremiumTogglePermittedEmails.first,
-          'subscription_expires_at':
-              DateTime.now().add(const Duration(days: 30)).toIso8601String(),
-        });
-      // Phải gieo CẢ HAI nguồn. Màn này đọc `cc_profiles` cho nhãn gói, còn
-      // mọi cổng tính năng đọc `wr_entitlements` — công tắc lấy trạng thái ban
-      // đầu từ nguồn thứ hai vì đó mới là thứ thật sự mở khoá.
-      final intel = FakeWrIntelligenceRepository()
-        ..seedEntitlement(const WrEntitlementRecord(
-          userId: 'u1',
-          plan: WrPlan.premium,
-        ));
-
-      await _pumpLarge(
-        tester,
-        _wrap(const ProfileScreen(), repo,
-            signedInEmail: kPremiumTogglePermittedEmails.first, intel: intel),
-      );
-
-      expect(find.text('PREMIUM MEMBER'), findsOneWidget);
-
-      await tester.tap(find.byKey(const Key('profile_premium_override_row')));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Thành viên'), findsOneWidget);
-      expect(find.byKey(const Key('profile_premium_card')), findsOneWidget);
-    });
+    expect(find.byKey(const Key('profile_premium_override_row')), findsNothing);
+    expect(
+      find.byKey(const Key('profile_premium_override_reset')),
+      findsNothing,
+    );
+    expect(find.textContaining('(Demo)'), findsNothing);
   });
 
   // App Store Review Guideline 5.1.1(v): app cho tạo tài khoản thì phải cho
@@ -924,8 +861,9 @@ void main() {
       expect(confirm.onPressed, isNull);
     });
 
-    testWidgets('gõ đúng rồi xác nhận thì gọi deleteAccount đúng một lần',
-        (tester) async {
+    testWidgets('gõ đúng rồi xác nhận thì gọi deleteAccount đúng một lần', (
+      tester,
+    ) async {
       final auth = await openDialog(tester);
 
       await tester.enterText(
@@ -941,8 +879,9 @@ void main() {
 
     // Gõ đúng nhưng lỡ tay dính dấu cách / gõ thường — chặn ở đây là hành hạ
     // người dùng chứ không bảo vệ được gì thêm.
-    testWidgets('chữ thường kèm khoảng trắng vẫn được chấp nhận',
-        (tester) async {
+    testWidgets('chữ thường kèm khoảng trắng vẫn được chấp nhận', (
+      tester,
+    ) async {
       final auth = await openDialog(tester);
 
       await tester.enterText(
@@ -970,8 +909,9 @@ void main() {
       expect(auth.deleteAccountCalls, 0);
     });
 
-    testWidgets('xoá lỗi thì báo cho người dùng chứ không im lặng',
-        (tester) async {
+    testWidgets('xoá lỗi thì báo cho người dùng chứ không im lặng', (
+      tester,
+    ) async {
       final auth = await openDialog(tester);
       auth.deleteShouldFail = true;
 

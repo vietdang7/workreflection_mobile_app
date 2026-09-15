@@ -20,8 +20,7 @@ import '../../core/models/wr_intelligence.dart';
 import '../profile/profile_providers.dart';
 import 'wr_providers.dart';
 
-final practiceThemesProvider =
-    FutureProvider<List<PracticeTheme>>((ref) async {
+final practiceThemesProvider = FutureProvider<List<PracticeTheme>>((ref) async {
   final repo = ref.watch(wrIntelligenceRepositoryProvider);
   return repo.fetchPracticeThemes();
 });
@@ -30,8 +29,9 @@ final practiceThemesProvider =
 ///
 /// Khác [practiceStepsProvider] ở chỗ không cần biết chủ đề trước: mảnh ký ức
 /// "điều mình ghi lại" chỉ lưu tên bước, không lưu `theme_id`.
-final allPracticeStepsProvider =
-    FutureProvider<List<PracticeStep>>((ref) async {
+final allPracticeStepsProvider = FutureProvider<List<PracticeStep>>((
+  ref,
+) async {
   final repo = ref.watch(wrIntelligenceRepositoryProvider);
   return repo.fetchAllPracticeSteps();
 });
@@ -75,8 +75,9 @@ final wrPracticeLabelMapProvider = Provider<Map<String, String>>((ref) {
   return map;
 });
 
-final practiceEnrollmentsProvider =
-    FutureProvider<List<PracticeEnrollment>>((ref) async {
+final practiceEnrollmentsProvider = FutureProvider<List<PracticeEnrollment>>((
+  ref,
+) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return const [];
   final repo = ref.watch(wrIntelligenceRepositoryProvider);
@@ -96,16 +97,17 @@ final wrSeniorityTierProvider = Provider<SeniorityTier?>((ref) {
 ///
 /// Cá nhân hoá LÚC ĐỌC (§XIV Kiến trúc Dữ liệu): dữ liệu gốc trong DB không
 /// đổi, người dùng đổi vị trí thì nội dung đổi theo ngay lần mở tới.
-final practiceStepsProvider =
-    FutureProvider.family<List<PracticeStep>, String>((ref, themeId) async {
-  final repo = ref.watch(wrIntelligenceRepositoryProvider);
-  final steps = await repo.fetchPracticeSteps(themeId);
-  return personalizePracticeSteps(
-    themeId: themeId,
-    steps: steps,
-    tier: ref.watch(wrSeniorityTierProvider),
-  );
-});
+final practiceStepsProvider = FutureProvider.family<List<PracticeStep>, String>(
+  (ref, themeId) async {
+    final repo = ref.watch(wrIntelligenceRepositoryProvider);
+    final steps = await repo.fetchPracticeSteps(themeId);
+    return personalizePracticeSteps(
+      themeId: themeId,
+      steps: steps,
+      tier: ref.watch(wrSeniorityTierProvider),
+    );
+  },
+);
 
 /// Một bước thực hành đang chờ người dùng — chủ đề nào, bước nào.
 class PendingPracticeStep {
@@ -132,8 +134,9 @@ class PendingPracticeStep {
 /// Bỏ qua bước bị khoá là có chủ đích: mời người dùng "tiếp tục" một bước họ
 /// không mở được là dẫn thẳng vào paywall từ màn Home, đúng chỗ khách muốn giữ
 /// tối giản nhất.
-final wrPendingPracticeStepProvider =
-    FutureProvider<PendingPracticeStep?>((ref) async {
+final wrPendingPracticeStepProvider = FutureProvider<PendingPracticeStep?>((
+  ref,
+) async {
   final enrollments = await ref.watch(practiceEnrollmentsProvider.future);
   final active = enrollments.where((e) => e.completedAt == null).toList();
   if (active.isEmpty) return null;
@@ -145,8 +148,9 @@ final wrPendingPracticeStepProvider =
   // Gần đích nhất trước; hoà thì chủ đề bắt đầu sớm hơn. Ghi danh chưa có
   // `startedAt` xếp cuối — không có mốc thời gian thì không thể coi là sớm.
   active.sort((a, b) {
-    final byProgress =
-        b.completedSteps.length.compareTo(a.completedSteps.length);
+    final byProgress = b.completedSteps.length.compareTo(
+      a.completedSteps.length,
+    );
     if (byProgress != 0) return byProgress;
     final sa = a.startedAt;
     final sb = b.startedAt;
@@ -160,15 +164,17 @@ final wrPendingPracticeStepProvider =
     final theme = themeById[enrollment.themeId];
     if (theme == null) continue;
 
-    final steps =
-        (await ref.watch(practiceStepsProvider(theme.themeId).future)).toList()
-          ..sort((a, b) => a.stepOrder.compareTo(b.stepOrder));
+    final steps = (await ref.watch(
+      practiceStepsProvider(theme.themeId).future,
+    )).toList()..sort((a, b) => a.stepOrder.compareTo(b.stepOrder));
 
     final next = steps
-        .where((s) =>
-            !enrollment.completedSteps.contains(s.stepId) &&
-            !(s.isPremium &&
-                !entitlement.canAccessPracticeStep(isPremiumStep: true)))
+        .where(
+          (s) =>
+              !enrollment.completedSteps.contains(s.stepId) &&
+              !(s.isPremium &&
+                  !entitlement.canAccessPracticeStep(isPremiumStep: true)),
+        )
         .firstOrNull;
     if (next != null) return PendingPracticeStep(theme: theme, step: next);
   }
@@ -192,11 +198,12 @@ final wrPendingPracticeStepProvider =
 final wrDominantNeedProvider = Provider<HumanNeed?>((ref) {
   final episodes = ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
   final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
-  final history =
-      ref.watch(wrSelfCheckHistoryProvider).valueOrNull ?? const [];
+  final history = ref.watch(wrSelfCheckHistoryProvider).valueOrNull ?? const [];
 
-  final behaviour =
-      dominantNeedFromBehaviour(recentSituationIds(episodes), situations);
+  final behaviour = dominantNeedFromBehaviour(
+    recentSituationIds(episodes),
+    situations,
+  );
   final latest = history.isNotEmpty ? history.first : null;
   if (latest == null) return behaviour;
 
@@ -234,8 +241,7 @@ final wrPracticeSuggestionProvider = Provider<PracticeSuggestion?>((ref) {
       ref.watch(practiceEnrollmentsProvider).valueOrNull ?? const [];
   final episodes = ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
   final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
-  final history =
-      ref.watch(wrSelfCheckHistoryProvider).valueOrNull ?? const [];
+  final history = ref.watch(wrSelfCheckHistoryProvider).valueOrNull ?? const [];
 
   final recent = recentSituationIds(episodes);
   final need = ref.watch(wrDominantNeedProvider);
@@ -260,13 +266,14 @@ final wrPracticeSuggestionProvider = Provider<PracticeSuggestion?>((ref) {
     need: need,
     jobPillars:
         ref.watch(wrSkillJdMatchProvider).valueOrNull?.matchedPillars ??
-            const [],
+        const [],
   );
 });
 
 /// Career Memory events — nguồn để đếm số lần đã thực hành.
-final practiceMemoryEventsProvider =
-    FutureProvider<List<CareerMemoryEvent>>((ref) async {
+final practiceMemoryEventsProvider = FutureProvider<List<CareerMemoryEvent>>((
+  ref,
+) async {
   final repo = ref.watch(wrContentRepositoryProvider);
   try {
     return await repo.fetchMemoryEvents(limit: 200);
@@ -290,7 +297,8 @@ final wrSkillFormationsProvider = Provider<List<SkillFormation>>((ref) {
   final themes = ref.watch(practiceThemesProvider).valueOrNull ?? const [];
   final enrollments =
       ref.watch(practiceEnrollmentsProvider).valueOrNull ?? const [];
-  final events = ref.watch(practiceMemoryEventsProvider).valueOrNull ?? const [];
+  final events =
+      ref.watch(practiceMemoryEventsProvider).valueOrNull ?? const [];
   return skillFormations(
     themes: themes,
     enrollments: enrollments,

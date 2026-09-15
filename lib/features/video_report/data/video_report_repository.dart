@@ -65,7 +65,9 @@ RawVideoJob? interpretPollResponse(Map<String, dynamic> data) {
     );
   }
   if (status == 'failed') {
-    throw Exception(data['error_message'] as String? ?? 'TTS generation failed');
+    throw Exception(
+      data['error_message'] as String? ?? 'TTS generation failed',
+    );
   }
   return null;
 }
@@ -155,16 +157,19 @@ class SupabaseVideoReportRepository implements VideoReportRepository {
   }) async {
     final voiceId = language == 'en' ? _enVoiceId : _viVoiceId;
 
-    final createResp = await _client.functions.invoke('tts-proxy', body: {
-      'action': 'create',
-      'report_id': reportId,
-      'user_id': userId,
-      'text': text,
-      'voice_id': voiceId,
-      'narration_script': narrationScript,
-      'language': language,
-      'speed': 1.0,
-    });
+    final createResp = await _client.functions.invoke(
+      'tts-proxy',
+      body: {
+        'action': 'create',
+        'report_id': reportId,
+        'user_id': userId,
+        'text': text,
+        'voice_id': voiceId,
+        'narration_script': narrationScript,
+        'language': language,
+        'speed': 1.0,
+      },
+    );
     final rawCreate = createResp.data;
     if (rawCreate is! Map) {
       throw Exception('Video job creation failed: unexpected response');
@@ -178,10 +183,10 @@ class SupabaseVideoReportRepository implements VideoReportRepository {
     for (var attempt = 0; attempt < _maxPollAttempts; attempt++) {
       await Future.delayed(_pollInterval);
 
-      final pollResp = await _client.functions.invoke('tts-proxy', body: {
-        'action': 'poll',
-        'job_id': jobId,
-      });
+      final pollResp = await _client.functions.invoke(
+        'tts-proxy',
+        body: {'action': 'poll', 'job_id': jobId},
+      );
       final rawPoll = pollResp.data;
       // Malformed/empty poll payload → treat as "not ready yet" and keep
       // polling rather than throwing a raw CastError (mirrors the create guard).
@@ -203,8 +208,7 @@ class SupabaseVideoReportRepository implements VideoReportRepository {
 
   @override
   Map<String, String> audioHeaders() => {
-        'Authorization':
-            'Bearer ${_client.auth.currentSession?.accessToken ?? ''}',
-        'apikey': SupabaseConfig.anonKey,
-      };
+    'Authorization': 'Bearer ${_client.auth.currentSession?.accessToken ?? ''}',
+    'apikey': SupabaseConfig.anonKey,
+  };
 }

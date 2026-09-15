@@ -121,17 +121,20 @@ void main() {
       expect(r.isActivePremium, isFalse);
     });
 
-    test('isActivePremium true when premium with null validUntil (perpetual)', () {
-      final json = {
-        'user_id': 'user-4',
-        'plan': 'premium',
-        'valid_until': null,
-        'source': 'manual',
-        'updated_at': '2026-07-22T00:00:00.000Z',
-      };
-      final r = WrEntitlementRecord.fromJson(json);
-      expect(r.isActivePremium, isTrue);
-    });
+    test(
+      'isActivePremium true when premium with null validUntil (perpetual)',
+      () {
+        final json = {
+          'user_id': 'user-4',
+          'plan': 'premium',
+          'valid_until': null,
+          'source': 'manual',
+          'updated_at': '2026-07-22T00:00:00.000Z',
+        };
+        final r = WrEntitlementRecord.fromJson(json);
+        expect(r.isActivePremium, isTrue);
+      },
+    );
   });
 
   // ---------------------------------------------------------------------------
@@ -349,7 +352,8 @@ void main() {
         expect(
           kAllowedScaDimensions,
           contains(dim.dbValue),
-          reason: '${dim.dbValue} có trong enum nhưng chưa được thêm vào check '
+          reason:
+              '${dim.dbValue} có trong enum nhưng chưa được thêm vào check '
               'constraint — thêm chiều mới thì phải nới constraint kèm theo, '
               'nếu không mọi lần ghi chiều đó sẽ bị DB từ chối.',
         );
@@ -397,7 +401,8 @@ void main() {
           expect(
             scoped,
             contains("'${dim.dbValue}'"),
-            reason: '$table chưa nhận ${dim.dbValue} — phản tư trên tình huống '
+            reason:
+                '$table chưa nhận ${dim.dbValue} — phản tư trên tình huống '
                 'tích cực sẽ bị Supabase trả 400.',
           );
         }
@@ -421,8 +426,9 @@ String? _lastScaConstraintFor(String sql, String table) {
     caseSensitive: false,
   ).firstMatch(sql);
   if (created != null) {
-    final inline = RegExp(r'sca_dimension[^,]*?check \(sca_dimension in \(([^)]*)\)')
-        .firstMatch(created.group(1)!);
+    final inline = RegExp(
+      r'sca_dimension[^,]*?check \(sca_dimension in \(([^)]*)\)',
+    ).firstMatch(created.group(1)!);
     if (inline != null) found = inline.group(1);
   }
 

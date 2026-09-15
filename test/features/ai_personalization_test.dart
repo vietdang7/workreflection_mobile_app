@@ -38,11 +38,13 @@ import '../support/fake_survey_repository.dart';
 // Helpers
 // ---------------------------------------------------------------------------
 
-Widget _wrap(Widget child,
-    {required FakeSurveyRepository repo,
-    FakeWrRepository? wrRepo,
-    String locale = 'vi',
-    bool aiConsentGranted = true}) {
+Widget _wrap(
+  Widget child, {
+  required FakeSurveyRepository repo,
+  FakeWrRepository? wrRepo,
+  String locale = 'vi',
+  bool aiConsentGranted = true,
+}) {
   final wr = wrRepo ?? FakeWrRepository();
   return ProviderScope(
     overrides: [
@@ -75,19 +77,19 @@ Widget _wrap(Widget child,
 }
 
 CcReportFull _premiumReport({String id = 'r1'}) => CcReportFull(
-      id: id,
-      surveyId: 's1',
-      userId: 'u1',
-      scoreTotal: 4.0,
-      scoreStructure: 4.0,
-      scoreCulture: 3.5,
-      scoreActivity: 4.5,
-      scoreEsi: 3.8,
-      scoreEnps: 25,
-      bottleneckLayer: SurveyLayer.culture,
-      scoreLevel: ScoreLevel.good,
-      createdAt: DateTime(2026, 7, 18),
-    );
+  id: id,
+  surveyId: 's1',
+  userId: 'u1',
+  scoreTotal: 4.0,
+  scoreStructure: 4.0,
+  scoreCulture: 3.5,
+  scoreActivity: 4.5,
+  scoreEsi: 3.8,
+  scoreEnps: 25,
+  bottleneckLayer: SurveyLayer.culture,
+  scoreLevel: ScoreLevel.good,
+  createdAt: DateTime(2026, 7, 18),
+);
 
 const _modelContent = {
   'quote': 'AI quote here',
@@ -139,54 +141,63 @@ void main() {
       expect(repo.aiInvokeCalls, isEmpty); // invoke was never called
     });
 
-    test('A2: cache miss → invokeAiPersonalize returns seeded content', () async {
-      // No cache entry seeded → getCachedAiPersonalization returns null.
-      repo.seedAiInvokeResult('reflection', _reflectionContent);
+    test(
+      'A2: cache miss → invokeAiPersonalize returns seeded content',
+      () async {
+        // No cache entry seeded → getCachedAiPersonalization returns null.
+        repo.seedAiInvokeResult('reflection', _reflectionContent);
 
-      final cached = await repo.getCachedAiPersonalization('r1', 'reflection');
-      expect(cached, isNull);
+        final cached = await repo.getCachedAiPersonalization(
+          'r1',
+          'reflection',
+        );
+        expect(cached, isNull);
 
-      final result = await repo.invokeAiPersonalize(
-        reportId: 'r1',
-        section: 'reflection',
-        userContext: const AiPersonalizationUserContext(),
-        scoreContext: AiPersonalizationScoreContext(
-          structure: 4.0,
-          culture: 3.5,
-          activity: 4.5,
-          total: 4.0,
-          esi: 3.8,
-          bottleneck: 'CULTURE',
-          scoreLevel: 'GOOD',
-        ),
-        defaultContent: {},
-      );
+        final result = await repo.invokeAiPersonalize(
+          reportId: 'r1',
+          section: 'reflection',
+          userContext: const AiPersonalizationUserContext(),
+          scoreContext: AiPersonalizationScoreContext(
+            structure: 4.0,
+            culture: 3.5,
+            activity: 4.5,
+            total: 4.0,
+            esi: 3.8,
+            bottleneck: 'CULTURE',
+            scoreLevel: 'GOOD',
+          ),
+          defaultContent: {},
+        );
 
-      expect(result, equals(_reflectionContent));
-      expect(repo.aiInvokeCalls, contains('reflection'));
-    });
+        expect(result, equals(_reflectionContent));
+        expect(repo.aiInvokeCalls, contains('reflection'));
+      },
+    );
 
-    test('A3: edge function failure returns null (graceful fallback)', () async {
-      repo.setAiInvokeFails(true);
+    test(
+      'A3: edge function failure returns null (graceful fallback)',
+      () async {
+        repo.setAiInvokeFails(true);
 
-      final result = await repo.invokeAiPersonalize(
-        reportId: 'r1',
-        section: 'model',
-        userContext: const AiPersonalizationUserContext(),
-        scoreContext: AiPersonalizationScoreContext(
-          structure: 4.0,
-          culture: 3.5,
-          activity: 4.5,
-          total: 4.0,
-          esi: 3.8,
-          bottleneck: 'CULTURE',
-          scoreLevel: 'GOOD',
-        ),
-        defaultContent: {},
-      );
+        final result = await repo.invokeAiPersonalize(
+          reportId: 'r1',
+          section: 'model',
+          userContext: const AiPersonalizationUserContext(),
+          scoreContext: AiPersonalizationScoreContext(
+            structure: 4.0,
+            culture: 3.5,
+            activity: 4.5,
+            total: 4.0,
+            esi: 3.8,
+            bottleneck: 'CULTURE',
+            scoreLevel: 'GOOD',
+          ),
+          defaultContent: {},
+        );
 
-      expect(result, isNull);
-    });
+        expect(result, isNull);
+      },
+    );
   });
 
   // ---------------------------------------------------------------------------
@@ -199,46 +210,50 @@ void main() {
     setUp(() => repo = FakeSurveyRepository());
 
     AiPersonalizationArgs makeArgs(String section, String locale) => (
-          reportId: 'r1',
-          section: section,
-          userContext: const AiPersonalizationUserContext(),
-          scoreContext: AiPersonalizationScoreContext(
-            structure: 4.0,
-            culture: 3.5,
-            activity: 4.5,
-            total: 4.0,
-            esi: 3.8,
-            bottleneck: 'CULTURE',
-            scoreLevel: 'GOOD',
-          ),
-          defaultContent: const {'quote': ''},
-          locale: locale,
-        );
+      reportId: 'r1',
+      section: section,
+      userContext: const AiPersonalizationUserContext(),
+      scoreContext: AiPersonalizationScoreContext(
+        structure: 4.0,
+        culture: 3.5,
+        activity: 4.5,
+        total: 4.0,
+        esi: 3.8,
+        bottleneck: 'CULTURE',
+        scoreLevel: 'GOOD',
+      ),
+      defaultContent: const {'quote': ''},
+      locale: locale,
+    );
 
     test('A4: VI locale → cache miss then invokes edge function', () async {
       repo.seedAiInvokeResult('model', _modelContent);
 
-      final container = ProviderContainer(overrides: [
-        surveyRepositoryProvider.overrideWithValue(repo),
-        grantedAiConsent(),
-      ]);
+      final container = ProviderContainer(
+        overrides: [
+          surveyRepositoryProvider.overrideWithValue(repo),
+          grantedAiConsent(),
+        ],
+      );
       addTearDown(container.dispose);
 
-      final result =
-          await container.read(aiPersonalizationProvider(makeArgs('model', 'vi')).future);
+      final result = await container.read(
+        aiPersonalizationProvider(makeArgs('model', 'vi')).future,
+      );
 
       expect(result, equals(_modelContent));
       expect(repo.aiInvokeCalls, contains('model'));
     });
 
     test('A5: EN locale → returns null immediately, no repo calls', () async {
-      final container = ProviderContainer(overrides: [
-        surveyRepositoryProvider.overrideWithValue(repo),
-      ]);
+      final container = ProviderContainer(
+        overrides: [surveyRepositoryProvider.overrideWithValue(repo)],
+      );
       addTearDown(container.dispose);
 
-      final result =
-          await container.read(aiPersonalizationProvider(makeArgs('model', 'en')).future);
+      final result = await container.read(
+        aiPersonalizationProvider(makeArgs('model', 'en')).future,
+      );
 
       expect(result, isNull);
       expect(repo.aiInvokeCalls, isEmpty);
@@ -256,15 +271,18 @@ void main() {
     test('chưa đồng ý gửi dữ liệu AI → KHÔNG gọi edge function', () async {
       repo.seedAiInvokeResult('model', _modelContent);
 
-      final container = ProviderContainer(overrides: [
-        surveyRepositoryProvider.overrideWithValue(repo),
-        // Không override consent → mặc định là chưa trả lời.
-        wrAiConsentProvider.overrideWith((ref) async => WrAiConsent.unknown),
-      ]);
+      final container = ProviderContainer(
+        overrides: [
+          surveyRepositoryProvider.overrideWithValue(repo),
+          // Không override consent → mặc định là chưa trả lời.
+          wrAiConsentProvider.overrideWith((ref) async => WrAiConsent.unknown),
+        ],
+      );
       addTearDown(container.dispose);
 
-      final result =
-          await container.read(aiPersonalizationProvider(makeArgs('model', 'vi')).future);
+      final result = await container.read(
+        aiPersonalizationProvider(makeArgs('model', 'vi')).future,
+      );
 
       // Trả null để màn Báo cáo hiện nội dung tĩnh — báo cáo vẫn đầy đủ.
       expect(result, isNull);
@@ -274,19 +292,22 @@ void main() {
     test('đã từ chối → vẫn KHÔNG gọi, và không hỏi lại', () async {
       repo.seedAiInvokeResult('model', _modelContent);
 
-      final container = ProviderContainer(overrides: [
-        surveyRepositoryProvider.overrideWithValue(repo),
-        wrAiConsentProvider.overrideWith(
-          (ref) async => WrAiConsent(
-            version: kWrAiDisclosureVersion,
-            revokedAt: DateTime(2026, 9, 9),
+      final container = ProviderContainer(
+        overrides: [
+          surveyRepositoryProvider.overrideWithValue(repo),
+          wrAiConsentProvider.overrideWith(
+            (ref) async => WrAiConsent(
+              version: kWrAiDisclosureVersion,
+              revokedAt: DateTime(2026, 9, 9),
+            ),
           ),
-        ),
-      ]);
+        ],
+      );
       addTearDown(container.dispose);
 
-      final result =
-          await container.read(aiPersonalizationProvider(makeArgs('model', 'vi')).future);
+      final result = await container.read(
+        aiPersonalizationProvider(makeArgs('model', 'vi')).future,
+      );
 
       expect(result, isNull);
       expect(repo.aiInvokeCalls, isEmpty);
@@ -297,14 +318,17 @@ void main() {
       // đường này là phạt người dùng vì một lần gửi đã xảy ra từ trước.
       repo.seedAiCache('r1', 'model', _modelContent);
 
-      final container = ProviderContainer(overrides: [
-        surveyRepositoryProvider.overrideWithValue(repo),
-        wrAiConsentProvider.overrideWith((ref) async => WrAiConsent.unknown),
-      ]);
+      final container = ProviderContainer(
+        overrides: [
+          surveyRepositoryProvider.overrideWithValue(repo),
+          wrAiConsentProvider.overrideWith((ref) async => WrAiConsent.unknown),
+        ],
+      );
       addTearDown(container.dispose);
 
-      final result =
-          await container.read(aiPersonalizationProvider(makeArgs('model', 'vi')).future);
+      final result = await container.read(
+        aiPersonalizationProvider(makeArgs('model', 'vi')).future,
+      );
 
       expect(result, equals(_modelContent));
       expect(repo.aiInvokeCalls, isEmpty);
@@ -324,52 +348,70 @@ void main() {
     });
 
     testWidgets(
-        'A6: CRITICAL — static narrative renders when AI returns null (AI down)',
-        (tester) async {
-      final report = _premiumReport();
-      repo.seedLatestReport(report);
-      // AI returns null for all sections → graceful fallback
-      repo.setAiInvokeFails(true);
+      'A6: CRITICAL — static narrative renders when AI returns null (AI down)',
+      (tester) async {
+        final report = _premiumReport();
+        repo.seedLatestReport(report);
+        // AI returns null for all sections → graceful fallback
+        repo.setAiInvokeFails(true);
 
-      await tester.pumpWidget(
-          _wrap(ReportScreen(reportId: 'r1'), repo: repo, locale: 'vi'));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          _wrap(
+            ReportScreen(reportId: 'r1'),
+            repo: repo,
+            locale: 'vi',
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      // ESI section (static) still renders
-      expect(find.textContaining('ESI'), findsOneWidget);
-      // eNPS section (static) still renders
-      expect(find.text('25'), findsOneWidget);
-      // No crash, no infinite spinner
-      expect(find.byType(CircularProgressIndicator), findsNothing);
-    });
+        // ESI section (static) still renders
+        expect(find.textContaining('ESI'), findsOneWidget);
+        // eNPS section (static) still renders
+        expect(find.text('25'), findsOneWidget);
+        // No crash, no infinite spinner
+        expect(find.byType(CircularProgressIndicator), findsNothing);
+      },
+    );
 
     testWidgets(
-        'A7: personalized model content replaces static when AI returns data',
-        (tester) async {
-      final report = _premiumReport();
-      repo.seedLatestReport(report);
-      // Seed cache directly so provider resolves synchronously from cache
-      repo.seedAiCache('r1', 'model', _modelContent);
-      repo.seedAiCache('r1', 'reflection', _reflectionContent);
-      repo.seedAiCache('r1', 'relationship', _relationshipContent);
+      'A7: personalized model content replaces static when AI returns data',
+      (tester) async {
+        final report = _premiumReport();
+        repo.seedLatestReport(report);
+        // Seed cache directly so provider resolves synchronously from cache
+        repo.seedAiCache('r1', 'model', _modelContent);
+        repo.seedAiCache('r1', 'reflection', _reflectionContent);
+        repo.seedAiCache('r1', 'relationship', _relationshipContent);
 
-      await tester.pumpWidget(
-          _wrap(ReportScreen(reportId: 'r1'), repo: repo, locale: 'vi'));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          _wrap(
+            ReportScreen(reportId: 'r1'),
+            repo: repo,
+            locale: 'vi',
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      // AI model content should appear
-      expect(find.text('AI quote here'), findsOneWidget);
-      expect(find.text('AI intro here'), findsOneWidget);
-    });
+        // AI model content should appear
+        expect(find.text('AI quote here'), findsOneWidget);
+        expect(find.text('AI intro here'), findsOneWidget);
+      },
+    );
 
-    testWidgets('A8: loading indicator shown while AI is resolving (vi locale)',
-        (tester) async {
+    testWidgets('A8: loading indicator shown while AI is resolving (vi locale)', (
+      tester,
+    ) async {
       final report = _premiumReport();
       repo.seedLatestReport(report);
       // No cache, no invoke result → provider stays loading until null returned
 
       await tester.pumpWidget(
-          _wrap(ReportScreen(reportId: 'r1'), repo: repo, locale: 'vi'));
+        _wrap(
+          ReportScreen(reportId: 'r1'),
+          repo: repo,
+          locale: 'vi',
+        ),
+      );
       // pump once without settle to catch loading state
       await tester.pump();
 
@@ -385,7 +427,12 @@ void main() {
       repo.seedAiCache('r1', 'model', _modelContent);
 
       await tester.pumpWidget(
-          _wrap(ReportScreen(reportId: 'r1'), repo: repo, locale: 'en'));
+        _wrap(
+          ReportScreen(reportId: 'r1'),
+          repo: repo,
+          locale: 'en',
+        ),
+      );
       await tester.pumpAndSettle();
 
       // AI content should NOT appear for EN locale
@@ -395,9 +442,9 @@ void main() {
       expect(find.textContaining('ESI'), findsOneWidget);
     });
 
-    testWidgets(
-        'A10: invoke receives userContext populated from cc_profiles',
-        (tester) async {
+    testWidgets('A10: invoke receives userContext populated from cc_profiles', (
+      tester,
+    ) async {
       final report = _premiumReport();
       repo.seedLatestReport(report);
       // No cache → will call invoke for each section
@@ -414,22 +461,39 @@ void main() {
         });
 
       await tester.pumpWidget(
-          _wrap(ReportScreen(reportId: 'r1'), repo: repo, wrRepo: wrRepo));
+        _wrap(
+          ReportScreen(reportId: 'r1'),
+          repo: repo,
+          wrRepo: wrRepo,
+        ),
+      );
       await tester.pumpAndSettle();
 
       // All three sections should have been invoked (cache miss path).
-      expect(repo.aiInvokeCalls, containsAll(['model', 'reflection', 'relationship']));
+      expect(
+        repo.aiInvokeCalls,
+        containsAll(['model', 'reflection', 'relationship']),
+      );
 
       // The invoke calls must have received the cc_profiles data as raw DB
       // enum values (same as web — no translation, no display labels).
       for (final section in ['model', 'reflection', 'relationship']) {
         final ctx = repo.aiInvokeUserContexts[section]!;
-        expect(ctx.position, 'staff',
-            reason: '$section: position must be raw DB value');
-        expect(ctx.tenure, 'less_6m',
-            reason: '$section: tenure must be raw DB value (company_tenure)');
-        expect(ctx.department, 'engineering',
-            reason: '$section: department must be raw DB value');
+        expect(
+          ctx.position,
+          'staff',
+          reason: '$section: position must be raw DB value',
+        );
+        expect(
+          ctx.tenure,
+          'less_6m',
+          reason: '$section: tenure must be raw DB value (company_tenure)',
+        );
+        expect(
+          ctx.department,
+          'engineering',
+          reason: '$section: department must be raw DB value',
+        );
         // Not translated to display labels.
         expect(ctx.position, isNot('Nhân viên'));
         expect(ctx.tenure, isNot('Dưới 6 tháng'));
@@ -437,51 +501,71 @@ void main() {
     });
 
     testWidgets(
-        'A11: no AI invoke fires while profile is loading; invoke fires with '
-        'populated context after profile completes',
-        (tester) async {
-      final report = _premiumReport();
-      repo.seedLatestReport(report);
-      // No cache → will call invoke on miss.
-      repo.seedAiInvokeResult('model', _modelContent);
-      repo.seedAiInvokeResult('reflection', _reflectionContent);
-      repo.seedAiInvokeResult('relationship', _relationshipContent);
+      'A11: no AI invoke fires while profile is loading; invoke fires with '
+      'populated context after profile completes',
+      (tester) async {
+        final report = _premiumReport();
+        repo.seedLatestReport(report);
+        // No cache → will call invoke on miss.
+        repo.seedAiInvokeResult('model', _modelContent);
+        repo.seedAiInvokeResult('reflection', _reflectionContent);
+        repo.seedAiInvokeResult('relationship', _relationshipContent);
 
-      // Completer keeps getCcProfile suspended until we resolve it.
-      final profileCompleter = Completer<Map<String, dynamic>>();
-      final wrRepo = FakeWrRepository()
-        ..setCcProfileCompleter(profileCompleter);
+        // Completer keeps getCcProfile suspended until we resolve it.
+        final profileCompleter = Completer<Map<String, dynamic>>();
+        final wrRepo = FakeWrRepository()
+          ..setCcProfileCompleter(profileCompleter);
 
-      await tester.pumpWidget(
-          _wrap(ReportScreen(reportId: 'r1'), repo: repo, wrRepo: wrRepo));
+        await tester.pumpWidget(
+          _wrap(
+            ReportScreen(reportId: 'r1'),
+            repo: repo,
+            wrRepo: wrRepo,
+          ),
+        );
 
-      // One frame: profile is still loading.
-      await tester.pump();
+        // One frame: profile is still loading.
+        await tester.pump();
 
-      // AI invoke must NOT have fired yet — profile not settled.
-      expect(repo.aiInvokeCalls, isEmpty,
-          reason: 'invokeAiPersonalize must not fire while profile is loading');
+        // AI invoke must NOT have fired yet — profile not settled.
+        expect(
+          repo.aiInvokeCalls,
+          isEmpty,
+          reason: 'invokeAiPersonalize must not fire while profile is loading',
+        );
 
-      // Now resolve the profile with populated data.
-      profileCompleter.complete({
-        'position': 'manager',
-        'company_tenure': '1_3y',
-        'department': 'product',
-      });
-      await tester.pumpAndSettle();
+        // Now resolve the profile with populated data.
+        profileCompleter.complete({
+          'position': 'manager',
+          'company_tenure': '1_3y',
+          'department': 'product',
+        });
+        await tester.pumpAndSettle();
 
-      // After profile settles, AI invokes fire with the populated context.
-      expect(repo.aiInvokeCalls,
-          containsAll(['model', 'reflection', 'relationship']));
-      for (final section in ['model', 'reflection', 'relationship']) {
-        final ctx = repo.aiInvokeUserContexts[section]!;
-        expect(ctx.position, 'manager',
-            reason: '$section: position populated from settled profile');
-        expect(ctx.tenure, '1_3y',
-            reason: '$section: tenure populated from settled profile');
-        expect(ctx.department, 'product',
-            reason: '$section: department populated from settled profile');
-      }
-    });
+        // After profile settles, AI invokes fire with the populated context.
+        expect(
+          repo.aiInvokeCalls,
+          containsAll(['model', 'reflection', 'relationship']),
+        );
+        for (final section in ['model', 'reflection', 'relationship']) {
+          final ctx = repo.aiInvokeUserContexts[section]!;
+          expect(
+            ctx.position,
+            'manager',
+            reason: '$section: position populated from settled profile',
+          );
+          expect(
+            ctx.tenure,
+            '1_3y',
+            reason: '$section: tenure populated from settled profile',
+          );
+          expect(
+            ctx.department,
+            'product',
+            reason: '$section: department populated from settled profile',
+          );
+        }
+      },
+    );
   });
 }

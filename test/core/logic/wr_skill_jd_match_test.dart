@@ -23,24 +23,24 @@ const _clarity = PracticeTheme(
 );
 
 SkillFormation _formed(PracticeTheme t) => SkillFormation(
-      themeId: t.themeId,
-      title: t.title,
-      scaDimension: t.scaDimension,
-      practiceCount: 5,
-      threshold: 5,
-      onboardingDone: true,
-      skillFormedDate: DateTime(2026, 8, 1),
-    );
+  themeId: t.themeId,
+  title: t.title,
+  scaDimension: t.scaDimension,
+  practiceCount: 5,
+  threshold: 5,
+  onboardingDone: true,
+  skillFormedDate: DateTime(2026, 8, 1),
+);
 
 SkillFormation _forming(PracticeTheme t) => SkillFormation(
-      themeId: t.themeId,
-      title: t.title,
-      scaDimension: t.scaDimension,
-      practiceCount: 2,
-      threshold: 5,
-      onboardingDone: false,
-      skillFormedDate: null,
-    );
+  themeId: t.themeId,
+  title: t.title,
+  scaDimension: t.scaDimension,
+  practiceCount: 2,
+  threshold: 5,
+  onboardingDone: false,
+  skillFormedDate: null,
+);
 
 void main() {
   test('không có mô tả công việc thì im lặng', () {
@@ -73,19 +73,21 @@ void main() {
     );
   });
 
-  test('kỹ năng đã hình thành thuộc trụ công việc cần thì được nêu là đã có',
-      () {
-    final m = matchSkillsToContext(
-      contextText: 'Giao tiếp với khách hàng, phối hợp đội nhóm hằng ngày.',
-      formations: [_formed(_voice), _formed(_clarity)],
-      allThemes: const [_voice, _clarity, _boundary],
-    )!;
+  test(
+    'kỹ năng đã hình thành thuộc trụ công việc cần thì được nêu là đã có',
+    () {
+      final m = matchSkillsToContext(
+        contextText: 'Giao tiếp với khách hàng, phối hợp đội nhóm hằng ngày.',
+        formations: [_formed(_voice), _formed(_clarity)],
+        allThemes: const [_voice, _clarity, _boundary],
+      )!;
 
-    expect(m.matchedPillars, contains('C'));
-    expect(m.matchedSkills.map((s) => s.themeId), ['pt-voice']);
-    expect(m.matchedDimensions, containsAll(['C1', 'C2', 'C3']));
-    expect(m.basedOnKeywords, isNotEmpty);
-  });
+      expect(m.matchedPillars, contains('C'));
+      expect(m.matchedSkills.map((s) => s.themeId), ['pt-voice']);
+      expect(m.matchedDimensions, containsAll(['C1', 'C2', 'C3']));
+      expect(m.basedOnKeywords, isNotEmpty);
+    },
+  );
 
   test('chủ đề công việc cần nhưng chưa hình thành là khoảng trống', () {
     final m = matchSkillsToContext(

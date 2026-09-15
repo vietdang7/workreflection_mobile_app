@@ -35,24 +35,23 @@ final premiumReportsProvider = FutureProvider<List<PremiumReport>>((ref) {
 /// Progress + custom tasks for a given report.
 final roadmapProgressProvider =
     FutureProvider.family<RoadmapProgressData, String>((ref, reportId) {
-  return ref.watch(roadmapRepositoryProvider).getProgressForReport(reportId);
-});
+      return ref
+          .watch(roadmapRepositoryProvider)
+          .getProgressForReport(reportId);
+    });
 
 /// All active roadmap action templates.
-final roadmapActionsProvider =
-    FutureProvider<List<RoadmapAction>>((ref) {
+final roadmapActionsProvider = FutureProvider<List<RoadmapAction>>((ref) {
   return ref.watch(roadmapRepositoryProvider).getRoadmapActions();
 });
 
 /// Coach access entries for the current user.
-final coachAccessProvider =
-    FutureProvider<List<CoachAccessEntry>>((ref) {
+final coachAccessProvider = FutureProvider<List<CoachAccessEntry>>((ref) {
   return ref.watch(roadmapRepositoryProvider).getCoachAccess();
 });
 
 /// All active coaches (for the invite dialog).
-final availableCoachesProvider =
-    FutureProvider<List<AvailableCoach>>((ref) {
+final availableCoachesProvider = FutureProvider<List<AvailableCoach>>((ref) {
   return ref.watch(roadmapRepositoryProvider).getAvailableCoaches();
 });
 
@@ -62,13 +61,14 @@ final availableCoachesProvider =
 
 /// Family key: reportId. State: Map of actionRefId to isCompleted.
 final roadmapActionToggleNotifierProvider = StateNotifierProvider.autoDispose
-    .family<RoadmapActionToggleNotifier, Map<String, bool>, String>(
-        (ref, reportId) {
-  return RoadmapActionToggleNotifier(ref, reportId);
-});
+    .family<RoadmapActionToggleNotifier, Map<String, bool>, String>((
+      ref,
+      reportId,
+    ) {
+      return RoadmapActionToggleNotifier(ref, reportId);
+    });
 
-class RoadmapActionToggleNotifier
-    extends StateNotifier<Map<String, bool>> {
+class RoadmapActionToggleNotifier extends StateNotifier<Map<String, bool>> {
   // ignore: avoid_unused_constructor_parameters
   RoadmapActionToggleNotifier(this._ref, this._reportId) : super({});
 
@@ -87,7 +87,9 @@ class RoadmapActionToggleNotifier
     final prior = state[actionRefId] ?? false;
     state = {...state, actionRefId: completed}; // optimistic
     try {
-      await _ref.read(roadmapRepositoryProvider).toggleRoadmapAction(
+      await _ref
+          .read(roadmapRepositoryProvider)
+          .toggleRoadmapAction(
             reportId: _reportId,
             actionRefId: actionRefId,
             isCompleted: completed,
@@ -104,10 +106,12 @@ class RoadmapActionToggleNotifier
 
 /// Family key: reportId. State: Map of taskId to isCompleted.
 final customTaskToggleNotifierProvider = StateNotifierProvider.autoDispose
-    .family<CustomTaskToggleNotifier, Map<String, bool>, String>(
-        (ref, reportId) {
-  return CustomTaskToggleNotifier(ref, reportId);
-});
+    .family<CustomTaskToggleNotifier, Map<String, bool>, String>((
+      ref,
+      reportId,
+    ) {
+      return CustomTaskToggleNotifier(ref, reportId);
+    });
 
 class CustomTaskToggleNotifier extends StateNotifier<Map<String, bool>> {
   // ignore: avoid_unused_constructor_parameters
@@ -128,10 +132,9 @@ class CustomTaskToggleNotifier extends StateNotifier<Map<String, bool>> {
     final prior = state[taskId] ?? false;
     state = {...state, taskId: completed}; // optimistic
     try {
-      await _ref.read(roadmapRepositoryProvider).toggleCustomTask(
-            taskId: taskId,
-            isCompleted: completed,
-          );
+      await _ref
+          .read(roadmapRepositoryProvider)
+          .toggleCustomTask(taskId: taskId, isCompleted: completed);
     } catch (_) {
       state = {...state, taskId: prior}; // rollback
     }

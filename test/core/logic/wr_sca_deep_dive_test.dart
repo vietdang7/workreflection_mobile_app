@@ -18,27 +18,53 @@ ScaSelfCheckResponse _check({
   double s = 3.0,
   double c = 3.0,
   double a = 3.0,
-}) =>
-    ScaSelfCheckResponse(
-      userId: 'u1',
-      answers: const {},
-      takenAt: at,
-      structureScore: s,
-      cultureScore: c,
-      activityScore: a,
-    );
+}) => ScaSelfCheckResponse(
+  userId: 'u1',
+  answers: const {},
+  takenAt: at,
+  structureScore: s,
+  cultureScore: c,
+  activityScore: a,
+);
 
 ReflectionEpisode _ep(String code, DateTime openedAt) => ReflectionEpisode(
-      userId: 'u1',
-      humanMoment: HumanMoment.confusion,
-      situationCode: code,
-      openedAt: openedAt,
-    );
+  userId: 'u1',
+  humanMoment: HumanMoment.confusion,
+  situationCode: code,
+  openedAt: openedAt,
+);
 
 const _situations = <WrSituation>[
-  WrSituation(code: 'S1-01', text: 'Vai trò chưa rõ', scaDimension: ScaDimension.s1, wave: 1),
-  WrSituation(code: 'C2-01', text: 'Không dám nói', scaDimension: ScaDimension.c2, wave: 1),
-  WrSituation(code: 'A3-01', text: 'Việc bị cắt ngang', scaDimension: ScaDimension.a3, wave: 1),
+  WrSituation(
+    code: 'S1-01',
+    text: 'Vai trò chưa rõ',
+    scaDimension: ScaDimension.s1,
+    pillarCode: 'S',
+    subgroup: 'S1',
+    mood: 'foggy',
+    valence: WrValence.thachThuc,
+    wave: 1,
+  ),
+  WrSituation(
+    code: 'C2-01',
+    text: 'Không dám nói',
+    scaDimension: ScaDimension.c2,
+    pillarCode: 'C',
+    subgroup: 'C2',
+    mood: 'stress',
+    valence: WrValence.thachThuc,
+    wave: 1,
+  ),
+  WrSituation(
+    code: 'A3-01',
+    text: 'Việc bị cắt ngang',
+    scaDimension: ScaDimension.a3,
+    pillarCode: 'A',
+    subgroup: 'A3',
+    mood: 'tired',
+    valence: WrValence.thachThuc,
+    wave: 1,
+  ),
 ];
 
 void main() {
@@ -351,9 +377,9 @@ void main() {
 
   group('selfAwarenessGapNarrative', () {
     List<ReflectionEpisode> fourCulture() => [
-          for (var i = 0; i < 4; i++)
-            _ep('C2-01', _now.subtract(Duration(days: i + 1))),
-        ];
+      for (var i = 0; i < 4; i++)
+        _ep('C2-01', _now.subtract(Duration(days: i + 1))),
+    ];
 
     test('tự chấm là ổn nhưng quay lại nhiều nhất → có câu', () {
       final text = selfAwarenessGapNarrative(

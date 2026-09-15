@@ -66,11 +66,12 @@ void main() {
       // Home hiện đúng mục ĐẦU nhóm (§8.3). Slot 1 phải luôn là một bài đọc
       // thật, nếu không bản release lọc nó đi và Home mất hẳn thẻ gợi ý.
       for (final mood in _moods) {
-        final orders = ofMood(mood)
-            .where((r) => r['type'] == 'reading')
-            .map((r) => r['sort_order'] as int)
-            .toList()
-          ..sort();
+        final orders =
+            ofMood(mood)
+                .where((r) => r['type'] == 'reading')
+                .map((r) => r['sort_order'] as int)
+                .toList()
+              ..sort();
         expect(orders, [1, 2, 3, 4, 5], reason: 'nhóm $mood');
       }
     });
@@ -174,7 +175,8 @@ void main() {
       expect(
         open,
         11,
-        reason: '10 bài nhóm mới + 1 bài mẫu gốc đã chỉnh. Nếu con số này tăng '
+        reason:
+            '10 bài nhóm mới + 1 bài mẫu gốc đã chỉnh. Nếu con số này tăng '
             'nghĩa là đội nội dung đã chỉnh thêm — cập nhật lại test.',
       );
     });

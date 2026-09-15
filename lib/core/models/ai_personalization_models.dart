@@ -33,12 +33,12 @@ class AiModelContent {
   final String activityDesc;
 
   factory AiModelContent.fromJson(Map<String, dynamic> j) => AiModelContent(
-        quote: _plain(j['quote']),
-        intro: _plain(j['intro']),
-        structureDesc: _plain(j['structure_desc']),
-        cultureDesc: _plain(j['culture_desc']),
-        activityDesc: _plain(j['activity_desc']),
-      );
+    quote: _plain(j['quote']),
+    intro: _plain(j['intro']),
+    structureDesc: _plain(j['structure_desc']),
+    cultureDesc: _plain(j['culture_desc']),
+    activityDesc: _plain(j['activity_desc']),
+  );
 }
 
 class AiReflectionContent {
@@ -144,10 +144,10 @@ class AiPersonalizationUserContext {
   final String? department;
 
   Map<String, dynamic> toJson() => {
-        if (position != null) 'position': position,
-        if (tenure != null) 'tenure': tenure,
-        if (department != null) 'department': department,
-      };
+    if (position != null) 'position': position,
+    if (tenure != null) 'tenure': tenure,
+    if (department != null) 'department': department,
+  };
 
   @override
   bool operator ==(Object other) =>
@@ -181,14 +181,14 @@ class AiPersonalizationScoreContext {
   final String scoreLevel;
 
   Map<String, dynamic> toJson() => {
-        'structure': structure,
-        'culture': culture,
-        'activity': activity,
-        'total': total,
-        'esi': esi,
-        'bottleneck': bottleneck,
-        'scoreLevel': scoreLevel,
-      };
+    'structure': structure,
+    'culture': culture,
+    'activity': activity,
+    'total': total,
+    'esi': esi,
+    'bottleneck': bottleneck,
+    'scoreLevel': scoreLevel,
+  };
 
   @override
   bool operator ==(Object other) =>
@@ -203,6 +203,13 @@ class AiPersonalizationScoreContext {
           scoreLevel == other.scoreLevel;
 
   @override
-  int get hashCode =>
-      Object.hash(structure, culture, activity, total, esi, bottleneck, scoreLevel);
+  int get hashCode => Object.hash(
+    structure,
+    culture,
+    activity,
+    total,
+    esi,
+    bottleneck,
+    scoreLevel,
+  );
 }

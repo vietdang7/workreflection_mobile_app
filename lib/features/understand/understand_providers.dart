@@ -12,8 +12,9 @@ final understandLatestInsightProvider = FutureProvider<Insight?>((ref) async {
   return ref.watch(wrRepositoryProvider).getLatestInsight();
 });
 
-final understandSituationsProvider =
-    FutureProvider<List<RecurringSituation>>((ref) async {
+final understandSituationsProvider = FutureProvider<List<RecurringSituation>>((
+  ref,
+) async {
   return ref.watch(wrRepositoryProvider).getRecurringSituations();
 });
 
@@ -24,6 +25,9 @@ final understandScaReportProvider = FutureProvider<ScaReport?>((ref) async {
 /// Combined reflection count: checkins + saved insights (plan Task 14).
 final understandInsightCountProvider = FutureProvider<int>((ref) async {
   final repo = ref.watch(wrRepositoryProvider);
-  final results = await Future.wait([repo.countCheckins(), repo.countInsights()]);
+  final results = await Future.wait([
+    repo.countCheckins(),
+    repo.countInsights(),
+  ]);
   return results[0] + results[1];
 });

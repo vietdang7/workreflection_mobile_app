@@ -22,9 +22,7 @@ Widget _wrap(
   String workshopId = 'ws-1',
 }) {
   return ProviderScope(
-    overrides: [
-      workshopRepositoryProvider.overrideWithValue(repo),
-    ],
+    overrides: [workshopRepositoryProvider.overrideWithValue(repo)],
     child: MaterialApp(
       builder: wrTextScaleBuilder,
       locale: Locale(locale),
@@ -44,17 +42,12 @@ WorkshopSurveyResults _results({
   Map<String, double>? layerScores,
   double total = 3.8,
   int responseCount = 10,
-}) =>
-    WorkshopSurveyResults(
-      layerScores: layerScores ??
-          {
-            'STRUCTURE': 4.0,
-            'CULTURE': 3.5,
-            'ACTIVITY': 3.8,
-          },
-      total: total,
-      responseCount: responseCount,
-    );
+}) => WorkshopSurveyResults(
+  layerScores:
+      layerScores ?? {'STRUCTURE': 4.0, 'CULTURE': 3.5, 'ACTIVITY': 3.8},
+  total: total,
+  responseCount: responseCount,
+);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -68,8 +61,9 @@ void main() {
       repo = FakeWorkshopRepository();
     });
 
-    testWidgets('shows not-found when no completed survey exists',
-        (tester) async {
+    testWidgets('shows not-found when no completed survey exists', (
+      tester,
+    ) async {
       // No submitted survey → getCompletedSurveyId returns null.
       await tester.pumpWidget(_wrap(repo));
       await tester.pumpAndSettle();
@@ -77,8 +71,9 @@ void main() {
       expect(find.byKey(const Key('ws_results_not_found')), findsOneWidget);
     });
 
-    testWidgets('shows not-found when getSurveyResults returns null',
-        (tester) async {
+    testWidgets('shows not-found when getSurveyResults returns null', (
+      tester,
+    ) async {
       repo.seedSubmittedSurvey('ws-1');
       // _surveyResults not seeded → getSurveyResults returns null.
       await tester.pumpWidget(_wrap(repo));
@@ -121,14 +116,12 @@ void main() {
 
     testWidgets('renders layer names in layer score rows', (tester) async {
       repo.seedSubmittedSurvey('ws-1');
-      repo.seedSurveyResults(_results(
-        layerScores: {
-          'STRUCTURE': 4.2,
-          'CULTURE': 3.1,
-          'ACTIVITY': 3.8,
-        },
-        total: 3.9,
-      ));
+      repo.seedSurveyResults(
+        _results(
+          layerScores: {'STRUCTURE': 4.2, 'CULTURE': 3.1, 'ACTIVITY': 3.8},
+          total: 3.9,
+        ),
+      );
 
       await tester.pumpWidget(_wrap(repo));
       await tester.pumpAndSettle();
@@ -146,7 +139,9 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-          find.byKey(const Key('ws_results_engagement_bar')), findsOneWidget);
+        find.byKey(const Key('ws_results_engagement_bar')),
+        findsOneWidget,
+      );
       // 80% engagement text should appear
       expect(find.textContaining('80%'), findsOneWidget);
     });
@@ -188,10 +183,13 @@ void main() {
 
     setUp(() => repo = FakeWorkshopRepository());
 
-    test('getCompletedSurveyId returns null when no submitted survey', () async {
-      final id = await repo.getCompletedSurveyId('ws-1');
-      expect(id, isNull);
-    });
+    test(
+      'getCompletedSurveyId returns null when no submitted survey',
+      () async {
+        final id = await repo.getCompletedSurveyId('ws-1');
+        expect(id, isNull);
+      },
+    );
 
     test('getCompletedSurveyId returns id after seedSubmittedSurvey', () async {
       repo.seedSubmittedSurvey('ws-1');
@@ -214,25 +212,29 @@ void main() {
       expect(r.responseCount, 5);
     });
 
-    test('cancelRegistration records call and sets status to cancelled',
-        () async {
-      repo.seedWorkshops([]);
-      repo.seedRegistration(WorkshopRegistration(
-        id: 'reg-1',
-        workshopId: 'ws-1',
-        userId: 'u-1',
-        status: 'registered',
-        attended: false,
-      ));
+    test(
+      'cancelRegistration records call and sets status to cancelled',
+      () async {
+        repo.seedWorkshops([]);
+        repo.seedRegistration(
+          WorkshopRegistration(
+            id: 'reg-1',
+            workshopId: 'ws-1',
+            userId: 'u-1',
+            status: 'registered',
+            attended: false,
+          ),
+        );
 
-      await repo.cancelRegistration('reg-1', 'ws-1');
+        await repo.cancelRegistration('reg-1', 'ws-1');
 
-      expect(repo.cancelRegistrationCalls, hasLength(1));
-      expect(repo.cancelRegistrationCalls.first, ('reg-1', 'ws-1'));
+        expect(repo.cancelRegistrationCalls, hasLength(1));
+        expect(repo.cancelRegistrationCalls.first, ('reg-1', 'ws-1'));
 
-      // Registration should now be cancelled.
-      final reg = await repo.getMyRegistration('ws-1'); // filters cancelled
-      expect(reg, isNull);
-    });
+        // Registration should now be cancelled.
+        final reg = await repo.getMyRegistration('ws-1'); // filters cancelled
+        expect(reg, isNull);
+      },
+    );
   });
 }

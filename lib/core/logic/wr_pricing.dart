@@ -91,8 +91,9 @@ class WrPremiumPricing {
   final String? description;
 
   /// Mặc định khi chưa tải xong hoặc bảng rỗng.
-  static const WrPremiumPricing fallback =
-      WrPremiumPricing(currentPrice: kPremiumFallbackPrice);
+  static const WrPremiumPricing fallback = WrPremiumPricing(
+    currentPrice: kPremiumFallbackPrice,
+  );
 
   factory WrPremiumPricing.fromJson(Map<String, dynamic> json) {
     final current = json['current_price'] as num?;
@@ -106,8 +107,9 @@ class WrPremiumPricing {
       // 0 cũng coi như "chưa đặt giá": cột mặc định 0 bên web, và một gói
       // Premium 0đ gần như chắc chắn là dữ liệu bỏ trống chứ không phải miễn
       // phí thật.
-      currentPrice:
-          (current == null || current <= 0) ? kPremiumFallbackPrice : current,
+      currentPrice: (current == null || current <= 0)
+          ? kPremiumFallbackPrice
+          : current,
       originalPrice: (original == null || original <= 0) ? null : original,
       currency: json['currency'] as String? ?? 'VND',
       name: json['name'] as String?,
@@ -127,11 +129,15 @@ class WrPremiumPricing {
   String get durationLabel {
     if (durationDays % 365 == 0) {
       final years = durationDays ~/ 365;
-      return years == 1 ? tr('một năm', 'one year') : tr('$years năm', '$years years');
+      return years == 1
+          ? tr('một năm', 'one year')
+          : tr('$years năm', '$years years');
     }
     if (durationDays % 30 == 0) {
       final months = durationDays ~/ 30;
-      return months == 1 ? tr('một tháng', 'one month') : tr('$months tháng', '$months months');
+      return months == 1
+          ? tr('một tháng', 'one month')
+          : tr('$months tháng', '$months months');
     }
     return tr('$durationDays ngày', '$durationDays days');
   }
@@ -147,7 +153,9 @@ class WrPremiumPricing {
     }
     if (durationDays % 30 == 0) {
       final months = durationDays ~/ 30;
-      return months == 1 ? tr('tháng', 'month') : tr('$months tháng', '$months months');
+      return months == 1
+          ? tr('tháng', 'month')
+          : tr('$months tháng', '$months months');
     }
     return tr('$durationDays ngày', '$durationDays days');
   }

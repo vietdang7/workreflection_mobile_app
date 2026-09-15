@@ -35,20 +35,19 @@ const _plans = [
 ];
 
 Widget _paywall(WrStorePolicy policy, {bool premium = false}) => ProviderScope(
-      overrides: [
-        wrStorePolicyProvider.overrideWithValue(policy),
-        wrPremiumPlansProvider.overrideWith((ref) async => _plans),
-        wrEntitlementProvider.overrideWith(
-          (ref) async => WrEntitlement(
-            plan: premium ? WrPlan.premium : WrPlan.free,
-          ),
-        ),
-      ],
-      child: MaterialApp(
-        builder: wrTextScaleBuilder,
-        home: const WrPaywallScreen(),
-      ),
-    );
+  overrides: [
+    wrStorePolicyProvider.overrideWithValue(policy),
+    wrPremiumPlansProvider.overrideWith((ref) async => _plans),
+    wrEntitlementProvider.overrideWith(
+      (ref) async =>
+          WrEntitlement(plan: premium ? WrPlan.premium : WrPlan.free),
+    ),
+  ],
+  child: MaterialApp(
+    builder: wrTextScaleBuilder,
+    home: const WrPaywallScreen(),
+  ),
+);
 
 void main() {
   group('wrWebPremiumUrl', () {
@@ -130,22 +129,23 @@ void main() {
       expect(find.textContaining('hoàn tiền'), findsWidgets);
     });
 
-    testWidgets('Kho ứng dụng: nút mua trong app biến mất, thay bằng lối sang web',
-        (tester) async {
-      await tester.pumpWidget(_paywall(WrStorePolicy.webLinkOnly));
-      await tester.pumpAndSettle();
+    testWidgets(
+      'Kho ứng dụng: nút mua trong app biến mất, thay bằng lối sang web',
+      (tester) async {
+        await tester.pumpWidget(_paywall(WrStorePolicy.webLinkOnly));
+        await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('wr_paywall_cta')), findsNothing);
-      expect(find.byKey(const Key('wr_paywall_cta_web')), findsOneWidget);
-      // Vẫn phải cho biết giá — bấm sang trình duyệt mà mù thông tin thì tệ.
-      expect(find.textContaining('499.000đ'), findsWidgets);
-      // Nhưng KHÔNG hứa hoàn tiền: điều khoản của giao dịch xảy ra trên web,
-      // đặt cạnh nút dẫn ra trình duyệt là tự nộp bằng chứng anti-steering.
-      expect(find.textContaining('hoàn tiền'), findsNothing);
-    });
+        expect(find.byKey(const Key('wr_paywall_cta')), findsNothing);
+        expect(find.byKey(const Key('wr_paywall_cta_web')), findsOneWidget);
+        // Vẫn phải cho biết giá — bấm sang trình duyệt mà mù thông tin thì tệ.
+        expect(find.textContaining('499.000đ'), findsWidgets);
+        // Nhưng KHÔNG hứa hoàn tiền: điều khoản của giao dịch xảy ra trên web,
+        // đặt cạnh nút dẫn ra trình duyệt là tự nộp bằng chứng anti-steering.
+        expect(find.textContaining('hoàn tiền'), findsNothing);
+      },
+    );
 
-    testWidgets('Bản im lặng: không nút, không con số giá nào',
-        (tester) async {
+    testWidgets('Bản im lặng: không nút, không con số giá nào', (tester) async {
       await tester.pumpWidget(_paywall(WrStorePolicy.silent));
       await tester.pumpAndSettle();
 
@@ -162,8 +162,9 @@ void main() {
   // 3.1.3 (anti-steering) cấm. Người thật đã trả tiền bị mời mua lại cũng vô
   // lý y như vậy.
   group('Đã có quyền thì Paywall thôi chào bán', () {
-    testWidgets('Kho ứng dụng: không còn lối sang web, không còn giá',
-        (tester) async {
+    testWidgets('Kho ứng dụng: không còn lối sang web, không còn giá', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _paywall(WrStorePolicy.webLinkOnly, premium: true),
       );

@@ -48,7 +48,15 @@ class _WrMomentScreenState extends ConsumerState<WrMomentScreen> {
     } catch (e, s) {
       logFlowError('openEpisode', e, s);
       if (mounted) {
-        setState(() => _error = flowErrorMessage(tr('Không mở được phiên phản tư. Thử lại.', 'Could not open the reflection session. Try again.'), e));
+        setState(
+          () => _error = flowErrorMessage(
+            tr(
+              'Không mở được phiên phản tư. Thử lại.',
+              'Could not open the reflection session. Try again.',
+            ),
+            e,
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);

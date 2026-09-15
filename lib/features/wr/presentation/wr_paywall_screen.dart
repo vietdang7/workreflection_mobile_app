@@ -117,7 +117,14 @@ Future<void> _openWebPurchase(
   }
   if (!opened && context.mounted) {
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(tr('Không mở được trang nâng cấp.', 'Could not open the upgrade page.'))),
+      SnackBar(
+        content: Text(
+          tr(
+            'Không mở được trang nâng cấp.',
+            'Could not open the upgrade page.',
+          ),
+        ),
+      ),
     );
   }
 }
@@ -151,13 +158,20 @@ class _PaywallCta extends ConsumerWidget {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Icon(Icons.check_circle_outlined, color: WrColors.pillTealText, size: 18),
+            const Icon(
+              Icons.check_circle_outlined,
+              color: WrColors.pillTealText,
+              size: 18,
+            ),
             const SizedBox(width: 10),
             Expanded(
               child: WrParagraph(
-                tr('Tài khoản của bạn đang dùng bản đầy đủ. Mọi phần ở trên đã mở '
-                'sẵn, không cần làm gì thêm.', 'Your account is on the full version. Everything above is already '
-                'unlocked, nothing more to do.'),
+                tr(
+                  'Tài khoản của bạn đang dùng bản đầy đủ. Mọi phần ở trên đã mở '
+                      'sẵn, không cần làm gì thêm.',
+                  'Your account is on the full version. Everything above is already '
+                      'unlocked, nothing more to do.',
+                ),
                 style: const TextStyle(
                   fontSize: 12.5,
                   color: WrColors.navy,
@@ -202,15 +216,25 @@ class _PaywallCta extends ConsumerWidget {
             style: _ctaStyle,
             child: Text(
               tr('Nâng cấp trên web →', 'Upgrade on the web →'),
-              style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w700),
+              style: const TextStyle(
+                fontSize: 16.5,
+                fontWeight: FontWeight.w700,
+              ),
             ),
           ),
           const SizedBox(height: 8),
           WrParagraph(
-            tr('Bạn sẽ được đưa sang trang WorkReflection để đăng nhập và hoàn '
-            'tất. Xong quay lại app là bản đầy đủ đã mở.', 'We will take you to the WorkReflection site to sign in and finish '
-            'up. Come back to the app and the full version is open.'),
-            style: const TextStyle(fontSize: 11.5, color: WrColors.muted, height: 1.6),
+            tr(
+              'Bạn sẽ được đưa sang trang WorkReflection để đăng nhập và hoàn '
+                  'tất. Xong quay lại app là bản đầy đủ đã mở.',
+              'We will take you to the WorkReflection site to sign in and finish '
+                  'up. Come back to the app and the full version is open.',
+            ),
+            style: const TextStyle(
+              fontSize: 11.5,
+              color: WrColors.muted,
+              height: 1.6,
+            ),
           ),
         ],
       );
@@ -227,10 +251,17 @@ class _PaywallCta extends ConsumerWidget {
       ),
       padding: const EdgeInsets.all(14),
       child: WrParagraph(
-        tr('Bản đầy đủ đi theo tài khoản WorkReflection của bạn. Khi tài khoản đã '
-        'có quyền, những phần trên tự mở trong app.', 'The full version follows your WorkReflection account. Once the account '
-        'has access, everything above opens inside the app.'),
-        style: const TextStyle(fontSize: 12.5, color: WrColors.muted, height: 1.6),
+        tr(
+          'Bản đầy đủ đi theo tài khoản WorkReflection của bạn. Khi tài khoản đã '
+              'có quyền, những phần trên tự mở trong app.',
+          'The full version follows your WorkReflection account. Once the account '
+              'has access, everything above opens inside the app.',
+        ),
+        style: const TextStyle(
+          fontSize: 12.5,
+          color: WrColors.muted,
+          height: 1.6,
+        ),
       ),
     );
   }
@@ -268,9 +299,9 @@ Future<void> _openLegal(BuildContext context, String url) async {
     opened = false;
   }
   if (!opened && context.mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Không mở được trang này.')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Không mở được trang này.')));
   }
 }
 
@@ -308,7 +339,9 @@ class _NativeIapCta extends ConsumerWidget {
       }
     });
 
-    return ref.watch(wrIapOffersProvider).when(
+    return ref
+        .watch(wrIapOffersProvider)
+        .when(
           loading: () => const Padding(
             key: Key('wr_paywall_iap_loading'),
             padding: EdgeInsets.symmetric(vertical: 18),
@@ -402,8 +435,11 @@ class _IapOfferList extends ConsumerWidget {
             child: WrParagraph(
               'Giao dịch đang chờ được duyệt. Bạn cứ dùng app bình thường, khi '
               'nào duyệt xong bản đầy đủ sẽ tự mở.',
-              style:
-                  TextStyle(fontSize: 11.5, color: WrColors.muted, height: 1.6),
+              style: TextStyle(
+                fontSize: 11.5,
+                color: WrColors.muted,
+                height: 1.6,
+              ),
             ),
           ),
         TextButton(
@@ -465,7 +501,7 @@ class _IapOfferButton extends StatelessWidget {
   Widget build(BuildContext context) {
     // Dán thẳng `priceLabel` của StoreKit, không tự định dạng lại: chuỗi đó đã
     // đúng tiền tệ và đúng quy tắc dấu phân cách của kho người dùng.
-    final label = '${offer.title} — ${offer.priceLabel}/${offer.durationSuffix}';
+    final label = '${offer.title}: ${offer.priceLabel}/${offer.durationSuffix}';
 
     if (primary) {
       return ElevatedButton(
@@ -475,8 +511,9 @@ class _IapOfferButton extends StatelessWidget {
           backgroundColor: WrColors.coral,
           foregroundColor: WrColors.navy,
           padding: const EdgeInsets.symmetric(vertical: 14),
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
+          ),
           elevation: 0,
         ),
         child: Text(
@@ -528,7 +565,10 @@ class _LegalLink extends StatelessWidget {
 }
 
 class WrPaywallScreen extends ConsumerStatefulWidget {
-  const WrPaywallScreen({super.key, this.trigger = PaywallTrigger.defaultTrigger});
+  const WrPaywallScreen({
+    super.key,
+    this.trigger = PaywallTrigger.defaultTrigger,
+  });
 
   final PaywallTrigger trigger;
 
@@ -547,47 +587,88 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
   PaywallTrigger get trigger => widget.trigger;
 
   ({String title, String sub}) get _headline => switch (trigger) {
-        PaywallTrigger.aiInsight => (
-            title: tr('AI Insight dành riêng cho bạn', 'AI insight written for you'),
-            sub: tr('Nhận insight cá nhân hoá từ Career Memory của bạn.', 'Get personalised insight drawn from your Career Memory.'),
-          ),
-        PaywallTrigger.trialEnd => (
-            title: tr('Tháng trải nghiệm của bạn kết thúc', 'Your trial month has ended'),
-            sub: tr('Tiếp tục hành trình với Premium.', 'Carry on with Premium.'),
-          ),
-        PaywallTrigger.benchmark => (
-            title: tr('So sánh với người đi làm cùng ngành', 'Compare with others in your field'),
-            sub: tr('Career Benchmark sẽ sớm ra mắt với Premium.', 'Career Benchmark is coming soon with Premium.'),
-          ),
-        PaywallTrigger.growthOpportunity => (
-            title: tr('Hướng phát triển tiếp theo của bạn', 'Where you could grow next'),
-            sub: tr('Từ những gì bạn đã nhìn lại, bản đầy đủ chỉ ra một hướng '
-                'năng lực đáng thử tiếp.', 'From what you have looked back on, the full version points to one '
-                'skill worth trying next.'),
-          ),
-        PaywallTrigger.needReading => (
-            title: tr('Điều bạn đang thật sự tìm kiếm', 'What you are really looking for'),
-            sub: tr('Bản đầy đủ đọc ra nhu cầu đứng sau những tình huống cứ lặp '
-                'lại với bạn.', 'The full version reads the need behind the situations that keep '
-                'coming back to you.'),
-          ),
-        PaywallTrigger.careerMemory => (
-            title: tr('Toàn bộ ký ức nghề nghiệp của bạn', 'Your whole career memory'),
-            sub: tr('Mở lại từng mảnh bạn đã để lại, theo đúng dòng thời gian.', 'Reopen every piece you have left behind, in order.'),
-          ),
-        PaywallTrigger.selfCheckDeep => (
-            title: tr('Môi trường làm việc của bạn đang thay đổi ra sao?', 'How is your work environment changing?'),
-            sub: tr('Theo dõi sự thay đổi qua thời gian từ bộ 15 câu hỏi đánh giá, '
-                'giúp bạn nhận diện xu hướng và đối chiếu với các góc nhìn '
-                'trước đó.', 'Follow the shifts over time through the 15 self-check questions, so '
-                'you can spot trends and compare them with what you saw '
-                'earlier.'),
-          ),
-        PaywallTrigger.defaultTrigger => (
-            title: tr('Mở khoá toàn bộ hành trình', 'Unlock the whole journey'),
-            sub: tr('Tiếp tục phát triển không giới hạn.', 'Keep growing without limits.'),
-          ),
-      };
+    PaywallTrigger.aiInsight => (
+      title: tr('Diễn giải theo thời gian', 'Structured timeline reading'),
+      sub: tr(
+        'Khi bạn cho phép xử lý bằng AI, bản Premium tổng hợp những lần nhìn lại '
+            'gần đây thành một câu chuyện có cấu trúc.',
+        'With your permission for AI processing, Premium turns recent look-backs '
+            'into a structured narrative.',
+      ),
+    ),
+    PaywallTrigger.trialEnd => (
+      title: tr(
+        'Tháng trải nghiệm của bạn kết thúc',
+        'Your trial month has ended',
+      ),
+      sub: tr('Tiếp tục hành trình với Premium.', 'Carry on with Premium.'),
+    ),
+    PaywallTrigger.benchmark => (
+      title: tr(
+        'So sánh với người đi làm cùng ngành',
+        'Compare with others in your field',
+      ),
+      sub: tr(
+        'Career Benchmark sẽ sớm ra mắt với Premium.',
+        'Career Benchmark is coming soon with Premium.',
+      ),
+    ),
+    PaywallTrigger.growthOpportunity => (
+      title: tr(
+        'Hướng phát triển tiếp theo của bạn',
+        'Where you could grow next',
+      ),
+      sub: tr(
+        'Từ những gì bạn đã nhìn lại, bản đầy đủ chỉ ra một hướng '
+            'năng lực đáng thử tiếp.',
+        'From what you have looked back on, the full version points to one '
+            'skill worth trying next.',
+      ),
+    ),
+    PaywallTrigger.needReading => (
+      title: tr(
+        'Điều bạn đang thật sự tìm kiếm',
+        'What you are really looking for',
+      ),
+      sub: tr(
+        'Bản đầy đủ đọc ra nhu cầu đứng sau những tình huống cứ lặp '
+            'lại với bạn.',
+        'The full version reads the need behind the situations that keep '
+            'coming back to you.',
+      ),
+    ),
+    PaywallTrigger.careerMemory => (
+      title: tr(
+        'Toàn bộ ký ức nghề nghiệp của bạn',
+        'Your whole career memory',
+      ),
+      sub: tr(
+        'Mở lại từng mảnh bạn đã để lại, theo đúng dòng thời gian.',
+        'Reopen every piece you have left behind, in order.',
+      ),
+    ),
+    PaywallTrigger.selfCheckDeep => (
+      title: tr(
+        'Môi trường làm việc của bạn đang thay đổi ra sao?',
+        'How is your work environment changing?',
+      ),
+      sub: tr(
+        'Theo dõi sự thay đổi qua thời gian từ bộ 15 câu hỏi đánh giá, '
+            'giúp bạn nhận diện xu hướng và đối chiếu với các góc nhìn '
+            'trước đó.',
+        'Follow the shifts over time through the 15 self-check questions, so '
+            'you can spot trends and compare them with what you saw '
+            'earlier.',
+      ),
+    ),
+    PaywallTrigger.defaultTrigger => (
+      title: tr('Mở khoá toàn bộ hành trình', 'Unlock the whole journey'),
+      sub: tr(
+        'Tiếp tục phát triển không giới hạn.',
+        'Keep growing without limits.',
+      ),
+    ),
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -604,15 +685,22 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
     // xem mình đang có gì, nên đổi sang lời xác nhận.
     final h = alreadyPremium
         ? (
-            title: tr('Bạn đang dùng bản đầy đủ', 'You are on the full version'),
-            sub: tr('Tất cả tính năng dưới đây đã mở sẵn trong tài khoản của bạn.', 'Every feature below is already open in your account.'),
+            title: tr(
+              'Bạn đang dùng bản đầy đủ',
+              'You are on the full version',
+            ),
+            sub: tr(
+              'Tất cả tính năng dưới đây đã mở sẵn trong tài khoản của bạn.',
+              'Every feature below is already open in your account.',
+            ),
           )
         : _headline;
     // Các gói APP (`cc_products.product_type = 'premium_mobile'`) — năm 499.000đ
     // và tháng 70.000đ, KHÔNG phải gói web 249.000đ. Sửa ở trang quản trị của
     // web là app đổi theo. Trong lúc chờ tải thì dùng gói mặc định chứ không để
     // trống chỗ ghi giá.
-    final plans = ref.watch(wrPremiumPlansProvider).valueOrNull ??
+    final plans =
+        ref.watch(wrPremiumPlansProvider).valueOrNull ??
         [WrPremiumPricing.fallback];
 
     // Gói đang chọn. Id đã chọn mà biến mất khỏi bảng (quản trị tắt gói giữa
@@ -630,37 +718,58 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
     final premiumHighlights = [
       _Highlight(
         icon: '◈',
-        title: tr('AI Insight cá nhân hoá', 'Personalised AI insight'),
-        desc: tr('Tự động phân tích dữ liệu từ Career Memory, mang lại những góc '
-            'nhìn ngày càng sát với thực tế của bạn.', 'Reads your Career Memory on its own, so the reflections keep getting '
-            'closer to what is actually happening for you.'),
+        title: tr('Diễn giải sâu theo thời gian', 'Deep timeline reading'),
+        desc: tr(
+          'Khi bạn cho phép xử lý bằng AI, bản Premium đọc các tình huống bạn đã '
+              'ghi nhận để viết lại diễn biến theo thời gian.',
+          'With your permission for AI processing, Premium reads your recorded '
+              'situations to write a structured timeline narrative.',
+        ),
       ),
       _Highlight(
         icon: '📈',
         title: 'Career Pattern',
-        desc: tr('Nhận diện các mẫu hình hành vi và cảm xúc lặp lại trong suốt '
-            'hành trình phát triển.', 'Spots the behaviour and feeling patterns that repeat across your '
-            'whole journey.'),
+        desc: tr(
+          'Nhận diện các mẫu hình hành vi và cảm xúc lặp lại trong suốt '
+              'hành trình phát triển.',
+          'Spots the behaviour and feeling patterns that repeat across your '
+              'whole journey.',
+        ),
       ),
       _Highlight(
         icon: '◎',
         title: tr('Truy cập không giới hạn', 'Unlimited access'),
-        desc: tr('Mở khóa trọn vẹn kho bài viết, bài tập Thực hành và toàn bộ '
-            'Career Memory.', 'Opens the full library of articles, Practice exercises and all of '
-            'Career Memory.'),
+        desc: tr(
+          'Mở khóa trọn vẹn kho bài viết, bài tập Thực hành và toàn bộ '
+              'Career Memory.',
+          'Opens the full library of articles, Practice exercises and all of '
+              'Career Memory.',
+        ),
       ),
     ];
 
     final freeFeatures = [
-      _FeatureRow(label: tr('Story Reflection hàng ngày', 'Daily Story Reflection'), avail: true),
+      _FeatureRow(
+        label: tr('Story Reflection hàng ngày', 'Daily Story Reflection'),
+        avail: true,
+      ),
       const _FeatureRow(label: 'Check-in nhanh', avail: true),
       const _FeatureRow(label: 'Career Memory Timeline', avail: true),
-      _FeatureRow(label: tr('15 câu hỏi phản chiếu', '15 reflection questions'), avail: true),
-      _FeatureRow(label: tr('3 chủ đề Thực hành', '3 Practice themes'), avail: true),
+      _FeatureRow(
+        label: tr('15 câu hỏi phản chiếu', '15 reflection questions'),
+        avail: true,
+      ),
+      _FeatureRow(
+        label: tr('3 chủ đề Thực hành', '3 Practice themes'),
+        avail: true,
+      ),
       const _FeatureRow(label: 'AI Insight', avail: false),
       const _FeatureRow(label: 'Career Pattern Analysis', avail: false),
       const _FeatureRow(label: 'Career Benchmark', avail: false),
-      _FeatureRow(label: tr('Không giới hạn Thực hành', 'Unlimited Practice'), avail: false),
+      _FeatureRow(
+        label: tr('Không giới hạn Thực hành', 'Unlimited Practice'),
+        avail: false,
+      ),
     ];
 
     return Scaffold(
@@ -690,7 +799,10 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                               color: WrColors.coral,
                               borderRadius: BorderRadius.circular(6),
                             ),
-                            padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 9,
+                              vertical: 2,
+                            ),
                             child: const Text(
                               'PREMIUM',
                               style: TextStyle(
@@ -757,7 +869,11 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                       color: const Color(0x1AFFFFFF),
                       borderRadius: BorderRadius.circular(15),
                     ),
-                    child: const Icon(Icons.close, color: Color(0x99FFFFFF), size: 14),
+                    child: const Icon(
+                      Icons.close,
+                      color: Color(0x99FFFFFF),
+                      size: 14,
+                    ),
                   ),
                 ),
               ],
@@ -786,10 +902,12 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                           ),
                         ),
                         const SizedBox(height: 12),
-                        ...premiumHighlights.map((item) => Padding(
-                              padding: const EdgeInsets.only(bottom: 8),
-                              child: _HighlightCard(highlight: item),
-                            )),
+                        ...premiumHighlights.map(
+                          (item) => Padding(
+                            padding: const EdgeInsets.only(bottom: 8),
+                            child: _HighlightCard(highlight: item),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -816,9 +934,7 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                             borderRadius: BorderRadius.circular(14),
                             border: Border.all(color: WrColors.line),
                           ),
-                          child: Column(
-                            children: freeFeatures,
-                          ),
+                          child: Column(children: freeFeatures),
                         ),
                       ],
                     ),
@@ -868,37 +984,50 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                   // chứng anti-steering (Guideline 3.1.3). Với người đã mua
                   // rồi thì nó cũng chẳng còn nghĩa gì.
                   if (policy.allowsVietQrCheckout && !alreadyPremium)
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(22, 0, 22, 20),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: WrColors.teal.withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(12),
-                        border: const Border(
-                          left: BorderSide(color: WrColors.pillTealText, width: 3),
-                        ),
-                      ),
-                      padding: const EdgeInsets.all(14),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            tr('Bảo đảm hoàn tiền 7 ngày', '7-day money-back guarantee'),
-                            style: const TextStyle(
-                              fontSize: 12.5,
-                              fontWeight: FontWeight.w700,
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(22, 0, 22, 20),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: WrColors.teal.withValues(alpha: 0.08),
+                          borderRadius: BorderRadius.circular(12),
+                          border: const Border(
+                            left: BorderSide(
                               color: WrColors.pillTealText,
+                              width: 3,
                             ),
                           ),
-                          const SizedBox(height: 3),
-                          WrParagraph(
-                            tr('Nếu không hài lòng trong 7 ngày đầu, chúng tôi hoàn tiền toàn bộ. Không câu hỏi.', 'Not happy in the first 7 days? We refund everything. No questions asked.'),
-                            style: const TextStyle(fontSize: 11.5, color: WrColors.muted, height: 1.6),
-                          ),
-                        ],
+                        ),
+                        padding: const EdgeInsets.all(14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              tr(
+                                'Bảo đảm hoàn tiền 7 ngày',
+                                '7-day money-back guarantee',
+                              ),
+                              style: const TextStyle(
+                                fontSize: 12.5,
+                                fontWeight: FontWeight.w700,
+                                color: WrColors.pillTealText,
+                              ),
+                            ),
+                            const SizedBox(height: 3),
+                            WrParagraph(
+                              tr(
+                                'Nếu không hài lòng trong 7 ngày đầu, chúng tôi hoàn tiền toàn bộ. Không câu hỏi.',
+                                'Not happy in the first 7 days? We refund everything. No questions asked.',
+                              ),
+                              style: const TextStyle(
+                                fontSize: 11.5,
+                                color: WrColors.muted,
+                                height: 1.6,
+                              ),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
                 ],
               ),
             ),
@@ -948,8 +1077,9 @@ class _PlanSelector extends StatelessWidget {
           _PlanOption(
             plan: plan,
             isSelected: identical(plan, selected),
-            savingsPercent:
-                identical(plan, baseline) ? null : plan.savingsPercentVs(baseline),
+            savingsPercent: identical(plan, baseline)
+                ? null
+                : plan.savingsPercentVs(baseline),
             onTap: () => onSelect(plan),
           ),
           if (plan != plans.last) const SizedBox(height: 8),
@@ -1033,9 +1163,12 @@ class _PlanOption extends StatelessWidget {
                   if (savingsPercent != null) ...[
                     const SizedBox(height: 2),
                     Text(
-                      tr('≈ ${formatVndPrice(plan.pricePerMonth, plan.currency)}'
-                      ' mỗi tháng', '≈ ${formatVndPrice(plan.pricePerMonth, plan.currency)}'
-                      ' per month'),
+                      tr(
+                        '≈ ${formatVndPrice(plan.pricePerMonth, plan.currency)}'
+                            ' mỗi tháng',
+                        '≈ ${formatVndPrice(plan.pricePerMonth, plan.currency)}'
+                            ' per month',
+                      ),
                       style: const TextStyle(
                         fontSize: 12.5,
                         color: WrColors.muted,
@@ -1160,7 +1293,11 @@ class _PriceBlock extends StatelessWidget {
 }
 
 class _Highlight {
-  const _Highlight({required this.icon, required this.title, required this.desc});
+  const _Highlight({
+    required this.icon,
+    required this.title,
+    required this.desc,
+  });
   final String icon;
   final String title;
   final String desc;
@@ -1209,7 +1346,11 @@ class _HighlightCard extends StatelessWidget {
                 const SizedBox(height: 3),
                 WrParagraph(
                   highlight.desc,
-                  style: const TextStyle(fontSize: 12.5, color: WrColors.muted, height: 1.6),
+                  style: const TextStyle(
+                    fontSize: 12.5,
+                    color: WrColors.muted,
+                    height: 1.6,
+                  ),
                 ),
               ],
             ),

@@ -24,7 +24,9 @@ import '../models/survey_models.dart';
 /// ENPS questions are excluded (they have no sub_component in practice).
 /// Returns null when no sub_component data is present.
 Map<String, dynamic>? buildSubScoresMap(
-    Map<String, int> answers, List<CcQuestion> questions) {
+  Map<String, int> answers,
+  List<CcQuestion> questions,
+) {
   final Map<String, ({String layer, List<int> values})> grouped = {};
   for (final q in questions) {
     final sub = q.subComponent;
@@ -114,7 +116,9 @@ abstract class SurveyRepository {
   /// Fetch per-sub-component average scores from cc_responses + cc_questions
   /// for the given survey and layer (e.g. 'STRUCTURE', 'CULTURE', 'ACTIVITY').
   Future<List<SubComponentScore>> getLayerSubScores(
-      String surveyId, String layer);
+    String surveyId,
+    String layer,
+  );
 
   /// Compute eNPS promoter/passive/detractor breakdown from cc_responses
   /// for the given survey. Thresholds: >=9 promoter, 7-8 passive, <=6 detractor.
@@ -129,7 +133,9 @@ abstract class SurveyRepository {
   /// Returns null when no completed cache row exists (cache miss or AI unavailable).
   /// The caller is responsible for triggering generation via [invokeAiPersonalize].
   Future<Map<String, dynamic>?> getCachedAiPersonalization(
-      String reportId, String section);
+    String reportId,
+    String section,
+  );
 
   /// Call the ai-personalize edge function (action=generate).
   /// Mirrors web's usePersonalizedContent mutation.
@@ -167,8 +173,7 @@ class SupabaseSurveyRepository implements SurveyRepository {
     return user.id;
   }
 
-  String get _userEmail =>
-      _client.auth.currentUser?.email ?? '';
+  String get _userEmail => _client.auth.currentUser?.email ?? '';
 
   String? get _userFullName =>
       (_client.auth.currentUser?.userMetadata?['display_name'] as String?);
@@ -232,9 +237,7 @@ class SupabaseSurveyRepository implements SurveyRepository {
             .inFilter('id', idStrings)
             .eq('is_active', true);
         // Preserve config order
-        final byId = {
-          for (final row in rows) row['id'] as String: row,
-        };
+        final byId = {for (final row in rows) row['id'] as String: row};
         return idStrings
             .where((id) => byId.containsKey(id))
             .map((id) => CcQuestion.fromJson(byId[id]!))
@@ -320,21 +323,27 @@ class SupabaseSurveyRepository implements SurveyRepository {
     if (existingSurveyId != null) {
       surveyId = existingSurveyId;
     } else {
-      final surveyRows = await _client.from('cc_surveys').insert({
-        'user_id': _uid,
-        'survey_type': type.toJson(),
-        'status': 'COMPLETED',
-        'user_email': _userEmail,
-        'user_full_name': _userFullName,
-        if (userPosition != null) 'user_position': userPosition,
-        if (userWorkExperience != null) 'user_work_experience': userWorkExperience,
-        if (userCompanyTenure != null) 'user_company_tenure': userCompanyTenure,
-        if (userCompanySize != null) 'user_company_size': userCompanySize,
-        if (userDepartment != null) 'user_department': userDepartment,
-        'started_at': now,
-        'completed_at': now,
-        'campaign_id': null,
-      }).select('id').single();
+      final surveyRows = await _client
+          .from('cc_surveys')
+          .insert({
+            'user_id': _uid,
+            'survey_type': type.toJson(),
+            'status': 'COMPLETED',
+            'user_email': _userEmail,
+            'user_full_name': _userFullName,
+            if (userPosition != null) 'user_position': userPosition,
+            if (userWorkExperience != null)
+              'user_work_experience': userWorkExperience,
+            if (userCompanyTenure != null)
+              'user_company_tenure': userCompanyTenure,
+            if (userCompanySize != null) 'user_company_size': userCompanySize,
+            if (userDepartment != null) 'user_department': userDepartment,
+            'started_at': now,
+            'completed_at': now,
+            'campaign_id': null,
+          })
+          .select('id')
+          .single();
       surveyId = surveyRows['id'] as String;
       onSurveyCreated?.call(surveyId);
     }
@@ -346,11 +355,15 @@ class SupabaseSurveyRepository implements SurveyRepository {
         .eq('survey_id', surveyId)
         .limit(1);
     if (existingResponses.isEmpty) {
-      final responses = answers.entries.map((e) => {
-            'survey_id': surveyId,
-            'question_id': e.key,
-            'answer_value': e.value,
-          }).toList();
+      final responses = answers.entries
+          .map(
+            (e) => {
+              'survey_id': surveyId,
+              'question_id': e.key,
+              'answer_value': e.value,
+            },
+          )
+          .toList();
       await _client.from('cc_responses').insert(responses);
     }
 
@@ -372,20 +385,24 @@ class SupabaseSurveyRepository implements SurveyRepository {
     if (existingReport.isNotEmpty) {
       reportRows = existingReport.first;
     } else {
-      reportRows = await _client.from('cc_reports').insert({
-        'survey_id': surveyId,
-        'user_id': _uid,
-        'score_total': scores.scoreTotal,
-        'score_structure': scores.scoreStructure,
-        'score_culture': scores.scoreCulture,
-        'score_activity': scores.scoreActivity,
-        'score_esi': scores.scoreEsi,
-        'score_enps': scores.scoreEnps,
-        'bottleneck_layer': scores.bottleneckLayer.toJson(),
-        'score_level': scores.scoreLevel.toJson(),
-        'sub_scores': _buildSubScores(answers, questions),
-        'selected_narrative_variants': null,
-      }).select().single();
+      reportRows = await _client
+          .from('cc_reports')
+          .insert({
+            'survey_id': surveyId,
+            'user_id': _uid,
+            'score_total': scores.scoreTotal,
+            'score_structure': scores.scoreStructure,
+            'score_culture': scores.scoreCulture,
+            'score_activity': scores.scoreActivity,
+            'score_esi': scores.scoreEsi,
+            'score_enps': scores.scoreEnps,
+            'bottleneck_layer': scores.bottleneckLayer.toJson(),
+            'score_level': scores.scoreLevel.toJson(),
+            'sub_scores': _buildSubScores(answers, questions),
+            'selected_narrative_variants': null,
+          })
+          .select()
+          .single();
     }
 
     final reportId = reportRows['id'] as String;
@@ -449,7 +466,9 @@ class SupabaseSurveyRepository implements SurveyRepository {
   Future<List<CcReportSummary>> getMyReports() async {
     final rows = await _client
         .from('cc_reports')
-        .select('id, survey_id, created_at, score_total, score_level, score_esi, score_enps')
+        .select(
+          'id, survey_id, created_at, score_total, score_level, score_esi, score_enps',
+        )
         .eq('user_id', _uid)
         .order('created_at', ascending: false);
     return rows.map(CcReportSummary.fromJson).toList();
@@ -536,8 +555,9 @@ class SupabaseSurveyRepository implements SurveyRepository {
   // ---------------------------------------------------------------------------
 
   static Map<String, dynamic>? _buildSubScores(
-          Map<String, int> answers, List<CcQuestion> questions) =>
-      buildSubScoresMap(answers, questions);
+    Map<String, int> answers,
+    List<CcQuestion> questions,
+  ) => buildSubScoresMap(answers, questions);
 
   // ---------------------------------------------------------------------------
   // Layer sub-scores (cc_responses + cc_questions JOIN)
@@ -545,7 +565,9 @@ class SupabaseSurveyRepository implements SurveyRepository {
 
   @override
   Future<List<SubComponentScore>> getLayerSubScores(
-      String surveyId, String layer) async {
+    String surveyId,
+    String layer,
+  ) async {
     // Fetch responses for this survey
     final responseRows = await _client
         .from('cc_responses')
@@ -671,7 +693,9 @@ class SupabaseSurveyRepository implements SurveyRepository {
 
   @override
   Future<Map<String, dynamic>?> getCachedAiPersonalization(
-      String reportId, String section) async {
+    String reportId,
+    String section,
+  ) async {
     final rows = await _client
         .from('cc_ai_personalization_cache')
         .select('content')
@@ -745,7 +769,6 @@ class SupabaseSurveyRepository implements SurveyRepository {
         'language': language,
       },
     );
-    return TtsResult.fromJson(
-        Map<String, dynamic>.from(response.data as Map));
+    return TtsResult.fromJson(Map<String, dynamic>.from(response.data as Map));
   }
 }

@@ -7,16 +7,19 @@ void main() {
     late FakeWrRepository repo;
     setUp(() => repo = FakeWrRepository());
 
-    test('upsertCheckin with energy+direction stores energy on checkin', () async {
-      await repo.upsertCheckin(
-        Mood.happy,
-        energy: CheckinEnergy.good,
-        direction: CheckinDirection.forward,
-      );
-      final c = await repo.getTodayCheckin();
-      expect(c!.energy, CheckinEnergy.good);
-      expect(c.direction, CheckinDirection.forward);
-    });
+    test(
+      'upsertCheckin with energy+direction stores energy on checkin',
+      () async {
+        await repo.upsertCheckin(
+          Mood.happy,
+          energy: CheckinEnergy.good,
+          direction: CheckinDirection.forward,
+        );
+        final c = await repo.getTodayCheckin();
+        expect(c!.energy, CheckinEnergy.good);
+        expect(c.direction, CheckinDirection.forward);
+      },
+    );
 
     test('upsertCheckin without energy preserves backward compat', () async {
       await repo.upsertCheckin(Mood.okay);

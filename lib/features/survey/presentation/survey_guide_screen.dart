@@ -46,10 +46,12 @@ class _GuideBody extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final isPremium = type == SurveyType.premium;
 
-    final title =
-        isPremium ? l10n.surveyGuidePremiumTitle : l10n.surveyGuideFreeTitle;
-    final intro =
-        isPremium ? l10n.surveyGuidePremiumIntro : l10n.surveyGuideFreeIntro;
+    final title = isPremium
+        ? l10n.surveyGuidePremiumTitle
+        : l10n.surveyGuideFreeTitle;
+    final intro = isPremium
+        ? l10n.surveyGuidePremiumIntro
+        : l10n.surveyGuideFreeIntro;
     final details = isPremium
         ? l10n.surveyGuidePremiumDetails
         : l10n.surveyGuideFreeDetails;
@@ -88,21 +90,23 @@ class _GuideBody extends StatelessWidget {
           Text(details, style: WrTextStyles.body),
           const SizedBox(height: 16),
           ...benefits.asMap().entries.map(
-                (e) => Padding(
-                  padding: const EdgeInsets.only(bottom: 10),
-                  child: Row(
-                    key: Key('guide_benefit_${e.key}'),
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Icon(Icons.check_circle_outlined,
-                          size: 18, color: WrColors.teal),
-                      const SizedBox(width: 10),
-                      Expanded(
-                          child: Text(e.value, style: WrTextStyles.body)),
-                    ],
+            (e) => Padding(
+              padding: const EdgeInsets.only(bottom: 10),
+              child: Row(
+                key: Key('guide_benefit_${e.key}'),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(
+                    Icons.check_circle_outlined,
+                    size: 18,
+                    color: WrColors.teal,
                   ),
-                ),
+                  const SizedBox(width: 10),
+                  Expanded(child: Text(e.value, style: WrTextStyles.body)),
+                ],
               ),
+            ),
+          ),
           if (isPremium) ...[
             const SizedBox(height: 8),
             Text(l10n.surveyGuidePremiumReportDesc, style: WrTextStyles.body),
@@ -112,20 +116,22 @@ class _GuideBody extends StatelessWidget {
               l10n.surveyGuidePremiumReport2,
               l10n.surveyGuidePremiumReport3,
             ].asMap().entries.map(
-                  (e) => Padding(
-                    padding: const EdgeInsets.only(bottom: 8),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const Icon(Icons.check_circle_outlined,
-                            size: 18, color: WrColors.coral),
-                        const SizedBox(width: 10),
-                        Expanded(
-                            child: Text(e.value, style: WrTextStyles.body)),
-                      ],
+              (e) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(
+                      Icons.check_circle_outlined,
+                      size: 18,
+                      color: WrColors.coral,
                     ),
-                  ),
+                    const SizedBox(width: 10),
+                    Expanded(child: Text(e.value, style: WrTextStyles.body)),
+                  ],
                 ),
+              ),
+            ),
           ],
           if (!isPremium) ...[
             const SizedBox(height: 8),

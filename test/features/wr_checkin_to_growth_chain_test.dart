@@ -55,11 +55,15 @@ import '../support/fake_wr_mood_content_repository.dart';
 const _situationText = 'Không dám lên tiếng trong cuộc họp';
 const _situations = [
   WrSituation(
-    code: 'C2-sit-01',
+    code: 'C2-01',
     text: _situationText,
     scaDimension: ScaDimension.c2,
     wave: 1,
     humanNeed: HumanNeed.ketNoi,
+    pillarCode: 'C',
+    subgroup: 'C2',
+    mood: 'stress',
+    valence: WrValence.thachThuc,
   ),
 ];
 
@@ -81,6 +85,10 @@ final _wideSituations = [
       scaDimension: ScaDimension.c2,
       wave: 1,
       humanNeed: HumanNeed.ketNoi,
+      pillarCode: 'C',
+      subgroup: 'C2',
+      mood: 'stress',
+      valence: WrValence.thachThuc,
     ),
 ];
 
@@ -107,13 +115,15 @@ class _Stage {
     // Hồ sơ phải có sẵn: `saveRecentSituationIds` là UPDATE trên hàng đã tồn
     // tại (production tạo hàng lúc đăng ký). Không gieo thì mọi lệnh ghi lịch
     // sử xoay vòng rơi vào hư không và test xoay vòng nào cũng thành vô nghĩa.
-    wr.seedProfile(MobileProfile(
-      userId: 'u1',
-      reminderEnabled: true,
-      language: 'vi',
-      createdAt: DateTime(2026, 7, 1),
-      updatedAt: DateTime(2026, 7, 1),
-    ));
+    wr.seedProfile(
+      MobileProfile(
+        userId: 'u1',
+        reminderEnabled: true,
+        language: 'vi',
+        createdAt: DateTime(2026, 7, 1),
+        updatedAt: DateTime(2026, 7, 1),
+      ),
+    );
     intel.seedPracticeThemes(const [_theme]);
     moodContent.seedChoicePool(const [
       'Ghi nhớ điều này để xem lại sau',
@@ -134,16 +144,23 @@ class _Stage {
     routes: [
       GoRoute(path: '/home', builder: (_, __) => const WrHomeScreen()),
       GoRoute(
-          path: '/wr/discover', builder: (_, __) => const WrDiscoverScreen()),
+        path: '/wr/discover',
+        builder: (_, __) => const WrDiscoverScreen(),
+      ),
       GoRoute(path: '/wr/growth', builder: (_, __) => const WrGrowthScreen()),
       GoRoute(path: '/wr/flow/step', builder: (_, __) => const WrStepScreen()),
       GoRoute(
-          path: '/wr/flow/detail', builder: (_, __) => const WrDetailScreen()),
+        path: '/wr/flow/detail',
+        builder: (_, __) => const WrDetailScreen(),
+      ),
       GoRoute(
-          path: '/wr/flow/meaning',
-          builder: (_, __) => const WrMeaningScreen()),
+        path: '/wr/flow/meaning',
+        builder: (_, __) => const WrMeaningScreen(),
+      ),
       GoRoute(
-          path: '/wr/flow/commit', builder: (_, __) => const WrCommitScreen()),
+        path: '/wr/flow/commit',
+        builder: (_, __) => const WrCommitScreen(),
+      ),
       GoRoute(path: '/wr/flow/done', builder: (_, __) => const WrDoneScreen()),
       for (final p in const [
         '/wr/patterns',
@@ -152,7 +169,10 @@ class _Stage {
         '/wr/journey',
         '/wr/story',
       ])
-        GoRoute(path: p, builder: (_, __) => Scaffold(body: Text('stub $p'))),
+        GoRoute(
+          path: p,
+          builder: (_, __) => Scaffold(body: Text('stub $p')),
+        ),
       GoRoute(
         path: '/wr/pattern/:code',
         builder: (_, s) =>
@@ -162,22 +182,22 @@ class _Stage {
   );
 
   Widget app() => ProviderScope(
-        overrides: [
-          wrRepositoryProvider.overrideWithValue(wr),
-          wrEpisodeRepositoryProvider.overrideWithValue(episodes),
-          wrIntelligenceRepositoryProvider.overrideWithValue(intel),
-          wrContentRepositoryProvider.overrideWithValue(content),
-          wrMoodContentRepositoryProvider.overrideWithValue(moodContent),
-          currentUserIdProvider.overrideWithValue('u1'),
-        ],
-        child: MaterialApp.router(
+    overrides: [
+      wrRepositoryProvider.overrideWithValue(wr),
+      wrEpisodeRepositoryProvider.overrideWithValue(episodes),
+      wrIntelligenceRepositoryProvider.overrideWithValue(intel),
+      wrContentRepositoryProvider.overrideWithValue(content),
+      wrMoodContentRepositoryProvider.overrideWithValue(moodContent),
+      currentUserIdProvider.overrideWithValue('u1'),
+    ],
+    child: MaterialApp.router(
       builder: wrTextScaleBuilder,
-          routerConfig: router,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('vi'),
-        ),
-      );
+      routerConfig: router,
+      localizationsDelegates: AppLocalizations.localizationsDelegates,
+      supportedLocales: AppLocalizations.supportedLocales,
+      locale: const Locale('vi'),
+    ),
+  );
 
   /// Một vòng phản tư trọn vẹn, bấm đúng nút người dùng bấm.
   ///
@@ -230,18 +250,18 @@ Future<void> _pump(WidgetTester tester, Widget app) async {
 }
 
 void main() {
-  testWidgets(
-      'ba lần check-in cùng một tình huống → Hiểu mình đếm đúng 3, '
+  testWidgets('ba lần check-in cùng một tình huống → Hiểu mình đếm đúng 3, '
       'Phát triển gợi đúng chủ đề của chiều đó', (tester) async {
     final stage = _Stage();
     // Premium: phần diễn giải ở tab Hiểu mình nằm sau paywall với người Free,
     // mà điều cần chứng minh ở đây là DỮ LIỆU có chảy tới nơi, không phải lớp
     // khoá.
-    stage.intel
-        .seedEntitlement(const WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium));
+    stage.intel.seedEntitlement(
+      const WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
+    );
     await _pump(tester, stage.app());
 
-    final only = find.byKey(const Key('wr_situation_C2-sit-01'));
+    final only = find.byKey(const Key('wr_situation_C2-01'));
     await stage.reflectOnce(tester, chip: only);
 
     // MỘT lần chưa tới ngưỡng (họp 26_1 hạ ngưỡng xuống 2): chưa lên bảng,
@@ -249,8 +269,11 @@ void main() {
     // nhìn lại" như thể app chưa thấy gì.
     stage.router.go('/wr/discover');
     await tester.pumpAndSettle();
-    expect(find.text(_situationText), findsNothing,
-        reason: 'lặp 1 lần chưa đủ ngưỡng $kRepeatedSituationsMinCount');
+    expect(
+      find.text(_situationText),
+      findsNothing,
+      reason: 'lặp 1 lần chưa đủ ngưỡng $kRepeatedSituationsMinCount',
+    );
     expect(find.byKey(const Key('wr_discover_patterns_empty')), findsNothing);
     expect(
       find.byKey(const Key('wr_discover_patterns_below_threshold')),
@@ -263,8 +286,11 @@ void main() {
     // Ba Episode, cả ba đều mang mã tình huống — mắt xích từng đứt.
     expect(stage.episodes.episodes, hasLength(3));
     for (final e in stage.episodes.episodes) {
-      expect(e.situationCode, 'C2-sit-01',
-          reason: 'phiên nào cũng phải ghi được mã tình huống');
+      expect(
+        e.situationCode,
+        'C2-01',
+        reason: 'phiên nào cũng phải ghi được mã tình huống',
+      );
     }
 
     // ── Tab Hiểu mình ────────────────────────────────────────────────────
@@ -318,76 +344,48 @@ void main() {
   // bể luôn cạn nên nhánh loại-trừ không bao giờ chạy. Test này dùng thư viện
   // rộng, tức đúng hình dạng của production (10 mục mỗi chiều).
   // ---------------------------------------------------------------------------
-  testWidgets('thư viện rộng: chọn lại được điều lần trước, '
-      'ba lần là "3 lần" ở Hiểu mình', (tester) async {
+  testWidgets('thư viện rộng: còn mục chưa chọn thì không lặp lại ngay', (
+    tester,
+  ) async {
     final stage = _Stage(situations: _wideSituations);
     stage.intel.seedEntitlement(
-        const WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium));
+      const WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
+    );
     await _pump(tester, stage.app());
 
-    // Vòng 1: chưa có gì để neo — chạm ô đầu, bất kể nó là mục nào.
+    // Vòng 1: chạm ô đầu, bất kể nó là mục nào.
     await stage.reflectOnce(tester);
     final chosen = stage.episodes.episodes.single.situationCode;
     expect(chosen, isNotNull);
 
-    // Vòng 2 và 3: ô đầu phải là chính điều vừa chọn.
-    //
-    // Trước 09/09/2026 chỗ này khoá bằng nhãn "Lần trước" (`kAnchorBadge`).
-    // Khách bỏ nhãn (§2.2), nên khoá bằng thứ thật sự quan trọng: ô neo là ô
-    // ĐẦU TIÊN, và nó cao hơn các ô khác.
-    for (var round = 2; round <= 3; round++) {
-      stage.router.go('/home');
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('wr_home_checkin_stress')));
-      await tester.pumpAndSettle();
+    // Vòng 2: khi còn đủ mục chưa chọn trong cửa sổ 10 lần, mã vừa chọn phải
+    // bị loại khỏi bể — không phục hồi cơ chế neo cũ chỉ để ép lặp.
+    stage.router.go('/home');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('wr_home_checkin_stress')));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(Key('wr_situation_$chosen')),
+      findsNothing,
+      reason: 'mã vừa chọn vẫn được đưa ra khi bể còn năm mã khác',
+    );
+    await tester.tap(find.byType(WrBigChoiceTile).first);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('wr_flow_primary')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('wr_flow_secondary')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('wr_flow_primary')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('wr_choice_0')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('wr_flow_primary')));
+    await tester.pumpAndSettle();
 
-      final first = tester.widget<WrBigChoiceTile>(
-        find.byType(WrBigChoiceTile).first,
-      );
-      expect(
-        first.key,
-        Key('wr_situation_$chosen'),
-        reason: 'vòng $round: ô đầu không phải ô neo — người dùng lại bị khoá '
-            'không chạm lại được điều mình đang gặp',
-      );
-      expect(
-        first.height,
-        92,
-        reason: 'vòng $round: ô neo mất chiều cao riêng — bỏ nhãn "Lần trước" '
-            'rồi thì đây là dấu hiệu duy nhất còn lại để nhận ra nó',
-      );
-      expect(find.byKey(Key('wr_situation_$chosen')), findsOneWidget,
-          reason: 'vòng $round: điều đã chọn biến mất khỏi danh sách');
-
-      await tester.tap(find.byType(WrBigChoiceTile).first);
-      await tester.pumpAndSettle();
-      // Meaning — bỏ trống, đi tiếp.
-      await tester.tap(find.byKey(const Key('wr_flow_primary')));
-      await tester.pumpAndSettle();
-      // Insight hai lớp (§1.2): bỏ qua phần tự viết rồi tiếp tục.
-      await tester.tap(find.byKey(const Key('wr_flow_secondary')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('wr_flow_primary')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('wr_choice_0')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('wr_flow_primary')));
-      await tester.pumpAndSettle();
-    }
-
-    // Ba Episode, CÙNG một mã — đây là điều production không làm được.
-    expect(stage.episodes.episodes, hasLength(3));
+    expect(stage.episodes.episodes, hasLength(2));
     expect(
       stage.episodes.episodes.map((e) => e.situationCode).toSet(),
-      {chosen},
-    );
-
-    stage.router.go('/wr/discover');
-    await tester.pumpAndSettle();
-    expect(find.textContaining('3 lần'), findsWidgets);
-    expect(
-      find.byKey(const Key('wr_discover_patterns_below_threshold')),
-      findsNothing,
+      hasLength(2),
     );
   });
 
@@ -400,10 +398,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // §4.3: rỗng thì hiển thị đúng trạng thái rỗng.
-    expect(
-      find.byKey(const Key('wr_discover_patterns_empty')),
-      findsOneWidget,
-    );
+    expect(find.byKey(const Key('wr_discover_patterns_empty')), findsOneWidget);
     expect(find.text(_situationText), findsNothing);
   });
 }

@@ -231,8 +231,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: '/splash',
     refreshListenable: authNotifier,
     redirect: (context, state) {
-      final hasSession =
-          Supabase.instance.client.auth.currentSession != null;
+      final hasSession = Supabase.instance.client.auth.currentSession != null;
       final seenOnboarding = seenOnboardingAsync.valueOrNull ?? false;
       final location = state.uri.toString();
 
@@ -243,18 +242,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       );
     },
     routes: [
-      wrRoute(
-        path: '/splash',
-        builder: (context, state) => SplashScreen(),
-      ),
+      wrRoute(path: '/splash', builder: (context, state) => SplashScreen()),
       wrRoute(
         path: '/onboarding',
         builder: (context, state) => OnboardingScreen(),
       ),
-      wrRoute(
-        path: '/auth',
-        builder: (context, state) => AuthScreen(),
-      ),
+      wrRoute(path: '/auth', builder: (context, state) => AuthScreen()),
 
       // Survey flow (fullscreen, outside shell)
       wrRoute(
@@ -338,10 +331,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/my-workshops',
         builder: (context, state) => MyWorkshopsScreen(),
       ),
-      wrRoute(
-        path: '/coaching',
-        builder: (context, state) => CoachingScreen(),
-      ),
+      wrRoute(path: '/coaching', builder: (context, state) => CoachingScreen()),
       wrRoute(
         path: '/coaching/sessions',
         builder: (context, state) => CoachingSessionsScreen(),
@@ -372,23 +362,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/profile/guide',
         builder: (context, state) => GuideScreen(),
       ),
-      wrRoute(
-        path: '/vouchers',
-        builder: (context, state) => VouchersScreen(),
-      ),
+      wrRoute(path: '/vouchers', builder: (context, state) => VouchersScreen()),
       wrRoute(
         path: '/invitations',
         builder: (context, state) => InvitationsScreen(),
       ),
-      wrRoute(
-        path: '/insights',
-        builder: (context, state) => InsightsScreen(),
-      ),
+      wrRoute(path: '/insights', builder: (context, state) => InsightsScreen()),
       wrRoute(
         path: '/roadmap',
-        builder: (context, state) => RoadmapScreen(
-          initialReportId: state.uri.queryParameters['report'],
-        ),
+        builder: (context, state) =>
+            RoadmapScreen(initialReportId: state.uri.queryParameters['report']),
       ),
 
       // Legacy tab screens — preserved as fullscreen routes (not in shell anymore)
@@ -396,17 +379,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/understand',
         builder: (context, state) => UnderstandScreen(),
       ),
-      wrRoute(
-        path: '/develop',
-        builder: (context, state) => DevelopScreen(),
-      ),
-      wrRoute(
-        path: '/journey',
-        builder: (context, state) => JourneyScreen(),
-      ),
+      wrRoute(path: '/develop', builder: (context, state) => DevelopScreen()),
+      wrRoute(path: '/journey', builder: (context, state) => JourneyScreen()),
+
       // NOTE: /profile is now a shell branch (Tab 4). Removed standalone route
       // to avoid GoRouter duplicate-path error.
-
       wrRoute(
         path: '/wr/self-check',
         builder: (context, state) => WrSelfCheckScreen(),
@@ -478,9 +455,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // ── Màn đọc tách khỏi tab (một màn – một hành động) ────────────────
       wrRoute(
         path: '/wr/episode/:id',
-        builder: (context, state) => WrEpisodeDetailScreen(
-          episodeId: state.pathParameters['id'] ?? '',
-        ),
+        builder: (context, state) =>
+            WrEpisodeDetailScreen(episodeId: state.pathParameters['id'] ?? ''),
       ),
       wrRoute(
         path: '/wr/journey/narrative',
@@ -508,9 +484,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // Đặt SAU /wr/growth/themes để đường tĩnh không bị nuốt bởi :id.
       wrRoute(
         path: '/wr/growth/theme/:id',
-        builder: (context, state) => WrPracticeThemeScreen(
-          themeId: state.pathParameters['id']!,
-        ),
+        builder: (context, state) =>
+            WrPracticeThemeScreen(themeId: state.pathParameters['id']!),
       ),
       wrRoute(
         path: '/wr/growth/skills',
@@ -519,10 +494,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
 
       // Ô hỏi về hành trình nghề nghiệp (họp khách 2026-07-29). Mở từ bong
       // bóng nổi ở mọi tab và từ một dòng dẫn trong tab Hành trình.
-      wrRoute(
-        path: '/wr/ask',
-        builder: (context, state) => WrAskScreen(),
-      ),
+      wrRoute(path: '/wr/ask', builder: (context, state) => WrAskScreen()),
 
       // Trà Chiều Nghề Nghiệp — chương trình offline riêng (họp khách
       // 2026-07-29). Đường tĩnh '/lich' đặt trước để không đụng route khác.
@@ -576,8 +548,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         // hay một `push` sót lại ở đâu đó vẫn tới được nếu chỉ ẩn nút.
         redirect: (context, state) =>
             ref.read(wrStorePolicyProvider).allowsVietQrCheckout
-                ? null
-                : '/wr/paywall',
+            ? null
+            : '/wr/paywall',
         builder: (context, state) =>
             WrPaymentScreen(plan: state.extra as WrPremiumPricing?),
       ),
@@ -656,16 +628,10 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
 
       // /profile — màn đẩy toàn màn hình, mở từ avatar (v1.6 §9.1).
-      wrRoute(
-        path: '/profile',
-        builder: (context, state) => ProfileScreen(),
-      ),
+      wrRoute(path: '/profile', builder: (context, state) => ProfileScreen()),
 
       // /wr/story — fullscreen push, uses root navigator implicitly (not nested in shell).
-      wrRoute(
-        path: '/wr/story',
-        builder: (context, state) => WrStoryScreen(),
-      ),
+      wrRoute(path: '/wr/story', builder: (context, state) => WrStoryScreen()),
 
       // Thông tin công việc hiện tại — Hai Lớp v1.6 §XI.
       wrRoute(
@@ -718,9 +684,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       wrRoute(
         path: '/wr/mood-content/:id',
-        builder: (context, state) => WrMoodReaderScreen(
-          contentId: state.pathParameters['id']!,
-        ),
+        builder: (context, state) =>
+            WrMoodReaderScreen(contentId: state.pathParameters['id']!),
       ),
     ],
   );

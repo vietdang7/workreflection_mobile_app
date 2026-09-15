@@ -83,17 +83,18 @@ class CareerMemoryDraft {
 /// Chỉ Episode đã khép mới tính là STORY — WDA Inv.6, và cũng là điều §8.2 mô
 /// tả: "mỗi khi hoàn thành một lượt Reflection (xong bước Lựa chọn)".
 List<ReflectionEpisode> closedStories(List<ReflectionEpisode> episodes) {
-  final closed = [
-    for (final e in episodes)
-      if (e.state == ExperienceState.integrated) e,
-  ]..sort((a, b) {
-      final av = _storyAt(a);
-      final bv = _storyAt(b);
-      if (av == null && bv == null) return 0;
-      if (av == null) return 1;
-      if (bv == null) return -1;
-      return bv.compareTo(av);
-    });
+  final closed =
+      [
+        for (final e in episodes)
+          if (e.state == ExperienceState.integrated) e,
+      ]..sort((a, b) {
+        final av = _storyAt(a);
+        final bv = _storyAt(b);
+        if (av == null && bv == null) return 0;
+        if (av == null) return 1;
+        if (bv == null) return -1;
+        return bv.compareTo(av);
+      });
   return closed;
 }
 
@@ -134,14 +135,20 @@ String? milestoneTextForStory({
   required List<ReflectionEpisode> previousStories,
 }) {
   if (previousStories.isEmpty) {
-    return tr('Lần đầu tiên bạn dừng lại và nhìn lại một chuyện ở công việc.', 'The first time you stopped and looked back at something at work.');
+    return tr(
+      'Lần đầu tiên bạn dừng lại và nhìn lại một chuyện ở công việc.',
+      'The first time you stopped and looked back at something at work.',
+    );
   }
 
   final need = story.humanNeed;
   if (need == null) return null;
   if (previousStories.any((e) => e.humanNeed == need)) return null;
 
-  return tr('Lần đầu bạn nhìn vào một chuyện thuộc về ${needSeekingLabel(need)}.', 'The first time you looked at something to do with ${needSeekingLabel(need)}.');
+  return tr(
+    'Lần đầu bạn nhìn vào một chuyện thuộc về ${needSeekingLabel(need)}.',
+    'The first time you looked at something to do with ${needSeekingLabel(need)}.',
+  );
 }
 
 /// Cột mốc của TỪNG STORY trong [stories], khoá theo `id`.
@@ -200,16 +207,31 @@ String memoryDetailForStory({
     parts.add(milestoneText.trim());
     // Nói rõ đây không phải thứ người dùng tự đánh dấu. Không có câu này thì
     // "Cột mốc" đọc như một nhãn họ quên là mình đã gắn.
-    parts.add(tr('Cột mốc được gắn tự động, bạn không phải tự đánh dấu.', 'Milestones are marked automatically. You do not have to flag them.'));
+    parts.add(
+      tr(
+        'Cột mốc được gắn tự động, bạn không phải tự đánh dấu.',
+        'Milestones are marked automatically. You do not have to flag them.',
+      ),
+    );
   }
 
   final need = story.humanNeed;
   if (need != null) {
-    parts.add(tr('Tình huống thuộc nhóm ${needSeekingLabel(need)}.', 'A situation in the ${needSeekingLabel(need)} group.'));
+    parts.add(
+      tr(
+        'Tình huống thuộc nhóm ${needSeekingLabel(need)}.',
+        'A situation in the ${needSeekingLabel(need)} group.',
+      ),
+    );
     if (countThisMonth > 1) {
-      parts.add(tr('Trong tháng này bạn đã nhìn vào một chuyện thuộc nhóm này '
-          '$countThisMonth lần.', 'This month you have looked at something in this group '
-          '$countThisMonth times.'));
+      parts.add(
+        tr(
+          'Trong tháng này bạn đã nhìn vào một chuyện thuộc nhóm này '
+              '$countThisMonth lần.',
+          'This month you have looked at something in this group '
+              '$countThisMonth times.',
+        ),
+      );
     }
   }
 
@@ -243,18 +265,24 @@ int needCountThisMonth(
 }
 
 /// Chi tiết của một mảnh CHỦ ĐỀ. Luật §8.2, viết cho người dùng đọc.
-String get kThemeDetail => tr('Khi một nhóm lặp lại từ $kThemeMinCount lần trở lên trong '
-    '$kThemeWindowDays ngày, hệ thống tự gọi tên nó thành một chủ đề riêng. '
-    'Bạn không phải tự đặt tên.', 'When a group repeats $kThemeMinCount times or more within '
-    '$kThemeWindowDays days, the app names it as a theme of its own. You do not '
-    'have to name it yourself.');
+String get kThemeDetail => tr(
+  'Khi một nhóm lặp lại từ $kThemeMinCount lần trở lên trong '
+      '$kThemeWindowDays ngày, hệ thống tự gọi tên nó thành một chủ đề riêng. '
+      'Bạn không phải tự đặt tên.',
+  'When a group repeats $kThemeMinCount times or more within '
+      '$kThemeWindowDays days, the app names it as a theme of its own. You do not '
+      'have to name it yourself.',
+);
 
 /// Chi tiết của một mảnh INSIGHT. Luật §8.2 + §9.
-String get kInsightDetail => tr('Insight được tổng hợp từ nhiều lần nhìn lại gần nhất, không phải từ một '
-    'lần duy nhất. Nó sinh định kỳ mỗi $kInsightEveryDays ngày, hoặc sau mỗi '
-    '$kInsightEveryStories lượt nhìn lại mới.', 'Insights are drawn from several recent look-backs, not from a single '
-    'one. They appear every $kInsightEveryDays days, or after every '
-    '$kInsightEveryStories new look-backs.');
+String get kInsightDetail => tr(
+  'Insight được tổng hợp từ nhiều lần nhìn lại gần nhất, không phải từ một '
+      'lần duy nhất. Nó sinh định kỳ mỗi $kInsightEveryDays ngày, hoặc sau mỗi '
+      '$kInsightEveryStories lượt nhìn lại mới.',
+  'Insights are drawn from several recent look-backs, not from a single '
+      'one. They appear every $kInsightEveryDays days, or after every '
+      '$kInsightEveryStories new look-backs.',
+);
 
 // ---------------------------------------------------------------------------
 // Chủ đề — §8.2
@@ -262,12 +290,18 @@ String get kInsightDetail => tr('Insight được tổng hợp từ nhiều lầ
 
 List<String> get _kThemeEmerging => [
   // §9, khung "Chủ đề vừa nổi lên" — câu mẫu của tài liệu.
-  tr('{n} lần Reflection gần đây của bạn đều xoay quanh {need}. Đây có thể là '
-      'điều đáng để nhìn kỹ hơn.', 'Your last {n} Reflections all circle around {need}. This may be worth a '
-      'closer look.'),
-  tr('Trong {days} ngày qua, {n} lần bạn nhìn lại đều dẫn về {need}. Một chủ đề '
-      'đang hình thành.', 'Over the past {days} days, {n} of your look-backs led back to {need}. A '
-      'theme is forming.'),
+  tr(
+    '{n} lần Reflection gần đây của bạn đều xoay quanh {need}. Đây có thể là '
+        'điều đáng để nhìn kỹ hơn.',
+    'Your last {n} Reflections all circle around {need}. This may be worth a '
+        'closer look.',
+  ),
+  tr(
+    'Trong {days} ngày qua, {n} lần bạn nhìn lại đều dẫn về {need}. Một chủ đề '
+        'đang hình thành.',
+    'Over the past {days} days, {n} of your look-backs led back to {need}. A '
+        'theme is forming.',
+  ),
 ];
 
 /// Số lượt thuộc [need] trong [days] ngày gần nhất.
@@ -277,8 +311,11 @@ int needCountWithin(
   required DateTime now,
   int days = kThemeWindowDays,
 }) {
-  final cutoff =
-      DateTime(now.year, now.month, now.day).subtract(Duration(days: days - 1));
+  final cutoff = DateTime(
+    now.year,
+    now.month,
+    now.day,
+  ).subtract(Duration(days: days - 1));
   var n = 0;
   for (final e in stories) {
     final at = _storyAt(e);
@@ -364,15 +401,17 @@ List<CareerMemoryDraft> themesDue({
       }
     }
 
-    out.add(CareerMemoryDraft(
-      behavior: kThemeBehavior,
-      text: pickVariant(_kThemeEmerging, count)
-          .replaceAll('{n}', '$count')
-          .replaceAll('{days}', '$kThemeWindowDays')
-          .replaceAll('{need}', needSeekingLabel(need)),
-      need: need,
-      scaDimension: dim,
-    ));
+    out.add(
+      CareerMemoryDraft(
+        behavior: kThemeBehavior,
+        text: pickVariant(_kThemeEmerging, count)
+            .replaceAll('{n}', '$count')
+            .replaceAll('{days}', '$kThemeWindowDays')
+            .replaceAll('{need}', needSeekingLabel(need)),
+        need: need,
+        scaDimension: dim,
+      ),
+    );
     seen.add(need);
   }
 
@@ -385,21 +424,33 @@ List<CareerMemoryDraft> themesDue({
 
 List<String> get _kThemeProgress => [
   // §9, khung "Chuyển biến trong một chủ đề".
-  tr('Trong {days} ngày qua, bạn đang học cách {need}, từ {first}, đến {last}.', 'Over the past {days} days you have been learning to {need}, from '
-      '{first} through to {last}.'),
-  tr('Cùng một mạch {need} chạy suốt {days} ngày qua: bắt đầu ở {first}, và gần '
-      'nhất là {last}.', 'The same thread of {need} runs across the past {days} days: starting at '
-      '{first}, and most recently {last}.'),
+  tr(
+    'Trong {days} ngày qua, bạn đang học cách {need}, từ {first}, đến {last}.',
+    'Over the past {days} days you have been learning to {need}, from '
+        '{first} through to {last}.',
+  ),
+  tr(
+    'Cùng một mạch {need} chạy suốt {days} ngày qua: bắt đầu ở {first}, và gần '
+        'nhất là {last}.',
+    'The same thread of {need} runs across the past {days} days: starting at '
+        '{first}, and most recently {last}.',
+  ),
 ];
 
 List<String> get _kQuietGap => [
   // §9, khung "Một khoảng lặng đáng chú ý".
-  tr('Nhóm {need} từng xuất hiện thường xuyên, nhưng {days} ngày gần đây bạn '
-      'không quay lại tình huống nào thuộc nhóm này.', 'The {need} group used to come up often, but in the past {days} days you '
-      'have not returned to any situation in it.'),
-  tr('{days} ngày rồi bạn chưa nhìn lại chuyện nào thuộc {need}, dù trước đó đây '
-      'là nhóm trở đi trở lại.', 'It has been {days} days since you looked back at anything to do with '
-      '{need}, though before that it kept returning.'),
+  tr(
+    'Nhóm {need} từng xuất hiện thường xuyên, nhưng {days} ngày gần đây bạn '
+        'không quay lại tình huống nào thuộc nhóm này.',
+    'The {need} group used to come up often, but in the past {days} days you '
+        'have not returned to any situation in it.',
+  ),
+  tr(
+    '{days} ngày rồi bạn chưa nhìn lại chuyện nào thuộc {need}, dù trước đó đây '
+        'là nhóm trở đi trở lại.',
+    'It has been {days} days since you looked back at anything to do with '
+        '{need}, though before that it kept returning.',
+  ),
 ];
 
 /// Khung "Chuyển biến trong một chủ đề".
@@ -414,8 +465,11 @@ String? themeProgressNarrative({
   required Map<String, String> situationLabels,
   required DateTime now,
 }) {
-  final cutoff = DateTime(now.year, now.month, now.day)
-      .subtract(const Duration(days: kThemeWindowDays - 1));
+  final cutoff = DateTime(
+    now.year,
+    now.month,
+    now.day,
+  ).subtract(const Duration(days: kThemeWindowDays - 1));
   // [stories] mới nhất đứng đầu.
   final inTheme = [
     for (final e in stories)
@@ -455,19 +509,19 @@ String? quietGapNarrative({
       if (latest == null || at.isAfter(latest)) latest = at;
     }
     if (latest == null) continue;
-    final gap = today.difference(DateTime(latest.year, latest.month, latest.day)).inDays;
+    final gap = today
+        .difference(DateTime(latest.year, latest.month, latest.day))
+        .inDays;
     if (gap < kQuietGapDays) continue;
-    return pickVariant(_kQuietGap, gap)
-        .replaceAll('{days}', '$gap')
-        .replaceAll('{need}', needSeekingLabel(need));
+    return pickVariant(
+      _kQuietGap,
+      gap,
+    ).replaceAll('{days}', '$gap').replaceAll('{need}', needSeekingLabel(need));
   }
   return null;
 }
 
-String? _storyTitle(
-  ReflectionEpisode e,
-  Map<String, String> situationLabels,
-) {
+String? _storyTitle(ReflectionEpisode e, Map<String, String> situationLabels) {
   final code = e.situationCode;
   if (code != null) {
     final label = situationLabels[code];
@@ -494,8 +548,9 @@ bool insightDue({
     return stories.length >= kInsightEveryStories;
   }
   final days = DateTime(now.year, now.month, now.day)
-      .difference(DateTime(
-          lastInsightAt.year, lastInsightAt.month, lastInsightAt.day))
+      .difference(
+        DateTime(lastInsightAt.year, lastInsightAt.month, lastInsightAt.day),
+      )
       .inDays;
   if (days >= kInsightEveryDays) return true;
 
@@ -519,11 +574,7 @@ CareerMemoryDraft? periodicInsight({
   required DateTime now,
   String? selfAwarenessGapText,
 }) {
-  if (!insightDue(
-    lastInsightAt: lastInsightAt,
-    stories: stories,
-    now: now,
-  )) {
+  if (!insightDue(lastInsightAt: lastInsightAt, stories: stories, now: now)) {
     return null;
   }
 

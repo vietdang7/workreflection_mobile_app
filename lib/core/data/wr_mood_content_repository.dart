@@ -36,8 +36,9 @@ abstract class WrMoodContentRepository {
 // Provider (ghi đè được trong test)
 // ---------------------------------------------------------------------------
 
-final wrMoodContentRepositoryProvider =
-    Provider<WrMoodContentRepository>((ref) {
+final wrMoodContentRepositoryProvider = Provider<WrMoodContentRepository>((
+  ref,
+) {
   return SupabaseWrMoodContentRepository(Supabase.instance.client);
 });
 

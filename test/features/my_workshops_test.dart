@@ -18,9 +18,7 @@ import '../support/fake_workshop_repository.dart';
 
 Widget _wrap(FakeWorkshopRepository repo) {
   return ProviderScope(
-    overrides: [
-      workshopRepositoryProvider.overrideWithValue(repo),
-    ],
+    overrides: [workshopRepositoryProvider.overrideWithValue(repo)],
     child: const MaterialApp(
       builder: wrTextScaleBuilder,
       localizationsDelegates: [
@@ -35,10 +33,7 @@ Widget _wrap(FakeWorkshopRepository repo) {
   );
 }
 
-WorkshopDetail _ws({
-  String id = 'ws-1',
-  String title = 'My Workshop',
-}) =>
+WorkshopDetail _ws({String id = 'ws-1', String title = 'My Workshop'}) =>
     WorkshopDetail(
       id: id,
       title: title,
@@ -56,16 +51,15 @@ WorkshopRegistration _reg({
   String status = 'registered',
   bool attended = false,
   DateTime? checkedInAt,
-}) =>
-    WorkshopRegistration(
-      id: id,
-      workshopId: workshopId,
-      userId: 'user-1',
-      status: status,
-      attended: attended,
-      checkedInAt: checkedInAt,
-      createdAt: DateTime(2026, 7, 1),
-    );
+}) => WorkshopRegistration(
+  id: id,
+  workshopId: workshopId,
+  userId: 'user-1',
+  status: status,
+  attended: attended,
+  checkedInAt: checkedInAt,
+  createdAt: DateTime(2026, 7, 1),
+);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -79,7 +73,9 @@ void main() {
       repo = FakeWorkshopRepository();
     });
 
-    testWidgets('shows workshop title and registered status chip', (tester) async {
+    testWidgets('shows workshop title and registered status chip', (
+      tester,
+    ) async {
       repo.seedWorkshops([_ws(title: 'Leadership 101')]);
       repo.seedRegistration(_reg());
 
@@ -158,7 +154,9 @@ void main() {
       expect(find.text('Chưa có tên'), findsOneWidget);
     });
 
-    testWidgets('cancel button visible when workshop is >48h away', (tester) async {
+    testWidgets('cancel button visible when workshop is >48h away', (
+      tester,
+    ) async {
       final futureDate = DateTime.now().add(const Duration(days: 5));
       repo.seedWorkshops([
         WorkshopDetail(
@@ -180,7 +178,9 @@ void main() {
       expect(find.byKey(const Key('my_ws_cancel')), findsOneWidget);
     });
 
-    testWidgets('cancel button NOT visible when workshop is <48h away', (tester) async {
+    testWidgets('cancel button NOT visible when workshop is <48h away', (
+      tester,
+    ) async {
       final soonDate = DateTime.now().add(const Duration(hours: 24));
       repo.seedWorkshops([
         WorkshopDetail(
@@ -202,8 +202,9 @@ void main() {
       expect(find.byKey(const Key('my_ws_cancel')), findsNothing);
     });
 
-    testWidgets('tapping cancel shows confirmation dialog then cancels',
-        (tester) async {
+    testWidgets('tapping cancel shows confirmation dialog then cancels', (
+      tester,
+    ) async {
       final futureDate = DateTime.now().add(const Duration(days: 5));
       repo.seedWorkshops([
         WorkshopDetail(
@@ -238,8 +239,9 @@ void main() {
       expect(repo.cancelRegistrationCalls.first, ('reg-1', 'ws-1'));
     });
 
-    testWidgets('dismiss cancel dialog hides dialog without calling repo',
-        (tester) async {
+    testWidgets('dismiss cancel dialog hides dialog without calling repo', (
+      tester,
+    ) async {
       final futureDate = DateTime.now().add(const Duration(days: 5));
       repo.seedWorkshops([
         WorkshopDetail(
@@ -269,20 +271,23 @@ void main() {
       expect(find.byKey(const Key('cancel_confirm')), findsNothing);
     });
 
-    testWidgets('view results link shown for attended workshop with survey done',
-        (tester) async {
-      repo.seedWorkshops([_ws()]);
-      repo.seedRegistration(_reg(attended: true));
-      repo.seedSubmittedSurvey('ws-1');
+    testWidgets(
+      'view results link shown for attended workshop with survey done',
+      (tester) async {
+        repo.seedWorkshops([_ws()]);
+        repo.seedRegistration(_reg(attended: true));
+        repo.seedSubmittedSurvey('ws-1');
 
-      await tester.pumpWidget(_wrap(repo));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(_wrap(repo));
+        await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('my_ws_view_results')), findsOneWidget);
-    });
+        expect(find.byKey(const Key('my_ws_view_results')), findsOneWidget);
+      },
+    );
 
-    testWidgets('view results link NOT shown when survey not submitted',
-        (tester) async {
+    testWidgets('view results link NOT shown when survey not submitted', (
+      tester,
+    ) async {
       repo.seedWorkshops([_ws()]);
       repo.seedRegistration(_reg(attended: true));
       // No survey submitted.
@@ -298,8 +303,9 @@ void main() {
     // Eligibility: reg.attended == true (mirrors web line 586)
     // -----------------------------------------------------------------------
 
-    testWidgets('download certificate button shown when attended=true',
-        (tester) async {
+    testWidgets('download certificate button shown when attended=true', (
+      tester,
+    ) async {
       repo.seedWorkshops([_ws()]);
       repo.seedRegistration(_reg(attended: true));
 
@@ -309,8 +315,9 @@ void main() {
       expect(find.byKey(const Key('my_ws_download_cert')), findsOneWidget);
     });
 
-    testWidgets('download certificate button NOT shown when attended=false',
-        (tester) async {
+    testWidgets('download certificate button NOT shown when attended=false', (
+      tester,
+    ) async {
       repo.seedWorkshops([_ws()]);
       repo.seedRegistration(_reg(attended: false));
 
@@ -321,15 +328,16 @@ void main() {
     });
 
     testWidgets(
-        'download certificate button NOT shown for cancelled registration',
-        (tester) async {
-      repo.seedWorkshops([_ws()]);
-      repo.seedRegistration(_reg(status: 'cancelled', attended: false));
+      'download certificate button NOT shown for cancelled registration',
+      (tester) async {
+        repo.seedWorkshops([_ws()]);
+        repo.seedRegistration(_reg(status: 'cancelled', attended: false));
 
-      await tester.pumpWidget(_wrap(repo));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(_wrap(repo));
+        await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('my_ws_download_cert')), findsNothing);
-    });
+        expect(find.byKey(const Key('my_ws_download_cert')), findsNothing);
+      },
+    );
   });
 }

@@ -108,7 +108,10 @@ class SupabaseWrChatRepository implements WrChatRepository {
       final data = res.data;
       if (data is! Map || data['reply'] == null) {
         throw WrChatException(
-          tr('Mình chưa trả lời được lúc này. Bạn thử gửi lại nhé.', 'I cannot answer right now. Please send it again.'),
+          tr(
+            'Mình chưa trả lời được lúc này. Bạn thử gửi lại nhé.',
+            'I cannot answer right now. Please send it again.',
+          ),
         );
       }
       return WrChatReply.fromJson(Map<String, dynamic>.from(data));
@@ -120,7 +123,10 @@ class SupabaseWrChatRepository implements WrChatRepository {
       // Mất mạng, DNS hỏng, máy chủ không với tới được. Nói đúng điều người
       // dùng làm được: thử lại.
       throw WrChatException(
-        tr('Không kết nối được lúc này. Bạn kiểm tra mạng rồi gửi lại nhé.', 'No connection right now. Check your network and send it again.'),
+        tr(
+          'Không kết nối được lúc này. Bạn kiểm tra mạng rồi gửi lại nhé.',
+          'No connection right now. Check your network and send it again.',
+        ),
       );
     }
   }
@@ -151,11 +157,17 @@ class SupabaseWrChatRepository implements WrChatRepository {
     }
     if (e.status == 401) {
       return WrChatException(
-        tr('Phiên đăng nhập đã hết hạn. Bạn đăng nhập lại nhé.', 'Your session has expired. Please sign in again.'),
+        tr(
+          'Phiên đăng nhập đã hết hạn. Bạn đăng nhập lại nhé.',
+          'Your session has expired. Please sign in again.',
+        ),
       );
     }
     return WrChatException(
-      tr('Mình chưa trả lời được lúc này. Bạn thử gửi lại nhé.', 'I cannot answer right now. Please send it again.'),
+      tr(
+        'Mình chưa trả lời được lúc này. Bạn thử gửi lại nhé.',
+        'I cannot answer right now. Please send it again.',
+      ),
     );
   }
 }

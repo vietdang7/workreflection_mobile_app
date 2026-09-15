@@ -70,9 +70,12 @@ CcQuestion _q(String id, SurveyLayer layer, ScaleType scale, int order) =>
       isActive: true,
     );
 
-CcLikertOption _opt(ScaleType scale, int value, String label) =>
-    CcLikertOption(
-        scaleType: scale, value: value, label: label, displayOrder: value);
+CcLikertOption _opt(ScaleType scale, int value, String label) => CcLikertOption(
+  scaleType: scale,
+  value: value,
+  label: label,
+  displayOrder: value,
+);
 
 FakeSurveyRepository _repo() {
   final repo = FakeSurveyRepository();
@@ -135,7 +138,9 @@ void main() {
       expect(find.byIcon(Icons.mic_none_outlined), findsOneWidget);
     });
 
-    testWidgets('tap mic → listening state (pulsing icon visible)', (tester) async {
+    testWidgets('tap mic → listening state (pulsing icon visible)', (
+      tester,
+    ) async {
       final stt = FakeSttService(available: true);
       // No pending transcript — stays listening.
       await tester.pumpWidget(_wrap(repo: _repo(), stt: stt));
@@ -148,7 +153,9 @@ void main() {
       expect(find.byIcon(Icons.stop_circle_outlined), findsOneWidget);
     });
 
-    testWidgets('matched transcript → listening stops, idle icon returns', (tester) async {
+    testWidgets('matched transcript → listening stops, idle icon returns', (
+      tester,
+    ) async {
       final stt = FakeSttService(available: true);
       // "ba" → 3 in Vietnamese
       stt.pendingTranscript = 'ba';
@@ -165,7 +172,9 @@ void main() {
       expect(find.byIcon(Icons.stop_circle_outlined), findsNothing);
     });
 
-    testWidgets('no-match final transcript → snackbar, idle icon returns', (tester) async {
+    testWidgets('no-match final transcript → snackbar, idle icon returns', (
+      tester,
+    ) async {
       final stt = FakeSttService(available: true);
       stt.pendingTranscript = 'xin chào thế giới'; // no number
       stt.pendingIsFinal = true;

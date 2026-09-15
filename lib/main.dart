@@ -26,9 +26,7 @@ Future<void> main() async {
 
   runApp(
     ProviderScope(
-      overrides: [
-        appLocaleProvider.overrideWith((ref) => initialLocale),
-      ],
+      overrides: [appLocaleProvider.overrideWith((ref) => initialLocale)],
       child: const WrApp(),
     ),
   );

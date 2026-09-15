@@ -18,6 +18,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/l10n/wr_tr.dart';
 import '../../../../core/logic/wr_reflect_flow.dart';
 import '../../../../core/logic/wr_situation_picker.dart';
+import '../../../../core/models/wr_episode.dart';
 import '../../../../core/theme/wr_colors.dart';
 import '../../../../core/widgets/wr_voice_field.dart';
 import '../../episode_flow_controller.dart';
@@ -40,6 +41,9 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
   bool _writing = false; // true = tự viết thay vì chọn từ bể
   String? _error;
   String? _picked;
+  bool _restoredSavedAction = false;
+  Object? _restoredEpisodeKey;
+  bool _actionEdited = false;
 
   /// Bốn lựa chọn của lần vào này. Giữ ở state để không bị trộn lại mỗi lần
   /// widget dựng lại — chọn xong một câu rồi thấy danh sách đổi là rối.
@@ -51,11 +55,24 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
     super.dispose();
   }
 
+  void _resetForEpisode(ReflectionEpisode episode) {
+    // Persisted episodes always have an id. The identity fallback keeps two
+    // unsaved in-memory episodes from sharing state in a test/preview flow.
+    final episodeKey = episode.id ?? identityHashCode(episode);
+    if (_restoredEpisodeKey == episodeKey) return;
+    _restoredEpisodeKey = episodeKey;
+    _restoredSavedAction = false;
+    _actionEdited = false;
+    _writing = false;
+    _picked = null;
+    _options = null;
+    _controller.clear();
+  }
+
   List<String> _buildOptions() {
     final pool = ref.watch(wrChoicePoolProvider).valueOrNull ?? const [];
     if (pool.isEmpty) return const [];
-    final practice =
-        ref.watch(wrEpisodeStoryProvider)?.practiceAction?.trim();
+    final practice = ref.watch(wrEpisodeStoryProvider)?.practiceAction?.trim();
     // `.text` chọn ngôn ngữ ở đây, lúc dựng màn — không phải lúc gọi server.
     // Đổi ngôn ngữ dựng lại cả cây widget nên `_options` cũng được tính lại
     // theo, chứ không kẹt lại bốn câu tiếng cũ.
@@ -63,6 +80,60 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
       practice: practice,
       pool: pool.map((line) => line.text).toList(),
     );
+  }
+
+  /// Restore a saved Practice when this screen is reopened.
+  ///
+  /// Reopening an integrated Episode keeps its `tinyAction` and
+  /// `reflectChoice`. Without hydrating them here, the UI looked like a fresh
+  /// choice screen and a user could accidentally replace the old action just
+  /// because it was not selected.
+  void _restoreSavedAction({
+    required ReflectionEpisode episode,
+    required List<String> options,
+    required bool choicePoolReady,
+  }) {
+    if (_restoredSavedAction) return;
+
+    // The free-write fallback is visible while the pool is loading. If the
+    // user starts typing in that window, their text is authoritative: a late
+    // pool response must not switch the screen back to the saved preset.
+    if (_actionEdited) {
+      _writing = true;
+      _picked = null;
+      _restoredSavedAction = true;
+      return;
+    }
+
+    final action = episode.tinyAction?.trim();
+    if (action == null || action.isEmpty) {
+      _restoredSavedAction = true;
+      return;
+    }
+
+    final choice = episode.reflectChoice?.trim();
+    if (choice != null && choice.isNotEmpty) {
+      // A preset may be localized or the pool may still be loading. Do not
+      // turn it into a free-form action before the pool has answered.
+      if (!choicePoolReady) return;
+      if (options.contains(choice)) {
+        _picked = choice;
+      } else {
+        // The old preset is no longer in the current pool. Preserve exactly
+        // what the user saved instead of silently replacing it.
+        _writing = true;
+        _controller.text = action;
+      }
+    } else {
+      _writing = true;
+      _controller.text = action;
+    }
+    _restoredSavedAction = true;
+  }
+
+  void _handleActionChanged() {
+    _actionEdited = true;
+    setState(() {});
   }
 
   /// [choice] chỉ có khi câu này được chạm từ bể Lựa chọn (v1.6 §V · §VI).
@@ -80,8 +151,12 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
     } catch (e, s) {
       logFlowError('commitAction', e, s);
       if (mounted) {
-        setState(() =>
-            _error = flowErrorMessage(tr('Không lưu được. Thử lại.', 'Could not save. Try again.'), e));
+        setState(
+          () => _error = flowErrorMessage(
+            tr('Không lưu được. Thử lại.', 'Could not save. Try again.'),
+            e,
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -95,7 +170,18 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
       return WrFlowGone(onHome: () => context.go('/home'));
     }
 
+    // A single mounted route can observe a different resumed Episode. Do not
+    // carry the previous episode's selected choice, controller text, or
+    // restoration guard into the new episode.
+    _resetForEpisode(episode);
+
+    final choicePool = ref.watch(wrChoicePoolProvider);
     final options = _buildOptions();
+    _restoreSavedAction(
+      episode: episode,
+      options: options,
+      choicePoolReady: choicePool.hasValue || choicePool.hasError,
+    );
     // Không đọc được bể thì lùi về ô tự viết — thà bắt gõ còn hơn hiện một màn
     // không có lựa chọn nào.
     final showChoices = options.isNotEmpty && !_writing;
@@ -109,9 +195,15 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
 
     return WrFlowScaffold(
       eyebrow: tr('Bước tiếp theo', 'Your next step'),
-      title: tr('Sau góc nhìn này, bước tiếp theo của bạn sẽ là gì?', 'After this way of seeing it, what will your next step be?'),
-      subtitle: tr('Mỗi lần nhìn lại luôn mang đến cho bạn một cơ hội để chủ động '
-          'thay đổi.', 'Every look back hands you a chance to change something on purpose.'),
+      title: tr(
+        'Sau góc nhìn này, bước tiếp theo của bạn sẽ là gì?',
+        'After this way of seeing it, what will your next step be?',
+      ),
+      subtitle: tr(
+        'Mỗi lần nhìn lại luôn mang đến cho bạn một cơ hội để chủ động '
+            'thay đổi.',
+        'Every look back hands you a chance to change something on purpose.',
+      ),
       progress: reflectProgress(3),
       onBack: () => context.pop(),
       onClose: () => context.push('/wr/flow/done'),
@@ -119,18 +211,20 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
       busy: _busy,
       onPrimary: canSave
           ? () => showChoices
-              // Chạm từ bể: câu này vừa là Choice vừa là Tiny Next Step.
-              ? _save(_picked!, choice: _picked)
-              // Tự viết: có cam kết, nhưng không có lựa chọn nào được chọn.
-              : _save(_controller.text)
+                // Chạm từ bể: câu này vừa là Choice vừa là Tiny Next Step.
+                ? _save(_picked!, choice: _picked)
+                // Tự viết: có cam kết, nhưng không có lựa chọn nào được chọn.
+                : _save(_controller.text)
           : null,
       // Hai lối ra phụ, tuỳ đang ở chế độ nào.
-      secondaryLabel: showChoices ? tr('Tự viết', 'Write my own') : tr('Chưa cần bước nào', 'No step needed yet'),
+      secondaryLabel: showChoices
+          ? tr('Tự viết', 'Write my own')
+          : tr('Chưa cần bước nào', 'No step needed yet'),
       onSecondary: showChoices
           ? () => setState(() {
-                _writing = true;
-                _picked = null;
-              })
+              _writing = true;
+              _picked = null;
+            })
           : () => context.push('/wr/flow/done'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -171,7 +265,7 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
               hintText: tr('Mình sẽ thử…', 'I will try…'),
               minLines: 3,
               maxLines: 4,
-              onChanged: () => setState(() {}),
+              onChanged: _handleActionChanged,
             ),
           if (_error != null) ...[
             const SizedBox(height: 16),
@@ -238,10 +332,7 @@ class _ChoiceTile extends StatelessWidget {
             if (suggested) ...[
               const SizedBox(width: 8),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 9,
-                  vertical: 3,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
                 decoration: BoxDecoration(
                   color: WrColors.teal.withValues(alpha: 0.14),
                   borderRadius: BorderRadius.circular(100),

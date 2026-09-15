@@ -51,9 +51,9 @@ class _WorkshopSurveyScreenState extends ConsumerState<WorkshopSurveyScreen> {
     } catch (_) {
       setState(() => _submitting = false);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.wsSurveyError)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.wsSurveyError)));
     }
   }
 
@@ -110,8 +110,9 @@ class _WorkshopSurveyScreenState extends ConsumerState<WorkshopSurveyScreen> {
             );
           }
 
-          final allAnswered =
-              surveySet.questions.every((q) => _answers.containsKey(q.id));
+          final allAnswered = surveySet.questions.every(
+            (q) => _answers.containsKey(q.id),
+          );
 
           return Column(
             children: [
@@ -123,8 +124,8 @@ class _WorkshopSurveyScreenState extends ConsumerState<WorkshopSurveyScreen> {
                     final question = surveySet.questions[index];
                     final questionText =
                         (locale == 'en' && question.questionTextEn != null)
-                            ? question.questionTextEn!
-                            : question.questionText;
+                        ? question.questionTextEn!
+                        : question.questionText;
                     final selected = _answers[question.id];
 
                     return Padding(
@@ -134,8 +135,9 @@ class _WorkshopSurveyScreenState extends ConsumerState<WorkshopSurveyScreen> {
                         children: [
                           Text(
                             questionText,
-                            style: WrTextStyles.hMedium
-                                .copyWith(color: WrColors.dark),
+                            style: WrTextStyles.hMedium.copyWith(
+                              color: WrColors.dark,
+                            ),
                           ),
                           const SizedBox(height: 12),
                           Wrap(
@@ -168,8 +170,10 @@ class _WorkshopSurveyScreenState extends ConsumerState<WorkshopSurveyScreen> {
                 ),
               ),
               Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 16,
+                ),
                 child: WrPillButton(
                   key: const Key('ws_survey_submit'),
                   label: l10n.wsSurveySubmit,

@@ -34,13 +34,15 @@ class WrPracticeThemeScreen extends ConsumerWidget {
     final themes = ref.watch(practiceThemesProvider).valueOrNull ?? const [];
     final enrollments =
         ref.watch(practiceEnrollmentsProvider).valueOrNull ?? const [];
-    final entitlement = ref.watch(wrEntitlementProvider).valueOrNull ??
+    final entitlement =
+        ref.watch(wrEntitlementProvider).valueOrNull ??
         WrEntitlement(plan: WrPlan.free);
     final stepsAsync = ref.watch(practiceStepsProvider(themeId));
 
     final theme = themes.where((t) => t.themeId == themeId).firstOrNull;
-    final enrollment =
-        enrollments.where((e) => e.themeId == themeId).firstOrNull;
+    final enrollment = enrollments
+        .where((e) => e.themeId == themeId)
+        .firstOrNull;
 
     if (theme == null) {
       return WrDetailScaffold(
@@ -48,9 +50,16 @@ class WrPracticeThemeScreen extends ConsumerWidget {
         title: tr('Không tìm thấy chủ đề', 'Theme not found'),
         children: [
           WrParagraph(
-            tr('Chủ đề này không còn nữa. Quay lại tab Phát triển để chọn chủ đề khác.', 'This theme is gone. Go back to the Grow tab and pick another.'),
+            tr(
+              'Chủ đề này không còn nữa. Quay lại tab Phát triển để chọn chủ đề khác.',
+              'This theme is gone. Go back to the Grow tab and pick another.',
+            ),
             key: Key('wr_practice_theme_gone'),
-            style: TextStyle(fontSize: 16.5, color: WrColors.muted, height: 1.6),
+            style: TextStyle(
+              fontSize: 16.5,
+              color: WrColors.muted,
+              height: 1.6,
+            ),
           ),
         ],
       );
@@ -69,8 +78,8 @@ class WrPracticeThemeScreen extends ConsumerWidget {
       eyebrow: enrollment == null
           ? tr('CHƯA BẮT ĐẦU', 'NOT STARTED')
           : (enrollment.completedAt != null
-              ? tr('ĐANG DUY TRÌ', 'IN UPKEEP')
-              : tr('ĐANG THỰC HÀNH', 'IN PRACTICE')),
+                ? tr('ĐANG DUY TRÌ', 'IN UPKEEP')
+                : tr('ĐANG THỰC HÀNH', 'IN PRACTICE')),
       title: theme.title,
       children: [
         if (theme.description != null) ...[
@@ -88,8 +97,14 @@ class WrPracticeThemeScreen extends ConsumerWidget {
         const SizedBox(height: 8),
         Text(
           steps.isEmpty
-              ? tr('Chủ đề này chưa có bước nào.', 'This theme has no steps yet.')
-              : tr('$doneCount/${steps.length} bước hoàn thành', '$doneCount/${steps.length} steps done'),
+              ? tr(
+                  'Chủ đề này chưa có bước nào.',
+                  'This theme has no steps yet.',
+                )
+              : tr(
+                  '$doneCount/${steps.length} bước hoàn thành',
+                  '$doneCount/${steps.length} steps done',
+                ),
           key: const Key('wr_practice_theme_progress'),
           style: const TextStyle(fontSize: 14.5, color: WrColors.muted),
         ),
@@ -103,18 +118,18 @@ class WrPracticeThemeScreen extends ConsumerWidget {
         // nhìn dọc theo đường kẻ là thấy mình đang ở đâu trong chuỗi.
         for (int i = 0; i < steps.length; i++) ...[
           if (i > 0)
-            _StepConnector(
-              isPassed: completed.contains(steps[i - 1].stepId),
-            ),
+            _StepConnector(isPassed: completed.contains(steps[i - 1].stepId)),
           _StepBlock(
             step: steps[i],
             index: i,
             isDone: completed.contains(steps[i].stepId),
-            isLocked: steps[i].isPremium &&
+            isLocked:
+                steps[i].isPremium &&
                 !entitlement.canAccessPracticeStep(isPremiumStep: true),
             // Chỉ bước liền sau bước đã xong mới bấm được: chuỗi thực hành
             // đi theo thứ tự, không nhảy cóc.
-            isNext: !completed.contains(steps[i].stepId) &&
+            isNext:
+                !completed.contains(steps[i].stepId) &&
                 completed.length == steps[i].stepOrder - 1,
             // Không chặn theo `completedAt`: người dùng miễn phí khép giai
             // đoạn làm quen ở bước 2 (bước 3 khoá). Nâng cấp lên Premium
@@ -182,14 +197,20 @@ class _MaintainBlock extends ConsumerWidget {
           const SizedBox(height: 9),
           WrParagraph(
             formation.skillFormed
-                ? tr('Bạn đã thực hành điều này ${formation.practiceCount} lần. '
-                    'Ghi nhận tiếp mỗi khi bạn dùng tới nó.', 'You have practised this ${formation.practiceCount} times. '
-                    'Keep recording it whenever you use it.')
-                : tr('Đã ${formation.practiceCount}/${formation.threshold} lần. '
-                    'Còn ${formation.remaining} lần nữa là điều này thành kỹ '
-                    'năng của bạn.', '${formation.practiceCount}/${formation.threshold} so far. '
-                    '${formation.remaining} more and this becomes a skill of '
-                    'yours.'),
+                ? tr(
+                    'Bạn đã thực hành điều này ${formation.practiceCount} lần. '
+                        'Ghi nhận tiếp mỗi khi bạn dùng tới nó.',
+                    'You have practised this ${formation.practiceCount} times. '
+                        'Keep recording it whenever you use it.',
+                  )
+                : tr(
+                    'Đã ${formation.practiceCount}/${formation.threshold} lần. '
+                        'Còn ${formation.remaining} lần nữa là điều này thành kỹ '
+                        'năng của bạn.',
+                    '${formation.practiceCount}/${formation.threshold} so far. '
+                        '${formation.remaining} more and this becomes a skill of '
+                        'yours.',
+                  ),
             key: const Key('wr_practice_maintain_count'),
             style: const TextStyle(
               fontSize: 15,
@@ -304,8 +325,8 @@ class _StepBlock extends StatelessWidget {
       opacity: isDone
           ? 0.55
           : isLocked
-              ? 0.72
-              : 1,
+          ? 0.72
+          : 1,
       child: Container(
         key: Key('wr_practice_step_${step.stepId}'),
         width: double.infinity,
@@ -348,8 +369,11 @@ class _StepBlock extends StatelessWidget {
                     const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(Icons.lock_outline,
-                            size: 13, color: WrColors.amber),
+                        Icon(
+                          Icons.lock_outline,
+                          size: 13,
+                          color: WrColors.amber,
+                        ),
                         SizedBox(width: 5),
                         Text(
                           'Premium',
@@ -420,7 +444,10 @@ class _StepBlock extends StatelessWidget {
                   ] else if (!isDone && !isNext) ...[
                     const SizedBox(height: 8),
                     Text(
-                      tr('Xong bước trước rồi mở tiếp', 'Finish the previous step to open this one'),
+                      tr(
+                        'Xong bước trước rồi mở tiếp',
+                        'Finish the previous step to open this one',
+                      ),
                       style: TextStyle(fontSize: 13.5, color: WrColors.muted),
                     ),
                   ],

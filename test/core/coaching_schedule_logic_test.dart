@@ -48,11 +48,7 @@ void main() {
 
     test('past dates in month are not selectable', () {
       final today = DateTime(2026, 8, 15);
-      final cells = buildCalendarCells(
-        year: 2026,
-        month: 8,
-        today: today,
-      );
+      final cells = buildCalendarCells(year: 2026, month: 8, today: today);
       final nonNull = cells.whereType<CalendarCell>().toList();
       // Dates up to the 15th should not be selectable
       final day1 = nonNull.firstWhere((c) => c.date.day == 1);
@@ -70,9 +66,9 @@ void main() {
         month: 8,
         today: DateTime(2026, 8, 1),
       );
-      final day5 = cells
-          .whereType<CalendarCell>()
-          .firstWhere((c) => c.date.day == 5);
+      final day5 = cells.whereType<CalendarCell>().firstWhere(
+        (c) => c.date.day == 5,
+      );
       expect(day5.dateKey, '2026-08-05');
     });
 
