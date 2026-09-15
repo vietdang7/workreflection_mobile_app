@@ -355,8 +355,6 @@ class _BodyState extends ConsumerState<_Body> {
             ),
             key: const Key('wr_deep_no_self_check_yet'),
             textAlign: TextAlign.start,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontSize: 13.5,
               height: 1.45,
@@ -386,15 +384,19 @@ class _BodyState extends ConsumerState<_Body> {
           ),
         ],
 
-        // ── 5 · Một dòng cho những tầng còn đang chờ ────────────────────
+        // ── 5 · Dòng cho những tầng còn đang chờ ────────────────────────
+        //
+        // Trước 15/09/2026 chỗ này bị ép `maxLines: 1` + ellipsis cho gọn.
+        // Khách phản hồi câu bị cắt cụt, đọc không hiểu gì ("câu gần cuối ở
+        // màn hình diễn giải bị mất chữ không đọc được"), và chốt là muốn đọc
+        // đủ câu chứ không cần gọn một dòng. Hai yêu cầu đó loại trừ nhau, đây
+        // là vế được chọn — đừng kẹp lại nếu không có yêu cầu mới từ khách.
         if (waitingLine case final String line) ...[
           const SizedBox(height: 22),
           WrParagraph(
             line,
             key: const Key('wr_deep_waiting_line'),
             textAlign: TextAlign.start,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontSize: 13.5,
               height: 1.55,
