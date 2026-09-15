@@ -10,6 +10,13 @@
 // so sánh golden phụ thuộc phiên bản font và engine render, nên để nó chạy
 // trong bộ test thường sẽ đỏ trên máy khác hoặc CI vì lý do chẳng liên quan gì
 // tới đúng/sai của sản phẩm.
+//
+// Ba ảnh 05/07/08 còn ĐỔI GIỮA HAI LẦN CHẠY kể cả trên cùng một máy: chúng đi
+// qua bể chọn tình huống, mà `pickSituationChoices` bốc ngẫu nhiên từ 72 tình
+// huống thật (`WrStepScreen` không truyền `random`). Năm ô hiện ra lần nào
+// cũng hợp lệ, chỉ là khác nhau. Chạy lại mà thấy ba ảnh đó lệch thì đó là
+// đúng như thiết kế, không phải hồi quy — đừng ghim seed vào mã sản phẩm chỉ
+// để ảnh chụp đứng yên.
 
 import 'dart:io';
 
@@ -29,10 +36,12 @@ import 'package:workreflection_mobile/core/models/checkin.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 import 'package:workreflection_mobile/core/models/wr_episode.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
+import 'package:workreflection_mobile/core/data/wr_canonical_catalog.dart';
 import 'package:workreflection_mobile/core/models/wr_mood_content.dart';
 import 'package:workreflection_mobile/core/models/workshop_models.dart';
 import 'package:workreflection_mobile/core/theme/wr_text.dart';
 import 'package:workreflection_mobile/features/wr/presentation/flow/wr_commit_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/flow/wr_detail_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/flow/wr_meaning_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/flow/wr_step_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_discover_screen.dart';
@@ -105,65 +114,6 @@ List<String> _materialIconCandidates() {
 // ---------------------------------------------------------------------------
 // Dữ liệu mẫu
 // ---------------------------------------------------------------------------
-
-const _situations = [
-  WrSituation(
-    code: 'A3-sit-02',
-    text: 'Liên tục lặp lại cùng một vấn đề',
-    scaDimension: ScaDimension.a3,
-    humanNeed: HumanNeed.thichNghi,
-    wave: 1,
-  ),
-  WrSituation(
-    code: 'C2-sit-01',
-    text: 'Không dám lên tiếng',
-    scaDimension: ScaDimension.c2,
-    humanNeed: HumanNeed.ketNoi,
-    wave: 1,
-  ),
-  WrSituation(
-    code: 'C2-sit-02',
-    text: 'Không được lắng nghe',
-    scaDimension: ScaDimension.c2,
-    humanNeed: HumanNeed.ketNoi,
-    wave: 1,
-  ),
-  WrSituation(
-    code: 'A3-sit-05',
-    text: 'Không có thời gian nhìn lại',
-    scaDimension: ScaDimension.a3,
-    humanNeed: HumanNeed.thichNghi,
-    wave: 1,
-  ),
-  WrSituation(
-    code: 'C2-sit-05',
-    text: 'Sợ mắc lỗi trước tập thể',
-    scaDimension: ScaDimension.c2,
-    humanNeed: HumanNeed.ketNoi,
-    wave: 1,
-  ),
-];
-
-const _stories = [
-  WrStory(
-    storyId: 'C2-01',
-    title: 'Ý tưởng của tôi biến mất trong cuộc họp',
-    scaDimension: ScaDimension.c2,
-    humanNeed: HumanNeed.ketNoi,
-    storyContent: 'Tôi đã chuẩn bị khá kỹ.',
-    emotionTags: [],
-    behaviorTags: [],
-    careerStages: [],
-    selfReflection:
-        'Lần gần nhất tôi cảm thấy tiếng nói của mình không được nhìn thấy '
-        'là khi nào?',
-    ahaMessage:
-        'Đôi khi điều khiến chúng ta im lặng không phải vì thiếu ý tưởng. '
-        'Mà vì nhiều lần lên tiếng nhưng không tạo ra khác biệt.',
-    practiceAction:
-        'Tuần này hãy ghi lại một lần tôi muốn lên tiếng nhưng đã chọn im lặng.',
-  ),
-];
 
 final _moodContent = [
   fakeMoodContent(
@@ -289,6 +239,15 @@ class _Stage {
           path: '/wr/flow/step',
           builder: (_, __) => const WrStepScreen(),
         ),
+        // Bước chi tiết có từ luồng 5 bước ngày 31/07/2026: phiên đã qua bước
+        // chọn tình huống thì `/wr/flow/step` tự chuyển sang đây. Thiếu route
+        // này thì hai màn 05 và 06 chụp ra trang "Page Not Found" chứ không
+        // phải màn cần chụp — và vì cả bộ ảnh là opt-in (`WR_SCREENSHOTS`),
+        // không ai thấy cho tới khi chạy tay.
+        GoRoute(
+          path: '/wr/flow/detail',
+          builder: (_, __) => const WrDetailScreen(),
+        ),
         GoRoute(
           path: '/wr/flow/meaning',
           builder: (_, __) => const WrMeaningScreen(),
@@ -363,16 +322,23 @@ Future<void> _shoot(
 final bool _enabled = Platform.environment['WR_SCREENSHOTS'] == '1';
 
 void main() {
+  // Ảnh gửi App Review phải là nội dung THẬT. Bộ ảnh này từng seed 5 dòng
+  // `*-sit-*` viết tay không có trục v2, nên `_isPickerEligible` lọc sạch và
+  // màn chọn tình huống chụp ra đúng một nút "Điều khác, để tôi tự mô tả".
+  // Dùng thẳng thư viện chuẩn để ảnh khớp cái người dùng nhìn thấy.
+  late final WrCanonicalCatalog canonical;
+
   setUpAll(() async {
     TestWidgetsFlutterBinding.ensureInitialized();
     await _loadFonts();
+    canonical = await loadWrCanonicalCatalog();
   });
 
   _Stage buildStage({Mood mood = Mood.stressed}) {
     final s = _Stage();
     s.content
-      ..seedSituations(_situations)
-      ..seedStories(_stories);
+      ..seedSituations(canonical.situations)
+      ..seedStories(canonical.stories);
     s.moodContent
       ..seedContent(_moodContent)
       ..seedChoicePool(_choicePool);
@@ -396,7 +362,7 @@ void main() {
       PatternCount(
         id: 'p1',
         userId: 'u1',
-        situationCode: 'C2-sit-01',
+        situationCode: 'C2-01',
         scaDimension: ScaDimension.c2,
         occurrenceCount: 5,
         lastSeenAt: DateTime(2026, 7, 27),
@@ -475,6 +441,10 @@ void main() {
     tester,
   ) async {
     final s = buildStage();
+    // Phiên phải còn ĐỨNG Ở bước chọn tình huống: `WrStepScreen.build` chuyển
+    // thẳng sang `/wr/flow/detail` ngay khi `situationCode` đã có hoặc bước
+    // `notice` đã xong. Seed cũ có sẵn `patternsDone: [notice]` nên màn này
+    // không bao giờ chụp được đúng thứ nó mang tên.
     s.episodes.seed([
       const ReflectionEpisode(
         id: 'ep',
@@ -482,8 +452,6 @@ void main() {
         humanMoment: HumanMoment.confusion,
         state: ExperienceState.exploring,
         energy: CheckinEnergy.low,
-        patternsDone: [ReflectionPattern.notice],
-        notes: {'notice': 'Tôi đang thấy nặng đầu vì cuộc họp sáng nay.'},
       ),
     ]);
     final app = s.app('/home');
@@ -493,6 +461,11 @@ void main() {
     await tester.pumpWidget(app);
     await tester.pumpAndSettle();
     await resumeOpenEpisode(tester);
+    expect(
+      find.byType(WrStepScreen),
+      findsOneWidget,
+      reason: 'ảnh 05 phải là màn chọn tình huống, không phải màn kế tiếp',
+    );
     await expectLater(
       find.byType(MaterialApp),
       matchesGoldenFile('../../screenshots/05_chon_tinh_huong.png'),
@@ -510,7 +483,7 @@ void main() {
         humanMoment: HumanMoment.celebration,
         state: ExperienceState.exploring,
         energy: CheckinEnergy.low,
-        situationCode: 'C2-sit-01',
+        situationCode: 'C2-01',
         patternsDone: [
           ReflectionPattern.notice,
           ReflectionPattern.name,
@@ -545,7 +518,7 @@ void main() {
         humanMoment: HumanMoment.celebration,
         state: ExperienceState.exploring,
         energy: CheckinEnergy.low,
-        situationCode: 'C2-sit-01',
+        situationCode: 'C2-01',
         patternsDone: [
           ReflectionPattern.notice,
           ReflectionPattern.name,
@@ -560,8 +533,15 @@ void main() {
     await tester.pumpWidget(s.app('/home'));
     await tester.pumpAndSettle();
     await resumeOpenEpisode(tester);
-    await tester.tap(find.byKey(const Key('wr_flow_primary')));
-    await tester.pumpAndSettle();
+    // Tình huống thật có Story, nên giữa bước Ý nghĩa và bước Lựa chọn còn màn
+    // "Một góc nhìn khác". Trước đây fixture dùng mã `C2-sit-01` không có
+    // trong thư viện nên màn đó không hiện, và ảnh 07 chụp nhầm màn aha.
+    await _tapPrimaryUntilCommit(tester);
+    expect(
+      find.byType(WrCommitScreen),
+      findsOneWidget,
+      reason: 'ảnh 07 phải là màn Lựa chọn',
+    );
     await expectLater(
       find.byType(MaterialApp),
       matchesGoldenFile('../../screenshots/07_lua_chon.png'),
@@ -582,7 +562,7 @@ void main() {
         humanMoment: HumanMoment.celebration,
         state: ExperienceState.exploring,
         energy: CheckinEnergy.low,
-        situationCode: 'C2-sit-01',
+        situationCode: 'C2-01',
         patternsDone: [
           ReflectionPattern.notice,
           ReflectionPattern.name,
@@ -597,8 +577,7 @@ void main() {
     await tester.pumpWidget(s.app('/home'));
     await tester.pumpAndSettle();
     await resumeOpenEpisode(tester);
-    await tester.tap(find.byKey(const Key('wr_flow_primary')));
-    await tester.pumpAndSettle();
+    await _tapPrimaryUntilCommit(tester);
     await tester.tap(find.byKey(const Key('wr_choice_1')));
     await tester.pumpAndSettle();
     await expectLater(
@@ -617,7 +596,7 @@ void main() {
       PatternCount(
         id: 'p1',
         userId: 'u1',
-        situationCode: 'C2-sit-01',
+        situationCode: 'C2-01',
         scaDimension: ScaDimension.c2,
         occurrenceCount: 5,
         lastSeenAt: DateTime(2026, 7, 26),
@@ -625,7 +604,7 @@ void main() {
       PatternCount(
         id: 'p2',
         userId: 'u1',
-        situationCode: 'C2-sit-02',
+        situationCode: 'C2-02',
         scaDimension: ScaDimension.c2,
         occurrenceCount: 4,
         lastSeenAt: DateTime(2026, 7, 20),
@@ -691,7 +670,7 @@ void main() {
                 'triển gần nhất của bạn có thể là năng lực đối thoại: nói điều '
                 'khó nói mà vẫn giữ được quan hệ.',
             confidenceNote: GrowthOpportunity.kConfidenceNote,
-            basedOn: const ['C2-sit-01'],
+            basedOn: const ['C2-01'],
             generatedAt: DateTime(2026, 7, 28),
           ),
         );
@@ -713,7 +692,7 @@ void main() {
         PatternCount(
           id: 'p1',
           userId: 'u1',
-          situationCode: 'C2-sit-01',
+          situationCode: 'C2-01',
           scaDimension: ScaDimension.c2,
           occurrenceCount: 5,
           lastSeenAt: DateTime(2026, 7, 27),
@@ -840,4 +819,19 @@ void main() {
       size: const Size(390, 1000),
     );
   });
+}
+
+/// Bấm nút chính cho tới khi đứng ở màn Lựa chọn.
+///
+/// Số màn giữa bước Ý nghĩa và bước Lựa chọn phụ thuộc dữ liệu: có Story thì
+/// còn màn "Một góc nhìn khác" chen vào. Đếm cứng số lần bấm thì mỗi lần nội
+/// dung đổi là ảnh chụp lại lệch màn mà không ai biết, vì cả bộ ảnh là opt-in.
+Future<void> _tapPrimaryUntilCommit(WidgetTester tester) async {
+  for (var i = 0; i < 4; i++) {
+    if (find.byType(WrCommitScreen).evaluate().isNotEmpty) return;
+    final primary = find.byKey(const Key('wr_flow_primary'));
+    if (primary.evaluate().isEmpty) break;
+    await tester.tap(primary);
+    await tester.pumpAndSettle();
+  }
 }
