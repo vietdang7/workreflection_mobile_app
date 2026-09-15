@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:workreflection_mobile/core/data/wr_canonical_catalog.dart';
@@ -49,6 +50,16 @@ void main() {
     );
     final invitation = find.byKey(const Key('wr_deep_no_self_check_yet'));
     expect(invitation, findsOneWidget);
-    expect(tester.getSize(invitation).height, lessThanOrEqualTo(24));
+
+    // Cùng lý do với `deep_layout_qa_test`: khách chốt 15/09/2026 là đọc đủ câu
+    // quan trọng hơn gọn một dòng. Trước đó bài này khoá `height <= 24`.
+    final paragraph = tester.renderObject<RenderParagraph>(
+      find.descendant(of: invitation, matching: find.byType(RichText)),
+    );
+    expect(
+      paragraph.didExceedMaxLines,
+      isFalse,
+      reason: 'lời mời Self-Check bị cắt cụt — phải hiện đủ câu',
+    );
   });
 }
