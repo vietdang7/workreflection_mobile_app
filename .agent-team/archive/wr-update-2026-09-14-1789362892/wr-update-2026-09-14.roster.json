@@ -1,0 +1,45 @@
+{
+  "team": "wr-update-2026-09-14",
+  "repo": "/home/duythong/Documents/DuyThong/appmobileworkreflection",
+  "team_dir": ".agent-team",
+  "created_by": "agent-team skill v1.0.0",
+  "created_at": "2026-09-14T03:01:53.217Z",
+  "host": "duythong-ASUS-TUF-Dash-F15-FX517ZC-FX517ZC",
+  "platform": "linux",
+  "role_order": [
+    "lead",
+    "core",
+    "ui",
+    "qa"
+  ],
+  "roles": {
+    "lead": {
+      "engine": "codex",
+      "model": "gpt-6-astra",
+      "effort": "low",
+      "session_id": null,
+      "log": ".agent-team/runs/wr-update-2026-09-14/logs/lead.log"
+    },
+    "core": {
+      "engine": "codex",
+      "model": "gpt-5.6-luna",
+      "effort": "max",
+      "session_id": null,
+      "log": ".agent-team/runs/wr-update-2026-09-14/logs/core.log"
+    },
+    "ui": {
+      "engine": "codex",
+      "model": "gpt-5.6-luna",
+      "effort": "max",
+      "session_id": null,
+      "log": ".agent-team/runs/wr-update-2026-09-14/logs/ui.log"
+    },
+    "qa": {
+      "engine": "codex",
+      "model": "gpt-6-astra",
+      "effort": "low",
+      "session_id": null,
+      "log": ".agent-team/runs/wr-update-2026-09-14/logs/qa.log"
+    }
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "role": "qa",
+  "engine": "codex",
+  "model": "gpt-6-astra",
+  "effort": "low",
+  "turns": 1,
+  "session_started": true,
+  "session_id": "01a09dd1-5e22-7943-88e4-36ba7de26a1b",
+  "running_since": null,
+  "runner_pid": 60384,
+  "child_pid": null,
+  "last_error": null,
+  "last_status": "TEAM-STATUS: qa | WORKING | Ready: role, protocol, memory, and SPEC read; awaiting lead TASK before starting QA.",
+  "last_status_at": "2026-09-14T02:49:16.128Z",
+  "last_turn_ended": "2026-09-14T02:49:16.128Z",
+  "last_turn_secs": 17,
+  "last_exit": 0
+}

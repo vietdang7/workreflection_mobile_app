@@ -1,0 +1,174 @@
+WorkReflection
+Changelog đợt 2 và checklist kiểm tra trước phát hành
+14/09/2026
+Tài liệu này gồm hai phần. 
+Phần A là ba hạng mục mới cần làm. Phần B là checklist đi hết vòng phản chiếu để kiểm tra trước khi phát hành, bao gồm cả các hạng mục dev đã xử lý ở đợt trước.
+Changelog Career Snapshot của đợt trước vẫn còn hiệu lực cho những mục dev chưa làm xong. Tài liệu này không thay thế nó, chỉ bổ sung.
+PHẦN A. Ba hạng mục mới
+A1. Thư viện tình huống v2, từ 70 lên 72
+File kèm theo: 
+SITUATIONS_v2.js (dev dùng trực tiếp) và WorkReflection_ThuVien_v2.docx (để đối chiếu nội dung).
+Thay nguyên mảng SITUATIONS hiện tại bằng file js. Không phải gõ lại gì.
+Hạng mục
+Trước
+Sau
+Tổng số tình huống
+70
+72
+Thách thức
+59, lệch giữa các tiểu nhóm
+48, đúng 8 mỗi tiểu nhóm
+Tích cực
+11
+24
+Mỗi cảm xúc check-in
+5 đến 20, rất lệch
+12 đều nhau cho cả 6
+Nội dung câu chuyện
+trung bình 120 ký tự
+viết lại toàn bộ, trung bình 300 ký tự
+Trường phân loại
+chỉ có dim
+pillar, subgroup, mood, valence
+A1.1 Bốn trường phân loại mới
+Trường
+Giá trị
+Dùng để làm gì
+pillar
+S, C hoặc A
+Đo lường. Career Snapshot và Diễn giải sâu đếm theo trường này
+subgroup
+S1, S2, C1, C2, A1, A3
+hoặc Sp, Cp, Ap cho tình huống tích cực
+Tổ chức nội dung, giữ cân bằng khi biên tập
+mood
+stress, tired, foggy, outofsync, ok, happy
+Cửa vào từ màn check-in. Độc lập với pillar
+valence
+thach-thuc hoặc tich-cuc
+Tách phép đếm khó khăn và thuận lợi
+Chặn phát hành: 
+Trường dim cũ đã bỏ hẳn. Mọi chỗ trong mã nguồn đang đọc s.dim phải chuyển sang s.pillar (nếu để đo lường) hoặc s.mood (nếu để lọc theo cảm xúc). Đây là chỗ dễ sót nhất, đặc biệt hàm pillarPatternCounts() trước đây lấy dim[0] nên bỏ sót toàn bộ nhóm tích cực.
+A1.2 Mười một tình huống đã cắt
+S1-06, S1-09, S2-04, S2-09, C1-08, C2-08, C2-09, A1-06, A1-08, A3-07, A3-10.
+Cần làm: 
+Xoá mọi tham chiếu tới 11 mã này, bao gồm cả trong recentSituationIds của dữ liệu người dùng hiện có. Nếu dữ liệu cũ còn chứa các mã này, cần lọc bỏ khi đọc để không lỗi khi tra cứu.
+A1.3 Hàm chọn tình huống viết lại
+File js đã kèm sẵn hàm getSituationChoices() mới. Hai thay đổi:
+Tham số đổi từ moodDims (một mảng) sang mood (một chuỗi). Chỗ gọi hàm cần sửa theo.
+Đổi từ lọc cứng sang ưu tiên mềm: lấy 3 tình huống thuộc đúng cảm xúc, cộng 2 từ cảm xúc khác nhưng cùng sắc thái. Việc này sửa lỗi nhóm C1 trước đây không cảm xúc nào trỏ tới, nên 10 tình huống về niềm tin gần như không bao giờ xuất hiện.
+A2. Diễn giải sâu, đặc tả v2 đã đồng bộ
+File kèm theo: 
+WorkReflection_DienGiaiSau_v2.docx. Bản này đã cập nhật để khớp với thư viện 72 tình huống.
+Sáu chỗ đã sửa so với bản dev nhận trước đó:
+Các con số: 70 thành 72, và 60/10 thành 48/24 ở cả phần mô tả lẫn tiêu chí nghiệm thu.
+Việc số 1 trong checklist đổi bản chất: trước đây yêu cầu dev tự gán trường cho từng tình huống, giờ chỉ cần thay file.
+Quy tắc R2 đổi từ gom theo pillar sang gom theo subgroup. S1 và S2 tuy cùng trụ S nhưng nói về hai chuyện khác hẳn, gom chung sẽ ra một cụm vô nghĩa.
+Thêm mục 3b về ảnh hưởng của hàm chọn tình huống mới lên dữ liệu phân bố trụ.
+Lưu ý: 
+Mục 3b đáng đọc kỹ. Việc trộn 2 tình huống từ cảm xúc khác vào mỗi lượt làm dữ liệu phân bố trụ đáng tin hơn hẳn. Trước đây ai hay chọn Mơ hồ thì trụ S luôn chiếm ưu thế, nhưng đó là do thuật toán chứ không phải do công việc của họ.
+A3. AI đọc ghi chú người dùng
+File kèm theo: 
+WorkReflection_AI_DocGhiChu.docx.
+Đây là tính năng cho giai đoạn sau, KHÔNG thuộc phạm vi bản phát hành đầu tiên. Gửi kèm để dev nắm trước kiến trúc và không xây những thứ sẽ phải đập đi.
+Ba điểm ảnh hưởng tới thiết kế dữ liệu ngay từ bây giờ:
+Mỗi lần gọi AI chỉ xử lý đúng một ghi chú, không đưa toàn bộ Career Memory vào. Cần thiết kế sao cho lấy được một ghi chú đơn lẻ kèm bối cảnh tình huống của nó.
+Phần AI diễn giải KHÔNG lưu vào Career Memory. Chỉ lưu những gì người dùng tự viết. Nếu lưu cả phần AI, sau vài tháng Diễn giải sâu sẽ diễn giải chồng lên diễn giải và sai số nhân lên.
+Tính năng phải có công tắc tắt được ngay mà không cần cập nhật ứng dụng.
+PHẦN B. Checklist kiểm tra vòng phản chiếu trước khi phát hành
+Đi hết một vòng bằng một tài khoản thật, theo đúng thứ tự dưới đây. Mỗi bước có tiêu chí đạt cụ thể. Các mục đánh dấu Chặn phát hành là những chỗ nếu sai thì không nên ra mắt.
+B1. Vòng chính, từ cảm xúc tới ghi nhận
+Bước
+Kiểm tra
+Đạt khi
+1. Check-in cảm xúc
+Chọn lần lượt cả 6 cảm xúc
+Mỗi cảm xúc đều hiện ra 5 tình huống cộng ô tự mô tả. Không cảm xúc nào bị lỗi hoặc thiếu lựa chọn
+2. Nhóm C1 xuất hiện
+Chọn Căng thẳng và Mọi thứ lệch nhau vài lần
+Tình huống mã C1 có xuất hiện. Trước đây nhóm này không bao giờ hiện
+3. Không lặp lại
+Phản chiếu liên tục 15 lần
+Không tình huống nào lặp lại trong 10 lần đầu
+4. Câu chuyện hiển thị đủ
+Mở vài tình huống bất kỳ
+Câu chuyện dài khoảng 300 ký tự hiện đủ, không bị cắt hay tràn khung thẻ
+5. Đồng ý và Không đồng ý
+Bấm Không đồng ý ở bước đúc kết
+Có màn phản hồi, không im lặng chuyển bước. Đúc kết không được ghi vào Insight
+6. Phép đếm không đổi
+Vẫn ở lượt vừa bấm Không đồng ý
+Lượt phản chiếu này VẪN được tính vào cột Xuất hiện của Career Snapshot
+7. Lựa chọn hành động
+Chọn một hành động rồi thoát app, mở lại
+Hành động đã chọn còn được lưu, không biến mất
+8. Ghi nhận được tạo
+Sang tab Hành trình
+Có một ghi nhận mới, đúng loại, đúng ngày
+Chặn phát hành: 
+Bước 2 và bước 6 là hai chỗ dễ sai nhất. Bước 2 vì liên quan tới hàm chọn tình huống mới. Bước 6 vì dễ nhầm rằng Không đồng ý thì bỏ luôn cả lượt phản chiếu, trong khi tần suất đo việc người dùng GẶP tình huống đó, không đo việc họ ĐỒNG Ý với cách diễn giải.
+B2. Ba nhánh đọc lại
+Nhánh
+Kiểm tra
+Đạt khi
+Hiểu mình
+Mở Career Snapshot sau 15 lượt
+Tổng ba con số ở cột Xuất hiện bằng đúng mẫu số hiển thị. Không còn chênh lệch kiểu 16 trên 32
+Hiểu mình
+Mở Diễn giải sâu với tài khoản phân bố đều 6/5/5
+Có ít nhất một câu nêu tên một tình huống cụ thể kèm số lần. Không có câu nào nói không có gì nổi bật rồi dừng
+Hiểu mình
+So sánh Career Snapshot và Diễn giải sâu cạnh nhau
+Không dòng thông tin nào xuất hiện giống hệt ở cả hai màn
+Phát triển
+Sau 15 lượt phản chiếu
+Chủ đề trọng tâm được gợi ý tự động. Hoàn thành Self-Check cũng mở khoá ngay
+Hành trình
+Mở Career Memory
+Mỗi mục có nhãn loại, tiêu đề riêng, nội dung riêng. Không mục nào trùng nhau
+Hành trình
+Bấm vào một mục
+Mở rộng ra nội dung chi tiết, kể cả khi đã Premium
+B3. Hai nguồn bối cảnh
+Nguồn
+Kiểm tra
+Đạt khi
+Self-Check
+Hoàn thành 15 câu
+Cột Bạn đánh giá hiện đầy đủ. Có hiện ngày làm gần nhất
+Self-Check
+Tài khoản chưa làm Self-Check nhưng đủ 15 lượt phản chiếu
+Cột Bạn đánh giá trống kèm lời mời, KHÔNG dùng hiệu ứng làm mờ
+JD công việc
+Điền một buổi rồi thoát giữa chừng
+Dữ liệu đã nhập còn được lưu, quay lại làm tiếp được
+JD công việc
+Hoàn thành 5 buổi
+Thông tin xuất hiện ở tab Phát triển, mục Mức độ tương thích với công việc
+Lưu ý: 
+Ô trống ở cột Bạn đánh giá phải là LỜI MỜI, không phải ổ khoá. Không dùng hiệu ứng làm mờ vì hiệu ứng đó đang dành riêng cho nội dung Premium. Nhầm hai tín hiệu này sẽ khiến người dùng tưởng phải trả tiền mới xem được, trong khi chỉ cần làm thêm một việc miễn phí.
+B4. Rà soát kỹ thuật
+Kiểm tra
+Đạt khi
+Tìm s.dim trong toàn bộ mã nguồn
+Không còn kết quả nào
+Tìm 11 mã đã cắt trong mã nguồn và dữ liệu
+Không còn kết quả nào
+Đếm số tình huống khi khởi động
+72, gồm 48 thach-thuc và 24 tich-cuc
+Đếm số tình huống theo từng cảm xúc
+12 cho cả 6 cảm xúc
+Tìm chữ Trust trong các trường aha
+Không còn kết quả nào, đã đổi thành Niềm tin
+Tìm dấu gạch ngang dài trong nội dung hiển thị
+Không còn kết quả nào
+Gỡ các nút demo
+Không còn dãy nút Sáng Chiều Tối Khuya, nút Buổi 1 đến 5, nút xem trước trạng thái Career Snapshot
+Gỡ dữ liệu demo trong state khởi tạo
+scaAnswers, recentSituationIds, scaHistory, reflectionTotal đều bắt đầu từ rỗng
+Chặn phát hành: 
+Hai dòng cuối rất dễ quên. Các nút demo và dữ liệu seed được thêm vào để tiện xem trước trong quá trình làm, nếu để lọt ra bản thật thì người dùng mới sẽ thấy sẵn 27 lượt phản chiếu mà họ chưa từng làm.
+B5. Thứ tự nên chạy
+B4 trước, vì nếu còn tham chiếu s.dim hoặc mã đã cắt thì các bước B1 tới B3 sẽ cho kết quả sai mà khó đoán nguyên nhân. Sau đó B1, rồi B2 và B3.
+Cần làm: 
+Với B1 và B2 cần một tài khoản đã tích luỹ ít nhất 15 lượt phản chiếu. Nên chuẩn bị sẵn một tài khoản như vậy trước khi bắt đầu, thay vì vừa kiểm tra vừa tạo dữ liệu.

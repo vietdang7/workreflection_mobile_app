@@ -1,0 +1,16 @@
+{
+  "role": "lead",
+  "engine": "claude",
+  "model": "fable",
+  "effort": "low",
+  "turns": 1,
+  "session_started": true,
+  "session_id": "2ec68b2f-3f8d-449a-ab73-5c9f61a295b3",
+  "running_since": null,
+  "runner_pid": 60376,
+  "child_pid": null,
+  "last_error": "You're out of usage credits. Run /usage-credits to keep using Fable 5 or /model to switch models.",
+  "last_turn_ended": "2026-09-14T02:49:01.440Z",
+  "last_turn_secs": 2,
+  "last_exit": 1
+}

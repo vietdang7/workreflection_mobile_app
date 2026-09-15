@@ -1,0 +1,190 @@
+WorkReflection
+AI đọc ghi chú người dùng: đặc tả và rào chắn
+Phạm vi: 
+Tính năng cho phép AI đọc phần văn bản tự do người dùng viết trong luồng phản chiếu, để tạo ra diễn giải và gợi ý hành động bám sát hoàn cảnh thật của họ.
+Tài liệu này dành cho giai đoạn sau, khi đội ngũ quyết định triển khai. Không thuộc phạm vi bản ra mắt đầu tiên.
+1. Vì sao phần này khác hẳn lớp AI đã có
+Sản phẩm đã có một lớp AI ở tính năng Diễn giải sâu. Lớp đó nhận một câu hệ thống đã ghép sẵn và chỉ viết lại cho mượt. Lớp mới hoàn toàn khác về bản chất.
+
+Lớp AI đã có
+Lớp AI đọc ghi chú
+Đầu vào
+Một câu do hệ thống ghép từ số liệu
+Văn bản người dùng tự viết về công việc thật
+Nội dung nhạy cảm
+Không có
+Có thể có tên người, mâu thuẫn, cảm xúc tiêu cực
+AI được suy luận
+Không, chỉ diễn đạt lại
+Có, phải đọc hiểu nội dung
+Hậu quả nếu sai
+Câu văn kém mượt
+Người dùng nhận một kết luận sai về chính cuộc sống của họ
+Một ứng dụng phản chiếu nghề nghiệp nói với người dùng rằng quản lý của họ đang thao túng họ, dựa trên một đoạn văn ngắn viết lúc bực bội, có thể gây hậu quả thật lên công việc và các mối quan hệ của người đó. Đây là lý do toàn bộ tài liệu này tập trung vào giới hạn nhiều hơn là vào khả năng.
+2. Năm nguyên tắc nền
+1. AI đọc, không chẩn đoán. 
+Không gán nhãn tâm lý, không kết luận về tính cách người dùng hay người được nhắc tới. Không dùng các từ như burnout, trầm cảm, thao túng, độc hại, rối loạn.
+2. Mọi điều AI nói phải neo vào chữ người dùng đã viết. 
+Nếu người dùng không viết ra, AI không được suy ra. Một đoạn ghi chú là một khoảnh khắc, không phải một bức chân dung.
+3. AI không đứng về phía nào. 
+Người dùng chỉ kể một phía của câu chuyện. AI không được phán xét người thứ ba dù người dùng mô tả họ tiêu cực đến đâu.
+4. Gợi ý hành động phải nhỏ và có thể rút lại. 
+Không gợi ý đối đầu, tố cáo, nghỉ việc, hay bất cứ việc gì để lại hậu quả không thể đảo ngược. Xem mục 6.
+5. Có tín hiệu nghiêm trọng thì dừng diễn giải. 
+Xem mục 5. Đây là rào chắn quan trọng nhất của cả tính năng.
+3. Đầu vào và đầu ra
+3.1 Những gì AI được nhận
+Trường
+Nguồn
+Ghi chú
+ghi_chu
+reflectDetail, phần người dùng kể lại khoảnh khắc
+Bắt buộc. Nếu dưới 20 ký tự thì không gọi AI
+cau_tu_viet
+reflectStemText, phần hoàn thành câu "Với tôi, điều này xảy ra vì..."
+Tuỳ chọn
+tinh_huong
+title của tình huống người dùng đã chọn
+Bắt buộc, để AI biết bối cảnh
+duc_ket
+trường aha của tình huống đó
+Bắt buộc, để AI không nói lệch khỏi hướng đã thiết kế
+vai_tro
+một dòng mô tả công việc từ hồ sơ
+Tuỳ chọn, giúp gợi ý sát hơn
+Bắt buộc: 
+AI KHÔNG được nhận: lịch sử toàn bộ Career Memory, các ghi chú của những lần phản chiếu khác, điểm Self-Check, hay bất kỳ dữ liệu tổng hợp nào. Mỗi lần gọi chỉ xử lý đúng một ghi chú. Việc này giới hạn thiệt hại nếu AI hiểu sai, và tránh việc AI tự dựng nên một câu chuyện lớn về người dùng từ nhiều mảnh rời rạc.
+3.2 Đầu ra bắt buộc theo cấu trúc
+AI trả về JSON, không trả về văn xuôi tự do. App quyết định cách hiển thị, AI chỉ cung cấp nội dung cho từng ô.
+{
+  "an_toan": true,
+  "phan_chieu": "Một hoặc hai câu nói lại điều người dùng vừa viết,
+                 bằng lời khác, không thêm nhận định.",
+  "cau_hoi": "Một câu hỏi mở, bám vào chi tiết cụ thể họ đã viết.",
+  "hanh_dong": ["Một việc nhỏ có thể làm trong tuần này.",
+                "Một việc nhỏ khác."],
+  "do_tin_cay": "cao"
+}
+an_toan bằng false nghĩa là phát hiện tín hiệu ở mục 5. Khi đó các trường còn lại để trống và app xử lý theo mục 5.
+do_tin_cay bằng "thap" khi ghi chú quá ngắn hoặc quá mơ hồ để bám vào. Khi đó app bỏ qua đầu ra AI và dùng nội dung mặc định.
+4. Prompt đề xuất
+Bạn là người hỗ trợ một ứng dụng giúp người đi làm nhìn lại công việc
+của mình. Người dùng vừa viết một ghi chú về điều họ trải qua.
+ 
+Nhiệm vụ: đọc ghi chú và trả về JSON theo đúng cấu trúc được yêu cầu.
+ 
+GIỚI HẠN BẮT BUỘC
+1. Chỉ nói về những gì người dùng đã viết ra. Không suy ra điều họ
+   không nói. Không đoán nguyên nhân, động cơ, hay tính cách của bất
+   kỳ ai.
+2. Không chẩn đoán tâm lý. Không dùng: burnout, trầm cảm, lo âu, rối
+   loạn, thao túng, độc hại, tự ti, ái kỷ, hay bất kỳ nhãn tâm lý nào.
+3. Không phán xét người thứ ba. Người dùng chỉ kể một phía.
+4. Không nhắc lại tên riêng. Nếu ghi chú có tên người, gọi bằng vai
+   trò chung như "đồng nghiệp", "quản lý".
+5. Gợi ý hành động phải nhỏ, riêng tư, và có thể rút lại. Không gợi ý:
+   đối đầu, gửi khiếu nại, tố cáo, nghỉ việc, chuyển bộ phận, hay nói
+   chuyện với cấp trên của quản lý.
+6. Không hứa hẹn kết quả. Không dùng "chắc chắn", "sẽ giúp bạn".
+7. Kết câu hỏi bằng dấu hỏi. Không dùng câu mệnh lệnh.
+8. Không dùng dấu gạch ngang dài.
+9. Viết tiếng Việt, xưng hô "bạn", không tự xưng.
+ 
+DỪNG LẠI
+Nếu ghi chú có dấu hiệu: quấy rối, phân biệt đối xử, bạo lực, đe doạ,
+vi phạm pháp luật, khủng hoảng tâm lý nghiêm trọng, hoặc ý định tự làm
+hại bản thân, thì trả về {"an_toan": false} và KHÔNG điền các trường
+còn lại. Không diễn giải, không khuyên gì.
+ 
+ĐỘ DÀI
+phan_chieu: 1 đến 2 câu. cau_hoi: 1 câu. hanh_dong: 1 đến 2 mục,
+mỗi mục dưới 20 từ.
+ 
+BỐI CẢNH
+Tình huống người dùng đã chọn: {tinh_huong}
+Đúc kết của tình huống này: {duc_ket}
+Vai trò công việc: {vai_tro}
+ 
+GHI CHÚ CỦA NGƯỜI DÙNG
+{ghi_chu}
+ 
+Chỉ trả về JSON, không thêm giải thích.
+5. Bộ lọc an toàn
+Đây là phần quan trọng nhất của tài liệu. Một ứng dụng phản chiếu công việc sẽ có lúc nhận được những ghi chú vượt ra ngoài phạm vi công việc thông thường. Khi đó, việc AI đưa ra diễn giải và gợi ý hành động là không phù hợp, và có thể gây hại.
+5.1 Sáu nhóm tín hiệu phải dừng
+Nhóm
+Ví dụ nội dung
+Vì sao phải dừng
+Quấy rối
+Bị đụng chạm, bị nhắn tin gạ gẫm, bị bình phẩm về cơ thể
+Đây là vấn đề pháp lý và an toàn, không phải vấn đề để phản chiếu
+Phân biệt đối xử
+Bị đối xử khác vì giới tính, tuổi, vùng miền, tình trạng hôn nhân
+Cần hỗ trợ đúng chuyên môn, không phải một câu hỏi mở
+Bạo lực, đe doạ
+Bị doạ đánh, bị doạ huỷ hoại danh tiếng, chứng kiến bạo lực
+Rủi ro an toàn thân thể
+Vi phạm pháp luật
+Bị ép làm việc sai luật, chứng kiến gian lận, bị giữ lương
+Cần tư vấn pháp lý thật
+Khủng hoảng tâm lý
+Mô tả không ngủ được kéo dài, không còn thiết tha gì, hoảng loạn
+Vượt quá phạm vi một ứng dụng phản chiếu
+Ý định tự làm hại
+Bất kỳ nội dung nào theo hướng này
+Tuyệt đối không diễn giải hay gợi ý hành động
+5.2 App phản ứng thế nào khi an_toan bằng false
+Không im lặng bỏ qua, cũng không phân tích. Hiển thị một nội dung viết sẵn, không do AI sinh ra:
+"Cảm ơn bạn đã viết ra điều này. Những gì bạn vừa kể vượt ra ngoài phạm vi mà một ứng dụng nhìn lại công việc có thể hỗ trợ đúng cách. Ghi chú của bạn vẫn được lưu riêng tư như mọi lần khác. Nếu bạn thấy cần, việc nói chuyện với một người bạn tin tưởng, bộ phận nhân sự, hoặc một chuyên gia sẽ phù hợp hơn với điều bạn đang trải qua."
+Vẫn cho người dùng đi tiếp các bước còn lại như bình thường, không chặn luồng.
+Vẫn lưu ghi chú của họ vào Career Memory như mọi lần, không đánh dấu gì đặc biệt lên đó.
+Không gửi thông báo, không cảnh báo, không chuyển tiếp cho bất kỳ ai. Người dùng phải giữ được quyền riêng tư và quyền tự quyết.
+Bắt buộc: 
+Không gắn nhãn cảnh báo lên ghi nhận trong Career Memory. Người dùng mở lại hành trình của mình vài tháng sau và thấy một dấu cảnh báo đỏ trên một ngày khó khăn là một trải nghiệm tệ, và cũng là một rủi ro nếu máy họ bị người khác xem.
+5.3 Không dựa hoàn toàn vào AI cho bộ lọc này
+AI có thể bỏ sót. Nên có thêm một lớp lọc bằng từ khoá chạy trước khi gọi AI, cho các trường hợp rõ ràng nhất. Lớp này không cần tinh vi, chỉ cần bắt được các từ trực diện. Nếu lớp từ khoá kích hoạt thì không gọi AI luôn, hiển thị thẳng nội dung ở mục 5.2.
+Cần làm: 
+Danh sách từ khoá nên do đội nội dung soạn cùng người có chuyên môn, không để dev tự nghĩ. Đây là việc cần làm trước khi bật tính năng.
+6. Ranh giới của gợi ý hành động
+Gợi ý hành động là phần dễ gây hại nhất, vì người dùng có thể làm theo và nhận hậu quả thật trong công việc.
+Được gợi ý
+Không được gợi ý
+Ghi lại một chi tiết cho lần sau
+Gửi email phản ánh lên cấp trên
+Tự đặt một câu hỏi trước cuộc họp tới
+Nói thẳng với đồng nghiệp rằng họ đã sai
+Thử một cách diễn đạt khác khi trao đổi
+Yêu cầu họp ba bên để làm rõ
+Quan sát xem điều này có lặp lại không
+Cân nhắc chuyển bộ phận hoặc nghỉ việc
+Hỏi thêm một câu để làm rõ phạm vi việc
+Đưa vấn đề ra cuộc họp nhóm
+Nguyên tắc phân biệt: nếu làm xong mà người dùng có thể thay đổi ý mà không ai biết, thì được gợi ý. Nếu làm xong là có người khác biết và không rút lại được, thì không.
+7. Kiểm tra đầu ra tự động
+Chạy trên mọi phản hồi AI trước khi hiển thị. Bất kỳ mục nào không đạt thì bỏ toàn bộ đầu ra AI và dùng nội dung mặc định của tình huống.
+JSON hợp lệ và có đủ các trường bắt buộc.
+Không chứa từ trong danh sách cấm (nhãn tâm lý, từ cấm CCOS).
+Không chứa tên riêng viết hoa không nằm đầu câu.
+Trường hanh_dong không chứa các động từ rủi ro: tố cáo, khiếu nại, nghỉ việc, chuyển, phản ánh, họp ba bên, đối chất.
+Trường cau_hoi kết thúc bằng dấu hỏi.
+Độ dài từng trường nằm trong giới hạn ở mục 4.
+do_tin_cay bằng "cao". Nếu "thap" thì dùng mặc định.
+Lưu ý cho dev: 
+Cả bảy lần kiểm tra đều rơi về cùng một hành vi dự phòng: dùng nội dung viết sẵn của tình huống. Vì nội dung đó vốn đã đầy đủ và đọc được, việc AI thất bại không gây hậu quả gì cho người dùng.
+8. Lưu trữ: cái gì được lưu, cái gì không
+Đây là quyết định kiến trúc quan trọng, ảnh hưởng lâu dài.
+Lưu vĩnh viễn: 
+những gì người dùng tự viết. Đây là tài sản của họ.
+Không lưu vào Career Memory: 
+phần diễn giải do AI sinh ra. Hiển thị một lần rồi thôi.
+Lý do: nếu lưu diễn giải của AI, thì sau vài tháng Career Memory sẽ đầy những nhận định mà người dùng chưa từng nói. Khi Diễn giải sâu đọc lại dữ liệu đó, nó sẽ diễn giải chồng lên diễn giải, và sai số nhân lên qua thời gian. Giữ cho kho dữ liệu chỉ chứa lời của người dùng là cách duy nhất để tránh chuyện này.
+Cần làm: 
+Nếu muốn giữ lại phần AI viết, lưu vào một bảng riêng, đánh dấu rõ nguồn gốc, và không đưa vào bất kỳ phép tính hay diễn giải nào về sau.
+9. Đưa vào vận hành
+Soạn danh sách từ khoá cho bộ lọc an toàn, cùng người có chuyên môn tâm lý.
+Chạy thử trên khoảng 100 ghi chú giả lập, bao gồm cả các trường hợp thuộc sáu nhóm tín hiệu ở mục 5.1, kiểm tra tỷ lệ bắt đúng.
+Bật cho một nhóm nhỏ người dùng, kèm cơ chế cho họ báo lại khi thấy phản hồi không phù hợp.
+Đội nội dung đọc ngẫu nhiên các phản hồi AI hằng tuần trong ít nhất một tháng đầu.
+Chỉ mở rộng khi tỷ lệ phản hồi bị báo không phù hợp ở mức chấp nhận được.
+Bắt buộc: 
+Tính năng phải có công tắc tắt được ngay, không cần cập nhật ứng dụng. Nếu phát hiện AI nói điều không phù hợp, cần tắt được trong vài phút chứ không phải chờ một bản phát hành mới.

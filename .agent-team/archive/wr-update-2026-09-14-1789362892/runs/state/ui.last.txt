@@ -1,0 +1,14 @@
+TEAM-STATUS: ui | DONE
+
+TASK8 completed in `_BodyState.build`: the no-Self-Check invitation is now one-line with ellipsis, preserving its key, action, and Premium semantics.
+
+Impact: LOW — 25 impacted, 4 direct callers; no HIGH/CRITICAL risk.
+
+Verified:
+- Both QA tests passed (including `<=24px` at 375px)
+- SCA suite: 8 passed
+- `flutter analyze`: clean
+- Formatting and diff checks clean
+- QA tests unchanged
+
+Reports updated and handoff sent to lead.

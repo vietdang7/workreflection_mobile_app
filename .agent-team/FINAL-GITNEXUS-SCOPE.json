@@ -1,0 +1,3988 @@
+{
+  "summary": {
+    "changed_count": 622,
+    "affected_count": 19,
+    "changed_files": 347,
+    "risk_level": "critical"
+  },
+  "changed_symbols": [
+    {
+      "id": "Section:AGENTS.md:L2:GitNexus — Code Intelligence",
+      "name": "GitNexus — Code Intelligence",
+      "filePath": "AGENTS.md",
+      "change_type": "touched"
+    },
+    {
+      "id": "Section:CLAUDE.md:L2:GitNexus — Code Intelligence",
+      "name": "GitNexus — Code Intelligence",
+      "filePath": "CLAUDE.md",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/app.dart:_WrAppState",
+      "name": "_WrAppState",
+      "filePath": "lib/app.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/data/ausynclab_tts_service.dart:AusynclabTtsService",
+      "name": "AusynclabTtsService",
+      "filePath": "lib/core/data/ausynclab_tts_service.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/core/data/coaching_repository.dart:CoachingRepository.scheduleBooking#4",
+      "name": "scheduleBooking",
+      "filePath": "lib/core/data/coaching_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/data/coaching_repository.dart:CoachingRepository",
+      "name": "CoachingRepository",
+      "filePath": "lib/core/data/coaching_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/data/coaching_repository.dart:SupabaseCoachingRepository",
+      "name": "SupabaseCoachingRepository",
+      "filePath": "lib/core/data/coaching_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/data/payment_repository.dart:SupabasePaymentRepository",
+      "name": "SupabasePaymentRepository",
+      "filePath": "lib/core/data/payment_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/core/data/roadmap_repository.dart:RoadmapProgressData.completedActionDates",
+      "name": "completedActionDates",
+      "filePath": "lib/core/data/roadmap_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/core/data/roadmap_repository.dart:RoadmapProgressData.customTasks",
+      "name": "customTasks",
+      "filePath": "lib/core/data/roadmap_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Constructor:lib/core/data/roadmap_repository.dart:PremiumReport.fromJson#2",
+      "name": "fromJson",
+      "filePath": "lib/core/data/roadmap_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/data/roadmap_repository.dart:PremiumReport",
+      "name": "PremiumReport",
+      "filePath": "lib/core/data/roadmap_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/data/roadmap_repository.dart:RoadmapProgressData",
+      "name": "RoadmapProgressData",
+      "filePath": "lib/core/data/roadmap_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/data/roadmap_repository.dart:SupabaseRoadmapRepository",
+      "name": "SupabaseRoadmapRepository",
+      "filePath": "lib/core/data/roadmap_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/core/data/survey_repository.dart:SurveyRepository.getLayerSubScores#2",
+      "name": "getLayerSubScores",
+      "filePath": "lib/core/data/survey_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/core/data/survey_repository.dart:SurveyRepository.getCachedAiPersonalization#2",
+      "name": "getCachedAiPersonalization",
+      "filePath": "lib/core/data/survey_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/core/data/survey_repository.dart:SupabaseSurveyRepository._buildSubScores#2",
+      "name": "_buildSubScores",
+      "filePath": "lib/core/data/survey_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/core/data/survey_repository.dart:SupabaseSurveyRepository.getLayerSubScores#2",
+      "name": "getLayerSubScores",
+      "filePath": "lib/core/data/survey_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/core/data/survey_repository.dart:SupabaseSurveyRepository.getCachedAiPersonalization#2",
+      "name": "getCachedAiPersonalization",
+      "filePath": "lib/core/data/survey_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Function:lib/core/data/survey_repository.dart:buildSubScoresMap",
+      "name": "buildSubScoresMap",
+      "filePath": "lib/core/data/survey_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/data/survey_repository.dart:SurveyRepository",
+      "name": "SurveyRepository",
+      "filePath": "lib/core/data/survey_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/data/survey_repository.dart:SupabaseSurveyRepository",
+      "name": "SupabaseSurveyRepository",
+      "filePath": "lib/core/data/survey_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/core/data/workshop_repository.dart:SupabaseWorkshopRepository.cancelRegistration#2",
+      "name": "cancelRegistration",
+      "filePath": "lib/core/data/workshop_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/data/workshop_repository.dart:SupabaseWorkshopRepository",
+      "name": "SupabaseWorkshopRepository",
+      "filePath": "lib/core/data/workshop_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/data/wr_ai_consent_repository.dart:WrAiConsent",
+      "name": "WrAiConsent",
+      "filePath": "lib/core/data/wr_ai_consent_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/data/wr_chat_repository.dart:SupabaseWrChatRepository",
+      "name": "SupabaseWrChatRepository",
+      "filePath": "lib/core/data/wr_chat_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/core/data/wr_content_repository.dart:SupabaseWrContentRepository._catalogFuture",
+      "name": "_catalogFuture",
+      "filePath": "lib/core/data/wr_content_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/core/data/wr_content_repository.dart:SupabaseWrContentRepository._canonicalCatalog#0",
+      "name": "_canonicalCatalog",
+      "filePath": "lib/core/data/wr_content_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/core/data/wr_content_repository.dart:SupabaseWrContentRepository._parseSituations#1",
+      "name": "_parseSituations",
+      "filePath": "lib/core/data/wr_content_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/core/data/wr_content_repository.dart:SupabaseWrContentRepository._tryParseSituation#1",
+      "name": "_tryParseSituation",
+      "filePath": "lib/core/data/wr_content_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/core/data/wr_content_repository.dart:SupabaseWrContentRepository._parseStories#1",
+      "name": "_parseStories",
+      "filePath": "lib/core/data/wr_content_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/core/data/wr_content_repository.dart:SupabaseWrContentRepository._tryParseStory#1",
+      "name": "_tryParseStory",
+      "filePath": "lib/core/data/wr_content_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Constructor:lib/core/data/wr_content_repository.dart:SupabaseWrContentRepository.SupabaseWrContentRepository#2",
+      "name": "SupabaseWrContentRepository",
+      "filePath": "lib/core/data/wr_content_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "TypeAlias:lib/core/data/wr_content_repository.dart:WrCanonicalCatalogLoader",
+      "name": "WrCanonicalCatalogLoader",
+      "filePath": "lib/core/data/wr_content_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Function:lib/core/data/wr_content_repository.dart:_loadCanonicalCatalog",
+      "name": "_loadCanonicalCatalog",
+      "filePath": "lib/core/data/wr_content_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/data/wr_content_repository.dart:SupabaseWrContentRepository",
+      "name": "SupabaseWrContentRepository",
+      "filePath": "lib/core/data/wr_content_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/data/wr_episode_repository.dart:SupabaseWrEpisodeRepository",
+      "name": "SupabaseWrEpisodeRepository",
+      "filePath": "lib/core/data/wr_episode_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/data/wr_iap_repository.dart:StoreKitIapRepository",
+      "name": "StoreKitIapRepository",
+      "filePath": "lib/core/data/wr_iap_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/core/data/wr_intelligence_repository.dart:WrIntelligenceRepository.fetchSelfCheckHistory#2",
+      "name": "fetchSelfCheckHistory",
+      "filePath": "lib/core/data/wr_intelligence_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/core/data/wr_intelligence_repository.dart:SupabaseWrIntelligenceRepository.fetchGrowthSnapshots#1",
+      "name": "fetchGrowthSnapshots",
+      "filePath": "lib/core/data/wr_intelligence_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/data/wr_intelligence_repository.dart:WrIntelligenceRepository",
+      "name": "WrIntelligenceRepository",
+      "filePath": "lib/core/data/wr_intelligence_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/data/wr_intelligence_repository.dart:SupabaseWrIntelligenceRepository",
+      "name": "SupabaseWrIntelligenceRepository",
+      "filePath": "lib/core/data/wr_intelligence_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/data/wr_org_survey_repository.dart:SupabaseWrOrgSurveyRepository",
+      "name": "SupabaseWrOrgSurveyRepository",
+      "filePath": "lib/core/data/wr_org_survey_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/data/wr_repository.dart:SupabaseWrRepository",
+      "name": "SupabaseWrRepository",
+      "filePath": "lib/core/data/wr_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/logic/stt_service.dart:RealSttService",
+      "name": "RealSttService",
+      "filePath": "lib/core/logic/stt_service.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "TypeAlias:lib/core/logic/stt_service.dart:SttResultCallback",
+      "name": "SttResultCallback",
+      "filePath": "lib/core/logic/stt_service.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Function:lib/core/logic/voice_answer_matcher.dart:matchVoiceAnswer",
+      "name": "matchVoiceAnswer",
+      "filePath": "lib/core/logic/voice_answer_matcher.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/core/logic/wr_career_health.dart:PillarTally.situationCounts",
+      "name": "situationCounts",
+      "filePath": "lib/core/logic/wr_career_health.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Function:lib/core/logic/wr_career_health.dart:pillarOfSituation",
+      "name": "pillarOfSituation",
+      "filePath": "lib/core/logic/wr_career_health.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Function:lib/core/logic/wr_career_health.dart:situationCounts",
+      "name": "situationCounts",
+      "filePath": "lib/core/logic/wr_career_health.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/logic/wr_career_health.dart:PillarTally",
+      "name": "PillarTally",
+      "filePath": "lib/core/logic/wr_career_health.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/logic/wr_career_profile.dart:CareerSnapshot",
+      "name": "CareerSnapshot",
+      "filePath": "lib/core/logic/wr_career_profile.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Function:lib/core/logic/wr_deep_interpretation.dart:deepStandoutOf",
+      "name": "deepStandoutOf",
+      "filePath": "lib/core/logic/wr_deep_interpretation.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/core/logic/wr_deep_interpretation.dart:DeepSituation.subgroup",
+      "name": "subgroup",
+      "filePath": "lib/core/logic/wr_deep_interpretation.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/core/logic/wr_deep_interpretation.dart:DeepSituation.valence",
+      "name": "valence",
+      "filePath": "lib/core/logic/wr_deep_interpretation.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/core/logic/wr_deep_interpretation.dart:DeepCluster.subgroup",
+      "name": "subgroup",
+      "filePath": "lib/core/logic/wr_deep_interpretation.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/core/logic/wr_deep_interpretation.dart:DeepCluster.total",
+      "name": "total",
+      "filePath": "lib/core/logic/wr_deep_interpretation.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/core/logic/wr_deep_interpretation.dart:DeepFacts.situationsInSubgroup#1",
+      "name": "situationsInSubgroup",
+      "filePath": "lib/core/logic/wr_deep_interpretation.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/logic/wr_deep_interpretation.dart:DeepSituation",
+      "name": "DeepSituation",
+      "filePath": "lib/core/logic/wr_deep_interpretation.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/logic/wr_deep_interpretation.dart:DeepFacts",
+      "name": "DeepFacts",
+      "filePath": "lib/core/logic/wr_deep_interpretation.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/logic/wr_deep_interpretation.dart:DeepCluster",
+      "name": "DeepCluster",
+      "filePath": "lib/core/logic/wr_deep_interpretation.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/logic/wr_deep_interpretation.dart:DeepInterpretation",
+      "name": "DeepInterpretation",
+      "filePath": "lib/core/logic/wr_deep_interpretation.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/logic/wr_home_surface.dart:SystemNotice",
+      "name": "SystemNotice",
+      "filePath": "lib/core/logic/wr_home_surface.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/logic/wr_iap_renewal.dart:WrRenewalNotice",
+      "name": "WrRenewalNotice",
+      "filePath": "lib/core/logic/wr_iap_renewal.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Enum:lib/core/logic/wr_org_survey_scoring.dart:OrgSurveyStanding",
+      "name": "OrgSurveyStanding",
+      "filePath": "lib/core/logic/wr_org_survey_scoring.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/logic/wr_payment.dart:WrInvoiceForm",
+      "name": "WrInvoiceForm",
+      "filePath": "lib/core/logic/wr_payment.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/logic/wr_pricing.dart:WrPremiumPricing",
+      "name": "WrPremiumPricing",
+      "filePath": "lib/core/logic/wr_pricing.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Enum:lib/core/logic/wr_sca_deep_dive.dart:ScaPillarStatus",
+      "name": "ScaPillarStatus",
+      "filePath": "lib/core/logic/wr_sca_deep_dive.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/logic/wr_self_check_narrative.dart:SelfCheckTrend",
+      "name": "SelfCheckTrend",
+      "filePath": "lib/core/logic/wr_self_check_narrative.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Enum:lib/core/logic/wr_self_check_questions.dart:SelfCheckPillar",
+      "name": "SelfCheckPillar",
+      "filePath": "lib/core/logic/wr_self_check_questions.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Enum:lib/core/logic/wr_seniority.dart:SkillRelevance",
+      "name": "SkillRelevance",
+      "filePath": "lib/core/logic/wr_seniority.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Function:lib/core/logic/wr_situation_picker.dart:pickSituationChoices",
+      "name": "pickSituationChoices",
+      "filePath": "lib/core/logic/wr_situation_picker.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Function:lib/core/logic/wr_situation_picker.dart:resolveStoryFor",
+      "name": "resolveStoryFor",
+      "filePath": "lib/core/logic/wr_situation_picker.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/logic/wr_skill_jd_match.dart:SkillJdMatch",
+      "name": "SkillJdMatch",
+      "filePath": "lib/core/logic/wr_skill_jd_match.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/logic/wr_store_policy.dart:WrStorePolicy",
+      "name": "WrStorePolicy",
+      "filePath": "lib/core/logic/wr_store_policy.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/ai_personalization_models.dart:AiModelContent",
+      "name": "AiModelContent",
+      "filePath": "lib/core/models/ai_personalization_models.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/ai_personalization_models.dart:AiPersonalizationUserContext",
+      "name": "AiPersonalizationUserContext",
+      "filePath": "lib/core/models/ai_personalization_models.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/ai_personalization_models.dart:AiPersonalizationScoreContext",
+      "name": "AiPersonalizationScoreContext",
+      "filePath": "lib/core/models/ai_personalization_models.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Enum:lib/core/models/checkin.dart:CheckinEnergy",
+      "name": "CheckinEnergy",
+      "filePath": "lib/core/models/checkin.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Enum:lib/core/models/checkin.dart:CheckinDirection",
+      "name": "CheckinDirection",
+      "filePath": "lib/core/models/checkin.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/mobile_profile.dart:MobileProfile",
+      "name": "MobileProfile",
+      "filePath": "lib/core/models/mobile_profile.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Enum:lib/core/models/survey_models.dart:SurveyType",
+      "name": "SurveyType",
+      "filePath": "lib/core/models/survey_models.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Enum:lib/core/models/survey_models.dart:ScaleType",
+      "name": "ScaleType",
+      "filePath": "lib/core/models/survey_models.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Enum:lib/core/models/survey_models.dart:SurveyLayer",
+      "name": "SurveyLayer",
+      "filePath": "lib/core/models/survey_models.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Enum:lib/core/models/survey_models.dart:ScoreLevel",
+      "name": "ScoreLevel",
+      "filePath": "lib/core/models/survey_models.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/survey_models.dart:CcReportFull",
+      "name": "CcReportFull",
+      "filePath": "lib/core/models/survey_models.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Enum:lib/core/models/wr_chat.dart:WrChatAction",
+      "name": "WrChatAction",
+      "filePath": "lib/core/models/wr_chat.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/wr_chat.dart:WrChatReply",
+      "name": "WrChatReply",
+      "filePath": "lib/core/models/wr_chat.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/wr_chat.dart:WrConversation",
+      "name": "WrConversation",
+      "filePath": "lib/core/models/wr_chat.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/core/models/wr_content.dart:WrValence.isPositive",
+      "name": "isPositive",
+      "filePath": "lib/core/models/wr_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/core/models/wr_content.dart:WrSituation.subgroup",
+      "name": "subgroup",
+      "filePath": "lib/core/models/wr_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/core/models/wr_content.dart:WrSituation.mood",
+      "name": "mood",
+      "filePath": "lib/core/models/wr_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/core/models/wr_content.dart:WrSituation.custom",
+      "name": "custom",
+      "filePath": "lib/core/models/wr_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/core/models/wr_content.dart:WrSituation._explicitValence",
+      "name": "_explicitValence",
+      "filePath": "lib/core/models/wr_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/core/models/wr_content.dart:WrSituation.explicitValence",
+      "name": "explicitValence",
+      "filePath": "lib/core/models/wr_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/core/models/wr_content.dart:WrSituation.v2Valence",
+      "name": "v2Valence",
+      "filePath": "lib/core/models/wr_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/core/models/wr_content.dart:WrSituation.isCustom",
+      "name": "isCustom",
+      "filePath": "lib/core/models/wr_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/core/models/wr_content.dart:WrSituation.hasV2Classification",
+      "name": "hasV2Classification",
+      "filePath": "lib/core/models/wr_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/core/models/wr_content.dart:WrSituation.valence",
+      "name": "valence",
+      "filePath": "lib/core/models/wr_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/core/models/wr_content.dart:WrStory.pillarCode",
+      "name": "pillarCode",
+      "filePath": "lib/core/models/wr_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/core/models/wr_content.dart:WrStory.subgroup",
+      "name": "subgroup",
+      "filePath": "lib/core/models/wr_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/core/models/wr_content.dart:WrStory.mood",
+      "name": "mood",
+      "filePath": "lib/core/models/wr_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/core/models/wr_content.dart:WrStory._explicitValence",
+      "name": "_explicitValence",
+      "filePath": "lib/core/models/wr_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/core/models/wr_content.dart:WrStory.explicitValence",
+      "name": "explicitValence",
+      "filePath": "lib/core/models/wr_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/core/models/wr_content.dart:WrStory.valence",
+      "name": "valence",
+      "filePath": "lib/core/models/wr_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/core/models/wr_content.dart:WrStory.emotionTags",
+      "name": "emotionTags",
+      "filePath": "lib/core/models/wr_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/core/models/wr_content.dart:HumanNeed.tryFromDb#1",
+      "name": "tryFromDb",
+      "filePath": "lib/core/models/wr_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/core/models/wr_content.dart:ScaDimension.tryFromDb#1",
+      "name": "tryFromDb",
+      "filePath": "lib/core/models/wr_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/core/models/wr_content.dart:WrValence.fromDb#1",
+      "name": "fromDb",
+      "filePath": "lib/core/models/wr_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/core/models/wr_content.dart:WrValence.tryFromDb#1",
+      "name": "tryFromDb",
+      "filePath": "lib/core/models/wr_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Enum:lib/core/models/wr_content.dart:HumanNeed",
+      "name": "HumanNeed",
+      "filePath": "lib/core/models/wr_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Enum:lib/core/models/wr_content.dart:ScaDimension",
+      "name": "ScaDimension",
+      "filePath": "lib/core/models/wr_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Enum:lib/core/models/wr_content.dart:WrValence",
+      "name": "WrValence",
+      "filePath": "lib/core/models/wr_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/wr_content.dart:WrSituation",
+      "name": "WrSituation",
+      "filePath": "lib/core/models/wr_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/wr_content.dart:WrStory",
+      "name": "WrStory",
+      "filePath": "lib/core/models/wr_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/wr_content.dart:CareerMemoryEvent",
+      "name": "CareerMemoryEvent",
+      "filePath": "lib/core/models/wr_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/core/models/wr_episode.dart:ReflectionEpisode.copyWith#17",
+      "name": "copyWith",
+      "filePath": "lib/core/models/wr_episode.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/wr_episode.dart:ReflectionEpisode",
+      "name": "ReflectionEpisode",
+      "filePath": "lib/core/models/wr_episode.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Enum:lib/core/models/wr_episode.dart:HumanMoment",
+      "name": "HumanMoment",
+      "filePath": "lib/core/models/wr_episode.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Enum:lib/core/models/wr_episode.dart:ReflectionPattern",
+      "name": "ReflectionPattern",
+      "filePath": "lib/core/models/wr_episode.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Enum:lib/core/models/wr_episode.dart:ExperienceState",
+      "name": "ExperienceState",
+      "filePath": "lib/core/models/wr_episode.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/wr_intelligence.dart:ReflectionStep",
+      "name": "ReflectionStep",
+      "filePath": "lib/core/models/wr_intelligence.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/wr_intelligence.dart:WrInsight",
+      "name": "WrInsight",
+      "filePath": "lib/core/models/wr_intelligence.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/wr_intelligence.dart:PatternCount",
+      "name": "PatternCount",
+      "filePath": "lib/core/models/wr_intelligence.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/wr_intelligence.dart:WrNarrativeRefresh",
+      "name": "WrNarrativeRefresh",
+      "filePath": "lib/core/models/wr_intelligence.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/wr_intelligence.dart:ScaSelfCheckResponse",
+      "name": "ScaSelfCheckResponse",
+      "filePath": "lib/core/models/wr_intelligence.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/wr_intelligence.dart:PracticeTheme",
+      "name": "PracticeTheme",
+      "filePath": "lib/core/models/wr_intelligence.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/wr_intelligence.dart:PracticeStep",
+      "name": "PracticeStep",
+      "filePath": "lib/core/models/wr_intelligence.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/wr_intelligence.dart:PracticeEnrollment",
+      "name": "PracticeEnrollment",
+      "filePath": "lib/core/models/wr_intelligence.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/wr_intelligence.dart:WrDocAnalysis",
+      "name": "WrDocAnalysis",
+      "filePath": "lib/core/models/wr_intelligence.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/wr_intelligence.dart:WrContextDocument",
+      "name": "WrContextDocument",
+      "filePath": "lib/core/models/wr_intelligence.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Enum:lib/core/models/wr_intelligence.dart:WrPlan",
+      "name": "WrPlan",
+      "filePath": "lib/core/models/wr_intelligence.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Enum:lib/core/models/wr_intelligence.dart:ReflectionStepType",
+      "name": "ReflectionStepType",
+      "filePath": "lib/core/models/wr_intelligence.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Enum:lib/core/models/wr_intelligence.dart:DocAnalysisStatus",
+      "name": "DocAnalysisStatus",
+      "filePath": "lib/core/models/wr_intelligence.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/wr_jd_draft.dart:WrJdDraft",
+      "name": "WrJdDraft",
+      "filePath": "lib/core/models/wr_jd_draft.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Enum:lib/core/models/wr_mood_content.dart:MoodContentType",
+      "name": "MoodContentType",
+      "filePath": "lib/core/models/wr_mood_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/wr_mood_content.dart:MoodContent",
+      "name": "MoodContent",
+      "filePath": "lib/core/models/wr_mood_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/wr_mood_content.dart:MoodContentKey",
+      "name": "MoodContentKey",
+      "filePath": "lib/core/models/wr_mood_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/wr_mood_content.dart:GrowthOpportunity",
+      "name": "GrowthOpportunity",
+      "filePath": "lib/core/models/wr_mood_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/wr_mood_content.dart:CareerQuestion",
+      "name": "CareerQuestion",
+      "filePath": "lib/core/models/wr_mood_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/wr_mood_content.dart:PracticeStepNote",
+      "name": "PracticeStepNote",
+      "filePath": "lib/core/models/wr_mood_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/wr_mood_content.dart:ChoicePoolLine",
+      "name": "ChoicePoolLine",
+      "filePath": "lib/core/models/wr_mood_content.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/models/wr_org_survey.dart:OrgSurveyResponse",
+      "name": "OrgSurveyResponse",
+      "filePath": "lib/core/models/wr_org_survey.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Enum:lib/core/models/wr_org_survey.dart:OrgSurveyArea",
+      "name": "OrgSurveyArea",
+      "filePath": "lib/core/models/wr_org_survey.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/core/pdf/certificate_pdf_builder.dart:CertificatePdfBuilder._signatureBlock#3",
+      "name": "_signatureBlock",
+      "filePath": "lib/core/pdf/certificate_pdf_builder.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/pdf/certificate_pdf_builder.dart:CertificateData",
+      "name": "CertificateData",
+      "filePath": "lib/core/pdf/certificate_pdf_builder.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/pdf/certificate_pdf_builder.dart:CertificatePdfBuilder",
+      "name": "CertificatePdfBuilder",
+      "filePath": "lib/core/pdf/certificate_pdf_builder.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/core/pdf/report_pdf_builder.dart:ReportPdfBuilder._bottleneckPage#3",
+      "name": "_bottleneckPage",
+      "filePath": "lib/core/pdf/report_pdf_builder.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/core/pdf/report_pdf_builder.dart:ReportPdfBuilder._layerRow#5",
+      "name": "_layerRow",
+      "filePath": "lib/core/pdf/report_pdf_builder.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/pdf/report_pdf_builder.dart:ReportPdfBuilder",
+      "name": "ReportPdfBuilder",
+      "filePath": "lib/core/pdf/report_pdf_builder.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/core/theme/wr_text_scale.dart:WrTextScaler.clamp#2",
+      "name": "clamp",
+      "filePath": "lib/core/theme/wr_text_scale.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/theme/wr_text_scale.dart:WrTextScaler",
+      "name": "WrTextScaler",
+      "filePath": "lib/core/theme/wr_text_scale.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/theme/wr_theme.dart:WrTextStyles",
+      "name": "WrTextStyles",
+      "filePath": "lib/core/theme/wr_theme.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/widgets/action_link.dart:WrActionLink",
+      "name": "WrActionLink",
+      "filePath": "lib/core/widgets/action_link.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Enum:lib/core/widgets/tab_back_link.dart:WrTab",
+      "name": "WrTab",
+      "filePath": "lib/core/widgets/tab_back_link.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/widgets/wr_ai_consent_sheet.dart:_ConsentSheetState",
+      "name": "_ConsentSheetState",
+      "filePath": "lib/core/widgets/wr_ai_consent_sheet.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/widgets/wr_hero_scene.dart:WrHeroScene",
+      "name": "WrHeroScene",
+      "filePath": "lib/core/widgets/wr_hero_scene.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/widgets/wr_hero_scene.dart:_HeroScenePainter",
+      "name": "_HeroScenePainter",
+      "filePath": "lib/core/widgets/wr_hero_scene.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/widgets/wr_link_row.dart:WrLinkRow",
+      "name": "WrLinkRow",
+      "filePath": "lib/core/widgets/wr_link_row.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/widgets/wr_premium_lock.dart:WrPremiumLock",
+      "name": "WrPremiumLock",
+      "filePath": "lib/core/widgets/wr_premium_lock.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/widgets/wr_profile_avatar.dart:WrProfileAvatar",
+      "name": "WrProfileAvatar",
+      "filePath": "lib/core/widgets/wr_profile_avatar.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/widgets/wr_voice_field.dart:_WrVoiceFieldState",
+      "name": "_WrVoiceFieldState",
+      "filePath": "lib/core/widgets/wr_voice_field.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/core/widgets/wr_voice_field.dart:_MicButton",
+      "name": "_MicButton",
+      "filePath": "lib/core/widgets/wr_voice_field.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/auth/data/auth_repository.dart:SupabaseAuthRepository",
+      "name": "SupabaseAuthRepository",
+      "filePath": "lib/features/auth/data/auth_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/auth/presentation/auth_screen.dart:_AuthScreenState",
+      "name": "_AuthScreenState",
+      "filePath": "lib/features/auth/presentation/auth_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/auth/presentation/auth_screen.dart:_ForgotPasswordDialog",
+      "name": "_ForgotPasswordDialog",
+      "filePath": "lib/features/auth/presentation/auth_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/auth/presentation/auth_screen.dart:_ForgotPasswordDialogState",
+      "name": "_ForgotPasswordDialogState",
+      "filePath": "lib/features/auth/presentation/auth_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/coaching/presentation/coaching_schedule_screen.dart:_CoachingScheduleScreenState",
+      "name": "_CoachingScheduleScreenState",
+      "filePath": "lib/features/coaching/presentation/coaching_schedule_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/coaching/presentation/coaching_screen.dart:_CoachingScreenState",
+      "name": "_CoachingScreenState",
+      "filePath": "lib/features/coaching/presentation/coaching_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/coaching/presentation/coaching_screen.dart:_Body",
+      "name": "_Body",
+      "filePath": "lib/features/coaching/presentation/coaching_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/coaching/presentation/coaching_screen.dart:_AudienceToggle",
+      "name": "_AudienceToggle",
+      "filePath": "lib/features/coaching/presentation/coaching_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/coaching/presentation/coaching_screen.dart:_PackageCardState",
+      "name": "_PackageCardState",
+      "filePath": "lib/features/coaching/presentation/coaching_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/coaching/presentation/coaching_screen.dart:_ReviewsSection",
+      "name": "_ReviewsSection",
+      "filePath": "lib/features/coaching/presentation/coaching_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/coaching/presentation/coaching_screen.dart:_ReviewCard",
+      "name": "_ReviewCard",
+      "filePath": "lib/features/coaching/presentation/coaching_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/coaching/presentation/coaching_sessions_screen.dart:CoachingSessionsScreen",
+      "name": "CoachingSessionsScreen",
+      "filePath": "lib/features/coaching/presentation/coaching_sessions_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/coaching/presentation/coaching_sessions_screen.dart:_BookingsList",
+      "name": "_BookingsList",
+      "filePath": "lib/features/coaching/presentation/coaching_sessions_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/coaching/presentation/coaching_sessions_screen.dart:_SessionRow",
+      "name": "_SessionRow",
+      "filePath": "lib/features/coaching/presentation/coaching_sessions_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/develop/presentation/develop_screen.dart:_ThemeFocusSection",
+      "name": "_ThemeFocusSection",
+      "filePath": "lib/features/develop/presentation/develop_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/develop/presentation/develop_screen.dart:_PracticeRow",
+      "name": "_PracticeRow",
+      "filePath": "lib/features/develop/presentation/develop_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/develop/presentation/develop_screen.dart:_OpportunityCard",
+      "name": "_OpportunityCard",
+      "filePath": "lib/features/develop/presentation/develop_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/home/presentation/home_screen.dart:HomeScreen",
+      "name": "HomeScreen",
+      "filePath": "lib/features/home/presentation/home_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/home/presentation/home_screen.dart:_HomeHeader",
+      "name": "_HomeHeader",
+      "filePath": "lib/features/home/presentation/home_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/home/presentation/home_screen.dart:_SystemNoticeCard",
+      "name": "_SystemNoticeCard",
+      "filePath": "lib/features/home/presentation/home_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/home/presentation/home_screen.dart:_SurveyCta",
+      "name": "_SurveyCta",
+      "filePath": "lib/features/home/presentation/home_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/home/presentation/home_screen.dart:_InsightSection",
+      "name": "_InsightSection",
+      "filePath": "lib/features/home/presentation/home_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/home/presentation/home_screen.dart:_InsightEmpty",
+      "name": "_InsightEmpty",
+      "filePath": "lib/features/home/presentation/home_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/home/presentation/home_screen.dart:_InsightContent",
+      "name": "_InsightContent",
+      "filePath": "lib/features/home/presentation/home_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/home/presentation/home_screen.dart:_ErrorCard",
+      "name": "_ErrorCard",
+      "filePath": "lib/features/home/presentation/home_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/journey/presentation/journey_screen.dart:_StoryQuoteBlock",
+      "name": "_StoryQuoteBlock",
+      "filePath": "lib/features/journey/presentation/journey_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/journey/presentation/journey_screen.dart:_TimelineSection",
+      "name": "_TimelineSection",
+      "filePath": "lib/features/journey/presentation/journey_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/onboarding/onboarding_state.dart:OnboardingState",
+      "name": "OnboardingState",
+      "filePath": "lib/features/onboarding/onboarding_state.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/onboarding/presentation/onboarding_screen.dart:OnboardingScreen",
+      "name": "OnboardingScreen",
+      "filePath": "lib/features/onboarding/presentation/onboarding_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/onboarding/presentation/onboarding_screen.dart:_Step1",
+      "name": "_Step1",
+      "filePath": "lib/features/onboarding/presentation/onboarding_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/onboarding/presentation/onboarding_screen.dart:_Step2",
+      "name": "_Step2",
+      "filePath": "lib/features/onboarding/presentation/onboarding_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/onboarding/presentation/onboarding_screen.dart:_Step3",
+      "name": "_Step3",
+      "filePath": "lib/features/onboarding/presentation/onboarding_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/onboarding/presentation/onboarding_screen.dart:_SituationCard",
+      "name": "_SituationCard",
+      "filePath": "lib/features/onboarding/presentation/onboarding_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/avatar_providers.dart:AvatarUploadNotifier",
+      "name": "AvatarUploadNotifier",
+      "filePath": "lib/features/profile/avatar_providers.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/change_password_dialog.dart:_ChangePasswordDialogState",
+      "name": "_ChangePasswordDialogState",
+      "filePath": "lib/features/profile/presentation/change_password_dialog.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/guide_screen.dart:_GuideScreenState",
+      "name": "_GuideScreenState",
+      "filePath": "lib/features/profile/presentation/guide_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/guide_screen.dart:_AssistantCard",
+      "name": "_AssistantCard",
+      "filePath": "lib/features/profile/presentation/guide_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/guide_screen.dart:_ClosingCta",
+      "name": "_ClosingCta",
+      "filePath": "lib/features/profile/presentation/guide_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/guide_screen.dart:_GuideBlockView",
+      "name": "_GuideBlockView",
+      "filePath": "lib/features/profile/presentation/guide_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/guide_screen.dart:_NoteBox",
+      "name": "_NoteBox",
+      "filePath": "lib/features/profile/presentation/guide_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/guide_screen.dart:_StepRow",
+      "name": "_StepRow",
+      "filePath": "lib/features/profile/presentation/guide_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/invitations_screen.dart:InvitationActionNotifier",
+      "name": "InvitationActionNotifier",
+      "filePath": "lib/features/profile/presentation/invitations_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/invitations_screen.dart:_InvitationsScreenState",
+      "name": "_InvitationsScreenState",
+      "filePath": "lib/features/profile/presentation/invitations_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/invitations_screen.dart:_InvitationTab",
+      "name": "_InvitationTab",
+      "filePath": "lib/features/profile/presentation/invitations_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/invitations_screen.dart:_InvitationCard",
+      "name": "_InvitationCard",
+      "filePath": "lib/features/profile/presentation/invitations_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/invitations_screen.dart:_Chip",
+      "name": "_Chip",
+      "filePath": "lib/features/profile/presentation/invitations_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/invitations_screen.dart:_StatusBadge",
+      "name": "_StatusBadge",
+      "filePath": "lib/features/profile/presentation/invitations_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/my_info_screen.dart:_MyInfoScreenState",
+      "name": "_MyInfoScreenState",
+      "filePath": "lib/features/profile/presentation/my_info_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/my_info_screen.dart:_FieldRow",
+      "name": "_FieldRow",
+      "filePath": "lib/features/profile/presentation/my_info_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/my_info_screen.dart:_WorkInfoRow",
+      "name": "_WorkInfoRow",
+      "filePath": "lib/features/profile/presentation/my_info_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/profile_edit_screen.dart:_ProfileEditScreenState",
+      "name": "_ProfileEditScreenState",
+      "filePath": "lib/features/profile/presentation/profile_edit_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/profile_edit_screen.dart:_EditField",
+      "name": "_EditField",
+      "filePath": "lib/features/profile/presentation/profile_edit_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/profile_edit_screen.dart:_SelectField",
+      "name": "_SelectField",
+      "filePath": "lib/features/profile/presentation/profile_edit_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/profile_screen.dart:_ProfileHeader",
+      "name": "_ProfileHeader",
+      "filePath": "lib/features/profile/presentation/profile_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/profile_screen.dart:_AvatarSection",
+      "name": "_AvatarSection",
+      "filePath": "lib/features/profile/presentation/profile_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/profile_screen.dart:_PremiumCard",
+      "name": "_PremiumCard",
+      "filePath": "lib/features/profile/presentation/profile_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/profile_screen.dart:_StatsCard",
+      "name": "_StatsCard",
+      "filePath": "lib/features/profile/presentation/profile_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/profile_screen.dart:_OrgSurveyCard",
+      "name": "_OrgSurveyCard",
+      "filePath": "lib/features/profile/presentation/profile_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/profile_screen.dart:_SettingsSection",
+      "name": "_SettingsSection",
+      "filePath": "lib/features/profile/presentation/profile_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/profile_screen.dart:_SettingRow",
+      "name": "_SettingRow",
+      "filePath": "lib/features/profile/presentation/profile_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/profile_screen.dart:_LogoutButton",
+      "name": "_LogoutButton",
+      "filePath": "lib/features/profile/presentation/profile_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/profile_screen.dart:_DeleteAccountButton",
+      "name": "_DeleteAccountButton",
+      "filePath": "lib/features/profile/presentation/profile_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/profile_screen.dart:_DeleteAccountDialogState",
+      "name": "_DeleteAccountDialogState",
+      "filePath": "lib/features/profile/presentation/profile_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/vouchers_screen.dart:_VouchersScreenState",
+      "name": "_VouchersScreenState",
+      "filePath": "lib/features/profile/presentation/vouchers_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/vouchers_screen.dart:_VouchersList",
+      "name": "_VouchersList",
+      "filePath": "lib/features/profile/presentation/vouchers_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/vouchers_screen.dart:_EmptyState",
+      "name": "_EmptyState",
+      "filePath": "lib/features/profile/presentation/vouchers_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/vouchers_screen.dart:_VoucherCard",
+      "name": "_VoucherCard",
+      "filePath": "lib/features/profile/presentation/vouchers_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/profile/presentation/vouchers_screen.dart:_StatusBadge",
+      "name": "_StatusBadge",
+      "filePath": "lib/features/profile/presentation/vouchers_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/features/roadmap/presentation/roadmap_screen.dart:_ActivityEntry.content",
+      "name": "content",
+      "filePath": "lib/features/roadmap/presentation/roadmap_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/features/roadmap/presentation/roadmap_screen.dart:_ReportPickerRow._showRenameDialog#4",
+      "name": "_showRenameDialog",
+      "filePath": "lib/features/roadmap/presentation/roadmap_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/features/roadmap/presentation/roadmap_screen.dart:_DayCell._deleteTask#3",
+      "name": "_deleteTask",
+      "filePath": "lib/features/roadmap/presentation/roadmap_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/features/roadmap/presentation/roadmap_screen.dart:_CoachSection._showInviteDialog#3",
+      "name": "_showInviteDialog",
+      "filePath": "lib/features/roadmap/presentation/roadmap_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/roadmap/presentation/roadmap_screen.dart:_ReportLabelExt",
+      "name": "_ReportLabelExt",
+      "filePath": "lib/features/roadmap/presentation/roadmap_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/roadmap/presentation/roadmap_screen.dart:_RoadmapScreenState",
+      "name": "_RoadmapScreenState",
+      "filePath": "lib/features/roadmap/presentation/roadmap_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/roadmap/presentation/roadmap_screen.dart:_EmptyState",
+      "name": "_EmptyState",
+      "filePath": "lib/features/roadmap/presentation/roadmap_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/roadmap/presentation/roadmap_screen.dart:_RoadmapBody",
+      "name": "_RoadmapBody",
+      "filePath": "lib/features/roadmap/presentation/roadmap_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/roadmap/presentation/roadmap_screen.dart:_ReportPickerRow",
+      "name": "_ReportPickerRow",
+      "filePath": "lib/features/roadmap/presentation/roadmap_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/roadmap/presentation/roadmap_screen.dart:_RenameDialogState",
+      "name": "_RenameDialogState",
+      "filePath": "lib/features/roadmap/presentation/roadmap_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/roadmap/presentation/roadmap_screen.dart:_LayerSection",
+      "name": "_LayerSection",
+      "filePath": "lib/features/roadmap/presentation/roadmap_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/roadmap/presentation/roadmap_screen.dart:_DayCell",
+      "name": "_DayCell",
+      "filePath": "lib/features/roadmap/presentation/roadmap_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/roadmap/presentation/roadmap_screen.dart:_CustomTaskRow",
+      "name": "_CustomTaskRow",
+      "filePath": "lib/features/roadmap/presentation/roadmap_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/roadmap/presentation/roadmap_screen.dart:_AddTaskButton",
+      "name": "_AddTaskButton",
+      "filePath": "lib/features/roadmap/presentation/roadmap_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/roadmap/presentation/roadmap_screen.dart:_CustomTaskDialogState",
+      "name": "_CustomTaskDialogState",
+      "filePath": "lib/features/roadmap/presentation/roadmap_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/roadmap/presentation/roadmap_screen.dart:_CoachSection",
+      "name": "_CoachSection",
+      "filePath": "lib/features/roadmap/presentation/roadmap_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/roadmap/presentation/roadmap_screen.dart:_CoachAccessTile",
+      "name": "_CoachAccessTile",
+      "filePath": "lib/features/roadmap/presentation/roadmap_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/roadmap/presentation/roadmap_screen.dart:_InviteCoachDialog",
+      "name": "_InviteCoachDialog",
+      "filePath": "lib/features/roadmap/presentation/roadmap_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/roadmap/presentation/roadmap_screen.dart:_ActivityLog",
+      "name": "_ActivityLog",
+      "filePath": "lib/features/roadmap/presentation/roadmap_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/roadmap/presentation/roadmap_screen.dart:_ActivityEntry",
+      "name": "_ActivityEntry",
+      "filePath": "lib/features/roadmap/presentation/roadmap_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/roadmap/presentation/roadmap_screen.dart:_ActivityEntryTile",
+      "name": "_ActivityEntryTile",
+      "filePath": "lib/features/roadmap/presentation/roadmap_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Function:lib/features/roadmap/presentation/roadmap_screen.dart:_buildLayerFocusMap",
+      "name": "_buildLayerFocusMap",
+      "filePath": "lib/features/roadmap/presentation/roadmap_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/roadmap/roadmap_providers.dart:RoadmapActionToggleNotifier",
+      "name": "RoadmapActionToggleNotifier",
+      "filePath": "lib/features/roadmap/roadmap_providers.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/roadmap/roadmap_providers.dart:CustomTaskToggleNotifier",
+      "name": "CustomTaskToggleNotifier",
+      "filePath": "lib/features/roadmap/roadmap_providers.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/shell/shell_screen.dart:WrAskBubble",
+      "name": "WrAskBubble",
+      "filePath": "lib/features/shell/shell_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/shell/shell_screen.dart:WrTabBar",
+      "name": "WrTabBar",
+      "filePath": "lib/features/shell/shell_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/splash/splash_screen.dart:SplashScreen",
+      "name": "SplashScreen",
+      "filePath": "lib/features/splash/splash_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/features/survey/presentation/action_plan_screen.dart:_ActionPlanBody.reportId",
+      "name": "reportId",
+      "filePath": "lib/features/survey/presentation/action_plan_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/action_plan_screen.dart:ActionPlanScreen",
+      "name": "ActionPlanScreen",
+      "filePath": "lib/features/survey/presentation/action_plan_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/action_plan_screen.dart:_ActionPlanBody",
+      "name": "_ActionPlanBody",
+      "filePath": "lib/features/survey/presentation/action_plan_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/action_plan_screen.dart:_PhaseCard",
+      "name": "_PhaseCard",
+      "filePath": "lib/features/survey/presentation/action_plan_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/features/survey/presentation/esi_analysis_screen.dart:_EsiPillar.key",
+      "name": "key",
+      "filePath": "lib/features/survey/presentation/esi_analysis_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/esi_analysis_screen.dart:_EsiPillar",
+      "name": "_EsiPillar",
+      "filePath": "lib/features/survey/presentation/esi_analysis_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/esi_analysis_screen.dart:EsiAnalysisScreen",
+      "name": "EsiAnalysisScreen",
+      "filePath": "lib/features/survey/presentation/esi_analysis_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/esi_analysis_screen.dart:_EsiAnalysisBody",
+      "name": "_EsiAnalysisBody",
+      "filePath": "lib/features/survey/presentation/esi_analysis_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/esi_analysis_screen.dart:_PillarCard",
+      "name": "_PillarCard",
+      "filePath": "lib/features/survey/presentation/esi_analysis_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/layer_detail_screen.dart:LayerDetailScreen",
+      "name": "LayerDetailScreen",
+      "filePath": "lib/features/survey/presentation/layer_detail_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/layer_detail_screen.dart:_LayerDetailBody",
+      "name": "_LayerDetailBody",
+      "filePath": "lib/features/survey/presentation/layer_detail_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/layer_detail_screen.dart:_SubComponentCard",
+      "name": "_SubComponentCard",
+      "filePath": "lib/features/survey/presentation/layer_detail_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/features/survey/presentation/report_screen.dart:_ReportBody._narrative#3",
+      "name": "_narrative",
+      "filePath": "lib/features/survey/presentation/report_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/report_screen.dart:_ReportScreenState",
+      "name": "_ReportScreenState",
+      "filePath": "lib/features/survey/presentation/report_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/report_screen.dart:_ReportBody",
+      "name": "_ReportBody",
+      "filePath": "lib/features/survey/presentation/report_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/report_screen.dart:_ScoreLevelBadge",
+      "name": "_ScoreLevelBadge",
+      "filePath": "lib/features/survey/presentation/report_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/report_screen.dart:_LayerCard",
+      "name": "_LayerCard",
+      "filePath": "lib/features/survey/presentation/report_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/report_screen.dart:_BottleneckCard",
+      "name": "_BottleneckCard",
+      "filePath": "lib/features/survey/presentation/report_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/report_screen.dart:_EsiCard",
+      "name": "_EsiCard",
+      "filePath": "lib/features/survey/presentation/report_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/report_screen.dart:_EnpsCard",
+      "name": "_EnpsCard",
+      "filePath": "lib/features/survey/presentation/report_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/report_screen.dart:_ScaRadarPainter",
+      "name": "_ScaRadarPainter",
+      "filePath": "lib/features/survey/presentation/report_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/report_screen.dart:_AiPersonalizedPremiumSection",
+      "name": "_AiPersonalizedPremiumSection",
+      "filePath": "lib/features/survey/presentation/report_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/survey_guide_screen.dart:_GuideBody",
+      "name": "_GuideBody",
+      "filePath": "lib/features/survey/presentation/survey_guide_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/survey_history_screen.dart:SurveyHistoryScreen",
+      "name": "SurveyHistoryScreen",
+      "filePath": "lib/features/survey/presentation/survey_history_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/survey_history_screen.dart:_ReportRow",
+      "name": "_ReportRow",
+      "filePath": "lib/features/survey/presentation/survey_history_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/survey_history_screen.dart:_EmptyState",
+      "name": "_EmptyState",
+      "filePath": "lib/features/survey/presentation/survey_history_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/survey_history_screen.dart:_ErrorState",
+      "name": "_ErrorState",
+      "filePath": "lib/features/survey/presentation/survey_history_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/survey_intro_screen.dart:_SurveyIntroScreenState",
+      "name": "_SurveyIntroScreenState",
+      "filePath": "lib/features/survey/presentation/survey_intro_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/survey_intro_screen.dart:_DropdownField",
+      "name": "_DropdownField",
+      "filePath": "lib/features/survey/presentation/survey_intro_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/survey_processing_screen.dart:SurveyProcessingScreen",
+      "name": "SurveyProcessingScreen",
+      "filePath": "lib/features/survey/presentation/survey_processing_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/features/survey/presentation/survey_questions_screen.dart:_TtsButton.questionText",
+      "name": "questionText",
+      "filePath": "lib/features/survey/presentation/survey_questions_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/features/survey/presentation/survey_questions_screen.dart:TtsPlaybackNotifier.toggle#3",
+      "name": "toggle",
+      "filePath": "lib/features/survey/presentation/survey_questions_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/features/survey/presentation/survey_questions_screen.dart:SttState.copyWith#3",
+      "name": "copyWith",
+      "filePath": "lib/features/survey/presentation/survey_questions_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/survey_questions_screen.dart:TtsPlaybackState",
+      "name": "TtsPlaybackState",
+      "filePath": "lib/features/survey/presentation/survey_questions_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/survey_questions_screen.dart:TtsPlaybackNotifier",
+      "name": "TtsPlaybackNotifier",
+      "filePath": "lib/features/survey/presentation/survey_questions_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/survey_questions_screen.dart:SttState",
+      "name": "SttState",
+      "filePath": "lib/features/survey/presentation/survey_questions_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/survey_questions_screen.dart:SttNotifier",
+      "name": "SttNotifier",
+      "filePath": "lib/features/survey/presentation/survey_questions_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/survey_questions_screen.dart:SurveyQuestionsScreen",
+      "name": "SurveyQuestionsScreen",
+      "filePath": "lib/features/survey/presentation/survey_questions_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/survey_questions_screen.dart:_QuestionsBody",
+      "name": "_QuestionsBody",
+      "filePath": "lib/features/survey/presentation/survey_questions_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/survey_questions_screen.dart:_QuestionViewState",
+      "name": "_QuestionViewState",
+      "filePath": "lib/features/survey/presentation/survey_questions_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/survey_questions_screen.dart:_TtsButton",
+      "name": "_TtsButton",
+      "filePath": "lib/features/survey/presentation/survey_questions_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/survey_questions_screen.dart:_MicButton",
+      "name": "_MicButton",
+      "filePath": "lib/features/survey/presentation/survey_questions_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/survey/presentation/survey_questions_screen.dart:_PulsingMicIconState",
+      "name": "_PulsingMicIconState",
+      "filePath": "lib/features/survey/presentation/survey_questions_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/understand/presentation/insights_screen.dart:InsightsScreen",
+      "name": "InsightsScreen",
+      "filePath": "lib/features/understand/presentation/insights_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/understand/presentation/understand_screen.dart:_DominantNeedBlock",
+      "name": "_DominantNeedBlock",
+      "filePath": "lib/features/understand/presentation/understand_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/understand/presentation/understand_screen.dart:_SituationsList",
+      "name": "_SituationsList",
+      "filePath": "lib/features/understand/presentation/understand_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/understand/presentation/understand_screen.dart:_ScaCard",
+      "name": "_ScaCard",
+      "filePath": "lib/features/understand/presentation/understand_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/understand/presentation/understand_screen.dart:_ScaRow",
+      "name": "_ScaRow",
+      "filePath": "lib/features/understand/presentation/understand_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/understand/presentation/understand_screen.dart:_CareerHealthCheck",
+      "name": "_CareerHealthCheck",
+      "filePath": "lib/features/understand/presentation/understand_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/video_report/data/video_report_repository.dart:SupabaseVideoReportRepository",
+      "name": "SupabaseVideoReportRepository",
+      "filePath": "lib/features/video_report/data/video_report_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/video_report/logic/narration_script_builder.dart:NarrationScriptBuilder",
+      "name": "NarrationScriptBuilder",
+      "filePath": "lib/features/video_report/logic/narration_script_builder.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/features/video_report/models/video_report_models.dart:SubtitleCue.text",
+      "name": "text",
+      "filePath": "lib/features/video_report/models/video_report_models.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/features/video_report/models/video_report_models.dart:TimedScene.id",
+      "name": "id",
+      "filePath": "lib/features/video_report/models/video_report_models.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/video_report/models/video_report_models.dart:SubtitleCue",
+      "name": "SubtitleCue",
+      "filePath": "lib/features/video_report/models/video_report_models.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/video_report/models/video_report_models.dart:TimedScene",
+      "name": "TimedScene",
+      "filePath": "lib/features/video_report/models/video_report_models.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Enum:lib/features/video_report/models/video_report_models.dart:VideoSceneId",
+      "name": "VideoSceneId",
+      "filePath": "lib/features/video_report/models/video_report_models.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/video_report/presentation/scenes/video_scene_view.dart:VideoSceneView",
+      "name": "VideoSceneView",
+      "filePath": "lib/features/video_report/presentation/scenes/video_scene_view.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/video_report/presentation/scenes/video_scene_view.dart:_Chip",
+      "name": "_Chip",
+      "filePath": "lib/features/video_report/presentation/scenes/video_scene_view.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/video_report/presentation/scenes/video_scene_view.dart:_GradientBar",
+      "name": "_GradientBar",
+      "filePath": "lib/features/video_report/presentation/scenes/video_scene_view.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/video_report/presentation/video_report_screen.dart:_VideoReportScreenState",
+      "name": "_VideoReportScreenState",
+      "filePath": "lib/features/video_report/presentation/video_report_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/video_report/presentation/video_report_screen.dart:_SubtitleOverlay",
+      "name": "_SubtitleOverlay",
+      "filePath": "lib/features/video_report/presentation/video_report_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/workshops/presentation/my_workshops_screen.dart:_MyWorkshopsScreenState",
+      "name": "_MyWorkshopsScreenState",
+      "filePath": "lib/features/workshops/presentation/my_workshops_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/workshops/presentation/my_workshops_screen.dart:_MyWorkshopRow",
+      "name": "_MyWorkshopRow",
+      "filePath": "lib/features/workshops/presentation/my_workshops_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/workshops/presentation/my_workshops_screen.dart:_CancelDialog",
+      "name": "_CancelDialog",
+      "filePath": "lib/features/workshops/presentation/my_workshops_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/workshops/presentation/workshop_detail_screen.dart:_DetailBodyState",
+      "name": "_DetailBodyState",
+      "filePath": "lib/features/workshops/presentation/workshop_detail_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/workshops/presentation/workshop_detail_screen.dart:_CtaArea",
+      "name": "_CtaArea",
+      "filePath": "lib/features/workshops/presentation/workshop_detail_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/workshops/presentation/workshop_detail_screen.dart:_StatusChip",
+      "name": "_StatusChip",
+      "filePath": "lib/features/workshops/presentation/workshop_detail_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/workshops/presentation/workshop_detail_screen.dart:_SurveyArea",
+      "name": "_SurveyArea",
+      "filePath": "lib/features/workshops/presentation/workshop_detail_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/workshops/presentation/workshop_detail_screen.dart:_ResourcesSection",
+      "name": "_ResourcesSection",
+      "filePath": "lib/features/workshops/presentation/workshop_detail_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/workshops/presentation/workshop_detail_screen.dart:_AttachmentRow",
+      "name": "_AttachmentRow",
+      "filePath": "lib/features/workshops/presentation/workshop_detail_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/features/workshops/presentation/workshop_survey_results_screen.dart:_ResultsBody._orderedLayers#1",
+      "name": "_orderedLayers",
+      "filePath": "lib/features/workshops/presentation/workshop_survey_results_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/workshops/presentation/workshop_survey_results_screen.dart:WorkshopSurveyResultsScreen",
+      "name": "WorkshopSurveyResultsScreen",
+      "filePath": "lib/features/workshops/presentation/workshop_survey_results_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/workshops/presentation/workshop_survey_results_screen.dart:_ResultsBody",
+      "name": "_ResultsBody",
+      "filePath": "lib/features/workshops/presentation/workshop_survey_results_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/workshops/presentation/workshop_survey_screen.dart:_WorkshopSurveyScreenState",
+      "name": "_WorkshopSurveyScreenState",
+      "filePath": "lib/features/workshops/presentation/workshop_survey_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/workshops/presentation/workshops_screen.dart:WorkshopsScreen",
+      "name": "WorkshopsScreen",
+      "filePath": "lib/features/workshops/presentation/workshops_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/workshops/presentation/workshops_screen.dart:_WorkshopCard",
+      "name": "_WorkshopCard",
+      "filePath": "lib/features/workshops/presentation/workshops_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/features/wr/chat_providers.dart:WrChatController._premiumOverride",
+      "name": "_premiumOverride",
+      "filePath": "lib/features/wr/chat_providers.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/chat_providers.dart:WrChatController",
+      "name": "WrChatController",
+      "filePath": "lib/features/wr/chat_providers.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/features/wr/episode_flow_controller.dart:EpisodeFlowController.confirmMeaning#2",
+      "name": "confirmMeaning",
+      "filePath": "lib/features/wr/episode_flow_controller.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/episode_flow_controller.dart:EpisodeFlowController",
+      "name": "EpisodeFlowController",
+      "filePath": "lib/features/wr/episode_flow_controller.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/iap_providers.dart:WrIapController",
+      "name": "WrIapController",
+      "filePath": "lib/features/wr/iap_providers.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/features/wr/presentation/flow/wr_commit_screen.dart:_WrCommitScreenState._restoredEpisodeKey",
+      "name": "_restoredEpisodeKey",
+      "filePath": "lib/features/wr/presentation/flow/wr_commit_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/features/wr/presentation/flow/wr_commit_screen.dart:_WrCommitScreenState._actionEdited",
+      "name": "_actionEdited",
+      "filePath": "lib/features/wr/presentation/flow/wr_commit_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/features/wr/presentation/flow/wr_commit_screen.dart:_WrCommitScreenState._buildOptions#0",
+      "name": "_buildOptions",
+      "filePath": "lib/features/wr/presentation/flow/wr_commit_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/features/wr/presentation/flow/wr_commit_screen.dart:_WrCommitScreenState._restoreSavedAction#3",
+      "name": "_restoreSavedAction",
+      "filePath": "lib/features/wr/presentation/flow/wr_commit_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/features/wr/presentation/flow/wr_commit_screen.dart:_WrCommitScreenState._handleActionChanged#0",
+      "name": "_handleActionChanged",
+      "filePath": "lib/features/wr/presentation/flow/wr_commit_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/flow/wr_commit_screen.dart:_WrCommitScreenState",
+      "name": "_WrCommitScreenState",
+      "filePath": "lib/features/wr/presentation/flow/wr_commit_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/flow/wr_commit_screen.dart:_ChoiceTile",
+      "name": "_ChoiceTile",
+      "filePath": "lib/features/wr/presentation/flow/wr_commit_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/flow/wr_detail_screen.dart:_WrDetailScreenState",
+      "name": "_WrDetailScreenState",
+      "filePath": "lib/features/wr/presentation/flow/wr_detail_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/flow/wr_detail_screen.dart:_LinkChip",
+      "name": "_LinkChip",
+      "filePath": "lib/features/wr/presentation/flow/wr_detail_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/flow/wr_done_screen.dart:_WrDoneScreenState",
+      "name": "_WrDoneScreenState",
+      "filePath": "lib/features/wr/presentation/flow/wr_done_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/flow/wr_flow_scaffold.dart:WrFlowScaffold",
+      "name": "WrFlowScaffold",
+      "filePath": "lib/features/wr/presentation/flow/wr_flow_scaffold.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/flow/wr_flow_scaffold.dart:WrFlowGone",
+      "name": "WrFlowGone",
+      "filePath": "lib/features/wr/presentation/flow/wr_flow_scaffold.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/flow/wr_meaning_screen.dart:_WrMeaningScreenState",
+      "name": "_WrMeaningScreenState",
+      "filePath": "lib/features/wr/presentation/flow/wr_meaning_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/flow/wr_moment_screen.dart:_WrMomentScreenState",
+      "name": "_WrMomentScreenState",
+      "filePath": "lib/features/wr/presentation/flow/wr_moment_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/flow/wr_step_screen.dart:_WrStepScreenState",
+      "name": "_WrStepScreenState",
+      "filePath": "lib/features/wr/presentation/flow/wr_step_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_ai_consent_screen.dart:_WrAiConsentScreenState",
+      "name": "_WrAiConsentScreenState",
+      "filePath": "lib/features/wr/presentation/wr_ai_consent_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_ask_screen.dart:_WrAskScreenState",
+      "name": "_WrAskScreenState",
+      "filePath": "lib/features/wr/presentation/wr_ask_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_ask_screen.dart:_Bubble",
+      "name": "_Bubble",
+      "filePath": "lib/features/wr/presentation/wr_ask_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_ask_screen.dart:_TypingBubble",
+      "name": "_TypingBubble",
+      "filePath": "lib/features/wr/presentation/wr_ask_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_ask_screen.dart:_Dot",
+      "name": "_Dot",
+      "filePath": "lib/features/wr/presentation/wr_ask_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_ask_screen.dart:_EmptyState",
+      "name": "_EmptyState",
+      "filePath": "lib/features/wr/presentation/wr_ask_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_ask_screen.dart:_Composer",
+      "name": "_Composer",
+      "filePath": "lib/features/wr/presentation/wr_ask_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_ask_screen.dart:_SendButton",
+      "name": "_SendButton",
+      "filePath": "lib/features/wr/presentation/wr_ask_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_ask_screen.dart:_ConversationsSheet",
+      "name": "_ConversationsSheet",
+      "filePath": "lib/features/wr/presentation/wr_ask_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_ask_screen.dart:_ConversationRow",
+      "name": "_ConversationRow",
+      "filePath": "lib/features/wr/presentation/wr_ask_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_ask_screen.dart:_OldQuestionsSheet",
+      "name": "_OldQuestionsSheet",
+      "filePath": "lib/features/wr/presentation/wr_ask_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_ask_screen.dart:_QuestionRow",
+      "name": "_QuestionRow",
+      "filePath": "lib/features/wr/presentation/wr_ask_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_career_setup_screen.dart:_WrCareerSetupScreenState",
+      "name": "_WrCareerSetupScreenState",
+      "filePath": "lib/features/wr/presentation/wr_career_setup_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_context_doc_screen.dart:_WrContextDocScreenState",
+      "name": "_WrContextDocScreenState",
+      "filePath": "lib/features/wr/presentation/wr_context_doc_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_context_doc_screen.dart:_WhatAiDoes",
+      "name": "_WhatAiDoes",
+      "filePath": "lib/features/wr/presentation/wr_context_doc_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_context_doc_screen.dart:_DocRow",
+      "name": "_DocRow",
+      "filePath": "lib/features/wr/presentation/wr_context_doc_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_context_doc_screen.dart:_MiniList",
+      "name": "_MiniList",
+      "filePath": "lib/features/wr/presentation/wr_context_doc_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_context_doc_screen.dart:_StatusChip",
+      "name": "_StatusChip",
+      "filePath": "lib/features/wr/presentation/wr_context_doc_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_discover_screen.dart:WrDiscoverScreen",
+      "name": "WrDiscoverScreen",
+      "filePath": "lib/features/wr/presentation/wr_discover_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_discover_screen.dart:_NeedReadingBlock",
+      "name": "_NeedReadingBlock",
+      "filePath": "lib/features/wr/presentation/wr_discover_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_discover_screen.dart:_SeekingBlock",
+      "name": "_SeekingBlock",
+      "filePath": "lib/features/wr/presentation/wr_discover_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_discover_screen.dart:_SeeMoreLink",
+      "name": "_SeeMoreLink",
+      "filePath": "lib/features/wr/presentation/wr_discover_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_discover_screen.dart:_CareerSnapshotCard",
+      "name": "_CareerSnapshotCard",
+      "filePath": "lib/features/wr/presentation/wr_discover_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_discover_screen.dart:_SnapshotInvite",
+      "name": "_SnapshotInvite",
+      "filePath": "lib/features/wr/presentation/wr_discover_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_discover_screen.dart:_SnapshotGapLine",
+      "name": "_SnapshotGapLine",
+      "filePath": "lib/features/wr/presentation/wr_discover_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_discover_screen.dart:_SelfCheckInviteCard",
+      "name": "_SelfCheckInviteCard",
+      "filePath": "lib/features/wr/presentation/wr_discover_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_discover_screen.dart:_SelfCheckDeepLock",
+      "name": "_SelfCheckDeepLock",
+      "filePath": "lib/features/wr/presentation/wr_discover_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_episode_detail_screen.dart:WrEpisodeDetailScreen",
+      "name": "WrEpisodeDetailScreen",
+      "filePath": "lib/features/wr/presentation/wr_episode_detail_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_episode_detail_screen.dart:_ReopenButton",
+      "name": "_ReopenButton",
+      "filePath": "lib/features/wr/presentation/wr_episode_detail_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_growth_journey_screen.dart:WrGrowthJourneyScreen",
+      "name": "WrGrowthJourneyScreen",
+      "filePath": "lib/features/wr/presentation/wr_growth_journey_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_growth_journey_screen.dart:_SnapshotBlock",
+      "name": "_SnapshotBlock",
+      "filePath": "lib/features/wr/presentation/wr_growth_journey_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_growth_screen.dart:_WrGrowthScreenState",
+      "name": "_WrGrowthScreenState",
+      "filePath": "lib/features/wr/presentation/wr_growth_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_growth_screen.dart:_OpportunitySliver",
+      "name": "_OpportunitySliver",
+      "filePath": "lib/features/wr/presentation/wr_growth_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_growth_screen.dart:WrPracticeThemeCard",
+      "name": "WrPracticeThemeCard",
+      "filePath": "lib/features/wr/presentation/wr_growth_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_growth_screen.dart:_QuotaCard",
+      "name": "_QuotaCard",
+      "filePath": "lib/features/wr/presentation/wr_growth_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_growth_skills_screen.dart:_WrGrowthSkillsScreenState",
+      "name": "_WrGrowthSkillsScreenState",
+      "filePath": "lib/features/wr/presentation/wr_growth_skills_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_growth_skills_screen.dart:_HowItWorks",
+      "name": "_HowItWorks",
+      "filePath": "lib/features/wr/presentation/wr_growth_skills_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_growth_skills_screen.dart:_FormedSkillTile",
+      "name": "_FormedSkillTile",
+      "filePath": "lib/features/wr/presentation/wr_growth_skills_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_growth_skills_screen.dart:_FormingSkillTile",
+      "name": "_FormingSkillTile",
+      "filePath": "lib/features/wr/presentation/wr_growth_skills_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_growth_skills_screen.dart:_OnboardingHint",
+      "name": "_OnboardingHint",
+      "filePath": "lib/features/wr/presentation/wr_growth_skills_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_growth_skills_screen.dart:_JdSection",
+      "name": "_JdSection",
+      "filePath": "lib/features/wr/presentation/wr_growth_skills_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_growth_skills_screen.dart:_BulletLine",
+      "name": "_BulletLine",
+      "filePath": "lib/features/wr/presentation/wr_growth_skills_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_growth_themes_screen.dart:_WrGrowthThemesScreenState",
+      "name": "_WrGrowthThemesScreenState",
+      "filePath": "lib/features/wr/presentation/wr_growth_themes_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_growth_themes_screen.dart:_SuggestionCard",
+      "name": "_SuggestionCard",
+      "filePath": "lib/features/wr/presentation/wr_growth_themes_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_growth_themes_screen.dart:_TraChieuRow",
+      "name": "_TraChieuRow",
+      "filePath": "lib/features/wr/presentation/wr_growth_themes_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_home_screen.dart:WrHomeScreen",
+      "name": "WrHomeScreen",
+      "filePath": "lib/features/wr/presentation/wr_home_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_home_screen.dart:_CheckinQuestion",
+      "name": "_CheckinQuestion",
+      "filePath": "lib/features/wr/presentation/wr_home_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_home_screen.dart:_CheckinTile",
+      "name": "_CheckinTile",
+      "filePath": "lib/features/wr/presentation/wr_home_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_home_screen.dart:_ProfileNudgeCard",
+      "name": "_ProfileNudgeCard",
+      "filePath": "lib/features/wr/presentation/wr_home_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_home_screen.dart:DottedBorderBox",
+      "name": "DottedBorderBox",
+      "filePath": "lib/features/wr/presentation/wr_home_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_home_screen.dart:_UnfinishedReflectionCard",
+      "name": "_UnfinishedReflectionCard",
+      "filePath": "lib/features/wr/presentation/wr_home_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_home_screen.dart:_SystemNoticeCard",
+      "name": "_SystemNoticeCard",
+      "filePath": "lib/features/wr/presentation/wr_home_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_home_screen.dart:_MoodContentSection",
+      "name": "_MoodContentSection",
+      "filePath": "lib/features/wr/presentation/wr_home_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_home_screen.dart:_LatestInsightSection",
+      "name": "_LatestInsightSection",
+      "filePath": "lib/features/wr/presentation/wr_home_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_home_screen.dart:_ContinueTodaySection",
+      "name": "_ContinueTodaySection",
+      "filePath": "lib/features/wr/presentation/wr_home_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_jd_builder_screen.dart:_WrJdBuilderScreenState",
+      "name": "_WrJdBuilderScreenState",
+      "filePath": "lib/features/wr/presentation/wr_jd_builder_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_jd_builder_screen.dart:_Field",
+      "name": "_Field",
+      "filePath": "lib/features/wr/presentation/wr_jd_builder_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_journey_narrative_screen.dart:WrJourneyNarrativeScreen",
+      "name": "WrJourneyNarrativeScreen",
+      "filePath": "lib/features/wr/presentation/wr_journey_narrative_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_journey_narrative_screen.dart:_AiConsentInvite",
+      "name": "_AiConsentInvite",
+      "filePath": "lib/features/wr/presentation/wr_journey_narrative_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_journey_screen.dart:WrJourneyScreen",
+      "name": "WrJourneyScreen",
+      "filePath": "lib/features/wr/presentation/wr_journey_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_journey_screen.dart:_NarrativeCardState",
+      "name": "_NarrativeCardState",
+      "filePath": "lib/features/wr/presentation/wr_journey_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_journey_screen.dart:_GrowthOpportunitySection",
+      "name": "_GrowthOpportunitySection",
+      "filePath": "lib/features/wr/presentation/wr_journey_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_journey_screen.dart:_WrCareerMemoryScreenState",
+      "name": "_WrCareerMemoryScreenState",
+      "filePath": "lib/features/wr/presentation/wr_journey_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_journey_screen.dart:_EntryRowState",
+      "name": "_EntryRowState",
+      "filePath": "lib/features/wr/presentation/wr_journey_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_mood_library_screen.dart:_LibraryEmpty",
+      "name": "_LibraryEmpty",
+      "filePath": "lib/features/wr/presentation/wr_mood_library_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_mood_reader_screen.dart:_ReaderBody",
+      "name": "_ReaderBody",
+      "filePath": "lib/features/wr/presentation/wr_mood_reader_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_mood_reader_screen.dart:_AudioPlayerBlockState",
+      "name": "_AudioPlayerBlockState",
+      "filePath": "lib/features/wr/presentation/wr_mood_reader_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_mood_reader_screen.dart:_DraftNotice",
+      "name": "_DraftNotice",
+      "filePath": "lib/features/wr/presentation/wr_mood_reader_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_org_survey_flow_screen.dart:_WrOrgSurveyFlowScreenState",
+      "name": "_WrOrgSurveyFlowScreenState",
+      "filePath": "lib/features/wr/presentation/wr_org_survey_flow_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_org_survey_flow_screen.dart:_TopBar",
+      "name": "_TopBar",
+      "filePath": "lib/features/wr/presentation/wr_org_survey_flow_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_org_survey_flow_screen.dart:_EnpsStep",
+      "name": "_EnpsStep",
+      "filePath": "lib/features/wr/presentation/wr_org_survey_flow_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_org_survey_intro_screen.dart:WrOrgSurveyIntroScreen",
+      "name": "WrOrgSurveyIntroScreen",
+      "filePath": "lib/features/wr/presentation/wr_org_survey_intro_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_org_survey_result_screen.dart:WrOrgSurveyResultScreen",
+      "name": "WrOrgSurveyResultScreen",
+      "filePath": "lib/features/wr/presentation/wr_org_survey_result_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_org_survey_result_screen.dart:_Empty",
+      "name": "_Empty",
+      "filePath": "lib/features/wr/presentation/wr_org_survey_result_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_org_survey_result_screen.dart:_Result",
+      "name": "_Result",
+      "filePath": "lib/features/wr/presentation/wr_org_survey_result_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_org_survey_result_screen.dart:_AreaBar",
+      "name": "_AreaBar",
+      "filePath": "lib/features/wr/presentation/wr_org_survey_result_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_org_survey_result_screen.dart:_Legend",
+      "name": "_Legend",
+      "filePath": "lib/features/wr/presentation/wr_org_survey_result_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_org_survey_result_screen.dart:_WithdrawButtonState",
+      "name": "_WithdrawButtonState",
+      "filePath": "lib/features/wr/presentation/wr_org_survey_result_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_pattern_detail_screen.dart:WrPatternDetailScreen",
+      "name": "WrPatternDetailScreen",
+      "filePath": "lib/features/wr/presentation/wr_pattern_detail_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_patterns_screen.dart:WrPatternsScreen",
+      "name": "WrPatternsScreen",
+      "filePath": "lib/features/wr/presentation/wr_patterns_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_payment_screen.dart:_WrPaymentScreenState",
+      "name": "_WrPaymentScreenState",
+      "filePath": "lib/features/wr/presentation/wr_payment_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_payment_screen.dart:_Message",
+      "name": "_Message",
+      "filePath": "lib/features/wr/presentation/wr_payment_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_payment_screen.dart:_CountdownBar",
+      "name": "_CountdownBar",
+      "filePath": "lib/features/wr/presentation/wr_payment_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_payment_screen.dart:_AmountCard",
+      "name": "_AmountCard",
+      "filePath": "lib/features/wr/presentation/wr_payment_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_payment_screen.dart:_VoucherCard",
+      "name": "_VoucherCard",
+      "filePath": "lib/features/wr/presentation/wr_payment_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_payment_screen.dart:_FreeOrderCard",
+      "name": "_FreeOrderCard",
+      "filePath": "lib/features/wr/presentation/wr_payment_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_payment_screen.dart:_VoucherListSheetState",
+      "name": "_VoucherListSheetState",
+      "filePath": "lib/features/wr/presentation/wr_payment_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_payment_screen.dart:_VoucherTile",
+      "name": "_VoucherTile",
+      "filePath": "lib/features/wr/presentation/wr_payment_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_payment_screen.dart:_QrCard",
+      "name": "_QrCard",
+      "filePath": "lib/features/wr/presentation/wr_payment_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_payment_screen.dart:_BankCard",
+      "name": "_BankCard",
+      "filePath": "lib/features/wr/presentation/wr_payment_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_payment_screen.dart:_InvoiceCard",
+      "name": "_InvoiceCard",
+      "filePath": "lib/features/wr/presentation/wr_payment_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_payment_screen.dart:_WaitingNote",
+      "name": "_WaitingNote",
+      "filePath": "lib/features/wr/presentation/wr_payment_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_payment_screen.dart:_ExpiredView",
+      "name": "_ExpiredView",
+      "filePath": "lib/features/wr/presentation/wr_payment_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_payment_screen.dart:_SuccessView",
+      "name": "_SuccessView",
+      "filePath": "lib/features/wr/presentation/wr_payment_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:lib/features/wr/presentation/wr_payment_screen.dart:_InvoiceCard._field#4",
+      "name": "_field",
+      "filePath": "lib/features/wr/presentation/wr_payment_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/features/wr/presentation/wr_paywall_screen.dart:_Highlight.icon",
+      "name": "icon",
+      "filePath": "lib/features/wr/presentation/wr_paywall_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_paywall_screen.dart:_PaywallCta",
+      "name": "_PaywallCta",
+      "filePath": "lib/features/wr/presentation/wr_paywall_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_paywall_screen.dart:_NativeIapCta",
+      "name": "_NativeIapCta",
+      "filePath": "lib/features/wr/presentation/wr_paywall_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_paywall_screen.dart:_IapOfferList",
+      "name": "_IapOfferList",
+      "filePath": "lib/features/wr/presentation/wr_paywall_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_paywall_screen.dart:_IapOfferButton",
+      "name": "_IapOfferButton",
+      "filePath": "lib/features/wr/presentation/wr_paywall_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_paywall_screen.dart:WrPaywallScreen",
+      "name": "WrPaywallScreen",
+      "filePath": "lib/features/wr/presentation/wr_paywall_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_paywall_screen.dart:_WrPaywallScreenState",
+      "name": "_WrPaywallScreenState",
+      "filePath": "lib/features/wr/presentation/wr_paywall_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_paywall_screen.dart:_PlanSelector",
+      "name": "_PlanSelector",
+      "filePath": "lib/features/wr/presentation/wr_paywall_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_paywall_screen.dart:_PlanOption",
+      "name": "_PlanOption",
+      "filePath": "lib/features/wr/presentation/wr_paywall_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_paywall_screen.dart:_Highlight",
+      "name": "_Highlight",
+      "filePath": "lib/features/wr/presentation/wr_paywall_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_paywall_screen.dart:_HighlightCard",
+      "name": "_HighlightCard",
+      "filePath": "lib/features/wr/presentation/wr_paywall_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_practice_note_sheet.dart:_PracticeNoteSheetState",
+      "name": "_PracticeNoteSheetState",
+      "filePath": "lib/features/wr/presentation/wr_practice_note_sheet.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_practice_theme_screen.dart:WrPracticeThemeScreen",
+      "name": "WrPracticeThemeScreen",
+      "filePath": "lib/features/wr/presentation/wr_practice_theme_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_practice_theme_screen.dart:_MaintainBlock",
+      "name": "_MaintainBlock",
+      "filePath": "lib/features/wr/presentation/wr_practice_theme_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_practice_theme_screen.dart:_StepBlock",
+      "name": "_StepBlock",
+      "filePath": "lib/features/wr/presentation/wr_practice_theme_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_sca_deep_dive_screen.dart:WrScaDeepDiveScreen",
+      "name": "WrScaDeepDiveScreen",
+      "filePath": "lib/features/wr/presentation/wr_sca_deep_dive_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_sca_deep_dive_screen.dart:_Locked",
+      "name": "_Locked",
+      "filePath": "lib/features/wr/presentation/wr_sca_deep_dive_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_sca_deep_dive_screen.dart:_BodyState",
+      "name": "_BodyState",
+      "filePath": "lib/features/wr/presentation/wr_sca_deep_dive_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_sca_deep_dive_screen.dart:_Empty",
+      "name": "_Empty",
+      "filePath": "lib/features/wr/presentation/wr_sca_deep_dive_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_sca_deep_dive_screen.dart:_PillarCard",
+      "name": "_PillarCard",
+      "filePath": "lib/features/wr/presentation/wr_sca_deep_dive_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/features/wr/presentation/wr_self_check_screen.dart:_PillarScoreCard._badgeBg",
+      "name": "_badgeBg",
+      "filePath": "lib/features/wr/presentation/wr_self_check_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_self_check_screen.dart:_WrSelfCheckScreenState",
+      "name": "_WrSelfCheckScreenState",
+      "filePath": "lib/features/wr/presentation/wr_self_check_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_self_check_screen.dart:_CollapsibleSectionState",
+      "name": "_CollapsibleSectionState",
+      "filePath": "lib/features/wr/presentation/wr_self_check_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_self_check_screen.dart:_DeepDiveLocked",
+      "name": "_DeepDiveLocked",
+      "filePath": "lib/features/wr/presentation/wr_self_check_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_self_check_screen.dart:_PillarScoreCard",
+      "name": "_PillarScoreCard",
+      "filePath": "lib/features/wr/presentation/wr_self_check_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_skill_moment.dart:WrMaintainPracticeAction",
+      "name": "WrMaintainPracticeAction",
+      "filePath": "lib/features/wr/presentation/wr_skill_moment.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/features/wr/presentation/wr_story_flow_screen.dart:_PhaseStory.story",
+      "name": "story",
+      "filePath": "lib/features/wr/presentation/wr_story_flow_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/features/wr/presentation/wr_story_flow_screen.dart:_PhaseReflection.story",
+      "name": "story",
+      "filePath": "lib/features/wr/presentation/wr_story_flow_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:lib/features/wr/presentation/wr_story_flow_screen.dart:_PhasePractice.story",
+      "name": "story",
+      "filePath": "lib/features/wr/presentation/wr_story_flow_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_story_flow_screen.dart:_WrStoryFlowScreenState",
+      "name": "_WrStoryFlowScreenState",
+      "filePath": "lib/features/wr/presentation/wr_story_flow_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_story_flow_screen.dart:_PhaseStory",
+      "name": "_PhaseStory",
+      "filePath": "lib/features/wr/presentation/wr_story_flow_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_story_flow_screen.dart:_PhaseAha",
+      "name": "_PhaseAha",
+      "filePath": "lib/features/wr/presentation/wr_story_flow_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_story_flow_screen.dart:_PhaseConfidence",
+      "name": "_PhaseConfidence",
+      "filePath": "lib/features/wr/presentation/wr_story_flow_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_story_flow_screen.dart:_ConfidenceOption",
+      "name": "_ConfidenceOption",
+      "filePath": "lib/features/wr/presentation/wr_story_flow_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_story_flow_screen.dart:_PhaseReflection",
+      "name": "_PhaseReflection",
+      "filePath": "lib/features/wr/presentation/wr_story_flow_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_story_flow_screen.dart:_PhaseReflectionState",
+      "name": "_PhaseReflectionState",
+      "filePath": "lib/features/wr/presentation/wr_story_flow_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_story_flow_screen.dart:_PhasePractice",
+      "name": "_PhasePractice",
+      "filePath": "lib/features/wr/presentation/wr_story_flow_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_story_flow_screen.dart:_PhaseMemory",
+      "name": "_PhaseMemory",
+      "filePath": "lib/features/wr/presentation/wr_story_flow_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_story_flow_screen.dart:_MemoryTypeBtn",
+      "name": "_MemoryTypeBtn",
+      "filePath": "lib/features/wr/presentation/wr_story_flow_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_story_screen.dart:WrStoryScreen",
+      "name": "WrStoryScreen",
+      "filePath": "lib/features/wr/presentation/wr_story_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_tra_chieu_screen.dart:WrTraChieuScreen",
+      "name": "WrTraChieuScreen",
+      "filePath": "lib/features/wr/presentation/wr_tra_chieu_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_tra_chieu_screen.dart:_NextSessionCard",
+      "name": "_NextSessionCard",
+      "filePath": "lib/features/wr/presentation/wr_tra_chieu_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_tra_chieu_screen.dart:_NoSessionCard",
+      "name": "_NoSessionCard",
+      "filePath": "lib/features/wr/presentation/wr_tra_chieu_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_tra_chieu_screen.dart:WrTraChieuCalendarScreen",
+      "name": "WrTraChieuCalendarScreen",
+      "filePath": "lib/features/wr/presentation/wr_tra_chieu_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_work_info_screen.dart:_WrWorkInfoScreenState",
+      "name": "_WrWorkInfoScreenState",
+      "filePath": "lib/features/wr/presentation/wr_work_info_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/presentation/wr_work_info_screen.dart:_JdBuilderCard",
+      "name": "_JdBuilderCard",
+      "filePath": "lib/features/wr/presentation/wr_work_info_screen.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:lib/features/wr/wr_providers.dart:PremiumOverrideNotifier",
+      "name": "PremiumOverrideNotifier",
+      "filePath": "lib/features/wr/wr_providers.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:test/core/ausynclab_tts_service_test.dart:_FakeClient",
+      "name": "_FakeClient",
+      "filePath": "test/core/ausynclab_tts_service_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:test/core/l10n/wr_locale_rebuild_test.dart:_DeepScreen",
+      "name": "_DeepScreen",
+      "filePath": "test/core/l10n/wr_locale_rebuild_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.getTodayCheckin#0",
+      "name": "getTodayCheckin",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.upsertCheckin#3",
+      "name": "upsertCheckin",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.getCheckinDates#1",
+      "name": "getCheckinDates",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.countCheckins#0",
+      "name": "countCheckins",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.getLatestInsight#0",
+      "name": "getLatestInsight",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.getInsights#0",
+      "name": "getInsights",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.countInsights#0",
+      "name": "countInsights",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.getRecurringSituations#0",
+      "name": "getRecurringSituations",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.getActiveTheme#0",
+      "name": "getActiveTheme",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.getTodayPractices#0",
+      "name": "getTodayPractices",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.updatePracticeStatus#2",
+      "name": "updatePracticeStatus",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.getTimelineEvents#0",
+      "name": "getTimelineEvents",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.countMilestones#0",
+      "name": "countMilestones",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.getMobileProfile#0",
+      "name": "getMobileProfile",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.updateReminder#1",
+      "name": "updateReminder",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.updateLanguage#1",
+      "name": "updateLanguage",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.saveCareerSnapshot#1",
+      "name": "saveCareerSnapshot",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.saveRecentSituationIds#1",
+      "name": "saveRecentSituationIds",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.saveRoleText#1",
+      "name": "saveRoleText",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.saveMyInfo#1",
+      "name": "saveMyInfo",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.uploadContextDocument#3",
+      "name": "uploadContextDocument",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.getLatestScaReport#0",
+      "name": "getLatestScaReport",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.getUpcomingWorkshop#0",
+      "name": "getUpcomingWorkshop",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.getCcProfile#0",
+      "name": "getCcProfile",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.getPremiumPlans#0",
+      "name": "getPremiumPlans",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.updateCcProfile#1",
+      "name": "updateCcProfile",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.updateDisplayName#1",
+      "name": "updateDisplayName",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.exportUserData#0",
+      "name": "exportUserData",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.ensureSeeded#1",
+      "name": "ensureSeeded",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.saveOnboardingSituation#1",
+      "name": "saveOnboardingSituation",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.uploadAvatar#2",
+      "name": "uploadAvatar",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.getVouchers#0",
+      "name": "getVouchers",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.getInvitations#0",
+      "name": "getInvitations",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.acceptInvitation#1",
+      "name": "acceptInvitation",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingCheckinRepo.declineInvitation#1",
+      "name": "declineInvitation",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.getTodayCheckin#0",
+      "name": "getTodayCheckin",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.upsertCheckin#3",
+      "name": "upsertCheckin",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.getCheckinDates#1",
+      "name": "getCheckinDates",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.countCheckins#0",
+      "name": "countCheckins",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.getLatestInsight#0",
+      "name": "getLatestInsight",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.getInsights#0",
+      "name": "getInsights",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.countInsights#0",
+      "name": "countInsights",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.getRecurringSituations#0",
+      "name": "getRecurringSituations",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.getActiveTheme#0",
+      "name": "getActiveTheme",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.getTodayPractices#0",
+      "name": "getTodayPractices",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.updatePracticeStatus#2",
+      "name": "updatePracticeStatus",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.getTimelineEvents#0",
+      "name": "getTimelineEvents",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.countMilestones#0",
+      "name": "countMilestones",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.getMobileProfile#0",
+      "name": "getMobileProfile",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.updateReminder#1",
+      "name": "updateReminder",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.updateLanguage#1",
+      "name": "updateLanguage",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.saveCareerSnapshot#1",
+      "name": "saveCareerSnapshot",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.saveRecentSituationIds#1",
+      "name": "saveRecentSituationIds",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.saveRoleText#1",
+      "name": "saveRoleText",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.saveMyInfo#1",
+      "name": "saveMyInfo",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.uploadContextDocument#3",
+      "name": "uploadContextDocument",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.getLatestScaReport#0",
+      "name": "getLatestScaReport",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.getUpcomingWorkshop#0",
+      "name": "getUpcomingWorkshop",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.getCcProfile#0",
+      "name": "getCcProfile",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.getPremiumPlans#0",
+      "name": "getPremiumPlans",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.updateCcProfile#1",
+      "name": "updateCcProfile",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.updateDisplayName#1",
+      "name": "updateDisplayName",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.exportUserData#0",
+      "name": "exportUserData",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.ensureSeeded#1",
+      "name": "ensureSeeded",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.saveOnboardingSituation#1",
+      "name": "saveOnboardingSituation",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.uploadAvatar#2",
+      "name": "uploadAvatar",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.getVouchers#0",
+      "name": "getVouchers",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.getInvitations#0",
+      "name": "getInvitations",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.acceptInvitation#1",
+      "name": "acceptInvitation",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/core/optimistic_update_test.dart:_FailingPracticeRepo.declineInvitation#1",
+      "name": "declineInvitation",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:test/core/optimistic_update_test.dart:_FailingCheckinRepo",
+      "name": "_FailingCheckinRepo",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:test/core/optimistic_update_test.dart:_FailingPracticeRepo",
+      "name": "_FailingPracticeRepo",
+      "filePath": "test/core/optimistic_update_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Function:test/core/widgets/tab_back_link_test.dart:_wrapWithRouter",
+      "name": "_wrapWithRouter",
+      "filePath": "test/core/widgets/tab_back_link_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Function:test/core/wr_self_check_narrative_test.dart:_sitOf",
+      "name": "_sitOf",
+      "filePath": "test/core/wr_self_check_narrative_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Function:test/core/wr_situation_library_coverage_test.dart:main",
+      "name": "main",
+      "filePath": "test/core/wr_situation_library_coverage_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Function:test/data/wr_seed_situation_story_pairing_test.dart:_readRows",
+      "name": "_readRows",
+      "filePath": "test/data/wr_seed_situation_story_pairing_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Function:test/data/wr_seed_situation_story_pairing_test.dart:_real",
+      "name": "_real",
+      "filePath": "test/data/wr_seed_situation_story_pairing_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Function:test/data/wr_seed_situation_story_pairing_test.dart:_codes",
+      "name": "_codes",
+      "filePath": "test/data/wr_seed_situation_story_pairing_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Function:test/data/wr_seed_situation_story_pairing_test.dart:_retirementAudit",
+      "name": "_retirementAudit",
+      "filePath": "test/data/wr_seed_situation_story_pairing_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Function:test/features/ai_personalization_test.dart:_wrap",
+      "name": "_wrap",
+      "filePath": "test/features/ai_personalization_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Function:test/features/invitations_test.dart:_pendingInv",
+      "name": "_pendingInv",
+      "filePath": "test/features/invitations_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/features/profile_test.dart:_FakeAuthRepository.signIn#2",
+      "name": "signIn",
+      "filePath": "test/features/profile_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/features/profile_test.dart:_FakeAuthRepository.signUp#3",
+      "name": "signUp",
+      "filePath": "test/features/profile_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/features/profile_test.dart:_FakeAuthRepository.signInWithGoogle#0",
+      "name": "signInWithGoogle",
+      "filePath": "test/features/profile_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/features/profile_test.dart:_FakeAuthRepository.signOut#0",
+      "name": "signOut",
+      "filePath": "test/features/profile_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/features/profile_test.dart:_FakeAuthRepository.resetPassword#1",
+      "name": "resetPassword",
+      "filePath": "test/features/profile_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:test/features/profile_test.dart:_FakeAuthRepository",
+      "name": "_FakeAuthRepository",
+      "filePath": "test/features/profile_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Function:test/features/video_report/narration_script_builder_test.dart:_report",
+      "name": "_report",
+      "filePath": "test/features/video_report/narration_script_builder_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:test/features/wr_checkin_to_growth_chain_test.dart:_Stage",
+      "name": "_Stage",
+      "filePath": "test/features/wr_checkin_to_growth_chain_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:test/features/wr_end_to_end_test.dart:_Stage.router",
+      "name": "router",
+      "filePath": "test/features/wr_end_to_end_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:test/features/wr_end_to_end_test.dart:_Stage.GoRouter",
+      "name": "GoRouter",
+      "filePath": "test/features/wr_end_to_end_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:test/features/wr_end_to_end_test.dart:_Stage",
+      "name": "_Stage",
+      "filePath": "test/features/wr_end_to_end_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Function:test/features/wr_growth_opportunity_ui_test.dart:_withEnoughPatterns",
+      "name": "_withEnoughPatterns",
+      "filePath": "test/features/wr_growth_opportunity_ui_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Function:test/features/wr_journey_discover_link_test.dart:_makeRouter",
+      "name": "_makeRouter",
+      "filePath": "test/features/wr_journey_discover_link_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Function:test/features/wr_practice_theme_test.dart:_step",
+      "name": "_step",
+      "filePath": "test/features/wr_practice_theme_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Function:test/features/wr_practice_theme_test.dart:_enroll",
+      "name": "_enroll",
+      "filePath": "test/features/wr_practice_theme_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:test/features/wr_reflection_flow_test.dart:_Harness",
+      "name": "_Harness",
+      "filePath": "test/features/wr_reflection_flow_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/features/wr_reflection_flow_test.dart:_Harness.app#2",
+      "name": "app",
+      "filePath": "test/features/wr_reflection_flow_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/features/wr_reflection_flow_test.dart:_Harness.seedOpenEpisode#8",
+      "name": "seedOpenEpisode",
+      "filePath": "test/features/wr_reflection_flow_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Function:test/features/wr_self_check_premium_test.dart:_expectVisible",
+      "name": "_expectVisible",
+      "filePath": "test/features/wr_self_check_premium_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Function:test/features/wr_story_flow_screen_test.dart:_wrap",
+      "name": "_wrap",
+      "filePath": "test/features/wr_story_flow_screen_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:test/screenshots/app_store_test.dart:_Stage",
+      "name": "_Stage",
+      "filePath": "test/screenshots/app_store_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:test/screenshots/wr_customer_case_test.dart:_Stage",
+      "name": "_Stage",
+      "filePath": "test/screenshots/wr_customer_case_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:test/screenshots/wr_v1_6_screens_test.dart:_Stage",
+      "name": "_Stage",
+      "filePath": "test/screenshots/wr_v1_6_screens_test.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:test/support/fake_coaching_repository.dart:FakeCoachingRepository",
+      "name": "FakeCoachingRepository",
+      "filePath": "test/support/fake_coaching_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:test/support/fake_repository.dart:FakeWrRepository.upsertCheckinCalls",
+      "name": "upsertCheckinCalls",
+      "filePath": "test/support/fake_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:test/support/fake_repository.dart:FakeWrRepository.updatePracticeStatusCalls",
+      "name": "updatePracticeStatusCalls",
+      "filePath": "test/support/fake_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:test/support/fake_repository.dart:FakeWrRepository",
+      "name": "FakeWrRepository",
+      "filePath": "test/support/fake_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/support/fake_survey_repository.dart:FakeSurveyRepository.getLayerSubScores#2",
+      "name": "getLayerSubScores",
+      "filePath": "test/support/fake_survey_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/support/fake_survey_repository.dart:FakeSurveyRepository.seedAiCache#3",
+      "name": "seedAiCache",
+      "filePath": "test/support/fake_survey_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/support/fake_survey_repository.dart:FakeSurveyRepository.getCachedAiPersonalization#2",
+      "name": "getCachedAiPersonalization",
+      "filePath": "test/support/fake_survey_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:test/support/fake_survey_repository.dart:FakeSurveyRepository",
+      "name": "FakeSurveyRepository",
+      "filePath": "test/support/fake_survey_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/support/fake_workshop_repository.dart:FakeWorkshopRepository.cancelRegistration#2",
+      "name": "cancelRegistration",
+      "filePath": "test/support/fake_workshop_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:test/support/fake_workshop_repository.dart:FakeWorkshopRepository",
+      "name": "FakeWorkshopRepository",
+      "filePath": "test/support/fake_workshop_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:test/support/fake_wr_chat_repository.dart:FakeWrChatRepository.deleteCalls",
+      "name": "deleteCalls",
+      "filePath": "test/support/fake_wr_chat_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:test/support/fake_wr_chat_repository.dart:FakeWrChatRepository",
+      "name": "FakeWrChatRepository",
+      "filePath": "test/support/fake_wr_chat_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:test/support/fake_wr_content_repository.dart:FakeWrContentRepository",
+      "name": "FakeWrContentRepository",
+      "filePath": "test/support/fake_wr_content_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:test/support/fake_wr_episode_repository.dart:FakeWrEpisodeRepository",
+      "name": "FakeWrEpisodeRepository",
+      "filePath": "test/support/fake_wr_episode_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:test/support/fake_wr_intelligence_repository.dart:FakeWrIntelligenceRepository.enrollThemeCalls",
+      "name": "enrollThemeCalls",
+      "filePath": "test/support/fake_wr_intelligence_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:test/support/fake_wr_intelligence_repository.dart:FakeWrIntelligenceRepository.insertGrowthOpportunityCalls",
+      "name": "insertGrowthOpportunityCalls",
+      "filePath": "test/support/fake_wr_intelligence_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Property:test/support/fake_wr_intelligence_repository.dart:FakeWrIntelligenceRepository.decrementSituationOccurrenceCalls",
+      "name": "decrementSituationOccurrenceCalls",
+      "filePath": "test/support/fake_wr_intelligence_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Method:test/support/fake_wr_intelligence_repository.dart:FakeWrIntelligenceRepository.fetchGrowthSnapshots#1",
+      "name": "fetchGrowthSnapshots",
+      "filePath": "test/support/fake_wr_intelligence_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:test/support/fake_wr_intelligence_repository.dart:FakeWrIntelligenceRepository",
+      "name": "FakeWrIntelligenceRepository",
+      "filePath": "test/support/fake_wr_intelligence_repository.dart",
+      "change_type": "touched"
+    },
+    {
+      "id": "Class:test/support/fake_wr_org_survey_repository.dart:FakeWrOrgSurveyRepository",
+      "name": "FakeWrOrgSurveyRepository",
+      "filePath": "test/support/fake_wr_org_survey_repository.dart",
+      "change_type": "touched"
+    }
+  ],
+  "affected_processes": [
+    {
+      "id": "proc_7_build",
+      "name": "Build → PillarTally",
+      "process_type": "cross_community",
+      "step_count": 5,
+      "changed_steps": [
+        {
+          "symbol": "PillarTally",
+          "step": 5
+        }
+      ]
+    },
+    {
+      "id": "proc_10_build",
+      "name": "Build → _signatureBlock",
+      "process_type": "cross_community",
+      "step_count": 5,
+      "changed_steps": [
+        {
+          "symbol": "_signatureBlock",
+          "step": 5
+        }
+      ]
+    },
+    {
+      "id": "proc_12_build",
+      "name": "Build → CareerSnapshot",
+      "process_type": "intra_community",
+      "step_count": 5,
+      "changed_steps": [
+        {
+          "symbol": "CareerSnapshot",
+          "step": 5
+        }
+      ]
+    },
+    {
+      "id": "proc_13_main",
+      "name": "Main → Tr",
+      "process_type": "cross_community",
+      "step_count": 5,
+      "changed_steps": [
+        {
+          "symbol": "seedOpenEpisode",
+          "step": 2
+        }
+      ]
+    },
+    {
+      "id": "proc_25_build",
+      "name": "Build → WrTextScaler",
+      "process_type": "cross_community",
+      "step_count": 4,
+      "changed_steps": [
+        {
+          "symbol": "WrTextScaler",
+          "step": 4
+        },
+        {
+          "symbol": "clamp",
+          "step": 3
+        }
+      ]
+    },
+    {
+      "id": "proc_46_build",
+      "name": "Build → PillarTally",
+      "process_type": "cross_community",
+      "step_count": 3,
+      "changed_steps": [
+        {
+          "symbol": "PillarTally",
+          "step": 3
+        }
+      ]
+    },
+    {
+      "id": "proc_47_build",
+      "name": "Build → WrTextScaler",
+      "process_type": "cross_community",
+      "step_count": 3,
+      "changed_steps": [
+        {
+          "symbol": "WrTextScaler",
+          "step": 3
+        },
+        {
+          "symbol": "clamp",
+          "step": 2
+        }
+      ]
+    },
+    {
+      "id": "proc_48_build",
+      "name": "Build → SelectNarrative",
+      "process_type": "cross_community",
+      "step_count": 3,
+      "changed_steps": [
+        {
+          "symbol": "_narrative",
+          "step": 2
+        }
+      ]
+    },
+    {
+      "id": "proc_52_build",
+      "name": "Build → DeepInterpretation",
+      "process_type": "intra_community",
+      "step_count": 3,
+      "changed_steps": [
+        {
+          "symbol": "DeepInterpretation",
+          "step": 3
+        }
+      ]
+    },
+    {
+      "id": "proc_53_build",
+      "name": "Build → WrTextScaler",
+      "process_type": "cross_community",
+      "step_count": 3,
+      "changed_steps": [
+        {
+          "symbol": "WrTextScaler",
+          "step": 3
+        },
+        {
+          "symbol": "clamp",
+          "step": 2
+        }
+      ]
+    },
+    {
+      "id": "proc_56_build",
+      "name": "Build → _subCompLabel",
+      "process_type": "intra_community",
+      "step_count": 3,
+      "changed_steps": [
+        {
+          "symbol": "_buildLayerFocusMap",
+          "step": 2
+        }
+      ]
+    },
+    {
+      "id": "proc_58_build",
+      "name": "Build → AiPersonalizationScoreContext",
+      "process_type": "intra_community",
+      "step_count": 3,
+      "changed_steps": [
+        {
+          "symbol": "AiPersonalizationScoreContext",
+          "step": 3
+        }
+      ]
+    },
+    {
+      "id": "proc_74_build",
+      "name": "Build → _ForgotPasswordDialog",
+      "process_type": "cross_community",
+      "step_count": 3,
+      "changed_steps": [
+        {
+          "symbol": "_ForgotPasswordDialog",
+          "step": 3
+        }
+      ]
+    },
+    {
+      "id": "proc_76_build",
+      "name": "Build → WrProfileAvatar",
+      "process_type": "cross_community",
+      "step_count": 3,
+      "changed_steps": [
+        {
+          "symbol": "WrProfileAvatar",
+          "step": 3
+        }
+      ]
+    },
+    {
+      "id": "proc_98_main",
+      "name": "Main → ReflectionEpisode",
+      "process_type": "cross_community",
+      "step_count": 3,
+      "changed_steps": [
+        {
+          "symbol": "ReflectionEpisode",
+          "step": 3
+        },
+        {
+          "symbol": "seedOpenEpisode",
+          "step": 2
+        }
+      ]
+    },
+    {
+      "id": "proc_100_main",
+      "name": "Main → DeepStandoutOf",
+      "process_type": "cross_community",
+      "step_count": 3,
+      "changed_steps": [
+        {
+          "symbol": "deepStandoutOf",
+          "step": 3
+        }
+      ]
+    },
+    {
+      "id": "proc_102_main",
+      "name": "Main → _seenWhileScrolling",
+      "process_type": "cross_community",
+      "step_count": 3,
+      "changed_steps": [
+        {
+          "symbol": "_expectVisible",
+          "step": 2
+        }
+      ]
+    },
+    {
+      "id": "proc_104_main",
+      "name": "Main → FakeWrIntelligenceRepository",
+      "process_type": "intra_community",
+      "step_count": 3,
+      "changed_steps": [
+        {
+          "symbol": "FakeWrIntelligenceRepository",
+          "step": 3
+        }
+      ]
+    },
+    {
+      "id": "proc_107_main",
+      "name": "Main → WrSituation",
+      "process_type": "cross_community",
+      "step_count": 3,
+      "changed_steps": [
+        {
+          "symbol": "WrSituation",
+          "step": 3
+        }
+      ]
+    }
+  ]
+}
