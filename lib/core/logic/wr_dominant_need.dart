@@ -82,13 +82,24 @@ String needLabel(HumanNeed need) => switch (need) {
   HumanNeed.phatTrien => tr('Phát triển', 'Growth'),
 };
 
-/// Vietnamese label for what the user is seeking, used in suggestion card reason.
-String needSeekingLabel(HumanNeed need) => switch (need) {
-  HumanNeed.roRang => tr('sự rõ ràng', 'clarity'),
-  HumanNeed.ketNoi => tr('sự kết nối', 'connection'),
-  HumanNeed.thichNghi => tr('sự thích nghi', 'adapting'),
-  HumanNeed.phatTrien => tr('sự phát triển', 'growth'),
+/// Cặp Việt/Anh của nhãn "điều bạn đang tìm kiếm".
+///
+/// Tách ra khỏi [needSeekingLabel] vì có chỗ cần CẢ HAI bản cùng lúc chứ không
+/// chỉ bản đang bật: câu Insight được ghép sẵn rồi lưu thẳng vào
+/// `wr_career_memory_events`, nên lúc đọc lại phải nhận ra nhãn đang nằm trong
+/// câu thuộc ngôn ngữ nào mới dựng lại được. Xem `localizeFrozenInsightText`.
+(String, String) needSeekingLabelPair(HumanNeed need) => switch (need) {
+  HumanNeed.roRang => ('sự rõ ràng', 'clarity'),
+  HumanNeed.ketNoi => ('sự kết nối', 'connection'),
+  HumanNeed.thichNghi => ('sự thích nghi', 'adapting'),
+  HumanNeed.phatTrien => ('sự phát triển', 'growth'),
 };
+
+/// Nhãn "điều bạn đang tìm kiếm" theo ngôn ngữ đang bật.
+String needSeekingLabel(HumanNeed need) {
+  final (vi, en) = needSeekingLabelPair(need);
+  return tr(vi, en);
+}
 
 // ---------------------------------------------------------------------------
 // Câu đọc lên ở khối "Điều bạn đang tìm kiếm"
