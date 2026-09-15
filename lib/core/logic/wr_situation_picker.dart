@@ -47,6 +47,17 @@ const Map<Mood, List<ScaDimension>> kMoodDimensions = {
   Mood.happy: [ScaDimension.pAchieve],
 };
 
+/// The v2 mood codes used by the editorial catalog. Keep this mapping next to
+/// the picker so enum values never get compared with raw strings ad hoc.
+const Map<Mood, String> kMoodCodes = {
+  Mood.stressed: 'stress',
+  Mood.tired: 'tired',
+  Mood.foggy: 'foggy',
+  Mood.outofsync: 'outofsync',
+  Mood.okay: 'ok',
+  Mood.happy: 'happy',
+};
+
 /// Số tình huống hiện mỗi lần ở bước Notice (§III, §4.1).
 const int kSituationChoiceCount = 5;
 
@@ -63,48 +74,9 @@ const int kChoicePoolSampleWithoutPractice = 4;
 // §IV.1 — Chọn tình huống
 // ---------------------------------------------------------------------------
 
-/// Năm tình huống cho bước Notice, đã lọc theo [mood] và tránh lặp [recentIds].
-///
-/// Thuật toán theo pseudo-code §4.1, CÓ MỘT SỬA ĐỔI bắt buộc — xem khối dưới:
-///
-///   relevant = lọc theo cụm dims của mood
-///   basePool = relevant nếu đủ ≥5, ngược lại toàn bộ thư viện
-///   neo      = tình huống gần đây nhất đã chọn mà vẫn thuộc basePool  ← THÊM
-///   unseen   = basePool bỏ neo và bỏ những mã đã có trong recentIds
-///   pool     = unseen nếu đủ chỗ, ngược lại basePool bỏ neo
-///   → neo đứng đầu, rồi 4 mục ngẫu nhiên từ pool
-///
-/// Hai lần "nếu đủ, ngược lại lùi về tập rộng hơn" là chủ đích: thà đưa gợi ý
-/// kém liên quan còn hơn đưa danh sách trống. Nhưng thứ tự ưu tiên luôn là
-/// đúng-cảm-xúc trước, rồi mới tới chưa-từng-thấy.
-///
-/// ---------------------------------------------------------------------------
-/// VÌ SAO PHẢI CÓ Ô NEO — tài liệu tự mâu thuẫn ở chỗ này
-/// ---------------------------------------------------------------------------
-///
-/// §4.1 bảo LOẠI khỏi bể mọi mã đã có trong recentSituationIds (30 mã gần
-/// nhất). §4.3 bảo ĐẾM số lần lặp của từng mã trong chính danh sách đó. Hai câu
-/// không thể cùng đúng: đã loại thì không bao giờ chọn lại được, mà không chọn
-/// lại được thì không mã nào đếm quá 1.
-///
-/// Đó không phải suy luận. Trên DB thật ngày 2026-07-31, một người dùng có 16
-/// Episode mang mã — **16 mã phân biệt, 0 lần lặp**. Người này cụm "mệt mỏi"
-/// (A3+A1, 20 tình huống) đã dùng 8 mã; cả 8 bị khoá khỏi bể vì `unseen` vẫn
-/// còn 12 ≥ 5. Họ mô tả đúng triệu chứng: "tôi cũng ráng chọn rồi nhưng vẫn
-/// không thấy... không thấy các câu hỏi mà tôi đã chọn ban đầu để chọn".
-///
-/// Cách chữa giữ được cả hai ý: xoay vòng vẫn lo phần đa dạng cho 4 ô còn lại,
-/// nhưng MỘT ô luôn dành cho điều gần nhất người đó đã chọn trong cụm này. "Vẫn
-/// chuyện đó" luôn cách một cú chạm, nên một chuyện lặp thật sẽ đếm lên thật.
-/// Ô neo đứng ĐẦU, không trộn — mục đích của nó là tìm thấy được ngay.
-///
-/// [mood] null nghĩa là vào thẳng từ tab, không qua check-in — khi đó dùng toàn
-/// bộ thư viện, vì không có cảm xúc nào để bám vào.
-///
-/// [random] cho phép test cố định kết quả; production truyền null.
-///
-/// Mục "Điều khác, để tôi tự mô tả" KHÔNG nằm trong đây — nó luôn có mặt và
-/// không thuộc cơ chế lọc (§III), nên tầng UI tự gắn thêm.
+/// Five real situations for Notice, selected with the v2 soft-priority rule:
+/// three matching the selected mood and two from another mood with the same
+/// valence. The custom self-description option is appended by UI.
 List<WrSituation> pickSituationChoices({
   required List<WrSituation> all,
   Mood? mood,
@@ -112,42 +84,71 @@ List<WrSituation> pickSituationChoices({
   int count = kSituationChoiceCount,
   Random? random,
 }) {
-  // Chỉ những tình huống còn được đề xuất mới vào bể. 60 chip Tầng 1 cũ vẫn
-  // nằm trong bảng để tra ngược ra nhãn cho lịch sử Episode.
-  //
-  // ⚠ Đính chính (đo trên DB thật 2026-07-31): hai tập KHÔNG phải một bản đổi
-  // tên của nhau. Đối chiếu từng chip cũ với mục thư viện CÙNG CHIỀU: chỉ 6/60
-  // là cùng một câu, 5/60 gần, 49/60 diễn đạt hẳn một tình huống khác. Chúng
-  // phủ cùng bộ chiều SCA nhưng bằng hai bộ từ vựng riêng.
-  //
-  // Vì vậy vẫn phải gỡ chúng khỏi bể: bày cả hai là đưa người dùng hai bộ từ
-  // vựng cho cùng một chiều, và số đếm "Tình huống lặp lại" (§4.3) bị xé đôi
-  // theo bộ nào họ tình cờ chạm. Nhưng ĐỪNG suy ra rằng mọi mã cũ đều có một
-  // mã mới tương đương để ghép lịch sử — phần lớn thì không.
-  final offered = all.where((s) => !s.isRetired).toList();
+  final offered = all.where(_isPickerEligible).toList();
   if (offered.isEmpty) return const [];
 
-  final dims = mood == null ? null : kMoodDimensions[mood];
+  final wanted = count < 0 ? 0 : count;
+  if (wanted == 0) return const [];
 
-  final relevant = dims == null
-      ? offered
-      : offered.where((s) => dims.contains(s.scaDimension)).toList();
+  final recentWindow = recentIds.take(10).toSet();
+  final selected = <WrSituation>[];
+  final selectedCodes = <String>{};
 
-  final basePool = relevant.length >= count ? relevant : offered;
+  WrValence valenceOf(WrSituation situation) =>
+      situation.explicitValence ?? situation.valence;
 
-  final anchor = anchorSituation(basePool, recentIds);
-  final rest = anchor == null
-      ? basePool
-      : basePool.where((s) => s.code != anchor.code).toList();
-  final fill = anchor == null ? count : count - 1;
+  List<WrSituation> unseenFirst(List<WrSituation> pool, int take) {
+    if (take <= 0 || pool.isEmpty) return const [];
+    final unseen = pool.where((s) => !recentWindow.contains(s.code)).toList();
+    final source = unseen.length >= take ? unseen : pool;
+    return _shuffle(source, random).take(take).toList();
+  }
 
-  final unseen = rest.where((s) => !recentIds.contains(s.code)).toList();
-  final pool = unseen.length >= fill ? unseen : rest;
+  if (mood == null) {
+    selected.addAll(unseenFirst(offered, wanted));
+  } else {
+    final moodCode = kMoodCodes[mood];
+    final matching = offered.where((s) => s.mood == moodCode).toList();
+    // If a partial/legacy catalog has no mood rows, fail soft to the complete
+    // real catalog instead of returning an empty Notice state.
+    if (matching.isEmpty) {
+      selected.addAll(unseenFirst(offered, wanted));
+    } else {
+      final matchingTake = wanted < 3 ? wanted : 3;
+      final sameValence = offered
+          .where(
+            (s) =>
+                s.mood != moodCode && valenceOf(s) == valenceOf(matching.first),
+          )
+          .toList();
+      final otherTake = wanted - matchingTake;
+      selected.addAll(unseenFirst(matching, matchingTake));
+      selected.addAll(unseenFirst(sameValence, otherTake < 2 ? otherTake : 2));
 
+      // Fill a non-standard count from any remaining real records. This path
+      // also handles a malformed catalog where one of the two requested pools
+      // is too small, without ever duplicating a code.
+      if (selected.length < wanted) {
+        final remainder = offered
+            .where((s) => !selected.any((picked) => picked.code == s.code))
+            .toList();
+        selected.addAll(unseenFirst(remainder, wanted - selected.length));
+      }
+    }
+  }
+
+  // Defensive de-duplication protects callers that pass duplicate catalog
+  // rows, while preserving the random order chosen above.
   return [
-    if (anchor != null) anchor,
-    ..._shuffle(pool, random).take(fill),
+    for (final situation in selected)
+      if (selectedCodes.add(situation.code)) situation,
   ];
+}
+
+bool _isPickerEligible(WrSituation situation) {
+  return !situation.isCustom &&
+      !situation.isRetired &&
+      situation.hasV2Classification;
 }
 
 /// Tình huống gần đây nhất đã được chọn mà vẫn còn trong [pool].
@@ -178,10 +179,7 @@ List<String> rememberSituation(
   List<String> recentIds, {
   int capacity = kRecentSituationCapacity,
 }) {
-  return [
-    code,
-    ...recentIds.where((c) => c != code),
-  ].take(capacity).toList();
+  return [code, ...recentIds.where((c) => c != code)].take(capacity).toList();
 }
 
 // ---------------------------------------------------------------------------
@@ -211,9 +209,11 @@ List<String> pickChoiceOptions({
       : pool;
 
   final sample = _shuffle(candidates, random)
-      .take(hasPractice
-          ? kChoicePoolSampleWithPractice
-          : kChoicePoolSampleWithoutPractice)
+      .take(
+        hasPractice
+            ? kChoicePoolSampleWithPractice
+            : kChoicePoolSampleWithoutPractice,
+      )
       .toList();
 
   return hasPractice ? [suggestion, ...sample] : sample;
@@ -226,45 +226,27 @@ List<String> pickChoiceOptions({
 /// Story chứa story/reflection/selfReflection/aha/practice cho [situation].
 ///
 /// v2.0 §2.2 mô tả Situation là MỘT thực thể có đủ chín trường. Trong app, dữ
-/// liệu đó nằm ở hai bảng ra đời tách nhau — nhưng từ migration
-/// `20260731090000_wr_situations_from_library.sql`, MỌI tình huống còn được đề
-/// xuất đều có mã trùng khít giữa hai bảng:
+/// liệu đó nằm ở hai bảng ra đời tách nhau — nhưng catalog v2 giữ cùng một mã
+/// cho nội dung trong cả hai bảng:
 ///
-///   wr_situations : 100 mục thư viện `<DIM>-NN` + 10 tích cực `P-NN`
-///   wr_stories    : đúng 110 mã đó
+///   wr_situations : 72 mục thư viện và một lựa chọn `other` phía client
+///   wr_stories    : đúng 72 mã của các mục thư viện
 ///
-/// Nên nhánh (1) dưới đây luôn trúng cho phiên mới.
+/// Chỉ phép ghép mã tuyệt đối mới được trả về. Mã lịch sử cũ, mã không biết,
+/// hoặc mã không còn Story tương ứng đều trả về null; không suy diễn theo
+/// `scaDimension`, không băm mã, và không mượn Story của tình huống khác.
 ///
-/// Nhánh (2) chỉ còn phục vụ dữ liệu CŨ: những Episode đã ghi mã Tầng 1
-/// `<DIM>-sit-NN` trước khi gộp. Mã đó không có story trùng tên, nên lùi về một
-/// story cùng chiều, chọn theo chỉ số suy ra từ mã để cùng một chip LUÔN ra
-/// cùng một story — bốc ngẫu nhiên thì câu Aha đổi mỗi lần mở và người dùng
-/// không quay lại được điều mình vừa đọc.
-///
-/// ⚠ Nhánh (2) là phép ĐOÁN: câu chuyện nó trả về thường không nói đúng tình
-/// huống đã chọn. Đó chính là lý do phải gộp mã. Đừng dựa vào nó cho nội dung
-/// mới — thêm tình huống nào thì thêm story cùng mã cho tình huống đó.
-///
-/// Trả về null khi không có story nào cùng chiều — khi đó tầng UI phải tự lo,
-/// tuyệt đối không bịa một câu Aha.
-WrStory? resolveStoryFor(
-  WrSituation situation,
-  List<WrStory> stories,
-) {
+/// Trả về null khi không có Story chính xác — khi đó tầng UI phải tự lo, tuyệt
+/// đối không bịa một câu Aha.
+WrStory? resolveStoryFor(WrSituation situation, List<WrStory> stories) {
+  if (situation.isCustom) return null;
   if (stories.isEmpty) return null;
 
   for (final s in stories) {
     if (s.storyId == situation.code) return s;
   }
 
-  final sameDimension =
-      stories.where((s) => s.scaDimension == situation.scaDimension).toList()
-        ..sort((a, b) => a.storyId.compareTo(b.storyId));
-  if (sameDimension.isEmpty) return null;
-
-  // Ổn định theo mã chip, không theo thời điểm gọi.
-  final index = situation.code.hashCode.abs() % sameDimension.length;
-  return sameDimension[index];
+  return null;
 }
 
 // ---------------------------------------------------------------------------

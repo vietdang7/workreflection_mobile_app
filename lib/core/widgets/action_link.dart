@@ -2,11 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/wr_colors.dart';
 
 class WrActionLink extends StatelessWidget {
-  const WrActionLink({
-    super.key,
-    required this.label,
-    required this.onTap,
-  });
+  const WrActionLink({super.key, required this.label, required this.onTap});
 
   final String label;
   final VoidCallback onTap;
@@ -35,11 +31,7 @@ class WrActionLink extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 4),
-          const Icon(
-            Icons.arrow_forward,
-            size: 14,
-            color: WrColors.coral,
-          ),
+          const Icon(Icons.arrow_forward, size: 14, color: WrColors.coral),
         ],
       ),
     );

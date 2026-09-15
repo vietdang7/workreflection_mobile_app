@@ -93,10 +93,7 @@ class _ThemeFocusSection extends ConsumerWidget {
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: WrColors.line),
             ),
-            child: Text(
-              l10n.developNoTheme,
-              style: WrTextStyles.body,
-            ),
+            child: Text(l10n.developNoTheme, style: WrTextStyles.body),
           );
         }
         return _ThemeCard(theme: theme);
@@ -224,7 +221,8 @@ class _PracticeRow extends ConsumerWidget {
     return GestureDetector(
       onTap: isDone
           ? null
-          : () => ref.read(practicesProvider.notifier).advanceStatus(practice.id),
+          : () =>
+                ref.read(practicesProvider.notifier).advanceStatus(practice.id),
       child: Opacity(
         opacity: isDone ? 0.45 : 1.0,
         child: Padding(
@@ -240,10 +238,7 @@ class _PracticeRow extends ConsumerWidget {
                   children: [
                     // Xong rồi thì dấu tick và độ mờ nói đủ, không gạch ngang
                     // chữ (yêu cầu 05/08).
-                    Text(
-                      practice.title,
-                      style: WrTextStyles.hMedium,
-                    ),
+                    Text(practice.title, style: WrTextStyles.hMedium),
                     const SizedBox(height: 2),
                     Text(
                       statusLabel,
@@ -335,8 +330,10 @@ class _OpportunityCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    Text(workshop.title,
-                        style: WrTextStyles.hMedium.copyWith(fontSize: 16.5)),
+                    Text(
+                      workshop.title,
+                      style: WrTextStyles.hMedium.copyWith(fontSize: 16.5),
+                    ),
                     const SizedBox(height: 6),
                     WrActionLink(
                       label: l10n.developWorkshopLink,

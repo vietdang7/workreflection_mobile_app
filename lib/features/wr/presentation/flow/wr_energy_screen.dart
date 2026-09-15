@@ -16,10 +16,10 @@ import '../../episode_flow_controller.dart';
 import 'wr_flow_scaffold.dart';
 
 String energyLabel(CheckinEnergy energy) => switch (energy) {
-      CheckinEnergy.good => tr('Có năng lượng', 'Energised'),
-      CheckinEnergy.ok => tr('Bình thường', 'Steady'),
-      CheckinEnergy.low => tr('Mệt mỏi', 'Drained'),
-    };
+  CheckinEnergy.good => tr('Có năng lượng', 'Energised'),
+  CheckinEnergy.ok => tr('Bình thường', 'Steady'),
+  CheckinEnergy.low => tr('Mệt mỏi', 'Drained'),
+};
 
 class WrEnergyScreen extends ConsumerWidget {
   const WrEnergyScreen({super.key});

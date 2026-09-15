@@ -61,7 +61,10 @@ class WrStoryScreen extends StatelessWidget {
                     ),
                     SizedBox(height: 4),
                     Text(
-                      tr('Câu chuyện từ Career Memory của bạn sẽ hiện ra tại đây.', 'Stories from your Career Memory will appear here.'),
+                      tr(
+                        'Câu chuyện từ Career Memory của bạn sẽ hiện ra tại đây.',
+                        'Stories from your Career Memory will appear here.',
+                      ),
                       style: TextStyle(
                         fontSize: 14.5,
                         color: WrColors.muted,
@@ -79,7 +82,10 @@ class WrStoryScreen extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      tr('Đọc câu chuyện phù hợp với bạn lúc này.', 'Read a story that fits where you are right now.'),
+                      tr(
+                        'Đọc câu chuyện phù hợp với bạn lúc này.',
+                        'Read a story that fits where you are right now.',
+                      ),
                       style: TextStyle(
                         fontSize: 14.5,
                         color: WrColors.muted,
@@ -96,7 +102,10 @@ class WrStoryScreen extends StatelessWidget {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 14,
+                        ),
                       ),
                       child: Text(
                         tr('Bắt đầu đọc', 'Start reading'),

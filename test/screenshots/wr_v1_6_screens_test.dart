@@ -87,7 +87,8 @@ Future<void> _loadFonts() async {
 }
 
 List<String> _materialIconCandidates() {
-  const relative = 'bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf';
+  const relative =
+      'bin/cache/artifacts/material_fonts/MaterialIcons-Regular.otf';
   final roots = <String>[
     if (Platform.environment['FLUTTER_ROOT'] != null)
       Platform.environment['FLUTTER_ROOT']!,
@@ -173,7 +174,8 @@ final _moodContent = [
     kind: 'HEALING AUDIO',
     duration: '3 phút',
     type: MoodContentType.audio,
-    body: 'Một bài hướng dẫn hít thở ngắn, giúp bạn lấy lại nhịp trước khi '
+    body:
+        'Một bài hướng dẫn hít thở ngắn, giúp bạn lấy lại nhịp trước khi '
         'bước vào một cuộc trao đổi căng thẳng.',
     placeholder: true,
   ),
@@ -184,7 +186,8 @@ final _moodContent = [
     title: 'Khi áp lực đến từ việc muốn kiểm soát mọi thứ',
     kind: 'BÀI ĐỌC',
     duration: '4 phút đọc',
-    body: 'Có những ngày căng thẳng đến từ một deadline gấp, một cuộc họp khó, '
+    body:
+        'Có những ngày căng thẳng đến từ một deadline gấp, một cuộc họp khó, '
         'một quyết định lớn cần đưa ra. Nhưng cũng có những ngày căng thẳng '
         'đến mà không có lý do rõ ràng nào cả.\n\n'
         'Nếu để ý kỹ hơn, một phần không nhỏ của loại căng thẳng này đến từ '
@@ -223,7 +226,8 @@ final _moodContent = [
     title: 'Điều gì đang vận hành tốt trong bạn?',
     kind: 'BÀI ĐỌC',
     duration: '4 phút đọc',
-    body: 'Những ngày ổn định là lúc tốt nhất để nhận diện điều gì đang '
+    body:
+        'Những ngày ổn định là lúc tốt nhất để nhận diện điều gì đang '
         'thực sự hiệu quả.',
     placeholder: true,
   ),
@@ -254,11 +258,11 @@ const _choicePool = [
 
 class _Stage {
   _Stage()
-      : content = FakeWrContentRepository(),
-        intel = FakeWrIntelligenceRepository(),
-        moodContent = FakeWrMoodContentRepository(),
-        episodes = FakeWrEpisodeRepository(),
-        wr = FakeWrRepository();
+    : content = FakeWrContentRepository(),
+      intel = FakeWrIntelligenceRepository(),
+      moodContent = FakeWrMoodContentRepository(),
+      episodes = FakeWrEpisodeRepository(),
+      wr = FakeWrRepository();
 
   final FakeWrContentRepository content;
   final FakeWrIntelligenceRepository intel;
@@ -326,7 +330,7 @@ class _Stage {
         currentUserIdProvider.overrideWithValue('u1'),
       ],
       child: MaterialApp.router(
-      builder: wrTextScaleBuilder,
+        builder: wrTextScaleBuilder,
         debugShowCheckedModeBanner: false,
         theme: ThemeData(fontFamily: 'NotoSans', useMaterial3: true),
         routerConfig: router,
@@ -372,18 +376,21 @@ void main() {
     s.moodContent
       ..seedContent(_moodContent)
       ..seedChoicePool(_choicePool);
-    s.wr.seedTodayCheckin(Checkin(
-      id: 'ck',
-      userId: 'u1',
-      mood: mood,
-      checkinDate: DateTime(2026, 7, 28),
-      createdAt: DateTime(2026, 7, 28),
-    ));
+    s.wr.seedTodayCheckin(
+      Checkin(
+        id: 'ck',
+        userId: 'u1',
+        mood: mood,
+        checkinDate: DateTime(2026, 7, 28),
+        createdAt: DateTime(2026, 7, 28),
+      ),
+    );
     return s;
   }
 
-  testWidgets('01 · Home — check-in + Thư viện Cảm xúc', skip: !_enabled,
-      (tester) async {
+  testWidgets('01 · Home — check-in + Thư viện Cảm xúc', skip: !_enabled, (
+    tester,
+  ) async {
     final s = buildStage();
     s.intel.seedPatternCounts([
       PatternCount(
@@ -436,7 +443,9 @@ void main() {
     await _shoot(tester, s.app('/home'), '01_home');
   });
 
-  testWidgets('02 · Thư viện Nội dung Cảm xúc', skip: !_enabled, (tester) async {
+  testWidgets('02 · Thư viện Nội dung Cảm xúc', skip: !_enabled, (
+    tester,
+  ) async {
     await _shoot(
       tester,
       buildStage().app('/wr/mood-library'),
@@ -462,7 +471,9 @@ void main() {
     );
   });
 
-  testWidgets('05 · Chọn tình huống — lọc theo cảm xúc', skip: !_enabled, (tester) async {
+  testWidgets('05 · Chọn tình huống — lọc theo cảm xúc', skip: !_enabled, (
+    tester,
+  ) async {
     final s = buildStage();
     s.episodes.seed([
       const ReflectionEpisode(
@@ -488,7 +499,9 @@ void main() {
     );
   });
 
-  testWidgets('06 · Ý nghĩa — Self Reflection + Aha gợi sẵn', skip: !_enabled, (tester) async {
+  testWidgets('06 · Ý nghĩa — Self Reflection + Aha gợi sẵn', skip: !_enabled, (
+    tester,
+  ) async {
     final s = buildStage();
     s.episodes.seed([
       const ReflectionEpisode(
@@ -521,7 +534,9 @@ void main() {
     );
   });
 
-  testWidgets('07 · Lựa chọn — Practice + bể 8 câu', skip: !_enabled, (tester) async {
+  testWidgets('07 · Lựa chọn — Practice + bể 8 câu', skip: !_enabled, (
+    tester,
+  ) async {
     final s = buildStage();
     s.episodes.seed([
       const ReflectionEpisode(
@@ -556,7 +571,9 @@ void main() {
   // Chụp thêm trạng thái ĐÃ CHỌN: đây là lúc nút Lưu mới sáng lên, và cũng là
   // lúc `reflect_choice` được ghi (§V · WDA Inv.9). Ảnh 07 chỉ có trạng thái
   // ban đầu nên không cho thấy khác biệt nào của bước Choice.
-  testWidgets('08 · Lựa chọn — đã chọn một câu', skip: !_enabled, (tester) async {
+  testWidgets('08 · Lựa chọn — đã chọn một câu', skip: !_enabled, (
+    tester,
+  ) async {
     final s = buildStage();
     s.episodes.seed([
       const ReflectionEpisode(
@@ -639,46 +656,53 @@ void main() {
     ]);
   }
 
-  testWidgets('09 · Hành trình — Free, Cơ hội phát triển còn khoá',
-      skip: !_enabled, (tester) async {
-    final s = buildStage();
-    seedJourney(s);
-    await _shoot(
-      tester,
-      s.app('/wr/journey'),
-      '09_hanh_trinh_free',
-      size: const Size(390, 1100),
-    );
-  });
-
-  testWidgets('10 · Hành trình — Premium, Cơ hội phát triển đã mở',
-      skip: !_enabled, (tester) async {
-    final s = buildStage();
-    seedJourney(s);
-    s.intel
-      ..seedEntitlement(
-        const WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
-      )
-      ..seedGrowthOpportunity(
-        GrowthOpportunity(
-          id: 'go-1',
-          userId: 'u1',
-          suggestionText: 'Có vẻ phần lớn điều bạn nhìn lại xoay quanh quan hệ '
-              'với người khác trong công việc. Nếu điều đó đúng, hướng phát '
-              'triển gần nhất của bạn có thể là năng lực đối thoại: nói điều '
-              'khó nói mà vẫn giữ được quan hệ.',
-          confidenceNote: GrowthOpportunity.kConfidenceNote,
-          basedOn: const ['C2-sit-01'],
-          generatedAt: DateTime(2026, 7, 28),
-        ),
+  testWidgets(
+    '09 · Hành trình — Free, Cơ hội phát triển còn khoá',
+    skip: !_enabled,
+    (tester) async {
+      final s = buildStage();
+      seedJourney(s);
+      await _shoot(
+        tester,
+        s.app('/wr/journey'),
+        '09_hanh_trinh_free',
+        size: const Size(390, 1100),
       );
-    await _shoot(
-      tester,
-      s.app('/wr/journey'),
-      '10_hanh_trinh_premium',
-      size: const Size(390, 1200),
-    );
-  });
+    },
+  );
+
+  testWidgets(
+    '10 · Hành trình — Premium, Cơ hội phát triển đã mở',
+    skip: !_enabled,
+    (tester) async {
+      final s = buildStage();
+      seedJourney(s);
+      s.intel
+        ..seedEntitlement(
+          const WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
+        )
+        ..seedGrowthOpportunity(
+          GrowthOpportunity(
+            id: 'go-1',
+            userId: 'u1',
+            suggestionText:
+                'Có vẻ phần lớn điều bạn nhìn lại xoay quanh quan hệ '
+                'với người khác trong công việc. Nếu điều đó đúng, hướng phát '
+                'triển gần nhất của bạn có thể là năng lực đối thoại: nói điều '
+                'khó nói mà vẫn giữ được quan hệ.',
+            confidenceNote: GrowthOpportunity.kConfidenceNote,
+            basedOn: const ['C2-sit-01'],
+            generatedAt: DateTime(2026, 7, 28),
+          ),
+        );
+      await _shoot(
+        tester,
+        s.app('/wr/journey'),
+        '10_hanh_trinh_premium',
+        size: const Size(390, 1200),
+      );
+    },
+  );
 
   // Hai tab dưới đây trước không có ảnh nào, nên lần đổi hệ màu 2026-07-30
   // không có cách nào xem lại được là bốn tab đã cùng một hệ màu hay chưa.
@@ -714,8 +738,9 @@ void main() {
     );
   });
 
-  testWidgets('12 · Phát triển — chủ đề + Trà Chiều', skip: !_enabled,
-      (tester) async {
+  testWidgets('12 · Phát triển — chủ đề + Trà Chiều', skip: !_enabled, (
+    tester,
+  ) async {
     final s = buildStage();
     s.intel
       ..seedPracticeThemes([
@@ -775,7 +800,9 @@ void main() {
     );
   });
 
-  testWidgets('13 · Trà Chiều — lịch các buổi', skip: !_enabled, (tester) async {
+  testWidgets('13 · Trà Chiều — lịch các buổi', skip: !_enabled, (
+    tester,
+  ) async {
     final s = buildStage();
     s.workshops.seedWorkshops([
       for (final (i, item) in [

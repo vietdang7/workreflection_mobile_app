@@ -9,12 +9,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:workreflection_mobile/core/logic/wr_org_survey_scoring.dart';
 import 'package:workreflection_mobile/core/models/wr_org_survey.dart';
 
-OrgSurveyQuestion q(String id, OrgSurveyArea area) => OrgSurveyQuestion(
-      id: id,
-      area: area,
-      text: id,
-      sortOrder: 0,
-    );
+OrgSurveyQuestion q(String id, OrgSurveyArea area) =>
+    OrgSurveyQuestion(id: id, area: area, text: id, sortOrder: 0);
 
 final _questions = [
   q('OS-01', OrgSurveyArea.compensation),

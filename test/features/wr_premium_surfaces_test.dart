@@ -23,10 +23,10 @@ import '../support/fake_wr_content_repository.dart';
 import '../support/fake_wr_intelligence_repository.dart';
 
 WrEntitlementRecord _premium() => WrEntitlementRecord(
-      userId: 'u1',
-      plan: WrPlan.premium,
-      validUntil: DateTime.now().add(const Duration(days: 30)),
-    );
+  userId: 'u1',
+  plan: WrPlan.premium,
+  validUntil: DateTime.now().add(const Duration(days: 30)),
+);
 
 Widget _wrap(
   Widget screen, {
@@ -48,14 +48,17 @@ Widget _wrap(
   return ProviderScope(
     overrides: [
       wrIntelligenceRepositoryProvider.overrideWithValue(intel),
-      wrContentRepositoryProvider
-          .overrideWithValue(content ?? FakeWrContentRepository()),
+      wrContentRepositoryProvider.overrideWithValue(
+        content ?? FakeWrContentRepository(),
+      ),
       wrRepositoryProvider.overrideWithValue(wr ?? FakeWrRepository()),
       currentUserIdProvider.overrideWithValue('u1'),
       grantedAiConsent(),
     ],
     child: MaterialApp.router(
-      builder: wrTextScaleBuilder,routerConfig: router),
+      builder: wrTextScaleBuilder,
+      routerConfig: router,
+    ),
   );
 }
 
@@ -75,7 +78,9 @@ void main() {
   group('Pattern Nâng cao (màn Diễn biến theo thời gian)', () {
     testWidgets('Free: khối bị khoá kèm nút nâng cấp', (tester) async {
       final intel = FakeWrIntelligenceRepository()..seedEntitlement(null);
-      await tester.pumpWidget(_wrap(const WrJourneyNarrativeScreen(), intel: intel));
+      await tester.pumpWidget(
+        _wrap(const WrJourneyNarrativeScreen(), intel: intel),
+      );
       await tester.pumpAndSettle();
 
       expect(
@@ -84,7 +89,9 @@ void main() {
       );
       expect(
         await _seenWhileScrolling(
-            tester, find.text('Mở phần nhìn lại dòng thời gian')),
+          tester,
+          find.text('Mở phần nhìn lại dòng thời gian'),
+        ),
         isTrue,
       );
     });
@@ -100,7 +107,9 @@ void main() {
             periodEnd: DateTime(2026, 7, 1),
           ),
         ]);
-      await tester.pumpWidget(_wrap(const WrJourneyNarrativeScreen(), intel: intel));
+      await tester.pumpWidget(
+        _wrap(const WrJourneyNarrativeScreen(), intel: intel),
+      );
       await tester.pumpAndSettle();
 
       expect(
@@ -112,7 +121,9 @@ void main() {
       );
       expect(
         await _seenWhileScrolling(
-            tester, find.text('Mở phần nhìn lại dòng thời gian')),
+          tester,
+          find.text('Mở phần nhìn lại dòng thời gian'),
+        ),
         isFalse,
       );
     });
@@ -129,13 +140,15 @@ void main() {
     testWidgets('Paid: mở màn là xin máy chủ kể lại', (tester) async {
       final intel = FakeWrIntelligenceRepository()..seedEntitlement(_premium());
       await tester.pumpWidget(
-          _wrap(const WrJourneyNarrativeScreen(), intel: intel));
+        _wrap(const WrJourneyNarrativeScreen(), intel: intel),
+      );
       await tester.pumpAndSettle();
 
       expect(
         intel.refreshNarrativeCalls,
         1,
-        reason: 'không ai gọi `wr-narrative` thì bảng không bao giờ có dòng nào',
+        reason:
+            'không ai gọi `wr-narrative` thì bảng không bao giờ có dòng nào',
       );
     });
 
@@ -144,7 +157,8 @@ void main() {
       // model. Gọi hộ người không được đọc là đốt tiền cho một màn khoá.
       final intel = FakeWrIntelligenceRepository()..seedEntitlement(null);
       await tester.pumpWidget(
-          _wrap(const WrJourneyNarrativeScreen(), intel: intel));
+        _wrap(const WrJourneyNarrativeScreen(), intel: intel),
+      );
       await tester.pumpAndSettle();
 
       expect(intel.refreshNarrativeCalls, 0);
@@ -156,8 +170,9 @@ void main() {
       // cả bốn mắt thay vì chỉ khẳng định hàm được gọi.
       final intel = FakeWrIntelligenceRepository()
         ..seedEntitlement(_premium())
-        ..nextNarrativeRefresh =
-            const WrNarrativeRefresh(status: WrNarrativeStatus.generated)
+        ..nextNarrativeRefresh = const WrNarrativeRefresh(
+          status: WrNarrativeStatus.generated,
+        )
         ..narrativeToGenerate = PatternNarrative(
           userId: 'u1',
           narrative: 'Gần đây bạn ít quay lại chuyện họp hành hơn trước.',
@@ -166,7 +181,8 @@ void main() {
         );
 
       await tester.pumpWidget(
-          _wrap(const WrJourneyNarrativeScreen(), intel: intel));
+        _wrap(const WrJourneyNarrativeScreen(), intel: intel),
+      );
       await tester.pumpAndSettle();
 
       expect(
@@ -178,8 +194,9 @@ void main() {
       );
     });
 
-    testWidgets('Paid nhưng chưa đủ: nói còn thiếu bao nhiêu lần',
-        (tester) async {
+    testWidgets('Paid nhưng chưa đủ: nói còn thiếu bao nhiêu lần', (
+      tester,
+    ) async {
       // Câu cũ ("Ghi thêm vài lần nữa") giống hệt nhau ở lần nhìn lại thứ hai
       // và thứ ba mươi — nó không đếm ngược được, nên không ai biết mình đang ở
       // đâu trên đường tới đó.
@@ -191,7 +208,8 @@ void main() {
         );
 
       await tester.pumpWidget(
-          _wrap(const WrJourneyNarrativeScreen(), intel: intel));
+        _wrap(const WrJourneyNarrativeScreen(), intel: intel),
+      );
       await tester.pumpAndSettle();
 
       // "có chọn tình huống" là phần bắt buộc của câu: hàm chỉ đếm Episode có
@@ -206,16 +224,20 @@ void main() {
       );
     });
 
-    testWidgets('Paid nhưng chưa có dữ liệu: hiện thông điệp mời quay lại',
-        (tester) async {
-      final intel = FakeWrIntelligenceRepository()
-        ..seedEntitlement(_premium());
-      await tester.pumpWidget(_wrap(const WrJourneyNarrativeScreen(), intel: intel));
+    testWidgets('Paid nhưng chưa có dữ liệu: hiện thông điệp mời quay lại', (
+      tester,
+    ) async {
+      final intel = FakeWrIntelligenceRepository()..seedEntitlement(_premium());
+      await tester.pumpWidget(
+        _wrap(const WrJourneyNarrativeScreen(), intel: intel),
+      );
       await tester.pumpAndSettle();
 
       expect(
         await _seenWhileScrolling(
-            tester, find.textContaining('Chưa đủ dữ liệu để kể lại diễn biến')),
+          tester,
+          find.textContaining('Chưa đủ dữ liệu để kể lại diễn biến'),
+        ),
         isTrue,
       );
     });
@@ -231,17 +253,16 @@ void main() {
       String docType = 'jd',
       DocAnalysisStatus status = DocAnalysisStatus.pending,
       WrDocAnalysis? analysis,
-    }) =>
-        WrContextDocument(
-          id: id,
-          userId: 'u1',
-          docType: docType,
-          filePath: 'u1/$docType-1.pdf',
-          uploadedAt: DateTime(2026, 8, 1),
-          analysisStatus: status,
-          analysis: analysis,
-          extractedText: analysis == null ? null : 'Chữ đọc được.',
-        );
+    }) => WrContextDocument(
+      id: id,
+      userId: 'u1',
+      docType: docType,
+      filePath: 'u1/$docType-1.pdf',
+      uploadedAt: DateTime(2026, 8, 1),
+      analysisStatus: status,
+      analysis: analysis,
+      extractedText: analysis == null ? null : 'Chữ đọc được.',
+    );
 
     testWidgets('Free: trống, quota 1, phần AI đọc bị khoá', (tester) async {
       final intel = FakeWrIntelligenceRepository()..seedEntitlement(null);
@@ -255,8 +276,9 @@ void main() {
       expect(find.byKey(const Key('wr_context_doc_lock')), findsOneWidget);
     });
 
-    testWidgets('Free đã đủ quota: nút thêm bị khoá và nêu lý do',
-        (tester) async {
+    testWidgets('Free đã đủ quota: nút thêm bị khoá và nêu lý do', (
+      tester,
+    ) async {
       final intel = FakeWrIntelligenceRepository()
         ..seedEntitlement(null)
         ..seedContextDocuments([docFixture()]);
@@ -274,8 +296,9 @@ void main() {
       expect(btn.onPressed, isNull);
     });
 
-    testWidgets('Free: không bấm đọc được, nút nói rõ đây là phần Premium',
-        (tester) async {
+    testWidgets('Free: không bấm đọc được, nút nói rõ đây là phần Premium', (
+      tester,
+    ) async {
       final intel = FakeWrIntelligenceRepository()
         ..seedEntitlement(null)
         ..seedContextDocuments([docFixture()]);
@@ -288,8 +311,9 @@ void main() {
       expect(intel.analyzeContextDocumentCalls, isEmpty);
     });
 
-    testWidgets('Premium: bấm đọc thì gọi máy chủ và đổi sang Đã đọc',
-        (tester) async {
+    testWidgets('Premium: bấm đọc thì gọi máy chủ và đổi sang Đã đọc', (
+      tester,
+    ) async {
       final intel = FakeWrIntelligenceRepository()
         ..seedEntitlement(_premium())
         ..seedContextDocuments([docFixture()]);
@@ -308,8 +332,9 @@ void main() {
       expect(find.textContaining('Tuyển dụng nhân sự mới'), findsOneWidget);
     });
 
-    testWidgets('tài liệu đã đọc hiện bản phân tích, kèm lối đọc lại',
-        (tester) async {
+    testWidgets('tài liệu đã đọc hiện bản phân tích, kèm lối đọc lại', (
+      tester,
+    ) async {
       final intel = FakeWrIntelligenceRepository()
         ..seedEntitlement(_premium())
         ..seedContextDocuments([
@@ -335,8 +360,9 @@ void main() {
       );
     });
 
-    testWidgets('máy chủ từ chối thì hiện đúng câu máy chủ soạn',
-        (tester) async {
+    testWidgets('máy chủ từ chối thì hiện đúng câu máy chủ soạn', (
+      tester,
+    ) async {
       final intel = FakeWrIntelligenceRepository()
         ..seedEntitlement(_premium())
         ..seedContextDocuments([docFixture()]);
@@ -350,27 +376,29 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('Mình chưa đọc được chữ trong tài liệu này. Bạn thử chụp rõ hơn nhé.'),
+        find.text(
+          'Mình chưa đọc được chữ trong tài liệu này. Bạn thử chụp rõ hơn nhé.',
+        ),
         findsOneWidget,
       );
     });
 
-    testWidgets('tải lên xong là đọc luôn, không bắt bấm thêm nút nữa',
-        (tester) async {
+    testWidgets('tải lên xong là đọc luôn, không bắt bấm thêm nút nữa', (
+      tester,
+    ) async {
       final intel = FakeWrIntelligenceRepository()..seedEntitlement(_premium());
       final wr = FakeWrRepository();
 
-      await tester.pumpWidget(_wrap(
-        WrContextDocScreen(
-          picker: () async => (
-            name: 'jd.pdf',
-            ext: 'pdf',
-            bytes: <int>[1, 2, 3],
+      await tester.pumpWidget(
+        _wrap(
+          WrContextDocScreen(
+            picker: () async =>
+                (name: 'jd.pdf', ext: 'pdf', bytes: <int>[1, 2, 3]),
           ),
+          intel: intel,
+          wr: wr,
         ),
-        intel: intel,
-        wr: wr,
-      ));
+      );
       await tester.pumpAndSettle();
 
       await tester.tap(find.text('Thêm tài liệu'));

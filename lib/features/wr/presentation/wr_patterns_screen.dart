@@ -21,7 +21,8 @@ class WrPatternsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final episodes = ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
+    final episodes =
+        ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
     final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
     final sitMap = {for (final s in situations) s.code: s.text};
 
@@ -33,8 +34,7 @@ class WrPatternsScreen extends ConsumerWidget {
       episodes,
       minCount: kRepeatedSituationsMinCount,
     );
-    final maxCount =
-        repeated.fold<int>(1, (m, p) => p.count > m ? p.count : m);
+    final maxCount = repeated.fold<int>(1, (m, p) => p.count > m ? p.count : m);
 
     return WrDetailScaffold(
       eyebrow: tr('NHỮNG VÒNG LẶP QUEN THUỘC', 'FAMILIAR LOOPS'),
@@ -43,15 +43,24 @@ class WrPatternsScreen extends ConsumerWidget {
         if (repeated.isEmpty)
           WrParagraph(
             recentSituationIds(episodes).isEmpty
-                ? tr('Sau vài lần nhìn lại có chọn tình huống, những điều lặp lại '
-                    'sẽ hiện ra ở đây.', 'After a few look-backs where you pick a situation, the things '
-                    'that repeat will show up here.')
-                : tr('Chưa điều nào trở lại đủ $kRepeatedSituationsMinCount lần. '
-                    'Những gì bạn đã ghi vẫn còn nguyên trong Hành trình.', 'Nothing has come back $kRepeatedSituationsMinCount times yet. '
-                    'Everything you recorded is still there in your Journey.'),
+                ? tr(
+                    'Sau vài lần nhìn lại có chọn tình huống, những điều lặp lại '
+                        'sẽ hiện ra ở đây.',
+                    'After a few look-backs where you pick a situation, the things '
+                        'that repeat will show up here.',
+                  )
+                : tr(
+                    'Chưa điều nào trở lại đủ $kRepeatedSituationsMinCount lần. '
+                        'Những gì bạn đã ghi vẫn còn nguyên trong Hành trình.',
+                    'Nothing has come back $kRepeatedSituationsMinCount times yet. '
+                        'Everything you recorded is still there in your Journey.',
+                  ),
             key: const Key('wr_patterns_empty'),
             style: const TextStyle(
-                fontSize: 15.5, color: WrColors.muted, height: 1.6),
+              fontSize: 15.5,
+              color: WrColors.muted,
+              height: 1.6,
+            ),
           )
         else ...[
           Text(
@@ -59,11 +68,14 @@ class WrPatternsScreen extends ConsumerWidget {
             // đó là điều người dùng không đoán được. Ngưỡng lặp và luật "lượt
             // tự viết không có mã nên không vào bảng" thì khách 09/09/2026
             // (§8.3) bỏ khỏi câu này cho nhẹ; luật vẫn nguyên trong mã.
-            tr('Trong $kRecentSituationsWindow ghi chép gần đây, có một vài tình '
-            'huống thường xuyên quay trở lại. Hãy cùng xem lại để hiểu rõ hơn '
-            'những gì bạn đang thực sự trải qua nhé.', 'Across your last $kRecentSituationsWindow entries, a few situations '
-            'keep coming back. Have a look at them to understand better what '
-            'you are actually going through.'),
+            tr(
+              'Trong $kRecentSituationsWindow ghi chép gần đây, có một vài tình '
+                  'huống thường xuyên quay trở lại. Hãy cùng xem lại để hiểu rõ hơn '
+                  'những gì bạn đang thực sự trải qua nhé.',
+              'Across your last $kRecentSituationsWindow entries, a few situations '
+                  'keep coming back. Have a look at them to understand better what '
+                  'you are actually going through.',
+            ),
             key: Key('wr_patterns_window_note'),
             style: TextStyle(
               fontSize: 14.5,

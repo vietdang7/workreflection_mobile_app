@@ -104,45 +104,45 @@ class _FakeSurveyRepository implements SurveyRepository {
 }
 
 CcReportFull _premiumReport() => CcReportFull(
-      id: 'report-1',
-      surveyId: 'survey-1',
-      userId: 'user-1',
-      scoreTotal: 3.8,
-      scoreStructure: 3.5,
-      scoreCulture: 4.0,
-      scoreActivity: 3.9,
-      scoreEsi: 4.1,
-      scoreEnps: 20,
-      bottleneckLayer: SurveyLayer.structure,
-      scoreLevel: ScoreLevel.good,
-      subScores: const {
-        'sub_a': {'layer': 'STRUCTURE', 'score': 3.5},
-      },
-      createdAt: DateTime(2026, 7, 20),
-    );
+  id: 'report-1',
+  surveyId: 'survey-1',
+  userId: 'user-1',
+  scoreTotal: 3.8,
+  scoreStructure: 3.5,
+  scoreCulture: 4.0,
+  scoreActivity: 3.9,
+  scoreEsi: 4.1,
+  scoreEnps: 20,
+  bottleneckLayer: SurveyLayer.structure,
+  scoreLevel: ScoreLevel.good,
+  subScores: const {
+    'sub_a': {'layer': 'STRUCTURE', 'score': 3.5},
+  },
+  createdAt: DateTime(2026, 7, 20),
+);
 
 VideoReportData _cannedData() => const VideoReportData(
-      scenes: [
-        TimedScene(
-          id: VideoSceneId.intro,
-          text: 'Intro scene text',
-          startMs: 0,
-          endMs: 2000,
-        ),
-        TimedScene(
-          id: VideoSceneId.overall,
-          text: 'Overall scene text',
-          startMs: 2000,
-          endMs: 5000,
-        ),
-      ],
-      cues: [
-        SubtitleCue(text: 'First cue line.', startMs: 0, endMs: 2000),
-        SubtitleCue(text: 'Second cue line.', startMs: 2000, endMs: 5000),
-      ],
-      audioUrl: 'x',
-      audioDurationMs: 5000,
-    );
+  scenes: [
+    TimedScene(
+      id: VideoSceneId.intro,
+      text: 'Intro scene text',
+      startMs: 0,
+      endMs: 2000,
+    ),
+    TimedScene(
+      id: VideoSceneId.overall,
+      text: 'Overall scene text',
+      startMs: 2000,
+      endMs: 5000,
+    ),
+  ],
+  cues: [
+    SubtitleCue(text: 'First cue line.', startMs: 0, endMs: 2000),
+    SubtitleCue(text: 'Second cue line.', startMs: 2000, endMs: 5000),
+  ],
+  audioUrl: 'x',
+  audioDurationMs: 5000,
+);
 
 Widget _buildApp({
   required FakeVideoAudioController fake,
@@ -157,10 +157,12 @@ Widget _buildApp({
         ref.onDispose(fake.dispose);
         return fake;
       }),
-      videoReportRepositoryProvider
-          .overrideWithValue(_FakeVideoReportRepository()),
-      surveyRepositoryProvider
-          .overrideWithValue(_FakeSurveyRepository(_premiumReport())),
+      videoReportRepositoryProvider.overrideWithValue(
+        _FakeVideoReportRepository(),
+      ),
+      surveyRepositoryProvider.overrideWithValue(
+        _FakeSurveyRepository(_premiumReport()),
+      ),
       appLocaleProvider.overrideWith((ref) => 'vi'),
       ccProfileProvider.overrideWith(
         (ref) => Future.value(<String, dynamic>{
@@ -179,33 +181,38 @@ Widget _buildApp({
 }
 
 void main() {
-  testWidgets('renders VideoSceneView and a play/pause control once data ready',
-      (tester) async {
-    final fake = FakeVideoAudioController();
-    addTearDown(fake.dispose);
+  testWidgets(
+    'renders VideoSceneView and a play/pause control once data ready',
+    (tester) async {
+      final fake = FakeVideoAudioController();
+      addTearDown(fake.dispose);
 
-    await tester.pumpWidget(_buildApp(fake: fake, data: _cannedData()));
-    await tester.pumpAndSettle();
+      await tester.pumpWidget(_buildApp(fake: fake, data: _cannedData()));
+      await tester.pumpAndSettle();
 
-    expect(find.byType(VideoSceneView), findsOneWidget);
-    expect(find.byType(Slider), findsOneWidget);
-    // A play/pause icon button is present.
-    expect(
-      find.byWidgetPredicate((w) =>
-          w is IconButton &&
-          (w.icon is Icon) &&
-          ((w.icon as Icon).icon == Icons.pause_circle_outlined ||
-              (w.icon as Icon).icon == Icons.play_circle_outlined)),
-      findsOneWidget,
-    );
+      expect(find.byType(VideoSceneView), findsOneWidget);
+      expect(find.byType(Slider), findsOneWidget);
+      // A play/pause icon button is present.
+      expect(
+        find.byWidgetPredicate(
+          (w) =>
+              w is IconButton &&
+              (w.icon is Icon) &&
+              ((w.icon as Icon).icon == Icons.pause_circle_outlined ||
+                  (w.icon as Icon).icon == Icons.play_circle_outlined),
+        ),
+        findsOneWidget,
+      );
 
-    // load + play were each called exactly once.
-    expect(fake.loadCalls, 1);
-    expect(fake.playCalls, 1);
-  });
+      // load + play were each called exactly once.
+      expect(fake.loadCalls, 1);
+      expect(fake.playCalls, 1);
+    },
+  );
 
-  testWidgets('position inside second scene renders the overall scene',
-      (tester) async {
+  testWidgets('position inside second scene renders the overall scene', (
+    tester,
+  ) async {
     final fake = FakeVideoAudioController();
     addTearDown(fake.dispose);
 
@@ -241,23 +248,24 @@ void main() {
   });
 
   testWidgets(
-      'controller lives while screen is mounted and is disposed on unmount',
-      (tester) async {
-    final fake = FakeVideoAudioController();
-    addTearDown(fake.dispose);
+    'controller lives while screen is mounted and is disposed on unmount',
+    (tester) async {
+      final fake = FakeVideoAudioController();
+      addTearDown(fake.dispose);
 
-    await tester.pumpWidget(_buildApp(fake: fake, data: _cannedData()));
-    await tester.pump();
+      await tester.pumpWidget(_buildApp(fake: fake, data: _cannedData()));
+      await tester.pump();
 
-    // The screen holds a manual subscription, so the autoDispose provider (and
-    // thus the controller) must stay alive while mounted.
-    expect(fake.disposed, isFalse);
+      // The screen holds a manual subscription, so the autoDispose provider (and
+      // thus the controller) must stay alive while mounted.
+      expect(fake.disposed, isFalse);
 
-    // Unmount the screen by replacing it with an unrelated widget. Closing the
-    // last subscription triggers autoDispose → onDispose(fake.dispose).
-    await tester.pumpWidget(const MaterialApp(home: SizedBox()));
-    await tester.pump();
+      // Unmount the screen by replacing it with an unrelated widget. Closing the
+      // last subscription triggers autoDispose → onDispose(fake.dispose).
+      await tester.pumpWidget(const MaterialApp(home: SizedBox()));
+      await tester.pump();
 
-    expect(fake.disposed, isTrue);
-  });
+      expect(fake.disposed, isTrue);
+    },
+  );
 }

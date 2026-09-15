@@ -55,5 +55,5 @@ class PracticesNotifier extends AsyncNotifier<List<Practice>> {
 
 final practicesProvider =
     AsyncNotifierProvider<PracticesNotifier, List<Practice>>(() {
-  return PracticesNotifier();
-});
+      return PracticesNotifier();
+    });

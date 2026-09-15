@@ -20,9 +20,7 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Những RPC/bảng chỉ tồn tại để dựng dữ liệu xem trước.
-const _bannedSymbols = <String>[
-  'seed_wr_sample_data',
-];
+const _bannedSymbols = <String>['seed_wr_sample_data'];
 
 void main() {
   test('không mã nào trong lib/ gọi hàm seed dữ liệu mẫu', () {
@@ -48,7 +46,8 @@ void main() {
     expect(
       offenders,
       isEmpty,
-      reason: 'Dữ liệu demo lại chảy vào tài khoản thật:\n'
+      reason:
+          'Dữ liệu demo lại chảy vào tài khoản thật:\n'
           '${offenders.join('\n')}',
     );
   });

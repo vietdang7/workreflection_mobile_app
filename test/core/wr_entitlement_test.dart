@@ -11,13 +11,13 @@ void main() {
   WrEntitlement freePlan() => WrEntitlement(plan: WrPlan.free);
   WrEntitlement activePremium() => WrEntitlement(plan: WrPlan.premium);
   WrEntitlement expiredPremium() => WrEntitlement(
-        plan: WrPlan.premium,
-        validUntil: DateTime.now().subtract(const Duration(days: 1)),
-      );
+    plan: WrPlan.premium,
+    validUntil: DateTime.now().subtract(const Duration(days: 1)),
+  );
   WrEntitlement futurePremium() => WrEntitlement(
-        plan: WrPlan.premium,
-        validUntil: DateTime.now().add(const Duration(days: 30)),
-      );
+    plan: WrPlan.premium,
+    validUntil: DateTime.now().add(const Duration(days: 30)),
+  );
 
   // ---------------------------------------------------------------------------
   // isPremium
@@ -58,12 +58,15 @@ void main() {
       }
     });
 
-    test('expired premium user cannot use premium features (treated as free)', () {
-      final e = expiredPremium();
-      for (final f in WrPremiumFeature.values) {
-        expect(e.canUseFeature(f), isFalse, reason: 'feature: $f');
-      }
-    });
+    test(
+      'expired premium user cannot use premium features (treated as free)',
+      () {
+        final e = expiredPremium();
+        for (final f in WrPremiumFeature.values) {
+          expect(e.canUseFeature(f), isFalse, reason: 'feature: $f');
+        }
+      },
+    );
   });
 
   // ---------------------------------------------------------------------------
@@ -85,7 +88,10 @@ void main() {
     });
 
     test('expired premium cannot access premium steps', () {
-      expect(expiredPremium().canAccessPracticeStep(isPremiumStep: true), isFalse);
+      expect(
+        expiredPremium().canAccessPracticeStep(isPremiumStep: true),
+        isFalse,
+      );
     });
   });
 

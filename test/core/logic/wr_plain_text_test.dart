@@ -15,12 +15,18 @@ import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 void main() {
   group('stripMarkdown', () {
     test('lột đậm, nghiêng, và đậm-nghiêng', () {
-      expect(stripMarkdown('một điều **quan trọng** với bạn'),
-          'một điều quan trọng với bạn');
-      expect(stripMarkdown('một điều *quan trọng* với bạn'),
-          'một điều quan trọng với bạn');
-      expect(stripMarkdown('một điều ***quan trọng*** với bạn'),
-          'một điều quan trọng với bạn');
+      expect(
+        stripMarkdown('một điều **quan trọng** với bạn'),
+        'một điều quan trọng với bạn',
+      );
+      expect(
+        stripMarkdown('một điều *quan trọng* với bạn'),
+        'một điều quan trọng với bạn',
+      );
+      expect(
+        stripMarkdown('một điều ***quan trọng*** với bạn'),
+        'một điều quan trọng với bạn',
+      );
     });
 
     test('`***` phải xử lý TRƯỚC `**` và `*`', () {
@@ -38,8 +44,10 @@ void main() {
     });
 
     test('bỏ tiêu đề và gạch đầu dòng, giữ chữ', () {
-      expect(stripMarkdown('## Ba điều\n- một\n* hai\n+ ba'),
-          'Ba điều\nmột\nhai\nba');
+      expect(
+        stripMarkdown('## Ba điều\n- một\n* hai\n+ ba'),
+        'Ba điều\nmột\nhai\nba',
+      );
     });
 
     test('lột nháy ngược và liên kết, bỏ đường dẫn', () {

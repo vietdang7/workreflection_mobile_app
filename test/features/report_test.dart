@@ -17,9 +17,7 @@ import '../support/fake_survey_repository.dart';
 
 Widget _wrap(Widget child, {required FakeSurveyRepository repo}) {
   return ProviderScope(
-    overrides: [
-      surveyRepositoryProvider.overrideWithValue(repo),
-    ],
+    overrides: [surveyRepositoryProvider.overrideWithValue(repo)],
     child: MaterialApp(
       builder: wrTextScaleBuilder,
       localizationsDelegates: const [
@@ -44,21 +42,20 @@ CcReportFull _report({
   int? enps,
   SurveyLayer bottleneck = SurveyLayer.culture,
   ScoreLevel level = ScoreLevel.good,
-}) =>
-    CcReportFull(
-      id: id,
-      surveyId: 's1',
-      userId: 'u1',
-      scoreTotal: total,
-      scoreStructure: s,
-      scoreCulture: c,
-      scoreActivity: a,
-      scoreEsi: esi,
-      scoreEnps: enps,
-      bottleneckLayer: bottleneck,
-      scoreLevel: level,
-      createdAt: DateTime(2026, 7, 17),
-    );
+}) => CcReportFull(
+  id: id,
+  surveyId: 's1',
+  userId: 'u1',
+  scoreTotal: total,
+  scoreStructure: s,
+  scoreCulture: c,
+  scoreActivity: a,
+  scoreEsi: esi,
+  scoreEnps: enps,
+  bottleneckLayer: bottleneck,
+  scoreLevel: level,
+  createdAt: DateTime(2026, 7, 17),
+);
 
 // ---------------------------------------------------------------------------
 // ReportScreen tests
@@ -103,8 +100,9 @@ void main() {
       expect(find.text('Cần chú ý'), findsOneWidget);
     });
 
-    testWidgets('score level CRITICAL shows destructive badge label',
-        (tester) async {
+    testWidgets('score level CRITICAL shows destructive badge label', (
+      tester,
+    ) async {
       final report = _report(total: 2.5, level: ScoreLevel.critical);
       repo.seedLatestReport(report);
 
@@ -138,10 +136,13 @@ void main() {
       expect(find.text('Hoạt động hàng ngày'), findsWidgets);
     });
 
-    testWidgets('shows bottleneck card with correct layer (culture)',
-        (tester) async {
+    testWidgets('shows bottleneck card with correct layer (culture)', (
+      tester,
+    ) async {
       final report = _report(
-          bottleneck: SurveyLayer.culture, level: ScoreLevel.good);
+        bottleneck: SurveyLayer.culture,
+        level: ScoreLevel.good,
+      );
       repo.seedLatestReport(report);
 
       await tester.pumpWidget(_wrap(ReportScreen(reportId: 'r1'), repo: repo));
@@ -153,8 +154,9 @@ void main() {
       expect(find.text('Văn hoá làm việc'), findsWidgets);
     });
 
-    testWidgets('shows bottleneck layer structure when structure is lowest',
-        (tester) async {
+    testWidgets('shows bottleneck layer structure when structure is lowest', (
+      tester,
+    ) async {
       final report = _report(bottleneck: SurveyLayer.structure);
       repo.seedLatestReport(report);
 
@@ -172,10 +174,7 @@ void main() {
       await tester.pumpWidget(_wrap(ReportScreen(reportId: 'r1'), repo: repo));
       await tester.pumpAndSettle();
 
-      expect(
-        find.textContaining('Premium'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('Premium'), findsOneWidget);
     });
 
     testWidgets('PREMIUM report shows ESI and eNPS sections', (tester) async {
@@ -213,7 +212,9 @@ void main() {
       expect(find.text('Kế hoạch 30 ngày'), findsOneWidget);
     });
 
-    testWidgets('N15: narrative fetch error shows error text not spinner', (tester) async {
+    testWidgets('N15: narrative fetch error shows error text not spinner', (
+      tester,
+    ) async {
       final r = _report();
       repo.seedLatestReport(r);
       repo.setNarrativesFails(true);
@@ -225,50 +226,64 @@ void main() {
       expect(find.textContaining('lỗi'), findsOneWidget);
     });
 
-    testWidgets('N16: eNPS card shows promoter/passive/detractor counts when available', (tester) async {
-      final report = CcReportFull(
-        id: 'r1',
-        surveyId: 's1',
-        userId: 'u1',
-        scoreTotal: 4.0,
-        scoreStructure: 4.0,
-        scoreCulture: 3.5,
-        scoreActivity: 4.5,
-        scoreEsi: 3.0,
-        scoreEnps: 25,
-        bottleneckLayer: SurveyLayer.culture,
-        scoreLevel: ScoreLevel.good,
-        createdAt: DateTime(2026, 7, 17),
-      );
-      repo.seedLatestReport(report);
-      // Seed render-time breakdown (computed from responses, not sub_scores).
-      repo.seedEnpsBreakdown(const EnpsBreakdown(
-        promoters: 5,
-        passives: 3,
-        detractors: 2,
-        total: 10,
-      ));
+    testWidgets(
+      'N16: eNPS card shows promoter/passive/detractor counts when available',
+      (tester) async {
+        final report = CcReportFull(
+          id: 'r1',
+          surveyId: 's1',
+          userId: 'u1',
+          scoreTotal: 4.0,
+          scoreStructure: 4.0,
+          scoreCulture: 3.5,
+          scoreActivity: 4.5,
+          scoreEsi: 3.0,
+          scoreEnps: 25,
+          bottleneckLayer: SurveyLayer.culture,
+          scoreLevel: ScoreLevel.good,
+          createdAt: DateTime(2026, 7, 17),
+        );
+        repo.seedLatestReport(report);
+        // Seed render-time breakdown (computed from responses, not sub_scores).
+        repo.seedEnpsBreakdown(
+          const EnpsBreakdown(
+            promoters: 5,
+            passives: 3,
+            detractors: 2,
+            total: 10,
+          ),
+        );
 
-      await tester.pumpWidget(_wrap(ReportScreen(reportId: 'r1'), repo: repo));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          _wrap(ReportScreen(reportId: 'r1'), repo: repo),
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.textContaining('5'), findsWidgets); // promoter count
-    });
+        expect(find.textContaining('5'), findsWidgets); // promoter count
+      },
+    );
 
-    testWidgets('T2-R1: radar chart section renders when SCA scores are present', (tester) async {
-      final report = _report(s: 4.0, c: 3.5, a: 4.5);
-      repo.seedLatestReport(report);
+    testWidgets(
+      'T2-R1: radar chart section renders when SCA scores are present',
+      (tester) async {
+        final report = _report(s: 4.0, c: 3.5, a: 4.5);
+        repo.seedLatestReport(report);
 
-      await tester.pumpWidget(_wrap(ReportScreen(reportId: 'r1'), repo: repo));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          _wrap(ReportScreen(reportId: 'r1'), repo: repo),
+        );
+        await tester.pumpAndSettle();
 
-      // WrEyebrow renders text via .toUpperCase() — match uppercased VI string
-      expect(find.text('BỨC TRANH S-C-A'), findsOneWidget);
-      // The chart CustomPaint should be present
-      expect(find.byType(CustomPaint), findsWidgets);
-    });
+        // WrEyebrow renders text via .toUpperCase() — match uppercased VI string
+        expect(find.text('BỨC TRANH S-C-A'), findsOneWidget);
+        // The chart CustomPaint should be present
+        expect(find.byType(CustomPaint), findsWidgets);
+      },
+    );
 
-    testWidgets('T2-R2: radar chart is absent when all SCA scores are zero', (tester) async {
+    testWidgets('T2-R2: radar chart is absent when all SCA scores are zero', (
+      tester,
+    ) async {
       final report = _report(s: 0.0, c: 0.0, a: 0.0);
       repo.seedLatestReport(report);
 
@@ -278,8 +293,9 @@ void main() {
       expect(find.text('BỨC TRANH S-C-A'), findsNothing);
     });
 
-    testWidgets('PDF export button appears in AppBar when report is loaded',
-        (tester) async {
+    testWidgets('PDF export button appears in AppBar when report is loaded', (
+      tester,
+    ) async {
       final report = _report();
       repo.seedLatestReport(report);
 
@@ -290,8 +306,9 @@ void main() {
       expect(find.byKey(const Key('report_pdf_export')), findsOneWidget);
     });
 
-    testWidgets('PDF export button absent while report is loading',
-        (tester) async {
+    testWidgets('PDF export button absent while report is loading', (
+      tester,
+    ) async {
       // Do NOT seed a report — loading state persists.
       await tester.pumpWidget(_wrap(ReportScreen(reportId: 'r1'), repo: repo));
       await tester.pump(); // one frame — still loading
@@ -323,11 +340,18 @@ void main() {
           tasks: tasks,
         );
 
-    ActionPlanTask makeTask(String id, String phaseId, String label,
-            {bool completed = false}) =>
-        ActionPlanTask(
-            id: id, phaseId: phaseId, label: label, displayOrder: 1,
-            completed: completed);
+    ActionPlanTask makeTask(
+      String id,
+      String phaseId,
+      String label, {
+      bool completed = false,
+    }) => ActionPlanTask(
+      id: id,
+      phaseId: phaseId,
+      label: label,
+      displayOrder: 1,
+      completed: completed,
+    );
 
     testWidgets('renders phase titles and tasks', (tester) async {
       repo.seedActionPlan([
@@ -339,7 +363,8 @@ void main() {
       repo.seedActionProgress({});
 
       await tester.pumpWidget(
-          _wrap(const ActionPlanScreen(reportId: 'r1'), repo: repo));
+        _wrap(const ActionPlanScreen(reportId: 'r1'), repo: repo),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Giai đoạn 1'), findsOneWidget);
@@ -347,8 +372,9 @@ void main() {
       expect(find.text('Đặt câu hỏi'), findsOneWidget);
     });
 
-    testWidgets('completed task shows check icon and strikethrough',
-        (tester) async {
+    testWidgets('completed task shows check icon and strikethrough', (
+      tester,
+    ) async {
       repo.seedActionPlan([
         makePhase('ph1', 1, [
           makeTask('t1', 'ph1', 'Task done', completed: false),
@@ -357,7 +383,8 @@ void main() {
       repo.seedActionProgress({'t1': true});
 
       await tester.pumpWidget(
-          _wrap(const ActionPlanScreen(reportId: 'r1'), repo: repo));
+        _wrap(const ActionPlanScreen(reportId: 'r1'), repo: repo),
+      );
       await tester.pumpAndSettle();
 
       // After init, progress loaded from seed → t1 is completed
@@ -370,14 +397,13 @@ void main() {
 
     testWidgets('tapping uncompleted task calls toggleTask', (tester) async {
       repo.seedActionPlan([
-        makePhase('ph1', 1, [
-          makeTask('t1', 'ph1', 'Task to toggle'),
-        ]),
+        makePhase('ph1', 1, [makeTask('t1', 'ph1', 'Task to toggle')]),
       ]);
       repo.seedActionProgress({'t1': false});
 
       await tester.pumpWidget(
-          _wrap(const ActionPlanScreen(reportId: 'r1'), repo: repo));
+        _wrap(const ActionPlanScreen(reportId: 'r1'), repo: repo),
+      );
       await tester.pumpAndSettle();
       await tester.pump(const Duration(milliseconds: 50));
       await tester.pumpAndSettle();
@@ -399,7 +425,8 @@ void main() {
       repo.seedActionProgress({});
 
       await tester.pumpWidget(
-          _wrap(const ActionPlanScreen(reportId: 'r1'), repo: repo));
+        _wrap(const ActionPlanScreen(reportId: 'r1'), repo: repo),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Giai đoạn 1'), findsOneWidget);

@@ -37,7 +37,8 @@ Future<void> completePracticeStep({
   if (userId == null) return;
   final repo = ref.read(wrIntelligenceRepositoryProvider);
   final contentRepo = ref.read(wrContentRepositoryProvider);
-  final entitlement = ref.read(wrEntitlementProvider).valueOrNull ??
+  final entitlement =
+      ref.read(wrEntitlementProvider).valueOrNull ??
       WrEntitlement(plan: WrPlan.free);
 
   final stepTitle = allSteps
@@ -104,7 +105,9 @@ Future<void> completePracticeStep({
   // nhận, trong khi ranh giới của mình là "ghi nhận miễn phí, diễn giải mới
   // Premium". Bước "Chuyển hóa" vẫn khoá; chỉ có đường đi tiếp là mở.
   final reachable = allSteps
-      .where((s) => entitlement.canAccessPracticeStep(isPremiumStep: s.isPremium))
+      .where(
+        (s) => entitlement.canAccessPracticeStep(isPremiumStep: s.isPremium),
+      )
       .map((s) => s.stepId)
       .toSet();
   final hasCompletedAll =
@@ -141,11 +144,11 @@ Future<void> completePracticeStep({
 /// Ba giai đoạn là ngôn ngữ của người dùng ("Nhận diện → Thử nghiệm → Chuyển
 /// hoá"), không phải số thứ tự trần.
 String? practiceStageTag(int stepOrder) => switch (stepOrder) {
-      1 => tr('NHẬN DIỆN', 'NOTICE'),
-      2 => tr('THỬ NGHIỆM', 'TRY'),
-      3 => tr('CHUYỂN HOÁ', 'SHIFT'),
-      _ => null,
-    };
+  1 => tr('NHẬN DIỆN', 'NOTICE'),
+  2 => tr('THỬ NGHIỆM', 'TRY'),
+  3 => tr('CHUYỂN HOÁ', 'SHIFT'),
+  _ => null,
+};
 
 /// Cùng ba giai đoạn nhưng viết như trong câu, không phải nhãn in hoa.
 ///
@@ -153,8 +156,8 @@ String? practiceStageTag(int stepOrder) => switch (stepOrder) {
 /// triển, và dạng câu ở dòng "Tiếp tục hôm nay" của Home ("bước Thử nghiệm đang
 /// chờ"). Giữ chung một nguồn để hai nơi không lệch tên giai đoạn.
 String? practiceStageLabel(int stepOrder) => switch (stepOrder) {
-      1 => tr('Nhận diện', 'Notice'),
-      2 => tr('Thử nghiệm', 'Try'),
-      3 => tr('Chuyển hoá', 'Shift'),
-      _ => null,
-    };
+  1 => tr('Nhận diện', 'Notice'),
+  2 => tr('Thử nghiệm', 'Try'),
+  3 => tr('Chuyển hoá', 'Shift'),
+  _ => null,
+};

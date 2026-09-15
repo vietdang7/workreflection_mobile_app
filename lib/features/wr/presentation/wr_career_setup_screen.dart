@@ -40,29 +40,44 @@ class _WrCareerSetupScreenState extends ConsumerState<WrCareerSetupScreen> {
   static List<(String, String)> get _questions => <(String, String)>[
     (
       tr('Vai trò hiện tại của bạn là gì?', 'What is your current role?'),
-      tr('Điều này giúp WorkReflection hiểu rõ hơn về bối cảnh công việc của bạn.', 'This helps WorkReflection understand the context you work in.')
+      tr(
+        'Điều này giúp WorkReflection hiểu rõ hơn về bối cảnh công việc của bạn.',
+        'This helps WorkReflection understand the context you work in.',
+      ),
     ),
     (
-      tr('Điều bạn đang quan tâm nhất trong sự nghiệp hiện tại?', 'What matters most to you in your career right now?'),
-      tr('Bạn có thể thay đổi bất cứ lúc nào.', 'You can change this any time.')
+      tr(
+        'Điều bạn đang quan tâm nhất trong sự nghiệp hiện tại?',
+        'What matters most to you in your career right now?',
+      ),
+      tr(
+        'Bạn có thể thay đổi bất cứ lúc nào.',
+        'You can change this any time.',
+      ),
     ),
     (
-      tr('Điều khiến bạn trăn trở nhất gần đây?', 'What has been weighing on you lately?'),
-      tr('Không có câu trả lời đúng hay sai.', 'There is no right or wrong answer.')
+      tr(
+        'Điều khiến bạn trăn trở nhất gần đây?',
+        'What has been weighing on you lately?',
+      ),
+      tr(
+        'Không có câu trả lời đúng hay sai.',
+        'There is no right or wrong answer.',
+      ),
     ),
   ];
 
   List<String> get _options => switch (_step) {
-        0 => kCareerRoleOptions,
-        1 => kCareerGoalOptions,
-        _ => kCareerChallengeOptions,
-      };
+    0 => kCareerRoleOptions,
+    1 => kCareerGoalOptions,
+    _ => kCareerChallengeOptions,
+  };
 
   String? get _selected => switch (_step) {
-        0 => _role,
-        1 => _goal,
-        _ => _challenge,
-      };
+    0 => _role,
+    1 => _goal,
+    _ => _challenge,
+  };
 
   void _select(String value) {
     setState(() {
@@ -109,7 +124,10 @@ class _WrCareerSetupScreenState extends ConsumerState<WrCareerSetupScreen> {
       if (!mounted) return;
       setState(() {
         _saving = false;
-        _errorMsg = tr('Chưa lưu được hồ sơ. Bạn có thể thử lại sau.', 'Could not save your profile. You can try again later.');
+        _errorMsg = tr(
+          'Chưa lưu được hồ sơ. Bạn có thể thử lại sau.',
+          'Could not save your profile. You can try again later.',
+        );
       });
       return;
     }
@@ -163,7 +181,10 @@ class _WrCareerSetupScreenState extends ConsumerState<WrCareerSetupScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    tr('THIẾT LẬP HỒ SƠ · ${_step + 1}/3', 'SETTING UP · ${_step + 1}/3'),
+                    tr(
+                      'THIẾT LẬP HỒ SƠ · ${_step + 1}/3',
+                      'SETTING UP · ${_step + 1}/3',
+                    ),
                     style: TextStyle(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w700,
@@ -231,7 +252,9 @@ class _WrCareerSetupScreenState extends ConsumerState<WrCareerSetupScreen> {
                 child: TextButton(
                   onPressed: _saving ? null : _advance,
                   child: Text(
-                    _step < 2 ? tr('Bỏ qua bước này', 'Skip this step') : tr('Bỏ qua, vào app', 'Skip, go to the app'),
+                    _step < 2
+                        ? tr('Bỏ qua bước này', 'Skip this step')
+                        : tr('Bỏ qua, vào app', 'Skip, go to the app'),
                     style: TextStyle(
                       fontSize: 13.5,
                       color: WrColors.white.withValues(alpha: 0.35),

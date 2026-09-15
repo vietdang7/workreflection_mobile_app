@@ -18,9 +18,7 @@ import '../support/fake_survey_repository.dart';
 
 Widget _wrap(FakeSurveyRepository repo) {
   return ProviderScope(
-    overrides: [
-      surveyRepositoryProvider.overrideWithValue(repo),
-    ],
+    overrides: [surveyRepositoryProvider.overrideWithValue(repo)],
     child: const MaterialApp(
       builder: wrTextScaleBuilder,
       localizationsDelegates: [
@@ -42,16 +40,15 @@ CcReportSummary _summary({
   ScoreLevel level = ScoreLevel.good,
   bool isPremium = false,
   DateTime? createdAt,
-}) =>
-    CcReportSummary(
-      id: id,
-      surveyId: surveyId,
-      createdAt: createdAt ?? DateTime(2026, 7, 1),
-      scoreTotal: total,
-      scoreLevel: level,
-      scoreEsi: isPremium ? 3.5 : null,
-      scoreEnps: isPremium ? 20 : null,
-    );
+}) => CcReportSummary(
+  id: id,
+  surveyId: surveyId,
+  createdAt: createdAt ?? DateTime(2026, 7, 1),
+  scoreTotal: total,
+  scoreLevel: level,
+  scoreEsi: isPremium ? 3.5 : null,
+  scoreEnps: isPremium ? 20 : null,
+);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -109,7 +106,9 @@ void main() {
       expect(find.text('Bắt đầu khảo sát'), findsOneWidget);
     });
 
-    testWidgets('shows error state and retry button on failure', (tester) async {
+    testWidgets('shows error state and retry button on failure', (
+      tester,
+    ) async {
       repo.setMyReportsError(Exception('network error'));
 
       await tester.pumpWidget(_wrap(repo));
@@ -127,8 +126,9 @@ void main() {
       expect(find.byKey(const Key('survey_history_row_r1')), findsOneWidget);
     });
 
-    testWidgets('tap row key exists and row is GestureDetector',
-        (tester) async {
+    testWidgets('tap row key exists and row is GestureDetector', (
+      tester,
+    ) async {
       repo.seedReportSummaries([_summary(id: 'r42')]);
 
       await tester.pumpWidget(_wrap(repo));
@@ -139,16 +139,11 @@ void main() {
       expect(row, findsOneWidget);
 
       // The row widget is a GestureDetector (tappable).
-      expect(
-        tester.widget(row),
-        isA<GestureDetector>(),
-      );
+      expect(tester.widget(row), isA<GestureDetector>());
     });
 
     testWidgets('date formats correctly as dd/MM/yyyy', (tester) async {
-      repo.seedReportSummaries([
-        _summary(createdAt: DateTime(2026, 3, 5)),
-      ]);
+      repo.seedReportSummaries([_summary(createdAt: DateTime(2026, 3, 5))]);
 
       await tester.pumpWidget(_wrap(repo));
       await tester.pumpAndSettle();
@@ -164,10 +159,7 @@ void main() {
   group('myReportsProvider', () {
     test('returns list from repository', () async {
       final repo = FakeSurveyRepository();
-      repo.seedReportSummaries([
-        _summary(id: 'r1'),
-        _summary(id: 'r2'),
-      ]);
+      repo.seedReportSummaries([_summary(id: 'r1'), _summary(id: 'r2')]);
 
       final container = ProviderContainer(
         overrides: [surveyRepositoryProvider.overrideWithValue(repo)],

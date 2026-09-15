@@ -63,22 +63,22 @@ class _FakeSurveyRepository implements SurveyRepository {
 }
 
 CcReportFull _premiumReport() => CcReportFull(
-      id: 'report-1',
-      surveyId: 'survey-1',
-      userId: 'user-1',
-      scoreTotal: 3.8,
-      scoreStructure: 3.5,
-      scoreCulture: 4.0,
-      scoreActivity: 3.9,
-      scoreEsi: 4.1,
-      scoreEnps: 20,
-      bottleneckLayer: SurveyLayer.structure,
-      scoreLevel: ScoreLevel.good,
-      subScores: const {
-        'sub_a': {'layer': 'STRUCTURE', 'score': 3.5},
-      },
-      createdAt: DateTime(2026, 7, 20),
-    );
+  id: 'report-1',
+  surveyId: 'survey-1',
+  userId: 'user-1',
+  scoreTotal: 3.8,
+  scoreStructure: 3.5,
+  scoreCulture: 4.0,
+  scoreActivity: 3.9,
+  scoreEsi: 4.1,
+  scoreEnps: 20,
+  bottleneckLayer: SurveyLayer.structure,
+  scoreLevel: ScoreLevel.good,
+  subScores: const {
+    'sub_a': {'layer': 'STRUCTURE', 'score': 3.5},
+  },
+  createdAt: DateTime(2026, 7, 20),
+);
 
 const _twoCueSrt = '''
 1
@@ -112,39 +112,48 @@ ProviderContainer _makeContainer({
 }
 
 void main() {
-  test('cache hit → returns assembled data and does NOT call createAndWait',
-      () async {
-    final videoRepo = _FakeVideoReportRepository(
-      completedJob: const RawVideoJob(
-        audioUrl: 'a.wav',
-        srt: _twoCueSrt,
-        durationMs: 5000,
-      ),
-      createResult:
-          const RawVideoJob(audioUrl: 'unused.wav', srt: '', durationMs: 0),
-    );
-    final container = _makeContainer(
-      videoRepo: videoRepo,
-      surveyRepo: _FakeSurveyRepository(_premiumReport()),
-    );
-    addTearDown(container.dispose);
+  test(
+    'cache hit → returns assembled data and does NOT call createAndWait',
+    () async {
+      final videoRepo = _FakeVideoReportRepository(
+        completedJob: const RawVideoJob(
+          audioUrl: 'a.wav',
+          srt: _twoCueSrt,
+          durationMs: 5000,
+        ),
+        createResult: const RawVideoJob(
+          audioUrl: 'unused.wav',
+          srt: '',
+          durationMs: 0,
+        ),
+      );
+      final container = _makeContainer(
+        videoRepo: videoRepo,
+        surveyRepo: _FakeSurveyRepository(_premiumReport()),
+      );
+      addTearDown(container.dispose);
 
-    final result =
-        await container.read(videoReportDataProvider('report-1').future);
+      final result = await container.read(
+        videoReportDataProvider('report-1').future,
+      );
 
-    expect(result.scenes, isNotEmpty);
-    expect(result.scenes.first.startMs, 0);
-    expect(result.scenes.last.endMs, 5000);
-    expect(result.audioUrl, 'PROXY:a.wav');
-    expect(result.audioDurationMs, 5000);
-    expect(videoRepo.createAndWaitCalled, isFalse);
-  });
+      expect(result.scenes, isNotEmpty);
+      expect(result.scenes.first.startMs, 0);
+      expect(result.scenes.last.endMs, 5000);
+      expect(result.audioUrl, 'PROXY:a.wav');
+      expect(result.audioDurationMs, 5000);
+      expect(videoRepo.createAndWaitCalled, isFalse);
+    },
+  );
 
   test('cache miss → calls createAndWait once', () async {
     final videoRepo = _FakeVideoReportRepository(
       completedJob: null,
-      createResult:
-          const RawVideoJob(audioUrl: 'b.wav', srt: '', durationMs: 8000),
+      createResult: const RawVideoJob(
+        audioUrl: 'b.wav',
+        srt: '',
+        durationMs: 8000,
+      ),
     );
     final container = _makeContainer(
       videoRepo: videoRepo,
@@ -152,8 +161,9 @@ void main() {
     );
     addTearDown(container.dispose);
 
-    final result =
-        await container.read(videoReportDataProvider('report-1').future);
+    final result = await container.read(
+      videoReportDataProvider('report-1').future,
+    );
 
     expect(videoRepo.createAndWaitCalled, isTrue);
     expect(result.audioUrl, 'PROXY:b.wav');

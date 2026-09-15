@@ -100,12 +100,12 @@ class _FakeTts implements TtsService {
 }
 
 Checkin _checkin(Mood mood) => Checkin(
-      id: 'c1',
-      userId: 'u1',
-      mood: mood,
-      checkinDate: DateTime(2026, 7, 29),
-      createdAt: DateTime(2026, 7, 29),
-    );
+  id: 'c1',
+  userId: 'u1',
+  mood: mood,
+  checkinDate: DateTime(2026, 7, 29),
+  createdAt: DateTime(2026, 7, 29),
+);
 
 WorkshopDetail _traChieu({
   String id = 'tc1',
@@ -115,21 +115,20 @@ WorkshopDetail _traChieu({
   String? location = 'TP.HCM',
   num price = 99000,
   String? imageUrl = 'https://cdn.test/anh-to.jpg',
-}) =>
-    WorkshopDetail(
-      id: id,
-      title: title,
-      description: description,
-      category: 'Trà chiều nghề nghiệp',
-      date: date ?? DateTime.now().add(const Duration(days: 7)),
-      location: location,
-      price: price,
-      currency: 'VND',
-      currentParticipants: 0,
-      imageUrl: imageUrl,
-      status: 'published',
-      isActive: true,
-    );
+}) => WorkshopDetail(
+  id: id,
+  title: title,
+  description: description,
+  category: 'Trà chiều nghề nghiệp',
+  date: date ?? DateTime.now().add(const Duration(days: 7)),
+  location: location,
+  price: price,
+  currency: 'VND',
+  currentParticipants: 0,
+  imageUrl: imageUrl,
+  status: 'published',
+  isActive: true,
+);
 
 Widget _wrap(
   Widget home, {
@@ -187,21 +186,26 @@ Widget _wrap(
   return ProviderScope(
     overrides: [
       wrRepositoryProvider.overrideWithValue(repo ?? FakeWrRepository()),
-      wrContentRepositoryProvider
-          .overrideWithValue(content ?? FakeWrContentRepository()),
-      wrIntelligenceRepositoryProvider
-          .overrideWithValue(intel ?? FakeWrIntelligenceRepository()),
-      wrMoodContentRepositoryProvider
-          .overrideWithValue(moodContent ?? FakeWrMoodContentRepository()),
-      wrEpisodeRepositoryProvider
-          .overrideWithValue(episodes ?? FakeWrEpisodeRepository()),
-      workshopRepositoryProvider
-          .overrideWithValue(workshops ?? FakeWorkshopRepository()),
-      wrChatRepositoryProvider
-          .overrideWithValue(chat ?? FakeWrChatRepository()),
+      wrContentRepositoryProvider.overrideWithValue(
+        content ?? FakeWrContentRepository(),
+      ),
+      wrIntelligenceRepositoryProvider.overrideWithValue(
+        intel ?? FakeWrIntelligenceRepository(),
+      ),
+      wrMoodContentRepositoryProvider.overrideWithValue(
+        moodContent ?? FakeWrMoodContentRepository(),
+      ),
+      wrEpisodeRepositoryProvider.overrideWithValue(
+        episodes ?? FakeWrEpisodeRepository(),
+      ),
+      workshopRepositoryProvider.overrideWithValue(
+        workshops ?? FakeWorkshopRepository(),
+      ),
+      wrChatRepositoryProvider.overrideWithValue(
+        chat ?? FakeWrChatRepository(),
+      ),
       grantedAiConsent(),
-      sttServiceProvider
-          .overrideWithValue(_FakeStt(available: sttAvailable)),
+      sttServiceProvider.overrideWithValue(_FakeStt(available: sttAvailable)),
       if (tts != null) ttsServiceProvider.overrideWithValue(tts),
       currentUserIdProvider.overrideWithValue('u1'),
       // Quyết định ai được thấy công tắc Premium thử nghiệm.
@@ -243,31 +247,32 @@ void main() {
     /// của cảm xúc vừa check-in — khách nói rõ "nhận diện tình huống vừa
     /// check-in". Không gieo bảng tình huống thì không mã nào tra ra được chiều,
     /// và thẻ im lặng đúng theo luật đó.
-    FakeWrContentRepository contentWithSituation() => FakeWrContentRepository()
-      ..seedSituations(const [
-        WrSituation(
-          code: 's1',
-          text: 'Ngại phản biện với đồng nghiệp',
-          scaDimension: ScaDimension.c2,
-          wave: 1,
-        ),
-      ]);
-
-    FakeWrEpisodeRepository episodesWithPattern() => FakeWrEpisodeRepository()
-      ..seed([
-        for (var i = 0; i < 5; i++)
-          ReflectionEpisode(
-            id: 'e\$i',
-            userId: 'u1',
-            humanMoment: HumanMoment.confusion,
-            state: ExperienceState.integrated,
-            situationCode: 's1',
-            openedAt: DateTime(2026, 7, 20).add(Duration(hours: i)),
+    FakeWrContentRepository contentWithSituation() =>
+        FakeWrContentRepository()..seedSituations(const [
+          WrSituation(
+            code: 's1',
+            text: 'Ngại phản biện với đồng nghiệp',
+            scaDimension: ScaDimension.c2,
+            wave: 1,
           ),
-      ]);
+        ]);
 
-    testWidgets('chưa check-in: không có Hệ thống nhận ra, không có Gợi ý',
-        (tester) async {
+    FakeWrEpisodeRepository episodesWithPattern() =>
+        FakeWrEpisodeRepository()..seed([
+          for (var i = 0; i < 5; i++)
+            ReflectionEpisode(
+              id: 'e\$i',
+              userId: 'u1',
+              humanMoment: HumanMoment.confusion,
+              state: ExperienceState.integrated,
+              situationCode: 's1',
+              openedAt: DateTime(2026, 7, 20).add(Duration(hours: i)),
+            ),
+        ]);
+
+    testWidgets('chưa check-in: không có Hệ thống nhận ra, không có Gợi ý', (
+      tester,
+    ) async {
       final moodContent = FakeWrMoodContentRepository()
         ..seedContent([fakeMoodContent(id: 'm1', mood: Mood.stressed)]);
 
@@ -352,8 +357,9 @@ void main() {
 
       double top(String key) => tester.getTopLeft(find.byKey(Key(key))).dy;
 
-      final checkin =
-          tester.getTopLeft(find.text('Ngày hôm nay của bạn như thế nào?')).dy;
+      final checkin = tester
+          .getTopLeft(find.text('Ngày hôm nay của bạn như thế nào?'))
+          .dy;
       expect(checkin, lessThan(top('wr_home_system_notice')));
       expect(
         top('wr_home_system_notice'),
@@ -375,33 +381,29 @@ void main() {
     FakeWrIntelligenceRepository withPractice({
       List<String> completed = const [],
       bool premiumStep = false,
-    }) =>
-        FakeWrIntelligenceRepository()
-          ..seedPracticeThemes([
-            const PracticeTheme(themeId: 't1', title: 'Dám lên tiếng'),
-          ])
-          ..seedPracticeSteps('t1', [
-            PracticeStep(
-              stepId: 's1',
-              themeId: 't1',
-              stepOrder: 1,
-              title: 'Quan sát lúc muốn im lặng',
-              isPremium: premiumStep,
-            ),
-          ])
-          ..seedEnrollments([
-            PracticeEnrollment(
-              userId: 'u1',
-              themeId: 't1',
-              completedSteps: completed,
-            ),
-          ]);
+    }) => FakeWrIntelligenceRepository()
+      ..seedPracticeThemes([
+        const PracticeTheme(themeId: 't1', title: 'Dám lên tiếng'),
+      ])
+      ..seedPracticeSteps('t1', [
+        PracticeStep(
+          stepId: 's1',
+          themeId: 't1',
+          stepOrder: 1,
+          title: 'Quan sát lúc muốn im lặng',
+          isPremium: premiumStep,
+        ),
+      ])
+      ..seedEnrollments([
+        PracticeEnrollment(
+          userId: 'u1',
+          themeId: 't1',
+          completedSteps: completed,
+        ),
+      ]);
 
     testWidgets('hiện bước còn dở, kể cả khi chưa check-in', (tester) async {
-      await _pump(
-        tester,
-        _wrap(const WrHomeScreen(), intel: withPractice()),
-      );
+      await _pump(tester, _wrap(const WrHomeScreen(), intel: withPractice()));
 
       expect(find.byKey(const Key('wr_home_continue_today')), findsOneWidget);
       // Khuôn câu của mockup Sprint 2: Home nhắc GIAI ĐOẠN đang dở, tên việc cụ
@@ -413,10 +415,7 @@ void main() {
     });
 
     testWidgets('chạm mở đúng màn chủ đề', (tester) async {
-      await _pump(
-        tester,
-        _wrap(const WrHomeScreen(), intel: withPractice()),
-      );
+      await _pump(tester, _wrap(const WrHomeScreen(), intel: withPractice()));
 
       await tester.tap(find.byKey(const Key('wr_home_continue_today_card')));
       await tester.pumpAndSettle();
@@ -431,14 +430,12 @@ void main() {
     // ghi danh — nên với người dùng thật khối im lặng vĩnh viễn và Home mất hẳn
     // sợi dây nối sang Phát triển. Giờ khối vẫn đứng đó, đổi lời thành mời chọn
     // chủ đề.
-    testWidgets('xong hết bước thì mời chọn chủ đề khác, không biến mất',
-        (tester) async {
+    testWidgets('xong hết bước thì mời chọn chủ đề khác, không biến mất', (
+      tester,
+    ) async {
       await _pump(
         tester,
-        _wrap(
-          const WrHomeScreen(),
-          intel: withPractice(completed: ['s1']),
-        ),
+        _wrap(const WrHomeScreen(), intel: withPractice(completed: ['s1'])),
       );
 
       expect(find.byKey(const Key('wr_home_continue_today')), findsOneWidget);
@@ -451,10 +448,7 @@ void main() {
       // là chọn chủ đề chứ không phải bước đang khoá.
       await _pump(
         tester,
-        _wrap(
-          const WrHomeScreen(),
-          intel: withPractice(premiumStep: true),
-        ),
+        _wrap(const WrHomeScreen(), intel: withPractice(premiumStep: true)),
       );
 
       expect(find.byKey(const Key('wr_home_continue_today')), findsOneWidget);
@@ -462,8 +456,9 @@ void main() {
       expect(find.textContaining('Dám lên tiếng'), findsNothing);
     });
 
-    testWidgets('chưa ghi danh chủ đề nào thì mời chọn, dẫn sang Phát triển',
-        (tester) async {
+    testWidgets('chưa ghi danh chủ đề nào thì mời chọn, dẫn sang Phát triển', (
+      tester,
+    ) async {
       await _pump(tester, _wrap(const WrHomeScreen()));
 
       expect(find.byKey(const Key('wr_home_continue_today')), findsOneWidget);
@@ -482,76 +477,79 @@ void main() {
     // nếu chủ đề đó hết bước mở được. Hai chủ đề đầu của owner đã xong 2/3 và
     // bước thứ ba là bước Premium (owner đang dùng bản free), nên nó bỏ cuộc
     // ngay, dù chủ đề thứ ba mới 0/3 với bước đầu mở thoải mái.
-    testWidgets('chủ đề đầu bí vì bước Premium thì lấy chủ đề khác còn mở được',
-        (tester) async {
-      final intel = FakeWrIntelligenceRepository()
-        ..seedPracticeThemes([
-          const PracticeTheme(themeId: 't1', title: 'Nhịp làm việc ổn định'),
-          const PracticeTheme(themeId: 't2', title: 'Dám lên tiếng'),
-          const PracticeTheme(themeId: 't3', title: 'Phản hồi hiệu quả'),
+    testWidgets(
+      'chủ đề đầu bí vì bước Premium thì lấy chủ đề khác còn mở được',
+      (tester) async {
+        final intel = FakeWrIntelligenceRepository()
+          ..seedPracticeThemes([
+            const PracticeTheme(themeId: 't1', title: 'Nhịp làm việc ổn định'),
+            const PracticeTheme(themeId: 't2', title: 'Dám lên tiếng'),
+            const PracticeTheme(themeId: 't3', title: 'Phản hồi hiệu quả'),
+          ]);
+        for (final id in ['t1', 't2', 't3']) {
+          intel.seedPracticeSteps(id, [
+            PracticeStep(
+              stepId: '$id-s1',
+              themeId: id,
+              stepOrder: 1,
+              title: 'Nhận diện',
+              isPremium: false,
+            ),
+            PracticeStep(
+              stepId: '$id-s2',
+              themeId: id,
+              stepOrder: 2,
+              title: 'Thử nghiệm',
+              isPremium: false,
+            ),
+            // Bước Chuyển hoá là bước trả tiền.
+            PracticeStep(
+              stepId: '$id-s3',
+              themeId: id,
+              stepOrder: 3,
+              title: 'Chuyển hoá',
+              isPremium: true,
+            ),
+          ]);
+        }
+        intel.seedEnrollments([
+          PracticeEnrollment(
+            userId: 'u1',
+            themeId: 't1',
+            startedAt: DateTime(2026, 7, 20),
+            completedSteps: const ['t1-s1', 't1-s2'],
+          ),
+          PracticeEnrollment(
+            userId: 'u1',
+            themeId: 't2',
+            startedAt: DateTime(2026, 7, 22),
+            completedSteps: const ['t2-s1', 't2-s2'],
+          ),
+          PracticeEnrollment(
+            userId: 'u1',
+            themeId: 't3',
+            startedAt: DateTime(2026, 7, 28),
+          ),
         ]);
-      for (final id in ['t1', 't2', 't3']) {
-        intel.seedPracticeSteps(id, [
-          PracticeStep(
-            stepId: '$id-s1',
-            themeId: id,
-            stepOrder: 1,
-            title: 'Nhận diện',
-            isPremium: false,
-          ),
-          PracticeStep(
-            stepId: '$id-s2',
-            themeId: id,
-            stepOrder: 2,
-            title: 'Thử nghiệm',
-            isPremium: false,
-          ),
-          // Bước Chuyển hoá là bước trả tiền.
-          PracticeStep(
-            stepId: '$id-s3',
-            themeId: id,
-            stepOrder: 3,
-            title: 'Chuyển hoá',
-            isPremium: true,
-          ),
-        ]);
-      }
-      intel.seedEnrollments([
-        PracticeEnrollment(
-          userId: 'u1',
-          themeId: 't1',
-          startedAt: DateTime(2026, 7, 20),
-          completedSteps: const ['t1-s1', 't1-s2'],
-        ),
-        PracticeEnrollment(
-          userId: 'u1',
-          themeId: 't2',
-          startedAt: DateTime(2026, 7, 22),
-          completedSteps: const ['t2-s1', 't2-s2'],
-        ),
-        PracticeEnrollment(
-          userId: 'u1',
-          themeId: 't3',
-          startedAt: DateTime(2026, 7, 28),
-        ),
-      ]);
 
-      await _pump(tester, _wrap(const WrHomeScreen(), intel: intel));
+        await _pump(tester, _wrap(const WrHomeScreen(), intel: intel));
 
-      expect(find.byKey(const Key('wr_home_continue_today')), findsOneWidget);
-      expect(
-        find.text('Chủ đề "Phản hồi hiệu quả": bước Nhận diện đang chờ'),
-        findsOneWidget,
-      );
+        expect(find.byKey(const Key('wr_home_continue_today')), findsOneWidget);
+        expect(
+          find.text('Chủ đề "Phản hồi hiệu quả": bước Nhận diện đang chờ'),
+          findsOneWidget,
+        );
 
-      // Và chạm vào mở đúng chủ đề ĐÓ, không phải chủ đề đầu danh sách.
-      await tester.tap(find.byKey(const Key('wr_home_continue_today_card')));
-      await tester.pumpAndSettle();
-      expect(find.text('THEME t3'), findsOneWidget);
-    });
+        // Và chạm vào mở đúng chủ đề ĐÓ, không phải chủ đề đầu danh sách.
+        await tester.tap(find.byKey(const Key('wr_home_continue_today_card')));
+        await tester.pumpAndSettle();
+        expect(find.text('THEME t3'), findsOneWidget);
+      },
+    );
 
-    testWidgets('nhiều chủ đề mở được thì lấy chủ đề gần đích nhất',
-        (tester) async {
+    testWidgets('nhiều chủ đề mở được thì lấy chủ đề gần đích nhất', (
+      tester,
+    ) async {
       // "Tiếp tục" phải là tiếp tục việc dở dang nhất, không phải việc mới nhất.
       final intel = FakeWrIntelligenceRepository()
         ..seedPracticeThemes([
@@ -629,7 +627,8 @@ void main() {
       final workshops = FakeWorkshopRepository()
         ..seedWorkshops([
           _traChieu(
-            description: 'Một buổi cho những người đang thấy mình bận nhưng '
+            description:
+                'Một buổi cho những người đang thấy mình bận nhưng '
                 'không rõ đang đi đâu.',
           ),
         ]);
@@ -678,10 +677,7 @@ void main() {
       );
 
       expect(kTraChieuZaloUrl, isEmpty);
-      expect(
-        find.byKey(const Key('wr_tra_chieu_zalo_button')),
-        findsNothing,
-      );
+      expect(find.byKey(const Key('wr_tra_chieu_zalo_button')), findsNothing);
       // Lối đăng ký qua web thì luôn phải còn.
       expect(
         find.byKey(const Key('wr_tra_chieu_detail_button')),
@@ -787,8 +783,9 @@ void main() {
     // Khách 2026-07-30: "để chạm vào là chuyển như vậy dễ chạm nhầm lắm, chỉ
     // vuốt lên thôi mà vô tình chạm cũng bất tiện". Rời khỏi app phải là việc
     // người dùng chủ ý làm, không phải hệ quả của một cú vuốt trượt tay.
-    testWidgets('mỗi buổi có nút riêng, chạm vào thẻ thì không đi đâu cả',
-        (tester) async {
+    testWidgets('mỗi buổi có nút riêng, chạm vào thẻ thì không đi đâu cả', (
+      tester,
+    ) async {
       final workshops = FakeWorkshopRepository()
         ..seedWorkshops([_traChieu(id: 'w1', title: 'Buổi A')]);
 
@@ -808,8 +805,9 @@ void main() {
       );
     });
 
-    testWidgets('thẻ buổi nói đủ tên, mô tả, giờ, địa điểm và giá',
-        (tester) async {
+    testWidgets('thẻ buổi nói đủ tên, mô tả, giờ, địa điểm và giá', (
+      tester,
+    ) async {
       // Ngày phải nằm ở tương lai so với lúc chạy: màn lịch chỉ hiện buổi chưa
       // diễn ra (`upcomingTraChieu`). Ghi cứng một ngày cụ thể là hẹn giờ cho
       // test hỏng — bản trước ghi 03/09/2026 và hỏng đúng vào 08/09/2026.
@@ -818,7 +816,8 @@ void main() {
       // sản phẩm để kiểm chính nó thì luôn khớp, kể cả khi nó sai.
       final date = DateTime.now().add(const Duration(days: 30));
       const weekdays = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
-      final whenLabel = '${weekdays[date.weekday - 1]} '
+      final whenLabel =
+          '${weekdays[date.weekday - 1]} '
           '${date.day.toString().padLeft(2, '0')}/'
           '${date.month.toString().padLeft(2, '0')}';
 
@@ -868,10 +867,9 @@ void main() {
       await tester.tap(find.byKey(const Key('wr_ask_send')));
       await tester.pumpAndSettle();
 
-      expect(
-        chat.sendCalls.map((c) => c.message),
-        ['Tôi vừa im lặng trong một cuộc họp.'],
-      );
+      expect(chat.sendCalls.map((c) => c.message), [
+        'Tôi vừa im lặng trong một cuộc họp.',
+      ]);
       expect(find.text('Tôi vừa im lặng trong một cuộc họp.'), findsOneWidget);
       expect(
         find.text('Nghe quen thuộc đấy. Điều gì khiến bạn chọn im lặng?'),
@@ -941,7 +939,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('wr_chat_quota_hint')), findsOneWidget);
-      expect(find.text('Còn 9 lượt trò chuyện miễn phí hôm nay.'), findsOneWidget);
+      expect(
+        find.text('Còn 9 lượt trò chuyện miễn phí hôm nay.'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('Premium không bị nhắc về hạn mức', (tester) async {
@@ -958,26 +959,22 @@ void main() {
       expect(find.byKey(const Key('wr_chat_quota_hint')), findsNothing);
     });
 
-    testWidgets('mở màn là vào thẳng cuộc gần nhất, đúng thứ tự', (tester) async {
+    testWidgets('mở màn là vào thẳng cuộc gần nhất, đúng thứ tự', (
+      tester,
+    ) async {
       // Vào thẳng cuộc đang dở chứ không bắt qua màn chọn: phần lớn lần mở là
       // để nói tiếp chuyện dở dang.
       final chat = FakeWrChatRepository()
-        ..seedConversation(
-          'cũ',
-          const [WrChatMessage(role: WrChatRole.user, content: 'Chuyện tháng trước')],
-          lastMessageAt: DateTime(2026, 7, 1),
-        )
-        ..seedConversation(
-          'mới',
-          const [
-            WrChatMessage(role: WrChatRole.user, content: 'Câu hỏi hôm qua'),
-            WrChatMessage(
-              role: WrChatRole.assistant,
-              content: 'Câu trả lời hôm qua',
-            ),
-          ],
-          lastMessageAt: DateTime(2026, 8, 2),
-        );
+        ..seedConversation('cũ', const [
+          WrChatMessage(role: WrChatRole.user, content: 'Chuyện tháng trước'),
+        ], lastMessageAt: DateTime(2026, 7, 1))
+        ..seedConversation('mới', const [
+          WrChatMessage(role: WrChatRole.user, content: 'Câu hỏi hôm qua'),
+          WrChatMessage(
+            role: WrChatRole.assistant,
+            content: 'Câu trả lời hôm qua',
+          ),
+        ], lastMessageAt: DateTime(2026, 8, 2));
 
       await _pump(tester, _wrap(const WrAskScreen(), chat: chat));
 
@@ -1009,10 +1006,9 @@ void main() {
 
     testWidgets('nút cuộc trò chuyện mới dọn màn và bỏ id cũ', (tester) async {
       final chat = FakeWrChatRepository()
-        ..seedConversation(
-          'c-cũ',
-          const [WrChatMessage(role: WrChatRole.user, content: 'Câu cũ')],
-        );
+        ..seedConversation('c-cũ', const [
+          WrChatMessage(role: WrChatRole.user, content: 'Câu cũ'),
+        ]);
 
       await _pump(tester, _wrap(const WrAskScreen(), chat: chat));
       expect(find.text('Câu cũ'), findsOneWidget);
@@ -1059,7 +1055,9 @@ void main() {
       expect(find.text('Chuyện mới'), findsNothing);
     });
 
-    testWidgets('trợ lý mời ghi Reflection thì có nút mở luồng', (tester) async {
+    testWidgets('trợ lý mời ghi Reflection thì có nút mở luồng', (
+      tester,
+    ) async {
       // Mục 5: trợ lý MỜI vào Reflection. Trước 2026-08-03 nó nói được câu mời
       // nhưng không có đường đi tới, nên lời mời rơi vào khoảng không.
       final chat = FakeWrChatRepository()
@@ -1067,7 +1065,10 @@ void main() {
         ..replyAction = WrChatAction.reflect;
 
       await _pump(tester, _wrap(const WrAskScreen(), chat: chat));
-      await tester.enterText(find.byKey(const Key('wr_ask_field')), 'Mình im lặng');
+      await tester.enterText(
+        find.byKey(const Key('wr_ask_field')),
+        'Mình im lặng',
+      );
       await tester.pump();
       await tester.tap(find.byKey(const Key('wr_ask_send')));
       await tester.pumpAndSettle();
@@ -1088,7 +1089,10 @@ void main() {
         ..replyAction = WrChatAction.calm;
 
       await _pump(tester, _wrap(const WrAskScreen(), chat: chat));
-      await tester.enterText(find.byKey(const Key('wr_ask_field')), 'Mình mệt quá');
+      await tester.enterText(
+        find.byKey(const Key('wr_ask_field')),
+        'Mình mệt quá',
+      );
       await tester.pump();
       await tester.tap(find.byKey(const Key('wr_ask_send')));
       await tester.pumpAndSettle();
@@ -1137,10 +1141,9 @@ void main() {
 
     testWidgets('xoá cuộc trò chuyện sau khi xác nhận', (tester) async {
       final chat = FakeWrChatRepository()
-        ..seedConversation(
-          'c-xoá',
-          const [WrChatMessage(role: WrChatRole.user, content: 'Câu cũ')],
-        );
+        ..seedConversation('c-xoá', const [
+          WrChatMessage(role: WrChatRole.user, content: 'Câu cũ'),
+        ]);
 
       await _pump(tester, _wrap(const WrAskScreen(), chat: chat));
       await tester.tap(find.byKey(const Key('wr_chat_menu')));
@@ -1187,10 +1190,7 @@ void main() {
     });
 
     testWidgets('có nút mic khi máy nhận dạng được giọng nói', (tester) async {
-      await _pump(
-        tester,
-        _wrap(const WrAskScreen(), sttAvailable: true),
-      );
+      await _pump(tester, _wrap(const WrAskScreen(), sttAvailable: true));
 
       expect(find.byKey(const Key('wr_voice_mic')), findsOneWidget);
     });
@@ -1242,11 +1242,10 @@ void main() {
     }
 
     FakeWrIntelligenceRepository themes(List<String> titles) =>
-        FakeWrIntelligenceRepository()
-          ..seedPracticeThemes([
-            for (var i = 0; i < titles.length; i++)
-              PracticeTheme(themeId: 't$i', title: titles[i]),
-          ]);
+        FakeWrIntelligenceRepository()..seedPracticeThemes([
+          for (var i = 0; i < titles.length; i++)
+            PracticeTheme(themeId: 't$i', title: titles[i]),
+        ]);
 
     testWidgets('đứng ngay sau Tư duy hệ thống', (tester) async {
       // Vị trí do khách chỉ định: "nó ở giữa tư duy hệ thống với AI".
@@ -1331,10 +1330,7 @@ void main() {
       await _pump(tester, _wrap(const WrGrowthScreen()));
 
       expect(find.text('Thực hành khác'), findsNothing);
-      expect(
-        find.byKey(const Key('wr_growth_other_themes_row')),
-        findsNothing,
-      );
+      expect(find.byKey(const Key('wr_growth_other_themes_row')), findsNothing);
       // Lối rẽ còn lại không bị đụng tới. "Chặng đường phát triển" đã bỏ khỏi
       // màn này (2026-08-03).
       // Đổi tên theo Ma trận Cấp bậc v1.0 mục A.1: giữ chữ "kỹ năng", bỏ chữ
@@ -1343,17 +1339,15 @@ void main() {
       expect(find.text('Chặng đường phát triển'), findsNothing);
     });
 
-    testWidgets('thẻ nói pill, chủ đề buổi, khuôn buổi và Xem chi tiết',
-        (tester) async {
+    testWidgets('thẻ nói pill, chủ đề buổi, khuôn buổi và Xem chi tiết', (
+      tester,
+    ) async {
       final workshops = FakeWorkshopRepository()
         ..seedWorkshops([
           _traChieu(date: DateTime.now().add(const Duration(days: 9))),
         ]);
 
-      await _pump(
-        tester,
-        _wrap(const WrGrowthScreen(), workshops: workshops),
-      );
+      await _pump(tester, _wrap(const WrGrowthScreen(), workshops: workshops));
 
       final card = find.byKey(const Key('wr_growth_opportunity'));
       expect(card, findsOneWidget);
@@ -1362,23 +1356,16 @@ void main() {
         find.text('"Bận cả tuần, nhưng mình đang đi về đâu?"'),
         findsOneWidget,
       );
-      expect(
-        find.textContaining(kTraChieuFormatLabel),
-        findsOneWidget,
-      );
+      expect(find.textContaining(kTraChieuFormatLabel), findsOneWidget);
       expect(find.text('Xem chi tiết'), findsOneWidget);
       // Chữ, không ảnh — nguyên tắc của họp 2026-07-29 vẫn giữ.
       expect(find.byType(Image), findsNothing);
     });
 
     testWidgets('chạm thẻ mở màn Trà Chiều', (tester) async {
-      final workshops = FakeWorkshopRepository()
-        ..seedWorkshops([_traChieu()]);
+      final workshops = FakeWorkshopRepository()..seedWorkshops([_traChieu()]);
 
-      await _pump(
-        tester,
-        _wrap(const WrGrowthScreen(), workshops: workshops),
-      );
+      await _pump(tester, _wrap(const WrGrowthScreen(), workshops: workshops));
       await tester.tap(find.byKey(const Key('wr_growth_opportunity')));
       await tester.pumpAndSettle();
 
@@ -1389,7 +1376,9 @@ void main() {
     // cả" — DB của khách chưa có buổi nào mang category Trà Chiều, và bản trước
     // ẩn cả thẻ khi lịch trống. Lịch trống không có nghĩa là không có chương
     // trình: cửa vào phải còn, chỉ đổi lời.
-    testWidgets('chưa mở buổi nào thì thẻ vẫn còn, chỉ đổi lời', (tester) async {
+    testWidgets('chưa mở buổi nào thì thẻ vẫn còn, chỉ đổi lời', (
+      tester,
+    ) async {
       await _pump(tester, _wrap(const WrGrowthScreen()));
 
       expect(find.byKey(const Key('wr_growth_opportunity')), findsOneWidget);
@@ -1408,8 +1397,9 @@ void main() {
       expect(find.byKey(const Key('wr_tra_chieu_empty')), findsOneWidget);
     });
 
-    testWidgets('buổi đã diễn ra rồi thì không mượn lại làm buổi sắp tới',
-        (tester) async {
+    testWidgets('buổi đã diễn ra rồi thì không mượn lại làm buổi sắp tới', (
+      tester,
+    ) async {
       final workshops = FakeWorkshopRepository()
         ..seedWorkshops([
           _traChieu(
@@ -1418,10 +1408,7 @@ void main() {
           ),
         ]);
 
-      await _pump(
-        tester,
-        _wrap(const WrGrowthScreen(), workshops: workshops),
-      );
+      await _pump(tester, _wrap(const WrGrowthScreen(), workshops: workshops));
 
       expect(find.textContaining('Buổi tháng trước'), findsNothing);
       expect(find.text('Hiện chưa có lịch sự kiện mới.'), findsOneWidget);
@@ -1434,12 +1421,14 @@ void main() {
         FakeWrMoodContentRepository()..seedContent([item]);
 
     testWidgets('header ghim lại khi cuộn nội dung', (tester) async {
-      final moodContent = libraryWith(fakeMoodContent(
-        id: 'm1',
-        mood: Mood.okay,
-        title: 'Khi áp lực đến từ việc muốn kiểm soát mọi thứ',
-        body: List.generate(12, (i) => 'Đoạn số $i.').join('\n\n'),
-      ));
+      final moodContent = libraryWith(
+        fakeMoodContent(
+          id: 'm1',
+          mood: Mood.okay,
+          title: 'Khi áp lực đến từ việc muốn kiểm soát mọi thứ',
+          body: List.generate(12, (i) => 'Đoạn số $i.').join('\n\n'),
+        ),
+      );
 
       await _pump(
         tester,
@@ -1483,12 +1472,14 @@ void main() {
     testWidgets('audio chưa có bản thu thì mời nghe bằng giọng đọc AI', (
       tester,
     ) async {
-      final moodContent = libraryWith(fakeMoodContent(
-        id: 'm1',
-        mood: Mood.stressed,
-        type: MoodContentType.audio,
-        kind: 'HEALING AUDIO',
-      ));
+      final moodContent = libraryWith(
+        fakeMoodContent(
+          id: 'm1',
+          mood: Mood.stressed,
+          type: MoodContentType.audio,
+          kind: 'HEALING AUDIO',
+        ),
+      );
 
       await _pump(
         tester,
@@ -1506,13 +1497,15 @@ void main() {
       // Gọi lại TTS cho một bài đã dựng là đốt credit của khách cho cùng một
       // đoạn chữ không đổi.
       final tts = _FakeTts(url: 'https://cdn.test/x.wav');
-      final moodContent = libraryWith(fakeMoodContent(
-        id: 'm1',
-        mood: Mood.stressed,
-        type: MoodContentType.audio,
-        duration: '3 phút',
-        audioUrl: 'https://cdn.test/co-san.wav',
-      ));
+      final moodContent = libraryWith(
+        fakeMoodContent(
+          id: 'm1',
+          mood: Mood.stressed,
+          type: MoodContentType.audio,
+          duration: '3 phút',
+          audioUrl: 'https://cdn.test/co-san.wav',
+        ),
+      );
 
       await _pump(
         tester,
@@ -1533,11 +1526,13 @@ void main() {
           'Giọng đọc AI chưa dùng được: A paid plan is required.',
         ),
       );
-      final moodContent = libraryWith(fakeMoodContent(
-        id: 'm1',
-        mood: Mood.stressed,
-        type: MoodContentType.audio,
-      ));
+      final moodContent = libraryWith(
+        fakeMoodContent(
+          id: 'm1',
+          mood: Mood.stressed,
+          type: MoodContentType.audio,
+        ),
+      );
 
       await _pump(
         tester,
@@ -1552,31 +1547,23 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(tts.calls, 1);
-      expect(
-        find.textContaining('A paid plan is required'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('A paid plan is required'), findsOneWidget);
     });
   });
 
   // -------------------------------------------------------------------------
-  group('công tắc Premium thử nghiệm áp cho cả trợ lý', () {
-    // Bản đầu chatbox CỐ Ý bỏ qua công tắc, vì công tắc nằm trên máy nên không
-    // được phép mở hạn mức tiêu tiền thật. Đúng về bảo mật, sai về hậu quả: mọi
-    // màn khác đổi theo công tắc còn riêng trợ lý thì không, nên bật Premium lên
-    // xem thử lại tưởng ranh giới hai gói bị hỏng.
-    //
-    // Máy chủ tự kiểm tra email của người gọi nên gửi cờ lên là an toàn. Phần
-    // dưới khoá đúng phía app: gửi khi được phép, và KHÔNG gửi khi không.
+  group('chat dùng entitlement thật, không dùng override đã lưu', () {
+    // Override cũ có thể còn trong SharedPreferences sau khi control bị gỡ.
+    // Chat production không được gửi cờ đó; máy chủ phải trả entitlement thật.
 
-    testWidgets('email được phép: lượt gửi mang theo cờ', (tester) async {
-      // Hai key: giá trị và CHỦ công tắc. Thiếu chủ thì công tắc bị bỏ — xem
-      // `overrideForAccount`.
+    testWidgets('override true không biến gói thật thành Premium', (
+      tester,
+    ) async {
       SharedPreferences.setMockInitialValues({
         'wr_dev_premium_override': true,
         'wr_dev_premium_override_owner': 'thedangs7@gmail.com',
       });
-      final chat = FakeWrChatRepository();
+      final chat = FakeWrChatRepository()..isPremium = false;
 
       await _pump(
         tester,
@@ -1588,18 +1575,22 @@ void main() {
       await tester.tap(find.byKey(const Key('wr_ask_send')));
       await tester.pumpAndSettle();
 
-      expect(chat.sendCalls.single.premiumOverride, isTrue);
+      expect(chat.sendCalls.single.premiumOverride, isNull);
+      expect(find.byKey(const Key('wr_chat_quota_hint')), findsOneWidget);
     });
 
-    testWidgets('email KHÔNG được phép: cờ bị bỏ qua', (tester) async {
-      // Một giá trị sót lại trong SharedPreferences không được phép đổi giọng
-      // trợ lý của người dùng thường.
-      SharedPreferences.setMockInitialValues({'wr_dev_premium_override': true});
-      final chat = FakeWrChatRepository();
+    testWidgets('override false không thu hồi gói Premium thật', (
+      tester,
+    ) async {
+      SharedPreferences.setMockInitialValues({
+        'wr_dev_premium_override': false,
+        'wr_dev_premium_override_owner': 'thedangs7@gmail.com',
+      });
+      final chat = FakeWrChatRepository()..isPremium = true;
 
       await _pump(
         tester,
-        _wrap(const WrAskScreen(), chat: chat, email: 'nguoila@example.com'),
+        _wrap(const WrAskScreen(), chat: chat, email: 'thedangs7@gmail.com'),
       );
       await tester.enterText(find.byKey(const Key('wr_ask_field')), 'chào');
       // Nút gửi chỉ bật khi ô đã có chữ, nên phải để khung dựng lại trước khi bấm.
@@ -1608,6 +1599,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(chat.sendCalls.single.premiumOverride, isNull);
+      expect(find.byKey(const Key('wr_chat_quota_hint')), findsNothing);
     });
 
     testWidgets('chưa động vào công tắc thì dùng gói thật', (tester) async {

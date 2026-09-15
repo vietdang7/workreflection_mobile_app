@@ -174,11 +174,8 @@ class WrStorePolicy {
       other.allowsNativeIap == allowsNativeIap;
 
   @override
-  int get hashCode => Object.hash(
-        allowsVietQrCheckout,
-        allowsWebPurchaseLink,
-        allowsNativeIap,
-      );
+  int get hashCode =>
+      Object.hash(allowsVietQrCheckout, allowsWebPurchaseLink, allowsNativeIap);
 }
 
 /// Đường dẫn web mở thẳng trang mua Premium, kèm gói đã chọn sẵn.
@@ -204,8 +201,10 @@ String wrWebPremiumUrl({
   final plan = planProductId?.trim();
   if (plan != null && plan.isNotEmpty) query['plan'] = plan;
   final qs = query.entries
-      .map((e) =>
-          '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}')
+      .map(
+        (e) =>
+            '${Uri.encodeQueryComponent(e.key)}=${Uri.encodeQueryComponent(e.value)}',
+      )
       .join('&');
   return '$root/premium?$qs';
 }

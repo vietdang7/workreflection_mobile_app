@@ -18,9 +18,7 @@ import '../support/fake_coaching_repository.dart';
 
 Widget _wrap(FakeCoachingRepository repo) {
   return ProviderScope(
-    overrides: [
-      coachingRepositoryProvider.overrideWithValue(repo),
-    ],
+    overrides: [coachingRepositoryProvider.overrideWithValue(repo)],
     child: const MaterialApp(
       builder: wrTextScaleBuilder,
       localizationsDelegates: [
@@ -44,19 +42,18 @@ CoachingPackage _pkg({
   int? durationMinutes,
   List<String> features = const ['Feature A', 'Feature B'],
   String? targetAudience,
-}) =>
-    CoachingPackage(
-      id: id,
-      name: name,
-      price: price,
-      currency: currency,
-      sessionsCount: sessionsCount,
-      durationMinutes: durationMinutes,
-      features: features,
-      targetAudience: targetAudience,
-      isActive: true,
-      displayOrder: 0,
-    );
+}) => CoachingPackage(
+  id: id,
+  name: name,
+  price: price,
+  currency: currency,
+  sessionsCount: sessionsCount,
+  durationMinutes: durationMinutes,
+  features: features,
+  targetAudience: targetAudience,
+  isActive: true,
+  displayOrder: 0,
+);
 
 Coach _coach({
   String id = 'coach-1',
@@ -65,17 +62,16 @@ Coach _coach({
   String? avatarUrl,
   List<String> specializations = const ['Leadership', 'Career'],
   int? experienceYears = 5,
-}) =>
-    Coach(
-      id: id,
-      fullName: fullName,
-      title: title,
-      avatarUrl: avatarUrl,
-      specializations: specializations,
-      experienceYears: experienceYears,
-      isActive: true,
-      displayOrder: 0,
-    );
+}) => Coach(
+  id: id,
+  fullName: fullName,
+  title: title,
+  avatarUrl: avatarUrl,
+  specializations: specializations,
+  experienceYears: experienceYears,
+  isActive: true,
+  displayOrder: 0,
+);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -145,8 +141,9 @@ void main() {
       expect(repo.claimFreePackageCalls.first.name, 'Free Pack');
     });
 
-    testWidgets('claim error shows snackbar and button re-enables',
-        (tester) async {
+    testWidgets('claim error shows snackbar and button re-enables', (
+      tester,
+    ) async {
       repo.seedPackages([_pkg(price: 0, name: 'Free Pack')]);
 
       await tester.pumpWidget(_wrap(repo));
@@ -162,8 +159,10 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(seconds: 1));
 
-      expect(find.text('Không thể kích hoạt gói. Vui lòng thử lại.'),
-          findsOneWidget);
+      expect(
+        find.text('Không thể kích hoạt gói. Vui lòng thử lại.'),
+        findsOneWidget,
+      );
 
       // Button should be re-enabled (not loading) — find the claim button again
       await tester.pumpAndSettle();
@@ -171,9 +170,7 @@ void main() {
     });
 
     testWidgets('paid package → shows paid dialog, no claim', (tester) async {
-      repo.seedPackages([
-        _pkg(id: 'p2', name: 'Premium Pack', price: 2000000),
-      ]);
+      repo.seedPackages([_pkg(id: 'p2', name: 'Premium Pack', price: 2000000)]);
 
       await tester.pumpWidget(_wrap(repo));
       await tester.pumpAndSettle();
@@ -188,9 +185,7 @@ void main() {
     });
 
     testWidgets('coaches section renders initials fallback', (tester) async {
-      repo.seedCoaches([
-        _coach(fullName: 'Nguyen Van A', avatarUrl: null),
-      ]);
+      repo.seedCoaches([_coach(fullName: 'Nguyen Van A', avatarUrl: null)]);
 
       await tester.pumpWidget(_wrap(repo));
       await tester.pumpAndSettle();
@@ -210,8 +205,9 @@ void main() {
       expect(find.text('Chưa có workshop nào sắp diễn ra'), findsOneWidget);
     });
 
-    testWidgets('error state shows retry button and retry refetches',
-        (tester) async {
+    testWidgets('error state shows retry button and retry refetches', (
+      tester,
+    ) async {
       repo.nextError = Exception('fail');
 
       await tester.pumpWidget(_wrap(repo));

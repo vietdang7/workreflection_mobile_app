@@ -85,14 +85,13 @@ CoachingBooking _pendingBooking({
   String id = 'b-1',
   int sessionNumber = 1,
   int totalSessions = 3,
-}) =>
-    CoachingBooking(
-      id: id,
-      packageId: 'pkg-1',
-      status: 'pending',
-      sessionNumber: sessionNumber,
-      totalSessions: totalSessions,
-    );
+}) => CoachingBooking(
+  id: id,
+  packageId: 'pkg-1',
+  status: 'pending',
+  sessionNumber: sessionNumber,
+  totalSessions: totalSessions,
+);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -109,14 +108,16 @@ void main() {
       repo.seedBookings([_pendingBooking()]);
 
       await tester.pumpWidget(
-          _wrapWithRouter(const CoachingSessionsScreen(), repo));
+        _wrapWithRouter(const CoachingSessionsScreen(), repo),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Đặt lịch'), findsOneWidget);
     });
 
-    testWidgets('scheduled booking does NOT show Đặt lịch button',
-        (tester) async {
+    testWidgets('scheduled booking does NOT show Đặt lịch button', (
+      tester,
+    ) async {
       repo.seedBookings([
         CoachingBooking(
           id: 'b-2',
@@ -129,7 +130,8 @@ void main() {
       ]);
 
       await tester.pumpWidget(
-          _wrapWithRouter(const CoachingSessionsScreen(), repo));
+        _wrapWithRouter(const CoachingSessionsScreen(), repo),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Đặt lịch'), findsNothing);
@@ -144,18 +146,21 @@ void main() {
 
     testWidgets('shows not-found state when booking missing', (tester) async {
       await tester.pumpWidget(
-          _wrapSimple(const CoachingScheduleScreen(bookingId: 'missing'), repo));
+        _wrapSimple(const CoachingScheduleScreen(bookingId: 'missing'), repo),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Không tìm thấy buổi coaching này'), findsOneWidget);
     });
 
     testWidgets('renders session label, date/time headers', (tester) async {
-      repo.seedBookings(
-          [_pendingBooking(id: 'b-1', sessionNumber: 2, totalSessions: 5)]);
+      repo.seedBookings([
+        _pendingBooking(id: 'b-1', sessionNumber: 2, totalSessions: 5),
+      ]);
 
       await tester.pumpWidget(
-          _wrapSimple(const CoachingScheduleScreen(bookingId: 'b-1'), repo));
+        _wrapSimple(const CoachingScheduleScreen(bookingId: 'b-1'), repo),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Buổi 2/5'), findsOneWidget);
@@ -172,7 +177,8 @@ void main() {
       repo.seedBookings([_pendingBooking(id: 'b-1')]);
 
       await tester.pumpWidget(
-          _wrapSimple(const CoachingScheduleScreen(bookingId: 'b-1'), repo));
+        _wrapSimple(const CoachingScheduleScreen(bookingId: 'b-1'), repo),
+      );
       await tester.pumpAndSettle();
 
       await _tapSubmit(tester);
@@ -183,23 +189,27 @@ void main() {
       expect(repo.scheduleBookingCalls, isEmpty);
     });
 
-    testWidgets(
-        'selecting date + time then confirming calls repo correctly',
-        (tester) async {
+    testWidgets('selecting date + time then confirming calls repo correctly', (
+      tester,
+    ) async {
       await tester.binding.setSurfaceSize(const Size(800, 1400));
       addTearDown(() => tester.binding.setSurfaceSize(null));
 
       repo.seedBookings([_pendingBooking(id: 'b-1')]);
 
       await tester.pumpWidget(
-          _wrapSimple(const CoachingScheduleScreen(bookingId: 'b-1'), repo));
+        _wrapSimple(const CoachingScheduleScreen(bookingId: 'b-1'), repo),
+      );
       await tester.pumpAndSettle();
 
       // Tap first selectable calendar cell
       final calendarGrid = find.byType(GridView).first;
       final detectors = tester
           .widgetList<GestureDetector>(
-            find.descendant(of: calendarGrid, matching: find.byType(GestureDetector)),
+            find.descendant(
+              of: calendarGrid,
+              matching: find.byType(GestureDetector),
+            ),
           )
           .toList();
 
@@ -239,14 +249,18 @@ void main() {
       repo.seedBookings([_pendingBooking(id: 'b-1')]);
 
       await tester.pumpWidget(
-          _wrapSimple(const CoachingScheduleScreen(bookingId: 'b-1'), repo));
+        _wrapSimple(const CoachingScheduleScreen(bookingId: 'b-1'), repo),
+      );
       await tester.pumpAndSettle();
 
       // Select a date
       final calendarGrid = find.byType(GridView).first;
       final detectors = tester
           .widgetList<GestureDetector>(
-            find.descendant(of: calendarGrid, matching: find.byType(GestureDetector)),
+            find.descendant(
+              of: calendarGrid,
+              matching: find.byType(GestureDetector),
+            ),
           )
           .toList();
       for (final d in detectors) {
@@ -271,7 +285,10 @@ void main() {
       await tester.pump();
       await tester.pump(const Duration(seconds: 1));
 
-      expect(find.text('Không thể đặt lịch. Vui lòng thử lại.'), findsOneWidget);
+      expect(
+        find.text('Không thể đặt lịch. Vui lòng thử lại.'),
+        findsOneWidget,
+      );
     });
   });
 
@@ -282,16 +299,24 @@ void main() {
     setUp(() => repo = FakeCoachingRepository());
 
     testWidgets('shows avg rating badge when reviews exist', (tester) async {
-      repo.seedReviews(CoachReviewSummary(
-        avgRating: 4.8,
-        totalCount: 10,
-        reviews: [
-          const CoachReview(
-              rating: 5, reviewerName: 'Nguyen A', comment: 'Rất tốt'),
-          const CoachReview(
-              rating: 4, reviewerName: 'Tran B', comment: 'Hài lòng'),
-        ],
-      ));
+      repo.seedReviews(
+        CoachReviewSummary(
+          avgRating: 4.8,
+          totalCount: 10,
+          reviews: [
+            const CoachReview(
+              rating: 5,
+              reviewerName: 'Nguyen A',
+              comment: 'Rất tốt',
+            ),
+            const CoachReview(
+              rating: 4,
+              reviewerName: 'Tran B',
+              comment: 'Hài lòng',
+            ),
+          ],
+        ),
+      );
 
       await tester.pumpWidget(_wrapSimple(const CoachingScreen(), repo));
       await tester.pumpAndSettle();

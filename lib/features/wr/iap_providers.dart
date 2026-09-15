@@ -129,10 +129,7 @@ class WrIapController extends StateNotifier<WrIapState> {
   Future<void> _onPurchase(WrIapPurchase purchase) async {
     switch (purchase.status) {
       case WrIapStatus.pending:
-        state = state.copyWith(
-          phase: WrIapPhase.awaitingApproval,
-          error: null,
-        );
+        state = state.copyWith(phase: WrIapPhase.awaitingApproval, error: null);
         return;
 
       case WrIapStatus.canceled:
@@ -212,9 +209,7 @@ class WrIapController extends StateNotifier<WrIapState> {
   Future<void> buy(String productId) async {
     final userId = _ref.read(currentUserIdProvider);
     if (userId == null) {
-      state = state.copyWith(
-        error: 'Bạn cần đăng nhập trước khi mua.',
-      );
+      state = state.copyWith(error: 'Bạn cần đăng nhập trước khi mua.');
       return;
     }
     state = state.copyWith(
@@ -293,8 +288,8 @@ const Duration kWrIapRestoreWindow = Duration(seconds: 6);
 
 final wrIapControllerProvider =
     StateNotifierProvider<WrIapController, WrIapState>((ref) {
-  return WrIapController(ref);
-});
+      return WrIapController(ref);
+    });
 
 // ---------------------------------------------------------------------------
 // Nhắc trước khi kỳ thuê bao kết thúc
@@ -304,8 +299,9 @@ final wrIapControllerProvider =
 ///
 /// Không bao giờ ném: đây là thứ nuôi một lời nhắc phụ, hỏng mạng thì im lặng
 /// chứ không được làm hỏng màn hình đang mở.
-final wrIapSubscriptionProvider =
-    FutureProvider<WrIapSubscription?>((ref) async {
+final wrIapSubscriptionProvider = FutureProvider<WrIapSubscription?>((
+  ref,
+) async {
   // Bản không bán bằng IAP thì không có gì để nhắc, và cũng không nên bắn một
   // truy vấn thừa ở mỗi lần mở Home.
   if (!ref.watch(wrStorePolicyProvider).allowsNativeIap) return null;

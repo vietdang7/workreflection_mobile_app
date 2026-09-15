@@ -33,20 +33,32 @@ import '../../../core/widgets/wr_paragraph.dart';
 
 /// Ba nguyên tắc cốt lõi — nguyên văn theo mockup, không rút gọn.
 List<String> get kTraChieuRules => [
-  tr('Điều gì nói ở đây, ở lại đây. Mọi trích dẫn ra ngoài đều ẩn danh và cần '
-      'người nói đồng ý.', 'What is said here stays here. Anything quoted outside is anonymous and '
-      'needs the speaker\'s consent.'),
-  tr('Không lời khuyên khi chưa được hỏi. Chỉ lắng nghe và hỏi lại.', 'No advice unless it is asked for. Just listen, and ask back.'),
-  tr('Được quyền im lặng. Có thể xin qua lượt bất kỳ lúc nào, không cần lý do.', 'You may stay silent. You can pass at any point, no reason needed.'),
+  tr(
+    'Điều gì nói ở đây, ở lại đây. Mọi trích dẫn ra ngoài đều ẩn danh và cần '
+        'người nói đồng ý.',
+    'What is said here stays here. Anything quoted outside is anonymous and '
+        'needs the speaker\'s consent.',
+  ),
+  tr(
+    'Không lời khuyên khi chưa được hỏi. Chỉ lắng nghe và hỏi lại.',
+    'No advice unless it is asked for. Just listen, and ask back.',
+  ),
+  tr(
+    'Được quyền im lặng. Có thể xin qua lượt bất kỳ lúc nào, không cần lý do.',
+    'You may stay silent. You can pass at any point, no reason needed.',
+  ),
 ];
 
-String get kTraChieuWhy => tr('Trà Chiều là một không gian tự do được kết nối bởi chính những người đi '
-    'làm. Bằng việc cùng đào sâu bằng phản chiếu, chúng ta mượn trải nghiệm của '
-    'người khác và gỡ rối cho chính mình. Giá trị lớn nhất ở khoảnh khắc bạn '
-    'nhận ra: Hóa ra mình không hề đơn độc trên hành trình này.', 'Tea Time is an open space held together by working people themselves. '
-    'By going deeper through reflection, we borrow other people\'s experience '
-    'to untangle our own. The greatest value is the moment you realise you are '
-    'not alone on this road.');
+String get kTraChieuWhy => tr(
+  'Trà Chiều là một không gian tự do được kết nối bởi chính những người đi '
+      'làm. Bằng việc cùng đào sâu bằng phản chiếu, chúng ta mượn trải nghiệm của '
+      'người khác và gỡ rối cho chính mình. Giá trị lớn nhất ở khoảnh khắc bạn '
+      'nhận ra: Hóa ra mình không hề đơn độc trên hành trình này.',
+  'Tea Time is an open space held together by working people themselves. '
+      'By going deeper through reflection, we borrow other people\'s experience '
+      'to untangle our own. The greatest value is the moment you realise you are '
+      'not alone on this road.',
+);
 
 // ---------------------------------------------------------------------------
 
@@ -55,7 +67,8 @@ class WrTraChieuScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final workshops = ref.watch(activeWorkshopsProvider).valueOrNull ?? const [];
+    final workshops =
+        ref.watch(activeWorkshopsProvider).valueOrNull ?? const [];
     final next = nextTraChieu(workshops, now: DateTime.now());
     final upcoming = upcomingTraChieu(workshops, now: DateTime.now());
 
@@ -111,7 +124,9 @@ class WrTraChieuScreen extends ConsumerWidget {
         WrLinkRow(
           key: const Key('wr_tra_chieu_calendar_row'),
           label: tr('Xem lịch các buổi', 'See the schedule'),
-          hint: upcoming.isEmpty ? null : tr('${upcoming.length} buổi', '${upcoming.length} sessions'),
+          hint: upcoming.isEmpty
+              ? null
+              : tr('${upcoming.length} buổi', '${upcoming.length} sessions'),
           onTap: () => context.push('/wr/tra-chieu/lich'),
         ),
         const SizedBox(height: 18),
@@ -210,10 +225,7 @@ class _NextSessionCard extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 16),
-          Container(
-            height: 1,
-            color: WrColors.cream.withValues(alpha: 0.15),
-          ),
+          Container(height: 1, color: WrColors.cream.withValues(alpha: 0.15)),
           const SizedBox(height: 16),
           _DarkLine(traChieuWhenLabel(session)),
           if (session.location != null && session.location!.isNotEmpty)
@@ -262,7 +274,10 @@ class _NextSessionCard extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  tr('Nhắn Zalo để giữ một ghế', 'Message on Zalo to hold a seat'),
+                  tr(
+                    'Nhắn Zalo để giữ một ghế',
+                    'Message on Zalo to hold a seat',
+                  ),
                   style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w600),
                 ),
               ),
@@ -303,9 +318,12 @@ class _NoSessionCard extends StatelessWidget {
     return WrCardMinimal(
       key: Key('wr_tra_chieu_empty'),
       child: WrParagraph(
-        tr('Hiện chưa có lịch sự kiện mới. Lịch tổ chức Trà Chiều thường sẽ được '
-        'thông báo trước hai tuần để bạn tiện sắp xếp công việc.', 'No sessions scheduled yet. Tea Time dates are usually announced two '
-        'weeks ahead so you can plan around work.'),
+        tr(
+          'Hiện chưa có lịch sự kiện mới. Lịch tổ chức Trà Chiều thường sẽ được '
+              'thông báo trước hai tuần để bạn tiện sắp xếp công việc.',
+          'No sessions scheduled yet. Tea Time dates are usually announced two '
+              'weeks ahead so you can plan around work.',
+        ),
         style: TextStyle(fontSize: 15.5, color: WrColors.muted, height: 1.7),
       ),
     );
@@ -321,7 +339,8 @@ class WrTraChieuCalendarScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final workshops = ref.watch(activeWorkshopsProvider).valueOrNull ?? const [];
+    final workshops =
+        ref.watch(activeWorkshopsProvider).valueOrNull ?? const [];
     final sessions = upcomingTraChieu(workshops, now: DateTime.now());
 
     return WrDetailScaffold(
@@ -332,7 +351,11 @@ class WrTraChieuCalendarScreen extends ConsumerWidget {
           Text(
             tr('Hiện chưa có lịch sự kiện mới.', 'No sessions scheduled yet.'),
             key: Key('wr_tra_chieu_calendar_empty'),
-            style: TextStyle(fontSize: 15.5, color: WrColors.muted, height: 1.7),
+            style: TextStyle(
+              fontSize: 15.5,
+              color: WrColors.muted,
+              height: 1.7,
+            ),
           )
         else
           for (final s in sessions) ...[
@@ -341,7 +364,10 @@ class WrTraChieuCalendarScreen extends ConsumerWidget {
           ],
         const SizedBox(height: 22),
         Text(
-          tr('Chủ đề đổi mỗi buổi. Định kỳ hai tuần một lần, chiều thứ Bảy.', 'A new topic each time. Every two weeks, Saturday afternoon.'),
+          tr(
+            'Chủ đề đổi mỗi buổi. Định kỳ hai tuần một lần, chiều thứ Bảy.',
+            'A new topic each time. Every two weeks, Saturday afternoon.',
+          ),
           style: TextStyle(fontSize: 14.5, color: WrColors.muted, height: 1.7),
         ),
       ],
@@ -491,11 +517,18 @@ class _MetaLine extends StatelessWidget {
 /// Không mở được (không có trình duyệt, không mạng) thì nói ra chứ không im
 /// lặng: người dùng vừa bấm một nút và phải biết vì sao không có gì xảy ra.
 Future<void> openTraChieuOnWeb(BuildContext context, String workshopId) =>
-    _open(context, traChieuWebUrl(workshopId), tr('Không mở được trang chi tiết.', 'Could not open the details page.'));
+    _open(
+      context,
+      traChieuWebUrl(workshopId),
+      tr('Không mở được trang chi tiết.', 'Could not open the details page.'),
+    );
 
 /// Mở Zalo để giữ chỗ. Chỉ gọi khi [kTraChieuZaloUrl] có giá trị.
-Future<void> openTraChieuZalo(BuildContext context) =>
-    _open(context, kTraChieuZaloUrl, tr('Không mở được Zalo.', 'Could not open Zalo.'));
+Future<void> openTraChieuZalo(BuildContext context) => _open(
+  context,
+  kTraChieuZaloUrl,
+  tr('Không mở được Zalo.', 'Could not open Zalo.'),
+);
 
 Future<void> _open(BuildContext context, String url, String failure) async {
   var opened = false;
@@ -508,6 +541,8 @@ Future<void> _open(BuildContext context, String url, String failure) async {
     opened = false;
   }
   if (!opened && context.mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(failure)));
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(failure)));
   }
 }

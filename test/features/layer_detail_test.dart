@@ -24,9 +24,7 @@ import '../support/fake_survey_repository.dart';
 
 Widget _wrap(Widget child, {required FakeSurveyRepository repo}) {
   return ProviderScope(
-    overrides: [
-      surveyRepositoryProvider.overrideWithValue(repo),
-    ],
+    overrides: [surveyRepositoryProvider.overrideWithValue(repo)],
     child: MaterialApp(
       builder: wrTextScaleBuilder,
       localizationsDelegates: const [
@@ -53,22 +51,21 @@ CcReportFull _report({
   SurveyLayer bottleneck = SurveyLayer.culture,
   ScoreLevel level = ScoreLevel.good,
   Map<String, dynamic>? subScores,
-}) =>
-    CcReportFull(
-      id: id,
-      surveyId: surveyId,
-      userId: 'u1',
-      scoreTotal: total,
-      scoreStructure: s,
-      scoreCulture: c,
-      scoreActivity: a,
-      scoreEsi: esi,
-      scoreEnps: enps,
-      bottleneckLayer: bottleneck,
-      scoreLevel: level,
-      subScores: subScores,
-      createdAt: DateTime(2026, 7, 18),
-    );
+}) => CcReportFull(
+  id: id,
+  surveyId: surveyId,
+  userId: 'u1',
+  scoreTotal: total,
+  scoreStructure: s,
+  scoreCulture: c,
+  scoreActivity: a,
+  scoreEsi: esi,
+  scoreEnps: enps,
+  bottleneckLayer: bottleneck,
+  scoreLevel: level,
+  subScores: subScores,
+  createdAt: DateTime(2026, 7, 18),
+);
 
 SubComponentScore _sc(String key, double score, {int count = 10}) =>
     SubComponentScore(
@@ -110,10 +107,12 @@ void main() {
         _sc('comm_channels', 4.5),
       ]);
 
-      await tester.pumpWidget(_wrap(
-        const LayerDetailScreen(reportId: 'r1', layer: 'STRUCTURE'),
-        repo: repo,
-      ));
+      await tester.pumpWidget(
+        _wrap(
+          const LayerDetailScreen(reportId: 'r1', layer: 'STRUCTURE'),
+          repo: repo,
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('4.2'), findsOneWidget);
@@ -127,10 +126,12 @@ void main() {
         _sc('comm_channels', 4.5),
       ]);
 
-      await tester.pumpWidget(_wrap(
-        const LayerDetailScreen(reportId: 'r1', layer: 'STRUCTURE'),
-        repo: repo,
-      ));
+      await tester.pumpWidget(
+        _wrap(
+          const LayerDetailScreen(reportId: 'r1', layer: 'STRUCTURE'),
+          repo: repo,
+        ),
+      );
       await tester.pumpAndSettle();
 
       // VI labels from l10n
@@ -143,10 +144,12 @@ void main() {
       repo.seedLatestReport(_report());
       repo.seedLayerSubScores('CULTURE', []);
 
-      await tester.pumpWidget(_wrap(
-        const LayerDetailScreen(reportId: 'r1', layer: 'CULTURE'),
-        repo: repo,
-      ));
+      await tester.pumpWidget(
+        _wrap(
+          const LayerDetailScreen(reportId: 'r1', layer: 'CULTURE'),
+          repo: repo,
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.textContaining('Chưa có dữ liệu'), findsOneWidget);
@@ -154,14 +157,14 @@ void main() {
 
     testWidgets('score >= 4.0 shows Good status badge', (tester) async {
       repo.seedLatestReport(_report());
-      repo.seedLayerSubScores('ACTIVITY', [
-        _sc('goal_alignment', 4.5),
-      ]);
+      repo.seedLayerSubScores('ACTIVITY', [_sc('goal_alignment', 4.5)]);
 
-      await tester.pumpWidget(_wrap(
-        const LayerDetailScreen(reportId: 'r1', layer: 'ACTIVITY'),
-        repo: repo,
-      ));
+      await tester.pumpWidget(
+        _wrap(
+          const LayerDetailScreen(reportId: 'r1', layer: 'ACTIVITY'),
+          repo: repo,
+        ),
+      );
       await tester.pumpAndSettle();
 
       // "Tốt" is the VI translation of layerDetailScoreGood
@@ -170,14 +173,14 @@ void main() {
 
     testWidgets('score >= 3.0 and < 4.0 shows Warning badge', (tester) async {
       repo.seedLatestReport(_report(a: 3.2));
-      repo.seedLayerSubScores('ACTIVITY', [
-        _sc('execution_rhythm', 3.2),
-      ]);
+      repo.seedLayerSubScores('ACTIVITY', [_sc('execution_rhythm', 3.2)]);
 
-      await tester.pumpWidget(_wrap(
-        const LayerDetailScreen(reportId: 'r1', layer: 'ACTIVITY'),
-        repo: repo,
-      ));
+      await tester.pumpWidget(
+        _wrap(
+          const LayerDetailScreen(reportId: 'r1', layer: 'ACTIVITY'),
+          repo: repo,
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Cần cải thiện'), findsWidgets);
@@ -185,14 +188,14 @@ void main() {
 
     testWidgets('score < 3.0 shows Critical badge', (tester) async {
       repo.seedLatestReport(_report(c: 2.5));
-      repo.seedLayerSubScores('CULTURE', [
-        _sc('trust', 2.5),
-      ]);
+      repo.seedLayerSubScores('CULTURE', [_sc('trust', 2.5)]);
 
-      await tester.pumpWidget(_wrap(
-        const LayerDetailScreen(reportId: 'r1', layer: 'CULTURE'),
-        repo: repo,
-      ));
+      await tester.pumpWidget(
+        _wrap(
+          const LayerDetailScreen(reportId: 'r1', layer: 'CULTURE'),
+          repo: repo,
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('Cần hành động'), findsWidgets);
@@ -200,20 +203,22 @@ void main() {
 
     testWidgets('shows response count for each sub-component', (tester) async {
       repo.seedLatestReport(_report());
-      repo.seedLayerSubScores('STRUCTURE', [
-        _sc('role_expect', 4.0, count: 7),
-      ]);
+      repo.seedLayerSubScores('STRUCTURE', [_sc('role_expect', 4.0, count: 7)]);
 
-      await tester.pumpWidget(_wrap(
-        const LayerDetailScreen(reportId: 'r1', layer: 'STRUCTURE'),
-        repo: repo,
-      ));
+      await tester.pumpWidget(
+        _wrap(
+          const LayerDetailScreen(reportId: 'r1', layer: 'STRUCTURE'),
+          repo: repo,
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.textContaining('7'), findsWidgets);
     });
 
-    testWidgets('CULTURE sub-components show correct VI labels', (tester) async {
+    testWidgets('CULTURE sub-components show correct VI labels', (
+      tester,
+    ) async {
       repo.seedLatestReport(_report());
       repo.seedLayerSubScores('CULTURE', [
         _sc('trust', 4.0),
@@ -221,10 +226,12 @@ void main() {
         _sc('feedback_dialogue', 3.5),
       ]);
 
-      await tester.pumpWidget(_wrap(
-        const LayerDetailScreen(reportId: 'r1', layer: 'CULTURE'),
-        repo: repo,
-      ));
+      await tester.pumpWidget(
+        _wrap(
+          const LayerDetailScreen(reportId: 'r1', layer: 'CULTURE'),
+          repo: repo,
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.textContaining('Sự tin tưởng'), findsOneWidget);
@@ -232,7 +239,9 @@ void main() {
       expect(find.textContaining('Đối thoại'), findsOneWidget);
     });
 
-    testWidgets('ACTIVITY sub-components show correct VI labels', (tester) async {
+    testWidgets('ACTIVITY sub-components show correct VI labels', (
+      tester,
+    ) async {
       repo.seedLatestReport(_report());
       repo.seedLayerSubScores('ACTIVITY', [
         _sc('goal_alignment', 4.0),
@@ -241,10 +250,12 @@ void main() {
         _sc('continuous_improve', 4.2),
       ]);
 
-      await tester.pumpWidget(_wrap(
-        const LayerDetailScreen(reportId: 'r1', layer: 'ACTIVITY'),
-        repo: repo,
-      ));
+      await tester.pumpWidget(
+        _wrap(
+          const LayerDetailScreen(reportId: 'r1', layer: 'ACTIVITY'),
+          repo: repo,
+        ),
+      );
       await tester.pumpAndSettle();
 
       expect(find.textContaining('Liên kết mục tiêu'), findsOneWidget);
@@ -275,10 +286,9 @@ void main() {
         'support_management': 4.1,
       });
 
-      await tester.pumpWidget(_wrap(
-        const EsiAnalysisScreen(reportId: 'r1'),
-        repo: repo,
-      ));
+      await tester.pumpWidget(
+        _wrap(const EsiAnalysisScreen(reportId: 'r1'), repo: repo),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('3.8'), findsOneWidget);
@@ -288,10 +298,9 @@ void main() {
       repo.seedLatestReport(_report(esi: 3.8, enps: 42));
       repo.seedEsiPillarScores({});
 
-      await tester.pumpWidget(_wrap(
-        const EsiAnalysisScreen(reportId: 'r1'),
-        repo: repo,
-      ));
+      await tester.pumpWidget(
+        _wrap(const EsiAnalysisScreen(reportId: 'r1'), repo: repo),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('42'), findsOneWidget);
@@ -310,10 +319,9 @@ void main() {
         'support_leadership': 3.7,
       });
 
-      await tester.pumpWidget(_wrap(
-        const EsiAnalysisScreen(reportId: 'r1'),
-        repo: repo,
-      ));
+      await tester.pumpWidget(
+        _wrap(const EsiAnalysisScreen(reportId: 'r1'), repo: repo),
+      );
       await tester.pumpAndSettle();
 
       expect(find.textContaining('Đãi ngộ'), findsOneWidget);
@@ -327,32 +335,32 @@ void main() {
       repo.seedLatestReport(_report(esi: 3.8, enps: 25));
       repo.seedEsiPillarScores({});
 
-      await tester.pumpWidget(_wrap(
-        const EsiAnalysisScreen(reportId: 'r1'),
-        repo: repo,
-      ));
+      await tester.pumpWidget(
+        _wrap(const EsiAnalysisScreen(reportId: 'r1'), repo: repo),
+      );
       await tester.pumpAndSettle();
 
       // The pillars section header should be present
       expect(find.textContaining('Phân tích ESI theo trụ cột'), findsOneWidget);
     });
 
-    testWidgets('shows premium-only message when scoreEsi is null',
-        (tester) async {
+    testWidgets('shows premium-only message when scoreEsi is null', (
+      tester,
+    ) async {
       repo.seedLatestReport(_report(esi: null, enps: null));
       repo.seedEsiPillarScores({});
 
-      await tester.pumpWidget(_wrap(
-        const EsiAnalysisScreen(reportId: 'r1'),
-        repo: repo,
-      ));
+      await tester.pumpWidget(
+        _wrap(const EsiAnalysisScreen(reportId: 'r1'), repo: repo),
+      );
       await tester.pumpAndSettle();
 
       expect(find.textContaining('Premium'), findsOneWidget);
     });
 
-    testWidgets('shows eNPS promoter/passive/detractor counts when available',
-        (tester) async {
+    testWidgets('shows eNPS promoter/passive/detractor counts when available', (
+      tester,
+    ) async {
       final report = CcReportFull(
         id: 'r1',
         surveyId: 's1',
@@ -370,17 +378,18 @@ void main() {
       repo.seedLatestReport(report);
       repo.seedEsiPillarScores({});
       // Seed render-time breakdown (computed from responses, not sub_scores).
-      repo.seedEnpsBreakdown(const EnpsBreakdown(
-        promoters: 6,
-        passives: 3,
-        detractors: 1,
-        total: 10,
-      ));
+      repo.seedEnpsBreakdown(
+        const EnpsBreakdown(
+          promoters: 6,
+          passives: 3,
+          detractors: 1,
+          total: 10,
+        ),
+      );
 
-      await tester.pumpWidget(_wrap(
-        const EsiAnalysisScreen(reportId: 'r1'),
-        repo: repo,
-      ));
+      await tester.pumpWidget(
+        _wrap(const EsiAnalysisScreen(reportId: 'r1'), repo: repo),
+      );
       await tester.pumpAndSettle();
 
       expect(find.textContaining('6'), findsWidgets);
@@ -402,10 +411,9 @@ void main() {
     testWidgets('premium report shows ESI view-details button', (tester) async {
       repo.seedLatestReport(_report(esi: 3.8, enps: 25));
 
-      await tester.pumpWidget(_wrap(
-        _ReportScreenWrapper(reportId: 'r1'),
-        repo: repo,
-      ));
+      await tester.pumpWidget(
+        _wrap(_ReportScreenWrapper(reportId: 'r1'), repo: repo),
+      );
       await tester.pumpAndSettle();
 
       // "Xem chi tiết" is the VI translation of layerDetailViewDetail
@@ -413,18 +421,19 @@ void main() {
       expect(find.text('Xem chi tiết'), findsWidgets);
     });
 
-    testWidgets('free report shows layer view-details buttons but no ESI button',
-        (tester) async {
-      repo.seedLatestReport(_report(esi: null, enps: null));
+    testWidgets(
+      'free report shows layer view-details buttons but no ESI button',
+      (tester) async {
+        repo.seedLatestReport(_report(esi: null, enps: null));
 
-      await tester.pumpWidget(_wrap(
-        _ReportScreenWrapper(reportId: 'r1'),
-        repo: repo,
-      ));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          _wrap(_ReportScreenWrapper(reportId: 'r1'), repo: repo),
+        );
+        await tester.pumpAndSettle();
 
-      // Layer cards still have "Xem chi tiết" (3 of them)
-      expect(find.text('Xem chi tiết'), findsNWidgets(3));
-    });
+        // Layer cards still have "Xem chi tiết" (3 of them)
+        expect(find.text('Xem chi tiết'), findsNWidgets(3));
+      },
+    );
   });
 }

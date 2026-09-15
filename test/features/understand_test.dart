@@ -103,14 +103,16 @@ void main() {
     // dưới đây khoá đúng ba mức của hàm đó.
     testWidgets('nhãn mức cao: điểm >= 3.8', (tester) async {
       final repo = FakeWrRepository();
-      repo.seedScaReport(ScaReport(
-        id: 'r1',
-        userId: 'u1',
-        scoreStructure: 4.5,
-        scoreCulture: 4.1,
-        scoreActivity: 3.8,
-        createdAt: DateTime(2026, 6, 1),
-      ));
+      repo.seedScaReport(
+        ScaReport(
+          id: 'r1',
+          userId: 'u1',
+          scoreStructure: 4.5,
+          scoreCulture: 4.1,
+          scoreActivity: 3.8,
+          createdAt: DateTime(2026, 6, 1),
+        ),
+      );
       await _pumpLarge(tester, _wrap(const UnderstandScreen(), repo));
 
       expect(
@@ -121,14 +123,16 @@ void main() {
 
     testWidgets('nhãn mức giữa: điểm 2.5–3.79', (tester) async {
       final repo = FakeWrRepository();
-      repo.seedScaReport(ScaReport(
-        id: 'r1',
-        userId: 'u1',
-        scoreStructure: 2.5,
-        scoreCulture: 3.0,
-        scoreActivity: 3.79,
-        createdAt: DateTime(2026, 6, 1),
-      ));
+      repo.seedScaReport(
+        ScaReport(
+          id: 'r1',
+          userId: 'u1',
+          scoreStructure: 2.5,
+          scoreCulture: 3.0,
+          scoreActivity: 3.79,
+          createdAt: DateTime(2026, 6, 1),
+        ),
+      );
       await _pumpLarge(tester, _wrap(const UnderstandScreen(), repo));
 
       expect(
@@ -139,23 +143,24 @@ void main() {
 
     testWidgets('nhãn mức thấp: điểm < 2.5', (tester) async {
       final repo = FakeWrRepository();
-      repo.seedScaReport(ScaReport(
-        id: 'r1',
-        userId: 'u1',
-        scoreStructure: 2.4,
-        scoreCulture: 1.0,
-        scoreActivity: 2.0,
-        createdAt: DateTime(2026, 6, 1),
-      ));
+      repo.seedScaReport(
+        ScaReport(
+          id: 'r1',
+          userId: 'u1',
+          scoreStructure: 2.4,
+          scoreCulture: 1.0,
+          scoreActivity: 2.0,
+          createdAt: DateTime(2026, 6, 1),
+        ),
+      );
       await _pumpLarge(tester, _wrap(const UnderstandScreen(), repo));
 
-      expect(
-        find.textContaining(ScaPillarStatus.priority.label),
-        findsWidgets,
-      );
+      expect(find.textContaining(ScaPillarStatus.priority.label), findsWidgets);
     });
 
-    testWidgets('SCA card shows "Chưa đánh giá" when no report', (tester) async {
+    testWidgets('SCA card shows "Chưa đánh giá" when no report', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       // No SCA report seeded
       await _pumpLarge(tester, _wrap(const UnderstandScreen(), repo));
@@ -166,8 +171,18 @@ void main() {
     testWidgets('renders Career Health Check section', (tester) async {
       final repo = FakeWrRepository();
       repo.seedInsights([
-        Insight(id: 'i1', userId: 'u1', content: 'A', savedAt: DateTime(2026, 6, 1)),
-        Insight(id: 'i2', userId: 'u1', content: 'B', savedAt: DateTime(2026, 6, 2)),
+        Insight(
+          id: 'i1',
+          userId: 'u1',
+          content: 'A',
+          savedAt: DateTime(2026, 6, 1),
+        ),
+        Insight(
+          id: 'i2',
+          userId: 'u1',
+          content: 'B',
+          savedAt: DateTime(2026, 6, 2),
+        ),
       ]);
       await _pumpLarge(tester, _wrap(const UnderstandScreen(), repo));
 
@@ -192,7 +207,9 @@ void main() {
       }
     });
 
-    testWidgets('Career Health Check counts checkins + insights combined', (tester) async {
+    testWidgets('Career Health Check counts checkins + insights combined', (
+      tester,
+    ) async {
       // 3 checkins + 2 insights = 5 total reflections
       final repo = FakeWrRepository();
       repo.seedCheckinDates([
@@ -201,8 +218,18 @@ void main() {
         DateTime(2026, 6, 3),
       ]);
       repo.seedInsights([
-        Insight(id: 'i1', userId: 'u1', content: 'A', savedAt: DateTime(2026, 6, 1)),
-        Insight(id: 'i2', userId: 'u1', content: 'B', savedAt: DateTime(2026, 6, 2)),
+        Insight(
+          id: 'i1',
+          userId: 'u1',
+          content: 'A',
+          savedAt: DateTime(2026, 6, 1),
+        ),
+        Insight(
+          id: 'i2',
+          userId: 'u1',
+          content: 'B',
+          savedAt: DateTime(2026, 6, 2),
+        ),
       ]);
       await _pumpLarge(tester, _wrap(const UnderstandScreen(), repo));
 
@@ -210,22 +237,29 @@ void main() {
       expect(find.textContaining('5'), findsWidgets);
     });
 
-    testWidgets('view-all insights link hidden when no insights but checkins exist',
-        (tester) async {
-      final repo = FakeWrRepository();
-      // Seed checkins but ZERO insights — regression case: combined count > 0
-      // but the link must still be hidden because there are no insights.
-      repo.seedCheckinDates([
-        DateTime(2026, 6, 1),
-        DateTime(2026, 6, 2),
-        DateTime(2026, 6, 3),
-      ]);
-      await _pumpLarge(tester, _wrap(const UnderstandScreen(), repo));
+    testWidgets(
+      'view-all insights link hidden when no insights but checkins exist',
+      (tester) async {
+        final repo = FakeWrRepository();
+        // Seed checkins but ZERO insights — regression case: combined count > 0
+        // but the link must still be hidden because there are no insights.
+        repo.seedCheckinDates([
+          DateTime(2026, 6, 1),
+          DateTime(2026, 6, 2),
+          DateTime(2026, 6, 3),
+        ]);
+        await _pumpLarge(tester, _wrap(const UnderstandScreen(), repo));
 
-      expect(find.byKey(const Key('understand_view_all_insights')), findsNothing);
-    });
+        expect(
+          find.byKey(const Key('understand_view_all_insights')),
+          findsNothing,
+        );
+      },
+    );
 
-    testWidgets('view-all insights link visible when insights exist', (tester) async {
+    testWidgets('view-all insights link visible when insights exist', (
+      tester,
+    ) async {
       final repo = FakeWrRepository();
       repo.seedInsights([
         Insight(
@@ -238,7 +272,10 @@ void main() {
       ]);
       await _pumpLarge(tester, _wrap(const UnderstandScreen(), repo));
 
-      expect(find.byKey(const Key('understand_view_all_insights')), findsOneWidget);
+      expect(
+        find.byKey(const Key('understand_view_all_insights')),
+        findsOneWidget,
+      );
       expect(find.textContaining('Xem tất cả insight'), findsOneWidget);
     });
   });

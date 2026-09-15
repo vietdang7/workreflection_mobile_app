@@ -93,8 +93,7 @@ class _WrVoiceFieldState extends ConsumerState<WrVoiceField> {
         onResult: (transcript, {required bool isFinal}) {
           if (!mounted) return;
           final spoken = transcript.trim();
-          widget.controller.text =
-              _base.isEmpty ? spoken : '$_base $spoken';
+          widget.controller.text = _base.isEmpty ? spoken : '$_base $spoken';
           widget.controller.selection = TextSelection.collapsed(
             offset: widget.controller.text.length,
           );
@@ -129,14 +128,15 @@ class _WrVoiceFieldState extends ConsumerState<WrVoiceField> {
                 fontSize: 16,
                 color: WrColors.navy,
                 height: 1.6,
-                fontStyle:
-                    widget.italic ? FontStyle.italic : FontStyle.normal,
+                fontStyle: widget.italic ? FontStyle.italic : FontStyle.normal,
               ),
               decoration: InputDecoration(
                 border: InputBorder.none,
                 hintText: widget.hintText,
-                hintStyle:
-                    const TextStyle(fontSize: 16.5, color: WrColors.muted),
+                hintStyle: const TextStyle(
+                  fontSize: 16.5,
+                  color: WrColors.muted,
+                ),
               ),
               onChanged: (_) => widget.onChanged?.call(),
             ),
@@ -163,7 +163,9 @@ class _MicButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Semantics(
       button: true,
-      label: listening ? tr('Dừng thu âm', 'Stop recording') : tr('Nói thay vì gõ', 'Speak instead of typing'),
+      label: listening
+          ? tr('Dừng thu âm', 'Stop recording')
+          : tr('Nói thay vì gõ', 'Speak instead of typing'),
       child: GestureDetector(
         key: const Key('wr_voice_mic'),
         behavior: HitTestBehavior.opaque,

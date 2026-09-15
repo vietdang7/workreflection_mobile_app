@@ -15,12 +15,12 @@ enum WrTab {
   final String path;
 
   static WrTab? fromKey(String? key) => switch (key) {
-        'home' => WrTab.home,
-        'discover' => WrTab.discover,
-        'growth' => WrTab.growth,
-        'journey' => WrTab.journey,
-        _ => null,
-      };
+    'home' => WrTab.home,
+    'discover' => WrTab.discover,
+    'growth' => WrTab.growth,
+    'journey' => WrTab.journey,
+    _ => null,
+  };
 }
 
 /// "Quay lại" link shown on a shell tab when reached via a cross-tab

@@ -24,16 +24,28 @@ class WrOrgSurveyIntroScreen extends ConsumerWidget {
   const WrOrgSurveyIntroScreen({super.key});
 
   static List<dynamic> get _guarantees => [
-    tr('Dữ liệu chỉ được dùng ở dạng tổng hợp, ẩn danh, không truy ngược về từng '
-        'cá nhân.', 'The data is only ever used pooled and anonymous, never traced back to '
-        'an individual.'),
-    tr('Hoàn toàn không ảnh hưởng đến Reflection, Insight hay Career Memory cá '
-        'nhân của bạn.', 'It has no effect at all on your own Reflection, Insight or Career '
-        'Memory.'),
-    tr('Không bắt buộc, không đổi lấy quyền lợi hay tính năng nào trong ứng dụng.', 'Not required, and it does not buy you any benefit or feature in the app.'),
-    tr('Có thể ngừng tham gia và xoá câu trả lời bất kỳ lúc nào, ngay ở màn kết '
-        'quả.', 'You can stop taking part and delete your answers at any time, right on '
-        'the results screen.'),
+    tr(
+      'Dữ liệu chỉ được dùng ở dạng tổng hợp, ẩn danh, không truy ngược về từng '
+          'cá nhân.',
+      'The data is only ever used pooled and anonymous, never traced back to '
+          'an individual.',
+    ),
+    tr(
+      'Hoàn toàn không ảnh hưởng đến Reflection, Insight hay Career Memory cá '
+          'nhân của bạn.',
+      'It has no effect at all on your own Reflection, Insight or Career '
+          'Memory.',
+    ),
+    tr(
+      'Không bắt buộc, không đổi lấy quyền lợi hay tính năng nào trong ứng dụng.',
+      'Not required, and it does not buy you any benefit or feature in the app.',
+    ),
+    tr(
+      'Có thể ngừng tham gia và xoá câu trả lời bất kỳ lúc nào, ngay ở màn kết '
+          'quả.',
+      'You can stop taking part and delete your answers at any time, right on '
+          'the results screen.',
+    ),
   ];
 
   @override
@@ -65,10 +77,18 @@ class WrOrgSurveyIntroScreen extends ConsumerWidget {
         child: ListView(
           padding: const EdgeInsets.fromLTRB(22, 8, 22, 32),
           children: [
-            WrEyebrow(tr('TUỲ CHỌN, TÁCH RIÊNG KHỎI REFLECTION', 'OPTIONAL, SEPARATE FROM REFLECTION')),
+            WrEyebrow(
+              tr(
+                'TUỲ CHỌN, TÁCH RIÊNG KHỎI REFLECTION',
+                'OPTIONAL, SEPARATE FROM REFLECTION',
+              ),
+            ),
             const SizedBox(height: 10),
             Text(
-              tr('Bạn đang ở đâu so với mặt bằng chung?', 'Where do you sit against the wider picture?'),
+              tr(
+                'Bạn đang ở đâu so với mặt bằng chung?',
+                'Where do you sit against the wider picture?',
+              ),
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.w700,
@@ -85,12 +105,18 @@ class WrOrgSurveyIntroScreen extends ConsumerWidget {
                 children: [
                   Text(
                     total == null
-                        ? tr('Vài câu ngắn về đãi ngộ, phát triển, sự công bằng và '
-                            'mức hỗ trợ nơi bạn làm việc.', 'A few short questions about pay, growth, fairness and '
-                            'support where you work.')
-                        : tr('Trả lời $total câu ngắn về đãi ngộ, phát triển, sự '
-                            'công bằng và mức hỗ trợ nơi bạn làm việc.', '$total short questions about pay, growth, fairness '
-                            'and support where you work.'),
+                        ? tr(
+                            'Vài câu ngắn về đãi ngộ, phát triển, sự công bằng và '
+                                'mức hỗ trợ nơi bạn làm việc.',
+                            'A few short questions about pay, growth, fairness and '
+                                'support where you work.',
+                          )
+                        : tr(
+                            'Trả lời $total câu ngắn về đãi ngộ, phát triển, sự '
+                                'công bằng và mức hỗ trợ nơi bạn làm việc.',
+                            '$total short questions about pay, growth, fairness '
+                                'and support where you work.',
+                          ),
                     style: _bodyStyle,
                   ),
                   const SizedBox(height: 14),
@@ -106,14 +132,20 @@ class WrOrgSurveyIntroScreen extends ConsumerWidget {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(Icons.auto_awesome_outlined,
-                            size: 14, color: WrColors.pillTealText),
+                        Icon(
+                          Icons.auto_awesome_outlined,
+                          size: 14,
+                          color: WrColors.pillTealText,
+                        ),
                         SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            tr('Xong là có ngay bản so sánh của riêng bạn, khoảng '
-                            '5 phút.', 'Finish and your own comparison is ready, about '
-                            '5 minutes.'),
+                            tr(
+                              'Xong là có ngay bản so sánh của riêng bạn, khoảng '
+                                  '5 phút.',
+                              'Finish and your own comparison is ready, about '
+                                  '5 minutes.',
+                            ),
                             style: TextStyle(
                               fontSize: 13.5,
                               height: 1.5,
@@ -136,7 +168,10 @@ class WrOrgSurveyIntroScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    tr('Vì sao câu trả lời của bạn cũng có giá trị rộng hơn', 'Why your answers matter more widely too'),
+                    tr(
+                      'Vì sao câu trả lời của bạn cũng có giá trị rộng hơn',
+                      'Why your answers matter more widely too',
+                    ),
                     style: TextStyle(
                       fontSize: 16.5,
                       fontWeight: FontWeight.w700,
@@ -145,15 +180,18 @@ class WrOrgSurveyIntroScreen extends ConsumerWidget {
                   ),
                   SizedBox(height: 8),
                   Text(
-                    tr('Ngoài bản so sánh riêng cho bạn, câu trả lời khi gộp cùng '
-                    'nhiều người khác ở dạng ẩn danh còn giúp xây dựng dữ liệu '
-                    'benchmark ngành, phục vụ nghiên cứu và các công cụ chẩn '
-                    'đoán tổ chức trong tương lai của Cloud & Coral. Đây là '
-                    'phần thưởng thêm, không phải lý do chính để bạn tham gia.', 'Beyond your own comparison, answers pooled anonymously with '
-                    'many others help build industry benchmark data for '
-                    'research and for future organisational diagnostic tools at '
-                    'Cloud & Coral. That is a bonus, not the main reason to '
-                    'take part.'),
+                    tr(
+                      'Ngoài bản so sánh riêng cho bạn, câu trả lời khi gộp cùng '
+                          'nhiều người khác ở dạng ẩn danh còn giúp xây dựng dữ liệu '
+                          'benchmark ngành, phục vụ nghiên cứu và các công cụ chẩn '
+                          'đoán tổ chức trong tương lai của Cloud & Coral. Đây là '
+                          'phần thưởng thêm, không phải lý do chính để bạn tham gia.',
+                      'Beyond your own comparison, answers pooled anonymously with '
+                          'many others help build industry benchmark data for '
+                          'research and for future organisational diagnostic tools at '
+                          'Cloud & Coral. That is a bonus, not the main reason to '
+                          'take part.',
+                    ),
                     style: _bodyStyle,
                   ),
                 ],
@@ -183,8 +221,11 @@ class WrOrgSurveyIntroScreen extends ConsumerWidget {
                         children: [
                           const Padding(
                             padding: EdgeInsets.only(top: 2),
-                            child: Icon(Icons.check,
-                                size: 14, color: WrColors.teal),
+                            child: Icon(
+                              Icons.check,
+                              size: 14,
+                              color: WrColors.teal,
+                            ),
                           ),
                           const SizedBox(width: 8),
                           Expanded(child: Text(g, style: _bodyStyle)),
@@ -196,11 +237,15 @@ class WrOrgSurveyIntroScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 22),
 
-            if (questionsAsync.hasError || (questionsAsync.hasValue && questions.isEmpty))
+            if (questionsAsync.hasError ||
+                (questionsAsync.hasValue && questions.isEmpty))
               Padding(
                 padding: EdgeInsets.only(bottom: 12),
                 child: Text(
-                  tr('Chưa tải được bộ câu hỏi. Bạn thử lại sau nhé.', 'Could not load the questions. Please try again later.'),
+                  tr(
+                    'Chưa tải được bộ câu hỏi. Bạn thử lại sau nhé.',
+                    'Could not load the questions. Please try again later.',
+                  ),
                   key: Key('wr_org_survey_questions_error'),
                   style: TextStyle(fontSize: 14, color: WrColors.coral),
                 ),

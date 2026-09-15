@@ -29,10 +29,7 @@ import 'wr_paragraph.dart';
 import '../../features/wr/ai_consent_providers.dart';
 
 /// Kết quả người dùng chọn.
-enum WrAiConsentChoice {
-  granted,
-  declined,
-}
+enum WrAiConsentChoice { granted, declined }
 
 /// Mở màn xin phép và trả về lựa chọn.
 ///
@@ -79,9 +76,9 @@ Future<void> openAiPrivacyUrl(BuildContext context, String url) async {
     opened = false;
   }
   if (!opened && context.mounted) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Không mở được trang này.')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Không mở được trang này.')));
   }
 }
 
@@ -108,15 +105,17 @@ class _ConsentSheetState extends ConsumerState<_ConsentSheet> {
       // đồng ý và sẽ chặn — người dùng nhận một lỗi khó hiểu ở màn khác.
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Chưa lưu được lựa chọn. Bạn kiểm tra mạng rồi thử lại.'),
+          content: Text(
+            'Chưa lưu được lựa chọn. Bạn kiểm tra mạng rồi thử lại.',
+          ),
         ),
       );
       return;
     }
 
-    Navigator.of(context).pop(
-      grant ? WrAiConsentChoice.granted : WrAiConsentChoice.declined,
-    );
+    Navigator.of(
+      context,
+    ).pop(grant ? WrAiConsentChoice.granted : WrAiConsentChoice.declined);
   }
 
   @override
@@ -137,9 +136,7 @@ class _ConsentSheetState extends ConsumerState<_ConsentSheet> {
               child: ListView(
                 controller: scrollController,
                 padding: const EdgeInsets.fromLTRB(22, 22, 22, 8),
-                children: const [
-                  WrAiDisclosureBody(),
-                ],
+                children: const [WrAiDisclosureBody()],
               ),
             ),
             _Actions(saving: _saving, onAnswer: _answer),

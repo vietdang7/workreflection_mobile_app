@@ -58,6 +58,8 @@ flutter:
     - assets/fonts/NotoSans-Regular.ttf
     - assets/fonts/NotoSans-Bold.ttf
     - assets/images/wr_logo.png
+    - assets/seed/wr_situations.json
+    - assets/seed/wr_stories.json
 
   # Lora — lớp `.serif` của mockup Sprint 2, dùng cho những câu TRÍCH (Insight
   # gần nhất, "Hệ thống nhận ra"). Nhúng thẳng file chứ không gọi

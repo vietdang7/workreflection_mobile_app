@@ -31,12 +31,22 @@ class WrEpisodeDetailScreen extends ConsumerWidget {
     if (episode == null) {
       return WrDetailScaffold(
         eyebrow: tr('MỘT LẦN NHÌN LẠI', 'ONE LOOK BACK'),
-        title: tr('Không mở được lần nhìn lại này', 'Could not open this look back'),
+        title: tr(
+          'Không mở được lần nhìn lại này',
+          'Could not open this look back',
+        ),
         children: [
           WrParagraph(
-            tr('Có thể nó đã bị xoá, hoặc thiết bị đang mất kết nối.', 'It may have been deleted, or the device is offline.'),
+            tr(
+              'Có thể nó đã bị xoá, hoặc thiết bị đang mất kết nối.',
+              'It may have been deleted, or the device is offline.',
+            ),
             key: Key('wr_episode_detail_missing'),
-            style: TextStyle(fontSize: 16.5, color: WrColors.muted, height: 1.65),
+            style: TextStyle(
+              fontSize: 16.5,
+              color: WrColors.muted,
+              height: 1.65,
+            ),
           ),
         ],
       );
@@ -46,7 +56,7 @@ class WrEpisodeDetailScreen extends ConsumerWidget {
     final dateStr = at == null
         ? ''
         : '${at.day.toString().padLeft(2, '0')}/'
-            '${at.month.toString().padLeft(2, '0')}/${at.year}';
+              '${at.month.toString().padLeft(2, '0')}/${at.year}';
 
     return WrDetailScaffold(
       eyebrow: tr('MỘT LẦN NHÌN LẠI', 'ONE LOOK BACK'),
@@ -80,8 +90,15 @@ class WrEpisodeDetailScreen extends ConsumerWidget {
         _Label(tr('BẠN ĐÃ VIẾT', 'WHAT YOU WROTE')),
         if (episode.patternsDone.isEmpty)
           Text(
-            tr('Lần này bạn chưa ghi lại gì.', 'You did not write anything that time.'),
-            style: TextStyle(fontSize: 16.5, color: WrColors.muted, height: 1.6),
+            tr(
+              'Lần này bạn chưa ghi lại gì.',
+              'You did not write anything that time.',
+            ),
+            style: TextStyle(
+              fontSize: 16.5,
+              color: WrColors.muted,
+              height: 1.6,
+            ),
           )
         else
           ...episode.patternsDone.map((p) {
@@ -157,8 +174,9 @@ class _ReopenButton extends ConsumerWidget {
       child: TextButton(
         key: const Key('wr_episode_reopen'),
         onPressed: () async {
-          final reopened =
-              await ref.read(episodeFlowProvider.notifier).reopen(episode);
+          final reopened = await ref
+              .read(episodeFlowProvider.notifier)
+              .reopen(episode);
           if (!context.mounted || reopened == null) return;
           context.go('/wr/flow/step');
         },

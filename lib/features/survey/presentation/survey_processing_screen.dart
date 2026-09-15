@@ -59,9 +59,11 @@ class SurveyProcessingScreen extends ConsumerWidget {
               children: [
                 const CircularProgressIndicator(color: WrColors.coral),
                 const SizedBox(height: 24),
-                Text(l10n.surveyProcessingTitle,
-                    style: WrTextStyles.hMedium,
-                    textAlign: TextAlign.center),
+                Text(
+                  l10n.surveyProcessingTitle,
+                  style: WrTextStyles.hMedium,
+                  textAlign: TextAlign.center,
+                ),
               ],
             ),
           ),
@@ -70,8 +72,11 @@ class SurveyProcessingScreen extends ConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(l10n.surveyProcessingError,
-                    style: WrTextStyles.body, textAlign: TextAlign.center),
+                Text(
+                  l10n.surveyProcessingError,
+                  style: WrTextStyles.body,
+                  textAlign: TextAlign.center,
+                ),
                 const SizedBox(height: 24),
                 WrPillButton(
                   label: l10n.surveyProcessingRetry,
@@ -87,7 +92,8 @@ class SurveyProcessingScreen extends ConsumerWidget {
                 // Reset survey state after success
                 ref.read(surveyAnswersProvider.notifier).reset();
                 ref.read(currentQuestionIndexProvider.notifier).state = 0;
-                ref.read(surveyIntroInfoProvider.notifier).state = const SurveyIntroInfo();
+                ref.read(surveyIntroInfoProvider.notifier).state =
+                    const SurveyIntroInfo();
                 context.pushReplacement('/survey/report/$reportId');
               }
             });

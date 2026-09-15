@@ -29,7 +29,11 @@ void main() {
       expect(p.currency, 'VND');
       expect(p.sessionsCount, 4);
       expect(p.durationMinutes, 60);
-      expect(p.features, ['Tư vấn 1-1', 'Tài liệu miễn phí', 'Hỗ trợ qua chat']);
+      expect(p.features, [
+        'Tư vấn 1-1',
+        'Tài liệu miễn phí',
+        'Hỗ trợ qua chat',
+      ]);
       expect(p.targetAudience, 'Nhân viên văn phòng');
       expect(p.isActive, isTrue);
       expect(p.displayOrder, 1);

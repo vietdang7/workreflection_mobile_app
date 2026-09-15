@@ -50,9 +50,18 @@ const int kChatStarterCount = 3;
 /// Cũng cố ý phủ ba nhu cầu nền tảng khác nhau, để người chưa có dữ liệu vẫn
 /// gặp được ít nhất một câu chạm đúng.
 List<String> get kDefaultChatStarters => [
-  tr('Hôm nay mình im lặng trong một cuộc họp dù có ý kiến khác.', 'Today I stayed quiet in a meeting even though I saw it differently.'),
-  tr('Mình vừa nhận một phản hồi khó nghe từ cấp trên.', 'I have just had some hard feedback from my manager.'),
-  tr('Mình làm xong một việc khó hơn mình tưởng.', 'I finished something that turned out harder than I expected.'),
+  tr(
+    'Hôm nay mình im lặng trong một cuộc họp dù có ý kiến khác.',
+    'Today I stayed quiet in a meeting even though I saw it differently.',
+  ),
+  tr(
+    'Mình vừa nhận một phản hồi khó nghe từ cấp trên.',
+    'I have just had some hard feedback from my manager.',
+  ),
+  tr(
+    'Mình làm xong một việc khó hơn mình tưởng.',
+    'I finished something that turned out harder than I expected.',
+  ),
 ];
 
 /// Đổi ngôi "tôi" thành "mình" trong một câu.
@@ -68,9 +77,9 @@ List<String> get kDefaultChatStarters => [
 ///
 /// Giữ nguyên hoa thường của chữ đầu: "Tôi" thành "Mình", "tôi" thành "mình".
 String vietnameseFirstPerson(String text) => text.replaceAllMapped(
-      RegExp(r'(^|[^\p{L}])([Tt])ôi(?![\p{L}])', unicode: true),
-      (m) => '${m[1]}${m[2] == 'T' ? 'M' : 'm'}ình',
-    );
+  RegExp(r'(^|[^\p{L}])([Tt])ôi(?![\p{L}])', unicode: true),
+  (m) => '${m[1]}${m[2] == 'T' ? 'M' : 'm'}ình',
+);
 
 /// Gợi ý mở lời cho [recent] — recentSituationIds của người dùng.
 ///

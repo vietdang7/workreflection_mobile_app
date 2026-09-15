@@ -40,28 +40,30 @@ class NarrationScriptBuilder {
     final bool en = locale == 'en';
     final scenes = <NarrationScene>[];
 
-    scenes.add(NarrationScene(
-      id: VideoSceneId.intro,
-      text: _intro(en),
-    ));
-    scenes.add(NarrationScene(
-      id: VideoSceneId.overall,
-      text: _overall(report, en),
-    ));
+    scenes.add(NarrationScene(id: VideoSceneId.intro, text: _intro(en)));
+    scenes.add(
+      NarrationScene(id: VideoSceneId.overall, text: _overall(report, en)),
+    );
 
     if (surveyType == SurveyType.premium) {
-      scenes.add(NarrationScene(
-        id: VideoSceneId.structure,
-        text: _layer(SurveyLayer.structure, report.scoreStructure, en),
-      ));
-      scenes.add(NarrationScene(
-        id: VideoSceneId.culture,
-        text: _layer(SurveyLayer.culture, report.scoreCulture, en),
-      ));
-      scenes.add(NarrationScene(
-        id: VideoSceneId.activity,
-        text: _layer(SurveyLayer.activity, report.scoreActivity, en),
-      ));
+      scenes.add(
+        NarrationScene(
+          id: VideoSceneId.structure,
+          text: _layer(SurveyLayer.structure, report.scoreStructure, en),
+        ),
+      );
+      scenes.add(
+        NarrationScene(
+          id: VideoSceneId.culture,
+          text: _layer(SurveyLayer.culture, report.scoreCulture, en),
+        ),
+      );
+      scenes.add(
+        NarrationScene(
+          id: VideoSceneId.activity,
+          text: _layer(SurveyLayer.activity, report.scoreActivity, en),
+        ),
+      );
 
       final esi = report.scoreEsi;
       if (esi != null && esi > 0) {
@@ -69,22 +71,25 @@ class NarrationScriptBuilder {
       }
       final enps = report.scoreEnps;
       if (enps != null) {
-        scenes.add(NarrationScene(id: VideoSceneId.enps, text: _enps(enps, en)));
+        scenes.add(
+          NarrationScene(id: VideoSceneId.enps, text: _enps(enps, en)),
+        );
       }
     }
 
-    scenes.add(NarrationScene(
-      id: VideoSceneId.bottleneck,
-      text: _bottleneck(report.bottleneckLayer, en),
-    ));
-    scenes.add(NarrationScene(
-      id: VideoSceneId.recommendations,
-      text: _recommendations(report.bottleneckLayer, en),
-    ));
-    scenes.add(NarrationScene(
-      id: VideoSceneId.closing,
-      text: _closing(en),
-    ));
+    scenes.add(
+      NarrationScene(
+        id: VideoSceneId.bottleneck,
+        text: _bottleneck(report.bottleneckLayer, en),
+      ),
+    );
+    scenes.add(
+      NarrationScene(
+        id: VideoSceneId.recommendations,
+        text: _recommendations(report.bottleneckLayer, en),
+      ),
+    );
+    scenes.add(NarrationScene(id: VideoSceneId.closing, text: _closing(en)));
 
     return scenes;
   }
@@ -105,7 +110,10 @@ class NarrationScriptBuilder {
     final level = _levelName(report.scoreLevel, en);
     return en
         ? 'Your overall score is $total out of 5, at the $level level.'
-        : tr('Điểm tổng của bạn là $total trên 5, ở mức $level.', 'Your overall score is $total out of 5, which is $level.');
+        : tr(
+            'Điểm tổng của bạn là $total trên 5, ở mức $level.',
+            'Your overall score is $total out of 5, which is $level.',
+          );
   }
 
   String _layer(SurveyLayer layer, double score, bool en) {
@@ -120,7 +128,10 @@ class NarrationScriptBuilder {
     final s = esi.toStringAsFixed(1);
     return en
         ? 'Your employee satisfaction index is $s out of 5.'
-        : tr('Chỉ số hài lòng nhân viên đạt $s trên 5.', 'Employee satisfaction scored $s out of 5.');
+        : tr(
+            'Chỉ số hài lòng nhân viên đạt $s trên 5.',
+            'Employee satisfaction scored $s out of 5.',
+          );
   }
 
   String _enps(int enps, bool en) {
@@ -133,20 +144,29 @@ class NarrationScriptBuilder {
     final name = _layerName(layer, en);
     return en
         ? 'Your biggest bottleneck is in the $name layer. This is where you should focus your improvements.'
-        : tr('Điểm nghẽn lớn nhất nằm ở lớp $name. Đây là nơi nên tập trung cải thiện.', 'The biggest bottleneck is in the $name layer. That is where to focus.');
+        : tr(
+            'Điểm nghẽn lớn nhất nằm ở lớp $name. Đây là nơi nên tập trung cải thiện.',
+            'The biggest bottleneck is in the $name layer. That is where to focus.',
+          );
   }
 
   String _recommendations(SurveyLayer layer, bool en) {
     final name = _layerName(layer, en);
     return en
         ? 'Three suggested actions will help you improve the $name layer over the next 30 days.'
-        : tr('Ba hành động gợi ý sẽ giúp bạn cải thiện lớp $name trong 30 ngày tới.', 'Three suggested actions will help you improve the $name layer over the next 30 days.');
+        : tr(
+            'Ba hành động gợi ý sẽ giúp bạn cải thiện lớp $name trong 30 ngày tới.',
+            'Three suggested actions will help you improve the $name layer over the next 30 days.',
+          );
   }
 
   String _closing(bool en) {
     return en
         ? 'Thank you for listening. Start your growth journey today.'
-        : tr('Cảm ơn bạn đã lắng nghe. Hãy bắt đầu hành trình phát triển của mình.', 'Thank you for listening. Now start your own path forward.');
+        : tr(
+            'Cảm ơn bạn đã lắng nghe. Hãy bắt đầu hành trình phát triển của mình.',
+            'Thank you for listening. Now start your own path forward.',
+          );
   }
 
   String _layerName(SurveyLayer layer, bool en) {

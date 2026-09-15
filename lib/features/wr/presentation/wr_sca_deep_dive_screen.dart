@@ -18,7 +18,6 @@ import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/logic/wr_polish_guard.dart';
 import '../../../core/logic/wr_repeated_situations.dart';
 import '../../../core/logic/wr_sca_deep_dive.dart';
-import '../../../core/logic/wr_self_check_questions.dart';
 import '../../../core/logic/vn_date.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -64,7 +63,8 @@ class WrScaDeepDiveScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final entitlement = ref.watch(wrEntitlementProvider).valueOrNull ??
+    final entitlement =
+        ref.watch(wrEntitlementProvider).valueOrNull ??
         WrEntitlement(plan: WrPlan.free);
 
     return Scaffold(
@@ -104,16 +104,15 @@ class _Locked extends StatelessWidget {
         const WrEyebrow('PREMIUM'),
         const SizedBox(height: 10),
         WrParagraph(
-          tr('Phần này đọc kỹ từng mặt theo khoảng điểm của bạn, so với những lần '
-          'tự soi trước, và đối chiếu với những tình huống bạn hay gặp khi nhìn '
-          'lại.', 'This reads each side closely against your score band, sets it beside '
-          'your earlier self-checks, and compares it with the situations you '
-          'meet most when looking back.'),
-          style: TextStyle(
-            fontSize: 16.5,
-            height: 1.65,
-            color: WrColors.muted,
+          tr(
+            'Phần này đọc kỹ từng mặt theo khoảng điểm của bạn, so với những lần '
+                'tự soi trước, và đối chiếu với những tình huống bạn hay gặp khi nhìn '
+                'lại.',
+            'This reads each side closely against your score band, sets it beside '
+                'your earlier self-checks, and compares it with the situations you '
+                'meet most when looking back.',
           ),
+          style: TextStyle(fontSize: 16.5, height: 1.65, color: WrColors.muted),
         ),
         const SizedBox(height: 18),
         ElevatedButton(
@@ -200,7 +199,8 @@ class _BodyState extends ConsumerState<_Body> {
   Widget build(BuildContext context) {
     final history =
         ref.watch(wrSelfCheckHistoryProvider).valueOrNull ?? const [];
-    final episodes = ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
+    final episodes =
+        ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
     final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
     final now = nowVn();
 
@@ -229,10 +229,10 @@ class _BodyState extends ConsumerState<_Body> {
       return const _Empty();
     }
 
-    final previous = () {
-      final scored = scoredSelfChecks(history);
-      return scored.length > 1 ? scored[1] : null;
-    }();
+    final scored = scoredSelfChecks(history);
+    final previous = scored.length > 1 ? scored[1] : null;
+    final hasSelfCheck = scored.isNotEmpty;
+    final waitingLine = hasSelfCheck ? content.waitingLine : null;
 
     final loops = f.situations
         .where((s) => s.count >= kRepeatedSituationsMinCount)
@@ -246,8 +246,8 @@ class _BodyState extends ConsumerState<_Body> {
         _LeadCard(
           text: _polished(
             content.leadText,
-            allowed: content.rung != null &&
-                !deepTextIsGuidance(content.leadText),
+            allowed:
+                content.rung != null && !deepTextIsGuidance(content.leadText),
           ),
           highlight: content.branch == DeepGapBranch.outOfSync,
         ),
@@ -349,16 +349,17 @@ class _BodyState extends ConsumerState<_Body> {
           // nên Self-Check không còn là cửa vào mà là thứ mở thêm bậc R3.
           const SizedBox(height: 22),
           WrParagraph(
-            tr('Làm bộ Self-Check ${kSelfCheckQuestions.length} câu sẽ thêm một '
-                'lớp nữa vào đây: so điều bạn tự đánh giá với điều đang thực sự '
-                'lặp lại.', 'Taking the ${kSelfCheckQuestions.length}-question Self-Check adds '
-                'another layer here: what you rate yourself against what '
-                'actually keeps repeating.'),
+            tr(
+              'Làm Self-Check để so điều bạn tự đánh giá với điều đang lặp lại.',
+              'Take the Self-Check to compare your view with what keeps repeating.',
+            ),
             key: const Key('wr_deep_no_self_check_yet'),
             textAlign: TextAlign.start,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
-              fontSize: 14.5,
-              height: 1.65,
+              fontSize: 13.5,
+              height: 1.45,
               color: WrColors.text3,
             ),
           ),
@@ -386,12 +387,14 @@ class _BodyState extends ConsumerState<_Body> {
         ],
 
         // ── 5 · Một dòng cho những tầng còn đang chờ ────────────────────
-        if (content.waitingLine case final String line) ...[
+        if (waitingLine case final String line) ...[
           const SizedBox(height: 22),
           WrParagraph(
             line,
             key: const Key('wr_deep_waiting_line'),
             textAlign: TextAlign.start,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
             style: const TextStyle(
               fontSize: 13.5,
               height: 1.55,
@@ -476,14 +479,13 @@ class _Empty extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(22, 12, 22, 32),
       children: [
         WrParagraph(
-          tr('Phần này đọc từ kết quả Self-Check của bạn, mà bạn thì chưa làm lần '
-          'nào. Trả lời 15 câu một lượt, rồi quay lại đây.', 'This reads from your Self-Check results, and you have not taken it '
-          'yet. Answer the 15 questions in one go, then come back here.'),
-          style: TextStyle(
-            fontSize: 16.5,
-            height: 1.65,
-            color: WrColors.muted,
+          tr(
+            'Phần này đọc từ kết quả Self-Check của bạn, mà bạn thì chưa làm lần '
+                'nào. Trả lời 15 câu một lượt, rồi quay lại đây.',
+            'This reads from your Self-Check results, and you have not taken it '
+                'yet. Answer the 15 questions in one go, then come back here.',
           ),
+          style: TextStyle(fontSize: 16.5, height: 1.65, color: WrColors.muted),
         ),
         const SizedBox(height: 18),
         ElevatedButton(
@@ -539,10 +541,10 @@ class _PillarCard extends StatelessWidget {
 
   // Cùng bảng màu với ba thanh điểm ở màn Kết quả Self-Check.
   Color get _accent => switch (data.pillar.name) {
-        's' => const Color(0xFF5B8CC9),
-        'c' => WrColors.teal,
-        _ => const Color(0xFF5E7A5A),
-      };
+    's' => const Color(0xFF5B8CC9),
+    'c' => WrColors.teal,
+    _ => const Color(0xFF5E7A5A),
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -591,8 +593,10 @@ class _PillarCard extends StatelessWidget {
                   Text(
                     situations.isEmpty
                         ? tr('chưa có', 'none yet')
-                        : tr('${situations.length} tình huống',
-                            '${situations.length} situations'),
+                        : tr(
+                            '${situations.length} tình huống',
+                            '${situations.length} situations',
+                          ),
                     key: Key('wr_deep_pillar_count_${data.pillar.name}'),
                     style: const TextStyle(
                       fontSize: 13.5,
@@ -637,8 +641,11 @@ class _PillarCard extends StatelessWidget {
                   // trụ đó, chứ không lặp lại con số tổng").
                   if (situations.isEmpty)
                     WrParagraph(
-                      tr('Chưa lần nhìn lại nào trong cửa sổ này rơi vào nhóm '
-                          'đó.', 'No look-back in this window falls into that group.'),
+                      tr(
+                        'Chưa lần nhìn lại nào trong cửa sổ này rơi vào nhóm '
+                            'đó.',
+                        'No look-back in this window falls into that group.',
+                      ),
                       key: Key('wr_deep_pillar_empty_${data.pillar.name}'),
                       textAlign: TextAlign.start,
                       style: const TextStyle(

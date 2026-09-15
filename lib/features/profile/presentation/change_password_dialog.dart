@@ -27,9 +27,9 @@ void showChangePasswordDialog(BuildContext context, WidgetRef ref) {
         try {
           await ref.read(authRepositoryProvider).changePassword(newPassword);
           if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(l10n.changePasswordSuccess)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(l10n.changePasswordSuccess)));
           }
         } catch (e) {
           if (context.mounted) {
@@ -37,9 +37,9 @@ void showChangePasswordDialog(BuildContext context, WidgetRef ref) {
             final text = msg.contains('session') || msg.contains('expired')
                 ? l10n.changePasswordErrorSessionExpired
                 : l10n.changePasswordErrorGeneric;
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(text)),
-            );
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(SnackBar(content: Text(text)));
           }
         }
       },
@@ -108,7 +108,9 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                 ),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscureNew ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    _obscureNew
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
                     size: 18,
                   ),
                   onPressed: () => setState(() => _obscureNew = !_obscureNew),
@@ -133,7 +135,9 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
                 ),
                 suffixIcon: IconButton(
                   icon: Icon(
-                    _obscureConfirm ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                    _obscureConfirm
+                        ? Icons.visibility_off_outlined
+                        : Icons.visibility_outlined,
                     size: 18,
                   ),
                   onPressed: () =>
@@ -152,10 +156,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
         ),
       ),
       actions: [
-        TextButton(
-          onPressed: widget.onCancel,
-          child: Text(l10n.commonCancel),
-        ),
+        TextButton(onPressed: widget.onCancel, child: Text(l10n.commonCancel)),
         TextButton(
           key: const Key('change_password_submit'),
           onPressed: _submit,

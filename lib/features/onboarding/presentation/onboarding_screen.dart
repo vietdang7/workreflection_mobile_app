@@ -38,9 +38,7 @@ class OnboardingScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 40),
               // Step content
-              Expanded(
-                child: _buildStep(context, ref, state, notifier),
-              ),
+              Expanded(child: _buildStep(context, ref, state, notifier)),
             ],
           ),
         ),
@@ -136,7 +134,12 @@ class _Step1 extends StatelessWidget {
         const SizedBox(height: 16),
         Text(
           l10n.onb1Title,
-          style: WrTextStyles.hLarge.copyWith(fontSize: 32, fontWeight: FontWeight.w300, height: 1.25, letterSpacing: -0.02 * 32),
+          style: WrTextStyles.hLarge.copyWith(
+            fontSize: 32,
+            fontWeight: FontWeight.w300,
+            height: 1.25,
+            letterSpacing: -0.02 * 32,
+          ),
         ),
         const SizedBox(height: 16),
         Text(
@@ -188,7 +191,12 @@ class _Step2 extends StatelessWidget {
         const SizedBox(height: 16),
         Text(
           l10n.onb2Title,
-          style: WrTextStyles.hLarge.copyWith(fontSize: 32, fontWeight: FontWeight.w300, height: 1.25, letterSpacing: -0.02 * 32),
+          style: WrTextStyles.hLarge.copyWith(
+            fontSize: 32,
+            fontWeight: FontWeight.w300,
+            height: 1.25,
+            letterSpacing: -0.02 * 32,
+          ),
         ),
         const SizedBox(height: 12),
         Text(
@@ -236,7 +244,12 @@ class _Step3 extends StatelessWidget {
         const SizedBox(height: 16),
         Text(
           l10n.onb3Title,
-          style: WrTextStyles.hLarge.copyWith(fontSize: 32, fontWeight: FontWeight.w300, height: 1.25, letterSpacing: -0.02 * 32),
+          style: WrTextStyles.hLarge.copyWith(
+            fontSize: 32,
+            fontWeight: FontWeight.w300,
+            height: 1.25,
+            letterSpacing: -0.02 * 32,
+          ),
         ),
         const SizedBox(height: 12),
         Text(
@@ -312,7 +325,9 @@ class _SituationCard extends StatelessWidget {
         duration: const Duration(milliseconds: 150),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         decoration: BoxDecoration(
-          color: isSelected ? WrColors.coral.withValues(alpha: 0.08) : WrColors.white,
+          color: isSelected
+              ? WrColors.coral.withValues(alpha: 0.08)
+              : WrColors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? WrColors.coral : WrColors.line,
@@ -344,7 +359,11 @@ class _SituationCard extends StatelessWidget {
               ),
             ),
             if (isSelected)
-              const Icon(Icons.check_circle_outlined, color: WrColors.coral, size: 18),
+              const Icon(
+                Icons.check_circle_outlined,
+                color: WrColors.coral,
+                size: 18,
+              ),
           ],
         ),
       ),

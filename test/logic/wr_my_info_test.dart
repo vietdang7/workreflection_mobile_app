@@ -18,18 +18,15 @@ void main() {
     test('có đúng bảy trường, đúng thứ tự của mockup', () {
       final fields = myInfoFields(l10n);
       expect(fields.length, 7);
-      expect(
-        fields.map((f) => f.column).toList(),
-        [
-          'total_work_experience',
-          'city',
-          'org_industry',
-          'company_size',
-          'org_company_type',
-          'department',
-          'position',
-        ],
-      );
+      expect(fields.map((f) => f.column).toList(), [
+        'total_work_experience',
+        'city',
+        'org_industry',
+        'company_size',
+        'org_company_type',
+        'department',
+        'position',
+      ]);
     });
 
     test('bốn trường dùng chung cột với web đi về cc_profiles', () {
@@ -50,8 +47,9 @@ void main() {
     test('trường dùng chung giữ NGUYÊN danh sách mã của web', () {
       // Mockup rút "Vị trí" còn ba mức. Lấy theo mockup là làm mồ côi giá trị
       // của người đã khai bên web — họ sẽ thấy "Chưa có" ở trường mình đã điền.
-      final position =
-          myInfoFields(l10n).firstWhere((f) => f.column == 'position');
+      final position = myInfoFields(
+        l10n,
+      ).firstWhere((f) => f.column == 'position');
       expect(position.options.length, 8);
       expect(position.options.map((o) => o.value), contains('team_lead'));
     });
@@ -64,10 +62,11 @@ void main() {
   });
 
   test('myInfoGroups trả về ba nhóm, không lặp, đúng thứ tự', () {
-    expect(
-      myInfoGroups(myInfoFields(l10n)),
-      [kMyInfoGroupAboutYou, kMyInfoGroupCompany, kMyInfoGroupWork],
-    );
+    expect(myInfoGroups(myInfoFields(l10n)), [
+      kMyInfoGroupAboutYou,
+      kMyInfoGroupCompany,
+      kMyInfoGroupWork,
+    ]);
   });
 
   group('myInfoLabelFor', () {

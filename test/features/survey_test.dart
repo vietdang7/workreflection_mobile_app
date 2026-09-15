@@ -22,9 +22,7 @@ import '../support/fake_survey_repository.dart';
 
 Widget _wrap(Widget child, {required FakeSurveyRepository repo}) {
   return ProviderScope(
-    overrides: [
-      surveyRepositoryProvider.overrideWithValue(repo),
-    ],
+    overrides: [surveyRepositoryProvider.overrideWithValue(repo)],
     child: MaterialApp(
       builder: wrTextScaleBuilder,
       localizationsDelegates: const [
@@ -49,9 +47,12 @@ CcQuestion _q(String id, SurveyLayer layer, ScaleType scale, int order) =>
       isActive: true,
     );
 
-CcLikertOption _opt(ScaleType scale, int value, String label) =>
-    CcLikertOption(
-        scaleType: scale, value: value, label: label, displayOrder: value);
+CcLikertOption _opt(ScaleType scale, int value, String label) => CcLikertOption(
+  scaleType: scale,
+  value: value,
+  label: label,
+  displayOrder: value,
+);
 
 /// GoRouter-wrapped harness for SurveyProcessingScreen.
 /// Captures the last route pushed into [navigatedRoutes].
@@ -64,17 +65,12 @@ Widget _wrapWithRouter(
   final router = GoRouter(
     initialLocation: '/survey/processing',
     routes: [
-      GoRoute(
-        path: '/survey/processing',
-        builder: (_, __) => child,
-      ),
+      GoRoute(path: '/survey/processing', builder: (_, __) => child),
       GoRoute(
         path: '/survey/report/:id',
         builder: (_, state) {
           navigatedRoutes?.add('/survey/report/${state.pathParameters['id']}');
-          return Scaffold(
-            body: Text('Report ${state.pathParameters['id']}'),
-          );
+          return Scaffold(body: Text('Report ${state.pathParameters['id']}'));
         },
       ),
     ],
@@ -100,17 +96,17 @@ Widget _wrapWithRouter(
 }
 
 CcReportFull _fakeReport({String id = 'r1'}) => CcReportFull(
-      id: id,
-      surveyId: 'sv1',
-      userId: 'u1',
-      scoreTotal: 3.8,
-      scoreStructure: 4.0,
-      scoreCulture: 3.5,
-      scoreActivity: 3.9,
-      bottleneckLayer: SurveyLayer.culture,
-      scoreLevel: ScoreLevel.good,
-      createdAt: DateTime(2026, 7, 18),
-    );
+  id: id,
+  surveyId: 'sv1',
+  userId: 'u1',
+  scoreTotal: 3.8,
+  scoreStructure: 4.0,
+  scoreCulture: 3.5,
+  scoreActivity: 3.9,
+  bottleneckLayer: SurveyLayer.culture,
+  scoreLevel: ScoreLevel.good,
+  createdAt: DateTime(2026, 7, 18),
+);
 
 /// Builds a GoRouter harness for SurveyIntroScreen with both repo overrides.
 Widget _introRouterWrap({
@@ -195,8 +191,7 @@ void main() {
     });
 
     testWidgets('renders first question text (RichText)', (tester) async {
-      await tester.pumpWidget(
-          _wrap(const SurveyQuestionsScreen(), repo: repo));
+      await tester.pumpWidget(_wrap(const SurveyQuestionsScreen(), repo: repo));
       await tester.pumpAndSettle();
 
       // Question is rendered as RichText (karaoke widget), not plain Text.
@@ -209,16 +204,14 @@ void main() {
     });
 
     testWidgets('renders progress indicator 1/3', (tester) async {
-      await tester.pumpWidget(
-          _wrap(const SurveyQuestionsScreen(), repo: repo));
+      await tester.pumpWidget(_wrap(const SurveyQuestionsScreen(), repo: repo));
       await tester.pumpAndSettle();
 
       expect(find.text('1/3'), findsOneWidget);
     });
 
     testWidgets('renders layer eyebrow for structure', (tester) async {
-      await tester.pumpWidget(
-          _wrap(const SurveyQuestionsScreen(), repo: repo));
+      await tester.pumpWidget(_wrap(const SurveyQuestionsScreen(), repo: repo));
       await tester.pumpAndSettle();
 
       // eyebrow is uppercase
@@ -226,8 +219,7 @@ void main() {
     });
 
     testWidgets('renders 5 likert pill options', (tester) async {
-      await tester.pumpWidget(
-          _wrap(const SurveyQuestionsScreen(), repo: repo));
+      await tester.pumpWidget(_wrap(const SurveyQuestionsScreen(), repo: repo));
       await tester.pumpAndSettle();
 
       for (int i = 1; i <= 5; i++) {
@@ -235,10 +227,10 @@ void main() {
       }
     });
 
-    testWidgets('selecting answer advances to next question after 300ms',
-        (tester) async {
-      await tester.pumpWidget(
-          _wrap(const SurveyQuestionsScreen(), repo: repo));
+    testWidgets('selecting answer advances to next question after 300ms', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_wrap(const SurveyQuestionsScreen(), repo: repo));
       await tester.pumpAndSettle();
 
       // Before answering: progress shows 1/3
@@ -262,8 +254,7 @@ void main() {
     });
 
     testWidgets('progress track value updates when advancing', (tester) async {
-      await tester.pumpWidget(
-          _wrap(const SurveyQuestionsScreen(), repo: repo));
+      await tester.pumpWidget(_wrap(const SurveyQuestionsScreen(), repo: repo));
       await tester.pumpAndSettle();
 
       expect(find.text('1/3'), findsOneWidget);
@@ -276,13 +267,10 @@ void main() {
     });
 
     testWidgets('ENPS screen renders 11 chips (0–10)', (tester) async {
-      repo.seedQuestions([
-        _q('n1', SurveyLayer.enps, ScaleType.enps10, 1),
-      ]);
+      repo.seedQuestions([_q('n1', SurveyLayer.enps, ScaleType.enps10, 1)]);
       repo.seedLikertOptions({});
 
-      await tester.pumpWidget(
-          _wrap(const SurveyQuestionsScreen(), repo: repo));
+      await tester.pumpWidget(_wrap(const SurveyQuestionsScreen(), repo: repo));
       await tester.pumpAndSettle();
 
       // 11 chips for 0–10
@@ -291,8 +279,9 @@ void main() {
       }
     });
 
-    testWidgets('last question shows Hoàn thành CTA after answer',
-        (tester) async {
+    testWidgets('last question shows Hoàn thành CTA after answer', (
+      tester,
+    ) async {
       // Only 1 question so it's both first and last
       repo.seedQuestions([
         _q('q1', SurveyLayer.structure, ScaleType.likert5, 1),
@@ -304,8 +293,7 @@ void main() {
         ),
       });
 
-      await tester.pumpWidget(
-          _wrap(const SurveyQuestionsScreen(), repo: repo));
+      await tester.pumpWidget(_wrap(const SurveyQuestionsScreen(), repo: repo));
       await tester.pumpAndSettle();
 
       // CTA not visible yet (no answer). l10n key surveyCompleteCta = "Hoàn thành"
@@ -319,8 +307,7 @@ void main() {
       expect(find.text('Hoàn thành'), findsOneWidget);
     });
 
-    testWidgets('answers stored correctly in provider state',
-        (tester) async {
+    testWidgets('answers stored correctly in provider state', (tester) async {
       // Verify answers accumulate correctly before submission.
       // submitSurvey is called in SurveyProcessingScreen (separate route),
       // so here we only verify the answers state is set.
@@ -338,9 +325,7 @@ void main() {
       late WidgetRef capturedRef;
       await tester.pumpWidget(
         ProviderScope(
-          overrides: [
-            surveyRepositoryProvider.overrideWithValue(repo),
-          ],
+          overrides: [surveyRepositoryProvider.overrideWithValue(repo)],
           child: MaterialApp(
             builder: wrTextScaleBuilder,
             localizationsDelegates: const [
@@ -401,11 +386,13 @@ void main() {
     testWidgets('submits and navigates to report', (tester) async {
       final navigated = <String>[];
 
-      await tester.pumpWidget(_wrapWithRouter(
-        const SurveyProcessingScreen(),
-        repo: repo,
-        navigatedRoutes: navigated,
-      ));
+      await tester.pumpWidget(
+        _wrapWithRouter(
+          const SurveyProcessingScreen(),
+          repo: repo,
+          navigatedRoutes: navigated,
+        ),
+      );
 
       // Allow async submit to complete (no pumpAndSettle — spinner would hang)
       await tester.pump(); // start frame
@@ -417,52 +404,64 @@ void main() {
       expect(repo.submitSurveyCalls, isNotEmpty);
       expect(navigated, contains('/survey/report/r1'));
       // Navigation happened exactly once — no duplicate navigations
-      expect(navigated.where((r) => r.startsWith('/survey/report/')), hasLength(1));
+      expect(
+        navigated.where((r) => r.startsWith('/survey/report/')),
+        hasLength(1),
+      );
     });
 
-    testWidgets('retry after failure passes existingSurveyId (no duplicate survey)',
-        (tester) async {
-      // Fake: first call fires onSurveyCreated('fake-survey-id') then throws.
-      // The _submitProvider stores that id in surveyIdInProgressProvider.
-      // On retry (invalidate), a subsequent call receives existingSurveyId =
-      // 'fake-survey-id' and succeeds, proving no duplicate survey is created.
-      repo.setSubmitFailsOnce(true);
+    testWidgets(
+      'retry after failure passes existingSurveyId (no duplicate survey)',
+      (tester) async {
+        // Fake: first call fires onSurveyCreated('fake-survey-id') then throws.
+        // The _submitProvider stores that id in surveyIdInProgressProvider.
+        // On retry (invalidate), a subsequent call receives existingSurveyId =
+        // 'fake-survey-id' and succeeds, proving no duplicate survey is created.
+        repo.setSubmitFailsOnce(true);
 
-      await tester.pumpWidget(_wrapWithRouter(
-        const SurveyProcessingScreen(),
-        repo: repo,
-      ));
+        await tester.pumpWidget(
+          _wrapWithRouter(const SurveyProcessingScreen(), repo: repo),
+        );
 
-      // First attempt: async Future throws → error state
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 100));
-      await tester.pump(); // rebuild with error UI
+        // First attempt: async Future throws → error state
+        await tester.pump();
+        await tester.pump(const Duration(milliseconds: 100));
+        await tester.pump(); // rebuild with error UI
 
-      // Error UI should show retry button (l10n: surveyProcessingRetry = "Thử lại")
-      expect(find.text('Thử lại'), findsOneWidget);
+        // Error UI should show retry button (l10n: surveyProcessingRetry = "Thử lại")
+        expect(find.text('Thử lại'), findsOneWidget);
 
-      // Record call count before retry
-      final callCountBeforeRetry = repo.submitSurveyCalls.length;
+        // Record call count before retry
+        final callCountBeforeRetry = repo.submitSurveyCalls.length;
 
-      // Tap retry — invalidates _submitProvider, triggers another attempt
-      await tester.tap(find.text('Thử lại'));
-      await tester.pump(); // start retry
-      await tester.pump(const Duration(milliseconds: 100)); // Future resolves
-      await tester.pump(); // postFrameCallback
-      await tester.pump(const Duration(milliseconds: 50)); // router
+        // Tap retry — invalidates _submitProvider, triggers another attempt
+        await tester.tap(find.text('Thử lại'));
+        await tester.pump(); // start retry
+        await tester.pump(const Duration(milliseconds: 100)); // Future resolves
+        await tester.pump(); // postFrameCallback
+        await tester.pump(const Duration(milliseconds: 50)); // router
 
-      // At least one more call after retry
-      expect(repo.submitSurveyCalls.length, greaterThan(callCountBeforeRetry));
-      // The call that happened after the first failure must carry the surveyId
-      // (any call index > 0 where existingSurveyId is set proves resumption)
-      final resumptionCall = repo.submitExistingIds
-          .skip(1) // skip initial pre-failure calls
-          .firstWhere((id) => id == 'fake-survey-id', orElse: () => null);
-      expect(resumptionCall, equals('fake-survey-id'),
-          reason: 'retry must pass existingSurveyId to avoid duplicate survey');
-    });
+        // At least one more call after retry
+        expect(
+          repo.submitSurveyCalls.length,
+          greaterThan(callCountBeforeRetry),
+        );
+        // The call that happened after the first failure must carry the surveyId
+        // (any call index > 0 where existingSurveyId is set proves resumption)
+        final resumptionCall = repo.submitExistingIds
+            .skip(1) // skip initial pre-failure calls
+            .firstWhere((id) => id == 'fake-survey-id', orElse: () => null);
+        expect(
+          resumptionCall,
+          equals('fake-survey-id'),
+          reason: 'retry must pass existingSurveyId to avoid duplicate survey',
+        );
+      },
+    );
 
-    testWidgets('back navigation preserves answers in provider', (tester) async {
+    testWidgets('back navigation preserves answers in provider', (
+      tester,
+    ) async {
       // Seed answers directly into the provider before pumping the widget.
       // Use a ProviderScope override that pre-populates surveyAnswersProvider.
       late WidgetRef capturedRef;
@@ -490,9 +489,7 @@ void main() {
                 capturedRef = ref;
                 // We read the answers provider here to ensure it is observed,
                 // but we don't actually navigate — we just verify persistence.
-                return const Scaffold(
-                  body: Center(child: Text('host')),
-                );
+                return const Scaffold(body: Center(child: Text('host')));
               },
             ),
           ),
@@ -502,8 +499,11 @@ void main() {
 
       // Answers seeded via override should still be present
       final answers = capturedRef.read(surveyAnswersProvider);
-      expect(answers['q1'], 4,
-          reason: 'answers must survive across the provider scope lifetime');
+      expect(
+        answers['q1'],
+        4,
+        reason: 'answers must survive across the provider scope lifetime',
+      );
     });
   });
 
@@ -513,156 +513,161 @@ void main() {
 
   group('SurveyIntroScreen — surveyIdInProgress reset', () {
     testWidgets(
-        'tapping CTA resets surveyIdInProgressProvider to null even when stale id was set',
-        (tester) async {
-      final repo = FakeSurveyRepository();
-      repo.seedRole('user');
-      repo.seedQuestions([]);
-      repo.seedLikertOptions({});
+      'tapping CTA resets surveyIdInProgressProvider to null even when stale id was set',
+      (tester) async {
+        final repo = FakeSurveyRepository();
+        repo.seedRole('user');
+        repo.seedQuestions([]);
+        repo.seedLikertOptions({});
 
-      final wrRepo = FakeWrRepository();
-      // No position set → no auto-skip, form is shown
-      wrRepo.seedCcProfile({});
+        final wrRepo = FakeWrRepository();
+        // No position set → no auto-skip, form is shown
+        wrRepo.seedCcProfile({});
 
-      // GoRouter so context.push('/survey/guide') does not throw.
-      final router = GoRouter(
-        initialLocation: '/survey/intro',
-        routes: [
-          GoRoute(
-            path: '/survey/intro',
-            builder: (_, __) => const SurveyIntroScreen(),
-          ),
-          GoRoute(
-            path: '/survey/guide',
-            builder: (_, __) => const Scaffold(body: Text('guide')),
-          ),
-          GoRoute(
-            path: '/survey/questions',
-            builder: (_, __) => const Scaffold(body: Text('questions')),
-          ),
-        ],
-      );
-
-      late WidgetRef capturedRef;
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            surveyRepositoryProvider.overrideWithValue(repo),
-            wrRepositoryProvider.overrideWithValue(wrRepo),
+        // GoRouter so context.push('/survey/guide') does not throw.
+        final router = GoRouter(
+          initialLocation: '/survey/intro',
+          routes: [
+            GoRoute(
+              path: '/survey/intro',
+              builder: (_, __) => const SurveyIntroScreen(),
+            ),
+            GoRoute(
+              path: '/survey/guide',
+              builder: (_, __) => const Scaffold(body: Text('guide')),
+            ),
+            GoRoute(
+              path: '/survey/questions',
+              builder: (_, __) => const Scaffold(body: Text('questions')),
+            ),
           ],
-          child: MaterialApp.router(
-            routerConfig: router,
-            localizationsDelegates: const [
-              AppLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
+        );
+
+        late WidgetRef capturedRef;
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              surveyRepositoryProvider.overrideWithValue(repo),
+              wrRepositoryProvider.overrideWithValue(wrRepo),
             ],
-            supportedLocales: const [Locale('vi')],
-            locale: const Locale('vi'),
-            builder: (context, child) => wrTextScaleBuilder(
-              context,
-              Consumer(
-                builder: (context, ref, _) {
-                  capturedRef = ref;
-                  return child ?? const SizedBox.shrink();
-                },
+            child: MaterialApp.router(
+              routerConfig: router,
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [Locale('vi')],
+              locale: const Locale('vi'),
+              builder: (context, child) => wrTextScaleBuilder(
+                context,
+                Consumer(
+                  builder: (context, ref, _) {
+                    capturedRef = ref;
+                    return child ?? const SizedBox.shrink();
+                  },
+                ),
               ),
             ),
           ),
-        ),
-      );
+        );
 
-      await tester.pumpAndSettle();
+        await tester.pumpAndSettle();
 
-      // Simulate a stale in-progress surveyId (e.g. from a prior failed submit)
-      capturedRef.read(surveyIdInProgressProvider.notifier).state =
-          'stale-survey-id';
-      expect(capturedRef.read(surveyIdInProgressProvider), 'stale-survey-id');
+        // Simulate a stale in-progress surveyId (e.g. from a prior failed submit)
+        capturedRef.read(surveyIdInProgressProvider.notifier).state =
+            'stale-survey-id';
+        expect(capturedRef.read(surveyIdInProgressProvider), 'stale-survey-id');
 
-      // Tap the CTA button (WrPillButton renders as ElevatedButton).
-      // The button may be below the fold — scroll to it first.
-      final ctaFinder = find.byType(ElevatedButton);
-      await tester.ensureVisible(ctaFinder.first);
-      await tester.pump();
-      await tester.tap(ctaFinder.first, warnIfMissed: false);
-      await tester.pump();
+        // Tap the CTA button (WrPillButton renders as ElevatedButton).
+        // The button may be below the fold — scroll to it first.
+        final ctaFinder = find.byType(ElevatedButton);
+        await tester.ensureVisible(ctaFinder.first);
+        await tester.pump();
+        await tester.tap(ctaFinder.first, warnIfMissed: false);
+        await tester.pump();
 
-      expect(
-        capturedRef.read(surveyIdInProgressProvider),
-        isNull,
-        reason:
-            'Starting a new survey from intro must clear any stale in-progress surveyId',
-      );
-    });
+        expect(
+          capturedRef.read(surveyIdInProgressProvider),
+          isNull,
+          reason:
+              'Starting a new survey from intro must clear any stale in-progress surveyId',
+        );
+      },
+    );
 
     testWidgets(
-        'tapping CTA navigates to /survey/guide (not /survey/questions)',
-        (tester) async {
-      final repo = FakeSurveyRepository();
-      repo.seedRole('user');
-      repo.seedQuestions([]);
-      repo.seedLikertOptions({});
+      'tapping CTA navigates to /survey/guide (not /survey/questions)',
+      (tester) async {
+        final repo = FakeSurveyRepository();
+        repo.seedRole('user');
+        repo.seedQuestions([]);
+        repo.seedLikertOptions({});
 
-      final wrRepo = FakeWrRepository();
-      // No position set → no auto-skip, form is shown
-      wrRepo.seedCcProfile({});
+        final wrRepo = FakeWrRepository();
+        // No position set → no auto-skip, form is shown
+        wrRepo.seedCcProfile({});
 
-      final navigated = <String>[];
-      final router = GoRouter(
-        initialLocation: '/survey/intro',
-        routes: [
-          GoRoute(
-            path: '/survey/intro',
-            builder: (_, __) => const SurveyIntroScreen(),
-          ),
-          GoRoute(
-            path: '/survey/guide',
-            builder: (_, __) {
-              navigated.add('/survey/guide');
-              return const Scaffold(body: Text('guide'));
-            },
-          ),
-          GoRoute(
-            path: '/survey/questions',
-            builder: (_, __) {
-              navigated.add('/survey/questions');
-              return const Scaffold(body: Text('questions'));
-            },
-          ),
-        ],
-      );
-
-      await tester.pumpWidget(
-        ProviderScope(
-          overrides: [
-            surveyRepositoryProvider.overrideWithValue(repo),
-            wrRepositoryProvider.overrideWithValue(wrRepo),
+        final navigated = <String>[];
+        final router = GoRouter(
+          initialLocation: '/survey/intro',
+          routes: [
+            GoRoute(
+              path: '/survey/intro',
+              builder: (_, __) => const SurveyIntroScreen(),
+            ),
+            GoRoute(
+              path: '/survey/guide',
+              builder: (_, __) {
+                navigated.add('/survey/guide');
+                return const Scaffold(body: Text('guide'));
+              },
+            ),
+            GoRoute(
+              path: '/survey/questions',
+              builder: (_, __) {
+                navigated.add('/survey/questions');
+                return const Scaffold(body: Text('questions'));
+              },
+            ),
           ],
-          child: MaterialApp.router(
-            routerConfig: router,
-            localizationsDelegates: const [
-              AppLocalizations.delegate,
-              GlobalMaterialLocalizations.delegate,
-              GlobalWidgetsLocalizations.delegate,
-              GlobalCupertinoLocalizations.delegate,
+        );
+
+        await tester.pumpWidget(
+          ProviderScope(
+            overrides: [
+              surveyRepositoryProvider.overrideWithValue(repo),
+              wrRepositoryProvider.overrideWithValue(wrRepo),
             ],
-            supportedLocales: const [Locale('vi')],
-            locale: const Locale('vi'),
+            child: MaterialApp.router(
+              routerConfig: router,
+              localizationsDelegates: const [
+                AppLocalizations.delegate,
+                GlobalMaterialLocalizations.delegate,
+                GlobalWidgetsLocalizations.delegate,
+                GlobalCupertinoLocalizations.delegate,
+              ],
+              supportedLocales: const [Locale('vi')],
+              locale: const Locale('vi'),
+            ),
           ),
-        ),
-      );
-      await tester.pumpAndSettle();
+        );
+        await tester.pumpAndSettle();
 
-      await tester.ensureVisible(find.byType(ElevatedButton).first);
-      await tester.pump();
-      await tester.tap(find.byType(ElevatedButton).first, warnIfMissed: false);
-      await tester.pumpAndSettle();
+        await tester.ensureVisible(find.byType(ElevatedButton).first);
+        await tester.pump();
+        await tester.tap(
+          find.byType(ElevatedButton).first,
+          warnIfMissed: false,
+        );
+        await tester.pumpAndSettle();
 
-      expect(navigated, contains('/survey/guide'));
-      expect(navigated, isNot(contains('/survey/questions')));
-    });
+        expect(navigated, contains('/survey/guide'));
+        expect(navigated, isNot(contains('/survey/questions')));
+      },
+    );
   });
 
   // ---------------------------------------------------------------------------
@@ -678,36 +683,42 @@ void main() {
       return r;
     }
 
-    testWidgets('renders position dropdown label when profile empty',
-        (tester) async {
+    testWidgets('renders position dropdown label when profile empty', (
+      tester,
+    ) async {
       final wrRepo = FakeWrRepository()..seedCcProfile({});
 
-      await tester.pumpWidget(_introRouterWrap(
-        surveyRepo: makeSurveyRepo(),
-        wrRepo: wrRepo,
-      ));
+      await tester.pumpWidget(
+        _introRouterWrap(surveyRepo: makeSurveyRepo(), wrRepo: wrRepo),
+      );
       await tester.pumpAndSettle();
 
       // Position field label should be visible (l10n: surveyIntroFieldPosition = 'Chức danh')
       expect(find.textContaining('Chức danh'), findsWidgets);
     });
 
-    testWidgets('auto-skip navigates to /survey/guide when position is set',
-        (tester) async {
+    testWidgets('auto-skip navigates to /survey/guide when position is set', (
+      tester,
+    ) async {
       final wrRepo = FakeWrRepository()..seedCcProfile({'position': 'staff'});
       final navigated = <String>[];
 
-      await tester.pumpWidget(_introRouterWrap(
-        surveyRepo: makeSurveyRepo(),
-        wrRepo: wrRepo,
-        navigatedRoutes: navigated,
-      ));
+      await tester.pumpWidget(
+        _introRouterWrap(
+          surveyRepo: makeSurveyRepo(),
+          wrRepo: wrRepo,
+          navigatedRoutes: navigated,
+        ),
+      );
 
       // pumpAndSettle resolves FutureProvider + postFrameCallback auto-skip
       await tester.pumpAndSettle();
 
-      expect(navigated, contains('/survey/guide'),
-          reason: 'auto-skip must navigate to /survey/guide when position is set');
+      expect(
+        navigated,
+        contains('/survey/guide'),
+        reason: 'auto-skip must navigate to /survey/guide when position is set',
+      );
     });
 
     testWidgets('auto-skip resets surveyIdInProgress', (tester) async {
@@ -737,8 +748,7 @@ void main() {
             surveyRepositoryProvider.overrideWithValue(makeSurveyRepo()),
             wrRepositoryProvider.overrideWithValue(wrRepo),
             // Pre-seed a stale surveyId so auto-skip can reset it
-            surveyIdInProgressProvider
-                .overrideWith((ref) => 'stale-id'),
+            surveyIdInProgressProvider.overrideWith((ref) => 'stale-id'),
           ],
           child: MaterialApp.router(
             routerConfig: router,
@@ -773,74 +783,90 @@ void main() {
       );
     });
 
-    testWidgets('NO auto-skip when profile incomplete (position empty)',
-        (tester) async {
+    testWidgets('NO auto-skip when profile incomplete (position empty)', (
+      tester,
+    ) async {
       final wrRepo = FakeWrRepository()..seedCcProfile({});
       final navigated = <String>[];
 
-      await tester.pumpWidget(_introRouterWrap(
-        surveyRepo: makeSurveyRepo(),
-        wrRepo: wrRepo,
-        navigatedRoutes: navigated,
-      ));
+      await tester.pumpWidget(
+        _introRouterWrap(
+          surveyRepo: makeSurveyRepo(),
+          wrRepo: wrRepo,
+          navigatedRoutes: navigated,
+        ),
+      );
       await tester.pumpAndSettle();
 
       // Intro form is still showing — NOT navigated away
-      expect(navigated, isNot(contains('/survey/guide')),
-          reason: 'must NOT auto-skip when position is empty');
+      expect(
+        navigated,
+        isNot(contains('/survey/guide')),
+        reason: 'must NOT auto-skip when position is empty',
+      );
       // The intro screen body is visible (dropdowns render)
       expect(find.byType(DropdownButton<String>), findsWidgets);
     });
 
     testWidgets(
-        '_hasSkipped guard: auto-skip fires only once per widget instance',
-        (tester) async {
-      // With a complete profile the auto-skip fires once on mount.
-      // After navigating to /survey/guide the router shows "guide".
-      // If we could pop back (same widget instance), it would NOT skip again.
-      // In practice going back creates a NEW widget instance which would
-      // auto-skip again — same as web behavior. This test simply verifies
-      // the navigated list has exactly 1 entry (not duplicated in same pump cycle).
-      final wrRepo = FakeWrRepository()..seedCcProfile({'position': 'staff'});
-      final navigated = <String>[];
+      '_hasSkipped guard: auto-skip fires only once per widget instance',
+      (tester) async {
+        // With a complete profile the auto-skip fires once on mount.
+        // After navigating to /survey/guide the router shows "guide".
+        // If we could pop back (same widget instance), it would NOT skip again.
+        // In practice going back creates a NEW widget instance which would
+        // auto-skip again — same as web behavior. This test simply verifies
+        // the navigated list has exactly 1 entry (not duplicated in same pump cycle).
+        final wrRepo = FakeWrRepository()..seedCcProfile({'position': 'staff'});
+        final navigated = <String>[];
 
-      await tester.pumpWidget(_introRouterWrap(
-        surveyRepo: makeSurveyRepo(),
-        wrRepo: wrRepo,
-        navigatedRoutes: navigated,
-      ));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          _introRouterWrap(
+            surveyRepo: makeSurveyRepo(),
+            wrRepo: wrRepo,
+            navigatedRoutes: navigated,
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      // Auto-skip should have fired exactly once
-      expect(
-        navigated.where((r) => r == '/survey/guide'),
-        hasLength(1),
-        reason: '_hasSkipped guard must prevent duplicate auto-skip callbacks',
-      );
-    });
+        // Auto-skip should have fired exactly once
+        expect(
+          navigated.where((r) => r == '/survey/guide'),
+          hasLength(1),
+          reason:
+              '_hasSkipped guard must prevent duplicate auto-skip callbacks',
+        );
+      },
+    );
 
     testWidgets(
-        'CTA tap with no fields set: updateCcProfile not called (no non-null fields)',
-        (tester) async {
-      final wrRepo = FakeWrRepository()..seedCcProfile({});
+      'CTA tap with no fields set: updateCcProfile not called (no non-null fields)',
+      (tester) async {
+        final wrRepo = FakeWrRepository()..seedCcProfile({});
 
-      await tester.pumpWidget(_introRouterWrap(
-        surveyRepo: makeSurveyRepo(),
-        wrRepo: wrRepo,
-      ));
-      await tester.pumpAndSettle();
+        await tester.pumpWidget(
+          _introRouterWrap(surveyRepo: makeSurveyRepo(), wrRepo: wrRepo),
+        );
+        await tester.pumpAndSettle();
 
-      // Tap CTA with all dropdowns still null (scroll into view first)
-      await tester.ensureVisible(find.byType(ElevatedButton).first);
-      await tester.pump();
-      await tester.tap(find.byType(ElevatedButton).first, warnIfMissed: false);
-      await tester.pumpAndSettle();
+        // Tap CTA with all dropdowns still null (scroll into view first)
+        await tester.ensureVisible(find.byType(ElevatedButton).first);
+        await tester.pump();
+        await tester.tap(
+          find.byType(ElevatedButton).first,
+          warnIfMissed: false,
+        );
+        await tester.pumpAndSettle();
 
-      // No non-null fields → updateCcProfile should NOT have been called
-      expect(wrRepo.updateCcProfileCalls, isEmpty,
+        // No non-null fields → updateCcProfile should NOT have been called
+        expect(
+          wrRepo.updateCcProfileCalls,
+          isEmpty,
           reason:
-              'updateCcProfile must not be called when no dropdown fields are selected');
-    });
+              'updateCcProfile must not be called when no dropdown fields are selected',
+        );
+      },
+    );
   });
 
   // ---------------------------------------------------------------------------
@@ -855,8 +881,9 @@ void main() {
       repo.seedRole('user'); // FREE
     });
 
-    testWidgets('FREE: shows free title containing "Work Reflection"',
-        (tester) async {
+    testWidgets('FREE: shows free title containing "Work Reflection"', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(const SurveyGuideScreen(), repo: repo));
       await tester.pumpAndSettle();
 
@@ -885,8 +912,9 @@ void main() {
       expect(find.byKey(const Key('guide_benefit_2')), findsOneWidget);
     });
 
-    testWidgets('FREE: CTA button navigates to /survey/questions',
-        (tester) async {
+    testWidgets('FREE: CTA button navigates to /survey/questions', (
+      tester,
+    ) async {
       final navigated = <String>[];
       final router = GoRouter(
         initialLocation: '/survey/guide',
@@ -905,20 +933,22 @@ void main() {
         ],
       );
 
-      await tester.pumpWidget(ProviderScope(
-        overrides: [surveyRepositoryProvider.overrideWithValue(repo)],
-        child: MaterialApp.router(
-          routerConfig: router,
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: const [Locale('vi')],
-          locale: const Locale('vi'),
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [surveyRepositoryProvider.overrideWithValue(repo)],
+          child: MaterialApp.router(
+            routerConfig: router,
+            localizationsDelegates: const [
+              AppLocalizations.delegate,
+              GlobalMaterialLocalizations.delegate,
+              GlobalWidgetsLocalizations.delegate,
+              GlobalCupertinoLocalizations.delegate,
+            ],
+            supportedLocales: const [Locale('vi')],
+            locale: const Locale('vi'),
+          ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Scroll to the CTA button (it may be below the fold in default viewport)

@@ -37,14 +37,11 @@ class WorkshopsScreen extends ConsumerWidget {
       ),
       body: workshopsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => _ErrorCard(
-          onRetry: () => ref.invalidate(activeWorkshopsProvider),
-        ),
+        error: (e, _) =>
+            _ErrorCard(onRetry: () => ref.invalidate(activeWorkshopsProvider)),
         data: (workshops) {
           if (workshops.isEmpty) {
-            return Center(
-              child: Text(l10n.wsEmpty, style: WrTextStyles.body),
-            );
+            return Center(child: Text(l10n.wsEmpty, style: WrTextStyles.body));
           }
           return ListView.separated(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -91,8 +88,9 @@ class _WorkshopCard extends StatelessWidget {
             // Optional image
             if (workshop.imageUrl != null)
               ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(20)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(20),
+                ),
                 child: Image.network(
                   workshop.imageUrl!,
                   width: double.infinity,
@@ -133,13 +131,13 @@ class _WorkshopCard extends StatelessWidget {
                       _Chip(
                         label: workshop.isFree
                             ? l10n.wsFree
-                            : _formatPrice(
-                                workshop.price, workshop.currency),
+                            : _formatPrice(workshop.price, workshop.currency),
                         backgroundColor: workshop.isFree
                             ? WrColors.teal.withValues(alpha: 0.1)
                             : WrColors.navy.withValues(alpha: 0.08),
-                        textColor:
-                            workshop.isFree ? WrColors.pillTealText : WrColors.dark,
+                        textColor: workshop.isFree
+                            ? WrColors.pillTealText
+                            : WrColors.dark,
                       ),
 
                       // Full badge
@@ -147,8 +145,9 @@ class _WorkshopCard extends StatelessWidget {
                         const SizedBox(width: 8),
                         _Chip(
                           label: l10n.wsFullBadge,
-                          backgroundColor:
-                              WrColors.destructive.withValues(alpha: 0.1),
+                          backgroundColor: WrColors.destructive.withValues(
+                            alpha: 0.1,
+                          ),
                           textColor: WrColors.destructive,
                         ),
                       ],

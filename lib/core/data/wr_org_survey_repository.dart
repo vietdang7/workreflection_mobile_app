@@ -116,9 +116,10 @@ class SupabaseWrOrgSurveyRepository implements WrOrgSurveyRepository {
       params: {'min_sample': kOrgSurveyMinSample},
     );
     return rows
-        .map((r) => OrgSurveyBenchmark.fromJson(
-              Map<String, dynamic>.from(r as Map),
-            ))
+        .map(
+          (r) =>
+              OrgSurveyBenchmark.fromJson(Map<String, dynamic>.from(r as Map)),
+        )
         .toList();
   }
 

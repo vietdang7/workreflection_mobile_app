@@ -102,7 +102,9 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
     });
     try {
       if (stem.isNotEmpty) {
-        await ref.read(episodeFlowProvider.notifier).submitStep(
+        await ref
+            .read(episodeFlowProvider.notifier)
+            .submitStep(
               pattern: ReflectionPattern.reframe,
               note: insightStemSentence(stem),
             );
@@ -111,7 +113,12 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
     } catch (e, s) {
       logFlowError('saveInsightStem', e, s);
       if (mounted) {
-        setState(() => _error = flowErrorMessage(tr('Không lưu được. Thử lại.', 'Could not save. Try again.'), e));
+        setState(
+          () => _error = flowErrorMessage(
+            tr('Không lưu được. Thử lại.', 'Could not save. Try again.'),
+            e,
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -156,7 +163,14 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
       _goCommit();
     } catch (e, s) {
       logFlowError('confirmMeaning', e, s);
-      if (mounted) setState(() => _error = flowErrorMessage(tr('Không lưu được. Thử lại.', 'Could not save. Try again.'), e));
+      if (mounted) {
+        setState(
+          () => _error = flowErrorMessage(
+            tr('Không lưu được. Thử lại.', 'Could not save. Try again.'),
+            e,
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -176,8 +190,7 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
   String _aha() => ahaFor(ref.read(wrEpisodeStoryProvider)?.ahaMessage);
 
   /// Nội dung ghi vào `draft_meaning` — bản gộp hai vế.
-  String _mergedMeaning() =>
-      mergeInsight(stem: _controller.text, aha: _aha());
+  String _mergedMeaning() => mergeInsight(stem: _controller.text, aha: _aha());
 
   @override
   Widget build(BuildContext context) {
@@ -196,8 +209,9 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
     //
     // Chốt ngay lần dựng đầu, không chờ thư viện story: notes đến cùng Episode.
     if (!_prefilled) {
-      _controller.text =
-          stemFromNote(episode.notes[ReflectionPattern.reframe.dbValue]);
+      _controller.text = stemFromNote(
+        episode.notes[ReflectionPattern.reframe.dbValue],
+      );
       // Đã có ý nghĩa chốt từ trước (quay lại bằng nút Back từ màn Lựa chọn)
       // thì mở thẳng ở Lớp 2 — bắt viết lại câu mở dở là hỏi lại một câu đã
       // được trả lời.
@@ -224,7 +238,10 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
   ) {
     return WrFlowScaffold(
       eyebrow: kInsightStemEyebrow,
-      title: tr('Nếu chọn ra một bài học cho lúc này, bạn sẽ viết gì?', 'If you picked one lesson for right now, what would you write?'),
+      title: tr(
+        'Nếu chọn ra một bài học cho lúc này, bạn sẽ viết gì?',
+        'If you picked one lesson for right now, what would you write?',
+      ),
       subtitle: kInsightStemNote,
       progress: reflectProgress(2),
       onBack: () => context.pop(),
@@ -315,7 +332,10 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
 
     return WrFlowScaffold(
       eyebrow: kInsightAhaEyebrow,
-      title: tr('Thêm một cách tiếp cận khác để bạn tham khảo', 'One more angle, in case it helps'),
+      title: tr(
+        'Thêm một cách tiếp cận khác để bạn tham khảo',
+        'One more angle, in case it helps',
+      ),
       subtitle: kInsightAhaNote,
       progress: reflectProgress(2),
       // Back về Lớp 1, không rời màn: hai lớp là một bước, nên nút lùi phải lùi
@@ -331,7 +351,9 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
       // "Không đồng ý" là lối phụ. Không phải vì lối phụ kém giá trị hơn, mà vì
       // đồng ý là điều xảy ra ở phần lớn phiên, và hai nút đặc cạnh nhau thì
       // không nút nào dẫn mắt.
-      primaryLabel: _disagreed ? tr('Tiếp tục', 'Continue') : kInsightAgreeLabel,
+      primaryLabel: _disagreed
+          ? tr('Tiếp tục', 'Continue')
+          : kInsightAgreeLabel,
       busy: _busy,
       onPrimary: _disagreed ? _goCommit : () => _confirm(agreed: true),
       secondaryLabel: _disagreed ? null : kInsightDisagreeLabel,
@@ -458,7 +480,9 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
       // sẽ làm Home hiện "Insight gần nhất" cho một phiên người dùng còn chưa
       // xem xong, và lần quay lại sau ô chữ nhận về cả câu aha họ chưa viết.
       try {
-        await ref.read(episodeFlowProvider.notifier).submitStep(
+        await ref
+            .read(episodeFlowProvider.notifier)
+            .submitStep(
               pattern: ReflectionPattern.reframe,
               note: insightStemSentence(stem),
             );

@@ -61,14 +61,6 @@ class ProfileScreen extends ConsumerWidget {
                   _SettingsSection(),
                   const SizedBox(height: 12),
                   _OrgSurveyCard(),
-                  // Công tắc nghiệm thu — nút chữ mờ, ngay trên nút đăng xuất,
-                  // đúng vị trí mockup. Chỉ tài khoản nội bộ thấy.
-                  Consumer(
-                    builder: (context, ref, _) =>
-                        ref.watch(canTogglePremiumProvider)
-                            ? _PremiumOverrideRow()
-                            : const SizedBox.shrink(),
-                  ),
                   const SizedBox(height: 12),
                   _LogoutButton(),
                   const SizedBox(height: 8),
@@ -109,8 +101,11 @@ class _ProfileHeader extends StatelessWidget {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(Icons.arrow_back_ios_new,
-                        size: 14, color: WrColors.muted),
+                    Icon(
+                      Icons.arrow_back_ios_new,
+                      size: 14,
+                      color: WrColors.muted,
+                    ),
                     SizedBox(width: 6),
                     Text(
                       tr('Quay lại', 'Back'),
@@ -166,13 +161,15 @@ Future<void> _pickAvatar(BuildContext context, WidgetRef ref) async {
   if (error is AvatarPermissionDeniedException) {
     // Từ chối quyền không phải sự cố — người dùng chỉ không đổi được ảnh cho
     // tới khi bật lại, mà bật lại thì phải sang Cài đặt vì iOS chỉ hỏi một lần.
-    messenger.showSnackBar(SnackBar(
-      content: Text(l10n.avatarPermissionDenied),
-      action: SnackBarAction(
-        label: l10n.avatarPermissionOpenSettings,
-        onPressed: permission.openSettings,
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(l10n.avatarPermissionDenied),
+        action: SnackBarAction(
+          label: l10n.avatarPermissionOpenSettings,
+          onPressed: permission.openSettings,
+        ),
       ),
-    ));
+    );
   } else if (error != null) {
     messenger.showSnackBar(SnackBar(content: Text(l10n.avatarUploadError)));
   }
@@ -253,30 +250,30 @@ class _AvatarSection extends ConsumerWidget {
                           ),
                         )
                       : avatarUrl != null && avatarUrl.isNotEmpty
-                          ? Image.network(
-                              avatarUrl,
-                              fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Center(
-                                child: Text(
-                                  _initials(name),
-                                  style: const TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w700,
-                                    color: WrColors.navy,
-                                  ),
-                                ),
-                              ),
-                            )
-                          : Center(
-                              child: Text(
-                                _initials(name),
-                                style: const TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.w700,
-                                  color: WrColors.navy,
-                                ),
+                      ? Image.network(
+                          avatarUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) => Center(
+                            child: Text(
+                              _initials(name),
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                                color: WrColors.navy,
                               ),
                             ),
+                          ),
+                        )
+                      : Center(
+                          child: Text(
+                            _initials(name),
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w700,
+                              color: WrColors.navy,
+                            ),
+                          ),
+                        ),
                 ),
                 Positioned(
                   right: 0,
@@ -422,7 +419,10 @@ class _PremiumCard extends ConsumerWidget {
               Text(
                 // §03: chữ trên nền coral là navy, pha loãng cho dòng phụ chứ
                 // không đổi sang trắng hay xám.
-                tr('${price}Diễn giải sâu, Pattern nâng cao, Career Memory đầy đủ.', '${price}Deep readings, advanced Patterns, the full Career Memory.'),
+                tr(
+                  '${price}Diễn giải sâu, Pattern nâng cao, Career Memory đầy đủ.',
+                  '${price}Deep readings, advanced Patterns, the full Career Memory.',
+                ),
                 style: TextStyle(
                   fontSize: 13.5,
                   color: WrColors.navy.withValues(alpha: 0.75),
@@ -447,10 +447,7 @@ class _PremiumCard extends ConsumerWidget {
                 ),
                 child: Text(
                   tr('Xem chi tiết', 'See details'),
-                  style: TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
                 ),
               ),
             ],
@@ -499,8 +496,10 @@ class _StatsCard extends ConsumerWidget {
             ),
           ),
           Expanded(
-            child:
-                _StatBlock(number: insights, label: l10n.profileStatInsights),
+            child: _StatBlock(
+              number: insights,
+              label: l10n.profileStatInsights,
+            ),
           ),
           Expanded(
             child: _StatBlock(
@@ -548,69 +547,6 @@ class _StatBlock extends StatelessWidget {
 }
 
 // ---------------------------------------------------------------------------
-// Công tắc Premium thử nghiệm — chỉ tài khoản nội bộ thấy
-// ---------------------------------------------------------------------------
-//
-// Không phải tính năng sản phẩm: đây là cách chủ sản phẩm xem qua lại hai bản
-// trên cùng một máy khi nghiệm thu. Xem `wr_premium_override.dart` để hiểu vì
-// sao công tắc nằm ở máy chứ không ghi vào `wr_entitlements`.
-
-class _PremiumOverrideRow extends ConsumerWidget {
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final override = ref.watch(premiumOverrideProvider);
-    final entitlement = ref.watch(wrEntitlementProvider).valueOrNull;
-    final on = entitlement?.isPremium ?? false;
-
-    // Mockup bản (4) để nó là NÚT CHỮ MỜ dưới thẻ Khảo sát tổ chức, không phải
-    // một dòng trong danh sách cài đặt. Đúng chỗ: bảy dòng kia là thiết lập
-    // thật của người dùng, dòng này là đồ nghề nghiệm thu. Để lẫn vào nhau thì
-    // công cụ nội bộ trông y hệt một tính năng.
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        TextButton(
-          key: const Key('profile_premium_override_row'),
-          onPressed: () => ref.read(premiumOverrideProvider.notifier).set(!on),
-          style: TextButton.styleFrom(
-            foregroundColor: WrColors.text3,
-            padding: const EdgeInsets.symmetric(vertical: 12),
-          ),
-          child: Text(
-            tr('(Demo) Chuyển trạng thái Premium: ${on ? 'Tắt' : 'Bật'}', '(Demo) Premium switched: ${on ? 'Off' : 'On'}'),
-            style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w500),
-          ),
-        ),
-
-        // Lối quay về gói thật. Không có nó thì sau khi chạm một lần, máy này
-        // vĩnh viễn nói dối về gói — kể cả khi thanh toán thật đã đổi trạng
-        // thái, và không cách nào biết mình đang xem bản giả hay bản thật.
-        if (override != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 2, bottom: 10),
-            child: GestureDetector(
-              key: const Key('profile_premium_override_reset'),
-              behavior: HitTestBehavior.opaque,
-              onTap: () =>
-                  ref.read(premiumOverrideProvider.notifier).set(null),
-              child: Text(
-                tr('Đang ép ${override ? 'Premium' : 'miễn phí'} trên máy này · '
-                'chạm để dùng lại gói thật', 'Forcing ${override ? 'Premium' : 'free'} on this device · '
-                'tap to go back to the real plan'),
-                style: TextStyle(
-                  fontSize: 13,
-                  height: 1.5,
-                  color: WrColors.coral.withValues(alpha: 0.9),
-                ),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
 // Khảo sát tổ chức (ESI + eNPS) — mockup Sprint 2, `screenProfile`
 // ---------------------------------------------------------------------------
 
@@ -650,7 +586,10 @@ class _OrgSurveyCard extends ConsumerWidget {
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    tr('Khảo sát tổ chức (tuỳ chọn)', 'Organisation survey (optional)'),
+                    tr(
+                      'Khảo sát tổ chức (tuỳ chọn)',
+                      'Organisation survey (optional)',
+                    ),
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -662,9 +601,12 @@ class _OrgSurveyCard extends ConsumerWidget {
             ),
             const SizedBox(height: 6),
             WrParagraph(
-              tr('Đánh giá đãi ngộ, phát triển và mức sẵn lòng giới thiệu nơi bạn '
-              'làm việc.', 'Rate the pay, the growth and how likely you are to recommend where '
-              'you work.'),
+              tr(
+                'Đánh giá đãi ngộ, phát triển và mức sẵn lòng giới thiệu nơi bạn '
+                    'làm việc.',
+                'Rate the pay, the growth and how likely you are to recommend where '
+                    'you work.',
+              ),
               style: TextStyle(
                 fontSize: 12.5,
                 height: 1.6,
@@ -680,14 +622,18 @@ class _OrgSurveyCard extends ConsumerWidget {
               style: OutlinedButton.styleFrom(
                 foregroundColor: WrColors.navy,
                 side: const BorderSide(color: WrColors.line),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
               ),
               child: Text(
-                done ? tr('Xem lại kết quả', 'See your results') : tr('Tìm hiểu & tham gia', 'Find out & take part'),
+                done
+                    ? tr('Xem lại kết quả', 'See your results')
+                    : tr('Tìm hiểu & tham gia', 'Find out & take part'),
                 style: const TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w600,
@@ -737,199 +683,226 @@ class _SettingsSection extends ConsumerWidget {
         border: Border.all(color: WrColors.line),
       ),
       child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // "Thông tin của bạn" — mockup Sprint 2 bản (4). Đứng ĐẦU danh sách,
-        // trên cả nhắc nhở hằng ngày: đây là thứ duy nhất trong danh sách này
-        // nói về người dùng, phần còn lại là thiết lập của app.
-        //
-        // Con số n/7 không phải để giục. Nó trả lời câu người dùng thật sự hỏi
-        // khi nhìn một dòng như thế này — "trong đó có gì, mình khai tới đâu
-        // rồi" — mà không bắt mở màn ra mới biết.
-        _SettingRow(
-          key: const Key('profile_my_info_btn'),
-          icon: Icons.badge_outlined,
-          label: tr('Thông tin của bạn', 'Your details'),
-          onTap: () => context.push('/profile/my-info'),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Builder(
-                builder: (context) {
-                  final status = ref.watch(myInfoStatusProvider(l10n));
-                  return Text(
-                    '${status.filled}/${status.total}',
-                    key: const Key('profile_my_info_count'),
-                    style: WrTextStyles.body.copyWith(fontSize: 14.5),
-                  );
-                },
-              ),
-              const SizedBox(width: 4),
-              const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
-            ],
-          ),
-        ),
-
-        // Đổi ảnh đại diện. Vòng tròn ảnh phía trên cũng bấm được, nhưng một
-        // dòng chữ rõ ràng ở đây mới là thứ người dùng tìm thấy khi họ đi dò
-        // danh sách thiết lập — và trước 27/08 màn này không có lối nào tới ô
-        // đổi ảnh cả (xem ghi chú ở [_pickAvatar]).
-        _SettingRow(
-          key: const Key('profile_change_avatar_btn'),
-          icon: Icons.photo_camera_outlined,
-          label: 'Đổi ảnh đại diện',
-          onTap: ref.watch(avatarUploadProvider).isLoading
-              ? null
-              : () => _pickAvatar(context, ref),
-          trailing: ref.watch(avatarUploadProvider).isLoading
-              ? Text(
-                  l10n.avatarUploading,
-                  key: const Key('profile_avatar_uploading_label'),
-                  style: WrTextStyles.body.copyWith(fontSize: 14.5),
-                )
-              : const Icon(Icons.chevron_right,
-                  color: WrColors.muted, size: 16),
-        ),
-
-        // Reminder toggle — bấm đâu trên dòng cũng bật/tắt được.
-        _SettingRow(
-          icon: Icons.notifications_none_outlined,
-          label: l10n.profileSettingReminder,
-          onTap: () => ref.read(reminderProvider.notifier).toggle(),
-          trailing: AnimatedContainer(
-            key: const Key('profile_reminder_toggle'),
-            duration: const Duration(milliseconds: 200),
-            width: 40,
-            height: 22,
-            decoration: BoxDecoration(
-              color: reminderEnabled ? WrColors.teal : WrColors.muted,
-              borderRadius: BorderRadius.circular(11),
-            ),
-            child: AnimatedAlign(
-              duration: const Duration(milliseconds: 200),
-              alignment: reminderEnabled
-                  ? Alignment.centerRight
-                  : Alignment.centerLeft,
-              child: Container(
-                width: 16,
-                height: 16,
-                margin: const EdgeInsets.all(3),
-                decoration: const BoxDecoration(
-                  color: WrColors.white,
-                  shape: BoxShape.circle,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // "Thông tin của bạn" — mockup Sprint 2 bản (4). Đứng ĐẦU danh sách,
+          // trên cả nhắc nhở hằng ngày: đây là thứ duy nhất trong danh sách này
+          // nói về người dùng, phần còn lại là thiết lập của app.
+          //
+          // Con số n/7 không phải để giục. Nó trả lời câu người dùng thật sự hỏi
+          // khi nhìn một dòng như thế này — "trong đó có gì, mình khai tới đâu
+          // rồi" — mà không bắt mở màn ra mới biết.
+          _SettingRow(
+            key: const Key('profile_my_info_btn'),
+            icon: Icons.badge_outlined,
+            label: tr('Thông tin của bạn', 'Your details'),
+            onTap: () => context.push('/profile/my-info'),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Builder(
+                  builder: (context) {
+                    final status = ref.watch(myInfoStatusProvider(l10n));
+                    return Text(
+                      '${status.filled}/${status.total}',
+                      key: const Key('profile_my_info_count'),
+                      style: WrTextStyles.body.copyWith(fontSize: 14.5),
+                    );
+                  },
                 ),
-              ),
+                const SizedBox(width: 4),
+                const Icon(
+                  Icons.chevron_right,
+                  color: WrColors.muted,
+                  size: 16,
+                ),
+              ],
             ),
           ),
-        ),
 
-        // Language
-        _SettingRow(
-          key: const Key('profile_language_row'),
-          icon: Icons.language_outlined,
-          label: l10n.profileSettingLanguage,
-          onTap: () => _showLanguageDialog(context, ref),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                l10n.profileLanguageValue,
-                style: WrTextStyles.body.copyWith(fontSize: 14.5),
-              ),
-              const SizedBox(width: 4),
-              const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
-            ],
+          // Đổi ảnh đại diện. Vòng tròn ảnh phía trên cũng bấm được, nhưng một
+          // dòng chữ rõ ràng ở đây mới là thứ người dùng tìm thấy khi họ đi dò
+          // danh sách thiết lập — và trước 27/08 màn này không có lối nào tới ô
+          // đổi ảnh cả (xem ghi chú ở [_pickAvatar]).
+          _SettingRow(
+            key: const Key('profile_change_avatar_btn'),
+            icon: Icons.photo_camera_outlined,
+            label: 'Đổi ảnh đại diện',
+            onTap: ref.watch(avatarUploadProvider).isLoading
+                ? null
+                : () => _pickAvatar(context, ref),
+            trailing: ref.watch(avatarUploadProvider).isLoading
+                ? Text(
+                    l10n.avatarUploading,
+                    key: const Key('profile_avatar_uploading_label'),
+                    style: WrTextStyles.body.copyWith(fontSize: 14.5),
+                  )
+                : const Icon(
+                    Icons.chevron_right,
+                    color: WrColors.muted,
+                    size: 16,
+                  ),
           ),
-        ),
 
-        // Đã bỏ hai dòng "Chỉnh sửa hồ sơ" và "Thông tin công việc" ở đây.
-        // Thông tin công việc đi vào từ màn "Thông tin của bạn" phía trên.
-
-        // Bản Premium. Với người đã có quyền, dòng này là chỗ tra trạng thái
-        // chứ không phải lối vào trang bán hàng — nói luôn "Đang dùng" ở đây
-        // để không ai phải bấm vào mới biết mình đang có gì.
-        _SettingRow(
-          key: const Key('profile_paywall_btn'),
-          // Mục 17.2 — không dùng icon tô đặc. Bản trước phân biệt Premium bằng
-          // ngôi sao ĐẶC so với ngôi sao viền; đổi cả hai về viền thì hai nhánh
-          // giống nhau và mất thông tin. Nên đổi GLYPH thay vì đổi độ đặc: cả
-          // hai đều là line art, và huy hiệu vs ngôi sao đọc ra khác nhau rõ
-          // hơn cả đặc-vs-viền.
-          icon: isPremium
-              ? Icons.workspace_premium_outlined
-              : Icons.star_outline,
-          label: tr('Bản Premium', 'Premium'),
-          onTap: () => context.push('/wr/paywall'),
-          trailing: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              if (isPremium)
-                Text(
-                  tr('Đang dùng', 'Active'),
-                  key: const Key('profile_premium_active_label'),
-                  style: WrTextStyles.body.copyWith(
-                    fontSize: 14.5,
-                    color: WrColors.pillTealText,
-                    fontWeight: FontWeight.w600,
+          // Reminder toggle — bấm đâu trên dòng cũng bật/tắt được.
+          _SettingRow(
+            icon: Icons.notifications_none_outlined,
+            label: l10n.profileSettingReminder,
+            onTap: () => ref.read(reminderProvider.notifier).toggle(),
+            trailing: AnimatedContainer(
+              key: const Key('profile_reminder_toggle'),
+              duration: const Duration(milliseconds: 200),
+              width: 40,
+              height: 22,
+              decoration: BoxDecoration(
+                color: reminderEnabled ? WrColors.teal : WrColors.muted,
+                borderRadius: BorderRadius.circular(11),
+              ),
+              child: AnimatedAlign(
+                duration: const Duration(milliseconds: 200),
+                alignment: reminderEnabled
+                    ? Alignment.centerRight
+                    : Alignment.centerLeft,
+                child: Container(
+                  width: 16,
+                  height: 16,
+                  margin: const EdgeInsets.all(3),
+                  decoration: const BoxDecoration(
+                    color: WrColors.white,
+                    shape: BoxShape.circle,
                   ),
                 ),
-              if (isPremium) const SizedBox(width: 4),
-              const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
-            ],
+              ),
+            ),
           ),
-        ),
 
-        // Đổi mật khẩu
-        _SettingRow(
-          key: const Key('profile_change_password_btn'),
-          icon: Icons.lock_outline,
-          label: l10n.profileSettingChangePassword,
-          onTap: () => showChangePasswordDialog(context, ref),
-          trailing:
-              const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
-        ),
+          // Language
+          _SettingRow(
+            key: const Key('profile_language_row'),
+            icon: Icons.language_outlined,
+            label: l10n.profileSettingLanguage,
+            onTap: () => _showLanguageDialog(context, ref),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  l10n.profileLanguageValue,
+                  style: WrTextStyles.body.copyWith(fontSize: 14.5),
+                ),
+                const SizedBox(width: 4),
+                const Icon(
+                  Icons.chevron_right,
+                  color: WrColors.muted,
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
 
-        _SettingRow(
-          key: const Key('profile_export_btn'),
-          icon: Icons.download_outlined,
-          label: l10n.profileSettingExport,
-          onTap: () => _exportData(context, ref),
-          trailing:
-              const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
-        ),
+          // Đã bỏ hai dòng "Chỉnh sửa hồ sơ" và "Thông tin công việc" ở đây.
+          // Thông tin công việc đi vào từ màn "Thông tin của bạn" phía trên.
 
-        // Xử lý dữ liệu bằng AI.
-        //
-        // Bản công bố hứa với người dùng là chỗ này nằm "trong Tài khoản → Xử
-        // lý dữ liệu bằng AI" (`kWrAiRevokeNote`), nên NHÃN PHẢI ĐÚNG NGUYÊN
-        // VĂN như thế — người đọc câu hứa rồi đi tìm mà không thấy đúng chữ đó
-        // sẽ tưởng mình nhớ nhầm. Apple cũng dò theo đúng đường này khi duyệt
-        // Guideline 5.1.1(i).
-        _SettingRow(
-          key: const Key('profile_ai_consent_btn'),
-          icon: Icons.privacy_tip_outlined,
-          label: 'Xử lý dữ liệu bằng AI',
-          onTap: () => context.push(kWrAiRevokePath),
-          trailing:
-              const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
-        ),
+          // Bản Premium. Với người đã có quyền, dòng này là chỗ tra trạng thái
+          // chứ không phải lối vào trang bán hàng — nói luôn "Đang dùng" ở đây
+          // để không ai phải bấm vào mới biết mình đang có gì.
+          _SettingRow(
+            key: const Key('profile_paywall_btn'),
+            // Mục 17.2 — không dùng icon tô đặc. Bản trước phân biệt Premium bằng
+            // ngôi sao ĐẶC so với ngôi sao viền; đổi cả hai về viền thì hai nhánh
+            // giống nhau và mất thông tin. Nên đổi GLYPH thay vì đổi độ đặc: cả
+            // hai đều là line art, và huy hiệu vs ngôi sao đọc ra khác nhau rõ
+            // hơn cả đặc-vs-viền.
+            icon: isPremium
+                ? Icons.workspace_premium_outlined
+                : Icons.star_outline,
+            label: tr('Bản Premium', 'Premium'),
+            onTap: () => context.push('/wr/paywall'),
+            trailing: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (isPremium)
+                  Text(
+                    tr('Đang dùng', 'Active'),
+                    key: const Key('profile_premium_active_label'),
+                    style: WrTextStyles.body.copyWith(
+                      fontSize: 14.5,
+                      color: WrColors.pillTealText,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                if (isPremium) const SizedBox(width: 4),
+                const Icon(
+                  Icons.chevron_right,
+                  color: WrColors.muted,
+                  size: 16,
+                ),
+              ],
+            ),
+          ),
 
-        // Hướng dẫn sử dụng — yêu cầu §4 họp 26_1. Đứng CUỐI theo quy ước quen
-        // thuộc của mọi màn thiết lập (trợ giúp nằm dưới cùng), nên không kẻ
-        // vạch dưới: vạch cuối sẽ nằm sát mép thẻ và đọc ra như viền thừa.
-        //
-        // Là dòng trong danh sách chứ không phải thẻ riêng: nó không phải lời
-        // mời như Khảo sát tổ chức hay Premium, mà là chỗ để tra khi cần.
-        _SettingRow(
-          key: const Key('profile_guide_btn'),
-          icon: Icons.help_outline,
-          label: tr('Hướng dẫn sử dụng', 'User guide'),
-          showBorder: false,
-          onTap: () => context.push('/profile/guide'),
-          trailing:
-              const Icon(Icons.chevron_right, color: WrColors.muted, size: 16),
-        ),
-      ],
+          // Đổi mật khẩu
+          _SettingRow(
+            key: const Key('profile_change_password_btn'),
+            icon: Icons.lock_outline,
+            label: l10n.profileSettingChangePassword,
+            onTap: () => showChangePasswordDialog(context, ref),
+            trailing: const Icon(
+              Icons.chevron_right,
+              color: WrColors.muted,
+              size: 16,
+            ),
+          ),
+
+          _SettingRow(
+            key: const Key('profile_export_btn'),
+            icon: Icons.download_outlined,
+            label: l10n.profileSettingExport,
+            onTap: () => _exportData(context, ref),
+            trailing: const Icon(
+              Icons.chevron_right,
+              color: WrColors.muted,
+              size: 16,
+            ),
+          ),
+
+          // Xử lý dữ liệu bằng AI.
+          //
+          // Bản công bố hứa với người dùng là chỗ này nằm "trong Tài khoản → Xử
+          // lý dữ liệu bằng AI" (`kWrAiRevokeNote`), nên NHÃN PHẢI ĐÚNG NGUYÊN
+          // VĂN như thế — người đọc câu hứa rồi đi tìm mà không thấy đúng chữ đó
+          // sẽ tưởng mình nhớ nhầm. Apple cũng dò theo đúng đường này khi duyệt
+          // Guideline 5.1.1(i).
+          _SettingRow(
+            key: const Key('profile_ai_consent_btn'),
+            icon: Icons.privacy_tip_outlined,
+            label: 'Xử lý dữ liệu bằng AI',
+            onTap: () => context.push(kWrAiRevokePath),
+            trailing: const Icon(
+              Icons.chevron_right,
+              color: WrColors.muted,
+              size: 16,
+            ),
+          ),
+
+          // Hướng dẫn sử dụng — yêu cầu §4 họp 26_1. Đứng CUỐI theo quy ước quen
+          // thuộc của mọi màn thiết lập (trợ giúp nằm dưới cùng), nên không kẻ
+          // vạch dưới: vạch cuối sẽ nằm sát mép thẻ và đọc ra như viền thừa.
+          //
+          // Là dòng trong danh sách chứ không phải thẻ riêng: nó không phải lời
+          // mời như Khảo sát tổ chức hay Premium, mà là chỗ để tra khi cần.
+          _SettingRow(
+            key: const Key('profile_guide_btn'),
+            icon: Icons.help_outline,
+            label: tr('Hướng dẫn sử dụng', 'User guide'),
+            showBorder: false,
+            onTap: () => context.push('/profile/guide'),
+            trailing: const Icon(
+              Icons.chevron_right,
+              color: WrColors.muted,
+              size: 16,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -1008,7 +981,14 @@ class _SettingsSection extends ConsumerWidget {
         await Clipboard.setData(ClipboardData(text: json));
         if (context.mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text(tr('Đã chép dữ liệu vào clipboard.', 'Copied your data to the clipboard.'))),
+            SnackBar(
+              content: Text(
+                tr(
+                  'Đã chép dữ liệu vào clipboard.',
+                  'Copied your data to the clipboard.',
+                ),
+              ),
+            ),
           );
         }
         return;
@@ -1019,18 +999,28 @@ class _SettingsSection extends ConsumerWidget {
       await file.writeAsString(json);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(tr('Đã xuất dữ liệu: ${file.path}', 'Data exported: ${file.path}'))),
+          SnackBar(
+            content: Text(
+              tr(
+                'Đã xuất dữ liệu: ${file.path}',
+                'Data exported: ${file.path}',
+              ),
+            ),
+          ),
         );
       }
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(tr('Không thể xuất dữ liệu.', 'Could not export your data.'))),
+          SnackBar(
+            content: Text(
+              tr('Không thể xuất dữ liệu.', 'Could not export your data.'),
+            ),
+          ),
         );
       }
     }
   }
-
 }
 
 /// Một dòng cài đặt.
@@ -1075,12 +1065,7 @@ class _SettingRow extends StatelessWidget {
               Icon(icon, size: 18, color: WrColors.navy),
               const SizedBox(width: 10),
             ],
-            Expanded(
-              child: Text(
-                label,
-                style: WrTextStyles.hMedium,
-              ),
-            ),
+            Expanded(child: Text(label, style: WrTextStyles.hMedium)),
             trailing,
           ],
         ),
@@ -1126,7 +1111,9 @@ class _LogoutButton extends ConsumerWidget {
     } catch (e) {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(tr('Không thể đăng xuất.', 'Could not sign out.'))),
+          SnackBar(
+            content: Text(tr('Không thể đăng xuất.', 'Could not sign out.')),
+          ),
         );
       }
     }
@@ -1173,9 +1160,9 @@ class _DeleteAccountButton extends ConsumerWidget {
       // là tự đá về /auth. Tự `go` thêm ở đây là đua với redirect của router.
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.profileDeleteAccountError)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.profileDeleteAccountError)));
       }
     }
   }
@@ -1206,7 +1193,8 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
     final l10n = AppLocalizations.of(context)!;
     // So khớp bỏ qua hoa/thường và khoảng trắng thừa: người dùng gõ đúng ý rồi
     // mà bị chặn vì cái dấu cách cuối dòng thì vô lý.
-    final ok = _controller.text.trim().toUpperCase() ==
+    final ok =
+        _controller.text.trim().toUpperCase() ==
         l10n.profileDeleteAccountConfirmWord.toUpperCase();
 
     return AlertDialog(

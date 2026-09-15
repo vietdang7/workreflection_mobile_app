@@ -61,12 +61,13 @@ SelfCheckPillar? pillarOfDimension(ScaDimension dim) {
 /// P-STEADY nhưng trụ A), nên không phép biến đổi nào từ `sca_dimension` ra
 /// được bảng đó. Phải đọc từ dữ liệu.
 ///
-/// Rơi về ký tự đầu của `sca_dimension` khi cột `pillar` còn trống: đúng với
-/// 160 dòng SCA, và null với dòng P chưa điền — thà thiếu còn hơn đoán sai.
+/// Legacy rows may still be displayed in history, but they are not classified
+/// for current v2 measurement. In particular, a compatibility
+/// `sca_dimension` must never manufacture a pillar when the explicit v2 axes
+/// are absent.
 SelfCheckPillar? pillarOfSituation(WrSituation s) {
-  final code = s.pillarCode;
-  if (code == null || code.isEmpty) return pillarOfDimension(s.scaDimension);
-  return switch (code) {
+  if (!s.hasV2Classification || s.isRetired) return null;
+  return switch (s.pillarCode) {
     'S' => SelfCheckPillar.s,
     'C' => SelfCheckPillar.c,
     'A' => SelfCheckPillar.a,
@@ -86,6 +87,7 @@ class PillarTally {
     required this.positive,
     required this.classified,
     required this.unclassified,
+    this.situationCounts = const {},
   });
 
   /// Đếm trên tình huống thách thức. Mẫu số của trụ nổi trội và khoảng lệch.
@@ -107,6 +109,10 @@ class PillarTally {
   /// khoản. Giữ con số này lại để nơi gọi không phải giả định điều đã sai.
   final int unclassified;
 
+  /// Count of usable, coded situations in the same pass. Retired, custom, and
+  /// unknown history codes are intentionally absent.
+  final Map<String, int> situationCounts;
+
   /// Hai valence cộng lại — số lần mỗi trụ XUẤT HIỆN, bất kể tốt hay khó.
   ///
   /// Đây mới là thứ cột "Xuất hiện" của Career Snapshot cần. Cột ấy nói TẦN
@@ -115,9 +121,9 @@ class PillarTally {
   /// vui lần nào khổ. Ba con số này cộng lại đúng bằng [classified] — điều kiện
   /// nghiệm thu của `DienGiaiSau v2` §9 việc 3.
   Map<SelfCheckPillar, int> get appearance => {
-        for (final p in SelfCheckPillar.values)
-          p: (challenge[p] ?? 0) + (positive[p] ?? 0),
-      };
+    for (final p in SelfCheckPillar.values)
+      p: (challenge[p] ?? 0) + (positive[p] ?? 0),
+  };
 
   /// Tổng số lượt thách thức. Mẫu số của mọi phép tính trụ nổi trội.
   int get challengeTotal => challenge.values.fold(0, (s, v) => s + v);
@@ -144,6 +150,7 @@ PillarTally pillarTally(
   final byCode = {for (final s in situations) s.code: s};
   final challenge = {for (final p in SelfCheckPillar.values) p: 0};
   final positive = {for (final p in SelfCheckPillar.values) p: 0};
+  final situationCounts = <String, int>{};
   var classified = 0;
   var unclassified = 0;
 
@@ -157,6 +164,7 @@ PillarTally pillarTally(
     }
     final bucket = s.valence.isPositive ? positive : challenge;
     bucket[pillar] = bucket[pillar]! + 1;
+    situationCounts[s.code] = (situationCounts[s.code] ?? 0) + 1;
     classified++;
   }
 
@@ -165,7 +173,37 @@ PillarTally pillarTally(
     positive: positive,
     classified: classified,
     unclassified: unclassified,
+    situationCounts: situationCounts,
   );
+}
+
+/// Count usable situation codes across [episodes].
+///
+/// This is deliberately catalog-backed: persisted episodes may contain old or
+/// unknown codes, and those records must remain in history without becoming a
+/// newly invented pattern. Custom/free-form reflections are likewise omitted.
+Map<String, int> situationCounts(
+  List<ReflectionEpisode> episodes,
+  List<WrSituation> situations, {
+  bool challengeOnly = false,
+}) {
+  final byCode = {for (final s in situations) s.code: s};
+  final counts = <String, int>{};
+  for (final episode in episodes) {
+    final code = episode.situationCode;
+    if (code == null || code.isEmpty) continue;
+    final situation = byCode[code];
+    if (situation == null ||
+        !situation.hasV2Classification ||
+        situation.isRetired) {
+      continue;
+    }
+    final pillar = pillarOfSituation(situation);
+    if (pillar == null) continue;
+    if (challengeOnly && situation.valence.isPositive) continue;
+    counts[code] = (counts[code] ?? 0) + 1;
+  }
+  return counts;
 }
 
 /// Tỉ trọng mỗi trụ trong recentSituationIds, trong khoảng 0–1.
@@ -180,13 +218,18 @@ Map<SelfCheckPillar, double> pillarShares(
   List<String> recent,
   List<WrSituation> situations,
 ) {
-  final codeToDim = {for (final s in situations) s.code: s.scaDimension};
+  final codeToSituation = {for (final s in situations) s.code: s};
   final tally = {for (final p in SelfCheckPillar.values) p: 0};
   var total = 0;
   for (final code in recent) {
-    final dim = codeToDim[code];
-    if (dim == null) continue;
-    final pillar = pillarOfDimension(dim);
+    final situation = codeToSituation[code];
+    if (situation == null ||
+        !situation.hasV2Classification ||
+        situation.isRetired ||
+        situation.valence.isPositive) {
+      continue;
+    }
+    final pillar = pillarOfSituation(situation);
     if (pillar == null) continue;
     tally[pillar] = tally[pillar]! + 1;
     total++;
@@ -194,9 +237,7 @@ Map<SelfCheckPillar, double> pillarShares(
   if (total == 0) {
     return {for (final p in SelfCheckPillar.values) p: 0};
   }
-  return {
-    for (final p in SelfCheckPillar.values) p: tally[p]! / total,
-  };
+  return {for (final p in SelfCheckPillar.values) p: tally[p]! / total};
 }
 
 /// Số lần trong [recent] thật sự rơi vào một trụ SCA.
@@ -210,12 +251,12 @@ Map<SelfCheckPillar, double> pillarShares(
 /// điều đó, chứ không được bịa. Hàm này để nơi gọi phân biệt được hai trường
 /// hợp trước khi dựng nhãn.
 int scaTouchedCount(List<String> recent, List<WrSituation> situations) {
-  final codeToDim = {for (final s in situations) s.code: s.scaDimension};
+  final codeToSituation = {for (final s in situations) s.code: s};
   var total = 0;
   for (final code in recent) {
-    final dim = codeToDim[code];
-    if (dim == null) continue;
-    if (pillarOfDimension(dim) == null) continue;
+    final situation = codeToSituation[code];
+    if (situation == null || situation.valence.isPositive) continue;
+    if (pillarOfSituation(situation) == null) continue;
     total++;
   }
   return total;

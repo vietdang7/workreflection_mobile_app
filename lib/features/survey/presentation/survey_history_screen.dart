@@ -15,18 +15,18 @@ import '../survey_providers.dart';
 // ---------------------------------------------------------------------------
 
 Color _levelColor(ScoreLevel level) => switch (level) {
-      ScoreLevel.high => WrColors.teal,
-      ScoreLevel.good => WrColors.navy,
-      ScoreLevel.warning => WrColors.coral,
-      ScoreLevel.critical => WrColors.destructive,
-    };
+  ScoreLevel.high => WrColors.teal,
+  ScoreLevel.good => WrColors.navy,
+  ScoreLevel.warning => WrColors.coral,
+  ScoreLevel.critical => WrColors.destructive,
+};
 
 String _levelLabel(ScoreLevel level, AppLocalizations l10n) => switch (level) {
-      ScoreLevel.high => l10n.reportScoreLevelHigh,
-      ScoreLevel.good => l10n.reportScoreLevelGood,
-      ScoreLevel.warning => l10n.reportScoreLevelWarning,
-      ScoreLevel.critical => l10n.reportScoreLevelCritical,
-    };
+  ScoreLevel.high => l10n.reportScoreLevelHigh,
+  ScoreLevel.good => l10n.reportScoreLevelGood,
+  ScoreLevel.warning => l10n.reportScoreLevelWarning,
+  ScoreLevel.critical => l10n.reportScoreLevelCritical,
+};
 
 // ---------------------------------------------------------------------------
 // Screen
@@ -59,9 +59,8 @@ class SurveyHistoryScreen extends ConsumerWidget {
       ),
       body: reportsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (e, _) => _ErrorState(
-          onRetry: () => ref.invalidate(myReportsProvider),
-        ),
+        error: (e, _) =>
+            _ErrorState(onRetry: () => ref.invalidate(myReportsProvider)),
         data: (reports) {
           if (reports.isEmpty) {
             return _EmptyState();
@@ -95,7 +94,10 @@ class _ReportRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context).languageCode;
-    final dateStr = DateFormat('dd/MM/yyyy', locale).format(report.createdAt.toLocal());
+    final dateStr = DateFormat(
+      'dd/MM/yyyy',
+      locale,
+    ).format(report.createdAt.toLocal());
     final color = _levelColor(report.scoreLevel);
     final levelLabel = _levelLabel(report.scoreLevel, l10n);
 
@@ -117,8 +119,10 @@ class _ReportRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(dateStr,
-                      style: WrTextStyles.hMedium.copyWith(fontSize: 15.5)),
+                  Text(
+                    dateStr,
+                    style: WrTextStyles.hMedium.copyWith(fontSize: 15.5),
+                  ),
                   const SizedBox(height: 4),
                   // Free / Premium chip
                   _TypeChip(isPremium: report.isPremium, l10n: l10n),
@@ -156,7 +160,9 @@ class _ReportRow extends StatelessWidget {
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: color.withValues(alpha: 0.12),
                         borderRadius: BorderRadius.circular(100),
@@ -171,8 +177,11 @@ class _ReportRow extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    const Icon(Icons.chevron_right,
-                        size: 16, color: WrColors.muted),
+                    const Icon(
+                      Icons.chevron_right,
+                      size: 16,
+                      color: WrColors.muted,
+                    ),
                   ],
                 ),
               ),
@@ -234,8 +243,11 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.bar_chart_rounded,
-                size: 56, color: WrColors.muted),
+            const Icon(
+              Icons.bar_chart_rounded,
+              size: 56,
+              color: WrColors.muted,
+            ),
             const SizedBox(height: 20),
             Text(
               l10n.surveyHistoryEmptyTitle,
@@ -281,10 +293,7 @@ class _ErrorState extends StatelessWidget {
           const SizedBox(height: 12),
           Text(l10n.homeErrorLoadData, style: WrTextStyles.body),
           const SizedBox(height: 12),
-          TextButton(
-            onPressed: onRetry,
-            child: Text(l10n.homeRetry),
-          ),
+          TextButton(onPressed: onRetry, child: Text(l10n.homeRetry)),
         ],
       ),
     );

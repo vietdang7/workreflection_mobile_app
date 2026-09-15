@@ -43,7 +43,6 @@ WorkshopRegistration _reg({
   );
 }
 
-
 CcQuestion _question(String id) {
   return CcQuestion(
     id: id,
@@ -190,7 +189,8 @@ void main() {
   test('getMyRegistrations returns newest first', () async {
     repo.seedRegistration(_reg(id: 'reg-1', createdAt: DateTime(2026, 1, 1)));
     repo.seedRegistration(
-        _reg(id: 'reg-2', workshopId: 'w2', createdAt: DateTime(2026, 6, 1)));
+      _reg(id: 'reg-2', workshopId: 'w2', createdAt: DateTime(2026, 6, 1)),
+    );
 
     final regs = await repo.getMyRegistrations();
 

@@ -9,7 +9,8 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
 // ---------------------------------------------------------------------------
 
 /// Callback invoked each time a (partial or final) transcript arrives.
-typedef SttResultCallback = void Function(String transcript, {required bool isFinal});
+typedef SttResultCallback =
+    void Function(String transcript, {required bool isFinal});
 
 /// Minimal STT contract used by the survey questions screen.
 abstract class SttService {
@@ -44,10 +45,7 @@ class RealSttService implements SttService {
   @override
   Future<bool> get isAvailable async {
     if (_initialized) return true;
-    _initialized = await _speech.initialize(
-      onError: (e) {},
-      onStatus: (_) {},
-    );
+    _initialized = await _speech.initialize(onError: (e) {}, onStatus: (_) {});
     return _initialized;
   }
 

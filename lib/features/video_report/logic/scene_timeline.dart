@@ -36,11 +36,13 @@ List<SubtitleCue> parseSrt(String srt) {
     final textLines = lines.sublist(timingIndex + 1);
     if (textLines.isEmpty) continue;
 
-    cues.add(SubtitleCue(
-      text: textLines.join('\n'),
-      startMs: timing.$1,
-      endMs: timing.$2,
-    ));
+    cues.add(
+      SubtitleCue(
+        text: textLines.join('\n'),
+        startMs: timing.$1,
+        endMs: timing.$2,
+      ),
+    );
   }
 
   return cues;
@@ -130,12 +132,12 @@ List<TimedScene> assignSceneTimings({
       // Guard against zero-duration scenes: if snapping would collapse the
       // previous scene to zero/negative length, keep the original proportional
       // value instead of the snapped one.
-      final candidate =
-          snapped > boundaries[i - 1] ? snapped : original;
+      final candidate = snapped > boundaries[i - 1] ? snapped : original;
       // Keep strictly monotonic (> previous boundary by at least 1ms) so every
       // scene retains a strictly positive duration.
-      boundaries[i] =
-          candidate > boundaries[i - 1] ? candidate : boundaries[i - 1] + 1;
+      boundaries[i] = candidate > boundaries[i - 1]
+          ? candidate
+          : boundaries[i - 1] + 1;
     }
     boundaries[0] = 0;
     boundaries[boundaries.length - 1] = duration;
@@ -153,12 +155,14 @@ List<TimedScene> assignSceneTimings({
 
   final result = <TimedScene>[];
   for (var i = 0; i < scenes.length; i++) {
-    result.add(TimedScene(
-      id: scenes[i].id,
-      text: scenes[i].text,
-      startMs: boundaries[i],
-      endMs: boundaries[i + 1],
-    ));
+    result.add(
+      TimedScene(
+        id: scenes[i].id,
+        text: scenes[i].text,
+        startMs: boundaries[i],
+        endMs: boundaries[i + 1],
+      ),
+    );
   }
   return result;
 }

@@ -119,17 +119,14 @@ Widget _wrap(FakePaymentRepository repo, {WrPremiumPricing? pricing}) {
             pricing ??
             // Giá gói APP (`cc_products.product_type = 'premium_mobile'`),
             // không phải gói web 249.000đ.
-            const WrPremiumPricing(
-              currentPrice: 499000,
-              productId: 'prod-1',
-            ),
+            const WrPremiumPricing(currentPrice: 499000, productId: 'prod-1'),
       ),
       ccProfileProvider.overrideWith((ref) async => {'role': 'user'}),
     ],
     child: MaterialApp(
-        builder: wrTextScaleBuilder,
-        home: const WrPaymentScreen(),
-      ),
+      builder: wrTextScaleBuilder,
+      home: const WrPaymentScreen(),
+    ),
   );
 }
 
@@ -180,9 +177,7 @@ void main() {
 
     testWidgets('không có product_id thì từ chối tạo đơn', (tester) async {
       final repo = FakePaymentRepository();
-      await tester.pumpWidget(
-        _wrap(repo, pricing: WrPremiumPricing.fallback),
-      );
+      await tester.pumpWidget(_wrap(repo, pricing: WrPremiumPricing.fallback));
       await tester.pump();
       await tester.pump();
 
@@ -421,7 +416,10 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      await _scrollTo(tester, find.byKey(const Key('wr_payment_voucher_browse')));
+      await _scrollTo(
+        tester,
+        find.byKey(const Key('wr_payment_voucher_browse')),
+      );
       await tester.tap(find.byKey(const Key('wr_payment_voucher_browse')));
       await tester.pumpAndSettle();
 
@@ -446,13 +444,19 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      await _scrollTo(tester, find.byKey(const Key('wr_payment_voucher_browse')));
+      await _scrollTo(
+        tester,
+        find.byKey(const Key('wr_payment_voucher_browse')),
+      );
       await tester.tap(find.byKey(const Key('wr_payment_voucher_browse')));
       await tester.pumpAndSettle();
 
       expect(find.text('CUROI'), findsOneWidget);
       expect(find.text('Hết hạn'), findsOneWidget);
-      expect(find.byKey(const Key('wr_payment_voucher_pick_CUROI')), findsNothing);
+      expect(
+        find.byKey(const Key('wr_payment_voucher_pick_CUROI')),
+        findsNothing,
+      );
 
       await tester.pumpWidget(const SizedBox());
     });
@@ -463,11 +467,16 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      await _scrollTo(tester, find.byKey(const Key('wr_payment_voucher_browse')));
+      await _scrollTo(
+        tester,
+        find.byKey(const Key('wr_payment_voucher_browse')),
+      );
       await tester.tap(find.byKey(const Key('wr_payment_voucher_browse')));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.byKey(const Key('wr_payment_voucher_pick_HELLO50')));
+      await tester.tap(
+        find.byKey(const Key('wr_payment_voucher_pick_HELLO50')),
+      );
       await tester.pumpAndSettle();
 
       // Repo giả trả về đơn 0đ nên đi thẳng tới màn thành công.
@@ -481,7 +490,10 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      await _scrollTo(tester, find.byKey(const Key('wr_payment_voucher_browse')));
+      await _scrollTo(
+        tester,
+        find.byKey(const Key('wr_payment_voucher_browse')),
+      );
       await tester.tap(find.byKey(const Key('wr_payment_voucher_browse')));
       await tester.pumpAndSettle();
 
@@ -498,15 +510,15 @@ void main() {
     /// Đơn đã gắn voucher giảm hết từ trước, mở lại màn là thấy ngay —
     /// đúng tình huống đơn CNCB2DE90DF ngày 2026-08-01.
     WrOrder freeOrder() => WrOrder(
-          id: 'order-free',
-          code: 'CNCFREE0001',
-          status: 'pending',
-          originalAmount: 499000,
-          discountAmount: 499000,
-          finalAmount: 0,
-          voucherId: 'v1',
-          expiresAt: DateTime.now().toUtc().add(const Duration(minutes: 20)),
-        );
+      id: 'order-free',
+      code: 'CNCFREE0001',
+      status: 'pending',
+      originalAmount: 499000,
+      discountAmount: 499000,
+      finalAmount: 0,
+      voucherId: 'v1',
+      expiresAt: DateTime.now().toUtc().add(const Duration(minutes: 20)),
+    );
 
     testWidgets('không hiện QR, hiện nút nhận Premium', (tester) async {
       final repo = FakePaymentRepository()
@@ -532,7 +544,10 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      await _scrollTo(tester, find.byKey(const Key('wr_payment_free_complete')));
+      await _scrollTo(
+        tester,
+        find.byKey(const Key('wr_payment_free_complete')),
+      );
       await tester.tap(find.byKey(const Key('wr_payment_free_complete')));
       await tester.pump();
       await tester.pump();
@@ -587,23 +602,29 @@ void main() {
         UncontrolledProviderScope(
           container: container,
           child: MaterialApp(
-        builder: wrTextScaleBuilder,
-        home: const WrPaymentScreen(),
-      ),
+            builder: wrTextScaleBuilder,
+            home: const WrPaymentScreen(),
+          ),
         ),
       );
       await tester.pump();
       await tester.pump();
 
-      expect(container.read(premiumOverrideProvider), isFalse,
-          reason: 'trước khi mua vẫn đang bị ép miễn phí');
+      expect(
+        container.read(premiumOverrideProvider),
+        isFalse,
+        reason: 'trước khi mua vẫn đang bị ép miễn phí',
+      );
 
       repo.nextPolled = repo.order.copyWith(status: 'paid');
       await tester.pump(kPaymentPollInterval);
       await tester.pump();
 
-      expect(container.read(premiumOverrideProvider), isNull,
-          reason: 'mua thật phải thắng công cụ thử nghiệm');
+      expect(
+        container.read(premiumOverrideProvider),
+        isNull,
+        reason: 'mua thật phải thắng công cụ thử nghiệm',
+      );
       expect(find.byKey(const Key('wr_payment_success')), findsOneWidget);
     });
 
@@ -636,9 +657,9 @@ void main() {
         UncontrolledProviderScope(
           container: container,
           child: MaterialApp(
-        builder: wrTextScaleBuilder,
-        home: const WrPaymentScreen(),
-      ),
+            builder: wrTextScaleBuilder,
+            home: const WrPaymentScreen(),
+          ),
         ),
       );
       await tester.pump();
@@ -663,7 +684,10 @@ void main() {
 
       expect(find.byKey(const Key('wr_payment_invoice_buyer')), findsNothing);
 
-      await _scrollTo(tester, find.byKey(const Key('wr_payment_invoice_toggle')));
+      await _scrollTo(
+        tester,
+        find.byKey(const Key('wr_payment_invoice_toggle')),
+      );
       await tester.tap(find.byKey(const Key('wr_payment_invoice_toggle')));
       await tester.pump();
 
@@ -679,7 +703,10 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      await _scrollTo(tester, find.byKey(const Key('wr_payment_invoice_toggle')));
+      await _scrollTo(
+        tester,
+        find.byKey(const Key('wr_payment_invoice_toggle')),
+      );
       await tester.tap(find.byKey(const Key('wr_payment_invoice_toggle')));
       await tester.pump();
       // Nhịp lưu của lần bật công tắc.
@@ -705,7 +732,10 @@ void main() {
       await tester.pump();
       await tester.pump();
 
-      await _scrollTo(tester, find.byKey(const Key('wr_payment_invoice_toggle')));
+      await _scrollTo(
+        tester,
+        find.byKey(const Key('wr_payment_invoice_toggle')),
+      );
       await tester.tap(find.byKey(const Key('wr_payment_invoice_toggle')));
       await tester.pump();
 

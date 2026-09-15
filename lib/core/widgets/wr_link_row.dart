@@ -52,8 +52,10 @@ class WrLinkRow extends StatelessWidget {
     height: 1.4,
   );
 
-  static const TextStyle _hintStyle =
-      TextStyle(fontSize: 15.5, color: WrColors.muted);
+  static const TextStyle _hintStyle = TextStyle(
+    fontSize: 15.5,
+    color: WrColors.muted,
+  );
 
   /// Khoảng cách giữa nhãn và gợi ý khi còn nằm chung một hàng.
   static const double _gap = 12;
@@ -106,7 +108,8 @@ class WrLinkRow extends StatelessWidget {
               return painter.width;
             }
 
-            final needed = widthOf(label, _labelStyle) +
+            final needed =
+                widthOf(label, _labelStyle) +
                 _gap +
                 widthOf(hintText, _hintStyle) +
                 _trailing;
@@ -146,9 +149,6 @@ class WrLinkRow extends StatelessWidget {
     );
   }
 
-  Widget _label() => WrParagraph(
-        label,
-        style: _labelStyle,
-        textAlign: TextAlign.start,
-      );
+  Widget _label() =>
+      WrParagraph(label, style: _labelStyle, textAlign: TextAlign.start);
 }

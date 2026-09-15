@@ -77,17 +77,24 @@ enum OrgSurveyStanding {
   /// GETTER, không phải trường của hàm tạo: đối số hàm tạo của enum bắt buộc
   /// là hằng biên dịch, mà `tr()` là lời gọi hàm đọc ngôn ngữ đang bật.
   String get label => switch (this) {
-        OrgSurveyStanding.above =>
-          tr('Cao hơn mặt bằng chung', 'Above the wider picture'),
-        OrgSurveyStanding.equal =>
-          tr('Ngang mặt bằng chung', 'In line with the wider picture'),
-        OrgSurveyStanding.below =>
-          tr('Thấp hơn mặt bằng chung', 'Below the wider picture'),
-        OrgSurveyStanding.unanswered => tr('Chưa trả lời', 'Not answered'),
-        OrgSurveyStanding.noBenchmark =>
-          tr('Chưa đủ dữ liệu để so sánh', 'Not enough data to compare'),
-      };
-
+    OrgSurveyStanding.above => tr(
+      'Cao hơn mặt bằng chung',
+      'Above the wider picture',
+    ),
+    OrgSurveyStanding.equal => tr(
+      'Ngang mặt bằng chung',
+      'In line with the wider picture',
+    ),
+    OrgSurveyStanding.below => tr(
+      'Thấp hơn mặt bằng chung',
+      'Below the wider picture',
+    ),
+    OrgSurveyStanding.unanswered => tr('Chưa trả lời', 'Not answered'),
+    OrgSurveyStanding.noBenchmark => tr(
+      'Chưa đủ dữ liệu để so sánh',
+      'Not enough data to compare',
+    ),
+  };
 }
 
 /// So [mine] với [benchmark] trên cùng một thang [max].

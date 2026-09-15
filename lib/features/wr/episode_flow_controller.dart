@@ -27,8 +27,8 @@ import 'wr_providers.dart';
 /// Episode đang được thao tác trong luồng check-in. Null = không có luồng nào.
 final episodeFlowProvider =
     StateNotifierProvider<EpisodeFlowController, ReflectionEpisode?>((ref) {
-  return EpisodeFlowController(ref);
-});
+      return EpisodeFlowController(ref);
+    });
 
 /// Năng lượng vừa chọn ở màn đầu — chưa gắn vào Episode nào cho tới khi người
 /// dùng chọn Human Moment.
@@ -210,11 +210,13 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
     for (final pattern in kReflectCapturePatterns) {
       final note = ep.notes[pattern.dbValue]?.trim();
       if (note == null || note.isEmpty) continue;
-      items.add(ReflectionRecapItem(
-        pattern: pattern,
-        prompt: prompts[pattern] ?? promptFor(ep.humanMoment, pattern),
-        answer: note,
-      ));
+      items.add(
+        ReflectionRecapItem(
+          pattern: pattern,
+          prompt: prompts[pattern] ?? promptFor(ep.humanMoment, pattern),
+          answer: note,
+        ),
+      );
     }
     return items;
   }
@@ -260,7 +262,10 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
   /// Phép đếm tần suất theo trụ **không** đọc bảng Insight mà đọc Episode, nên
   /// lần bị từ chối vẫn được đếm — đúng §10.1: "Tần suất đo việc người dùng GẶP
   /// tình huống đó, không đo việc họ ĐỒNG Ý với cách diễn giải."
-  Future<void> confirmMeaning(String meaning, {bool recordInsight = true}) async {
+  Future<void> confirmMeaning(
+    String meaning, {
+    bool recordInsight = true,
+  }) async {
     var ep = state;
     if (ep == null) return;
 
@@ -290,13 +295,15 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
     // và memory event, nên confirmed_insight_id để trống ở bản này.
     if (recordInsight && meaning.trim().isNotEmpty) {
       try {
-        await _intel.insertInsight(WrInsight(
-          userId: userId,
-          source: 'episode',
-          scaDimension: ep.scaDimension,
-          humanNeed: ep.humanNeed,
-          content: meaning.trim(),
-        ));
+        await _intel.insertInsight(
+          WrInsight(
+            userId: userId,
+            source: 'episode',
+            scaDimension: ep.scaDimension,
+            humanNeed: ep.humanNeed,
+            content: meaning.trim(),
+          ),
+        );
       } catch (e, s) {
         // Đúng chỗ đã giấu lỗi 400 `source = 'episode'` suốt từ 2026-07-27:
         // Episode vẫn giữ draft_meaning nên màn hình đi tiếp như không có gì,
@@ -347,7 +354,8 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
     if (ep.state.actionAlreadySettled) {
       final text = action.trim();
       final picked = choice?.trim();
-      final changed = text != ep.tinyAction?.trim() ||
+      final changed =
+          text != ep.tinyAction?.trim() ||
           _blankToNull(picked) != _blankToNull(ep.reflectChoice);
       if (ep.state.canReviseActionInPlace && text.isNotEmpty && changed) {
         // Đổi câu khi phiên còn mở — cập nhật thuần, không đổi trạng thái.
@@ -391,16 +399,18 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
 
     // (1) Career Memory Event — nội dung là Meaning, không phải ghi chú thô.
     try {
-      await _content.insertMemoryEvent(CareerMemoryEvent(
-        id: '',
-        userId: userId,
-        situationCode: ep.situationCode,
-        humanNeed: ep.humanNeed,
-        scaDimension: ep.scaDimension,
-        emotion: ep.energy?.dbValue,
-        behavior: 'reflection_episode',
-        reflectionText: ep.draftMeaning,
-      ));
+      await _content.insertMemoryEvent(
+        CareerMemoryEvent(
+          id: '',
+          userId: userId,
+          situationCode: ep.situationCode,
+          humanNeed: ep.humanNeed,
+          scaDimension: ep.scaDimension,
+          emotion: ep.energy?.dbValue,
+          behavior: 'reflection_episode',
+          reflectionText: ep.draftMeaning,
+        ),
+      );
     } catch (e, s) {
       logFlowError('insertMemoryEvent', e, s);
     }
@@ -421,10 +431,16 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
     }
 
     // (3) Reflection steps theo Reflection Cycle của WDA §5.3.
-    await _insertStep(userId, ReflectionStepType.notice,
-        ep.notes[ReflectionPattern.notice.dbValue]);
-    await _insertStep(userId, ReflectionStepType.meaning,
-        ep.notes[ReflectionPattern.explore.dbValue]);
+    await _insertStep(
+      userId,
+      ReflectionStepType.notice,
+      ep.notes[ReflectionPattern.notice.dbValue],
+    );
+    await _insertStep(
+      userId,
+      ReflectionStepType.meaning,
+      ep.notes[ReflectionPattern.explore.dbValue],
+    );
     await _insertStep(userId, ReflectionStepType.insight, ep.draftMeaning);
     // WDA Inv.9 + §V: Choice là một bước riêng, không phải một phần của Action.
     // Chỉ có dòng này khi người dùng thật sự chọn từ bể; tự viết thì bỏ qua.
@@ -492,15 +508,17 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
       );
 
       for (final d in drafts) {
-        await _content.insertMemoryEvent(CareerMemoryEvent(
-          id: '',
-          userId: userId,
-          humanNeed: d.need,
-          scaDimension: d.scaDimension,
-          situationCode: d.situationCode,
-          behavior: d.behavior,
-          reflectionText: d.text,
-        ));
+        await _content.insertMemoryEvent(
+          CareerMemoryEvent(
+            id: '',
+            userId: userId,
+            humanNeed: d.need,
+            scaDimension: d.scaDimension,
+            situationCode: d.situationCode,
+            behavior: d.behavior,
+            reflectionText: d.text,
+          ),
+        );
       }
     } catch (e, s) {
       logFlowError('writeDerivedMemory', e, s);
@@ -535,11 +553,9 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
   ) async {
     if (content == null || content.trim().isEmpty) return;
     try {
-      await _intel.insertReflectionStep(ReflectionStep(
-        userId: userId,
-        step: type,
-        content: content.trim(),
-      ));
+      await _intel.insertReflectionStep(
+        ReflectionStep(userId: userId, step: type, content: content.trim()),
+      );
     } catch (e, s) {
       logFlowError('insertReflectionStep(${type.dbValue})', e, s);
     }

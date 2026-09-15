@@ -67,19 +67,21 @@ void main() {
     }
   });
 
-  test('đăng nhập rồi thì không thấy onboarding, kể cả khi cờ chưa ghi',
-      () async {
-    // Hai lớp bảo vệ độc lập. Nhánh `hasSession` chặn trước cả khi cờ bị mất —
-    // gỡ app rồi cài lại mà phiên đăng nhập còn thì cũng không bắt xem lại.
-    expect(
-      computeRedirect(
-        hasSession: true,
-        seenOnboarding: false,
-        location: '/onboarding',
-      ),
-      '/home',
-    );
-  });
+  test(
+    'đăng nhập rồi thì không thấy onboarding, kể cả khi cờ chưa ghi',
+    () async {
+      // Hai lớp bảo vệ độc lập. Nhánh `hasSession` chặn trước cả khi cờ bị mất —
+      // gỡ app rồi cài lại mà phiên đăng nhập còn thì cũng không bắt xem lại.
+      expect(
+        computeRedirect(
+          hasSession: true,
+          seenOnboarding: false,
+          location: '/onboarding',
+        ),
+        '/home',
+      );
+    },
+  );
 
   test('CHƯA xem thì vẫn phải đi qua onboarding', () async {
     // Vế ngược lại của cùng một luật. Thiếu bài này thì một lần sửa làm

@@ -35,7 +35,8 @@ class FakeWrRepository implements WrRepository {
   Completer<Map<String, dynamic>>? _ccProfileCompleter;
 
   // --- Call recorders ---
-  final List<({Mood mood, CheckinEnergy? energy, CheckinDirection? direction})> upsertCheckinCalls = [];
+  final List<({Mood mood, CheckinEnergy? energy, CheckinDirection? direction})>
+  upsertCheckinCalls = [];
   final List<(String, PracticeStatus)> updatePracticeStatusCalls = [];
   final List<bool> updateReminderCalls = [];
   final List<String> updateLanguageCalls = [];
@@ -167,7 +168,8 @@ class FakeWrRepository implements WrRepository {
     );
     // Add to dates if not already present for today.
     if (!_checkinDates.any(
-      (d) => d.year == today.year && d.month == today.month && d.day == today.day,
+      (d) =>
+          d.year == today.year && d.month == today.month && d.day == today.day,
     )) {
       _checkinDates.add(today);
     }
@@ -217,12 +219,20 @@ class FakeWrRepository implements WrRepository {
     if (todayPractices.isNotEmpty) return List.unmodifiable(todayPractices);
     // Fallback: return practices from the most recent practice_date.
     final latestDate = _practices
-        .map((p) => DateTime(p.practiceDate.year, p.practiceDate.month, p.practiceDate.day))
+        .map(
+          (p) => DateTime(
+            p.practiceDate.year,
+            p.practiceDate.month,
+            p.practiceDate.day,
+          ),
+        )
         .reduce((a, b) => a.isAfter(b) ? a : b);
-    return List.unmodifiable(_practices.where((p) {
-      final d = p.practiceDate;
-      return DateTime(d.year, d.month, d.day) == latestDate;
-    }).toList());
+    return List.unmodifiable(
+      _practices.where((p) {
+        final d = p.practiceDate;
+        return DateTime(d.year, d.month, d.day) == latestDate;
+      }).toList(),
+    );
   }
 
   @override
@@ -242,8 +252,9 @@ class FakeWrRepository implements WrRepository {
       List.unmodifiable(_timelineEvents);
 
   @override
-  Future<int> countMilestones() async =>
-      _timelineEvents.where((e) => e.eventType == TimelineEventType.milestone).length;
+  Future<int> countMilestones() async => _timelineEvents
+      .where((e) => e.eventType == TimelineEventType.milestone)
+      .length;
 
   @override
   Future<MobileProfile?> getMobileProfile() async => _profile;
@@ -286,8 +297,7 @@ class FakeWrRepository implements WrRepository {
   @override
   Future<void> saveRoleText(String? roleText) async {
     final trimmed = roleText?.trim();
-    final normalised =
-        (trimmed == null || trimmed.isEmpty) ? null : trimmed;
+    final normalised = (trimmed == null || trimmed.isEmpty) ? null : trimmed;
     saveRoleTextCalls.add(normalised);
     if (_profile != null) {
       _profile = _profile!.copyWith(roleText: normalised);
@@ -413,8 +423,7 @@ class FakeWrRepository implements WrRepository {
   @override
   Future<String> uploadAvatar(List<int> bytes, String ext) async {
     uploadAvatarCalls.add((bytes, ext));
-    _avatarUrl =
-        'https://fake.supabase.co/avatars/u1/avatar.$ext?t=12345';
+    _avatarUrl = 'https://fake.supabase.co/avatars/u1/avatar.$ext?t=12345';
     _ccProfile = {..._ccProfile, 'avatar_url': _avatarUrl};
     return _avatarUrl;
   }

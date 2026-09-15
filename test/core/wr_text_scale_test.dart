@@ -38,7 +38,9 @@ void main() {
       );
     });
 
-    testWidgets('builder gắn scaler vào MediaQuery của cây con', (tester) async {
+    testWidgets('builder gắn scaler vào MediaQuery của cây con', (
+      tester,
+    ) async {
       late TextScaler seen;
       await tester.pumpWidget(
         MaterialApp(
@@ -56,8 +58,9 @@ void main() {
       expect(seen.scale(13), closeTo(15.57, 0.01));
     });
 
-    testWidgets('nhân chồng lên cỡ chữ người dùng đặt ở hệ thống',
-        (tester) async {
+    testWidgets('nhân chồng lên cỡ chữ người dùng đặt ở hệ thống', (
+      tester,
+    ) async {
       late TextScaler seen;
       await tester.pumpWidget(
         MediaQuery(

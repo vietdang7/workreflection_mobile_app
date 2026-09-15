@@ -8,26 +8,26 @@ import 'package:workreflection_mobile/core/models/wr_content.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 
 PracticeStep _step(int order, String content) => PracticeStep(
-      stepId: 'pt-c1-$order',
-      themeId: 'pt-c1',
-      stepOrder: order,
-      title: 'Bước $order',
-      content: content,
-      isPremium: order == 3,
-    );
+  stepId: 'pt-c1-$order',
+  themeId: 'pt-c1',
+  stepOrder: order,
+  title: 'Bước $order',
+  content: content,
+  isPremium: order == 3,
+);
 
 PracticeTheme _theme(String id, ScaDimension dim) =>
     PracticeTheme(themeId: id, title: 'Chủ đề $id', scaDimension: dim);
 
 SkillFormation _forming(PracticeTheme t) => SkillFormation(
-      themeId: t.themeId,
-      title: t.title,
-      scaDimension: t.scaDimension,
-      practiceCount: 1,
-      threshold: 5,
-      onboardingDone: false,
-      skillFormedDate: null,
-    );
+  themeId: t.themeId,
+  title: t.title,
+  scaDimension: t.scaDimension,
+  practiceCount: 1,
+  threshold: 5,
+  onboardingDone: false,
+  skillFormedDate: null,
+);
 
 void main() {
   group('seniorityFromPosition', () {
@@ -41,15 +41,18 @@ void main() {
       expect(seniorityFromPosition('c_level'), SeniorityTier.leadOrg);
     });
 
-    test('chưa khai, mã "other" hay mã lạ đều là CHƯA BIẾT, không mặc định', () {
-      // Chưa biết và biết-là-nhân-viên là hai chuyện khác nhau: mặc định về
-      // `individual` sẽ đảo thứ tự khoảng trống của người chưa khai gì.
-      expect(seniorityFromPosition(null), isNull);
-      expect(seniorityFromPosition(''), isNull);
-      expect(seniorityFromPosition('   '), isNull);
-      expect(seniorityFromPosition('other'), isNull);
-      expect(seniorityFromPosition('ceo-of-everything'), isNull);
-    });
+    test(
+      'chưa khai, mã "other" hay mã lạ đều là CHƯA BIẾT, không mặc định',
+      () {
+        // Chưa biết và biết-là-nhân-viên là hai chuyện khác nhau: mặc định về
+        // `individual` sẽ đảo thứ tự khoảng trống của người chưa khai gì.
+        expect(seniorityFromPosition(null), isNull);
+        expect(seniorityFromPosition(''), isNull);
+        expect(seniorityFromPosition('   '), isNull);
+        expect(seniorityFromPosition('other'), isNull);
+        expect(seniorityFromPosition('ceo-of-everything'), isNull);
+      },
+    );
 
     test('chỉ cấp quản lý mới bật Nguyên tắc 3', () {
       expect(SeniorityTier.individual.isManaging, isFalse);
@@ -139,9 +142,11 @@ void main() {
     test('chưa biết cấp bậc thì giữ nguyên bản mặc định', () {
       final steps = [_step(3, 'gốc 3')];
       expect(
-        personalizePracticeSteps(themeId: 'pt-c1', steps: steps, tier: null)
-            .single
-            .content,
+        personalizePracticeSteps(
+          themeId: 'pt-c1',
+          steps: steps,
+          tier: null,
+        ).single.content,
         'gốc 3',
       );
     });
@@ -162,21 +167,24 @@ void main() {
   group('B.1/B.2 áp vào đối chiếu JD', () {
     const jd = 'Cần lập kế hoạch, báo cáo và phân tích số liệu rõ ràng.';
 
-    test('JD không nhắc Kết nối: người tự làm việc của mình thì không có C', () {
-      final match = matchSkillsToContext(
-        contextText: jd,
-        formations: const [],
-        allThemes: [
-          _theme('pt-s1', ScaDimension.s1),
-          _theme('pt-c1', ScaDimension.c1),
-        ],
-        tier: SeniorityTier.individual,
-      );
+    test(
+      'JD không nhắc Kết nối: người tự làm việc của mình thì không có C',
+      () {
+        final match = matchSkillsToContext(
+          contextText: jd,
+          formations: const [],
+          allThemes: [
+            _theme('pt-s1', ScaDimension.s1),
+            _theme('pt-c1', ScaDimension.c1),
+          ],
+          tier: SeniorityTier.individual,
+        );
 
-      expect(match!.matchedPillars, isNot(contains('C')));
-      expect(match.autoRaisedDimensions, isEmpty);
-      expect(match.gapThemes.map((t) => t.themeId), ['pt-s1']);
-    });
+        expect(match!.matchedPillars, isNot(contains('C')));
+        expect(match.autoRaisedDimensions, isEmpty);
+        expect(match.gapThemes.map((t) => t.themeId), ['pt-s1']);
+      },
+    );
 
     test('cùng JD đó, người quản lý vẫn được kéo nhóm Kết nối vào', () {
       final match = matchSkillsToContext(
@@ -209,7 +217,11 @@ void main() {
         tier: SeniorityTier.leadTeam,
       );
 
-      expect(match!.gapThemes.map((t) => t.themeId), ['pt-c1', 'pt-a2', 'pt-a4']);
+      expect(match!.gapThemes.map((t) => t.themeId), [
+        'pt-c1',
+        'pt-a2',
+        'pt-a4',
+      ]);
       expect(match.gapRelevance['pt-c1'], SkillRelevance.critical);
       expect(match.gapRelevance['pt-a2'], SkillRelevance.needed);
       expect(match.gapRelevance['pt-a4'], SkillRelevance.nice);

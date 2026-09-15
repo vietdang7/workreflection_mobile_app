@@ -39,14 +39,13 @@ WrSituation _sit(
   String text, {
   ScaDimension dim = ScaDimension.c1,
   HumanNeed? need,
-}) =>
-    WrSituation(
-      code: code,
-      text: text,
-      scaDimension: dim,
-      wave: 1,
-      humanNeed: need,
-    );
+}) => WrSituation(
+  code: code,
+  text: text,
+  scaDimension: dim,
+  wave: 1,
+  humanNeed: need,
+);
 
 /// [count] lần xuất hiện của [code] trong recentSituationIds.
 List<String> _pattern(String code, int count) => List.filled(count, code);
@@ -55,16 +54,16 @@ List<String> _pattern(String code, int count) => List.filled(count, code);
 /// recentSituationIds (v2.0 §4.3). Trước đây các test này gieo
 /// `wr_pattern_counts`; màn hình không còn đọc bảng đó nữa.
 List<ReflectionEpisode> _episodes(String code, int count) => [
-      for (var i = 0; i < count; i++)
-        ReflectionEpisode(
-          id: '\$code-\$i',
-          userId: 'u1',
-          humanMoment: HumanMoment.confusion,
-          state: ExperienceState.integrated,
-          situationCode: code,
-          openedAt: DateTime(2026, 7, 1).add(Duration(hours: i)),
-        ),
-    ];
+  for (var i = 0; i < count; i++)
+    ReflectionEpisode(
+      id: '\$code-\$i',
+      userId: 'u1',
+      humanMoment: HumanMoment.confusion,
+      state: ExperienceState.integrated,
+      situationCode: code,
+      openedAt: DateTime(2026, 7, 1).add(Duration(hours: i)),
+    ),
+];
 
 WrStory _story(
   String id,
@@ -72,24 +71,23 @@ WrStory _story(
   ScaDimension dim = ScaDimension.c1,
   HumanNeed? need,
   String content = 'một hai ba bốn năm',
-}) =>
-    WrStory(
-      storyId: id,
-      title: title,
-      scaDimension: dim,
-      humanNeed: need,
-      storyContent: content,
-      emotionTags: const [],
-      behaviorTags: const [],
-      careerStages: const [],
-    );
+}) => WrStory(
+  storyId: id,
+  title: title,
+  scaDimension: dim,
+  humanNeed: need,
+  storyContent: content,
+  emotionTags: const [],
+  behaviorTags: const [],
+  careerStages: const [],
+);
 
 CareerMemoryEvent _readEvent(String storyId) => CareerMemoryEvent(
-      id: 'e-$storyId',
-      userId: 'u1',
-      storyId: storyId,
-      createdAt: DateTime(2026, 7, 21),
-    );
+  id: 'e-$storyId',
+  userId: 'u1',
+  storyId: storyId,
+  createdAt: DateTime(2026, 7, 21),
+);
 
 Widget _wrap({
   FakeWrContentRepository? content,
@@ -125,15 +123,19 @@ Widget _wrap({
   );
   return ProviderScope(
     overrides: [
-      wrContentRepositoryProvider
-          .overrideWithValue(content ?? FakeWrContentRepository()),
-      wrIntelligenceRepositoryProvider
-          .overrideWithValue(intel ?? FakeWrIntelligenceRepository()),
-      wrMoodContentRepositoryProvider
-          .overrideWithValue(moodContent ?? FakeWrMoodContentRepository()),
+      wrContentRepositoryProvider.overrideWithValue(
+        content ?? FakeWrContentRepository(),
+      ),
+      wrIntelligenceRepositoryProvider.overrideWithValue(
+        intel ?? FakeWrIntelligenceRepository(),
+      ),
+      wrMoodContentRepositoryProvider.overrideWithValue(
+        moodContent ?? FakeWrMoodContentRepository(),
+      ),
       wrRepositoryProvider.overrideWithValue(repo ?? FakeWrRepository()),
-      wrEpisodeRepositoryProvider
-          .overrideWithValue(episodes ?? FakeWrEpisodeRepository()),
+      wrEpisodeRepositoryProvider.overrideWithValue(
+        episodes ?? FakeWrEpisodeRepository(),
+      ),
       currentUserIdProvider.overrideWithValue('u1'),
     ],
     child: MaterialApp.router(
@@ -208,26 +210,35 @@ void main() {
     group('lọc theo cảm xúc vừa check-in', () {
       // P-08 trụ P-STEADY, ghi 3 lần tuần trước. C2-03 vừa ghi hôm nay, 1 lần.
       final khach = [
-        _sit('C2-03', 'Tôi đồng ý dù trong lòng không đồng ý',
-            dim: ScaDimension.c2),
-        _sit('P-08', 'Tôi vừa học được một điều nhỏ nhưng hữu ích',
-            dim: ScaDimension.pSteady),
+        _sit(
+          'C2-03',
+          'Tôi đồng ý dù trong lòng không đồng ý',
+          dim: ScaDimension.c2,
+        ),
+        _sit(
+          'P-08',
+          'Tôi vừa học được một điều nhỏ nhưng hữu ích',
+          dim: ScaDimension.pSteady,
+        ),
       ];
       final lichSu = ['C2-03', ..._pattern('P-08', 3)];
 
-      test('check-in căng thẳng thì im lặng, không đọc chuyện trụ P tuần trước',
-          () {
-        expect(
-          systemNotice(
-            recent: lichSu,
-            situations: khach,
-            mood: Mood.stressed,
-          ),
-          isNull,
-          reason: 'stressed → A3+C2; trong cụm đó chưa mã nào lặp đủ 2 lần, '
-              'nên im lặng đúng hơn là nói một chuyện ngược cảm xúc',
-        );
-      });
+      test(
+        'check-in căng thẳng thì im lặng, không đọc chuyện trụ P tuần trước',
+        () {
+          expect(
+            systemNotice(
+              recent: lichSu,
+              situations: khach,
+              mood: Mood.stressed,
+            ),
+            isNull,
+            reason:
+                'stressed → A3+C2; trong cụm đó chưa mã nào lặp đủ 2 lần, '
+                'nên im lặng đúng hơn là nói một chuyện ngược cảm xúc',
+          );
+        },
+      );
 
       test('check-in khá ổn thì đọc đúng tình huống trụ P đã lặp', () {
         final n = systemNotice(
@@ -323,8 +334,9 @@ void main() {
       expect(find.byKey(const Key('wr_home_latest_insight')), findsNothing);
     });
 
-    testWidgets('chưa check-in thì Hệ thống nhận ra chưa xuất hiện',
-        (tester) async {
+    testWidgets('chưa check-in thì Hệ thống nhận ra chưa xuất hiện', (
+      tester,
+    ) async {
       // Họp khách 2026-07-29: màn Home lúc mở ra chỉ có ba việc. "Hệ thống nhận
       // ra" và "Gợi ý hôm nay" là hai thứ hiện SAU khi check-in xong.
       final content = FakeWrContentRepository()
@@ -340,8 +352,9 @@ void main() {
     // chọn tình huống, tin là đã ghi xong. DB ngày đó có check-in và không có
     // Episode nào, còn Home thì không nói gì.
     group('Còn dở', () {
-      testWidgets('check-in rồi mà chưa mở phiên nào hôm nay thì Home nhắc',
-          (tester) async {
+      testWidgets('check-in rồi mà chưa mở phiên nào hôm nay thì Home nhắc', (
+        tester,
+      ) async {
         final repo = FakeWrRepository()
           ..seedTodayCheckin(_checkin(Mood.stressed));
 
@@ -384,10 +397,12 @@ void main() {
               humanMoment: HumanMoment.confusion,
               state: ExperienceState.exploring,
               situationCode: 's1',
-              openedAt:
-                  DateTime.now().toUtc().subtract(const Duration(days: 1)),
-              updatedAt:
-                  DateTime.now().toUtc().subtract(const Duration(days: 1)),
+              openedAt: DateTime.now().toUtc().subtract(
+                const Duration(days: 1),
+              ),
+              updatedAt: DateTime.now().toUtc().subtract(
+                const Duration(days: 1),
+              ),
             ),
           ]);
 
@@ -397,8 +412,9 @@ void main() {
         expect(find.textContaining('chưa hoàn thành'), findsOneWidget);
       });
 
-      testWidgets('phiên bỏ dở ba tuần trước thì Home thôi nhắc về nó',
-          (tester) async {
+      testWidgets('phiên bỏ dở ba tuần trước thì Home thôi nhắc về nó', (
+        tester,
+      ) async {
         final repo = FakeWrRepository()
           ..seedTodayCheckin(_checkin(Mood.stressed));
         final episodes = FakeWrEpisodeRepository()
@@ -409,10 +425,12 @@ void main() {
               humanMoment: HumanMoment.confusion,
               state: ExperienceState.exploring,
               situationCode: 's1',
-              openedAt:
-                  DateTime.now().toUtc().subtract(const Duration(days: 21)),
-              updatedAt:
-                  DateTime.now().toUtc().subtract(const Duration(days: 21)),
+              openedAt: DateTime.now().toUtc().subtract(
+                const Duration(days: 21),
+              ),
+              updatedAt: DateTime.now().toUtc().subtract(
+                const Duration(days: 21),
+              ),
             ),
           ]);
 
@@ -428,8 +446,7 @@ void main() {
         );
       });
 
-      testWidgets('nhãn cũ "CÒN DỞ" không còn ở đâu trên Home',
-          (tester) async {
+      testWidgets('nhãn cũ "CÒN DỞ" không còn ở đâu trên Home', (tester) async {
         // "dở" một mình trong tiếng Việt là DỞ/TỆ — khách đọc ra thành lời chê.
         final repo = FakeWrRepository()
           ..seedTodayCheckin(_checkin(Mood.stressed));
@@ -465,8 +482,9 @@ void main() {
       });
     });
 
-    testWidgets('Hệ thống nhận ra hiện đúng câu từ dữ liệu thật',
-        (tester) async {
+    testWidgets('Hệ thống nhận ra hiện đúng câu từ dữ liệu thật', (
+      tester,
+    ) async {
       final content = FakeWrContentRepository()
         // C2 để khớp cụm chiều của "căng thẳng" (A3+C2, §III) — từ 2026-08-22
         // thẻ chỉ đọc tình huống thuộc cảm xúc vừa check-in. Chiều này cũng
@@ -475,7 +493,8 @@ void main() {
           _sit('s1', 'Ngại phản biện với đồng nghiệp', dim: ScaDimension.c2),
         ]);
       final episodes = FakeWrEpisodeRepository()..seed(_episodes('s1', 5));
-      final repo = FakeWrRepository()..seedTodayCheckin(_checkin(Mood.stressed));
+      final repo = FakeWrRepository()
+        ..seedTodayCheckin(_checkin(Mood.stressed));
 
       await _pump(
         tester,
@@ -484,20 +503,17 @@ void main() {
 
       expect(find.byKey(const Key('wr_home_system_notice')), findsOneWidget);
       expect(find.text('HỆ THỐNG NHẬN RA'), findsOneWidget);
-      expect(
-        find.textContaining('Bạn đã gặp tình huống'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('Bạn đã gặp tình huống'), findsOneWidget);
     });
 
-    testWidgets('Tìm hiểu thêm mở đúng màn chi tiết của tình huống đó',
-        (tester) async {
+    testWidgets('Tìm hiểu thêm mở đúng màn chi tiết của tình huống đó', (
+      tester,
+    ) async {
       final content = FakeWrContentRepository()
-        ..seedSituations([
-          _sit('s1', 'Ngại phản biện', dim: ScaDimension.c2),
-        ]);
+        ..seedSituations([_sit('s1', 'Ngại phản biện', dim: ScaDimension.c2)]);
       final episodes = FakeWrEpisodeRepository()..seed(_episodes('s1', 4));
-      final repo = FakeWrRepository()..seedTodayCheckin(_checkin(Mood.stressed));
+      final repo = FakeWrRepository()
+        ..seedTodayCheckin(_checkin(Mood.stressed));
 
       await _pump(
         tester,
@@ -509,8 +525,9 @@ void main() {
       expect(find.text('PATTERN s1'), findsOneWidget);
     });
 
-    testWidgets('chưa check-in thì khối Thư viện Cảm xúc im lặng',
-        (tester) async {
+    testWidgets('chưa check-in thì khối Thư viện Cảm xúc im lặng', (
+      tester,
+    ) async {
       // §8.3: thẻ bám vào cảm xúc vừa check-in. Không có cảm xúc thì không có
       // gì để gợi ý — bịa một mục mặc định là sai tinh thần "đúng cảm giác
       // lúc này".
@@ -524,9 +541,11 @@ void main() {
       expect(find.byKey(const Key('wr_home_mood_content')), findsNothing);
     });
 
-    testWidgets('khối gợi ý lấy đúng mục đầu tiên theo cảm xúc đã check-in',
-        (tester) async {
-      final repo = FakeWrRepository()..seedTodayCheckin(_checkin(Mood.stressed));
+    testWidgets('khối gợi ý lấy đúng mục đầu tiên theo cảm xúc đã check-in', (
+      tester,
+    ) async {
+      final repo = FakeWrRepository()
+        ..seedTodayCheckin(_checkin(Mood.stressed));
       final moodContent = FakeWrMoodContentRepository()
         ..seedContent([
           // sortOrder 2 nạp trước để chắc chắn thẻ chọn theo THỨ TỰ chứ không
@@ -576,8 +595,11 @@ void main() {
           ..seedContent([fakeMoodContent(id: 'c', mood: entry.key)]);
 
         await _pump(tester, _wrap(moodContent: moodContent, repo: repo));
-        expect(find.text(entry.value), findsOneWidget,
-            reason: 'sai nhãn cho ${entry.key.name}');
+        expect(
+          find.text(entry.value),
+          findsOneWidget,
+          reason: 'sai nhãn cho ${entry.key.name}',
+        );
       }
     });
 
@@ -631,10 +653,7 @@ void main() {
       await _pump(tester, _wrap(intel: intel));
 
       expect(find.byKey(const Key('wr_home_latest_insight')), findsOneWidget);
-      expect(
-        find.text('"Tôi thường im lặng vì sợ phán xét."'),
-        findsOneWidget,
-      );
+      expect(find.text('"Tôi thường im lặng vì sợ phán xét."'), findsOneWidget);
       expect(find.text('Lưu ngày 20/06'), findsOneWidget);
     });
   });
@@ -643,9 +662,9 @@ void main() {
 /// Check-in hôm nay với [mood] — chỉ cần đúng trường `mood` cho các test thẻ
 /// Thư viện Nội dung Cảm xúc.
 Checkin _checkin(Mood mood) => Checkin(
-      id: 'ck-1',
-      userId: 'u1',
-      mood: mood,
-      checkinDate: DateTime(2026, 7, 28),
-      createdAt: DateTime(2026, 7, 28),
-    );
+  id: 'ck-1',
+  userId: 'u1',
+  mood: mood,
+  checkinDate: DateTime(2026, 7, 28),
+  createdAt: DateTime(2026, 7, 28),
+);

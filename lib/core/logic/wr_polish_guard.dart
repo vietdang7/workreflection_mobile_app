@@ -180,10 +180,7 @@ PolishRejection? inspectPolished({
 ///
 /// Đây là hàm DUY NHẤT tầng UI nên gọi. Để tầng UI tự quyết định lấy bản nào là
 /// sớm muộn có một màn quên kiểm.
-String polishedOrOriginal({
-  required String original,
-  String? polished,
-}) {
+String polishedOrOriginal({required String original, String? polished}) {
   if (polished == null) return original;
   return inspectPolished(original: original, polished: polished) == null
       ? polished.trim()

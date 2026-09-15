@@ -1,8 +1,16 @@
 // Video Report — foundation data models (scenes, subtitle cues, assembled player data).
 
 enum VideoSceneId {
-  intro, overall, structure, culture, activity,
-  bottleneck, esi, enps, recommendations, closing,
+  intro,
+  overall,
+  structure,
+  culture,
+  activity,
+  bottleneck,
+  esi,
+  enps,
+  recommendations,
+  closing,
 }
 
 class NarrationScene {
@@ -12,14 +20,23 @@ class NarrationScene {
 }
 
 class SubtitleCue {
-  const SubtitleCue({required this.text, required this.startMs, required this.endMs});
+  const SubtitleCue({
+    required this.text,
+    required this.startMs,
+    required this.endMs,
+  });
   final String text;
   final int startMs;
   final int endMs;
 }
 
 class TimedScene {
-  const TimedScene({required this.id, required this.text, required this.startMs, required this.endMs});
+  const TimedScene({
+    required this.id,
+    required this.text,
+    required this.startMs,
+    required this.endMs,
+  });
   final VideoSceneId id;
   final String text;
   final int startMs;

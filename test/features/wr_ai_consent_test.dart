@@ -57,9 +57,9 @@ class _FakeConsentRepository implements WrAiConsentRepository {
 }
 
 WrAiConsent _granted({int? version}) => WrAiConsent(
-      version: version ?? kWrAiDisclosureVersion,
-      grantedAt: DateTime(2026, 9, 7, 10),
-    );
+  version: version ?? kWrAiDisclosureVersion,
+  grantedAt: DateTime(2026, 9, 7, 10),
+);
 
 ProviderContainer _container(_FakeConsentRepository repo) {
   final c = ProviderContainer(
@@ -155,15 +155,17 @@ void main() {
       expect(c.hasAnswered, isTrue);
     });
 
-    test('tắt rồi BẬT LẠI thì được phép — so mốc chứ không xem có hay không',
-        () {
-      final c = WrAiConsent(
-        version: kWrAiDisclosureVersion,
-        grantedAt: DateTime(2026, 9, 7, 12),
-        revokedAt: DateTime(2026, 9, 7, 11),
-      );
-      expect(c.isGranted, isTrue);
-    });
+    test(
+      'tắt rồi BẬT LẠI thì được phép — so mốc chứ không xem có hay không',
+      () {
+        final c = WrAiConsent(
+          version: kWrAiDisclosureVersion,
+          grantedAt: DateTime(2026, 9, 7, 12),
+          revokedAt: DateTime(2026, 9, 7, 11),
+        );
+        expect(c.isGranted, isTrue);
+      },
+    );
 
     test('đồng ý bản công bố CŨ thì phải hỏi lại', () {
       // Thêm một bên nhận dữ liệu rồi dùng lại lời đồng ý cũ là xin phép cho
@@ -276,8 +278,9 @@ void main() {
       expect(find.byKey(const Key('wr_ai_consent_title')), findsNothing);
     });
 
-    testWidgets('chưa trả lời thì HỎI trước, và chưa bấm gì thì chưa được đi',
-        (tester) async {
+    testWidgets('chưa trả lời thì HỎI trước, và chưa bấm gì thì chưa được đi', (
+      tester,
+    ) async {
       final repo = _FakeConsentRepository();
       final results = <bool>[];
       await tester.pumpWidget(harness(repo, results));
@@ -333,8 +336,9 @@ void main() {
       expect(find.byKey(const Key('wr_ai_consent_title')), findsNothing);
     });
 
-    testWidgets('ghi hỏng thì không đóng màn và không cho đi tiếp',
-        (tester) async {
+    testWidgets('ghi hỏng thì không đóng màn và không cho đi tiếp', (
+      tester,
+    ) async {
       final repo = _FakeConsentRepository()..failWrites = true;
       final results = <bool>[];
       await tester.pumpWidget(harness(repo, results));
@@ -353,8 +357,9 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
-            wrAiConsentRepositoryProvider
-                .overrideWithValue(_FakeConsentRepository()),
+            wrAiConsentRepositoryProvider.overrideWithValue(
+              _FakeConsentRepository(),
+            ),
             currentUserIdProvider.overrideWithValue(_userId),
           ],
           child: const MaterialApp(

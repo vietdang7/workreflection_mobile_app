@@ -58,10 +58,7 @@ Widget _app() {
   final router = GoRouter(
     initialLocation: '/profile/guide',
     routes: [
-      GoRoute(
-        path: '/profile/guide',
-        builder: (_, __) => const GuideScreen(),
-      ),
+      GoRoute(path: '/profile/guide', builder: (_, __) => const GuideScreen()),
       GoRoute(
         path: '/wr/ask',
         builder: (_, __) => const Scaffold(body: SizedBox.shrink()),
@@ -96,8 +93,11 @@ Future<void> _shoot(
 
   for (final id in open) {
     final row = find.byKey(Key('guide_section_$id'));
-    await tester.scrollUntilVisible(row, 200,
-        scrollable: find.byType(Scrollable).first);
+    await tester.scrollUntilVisible(
+      row,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
     await tester.tap(row);
     await tester.pumpAndSettle();
     await tester.ensureVisible(row);

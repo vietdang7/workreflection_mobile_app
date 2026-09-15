@@ -24,44 +24,68 @@ enum HumanMoment {
   String get dbValue => name;
 
   static HumanMoment fromDb(String value) => switch (value) {
-        'arrival' => HumanMoment.arrival,
-        'confusion' => HumanMoment.confusion,
-        'decision' => HumanMoment.decision,
-        'growth' => HumanMoment.growth,
-        'recovery' => HumanMoment.recovery,
-        'celebration' => HumanMoment.celebration,
-        _ => throw ArgumentError('Unknown HumanMoment db value: $value'),
-      };
+    'arrival' => HumanMoment.arrival,
+    'confusion' => HumanMoment.confusion,
+    'decision' => HumanMoment.decision,
+    'growth' => HumanMoment.growth,
+    'recovery' => HumanMoment.recovery,
+    'celebration' => HumanMoment.celebration,
+    _ => throw ArgumentError('Unknown HumanMoment db value: $value'),
+  };
 
   /// Nhãn hiển thị trên thẻ chọn khoảnh khắc.
   String get label => switch (this) {
-        HumanMoment.arrival => tr('Muốn dừng lại một chút', 'I want to stop for a moment'),
-        HumanMoment.confusion => tr('Có gì đó chưa ổn', 'Something is off'),
-        HumanMoment.decision => tr('Đang phải chọn', 'I have a choice to make'),
-        HumanMoment.growth => tr('Muốn tiến bộ hơn', 'I want to get better'),
-        HumanMoment.recovery => tr('Vừa mất năng lượng', 'I have just lost energy'),
-        HumanMoment.celebration => tr('Vừa làm được điều hay', 'I have just done something good'),
-      };
+    HumanMoment.arrival => tr(
+      'Muốn dừng lại một chút',
+      'I want to stop for a moment',
+    ),
+    HumanMoment.confusion => tr('Có gì đó chưa ổn', 'Something is off'),
+    HumanMoment.decision => tr('Đang phải chọn', 'I have a choice to make'),
+    HumanMoment.growth => tr('Muốn tiến bộ hơn', 'I want to get better'),
+    HumanMoment.recovery => tr('Vừa mất năng lượng', 'I have just lost energy'),
+    HumanMoment.celebration => tr(
+      'Vừa làm được điều hay',
+      'I have just done something good',
+    ),
+  };
 
   /// Reflection Tension — HXA §2.5, câu hỏi nội tâm của archetype.
   String get tension => switch (this) {
-        HumanMoment.arrival => tr('Điều gì đang diễn ra trong mình lúc này?', 'What is going on inside me right now?'),
-        HumanMoment.confusion => tr('Điều gì mình chưa nhìn thấy?', 'What am I not seeing?'),
-        HumanMoment.decision => tr('Giá trị nào đang dẫn dắt lựa chọn này?', 'Which value is guiding this choice?'),
-        HumanMoment.growth => tr('Điều gì giúp phiên bản tiếp theo của mình hình thành?', 'What helps the next version of me take shape?'),
-        HumanMoment.recovery => tr('Điều gì đang cần được lắng nghe?', 'What needs to be heard?'),
-        HumanMoment.celebration => tr('Điều gì mình muốn giữ lại từ trải nghiệm này?', 'What do I want to keep from this?'),
-      };
+    HumanMoment.arrival => tr(
+      'Điều gì đang diễn ra trong mình lúc này?',
+      'What is going on inside me right now?',
+    ),
+    HumanMoment.confusion => tr(
+      'Điều gì mình chưa nhìn thấy?',
+      'What am I not seeing?',
+    ),
+    HumanMoment.decision => tr(
+      'Giá trị nào đang dẫn dắt lựa chọn này?',
+      'Which value is guiding this choice?',
+    ),
+    HumanMoment.growth => tr(
+      'Điều gì giúp phiên bản tiếp theo của mình hình thành?',
+      'What helps the next version of me take shape?',
+    ),
+    HumanMoment.recovery => tr(
+      'Điều gì đang cần được lắng nghe?',
+      'What needs to be heard?',
+    ),
+    HumanMoment.celebration => tr(
+      'Điều gì mình muốn giữ lại từ trải nghiệm này?',
+      'What do I want to keep from this?',
+    ),
+  };
 
   /// Human Need mà archetype này thường chạm tới — dùng để lọc gợi ý.
   HumanNeed get relatedNeed => switch (this) {
-        HumanMoment.arrival => HumanNeed.roRang,
-        HumanMoment.confusion => HumanNeed.roRang,
-        HumanMoment.decision => HumanNeed.roRang,
-        HumanMoment.growth => HumanNeed.phatTrien,
-        HumanMoment.recovery => HumanNeed.ketNoi,
-        HumanMoment.celebration => HumanNeed.phatTrien,
-      };
+    HumanMoment.arrival => HumanNeed.roRang,
+    HumanMoment.confusion => HumanNeed.roRang,
+    HumanMoment.decision => HumanNeed.roRang,
+    HumanMoment.growth => HumanNeed.phatTrien,
+    HumanMoment.recovery => HumanNeed.ketNoi,
+    HumanMoment.celebration => HumanNeed.phatTrien,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -80,23 +104,23 @@ enum ReflectionPattern {
   // Không dùng `name` của enum ở đây: giá trị `ReflectionPattern.name` che mất
   // getter tổng hợp, nên phải liệt kê tường minh.
   String get dbValue => switch (this) {
-        ReflectionPattern.notice => 'notice',
-        ReflectionPattern.name => 'name',
-        ReflectionPattern.explore => 'explore',
-        ReflectionPattern.reframe => 'reframe',
-        ReflectionPattern.commit => 'commit',
-        ReflectionPattern.preserve => 'preserve',
-      };
+    ReflectionPattern.notice => 'notice',
+    ReflectionPattern.name => 'name',
+    ReflectionPattern.explore => 'explore',
+    ReflectionPattern.reframe => 'reframe',
+    ReflectionPattern.commit => 'commit',
+    ReflectionPattern.preserve => 'preserve',
+  };
 
   static ReflectionPattern fromDb(String value) => switch (value) {
-        'notice' => ReflectionPattern.notice,
-        'name' => ReflectionPattern.name,
-        'explore' => ReflectionPattern.explore,
-        'reframe' => ReflectionPattern.reframe,
-        'commit' => ReflectionPattern.commit,
-        'preserve' => ReflectionPattern.preserve,
-        _ => throw ArgumentError('Unknown ReflectionPattern db value: $value'),
-      };
+    'notice' => ReflectionPattern.notice,
+    'name' => ReflectionPattern.name,
+    'explore' => ReflectionPattern.explore,
+    'reframe' => ReflectionPattern.reframe,
+    'commit' => ReflectionPattern.commit,
+    'preserve' => ReflectionPattern.preserve,
+    _ => throw ArgumentError('Unknown ReflectionPattern db value: $value'),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -116,35 +140,35 @@ enum ExperienceState {
   reactivated;
 
   String get dbValue => switch (this) {
-        ExperienceState.emerging => 'emerging',
-        ExperienceState.captured => 'captured',
-        ExperienceState.exploring => 'exploring',
-        ExperienceState.meaningForming => 'meaning_forming',
-        ExperienceState.meaningConfirmed => 'meaning_confirmed',
-        ExperienceState.committed => 'committed',
-        ExperienceState.integrated => 'integrated',
-        ExperienceState.dormant => 'dormant',
-        ExperienceState.reactivated => 'reactivated',
-      };
+    ExperienceState.emerging => 'emerging',
+    ExperienceState.captured => 'captured',
+    ExperienceState.exploring => 'exploring',
+    ExperienceState.meaningForming => 'meaning_forming',
+    ExperienceState.meaningConfirmed => 'meaning_confirmed',
+    ExperienceState.committed => 'committed',
+    ExperienceState.integrated => 'integrated',
+    ExperienceState.dormant => 'dormant',
+    ExperienceState.reactivated => 'reactivated',
+  };
 
   static ExperienceState fromDb(String value) => switch (value) {
-        'emerging' => ExperienceState.emerging,
-        'captured' => ExperienceState.captured,
-        'exploring' => ExperienceState.exploring,
-        'meaning_forming' => ExperienceState.meaningForming,
-        'meaning_confirmed' => ExperienceState.meaningConfirmed,
-        'committed' => ExperienceState.committed,
-        'integrated' => ExperienceState.integrated,
-        'dormant' => ExperienceState.dormant,
-        'reactivated' => ExperienceState.reactivated,
-        _ => throw ArgumentError('Unknown ExperienceState db value: $value'),
-      };
+    'emerging' => ExperienceState.emerging,
+    'captured' => ExperienceState.captured,
+    'exploring' => ExperienceState.exploring,
+    'meaning_forming' => ExperienceState.meaningForming,
+    'meaning_confirmed' => ExperienceState.meaningConfirmed,
+    'committed' => ExperienceState.committed,
+    'integrated' => ExperienceState.integrated,
+    'dormant' => ExperienceState.dormant,
+    'reactivated' => ExperienceState.reactivated,
+    _ => throw ArgumentError('Unknown ExperienceState db value: $value'),
+  };
 
   /// Episode còn đang mở — Home mời người dùng tiếp tục.
   bool get isOpen => switch (this) {
-        ExperienceState.integrated || ExperienceState.dormant => false,
-        _ => true,
-      };
+    ExperienceState.integrated || ExperienceState.dormant => false,
+    _ => true,
+  };
 
   /// Episode còn có thể quay lại tiếp — gồm cả bản đang ngủ.
   ///
@@ -163,12 +187,11 @@ enum ExperienceState {
   /// `meaning_confirmed` nên người dùng khép phiên xong bấm Back hai lần vẫn
   /// gặp đúng lỗi đó với `integrated`.
   bool get meaningAlreadySettled => switch (this) {
-        ExperienceState.meaningConfirmed ||
-        ExperienceState.committed ||
-        ExperienceState.integrated =>
-          true,
-        _ => false,
-      };
+    ExperienceState.meaningConfirmed ||
+    ExperienceState.committed ||
+    ExperienceState.integrated => true,
+    _ => false,
+  };
 
   /// Còn sửa được câu Meaning tại chỗ hay không.
   ///
@@ -177,8 +200,7 @@ enum ExperienceState {
   /// [integrated] thì Career Memory đã ghi — sửa lặng lẽ sẽ làm bản ghi lệch
   /// với ký ức đã lưu. Muốn đổi thì phải mở lại phiên (WPA Inv.4), là một hành
   /// động có chủ đích của người dùng chứ không phải tác dụng phụ của nút Back.
-  bool get canReviseMeaningInPlace =>
-      this == ExperienceState.meaningConfirmed;
+  bool get canReviseMeaningInPlace => this == ExperienceState.meaningConfirmed;
 
   /// Lựa chọn đã được chốt rồi — đừng chạy lại `commitAction`.
   ///
@@ -188,9 +210,9 @@ enum ExperienceState {
   /// [committed] (WXS §4.4), nên bấm "Lưu lựa chọn này" lần nữa sẽ ném
   /// "Transition bất hợp lệ".
   bool get actionAlreadySettled => switch (this) {
-        ExperienceState.committed || ExperienceState.integrated => true,
-        _ => false,
-      };
+    ExperienceState.committed || ExperienceState.integrated => true,
+    _ => false,
+  };
 
   /// Còn đổi lựa chọn tại chỗ được hay không.
   ///
@@ -278,14 +300,14 @@ class ReflectionEpisode {
       state: ExperienceState.fromDb(json['state'] as String),
       energy: rawEnergy != null ? CheckinEnergy.fromDb(rawEnergy) : null,
       situationCode: json['situation_code'] as String?,
-      scaDimension: rawDim != null ? ScaDimension.fromDb(rawDim) : null,
-      humanNeed: rawNeed != null ? HumanNeed.fromDb(rawNeed) : null,
+      scaDimension: ScaDimension.tryFromDb(rawDim),
+      humanNeed: HumanNeed.tryFromDb(rawNeed),
       intention: json['intention'] as String?,
       patternsDone: rawPatterns is List
           ? rawPatterns
-              .cast<String>()
-              .map(ReflectionPattern.fromDb)
-              .toList(growable: false)
+                .cast<String>()
+                .map(ReflectionPattern.fromDb)
+                .toList(growable: false)
           : const [],
       notes: rawNotes is Map
           ? rawNotes.map((k, v) => MapEntry(k as String, v?.toString() ?? ''))
@@ -310,17 +332,17 @@ class ReflectionEpisode {
 
   /// Map cho INSERT — bỏ các trường server sinh (id, opened_at, updated_at).
   Map<String, dynamic> toInsert() => {
-        'user_id': userId,
-        'human_moment': humanMoment.dbValue,
-        'state': state.dbValue,
-        if (energy != null) 'energy': energy!.dbValue,
-        if (situationCode != null) 'situation_code': situationCode,
-        if (scaDimension != null) 'sca_dimension': scaDimension!.dbValue,
-        if (humanNeed != null) 'human_need': humanNeed!.dbValue,
-        if (intention != null) 'intention': intention,
-        'patterns_done': patternsDone.map((p) => p.dbValue).toList(),
-        'notes': notes,
-      };
+    'user_id': userId,
+    'human_moment': humanMoment.dbValue,
+    'state': state.dbValue,
+    if (energy != null) 'energy': energy!.dbValue,
+    if (situationCode != null) 'situation_code': situationCode,
+    if (scaDimension != null) 'sca_dimension': scaDimension!.dbValue,
+    if (humanNeed != null) 'human_need': humanNeed!.dbValue,
+    if (intention != null) 'intention': intention,
+    'patterns_done': patternsDone.map((p) => p.dbValue).toList(),
+    'notes': notes,
+  };
 
   ReflectionEpisode copyWith({
     String? id,
@@ -339,6 +361,7 @@ class ReflectionEpisode {
     String? themeId,
     String? memoryEventId,
     DateTime? closedAt,
+
     /// Xoá hẳn `reflectChoice` về null. Cần riêng một cờ vì truyền null vào
     /// [reflectChoice] chỉ có nghĩa "giữ nguyên", trong khi đổi từ câu chọn sẵn
     /// sang câu tự viết thì lựa chọn cũ phải biến mất.
@@ -358,8 +381,9 @@ class ReflectionEpisode {
       notes: notes ?? this.notes,
       draftMeaning: draftMeaning ?? this.draftMeaning,
       confirmedInsightId: confirmedInsightId ?? this.confirmedInsightId,
-      reflectChoice:
-          clearReflectChoice ? null : (reflectChoice ?? this.reflectChoice),
+      reflectChoice: clearReflectChoice
+          ? null
+          : (reflectChoice ?? this.reflectChoice),
       tinyAction: tinyAction ?? this.tinyAction,
       themeId: themeId ?? this.themeId,
       memoryEventId: memoryEventId ?? this.memoryEventId,

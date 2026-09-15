@@ -16,15 +16,15 @@ enum WrPlan {
   premium;
 
   String get dbValue => switch (this) {
-        WrPlan.free => 'free',
-        WrPlan.premium => 'premium',
-      };
+    WrPlan.free => 'free',
+    WrPlan.premium => 'premium',
+  };
 
   static WrPlan fromDb(String value) => switch (value) {
-        'free' => WrPlan.free,
-        'premium' => WrPlan.premium,
-        _ => throw ArgumentError('Unknown WrPlan db value: $value'),
-      };
+    'free' => WrPlan.free,
+    'premium' => WrPlan.premium,
+    _ => throw ArgumentError('Unknown WrPlan db value: $value'),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -40,21 +40,21 @@ enum ReflectionStepType {
   action;
 
   String get dbValue => switch (this) {
-        ReflectionStepType.notice => 'notice',
-        ReflectionStepType.meaning => 'meaning',
-        ReflectionStepType.insight => 'insight',
-        ReflectionStepType.choice => 'choice',
-        ReflectionStepType.action => 'action',
-      };
+    ReflectionStepType.notice => 'notice',
+    ReflectionStepType.meaning => 'meaning',
+    ReflectionStepType.insight => 'insight',
+    ReflectionStepType.choice => 'choice',
+    ReflectionStepType.action => 'action',
+  };
 
   static ReflectionStepType fromDb(String value) => switch (value) {
-        'notice' => ReflectionStepType.notice,
-        'meaning' => ReflectionStepType.meaning,
-        'insight' => ReflectionStepType.insight,
-        'choice' => ReflectionStepType.choice,
-        'action' => ReflectionStepType.action,
-        _ => throw ArgumentError('Unknown ReflectionStepType db value: $value'),
-      };
+    'notice' => ReflectionStepType.notice,
+    'meaning' => ReflectionStepType.meaning,
+    'insight' => ReflectionStepType.insight,
+    'choice' => ReflectionStepType.choice,
+    'action' => ReflectionStepType.action,
+    _ => throw ArgumentError('Unknown ReflectionStepType db value: $value'),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -176,11 +176,11 @@ class ReflectionStep {
   /// Returns a map suitable for INSERT into public.wr_reflection_steps.
   /// Excludes server-generated fields: id, created_at.
   Map<String, dynamic> toInsert() => {
-        'user_id': userId,
-        if (memoryEventId != null) 'memory_event_id': memoryEventId,
-        'step': step.dbValue,
-        if (content != null) 'content': content,
-      };
+    'user_id': userId,
+    if (memoryEventId != null) 'memory_event_id': memoryEventId,
+    'step': step.dbValue,
+    if (content != null) 'content': content,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -214,7 +214,7 @@ class WrInsight {
       id: json['id'] as String?,
       userId: json['user_id'] as String,
       source: json['source'] as String?,
-      scaDimension: rawDim != null ? ScaDimension.fromDb(rawDim) : null,
+      scaDimension: ScaDimension.tryFromDb(rawDim),
       humanNeed: rawNeed != null ? HumanNeed.fromDb(rawNeed) : null,
       content: json['content'] as String,
       createdAt: json['created_at'] != null
@@ -226,12 +226,12 @@ class WrInsight {
   /// Returns a map suitable for INSERT into public.wr_reflection_insights.
   /// Excludes server-generated fields: id, created_at.
   Map<String, dynamic> toInsert() => {
-        'user_id': userId,
-        if (source != null) 'source': source,
-        if (scaDimension != null) 'sca_dimension': scaDimension!.dbValue,
-        if (humanNeed != null) 'human_need': humanNeed!.dbValue,
-        'content': content,
-      };
+    'user_id': userId,
+    if (source != null) 'source': source,
+    if (scaDimension != null) 'sca_dimension': scaDimension!.dbValue,
+    if (humanNeed != null) 'human_need': humanNeed!.dbValue,
+    'content': content,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -262,7 +262,7 @@ class PatternCount {
       id: json['id'] as String?,
       userId: json['user_id'] as String,
       situationCode: json['situation_code'] as String?,
-      scaDimension: rawDim != null ? ScaDimension.fromDb(rawDim) : null,
+      scaDimension: ScaDimension.tryFromDb(rawDim),
       occurrenceCount: json['occurrence_count'] as int,
       lastSeenAt: DateTime.parse(json['last_seen_at'] as String),
     );
@@ -356,8 +356,8 @@ class WrNarrativeRefresh {
   const WrNarrativeRefresh({required this.status, this.needed});
 
   const WrNarrativeRefresh.unavailable()
-      : status = WrNarrativeStatus.unavailable,
-        needed = null;
+    : status = WrNarrativeStatus.unavailable,
+      needed = null;
 
   final WrNarrativeStatus status;
 
@@ -460,12 +460,12 @@ class ScaSelfCheckResponse {
   /// Returns a map suitable for INSERT into public.wr_sca_self_check_responses.
   /// Excludes server-generated fields: id, taken_at.
   Map<String, dynamic> toInsert() => {
-        'user_id': userId,
-        'answers': answers,
-        if (structureScore != null) 'structure_score': structureScore,
-        if (cultureScore != null) 'culture_score': cultureScore,
-        if (activityScore != null) 'activity_score': activityScore,
-      };
+    'user_id': userId,
+    'answers': answers,
+    if (structureScore != null) 'structure_score': structureScore,
+    if (cultureScore != null) 'culture_score': cultureScore,
+    if (activityScore != null) 'activity_score': activityScore,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -485,9 +485,9 @@ class PracticeTheme {
     this.formedLineEn,
     this.createdAt,
     this.retiredAt,
-  })  : titleVi = title,
-        descriptionVi = description,
-        formedLineVi = formedLine;
+  }) : titleVi = title,
+       descriptionVi = description,
+       formedLineVi = formedLine;
 
   final String themeId;
   final ScaDimension? scaDimension;
@@ -560,8 +560,8 @@ class PracticeStep {
     this.titleEn,
     this.contentEn,
     this.createdAt,
-  })  : titleVi = title,
-        contentVi = content;
+  }) : titleVi = title,
+       contentVi = content;
 
   final String stepId;
   final String themeId;
@@ -638,10 +638,7 @@ class PracticeEnrollment {
 
   /// Returns a map suitable for INSERT into public.wr_practice_enrollments.
   /// Excludes server-generated fields: id, started_at (server default), completed_at.
-  Map<String, dynamic> toInsert() => {
-        'user_id': userId,
-        'theme_id': themeId,
-      };
+  Map<String, dynamic> toInsert() => {'user_id': userId, 'theme_id': themeId};
 
   PracticeEnrollment copyWith({List<String>? completedSteps}) {
     return PracticeEnrollment(
@@ -676,13 +673,13 @@ enum DocAnalysisStatus {
   String get dbValue => name;
 
   static DocAnalysisStatus fromDb(String? value) => switch (value) {
-        'processing' => DocAnalysisStatus.processing,
-        'ready' => DocAnalysisStatus.ready,
-        'failed' => DocAnalysisStatus.failed,
-        // Cột mới có default 'pending', nhưng dòng cũ tạo trước migration có
-        // thể về null. Coi như chưa phân tích, không ném lỗi giữa màn hình.
-        _ => DocAnalysisStatus.pending,
-      };
+    'processing' => DocAnalysisStatus.processing,
+    'ready' => DocAnalysisStatus.ready,
+    'failed' => DocAnalysisStatus.failed,
+    // Cột mới có default 'pending', nhưng dòng cũ tạo trước migration có
+    // thể về null. Coi như chưa phân tích, không ném lỗi giữa màn hình.
+    _ => DocAnalysisStatus.pending,
+  };
 }
 
 /// Bản phân tích tài liệu do `wr-doc-analyze` sinh ra.
@@ -735,8 +732,9 @@ class WrDocAnalysis {
     // Edge Function vẫn còn nguyên dấu sao trong database.
     return WrDocAnalysis(
       title: stripMarkdownOrNull(json['title'] as String?)?.trim(),
-      organization:
-          stripMarkdownOrNull(json['organization'] as String?)?.trim(),
+      organization: stripMarkdownOrNull(
+        json['organization'] as String?,
+      )?.trim(),
       summary: stripMarkdownOrNull(json['summary'] as String?)?.trim() ?? '',
       responsibilities: _list(json['responsibilities']),
       requirements: _list(json['requirements']),
@@ -798,8 +796,9 @@ class WrContextDocument {
       uploadedAt: json['uploaded_at'] != null
           ? DateTime.parse(json['uploaded_at'] as String)
           : null,
-      analysisStatus:
-          DocAnalysisStatus.fromDb(json['analysis_status'] as String?),
+      analysisStatus: DocAnalysisStatus.fromDb(
+        json['analysis_status'] as String?,
+      ),
       extractedText: (json['extracted_text'] as String?)?.trim(),
       analysis: rawAnalysis is Map
           ? WrDocAnalysis.fromJson(Map<String, dynamic>.from(rawAnalysis))
@@ -814,8 +813,8 @@ class WrContextDocument {
   /// Returns a map suitable for INSERT into public.wr_context_documents.
   /// Excludes server-generated fields: id, uploaded_at.
   Map<String, dynamic> toInsert() => {
-        'user_id': userId,
-        'file_path': filePath,
-        if (docType != null) 'doc_type': docType,
-      };
+    'user_id': userId,
+    'file_path': filePath,
+    if (docType != null) 'doc_type': docType,
+  };
 }

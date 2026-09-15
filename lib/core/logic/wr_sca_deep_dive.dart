@@ -70,10 +70,13 @@ enum ScaPillarStatus {
   /// của mockup sang đây là mọi người dùng cũ mở app lên thấy đánh giá của mình
   /// tự nhiên khác đi mà không ai chạm vào dữ liệu của họ.
   String get label => switch (this) {
-        ScaPillarStatus.developing => tr('Đang hỗ trợ tốt', 'Supporting you well'),
-        ScaPillarStatus.needsAttention => tr('Ổn, còn dư địa', 'Fine, room to grow'),
-        ScaPillarStatus.priority => tr('Đang cản trở', 'Holding you back'),
-      };
+    ScaPillarStatus.developing => tr('Đang hỗ trợ tốt', 'Supporting you well'),
+    ScaPillarStatus.needsAttention => tr(
+      'Ổn, còn dư địa',
+      'Fine, room to grow',
+    ),
+    ScaPillarStatus.priority => tr('Đang cản trở', 'Holding you back'),
+  };
 
   /// Dạng nhúng giữa câu — "bạn tự đánh giá phần này {inlineLabel}, nhưng…".
   ///
@@ -81,10 +84,13 @@ enum ScaPillarStatus {
   /// phẩy, nên "tự đánh giá ổn, còn dư địa, vừa là nơi…" đọc ra thành hai mệnh
   /// đề rời. Mức giữa cần một dạng liền câu riêng.
   String get inlineLabel => switch (this) {
-        ScaPillarStatus.developing => tr('đang hỗ trợ tốt', 'supporting you well'),
-        ScaPillarStatus.needsAttention => tr('ổn nhưng còn dư địa', 'fine but with room to grow'),
-        ScaPillarStatus.priority => tr('đang cản trở', 'holding you back'),
-      };
+    ScaPillarStatus.developing => tr('đang hỗ trợ tốt', 'supporting you well'),
+    ScaPillarStatus.needsAttention => tr(
+      'ổn nhưng còn dư địa',
+      'fine but with room to grow',
+    ),
+    ScaPillarStatus.priority => tr('đang cản trở', 'holding you back'),
+  };
 
   /// Người dùng đang tự chấm trụ này là ỔN.
   ///
@@ -121,10 +127,12 @@ List<ScaSelfCheckResponse> scoredSelfChecks(
   List<ScaSelfCheckResponse> history,
 ) =>
     history
-        .where((r) =>
-            r.structureScore != null &&
-            r.cultureScore != null &&
-            r.activityScore != null)
+        .where(
+          (r) =>
+              r.structureScore != null &&
+              r.cultureScore != null &&
+              r.activityScore != null,
+        )
         .toList()
       ..sort((a, b) => b.takenAt.compareTo(a.takenAt));
 
@@ -148,18 +156,30 @@ String? scaTrendText({
   final date = scaDateLabel(previous.takenAt);
   final diff = score - prev;
   if (diff.abs() < kScaTrendEpsilon) {
-    return tr('Gần như không đổi so với lần trước ($date).', 'Almost unchanged from last time ($date).');
+    return tr(
+      'Gần như không đổi so với lần trước ($date).',
+      'Almost unchanged from last time ($date).',
+    );
   }
   return diff > 0
-      ? tr('Tăng nhẹ so với lần trước ($date).', 'Slightly up from last time ($date).')
-      : tr('Giảm nhẹ so với lần trước ($date).', 'Slightly down from last time ($date).');
+      ? tr(
+          'Tăng nhẹ so với lần trước ($date).',
+          'Slightly up from last time ($date).',
+        )
+      : tr(
+          'Giảm nhẹ so với lần trước ($date).',
+          'Slightly down from last time ($date).',
+        );
 }
 
 /// Câu thay thế khi đây là lần Self-Check đầu tiên được ghi lại.
-String get kScaNoTrendText => tr('Đây là lần tự soi đầu tiên được ghi lại, nên chưa có gì để so. Làm lại sau '
-    'vài tuần, phần này sẽ cho bạn thấy điều gì đã đổi.', 'This is the first self-check on record, so there is nothing to compare '
-    'against yet. Take it again in a few weeks and this part will show you '
-    'what has shifted.');
+String get kScaNoTrendText => tr(
+  'Đây là lần tự soi đầu tiên được ghi lại, nên chưa có gì để so. Làm lại sau '
+      'vài tuần, phần này sẽ cho bạn thấy điều gì đã đổi.',
+  'This is the first self-check on record, so there is nothing to compare '
+      'against yet. Take it again in a few weeks and this part will show you '
+      'what has shifted.',
+);
 
 // ---------------------------------------------------------------------------
 // Lớp 3 — đối chiếu Pattern Reflection
@@ -184,8 +204,11 @@ List<ReflectionEpisode> episodesWithinDays(
   required DateTime now,
   int days = kScaPatternWindowDays,
 }) {
-  final endOfDay = DateTime(now.year, now.month, now.day)
-      .add(const Duration(days: 1));
+  final endOfDay = DateTime(
+    now.year,
+    now.month,
+    now.day,
+  ).add(const Duration(days: 1));
   final cutoff = endOfDay.subtract(Duration(days: days));
   return [
     for (final e in episodes)
@@ -228,8 +251,7 @@ Map<SelfCheckPillar, int> pillarPatternCounts(
   List<WrSituation> situations, {
   required DateTime now,
   int days = kScaPatternWindowDays,
-}) =>
-    patternTally(episodes, situations, now: now, days: days).challenge;
+}) => patternTally(episodes, situations, now: now, days: days).challenge;
 
 /// Tổng số lần Reflection trong cửa sổ, kể cả lượt không gắn được trụ nào.
 ///
@@ -245,8 +267,7 @@ int totalReflectionInWindow(
   List<ReflectionEpisode> episodes, {
   required DateTime now,
   int days = kScaPatternWindowDays,
-}) =>
-    episodesWithinDays(episodes, now: now, days: days).length;
+}) => episodesWithinDays(episodes, now: now, days: days).length;
 
 /// Trụ được quay lại nhiều nhất. Null khi chưa đủ chênh lệch để gọi là nổi trội.
 ///
@@ -264,11 +285,10 @@ int totalReflectionInWindow(
 SelfCheckPillar? dominantPatternPillar(
   Map<SelfCheckPillar, int> counts, {
   int? total,
-}) =>
-    dominantPillar(
-      counts,
-      total ?? counts.values.fold<int>(0, (s, v) => s + v),
-    );
+}) => dominantPillar(
+  counts,
+  total ?? counts.values.fold<int>(0, (s, v) => s + v),
+);
 
 // ---------------------------------------------------------------------------
 // ĐÃ BỎ: scaPatternText
@@ -316,10 +336,7 @@ String? selfAwarenessGapNarrative({
 
   final tally = patternTally(episodes, situations, now: now);
   final counts = tally.challenge;
-  final dominant = dominantPatternPillar(
-    counts,
-    total: tally.challengeTotal,
-  );
+  final dominant = dominantPatternPillar(counts, total: tally.challengeTotal);
   if (dominant == null) return null;
 
   final score = scaScoreOf(scored.first, dominant);
@@ -329,22 +346,27 @@ String? selfAwarenessGapNarrative({
   if (!status.isReassuring) return null;
 
   final count = counts[dominant] ?? 0;
-  return tr('Bạn tự đánh giá ${dominant.displayName.toLowerCase()} là '
-      '${status.inlineLabel}, nhưng $kScaPatternWindowDays ngày qua đây '
-      'lại là nhóm bạn quay lại nhiều nhất khi nhìn lại ($count lần). Chênh '
-      'lệch giữa hai điều đó thường đáng nhìn kỹ hơn bản thân điểm số.', 'You rate ${dominant.displayName.toLowerCase()} as '
-      '${status.inlineLabel}, yet over the past $kScaPatternWindowDays days it '
-      'is the group you return to most when looking back ($count times). That '
-      'gap is usually worth a closer look than the score itself.');
+  return tr(
+    'Bạn tự đánh giá ${dominant.displayName.toLowerCase()} là '
+        '${status.inlineLabel}, nhưng $kScaPatternWindowDays ngày qua đây '
+        'lại là nhóm bạn quay lại nhiều nhất khi nhìn lại ($count lần). Chênh '
+        'lệch giữa hai điều đó thường đáng nhìn kỹ hơn bản thân điểm số.',
+    'You rate ${dominant.displayName.toLowerCase()} as '
+        '${status.inlineLabel}, yet over the past $kScaPatternWindowDays days it '
+        'is the group you return to most when looking back ($count times). That '
+        'gap is usually worth a closer look than the score itself.',
+  );
 }
 
 /// Dòng chú thích cuối màn.
-String scaDeepDiveFootnote(ScaSelfCheckResponse? previous) =>
-    tr('Pattern được tính từ $kScaPatternWindowDays ngày Reflection gần nhất. '
-    'Self-Check trước đó: '
-    '${previous == null ? 'chưa có' : scaDateLabel(previous.takenAt)}.', 'Patterns are drawn from the last $kScaPatternWindowDays days of '
-    'Reflection. Previous Self-Check: '
-    '${previous == null ? 'none yet' : scaDateLabel(previous.takenAt)}.');
+String scaDeepDiveFootnote(ScaSelfCheckResponse? previous) => tr(
+  'Pattern được tính từ $kScaPatternWindowDays ngày Reflection gần nhất. '
+      'Self-Check trước đó: '
+      '${previous == null ? 'chưa có' : scaDateLabel(previous.takenAt)}.',
+  'Patterns are drawn from the last $kScaPatternWindowDays days of '
+      'Reflection. Previous Self-Check: '
+      '${previous == null ? 'none yet' : scaDateLabel(previous.takenAt)}.',
+);
 
 // ---------------------------------------------------------------------------
 // Gói dữ liệu một trụ, để màn hình chỉ việc dựng
@@ -396,10 +418,7 @@ List<ScaDeepDivePillar> buildScaDeepDive({
   final previous = scored.length > 1 ? scored[1] : null;
   final tally = patternTally(episodes, situations, now: now);
   final counts = tally.challenge;
-  final dominant = dominantPatternPillar(
-    counts,
-    total: tally.challengeTotal,
-  );
+  final dominant = dominantPatternPillar(counts, total: tally.challengeTotal);
 
   return [
     for (final pillar in SelfCheckPillar.values)

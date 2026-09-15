@@ -103,9 +103,9 @@ final reflectionDayCountProvider = FutureProvider<int>((ref) async {
   final userId = ref.watch(currentUserIdProvider);
   if (userId == null) return 0;
   try {
-    final episodes = await ref.watch(wrEpisodeRepositoryProvider).fetchEpisodes(
-          userId,
-        );
+    final episodes = await ref
+        .watch(wrEpisodeRepositoryProvider)
+        .fetchEpisodes(userId);
     return reflectionDayCount(episodes);
   } catch (_) {
     return 0;
@@ -115,8 +115,9 @@ final reflectionDayCountProvider = FutureProvider<int>((ref) async {
 /// 30-element list: index 0 = today−29, index 29 = today.
 /// true = checked in that day.
 final checkinHistoryProvider = FutureProvider<List<bool>>((ref) async {
-  final dates =
-      await ref.watch(wrRepositoryProvider).getCheckinDates(limit: 30);
+  final dates = await ref
+      .watch(wrRepositoryProvider)
+      .getCheckinDates(limit: 30);
   return buildCheckinHistory(checkinDates: dates, today: DateTime.now());
 });
 
@@ -142,8 +143,9 @@ class ReminderNotifier extends AsyncNotifier<bool> {
   }
 }
 
-final reminderProvider =
-    AsyncNotifierProvider<ReminderNotifier, bool>(ReminderNotifier.new);
+final reminderProvider = AsyncNotifierProvider<ReminderNotifier, bool>(
+  ReminderNotifier.new,
+);
 
 // ---------------------------------------------------------------------------
 // Profile edit save notifier
@@ -174,8 +176,9 @@ class ProfileEditNotifier extends AsyncNotifier<void> {
   }
 }
 
-final profileEditProvider =
-    AsyncNotifierProvider<ProfileEditNotifier, void>(ProfileEditNotifier.new);
+final profileEditProvider = AsyncNotifierProvider<ProfileEditNotifier, void>(
+  ProfileEditNotifier.new,
+);
 
 // ---------------------------------------------------------------------------
 // "Thông tin của bạn" — mockup Sprint 2 bản (4)
@@ -210,8 +213,9 @@ class MyInfoSaveNotifier extends AsyncNotifier<void> {
   }
 }
 
-final myInfoSaveProvider =
-    AsyncNotifierProvider<MyInfoSaveNotifier, void>(MyInfoSaveNotifier.new);
+final myInfoSaveProvider = AsyncNotifierProvider<MyInfoSaveNotifier, void>(
+  MyInfoSaveNotifier.new,
+);
 
 /// Người dùng đã bấm "Bỏ qua" ở thẻ nhắc điền hồ sơ trên màn Hôm nay.
 ///
@@ -247,8 +251,8 @@ class ProfileNudgeDismissedNotifier extends StateNotifier<bool> {
 
 final profileNudgeDismissedProvider =
     StateNotifierProvider<ProfileNudgeDismissedNotifier, bool>(
-  (ref) => ProfileNudgeDismissedNotifier(),
-);
+      (ref) => ProfileNudgeDismissedNotifier(),
+    );
 
 /// Số trường đã điền / tổng số, cho dòng "n/7" ở màn Hồ sơ.
 ///
@@ -256,19 +260,19 @@ final profileNudgeDismissedProvider =
 /// định thẻ nhắc ở màn Hôm nay có hiện hay không.
 final myInfoStatusProvider =
     Provider.family<({int filled, int total}), AppLocalizations>((ref, l10n) {
-  final fields = myInfoFields(l10n);
-  final cc = ref.watch(ccProfileProvider).valueOrNull ?? const {};
-  final profile = ref.watch(mobileProfileProvider).valueOrNull;
+      final fields = myInfoFields(l10n);
+      final cc = ref.watch(ccProfileProvider).valueOrNull ?? const {};
+      final profile = ref.watch(mobileProfileProvider).valueOrNull;
 
-  String? read(MyInfoField f) => switch (f.store) {
-    MyInfoStore.ccProfile => cc[f.column] as String?,
-    MyInfoStore.mobileProfile => switch (f.column) {
-      'city' => profile?.city,
-      'org_industry' => profile?.orgIndustry,
-      'org_company_type' => profile?.orgCompanyType,
-      _ => null,
-    },
-  };
+      String? read(MyInfoField f) => switch (f.store) {
+        MyInfoStore.ccProfile => cc[f.column] as String?,
+        MyInfoStore.mobileProfile => switch (f.column) {
+          'city' => profile?.city,
+          'org_industry' => profile?.orgIndustry,
+          'org_company_type' => profile?.orgCompanyType,
+          _ => null,
+        },
+      };
 
-  return (filled: myInfoFilledCount(fields, read), total: fields.length);
-});
+      return (filled: myInfoFilledCount(fields, read), total: fields.length);
+    });

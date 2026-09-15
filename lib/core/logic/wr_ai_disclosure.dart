@@ -138,20 +138,23 @@ const List<WrAiRecipient> kWrAiRecipients = [
 const List<WrAiDataFlow> kWrAiDataFlows = [
   WrAiDataFlow(
     trigger: 'Khi bạn trò chuyện với trợ lý phản chiếu',
-    data: 'Câu bạn vừa viết, các lượt trước trong cùng cuộc trò chuyện, và tóm '
+    data:
+        'Câu bạn vừa viết, các lượt trước trong cùng cuộc trò chuyện, và tóm '
         'tắt những điều bạn đã nhìn lại gần đây: tình huống bạn ghi, insight, '
         'chủ đề đang thực hành, kết quả tự đánh giá.',
     recipient: 'OpenRouter → DeepSeek',
   ),
   WrAiDataFlow(
     trigger: 'Khi bạn tải JD hoặc CV lên để đọc',
-    data: 'Toàn bộ nội dung tài liệu đó, kể cả phần bạn không nhắc tới trong '
+    data:
+        'Toàn bộ nội dung tài liệu đó, kể cả phần bạn không nhắc tới trong '
         'app.',
     recipient: 'OpenRouter → Google (Gemini)',
   ),
   WrAiDataFlow(
     trigger: 'Khi phần mềm viết mục Diễn biến',
-    data: 'Các tình huống bạn đã ghi lại theo thời gian. Việc này chạy tự động '
+    data:
+        'Các tình huống bạn đã ghi lại theo thời gian. Việc này chạy tự động '
         'khi bạn mở mục đó, không cần bạn bấm gì.',
     recipient: 'OpenRouter → DeepSeek',
   ),
@@ -162,7 +165,8 @@ const List<WrAiDataFlow> kWrAiDataFlows = [
   ),
   WrAiDataFlow(
     trigger: 'Khi bạn mở Báo cáo khảo sát',
-    data: 'Vị trí công việc, thâm niên và phòng ban bạn đã khai, cùng điểm ba '
+    data:
+        'Vị trí công việc, thâm niên và phòng ban bạn đã khai, cùng điểm ba '
         'lớp, điểm tổng, chỉ số ESI và lớp đang yếu nhất. Dùng để viết lại phần '
         'nhận định cho hợp với hoàn cảnh của bạn. Việc này chạy tự động khi bạn '
         'mở báo cáo, không cần bạn bấm gì.',

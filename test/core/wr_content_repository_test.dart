@@ -221,10 +221,7 @@ void main() {
     });
 
     test('respects limit parameter', () async {
-      repo.seedMemoryEvents(List.generate(
-        10,
-        (i) => _event(id: 'e$i'),
-      ));
+      repo.seedMemoryEvents(List.generate(10, (i) => _event(id: 'e$i')));
 
       final result = await repo.fetchMemoryEvents(limit: 3);
 
@@ -232,10 +229,12 @@ void main() {
     });
 
     test('default limit is 50', () async {
-      repo.seedMemoryEvents(List.generate(
-        60,
-        (i) => _event(id: 'e${i.toString().padLeft(2, '0')}'),
-      ));
+      repo.seedMemoryEvents(
+        List.generate(
+          60,
+          (i) => _event(id: 'e${i.toString().padLeft(2, '0')}'),
+        ),
+      );
 
       final result = await repo.fetchMemoryEvents();
 

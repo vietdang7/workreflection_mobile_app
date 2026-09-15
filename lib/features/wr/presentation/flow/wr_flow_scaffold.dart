@@ -95,11 +95,7 @@ class WrFlowScaffold extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _FlowHeader(
-              progress: progress,
-              onBack: onBack,
-              onClose: onClose,
-            ),
+            _FlowHeader(progress: progress, onBack: onBack, onClose: onClose),
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(24, 24, 24, 24),
@@ -293,8 +289,14 @@ class WrFlowGone extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return WrFlowScaffold(
-      title: tr('Phiên phản tư đã khép lại.', 'This reflection session has closed.'),
-      subtitle: tr('Bạn có thể bắt đầu một lần nhìn lại mới bất cứ lúc nào.', 'You can start a new look back any time.'),
+      title: tr(
+        'Phiên phản tư đã khép lại.',
+        'This reflection session has closed.',
+      ),
+      subtitle: tr(
+        'Bạn có thể bắt đầu một lần nhìn lại mới bất cứ lúc nào.',
+        'You can start a new look back any time.',
+      ),
       primaryLabel: tr('Về trang chủ', 'Back to home'),
       onPrimary: onHome,
       child: const SizedBox.shrink(),

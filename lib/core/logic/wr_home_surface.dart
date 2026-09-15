@@ -49,8 +49,10 @@ class SystemNotice {
   final int count;
 
   /// Câu hiển thị trên thẻ navy — đúng một sự kiện, không kết luận gì thêm.
-  String get sentence =>
-      tr('Bạn đã gặp tình huống "$situationText" $count lần', 'You have met "$situationText" $count times');
+  String get sentence => tr(
+    'Bạn đã gặp tình huống "$situationText" $count lần',
+    'You have met "$situationText" $count times',
+  );
 }
 
 /// Điều hệ thống nhận ra, đọc từ [recent] — mới nhất đứng đầu.
@@ -118,8 +120,9 @@ SystemNotice? systemNotice({
       ? null
       : SystemNotice(
           situationCode: r.situationCode,
-          situationText:
-              midSentence(labels[r.situationCode] ?? r.situationCode),
+          situationText: midSentence(
+            labels[r.situationCode] ?? r.situationCode,
+          ),
           count: r.count,
         );
 
@@ -192,9 +195,9 @@ StorySuggestion? suggestStory({
   final topDimension = notice == null
       ? null
       : situations
-          .where((s) => s.code == notice.situationCode)
-          .map((s) => s.scaDimension)
-          .firstOrNull;
+            .where((s) => s.code == notice.situationCode)
+            .map((s) => s.scaDimension)
+            .firstOrNull;
   final need = dominantNeedFromBehaviour(recent, situations);
 
   WrStory? pick;

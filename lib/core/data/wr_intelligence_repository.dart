@@ -73,7 +73,10 @@ abstract class WrIntelligenceRepository {
 
   /// Fetch self-check history for [userId], newest first.
   /// [limit] defaults to 10.
-  Future<List<ScaSelfCheckResponse>> fetchSelfCheckHistory(String userId, {int? limit});
+  Future<List<ScaSelfCheckResponse>> fetchSelfCheckHistory(
+    String userId, {
+    int? limit,
+  });
 
   /// Fetch the most recent insight for [userId] (Free tier — latest only).
   Future<WrInsight?> fetchLatestInsight(String userId);
@@ -198,7 +201,9 @@ abstract class WrIntelligenceRepository {
 // Riverpod provider (overridable in tests)
 // ---------------------------------------------------------------------------
 
-final wrIntelligenceRepositoryProvider = Provider<WrIntelligenceRepository>((ref) {
+final wrIntelligenceRepositoryProvider = Provider<WrIntelligenceRepository>((
+  ref,
+) {
   return SupabaseWrIntelligenceRepository(Supabase.instance.client);
 });
 
@@ -485,7 +490,10 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
       final data = res.data;
       if (data is! Map || data['status'] != 'ready') {
         throw WrDocAnalysisException(
-          tr('Chưa đọc được tài liệu này. Bạn thử lại sau nhé.', 'Could not read this document. Please try again later.'),
+          tr(
+            'Chưa đọc được tài liệu này. Bạn thử lại sau nhé.',
+            'Could not read this document. Please try again later.',
+          ),
         );
       }
     } on FunctionException catch (e) {
@@ -494,7 +502,10 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
       rethrow;
     } catch (_) {
       throw WrDocAnalysisException(
-        tr('Không kết nối được lúc này. Bạn kiểm tra mạng rồi thử lại nhé.', 'No connection right now. Check your network and try again.'),
+        tr(
+          'Không kết nối được lúc này. Bạn kiểm tra mạng rồi thử lại nhé.',
+          'No connection right now. Check your network and try again.',
+        ),
       );
     }
 
@@ -507,7 +518,9 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
         .eq('id', documentId)
         .maybeSingle();
     if (row == null) {
-      throw WrDocAnalysisException(tr('Không tìm thấy tài liệu này.', 'This document could not be found.'));
+      throw WrDocAnalysisException(
+        tr('Không tìm thấy tài liệu này.', 'This document could not be found.'),
+      );
     }
     return WrContextDocument.fromJson(row);
   }
@@ -538,7 +551,10 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
       }
     }
     return WrDocAnalysisException(
-      tr('Chưa đọc được tài liệu này. Bạn thử lại sau nhé.', 'Could not read this document. Please try again later.'),
+      tr(
+        'Chưa đọc được tài liệu này. Bạn thử lại sau nhé.',
+        'Could not read this document. Please try again later.',
+      ),
     );
   }
 
@@ -582,7 +598,9 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
   }
 
   @override
-  Future<List<GrowthJourneySnapshot>> fetchGrowthSnapshots(String userId) async {
+  Future<List<GrowthJourneySnapshot>> fetchGrowthSnapshots(
+    String userId,
+  ) async {
     final rows = await _client
         .from('wr_growth_journey_snapshots')
         .select()

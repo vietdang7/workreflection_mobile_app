@@ -7,7 +7,8 @@ final journeyLatestInsightProvider = FutureProvider<Insight?>((ref) async {
   return ref.watch(wrRepositoryProvider).getLatestInsight();
 });
 
-final journeyTimelineProvider =
-    FutureProvider<List<TimelineEvent>>((ref) async {
+final journeyTimelineProvider = FutureProvider<List<TimelineEvent>>((
+  ref,
+) async {
   return ref.watch(wrRepositoryProvider).getTimelineEvents();
 });

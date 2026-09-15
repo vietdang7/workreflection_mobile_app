@@ -93,7 +93,8 @@ class FakeWrEpisodeRepository implements WrEpisodeRepository {
     WrSituation? situation,
   }) async {
     _maybeThrow();
-    final nextState = episode.state == ExperienceState.captured ||
+    final nextState =
+        episode.state == ExperienceState.captured ||
             episode.state == ExperienceState.reactivated
         ? ExperienceState.exploring
         : episode.state;
@@ -110,14 +111,16 @@ class FakeWrEpisodeRepository implements WrEpisodeRepository {
       notes[pattern.dbValue] = text.trim();
     }
 
-    return _store(episode.copyWith(
-      state: nextState,
-      patternsDone: patterns,
-      notes: notes,
-      situationCode: situation?.code,
-      scaDimension: situation?.scaDimension,
-      humanNeed: situation?.humanNeed,
-    ));
+    return _store(
+      episode.copyWith(
+        state: nextState,
+        patternsDone: patterns,
+        notes: notes,
+        situationCode: situation?.code,
+        scaDimension: situation?.scaDimension,
+        humanNeed: situation?.humanNeed,
+      ),
+    );
   }
 
   @override
@@ -134,10 +137,12 @@ class FakeWrEpisodeRepository implements WrEpisodeRepository {
     if (from != ExperienceState.meaningForming) {
       assertTransition(from, ExperienceState.meaningForming);
     }
-    return _store(episode.copyWith(
-      state: ExperienceState.meaningForming,
-      draftMeaning: meaning.trim(),
-    ));
+    return _store(
+      episode.copyWith(
+        state: ExperienceState.meaningForming,
+        draftMeaning: meaning.trim(),
+      ),
+    );
   }
 
   @override
@@ -149,11 +154,13 @@ class FakeWrEpisodeRepository implements WrEpisodeRepository {
     _maybeThrow();
     assertTransition(episode.state, ExperienceState.meaningConfirmed);
     confirmMeaningCalls.add(episode);
-    return _store(episode.copyWith(
-      state: ExperienceState.meaningConfirmed,
-      draftMeaning: meaning.trim(),
-      confirmedInsightId: insightId,
-    ));
+    return _store(
+      episode.copyWith(
+        state: ExperienceState.meaningConfirmed,
+        draftMeaning: meaning.trim(),
+        confirmedInsightId: insightId,
+      ),
+    );
   }
 
   @override
@@ -177,11 +184,13 @@ class FakeWrEpisodeRepository implements WrEpisodeRepository {
     assertTransition(episode.state, ExperienceState.committed);
     commitActionCalls.add(episode);
     final picked = choice?.trim();
-    return _store(episode.copyWith(
-      state: ExperienceState.committed,
-      tinyAction: action.trim(),
-      reflectChoice: picked != null && picked.isNotEmpty ? picked : null,
-    ));
+    return _store(
+      episode.copyWith(
+        state: ExperienceState.committed,
+        tinyAction: action.trim(),
+        reflectChoice: picked != null && picked.isNotEmpty ? picked : null,
+      ),
+    );
   }
 
   @override
@@ -195,11 +204,13 @@ class FakeWrEpisodeRepository implements WrEpisodeRepository {
     // Không assertTransition: đổi câu không đổi trạng thái nào.
     final picked = choice?.trim();
     final hasPick = picked != null && picked.isNotEmpty;
-    return _store(episode.copyWith(
-      tinyAction: action.trim(),
-      reflectChoice: hasPick ? picked : null,
-      clearReflectChoice: !hasPick,
-    ));
+    return _store(
+      episode.copyWith(
+        tinyAction: action.trim(),
+        reflectChoice: hasPick ? picked : null,
+        clearReflectChoice: !hasPick,
+      ),
+    );
   }
 
   @override
@@ -210,11 +221,13 @@ class FakeWrEpisodeRepository implements WrEpisodeRepository {
     _maybeThrow();
     assertTransition(episode.state, ExperienceState.integrated);
     integrateCalls.add(episode);
-    return _store(episode.copyWith(
-      state: ExperienceState.integrated,
-      memoryEventId: memoryEventId,
-      closedAt: DateTime(2026, 7, 27),
-    ));
+    return _store(
+      episode.copyWith(
+        state: ExperienceState.integrated,
+        memoryEventId: memoryEventId,
+        closedAt: DateTime(2026, 7, 27),
+      ),
+    );
   }
 
   @override

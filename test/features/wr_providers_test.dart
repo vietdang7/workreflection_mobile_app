@@ -53,11 +53,13 @@ void main() {
 
     test('returns premium when record has active premium plan', () async {
       final fake = FakeWrIntelligenceRepository();
-      fake.seedEntitlement(WrEntitlementRecord(
-        userId: 'user-1',
-        plan: WrPlan.premium,
-        validUntil: DateTime.now().add(const Duration(days: 30)),
-      ));
+      fake.seedEntitlement(
+        WrEntitlementRecord(
+          userId: 'user-1',
+          plan: WrPlan.premium,
+          validUntil: DateTime.now().add(const Duration(days: 30)),
+        ),
+      );
       final container = _makeContainer(fake);
       addTearDown(container.dispose);
 
@@ -67,11 +69,13 @@ void main() {
 
     test('returns free when premium record is expired', () async {
       final fake = FakeWrIntelligenceRepository();
-      fake.seedEntitlement(WrEntitlementRecord(
-        userId: 'user-1',
-        plan: WrPlan.premium,
-        validUntil: DateTime.now().subtract(const Duration(days: 1)),
-      ));
+      fake.seedEntitlement(
+        WrEntitlementRecord(
+          userId: 'user-1',
+          plan: WrPlan.premium,
+          validUntil: DateTime.now().subtract(const Duration(days: 1)),
+        ),
+      );
       final container = _makeContainer(fake);
       addTearDown(container.dispose);
 
@@ -81,11 +85,13 @@ void main() {
 
     test('returns free when premium plan has no expiry (perpetual)', () async {
       final fake = FakeWrIntelligenceRepository();
-      fake.seedEntitlement(WrEntitlementRecord(
-        userId: 'user-1',
-        plan: WrPlan.premium,
-        validUntil: null,
-      ));
+      fake.seedEntitlement(
+        WrEntitlementRecord(
+          userId: 'user-1',
+          plan: WrPlan.premium,
+          validUntil: null,
+        ),
+      );
       final container = _makeContainer(fake);
       addTearDown(container.dispose);
 
@@ -101,9 +107,14 @@ void main() {
       required String? webRole,
       WrEntitlementRecord? mobileRecord,
     }) {
-      final intel = FakeWrIntelligenceRepository()..seedEntitlement(mobileRecord);
+      final intel = FakeWrIntelligenceRepository()
+        ..seedEntitlement(mobileRecord);
       final repo = FakeWrRepository()
-        ..seedCcProfile({'full_name': 'Y', 'email': 'y@y.com', 'role': webRole});
+        ..seedCcProfile({
+          'full_name': 'Y',
+          'email': 'y@y.com',
+          'role': webRole,
+        });
       return ProviderContainer(
         overrides: [
           wrIntelligenceRepositoryProvider.overrideWithValue(intel),
@@ -125,14 +136,20 @@ void main() {
       final container = makeWith(webRole: 'admin', mobileRecord: null);
       addTearDown(container.dispose);
 
-      expect((await container.read(wrEntitlementProvider.future)).isPremium, isTrue);
+      expect(
+        (await container.read(wrEntitlementProvider.future)).isPremium,
+        isTrue,
+      );
     });
 
     test('role thường + không có gói mobile = miễn phí', () async {
       final container = makeWith(webRole: 'user', mobileRecord: null);
       addTearDown(container.dispose);
 
-      expect((await container.read(wrEntitlementProvider.future)).isPremium, isFalse);
+      expect(
+        (await container.read(wrEntitlementProvider.future)).isPremium,
+        isFalse,
+      );
     });
 
     test('gói mobile vẫn có hiệu lực khi web không phải Premium', () async {
@@ -147,7 +164,10 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      expect((await container.read(wrEntitlementProvider.future)).isPremium, isTrue);
+      expect(
+        (await container.read(wrEntitlementProvider.future)).isPremium,
+        isTrue,
+      );
     });
 
     test('Premium web không bị hạ xuống bởi gói mobile đã hết hạn', () async {
@@ -161,7 +181,10 @@ void main() {
       );
       addTearDown(container.dispose);
 
-      expect((await container.read(wrEntitlementProvider.future)).isPremium, isTrue);
+      expect(
+        (await container.read(wrEntitlementProvider.future)).isPremium,
+        isTrue,
+      );
     });
   });
 
@@ -188,7 +211,7 @@ void main() {
       return c;
     }
 
-    test('chủ công tắc bật rồi mở lại app thì vẫn còn', () async {
+    test('stale dev override không còn cấp entitlement Premium', () async {
       SharedPreferences.setMockInitialValues({
         'wr_dev_premium_override': true,
         'wr_dev_premium_override_owner': 'thedangs7@gmail.com',
@@ -196,10 +219,49 @@ void main() {
       final c = containerFor('thedangs7@gmail.com');
 
       expect(c.read(premiumOverrideProvider), isNull, reason: 'chưa đọc xong');
-      await Future<void>.delayed(Duration.zero);
+      await c.read(premiumOverrideProvider.notifier).load();
       expect(c.read(premiumOverrideProvider), isTrue);
-      expect((await c.read(wrEntitlementProvider.future)).isPremium, isTrue);
+      expect(
+        (await c.read(wrEntitlementProvider.future)).isPremium,
+        isFalse,
+        reason: 'entitlement runtime phải đến từ nguồn mua thật',
+      );
     });
+
+    test(
+      'stale dev override không thể thu hồi entitlement mobile thật',
+      () async {
+        SharedPreferences.setMockInitialValues({
+          'wr_dev_premium_override': false,
+          'wr_dev_premium_override_owner': 'thedangs7@gmail.com',
+        });
+        final intel = FakeWrIntelligenceRepository()
+          ..seedEntitlement(
+            WrEntitlementRecord(
+              userId: 'u1',
+              plan: WrPlan.premium,
+              validUntil: DateTime.now().add(const Duration(days: 30)),
+            ),
+          );
+        final c = ProviderContainer(
+          overrides: [
+            currentUserEmailProvider.overrideWithValue('thedangs7@gmail.com'),
+            currentUserIdProvider.overrideWithValue('u1'),
+            wrIntelligenceRepositoryProvider.overrideWithValue(intel),
+            ccProfileProvider.overrideWith((ref) async => {'role': 'free'}),
+          ],
+        );
+        addTearDown(c.dispose);
+        await c.read(premiumOverrideProvider.notifier).load();
+
+        expect(c.read(premiumOverrideProvider), isFalse);
+        expect(
+          (await c.read(wrEntitlementProvider.future)).isPremium,
+          isTrue,
+          reason: 'a real active mobile entitlement must remain Premium',
+        );
+      },
+    );
 
     test('người khác đăng nhập trên máy đã bật: KHÔNG Premium', () async {
       SharedPreferences.setMockInitialValues({
@@ -210,8 +272,11 @@ void main() {
       await Future<void>.delayed(Duration.zero);
 
       expect(c.read(premiumOverrideProvider), isNull);
-      expect(c.read(canTogglePremiumProvider), isFalse,
-          reason: 'không được thấy cả nút bật/tắt');
+      expect(
+        c.read(canTogglePremiumProvider),
+        isFalse,
+        reason: 'không được thấy cả nút bật/tắt',
+      );
       expect((await c.read(wrEntitlementProvider.future)).isPremium, isFalse);
 
       // Và cờ bị dọn khỏi máy, không nằm chờ ai đó nữa.
@@ -220,9 +285,7 @@ void main() {
     });
 
     test('cờ của bản cũ (không ghi chủ) không cấp Premium cho ai', () async {
-      SharedPreferences.setMockInitialValues({
-        'wr_dev_premium_override': true,
-      });
+      SharedPreferences.setMockInitialValues({'wr_dev_premium_override': true});
       final c = containerFor('thedangs7@gmail.com');
       await Future<void>.delayed(Duration.zero);
 
@@ -246,8 +309,10 @@ void main() {
 
       final prefs = await SharedPreferences.getInstance();
       expect(prefs.getBool('wr_dev_premium_override'), isTrue);
-      expect(prefs.getString('wr_dev_premium_override_owner'),
-          'thedangs7@gmail.com');
+      expect(
+        prefs.getString('wr_dev_premium_override_owner'),
+        'thedangs7@gmail.com',
+      );
     });
   });
 

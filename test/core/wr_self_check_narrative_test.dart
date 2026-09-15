@@ -15,23 +15,17 @@ ScaSelfCheckResponse _resp(
   double c,
   double a, {
   required DateTime at,
-}) =>
-    ScaSelfCheckResponse(
-      userId: 'u1',
-      answers: const {},
-      structureScore: s,
-      cultureScore: c,
-      activityScore: a,
-      takenAt: at,
-    );
+}) => ScaSelfCheckResponse(
+  userId: 'u1',
+  answers: const {},
+  structureScore: s,
+  cultureScore: c,
+  activityScore: a,
+  takenAt: at,
+);
 
-
-WrSituation _sitOf(String code, ScaDimension dim) => WrSituation(
-      code: code,
-      text: code,
-      scaDimension: dim,
-      wave: 1,
-    );
+WrSituation _sitOf(String code, ScaDimension dim) =>
+    WrSituation(code: code, text: code, scaDimension: dim, wave: 1);
 
 void main() {
   group('bandForScore', () {
@@ -108,8 +102,11 @@ void main() {
 
     test('mọi mất cân bằng đều có narrative không rỗng', () {
       for (final k in PillarImbalance.values) {
-        expect(imbalanceNarrative(k).trim().length, greaterThan(60),
-            reason: '$k');
+        expect(
+          imbalanceNarrative(k).trim().length,
+          greaterThan(60),
+          reason: '$k',
+        );
       }
     });
   });
@@ -119,10 +116,7 @@ void main() {
 
     test('ít hơn 2 lần trả lời → chưa có xu hướng', () {
       expect(trendFromHistory(const []), isNull);
-      expect(
-        trendFromHistory([_resp(3, 3, 3, at: now)]),
-        isNull,
-      );
+      expect(trendFromHistory([_resp(3, 3, 3, at: now)]), isNull);
     });
 
     test('so lần mới nhất với lần liền trước', () {

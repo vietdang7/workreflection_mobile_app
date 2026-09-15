@@ -99,6 +99,16 @@ const double kDeepR4HighShare = 0.60;
 /// R4: từ tỉ lệ này trở xuống là "tích cực thấp".
 const double kDeepR4LowShare = 0.20;
 
+/// Số lần tối thiểu để được phép nói một tình huống "quay lại" / "lặp lại".
+///
+/// HAI. Một lần không phải là lặp, và câu "quay lại với bạn nhiều nhất, 1 lần"
+/// là câu tự mâu thuẫn. Ca này KHÔNG hiếm: bể chọn tình huống cố tình tránh
+/// nhắc lại mã đã chọn trong 10 lượt gần nhất (`pickSituationChoices`), nên một
+/// người dùng đều đặn rất dễ đủ 15 lượt mở Diễn giải sâu mà chưa mã nào sang
+/// lần thứ hai. Khi đó R3 và R5 vẫn phải gọi tên một tình huống cụ thể — §8 cấm
+/// im lặng — nhưng phải gọi đúng tên sự việc: chưa có gì lặp lại.
+const int kDeepRepeatMinCount = 2;
+
 // ---------------------------------------------------------------------------
 // LỚP 1 — dữ kiện
 // ---------------------------------------------------------------------------
@@ -119,6 +129,7 @@ class DeepSituation {
     required this.code,
     required this.label,
     required this.pillar,
+    this.subgroup,
     required this.valence,
     required this.count,
   });
@@ -130,6 +141,9 @@ class DeepSituation {
 
   /// Null khi thư viện chưa gán trụ cho mã này.
   final SelfCheckPillar? pillar;
+
+  /// Explicit v2 subgroup. Classified deep-reading rows always have one.
+  final String? subgroup;
 
   final WrValence valence;
   final int count;
@@ -156,7 +170,13 @@ List<DeepSituation> rankDeepSituations(
   for (final e in window) {
     final code = e.situationCode;
     if (code == null || code.isEmpty) continue;
-    if (!byCode.containsKey(code)) continue;
+    final situation = byCode[code];
+    if (situation == null ||
+        !situation.hasV2Classification ||
+        situation.isRetired ||
+        pillarOfSituation(situation) == null) {
+      continue;
+    }
     counts[code] = (counts[code] ?? 0) + 1;
   }
 
@@ -167,6 +187,7 @@ List<DeepSituation> rankDeepSituations(
           code: s.code,
           label: s.text,
           pillar: pillarOfSituation(s),
+          subgroup: s.subgroup,
           valence: s.valence,
           count: entry.value,
         ),
@@ -175,8 +196,9 @@ List<DeepSituation> rankDeepSituations(
   out.sort((a, b) {
     final byCount = b.count.compareTo(a.count);
     if (byCount != 0) return byCount;
-    final byValence = (a.valence.isPositive ? 1 : 0)
-        .compareTo(b.valence.isPositive ? 1 : 0);
+    final byValence = (a.valence.isPositive ? 1 : 0).compareTo(
+      b.valence.isPositive ? 1 : 0,
+    );
     if (byValence != 0) return byValence;
     return a.code.compareTo(b.code);
   });
@@ -256,8 +278,16 @@ class DeepFacts {
   /// Nuôi khối "Xem chi tiết theo nhóm" — §7 yêu cầu khối ấy phải mang thông
   /// tin MỚI so với Career Snapshot, và danh sách tình huống cụ thể là thứ
   /// Career Snapshot không có.
-  List<DeepSituation> situationsOf(SelfCheckPillar pillar) =>
-      [for (final s in situations) if (s.pillar == pillar) s];
+  List<DeepSituation> situationsOf(SelfCheckPillar pillar) => [
+    for (final s in situations)
+      if (s.pillar == pillar) s,
+  ];
+
+  /// Concrete rows in one v2 subgroup, for the optional collapsed detail.
+  List<DeepSituation> situationsInSubgroup(String subgroup) => [
+    for (final s in situations)
+      if (s.subgroup == subgroup) s,
+  ];
 
   /// Trụ nổi trội, hoặc null khi phân bố tương đối đều.
   final SelfCheckPillar? dominant;
@@ -399,8 +429,8 @@ DeepFacts buildDeepFacts({
     ),
     situationTrend: _situationTrends(window, prevWindow, situations),
     hasScoredSelfCheck: latest != null,
-    hasTwoWindows: total >= kDeepTrendMinPerWindow &&
-        prevTotal >= kDeepTrendMinPerWindow,
+    hasTwoWindows:
+        total >= kDeepTrendMinPerWindow && prevTotal >= kDeepTrendMinPerWindow,
     // Xoay vòng theo tổng số lần nhìn lại: người dùng quay lại sau vài lần nữa
     // thì đọc được một cách nói khác, mà vẫn thuần tuý tính ra được nên test
     // không phải đoán.
@@ -450,8 +480,7 @@ List<DeepSituationShift> _situationTrends(
     for (final s in rankDeepSituations(window, situations)) s.code: s,
   };
   final before = {
-    for (final s in rankDeepSituations(prevWindow, situations))
-      s.code: s.count,
+    for (final s in rankDeepSituations(prevWindow, situations)) s.code: s.count,
   };
 
   final out = <DeepSituationShift>[
@@ -460,8 +489,13 @@ List<DeepSituationShift> _situationTrends(
         code: code,
         // Cửa sổ trước có mà cửa sổ này không thì nhãn phải lấy từ chỗ khác;
         // `rankDeepSituations` của cửa sổ trước cũng đã tra ra đúng nhãn ấy.
-        label: now[code]?.label ??
-            situations.firstWhere((s) => s.code == code).text,
+        label:
+            now[code]?.label ??
+            situations
+                .where((s) => s.code == code)
+                .map((s) => s.text)
+                .firstOrNull ??
+            code,
         count: now[code]?.count ?? 0,
         previousCount: before[code] ?? 0,
       ),
@@ -526,11 +560,7 @@ DeepGapStatus? _gapStatus({
   if (latest == null || previous == null) return null;
   if (total == 0 || prevTotal == 0) return null;
 
-  double gap(
-    ScaSelfCheckResponse check,
-    Map<SelfCheckPillar, int> c,
-    int t,
-  ) {
+  double gap(ScaSelfCheckResponse check, Map<SelfCheckPillar, int> c, int t) {
     final dom = dominantPillar(c, t);
     if (dom == null) return 0;
     final score = scaScoreOf(check, dom);
@@ -541,7 +571,8 @@ DeepGapStatus? _gapStatus({
     return reassurance * ((c[dom] ?? 0) / t);
   }
 
-  final diff = gap(latest, counts, total) - gap(previous, prevCounts, prevTotal);
+  final diff =
+      gap(latest, counts, total) - gap(previous, prevCounts, prevTotal);
   if (diff.abs() < kDeepTrendEpsilon) return DeepGapStatus.unchanged;
   return diff < 0 ? DeepGapStatus.narrowing : DeepGapStatus.widening;
 }
@@ -600,8 +631,9 @@ DeepGapBranch deepGapBranch(DeepFacts f) {
 ///
 /// §5.3 yêu cầu bậc R3 "gọi kèm tên tình huống cụ thể thay vì chỉ nói tên trụ".
 /// Chín đoạn văn của nhánh A/B/D là nội dung khách đã duyệt ở v1 §3, nên chúng
-/// giữ nguyên và câu gọi tên được NỐI THÊM vào cuối — viết lại cả chín đoạn để
-/// nhét một cái tên vào giữa là đánh đổi nội dung đã duyệt lấy một chi tiết.
+/// giữ nguyên; câu gọi tên được đặt lên trước để bằng chứng cụ thể xuất hiện
+/// trước phần diễn giải, thay vì phải viết lại cả chín đoạn để nhét tên vào
+/// giữa và đánh đổi nội dung đã duyệt lấy một chi tiết.
 DeepSituation? deepStandoutOf(DeepFacts f, SelfCheckPillar pillar) {
   for (final s in f.situations) {
     if (s.pillar == pillar && !s.valence.isPositive) return s;
@@ -618,40 +650,60 @@ String deepGapText(DeepFacts f) {
   final standout = deepStandoutOf(f, dom);
   if (standout == null) return body;
 
-  return '$body ${tr('Trong nhóm này, điều quay lại với bạn nhiều nhất là '
-      '"${standout.label}", ${standout.count} lần.', 'Within this group, the one that returns most is '
-      '"${standout.label}", ${standout.count} times.')}';
+  final concrete = standout.count < kDeepRepeatMinCount
+      ? tr(
+          'Trong nhóm này, mỗi lần bạn gặp một tình huống khác nhau, chưa cái '
+              'nào lặp lại, chẳng hạn "${standout.label}".',
+          'Within this group, each time was a different situation and none has '
+              'repeated yet, for example "${standout.label}".',
+        )
+      : tr(
+          'Trong nhóm này, điều quay lại với bạn nhiều nhất là '
+              '"${standout.label}", ${standout.count} lần.',
+          'Within this group, the one that returns most is '
+              '"${standout.label}", ${standout.count} times.',
+        );
+  return '$concrete $body';
 }
 
 String _deepGapBody(DeepFacts f) {
   final branch = deepGapBranch(f);
-  final total = f.classifiedTotal;
+  final total = f.challengeTotal;
   final v = f.variantSeed % 3;
 
   if (branch == DeepGapBranch.even) {
     return switch (v) {
-      0 => tr('Trong $total lần nhìn lại gần đây, những điều bạn ghi nhận trải khá '
-          'đều giữa ba nhóm, chưa nhóm nào nổi lên rõ hơn hẳn. Điều này không '
-          'có gì bất thường. Nó thường xuất hiện khi công việc đang có nhiều '
-          'thứ diễn ra cùng lúc, hoặc khi bạn mới bắt đầu thói quen nhìn lại. '
-          'Sau một thời gian nữa, bức tranh sẽ dần rõ hơn.', 'Across your last $total look-backs, what you recorded is spread '
-          'fairly evenly across the three groups, with none standing out. '
-          'There is nothing odd about that. It usually shows up when a lot is '
-          'happening at work at once, or when you have only just started the '
-          'habit of looking back. Give it a while and the picture will sharpen.'),
-      1 => tr('Chưa có nhóm nào chiếm ưu thế rõ rệt trong $total lần ghi nhận gần '
-          'đây của bạn. Có thể mọi thứ đang khá cân bằng, cũng có thể bức '
-          'tranh cần thêm thời gian để hiện ra. Bạn cứ tiếp tục nhìn lại đều '
-          'đặn nhé, hệ thống sẽ báo cho bạn khi có điều gì đó lặp lại đủ nhiều.', 'No group stands out clearly across your last $total entries. Things '
-          'may be fairly balanced, or the picture may just need more time to '
-          'appear. Keep looking back regularly and the app will tell you when '
-          'something repeats often enough to mean anything.'),
-      _ => tr('Ba nhóm trải nghiệm của bạn đang khá cân nhau trong thời gian qua. '
-          'Điều đáng chú ý ở đây không nằm ở một nhóm cụ thể, mà ở chính sự cân '
-          'bằng đó. Bạn có thấy điều này giống với cảm nhận của mình về công '
-          'việc hiện tại không?', 'Your three groups have been fairly even lately. What is worth '
-          'noticing here is not any one group but that evenness itself. Does '
-          'it match how your work actually feels to you right now?'),
+      0 => tr(
+        'Trong $total lần nhìn lại gần đây, những điều bạn ghi nhận trải khá '
+            'đều giữa ba nhóm, chưa nhóm nào nổi lên rõ hơn hẳn. Điều này không '
+            'có gì bất thường. Nó thường xuất hiện khi công việc đang có nhiều '
+            'thứ diễn ra cùng lúc, hoặc khi bạn mới bắt đầu thói quen nhìn lại. '
+            'Sau một thời gian nữa, bức tranh sẽ dần rõ hơn.',
+        'Across your last $total look-backs, what you recorded is spread '
+            'fairly evenly across the three groups, with none standing out. '
+            'There is nothing odd about that. It usually shows up when a lot is '
+            'happening at work at once, or when you have only just started the '
+            'habit of looking back. Give it a while and the picture will sharpen.',
+      ),
+      1 => tr(
+        'Chưa có nhóm nào chiếm ưu thế rõ rệt trong $total lần ghi nhận gần '
+            'đây của bạn. Có thể mọi thứ đang khá cân bằng, cũng có thể bức '
+            'tranh cần thêm thời gian để hiện ra. Bạn cứ tiếp tục nhìn lại đều '
+            'đặn nhé, hệ thống sẽ báo cho bạn khi có điều gì đó lặp lại đủ nhiều.',
+        'No group stands out clearly across your last $total entries. Things '
+            'may be fairly balanced, or the picture may just need more time to '
+            'appear. Keep looking back regularly and the app will tell you when '
+            'something repeats often enough to mean anything.',
+      ),
+      _ => tr(
+        'Ba nhóm trải nghiệm của bạn đang khá cân nhau trong thời gian qua. '
+            'Điều đáng chú ý ở đây không nằm ở một nhóm cụ thể, mà ở chính sự cân '
+            'bằng đó. Bạn có thấy điều này giống với cảm nhận của mình về công '
+            'việc hiện tại không?',
+        'Your three groups have been fairly even lately. What is worth '
+            'noticing here is not any one group but that evenness itself. Does '
+            'it match how your work actually feels to you right now?',
+      ),
     };
   }
 
@@ -661,83 +713,114 @@ String _deepGapBody(DeepFacts f) {
 
   return switch (branch) {
     DeepGapBranch.outOfSync => switch (v) {
-        0 => tr('Trong bộ Self-Check gần nhất, bạn đánh giá $name đang ở mức khá '
-            'ổn. Nhưng khi nhìn lại, $count trong $total lần ghi nhận gần đây '
+      0 => tr(
+        'Trong bộ Self-Check gần nhất, bạn đánh giá $name đang ở mức khá '
+            'ổn. Nhưng khi nhìn lại, $count trong $total lượt thách thức gần đây '
             'của bạn lại xoay quanh chính nhóm này. Khoảng cách giữa hai điều '
             'đó thường đáng để dừng lại một chút. Có thể đây là điều bạn đã '
             'quen đến mức không còn thấy nó ảnh hưởng nữa. Bạn thử nghĩ xem sao '
-            'nhé.', 'In your last Self-Check you rated $name as fairly okay. Yet '
-            'looking back, $count of your last $total entries circle around '
+            'nhé.',
+        'In your last Self-Check you rated $name as fairly okay. Yet '
+            'looking back, $count of your last $total challenge reflections circle around '
             'this very group. That distance is usually worth pausing on. It may '
             'be something you have grown so used to that you no longer see it '
-            'affecting you. Worth a thought.'),
-        1 => tr('Bạn từng đánh giá $name là phần đang ổn trong công việc của mình. '
-            'Tuy nhiên, $count trong $total lần nhìn lại gần đây đều liên quan '
+            'affecting you. Worth a thought.',
+      ),
+      1 => tr(
+        'Bạn từng đánh giá $name là phần đang ổn trong công việc của mình. '
+            'Tuy nhiên, $count trong $total lượt thách thức gần đây đều liên quan '
             'đến nhóm này. Hai điều đó chưa hẳn mâu thuẫn, nhưng chúng đang kể '
             'hai câu chuyện khác nhau. Điều gì có thể giải thích cho khoảng '
-            'cách này?', 'You once rated $name as a part of work that was fine. But $count '
-            'of your last $total look-backs relate to this group. The two are '
+            'cách này?',
+        'You once rated $name as a part of work that was fine. But $count '
+            'of your last $total challenge reflections relate to this group. The two are '
             'not necessarily in conflict, yet they are telling different '
-            'stories. What might explain the gap?'),
-        _ => tr('Có một chi tiết đáng chú ý. ${dom.displayName} là nhóm bạn tự '
+            'stories. What might explain the gap?',
+      ),
+      _ => tr(
+        'Có một chi tiết đáng chú ý. ${dom.displayName} là nhóm bạn tự '
             'đánh giá không đáng lo, nhưng cũng là nhóm xuất hiện nhiều nhất '
-            'trong những lần bạn dừng lại để nhìn lại, $count trên $total lần. '
+            'trong những lần bạn dừng lại để nhìn lại, $count trên $total lượt '
+            'thách thức. '
             'Đôi khi những điều ta cho là bình thường lại chính là thứ chiếm '
-            'nhiều tâm trí nhất.', 'Here is something worth noticing. ${dom.displayName} is the group '
+            'nhiều tâm trí nhất.',
+        'Here is something worth noticing. ${dom.displayName} is the group '
             'you rate as no cause for concern, and also the one that comes up '
-            'most when you stop to look back, $count out of $total. Sometimes '
-            'what we call normal is exactly what occupies most of our mind.'),
-      },
+            'most when you stop to look back, $count out of your $total challenge '
+            'reflections. Sometimes '
+            'what we call normal is exactly what occupies most of our mind.',
+      ),
+    },
     DeepGapBranch.aligned => switch (v) {
-        0 => tr('${dom.displayName} vừa là phần bạn tự đánh giá cần được chú ý, '
-            'vừa là nhóm tình huống quay lại nhiều nhất trong $total lần ghi '
-            'nhận gần đây, $count lần. Cảm nhận của bạn và những gì đang thực '
+      0 => tr(
+        '${dom.displayName} vừa là phần bạn tự đánh giá cần được chú ý, '
+            'vừa là nhóm tình huống quay lại nhiều nhất trong $total lượt thách thức '
+            'gần đây, $count lần. Cảm nhận của bạn và những gì đang thực '
             'sự diễn ra đang khớp với nhau. Đây thường là dấu hiệu cho thấy bạn '
-            'đã nhìn khá rõ điều đang xảy ra với mình.', '${dom.displayName} is both the part you rate as needing '
+            'đã nhìn khá rõ điều đang xảy ra với mình.',
+        '${dom.displayName} is both the part you rate as needing '
             'attention and the group of situations that returns most across '
-            'your last $total entries, $count times. What you sense and what is '
+            'your last $total challenge reflections, $count times. What you sense '
+            'and what is '
             'actually happening line up. That usually means you are seeing your '
-            'own situation fairly clearly.'),
-        1 => tr('Cả hai nguồn đang chỉ về cùng một hướng. Bạn tự đánh giá $name là '
-            'phần cần cải thiện, và trong $total lần nhìn lại gần đây thì có '
+            'own situation fairly clearly.',
+      ),
+      1 => tr(
+        'Cả hai nguồn đang chỉ về cùng một hướng. Bạn tự đánh giá $name là '
+            'phần cần cải thiện, và trong $total lượt thách thức gần đây thì có '
             '$count lần thuộc về nhóm này. Khi cảm nhận và trải nghiệm thật '
-            'khớp nhau như vậy, đây thường là chỗ đáng để bắt đầu.', 'Both sources point the same way. You rate $name as the part to '
-            'improve, and $count of your last $total look-backs belong to this '
+            'khớp nhau như vậy, đây thường là chỗ đáng để bắt đầu.',
+        'Both sources point the same way. You rate $name as the part to '
+            'improve, and $count of your last $total challenge reflections belong to this '
             'group. When feeling and lived experience match like this, it is '
-            'usually the place to start.'),
-        _ => tr('${dom.displayName} đang là điều rõ ràng nhất trong bức tranh hiện '
+            'usually the place to start.',
+      ),
+      _ => tr(
+        '${dom.displayName} đang là điều rõ ràng nhất trong bức tranh hiện '
             'tại của bạn. Bạn đã tự nhận ra nó qua Self-Check, và nó cũng chiếm '
-            '$count trong $total lần bạn dừng lại nhìn lại. Bạn muốn thử một '
-            'bước nhỏ nào cho phần này trong tuần tới không?', '${dom.displayName} is the clearest thing in your picture right '
+            '$count trong $total lượt thách thức bạn đã ghi nhận. Bạn muốn thử một '
+            'bước nhỏ nào cho phần này trong tuần tới không?',
+        '${dom.displayName} is the clearest thing in your picture right '
             'now. You spotted it yourself in the Self-Check, and it accounts '
-            'for $count of the $total times you stopped to look back. Fancy '
-            'trying one small step on it this coming week?'),
-      },
+            'for $count of the $total challenge reflections you recorded. Fancy '
+            'trying one small step on it this coming week?',
+      ),
+    },
     DeepGapBranch.mismatch => () {
-        final weak = f.weakestPillar!.displayName.toLowerCase();
-        return switch (v) {
-          0 => tr('Bạn tự đánh giá $weak là phần khó khăn nhất hiện tại. Nhưng '
-              'trong $total lần nhìn lại gần đây, nhóm quay lại nhiều nhất lại '
+      final weak = f.weakestPillar!.displayName.toLowerCase();
+      return switch (v) {
+        0 => tr(
+          'Bạn tự đánh giá $weak là phần khó khăn nhất hiện tại. Nhưng '
+              'trong $total lượt thách thức gần đây, nhóm quay lại nhiều nhất lại '
               'là $name, với $count lần. Đôi khi điều làm ta bận tâm mỗi ngày '
-              'không trùng với điều ta nghĩ là vấn đề lớn nhất.', 'You rate $weak as the hardest part right now. But across your '
-              'last $total look-backs, the group that returns most is $name, '
+              'không trùng với điều ta nghĩ là vấn đề lớn nhất.',
+          'You rate $weak as the hardest part right now. But across your '
+              'last $total challenge reflections, the group that returns most is '
+              '$name, '
               'with $count. Sometimes what occupies us daily is not what we '
-              'think of as the biggest problem.'),
-          1 => tr('Có hai điều đang cùng nổi lên. Self-Check cho thấy $weak là '
+              'think of as the biggest problem.',
+        ),
+        1 => tr(
+          'Có hai điều đang cùng nổi lên. Self-Check cho thấy $weak là '
               'phần bạn thấy khó nhất, còn các lần nhìn lại của bạn lại tập '
-              'trung nhiều vào $name, $count trên $total lần. Cả hai đều là dữ '
-              'liệu thật về bạn, chỉ là chúng đang nói về hai lớp khác nhau.', 'Two things are surfacing together. The Self-Check says $weak is '
+              'trung nhiều vào $name, $count trên $total lượt thách thức. Cả hai đều là dữ '
+              'liệu thật về bạn, chỉ là chúng đang nói về hai lớp khác nhau.',
+          'Two things are surfacing together. The Self-Check says $weak is '
               'what you find hardest, while your look-backs cluster around '
-              '$name, $count out of $total. Both are real data about you; they '
-              'are just speaking about different layers.'),
-          _ => tr('${dom.displayName} đang là nhóm chiếm nhiều lần nhìn lại nhất '
-              'của bạn, $count trên $total lần, dù đây không phải phần bạn tự '
+              '$name, $count out of $total challenge reflections. Both are real data about you; they '
+              'are just speaking about different layers.',
+        ),
+        _ => tr(
+          '${dom.displayName} đang là nhóm chiếm nhiều lần nhìn lại nhất '
+              'của bạn, $count trên $total lượt thách thức, dù đây không phải phần bạn tự '
               'đánh giá thấp nhất. Điều gì khiến nhóm này thường xuyên quay lại '
-              'như vậy?', '${dom.displayName} takes up more of your look-backs than any '
-              'other, $count out of $total, even though it is not the part you '
-              'rate lowest. What keeps bringing this group back?'),
-        };
-      }(),
+              'như vậy?',
+          '${dom.displayName} takes up more of your look-backs than any '
+              'other, $count out of $total challenge reflections, even though it is not the part you '
+              'rate lowest. What keeps bringing this group back?',
+        ),
+      };
+    }(),
     DeepGapBranch.even => '',
   };
 }
@@ -777,14 +860,21 @@ enum DeepRung {
   evenSpread,
 }
 
-/// Một cụm tình huống cùng trụ và cùng valence (R2).
+/// Một cụm tình huống cùng subgroup và cùng valence (R2).
 class DeepCluster {
-  const DeepCluster({required this.members, required this.pillar});
+  const DeepCluster({
+    required this.members,
+    required this.pillar,
+    this.subgroup,
+  });
 
   /// Từ 2 đến [kDeepR2MaxMembers] tình huống, nhiều lần nhất đứng đầu.
   final List<DeepSituation> members;
 
   final SelfCheckPillar pillar;
+
+  /// The v2 grouping key. Null means this row cannot participate in R2.
+  final String? subgroup;
 
   int get total => members.fold(0, (s, m) => s + m.count);
 
@@ -807,14 +897,18 @@ class DeepCluster {
     if (members.length != other.members.length) {
       return members.length > other.members.length;
     }
-    return pillar.index < other.pillar.index;
+    final byPillar = pillar.index.compareTo(other.pillar.index);
+    if (byPillar != 0) return byPillar < 0;
+    return (subgroup ?? '').compareTo(other.subgroup ?? '') < 0;
   }
 }
 
 /// Cụm mạnh nhất thoả điều kiện R2, hoặc null.
 ///
-/// Gom theo (trụ, valence) rồi lấy tối đa [kDeepR2MaxMembers] tình huống nhiều
-/// nhất của mỗi nhóm; cụm nào tổng lớn nhất và đạt [kDeepR2MinTotal] thì thắng.
+/// Group by the explicit (subgroup, valence) key, then take at most
+/// [kDeepR2MaxMembers] highest-count situations from each group. Legacy rows
+/// without an explicit subgroup remain readable in history but cannot qualify
+/// for R2.
 ///
 /// CÓ CHO PHÉP THÀNH VIÊN CHỈ 1 LẦN, và đây là một lựa chọn có hệ quả thật.
 /// Đặc tả chỉ nói "từ 2 đến 3 tình huống cùng pillar và cùng valence, tổng từ 5
@@ -828,9 +922,10 @@ DeepCluster? deepCluster(DeepFacts f) {
   for (final s in f.situations) {
     final pillar = s.pillar;
     if (pillar == null) continue;
-    groups
-        .putIfAbsent('${pillar.name}:${s.valence.name}', () => [])
-        .add(s);
+    final subgroup = s.subgroup;
+    if (subgroup == null) continue;
+    final groupingKey = 'subgroup:${pillar.name}:$subgroup';
+    groups.putIfAbsent('$groupingKey:${s.valence.name}', () => []).add(s);
   }
 
   DeepCluster? best;
@@ -838,7 +933,11 @@ DeepCluster? deepCluster(DeepFacts f) {
     if (members.length < 2) continue;
     // `f.situations` đã sắp giảm dần nên phần đầu của mỗi nhóm cũng vậy.
     final top = members.take(kDeepR2MaxMembers).toList();
-    final cluster = DeepCluster(members: top, pillar: top.first.pillar!);
+    final cluster = DeepCluster(
+      members: top,
+      pillar: top.first.pillar!,
+      subgroup: top.first.subgroup,
+    );
     if (cluster.total < kDeepR2MinTotal) continue;
     if (best == null || cluster.beats(best)) best = cluster;
   }
@@ -873,27 +972,12 @@ DeepRung deepRung(DeepFacts f) {
 
   // R4 — cán cân lệch hẳn về một phía.
   //
-  // MỘT MÂU THUẪN TRONG CHÍNH ĐẶC TẢ, và cách chọn.
-  //
-  // Bảng ở §4 viết điều kiện R4 là "tỷ lệ tích cực từ 60 phần trăm trở lên,
-  // HOẶC từ 20 phần trăm trở xuống". Đọc chữ thì 0% cũng là "từ 20 trở xuống",
-  // nên R4 sẽ chạy.
-  //
-  // Nhưng §9 việc 4 lại đưa hai bộ nghiệm thu KHÔNG có lượt tích cực nào —
-  // "phân bố đều 6/5/5" và "đúng 15 lần Reflection rải đều mỗi tình huống 1
-  // lần" — và nói cả hai "phải ra R5". Hai chỗ không thể cùng đúng.
-  //
-  // Chọn theo §9, vì nghiệm thu là định nghĩa của "xong". Và nó cũng hợp với
-  // tên của bậc: R4 nói về CÁN CÂN, mà một cán cân thì cần có cả hai bên. Chưa
-  // ghi lần nào điều đang tốt thì chưa có cán cân nào để nói, chỉ có một bức
-  // tranh chưa đủ vế — và R5 vẫn gọi tên được điều đang lặp.
-  //
-  // ĐÃ BÁO KHÁCH ngày 11/09/2026. Nếu khách muốn 0% cũng chạy R4b, bỏ vế
-  // `positiveTotal > 0` là xong, nhưng phải sửa hai bộ nghiệm thu ở §9 theo.
+  // R4 follows the ladder literally: positive share >=60% OR <=20%.
+  // With usable classified data, zero positive rows are a valid 0% low-share
+  // result and must not be forced into R5.
   if (f.classifiedTotal > 0) {
     final share = f.positiveShare;
-    if (share >= kDeepR4HighShare ||
-        (f.positiveTotal > 0 && share <= kDeepR4LowShare)) {
+    if (share >= kDeepR4HighShare || share <= kDeepR4LowShare) {
       return DeepRung.positiveBalance;
     }
   }
@@ -906,12 +990,12 @@ DeepRung deepRung(DeepFacts f) {
 /// Điều kiện nghiệm thu của §9 việc 4: bốn bộ dữ liệu khác nhau, không bộ nào
 /// được trả về rỗng.
 String deepLeadText(DeepFacts f) => switch (deepRung(f)) {
-      DeepRung.standoutSituation => _deepR1Text(f),
-      DeepRung.situationCluster => _deepR2Text(f),
-      DeepRung.awarenessGap => deepGapText(f),
-      DeepRung.positiveBalance => _deepR4Text(f),
-      DeepRung.evenSpread => _deepR5Text(f),
-    };
+  DeepRung.standoutSituation => _deepR1Text(f),
+  DeepRung.situationCluster => _deepR2Text(f),
+  DeepRung.awarenessGap => deepGapText(f),
+  DeepRung.positiveBalance => _deepR4Text(f),
+  DeepRung.evenSpread => _deepR5Text(f),
+};
 
 // --- R1 · Một tình huống nổi bật (§5.1) ------------------------------------
 
@@ -922,25 +1006,34 @@ String _deepR1Text(DeepFacts f) {
   final name = s.label;
 
   return switch (f.variantSeed % 3) {
-    0 => tr('Có một tình huống quay lại với bạn nhiều hơn hẳn những tình huống '
-        'khác: "$name", $count lần trong $total lần nhìn lại gần đây. Khi một '
-        'điều lặp lại với tần suất như vậy, nó thường không còn là chuyện ngẫu '
-        'nhiên nữa. Bạn có nhận ra điều gì chung giữa những lần đó không?', 'One situation returns to you far more than the rest: "$name", '
-        '$count times out of your last $total look-backs. When something '
-        'repeats at that rate, it has usually stopped being a coincidence. Can '
-        'you see what those times had in common?'),
-    1 => tr('"$name" là điều bạn quay lại nhiều nhất trong thời gian qua, $count '
-        'lần. Đây là tình huống đang chiếm nhiều tâm trí của bạn hơn cả. Nếu có '
-        'một điều đáng để nhìn kỹ hơn lúc này, nhiều khả năng là nó.', '"$name" is what you have returned to most lately, $count times. '
-        'This is the situation taking up more of your mind than any other. If '
-        'there is one thing worth a closer look right now, it is most likely '
-        'this.'),
-    _ => tr('Trong $total lần bạn dừng lại nhìn lại, có $count lần xoay quanh '
-        'cùng một chuyện: "$name". Những điều lặp lại thường khó nhận ra khi '
-        'đang ở trong đó, nhưng nhìn từ ngoài vào thì khá rõ. Bạn thấy sao về '
-        'điều này?', 'Of the $total times you stopped to look back, $count circled the '
-        'same thing: "$name". What repeats is hard to see from the inside, but '
-        'from the outside it stands out. How does that sit with you?'),
+    0 => tr(
+      'Có một tình huống quay lại với bạn nhiều hơn hẳn những tình huống '
+          'khác: "$name", $count lần trong $total lần nhìn lại gần đây. Khi một '
+          'điều lặp lại với tần suất như vậy, nó thường không còn là chuyện ngẫu '
+          'nhiên nữa. Bạn có nhận ra điều gì chung giữa những lần đó không?',
+      'One situation returns to you far more than the rest: "$name", '
+          '$count times out of your last $total look-backs. When something '
+          'repeats at that rate, it has usually stopped being a coincidence. Can '
+          'you see what those times had in common?',
+    ),
+    1 => tr(
+      '"$name" là điều bạn quay lại nhiều nhất trong thời gian qua, $count '
+          'lần. Đây là tình huống đang chiếm nhiều tâm trí của bạn hơn cả. Nếu có '
+          'một điều đáng để nhìn kỹ hơn lúc này, nhiều khả năng là nó.',
+      '"$name" is what you have returned to most lately, $count times. '
+          'This is the situation taking up more of your mind than any other. If '
+          'there is one thing worth a closer look right now, it is most likely '
+          'this.',
+    ),
+    _ => tr(
+      'Trong $total lần bạn dừng lại nhìn lại, có $count lần xoay quanh '
+          'cùng một chuyện: "$name". Những điều lặp lại thường khó nhận ra khi '
+          'đang ở trong đó, nhưng nhìn từ ngoài vào thì khá rõ. Bạn thấy sao về '
+          'điều này?',
+      'Of the $total times you stopped to look back, $count circled the '
+          'same thing: "$name". What repeats is hard to see from the inside, but '
+          'from the outside it stands out. How does that sit with you?',
+    ),
   };
 }
 
@@ -948,27 +1041,66 @@ String _deepR1Text(DeepFacts f) {
 
 String _deepR2Text(DeepFacts f) {
   final c = deepCluster(f)!;
-  final pillar = c.pillar.displayName.toLowerCase();
+  final theme = _deepSubgroupLabel(c.subgroup, c.pillar);
   final names = [for (final m in c.members) '"${m.label}"'];
+  final variant = f.variantSeed % 2;
 
-  // Biến thể a viết cho ba tình huống, biến thể b cho hai. Chọn theo số thành
-  // viên thật chứ không theo `variantSeed`: câu a có sẵn ba chỗ chèn và ghép
-  // hai cái tên vào đó thì thừa một liên từ.
   if (c.members.length >= 3) {
-    return tr('Có ba chuyện khác nhau nhưng đang cùng kể một câu chuyện: '
-        '${names[0]}, ${names[1]} và ${names[2]}, tổng cộng ${c.total} lần. '
+    return switch (variant) {
+      0 => tr(
+        'Có ba chuyện khác nhau nhưng đang cùng kể một câu chuyện: '
+            '${names[0]}, ${names[1]} và ${names[2]}, tổng cộng ${c.total} lần. '
+            'Nhìn riêng từng cái thì rời rạc, nhưng đặt cạnh nhau thì chúng đều '
+            'liên quan đến $theme.',
+        'Three different things are telling one story: ${names[0]}, '
+            '${names[1]} and ${names[2]}, ${c.total} times in all. Each on its own '
+            'looks unrelated, but side by side they all come back to $theme.',
+      ),
+      _ => tr(
         'Nhìn riêng từng cái thì rời rạc, nhưng đặt cạnh nhau thì chúng đều '
-        'liên quan đến $pillar.', 'Three different things are telling one story: ${names[0]}, '
-        '${names[1]} and ${names[2]}, ${c.total} times in all. Each on its own '
-        'looks unrelated, but side by side they all come back to $pillar.');
+            'liên quan đến $theme. Có ba chuyện khác nhau nhưng đang cùng kể '
+            'một câu chuyện: ${names[0]}, ${names[1]} và ${names[2]}, tổng cộng '
+            '${c.total} lần.',
+        'Each on its own looks unrelated, but side by side they all come back '
+            'to $theme. Three different things are telling one story: '
+            '${names[0]}, ${names[1]} and ${names[2]}, ${c.total} times in all.',
+      ),
+    };
   }
 
-  return tr('Những điều bạn nhìn lại gần đây tập trung khá rõ vào một hướng: '
-      '$pillar. Cụ thể là ${names[0]} và ${names[1]}, cộng lại ${c.total} lần. '
-      'Đây có thể là chỗ đáng để bạn dành thêm chú ý.', 'What you have looked back on lately points fairly clearly one way: '
-      '$pillar. Specifically ${names[0]} and ${names[1]}, ${c.total} times '
-      'between them. This may be where a little more attention is worth it.');
+  return switch (variant) {
+    0 => tr(
+      'Những điều bạn nhìn lại gần đây tập trung khá rõ vào một hướng: '
+          '$theme. Cụ thể là ${names[0]} và ${names[1]}, cộng lại ${c.total} lần. '
+          'Đây có thể là chỗ đáng để bạn dành thêm chú ý.',
+      'What you have looked back on lately points fairly clearly one way: '
+          '$theme. Specifically ${names[0]} and ${names[1]}, ${c.total} times '
+          'between them. This may be where a little more attention is worth it.',
+    ),
+    _ => tr(
+      'Cụ thể là ${names[0]} và ${names[1]}, cộng lại ${c.total} lần. Những điều '
+          'bạn nhìn lại gần đây tập trung khá rõ vào một hướng: $theme. Đây có thể '
+          'là chỗ đáng để bạn dành thêm chú ý.',
+      'Specifically ${names[0]} and ${names[1]}, ${c.total} times between them. '
+          'What you have looked back on lately points fairly clearly one way: '
+          '$theme. This may be where a little more attention is worth it.',
+    ),
+  };
 }
+
+String _deepSubgroupLabel(String? subgroup, SelfCheckPillar pillar) =>
+    switch (subgroup) {
+      'S1' => tr('vai trò và trách nhiệm', 'roles and responsibilities'),
+      'S2' => tr('phối hợp và luồng công việc', 'coordination and workflow'),
+      'C1' => tr('tin tưởng và giao việc', 'trust and delegation'),
+      'C2' => tr('tiếng nói và phản hồi', 'voice and feedback'),
+      'A1' => tr('định hướng và ý nghĩa', 'direction and meaning'),
+      'A3' => tr('năng lượng và phản ứng', 'energy and reactions'),
+      'Sp' => tr('sự ổn định trong công việc', 'steadiness at work'),
+      'Cp' => tr('kết nối trong công việc', 'connection at work'),
+      'Ap' => tr('phát triển trong công việc', 'growth at work'),
+      _ => pillar.displayName.toLowerCase(),
+    };
 
 // --- R4 · Cán cân tích cực và thách thức (§5.4) -----------------------------
 
@@ -977,23 +1109,29 @@ String _deepR4Text(DeepFacts f) {
   final total = f.classifiedTotal;
 
   if (f.positiveShare >= kDeepR4HighShare) {
-    return tr('Có một điều dễ bị bỏ qua: $count trong $total lần bạn dừng lại '
-        'nhìn lại là để ghi nhận điều gì đó đang diễn ra tốt. Nhiều người chỉ '
-        'nhìn lại khi gặp khó, nên tỷ lệ này ở bạn là đáng chú ý. Bạn có nhận '
-        'ra điều gì đang giúp mình duy trì được nhịp đó không?', 'Here is something easy to miss: $count of the $total times you '
-        'stopped to look back were to mark something going well. Most people '
-        'only look back when things are hard, so your ratio stands out. Can you '
-        'tell what is helping you hold that rhythm?');
+    return tr(
+      'Có một điều dễ bị bỏ qua: $count trong $total lần bạn dừng lại '
+          'nhìn lại là để ghi nhận điều gì đó đang diễn ra tốt. Nhiều người chỉ '
+          'nhìn lại khi gặp khó, nên tỷ lệ này ở bạn là đáng chú ý. Bạn có nhận '
+          'ra điều gì đang giúp mình duy trì được nhịp đó không?',
+      'Here is something easy to miss: $count of the $total times you '
+          'stopped to look back were to mark something going well. Most people '
+          'only look back when things are hard, so your ratio stands out. Can you '
+          'tell what is helping you hold that rhythm?',
+    );
   }
 
-  return tr('Phần lớn những lần bạn dừng lại nhìn lại đều xoay quanh khó khăn, '
-      'chỉ $count trong $total lần là ghi nhận điều đang diễn ra tốt. Điều này '
-      'không có gì bất thường, vì khó khăn thường thôi thúc ta nhìn lại nhiều '
-      'hơn. Nhưng những điều đang tốt cũng đáng được ghi lại, để bức tranh đầy '
-      'đủ hơn về sau.', 'Most of the times you stop to look back are about something hard; only '
-      '$count of $total mark something going well. Nothing unusual there, since '
-      'difficulty prompts reflection more than ease does. But what is going '
-      'well is worth recording too, so the picture fills out over time.');
+  return tr(
+    'Phần lớn những lần bạn dừng lại nhìn lại đều xoay quanh khó khăn, '
+        'chỉ $count trong $total lần là ghi nhận điều đang diễn ra tốt. Điều này '
+        'không có gì bất thường, vì khó khăn thường thôi thúc ta nhìn lại nhiều '
+        'hơn. Nhưng những điều đang tốt cũng đáng được ghi lại, để bức tranh đầy '
+        'đủ hơn về sau.',
+    'Most of the times you stop to look back are about something hard; only '
+        '$count of $total mark something going well. Nothing unusual there, since '
+        'difficulty prompts reflection more than ease does. But what is going '
+        'well is worth recording too, so the picture fills out over time.',
+  );
 }
 
 // --- R5 · Phân bố đều, lưới an toàn (§5.5) ---------------------------------
@@ -1009,25 +1147,71 @@ String _deepR5Text(DeepFacts f) {
   final count = s.count;
   final name = s.label;
 
+  // Chưa mã nào sang lần thứ hai. Vẫn gọi tên một tình huống cụ thể như §8 đòi,
+  // nhưng không được nói nó "quay lại" — xem [kDeepRepeatMinCount].
+  if (count < kDeepRepeatMinCount) {
+    return switch (f.variantSeed % 3) {
+      0 => tr(
+        'Những điều bạn nhìn lại gần đây trải khá đều, chưa nhóm nào nổi lên '
+            'hẳn. Thực ra chưa tình huống nào lặp lại: mỗi lần bạn dừng lại là '
+            'một chuyện khác nhau, chẳng hạn "$name". Bạn thấy điều này có đúng '
+            'với cảm nhận của mình không?',
+        'What you have looked back on lately is spread fairly evenly, with no '
+            'group standing out. In fact nothing has repeated yet: each time you '
+            'stopped it was a different thing, such as "$name". Does that match '
+            'how it feels to you?',
+      ),
+      1 => tr(
+        'Bức tranh của bạn khá cân bằng giữa ba nhóm, không có chỗ nào nổi '
+            'trội rõ rệt. Sự cân bằng này tự nó cũng là một thông tin. Mỗi tình '
+            'huống bạn ghi lại tới giờ đều mới xuất hiện một lần, trong đó có '
+            '"$name".',
+        'Your picture is fairly balanced across the three groups, with nothing '
+            'clearly dominant. That balance is information in itself. So far '
+            'every situation you have recorded has come up just once, "$name" '
+            'among them.',
+      ),
+      _ => tr(
+        'Chưa có nhóm nào chiếm ưu thế trong thời gian qua, mọi thứ khá đều '
+            'nhau. Cũng chưa tình huống nào quay lại lần thứ hai, nên tới giờ '
+            'vẫn là những lần riêng lẻ như "$name". Bạn cứ tiếp tục nhìn lại đều '
+            'đặn nhé, bức tranh sẽ dần rõ hơn theo thời gian.',
+        'No group has taken the lead lately; things are fairly even. Nothing '
+            'has come back a second time either, so for now these are separate '
+            'moments such as "$name". Keep looking back regularly and the '
+            'picture will sharpen.',
+      ),
+    };
+  }
+
   return switch (f.variantSeed % 3) {
-    0 => tr('Những điều bạn nhìn lại gần đây trải khá đều, chưa nhóm nào nổi lên '
-        'hẳn. Nhưng nếu nhìn vào từng tình huống cụ thể, "$name" là điều quay '
-        'lại với bạn nhiều nhất, $count lần. Bạn thấy điều này có đúng với cảm '
-        'nhận của mình không?', 'What you have looked back on lately is spread fairly evenly, with no '
-        'group standing out. But look at the individual situations and "$name" '
-        'is the one that returns most, $count times. Does that match how it '
-        'feels to you?'),
-    1 => tr('Bức tranh của bạn khá cân bằng giữa ba nhóm, không có chỗ nào nổi '
-        'trội rõ rệt. Sự cân bằng này tự nó cũng là một thông tin. Trong số các '
-        'tình huống cụ thể, "$name" xuất hiện nhiều hơn cả với $count lần.', 'Your picture is fairly balanced across the three groups, with nothing '
-        'clearly dominant. That balance is information in itself. Among the '
-        'individual situations, "$name" comes up most, $count times.'),
-    _ => tr('Chưa có nhóm nào chiếm ưu thế trong thời gian qua, mọi thứ khá đều '
-        'nhau. Điều gần nhất với một mẫu hình là "$name", đã quay lại $count '
-        'lần. Bạn cứ tiếp tục nhìn lại đều đặn nhé, bức tranh sẽ dần rõ hơn '
-        'theo thời gian.', 'No group has taken the lead lately; things are fairly even. The '
-        'closest thing to a pattern is "$name", which has come back $count '
-        'times. Keep looking back regularly and the picture will sharpen.'),
+    0 => tr(
+      'Những điều bạn nhìn lại gần đây trải khá đều, chưa nhóm nào nổi lên '
+          'hẳn. Nhưng nếu nhìn vào từng tình huống cụ thể, "$name" là điều quay '
+          'lại với bạn nhiều nhất, $count lần. Bạn thấy điều này có đúng với cảm '
+          'nhận của mình không?',
+      'What you have looked back on lately is spread fairly evenly, with no '
+          'group standing out. But look at the individual situations and "$name" '
+          'is the one that returns most, $count times. Does that match how it '
+          'feels to you?',
+    ),
+    1 => tr(
+      'Bức tranh của bạn khá cân bằng giữa ba nhóm, không có chỗ nào nổi '
+          'trội rõ rệt. Sự cân bằng này tự nó cũng là một thông tin. Trong số các '
+          'tình huống cụ thể, "$name" xuất hiện nhiều hơn cả với $count lần.',
+      'Your picture is fairly balanced across the three groups, with nothing '
+          'clearly dominant. That balance is information in itself. Among the '
+          'individual situations, "$name" comes up most, $count times.',
+    ),
+    _ => tr(
+      'Chưa có nhóm nào chiếm ưu thế trong thời gian qua, mọi thứ khá đều '
+          'nhau. Điều gần nhất với một mẫu hình là "$name", đã quay lại $count '
+          'lần. Bạn cứ tiếp tục nhìn lại đều đặn nhé, bức tranh sẽ dần rõ hơn '
+          'theo thời gian.',
+      'No group has taken the lead lately; things are fairly even. The '
+          'closest thing to a pattern is "$name", which has come back $count '
+          'times. Keep looking back regularly and the picture will sharpen.',
+    ),
   };
 }
 
@@ -1037,13 +1221,16 @@ String _deepR5Text(DeepFacts f) {
 /// không ghi `situation_code` nào, nên cả năm bậc đều không có cái tên nào để
 /// gọi. Không phải trạng thái "chưa đủ dữ liệu": họ đã nhìn lại đủ nhiều, chỉ
 /// là hệ thống không đọc được nội dung tự viết.
-String get kDeepAllFreeform => tr('Những lần nhìn lại gần đây của bạn phần lớn là chuyện bạn tự kể chứ không '
-    'chọn từ danh sách, nên phần này chưa gọi tên được điều gì đang lặp lại. '
-    'Lần tới, chọn thêm một tình huống gần đúng trước khi viết cũng đủ để bức '
-    'tranh bắt đầu hiện ra.', 'Your recent look-backs are mostly in your own words rather than picked '
-    'from the list, so this part cannot yet name what keeps repeating. Next '
-    'time, picking the closest situation before you write is enough for the '
-    'picture to start forming.');
+String get kDeepAllFreeform => tr(
+  'Những lần nhìn lại gần đây của bạn phần lớn là chuyện bạn tự kể chứ không '
+      'chọn từ danh sách, nên phần này chưa gọi tên được điều gì đang lặp lại. '
+      'Lần tới, chọn thêm một tình huống gần đúng trước khi viết cũng đủ để bức '
+      'tranh bắt đầu hiện ra.',
+  'Your recent look-backs are mostly in your own words rather than picked '
+      'from the list, so this part cannot yet name what keeps repeating. Next '
+      'time, picking the closest situation before you write is enough for the '
+      'picture to start forming.',
+);
 
 // ---------------------------------------------------------------------------
 // Tầng 2 — xu hướng từ Reflection (§4)
@@ -1073,93 +1260,88 @@ String? deepReflectionTrendText(DeepFacts f) {
     final up = f.situationTrend.first;
     if (up.delta > 0) {
       return v == 0
-          ? tr('So với giai đoạn trước, "${up.label}" đang xuất hiện dày hơn '
-              'trong các lần bạn nhìn lại: ${up.previousCount} lần thành '
-              '${up.count} lần. Điều này có thể đến từ một thay đổi trong công '
-              'việc, hoặc đơn giản là bạn đang chú ý đến nó nhiều hơn trước. '
-              'Bạn có nhận ra điều gì đã khác đi không?', 'Compared with the previous stretch, "${up.label}" is showing up '
-              'more densely in your look-backs: ${up.previousCount} times, now '
-              '${up.count}. That could come from a change at work, or simply '
-              'from you paying it more attention. Can you spot what has become '
-              'different?')
-          : tr('"${up.label}" đang quay lại dày hơn giai đoạn trước, '
-              '${up.count} lần so với ${up.previousCount}. Khi một chuyện dồn '
-              'lại như vậy, thường có điều gì đó trong công việc đang chuyển '
-              'động. Bạn thử nhớ lại xem giai đoạn này có gì khác không nhé.', '"${up.label}" is coming back more often than in the stretch '
-              'before, ${up.count} times against ${up.previousCount}. When '
-              'something bunches up like that, usually something at work is '
-              'moving. Try to recall what has been different in this period.');
+          ? tr(
+              'So với giai đoạn trước, "${up.label}" đang xuất hiện dày hơn '
+                  'trong các lần bạn nhìn lại: ${up.previousCount} lần thành '
+                  '${up.count} lần. Điều này có thể đến từ một thay đổi trong công '
+                  'việc, hoặc đơn giản là bạn đang chú ý đến nó nhiều hơn trước. '
+                  'Bạn có nhận ra điều gì đã khác đi không?',
+              'Compared with the previous stretch, "${up.label}" is showing up '
+                  'more densely in your look-backs: ${up.previousCount} times, now '
+                  '${up.count}. That could come from a change at work, or simply '
+                  'from you paying it more attention. Can you spot what has become '
+                  'different?',
+            )
+          : tr(
+              '"${up.label}" đang quay lại dày hơn giai đoạn trước, '
+                  '${up.count} lần so với ${up.previousCount}. Khi một chuyện dồn '
+                  'lại như vậy, thường có điều gì đó trong công việc đang chuyển '
+                  'động. Bạn thử nhớ lại xem giai đoạn này có gì khác không nhé.',
+              '"${up.label}" is coming back more often than in the stretch '
+                  'before, ${up.count} times against ${up.previousCount}. When '
+                  'something bunches up like that, usually something at work is '
+                  'moving. Try to recall what has been different in this period.',
+            );
     }
 
     final down = f.situationTrend.last;
     return v == 0
-        ? tr('"${down.label}" từng quay lại thường xuyên trong những lần bạn '
-            'nhìn lại, ${down.previousCount} lần ở giai đoạn trước, nay còn '
-            '${down.count}. Đây có thể là dấu hiệu tích cực, cho thấy điều đó '
-            'đã bớt chiếm tâm trí bạn. Bạn có thấy vậy không?', '"${down.label}" used to come back often in your look-backs, '
-            '${down.previousCount} times in the previous stretch, now '
-            '${down.count}. That can be a good sign, showing it takes up less '
-            'of your mind now. Does that match?')
-        : tr('Có một điều đã lùi lại phía sau. "${down.label}" không còn quay '
-            'lại thường xuyên như giai đoạn trước, ${down.count} lần so với '
-            '${down.previousCount}. Những thay đổi kiểu này thường diễn ra âm '
-            'thầm và dễ bị bỏ qua, nên đây là một điều đáng để ghi nhận cho '
-            'chính mình.', 'Something has stepped back. "${down.label}" no longer returns as '
-            'often as before, ${down.count} times against '
-            '${down.previousCount}. Changes like this happen quietly and are '
-            'easy to miss, so it is worth marking for yourself.');
+        ? tr(
+            '"${down.label}" từng quay lại thường xuyên trong những lần bạn '
+                'nhìn lại, ${down.previousCount} lần ở giai đoạn trước, nay còn '
+                '${down.count}. Đây có thể là dấu hiệu tích cực, cho thấy điều đó '
+                'đã bớt chiếm tâm trí bạn. Bạn có thấy vậy không?',
+            '"${down.label}" used to come back often in your look-backs, '
+                '${down.previousCount} times in the previous stretch, now '
+                '${down.count}. That can be a good sign, showing it takes up less '
+                'of your mind now. Does that match?',
+          )
+        : tr(
+            'Có một điều đã lùi lại phía sau. "${down.label}" không còn quay '
+                'lại thường xuyên như giai đoạn trước, ${down.count} lần so với '
+                '${down.previousCount}. Những thay đổi kiểu này thường diễn ra âm '
+                'thầm và dễ bị bỏ qua, nên đây là một điều đáng để ghi nhận cho '
+                'chính mình.',
+            'Something has stepped back. "${down.label}" no longer returns as '
+                'often as before, ${down.count} times against '
+                '${down.previousCount}. Changes like this happen quietly and are '
+                'easy to miss, so it is worth marking for yourself.',
+          );
   }
 
-  final v = f.variantSeed % 2;
-
-  // Nhóm tăng rõ nhất thắng; không có thì xét nhóm lùi lại.
-  SelfCheckPillar? rising;
-  SelfCheckPillar? falling;
-  for (final e in f.reflectionTrend.entries) {
-    if (e.value == DeepTrend.rising && rising == null) rising = e.key;
-    if (e.value == DeepTrend.falling && falling == null) falling = e.key;
-  }
-
-  if (rising != null) {
-    final name = rising.displayName.toLowerCase();
+  // v2 keeps the trend concrete even when no single situation crosses the
+  // shift threshold. Do not fall back to a repeated abstract pillar sentence:
+  // the main Deep Reading trend is about situations, not Career Snapshot rows.
+  if (f.situations.isNotEmpty) {
+    final top = f.situations.first;
+    final v = f.variantSeed % 2;
     return v == 0
-        ? tr('So với giai đoạn trước, $name đang chiếm nhiều hơn trong các lần bạn '
-            'nhìn lại. Điều này có thể đến từ một thay đổi trong công việc, '
-            'hoặc đơn giản là bạn đang chú ý đến nó nhiều hơn trước. Bạn có '
-            'nhận ra điều gì đã khác đi không?', 'Compared with the previous stretch, $name takes up more of your '
-            'look-backs. That could come from a change at work, or simply from '
-            'you paying it more attention than before. Can you spot what has '
-            'become different?')
-        : tr('${rising.displayName} đang xuất hiện dày hơn trong thời gian gần đây '
-            'so với giai đoạn trước đó. Khi một nhóm tăng dần như vậy, thường '
-            'có điều gì đó trong công việc đang chuyển động. Bạn thử nhớ lại '
-            'xem giai đoạn này có gì khác không nhé.', '${rising.displayName} has been showing up more densely lately than '
-            'in the stretch before. When a group climbs like that, something at '
-            'work is usually moving. Try to recall what has been different in '
-            'this period.');
+        ? tr(
+            'Các tình huống bạn nhìn lại gần đây khá ổn định so với giai đoạn '
+                'trước. Trong đó, "${top.label}" vẫn là điều xuất hiện nhiều nhất, '
+                '${top.count} lần. Sự ổn định này tự nó cũng là một thông tin.',
+            'The situations in your recent look-backs are fairly steady compared with '
+                'the previous stretch. "${top.label}" remains the most frequent, at '
+                '${top.count} times. That steadiness is information in itself.',
+          )
+        : tr(
+            'Chưa có tình huống cụ thể nào đổi đủ rõ để gọi là một xu hướng. '
+                'Điều đang hiện ra lúc này là "${top.label}", với ${top.count} lần '
+                'xuất hiện trong khoảng gần đây.',
+            'No individual situation has changed enough to call a trend yet. What is '
+                'visible right now is "${top.label}", appearing ${top.count} times in '
+                'this recent stretch.',
+          );
   }
 
-  if (falling != null) {
-    final name = falling.displayName.toLowerCase();
-    return v == 0
-        ? tr('${falling.displayName} từng chiếm phần lớn trong những lần bạn nhìn '
-            'lại, nhưng gần đây đã ít dần. Đây có thể là dấu hiệu tích cực, cho '
-            'thấy điều đó đã bớt chiếm tâm trí bạn. Bạn có thấy vậy không?', '${falling.displayName} used to take up most of your look-backs, but '
-            'lately it has thinned out. That can be a good sign, showing it '
-            'takes up less of your mind now. Does that match?')
-        : tr('Có một điều đã lùi lại phía sau. $name không còn quay lại thường '
-            'xuyên như giai đoạn trước. Những thay đổi kiểu này thường diễn ra '
-            'âm thầm và dễ bị bỏ qua, nên đây là một điều đáng để ghi nhận cho '
-            'chính mình.', 'Something has stepped back. $name no longer returns as often as it '
-            'did in the previous stretch. Changes like this happen quietly and '
-            'are easy to miss, so it is worth marking for yourself.');
-  }
-
-  return tr('Bức tranh của bạn khá ổn định so với giai đoạn trước, không nhóm nào '
-      'tăng hay giảm rõ rệt. Sự ổn định này tự nó cũng là một thông tin, nó cho '
-      'thấy điều kiện xung quanh bạn đang giữ nguyên nhịp.', 'Your picture is fairly steady compared with the previous stretch, with '
-      'no group clearly up or down. That steadiness is information in itself: '
-      'the conditions around you are holding their rhythm.');
+  return tr(
+    'Các lần nhìn lại gần đây khá ổn định so với giai đoạn trước. Khi chưa '
+        'có tình huống nào đủ dữ liệu để gọi tên, sự ổn định này vẫn là một thông '
+        'tin đáng ghi nhận.',
+    'Your recent look-backs are fairly steady compared with the previous '
+        'stretch. When no situation has enough data to name, that steadiness is '
+        'still useful information.',
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -1177,38 +1359,53 @@ String? deepSelfCheckTrendText(DeepFacts f) {
       final dom = f.dominant;
       final name = (dom ?? SelfCheckPillar.s).displayName.toLowerCase();
       return v == 0
-          ? tr('Ở lần Self-Check trước, bạn đánh giá $name khá ổn trong khi đây lại '
-              'là nhóm quay lại nhiều nhất trong các lần nhìn lại. Lần này, '
-              'đánh giá của bạn đã sát hơn với điều đang thực sự diễn ra. Việc '
-              'dừng lại nhìn lại đều đặn đang giúp bạn thấy rõ hơn chính mình.', 'At your previous Self-Check you rated $name as fairly okay while '
-              'it was the group returning most in your look-backs. This time '
-              'your rating sits closer to what is actually happening. Stopping '
-              'to look back regularly is helping you see yourself more '
-              'clearly.')
-          : tr('Có một thay đổi đáng ghi nhận. Khoảng cách giữa điều bạn tự đánh '
-              'giá và điều thực sự lặp lại đã thu hẹp so với lần trước. Nói '
-              'cách khác, bạn đang nhìn công việc của mình rõ hơn so với vài '
-              'tháng trước.', 'Here is a change worth marking. The distance between what you '
-              'rate yourself and what actually repeats has narrowed since last '
-              'time. Put another way, you are seeing your own work more clearly '
-              'than you were a few months ago.');
+          ? tr(
+              'Ở lần Self-Check trước, bạn đánh giá $name khá ổn trong khi đây lại '
+                  'là nhóm quay lại nhiều nhất trong các lần nhìn lại. Lần này, '
+                  'đánh giá của bạn đã sát hơn với điều đang thực sự diễn ra. Việc '
+                  'dừng lại nhìn lại đều đặn đang giúp bạn thấy rõ hơn chính mình.',
+              'At your previous Self-Check you rated $name as fairly okay while '
+                  'it was the group returning most in your look-backs. This time '
+                  'your rating sits closer to what is actually happening. Stopping '
+                  'to look back regularly is helping you see yourself more '
+                  'clearly.',
+            )
+          : tr(
+              'Có một thay đổi đáng ghi nhận. Khoảng cách giữa điều bạn tự đánh '
+                  'giá và điều thực sự lặp lại đã thu hẹp so với lần trước. Nói '
+                  'cách khác, bạn đang nhìn công việc của mình rõ hơn so với vài '
+                  'tháng trước.',
+              'Here is a change worth marking. The distance between what you '
+                  'rate yourself and what actually repeats has narrowed since last '
+                  'time. Put another way, you are seeing your own work more clearly '
+                  'than you were a few months ago.',
+            );
 
     case DeepGapStatus.unchanged:
       // Không có trụ nổi trội thì không gọi tên trụ nào — câu I1 vốn có chỗ
       // chèn tên nhóm, nhưng chèn một cái tên không có thật thì tệ hơn là bỏ.
       final dom = f.dominant;
       final tail = dom == null
-          ? tr('Bạn có muốn thử nhìn kỹ hơn vào những điều đang lặp lại trong thời '
-              'gian tới không?', 'Would you like to look more closely at what keeps repeating over '
-              'the coming while?')
-          : tr('Bạn có muốn thử nhìn kỹ hơn vào nhóm '
-              '${dom.displayName.toLowerCase()} trong thời gian tới không?', 'Would you like to look more closely at the '
-              '${dom.displayName.toLowerCase()} group over the coming while?');
-      return tr('Khoảng cách giữa cảm nhận của bạn và những gì đang lặp lại vẫn '
-          'tương tự lần trước. Điều này khá bình thường, những mẫu hình đã hình '
-          'thành lâu thường cần thời gian để nhận ra. $tail', 'The distance between what you sense and what repeats is much as it '
-          'was last time. That is quite normal; patterns formed over a long '
-          'while usually take time to recognise. $tail');
+          ? tr(
+              'Bạn có muốn thử nhìn kỹ hơn vào những điều đang lặp lại trong thời '
+                  'gian tới không?',
+              'Would you like to look more closely at what keeps repeating over '
+                  'the coming while?',
+            )
+          : tr(
+              'Bạn có muốn thử nhìn kỹ hơn vào nhóm '
+                  '${dom.displayName.toLowerCase()} trong thời gian tới không?',
+              'Would you like to look more closely at the '
+                  '${dom.displayName.toLowerCase()} group over the coming while?',
+            );
+      return tr(
+        'Khoảng cách giữa cảm nhận của bạn và những gì đang lặp lại vẫn '
+            'tương tự lần trước. Điều này khá bình thường, những mẫu hình đã hình '
+            'thành lâu thường cần thời gian để nhận ra. $tail',
+        'The distance between what you sense and what repeats is much as it '
+            'was last time. That is quite normal; patterns formed over a long '
+            'while usually take time to recognise. $tail',
+      );
 
     case DeepGapStatus.widening:
     case null:
@@ -1223,19 +1420,25 @@ String? deepSelfCheckTrendText(DeepFacts f) {
         final dir = f.pillarTrend[changed] == DeepTrend.rising
             ? tr('tăng lên', 'gone up')
             : tr('giảm xuống', 'gone down');
-        return tr('So với lần cập nhật Self-Check trước vào $date, đánh giá của '
-            'bạn về ${changed.displayName.toLowerCase()} đã $dir. Bạn có nhớ '
-            'điều gì trong công việc đã thay đổi trong khoảng thời gian này '
-            'không?', 'Since your previous Self-Check on $date, your rating of '
-            '${changed.displayName.toLowerCase()} has $dir. Do you remember '
-            'what changed at work over that period?');
+        return tr(
+          'So với lần cập nhật Self-Check trước vào $date, đánh giá của '
+              'bạn về ${changed.displayName.toLowerCase()} đã $dir. Bạn có nhớ '
+              'điều gì trong công việc đã thay đổi trong khoảng thời gian này '
+              'không?',
+          'Since your previous Self-Check on $date, your rating of '
+              '${changed.displayName.toLowerCase()} has $dir. Do you remember '
+              'what changed at work over that period?',
+        );
       }
       if (stable != null) {
-        return tr('${stable.displayName} gần như giữ nguyên so với lần bạn cập '
-            'nhật vào $date. Khi một phần giữ nguyên qua thời gian, đó thường '
-            'là điều kiện nền của công việc chứ không phải chuyện nhất thời.', '${stable.displayName} is much as it was when you last updated on '
-            '$date. When a part holds steady over time, it is usually a '
-            'baseline condition of the job rather than a passing thing.');
+        return tr(
+          '${stable.displayName} gần như giữ nguyên so với lần bạn cập '
+              'nhật vào $date. Khi một phần giữ nguyên qua thời gian, đó thường '
+              'là điều kiện nền của công việc chứ không phải chuyện nhất thời.',
+          '${stable.displayName} is much as it was when you last updated on '
+              '$date. When a part holds steady over time, it is usually a '
+              'baseline condition of the job rather than a passing thing.',
+        );
       }
       return null;
   }
@@ -1250,17 +1453,23 @@ String? deepSelfCheckTrendText(DeepFacts f) {
 // 'Cần thêm X lần nữa mới hiển thị được'."
 
 /// Câu thay cho tầng 2 khi chưa đủ hai cửa sổ.
-String get kDeepNoTrendYet => tr('Phần xu hướng sẽ mở ra khi bạn có thêm một khoảng thời gian nhìn lại nữa. '
-    'Khi đó bạn sẽ thấy được điều gì đang tăng lên và điều gì đang lùi lại '
-    'trong công việc của mình.', 'The trend part opens once you have another stretch of looking back behind '
-    'you. Then you will see what is rising and what is stepping back in your '
-    'work.');
+String get kDeepNoTrendYet => tr(
+  'Phần xu hướng sẽ mở ra khi bạn có thêm một khoảng thời gian nhìn lại nữa. '
+      'Khi đó bạn sẽ thấy được điều gì đang tăng lên và điều gì đang lùi lại '
+      'trong công việc của mình.',
+  'The trend part opens once you have another stretch of looking back behind '
+      'you. Then you will see what is rising and what is stepping back in your '
+      'work.',
+);
 
 /// Câu thay cho tầng 3 khi mới có một lần Self-Check.
-String get kDeepOneSelfCheckOnly => tr('Sau lần cập nhật Self-Check tiếp theo, bạn sẽ thấy được cảm nhận của mình '
-    'đã thay đổi ra sao so với hôm nay. Bạn có thể cập nhật bất cứ khi nào thấy '
-    'công việc có gì khác đi.', 'After your next Self-Check update, you will see how your sense of things '
-    'has shifted since today. Update it whenever work feels different.');
+String get kDeepOneSelfCheckOnly => tr(
+  'Sau lần cập nhật Self-Check tiếp theo, bạn sẽ thấy được cảm nhận của mình '
+      'đã thay đổi ra sao so với hôm nay. Bạn có thể cập nhật bất cứ khi nào thấy '
+      'công việc có gì khác đi.',
+  'After your next Self-Check update, you will see how your sense of things '
+      'has shifted since today. Update it whenever work feels different.',
+);
 
 /// Câu thay cho tầng 3 khi ĐÃ có hai lần Self-Check nhưng cách nhau chưa đủ
 /// [kDeepSelfCheckMinGapDays].
@@ -1272,29 +1481,37 @@ String get kDeepOneSelfCheckOnly => tr('Sau lần cập nhật Self-Check tiếp
 ///
 /// Vẫn theo §6: nói cái sắp mở ra và lý do, không nói "chưa đủ dữ liệu" cũng
 /// không đếm ngược "còn N ngày nữa".
-String get kDeepSelfChecksTooClose => tr('Cảm nhận về công việc thường đổi theo tháng chứ không theo tuần, nên phần '
-    'so sánh này chờ hai lần Self-Check cách nhau một quãng đủ dài. Khi bạn cập '
-    'nhật lại sau một thời gian nữa, bạn sẽ thấy được điều gì đã dịch chuyển so '
-    'với hôm nay.', 'How work feels tends to shift over months rather than weeks, so this '
-    'comparison waits for two Self-Checks a good stretch apart. When you update '
-    'again after a while, you will see what has moved since today.');
+String get kDeepSelfChecksTooClose => tr(
+  'Cảm nhận về công việc thường đổi theo tháng chứ không theo tuần, nên phần '
+      'so sánh này chờ hai lần Self-Check cách nhau một quãng đủ dài. Khi bạn cập '
+      'nhật lại sau một thời gian nữa, bạn sẽ thấy được điều gì đã dịch chuyển so '
+      'với hôm nay.',
+  'How work feels tends to shift over months rather than weeks, so this '
+      'comparison waits for two Self-Checks a good stretch apart. When you update '
+      'again after a while, you will see what has moved since today.',
+);
 
 /// Câu mời cập nhật khi lần Self-Check gần nhất đã quá 3 tháng.
-String deepStaleSelfCheckText(DateTime takenAt) =>
-    tr('Lần Self-Check gần nhất của bạn là vào ${selfCheckDateLabel(takenAt)}. '
-    'Công việc có thể đã khác đi từ đó, bạn thử cập nhật lại để bức tranh sát '
-    'với hiện tại hơn nhé.', 'Your last Self-Check was on ${selfCheckDateLabel(takenAt)}. Work may have '
-    'changed since, so it is worth updating to keep the picture close to now.');
+String deepStaleSelfCheckText(DateTime takenAt) => tr(
+  'Lần Self-Check gần nhất của bạn là vào ${selfCheckDateLabel(takenAt)}. '
+      'Công việc có thể đã khác đi từ đó, bạn thử cập nhật lại để bức tranh sát '
+      'với hiện tại hơn nhé.',
+  'Your last Self-Check was on ${selfCheckDateLabel(takenAt)}. Work may have '
+      'changed since, so it is worth updating to keep the picture close to now.',
+);
 
 /// Câu mời khi chưa đủ số lần nhìn lại để mở tầng 1.
 ///
 /// Cố ý KHÔNG nói "cần thêm N lần nữa mới hiển thị được" — đó đúng là dạng câu
 /// §6 cấm. Nói cái sẽ mở ra, không nói cái đang thiếu.
-String get kDeepNotEnoughReflection => tr('Bức tranh này rõ dần theo số lần bạn dừng lại nhìn lại. Cứ ghi lại những '
-    'lúc đáng nhớ trong công việc, rồi quay lại đây để đọc điều đang lặp lại '
-    'phía sau chúng.', 'This picture sharpens with every time you stop to look back. Keep '
-    'recording the moments at work that stay with you, then come back here to '
-    'read what repeats behind them.');
+String get kDeepNotEnoughReflection => tr(
+  'Bức tranh này rõ dần theo số lần bạn dừng lại nhìn lại. Cứ ghi lại những '
+      'lúc đáng nhớ trong công việc, rồi quay lại đây để đọc điều đang lặp lại '
+      'phía sau chúng.',
+  'This picture sharpens with every time you stop to look back. Keep '
+      'recording the moments at work that stay with you, then come back here to '
+      'read what repeats behind them.',
+);
 
 // ---------------------------------------------------------------------------
 // Gói cả màn
@@ -1346,15 +1563,14 @@ class DeepInterpretation {
   ///
   /// Câu nhắc Self-Check đã cũ cũng KHÔNG vào đây, cùng một lý do.
   List<String> get polishableTexts => [
-        if (rung != null && !deepTextIsGuidance(leadText)) leadText,
-        if (!deepTextIsGuidance(trendText)) trendText,
-        if (selfCheckTrendText case final String t)
-          if (!deepTextIsGuidance(t)) t,
-      ];
+    if (rung != null && !deepTextIsGuidance(leadText)) leadText,
+    if (!deepTextIsGuidance(trendText)) trendText,
+    if (selfCheckTrendText case final String t)
+      if (!deepTextIsGuidance(t)) t,
+  ];
 
   /// Câu xu hướng thật, hoặc null khi tầng 2 chưa mở.
-  String? get realTrendText =>
-      deepTextIsGuidance(trendText) ? null : trendText;
+  String? get realTrendText => deepTextIsGuidance(trendText) ? null : trendText;
 
   /// Câu xu hướng Self-Check thật, hoặc null khi tầng 3 chưa mở.
   String? get realSelfCheckTrendText {
@@ -1383,19 +1599,28 @@ class DeepInterpretation {
         selfCheckTrendText != null && realSelfCheckTrendText == null;
 
     if (waitingTrend && waitingSelfCheck) {
-      return tr('Phần so sánh theo thời gian sẽ mở ra khi bạn có thêm một khoảng '
-          'nhìn lại nữa và một lần Self-Check cách lần này đủ xa.', 'The over-time comparison opens once you have another stretch of '
-          'looking back and a Self-Check far enough from this one.');
+      return tr(
+        'Phần so sánh theo thời gian sẽ mở ra khi bạn có thêm một khoảng '
+            'nhìn lại nữa và một lần Self-Check cách lần này đủ xa.',
+        'The over-time comparison opens once you have another stretch of '
+            'looking back and a Self-Check far enough from this one.',
+      );
     }
     if (waitingTrend) {
-      return tr('Phần so sánh với giai đoạn trước sẽ mở ra khi bạn có thêm một '
-          'khoảng nhìn lại nữa.', 'The comparison with the previous stretch opens once you have '
-          'another stretch of looking back.');
+      return tr(
+        'Phần so sánh với giai đoạn trước sẽ mở ra khi bạn có thêm một '
+            'khoảng nhìn lại nữa.',
+        'The comparison with the previous stretch opens once you have '
+            'another stretch of looking back.',
+      );
     }
     if (waitingSelfCheck) {
-      return tr('Phần so với lần Self-Check trước sẽ mở ra khi hai lần cách nhau '
-          'đủ xa.', 'The comparison with your previous Self-Check opens once the two are '
-          'far enough apart.');
+      return tr(
+        'Phần so với lần Self-Check trước sẽ mở ra khi hai lần cách nhau '
+            'đủ xa.',
+        'The comparison with your previous Self-Check opens once the two are '
+            'far enough apart.',
+      );
     }
     return null;
   }
@@ -1436,9 +1661,9 @@ DeepInterpretation buildDeepInterpretation({
     selfCheckTrendText: !f.hasScoredSelfCheck
         ? null
         : (deepSelfCheckTrendText(f) ??
-            (f.previousSelfCheckDate == null
-                ? kDeepOneSelfCheckOnly
-                : kDeepSelfChecksTooClose)),
+              (f.previousSelfCheckDate == null
+                  ? kDeepOneSelfCheckOnly
+                  : kDeepSelfChecksTooClose)),
     staleSelfCheckText: takenAt != null && selfCheckIsStale(takenAt, now)
         ? deepStaleSelfCheckText(takenAt)
         : null,

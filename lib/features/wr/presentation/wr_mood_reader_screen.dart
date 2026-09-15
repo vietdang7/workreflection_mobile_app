@@ -125,7 +125,11 @@ class _ReaderBody extends StatelessWidget {
                     color: WrColors.teal,
                   ),
                   const SizedBox(width: 7),
-                  Flexible(child: WrEyebrow('${item.kindLabel} · ${item.durationLabel}')),
+                  Flexible(
+                    child: WrEyebrow(
+                      '${item.kindLabel} · ${item.durationLabel}',
+                    ),
+                  ),
                   if (item.placeholder) ...[
                     const SizedBox(width: 8),
                     const WrDraftBadge(),
@@ -254,10 +258,9 @@ class _AudioPlayerBlockState extends ConsumerState<_AudioPlayerBlock> {
     try {
       // Chưa có bản thu thì dựng trước. Chỉ dựng MỘT lần cho mỗi lần mở màn —
       // `_url` giữ lại kết quả, bấm dừng rồi phát lại không gọi TTS nữa.
-      final url = _url ??= await ref.read(ttsServiceProvider).synthesize(
-            text: widget.item.body,
-            name: widget.item.title,
-          );
+      final url = _url ??= await ref
+          .read(ttsServiceProvider)
+          .synthesize(text: widget.item.body, name: widget.item.title);
 
       final player = _player ??= AudioPlayer();
       if (player.playing) {
@@ -269,7 +272,14 @@ class _AudioPlayerBlockState extends ConsumerState<_AudioPlayerBlock> {
     } on TtsException catch (e) {
       if (mounted) setState(() => _error = e.message);
     } catch (_) {
-      if (mounted) setState(() => _error = tr('Không phát được bản thu này.', 'Could not play this recording.'));
+      if (mounted) {
+        setState(
+          () => _error = tr(
+            'Không phát được bản thu này.',
+            'Could not play this recording.',
+          ),
+        );
+      }
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -309,9 +319,7 @@ class _AudioPlayerBlockState extends ConsumerState<_AudioPlayerBlock> {
                       ),
                     )
                   : Icon(
-                      playing
-                          ? Icons.pause_rounded
-                          : Icons.play_arrow_rounded,
+                      playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
                       size: 32,
                       color: WrColors.cream,
                     ),
@@ -321,10 +329,13 @@ class _AudioPlayerBlockState extends ConsumerState<_AudioPlayerBlock> {
           Text(
             _error ??
                 (_busy
-                    ? tr('Đang dựng bản thu bằng giọng đọc AI…', 'Building the recording with the AI voice…')
+                    ? tr(
+                        'Đang dựng bản thu bằng giọng đọc AI…',
+                        'Building the recording with the AI voice…',
+                      )
                     : _url != null
-                        ? widget.item.durationLabel
-                        : tr('Nghe bằng giọng đọc AI', 'Listen with the AI voice')),
+                    ? widget.item.durationLabel
+                    : tr('Nghe bằng giọng đọc AI', 'Listen with the AI voice')),
             key: const Key('wr_mood_audio_status'),
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -355,7 +366,10 @@ class _DraftNotice extends StatelessWidget {
         border: Border.all(color: WrColors.line),
       ),
       child: Text(
-        tr('Nội dung nháp, chưa thu âm hoặc biên tập chính thức.', 'Draft content, not yet recorded or properly edited.'),
+        tr(
+          'Nội dung nháp, chưa thu âm hoặc biên tập chính thức.',
+          'Draft content, not yet recorded or properly edited.',
+        ),
         style: TextStyle(fontSize: 14, color: WrColors.navy, height: 1.6),
       ),
     );

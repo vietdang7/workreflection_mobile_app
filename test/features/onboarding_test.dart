@@ -125,7 +125,10 @@ void main() {
       await advance(tester);
 
       expect(find.text('Mệt mỏi nhưng không rõ lý do.'), findsOneWidget);
-      expect(find.text('Nỗ lực nhiều nhưng chưa thấy bước tiến.'), findsOneWidget);
+      expect(
+        find.text('Nỗ lực nhiều nhưng chưa thấy bước tiến.'),
+        findsOneWidget,
+      );
       expect(
         find.text('Khao khát thay đổi nhưng chưa biết bắt đầu từ đâu.'),
         findsOneWidget,
@@ -136,7 +139,9 @@ void main() {
       );
     });
 
-    testWidgets('selecting situation on step 2 toggles selection', (tester) async {
+    testWidgets('selecting situation on step 2 toggles selection', (
+      tester,
+    ) async {
       await tester.pumpWidget(_wrap(const OnboardingScreen()));
       await tester.pump();
 

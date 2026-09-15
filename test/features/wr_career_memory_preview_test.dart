@@ -30,36 +30,36 @@ import '../support/fake_wr_intelligence_repository.dart';
 
 /// [n] mảnh ký ức, mỗi mảnh một ngày khác nhau để tiêu đề dễ phân biệt.
 List<CareerMemoryEvent> _events(int n) => [
-      for (var i = 1; i <= n; i++)
-        CareerMemoryEvent(
-          id: 'e$i',
-          userId: 'u1',
-          behavior: 'insight',
-          reflectionText: 'Mảnh ký ức số $i',
-          createdAt: DateTime(2026, 7, 1).add(Duration(days: i)),
-        ),
-    ];
+  for (var i = 1; i <= n; i++)
+    CareerMemoryEvent(
+      id: 'e$i',
+      userId: 'u1',
+      behavior: 'insight',
+      reflectionText: 'Mảnh ký ức số $i',
+      createdAt: DateTime(2026, 7, 1).add(Duration(days: i)),
+    ),
+];
 
 /// Trộn nhiều loại để có gì mà lọc: `insight` → NHẬN RA, `decision` → QUYẾT
 /// ĐỊNH. Số lượng lệch nhau để kiểm luôn thứ tự chip (nhiều trước).
 List<CareerMemoryEvent> _mixedEvents() => [
-      for (var i = 1; i <= 5; i++)
-        CareerMemoryEvent(
-          id: 'i$i',
-          userId: 'u1',
-          behavior: 'insight',
-          reflectionText: 'Nhận ra $i',
-          createdAt: DateTime(2026, 7, 1).add(Duration(days: i)),
-        ),
-      for (var i = 1; i <= 2; i++)
-        CareerMemoryEvent(
-          id: 'd$i',
-          userId: 'u1',
-          behavior: 'decision',
-          reflectionText: 'Quyết định $i',
-          createdAt: DateTime(2026, 7, 10).add(Duration(days: i)),
-        ),
-    ];
+  for (var i = 1; i <= 5; i++)
+    CareerMemoryEvent(
+      id: 'i$i',
+      userId: 'u1',
+      behavior: 'insight',
+      reflectionText: 'Nhận ra $i',
+      createdAt: DateTime(2026, 7, 1).add(Duration(days: i)),
+    ),
+  for (var i = 1; i <= 2; i++)
+    CareerMemoryEvent(
+      id: 'd$i',
+      userId: 'u1',
+      behavior: 'decision',
+      reflectionText: 'Quyết định $i',
+      createdAt: DateTime(2026, 7, 10).add(Duration(days: i)),
+    ),
+];
 
 Widget _wrap({
   required Widget home,
@@ -119,7 +119,9 @@ Widget _wrap({
       currentUserIdProvider.overrideWithValue('u1'),
     ],
     child: MaterialApp.router(
-      builder: wrTextScaleBuilder,routerConfig: router),
+      builder: wrTextScaleBuilder,
+      routerConfig: router,
+    ),
   );
 }
 
@@ -167,20 +169,23 @@ void main() {
   // chúng khác nhau, nên người dùng chỉ còn cách kết luận là app đếm sai.
   // ---------------------------------------------------------------------------
   group('Mảnh ký ức tự giải thích con số của mình', () {
-    List<ReflectionEpisode> episodesFor({required int total, required int closed}) => [
-          for (var i = 1; i <= total; i++)
-            ReflectionEpisode(
-              id: 'ep$i',
-              userId: 'u1',
-              humanMoment: HumanMoment.confusion,
-              state: i <= closed
-                  ? ExperienceState.integrated
-                  : ExperienceState.exploring,
-              situationCode: 'C1-sit-01',
-              openedAt: DateTime(2026, 8, 1).add(Duration(hours: i)),
-              closedAt: DateTime(2026, 8, 1).add(Duration(hours: i)),
-            ),
-        ];
+    List<ReflectionEpisode> episodesFor({
+      required int total,
+      required int closed,
+    }) => [
+      for (var i = 1; i <= total; i++)
+        ReflectionEpisode(
+          id: 'ep$i',
+          userId: 'u1',
+          humanMoment: HumanMoment.confusion,
+          state: i <= closed
+              ? ExperienceState.integrated
+              : ExperienceState.exploring,
+          situationCode: 'C1-sit-01',
+          openedAt: DateTime(2026, 8, 1).add(Duration(hours: i)),
+          closedAt: DateTime(2026, 8, 1).add(Duration(hours: i)),
+        ),
+    ];
 
     testWidgets('tách con số thành các phần hợp thành nó', (tester) async {
       await _pumpTall(
@@ -216,7 +221,10 @@ void main() {
         ),
       );
 
-      expect(find.textContaining('Gồm 6 lần nhìn lại đã khép.'), findsOneWidget);
+      expect(
+        find.textContaining('Gồm 6 lần nhìn lại đã khép.'),
+        findsOneWidget,
+      );
       expect(find.textContaining('dấu mốc thực hành'), findsNothing);
     });
 
@@ -234,8 +242,9 @@ void main() {
   });
 
   group('Tab Hành trình — Career Memory rút gọn', () {
-    testWidgets('nhiều hơn ngưỡng thì chỉ hiện $kJourneyPreviewCount mảnh',
-        (tester) async {
+    testWidgets('nhiều hơn ngưỡng thì chỉ hiện $kJourneyPreviewCount mảnh', (
+      tester,
+    ) async {
       await _pumpTall(
         tester,
         _wrap(home: const WrJourneyScreen(), events: _events(38)),
@@ -250,7 +259,10 @@ void main() {
         _wrap(home: const WrJourneyScreen(), events: _events(38)),
       );
 
-      expect(find.byKey(const Key('wr_journey_memory_see_all')), findsOneWidget);
+      expect(
+        find.byKey(const Key('wr_journey_memory_see_all')),
+        findsOneWidget,
+      );
       expect(find.text('Xem toàn bộ Career Memory'), findsOneWidget);
       // 38 − 4 = 34. Thẻ xem trước lấy BỐN mục gần nhất, đúng mockup v16 §8.1
       // ("thẻ xem trước lấy 4 mục gần nhất"); bản trước lấy 5.
@@ -269,13 +281,20 @@ void main() {
         ),
       );
 
-      expect(_visibleEntries(tester, kJourneyPreviewCount), kJourneyPreviewCount);
-      expect(find.byKey(const Key('wr_journey_memory_see_all')), findsOneWidget);
+      expect(
+        _visibleEntries(tester, kJourneyPreviewCount),
+        kJourneyPreviewCount,
+      );
+      expect(
+        find.byKey(const Key('wr_journey_memory_see_all')),
+        findsOneWidget,
+      );
       expect(find.text('Lọc theo loại, mở rộng từng ghi nhận'), findsOneWidget);
     });
 
-    testWidgets('bản miễn phí thấy dòng thời gian, vẫn có khối mời mở khoá',
-        (tester) async {
+    testWidgets('bản miễn phí thấy dòng thời gian, vẫn có khối mời mở khoá', (
+      tester,
+    ) async {
       // Mockup v16 khoá theo TUẦN: `!g.current && !state.isPremium`. Quyết định
       // 2026-07-29 ("khoá hoàn toàn với Free") bị bản 24/08 thay thế — dựng một
       // khung trống rồi mời trả tiền thì không ai biết mình đang mua gì.
@@ -341,8 +360,9 @@ void main() {
       expect(find.text('Thứ Bảy, 11/07'), findsOneWidget);
     });
 
-    testWidgets('ngày không bị in lại trên từng dòng dưới tiêu đề ngày',
-        (tester) async {
+    testWidgets('ngày không bị in lại trên từng dòng dưới tiêu đề ngày', (
+      tester,
+    ) async {
       await _pumpTall(
         tester,
         _wrap(home: const WrCareerMemoryScreen(), events: _events(1)),
@@ -354,15 +374,18 @@ void main() {
     });
 
     // Bộ lọc theo loại — yêu cầu khách 2026-08-01.
-    testWidgets('hàng chip dựng từ loại thật có trong dữ liệu, nhiều trước',
-        (tester) async {
+    testWidgets('hàng chip dựng từ loại thật có trong dữ liệu, nhiều trước', (
+      tester,
+    ) async {
       await _pumpTall(
         tester,
         _wrap(home: const WrCareerMemoryScreen(), events: _mixedEvents()),
       );
 
-      expect(find.byKey(const Key('wr_career_memory_filter_bar')),
-          findsOneWidget);
+      expect(
+        find.byKey(const Key('wr_career_memory_filter_bar')),
+        findsOneWidget,
+      );
       expect(find.text('Tất cả 7'), findsOneWidget);
       expect(find.text('NHẬN RA 5'), findsOneWidget);
       expect(find.text('QUYẾT ĐỊNH 2'), findsOneWidget);
@@ -376,8 +399,9 @@ void main() {
         _wrap(home: const WrCareerMemoryScreen(), events: _mixedEvents()),
       );
 
-      await tester
-          .tap(find.byKey(const Key('wr_career_memory_filter_QUYẾT ĐỊNH')));
+      await tester.tap(
+        find.byKey(const Key('wr_career_memory_filter_QUYẾT ĐỊNH')),
+      );
       await tester.pumpAndSettle();
       await _expandAll(tester);
 
@@ -387,15 +411,17 @@ void main() {
       expect(find.text('2 ghi nhận · quyết định'), findsOneWidget);
     });
 
-    testWidgets('mọi chip vẫn còn sau khi lọc — luôn có đường quay lại',
-        (tester) async {
+    testWidgets('mọi chip vẫn còn sau khi lọc — luôn có đường quay lại', (
+      tester,
+    ) async {
       await _pumpTall(
         tester,
         _wrap(home: const WrCareerMemoryScreen(), events: _mixedEvents()),
       );
 
-      await tester
-          .tap(find.byKey(const Key('wr_career_memory_filter_QUYẾT ĐỊNH')));
+      await tester.tap(
+        find.byKey(const Key('wr_career_memory_filter_QUYẾT ĐỊNH')),
+      );
       await tester.pumpAndSettle();
 
       expect(find.text('NHẬN RA 5'), findsOneWidget);
@@ -427,11 +453,15 @@ void main() {
         _wrap(home: const WrCareerMemoryScreen(), events: _events(6)),
       );
 
-      expect(find.byKey(const Key('wr_career_memory_filter_bar')), findsNothing);
+      expect(
+        find.byKey(const Key('wr_career_memory_filter_bar')),
+        findsNothing,
+      );
     });
 
-    testWidgets('bản miễn phí: tuần cũ khoá nội dung, khối mời vẫn ở đó',
-        (tester) async {
+    testWidgets('bản miễn phí: tuần cũ khoá nội dung, khối mời vẫn ở đó', (
+      tester,
+    ) async {
       // `_events(38)` trải ngược về quá khứ từ hôm nay, nên phần lớn nằm ngoài
       // tuần hiện tại. Mockup v16 khoá NỘI DUNG những tuần đó, không xoá chúng
       // khỏi màn: người dùng vẫn thấy mình đã để lại bao nhiêu.
@@ -453,8 +483,9 @@ void main() {
       );
     });
 
-    testWidgets('chưa có mảnh nào thì nói rõ, không để trang trắng',
-        (tester) async {
+    testWidgets('chưa có mảnh nào thì nói rõ, không để trang trắng', (
+      tester,
+    ) async {
       await _pumpTall(
         tester,
         _wrap(home: const WrCareerMemoryScreen(), events: const []),

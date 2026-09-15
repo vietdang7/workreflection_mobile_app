@@ -76,46 +76,49 @@ void main() {
     test('bản debug cũng ẩn mục audio chưa có bản thu', () {
       // Khác với nội dung nháp: mục nháp còn chữ để đọc thử, còn mục audio
       // không có bản thu thì mở ra chỉ có một khối trình phát rỗng.
-      final result = MoodContent.releasable(
-        [reading, silentAudio],
-        isRelease: false,
-      );
+      final result = MoodContent.releasable([
+        reading,
+        silentAudio,
+      ], isRelease: false);
 
       expect(result.map((c) => c.id), ['reading']);
     });
 
     test('bản release cũng vậy', () {
-      final result = MoodContent.releasable(
-        [reading, silentAudio],
-        isRelease: true,
-      );
+      final result = MoodContent.releasable([
+        reading,
+        silentAudio,
+      ], isRelease: true);
 
       expect(result.map((c) => c.id), ['reading']);
     });
 
     test('có bản thu rồi thì mục audio hiện lại, không cần sửa code', () {
-      final result = MoodContent.releasable(
-        [reading, silentAudio, recordedAudio],
-        isRelease: true,
-      );
+      final result = MoodContent.releasable([
+        reading,
+        silentAudio,
+        recordedAudio,
+      ], isRelease: true);
 
       expect(result.map((c) => c.id), ['reading', 'recorded']);
     });
 
-    test('audio_url rỗng hoặc toàn khoảng trắng vẫn tính là chưa có bản thu',
-        () {
-      final blank = fakeMoodContent(
-        id: 'blank',
-        mood: Mood.okay,
-        sortOrder: 8,
-        type: MoodContentType.audio,
-        placeholder: false,
-        audioUrl: '   ',
-      );
+    test(
+      'audio_url rỗng hoặc toàn khoảng trắng vẫn tính là chưa có bản thu',
+      () {
+        final blank = fakeMoodContent(
+          id: 'blank',
+          mood: Mood.okay,
+          sortOrder: 8,
+          type: MoodContentType.audio,
+          placeholder: false,
+          audioUrl: '   ',
+        );
 
-      expect(blank.isUsable, isFalse);
-      expect(MoodContent.releasable([blank], isRelease: false), isEmpty);
-    });
+        expect(blank.isUsable, isFalse);
+        expect(MoodContent.releasable([blank], isRelease: false), isEmpty);
+      },
+    );
 
     test('bài đọc không bị ràng buộc bản thu', () {
       expect(reading.isUsable, isTrue);
@@ -167,12 +170,14 @@ void main() {
       expect(untranslated.body, 'Nội dung.');
     });
 
-    test('số đoạn không đổi theo ngôn ngữ — bố cục màn đọc phải giống nhau',
-        () {
-      final vi = item.paragraphs.length;
-      wrSetLocale('en');
-      expect(item.paragraphs.length, vi);
-    });
+    test(
+      'số đoạn không đổi theo ngôn ngữ — bố cục màn đọc phải giống nhau',
+      () {
+        final vi = item.paragraphs.length;
+        wrSetLocale('en');
+        expect(item.paragraphs.length, vi);
+      },
+    );
 
     test('nhãn loại và thời lượng dịch ở tầng app, không cần cột trong DB', () {
       // Cả bảng chỉ có một giá trị `kind` và ba giá trị `duration`. Thêm cột

@@ -49,12 +49,15 @@ Widget _wrap({
   return ProviderScope(
     overrides: [
       wrIntelligenceRepositoryProvider.overrideWithValue(intel),
-      wrContentRepositoryProvider
-          .overrideWithValue(content ?? FakeWrContentRepository()),
+      wrContentRepositoryProvider.overrideWithValue(
+        content ?? FakeWrContentRepository(),
+      ),
       currentUserIdProvider.overrideWithValue('u1'),
     ],
     child: MaterialApp.router(
-      builder: wrTextScaleBuilder,routerConfig: router),
+      builder: wrTextScaleBuilder,
+      routerConfig: router,
+    ),
   );
 }
 
@@ -92,7 +95,11 @@ Future<bool> _seenWhileScrolling(WidgetTester tester, Finder finder) async {
   return finder.evaluate().isNotEmpty;
 }
 
-Future<void> _expectVisible(WidgetTester tester, Finder f, {String? why}) async {
+Future<void> _expectVisible(
+  WidgetTester tester,
+  Finder f, {
+  String? why,
+}) async {
   expect(await _seenWhileScrolling(tester, f), isTrue, reason: why);
 }
 
@@ -103,8 +110,11 @@ Future<void> _expectAbsent(WidgetTester tester, Finder f, {String? why}) async {
 /// Mở một mục thu gọn ở trang kết quả bằng cách chạm vào dòng chữ in hoa.
 Future<void> _openSection(WidgetTester tester, String title) async {
   final header = find.byKey(Key('self_check_section_$title'));
-  expect(await _seenWhileScrolling(tester, header), isTrue,
-      reason: 'không thấy mục "$title"');
+  expect(
+    await _seenWhileScrolling(tester, header),
+    isTrue,
+    reason: 'không thấy mục "$title"',
+  );
   await tester.ensureVisible(header);
   await tester.pumpAndSettle();
   await tester.tap(header);
@@ -112,14 +122,15 @@ Future<void> _openSection(WidgetTester tester, String title) async {
 }
 
 WrEntitlementRecord _premium() => WrEntitlementRecord(
-      userId: 'u1',
-      plan: WrPlan.premium,
-      validUntil: DateTime.now().add(const Duration(days: 30)),
-    );
+  userId: 'u1',
+  plan: WrPlan.premium,
+  validUntil: DateTime.now().add(const Duration(days: 30)),
+);
 
 void main() {
-  testWidgets('Free: thấy 3 trụ + đọc nhanh, khối diễn giải sâu bị khoá',
-      (tester) async {
+  testWidgets('Free: thấy 3 trụ + đọc nhanh, khối diễn giải sâu bị khoá', (
+    tester,
+  ) async {
     final intel = FakeWrIntelligenceRepository()..seedEntitlement(null);
     await tester.pumpWidget(_wrap(intel: intel));
     await tester.pumpAndSettle();
@@ -174,8 +185,9 @@ void main() {
     await _expectVisible(tester, find.textContaining('lần tự soi đầu tiên'));
   });
 
-  testWidgets('Paid: có lịch sử thì hiện so sánh với lần trước',
-      (tester) async {
+  testWidgets('Paid: có lịch sử thì hiện so sánh với lần trước', (
+    tester,
+  ) async {
     final now = DateTime.now();
     final intel = FakeWrIntelligenceRepository()
       ..seedEntitlement(_premium())
@@ -208,8 +220,9 @@ void main() {
     await _expectVisible(tester, find.textContaining('cải thiện'));
   });
 
-  testWidgets('Paid: khi ba mặt lệch nhau thì hiện khối mất cân bằng',
-      (tester) async {
+  testWidgets('Paid: khi ba mặt lệch nhau thì hiện khối mất cân bằng', (
+    tester,
+  ) async {
     final intel = FakeWrIntelligenceRepository()..seedEntitlement(_premium());
     await tester.pumpWidget(_wrap(intel: intel));
     await tester.pumpAndSettle();
@@ -220,8 +233,9 @@ void main() {
     await _expectVisible(tester, find.text('MẤT CÂN BẰNG GIỮA CÁC MẶT'));
   });
 
-  testWidgets('Paid: mục mất cân bằng thu gọn sẵn, chạm mới mở ra',
-      (tester) async {
+  testWidgets('Paid: mục mất cân bằng thu gọn sẵn, chạm mới mở ra', (
+    tester,
+  ) async {
     final intel = FakeWrIntelligenceRepository()..seedEntitlement(_premium());
     await tester.pumpWidget(_wrap(intel: intel));
     await tester.pumpAndSettle();
@@ -230,18 +244,28 @@ void main() {
 
     // Chỉ dòng chữ in hoa hiện ra, đoạn diễn giải nằm im.
     await _expectVisible(tester, find.text('MẤT CÂN BẰNG GIỮA CÁC MẶT'));
-    await _expectAbsent(tester, find.textContaining('Cả ba mặt đều đang ở mức thấp'));
+    await _expectAbsent(
+      tester,
+      find.textContaining('Cả ba mặt đều đang ở mức thấp'),
+    );
 
     await _openSection(tester, 'MẤT CÂN BẰNG GIỮA CÁC MẶT');
-    await _expectVisible(tester, find.textContaining('Cả ba mặt đều đang ở mức thấp'));
+    await _expectVisible(
+      tester,
+      find.textContaining('Cả ba mặt đều đang ở mức thấp'),
+    );
 
     // Chạm lần nữa thì thu lại.
     await _openSection(tester, 'MẤT CÂN BẰNG GIỮA CÁC MẶT');
-    await _expectAbsent(tester, find.textContaining('Cả ba mặt đều đang ở mức thấp'));
+    await _expectAbsent(
+      tester,
+      find.textContaining('Cả ba mặt đều đang ở mức thấp'),
+    );
   });
 
-  testWidgets('Paid: đối chiếu với pattern lặp lại của cùng một mặt',
-      (tester) async {
+  testWidgets('Paid: đối chiếu với pattern lặp lại của cùng một mặt', (
+    tester,
+  ) async {
     final content = FakeWrContentRepository()
       ..seedSituations([
         const WrSituation(
@@ -284,8 +308,9 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('chưa trả lời câu nào thì đóng thẳng, không cản đường',
-        (tester) async {
+    testWidgets('chưa trả lời câu nào thì đóng thẳng, không cản đường', (
+      tester,
+    ) async {
       final intel = FakeWrIntelligenceRepository()..seedEntitlement(null);
       await tester.pumpWidget(_wrap(intel: intel));
       await tester.pumpAndSettle();

@@ -89,8 +89,9 @@ class RepeatedSituation {
 List<String> recentSituationIds(
   List<ReflectionEpisode> episodes, {
   int window = kRecentSituationsWindow,
-}) =>
-    [for (final e in recentEpisodes(episodes, window: window)) e.situationCode!];
+}) => [
+  for (final e in recentEpisodes(episodes, window: window)) e.situationCode!,
+];
 
 /// Chính những Episode đứng sau [recentSituationIds] — cùng phép lọc, cùng thứ
 /// tự, cùng cửa sổ.
@@ -103,17 +104,16 @@ List<ReflectionEpisode> recentEpisodes(
   List<ReflectionEpisode> episodes, {
   int window = kRecentSituationsWindow,
 }) {
-  final coded = episodes
-      .where((e) => e.situationCode?.isNotEmpty ?? false)
-      .toList()
-    ..sort((a, b) {
-      final av = a.openedAt ?? a.updatedAt ?? a.closedAt;
-      final bv = b.openedAt ?? b.updatedAt ?? b.closedAt;
-      if (av == null && bv == null) return 0;
-      if (av == null) return 1;
-      if (bv == null) return -1;
-      return bv.compareTo(av);
-    });
+  final coded =
+      episodes.where((e) => e.situationCode?.isNotEmpty ?? false).toList()
+        ..sort((a, b) {
+          final av = a.openedAt ?? a.updatedAt ?? a.closedAt;
+          final bv = b.openedAt ?? b.updatedAt ?? b.closedAt;
+          if (av == null && bv == null) return 0;
+          if (av == null) return 1;
+          if (bv == null) return -1;
+          return bv.compareTo(av);
+        });
 
   return coded.take(window).toList();
 }
@@ -145,9 +145,9 @@ List<RepeatedSituation> rankSituations(
       if (entry.value >= minCount)
         RepeatedSituation(situationCode: entry.key, count: entry.value),
   ]..sort((a, b) {
-      final byCount = b.count.compareTo(a.count);
-      return byCount != 0 ? byCount : a.situationCode.compareTo(b.situationCode);
-    });
+    final byCount = b.count.compareTo(a.count);
+    return byCount != 0 ? byCount : a.situationCode.compareTo(b.situationCode);
+  });
 }
 
 /// Số lần một tình huống xuất hiện trong recentSituationIds.
@@ -162,27 +162,24 @@ List<ReflectionEpisode> episodesForSituation(
   List<ReflectionEpisode> episodes,
   String code, {
   int window = kRecentSituationsWindow,
-}) =>
-    [
-      for (final e in recentEpisodes(episodes, window: window))
-        if (e.situationCode == code) e,
-    ];
+}) => [
+  for (final e in recentEpisodes(episodes, window: window))
+    if (e.situationCode == code) e,
+];
 
 /// Số lần một tình huống xuất hiện trong recentSituationIds.
 int countSituation(
   List<ReflectionEpisode> episodes,
   String code, {
   int window = kRecentSituationsWindow,
-}) =>
-    episodesForSituation(episodes, code, window: window).length;
+}) => episodesForSituation(episodes, code, window: window).length;
 
 /// Tiện ích gộp: xếp hạng thẳng từ danh sách Episode.
 List<RepeatedSituation> repeatedSituations(
   List<ReflectionEpisode> episodes, {
   int window = kRecentSituationsWindow,
   int minCount = 1,
-}) =>
-    rankSituations(
-      recentSituationIds(episodes, window: window),
-      minCount: minCount,
-    );
+}) => rankSituations(
+  recentSituationIds(episodes, window: window),
+  minCount: minCount,
+);

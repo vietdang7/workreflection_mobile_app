@@ -18,9 +18,7 @@ import '../support/fake_coaching_repository.dart';
 
 Widget _wrap(FakeCoachingRepository repo) {
   return ProviderScope(
-    overrides: [
-      coachingRepositoryProvider.overrideWithValue(repo),
-    ],
+    overrides: [coachingRepositoryProvider.overrideWithValue(repo)],
     child: const MaterialApp(
       builder: wrTextScaleBuilder,
       localizationsDelegates: [
@@ -43,16 +41,15 @@ CoachingBooking _booking({
   int? totalSessions = 3,
   DateTime? scheduledAt,
   String? meetingLink,
-}) =>
-    CoachingBooking(
-      id: id,
-      packageId: packageId,
-      status: status,
-      sessionNumber: sessionNumber,
-      totalSessions: totalSessions,
-      scheduledAt: scheduledAt,
-      meetingLink: meetingLink,
-    );
+}) => CoachingBooking(
+  id: id,
+  packageId: packageId,
+  status: status,
+  sessionNumber: sessionNumber,
+  totalSessions: totalSessions,
+  scheduledAt: scheduledAt,
+  meetingLink: meetingLink,
+);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -68,9 +65,24 @@ void main() {
 
     testWidgets('groups bookings by status', (tester) async {
       repo.seedBookings([
-        _booking(id: 'b1', status: 'scheduled', sessionNumber: 1, totalSessions: 2),
-        _booking(id: 'b2', status: 'pending', sessionNumber: 2, totalSessions: 2),
-        _booking(id: 'b3', status: 'completed', sessionNumber: 1, totalSessions: 1),
+        _booking(
+          id: 'b1',
+          status: 'scheduled',
+          sessionNumber: 1,
+          totalSessions: 2,
+        ),
+        _booking(
+          id: 'b2',
+          status: 'pending',
+          sessionNumber: 2,
+          totalSessions: 2,
+        ),
+        _booking(
+          id: 'b3',
+          status: 'completed',
+          sessionNumber: 1,
+          totalSessions: 1,
+        ),
       ]);
 
       await tester.pumpWidget(_wrap(repo));
@@ -93,7 +105,9 @@ void main() {
       expect(find.text('Buổi 2/5'), findsOneWidget);
     });
 
-    testWidgets('meeting link row taps and shows copied snackbar', (tester) async {
+    testWidgets('meeting link row taps and shows copied snackbar', (
+      tester,
+    ) async {
       // Use a tall surface so the card is well below the AppBar and tappable.
       await tester.binding.setSurfaceSize(const Size(800, 1200));
       addTearDown(() => tester.binding.setSurfaceSize(null));
@@ -118,9 +132,7 @@ void main() {
     });
 
     testWidgets('pending chip renders for pending booking', (tester) async {
-      repo.seedBookings([
-        _booking(status: 'pending'),
-      ]);
+      repo.seedBookings([_booking(status: 'pending')]);
 
       await tester.pumpWidget(_wrap(repo));
       await tester.pumpAndSettle();
@@ -136,8 +148,9 @@ void main() {
       expect(find.text('Bạn chưa có buổi coaching nào'), findsOneWidget);
     });
 
-    testWidgets('error state shows retry button and retry refetches',
-        (tester) async {
+    testWidgets('error state shows retry button and retry refetches', (
+      tester,
+    ) async {
       repo.nextError = Exception('fail');
 
       await tester.pumpWidget(_wrap(repo));

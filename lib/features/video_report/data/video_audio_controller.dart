@@ -57,9 +57,10 @@ class JustAudioController implements VideoAudioController {
 /// manual subscription for its entire lifetime, so this autoDispose provider
 /// creates a fresh controller when the screen mounts and disposes it (via
 /// [ref.onDispose]) exactly once, when that subscription closes on unmount.
-final videoAudioControllerProvider =
-    Provider.autoDispose<VideoAudioController>((ref) {
-  final c = JustAudioController();
-  ref.onDispose(c.dispose);
-  return c;
-});
+final videoAudioControllerProvider = Provider.autoDispose<VideoAudioController>(
+  (ref) {
+    final c = JustAudioController();
+    ref.onDispose(c.dispose);
+    return c;
+  },
+);

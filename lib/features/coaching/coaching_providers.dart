@@ -15,9 +15,9 @@ import '../../core/models/coaching_models.dart';
 /// All active coaching packages, ordered by display_order asc.
 final coachingPackagesProvider =
     FutureProvider.autoDispose<List<CoachingPackage>>((ref) {
-  final repo = ref.watch(coachingRepositoryProvider);
-  return repo.getPackages();
-});
+      final repo = ref.watch(coachingRepositoryProvider);
+      return repo.getPackages();
+    });
 
 /// All active coaches, ordered by display_order asc.
 final coachesProvider = FutureProvider.autoDispose<List<Coach>>((ref) {
@@ -30,8 +30,9 @@ final coachesProvider = FutureProvider.autoDispose<List<Coach>>((ref) {
 // ---------------------------------------------------------------------------
 
 /// All coaching bookings for the current user.
-final myBookingsProvider =
-    FutureProvider.autoDispose<List<CoachingBooking>>((ref) {
+final myBookingsProvider = FutureProvider.autoDispose<List<CoachingBooking>>((
+  ref,
+) {
   final repo = ref.watch(coachingRepositoryProvider);
   return repo.getMyBookings();
 });
@@ -41,8 +42,9 @@ final myBookingsProvider =
 // ---------------------------------------------------------------------------
 
 /// Aggregated coach reviews (admin + user) with avg rating.
-final coachReviewsProvider =
-    FutureProvider.autoDispose<CoachReviewSummary>((ref) {
+final coachReviewsProvider = FutureProvider.autoDispose<CoachReviewSummary>((
+  ref,
+) {
   final repo = ref.watch(coachingRepositoryProvider);
   return repo.getCoachReviews();
 });

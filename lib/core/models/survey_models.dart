@@ -10,15 +10,15 @@ enum SurveyType {
   premium;
 
   static SurveyType fromJson(String v) => switch (v) {
-        'FREE' => free,
-        'PREMIUM' => premium,
-        _ => throw ArgumentError('Unknown SurveyType: $v'),
-      };
+    'FREE' => free,
+    'PREMIUM' => premium,
+    _ => throw ArgumentError('Unknown SurveyType: $v'),
+  };
 
   String toJson() => switch (this) {
-        free => 'FREE',
-        premium => 'PREMIUM',
-      };
+    free => 'FREE',
+    premium => 'PREMIUM',
+  };
 }
 
 enum ScaleType {
@@ -27,17 +27,17 @@ enum ScaleType {
   enps10;
 
   static ScaleType fromJson(String v) => switch (v) {
-        'LIKERT_5' => likert5,
-        'ESI_5' => esi5,
-        'ENPS_10' => enps10,
-        _ => throw ArgumentError('Unknown ScaleType: $v'),
-      };
+    'LIKERT_5' => likert5,
+    'ESI_5' => esi5,
+    'ENPS_10' => enps10,
+    _ => throw ArgumentError('Unknown ScaleType: $v'),
+  };
 
   String toJson() => switch (this) {
-        likert5 => 'LIKERT_5',
-        esi5 => 'ESI_5',
-        enps10 => 'ENPS_10',
-      };
+    likert5 => 'LIKERT_5',
+    esi5 => 'ESI_5',
+    enps10 => 'ENPS_10',
+  };
 }
 
 enum SurveyLayer {
@@ -48,21 +48,21 @@ enum SurveyLayer {
   enps;
 
   static SurveyLayer fromJson(String v) => switch (v) {
-        'STRUCTURE' => structure,
-        'CULTURE' => culture,
-        'ACTIVITY' => activity,
-        'ESI' => esi,
-        'ENPS' => enps,
-        _ => throw ArgumentError('Unknown SurveyLayer: $v'),
-      };
+    'STRUCTURE' => structure,
+    'CULTURE' => culture,
+    'ACTIVITY' => activity,
+    'ESI' => esi,
+    'ENPS' => enps,
+    _ => throw ArgumentError('Unknown SurveyLayer: $v'),
+  };
 
   String toJson() => switch (this) {
-        structure => 'STRUCTURE',
-        culture => 'CULTURE',
-        activity => 'ACTIVITY',
-        esi => 'ESI',
-        enps => 'ENPS',
-      };
+    structure => 'STRUCTURE',
+    culture => 'CULTURE',
+    activity => 'ACTIVITY',
+    esi => 'ESI',
+    enps => 'ENPS',
+  };
 }
 
 enum ScoreLevel {
@@ -72,19 +72,19 @@ enum ScoreLevel {
   critical;
 
   static ScoreLevel fromJson(String v) => switch (v) {
-        'HIGH' => high,
-        'GOOD' => good,
-        'WARNING' => warning,
-        'CRITICAL' => critical,
-        _ => throw ArgumentError('Unknown ScoreLevel: $v'),
-      };
+    'HIGH' => high,
+    'GOOD' => good,
+    'WARNING' => warning,
+    'CRITICAL' => critical,
+    _ => throw ArgumentError('Unknown ScoreLevel: $v'),
+  };
 
   String toJson() => switch (this) {
-        high => 'HIGH',
-        good => 'GOOD',
-        warning => 'WARNING',
-        critical => 'CRITICAL',
-      };
+    high => 'HIGH',
+    good => 'GOOD',
+    warning => 'WARNING',
+    critical => 'CRITICAL',
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -260,12 +260,12 @@ class CcReportFull {
           ? (json['score_esi'] as num).toDouble()
           : null,
       scoreEnps: json['score_enps'] as int?,
-      bottleneckLayer:
-          SurveyLayer.fromJson(json['bottleneck_layer'] as String),
+      bottleneckLayer: SurveyLayer.fromJson(json['bottleneck_layer'] as String),
       scoreLevel: ScoreLevel.fromJson(json['score_level'] as String),
       subScores: ss != null ? Map<String, dynamic>.from(ss as Map) : null,
-      selectedNarrativeVariants:
-          snv != null ? Map<String, dynamic>.from(snv as Map) : null,
+      selectedNarrativeVariants: snv != null
+          ? Map<String, dynamic>.from(snv as Map)
+          : null,
       createdAt: DateTime.parse(json['created_at'] as String),
     );
   }

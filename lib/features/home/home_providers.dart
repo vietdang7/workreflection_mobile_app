@@ -49,8 +49,9 @@ final latestInsightProvider = FutureProvider<Insight?>((ref) async {
 // Recurring situations (top for home card)
 // ---------------------------------------------------------------------------
 
-final recurringSituationsProvider =
-    FutureProvider<List<RecurringSituation>>((ref) async {
+final recurringSituationsProvider = FutureProvider<List<RecurringSituation>>((
+  ref,
+) async {
   final repo = ref.watch(wrRepositoryProvider);
   return repo.getRecurringSituations();
 });

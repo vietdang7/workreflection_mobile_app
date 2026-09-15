@@ -99,13 +99,13 @@ const List<ReflectionPattern> kReflectCapturePatterns = [
 /// Chúng vẫn sống trong model, dùng cho phiên mở lại và cho lối vào qua màn
 /// năng lượng.
 HumanMoment momentForMood(Mood mood) => switch (mood) {
-      Mood.stressed => HumanMoment.confusion,
-      Mood.tired => HumanMoment.recovery,
-      Mood.foggy => HumanMoment.confusion,
-      Mood.outofsync => HumanMoment.confusion,
-      Mood.okay => HumanMoment.arrival,
-      Mood.happy => HumanMoment.celebration,
-    };
+  Mood.stressed => HumanMoment.confusion,
+  Mood.tired => HumanMoment.recovery,
+  Mood.foggy => HumanMoment.confusion,
+  Mood.outofsync => HumanMoment.confusion,
+  Mood.okay => HumanMoment.arrival,
+  Mood.happy => HumanMoment.celebration,
+};
 
 // ---------------------------------------------------------------------------
 // Bước 0 — Notice
@@ -122,14 +122,18 @@ HumanMoment momentForMood(Mood mood) => switch (mood) {
 ///
 /// Ranh giới mới nằm ở chỗ khác: câu HỎI dùng "bạn", còn giọng KỂ (story, aha,
 /// nhãn "Điều khác") vẫn giữ "tôi" — xem [kOtherSituationLabel].
-String get kNoticePrompt => tr('Điều gì đang mô tả đúng nhất trạng thái công việc của bạn?', 'What best describes where you are at work right now?');
+String get kNoticePrompt => tr(
+  'Điều gì đang mô tả đúng nhất trạng thái công việc của bạn?',
+  'What best describes where you are at work right now?',
+);
 
 /// Nhãn của mục "Điều khác", nguyên văn mockup v16 (`SITUATIONS` id `other`).
 ///
 /// GIỮ ngôi "tôi" dù §1.3 đã đổi mọi câu hỏi sang "bạn": đây không phải câu hỏi
 /// mà là một lựa chọn người dùng tự nói ra. Mockup v16 cũng giữ nguyên chuỗi
 /// này sau khi đã đổi ngôi toàn bộ phần còn lại.
-String get kOtherSituationLabel => tr('Điều khác, để tôi tự mô tả', 'Something else, let me describe it');
+String get kOtherSituationLabel =>
+    tr('Điều khác, để tôi tự mô tả', 'Something else, let me describe it');
 
 // Ô neo ở bước Notice KHÔNG còn nhãn — khách 09/09/2026 (§2.2). Hằng
 // `kAnchorBadge = 'Lần trước'` đã bỏ hẳn ở đây.
@@ -147,13 +151,13 @@ String get kOtherSituationLabel => tr('Điều khác, để tôi tự mô tả',
 /// vì bốn ô vuông cần chữ xuống dòng đúng chỗ. Ở đây phải là một dòng liền:
 /// nhãn này nằm GIỮA một câu, không đứng riêng trong một ô.
 String moodCheckinLabel(Mood mood) => switch (mood) {
-      Mood.stressed => tr('Tôi đang căng thẳng', 'I feel tense'),
-      Mood.tired => tr('Tôi mệt mỏi cần nghỉ ngơi', 'I am tired and need rest'),
-      Mood.foggy => tr('Tôi thấy mơ hồ', 'I feel unclear'),
-      Mood.outofsync => tr('Tôi thấy mọi thứ lệch nhau', 'Things feel out of sync'),
-      Mood.okay => tr('Tôi khá ổn', 'I am doing okay'),
-      Mood.happy => tr('Tôi đang vui', 'I am feeling good'),
-    };
+  Mood.stressed => tr('Tôi đang căng thẳng', 'I feel tense'),
+  Mood.tired => tr('Tôi mệt mỏi cần nghỉ ngơi', 'I am tired and need rest'),
+  Mood.foggy => tr('Tôi thấy mơ hồ', 'I feel unclear'),
+  Mood.outofsync => tr('Tôi thấy mọi thứ lệch nhau', 'Things feel out of sync'),
+  Mood.okay => tr('Tôi khá ổn', 'I am doing okay'),
+  Mood.happy => tr('Tôi đang vui', 'I am feeling good'),
+};
 
 /// Dòng phụ dưới câu hỏi bước Notice.
 ///
@@ -162,11 +166,17 @@ String moodCheckinLabel(Mood mood) => switch (mood) {
 /// mình đang gặp.
 String noticeSubtitle(String? moodLabel) {
   if (moodLabel == null || moodLabel.isEmpty) {
-    return tr('Chọn điều gần đúng nhất, không cần hoàn hảo.', 'Pick the closest one. It does not have to be perfect.');
+    return tr(
+      'Chọn điều gần đúng nhất, không cần hoàn hảo.',
+      'Pick the closest one. It does not have to be perfect.',
+    );
   }
-  return tr('Những tình huống dưới đây thường xuất hiện khi ai đó chọn '
-      '"$moodLabel".', 'These situations often come up for people who pick '
-      '"$moodLabel".');
+  return tr(
+    'Những tình huống dưới đây thường xuất hiện khi ai đó chọn '
+        '"$moodLabel".',
+    'These situations often come up for people who pick '
+        '"$moodLabel".',
+  );
 }
 
 // ---------------------------------------------------------------------------
@@ -178,7 +188,10 @@ String noticeSubtitle(String? moodLabel) {
 /// Mục 3.2 của file khách 09/09: bỏ câu hỏi riêng của từng tình huống, dùng
 /// chung đúng câu này. Trước đây câu hỏi đọc từ `reflection_question` của tình
 /// huống trong thư viện, nên mỗi tình huống hỏi một kiểu.
-String get kDetailPrompt => tr('Viết ra bất cứ điều gì vừa xuất hiện trong đầu bạn lúc này.', 'Write whatever just came to mind.');
+String get kDetailPrompt => tr(
+  'Viết ra bất cứ điều gì vừa xuất hiện trong đầu bạn lúc này.',
+  'Write whatever just came to mind.',
+);
 
 /// Hệ số cỡ chữ của [kDetailPrompt] — mục 3.2 yêu cầu giảm còn 70%.
 ///
@@ -199,11 +212,14 @@ String detailPrompt(String? reflectionQuestion) => kDetailPrompt;
 /// Changelog §1.1: người dùng cần hiểu đây là tình huống nhiều người khác cũng
 /// từng gặp, và hiểu vai trò của bước này trong luồng phản chiếu. Không có đoạn
 /// này thì màn mở thẳng bằng một câu chuyện lạ, không rõ của ai và để làm gì.
-String get kFamiliarStoryIntro => tr('Rất nhiều người đi làm cũng từng trải qua giai đoạn những cảm xúc giống '
-    'bạn. Thử xem tình huống dưới đây có quen thuộc không nhé. Đây có thể sẽ '
-    'là điểm bắt đầu giúp bạn nhìn sâu hơn', 'Plenty of working people have been through stretches that feel like '
-    'yours. See whether the situation below rings a bell. It can be a place '
-    'to start looking a little deeper');
+String get kFamiliarStoryIntro => tr(
+  'Rất nhiều người đi làm cũng từng trải qua giai đoạn những cảm xúc giống '
+      'bạn. Thử xem tình huống dưới đây có quen thuộc không nhé. Đây có thể sẽ '
+      'là điểm bắt đầu giúp bạn nhìn sâu hơn',
+  'Plenty of working people have been through stretches that feel like '
+      'yours. See whether the situation below rings a bell. It can be a place '
+      'to start looking a little deeper',
+);
 
 /// Lời mời viết, đặt dưới câu Reflection ở nhánh CÓ tình huống.
 ///
@@ -219,26 +235,38 @@ String get kFamiliarStoryIntro => tr('Rất nhiều người đi làm cũng từ
 /// ý đó — nhưng lời mời có điều kiện thôi thì chưa đủ: người dùng đọc xong vẫn
 /// không chắc bỏ trống có đi tiếp được không, nên ngồi cố nghĩ ra một câu.
 /// "Có thể bỏ trống cũng không sao" là nguyên văn khách đọc trong họp.
-String get kStoryDetailInvite => tr('Kể lại khoảnh khắc đó theo cách riêng của bạn. Để trống cũng không sao, '
-    'miễn là bạn đã dành 1 phút để nghĩ về nó.', 'Tell that moment in your own words. Leaving it blank is fine too, as '
-    'long as you gave it a minute of thought.');
+String get kStoryDetailInvite => tr(
+  'Kể lại khoảnh khắc đó theo cách riêng của bạn. Để trống cũng không sao, '
+      'miễn là bạn đã dành 1 phút để nghĩ về nó.',
+  'Tell that moment in your own words. Leaving it blank is fine too, as '
+      'long as you gave it a minute of thought.',
+);
 
 /// Dòng phụ của nhánh "Điều khác", nguyên văn mockup v16 i===1 `s.custom`.
 ///
 /// Nhánh này không có câu chuyện nào để đối chiếu nên vẫn cần nói thẳng bắt đầu
 /// từ đâu.
-String get kCustomDetailNote => tr('Không cần đầy đủ, chỉ cần bắt đầu từ: ai, khi nào, và chuyện gì đã xảy ra.', 'It does not have to be complete. Just start with who, when, and what happened.');
+String get kCustomDetailNote => tr(
+  'Không cần đầy đủ, chỉ cần bắt đầu từ: ai, khi nào, và chuyện gì đã xảy ra.',
+  'It does not have to be complete. Just start with who, when, and what happened.',
+);
 
 /// Gợi ý trong ô chữ ở nhánh CÓ tình huống.
 ///
 /// Changelog §1.1: đổi từ gợi ý chung chung sang ví dụ có cấu trúc thời gian –
 /// nhân vật – sự kiện. Ba dấu chấm lửng là chủ đích: chúng để trống đúng ba chỗ
 /// người viết cần điền.
-String get kStoryDetailHint => tr('Ví dụ: Sáng nay, trong cuộc họp với..., lúc...', 'For example: This morning, in the meeting with..., when...');
+String get kStoryDetailHint => tr(
+  'Ví dụ: Sáng nay, trong cuộc họp với..., lúc...',
+  'For example: This morning, in the meeting with..., when...',
+);
 
 /// Gợi ý trong ô chữ ở nhánh "Điều khác" — dài hơn vì không có câu chuyện nào
 /// đứng trước làm mẫu.
-String get kCustomDetailHint => tr('Ví dụ: Sáng nay, trong cuộc họp với anh Nam, lúc mình vừa nêu ý kiến thì...', 'For example: This morning, in the meeting with Nam, right after I gave my view...');
+String get kCustomDetailHint => tr(
+  'Ví dụ: Sáng nay, trong cuộc họp với anh Nam, lúc mình vừa nêu ý kiến thì...',
+  'For example: This morning, in the meeting with Nam, right after I gave my view...',
+);
 
 // ---------------------------------------------------------------------------
 // Bước 2 — Insight
@@ -294,10 +322,12 @@ String ahaFor(String? situationAha) {
 String get kInsightStemEyebrow => tr('Với tôi, điều này...', 'To me, this...');
 
 /// Nhãn bước ở Lớp 2.
-String get kInsightAhaEyebrow => tr('Một góc nhìn khác', 'Another way to see it');
+String get kInsightAhaEyebrow =>
+    tr('Một góc nhìn khác', 'Another way to see it');
 
 /// Vế đầu của câu mở dở. Người dùng viết tiếp phần sau chữ "vì".
-String get kInsightStemPrefix => tr('Với tôi, điều này xảy ra vì', 'To me, this happens because');
+String get kInsightStemPrefix =>
+    tr('Với tôi, điều này xảy ra vì', 'To me, this happens because');
 
 /// Mọi vế mở dở ĐÃ TỪNG được ghi xuống, không riêng vế của ngôn ngữ đang bật.
 ///
@@ -318,15 +348,24 @@ String get kInsightStemPrompt => '$kInsightStemPrefix...';
 
 /// Dòng phụ ở Lớp 1 — nói rõ không có đáp án đúng, để ô chữ không đọc ra như
 /// một bài kiểm tra.
-String get kInsightStemNote => tr('Không có câu trả lời đúng, chỉ cần viết điều bạn đang thực sự nghĩ.', 'There is no right answer. Just write what you actually think.');
+String get kInsightStemNote => tr(
+  'Không có câu trả lời đúng, chỉ cần viết điều bạn đang thực sự nghĩ.',
+  'There is no right answer. Just write what you actually think.',
+);
 
 /// Gợi ý trong ô chữ ở Lớp 1, nguyên văn mockup v16.
-String get kInsightStemHint => tr('...có thể do mình đang ôm đồm quá nhiều / do thiếu giao tiếp với sếp / '
-    'do chưa biết cách từ chối...', '...maybe I am taking on too much / there is not enough talk with my '
-    'manager / I have not learned to say no...');
+String get kInsightStemHint => tr(
+  '...có thể do mình đang ôm đồm quá nhiều / do thiếu giao tiếp với sếp / '
+      'do chưa biết cách từ chối...',
+  '...maybe I am taking on too much / there is not enough talk with my '
+      'manager / I have not learned to say no...',
+);
 
 /// Nhãn của khối gợi ý nằm DƯỚI ô chữ ở Lớp 1.
-String get kInsightSuggestionsLabel => tr('CHƯA BIẾT VIẾT GÌ? THỬ MỘT TRONG SỐ NÀY', 'NOT SURE WHAT TO WRITE? TRY ONE OF THESE');
+String get kInsightSuggestionsLabel => tr(
+  'CHƯA BIẾT VIẾT GÌ? THỬ MỘT TRONG SỐ NÀY',
+  'NOT SURE WHAT TO WRITE? TRY ONE OF THESE',
+);
 
 /// Những vế viết tiếp có thể chạm để điền thẳng vào ô.
 ///
@@ -340,18 +379,29 @@ String get kInsightSuggestionsLabel => tr('CHƯA BIẾT VIẾT GÌ? THỬ MỘT 
 List<String> get kInsightStemSuggestions => [
   tr('đây không phải lần đầu', 'this is not the first time'),
   tr('mình chưa từng nói ra điều đó', 'I have never said that out loud'),
-  tr('mình chưa rõ mình đang mong đợi gì', 'I am not clear what I am hoping for'),
-  tr('mình sợ nói ra sẽ làm mọi thứ căng hơn', 'I am afraid saying it will make things tenser'),
+  tr(
+    'mình chưa rõ mình đang mong đợi gì',
+    'I am not clear what I am hoping for',
+  ),
+  tr(
+    'mình sợ nói ra sẽ làm mọi thứ căng hơn',
+    'I am afraid saying it will make things tenser',
+  ),
 ];
 
 /// Nhãn của lối thoát ở Lớp 1.
-String get kInsightSkipLabel => tr('Tạm thời bỏ qua, bạn muốn suy nghĩ thêm', 'Skip for now, you want to think it over');
+String get kInsightSkipLabel => tr(
+  'Tạm thời bỏ qua, bạn muốn suy nghĩ thêm',
+  'Skip for now, you want to think it over',
+);
 
 /// Nhãn nút chính ở Lớp 1.
-String get kInsightRevealLabel => tr('Xem một góc nhìn khác', 'See another way to look at it');
+String get kInsightRevealLabel =>
+    tr('Xem một góc nhìn khác', 'See another way to look at it');
 
 /// Nhãn khối "điều bạn vừa viết" ở Lớp 2.
-String get kInsightYourWordsLabel => tr('Điều bạn vừa viết', 'What you just wrote');
+String get kInsightYourWordsLabel =>
+    tr('Điều bạn vừa viết', 'What you just wrote');
 
 /// Nhãn khối câu aha ở Lớp 2.
 ///
@@ -359,7 +409,8 @@ String get kInsightYourWordsLabel => tr('Điều bạn vừa viết', 'What you 
 /// một câu chuẩn hoá/xã hội hoá. Cùng một câu aha, khung "tôi nhận ra…" bảo
 /// người dùng phải nghĩ như vậy, còn khung này chỉ nói có người khác cũng nghĩ
 /// vậy.
-String get kInsightNormalizingLabel => tr('Đúc kết phổ biến', 'A common thread');
+String get kInsightNormalizingLabel =>
+    tr('Đúc kết phổ biến', 'A common thread');
 
 // ---------------------------------------------------------------------------
 // Đồng ý / Không đồng ý ở Lớp 2 — §10 changelog Career Snapshot (khách 10/09)
@@ -375,15 +426,21 @@ String get kInsightDisagreeLabel => tr('Không đồng ý', 'Disagree');
 ///
 /// §10.2: "Không nên im lặng chuyển sang bước sau như thể không có gì xảy ra,
 /// vì người dùng vừa thực hiện một hành động có chủ đích và cần được phản hồi."
-String get kInsightDisagreeAck => tr('Cảm ơn bạn đã cho biết. Góc nhìn này sẽ không được lưu lại. Bạn vẫn có thể '
-    'tiếp tục với bước sau nhé.', 'Thanks for telling us. This view will not be saved. You can still carry '
-    'on to the next step.');
+String get kInsightDisagreeAck => tr(
+  'Cảm ơn bạn đã cho biết. Góc nhìn này sẽ không được lưu lại. Bạn vẫn có thể '
+      'tiếp tục với bước sau nhé.',
+  'Thanks for telling us. This view will not be saved. You can still carry '
+      'on to the next step.',
+);
 
 /// Câu chốt dưới khối aha ở Lớp 2.
-String get kInsightAhaNote => tr('Một vấn đề luôn có thể được giải nghĩa theo nhiều cách. Đây là một lăng '
-    'kính bổ sung, mở ra thêm không gian để bạn đối chiếu với công việc hiện '
-    'tại.', 'A problem can always be read more than one way. This is one more lens, '
-    'opening a bit more room to hold it against your work as it is now.');
+String get kInsightAhaNote => tr(
+  'Một vấn đề luôn có thể được giải nghĩa theo nhiều cách. Đây là một lăng '
+      'kính bổ sung, mở ra thêm không gian để bạn đối chiếu với công việc hiện '
+      'tại.',
+  'A problem can always be read more than one way. This is one more lens, '
+      'opening a bit more room to hold it against your work as it is now.',
+);
 
 /// Câu người dùng vừa viết, đã ghép với vế mở dở.
 ///
@@ -448,11 +505,10 @@ String stemFromNote(String? note) {
 String liveMeaning({
   required Map<String, String> notes,
   required String? storyAha,
-}) =>
-    mergeInsight(
-      stem: stemFromNote(notes[ReflectionPattern.reframe.dbValue]),
-      aha: ahaFor(storyAha),
-    );
+}) => mergeInsight(
+  stem: stemFromNote(notes[ReflectionPattern.reframe.dbValue]),
+  aha: ahaFor(storyAha),
+);
 
 /// Dịch lại phần APP viết trong một câu ý nghĩa ĐÃ ĐÓNG BĂNG trong database.
 ///

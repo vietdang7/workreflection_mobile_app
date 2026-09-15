@@ -29,19 +29,19 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
   final List<ScaSelfCheckResponse> insertSelfCheckResponseCalls = [];
   final List<WrInsight> insertInsightCalls = [];
   final List<({String userId, String? situationCode, bool agreed})>
-      insertInsightFeedbackCalls = [];
+  insertInsightFeedbackCalls = [];
   final List<PracticeEnrollment> enrollThemeCalls = [];
   final List<({String userId, String themeId, List<String> completedSteps})>
-      updateEnrollmentStepsCalls = [];
+  updateEnrollmentStepsCalls = [];
   final List<GrowthOpportunity> insertGrowthOpportunityCalls = [];
   final List<PracticeStepNote> upsertPracticeStepNoteCalls = [];
   final List<CareerQuestion> insertCareerQuestionCalls = [];
   final List<({String userId, String themeId})> completeThemeCalls = [];
   final List<WrContextDocument> insertContextDocumentCalls = [];
   final List<({String userId, String situationCode, String scaDimensionDb})>
-      recordSituationOccurrenceCalls = [];
+  recordSituationOccurrenceCalls = [];
   final List<({String userId, String situationCode})>
-      decrementSituationOccurrenceCalls = [];
+  decrementSituationOccurrenceCalls = [];
 
   // --- Seed helpers ---
   void seedEntitlement(WrEntitlementRecord? r) => _entitlement = r;
@@ -162,14 +162,16 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
         lastSeenAt: DateTime.now(),
       );
     } else {
-      _patternCounts.add(PatternCount(
-        id: null,
-        userId: userId,
-        situationCode: situationCode,
-        scaDimension: null,
-        occurrenceCount: 1,
-        lastSeenAt: DateTime.now(),
-      ));
+      _patternCounts.add(
+        PatternCount(
+          id: null,
+          userId: userId,
+          situationCode: situationCode,
+          scaDimension: null,
+          occurrenceCount: 1,
+          lastSeenAt: DateTime.now(),
+        ),
+      );
     }
   }
 
@@ -284,8 +286,11 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
     required bool agreed,
   }) async {
     _maybeThrow();
-    insertInsightFeedbackCalls
-        .add((userId: userId, situationCode: situationCode, agreed: agreed));
+    insertInsightFeedbackCalls.add((
+      userId: userId,
+      situationCode: situationCode,
+      agreed: agreed,
+    ));
   }
 
   @override
@@ -305,9 +310,8 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
   @override
   Future<List<PracticeStep>> fetchAllPracticeSteps() async {
     _maybeThrow();
-    final steps = [
-      for (final byTheme in _practiceSteps.values) ...byTheme,
-    ]..sort((a, b) {
+    final steps = [for (final byTheme in _practiceSteps.values) ...byTheme]
+      ..sort((a, b) {
         final byThemeId = a.themeId.compareTo(b.themeId);
         return byThemeId != 0 ? byThemeId : a.stepOrder.compareTo(b.stepOrder);
       });
@@ -317,9 +321,7 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
   @override
   Future<List<PracticeEnrollment>> fetchEnrollments(String userId) async {
     _maybeThrow();
-    return List.unmodifiable(
-      _enrollments.where((e) => e.userId == userId),
-    );
+    return List.unmodifiable(_enrollments.where((e) => e.userId == userId));
   }
 
   @override
@@ -345,7 +347,9 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
       (e) => e.userId == userId && e.themeId == themeId,
     );
     if (idx >= 0) {
-      _enrollments[idx] = _enrollments[idx].copyWith(completedSteps: completedSteps);
+      _enrollments[idx] = _enrollments[idx].copyWith(
+        completedSteps: completedSteps,
+      );
     }
   }
 
@@ -377,14 +381,16 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
     _maybeThrow();
     insertContextDocumentCalls.add(d);
     final id = d.id ?? 'doc-${_contextDocuments.length + 1}';
-    _contextDocuments.add(WrContextDocument(
-      id: id,
-      userId: d.userId,
-      docType: d.docType,
-      filePath: d.filePath,
-      uploadedAt: d.uploadedAt ?? DateTime.now(),
-      analysisStatus: d.analysisStatus,
-    ));
+    _contextDocuments.add(
+      WrContextDocument(
+        id: id,
+        userId: d.userId,
+        docType: d.docType,
+        filePath: d.filePath,
+        uploadedAt: d.uploadedAt ?? DateTime.now(),
+        analysisStatus: d.analysisStatus,
+      ),
+    );
     return id;
   }
 
@@ -411,7 +417,8 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
       throw const WrDocAnalysisException('Không tìm thấy tài liệu này.');
     }
     final old = _contextDocuments[i];
-    final analysis = nextAnalysis ??
+    final analysis =
+        nextAnalysis ??
         const WrDocAnalysis(
           title: 'Chuyên viên nhân sự',
           summary: 'Tuyển dụng và đào tạo nhân sự.',
@@ -470,16 +477,17 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
   }
 
   @override
-  Future<List<GrowthJourneySnapshot>> fetchGrowthSnapshots(String userId) async {
+  Future<List<GrowthJourneySnapshot>> fetchGrowthSnapshots(
+    String userId,
+  ) async {
     _maybeThrow();
-    return List.unmodifiable(
-      _growthSnapshots.where((s) => s.userId == userId),
-    );
+    return List.unmodifiable(_growthSnapshots.where((s) => s.userId == userId));
   }
 
   // --- Hai Lớp v1.6 ---
 
-  void seedGrowthOpportunity(GrowthOpportunity o) => _growthOpportunities.add(o);
+  void seedGrowthOpportunity(GrowthOpportunity o) =>
+      _growthOpportunities.add(o);
 
   @override
   Future<GrowthOpportunity?> fetchLatestGrowthOpportunity(String userId) async {
@@ -506,13 +514,15 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
       (n) => n.userId == note.userId && n.stepId == note.stepId,
     );
     final id = 'note-${_stepNotes.length + 1}';
-    _stepNotes.add(PracticeStepNote(
-      id: id,
-      userId: note.userId,
-      stepId: note.stepId,
-      note: note.note,
-      memoryEventId: note.memoryEventId,
-    ));
+    _stepNotes.add(
+      PracticeStepNote(
+        id: id,
+        userId: note.userId,
+        stepId: note.stepId,
+        note: note.note,
+        memoryEventId: note.memoryEventId,
+      ),
+    );
     return id;
   }
 
@@ -570,10 +580,18 @@ const Set<String> kAllowedInsightSources = {
 
 /// Chiều SCA mà các bảng WR chấp nhận, kể cả hai nhóm tích cực của v1.6 §2.2.
 const Set<String> kAllowedScaDimensions = {
-  'S1', 'S2', 'S3',
-  'C1', 'C2', 'C3',
-  'A1', 'A2', 'A3', 'A4',
-  'P-ACHIEVE', 'P-STEADY',
+  'S1',
+  'S2',
+  'S3',
+  'C1',
+  'C2',
+  'C3',
+  'A1',
+  'A2',
+  'A3',
+  'A4',
+  'P-ACHIEVE',
+  'P-STEADY',
 };
 
 /// Ném khi payload vi phạm check constraint, đúng như Postgres sẽ làm.

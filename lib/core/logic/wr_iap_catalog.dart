@@ -97,8 +97,7 @@ const List<WrIapProduct> kWrIapProducts = [
 ];
 
 /// Tập id để truyền vào `queryProductDetails`.
-final Set<String> kWrIapProductIds =
-    kWrIapProducts.map((p) => p.id).toSet();
+final Set<String> kWrIapProductIds = kWrIapProducts.map((p) => p.id).toSet();
 
 /// Tra gói theo product id. null khi id không phải của app này.
 ///

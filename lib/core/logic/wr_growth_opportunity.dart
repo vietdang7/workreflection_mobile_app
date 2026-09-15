@@ -33,25 +33,34 @@ String? _pillarOf(ScaDimension d) =>
 /// Chỉ ba câu vì SCA chỉ có ba trụ. Nói theo trụ chứ không theo từng chiều: mười
 /// câu khác nhau sẽ nghe như hệ thống biết rõ hơn thực tế nó biết.
 Map<String, String> get _pillarSuggestion => {
-  'S': tr('Có vẻ phần lớn điều bạn nhìn lại xoay quanh cách bạn tự nhìn mình '
-      'trong công việc. Nếu điều đó đúng, hướng phát triển gần nhất của bạn '
-      'có thể là năng lực tự định vị: gọi tên được mình mạnh ở đâu và nói ra '
-      'được điều đó khi cần.', 'Most of what you look back on seems to circle around how you see '
-      'yourself at work. If that is right, the nearest place to grow may be '
-      'self-positioning: being able to name where you are strong and to say so '
-      'when it counts.'),
-  'C': tr('Có vẻ phần lớn điều bạn nhìn lại xoay quanh quan hệ với người khác '
-      'trong công việc. Nếu điều đó đúng, hướng phát triển gần nhất của bạn '
-      'có thể là năng lực đối thoại: nói điều khó nói mà vẫn giữ được quan hệ.', 'Most of what you look back on seems to circle around your relationships '
-      'at work. If that is right, the nearest place to grow may be difficult '
-      'conversations: saying the hard thing and keeping the relationship.'),
-  'A': tr('Có vẻ phần lớn điều bạn nhìn lại xoay quanh quyền chủ động trong công '
-      'việc. Nếu điều đó đúng, hướng phát triển gần nhất của bạn có thể là '
-      'năng lực tự điều phối: chọn được việc nào làm trước và giữ được ranh '
-      'giới của mình.', 'Most of what you look back on seems to circle around how much say you '
-      'have over your work. If that is right, the nearest place to grow may be '
-      'self-direction: choosing what comes first and holding your own '
-      'boundaries.'),
+  'S': tr(
+    'Có vẻ phần lớn điều bạn nhìn lại xoay quanh cách bạn tự nhìn mình '
+        'trong công việc. Nếu điều đó đúng, hướng phát triển gần nhất của bạn '
+        'có thể là năng lực tự định vị: gọi tên được mình mạnh ở đâu và nói ra '
+        'được điều đó khi cần.',
+    'Most of what you look back on seems to circle around how you see '
+        'yourself at work. If that is right, the nearest place to grow may be '
+        'self-positioning: being able to name where you are strong and to say so '
+        'when it counts.',
+  ),
+  'C': tr(
+    'Có vẻ phần lớn điều bạn nhìn lại xoay quanh quan hệ với người khác '
+        'trong công việc. Nếu điều đó đúng, hướng phát triển gần nhất của bạn '
+        'có thể là năng lực đối thoại: nói điều khó nói mà vẫn giữ được quan hệ.',
+    'Most of what you look back on seems to circle around your relationships '
+        'at work. If that is right, the nearest place to grow may be difficult '
+        'conversations: saying the hard thing and keeping the relationship.',
+  ),
+  'A': tr(
+    'Có vẻ phần lớn điều bạn nhìn lại xoay quanh quyền chủ động trong công '
+        'việc. Nếu điều đó đúng, hướng phát triển gần nhất của bạn có thể là '
+        'năng lực tự điều phối: chọn được việc nào làm trước và giữ được ranh '
+        'giới của mình.',
+    'Most of what you look back on seems to circle around how much say you '
+        'have over your work. If that is right, the nearest place to grow may be '
+        'self-direction: choosing what comes first and holding your own '
+        'boundaries.',
+  ),
 };
 
 /// Suy ra Cơ hội phát triển từ Pattern đã tích luỹ.
@@ -103,20 +112,35 @@ GrowthOpportunity? deriveGrowthOpportunity({
   final role = roleText?.trim();
   var text = (role == null || role.isEmpty)
       ? suggestion
-      : tr('$suggestion Đặt cạnh công việc bạn mô tả, "$role", đây có thể là '
-          'chỗ đáng thử trước.', '$suggestion Set beside the job you describe, "$role", this may be '
-          'the place to try first.');
+      : tr(
+          '$suggestion Đặt cạnh công việc bạn mô tả, "$role", đây có thể là '
+              'chỗ đáng thử trước.',
+          '$suggestion Set beside the job you describe, "$role", this may be '
+              'the place to try first.',
+        );
 
   // Khoảng trống giữa kỹ năng đã hình thành và công việc đang làm là một nguồn
   // đầu vào của Cơ hội phát triển (spec Kỹ năng đã hình thành). Vẫn ở thể điều
   // kiện (§11.1), và chỉ nói khi thật sự có khoảng trống — không có thì im.
-  final gaps = skillGapTitles.where((t) => t.trim().isNotEmpty).take(2).toList();
+  final gaps = skillGapTitles
+      .where((t) => t.trim().isNotEmpty)
+      .take(2)
+      .toList();
   if (gaps.isNotEmpty) {
     final list = gaps.map((t) => '"$t"').join(tr(' và ', ' and '));
     final tail = gaps.length == 1
-        ? tr('điều bạn chưa thực hành đủ để thành kỹ năng', 'one thing you have not practised enough to make a skill')
-        : tr('hai điều bạn chưa thực hành đủ để thành kỹ năng', 'two things you have not practised enough to make skills');
-    text = tr('$text Công việc đó cũng có vẻ cần $list, $tail.', '$text That job also seems to need $list, $tail.');
+        ? tr(
+            'điều bạn chưa thực hành đủ để thành kỹ năng',
+            'one thing you have not practised enough to make a skill',
+          )
+        : tr(
+            'hai điều bạn chưa thực hành đủ để thành kỹ năng',
+            'two things you have not practised enough to make skills',
+          );
+    text = tr(
+      '$text Công việc đó cũng có vẻ cần $list, $tail.',
+      '$text That job also seems to need $list, $tail.',
+    );
   }
 
   return GrowthOpportunity(

@@ -16,13 +16,12 @@ WrIapSubscription _sub({
   DateTime? expiresAt,
   bool? autoRenew,
   DateTime? revokedAt,
-}) =>
-    WrIapSubscription(
-      productId: 'app.workreflection.mobile.premium.yearly',
-      expiresAt: expiresAt,
-      autoRenew: autoRenew,
-      revokedAt: revokedAt,
-    );
+}) => WrIapSubscription(
+  productId: 'app.workreflection.mobile.premium.yearly',
+  expiresAt: expiresAt,
+  autoRenew: autoRenew,
+  revokedAt: revokedAt,
+);
 
 void main() {
   final now = DateTime(2026, 9, 8, 10);
@@ -111,20 +110,24 @@ void main() {
         isNull,
       );
       expect(
-        wrRenewalNotice(_sub(expiresAt: in10Days, autoRenew: false), now: now)
-            ?.kind,
+        wrRenewalNotice(
+          _sub(expiresAt: in10Days, autoRenew: false),
+          now: now,
+        )?.kind,
         WrRenewalKind.willEnd,
       );
     });
 
-    test('"chưa biết" đi theo cửa sổ dài — im lặng là rủi ro cho người dùng',
-        () {
-      final notice = wrRenewalNotice(
-        _sub(expiresAt: now.add(const Duration(days: 10))),
-        now: now,
-      );
-      expect(notice?.kind, WrRenewalKind.unknown);
-    });
+    test(
+      '"chưa biết" đi theo cửa sổ dài — im lặng là rủi ro cho người dùng',
+      () {
+        final notice = wrRenewalNotice(
+          _sub(expiresAt: now.add(const Duration(days: 10))),
+          now: now,
+        );
+        expect(notice?.kind, WrRenewalKind.unknown);
+      },
+    );
 
     test('làm tròn LÊN: còn 20 tiếng vẫn là 1 ngày, không phải 0', () {
       final notice = wrRenewalNotice(
@@ -137,13 +140,9 @@ void main() {
 
   group('Thẻ nhắc', () {
     Widget wrap(WrRenewalNotice? notice) => ProviderScope(
-          overrides: [
-            wrRenewalNoticeProvider.overrideWithValue(notice),
-          ],
-          child: const MaterialApp(
-            home: Scaffold(body: WrRenewalNoticeCard()),
-          ),
-        );
+      overrides: [wrRenewalNoticeProvider.overrideWithValue(notice)],
+      child: const MaterialApp(home: Scaffold(body: WrRenewalNoticeCard())),
+    );
 
     testWidgets('không có gì để nói thì thẻ biến mất hẳn', (tester) async {
       await tester.pumpWidget(wrap(null));
@@ -151,16 +150,17 @@ void main() {
     });
 
     testWidgets('có lời nhắc thì hiện câu và lối quản lý gói', (tester) async {
-      await tester.pumpWidget(wrap(WrRenewalNotice(
-        kind: WrRenewalKind.willRenew,
-        date: DateTime(2026, 9, 12),
-        daysLeft: 4,
-      )));
-
-      expect(
-        find.text('Gói tự động gia hạn ngày 12/09/2026'),
-        findsOneWidget,
+      await tester.pumpWidget(
+        wrap(
+          WrRenewalNotice(
+            kind: WrRenewalKind.willRenew,
+            date: DateTime(2026, 9, 12),
+            daysLeft: 4,
+          ),
+        ),
       );
+
+      expect(find.text('Gói tự động gia hạn ngày 12/09/2026'), findsOneWidget);
       // Lối huỷ phải bấm được ngay tại chỗ, không phải một lộ trình bốn bước
       // trong Cài đặt mà người đọc phải tự nhớ.
       expect(find.byKey(const Key('wr_renewal_notice_manage')), findsOneWidget);

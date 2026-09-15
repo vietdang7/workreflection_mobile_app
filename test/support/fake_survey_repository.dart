@@ -82,8 +82,8 @@ class FakeSurveyRepository implements SurveyRepository {
   @override
   SurveyType surveyTypeForRole(String role) =>
       (role == 'premium' || role == 'admin')
-          ? SurveyType.premium
-          : SurveyType.free;
+      ? SurveyType.premium
+      : SurveyType.free;
 
   @override
   Future<List<CcQuestion>> getQuestions(SurveyType type) async {
@@ -131,7 +131,8 @@ class FakeSurveyRepository implements SurveyRepository {
       return _reportsBySurveyId[surveyId]!;
     }
 
-    final report = _latestReport ??
+    final report =
+        _latestReport ??
         CcReportFull(
           id: 'fake-report-id',
           surveyId: surveyId,
@@ -151,8 +152,7 @@ class FakeSurveyRepository implements SurveyRepository {
   }
 
   @override
-  Future<CcReportFull?> getReport(String reportId) async =>
-      _reports[reportId];
+  Future<CcReportFull?> getReport(String reportId) async => _reports[reportId];
 
   @override
   Future<CcReportFull?> getLatestReportFull() async => _latestReport;
@@ -221,7 +221,9 @@ class FakeSurveyRepository implements SurveyRepository {
 
   @override
   Future<List<SubComponentScore>> getLayerSubScores(
-      String surveyId, String layer) async {
+    String surveyId,
+    String layer,
+  ) async {
     return List.unmodifiable(_layerSubScores[layer] ?? []);
   }
 
@@ -248,7 +250,11 @@ class FakeSurveyRepository implements SurveyRepository {
   final Map<String, AiPersonalizationUserContext> aiInvokeUserContexts = {};
 
   /// Pre-seed a completed cache entry for a given (reportId, section).
-  void seedAiCache(String reportId, String section, Map<String, dynamic> content) {
+  void seedAiCache(
+    String reportId,
+    String section,
+    Map<String, dynamic> content,
+  ) {
     _aiCache['$reportId:$section'] = content;
   }
 
@@ -263,7 +269,9 @@ class FakeSurveyRepository implements SurveyRepository {
 
   @override
   Future<Map<String, dynamic>?> getCachedAiPersonalization(
-      String reportId, String section) async {
+    String reportId,
+    String section,
+  ) async {
     return _aiCache['$reportId:$section'];
   }
 

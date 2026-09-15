@@ -18,9 +18,7 @@ import '../support/fake_workshop_repository.dart';
 
 Widget _wrap(FakeWorkshopRepository repo) {
   return ProviderScope(
-    overrides: [
-      workshopRepositoryProvider.overrideWithValue(repo),
-    ],
+    overrides: [workshopRepositoryProvider.overrideWithValue(repo)],
     child: const MaterialApp(
       builder: wrTextScaleBuilder,
       localizationsDelegates: [
@@ -44,20 +42,19 @@ WorkshopDetail _ws({
   String? category,
   String? imageUrl,
   bool isActive = true,
-}) =>
-    WorkshopDetail(
-      id: id,
-      title: title,
-      date: DateTime(2026, 8, 1),
-      price: price,
-      currency: 'VND',
-      currentParticipants: current,
-      maxParticipants: max,
-      status: 'active',
-      isActive: isActive,
-      category: category,
-      imageUrl: imageUrl,
-    );
+}) => WorkshopDetail(
+  id: id,
+  title: title,
+  date: DateTime(2026, 8, 1),
+  price: price,
+  currency: 'VND',
+  currentParticipants: current,
+  maxParticipants: max,
+  status: 'active',
+  isActive: isActive,
+  category: category,
+  imageUrl: imageUrl,
+);
 
 // ---------------------------------------------------------------------------
 // Tests

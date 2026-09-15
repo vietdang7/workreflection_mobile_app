@@ -12,14 +12,7 @@ import 'package:intl/intl.dart';
 // ---------------------------------------------------------------------------
 
 /// Fixed time slots, identical to web CoachingSchedule.tsx TIME_SLOTS.
-const kTimeSlots = [
-  '9:00',
-  '10:00',
-  '11:00',
-  '14:00',
-  '15:00',
-  '16:00',
-];
+const kTimeSlots = ['9:00', '10:00', '11:00', '14:00', '15:00', '16:00'];
 
 // ---------------------------------------------------------------------------
 // Date helpers
@@ -92,11 +85,13 @@ List<CalendarCell?> buildCalendarCells({
 
   for (var d = 1; d <= lastDay.day; d++) {
     final date = DateTime(year, month, d);
-    cells.add(CalendarCell(
-      date: date,
-      dateKey: formatDateKey(date),
-      isSelectable: isDateSelectable(date, today),
-    ));
+    cells.add(
+      CalendarCell(
+        date: date,
+        dateKey: formatDateKey(date),
+        isSelectable: isDateSelectable(date, today),
+      ),
+    );
   }
 
   return cells;

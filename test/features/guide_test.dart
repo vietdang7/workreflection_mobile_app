@@ -29,10 +29,7 @@ Widget _wrap({String initial = '/profile/guide'}) {
   final router = GoRouter(
     initialLocation: initial,
     routes: [
-      GoRoute(
-        path: '/profile/guide',
-        builder: (_, __) => const GuideScreen(),
-      ),
+      GoRoute(path: '/profile/guide', builder: (_, __) => const GuideScreen()),
       GoRoute(
         path: '/wr/ask',
         builder: (_, __) => const Scaffold(body: Text('CHATBOT')),
@@ -140,22 +137,10 @@ void main() {
     test('ngưỡng trong chữ đọc từ hằng số của app', () {
       final byId = {for (final s in wrGuideSections()) s.id: _flatten(s)};
 
-      expect(
-        byId['understand'],
-        contains('$kRepeatedSituationsMinCount lần'),
-      );
-      expect(
-        byId['understand'],
-        contains('$kRepeatedSituationsTop dòng'),
-      );
-      expect(
-        byId['understand'],
-        contains('$kCareerHealthThreshold lần'),
-      );
-      expect(
-        byId['growth'],
-        contains('$kReflectionsPerPracticeTheme lần'),
-      );
+      expect(byId['understand'], contains('$kRepeatedSituationsMinCount lần'));
+      expect(byId['understand'], contains('$kRepeatedSituationsTop dòng'));
+      expect(byId['understand'], contains('$kCareerHealthThreshold lần'));
+      expect(byId['growth'], contains('$kReflectionsPerPracticeTheme lần'));
       expect(byId['growth'], contains('$kSkillThreshold lần'));
       expect(
         byId['understand'],
@@ -170,8 +155,11 @@ void main() {
       String? previous;
       for (final s in wrGuideSections()) {
         if (s.group != previous) {
-          expect(seen, isNot(contains(s.group)),
-              reason: 'cụm "${s.group}" bị ngắt quãng ở mục ${s.id}');
+          expect(
+            seen,
+            isNot(contains(s.group)),
+            reason: 'cụm "${s.group}" bị ngắt quãng ở mục ${s.id}',
+          );
           seen.add(s.group);
           previous = s.group;
         }
@@ -239,14 +227,19 @@ void main() {
       }
     });
 
-    testWidgets('mục đóng hiện tóm tắt; chạm thì mở ra, chạm nữa thì đóng',
-        (t) async {
+    testWidgets('mục đóng hiện tóm tắt; chạm thì mở ra, chạm nữa thì đóng', (
+      t,
+    ) async {
       await t.pumpWidget(_wrap());
       await t.pumpAndSettle();
 
       final faq = wrGuideSections().firstWhere((s) => s.id == 'faq');
-      final firstQa =
-          faq.blocks.whereType<WrGuideQa>().single.items.first.question;
+      final firstQa = faq.blocks
+          .whereType<WrGuideQa>()
+          .single
+          .items
+          .first
+          .question;
 
       // Đóng: thấy tóm tắt, chưa thấy nội dung.
       expect(find.text(faq.summary), findsOneWidget);
@@ -272,8 +265,9 @@ void main() {
       await t.tap(find.byKey(const Key('guide_section_growth')));
       await t.pumpAndSettle();
 
-      final understand =
-          wrGuideSections().firstWhere((s) => s.id == 'understand');
+      final understand = wrGuideSections().firstWhere(
+        (s) => s.id == 'understand',
+      );
       final growth = wrGuideSections().firstWhere((s) => s.id == 'growth');
 
       // Cả hai đang mở → không mục nào còn hiện dòng tóm tắt.
@@ -294,8 +288,11 @@ void main() {
         if (groups.isEmpty || groups.last != s.group) groups.add(s.group);
       }
 
-      expect(groups.toSet().length, groups.length,
-          reason: 'các mục cùng nhóm phải đứng liền nhau');
+      expect(
+        groups.toSet().length,
+        groups.length,
+        reason: 'các mục cùng nhóm phải đứng liền nhau',
+      );
 
       for (final g in groups) {
         expect(find.text(g.toUpperCase()), findsOneWidget, reason: g);

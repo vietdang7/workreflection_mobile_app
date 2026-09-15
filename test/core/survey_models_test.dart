@@ -438,9 +438,7 @@ void main() {
     });
 
     test('returns null when no questions have sub_component', () {
-      final questions = [
-        makeQWithSub('q1', SurveyLayer.enps, null),
-      ];
+      final questions = [makeQWithSub('q1', SurveyLayer.enps, null)];
       final answers = {'q1': 9};
       final result = buildSubScoresMap(answers, questions);
       expect(result, isNull);

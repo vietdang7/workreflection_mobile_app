@@ -143,8 +143,9 @@ void main() {
       }
     });
 
-    testWidgets('viết dở thì mở lại đúng buổi đang dở, chữ cũ còn nguyên',
-        (tester) async {
+    testWidgets('viết dở thì mở lại đúng buổi đang dở, chữ cũ còn nguyên', (
+      tester,
+    ) async {
       final repo = FakeWrJdRepository(
         seed: WrJdDraft(
           values: const {'job_title': 'Trưởng nhóm nội dung'},
@@ -247,8 +248,9 @@ void main() {
       expect(find.text(kJdDays[1].title), findsOneWidget);
     });
 
-    testWidgets('xong buổi cuối thì đóng màn, về Thông tin công việc',
-        (tester) async {
+    testWidgets('xong buổi cuối thì đóng màn, về Thông tin công việc', (
+      tester,
+    ) async {
       final repo = FakeWrJdRepository(
         seed: WrJdDraft(
           values: const {},
@@ -301,8 +303,9 @@ void main() {
       expect(canOpenJdDay(2, repo._draft!.completedDays), isFalse);
     });
 
-    testWidgets('lưu nháp hỏng thì giữ người dùng lại, không nuốt chữ',
-        (tester) async {
+    testWidgets('lưu nháp hỏng thì giữ người dùng lại, không nuốt chữ', (
+      tester,
+    ) async {
       final repo = FakeWrJdRepository()..failNextSave = true;
       await _openBuilder(tester, repo);
 

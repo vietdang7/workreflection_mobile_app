@@ -34,9 +34,9 @@ class _VouchersScreenState extends ConsumerState<VouchersScreen> {
     Clipboard.setData(ClipboardData(text: code));
     setState(() => _copiedId = id);
     final l10n = AppLocalizations.of(context)!;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(l10n.voucherCopiedToast(code))),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(l10n.voucherCopiedToast(code))));
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _copiedId = null);
     });
@@ -66,11 +66,11 @@ class _VouchersScreenState extends ConsumerState<VouchersScreen> {
         centerTitle: false,
       ),
       body: async.when(
-        loading: () =>
-            const Center(child: CircularProgressIndicator(color: WrColors.coral)),
-        error: (_, __) => Center(
-          child: Text(l10n.vouchersEmpty, style: WrTextStyles.body),
+        loading: () => const Center(
+          child: CircularProgressIndicator(color: WrColors.coral),
         ),
+        error: (_, __) =>
+            Center(child: Text(l10n.vouchersEmpty, style: WrTextStyles.body)),
         data: (vouchers) => _VouchersList(
           vouchers: vouchers,
           copiedId: _copiedId,
@@ -117,8 +117,10 @@ class _VouchersList extends StatelessWidget {
               Expanded(
                 child: Text(
                   l10n.voucherWebNote,
-                  style: WrTextStyles.body
-                      .copyWith(fontSize: 13.5, color: WrColors.coral),
+                  style: WrTextStyles.body.copyWith(
+                    fontSize: 13.5,
+                    color: WrColors.coral,
+                  ),
                 ),
               ),
             ],
@@ -162,12 +164,17 @@ class _EmptyState extends StatelessWidget {
               color: WrColors.navy.withValues(alpha: 0.06),
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.confirmation_number_outlined,
-                color: WrColors.muted, size: 32),
+            child: const Icon(
+              Icons.confirmation_number_outlined,
+              color: WrColors.muted,
+              size: 32,
+            ),
           ),
           const SizedBox(height: 16),
-          Text(l10n.vouchersEmpty,
-              style: WrTextStyles.hMedium.copyWith(color: WrColors.navy)),
+          Text(
+            l10n.vouchersEmpty,
+            style: WrTextStyles.hMedium.copyWith(color: WrColors.navy),
+          ),
           const SizedBox(height: 6),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
@@ -221,8 +228,7 @@ class _VoucherCard extends StatelessWidget {
     final id = voucher['id'] as String? ?? '';
     final code = voucher['code'] as String? ?? '';
     final discountType = voucher['discount_type'] as String? ?? 'percentage';
-    final discountPercent =
-        (voucher['discount_percent'] as num?)?.toInt() ?? 0;
+    final discountPercent = (voucher['discount_percent'] as num?)?.toInt() ?? 0;
     final discountAmount = (voucher['discount_amount'] as num?) ?? 0;
     final maxUses = (voucher['max_uses'] as num?)?.toInt() ?? 0;
     final usedCount = (voucher['used_count'] as num?)?.toInt() ?? 0;
@@ -236,7 +242,9 @@ class _VoucherCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 12),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: _isAvailable ? 1 : 0,
-      color: _isAvailable ? WrColors.white : WrColors.navy.withValues(alpha: 0.04),
+      color: _isAvailable
+          ? WrColors.white
+          : WrColors.navy.withValues(alpha: 0.04),
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -270,9 +278,7 @@ class _VoucherCard extends StatelessWidget {
                         style: WrTextStyles.hMedium.copyWith(
                           fontFamily: 'monospace',
                           letterSpacing: 1.5,
-                          color: _isAvailable
-                              ? WrColors.navy
-                              : WrColors.muted,
+                          color: _isAvailable ? WrColors.navy : WrColors.muted,
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -280,9 +286,12 @@ class _VoucherCard extends StatelessWidget {
                         discountType == 'percentage'
                             ? l10n.voucherDiscountPercent(discountPercent)
                             : l10n.voucherDiscountAmount(
-                                discountAmount.toStringAsFixed(0)),
-                        style: WrTextStyles.body
-                            .copyWith(fontSize: 13.5, color: WrColors.muted),
+                                discountAmount.toStringAsFixed(0),
+                              ),
+                        style: WrTextStyles.body.copyWith(
+                          fontSize: 13.5,
+                          color: WrColors.muted,
+                        ),
                       ),
                     ],
                   ),
@@ -308,7 +317,9 @@ class _VoucherCard extends StatelessWidget {
                   };
                   return Container(
                     padding: const EdgeInsets.symmetric(
-                        horizontal: 8, vertical: 3),
+                      horizontal: 8,
+                      vertical: 3,
+                    ),
                     decoration: BoxDecoration(
                       color: WrColors.coral.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(20),
@@ -316,7 +327,9 @@ class _VoucherCard extends StatelessWidget {
                     child: Text(
                       labels[s] ?? s,
                       style: WrTextStyles.body.copyWith(
-                          fontSize: 11.5, color: WrColors.pillCoralText),
+                        fontSize: 11.5,
+                        color: WrColors.pillCoralText,
+                      ),
                     ),
                   );
                 }).toList(),
@@ -336,15 +349,18 @@ class _VoucherCard extends StatelessWidget {
                     children: [
                       Text(
                         l10n.voucherExpiry(formatDate(validTo)),
-                        style: WrTextStyles.body
-                            .copyWith(fontSize: 13.5, color: WrColors.muted),
+                        style: WrTextStyles.body.copyWith(
+                          fontSize: 13.5,
+                          color: WrColors.muted,
+                        ),
                       ),
                       if (maxUses > 0)
                         Text(
-                          l10n.voucherUsesLeft(
-                              maxUses - usedCount, maxUses),
+                          l10n.voucherUsesLeft(maxUses - usedCount, maxUses),
                           style: WrTextStyles.body.copyWith(
-                              fontSize: 13.5, color: WrColors.muted),
+                            fontSize: 13.5,
+                            color: WrColors.muted,
+                          ),
                         ),
                     ],
                   ),
@@ -365,9 +381,12 @@ class _VoucherCard extends StatelessWidget {
                       backgroundColor: WrColors.coral,
                       foregroundColor: WrColors.navy,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 8),
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       elevation: 0,
                     ),
                   ),
@@ -417,8 +436,10 @@ class _StatusBadge extends StatelessWidget {
         color: bg,
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(label,
-          style: WrTextStyles.body.copyWith(fontSize: 12.5, color: fg)),
+      child: Text(
+        label,
+        style: WrTextStyles.body.copyWith(fontSize: 12.5, color: fg),
+      ),
     );
   }
 }

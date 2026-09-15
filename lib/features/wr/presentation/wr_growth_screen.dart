@@ -121,7 +121,9 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
 
     _autoEnrolling = true;
     try {
-      await ref.read(wrIntelligenceRepositoryProvider).enrollTheme(
+      await ref
+          .read(wrIntelligenceRepositoryProvider)
+          .enrollTheme(
             PracticeEnrollment(
               userId: userId,
               themeId: suggestion.theme.themeId,
@@ -172,7 +174,8 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
               (_) => _maybeAutoEnroll(),
             );
             final enrollments = enrollmentsAsync.valueOrNull ?? const [];
-            final entitlement = entitlementAsync.valueOrNull ??
+            final entitlement =
+                entitlementAsync.valueOrNull ??
                 WrEntitlement(plan: WrPlan.free);
             final episodes = episodesAsync.valueOrNull ?? const [];
             final situations = situationsAsync.valueOrNull ?? const [];
@@ -203,8 +206,9 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
     required ScaSelfCheckResponse? latestSelfCheck,
   }) {
     // Find the first active (non-completed) enrollment
-    final activeEnrollment =
-        enrollments.where((e) => e.completedAt == null).firstOrNull;
+    final activeEnrollment = enrollments
+        .where((e) => e.completedAt == null)
+        .firstOrNull;
     final activeTheme = activeEnrollment != null
         ? themes.where((t) => t.themeId == activeEnrollment.themeId).firstOrNull
         : null;
@@ -269,12 +273,11 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
       ])
         if (seenTitles.add(card.$1.title)) card,
     ];
-    final hiddenThemeCount =
-        (enrolledCards.length - kGrowthThemesPreview).clamp(0, 1 << 30);
+    final hiddenThemeCount = (enrolledCards.length - kGrowthThemesPreview)
+        .clamp(0, 1 << 30);
     final visibleCards = _showAllThemes || hiddenThemeCount == 0
         ? enrolledCards
         : enrolledCards.take(kGrowthThemesPreview).toList();
-
 
     return CustomScrollView(
       slivers: [
@@ -361,7 +364,10 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
                             key: const Key('wr_growth_themes_more'),
                             label: _showAllThemes
                                 ? tr('Thu gọn', 'Show less')
-                                : tr('Xem thêm $hiddenThemeCount chủ đề', 'See $hiddenThemeCount more themes'),
+                                : tr(
+                                    'Xem thêm $hiddenThemeCount chủ đề',
+                                    'See $hiddenThemeCount more themes',
+                                  ),
                             onTap: () => setState(
                               () => _showAllThemes = !_showAllThemes,
                             ),
@@ -446,25 +452,37 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
       // Thư viện chưa có chủ đề nào — không phải lỗi của người dùng, đừng bảo
       // họ đi nhìn lại thêm.
       (false, _) => (
-          tr('Chưa có chủ đề nào đang thực hành', 'No theme in practice yet'),
-          tr('WorkReflection sẽ đề xuất chủ đề dựa trên những gì bạn đã nhìn lại.', 'WorkReflection will suggest a theme based on what you have looked back on.'),
+        tr('Chưa có chủ đề nào đang thực hành', 'No theme in practice yet'),
+        tr(
+          'WorkReflection sẽ đề xuất chủ đề dựa trên những gì bạn đã nhìn lại.',
+          'WorkReflection will suggest a theme based on what you have looked back on.',
         ),
+      ),
       // Còn chủ đề để mời, chỉ là chưa tích đủ. Nói đúng quãng đường còn lại
       // thay vì bảo họ chờ một điều không đo được.
       (true, true) => (
-          tr('Chưa xác định chủ đề trọng tâm', 'No focus theme yet'),
-          tr('Bạn đã tích lũy $reflectionCount/$kReflectionsPerPracticeTheme lượt '
+        tr('Chưa xác định chủ đề trọng tâm', 'No focus theme yet'),
+        tr(
+          'Bạn đã tích lũy $reflectionCount/$kReflectionsPerPracticeTheme lượt '
               'nhìn lại. Khi đạt mốc $kReflectionsPerPracticeTheme lượt, ứng '
               'dụng sẽ tự động gợi ý chủ đề phù hợp nhất với bạn. Bạn cũng có '
-              'thể hoàn thành Self-Check để mở khóa ngay.', 'You have $reflectionCount of $kReflectionsPerPracticeTheme look-backs so '
+              'thể hoàn thành Self-Check để mở khóa ngay.',
+          'You have $reflectionCount of $kReflectionsPerPracticeTheme look-backs so '
               'far. At $kReflectionsPerPracticeTheme the app will suggest the '
               'theme that fits you best. You can also finish the Self-Check to '
-              'unlock it now.'),
+              'unlock it now.',
         ),
+      ),
       (true, false) => (
-          tr('Bạn đã bắt đầu tất cả chủ đề hiện có', 'You have started every theme available'),
-          tr('Hoàn thành một chủ đề đang theo, rồi quay lại đây.', 'Finish one you are already on, then come back here.'),
+        tr(
+          'Bạn đã bắt đầu tất cả chủ đề hiện có',
+          'You have started every theme available',
         ),
+        tr(
+          'Hoàn thành một chủ đề đang theo, rồi quay lại đây.',
+          'Finish one you are already on, then come back here.',
+        ),
+      ),
     };
 
     return WrCardMinimal(
@@ -544,7 +562,8 @@ class _OpportunitySliver extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final workshops = ref.watch(activeWorkshopsProvider).valueOrNull ?? const [];
+    final workshops =
+        ref.watch(activeWorkshopsProvider).valueOrNull ?? const [];
     final next = nextTraChieu(workshops, now: DateTime.now());
 
     return SliverToBoxAdapter(
@@ -592,7 +611,10 @@ class _OpportunitySliver extends ConsumerWidget {
                 // buổi cũ đã diễn ra để thẻ trông có nội dung.
                 Text(
                   next == null
-                      ? tr('Hiện chưa có lịch sự kiện mới.', 'No sessions scheduled yet.')
+                      ? tr(
+                          'Hiện chưa có lịch sự kiện mới.',
+                          'No sessions scheduled yet.',
+                        )
                       : '"${next.title}"',
                   style: WrText.serifQuote(
                     fontSize: 15.5,
@@ -659,8 +681,9 @@ class WrPracticeThemeCard extends ConsumerWidget {
     final steps =
         ref.watch(practiceStepsProvider(theme.themeId)).valueOrNull ?? const [];
     final total = steps.length;
-    final done =
-        steps.where((s) => enrollment.completedSteps.contains(s.stepId)).length;
+    final done = steps
+        .where((s) => enrollment.completedSteps.contains(s.stepId))
+        .length;
     final finished = enrollment.completedAt != null;
 
     return Padding(
@@ -676,7 +699,9 @@ class WrPracticeThemeCard extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      finished ? tr('Đã hoàn thành', 'Completed') : tr('Đang thực hành', 'In practice'),
+                      finished
+                          ? tr('Đã hoàn thành', 'Completed')
+                          : tr('Đang thực hành', 'In practice'),
                       style: const TextStyle(
                         fontSize: 13.5,
                         color: WrColors.muted,
@@ -698,7 +723,10 @@ class WrPracticeThemeCard extends ConsumerWidget {
                       child: Text(
                         finished
                             ? tr('Trọn chuỗi', 'Whole series')
-                            : tr('Giai đoạn ${min(done + 1, total)}/$total', 'Stage ${min(done + 1, total)}/$total'),
+                            : tr(
+                                'Giai đoạn ${min(done + 1, total)}/$total',
+                                'Stage ${min(done + 1, total)}/$total',
+                              ),
                         style: const TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w700,
@@ -770,9 +798,12 @@ class _QuotaCard extends StatelessWidget {
         child: Column(
           children: [
             Text(
-              tr('Bản miễn phí mở tối đa $max chủ đề cùng lúc '
-              '(đang mở $activeCount/$max).', 'The free version opens up to $max themes at once '
-              '(you have $activeCount/$max open).'),
+              tr(
+                'Bản miễn phí mở tối đa $max chủ đề cùng lúc '
+                    '(đang mở $activeCount/$max).',
+                'The free version opens up to $max themes at once '
+                    '(you have $activeCount/$max open).',
+              ),
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 14.5,

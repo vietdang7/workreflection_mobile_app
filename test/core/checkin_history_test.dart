@@ -16,10 +16,7 @@ void main() {
     });
 
     test('today checked in → last element true', () {
-      final result = buildCheckinHistory(
-        checkinDates: [today],
-        today: today,
-      );
+      final result = buildCheckinHistory(checkinDates: [today], today: today);
       expect(result.last, isTrue);
       // All others should be false
       for (int i = 0; i < 29; i++) {
@@ -39,10 +36,7 @@ void main() {
 
     test('29 days ago checked in → index 0 true', () {
       final oldest = today.subtract(const Duration(days: 29));
-      final result = buildCheckinHistory(
-        checkinDates: [oldest],
-        today: today,
-      );
+      final result = buildCheckinHistory(checkinDates: [oldest], today: today);
       expect(result[0], isTrue);
       for (int i = 1; i < 30; i++) {
         expect(result[i], isFalse);
@@ -51,19 +45,13 @@ void main() {
 
     test('date 30 days ago (outside window) → all false', () {
       final outside = today.subtract(const Duration(days: 30));
-      final result = buildCheckinHistory(
-        checkinDates: [outside],
-        today: today,
-      );
+      final result = buildCheckinHistory(checkinDates: [outside], today: today);
       expect(result.every((v) => !v), isTrue);
     });
 
     test('date far in the future (outside window) → all false', () {
       final future = today.add(const Duration(days: 10));
-      final result = buildCheckinHistory(
-        checkinDates: [future],
-        today: today,
-      );
+      final result = buildCheckinHistory(checkinDates: [future], today: today);
       expect(result.every((v) => !v), isTrue);
     });
 

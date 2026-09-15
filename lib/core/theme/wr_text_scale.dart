@@ -59,7 +59,10 @@ class WrTextScaler implements TextScaler {
   double get textScaleFactor => scale(14) / 14;
 
   @override
-  TextScaler clamp({double minScaleFactor = 0, double maxScaleFactor = double.infinity}) {
+  TextScaler clamp({
+    double minScaleFactor = 0,
+    double maxScaleFactor = double.infinity,
+  }) {
     return WrTextScaler(
       systemScale: clampDouble(systemScale, minScaleFactor, maxScaleFactor),
     );
@@ -80,9 +83,7 @@ class WrTextScaler implements TextScaler {
 /// mọi màn — kể cả dialog và bottom sheet mở qua Navigator gốc — đều nhận.
 Widget wrTextScaleBuilder(BuildContext context, Widget? child) {
   return MediaQuery(
-    data: MediaQuery.of(context).copyWith(
-      textScaler: WrTextScaler.of(context),
-    ),
+    data: MediaQuery.of(context).copyWith(textScaler: WrTextScaler.of(context)),
     child: child ?? const SizedBox.shrink(),
   );
 }

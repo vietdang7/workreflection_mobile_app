@@ -20,7 +20,8 @@ class WrGrowthJourneyScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final entitlement = ref.watch(wrEntitlementProvider).valueOrNull ??
+    final entitlement =
+        ref.watch(wrEntitlementProvider).valueOrNull ??
         WrEntitlement(plan: WrPlan.free);
     final snapshots =
         ref.watch(wrGrowthSnapshotsProvider).valueOrNull ?? const [];
@@ -33,18 +34,23 @@ class WrGrowthJourneyScreen extends ConsumerWidget {
         if (!canRead)
           WrPremiumLock(
             key: Key('wr_growth_journey_lock'),
-            description:
-                tr('Bản đầy đủ tổng kết từng chặng: bạn đã đi được bao xa và '
-                'hướng nào đang mở ra tiếp theo.', 'The full version sums up each stage: how far you have come '
-                'and which direction is opening up next.'),
+            description: tr(
+              'Bản đầy đủ tổng kết từng chặng: bạn đã đi được bao xa và '
+                  'hướng nào đang mở ra tiếp theo.',
+              'The full version sums up each stage: how far you have come '
+                  'and which direction is opening up next.',
+            ),
             ctaLabel: tr('Mở chặng đường phát triển', 'Open your growth path'),
             paywallTrigger: 'growth_journey',
           )
         else if (snapshots.isEmpty)
           WrParagraph(
-            tr('Chưa có chặng nào được tổng kết. Sau vài tuần thực hành đều, '
-            'WorkReflection sẽ dựng lại chặng đường của bạn ở đây.', 'No stage has been summed up yet. After a few weeks of steady '
-            'practice, WorkReflection will lay out your path here.'),
+            tr(
+              'Chưa có chặng nào được tổng kết. Sau vài tuần thực hành đều, '
+                  'WorkReflection sẽ dựng lại chặng đường của bạn ở đây.',
+              'No stage has been summed up yet. After a few weeks of steady '
+                  'practice, WorkReflection will lay out your path here.',
+            ),
             key: Key('wr_growth_journey_empty'),
             style: TextStyle(
               fontSize: 16.5,
@@ -85,7 +91,11 @@ class _SnapshotBlock extends StatelessWidget {
             const SizedBox(height: 8),
           ],
           Text(
-            snapshot.direction ?? tr('Chặng này chưa có ghi chú hướng đi.', 'No direction notes for this stage yet.'),
+            snapshot.direction ??
+                tr(
+                  'Chặng này chưa có ghi chú hướng đi.',
+                  'No direction notes for this stage yet.',
+                ),
             style: const TextStyle(
               fontSize: 16,
               color: WrColors.navy,

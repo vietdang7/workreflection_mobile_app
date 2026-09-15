@@ -62,10 +62,12 @@ Widget _wrap(
 
   return ProviderScope(
     overrides: [
-      wrIntelligenceRepositoryProvider
-          .overrideWithValue(intel ?? FakeWrIntelligenceRepository()),
-      wrContentRepositoryProvider
-          .overrideWithValue(content ?? FakeWrContentRepository()),
+      wrIntelligenceRepositoryProvider.overrideWithValue(
+        intel ?? FakeWrIntelligenceRepository(),
+      ),
+      wrContentRepositoryProvider.overrideWithValue(
+        content ?? FakeWrContentRepository(),
+      ),
       currentUserIdProvider.overrideWithValue('u1'),
       wrSeniorityTierProvider.overrideWithValue(tier),
     ],
@@ -151,8 +153,9 @@ void main() {
       expect(find.text('Nội dung gốc bước 3.'), findsOneWidget);
     });
 
-    testWidgets('quản lý nhóm nhỏ thấy bản viết cho người quản lý',
-        (tester) async {
+    testWidgets('quản lý nhóm nhỏ thấy bản viết cho người quản lý', (
+      tester,
+    ) async {
       await _pumpLarge(
         tester,
         _wrap(
@@ -163,10 +166,7 @@ void main() {
       );
 
       expect(find.text('Nội dung gốc bước 3.'), findsNothing);
-      expect(
-        find.textContaining('giao việc và thật sự buông'),
-        findsOneWidget,
-      );
+      expect(find.textContaining('giao việc và thật sự buông'), findsOneWidget);
       // Hai bước đầu không đổi — B.3 chỉ cho viết lại bước thứ ba.
       expect(find.text('Nội dung gốc bước 1.'), findsOneWidget);
       expect(find.text('Nội dung gốc bước 2.'), findsOneWidget);
@@ -190,8 +190,9 @@ void main() {
   });
 
   group('Yêu cầu 05/08 — màn chủ đề', () {
-    testWidgets('mỗi bước là một thẻ RIÊNG, không gộp chung một thẻ',
-        (tester) async {
+    testWidgets('mỗi bước là một thẻ RIÊNG, không gộp chung một thẻ', (
+      tester,
+    ) async {
       await _pumpLarge(
         tester,
         _wrap(
@@ -202,9 +203,11 @@ void main() {
 
       expect(find.byType(WrListCard), findsNothing);
       for (final id in ['pt-c1-1', 'pt-c1-2', 'pt-c1-3']) {
-        final box = tester
-            .widget<Container>(find.byKey(Key('wr_practice_step_$id')))
-            .decoration as BoxDecoration;
+        final box =
+            tester
+                    .widget<Container>(find.byKey(Key('wr_practice_step_$id')))
+                    .decoration
+                as BoxDecoration;
         expect(box.color, WrColors.white, reason: id);
         expect(box.border, isNotNull, reason: id);
         expect(
@@ -215,8 +218,9 @@ void main() {
       }
     });
 
-    testWidgets('đoạn nối là kẻ DỌC mảnh, không phải thanh ngang',
-        (tester) async {
+    testWidgets('đoạn nối là kẻ DỌC mảnh, không phải thanh ngang', (
+      tester,
+    ) async {
       // Màn này dựng bằng ListView, vốn ép con chiếm trọn bề ngang. Thiếu
       // `Align` là `width: 2` bị bỏ qua và đoạn kẻ biến thành một thanh ngang
       // dày chắn giữa hai thẻ — đúng lỗi giao diện báo ngày 05/08.
@@ -238,8 +242,9 @@ void main() {
       }
     });
 
-    testWidgets('bước đã xong thì mờ đi, bước đang chờ thì không',
-        (tester) async {
+    testWidgets('bước đã xong thì mờ đi, bước đang chờ thì không', (
+      tester,
+    ) async {
       // Ghi danh của `_trustTheme` đánh dấu cả ba bước đã xong, nên lấy một
       // ghi danh mới chỉ xong bước đầu để so hai trạng thái cạnh nhau.
       final intel = _trustTheme()
@@ -292,8 +297,9 @@ void main() {
   });
 
   group('C.1 — mảnh ký ức mang theo theme_id', () {
-    testWidgets('ghi nhận duy trì lưu theme_id, không chỉ lưu tên',
-        (tester) async {
+    testWidgets('ghi nhận duy trì lưu theme_id, không chỉ lưu tên', (
+      tester,
+    ) async {
       final content = FakeWrContentRepository();
       await _pumpLarge(
         tester,
@@ -349,8 +355,9 @@ void main() {
       );
     });
 
-    testWidgets('chủ đề chưa có câu riêng thì lùi về câu chốt ở A.1',
-        (tester) async {
+    testWidgets('chủ đề chưa có câu riêng thì lùi về câu chốt ở A.1', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Builder(
@@ -415,18 +422,18 @@ void main() {
           ]);
 
     /// Bốn lần cho mỗi chủ đề — cùng chữ, khác theme_id.
-    FakeWrContentRepository fourEach() => FakeWrContentRepository()
-      ..seedMemoryEvents([
-        for (final id in ['pt-voice', 'pt-c2'])
-          for (var i = 1; i <= 4; i++)
-            CareerMemoryEvent(
-              id: '$id-$i',
-              userId: 'u1',
-              behavior: kPracticeMaintainedBehavior,
-              themeId: id,
-              reflectionText: 'Dám lên tiếng · Duy trì',
-            ),
-      ]);
+    FakeWrContentRepository fourEach() =>
+        FakeWrContentRepository()..seedMemoryEvents([
+          for (final id in ['pt-voice', 'pt-c2'])
+            for (var i = 1; i <= 4; i++)
+              CareerMemoryEvent(
+                id: '$id-$i',
+                userId: 'u1',
+                behavior: kPracticeMaintainedBehavior,
+                themeId: id,
+                reflectionText: 'Dám lên tiếng · Duy trì',
+              ),
+        ]);
 
     testWidgets('bộ đếm của mỗi chủ đề là 4/5, không phải 8/5', (tester) async {
       await _pumpLarge(
@@ -443,8 +450,9 @@ void main() {
       expect(find.textContaining('Còn 1 lần nữa'), findsOneWidget);
     });
 
-    testWidgets('lần thứ 5 mới ăn mừng, và dấu mốc ghi đúng theme_id',
-        (tester) async {
+    testWidgets('lần thứ 5 mới ăn mừng, và dấu mốc ghi đúng theme_id', (
+      tester,
+    ) async {
       final content = fourEach();
       await _pumpLarge(
         tester,
@@ -477,23 +485,26 @@ void main() {
   });
 
   group('Đối chiếu UX/UI 05/08 — ba việc về phần nhìn', () {
-    testWidgets('thẻ mở đầu là thẻ trắng có viền, không phải khối màu phẳng',
-        (tester) async {
+    testWidgets('thẻ mở đầu là thẻ trắng có viền, không phải khối màu phẳng', (
+      tester,
+    ) async {
       await _pumpLarge(tester, _wrap(const WrGrowthSkillsScreen()));
 
-      final box = tester
-          .widget<Container>(find.byKey(const Key('wr_skills_how_it_works')))
-          .decoration as BoxDecoration;
+      final box =
+          tester
+                  .widget<Container>(
+                    find.byKey(const Key('wr_skills_how_it_works')),
+                  )
+                  .decoration
+              as BoxDecoration;
       expect(box.color, WrColors.white);
       expect(box.border, isNotNull);
-      expect(
-        box.borderRadius,
-        BorderRadius.circular(kWrCardRadius),
-      );
+      expect(box.borderRadius, BorderRadius.circular(kWrCardRadius));
     });
 
-    testWidgets('mỗi nhóm danh sách nằm trong một khối thẻ chung',
-        (tester) async {
+    testWidgets('mỗi nhóm danh sách nằm trong một khối thẻ chung', (
+      tester,
+    ) async {
       final intel = FakeWrIntelligenceRepository()
         ..seedPracticeThemes([
           for (var i = 1; i <= 2; i++)
@@ -528,11 +539,13 @@ void main() {
       );
     });
 
-    testWidgets('dòng tiến độ dùng dấu phẩy, không dùng dấu chấm giữa',
-        (tester) async {
+    testWidgets('dòng tiến độ dùng dấu phẩy, không dùng dấu chấm giữa', (
+      tester,
+    ) async {
       final intel = FakeWrIntelligenceRepository()
-        ..seedPracticeThemes(
-            [const PracticeTheme(themeId: 't1', title: 'Chủ đề 1')])
+        ..seedPracticeThemes([
+          const PracticeTheme(themeId: 't1', title: 'Chủ đề 1'),
+        ])
         ..seedEnrollments([
           PracticeEnrollment(
             userId: 'u1',
@@ -553,8 +566,9 @@ void main() {
       expect(line, isNot(contains('·')));
     });
 
-    testWidgets('màu nhãn Premium chỉ còn ở đúng khối khoá Premium',
-        (tester) async {
+    testWidgets('màu nhãn Premium chỉ còn ở đúng khối khoá Premium', (
+      tester,
+    ) async {
       // `WrColors.amber` là token dành riêng cho nhãn Premium. Dùng nó làm
       // chấm bullet cho khoảng trống JD nói với người dùng một điều sai: rằng
       // khoảng trống đó là hàng trả phí. Ở khối khoá Premium thì nó đúng chỗ,
@@ -593,10 +607,12 @@ void main() {
       ];
       return ProviderScope(
         overrides: [
-          wrIntelligenceRepositoryProvider
-              .overrideWithValue(FakeWrIntelligenceRepository()),
-          wrContentRepositoryProvider
-              .overrideWithValue(FakeWrContentRepository()),
+          wrIntelligenceRepositoryProvider.overrideWithValue(
+            FakeWrIntelligenceRepository(),
+          ),
+          wrContentRepositoryProvider.overrideWithValue(
+            FakeWrContentRepository(),
+          ),
           currentUserIdProvider.overrideWithValue('u1'),
           wrSeniorityTierProvider.overrideWithValue(SeniorityTier.leadOrg),
           wrEntitlementProvider.overrideWith(
@@ -627,8 +643,9 @@ void main() {
       );
     }
 
-    testWidgets('mỗi dòng dẫn đầu bằng pill chữ, không phải chấm tròn',
-        (tester) async {
+    testWidgets('mỗi dòng dẫn đầu bằng pill chữ, không phải chấm tròn', (
+      tester,
+    ) async {
       await _pumpLarge(tester, premiumWithGaps());
 
       expect(find.text('Cần'), findsOneWidget);

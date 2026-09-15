@@ -86,12 +86,16 @@ class _DominantNeedBlock extends ConsumerWidget {
 
     return insightAsync.when(
       loading: () => const _LoadingCard(),
-      error: (e, _) =>
-          _ErrorCard(onRetry: () => ref.invalidate(understandLatestInsightProvider)),
+      error: (e, _) => _ErrorCard(
+        onRetry: () => ref.invalidate(understandLatestInsightProvider),
+      ),
       data: (insight) {
         final quote = insight != null
             ? '"${insight.content}"'
-            : tr('"Đang tải hành trình của bạn..."', '"Loading your journey..."');
+            : tr(
+                '"Đang tải hành trình của bạn..."',
+                '"Loading your journey..."',
+              );
         final source = insight?.source ?? 'VOICE';
         return Padding(
           padding: const EdgeInsets.symmetric(vertical: 12),
@@ -144,11 +148,14 @@ class _SituationsList extends ConsumerWidget {
         situationsAsync.when(
           loading: () => const _LoadingCard(),
           error: (e, _) => _ErrorCard(
-              onRetry: () => ref.invalidate(understandSituationsProvider)),
+            onRetry: () => ref.invalidate(understandSituationsProvider),
+          ),
           data: (situations) {
             if (situations.isEmpty) {
-              return Text(l10n.understandNoSituations,
-                  style: WrTextStyles.body);
+              return Text(
+                l10n.understandNoSituations,
+                style: WrTextStyles.body,
+              );
             }
             final maxCount = situations
                 .map((s) => s.occurrenceCount)
@@ -232,17 +239,17 @@ class _SituationRow extends StatelessWidget {
   }
   return switch (scaPillarStatus(score)) {
     ScaPillarStatus.developing => (
-        label: l10n.understandStatusStable,
-        color: WrColors.teal
-      ),
+      label: l10n.understandStatusStable,
+      color: WrColors.teal,
+    ),
     ScaPillarStatus.needsAttention => (
-        label: l10n.understandStatusImproving,
-        color: WrColors.coral
-      ),
+      label: l10n.understandStatusImproving,
+      color: WrColors.coral,
+    ),
     ScaPillarStatus.priority => (
-        label: l10n.understandStatusNeedsAttention,
-        color: WrColors.coral
-      ),
+      label: l10n.understandStatusNeedsAttention,
+      color: WrColors.coral,
+    ),
   };
 }
 
@@ -254,8 +261,9 @@ class _ScaCard extends ConsumerWidget {
 
     return scaAsync.when(
       loading: () => const _LoadingCard(),
-      error: (e, _) =>
-          _ErrorCard(onRetry: () => ref.invalidate(understandScaReportProvider)),
+      error: (e, _) => _ErrorCard(
+        onRetry: () => ref.invalidate(understandScaReportProvider),
+      ),
       data: (report) {
         final sStatus = _scaStatus(report?.scoreStructure, l10n);
         final cStatus = _scaStatus(report?.scoreCulture, l10n);
@@ -335,9 +343,7 @@ class _ScaRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        Expanded(
-          child: Text(label, style: WrTextStyles.hMedium),
-        ),
+        Expanded(child: Text(label, style: WrTextStyles.hMedium)),
         Text(
           status,
           style: TextStyle(
@@ -370,7 +376,8 @@ class _CareerHealthCheck extends ConsumerWidget {
         countAsync.when(
           loading: () => const _LoadingCard(),
           error: (e, _) => _ErrorCard(
-              onRetry: () => ref.invalidate(understandInsightCountProvider)),
+            onRetry: () => ref.invalidate(understandInsightCountProvider),
+          ),
           data: (count) => Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [

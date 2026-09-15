@@ -6,10 +6,7 @@ import 'package:workreflection_mobile/core/models/coaching_models.dart';
 
 import '../support/fake_coaching_repository.dart';
 
-CoachingPackage _freePackage({
-  String id = 'pkg-free',
-  int sessionsCount = 3,
-}) {
+CoachingPackage _freePackage({String id = 'pkg-free', int sessionsCount = 3}) {
   return CoachingPackage(
     id: id,
     name: 'Free Package',
@@ -45,10 +42,7 @@ Coach _coach({String id = 'coach-1'}) {
   );
 }
 
-CoachingBooking _booking({
-  String id = 'booking-1',
-  DateTime? scheduledAt,
-}) {
+CoachingBooking _booking({String id = 'booking-1', DateTime? scheduledAt}) {
   return CoachingBooking(
     id: id,
     packageId: 'pkg-1',
@@ -115,10 +109,7 @@ void main() {
   test('claimFreePackage throws StateError for paid package', () async {
     final pkg = _paidPackage();
 
-    expect(
-      () => repo.claimFreePackage(pkg),
-      throwsA(isA<StateError>()),
-    );
+    expect(() => repo.claimFreePackage(pkg), throwsA(isA<StateError>()));
     expect(repo.claimFreePackageCalls, isEmpty);
   });
 
@@ -146,21 +137,24 @@ void main() {
     expect(() => repo.getPackages(), returnsNormally);
   });
 
-  test('nextError is cleared after throw so subsequent calls succeed', () async {
-    repo.seedPackages([_freePackage()]);
-    repo.nextError = Exception('one-shot');
+  test(
+    'nextError is cleared after throw so subsequent calls succeed',
+    () async {
+      repo.seedPackages([_freePackage()]);
+      repo.nextError = Exception('one-shot');
 
-    // First call blows up.
-    Object? caught;
-    try {
-      await repo.getPackages();
-    } catch (e) {
-      caught = e;
-    }
-    expect(caught, isNotNull);
+      // First call blows up.
+      Object? caught;
+      try {
+        await repo.getPackages();
+      } catch (e) {
+        caught = e;
+      }
+      expect(caught, isNotNull);
 
-    // Second call returns normally.
-    final result = await repo.getPackages();
-    expect(result.length, 1);
-  });
+      // Second call returns normally.
+      final result = await repo.getPackages();
+      expect(result.length, 1);
+    },
+  );
 }

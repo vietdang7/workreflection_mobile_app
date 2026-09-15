@@ -134,12 +134,16 @@ void main() {
     });
 
     test('công tắc ép được cả hai chiều', () {
-      expect(resolvePremium(actual: false, override: true, allowed: true),
-          isTrue);
+      expect(
+        resolvePremium(actual: false, override: true, allowed: true),
+        isTrue,
+      );
       // Chiều ngược lại quan trọng ngang chiều bật: người đang có Premium thật
       // vẫn phải xem được bản miễn phí trông ra sao.
-      expect(resolvePremium(actual: true, override: false, allowed: true),
-          isFalse);
+      expect(
+        resolvePremium(actual: true, override: false, allowed: true),
+        isFalse,
+      );
     });
 
     test('KHÔNG được phép thì công tắc vô hiệu, kể cả đang bật', () {

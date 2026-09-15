@@ -10,9 +10,9 @@ import 'package:workreflection_mobile/core/widgets/action_link.dart';
 import 'package:workreflection_mobile/core/widgets/section_divider.dart';
 
 Widget wrap(Widget child) => MaterialApp(
-      builder: wrTextScaleBuilder,
-      home: Scaffold(body: child),
-    );
+  builder: wrTextScaleBuilder,
+  home: Scaffold(body: child),
+);
 
 void main() {
   group('WrEyebrow', () {
@@ -32,18 +32,16 @@ void main() {
 
   group('WrCardMinimal', () {
     testWidgets('renders child', (tester) async {
-      await tester.pumpWidget(wrap(
-        const WrCardMinimal(child: Text('content')),
-      ));
+      await tester.pumpWidget(
+        wrap(const WrCardMinimal(child: Text('content'))),
+      );
       expect(find.text('content'), findsOneWidget);
     });
 
     // Brand identity 04/8: thẻ thường là TRẮNG viền mảnh trên nền xám, không
     // còn là mảng kem. Kem chỉ còn dùng làm chữ trên nền navy.
     testWidgets('has white background and hairline border', (tester) async {
-      await tester.pumpWidget(wrap(
-        const WrCardMinimal(child: Text('x')),
-      ));
+      await tester.pumpWidget(wrap(const WrCardMinimal(child: Text('x'))));
       final container = tester.widget<Container>(find.byType(Container).first);
       final decoration = container.decoration as BoxDecoration;
       expect(decoration.color, WrColors.white);
@@ -52,30 +50,23 @@ void main() {
     });
 
     testWidgets('has radius 20', (tester) async {
-      await tester.pumpWidget(wrap(
-        const WrCardMinimal(child: Text('x')),
-      ));
+      await tester.pumpWidget(wrap(const WrCardMinimal(child: Text('x'))));
       final container = tester.widget<Container>(find.byType(Container).first);
       final decoration = container.decoration as BoxDecoration;
-      expect(
-        (decoration.borderRadius as BorderRadius).topLeft.x,
-        20,
-      );
+      expect((decoration.borderRadius as BorderRadius).topLeft.x, 20);
     });
   });
 
   group('WrCardDark', () {
     testWidgets('renders child', (tester) async {
-      await tester.pumpWidget(wrap(
-        const WrCardDark(child: Text('dark content')),
-      ));
+      await tester.pumpWidget(
+        wrap(const WrCardDark(child: Text('dark content'))),
+      );
       expect(find.text('dark content'), findsOneWidget);
     });
 
     testWidgets('has navy background', (tester) async {
-      await tester.pumpWidget(wrap(
-        const WrCardDark(child: Text('x')),
-      ));
+      await tester.pumpWidget(wrap(const WrCardDark(child: Text('x'))));
       final container = tester.widget<Container>(find.byType(Container).first);
       final decoration = container.decoration as BoxDecoration;
       expect(decoration.color, WrColors.navy);
@@ -84,41 +75,41 @@ void main() {
 
   group('WrProgressTrack', () {
     testWidgets('renders without error', (tester) async {
-      await tester.pumpWidget(wrap(
-        const WrProgressTrack(value: 0.5, color: WrColors.teal),
-      ));
+      await tester.pumpWidget(
+        wrap(const WrProgressTrack(value: 0.5, color: WrColors.teal)),
+      );
       expect(find.byType(WrProgressTrack), findsOneWidget);
     });
 
     testWidgets('clamps value between 0 and 1', (tester) async {
-      await tester.pumpWidget(wrap(
-        const WrProgressTrack(value: 1.5, color: WrColors.coral),
-      ));
+      await tester.pumpWidget(
+        wrap(const WrProgressTrack(value: 1.5, color: WrColors.coral)),
+      );
       expect(find.byType(WrProgressTrack), findsOneWidget);
     });
   });
 
   group('WrPillButton', () {
     testWidgets('renders label text', (tester) async {
-      await tester.pumpWidget(wrap(
-        WrPillButton(label: 'Press me', onPressed: () {}),
-      ));
+      await tester.pumpWidget(
+        wrap(WrPillButton(label: 'Press me', onPressed: () {})),
+      );
       expect(find.text('Press me'), findsOneWidget);
     });
 
     testWidgets('calls onPressed when tapped', (tester) async {
       var pressed = false;
-      await tester.pumpWidget(wrap(
-        WrPillButton(label: 'Tap', onPressed: () => pressed = true),
-      ));
+      await tester.pumpWidget(
+        wrap(WrPillButton(label: 'Tap', onPressed: () => pressed = true)),
+      );
       await tester.tap(find.byType(WrPillButton));
       expect(pressed, isTrue);
     });
 
     testWidgets('navy variant uses navy color by default', (tester) async {
-      await tester.pumpWidget(wrap(
-        WrPillButton(label: 'Navy', onPressed: () {}),
-      ));
+      await tester.pumpWidget(
+        wrap(WrPillButton(label: 'Navy', onPressed: () {})),
+      );
       final btn = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
       final style = btn.style!;
       final bg = style.backgroundColor?.resolve({});
@@ -126,13 +117,15 @@ void main() {
     });
 
     testWidgets('coral variant uses coral color', (tester) async {
-      await tester.pumpWidget(wrap(
-        WrPillButton(
-          label: 'Coral',
-          onPressed: () {},
-          variant: WrPillVariant.coral,
+      await tester.pumpWidget(
+        wrap(
+          WrPillButton(
+            label: 'Coral',
+            onPressed: () {},
+            variant: WrPillVariant.coral,
+          ),
         ),
-      ));
+      );
       final btn = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
       final style = btn.style!;
       final bg = style.backgroundColor?.resolve({});
@@ -142,17 +135,17 @@ void main() {
 
   group('WrActionLink', () {
     testWidgets('renders label', (tester) async {
-      await tester.pumpWidget(wrap(
-        WrActionLink(label: 'Learn more', onTap: () {}),
-      ));
+      await tester.pumpWidget(
+        wrap(WrActionLink(label: 'Learn more', onTap: () {})),
+      );
       expect(find.text('Learn more'), findsOneWidget);
     });
 
     testWidgets('calls onTap when tapped', (tester) async {
       var tapped = false;
-      await tester.pumpWidget(wrap(
-        WrActionLink(label: 'Go', onTap: () => tapped = true),
-      ));
+      await tester.pumpWidget(
+        wrap(WrActionLink(label: 'Go', onTap: () => tapped = true)),
+      );
       await tester.tap(find.byType(WrActionLink));
       expect(tapped, isTrue);
     });

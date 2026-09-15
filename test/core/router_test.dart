@@ -176,16 +176,19 @@ void main() {
     // hasSession is true). The GoRouter declaration order in app_router.dart
     // ensures '/workshops/checkin' is registered before '/workshops/:id' so the
     // literal segment 'checkin' is never captured as the :id parameter.
-    test('has session + on /workshops/checkin → null (not captured as :id)', () {
-      expect(
-        computeRedirect(
-          hasSession: true,
-          seenOnboarding: true,
-          location: '/workshops/checkin',
-        ),
-        isNull,
-      );
-    });
+    test(
+      'has session + on /workshops/checkin → null (not captured as :id)',
+      () {
+        expect(
+          computeRedirect(
+            hasSession: true,
+            seenOnboarding: true,
+            location: '/workshops/checkin',
+          ),
+          isNull,
+        );
+      },
+    );
 
     // New: /profile/setup must not be redirected when user has session
     test('has session + on /profile/setup → null', () {

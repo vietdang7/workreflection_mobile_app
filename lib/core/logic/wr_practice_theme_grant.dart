@@ -32,12 +32,12 @@ const int kReflectionsPerPracticeTheme = 15;
 int earnedPracticeThemes({
   required int reflectionCount,
   required int selfCheckCount,
-}) =>
-    reflectionCount ~/ kReflectionsPerPracticeTheme + selfCheckCount;
+}) => reflectionCount ~/ kReflectionsPerPracticeTheme + selfCheckCount;
 
 /// Còn bao nhiêu lần nhìn lại nữa thì được thêm một chủ đề theo hướng 1.
 ///
 /// Dùng cho câu "Bạn đã nhìn lại N/15 lần" — nói đúng quãng đường còn lại thay
 /// vì bảo người dùng chờ một điều không đo được.
 int reflectionsToNextTheme(int reflectionCount) =>
-    kReflectionsPerPracticeTheme - (reflectionCount % kReflectionsPerPracticeTheme);
+    kReflectionsPerPracticeTheme -
+    (reflectionCount % kReflectionsPerPracticeTheme);

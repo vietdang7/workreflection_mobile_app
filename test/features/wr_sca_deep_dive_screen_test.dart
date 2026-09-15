@@ -30,12 +30,20 @@ const _situations = <WrSituation>[
     text: 'Vai trò chưa rõ',
     scaDimension: ScaDimension.s1,
     wave: 1,
+    pillarCode: 'S',
+    subgroup: 'S1',
+    mood: 'foggy',
+    valence: WrValence.thachThuc,
   ),
   WrSituation(
     code: 'C2-01',
     text: 'Không dám nói',
     scaDimension: ScaDimension.c2,
     wave: 1,
+    pillarCode: 'C',
+    subgroup: 'C2',
+    mood: 'stress',
+    valence: WrValence.thachThuc,
   ),
 ];
 
@@ -44,22 +52,21 @@ ScaSelfCheckResponse _check({
   double s = 3.0,
   double c = 3.0,
   double a = 3.0,
-}) =>
-    ScaSelfCheckResponse(
-      userId: 'u1',
-      answers: const {},
-      takenAt: at,
-      structureScore: s,
-      cultureScore: c,
-      activityScore: a,
-    );
+}) => ScaSelfCheckResponse(
+  userId: 'u1',
+  answers: const {},
+  takenAt: at,
+  structureScore: s,
+  cultureScore: c,
+  activityScore: a,
+);
 
 ReflectionEpisode _ep(String code, DateTime at) => ReflectionEpisode(
-      userId: 'u1',
-      humanMoment: HumanMoment.confusion,
-      situationCode: code,
-      openedAt: at,
-    );
+  userId: 'u1',
+  humanMoment: HumanMoment.confusion,
+  situationCode: code,
+  openedAt: at,
+);
 
 Widget _wrap({
   required bool premium,
@@ -131,20 +138,23 @@ void main() {
   // đóng mặc định, và ĐỔI HẲN NỘI DUNG bên trong. §1.3: khối cũ hiện nhãn mức
   // đánh giá cộng số lần xuất hiện — cả hai đã có nguyên ở Career Snapshot bản
   // miễn phí — cộng một câu gần như giống hệt nhau ba lần.
-  testWidgets('Premium: ba nhóm đóng sẵn, bấm mở ra tình huống cụ thể',
-      (tester) async {
+  testWidgets('Premium: ba nhóm đóng sẵn, bấm mở ra tình huống cụ thể', (
+    tester,
+  ) async {
     final now = DateTime.now();
-    await tester.pumpWidget(_wrap(
-      premium: true,
-      history: [
-        _check(at: now.subtract(const Duration(days: 40)), s: 2.0),
-        _check(at: now.subtract(const Duration(days: 2)), s: 4.2),
-      ],
-      episodes: [
-        for (var i = 0; i < 4; i++)
-          _ep('C2-01', now.subtract(Duration(days: i))),
-      ],
-    ));
+    await tester.pumpWidget(
+      _wrap(
+        premium: true,
+        history: [
+          _check(at: now.subtract(const Duration(days: 40)), s: 2.0),
+          _check(at: now.subtract(const Duration(days: 2)), s: 4.2),
+        ],
+        episodes: [
+          for (var i = 0; i < 4; i++)
+            _ep('C2-01', now.subtract(Duration(days: i))),
+        ],
+      ),
+    );
     await tester.pumpAndSettle();
 
     for (final p in ['s', 'c', 'a']) {
@@ -174,17 +184,20 @@ void main() {
   });
 
   // Phép thử cuối của §9.1, dựng lại đúng hình dạng tài khoản khách báo lỗi.
-  testWidgets('Premium: khối chính gọi tên một tình huống kèm số lần',
-      (tester) async {
+  testWidgets('Premium: khối chính gọi tên một tình huống kèm số lần', (
+    tester,
+  ) async {
     final now = DateTime.now();
-    await tester.pumpWidget(_wrap(
-      premium: true,
-      history: [_check(at: now.subtract(const Duration(days: 1)), c: 4.5)],
-      episodes: [
-        for (var i = 0; i < 20; i++)
-          _ep('C2-01', now.subtract(Duration(days: i % 25))),
-      ],
-    ));
+    await tester.pumpWidget(
+      _wrap(
+        premium: true,
+        history: [_check(at: now.subtract(const Duration(days: 1)), c: 4.5)],
+        episodes: [
+          for (var i = 0; i < 20; i++)
+            _ep('C2-01', now.subtract(Duration(days: i % 25))),
+        ],
+      ),
+    );
     await tester.pumpAndSettle();
 
     final lead = tester.widget<Text>(
@@ -197,32 +210,35 @@ void main() {
     expect(lead.data, contains('20'));
   });
 
-  testWidgets('Premium: những vòng lặp quen thuộc bày ngay dưới khối chính',
-      (tester) async {
+  testWidgets('Premium: những vòng lặp quen thuộc bày ngay dưới khối chính', (
+    tester,
+  ) async {
     // §7 khối phụ. Nó là chính lớp dữ liệu khối chính vừa đọc, nên bày ra để
     // người dùng kiểm chứng được thay vì phải tin.
     final now = DateTime.now();
-    await tester.pumpWidget(_wrap(
-      premium: true,
-      episodes: [
-        for (var i = 0; i < 12; i++)
-          _ep('C2-01', now.subtract(Duration(days: i))),
-        for (var i = 0; i < 4; i++)
-          _ep('S1-01', now.subtract(Duration(days: 12 + i))),
-      ],
-    ));
+    await tester.pumpWidget(
+      _wrap(
+        premium: true,
+        episodes: [
+          for (var i = 0; i < 12; i++)
+            _ep('C2-01', now.subtract(Duration(days: i))),
+          for (var i = 0; i < 4; i++)
+            _ep('S1-01', now.subtract(Duration(days: 12 + i))),
+        ],
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('wr_deep_loop_C2-01')), findsOneWidget);
     expect(find.byKey(const Key('wr_deep_loop_S1-01')), findsOneWidget);
   });
 
-  testWidgets('Premium: lần Self-Check đầu tiên thì nói rõ chưa có gì để so',
-      (tester) async {
-    await tester.pumpWidget(_wrap(
-      premium: true,
-      history: [_check(at: DateTime.now())],
-    ));
+  testWidgets('Premium: lần Self-Check đầu tiên thì nói rõ chưa có gì để so', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      _wrap(premium: true, history: [_check(at: DateTime.now())]),
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const Key('wr_deep_pillar_toggle_s')));
@@ -235,27 +251,27 @@ void main() {
       ),
     );
     expect(trend.data, contains('lần tự soi đầu tiên'));
-    expect(
-      find.textContaining('Self-Check trước đó: chưa có'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Self-Check trước đó: chưa có'), findsOneWidget);
   });
 
-  testWidgets('Premium, đã nhìn lại đều mà chưa Self-Check: vẫn có khối chính',
-      (tester) async {
+  testWidgets('Premium, đã nhìn lại đều mà chưa Self-Check: vẫn có khối chính', (
+    tester,
+  ) async {
     // §4 — bốn trong năm bậc không cần Self-Check. Người vừa trả tiền mà gặp
     // màn hình rỗng trong khi họ đã nhìn lại đều đặn hai tháng là đúng cái §6
     // gọi là phần dễ làm hỏng trải nghiệm nhất.
     final now = DateTime.now();
-    await tester.pumpWidget(_wrap(
-      premium: true,
-      episodes: [
-        for (var i = 0; i < 12; i++)
-          _ep('C2-01', now.subtract(Duration(days: i))),
-        for (var i = 0; i < 12; i++)
-          _ep('S1-01', now.subtract(Duration(days: 31 + i))),
-      ],
-    ));
+    await tester.pumpWidget(
+      _wrap(
+        premium: true,
+        episodes: [
+          for (var i = 0; i < 12; i++)
+            _ep('C2-01', now.subtract(Duration(days: i))),
+          for (var i = 0; i < 12; i++)
+            _ep('S1-01', now.subtract(Duration(days: 31 + i))),
+        ],
+      ),
+    );
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('wr_sca_deep_dive_empty')), findsNothing);
@@ -268,18 +284,22 @@ void main() {
     expect(find.byKey(const Key('wr_deep_no_self_check_yet')), findsOneWidget);
   });
 
-  testWidgets('Premium: hai đoạn chờ rút thành một dòng ở cuối', (tester) async {
+  testWidgets('Premium: hai đoạn chờ rút thành một dòng ở cuối', (
+    tester,
+  ) async {
     // §6 điều chỉnh 2: "hai đoạn giải thích dài về việc chờ thêm đang chiếm
     // nhiều diện tích hơn cả phần nội dung thật."
     final now = DateTime.now();
-    await tester.pumpWidget(_wrap(
-      premium: true,
-      history: [_check(at: now.subtract(const Duration(days: 1)))],
-      episodes: [
-        for (var i = 0; i < 16; i++)
-          _ep('C2-01', now.subtract(Duration(days: i))),
-      ],
-    ));
+    await tester.pumpWidget(
+      _wrap(
+        premium: true,
+        history: [_check(at: now.subtract(const Duration(days: 1)))],
+        episodes: [
+          for (var i = 0; i < 16; i++)
+            _ep('C2-01', now.subtract(Duration(days: i))),
+        ],
+      ),
+    );
     await tester.pumpAndSettle();
 
     // Cả khối XU HƯỚNG vắng mặt, không còn hai đoạn dài giữa màn.
@@ -294,18 +314,18 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('wr_sca_deep_dive_empty')), findsOneWidget);
-    await tester
-        .tap(find.byKey(const Key('wr_sca_deep_dive_start_self_check')));
+    await tester.tap(
+      find.byKey(const Key('wr_sca_deep_dive_start_self_check')),
+    );
     await tester.pumpAndSettle();
     expect(find.text('SELF-CHECK'), findsOneWidget);
   });
 
   // Vào thẳng route mà chưa mua — deep link, hoặc quyền hết hạn giữa chừng.
   testWidgets('Free: không thấy nội dung, chỉ thấy lối mua', (tester) async {
-    await tester.pumpWidget(_wrap(
-      premium: false,
-      history: [_check(at: DateTime.now())],
-    ));
+    await tester.pumpWidget(
+      _wrap(premium: false, history: [_check(at: DateTime.now())]),
+    );
     await tester.pumpAndSettle();
 
     expect(find.byKey(const Key('wr_sca_deep_dive_locked')), findsOneWidget);

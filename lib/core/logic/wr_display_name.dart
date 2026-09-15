@@ -64,4 +64,6 @@ String? wrGreetingName({
 }
 
 /// Câu chào đầu màn Hôm nay.
-String wrGreeting(String? name) => name == null ? tr('Chào bạn', 'Hello there') : tr('Chào $name', 'Hello $name');
+String wrGreeting(String? name) => name == null
+    ? tr('Chào bạn', 'Hello there')
+    : tr('Chào $name', 'Hello $name');

@@ -8,27 +8,57 @@ import 'package:workreflection_mobile/core/logic/wr_situation_picker.dart';
 import 'package:workreflection_mobile/core/models/checkin.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 
-WrSituation _sit(String code, ScaDimension dim) => WrSituation(
-      code: code,
-      text: 'Tình huống $code',
-      scaDimension: dim,
-      wave: 1,
-    );
+WrSituation _sit(String code, ScaDimension dim) {
+  final subgroup = switch (dim) {
+    ScaDimension.s1 => 'S1',
+    ScaDimension.s2 => 'S2',
+    ScaDimension.c1 => 'C1',
+    ScaDimension.c2 => 'C2',
+    ScaDimension.a1 => 'A1',
+    ScaDimension.a3 => 'A3',
+    ScaDimension.pAchieve => 'Ap',
+    ScaDimension.pSteady => 'Sp',
+    _ => 'S1',
+  };
+  final pillar = switch (subgroup) {
+    'S1' || 'S2' || 'Sp' => 'S',
+    'C1' || 'C2' || 'Cp' => 'C',
+    _ => 'A',
+  };
+  final mood = switch (subgroup) {
+    'S1' => 'foggy',
+    'S2' => 'outofsync',
+    'C1' || 'C2' => 'stress',
+    'A1' || 'A3' => 'tired',
+    'Sp' => 'ok',
+    _ => 'happy',
+  };
+  return WrSituation(
+    code: code,
+    text: 'Tình huống $code',
+    scaDimension: dim,
+    pillarCode: pillar,
+    subgroup: subgroup,
+    mood: mood,
+    valence: dim.isPositive ? WrValence.tichCuc : WrValence.thachThuc,
+    wave: 1,
+  );
+}
 
 /// Thư viện giả đủ rộng để mọi nhánh của §4.1 đều chạm tới được.
 List<WrSituation> _library() => [
-      for (var i = 1; i <= 6; i++) _sit('A3-$i', ScaDimension.a3),
-      for (var i = 1; i <= 6; i++) _sit('C2-$i', ScaDimension.c2),
-      for (var i = 1; i <= 6; i++) _sit('A1-$i', ScaDimension.a1),
-      // S1 và S2 là cụm của hai cảm xúc thêm 25/08 ("mơ hồ", "lệch nhau").
-      // Thiếu một trong hai thì cụm không đủ 5, `pickSituationChoices` lùi về
-      // toàn thư viện và bài test lọc-theo-cảm-xúc mất hết ý nghĩa: nó sẽ báo
-      // xanh cả khi ánh xạ sai.
-      for (var i = 1; i <= 6; i++) _sit('S1-$i', ScaDimension.s1),
-      for (var i = 1; i <= 6; i++) _sit('S2-$i', ScaDimension.s2),
-      for (var i = 1; i <= 5; i++) _sit('P-A$i', ScaDimension.pAchieve),
-      for (var i = 1; i <= 5; i++) _sit('P-S$i', ScaDimension.pSteady),
-    ];
+  for (var i = 1; i <= 6; i++) _sit('A3-$i', ScaDimension.a3),
+  for (var i = 1; i <= 6; i++) _sit('C2-$i', ScaDimension.c2),
+  for (var i = 1; i <= 6; i++) _sit('A1-$i', ScaDimension.a1),
+  // S1 và S2 là cụm của hai cảm xúc thêm 25/08 ("mơ hồ", "lệch nhau").
+  // Thiếu một trong hai thì cụm không đủ 5, `pickSituationChoices` lùi về
+  // toàn thư viện và bài test lọc-theo-cảm-xúc mất hết ý nghĩa: nó sẽ báo
+  // xanh cả khi ánh xạ sai.
+  for (var i = 1; i <= 6; i++) _sit('S1-$i', ScaDimension.s1),
+  for (var i = 1; i <= 6; i++) _sit('S2-$i', ScaDimension.s2),
+  for (var i = 1; i <= 5; i++) _sit('P-A$i', ScaDimension.pAchieve),
+  for (var i = 1; i <= 5; i++) _sit('P-S$i', ScaDimension.pSteady),
+];
 
 void main() {
   _resolveTests();
@@ -39,12 +69,12 @@ void main() {
   // -------------------------------------------------------------------------
   group('tình huống đã ngưng đề xuất', () {
     WrSituation retired(String code, ScaDimension dim) => WrSituation(
-          code: code,
-          text: 'Tình huống $code',
-          scaDimension: dim,
-          wave: 1,
-          retiredAt: DateTime(2026, 7, 31),
-        );
+      code: code,
+      text: 'Tình huống $code',
+      scaDimension: dim,
+      wave: 1,
+      retiredAt: DateTime(2026, 7, 31),
+    );
 
     test('không bao giờ lọt vào bể gợi ý', () {
       final all = [
@@ -58,7 +88,8 @@ void main() {
         expect(
           picked.where((s) => s.isRetired),
           isEmpty,
-          reason: 'chip Tầng 1 cũ trùng nghĩa với mục thư viện — bày cả hai là '
+          reason:
+              'chip Tầng 1 cũ trùng nghĩa với mục thư viện — bày cả hai là '
               'dựng ra hai phiên bản của cùng một tình huống',
         );
       }
@@ -82,24 +113,27 @@ void main() {
 
   // -------------------------------------------------------------------------
   group('§III — lọc tình huống theo cảm xúc check-in', () {
-    test('mỗi cảm xúc chỉ lấy tình huống trong đúng cụm chiều của nó', () {
+    test('mỗi cảm xúc lấy ba mục cùng mood và hai mục cùng valence', () {
       final all = _library();
 
-      for (final entry in kMoodDimensions.entries) {
+      for (final entry in kMoodCodes.entries) {
         final picked = pickSituationChoices(
           all: all,
           mood: entry.key,
           random: Random(1),
         );
         expect(picked, hasLength(kSituationChoiceCount));
-        for (final s in picked) {
-          expect(
-            entry.value,
-            contains(s.scaDimension),
-            reason: '${entry.key.name} không được gợi ý '
-                '${s.code} thuộc chiều ${s.scaDimension.dbValue}',
-          );
-        }
+        final sameMood = picked.where((s) => s.mood == entry.value).toList();
+        expect(sameMood, hasLength(3));
+        final valence = sameMood.first.explicitValence;
+        expect(
+          picked
+              .skip(3)
+              .every(
+                (s) => s.mood != entry.value && s.explicitValence == valence,
+              ),
+          isTrue,
+        );
       }
     });
 
@@ -110,8 +144,11 @@ void main() {
       final all = _library();
 
       for (final mood in [Mood.okay, Mood.happy]) {
-        final picked =
-            pickSituationChoices(all: all, mood: mood, random: Random(7));
+        final picked = pickSituationChoices(
+          all: all,
+          mood: mood,
+          random: Random(7),
+        );
         for (final s in picked) {
           expect(
             s.scaDimension.isPositive,
@@ -137,8 +174,11 @@ void main() {
     test('không có cảm xúc thì dùng toàn bộ thư viện', () {
       // Vào thẳng từ tab, không qua check-in.
       final all = _library();
-      final picked =
-          pickSituationChoices(all: all, mood: null, random: Random(3));
+      final picked = pickSituationChoices(
+        all: all,
+        mood: null,
+        random: Random(3),
+      );
       expect(picked, hasLength(kSituationChoiceCount));
     });
 
@@ -177,11 +217,14 @@ void main() {
         random: Random(11),
       );
 
-      // Cụm stressed có 12 mục, bỏ ô neo và 4 mã đã xem còn 7 ≥ 4 → bốn ô sau
-      // ô neo không được lặp lại.
-      for (final s in picked.skip(1)) {
-        expect(seen, isNot(contains(s.code)),
-            reason: '${s.code} vừa xem gần đây mà vẫn được gợi ý lại');
+      // There are enough unseen rows in the strict v2 pools, so every choice
+      // remains new within the first-ten window.
+      for (final s in picked) {
+        expect(
+          seen,
+          isNot(contains(s.code)),
+          reason: '${s.code} vừa xem gần đây mà vẫn được gợi ý lại',
+        );
       }
     });
 
@@ -230,20 +273,13 @@ void main() {
   });
 
   // -------------------------------------------------------------------------
-  // Ô NEO — luật quan trọng nhất của cả tệp này.
-  //
-  // §4.1 (loại mọi mã đã chọn khỏi bể) và §4.3 (đếm số lần lặp của chính những
-  // mã đó) không thể cùng đúng. Trên DB thật 2026-07-31: 16 Episode mang mã,
-  // 16 mã phân biệt, 0 lần lặp — người dùng báo "ráng chọn rồi nhưng vẫn không
-  // thấy... không thấy các câu hỏi mà tôi đã chọn ban đầu để chọn".
-  //
-  // Bỏ ô neo là "Tình huống lặp lại" trống vĩnh viễn trở lại.
+  // The v2 picker deliberately has no forced anchor. The recent window is a
+  // diversity hint: unseen records win while the exhausted-pool path remains
+  // available.
   // -------------------------------------------------------------------------
-  group('§IV.1 — ô neo: chọn lại được điều lần trước', () {
-    test('điều chọn gần nhất LUÔN có mặt, dù đã nằm trong recentIds', () {
+  group('§IV.1 — xoay vòng v2 không ép ô neo', () {
+    test('đủ pool chưa xem thì không chọn lại mười mã gần nhất', () {
       final all = _library();
-      // Bể stressed có 12 mục, mới dùng 3 → nhánh "còn nhiều mục chưa xem",
-      // đúng nhánh từng khoá người dùng lại.
       final seen = ['C2-4', 'A3-2', 'A3-5'];
 
       for (var run = 0; run < 40; run++) {
@@ -252,18 +288,17 @@ void main() {
           mood: Mood.stressed,
           recentIds: seen,
         );
-        expect(picked.first.code, 'C2-4',
-            reason: 'ô neo phải đứng đầu để tìm thấy được ngay');
         expect(picked, hasLength(kSituationChoiceCount));
-        expect(picked.map((s) => s.code).toSet(), hasLength(picked.length),
-            reason: 'ô neo bị đếm hai lần');
+        expect(picked.any((s) => seen.contains(s.code)), isFalse);
+        expect(
+          picked.map((s) => s.code).toSet(),
+          hasLength(picked.length),
+          reason: 'picker must not duplicate a code',
+        );
       }
     });
 
-    test('neo bám theo cụm cảm xúc, không bám theo lần chọn cuối cùng', () {
-      // Check-in "mệt mỏi" (A3+A1) sau khi lần trước chọn một tình huống C2:
-      // C2 không thuộc cụm này nên không thể neo, phải lùi xuống mã gần nhất
-      // còn nằm trong cụm.
+    test('mood pool still supplies five choices without an anchor', () {
       final all = _library();
       final picked = pickSituationChoices(
         all: all,
@@ -272,7 +307,8 @@ void main() {
         random: Random(21),
       );
 
-      expect(picked.first.code, 'A1-3');
+      expect(picked, hasLength(kSituationChoiceCount));
+      expect(picked.any((s) => s.code == 'A1-3'), isFalse);
     });
 
     test('chưa chọn lần nào thì không có neo, vẫn đủ 5 ô', () {
@@ -286,7 +322,7 @@ void main() {
       expect(picked, hasLength(kSituationChoiceCount));
     });
 
-    test('mọi mã đã chọn đều ngoài cụm thì không neo, vẫn đủ 5 ô', () {
+    test('mọi mã đã chọn đều ngoài cụm vẫn đủ 5 ô', () {
       final picked = pickSituationChoices(
         all: _library(),
         mood: Mood.stressed,
@@ -295,12 +331,17 @@ void main() {
       );
 
       expect(picked, hasLength(kSituationChoiceCount));
-      for (final s in picked) {
-        expect(kMoodDimensions[Mood.stressed], contains(s.scaDimension));
-      }
+      expect(
+        picked.take(3).every((s) => s.mood == kMoodCodes[Mood.stressed]),
+        isTrue,
+      );
+      expect(
+        picked.skip(3).every((s) => s.mood != kMoodCodes[Mood.stressed]),
+        isTrue,
+      );
     });
 
-    test('neo không bao giờ là tình huống đã ngưng đề xuất', () {
+    test('tình huống đã ngưng đề xuất không lọt vào bể', () {
       // Lịch sử cũ đầy mã `-sit-` đã retired. Neo vào một mã như thế là bày lại
       // đúng cái chip vừa bị gỡ khỏi thư viện.
       final all = [
@@ -321,37 +362,30 @@ void main() {
           recentIds: ['C2-sit-01', 'A3-2'],
         );
         expect(picked.any((s) => s.isRetired), isFalse);
-        expect(picked.first.code, 'A3-2');
+        expect(picked, hasLength(kSituationChoiceCount));
       }
     });
 
-    test('chọn lại chính ô neo thì lần sau nó vẫn là neo', () {
-      // Đây là điều làm "Tình huống lặp lại" đếm lên được: ba phiên liên tiếp
-      // chạm cùng một chip là ba lần, không phải ba mã khác nhau.
+    test('exhausted pool allows repeats without duplicates in one result', () {
       final all = _library();
-      var recent = <String>[];
-
-      for (var session = 0; session < 3; session++) {
-        final picked = pickSituationChoices(
-          all: all,
-          mood: Mood.stressed,
-          recentIds: recent,
-        );
-        final chosen = session == 0
-            ? picked.firstWhere((s) => s.code == 'C2-1',
-                orElse: () => picked.first)
-            : picked.first;
-        if (session > 0) expect(chosen.code, recent.first);
-        recent = rememberSituation(chosen.code, recent);
-      }
-
-      // Ba phiên, một mã duy nhất trong lịch sử xoay vòng — và Episode sẽ có ba
-      // dòng cùng mã đó, tức "3 lần" ở tab Hiểu mình.
-      expect(recent, hasLength(1));
+      final picked = pickSituationChoices(
+        all: all,
+        mood: Mood.stressed,
+        recentIds: [
+          for (var i = 1; i <= 6; i++) 'A3-$i',
+          for (var i = 1; i <= 6; i++) 'C2-$i',
+        ],
+        random: Random(4),
+      );
+      expect(picked, hasLength(kSituationChoiceCount));
+      expect(picked.map((s) => s.code).toSet(), hasLength(picked.length));
     });
 
     test('anchorSituation trả về mã gần nhất còn trong danh sách', () {
-      final pool = [_sit('A3-1', ScaDimension.a3), _sit('C2-9', ScaDimension.c2)];
+      final pool = [
+        _sit('A3-1', ScaDimension.a3),
+        _sit('C2-9', ScaDimension.c2),
+      ];
 
       expect(anchorSituation(pool, ['C2-9', 'A3-1'])?.code, 'C2-9');
       expect(anchorSituation(pool, ['S1-1', 'A3-1'])?.code, 'A3-1');
@@ -387,8 +421,11 @@ void main() {
     });
 
     test('không có Practice ("Điều khác"): 4 câu lấy hết từ bể', () {
-      final options =
-          pickChoiceOptions(practice: null, pool: pool, random: Random(2));
+      final options = pickChoiceOptions(
+        practice: null,
+        pool: pool,
+        random: Random(2),
+      );
       expect(options, hasLength(4));
       for (final o in options) {
         expect(pool, contains(o));
@@ -397,8 +434,11 @@ void main() {
 
     test('Practice rỗng hoặc toàn khoảng trắng coi như không có', () {
       for (final blank in ['', '   ', '\n']) {
-        final options =
-            pickChoiceOptions(practice: blank, pool: pool, random: Random(2));
+        final options = pickChoiceOptions(
+          practice: blank,
+          pool: pool,
+          random: Random(2),
+        );
         expect(options, hasLength(4));
         for (final o in options) {
           expect(pool, contains(o));
@@ -426,8 +466,11 @@ void main() {
           pool: pool,
           random: Random(seed),
         );
-        expect(options.toSet(), hasLength(options.length),
-            reason: 'seed $seed sinh ra lựa chọn trùng');
+        expect(
+          options.toSet(),
+          hasLength(options.length),
+          reason: 'seed $seed sinh ra lựa chọn trùng',
+        );
       }
     });
 
@@ -448,16 +491,16 @@ void main() {
 // ---------------------------------------------------------------------------
 
 WrStory _story(String id, ScaDimension dim, {String? aha}) => WrStory(
-      storyId: id,
-      title: 'Tiêu đề $id',
-      scaDimension: dim,
-      storyContent: 'Nội dung $id',
-      emotionTags: const [],
-      behaviorTags: const [],
-      careerStages: const [],
-      ahaMessage: aha ?? 'Aha của $id',
-      practiceAction: 'Practice của $id',
-    );
+  storyId: id,
+  title: 'Tiêu đề $id',
+  scaDimension: dim,
+  storyContent: 'Nội dung $id',
+  emotionTags: const [],
+  behaviorTags: const [],
+  careerStages: const [],
+  ahaMessage: aha ?? 'Aha của $id',
+  practiceAction: 'Practice của $id',
+);
 
 void _resolveTests() {
   group('resolveStoryFor', () {
@@ -470,7 +513,7 @@ void _resolveTests() {
       expect(resolveStoryFor(sit, stories)!.storyId, 'P-01');
     });
 
-    test('không trùng mã thì lấy story cùng chiều', () {
+    test('không trùng mã thì trả null, không mượn story cùng chiều', () {
       final sit = _sit('C2-sit-03', ScaDimension.c2);
       final stories = [
         _story('A1-01', ScaDimension.a1),
@@ -478,50 +521,42 @@ void _resolveTests() {
         _story('C2-02', ScaDimension.c2),
       ];
       final found = resolveStoryFor(sit, stories);
-      expect(found, isNotNull);
-      expect(found!.scaDimension, ScaDimension.c2);
+      expect(found, isNull);
     });
 
-    test('cùng một chip luôn ra cùng một story', () {
-      // Nếu bốc ngẫu nhiên, câu Aha đổi mỗi lần mở màn và người dùng không quay
-      // lại được điều mình vừa đọc.
+    test('legacy chip không có story chính xác cũng trả null', () {
       final sit = _sit('A3-sit-05', ScaDimension.a3);
       final stories = [
         for (var i = 1; i <= 10; i++)
           _story('A3-${i.toString().padLeft(2, '0')}', ScaDimension.a3),
       ];
-      final first = resolveStoryFor(sit, stories)!.storyId;
+      final first = resolveStoryFor(sit, stories);
       for (var i = 0; i < 20; i++) {
-        expect(resolveStoryFor(sit, stories)!.storyId, first);
+        expect(resolveStoryFor(sit, stories), first);
       }
     });
 
-    test('thứ tự danh sách đầu vào không làm đổi kết quả', () {
+    test('unknown story code never falls back despite matching dimension', () {
       final sit = _sit('A3-sit-05', ScaDimension.a3);
       final stories = [
         for (var i = 1; i <= 6; i++)
           _story('A3-${i.toString().padLeft(2, '0')}', ScaDimension.a3),
       ];
-      final normal = resolveStoryFor(sit, stories)!.storyId;
-      final reversed = resolveStoryFor(sit, stories.reversed.toList())!.storyId;
-      expect(reversed, normal);
+      expect(resolveStoryFor(sit, stories), isNull);
+      expect(resolveStoryFor(sit, stories.reversed.toList()), isNull);
     });
 
-    test('hai chip khác nhau cùng chiều không nhất thiết trùng story', () {
+    test('multiple unknown chips do not borrow unrelated stories', () {
       final stories = [
         for (var i = 1; i <= 10; i++)
           _story('C1-${i.toString().padLeft(2, '0')}', ScaDimension.c1),
       ];
-      final ids = {
-        for (var i = 1; i <= 6; i++)
-          resolveStoryFor(
-            _sit('C1-sit-0$i', ScaDimension.c1),
-            stories,
-          )!.storyId,
-      };
-      // Không đòi phân biệt hoàn toàn (hash có thể đụng), nhưng gom hết 6 chip
-      // vào đúng 1 story thì coi như hàm nối hỏng.
-      expect(ids.length, greaterThan(1));
+      for (var i = 1; i <= 6; i++) {
+        expect(
+          resolveStoryFor(_sit('C1-sit-0$i', ScaDimension.c1), stories),
+          isNull,
+        );
+      }
     });
 
     test('không có story cùng chiều thì trả null, không bịa', () {
@@ -531,8 +566,10 @@ void _resolveTests() {
     });
 
     test('thư viện story rỗng thì trả null', () {
-      expect(resolveStoryFor(_sit('C1-sit-01', ScaDimension.c1), const []),
-          isNull);
+      expect(
+        resolveStoryFor(_sit('C1-sit-01', ScaDimension.c1), const []),
+        isNull,
+      );
     });
   });
 }

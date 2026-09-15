@@ -1,5 +1,10 @@
 import '../logic/wr_career_profile.dart';
 
+List<String> _safeRecentSituationIds(Object? raw) {
+  if (raw is! List) return const [];
+  return raw.whereType<String>().toList(growable: false);
+}
+
 /// Maps to the public.wr_mobile_profiles table.
 class MobileProfile {
   const MobileProfile({
@@ -66,8 +71,7 @@ class MobileProfile {
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
       careerSnapshot: CareerSnapshot.fromJson(json),
-      recentSituationIds:
-          (json['recent_situation_ids'] as List?)?.cast<String>() ?? const [],
+      recentSituationIds: _safeRecentSituationIds(json['recent_situation_ids']),
       roleText: json['role_text'] as String?,
       city: json['city'] as String?,
       orgIndustry: json['org_industry'] as String?,

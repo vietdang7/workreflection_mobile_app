@@ -21,7 +21,7 @@ class FakeWrContentRepository implements WrContentRepository {
   // --- Call recorders ---
   final List<CareerMemoryEvent> insertMemoryEventCalls = [];
   final List<({String userId, String situationCode, DateTime day})>
-      deleteTodayMemoryEventsForSituationCalls = [];
+  deleteTodayMemoryEventsForSituationCalls = [];
 
   // --- Seed helpers ---
 

@@ -43,16 +43,21 @@ Widget _wrap(
   );
   return ProviderScope(
     overrides: [
-      wrContentRepositoryProvider
-          .overrideWithValue(content ?? FakeWrContentRepository()),
-      wrIntelligenceRepositoryProvider
-          .overrideWithValue(intel ?? FakeWrIntelligenceRepository()),
-      wrEpisodeRepositoryProvider
-          .overrideWithValue(episodes ?? FakeWrEpisodeRepository()),
+      wrContentRepositoryProvider.overrideWithValue(
+        content ?? FakeWrContentRepository(),
+      ),
+      wrIntelligenceRepositoryProvider.overrideWithValue(
+        intel ?? FakeWrIntelligenceRepository(),
+      ),
+      wrEpisodeRepositoryProvider.overrideWithValue(
+        episodes ?? FakeWrEpisodeRepository(),
+      ),
       currentUserIdProvider.overrideWithValue(userId),
     ],
     child: MaterialApp.router(
-      builder: wrTextScaleBuilder,routerConfig: router),
+      builder: wrTextScaleBuilder,
+      routerConfig: router,
+    ),
   );
 }
 
@@ -81,33 +86,31 @@ ReflectionEpisode _episode({
   },
   String? situationCode,
   DateTime? closedAt,
-}) =>
-    ReflectionEpisode(
-      id: id,
-      userId: 'u1',
-      humanMoment: moment,
-      state: state,
-      draftMeaning: meaning,
-      tinyAction: action,
-      patternsDone: done,
-      notes: notes,
-      situationCode: situationCode,
-      closedAt: closedAt ?? DateTime(2026, 7, 20),
-    );
+}) => ReflectionEpisode(
+  id: id,
+  userId: 'u1',
+  humanMoment: moment,
+  state: state,
+  draftMeaning: meaning,
+  tinyAction: action,
+  patternsDone: done,
+  notes: notes,
+  situationCode: situationCode,
+  closedAt: closedAt ?? DateTime(2026, 7, 20),
+);
 
 CareerMemoryEvent _event({
   String id = 'e1',
   String? behavior,
   String? reflectionText,
   DateTime? createdAt,
-}) =>
-    CareerMemoryEvent(
-      id: id,
-      userId: 'u1',
-      behavior: behavior,
-      reflectionText: reflectionText,
-      createdAt: createdAt ?? DateTime(2026, 7, 19),
-    );
+}) => CareerMemoryEvent(
+  id: id,
+  userId: 'u1',
+  behavior: behavior,
+  reflectionText: reflectionText,
+  createdAt: createdAt ?? DateTime(2026, 7, 19),
+);
 
 PracticeTheme _theme(String id, String title) =>
     PracticeTheme(themeId: id, title: title);
@@ -193,7 +196,11 @@ void main() {
       final entries = buildJourneyEntries(
         episodes: [_episode(id: 'a', closedAt: DateTime(2026, 7, 10))],
         events: [
-          _event(id: 'e', reflectionText: 'Mới hơn', createdAt: DateTime(2026, 7, 25)),
+          _event(
+            id: 'e',
+            reflectionText: 'Mới hơn',
+            createdAt: DateTime(2026, 7, 25),
+          ),
         ],
         situationLabels: const {},
       );
@@ -503,8 +510,9 @@ void main() {
       await tester.tap(find.byKey(const Key('wr_practice_maintain_t1')));
       await tester.pumpAndSettle();
 
-      final behaviors =
-          content.insertMemoryEventCalls.map((e) => e.behavior).toList();
+      final behaviors = content.insertMemoryEventCalls
+          .map((e) => e.behavior)
+          .toList();
       expect(behaviors, contains('practice_maintained'));
       expect(behaviors, contains('skill_certified'));
       expect(

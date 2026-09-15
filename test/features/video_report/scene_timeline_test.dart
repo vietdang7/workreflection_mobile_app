@@ -26,17 +26,25 @@ void main() {
       const NarrationScene(id: VideoSceneId.intro, text: 'a'),
       const NarrationScene(id: VideoSceneId.overall, text: 'bb'),
     ];
-    final timed = assignSceneTimings(scenes: scenes, cues: parseSrt(_srt), audioDurationMs: 5000);
+    final timed = assignSceneTimings(
+      scenes: scenes,
+      cues: parseSrt(_srt),
+      audioDurationMs: 5000,
+    );
     expect(timed.first.startMs, 0);
     expect(timed.last.endMs, 5000);
   });
 
   test('assignSceneTimings falls back to proportional split when no cues', () {
     final scenes = [
-      const NarrationScene(id: VideoSceneId.intro, text: 'aa'),    // len 2
+      const NarrationScene(id: VideoSceneId.intro, text: 'aa'), // len 2
       const NarrationScene(id: VideoSceneId.overall, text: 'aaaa'), // len 4
     ];
-    final timed = assignSceneTimings(scenes: scenes, cues: const [], audioDurationMs: 6000);
+    final timed = assignSceneTimings(
+      scenes: scenes,
+      cues: const [],
+      audioDurationMs: 6000,
+    );
     expect(timed.first.startMs, 0);
     expect(timed.first.endMs, 2000);
     expect(timed.last.endMs, 6000);
@@ -46,7 +54,11 @@ void main() {
     final scenes = [
       const NarrationScene(id: VideoSceneId.intro, text: 'hello'),
     ];
-    final timed = assignSceneTimings(scenes: scenes, cues: const [], audioDurationMs: 4000);
+    final timed = assignSceneTimings(
+      scenes: scenes,
+      cues: const [],
+      audioDurationMs: 4000,
+    );
     expect(timed.length, 1);
     expect(timed.first.startMs, 0);
     expect(timed.first.endMs, 4000);
@@ -70,7 +82,11 @@ Good block
   });
 
   test('empty scenes returns empty list', () {
-    final timed = assignSceneTimings(scenes: const [], cues: const [], audioDurationMs: 5000);
+    final timed = assignSceneTimings(
+      scenes: const [],
+      cues: const [],
+      audioDurationMs: 5000,
+    );
     expect(timed, isEmpty);
   });
 
@@ -89,8 +105,11 @@ Good block
       SubtitleCue(text: 'two', startMs: 3100, endMs: 6000),
       SubtitleCue(text: 'three', startMs: 6000, endMs: 9000),
     ];
-    final timed =
-        assignSceneTimings(scenes: scenes, cues: cues, audioDurationMs: 9000);
+    final timed = assignSceneTimings(
+      scenes: scenes,
+      cues: cues,
+      audioDurationMs: 9000,
+    );
     // First interior boundary (end of scene 0 / start of scene 1) snapped.
     expect(timed[0].endMs, 3100);
     expect(timed[1].startMs, 3100);
@@ -110,16 +129,21 @@ Good block
       const NarrationScene(id: VideoSceneId.culture, text: 'a'),
       const NarrationScene(id: VideoSceneId.activity, text: 'a'),
     ];
-    const cues = [
-      SubtitleCue(text: 'only', startMs: 2500, endMs: 2500),
-    ];
-    final timed =
-        assignSceneTimings(scenes: scenes, cues: cues, audioDurationMs: 10000);
+    const cues = [SubtitleCue(text: 'only', startMs: 2500, endMs: 2500)];
+    final timed = assignSceneTimings(
+      scenes: scenes,
+      cues: cues,
+      audioDurationMs: 10000,
+    );
     expect(timed.length, 5);
     for (final s in timed) {
-      expect(s.endMs > s.startMs, isTrue,
-          reason: 'scene ${s.id} has non-positive duration '
-              '(${s.startMs}..${s.endMs})');
+      expect(
+        s.endMs > s.startMs,
+        isTrue,
+        reason:
+            'scene ${s.id} has non-positive duration '
+            '(${s.startMs}..${s.endMs})',
+      );
     }
     expect(timed.first.startMs, 0);
     expect(timed.last.endMs, 10000);

@@ -79,8 +79,8 @@ class _WrJdBuilderScreenState extends ConsumerState<WrJdBuilderScreen> {
   WrJdDay get _current => kJdDays[(_day ?? 1) - 1];
 
   Map<String, String?> _fieldsOfCurrentDay() => {
-        for (final f in _current.fields) f.column: _controllers[f.column]?.text,
-      };
+    for (final f in _current.fields) f.column: _controllers[f.column]?.text,
+  };
 
   Future<void> _save({required bool markDayDone}) async {
     if (_busy) return;
@@ -89,7 +89,9 @@ class _WrJdBuilderScreenState extends ConsumerState<WrJdBuilderScreen> {
       _error = null;
     });
     try {
-      final saved = await ref.read(wrJdRepositoryProvider).save(
+      final saved = await ref
+          .read(wrJdRepositoryProvider)
+          .save(
             day: _day ?? 1,
             fields: _fieldsOfCurrentDay(),
             markDayDone: markDayDone,
@@ -107,7 +109,12 @@ class _WrJdBuilderScreenState extends ConsumerState<WrJdBuilderScreen> {
       });
     } catch (e) {
       if (mounted) {
-        setState(() => _error = tr('Không lưu được. Thử lại.', 'Could not save. Try again.'));
+        setState(
+          () => _error = tr(
+            'Không lưu được. Thử lại.',
+            'Could not save. Try again.',
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -239,7 +246,12 @@ class _WrJdBuilderScreenState extends ConsumerState<WrJdBuilderScreen> {
                         elevation: 0,
                       ),
                       child: Text(
-                        isLast ? tr('Hoàn tất, lưu vào hồ sơ', 'Finish and save to my profile') : tr('Lưu và tiếp tục', 'Save and continue'),
+                        isLast
+                            ? tr(
+                                'Hoàn tất, lưu vào hồ sơ',
+                                'Finish and save to my profile',
+                              )
+                            : tr('Lưu và tiếp tục', 'Save and continue'),
                         style: const TextStyle(
                           fontSize: 16.5,
                           fontWeight: FontWeight.w600,
@@ -251,7 +263,10 @@ class _WrJdBuilderScreenState extends ConsumerState<WrJdBuilderScreen> {
                     key: const Key('wr_jd_pause'),
                     onPressed: _busy ? null : _pauseAndLeave,
                     child: Text(
-                      tr('Dừng ở đây, làm tiếp sau', 'Stop here, carry on later'),
+                      tr(
+                        'Dừng ở đây, làm tiếp sau',
+                        'Stop here, carry on later',
+                      ),
                       style: TextStyle(
                         fontSize: 15.5,
                         color: WrColors.muted,
@@ -370,9 +385,7 @@ class _Field extends StatelessWidget {
           Container(
             padding: const EdgeInsets.only(left: 10),
             decoration: const BoxDecoration(
-              border: Border(
-                left: BorderSide(color: WrColors.line, width: 2),
-              ),
+              border: Border(left: BorderSide(color: WrColors.line, width: 2)),
             ),
             child: WrParagraph(
               'VD: ${field.example!}',

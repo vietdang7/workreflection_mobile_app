@@ -87,17 +87,21 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
     });
     try {
       if (text.isNotEmpty) {
-        await ref.read(episodeFlowProvider.notifier).submitStep(
-              pattern: ReflectionPattern.explore,
-              note: text,
-            );
+        await ref
+            .read(episodeFlowProvider.notifier)
+            .submitStep(pattern: ReflectionPattern.explore, note: text);
       }
       await _saveLink();
       if (mounted) context.push('/wr/flow/meaning');
     } catch (e, s) {
       logFlowError('submitDetail', e, s);
       if (mounted) {
-        setState(() => _error = flowErrorMessage(tr('Không lưu được. Thử lại.', 'Could not save. Try again.'), e));
+        setState(
+          () => _error = flowErrorMessage(
+            tr('Không lưu được. Thử lại.', 'Could not save. Try again.'),
+            e,
+          ),
+        );
       }
     } finally {
       if (mounted) setState(() => _busy = false);
@@ -125,12 +129,12 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
     final situation = _linked;
     if (situation == null) return;
     try {
-      await ref.read(episodeFlowProvider.notifier).submitStep(
-            pattern: ReflectionPattern.notice,
-            situation: situation,
-          );
+      await ref
+          .read(episodeFlowProvider.notifier)
+          .submitStep(pattern: ReflectionPattern.notice, situation: situation);
       final recent =
-          ref.read(wrRecentSituationIdsProvider).valueOrNull ?? const <String>[];
+          ref.read(wrRecentSituationIdsProvider).valueOrNull ??
+          const <String>[];
       await ref
           .read(wrRepositoryProvider)
           .saveRecentSituationIds(rememberSituation(situation.code, recent));
@@ -158,7 +162,8 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
     }
 
     final storyText = story?.storyContent.trim();
-    final hasStory = episode.situationCode != null &&
+    final hasStory =
+        episode.situationCode != null &&
         storyText != null &&
         storyText.isNotEmpty;
 
@@ -172,7 +177,8 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
       if (all.isNotEmpty && !recent.isLoading) {
         _fallbackChoices ??= pickSituationChoices(
           all: all,
-          mood: ref.read(pendingMoodProvider) ??
+          mood:
+              ref.read(pendingMoodProvider) ??
               ref.read(todayCheckinProvider).valueOrNull?.mood,
           recentIds: recent.valueOrNull ?? const [],
           count: kFallbackSituationCount,
@@ -181,7 +187,9 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
     }
 
     return WrFlowScaffold(
-      eyebrow: hasStory ? tr('Một câu chuyện quen thuộc', 'A familiar story') : tr('Chi tiết cụ thể', 'The specifics'),
+      eyebrow: hasStory
+          ? tr('Một câu chuyện quen thuộc', 'A familiar story')
+          : tr('Chi tiết cụ thể', 'The specifics'),
       // Changelog §1.1: đoạn giải thích chỉ có ở nhánh CÓ câu chuyện. Nhánh
       // "Điều khác" không mượn chuyện của ai nên không có gì để chuẩn hoá.
       eyebrowNote: hasStory ? kFamiliarStoryIntro : null,
@@ -274,9 +282,12 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
             WrParagraph(
               // Nói thẳng chọn để làm gì. Một câu hỏi không có lý do thì đọc ra
               // như phần mềm đang ép phân loại điều vừa kể.
-              tr('Chọn một điều để lần này được tính vào phần lặp lại của bạn. '
-              'Bỏ qua cũng không sao.', 'Pick one so this time counts towards what repeats for you. '
-              'Skipping is fine too.'),
+              tr(
+                'Chọn một điều để lần này được tính vào phần lặp lại của bạn. '
+                    'Bỏ qua cũng không sao.',
+                'Pick one so this time counts towards what repeats for you. '
+                    'Skipping is fine too.',
+              ),
               style: TextStyle(
                 fontSize: 13.5,
                 color: WrColors.text3,
@@ -314,10 +325,9 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
     if (text.isNotEmpty) {
       // Giữ lại chữ đã viết trước khi phiên ngủ (WXS §4.5).
       try {
-        await ref.read(episodeFlowProvider.notifier).submitStep(
-              pattern: ReflectionPattern.explore,
-              note: text,
-            );
+        await ref
+            .read(episodeFlowProvider.notifier)
+            .submitStep(pattern: ReflectionPattern.explore, note: text);
       } catch (_) {
         /* best-effort */
       }
@@ -352,7 +362,9 @@ class _LinkChip extends StatelessWidget {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
         decoration: BoxDecoration(
-          color: selected ? WrColors.coral.withValues(alpha: 0.07) : WrColors.white,
+          color: selected
+              ? WrColors.coral.withValues(alpha: 0.07)
+              : WrColors.white,
           borderRadius: BorderRadius.circular(13),
           border: Border.all(
             color: selected ? WrColors.coral : WrColors.line,

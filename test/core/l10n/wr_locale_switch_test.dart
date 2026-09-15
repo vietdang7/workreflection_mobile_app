@@ -23,12 +23,12 @@ import 'package:workreflection_mobile/core/models/wr_mood_content.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 
 WrSituation _sit(String code, String text, String? textEn) => WrSituation(
-      code: code,
-      text: text,
-      textEn: textEn,
-      scaDimension: ScaDimension.a3,
-      wave: 1,
-    );
+  code: code,
+  text: text,
+  textEn: textEn,
+  scaDimension: ScaDimension.a3,
+  wave: 1,
+);
 
 void main() {
   // Quên trả về là hàng trăm bài chạy sau đó đỏ ở file khác hẳn file gây ra.
@@ -36,8 +36,10 @@ void main() {
 
   group('midSentence — nhúng một câu vào giữa câu khác', () {
     test('tiếng Việt hạ chữ đầu, vì tiếng Việt không viết hoa giữa câu', () {
-      expect(midSentence('Tôi cứ ra quyết định theo cảm xúc'),
-          'tôi cứ ra quyết định theo cảm xúc');
+      expect(
+        midSentence('Tôi cứ ra quyết định theo cảm xúc'),
+        'tôi cứ ra quyết định theo cảm xúc',
+      );
     });
 
     test('tiếng Anh GIỮ NGUYÊN — "I" viết hoa ở mọi vị trí', () {
@@ -45,15 +47,20 @@ void main() {
       // Hạ chữ đầu là luật của tiếng Việt, đem sang tiếng Anh thì nó biến đại
       // từ ngôi thứ nhất thành lỗi chính tả.
       wrSetLocale('en');
-      expect(midSentence('I keep making decisions on how I feel'),
-          'I keep making decisions on how I feel');
+      expect(
+        midSentence('I keep making decisions on how I feel'),
+        'I keep making decisions on how I feel',
+      );
     });
   });
 
   group('Hệ thống nhận ra — đúng MỘT cặp ngoặc kép', () {
     final situations = [
-      _sit('A3-05', 'Tôi cứ ra quyết định theo cảm xúc',
-          'I keep making decisions on how I feel'),
+      _sit(
+        'A3-05',
+        'Tôi cứ ra quyết định theo cảm xúc',
+        'I keep making decisions on how I feel',
+      ),
     ];
 
     test('tiếng Việt: ngoặc chỉ ôm tên tình huống', () {
@@ -63,8 +70,10 @@ void main() {
       );
 
       expect(notice, isNotNull);
-      expect(notice!.sentence,
-          'Bạn đã gặp tình huống "tôi cứ ra quyết định theo cảm xúc" 2 lần');
+      expect(
+        notice!.sentence,
+        'Bạn đã gặp tình huống "tôi cứ ra quyết định theo cảm xúc" 2 lần',
+      );
       // Hai dấu, không phải bốn. Bản trước màn Hôm nay bọc thêm một cặp nữa
       // quanh cả câu, nên người đọc mất một nhịp để biết dấu nào đóng dấu nào.
       expect('"'.allMatches(notice.sentence).length, 2);
@@ -77,8 +86,10 @@ void main() {
         situations: situations,
       );
 
-      expect(notice!.sentence,
-          'You have met "I keep making decisions on how I feel" 2 times');
+      expect(
+        notice!.sentence,
+        'You have met "I keep making decisions on how I feel" 2 times',
+      );
       expect('"'.allMatches(notice.sentence).length, 2);
     });
   });
@@ -124,7 +135,10 @@ void main() {
       // …chữ của chính người dùng thì không. Dịch chữ họ viết mới là sai.
       expect(built, contains('mình chưa rõ mình mong gì'));
       // …và câu của app thì theo ngôn ngữ đang bật.
-      expect(built, endsWith('Weak coordination often creates invisible waste.'));
+      expect(
+        built,
+        endsWith('Weak coordination often creates invisible waste.'),
+      );
     });
 
     test('người dùng bỏ qua Lớp 1 thì còn đúng câu aha, không có vế mở dở', () {
@@ -172,11 +186,8 @@ void main() {
   });
 
   group('Diễn biến do AI viết — ngoại lệ duy nhất', () {
-    PatternNarrative n(String locale, String text) => PatternNarrative(
-          userId: 'u1',
-          narrative: text,
-          locale: locale,
-        );
+    PatternNarrative n(String locale, String text) =>
+        PatternNarrative(userId: 'u1', narrative: text, locale: locale);
 
     test('chỉ nhận đoạn đúng tiếng đang bật, không rơi về tiếng kia', () {
       final list = [n('vi', 'Đoạn tiếng Việt')];
@@ -231,10 +242,7 @@ void main() {
       );
 
       wrSetLocale('en');
-      final built = liveMeaning(
-        notes: e.notes,
-        storyAha: 'The English aha.',
-      );
+      final built = liveMeaning(notes: e.notes, storyAha: 'The English aha.');
 
       expect(built, 'To me, this happens because A. The English aha.');
       // Bản đóng băng vẫn nằm nguyên trong DB — không sửa dữ liệu cũ, chỉ thôi
@@ -293,16 +301,19 @@ void main() {
       expect(relocaliseInsight(mine, ahaEnByVi: map), mine);
     });
 
-    test('bản đồ có dòng rỗng hay trùng nhau thì bỏ qua, không xoá đuôi câu', () {
-      // `aha_message_en` bằng đúng bản tiếng Việt (chưa dịch, chép tạm) từng
-      // làm mọi câu bị cắt đuôi rồi nối lại y nguyên — vô hại nhưng che mất
-      // dòng dịch thật đứng sau nó trong vòng lặp.
-      const frozen = 'Với tôi, điều này xảy ra vì B. $ahaVi';
-      wrSetLocale('en');
-      expect(
-        relocaliseInsight(frozen, ahaEnByVi: {'': '', ahaVi: ahaVi, ...map}),
-        'To me, this happens because B. $ahaEn',
-      );
-    });
+    test(
+      'bản đồ có dòng rỗng hay trùng nhau thì bỏ qua, không xoá đuôi câu',
+      () {
+        // `aha_message_en` bằng đúng bản tiếng Việt (chưa dịch, chép tạm) từng
+        // làm mọi câu bị cắt đuôi rồi nối lại y nguyên — vô hại nhưng che mất
+        // dòng dịch thật đứng sau nó trong vòng lặp.
+        const frozen = 'Với tôi, điều này xảy ra vì B. $ahaVi';
+        wrSetLocale('en');
+        expect(
+          relocaliseInsight(frozen, ahaEnByVi: {'': '', ahaVi: ahaVi, ...map}),
+          'To me, this happens because B. $ahaEn',
+        );
+      },
+    );
   });
 }

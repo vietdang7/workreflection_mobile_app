@@ -64,11 +64,11 @@ HumanNeed dominantNeedFromSelfCheck(ScaSelfCheckResponse r) {
 /// Returns the SCA pillar letter for matching [PracticeTheme.scaDimension.dbValue].
 /// roRang → 'S', ketNoi → 'C', thichNghi → 'A', phatTrien → 'A'.
 String needPillarLetter(HumanNeed need) => switch (need) {
-      HumanNeed.roRang => 'S',
-      HumanNeed.ketNoi => 'C',
-      HumanNeed.thichNghi => 'A',
-      HumanNeed.phatTrien => 'A',
-    };
+  HumanNeed.roRang => 'S',
+  HumanNeed.ketNoi => 'C',
+  HumanNeed.thichNghi => 'A',
+  HumanNeed.phatTrien => 'A',
+};
 
 // ---------------------------------------------------------------------------
 // needSeekingLabel
@@ -76,19 +76,19 @@ String needPillarLetter(HumanNeed need) => switch (need) {
 
 /// Tên ngắn của nhu cầu — dùng làm nhãn phân loại nội dung.
 String needLabel(HumanNeed need) => switch (need) {
-      HumanNeed.roRang => tr('Rõ ràng', 'Clarity'),
-      HumanNeed.ketNoi => tr('Kết nối', 'Connection'),
-      HumanNeed.thichNghi => tr('Thích nghi', 'Adapting'),
-      HumanNeed.phatTrien => tr('Phát triển', 'Growth'),
-    };
+  HumanNeed.roRang => tr('Rõ ràng', 'Clarity'),
+  HumanNeed.ketNoi => tr('Kết nối', 'Connection'),
+  HumanNeed.thichNghi => tr('Thích nghi', 'Adapting'),
+  HumanNeed.phatTrien => tr('Phát triển', 'Growth'),
+};
 
 /// Vietnamese label for what the user is seeking, used in suggestion card reason.
 String needSeekingLabel(HumanNeed need) => switch (need) {
-      HumanNeed.roRang => tr('sự rõ ràng', 'clarity'),
-      HumanNeed.ketNoi => tr('sự kết nối', 'connection'),
-      HumanNeed.thichNghi => tr('sự thích nghi', 'adapting'),
-      HumanNeed.phatTrien => tr('sự phát triển', 'growth'),
-    };
+  HumanNeed.roRang => tr('sự rõ ràng', 'clarity'),
+  HumanNeed.ketNoi => tr('sự kết nối', 'connection'),
+  HumanNeed.thichNghi => tr('sự thích nghi', 'adapting'),
+  HumanNeed.phatTrien => tr('sự phát triển', 'growth'),
+};
 
 // ---------------------------------------------------------------------------
 // Câu đọc lên ở khối "Điều bạn đang tìm kiếm"
@@ -134,9 +134,20 @@ String needSeekingLabel(HumanNeed need) => switch (need) {
 /// điều còn thiếu. Ba câu kia nay kéo về đúng khuôn ấy; câu của khách giữ
 /// nguyên từng chữ.
 String needSeekingSentence(HumanNeed need) => switch (need) {
-      HumanNeed.roRang =>
-        tr('Được biết rõ mình đang ở đâu và người khác chờ đợi điều gì.', 'To know where you stand and what others expect.'),
-      HumanNeed.ketNoi => tr('Được lắng nghe và thể hiện quan điểm.', 'To be heard and to say what you think.'),
-      HumanNeed.thichNghi => tr('Được là chính mình khi mọi thứ đổi thay.', 'To stay yourself while everything shifts.'),
-      HumanNeed.phatTrien => tr('Được thấy mình đang đi về phía trước.', 'To see yourself moving forward.'),
-    };
+  HumanNeed.roRang => tr(
+    'Được biết rõ mình đang ở đâu và người khác chờ đợi điều gì.',
+    'To know where you stand and what others expect.',
+  ),
+  HumanNeed.ketNoi => tr(
+    'Được lắng nghe và thể hiện quan điểm.',
+    'To be heard and to say what you think.',
+  ),
+  HumanNeed.thichNghi => tr(
+    'Được là chính mình khi mọi thứ đổi thay.',
+    'To stay yourself while everything shifts.',
+  ),
+  HumanNeed.phatTrien => tr(
+    'Được thấy mình đang đi về phía trước.',
+    'To see yourself moving forward.',
+  ),
+};

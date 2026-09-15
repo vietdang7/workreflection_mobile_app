@@ -45,14 +45,16 @@ Future<void> _pumpEdit(WidgetTester tester, Widget widget) async {
 
 FakeWrRepository _seedRepo() {
   final repo = FakeWrRepository();
-  repo.seedProfile(MobileProfile(
-    userId: 'u1',
-    displayName: 'Yumi Trần',
-    reminderEnabled: true,
-    language: 'vi',
-    createdAt: DateTime(2026, 1, 1),
-    updatedAt: DateTime(2026, 6, 1),
-  ));
+  repo.seedProfile(
+    MobileProfile(
+      userId: 'u1',
+      displayName: 'Yumi Trần',
+      reminderEnabled: true,
+      language: 'vi',
+      createdAt: DateTime(2026, 1, 1),
+      updatedAt: DateTime(2026, 6, 1),
+    ),
+  );
   repo.seedCcProfile({
     'full_name': 'Yumi Trần',
     'email': 'yumi@workreflection.app',
@@ -122,16 +124,23 @@ void main() {
       final repo = _seedRepo();
       await _pumpEdit(tester, _wrapEdit(const ProfileEditScreen(), repo));
 
-      expect(find.byKey(const Key('profile_edit_display_name')), findsOneWidget);
+      expect(
+        find.byKey(const Key('profile_edit_display_name')),
+        findsOneWidget,
+      );
       expect(find.byKey(const Key('profile_edit_full_name')), findsOneWidget);
       expect(find.byKey(const Key('profile_edit_phone')), findsOneWidget);
-      expect(find.byKey(const Key('profile_edit_company_name')), findsOneWidget);
+      expect(
+        find.byKey(const Key('profile_edit_company_name')),
+        findsOneWidget,
+      );
       // Check one pre-filled value
       expect(find.widgetWithText(TextFormField, 'Yumi Trần'), findsWidgets);
     });
 
-    testWidgets('save button calls updateCcProfile and updateDisplayName',
-        (tester) async {
+    testWidgets('save button calls updateCcProfile and updateDisplayName', (
+      tester,
+    ) async {
       final repo = _seedRepo();
       await _pumpEdit(tester, _wrapEdit(const ProfileEditScreen(), repo));
 
@@ -184,7 +193,9 @@ void main() {
   // Setup mode
   // ---------------------------------------------------------------------------
   group('ProfileEditScreen setup mode', () {
-    testWidgets('shows setup title "Hoàn thiện hồ sơ" in setupMode', (tester) async {
+    testWidgets('shows setup title "Hoàn thiện hồ sơ" in setupMode', (
+      tester,
+    ) async {
       final repo = _seedRepo();
       await _pumpEdit(
         tester,
@@ -203,7 +214,9 @@ void main() {
       expect(find.text('Bỏ qua'), findsOneWidget);
     });
 
-    testWidgets('shows "Hoàn tất" label on save button in setupMode', (tester) async {
+    testWidgets('shows "Hoàn tất" label on save button in setupMode', (
+      tester,
+    ) async {
       final repo = _seedRepo();
       await _pumpEdit(
         tester,
@@ -224,19 +237,13 @@ void main() {
 
     testWidgets('normal mode still shows back button', (tester) async {
       final repo = _seedRepo();
-      await _pumpEdit(
-        tester,
-        _wrapEdit(const ProfileEditScreen(), repo),
-      );
+      await _pumpEdit(tester, _wrapEdit(const ProfileEditScreen(), repo));
       expect(find.byType(BackButton), findsOneWidget);
     });
 
     testWidgets('normal mode shows "Lưu thay đổi" label', (tester) async {
       final repo = _seedRepo();
-      await _pumpEdit(
-        tester,
-        _wrapEdit(const ProfileEditScreen(), repo),
-      );
+      await _pumpEdit(tester, _wrapEdit(const ProfileEditScreen(), repo));
       expect(find.text('Lưu thay đổi'), findsOneWidget);
       expect(find.text('Hoàn tất'), findsNothing);
     });

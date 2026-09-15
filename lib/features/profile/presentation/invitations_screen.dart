@@ -10,8 +10,7 @@ import '../../../l10n/app_localizations.dart';
 // Providers
 // ---------------------------------------------------------------------------
 
-final invitationsProvider =
-    FutureProvider<List<Map<String, dynamic>>>((ref) {
+final invitationsProvider = FutureProvider<List<Map<String, dynamic>>>((ref) {
   return ref.watch(wrRepositoryProvider).getInvitations();
 });
 
@@ -22,8 +21,9 @@ class InvitationActionNotifier extends AsyncNotifier<void> {
   Future<String> accept(String token) async {
     state = const AsyncLoading();
     try {
-      final orgName =
-          await ref.read(wrRepositoryProvider).acceptInvitation(token);
+      final orgName = await ref
+          .read(wrRepositoryProvider)
+          .acceptInvitation(token);
       ref.invalidate(invitationsProvider);
       state = const AsyncData(null);
       return orgName;
@@ -48,8 +48,8 @@ class InvitationActionNotifier extends AsyncNotifier<void> {
 
 final invitationActionProvider =
     AsyncNotifierProvider<InvitationActionNotifier, void>(
-  InvitationActionNotifier.new,
-);
+      InvitationActionNotifier.new,
+    );
 
 // ---------------------------------------------------------------------------
 // Screen
@@ -127,9 +127,9 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen>
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.invitationsAcceptError)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.invitationsAcceptError)));
       }
     }
   }
@@ -166,15 +166,15 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen>
           .read(invitationActionProvider.notifier)
           .decline(inv['id'] as String);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.invitationsDeclineSuccess)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.invitationsDeclineSuccess)));
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.invitationsDeclineError)),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.invitationsDeclineError)));
       }
     }
   }
@@ -208,7 +208,8 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen>
       ),
       body: invAsync.when(
         loading: () => const Center(
-            child: CircularProgressIndicator(color: WrColors.coral)),
+          child: CircularProgressIndicator(color: WrColors.coral),
+        ),
         error: (_, __) => Center(
           child: Text(l10n.invitationsEmpty, style: WrTextStyles.body),
         ),
@@ -223,14 +224,14 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen>
 
           final expired = invitations.where((i) {
             final exp = DateTime.tryParse(i['expires_at'] as String? ?? '');
-            return i['status'] == 'pending' &&
-                exp != null &&
-                exp.isBefore(now);
+            return i['status'] == 'pending' && exp != null && exp.isBefore(now);
           }).toList();
 
           final processed = invitations
-              .where((i) => ['accepted', 'declined', 'cancelled']
-                  .contains(i['status']))
+              .where(
+                (i) =>
+                    ['accepted', 'declined', 'cancelled'].contains(i['status']),
+              )
               .toList();
 
           return Stack(
@@ -274,8 +275,8 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen>
                 const ColoredBox(
                   color: Colors.black26,
                   child: Center(
-                      child:
-                          CircularProgressIndicator(color: WrColors.coral)),
+                    child: CircularProgressIndicator(color: WrColors.coral),
+                  ),
                 ),
             ],
           );
@@ -313,8 +314,10 @@ class _InvitationTab extends StatelessWidget {
   Widget build(BuildContext context) {
     if (invitations.isEmpty) {
       return Center(
-        child: Text(emptyMessage,
-            style: WrTextStyles.body.copyWith(color: WrColors.muted)),
+        child: Text(
+          emptyMessage,
+          style: WrTextStyles.body.copyWith(color: WrColors.muted),
+        ),
       );
     }
     return ListView.builder(
@@ -387,43 +390,60 @@ class _InvitationCard extends StatelessWidget {
                     color: WrColors.navy.withValues(alpha: 0.07),
                     borderRadius: BorderRadius.circular(10),
                   ),
-                  child: const Icon(Icons.business_outlined,
-                      color: WrColors.navy, size: 24),
+                  child: const Icon(
+                    Icons.business_outlined,
+                    color: WrColors.navy,
+                    size: 24,
+                  ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(orgName,
-                          style: WrTextStyles.hMedium
-                              .copyWith(color: WrColors.navy)),
+                      Text(
+                        orgName,
+                        style: WrTextStyles.hMedium.copyWith(
+                          color: WrColors.navy,
+                        ),
+                      ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
                           _Chip(role),
                           if (department != null && department.isNotEmpty) ...[
                             const SizedBox(width: 6),
-                            Text('• $department',
-                                style: WrTextStyles.body.copyWith(
-                                    fontSize: 13.5, color: WrColors.muted)),
+                            Text(
+                              '• $department',
+                              style: WrTextStyles.body.copyWith(
+                                fontSize: 13.5,
+                                color: WrColors.muted,
+                              ),
+                            ),
                           ],
                         ],
                       ),
                       const SizedBox(height: 4),
                       Row(
                         children: [
-                          const Icon(Icons.access_time,
-                              size: 12, color: WrColors.muted),
+                          const Icon(
+                            Icons.access_time,
+                            size: 12,
+                            color: WrColors.muted,
+                          ),
                           const SizedBox(width: 4),
                           Text(
                             isExpired
                                 ? l10n.invitationsExpiredAt(
-                                    formatDate(expiresAt))
+                                    formatDate(expiresAt),
+                                  )
                                 : l10n.invitationsExpiresAt(
-                                    formatDate(expiresAt)),
+                                    formatDate(expiresAt),
+                                  ),
                             style: WrTextStyles.body.copyWith(
-                                fontSize: 12.5, color: WrColors.text3),
+                              fontSize: 12.5,
+                              color: WrColors.text3,
+                            ),
                           ),
                         ],
                       ),
@@ -445,10 +465,10 @@ class _InvitationCard extends StatelessWidget {
                     onPressed: () => onDecline(invitation),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: WrColors.destructive,
-                      side:
-                          const BorderSide(color: WrColors.destructive),
+                      side: const BorderSide(color: WrColors.destructive),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                     child: Text(l10n.invitationsDeclineBtn),
                   ),
@@ -460,7 +480,8 @@ class _InvitationCard extends StatelessWidget {
                       backgroundColor: WrColors.coral,
                       foregroundColor: WrColors.navy,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                       elevation: 0,
                     ),
                     child: Text(l10n.invitationsAcceptBtn),
@@ -487,9 +508,10 @@ class _Chip extends StatelessWidget {
         border: Border.all(color: WrColors.navy.withValues(alpha: 0.2)),
         borderRadius: BorderRadius.circular(4),
       ),
-      child: Text(label,
-          style: WrTextStyles.body
-              .copyWith(fontSize: 12.5, color: WrColors.navy)),
+      child: Text(
+        label,
+        style: WrTextStyles.body.copyWith(fontSize: 12.5, color: WrColors.navy),
+      ),
     );
   }
 }
@@ -542,8 +564,10 @@ class _StatusBadge extends StatelessWidget {
         color: bg,
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(label,
-          style: WrTextStyles.body.copyWith(fontSize: 12.5, color: fg)),
+      child: Text(
+        label,
+        style: WrTextStyles.body.copyWith(fontSize: 12.5, color: fg),
+      ),
     );
   }
 }

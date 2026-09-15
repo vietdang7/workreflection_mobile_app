@@ -128,7 +128,9 @@ class _SurveyIntroScreenState extends ConsumerState<SurveyIntroScreen> {
       ),
       body: SafeArea(
         child: ccAsync.isLoading
-            ? const Center(child: CircularProgressIndicator(color: WrColors.coral))
+            ? const Center(
+                child: CircularProgressIndicator(color: WrColors.coral),
+              )
             : SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24),
                 child: Column(
@@ -140,7 +142,10 @@ class _SurveyIntroScreenState extends ConsumerState<SurveyIntroScreen> {
                     Row(
                       children: [
                         Expanded(
-                          child: Text(l10n.surveyIntroTitle, style: WrTextStyles.hLarge),
+                          child: Text(
+                            l10n.surveyIntroTitle,
+                            style: WrTextStyles.hLarge,
+                          ),
                         ),
                         typeAsync.when(
                           data: (type) => _BadgeChip(
@@ -164,7 +169,12 @@ class _SurveyIntroScreenState extends ConsumerState<SurveyIntroScreen> {
                       value: _position,
                       hint: l10n.profileEditSelectHint,
                       items: positionOptions(l10n)
-                          .map((o) => DropdownMenuItem(value: o.value, child: Text(o.label, style: WrTextStyles.body)))
+                          .map(
+                            (o) => DropdownMenuItem(
+                              value: o.value,
+                              child: Text(o.label, style: WrTextStyles.body),
+                            ),
+                          )
                           .toList(),
                       onChanged: (v) => setState(() => _position = v),
                     ),
@@ -176,7 +186,12 @@ class _SurveyIntroScreenState extends ConsumerState<SurveyIntroScreen> {
                       value: _experience,
                       hint: l10n.profileEditSelectHint,
                       items: workExperienceOptions(l10n)
-                          .map((o) => DropdownMenuItem(value: o.value, child: Text(o.label, style: WrTextStyles.body)))
+                          .map(
+                            (o) => DropdownMenuItem(
+                              value: o.value,
+                              child: Text(o.label, style: WrTextStyles.body),
+                            ),
+                          )
                           .toList(),
                       onChanged: (v) => setState(() => _experience = v),
                     ),
@@ -188,7 +203,12 @@ class _SurveyIntroScreenState extends ConsumerState<SurveyIntroScreen> {
                       value: _tenure,
                       hint: l10n.profileEditSelectHint,
                       items: companyTenureOptions(l10n)
-                          .map((o) => DropdownMenuItem(value: o.value, child: Text(o.label, style: WrTextStyles.body)))
+                          .map(
+                            (o) => DropdownMenuItem(
+                              value: o.value,
+                              child: Text(o.label, style: WrTextStyles.body),
+                            ),
+                          )
                           .toList(),
                       onChanged: (v) => setState(() => _tenure = v),
                     ),
@@ -200,7 +220,12 @@ class _SurveyIntroScreenState extends ConsumerState<SurveyIntroScreen> {
                       value: _companySize,
                       hint: l10n.profileEditSelectHint,
                       items: companySizeOptions(l10n)
-                          .map((o) => DropdownMenuItem(value: o.value, child: Text(o.label, style: WrTextStyles.body)))
+                          .map(
+                            (o) => DropdownMenuItem(
+                              value: o.value,
+                              child: Text(o.label, style: WrTextStyles.body),
+                            ),
+                          )
                           .toList(),
                       onChanged: (v) => setState(() => _companySize = v),
                     ),
@@ -212,7 +237,12 @@ class _SurveyIntroScreenState extends ConsumerState<SurveyIntroScreen> {
                       value: _department,
                       hint: l10n.profileEditSelectHint,
                       items: departmentOptions(l10n)
-                          .map((o) => DropdownMenuItem(value: o.value, child: Text(o.label, style: WrTextStyles.body)))
+                          .map(
+                            (o) => DropdownMenuItem(
+                              value: o.value,
+                              child: Text(o.label, style: WrTextStyles.body),
+                            ),
+                          )
                           .toList(),
                       onChanged: (v) => setState(() => _department = v),
                     ),
@@ -282,7 +312,10 @@ class _DropdownField<T> extends StatelessWidget {
       children: [
         Text(
           label,
-          style: WrTextStyles.body.copyWith(color: WrColors.muted, fontSize: 13.5),
+          style: WrTextStyles.body.copyWith(
+            color: WrColors.muted,
+            fontSize: 13.5,
+          ),
         ),
         const SizedBox(height: 6),
         Container(
@@ -295,11 +328,17 @@ class _DropdownField<T> extends StatelessWidget {
             child: DropdownButton<T>(
               isExpanded: true,
               value: value,
-              hint: Text(hint, style: WrTextStyles.body.copyWith(color: WrColors.muted)),
+              hint: Text(
+                hint,
+                style: WrTextStyles.body.copyWith(color: WrColors.muted),
+              ),
               items: items,
               onChanged: onChanged,
               style: WrTextStyles.body,
-              icon: const Icon(Icons.keyboard_arrow_down, color: WrColors.muted),
+              icon: const Icon(
+                Icons.keyboard_arrow_down,
+                color: WrColors.muted,
+              ),
             ),
           ),
         ),

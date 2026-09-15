@@ -114,11 +114,14 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
           ),
         ),
         content: WrParagraph(
-          tr('${_answers.length} câu bạn đã trả lời sẽ không được giữ lại. '
-          'Bộ câu hỏi chỉ được lưu khi bạn trả lời xong cả '
-          '${kSelfCheckQuestions.length} câu.', 'The ${_answers.length} answers you have given will not be kept. '
-          'The set is only saved once you answer all '
-          '${kSelfCheckQuestions.length} questions.'),
+          tr(
+            '${_answers.length} câu bạn đã trả lời sẽ không được giữ lại. '
+                'Bộ câu hỏi chỉ được lưu khi bạn trả lời xong cả '
+                '${kSelfCheckQuestions.length} câu.',
+            'The ${_answers.length} answers you have given will not be kept. '
+                'The set is only saved once you answer all '
+                '${kSelfCheckQuestions.length} questions.',
+          ),
           style: const TextStyle(
             fontSize: 15.5,
             height: 1.6,
@@ -178,7 +181,12 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
         ref.invalidate(wrSelfCheckHistoryProvider);
       }
     } catch (e) {
-      if (mounted) setState(() => _errorMsg = tr('Lưu không thành công: $e', 'Could not save: $e'));
+      if (mounted) {
+        setState(
+          () =>
+              _errorMsg = tr('Lưu không thành công: $e', 'Could not save: $e'),
+        );
+      }
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -231,7 +239,10 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                       children: [
                         // Khách 09/09/2026 (§15.1): bỏ chấm tròn ◉ ở đầu màn.
                         Text(
-                          tr('${kSelfCheckQuestions.length} câu hỏi phản chiếu', '${kSelfCheckQuestions.length} reflection questions'),
+                          tr(
+                            '${kSelfCheckQuestions.length} câu hỏi phản chiếu',
+                            '${kSelfCheckQuestions.length} reflection questions',
+                          ),
                           style: const TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.w800,
@@ -242,8 +253,11 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                         ),
                         const SizedBox(height: 12),
                         WrParagraph(
-                          tr('Hãy trả lời dựa trên trải nghiệm thực tế của bạn tại '
-                          'nơi làm việc.', 'Answer from what actually happens for you at work.'),
+                          tr(
+                            'Hãy trả lời dựa trên trải nghiệm thực tế của bạn tại '
+                                'nơi làm việc.',
+                            'Answer from what actually happens for you at work.',
+                          ),
                           style: TextStyle(
                             fontSize: 16.5,
                             color: WrColors.text2,
@@ -256,17 +270,26 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                         // màu của brand.
                         _InfoRow(
                           icon: Icons.schedule_outlined,
-                          text: tr('Thời gian: Khoảng 3–4 phút hoàn thành', 'Takes about 3–4 minutes'),
+                          text: tr(
+                            'Thời gian: Khoảng 3–4 phút hoàn thành',
+                            'Takes about 3–4 minutes',
+                          ),
                         ),
                         const SizedBox(height: 12),
                         _InfoRow(
                           icon: Icons.lock_outline,
-                          text: tr('Bảo mật tuyệt đối. Chỉ bạn mới thấy kết quả', 'Completely private. Only you see the results'),
+                          text: tr(
+                            'Bảo mật tuyệt đối. Chỉ bạn mới thấy kết quả',
+                            'Completely private. Only you see the results',
+                          ),
                         ),
                         const SizedBox(height: 12),
                         _InfoRow(
                           icon: Icons.refresh_outlined,
-                          text: tr('Có thể làm lại bất cứ lúc nào bạn muốn', 'Retake it any time you like'),
+                          text: tr(
+                            'Có thể làm lại bất cứ lúc nào bạn muốn',
+                            'Retake it any time you like',
+                          ),
                         ),
                       ],
                     ),
@@ -364,9 +387,12 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                       ),
                       const Spacer(),
                       Text(
-                        tr('Câu ${_questionIndex + 1} / '
-                        '${kSelfCheckQuestions.length}', 'Question ${_questionIndex + 1} / '
-                        '${kSelfCheckQuestions.length}'),
+                        tr(
+                          'Câu ${_questionIndex + 1} / '
+                              '${kSelfCheckQuestions.length}',
+                          'Question ${_questionIndex + 1} / '
+                              '${kSelfCheckQuestions.length}',
+                        ),
                         style: const TextStyle(
                           fontSize: 14.5,
                           fontWeight: FontWeight.w600,
@@ -539,7 +565,10 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      tr('Dựa trên 15 câu hỏi phản chiếu', 'Based on 15 reflection questions'),
+                      tr(
+                        'Dựa trên 15 câu hỏi phản chiếu',
+                        'Based on 15 reflection questions',
+                      ),
                       style: TextStyle(fontSize: 15.5, color: WrColors.muted),
                     ),
                     if (_saving) ...[
@@ -691,18 +720,21 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
   // Story tự do".
 
   Widget _buildDeepDive() {
-    final entitlement = ref.watch(wrEntitlementProvider).valueOrNull ??
+    final entitlement =
+        ref.watch(wrEntitlementProvider).valueOrNull ??
         WrEntitlement(plan: WrPlan.free);
     if (!entitlement.canUseFeature(WrPremiumFeature.selfCheckDeepDive)) {
       return const _DeepDiveLocked();
     }
 
     final imbalance = detectPillarImbalance(_sScore, _cScore, _aScore);
-    final history = ref.watch(wrSelfCheckHistoryProvider).valueOrNull ?? const [];
+    final history =
+        ref.watch(wrSelfCheckHistoryProvider).valueOrNull ?? const [];
     final trend = trendFromHistory(history);
     // recentSituationIds — nguồn duy nhất (Kiến trúc v2.0 §4.3), không còn đọc
     // `wr_pattern_counts`.
-    final episodes = ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
+    final episodes =
+        ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
     final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
     final sitText = {for (final s in situations) s.code: s.text};
 
@@ -725,22 +757,27 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
             (SelfCheckPillar.c, _cScore),
             (SelfCheckPillar.a, _aScore),
           ]) ...[
-            Builder(builder: (_) {
-              final n = pillarNarrative(pillar, score);
-              return _NarrativeCard(
-                title: n.title,
-                text: n.text,
-                pillarName: n.pillarName,
-                collapsible: true,
-              );
-            }),
+            Builder(
+              builder: (_) {
+                final n = pillarNarrative(pillar, score);
+                return _NarrativeCard(
+                  title: n.title,
+                  text: n.text,
+                  pillarName: n.pillarName,
+                  collapsible: true,
+                );
+              },
+            ),
             const SizedBox(height: 10),
           ],
 
           if (imbalance != null) ...[
             const SizedBox(height: 8),
             _CollapsibleSection(
-              title: tr('MẤT CÂN BẰNG GIỮA CÁC MẶT', 'OUT OF BALANCE ACROSS THE THREE'),
+              title: tr(
+                'MẤT CÂN BẰNG GIỮA CÁC MẶT',
+                'OUT OF BALANCE ACROSS THE THREE',
+              ),
               child: _NarrativeCard(text: imbalanceNarrative(imbalance)),
             ),
             const SizedBox(height: 10),
@@ -751,36 +788,55 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
             title: tr('XU HƯỚNG THEO THỜI GIAN', 'HOW IT MOVES OVER TIME'),
             child: trend == null
                 ? _NarrativeCard(
-                    text: tr('Đây là lần tự soi đầu tiên được ghi lại. Làm lại '
-                        'sau vài tuần, WorkReflection sẽ cho bạn thấy điều gì '
-                        'đã đổi và điều gì vẫn ở nguyên đó.', 'This is the first self-check on record. Take it again '
-                        'in a few weeks and WorkReflection will show you what '
-                        'has shifted and what has stayed put.'),
+                    text: tr(
+                      'Đây là lần tự soi đầu tiên được ghi lại. Làm lại '
+                          'sau vài tuần, WorkReflection sẽ cho bạn thấy điều gì '
+                          'đã đổi và điều gì vẫn ở nguyên đó.',
+                      'This is the first self-check on record. Take it again '
+                          'in a few weeks and WorkReflection will show you what '
+                          'has shifted and what has stayed put.',
+                    ),
                   )
                 : _NarrativeCard(
-                    title: tr('Đã ghi ${trend.takenCount} lần tự soi', '${trend.takenCount} self-checks recorded'),
+                    title: tr(
+                      'Đã ghi ${trend.takenCount} lần tự soi',
+                      '${trend.takenCount} self-checks recorded',
+                    ),
                     text: trend.summary,
-                    footer: tr('Sự rõ ràng ${_delta(trend.structureDelta)} · '
-                        'Mối quan hệ ${_delta(trend.cultureDelta)} · '
-                        'Cách làm việc ${_delta(trend.activityDelta)}', 'Clarity ${_delta(trend.structureDelta)} · '
-                        'Relationships ${_delta(trend.cultureDelta)} · '
-                        'Ways of working ${_delta(trend.activityDelta)}'),
+                    footer: tr(
+                      'Sự rõ ràng ${_delta(trend.structureDelta)} · '
+                          'Mối quan hệ ${_delta(trend.cultureDelta)} · '
+                          'Cách làm việc ${_delta(trend.activityDelta)}',
+                      'Clarity ${_delta(trend.structureDelta)} · '
+                          'Relationships ${_delta(trend.cultureDelta)} · '
+                          'Ways of working ${_delta(trend.activityDelta)}',
+                    ),
                   ),
           ),
 
           if (relatedPatterns.isNotEmpty) ...[
             const SizedBox(height: 18),
             _CollapsibleSection(
-              title: tr('ĐỐI CHIẾU VỚI ĐIỀU BẠN HAY GẶP', 'SET AGAINST WHAT YOU KEEP MEETING'),
+              title: tr(
+                'ĐỐI CHIẾU VỚI ĐIỀU BẠN HAY GẶP',
+                'SET AGAINST WHAT YOU KEEP MEETING',
+              ),
               child: _NarrativeCard(
-                text: tr('Những gì bạn ghi lại trong các câu chuyện cũng chỉ về '
-                    'cùng một hướng với "${lowest.displayName}":', 'What you wrote in your stories points the same way as '
-                    '"${lowest.displayName}":'),
+                text: tr(
+                  'Những gì bạn ghi lại trong các câu chuyện cũng chỉ về '
+                      'cùng một hướng với "${lowest.displayName}":',
+                  'What you wrote in your stories points the same way as '
+                      '"${lowest.displayName}":',
+                ),
                 footer: relatedPatterns
-                    .map((p) =>
-                        tr('${sitText[p.situationCode] ?? p.situationCode}'
-                        ' · lần thứ ${p.count}', '${sitText[p.situationCode] ?? p.situationCode}'
-                        ' · time ${p.count}'))
+                    .map(
+                      (p) => tr(
+                        '${sitText[p.situationCode] ?? p.situationCode}'
+                            ' · lần thứ ${p.count}',
+                        '${sitText[p.situationCode] ?? p.situationCode}'
+                            ' · time ${p.count}',
+                      ),
+                    )
                     .join('\n'),
               ),
             ),
@@ -864,10 +920,7 @@ class _CollapsibleSectionState extends State<_CollapsibleSection> {
             ),
           ),
         ),
-        if (_open) ...[
-          const SizedBox(height: 4),
-          widget.child,
-        ],
+        if (_open) ...[const SizedBox(height: 4), widget.child],
       ],
     );
   }
@@ -1048,8 +1101,7 @@ class _DeepDiveLocked extends ConsumerWidget {
               children: [
                 const Row(
                   children: [
-                    Icon(Icons.lock_outline,
-                        size: 15, color: WrColors.amber),
+                    Icon(Icons.lock_outline, size: 15, color: WrColors.amber),
                     SizedBox(width: 6),
                     Text(
                       'Premium',
@@ -1064,13 +1116,16 @@ class _DeepDiveLocked extends ConsumerWidget {
                 ),
                 const SizedBox(height: 10),
                 WrParagraph(
-                  tr('Mở khóa báo cáo đầy đủ để phân tích chi tiết từng khía cạnh, '
-                  'nhận diện điểm mất cân bằng giữa các nhóm trải nghiệm, đồng '
-                  'thời so sánh với lịch sử nhìn lại và các tình huống bạn '
-                  'thường gặp.', 'Unlock the full report to break down each side in detail, spot '
-                  'where the three fall out of balance, and set it against '
-                  'your history of looking back and the situations you meet '
-                  'most.'),
+                  tr(
+                    'Mở khóa báo cáo đầy đủ để phân tích chi tiết từng khía cạnh, '
+                        'nhận diện điểm mất cân bằng giữa các nhóm trải nghiệm, đồng '
+                        'thời so sánh với lịch sử nhìn lại và các tình huống bạn '
+                        'thường gặp.',
+                    'Unlock the full report to break down each side in detail, spot '
+                        'where the three fall out of balance, and set it against '
+                        'your history of looking back and the situations you meet '
+                        'most.',
+                  ),
                   style: TextStyle(
                     fontSize: 16.5,
                     height: 1.65,
@@ -1095,8 +1150,10 @@ class _DeepDiveLocked extends ConsumerWidget {
                     ),
                     child: Text(
                       tr('Mở diễn giải sâu', 'Open the deep reading'),
-                      style:
-                          TextStyle(fontSize: 16.5, fontWeight: FontWeight.w600),
+                      style: TextStyle(
+                        fontSize: 16.5,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ),
@@ -1154,12 +1211,10 @@ class _PillarScoreCard extends StatelessWidget {
 
   String get _badge => _status.label;
 
-  Color get _badgeColor => _status.isReassuring
-      ? WrColors.pillTealText
-      : WrColors.pillCoralText;
-  Color get _badgeBg => _status.isReassuring
-      ? const Color(0xFFE6F7F7)
-      : const Color(0xFFFFEEEB);
+  Color get _badgeColor =>
+      _status.isReassuring ? WrColors.pillTealText : WrColors.pillCoralText;
+  Color get _badgeBg =>
+      _status.isReassuring ? const Color(0xFFE6F7F7) : const Color(0xFFFFEEEB);
 
   @override
   Widget build(BuildContext context) {
@@ -1191,7 +1246,10 @@ class _PillarScoreCard extends StatelessWidget {
               const SizedBox(width: 10),
               const Spacer(),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 3,
+                ),
                 decoration: BoxDecoration(
                   color: _badgeBg,
                   borderRadius: BorderRadius.circular(100),
@@ -1220,10 +1278,7 @@ class _PillarScoreCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             '${(score * 20).round()}%',
-            style: const TextStyle(
-              fontSize: 14.5,
-              color: WrColors.text3,
-            ),
+            style: const TextStyle(fontSize: 14.5, color: WrColors.text3),
           ),
         ],
       ),

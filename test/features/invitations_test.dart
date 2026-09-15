@@ -27,33 +27,34 @@ Widget _wrap(Widget child, WrRepository repo) {
   );
 }
 
-Map<String, dynamic> _pendingInv({String id = 'inv1', String token = 'tok1'}) => {
-      'id': id,
-      'org_id': 'org1',
-      'org_name': 'ACME Corp',
-      'email': 'user@test.com',
-      'role': 'member',
-      'department': 'IT',
-      'status': 'pending',
-      'expires_at':
-          DateTime.now().add(const Duration(days: 7)).toIso8601String(),
-      'created_at': DateTime.now().toIso8601String(),
-      'token': token,
-    };
+Map<String, dynamic> _pendingInv({
+  String id = 'inv1',
+  String token = 'tok1',
+}) => {
+  'id': id,
+  'org_id': 'org1',
+  'org_name': 'ACME Corp',
+  'email': 'user@test.com',
+  'role': 'member',
+  'department': 'IT',
+  'status': 'pending',
+  'expires_at': DateTime.now().add(const Duration(days: 7)).toIso8601String(),
+  'created_at': DateTime.now().toIso8601String(),
+  'token': token,
+};
 
 Map<String, dynamic> _acceptedInv({String id = 'inv2'}) => {
-      'id': id,
-      'org_id': 'org2',
-      'org_name': 'Beta Inc',
-      'email': 'user@test.com',
-      'role': 'admin',
-      'department': null,
-      'status': 'accepted',
-      'expires_at':
-          DateTime.now().add(const Duration(days: 7)).toIso8601String(),
-      'created_at': DateTime.now().toIso8601String(),
-      'token': 'tok2',
-    };
+  'id': id,
+  'org_id': 'org2',
+  'org_name': 'Beta Inc',
+  'email': 'user@test.com',
+  'role': 'admin',
+  'department': null,
+  'status': 'accepted',
+  'expires_at': DateTime.now().add(const Duration(days: 7)).toIso8601String(),
+  'created_at': DateTime.now().toIso8601String(),
+  'token': 'tok2',
+};
 
 void main() {
   group('InvitationsScreen', () {
@@ -65,8 +66,9 @@ void main() {
       expect(find.byKey(const Key('tab_pending')), findsOneWidget);
     });
 
-    testWidgets('shows pending invitation with Accept/Decline buttons',
-        (tester) async {
+    testWidgets('shows pending invitation with Accept/Decline buttons', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1080, 4000);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() {
@@ -84,8 +86,9 @@ void main() {
       expect(find.byKey(const Key('decline_inv1')), findsOneWidget);
     });
 
-    testWidgets('accept button calls acceptInvitation with correct token',
-        (tester) async {
+    testWidgets('accept button calls acceptInvitation with correct token', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1080, 4000);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() {
@@ -111,8 +114,9 @@ void main() {
       expect(repo.acceptInvitationCalls, contains('secret-token'));
     });
 
-    testWidgets('decline button calls declineInvitation with correct id',
-        (tester) async {
+    testWidgets('decline button calls declineInvitation with correct id', (
+      tester,
+    ) async {
       tester.view.physicalSize = const Size(1080, 4000);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(() {
@@ -195,13 +199,9 @@ void main() {
     test('acceptInvitation throws when error is set', () async {
       final repo = FakeWrRepository();
       repo.seedInvitations([_pendingInv(token: 'bad-token')]);
-      repo.setAcceptInvitationResult(
-          error: Exception('already accepted'));
+      repo.setAcceptInvitationResult(error: Exception('already accepted'));
 
-      expect(
-        () => repo.acceptInvitation('bad-token'),
-        throwsException,
-      );
+      expect(() => repo.acceptInvitation('bad-token'), throwsException);
     });
   });
 }

@@ -104,13 +104,15 @@ class FakeCoachingRepository implements CoachingRepository {
     // Simulate the RPC: append pkg.sessionsCount pending bookings.
     for (var i = 1; i <= pkg.sessionsCount; i++) {
       _bookingCounter++;
-      _bookings.add(CoachingBooking(
-        id: 'booking-$_bookingCounter',
-        packageId: pkg.id,
-        status: 'pending',
-        sessionNumber: i,
-        totalSessions: pkg.sessionsCount,
-      ));
+      _bookings.add(
+        CoachingBooking(
+          id: 'booking-$_bookingCounter',
+          packageId: pkg.id,
+          status: 'pending',
+          sessionNumber: i,
+          totalSessions: pkg.sessionsCount,
+        ),
+      );
     }
   }
 

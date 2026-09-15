@@ -52,34 +52,55 @@ import '../support/fake_repository.dart';
 /// Một tình huống cho mỗi cụm chiều của §III, để cảm xúc nào cũng có chip.
 const _situations = [
   WrSituation(
-    code: 'A3-sit-01',
-    text: 'Việc dồn nhiều hơn mình xử lý nổi',
+    code: 'A3-01',
+    text: 'Chuyện này sao lại xảy ra lần nữa?',
     scaDimension: ScaDimension.a3,
     wave: 1,
+    pillarCode: 'A',
+    subgroup: 'A3',
+    mood: 'tired',
+    valence: WrValence.thachThuc,
   ),
   WrSituation(
-    code: 'C2-sit-01',
-    text: 'Không dám lên tiếng trong cuộc họp',
+    code: 'C2-01',
+    text: 'Ý tưởng của tôi biến mất trong cuộc họp',
     scaDimension: ScaDimension.c2,
     wave: 1,
+    pillarCode: 'C',
+    subgroup: 'C2',
+    mood: 'stress',
+    valence: WrValence.thachThuc,
   ),
   WrSituation(
-    code: 'A1-sit-01',
-    text: 'Không biết mình đang đi về đâu',
+    code: 'A1-01',
+    text: 'Tôi đang đi rất nhanh, nhưng đi đâu?',
     scaDimension: ScaDimension.a1,
     wave: 1,
+    pillarCode: 'A',
+    subgroup: 'A1',
+    mood: 'foggy',
+    valence: WrValence.thachThuc,
   ),
   WrSituation(
     code: 'P-01',
     text: 'Tôi vừa hoàn thành một việc khó hơn mong đợi',
     scaDimension: ScaDimension.pAchieve,
     wave: 1,
+    pillarCode: 'A',
+    subgroup: 'Ap',
+    mood: 'happy',
+    valence: WrValence.tichCuc,
   ),
   WrSituation(
     code: 'P-06',
     text: 'Công việc hôm nay diễn ra đúng như tôi mong đợi',
     scaDimension: ScaDimension.pSteady,
     wave: 1,
+    pillarCode: 'S',
+    subgroup: 'Sp',
+    mood: 'ok',
+    valence: WrValence.tichCuc,
+    humanNeed: HumanNeed.phatTrien,
   ),
 ];
 
@@ -96,43 +117,55 @@ void main() {
         routes: [
           GoRoute(path: '/home', builder: (_, __) => const WrHomeScreen()),
           GoRoute(
-              path: '/wr/flow/energy',
-              builder: (_, __) => const WrEnergyScreen()),
+            path: '/wr/flow/energy',
+            builder: (_, __) => const WrEnergyScreen(),
+          ),
           GoRoute(
-              path: '/wr/flow/moment',
-              builder: (_, __) => const WrMomentScreen()),
+            path: '/wr/flow/moment',
+            builder: (_, __) => const WrMomentScreen(),
+          ),
           GoRoute(
-              path: '/wr/flow/step', builder: (_, __) => const WrStepScreen()),
+            path: '/wr/flow/step',
+            builder: (_, __) => const WrStepScreen(),
+          ),
           GoRoute(
-              path: '/wr/flow/detail',
-              builder: (_, __) => const WrDetailScreen()),
+            path: '/wr/flow/detail',
+            builder: (_, __) => const WrDetailScreen(),
+          ),
           GoRoute(
-              path: '/wr/flow/meaning',
-              builder: (_, __) => const WrMeaningScreen()),
+            path: '/wr/flow/meaning',
+            builder: (_, __) => const WrMeaningScreen(),
+          ),
           GoRoute(
-              path: '/wr/flow/commit',
-              builder: (_, __) => const WrCommitScreen()),
+            path: '/wr/flow/commit',
+            builder: (_, __) => const WrCommitScreen(),
+          ),
           GoRoute(
-              path: '/wr/flow/done', builder: (_, __) => const WrDoneScreen()),
+            path: '/wr/flow/done',
+            builder: (_, __) => const WrDoneScreen(),
+          ),
         ],
       );
-      await tester.pumpWidget(ProviderScope(
-        overrides: [
-          wrEpisodeRepositoryProvider.overrideWithValue(episodes),
-          wrIntelligenceRepositoryProvider
-              .overrideWithValue(FakeWrIntelligenceRepository()),
-          wrContentRepositoryProvider.overrideWithValue(content),
-          wrMoodContentRepositoryProvider.overrideWithValue(moodContent),
-          wrRepositoryProvider.overrideWithValue(FakeWrRepository()),
-          currentUserIdProvider.overrideWithValue('u1'),
-        ],
-        child: MaterialApp.router(
-      builder: wrTextScaleBuilder,
-          routerConfig: router,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
+      await tester.pumpWidget(
+        ProviderScope(
+          overrides: [
+            wrEpisodeRepositoryProvider.overrideWithValue(episodes),
+            wrIntelligenceRepositoryProvider.overrideWithValue(
+              FakeWrIntelligenceRepository(),
+            ),
+            wrContentRepositoryProvider.overrideWithValue(content),
+            wrMoodContentRepositoryProvider.overrideWithValue(moodContent),
+            wrRepositoryProvider.overrideWithValue(FakeWrRepository()),
+            currentUserIdProvider.overrideWithValue('u1'),
+          ],
+          child: MaterialApp.router(
+            builder: wrTextScaleBuilder,
+            routerConfig: router,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+          ),
         ),
-      ));
+      );
       await tester.pumpAndSettle();
 
       // Home → chạm ô cảm xúc → THẲNG vào bước chọn tình huống.
@@ -146,12 +179,20 @@ void main() {
       await tester.tap(cell);
       await tester.pumpAndSettle();
 
-      expect(find.byType(WrStepScreen), findsOneWidget,
-          reason: '${option.id}: check-in phải vào thẳng bước chọn tình huống, '
-              'không qua màn khoảnh khắc nào');
-      expect(find.byType(TextField), findsNothing,
-          reason: '${option.id}: bước đầu KHÔNG được có ô chữ nào — §V bảo '
-              'chọn chip, và ô chữ ở đây là đúng lỗi đã làm mất situation_code');
+      expect(
+        find.byType(WrStepScreen),
+        findsOneWidget,
+        reason:
+            '${option.id}: check-in phải vào thẳng bước chọn tình huống, '
+            'không qua màn khoảnh khắc nào',
+      );
+      expect(
+        find.byType(TextField),
+        findsNothing,
+        reason:
+            '${option.id}: bước đầu KHÔNG được có ô chữ nào — §V bảo '
+            'chọn chip, và ô chữ ở đây là đúng lỗi đã làm mất situation_code',
+      );
       expect(find.text(kNoticePrompt), findsOneWidget);
       // "Điều khác" luôn có mặt, không thuộc cơ chế lọc (§III). Nó nằm dưới
       // năm chip nên phải cuộn tới mới nhìn thấy.
@@ -165,10 +206,7 @@ void main() {
       // Chạm chip đầu tiên đang hiện. Danh sách được lọc theo cảm xúc nên mã cụ
       // thể khác nhau tuỳ ô check-in — tìm mã nào có mặt thì chạm mã đó.
       final shown = _situations.firstWhere(
-        (s) => find
-            .byKey(Key('wr_situation_${s.code}'))
-            .evaluate()
-            .isNotEmpty,
+        (s) => find.byKey(Key('wr_situation_${s.code}')).evaluate().isNotEmpty,
         orElse: () => throw StateError('${option.id}: không có chip nào hiện'),
       );
       // Danh sách chip được trộn ngẫu nhiên (§4.1) nên chip cần chạm có thể
@@ -181,8 +219,11 @@ void main() {
       // Chọn xong là Episode đã ghi mã tình huống — điều mà bản cũ đánh rơi ở
       // hai archetype.
       final episode = episodes.episodes.single;
-      expect(episode.situationCode, shown.code,
-          reason: '${option.id}: chọn tình huống mà không ghi được mã');
+      expect(
+        episode.situationCode,
+        shown.code,
+        reason: '${option.id}: chọn tình huống mà không ghi được mã',
+      );
       expect(episode.humanMoment, momentForMood(option.mood));
       expect(episode.patternsDone, contains(ReflectionPattern.notice));
 
@@ -198,29 +239,46 @@ void main() {
       // giờ bằng ô trống") — đó chính là cơ chế §1.2 thay: câu trả lời có mặt
       // trước khi câu hỏi kịp đọng lại.
       expect(find.byType(WrMeaningScreen), findsOneWidget);
-      expect(find.text(kInsightStemPrompt), findsOneWidget,
-          reason: '${option.id}: Lớp 1 phải hiện câu mở dở');
+      expect(
+        find.text(kInsightStemPrompt),
+        findsOneWidget,
+        reason: '${option.id}: Lớp 1 phải hiện câu mở dở',
+      );
       final field = tester.widget<TextField>(
         find.byKey(const Key('wr_meaning_field')),
       );
-      expect(field.controller!.text, isEmpty,
-          reason: '${option.id}: Lớp 1 mở bằng ô trống, câu Aha để dành Lớp 2');
-      expect(find.byKey(const Key('wr_meaning_aha')), findsNothing,
-          reason: '${option.id}: chưa viết gì mà đã thấy câu Aha là hỏng đúng '
-              'cái §1.2 chữa');
+      expect(
+        field.controller!.text,
+        isEmpty,
+        reason: '${option.id}: Lớp 1 mở bằng ô trống, câu Aha để dành Lớp 2',
+      );
+      expect(
+        find.byKey(const Key('wr_meaning_aha')),
+        findsNothing,
+        reason:
+            '${option.id}: chưa viết gì mà đã thấy câu Aha là hỏng đúng '
+            'cái §1.2 chữa',
+      );
 
       // Bỏ qua vẫn sang được Lớp 2 — lối thoát của §1.2.
       await tester.tap(find.byKey(const Key('wr_flow_secondary')));
       await tester.pumpAndSettle();
-      expect(find.byKey(const Key('wr_meaning_aha')), findsOneWidget,
-          reason: '${option.id}: Lớp 2 phải hiện câu Aha');
-      expect(find.byKey(const Key('wr_meaning_your_words')), findsNothing,
-          reason: '${option.id}: bỏ qua thì không có "điều bạn vừa viết"');
+      expect(
+        find.byKey(const Key('wr_meaning_aha')),
+        findsOneWidget,
+        reason: '${option.id}: Lớp 2 phải hiện câu Aha',
+      );
+      expect(
+        find.byKey(const Key('wr_meaning_your_words')),
+        findsNothing,
+        reason: '${option.id}: bỏ qua thì không có "điều bạn vừa viết"',
+      );
     });
   }
 
-  testWidgets('nhánh "Điều khác" vẫn đi được, và không ghi mã tình huống nào',
-      (tester) async {
+  testWidgets('nhánh "Điều khác" vẫn đi được, và không ghi mã tình huống nào', (
+    tester,
+  ) async {
     final episodes = FakeWrEpisodeRepository();
     final content = FakeWrContentRepository()..seedSituations(_situations);
 
@@ -229,33 +287,41 @@ void main() {
       routes: [
         GoRoute(path: '/home', builder: (_, __) => const WrHomeScreen()),
         GoRoute(
-            path: '/wr/flow/step', builder: (_, __) => const WrStepScreen()),
+          path: '/wr/flow/step',
+          builder: (_, __) => const WrStepScreen(),
+        ),
         GoRoute(
-            path: '/wr/flow/detail',
-            builder: (_, __) => const WrDetailScreen()),
+          path: '/wr/flow/detail',
+          builder: (_, __) => const WrDetailScreen(),
+        ),
         GoRoute(
-            path: '/wr/flow/meaning',
-            builder: (_, __) => const WrMeaningScreen()),
+          path: '/wr/flow/meaning',
+          builder: (_, __) => const WrMeaningScreen(),
+        ),
       ],
     );
-    await tester.pumpWidget(ProviderScope(
-      overrides: [
-        wrEpisodeRepositoryProvider.overrideWithValue(episodes),
-        wrIntelligenceRepositoryProvider
-            .overrideWithValue(FakeWrIntelligenceRepository()),
-        wrContentRepositoryProvider.overrideWithValue(content),
-        wrMoodContentRepositoryProvider
-            .overrideWithValue(FakeWrMoodContentRepository()),
-        wrRepositoryProvider.overrideWithValue(FakeWrRepository()),
-        currentUserIdProvider.overrideWithValue('u1'),
-      ],
-      child: MaterialApp.router(
-      builder: wrTextScaleBuilder,
-        routerConfig: router,
-        localizationsDelegates: AppLocalizations.localizationsDelegates,
-        supportedLocales: AppLocalizations.supportedLocales,
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          wrEpisodeRepositoryProvider.overrideWithValue(episodes),
+          wrIntelligenceRepositoryProvider.overrideWithValue(
+            FakeWrIntelligenceRepository(),
+          ),
+          wrContentRepositoryProvider.overrideWithValue(content),
+          wrMoodContentRepositoryProvider.overrideWithValue(
+            FakeWrMoodContentRepository(),
+          ),
+          wrRepositoryProvider.overrideWithValue(FakeWrRepository()),
+          currentUserIdProvider.overrideWithValue('u1'),
+        ],
+        child: MaterialApp.router(
+          builder: wrTextScaleBuilder,
+          routerConfig: router,
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+        ),
       ),
-    ));
+    );
     await tester.pumpAndSettle();
 
     await tester.tap(find.byKey(const Key('wr_home_checkin_stress')));

@@ -21,13 +21,18 @@ Widget _wrap(FakeWrRepository repo) {
         path: '/wr/career-setup',
         builder: (_, __) => const WrCareerSetupScreen(),
       ),
-      GoRoute(path: '/home', builder: (_, __) => const Scaffold(body: Text('HOME'))),
+      GoRoute(
+        path: '/home',
+        builder: (_, __) => const Scaffold(body: Text('HOME')),
+      ),
     ],
   );
   return ProviderScope(
     overrides: [wrRepositoryProvider.overrideWithValue(repo)],
     child: MaterialApp.router(
-      builder: wrTextScaleBuilder,routerConfig: router),
+      builder: wrTextScaleBuilder,
+      routerConfig: router,
+    ),
   );
 }
 

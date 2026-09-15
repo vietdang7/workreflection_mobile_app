@@ -15,22 +15,21 @@ WorkshopDetail _w({
   String? location,
   num price = 99000,
   String currency = 'VND',
-}) =>
-    WorkshopDetail(
-      id: id,
-      slug: slug,
-      title: title,
-      category: category,
-      date: date ?? DateTime(2026, 8, 22),
-      startsAt: startsAt,
-      endsAt: endsAt,
-      location: location,
-      price: price,
-      currency: currency,
-      currentParticipants: 0,
-      status: 'published',
-      isActive: true,
-    );
+}) => WorkshopDetail(
+  id: id,
+  slug: slug,
+  title: title,
+  category: category,
+  date: date ?? DateTime(2026, 8, 22),
+  startsAt: startsAt,
+  endsAt: endsAt,
+  location: location,
+  price: price,
+  currency: currency,
+  currentParticipants: 0,
+  status: 'published',
+  isActive: true,
+);
 
 void main() {
   group('isTraChieu', () {
@@ -94,8 +93,7 @@ void main() {
         nextTraChieu([
           _w(id: 'xa', date: DateTime(2026, 10, 3)),
           _w(id: 'gan', date: DateTime(2026, 8, 22)),
-        ], now: now)!
-            .id,
+        ], now: now)!.id,
         'gan',
       );
       expect(nextTraChieu(const [], now: now), isNull);
@@ -111,23 +109,24 @@ void main() {
     });
 
     test('ngày giờ bỏ phần nào không có dữ liệu', () {
+      expect(traChieuWhenLabel(_w(date: DateTime(2026, 8, 22))), 'T7 22/08');
       expect(
-        traChieuWhenLabel(_w(date: DateTime(2026, 8, 22))),
-        'T7 22/08',
-      );
-      expect(
-        traChieuWhenLabel(_w(
-          date: DateTime(2026, 8, 22),
-          startsAt: DateTime(2026, 8, 22, 15, 30),
-        )),
+        traChieuWhenLabel(
+          _w(
+            date: DateTime(2026, 8, 22),
+            startsAt: DateTime(2026, 8, 22, 15, 30),
+          ),
+        ),
         'T7 22/08, 15:30',
       );
       expect(
-        traChieuWhenLabel(_w(
-          date: DateTime(2026, 8, 22),
-          startsAt: DateTime(2026, 8, 22, 15, 30),
-          endsAt: DateTime(2026, 8, 22, 17, 30),
-        )),
+        traChieuWhenLabel(
+          _w(
+            date: DateTime(2026, 8, 22),
+            startsAt: DateTime(2026, 8, 22, 15, 30),
+            endsAt: DateTime(2026, 8, 22, 17, 30),
+          ),
+        ),
         'T7 22/08, 15:30 – 17:30',
       );
     });

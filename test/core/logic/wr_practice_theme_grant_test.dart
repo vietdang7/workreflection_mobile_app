@@ -11,9 +11,9 @@ void main() {
 
   group('earnedPracticeThemes', () {
     int earned(int reflections, int selfChecks) => earnedPracticeThemes(
-          reflectionCount: reflections,
-          selfCheckCount: selfChecks,
-        );
+      reflectionCount: reflections,
+      selfCheckCount: selfChecks,
+    );
 
     test('chưa làm gì thì chưa được chủ đề nào', () {
       expect(earned(0, 0), 0);

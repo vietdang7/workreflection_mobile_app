@@ -28,7 +28,7 @@ class FakeWrChatRepository implements WrChatRepository {
   Object? nextError;
 
   final List<({String message, String? conversationId, bool? premiumOverride})>
-      sendCalls = [];
+  sendCalls = [];
   final List<String> deleteCalls = [];
 
   /// Gieo một cuộc trò chuyện đã có, kèm các lượt bên trong.

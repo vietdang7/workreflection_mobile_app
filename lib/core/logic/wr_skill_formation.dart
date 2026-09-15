@@ -41,8 +41,10 @@ const int kSkillThresholdDefault = 5;
 ///
 /// Mọi hàm dưới đây vẫn nhận `threshold` rời để test và để sau này đọc từ
 /// remote config mà không phải sửa chữ ký hàm.
-const int kSkillThreshold =
-    int.fromEnvironment('WR_SKILL_THRESHOLD', defaultValue: kSkillThresholdDefault);
+const int kSkillThreshold = int.fromEnvironment(
+  'WR_SKILL_THRESHOLD',
+  defaultValue: kSkillThresholdDefault,
+);
 
 // ---------------------------------------------------------------------------
 // Mã behavior trong Career Memory
@@ -212,8 +214,7 @@ const Set<String> _kTitleSeparators = {'·', '—', '–', '-', ':', '|'};
 int practiceCountForTheme(
   PracticeTheme theme,
   List<CareerMemoryEvent> events,
-) =>
-    events.where((e) => _isPracticeOf(e, theme)).length;
+) => events.where((e) => _isPracticeOf(e, theme)).length;
 
 /// Lần thực hành gần nhất của một chủ đề.
 DateTime? lastPracticedAtForTheme(
@@ -404,8 +405,9 @@ List<SkillFormation> newlyFormed({
   List<PracticeTheme> themes = const [],
 }) {
   final themeById = {for (final t in themes) t.themeId: t};
-  final milestones =
-      events.where((e) => e.behavior == kSkillFormedBehavior).toList();
+  final milestones = events
+      .where((e) => e.behavior == kSkillFormedBehavior)
+      .toList();
 
   // Dữ liệu cũ chỉ có tên; dữ liệu mới có `theme_id`. Một kỹ năng coi là đã ăn
   // mừng nếu khớp một trong hai — bỏ sót một dấu mốc cũ là ăn mừng lần thứ hai

@@ -43,8 +43,10 @@ class WrPatternDetailScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
-    final episodes = ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
-    final entitlement = ref.watch(wrEntitlementProvider).valueOrNull ??
+    final episodes =
+        ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
+    final entitlement =
+        ref.watch(wrEntitlementProvider).valueOrNull ??
         WrEntitlement(plan: WrPlan.free);
     final narratives =
         ref.watch(wrPatternNarrativesProvider).valueOrNull ?? const [];
@@ -61,8 +63,7 @@ class WrPatternDetailScreen extends ConsumerWidget {
     final related = episodesForSituation(episodes, situationCode);
     final count = related.length;
     final hasEnoughData = count >= kInsightThreshold;
-    final canRead =
-        entitlement.canUseFeature(WrPremiumFeature.patternAdvanced);
+    final canRead = entitlement.canUseFeature(WrPremiumFeature.patternAdvanced);
 
     return Scaffold(
       backgroundColor: WrColors.pageBg,
@@ -96,9 +97,18 @@ class WrPatternDetailScreen extends ConsumerWidget {
             const SizedBox(height: 16),
             WrParagraph(
               switch (count) {
-                0 => tr('Bạn chưa ghi lại điều này lần nào.', 'You have not recorded this yet.'),
-                1 => tr('Bạn mới ghi lại điều này một lần.', 'You have recorded this once.'),
-                _ => tr('Bạn đã ghi lại điều này $count lần.', 'You have recorded this $count times.'),
+                0 => tr(
+                  'Bạn chưa ghi lại điều này lần nào.',
+                  'You have not recorded this yet.',
+                ),
+                1 => tr(
+                  'Bạn mới ghi lại điều này một lần.',
+                  'You have recorded this once.',
+                ),
+                _ => tr(
+                  'Bạn đã ghi lại điều này $count lần.',
+                  'You have recorded this $count times.',
+                ),
               },
               style: const TextStyle(
                 fontSize: 16.5,
@@ -112,11 +122,16 @@ class WrPatternDetailScreen extends ConsumerWidget {
             const SizedBox(height: 24),
 
             // ── Những lần bạn đã nhìn lại (ghi nhận — luôn miễn phí) ─────
-            WrEyebrow(tr('NHỮNG LẦN BẠN ĐÃ NHÌN LẠI', 'THE TIMES YOU LOOKED BACK')),
+            WrEyebrow(
+              tr('NHỮNG LẦN BẠN ĐÃ NHÌN LẠI', 'THE TIMES YOU LOOKED BACK'),
+            ),
             const SizedBox(height: 14),
             if (related.isEmpty)
               Text(
-                tr('Chưa có lần nhìn lại nào gắn với điều này.', 'No look-backs tied to this yet.'),
+                tr(
+                  'Chưa có lần nhìn lại nào gắn với điều này.',
+                  'No look-backs tied to this yet.',
+                ),
                 style: TextStyle(
                   fontSize: 15.5,
                   color: WrColors.muted,
@@ -128,7 +143,9 @@ class WrPatternDetailScreen extends ConsumerWidget {
               // `draftMeaning`, mà những lần nhìn lại cùng một tình huống
               // thường viết gần giống nhau — bốn khối chữ dài lặp lại đọc như
               // lỗi hiển thị. Câu đầy đủ vẫn nằm ở màn một lần nhìn lại.
-              ...related.take(10).map(
+              ...related
+                  .take(10)
+                  .map(
                     (e) => Padding(
                       padding: const EdgeInsets.only(bottom: 14),
                       child: Row(
@@ -165,13 +182,18 @@ class WrPatternDetailScreen extends ConsumerWidget {
             const SizedBox(height: 24),
 
             // ── Diễn giải (Premium, và chỉ khi đủ dữ liệu) ───────────────
-            WrEyebrow(tr('ĐIỀU ĐỨNG SAU SỰ LẶP LẠI', 'WHAT SITS BEHIND THE REPETITION')),
+            WrEyebrow(
+              tr('ĐIỀU ĐỨNG SAU SỰ LẶP LẠI', 'WHAT SITS BEHIND THE REPETITION'),
+            ),
             const SizedBox(height: 14),
             if (!hasEnoughData)
               WrParagraph(
-                tr('Cần thêm ${kInsightThreshold - count} lần nữa để hệ thống đủ '
-                'dữ liệu đọc ra điều đứng sau.', '${kInsightThreshold - count} more and there is enough to read '
-                'what sits behind it.'),
+                tr(
+                  'Cần thêm ${kInsightThreshold - count} lần nữa để hệ thống đủ '
+                      'dữ liệu đọc ra điều đứng sau.',
+                  '${kInsightThreshold - count} more and there is enough to read '
+                      'what sits behind it.',
+                ),
                 key: const Key('wr_pattern_not_enough_data'),
                 style: const TextStyle(
                   fontSize: 15.5,
@@ -182,10 +204,12 @@ class WrPatternDetailScreen extends ConsumerWidget {
             else if (!canRead)
               WrPremiumLock(
                 key: Key('wr_pattern_premium_lock'),
-                description:
-                    tr('Bản đầy đủ đọc ra nguyên nhân sâu đứng sau điều lặp lại '
-                    'này, và điều gì đang dần thay đổi trong bạn.', 'The full version reads the deeper cause behind this pattern, '
-                    'and what is slowly changing in you.'),
+                description: tr(
+                  'Bản đầy đủ đọc ra nguyên nhân sâu đứng sau điều lặp lại '
+                      'này, và điều gì đang dần thay đổi trong bạn.',
+                  'The full version reads the deeper cause behind this pattern, '
+                      'and what is slowly changing in you.',
+                ),
                 ctaLabel: tr('Mở phần diễn giải', 'Open the reading'),
                 paywallTrigger: 'pattern_advanced',
               )
@@ -194,7 +218,10 @@ class WrPatternDetailScreen extends ConsumerWidget {
                 // Chỉ nhận đoạn đúng ngôn ngữ đang bật — bản tiếng kia đang
                 // được viết lại (xem `currentLocaleNarrative`).
                 currentLocaleNarrative(narratives)?.narrative ??
-                    tr('Hệ thống đang tổng hợp phần diễn giải cho điều này.', 'The reading for this is being put together.'),
+                    tr(
+                      'Hệ thống đang tổng hợp phần diễn giải cho điều này.',
+                      'The reading for this is being put together.',
+                    ),
                 key: const Key('wr_pattern_narrative'),
                 style: const TextStyle(
                   fontSize: 16,

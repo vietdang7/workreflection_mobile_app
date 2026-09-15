@@ -91,15 +91,15 @@ class _CoachingScheduleScreenState
   Future<void> _submit() async {
     final l10n = AppLocalizations.of(context)!;
     if (_selectedDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.coachSchedPickDate)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.coachSchedPickDate)));
       return;
     }
     if (_selectedTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.coachSchedPickTime)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.coachSchedPickTime)));
       return;
     }
 
@@ -142,15 +142,15 @@ class _CoachingScheduleScreenState
       );
       if (!mounted) return;
       ref.invalidate(myBookingsProvider);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.coachSchedSuccess)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.coachSchedSuccess)));
       context.pop();
     } catch (_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(l10n.coachSchedError)),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.coachSchedError)));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -166,10 +166,9 @@ class _CoachingScheduleScreenState
     final bookingAsync = ref.watch(myBookingsProvider);
 
     // Find this booking to verify it exists and is schedulable.
-    final booking = bookingAsync.valueOrNull?.cast<CoachingBooking?>().firstWhere(
-          (b) => b?.id == widget.bookingId,
-          orElse: () => null,
-        );
+    final booking = bookingAsync.valueOrNull
+        ?.cast<CoachingBooking?>()
+        .firstWhere((b) => b?.id == widget.bookingId, orElse: () => null);
 
     // If loading show spinner; if not found show error.
     if (bookingAsync.isLoading) {
@@ -196,11 +195,7 @@ class _CoachingScheduleScreenState
       );
     }
 
-    final cells = buildCalendarCells(
-      year: _year,
-      month: _month,
-      today: _today,
-    );
+    final cells = buildCalendarCells(year: _year, month: _month, today: _today);
 
     final monthLabel = _monthName(l10n, _month);
 
@@ -285,8 +280,7 @@ class _CoachingScheduleScreenState
                       final isSelected = _selectedDate == cell.dateKey;
                       return GestureDetector(
                         onTap: cell.isSelectable
-                            ? () => setState(
-                                () => _selectedDate = cell.dateKey)
+                            ? () => setState(() => _selectedDate = cell.dateKey)
                             : null,
                         child: Container(
                           decoration: BoxDecoration(
@@ -304,8 +298,8 @@ class _CoachingScheduleScreenState
                               color: !cell.isSelectable
                                   ? WrColors.muted.withValues(alpha: 0.4)
                                   : isSelected
-                                      ? WrColors.white
-                                      : WrColors.navy,
+                                  ? WrColors.white
+                                  : WrColors.navy,
                             ),
                           ),
                         ),
@@ -316,8 +310,7 @@ class _CoachingScheduleScreenState
                     const SizedBox(height: 8),
                     Text(
                       '${l10n.coachSchedSelectedDate} ${_selectedDate!.split('-').reversed.join('/')}',
-                      style:
-                          WrTextStyles.body.copyWith(color: WrColors.muted),
+                      style: WrTextStyles.body.copyWith(color: WrColors.muted),
                     ),
                   ],
                 ],
@@ -373,8 +366,7 @@ class _CoachingScheduleScreenState
                 maxLines: 3,
                 decoration: InputDecoration(
                   hintText: l10n.coachSchedNotesHint,
-                  hintStyle:
-                      WrTextStyles.body.copyWith(color: WrColors.muted),
+                  hintStyle: WrTextStyles.body.copyWith(color: WrColors.muted),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(10),
                     borderSide: const BorderSide(color: WrColors.line),

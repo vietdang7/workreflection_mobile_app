@@ -59,14 +59,16 @@ void main() {
   });
 
   group('nhãn ô check-in không bị nối cứng', () {
-    test('phép nối đuôi câu BIẾN "feeling good" thành khối không ngắt được',
-        () {
-      // Ghi lại đúng cơ chế gây lỗi, để ai đó đưa `WrParagraph` trở lại ô
-      // check-in sẽ thấy ngay vì sao không được.
-      final joined = wrKeepSentenceTailTogether('I am\nfeeling good');
-      expect(joined.contains(nbsp), isTrue);
-      expect(joined.contains('feeling good'), isFalse);
-    });
+    test(
+      'phép nối đuôi câu BIẾN "feeling good" thành khối không ngắt được',
+      () {
+        // Ghi lại đúng cơ chế gây lỗi, để ai đó đưa `WrParagraph` trở lại ô
+        // check-in sẽ thấy ngay vì sao không được.
+        final joined = wrKeepSentenceTailTogether('I am\nfeeling good');
+        expect(joined.contains(nbsp), isTrue);
+        expect(joined.contains('feeling good'), isFalse);
+      },
+    );
 
     test('nhãn sáu ô không chứa khoảng trắng cứng ở bản tiếng Anh', () {
       wrSetLocale('en');
@@ -130,21 +132,23 @@ void main() {
       expect(c.read(baked), 'English');
     });
 
-    test('provider KHÔNG gọi thì kẹt lại tiếng cũ — đúng hình dạng của lỗi', () {
-      final c = ProviderContainer();
-      addTearDown(c.dispose);
+    test(
+      'provider KHÔNG gọi thì kẹt lại tiếng cũ — đúng hình dạng của lỗi',
+      () {
+        final c = ProviderContainer();
+        addTearDown(c.dispose);
 
-      wrSetLocale('vi');
-      expect(c.read(bakedWithoutWatch), 'tiếng Việt');
+        wrSetLocale('vi');
+        expect(c.read(bakedWithoutWatch), 'tiếng Việt');
 
-      wrSetLocale('en');
-      c.read(appLocaleProvider.notifier).state = 'en';
-      expect(c.read(bakedWithoutWatch), 'tiếng Việt');
-    });
+        wrSetLocale('en');
+        c.read(appLocaleProvider.notifier).state = 'en';
+        expect(c.read(bakedWithoutWatch), 'tiếng Việt');
+      },
+    );
   });
 
-  group('dòng thời gian đọc lại tên chủ đề / tên bước theo ngôn ngữ đang bật',
-      () {
+  group('dòng thời gian đọc lại tên chủ đề / tên bước theo ngôn ngữ đang bật', () {
     const labels = {
       'Vững vàng khi mọi thứ thay đổi': 'Steady when things change',
       'Steady when things change': 'Steady when things change',

@@ -49,12 +49,12 @@ void main() {
 
   group('model đọc theo ngôn ngữ đang bật', () {
     WrSituation situation({String? textEn}) => WrSituation(
-          code: 'S1-01',
-          text: 'Tôi im lặng trong cuộc họp',
-          textEn: textEn,
-          scaDimension: ScaDimension.s1,
-          wave: 1,
-        );
+      code: 'S1-01',
+      text: 'Tôi im lặng trong cuộc họp',
+      textEn: textEn,
+      scaDimension: ScaDimension.s1,
+      wave: 1,
+    );
 
     test('WrSituation.text đổi theo ngôn ngữ, textVi thì không', () {
       final s = situation(textEn: 'I stayed quiet in the meeting');

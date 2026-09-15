@@ -5,11 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:workreflection_mobile/core/logic/wr_career_profile.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 
-WrStory _story(
-  String id,
-  ScaDimension dim, {
-  List<String> stages = const [],
-}) =>
+WrStory _story(String id, ScaDimension dim, {List<String> stages = const []}) =>
     WrStory(
       storyId: id,
       title: id,
@@ -38,18 +34,36 @@ void main() {
 
   group('roleToDimensions', () {
     test('maps every role to its 3 priority dimensions', () {
-      expect(roleToDimensions('Chuyên viên'),
-          [ScaDimension.c2, ScaDimension.a1, ScaDimension.s1]);
-      expect(roleToDimensions('Senior Specialist'),
-          [ScaDimension.a1, ScaDimension.a3, ScaDimension.s1]);
-      expect(roleToDimensions('Team Leader'),
-          [ScaDimension.c1, ScaDimension.c2, ScaDimension.c3]);
-      expect(roleToDimensions('Manager'),
-          [ScaDimension.c1, ScaDimension.s2, ScaDimension.a4]);
-      expect(roleToDimensions('Director'),
-          [ScaDimension.c3, ScaDimension.s3, ScaDimension.a1]);
-      expect(roleToDimensions('Founder / Business Owner'),
-          [ScaDimension.a1, ScaDimension.c1, ScaDimension.a3]);
+      expect(roleToDimensions('Chuyên viên'), [
+        ScaDimension.c2,
+        ScaDimension.a1,
+        ScaDimension.s1,
+      ]);
+      expect(roleToDimensions('Senior Specialist'), [
+        ScaDimension.a1,
+        ScaDimension.a3,
+        ScaDimension.s1,
+      ]);
+      expect(roleToDimensions('Team Leader'), [
+        ScaDimension.c1,
+        ScaDimension.c2,
+        ScaDimension.c3,
+      ]);
+      expect(roleToDimensions('Manager'), [
+        ScaDimension.c1,
+        ScaDimension.s2,
+        ScaDimension.a4,
+      ]);
+      expect(roleToDimensions('Director'), [
+        ScaDimension.c3,
+        ScaDimension.s3,
+        ScaDimension.a1,
+      ]);
+      expect(roleToDimensions('Founder / Business Owner'), [
+        ScaDimension.a1,
+        ScaDimension.c1,
+        ScaDimension.a3,
+      ]);
     });
 
     test('unknown or null role falls back to the Wave 1 dimensions', () {
@@ -63,8 +77,10 @@ void main() {
     test('maps roles to career stages', () {
       expect(roleToCareerStages('Chuyên viên'), ['Early Career', 'Growth']);
       expect(roleToCareerStages('Director'), ['Leadership']);
-      expect(roleToCareerStages('Founder / Business Owner'),
-          ['Leadership', 'Career Transition']);
+      expect(roleToCareerStages('Founder / Business Owner'), [
+        'Leadership',
+        'Career Transition',
+      ]);
     });
 
     test('unknown role yields an empty (non-filtering) list', () {
@@ -75,10 +91,7 @@ void main() {
   group('CareerSnapshot', () {
     test('isComplete only when all three answers exist', () {
       expect(const CareerSnapshot().isComplete, isFalse);
-      expect(
-        const CareerSnapshot(currentRole: 'Manager').isComplete,
-        isFalse,
-      );
+      expect(const CareerSnapshot(currentRole: 'Manager').isComplete, isFalse);
       expect(
         const CareerSnapshot(
           currentRole: 'Manager',
@@ -150,8 +163,10 @@ void main() {
         const CareerSnapshot(currentRole: 'Team Leader'),
       );
       // Team Leader → Mid Career / Leadership, so C1-01 outranks C1-02.
-      expect(ranked.indexWhere((s) => s.storyId == 'C1-01'),
-          lessThan(ranked.indexWhere((s) => s.storyId == 'C1-02')));
+      expect(
+        ranked.indexWhere((s) => s.storyId == 'C1-01'),
+        lessThan(ranked.indexWhere((s) => s.storyId == 'C1-02')),
+      );
     });
 
     test('never drops a story — ranking only reorders', () {
@@ -160,8 +175,10 @@ void main() {
         const CareerSnapshot(currentRole: 'Director'),
       );
       expect(ranked.length, stories.length);
-      expect(ranked.map((s) => s.storyId).toSet(),
-          stories.map((s) => s.storyId).toSet());
+      expect(
+        ranked.map((s) => s.storyId).toSet(),
+        stories.map((s) => s.storyId).toSet(),
+      );
     });
 
     test('empty snapshot keeps the Wave 1 priority order', () {
@@ -178,9 +195,11 @@ void main() {
       // Sau C1/C2/C3 (vai trò), thứ tự đợt còn lại là A1, A3, A4, A2, S1, S2, S3
       // → A2 đứng trước S3.
       final tail = ranked
-          .where((s) =>
-              s.scaDimension == ScaDimension.s3 ||
-              s.scaDimension == ScaDimension.a2)
+          .where(
+            (s) =>
+                s.scaDimension == ScaDimension.s3 ||
+                s.scaDimension == ScaDimension.a2,
+          )
           .map((s) => s.storyId)
           .toList();
       expect(tail, ['A2-01', 'S3-01']);
@@ -200,9 +219,14 @@ void main() {
 
     test('does not mutate the input list', () {
       final input = [...stories];
-      rankStoriesForProfile(input, const CareerSnapshot(currentRole: 'Manager'));
-      expect(input.map((s) => s.storyId).toList(),
-          stories.map((s) => s.storyId).toList());
+      rankStoriesForProfile(
+        input,
+        const CareerSnapshot(currentRole: 'Manager'),
+      );
+      expect(
+        input.map((s) => s.storyId).toList(),
+        stories.map((s) => s.storyId).toList(),
+      );
     });
   });
 }

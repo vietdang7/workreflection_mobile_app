@@ -7,23 +7,58 @@ import 'package:workreflection_mobile/core/logic/wr_self_check_questions.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 import 'package:workreflection_mobile/core/models/wr_episode.dart';
 
-WrSituation _sit(String code, ScaDimension dim, {String? pillar}) =>
-    WrSituation(
-      code: code,
-      text: code,
-      scaDimension: dim,
-      pillarCode: pillar,
-      wave: 1,
-    );
+WrSituation _sit(String code, ScaDimension dim, {String? pillar}) {
+  final inferredSubgroup = switch (dim) {
+    ScaDimension.s1 => 'S1',
+    ScaDimension.s2 => 'S2',
+    ScaDimension.c1 => 'C1',
+    ScaDimension.c2 => 'C2',
+    ScaDimension.a1 => 'A1',
+    ScaDimension.a3 => 'A3',
+    ScaDimension.pAchieve || ScaDimension.pSteady => switch (pillar ?? 'A') {
+      'S' => 'Sp',
+      'C' => 'Cp',
+      _ => 'Ap',
+    },
+    _ => null,
+  };
+  final inferredPillar =
+      pillar ??
+      switch (inferredSubgroup) {
+        'S1' || 'S2' || 'Sp' => 'S',
+        'C1' || 'C2' || 'Cp' => 'C',
+        'A1' || 'A3' || 'Ap' => 'A',
+        _ => null,
+      };
+  final mood = switch (inferredSubgroup) {
+    'S1' => 'foggy',
+    'S2' => 'outofsync',
+    'C1' || 'C2' => 'stress',
+    'A1' || 'A3' => 'tired',
+    'Sp' => 'ok',
+    'Cp' || 'Ap' => 'happy',
+    _ => null,
+  };
+  return WrSituation(
+    code: code,
+    text: code,
+    scaDimension: dim,
+    pillarCode: inferredPillar,
+    subgroup: inferredSubgroup,
+    mood: mood,
+    valence: dim.isPositive ? WrValence.tichCuc : WrValence.thachThuc,
+    wave: 1,
+  );
+}
 
 /// [count] lần xuất hiện của [code] trong recentSituationIds.
 List<String> _p(String code, int count) => List.filled(count, code);
 
 ReflectionEpisode _episode(String? code) => ReflectionEpisode(
-      userId: 'u',
-      humanMoment: HumanMoment.arrival,
-      situationCode: code,
-    );
+  userId: 'u',
+  humanMoment: HumanMoment.arrival,
+  situationCode: code,
+);
 
 /// [count] lượt nhìn lại đã chọn tình huống [code].
 List<ReflectionEpisode> _e(String code, int count) =>
@@ -53,7 +88,7 @@ void main() {
     final situations = [
       _sit('s-a', ScaDimension.s1),
       _sit('c-a', ScaDimension.c2),
-      _sit('a-a', ScaDimension.a2),
+      _sit('a-a', ScaDimension.a3),
       _sit('pos', ScaDimension.pAchieve),
     ];
 
@@ -65,10 +100,11 @@ void main() {
     });
 
     test('chia đúng tỉ trọng theo số lần', () {
-      final shares = pillarShares(
-        [..._p('s-a', 6), ..._p('c-a', 3), ..._p('a-a', 1)],
-        situations,
-      );
+      final shares = pillarShares([
+        ..._p('s-a', 6),
+        ..._p('c-a', 3),
+        ..._p('a-a', 1),
+      ], situations);
       expect(shares[SelfCheckPillar.s], closeTo(0.6, 0.001));
       expect(shares[SelfCheckPillar.c], closeTo(0.3, 0.001));
       expect(shares[SelfCheckPillar.a], closeTo(0.1, 0.001));
@@ -78,18 +114,18 @@ void main() {
       // P-ACHIEVE không thuộc trụ nào — nếu bị tính vào mẫu số thì ba trụ đều
       // loãng đi và trụ đang thật sự vướng sẽ hiện nhẹ hơn thực tế.
       expect(pillarOfDimension(ScaDimension.pAchieve), isNull);
-      final shares = pillarShares(
-        [..._p('s-a', 1), ..._p('pos', 99)],
-        situations,
-      );
+      final shares = pillarShares([
+        ..._p('s-a', 1),
+        ..._p('pos', 99),
+      ], situations);
       expect(shares[SelfCheckPillar.s], 1.0);
     });
 
     test('tình huống không có trong danh mục thì bỏ qua', () {
-      final shares = pillarShares(
-        [..._p('s-a', 2), ..._p('khong-ton-tai', 50)],
-        situations,
-      );
+      final shares = pillarShares([
+        ..._p('s-a', 2),
+        ..._p('khong-ton-tai', 50),
+      ], situations);
       expect(shares[SelfCheckPillar.s], 1.0);
     });
   });
@@ -105,7 +141,10 @@ void main() {
     ];
 
     test('đếm đúng số lần rơi vào một trụ', () {
-      expect(scaTouchedCount([..._p('s-a', 3), ..._p('c-a', 2)], situations), 5);
+      expect(
+        scaTouchedCount([..._p('s-a', 3), ..._p('c-a', 2)], situations),
+        5,
+      );
     });
 
     test('tình huống tích cực không tính — nó không thuộc trụ nào', () {
@@ -134,10 +173,14 @@ void main() {
 
   group('pillarOfSituation', () {
     test('tình huống SCA lấy trụ từ ký tự đầu của chiều', () {
-      expect(pillarOfSituation(_sit('s-a', ScaDimension.s1)),
-          SelfCheckPillar.s);
-      expect(pillarOfSituation(_sit('c-a', ScaDimension.c2)),
-          SelfCheckPillar.c);
+      expect(
+        pillarOfSituation(_sit('s-a', ScaDimension.s1)),
+        SelfCheckPillar.s,
+      );
+      expect(
+        pillarOfSituation(_sit('c-a', ScaDimension.c2)),
+        SelfCheckPillar.c,
+      );
     });
 
     // §2.1 gán trụ cắt ngang hai nhóm P: P-09 thuộc P-STEADY nhưng trụ C, P-07
@@ -156,7 +199,17 @@ void main() {
 
     // Đội nội dung thêm một dòng P mà quên điền cột: thà null còn hơn đoán.
     test('tình huống tích cực chưa điền cột pillar thì trả null', () {
-      expect(pillarOfSituation(_sit('P-XX', ScaDimension.pAchieve)), isNull);
+      expect(
+        pillarOfSituation(
+          const WrSituation(
+            code: 'P-XX',
+            text: 'P-XX',
+            scaDimension: ScaDimension.pAchieve,
+            wave: 1,
+          ),
+        ),
+        isNull,
+      );
     });
   });
 
@@ -164,15 +217,16 @@ void main() {
     final situations = [
       _sit('s-a', ScaDimension.s1),
       _sit('c-a', ScaDimension.c2),
-      _sit('a-a', ScaDimension.a2),
+      _sit('a-a', ScaDimension.a3),
       _sit('pos', ScaDimension.pAchieve, pillar: 'A'),
     ];
 
     test('đếm đúng số lần từng trụ thách thức', () {
-      final t = pillarTally(
-        [..._e('s-a', 5), ..._e('c-a', 14), ..._e('a-a', 8)],
-        situations,
-      );
+      final t = pillarTally([
+        ..._e('s-a', 5),
+        ..._e('c-a', 14),
+        ..._e('a-a', 8),
+      ], situations);
       expect(t.challenge[SelfCheckPillar.s], 5);
       expect(t.challenge[SelfCheckPillar.c], 14);
       expect(t.challenge[SelfCheckPillar.a], 8);
@@ -192,10 +246,12 @@ void main() {
 
     // ĐÂY LÀ §1.1: "6 + 5 + 5 = 16, trong khi tổng hiển thị là 32."
     test('ba con số cột Xuất hiện cộng lại đúng bằng mẫu số', () {
-      final t = pillarTally(
-        [..._e('s-a', 6), ..._e('c-a', 5), ..._e('a-a', 5), ..._e('pos', 16)],
-        situations,
-      );
+      final t = pillarTally([
+        ..._e('s-a', 6),
+        ..._e('c-a', 5),
+        ..._e('a-a', 5),
+        ..._e('pos', 16),
+      ], situations);
       final sum = t.appearance.values.fold<int>(0, (x, v) => x + v);
       expect(sum, t.classified);
       expect(t.classified, 32);
@@ -205,10 +261,11 @@ void main() {
     // §2.3 đoán con số này về 0 sau khi gán trụ cho nhóm P. Không đúng: nhánh
     // "Điều khác" của luồng Reflect không ghi `situation_code` nào.
     test('lượt không có mã tình huống đếm riêng, không lẫn vào trụ nào', () {
-      final t = pillarTally(
-        [..._e('s-a', 3), _episode(null), _episode('khong-ton-tai')],
-        situations,
-      );
+      final t = pillarTally([
+        ..._e('s-a', 3),
+        _episode(null),
+        _episode('khong-ton-tai'),
+      ], situations);
       expect(t.challenge[SelfCheckPillar.s], 3);
       expect(t.classified, 3);
       expect(t.unclassified, 2);
@@ -216,10 +273,11 @@ void main() {
     });
 
     test('tỉ lệ tích cực chia cho số lượt phân loại được', () {
-      final t = pillarTally(
-        [..._e('pos', 6), ..._e('c-a', 4), _episode(null)],
-        situations,
-      );
+      final t = pillarTally([
+        ..._e('pos', 6),
+        ..._e('c-a', 4),
+        _episode(null),
+      ], situations);
       // 6 / 10, KHÔNG phải 6 / 11 — lượt tự viết không nói được nó vui hay khổ.
       expect(t.positiveShare, closeTo(0.6, 1e-9));
     });
@@ -234,10 +292,10 @@ void main() {
 
   group('dominantPillar', () {
     Map<SelfCheckPillar, int> counts(int s, int c, int a) => {
-          SelfCheckPillar.s: s,
-          SelfCheckPillar.c: c,
-          SelfCheckPillar.a: a,
-        };
+      SelfCheckPillar.s: s,
+      SelfCheckPillar.c: c,
+      SelfCheckPillar.a: a,
+    };
 
     test('vượt 40% tổng thì là trụ nổi trội', () {
       // 14/27 = 51.9%
@@ -282,15 +340,21 @@ void main() {
     });
 
     test('vừa làm hôm qua thì chưa cũ', () {
-      expect(selfCheckIsStale(now.subtract(const Duration(days: 1)), now),
-          isFalse);
+      expect(
+        selfCheckIsStale(now.subtract(const Duration(days: 1)), now),
+        isFalse,
+      );
     });
 
     test('89 ngày chưa cũ, 90 ngày là cũ', () {
-      expect(selfCheckIsStale(now.subtract(const Duration(days: 89)), now),
-          isFalse);
       expect(
-          selfCheckIsStale(now.subtract(const Duration(days: 90)), now), isTrue);
+        selfCheckIsStale(now.subtract(const Duration(days: 89)), now),
+        isFalse,
+      );
+      expect(
+        selfCheckIsStale(now.subtract(const Duration(days: 90)), now),
+        isTrue,
+      );
     });
 
     test('ngày in ra dạng dd/MM/yyyy', () {

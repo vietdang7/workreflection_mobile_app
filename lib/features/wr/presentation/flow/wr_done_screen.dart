@@ -70,7 +70,10 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
       eyebrow: tr('Lưu vào hành trình', 'Save to my journey'),
       title: _integrating
           ? tr('Đang lưu lại…', 'Saving…')
-          : tr('Góc nhìn này đã được kết nối vào hành trình sự nghiệp của bạn.', 'This way of seeing it is now part of your career journey.'),
+          : tr(
+              'Góc nhìn này đã được kết nối vào hành trình sự nghiệp của bạn.',
+              'This way of seeing it is now part of your career journey.',
+            ),
       titleScale: 0.8,
       progress: 1,
       primaryLabel: 'Xong',
@@ -96,7 +99,10 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
           if (count != null && count >= 2) ...[
             const SizedBox(height: 28),
             Text(
-              tr('Bạn đã ghi lại tình huống này $count lần', 'You have recorded this situation $count times'),
+              tr(
+                'Bạn đã ghi lại tình huống này $count lần',
+                'You have recorded this situation $count times',
+              ),
               style: const TextStyle(
                 fontSize: 15.5,
                 color: WrColors.muted,

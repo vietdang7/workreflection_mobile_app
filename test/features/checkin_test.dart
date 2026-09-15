@@ -49,35 +49,33 @@ WorkshopDetail _ws({
   String id = 'ws-1',
   String checkinCode = 'ABCD1234',
   DateTime? startsAt,
-}) =>
-    WorkshopDetail(
-      id: id,
-      title: 'Test Workshop',
-      date: DateTime(2026, 8, 1),
-      startsAt: startsAt,
-      price: 0,
-      currency: 'VND',
-      currentParticipants: 0,
-      status: 'active',
-      isActive: true,
-      checkinCode: checkinCode,
-    );
+}) => WorkshopDetail(
+  id: id,
+  title: 'Test Workshop',
+  date: DateTime(2026, 8, 1),
+  startsAt: startsAt,
+  price: 0,
+  currency: 'VND',
+  currentParticipants: 0,
+  status: 'active',
+  isActive: true,
+  checkinCode: checkinCode,
+);
 
 WorkshopRegistration _reg({
   String id = 'reg-1',
   String workshopId = 'ws-1',
   DateTime? checkedInAt,
   bool? imageConsent,
-}) =>
-    WorkshopRegistration(
-      id: id,
-      workshopId: workshopId,
-      userId: 'user-1',
-      status: 'registered',
-      attended: false,
-      checkedInAt: checkedInAt,
-      imageConsent: imageConsent,
-    );
+}) => WorkshopRegistration(
+  id: id,
+  workshopId: workshopId,
+  userId: 'user-1',
+  status: 'registered',
+  attended: false,
+  checkedInAt: checkedInAt,
+  imageConsent: imageConsent,
+);
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -100,8 +98,9 @@ void main() {
       expect(repo.checkInCalls, isEmpty);
     });
 
-    testWidgets('valid code but workshop not found shows wsCheckinNotFound',
-        (tester) async {
+    testWidgets('valid code but workshop not found shows wsCheckinNotFound', (
+      tester,
+    ) async {
       // No workshops seeded → getWorkshopByCheckinCode returns null.
       await tester.pumpWidget(_wrap(repo));
       await _submitCode(tester, 'ABCD1234');
@@ -110,8 +109,9 @@ void main() {
       expect(find.text('Không tìm thấy workshop với mã này'), findsOneWidget);
     });
 
-    testWidgets('user not registered shows wsCheckinNotRegistered',
-        (tester) async {
+    testWidgets('user not registered shows wsCheckinNotRegistered', (
+      tester,
+    ) async {
       repo.seedWorkshops([_ws()]);
       // No registration seeded.
 
@@ -133,9 +133,9 @@ void main() {
 
       expect(find.byKey(const Key('checkin_error')), findsOneWidget);
       expect(
-          find.text(
-              'Chưa đến giờ check-in (mở trước giờ bắt đầu 2 tiếng)'),
-          findsOneWidget);
+        find.text('Chưa đến giờ check-in (mở trước giờ bắt đầu 2 tiếng)'),
+        findsOneWidget,
+      );
       expect(repo.checkInCalls, isEmpty);
     });
 
@@ -153,8 +153,9 @@ void main() {
       expect(repo.checkInCalls, isEmpty);
     });
 
-    testWidgets('success open window — checkIn called, shows success text',
-        (tester) async {
+    testWidgets('success open window — checkIn called, shows success text', (
+      tester,
+    ) async {
       // startsAt 30 min ago → open window.
       final startsAt = DateTime.now().subtract(const Duration(minutes: 30));
       repo.seedWorkshops([_ws(startsAt: startsAt)]);
@@ -168,8 +169,9 @@ void main() {
       expect(find.text('Check-in thành công!'), findsOneWidget);
     });
 
-    testWidgets('success unknown window (null startsAt) — checkIn called',
-        (tester) async {
+    testWidgets('success unknown window (null startsAt) — checkIn called', (
+      tester,
+    ) async {
       // startsAt is null → unknown → treated as open.
       repo.seedWorkshops([_ws(startsAt: null)]);
       repo.seedRegistration(_reg());
@@ -181,8 +183,9 @@ void main() {
       expect(find.byKey(const Key('checkin_success')), findsOneWidget);
     });
 
-    testWidgets('already-checked-in is idempotent — no checkIn call',
-        (tester) async {
+    testWidgets('already-checked-in is idempotent — no checkIn call', (
+      tester,
+    ) async {
       final startsAt = DateTime.now().subtract(const Duration(minutes: 30));
       repo.seedWorkshops([_ws(startsAt: startsAt)]);
       // checkedInAt already set → idempotent.
@@ -195,8 +198,9 @@ void main() {
       expect(find.byKey(const Key('checkin_success')), findsOneWidget);
     });
 
-    testWidgets('consent dialog accept records setImageConsent true',
-        (tester) async {
+    testWidgets('consent dialog accept records setImageConsent true', (
+      tester,
+    ) async {
       final startsAt = DateTime.now().subtract(const Duration(minutes: 30));
       repo.seedWorkshops([_ws(startsAt: startsAt)]);
       // imageConsent is null → consent dialog should appear.
@@ -212,14 +216,12 @@ void main() {
       await tester.tap(find.text('Đồng ý'));
       await tester.pumpAndSettle();
 
-      expect(
-        repo.setImageConsentCalls,
-        contains(('reg-1', true)),
-      );
+      expect(repo.setImageConsentCalls, contains(('reg-1', true)));
     });
 
-    testWidgets('consent dialog decline records setImageConsent false',
-        (tester) async {
+    testWidgets('consent dialog decline records setImageConsent false', (
+      tester,
+    ) async {
       final startsAt = DateTime.now().subtract(const Duration(minutes: 30));
       repo.seedWorkshops([_ws(startsAt: startsAt)]);
       repo.seedRegistration(_reg(imageConsent: null));
@@ -233,10 +235,7 @@ void main() {
       await tester.tap(find.text('Không đồng ý'));
       await tester.pumpAndSettle();
 
-      expect(
-        repo.setImageConsentCalls,
-        contains(('reg-1', false)),
-      );
+      expect(repo.setImageConsentCalls, contains(('reg-1', false)));
     });
 
     testWidgets('repo error shows wsCheckinError', (tester) async {

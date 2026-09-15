@@ -189,7 +189,8 @@ class SupabasePaymentRepository implements PaymentRepository {
 
     await _client
         .from('cc_orders')
-        .update({'order_code': code}).eq('id', order.id);
+        .update({'order_code': code})
+        .eq('id', order.id);
 
     return WrOrder(
       id: order.id,
@@ -267,7 +268,9 @@ class SupabasePaymentRepository implements PaymentRepository {
     String? orgId,
   }) async {
     final trimmed = code.trim();
-    if (trimmed.isEmpty) throw WrVoucherException(tr('Chưa nhập mã', 'No code entered'));
+    if (trimmed.isEmpty) {
+      throw WrVoucherException(tr('Chưa nhập mã', 'No code entered'));
+    }
 
     final row = await _client
         .from('cc_vouchers')
@@ -282,7 +285,9 @@ class SupabasePaymentRepository implements PaymentRepository {
         .maybeSingle();
 
     if (row == null) {
-      throw WrVoucherException(tr('Mã giảm giá không tồn tại', 'That discount code does not exist'));
+      throw WrVoucherException(
+        tr('Mã giảm giá không tồn tại', 'That discount code does not exist'),
+      );
     }
 
     final voucher = WrVoucher.fromJson(Map<String, dynamic>.from(row));
@@ -298,11 +303,14 @@ class SupabasePaymentRepository implements PaymentRepository {
     final discount = calculateVoucherDiscount(voucher, order.originalAmount);
     final finalAmount = order.originalAmount - discount;
 
-    await _client.from('cc_orders').update({
-      'voucher_id': voucher.id,
-      'discount_amount': discount,
-      'final_amount': finalAmount,
-    }).eq('id', order.id);
+    await _client
+        .from('cc_orders')
+        .update({
+          'voucher_id': voucher.id,
+          'discount_amount': discount,
+          'final_amount': finalAmount,
+        })
+        .eq('id', order.id);
 
     return order.copyWith(
       voucherId: voucher.id,
@@ -313,11 +321,14 @@ class SupabasePaymentRepository implements PaymentRepository {
 
   @override
   Future<WrOrder> removeVoucher(WrOrder order) async {
-    await _client.from('cc_orders').update({
-      'voucher_id': null,
-      'discount_amount': 0,
-      'final_amount': order.originalAmount,
-    }).eq('id', order.id);
+    await _client
+        .from('cc_orders')
+        .update({
+          'voucher_id': null,
+          'discount_amount': 0,
+          'final_amount': order.originalAmount,
+        })
+        .eq('id', order.id);
 
     return order.copyWith(
       clearVoucher: true,

@@ -27,11 +27,11 @@ enum OrgSurveyArea {
   /// GETTER, không phải trường của hàm tạo: đối số hàm tạo của enum bắt buộc
   /// là hằng biên dịch, mà `tr()` là lời gọi hàm đọc ngôn ngữ đang bật.
   String get label => switch (this) {
-        OrgSurveyArea.compensation => tr('Đãi ngộ', 'Pay and benefits'),
-        OrgSurveyArea.growth => tr('Phát triển', 'Growth'),
-        OrgSurveyArea.fairness => tr('Công bằng', 'Fairness'),
-        OrgSurveyArea.support => tr('Hỗ trợ', 'Support'),
-      };
+    OrgSurveyArea.compensation => tr('Đãi ngộ', 'Pay and benefits'),
+    OrgSurveyArea.growth => tr('Phát triển', 'Growth'),
+    OrgSurveyArea.fairness => tr('Công bằng', 'Fairness'),
+    OrgSurveyArea.support => tr('Hỗ trợ', 'Support'),
+  };
 
   static OrgSurveyArea? fromCode(String? code) {
     for (final a in OrgSurveyArea.values) {
@@ -130,7 +130,8 @@ class OrgSurveyResponse {
       enps: (json['enps'] as num?)?.toInt(),
       areaAverages: averages,
       createdAt:
-          DateTime.tryParse('${json['created_at']}')?.toLocal() ?? DateTime.now(),
+          DateTime.tryParse('${json['created_at']}')?.toLocal() ??
+          DateTime.now(),
     );
   }
 }

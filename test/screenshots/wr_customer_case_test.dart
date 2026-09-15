@@ -114,8 +114,8 @@ const _situations = <WrSituation>[
     wave: 1,
   ),
   WrSituation(
-    code: 'C2-09',
-    text: 'Tôi luôn là người cuối cùng phát biểu',
+    code: 'C2-01',
+    text: 'Ý tưởng của tôi biến mất trong cuộc họp',
     scaDimension: ScaDimension.c2,
     humanNeed: HumanNeed.ketNoi,
     wave: 1,
@@ -128,8 +128,8 @@ const _situations = <WrSituation>[
     wave: 1,
   ),
   WrSituation(
-    code: 'A1-08',
-    text: 'Tôi muốn nhiều hơn, nhưng không biết là gì',
+    code: 'A1-07',
+    text: 'Tôi không còn thấy mình thuộc về nơi này',
     scaDimension: ScaDimension.a1,
     humanNeed: HumanNeed.phatTrien,
     wave: 1,
@@ -161,20 +161,19 @@ ReflectionEpisode _ep({
   ScaDimension? dim,
   HumanNeed? need,
   String? meaning,
-}) =>
-    ReflectionEpisode(
-      id: id,
-      userId: 'u1',
-      humanMoment: HumanMoment.confusion,
-      state: state,
-      situationCode: code,
-      scaDimension: dim,
-      humanNeed: need,
-      draftMeaning: meaning,
-      openedAt: at,
-      updatedAt: at,
-      closedAt: state == ExperienceState.integrated ? at : null,
-    );
+}) => ReflectionEpisode(
+  id: id,
+  userId: 'u1',
+  humanMoment: HumanMoment.confusion,
+  state: state,
+  situationCode: code,
+  scaDimension: dim,
+  humanNeed: need,
+  draftMeaning: meaning,
+  openedAt: at,
+  updatedAt: at,
+  closedAt: state == ExperienceState.integrated ? at : null,
+);
 
 /// 15 Episode, phân bố y hệt tài khoản khách.
 final _episodes = <ReflectionEpisode>[
@@ -218,8 +217,8 @@ final _episodes = <ReflectionEpisode>[
     need: HumanNeed.ketNoi,
   ),
   _ep(
-    id: 'a108-do',
-    code: 'A1-08',
+    id: 'a107-do',
+    code: 'A1-07',
     state: ExperienceState.dormant,
     at: DateTime(2026, 8, 11),
     dim: ScaDimension.a1,
@@ -242,8 +241,8 @@ final _episodes = <ReflectionEpisode>[
     need: HumanNeed.phatTrien,
   ),
   _ep(
-    id: 'c209',
-    code: 'C2-09',
+    id: 'c201',
+    code: 'C2-01',
     state: ExperienceState.integrated,
     at: DateTime(2026, 8, 6),
     dim: ScaDimension.c2,
@@ -350,7 +349,10 @@ class _Stage {
           '/wr/flow/step',
         ])
           GoRoute(path: p, builder: (_, __) => const Scaffold()),
-        GoRoute(path: '/wr/pattern/:code', builder: (_, __) => const Scaffold()),
+        GoRoute(
+          path: '/wr/pattern/:code',
+          builder: (_, __) => const Scaffold(),
+        ),
         GoRoute(path: '/wr/episode/:id', builder: (_, __) => const Scaffold()),
       ],
     );
@@ -421,10 +423,9 @@ void main() {
     // Khách đang ở gói trả phí, và ĐÃ từng làm Self-check — chính điều kiện
     // này làm thẻ Career Health cũ đứng im ở mốc 15 mà không có gì bấm được.
     s.intel
-      ..seedEntitlement(const WrEntitlementRecord(
-        userId: 'u1',
-        plan: WrPlan.premium,
-      ))
+      ..seedEntitlement(
+        const WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
+      )
       ..seedSelfCheckHistory([
         ScaSelfCheckResponse(
           id: 'sc1',
@@ -460,7 +461,8 @@ void main() {
         PatternNarrative(
           id: 'pn1',
           userId: 'u1',
-          narrative: 'Gần đây điều trở đi trở lại nhiều nhất ở bạn là những '
+          narrative:
+              'Gần đây điều trở đi trở lại nhiều nhất ở bạn là những '
               'lần học được một điều nhỏ trong lúc làm. Trong khi đó, những '
               'lần đồng ý dù trong lòng không đồng ý đã thưa dần so với giai '
               'đoạn trước.',
