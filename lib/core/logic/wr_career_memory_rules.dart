@@ -29,6 +29,7 @@ import '../l10n/wr_tr.dart';
 import '../models/wr_content.dart';
 import '../models/wr_episode.dart';
 import 'wr_dominant_need.dart';
+import 'wr_frozen_sentence.dart';
 
 /// Mã `behavior` của ba loại mảnh ký ức được sinh thêm.
 const String kMilestoneBehavior = 'career_milestone';
@@ -288,20 +289,24 @@ String get kInsightDetail => tr(
 // Chủ đề — §8.2
 // ---------------------------------------------------------------------------
 
-List<String> get _kThemeEmerging => [
-  // §9, khung "Chủ đề vừa nổi lên" — câu mẫu của tài liệu.
-  tr(
+/// §9, khung "Chủ đề vừa nổi lên" — câu mẫu của tài liệu.
+const List<WrFrozenSentence> kThemeEmergingTemplates = [
+  WrFrozenSentence(
     '{n} lần Reflection gần đây của bạn đều xoay quanh {need}. Đây có thể là '
         'điều đáng để nhìn kỹ hơn.',
     'Your last {n} Reflections all circle around {need}. This may be worth a '
         'closer look.',
   ),
-  tr(
+  WrFrozenSentence(
     'Trong {days} ngày qua, {n} lần bạn nhìn lại đều dẫn về {need}. Một chủ đề '
         'đang hình thành.',
     'Over the past {days} days, {n} of your look-backs led back to {need}. A '
         'theme is forming.',
   ),
+];
+
+List<String> get _kThemeEmerging => [
+  for (final t in kThemeEmergingTemplates) t.text,
 ];
 
 /// Số lượt thuộc [need] trong [days] ngày gần nhất.
@@ -422,14 +427,14 @@ List<CareerMemoryDraft> themesDue({
 // Insight — §9, các khung câu chuyện
 // ---------------------------------------------------------------------------
 
-List<String> get _kThemeProgress => [
-  // §9, khung "Chuyển biến trong một chủ đề".
-  tr(
+/// §9, khung "Chuyển biến trong một chủ đề".
+const List<WrFrozenSentence> kThemeProgressTemplates = [
+  WrFrozenSentence(
     'Trong {days} ngày qua, bạn đang học cách {need}, từ {first}, đến {last}.',
     'Over the past {days} days you have been learning to {need}, from '
         '{first} through to {last}.',
   ),
-  tr(
+  WrFrozenSentence(
     'Cùng một mạch {need} chạy suốt {days} ngày qua: bắt đầu ở {first}, và gần '
         'nhất là {last}.',
     'The same thread of {need} runs across the past {days} days: starting at '
@@ -437,21 +442,73 @@ List<String> get _kThemeProgress => [
   ),
 ];
 
-List<String> get _kQuietGap => [
-  // §9, khung "Một khoảng lặng đáng chú ý".
-  tr(
+List<String> get _kThemeProgress => [
+  for (final t in kThemeProgressTemplates) t.text,
+];
+
+/// §9, khung "Một khoảng lặng đáng chú ý".
+const List<WrFrozenSentence> kQuietGapTemplates = [
+  WrFrozenSentence(
     'Nhóm {need} từng xuất hiện thường xuyên, nhưng {days} ngày gần đây bạn '
         'không quay lại tình huống nào thuộc nhóm này.',
     'The {need} group used to come up often, but in the past {days} days you '
         'have not returned to any situation in it.',
   ),
-  tr(
+  WrFrozenSentence(
     '{days} ngày rồi bạn chưa nhìn lại chuyện nào thuộc {need}, dù trước đó đây '
         'là nhóm trở đi trở lại.',
     'It has been {days} days since you looked back at anything to do with '
         '{need}, though before that it kept returning.',
   ),
 ];
+
+List<String> get _kQuietGap => [for (final t in kQuietGapTemplates) t.text];
+
+/// Mọi khung câu mà Insight/Chủ đề có thể đã ghi vào `wr_career_memory_events`.
+const List<WrFrozenSentence> kFrozenInsightTemplates = [
+  ...kThemeProgressTemplates,
+  ...kQuietGapTemplates,
+  ...kThemeEmergingTemplates,
+];
+
+/// Dựng lại câu Insight/Chủ đề đã lưu, theo ngôn ngữ đang bật.
+///
+/// Câu được ghép sẵn lúc khép một lượt nhìn lại rồi lưu thẳng vào
+/// `wr_career_memory_events.reflection_text`, nên nó đóng băng ngôn ngữ của
+/// thời điểm GHI. Ai bật tiếng Anh một lần rồi quay lại tiếng Việt sẽ thấy
+/// những dòng Insight tiếng Anh nằm lẫn trong giao diện tiếng Việt, và không
+/// có thao tác nào trong app gỡ được vì chuỗi đã nằm trong database.
+///
+/// [situations] dùng để tra nhãn tình huống theo cả hai thứ tiếng. Ô nào không
+/// tra được thì giữ nguyên — đó là chữ người dùng tự viết (`_storyTitle` rơi về
+/// `draftMeaning` khi lượt đó không gắn mã tình huống nào), và dịch chữ của họ
+/// là việc không được phép làm.
+String localizeFrozenInsightText(
+  String frozen, {
+  required Iterable<WrSituation> situations,
+}) {
+  final swaps = <String, String>{};
+
+  for (final need in HumanNeed.values) {
+    final (vi, en) = needSeekingLabelPair(need);
+    final current = needSeekingLabel(need);
+    swaps[vi] = current;
+    swaps[en] = current;
+  }
+
+  for (final situation in situations) {
+    final current = situation.text;
+    swaps[situation.textVi] = current;
+    final en = situation.textEn?.trim();
+    if (en != null && en.isNotEmpty) swaps[en] = current;
+  }
+
+  return localizeFrozenSentence(
+    frozen,
+    templates: kFrozenInsightTemplates,
+    phraseSwaps: swaps,
+  );
+}
 
 /// Khung "Chuyển biến trong một chủ đề".
 ///

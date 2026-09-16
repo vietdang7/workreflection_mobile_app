@@ -91,6 +91,20 @@ Future<void> _shoot(
   await tester.pumpWidget(_app());
   await tester.pumpAndSettle();
 
+  // Kiểm trên DỮ LIỆU chứ không trên cây widget: danh sách dựng lười nên mục
+  // chưa cuộn tới thì chưa có key, và `scrollUntilVisible` với một id không tồn
+  // tại ném "Bad state: No element" chẳng nói lên điều gì.
+  final knownIds = wrGuideSections().map((section) => section.id).toSet();
+  for (final id in open) {
+    expect(
+      knownIds,
+      contains(id),
+      reason:
+          'không có mục "$id" trong bộ chữ Hướng dẫn — sửa danh sách `open` '
+          'cho khớp `wrGuideSections()`',
+    );
+  }
+
   for (final id in open) {
     final row = find.byKey(Key('guide_section_$id'));
     await tester.scrollUntilVisible(
@@ -130,10 +144,15 @@ void main() {
       await _shoot(tester, '41_huong_dan_muc_mo', open: const ['today']);
     });
 
-    // Bảng "bốn tab" — khối hai cột duy nhất của bộ chữ, và là chỗ icon mục
-    // trùng icon thanh tab thật.
-    testWidgets('bảng bốn tab', (tester) async {
-      await _shoot(tester, '42_huong_dan_bang_tab', open: const ['tabs']);
+    // HDSD v4 (11/09/2026) bỏ mục gộp `tabs` và tách thành bốn mục riêng, mỗi
+    // tab một mục. Test cũ vẫn mở `tabs` nên ném "Bad state: No element" —
+    // không ai thấy vì cả bộ ảnh là opt-in.
+    testWidgets('bốn tab của app', (tester) async {
+      await _shoot(
+        tester,
+        '42_huong_dan_bang_tab',
+        open: const ['understand', 'growth', 'journey'],
+      );
     });
 
     // Cuối màn: nhóm thứ ba và dòng chốt — hai thứ các ảnh trên không chạm tới.

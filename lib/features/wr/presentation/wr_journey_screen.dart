@@ -142,6 +142,10 @@ List<JourneyEntry> buildJourneyEntries({
   required Map<String, String> situationLabels,
   Map<String, String> ahaByCode = const {},
   Map<String, String> practiceLabels = const {},
+  // Cần CẢ HAI bản ngôn ngữ của nhãn tình huống, nên không dùng lại được
+  // [situationLabels] — map đó chỉ giữ bản đang bật. Xem
+  // `localizeFrozenInsightText`.
+  List<WrSituation> situations = const [],
 }) {
   final entries = <JourneyEntry>[];
 
@@ -224,7 +228,13 @@ List<JourneyEntry> buildJourneyEntries({
                       )
                     : tr('Một chủ đề mới xuất hiện', 'A new theme appeared'))
               : tr('Điều hệ thống đọc ra', 'What the app read'),
-          subtitle: hasText ? text : null,
+          // Câu này được GHÉP SẴN lúc khép lượt nhìn lại rồi lưu vào
+          // `reflection_text`, nên nó mang ngôn ngữ của thời điểm GHI chứ không
+          // phải thời điểm đọc — dựng lại theo ngôn ngữ đang bật, cùng cách đã
+          // làm cho chữ thực hành ngay bên dưới.
+          subtitle: hasText
+              ? localizeFrozenInsightText(text, situations: situations)
+              : null,
           detail: isTheme ? kThemeDetail : kInsightDetail,
           color: eventColor(ev),
         ),
@@ -604,6 +614,7 @@ List<JourneyEntry> watchJourneyEntries(WidgetRef ref) {
         if (s.ahaMessage != null) s.storyId: s.ahaMessage!,
     },
     practiceLabels: ref.watch(wrPracticeLabelMapProvider),
+    situations: situations,
   );
 }
 
