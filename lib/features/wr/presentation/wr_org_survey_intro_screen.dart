@@ -54,9 +54,9 @@ class WrOrgSurveyIntroScreen extends ConsumerWidget {
     final latest = ref.watch(wrOrgSurveyLatestProvider).valueOrNull;
     final questions = questionsAsync.valueOrNull ?? const [];
 
-    // Số câu đọc từ bảng chứ không ghi cứng "13": bảng câu hỏi là thứ người vận
+    // Số câu đọc từ bảng (+ Lĩnh vực + eNPS) chứ không ghi cứng "13": bảng câu hỏi là thứ người vận
     // hành sửa được, và một màn hứa 13 câu rồi hỏi 11 câu là màn nói dối.
-    final total = questions.isEmpty ? null : questions.length + 1;
+    final total = questions.isEmpty ? null : questions.length + 2;
 
     return Scaffold(
       backgroundColor: WrColors.pageBg,

@@ -1,7 +1,9 @@
 // Khảo sát tổ chức — luồng trả lời. Mockup Sprint 2, `screenEsiFlow` +
 // `screenEnpsQuestion`.
 //
-// Một màn một câu, chọn xong tự sang câu sau sau ~220ms. Câu cuối là eNPS với
+// Bước 0 là câu Lĩnh vực làm việc (dropdown, phải bấm Tiếp tục: chọn trong
+// danh sách cần xác nhận nên không tự sang câu sau). Từ bước 1, một màn một
+// câu, chọn xong tự sang câu sau sau ~220ms. Câu cuối là eNPS với
 // lưới 0..10, khác thang 5 mức của 12 câu trước — nên nó là một bước riêng chứ
 // không phải câu thứ 13 cùng kiểu.
 //
@@ -15,6 +17,9 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/data/wr_org_survey_repository.dart';
 import '../../../core/l10n/wr_tr.dart';
+import '../../../core/data/wr_repository.dart';
+import '../../../core/logic/wr_my_info.dart';
+import '../../profile/profile_providers.dart';
 import '../../../core/models/wr_org_survey.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
@@ -32,11 +37,23 @@ class WrOrgSurveyFlowScreen extends ConsumerStatefulWidget {
 class _WrOrgSurveyFlowScreenState extends ConsumerState<WrOrgSurveyFlowScreen> {
   final Map<String, int> _answers = {};
   int? _enps;
+  // Mã lĩnh vực người dùng tự chọn trong bài. Null = chưa chạm, khi đó dùng mã
+  // của hồ sơ (nếu có) làm giá trị chọn sẵn, xem [_industry].
+  String? _pickedIndustry;
   int _index = 0;
   bool _submitting = false;
   String? _error;
 
-  bool get _hasAnything => _answers.isNotEmpty || _enps != null;
+  bool get _hasAnything =>
+      _answers.isNotEmpty || _enps != null || _pickedIndustry != null;
+
+  /// Mã `org_industry` đang có trong hồ sơ, chỉ khi nó là một trong 8 mã hợp lệ.
+  String? get _profileIndustry {
+    final v = ref.read(mobileProfileProvider).valueOrNull?.orgIndustry;
+    return myInfoIndustryOptions().any((o) => o.value == v) ? v : null;
+  }
+
+  String? get _industry => _pickedIndustry ?? _profileIndustry;
 
   void _answer(String questionId, int value) {
     setState(() => _answers[questionId] = value);
@@ -53,7 +70,9 @@ class _WrOrgSurveyFlowScreenState extends ConsumerState<WrOrgSurveyFlowScreen> {
       if (!mounted) return;
       final total = ref.read(wrOrgSurveyQuestionsProvider).valueOrNull?.length;
       if (total == null) return;
-      if (_index >= total) {
+      // Chỉ số 0 là Lĩnh vực, 1..total là câu thang, total + 1 là eNPS: trả
+      // lời xong eNPS mới gửi.
+      if (_index >= total + 1) {
         _submit();
       } else {
         setState(() => _index++);
@@ -70,11 +89,12 @@ class _WrOrgSurveyFlowScreenState extends ConsumerState<WrOrgSurveyFlowScreen> {
     try {
       final saved = await ref
           .read(wrOrgSurveyRepositoryProvider)
-          .submit(answers: _answers, enps: _enps);
+          .submit(answers: _answers, enps: _enps, industry: _industry);
       // Thẻ trên màn Hồ sơ và mặt bằng chung đều vừa cũ đi: câu trả lời này đã
       // là một phần của mẫu.
       ref.invalidate(wrOrgSurveyLatestProvider);
       ref.invalidate(wrOrgSurveyBenchmarkProvider);
+      await _backfillProfileIndustry();
       if (!mounted) return;
       // `pushReplacement`: quay lại từ màn kết quả phải về Hồ sơ, không rơi
       // ngược vào câu cuối của bài vừa làm xong.
@@ -88,6 +108,31 @@ class _WrOrgSurveyFlowScreenState extends ConsumerState<WrOrgSurveyFlowScreen> {
           'Could not send your answers. Please try again.',
         );
       });
+    }
+  }
+
+  /// Hồ sơ chưa có lĩnh vực thì ghi mã vừa chọn vào đó; đã có thì giữ nguyên,
+  /// vì hồ sơ là chỗ người dùng tự khai.
+  ///
+  /// Chạy SAU khi phiếu đã gửi thành công và nuốt mọi lỗi: khảo sát mới là việc
+  /// chính, một lần ghi hồ sơ hỏng không được biến thành "Chưa gửi được" rồi
+  /// bắt người dùng gửi lại một phiếu đã nằm trong DB. Cùng cách với các ghi
+  /// phụ khác (best-effort, lần sau người dùng vẫn điền được ở "Thông tin của
+  /// bạn").
+  Future<void> _backfillProfileIndustry() async {
+    final industry = _industry;
+    if (industry == null) return;
+    try {
+      final profile = await ref.read(mobileProfileProvider.future);
+      if (profile == null) return;
+      if ((profile.orgIndustry ?? '').trim().isNotEmpty) return;
+      // Chỉ một khoá: `saveMyInfo` ghi đè mọi khoá nó nhận được.
+      await ref.read(wrRepositoryProvider).saveMyInfo({
+        'org_industry': industry,
+      });
+      ref.invalidate(mobileProfileProvider);
+    } catch (_) {
+      /* best-effort */
     }
   }
 
@@ -140,6 +185,8 @@ class _WrOrgSurveyFlowScreenState extends ConsumerState<WrOrgSurveyFlowScreen> {
   Widget build(BuildContext context) {
     final questions =
         ref.watch(wrOrgSurveyQuestionsProvider).valueOrNull ?? const [];
+    // Xem để màn dựng lại khi hồ sơ tải xong và lĩnh vực chọn sẵn xuất hiện.
+    ref.watch(mobileProfileProvider);
     if (questions.isEmpty) {
       return const Scaffold(
         backgroundColor: WrColors.pageBg,
@@ -147,8 +194,9 @@ class _WrOrgSurveyFlowScreenState extends ConsumerState<WrOrgSurveyFlowScreen> {
       );
     }
 
-    final total = questions.length + 1; // +1 cho câu eNPS
-    final isEnps = _index >= questions.length;
+    final total = questions.length + 2; // +1 Lĩnh vực, +1 câu eNPS
+    final isIndustry = _index == 0;
+    final isEnps = _index >= questions.length + 1;
 
     return Scaffold(
       backgroundColor: WrColors.pageBg,
@@ -176,17 +224,23 @@ class _WrOrgSurveyFlowScreenState extends ConsumerState<WrOrgSurveyFlowScreen> {
               ),
             ),
             Expanded(
-              child: isEnps
+              child: isIndustry
+                  ? _IndustryStep(
+                      selected: _industry,
+                      onChanged: (v) => setState(() => _pickedIndustry = v),
+                      onNext: () => setState(() => _index++),
+                    )
+                  : isEnps
                   ? _EnpsStep(
                       selected: _enps,
                       onSelect: _submitting ? null : _answerEnps,
                     )
                   : _ScaleStep(
-                      question: questions[_index],
-                      selected: _answers[questions[_index].id],
+                      question: questions[_index - 1],
+                      selected: _answers[questions[_index - 1].id],
                       onSelect: _submitting
                           ? null
-                          : (v) => _answer(questions[_index].id, v),
+                          : (v) => _answer(questions[_index - 1].id, v),
                     ),
             ),
             if (_submitting)
@@ -276,6 +330,84 @@ class _TopBar extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// Bước 0: lĩnh vực làm việc, 8 mã của `myInfoIndustryOptions()`.
+class _IndustryStep extends StatelessWidget {
+  const _IndustryStep({
+    required this.selected,
+    required this.onChanged,
+    required this.onNext,
+  });
+
+  final String? selected;
+  final ValueChanged<String?> onChanged;
+  final VoidCallback onNext;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(22, 22, 22, 22),
+      children: [
+        Text(
+          tr(
+            'Bạn đang làm việc trong lĩnh vực nào?',
+            'Which field do you work in?',
+          ),
+          style: const TextStyle(
+            fontSize: 17,
+            height: 1.55,
+            fontWeight: FontWeight.w700,
+            color: WrColors.navy,
+          ),
+        ),
+        const SizedBox(height: 22),
+        KeyedSubtree(
+          key: const Key('wr_org_survey_industry'),
+          child: DropdownButtonFormField<String>(
+            // Khoá theo giá trị: hồ sơ tải xong sau khi màn mở thì `initialValue`
+            // mới được áp dụng lại.
+            key: ValueKey(selected),
+            initialValue: selected,
+            isExpanded: true,
+            hint: Text(tr('Chọn lĩnh vực', 'Choose a field')),
+            decoration: InputDecoration(
+              filled: true,
+              fillColor: WrColors.white,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(14),
+                borderSide: const BorderSide(color: WrColors.line, width: 1.5),
+              ),
+            ),
+            items: [
+              for (final o in myInfoIndustryOptions())
+                DropdownMenuItem(value: o.value, child: Text(o.label)),
+            ],
+            onChanged: onChanged,
+          ),
+        ),
+        const SizedBox(height: 26),
+        ElevatedButton(
+          key: const Key('wr_org_survey_industry_next'),
+          onPressed: selected == null ? null : onNext,
+          style: ElevatedButton.styleFrom(
+            backgroundColor: WrColors.coral,
+            foregroundColor: WrColors.navy,
+            disabledBackgroundColor: WrColors.line,
+            padding: const EdgeInsets.symmetric(vertical: 15),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            elevation: 0,
+          ),
+          child: Text(
+            tr('Tiếp tục', 'Continue'),
+            style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700),
+          ),
+        ),
+      ],
     );
   }
 }

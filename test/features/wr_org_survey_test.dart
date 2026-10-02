@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/wr_org_survey_repository.dart';
+import 'package:workreflection_mobile/core/data/wr_repository.dart';
+import 'package:workreflection_mobile/core/models/mobile_profile.dart';
 import 'package:workreflection_mobile/core/logic/wr_org_survey_scoring.dart';
 import 'package:workreflection_mobile/core/models/wr_org_survey.dart';
 import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
@@ -16,11 +18,33 @@ import 'package:workreflection_mobile/features/wr/org_survey_providers.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
+import '../support/fake_repository.dart';
 import '../support/fake_wr_org_survey_repository.dart';
+
+MobileProfile _profile({String? orgIndustry}) => MobileProfile(
+  userId: 'u1',
+  displayName: 'Thông',
+  reminderEnabled: true,
+  language: 'vi',
+  createdAt: DateTime(2026, 1, 1),
+  updatedAt: DateTime(2026, 1, 1),
+  orgIndustry: orgIndustry,
+);
+
+/// Chọn một mã lĩnh vực ở bước đầu rồi bấm Tiếp tục.
+Future<void> _pickIndustry(WidgetTester tester, String label) async {
+  await tester.tap(find.byKey(const Key('wr_org_survey_industry')));
+  await tester.pumpAndSettle();
+  await tester.tap(find.text(label).last);
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(const Key('wr_org_survey_industry_next')));
+  await tester.pumpAndSettle();
+}
 
 Widget _wrap(
   FakeWrOrgSurveyRepository repo, {
   String initial = '/wr/org-survey',
+  FakeWrRepository? wr,
 }) {
   final router = GoRouter(
     initialLocation: initial,
@@ -45,7 +69,10 @@ Widget _wrap(
   );
 
   return ProviderScope(
-    overrides: [wrOrgSurveyRepositoryProvider.overrideWithValue(repo)],
+    overrides: [
+      wrOrgSurveyRepositoryProvider.overrideWithValue(repo),
+      wrRepositoryProvider.overrideWithValue(wr ?? FakeWrRepository()),
+    ],
     child: MaterialApp.router(
       builder: wrTextScaleBuilder,
       routerConfig: router,
@@ -64,8 +91,14 @@ Future<void> _pump(WidgetTester tester, Widget app) async {
   await tester.pumpAndSettle();
 }
 
-/// Trả lời hết 5 câu thang + câu eNPS.
-Future<void> _answerEverything(WidgetTester tester, int count) async {
+/// Chọn lĩnh vực, trả lời hết 5 câu thang + câu eNPS.
+Future<void> _answerEverything(
+  WidgetTester tester,
+  int count, {
+  String industry = 'Tài chính, ngân hàng',
+  bool pickIndustry = true,
+}) async {
+  if (pickIndustry) await _pickIndustry(tester, industry);
   for (var i = 0; i < count; i++) {
     await tester.tap(find.byKey(const Key('wr_org_survey_option_3')));
     await tester.pumpAndSettle();
@@ -92,9 +125,9 @@ void main() {
     });
 
     testWidgets('số câu đếm từ bảng hỏi, không ghi cứng', (tester) async {
-      // Repo giả có 5 câu → 5 + 1 câu eNPS.
+      // Repo giả có 5 câu → 1 câu lĩnh vực + 5 + 1 câu eNPS.
       await _pump(tester, _wrap(FakeWrOrgSurveyRepository()));
-      expect(find.textContaining('Trả lời 6 câu ngắn'), findsOneWidget);
+      expect(find.textContaining('Trả lời 7 câu ngắn'), findsOneWidget);
     });
 
     testWidgets('đọc hỏng bảng hỏi thì KHÓA nút bắt đầu', (tester) async {
@@ -123,14 +156,96 @@ void main() {
       final repo = FakeWrOrgSurveyRepository();
       await _pump(tester, _wrap(repo, initial: '/wr/org-survey/flow'));
 
+      await _pickIndustry(tester, 'Công nghệ');
       await tester.tap(find.byKey(const Key('wr_org_survey_option_3')));
       await tester.pumpAndSettle();
       expect(repo.submittedAnswers, isNull, reason: 'chưa xong mà đã gửi');
 
-      await _answerEverything(tester, 4);
+      await _answerEverything(tester, 4, pickIndustry: false);
 
       expect(repo.submittedAnswers?.length, 5);
       expect(repo.submittedEnps, 8);
+    });
+
+    testWidgets('bước đầu là Lĩnh vực, chưa chọn thì nút Tiếp tục tắt', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _wrap(FakeWrOrgSurveyRepository(), initial: '/wr/org-survey/flow'),
+      );
+      expect(
+        find.text('Bạn đang làm việc trong lĩnh vực nào?'),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('wr_org_survey_industry')), findsOneWidget);
+      expect(find.byKey(const Key('wr_org_survey_option_0')), findsNothing);
+      final btn = tester.widget<ElevatedButton>(
+        find.byKey(const Key('wr_org_survey_industry_next')),
+      );
+      expect(btn.onPressed, isNull);
+    });
+
+    testWidgets(
+      'hồ sơ có org_industry=finance → chọn sẵn Tài chính, ngân hàng',
+      (tester) async {
+        final wr = FakeWrRepository()
+          ..seedProfile(_profile(orgIndustry: 'finance'));
+        await _pump(
+          tester,
+          _wrap(
+            FakeWrOrgSurveyRepository(),
+            initial: '/wr/org-survey/flow',
+            wr: wr,
+          ),
+        );
+        expect(find.text('Tài chính, ngân hàng'), findsOneWidget);
+        final btn = tester.widget<ElevatedButton>(
+          find.byKey(const Key('wr_org_survey_industry_next')),
+        );
+        expect(btn.onPressed, isNotNull);
+        // Không tự sang câu sau.
+        expect(find.byKey(const Key('wr_org_survey_option_0')), findsNothing);
+      },
+    );
+
+    testWidgets('nộp xong gửi industry=finance', (tester) async {
+      final repo = FakeWrOrgSurveyRepository();
+      await _pump(tester, _wrap(repo, initial: '/wr/org-survey/flow'));
+      await _answerEverything(tester, 5);
+      expect(repo.submittedIndustry, 'finance');
+    });
+
+    testWidgets('hồ sơ trống → nộp xong ghi org_industry', (tester) async {
+      final wr = FakeWrRepository()..seedProfile(_profile());
+      final repo = FakeWrOrgSurveyRepository();
+      await _pump(tester, _wrap(repo, initial: '/wr/org-survey/flow', wr: wr));
+      await _answerEverything(tester, 5);
+      expect(wr.saveMyInfoCalls, [
+        {'org_industry': 'finance'},
+      ]);
+    });
+
+    testWidgets('hồ sơ đã có → không ghi đè', (tester) async {
+      final wr = FakeWrRepository()..seedProfile(_profile(orgIndustry: 'tech'));
+      final repo = FakeWrOrgSurveyRepository();
+      await _pump(tester, _wrap(repo, initial: '/wr/org-survey/flow', wr: wr));
+      // Đổi sang finance ngay trong bài: khảo sát nhận finance, hồ sơ giữ tech.
+      await tester.tap(find.byKey(const Key('wr_org_survey_industry')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Tài chính, ngân hàng').last);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('wr_org_survey_industry_next')));
+      await tester.pumpAndSettle();
+      for (var i = 0; i < 5; i++) {
+        await tester.tap(find.byKey(const Key('wr_org_survey_option_3')));
+        await tester.pumpAndSettle();
+      }
+      await tester.tap(find.byKey(const Key('wr_org_survey_enps_8')));
+      await tester.pumpAndSettle();
+
+      expect(repo.submittedIndustry, 'finance');
+      expect(wr.saveMyInfoCalls, isEmpty);
     });
 
     testWidgets('câu cuối là eNPS 0..10, không phải thang 5 mức', (
@@ -139,6 +254,7 @@ void main() {
       final repo = FakeWrOrgSurveyRepository();
       await _pump(tester, _wrap(repo, initial: '/wr/org-survey/flow'));
 
+      await _pickIndustry(tester, 'Công nghệ');
       for (var i = 0; i < 5; i++) {
         await tester.tap(find.byKey(const Key('wr_org_survey_option_0')));
         await tester.pumpAndSettle();
@@ -177,6 +293,7 @@ void main() {
       final repo = FakeWrOrgSurveyRepository();
       await _pump(tester, _wrap(repo, initial: '/wr/org-survey/flow'));
 
+      await _pickIndustry(tester, 'Công nghệ');
       await tester.tap(find.byKey(const Key('wr_org_survey_option_2')));
       await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('wr_org_survey_close')));
