@@ -17,6 +17,7 @@ import 'package:workreflection_mobile/l10n/app_localizations.dart';
 
 import '../support/fake_repository.dart';
 import '../support/fake_wr_intelligence_repository.dart';
+import 'package:workreflection_mobile/core/widgets/wr_title_text.dart';
 
 // ---------------------------------------------------------------------------
 // Fake AuthRepository for profile tests — mirrors the one in auth_test.dart
@@ -714,7 +715,7 @@ void main() {
       expect(find.byKey(const Key('profile_premium_card')), findsOneWidget);
       // Nguyên văn mockup bản (4), và nền coral ĐẶC — đây là CTA chính duy nhất
       // của màn, tô 12% thì nó chìm ngang hàng mọi thẻ trắng khác.
-      expect(find.text('Mở khoá Premium'), findsOneWidget);
+      expect(find.text(wrKeepTitleTail('Mở khoá Premium')), findsOneWidget);
       final card = tester.widget<Container>(
         find
             .descendant(

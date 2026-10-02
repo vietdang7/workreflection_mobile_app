@@ -44,6 +44,7 @@ import '../support/fake_wr_episode_repository.dart';
 import '../support/fake_wr_intelligence_repository.dart';
 import '../support/fake_wr_mood_content_repository.dart';
 import '../support/resume_open_episode.dart';
+import 'package:workreflection_mobile/core/widgets/wr_title_text.dart';
 
 class _Harness {
   _Harness()
@@ -139,7 +140,10 @@ void main() {
       final h = _Harness();
       await _pump(tester, h.app());
 
-      expect(find.text('Ngày hôm nay của bạn như thế nào?'), findsOneWidget);
+      expect(
+        find.text(wrKeepTitleTail('Ngày hôm nay của bạn như thế nào?')),
+        findsOneWidget,
+      );
       for (final o in kCheckinOptions) {
         expect(
           find.byKey(Key('wr_home_checkin_${o.id}')),
@@ -190,7 +194,10 @@ void main() {
       expect(find.text(HumanMoment.confusion.tension), findsNothing);
       // Lưới check-in vẫn nguyên chỗ — hỏi thì phải bày sẵn chỗ trả lời.
       expect(find.byKey(const Key('wr_home_checkin_tired')), findsOneWidget);
-      expect(find.text('Ngày hôm nay của bạn như thế nào?'), findsOneWidget);
+      expect(
+        find.text(wrKeepTitleTail('Ngày hôm nay của bạn như thế nào?')),
+        findsOneWidget,
+      );
     });
 
     // Dormant chỉ đi được sang Reactivated (WXS §4.4). Nạp thẳng vào luồng thì
