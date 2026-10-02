@@ -37,6 +37,7 @@ import '../../../core/widgets/wr_voice_field.dart';
 import '../chat_providers.dart';
 import '../wr_providers.dart';
 import '../../../core/widgets/wr_paragraph.dart';
+import '../../../core/widgets/wr_title_text.dart';
 
 /// Câu người dùng thấy cho những câu hỏi gửi theo cách cũ, chưa được trả lời.
 ///
@@ -996,7 +997,7 @@ class _QuestionRow extends StatelessWidget {
                 style: const TextStyle(fontSize: 13.5, color: WrColors.muted),
               ),
             ),
-          Text(
+          WrTitleText(
             question.question,
             style: const TextStyle(
               fontSize: 16.5,

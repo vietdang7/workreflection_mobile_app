@@ -18,6 +18,7 @@ import '../../../core/widgets/wr_link_row.dart';
 import 'wr_sca_deep_dive_screen.dart' show openScaDeepDive;
 import '../wr_providers.dart';
 import '../../../core/widgets/wr_paragraph.dart';
+import '../../../core/widgets/wr_title_text.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Route: /wr/self-check
@@ -105,7 +106,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: WrColors.white,
-        title: Text(
+        title: WrTitleText(
           tr('Thoát khỏi bộ câu hỏi?', 'Leave the questions?'),
           style: TextStyle(
             fontSize: 18,
@@ -453,7 +454,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                       ),
                     ),
                     const SizedBox(height: 18),
-                    Text(
+                    WrTitleText(
                       q.text,
                       style: const TextStyle(
                         fontSize: 21,

@@ -51,6 +51,7 @@ import '../support/fake_wr_content_repository.dart';
 import '../support/fake_wr_episode_repository.dart';
 import '../support/fake_wr_intelligence_repository.dart';
 import '../support/fake_wr_mood_content_repository.dart';
+import 'package:workreflection_mobile/core/widgets/wr_title_text.dart';
 
 // ---------------------------------------------------------------------------
 // Hạ tầng test
@@ -288,7 +289,10 @@ void main() {
       expect(find.byKey(const Key('wr_home_system_notice')), findsNothing);
       expect(find.byKey(const Key('wr_home_mood_content')), findsNothing);
       // Câu hỏi check-in thì vẫn phải còn — đó là việc duy nhất còn lại.
-      expect(find.text('Ngày hôm nay của bạn như thế nào?'), findsOneWidget);
+      expect(
+        find.text(wrKeepTitleTail('Ngày hôm nay của bạn như thế nào?')),
+        findsOneWidget,
+      );
     });
 
     testWidgets('đã check-in: cả hai khối hiện ra', (tester) async {
@@ -358,7 +362,9 @@ void main() {
       double top(String key) => tester.getTopLeft(find.byKey(Key(key))).dy;
 
       final checkin = tester
-          .getTopLeft(find.text('Ngày hôm nay của bạn như thế nào?'))
+          .getTopLeft(
+            find.text(wrKeepTitleTail('Ngày hôm nay của bạn như thế nào?')),
+          )
           .dy;
       expect(checkin, lessThan(top('wr_home_system_notice')));
       expect(
@@ -1183,9 +1189,9 @@ void main() {
       await tester.tap(find.text('Câu hỏi đã gửi trước đây'));
       await tester.pumpAndSettle();
 
-      expect(find.text('Câu đã trả lời'), findsOneWidget);
+      expect(find.text(wrKeepTitleTail('Câu đã trả lời')), findsOneWidget);
       expect(find.text('Đây là câu trả lời.'), findsOneWidget);
-      expect(find.text('Câu chưa trả lời'), findsOneWidget);
+      expect(find.text(wrKeepTitleTail('Câu chưa trả lời')), findsOneWidget);
       expect(find.text(kAskPendingMessage), findsOneWidget);
     });
 

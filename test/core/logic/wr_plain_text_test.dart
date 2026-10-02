@@ -118,4 +118,99 @@ void main() {
       expect(r.reply, 'Mình nghe rõ rồi.');
     });
   });
+
+  group('vết AI: gạch dài và emoji', () {
+    test('gạch dài giữa hai chữ thành dấu phẩy, emoji bị bỏ', () {
+      expect(
+        stripMarkdown('Bạn đã làm tốt — rất tốt 🎉'),
+        'Bạn đã làm tốt, rất tốt',
+      );
+    });
+
+    test('gạch dài sau chữ in đậm/nghiêng vẫn thành dấu phẩy', () {
+      expect(stripMarkdown('**Tốt** — rất tốt'), 'Tốt, rất tốt');
+      expect(stripMarkdown('*Ý chính* — giải thích'), 'Ý chính, giải thích');
+    });
+
+    test('gạch ngắn giữa hai chữ cũng thành dấu phẩy', () {
+      expect(stripMarkdown('một việc – một nhịp'), 'một việc, một nhịp');
+    });
+
+    test('gạch giữa hai SỐ giữ nguyên', () {
+      expect(stripMarkdown('tỉ số 5 – 3'), 'tỉ số 5 – 3');
+      expect(stripMarkdown('từ 5 — 7 triệu'), 'từ 5 — 7 triệu');
+    });
+
+    test('gạch dài đầu dòng bị bỏ', () {
+      expect(
+        stripMarkdown('— Xin chào\n— Bạn khỏe không'),
+        'Xin chào\nBạn khỏe không',
+      );
+    });
+
+    test('emoji: đủ loại, kèm U+FE0F và ZWJ mồ côi', () {
+      expect(stripMarkdown('Ổn rồi ❤️ nhé'), 'Ổn rồi nhé');
+      expect(stripMarkdown('Cả nhà 👨\u200D👩\u200D👧 vui'), 'Cả nhà vui');
+      expect(stripMarkdown('🌱 Bắt đầu'), 'Bắt đầu');
+      expect(stripMarkdown('Tốt lắm 👍🏽!'), 'Tốt lắm!');
+    });
+
+    test('không còn khoảng trắng thừa trước dấu câu', () {
+      expect(stripMarkdown('Hay quá 🎉.'), 'Hay quá.');
+      expect(stripMarkdown('Hay quá 🎉 , nhỉ'), 'Hay quá, nhỉ');
+    });
+
+    test('gạch dài KHÔNG cách giữa hai chữ thành dấu phẩy', () {
+      expect(
+        stripMarkdown("It's not about speed\u2014it's about clarity."),
+        "It's not about speed, it's about clarity.",
+      );
+      expect(
+        stripMarkdown('Slow\u2014steady\u2014and calm'),
+        'Slow, steady, and calm',
+      );
+    });
+
+    test('gạch cách cạnh nháy đóng, ngoặc hoặc chỉ một bên là số', () {
+      expect(
+        stripMarkdown('\u201CTốt\u201D \u2014 rất tốt'),
+        '\u201CTốt\u201D, rất tốt',
+      );
+      expect(stripMarkdown('Năm 2024 \u2014 mình'), 'Năm 2024, mình');
+      expect(stripMarkdown('(xong) \u2013 rồi'), '(xong), rồi');
+    });
+
+    test('gạch cách giữa hai SỐ vẫn giữ, kể cả "8h – 17h"', () {
+      expect(stripMarkdown('8h \u2013 17h'), '8h \u2013 17h');
+      expect(stripMarkdown('5 \u2013 3'), '5 \u2013 3');
+    });
+
+    test('gạch kề dấu câu thì chỉ bỏ gạch', () {
+      expect(stripMarkdown('Xong \u2014, rồi'), 'Xong, rồi');
+      expect(stripMarkdown('Xong \u2014.'), 'Xong.');
+      expect(stripMarkdown('Xong, \u2014 rồi'), 'Xong, rồi');
+    });
+
+    test('mũi tên không phải emoji; keycap bị gỡ cả U+20E3', () {
+      expect(stripMarkdown('Trust \u2194 Autonomy'), 'Trust \u2194 Autonomy');
+      expect(stripMarkdown('A \u2192 B'), 'A \u2192 B');
+      expect(stripMarkdown('1\uFE0F\u20E3 Bước một'), '1 Bước một');
+    });
+
+    test('ký hiệu ©, ® và ™ không bị coi là emoji', () {
+      expect(stripMarkdown('WorkReflection™ ©2026'), 'WorkReflection™ ©2026');
+    });
+
+    test('chữ Việt có dấu giữa hai bên gạch vẫn được nhận là chữ', () {
+      expect(stripMarkdown('chậm lại — ổn định'), 'chậm lại, ổn định');
+    });
+
+    test('lượt chat của NGƯỜI DÙNG không bị lọc', () {
+      final me = WrChatMessage.fromJson({
+        'role': 'user',
+        'content': 'sếp bảo — phải xong 🎉',
+      });
+      expect(me.content, 'sếp bảo — phải xong 🎉');
+    });
+  });
 }

@@ -57,7 +57,7 @@ function tally(
 function listCounts(counts: Map<string, number>): string {
   const rows = [...counts.entries()].sort((a, b) => b[1] - a[1]);
   if (rows.length === 0) return '  (không có)';
-  return rows.map(([label, n]) => `  • ${label} — ${n} lần`).join('\n');
+  return rows.map(([label, n]) => `  • ${label}: ${n} lần`).join('\n');
 }
 
 /// Dòng dữ liệu đưa cho model. Cố ý là BẢNG ĐẾM, không phải văn xuôi: đưa văn
@@ -107,12 +107,13 @@ function buildFacts(input: NarrativeInput): string {
   return lines.join('\n');
 }
 
-const SYSTEM = `Bạn viết mục "Diễn biến theo thời gian" trong ứng dụng WorkReflection — một đoạn ngắn đọc lại cho người dùng thấy điều gì đang đổi trong cách họ nhìn công việc của mình.
+const SYSTEM = `Bạn viết mục "Diễn biến theo thời gian" trong ứng dụng WorkReflection, một đoạn ngắn đọc lại cho người dùng thấy điều gì đang đổi trong cách họ nhìn công việc của mình.
 
 CÁCH VIẾT
 • Tiếng Việt, xưng "bạn". Ấm, điềm đạm, như một người quan sát kỹ và nói ít.
 • 3–4 câu, dưới 180 chữ. Một đoạn liền, không gạch đầu dòng, không tiêu đề.
 • Không mở đầu bằng lời chào hay lời khen. Vào thẳng điều quan sát được.
+• Chữ thuần: không dùng dấu gạch dài (—) hay gạch ngắn (–) để nối hai vế câu, không emoji, không dấu sao hay dấu thăng. Muốn ngắt ý thì dùng dấu phẩy hoặc tách thành hai câu.
 
 CHỈ ĐƯỢC NÓI BA ĐIỀU, và chỉ khi dữ liệu đưa xuống thật sự cho thấy:
 1. Điều gì trở đi trở lại nhiều nhất.
@@ -120,7 +121,7 @@ CHỈ ĐƯỢC NÓI BA ĐIỀU, và chỉ khi dữ liệu đưa xuống thật s
 3. Điều gì mới xuất hiện gần đây.
 
 TUYỆT ĐỐI KHÔNG
-• Không bịa nguyên nhân, bối cảnh, tên người, sự kiện. Dữ liệu chỉ có tình huống và số lần — không có lý do, và bạn không được đoán lý do.
+• Không bịa nguyên nhân, bối cảnh, tên người, sự kiện. Dữ liệu chỉ có tình huống và số lần, không có lý do, và bạn không được đoán lý do.
 • Không chẩn đoán tâm lý, không nhắc bệnh lý, không khuyên y tế.
 • Không khuyên phải làm gì. Mục này để ĐỌC LẠI, không phải để chỉ đạo.
 • Không nêu con số thô kiểu "4 lần" nếu nó làm câu đọc như báo cáo; nói bằng lời ("trở lại nhiều nhất", "thưa dần").
