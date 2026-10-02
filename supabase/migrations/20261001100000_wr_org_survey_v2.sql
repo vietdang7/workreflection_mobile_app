@@ -50,7 +50,7 @@ as $$
       ('compensation', a.a_c, a.n_c), ('growth', a.a_g, a.n_g),
       ('fairness', a.a_f, a.n_f), ('support', a.a_s, a.n_s), ('enps', a.a_e, a.n_e)
     ) as x(area, v, n)
-  )
+  ),
   counted as (
     -- n_all: số người của phạm vi 'all' cho cùng mảng, để tính phần bù bên dưới.
     select u.*, max(case when u.scope = 'all' then u.n end) over (partition by u.area) as n_all
@@ -128,8 +128,9 @@ grant execute on function public.wr_org_survey_benchmark(integer) to authenticat
 --   -- Làm lại không mở khoá được (CHỈ CHẠY TRONG GIAO DỊCH, rồi rollback):
 --   --   begin;
 --   --   -- chèn 10 phiếu mới cho cùng MỘT user_id có sẵn (điền các cột bắt buộc còn lại theo bảng):
---   --   insert into wr_org_survey_responses (user_id, enps, created_at)
---   --     select (select user_id from wr_org_survey_responses limit 1), 8, now() + g * interval '1 second'
+--   --   insert into wr_org_survey_responses (user_id, answers, enps, created_at)
+--   --     select (select user_id from wr_org_survey_responses limit 1),
+--   --            '{"OS-01":3,"OS-04":2,"OS-07":1,"OS-10":4}'::jsonb, 8, now() + g * interval '1 second'
 --   --     from generate_series(1,10) g;
 --   --   select area, sample_size from wr_org_survey_benchmark_v2(null) where area='enps';
 --   --   -- sample_size tăng tối đa 1 so với trước khi chèn
