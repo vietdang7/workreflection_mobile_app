@@ -746,7 +746,7 @@ void main() {
       );
 
       expect(find.byKey(const Key('profile_premium_card')), findsNothing);
-      expect(find.text('Mở khoá Premium'), findsNothing);
+      expect(find.text(wrKeepTitleTail('Mở khoá Premium')), findsNothing);
       expect(find.textContaining('499.000'), findsNothing);
     });
 

@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
+import 'package:workreflection_mobile/core/widgets/wr_title_text.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
@@ -321,7 +322,13 @@ void main() {
       await tester.tap(find.byKey(const Key('wr_self_check_close')));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('Thoát khỏi bộ câu hỏi'), findsNothing);
+      // Tiêu đề hộp thoại chứa U+00A0 (wrKeepTitleTail) nên phải tìm đúng dạng đó,
+      // nếu không phép "không thấy" này đúng cả khi hộp thoại có mặt. Dạng đó
+      // được chứng minh tìm ra được ở test dưới.
+      expect(
+        find.text(wrKeepTitleTail('Thoát khỏi bộ câu hỏi?')),
+        findsNothing,
+      );
       expect(find.byType(WrSelfCheckScreen), findsNothing);
     });
 
@@ -342,6 +349,10 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.textContaining('3 câu bạn đã trả lời'), findsOneWidget);
+      expect(
+        find.text(wrKeepTitleTail('Thoát khỏi bộ câu hỏi?')),
+        findsOneWidget,
+      );
 
       // "Làm tiếp" đưa về đúng chỗ đang dở, không mất gì.
       await tester.tap(find.text('Làm tiếp'));

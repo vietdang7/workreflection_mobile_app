@@ -6,8 +6,9 @@
 // `ai-personalize` có từ thời bản web (repo `workreflection`), deploy trên cùng
 // project Supabase `sukpcxevcjnhiuyaoqxi`. Tệp này là bản sao trong repo app,
 // chép từ bản đang chạy (version 21) rồi thêm đúng một thứ: cổng chặn xin phép.
-// Sửa bên nào cũng phải chép sang bên kia, nếu không lần deploy sau sẽ ghi đè
-// mất phần của bên còn lại.
+// Chỉ deploy từ repo APP này. Bản trong repo web thiếu thư mục `_shared` (bộ
+// lọc Markdown/vết AI) và dùng cổng xin phép cũ hơn, nên deploy từ web sẽ âm
+// thầm làm mất cả hai.
 //
 // ---------------------------------------------------------------------------
 // VÌ SAO PHẢI THÊM CỔNG CHẶN — VÀ VÌ SAO CHẶN CÓ ĐIỀU KIỆN

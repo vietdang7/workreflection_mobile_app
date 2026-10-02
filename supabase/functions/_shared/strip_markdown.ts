@@ -15,8 +15,9 @@
 //
 // Bài học từ chính `reply_shaping`: prompt lo phần model làm ĐÚNG, tầng lọc lo
 // phần model làm SAI. Nhưng Edge Function không phải nguồn duy nhất — chữ AI
-// cũng vào app qua `ai-personalize` (hàm của phần Khảo sát, không nằm trong
-// repo này) và qua bất kỳ hàm nào thêm sau. Một tầng nữa ngay trước lúc dựng
+// cũng vào app qua `ai-personalize` (nay đã nằm trong repo này và gọi bộ lọc
+// này ở phía máy chủ; tầng app vẫn lọc lại dữ liệu đã lưu từ trước) và qua bất
+// kỳ hàm nào thêm sau. Một tầng nữa ngay trước lúc dựng
 // `Text` là chỗ duy nhất phủ được hết. Xem `lib/core/logic/wr_plain_text.dart`.
 
 /// Lột ký hiệu Markdown, giữ nguyên chữ.
@@ -25,14 +26,17 @@
 /// ra là hiện nguyên hình trên màn hình.
 // Vết AI ngoài Markdown (Task B3, khách 01/10): gạch dài và emoji.
 //
-// - " — " / " – " GIỮA HAI CHỮ là dấu phẩy ngầm của model, đổi thành ", ".
-//   Gạch giữa hai SỐ ("5 – 3") là khoảng giá trị thật, giữ nguyên.
+// - "—" dính liền giữa hai chữ ("speed—it's") và " — " / " – " có cách đều là
+//   dấu phẩy ngầm của model, đổi thành ", " (kể cả khi trước là nháy đóng, ngoặc,
+//   hoặc chỉ một bên là số). Gạch cách giữa hai SỐ (kể cả số kèm đơn vị ngắn) ("5 – 3", "8h – 17h") là
+//   khoảng giá trị thật, giữ nguyên. Gạch kề dấu câu thì chỉ bỏ gạch.
+// - Mũi tên U+2190-21FF (↔ →) không phải emoji. Keycap U+20E3 gỡ cùng emoji.
 // - "—" đầu dòng là gạch đầu dòng/đối thoại, bỏ.
 // - Emoji bỏ cùng U+FE0F và ZWJ mồ côi; © ® ™ không phải emoji trang trí.
 // Luật này phải GIỐNG HỆT bản Dart `lib/core/logic/wr_plain_text.dart`.
 // Chỉ gọi trên chữ do model sinh ra, không bao giờ trên chữ người dùng.
 const EMOJI_RUN =
-  /([ \t]*)((?:(?![\u00A9\u00AE\u2122])\p{Extended_Pictographic}|[\u{1F3FB}-\u{1F3FF}\uFE0F\u200D])+)([ \t]*)/gu;
+  /([ \t]*)((?:(?![\u00A9\u00AE\u2122\u2190-\u21FF])\p{Extended_Pictographic}|[\u{1F3FB}-\u{1F3FF}\uFE0F\u200D\u20E3])+)([ \t]*)/gu;
 
 function stripAiTraces(text: string): string {
   return text
@@ -41,7 +45,11 @@ function stripAiTraces(text: string): string {
       return atLineStart || (!before && !after) ? '' : ' ';
     })
     .replace(/^[ \t]*—[ \t]*/gm, '')
-    .replace(/(?<=[\p{L}\p{M}])[ \t]+[—–][ \t]+(?=[\p{L}\p{M}])/gu, ', ')
+    .replace(/(?<=[\p{L}\p{M}])—(?=[\p{L}\p{M}])/gu, ', ')
+    .replace(/[ \t]+[—–](?=[ \t]*[,.;:!?])/g, '')
+    .replace(/(?<=[,.;:!?])[ \t]+[—–][ \t]+/g, ' ')
+    .replace(/(?<=\S)(?<![ \t])[ \t]+[—–][ \t]+(?!\d)/g, ', ')
+    .replace(/(?<=[^\s\d])(?<!\d[\p{L}%]{0,3})[ \t]+[—–][ \t]+(?=\d)/gu, ', ')
     .replace(/[ \t]+(?=[,.;:!?])/g, '')
     .replace(/[ \t]+$/gm, '');
 }

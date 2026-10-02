@@ -172,6 +172,40 @@ Deno.test('không còn khoảng trắng thừa trước dấu câu', () => {
   assertEquals(stripMarkdown('Hay quá 🎉 , nhỉ'), 'Hay quá, nhỉ');
 });
 
+Deno.test('gạch dài KHÔNG cách giữa hai chữ thành dấu phẩy (dạng phổ biến nhất)', () => {
+  assertEquals(
+    stripMarkdown("It's not about speed\u2014it's about clarity."),
+    "It's not about speed, it's about clarity.",
+  );
+  assertEquals(
+    stripMarkdown('Slow\u2014steady\u2014and calm'),
+    'Slow, steady, and calm',
+  );
+});
+
+Deno.test('gạch cách đứng cạnh nháy đóng, ngoặc hoặc chỉ một bên là số', () => {
+  assertEquals(stripMarkdown('\u201CTốt\u201D \u2014 rất tốt'), '\u201CTốt\u201D, rất tốt');
+  assertEquals(stripMarkdown('Năm 2024 \u2014 mình'), 'Năm 2024, mình');
+  assertEquals(stripMarkdown('(xong) \u2013 rồi'), '(xong), rồi');
+});
+
+Deno.test('gạch cách giữa hai SỐ vẫn giữ, kể cả "8h – 17h"', () => {
+  assertEquals(stripMarkdown('8h \u2013 17h'), '8h \u2013 17h');
+  assertEquals(stripMarkdown('5 \u2013 3'), '5 \u2013 3');
+});
+
+Deno.test('gạch kề dấu câu thì chỉ bỏ gạch, không sinh ", ," hay ", ."', () => {
+  assertEquals(stripMarkdown('Xong \u2014, rồi'), 'Xong, rồi');
+  assertEquals(stripMarkdown('Xong \u2014.'), 'Xong.');
+  assertEquals(stripMarkdown('Xong, \u2014 rồi'), 'Xong, rồi');
+});
+
+Deno.test('mũi tên không phải emoji; keycap bị gỡ cả U+20E3', () => {
+  assertEquals(stripMarkdown('Trust \u2194 Autonomy'), 'Trust \u2194 Autonomy');
+  assertEquals(stripMarkdown('A \u2192 B'), 'A \u2192 B');
+  assertEquals(stripMarkdown('1\uFE0F\u20E3 Bước một'), '1 Bước một');
+});
+
 Deno.test('ký hiệu ©, ® và ™ không bị coi là emoji', () => {
   assertEquals(stripMarkdown('WorkReflection™ ©2026'), 'WorkReflection™ ©2026');
 });

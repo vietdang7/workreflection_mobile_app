@@ -160,6 +160,43 @@ void main() {
       expect(stripMarkdown('Hay quá 🎉 , nhỉ'), 'Hay quá, nhỉ');
     });
 
+    test('gạch dài KHÔNG cách giữa hai chữ thành dấu phẩy', () {
+      expect(
+        stripMarkdown("It's not about speed\u2014it's about clarity."),
+        "It's not about speed, it's about clarity.",
+      );
+      expect(
+        stripMarkdown('Slow\u2014steady\u2014and calm'),
+        'Slow, steady, and calm',
+      );
+    });
+
+    test('gạch cách cạnh nháy đóng, ngoặc hoặc chỉ một bên là số', () {
+      expect(
+        stripMarkdown('\u201CTốt\u201D \u2014 rất tốt'),
+        '\u201CTốt\u201D, rất tốt',
+      );
+      expect(stripMarkdown('Năm 2024 \u2014 mình'), 'Năm 2024, mình');
+      expect(stripMarkdown('(xong) \u2013 rồi'), '(xong), rồi');
+    });
+
+    test('gạch cách giữa hai SỐ vẫn giữ, kể cả "8h – 17h"', () {
+      expect(stripMarkdown('8h \u2013 17h'), '8h \u2013 17h');
+      expect(stripMarkdown('5 \u2013 3'), '5 \u2013 3');
+    });
+
+    test('gạch kề dấu câu thì chỉ bỏ gạch', () {
+      expect(stripMarkdown('Xong \u2014, rồi'), 'Xong, rồi');
+      expect(stripMarkdown('Xong \u2014.'), 'Xong.');
+      expect(stripMarkdown('Xong, \u2014 rồi'), 'Xong, rồi');
+    });
+
+    test('mũi tên không phải emoji; keycap bị gỡ cả U+20E3', () {
+      expect(stripMarkdown('Trust \u2194 Autonomy'), 'Trust \u2194 Autonomy');
+      expect(stripMarkdown('A \u2192 B'), 'A \u2192 B');
+      expect(stripMarkdown('1\uFE0F\u20E3 Bước một'), '1 Bước một');
+    });
+
     test('ký hiệu ©, ® và ™ không bị coi là emoji', () {
       expect(stripMarkdown('WorkReflection™ ©2026'), 'WorkReflection™ ©2026');
     });

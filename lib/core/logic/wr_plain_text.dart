@@ -11,8 +11,8 @@
 // Lọc ở Edge Function là đúng chỗ nhất: sửa một lần, mọi client hưởng. Nhưng
 // nó không phủ hết được:
 //
-//   • `ai-personalize` (phần Khảo sát) là hàm KHÔNG nằm trong repo này, nên
-//     không sửa được ở đây.
+//   • `ai-personalize` (phần Khảo sát) nay nằm trong repo này và đã gọi bộ lọc
+//     phía máy chủ, nhưng bản trả về đã lưu/cache từ trước vẫn có thể còn vết.
 //   • Dữ liệu đã lưu trước hôm nay vẫn còn nguyên dấu sao trong database. Lọc ở
 //     hàm sinh chỉ sạch từ bản ghi mới trở đi.
 //   • Hàm mới thêm sau này sẽ quên gọi bộ lọc — đó là chuyện đã xảy ra đúng ba
@@ -34,8 +34,9 @@
 /// Giữ đúng thứ tự và đúng ngoại lệ của bản Deno — hai bản lệch nhau thì cùng
 /// một câu đọc ra hai kiểu tuỳ nó đi đường nào.
 // Vết AI ngoài Markdown (Task B3): gạch dài và emoji. Giống hệt bản Deno.
+// Mũi tên U+2190-21FF không phải emoji; keycap U+20E3 gỡ cùng emoji.
 final RegExp _emojiRun = RegExp(
-  r'([ \t]*)((?:(?![\u00A9\u00AE\u2122])\p{Extended_Pictographic}|[\u{1F3FB}-\u{1F3FF}\uFE0F\u200D])+)([ \t]*)',
+  r'([ \t]*)((?:(?![\u00A9\u00AE\u2122\u2190-\u21FF])\p{Extended_Pictographic}|[\u{1F3FB}-\u{1F3FF}\uFE0F\u200D\u20E3])+)([ \t]*)',
   unicode: true,
 );
 
@@ -48,8 +49,15 @@ String _stripAiTraces(String text) {
       })
       .replaceAll(RegExp(r'^[ \t]*—[ \t]*', multiLine: true), '')
       .replaceAll(
+        RegExp(r'(?<=[\p{L}\p{M}])—(?=[\p{L}\p{M}])', unicode: true),
+        ', ',
+      )
+      .replaceAll(RegExp(r'[ \t]+[—–](?=[ \t]*[,.;:!?])'), '')
+      .replaceAll(RegExp(r'(?<=[,.;:!?])[ \t]+[—–][ \t]+'), ' ')
+      .replaceAll(RegExp(r'(?<=\S)(?<![ \t])[ \t]+[—–][ \t]+(?!\d)'), ', ')
+      .replaceAll(
         RegExp(
-          r'(?<=[\p{L}\p{M}])[ \t]+[—–][ \t]+(?=[\p{L}\p{M}])',
+          r'(?<=[^\s\d])(?<!\d[\p{L}%]{0,3})[ \t]+[—–][ \t]+(?=\d)',
           unicode: true,
         ),
         ', ',

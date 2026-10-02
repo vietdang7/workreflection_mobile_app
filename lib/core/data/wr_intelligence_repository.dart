@@ -10,6 +10,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../l10n/wr_tr.dart';
+import '../logic/wr_plain_text.dart';
 import '../logic/wr_polish_guard.dart';
 import '../models/wr_intelligence.dart';
 import '../models/wr_mood_content.dart';
@@ -373,8 +374,11 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
       if (polished is! String) return null;
       // Soi LẠI ở phía app dù máy chủ đã soi. Câu gốc chỉ có ở đây, nên đây là
       // phía duy nhất kiểm được rào chắn 1 và 2 trên đúng cặp câu.
+      // Lọc Markdown/vết AI khi ĐỌC: `wr_polished_text` được cache vĩnh viễn nên
+      // bản đã lưu trước khi có bộ lọc vẫn có thể còn gạch dài. Đây là chữ AI,
+      // không phải chữ người dùng.
       return inspectPolished(original: original, polished: polished) == null
-          ? polished.trim()
+          ? stripMarkdown(polished).trim()
           : null;
     } catch (_) {
       // Hết hạn chờ, mất mạng, hàm chưa deploy — tất cả cùng một hành vi.
