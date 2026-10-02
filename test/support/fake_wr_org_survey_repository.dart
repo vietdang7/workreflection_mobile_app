@@ -191,9 +191,8 @@ class FakeWrOrgSurveyRepository implements WrOrgSurveyRepository {
           r.areaAverages[area]!,
     ];
     // Làm tròn 1 chữ số như `round(avg(...), 1)` bên SQL.
-    double avg(List<double> v) => double.parse(
-      (v.reduce((a, b) => a + b) / v.length).toStringAsFixed(1),
-    );
+    double avg(List<double> v) =>
+        double.parse((v.reduce((a, b) => a + b) / v.length).toStringAsFixed(1));
 
     final out = <OrgSurveyBenchmark>[];
     for (final scope in [

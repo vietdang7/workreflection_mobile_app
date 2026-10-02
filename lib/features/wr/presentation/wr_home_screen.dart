@@ -78,6 +78,7 @@ import '../wr_providers.dart';
 import 'wr_mood_library_screen.dart' show WrDraftBadge;
 import 'wr_practice_step_completion.dart' show practiceStageLabel;
 import '../../../core/widgets/wr_paragraph.dart';
+import '../../../core/widgets/wr_equal_height_row.dart';
 import '../../../core/widgets/wr_title_text.dart';
 
 // Hồ sơ đọc qua `mobileProfileProvider` dùng chung ở `profile_providers.dart`.
@@ -363,30 +364,22 @@ class _CheckinQuestion extends ConsumerWidget {
           const SizedBox(height: 12),
           for (var i = 0; i < kCheckinOptions.length; i += 2) ...[
             if (i > 0) const SizedBox(height: 12),
-            // IntrinsicHeight để hai ô cùng hàng cao bằng nhau như lưới CSS —
-            // "Tôi khá ổn" một dòng và "Tôi mệt mỏi cần nghỉ ngơi" hai dòng mà
-            // để tự do thì hai ô lệch nhau.
-            IntrinsicHeight(
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    child: _CheckinTile(
-                      option: kCheckinOptions[i],
-                      selected: kCheckinOptions[i].id == selectedId,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: i + 1 < kCheckinOptions.length
-                        ? _CheckinTile(
-                            option: kCheckinOptions[i + 1],
-                            selected: kCheckinOptions[i + 1].id == selectedId,
-                          )
-                        : const SizedBox.shrink(),
-                  ),
-                ],
-              ),
+            // Hai ô cùng hàng cao bằng nhau như lưới CSS, bằng ô cao nhất.
+            // KHÔNG dùng IntrinsicHeight: xem `WrEqualHeightRow`.
+            WrEqualHeightRow(
+              gap: 12,
+              children: [
+                _CheckinTile(
+                  option: kCheckinOptions[i],
+                  selected: kCheckinOptions[i].id == selectedId,
+                ),
+                i + 1 < kCheckinOptions.length
+                    ? _CheckinTile(
+                        option: kCheckinOptions[i + 1],
+                        selected: kCheckinOptions[i + 1].id == selectedId,
+                      )
+                    : const SizedBox.shrink(),
+              ],
             ),
           ],
           const SizedBox(height: 12),
