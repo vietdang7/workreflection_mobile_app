@@ -183,6 +183,18 @@ class FakeWrOrgSurveyRepository implements WrOrgSurveyRepository {
     }
     final latestRows = latestByUser.values.toList();
 
+    List<double> valuesOf(List<FakeSurveyRow> rs, OrgSurveyArea? area) => [
+      for (final r in rs)
+        if (area == null)
+          if (r.enps != null) r.enps!.toDouble() else ...const <double>[]
+        else if (r.areaAverages[area] != null)
+          r.areaAverages[area]!,
+    ];
+    // Làm tròn 1 chữ số như `round(avg(...), 1)` bên SQL.
+    double avg(List<double> v) => double.parse(
+      (v.reduce((a, b) => a + b) / v.length).toStringAsFixed(1),
+    );
+
     final out = <OrgSurveyBenchmark>[];
     for (final scope in [
       BenchmarkScope.all,
@@ -192,27 +204,43 @@ class FakeWrOrgSurveyRepository implements WrOrgSurveyRepository {
           ? latestRows
           : latestRows.where((r) => r.industry == industry).toList();
       for (final area in [...OrgSurveyArea.values, null]) {
-        final vals = <double>[
-          for (final r in scoped)
-            if (area == null)
-              if (r.enps != null) r.enps!.toDouble() else ...const <double>[]
-            else if (r.areaAverages[area] != null)
-              r.areaAverages[area]!,
-        ];
-        final n = vals.length;
-        double? avg() =>
-            double.parse((vals.reduce((a, b) => a + b) / n).toStringAsFixed(2));
-        if (n >= fakeOrgSurveyMinSample) {
+        final n = valuesOf(scoped, area).length;
+        final nAll = valuesOf(latestRows, area).length;
+        if (scope == BenchmarkScope.industry) {
+          // Luật phần bù (mirror SQL): hiệu all - industry là tổng của những
+          // người ngoài ngành; để lộ khi phần bù < ngưỡng thì suy ngược được
+          // điểm từng người. Không live thì trả 0, không lộ số đếm thật.
+          final complement = nAll - n;
+          final live =
+              n >= fakeOrgSurveyMinSample &&
+              (complement == 0 || complement >= fakeOrgSurveyMinSample);
+          out.add(
+            live
+                ? OrgSurveyBenchmark(
+                    scope: scope,
+                    area: area,
+                    value: avg(valuesOf(scoped, area)),
+                    sampleSize: n,
+                    source: BenchmarkSource.live,
+                  )
+                : OrgSurveyBenchmark(
+                    scope: scope,
+                    area: area,
+                    sampleSize: 0,
+                    source: BenchmarkSource.none,
+                  ),
+          );
+        } else if (n >= fakeOrgSurveyMinSample) {
           out.add(
             OrgSurveyBenchmark(
               scope: scope,
               area: area,
-              value: avg(),
+              value: avg(valuesOf(scoped, area)),
               sampleSize: n,
               source: BenchmarkSource.live,
             ),
           );
-        } else if (scope == BenchmarkScope.all && reference[area] != null) {
+        } else if (reference[area] != null) {
           out.add(
             OrgSurveyBenchmark(
               scope: scope,

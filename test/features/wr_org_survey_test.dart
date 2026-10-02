@@ -544,7 +544,8 @@ void main() {
         ],
       );
       final res = await repo.fetchBenchmark(industry: 'tech');
-      expect(pick(res, BenchmarkScope.industry, null).sampleSize, 9);
+      // 9 cùng ngành (dưới ngưỡng) → không lộ số đếm thật, trả 0.
+      expect(pick(res, BenchmarkScope.industry, null).sampleSize, 0);
       expect(
         pick(res, BenchmarkScope.industry, null).source,
         BenchmarkSource.none,
@@ -580,7 +581,7 @@ void main() {
         final repo = FakeWrOrgSurveyRepository(
           rows: [
             for (var u = 0; u < 10; u++) row('t$u', 0, industry: 'tech', v: 3),
-            for (var u = 0; u < 4; u++) row('r$u', 0, industry: 'retail'),
+            for (var u = 0; u < 10; u++) row('r$u', 0, industry: 'retail'),
           ],
           reference: {OrgSurveyArea.growth: 2.7},
         );
@@ -591,16 +592,102 @@ void main() {
         expect(t.source, BenchmarkSource.live);
         expect(
           pick(tech, BenchmarkScope.all, OrgSurveyArea.growth).sampleSize,
-          14,
+          20,
         );
 
         final retail = await repo.fetchBenchmark(industry: 'retail');
         final r = pick(retail, BenchmarkScope.industry, OrgSurveyArea.growth);
-        expect(r.sampleSize, 4);
-        expect(r.source, BenchmarkSource.none);
-        expect(r.value, isNull);
+        // retail cũng 10 người, phần bù 10 → live.
+        expect(r.sampleSize, 10);
+        expect(r.source, BenchmarkSource.live);
+
+        // Ngành nhỏ (4 người) → none, sampleSize 0, không rơi về tham chiếu.
+        final small = FakeWrOrgSurveyRepository(
+          rows: [
+            for (var u = 0; u < 10; u++) row('t$u', 0, industry: 'tech', v: 3),
+            for (var u = 0; u < 4; u++) row('r$u', 0, industry: 'retail'),
+          ],
+          reference: {OrgSurveyArea.growth: 2.7},
+        );
+        final sr = pick(
+          await small.fetchBenchmark(industry: 'retail'),
+          BenchmarkScope.industry,
+          OrgSurveyArea.growth,
+        );
+        expect(sr.sampleSize, 0);
+        expect(sr.source, BenchmarkSource.none);
+        expect(sr.value, isNull);
       },
     );
+
+    test(
+      'industry: 10 cùng ngành + 1 ngành khác → dòng Cùng lĩnh vực KHÔNG live (chặn phép trừ)',
+      () async {
+        final repo = FakeWrOrgSurveyRepository(
+          rows: [
+            for (var u = 0; u < 10; u++) row('t$u', 0, industry: 'tech', v: 3),
+            row('r0', 0, industry: 'retail', v: 1),
+          ],
+        );
+        final res = await repo.fetchBenchmark(industry: 'tech');
+        for (final area in [...OrgSurveyArea.values, null]) {
+          final b = pick(res, BenchmarkScope.industry, area);
+          expect(b.source, BenchmarkSource.none);
+          expect(b.value, isNull);
+          expect(b.sampleSize, 0);
+        }
+        // Phạm vi all vẫn live (11 người).
+        expect(pick(res, BenchmarkScope.all, null).sampleSize, 11);
+        expect(pick(res, BenchmarkScope.all, null).source, BenchmarkSource.live);
+      },
+    );
+
+    test('industry: 10 cùng ngành + 10 ngành khác → live', () async {
+      final repo = FakeWrOrgSurveyRepository(
+        rows: [
+          for (var u = 0; u < 10; u++) row('t$u', 0, industry: 'tech', v: 3),
+          for (var u = 0; u < 10; u++) row('r$u', 0, industry: 'retail'),
+        ],
+      );
+      final res = await repo.fetchBenchmark(industry: 'tech');
+      final b = pick(res, BenchmarkScope.industry, OrgSurveyArea.growth);
+      expect(b.source, BenchmarkSource.live);
+      expect(b.sampleSize, 10);
+      expect(b.value, 3);
+    });
+
+    test('industry: toàn bộ 10 người cùng ngành → live', () async {
+      final repo = FakeWrOrgSurveyRepository(
+        rows: [
+          for (var u = 0; u < 10; u++) row('t$u', 0, industry: 'tech', v: 3),
+        ],
+      );
+      final res = await repo.fetchBenchmark(industry: 'tech');
+      final b = pick(res, BenchmarkScope.industry, null);
+      expect(b.source, BenchmarkSource.live);
+      expect(b.sampleSize, 10);
+    });
+
+    test('làm tròn 1 chữ số thập phân ở cả hai phạm vi', () async {
+      // 12 người: 8 điểm 2 + 4 điểm 3 → 2.333 → 2.3; enps 7 x11 + 8 → 7.083 → 7.1
+      final repo = FakeWrOrgSurveyRepository(
+        rows: [
+          for (var u = 0; u < 12; u++)
+            row(
+              't$u',
+              0,
+              industry: 'tech',
+              v: u < 8 ? 2 : 3,
+              enps: u == 0 ? 8 : 7,
+            ),
+        ],
+      );
+      final res = await repo.fetchBenchmark(industry: 'tech');
+      for (final scope in [BenchmarkScope.all, BenchmarkScope.industry]) {
+        expect(pick(res, scope, OrgSurveyArea.growth).value, 2.3);
+        expect(pick(res, scope, null).value, 7.1);
+      }
+    });
 
     test('không truyền lĩnh vực thì chỉ trả phạm vi all', () async {
       final repo = FakeWrOrgSurveyRepository();

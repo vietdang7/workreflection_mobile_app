@@ -50,7 +50,7 @@ class OrgSurveyBenchmarks {
 /// KHÔNG nuốt lỗi: "RPC hỏng" phải ra `AsyncError`, không được trông giống
 /// "chưa đủ người". Nơi dùng tự quyết định hiện gì khi lỗi.
 final wrOrgSurveyBenchmarkProvider =
-    FutureProvider.family<OrgSurveyBenchmarks, String?>((ref, industry) async {
+    FutureProvider.autoDispose.family<OrgSurveyBenchmarks, String?>((ref, industry) async {
       final rows = await ref
           .watch(wrOrgSurveyRepositoryProvider)
           .fetchBenchmark(industry: industry);

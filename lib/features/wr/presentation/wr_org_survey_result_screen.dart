@@ -11,7 +11,7 @@
 // là nói một điều không có thật về hàng nghìn người không tồn tại, ngay trong
 // màn hình vừa hứa với họ về tính trung thực của dữ liệu.
 //
-// Nên: vạch so sánh chỉ xuất hiện khi RPC `wr_org_survey_benchmark` trả về số
+// Nên: vạch so sánh chỉ xuất hiện khi RPC `wr_org_survey_benchmark_v2` trả về số
 // thật (đủ mẫu) hoặc số tham chiếu ngành do người vận hành nhập. Chưa có gì thì
 // hiện điểm của chính người dùng, kèm một dòng nói thẳng vì sao chưa so sánh
 // được. Điểm của họ vẫn có nghĩa mà không cần một cái nền bịa ra để dựa vào.
@@ -164,7 +164,8 @@ class _Result extends ConsumerWidget {
       wrOrgSurveyBenchmarkProvider(response.industry),
     );
     final loadFailed = benchAsync.hasError;
-    final benchmarks = benchAsync.valueOrNull;
+    // Lỗi thì KHÔNG vẽ thanh so sánh từ giá trị cũ còn sót cạnh dòng báo lỗi.
+    final benchmarks = loadFailed ? null : benchAsync.valueOrNull;
     final all = benchmarks?.all ?? const <OrgSurveyArea?, OrgSurveyBenchmark>{};
     final industry =
         benchmarks?.industry ?? const <OrgSurveyArea?, OrgSurveyBenchmark>{};

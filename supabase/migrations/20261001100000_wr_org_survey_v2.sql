@@ -31,11 +31,11 @@ as $$
   ),
   agg as (
     select scope,
-      count(avg_compensation)::int n_c, round(avg(avg_compensation),2) a_c,
-      count(avg_growth)::int       n_g, round(avg(avg_growth),2)       a_g,
-      count(avg_fairness)::int     n_f, round(avg(avg_fairness),2)     a_f,
-      count(avg_support)::int      n_s, round(avg(avg_support),2)      a_s,
-      count(enps)::int             n_e, round(avg(enps),2)             a_e
+      count(avg_compensation)::int n_c, round(avg(avg_compensation),1) a_c,
+      count(avg_growth)::int       n_g, round(avg(avg_growth),1)       a_g,
+      count(avg_fairness)::int     n_f, round(avg(avg_fairness),1)     a_f,
+      count(avg_support)::int      n_s, round(avg(avg_support),1)      a_s,
+      count(enps)::int             n_e, round(avg(enps),1)             a_e
     from scoped group by scope
   ),
   scopes as (
@@ -51,19 +51,42 @@ as $$
       ('fairness', a.a_f, a.n_f), ('support', a.a_s, a.n_s), ('enps', a.a_e, a.n_e)
     ) as x(area, v, n)
   )
-  select u.scope, u.area,
-    case when u.n >= c.min_sample then u.v
-         when u.scope = 'all' then r.avg_value end,
-    u.n,
-    case when u.n >= c.min_sample then 'live'
-         when u.scope = 'all' and r.avg_value is not null then 'reference'
+  counted as (
+    -- n_all: số người của phạm vi 'all' cho cùng mảng, để tính phần bù bên dưới.
+    select u.*, max(case when u.scope = 'all' then u.n end) over (partition by u.area) as n_all
+    from unpivoted u
+  ),
+  judged as (
+    select d.*, c.min_sample,
+      -- Phạm vi 'industry' chỉ được trả số khi:
+      --   (1) đủ ngưỡng cùng ngành, VÀ
+      --   (2) phần bù (n_all - n_industry) bằng 0 hoặc cũng đủ ngưỡng.
+      -- Một lần gọi trả cả hai dòng: nếu phần bù chỉ còn 1-9 người thì
+      -- n_all*avg_all - n_ind*avg_ind = tổng điểm của đúng những người đó,
+      -- tức suy ngược được điểm cá nhân. Phần bù 0 thì không còn ai để suy.
+      case when d.scope = 'industry'
+           then d.n >= c.min_sample
+                and (d.n_all - d.n = 0 or d.n_all - d.n >= c.min_sample)
+           else d.n >= c.min_sample end as is_live
+    from counted d cross join cfg c
+  )
+  select j.scope, j.area,
+    case when j.is_live then j.v
+         when j.scope = 'all' then r.avg_value end,
+    -- Industry không live: trả 0, không lộ số đếm thật (số nhỏ cũng là thông tin).
+    case when j.scope = 'industry' and not j.is_live then 0 else j.n end,
+    case when j.is_live then 'live'
+         when j.scope = 'all' and r.avg_value is not null then 'reference'
          else 'none' end
-  from unpivoted u cross join cfg c
-  left join public.wr_org_survey_reference r on r.area = u.area;
+  from judged j
+  left join public.wr_org_survey_reference r on r.area = j.area;
 $$;
 
 comment on function public.wr_org_survey_benchmark_v2(text) is
   'Mặt bằng chung v2: một người một phiếu (phiếu mới nhất), ngưỡng 10 cứng phía server. '
+  'Dòng industry chỉ live khi đủ ngưỡng VÀ phần bù (all - industry) bằng 0 hoặc đủ ngưỡng, '
+  'để không suy ngược điểm cá nhân bằng phép trừ giữa hai phạm vi; không live thì sample_size = 0. '
+  'Trung bình làm tròn 1 chữ số. '
   'SECURITY DEFINER vì phải đọc câu trả lời của mọi người, chỉ trả SỐ TỔNG HỢP.';
 
 revoke all on function public.wr_org_survey_benchmark_v2(text) from public;
@@ -80,6 +103,9 @@ as $$
   from public.wr_org_survey_benchmark_v2(null) where scope = 'all';
 $$;
 
+comment on function public.wr_org_survey_benchmark(integer) is
+  'Bản cũ cho các build đã lên store: tham số min_sample được BỎ QUA, ngưỡng nằm cứng trong wr_org_survey_benchmark_v2.';
+
 revoke all on function public.wr_org_survey_benchmark(integer) from public;
 revoke all on function public.wr_org_survey_benchmark(integer) from anon;
 grant execute on function public.wr_org_survey_benchmark(integer) to authenticated;
@@ -91,10 +117,27 @@ grant execute on function public.wr_org_survey_benchmark(integer) to authenticat
 --   select * from wr_org_survey_benchmark_v2('tech');  -- 10 dòng
 --   select * from wr_org_survey_benchmark(1);          -- source vẫn 'none' nếu < 10 người
 --
---   -- Một người làm lại nhiều lần chỉ tính 1:
+--   -- Một người làm lại nhiều lần chỉ tính 1 (so với số người có PHIẾU MỚI NHẤT có enps):
 --   --   select area, sample_size from wr_org_survey_benchmark_v2(null) where area='enps';
---   --   so với: select count(distinct user_id) from wr_org_survey_responses where enps is not null;
---   --   (hai con số phải bằng nhau nếu mỗi người có phiếu mới nhất có enps)
+--   --   select count(*) from (
+--   --     select distinct on (user_id) user_id, enps
+--   --     from wr_org_survey_responses order by user_id, created_at desc
+--   --   ) t where enps is not null;
+--   --   (hai con số phải bằng nhau)
+--
+--   -- Làm lại không mở khoá được (CHỈ CHẠY TRONG GIAO DỊCH, rồi rollback):
+--   --   begin;
+--   --   -- chèn 10 phiếu mới cho cùng MỘT user_id có sẵn (điền các cột bắt buộc còn lại theo bảng):
+--   --   insert into wr_org_survey_responses (user_id, enps, created_at)
+--   --     select (select user_id from wr_org_survey_responses limit 1), 8, now() + g * interval '1 second'
+--   --     from generate_series(1,10) g;
+--   --   select area, sample_size from wr_org_survey_benchmark_v2(null) where area='enps';
+--   --   -- sample_size tăng tối đa 1 so với trước khi chèn
+--   --   rollback;
+--
+--   -- Phép trừ giữa hai phạm vi bị chặn: với n_all - n_industry trong 1..9 thì
+--   -- dòng scope='industry' phải có source='none', sample_size=0.
+--   --   select scope, area, sample_size, source from wr_org_survey_benchmark_v2('tech') where scope='industry';
 --
 --   -- Anon không gọi được:
 --   --   select has_function_privilege('anon','public.wr_org_survey_benchmark_v2(text)','execute'); -- false
