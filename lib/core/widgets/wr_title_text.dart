@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
 
-const String _nbsp = ' ';
+const String _nbsp = '\u00A0';
 
 /// Nối hai tiếng CUỐI của tiêu đề bằng U+00A0 để tiếng cuối không rớt
 /// xuống dòng một mình. Chỉ nối khi: có từ 3 tiếng trở lên, đuôi
@@ -25,8 +25,13 @@ String wrKeepTitleTail(String text, {int maxTailChars = 14}) {
 /// Thay thế trực tiếp cho `Text` ở các tiêu đề: giữ đuôi không rớt dòng.
 /// Không đổi `textAlign` (mặc định start), không bao giờ justify.
 class WrTitleText extends StatelessWidget {
-  const WrTitleText(this.text,
-      {super.key, this.style, this.textAlign, this.maxLines});
+  const WrTitleText(
+    this.text, {
+    super.key,
+    this.style,
+    this.textAlign,
+    this.maxLines,
+  });
 
   final String text;
   final TextStyle? style;
@@ -35,9 +40,9 @@ class WrTitleText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) => Text(
-        wrKeepTitleTail(text),
-        style: style,
-        textAlign: textAlign,
-        maxLines: maxLines,
-      );
+    wrKeepTitleTail(text),
+    style: style,
+    textAlign: textAlign,
+    maxLines: maxLines,
+  );
 }
