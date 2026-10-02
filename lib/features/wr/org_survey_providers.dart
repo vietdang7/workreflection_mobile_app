@@ -30,6 +30,14 @@ final wrOrgSurveyLatestProvider = FutureProvider<OrgSurveyResponse?>((
 
 /// Mặt bằng chung theo hai phạm vi, mỗi phạm vi khoá theo mảng (eNPS ở khoá
 /// null). `industry` rỗng khi không truyền lĩnh vực.
+/// Bản gần nhất, nhưng KHÔNG nuốt lỗi: màn kết quả cần phân biệt "chưa từng
+/// làm" với "đọc hỏng". autoDispose để mỗi lần mở màn đọc lại, không giữ bản cũ
+/// sau khi người dùng làm lại hoặc rút lui.
+final wrOrgSurveyLatestOrThrowProvider =
+    FutureProvider.autoDispose<OrgSurveyResponse?>((ref) async {
+      return ref.watch(wrOrgSurveyRepositoryProvider).fetchLatestResponse();
+    });
+
 class OrgSurveyBenchmarks {
   const OrgSurveyBenchmarks({this.all = const {}, this.industry = const {}});
 

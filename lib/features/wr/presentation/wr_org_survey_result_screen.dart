@@ -40,8 +40,12 @@ class WrOrgSurveyResultScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final latestAsync = ref.watch(wrOrgSurveyLatestProvider);
-    final data = response ?? latestAsync.valueOrNull;
+    // Có bản truyền tay thì khỏi đọc lại. Không có (mở từ Hồ sơ, hoặc tải lại
+    // trang web) thì đọc bản gần nhất, và để lỗi đọc lộ ra thay vì thành "trống".
+    final AsyncValue<OrgSurveyResponse?>? latestAsync = response == null
+        ? ref.watch(wrOrgSurveyLatestOrThrowProvider)
+        : null;
+    final data = response ?? latestAsync?.valueOrNull;
 
     return Scaffold(
       backgroundColor: WrColors.pageBg,
@@ -70,9 +74,57 @@ class WrOrgSurveyResultScreen extends ConsumerWidget {
       body: SafeArea(
         child: data != null
             ? _Result(response: data)
-            : latestAsync.isLoading
+            : latestAsync == null || latestAsync.isLoading
             ? const Center(child: CircularProgressIndicator())
+            : latestAsync.hasError
+            ? _LoadError(
+                message: tr(
+                  'Chưa tải được kết quả của bạn.',
+                  'Could not load your results.',
+                ),
+                onRetry: () => ref.invalidate(wrOrgSurveyLatestOrThrowProvider),
+                retryKey: const Key('wr_org_survey_result_retry'),
+              )
             : const _Empty(),
+      ),
+    );
+  }
+}
+
+/// Một dòng báo lỗi kèm nút "Thử lại". Dùng cho cả lỗi đọc bản gần nhất lẫn lỗi
+/// đọc phần so sánh, để hai trường hợp này không bao giờ giống "chưa đủ người".
+class _LoadError extends StatelessWidget {
+  const _LoadError({
+    required this.message,
+    required this.onRetry,
+    required this.retryKey,
+  });
+
+  final String message;
+  final VoidCallback onRetry;
+  final Key retryKey;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 15, color: WrColors.muted),
+            ),
+            const SizedBox(height: 8),
+            TextButton(
+              key: retryKey,
+              onPressed: onRetry,
+              child: Text(tr('Thử lại', 'Try again')),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -107,12 +159,26 @@ class _Result extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // TODO(A4): thiết kế lại theo hai phạm vi + hiện lỗi đọc thay vì nuốt.
-    final benchmark =
-        ref.watch(wrOrgSurveyBenchmarkProvider(null)).valueOrNull?.all ??
-        const <OrgSurveyArea?, OrgSurveyBenchmark>{};
-    final enpsBenchmark = benchmark[null];
-    final anyComparable = benchmark.values.any((b) => b.isComparable);
+    // Hai phạm vi: `all` (mọi người) và `industry` (cùng lĩnh vực với bản này).
+    final benchAsync = ref.watch(
+      wrOrgSurveyBenchmarkProvider(response.industry),
+    );
+    final loadFailed = benchAsync.hasError;
+    final benchmarks = benchAsync.valueOrNull;
+    final all = benchmarks?.all ?? const <OrgSurveyArea?, OrgSurveyBenchmark>{};
+    final industry =
+        benchmarks?.industry ?? const <OrgSurveyArea?, OrgSurveyBenchmark>{};
+    final enpsBenchmark = all[null];
+    final anyComparable = all.values.any((b) => b.isComparable);
+
+    // Chưa có gì để so sánh (đã đọc xong, không lỗi): nói MỘT lần còn thiếu bao
+    // nhiêu người, thay vì lặp "chưa đủ" ở từng mảng. RPC không trả riêng số
+    // người, nên lấy mẫu lớn nhất trong các phần làm số người đã tham gia.
+    final nothingToCompare = benchmarks != null && !anyComparable;
+    final people = all.values.fold<int>(
+      0,
+      (m, b) => b.sampleSize > m ? b.sampleSize : m,
+    );
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(22, 4, 22, 32),
@@ -150,7 +216,8 @@ class _Result extends ConsumerWidget {
                   child: _AreaBar(
                     area: area,
                     mine: response.areaAverages[area],
-                    benchmark: benchmark[area],
+                    benchmark: all[area],
+                    industryBenchmark: industry[area],
                   ),
                 ),
               if (anyComparable) ...[
@@ -190,46 +257,77 @@ class _Result extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
-                enpsBenchmark != null && enpsBenchmark.isComparable
-                    ? tr(
-                        'Mặt bằng chung ẩn danh: '
-                            '${_fmt(enpsBenchmark.value!)} / $kEnpsMaxScore',
-                        'Anonymous wider picture: '
-                            '${_fmt(enpsBenchmark.value!)} / $kEnpsMaxScore',
-                      )
-                    : tr(
-                        'Chưa đủ dữ liệu để so sánh phần này.',
-                        'Not enough data to compare this part yet.',
-                      ),
-                style: const TextStyle(fontSize: 13.5, color: WrColors.muted),
-              ),
+              if (enpsBenchmark != null && enpsBenchmark.isComparable) ...[
+                const SizedBox(height: 4),
+                Text(
+                  tr(
+                    'Mặt bằng chung ẩn danh: '
+                        '${_fmt(enpsBenchmark.value!)} / $kEnpsMaxScore',
+                    'Anonymous wider picture: '
+                        '${_fmt(enpsBenchmark.value!)} / $kEnpsMaxScore',
+                  ),
+                  style: const TextStyle(fontSize: 13.5, color: WrColors.muted),
+                ),
+              ] else if (anyComparable) ...[
+                // Một số mảng đã so sánh được, riêng phần này thì chưa.
+                const SizedBox(height: 4),
+                Text(
+                  tr(
+                    'Chưa đủ dữ liệu để so sánh phần này.',
+                    'Not enough data to compare this part yet.',
+                  ),
+                  style: const TextStyle(fontSize: 13.5, color: WrColors.muted),
+                ),
+              ],
+              if (industry[null] case final ib?
+                  when ib.source == BenchmarkSource.live && ib.value != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 4),
+                  child: Text(
+                    '${tr('Cùng lĩnh vực', 'Same field')}: '
+                    '${_fmt(ib.value!)} / $kEnpsMaxScore',
+                    key: const Key('wr_org_survey_industry_row_enps'),
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      color: WrColors.muted,
+                    ),
+                  ),
+                ),
             ],
           ),
         ),
         const SizedBox(height: 16),
 
-        if (!anyComparable)
+        if (loadFailed)
+          _LoadError(
+            message: tr(
+              'Chưa tải được phần so sánh.',
+              'Could not load the comparison.',
+            ),
+            onRetry: () =>
+                ref.invalidate(wrOrgSurveyBenchmarkProvider(response.industry)),
+            retryKey: const Key('wr_org_survey_benchmark_retry'),
+          )
+        else if (nothingToCompare)
           Padding(
-            padding: EdgeInsets.only(bottom: 12),
+            padding: const EdgeInsets.only(bottom: 12),
             child: Text(
               tr(
-                'Bản so sánh với mặt bằng chung sẽ hiện khi đã có đủ người tham '
-                    'gia. Chúng tôi không vẽ một đường trung bình khi chưa đo được '
-                    'nó.',
-                'The comparison against the wider picture appears once enough '
-                    'people have taken part. We do not draw an average line before '
-                    'we can measure one.',
+                'Mặt bằng chung sẽ hiện khi có đủ $kOrgSurveyMinSample người '
+                    'tham gia. Hiện đã có $people người.',
+                'The overall comparison appears once $kOrgSurveyMinSample '
+                    'people have taken part. So far: $people.',
               ),
-              key: Key('wr_org_survey_no_benchmark'),
+              key: const Key('wr_org_survey_no_benchmark'),
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 14,
                 height: 1.6,
                 color: WrColors.muted,
               ),
             ),
           ),
+        const SizedBox(height: 4),
 
         Text(
           tr(
@@ -259,11 +357,13 @@ class _AreaBar extends StatelessWidget {
     required this.area,
     required this.mine,
     required this.benchmark,
+    this.industryBenchmark,
   });
 
   final OrgSurveyArea area;
   final double? mine;
   final OrgSurveyBenchmark? benchmark;
+  final OrgSurveyBenchmark? industryBenchmark;
 
   @override
   Widget build(BuildContext context) {
@@ -271,6 +371,14 @@ class _AreaBar extends StatelessWidget {
         ? benchmark!.value
         : null;
     final standing = orgSurveyStanding(mine: mine, benchmark: benchValue);
+    final industryValue = industryBenchmark?.source == BenchmarkSource.live
+        ? industryBenchmark!.value
+        : null;
+    // Chưa có mặt bằng chung thì nhãn chỉ nói điểm của chính người dùng; lý do
+    // chưa so sánh được đã có ở MỘT khối riêng bên dưới.
+    final standingText = benchValue == null && mine != null
+        ? '${_fmt(mine!)} / $kOrgSurveyMaxScore'
+        : standing.label;
     final minePct = mine == null ? 0 : orgSurveyPercent(mine!);
     final benchPct = benchValue == null ? 0 : orgSurveyPercent(benchValue);
 
@@ -290,7 +398,7 @@ class _AreaBar extends StatelessWidget {
               ),
             ),
             Text(
-              standing.label,
+              standingText,
               key: Key('wr_org_survey_standing_${area.code}'),
               style: const TextStyle(fontSize: 12.5, color: WrColors.muted),
             ),
@@ -331,6 +439,46 @@ class _AreaBar extends StatelessWidget {
             ),
           ),
         ),
+        if (industryValue != null) ...[
+          const SizedBox(height: 6),
+          Row(
+            key: Key('wr_org_survey_industry_row_${area.code}'),
+            children: [
+              Expanded(
+                child: Text(
+                  tr('Cùng lĩnh vực', 'Same field'),
+                  style: const TextStyle(fontSize: 12.5, color: WrColors.muted),
+                ),
+              ),
+              Text(
+                '${_fmt(industryValue)} / $kOrgSurveyMaxScore',
+                style: const TextStyle(fontSize: 12.5, color: WrColors.muted),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          LayoutBuilder(
+            builder: (context, c) => Stack(
+              children: [
+                Container(
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: WrColors.navy.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                Container(
+                  height: 4,
+                  width: c.maxWidth * orgSurveyPercent(industryValue) / 100,
+                  decoration: BoxDecoration(
+                    color: WrColors.navy.withValues(alpha: 0.45),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ],
     );
   }

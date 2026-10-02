@@ -337,13 +337,14 @@ void main() {
         find.byKey(const Key('wr_org_survey_standing_compensation')),
         findsOneWidget,
       );
+      // Nhãn từng mảng chỉ còn điểm của người dùng, không lặp câu "chưa đủ".
       expect(
         tester
             .widget<Text>(
               find.byKey(const Key('wr_org_survey_standing_compensation')),
             )
             .data,
-        OrgSurveyStanding.noBenchmark.label,
+        '3.0 / $kOrgSurveyMaxScore',
       );
     });
 
@@ -377,6 +378,108 @@ void main() {
       );
       expect(
         find.byKey(const Key('wr_org_survey_result_empty')),
+        findsOneWidget,
+      );
+    });
+
+    OrgSurveyResponse resp({String? industry}) => OrgSurveyResponse(
+      id: 'r1',
+      answers: const {},
+      enps: 8,
+      areaAverages: {for (final a in OrgSurveyArea.values) a: 3.0},
+      industry: industry,
+      createdAt: DateTime(2026, 10, 1),
+    );
+
+    List<FakeSurveyRow> people(int n, {String? industry}) => [
+      for (var u = 0; u < n; u++)
+        FakeSurveyRow(
+          userId: 'p$u',
+          createdAt: DateTime(2026, 10, 1, 9, u),
+          industry: industry,
+          enps: 7,
+          areaAverages: {for (final a in OrgSurveyArea.values) a: 2.0},
+        ),
+    ];
+
+    testWidgets(
+      '9 người → một khối "Hiện đã có 9 người", không còn chữ "Chưa đủ dữ liệu để so sánh"',
+      (tester) async {
+        final repo = FakeWrOrgSurveyRepository(latest: resp(), rows: people(9));
+        await _pump(tester, _wrap(repo, initial: '/wr/org-survey/result'));
+
+        expect(find.textContaining('Hiện đã có 9 người'), findsOneWidget);
+        expect(
+          find.textContaining('đủ $kOrgSurveyMinSample người tham gia'),
+          findsOneWidget,
+        );
+        expect(find.textContaining('Chưa đủ dữ liệu'), findsNothing);
+      },
+    );
+
+    testWidgets('benchmark lỗi → "Chưa tải được phần so sánh" + Thử lại', (
+      tester,
+    ) async {
+      final repo = FakeWrOrgSurveyRepository(
+        latest: resp(),
+        failBenchmark: true,
+      );
+      await _pump(tester, _wrap(repo, initial: '/wr/org-survey/result'));
+
+      expect(find.text('Chưa tải được phần so sánh.'), findsOneWidget);
+      expect(find.text('Thử lại'), findsOneWidget);
+      expect(find.textContaining('Hiện đã có'), findsNothing);
+
+      repo.failBenchmark = false;
+      await tester.tap(find.text('Thử lại'));
+      await tester.pumpAndSettle();
+      expect(find.text('Chưa tải được phần so sánh.'), findsNothing);
+      expect(find.textContaining('Hiện đã có 0 người'), findsOneWidget);
+    });
+
+    testWidgets('10 người cùng ngành → hiện dòng Cùng lĩnh vực', (
+      tester,
+    ) async {
+      final repo = FakeWrOrgSurveyRepository(
+        latest: resp(industry: 'tech'),
+        rows: people(10, industry: 'tech'),
+      );
+      await _pump(tester, _wrap(repo, initial: '/wr/org-survey/result'));
+
+      expect(find.text('Cùng lĩnh vực'), findsWidgets);
+      expect(
+        find.byKey(const Key('wr_org_survey_industry_row_compensation')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('ngành chưa đủ 10 người → không hiện dòng Cùng lĩnh vực', (
+      tester,
+    ) async {
+      final repo = FakeWrOrgSurveyRepository(
+        latest: resp(industry: 'tech'),
+        rows: [
+          ...people(10),
+          ...people(3, industry: 'tech'),
+        ],
+      );
+      await _pump(tester, _wrap(repo, initial: '/wr/org-survey/result'));
+      expect(find.text('Cùng lĩnh vực'), findsNothing);
+    });
+
+    testWidgets('không extra + latest lỗi → không hiện _Empty', (tester) async {
+      final repo = _LatestFailsRepo();
+      await _pump(tester, _wrap(repo, initial: '/wr/org-survey/result'));
+
+      expect(find.byKey(const Key('wr_org_survey_result_empty')), findsNothing);
+      expect(find.text('Thử lại'), findsOneWidget);
+
+      repo.latest = resp();
+      repo.failLatest = false;
+      await tester.tap(find.text('Thử lại'));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('wr_org_survey_result_enps')),
         findsOneWidget,
       );
     });
@@ -560,4 +663,14 @@ void main() {
       expect(none.industry, isEmpty);
     });
   });
+}
+
+class _LatestFailsRepo extends FakeWrOrgSurveyRepository {
+  bool failLatest = true;
+
+  @override
+  Future<OrgSurveyResponse?> fetchLatestResponse() async {
+    if (failLatest) throw StateError('boom');
+    return latest;
+  }
 }
