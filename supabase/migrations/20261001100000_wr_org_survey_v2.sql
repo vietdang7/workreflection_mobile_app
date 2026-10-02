@@ -67,6 +67,7 @@ comment on function public.wr_org_survey_benchmark_v2(text) is
   'SECURITY DEFINER vì phải đọc câu trả lời của mọi người, chỉ trả SỐ TỔNG HỢP.';
 
 revoke all on function public.wr_org_survey_benchmark_v2(text) from public;
+revoke all on function public.wr_org_survey_benchmark_v2(text) from anon;
 grant execute on function public.wr_org_survey_benchmark_v2(text) to authenticated;
 
 -- Bản cũ: app đang chạy ngoài thị trường vẫn gọi tên này kèm min_sample.
@@ -80,6 +81,7 @@ as $$
 $$;
 
 revoke all on function public.wr_org_survey_benchmark(integer) from public;
+revoke all on function public.wr_org_survey_benchmark(integer) from anon;
 grant execute on function public.wr_org_survey_benchmark(integer) to authenticated;
 
 -- ---------------------------------------------------------------------------
