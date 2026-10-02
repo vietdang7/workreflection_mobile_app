@@ -15,10 +15,10 @@ import 'package:workreflection_mobile/features/wr/presentation/wr_org_survey_flo
 import 'package:workreflection_mobile/features/wr/presentation/wr_org_survey_intro_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_org_survey_result_screen.dart';
 import 'package:workreflection_mobile/features/wr/org_survey_providers.dart';
+import 'package:workreflection_mobile/core/widgets/wr_title_text.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
-import 'package:workreflection_mobile/core/widgets/wr_title_text.dart';
 import '../support/fake_repository.dart';
 import '../support/fake_wr_org_survey_repository.dart';
 

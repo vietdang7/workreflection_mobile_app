@@ -39,7 +39,11 @@ void main() {
   test('bề rộng lòng ô tính ra 88', () => expect(_tileText, 88));
 
   for (final lang in ['vi', 'en']) {
-    test('[$lang] không nhãn nào tự xuống thêm dòng ở 320px', () {
+    final name = lang == 'vi'
+        ? '[vi] ĐÃ BIẾT: tired + outofsync tràn dòng ở 320px, chờ khách chốt '
+              'chữ (đổi sang isEmpty khi sửa)'
+        : '[en] không nhãn nào tự xuống thêm dòng ở 320px';
+    test(name, () {
       wrSetLocale(lang);
       addTearDown(() => wrSetLocale('vi'));
       final bad = <String>[];
