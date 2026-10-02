@@ -497,24 +497,18 @@ class _CheckinTile extends ConsumerWidget {
         // Bản tiếng Việt không lộ vì "đang vui" đủ ngắn, và bộ test cũng không
         // lộ vì `flutter_test_config.dart` tắt `wrParagraphKeepsTail`.
         //
-        // Bề ngang của chữ phải TIGHT (SizedBox infinity). `alignment: center`
-        // của container nới lỏng ràng buộc, nên không có nó Text tự co về bề
-        // ngang dòng dài nhất rồi layout lại theo bề ngang đó (text_painter.dart:
-        // `_layoutParagraph` + `_computePaintOffsetFraction` với TextAlign.center,
-        // `minWidth` = 0). Trên web, bề ngang co ấy hẹp hơn dòng cần ~1px nên chữ
-        // cuối rớt xuống khi VẼ, còn chiều cao hàng tính từ lần đo đầu: mất chữ
-        // "sync" ở khổ 320px. Tight thì chỉ layout một lần, không có bước co.
-        child: SizedBox(
-          width: double.infinity,
-          child: Text(
-            option.label,
-            textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 13.5,
-              fontWeight: FontWeight.w600,
-              height: 1.4,
-              color: WrColors.navy,
-            ),
+        // Trên Flutter web (canvaskit) đã thấy chữ VẼ rộng hơn đoạn văn đã layout
+        // (02/10, khổ 320px): dòng cuối rớt xuống và bị cắt dù RenderParagraph
+        // báo đúng số dòng. Layout ở đây đúng; hãy thử trên máy thật trước khi
+        // đổi bố cục.
+        child: Text(
+          option.label,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 13.5,
+            fontWeight: FontWeight.w600,
+            height: 1.4,
+            color: WrColors.navy,
           ),
         ),
       ),
