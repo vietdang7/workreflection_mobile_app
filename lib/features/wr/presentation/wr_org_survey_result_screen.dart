@@ -107,8 +107,10 @@ class _Result extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // TODO(A4): thiết kế lại theo hai phạm vi + hiện lỗi đọc thay vì nuốt.
     final benchmark =
-        ref.watch(wrOrgSurveyBenchmarkProvider).valueOrNull ?? const {};
+        ref.watch(wrOrgSurveyBenchmarkProvider(null)).valueOrNull?.all ??
+        const <OrgSurveyArea?, OrgSurveyBenchmark>{};
     final enpsBenchmark = benchmark[null];
     final anyComparable = benchmark.values.any((b) => b.isComparable);
 

@@ -92,9 +92,14 @@ class OrgSurveyResponse {
     required this.createdAt,
     this.enps,
     this.areaAverages = const {},
+    this.industry,
   });
 
   final String id;
+
+  /// Mã lĩnh vực lúc làm khảo sát (chụp lại, không đọc từ hồ sơ). Null với phiếu
+  /// cũ hoặc khi người dùng không chọn.
+  final String? industry;
 
   /// `{question_id: 0..4}`.
   final Map<String, int> answers;
@@ -129,6 +134,7 @@ class OrgSurveyResponse {
       answers: answers,
       enps: (json['enps'] as num?)?.toInt(),
       areaAverages: averages,
+      industry: json['industry'] as String?,
       createdAt:
           DateTime.tryParse('${json['created_at']}')?.toLocal() ??
           DateTime.now(),
@@ -148,6 +154,18 @@ enum BenchmarkSource {
   none,
 }
 
+/// Phạm vi của một dòng mặt bằng chung.
+enum BenchmarkScope {
+  /// Mọi người dùng.
+  all,
+
+  /// Chỉ những người cùng lĩnh vực. Không bao giờ rơi về số tham chiếu.
+  industry;
+
+  static BenchmarkScope fromCode(String? code) =>
+      code == 'industry' ? BenchmarkScope.industry : BenchmarkScope.all;
+}
+
 /// Một dòng mặt bằng chung: bốn mảng dùng [OrgSurveyArea], eNPS có dòng riêng
 /// với `area == null`.
 class OrgSurveyBenchmark {
@@ -156,7 +174,11 @@ class OrgSurveyBenchmark {
     required this.source,
     required this.sampleSize,
     this.value,
+    this.scope = BenchmarkScope.all,
   });
+
+  /// Dòng này tính trên mọi người hay chỉ cùng lĩnh vực.
+  final BenchmarkScope scope;
 
   /// Null nghĩa là dòng eNPS.
   final OrgSurveyArea? area;
@@ -175,6 +197,7 @@ class OrgSurveyBenchmark {
   factory OrgSurveyBenchmark.fromJson(Map<String, dynamic> json) {
     final code = json['area'] as String?;
     return OrgSurveyBenchmark(
+      scope: BenchmarkScope.fromCode(json['scope'] as String?),
       area: OrgSurveyArea.fromCode(code),
       value: (json['avg_value'] as num?)?.toDouble(),
       sampleSize: (json['sample_size'] as num?)?.toInt() ?? 0,

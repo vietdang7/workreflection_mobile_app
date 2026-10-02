@@ -8,7 +8,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-import '../logic/wr_org_survey_scoring.dart';
 import '../models/wr_org_survey.dart';
 
 // ---------------------------------------------------------------------------
@@ -27,10 +26,12 @@ abstract class WrOrgSurveyRepository {
   Future<OrgSurveyResponse> submit({
     required Map<String, int> answers,
     int? enps,
+    String? industry,
   });
 
-  /// Mặt bằng chung để so sánh, một dòng cho mỗi mảng cộng một dòng eNPS.
-  Future<List<OrgSurveyBenchmark>> fetchBenchmark();
+  /// Mặt bằng chung để so sánh. Luôn có các dòng `scope == all` (mỗi mảng cộng
+  /// một dòng eNPS); khi truyền [industry] có thêm các dòng `scope == industry`.
+  Future<List<OrgSurveyBenchmark>> fetchBenchmark({String? industry});
 
   /// Ngừng tham gia: xoá mọi câu trả lời của người dùng hiện tại.
   ///
@@ -93,6 +94,7 @@ class SupabaseWrOrgSurveyRepository implements WrOrgSurveyRepository {
   Future<OrgSurveyResponse> submit({
     required Map<String, int> answers,
     int? enps,
+    String? industry,
   }) async {
     // Cố tình KHÔNG gửi bốn cột avg_*: trigger trên bảng tính chúng. Gửi lên
     // thì hai bên có thể lệch nhau mà không ai thấy, cho tới lúc bản so sánh
@@ -103,6 +105,7 @@ class SupabaseWrOrgSurveyRepository implements WrOrgSurveyRepository {
           'user_id': _uid,
           'answers': answers,
           if (enps != null) 'enps': enps,
+          if (industry != null) 'industry': industry,
         })
         .select()
         .single();
@@ -110,10 +113,11 @@ class SupabaseWrOrgSurveyRepository implements WrOrgSurveyRepository {
   }
 
   @override
-  Future<List<OrgSurveyBenchmark>> fetchBenchmark() async {
+  Future<List<OrgSurveyBenchmark>> fetchBenchmark({String? industry}) async {
+    // Ngưỡng nằm cứng phía server: không gửi min_sample nữa.
     final rows = await _client.rpc<List<dynamic>>(
-      'wr_org_survey_benchmark',
-      params: {'min_sample': kOrgSurveyMinSample},
+      'wr_org_survey_benchmark_v2',
+      params: {'p_industry': industry},
     );
     return rows
         .map(

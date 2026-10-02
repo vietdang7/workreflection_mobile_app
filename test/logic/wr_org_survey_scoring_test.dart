@@ -142,9 +142,9 @@ void main() {
     );
   });
 
-  test('ngưỡng mẫu tối thiểu khớp mặc định của RPC', () {
-    // Lệch số này với `wr_org_survey_benchmark(min_sample integer default 30)`
-    // là app xin một ngưỡng, máy chủ dùng một ngưỡng khác.
-    expect(kOrgSurveyMinSample, 30);
+  test('ngưỡng mẫu hiển thị khớp ngưỡng cứng của RPC v2', () {
+    // Ngưỡng thật nằm trong `wr_org_survey_benchmark_v2` (cfg min_sample = 10).
+    // Lệch số này là app nói "cần 10 người" trong khi máy chủ đòi số khác.
+    expect(kOrgSurveyMinSample, 10);
   });
 }

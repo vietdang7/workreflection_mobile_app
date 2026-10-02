@@ -12,7 +12,9 @@ import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_org_survey_flow_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_org_survey_intro_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_org_survey_result_screen.dart';
+import 'package:workreflection_mobile/features/wr/org_survey_providers.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
+import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
 import '../support/fake_wr_org_survey_repository.dart';
 
@@ -278,6 +280,167 @@ void main() {
 
       expect(repo.withdrawCount, 1);
       expect(repo.latest, isNull);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  group('Mặt bằng chung v2 (repo giả chép luật SQL)', () {
+    FakeSurveyRow row(
+      String user,
+      int minute, {
+      String? industry,
+      int? enps = 8,
+      double v = 2,
+    }) => FakeSurveyRow(
+      userId: user,
+      createdAt: DateTime(2026, 10, 1, 9, minute),
+      industry: industry,
+      enps: enps,
+      areaAverages: {for (final a in OrgSurveyArea.values) a: v},
+    );
+
+    OrgSurveyBenchmark pick(
+      List<OrgSurveyBenchmark> l,
+      BenchmarkScope scope,
+      OrgSurveyArea? area,
+    ) => l.firstWhere((b) => b.scope == scope && b.area == area);
+
+    test('fake: một người nộp 10 lần vẫn chỉ tính 1 mẫu', () async {
+      final repo = FakeWrOrgSurveyRepository(
+        rows: [for (var i = 0; i < 10; i++) row('u1', i)],
+      );
+      final res = await repo.fetchBenchmark();
+      final enps = pick(res, BenchmarkScope.all, null);
+      expect(enps.sampleSize, 1);
+      expect(enps.source, BenchmarkSource.none);
+      expect(res.every((b) => b.sampleSize == 1), isTrue);
+    });
+
+    test('fake: một người đổi lĩnh vực, chỉ phiếu mới nhất được đếm', () async {
+      final repo = FakeWrOrgSurveyRepository(
+        rows: [
+          for (var u = 0; u < 10; u++) row('u$u', 0, industry: 'tech'),
+          row('u0', 5, industry: 'retail'),
+        ],
+      );
+      final res = await repo.fetchBenchmark(industry: 'tech');
+      expect(pick(res, BenchmarkScope.industry, null).sampleSize, 9);
+      expect(
+        pick(res, BenchmarkScope.industry, null).source,
+        BenchmarkSource.none,
+      );
+    });
+
+    test('fake: 10 người khác nhau → live', () async {
+      final repo = FakeWrOrgSurveyRepository(
+        rows: [for (var u = 0; u < 10; u++) row('u$u', 0, v: 3)],
+      );
+      final res = await repo.fetchBenchmark();
+      final b = pick(res, BenchmarkScope.all, OrgSurveyArea.growth);
+      expect(b.sampleSize, 10);
+      expect(b.source, BenchmarkSource.live);
+      expect(b.value, 3);
+    });
+
+    test('fake: dưới ngưỡng thì phạm vi all rơi về tham chiếu', () async {
+      final repo = FakeWrOrgSurveyRepository(
+        rows: [for (var u = 0; u < 9; u++) row('u$u', 0)],
+        reference: {OrgSurveyArea.growth: 2.7},
+      );
+      final res = await repo.fetchBenchmark();
+      final b = pick(res, BenchmarkScope.all, OrgSurveyArea.growth);
+      expect(b.source, BenchmarkSource.reference);
+      expect(b.value, 2.7);
+      expect(b.sampleSize, 9);
+    });
+
+    test(
+      'industry: chỉ đếm phiếu cùng lĩnh vực, không rơi về tham chiếu',
+      () async {
+        final repo = FakeWrOrgSurveyRepository(
+          rows: [
+            for (var u = 0; u < 10; u++) row('t$u', 0, industry: 'tech', v: 3),
+            for (var u = 0; u < 4; u++) row('r$u', 0, industry: 'retail'),
+          ],
+          reference: {OrgSurveyArea.growth: 2.7},
+        );
+        final tech = await repo.fetchBenchmark(industry: 'tech');
+        expect(tech.length, 10);
+        final t = pick(tech, BenchmarkScope.industry, OrgSurveyArea.growth);
+        expect(t.sampleSize, 10);
+        expect(t.source, BenchmarkSource.live);
+        expect(
+          pick(tech, BenchmarkScope.all, OrgSurveyArea.growth).sampleSize,
+          14,
+        );
+
+        final retail = await repo.fetchBenchmark(industry: 'retail');
+        final r = pick(retail, BenchmarkScope.industry, OrgSurveyArea.growth);
+        expect(r.sampleSize, 4);
+        expect(r.source, BenchmarkSource.none);
+        expect(r.value, isNull);
+      },
+    );
+
+    test('không truyền lĩnh vực thì chỉ trả phạm vi all', () async {
+      final repo = FakeWrOrgSurveyRepository();
+      final res = await repo.fetchBenchmark();
+      expect(res.length, 5);
+      expect(res.every((b) => b.scope == BenchmarkScope.all), isTrue);
+    });
+
+    test('submit gửi industry và chép CHECK 8 mã', () async {
+      final repo = FakeWrOrgSurveyRepository();
+      final saved = await repo.submit(
+        answers: {'OS-01': 3},
+        enps: 7,
+        industry: 'tech',
+      );
+      expect(repo.submittedIndustry, 'tech');
+      expect(saved.industry, 'tech');
+      expect(repo.rows.single.industry, 'tech');
+
+      await expectLater(
+        repo.submit(answers: {'OS-01': 3}, industry: 'crypto'),
+        throwsA(
+          isA<PostgrestException>().having((e) => e.code, 'code', '23514'),
+        ),
+      );
+      // Không chọn lĩnh vực vẫn hợp lệ (cột cho phép NULL).
+      await repo.submit(answers: {'OS-01': 3});
+      expect(repo.submittedIndustry, isNull);
+    });
+
+    test(
+      'lỗi đọc mặt bằng chung → provider báo lỗi, không trả map rỗng',
+      () async {
+        final repo = FakeWrOrgSurveyRepository(failBenchmark: true);
+        final c = ProviderContainer(
+          overrides: [wrOrgSurveyRepositoryProvider.overrideWithValue(repo)],
+        );
+        addTearDown(c.dispose);
+        await expectLater(
+          c.read(wrOrgSurveyBenchmarkProvider(null).future),
+          throwsA(isA<StateError>()),
+        );
+        expect(c.read(wrOrgSurveyBenchmarkProvider(null)).hasError, isTrue);
+      },
+    );
+
+    test('provider tách hai phạm vi', () async {
+      final repo = FakeWrOrgSurveyRepository(
+        rows: [for (var u = 0; u < 10; u++) row('u$u', 0, industry: 'tech')],
+      );
+      final c = ProviderContainer(
+        overrides: [wrOrgSurveyRepositoryProvider.overrideWithValue(repo)],
+      );
+      addTearDown(c.dispose);
+      final b = await c.read(wrOrgSurveyBenchmarkProvider('tech').future);
+      expect(b.all.length, 5);
+      expect(b.industry.length, 5);
+      expect(b.all[null]!.sampleSize, 10);
+      final none = await c.read(wrOrgSurveyBenchmarkProvider(null).future);
+      expect(none.industry, isEmpty);
     });
   });
 }

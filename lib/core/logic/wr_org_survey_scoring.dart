@@ -18,8 +18,10 @@ import '../models/wr_org_survey.dart';
 const int kOrgSurveyEqualBandPct = 3;
 
 /// Số người tối thiểu để bản so sánh được tính từ dữ liệu thật.
-/// Phải khớp tham số mặc định của RPC `wr_org_survey_benchmark`.
-const int kOrgSurveyMinSample = 30;
+///
+/// CHỈ ĐỂ HIỂN THỊ. Ngưỡng thật nằm cứng trong RPC `wr_org_survey_benchmark_v2`
+/// (app không còn gửi lên). Hai nơi phải khớp nhau bằng tay.
+const int kOrgSurveyMinSample = 10;
 
 /// Trung bình của [area] theo [answers], chỉ tính trên câu đã trả lời.
 ///

@@ -28,19 +28,32 @@ final wrOrgSurveyLatestProvider = FutureProvider<OrgSurveyResponse?>((
   }
 });
 
-/// Mặt bằng chung, khoá theo mảng. eNPS nằm ở khoá null.
+/// Mặt bằng chung theo hai phạm vi, mỗi phạm vi khoá theo mảng (eNPS ở khoá
+/// null). `industry` rỗng khi không truyền lĩnh vực.
+class OrgSurveyBenchmarks {
+  const OrgSurveyBenchmarks({this.all = const {}, this.industry = const {}});
+
+  final Map<OrgSurveyArea?, OrgSurveyBenchmark> all;
+  final Map<OrgSurveyArea?, OrgSurveyBenchmark> industry;
+}
+
+/// Mặt bằng chung, khoá theo lĩnh vực (null = chỉ phạm vi "tất cả").
 ///
-/// Lỗi đọc trả về map rỗng, và màn kết quả hiểu map rỗng đúng như khi chưa đủ
-/// mẫu: chỉ hiện điểm của chính người dùng, không vẽ vạch so sánh. Vẽ một vạch
-/// so sánh dựng trên số không đọc được là điều tệ nhất màn này có thể làm.
+/// KHÔNG nuốt lỗi: "RPC hỏng" phải ra `AsyncError`, không được trông giống
+/// "chưa đủ người". Nơi dùng tự quyết định hiện gì khi lỗi.
 final wrOrgSurveyBenchmarkProvider =
-    FutureProvider<Map<OrgSurveyArea?, OrgSurveyBenchmark>>((ref) async {
-      try {
-        final rows = await ref
-            .watch(wrOrgSurveyRepositoryProvider)
-            .fetchBenchmark();
-        return {for (final r in rows) r.area: r};
-      } catch (_) {
-        return const {};
-      }
+    FutureProvider.family<OrgSurveyBenchmarks, String?>((ref, industry) async {
+      final rows = await ref
+          .watch(wrOrgSurveyRepositoryProvider)
+          .fetchBenchmark(industry: industry);
+      return OrgSurveyBenchmarks(
+        all: {
+          for (final r in rows)
+            if (r.scope == BenchmarkScope.all) r.area: r,
+        },
+        industry: {
+          for (final r in rows)
+            if (r.scope == BenchmarkScope.industry) r.area: r,
+        },
+      );
     });
