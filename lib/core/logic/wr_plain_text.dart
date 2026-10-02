@@ -58,8 +58,11 @@ String _stripAiTraces(String text) {
       .replaceAll(RegExp(r'[ \t]+$', multiLine: true), '');
 }
 
-String stripMarkdown(String input) {
-  return _stripAiTraces(input)
+// Bỏ ký hiệu Markdown TRƯỚC, lọc vết AI SAU (giống bản Deno).
+String stripMarkdown(String input) => _stripAiTraces(_stripMdSymbols(input));
+
+String _stripMdSymbols(String input) {
+  return input
       // Đậm và nghiêng. Xử lý `***` trước `**` trước `*`, nếu không `**a**` sẽ
       // bị luật một-sao ăn mất một lớp và chừa lại `*a*`.
       .replaceAllMapped(

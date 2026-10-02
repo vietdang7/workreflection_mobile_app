@@ -47,7 +47,13 @@ function stripAiTraces(text: string): string {
 }
 
 export function stripMarkdown(input: string): string {
-  return stripAiTraces(input)
+  // Bỏ ký hiệu Markdown TRƯỚC, lọc vết AI SAU: `**Tốt** — rất` phải lộ ra
+  // chữ ngay trước gạch thì luật gạch giữa hai chữ mới khớp.
+  return stripAiTraces(stripMdSymbols(input));
+}
+
+function stripMdSymbols(input: string): string {
+  return input
     // Đậm và nghiêng. Xử lý `***` trước `**` trước `*`, nếu không `**a**` sẽ bị
     // luật một-sao ăn mất một lớp và chừa lại `*a*`.
     .replace(/\*\*\*(.+?)\*\*\*/gs, '$1')

@@ -142,6 +142,11 @@ Deno.test('gạch dài giữa hai chữ thành dấu phẩy, emoji bị bỏ', (
   );
 });
 
+Deno.test('gạch dài sau chữ in đậm/nghiêng vẫn thành dấu phẩy', () => {
+  assertEquals(stripMarkdown('**Tốt** — rất tốt'), 'Tốt, rất tốt');
+  assertEquals(stripMarkdown('*Ý chính* — giải thích'), 'Ý chính, giải thích');
+});
+
 Deno.test('gạch ngắn giữa hai chữ cũng thành dấu phẩy', () => {
   assertEquals(stripMarkdown('một việc – một nhịp'), 'một việc, một nhịp');
 });

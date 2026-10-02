@@ -127,6 +127,11 @@ void main() {
       );
     });
 
+    test('gạch dài sau chữ in đậm/nghiêng vẫn thành dấu phẩy', () {
+      expect(stripMarkdown('**Tốt** — rất tốt'), 'Tốt, rất tốt');
+      expect(stripMarkdown('*Ý chính* — giải thích'), 'Ý chính, giải thích');
+    });
+
     test('gạch ngắn giữa hai chữ cũng thành dấu phẩy', () {
       expect(stripMarkdown('một việc – một nhịp'), 'một việc, một nhịp');
     });
