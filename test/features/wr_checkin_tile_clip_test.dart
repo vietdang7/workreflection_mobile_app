@@ -15,6 +15,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -96,6 +97,15 @@ void main() {
           final text = find.descendant(of: tile, matching: find.byType(Text));
           // padding dọc 12*2 + viền 1.5*2.
           final inner = tester.getSize(container).height - 24 - 3;
+          // Chống tái phát lỗi làm tròn trên web (không tái hiện được trong VM):
+          // chữ phải được layout ở bề ngang TIGHT, không để co theo nội dung.
+          final rp = tester.renderObject<RenderParagraph>(text);
+          final c = rp.constraints;
+          expect(
+            c.minWidth,
+            c.maxWidth,
+            reason: '${o.id}: bề ngang chữ không tight',
+          );
           final textH = tester.getSize(text).height;
           if (textH > inner + 0.5) {
             bad.add('${o.id}: chữ cao $textH > lòng ô $inner');
