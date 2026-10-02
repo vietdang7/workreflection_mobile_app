@@ -33,8 +33,33 @@
 ///
 /// Giữ đúng thứ tự và đúng ngoại lệ của bản Deno — hai bản lệch nhau thì cùng
 /// một câu đọc ra hai kiểu tuỳ nó đi đường nào.
+// Vết AI ngoài Markdown (Task B3): gạch dài và emoji. Giống hệt bản Deno.
+final RegExp _emojiRun = RegExp(
+  r'([ \t]*)((?:(?![\u00A9\u00AE\u2122])\p{Extended_Pictographic}|[\u{1F3FB}-\u{1F3FF}\uFE0F\u200D])+)([ \t]*)',
+  unicode: true,
+);
+
+String _stripAiTraces(String text) {
+  return text
+      .replaceAllMapped(_emojiRun, (m) {
+        final atLineStart = m.start == 0 || text[m.start - 1] == '\n';
+        final noSpace = m[1]!.isEmpty && m[3]!.isEmpty;
+        return atLineStart || noSpace ? '' : ' ';
+      })
+      .replaceAll(RegExp(r'^[ \t]*—[ \t]*', multiLine: true), '')
+      .replaceAll(
+        RegExp(
+          r'(?<=[\p{L}\p{M}])[ \t]+[—–][ \t]+(?=[\p{L}\p{M}])',
+          unicode: true,
+        ),
+        ', ',
+      )
+      .replaceAll(RegExp(r'[ \t]+(?=[,.;:!?])'), '')
+      .replaceAll(RegExp(r'[ \t]+$', multiLine: true), '');
+}
+
 String stripMarkdown(String input) {
-  return input
+  return _stripAiTraces(input)
       // Đậm và nghiêng. Xử lý `***` trước `**` trước `*`, nếu không `**a**` sẽ
       // bị luật một-sao ăn mất một lớp và chừa lại `*a*`.
       .replaceAllMapped(

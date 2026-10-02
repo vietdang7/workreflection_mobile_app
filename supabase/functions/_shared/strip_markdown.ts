@@ -23,8 +23,31 @@
 ///
 /// Mọi màn của WorkReflection dựng bằng `Text` thuần, nên ký hiệu Markdown lọt
 /// ra là hiện nguyên hình trên màn hình.
+// Vết AI ngoài Markdown (Task B3, khách 01/10): gạch dài và emoji.
+//
+// - " — " / " – " GIỮA HAI CHỮ là dấu phẩy ngầm của model, đổi thành ", ".
+//   Gạch giữa hai SỐ ("5 – 3") là khoảng giá trị thật, giữ nguyên.
+// - "—" đầu dòng là gạch đầu dòng/đối thoại, bỏ.
+// - Emoji bỏ cùng U+FE0F và ZWJ mồ côi; © ® ™ không phải emoji trang trí.
+// Luật này phải GIỐNG HỆT bản Dart `lib/core/logic/wr_plain_text.dart`.
+// Chỉ gọi trên chữ do model sinh ra, không bao giờ trên chữ người dùng.
+const EMOJI_RUN =
+  /([ \t]*)((?:(?![\u00A9\u00AE\u2122])\p{Extended_Pictographic}|[\u{1F3FB}-\u{1F3FF}\uFE0F\u200D])+)([ \t]*)/gu;
+
+function stripAiTraces(text: string): string {
+  return text
+    .replace(EMOJI_RUN, (_m, before: string, _e: string, after: string, offset: number, whole: string) => {
+      const atLineStart = offset === 0 || whole[offset - 1] === '\n';
+      return atLineStart || (!before && !after) ? '' : ' ';
+    })
+    .replace(/^[ \t]*—[ \t]*/gm, '')
+    .replace(/(?<=[\p{L}\p{M}])[ \t]+[—–][ \t]+(?=[\p{L}\p{M}])/gu, ', ')
+    .replace(/[ \t]+(?=[,.;:!?])/g, '')
+    .replace(/[ \t]+$/gm, '');
+}
+
 export function stripMarkdown(input: string): string {
-  return input
+  return stripAiTraces(input)
     // Đậm và nghiêng. Xử lý `***` trước `**` trước `*`, nếu không `**a**` sẽ bị
     // luật một-sao ăn mất một lớp và chừa lại `*a*`.
     .replace(/\*\*\*(.+?)\*\*\*/gs, '$1')

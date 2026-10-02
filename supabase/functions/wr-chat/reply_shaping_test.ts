@@ -132,6 +132,50 @@ Deno.test('chữ thuần đi qua nguyên vẹn', () => {
 });
 
 // ---------------------------------------------------------------------------
+// Vết AI: gạch dài và emoji (Task B3)
+// ---------------------------------------------------------------------------
+
+Deno.test('gạch dài giữa hai chữ thành dấu phẩy, emoji bị bỏ', () => {
+  assertEquals(
+    stripMarkdown('Bạn đã làm tốt — rất tốt 🎉'),
+    'Bạn đã làm tốt, rất tốt',
+  );
+});
+
+Deno.test('gạch ngắn giữa hai chữ cũng thành dấu phẩy', () => {
+  assertEquals(stripMarkdown('một việc – một nhịp'), 'một việc, một nhịp');
+});
+
+Deno.test('gạch giữa hai SỐ không phải dấu câu, giữ nguyên', () => {
+  assertEquals(stripMarkdown('tỉ số 5 – 3'), 'tỉ số 5 – 3');
+  assertEquals(stripMarkdown('từ 5 — 7 triệu'), 'từ 5 — 7 triệu');
+});
+
+Deno.test('gạch dài đầu dòng bị bỏ', () => {
+  assertEquals(stripMarkdown('— Xin chào\n— Bạn khỏe không'), 'Xin chào\nBạn khỏe không');
+});
+
+Deno.test('emoji: đủ loại, kèm U+FE0F và ZWJ mồ côi', () => {
+  assertEquals(stripMarkdown('Ổn rồi ❤️ nhé'), 'Ổn rồi nhé');
+  assertEquals(stripMarkdown('Cả nhà 👨\u200D👩\u200D👧 vui'), 'Cả nhà vui');
+  assertEquals(stripMarkdown('🌱 Bắt đầu'), 'Bắt đầu');
+  assertEquals(stripMarkdown('Tốt lắm 👍🏽!'), 'Tốt lắm!');
+});
+
+Deno.test('không còn khoảng trắng thừa trước dấu câu', () => {
+  assertEquals(stripMarkdown('Hay quá 🎉.'), 'Hay quá.');
+  assertEquals(stripMarkdown('Hay quá 🎉 , nhỉ'), 'Hay quá, nhỉ');
+});
+
+Deno.test('ký hiệu ©, ® và ™ không bị coi là emoji', () => {
+  assertEquals(stripMarkdown('WorkReflection™ ©2026'), 'WorkReflection™ ©2026');
+});
+
+Deno.test('chữ Việt có dấu giữa hai bên gạch vẫn được nhận là chữ', () => {
+  assertEquals(stripMarkdown('chậm lại — ổn định'), 'chậm lại, ổn định');
+});
+
+// ---------------------------------------------------------------------------
 // Tiêu đề cuộc trò chuyện
 // ---------------------------------------------------------------------------
 

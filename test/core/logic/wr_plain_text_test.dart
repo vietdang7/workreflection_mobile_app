@@ -118,4 +118,57 @@ void main() {
       expect(r.reply, 'Mình nghe rõ rồi.');
     });
   });
+
+  group('vết AI: gạch dài và emoji', () {
+    test('gạch dài giữa hai chữ thành dấu phẩy, emoji bị bỏ', () {
+      expect(
+        stripMarkdown('Bạn đã làm tốt — rất tốt 🎉'),
+        'Bạn đã làm tốt, rất tốt',
+      );
+    });
+
+    test('gạch ngắn giữa hai chữ cũng thành dấu phẩy', () {
+      expect(stripMarkdown('một việc – một nhịp'), 'một việc, một nhịp');
+    });
+
+    test('gạch giữa hai SỐ giữ nguyên', () {
+      expect(stripMarkdown('tỉ số 5 – 3'), 'tỉ số 5 – 3');
+      expect(stripMarkdown('từ 5 — 7 triệu'), 'từ 5 — 7 triệu');
+    });
+
+    test('gạch dài đầu dòng bị bỏ', () {
+      expect(
+        stripMarkdown('— Xin chào\n— Bạn khỏe không'),
+        'Xin chào\nBạn khỏe không',
+      );
+    });
+
+    test('emoji: đủ loại, kèm U+FE0F và ZWJ mồ côi', () {
+      expect(stripMarkdown('Ổn rồi ❤️ nhé'), 'Ổn rồi nhé');
+      expect(stripMarkdown('Cả nhà 👨\u200D👩\u200D👧 vui'), 'Cả nhà vui');
+      expect(stripMarkdown('🌱 Bắt đầu'), 'Bắt đầu');
+      expect(stripMarkdown('Tốt lắm 👍🏽!'), 'Tốt lắm!');
+    });
+
+    test('không còn khoảng trắng thừa trước dấu câu', () {
+      expect(stripMarkdown('Hay quá 🎉.'), 'Hay quá.');
+      expect(stripMarkdown('Hay quá 🎉 , nhỉ'), 'Hay quá, nhỉ');
+    });
+
+    test('ký hiệu ©, ® và ™ không bị coi là emoji', () {
+      expect(stripMarkdown('WorkReflection™ ©2026'), 'WorkReflection™ ©2026');
+    });
+
+    test('chữ Việt có dấu giữa hai bên gạch vẫn được nhận là chữ', () {
+      expect(stripMarkdown('chậm lại — ổn định'), 'chậm lại, ổn định');
+    });
+
+    test('lượt chat của NGƯỜI DÙNG không bị lọc', () {
+      final me = WrChatMessage.fromJson({
+        'role': 'user',
+        'content': 'sếp bảo — phải xong 🎉',
+      });
+      expect(me.content, 'sếp bảo — phải xong 🎉');
+    });
+  });
 }

@@ -457,7 +457,7 @@ export async function buildUserContext(
     if (named.length > 0) {
       skillLines.push('Kỹ năng họ đã hình thành:');
       for (const s of named) {
-        skillLines.push(`  • "${s.title}" — từ ${formatDate(s.at)}`);
+        skillLines.push(`  • "${s.title}" (từ ${formatDate(s.at)})`);
       }
       skillLines.push(
         'Đây là dấu mốc dài hạn, đáng ghi nhận khi câu chuyện hôm nay chạm vào '
@@ -561,7 +561,7 @@ export async function buildUserContext(
     const titles = await resolveTitles(db, repeated.map(([code]) => code));
     const named = repeated
       .filter(([code]) => titles.has(code))
-      .map(([code, n]) => `  • "${titles.get(code)}" — ${n} lần`);
+      .map(([code, n]) => `  • "${titles.get(code)}": ${n} lần`);
     if (named.length > 0) {
       lines.push(
         `Những tình huống họ đã chọn nhiều lần (trong ${recentWindow.length} lần gần nhất):`,
@@ -857,7 +857,7 @@ export async function buildUserContext(
         if (parts.length > 0) {
           lines.push(
             `${name.charAt(0).toUpperCase() + name.slice(1)} họ đã tải lên `
-              + `(đọc ngày ${formatDate(d.analyzed_at ?? null)}) — ${parts.join(' · ')}.`,
+              + `(đọc ngày ${formatDate(d.analyzed_at ?? null)}): ${parts.join(' · ')}.`,
           );
         }
 
@@ -869,7 +869,7 @@ export async function buildUserContext(
           lines.push(
             `Trích nguyên văn từ ${name} đó: "${truncate(rawText, 1500)}". `
               + `Đây là chữ đọc được từ chính tài liệu của họ, bạn được phép nhắc `
-              + `lại và bàn về nó. Nhưng CHỈ những gì có trong đoạn trên — không `
+              + `lại và bàn về nó. Nhưng CHỈ những gì có trong đoạn trên, không `
               + `suy ra thêm phần tài liệu bị cắt, không đoán mức lương, tên công `
               + `ty hay kinh nghiệm nếu chúng không xuất hiện ở đây.`,
           );
