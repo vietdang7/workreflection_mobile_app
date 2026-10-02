@@ -127,7 +127,7 @@ List<CheckinOption> get kCheckinOptions => [
   ),
   (
     id: 'tired',
-    label: tr('Tôi mệt mỏi\ncần nghỉ ngơi', 'I am tired\nand need rest'),
+    label: tr('Tôi mệt mỏi\ncần nghỉ ngơi', 'I am tired,\nneed rest'),
     energy: CheckinEnergy.low,
     mood: Mood.tired,
   ),

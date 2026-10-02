@@ -18,6 +18,7 @@ import 'package:workreflection_mobile/features/wr/org_survey_providers.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
+import 'package:workreflection_mobile/core/widgets/wr_title_text.dart';
 import '../support/fake_repository.dart';
 import '../support/fake_wr_org_survey_repository.dart';
 
@@ -175,7 +176,7 @@ void main() {
         _wrap(FakeWrOrgSurveyRepository(), initial: '/wr/org-survey/flow'),
       );
       expect(
-        find.text('Bạn đang làm việc trong lĩnh vực nào?'),
+        find.text(wrKeepTitleTail('Bạn đang làm việc trong lĩnh vực nào?')),
         findsOneWidget,
       );
       expect(find.byKey(const Key('wr_org_survey_industry')), findsOneWidget);
@@ -638,7 +639,10 @@ void main() {
         }
         // Phạm vi all vẫn live (11 người).
         expect(pick(res, BenchmarkScope.all, null).sampleSize, 11);
-        expect(pick(res, BenchmarkScope.all, null).source, BenchmarkSource.live);
+        expect(
+          pick(res, BenchmarkScope.all, null).source,
+          BenchmarkSource.live,
+        );
       },
     );
 
