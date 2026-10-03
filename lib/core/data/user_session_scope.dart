@@ -41,6 +41,7 @@ import 'wr_episode_repository.dart';
 import 'wr_intelligence_repository.dart';
 import 'wr_mood_content_repository.dart';
 import 'wr_org_survey_repository.dart';
+import 'wr_owned_skill_repository.dart';
 import 'wr_repository.dart';
 import 'wr_user_action_repository.dart';
 
@@ -63,6 +64,7 @@ final List<ProviderOrFamily> userDataProviders = [
   wrMoodContentRepositoryProvider,
   wrOrgSurveyRepositoryProvider,
   wrUserActionRepositoryProvider,
+  wrOwnedSkillRepositoryProvider,
   workshopRepositoryProvider,
   roadmapRepositoryProvider,
   coachingRepositoryProvider,
