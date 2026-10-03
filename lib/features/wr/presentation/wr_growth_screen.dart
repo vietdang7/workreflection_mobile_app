@@ -31,6 +31,7 @@ import '../../../core/widgets/wr_link_row.dart';
 import '../../../core/widgets/wr_profile_avatar.dart';
 import '../../workshops/workshops_providers.dart';
 import '../growth_providers.dart';
+import '../owned_skill_providers.dart';
 import '../wr_providers.dart';
 import 'wr_practice_theme_screen.dart';
 import 'widgets/wr_user_actions_section.dart';
@@ -106,6 +107,10 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
         entitlement == null) {
       return;
     }
+    // Chủ đề người dùng tự khai đã có bị loại khỏi gợi ý (Task D2). Chưa đọc
+    // xong danh sách đó mà gợi ý đã chạy thì tập "đã có" đang rỗng, và chủ đề
+    // họ đã có có thể bị thêm nhầm. Đọc hỏng thì thôi, chạy như trước.
+    if (ref.read(wrOwnedSkillsProvider).isLoading) return;
 
     final earned = earnedPracticeThemes(
       reflectionCount: episodes.length,
@@ -150,6 +155,9 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
     final episodesAsync = ref.watch(wrEpisodeHistoryProvider);
     final situationsAsync = ref.watch(wrSituationsProvider);
     final selfCheckAsync = ref.watch(wrSelfCheckHistoryProvider);
+    // Chỉ để màn dựng lại (và `_maybeAutoEnroll` chạy lại) khi danh sách thứ
+    // người dùng đã có đọc xong. Xem chỗ chờ trong `_maybeAutoEnroll`.
+    ref.watch(wrOwnedSkillsProvider);
 
     return Scaffold(
       // Nền TRẮNG như ba tab kia — xem `wr_card.dart`. Trước đây màn này dùng

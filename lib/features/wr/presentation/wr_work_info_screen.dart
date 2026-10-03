@@ -22,6 +22,7 @@ import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_link_row.dart';
 import '../../../core/logic/wr_jd_builder.dart';
 import '../wr_providers.dart';
+import 'widgets/wr_owned_skills_section.dart';
 import 'wr_jd_builder_screen.dart' show wrJdDraftProvider;
 import '../../../core/widgets/wr_paragraph.dart';
 
@@ -223,6 +224,12 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
             // được phần này.
             const SizedBox(height: 18),
             const _JdBuilderCard(),
+
+            // Chứng chỉ, khoá học, kỹ năng đã có (họp khách 01/10/2026).
+            // Đặt dưới khối tài liệu: cùng là "bạn là ai trong công việc",
+            // nhưng đây là thứ người dùng tự khai, không cần tải tài liệu nào.
+            const SizedBox(height: 28),
+            const WrOwnedSkillsSection(),
           ],
         ),
       ),
