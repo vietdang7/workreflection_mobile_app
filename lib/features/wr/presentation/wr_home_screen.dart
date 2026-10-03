@@ -127,7 +127,7 @@ List<CheckinOption> get kCheckinOptions => [
   ),
   (
     id: 'tired',
-    label: tr('Tôi mệt mỏi\ncần nghỉ ngơi', 'I am tired\nand need rest'),
+    label: tr('Tôi mệt mỏi\ncần nghỉ ngơi', 'I am tired,\nneed rest'),
     energy: CheckinEnergy.low,
     mood: Mood.tired,
   ),
@@ -496,6 +496,11 @@ class _CheckinTile extends ConsumerWidget {
         //
         // Bản tiếng Việt không lộ vì "đang vui" đủ ngắn, và bộ test cũng không
         // lộ vì `flutter_test_config.dart` tắt `wrParagraphKeepsTail`.
+        //
+        // Trên Flutter web (canvaskit) đã thấy chữ VẼ rộng hơn đoạn văn đã layout
+        // (02/10, khổ 320px): dòng cuối rớt xuống và bị cắt dù RenderParagraph
+        // báo đúng số dòng. Layout ở đây đúng; hãy thử trên máy thật trước khi
+        // đổi bố cục.
         child: Text(
           option.label,
           textAlign: TextAlign.center,

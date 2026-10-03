@@ -30,6 +30,9 @@ const _titles = <(String, String)>[
     '${_p}wr/presentation/wr_org_survey_intro_screen.dart',
     'WrOrgSurveyIntroScreen',
   ),
+  ('${_p}wr/presentation/wr_org_survey_flow_screen.dart', '_IndustryStep'),
+  ('${_p}wr/presentation/wr_org_survey_flow_screen.dart', '_ScaleStep'),
+  ('${_p}wr/presentation/wr_org_survey_flow_screen.dart', '_EnpsStep'),
   ('${_p}profile/presentation/profile_screen.dart', '_PremiumCard'),
 ];
 

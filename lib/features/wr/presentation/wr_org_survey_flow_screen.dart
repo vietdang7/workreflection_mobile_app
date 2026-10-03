@@ -17,6 +17,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/data/wr_org_survey_repository.dart';
 import '../../../core/l10n/wr_tr.dart';
+import '../../../core/widgets/wr_title_text.dart';
 import '../../../core/data/wr_repository.dart';
 import '../../../core/logic/wr_my_info.dart';
 import '../../profile/profile_providers.dart';
@@ -24,7 +25,6 @@ import '../../../core/models/wr_org_survey.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../org_survey_providers.dart';
-import '../../../core/widgets/wr_paragraph.dart';
 
 class WrOrgSurveyFlowScreen extends ConsumerStatefulWidget {
   const WrOrgSurveyFlowScreen({super.key});
@@ -351,7 +351,7 @@ class _IndustryStep extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(22, 22, 22, 22),
       children: [
-        Text(
+        WrTitleText(
           tr(
             'Bạn đang làm việc trong lĩnh vực nào?',
             'Which field do you work in?',
@@ -429,7 +429,7 @@ class _ScaleStep extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(22, 22, 22, 22),
       children: [
-        Text(
+        WrTitleText(
           question.text,
           key: const Key('wr_org_survey_question_text'),
           style: const TextStyle(
@@ -514,7 +514,7 @@ class _EnpsStep extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.fromLTRB(22, 22, 22, 22),
       children: [
-        WrParagraph(
+        WrTitleText(
           tr(
             'Trên thang từ 0 đến 10, bạn sẽ giới thiệu nơi mình đang làm việc cho '
                 'bạn bè hoặc người quen ở mức nào?',
