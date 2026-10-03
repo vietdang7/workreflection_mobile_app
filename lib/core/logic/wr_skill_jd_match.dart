@@ -162,11 +162,16 @@ class SkillJdMatch {
 /// [tier] là cấp bậc người dùng đã khai (`cc_profiles.position`). Có thì bật
 /// hai luật của Phần B: nâng trọng số nhóm Kết nối (Nguyên tắc 3) và xếp hạng
 /// khoảng trống theo bảng B.2. Null thì mọi thứ chạy như trước.
+///
+/// [ownedThemeIds] là chủ đề người dùng tự khai đã có (chứng chỉ, khoá học,
+/// kỹ năng; Task D2). Chúng KHÔNG phải khoảng trống: người đã có chứng chỉ
+/// PMP không cần được bảo là thiếu kỹ năng ưu tiên việc.
 SkillJdMatch? matchSkillsToContext({
   required String? contextText,
   required List<SkillFormation> formations,
   required List<PracticeTheme> allThemes,
   SeniorityTier? tier,
+  Set<String> ownedThemeIds = const {},
 }) {
   final text = contextText?.trim().toLowerCase();
   if (text == null || text.isEmpty) return null;
@@ -228,6 +233,7 @@ SkillJdMatch? matchSkillsToContext({
     for (final t in allThemes)
       if (!t.isRetired &&
           !formedIds.contains(t.themeId) &&
+          !ownedThemeIds.contains(t.themeId) &&
           pillarSet.contains(pillarOfDimension(t.scaDimension)))
         t,
   ];
