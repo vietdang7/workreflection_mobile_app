@@ -18,6 +18,7 @@ import '../../core/logic/wr_skill_jd_match.dart';
 import '../../core/models/wr_content.dart';
 import '../../core/models/wr_intelligence.dart';
 import '../profile/profile_providers.dart';
+import 'owned_skill_providers.dart';
 import 'wr_providers.dart';
 
 final practiceThemesProvider = FutureProvider<List<PracticeTheme>>((ref) async {
@@ -249,8 +250,17 @@ final wrPracticeSuggestionProvider = Provider<PracticeSuggestion?>((ref) {
   // Chủ đề đã ngưng đề xuất không nằm trong danh sách mời; đã ghi danh (kể cả
   // đã hoàn thành) cũng vậy — mời lại là mời làm lại việc đã làm.
   final enrolledIds = enrollments.map((e) => e.themeId).toSet();
+  // Chủ đề người dùng tự khai đã có (chứng chỉ, khoá học, kỹ năng; Task D2)
+  // phải lọc TRƯỚC `suggestPracticeTheme`: hàm đó không khớp được gì thì lùi về
+  // `candidates.first`, nên lọc sau là vẫn có đường lọt.
+  final owned = ref.watch(wrOwnedThemeIdsProvider);
   final candidates = themes
-      .where((t) => !enrolledIds.contains(t.themeId) && !t.isRetired)
+      .where(
+        (t) =>
+            !enrolledIds.contains(t.themeId) &&
+            !owned.contains(t.themeId) &&
+            !t.isRetired,
+      )
       .toList();
 
   final earned = earnedPracticeThemes(
@@ -321,5 +331,6 @@ final wrSkillJdMatchProvider = FutureProvider<SkillJdMatch?>((ref) async {
     formations: ref.watch(wrSkillFormationsProvider),
     allThemes: themes,
     tier: ref.watch(wrSeniorityTierProvider),
+    ownedThemeIds: ref.watch(wrOwnedThemeIdsProvider),
   );
 });

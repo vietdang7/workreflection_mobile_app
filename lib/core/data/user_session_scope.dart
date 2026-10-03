@@ -41,7 +41,9 @@ import 'wr_episode_repository.dart';
 import 'wr_intelligence_repository.dart';
 import 'wr_mood_content_repository.dart';
 import 'wr_org_survey_repository.dart';
+import 'wr_owned_skill_repository.dart';
 import 'wr_repository.dart';
+import 'wr_user_action_repository.dart';
 
 /// Định danh người đang đăng nhập. Phải đứng đầu danh sách: mọi truy vấn theo
 /// user đều bắt nguồn từ đây.
@@ -61,6 +63,8 @@ final List<ProviderOrFamily> userDataProviders = [
   wrChatRepositoryProvider,
   wrMoodContentRepositoryProvider,
   wrOrgSurveyRepositoryProvider,
+  wrUserActionRepositoryProvider,
+  wrOwnedSkillRepositoryProvider,
   workshopRepositoryProvider,
   roadmapRepositoryProvider,
   coachingRepositoryProvider,

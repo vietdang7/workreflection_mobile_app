@@ -31,8 +31,10 @@ import '../../../core/widgets/wr_link_row.dart';
 import '../../../core/widgets/wr_profile_avatar.dart';
 import '../../workshops/workshops_providers.dart';
 import '../growth_providers.dart';
+import '../owned_skill_providers.dart';
 import '../wr_providers.dart';
 import 'wr_practice_theme_screen.dart';
+import 'widgets/wr_user_actions_section.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -105,6 +107,10 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
         entitlement == null) {
       return;
     }
+    // Chủ đề người dùng tự khai đã có bị loại khỏi gợi ý (Task D2). Chưa đọc
+    // xong danh sách đó mà gợi ý đã chạy thì tập "đã có" đang rỗng, và chủ đề
+    // họ đã có có thể bị thêm nhầm. Đọc hỏng thì thôi, chạy như trước.
+    if (ref.read(wrOwnedSkillsProvider).isLoading) return;
 
     final earned = earnedPracticeThemes(
       reflectionCount: episodes.length,
@@ -149,6 +155,9 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
     final episodesAsync = ref.watch(wrEpisodeHistoryProvider);
     final situationsAsync = ref.watch(wrSituationsProvider);
     final selfCheckAsync = ref.watch(wrSelfCheckHistoryProvider);
+    // Chỉ để màn dựng lại (và `_maybeAutoEnroll` chạy lại) khi danh sách thứ
+    // người dùng đã có đọc xong. Xem chỗ chờ trong `_maybeAutoEnroll`.
+    ref.watch(wrOwnedSkillsProvider);
 
     return Scaffold(
       // Nền TRẮNG như ba tab kia — xem `wr_card.dart`. Trước đây màn này dùng
@@ -382,12 +391,29 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
                       // thư viện chủ đề (danh sách trần, không ai biết dựa vào
                       // đâu mà chọn), rồi thẻ "CHỦ ĐỀ TIẾP THEO CHO BẠN" (vẫn
                       // bắt người dùng bấm để nhận thứ đáng lẽ tự đến).
+                      //
+                      // "VIỆC BẠN TỰ ĐẶT" (01/10/2026) nằm ở sliver RIÊNG bên
+                      // dưới, không trong cột này: đó là việc người dùng tự gõ,
+                      // không phải chủ đề thư viện, không tính vào quota ngay
+                      // dưới đây và không đổi `practiceEnrollmentsProvider`.
                       _QuotaCard(
                         quota: entitlement.maxActivePracticeThemes,
                         activeCount: activeCount,
                       ),
                     ],
                   ),
+          ),
+        ),
+
+        // ── Việc bạn tự đặt (họp khách 01/10/2026) ─────────────────────────
+        //
+        // Sliver riêng, hiện cả khi chưa theo chủ đề nào. Đặt SAU thẻ quota
+        // chứ không chen giữa danh sách chủ đề và thẻ quota: đứng sát câu
+        // "tối đa 2 chủ đề" thì việc tự đặt dễ bị đọc thành một chủ đề nữa.
+        const SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(22, 0, 22, 20),
+            child: WrUserActionsSection(),
           ),
         ),
 

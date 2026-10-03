@@ -775,3 +775,80 @@ Deno.test('không tải hồ sơ nào thì gói miễn phí KHÔNG thấy câu n
 
   assertEquals(ctx.includes('tài liệu công việc'), false);
 });
+
+// ---------------------------------------------------------------------------
+// Chứng chỉ / khoá học / kỹ năng người dùng tự khai đã có (Task D2, họp khách
+// 01/10/2026)
+//
+// Người dùng đã nói thẳng là họ CÓ những thứ này. Trợ lý gợi ý lại đúng thứ đó
+// ("bạn thử học thêm về quản lý dự án nhé" với người cầm chứng chỉ PMP) là dấu
+// hiệu nó không nghe. KHÔNG gác theo gói: đây là dữ liệu thô người dùng tự khai.
+// ---------------------------------------------------------------------------
+
+const OWNED_ROWS = {
+  ...ROWS,
+  wr_owned_skills: [
+    {
+      kind: 'certificate',
+      title: 'Chứng chỉ Quản lý dự án PMP',
+      issuer: 'PMI',
+      theme_ids: ['pt-s2'],
+      created_at: ISO_NOW,
+    },
+    {
+      kind: 'skill',
+      title: 'Thuyết trình trước khách hàng',
+      issuer: null,
+      theme_ids: [],
+      created_at: ISO_NOW,
+    },
+  ],
+  wr_practice_themes: [
+    { theme_id: 'pt-s2', title: 'Ưu tiên đúng việc của mình' },
+    { theme_id: 'pt-c2', title: 'Dám lên tiếng' },
+  ],
+};
+
+Deno.test('có 2 mục tự khai → prompt chứa cả hai tên, kèm lời dặn đừng gợi ý lại', async () => {
+  const { buildUserContext } = await import('./user_context.ts');
+  for (const premium of [false, true]) {
+    const ctx = await buildUserContext(fakeDb(OWNED_ROWS), 'u1', premium);
+    assertEquals(ctx.includes('đừng gợi ý lại'), true);
+    assertEquals(ctx.includes('Chứng chỉ Quản lý dự án PMP (PMI)'), true);
+    assertEquals(ctx.includes('Thuyết trình trước khách hàng'), true);
+    // Tên chủ đề người dùng đã gắn cũng được nêu, để không bị mời lại.
+    assertEquals(ctx.includes('Ưu tiên đúng việc của mình'), true);
+    // Chủ đề KHÔNG ai gắn thì không được kéo vào.
+    assertEquals(ctx.includes('Dám lên tiếng'), false);
+  }
+});
+
+Deno.test('0 mục tự khai → không có khối đó', async () => {
+  const { buildUserContext } = await import('./user_context.ts');
+  const ctx = await buildUserContext(fakeDb(ROWS), 'u1', true);
+  assertEquals(ctx.includes('đừng gợi ý lại'), false);
+});
+
+// Việc người dùng tự đặt (Task D1) KHÔNG phải chủ đề thư viện. Nó không được
+// lọt vào khối "Chủ đề thực hành đang theo" hay bất cứ chỗ nào của ngữ cảnh.
+Deno.test('việc tự đặt (Task D1) không lọt vào ngữ cảnh trò chuyện', async () => {
+  const { buildUserContext } = await import('./user_context.ts');
+  const ctx = await buildUserContext(
+    fakeDb({
+      ...ROWS,
+      wr_user_practice_actions: [
+        { title: 'Hỏi ý kiến 1 đồng nghiệp mỗi ngày', target_count: 5 },
+      ],
+    }),
+    'u1',
+    true,
+  );
+  assertEquals(ctx.includes('Hỏi ý kiến 1 đồng nghiệp'), false);
+});
+
+Deno.test('mục tự khai không lộ mã chủ đề nội bộ', async () => {
+  const { buildUserContext } = await import('./user_context.ts');
+  const ctx = await buildUserContext(fakeDb(OWNED_ROWS), 'u1', true);
+  assertEquals(ctx.includes('pt-s2'), false);
+  assertEquals(ctx.includes('certificate'), false);
+});
