@@ -22,7 +22,7 @@ import '../data/video_report_repository.dart';
 import '../models/video_report_models.dart';
 import '../video_report_providers.dart';
 import 'scenes/video_scene_view.dart';
-import '../../../core/widgets/wr_paragraph.dart';
+import 'video_subtitle_overlay.dart';
 
 const _kBg = Color(0xFF0B1121);
 
@@ -219,7 +219,7 @@ class _VideoReportScreenState extends ConsumerState<VideoReportScreen> {
                     if (cue != null)
                       Align(
                         alignment: Alignment.bottomCenter,
-                        child: _SubtitleOverlay(text: cue.text),
+                        child: VideoSubtitleOverlay(text: cue.text),
                       ),
                   ],
                 ),
@@ -295,28 +295,5 @@ class _VideoReportScreenState extends ConsumerState<VideoReportScreen> {
       if (posMs >= c.startMs && posMs < c.endMs) return c;
     }
     return null;
-  }
-}
-
-class _SubtitleOverlay extends StatelessWidget {
-  const _SubtitleOverlay({required this.text});
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      color: Colors.black.withValues(alpha: 0.55),
-      child: WrParagraph(
-        text,
-        textAlign: TextAlign.center,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 16.5,
-          height: 1.3,
-        ),
-      ),
-    );
   }
 }

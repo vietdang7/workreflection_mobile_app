@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:workreflection_mobile/core/models/survey_models.dart';
 import 'package:workreflection_mobile/features/video_report/models/video_report_models.dart';
 import '../../../../core/l10n/wr_tr.dart';
+import 'video_scene_frame.dart';
 
 // Colors mirroring the web video renderer, keyed off `.toJson()` strings.
 const _kScoreLevelColors = <String, Color>{
@@ -52,33 +53,10 @@ class VideoSceneView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Fade in quickly over the first third of the scene.
-    final t = (progress * 3).clamp(0.0, 1.0);
-    final opacity = Curves.easeOut.transform(t);
-    final dy = (1 - Curves.easeOut.transform(t)) * 24.0; // settles to 0
-    final scale = 0.96 + 0.04 * Curves.easeOut.transform(t);
-
-    return Container(
-      constraints: const BoxConstraints.expand(),
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [_kBgTop, _kBgBottom],
-        ),
-      ),
-      child: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(28),
-          child: Opacity(
-            opacity: opacity,
-            child: Transform.translate(
-              offset: Offset(0, dy),
-              child: Transform.scale(scale: scale, child: _content()),
-            ),
-          ),
-        ),
-      ),
+    return VideoSceneFrame(
+      progress: progress,
+      colors: const [_kBgTop, _kBgBottom],
+      child: _content(),
     );
   }
 
