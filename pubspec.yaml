@@ -60,6 +60,10 @@ flutter:
     - assets/images/wr_logo.png
     - assets/seed/wr_situations.json
     - assets/seed/wr_stories.json
+    # Giọng đọc của video hướng dẫn ở màn chào (intro_<vi|en>.mp3 + .json),
+    # sinh MỘT lần bằng `dart run tool/gen_intro_narration.dart <vi|en>`.
+    # Thư mục còn trống thì video chạy không tiếng, kèm phụ đề.
+    - assets/intro/
 
   # Lora — lớp `.serif` của mockup Sprint 2, dùng cho những câu TRÍCH (Insight
   # gần nhất, "Hệ thống nhận ra"). Nhúng thẳng file chứ không gọi

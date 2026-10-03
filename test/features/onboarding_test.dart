@@ -1,184 +1,153 @@
+// Màn chào (đợt E, họp khách 01/10): MỘT màn thay cho ba slide cũ.
+//
+// Khoá ba điều:
+//   1. Chỉ còn một màn: logo, tiêu đề chào mừng, thẻ video, nút "Bắt đầu".
+//      Không còn tag Reflect/Understand/Grow, không còn chấm tiến độ.
+//   2. "Bắt đầu" ghi cờ `seen_onboarding` như cũ (router dựa vào cờ này).
+//   3. Tiêu đề dựng bằng `WrTitleText` và không tràn ở màn hẹp, cả tiếng Anh.
+//
+// Run: flutter test test/features/onboarding_test.dart
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:workreflection_mobile/core/l10n/wr_tr.dart';
 import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
+import 'package:workreflection_mobile/core/widgets/wr_title_text.dart';
+import 'package:workreflection_mobile/features/onboarding/intro_video_providers.dart';
 import 'package:workreflection_mobile/features/onboarding/onboarding_state.dart';
 import 'package:workreflection_mobile/features/onboarding/presentation/onboarding_screen.dart';
 import 'package:workreflection_mobile/features/onboarding/presentation/wr_logo.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
 
-Widget _wrap(Widget child) {
+Widget _wrap(Widget child, {Locale locale = const Locale('vi')}) {
   return ProviderScope(
+    overrides: [
+      // Không đọc asset thật: video chạy chế độ không tiếng.
+      introTimingSourceProvider.overrideWithValue((_) async => null),
+    ],
     child: MaterialApp(
       builder: wrTextScaleBuilder,
       localizationsDelegates: AppLocalizations.localizationsDelegates,
       supportedLocales: AppLocalizations.supportedLocales,
-      locale: const Locale('vi'),
+      locale: locale,
       home: child,
     ),
   );
 }
 
 void main() {
-  group('OnboardingNotifier state', () {
-    test('starts at step 0', () {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-      final state = container.read(onboardingNotifierProvider);
-      expect(state.currentStep, 0);
-      expect(state.selectedSituation, isNull);
-    });
+  setUp(() {
+    wrEnglish = false;
+    // Video đã từng bật: các bài ở đây chỉ nói về màn chào, không muốn sheet
+    // video tự bật đè lên. Luật bật một lần khoá ở wr_intro_video_test.dart.
+    SharedPreferences.setMockInitialValues({'wr_intro_video_shown': true});
+  });
+  tearDown(() => wrEnglish = false);
 
-    test('nextStep advances step', () {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-      container.read(onboardingNotifierProvider.notifier).nextStep();
-      expect(container.read(onboardingNotifierProvider).currentStep, 1);
-    });
-
-    test('nextStep does not exceed step 2', () {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-      final notifier = container.read(onboardingNotifierProvider.notifier);
-      notifier.nextStep();
-      notifier.nextStep();
-      notifier.nextStep(); // attempt beyond max
-      expect(container.read(onboardingNotifierProvider).currentStep, 2);
-    });
-
-    test('selectSituation stores value', () {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-      container
-          .read(onboardingNotifierProvider.notifier)
-          .selectSituation('Mệt nhưng không biết tại sao');
-      expect(
-        container.read(onboardingNotifierProvider).selectedSituation,
-        'Mệt nhưng không biết tại sao',
-      );
-    });
-
-    test('selectSituation can be changed', () {
-      final container = ProviderContainer();
-      addTearDown(container.dispose);
-      final notifier = container.read(onboardingNotifierProvider.notifier);
-      notifier.selectSituation('A');
-      notifier.selectSituation('B');
-      expect(container.read(onboardingNotifierProvider).selectedSituation, 'B');
-    });
+  test('OnboardingState không còn bước, tình huống luôn null', () {
+    final container = ProviderContainer();
+    addTearDown(container.dispose);
+    expect(
+      container.read(onboardingNotifierProvider).selectedSituation,
+      isNull,
+    );
   });
 
-  group('OnboardingScreen widget', () {
-    testWidgets('renders step 1 tag and title', (tester) async {
+  testWidgets(
+    'chỉ một màn: có tiêu đề chào mừng, không có Reflect/Understand/Grow, '
+    'không có chấm tiến độ',
+    (tester) async {
       await tester.pumpWidget(_wrap(const OnboardingScreen()));
       await tester.pump();
 
-      // Step 1 tag
-      expect(find.text('Reflect'), findsOneWidget);
-      // Step 1 CTA
-      expect(find.text('Tiếp tục'), findsOneWidget);
-      // Step 1 body text fragment
-      expect(find.textContaining('khoảnh khắc'), findsOneWidget);
-    });
-
-    testWidgets('renders WrLogo on step 1', (tester) async {
-      await tester.pumpWidget(_wrap(const OnboardingScreen()));
-      await tester.pump();
-      // WrLogo nhúng thẳng file logo chuẩn assets/images/wr_logo.png
       expect(find.byType(WrLogo), findsOneWidget);
-    });
-
-    testWidgets('progress dots row shows 3 dot containers', (tester) async {
-      await tester.pumpWidget(_wrap(const OnboardingScreen()));
-      await tester.pump();
-      // The dots row is a Row with 3 containers; verify step 1 tag visible means screen rendered
-      // and we have navigation forward; we check via the overall rendered count of containers
-      // The presence of WrLogo (CustomPaint) proves the screen is rendering with visual elements
-      expect(find.byType(CustomPaint), findsWidgets);
-    });
-
-    // Khách 09/09 đổi nhãn nút bước 2 từ "Bắt đầu ngay" (coral) sang "Tiếp tục"
-    // (navy) — cả ba bước giờ dùng cùng một nhãn cho hai bước đầu. Nên các bài
-    // dưới đây khoá VỊ TRÍ BƯỚC bằng nhãn tag (Reflect · Understand · Grow),
-    // thứ không đổi theo câu chữ, chứ không bằng nhãn nút.
-    Future<void> advance(WidgetTester tester) async {
-      await tester.tap(find.text('Tiếp tục'));
-      await tester.pump();
-    }
-
-    testWidgets('tapping CTA on step 1 advances to step 2', (tester) async {
-      await tester.pumpWidget(_wrap(const OnboardingScreen()));
-      await tester.pump();
-
-      await advance(tester);
-
-      // Now step 2
-      expect(find.text('Understand'), findsOneWidget);
-      expect(find.text('Reflect'), findsNothing);
-    });
-
-    testWidgets('step 2 shows situation options', (tester) async {
-      await tester.pumpWidget(_wrap(const OnboardingScreen()));
-      await tester.pump();
-
-      // Advance to step 2
-      await advance(tester);
-
-      expect(find.text('Mệt mỏi nhưng không rõ lý do.'), findsOneWidget);
+      final title = find.byType(WrTitleText);
+      expect(title, findsOneWidget);
       expect(
-        find.text('Nỗ lực nhiều nhưng chưa thấy bước tiến.'),
-        findsOneWidget,
+        tester.widget<WrTitleText>(title).text,
+        'Chào mừng bạn đến với WorkReflection',
       );
-      expect(
-        find.text('Khao khát thay đổi nhưng chưa biết bắt đầu từ đâu.'),
-        findsOneWidget,
-      );
-      expect(
-        find.text('Mọi thứ đang ổn, nhưng muốn thấu hiểu mình sâu hơn.'),
-        findsOneWidget,
-      );
-    });
+      expect(find.byKey(const Key('intro_video_card')), findsOneWidget);
+      expect(find.text('Bắt đầu'), findsOneWidget);
 
-    testWidgets('selecting situation on step 2 toggles selection', (
-      tester,
-    ) async {
-      await tester.pumpWidget(_wrap(const OnboardingScreen()));
-      await tester.pump();
+      for (final gone in ['Reflect', 'Understand', 'Grow', 'Tiếp tục']) {
+        expect(find.text(gone), findsNothing, reason: '$gone phải biến mất');
+      }
+      expect(find.byKey(const Key('onboarding_step_dot')), findsNothing);
+    },
+  );
 
-      await advance(tester);
+  testWidgets('Bắt đầu → seen_onboarding = true', (tester) async {
+    await tester.pumpWidget(_wrap(const OnboardingScreen()));
+    await tester.pump();
 
-      // Tap option 1 — should appear selected (check via _SituationCard internal state)
-      await tester.tap(find.text('Mệt mỏi nhưng không rõ lý do.'));
-      await tester.pump();
+    await tester.tap(find.text('Bắt đầu'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
 
-      // Tapping again should deselect (the state tracks selectedSituation in notifier)
-      await tester.tap(find.text('Mệt mỏi nhưng không rõ lý do.'));
-      await tester.pump();
-      // Widget did not crash
-    });
-
-    testWidgets('tapping through to step 3 shows Grow tag', (tester) async {
-      await tester.pumpWidget(_wrap(const OnboardingScreen()));
-      await tester.pump();
-
-      // Step 1 → 2 → 3
-      await advance(tester);
-      await advance(tester);
-
-      expect(find.text('Grow'), findsOneWidget);
-      expect(find.text('Bắt đầu hành trình'), findsOneWidget);
-    });
-
-    testWidgets('step 3 shows all three promise cards', (tester) async {
-      await tester.pumpWidget(_wrap(const OnboardingScreen()));
-      await tester.pump();
-
-      await advance(tester);
-      await advance(tester);
-
-      expect(find.text('5–15 phút mỗi ngày'), findsOneWidget);
-      expect(find.text('Riêng tư hoàn toàn'), findsOneWidget);
-      expect(find.text('Góc nhìn khách quan'), findsOneWidget);
-    });
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getBool('seen_onboarding'), isTrue);
   });
+
+  for (final (width, en) in [(320.0, false), (320.0, true), (390.0, false)]) {
+    testWidgets(
+      'tiêu đề không rớt chữ, không tràn (rộng $width, ${en ? 'EN' : 'VI'})',
+      (tester) async {
+        wrEnglish = en;
+        tester.view.physicalSize = Size(width * 3, 700 * 3);
+        tester.view.devicePixelRatio = 3;
+        addTearDown(tester.view.reset);
+
+        await tester.pumpWidget(
+          _wrap(const OnboardingScreen(), locale: Locale(en ? 'en' : 'vi')),
+        );
+        await tester.pump();
+
+        expect(tester.takeException(), isNull);
+        final w = tester.widget<WrTitleText>(find.byType(WrTitleText));
+        expect(
+          w.text,
+          en
+              ? 'Welcome to WorkReflection'
+              : 'Chào mừng bạn đến với WorkReflection',
+        );
+        // Dòng cuối không được là một tiếng ngắn đứng một mình.
+        final rendered = tester.widget<Text>(
+          find.descendant(
+            of: find.byType(WrTitleText),
+            matching: find.byType(Text),
+          ),
+        );
+        final painter = TextPainter(
+          text: TextSpan(text: rendered.data, style: rendered.style),
+          textDirection: TextDirection.ltr,
+          textScaler: MediaQuery.of(
+            tester.element(find.byType(WrTitleText)),
+          ).textScaler,
+        )..layout(maxWidth: tester.getSize(find.byType(WrTitleText)).width);
+        final lines = painter.computeLineMetrics();
+        final last = painter.getLineBoundary(
+          painter.getPositionForOffset(
+            Offset(1, lines.last.baseline - lines.last.ascent / 2),
+          ),
+        );
+        final lastLine = rendered.data!.substring(last.start, last.end).trim();
+        // Font thử của flutter_test (Ahem) rộng hơn font thật nên có thể bẻ
+        // giữa một tiếng dài; chỉ bắt lỗi khi dòng cuối là MỘT tiếng ngắn
+        // nguyên vẹn của câu, đúng kiểu "rớt chữ".
+        final words = rendered.data!.split(RegExp(r'[\s\u00A0]+'));
+        final orphan =
+            !lastLine.contains(RegExp(r'[\s\u00A0]')) &&
+            words.contains(lastLine) &&
+            lastLine.length <= 4;
+        expect(
+          orphan,
+          isFalse,
+          reason: 'dòng cuối "$lastLine" là một tiếng rớt',
+        );
+      },
+    );
+  }
 }
