@@ -829,6 +829,23 @@ Deno.test('0 mục tự khai → không có khối đó', async () => {
   assertEquals(ctx.includes('đừng gợi ý lại'), false);
 });
 
+// Việc người dùng tự đặt (Task D1) KHÔNG phải chủ đề thư viện. Nó không được
+// lọt vào khối "Chủ đề thực hành đang theo" hay bất cứ chỗ nào của ngữ cảnh.
+Deno.test('việc tự đặt (Task D1) không lọt vào ngữ cảnh trò chuyện', async () => {
+  const { buildUserContext } = await import('./user_context.ts');
+  const ctx = await buildUserContext(
+    fakeDb({
+      ...ROWS,
+      wr_user_practice_actions: [
+        { title: 'Hỏi ý kiến 1 đồng nghiệp mỗi ngày', target_count: 5 },
+      ],
+    }),
+    'u1',
+    true,
+  );
+  assertEquals(ctx.includes('Hỏi ý kiến 1 đồng nghiệp'), false);
+});
+
 Deno.test('mục tự khai không lộ mã chủ đề nội bộ', async () => {
   const { buildUserContext } = await import('./user_context.ts');
   const ctx = await buildUserContext(fakeDb(OWNED_ROWS), 'u1', true);
