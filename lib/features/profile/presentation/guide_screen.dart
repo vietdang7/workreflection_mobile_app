@@ -52,6 +52,7 @@ import '../../../core/logic/wr_user_guide.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_paragraph.dart';
+import '../../onboarding/presentation/wr_intro_video_sheet.dart';
 
 class GuideScreen extends StatefulWidget {
   const GuideScreen({super.key});
@@ -173,6 +174,8 @@ class _GuideScreenState extends State<GuideScreen> {
               ),
             ),
             const SizedBox(height: 18),
+            const _ReplayVideoRow(),
+            const SizedBox(height: 12),
             const _AssistantCard(),
             const SizedBox(height: 20),
             ...sectionWidgets,
@@ -181,6 +184,58 @@ class _GuideScreenState extends State<GuideScreen> {
             // còn thắc mắc thì đã có sẵn chỗ hỏi — chính trợ lý ở trên.
             const _ClosingCta(),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Xem lại video hướng dẫn
+// ---------------------------------------------------------------------------
+
+/// Lối xem lại video hướng dẫn của màn chào. Video chỉ TỰ bật một lần trên mỗi
+/// máy, và câu báo lỗi của video hẹn người dùng "xem lại trong phần Hướng
+/// dẫn", nên lối này phải có ở đây.
+class _ReplayVideoRow extends StatelessWidget {
+  const _ReplayVideoRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: WrColors.white,
+      borderRadius: BorderRadius.circular(16),
+      child: InkWell(
+        key: const Key('guide_replay_video'),
+        borderRadius: BorderRadius.circular(16),
+        onTap: () => showIntroVideo(context),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: WrColors.line),
+          ),
+          child: Row(
+            children: [
+              const Icon(
+                Icons.play_circle_outline,
+                size: 24,
+                color: WrColors.navy,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  tr('Xem lại video hướng dẫn', 'Watch the intro video again'),
+                  style: const TextStyle(
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w700,
+                    color: WrColors.navy,
+                  ),
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: WrColors.text3),
+            ],
+          ),
         ),
       ),
     );
