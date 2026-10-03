@@ -23,6 +23,7 @@ import '../avatar_providers.dart';
 import '../profile_providers.dart';
 import 'change_password_dialog.dart';
 import '../../../core/widgets/wr_paragraph.dart';
+import '../../../core/widgets/wr_title_text.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -407,7 +408,7 @@ class _PremiumCard extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
+              WrTitleText(
                 tr('Mở khoá Premium', 'Unlock Premium'),
                 style: TextStyle(
                   fontSize: 16,

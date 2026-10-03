@@ -20,6 +20,7 @@ import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 
 import '../support/fake_wr_content_repository.dart';
 import '../support/fake_wr_intelligence_repository.dart';
+import 'package:workreflection_mobile/core/widgets/wr_title_text.dart';
 
 void main() {
   testWidgets('màn hình hiện đúng nguyên văn cả 15 câu, theo đúng thứ tự', (
@@ -82,7 +83,7 @@ void main() {
         reason: 'phải đang ở câu ${i + 1}',
       );
       expect(
-        find.text(q.text),
+        find.text(wrKeepTitleTail(q.text)),
         findsOneWidget,
         reason: 'câu ${i + 1} (${q.id}) hiển thị sai nguyên văn',
       );

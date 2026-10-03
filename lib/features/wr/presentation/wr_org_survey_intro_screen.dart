@@ -19,6 +19,7 @@ import '../../../core/l10n/wr_tr.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../org_survey_providers.dart';
+import '../../../core/widgets/wr_title_text.dart';
 
 class WrOrgSurveyIntroScreen extends ConsumerWidget {
   const WrOrgSurveyIntroScreen({super.key});
@@ -204,7 +205,7 @@ class WrOrgSurveyIntroScreen extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
+                  WrTitleText(
                     tr('Điều gì được đảm bảo', 'What is guaranteed'),
                     style: TextStyle(
                       fontSize: 16.5,

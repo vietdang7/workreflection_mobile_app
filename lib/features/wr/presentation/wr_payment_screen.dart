@@ -28,6 +28,7 @@ import '../../../core/theme/wr_colors.dart';
 import '../../profile/profile_providers.dart';
 import '../wr_providers.dart';
 import '../../../core/widgets/wr_paragraph.dart';
+import '../../../core/widgets/wr_title_text.dart';
 
 class WrPaymentScreen extends ConsumerStatefulWidget {
   const WrPaymentScreen({super.key, this.plan});
@@ -770,7 +771,7 @@ class _FreeOrderCard extends StatelessWidget {
             color: WrColors.teal,
           ),
           const SizedBox(height: 10),
-          Text(
+          WrTitleText(
             tr('Đơn này miễn phí', 'This order is free'),
             style: TextStyle(
               fontSize: 16.5,
@@ -852,7 +853,7 @@ class _VoucherListSheetState extends State<_VoucherListSheet> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
+            WrTitleText(
               tr('Chọn mã giảm giá', 'Pick a discount code'),
               style: TextStyle(
                 fontSize: 17,
@@ -1369,7 +1370,7 @@ class _ExpiredView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 18),
-            Text(
+            WrTitleText(
               tr('Đơn hàng đã hết hạn', 'This order has expired'),
               style: TextStyle(
                 fontSize: 20,
@@ -1493,7 +1494,7 @@ class _SuccessView extends StatelessWidget {
               color: WrColors.teal,
             ),
             const SizedBox(height: 18),
-            Text(
+            WrTitleText(
               tr('Đã nhận được thanh toán', 'Payment received'),
               style: TextStyle(
                 fontSize: 20,

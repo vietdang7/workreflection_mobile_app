@@ -78,6 +78,7 @@ import '../wr_providers.dart';
 import 'wr_mood_library_screen.dart' show WrDraftBadge;
 import 'wr_practice_step_completion.dart' show practiceStageLabel;
 import '../../../core/widgets/wr_paragraph.dart';
+import '../../../core/widgets/wr_title_text.dart';
 
 // Hồ sơ đọc qua `mobileProfileProvider` dùng chung ở `profile_providers.dart`.
 // Trước 2026-08-22 màn này khai một FutureProvider riêng cùng nội dung, nên
@@ -349,7 +350,7 @@ class _CheckinQuestion extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
+          WrTitleText(
             // Nguyên văn mockup Sprint 2 §screenHome, cỡ chữ `.h2` = 15.5px.
             tr('Ngày hôm nay của bạn như thế nào?', 'How has your day been?'),
             style: const TextStyle(

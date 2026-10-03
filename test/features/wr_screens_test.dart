@@ -30,6 +30,7 @@ import 'package:workreflection_mobile/core/logic/wr_store_policy.dart';
 
 import '../support/fake_repository.dart';
 import '../support/fake_wr_intelligence_repository.dart';
+import 'package:workreflection_mobile/core/widgets/wr_title_text.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -201,7 +202,10 @@ void main() {
       await tester.pumpWidget(_wrap(const WrHomeScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('Ngày hôm nay của bạn như thế nào?'), findsOneWidget);
+      expect(
+        find.text(wrKeepTitleTail('Ngày hôm nay của bạn như thế nào?')),
+        findsOneWidget,
+      );
       expect(find.byKey(const Key('wr_home_checkin_tired')), findsOneWidget);
       // Không còn nút trung gian, cũng không còn bước "hướng đi".
       expect(find.byKey(const Key('wr_home_start_reflection')), findsNothing);

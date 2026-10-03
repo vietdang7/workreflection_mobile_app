@@ -727,7 +727,7 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
         ),
       ),
       _Highlight(
-        icon: '📈',
+        icon: '◇',
         title: 'Career Pattern',
         desc: tr(
           'Nhận diện các mẫu hình hành vi và cảm xúc lặp lại trong suốt '

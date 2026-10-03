@@ -9,6 +9,7 @@ import 'package:workreflection_mobile/core/logic/wr_pricing.dart';
 import 'package:workreflection_mobile/features/profile/profile_providers.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_payment_screen.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
+import 'package:workreflection_mobile/core/widgets/wr_title_text.dart';
 
 /// Repo thanh toán giả — ghi lại lời gọi để test kiểm đúng thứ được gửi lên.
 class FakePaymentRepository implements PaymentRepository {
@@ -246,7 +247,10 @@ void main() {
       await tester.pump();
 
       expect(find.byKey(const Key('wr_payment_success')), findsOneWidget);
-      expect(find.text('Đã nhận được thanh toán'), findsOneWidget);
+      expect(
+        find.text(wrKeepTitleTail('Đã nhận được thanh toán')),
+        findsOneWidget,
+      );
     });
 
     testWidgets('đã thành công thì dừng đếm ngược', (tester) async {
@@ -377,7 +381,7 @@ void main() {
       await tester.pump(kPaymentWindow);
       await tester.pump();
 
-      expect(find.text('Đơn hàng đã hết hạn'), findsOneWidget);
+      expect(find.text(wrKeepTitleTail('Đơn hàng đã hết hạn')), findsOneWidget);
       expect(find.text('CNCORDER01'), findsOneWidget);
       expect(find.text('499.000đ'), findsOneWidget);
       expect(find.text('Work Reflection Premium'), findsOneWidget);

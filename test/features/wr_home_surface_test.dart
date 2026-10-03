@@ -29,6 +29,7 @@ import '../support/fake_wr_content_repository.dart';
 import '../support/fake_wr_episode_repository.dart';
 import '../support/fake_wr_intelligence_repository.dart';
 import '../support/fake_wr_mood_content_repository.dart';
+import 'package:workreflection_mobile/core/widgets/wr_title_text.dart';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -328,7 +329,10 @@ void main() {
     testWidgets('chưa có dữ liệu thì ba khối dưới im lặng', (tester) async {
       await _pump(tester, _wrap());
 
-      expect(find.text('Ngày hôm nay của bạn như thế nào?'), findsOneWidget);
+      expect(
+        find.text(wrKeepTitleTail('Ngày hôm nay của bạn như thế nào?')),
+        findsOneWidget,
+      );
       expect(find.byKey(const Key('wr_home_system_notice')), findsNothing);
       expect(find.byKey(const Key('wr_home_mood_content')), findsNothing);
       expect(find.byKey(const Key('wr_home_latest_insight')), findsNothing);

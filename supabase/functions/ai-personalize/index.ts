@@ -6,8 +6,9 @@
 // `ai-personalize` có từ thời bản web (repo `workreflection`), deploy trên cùng
 // project Supabase `sukpcxevcjnhiuyaoqxi`. Tệp này là bản sao trong repo app,
 // chép từ bản đang chạy (version 21) rồi thêm đúng một thứ: cổng chặn xin phép.
-// Sửa bên nào cũng phải chép sang bên kia, nếu không lần deploy sau sẽ ghi đè
-// mất phần của bên còn lại.
+// Chỉ deploy từ repo APP này. Bản trong repo web thiếu thư mục `_shared` (bộ
+// lọc Markdown/vết AI) và dùng cổng xin phép cũ hơn, nên deploy từ web sẽ âm
+// thầm làm mất cả hai.
 //
 // ---------------------------------------------------------------------------
 // VÌ SAO PHẢI THÊM CỔNG CHẶN — VÀ VÌ SAO CHẶN CÓ ĐIỀU KIỆN
@@ -33,6 +34,7 @@
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
+import { stripMarkdown } from "../_shared/strip_markdown.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -387,11 +389,19 @@ async function handleGenerate(
       );
     }
 
+    // Lọc vết AI (Markdown, gạch dài, emoji) phía server trước khi lưu cache,
+    // để mọi client (app và web) đều nhận chữ sạch. Chỉ lọc các field chữ do
+    // model viết; không đụng vào nội dung người dùng.
+    const cleaned: Record<string, unknown> = { ...parsed };
+    for (const key of SECTION_SCHEMAS[section]) {
+      cleaned[key] = stripMarkdown(parsed[key] as string).trim();
+    }
+
     // Update cache with completed status
     const { error: updateError } = await supabaseAdmin
       .from("cc_ai_personalization_cache")
       .update({
-        content: parsed,
+        content: cleaned,
         status: "completed",
         error_message: null,
         updated_at: new Date().toISOString(),
@@ -404,7 +414,7 @@ async function handleGenerate(
     }
 
     return jsonResponse({
-      content: parsed,
+      content: cleaned,
       fromCache: false,
     });
   } catch (err) {
