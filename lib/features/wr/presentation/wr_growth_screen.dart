@@ -33,6 +33,7 @@ import '../../workshops/workshops_providers.dart';
 import '../growth_providers.dart';
 import '../wr_providers.dart';
 import 'wr_practice_theme_screen.dart';
+import 'widgets/wr_user_actions_section.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -382,12 +383,29 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
                       // thư viện chủ đề (danh sách trần, không ai biết dựa vào
                       // đâu mà chọn), rồi thẻ "CHỦ ĐỀ TIẾP THEO CHO BẠN" (vẫn
                       // bắt người dùng bấm để nhận thứ đáng lẽ tự đến).
+                      //
+                      // "VIỆC BẠN TỰ ĐẶT" (01/10/2026) nằm ở sliver RIÊNG bên
+                      // dưới, không trong cột này: đó là việc người dùng tự gõ,
+                      // không phải chủ đề thư viện, không tính vào quota ngay
+                      // dưới đây và không đổi `practiceEnrollmentsProvider`.
                       _QuotaCard(
                         quota: entitlement.maxActivePracticeThemes,
                         activeCount: activeCount,
                       ),
                     ],
                   ),
+          ),
+        ),
+
+        // ── Việc bạn tự đặt (họp khách 01/10/2026) ─────────────────────────
+        //
+        // Sliver riêng, hiện cả khi chưa theo chủ đề nào. Đặt SAU thẻ quota
+        // chứ không chen giữa danh sách chủ đề và thẻ quota: đứng sát câu
+        // "tối đa 2 chủ đề" thì việc tự đặt dễ bị đọc thành một chủ đề nữa.
+        const SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(22, 0, 22, 20),
+            child: WrUserActionsSection(),
           ),
         ),
 
