@@ -9,6 +9,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:workreflection_mobile/core/data/user_session_scope.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
+import 'package:workreflection_mobile/core/data/wr_user_action_repository.dart';
 import 'package:workreflection_mobile/core/models/mobile_profile.dart';
 import 'package:workreflection_mobile/features/home/home_providers.dart';
 import 'package:workreflection_mobile/features/profile/profile_providers.dart';
@@ -57,7 +58,11 @@ void main() {
     test('không sót repository nào của lib/core/data', () {
       // Chốt số lượng để việc thêm một repository mới mà quên khai báo ở đây
       // làm test đỏ, thay vì lặng lẽ rò dữ liệu sang tài khoản kế tiếp.
-      expect(userDataProviders, hasLength(13));
+      expect(userDataProviders, hasLength(14));
+    });
+
+    test('gồm repo "Việc bạn tự đặt" (Task D1)', () {
+      expect(userDataProviders, contains(wrUserActionRepositoryProvider));
     });
   });
 

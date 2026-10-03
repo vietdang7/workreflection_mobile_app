@@ -736,6 +736,8 @@ class SupabaseWrRepository implements WrRepository {
       _client.from('wr_practices').select().eq('user_id', _uid),
       _client.from('wr_timeline_events').select().eq('user_id', _uid),
       _client.from('wr_mobile_profiles').select().eq('user_id', _uid),
+      _client.from('wr_user_practice_actions').select().eq('user_id', _uid),
+      _client.from('wr_user_practice_action_logs').select().eq('user_id', _uid),
     ]);
     return {
       'checkins': results[0],
@@ -745,6 +747,8 @@ class SupabaseWrRepository implements WrRepository {
       'practices': results[4],
       'timeline_events': results[5],
       'mobile_profile': results[6],
+      'user_practice_actions': results[7],
+      'user_practice_action_logs': results[8],
     };
   }
 
