@@ -95,6 +95,12 @@ const RECENT_ACTIVITY_DAYS = 30;
 /// hơn, nhưng năm cái gần nhất đã đủ để trợ lý ghi nhận đúng chỗ.
 const SKILLS_MAX = 5;
 
+/// Số mục chứng chỉ / khoá học / kỹ năng tự khai đưa vào ngữ cảnh.
+///
+/// Mười là đủ để trợ lý biết đừng gợi ý lại; quá nhiều thì chen mất chỗ của
+/// các luật an toàn ở cuối prompt.
+const OWNED_SKILLS_MAX = 10;
+
 /// Mã mảnh ký ức đánh dấu một kỹ năng đã hình thành.
 ///
 /// Giữ nguyên chuỗi của `kSkillFormedBehavior` trong
@@ -664,6 +670,64 @@ export async function buildUserContext(
   // một hành trình: chủ đề là việc đang làm, kỹ năng là việc đã thành. Đọc liền
   // nhau thì model thấy được cả quãng đường.
   lines.push(...skillLines);
+
+  // ── Thứ người dùng tự khai là ĐÃ CÓ (Task D2, họp khách 01/10/2026) ──────
+  //
+  // Chứng chỉ, khoá học, kỹ năng họ tự khai ở màn Thông tin công việc. Đặt cạnh
+  // kỹ năng đã hình thành vì cùng là "những gì họ đã có", nhưng khác nguồn:
+  // khối trên do app ghi nhận, khối này do chính họ nói. Không gác theo gói.
+  //
+  // ⚠ Chỉ ghép TÊN. `kind` ('certificate'...) và `theme_ids` ('pt-s2'...) là
+  //   mã nội bộ, phần "Danh sách cấm" cấm nói ra; chủ đề được đổi sang tên.
+  try {
+    const { data: owned } = await db
+      .from('wr_owned_skills')
+      .select('title, issuer, theme_ids, created_at')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(OWNED_SKILLS_MAX);
+
+    const items = (owned ?? [])
+      .map((r) => ({
+        title: String(r.title ?? '').trim(),
+        issuer: String(r.issuer ?? '').trim(),
+        themeIds: Array.isArray(r.theme_ids) ? r.theme_ids.map(String) : [],
+      }))
+      .filter((r) => r.title);
+
+    if (items.length > 0) {
+      lines.push(
+        'Người dùng đã có sẵn (chứng chỉ/khoá học/kỹ năng tự khai), đừng gợi ý lại:',
+      );
+      for (const s of items) {
+        lines.push(
+          `- ${truncate(s.title, 160)}${s.issuer ? ` (${truncate(s.issuer, 160)})` : ''}`,
+        );
+      }
+
+      const ids = [...new Set(items.flatMap((s) => s.themeIds))];
+      if (ids.length > 0) {
+        const { data: themes } = await db
+          .from('wr_practice_themes')
+          .select('theme_id, title')
+          .in('theme_id', ids);
+        // Lọc lại ở đây chứ không tin bộ lọc của truy vấn: chỉ gọi tên đúng
+        // những chủ đề họ đã gắn.
+        const wanted = new Set(ids);
+        const names = (themes ?? [])
+          .filter((t) => wanted.has(String(t.theme_id)))
+          .map((t) => String(t.title ?? '').trim())
+          .filter(Boolean);
+        if (names.length > 0) {
+          lines.push(
+            `Các chủ đề thực hành họ xác nhận là đã có, đừng mời họ theo lại: ${
+              names.map((n) => `"${n}"`).join(', ')
+            }.`,
+          );
+        }
+      }
+    }
+  } catch (_) { /* bỏ qua */ }
 
   // ── Bài tự đánh giá ────────────────────────────────────────────────────
   //
