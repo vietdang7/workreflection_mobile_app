@@ -515,6 +515,9 @@ String eventTypeLabel(CareerMemoryEvent e) {
   if (e.behavior == kThemeBehavior) return kThemeLabel;
   if (e.behavior == kInsightBehavior) return kInsightLabel;
   if (e.behavior == 'skill_certified') return tr('KỸ NĂNG', 'SKILL');
+  if (e.behavior == 'user_action_completed') {
+    return tr('TỰ RÈN LUYỆN', 'SELF PRACTICE');
+  }
   if (e.behavior == kPracticeStepNoteBehavior) {
     return tr('ĐIỀU MÌNH GHI LẠI', 'WHAT I WROTE DOWN');
   }
@@ -538,6 +541,7 @@ Color eventColor(CareerMemoryEvent e) {
   if (e.behavior == kThemeBehavior) return WrColors.teal;
   if (e.behavior == kInsightBehavior) return WrColors.coral;
   if (e.behavior == 'skill_certified') return WrColors.teal;
+  if (e.behavior == 'user_action_completed') return WrColors.teal;
   if (e.behavior == kPracticeStepNoteBehavior) return const Color(0xFF5E7A5A);
   if (e.behavior == 'practice_step_done' ||
       e.behavior == 'practice_theme_done') {

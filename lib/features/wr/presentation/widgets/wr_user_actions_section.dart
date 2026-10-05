@@ -14,14 +14,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' show PostgrestException;
 
+import '../../../../core/data/wr_content_repository.dart';
 import '../../../../core/data/wr_user_action_repository.dart';
 import '../../../../core/l10n/wr_tr.dart';
+import '../../../../core/models/wr_content.dart';
 import '../../../../core/models/wr_user_action.dart';
 import '../../../../core/theme/wr_colors.dart';
 import '../../../../core/widgets/eyebrow.dart';
 import '../../../../core/widgets/wr_card.dart';
 import '../../../../core/widgets/wr_title_text.dart';
 import '../../user_action_providers.dart';
+import '../../wr_providers.dart'
+    show currentUserIdProvider, wrMemoryEventsProvider;
+import '../wr_practice_theme_screen.dart' show WrPracticeProgressDots;
 
 class WrUserActionsSection extends ConsumerStatefulWidget {
   const WrUserActionsSection({super.key});
@@ -98,8 +103,29 @@ class _WrUserActionsSectionState extends ConsumerState<WrUserActionsSection> {
     }
   });
 
-  Future<void> _complete(WrUserAction a) =>
-      _run(() => ref.read(wrUserActionRepositoryProvider).complete(a.id));
+  Future<void> _complete(WrUserAction a) => _run(() async {
+        await ref.read(wrUserActionRepositoryProvider).complete(a.id);
+        final userId = ref.read(currentUserIdProvider);
+        if (userId != null && userId.isNotEmpty) {
+          try {
+            await ref.read(wrContentRepositoryProvider).insertMemoryEvent(
+                  CareerMemoryEvent(
+                    id: '',
+                    userId: userId,
+                    behavior: 'user_action_completed',
+                    reflectionText: tr(
+                      'Đã hoàn thành 5 ngày thực hành: ${a.title}',
+                      'Completed 5-day practice: ${a.title}',
+                    ),
+                    createdAt: DateTime.now(),
+                  ),
+                );
+            ref.invalidate(wrMemoryEventsProvider);
+          } catch (_) {
+            // Lỗi ghi nhận kỷ niệm không chặn việc hoàn thành việc tự đặt
+          }
+        }
+      });
 
   Future<void> _delete(WrUserAction a) async {
     final ok = await showDialog<bool>(
@@ -131,6 +157,25 @@ class _WrUserActionsSectionState extends ConsumerState<WrUserActionsSection> {
     if (ok != true) return;
     await _run(() => ref.read(wrUserActionRepositoryProvider).delete(a.id));
   }
+
+  static const _kSuggestions = [
+    (
+      vi: 'Hỏi ý kiến 1 đồng nghiệp',
+      en: 'Ask a colleague for feedback',
+    ),
+    (
+      vi: '5 phút đúc kết cuối ngày',
+      en: '5-min reflection at end of day',
+    ),
+    (
+      vi: 'Lắng nghe trọn vẹn khi họp',
+      en: 'Listen actively in meetings',
+    ),
+    (
+      vi: 'Gửi 1 lời cảm ơn cụ thể',
+      en: 'Send a specific thank-you note',
+    ),
+  ];
 
   @override
   Widget build(BuildContext context) {
@@ -238,6 +283,45 @@ class _WrUserActionsSectionState extends ConsumerState<WrUserActionsSection> {
             ],
           ),
         ),
+        const SizedBox(height: 8),
+        SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (final s in _kSuggestions)
+                Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: ActionChip(
+                    label: Text(
+                      tr(s.vi, s.en),
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        color: WrColors.navy,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    backgroundColor: WrColors.white,
+                    side: BorderSide(
+                      color: WrColors.navy.withValues(alpha: 0.12),
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 4,
+                      vertical: 2,
+                    ),
+                    onPressed: _busy
+                        ? null
+                        : () {
+                            _controller.text = tr(s.vi, s.en);
+                            setState(() {});
+                          },
+                  ),
+                ),
+            ],
+          ),
+        ),
         if (_error != null) ...[
           const SizedBox(height: 8),
           Text(
@@ -283,15 +367,32 @@ class _UserActionCard extends StatelessWidget {
               children: [
                 Expanded(
                   child: Padding(
-                    padding: const EdgeInsets.only(top: 6),
-                    child: WrTitleText(
-                      a.title,
-                      style: const TextStyle(
-                        fontSize: 16.5,
-                        fontWeight: FontWeight.w700,
-                        color: WrColors.navy,
-                        height: 1.35,
-                      ),
+                    padding: const EdgeInsets.only(top: 4),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          a.isCompleted
+                              ? tr('ĐÃ HOÀN THÀNH', 'COMPLETED')
+                              : tr('MỤC TIÊU 5 NGÀY', '5-DAY GOAL'),
+                          style: const TextStyle(
+                            fontSize: 11,
+                            letterSpacing: 0.8,
+                            fontWeight: FontWeight.w700,
+                            color: WrColors.teal,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        WrTitleText(
+                          a.title,
+                          style: const TextStyle(
+                            fontSize: 16.5,
+                            fontWeight: FontWeight.w700,
+                            color: WrColors.navy,
+                            height: 1.35,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
@@ -303,15 +404,17 @@ class _UserActionCard extends StatelessWidget {
                     vertical: 4,
                   ),
                   decoration: BoxDecoration(
-                    color: WrColors.pageBg,
+                    color: a.isCompleted
+                        ? WrColors.teal.withValues(alpha: 0.1)
+                        : WrColors.pageBg,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     '$shown/${a.targetCount}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,
-                      color: WrColors.navy,
+                      color: a.isCompleted ? WrColors.teal : WrColors.navy,
                     ),
                   ),
                 ),
@@ -329,6 +432,11 @@ class _UserActionCard extends StatelessWidget {
               ],
             ),
             const SizedBox(height: 10),
+            WrPracticeProgressDots(
+              total: a.targetCount,
+              done: shown,
+            ),
+            const SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.only(right: 10),
               child: _footer(),
@@ -342,19 +450,41 @@ class _UserActionCard extends StatelessWidget {
   Widget _footer() {
     final a = action;
     if (a.isCompleted) {
-      return Row(
-        children: [
-          const Icon(
-            Icons.check_circle_outlined,
-            size: 17,
-            color: WrColors.teal,
-          ),
-          const SizedBox(width: 8),
-          Text(
-            tr('Đã xong', 'Done'),
-            style: const TextStyle(fontSize: 14.5, color: WrColors.muted),
-          ),
-        ],
+      return Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        decoration: BoxDecoration(
+          color: WrColors.teal.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.check_circle_rounded,
+              size: 18,
+              color: WrColors.teal,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              tr('Đã xong', 'Done'),
+              style: const TextStyle(
+                fontSize: 14.5,
+                fontWeight: FontWeight.w700,
+                color: WrColors.teal,
+              ),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                tr('· Đã lưu vào Hành trình', '· Saved to Journey'),
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: WrColors.muted,
+                ),
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+          ],
+        ),
       );
     }
 
@@ -363,7 +493,7 @@ class _UserActionCard extends StatelessWidget {
         children: [
           const Icon(
             Icons.emoji_events_outlined,
-            size: 18,
+            size: 20,
             color: WrColors.teal,
           ),
           const SizedBox(width: 8),
@@ -380,7 +510,12 @@ class _UserActionCard extends StatelessWidget {
           OutlinedButton(
             key: Key('wr_growth_user_action_complete_${a.id}'),
             onPressed: busy ? null : onComplete,
-            style: _outlined,
+            style: _outlined.copyWith(
+              side: const WidgetStatePropertyAll(
+                BorderSide(color: WrColors.teal, width: 1.5),
+              ),
+              foregroundColor: const WidgetStatePropertyAll(WrColors.teal),
+            ),
             child: Text(
               tr('Đánh dấu xong', 'Mark as done'),
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
@@ -393,15 +528,39 @@ class _UserActionCard extends StatelessWidget {
     final today = a.doneToday;
     return SizedBox(
       width: double.infinity,
-      child: OutlinedButton(
+      child: OutlinedButton.icon(
         key: Key('wr_growth_user_action_done_${a.id}'),
         onPressed: (busy || today) ? null : onLogToday,
-        style: _outlined,
-        child: Text(
+        icon: Icon(
+          today ? Icons.check_circle_rounded : Icons.check_circle_outline_rounded,
+          size: 18,
+          color: today ? WrColors.teal : WrColors.coral,
+        ),
+        label: Text(
           today
               ? tr('Đã ghi hôm nay', 'Logged today')
               : tr('Hôm nay tôi đã làm', 'Done today'),
-          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+          style: TextStyle(
+            fontSize: 15,
+            fontWeight: FontWeight.w700,
+            color: today ? WrColors.teal : WrColors.navy,
+          ),
+        ),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: WrColors.navy,
+          disabledForegroundColor: WrColors.teal,
+          disabledBackgroundColor:
+              today ? WrColors.teal.withValues(alpha: 0.08) : null,
+          side: BorderSide(
+            color: today
+                ? WrColors.teal.withValues(alpha: 0.3)
+                : WrColors.coral,
+            width: 1.2,
+          ),
+          padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
       ),
     );

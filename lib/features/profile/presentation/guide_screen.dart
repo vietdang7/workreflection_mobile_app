@@ -52,6 +52,7 @@ import '../../../core/logic/wr_user_guide.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_paragraph.dart';
+import '../../onboarding/intro_video_script.dart';
 import '../../onboarding/presentation/wr_intro_video_sheet.dart';
 
 class GuideScreen extends StatefulWidget {
@@ -174,8 +175,8 @@ class _GuideScreenState extends State<GuideScreen> {
               ),
             ),
             const SizedBox(height: 18),
-            const _ReplayVideoRow(),
-            const SizedBox(height: 12),
+            const _GuideVideoShowcase(),
+            const SizedBox(height: 16),
             const _AssistantCard(),
             const SizedBox(height: 20),
             ...sectionWidgets,
@@ -191,49 +192,479 @@ class _GuideScreenState extends State<GuideScreen> {
 }
 
 // ---------------------------------------------------------------------------
-// Xem lại video hướng dẫn
+// Video hướng dẫn sử dụng (Showcase & Playlist)
 // ---------------------------------------------------------------------------
 
-/// Lối xem lại video hướng dẫn của màn chào. Video chỉ TỰ bật một lần trên mỗi
-/// máy, và câu báo lỗi của video hẹn người dùng "xem lại trong phần Hướng
-/// dẫn", nên lối này phải có ở đây.
-class _ReplayVideoRow extends StatelessWidget {
-  const _ReplayVideoRow();
+class _GuideVideoTopic {
+  const _GuideVideoTopic({
+    required this.id,
+    required this.number,
+    required this.tabLabel,
+    required this.heroTitle,
+    required this.chapterTitle,
+    required this.subtitle,
+    required this.imageAsset,
+    required this.duration,
+    required this.sceneId,
+  });
+
+  final String id;
+  final String number;
+  final String tabLabel;
+  final String heroTitle;
+  final String chapterTitle;
+  final String subtitle;
+  final String imageAsset;
+  final String duration;
+  final IntroSceneId sceneId;
+}
+
+class _GuideVideoShowcase extends StatefulWidget {
+  const _GuideVideoShowcase();
+
+  @override
+  State<_GuideVideoShowcase> createState() => _GuideVideoShowcaseState();
+}
+
+class _GuideVideoShowcaseState extends State<_GuideVideoShowcase> {
+  int _selectedIndex = 0;
+
+  List<_GuideVideoTopic> get _topics => [
+    _GuideVideoTopic(
+      id: 'overview',
+      number: '01',
+      tabLabel: tr('Tổng quan', 'Overview'),
+      heroTitle: tr('Xem lại video hướng dẫn', 'Watch the intro video again'),
+      chapterTitle: tr('Tổng quan WorkReflection', 'WorkReflection Overview'),
+      subtitle: tr(
+        'Khám phá tổng quan WorkReflection và cách nhìn lại công việc mỗi ngày',
+        'Overview of WorkReflection and how to reflect on work daily',
+      ),
+      imageAsset: 'assets/images/thumb_intro_overview.jpg',
+      duration: '1:00',
+      sceneId: IntroSceneId.welcome,
+    ),
+    _GuideVideoTopic(
+      id: 'reflect',
+      number: '02',
+      tabLabel: tr('Hôm nay', 'Today'),
+      heroTitle: tr(
+        'Tab Hôm nay & Check-in cảm xúc',
+        'Today tab & Emotion check-in',
+      ),
+      chapterTitle: tr(
+        'Phản chiếu 3 phút & Chọn cảm xúc',
+        '3-min reflection & emotions',
+      ),
+      subtitle: tr(
+        'Cách check-in cảm xúc và 4 bước nhìn lại khoảnh khắc sự nghiệp',
+        'How to check-in emotions and reflect on moments in 4 steps',
+      ),
+      imageAsset: 'assets/images/thumb_daily_reflect.jpg',
+      duration: '1:00',
+      sceneId: IntroSceneId.reflect,
+    ),
+    _GuideVideoTopic(
+      id: 'understand',
+      number: '03',
+      tabLabel: tr('Hiểu mình', 'Understand'),
+      heroTitle: tr(
+        'Hiểu mình & Kế hoạch phát triển',
+        'Understand self & Growth plan',
+      ),
+      chapterTitle: tr(
+        'Mẫu hình lặp lại & Thực hành kỹ năng',
+        'Repeating patterns & skills',
+      ),
+      subtitle: tr(
+        'Nhận diện các mẫu hình lặp lại và kế hoạch thực hành kỹ năng',
+        'Recognize repeating patterns and skill practice plan',
+      ),
+      imageAsset: 'assets/images/thumb_understand_grow.jpg',
+      duration: '1:00',
+      sceneId: IntroSceneId.understand,
+    ),
+    _GuideVideoTopic(
+      id: 'assistant',
+      number: '04',
+      tabLabel: tr('Trợ lý AI', 'AI Assistant'),
+      heroTitle: tr(
+        'Đồng hành cùng Trợ lý AI Mentoring',
+        'Companion with AI Mentor',
+      ),
+      chapterTitle: tr(
+        'Trò chuyện & Tham vấn Trợ lý AI',
+        'Chat & consult with AI Mentor',
+      ),
+      subtitle: tr(
+        'Trò chuyện, hỏi đáp và nhận góc nhìn bám sát bối cảnh công việc',
+        'Chat, ask questions, and get contextual work advice',
+      ),
+      imageAsset: 'assets/images/thumb_ai_mentor.jpg',
+      duration: '1:00',
+      sceneId: IntroSceneId.assistant,
+    ),
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    final topics = _topics;
+    final current = topics[_selectedIndex.clamp(0, topics.length - 1)];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
+          child: WrEyebrow(tr('VIDEO HƯỚNG DẪN', 'VIDEO TUTORIALS')),
+        ),
+        // Thẻ Video Hero lớn điện ảnh
+        Semantics(
+          button: true,
+          label: current.heroTitle,
+          child: GestureDetector(
+            key: const Key('guide_replay_video'),
+            behavior: HitTestBehavior.opaque,
+            onTap: () => showIntroVideo(context, startScene: current.sceneId),
+            child: Container(
+              height: 204,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: WrColors.line),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x18093774),
+                    blurRadius: 20,
+                    offset: Offset(0, 8),
+                  ),
+                ],
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // Ảnh thumbnail
+                  Image.asset(
+                    current.imageAsset,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [WrColors.navy, Color(0xFF1B4E92)],
+                        ),
+                      ),
+                    ),
+                  ),
+                  // Lớp phủ Gradient điện ảnh: tối dần về phía đáy
+                  const DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        stops: [0.0, 0.45, 1.0],
+                        colors: [
+                          Color(0x2E000000),
+                          Color(0x55093774),
+                          Color(0xEE093774),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Huy hiệu chủ đề góc trên bên trái
+                  Positioned(
+                    top: 14,
+                    left: 14,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: WrColors.navy.withValues(alpha: 0.8),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.25),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 6,
+                            height: 6,
+                            decoration: const BoxDecoration(
+                              color: WrColors.coral,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            current.tabLabel.toUpperCase(),
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.5,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Huy hiệu thời lượng góc trên bên phải
+                  Positioned(
+                    top: 14,
+                    right: 14,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 9,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.55),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.2),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.schedule_rounded,
+                            size: 12,
+                            color: Colors.white,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            current.duration,
+                            style: const TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w600,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  // Nút Play ở trung tâm
+                  Center(
+                    child: Container(
+                      width: 54,
+                      height: 54,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: WrColors.coral,
+                        boxShadow: [
+                          BoxShadow(
+                            color: WrColors.coral.withValues(alpha: 0.55),
+                            blurRadius: 20,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.play_arrow_rounded,
+                        size: 34,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                  // Thông tin chữ đặt ở đáy thumbnail (lớp gradient)
+                  Positioned(
+                    left: 16,
+                    right: 16,
+                    bottom: 14,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          current.heroTitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                            letterSpacing: -0.2,
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          current.subtitle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            color: Colors.white.withValues(alpha: 0.85),
+                            height: 1.3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 14),
+        // Danh sách 4 bài học hướng dẫn
+        for (var i = 0; i < topics.length; i++) ...[
+          if (i > 0) const SizedBox(height: 8),
+          _ChapterItem(
+            key: Key('guide_video_chip_${topics[i].id}'),
+            topic: topics[i],
+            selected: i == _selectedIndex,
+            onTap: () => setState(() => _selectedIndex = i),
+            onPlay: () {
+              setState(() => _selectedIndex = i);
+              showIntroVideo(context, startScene: topics[i].sceneId);
+            },
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _ChapterItem extends StatelessWidget {
+  const _ChapterItem({
+    super.key,
+    required this.topic,
+    required this.selected,
+    required this.onTap,
+    required this.onPlay,
+  });
+
+  final _GuideVideoTopic topic;
+  final bool selected;
+  final VoidCallback onTap;
+  final VoidCallback onPlay;
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: WrColors.white,
-      borderRadius: BorderRadius.circular(16),
+      color: Colors.transparent,
       child: InkWell(
-        key: const Key('guide_replay_video'),
-        borderRadius: BorderRadius.circular(16),
-        onTap: () => showIntroVideo(context),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 180),
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: WrColors.line),
+            color: selected
+                ? WrColors.coral.withValues(alpha: 0.04)
+                : WrColors.white,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: selected ? WrColors.coral : WrColors.line,
+              width: selected ? 1.5 : 1,
+            ),
+            boxShadow: selected
+                ? const [
+                    BoxShadow(
+                      color: Color(0x0E093774),
+                      blurRadius: 8,
+                      offset: Offset(0, 2),
+                    ),
+                  ]
+                : null,
           ),
           child: Row(
             children: [
-              const Icon(
-                Icons.play_circle_outline,
-                size: 24,
-                color: WrColors.navy,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
+              // Badge số thứ tự
+              Container(
+                width: 32,
+                height: 32,
+                decoration: BoxDecoration(
+                  color: selected
+                      ? WrColors.coral
+                      : WrColors.navy.withValues(alpha: 0.06),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                alignment: Alignment.center,
                 child: Text(
-                  tr('Xem lại video hướng dẫn', 'Watch the intro video again'),
-                  style: const TextStyle(
-                    fontSize: 15.5,
+                  topic.number,
+                  style: TextStyle(
+                    fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: WrColors.navy,
+                    color: selected ? Colors.white : WrColors.navy,
                   ),
                 ),
               ),
-              const Icon(Icons.chevron_right, color: WrColors.text3),
+              const SizedBox(width: 12),
+              // Tiêu đề & mô tả
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      topic.chapterTitle,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: selected
+                            ? FontWeight.w700
+                            : FontWeight.w600,
+                        color: selected ? WrColors.navy : WrColors.text2,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      topic.subtitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: WrColors.text3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 10),
+              // Nút Play nhỏ
+              GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onTap: onPlay,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 5,
+                  ),
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? WrColors.coral.withValues(alpha: 0.12)
+                        : WrColors.pageBg,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        selected
+                            ? Icons.play_arrow_rounded
+                            : Icons.play_circle_outline_rounded,
+                        size: 16,
+                        color: selected ? WrColors.coral : WrColors.muted,
+                      ),
+                      const SizedBox(width: 3),
+                      Text(
+                        topic.duration,
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w600,
+                          color: selected ? WrColors.coral : WrColors.muted,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
             ],
           ),
         ),

@@ -324,5 +324,26 @@ void main() {
         findsOneWidget,
       );
     });
+
+    testWidgets('thẻ Video hướng dẫn hiển thị và chuyển đổi các chủ đề', (t) async {
+      await t.pumpWidget(_wrap());
+      await t.pumpAndSettle();
+
+      expect(find.byKey(const Key('guide_replay_video')), findsOneWidget);
+      expect(find.text('Xem lại video hướng dẫn'), findsOneWidget);
+      expect(find.text('VIDEO HƯỚNG DẪN'), findsOneWidget);
+
+      // Chuyển sang chủ đề "Hôm nay"
+      await t.tap(find.byKey(const Key('guide_video_chip_reflect')));
+      await t.pumpAndSettle();
+
+      expect(find.text('Tab Hôm nay & Check-in cảm xúc'), findsOneWidget);
+
+      // Chuyển sang chủ đề "Hiểu mình"
+      await t.tap(find.byKey(const Key('guide_video_chip_understand')));
+      await t.pumpAndSettle();
+
+      expect(find.text('Hiểu mình & Kế hoạch phát triển'), findsOneWidget);
+    });
   });
 }

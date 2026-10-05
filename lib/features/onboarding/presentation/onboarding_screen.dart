@@ -63,62 +63,97 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     return Scaffold(
       backgroundColor: WrColors.pageBg,
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(28, 0, 28, 28),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 40),
-                      const WrLogo(width: 200),
-                      const SizedBox(height: 36),
-                      WrTitleText(
-                        tr(
-                          'Chào mừng bạn đến với WorkReflection',
-                          'Welcome to WorkReflection',
-                        ),
-                        style: const TextStyle(
-                          fontSize: 30,
-                          fontWeight: FontWeight.w300,
-                          color: WrColors.navy,
-                          height: 1.25,
-                          letterSpacing: -0.6,
-                        ),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 440),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          const SizedBox(height: 20),
+                          const Center(child: WrLogo(width: 220)),
+                          const SizedBox(height: 24),
+                          WrTitleText(
+                            tr(
+                              'Chào mừng bạn đến với WorkReflection',
+                              'Welcome to WorkReflection',
+                            ),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 26,
+                              fontWeight: FontWeight.w700,
+                              color: WrColors.navy,
+                              height: 1.3,
+                              letterSpacing: -0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            tr(
+                              'Thấu hiểu bản thân • Nâng tầm sự nghiệp',
+                              'Discover yourself • Elevate your career',
+                            ),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 14.5,
+                              color: WrColors.text2,
+                              height: 1.4,
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                          _IntroVideoCard(
+                            onTap: () => showIntroVideo(context),
+                          ),
+                          const SizedBox(height: 20),
+                          const _ValueHighlightsCard(),
+                          const SizedBox(height: 16),
+                        ],
                       ),
-                      const SizedBox(height: 28),
-                      _IntroVideoCard(onTap: () => showIntroVideo(context)),
-                      const SizedBox(height: 24),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: 12),
-              // Nút Coral chữ Navy (spec §01).
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  key: const Key('onboarding_start'),
-                  onPressed: _start,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: WrColors.coral,
-                    foregroundColor: WrColors.navy,
-                    padding: const EdgeInsets.symmetric(vertical: 18),
-                    shape: const StadiumBorder(),
-                    elevation: 0,
-                    textStyle: const TextStyle(
-                      fontSize: 16.5,
-                      fontWeight: FontWeight.w700,
                     ),
                   ),
-                  child: Text(tr('Bắt đầu', 'Get started')),
-                ),
+                  const SizedBox(height: 12),
+                  // Nút Coral chữ Navy (spec §01).
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      key: const Key('onboarding_start'),
+                      onPressed: _start,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: WrColors.coral,
+                        foregroundColor: WrColors.navy,
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        shape: const StadiumBorder(),
+                        elevation: 0,
+                        textStyle: const TextStyle(
+                          fontSize: 16.5,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      child: Text(tr('Bắt đầu', 'Get started')),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    tr(
+                      'Bảo mật dữ liệu cá nhân • Bắt đầu ngay hôm nay',
+                      'Personal data protected • Start today',
+                    ),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      color: WrColors.text3,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                ],
               ),
-              const SizedBox(height: 8),
-            ],
+            ),
           ),
         ),
       ),
@@ -146,6 +181,13 @@ class _IntroVideoCard extends StatelessWidget {
             color: WrColors.white,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: WrColors.line),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0C093774),
+                blurRadius: 16,
+                offset: Offset(0, 6),
+              ),
+            ],
           ),
           clipBehavior: Clip.antiAlias,
           child: Column(
@@ -153,81 +195,107 @@ class _IntroVideoCard extends StatelessWidget {
             children: [
               AspectRatio(
                 aspectRatio: 16 / 9,
-                child: DecoratedBox(
-                  decoration: const BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [WrColors.navy, Color(0xFF1B4E92)],
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.asset(
+                      'assets/images/thumb_intro_overview.jpg',
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                            colors: [WrColors.navy, Color(0xFF1B4E92)],
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
-                  child: Stack(
-                    children: [
-                      Positioned(
-                        left: 0,
-                        right: 0,
-                        bottom: 14,
+                    // Badge thời lượng ở góc trên
+                    Positioned(
+                      top: 12,
+                      right: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: WrColors.navy.withValues(alpha: 0.75),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: WrColors.white.withValues(alpha: 0.2),
+                          ),
+                        ),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            for (final icon in const [
-                              Icons.visibility_outlined,
-                              Icons.lightbulb_outline,
-                              Icons.bolt_outlined,
-                              Icons.show_chart,
-                            ])
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                ),
-                                child: Icon(
-                                  icon,
-                                  size: 20,
-                                  color: WrColors.white.withValues(alpha: 0.7),
-                                ),
+                            const Icon(
+                              Icons.access_time_rounded,
+                              size: 12,
+                              color: WrColors.white,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              tr('1 phút', '1 min'),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: WrColors.white,
                               ),
+                            ),
                           ],
                         ),
                       ),
-                      Center(
-                        child: Container(
-                          width: 60,
-                          height: 60,
-                          decoration: const BoxDecoration(
-                            color: WrColors.coral,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.play_arrow_rounded,
-                            size: 36,
-                            color: WrColors.navy,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
+                padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
                 child: Row(
                   children: [
-                    Expanded(
-                      child: Text(
-                        tr('Xem video hướng dẫn', 'Watch the intro video'),
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                          color: WrColors.navy,
-                        ),
+                    Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: WrColors.pageBg,
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.smart_display_outlined,
+                        size: 20,
+                        color: WrColors.navy,
                       ),
                     ),
-                    Text(
-                      tr('Khoảng 1 phút', 'About 1 minute'),
-                      style: const TextStyle(
-                        fontSize: 13.5,
-                        color: WrColors.text3,
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            tr('Xem video hướng dẫn', 'Watch the intro video'),
+                            style: const TextStyle(
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w700,
+                              color: WrColors.navy,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            tr('Khoảng 1 phút', 'About 1 minute'),
+                            style: const TextStyle(
+                              fontSize: 13,
+                              color: WrColors.text3,
+                            ),
+                          ),
+                        ],
                       ),
+                    ),
+                    const Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 14,
+                      color: WrColors.text3,
                     ),
                   ],
                 ),
@@ -236,6 +304,138 @@ class _IntroVideoCard extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Thẻ hiển thị 3 giá trị cốt lõi của ứng dụng.
+class _ValueHighlightsCard extends StatelessWidget {
+  const _ValueHighlightsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      decoration: BoxDecoration(
+        color: WrColors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: WrColors.line),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x08093774),
+            blurRadius: 14,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          _FeatureHighlightItem(
+            icon: Icons.schedule_rounded,
+            iconBg: WrColors.coral.withValues(alpha: 0.12),
+            iconColor: WrColors.pillCoralText,
+            title: tr('3 phút mỗi ngày', '3 minutes daily'),
+            description: tr(
+              'Ghi nhận sự kiện, cảm xúc và bài học công việc nhanh chóng',
+              'Capture events, emotions and career lessons effortlessly',
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Container(
+              height: 1,
+              color: WrColors.lineSoft,
+            ),
+          ),
+          _FeatureHighlightItem(
+            icon: Icons.auto_awesome_outlined,
+            iconBg: WrColors.teal.withValues(alpha: 0.14),
+            iconColor: WrColors.pillTealText,
+            title: tr('Trợ lý AI thấu hiểu', 'Insightful AI Assistant'),
+            description: tr(
+              'Phân tích điểm mạnh, rào cản và mở rộng góc nhìn',
+              'Identify strengths, bottlenecks and expand your perspective',
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Container(
+              height: 1,
+              color: WrColors.lineSoft,
+            ),
+          ),
+          _FeatureHighlightItem(
+            icon: Icons.verified_user_outlined,
+            iconBg: WrColors.navy.withValues(alpha: 0.08),
+            iconColor: WrColors.navy,
+            title: tr('Riêng tư & An toàn', 'Private & Secure'),
+            description: tr(
+              'Dữ liệu cá nhân được bảo mật, thuộc về riêng bạn',
+              'Personal data is protected, strictly belonging to you',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _FeatureHighlightItem extends StatelessWidget {
+  const _FeatureHighlightItem({
+    required this.icon,
+    required this.title,
+    required this.description,
+    required this.iconColor,
+    required this.iconBg,
+  });
+
+  final IconData icon;
+  final String title;
+  final String description;
+  final Color iconColor;
+  final Color iconBg;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: iconBg,
+            borderRadius: BorderRadius.circular(10),
+          ),
+          child: Icon(icon, size: 20, color: iconColor),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                title,
+                style: const TextStyle(
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w700,
+                  color: WrColors.navy,
+                  height: 1.25,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                description,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: WrColors.text2,
+                  height: 1.35,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
