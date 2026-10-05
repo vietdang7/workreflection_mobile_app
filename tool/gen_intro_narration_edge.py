@@ -35,7 +35,7 @@ SCENES = [
     {
         "id": "assistant",
         "text": "Cần hỏi gì, bạn chạm biểu tượng trò chuyện ở góc dưới bên phải để mở Trợ lý AI. Trợ lý đọc các ghi nhận của bạn, nên trả lời sát với bối cảnh của bạn.",
-        "spoken": "Cần hỏi gì, bạn chạm biểu tượng trò chuyện ở góc dưới bên phải để mở Trợ lý A.I. Trợ lý đọc các ghi nhận của bạn, nên trả lời sát với bối cảnh của bạn.",
+        "spoken": "Cần hỏi gì, bạn chạm biểu tượng trò chuyện ở góc dưới bên phải để mở Trợ lý ây ai. Trợ lý đọc các ghi nhận của bạn, nên trả lời sát với bối cảnh của bạn.",
     },
     {
         "id": "closing",

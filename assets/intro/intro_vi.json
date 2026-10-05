@@ -1,9 +1,9 @@
 {
   "lang": "vi",
   "voice": "vi-VN-HoaiMyNeural",
-  "generatedAt": "2026-10-05T04:04:48.326292+00:00",
+  "generatedAt": "2026-10-05T04:11:06.218871+00:00",
   "audio": "assets/intro/intro_vi.mp3",
-  "durationMs": 56136,
+  "durationMs": 57624,
   "scenes": [
     {
       "id": "welcome",
@@ -33,13 +33,13 @@
       "id": "assistant",
       "text": "Cần hỏi gì, bạn chạm biểu tượng trò chuyện ở góc dưới bên phải để mở Trợ lý AI. Trợ lý đọc các ghi nhận của bạn, nên trả lời sát với bối cảnh của bạn.",
       "startMs": 39480,
-      "endMs": 49248
+      "endMs": 50736
     },
     {
       "id": "closing",
       "text": "Mọi lần nhìn lại đều được lưu ở tab Hành trình. Bắt đầu bằng một lần chạm ở tab Hôm nay nhé.",
-      "startMs": 49248,
-      "endMs": 56136
+      "startMs": 50736,
+      "endMs": 57624
     }
   ]
 }
