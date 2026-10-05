@@ -17,9 +17,11 @@ import 'package:workreflection_mobile/core/data/wr_user_action_repository.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 import 'package:workreflection_mobile/core/models/wr_user_action.dart';
+import 'package:workreflection_mobile/core/theme/wr_colors.dart';
 import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:workreflection_mobile/features/wr/growth_providers.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_growth_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/wr_journey_screen.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 
 import '../support/fake_wr_content_repository.dart';
@@ -52,10 +54,13 @@ GoRouter _router() => GoRouter(
 Widget _wrap({
   required FakeWrUserActionRepository actions,
   FakeWrIntelligenceRepository? intel,
+  FakeWrContentRepository? content,
 }) {
   return ProviderScope(
     overrides: [
-      wrContentRepositoryProvider.overrideWithValue(FakeWrContentRepository()),
+      wrContentRepositoryProvider.overrideWithValue(
+        content ?? FakeWrContentRepository(),
+      ),
       wrIntelligenceRepositoryProvider.overrideWithValue(
         intel ?? FakeWrIntelligenceRepository(),
       ),
@@ -369,5 +374,107 @@ void main() {
     await tester.pumpAndSettle();
     expect(repo.deleteCalls, ['a1']);
     expect(find.byKey(_card('a1')), findsNothing);
+  });
+
+  testWidgets('chạm chip gợi ý → tự động điền vào ô nhập', (tester) async {
+    final repo = FakeWrUserActionRepository();
+    await _pump(tester, _wrap(actions: repo));
+
+    expect(find.text('Hỏi ý kiến 1 đồng nghiệp'), findsOneWidget);
+    await tester.tap(find.text('Hỏi ý kiến 1 đồng nghiệp'));
+    await tester.pump();
+
+    expect(
+      tester.widget<TextField>(find.byKey(_kInput)).controller!.text,
+      'Hỏi ý kiến 1 đồng nghiệp',
+    );
+  });
+
+  testWidgets(
+    'hoàn thành việc → ghi nhận CareerMemoryEvent behavior user_action_completed',
+    (tester) async {
+      final repo = FakeWrUserActionRepository()
+        ..seed([
+          WrUserAction(
+            id: 'a1',
+            title: 'Lắng nghe trọn vẹn',
+            createdAt: DateTime(2026, 9, 20),
+            doneDays: [for (var d = 21; d <= 25; d++) DateTime(2026, 9, d)],
+          ),
+        ]);
+      final content = FakeWrContentRepository();
+      await _pump(tester, _wrap(actions: repo, content: content));
+
+      await tester.tap(find.byKey(_complete('a1')));
+      await tester.pumpAndSettle();
+
+      expect(content.insertMemoryEventCalls, hasLength(1));
+      final event = content.insertMemoryEventCalls.single;
+      expect(event.behavior, 'user_action_completed');
+      expect(event.reflectionText, contains('Lắng nghe trọn vẹn'));
+    },
+  );
+
+  testWidgets('tiến độ vượt target (6/5) vẫn kẹp trần 5/5', (tester) async {
+    final repo = FakeWrUserActionRepository()
+      ..seed([
+        WrUserAction(
+          id: 'a1',
+          title: 'Tập thở 3 phút',
+          createdAt: DateTime(2026, 9, 20),
+          doneDays: [for (var d = 20; d <= 25; d++) DateTime(2026, 9, d)],
+        ),
+      ]);
+    await _pump(tester, _wrap(actions: repo));
+
+    final card = find.byKey(_card('a1'));
+    expect(find.descendant(of: card, matching: find.text('5/5')), findsOneWidget);
+    expect(find.descendant(of: card, matching: find.text('Hoàn thành')), findsOneWidget);
+  });
+
+  testWidgets(
+    'thứ tự hiển thị: việc đang làm lên trước, việc đã xong xuống dưới',
+    (tester) async {
+      final repo = FakeWrUserActionRepository()
+        ..seed([
+          WrUserAction(
+            id: 'done1',
+            title: 'Việc cũ đã hoàn thành',
+            createdAt: DateTime(2026, 9, 1),
+            completedAt: DateTime(2026, 9, 10),
+            doneDays: [for (var d = 1; d <= 5; d++) DateTime(2026, 9, d)],
+          ),
+          WrUserAction(
+            id: 'active1',
+            title: 'Việc mới đang làm',
+            createdAt: DateTime(2026, 9, 15),
+            doneDays: [DateTime(2026, 9, 16)],
+          ),
+        ]);
+      await _pump(tester, _wrap(actions: repo));
+
+      final activeCard = find.byKey(_card('active1'));
+      final doneCard = find.byKey(_card('done1'));
+      expect(activeCard, findsOneWidget);
+      expect(doneCard, findsOneWidget);
+
+      expect(
+        tester.getTopLeft(activeCard).dy,
+        lessThan(tester.getTopLeft(doneCard).dy),
+      );
+    },
+  );
+
+  test('eventTypeLabel và eventColor nhận diện user_action_completed', () {
+    final event = CareerMemoryEvent(
+      id: 'e1',
+      userId: 'u1',
+      behavior: 'user_action_completed',
+      createdAt: DateTime.now(),
+      reflectionText: 'Đã hoàn thành 5 ngày thực hành: Tập lắng nghe',
+    );
+
+    expect(eventTypeLabel(event), 'TỰ RÈN LUYỆN');
+    expect(eventColor(event), WrColors.teal);
   });
 }

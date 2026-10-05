@@ -18,7 +18,6 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -40,10 +39,12 @@ const int _kResyncMs = 300;
 /// Mở video hướng dẫn toàn màn.
 ///
 /// [startMuted] mặc định tắt tiếng trên web, bật tiếng trên điện thoại.
+/// [startScene] nhảy thẳng tới cảnh chỉ định (vd khi chọn từ danh sách hướng dẫn).
 Future<void> showIntroVideo(
   BuildContext context, {
   bool autoplay = true,
   bool? startMuted,
+  IntroSceneId? startScene,
 }) {
   return Navigator.of(context, rootNavigator: true).push<void>(
     PageRouteBuilder<void>(
@@ -53,7 +54,8 @@ Future<void> showIntroVideo(
       reverseTransitionDuration: const Duration(milliseconds: 180),
       pageBuilder: (_, __, ___) => WrIntroVideoSheet(
         autoplay: autoplay,
-        startMuted: startMuted ?? kIsWeb,
+        startMuted: startMuted ?? false,
+        startScene: startScene,
       ),
       transitionsBuilder: (_, animation, __, child) =>
           FadeTransition(opacity: animation, child: child),
@@ -67,11 +69,13 @@ class WrIntroVideoSheet extends ConsumerStatefulWidget {
   const WrIntroVideoSheet({
     super.key,
     this.autoplay = true,
-    this.startMuted = kIsWeb,
+    this.startMuted = false,
+    this.startScene,
   });
 
   final bool autoplay;
   final bool startMuted;
+  final IntroSceneId? startScene;
 
   @override
   ConsumerState<WrIntroVideoSheet> createState() => _WrIntroVideoSheetState();
@@ -138,6 +142,14 @@ class _WrIntroVideoSheetState extends ConsumerState<WrIntroVideoSheet>
       }
       if (_disposed) return;
       _audioPosSub = audio.positionStream.listen(_onAudioPosition);
+    }
+
+    if (widget.startScene != null && _totalMs > 0) {
+      final target = timeline.scenes.firstWhere(
+        (s) => s.id == widget.startScene,
+        orElse: () => timeline.scenes.first,
+      );
+      _clock.value = (target.startMs / _totalMs).clamp(0.0, 1.0);
     }
 
     setState(() => _phase = _Phase.ready);
@@ -228,25 +240,30 @@ class _WrIntroVideoSheetState extends ConsumerState<WrIntroVideoSheet>
       key: const Key('intro_video_sheet'),
       backgroundColor: WrColors.navy,
       body: SafeArea(
-        child: Column(
-          children: [
-            _topBar(),
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
-                child: Center(
-                  child: AspectRatio(
-                    aspectRatio: 9 / 16,
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(24),
-                      child: _stage(),
+        child: Center(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 480),
+            child: Column(
+              children: [
+                _topBar(),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+                    child: Center(
+                      child: AspectRatio(
+                        aspectRatio: 9 / 16,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(24),
+                          child: _stage(),
+                        ),
+                      ),
                     ),
                   ),
                 ),
-              ),
+                _bottomBar(),
+              ],
             ),
-            _bottomBar(),
-          ],
+          ),
         ),
       ),
     );

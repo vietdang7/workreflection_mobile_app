@@ -29,6 +29,9 @@ import '../support/fake_wr_content_repository.dart';
 import '../support/fake_wr_episode_repository.dart';
 import '../support/fake_wr_intelligence_repository.dart';
 import '../support/fake_wr_mood_content_repository.dart';
+import '../support/fake_wr_user_action_repository.dart';
+import 'package:workreflection_mobile/core/data/wr_user_action_repository.dart';
+import 'package:workreflection_mobile/core/models/wr_user_action.dart';
 import 'package:workreflection_mobile/core/widgets/wr_title_text.dart';
 
 // ---------------------------------------------------------------------------
@@ -96,6 +99,7 @@ Widget _wrap({
   FakeWrMoodContentRepository? moodContent,
   FakeWrRepository? repo,
   FakeWrEpisodeRepository? episodes,
+  FakeWrUserActionRepository? userActions,
 }) {
   final router = GoRouter(
     initialLocation: '/home',
@@ -119,6 +123,10 @@ Widget _wrap({
         path: '/wr/flow/moment',
         builder: (_, __) => const Scaffold(body: Text('MOMENT')),
       ),
+      GoRoute(
+        path: '/wr/growth',
+        builder: (_, __) => const Scaffold(body: Text('PHÁT TRIỂN')),
+      ),
       GoRoute(path: '/profile', builder: (_, __) => const Scaffold()),
     ],
   );
@@ -136,6 +144,9 @@ Widget _wrap({
       wrRepositoryProvider.overrideWithValue(repo ?? FakeWrRepository()),
       wrEpisodeRepositoryProvider.overrideWithValue(
         episodes ?? FakeWrEpisodeRepository(),
+      ),
+      wrUserActionRepositoryProvider.overrideWithValue(
+        userActions ?? FakeWrUserActionRepository(),
       ),
       currentUserIdProvider.overrideWithValue('u1'),
     ],
@@ -660,6 +671,69 @@ void main() {
       expect(find.text('"Tôi thường im lặng vì sợ phán xét."'), findsOneWidget);
       expect(find.text('Lưu ngày 20/06'), findsOneWidget);
     });
+
+    testWidgets(
+      'Việc tự rèn luyện chưa làm hôm nay hiện trên thẻ Tiếp tục hôm nay và chạm để sang /wr/growth',
+      (tester) async {
+        final now = DateTime.now();
+        final actionsRepo = FakeWrUserActionRepository()
+          ..seed([
+            WrUserAction(
+              id: 'act-1',
+              title: 'Lắng nghe trọn vẹn khi họp',
+              createdAt: now.subtract(const Duration(days: 3)),
+              doneDays: [
+                now.subtract(const Duration(days: 2)),
+                now.subtract(const Duration(days: 1)),
+              ],
+            ),
+          ]);
+
+        await _pump(tester, _wrap(userActions: actionsRepo));
+
+        expect(
+          find.byKey(const Key('wr_home_user_action_card')),
+          findsOneWidget,
+        );
+        expect(
+          find.text(
+            'Việc tự rèn luyện: "Lắng nghe trọn vẹn khi họp" (ngày 3/5)',
+          ),
+          findsOneWidget,
+        );
+
+        await tester.tap(find.byKey(const Key('wr_home_user_action_card')));
+        await tester.pumpAndSettle();
+
+        expect(find.text('PHÁT TRIỂN'), findsOneWidget);
+      },
+    );
+
+    testWidgets(
+      'Việc tự rèn luyện đã làm hôm nay hoặc đã hoàn thành thì không hiện thẻ nhắc trên Home',
+      (tester) async {
+        final now = DateTime.now();
+        final actionsRepo = FakeWrUserActionRepository()
+          ..seed([
+            WrUserAction(
+              id: 'act-1',
+              title: 'Đã làm hôm nay',
+              createdAt: now.subtract(const Duration(days: 2)),
+              doneDays: [now],
+            ),
+            WrUserAction(
+              id: 'act-2',
+              title: 'Đã đóng hoàn tất',
+              createdAt: now.subtract(const Duration(days: 5)),
+              completedAt: now.subtract(const Duration(days: 1)),
+            ),
+          ]);
+
+        await _pump(tester, _wrap(userActions: actionsRepo));
+
+        expect(find.byKey(const Key('wr_home_user_action_card')), findsNothing);
+      },
+    );
   });
 }
 

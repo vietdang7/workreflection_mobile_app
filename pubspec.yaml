@@ -58,6 +58,10 @@ flutter:
     - assets/fonts/NotoSans-Regular.ttf
     - assets/fonts/NotoSans-Bold.ttf
     - assets/images/wr_logo.png
+    - assets/images/thumb_intro_overview.jpg
+    - assets/images/thumb_daily_reflect.jpg
+    - assets/images/thumb_understand_grow.jpg
+    - assets/images/thumb_ai_mentor.jpg
     - assets/seed/wr_situations.json
     - assets/seed/wr_stories.json
     # Giọng đọc của video hướng dẫn ở màn chào (intro_<vi|en>.mp3 + .json),

@@ -1,0 +1,45 @@
+{
+  "lang": "vi",
+  "voice": "vi-VN-HoaiMyNeural",
+  "generatedAt": "2026-10-05T04:04:48.326292+00:00",
+  "audio": "assets/intro/intro_vi.mp3",
+  "durationMs": 56136,
+  "scenes": [
+    {
+      "id": "welcome",
+      "text": "Chào bạn, đây là WorkReflection. Mỗi ngày, bạn chỉ cần một hai phút để nhìn lại công việc của mình.",
+      "startMs": 0,
+      "endMs": 8208
+    },
+    {
+      "id": "reflect",
+      "text": "Ở tab Hôm nay, bạn chạm chọn cảm xúc lúc này. Rồi bạn nhìn lại một khoảnh khắc qua bốn bước: chọn tình huống, đọc một câu chuyện, xem một góc nhìn khác, và chọn bước tiếp theo.",
+      "startMs": 8208,
+      "endMs": 19968
+    },
+    {
+      "id": "understand",
+      "text": "Qua nhiều lần nhìn lại, tab Hiểu mình chỉ ra những vòng lặp quen thuộc, những điều cứ quay lại với bạn trong công việc.",
+      "startMs": 19968,
+      "endMs": 27192
+    },
+    {
+      "id": "grow",
+      "text": "Ở tab Phát triển, ứng dụng tự gợi ý chủ đề thực hành hợp với bạn. Mỗi lần thực hành, bạn đánh dấu một lần. Giữ đều đặn, điều đó thành kỹ năng của bạn.",
+      "startMs": 27192,
+      "endMs": 39480
+    },
+    {
+      "id": "assistant",
+      "text": "Cần hỏi gì, bạn chạm biểu tượng trò chuyện ở góc dưới bên phải để mở Trợ lý AI. Trợ lý đọc các ghi nhận của bạn, nên trả lời sát với bối cảnh của bạn.",
+      "startMs": 39480,
+      "endMs": 49248
+    },
+    {
+      "id": "closing",
+      "text": "Mọi lần nhìn lại đều được lưu ở tab Hành trình. Bắt đầu bằng một lần chạm ở tab Hôm nay nhé.",
+      "startMs": 49248,
+      "endMs": 56136
+    }
+  ]
+}
