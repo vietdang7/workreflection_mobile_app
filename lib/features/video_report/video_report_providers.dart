@@ -6,6 +6,7 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/logic/wr_ai_voice.dart';
 import '../../core/models/survey_models.dart';
 import '../profile/profile_providers.dart';
 import '../survey/survey_providers.dart';
@@ -19,6 +20,12 @@ import 'models/video_report_models.dart';
 ///
 /// Kiểu riêng chứ không phải `Exception` chung: màn hình phải phân biệt được
 /// "chưa cho phép" (mời bật lên) với "hỏng thật" (báo lỗi).
+/// Giọng đọc AI đang tắt (`kAiVoiceEnabled`, mockup v47 / khách 06/10) mà
+/// báo cáo này chưa có bản thu nào để phát lại.
+class VideoReportAiVoiceOff implements Exception {
+  const VideoReportAiVoiceOff();
+}
+
 class VideoReportAiConsentRequired implements Exception {
   const VideoReportAiConsentRequired();
 }
@@ -58,6 +65,8 @@ final videoReportDataProvider = FutureProvider.family<VideoReportData, String>((
   // trước. Chỉ chặn ở nhánh DỰNG MỚI: bản thu đã có sẵn trong `cc_video_jobs`
   // thì đọc lại không gửi gì đi cả, chặn nốt là phạt người dùng vì một lần gửi
   // đã xảy ra từ trước.
+  // Giọng AI tắt thì không dựng bản mới; bản đã có vẫn phát được.
+  if (raw == null && !kAiVoiceEnabled) throw const VideoReportAiVoiceOff();
   if (raw == null && !(await ref.watch(wrAiConsentProvider.future)).isGranted) {
     throw const VideoReportAiConsentRequired();
   }

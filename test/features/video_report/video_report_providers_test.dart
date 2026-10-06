@@ -6,6 +6,7 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/logic/wr_ai_voice.dart';
 import 'package:workreflection_mobile/core/data/survey_repository.dart';
 import 'package:workreflection_mobile/core/models/survey_models.dart';
 import 'package:workreflection_mobile/features/profile/profile_providers.dart';
@@ -146,6 +147,30 @@ void main() {
     },
   );
 
+  // Giọng đọc AI tắt mặc định (mockup v47, khách 06/10): chưa có bản thu thì
+  // KHÔNG dựng mới, không gửi gì sang dịch vụ đọc giọng nói.
+  test('giọng AI tắt + chưa có bản thu → không dựng mới', () async {
+    final videoRepo = _FakeVideoReportRepository(
+      completedJob: null,
+      createResult: const RawVideoJob(
+        audioUrl: 'b.wav',
+        srt: '',
+        durationMs: 8000,
+      ),
+    );
+    final container = _makeContainer(
+      videoRepo: videoRepo,
+      surveyRepo: _FakeSurveyRepository(_premiumReport()),
+    );
+    addTearDown(container.dispose);
+
+    await expectLater(
+      container.read(videoReportDataProvider('report-1').future),
+      throwsA(isA<VideoReportAiVoiceOff>()),
+    );
+    expect(videoRepo.createAndWaitCalled, isFalse);
+  }, skip: kAiVoiceEnabled);
+
   test('cache miss → calls createAndWait once', () async {
     final videoRepo = _FakeVideoReportRepository(
       completedJob: null,
@@ -170,5 +195,5 @@ void main() {
     expect(result.audioDurationMs, 8000);
     expect(result.scenes, isNotEmpty);
     expect(result.scenes.last.endMs, 8000);
-  });
+  }, skip: !kAiVoiceEnabled);
 }

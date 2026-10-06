@@ -6,6 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
 
 import '../../../core/logic/stt_service.dart';
+import '../../../core/logic/wr_ai_voice.dart';
 import '../../../core/logic/voice_answer_matcher.dart';
 import '../../../core/models/survey_models.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -68,6 +69,7 @@ class TtsPlaybackNotifier extends StateNotifier<TtsPlaybackState> {
     String language, {
     String? questionId,
   }) async {
+    if (!kAiVoiceEnabled) return;
     if (state.isPlaying) {
       await _player.pause();
       state = TtsPlaybackState(
@@ -397,11 +399,13 @@ class _QuestionViewState extends ConsumerState<_QuestionView> {
                 onPressed: () => context.pop(),
               ),
         actions: [
-          _TtsButton(
-            questionText: displayText,
-            language: ttsLanguage,
-            questionId: question.id,
-          ),
+          // Giọng đọc AI đang tắt (mockup v47, khách 06/10): không có nút đọc.
+          if (kAiVoiceEnabled)
+            _TtsButton(
+              questionText: displayText,
+              language: ttsLanguage,
+              questionId: question.id,
+            ),
           _MicButton(
             localeId: localeCode == 'en' ? 'en-US' : 'vi-VN',
             maxValue: question.scaleType == ScaleType.enps10 ? 10 : 5,
