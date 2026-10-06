@@ -150,7 +150,7 @@ class WrCard extends StatelessWidget {
     }
     if (dashed) {
       return CustomPaint(
-        foregroundPainter: const _DashedRRectPainter(
+        foregroundPainter: const WrDashedRRectPainter(
           color: WrColors.line,
           radius: kRadius,
         ),
@@ -221,8 +221,9 @@ class WrMentorCard extends StatelessWidget {
   }
 }
 
-class _DashedRRectPainter extends CustomPainter {
-  const _DashedRRectPainter({required this.color, required this.radius});
+/// Viền nét đứt bo góc (`border-style: dashed` của mockup).
+class WrDashedRRectPainter extends CustomPainter {
+  const WrDashedRRectPainter({required this.color, required this.radius});
 
   final Color color;
   final double radius;
@@ -252,6 +253,6 @@ class _DashedRRectPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(_DashedRRectPainter old) =>
+  bool shouldRepaint(WrDashedRRectPainter old) =>
       old.color != color || old.radius != radius;
 }

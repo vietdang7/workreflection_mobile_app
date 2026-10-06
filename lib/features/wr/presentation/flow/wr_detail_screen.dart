@@ -1,17 +1,14 @@
-// Bước 1 — Meaning: đọc Story, đọc câu hỏi Reflection, viết chi tiết cụ thể.
-// Kiến trúc Dữ liệu v2.0 §V, mockup `screenReflectFlow` i===1.
+// Bước 2/4 — Một khoảnh khắc cụ thể (mockup v47, `screenReflectFlow` i===1).
 //
-// Đây là chỗ DUY NHẤT trong luồng có ô chữ ở dạng câu hỏi mở, và §V ghi rõ nó
-// "không bắt buộc". Bỏ trống vẫn đi tiếp được — nút "Tiếp tục" không bao giờ bị
-// khoá. Trước bản 2026-07-31 luồng có tới bốn năm ô chữ như thế này và mọi ô
-// đều bắt buộc; xem `wr_reflect_flow.dart` để biết vì sao điều đó làm hỏng cả
-// phần thống kê.
+// v47 bỏ phần đọc Story và câu Reflection riêng của tình huống. Màn chỉ còn:
+// câu hỏi cố định "Điều gì xuất hiện trong khoảnh khắc đó làm bạn suy nghĩ?",
+// thẻ "Bạn chọn" nhắc lại tình huống vừa chọn, và MỘT ô kể. Ô này BẮT BUỘC —
+// câu kể là nguyên liệu của Insight ở bước sau (`reflectionAhaFor` đọc từ khoá
+// trong đó), nên "Tôi đã kể xong" khoá cho tới khi có chữ.
 //
-// Hai nhánh, đúng §V:
-//   · Có tình huống → đọc Story (khối in nghiêng) rồi tới câu Reflection riêng
-//     của tình huống đó.
-//   · "Điều khác"   → bỏ qua Story/Reflection, hỏi thẳng "Chuyện gì cụ thể đã
-//     xảy ra?".
+// Nhánh "Điều khác" vẫn giữ ba chip "Gần nhất với điều nào?": thiếu nó thì
+// Episode khép với `situation_code = NULL` và lần nhìn lại không được đếm vào
+// phần lặp lại (xem `wr_reflect_flow.dart`).
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,7 +17,7 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/data/wr_repository.dart';
 import '../../../../core/l10n/wr_tr.dart';
 import '../../../../core/logic/wr_flow_error.dart';
-import '../../../../core/logic/wr_reflect_flow.dart';
+import '../../../../core/logic/wr_reflect_v47.dart';
 import '../../../../core/logic/wr_situation_picker.dart';
 import '../../../../core/models/wr_content.dart';
 import '../../../../core/models/wr_episode.dart';
@@ -76,21 +73,20 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
     super.dispose();
   }
 
-  /// Đi tiếp sang bước Insight. Ô trống vẫn đi được (§V: không bắt buộc) —
-  /// lúc đó không ghi Pattern nào, phiên vẫn ở Exploring và bước sau vẫn hợp lệ.
+  /// Đi tiếp sang bước Insight. Ô kể bắt buộc (v47, khách 06/10): Insight ở
+  /// bước sau được dựng từ chính câu kể này.
   Future<void> _continue() async {
     if (_busy) return;
     final text = _controller.text.trim();
+    if (text.isEmpty) return;
     setState(() {
       _busy = true;
       _error = null;
     });
     try {
-      if (text.isNotEmpty) {
-        await ref
-            .read(episodeFlowProvider.notifier)
-            .submitStep(pattern: ReflectionPattern.explore, note: text);
-      }
+      await ref
+          .read(episodeFlowProvider.notifier)
+          .submitStep(pattern: ReflectionPattern.explore, note: text);
       await _saveLink();
       if (mounted) context.push('/wr/flow/meaning');
     } catch (e, s) {
@@ -144,6 +140,19 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
     }
   }
 
+  /// Câu tình huống vừa chọn, cho thẻ "Bạn chọn".
+  String? _chosenTitle(ReflectionEpisode episode) {
+    final code = episode.situationCode;
+    if (code != null) {
+      final all = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
+      for (final s in all) {
+        if (s.code == code) return s.text;
+      }
+    }
+    final note = episode.notes[ReflectionPattern.notice.dbValue]?.trim();
+    return (note == null || note.isEmpty) ? null : note;
+  }
+
   @override
   Widget build(BuildContext context) {
     final episode = ref.watch(episodeFlowProvider);
@@ -151,29 +160,17 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
       return WrFlowGone(onHome: () => context.go('/home'));
     }
 
-    final story = ref.watch(wrEpisodeStoryProvider);
-
-    // Quay lại màn này thì phải thấy nguyên chữ mình đã viết. Chỉ điền một lần:
-    // điền lại ở mỗi lần dựng sẽ nuốt mất ký tự đang gõ dở.
     if (!_prefilled) {
       final saved = episode.notes[ReflectionPattern.explore.dbValue]?.trim();
       if (saved != null && saved.isNotEmpty) _controller.text = saved;
       _prefilled = true;
     }
 
-    final storyText = story?.storyContent.trim();
-    final hasStory =
-        episode.situationCode != null &&
-        storyText != null &&
-        storyText.isNotEmpty;
-
-    // Nhánh "Điều khác": phiên chưa có mã nào, nên hỏi thêm một chạm ở cuối màn.
+    // Nhánh "Điều khác": hỏi thêm ba chip để lần này vẫn được đếm.
     final needsLink = episode.situationCode == null;
     if (needsLink) {
       final all = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
       final recent = ref.watch(wrRecentSituationIdsProvider);
-      // Chỉ chốt danh sách khi dữ liệu đã về. Chốt sớm trên tập rỗng thì màn
-      // này vĩnh viễn không có chip nào — đúng cái bẫy đã mắc ở bước Notice.
       if (all.isNotEmpty && !recent.isLoading) {
         _fallbackChoices ??= pickSituationChoices(
           all: all,
@@ -186,109 +183,69 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
       }
     }
 
+    final hasText = _controller.text.trim().isNotEmpty;
+
     return WrFlowScaffold(
-      eyebrow: hasStory
-          ? tr('Một câu chuyện quen thuộc', 'A familiar story')
-          : tr('Chi tiết cụ thể', 'The specifics'),
-      // Changelog §1.1: đoạn giải thích chỉ có ở nhánh CÓ câu chuyện. Nhánh
-      // "Điều khác" không mượn chuyện của ai nên không có gì để chuẩn hoá.
-      eyebrowNote: hasStory ? kFamiliarStoryIntro : null,
-      // CÓ câu chuyện thì câu hỏi KHÔNG nằm ở đây.
-      //
-      // Họp 26_1: "giao diện hiện tại đang để câu hỏi trước câu chuyện khiến
-      // người dùng bị đứt mạch và không hiểu vì sao lại có câu hỏi đó". Câu hỏi
-      // là câu hỏi VỀ câu chuyện, nên nó phải đứng sau khi đã đọc chuyện — mà
-      // `title` của khung thì luôn nằm trên `child`. Nhánh "Điều khác" không có
-      // chuyện nào để đọc trước, giữ nguyên như cũ.
-      title: hasStory ? null : kDetailPrompt,
-      // Mục 3.2 giảm cỡ chữ câu gợi mở còn 70%. Áp cả ở nhánh "Điều khác" vì
-      // hai nhánh dùng đúng một câu, để chữ hai bên không lệch cỡ nhau.
-      titleScale: kDetailPromptScale,
-      subtitle: hasStory ? null : kCustomDetailNote,
-      progress: reflectProgress(1),
+      eyebrow: reflectStepEyebrow(1),
+      title: kMomentTitle,
+      subtitle: kMomentSubtitle,
+      step: 1,
       onBack: () => context.pop(),
       onClose: _leave,
-      // Luôn bật. §V: bước này không bắt buộc, nên khoá nút khi ô trống là biến
-      // một bước tuỳ chọn thành bắt buộc.
-      primaryLabel: tr('Tiếp tục', 'Continue'),
+      primaryLabel: kMomentDone,
       busy: _busy,
-      onPrimary: _continue,
+      onPrimary: hasText ? _continue : null,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (hasStory) ...[
-            Container(
-              key: const Key('wr_detail_story'),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-              decoration: BoxDecoration(
-                color: WrColors.white,
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(color: WrColors.line),
-              ),
-              child: WrParagraph(
-                storyText,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontStyle: FontStyle.italic,
-                  color: WrColors.navy,
-                  height: 1.7,
+          Container(
+            key: const Key('wr_detail_chosen'),
+            width: double.infinity,
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+            decoration: BoxDecoration(
+              color: WrColors.navy.withValues(alpha: 0.035),
+              borderRadius: BorderRadius.circular(18),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                WrEyebrow(tr('Bạn chọn', 'You picked')),
+                const SizedBox(height: 7),
+                WrParagraph(
+                  _chosenTitle(episode) ??
+                      tr('Điều bạn vừa chọn', 'What you just picked'),
+                  style: const TextStyle(
+                    fontSize: 14.5,
+                    fontWeight: FontWeight.w700,
+                    color: WrColors.navy,
+                    height: 1.45,
+                  ),
+                  textAlign: TextAlign.start,
                 ),
-              ),
+              ],
             ),
-            const SizedBox(height: 28),
-            // Câu hỏi, SAU câu chuyện và canh giữa (họp 26_1).
-            //
-            // Canh giữa là để nó tách hẳn khỏi khối chuyện phía trên: hai khối
-            // chữ cùng canh trái, cùng cỡ gần nhau thì đọc ra như một đoạn văn
-            // dài, và câu hỏi chìm mất.
-            WrParagraph(
-              kDetailPrompt,
-              key: const Key('wr_detail_question'),
-              style: wrFlowTitleStyle.copyWith(
-                fontSize: wrFlowTitleStyle.fontSize! * kDetailPromptScale,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 14),
-            WrParagraph(
-              kStoryDetailInvite,
-              key: Key('wr_detail_invite'),
-              style: TextStyle(
-                fontSize: 15.5,
-                color: WrColors.muted,
-                height: 1.55,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-          ],
-          // Nút mic ngay trong ô (họp khách 2026-07-29): trên điện thoại, bắt
-          // gõ là cách chắc chắn nhất để không ai viết gì.
+          ),
+          const SizedBox(height: 12),
           WrVoiceField(
             fieldKey: const Key('wr_detail_field'),
             controller: _controller,
-            // Changelog §1.1: gợi ý đổi từ câu chung chung sang một ví dụ có
-            // cấu trúc thời gian – nhân vật – sự kiện. Ba dấu chấm lửng để
-            // trống đúng ba chỗ người viết cần điền.
-            hintText: hasStory ? kStoryDetailHint : kCustomDetailHint,
-            minLines: 4,
-            maxLines: 6,
-            onChanged: () {},
+            hintText: kMomentHint,
+            minLines: 5,
+            maxLines: 8,
+            onChanged: () => setState(() {}),
           ),
           if (needsLink && (_fallbackChoices?.isNotEmpty ?? false)) ...[
             const SizedBox(height: 24),
             WrEyebrow(tr('GẦN NHẤT VỚI ĐIỀU NÀO?', 'CLOSEST TO WHICH ONE?')),
             const SizedBox(height: 6),
             WrParagraph(
-              // Nói thẳng chọn để làm gì. Một câu hỏi không có lý do thì đọc ra
-              // như phần mềm đang ép phân loại điều vừa kể.
               tr(
                 'Chọn một điều để lần này được tính vào phần lặp lại của bạn. '
                     'Bỏ qua cũng không sao.',
                 'Pick one so this time counts towards what repeats for you. '
                     'Skipping is fine too.',
               ),
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 13.5,
                 color: WrColors.text3,
                 height: 1.5,
@@ -296,16 +253,15 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
             ),
             const SizedBox(height: 12),
             for (final s in _fallbackChoices!) ...[
-              _LinkChip(
+              WrRadioOption(
                 key: Key('wr_detail_link_${s.code}'),
                 label: s.text,
                 selected: _linkedCode == s.code,
-                // Chạm lần nữa là bỏ chọn — người dùng đổi ý không cần rời màn.
                 onTap: () => setState(
                   () => _linkedCode = _linkedCode == s.code ? null : s.code,
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 8),
             ],
           ],
           if (_error != null) ...[
@@ -335,52 +291,5 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
     await _saveLink();
     await ref.read(episodeFlowProvider.notifier).pause();
     if (mounted) context.go('/home');
-  }
-}
-
-/// Chip "gần nhất với điều nào" — cùng hình thức với chip ở bước Notice, vì nó
-/// trả lời cùng một câu hỏi.
-class _LinkChip extends StatelessWidget {
-  const _LinkChip({
-    super.key,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-        decoration: BoxDecoration(
-          color: selected
-              ? WrColors.coral.withValues(alpha: 0.07)
-              : WrColors.white,
-          borderRadius: BorderRadius.circular(13),
-          border: Border.all(
-            color: selected ? WrColors.coral : WrColors.line,
-            width: 1.5,
-          ),
-        ),
-        child: WrParagraph(
-          label,
-          style: const TextStyle(
-            fontSize: 14.5,
-            fontWeight: FontWeight.w600,
-            color: WrColors.navy,
-            height: 1.4,
-          ),
-        ),
-      ),
-    );
   }
 }

@@ -1,7 +1,12 @@
-// Màn 6 — khép Episode.
+// Hoàn tất — khép Episode (mockup v47, `screenReflectFlow` sau bước 4).
 //
 // Đây là nơi duy nhất Meaning được đưa vào Career Memory (WDA Invariant 6:
 // chỉ những trải nghiệm đã được chuyển hóa mới được lưu).
+//
+// Hai tiêu đề như mockup: "Đã ghi nhận một cột mốc" khi lần này là một "lần
+// đầu" theo luật Cột mốc của Career Memory (`milestoneTextForStory` — cột mốc là
+// cờ trên STORY, không phải bản ghi riêng), còn lại "Đã lưu vào Career Memory".
+// Bên dưới là "Điều được giữ lại": Insight người dùng vừa giữ ở bước 3.
 //
 // Nội dung hiển thị ở đây là GHI NHẬN, không phải diễn giải — nên bản miễn phí
 // vẫn thấy đủ (yêu cầu khách #4).
@@ -17,8 +22,14 @@ import '../../../../core/theme/wr_colors.dart';
 import '../../episode_flow_controller.dart';
 import '../../wr_providers.dart';
 import '../../../../core/logic/wr_flow_error.dart';
+import '../../../../core/logic/wr_career_memory_rules.dart'
+    show closedStories, milestoneTextForStory;
+import '../../../../core/logic/wr_reflect_v47.dart';
 import '../../../../core/logic/wr_repeated_situations.dart';
-import 'wr_flow_scaffold.dart';
+import '../../../../core/models/wr_episode.dart';
+import '../../../../core/theme/wr_text.dart';
+import '../../../../core/widgets/eyebrow.dart';
+import '../../../../core/widgets/wr_paragraph.dart';
 
 /// Mockup v47: sheet lưu hành trình hiện sau màn Xong 1100ms.
 const kSaveSheetDelay = Duration(milliseconds: 1100);
@@ -35,6 +46,9 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
   String? _meaning;
   String? _situationCode;
 
+  /// Episode vừa khép, để xét Cột mốc.
+  ReflectionEpisode? _closed;
+
   @override
   void initState() {
     super.initState();
@@ -45,6 +59,7 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
     final episode = ref.read(episodeFlowProvider);
     _meaning = episode?.draftMeaning;
     _situationCode = episode?.situationCode;
+    _closed = episode;
     try {
       await ref.read(episodeFlowProvider.notifier).integrate();
     } catch (e, s) {
@@ -75,62 +90,231 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
   /// Đếm từ Episode chứ không từ `wr_pattern_counts` (v2.0 §4.3): bảng kia cộng
   /// thêm một lần nữa mỗi khi người dùng mở lại một Episode đã khép và xác nhận
   /// Ý nghĩa lần hai, nên "lần thứ N" ở đây sẽ vượt số lần ghi ở màn chi tiết.
-  int? _occurrenceCount() {
+  int? _occurrenceCount(List<ReflectionEpisode>? episodes) {
     final code = _situationCode;
-    if (code == null) return null;
-    final episodes = ref.watch(wrEpisodeHistoryProvider).valueOrNull;
-    if (episodes == null) return null;
+    if (code == null || episodes == null) return null;
     return countSituation(episodes, code);
+  }
+
+  /// Câu Cột mốc nếu lần nhìn lại vừa khép là một "lần đầu".
+  String? _milestone(List<ReflectionEpisode>? episodes) {
+    final episode = _closed;
+    if (episode == null || episodes == null) return null;
+    final previous = closedStories([
+      for (final e in episodes)
+        if (e.id != episode.id) e,
+    ]);
+    return milestoneTextForStory(story: episode, previousStories: previous);
+  }
+
+  void _home() {
+    ref.read(episodeFlowProvider.notifier).leave();
+    ref.read(pendingEnergyProvider.notifier).state = null;
+    context.go('/home');
   }
 
   @override
   Widget build(BuildContext context) {
-    final count = _occurrenceCount();
+    final history = _integrating
+        ? null
+        : ref.watch(wrEpisodeHistoryProvider).valueOrNull;
+    final milestone = _milestone(history);
+    final count = _occurrenceCount(history);
 
-    return WrFlowScaffold(
-      eyebrow: tr('Lưu vào hành trình', 'Save to my journey'),
-      title: _integrating
-          ? tr('Đang lưu lại…', 'Saving…')
-          : tr(
-              'Góc nhìn này đã được kết nối vào hành trình sự nghiệp của bạn.',
-              'This way of seeing it is now part of your career journey.',
-            ),
-      titleScale: 0.8,
-      progress: 1,
-      primaryLabel: 'Xong',
-      busy: _integrating,
-      onPrimary: () {
-        ref.read(episodeFlowProvider.notifier).leave();
-        ref.read(pendingEnergyProvider.notifier).state = null;
-        context.go('/home');
-      },
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          if (_meaning != null && _meaning!.isNotEmpty)
-            Text(
-              '"${_meaning!}"',
-              style: const TextStyle(
-                fontSize: 19,
-                fontStyle: FontStyle.italic,
-                color: WrColors.navy,
-                height: 1.5,
+    return Scaffold(
+      backgroundColor: WrColors.pageBg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            Align(
+              alignment: Alignment.centerRight,
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(22, 12, 18, 0),
+                child: TextButton(
+                  key: const Key('wr_flow_close'),
+                  onPressed: _integrating ? null : _home,
+                  style: TextButton.styleFrom(foregroundColor: WrColors.text2),
+                  child: Text(
+                    tr('Đóng', 'Close'),
+                    style: const TextStyle(fontSize: 13.5),
+                  ),
+                ),
               ),
             ),
-          if (count != null && count >= 2) ...[
-            const SizedBox(height: 28),
-            Text(
+            Expanded(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 28),
+                  child: _integrating
+                      ? Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const SizedBox(
+                              width: 28,
+                              height: 28,
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                            const SizedBox(height: 14),
+                            Text(
+                              tr('Đang lưu lại…', 'Saving…'),
+                              style: const TextStyle(
+                                fontSize: 15,
+                                color: WrColors.text2,
+                              ),
+                            ),
+                          ],
+                        )
+                      : _doneBody(milestone: milestone, count: count),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _doneBody({String? milestone, int? count}) {
+    final kept = _meaning?.trim();
+    return Column(
+      key: const Key('wr_done_body'),
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 60,
+          height: 60,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: WrColors.teal.withValues(alpha: 0.12),
+          ),
+          child: const Icon(
+            Icons.check_rounded,
+            size: 28,
+            color: WrColors.teal,
+          ),
+        ),
+        const SizedBox(height: 18),
+        Text(
+          milestone != null ? kDoneMilestoneTitle : kDoneSavedTitle,
+          key: const Key('wr_done_title'),
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 21,
+            fontWeight: FontWeight.w800,
+            color: WrColors.navy,
+            height: 1.32,
+          ),
+        ),
+        const SizedBox(height: 8),
+        WrParagraph(
+          milestone != null ? kDoneMilestoneNote : kDoneSavedNote,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontSize: 14,
+            color: WrColors.text2,
+            height: 1.65,
+          ),
+        ),
+        if (kept != null && kept.isNotEmpty)
+          _MemoryNote(
+            key: const Key('wr_done_kept'),
+            eyebrow: kDoneKept,
+            child: WrParagraph(
+              '“$kept”',
+              style: WrText.serifQuote(
+                fontSize: 14,
+                color: WrColors.navy,
+                height: 1.6,
+              ),
+              textAlign: TextAlign.start,
+            ),
+          ),
+        if (milestone != null)
+          _MemoryNote(
+            key: const Key('wr_done_milestone'),
+            eyebrow: tr('Career Memory · Cột mốc', 'Career Memory · Milestone'),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                WrParagraph(
+                  milestone,
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: WrColors.navy,
+                    height: 1.45,
+                  ),
+                  textAlign: TextAlign.start,
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  tr('Được ghi nhận hôm nay', 'Recorded today'),
+                  style: const TextStyle(fontSize: 12.5, color: WrColors.text3),
+                ),
+              ],
+            ),
+          ),
+        if (count != null && count >= 2)
+          Padding(
+            padding: const EdgeInsets.only(bottom: 18),
+            child: Text(
               tr(
                 'Bạn đã ghi lại tình huống này $count lần',
                 'You have recorded this situation $count times',
               ),
-              style: const TextStyle(
-                fontSize: 15.5,
-                color: WrColors.muted,
-                height: 1.55,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 13, color: WrColors.text3),
+            ),
+          ),
+        const SizedBox(height: 4),
+        SizedBox(
+          width: double.infinity,
+          child: FilledButton(
+            key: const Key('wr_flow_primary'),
+            onPressed: _home,
+            style: FilledButton.styleFrom(
+              backgroundColor: WrColors.navy,
+              foregroundColor: WrColors.cream,
+              minimumSize: const Size.fromHeight(50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
               ),
             ),
-          ],
+            child: Text(
+              kDoneHome,
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// `.completion-memory`: vạch coral bên trái, nền ửng coral.
+class _MemoryNote extends StatelessWidget {
+  const _MemoryNote({super.key, required this.eyebrow, required this.child});
+
+  final String eyebrow;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.fromLTRB(0, 12, 0, 10),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        color: WrColors.coral.withValues(alpha: 0.06),
+        borderRadius: const BorderRadius.horizontal(right: Radius.circular(14)),
+        border: const Border(left: BorderSide(color: WrColors.coral, width: 3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          WrEyebrow(eyebrow, color: WrColors.pillCoralText),
+          const SizedBox(height: 5),
+          child,
         ],
       ),
     );
