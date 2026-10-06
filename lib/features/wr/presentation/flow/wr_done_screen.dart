@@ -11,12 +11,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/l10n/wr_tr.dart';
+import '../../../auth/guest_session.dart';
+import '../../../auth/presentation/wr_save_journey_sheet.dart';
 import '../../../../core/theme/wr_colors.dart';
 import '../../episode_flow_controller.dart';
 import '../../wr_providers.dart';
 import '../../../../core/logic/wr_flow_error.dart';
 import '../../../../core/logic/wr_repeated_situations.dart';
 import 'wr_flow_scaffold.dart';
+
+/// Mockup v47: sheet lưu hành trình hiện sau màn Xong 1100ms.
+const kSaveSheetDelay = Duration(milliseconds: 1100);
 
 class WrDoneScreen extends ConsumerStatefulWidget {
   const WrDoneScreen({super.key});
@@ -47,6 +52,22 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
       /* best-effort: nội dung đã được ghi ở từng bước */
     }
     if (mounted) setState(() => _integrating = false);
+    await _inviteGuestToSave();
+  }
+
+  /// Khách vừa xong lần nhìn lại đầu tiên: mời lưu hành trình (mockup v47,
+  /// `saveSheetHTML`). Trễ 1,1 giây như mockup, để người dùng kịp đọc màn
+  /// Xong trước khi bị hỏi. Mỗi khách chỉ được mời tự động một lần; "Để sau"
+  /// thì lối lưu vẫn nằm ở màn Tài khoản.
+  Future<void> _inviteGuestToSave() async {
+    if (!ref.read(isGuestProvider)) return;
+    final uid = ref.read(currentUserIdProvider);
+    if (uid == null || await saveSheetSeen(uid)) return;
+    await Future<void>.delayed(kSaveSheetDelay);
+    if (!mounted || !ref.read(isGuestProvider)) return;
+    await markSaveSheetSeen(uid);
+    if (!mounted) return;
+    await showSaveJourneySheet(context);
   }
 
   /// Số lần đã gặp tình huống này — thuần ghi nhận, không diễn giải.

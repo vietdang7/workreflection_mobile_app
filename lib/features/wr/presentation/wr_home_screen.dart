@@ -414,6 +414,41 @@ class _CheckinQuestion extends ConsumerWidget {
   }
 }
 
+/// Chạm một ô cảm xúc: ghi check-in và mở một lần nhìn lại MỚI.
+///
+/// Dùng chung cho lưới Home và bước cuối của Onboarding (mockup v47: chọn cảm
+/// xúc là vào thẳng lần nhìn lại đầu tiên). Người gọi tự điều hướng sang
+/// `/wr/flow/step`.
+void startReflectionFromCheckin(WidgetRef ref, CheckinOption option) {
+  ref.read(pendingEnergyProvider.notifier).state = option.energy;
+  ref.read(pendingMoodProvider.notifier).state = option.mood;
+
+  // Chạm ô cảm xúc là BẮT ĐẦU MỘT LẦN NHÌN LẠI MỚI — buông phiên mà
+  // controller còn đang giữ, trước khi đi tiếp.
+  //
+  // Khách báo 2026-08-24: "các check in lặp lại 2 lần không được count".
+  // Đúng, và đây là chỗ sinh ra nó. Bỏ dở một phiên bằng thanh tab hay
+  // nút Back của hệ thống thì phiên ấy vẫn nằm nguyên trong
+  // `episodeFlowProvider` — chỉ nút "Xong" mới gọi `leave()`. Lần check-in
+  // kế tiếp bị `wr_step_screen` kéo thẳng về bước còn dở của phiên cũ:
+  // không Episode mới, bộ đếm Career Health đứng yên.
+  //
+  // Tệ hơn cả việc đếm thiếu là việc nó KHÔNG NHẤT QUÁN: đóng app rồi mở
+  // lại thì state rỗng và đúng thao tác ấy lại được đếm. Cùng một hành vi,
+  // hai kết quả, không ai đối chiếu được.
+  //
+  // Phiên cũ không mất gì: nó vẫn mở trong DB, và thẻ "Đang bỏ ngỏ" dưới
+  // lưới này vẫn mời quay lại — đường đó gọi `resume()` với Episode đọc
+  // thẳng từ `wrOpenEpisodeProvider`, không phụ thuộc state ở đây. Khác
+  // biệt duy nhất: người dùng chọn quay lại phiên cũ, thay vì bị đưa vào
+  // một phiên họ không nhớ mình đang dở.
+  ref.read(episodeFlowProvider.notifier).leave();
+
+  ref
+      .read(episodeFlowProvider.notifier)
+      .saveCheckin(energy: option.energy, mood: option.mood);
+}
+
 class _CheckinTile extends ConsumerWidget {
   const _CheckinTile({required this.option, required this.selected});
 
@@ -434,33 +469,7 @@ class _CheckinTile extends ConsumerWidget {
       // Check-in ghi ngay tại đây, còn Episode chỉ mở khi người dùng thật sự
       // chạm một tình huống ở màn sau — lý do ở `wr_step_screen.dart`.
       onTap: () {
-        ref.read(pendingEnergyProvider.notifier).state = option.energy;
-        ref.read(pendingMoodProvider.notifier).state = option.mood;
-
-        // Chạm ô cảm xúc là BẮT ĐẦU MỘT LẦN NHÌN LẠI MỚI — buông phiên mà
-        // controller còn đang giữ, trước khi đi tiếp.
-        //
-        // Khách báo 2026-08-24: "các check in lặp lại 2 lần không được count".
-        // Đúng, và đây là chỗ sinh ra nó. Bỏ dở một phiên bằng thanh tab hay
-        // nút Back của hệ thống thì phiên ấy vẫn nằm nguyên trong
-        // `episodeFlowProvider` — chỉ nút "Xong" mới gọi `leave()`. Lần check-in
-        // kế tiếp bị `wr_step_screen` kéo thẳng về bước còn dở của phiên cũ:
-        // không Episode mới, bộ đếm Career Health đứng yên.
-        //
-        // Tệ hơn cả việc đếm thiếu là việc nó KHÔNG NHẤT QUÁN: đóng app rồi mở
-        // lại thì state rỗng và đúng thao tác ấy lại được đếm. Cùng một hành vi,
-        // hai kết quả, không ai đối chiếu được.
-        //
-        // Phiên cũ không mất gì: nó vẫn mở trong DB, và thẻ "Đang bỏ ngỏ" dưới
-        // lưới này vẫn mời quay lại — đường đó gọi `resume()` với Episode đọc
-        // thẳng từ `wrOpenEpisodeProvider`, không phụ thuộc state ở đây. Khác
-        // biệt duy nhất: người dùng chọn quay lại phiên cũ, thay vì bị đưa vào
-        // một phiên họ không nhớ mình đang dở.
-        ref.read(episodeFlowProvider.notifier).leave();
-
-        ref
-            .read(episodeFlowProvider.notifier)
-            .saveCheckin(energy: option.energy, mood: option.mood);
+        startReflectionFromCheckin(ref, option);
         context.push('/wr/flow/step');
       },
       // Mockup bản (4) §screenHome: ô là VIỀN 1.5px, bo 13, chữ luôn navy. Ô
@@ -1205,8 +1214,9 @@ class _ContinueTodaySection extends ConsumerWidget {
     final pending = ref.watch(wrPendingPracticeStepProvider).valueOrNull;
     final userActions =
         ref.watch(wrUserActionsProvider).valueOrNull ?? const [];
-    final pendingAction =
-        userActions.where((a) => !a.isCompleted && !a.doneToday).firstOrNull;
+    final pendingAction = userActions
+        .where((a) => !a.isCompleted && !a.doneToday)
+        .firstOrNull;
 
     // Chưa theo chủ đề nào: cùng một khối, cùng một chỗ, đổi lời và đổi điểm
     // đến sang danh sách chủ đề.

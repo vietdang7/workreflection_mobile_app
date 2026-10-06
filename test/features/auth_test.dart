@@ -73,6 +73,27 @@ class FakeAuthRepository implements AuthRepository {
     deleteAccountCalls++;
     if (deleteShouldFail) throw Exception('Network error');
   }
+
+  int anonymousSignIns = 0;
+  String? attachedEmail;
+  String? attachedName;
+  bool attachShouldFail = false;
+
+  /// `false` giả lập project bật "Confirm email": email chờ xác nhận.
+  bool attachConfirmsImmediately = true;
+
+  @override
+  Future<void> signInAnonymously() async {
+    anonymousSignIns++;
+  }
+
+  @override
+  Future<bool> attachEmail(String email, String password, String name) async {
+    if (attachShouldFail) throw Exception('User already registered');
+    attachedEmail = email;
+    attachedName = name;
+    return attachConfirmsImmediately;
+  }
 }
 
 Widget _wrap(Widget child, {AuthRepository? repo}) {

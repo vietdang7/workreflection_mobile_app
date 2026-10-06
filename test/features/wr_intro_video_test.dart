@@ -2,11 +2,11 @@
 // giọng đọc AI sinh sẵn một lần, đóng gói trong app.
 //
 // Khoá:
-//   1. Luật bật MỘT lần theo thiết bị: lần đầu mở màn chào thì tự bật, đánh
-//      dấu NGAY lúc mở; đã đánh dấu thì không tự bật nữa.
-//   2. Không bao giờ treo màn chào: audio lỗi hoặc quá 8 giây thì hiện câu
+//   1. Onboarding (mockup v47): video mở SAU bước Riêng tư, không tự bật ở
+//      bước đầu; cờ đã xem được ghi lúc mở.
+//   2. Không bao giờ treo Onboarding: audio lỗi hoặc quá 8 giây thì hiện câu
 //      "Chưa tải được video..." kèm nút đóng; nút đóng bấm được cả lúc đang
-//      tải; đóng xong vẫn bấm "Bắt đầu" được.
+//      tải; đóng xong sang bước chọn cảm xúc.
 //   3. Web bắt đầu tắt tiếng (trình duyệt chặn tự phát có tiếng), có nút
 //      "Bật tiếng".
 //   4. Không có giọng đọc (chưa sinh được, hoặc lời đọc đã sửa mà chưa sinh
@@ -132,6 +132,20 @@ Widget _app(
       home: home,
     ),
   );
+}
+
+/// Bấm "Tiếp tục" qua ba bước có hero, tới bước Riêng tư rồi bấm tiếp —
+/// đúng chỗ video hướng dẫn mở.
+Future<void> _toPrivacyAndContinue(WidgetTester tester) async {
+  for (var i = 0; i < 4; i++) {
+    await tester.tap(find.byKey(const Key('onboarding_next')));
+    // Qua hết hiệu ứng chuyển bước (220ms) để không còn hai nút cùng khoá:
+    // khung đầu khởi động hiệu ứng, khung giữa chạy hết, khung cuối gỡ màn cũ.
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.pump();
+  }
+  await _settleOpen(tester);
 }
 
 Future<void> _settleOpen(WidgetTester tester) async {
@@ -281,37 +295,26 @@ void main() {
   );
 
   // -------------------------------------------------------------------------
-  // Màn chào
+  // Onboarding (mockup v47): video phát SAU bước Riêng tư
   // -------------------------------------------------------------------------
 
-  testWidgets('lần đầu mở màn chào → sheet video tự bật, cờ = true', (
-    tester,
-  ) async {
-    await tester.pumpWidget(_app(const OnboardingScreen()));
-    await _settleOpen(tester);
+  testWidgets(
+    'bước đầu không tự bật video; hết bước Riêng tư thì mở, cờ = true',
+    (tester) async {
+      await tester.pumpWidget(_app(const OnboardingScreen()));
+      await _settleOpen(tester);
+      expect(find.byType(WrIntroVideoSheet), findsNothing);
 
-    expect(find.byType(WrIntroVideoSheet), findsOneWidget);
-    final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getBool(kIntroVideoShownKey), isTrue);
-  });
-
-  testWidgets('cờ = true → không tự bật; chạm thẻ video thì mở', (
-    tester,
-  ) async {
-    SharedPreferences.setMockInitialValues({kIntroVideoShownKey: true});
-    await tester.pumpWidget(_app(const OnboardingScreen()));
-    await _settleOpen(tester);
-    expect(find.byType(WrIntroVideoSheet), findsNothing);
-
-    await tester.ensureVisible(find.byKey(const Key('intro_video_card')));
-    await tester.tap(find.byKey(const Key('intro_video_card')));
-    await _settleOpen(tester);
-    expect(find.byType(WrIntroVideoSheet), findsOneWidget);
-  });
+      await _toPrivacyAndContinue(tester);
+      expect(find.byType(WrIntroVideoSheet), findsOneWidget);
+      final prefs = await SharedPreferences.getInstance();
+      expect(prefs.getBool(kIntroVideoShownKey), isTrue);
+    },
+  );
 
   testWidgets(
-    'controller lỗi → hiện câu chưa tải được + nút đóng; đóng xong vẫn bấm '
-    'Bắt đầu được',
+    'controller lỗi → hiện câu chưa tải được + nút đóng; đóng xong sang bước '
+    'chọn cảm xúc',
     (tester) async {
       final audio = FakeIntroAudio(failLoad: true);
       await tester.pumpWidget(
@@ -322,18 +325,14 @@ void main() {
         ),
       );
       await _settleOpen(tester);
+      await _toPrivacyAndContinue(tester);
 
       expect(audio.loadedUrls, ['asset:///assets/intro/intro_vi.mp3']);
       expect(find.text(_errorText), findsOneWidget);
       await tester.tap(find.byKey(const Key('intro_video_close')));
       await _settleOpen(tester);
       expect(find.byType(WrIntroVideoSheet), findsNothing);
-
-      await tester.tap(find.text('Bắt đầu'));
-      await tester.pump();
-      await tester.pump(const Duration(milliseconds: 50));
-      final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getBool('seen_onboarding'), isTrue);
+      expect(find.byKey(const Key('onboarding_mood_ok')), findsOneWidget);
     },
   );
 
@@ -354,7 +353,6 @@ void main() {
   });
 
   testWidgets('nút đóng bấm được ngay cả khi video đang tải', (tester) async {
-    SharedPreferences.setMockInitialValues({kIntroVideoShownKey: true});
     final audio = FakeIntroAudio(hangLoad: true);
     await tester.pumpWidget(
       _app(
@@ -364,15 +362,13 @@ void main() {
       ),
     );
     await tester.pump();
-    await tester.ensureVisible(find.byKey(const Key('intro_video_card')));
-    await tester.tap(find.byKey(const Key('intro_video_card')));
-    await _settleOpen(tester);
+    await _toPrivacyAndContinue(tester);
     expect(find.byType(WrIntroVideoSheet), findsOneWidget);
 
     await tester.tap(find.byKey(const Key('intro_video_close')));
     await _settleOpen(tester);
     expect(find.byType(WrIntroVideoSheet), findsNothing);
-    expect(find.text('Bắt đầu'), findsOneWidget);
+    expect(find.byKey(const Key('onboarding_mood_ok')), findsOneWidget);
     // Hết hạn 8 giây sau khi đã đóng cũng không được ném lỗi.
     await tester.pump(const Duration(seconds: 9));
     expect(tester.takeException(), isNull);

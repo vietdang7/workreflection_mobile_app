@@ -7,6 +7,7 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/features/auth/guest_session.dart';
 import 'package:workreflection_mobile/core/data/user_session_scope.dart';
 import 'package:workreflection_mobile/core/data/wr_owned_skill_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
@@ -50,6 +51,8 @@ void main() {
     test('gồm định danh người dùng — nguồn của mọi truy vấn theo user', () {
       expect(userScopedProviders, contains(currentUserIdProvider));
       expect(userScopedProviders, contains(currentUserEmailProvider));
+      // Khách → tài khoản khác trên cùng máy: cờ khách phải đọc lại.
+      expect(userScopedProviders, contains(isGuestProvider));
     });
 
     test('gồm cửa đọc/ghi dữ liệu chính', () {

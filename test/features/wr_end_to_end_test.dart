@@ -89,6 +89,13 @@ class _FakeAuth implements AuthRepository {
 
   @override
   Future<void> deleteAccount() async => calls.add('deleteAccount');
+
+  @override
+  Future<void> signInAnonymously() async {}
+
+  @override
+  Future<bool> attachEmail(String email, String password, String name) async =>
+      true;
 }
 
 // ---------------------------------------------------------------------------

@@ -51,6 +51,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../l10n/wr_locale_scope.dart';
 import '../../features/auth/presentation/auth_screen.dart';
+import '../../features/auth/presentation/wr_save_account_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/shell/shell_screen.dart';
 import '../../features/splash/splash_screen.dart';
@@ -137,8 +138,18 @@ String? computeRedirect({
   required bool hasSession,
   required bool seenOnboarding,
   required String location,
+  bool isGuest = false,
 }) {
   const authScreens = {'/splash', '/onboarding', '/auth'};
+
+  // Khách (user ẩn danh, mockup v47) đã có phiên nhưng chưa có tài khoản.
+  // Họ vẫn được ở lại Onboarding — phiên khách được mở ngay giữa Onboarding,
+  // lúc chọn cảm xúc, và router không được giật họ ra Home giữa chừng — và
+  // vẫn mở được màn đăng nhập để vào tài khoản cũ. Chỉ màn chờ mới chuyển đi.
+  if (hasSession && isGuest) {
+    if (location == '/splash') return '/home';
+    return null;
+  }
 
   if (hasSession) {
     // Logged-in users must not linger on auth/onboarding screens.
@@ -234,7 +245,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: '/splash',
     refreshListenable: authNotifier,
     redirect: (context, state) {
-      final hasSession = Supabase.instance.client.auth.currentSession != null;
+      final auth = Supabase.instance.client.auth;
+      final hasSession = auth.currentSession != null;
+      final isGuest = auth.currentUser?.isAnonymous ?? false;
       final seenOnboarding = seenOnboardingAsync.valueOrNull ?? false;
       final location = state.uri.toString();
 
@@ -242,6 +255,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         hasSession: hasSession,
         seenOnboarding: seenOnboarding,
         location: location,
+        isGuest: isGuest,
       );
     },
     routes: [
@@ -251,6 +265,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => OnboardingScreen(),
       ),
       wrRoute(path: '/auth', builder: (context, state) => AuthScreen()),
+      // Khách lưu hành trình bằng Email (sheet "Lưu lại hành trình").
+      wrRoute(
+        path: '/auth/save',
+        builder: (context, state) => WrSaveAccountScreen(),
+      ),
 
       // Survey flow (fullscreen, outside shell)
       wrRoute(

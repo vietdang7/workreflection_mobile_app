@@ -1,445 +1,606 @@
-// Màn chào: MỘT màn thay cho ba slide Reflect · Understand · Grow (họp khách
-// 01/10, đợt E).
+// Onboarding năm bước — mockup v47 (`screenOnboarding`, 06/10/2026).
 //
-// Chỉ gồm: logo, tiêu đề chào mừng, thẻ video hướng dẫn, nút "Bắt đầu".
+//   0 Dừng lại một chút   hero thành phố theo khung giờ
+//   1 Thấy rõ hơn         hero `understand`
+//   2 Hành trình          hero `grow`
+//   3 Riêng tư            chỉ có chữ (v47 bỏ giờ nhắc và dòng điều khoản)
+//      → video hướng dẫn (khách 06/10: "video HDSD để sau landing page")
+//   4 Bắt đầu             chọn cảm xúc → vào thẳng lần nhìn lại đầu tiên
 //
-// Lần đầu mở trên một máy, video hướng dẫn tự bật toàn màn (sau khung hình
-// đầu) và cờ `wr_intro_video_shown` được ghi NGAY lúc mở. Nút "Bắt đầu" không
-// bao giờ phụ thuộc video: video lỗi, đang tải hay đã đóng thì vẫn bấm được.
+// Không bắt đăng ký trước. Chọn cảm xúc (hoặc Bỏ qua) mở một phiên KHÁCH
+// (Supabase ẩn danh, `guest_session.dart`); sau lần nhìn lại đầu tiên, màn Xong
+// mời lưu hành trình bằng email.
+//
+// Người đã có tài khoản (cài lại app, đổi máy) vào bằng dòng "Đã có tài khoản?
+// Đăng nhập" ở bước đầu — mockup không vẽ dòng này, nhưng thiếu nó thì họ chỉ
+// còn cách tạo một phiên khách rỗng.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/wr_tr.dart';
+import '../../../core/logic/vn_date.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/wr_colors.dart';
-import '../../../core/widgets/wr_title_text.dart';
+import '../../../core/widgets/wr_hero_header.dart';
+import '../../auth/guest_session.dart';
+import '../../wr/presentation/wr_home_screen.dart'
+    show CheckinOption, kCheckinOptions, startReflectionFromCheckin;
 import '../intro_video_providers.dart';
 import 'wr_intro_video_sheet.dart';
-import 'wr_logo.dart';
+
+/// Ba bước có hero (`ONB_STEPS` của mockup v47).
+typedef _HeroStep = ({String eyebrow, String title, String text});
+
+List<_HeroStep> get _heroSteps => [
+  (
+    eyebrow: tr('Dừng lại một chút', 'Pause for a moment'),
+    title: tr(
+      'Có những ngày làm việc trôi qua rất vội.',
+      'Some workdays rush by.',
+    ),
+    text: tr(
+      'Giữa những ngày như vậy, dành một phút để xem mình đang thấy thế nào '
+          'cũng đã là một việc đáng làm.',
+      'On days like that, taking one minute to notice how you feel is already '
+          'worth doing.',
+    ),
+  ),
+  (
+    eyebrow: tr('Thấy rõ hơn', 'See more clearly'),
+    title: tr(
+      'Nhận ra những điều đang âm thầm lặp lại.',
+      'Notice what keeps quietly repeating.',
+    ),
+    text: tr(
+      'Khi bạn quay lại đủ nhiều, những điều tưởng rời rạc sẽ dần hiện thành '
+          'một mẫu hình quen thuộc. Nhìn thấy được nó thường là bước đầu tiên.',
+      'When you come back often enough, things that seemed scattered start to '
+          'form a familiar pattern. Seeing it is usually the first step.',
+    ),
+  ),
+  (
+    eyebrow: tr('Hành trình', 'Journey'),
+    title: tr(
+      'Những điều bạn ghi lại sẽ ở lại.',
+      'What you write down stays with you.',
+    ),
+    text: tr(
+      'Một niềm vui nhỏ, một quyết định khó, hay một ngày cạn năng lượng, tất '
+          'cả được nối lại thành hành trình của riêng bạn.',
+      'A small joy, a hard decision, or a drained day, all of it is joined '
+          'into a journey of your own.',
+    ),
+  ),
+];
+
+/// Số bước, tính cả bước chọn cảm xúc.
+const kOnboardingSteps = 5;
 
 class OnboardingScreen extends ConsumerStatefulWidget {
-  const OnboardingScreen({super.key});
+  const OnboardingScreen({super.key, this.period});
+
+  /// Khung giờ của hero bước đầu. Bỏ trống thì theo giờ Việt Nam hiện tại;
+  /// test truyền thẳng để chụp bản tối.
+  final WrDayPeriod? period;
 
   @override
   ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
-  bool _autoOpened = false;
+  int _step = 0;
+  bool _busy = false;
 
-  @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeAutoOpen());
-  }
+  WrDayPeriod get _period =>
+      widget.period ?? WrDayPeriod.fromHour(nowVn().hour);
 
-  /// Tự bật video đúng một lần trên máy này. Cờ còn `null` (chưa đọc xong bộ
-  /// nhớ máy) thì chờ: `ref.listen` trong [build] gọi lại khi có giá trị.
-  void _maybeAutoOpen() {
-    if (_autoOpened || !mounted) return;
-    if (ref.read(introVideoShownProvider) != false) return;
-    _autoOpened = true;
+  /// Bước đầu ở khung giờ tối: hero tối, chữ trên thanh đầu màu kem.
+  bool get _dark => _step == 0 && wrIsDarkPeriod(_period);
+
+  void _go(int step) =>
+      setState(() => _step = step.clamp(0, kOnboardingSteps - 1));
+
+  /// Hết bước Riêng tư: phát video hướng dẫn rồi mới sang chọn cảm xúc.
+  Future<void> _afterPrivacy() async {
     ref.read(introVideoShownProvider.notifier).markShown();
-    showIntroVideo(context);
+    await showIntroVideo(context);
+    if (mounted) _go(4);
   }
 
-  Future<void> _start() async {
+  /// Mở phiên khách rồi chạy [then]. Lỗi mạng thì ở lại màn này, báo một câu.
+  Future<void> _asGuest(Future<void> Function(GoRouter router) then) async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    final router = GoRouter.of(context);
+    final messenger = ScaffoldMessenger.of(context);
+    try {
+      await ensureGuestSession(ref);
+      await setSeenOnboarding();
+    } catch (_) {
+      if (mounted) setState(() => _busy = false);
+      messenger.showSnackBar(
+        SnackBar(
+          content: Text(
+            tr(
+              'Chưa kết nối được. Kiểm tra mạng rồi thử lại.',
+              'Could not connect. Check your network and try again.',
+            ),
+          ),
+        ),
+      );
+      return;
+    }
+    await then(router);
+  }
+
+  Future<void> _pickMood(CheckinOption option) => _asGuest((router) async {
+    if (!mounted) return;
+    startReflectionFromCheckin(ref, option);
+    // Home nằm dưới luồng nhìn lại, để nút quay lại của bước đầu (`pop`) có
+    // chỗ về. `push` phải đợi một khung hình: go_router chưa dựng xong ngăn
+    // xếp của `go` thì `push` sẽ chồng lên ngăn xếp cũ.
+    router.go('/home');
+    await WidgetsBinding.instance.endOfFrame;
+    router.push('/wr/flow/step');
+  });
+
+  Future<void> _skip() => _asGuest((router) async => router.go('/home'));
+
+  /// Người đã có tài khoản: đi đường cũ, đánh dấu đã xem rồi để router đưa
+  /// sang `/auth`.
+  Future<void> _signIn() async {
     await setSeenOnboarding();
-    // appRouterProvider watches seenOnboardingProvider → invalidate làm router
-    // rebuild với giá trị mới → router mới redirect /splash → /auth. Không cần
-    // context.go. invalidate + await future đảm bảo AsyncData(true) sẵn sàng
-    // trước frame rebuild kế tiếp, đóng cửa sổ race.
     ref.invalidate(seenOnboardingProvider);
     await ref.read(seenOnboardingProvider.future);
   }
 
   @override
   Widget build(BuildContext context) {
-    ref.listen<bool?>(introVideoShownProvider, (_, next) {
-      if (next == false) _maybeAutoOpen();
-    });
-
-    return Scaffold(
-      backgroundColor: WrColors.pageBg,
-      body: SafeArea(
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 440),
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Expanded(
-                    child: SingleChildScrollView(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          const SizedBox(height: 20),
-                          const Center(child: WrLogo(width: 220)),
-                          const SizedBox(height: 24),
-                          WrTitleText(
-                            tr(
-                              'Chào mừng bạn đến với WorkReflection',
-                              'Welcome to WorkReflection',
-                            ),
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 26,
-                              fontWeight: FontWeight.w700,
-                              color: WrColors.navy,
-                              height: 1.3,
-                              letterSpacing: -0.5,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            tr(
-                              'Thấu hiểu bản thân • Nâng tầm sự nghiệp',
-                              'Discover yourself • Elevate your career',
-                            ),
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              fontSize: 14.5,
-                              color: WrColors.text2,
-                              height: 1.4,
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-                          _IntroVideoCard(
-                            onTap: () => showIntroVideo(context),
-                          ),
-                          const SizedBox(height: 20),
-                          const _ValueHighlightsCard(),
-                          const SizedBox(height: 16),
-                        ],
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  // Nút Coral chữ Navy (spec §01).
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      key: const Key('onboarding_start'),
-                      onPressed: _start,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: WrColors.coral,
-                        foregroundColor: WrColors.navy,
-                        padding: const EdgeInsets.symmetric(vertical: 18),
-                        shape: const StadiumBorder(),
-                        elevation: 0,
-                        textStyle: const TextStyle(
-                          fontSize: 16.5,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      child: Text(tr('Bắt đầu', 'Get started')),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    tr(
-                      'Bảo mật dữ liệu cá nhân • Bắt đầu ngay hôm nay',
-                      'Personal data protected • Start today',
-                    ),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 12.5,
-                      color: WrColors.text3,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                ],
-              ),
-            ),
+    final darkTop = _dark ? wrDarkPeriodTop(_period) : null;
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: darkTop != null
+          ? SystemUiOverlayStyle.light
+          : SystemUiOverlayStyle.dark,
+      child: Scaffold(
+        backgroundColor: WrColors.pageBg,
+        body: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 220),
+          child: KeyedSubtree(
+            key: ValueKey('onboarding_step_$_step'),
+            child: _body(),
           ),
         ),
       ),
     );
   }
-}
 
-/// Thẻ video: ảnh bìa dựng bằng widget (bốn icon tab + nút phát) và một dòng
-/// chữ. Chạm để mở video toàn màn.
-class _IntroVideoCard extends StatelessWidget {
-  const _IntroVideoCard({required this.onTap});
-  final VoidCallback onTap;
+  Widget _body() {
+    if (_step <= 2) return _heroStep(_heroSteps[_step]);
+    if (_step == 3) return _privacyStep();
+    return _moodStep();
+  }
 
-  @override
-  Widget build(BuildContext context) {
-    return Semantics(
-      button: true,
-      label: tr('Xem video hướng dẫn', 'Watch the intro video'),
-      child: GestureDetector(
-        key: const Key('intro_video_card'),
-        behavior: HitTestBehavior.opaque,
-        onTap: onTap,
-        child: Container(
-          decoration: BoxDecoration(
-            color: WrColors.white,
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: WrColors.line),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x0C093774),
-                blurRadius: 16,
-                offset: Offset(0, 6),
+  // ── Thanh đầu: nút lùi · năm vạch · Bỏ qua (`.onb-top`) ──────────────────
+
+  Widget _topBar() {
+    final light = _dark;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        22,
+        MediaQuery.paddingOf(context).top + 16,
+        22,
+        0,
+      ),
+      child: Row(
+        children: [
+          if (_step > 0) ...[
+            Semantics(
+              button: true,
+              label: tr('Quay lại', 'Back'),
+              child: InkResponse(
+                key: const Key('onboarding_back'),
+                onTap: _busy ? null : () => _go(_step - 1),
+                radius: 22,
+                child: Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: light
+                        ? WrColors.cream.withValues(alpha: 0.14)
+                        : WrColors.navy.withValues(alpha: 0.06),
+                  ),
+                  child: Icon(
+                    Icons.chevron_left_rounded,
+                    size: 20,
+                    color: light ? WrColors.cream : WrColors.navy,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+          ],
+          Expanded(
+            child: Row(
+              key: const Key('onboarding_segments'),
+              children: [
+                for (var k = 0; k < kOnboardingSteps; k++) ...[
+                  if (k > 0) const SizedBox(width: 4),
+                  Expanded(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      height: 3,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(2),
+                        color: k <= _step
+                            ? (light ? WrColors.cream : WrColors.navy)
+                            : (light
+                                  ? WrColors.cream.withValues(alpha: 0.22)
+                                  : WrColors.navy.withValues(alpha: 0.14)),
+                      ),
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          TextButton(
+            key: const Key('onboarding_skip'),
+            onPressed: _busy ? null : _skip,
+            style: TextButton.styleFrom(
+              foregroundColor: light
+                  ? WrColors.cream.withValues(alpha: 0.8)
+                  : WrColors.text2,
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
+              minimumSize: Size.zero,
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: Text(
+              tr('Bỏ qua', 'Skip'),
+              style: const TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // ── Chữ (`.onb-copy`) ─────────────────────────────────────────────────────
+
+  Widget _copy({
+    required String eyebrow,
+    required String title,
+    String? text,
+    double top = 6,
+  }) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(26, top, 26, 0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            eyebrow.toUpperCase(),
+            style: const TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.8,
+              color: WrColors.text3,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            title,
+            style: const TextStyle(
+              fontSize: 23,
+              fontWeight: FontWeight.w800,
+              color: WrColors.navy,
+              height: 1.3,
+            ),
+          ),
+          if (text != null) ...[
+            const SizedBox(height: 10),
+            Text(
+              text,
+              style: const TextStyle(
+                fontSize: 15,
+                color: Color(0xB82C335D),
+                height: 1.6,
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // ── Nút dưới (`.onb-cta`) ─────────────────────────────────────────────────
+
+  Widget _cta(String label, VoidCallback? onPressed, {Widget? below}) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        22,
+        16,
+        22,
+        18 + MediaQuery.paddingOf(context).bottom,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              key: const Key('onboarding_next'),
+              onPressed: _busy ? null : onPressed,
+              style: FilledButton.styleFrom(
+                backgroundColor: WrColors.coral,
+                foregroundColor: WrColors.navy,
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                textStyle: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              child: Text(label),
+            ),
+          ),
+          ?below,
+        ],
+      ),
+    );
+  }
+
+  // ── Bước 0–2 ─────────────────────────────────────────────────────────────
+
+  Widget _heroStep(_HeroStep s) {
+    final city = _step == 0;
+    final asset = switch (_step) {
+      0 => wrCityHeroAsset(_period),
+      1 => WrHeroArt.understand.asset,
+      _ => WrHeroArt.grow.asset,
+    };
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                SizedBox(
+                  // `.onb-hero { height: 292px }`, ảnh tràn lên thanh trạng
+                  // thái.
+                  height: 292 + MediaQuery.paddingOf(context).top,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: WrHeroBackdrop(
+                          key: Key('onboarding_hero_$_step'),
+                          asset: asset,
+                          alignment: city
+                              ? Alignment.centerRight
+                              : Alignment.bottomCenter,
+                          fadeTop: !_dark,
+                          fadeStops: const [0, 0.10, 0.90, 1],
+                        ),
+                      ),
+                      _topBar(),
+                    ],
+                  ),
+                ),
+                _copy(eyebrow: s.eyebrow, title: s.title, text: s.text),
+              ],
+            ),
+          ),
+        ),
+        _cta(
+          tr('Tiếp tục', 'Continue'),
+          () => _go(_step + 1),
+          below: _step == 0 ? _signInLink() : null,
+        ),
+      ],
+    );
+  }
+
+  Widget _signInLink() {
+    return Padding(
+      padding: const EdgeInsets.only(top: 6),
+      child: TextButton(
+        key: const Key('onboarding_sign_in'),
+        onPressed: _busy ? null : _signIn,
+        style: TextButton.styleFrom(foregroundColor: WrColors.text2),
+        child: Text.rich(
+          TextSpan(
+            style: const TextStyle(fontSize: 13.5),
+            children: [
+              TextSpan(text: tr('Đã có tài khoản? ', 'Have an account? ')),
+              TextSpan(
+                text: tr('Đăng nhập', 'Sign in'),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w700,
+                  color: WrColors.navy,
+                ),
               ),
             ],
           ),
-          clipBehavior: Clip.antiAlias,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              AspectRatio(
-                aspectRatio: 16 / 9,
-                child: Stack(
-                  fit: StackFit.expand,
+        ),
+      ),
+    );
+  }
+
+  // ── Bước 3: Riêng tư ─────────────────────────────────────────────────────
+
+  Widget _privacyStep() {
+    return Stack(
+      children: [
+        const Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: WrReflectBand(mood: 'ok'),
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _topBar(),
+            Expanded(
+              child: SingleChildScrollView(
+                child: _copy(
+                  top: 22,
+                  eyebrow: tr('Riêng tư', 'Privacy'),
+                  title: tr(
+                    'Những gì bạn viết là của bạn',
+                    'What you write is yours',
+                  ),
+                  text: tr(
+                    'Nội dung bạn viết không hiển thị cho ai khác và không dùng '
+                        'để nhận diện bạn. Số liệu dùng cho thống kê chung đều ở '
+                        'dạng ẩn danh. Bạn có thể xoá bất cứ lúc nào.',
+                    'What you write is never shown to anyone else and is not '
+                        'used to identify you. Figures used for overall '
+                        'statistics are anonymous. You can delete them at any '
+                        'time.',
+                  ),
+                ),
+              ),
+            ),
+            _cta(tr('Tiếp tục', 'Continue'), _afterPrivacy),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // ── Bước 4: chọn cảm xúc ─────────────────────────────────────────────────
+
+  Widget _moodStep() {
+    final options = kCheckinOptions;
+    return Stack(
+      children: [
+        const Positioned(
+          top: 0,
+          left: 0,
+          right: 0,
+          child: WrReflectBand(mood: 'happy'),
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _topBar(),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.only(
+                  bottom: 24 + MediaQuery.paddingOf(context).bottom,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Image.asset(
-                      'assets/images/thumb_intro_overview.jpg',
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const DecoratedBox(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                            colors: [WrColors.navy, Color(0xFF1B4E92)],
-                          ),
-                        ),
+                    _copy(
+                      top: 22,
+                      eyebrow: tr('Bắt đầu', 'Begin'),
+                      title: tr(
+                        'Ngày hôm nay của bạn như thế nào?',
+                        'How has your day been?',
+                      ),
+                      text: tr(
+                        'Chọn cảm xúc sát nhất với bạn lúc này để bắt đầu lần '
+                            'nhìn lại đầu tiên.',
+                        'Pick the feeling closest to you right now to begin '
+                            'your first look back.',
                       ),
                     ),
-                    // Badge video ở góc trên
-                    Positioned(
-                      top: 12,
-                      right: 12,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: WrColors.navy.withValues(alpha: 0.75),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: WrColors.white.withValues(alpha: 0.2),
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(
-                              Icons.play_circle_fill_rounded,
-                              size: 13,
-                              color: WrColors.coral,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              tr('HƯỚNG DẪN', 'GUIDE'),
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w700,
-                                letterSpacing: 0.5,
-                                color: WrColors.white,
+                    const SizedBox(height: 16),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 26),
+                      child: Column(
+                        children: [
+                          for (var i = 0; i < options.length; i += 2) ...[
+                            if (i > 0) const SizedBox(height: 8),
+                            IntrinsicHeight(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Expanded(child: _moodTile(options[i])),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: i + 1 < options.length
+                                        ? _moodTile(options[i + 1])
+                                        : const SizedBox.shrink(),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 38,
-                      height: 38,
-                      decoration: BoxDecoration(
-                        color: WrColors.pageBg,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.smart_display_outlined,
-                        size: 20,
-                        color: WrColors.navy,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            tr('Xem video hướng dẫn', 'Watch the intro video'),
-                            style: const TextStyle(
-                              fontSize: 15.5,
-                              fontWeight: FontWeight.w700,
-                              color: WrColors.navy,
-                            ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            tr(
-                              'Khám phá tổng quan WorkReflection',
-                              'Overview of WorkReflection',
-                            ),
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: WrColors.text3,
-                            ),
-                          ),
                         ],
                       ),
                     ),
-                    const Icon(
-                      Icons.arrow_forward_ios_rounded,
-                      size: 14,
-                      color: WrColors.text3,
-                    ),
+                    const SizedBox(height: 14),
+                    if (_busy)
+                      const Center(
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                      )
+                    else
+                      Text(
+                        tr(
+                          'Lần nhìn lại đầu tiên chỉ mất khoảng một phút.',
+                          'Your first look back takes about a minute.',
+                        ),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 12.5,
+                          color: WrColors.text3,
+                        ),
+                      ),
                   ],
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Thẻ hiển thị 3 giá trị cốt lõi của ứng dụng.
-class _ValueHighlightsCard extends StatelessWidget {
-  const _ValueHighlightsCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      decoration: BoxDecoration(
-        color: WrColors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: WrColors.line),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x08093774),
-            blurRadius: 14,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          _FeatureHighlightItem(
-            icon: Icons.schedule_rounded,
-            iconBg: WrColors.coral.withValues(alpha: 0.12),
-            iconColor: WrColors.pillCoralText,
-            title: tr('3 phút mỗi ngày', '3 minutes daily'),
-            description: tr(
-              'Ghi nhận sự kiện, cảm xúc và bài học công việc nhanh chóng',
-              'Capture events, emotions and career lessons effortlessly',
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Container(
-              height: 1,
-              color: WrColors.lineSoft,
-            ),
-          ),
-          _FeatureHighlightItem(
-            icon: Icons.auto_awesome_outlined,
-            iconBg: WrColors.teal.withValues(alpha: 0.14),
-            iconColor: WrColors.pillTealText,
-            title: tr('Trợ lý AI thấu hiểu', 'Insightful AI Assistant'),
-            description: tr(
-              'Phân tích điểm mạnh, rào cản và mở rộng góc nhìn',
-              'Identify strengths, bottlenecks and expand your perspective',
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
-            child: Container(
-              height: 1,
-              color: WrColors.lineSoft,
-            ),
-          ),
-          _FeatureHighlightItem(
-            icon: Icons.verified_user_outlined,
-            iconBg: WrColors.navy.withValues(alpha: 0.08),
-            iconColor: WrColors.navy,
-            title: tr('Riêng tư & An toàn', 'Private & Secure'),
-            description: tr(
-              'Dữ liệu cá nhân được bảo mật, thuộc về riêng bạn',
-              'Personal data is protected, strictly belonging to you',
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FeatureHighlightItem extends StatelessWidget {
-  const _FeatureHighlightItem({
-    required this.icon,
-    required this.title,
-    required this.description,
-    required this.iconColor,
-    required this.iconBg,
-  });
-
-  final IconData icon;
-  final String title;
-  final String description;
-  final Color iconColor;
-  final Color iconBg;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Container(
-          width: 36,
-          height: 36,
-          decoration: BoxDecoration(
-            color: iconBg,
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Icon(icon, size: 20, color: iconColor),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 14.5,
-                  fontWeight: FontWeight.w700,
-                  color: WrColors.navy,
-                  height: 1.25,
-                ),
-              ),
-              const SizedBox(height: 3),
-              Text(
-                description,
-                style: const TextStyle(
-                  fontSize: 13,
-                  color: WrColors.text2,
-                  height: 1.35,
-                ),
-              ),
-            ],
-          ),
+          ],
         ),
       ],
+    );
+  }
+
+  Widget _moodTile(CheckinOption option) {
+    return Material(
+      color: WrColors.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(13),
+        side: const BorderSide(color: Color(0x24093774), width: 1.5),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        key: Key('onboarding_mood_${option.id}'),
+        onTap: _busy ? null : () => _pickMood(option),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
+          child: Center(
+            child: Text(
+              option.label,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: WrColors.navy,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

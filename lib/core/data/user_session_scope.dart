@@ -26,6 +26,7 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../features/auth/guest_session.dart';
 import '../../features/profile/profile_providers.dart';
 import '../../features/survey/survey_providers.dart';
 import '../../features/video_report/data/video_report_repository.dart';
@@ -50,6 +51,7 @@ import 'wr_user_action_repository.dart';
 final List<ProviderOrFamily> userIdentityProviders = [
   currentUserIdProvider,
   currentUserEmailProvider,
+  isGuestProvider,
 ];
 
 /// Cửa đọc/ghi dữ liệu. Xoá là mọi `FutureProvider` đọc qua chúng phải hỏi lại
