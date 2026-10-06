@@ -101,3 +101,157 @@ class WrCardDark extends StatelessWidget {
     );
   }
 }
+
+/// Thẻ chuẩn của mockup v47 (`.card` + `.card-pad`).
+///
+/// Khách 06/10: mọi danh sách đều nằm trong thẻ. Đây là thẻ dùng chung cho các
+/// màn làm lại theo v47. [WrCardMinimal] giữ nguyên bo 20 / lề 20 cho các màn
+/// chưa chuyển, vì nó đang nằm ở hàng chục màn khác.
+class WrCard extends StatelessWidget {
+  const WrCard({
+    super.key,
+    required this.child,
+    this.padding = kPadding,
+    this.dashed = false,
+    this.color = WrColors.white,
+    this.onTap,
+  });
+
+  /// `.card { border-radius: 18px }`
+  static const kRadius = 18.0;
+
+  /// `.card-pad { padding: 16px 18px }`
+  static const kPadding = EdgeInsets.symmetric(horizontal: 18, vertical: 16);
+
+  /// `.card + .card { margin-top: 12px }`
+  static const kGap = 12.0;
+
+  /// `.section-gap { margin: 0 22px 14px }`
+  static const kSectionPadding = EdgeInsets.fromLTRB(22, 0, 22, 14);
+
+  final Widget child;
+  final EdgeInsetsGeometry padding;
+
+  /// Viền nét đứt: thẻ "Tự thêm", thẻ hết lượt, thẻ "Điều khác".
+  final bool dashed;
+
+  final Color color;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    const radius = BorderRadius.all(Radius.circular(kRadius));
+    Widget body = Padding(padding: padding, child: child);
+    if (onTap != null) {
+      body = Material(
+        type: MaterialType.transparency,
+        child: InkWell(borderRadius: radius, onTap: onTap, child: body),
+      );
+    }
+    if (dashed) {
+      return CustomPaint(
+        foregroundPainter: const _DashedRRectPainter(
+          color: WrColors.line,
+          radius: kRadius,
+        ),
+        child: ClipRRect(
+          borderRadius: radius,
+          child: ColoredBox(color: color, child: body),
+        ),
+      );
+    }
+    return Container(
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: radius,
+        border: Border.all(color: WrColors.line),
+      ),
+      child: body,
+    );
+  }
+}
+
+/// Thẻ lựa chọn (`.rf-mentor-card`): viền đậm hơn thẻ thường, chọn thì viền
+/// coral và nền ửng coral.
+class WrMentorCard extends StatelessWidget {
+  const WrMentorCard({
+    super.key,
+    required this.child,
+    this.selected = false,
+    this.onTap,
+  });
+
+  final Widget child;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    const radius = BorderRadius.all(Radius.circular(16));
+    return Semantics(
+      selected: selected,
+      button: onTap != null,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          color: selected
+              ? Color.alphaBlend(
+                  WrColors.coral.withValues(alpha: 0.045),
+                  WrColors.white,
+                )
+              : WrColors.white,
+          borderRadius: radius,
+          border: Border.all(
+            color: selected ? WrColors.coral : const Color(0x1F093774),
+            width: 1.5,
+          ),
+        ),
+        child: Material(
+          type: MaterialType.transparency,
+          child: InkWell(
+            borderRadius: radius,
+            onTap: onTap,
+            child: Padding(padding: const EdgeInsets.all(14), child: child),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _DashedRRectPainter extends CustomPainter {
+  const _DashedRRectPainter({required this.color, required this.radius});
+
+  final Color color;
+  final double radius;
+
+  // Chrome vẽ `border: 1px dashed` thành gạch ~3px, hở ~3px.
+  static const _dash = 4.0;
+  static const _gap = 3.0;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    final rrect = RRect.fromRectAndRadius(
+      (Offset.zero & size).deflate(0.5),
+      Radius.circular(radius),
+    );
+    final path = Path()..addRRect(rrect);
+    for (final metric in path.computeMetrics()) {
+      var d = 0.0;
+      while (d < metric.length) {
+        canvas.drawPath(metric.extractPath(d, d + _dash), paint);
+        d += _dash + _gap;
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_DashedRRectPainter old) =>
+      old.color != color || old.radius != radius;
+}

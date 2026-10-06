@@ -62,6 +62,7 @@ flutter:
     - assets/images/thumb_daily_reflect.jpg
     - assets/images/thumb_understand_grow.jpg
     - assets/images/thumb_ai_mentor.jpg
+    - assets/images/hero/
     - assets/seed/wr_situations.json
     - assets/seed/wr_stories.json
     # Giọng đọc của video hướng dẫn ở màn chào (intro_<vi|en>.mp3 + .json),
