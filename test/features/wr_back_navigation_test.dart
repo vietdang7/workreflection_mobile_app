@@ -281,8 +281,11 @@ void main() {
 
   // ── RT1: round-trip Journey → Discover → tap Quay lại → về Journey ─────────
   group('RT1: Journey → Discover round-trip (link chéo ?from=)', () {
+    // Mockup v47 (script khách 06/10) bỏ dòng "Xem trong Hiểu mình" khỏi
+    // Hành trình. Nửa Journey của vòng này giờ chỉ kiểm dòng đó KHÔNG còn; nửa
+    // Discover vẫn kiểm được bằng cách mở thẳng `?from=journey`.
     testWidgets(
-      'Journey: tap "Xem trong Hiểu mình" → Discover thấy "Quay lại" → tap → về Journey',
+      'Journey không còn "Xem trong Hiểu mình"; Discover ?from=journey thấy "Quay lại" → tap → về Journey',
       (tester) async {
         final contentRepo = FakeWrContentRepository();
         final intelRepo = FakeWrIntelligenceRepository();
@@ -352,11 +355,12 @@ void main() {
         );
 
         await _pumpLarge(tester, app);
-        // Journey phải hiển thị link "Xem trong Hiểu mình"
-        expect(find.text('Xem trong Hiểu mình'), findsOneWidget);
+        // v47: Journey không còn link sang Hiểu mình.
+        expect(find.text('Xem trong Hiểu mình'), findsNothing);
+        expect(find.byKey(const Key('wr_journey_discover_row')), findsNothing);
 
-        // Tap link → navigate sang Discover với ?from=journey
-        await tester.tap(find.text('Xem trong Hiểu mình'));
+        // Vào Discover như từ một link chéo mang ?from=journey.
+        router.go('/wr/discover?from=journey');
         await tester.pumpAndSettle();
 
         // Discover phải hiện "Quay lại"
@@ -367,7 +371,7 @@ void main() {
         await tester.pumpAndSettle();
 
         // Về Journey: thấy title đặc trưng, không thấy "Quay lại"
-        expect(find.text('Hành trình'), findsOneWidget);
+        expect(find.text('Hành trình của bạn'), findsOneWidget);
         expect(find.text('Quay lại'), findsNothing);
       },
     );

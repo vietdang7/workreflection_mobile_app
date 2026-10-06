@@ -145,6 +145,20 @@ Future<void> _pumpTall(WidgetTester tester, Widget widget) async {
 int _visibleEntries(WidgetTester tester, int total) =>
     find.byIcon(Icons.keyboard_arrow_down_rounded).evaluate().length;
 
+/// Số mốc trên dòng thời gian rút gọn của TAB Hành trình.
+///
+/// Mockup v47: mốc trên tab không còn mũi tên thu gọn (đó là của màn Career
+/// Memory đầy đủ), nên đếm theo key `wr_journey_timeline_<i>` — mỗi mốc đúng
+/// một key.
+int _tabEntries(WidgetTester tester) => find
+    .byWidgetPredicate((w) {
+      final k = w.key;
+      return k is ValueKey<String> &&
+          RegExp(r'^wr_journey_timeline_\d+$').hasMatch(k.value);
+    })
+    .evaluate()
+    .length;
+
 /// Mở hết mọi mốc đang hiện, để kiểm được NỘI DUNG bên trong.
 ///
 /// Chạm từ mốc cuối ngược lên đầu: mở một mốc làm trang dài ra và đẩy mọi mốc
@@ -167,6 +181,11 @@ void main() {
   // khép, cộng 8 dấu mốc thực hành. Tab Hiểu mình nói "15 lần nhìn lại"; tab
   // này nói "21 mảnh ký ức". Cả hai đều đúng, nhưng không nơi nào nói ra vì sao
   // chúng khác nhau, nên người dùng chỉ còn cách kết luận là app đếm sai.
+  //
+  // Mockup v47 (script khách 06/10) bỏ dòng giải thích "Gồm N lần nhìn lại đã
+  // khép…" khỏi tab; chỉ còn "N ghi nhận đã lưu". Các bài dưới đây giữ phần
+  // phép cộng (Episode đã khép + dấu mốc, Episode đang mở không tính) và kiểm
+  // dòng giải thích đã vắng mặt.
   // ---------------------------------------------------------------------------
   group('Mảnh ký ức tự giải thích con số của mình', () {
     List<ReflectionEpisode> episodesFor({
@@ -199,16 +218,16 @@ void main() {
 
       // 13 Episode đã khép + 8 dấu mốc = 21, đúng con số trên ảnh khách gửi.
       expect(
-        find.text('Bạn đã có 21 ghi nhận trên hành trình sự nghiệp.'),
+        find.text('21 ghi nhận đã lưu'),
         findsOneWidget,
         reason: 'phép cộng phải khớp dữ liệu thật của khách',
       );
+      // v47: dòng giải thích đã bỏ khỏi tab.
       expect(
-        find.textContaining('Gồm 13 lần nhìn lại đã khép và 8 dấu mốc'),
-        findsOneWidget,
+        find.byKey(const Key('wr_journey_memory_breakdown')),
+        findsNothing,
       );
-      // Và phải nói thẳng vì sao tab Hiểu mình hiện một con số khác.
-      expect(find.textContaining('tab Hiểu mình'), findsOneWidget);
+      expect(find.textContaining('Gồm 13 lần nhìn lại đã khép'), findsNothing);
     });
 
     testWidgets('chưa có dấu mốc nào thì không bịa vế thứ hai', (tester) async {
@@ -221,10 +240,7 @@ void main() {
         ),
       );
 
-      expect(
-        find.textContaining('Gồm 6 lần nhìn lại đã khép.'),
-        findsOneWidget,
-      );
+      expect(find.text('6 ghi nhận đã lưu'), findsOneWidget);
       expect(find.textContaining('dấu mốc thực hành'), findsNothing);
     });
 
@@ -250,10 +266,11 @@ void main() {
         _wrap(home: const WrJourneyScreen(), events: _events(38)),
       );
 
-      expect(_visibleEntries(tester, 38), kJourneyPreviewCount);
+      expect(_tabEntries(tester), kJourneyPreviewCount);
     });
 
-    testWidgets('hiện nút xem toàn bộ kèm số mảnh còn lại', (tester) async {
+    // v47: nút "Xem toàn bộ lịch sử", không còn dòng "Còn N ghi nhận nữa".
+    testWidgets('hiện nút xem toàn bộ lịch sử', (tester) async {
       await _pumpTall(
         tester,
         _wrap(home: const WrJourneyScreen(), events: _events(38)),
@@ -263,10 +280,9 @@ void main() {
         find.byKey(const Key('wr_journey_memory_see_all')),
         findsOneWidget,
       );
-      expect(find.text('Xem toàn bộ Career Memory'), findsOneWidget);
-      // 38 − 4 = 34. Thẻ xem trước lấy BỐN mục gần nhất, đúng mockup v16 §8.1
-      // ("thẻ xem trước lấy 4 mục gần nhất"); bản trước lấy 5.
-      expect(find.text('Còn 34 ghi nhận nữa'), findsOneWidget);
+      expect(find.text('Xem toàn bộ lịch sử'), findsOneWidget);
+      expect(find.text('Xem toàn bộ Career Memory'), findsNothing);
+      expect(find.textContaining('Còn 34 ghi nhận nữa'), findsNothing);
     });
 
     // Changelog 24/08 §8.1: nút này giờ LUÔN hiện. Trước đây nó biến mất khi
@@ -281,23 +297,23 @@ void main() {
         ),
       );
 
-      expect(
-        _visibleEntries(tester, kJourneyPreviewCount),
-        kJourneyPreviewCount,
-      );
+      expect(_tabEntries(tester), kJourneyPreviewCount);
       expect(
         find.byKey(const Key('wr_journey_memory_see_all')),
         findsOneWidget,
       );
-      expect(find.text('Lọc theo loại, mở rộng từng ghi nhận'), findsOneWidget);
+      expect(find.text('Xem toàn bộ lịch sử'), findsOneWidget);
     });
 
-    testWidgets('bản miễn phí thấy dòng thời gian, vẫn có khối mời mở khoá', (
+    testWidgets('bản miễn phí thấy dòng thời gian, mốc tuần cũ khoá từng dòng', (
       tester,
     ) async {
       // Mockup v16 khoá theo TUẦN: `!g.current && !state.isPremium`. Quyết định
       // 2026-07-29 ("khoá hoàn toàn với Free") bị bản 24/08 thay thế — dựng một
       // khung trống rồi mời trả tiền thì không ai biết mình đang mua gì.
+      //
+      // v47: không còn khối mời riêng `wr_journey_memory_lock`; mỗi mốc khoá
+      // tự nói "Premium · Mở khoá".
       await _pumpTall(
         tester,
         _wrap(
@@ -307,14 +323,18 @@ void main() {
         ),
       );
 
-      expect(find.byKey(const Key('wr_journey_memory_lock')), findsOneWidget);
+      expect(find.byKey(const Key('wr_journey_memory_lock')), findsNothing);
       expect(
         find.byKey(const Key('wr_journey_memory_see_all')),
         findsOneWidget,
       );
-      // Dòng thời gian có mặt; những tuần cũ hiện dưới dạng đã khoá.
-      expect(find.textContaining('THÁNG '), findsWidgets);
-      expect(find.text('Nội dung đã khoá'), findsWidgets);
+      // Dòng thời gian có mặt; mọi mốc (tháng 7/2026, ngoài tuần này) đã khoá.
+      expect(_tabEntries(tester), kJourneyPreviewCount);
+      expect(
+        find.text('Premium · Mở khoá'),
+        findsNWidgets(kJourneyPreviewCount),
+      );
+      expect(find.text('Chạm để xem'), findsNothing);
     });
 
     testWidgets('bấm nút thì sang màn Career Memory đầy đủ', (tester) async {

@@ -175,7 +175,8 @@ void main() {
 
       expect(entries, hasLength(2));
       expect(entries.any((e) => e.title == 'X'), isFalse);
-      expect(entries.any((e) => e.title == 'Y'), isTrue);
+      // Mockup v47: bước thực hành xong mang tiêu đề "Thực hành: ‹việc›".
+      expect(entries.any((e) => e.title == 'Thực hành: Y'), isTrue);
     });
 
     test('chưa đọc được Episode thì vẫn giữ event của Episode', () {

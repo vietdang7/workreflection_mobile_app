@@ -19,22 +19,27 @@ import '../../../core/logic/wr_career_memory_rules.dart';
 import '../../../core/logic/wr_dominant_need.dart';
 import '../../../core/logic/wr_reflect_flow.dart';
 import '../../../core/logic/wr_entitlement.dart';
+import '../../../core/logic/wr_practice_v47.dart';
 import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_episode.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/models/wr_mood_content.dart';
 import '../../../core/theme/wr_colors.dart';
+import '../../../core/theme/wr_text.dart';
 import '../../../core/widgets/eyebrow.dart';
-import '../../../core/widgets/section_divider.dart';
 import '../../../core/widgets/tab_back_link.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../core/widgets/wr_detail_scaffold.dart';
-import '../../../core/widgets/wr_link_row.dart';
+import '../../../core/widgets/wr_hero_header.dart';
 import '../../../core/widgets/wr_premium_lock.dart';
 import '../../../core/widgets/wr_profile_avatar.dart';
+import '../../../core/widgets/wr_small_button.dart';
 import '../growth_providers.dart';
 import '../wr_providers.dart';
 import '../../../core/widgets/wr_paragraph.dart';
+
+/// Loại mục của "Những gì bạn đã học" (mockup v47): Cột mốc hay Điều đã thử.
+enum JourneyLearnedKind { milestone, tried }
 
 /// Bản ghi hiển thị trên dòng thời gian — Episode hoặc Career Memory event.
 class JourneyEntry {
@@ -46,6 +51,7 @@ class JourneyEntry {
     this.subtitle,
     this.detail,
     this.episodeId,
+    this.learned,
   });
 
   final DateTime? at;
@@ -68,6 +74,10 @@ class JourneyEntry {
 
   /// Có id nghĩa là bấm vào mở được màn đọc riêng.
   final String? episodeId;
+
+  /// Khác null nghĩa là mục này là một điều đã thật sự xảy ra (một bài học,
+  /// một lần thử) và hiện cả ở "Những gì bạn đã học" (mockup v47).
+  final JourneyLearnedKind? learned;
 }
 
 // Free tier KHÔNG xem được mục ký ức nào — quyết định của khách 2026-07-29:
@@ -146,6 +156,9 @@ List<JourneyEntry> buildJourneyEntries({
   // [situationLabels] — map đó chỉ giữ bản đang bật. Xem
   // `localizeFrozenInsightText`.
   List<WrSituation> situations = const [],
+  // Tên chủ đề thực hành theo ngôn ngữ đang bật, theo `theme_id` — cho Cột mốc
+  // "Lần đầu thử một cách khác: …", vốn chỉ lưu tên tiếng Việt.
+  Map<String, String> themeTitles = const {},
 }) {
   final entries = <JourneyEntry>[];
 
@@ -209,6 +222,51 @@ List<JourneyEntry> buildJourneyEntries({
     final text = ev.reflectionText?.trim();
     final hasText = text != null && text.isNotEmpty;
 
+    // Mockup v47: lần đầu thử một bước của chủ đề, và bài học ghi ở màn "Bạn
+    // vừa học được điều hữu ích". Câu tiêu đề dựng lúc hiển thị, DB chỉ giữ tên
+    // chủ đề / lời người dùng.
+    if (ev.behavior == kMilestoneBehavior && ev.themeId != null) {
+      final name = (themeTitles[ev.themeId] ?? (hasText ? text : '')).trim();
+      entries.add(
+        JourneyEntry(
+          at: ev.createdAt,
+          label: kMilestoneLabel,
+          title: name.isEmpty
+              ? tr(
+                  'Lần đầu thử một cách khác',
+                  'First time trying a different way',
+                )
+              : tr(
+                  'Lần đầu thử một cách khác: $name',
+                  'First time trying a different way: $name',
+                ),
+          subtitle: tr(
+            'Bạn đã thử bước đầu tiên của chủ đề này.',
+            'You tried the first step of this theme.',
+          ),
+          color: WrColors.coral,
+          learned: JourneyLearnedKind.milestone,
+        ),
+      );
+      continue;
+    }
+    if (ev.behavior == kLearningBehavior) {
+      entries.add(
+        JourneyEntry(
+          at: ev.createdAt,
+          label: kMilestoneLabel,
+          title: tr(
+            'Bạn vừa học được điều hữu ích',
+            'You just learned something useful',
+          ),
+          subtitle: hasText ? text : null,
+          color: WrColors.coral,
+          learned: JourneyLearnedKind.milestone,
+        ),
+      );
+      continue;
+    }
+
     // Chủ đề và Insight có TÊN GỌI riêng, và nội dung do máy sinh ra thì xuống
     // làm excerpt. Mockup v16: "Chủ đề mới xuất hiện: …" / "Pattern được nhận
     // diện". Bản trước đẩy nguyên đoạn văn lên làm tiêu đề, nên thu gọn lại thì
@@ -251,6 +309,24 @@ List<JourneyEntry> buildJourneyEntries({
     final shownText = hasText && isPracticeText
         ? localizeFrozenPracticeText(text, practiceLabels)
         : text;
+
+    // Mockup v47: một lần thử là "Thực hành: ‹việc›" + "Bạn đã thử: ‹việc›.".
+    // `reflection_text` mang "‹chủ đề› · ‹bước›", việc là phần sau nhãn giai
+    // đoạn của bước.
+    if (ev.behavior == 'practice_step_done' && hasText) {
+      final action = practiceStepAction(shownText!.split(' · ').last);
+      entries.add(
+        JourneyEntry(
+          at: ev.createdAt,
+          label: eventTypeLabel(ev),
+          title: tr('Thực hành: $action', 'Practice: $action'),
+          subtitle: tr('Bạn đã thử: $action.', 'You tried: $action.'),
+          color: eventColor(ev),
+          learned: JourneyLearnedKind.tried,
+        ),
+      );
+      continue;
+    }
 
     // Không rơi về chính cái mã: `C2-sit-01` là thuật ngữ nội bộ, không phải
     // thứ để người dùng đọc trên dòng thời gian của đời mình (v1.6 §XII.5).
@@ -343,12 +419,18 @@ List<String> get _kWeekdayVi => [
 
 String _dd(int n) => n.toString().padLeft(2, '0');
 
-/// Nửa đêm của [d] — khoá gom nhóm theo ngày, bỏ phần giờ.
-DateTime _dayKey(DateTime d) => DateTime(d.year, d.month, d.day);
+/// Nửa đêm của [d] theo giờ máy — khoá gom nhóm theo ngày, bỏ phần giờ.
+///
+/// `created_at`/`closed_at` từ Supabase là UTC: không đổi sang giờ máy thì một
+/// mục ghi lúc 5 giờ sáng Thứ Hai ở Việt Nam rơi về Chủ Nhật tuần trước.
+DateTime _dayKey(DateTime d) {
+  final l = d.toLocal();
+  return DateTime(l.year, l.month, l.day);
+}
 
 /// Thứ Hai của tuần chứa [d]. Tuần bắt đầu từ Thứ Hai theo lịch Việt Nam.
 DateTime _mondayOf(DateTime d) =>
-    _dayKey(d).subtract(Duration(days: d.weekday - DateTime.monday));
+    _dayKey(d).subtract(Duration(days: d.toLocal().weekday - DateTime.monday));
 
 /// Gom dòng thời gian theo tháng → tuần → ngày, giữ nguyên thứ tự mới-trước.
 ///
@@ -375,7 +457,7 @@ List<JourneyMonthDetailed> groupJourneyByWeekAndDay(
   final undated = <JourneyEntry>[];
 
   for (final e in entries) {
-    final at = e.at;
+    final at = e.at?.toLocal();
     if (at == null) {
       undated.add(e);
       continue;
@@ -412,7 +494,7 @@ List<JourneyMonthDetailed> groupJourneyByWeekAndDay(
       for (var i = 0; i < ascending.length; i++) ascending[i]: i + 1,
     };
 
-    final anyDate = monthEntries.first.at!;
+    final anyDate = monthEntries.first.at!.toLocal();
     final firstOfMonth = DateTime(anyDate.year, anyDate.month, 1);
     final lastOfMonth = DateTime(anyDate.year, anyDate.month + 1, 0);
 
@@ -568,43 +650,6 @@ Color eventColor(CareerMemoryEvent e) {
 /// 5 — lệch nhỏ nhưng không có lý do nào để lệch.
 const int kJourneyPreviewCount = 4;
 
-/// Tách con số "mảnh ký ức" thành các phần hợp thành nó.
-///
-/// Đọc từ CHÍNH danh sách đang hiển thị chứ không đếm lại từ provider: đếm lại
-/// là mở đúng cái cửa vừa đóng — hai phép đếm theo hai luật rồi lệch nhau, và
-/// dòng giải thích lại thành một con số thứ ba cần giải thích.
-String _memoryBreakdown(List<JourneyEntry> all) {
-  // Nhận diện bằng `episodeId`, KHÔNG bằng nhãn: từ changelog 24/08 §8.2 một
-  // lần nhìn lại có thể mang nhãn "CỘT MỐC" thay vì "CÂU CHUYỆN", mà nó vẫn là
-  // một lần nhìn lại. Đếm theo nhãn thì mỗi cột mốc lại làm hụt con số này đúng
-  // một đơn vị — và dòng sinh ra để giải thích con số lại tự nói sai.
-  final reflections = all
-      .where((e) => e.episodeId != null || e.label == kStoryLabel)
-      .length;
-  final others = all.length - reflections;
-
-  final parts = StringBuffer(
-    tr(
-      'Gồm $reflections lần nhìn lại đã khép',
-      'Includes $reflections closed look-backs',
-    ),
-  );
-  if (others > 0) {
-    parts.write(
-      tr(' và $others dấu mốc thực hành', ' and $others practice markers'),
-    );
-  }
-  parts.write(
-    tr(
-      '. Lần nhìn lại còn dở chưa vào đây, nên con số ở tab Hiểu mình '
-          'có thể lớn hơn.',
-      '. Unfinished look-backs are not counted here, so the number on the '
-          'Understand tab may be higher.',
-    ),
-  );
-  return parts.toString();
-}
-
 /// Dựng dòng thời gian từ các provider — dùng chung giữa tab Hành trình và màn
 /// Career Memory đầy đủ, để hai nơi không bao giờ liệt kê khác nhau.
 List<JourneyEntry> watchJourneyEntries(WidgetRef ref) {
@@ -623,6 +668,12 @@ List<JourneyEntry> watchJourneyEntries(WidgetRef ref) {
     },
     practiceLabels: ref.watch(wrPracticeLabelMapProvider),
     situations: situations,
+    themeTitles: {
+      for (final t
+          in ref.watch(practiceThemesProvider).valueOrNull ??
+              const <PracticeTheme>[])
+        t.themeId: t.title,
+    },
   );
 }
 
@@ -631,202 +682,504 @@ class WrJourneyScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final patterns = ref.watch(wrPatternCountsProvider).valueOrNull ?? const [];
     final entitlement =
         ref.watch(wrEntitlementProvider).valueOrNull ??
         WrEntitlement(plan: WrPlan.free);
 
     final all = watchJourneyEntries(ref);
-    final locked = !entitlement.isPremium;
-    // Bản miễn phí KHÔNG còn thấy một danh sách trống.
-    //
-    // Quyết định 2026-07-29 là "Career Memory đầy đủ bị khoá hoàn toàn với tài
-    // khoản Free", và app làm đúng vậy: `shown` là rỗng. Nhưng mockup v16 —
-    // bản chuẩn mới, 24/08 — khoá theo TUẦN chứ không khoá cả màn
-    // (`!g.current && !state.isPremium`), nên tuần này vẫn đọc được. Bày ra
-    // đúng cái mình đang khoá thì lời mời trả tiền mới có nghĩa; một khung
-    // trống thì không mời được ai.
     final shown = all.take(kJourneyPreviewCount).toList();
-    final hasMore = all.length > shown.length;
+    final learned = all.where((e) => e.learned != null).take(3).toList();
+    final currentMonday = _mondayOf(DateTime.now());
+    // Mockup v16: Free đọc được tuần này, các tuần trước khoá (khách chốt
+    // 2026-07-29 / 24-08). Áp cho cả "Những gì bạn đã học", nếu không lời
+    // người dùng viết tuần trước lọt ra ở đó.
+    bool isLocked(JourneyEntry e) =>
+        !entitlement.isPremium &&
+        (e.at == null || _mondayOf(e.at!) != currentMonday);
 
     return Scaffold(
       backgroundColor: WrColors.pageBg,
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 80),
-          children: [
-            const WrTabBackLink(currentTab: WrTab.journey),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
+      body: ListView(
+        // Padding tường minh: `ListView` không có padding sẽ xoá phần thanh
+        // trạng thái khỏi `MediaQuery` của con, ảnh hero hết tràn lên.
+        padding: const EdgeInsets.only(bottom: 34),
+        children: [
+          WrHeroHeader.inner(
+            key: const Key('wr_journey_hero'),
+            art: WrHeroArt.grow,
+            eyebrow: tr('Hành trình', 'Journey'),
+            title: tr('Hành trình của bạn', 'Your journey'),
+            subtitle: tr(
+              'Nhìn lại những gì đã ở lại, để thấy mình đã thật sự đi qua '
+                  'điều gì.',
+              'Look back at what stayed, to see what you have truly been '
+                  'through.',
+            ),
+            // v1.6 §9.1: "Tôi" là avatar ở mọi màn tab.
+            trailing: const WrProfileAvatar(),
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 22),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
+                const WrTabBackLink(currentTab: WrTab.journey),
+
+                // ── Dấu ấn hành trình ─────────────────────────────────────
+                // Script khách: Career Memory lên ĐẦU TRANG.
+                Text(tr('Dấu ấn hành trình', 'Journey marks'), style: _h2),
+                const SizedBox(height: 2),
+                Text(
+                  tr(
+                    '${all.length} ghi nhận đã lưu',
+                    '${all.length} saved entries',
+                  ),
+                  key: const Key('wr_journey_memory_count'),
+                  style: _tiny,
+                ),
+                const SizedBox(height: 12),
+                if (all.isEmpty)
+                  WrCard(
+                    key: const Key('wr_journey_memory_empty'),
+                    child: Text(
+                      tr(
+                        'Nhật ký sự nghiệp của bạn chưa có ghi nhận nào. Hãy '
+                            'bắt đầu một lần nhìn lại để lưu giữ những dấu ấn '
+                            'của riêng bạn.',
+                        'Your career journal has nothing in it yet. Start a '
+                            'look back to keep the marks that are yours.',
+                      ),
+                      style: _muted,
+                    ),
+                  )
+                else ...[
+                  _TimelinePreview(entries: shown, isLocked: isLocked),
+                  const SizedBox(height: 4),
+                  Center(
+                    child: WrSmallButton(
+                      key: const Key('wr_journey_memory_see_all'),
+                      kind: WrSmallButtonKind.ghost,
+                      label: tr('Xem toàn bộ lịch sử', 'See the whole history'),
+                      onTap: () => context.push('/wr/career-memory'),
+                    ),
+                  ),
+                ],
+                const SizedBox(height: 26),
+
+                // ── Những gì bạn đã học ───────────────────────────────────
+                Text(
+                  tr('Những gì bạn đã học', 'What you have learned'),
+                  style: _h2,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  tr(
+                    'Những điều đã xảy ra, không phải việc cần làm',
+                    'Things that happened, not things to do',
+                  ),
+                  style: _tiny,
+                ),
+                const SizedBox(height: 10),
+                if (learned.isEmpty)
+                  WrCard(
+                    key: const Key('wr_journey_learned_empty'),
+                    child: Text(
+                      tr(
+                        'Những điều bạn học được sẽ xuất hiện ở đây sau khi '
+                            'chúng thực sự xảy ra.',
+                        'What you learn will show up here once it has '
+                            'actually happened.',
+                      ),
+                      style: _muted,
+                    ),
+                  )
+                else
+                  for (final e in learned)
+                    _LearnedCard(entry: e, locked: isLocked(e)),
+                const SizedBox(height: 16),
+
+                // ── Trò chuyện về hành trình ──────────────────────────────
+                // Script khách: thẻ nổi bật, bấm vào mở trợ lý chat.
+                const _AskCard(),
+                const SizedBox(height: 26),
+
+                // ── Dòng nhìn lại thời gian ───────────────────────────────
+                // Script khách: đẩy xuống dưới Career Memory.
+                const _NarrativeCard(),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Tiêu đề thay thế cho mục bị khoá ở bản Free — cùng chữ với màn Career
+/// Memory đầy đủ.
+String get kLockedEntryTitle => tr('Nội dung đã khoá', 'Locked');
+
+const _h2 = TextStyle(
+  fontSize: 17,
+  fontWeight: FontWeight.w700,
+  color: WrColors.navy,
+  height: 1.35,
+);
+
+const _tiny = TextStyle(fontSize: 12.5, color: WrColors.text3);
+
+const _muted = TextStyle(fontSize: 14, color: WrColors.text2, height: 1.6);
+
+String _ddmm(DateTime d) {
+  final l = d.toLocal();
+  return '${_dd(l.day)}/${_dd(l.month)}';
+}
+
+// ---------------------------------------------------------------------------
+// Dấu ấn hành trình — dòng thời gian 4 mục (mockup v47 `.timeline-*`)
+// ---------------------------------------------------------------------------
+
+class _TimelinePreview extends StatelessWidget {
+  const _TimelinePreview({required this.entries, required this.isLocked});
+
+  final List<JourneyEntry> entries;
+  final bool Function(JourneyEntry) isLocked;
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        // `.timeline-line`: kẻ dọc 2px nối các chấm.
+        const Positioned(
+          left: 4,
+          top: 6,
+          bottom: 0,
+          child: SizedBox(
+            width: 2,
+            child: ColoredBox(color: WrColors.lineSoft),
+          ),
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (var i = 0; i < entries.length; i++)
+              _TimelineItem(
+                key: Key('wr_journey_timeline_$i'),
+                entry: entries[i],
+                locked: isLocked(entries[i]),
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+class _TimelineItem extends StatefulWidget {
+  const _TimelineItem({super.key, required this.entry, required this.locked});
+
+  final JourneyEntry entry;
+  final bool locked;
+
+  @override
+  State<_TimelineItem> createState() => _TimelineItemState();
+}
+
+class _TimelineItemState extends State<_TimelineItem> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final e = widget.entry;
+    final excerpt = e.subtitle?.trim();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 20),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          // `.timeline-dot`: chấm 10px, viền trắng 4px.
+          Positioned(
+            left: 0,
+            top: 6,
+            child: Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: e.color,
+                shape: BoxShape.circle,
+                boxShadow: const [
+                  BoxShadow(color: Colors.white, spreadRadius: 4),
+                ],
+              ),
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.only(left: 20),
+            child: Material(
+              color: _expanded ? const Color(0x05093774) : Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+                side: const BorderSide(color: WrColors.line),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: InkWell(
+                onTap: widget.locked
+                    ? () => context.push('/wr/paywall?trigger=career_memory')
+                    : () => setState(() => _expanded = !_expanded),
+                child: Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 12,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Career Memory',
-                        style: TextStyle(fontSize: 15.5, color: WrColors.muted),
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        tr('Hành trình', 'Journey'),
+                        e.label.toUpperCase(),
                         style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w800,
-                          color: WrColors.navy,
-                          letterSpacing: -0.96,
-                          height: 1.1,
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.4,
+                          color: e.color,
                         ),
                       ),
+                      const SizedBox(height: 2),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Expanded(
+                            // Khoá thì giấu cả tiêu đề: với nhiều loại mục,
+                            // tiêu đề chính là lời người dùng viết.
+                            child: Text(
+                              widget.locked ? kLockedEntryTitle : e.title,
+                              style: TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w600,
+                                color: widget.locked
+                                    ? WrColors.text2
+                                    : WrColors.navy,
+                                height: 1.35,
+                              ),
+                            ),
+                          ),
+                          if (e.at != null) ...[
+                            const SizedBox(width: 10),
+                            Text(
+                              _ddmm(e.at!),
+                              style: const TextStyle(
+                                fontSize: 11.5,
+                                color: WrColors.text3,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                      if (_expanded &&
+                          excerpt != null &&
+                          excerpt.isNotEmpty) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          '“$excerpt”',
+                          key: Key('wr_journey_timeline_excerpt_${e.title}'),
+                          style: WrText.serifQuote(
+                            fontSize: 14,
+                            color: WrColors.text2,
+                            height: 1.5,
+                          ),
+                        ),
+                        if (e.episodeId != null) ...[
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            onTap: () =>
+                                context.push('/wr/episode/${e.episodeId}'),
+                            child: Text(
+                              tr(
+                                'Đọc lại lần nhìn lại này',
+                                'Read this look back',
+                              ),
+                              style: const TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: WrColors.navy,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                      if (!_expanded) ...[
+                        const SizedBox(height: 6),
+                        Row(
+                          children: [
+                            Text(
+                              widget.locked
+                                  ? tr('Premium · Mở khoá', 'Premium · Unlock')
+                                  : tr('Chạm để xem', 'Tap to see'),
+                              style: const TextStyle(
+                                fontSize: 12.5,
+                                color: WrColors.text3,
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            Icon(
+                              widget.locked
+                                  ? Icons.lock_outline
+                                  : Icons.expand_more,
+                              size: 14,
+                              color: WrColors.text3,
+                            ),
+                          ],
+                        ),
+                      ],
                     ],
                   ),
                 ),
-                // v1.6 §9.1: "Tôi" là avatar ở mọi màn tab, không còn tab riêng.
-                WrProfileAvatar(),
-              ],
+              ),
             ),
-            const SizedBox(height: 28),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
-            // Diễn biến theo thời gian — thẻ mở đầu tab, theo giao diện mẫu
-            // Sprint 2. Trước đây nó là một dòng dẫn nằm tận cuối màn, nên thứ
-            // duy nhất tóm được cả chặng đường lại là thứ dễ bỏ sót nhất.
-            const _NarrativeCard(),
-            const SizedBox(height: 28),
+// ---------------------------------------------------------------------------
+// Những gì bạn đã học (mockup v47)
+// ---------------------------------------------------------------------------
 
-            const WrEyebrow('CAREER MEMORY'),
-            const SizedBox(height: 14),
-            WrParagraph(
-              all.isEmpty
-                  ? tr(
-                      'Nhật ký sự nghiệp của bạn chưa có ghi nhận nào. Hãy '
-                          'bắt đầu một lần nhìn lại để lưu giữ những dấu ấn của '
-                          'riêng bạn.',
-                      'Your career journal has nothing in it yet. Start a look '
-                          'back to keep the marks that are yours.',
-                    )
-                  : tr(
-                      'Bạn đã có ${all.length} ghi nhận trên hành trình sự '
-                          'nghiệp.',
-                      'You have ${all.length} entries on your career '
-                          'journey.',
-                    ),
-              style: const TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-                color: WrColors.navy,
-                height: 1.4,
-              ),
-              textAlign: TextAlign.start,
-            ),
+class _LearnedCard extends StatelessWidget {
+  const _LearnedCard({required this.entry, required this.locked});
 
-            // Con số này phải TỰ GIẢI THÍCH, nếu không nó là một con số lạ.
-            //
-            // Khách mở đầu phản hồi 2026-08-24 bằng "dữ liệu trong app chưa
-            // được kết nối với nhau", và đây là ví dụ rõ nhất: màn này nói "21
-            // mảnh ký ức" trong khi tab Hiểu mình ngay bên cạnh nói "15 lần
-            // nhìn lại". Hai con số đo hai thứ khác nhau VÀ lọc khác nhau —
-            // mảnh ký ức gộp cả dấu mốc thực hành nhưng bỏ những lần còn dở,
-            // còn "lần nhìn lại" đếm mọi Episode. Không nơi nào nói ra điều đó,
-            // nên người dùng chỉ còn cách kết luận là app đếm sai.
-            if (all.isNotEmpty) ...[
-              const SizedBox(height: 10),
-              WrParagraph(
-                _memoryBreakdown(all),
-                key: const Key('wr_journey_memory_breakdown'),
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: WrColors.muted,
-                  height: 1.6,
-                ),
-                textAlign: TextAlign.start,
-              ),
-            ],
+  final JourneyEntry entry;
+  final bool locked;
 
-            if (all.isNotEmpty) ...[
-              const SizedBox(height: 32),
-              const WrSectionDivider(),
-              const SizedBox(height: 24),
-              ...buildJourneyTimeline(
-                context,
-                groupJourneyByWeekAndDay(shown, now: DateTime.now()),
-                lockOlderWeeks: locked,
-              ),
-              if (locked) ...[
-                const SizedBox(height: 16),
-                WrPremiumLock(
-                  key: Key('wr_journey_memory_lock'),
-                  description: tr(
-                    'Bản đầy đủ mở lại từng ghi nhận bạn đã lưu trên hành '
-                        'trình sự nghiệp, đọc lại được bất cứ lúc nào, theo đúng '
-                        'dòng thời gian.',
-                    'The full version reopens every entry you have saved on your '
-                        'career journey, readable any time, in order.',
-                  ),
-                  ctaLabel: tr(
-                    'Mở toàn bộ Career Memory',
-                    'Open all of Career Memory',
-                  ),
-                  paywallTrigger: 'career_memory',
-                ),
-                const SizedBox(height: 8),
-              ],
-              // LUÔN hiện, kể cả khi màn này đã bày hết (changelog 24/08 §8.1).
-              //
-              // Trước đây dòng này chỉ hiện khi còn mảnh chưa bày. Nghe hợp lý,
-              // nhưng nó khoá người dùng ở bản xem trước: màn đầy đủ mới có bộ
-              // lọc theo loại và chỗ mở rộng từng mục, mà người có đúng bốn
-              // mảnh ký ức thì không bao giờ thấy lối sang đó.
-              WrLinkRow(
-                key: const Key('wr_journey_memory_see_all'),
-                label: tr(
-                  'Xem toàn bộ Career Memory',
-                  'See all of Career Memory',
-                ),
-                hint: hasMore
-                    ? tr(
-                        'Còn ${all.length - shown.length} ghi nhận nữa',
-                        '${all.length - shown.length} more entries',
-                      )
-                    : tr(
-                        'Lọc theo loại, mở rộng từng ghi nhận',
-                        'Filter by type, expand any entry',
-                      ),
-                onTap: () => context.push('/wr/career-memory'),
-              ),
-            ],
-
-            // Cơ hội phát triển — §XI. Nằm dưới Career Memory vì nó là điều
-            // rút ra TỪ chặng đường, không phải một mục của chặng đường.
-            const _GrowthOpportunitySection(),
-
-            const SizedBox(height: 24),
-            const WrSectionDivider(),
-            const SizedBox(height: 12),
-
-            // Trò chuyện với trợ lý phản chiếu. Đặt ở tab Hành trình vì câu hỏi
-            // người dùng muốn đặt ("tôi có phù hợp với công việc đó không") chỉ
-            // trả lời được từ Career Memory, tức từ chính tab này.
-            //
-            // Trước 2026-08-03 đây là ô hỏi một chiều chờ trả lời qua email
-            // (họp khách 2026-07-29); giờ là hội thoại nhiều lượt.
-            WrLinkRow(
-              key: const Key('wr_journey_ask_row'),
-              label: tr(
-                'Trò chuyện về hành trình của bạn',
-                'Talk about your journey',
-              ),
-              hint: tr('Hỏi và trả lời ngay', 'Ask and get an answer now'),
-              onTap: () => context.push('/wr/ask'),
-            ),
-
-            if (patterns.isNotEmpty)
-              WrLinkRow(
-                key: const Key('wr_journey_discover_row'),
-                label: tr('Xem trong Hiểu mình', 'See it in Understand'),
-                onTap: () => context.go('/wr/discover?from=journey'),
-              ),
-          ],
+  @override
+  Widget build(BuildContext context) {
+    final milestone = entry.learned == JourneyLearnedKind.milestone;
+    final accent = milestone ? WrColors.coral : WrColors.teal;
+    final excerpt = entry.subtitle?.trim();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(WrCard.kRadius),
+          border: Border.all(color: WrColors.line),
         ),
+        clipBehavior: Clip.antiAlias,
+        child: IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(width: 3, color: accent),
+              Expanded(
+                child: Padding(
+                  padding: WrCard.kPadding,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        milestone
+                            ? tr('CỘT MỐC', 'MILESTONE')
+                            : tr('ĐIỀU ĐÃ THỬ', 'SOMETHING TRIED'),
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          fontWeight: FontWeight.w700,
+                          letterSpacing: 0.6,
+                          color: milestone
+                              ? WrColors.pillCoralText
+                              : WrColors.pillTealText,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        locked ? kLockedEntryTitle : entry.title,
+                        style: TextStyle(
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w700,
+                          color: locked ? WrColors.text2 : WrColors.navy,
+                          height: 1.4,
+                        ),
+                      ),
+                      if (locked) ...[
+                        const SizedBox(height: 6),
+                        GestureDetector(
+                          onTap: () =>
+                              context.push('/wr/paywall?trigger=career_memory'),
+                          child: Row(
+                            children: [
+                              Text(
+                                tr('Premium · Mở khoá', 'Premium · Unlock'),
+                                style: _tiny,
+                              ),
+                              const SizedBox(width: 4),
+                              const Icon(
+                                Icons.lock_outline,
+                                size: 14,
+                                color: WrColors.text3,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ] else if (excerpt != null && excerpt.isNotEmpty) ...[
+                        const SizedBox(height: 4),
+                        Text(excerpt, style: _muted),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Trò chuyện về hành trình — thẻ nổi bật (script khách)
+// ---------------------------------------------------------------------------
+
+class _AskCard extends StatelessWidget {
+  const _AskCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return WrCardNavy(
+      key: const Key('wr_journey_ask_card'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            tr('Trò chuyện về hành trình của bạn', 'Talk about your journey'),
+            style: const TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: WrColors.cream,
+              height: 1.35,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            tr(
+              'Hỏi về những gì bạn đã đi qua. Trợ lý trả lời ngay.',
+              'Ask about what you have been through. The assistant answers '
+                  'right away.',
+            ),
+            style: TextStyle(
+              fontSize: 14,
+              height: 1.55,
+              color: WrColors.cream.withValues(alpha: 0.82),
+            ),
+          ),
+          const SizedBox(height: 12),
+          WrSmallButton(
+            key: const Key('wr_journey_ask_row'),
+            label: tr('Bắt đầu trò chuyện', 'Start a conversation'),
+            arrow: true,
+            onTap: () => context.push('/wr/ask'),
+          ),
+        ],
       ),
     );
   }
@@ -938,232 +1291,135 @@ class _NarrativeCardState extends ConsumerState<_NarrativeCard> {
     // hàng chục mảnh ký ức.
     final refresh = ref.watch(wrNarrativeRefreshProvider).valueOrNull;
 
-    return WrCardNavy(
+    final hasStory = canRead && latest != null;
+    // Mockup v47 `.ai-insight-card`: nền kem, không viền.
+    return Container(
       key: const Key('wr_journey_narrative_card'),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              // Khách 09/09/2026 (§12.1): bỏ biểu tượng ✦ ở đầu nhãn AI. Ổ
-              // khoá thì GIỮ — nó nói một điều có thật (chưa mở khoá), không
-              // phải trang trí.
-              if (!canRead) ...[
-                const Icon(Icons.lock_outline, size: 14, color: WrColors.coral),
-                const SizedBox(width: 6),
-              ],
-              // `Flexible` chứ không phải `Text` trần: nhãn tiếng Anh dài hơn
-              // hẳn bản tiếng Việt, cộng thêm `letterSpacing`, nên nó tràn khỏi
-              // mép thẻ và bị cắt mất chữ cuối. Cho phép xuống dòng thay vì cắt
-              // — đây là nhãn nói thẻ này là gì, mất chữ là mất nghĩa.
-              Flexible(
-                child: Text(
-                  canRead
-                      ? tr(
-                          'NHÌN LẠI DÒNG THỜI GIAN',
-                          'LOOK BACK ALONG THE TIMELINE',
-                        )
-                      : 'PREMIUM',
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.6,
-                    color: WrColors.coral,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          GestureDetector(
-            // Bấm vào chính đoạn chữ để mở/thu — khách xin "bấm vào là nó bung
-            // ra", không phải đi tìm một nút riêng.
-            key: const Key('wr_journey_narrative_expand'),
-            behavior: HitTestBehavior.opaque,
-            onTap: latest == null || !canRead
-                ? null
-                : () => setState(() => _expanded = !_expanded),
-            child: WrParagraph(
-              canRead && latest != null
-                  ? latest
-                  : canRead
-                  ? _waitingLine(refresh, rewriting: rewriting)
-                  : tr(
-                      'Mở khóa bản đầy đủ để nhìn lại toàn bộ bức tranh thay '
-                          'đổi của bạn qua từng giai đoạn.',
-                      'Unlock the full version to see the whole picture of how '
-                          'you have changed, stage by stage.',
-                    ),
-              // Chỉ kẹp bản kể của AI. Câu chờ và câu quảng cáo Premium đều do
-              // mình viết, độ dài đã biết trước, kẹp thêm chỉ tổ cắt cụt.
-              maxLines: canRead && latest != null && !_expanded
-                  ? kNarrativeCollapsedLines
-                  : null,
-              overflow: canRead && latest != null && !_expanded
-                  ? TextOverflow.ellipsis
-                  : null,
-              style: TextStyle(
-                fontSize: 16.5,
-                height: 1.65,
-                // Kem, không phải trắng mờ: chữ trên thẻ navy ở cả bốn tab là kem.
-                color: WrColors.cream,
-                fontStyle: canRead && latest != null
-                    ? FontStyle.italic
-                    : FontStyle.normal,
-              ),
-            ),
-          ),
-          if (canRead && latest != null) ...[
-            const SizedBox(height: 10),
-            GestureDetector(
-              key: const Key('wr_journey_narrative_expand_label'),
-              behavior: HitTestBehavior.opaque,
-              onTap: () => setState(() => _expanded = !_expanded),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    _expanded
-                        ? tr('Thu gọn', 'Collapse')
-                        : tr('Mở rộng', 'Expand'),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: WrColors.cream,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Icon(
-                    _expanded ? Icons.expand_less : Icons.expand_more,
-                    size: 16,
-                    color: WrColors.cream,
-                  ),
-                ],
-              ),
-            ),
-          ],
-          const SizedBox(height: 16),
-          GestureDetector(
-            key: const Key('wr_journey_narrative_row'),
-            behavior: HitTestBehavior.opaque,
-            onTap: () => context.push('/wr/journey/narrative'),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  canRead
-                      ? tr('Đọc toàn bộ diễn biến', 'Read the whole story')
-                      : tr(
-                          'Xem bản đầy đủ có gì',
-                          'See what the full version holds',
-                        ),
-                  style: const TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w700,
-                    color: WrColors.coral,
-                  ),
-                ),
-                const SizedBox(width: 5),
-                const Icon(
-                  Icons.arrow_forward,
-                  size: 14,
-                  color: WrColors.coral,
-                ),
-              ],
-            ),
-          ),
-        ],
+      padding: WrCard.kPadding,
+      decoration: BoxDecoration(
+        color: WrColors.cream,
+        borderRadius: BorderRadius.circular(WrCard.kRadius),
       ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Cơ hội phát triển — Hai Lớp v1.6 §XI
-// ---------------------------------------------------------------------------
-
-/// Khối "Cơ hội phát triển" dưới Career Memory.
-///
-/// Ba điều kiện của §XI được cài ở đây:
-///   §11.3  Chưa suy ra được gợi ý nào thì cả khối biến mất, không hiện khung
-///          rỗng cũng không hiện lời mời chung chung.
-///   §11.4  Free chỉ thấy khối khoá; nội dung gợi ý không lọt ra ngoài paywall.
-///   §XII.7 [GrowthOpportunity.suggestionText] và [GrowthOpportunity.confidenceNote]
-///          dựng chung một chỗ — không nhánh nào hiện câu gợi ý mà thiếu ghi chú.
-class _GrowthOpportunitySection extends ConsumerWidget {
-  const _GrowthOpportunitySection();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final opportunity = ref.watch(wrGrowthOpportunityProvider).valueOrNull;
-    if (opportunity == null) return const SizedBox.shrink();
-
-    final entitlement =
-        ref.watch(wrEntitlementProvider).valueOrNull ??
-        WrEntitlement(plan: WrPlan.free);
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 28),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const WrSectionDivider(),
-          const SizedBox(height: 24),
-          WrEyebrow(tr('GÓC NHÌN PHÁT TRIỂN', 'A VIEW ON GROWTH')),
-          const SizedBox(height: 14),
-          if (!entitlement.isPremium)
-            WrPremiumLock(
-              key: Key('wr_journey_growth_opportunity_lock'),
-              description: tr(
-                'Từ những gì bạn đã nhìn lại, bản đầy đủ chỉ ra một hướng '
-                    'năng lực đáng phát triển tiếp, kèm lý do vì sao là hướng đó.',
-                'From what you have looked back on, the full version points to '
-                    'one skill worth growing next, and why that one.',
-              ),
-              ctaLabel: tr('Mở Cơ hội phát triển', 'Open Growth opportunities'),
-              paywallTrigger: 'growth_opportunity',
+          // Khách 09/09/2026 (§12.1): bỏ biểu tượng ✦ ở đầu nhãn AI.
+          WrEyebrow(
+            tr('DÒNG NHÌN LẠI THỜI GIAN', 'LOOKING BACK OVER TIME'),
+            color: WrColors.navy,
+          ),
+          const SizedBox(height: 10),
+          if (canRead)
+            GestureDetector(
+              // Bấm vào chính đoạn chữ để mở/thu — khách xin "bấm vào là nó
+              // bung ra", không phải đi tìm một nút riêng.
+              key: const Key('wr_journey_narrative_expand'),
+              behavior: HitTestBehavior.opaque,
+              onTap: latest == null
+                  ? null
+                  : () => setState(() => _expanded = !_expanded),
+              child: hasStory
+                  ? Text(
+                      latest,
+                      // Chỉ kẹp bản kể của AI: độ dài của nó do mô hình quyết.
+                      maxLines: _expanded ? null : kNarrativeCollapsedLines,
+                      overflow: _expanded ? null : TextOverflow.ellipsis,
+                      style: WrText.serifQuote(
+                        fontSize: 15.5,
+                        color: WrColors.text2,
+                      ),
+                    )
+                  : Text(
+                      _waitingLine(refresh, rewriting: rewriting),
+                      style: _muted,
+                    ),
             )
           else
-            WrCardMinimal(
-              key: const Key('wr_journey_growth_opportunity'),
+            // Free: không gửi một chữ nào của bản kể xuống máy.
+            Container(
+              key: const Key('wr_journey_narrative_lock'),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: WrColors.coral.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(12),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    opportunity.suggestionText,
-                    textAlign: TextAlign.justify,
+                    tr('PHÂN TÍCH BỊ KHÓA', 'ANALYSIS LOCKED'),
                     style: const TextStyle(
-                      fontSize: 16.5,
-                      height: 1.6,
-                      color: WrColors.navy,
-                      fontWeight: FontWeight.w500,
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: WrColors.pillCoralText,
                     ),
                   ),
-                  const SizedBox(height: 14),
+                  const SizedBox(height: 8),
                   Text(
-                    opportunity.confidenceNote,
-                    key: const Key('wr_journey_growth_confidence'),
-                    textAlign: TextAlign.justify,
+                    tr(
+                      'Mở khóa bản đầy đủ để nhìn lại toàn bộ bức tranh thay '
+                          'đổi của bạn qua từng giai đoạn.',
+                      'Unlock the full version to see the whole picture of '
+                          'how you have changed, stage by stage.',
+                    ),
                     style: const TextStyle(
                       fontSize: 13.5,
-                      height: 1.55,
-                      color: WrColors.muted,
-                      fontStyle: FontStyle.italic,
+                      color: WrColors.navy,
+                      height: 1.5,
                     ),
+                  ),
+                  const SizedBox(height: 10),
+                  WrSmallButton(
+                    key: const Key('wr_journey_narrative_row'),
+                    label: tr('Xem đúc kết chi tiết', 'See the full reading'),
+                    onTap: () => context.push('/wr/paywall?trigger=ai_insight'),
                   ),
                 ],
               ),
             ),
-          const SizedBox(height: 12),
-          WrLinkRow(
-            key: const Key('wr_journey_work_info_row'),
-            label: tr(
-              'Cập nhật bối cảnh công việc',
-              'Update your work context',
+          if (hasStory) ...[
+            const SizedBox(height: 10),
+            Row(
+              children: [
+                GestureDetector(
+                  key: const Key('wr_journey_narrative_expand_label'),
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => setState(() => _expanded = !_expanded),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        _expanded
+                            ? tr('Thu gọn', 'Collapse')
+                            : tr('Mở rộng', 'Expand'),
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: WrColors.navy,
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Icon(
+                        _expanded ? Icons.expand_less : Icons.expand_more,
+                        size: 16,
+                        color: WrColors.navy,
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
-            hint: tr('Để gợi ý chính xác hơn', 'So the prompts fit better'),
-            onTap: () => context.push('/wr/work-info'),
-          ),
+          ],
+          if (canRead) ...[
+            const SizedBox(height: 12),
+            WrSmallButton(
+              key: const Key('wr_journey_narrative_row'),
+              kind: WrSmallButtonKind.ghost,
+              label: tr('Đọc toàn bộ diễn biến', 'Read the whole story'),
+              arrow: true,
+              onTap: () => context.push('/wr/journey/narrative'),
+            ),
+          ],
         ],
       ),
     );
@@ -1674,9 +1930,7 @@ class _EntryRowState extends State<_EntryRow> {
                         // chỉ còn nhãn loại đọc như một lỗi tải dở.
                         const SizedBox(height: 6),
                         WrParagraph(
-                          locked
-                              ? tr('Nội dung đã khoá', 'Locked')
-                              : entry.title,
+                          locked ? kLockedEntryTitle : entry.title,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,

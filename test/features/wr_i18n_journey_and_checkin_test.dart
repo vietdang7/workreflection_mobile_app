@@ -221,10 +221,14 @@ void main() {
       );
 
       expect(entries, hasLength(2));
+      // Mockup v47: một bước thực hành xong là "Practice: ‹việc›", việc là
+      // phần sau nhãn giai đoạn của tên bước ĐÃ DỊCH — nên vẫn kiểm được rằng
+      // tên bước được tra lại theo ngôn ngữ đang bật.
       expect(entries.map((e) => e.title), [
-        'Steady when things change · Try: ask why the change happened',
+        'Practice: ask why the change happened',
         'Notice — write down a change that let you down: uadafas',
       ]);
+      expect(entries.first.subtitle, 'You tried: ask why the change happened.');
       expect(entries.map((e) => e.label), ['PRACTICE', 'WHAT I WROTE DOWN']);
     });
 

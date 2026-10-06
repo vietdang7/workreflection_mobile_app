@@ -414,13 +414,26 @@ void main() {
     stage.router.go('/wr/journey');
     await tester.pumpAndSettle();
     expect(find.byType(WrJourneyScreen), findsOneWidget);
-    // Free: Career Memory khoá hoàn toàn, con số tổng vẫn nói ra.
+    // Mockup v47: không còn khối khoá riêng; Free khoá theo TỪNG MỐC ngoài
+    // tuần này. Fake repo khép Episode với ngày cố định 27/07/2026 nên mốc
+    // vừa tạo nằm ở tuần cũ → hiện "Premium · Mở khoá". Con số tổng vẫn nói
+    // ra.
     expect(
       find.byKey(const Key('wr_journey_memory_lock'), skipOffstage: false),
-      findsOneWidget,
+      findsNothing,
     );
+    expect(find.text('1 ghi nhận đã lưu', skipOffstage: false), findsOneWidget);
+    final firstEntry = find.byKey(
+      const Key('wr_journey_timeline_0'),
+      skipOffstage: false,
+    );
+    expect(firstEntry, findsOneWidget);
     expect(
-      find.textContaining('1 ghi nhận', skipOffstage: false),
+      find.descendant(
+        of: firstEntry,
+        matching: find.text('Premium · Mở khoá', skipOffstage: false),
+        skipOffstage: false,
+      ),
       findsOneWidget,
     );
 

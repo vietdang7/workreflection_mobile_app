@@ -197,17 +197,19 @@ Future<void> _expandFirstJourneyEntry(WidgetTester tester) async {
   // Thêm một dòng chữ ở phần đầu là đủ đẩy mốc đầu tiên ra ngoài khung, và khi
   // đó helper cũ ném "Bad state: No element" — một thất bại nói về bố cục chứ
   // không nói gì về điều bài kiểm định kiểm.
-  final arrows = find.byIcon(Icons.keyboard_arrow_down_rounded);
+  //
+  // Mockup v47: mốc mở ra bằng một cú chạm vào CHÍNH mốc đó, không còn mũi
+  // tên riêng.
+  final item = find.byKey(const Key('wr_journey_timeline_0'));
   final scrollable = find.byType(Scrollable).first;
-  for (var i = 0; i < 20 && arrows.evaluate().isEmpty; i++) {
+  for (var i = 0; i < 20 && item.evaluate().isEmpty; i++) {
     await tester.drag(scrollable, const Offset(0, -220));
     await tester.pumpAndSettle();
   }
 
-  final arrow = arrows.first;
-  await tester.ensureVisible(arrow);
+  await tester.ensureVisible(item);
   await tester.pumpAndSettle();
-  await tester.tap(arrow);
+  await tester.tap(item);
   await tester.pumpAndSettle();
 }
 
@@ -820,14 +822,18 @@ void main() {
   // ─────────────────────────────────────────────────────────────────────────────
 
   group('WrJourneyScreen — top-area', () {
-    testWidgets('renders Career Memory eyebrow and Hành trình title', (
+    // Mockup v47: đầu màn là hero "Hành trình của bạn"; dòng "Career Memory"
+    // và tiêu đề 32px cũ đã bỏ.
+    testWidgets('renders hero Hành trình của bạn, không còn CAREER MEMORY', (
       tester,
     ) async {
       await tester.pumpWidget(_wrap(const WrJourneyScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('CAREER MEMORY'), findsOneWidget);
-      expect(find.text('Hành trình'), findsOneWidget);
+      expect(find.byKey(const Key('wr_journey_hero')), findsOneWidget);
+      expect(find.text('HÀNH TRÌNH'), findsOneWidget);
+      expect(find.text('Hành trình của bạn'), findsOneWidget);
+      expect(find.text('CAREER MEMORY'), findsNothing);
     });
 
     testWidgets('renders memory count', (tester) async {
@@ -848,7 +854,7 @@ void main() {
       await tester.pumpWidget(_wrap(const WrJourneyScreen(), content: content));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('2 ghi nhận'), findsOneWidget);
+      expect(find.text('2 ghi nhận đã lưu'), findsOneWidget);
     });
   });
 
@@ -869,7 +875,9 @@ void main() {
           WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
         );
 
-    testWidgets('gom mục theo tháng khi có dữ liệu', (tester) async {
+    // v47: tab chỉ còn dòng thời gian phẳng 4 mục; gom theo tháng là việc của
+    // màn Career Memory đầy đủ.
+    testWidgets('không gom theo tháng trên tab', (tester) async {
       final content = FakeWrContentRepository();
       content.seedMemoryEvents([
         _event(
@@ -884,7 +892,12 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('THÁNG 7, 2026'), findsOneWidget);
+      await _scrollUntilFound(
+        tester,
+        find.byKey(const Key('wr_journey_timeline_0')),
+      );
+      expect(find.byKey(const Key('wr_journey_timeline_0')), findsOneWidget);
+      expect(find.text('THÁNG 7, 2026'), findsNothing);
     });
 
     testWidgets('renders event reflectionText as timeline title', (
@@ -903,8 +916,8 @@ void main() {
         _wrap(const WrJourneyScreen(), intel: premiumIntel(), content: content),
       );
       await tester.pumpAndSettle();
-      await _expandFirstJourneyEntry(tester);
-
+      // Tiêu đề luôn hiện, không cần mở mốc.
+      await _scrollUntilFound(tester, find.text('Insight đầu tiên'));
       expect(find.text('Insight đầu tiên'), findsOneWidget);
     });
 
@@ -951,10 +964,11 @@ void main() {
     });
   });
 
-  // Quyết định của khách 2026-07-29: Career Memory khoá HOÀN TOÀN với Free.
-  // Bản trước cho xem 10 mục gần nhất rồi mới cắt.
+  // Mockup v47: Free đọc được tuần này; mốc tuần trước bị khoá ngay trên từng
+  // dòng ("Premium · Mở khoá"), không còn khối khoá riêng
+  // `wr_journey_memory_lock`.
   group('WrJourneyScreen — with events (free user)', () {
-    testWidgets('free: nội dung tuần cũ bị khoá, khối mời mở khoá vẫn ở đó', (
+    testWidgets('free: mốc tuần cũ bị khoá từng dòng, chạm vào mở paywall', (
       tester,
     ) async {
       // Khoá theo TUẦN (mockup v16 `!g.current && !isPremium`). Các mốc dưới
@@ -984,20 +998,16 @@ void main() {
 
       expect(
         find.byKey(const Key('wr_journey_memory_lock'), skipOffstage: false),
-        findsOneWidget,
+        findsNothing,
       );
-      for (var i = 0; i < 3; i++) {
-        expect(
-          find.text('Event $i', skipOffstage: false),
-          findsNothing,
-          reason: 'mảnh ký ức $i lọt ra ngoài paywall',
-        );
-      }
+      expect(find.text('Premium · Mở khoá'), findsNWidgets(3));
+      expect(find.text('Chạm để xem'), findsNothing);
       // Con số tổng vẫn nói ra — đó là việc chính người dùng đã làm.
-      expect(
-        find.textContaining('3 ghi nhận', skipOffstage: false),
-        findsOneWidget,
-      );
+      expect(find.text('3 ghi nhận đã lưu'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('wr_journey_timeline_0')));
+      await tester.pumpAndSettle();
+      expect(find.text('Paywall'), findsOneWidget);
     });
 
     testWidgets('chưa có ký ức nào thì không dựng khối khoá rỗng', (
@@ -1036,6 +1046,7 @@ void main() {
         find.byKey(const Key('wr_journey_memory_lock'), skipOffstage: false),
         findsNothing,
       );
+      expect(find.text('Premium · Mở khoá'), findsNothing);
       await _expandFirstJourneyEntry(tester);
       expect(find.text('Event 1', skipOffstage: false), findsOneWidget);
     });

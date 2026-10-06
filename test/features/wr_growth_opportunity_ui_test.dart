@@ -1,4 +1,4 @@
-// Cơ hội phát triển trên tab Hành trình + màn Thông tin công việc.
+// Cơ hội phát triển trên tab Hành trình (v47: đã bỏ) + màn Thông tin công việc.
 // Kiến trúc Dữ liệu Hai Lớp v1.6 §XI.
 
 import 'package:flutter/material.dart';
@@ -140,158 +140,65 @@ _withEnoughPatterns() {
 }
 
 void main() {
-  group('Hành trình — khối Cơ hội phát triển (§XI)', () {
-    testWidgets('chưa đủ Pattern thì cả khối im lặng (§11.3)', (tester) async {
-      // Không seed Pattern nào — không được hiện khung rỗng hay lời mời chung.
-      await tester.pumpWidget(
-        _wrap(const WrJourneyScreen(), repo: _repo(), premium: true),
-      );
-      await tester.pumpAndSettle();
-
+  // Mockup v47 (script khách 06/10) bỏ khối "Góc nhìn phát triển" và dòng
+  // dẫn sang Thông tin công việc khỏi tab Hành trình. Luật §XI
+  // (`wrGrowthOpportunityProvider`) vẫn dùng ở nơi khác; ở đây chỉ kiểm khối
+  // đó KHÔNG còn trên tab, kể cả khi đủ dữ liệu.
+  group('Hành trình — không còn khối Cơ hội phát triển (v47)', () {
+    void expectNoGrowthBlock() {
       expect(find.text('CƠ HỘI PHÁT TRIỂN'), findsNothing);
-      expect(
-        find.byKey(const Key('wr_journey_growth_opportunity')),
-        findsNothing,
-      );
-      expect(
-        find.byKey(const Key('wr_journey_growth_opportunity_lock')),
-        findsNothing,
-      );
-    });
+      for (final key in const [
+        'wr_journey_growth_opportunity',
+        'wr_journey_growth_opportunity_lock',
+        'wr_journey_growth_confidence',
+        'wr_journey_work_info_row',
+      ]) {
+        expect(
+          find.byKey(Key(key), skipOffstage: false),
+          findsNothing,
+          reason: '$key phải bị bỏ khỏi tab Hành trình',
+        );
+      }
+    }
 
-    testWidgets('Free chỉ thấy khối khoá, không thấy nội dung gợi ý (§11.4)', (
-      tester,
-    ) async {
-      // Khung test mặc định 800px không đủ cao — xem ghi chú ở test Premium bên
-      // dưới. Cỡ chữ toàn app nới ra càng đẩy khối khoá ra ngoài vùng dựng lười.
-      tester.view.physicalSize = const Size(1080, 3000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-      final fakes = _withEnoughPatterns();
-      await tester.pumpWidget(
-        _wrap(
-          const WrJourneyScreen(),
-          repo: _repo(),
-          intel: fakes.intel,
-          content: fakes.content,
-          episodes: fakes.episodes,
-        ),
-      );
-      await tester.pumpAndSettle();
+    for (final premium in const [false, true]) {
+      testWidgets(
+        '${premium ? 'Premium' : 'Free'} đủ Pattern vẫn không thấy khối này',
+        (tester) async {
+          tester.view.physicalSize = const Size(1080, 6000);
+          tester.view.devicePixelRatio = 1.0;
+          addTearDown(tester.view.reset);
+          final fakes = _withEnoughPatterns();
+          // Có cả bản đối tác đã tổng hợp — vẫn không được hiện trên tab.
+          fakes.intel.seedGrowthOpportunity(
+            GrowthOpportunity(
+              id: 'go-1',
+              userId: 'u1',
+              suggestionText: 'Gợi ý do đối tác tổng hợp.',
+              confidenceNote: GrowthOpportunity.kConfidenceNote,
+              basedOn: const ['C1-sit-01'],
+              generatedAt: _now,
+            ),
+          );
+          await tester.pumpWidget(
+            _wrap(
+              const WrJourneyScreen(),
+              repo: _repo(),
+              intel: fakes.intel,
+              content: fakes.content,
+              episodes: fakes.episodes,
+              premium: premium,
+            ),
+          );
+          await tester.pumpAndSettle();
 
-      expect(
-        find.byKey(const Key('wr_journey_growth_opportunity_lock')),
-        findsOneWidget,
+          expectNoGrowthBlock();
+          expect(find.text('Gợi ý do đối tác tổng hợp.'), findsNothing);
+          expect(find.textContaining('đối thoại'), findsNothing);
+          expect(find.text(GrowthOpportunity.kConfidenceNote), findsNothing);
+        },
       );
-      expect(
-        find.byKey(const Key('wr_journey_growth_opportunity')),
-        findsNothing,
-      );
-      // Câu gợi ý thật không được lọt ra ngoài paywall.
-      expect(find.textContaining('đối thoại'), findsNothing);
-    });
-
-    testWidgets('Premium thấy gợi ý, và luôn kèm ghi chú độ chính xác (§XII.7)', (
-      tester,
-    ) async {
-      // Khung test mặc định 800px không đủ cao: từ khi các test này gieo
-      // Episode thật (nguồn của recentSituationIds), dòng thời gian Hành trình
-      // dài thêm và đẩy khối Cơ hội phát triển ra ngoài vùng ListView dựng lười.
-      tester.view.physicalSize = const Size(1080, 3000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-      final fakes = _withEnoughPatterns();
-      await tester.pumpWidget(
-        _wrap(
-          const WrJourneyScreen(),
-          repo: _repo(),
-          intel: fakes.intel,
-          content: fakes.content,
-          episodes: fakes.episodes,
-          premium: true,
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(
-        find.byKey(const Key('wr_journey_growth_opportunity')),
-        findsOneWidget,
-      );
-      expect(find.textContaining('đối thoại'), findsOneWidget);
-      expect(
-        find.byKey(const Key('wr_journey_growth_confidence')),
-        findsOneWidget,
-      );
-      expect(find.text(GrowthOpportunity.kConfidenceNote), findsOneWidget);
-    });
-
-    testWidgets('có dòng dẫn sang màn Thông tin công việc', (tester) async {
-      // Khung test mặc định 800px không đủ cao: từ khi các test này gieo
-      // Episode thật (nguồn của recentSituationIds), dòng thời gian Hành trình
-      // dài thêm và đẩy khối Cơ hội phát triển ra ngoài vùng ListView dựng lười.
-      tester.view.physicalSize = const Size(1080, 3000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-      final fakes = _withEnoughPatterns();
-      await tester.pumpWidget(
-        _wrap(
-          const WrJourneyScreen(),
-          repo: _repo(),
-          intel: fakes.intel,
-          content: fakes.content,
-          episodes: fakes.episodes,
-          premium: true,
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      // Tab Hành trình dài hơn sau khi thêm thẻ Diễn biến — phải cuộn tới dòng
-      // rồi mới bấm được.
-      await tester.ensureVisible(
-        find.byKey(const Key('wr_journey_work_info_row')),
-      );
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('wr_journey_work_info_row')));
-      await tester.pumpAndSettle();
-      expect(find.text('WorkInfo'), findsOneWidget);
-    });
-
-    testWidgets('bản đối tác đã tổng hợp thì dùng bản đó, không suy bằng luật', (
-      tester,
-    ) async {
-      // Khung test mặc định 800px không đủ cao: từ khi các test này gieo
-      // Episode thật (nguồn của recentSituationIds), dòng thời gian Hành trình
-      // dài thêm và đẩy khối Cơ hội phát triển ra ngoài vùng ListView dựng lười.
-      tester.view.physicalSize = const Size(1080, 3000);
-      tester.view.devicePixelRatio = 1.0;
-      addTearDown(tester.view.reset);
-      final fakes = _withEnoughPatterns();
-      fakes.intel.seedGrowthOpportunity(
-        GrowthOpportunity(
-          id: 'go-1',
-          userId: 'u1',
-          suggestionText: 'Gợi ý do đối tác tổng hợp.',
-          confidenceNote: GrowthOpportunity.kConfidenceNote,
-          basedOn: const ['C1-sit-01'],
-          generatedAt: _now,
-        ),
-      );
-
-      await tester.pumpWidget(
-        _wrap(
-          const WrJourneyScreen(),
-          repo: _repo(),
-          intel: fakes.intel,
-          content: fakes.content,
-          episodes: fakes.episodes,
-          premium: true,
-        ),
-      );
-      await tester.pumpAndSettle();
-
-      expect(find.text('Gợi ý do đối tác tổng hợp.'), findsOneWidget);
-      expect(find.textContaining('đối thoại'), findsNothing);
-    });
+    }
   });
 
   group('Màn Thông tin công việc', () {
