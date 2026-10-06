@@ -460,10 +460,9 @@ void main() {
       );
     });
 
-    // Nhánh "Điều khác" để `situation_code` trống, nên phiên đó biến mất khỏi
-    // mọi thống kê theo tình huống (14/59 Episode trên DB thật, 2026-08-22).
-    // Màn này hỏi thêm một chạm để phiên tự mô tả vẫn có chỗ đứng.
-    group('nhánh Điều khác — hỏi lại điều gần nhất', () {
+    // Nhánh "Điều khác" để `situation_code` trống. Bản 22/08 hỏi thêm ba chip
+    // để vá mã; script v47 bỏ câu hỏi đó (khách 06/10).
+    group('nhánh Điều khác — không hỏi thêm', () {
       _Harness customHarness() {
         final h = _Harness();
         h.content.seedSituations(_someSituations);
@@ -502,53 +501,38 @@ void main() {
         );
       });
 
-      testWidgets('chọn một chip thì phiên được vá mã và vào lịch sử', (
-        tester,
-      ) async {
-        final h = customHarness();
-        await _pump(tester, h.app());
-        await _resume(tester, stopAtDetail: true);
+      testWidgets(
+        'không hỏi thêm chip nào, kể xong là đi tiếp, phiên không mã',
+        (tester) async {
+          // Khách 06/10 "build theo script": script v47 tối giản câu hỏi nên bỏ
+          // ba chip "Gần nhất với điều nào?" từng vá mã cho phiên tự mô tả.
+          final h = customHarness();
+          await _pump(tester, h.app());
+          await _resume(tester, stopAtDetail: true);
 
-        expect(find.text('GẦN NHẤT VỚI ĐIỀU NÀO?'), findsOneWidget);
+          expect(find.text('GẦN NHẤT VỚI ĐIỀU NÀO?'), findsNothing);
+          expect(
+            find.byWidgetPredicate(
+              (w) =>
+                  w.key is ValueKey<String> &&
+                  (w.key! as ValueKey<String>).value.startsWith(
+                    'wr_detail_link_',
+                  ),
+            ),
+            findsNothing,
+          );
+          await tester.enterText(
+            find.byKey(const Key('wr_detail_field')),
+            'Một chuyện không có trong danh sách',
+          );
+          await tester.pumpAndSettle();
+          await tester.tap(find.byKey(const Key('wr_flow_primary')));
+          await tester.pumpAndSettle();
 
-        final chip = find.byKey(const Key('wr_detail_link_A3-sit-01'));
-        await tester.ensureVisible(chip);
-        await tester.tap(chip);
-        await tester.pumpAndSettle();
-
-        // Ô kể vẫn bắt buộc ở nhánh này.
-        await tester.enterText(
-          find.byKey(const Key('wr_detail_field')),
-          'Việc dồn tới cuối tuần',
-        );
-        await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const Key('wr_flow_primary')));
-        await tester.pumpAndSettle();
-
-        final saved = h.episodes.episodes.single;
-        expect(saved.situationCode, 'A3-sit-01');
-        expect(h.wr.saveRecentSituationIdsCalls.last.first, 'A3-sit-01');
-      });
-
-      testWidgets('bỏ qua chip vẫn đi tiếp được, phiên giữ nguyên không mã', (
-        tester,
-      ) async {
-        final h = customHarness();
-        await _pump(tester, h.app());
-        await _resume(tester, stopAtDetail: true);
-
-        // Chip là câu hỏi phụ — chỉ ô kể là điều kiện để đi tiếp.
-        await tester.enterText(
-          find.byKey(const Key('wr_detail_field')),
-          'Một chuyện không có trong danh sách',
-        );
-        await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const Key('wr_flow_primary')));
-        await tester.pumpAndSettle();
-
-        expect(find.byType(WrMeaningScreen), findsOneWidget);
-        expect(h.episodes.episodes.single.situationCode, isNull);
-      });
+          expect(find.byType(WrMeaningScreen), findsOneWidget);
+          expect(h.episodes.episodes.single.situationCode, isNull);
+        },
+      );
     });
   });
 
