@@ -22,6 +22,7 @@ import 'package:workreflection_mobile/core/models/wr_content.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 import 'package:workreflection_mobile/core/theme/wr_colors.dart';
 import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
+import 'package:workreflection_mobile/core/widgets/wr_card.dart';
 import 'package:workreflection_mobile/core/widgets/wr_list_card.dart';
 import 'package:workreflection_mobile/core/widgets/wr_premium_lock.dart';
 import 'package:workreflection_mobile/features/wr/growth_providers.dart';
@@ -190,7 +191,9 @@ void main() {
   });
 
   group('Yêu cầu 05/08 — màn chủ đề', () {
-    testWidgets('mỗi bước là một thẻ RIÊNG, không gộp chung một thẻ', (
+    // Mockup v47 đảo yêu cầu 05/08: các bước nằm chung MỘT khung trắng, mỗi
+    // bước là một hàng ngăn bằng kẻ mảnh; đoạn nối dọc giữa các thẻ đã bỏ.
+    testWidgets('các bước nằm chung một khung, hàng ngăn bằng kẻ mảnh', (
       tester,
     ) async {
       await _pumpLarge(
@@ -202,52 +205,75 @@ void main() {
       );
 
       expect(find.byType(WrListCard), findsNothing);
-      for (final id in ['pt-c1-1', 'pt-c1-2', 'pt-c1-3']) {
-        final box =
-            tester
-                    .widget<Container>(find.byKey(Key('wr_practice_step_$id')))
-                    .decoration
-                as BoxDecoration;
-        expect(box.color, WrColors.white, reason: id);
-        expect(box.border, isNotNull, reason: id);
+      expect(find.byKey(const Key('wr_practice_step_connector')), findsNothing);
+
+      BoxDecoration? rowBox(String id) =>
+          tester
+                  .widget<Container>(find.byKey(Key('wr_practice_step_$id')))
+                  .decoration
+              as BoxDecoration?;
+
+      // Hai hàng đầu có kẻ dưới, hàng cuối thì không.
+      for (final id in ['pt-c1-1', 'pt-c1-2']) {
+        final border = rowBox(id)?.border as Border?;
+        expect(border?.bottom.color, WrColors.lineSoft, reason: id);
+      }
+      expect(rowBox('pt-c1-3'), isNull);
+
+      // Cả ba hàng chung một khung trắng bo góc.
+      final frame = find.ancestor(
+        of: find.byKey(const Key('wr_practice_step_pt-c1-1')),
+        matching: find.byWidgetPredicate(
+          (w) =>
+              w is Container &&
+              w.decoration is BoxDecoration &&
+              (w.decoration! as BoxDecoration).color == WrColors.white &&
+              (w.decoration! as BoxDecoration).borderRadius ==
+                  BorderRadius.circular(WrCard.kRadius),
+        ),
+      );
+      expect(frame, findsOneWidget);
+      for (final id in ['pt-c1-2', 'pt-c1-3']) {
         expect(
-          box.borderRadius,
-          BorderRadius.circular(kWrCardRadius),
+          find.descendant(
+            of: frame,
+            matching: find.byKey(Key('wr_practice_step_$id')),
+          ),
+          findsOneWidget,
           reason: id,
         );
       }
     });
 
-    testWidgets('đoạn nối là kẻ DỌC mảnh, không phải thanh ngang', (
+    testWidgets('bước đã xong không mờ đi, chỉ bước Premium bị khoá mới mờ', (
       tester,
     ) async {
-      // Màn này dựng bằng ListView, vốn ép con chiếm trọn bề ngang. Thiếu
-      // `Align` là `width: 2` bị bỏ qua và đoạn kẻ biến thành một thanh ngang
-      // dày chắn giữa hai thẻ — đúng lỗi giao diện báo ngày 05/08.
-      await _pumpLarge(
-        tester,
-        _wrap(
-          const WrPracticeThemeScreen(themeId: 'pt-c1'),
-          intel: _trustTheme(),
-        ),
-      );
-
-      final connectors = find.byKey(const Key('wr_practice_step_connector'));
-      // Ba bước thì có hai đoạn nối.
-      expect(connectors, findsNWidgets(2));
-      for (var i = 0; i < 2; i++) {
-        final size = tester.getSize(connectors.at(i));
-        expect(size.width, 2, reason: 'đoạn nối $i phải mảnh, đang là $size');
-        expect(size.height, greaterThan(size.width), reason: 'phải DỌC');
-      }
-    });
-
-    testWidgets('bước đã xong thì mờ đi, bước đang chờ thì không', (
-      tester,
-    ) async {
-      // Ghi danh của `_trustTheme` đánh dấu cả ba bước đã xong, nên lấy một
-      // ghi danh mới chỉ xong bước đầu để so hai trạng thái cạnh nhau.
+      // v47: bước đã xong giữ nguyên độ đậm, kèm dấu tick và ghi chú. Mờ đi
+      // chỉ dành cho bước người dùng chưa mở được.
       final intel = _trustTheme()
+        ..seedPracticeSteps('pt-c1', const [
+          PracticeStep(
+            stepId: 'pt-c1-1',
+            themeId: 'pt-c1',
+            stepOrder: 1,
+            title: 'Nhận diện',
+            isPremium: false,
+          ),
+          PracticeStep(
+            stepId: 'pt-c1-2',
+            themeId: 'pt-c1',
+            stepOrder: 2,
+            title: 'Thử nghiệm',
+            isPremium: false,
+          ),
+          PracticeStep(
+            stepId: 'pt-c1-3',
+            themeId: 'pt-c1',
+            stepOrder: 3,
+            title: 'Chuyển hoá',
+            isPremium: true,
+          ),
+        ])
         ..seedEnrollments([
           const PracticeEnrollment(
             userId: 'u1',
@@ -272,8 +298,9 @@ void main() {
           )
           .opacity;
 
-      expect(opacityOf('pt-c1-1'), lessThan(1.0));
+      expect(opacityOf('pt-c1-1'), 1.0);
       expect(opacityOf('pt-c1-2'), 1.0);
+      expect(opacityOf('pt-c1-3'), lessThan(1.0));
     });
 
     testWidgets('bước đã xong KHÔNG bị gạch ngang chữ', (tester) async {

@@ -393,12 +393,16 @@ class PracticeStepNote {
     this.id,
     this.memoryEventId,
     this.createdAt,
+    this.choice,
   });
 
   final String? id;
   final String userId;
   final String stepId;
   final String note;
+
+  /// Cách người dùng đã chọn khi thử bước này (mockup v47), nếu có.
+  final String? choice;
 
   /// Mục Career Memory đã sinh ra từ ghi chú này, để truy vết ngược.
   final String? memoryEventId;
@@ -412,6 +416,7 @@ class PracticeStepNote {
       stepId: json['step_id'] as String,
       note: json['note'] as String,
       memoryEventId: json['memory_event_id'] as String?,
+      choice: json['choice'] as String?,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
@@ -423,6 +428,7 @@ class PracticeStepNote {
     'step_id': stepId,
     'note': note,
     if (memoryEventId != null) 'memory_event_id': memoryEventId,
+    if (choice != null) 'choice': choice,
   };
 }
 

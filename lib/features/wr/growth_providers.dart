@@ -16,6 +16,7 @@ import '../../core/logic/wr_seniority.dart';
 import '../../core/logic/wr_skill_formation.dart';
 import '../../core/logic/wr_skill_jd_match.dart';
 import '../../core/models/wr_content.dart';
+import '../../core/models/wr_mood_content.dart' show PracticeStepNote;
 import '../../core/models/wr_intelligence.dart';
 import '../profile/profile_providers.dart';
 import 'owned_skill_providers.dart';
@@ -75,6 +76,21 @@ final wrPracticeLabelMapProvider = Provider<Map<String, String>>((ref) {
   }
   return map;
 });
+
+/// Ghi chú các bước thực hành của người dùng, theo `step_id`.
+final practiceStepNotesProvider =
+    FutureProvider<Map<String, PracticeStepNote>>((ref) async {
+      final userId = ref.watch(currentUserIdProvider);
+      if (userId == null) return const {};
+      try {
+        final notes = await ref
+            .read(wrIntelligenceRepositoryProvider)
+            .fetchPracticeStepNotes(userId);
+        return {for (final n in notes) n.stepId: n};
+      } catch (_) {
+        return const {};
+      }
+    });
 
 final practiceEnrollmentsProvider = FutureProvider<List<PracticeEnrollment>>((
   ref,

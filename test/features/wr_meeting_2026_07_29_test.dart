@@ -674,8 +674,9 @@ void main() {
 
       await _pump(tester, _wrap(const WrHomeScreen(), intel: intel));
 
+      // Nhãn giai đoạn theo mockup v47: bước thứ hai là "Phần của tôi".
       expect(
-        find.text('Chủ đề "Gần xong": bước Thử nghiệm đang chờ'),
+        find.text('Chủ đề "Gần xong": bước Phần của tôi đang chờ'),
         findsOneWidget,
       );
     });
@@ -1442,8 +1443,12 @@ void main() {
       );
       expect(find.textContaining(kTraChieuFormatLabel), findsOneWidget);
       expect(find.text('Xem chi tiết'), findsOneWidget);
-      // Chữ, không ảnh — nguyên tắc của họp 2026-07-29 vẫn giữ.
-      expect(find.byType(Image), findsNothing);
+      // Chữ, không ảnh — nguyên tắc của họp 2026-07-29 vẫn giữ. Chỉ xét trong
+      // thẻ: hero v47 của tab có ảnh minh hoạ riêng.
+      expect(
+        find.descendant(of: card, matching: find.byType(Image)),
+        findsNothing,
+      );
     });
 
     testWidgets('chạm thẻ mở màn Trà Chiều', (tester) async {

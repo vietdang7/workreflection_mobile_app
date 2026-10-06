@@ -372,6 +372,47 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
         startedAt: e.startedAt,
         completedAt: DateTime.now(),
         completedSteps: e.completedSteps,
+        pendingChoice: e.pendingChoice,
+      );
+    }
+  }
+
+  /// Lời gọi `createUserTheme`, theo thứ tự.
+  final List<({PracticeTheme theme, List<PracticeStep> steps})>
+  createUserThemeCalls = [];
+
+  @override
+  Future<void> createUserTheme({
+    required String userId,
+    required PracticeTheme theme,
+    required List<PracticeStep> steps,
+  }) async {
+    _maybeThrow();
+    createUserThemeCalls.add((theme: theme, steps: steps));
+    _practiceThemes.add(theme);
+    _practiceSteps[theme.themeId] = List.of(steps);
+    _enrollments.add(
+      PracticeEnrollment(
+        userId: userId,
+        themeId: theme.themeId,
+        startedAt: DateTime.now(),
+      ),
+    );
+  }
+
+  @override
+  Future<void> setPendingChoice({
+    required String userId,
+    required String themeId,
+    required String? choice,
+  }) async {
+    _maybeThrow();
+    final idx = _enrollments.indexWhere(
+      (e) => e.userId == userId && e.themeId == themeId,
+    );
+    if (idx >= 0) {
+      _enrollments[idx] = _enrollments[idx].copyWith(
+        pendingChoice: () => choice,
       );
     }
   }
@@ -537,6 +578,17 @@ class FakeWrIntelligenceRepository implements WrIntelligenceRepository {
     _careerQuestions
       ..clear()
       ..addAll(questions);
+  }
+
+  @override
+  Future<List<PracticeStepNote>> fetchPracticeStepNotes(String userId) async {
+    _maybeThrow();
+    // Bản mới nhất của mỗi bước thắng, giống upsert theo (user_id, step_id).
+    final byStep = <String, PracticeStepNote>{};
+    for (final n in upsertPracticeStepNoteCalls) {
+      if (n.userId == userId) byStep[n.stepId] = n;
+    }
+    return byStep.values.toList();
   }
 
   @override

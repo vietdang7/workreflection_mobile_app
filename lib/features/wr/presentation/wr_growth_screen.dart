@@ -1,17 +1,22 @@
 import '../../../core/l10n/wr_tr.dart';
-import 'dart:math' show min;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-// Phát triển — Practice Surface (WXS §8.6).
+// Phát triển — Practice Surface (WXS §8.6), bố cục theo mockup v47 `screenAct`.
 //
-// Màn này chỉ giữ đúng một việc: chủ đề đang thực hành và bước kế tiếp.
-// "Thực hành khác" và "Kỹ năng đã hình thành" đã tách thành màn riêng — bấm
-// vào dòng mới mở, không xổ tại chỗ. Dòng "Chặng đường phát triển" đã bỏ khỏi
-// màn này (2026-08-03); màn `/wr/growth/journey` vẫn còn nhưng không còn lối
-// vào từ tab Phát triển.
+// Thứ tự khối, đúng mockup:
+//   hero `act` "Thực hành" → thẻ cầu nối "Điều bạn từng viết" (Insight gần
+//   nhất → "Xem 3 cách để cân nhắc") → "Điều bạn đang thử" (tối đa 3 chủ đề +
+//   "Xem thêm") → thẻ nét đứt "Tự thêm · Một chủ đề chưa có trong thư viện" →
+//   "Ghi nhận một điều · Bạn vừa học được điều hữu ích" → "Free: tối đa N chủ
+//   đề" + thẻ Trà Chiều.
+// Dưới cùng, ngoài mockup (theo chữ của khách): "Kỹ năng của bạn" và "Cập nhật
+// bối cảnh công việc" (JD/CV).
+//
+// "Việc bạn tự đặt" đã rời màn này (chủ dự án chốt 06/10, Q3); bảng và dữ liệu
+// vẫn giữ nguyên.
 
 import '../../../core/data/wr_intelligence_repository.dart';
 import '../../../core/logic/wr_entitlement.dart';
@@ -24,17 +29,18 @@ import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_text.dart';
 import '../../../core/widgets/action_link.dart';
 import '../../../core/widgets/eyebrow.dart';
-import '../../../core/widgets/section_divider.dart';
 import '../../../core/widgets/tab_back_link.dart';
 import '../../../core/widgets/wr_card.dart';
+import '../../../core/widgets/wr_hero_header.dart';
+import '../../../core/widgets/wr_small_button.dart';
+import '../../../core/logic/wr_practice_v47.dart';
+import '../../../core/models/wr_episode.dart';
 import '../../../core/widgets/wr_link_row.dart';
 import '../../../core/widgets/wr_profile_avatar.dart';
 import '../../workshops/workshops_providers.dart';
 import '../growth_providers.dart';
 import '../owned_skill_providers.dart';
 import '../wr_providers.dart';
-import 'wr_practice_theme_screen.dart';
-import 'widgets/wr_user_actions_section.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -116,7 +122,19 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
       reflectionCount: episodes.length,
       selfCheckCount: history.length,
     );
-    if (enrollments.length >= earned) return;
+    // Chỉ đếm chủ đề thư viện: chủ đề người dùng tự thêm (v47) không ăn vào
+    // suất phần mềm tự thêm, nếu không thì tự thêm một chủ đề là mất luôn
+    // chủ đề kế tiếp của hành trình. Quota Free bên dưới thì vẫn đếm cả hai.
+    final themes = ref.read(practiceThemesProvider).valueOrNull;
+    if (themes == null) return;
+    final userThemeIds = {
+      for (final t in themes)
+        if (t.isUserAdded) t.themeId,
+    };
+    final libraryEnrolled = enrollments
+        .where((e) => !userThemeIds.contains(e.themeId))
+        .length;
+    if (libraryEnrolled >= earned) return;
 
     // Hết quota thì dừng, thẻ quota bên dưới đã nói lý do và dẫn sang paywall.
     final activeCount = enrollments.where((e) => e.completedAt == null).length;
@@ -164,43 +182,40 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
       // #FBFBF9, một sắc ngà không có trong hệ màu nào cả: đứng riêng thì không
       // ai thấy, nhưng chuyển tab từ Home sang là thấy màn tối đi một chút.
       backgroundColor: WrColors.pageBg,
-      body: SafeArea(
-        child: themesAsync.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, __) => _buildContent(
-            context,
-            themes: const [],
-            enrollments: const [],
-            entitlement: WrEntitlement(plan: WrPlan.free),
-            recent: const [],
-            situations: const [],
-            latestSelfCheck: null,
-          ),
-          data: (themes) {
-            // Dữ liệu về muộn hơn frame đầu, nên thử lại sau mỗi lần dựng.
-            // `_maybeAutoEnroll` chỉ so số nên chạy thừa không hại gì.
-            WidgetsBinding.instance.addPostFrameCallback(
-              (_) => _maybeAutoEnroll(),
-            );
-            final enrollments = enrollmentsAsync.valueOrNull ?? const [];
-            final entitlement =
-                entitlementAsync.valueOrNull ??
-                WrEntitlement(plan: WrPlan.free);
-            final episodes = episodesAsync.valueOrNull ?? const [];
-            final situations = situationsAsync.valueOrNull ?? const [];
-            final history = selfCheckAsync.valueOrNull ?? const [];
-            final latestSelfCheck = history.isNotEmpty ? history.first : null;
-            return _buildContent(
-              context,
-              themes: themes,
-              enrollments: enrollments,
-              entitlement: entitlement,
-              recent: recentSituationIds(episodes),
-              situations: situations,
-              latestSelfCheck: latestSelfCheck,
-            );
-          },
+      body: themesAsync.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (_, __) => _buildContent(
+          context,
+          themes: const [],
+          enrollments: const [],
+          entitlement: WrEntitlement(plan: WrPlan.free),
+          recent: const [],
+          situations: const [],
+          latestSelfCheck: null,
         ),
+        data: (themes) {
+          // Dữ liệu về muộn hơn frame đầu, nên thử lại sau mỗi lần dựng.
+          // `_maybeAutoEnroll` chỉ so số nên chạy thừa không hại gì.
+          WidgetsBinding.instance.addPostFrameCallback(
+            (_) => _maybeAutoEnroll(),
+          );
+          final enrollments = enrollmentsAsync.valueOrNull ?? const [];
+          final entitlement =
+              entitlementAsync.valueOrNull ?? WrEntitlement(plan: WrPlan.free);
+          final episodes = episodesAsync.valueOrNull ?? const [];
+          final situations = situationsAsync.valueOrNull ?? const [];
+          final history = selfCheckAsync.valueOrNull ?? const [];
+          final latestSelfCheck = history.isNotEmpty ? history.first : null;
+          return _buildContent(
+            context,
+            themes: themes,
+            enrollments: enrollments,
+            entitlement: entitlement,
+            recent: recentSituationIds(episodes),
+            situations: situations,
+            latestSelfCheck: latestSelfCheck,
+          );
+        },
       ),
     );
   }
@@ -214,14 +229,6 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
     required List<WrSituation> situations,
     required ScaSelfCheckResponse? latestSelfCheck,
   }) {
-    // Find the first active (non-completed) enrollment
-    final activeEnrollment = enrollments
-        .where((e) => e.completedAt == null)
-        .firstOrNull;
-    final activeTheme = activeEnrollment != null
-        ? themes.where((t) => t.themeId == activeEnrollment.themeId).firstOrNull
-        : null;
-
     // Themes chưa enroll (loại bỏ MỌI enrollment, kể cả completed) và chưa bị
     // ngưng đề xuất. `pt-voice` / `pt-rhythm` đời đầu trùng chiều với `pt-c2` /
     // `pt-a2` nên đã đánh dấu retired — mời người mới vào chúng là mời vào một
@@ -280,7 +287,8 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
         ...cardsOf(enrollments.where((e) => e.completedAt == null)),
         ...cardsOf(enrollments.where((e) => e.completedAt != null)),
       ])
-        if (seenTitles.add(card.$1.title)) card,
+        // Chủ đề tự thêm là của riêng người dùng: trùng tên thư viện vẫn giữ.
+        if (card.$1.isUserAdded || seenTitles.add(card.$1.title)) card,
     ];
     final hiddenThemeCount = (enrolledCards.length - kGrowthThemesPreview)
         .clamp(0, 1 << 30);
@@ -288,176 +296,194 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
         ? enrolledCards
         : enrolledCards.take(kGrowthThemesPreview).toList();
 
-    return CustomScrollView(
-      slivers: [
-        // ── Top area ────────────────────────────────────────────────────────
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(22, 16, 22, 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                WrTabBackLink(currentTab: WrTab.growth),
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+    final canAddTheme = entitlement.canEnrollPracticeTheme(activeCount);
+
+    return ListView(
+      // Padding tường minh: `ListView` không có padding sẽ xoá phần thanh
+      // trạng thái khỏi `MediaQuery` của con, ảnh hero hết tràn lên.
+      padding: const EdgeInsets.only(bottom: 24),
+      children: [
+        WrHeroHeader.inner(
+          key: const Key('wr_growth_hero'),
+          art: WrHeroArt.act,
+          eyebrow: tr('Phát triển', 'Grow'),
+          title: tr('Thực hành', 'Practice'),
+          subtitle: tr(
+            'Không cần thay đổi tất cả. Chỉ cần thử một cách khác.',
+            'You do not need to change everything. Just try one different way.',
+          ),
+          // v1.6 §9.1: "Tôi" là avatar ở mọi màn tab.
+          trailing: const WrProfileAvatar(),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 22),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const WrTabBackLink(currentTab: WrTab.growth),
+              // ── Điều bạn từng viết ──────────────────────────────────────
+              _BridgeCard(
+                themes: themes,
+                enrollments: enrollments,
+                situations: situations,
+              ),
+              const SizedBox(height: 14),
+
+              // ── Điều bạn đang thử ───────────────────────────────────────
+              Text(tr('Điều bạn đang thử', 'What you are trying'), style: _h2),
+              const SizedBox(height: 2),
+              Text(
+                tr(
+                  'Những chủ đề bắt đầu từ chính hành trình của bạn',
+                  'Themes that started from your own journey',
+                ),
+                style: _tiny,
+              ),
+              const SizedBox(height: 10),
+              if (enrolledCards.isEmpty)
+                _buildEmptyThemeCard(
+                  context,
+                  eyebrow: tr('TRỌNG TÂM HIỆN TẠI', 'YOUR CURRENT FOCUS'),
+                  hasAnyTheme: themes.isNotEmpty,
+                  hasCandidates: unenrolledThemes.isNotEmpty,
+                  reflectionCount: reflectionCount,
+                )
+              else ...[
+                for (final pair in visibleCards)
+                  WrPracticeThemeCard(
+                    key: Key('wr_growth_theme_card_${pair.$1.themeId}'),
+                    theme: pair.$1,
+                    enrollment: pair.$2,
+                  ),
+                if (hiddenThemeCount > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 6),
+                    child: WrActionLink(
+                      key: const Key('wr_growth_themes_more'),
+                      label: _showAllThemes
+                          ? tr('Thu gọn', 'Show less')
+                          : tr(
+                              'Xem thêm $hiddenThemeCount chủ đề',
+                              'See $hiddenThemeCount more themes',
+                            ),
+                      onTap: () =>
+                          setState(() => _showAllThemes = !_showAllThemes),
+                    ),
+                  ),
+              ],
+              const SizedBox(height: 10),
+              // ── Tự thêm ─────────────────────────────────────────────────
+              WrCard(
+                key: const Key('wr_growth_add_theme'),
+                dashed: true,
+                onTap: () => context.push(
+                  canAddTheme
+                      ? '/wr/growth/add-theme'
+                      : '/wr/paywall?trigger=practice_limit',
+                ),
+                child: Row(
                   children: [
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
+                          WrEyebrow(tr('TỰ THÊM', 'ADD YOUR OWN')),
+                          const SizedBox(height: 6),
                           Text(
-                            tr('Phát triển', 'Grow'),
-                            style: TextStyle(
-                              fontSize: 15.5,
-                              color: WrColors.muted,
-                              fontWeight: FontWeight.w400,
+                            tr(
+                              'Một chủ đề chưa có trong thư viện',
+                              'A theme that is not in the library',
                             ),
+                            style: _cardTitle,
                           ),
-                          SizedBox(height: 4),
+                          const SizedBox(height: 4),
                           Text(
-                            tr('Thực hành', 'Practice'),
-                            style: TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w800,
-                              color: WrColors.navy,
-                              height: 1.15,
+                            tr(
+                              'Kể lại tình huống thật, điều bạn muốn khác đi và '
+                                  'cách bạn đã thử.',
+                              'Describe a real situation, what you want to '
+                                  'change and what you have tried.',
                             ),
+                            style: _tiny.copyWith(height: 1.45),
                           ),
                         ],
                       ),
                     ),
-                    // v1.6 §9.1: "Tôi" là avatar ở mọi màn tab.
-                    WrProfileAvatar(),
+                    const SizedBox(width: 12),
+                    const Icon(
+                      Icons.chevron_right,
+                      size: 20,
+                      color: WrColors.navy,
+                    ),
                   ],
                 ),
-              ],
-            ),
-          ),
-        ),
+              ),
+              const SizedBox(height: 14),
 
-        // Thẻ "BƯỚC ĐANG CHỜ BẠN" đã bỏ (khách 2026-08-04): nó nhắc lại đúng
-        // thứ mà thẻ chủ đề ngay bên dưới đã nói, chỉ khác cách gọi tên, nên
-        // đọc thành hai việc khác nhau. Bước kế tiếp nằm trong màn chủ đề.
-
-        // ── Danh sách chủ đề, hoặc lời mời khi chưa có chủ đề nào ──────────
-        //
-        // Giao diện mẫu Sprint 2: màn này liệt kê CHỦ ĐỀ, không liệt kê bước.
-        // Mỗi thẻ nói đủ ba điều — chủ đề nào, đang ở giai đoạn nào, còn mấy
-        // bước — rồi bấm vào mới mở chuỗi bước ở màn riêng.
-        // ── Khối thực hành hợp nhất: Chủ đề & Việc bạn tự đặt ──────────────
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(22, 0, 22, 20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (enrolledCards.isEmpty) ...[
-                  _buildEmptyThemeCard(
-                    context,
-                    eyebrow: tr('TRỌNG TÂM HIỆN TẠI', 'YOUR CURRENT FOCUS'),
-                    hasAnyTheme: themes.isNotEmpty,
-                    hasCandidates: unenrolledThemes.isNotEmpty,
-                    reflectionCount: reflectionCount,
-                  ),
-                ] else ...[
-                  Row(
-                    children: [
-                      WrEyebrow(tr('CHỦ ĐỀ CỦA BẠN', 'YOUR THEMES')),
-                      const Spacer(),
-                      if (activeCount > 0)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
-                          decoration: BoxDecoration(
-                            color: WrColors.navy.withValues(alpha: 0.05),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Text(
-                            '$activeCount/${entitlement.maxActivePracticeThemes ?? 3}',
-                            style: const TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w700,
-                              color: WrColors.navy,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  for (final pair in visibleCards)
-                    WrPracticeThemeCard(
-                      key: Key('wr_growth_theme_card_${pair.$1.themeId}'),
-                      theme: pair.$1,
-                      enrollment: pair.$2,
-                    ),
-                  if (hiddenThemeCount > 0)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 6),
-                      child: WrActionLink(
-                        key: const Key('wr_growth_themes_more'),
-                        label: _showAllThemes
-                            ? tr('Thu gọn', 'Show less')
-                            : tr(
-                                'Xem thêm $hiddenThemeCount chủ đề',
-                                'See $hiddenThemeCount more themes',
-                              ),
-                        onTap: () => setState(
-                          () => _showAllThemes = !_showAllThemes,
-                        ),
+              // ── Ghi nhận một điều ───────────────────────────────────────
+              WrCard(
+                key: const Key('wr_growth_learning_card'),
+                dashed: true,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    WrEyebrow(tr('GHI NHẬN MỘT ĐIỀU', 'NOTE ONE THING')),
+                    const SizedBox(height: 6),
+                    Text(
+                      tr(
+                        'Bạn vừa học được điều hữu ích',
+                        'You just learned something useful',
                       ),
+                      style: _cardTitle,
                     ),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 2, bottom: 2),
-                    child: _QuotaCard(
-                      quota: entitlement.maxActivePracticeThemes,
-                      activeCount: activeCount,
+                    const SizedBox(height: 5),
+                    Text(
+                      tr(
+                        'Một bài học vừa nhận ra cũng là một phần của hành '
+                            'trình, không phải một việc cần làm tiếp.',
+                        'A lesson you just noticed is part of the journey too, '
+                            'not another thing to do.',
+                      ),
+                      style: _tiny.copyWith(height: 1.5),
                     ),
-                  ),
-                ],
-
-                // ── Phần Việc bạn tự đặt nối tiếp liền mạch ──
-                const SizedBox(height: 20),
-                const WrUserActionsSection(),
-              ],
-            ),
-          ),
-        ),
-
-        // ── Divider ──────────────────────────────────────────────────────
-        const SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(22, 4, 22, 16),
-            child: WrSectionDivider(),
-          ),
-        ),
-
-        // ── Cơ hội phát triển — workshop gần nhất sắp diễn ra ────────────
-        const _OpportunitySliver(),
-
-        // ── Lối rẽ còn lại, mở thành màn riêng ──────────────────────────
-        //
-        // "Chặng đường phát triển" đã bỏ khỏi màn này (yêu cầu 2026-08-03).
-        // Màn `/wr/growth/journey` vẫn còn, chỉ là không còn lối vào từ đây.
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(22, 0, 22, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (activeTheme == null) const WrSectionDivider(),
-                WrLinkRow(
-                  key: const Key('wr_growth_skills_row'),
-                  label: tr('Kỹ năng của bạn', 'Your skills'),
-                  onTap: () => context.push('/wr/growth/skills'),
+                    const SizedBox(height: 10),
+                    WrSmallButton(
+                      key: const Key('wr_growth_learning'),
+                      kind: WrSmallButtonKind.ghost,
+                      label: tr('Ghi lại', 'Write it down'),
+                      arrow: true,
+                      onTap: () => context.push('/wr/growth/learning'),
+                    ),
+                  ],
                 ),
+              ),
+              const SizedBox(height: 14),
+
+              // ── Quota + Trà Chiều ───────────────────────────────────────
+              if (entitlement.maxActivePracticeThemes != null) ...[
+                _QuotaCard(quota: entitlement.maxActivePracticeThemes!),
+                const SizedBox(height: WrCard.kGap),
               ],
-            ),
+              const _OpportunitySliver(),
+              const SizedBox(height: 14),
+
+              // ── Ngoài mockup, theo chữ của khách ────────────────────────
+              WrLinkRow(
+                key: const Key('wr_growth_skills_row'),
+                label: tr('Kỹ năng của bạn', 'Your skills'),
+                onTap: () => context.push('/wr/growth/skills'),
+              ),
+              WrLinkRow(
+                key: const Key('wr_growth_context_docs_row'),
+                label: tr(
+                  'Cập nhật bối cảnh công việc',
+                  'Update your work context',
+                ),
+                onTap: () => context.push('/wr/context-docs'),
+              ),
+            ],
           ),
         ),
-
-        const SliverToBoxAdapter(child: SizedBox(height: 24)),
       ],
     );
   }
@@ -518,7 +544,7 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
       ),
     };
 
-    return WrCardMinimal(
+    return WrCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -599,92 +625,87 @@ class _OpportunitySliver extends ConsumerWidget {
         ref.watch(activeWorkshopsProvider).valueOrNull ?? const [];
     final next = nextTraChieu(workshops, now: DateTime.now());
 
-    return SliverToBoxAdapter(
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(22, 4, 22, 20),
-        child: InkWell(
-          key: const Key('wr_growth_opportunity'),
-          borderRadius: BorderRadius.circular(20),
-          onTap: () => context.push('/wr/tra-chieu'),
-          child: WrCardNavy(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(
-                      Icons.home_outlined,
-                      size: 16,
-                      color: WrColors.coral,
-                    ),
-                    const SizedBox(width: 6),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 3,
-                      ),
-                      decoration: BoxDecoration(
-                        color: WrColors.teal.withValues(alpha: 0.14),
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                      child: Text(
-                        'Offline · $kTraChieuLabel',
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w700,
-                          color: WrColors.pillTealText,
-                          letterSpacing: 0.2,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                // Lịch trống thì nói đúng như vậy, không mượn câu chủ đề của
-                // buổi cũ đã diễn ra để thẻ trông có nội dung.
-                Text(
-                  next == null
-                      ? tr(
-                          'Hiện chưa có lịch sự kiện mới.',
-                          'No sessions scheduled yet.',
-                        )
-                      : '"${next.title}"',
-                  style: WrText.serifQuote(
-                    fontSize: 15.5,
-                    color: WrColors.cream,
+    return Padding(
+      padding: EdgeInsets.zero,
+      child: InkWell(
+        key: const Key('wr_growth_opportunity'),
+        borderRadius: BorderRadius.circular(20),
+        onTap: () => context.push('/wr/tra-chieu'),
+        child: WrCardNavy(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(
+                    Icons.home_outlined,
+                    size: 16,
+                    color: WrColors.coral,
                   ),
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  next == null
-                      ? kTraChieuFormatLabel
-                      : '${traChieuWhenLabel(next)} · $kTraChieuFormatLabel',
-                  style: TextStyle(
-                    fontSize: 12.5,
-                    height: 1.5,
-                    color: WrColors.cream.withValues(alpha: 0.6),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      tr('Xem chi tiết', 'See details'),
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: WrColors.teal.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    child: Text(
+                      'Offline · $kTraChieuLabel',
                       style: TextStyle(
-                        fontSize: 12.5,
-                        color: WrColors.cream.withValues(alpha: 0.55),
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w700,
+                        color: WrColors.pillTealText,
+                        letterSpacing: 0.2,
                       ),
                     ),
-                    Icon(
-                      Icons.chevron_right,
-                      size: 18,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
+              // Lịch trống thì nói đúng như vậy, không mượn câu chủ đề của
+              // buổi cũ đã diễn ra để thẻ trông có nội dung.
+              Text(
+                next == null
+                    ? tr(
+                        'Hiện chưa có lịch sự kiện mới.',
+                        'No sessions scheduled yet.',
+                      )
+                    : '"${next.title}"',
+                style: WrText.serifQuote(fontSize: 15.5, color: WrColors.cream),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                next == null
+                    ? kTraChieuFormatLabel
+                    : '${traChieuWhenLabel(next)} · $kTraChieuFormatLabel',
+                style: TextStyle(
+                  fontSize: 12.5,
+                  height: 1.5,
+                  color: WrColors.cream.withValues(alpha: 0.6),
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    tr('Xem chi tiết', 'See details'),
+                    style: TextStyle(
+                      fontSize: 12.5,
                       color: WrColors.cream.withValues(alpha: 0.55),
                     ),
-                  ],
-                ),
-              ],
-            ),
+                  ),
+                  Icon(
+                    Icons.chevron_right,
+                    size: 18,
+                    color: WrColors.cream.withValues(alpha: 0.55),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
       ),
@@ -713,85 +734,277 @@ class WrPracticeThemeCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final steps =
         ref.watch(practiceStepsProvider(theme.themeId)).valueOrNull ?? const [];
-    final total = steps.length;
-    final done = steps
+    final doneCount = steps
         .where((s) => enrollment.completedSteps.contains(s.stepId))
         .length;
-    final finished = enrollment.completedAt != null;
+    final next = steps
+        .where((s) => !enrollment.completedSteps.contains(s.stepId))
+        .firstOrNull;
+    // Mockup: chủ đề thư viện tô teal, chủ đề tự thêm tô navy.
+    final color = theme.isUserAdded ? WrColors.navy : WrColors.teal;
 
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(20),
+      padding: const EdgeInsets.only(bottom: WrCard.kGap),
+      child: WrCard(
         onTap: () => context.push('/wr/growth/theme/${theme.themeId}'),
-        child: WrCardMinimal(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    practiceThemeSourceLabel(theme, enrollment.startedAt),
+                    style: _tiny,
+                  ),
+                ),
+                _Pill(
+                  label: doneCount > 0
+                      ? tr('Đang thử', 'Trying')
+                      : tr('Có thể bắt đầu', 'Ready to start'),
+                  teal: doneCount > 0,
+                ),
+              ],
+            ),
+            const SizedBox(height: 5),
+            Text(theme.title, style: _h2),
+            const SizedBox(height: 7),
+            Text(
+              next != null
+                  ? tr(
+                      'Tiếp theo: ${practiceStepAction(next.title)}',
+                      'Next: ${practiceStepAction(next.title)}',
+                    )
+                  : tr(
+                      'Bạn đã đi hết các bước hiện tại.',
+                      'You have gone through all the current steps.',
+                    ),
+              style: const TextStyle(
+                fontSize: 13,
+                color: WrColors.text2,
+                height: 1.55,
+              ),
+            ),
+            if (steps.isNotEmpty) ...[
+              const SizedBox(height: 8),
               Row(
                 children: [
-                  Expanded(
-                    child: Text(
-                      finished
-                          ? tr('Đã hoàn thành', 'Completed')
-                          : tr('Đang thực hành', 'In practice'),
-                      style: const TextStyle(
-                        fontSize: 13.5,
-                        color: WrColors.muted,
+                  for (final s in steps) ...[
+                    if (s != steps.first) const SizedBox(width: 6),
+                    Container(
+                      width: 22,
+                      height: 5,
+                      decoration: BoxDecoration(
+                        color: enrollment.completedSteps.contains(s.stepId)
+                            ? color
+                            : WrColors.navy.withValues(alpha: 0.12),
+                        borderRadius: BorderRadius.circular(3),
                       ),
                     ),
-                  ),
-                  if (total > 0)
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 9,
-                        vertical: 4,
+                  ],
+                ],
+              ),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// `.pill.pill-teal` / `.pill.pill-navy`.
+class _Pill extends StatelessWidget {
+  const _Pill({required this.label, this.teal = false});
+
+  final String label;
+  final bool teal;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+    decoration: BoxDecoration(
+      color: teal
+          ? WrColors.teal.withValues(alpha: 0.14)
+          : WrColors.navy.withValues(alpha: 0.08),
+      borderRadius: BorderRadius.circular(100),
+    ),
+    child: Text(
+      label,
+      style: TextStyle(
+        fontSize: 10.5,
+        fontWeight: FontWeight.w700,
+        color: teal ? WrColors.pillTealText : WrColors.navy,
+      ),
+    ),
+  );
+}
+
+/// `.h2` (15.5px) +1.5 theo quy ước cỡ chữ của app.
+const _h2 = TextStyle(
+  fontSize: 17,
+  fontWeight: FontWeight.w700,
+  color: WrColors.navy,
+  height: 1.35,
+);
+
+/// Dòng chữ đậm 13px trong thẻ nét đứt, +1.5.
+const _cardTitle = TextStyle(
+  fontSize: 14.5,
+  fontWeight: FontWeight.w700,
+  color: WrColors.navy,
+  height: 1.4,
+);
+
+/// `.tiny` (11px) +1.5.
+const _tiny = TextStyle(fontSize: 12.5, color: WrColors.text3);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _BridgeCard — "Điều bạn từng viết" (mockup v47).
+//
+// Cầu nối từ Hiểu mình sang Phát triển: nhắc lại Insight gần nhất người dùng đã
+// giữ, rồi mời xem ba cách của chủ đề liên quan. Chủ đề liên quan = chủ đề đang
+// theo cùng chiều SCA với tình huống đó; không có thì chủ đề đang theo đầu
+// tiên; không theo chủ đề nào thì không có nút.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _BridgeCard extends ConsumerWidget {
+  const _BridgeCard({
+    required this.themes,
+    required this.enrollments,
+    required this.situations,
+  });
+
+  final List<PracticeTheme> themes;
+  final List<PracticeEnrollment> enrollments;
+  final List<WrSituation> situations;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final episodes =
+        ref.watch(wrEpisodeHistoryProvider).valueOrNull ??
+        const <ReflectionEpisode>[];
+    ReflectionEpisode? latest;
+    for (final e in recentEpisodes(episodes)) {
+      if ((e.draftMeaning?.trim().isNotEmpty ?? false)) {
+        latest = e;
+        break;
+      }
+    }
+    WrSituation? situation;
+    for (final s in situations) {
+      if (s.code == latest?.situationCode) situation = s;
+    }
+
+    final active = [
+      for (final e in enrollments)
+        if (e.completedAt == null)
+          if (themes.where((t) => t.themeId == e.themeId).firstOrNull
+              case final t?)
+            t,
+    ];
+    final related =
+        active
+            .where(
+              (t) =>
+                  situation != null && t.scaDimension == situation.scaDimension,
+            )
+            .firstOrNull ??
+        active.firstOrNull;
+
+    // Nhánh "Điều khác" không có mã tình huống: vẫn nhắc lại điều đã viết,
+    // chỉ bỏ tên tình huống.
+    final has = latest != null;
+    return Container(
+      key: const Key('wr_growth_bridge'),
+      padding: WrCard.kPadding,
+      decoration: BoxDecoration(
+        color: WrColors.teal.withValues(alpha: 0.055),
+        borderRadius: BorderRadius.circular(WrCard.kRadius),
+        border: Border.all(color: WrColors.teal.withValues(alpha: 0.18)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          WrEyebrow(
+            tr('ĐIỀU BẠN TỪNG VIẾT', 'WHAT YOU ONCE WROTE'),
+            color: WrColors.pillTealText,
+          ),
+          const SizedBox(height: 7),
+          if (has)
+            Text.rich(
+              key: const Key('wr_growth_bridge_text'),
+              TextSpan(
+                children: [
+                  if (situation != null) ...[
+                    TextSpan(
+                      text: tr(
+                        'Lần gần nhất bạn viết về ',
+                        'The last time you wrote about ',
                       ),
-                      decoration: BoxDecoration(
-                        // Trắng, không phải navy mờ: navy 6% trên nền kem ra
-                        // một sắc xám ngà, gần như không thấy được viên pill.
-                        color: WrColors.white,
-                        borderRadius: BorderRadius.circular(20),
+                    ),
+                    TextSpan(
+                      text: '“${situation.text}”',
+                      style: const TextStyle(fontWeight: FontWeight.w700),
+                    ),
+                    TextSpan(
+                      text: tr(
+                        ', bạn nhận ra: ${latest.draftMeaning!.trim()}',
+                        ', you noticed: ${latest.draftMeaning!.trim()}',
                       ),
-                      child: Text(
-                        finished
-                            ? tr('Trọn chuỗi', 'Whole series')
-                            : tr(
-                                'Giai đoạn ${min(done + 1, total)}/$total',
-                                'Stage ${min(done + 1, total)}/$total',
-                              ),
-                        style: const TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w700,
-                          color: WrColors.navy,
-                        ),
+                    ),
+                  ] else
+                    TextSpan(
+                      text: tr(
+                        'Lần gần nhất bạn nhìn lại, bạn nhận ra: '
+                            '${latest.draftMeaning!.trim()}',
+                        'The last time you looked back, you noticed: '
+                            '${latest.draftMeaning!.trim()}',
                       ),
                     ),
                 ],
               ),
-              const SizedBox(height: 8),
-              WrParagraph(
-                theme.title,
-                style: const TextStyle(
-                  fontSize: 19,
-                  fontWeight: FontWeight.w800,
-                  color: WrColors.navy,
-                  height: 1.25,
-                ),
-                textAlign: TextAlign.start,
+              style: WrText.serifQuote(fontSize: 16, color: WrColors.navy),
+            )
+          else
+            Text(
+              tr(
+                'Những điều bạn từng nhìn lại có thể trở thành điểm bắt đầu cho '
+                    'một cách thử mới.',
+                'What you have looked back on can become the starting point '
+                    'for a new way to try.',
               ),
-              if (total > 0) ...[
-                const SizedBox(height: 12),
-                WrPracticeProgressDots(total: total, done: done),
-                const SizedBox(height: 10),
-                Text(
-                  tr('$done/$total bước hoàn thành', '$done/$total steps done'),
-                  style: const TextStyle(fontSize: 14, color: WrColors.muted),
-                ),
-              ],
-            ],
+              style: WrText.serifQuote(fontSize: 16, color: WrColors.navy),
+            ),
+          const SizedBox(height: 8),
+          Text(
+            has
+                ? tr(
+                    'Bạn muốn thử một cách khác trong lần tới?',
+                    'Want to try a different way next time?',
+                  )
+                : tr(
+                    'Khi một điều lặp lại đủ lâu, chúng ta có thể thử một cách '
+                        'khác.',
+                    'When something repeats long enough, we can try a '
+                        'different way.',
+                  ),
+            style: const TextStyle(
+              fontSize: 14,
+              color: WrColors.text2,
+              height: 1.65,
+            ),
           ),
-        ),
+          if (related != null) ...[
+            const SizedBox(height: 11),
+            WrSmallButton(
+              key: const Key('wr_growth_bridge_open'),
+              kind: WrSmallButtonKind.dark,
+              label: tr('Xem 3 cách để cân nhắc', 'See 3 ways to consider'),
+              arrow: true,
+              onTap: () => context.push('/wr/growth/theme/${related.themeId}'),
+            ),
+          ],
+        ],
       ),
     );
   }
@@ -804,83 +1017,57 @@ class WrPracticeThemeCard extends ConsumerWidget {
 // ─────────────────────────────────────────────────────────────────────────────
 
 class _QuotaCard extends StatelessWidget {
-  const _QuotaCard({required this.quota, required this.activeCount});
+  const _QuotaCard({required this.quota});
 
-  final int? quota;
-  final int activeCount;
+  final int quota;
 
   @override
   Widget build(BuildContext context) {
-    final max = quota;
-    if (max == null) return const SizedBox.shrink();
-
-    return GestureDetector(
+    // Mockup v47: thẻ nét đứt, canh giữa, KHÔNG có số "đang mở x/y" — bản
+    // trước hiện cả badge "/3" sai với Premium.
+    return WrCard(
       key: const Key('wr_growth_quota_card'),
-      behavior: HitTestBehavior.opaque,
+      dashed: true,
       onTap: () => context.push('/wr/paywall?trigger=practice_limit'),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          color: WrColors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: WrColors.navy.withValues(alpha: 0.1),
-            style: BorderStyle.solid,
+      child: Column(
+        children: [
+          Text(
+            tr(
+              'Free: tối đa $quota chủ đề cùng lúc',
+              'Free: up to $quota themes at a time',
+            ),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 14,
+              color: WrColors.text2,
+              height: 1.65,
+            ),
           ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(7),
-              decoration: BoxDecoration(
-                color: WrColors.coral.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.auto_awesome,
-                size: 15,
-                color: WrColors.coral,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    tr(
-                      'Bản miễn phí mở tối đa $max chủ đề cùng lúc '
-                          '(đang mở $activeCount/$max).',
-                      'The free version opens up to $max themes at once '
-                          '(you have $activeCount/$max open).',
-                    ),
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: WrColors.navy,
-                      height: 1.4,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    tr('Premium: không giới hạn', 'Premium: no limit'),
-                    style: const TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w700,
-                      color: WrColors.coral,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(
-              Icons.chevron_right,
-              size: 18,
-              color: WrColors.muted,
-            ),
-          ],
-        ),
+          const SizedBox(height: 6),
+          const _PremiumPill(),
+        ],
       ),
     );
   }
+}
+
+class _PremiumPill extends StatelessWidget {
+  const _PremiumPill();
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+    decoration: BoxDecoration(
+      color: WrColors.coral.withValues(alpha: 0.12),
+      borderRadius: BorderRadius.circular(100),
+    ),
+    child: Text(
+      tr('Premium: không giới hạn', 'Premium: no limit'),
+      style: const TextStyle(
+        fontSize: 10.5,
+        fontWeight: FontWeight.w700,
+        color: WrColors.pillCoralText,
+      ),
+    ),
+  );
 }

@@ -36,6 +36,12 @@ const String kMilestoneBehavior = 'career_milestone';
 const String kThemeBehavior = 'career_theme';
 const String kInsightBehavior = 'career_insight';
 
+/// "Ghi nhận một điều · Bạn vừa học được điều hữu ích" (mockup v47
+/// `saveLearningCapture`): một Cột mốc mang đúng câu bài học của người dùng.
+/// Tách mã riêng để "Những gì bạn đã học" ở Hành trình đọc ra được, còn khi
+/// hiển thị thì nó là một Cột mốc như mọi Cột mốc khác.
+const String kLearningBehavior = 'career_learning';
+
 /// §8.2: "cùng một dim/need xuất hiện từ 3 lần trở lên trong 14 ngày gần nhất".
 const int kThemeMinCount = 3;
 const int kThemeWindowDays = 14;

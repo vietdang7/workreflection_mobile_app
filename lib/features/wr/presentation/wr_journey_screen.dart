@@ -511,7 +511,9 @@ String eventTypeLabel(CareerMemoryEvent e) {
   if (e.behavior == kEpisodeBehavior) return kStoryLabel;
   // Ba loại được SINH THÊM từ STORY (changelog 24/08 §8.2). Nhãn tiếng Việt
   // đúng như §8.1 đòi: Cột mốc / Chủ đề / Insight, không phải mã viết hoa.
-  if (e.behavior == kMilestoneBehavior) return kMilestoneLabel;
+  if (e.behavior == kMilestoneBehavior || e.behavior == kLearningBehavior) {
+    return kMilestoneLabel;
+  }
   if (e.behavior == kThemeBehavior) return kThemeLabel;
   if (e.behavior == kInsightBehavior) return kInsightLabel;
   if (e.behavior == 'skill_certified') return tr('KỸ NĂNG', 'SKILL');
@@ -537,7 +539,9 @@ Color eventColor(CareerMemoryEvent e) {
   // Bốn màu đúng `TYPE_META` của mockup v16: Cột mốc coral · Câu chuyện navy ·
   // Chủ đề teal · Insight coral. Bản trước dùng hổ phách cho Chủ đề và xanh
   // dương cho Insight — hai màu không có trong bảng màu nào của thiết kế.
-  if (e.behavior == kMilestoneBehavior) return WrColors.coral;
+  if (e.behavior == kMilestoneBehavior || e.behavior == kLearningBehavior) {
+    return WrColors.coral;
+  }
   if (e.behavior == kThemeBehavior) return WrColors.teal;
   if (e.behavior == kInsightBehavior) return WrColors.coral;
   if (e.behavior == 'skill_certified') return WrColors.teal;

@@ -92,6 +92,8 @@ import '../../features/wr/presentation/wr_career_setup_screen.dart';
 import '../../features/wr/presentation/wr_context_doc_screen.dart';
 import '../../features/wr/presentation/wr_story_flow_screen.dart';
 import '../../features/wr/presentation/wr_mood_library_screen.dart';
+import '../../features/wr/presentation/wr_add_practice_theme_screen.dart';
+import '../../features/wr/presentation/wr_learning_capture_screen.dart';
 import '../models/wr_mood_content.dart' show moodFromContentKey;
 import '../../features/wr/presentation/wr_org_survey_flow_screen.dart';
 import '../../features/wr/presentation/wr_org_survey_intro_screen.dart';
@@ -513,6 +515,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       wrRoute(
         path: '/wr/growth/skills',
         builder: (context, state) => WrGrowthSkillsScreen(),
+      ),
+      // Mockup v47: "Tự thêm · Một chủ đề chưa có trong thư viện" và "Ghi
+      // nhận một điều · Bạn vừa học được điều hữu ích".
+      wrRoute(
+        path: '/wr/growth/add-theme',
+        builder: (context, state) => const WrAddPracticeThemeScreen(),
+      ),
+      wrRoute(
+        path: '/wr/growth/learning',
+        builder: (context, state) => const WrLearningCaptureScreen(),
       ),
 
       // Ô hỏi về hành trình nghề nghiệp (họp khách 2026-07-29). Mở từ bong

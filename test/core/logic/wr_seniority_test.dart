@@ -11,7 +11,7 @@ PracticeStep _step(int order, String content) => PracticeStep(
   stepId: 'pt-c1-$order',
   themeId: 'pt-c1',
   stepOrder: order,
-  title: 'Bước $order',
+  title: order == 3 ? 'Chuyển hóa: Bước $order' : 'Bước $order',
   content: content,
   isPremium: order == 3,
 );
@@ -120,7 +120,30 @@ void main() {
       }
     });
 
-    test('chỉ bước thứ ba bị viết lại, hai bước đầu giữ nguyên', () {
+    test('bước 3 "Chọn một cách" của bộ 4 bước v47 KHÔNG bị viết lại', () {
+      // v47 bỏ nhãn Chuyển hoá; bước thứ ba giờ là "Chọn một cách". Viết lại
+      // theo số thứ tự là thay mất chữ của bước đó.
+      final steps = [
+        _step(1, 'gốc 1'),
+        _step(2, 'gốc 2'),
+        PracticeStep(
+          stepId: 'pt-c1-2',
+          themeId: 'pt-c1',
+          stepOrder: 3,
+          title: 'Chọn một cách: Chọn một cách rồi thử',
+          content: 'gốc 3',
+          isPremium: false,
+        ),
+      ];
+      final out = personalizePracticeSteps(
+        themeId: 'pt-c1',
+        steps: steps,
+        tier: SeniorityTier.leadTeam,
+      );
+      expect(out[2].content, 'gốc 3');
+    });
+
+    test('chỉ bước Chuyển hoá cũ bị viết lại, hai bước đầu giữ nguyên', () {
       final steps = [_step(1, 'gốc 1'), _step(2, 'gốc 2'), _step(3, 'gốc 3')];
       final out = personalizePracticeSteps(
         themeId: 'pt-c1',
@@ -134,7 +157,7 @@ void main() {
       // Giữ nguyên chiều, vị trí bước và cờ Premium — B.3 chỉ cho đổi chữ.
       expect(out[2].stepId, 'pt-c1-3');
       expect(out[2].stepOrder, 3);
-      expect(out[2].title, 'Bước 3');
+      expect(out[2].title, 'Chuyển hóa: Bước 3');
       expect(out[2].isPremium, isTrue);
       expect(out.length, 3);
     });

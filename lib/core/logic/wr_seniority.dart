@@ -169,11 +169,24 @@ bool isAutoRaised(ScaDimension? dimension, SeniorityTier? tier) =>
 // B.3 — Bước Chuyển hoá viết lại theo cấp bậc
 // ---------------------------------------------------------------------------
 
-/// Bước Chuyển hoá là bước thứ ba trong chuỗi ba bước.
+/// Bước Chuyển hoá là bước thứ ba trong chuỗi ba bước CŨ.
 ///
 /// Hai bước đầu (Nhận diện, Thử nghiệm) giữ nguyên chung cho mọi cấp bậc: việc
 /// nhận ra và thử nghiệm ở quy mô cá nhân là như nhau bất kể vị trí (B.3).
+///
+/// ⚠ Mockup v47 (06/10/2026) bỏ hẳn nhãn "Chuyển hoá": thư viện chuyển sang 4
+/// bước và bước thứ ba giờ là "Chọn một cách" (migration 20261006120000). Vì
+/// vậy chỉ viết lại bước nào THẬT SỰ là Chuyển hoá (xem [isTransformStep]),
+/// không viết lại theo số thứ tự nữa — nếu không bước "Chọn một cách" sẽ bị
+/// thay bằng chữ của Chuyển hoá.
 const int kTransformStepOrder = 3;
+
+/// Bước này có phải bước Chuyển hoá của bộ 3 bước cũ không.
+bool isTransformStep(PracticeStep s) {
+  if (s.stepOrder != kTransformStepOrder) return false;
+  final t = s.titleVi.trim().toLowerCase();
+  return t.startsWith('chuyển hóa') || t.startsWith('chuyển hoá');
+}
 
 /// Bảng B.3 nguyên văn: theme_id → cấp bậc → nội dung bước Chuyển hoá.
 ///
@@ -399,7 +412,7 @@ List<PracticeStep> personalizePracticeSteps({
   if (replacement == null) return steps;
   return [
     for (final s in steps)
-      if (s.stepOrder == kTransformStepOrder)
+      if (isTransformStep(s))
         PracticeStep(
           stepId: s.stepId,
           themeId: s.themeId,

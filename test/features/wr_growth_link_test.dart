@@ -406,6 +406,32 @@ void main() {
       },
     );
 
+    // v47: chủ đề người dùng tự thêm cũng có một dòng ghi danh, nhưng không
+    // được ăn vào suất phần mềm tự thêm.
+    testWidgets('chủ đề tự thêm không chiếm suất phần mềm tự thêm', (
+      tester,
+    ) async {
+      final intel = FakeWrIntelligenceRepository();
+      intel.seedPracticeThemes([
+        _theme('t-culture', 'Thực hành kết nối', dim: ScaDimension.c1),
+        const PracticeTheme(
+          themeId: 'u-mine',
+          title: 'Chủ đề của tôi',
+          source: PracticeThemeSource.user,
+          ownerId: 'u1',
+        ),
+      ]);
+      intel.seedEnrollments([
+        const PracticeEnrollment(userId: 'u1', themeId: 'u-mine'),
+      ]);
+      intel.seedSelfCheckHistory([selfCheck()]);
+
+      await _pumpLarge(tester, _wrapGrowth(intel: intel));
+
+      expect(intel.enrollThemeCalls, hasLength(1));
+      expect(intel.enrollThemeCalls.first.themeId, 't-culture');
+    });
+
     // Bộ tự đánh giá làm SAU lần nhìn lại gần nhất thì nó là tiếng nói mới nhất.
     // Bản trước hành vi luôn thắng, nên ai đã nhìn lại vài lần rồi mới ngồi trả
     // lời 15 câu thì kết quả bộ đó không đổi được gì.
@@ -659,45 +685,71 @@ void main() {
   // Task E — Tags bước + link Discover → Growth
   // ─────────────────────────────────────────────────────────────────────────────
 
+  // Mockup v47: bốn giai đoạn Nhận diện → Phần của tôi → Chọn một cách → Mang
+  // về; nhãn "Thử nghiệm / Chuyển hoá" đã bỏ (migration 20261006120000).
   group('Task E — Tags bước theo stepOrder', () {
     testWidgets(
-      'step order 1→NHẬN DIỆN, 2→THỬ NGHIỆM, 3→CHUYỂN HÓA hiện đúng',
+      'step order 1→NHẬN DIỆN, 2→PHẦN CỦA TÔI, 3→CHỌN MỘT CÁCH, 4→MANG VỀ',
       (tester) async {
         final intel = FakeWrIntelligenceRepository();
         intel.seedPracticeThemes([_theme('t1', 'Chủ đề test')]);
         intel.seedPracticeSteps('t1', [
           _step('s1', 't1', 1, 'Bước nhận diện'),
-          _step('s2', 't1', 2, 'Bước thử nghiệm'),
-          _step('s3', 't1', 3, 'Bước chuyển hóa'),
+          _step('s2', 't1', 2, 'Bước phần của tôi'),
+          _step('s3', 't1', 3, 'Bước chọn một cách'),
+          _step('s4', 't1', 4, 'Bước mang về'),
         ]);
         intel.seedEnrollments([_enrollment('t1')]);
 
         await _pumpLarge(tester, _wrapPracticeTheme('t1', intel: intel));
 
         expect(find.text('NHẬN DIỆN'), findsOneWidget);
-        expect(find.text('THỬ NGHIỆM'), findsOneWidget);
-        expect(find.text('CHUYỂN HOÁ'), findsOneWidget);
+        expect(find.text('PHẦN CỦA TÔI'), findsOneWidget);
+        expect(find.text('CHỌN MỘT CÁCH'), findsOneWidget);
+        expect(find.text('MANG VỀ'), findsOneWidget);
+        expect(find.text('THỬ NGHIỆM'), findsNothing);
+        expect(find.text('CHUYỂN HOÁ'), findsNothing);
       },
     );
 
-    testWidgets('step order 4 → không có tag', (tester) async {
+    testWidgets('step order 5 → không có tag', (tester) async {
       final intel = FakeWrIntelligenceRepository();
-      intel.seedPracticeThemes([_theme('t1', 'Chủ đề 4 bước')]);
+      intel.seedPracticeThemes([_theme('t1', 'Chủ đề 5 bước')]);
       intel.seedPracticeSteps('t1', [
         _step('s1', 't1', 1, 'Bước 1'),
         _step('s2', 't1', 2, 'Bước 2'),
         _step('s3', 't1', 3, 'Bước 3'),
-        _step('s4', 't1', 4, 'Bước 4 không tag'),
+        _step('s4', 't1', 4, 'Bước 4'),
+        _step('s5', 't1', 5, 'Bước 5 không tag'),
       ]);
       intel.seedEnrollments([_enrollment('t1')]);
 
       await _pumpLarge(tester, _wrapPracticeTheme('t1', intel: intel));
 
-      // Chỉ 3 tag cho order 1-3; bước 4 hiện tên nhưng không có nhãn giai đoạn.
+      // Chỉ 4 tag cho order 1-4; bước 5 hiện tên nhưng không có nhãn giai đoạn.
       expect(find.text('NHẬN DIỆN'), findsOneWidget);
-      expect(find.text('THỬ NGHIỆM'), findsOneWidget);
-      expect(find.text('CHUYỂN HOÁ'), findsOneWidget);
-      expect(find.text('Bước 4 không tag'), findsOneWidget);
+      expect(find.text('PHẦN CỦA TÔI'), findsOneWidget);
+      expect(find.text('CHỌN MỘT CÁCH'), findsOneWidget);
+      expect(find.text('MANG VỀ'), findsOneWidget);
+      final row5 = find.byKey(const Key('wr_practice_step_s5'));
+      expect(
+        find.descendant(of: row5, matching: find.text('Bước 5 không tag')),
+        findsOneWidget,
+      );
+      // Hàng bước 5 chỉ có số thứ tự, tên và nút — không có dòng nhãn nào.
+      expect(
+        find
+            .descendant(of: row5, matching: find.byType(Text))
+            .evaluate()
+            .map((e) => (e.widget as Text).data),
+        isNot(
+          contains(
+            predicate<String?>(
+              (t) => t != null && t == t.toUpperCase() && t.length > 2,
+            ),
+          ),
+        ),
+      );
     });
   });
 
