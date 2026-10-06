@@ -735,7 +735,7 @@ class _SettingsSection extends ConsumerWidget {
           _SettingRow(
             key: const Key('profile_change_avatar_btn'),
             icon: Icons.photo_camera_outlined,
-            label: 'Đổi ảnh đại diện',
+            label: tr('Đổi ảnh đại diện', 'Change profile photo'),
             onTap: ref.watch(avatarUploadProvider).isLoading
                 ? null
                 : () => _pickAvatar(context, ref),
@@ -884,7 +884,7 @@ class _SettingsSection extends ConsumerWidget {
           _SettingRow(
             key: const Key('profile_ai_consent_btn'),
             icon: Icons.privacy_tip_outlined,
-            label: 'Xử lý dữ liệu bằng AI',
+            label: tr('Xử lý dữ liệu bằng AI', 'AI data processing'),
             onTap: () => context.push(kWrAiRevokePath),
             trailing: const Icon(
               Icons.chevron_right,

@@ -156,14 +156,18 @@ class _VideoReportScreenState extends ConsumerState<VideoReportScreen> {
                   ),
                 ),
               ] else if (e is VideoReportAiConsentRequired) ...[
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 32),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
                   child: Text(
-                    'Bản đọc thành tiếng cần gửi đoạn chữ sang dịch vụ đọc '
-                    'giọng nói bên ngoài. Bạn xem app gửi những gì rồi quyết '
-                    'định nhé.',
+                    tr(
+                      'Bản đọc thành tiếng cần gửi đoạn chữ sang dịch vụ đọc '
+                          'giọng nói bên ngoài. Bạn xem app gửi những gì rồi '
+                          'quyết định nhé.',
+                      'The spoken version needs to send the text to an outside '
+                          'voice service. See what the app sends, then decide.',
+                    ),
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white70, height: 1.6),
+                    style: const TextStyle(color: Colors.white70, height: 1.6),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -174,7 +178,7 @@ class _VideoReportScreenState extends ConsumerState<VideoReportScreen> {
                       ref.invalidate(videoReportDataProvider(widget.reportId));
                     }
                   },
-                  child: const Text('Xem app gửi những gì'),
+                  child: Text(tr('Xem app gửi những gì', 'See what the app sends')),
                 ),
               ] else ...[
                 Text(

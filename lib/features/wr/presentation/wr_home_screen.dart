@@ -1271,7 +1271,7 @@ String _continueLabel(PendingPracticeStep pending) {
   final stage = practiceStageLabel(pending.step.stepOrder);
   final tail = stage == null
       ? pending.step.title
-      : tr('bước $stage đang chờ', 'step $stage waiting');
+      : tr('bước $stage đang chờ', 'the "$stage" step is waiting');
   return tr(
     'Chủ đề "${pending.theme.title}": $tail',
     'Theme "${pending.theme.title}": $tail',
