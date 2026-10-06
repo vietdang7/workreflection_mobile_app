@@ -101,7 +101,10 @@ class _WrAddPracticeThemeScreenState
       source: PracticeThemeSource.user,
       ownerId: userId,
       intake: intake,
-      mentorOptions: buildUserThemeMentorOptions(intake.goal),
+      mentorOptions: buildUserThemeMentorOptions(
+        intake.goal,
+        tried: intake.tried,
+      ),
     );
     try {
       await ref

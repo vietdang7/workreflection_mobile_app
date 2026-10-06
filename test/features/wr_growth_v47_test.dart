@@ -711,10 +711,20 @@ void main() {
       await tester.pump();
       await _tap(tester, find.byKey(const Key('wr_add_theme_create')));
 
+      final call = intel.createUserThemeCalls.single;
+      expect(call.theme.intake?.tried, 'Đã thử nói thẳng');
+      // Họp khách 05/10: điều đã thử mà không có kết quả không được gợi ý lại.
+      // "nói" cùng hướng với "Đưa người khác vào cuộc" nên cách đó không có.
+      expect(call.theme.mentorOptions.map((o) => o.id), [
+        'reframe',
+        'small',
+        'observe',
+      ]);
       expect(
-        intel.createUserThemeCalls.single.theme.intake?.tried,
-        'Đã thử nói thẳng',
+        call.theme.mentorOptions.first.fit,
+        contains('"Đã thử nói thẳng"'),
       );
+      expect(call.steps[2].content, contains('đừng lặp lại'));
     });
   });
 

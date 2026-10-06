@@ -648,13 +648,14 @@ export async function buildUserContext(
     if (ids.length > 0) {
       const { data: themes } = await db
         .from('wr_practice_themes')
-        .select('theme_id, title')
+        .select('theme_id, title, intake')
         .in('theme_id', ids);
       const byId = new Map(
-        (themes ?? []).map((t) => [t.theme_id as string, t.title as string]),
+        (themes ?? []).map((t) => [t.theme_id as string, t]),
       );
       for (const e of enrollments ?? []) {
-        const title = byId.get(e.theme_id as string);
+        const theme = byId.get(e.theme_id as string);
+        const title = String(theme?.title ?? '').trim();
         if (!title) continue;
         const done = Array.isArray(e.completed_steps)
           ? e.completed_steps.length
@@ -662,6 +663,17 @@ export async function buildUserContext(
         lines.push(
           `Chủ đề thực hành đang theo: "${title}" (đã xong ${done} bước).`,
         );
+        // Chủ đề tự thêm: câu "đã thử rồi mà không có kết quả" (họp khách
+        // 05/10). Họ đã nói cách đó không ăn thua; trợ lý gợi ý lại đúng cách
+        // đó là dấu hiệu nó không nghe.
+        const intake = theme?.intake as { tried?: unknown } | null | undefined;
+        const tried = String(intake?.tried ?? '').trim();
+        if (tried) {
+          lines.push(
+            `Với chủ đề "${title}", họ đã thử "${truncate(tried, 200)}" mà `
+              + 'không có kết quả, đừng gợi ý lại cách này.',
+          );
+        }
       }
     }
   } catch (_) { /* bỏ qua */ }
