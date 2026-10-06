@@ -92,6 +92,7 @@ import '../../features/wr/presentation/wr_career_setup_screen.dart';
 import '../../features/wr/presentation/wr_context_doc_screen.dart';
 import '../../features/wr/presentation/wr_story_flow_screen.dart';
 import '../../features/wr/presentation/wr_mood_library_screen.dart';
+import '../models/wr_mood_content.dart' show moodFromContentKey;
 import '../../features/wr/presentation/wr_org_survey_flow_screen.dart';
 import '../../features/wr/presentation/wr_org_survey_intro_screen.dart';
 import '../../features/wr/presentation/wr_org_survey_result_screen.dart';
@@ -702,12 +703,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // §8.3: miễn phí cho mọi người dùng, không phân lớp Free/Paid.
       wrRoute(
         path: '/wr/mood-library',
-        builder: (context, state) => WrMoodLibraryScreen(),
+        builder: (context, state) => WrMoodLibraryScreen(
+          initialMood: moodFromContentKey(state.uri.queryParameters['mood']),
+        ),
       ),
       wrRoute(
         path: '/wr/mood-content/:id',
-        builder: (context, state) =>
-            WrMoodReaderScreen(contentId: state.pathParameters['id']!),
+        builder: (context, state) => WrMoodReaderScreen(
+          contentId: state.pathParameters['id']!,
+          fromLibrary: state.uri.queryParameters['from'] == 'library',
+        ),
       ),
     ],
   );

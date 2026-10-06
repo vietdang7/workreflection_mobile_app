@@ -221,6 +221,17 @@ Mood _moodFromContentKey(String value) => switch (value) {
 ///
 /// Hai cảm xúc thêm 24/08/2026 dùng CÙNG một chuỗi ở cả hai bảng (`foggy`,
 /// `outofsync`), nên chỗ lệch tên chỉ còn đúng hai cặp cũ.
+/// Mã nhóm trong `wr_mood_content.mood` → [Mood]; mã lạ hoặc null → null.
+Mood? moodFromContentKey(String? value) => switch (value) {
+  'stress' => Mood.stressed,
+  'tired' => Mood.tired,
+  'foggy' => Mood.foggy,
+  'outofsync' => Mood.outofsync,
+  'ok' => Mood.okay,
+  'happy' => Mood.happy,
+  _ => null,
+};
+
 extension MoodContentKey on Mood {
   String get moodContentKey => switch (this) {
     Mood.stressed => 'stress',

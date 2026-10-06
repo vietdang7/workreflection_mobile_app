@@ -342,6 +342,10 @@ void main() {
       GoRouter.of(tester.element(find.byType(WrDetailScreen))).go('/home');
       await tester.pumpAndSettle();
 
+      // Đã check-in hôm nay: lưới thu thành một dòng, bấm Đổi để mở lại.
+      expect(find.byKey(const Key('wr_home_mood_row')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('wr_home_mood_change')));
+      await tester.pumpAndSettle();
       await tester.tap(find.byKey(const Key('wr_home_checkin_tired')));
       await tester.pumpAndSettle();
 

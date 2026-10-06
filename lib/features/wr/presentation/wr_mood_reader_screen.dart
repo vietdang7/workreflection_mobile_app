@@ -1,27 +1,21 @@
-// Thư viện Nội dung Cảm xúc — màn đọc / nghe.
+// Thư viện Nội dung Cảm xúc — màn đọc / nghe (mockup v47 `screenContentReader`).
 // Kiến trúc Dữ liệu Hai Lớp v1.6 §8.1, §8.2 + họp khách 2026-07-29.
 //
-// §8.1: `type` quyết định giao diện — audio có thêm khối trình phát phía trên
-// phần chữ. BÀI ĐỌC hiện toàn văn; HEALING AUDIO hiện mô tả ngắn dưới khối phát.
+// Bố cục v47: dải phong cảnh theo cảm xúc của bài · chip cảm xúc + "Đọc · 5
+// phút" · tiêu đề · (bài nghe: khối phát) · lời dẫn · thân bài · "Câu hỏi để
+// mang theo" · nút "Xong, đọc bài khác".
 //
-// Ba điều chỉnh từ buổi họp 2026-07-29:
+// Giữ từ buổi họp 2026-07-29:
+//   1. HEADER GIỮ NGUYÊN KHI CUỘN: nút lùi luôn ở đỉnh, cuộn qua tiêu đề thì
+//      thanh phủ nền và hiện tên bài thu nhỏ.
+//   2. CHỮ GIÃN RA ("đọc bị tức mắt"): cỡ chữ lớn hơn mockup một bậc.
+//   3. NGHE ĐƯỢC THẬT: có bản thu thì phát bằng just_audio. Chưa có thì trước
+//      đây dựng bằng giọng AI tại chỗ; từ v47 việc đó đi theo `kAiVoiceEnabled`
+//      (mặc định tắt).
 //
-//   1. HEADER GIỮ NGUYÊN KHI CUỘN. "Cái này nó có thể đẩy lên được nhưng mà cái
-//      header nó bị mất, cho nên là có cách nào khi mà mình chỉnh á nó chỉ đẩy
-//      cái nội dung lên thôi và nó giữ lại cái header." → `SliverAppBar` ghim,
-//      tiêu đề bài thu nhỏ lại và ở lại trên đỉnh suốt lúc đọc.
-//
-//   2. CHỮ GIÃN RA. "Chị đọc chị bị tức mắt, nhìn cảm giác như nó nhiều chữ."
-//      → cỡ chữ và giãn dòng tăng, khoảng cách giữa các đoạn rộng hơn, và mỗi
-//      đoạn được ngắt bằng một dấu nhỏ để mắt có chỗ nghỉ.
-//
-//   3. NGHE ĐƯỢC THẬT. Bản trước chỉ vẽ một nút play không kêu. Giờ có bản thu
-//      thì phát bằng just_audio; chưa có thì dựng bằng giọng đọc AI (AusyncLab)
-//      ngay tại chỗ.
-//
-// ⚠ §XII.3: màn này KHÔNG hiển thị `script` (kịch bản lồng tiếng). Trường đó
-//   không tồn tại trong [MoodContent] vì repository đọc qua view
-//   `wr_mood_content_public`. Đây là chủ đích, không phải thiếu sót.
+// ⚠ §XII.3: màn này KHÔNG hiển thị `script` (kịch bản lồng tiếng) dù mockup có
+//   khối "Kịch bản lồng tiếng (nội bộ)". Trường đó không tồn tại trong
+//   [MoodContent] vì repository đọc qua view `wr_mood_content_public`.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -30,17 +24,29 @@ import 'package:just_audio/just_audio.dart';
 
 import '../../../core/data/ausynclab_tts_service.dart';
 import '../../../core/l10n/wr_tr.dart';
+import '../../../core/logic/wr_ai_voice.dart';
 import '../../../core/widgets/wr_ai_consent_sheet.dart';
+import '../../../core/models/checkin.dart' show Mood;
 import '../../../core/models/wr_mood_content.dart';
 import '../../../core/theme/wr_colors.dart';
-import '../../../core/widgets/eyebrow.dart';
+import '../../../core/theme/wr_text.dart';
+import '../../../core/widgets/wr_back_circle.dart';
+import '../../../core/widgets/wr_hero_header.dart';
 import '../mood_content_providers.dart';
-import 'wr_mood_library_screen.dart' show WrDraftBadge;
+import 'wr_mood_library_screen.dart' show moodContentMeta;
 
 class WrMoodReaderScreen extends ConsumerWidget {
-  const WrMoodReaderScreen({super.key, required this.contentId});
+  const WrMoodReaderScreen({
+    super.key,
+    required this.contentId,
+    this.fromLibrary = false,
+  });
 
   final String contentId;
+
+  /// Mở từ màn Thư viện: "Xong, đọc bài khác" chỉ cần lùi về đó. Mở từ Home
+  /// thì nút đó thay màn này bằng Thư viện.
+  final bool fromLibrary;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -48,128 +54,260 @@ class WrMoodReaderScreen extends ConsumerWidget {
 
     return Scaffold(
       backgroundColor: WrColors.pageBg,
-      body: SafeArea(
-        child: library.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (_, __) => const _ReaderMissing(),
-          data: (grouped) {
-            final item = grouped.values
-                .expand((items) => items)
-                .where((c) => c.id == contentId)
-                .firstOrNull;
-            if (item == null) return const _ReaderMissing();
-            return _ReaderBody(item: item);
-          },
-        ),
+      body: library.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (_, _) => const _ReaderMissing(),
+        data: (grouped) {
+          final item = grouped.values
+              .expand((items) => items)
+              .where((c) => c.id == contentId)
+              .firstOrNull;
+          if (item == null) return const _ReaderMissing();
+          return _ReaderBody(item: item, fromLibrary: fromLibrary);
+        },
       ),
     );
   }
 }
 
-class _ReaderBody extends StatelessWidget {
-  const _ReaderBody({required this.item});
+/// Tách bài thành ba phần như mockup (`screenContentReader`): đoạn đầu là lời
+/// dẫn, đoạn cuối là "Câu hỏi để mang theo" nếu bài có từ ba đoạn trở lên và
+/// đoạn cuối kết bằng dấu hỏi, còn lại là thân bài.
+({String? lead, List<String> body, String? ask}) splitMoodArticle(
+  List<String> paragraphs,
+) {
+  if (paragraphs.isEmpty) return (lead: null, body: const [], ask: null);
+  final hasAsk =
+      paragraphs.length > 2 && RegExp(r'\?\s*$').hasMatch(paragraphs.last);
+  return (
+    lead: paragraphs.first,
+    body: paragraphs.sublist(
+      1,
+      hasAsk ? paragraphs.length - 1 : paragraphs.length,
+    ),
+    ask: hasAsk ? paragraphs.last : null,
+  );
+}
+
+class _ReaderBody extends StatefulWidget {
+  const _ReaderBody({required this.item, required this.fromLibrary});
 
   final MoodContent item;
+  final bool fromLibrary;
+
+  @override
+  State<_ReaderBody> createState() => _ReaderBodyState();
+}
+
+class _ReaderBodyState extends State<_ReaderBody> {
+  final _scroll = ScrollController();
+
+  /// Chiều cao thanh ghim trên cùng (chưa tính thanh trạng thái).
+  static const _barHeight = 56.0;
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  void _done() {
+    if (widget.fromLibrary && context.canPop()) {
+      context.pop();
+    } else {
+      context.pushReplacement(
+        '/wr/mood-library?mood=${widget.item.mood.moodContentKey}',
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
-    return CustomScrollView(
-      slivers: [
-        // ── Header ghim ────────────────────────────────────────────────
-        //
-        // `pinned: true` là điểm mấu chốt của yêu cầu: cuộn bao xa thì thanh
-        // này vẫn ở đó. `FlexibleSpaceBar` co tiêu đề lớn thành tiêu đề nhỏ
-        // theo độ cuộn, nên người đọc luôn biết mình đang ở bài nào.
-        SliverAppBar(
-          key: const Key('wr_mood_reader_header'),
-          pinned: true,
-          expandedHeight: 148,
-          backgroundColor: WrColors.pageBg,
-          surfaceTintColor: WrColors.white,
-          elevation: 0,
-          scrolledUnderElevation: 0.5,
-          leading: IconButton(
-            key: const Key('wr_mood_reader_back'),
-            icon: const Icon(Icons.arrow_back_ios_new, size: 18),
-            color: WrColors.navy,
-            onPressed: () => context.pop(),
-          ),
-          flexibleSpace: FlexibleSpaceBar(
-            titlePadding: const EdgeInsets.fromLTRB(56, 0, 24, 14),
-            title: Text(
-              item.title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 17,
-                fontWeight: FontWeight.w700,
-                color: WrColors.navy,
-                height: 1.3,
-                letterSpacing: -0.3,
-              ),
-            ),
-          ),
-        ),
+    final item = widget.item;
+    final mood = item.mood.moodContentKey;
+    final top = MediaQuery.paddingOf(context).top;
+    final parts = splitMoodArticle(item.paragraphs);
 
-        SliverPadding(
-          padding: const EdgeInsets.fromLTRB(24, 18, 24, 48),
-          sliver: SliverList.list(
+    return Column(
+      children: [
+        Expanded(
+          child: Stack(
             children: [
-              Row(
+              // Dải phong cảnh trôi theo nội dung, như mockup.
+              AnimatedBuilder(
+                animation: _scroll,
+                builder: (_, child) => Positioned(
+                  top: -(_scroll.hasClients ? _scroll.offset : 0.0),
+                  left: 0,
+                  right: 0,
+                  child: child!,
+                ),
+                child: WrReflectBand(mood: mood),
+              ),
+              ListView(
+                controller: _scroll,
+                padding: EdgeInsets.fromLTRB(22, top + _barHeight + 4, 22, 24),
                 children: [
-                  Icon(
-                    item.type == MoodContentType.audio
-                        ? Icons.headphones_outlined
-                        : Icons.menu_book_outlined,
-                    size: 15,
-                    color: WrColors.teal,
+                  Row(
+                    children: [
+                      _MoodChip(mood: item.mood),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          moodContentMeta(item),
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            color: WrColors.text3,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 7),
-                  Flexible(
-                    child: WrEyebrow(
-                      '${item.kindLabel} · ${item.durationLabel}',
+                  const SizedBox(height: 12),
+                  Text(
+                    item.title,
+                    key: const Key('wr_mood_reader_title'),
+                    style: const TextStyle(
+                      fontSize: 22,
+                      fontWeight: FontWeight.w700,
+                      color: WrColors.navy,
+                      height: 1.4,
                     ),
                   ),
+                  const SizedBox(height: 18),
+                  if (item.type == MoodContentType.audio) ...[
+                    _AudioPlayerBlock(item: item),
+                    const SizedBox(height: 18),
+                  ],
+                  // Chữ to và giãn (khách 2026-07-29: "đọc bị tức mắt"): lời
+                  // dẫn 17.5, thân bài 16 giãn 1.85 — lớn hơn mockup một bậc
+                  // theo quy ước cỡ chữ của app.
+                  if (parts.lead != null)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 18),
+                      child: Text(
+                        parts.lead!,
+                        key: const Key('wr_mood_reader_lead'),
+                        style: const TextStyle(
+                          fontSize: 17.5,
+                          fontWeight: FontWeight.w500,
+                          color: WrColors.navy,
+                          height: 1.65,
+                        ),
+                      ),
+                    ),
+                  for (final p in parts.body)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 16),
+                      child: Text(
+                        p,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          color: WrColors.text2,
+                          height: 1.85,
+                        ),
+                      ),
+                    ),
+                  if (parts.ask != null) _AskBlock(question: parts.ask!),
+                  // §8.2: nội dung còn nháp thì nói thẳng, đừng để người dùng
+                  // tưởng đây là bản chính thức.
                   if (item.placeholder) ...[
-                    const SizedBox(width: 8),
-                    const WrDraftBadge(),
+                    const SizedBox(height: 18),
+                    Center(
+                      child: Text(
+                        tr(
+                          'Bản nháp, chưa biên tập chính thức',
+                          'Draft, not yet properly edited',
+                        ),
+                        key: const Key('wr_mood_draft_notice'),
+                        style: TextStyle(
+                          fontSize: 12.5,
+                          color: WrColors.text3.withValues(alpha: 0.85),
+                        ),
+                      ),
+                    ),
                   ],
                 ],
               ),
-              const SizedBox(height: 22),
-
-              // §8.2: nội dung còn nháp thì nói thẳng, đừng để người dùng tưởng
-              // đây là bản chính thức rồi thất vọng.
-              if (item.placeholder) ...[
-                const _DraftNotice(),
-                const SizedBox(height: 22),
-              ],
-
-              if (item.type == MoodContentType.audio) ...[
-                _AudioPlayerBlock(item: item),
-                const SizedBox(height: 26),
-              ],
-
-              // Chữ giãn hẳn ra so với bản trước (14/1.75 → 16.5/2.0), và mỗi
-              // đoạn cách nhau 22px thay vì 14px. Đây là bài để đọc trên điện
-              // thoại lúc đang mệt, không phải một khối tài liệu.
-              for (final para in item.paragraphs) ...[
-                Text(
-                  para,
-                  style: const TextStyle(
-                    fontSize: 16.5,
-                    height: 2.0,
-                    color: WrColors.dark,
-                    letterSpacing: 0.1,
+              // ── Thanh ghim ───────────────────────────────────────────────
+              //
+              // Khách 2026-07-29: "nó chỉ đẩy cái nội dung lên thôi và nó giữ
+              // lại cái header". Nút lùi luôn ở đó; cuộn qua tiêu đề thì thanh
+              // phủ nền và hiện tên bài thu nhỏ.
+              AnimatedBuilder(
+                animation: _scroll,
+                builder: (context, _) {
+                  final offset = _scroll.hasClients ? _scroll.offset : 0.0;
+                  final t = (offset / 60).clamp(0.0, 1.0);
+                  return Container(
+                    key: const Key('wr_mood_reader_header'),
+                    height: top + _barHeight,
+                    padding: EdgeInsets.fromLTRB(22, top, 22, 0),
+                    decoration: BoxDecoration(
+                      color: WrColors.pageBg.withValues(alpha: t),
+                      border: Border(
+                        bottom: BorderSide(
+                          color: WrColors.line.withValues(alpha: t),
+                        ),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        WrBackCircle(
+                          key: const Key('wr_mood_reader_back'),
+                          onTap: () => context.pop(),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Opacity(
+                            opacity: t,
+                            child: Text(
+                              item.title,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 15,
+                                fontWeight: FontWeight.w700,
+                                color: WrColors.navy,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+        ),
+        // `.rf-cta`
+        SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(22, 8, 22, 16),
+            child: SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                key: const Key('wr_mood_reader_done'),
+                onPressed: _done,
+                style: FilledButton.styleFrom(
+                  backgroundColor: WrColors.coral,
+                  foregroundColor: WrColors.navy,
+                  minimumSize: const Size.fromHeight(50),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
                   ),
                 ),
-                if (para != item.paragraphs.last) ...[
-                  const SizedBox(height: 22),
-                  const _ParagraphBreak(),
-                  const SizedBox(height: 22),
-                ],
-              ],
-            ],
+                child: Text(
+                  tr('Xong, đọc bài khác', 'Done, read another'),
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ),
           ),
         ),
       ],
@@ -177,20 +315,82 @@ class _ReaderBody extends StatelessWidget {
   }
 }
 
-/// Dấu ngắt giữa hai đoạn — chỗ nghỉ cho mắt, thay cho một khoảng trắng trơn.
-class _ParagraphBreak extends StatelessWidget {
-  const _ParagraphBreak();
+/// `.mood-chip` — chấm màu + tên cảm xúc của bài.
+class _MoodChip extends StatelessWidget {
+  const _MoodChip({required this.mood});
+
+  final Mood mood;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        width: 26,
-        height: 2,
-        decoration: BoxDecoration(
-          color: WrColors.teal.withValues(alpha: 0.28),
-          borderRadius: BorderRadius.circular(1),
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: WrColors.white.withValues(alpha: 0.75),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: WrColors.navy.withValues(alpha: 0.1)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 7,
+            height: 7,
+            decoration: BoxDecoration(
+              color: WrMoodPalette.dot(mood.moodContentKey),
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(
+            moodLabel(mood),
+            style: const TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w600,
+              color: WrColors.navy,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// `.rd-ask` — "Câu hỏi để mang theo".
+class _AskBlock extends StatelessWidget {
+  const _AskBlock({required this.question});
+
+  final String question;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: const Key('wr_mood_reader_ask'),
+      margin: const EdgeInsets.only(top: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: WrColors.coral.withValues(alpha: 0.06),
+        borderRadius: const BorderRadius.horizontal(right: Radius.circular(14)),
+        border: const Border(left: BorderSide(color: WrColors.coral, width: 3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            tr('CÂU HỎI ĐỂ MANG THEO', 'A QUESTION TO TAKE WITH YOU'),
+            style: const TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.6,
+              color: WrColors.pillCoralText,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            question,
+            style: WrText.serifQuote(fontSize: 16, color: WrColors.navy),
+          ),
+        ],
       ),
     );
   }
@@ -249,6 +449,9 @@ class _AudioPlayerBlockState extends ConsumerState<_AudioPlayerBlock> {
     //
     // Hỏi trước cả `_url` đã có sẵn hay chưa: lần phát lại không gửi gì thêm,
     // nhưng lần đầu thì có, và người dùng cần biết trước lần đầu đó.
+    // Giọng AI đang tắt (mockup v47, khách 06/10): bài chưa có bản thu thì
+    // không dựng tại chỗ nữa.
+    if (_url == null && !kAiVoiceEnabled) return;
     if (_url == null && !await ensureAiConsent(context, ref)) return;
 
     setState(() {
@@ -335,7 +538,12 @@ class _AudioPlayerBlockState extends ConsumerState<_AudioPlayerBlock> {
                       )
                     : _url != null
                     ? widget.item.durationLabel
-                    : tr('Nghe bằng giọng đọc AI', 'Listen with the AI voice')),
+                    : kAiVoiceEnabled
+                    ? tr('Nghe bằng giọng đọc AI', 'Listen with the AI voice')
+                    : tr(
+                        'Bản thu đang được chuẩn bị.',
+                        'The recording is on its way.',
+                      )),
             key: const Key('wr_mood_audio_status'),
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -347,30 +555,6 @@ class _AudioPlayerBlockState extends ConsumerState<_AudioPlayerBlock> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _DraftNotice extends StatelessWidget {
-  const _DraftNotice();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      key: const Key('wr_mood_draft_notice'),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-      decoration: BoxDecoration(
-        color: WrColors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: WrColors.line),
-      ),
-      child: Text(
-        tr(
-          'Nội dung nháp, chưa thu âm hoặc biên tập chính thức.',
-          'Draft content, not yet recorded or properly edited.',
-        ),
-        style: TextStyle(fontSize: 14, color: WrColors.navy, height: 1.6),
       ),
     );
   }

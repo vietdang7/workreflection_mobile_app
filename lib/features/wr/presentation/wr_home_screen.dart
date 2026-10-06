@@ -69,7 +69,7 @@ import '../../../core/widgets/wr_profile_avatar.dart';
 import '../../../core/widgets/wr_renewal_notice_card.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_card.dart';
-import '../../../core/widgets/wr_hero_scene.dart';
+import '../../../core/widgets/wr_hero_header.dart';
 import '../../profile/profile_providers.dart';
 import '../episode_flow_controller.dart';
 import '../growth_providers.dart';
@@ -217,105 +217,62 @@ class WrHomeScreen extends ConsumerWidget {
     final displayName = greetingName ?? '';
 
     return Scaffold(
-      // `giao-dien-chinh.html` §.screen: nền màn TRẮNG, thẻ mới là màu kem. Sắc
-      // kem nằm ở thẻ chứ không ở nền — đảo lại thì màn vàng cả mảng và thẻ
-      // chìm mất.
       backgroundColor: WrColors.pageBg,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ── .topbar { padding: 8px 22px 14px } ──────────────────────
-            Padding(
-              padding: const EdgeInsets.fromLTRB(22, 8, 22, 14),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Mockup: ngày là dòng `.tiny` ở TRÊN, lời chào là
-                        // `.h1` ở dưới. Trước đây app làm ngược — ngày to 32px
-                        // choán đầu màn, tên người dùng thành chú thích.
-                        Text(
-                          _dateLabel(),
-                          style: const TextStyle(
-                            fontSize: 12.5,
-                            color: WrColors.text3,
-                          ),
-                        ),
-                        const SizedBox(height: 3),
-                        Text(
-                          wrGreeting(greetingName),
-                          style: const TextStyle(
-                            fontSize: 21,
-                            fontWeight: FontWeight.w800,
-                            color: WrColors.navy,
-                            height: 1.32,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  WrProfileAvatar(
-                    key: const Key('wr_home_profile_button'),
-                    displayName: displayName,
-                  ),
-                ],
-              ),
+      // Không bọc SafeArea: ảnh hero tràn lên dưới thanh trạng thái như mockup
+      // v47 (`.hero2.home2`), phần chữ tự né thanh đó trong `WrHeroHeader`.
+      body: ListView(
+        // Padding tường minh: `ListView` không có padding sẽ xoá phần thanh
+        // trạng thái khỏi `MediaQuery` của con, ảnh hero hết tràn lên.
+        padding: const EdgeInsets.only(bottom: 34),
+        children: [
+          // Hero thành phố theo khung giờ (mockup v47 `cityHero`). Một khối tĩnh,
+          // đổi theo giờ hệ thống chứ không theo dữ liệu người dùng — nên nó ở
+          // đây kể cả trước lần check-in đầu tiên.
+          WrHeroHeader.city(
+            key: const Key('wr_home_hero'),
+            period: WrDayPeriod.fromHour(nowVn().hour),
+            overline: _dateLabel(),
+            title: wrGreeting(greetingName),
+            subtitle: tr(
+              'Dừng lại một chút. Hôm nay của bạn đang như thế nào?',
+              'Pause for a moment. How is your day going?',
             ),
-
-            // ── .scr-body ───────────────────────────────────────────────
-            // `.section-gap { margin: 0 22px 14px }` → lề ngang 22, các thẻ
-            // cách nhau 14. Không có đường kẻ ngang nào trong mockup.
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(22, 0, 22, 34),
-                children: [
-                  // Minh hoạ mở đầu — changelog 24/08 §5: "đặt ở đầu Home,
-                  // ngay trên card chọn mood". Một khối tĩnh, không bấm được,
-                  // và đổi theo khung giờ hệ thống chứ không theo dữ liệu người
-                  // dùng — nên nó ở đây được kể cả trước lần check-in đầu tiên,
-                  // khác ba khối nội dung phía dưới.
-                  WrHeroScene(period: WrDayPeriod.fromHour(nowVn().hour)),
-                  const SizedBox(height: 14),
-                  // Nhắc trước khi kỳ thuê bao kết thúc (khách chốt 08/09).
-                  // Tự biến mất khi không có gì để nói, nên nó không chiếm chỗ
-                  // của lưới check-in trong đời sống thường ngày. Đặt trên lưới
-                  // vì đây là loại tin có hạn chót — đọc sau khi cuộn hết màn
-                  // thì đã trôi mất mấy ngày cuối.
-                  const WrRenewalNoticeCard(),
-                  // Lưới check-in là khối CỐ ĐỊNH của mockup: luôn ở đây, luôn
-                  // bày sẵn sáu câu trả lời. Trước đây phiên đang dở thay chỗ
-                  // nó bằng một nút "Tiếp tục", nghĩa là muốn nói hôm nay mình
-                  // thế nào thì phải bấm thêm một nút nữa — hỏi xong rồi giấu
-                  // mất chỗ trả lời.
-                  const _CheckinQuestion(),
-                  // Thẻ nhắc điền hồ sơ nằm NGAY dưới lưới check-in, trên các
-                  // khối nội dung — mockup bản (4) đặt nó ở đó vì nó là lời mời
-                  // duy nhất trong màn có thời hạn: hỏi muộn hơn thì mấy chục
-                  // Insight đầu đã sinh ra trong lúc app còn đoán mò bối cảnh.
-                  const _ProfileNudgeCard(),
-                  // Lời nhắc "còn dở" đứng ngay dưới lưới check-in: nó nói về
-                  // chính việc người dùng vừa làm ở lưới đó, và phải đọc được
-                  // trước khi mắt trôi xuống các khối nội dung.
-                  const _UnfinishedReflectionCard(),
-                  // Thứ tự lấy nguyên từ `screenHome()`: check-in (cố định) →
-                  // Hệ thống nhận ra → Gợi ý → Insight gần nhất → Tiếp tục hôm
-                  // nay. Hai khối giữa nằm trong nhánh `state.checkedInToday`
-                  // của mockup, nên chúng vắng mặt trước check-in mà KHÔNG đổi
-                  // chỗ ba khối còn lại.
-                  const _SystemNoticeCard(),
-                  const _MoodContentSection(),
-                  const _LatestInsightSection(),
-                  const _ContinueTodaySection(),
-                ],
-              ),
+            trailing: WrProfileAvatar(
+              key: const Key('wr_home_profile_button'),
+              displayName: displayName,
             ),
-          ],
-        ),
+          ),
+          // `.section-gap { margin: 0 22px 14px }` → lề ngang 22, các thẻ
+          // cách nhau 14.
+          const Padding(
+            padding: EdgeInsets.symmetric(horizontal: 22),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // Nhắc trước khi kỳ thuê bao kết thúc (khách chốt 08/09). Tự
+                // biến mất khi không có gì để nói. Đặt trên lưới vì đây là loại
+                // tin có hạn chót.
+                WrRenewalNoticeCard(),
+                // Lưới check-in, hoặc dòng "Hôm nay bạn … · Đổi" khi đã
+                // check-in hôm nay.
+                _CheckinQuestion(),
+                // Thẻ nhắc điền hồ sơ nằm NGAY dưới lưới check-in — mockup bản
+                // (4): lời mời duy nhất trong màn có thời hạn.
+                _ProfileNudgeCard(),
+                // Lời nhắc "còn dở" nói về chính việc người dùng vừa làm ở
+                // lưới, nên phải đọc được trước các khối nội dung.
+                _UnfinishedReflectionCard(),
+                // Thứ tự lấy từ `screenHome()` v47: Gợi ý → Hệ thống nhận ra
+                // (hai khối chỉ có sau check-in) → Insight gần nhất (chỉ TRƯỚC
+                // check-in) → Tiếp tục hôm nay.
+                _MoodContentSection(),
+                _SystemNoticeCard(),
+                _LatestInsightSection(),
+                _ContinueTodaySection(),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -325,11 +282,36 @@ class WrHomeScreen extends ConsumerWidget {
 // 2 · "Bạn đang trải qua điều gì?" + lưới 3×2
 // ---------------------------------------------------------------------------
 
-class _CheckinQuestion extends ConsumerWidget {
+/// Phần đứng sau "Hôm nay bạn" ở dòng cảm xúc đã chọn (mockup v47
+/// `.mood-row`): nhãn ô check-in bỏ chữ "Tôi"/"Tôi đang" ở đầu.
+String checkinTodayPhrase(String id) => switch (id) {
+  'stress' => tr('căng thẳng', 'feel tense'),
+  'tired' => tr('mệt mỏi cần nghỉ ngơi', 'are tired and need rest'),
+  'foggy' => tr('thấy mơ hồ', 'feel unclear'),
+  'outofsync' => tr('thấy mọi thứ lệch nhau', 'feel things are out of sync'),
+  'ok' => tr('khá ổn', 'are doing okay'),
+  'happy' => tr('đang vui', 'are feeling good'),
+  _ => '',
+};
+
+class _CheckinQuestion extends ConsumerStatefulWidget {
   const _CheckinQuestion();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_CheckinQuestion> createState() => _CheckinQuestionState();
+}
+
+class _CheckinQuestionState extends ConsumerState<_CheckinQuestion> {
+  /// Đã check-in hôm nay mà bấm "Đổi" thì mở lại lưới.
+  bool _editing = false;
+
+  /// Chọn lại xong thì quay về dòng gọn khi trở lại Home.
+  void _closeEditor() {
+    if (_editing) setState(() => _editing = false);
+  }
+
+  @override
+  Widget build(BuildContext context) {
     // Tô theo cảm xúc đã ghi, không theo năng lượng: "căng thẳng" và "mệt mỏi"
     // cùng là năng lượng thấp, nên khớp bằng energy sẽ luôn sáng ô đầu tiên dù
     // người dùng chạm ô thứ hai.
@@ -340,6 +322,16 @@ class _CheckinQuestion extends ConsumerWidget {
               .where((o) => o.mood == todayMood)
               .map((o) => o.id)
               .firstOrNull;
+
+    // Mockup v47: check-in xong thì lưới thu thành một dòng. Lưới sáu ô đã làm
+    // xong việc của nó trong ngày; để nguyên thì nó choán nửa màn và đẩy các
+    // khối nói về chính lần check-in đó xuống dưới.
+    if (selectedId != null && !_editing) {
+      return _TodayMoodRow(
+        id: selectedId,
+        onChange: () => setState(() => _editing = true),
+      );
+    }
 
     // Cả khối nằm TRONG một thẻ trắng — `<div class="card card-pad">` của
     // mockup bản (4). Trước đây lưới đứng trần trên nền màn: hồi nền màn còn
@@ -375,6 +367,7 @@ class _CheckinQuestion extends ConsumerWidget {
                     child: _CheckinTile(
                       option: kCheckinOptions[i],
                       selected: kCheckinOptions[i].id == selectedId,
+                      onPicked: _closeEditor,
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -383,6 +376,7 @@ class _CheckinQuestion extends ConsumerWidget {
                         ? _CheckinTile(
                             option: kCheckinOptions[i + 1],
                             selected: kCheckinOptions[i + 1].id == selectedId,
+                            onPicked: _closeEditor,
                           )
                         : const SizedBox.shrink(),
                   ),
@@ -407,6 +401,73 @@ class _CheckinQuestion extends ConsumerWidget {
                 height: 1.5,
               ),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// `.mood-row` — "Hôm nay bạn **căng thẳng** · Đổi".
+class _TodayMoodRow extends StatelessWidget {
+  const _TodayMoodRow({required this.id, required this.onChange});
+
+  final String id;
+  final VoidCallback onChange;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      key: const Key('wr_home_mood_row'),
+      padding: const EdgeInsets.fromLTRB(14, 4, 6, 4),
+      decoration: BoxDecoration(
+        color: WrColors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: WrColors.line),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 9,
+            height: 9,
+            decoration: BoxDecoration(
+              color: WrMoodPalette.dot(id),
+              shape: BoxShape.circle,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text.rich(
+              TextSpan(
+                children: [
+                  TextSpan(
+                    text: tr('Hôm nay bạn ', 'Today you '),
+                    style: const TextStyle(color: WrColors.text2),
+                  ),
+                  TextSpan(
+                    text: checkinTodayPhrase(id),
+                    style: const TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                ],
+              ),
+              style: const TextStyle(
+                fontSize: 14,
+                color: WrColors.navy,
+                height: 1.4,
+              ),
+            ),
+          ),
+          TextButton(
+            key: const Key('wr_home_mood_change'),
+            onPressed: onChange,
+            style: TextButton.styleFrom(
+              foregroundColor: WrColors.teal,
+              textStyle: const TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            child: Text(tr('Đổi', 'Change')),
           ),
         ],
       ),
@@ -450,10 +511,15 @@ void startReflectionFromCheckin(WidgetRef ref, CheckinOption option) {
 }
 
 class _CheckinTile extends ConsumerWidget {
-  const _CheckinTile({required this.option, required this.selected});
+  const _CheckinTile({
+    required this.option,
+    required this.selected,
+    required this.onPicked,
+  });
 
   final CheckinOption option;
   final bool selected;
+  final VoidCallback onPicked;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -469,6 +535,7 @@ class _CheckinTile extends ConsumerWidget {
       // Check-in ghi ngay tại đây, còn Episode chỉ mở khi người dùng thật sự
       // chạm một tình huống ở màn sau — lý do ở `wr_step_screen.dart`.
       onTap: () {
+        onPicked();
         startReflectionFromCheckin(ref, option);
         context.push('/wr/flow/step');
       },
@@ -948,8 +1015,42 @@ class _MoodContentSection extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  WrEyebrow(moodSuggestionTitle(mood)),
-                  const SizedBox(height: 6),
+                  // Mockup v47: lối vào Thư viện nằm ngay góc phải đầu thẻ.
+                  Row(
+                    children: [
+                      Expanded(child: WrEyebrow(moodSuggestionTitle(mood))),
+                      GestureDetector(
+                        key: const Key('wr_home_mood_library_link'),
+                        behavior: HitTestBehavior.opaque,
+                        onTap: () => context.push('/wr/mood-library'),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(8, 4, 0, 4),
+                          // Mũi tên dùng Icon chứ không dùng ký tự "→": font
+                          // của app không chắc có glyph U+2192.
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                tr('Thư viện', 'Library'),
+                                style: const TextStyle(
+                                  fontSize: 12.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: WrColors.teal,
+                                ),
+                              ),
+                              const SizedBox(width: 3),
+                              const Icon(
+                                Icons.arrow_forward,
+                                size: 14,
+                                color: WrColors.teal,
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
                   Row(
                     children: [
                       Container(
@@ -1020,41 +1121,6 @@ class _MoodContentSection extends ConsumerWidget {
               ),
             ),
           ),
-          const SizedBox(height: 4),
-          Center(
-            child: GestureDetector(
-              key: const Key('wr_home_mood_library_link'),
-              behavior: HitTestBehavior.opaque,
-              onTap: () => context.push('/wr/mood-library'),
-              // Mũi tên dùng Icon chứ không dùng ký tự "→": font chữ của app
-              // không chắc có glyph U+2192, thiếu là ra ô vuông rỗng.
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      tr(
-                        'Xem thêm gợi ý trong thư viện',
-                        'See more prompts in the library',
-                      ),
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        fontWeight: FontWeight.w700,
-                        color: WrColors.navy,
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                    const Icon(
-                      Icons.arrow_forward,
-                      size: 12,
-                      color: WrColors.navy,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
         ],
       ),
     );
@@ -1071,6 +1137,12 @@ class _LatestInsightSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final insight = ref.watch(wrLatestInsightProvider).valueOrNull;
+
+    // Mockup v47: sau check-in hôm nay thì thẻ này nhường chỗ cho hai khối nói
+    // về chính lần check-in đó (Gợi ý + Hệ thống nhận ra).
+    if (ref.watch(todayCheckinProvider).valueOrNull != null) {
+      return const SizedBox.shrink();
+    }
 
     // Chưa có Insight nào thì thẻ VẪN đứng đây, chỉ đổi lời — mockup bản (4)
     // thay nhánh ẩn cũ bằng một câu mời.

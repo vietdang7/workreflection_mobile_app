@@ -162,8 +162,9 @@ class WrHeroHeader extends StatelessWidget {
     this.dark = false,
     this.alignment = Alignment.bottomCenter,
     this.landscape = true,
+    bool? glow,
     this.height = kHeight,
-  });
+  }) : glow = glow ?? landscape;
 
   /// Home tạo hero theo khung giờ.
   factory WrHeroHeader.city({
@@ -183,6 +184,9 @@ class WrHeroHeader extends StatelessWidget {
     dark: wrIsDarkPeriod(period),
     alignment: Alignment.centerRight,
     landscape: false,
+    // Ảnh sáng/chiều có nhà cao tầng ngay sau dòng chữ phụ: cần quầng trắng
+    // để chữ đọc được (ảnh soi M3, khổ 393pt).
+    glow: true,
   );
 
   /// Ba tab trong: Hiểu mình, Phát triển, Hành trình.
@@ -228,6 +232,9 @@ class WrHeroHeader extends StatelessWidget {
 
   /// Thêm quầng màu và quầng trắng sau chữ như `.inner-landscape`.
   final bool landscape;
+
+  /// Quầng trắng sau khối chữ (bỏ qua khi ảnh tối). Mặc định theo [landscape].
+  final bool glow;
 
   final double height;
 
@@ -307,14 +314,14 @@ class WrHeroHeader extends StatelessWidget {
                     clipBehavior: Clip.none,
                     children: [
                       // Quầng trắng sau khối chữ: `.topbar > div::after`.
-                      if (landscape && !dark)
+                      if (glow && !dark)
                         const Positioned(
                           left: -10,
                           top: -10,
+                          right: -10,
+                          bottom: -10,
                           child: IgnorePointer(
                             child: SizedBox(
-                              width: 250,
-                              height: 144,
                               child: DecoratedBox(
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.all(

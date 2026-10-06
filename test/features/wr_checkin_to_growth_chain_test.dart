@@ -201,7 +201,14 @@ class _Stage {
     router.go('/home');
     await tester.pumpAndSettle();
 
-    // 1 · check-in "căng thẳng" → thẳng vào bước chọn tình huống.
+    // 1 · check-in "căng thẳng" → thẳng vào bước chọn tình huống. Đã check-in
+    // hôm nay thì lưới thu thành dòng "Hôm nay bạn … · Đổi" (v47): bấm Đổi
+    // để mở lại lưới.
+    final change = find.byKey(const Key('wr_home_mood_change'));
+    if (change.evaluate().isNotEmpty) {
+      await tester.tap(change);
+      await tester.pumpAndSettle();
+    }
     await tester.tap(find.byKey(const Key('wr_home_checkin_stress')));
     await tester.pumpAndSettle();
 
@@ -369,6 +376,8 @@ void main() {
     // Vòng 2: khi còn đủ mục chưa chọn trong cửa sổ 10 lần, mã vừa chọn phải
     // bị loại khỏi bể — không phục hồi cơ chế neo cũ chỉ để ép lặp.
     stage.router.go('/home');
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('wr_home_mood_change')));
     await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('wr_home_checkin_stress')));
     await tester.pumpAndSettle();
