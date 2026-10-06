@@ -392,13 +392,24 @@ void main() {
     stage.router.go('/wr/discover');
     await tester.pumpAndSettle();
     expect(find.byType(WrDiscoverScreen), findsOneWidget);
-    // Career Snapshot: mới một lần nhìn lại nên cột "Xuất hiện" còn thiếu 14.
+    // Một lần chọn tình huống: đã ghi nhận nhưng chưa điều nào lặp tới ngưỡng.
+    expect(
+      find.byKey(const Key('wr_discover_patterns_below_threshold')),
+      findsOneWidget,
+    );
+    // Career Snapshot (v47: thu gọn sẵn, mở ra mới thấy): mới một lần nhìn
+    // lại nên cột "Xuất hiện" còn thiếu 14.
+    final snapshotToggle = find.byKey(const Key('wr_discover_snapshot_toggle'));
+    await tester.ensureVisible(snapshotToggle);
+    await tester.pumpAndSettle();
+    await tester.tap(snapshotToggle);
+    await tester.pumpAndSettle();
     expect(
       find.textContaining('sẽ mở sau 14 lần nhìn lại nữa'),
       findsOneWidget,
     );
-    // Free: mọi diễn giải nằm sau paywall.
-    expect(find.byKey(const Key('wr_discover_need_lock')), findsOneWidget);
+    // Free: diễn giải sâu nằm sau paywall — thẻ navy cuối màn là ổ khoá.
+    expect(find.byKey(const Key('wr_discover_sca_deep_lock')), findsOneWidget);
 
     stage.router.go('/wr/journey');
     await tester.pumpAndSettle();

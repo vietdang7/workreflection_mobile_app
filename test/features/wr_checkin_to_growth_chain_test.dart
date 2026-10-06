@@ -53,6 +53,9 @@ import '../support/fake_wr_mood_content_repository.dart';
 /// Thư viện chỉ có tình huống chiều C2, để biết chắc lần nào cũng chọn trúng nó
 /// dù danh sách được trộn ngẫu nhiên (§4.1).
 const _situationText = 'Không dám lên tiếng trong cuộc họp';
+
+/// Câu gõ ở bước kể lại (2/4) — tab Hiểu mình phải đọc lại đúng câu này.
+const _detailText = 'Cuộc họp sáng nay tôi lại giữ ý kiến cho riêng mình';
 const _situations = [
   WrSituation(
     code: 'C2-01',
@@ -231,10 +234,7 @@ Future<void> _finishReflection(WidgetTester tester, Finder situation) async {
   await tester.pumpAndSettle();
 
   // Bước 2/4 — ô kể bắt buộc từ mockup v47.
-  await tester.enterText(
-    find.byKey(const Key('wr_detail_field')),
-    'Cuộc họp sáng nay tôi lại giữ ý kiến cho riêng mình',
-  );
+  await tester.enterText(find.byKey(const Key('wr_detail_field')), _detailText);
   await tester.pumpAndSettle();
   await tester.tap(find.byKey(const Key('wr_flow_primary')));
   await tester.pumpAndSettle();
@@ -319,14 +319,39 @@ void main() {
       findsNothing,
       reason: 'đã lặp đủ 3 lần mà khối vẫn báo chưa tới ngưỡng',
     );
+    // Thẻ đầu trang v47 gọi đúng tên, đúng mẫu số.
+    expect(find.text('“$_situationText”'), findsOneWidget);
+    expect(find.text('3 lần trong 3 lần ghi nhận'), findsOneWidget);
+    // Dòng "Những vòng lặp quen thuộc" + pill số lần.
     expect(find.text(_situationText), findsOneWidget);
-    expect(find.textContaining('3 lần'), findsWidgets);
+    final loop = find.byKey(const Key('wr_discover_loop_C2-01'));
+    expect(
+      find.descendant(of: loop, matching: find.text('3 lần')),
+      findsOneWidget,
+    );
 
-    // "Điều bạn đang tìm kiếm" — nhu cầu chủ đạo đọc từ chính ba lần đó.
-    expect(find.byKey(const Key('wr_discover_need_reading')), findsOneWidget);
+    // Mở dòng ra: đúng ba lần, mỗi lần mang đúng câu đã gõ ở bước kể lại —
+    // chứng minh chữ người dùng viết chảy được tới tận tab này.
+    await tester.ensureVisible(loop);
+    await tester.pumpAndSettle();
+    await tester.tap(loop);
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('wr_discover_loop_log_C2-01')),
+        matching: find.text('“$_detailText”'),
+      ),
+      findsNWidgets(3),
+    );
 
-    // Khối Career Snapshot dựng được, và nói đúng còn thiếu bao nhiêu lần nữa
-    // thì cột "Xuất hiện" mở ra — 15 − 3 = 12.
+    // Khối Career Snapshot dựng được (v47: thu gọn sẵn, mở ra mới thấy), và
+    // nói đúng còn thiếu bao nhiêu lần nữa thì cột "Xuất hiện" mở ra —
+    // 15 − 3 = 12.
+    final snapshotToggle = find.byKey(const Key('wr_discover_snapshot_toggle'));
+    await tester.ensureVisible(snapshotToggle);
+    await tester.pumpAndSettle();
+    await tester.tap(snapshotToggle);
+    await tester.pumpAndSettle();
     expect(
       find.byKey(const Key('wr_discover_career_snapshot')),
       findsOneWidget,

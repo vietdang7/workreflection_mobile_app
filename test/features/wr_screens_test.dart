@@ -283,9 +283,24 @@ void main() {
       await tester.pumpWidget(_wrap(const WrDiscoverScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('Hiểu mình'), findsOneWidget);
+      // Hero v47: eyebrow viết hoa + tiêu đề "Những điều đang lặp lại".
+      expect(find.byKey(const Key('wr_discover_hero')), findsOneWidget);
+      expect(find.text('HIỂU MÌNH'), findsOneWidget);
+      expect(find.text('Những điều đang lặp lại'), findsOneWidget);
+      // Chưa chọn tình huống lần nào → thẻ đầu trang mời nhìn lại.
+      expect(
+        find.byKey(const Key('wr_discover_patterns_empty')),
+        findsOneWidget,
+      );
+
       // Khối Career Snapshot dựng ngay cả khi chưa có gì: cả hai cột đều là
-      // LỜI MỜI, không phải ổ khoá (Changelog CareerSnapshot §4).
+      // LỜI MỜI, không phải ổ khoá (Changelog CareerSnapshot §4). v47 để nó
+      // sau "Xem theo nhóm trải nghiệm", thu gọn sẵn — mở ra mới thấy.
+      final toggle = find.byKey(const Key('wr_discover_snapshot_toggle'));
+      await tester.ensureVisible(toggle);
+      await tester.pumpAndSettle();
+      await tester.tap(toggle);
+      await tester.pumpAndSettle();
       expect(
         find.byKey(const Key('wr_discover_career_snapshot')),
         findsOneWidget,
@@ -302,7 +317,8 @@ void main() {
       await tester.pumpWidget(_wrap(const WrDiscoverScreen()));
       await tester.pumpAndSettle();
 
-      // Phần diễn giải (nhu cầu chủ đạo) không còn ở tầng miễn phí.
+      // Phần diễn giải (nhu cầu chủ đạo) không còn ở tab này — v47 bỏ hẳn
+      // khối "Điều bạn đang tìm kiếm".
       expect(find.textContaining('ĐIỀU BẠN ĐANG TÌM KIẾM'), findsNothing);
     });
   });
