@@ -78,5 +78,7 @@ flutter:
   fonts:
     - family: Lora
       fonts:
+        # Lora đứng: câu hỏi lớn của luồng nhìn lại (`.h1.serif` mockup v47).
+        - asset: assets/fonts/Lora-Regular.ttf
         - asset: assets/fonts/Lora-Italic.ttf
           style: italic

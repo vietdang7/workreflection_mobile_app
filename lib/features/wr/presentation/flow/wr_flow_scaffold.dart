@@ -15,19 +15,21 @@ import '../../../../core/widgets/wr_card.dart' show WrDashedRRectPainter;
 import '../../../../core/widgets/wr_hero_header.dart';
 import '../../episode_flow_controller.dart' show pendingMoodProvider;
 import '../../../../core/theme/wr_colors.dart';
+import '../../../../core/theme/wr_text.dart';
 import '../../../../core/widgets/wr_paragraph.dart';
 
 /// Dáng chữ của câu hỏi lớn trong luồng (`.h1.serif` 20px của mockup v47).
 ///
-/// Mockup viết bằng Lora đứng; app chỉ nhúng Lora nghiêng (cho câu trích), nên
-/// câu hỏi dùng chữ chính của app, đậm vừa.
+/// Mockup viết bằng Lora đứng, nét thường (`font-weight:400`) — app nhúng
+/// `Lora-Regular.ttf` cho đúng dáng đó.
 ///
 /// Tách ra khỏi [WrFlowScaffold] để màn nào tự dựng câu hỏi bên trong `child`
 /// vẫn viết đúng một dáng chữ với các màn còn lại — hai chỗ gõ lại cùng một
 /// TextStyle là hai chỗ sẽ lệch nhau.
 const TextStyle wrFlowTitleStyle = TextStyle(
+  fontFamily: WrText.serifFamily,
   fontSize: 21,
-  fontWeight: FontWeight.w700,
+  fontWeight: FontWeight.w400,
   color: WrColors.navy,
   height: 1.45,
 );
@@ -186,6 +188,8 @@ class WrFlowScaffold extends ConsumerWidget {
                               color: WrColors.text2,
                               height: 1.6,
                             ),
+                            // Câu phụ ngắn: căn đều làm giãn chữ thành khe hở.
+                            textAlign: TextAlign.start,
                           ),
                         ],
                         if (title != null || subtitle != null)

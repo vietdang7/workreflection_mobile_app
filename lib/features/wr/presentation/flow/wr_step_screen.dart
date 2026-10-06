@@ -304,6 +304,24 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Danh sách tình huống còn đang tải (khách mới vừa đăng nhập ẩn danh
+          // có thể mất vài giây): báo đang tải, đừng để "Điều khác" đứng một
+          // mình như thể không có gì để chọn.
+          if (choices.isEmpty &&
+              (ref.watch(wrSituationsProvider).isLoading ||
+                  ref.watch(wrRecentSituationIdsProvider).isLoading)) ...[
+            const Padding(
+              key: Key('wr_situation_loading'),
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            ),
+          ],
           // Ô neo — điều gần nhất người dùng đã chọn trong cụm này — vẫn đứng
           // đầu (`pickSituationChoices`), nhưng v47 không còn ô cao hơn.
           for (final sit in choices) ...[

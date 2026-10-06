@@ -1220,6 +1220,17 @@ void main() {
       );
       expect(find.text('Gợi ý'), findsNothing);
 
+      // Mockup `.rf-mentor-pick`: chỉ thẻ đang chọn mới nói "Đã chọn".
+      expect(find.text('Đã chọn · lưu lại'), findsNothing);
+      await tester.ensureVisible(small);
+      await tester.tap(small);
+      await tester.pumpAndSettle();
+      expect(
+        find.descendant(of: small, matching: find.text('Đã chọn · lưu lại')),
+        findsOneWidget,
+      );
+      expect(find.text('Đã chọn · lưu lại'), findsOneWidget);
+
       // Thẻ coral nhắc lại Insight vừa giữ, để phép thử bám đúng điều đó.
       final seen = h.episodes.episodes.single.draftMeaning!;
       expect(

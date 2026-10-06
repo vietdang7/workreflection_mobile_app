@@ -56,6 +56,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/wr_tr.dart';
+import '../../../core/logic/wr_reflect_v47.dart' show insightGist;
 import '../../../core/logic/vn_date.dart';
 import '../../../core/logic/wr_display_name.dart';
 import '../../../core/logic/wr_home_surface.dart';
@@ -389,10 +390,10 @@ class _CheckinQuestionState extends ConsumerState<_CheckinQuestion> {
             width: double.infinity,
             child: Text(
               tr(
-                'Chọn cảm xúc sát nhất với bạn lúc này để bắt đầu nhìn lại '
-                    '(Reflection).',
-                'Pick the feeling closest to you right now to start looking back '
-                    '(Reflection).',
+                'Chạm để bắt đầu một Reflection, dựa trên đúng cảm giác lúc '
+                    'này.',
+                'Tap to start a Reflection, based on exactly how you feel right '
+                    'now.',
               ),
               textAlign: TextAlign.center,
               style: const TextStyle(
@@ -1201,18 +1202,13 @@ class _LatestInsightSection extends ConsumerWidget {
     return Padding(
       key: const Key('wr_home_latest_insight'),
       padding: const EdgeInsets.only(top: 14),
-      // Navy đậm như thẻ "Hệ thống nhận ra" (khách 2026-07-30). Hai thẻ này là
-      // một cặp về nội dung — đều là câu TRÍCH về chính người dùng, một câu do hệ
-      // thống đọc ra, một câu do người dùng tự đặt tên. Cùng giọng nói thì cùng
-      // màu áo. Các thẻ kem còn lại là thứ để làm, không phải thứ để đọc chậm.
-      child: WrCardNavy(
+      // Mockup v47: thẻ TRẮNG (`.card`), chữ trích navy nghiêng. Bản navy cũ
+      // (khách 2026-07-30) đã được v47 thay.
+      child: WrCardMinimal(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            WrEyebrow(
-              tr('INSIGHT GẦN NHẤT', 'LATEST INSIGHT'),
-              color: WrColors.cream.withValues(alpha: 0.55),
-            ),
+            WrEyebrow(tr('INSIGHT GẦN NHẤT', 'LATEST INSIGHT')),
             const SizedBox(height: 6),
             Text(
               // `content` là bản GỘP đóng băng lúc bấm lưu — nửa chữ người
@@ -1222,19 +1218,16 @@ class _LatestInsightSection extends ConsumerWidget {
               //
               // `relocaliseInsight` chỉ đụng vào hai mảnh do APP viết. Phần
               // giữa là chữ người dùng tự gõ và ở nguyên ngôn ngữ họ đã viết.
-              '"${relocaliseInsight(insight.content, ahaEnByVi: ahaEnByVi)}"',
+              '"${insightGist(relocaliseInsight(insight.content, ahaEnByVi: ahaEnByVi))}"',
               // `.muted.serif` italic 13.5px của mockup — cùng giọng với thẻ
               // "Hệ thống nhận ra", vì cả hai đều là câu trích về người dùng.
-              style: WrText.serifQuote(fontSize: 15, color: WrColors.cream),
+              style: WrText.serifQuote(fontSize: 15, color: WrColors.navy),
             ),
             if (saved != null) ...[
               const SizedBox(height: 8),
               Text(
                 saved,
-                style: TextStyle(
-                  fontSize: 12.5,
-                  color: WrColors.cream.withValues(alpha: 0.6),
-                ),
+                style: const TextStyle(fontSize: 12.5, color: WrColors.text3),
               ),
             ],
           ],
@@ -1273,8 +1266,8 @@ String _continueLabel(PendingPracticeStep pending) {
       ? pending.step.title
       : tr('bước $stage đang chờ', 'the "$stage" step is waiting');
   return tr(
-    'Chủ đề "${pending.theme.title}": $tail',
-    'Theme "${pending.theme.title}": $tail',
+    '"${pending.theme.title}": $tail',
+    '"${pending.theme.title}": $tail',
   );
 }
 

@@ -213,6 +213,20 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
                     ),
                     textAlign: TextAlign.start,
                   ),
+                  // Mockup v47 `.rf-mentor-pick`: thẻ đang chọn nói rõ là
+                  // đã chọn, và bấm Lưu là giữ lại.
+                  if (!_writing && _picked == options[i].id) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      tr('Đã chọn · lưu lại', 'Picked · save it'),
+                      key: Key('wr_choice_picked_$i'),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: WrColors.coral,
+                      ),
+                    ),
+                  ],
                 ],
               ),
             ),

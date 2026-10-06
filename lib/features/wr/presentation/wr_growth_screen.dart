@@ -1,4 +1,5 @@
 import '../../../core/l10n/wr_tr.dart';
+import '../../../core/logic/wr_reflect_v47.dart' show insightGist;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -649,15 +650,18 @@ class _OpportunitySliver extends ConsumerWidget {
                       vertical: 3,
                     ),
                     decoration: BoxDecoration(
-                      color: WrColors.teal.withValues(alpha: 0.14),
+                      color: WrColors.teal.withValues(alpha: 0.22),
                       borderRadius: BorderRadius.circular(100),
                     ),
+                    // Chữ teal sáng, không dùng teal đậm của `.pill-teal`: trên
+                    // nền navy teal đậm gần như chìm (script khách: chữ phải
+                    // đủ tương phản với nền).
                     child: Text(
                       'Offline · $kTraChieuLabel',
                       style: TextStyle(
                         fontSize: 11.5,
                         fontWeight: FontWeight.w700,
-                        color: WrColors.pillTealText,
+                        color: WrColors.teal,
                         letterSpacing: 0.2,
                       ),
                     ),
@@ -948,17 +952,17 @@ class _BridgeCard extends ConsumerWidget {
                     ),
                     TextSpan(
                       text: tr(
-                        ', bạn nhận ra: ${latest.draftMeaning!.trim()}',
-                        ', you noticed: ${latest.draftMeaning!.trim()}',
+                        ', bạn nhận ra: ${insightGist(latest.draftMeaning!)}',
+                        ', you noticed: ${insightGist(latest.draftMeaning!)}',
                       ),
                     ),
                   ] else
                     TextSpan(
                       text: tr(
                         'Lần gần nhất bạn nhìn lại, bạn nhận ra: '
-                            '${latest.draftMeaning!.trim()}',
+                            '${insightGist(latest.draftMeaning!)}',
                         'The last time you looked back, you noticed: '
-                            '${latest.draftMeaning!.trim()}',
+                            '${insightGist(latest.draftMeaning!)}',
                       ),
                     ),
                 ],

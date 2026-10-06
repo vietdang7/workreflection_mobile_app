@@ -493,7 +493,7 @@ void main() {
       // Khuôn câu của mockup Sprint 2: Home nhắc GIAI ĐOẠN đang dở, tên việc cụ
       // thể để dành cho màn chủ đề.
       expect(
-        find.text('Chủ đề "Dám lên tiếng": bước Nhận diện đang chờ'),
+        find.text('"Dám lên tiếng": bước Nhận diện đang chờ'),
         findsOneWidget,
       );
     });
@@ -620,7 +620,7 @@ void main() {
 
         expect(find.byKey(const Key('wr_home_continue_today')), findsOneWidget);
         expect(
-          find.text('Chủ đề "Phản hồi hiệu quả": bước Nhận diện đang chờ'),
+          find.text('"Phản hồi hiệu quả": bước Nhận diện đang chờ'),
           findsOneWidget,
         );
 
@@ -676,7 +676,7 @@ void main() {
 
       // Nhãn giai đoạn theo mockup v47: bước thứ hai là "Phần của tôi".
       expect(
-        find.text('Chủ đề "Gần xong": bước Phần của tôi đang chờ'),
+        find.text('"Gần xong": bước Phần của tôi đang chờ'),
         findsOneWidget,
       );
     });

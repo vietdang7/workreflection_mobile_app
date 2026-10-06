@@ -257,6 +257,27 @@ String reflectionAhaFor({
   );
 }
 
+/// Ý chính của một câu Insight đã giữ, để nhắc lại ở chỗ khác (Home, thẻ
+/// "Điều bạn từng viết" ở Phát triển).
+///
+/// Câu mẫu của [reflectionAhaFor] có hai đoạn: "Điều bạn vừa kể có thể không
+/// chỉ là “…”." rồi "Có thể phần đáng nhìn thêm là: ‹aha›". Chép nguyên hai đoạn
+/// vào giữa một câu khác thì đọc lủng củng; phần đáng nhắc là ‹aha›. Câu người
+/// dùng tự viết thì giữ nguyên, chỉ gộp xuống dòng thành dấu cách.
+String insightGist(String text) {
+  final t = text.trim();
+  for (final marker in const [
+    'Có thể phần đáng nhìn thêm là: ',
+    'What may be worth a closer look: ',
+  ]) {
+    final i = t.indexOf(marker);
+    if (i < 0) continue;
+    final rest = t.substring(i + marker.length).trim();
+    if (rest.isNotEmpty) return rest;
+  }
+  return t.replaceAll(RegExp(r'\s*\n+\s*'), ' ');
+}
+
 // ---------------------------------------------------------------------------
 // Bước 4 · Mang theo
 // ---------------------------------------------------------------------------
@@ -271,12 +292,12 @@ String get kTakeAwaySubtitle => tr(
   'Pick what you want to try. It does not need to become a big goal.',
 );
 
-String get kTakeAwaySeen =>
-    tr('Điều bạn vừa nhìn thấy', 'What you just saw');
+String get kTakeAwaySeen => tr('Điều bạn vừa nhìn thấy', 'What you just saw');
 
 String get kTakeAwayWriteOwn => tr('Tự viết', 'Write my own');
 
-String get kTakeAwayHint => tr('Lần tới, tôi sẽ thử…', 'Next time, I will try…');
+String get kTakeAwayHint =>
+    tr('Lần tới, tôi sẽ thử…', 'Next time, I will try…');
 
 String get kTakeAwaySave => tr('Lưu', 'Save');
 
@@ -364,7 +385,10 @@ List<ReflectNextOption> reflectionNextOptions({
     'C2-05' => [
       (
         id: 'specific',
-        title: tr('Góp ý một điều cụ thể', 'Give one specific piece of feedback'),
+        title: tr(
+          'Góp ý một điều cụ thể',
+          'Give one specific piece of feedback',
+        ),
         desc: tr(
           'Nói về một hành vi và tác động của nó, thay vì đánh giá con người.',
           'Talk about one behaviour and its effect, not about the person.',

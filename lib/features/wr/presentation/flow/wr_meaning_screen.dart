@@ -135,9 +135,16 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
   Widget _insightView(ReflectionEpisode episode) {
     // Phiên mở lại sau khi đã xác lập ý nghĩa: hiện đúng câu đã giữ.
     final saved = episode.draftMeaning?.trim();
-    final insight = (saved != null && saved.isNotEmpty)
-        ? saved
-        : _insight(episode);
+    final hasSaved = saved != null && saved.isNotEmpty;
+    // Câu Insight dựa trên câu chuyện của tình huống. Thư viện còn đang tải
+    // thì CHỜ: tính sớm là rơi vào câu chung của nhánh "Điều khác", và người
+    // dùng bấm "Ừ, tôi cũng thấy vậy" ngay lúc đó là giữ nhầm câu chung.
+    final loading =
+        !hasSaved &&
+        episode.situationCode != null &&
+        (ref.watch(wrSituationsProvider).isLoading ||
+            ref.watch(wrStoriesProvider).isLoading);
+    final insight = hasSaved ? saved : _insight(episode);
     return WrFlowScaffold(
       eyebrow: reflectStepEyebrow(2),
       title: kInsightTitle,
@@ -146,32 +153,47 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
       onClose: _leave,
       primaryLabel: kInsightAgree,
       busy: _busy,
-      onPrimary: () => _keep(insight, agreed: true),
+      onPrimary: loading ? null : () => _keep(insight, agreed: true),
       secondaryLabel: kInsightRetell,
-      onSecondary: () => setState(() {
-        _retelling = true;
-        _error = null;
-      }),
+      onSecondary: loading
+          ? null
+          : () => setState(() {
+              _retelling = true;
+              _error = null;
+            }),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            key: const Key('wr_meaning_aha'),
-            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
-            decoration: BoxDecoration(
-              color: WrColors.teal.withValues(alpha: 0.07),
-              borderRadius: BorderRadius.circular(18),
-            ),
-            child: WrParagraph(
-              '“$insight”',
-              style: WrText.serifQuote(
-                fontSize: 16.5,
-                color: WrColors.navy,
-                height: 1.72,
+          if (loading)
+            const Padding(
+              key: Key('wr_meaning_loading'),
+              padding: EdgeInsets.symmetric(vertical: 40),
+              child: Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
               ),
-              textAlign: TextAlign.start,
+            )
+          else
+            Container(
+              key: const Key('wr_meaning_aha'),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+              decoration: BoxDecoration(
+                color: WrColors.teal.withValues(alpha: 0.07),
+                borderRadius: BorderRadius.circular(18),
+              ),
+              child: WrParagraph(
+                '“$insight”',
+                style: WrText.serifQuote(
+                  fontSize: 16.5,
+                  color: WrColors.navy,
+                  height: 1.72,
+                ),
+                textAlign: TextAlign.start,
+              ),
             ),
-          ),
           const SizedBox(height: 16),
           WrParagraph(
             kInsightNote,
