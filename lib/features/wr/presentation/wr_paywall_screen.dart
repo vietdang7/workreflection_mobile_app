@@ -299,9 +299,13 @@ Future<void> _openLegal(BuildContext context, String url) async {
     opened = false;
   }
   if (!opened && context.mounted) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Không mở được trang này.')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          tr('Không mở được trang này.', 'Could not open this page.'),
+        ),
+      ),
+    );
   }
 }
 
@@ -329,9 +333,12 @@ class _NativeIapCta extends ConsumerWidget {
         ref.read(wrIapControllerProvider.notifier).clearMessages();
       } else if (next.restoredNothing && !(prev?.restoredNothing ?? false)) {
         messenger.showSnackBar(
-          const SnackBar(
+          SnackBar(
             content: Text(
-              'Không tìm thấy gói nào đã mua trên tài khoản Apple này.',
+              tr(
+                'Không tìm thấy gói nào đã mua trên tài khoản Apple này.',
+                'No purchases found on this Apple account.',
+              ),
             ),
           ),
         );
@@ -382,10 +389,18 @@ class _IapUnavailable extends StatelessWidget {
         border: Border.all(color: WrColors.line),
       ),
       padding: const EdgeInsets.all(14),
-      child: const WrParagraph(
-        'Chưa mở bán được trên thiết bị này. Nếu tài khoản của bạn đã có bản '
-        'đầy đủ, những phần ở trên vẫn tự mở.',
-        style: TextStyle(fontSize: 12.5, color: WrColors.muted, height: 1.6),
+      child: WrParagraph(
+        tr(
+          'Chưa mở bán được trên thiết bị này. Nếu tài khoản của bạn đã có bản '
+              'đầy đủ, những phần ở trên vẫn tự mở.',
+          'Purchases are not available on this device yet. If your account '
+              'already has the full version, the parts above unlock on their own.',
+        ),
+        style: const TextStyle(
+          fontSize: 12.5,
+          color: WrColors.muted,
+          height: 1.6,
+        ),
       ),
     );
   }
@@ -430,12 +445,16 @@ class _IapOfferList extends ConsumerWidget {
             ),
           ),
         if (state.phase == WrIapPhase.awaitingApproval)
-          const Padding(
-            padding: EdgeInsets.only(bottom: 4),
+          Padding(
+            padding: const EdgeInsets.only(bottom: 4),
             child: WrParagraph(
-              'Giao dịch đang chờ được duyệt. Bạn cứ dùng app bình thường, khi '
-              'nào duyệt xong bản đầy đủ sẽ tự mở.',
-              style: TextStyle(
+              tr(
+                'Giao dịch đang chờ được duyệt. Bạn cứ dùng app bình thường, khi '
+                    'nào duyệt xong bản đầy đủ sẽ tự mở.',
+                'Your purchase is waiting for approval. Keep using the app as '
+                    'usual; the full version unlocks once it is approved.',
+              ),
+              style: const TextStyle(
                 fontSize: 11.5,
                 color: WrColors.muted,
                 height: 1.6,
@@ -445,18 +464,28 @@ class _IapOfferList extends ConsumerWidget {
         TextButton(
           key: const Key('wr_paywall_iap_restore'),
           onPressed: busy ? null : controller.restore,
-          child: const Text(
-            'Khôi phục giao dịch đã mua',
-            style: TextStyle(fontSize: 13, color: WrColors.pillTealText),
+          child: Text(
+            tr('Khôi phục giao dịch đã mua', 'Restore purchases'),
+            style: const TextStyle(fontSize: 13, color: WrColors.pillTealText),
           ),
         ),
         const SizedBox(height: 2),
-        const WrParagraph(
-          'Gói tự động gia hạn cho tới khi bạn tắt. Tiền được trừ vào tài khoản '
-          'Apple của bạn, và kỳ tiếp theo sẽ được trừ trong vòng 24 giờ trước '
-          'khi kỳ hiện tại kết thúc. Bạn tắt gia hạn bất cứ lúc nào trong phần '
-          'Cài đặt tài khoản Apple.',
-          style: TextStyle(fontSize: 11, color: WrColors.muted, height: 1.6),
+        WrParagraph(
+          tr(
+            'Gói tự động gia hạn cho tới khi bạn tắt. Tiền được trừ vào tài khoản '
+                'Apple của bạn, và kỳ tiếp theo sẽ được trừ trong vòng 24 giờ trước '
+                'khi kỳ hiện tại kết thúc. Bạn tắt gia hạn bất cứ lúc nào trong phần '
+                'Cài đặt tài khoản Apple.',
+            'Subscriptions renew automatically until you turn them off. Payment '
+                'is charged to your Apple account, and the next period is charged '
+                'within 24 hours before the current one ends. You can turn off '
+                'renewal at any time in your Apple account settings.',
+          ),
+          style: const TextStyle(
+            fontSize: 11,
+            color: WrColors.muted,
+            height: 1.6,
+          ),
         ),
         const SizedBox(height: 8),
         Row(
@@ -464,7 +493,7 @@ class _IapOfferList extends ConsumerWidget {
           children: [
             _LegalLink(
               key: const Key('wr_paywall_terms_link'),
-              label: 'Điều khoản sử dụng',
+              label: tr('Điều khoản sử dụng', 'Terms of Use'),
               url: kAppleStandardEulaUrl,
             ),
             const Text(
@@ -473,7 +502,7 @@ class _IapOfferList extends ConsumerWidget {
             ),
             _LegalLink(
               key: const Key('wr_paywall_privacy_link'),
-              label: 'Chính sách quyền riêng tư',
+              label: tr('Chính sách quyền riêng tư', 'Privacy Policy'),
               url: kPrivacyPolicyUrl,
             ),
           ],
@@ -753,7 +782,7 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
         label: tr('Story Reflection hàng ngày', 'Daily Story Reflection'),
         avail: true,
       ),
-      const _FeatureRow(label: 'Check-in nhanh', avail: true),
+      _FeatureRow(label: tr('Check-in nhanh', 'Quick check-in'), avail: true),
       const _FeatureRow(label: 'Career Memory Timeline', avail: true),
       _FeatureRow(
         label: tr('15 câu hỏi phản chiếu', '15 reflection questions'),
@@ -1264,7 +1293,10 @@ class _PriceBlock extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  'cho ${pricing.durationLabel} Premium',
+                  tr(
+                    'cho ${pricing.durationLabel} Premium',
+                    'for ${pricing.durationLabel} of Premium',
+                  ),
                   style: const TextStyle(fontSize: 12.5, color: WrColors.muted),
                 ),
               ],

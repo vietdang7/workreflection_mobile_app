@@ -8,6 +8,7 @@ import '../../../core/theme/wr_theme.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../l10n/app_localizations.dart';
 import '../survey_providers.dart';
+import '../../../core/l10n/wr_tr.dart';
 
 class ActionPlanScreen extends ConsumerWidget {
   const ActionPlanScreen({super.key, required this.reportId});
@@ -134,7 +135,7 @@ class _PhaseCard extends StatelessWidget {
       children: [
         WrEyebrow(l10n.actionPlanDay(phase.day)),
         const SizedBox(height: 8),
-        Text(phase.titleVi, style: WrTextStyles.hMedium),
+        Text(trDb(phase.titleVi, phase.titleEn), style: WrTextStyles.hMedium),
         if (phase.reflectionQuestion != null) ...[
           const SizedBox(height: 8),
           Text(

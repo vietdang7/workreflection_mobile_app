@@ -492,9 +492,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // Đường dẫn phải khớp `kWrAiRevokePath` trong `wr_ai_disclosure.dart`:
       // bản công bố nói với người dùng chỗ này nằm ở đâu, và Apple đọc chính
       // câu đó khi duyệt Guideline 5.1.1(i).
-      GoRoute(
+      wrRoute(
         path: kWrAiRevokePath,
-        builder: (context, state) => const WrAiConsentScreen(),
+        builder: (context, state) => WrAiConsentScreen(),
       ),
       // Career Memory đầy đủ — tab Hành trình chỉ hiện vài mảnh gần nhất.
       wrRoute(

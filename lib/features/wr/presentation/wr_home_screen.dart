@@ -56,7 +56,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/wr_tr.dart';
-import '../../../core/logic/wr_reflect_v47.dart' show insightGist;
+import '../../../core/logic/wr_reflect_v47.dart'
+    show insightGist, relocaliseInsightByEpisodes;
 import '../../../core/logic/vn_date.dart';
 import '../../../core/logic/wr_display_name.dart';
 import '../../../core/logic/wr_home_surface.dart';
@@ -1218,7 +1219,13 @@ class _LatestInsightSection extends ConsumerWidget {
               //
               // `relocaliseInsight` chỉ đụng vào hai mảnh do APP viết. Phần
               // giữa là chữ người dùng tự gõ và ở nguyên ngôn ngữ họ đã viết.
-              '"${insightGist(relocaliseInsight(insight.content, ahaEnByVi: ahaEnByVi))}"',
+              //
+              // Câu Insight v47 thì do app dựng TRỌN, nên dựng lại được cả câu
+              // từ lượt nhìn lại sinh ra nó (`relocaliseInsightByEpisodes`).
+              '"${insightGist(relocaliseInsight(
+                relocaliseInsightByEpisodes(insight.content, episodes: ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [], situations: ref.watch(wrSituationsProvider).valueOrNull ?? const [], stories: stories),
+                ahaEnByVi: ahaEnByVi,
+              ))}"',
               // `.muted.serif` italic 13.5px của mockup — cùng giọng với thẻ
               // "Hệ thống nhận ra", vì cả hai đều là câu trích về người dùng.
               style: WrText.serifQuote(fontSize: 15, color: WrColors.navy),

@@ -26,6 +26,7 @@ import '../../../core/widgets/eyebrow.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../profile/profile_providers.dart';
 import '../roadmap_providers.dart';
+import '../../../core/l10n/wr_tr.dart';
 
 // ---------------------------------------------------------------------------
 // Constants — mirror LAYERS / DAYS from web
@@ -1120,7 +1121,7 @@ class _ActionRow extends StatelessWidget {
                 GestureDetector(
                   onTap: () => onToggle(!isCompleted),
                   child: Text(
-                    action.titleVi,
+                    trDb(action.titleVi, action.titleEn),
                     // Xong rồi thì dấu tick nói đủ, không gạch ngang chữ
                     // (yêu cầu 05/08).
                     style: WrTextStyles.hMedium.copyWith(
@@ -1132,7 +1133,7 @@ class _ActionRow extends StatelessWidget {
                 if (action.descriptionVi.isNotEmpty) ...[
                   const SizedBox(height: 3),
                   Text(
-                    action.descriptionVi,
+                    trDb(action.descriptionVi, action.descriptionEn),
                     style: WrTextStyles.body.copyWith(
                       fontSize: 13.5,
                       color: WrColors.muted,
@@ -1774,7 +1775,7 @@ class _ActivityLog extends StatelessWidget {
         if (actionToggleState[action.id] ?? false) {
           entries.add(
             _ActivityEntry(
-              content: action.titleVi,
+              content: trDb(action.titleVi, action.titleEn),
               layer: action.layer,
               date: progressData.completedActionDates[action.id],
             ),

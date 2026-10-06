@@ -388,7 +388,7 @@ class _Field extends StatelessWidget {
               border: Border(left: BorderSide(color: WrColors.line, width: 2)),
             ),
             child: WrParagraph(
-              'VD: ${field.example!}',
+              tr('VD: ${field.example!}', 'e.g. ${field.example!}'),
               style: const TextStyle(
                 fontSize: 13,
                 fontStyle: FontStyle.italic,

@@ -255,6 +255,7 @@ class WrSituation {
   static const WrSituation customOption = WrSituation(
     code: 'other',
     text: 'Điều khác, để tôi tự mô tả',
+    textEn: 'Something else, let me describe it',
     scaDimension: ScaDimension.pSteady,
     wave: 1,
     custom: true,

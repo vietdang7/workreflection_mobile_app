@@ -18,6 +18,9 @@
 
 import '../l10n/wr_tr.dart';
 import '../models/checkin.dart';
+import '../models/wr_content.dart';
+import '../models/wr_episode.dart';
+import 'wr_situation_picker.dart' show resolveStoryFor;
 
 /// Số bước của luồng v47.
 const int kReflectV47Steps = 4;
@@ -276,6 +279,93 @@ String insightGist(String text) {
     if (rest.isNotEmpty) return rest;
   }
   return t.replaceAll(RegExp(r'\s*\n+\s*'), ' ');
+}
+
+/// Câu Insight [saved] của lượt [episode], theo ngôn ngữ ĐANG bật.
+///
+/// Bấm "Ừ, tôi cũng thấy vậy" là lưu nguyên câu [reflectionAhaFor] dựng ra,
+/// bằng ngôn ngữ lúc bấm, vào `draft_meaning` và `wr_reflection_insights`. Đổi
+/// ngôn ngữ sau đó thì Home, Phát triển, Hành trình hiện một câu tiếng Anh giữa
+/// giao diện tiếng Việt (và ngược lại).
+///
+/// Câu đó hoàn toàn do app dựng từ tình huống + câu kể, nên dựng lại được: tính
+/// [reflectionAhaFor] cho cả hai ngôn ngữ từ đúng dữ liệu của lượt đó; [saved]
+/// khớp NGUYÊN VĂN một trong hai thì trả bản đang bật. Không khớp (người dùng
+/// bấm "Chưa đúng, để tôi nói lại" và tự viết) thì giữ nguyên chữ của họ.
+String relocaliseEpisodeInsight(
+  String saved, {
+  required ReflectionEpisode episode,
+  required List<WrSituation> situations,
+  required List<WrStory> stories,
+}) =>
+    rebuildEpisodeInsight(
+      saved,
+      episode: episode,
+      situations: situations,
+      stories: stories,
+    ) ??
+    saved;
+
+/// Như [relocaliseEpisodeInsight] nhưng trả null khi [saved] không phải câu
+/// app dựng (tức là chữ người dùng tự viết).
+String? rebuildEpisodeInsight(
+  String saved, {
+  required ReflectionEpisode episode,
+  required List<WrSituation> situations,
+  required List<WrStory> stories,
+}) {
+  final s = saved.trim();
+  if (s.isEmpty) return null;
+  final code = episode.situationCode;
+  WrSituation? situation;
+  if (code != null) {
+    for (final x in situations) {
+      if (x.code == code) situation = x;
+    }
+  }
+  final story = situation == null ? null : resolveStoryFor(situation, stories);
+
+  // Getter `text` / `ahaMessage` đọc `wrEnglish` lúc gọi, nên dựng trong hàm.
+  String build() => reflectionAhaFor(
+    code: code,
+    title: situation?.text ?? episode.notes[ReflectionPattern.notice.dbValue],
+    detail: episode.notes[ReflectionPattern.explore.dbValue],
+    situationAha: story?.ahaMessage,
+  );
+
+  final current = build();
+  if (s == current.trim()) return current;
+  final was = wrEnglish;
+  wrEnglish = !was;
+  final String other;
+  try {
+    other = build();
+  } finally {
+    wrEnglish = was;
+  }
+  return s == other.trim() ? current : null;
+}
+
+/// Như [relocaliseEpisodeInsight] cho một câu Insight không mang theo lượt
+/// nhìn lại của nó (`wr_reflection_insights` không có `episode_id`): tìm lượt
+/// có `draft_meaning` trùng nguyên văn. Không tìm thấy thì giữ nguyên.
+String relocaliseInsightByEpisodes(
+  String saved, {
+  required List<ReflectionEpisode> episodes,
+  required List<WrSituation> situations,
+  required List<WrStory> stories,
+}) {
+  final s = saved.trim();
+  for (final e in episodes) {
+    if (e.draftMeaning?.trim() != s) continue;
+    return relocaliseEpisodeInsight(
+      saved,
+      episode: e,
+      situations: situations,
+      stories: stories,
+    );
+  }
+  return saved;
 }
 
 // ---------------------------------------------------------------------------

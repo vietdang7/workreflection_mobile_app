@@ -1,5 +1,6 @@
 import '../../../core/l10n/wr_tr.dart';
-import '../../../core/logic/wr_reflect_v47.dart' show insightGist;
+import '../../../core/logic/wr_reflect_v47.dart'
+    show insightGist, relocaliseEpisodeInsight;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -918,6 +919,17 @@ class _BridgeCard extends ConsumerWidget {
     // Nhánh "Điều khác" không có mã tình huống: vẫn nhắc lại điều đã viết,
     // chỉ bỏ tên tình huống.
     final has = latest != null;
+    // Câu Insight lưu bằng ngôn ngữ lúc bấm giữ; dựng lại theo ngôn ngữ đang bật.
+    final gist = latest == null
+        ? ''
+        : insightGist(
+            relocaliseEpisodeInsight(
+              latest.draftMeaning!,
+              episode: latest,
+              situations: situations,
+              stories: ref.watch(wrStoriesProvider).valueOrNull ?? const [],
+            ),
+          );
     return Container(
       key: const Key('wr_growth_bridge'),
       padding: WrCard.kPadding,
@@ -951,18 +963,13 @@ class _BridgeCard extends ConsumerWidget {
                       style: const TextStyle(fontWeight: FontWeight.w700),
                     ),
                     TextSpan(
-                      text: tr(
-                        ', bạn nhận ra: ${insightGist(latest.draftMeaning!)}',
-                        ', you noticed: ${insightGist(latest.draftMeaning!)}',
-                      ),
+                      text: tr(', bạn nhận ra: $gist', ', you noticed: $gist'),
                     ),
                   ] else
                     TextSpan(
                       text: tr(
-                        'Lần gần nhất bạn nhìn lại, bạn nhận ra: '
-                            '${insightGist(latest.draftMeaning!)}',
-                        'The last time you looked back, you noticed: '
-                            '${insightGist(latest.draftMeaning!)}',
+                        'Lần gần nhất bạn nhìn lại, bạn nhận ra: $gist',
+                        'The last time you looked back, you noticed: $gist',
                       ),
                     ),
                 ],

@@ -20,6 +20,9 @@ import '../../../core/logic/wr_dominant_need.dart';
 import '../../../core/logic/wr_reflect_flow.dart';
 import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/logic/wr_practice_v47.dart';
+import '../../../core/logic/wr_reflect_v47.dart' show rebuildEpisodeInsight;
+import '../../../core/logic/wr_skill_formation.dart'
+    show kPracticeMaintainedBehavior;
 import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_episode.dart';
 import '../../../core/models/wr_intelligence.dart';
@@ -159,6 +162,9 @@ List<JourneyEntry> buildJourneyEntries({
   // Tên chủ đề thực hành theo ngôn ngữ đang bật, theo `theme_id` — cho Cột mốc
   // "Lần đầu thử một cách khác: …", vốn chỉ lưu tên tiếng Việt.
   Map<String, String> themeTitles = const {},
+  // Để dựng lại câu Insight v47 đã lưu theo ngôn ngữ đang bật
+  // (`rebuildEpisodeInsight`).
+  List<WrStory> stories = const [],
 }) {
   final entries = <JourneyEntry>[];
 
@@ -200,6 +206,16 @@ List<JourneyEntry> buildJourneyEntries({
         // story (đọc lại theo ngôn ngữ đang bật). Rơi về `draft_meaning` khi
         // Episode không có ghi chú lẫn story — dữ liệu cũ trước lúc tách notes.
         subtitle:
+            // Câu Insight v47 do app dựng trọn: dựng lại đúng câu người dùng
+            // đã giữ, theo ngôn ngữ đang bật.
+            (e.draftMeaning == null
+                ? null
+                : rebuildEpisodeInsight(
+                    e.draftMeaning!,
+                    episode: e,
+                    situations: situations,
+                    stories: stories,
+                  )) ??
             _episodeExcerpt(e, ahaByCode[e.situationCode]) ??
             situation ??
             e.humanMoment.label,
@@ -305,6 +321,7 @@ List<JourneyEntry> buildJourneyEntries({
     final isPracticeText =
         ev.behavior == 'practice_step_done' ||
         ev.behavior == 'practice_theme_done' ||
+        ev.behavior == kPracticeMaintainedBehavior ||
         ev.behavior == kPracticeStepNoteBehavior;
     final shownText = hasText && isPracticeText
         ? localizeFrozenPracticeText(text, practiceLabels)
@@ -668,6 +685,7 @@ List<JourneyEntry> watchJourneyEntries(WidgetRef ref) {
     },
     practiceLabels: ref.watch(wrPracticeLabelMapProvider),
     situations: situations,
+    stories: stories,
     themeTitles: {
       for (final t
           in ref.watch(practiceThemesProvider).valueOrNull ??

@@ -18,6 +18,7 @@ import '../../../core/widgets/progress_track.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../profile/profile_providers.dart';
 import '../survey_providers.dart';
+import '../../../core/l10n/wr_tr.dart';
 
 // ---------------------------------------------------------------------------
 // TTS playback provider (per-screen, auto-disposed)
@@ -729,7 +730,7 @@ class _LikertPills extends StatelessWidget {
                 ),
               ),
               child: Text(
-                opt.label,
+                trDb(opt.label, opt.labelEn),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16.5,

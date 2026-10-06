@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../../features/wr/iap_providers.dart';
+import '../l10n/wr_tr.dart';
 import '../logic/wr_iap_renewal.dart';
 import '../theme/wr_colors.dart';
 
@@ -76,9 +77,9 @@ class WrRenewalNoticeCard extends ConsumerWidget {
             GestureDetector(
               key: const Key('wr_renewal_notice_manage'),
               onTap: () => _openManageSubscriptions(context),
-              child: const Text(
-                'Quản lý gói đăng ký',
-                style: TextStyle(
+              child: Text(
+                tr('Quản lý gói đăng ký', 'Manage subscription'),
+                style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                   color: WrColors.pillTealText,
@@ -105,10 +106,14 @@ Future<void> _openManageSubscriptions(BuildContext context) async {
   }
   if (!opened && context.mounted) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Text(
-          'Không mở được trang quản lý gói. Bạn vào Cài đặt → tên bạn → Thuê '
-          'bao nhé.',
+          tr(
+            'Không mở được trang quản lý gói. Bạn vào Cài đặt → tên bạn → Thuê '
+                'bao nhé.',
+            'Could not open subscription management. Go to Settings → your '
+                'name → Subscriptions.',
+          ),
         ),
       ),
     );

@@ -211,7 +211,9 @@ function toSituation(row, english) {
     ...(row.custom ? { custom: true } : {}),
     code: row.id,
     text: editorialTitle(row),
-    text_en: english?.title ?? null,
+    text_en:
+      english?.title ??
+      (row.custom ? 'Something else, let me describe it' : null),
     sca_dimension: compatibilityDimension(row),
     human_need: databaseNeed(row),
     wave: compatibilityWave(row),

@@ -31,6 +31,8 @@
 //
 // Pure Dart, không phụ thuộc Flutter → test được trực tiếp.
 
+import '../l10n/wr_tr.dart';
+
 /// Bundle id của bản iOS. Phải khớp `PRODUCT_BUNDLE_IDENTIFIER` trong
 /// `ios/Runner.xcodeproj/project.pbxproj`.
 ///
@@ -81,18 +83,27 @@ class WrIapProduct {
 ///
 /// Gói năm đứng trước và là gói chọn sẵn — giống thứ tự `display_order` của
 /// `cc_products` (90 trước 91).
-const List<WrIapProduct> kWrIapProducts = [
+///
+/// Getter chứ không phải `const`: [WrIapProduct.title] và [WrIapProduct.blurb]
+/// đi qua `tr()`, giữ trong hằng thì đóng băng ở ngôn ngữ lúc đọc lần đầu.
+List<WrIapProduct> get kWrIapProducts => [
   WrIapProduct(
     id: kIapYearlyProductId,
     durationDays: 365,
-    title: 'Premium 1 năm',
-    blurb: 'Mở toàn bộ phần trả phí trong một năm.',
+    title: tr('Premium 1 năm', 'Premium 1 year'),
+    blurb: tr(
+      'Mở toàn bộ phần trả phí trong một năm.',
+      'Unlocks every paid feature for one year.',
+    ),
   ),
   WrIapProduct(
     id: kIapMonthlyProductId,
     durationDays: 30,
-    title: 'Premium 1 tháng',
-    blurb: 'Dùng thử một tháng trước khi quyết định.',
+    title: tr('Premium 1 tháng', 'Premium 1 month'),
+    blurb: tr(
+      'Dùng thử một tháng trước khi quyết định.',
+      'Try it for a month before you decide.',
+    ),
   ),
 ];
 
