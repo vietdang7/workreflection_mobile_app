@@ -344,87 +344,94 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
         // Giao diện mẫu Sprint 2: màn này liệt kê CHỦ ĐỀ, không liệt kê bước.
         // Mỗi thẻ nói đủ ba điều — chủ đề nào, đang ở giai đoạn nào, còn mấy
         // bước — rồi bấm vào mới mở chuỗi bước ở màn riêng.
+        // ── Khối thực hành hợp nhất: Chủ đề & Việc bạn tự đặt ──────────────
         SliverToBoxAdapter(
           child: Padding(
             padding: const EdgeInsets.fromLTRB(22, 0, 22, 20),
-            child: enrolledCards.isEmpty
-                ? _buildEmptyThemeCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (enrolledCards.isEmpty) ...[
+                  _buildEmptyThemeCard(
                     context,
                     eyebrow: tr('TRỌNG TÂM HIỆN TẠI', 'YOUR CURRENT FOCUS'),
                     hasAnyTheme: themes.isNotEmpty,
                     hasCandidates: unenrolledThemes.isNotEmpty,
                     reflectionCount: reflectionCount,
-                  )
-                : Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                  ),
+                ] else ...[
+                  Row(
                     children: [
                       WrEyebrow(tr('CHỦ ĐỀ CỦA BẠN', 'YOUR THEMES')),
-                      const SizedBox(height: 12),
-                      for (final pair in visibleCards)
-                        WrPracticeThemeCard(
-                          key: Key('wr_growth_theme_card_${pair.$1.themeId}'),
-                          theme: pair.$1,
-                          enrollment: pair.$2,
-                        ),
-                      if (hiddenThemeCount > 0)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 4),
-                          child: WrActionLink(
-                            key: const Key('wr_growth_themes_more'),
-                            label: _showAllThemes
-                                ? tr('Thu gọn', 'Show less')
-                                : tr(
-                                    'Xem thêm $hiddenThemeCount chủ đề',
-                                    'See $hiddenThemeCount more themes',
-                                  ),
-                            onTap: () => setState(
-                              () => _showAllThemes = !_showAllThemes,
+                      const Spacer(),
+                      if (activeCount > 0)
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
+                          decoration: BoxDecoration(
+                            color: WrColors.navy.withValues(alpha: 0.05),
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          child: Text(
+                            '$activeCount/${entitlement.maxActivePracticeThemes ?? 3}',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              fontWeight: FontWeight.w700,
+                              color: WrColors.navy,
                             ),
                           ),
                         ),
-                      // KHÔNG có khối mời thêm chủ đề ở đây (khách 2026-08-04).
-                      // Đã theo chủ đề rồi thì màn này chỉ nói việc đang làm.
-                      // Chủ đề mới là việc của phần mềm: nó tự thêm khi đã tổng
-                      // hợp đủ dữ liệu người dùng, không hỏi han gì thêm.
-                      //
-                      // Đã thử hai bản khác và khách bác cả hai: dòng dẫn sang
-                      // thư viện chủ đề (danh sách trần, không ai biết dựa vào
-                      // đâu mà chọn), rồi thẻ "CHỦ ĐỀ TIẾP THEO CHO BẠN" (vẫn
-                      // bắt người dùng bấm để nhận thứ đáng lẽ tự đến).
-                      //
-                      // "VIỆC BẠN TỰ ĐẶT" (01/10/2026) nằm ở sliver RIÊNG bên
-                      // dưới, không trong cột này: đó là việc người dùng tự gõ,
-                      // không phải chủ đề thư viện, không tính vào quota ngay
-                      // dưới đây và không đổi `practiceEnrollmentsProvider`.
-                      _QuotaCard(
-                        quota: entitlement.maxActivePracticeThemes,
-                        activeCount: activeCount,
-                      ),
                     ],
                   ),
-          ),
-        ),
+                  const SizedBox(height: 12),
+                  for (final pair in visibleCards)
+                    WrPracticeThemeCard(
+                      key: Key('wr_growth_theme_card_${pair.$1.themeId}'),
+                      theme: pair.$1,
+                      enrollment: pair.$2,
+                    ),
+                  if (hiddenThemeCount > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: WrActionLink(
+                        key: const Key('wr_growth_themes_more'),
+                        label: _showAllThemes
+                            ? tr('Thu gọn', 'Show less')
+                            : tr(
+                                'Xem thêm $hiddenThemeCount chủ đề',
+                                'See $hiddenThemeCount more themes',
+                              ),
+                        onTap: () => setState(
+                          () => _showAllThemes = !_showAllThemes,
+                        ),
+                      ),
+                    ),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2, bottom: 2),
+                    child: _QuotaCard(
+                      quota: entitlement.maxActivePracticeThemes,
+                      activeCount: activeCount,
+                    ),
+                  ),
+                ],
 
-        // ── Việc bạn tự đặt (họp khách 01/10/2026) ─────────────────────────
-        //
-        // Sliver riêng, hiện cả khi chưa theo chủ đề nào. Đặt SAU thẻ quota
-        // chứ không chen giữa danh sách chủ đề và thẻ quota: đứng sát câu
-        // "tối đa 2 chủ đề" thì việc tự đặt dễ bị đọc thành một chủ đề nữa.
-        const SliverToBoxAdapter(
-          child: Padding(
-            padding: EdgeInsets.fromLTRB(22, 0, 22, 20),
-            child: WrUserActionsSection(),
+                // ── Phần Việc bạn tự đặt nối tiếp liền mạch ──
+                const SizedBox(height: 20),
+                const WrUserActionsSection(),
+              ],
+            ),
           ),
         ),
 
         // ── Divider ──────────────────────────────────────────────────────
-        if (enrolledCards.isNotEmpty)
-          const SliverToBoxAdapter(
-            child: Padding(
-              padding: EdgeInsets.fromLTRB(22, 4, 22, 16),
-              child: WrSectionDivider(),
-            ),
+        const SliverToBoxAdapter(
+          child: Padding(
+            padding: EdgeInsets.fromLTRB(22, 4, 22, 16),
+            child: WrSectionDivider(),
           ),
+        ),
 
         // ── Cơ hội phát triển — workshop gần nhất sắp diễn ra ────────────
         const _OpportunitySliver(),
@@ -813,38 +820,63 @@ class _QuotaCard extends StatelessWidget {
       onTap: () => context.push('/wr/paywall?trigger=practice_limit'),
       child: Container(
         width: double.infinity,
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(14),
+          color: WrColors.white,
+          borderRadius: BorderRadius.circular(16),
           border: Border.all(
-            color: WrColors.navy.withValues(alpha: 0.16),
+            color: WrColors.navy.withValues(alpha: 0.1),
             style: BorderStyle.solid,
           ),
         ),
-        child: Column(
+        child: Row(
           children: [
-            Text(
-              tr(
-                'Bản miễn phí mở tối đa $max chủ đề cùng lúc '
-                    '(đang mở $activeCount/$max).',
-                'The free version opens up to $max themes at once '
-                    '(you have $activeCount/$max open).',
+            Container(
+              padding: const EdgeInsets.all(7),
+              decoration: BoxDecoration(
+                color: WrColors.coral.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
               ),
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14.5,
-                color: WrColors.muted,
-                height: 1.55,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              tr('Premium: không giới hạn', 'Premium: no limit'),
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
+              child: const Icon(
+                Icons.auto_awesome,
+                size: 15,
                 color: WrColors.coral,
               ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    tr(
+                      'Bản miễn phí mở tối đa $max chủ đề cùng lúc '
+                          '(đang mở $activeCount/$max).',
+                      'The free version opens up to $max themes at once '
+                          '(you have $activeCount/$max open).',
+                    ),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: WrColors.navy,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    tr('Premium: không giới hạn', 'Premium: no limit'),
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: WrColors.coral,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right,
+              size: 18,
+              color: WrColors.muted,
             ),
           ],
         ),

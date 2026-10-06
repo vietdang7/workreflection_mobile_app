@@ -303,6 +303,7 @@ void main() {
     await _settleOpen(tester);
     expect(find.byType(WrIntroVideoSheet), findsNothing);
 
+    await tester.ensureVisible(find.byKey(const Key('intro_video_card')));
     await tester.tap(find.byKey(const Key('intro_video_card')));
     await _settleOpen(tester);
     expect(find.byType(WrIntroVideoSheet), findsOneWidget);
@@ -363,6 +364,7 @@ void main() {
       ),
     );
     await tester.pump();
+    await tester.ensureVisible(find.byKey(const Key('intro_video_card')));
     await tester.tap(find.byKey(const Key('intro_video_card')));
     await _settleOpen(tester);
     expect(find.byType(WrIntroVideoSheet), findsOneWidget);

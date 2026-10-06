@@ -146,6 +146,9 @@ String? computeRedirect({
     return null;
   }
 
+  // Cho phép xem màn hình Onboarding (Landing Board) và Hướng dẫn sử dụng mà không bắt buộc đăng nhập
+  if (location == '/profile/guide' || location == '/onboarding') return null;
+
   // No session:
   if (!seenOnboarding) {
     // Must go through onboarding first.

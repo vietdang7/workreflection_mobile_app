@@ -477,4 +477,41 @@ void main() {
     expect(eventTypeLabel(event), 'TỰ RÈN LUYỆN');
     expect(eventColor(event), WrColors.teal);
   });
+
+  testWidgets(
+    'khối thực hành hiển thị hợp nhất cả chủ đề và việc tự đặt cùng lúc',
+    (tester) async {
+      final repo = FakeWrUserActionRepository()
+        ..seed([
+          WrUserAction(
+            id: 'a1',
+            title: 'Việc tự đặt 1',
+            createdAt: DateTime(2026),
+          ),
+        ]);
+      final intel = FakeWrIntelligenceRepository()
+        ..seedPracticeThemes([_theme('t1', 'Chủ đề A')])
+        ..seedEnrollments([
+          PracticeEnrollment(
+            userId: 'u1',
+            themeId: 't1',
+            startedAt: DateTime(2026),
+          ),
+        ]);
+
+      await _pump(tester, _wrap(actions: repo, intel: intel));
+
+      // Không có thanh tab lọc
+      expect(find.byKey(const Key('wr_growth_tab_all')), findsNothing);
+      expect(find.byKey(const Key('wr_growth_tab_themes')), findsNothing);
+      expect(find.byKey(const Key('wr_growth_tab_actions')), findsNothing);
+
+      // Cả 2 cùng hiển thị trên màn hình
+      expect(find.text('CHỦ ĐỀ CỦA BẠN'), findsOneWidget);
+      expect(find.byKey(const Key('wr_growth_theme_card_t1')), findsOneWidget);
+      expect(find.text('VIỆC BẠN TỰ ĐẶT'), findsOneWidget);
+      expect(find.byKey(_card('a1')), findsOneWidget);
+      expect(find.byKey(_kInput), findsOneWidget);
+    },
+  );
 }

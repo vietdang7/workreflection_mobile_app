@@ -192,12 +192,35 @@ class _WrUserActionsSectionState extends ConsumerState<WrUserActionsSection> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        WrEyebrow(tr('VIỆC BẠN TỰ ĐẶT', 'YOUR OWN ACTIONS')),
+        Row(
+          children: [
+            WrEyebrow(tr('VIỆC BẠN TỰ ĐẶT', 'YOUR OWN ACTIONS')),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 7,
+                vertical: 2,
+              ),
+              decoration: BoxDecoration(
+                color: WrColors.teal.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                tr('5 ngày', '5 days'),
+                style: const TextStyle(
+                  fontSize: 10.5,
+                  fontWeight: FontWeight.w700,
+                  color: WrColors.teal,
+                ),
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: 6),
         Text(
           tr(
-            'Việc nhỏ bạn tự chọn để tập. Không tính vào số chủ đề.',
-            'Small things you chose to practise. They do not count as themes.',
+            'Mục tiêu nhỏ 5 ngày bạn tự đặt, thực hành song song cùng chủ đề mỗi ngày.',
+            '5-day micro-habits you set yourself, practiced daily alongside your themes.',
           ),
           style: const TextStyle(
             fontSize: 13.5,
@@ -216,7 +239,7 @@ class _WrUserActionsSectionState extends ConsumerState<WrUserActionsSection> {
             onDelete: () => _delete(a),
           ),
         Container(
-          padding: const EdgeInsets.fromLTRB(16, 4, 8, 4),
+          padding: const EdgeInsets.fromLTRB(12, 4, 8, 4),
           decoration: BoxDecoration(
             color: WrColors.white,
             borderRadius: BorderRadius.circular(16),
@@ -224,6 +247,14 @@ class _WrUserActionsSectionState extends ConsumerState<WrUserActionsSection> {
           ),
           child: Row(
             children: [
+              const Padding(
+                padding: EdgeInsets.only(left: 4, right: 8),
+                child: Icon(
+                  Icons.edit_note_rounded,
+                  size: 22,
+                  color: WrColors.coral,
+                ),
+              ),
               Expanded(
                 child: TextField(
                   key: const Key('wr_growth_user_action_input'),

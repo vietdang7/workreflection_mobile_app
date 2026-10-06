@@ -211,7 +211,7 @@ class _IntroVideoCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    // Badge thời lượng ở góc trên
+                    // Badge video ở góc trên
                     Positioned(
                       top: 12,
                       right: 12,
@@ -231,16 +231,17 @@ class _IntroVideoCard extends StatelessWidget {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             const Icon(
-                              Icons.access_time_rounded,
-                              size: 12,
-                              color: WrColors.white,
+                              Icons.play_circle_fill_rounded,
+                              size: 13,
+                              color: WrColors.coral,
                             ),
                             const SizedBox(width: 4),
                             Text(
-                              tr('1 phút', '1 min'),
+                              tr('HƯỚNG DẪN', 'GUIDE'),
                               style: const TextStyle(
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: 0.5,
                                 color: WrColors.white,
                               ),
                             ),
@@ -283,7 +284,10 @@ class _IntroVideoCard extends StatelessWidget {
                           ),
                           const SizedBox(height: 2),
                           Text(
-                            tr('Khoảng 1 phút', 'About 1 minute'),
+                            tr(
+                              'Khám phá tổng quan WorkReflection',
+                              'Overview of WorkReflection',
+                            ),
                             style: const TextStyle(
                               fontSize: 13,
                               color: WrColors.text3,
