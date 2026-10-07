@@ -10,7 +10,7 @@
 //      sau Premium là "thu phí người dùng để họ được biết chính nỗ lực của
 //      mình".
 //   2. THÓI QUEN ĐANG RÈN LUYỆN — bộ đếm, còn bao xa, và hành động tiếp theo
-//      (ba bước làm quen, hay nút duy trì).
+//      (bốn bước làm quen, hay nút duy trì).
 //   3. MỨC ĐỘ TƯƠNG THÍCH VỚI CÔNG VIỆC — tổng hợp và diễn giải, PREMIUM.
 
 import 'package:flutter/material.dart';
@@ -184,12 +184,14 @@ class _HowItWorks extends StatelessWidget {
           const SizedBox(height: 8),
           WrParagraph(
             tr(
-              'Mỗi chủ đề bắt đầu bằng ba bước làm quen: Nhận diện, Thử nghiệm, '
-                  'Chuyển hoá. Xong ba bước, chủ đề chuyển sang giai đoạn duy trì, '
+              'Mỗi chủ đề bắt đầu bằng bốn bước làm quen: Nhận diện, Phần của '
+                  'tôi, Chọn một cách, Mang về. Xong bốn bước, chủ đề chuyển sang '
+                  'giai đoạn duy trì, '
                   'mỗi ngày bạn thực hành lại, bấm ghi nhận một lần. Đủ $threshold '
                   'lần, WorkReflection ghi nó thành kỹ năng của bạn.',
-              'Every theme starts with three getting-familiar steps: Notice, Try, '
-                  'Shift. After those three, the theme moves into upkeep: practise '
+              'Every theme starts with four getting-familiar steps: Notice, Your '
+                  'part, Pick one way, Take it with you. After those four, the theme '
+                  'moves into upkeep: practise '
                   'it again each day and tap to record it once. Reach $threshold and '
                   'WorkReflection records it as a skill of yours.',
             ),
@@ -363,8 +365,8 @@ class _OnboardingHint extends StatelessWidget {
           Expanded(
             child: Text(
               tr(
-                'Đi hết ba bước làm quen của chủ đề này trước đã.',
-                'Finish the three getting-familiar steps of this theme first.',
+                'Đi hết bốn bước làm quen của chủ đề này trước đã.',
+                'Finish the four getting-familiar steps of this theme first.',
               ),
               style: TextStyle(
                 fontSize: 14.5,

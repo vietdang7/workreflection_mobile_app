@@ -396,7 +396,7 @@ void main() {
       expect(find.byKey(const Key('wr_skill_progress_t1')), findsNothing);
       expect(find.textContaining('lần thực hành'), findsNothing);
       expect(
-        find.text('Đi hết ba bước làm quen của chủ đề này trước đã.'),
+        find.text('Đi hết bốn bước làm quen của chủ đề này trước đã.'),
         findsOneWidget,
       );
     });

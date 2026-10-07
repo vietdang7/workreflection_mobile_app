@@ -35,7 +35,7 @@ class WrProfileAvatar extends ConsumerWidget {
   /// Tên hiển thị để lấy chữ cái đầu.
   ///
   /// Bỏ trống — mặc định ở cả bốn màn tab — thì widget tự đọc hồ sơ qua
-  /// [mobileProfileProvider]. Trước 2026-08-22 tham số này bắt buộc phải được
+  /// [greetingNameProvider]. Trước 2026-08-22 tham số này bắt buộc phải được
   /// truyền vào, và chỉ màn Hôm nay truyền: ba màn còn lại gọi
   /// `const WrProfileAvatar()` nên luôn hiện 'WR' trong khi Hôm nay hiện chữ
   /// cái đầu của người dùng. Cùng một lối vào, cùng một góc màn, hai mặt chữ
@@ -48,10 +48,11 @@ class WrProfileAvatar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final name =
-        displayName ??
-        ref.watch(mobileProfileProvider).valueOrNull?.displayName ??
-        '';
+    // Đọc cùng `greetingNameProvider` với lời chào ở Hôm nay. Trước 07/10 nhánh
+    // này đọc thẳng `wr_mobile_profiles.display_name`, còn Hôm nay đọc tên qua
+    // provider (ưu tiên `cc_profiles.full_name`) — nên cùng một tài khoản hiện
+    // "TD" ở Hôm nay mà chỉ "T" ở ba tab còn lại.
+    final name = displayName ?? ref.watch(greetingNameProvider) ?? '';
 
     return Semantics(
       label: tr('Tôi', 'Me'),
