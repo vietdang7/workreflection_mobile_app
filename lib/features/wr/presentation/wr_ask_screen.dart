@@ -370,6 +370,10 @@ class _Bubble extends StatelessWidget {
                   height: 1.65,
                   color: isUser ? WrColors.white : WrColors.dark,
                 ),
+                // Bong bóng chỉ rộng 78% màn: căn đều ở đây giãn chữ thành khe
+                // hở, rõ nhất ở tiếng Anh với cỡ chữ hệ thống lớn ("question
+                // feel safe" mỗi từ cách nhau cả ô, máy thật 07/10).
+                textAlign: TextAlign.start,
               ),
             ),
           ),
