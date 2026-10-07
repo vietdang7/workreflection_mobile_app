@@ -1185,6 +1185,27 @@ void main() {
       expect(find.byKey(const Key('wr_chat_action_calm')), findsOneWidget);
     });
 
+    testWidgets('mở lại cuộc trò chuyện: lời mời ở lượt cuối vẫn có nút', (
+      tester,
+    ) async {
+      // Người dùng gặp 09/09: nút không lưu vào DB, nên mở lại cuộc trò chuyện
+      // thì câu "thử một bài đọc ngắn" còn đó mà không có gì để bấm.
+      final chat = FakeWrChatRepository()
+        ..seedConversation('c1', const [
+          WrChatMessage(role: WrChatRole.user, content: 'khá là căng thẳng'),
+          WrChatMessage(
+            role: WrChatRole.assistant,
+            content:
+                'Bạn có muốn thử một bài đọc ngắn để thấy nhẹ lòng hơn lúc này không?',
+          ),
+        ]);
+
+      await _pump(tester, _wrap(const WrAskScreen(), chat: chat));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('wr_chat_action_calm')), findsOneWidget);
+    });
+
     testWidgets('lượt không có lời mời thì KHÔNG có nút', (tester) async {
       final chat = FakeWrChatRepository()..replyAction = null;
 

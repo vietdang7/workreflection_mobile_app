@@ -145,6 +145,63 @@ const REFLECT_INVITE_RE =
 const REFLECT_REFUSAL_RE =
   /(không|chưa) (thể |tự |được )?(ghi|lưu)|không có quyền (ghi|lưu)/i;
 
+// ── Bản tiếng Anh của năm mẫu trên ──────────────────────────────────────────
+//
+// Từ 09/2026 app có tiếng Anh, và khi đó model DỊCH các mẫu câu tiếng Việt của
+// prompt ("I have a short reading that might help…", "the button is right
+// below"). Năm mẫu ở trên chỉ biết tiếng Việt, nên ở tiếng Anh một lượt quên
+// thẻ là ra màn hình không có nút nào — đúng loại lỗi mà cả lớp này dựng lên để
+// chặn. Mỗi mẫu dưới đây giữ nguyên yêu cầu của bản tiếng Việt (động từ mời +
+// danh từ nội dung, v.v.), chỉ đổi từ vựng. `\b` để "trying to finish reading
+// the report" không khớp "try … reading".
+//
+// App đọc lại lịch sử chat cũng suy nút bằng đúng các mẫu này (bản Dart ở
+// `lib/core/logic/wr_chat_offer.dart`). Hai bên cùng chạy bộ ca trong
+// `offer_cases.json`, nên sửa một bên mà quên bên kia thì test đỏ.
+
+const RISK_SELF_LIMIT_EN_RE =
+  /\bnot an? (licensed |trained )?(therapist|psychologist|counsell?or|mental health (professional|expert))\b/i;
+
+const RISK_REDIRECT_EN_RE =
+  /\b(reach out to|talk to|speak (to|with)|contact|turn to)\b[^.?!]{0,90}\b(someone you trust|a friend|friends|family|a professional|a therapist|a counsell?or|a doctor)\b|\b(someone you trust|a friend|family|a professional|a therapist)\b[^.?!]{0,90}\b(right now|right away)\b/i;
+
+const CALM_OFFER_EN_RE =
+  /\b(want|would you like|like to|try|suggest|recommend|i have|there is|there's)\b[^.?!]{0,40}\b(short read|reading|article|audio|something (gentle|gentler|calming|lighter))\b|\bemotional content library\b/i;
+
+const REFLECT_POINTER_EN_RE =
+  /\b(button|tap)\b[^.?!]{0,50}\b(reflection|below|underneath)\b|\btap (it|that|the button|on it)\b|\bopen (the )?reflection\b/i;
+
+const REFLECT_INVITE_EN_RE =
+  /\b(want|would you like|like to|try)\b[^.?!]{0,60}\b(record|write|capture|save|note)\b[^.?!]{0,60}\breflection\b|\b(record|write|capture|save) (it|this|that) (down )?as an? (full )?reflection\b[^.?!]{0,40}\?/i;
+
+const REFLECT_REFUSAL_EN_RE =
+  /\b(can ?not|can't|cannot|unable to|not able to)\b[^.?!]{0,20}\b(record|save|write|log)\b/i;
+
+/// Nút mà CÂU CHỮ đang hứa, khi model không đặt thẻ.
+///
+/// Tách khỏi [shapeReply] để chạy riêng được trên bộ ca dùng chung với app.
+/// Thứ tự luật giữ nguyên như trước khi tách: nhánh tín hiệu đáng lo ngại
+/// quyết định trước, lời mời ghi lại rộng nhất nên quyết định sau cùng.
+export function inferAction(text: string): ChatAction | null {
+  if (
+    (RISK_SELF_LIMIT_RE.test(text) && RISK_REDIRECT_RE.test(text)) ||
+    (RISK_SELF_LIMIT_EN_RE.test(text) && RISK_REDIRECT_EN_RE.test(text))
+  ) {
+    return 'calm';
+  }
+  if (CALM_OFFER_RE.test(text) || CALM_OFFER_EN_RE.test(text)) return 'calm';
+  if (REFLECT_POINTER_RE.test(text) || REFLECT_POINTER_EN_RE.test(text)) {
+    return 'reflect';
+  }
+  if (
+    (REFLECT_INVITE_RE.test(text) && !REFLECT_REFUSAL_RE.test(text)) ||
+    (REFLECT_INVITE_EN_RE.test(text) && !REFLECT_REFUSAL_EN_RE.test(text))
+  ) {
+    return 'reflect';
+  }
+  return null;
+}
+
 /// Gỡ thẻ, lột Markdown, và áp luật an toàn.
 export function shapeReply(raw: string): ShapedReply {
   let action: ChatAction | null = null;
@@ -165,40 +222,11 @@ export function shapeReply(raw: string): ShapedReply {
   // ── Luật an toàn ────────────────────────────────────────────────────────
   //
   // Bước 3 của phần "Xử lý tín hiệu đáng lo ngại" buộc phải đề nghị Thư viện
-  // Nội dung Cảm xúc. Nếu model chạy đúng nhánh đó mà QUÊN đặt thẻ, ta tự đặt.
-  //
-  // Đây là chỗ duy nhất trong cả hệ thống ép một nút mà model không yêu cầu, và
-  // nó đáng: lượt này xảy ra đúng lúc người dùng đang tệ nhất, và thứ tệ nhất
-  // ta có thể làm là đề nghị giúp rồi không mở được gì.
-  if (
-    action === null &&
-    RISK_SELF_LIMIT_RE.test(text) && RISK_REDIRECT_RE.test(text)
-  ) {
-    action = 'calm';
-  }
-
-  // Cùng lý lẽ, cho những lượt nhẹ hơn: đã mời đọc gì đó cho dịu lại thì phải
-  // mở được. Đặt SAU luật trên để nhánh tín hiệu đáng lo ngại luôn quyết định.
-  if (action === null && CALM_OFFER_RE.test(text)) {
-    action = 'calm';
-  }
-
-  // Và nếu trợ lý đang chỉ vào cái nút mở luồng Reflection thì cái nút đó phải
-  // có thật. Đặt cuối cùng: hai luật trên nói về nội dung cảm xúc, luật này chỉ
-  // dọn nốt trường hợp trợ lý nhắc tới nút mà quên đặt thẻ.
-  if (action === null && REFLECT_POINTER_RE.test(text)) {
-    action = 'reflect';
-  }
-
-  // Và chính lời mời cũng phải mở được. Đặt CUỐI CÙNG, sau cả luật chỉ-vào-nút:
-  // hai luật trên nói về nội dung cảm xúc và về cái nút đã được nhắc tên, còn
-  // luật này rộng hơn nên để nó quyết định sau cùng.
-  if (
-    action === null &&
-    REFLECT_INVITE_RE.test(text) && !REFLECT_REFUSAL_RE.test(text)
-  ) {
-    action = 'reflect';
-  }
+  // Nội dung Cảm xúc; các lời mời nhẹ hơn và lời mời ghi lại cũng vậy: câu chữ
+  // đã hứa một nút thì nút phải có thật. Nếu model QUÊN đặt thẻ, ta tự đặt —
+  // chỗ duy nhất trong cả hệ thống ép một nút mà model không yêu cầu. Chi tiết
+  // từng luật ở các hằng phía trên, thứ tự ở [inferAction].
+  if (action === null) action = inferAction(text);
 
   return { text: text.trim(), action };
 }

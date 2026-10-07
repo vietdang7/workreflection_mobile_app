@@ -513,6 +513,10 @@ class _EmptyState extends StatelessWidget {
                 'something you want to understand about yourself. One line is enough.',
           ),
           style: TextStyle(fontSize: 15.5, color: WrColors.muted, height: 1.75),
+          // Câu phụ ngắn: căn đều làm giãn chữ thành khe hở. Bản tiếng Anh ở
+          // cỡ chữ hệ thống lớn chỉ còn hai ba từ một dòng, hở thấy rõ (máy
+          // thật 07/10).
+          textAlign: TextAlign.start,
         ),
         const SizedBox(height: 24),
         for (final (i, s) in starters.indexed)

@@ -9,6 +9,7 @@
 import { assertEquals } from 'jsr:@std/assert@1';
 import {
   conversationTitle,
+  inferAction,
   shapeReply,
   stripMarkdown,
 } from './reply_shaping.ts';
@@ -477,5 +478,33 @@ Deno.test('nhánh tín hiệu đáng lo ngại vẫn thắng luật lời-mời'
     'Mình không phải chuyên gia tâm lý. Hãy tìm đến một người thân bạn tin '
       + 'tưởng ngay bây giờ nhé. Bạn có muốn ghi lại thành một Reflection không?',
   );
+  assertEquals(r.action, 'calm');
+});
+
+// ---------------------------------------------------------------------------
+// Bộ ca dùng chung với app (offer_cases.json)
+// ---------------------------------------------------------------------------
+//
+// App đọc lại lịch sử chat và suy nút bằng bản Dart của cùng các mẫu
+// (`lib/core/logic/wr_chat_offer.dart`), test Dart chạy đúng file này. Sửa mẫu
+// một bên mà quên bên kia thì một trong hai bộ test đỏ.
+
+Deno.test('inferAction khớp mọi ca trong offer_cases.json', async () => {
+  const raw = await Deno.readTextFile(
+    new URL('./offer_cases.json', import.meta.url),
+  );
+  const { cases } = JSON.parse(raw) as {
+    cases: { expect: 'calm' | 'reflect' | null; text: string }[];
+  };
+  for (const c of cases) {
+    assertEquals(inferAction(c.text), c.expect, c.text);
+  }
+});
+
+Deno.test('câu mời tiếng Anh quên thẻ vẫn ra nút', () => {
+  const r = shapeReply(
+    'I have a short reading that might help you settle a little. Want to try it?',
+  );
+
   assertEquals(r.action, 'calm');
 });

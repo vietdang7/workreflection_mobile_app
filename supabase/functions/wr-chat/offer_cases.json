@@ -1,0 +1,24 @@
+{
+  "_note": "Bộ ca dùng chung cho inferAction (reply_shaping.ts) và inferChatAction (lib/core/logic/wr_chat_offer.dart). Hai bên phải cho cùng kết quả. expect: calm | reflect | null.",
+  "cases": [
+    { "expect": "calm", "text": "Nghe có vẻ bạn đang trải qua những ngày khá áp lực. Nếu muốn, bạn có thể thử một bài đọc ngắn để dịu lại một chút trước khi mình cùng nhìn kỹ hơn vào những gì đang diễn ra." },
+    { "expect": "calm", "text": "Xin lỗi bạn, mình đã sơ suất quên đặt nút mở bài đọc. Bạn có muốn thử một bài đọc ngắn để thấy nhẹ lòng hơn lúc này không?" },
+    { "expect": "calm", "text": "Nghe như dạo này khá nặng nề với bạn. Mình có một bài đọc ngắn có thể giúp bạn dịu lại một chút, muốn thử không?" },
+    { "expect": "calm", "text": "Có một bài đọc ngắn trong Thư viện Nội dung Cảm xúc, bạn xem khi nào tiện nhé." },
+    { "expect": "reflect", "text": "Được, nút mở luồng đang ở ngay dưới đây nhé." },
+    { "expect": "reflect", "text": "Cảm giác đó rất thật. Muốn ghi lại thành một Reflection đầy đủ để giữ lại không?" },
+    { "expect": null, "text": "Mình không tự ghi lại thành một Reflection thay bạn được, nhưng mình ở đây nếu bạn muốn kể tiếp." },
+    { "expect": null, "text": "Hôm trước bạn có nghe một bài, và bạn nói nó giúp được một chút." },
+
+    { "expect": "calm", "text": "It sounds like these days have been heavy for you. I have a short reading that might help you settle a little. Want to try it?" },
+    { "expect": "calm", "text": "Sorry, I forgot to add the button. Would you like to try a short reading to feel a bit lighter right now?" },
+    { "expect": "calm", "text": "There is a short read in the emotional content library you can open whenever you like." },
+    { "expect": "calm", "text": "If you want, I can suggest something gentle to read before we look at this more closely." },
+    { "expect": "reflect", "text": "Sure, the button to start is right below." },
+    { "expect": "reflect", "text": "That feeling is real. Want to record it as a full Reflection to keep it?" },
+    { "expect": "reflect", "text": "This seems to keep coming back. Would you like to capture this as a Reflection?" },
+    { "expect": null, "text": "I cannot record a Reflection for you, but I am here if you want to keep talking." },
+    { "expect": null, "text": "You mentioned you were trying to finish reading the report before the meeting." },
+    { "expect": null, "text": "What would make that question feel safe enough to ask?" }
+  ]
+}
