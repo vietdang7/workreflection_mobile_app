@@ -9,6 +9,7 @@ import 'package:workreflection_mobile/core/models/insight.dart';
 import 'package:workreflection_mobile/core/models/mobile_profile.dart';
 import 'package:workreflection_mobile/core/models/timeline_event.dart';
 import 'package:workreflection_mobile/features/auth/data/auth_repository.dart';
+import 'package:workreflection_mobile/features/auth/guest_session.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
 import 'package:workreflection_mobile/core/logic/wr_store_policy.dart';
 import 'package:workreflection_mobile/features/profile/presentation/profile_screen.dart';
@@ -36,13 +37,22 @@ class _FakeAuthRepository implements AuthRepository {
   }
 
   @override
+  Future<void> signInAnonymously() async {}
+
+  @override
+  Future<bool> attachEmail(String email, String password, String name) async =>
+      true;
+
+  @override
   Future<void> signIn(String e, String p) async {}
   @override
   Future<void> signUp(String e, String p, String n) async {}
   @override
   Future<void> signInWithGoogle() async {}
+  int signOutCalls = 0;
+
   @override
-  Future<void> signOut() async {}
+  Future<void> signOut() async => signOutCalls++;
   @override
   Future<void> resetPassword(String email) async {}
 
@@ -61,10 +71,12 @@ Widget _wrap(
   String? signedInEmail,
   FakeWrIntelligenceRepository? intel,
   WrStorePolicy? storePolicy,
+  bool guest = false,
 }) {
   return ProviderScope(
     overrides: [
       wrRepositoryProvider.overrideWithValue(repo),
+      isGuestProvider.overrideWith((ref) => guest),
       if (storePolicy != null)
         wrStorePolicyProvider.overrideWithValue(storePolicy),
       if (authRepo != null) authRepositoryProvider.overrideWithValue(authRepo),
@@ -925,6 +937,62 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byType(SnackBar), findsOneWidget);
+    });
+  });
+
+  group('Khách dùng thử', () {
+    Future<_FakeAuthRepository> pumpGuest(WidgetTester tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile());
+      final auth = _FakeAuthRepository();
+      await _pumpLarge(
+        tester,
+        _wrap(const ProfileScreen(), repo, authRepo: auth, guest: true),
+      );
+      return auth;
+    }
+
+    testWidgets('thấy thẻ lưu hành trình, không thấy Đổi mật khẩu', (
+      tester,
+    ) async {
+      await pumpGuest(tester);
+      expect(find.byKey(const Key('profile_guest_save_card')), findsOneWidget);
+      expect(
+        find.byKey(const Key('profile_change_password_btn')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('đăng xuất phải xác nhận; bấm Ở lại thì không đăng xuất', (
+      tester,
+    ) async {
+      final auth = await pumpGuest(tester);
+      final btn = find.byKey(const Key('profile_logout_btn'));
+      await tester.scrollUntilVisible(btn, 200);
+      await tester.tap(btn);
+      await tester.pumpAndSettle();
+      expect(find.text('Hành trình chưa được lưu'), findsOneWidget);
+
+      await tester.tap(find.text('Ở lại'));
+      await tester.pumpAndSettle();
+      expect(auth.signOutCalls, 0);
+
+      await tester.tap(btn);
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('profile_guest_logout_confirm')));
+      await tester.pumpAndSettle();
+      expect(auth.signOutCalls, 1);
+    });
+
+    testWidgets('tài khoản thật không thấy thẻ khách', (tester) async {
+      final repo = FakeWrRepository();
+      repo.seedProfile(_profile());
+      await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
+      expect(find.byKey(const Key('profile_guest_save_card')), findsNothing);
+      expect(
+        find.byKey(const Key('profile_change_password_btn')),
+        findsOneWidget,
+      );
     });
   });
 }

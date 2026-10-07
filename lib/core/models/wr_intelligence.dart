@@ -485,6 +485,10 @@ class PracticeTheme {
     this.formedLineEn,
     this.createdAt,
     this.retiredAt,
+    this.source = PracticeThemeSource.library,
+    this.ownerId,
+    this.intake,
+    this.mentorOptions = const [],
   }) : titleVi = title,
        descriptionVi = description,
        formedLineVi = formedLine;
@@ -523,8 +527,35 @@ class PracticeTheme {
 
   bool get isRetired => retiredAt != null;
 
+  /// Thư viện hay người dùng tự thêm (mockup v47, migration 20261006120000).
+  final PracticeThemeSource source;
+
+  /// Chủ nhân của chủ đề tự thêm. Null với chủ đề thư viện.
+  final String? ownerId;
+
+  /// Bốn câu của form "Bạn muốn tự thêm điều gì?". Null với chủ đề thư viện.
+  final PracticeIntake? intake;
+
+  /// Ba cách ở bước "Chọn một cách", mỗi cách có "Phù hợp" và "Đánh đổi".
+  /// Rỗng thì màn chủ đề dùng bộ chung (`fallbackMentorOptions`).
+  final List<PracticeMentorOption> mentorOptions;
+
+  bool get isUserAdded => source == PracticeThemeSource.user;
+
+  /// Dòng ghi cho bảng khi người dùng tự thêm chủ đề.
+  Map<String, dynamic> toUserInsert() => {
+    'theme_id': themeId,
+    'title': titleVi,
+    'source': source.dbValue,
+    'owner_id': ownerId,
+    if (intake != null) 'intake': intake!.toJson(),
+    'mentor_options': [for (final o in mentorOptions) o.toJson()],
+  };
+
   factory PracticeTheme.fromJson(Map<String, dynamic> json) {
     final rawDim = json['sca_dimension'] as String?;
+    final rawIntake = json['intake'];
+    final rawOptions = json['mentor_options'];
     return PracticeTheme(
       themeId: json['theme_id'] as String,
       title: json['title'] as String,
@@ -540,8 +571,106 @@ class PracticeTheme {
       retiredAt: json['retired_at'] != null
           ? DateTime.parse(json['retired_at'] as String)
           : null,
+      source: PracticeThemeSource.fromDb(json['source'] as String?),
+      ownerId: json['owner_id'] as String?,
+      intake: rawIntake is Map<String, dynamic>
+          ? PracticeIntake.fromJson(rawIntake)
+          : null,
+      mentorOptions: rawOptions is List
+          ? [
+              for (final o in rawOptions)
+                if (o is Map<String, dynamic>) PracticeMentorOption.fromJson(o),
+            ]
+          : const [],
     );
   }
+}
+
+/// `wr_practice_themes.source`.
+enum PracticeThemeSource {
+  library,
+  user;
+
+  String get dbValue => name;
+
+  static PracticeThemeSource fromDb(String? v) =>
+      v == 'user' ? PracticeThemeSource.user : PracticeThemeSource.library;
+}
+
+/// Bốn câu của form tự thêm chủ đề (mockup v47 `screenAddPracticeTheme`).
+///
+/// Tên chủ đề nằm ở `PracticeTheme.title`; ba câu còn lại ở đây. `tried` không
+/// bắt buộc.
+class PracticeIntake {
+  const PracticeIntake({
+    required this.situation,
+    required this.goal,
+    this.tried,
+  });
+
+  final String situation;
+  final String goal;
+  final String? tried;
+
+  factory PracticeIntake.fromJson(Map<String, dynamic> json) => PracticeIntake(
+    situation: (json['situation'] as String?) ?? '',
+    goal: (json['goal'] as String?) ?? '',
+    tried: json['tried'] as String?,
+  );
+
+  Map<String, dynamic> toJson() => {
+    'situation': situation,
+    'goal': goal,
+    if (tried != null && tried!.trim().isNotEmpty) 'tried': tried,
+  };
+}
+
+/// Một cách ở bước "Chọn một cách" (mockup `.rf-mentor-card`).
+class PracticeMentorOption {
+  const PracticeMentorOption({
+    required this.id,
+    required String title,
+    required String fit,
+    required String tradeoff,
+    this.titleEn,
+    this.fitEn,
+    this.tradeoffEn,
+  }) : titleVi = title,
+       fitVi = fit,
+       tradeoffVi = tradeoff;
+
+  final String id;
+  final String titleVi;
+  final String? titleEn;
+  final String fitVi;
+  final String? fitEn;
+  final String tradeoffVi;
+  final String? tradeoffEn;
+
+  String get title => trDb(titleVi, titleEn);
+  String get fit => trDb(fitVi, fitEn);
+  String get tradeoff => trDb(tradeoffVi, tradeoffEn);
+
+  factory PracticeMentorOption.fromJson(Map<String, dynamic> json) =>
+      PracticeMentorOption(
+        id: json['id'] as String? ?? '',
+        title: json['title'] as String? ?? '',
+        titleEn: json['title_en'] as String?,
+        fit: json['fit'] as String? ?? '',
+        fitEn: json['fit_en'] as String?,
+        tradeoff: json['tradeoff'] as String? ?? '',
+        tradeoffEn: json['tradeoff_en'] as String?,
+      );
+
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'title': titleVi,
+    if (titleEn != null) 'title_en': titleEn,
+    'fit': fitVi,
+    if (fitEn != null) 'fit_en': fitEn,
+    'tradeoff': tradeoffVi,
+    if (tradeoffEn != null) 'tradeoff_en': tradeoffEn,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -577,6 +706,18 @@ class PracticeStep {
   final String? contentEn;
   String? get content => contentVi == null ? null : trDb(contentVi!, contentEn);
 
+  /// Dòng ghi cho bảng khi người dùng tự thêm chủ đề.
+  Map<String, dynamic> toInsert() => {
+    'step_id': stepId,
+    'theme_id': themeId,
+    'step_order': stepOrder,
+    'title': titleVi,
+    if (titleEn != null) 'title_en': titleEn,
+    if (contentVi != null) 'content': contentVi,
+    if (contentEn != null) 'content_en': contentEn,
+    'is_premium': isPremium,
+  };
+
   factory PracticeStep.fromJson(Map<String, dynamic> json) {
     return PracticeStep(
       stepId: json['step_id'] as String,
@@ -607,6 +748,7 @@ class PracticeEnrollment {
     this.startedAt,
     this.completedAt,
     this.completedSteps = const [],
+    this.pendingChoice,
   });
 
   final String? id;
@@ -618,6 +760,9 @@ class PracticeEnrollment {
   /// IDs of practice steps the user has marked done (e.g. ['pt-voice-1']).
   /// Maps to completed_steps text[] column added by migration 20260722000002.
   final List<String> completedSteps;
+
+  /// Cách người dùng đã "Lưu cách tôi muốn thử" mà chưa thử (mockup v47).
+  final String? pendingChoice;
 
   factory PracticeEnrollment.fromJson(Map<String, dynamic> json) {
     final raw = json['completed_steps'];
@@ -633,6 +778,7 @@ class PracticeEnrollment {
           ? DateTime.parse(json['completed_at'] as String)
           : null,
       completedSteps: steps,
+      pendingChoice: json['pending_choice'] as String?,
     );
   }
 
@@ -640,7 +786,10 @@ class PracticeEnrollment {
   /// Excludes server-generated fields: id, started_at (server default), completed_at.
   Map<String, dynamic> toInsert() => {'user_id': userId, 'theme_id': themeId};
 
-  PracticeEnrollment copyWith({List<String>? completedSteps}) {
+  PracticeEnrollment copyWith({
+    List<String>? completedSteps,
+    String? Function()? pendingChoice,
+  }) {
     return PracticeEnrollment(
       id: id,
       userId: userId,
@@ -648,6 +797,9 @@ class PracticeEnrollment {
       startedAt: startedAt,
       completedAt: completedAt,
       completedSteps: completedSteps ?? this.completedSteps,
+      pendingChoice: pendingChoice != null
+          ? pendingChoice()
+          : this.pendingChoice,
     );
   }
 }

@@ -1,6 +1,6 @@
 // Một luồng liên thông, đi bằng tay từ đầu tới cuối:
 //
-//   Home check-in  →  chọn tình huống  →  chi tiết  →  Ý nghĩa  →  Lựa chọn
+//   Home check-in  →  chọn tình huống  →  kể lại  →  Insight  →  Mang theo
 //        →  tab Hiểu mình đọc ra "Tình huống lặp lại" + Trải nghiệm hiện tại
 //        →  tab Phát triển gợi ra đúng chủ đề thực hành của chiều đó
 //
@@ -53,6 +53,9 @@ import '../support/fake_wr_mood_content_repository.dart';
 /// Thư viện chỉ có tình huống chiều C2, để biết chắc lần nào cũng chọn trúng nó
 /// dù danh sách được trộn ngẫu nhiên (§4.1).
 const _situationText = 'Không dám lên tiếng trong cuộc họp';
+
+/// Câu gõ ở bước kể lại (2/4) — tab Hiểu mình phải đọc lại đúng câu này.
+const _detailText = 'Cuộc họp sáng nay tôi lại giữ ý kiến cho riêng mình';
 const _situations = [
   WrSituation(
     code: 'C2-01',
@@ -125,12 +128,6 @@ class _Stage {
       ),
     );
     intel.seedPracticeThemes(const [_theme]);
-    moodContent.seedChoicePool(const [
-      'Ghi nhớ điều này để xem lại sau',
-      'Nói chuyện với ai đó về điều này',
-      'Chưa biết, cần thêm thời gian',
-      'Không cần hành động gì, chỉ cần ghi nhận là đủ',
-    ]);
   }
 
   final episodes = FakeWrEpisodeRepository();
@@ -207,35 +204,53 @@ class _Stage {
     router.go('/home');
     await tester.pumpAndSettle();
 
-    // 1 · check-in "căng thẳng" → thẳng vào bước chọn tình huống.
+    // 1 · check-in "căng thẳng" → thẳng vào bước chọn tình huống. Đã check-in
+    // hôm nay thì lưới thu thành dòng "Hôm nay bạn … · Đổi" (v47): bấm Đổi
+    // để mở lại lưới.
+    final change = find.byKey(const Key('wr_home_mood_change'));
+    if (change.evaluate().isNotEmpty) {
+      await tester.tap(change);
+      await tester.pumpAndSettle();
+    }
     await tester.tap(find.byKey(const Key('wr_home_checkin_stress')));
     await tester.pumpAndSettle();
 
-    // 2 · Notice — CHỌN, không viết.
-    final target = chip ?? find.byType(WrBigChoiceTile).first;
-    await tester.ensureVisible(target);
-    await tester.pumpAndSettle();
-    await tester.tap(target);
-    await tester.pumpAndSettle();
-
-    // 3 · Meaning — chi tiết cụ thể, bỏ trống (§V: không bắt buộc).
-    await tester.tap(find.byKey(const Key('wr_flow_primary')));
-    await tester.pumpAndSettle();
-
-    // 4 · Insight — HAI LỚP từ changelog 24/08 §1.2. Bỏ qua phần tự viết
-    // (lối thoát của Lớp 1) rồi tiếp tục qua Lớp 2.
-    await tester.tap(find.byKey(const Key('wr_flow_secondary')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('wr_flow_primary')));
-    await tester.pumpAndSettle();
-
-    // 5 · Choice — chạm lựa chọn đầu rồi lưu → khép phiên.
-    await tester.tap(find.byKey(const Key('wr_choice_0')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('wr_flow_primary')));
-    await tester.pumpAndSettle();
+    // 2 · Bước 1/4 — CHỌN, không viết, rồi bấm "Tiếp tục" (v47: chạm chỉ
+    // là chọn). Dòng đầu là ô neo nếu đã có lần chọn trước.
+    final target = chip ?? find.byType(WrRadioOption).first;
+    await _finishReflection(tester, target);
     expect(find.byType(WrDoneScreen), findsOneWidget);
   }
+}
+
+/// Đi nốt một vòng v47 từ bước chọn chuyện: chọn [situation] + Tiếp tục →
+/// kể lại (bắt buộc) → giữ Insight → chọn phép thử đầu + Lưu.
+Future<void> _finishReflection(WidgetTester tester, Finder situation) async {
+  await tester.ensureVisible(situation);
+  await tester.pumpAndSettle();
+  await tester.tap(situation);
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(const Key('wr_flow_primary')));
+  await tester.pumpAndSettle();
+
+  // Bước 2/4 — ô kể bắt buộc từ mockup v47.
+  await tester.enterText(find.byKey(const Key('wr_detail_field')), _detailText);
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(const Key('wr_flow_primary')));
+  await tester.pumpAndSettle();
+
+  // Bước 3/4 — Insight hiện ngay; "Ừ, tôi cũng thấy vậy".
+  await tester.tap(find.byKey(const Key('wr_flow_primary')));
+  await tester.pumpAndSettle();
+
+  // Bước 4/4 — chạm thẻ đầu rồi Lưu → khép phiên.
+  final card = find.byKey(const Key('wr_choice_0'));
+  await tester.ensureVisible(card);
+  await tester.pumpAndSettle();
+  await tester.tap(card);
+  await tester.pumpAndSettle();
+  await tester.tap(find.byKey(const Key('wr_flow_primary')));
+  await tester.pumpAndSettle();
 }
 
 Future<void> _pump(WidgetTester tester, Widget app) async {
@@ -304,14 +319,39 @@ void main() {
       findsNothing,
       reason: 'đã lặp đủ 3 lần mà khối vẫn báo chưa tới ngưỡng',
     );
+    // Thẻ đầu trang v47 gọi đúng tên, đúng mẫu số.
+    expect(find.text('“$_situationText”'), findsOneWidget);
+    expect(find.text('3 lần trong 3 lần ghi nhận'), findsOneWidget);
+    // Dòng "Những vòng lặp quen thuộc" + pill số lần.
     expect(find.text(_situationText), findsOneWidget);
-    expect(find.textContaining('3 lần'), findsWidgets);
+    final loop = find.byKey(const Key('wr_discover_loop_C2-01'));
+    expect(
+      find.descendant(of: loop, matching: find.text('3 lần')),
+      findsOneWidget,
+    );
 
-    // "Điều bạn đang tìm kiếm" — nhu cầu chủ đạo đọc từ chính ba lần đó.
-    expect(find.byKey(const Key('wr_discover_need_reading')), findsOneWidget);
+    // Mở dòng ra: đúng ba lần, mỗi lần mang đúng câu đã gõ ở bước kể lại —
+    // chứng minh chữ người dùng viết chảy được tới tận tab này.
+    await tester.ensureVisible(loop);
+    await tester.pumpAndSettle();
+    await tester.tap(loop);
+    await tester.pumpAndSettle();
+    expect(
+      find.descendant(
+        of: find.byKey(const Key('wr_discover_loop_log_C2-01')),
+        matching: find.text('“$_detailText”'),
+      ),
+      findsNWidgets(3),
+    );
 
-    // Khối Career Snapshot dựng được, và nói đúng còn thiếu bao nhiêu lần nữa
-    // thì cột "Xuất hiện" mở ra — 15 − 3 = 12.
+    // Khối Career Snapshot dựng được (v47: thu gọn sẵn, mở ra mới thấy), và
+    // nói đúng còn thiếu bao nhiêu lần nữa thì cột "Xuất hiện" mở ra —
+    // 15 − 3 = 12.
+    final snapshotToggle = find.byKey(const Key('wr_discover_snapshot_toggle'));
+    await tester.ensureVisible(snapshotToggle);
+    await tester.pumpAndSettle();
+    await tester.tap(snapshotToggle);
+    await tester.pumpAndSettle();
     expect(
       find.byKey(const Key('wr_discover_career_snapshot')),
       findsOneWidget,
@@ -362,6 +402,8 @@ void main() {
     // bị loại khỏi bể — không phục hồi cơ chế neo cũ chỉ để ép lặp.
     stage.router.go('/home');
     await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const Key('wr_home_mood_change')));
+    await tester.pumpAndSettle();
     await tester.tap(find.byKey(const Key('wr_home_checkin_stress')));
     await tester.pumpAndSettle();
     expect(
@@ -369,18 +411,8 @@ void main() {
       findsNothing,
       reason: 'mã vừa chọn vẫn được đưa ra khi bể còn năm mã khác',
     );
-    await tester.tap(find.byType(WrBigChoiceTile).first);
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('wr_flow_primary')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('wr_flow_secondary')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('wr_flow_primary')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('wr_choice_0')));
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('wr_flow_primary')));
-    await tester.pumpAndSettle();
+    await _finishReflection(tester, find.byType(WrRadioOption).first);
+    expect(find.byType(WrDoneScreen), findsOneWidget);
 
     expect(stage.episodes.episodes, hasLength(2));
     expect(

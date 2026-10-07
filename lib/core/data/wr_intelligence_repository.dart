@@ -142,6 +142,22 @@ abstract class WrIntelligenceRepository {
   /// Mark a theme enrollment as completed for [userId]/[themeId].
   Future<void> completeTheme({required String userId, required String themeId});
 
+  /// Người dùng tự thêm chủ đề (mockup v47): ghi chủ đề, bốn bước, rồi ghi
+  /// danh luôn — chủ đề tự thêm là chủ đề họ muốn thử ngay.
+  Future<void> createUserTheme({
+    required String userId,
+    required PracticeTheme theme,
+    required List<PracticeStep> steps,
+  });
+
+  /// Lưu (hoặc xoá, khi [choice] null) cách người dùng "muốn thử" ở bước kế
+  /// tiếp của chủ đề.
+  Future<void> setPendingChoice({
+    required String userId,
+    required String themeId,
+    required String? choice,
+  });
+
   /// Insert a context document record. Trả về id vừa tạo (null nếu không lấy
   /// được) — cần id để gọi phân tích ngay sau khi tải lên.
   Future<String?> insertContextDocument(WrContextDocument d);
@@ -190,6 +206,9 @@ abstract class WrIntelligenceRepository {
   /// Trả về id của dòng vừa ghi, để nối với mục Career Memory sinh ra từ nó.
   /// Ghi lại cùng một bước thì cập nhật chính dòng cũ.
   Future<String?> upsertPracticeStepNote(PracticeStepNote note);
+
+  /// Mọi ghi chú bước thực hành của [userId] — "Bạn đã ghi lại" ở màn chủ đề.
+  Future<List<PracticeStepNote>> fetchPracticeStepNotes(String userId);
 
   /// Ghi một câu hỏi nghề nghiệp người dùng vừa gửi.
   Future<void> insertCareerQuestion(CareerQuestion question);
@@ -474,6 +493,36 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
   }
 
   @override
+  Future<void> createUserTheme({
+    required String userId,
+    required PracticeTheme theme,
+    required List<PracticeStep> steps,
+  }) async {
+    await _client.from('wr_practice_themes').insert(theme.toUserInsert());
+    await _client
+        .from('wr_practice_steps')
+        .insert([for (final s in steps) s.toInsert()]);
+    await _client
+        .from('wr_practice_enrollments')
+        .insert(
+          PracticeEnrollment(userId: userId, themeId: theme.themeId).toInsert(),
+        );
+  }
+
+  @override
+  Future<void> setPendingChoice({
+    required String userId,
+    required String themeId,
+    required String? choice,
+  }) async {
+    await _client
+        .from('wr_practice_enrollments')
+        .update({'pending_choice': choice})
+        .eq('user_id', userId)
+        .eq('theme_id', themeId);
+  }
+
+  @override
   Future<String?> insertContextDocument(WrContextDocument d) async {
     final row = await _client
         .from('wr_context_documents')
@@ -642,6 +691,15 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
         .select('id');
     if (rows.isEmpty) return null;
     return rows.first['id'] as String?;
+  }
+
+  @override
+  Future<List<PracticeStepNote>> fetchPracticeStepNotes(String userId) async {
+    final rows = await _client
+        .from('wr_practice_step_notes')
+        .select()
+        .eq('user_id', userId);
+    return rows.map(PracticeStepNote.fromJson).toList();
   }
 
   @override

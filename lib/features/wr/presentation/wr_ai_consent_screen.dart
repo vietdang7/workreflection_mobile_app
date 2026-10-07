@@ -12,6 +12,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/data/wr_ai_consent_repository.dart';
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/wr_ai_consent_sheet.dart';
 import '../../../core/widgets/wr_detail_scaffold.dart';
@@ -40,9 +41,18 @@ class _WrAiConsentScreenState extends ConsumerState<WrAiConsentScreen> {
         content: Text(
           ok
               ? (turnOn
-                    ? 'Đã bật. Những phần cần AI dùng được rồi.'
-                    : 'Đã tắt. App sẽ không gửi dữ liệu của bạn đi nữa.')
-              : 'Chưa lưu được. Bạn kiểm tra mạng rồi thử lại.',
+                    ? tr(
+                        'Đã bật. Những phần cần AI dùng được rồi.',
+                        'On. The AI features are ready to use.',
+                      )
+                    : tr(
+                        'Đã tắt. App sẽ không gửi dữ liệu của bạn đi nữa.',
+                        'Off. The app will no longer send your data anywhere.',
+                      ))
+              : tr(
+                  'Chưa lưu được. Bạn kiểm tra mạng rồi thử lại.',
+                  'Not saved. Check your connection and try again.',
+                ),
         ),
       ),
     );
@@ -55,8 +65,8 @@ class _WrAiConsentScreenState extends ConsumerState<WrAiConsentScreen> {
     final on = consent.isGranted;
 
     return WrDetailScaffold(
-      eyebrow: 'QUYỀN RIÊNG TƯ',
-      title: 'Xử lý dữ liệu bằng AI',
+      eyebrow: tr('QUYỀN RIÊNG TƯ', 'PRIVACY'),
+      title: tr('Xử lý dữ liệu bằng AI', 'AI data processing'),
       children: [
         Container(
           key: const Key('wr_ai_consent_status'),
@@ -75,7 +85,7 @@ class _WrAiConsentScreenState extends ConsumerState<WrAiConsentScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      on ? 'Đang bật' : 'Đang tắt',
+                      on ? tr('Đang bật', 'On') : tr('Đang tắt', 'Off'),
                       style: TextStyle(
                         fontSize: 15.5,
                         fontWeight: FontWeight.w700,
@@ -85,10 +95,18 @@ class _WrAiConsentScreenState extends ConsumerState<WrAiConsentScreen> {
                     const SizedBox(height: 4),
                     WrParagraph(
                       on
-                          ? 'App được phép gửi dữ liệu nêu dưới đây sang các '
-                                'dịch vụ AI để xử lý.'
-                          : 'App không gửi dữ liệu của bạn đi đâu cả. Những '
-                                'phần cần AI đang ngừng hoạt động.',
+                          ? tr(
+                              'App được phép gửi dữ liệu nêu dưới đây sang các '
+                                  'dịch vụ AI để xử lý.',
+                              'The app may send the data listed below to AI '
+                                  'services for processing.',
+                            )
+                          : tr(
+                              'App không gửi dữ liệu của bạn đi đâu cả. Những '
+                                  'phần cần AI đang ngừng hoạt động.',
+                              'The app does not send your data anywhere. The '
+                                  'AI features are switched off.',
+                            ),
                       style: const TextStyle(
                         fontSize: 13,
                         color: WrColors.navy,

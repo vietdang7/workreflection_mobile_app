@@ -208,15 +208,22 @@ class WrTabItem extends StatelessWidget {
           children: [
             Icon(icon, color: color, size: 21),
             const SizedBox(height: 4),
-            Text(
-              semanticsLabel,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                fontSize: 10.5,
-                fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
-                letterSpacing: 0.09,
-                color: color,
+            // Co chữ lại thay vì cắt: "Understand" ở cỡ chữ hệ thống lớn bị
+            // cắt thành "Understa…" (chạy máy thật 06/10).
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 2),
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  semanticsLabel,
+                  maxLines: 1,
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: isActive ? FontWeight.w700 : FontWeight.w600,
+                    letterSpacing: 0.09,
+                    color: color,
+                  ),
+                ),
               ),
             ),
           ],

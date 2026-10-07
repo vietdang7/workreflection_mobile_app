@@ -72,7 +72,7 @@ class _HomeHeader extends StatelessWidget {
     final now = DateTime.now();
     // Format: "Thứ Ba, 24/06"
     // DateFormat 'EEEE' in 'vi' locale gives "Thứ Ba", etc.
-    final dayName = DateFormat('EEEE', 'vi').format(now);
+    final dayName = DateFormat('EEEE', wrLocaleCode).format(now);
     final dayMonth = DateFormat('dd/MM').format(now);
     final raw = '$dayName, $dayMonth';
     // Capitalize first letter

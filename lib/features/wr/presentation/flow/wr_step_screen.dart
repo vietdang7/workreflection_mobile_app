@@ -1,9 +1,9 @@
 // Bước 0 — Notice: CHỌN một tình huống (Kiến trúc Dữ liệu v2.0 §V).
 //
-// Đây là màn đầu tiên sau khi chạm một ô cảm xúc ở Home. Người dùng chạm một
-// trong năm chip (đã lọc theo cảm xúc, §III; xoay vòng chống lặp, §IV) hoặc
-// "Điều khác, để tôi tự mô tả". Chạm là xong — không có nút xác nhận, đúng
-// mockup `pickSituation()`.
+// Đây là màn đầu tiên sau khi chạm một ô cảm xúc ở Home. Người dùng chọn một
+// trong năm tình huống (đã lọc theo cảm xúc, §III; xoay vòng chống lặp, §IV)
+// hoặc "Điều khác, để tôi tự mô tả", rồi bấm Tiếp tục (mockup v47, bước 1/4
+// "Chọn chuyện").
 //
 // ---------------------------------------------------------------------------
 // Vì sao màn này thay hẳn chuỗi câu hỏi cũ
@@ -47,6 +47,7 @@ import '../../../../core/data/wr_repository.dart';
 import '../../../../core/l10n/wr_tr.dart';
 import '../../../../core/logic/wr_flow_error.dart';
 import '../../../../core/logic/wr_reflect_flow.dart';
+import '../../../../core/logic/wr_reflect_v47.dart';
 import '../../../../core/logic/wr_situation_picker.dart';
 import '../../../../core/models/checkin.dart';
 import '../../../../core/models/wr_content.dart';
@@ -144,7 +145,6 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
   Future<void> _pick(WrSituation? situation) async {
     if (_busy) return;
     setState(() {
-      _selectedCode = situation?.code ?? 'other';
       _busy = true;
       _error = null;
     });
@@ -220,100 +220,127 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
     }
 
     final choices = _situationChoices();
-    final anchor = anchorSituation(choices, _recentIds);
     final filtered = !_ignoreMoodFilter && _mood != null;
-    final moodLabel = filtered ? moodCheckinLabel(_mood!) : null;
+    final mood = _mood;
+
+    WrSituation? selectedSituation;
+    for (final sit in choices) {
+      if (sit.code == _selectedCode) selectedSituation = sit;
+    }
+    final canContinue = _selectedCode != null && !_busy;
 
     return WrFlowScaffold(
-      eyebrow: tr('Bắt đầu', 'Start'),
-      title: kNoticePrompt,
-      subtitle: noticeSubtitle(moodLabel),
-      progress: reflectProgress(0),
+      eyebrow: reflectStepEyebrow(0),
+      // Chip cảm xúc vừa chọn ở Home (`.mood-chip`), chỉ khi danh sách đang
+      // lọc theo cảm xúc đó.
+      eyebrowTrailing: filtered && mood != null
+          ? WrMoodChip(key: const Key('wr_step_mood_chip'), mood: mood)
+          : null,
+      title: kPickStoryTitle,
+      subtitle: kPickStorySubtitle,
+      step: 0,
       onBack: () => context.pop(),
       onClose: _leave,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Ô neo — điều gần nhất người dùng đã chọn trong cụm này, luôn có mặt
-          // và luôn đứng đầu (xem `pickSituationChoices`). Khách 09/09/2026
-          // (§2.2) bỏ nhãn "Lần trước": nhãn nói sai khi người dùng đổi cảm xúc
-          // check-in sang cụm khác. Chỗ đứng đầu + ô cao hơn vẫn giữ, đó mới là
-          // phần chỉ đúng trong mọi trường hợp.
-          for (final sit in choices) ...[
-            WrBigChoiceTile(
-              key: Key('wr_situation_${sit.code}'),
-              label: sit.text,
-              height: sit.code == anchor?.code ? 92 : 76,
-              selected: _selectedCode == sit.code,
-              onTap: () => _pick(sit),
-            ),
-            const SizedBox(height: 10),
-          ],
-
-          // §III: "Điều khác" LUÔN có mặt và không thuộc cơ chế lọc. Đây là lối
-          // duy nhất để tự viết — và cũng là lý do không cần ô chữ nào ở màn
-          // này.
-          WrBigChoiceTile(
-            key: const Key('wr_situation_other'),
-            label: kOtherSituationLabel,
-            height: 76,
-            selected: _selectedCode == 'other',
-            onTap: () => _pick(null),
-          ),
-
-          // §III: hai lối thoát khỏi bộ lọc khi năm gợi ý đầu chưa đúng. Không
-          // có chúng thì người dùng bị kẹt trong đúng một cụm chiều, và bộ lọc
-          // từ chỗ giúp ích thành ra cản đường.
-          const SizedBox(height: 16),
-          Center(
-            child: GestureDetector(
+      primaryLabel: tr('Tiếp tục', 'Continue'),
+      busy: _busy,
+      // Mockup v47: chạm một dòng chỉ là CHỌN, bấm Tiếp tục mới đi. Bản trước
+      // chạm là đi luôn — chạm nhầm thì không có đường lùi.
+      onPrimary: canContinue
+          ? () => _pick(_selectedCode == 'other' ? null : selectedSituation)
+          : null,
+      aboveActions: Padding(
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Column(
+          children: [
+            // §III: hai lối thoát khỏi bộ lọc khi năm gợi ý đầu chưa đúng.
+            GestureDetector(
               key: const Key('wr_step_reshuffle'),
               behavior: HitTestBehavior.opaque,
               onTap: () => _reshuffle(dropMoodFilter: false),
-              // Mũi tên dùng Icon, không dùng ký tự "→" — font chữ của app
-              // không chắc có glyph U+2192.
               child: Padding(
-                padding: EdgeInsets.symmetric(vertical: 6),
+                padding: const EdgeInsets.symmetric(vertical: 4),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Flexible: cỡ chữ đã tăng theo brand identity mới, dòng
-                    // này chạm mép ở màn hẹp nếu để Text tự do.
                     Flexible(
                       child: Text(
                         tr('Xem tình huống khác', 'See other situations'),
-                        style: TextStyle(
-                          fontSize: 14,
+                        style: const TextStyle(
+                          fontSize: 13.5,
                           fontWeight: FontWeight.w700,
-                          color: WrColors.navy,
+                          color: Color(0xFF0C8C88),
                         ),
                       ),
                     ),
-                    SizedBox(width: 4),
-                    Icon(Icons.arrow_forward, size: 14, color: WrColors.navy),
+                    const SizedBox(width: 4),
+                    const Icon(
+                      Icons.arrow_forward,
+                      size: 14,
+                      color: Color(0xFF0C8C88),
+                    ),
                   ],
                 ),
               ),
             ),
-          ),
-          if (filtered)
-            Center(
-              child: GestureDetector(
+            if (filtered)
+              GestureDetector(
                 key: const Key('wr_step_show_all'),
                 behavior: HitTestBehavior.opaque,
                 onTap: () => _reshuffle(dropMoodFilter: true),
                 child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 6),
+                  padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Text(
-                    tr(
-                      'Xem tất cả, không chỉ theo cảm xúc',
-                      'See everything, not just by feeling',
+                    tr('Xem tất cả', 'See all'),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: Color(0x9E2C335D),
                     ),
-                    style: TextStyle(fontSize: 13.5, color: WrColors.muted),
                   ),
                 ),
               ),
+          ],
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Danh sách tình huống còn đang tải (khách mới vừa đăng nhập ẩn danh
+          // có thể mất vài giây): báo đang tải, đừng để "Điều khác" đứng một
+          // mình như thể không có gì để chọn.
+          if (choices.isEmpty &&
+              (ref.watch(wrSituationsProvider).isLoading ||
+                  ref.watch(wrRecentSituationIdsProvider).isLoading)) ...[
+            const Padding(
+              key: Key('wr_situation_loading'),
+              padding: EdgeInsets.symmetric(vertical: 24),
+              child: Center(
+                child: SizedBox(
+                  width: 22,
+                  height: 22,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
             ),
+          ],
+          // Ô neo — điều gần nhất người dùng đã chọn trong cụm này — vẫn đứng
+          // đầu (`pickSituationChoices`), nhưng v47 không còn ô cao hơn.
+          for (final sit in choices) ...[
+            WrRadioOption(
+              key: Key('wr_situation_${sit.code}'),
+              label: sit.text,
+              selected: _selectedCode == sit.code,
+              onTap: _busy ? null : () => _select(sit.code),
+            ),
+            const SizedBox(height: 8),
+          ],
+          // §III: "Điều khác" LUÔN có mặt, viền nét đứt + bút như mockup.
+          WrRadioOption(
+            key: const Key('wr_situation_other'),
+            label: kOtherSituationLabel,
+            selected: _selectedCode == 'other',
+            custom: true,
+            onTap: _busy ? null : () => _select('other'),
+          ),
           if (_error != null) ...[
             const SizedBox(height: 16),
             Text(
@@ -325,6 +352,11 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
       ),
     );
   }
+
+  void _select(String code) => setState(() {
+    _selectedCode = code;
+    _error = null;
+  });
 
   Future<void> _leave() async {
     await ref.read(episodeFlowProvider.notifier).pause();

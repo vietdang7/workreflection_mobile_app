@@ -1,27 +1,26 @@
-// Hiểu mình — Meaning Surface (WXS §8.5).
+// Hiểu mình — Meaning Surface (WXS §8.5), bố cục theo mockup v47
+// `screenUnderstand`.
 //
-// Bố cục lấy theo giao-dien-chinh.html §screen-understand:
-//   Điều bạn đang tìm kiếm → Tình huống lặp lại (có thanh so sánh) →
-//   Trải nghiệm hiện tại → Hành trình đã đi.
+// Thứ tự khối, đúng mockup:
+//   hero `understand` "Những điều đang lặp lại"
+//   → thẻ đầu trang: "Trong N lần nhìn lại gần đây, điều quay lại với bạn
+//     nhiều nhất là …" + "Điều này có đúng với bạn không?"
+//   → "Những vòng lặp quen thuộc": mỗi tình huống một dòng, chạm mở ra từng lần
+//   → thẻ Self-Check → "Xem theo nhóm trải nghiệm" (thu gọn, mở ra mới thấy
+//     Career Snapshot) → thẻ navy Premium "Diễn giải sâu & xu hướng".
+//
+// Khối "Điều bạn đang tìm kiếm" (đọc vị nhu cầu, Premium) đã rời màn này: thẻ
+// đầu trang v47 thay đúng chỗ của nó.
 //
 // Nhãn cố tình không kèm chữ "SCA" (v1.6 §XII.5: thuật ngữ nội bộ không phơi
 // ra người dùng), dù bên dưới vẫn là ba trụ SCA.
-//
-// Hai tầng vẫn giữ nguyên như trước:
-//   • GHI NHẬN (miễn phí): bạn đã phản tư bao nhiêu lần, tình huống nào lặp
-//     lại mấy lần, nhu cầu nào đang nổi lên. Đây là dữ kiện đếm được.
-//   • DIỄN GIẢI (Premium): vì sao nó lặp lại, điều gì đang hình thành —
-//     nằm ở màn chi tiết, mở khi đã đủ 5 lần cùng một tình huống.
-//
-// Màn này chỉ liệt kê. Bấm vào một dòng mới mở màn chi tiết
-// (yêu cầu khách: không xổ toàn bộ nội dung trên một trang).
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/l10n/wr_tr.dart';
-import '../../../core/logic/wr_dominant_need.dart';
 import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/logic/wr_career_health.dart';
 import '../../../core/logic/wr_repeated_situations.dart';
@@ -29,15 +28,16 @@ import '../../../core/logic/wr_sca_deep_dive.dart'
     show ScaPillarStatus, scaPillarStatus;
 import '../../../core/logic/wr_self_check_questions.dart';
 import '../../../core/models/wr_content.dart';
+import '../../../core/models/wr_episode.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
+import '../../../core/theme/wr_text.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/progress_track.dart';
-import '../../../core/widgets/section_divider.dart';
 import '../../../core/widgets/tab_back_link.dart';
 import '../../../core/widgets/wr_profile_avatar.dart';
 import '../../../core/widgets/wr_card.dart';
-import '../../../core/widgets/wr_premium_lock.dart';
+import '../../../core/widgets/wr_hero_header.dart';
 import '../../../core/widgets/wr_link_row.dart';
 import 'wr_sca_deep_dive_screen.dart' show openScaDeepDive;
 import '../wr_providers.dart';
@@ -53,13 +53,6 @@ const int kInsightThreshold = 5;
 /// mờ. Để nguyên số 2 như trước thì mọi dòng lọt qua ngưỡng đều đậm và trạng
 /// thái mờ thành nhánh chết.
 const int kPatternFaintThreshold = kRepeatedSituationsMinCount + 1;
-
-/// Số tình huống hiện thẳng ở tab Hiểu mình.
-///
-/// Ba, không phải sáu: màn này là tấm gương chứ không phải bảng số liệu, và
-/// một danh sách dài thì không ai đọc hết. Phần còn lại nằm sau "Xem thêm",
-/// mở ra màn riêng — không xổ tất cả trên một trang.
-const int kDiscoverPatternPreview = 3;
 
 // ---------------------------------------------------------------------------
 // Trạng thái một trụ SCA, suy từ điểm tự đánh giá gần nhất (thang 1–5).
@@ -90,9 +83,6 @@ double? scaScoreFor(ScaSelfCheckResponse? r, SelfCheckPillar pillar) =>
 /// Đòi CẢ BA trụ có điểm chứ không chỉ đòi `latest != null`: có bản ghi thiếu
 /// câu thật trong DB (di chứng lỗi nuốt câu đã vá ở `wr_self_check_screen`), và
 /// một cột hiện hai dòng rồi bỏ trống dòng thứ ba đọc như lỗi tải dở.
-///
-/// Nằm ở tầng file chứ không nằm trong thẻ: màn hình cũng cần biết câu trả lời
-/// này để quyết định có dựng thêm khối khoá Diễn giải sâu ở dưới hay không.
 bool snapshotHasSelfCheck(ScaSelfCheckResponse? latest) =>
     latest != null &&
     SelfCheckPillar.values.every((p) => (scaScoreFor(latest, p) ?? 0) > 0);
@@ -138,7 +128,6 @@ class WrDiscoverScreen extends ConsumerWidget {
 
     final sitMap = {for (final s in situations) s.code: s.text};
     final reflectionCount = episodes.length;
-    final need = dominantNeedFromBehaviour(recent, situations);
     final latestCheck = selfChecks.isEmpty ? null : selfChecks.first;
 
     // Cột "Xuất hiện" của Career Snapshot — số lần mỗi trụ bị chạm.
@@ -147,315 +136,682 @@ class WrDiscoverScreen extends ConsumerWidget {
     // chặn ở 30 mục gần nhất, nên lấy nó làm nguồn thì người đã nhìn lại 80 lần
     // vẫn đọc được "14 / 30 lần" (Changelog CareerSnapshot §8).
     //
-    // MẪU SỐ ĐÃ ĐỔI 11/09/2026 — `DienGiaiSau v2` §2.3 và §9 việc 3. Trước đây
-    // cột này chia cho TỔNG SỐ LẦN NHÌN LẠI, trong khi tử số chỉ đếm những lượt
-    // rơi vào một trụ. Trên tài khoản khách báo lỗi: 6+5+5 = 16 mà mẫu số là 32,
-    // nên mọi con số trông nhỏ hơn thực tế gấp đôi và người đọc kết luận "không
-    // đáng kể". Nay chia cho số lượt PHÂN LOẠI ĐƯỢC, để ba con số cộng lại đúng
-    // bằng mẫu số — đó là điều kiện nghiệm thu của §9 việc 3.
+    // Mẫu số là số lượt PHÂN LOẠI ĐƯỢC (`DienGiaiSau v2` §2.3, §9 việc 3), để
+    // ba con số cộng lại đúng bằng mẫu số.
     final tally = pillarTally(episodes, situations);
 
-    // Khối Snapshot có dựng ra dòng khoảng lệch không — quyết định luôn ở đây
-    // vì phần dưới màn phải biết để khỏi mời mua Diễn giải sâu lần thứ hai.
-    //
-    // Trụ nổi trội tính trên valence thách thức (§2.2): trộn cả tình huống tích
-    // cực vào rồi tuyên bố "nhóm Mối quan hệ đang nổi trội" là nói ngược, vì
-    // nhóm ấy có thể đang nổi trội theo hướng tốt.
-    //
-    // TÍNH ĐÚNG MỘT LẦN rồi truyền xuống thẻ Snapshot. Bản 11/09 để thẻ tự tính
-    // lại bằng mẫu số cũ, và hai chỗ trả lời khác nhau về cùng một câu hỏi:
-    // màn cha thấy "có trụ nổi trội" nên ẩn thẻ mời, còn thẻ Snapshot thấy
-    // "không" nên không dựng dòng khoảng lệch — hai lối vào Diễn giải sâu cùng
-    // tắt và nút biến mất. Khách báo 12/09/2026.
+    // Trụ nổi trội tính trên valence thách thức (§2.2), TÍNH ĐÚNG MỘT LẦN rồi
+    // truyền xuống thẻ Snapshot (khách báo 12/09/2026: hai chỗ tự tính bằng
+    // hai mẫu số thì mất lối vào Diễn giải sâu).
     final snapshotDominant = dominantPillar(
       tally.challenge,
       tally.challengeTotal,
     );
-    final snapshotGapShown =
-        snapshotHasSelfCheck(latestCheck) &&
-        careerHealthUnlocked(reflectionCount) &&
-        snapshotDominant != null;
 
-    // "Tình huống lặp lại" — v2.0 §4.3: đếm số lần xuất hiện của từng
-    // situationId trong recentSituationIds, lấy ba tình huống nhiều nhất.
-    // Phần còn lại nằm sau "Xem thêm".
-    //
-    // Yêu cầu khách 2026-07-31: chỉ những điều đã trở lại từ
-    // kRepeatedSituationsMinCount lần mới được gọi là đang lặp. Lọc TRƯỚC khi
-    // cắt ba dòng, nếu không "Xem thêm N" sẽ hứa một con số mà màn đầy đủ
-    // không có.
+    // Những điều đang lặp lại — v2.0 §4.3: đếm số lần xuất hiện của từng
+    // situationId trong recentSituationIds. Chỉ những điều đã trở lại từ
+    // [kRepeatedSituationsMinCount] lần mới được gọi là đang lặp (họp 26_1).
     final repeated = rankSituations(
       recent,
       minCount: kRepeatedSituationsMinCount,
     );
-    final top = repeated.take(kRepeatedSituationsTop).toList();
-    final hidden = repeated.length - top.length;
-
-    // Thanh so sánh lấy tình huống lặp nhiều nhất làm mốc — người dùng thấy
-    // ngay điều nào đang lớn hơn điều nào. Mốc tính trên TOÀN BỘ danh sách để
-    // ba thanh ở đây và danh sách đầy đủ đo cùng một thước.
-    final maxCount = repeated.fold<int>(1, (m, p) => p.count > m ? p.count : m);
 
     return Scaffold(
       backgroundColor: WrColors.pageBg,
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 80),
-          children: [
-            const WrTabBackLink(currentTab: WrTab.discover),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Career Snapshot',
-                        style: TextStyle(fontSize: 15.5, color: WrColors.muted),
-                      ),
-                      SizedBox(height: 2),
-                      Text(
-                        tr('Hiểu mình', 'Understand'),
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w800,
-                          color: WrColors.navy,
-                          letterSpacing: -0.96,
-                          height: 1.1,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                // v1.6 §9.1: "Tôi" là avatar ở mọi màn tab, không còn tab riêng.
-                const WrProfileAvatar(),
-              ],
-            ),
-
-            // ── Điều bạn đang tìm kiếm ──────────────────────────────────
-            // Chưa đủ tình huống lặp lại thì chưa có nhu cầu nào nổi lên —
-            // im lặng, không đoán bừa (WXS Orch. Inv.5).
-            if (need != null) ...[
-              const SizedBox(height: 24),
-              _NeedReadingBlock(need: need),
-            ],
-
-            const SizedBox(height: 28),
-            const WrSectionDivider(),
-            const SizedBox(height: 24),
-
-            // ── Tình huống lặp lại ──────────────────────────────────────
-            WrEyebrow(tr('TÌNH HUỐNG LẶP LẠI', 'SITUATIONS THAT REPEAT')),
-            const SizedBox(height: 16),
-            // Hai kiểu rỗng khác hẳn nhau, và từ khi có ngưỡng lặp thì kiểu thứ
-            // hai lại xuất hiện. Đã ghi lại mấy lần rồi mà vẫn thấy đúng câu
-            // "sau vài lần nữa" thì người dùng tưởng app nuốt mất dữ liệu —
-            // phải nói rõ là đã ghi nhận, chỉ chưa điều nào lặp tới ngưỡng.
-            if (top.isEmpty)
-              if (recent.isEmpty)
-                WrParagraph(
-                  tr(
-                    'Sau vài lần nhìn lại có chọn tình huống, những điều lặp lại '
-                        'sẽ hiện ra ở đây.',
-                    'After a few look-backs where you pick a situation, the things that '
-                        'repeat will show up here.',
-                  ),
-                  key: Key('wr_discover_patterns_empty'),
-                  style: TextStyle(
-                    fontSize: 15.5,
-                    color: WrColors.muted,
-                    height: 1.6,
-                  ),
-                )
-              else
-                WrParagraph(
-                  tr(
-                    'Bạn đã chọn tình huống ${recent.length} lần, nhưng chưa '
-                        'điều nào trở lại đủ $kRepeatedSituationsMinCount lần. Khi '
-                        'một điều quay lại tới đó, nó sẽ hiện ở đây.',
-                    'You have picked a situation ${recent.length} times, but none has '
-                        'come back $kRepeatedSituationsMinCount times yet. Once one '
-                        'does, it will appear here.',
-                  ),
-                  key: const Key('wr_discover_patterns_below_threshold'),
-                  style: const TextStyle(
-                    fontSize: 15.5,
-                    color: WrColors.muted,
-                    height: 1.6,
-                  ),
-                )
-            else ...[
-              for (final p in top) ...[
-                WrPatternRow(
-                  label: situationLabelFor(sitMap, p.situationCode),
-                  count: p.count,
-                  ratio: p.count / maxCount,
-                  onTap: () => context.push('/wr/pattern/${p.situationCode}'),
-                ),
-                if (p != top.last) const SizedBox(height: 18),
-              ],
-              // Lối DUY NHẤT sang danh sách đầy đủ, kể từ 11/09.
-              //
-              // Thẻ Career Snapshot phía dưới từng mang một lối thứ hai đi
-              // cùng chỗ; ai có hơn ba tình huống lặp lại thì thấy hai đường
-              // giống hệt nhau cách nhau một màn hình. Khách yêu cầu bỏ cái
-              // trùng, và cái ở lại là cái này — nó đứng ngay dưới chính danh
-              // sách nó mở rộng.
-              //
-              // Vẫn giữ điều kiện `hidden > 0`, KHÔNG cho luôn hiện: hết dòng
-              // bị giấu nghĩa là màn chính đã bày đủ, và màn đầy đủ lúc ấy
-              // chép lại đúng bấy nhiêu dòng. Một lối đi không dẫn tới điều gì
-              // mới thì không phải lối đi.
-              if (hidden > 0) ...[
-                const SizedBox(height: 18),
-                _SeeMoreLink(
-                  count: hidden,
-                  onTap: () => context.push('/wr/patterns'),
-                ),
-              ],
-            ],
-
-            const SizedBox(height: 28),
-            const WrSectionDivider(),
-            const SizedBox(height: 24),
-
-            // ── Career Snapshot — MỘT khối, mỗi trụ đúng một dòng ───────
-            _CareerSnapshotCard(
-              key: const Key('wr_discover_career_snapshot'),
-              latest: latestCheck,
-              counts: tally.appearance,
-              reflectionTotal: reflectionCount,
-              classifiedTotal: tally.classified,
-              dominant: snapshotDominant,
-              onStartSelfCheck: () => context.push('/wr/self-check'),
-            ),
-
-            // ── Lời mời làm Self-Check ──────────────────────────────────
-            const SizedBox(height: 14),
-            _SelfCheckInviteCard(
-              answered: latestCheck?.answers.length ?? 0,
-              onStart: () => context.push('/wr/self-check'),
-            ),
-
-            // ── Diễn giải sâu & theo dõi xu hướng (Premium) ─────────────
-            //
-            // Chỉ khi khối Career Snapshot phía trên CHƯA có dòng khoảng lệch.
-            // Dòng đó đã mang sẵn lối vào Diễn giải sâu (và nút mở khoá cho bản
-            // miễn phí); dựng thêm thẻ này nữa là hai lời mời mua cùng một thứ,
-            // cách nhau ba dòng.
-            if (!snapshotGapShown) ...[
-              const SizedBox(height: 14),
-              const _SelfCheckDeepLock(),
-            ],
-
-            // Mục "Hành trình đã đi" (Bạn đã nhìn lại N lần) đã bỏ: thẻ Career
-            // Health phía trên đọc CÙNG con số đó, chỉ khác là nói luôn còn bao
-            // xa tới đích. Giữ cả hai là hiện một con số hai lần ở hai chỗ.
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Đọc vị nhu cầu — ba lớp, Premium (quyết định của khách 2026-07-29).
-//
-// Free thấy đúng một khối khoá: mọi câu diễn giải đều nằm sau paywall, kể cả
-// tên nhu cầu chủ đạo. Ranh giới giữ nguyên tinh thần cũ — Free xem dữ kiện
-// đếm được (tình huống nào lặp mấy lần, đã nhìn lại bao nhiêu lần), Premium
-// mới đọc ra điều đứng sau những con số đó.
-// ---------------------------------------------------------------------------
-
-class _NeedReadingBlock extends ConsumerWidget {
-  const _NeedReadingBlock({required this.need});
-
-  final HumanNeed need;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final entitlement =
-        ref.watch(wrEntitlementProvider).valueOrNull ??
-        WrEntitlement(plan: WrPlan.free);
-    if (!entitlement.canUseFeature(WrPremiumFeature.aiInsight)) {
-      return WrPremiumLock(
-        key: Key('wr_discover_need_lock'),
-        description: tr(
-          'Bản đầy đủ đọc ra điều bạn đang thật sự tìm kiếm đứng sau những '
-              'tình huống lặp lại này, bằng lời của đời sống chứ không phải con số.',
-          'The full version reads what you are really looking for behind these '
-              'repeating situations, in plain language rather than numbers.',
-        ),
-        ctaLabel: tr('Mở phần đọc vị', 'Open the reading'),
-        paywallTrigger: 'need_reading',
-      );
-    }
-
-    // Một câu, hết. Ba khối "MONG ĐỢI KẾT QUẢ / NHU CẦU CỐT LÕI / GÓC NHÌN" đã
-    // bỏ (khách 2026-08-04): chúng là chữ gán cứng theo nhu cầu, nói lại cùng
-    // một ý bằng ba giọng, và kéo màn Hiểu mình thành một trang đọc dài.
-    return _SeekingBlock(
-      key: const Key('wr_discover_need_reading'),
-      need: need,
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// "Điều bạn đang tìm kiếm" — canh giữa, chữ nghiêng lớn như giao diện mẫu.
-// ---------------------------------------------------------------------------
-
-class _SeekingBlock extends StatelessWidget {
-  const _SeekingBlock({super.key, required this.need});
-
-  final HumanNeed need;
-
-  @override
-  Widget build(BuildContext context) {
-    // Câu NHU CẦU, không phải câu Insight (họp 26_1). Nhãn của khối hứa "điều
-    // bạn đang tìm kiếm"; câu aha đọc vị một tình huống cụ thể thì trả lời một
-    // câu hỏi khác, và người dùng đọc xong không biết nó liên quan gì tới nhãn.
-    final text = needSeekingSentence(need);
-    // Bốn câu nhu cầu đều ngắn, nhưng giữ luật co chữ phòng khi nội dung đổi.
-    final fontSize = text.length > 90 ? 20.0 : 26.0;
-
-    return Padding(
-      key: const Key('wr_discover_seeking'),
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+      // Không bọc SafeArea: ảnh hero tràn lên dưới thanh trạng thái.
+      body: ListView(
+        // Padding tường minh: `ListView` không có padding sẽ xoá phần thanh
+        // trạng thái khỏi `MediaQuery` của con, ảnh hero hết tràn lên.
+        padding: const EdgeInsets.only(bottom: 80),
         children: [
-          WrEyebrow(
-            tr('ĐIỀU BẠN ĐANG TÌM KIẾM', 'WHAT YOU ARE LOOKING FOR'),
-            center: true,
-          ),
-          const SizedBox(height: 16),
-          WrParagraph(
-            '"$text"',
-            // Câu trích canh giữa là có chủ ý — căn đều sẽ phá dáng khối này.
-            // Vẫn cần giữ cụm cuối câu để dòng chót không còn trơ một chữ.
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: fontSize,
-              fontWeight: FontWeight.w400,
-              fontStyle: FontStyle.italic,
-              color: WrColors.navy,
-              height: 1.35,
-              letterSpacing: -0.52,
+          WrHeroHeader.inner(
+            key: const Key('wr_discover_hero'),
+            art: WrHeroArt.understand,
+            eyebrow: tr('Hiểu mình', 'Understand'),
+            title: tr('Những điều đang lặp lại', 'What keeps coming back'),
+            subtitle: tr(
+              'Sau một thời gian nhìn lại, có vài chuyện cứ quay về. Đây là '
+                  'những chuyện đó.',
+              'After a while of looking back, a few things keep returning. '
+                  'Here they are.',
             ),
+            // v1.6 §9.1: "Tôi" là avatar ở mọi màn tab, không còn tab riêng.
+            trailing: const WrProfileAvatar(),
           ),
-          const SizedBox(height: 12),
-          Text(
-            tr(
-              '${needLabel(need).toUpperCase()} · Nhu cầu chủ đạo',
-              '${needLabel(need).toUpperCase()} · Core need',
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 22),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const WrTabBackLink(currentTab: WrTab.discover),
+                _TopPatternCard(
+                  key: const Key('wr_discover_top_pattern'),
+                  recentTotal: recent.length,
+                  repeated: repeated,
+                  labels: sitMap,
+                ),
+                if (repeated.isNotEmpty) ...[
+                  const SizedBox(height: WrCard.kGap),
+                  _RepeatLoopsCard(
+                    key: const Key('wr_discover_loops'),
+                    repeated: repeated,
+                    labels: sitMap,
+                    episodes: episodes,
+                  ),
+                ],
+                const SizedBox(height: 14),
+                _SelfCheckInviteCard(
+                  answered: latestCheck?.answers.length ?? 0,
+                  onStart: () => context.push('/wr/self-check'),
+                ),
+                const SizedBox(height: WrCard.kGap),
+                _SnapshotSection(
+                  snapshot: _CareerSnapshotCard(
+                    key: const Key('wr_discover_career_snapshot'),
+                    latest: latestCheck,
+                    counts: tally.appearance,
+                    reflectionTotal: reflectionCount,
+                    classifiedTotal: tally.classified,
+                    dominant: snapshotDominant,
+                    onStartSelfCheck: () => context.push('/wr/self-check'),
+                  ),
+                ),
+                const SizedBox(height: WrCard.kGap),
+                const _SelfCheckDeepLock(),
+              ],
             ),
-            textAlign: TextAlign.center,
-            style: const TextStyle(fontSize: 14.5, color: WrColors.muted),
           ),
         ],
       ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Thẻ đầu trang — "Trong N lần nhìn lại gần đây, điều quay lại với bạn nhiều
+// nhất là …" (mockup v47). Hỏi lại người dùng có đúng không; câu trả lời được
+// nhớ theo từng tình huống để lần sau mở tab không hỏi lại.
+// ---------------------------------------------------------------------------
+
+/// Câu trả lời cho "Điều này có đúng với bạn không?".
+enum PatternFeedback { yes, no }
+
+String _patternFeedbackKey(String uid, String code) =>
+    'wr_pattern_feedback_${uid}_$code';
+
+class _TopPatternCard extends ConsumerStatefulWidget {
+  const _TopPatternCard({
+    super.key,
+    required this.recentTotal,
+    required this.repeated,
+    required this.labels,
+  });
+
+  /// Số lần nhìn lại có chọn tình huống trong cửa sổ gần đây — cùng mẫu với
+  /// con số "N lần" của từng dòng.
+  final int recentTotal;
+  final List<RepeatedSituation> repeated;
+  final Map<String, String> labels;
+
+  @override
+  ConsumerState<_TopPatternCard> createState() => _TopPatternCardState();
+}
+
+class _TopPatternCardState extends ConsumerState<_TopPatternCard> {
+  PatternFeedback? _feedback;
+  String? _loadedFor;
+
+  String? get _topCode =>
+      widget.repeated.isEmpty ? null : widget.repeated.first.situationCode;
+
+  Future<void> _load(String code) async {
+    _loadedFor = code;
+    final uid = ref.read(currentUserIdProvider);
+    if (uid == null) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final v = prefs.getString(_patternFeedbackKey(uid, code));
+      if (!mounted || _loadedFor != code) return;
+      setState(
+        () => _feedback = switch (v) {
+          'yes' => PatternFeedback.yes,
+          'no' => PatternFeedback.no,
+          _ => null,
+        },
+      );
+    } catch (_) {
+      /* chỉ là tiện ích nhớ câu trả lời */
+    }
+  }
+
+  /// Chọn một điều khác ở nhánh "Chưa đúng" (hoặc "Không có điều nào ở
+  /// trên"): hiện phần kết như mockup, nhưng KHÔNG ghi đè câu "no" đã lưu cho
+  /// điều đầu trang — người dùng vừa nói nó chưa đúng.
+  void _closeNo() => setState(() => _feedback = PatternFeedback.yes);
+
+  Future<void> _answer(PatternFeedback f) async {
+    setState(() => _feedback = f);
+    final uid = ref.read(currentUserIdProvider);
+    final code = _topCode;
+    if (uid == null || code == null) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_patternFeedbackKey(uid, code), f.name);
+    } catch (_) {
+      /* chỉ là tiện ích nhớ câu trả lời */
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final code = _topCode;
+    if (code != null && code != _loadedFor) {
+      _feedback = null;
+      _load(code);
+    }
+
+    // Hai kiểu rỗng khác hẳn nhau: chưa chọn tình huống lần nào, và đã chọn
+    // mà chưa điều nào lặp tới ngưỡng. Kiểu thứ hai phải nói rõ là đã ghi
+    // nhận, kẻo người dùng tưởng app nuốt mất dữ liệu.
+    if (code == null) {
+      return WrCard(
+        child: WrParagraph(
+          widget.recentTotal == 0
+              ? tr(
+                  'Sau vài lần nhìn lại có chọn tình huống, những điều lặp lại '
+                      'sẽ hiện ra ở đây.',
+                  'After a few look-backs where you pick a situation, the '
+                      'things that repeat will show up here.',
+                )
+              : tr(
+                  'Bạn đã chọn tình huống ${widget.recentTotal} lần, nhưng chưa '
+                      'điều nào trở lại đủ $kRepeatedSituationsMinCount lần. Khi '
+                      'một điều quay lại tới đó, nó sẽ hiện ở đây.',
+                  'You have picked a situation ${widget.recentTotal} times, but '
+                      'none has come back $kRepeatedSituationsMinCount times '
+                      'yet. Once one does, it will appear here.',
+                ),
+          key: Key(
+            widget.recentTotal == 0
+                ? 'wr_discover_patterns_empty'
+                : 'wr_discover_patterns_below_threshold',
+          ),
+          textAlign: TextAlign.start,
+          style: _muted,
+        ),
+      );
+    }
+
+    final top = widget.repeated.first;
+    final others = widget.repeated.skip(1).toList();
+
+    return WrCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            tr(
+              'Trong ${widget.recentTotal} lần nhìn lại gần đây, điều quay lại '
+                  'với bạn nhiều nhất là',
+              'Across your last ${widget.recentTotal} look-backs, the thing '
+                  'that came back most is',
+            ),
+            style: _muted,
+          ),
+          const SizedBox(height: 10),
+          Text(
+            '“${situationLabelFor(widget.labels, code)}”',
+            key: const Key('wr_discover_top_title'),
+            style: WrText.serifQuote(
+              fontSize: 18,
+              color: WrColors.navy,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            tr(
+              '${top.count} lần trong ${widget.recentTotal} lần ghi nhận',
+              '${top.count} out of ${widget.recentTotal} entries',
+            ),
+            key: const Key('wr_discover_top_count'),
+            style: _tiny,
+          ),
+          const SizedBox(height: 16),
+          switch (_feedback) {
+            null => _askView(),
+            PatternFeedback.yes => _yesView(context),
+            PatternFeedback.no => _noView(others),
+          },
+        ],
+      ),
+    );
+  }
+
+  Widget _askView() => Column(
+    crossAxisAlignment: CrossAxisAlignment.start,
+    children: [
+      Text(
+        tr('Điều này có đúng với bạn không?', 'Does this ring true for you?'),
+        style: _tiny.copyWith(fontWeight: FontWeight.w700),
+      ),
+      const SizedBox(height: 8),
+      Row(
+        children: [
+          Expanded(
+            child: _GhostSmallButton(
+              key: const Key('wr_discover_feedback_yes'),
+              label: tr('Đúng với tôi', 'That is me'),
+              onTap: () => _answer(PatternFeedback.yes),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: _GhostSmallButton(
+              key: const Key('wr_discover_feedback_no'),
+              label: tr('Chưa đúng lắm', 'Not quite'),
+              onTap: () => _answer(PatternFeedback.no),
+            ),
+          ),
+        ],
+      ),
+    ],
+  );
+
+  Widget _yesView(BuildContext context) => _SoftTop(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          tr(
+            'Vậy thì đây có thể là chỗ đáng để bạn dành thêm chú ý trong thời '
+                'gian tới.',
+            'Then this may be worth a bit more of your attention in the '
+                'coming weeks.',
+          ),
+          style: _muted,
+        ),
+        const SizedBox(height: 10),
+        _PrimarySmallButton(
+          key: const Key('wr_discover_feedback_practice'),
+          label: tr(
+            'Xem chủ đề thực hành liên quan',
+            'See related practice themes',
+          ),
+          onTap: () => context.go('/wr/growth'),
+        ),
+      ],
+    ),
+  );
+
+  Widget _noView(List<RepeatedSituation> others) => _SoftTop(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          tr(
+            'Cảm ơn bạn đã cho biết. Vậy điều nào dưới đây gần với bạn hơn?',
+            'Thanks for telling us. Which of these feels closer?',
+          ),
+          style: _muted,
+        ),
+        const SizedBox(height: 10),
+        for (final o in others) ...[
+          WrCard(
+            key: Key('wr_discover_feedback_alt_${o.situationCode}'),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            onTap: _closeNo,
+            child: Text(
+              situationLabelFor(widget.labels, o.situationCode),
+              style: const TextStyle(
+                fontSize: 14,
+                color: WrColors.navy,
+                height: 1.45,
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+        ],
+        Center(
+          child: GestureDetector(
+            key: const Key('wr_discover_feedback_none'),
+            behavior: HitTestBehavior.opaque,
+            onTap: _closeNo,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 6),
+              child: Text(
+                tr('Không có điều nào ở trên', 'None of the above'),
+                style: _tiny.copyWith(
+                  color: WrColors.teal,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+/// Phần trả lời nằm dưới một vạch mảnh (`border-top: 1px solid --line-soft`).
+class _SoftTop extends StatelessWidget {
+  const _SoftTop({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) => Container(
+    padding: const EdgeInsets.only(top: 12),
+    decoration: const BoxDecoration(
+      border: Border(top: BorderSide(color: WrColors.lineSoft)),
+    ),
+    child: child,
+  );
+}
+
+/// `.muted` (12.5px) +1.5 theo quy ước cỡ chữ của app.
+const _muted = TextStyle(fontSize: 14, color: WrColors.text2, height: 1.65);
+
+/// `.tiny` (11px) +1.5.
+const _tiny = TextStyle(fontSize: 12.5, color: WrColors.text3);
+
+/// `.btn.btn-ghost.btn-sm`.
+class _GhostSmallButton extends StatelessWidget {
+  const _GhostSmallButton({
+    super.key,
+    required this.label,
+    required this.onTap,
+  });
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => OutlinedButton(
+    onPressed: onTap,
+    style: OutlinedButton.styleFrom(
+      foregroundColor: WrColors.navy,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      side: const BorderSide(color: Color(0x40093774), width: 1.5),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    ),
+    child: Text(
+      label,
+      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+    ),
+  );
+}
+
+/// `.btn.btn-primary.btn-sm`.
+class _PrimarySmallButton extends StatelessWidget {
+  const _PrimarySmallButton({
+    super.key,
+    required this.label,
+    required this.onTap,
+  });
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => FilledButton(
+    onPressed: onTap,
+    style: FilledButton.styleFrom(
+      backgroundColor: WrColors.coral,
+      foregroundColor: WrColors.navy,
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+    ),
+    child: Text(
+      label,
+      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+    ),
+  );
+}
+
+// ---------------------------------------------------------------------------
+// "Những vòng lặp quen thuộc" — mỗi tình huống một dòng, chạm mở ra từng lần.
+//
+// Danh sách từng lần lấy từ `episodesForSituation`, CÙNG cửa sổ với con số
+// "N lần" — khách báo 2026-08-01 khi số đếm và danh sách lệch nhau.
+// ---------------------------------------------------------------------------
+
+class _RepeatLoopsCard extends StatefulWidget {
+  const _RepeatLoopsCard({
+    super.key,
+    required this.repeated,
+    required this.labels,
+    required this.episodes,
+  });
+
+  final List<RepeatedSituation> repeated;
+  final Map<String, String> labels;
+  final List<ReflectionEpisode> episodes;
+
+  @override
+  State<_RepeatLoopsCard> createState() => _RepeatLoopsCardState();
+}
+
+class _RepeatLoopsCardState extends State<_RepeatLoopsCard> {
+  String? _open;
+
+  @override
+  Widget build(BuildContext context) {
+    return WrCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          WrEyebrow(tr('NHỮNG VÒNG LẶP QUEN THUỘC', 'FAMILIAR LOOPS')),
+          const SizedBox(height: 2),
+          for (var i = 0; i < widget.repeated.length; i++)
+            _loopRow(widget.repeated[i], last: i == widget.repeated.length - 1),
+        ],
+      ),
+    );
+  }
+
+  Widget _loopRow(RepeatedSituation r, {required bool last}) {
+    final code = r.situationCode;
+    final open = _open == code;
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 11),
+      decoration: last
+          ? null
+          : const BoxDecoration(
+              border: Border(bottom: BorderSide(color: WrColors.lineSoft)),
+            ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          GestureDetector(
+            key: Key('wr_discover_loop_$code'),
+            behavior: HitTestBehavior.opaque,
+            onTap: () => setState(() => _open = open ? null : code),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    situationLabelFor(widget.labels, code),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: WrColors.navy,
+                      height: 1.45,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: WrColors.navy.withValues(alpha: 0.08),
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  child: Text(
+                    tr('${r.count} lần', '${r.count} times'),
+                    style: const TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w700,
+                      color: WrColors.navy,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 6),
+                AnimatedRotation(
+                  turns: open ? 0.5 : 0,
+                  duration: const Duration(milliseconds: 150),
+                  child: const Icon(
+                    Icons.keyboard_arrow_down_rounded,
+                    size: 20,
+                    color: WrColors.navy,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          if (open) _log(code),
+        ],
+      ),
+    );
+  }
+
+  Widget _log(String code) {
+    final entries = episodesForSituation(widget.episodes, code);
+    return Container(
+      key: Key('wr_discover_loop_log_$code'),
+      margin: const EdgeInsets.only(top: 10),
+      padding: const EdgeInsets.only(left: 10),
+      decoration: const BoxDecoration(
+        border: Border(left: BorderSide(color: WrColors.lineSoft, width: 2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          for (final e in entries)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 9),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    _dayMonth(e.openedAt ?? e.updatedAt ?? e.closedAt),
+                    style: _tiny.copyWith(fontWeight: FontWeight.w700),
+                  ),
+                  const SizedBox(height: 2),
+                  if (_written(e) case final t?)
+                    Text(
+                      '“$t”',
+                      style: WrText.serifQuote(
+                        fontSize: 14,
+                        color: WrColors.text2,
+                        height: 1.55,
+                      ),
+                    )
+                  else
+                    Text(
+                      tr(
+                        'Bạn không viết gì lần này',
+                        'You wrote nothing this time',
+                      ),
+                      style: _tiny.copyWith(
+                        color: WrColors.text3.withValues(alpha: 0.55),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+
+  /// Câu người dùng đã kể ở bước 2 ("Kể lại khoảnh khắc…").
+  static String? _written(ReflectionEpisode e) {
+    final t = e.notes[ReflectionPattern.explore.dbValue]?.trim();
+    return (t == null || t.isEmpty) ? null : t;
+  }
+
+  static String _dayMonth(DateTime? d) {
+    if (d == null) return '';
+    final l = d.toLocal();
+    return '${l.day.toString().padLeft(2, '0')}/'
+        '${l.month.toString().padLeft(2, '0')}';
+  }
+}
+
+// ---------------------------------------------------------------------------
+// "Xem theo nhóm trải nghiệm" — mặc định THU GỌN (mockup v47); mở ra mới thấy
+// Career Snapshot.
+// ---------------------------------------------------------------------------
+
+class _SnapshotSection extends StatefulWidget {
+  const _SnapshotSection({required this.snapshot});
+
+  final Widget snapshot;
+
+  @override
+  State<_SnapshotSection> createState() => _SnapshotSectionState();
+}
+
+class _SnapshotSectionState extends State<_SnapshotSection> {
+  bool _open = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        WrCard(
+          key: const Key('wr_discover_snapshot_toggle'),
+          onTap: () => setState(() => _open = !_open),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tr(
+                        'Xem theo nhóm trải nghiệm',
+                        'View by experience group',
+                      ),
+                      style: const TextStyle(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                        color: WrColors.navy,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      tr(
+                        'Ba nhóm, đối chiếu điều bạn tự đánh giá với điều đang '
+                            'lặp lại',
+                        'Three groups, setting how you rate yourself against '
+                            'what keeps repeating',
+                      ),
+                      style: _tiny,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              AnimatedRotation(
+                turns: _open ? 0.5 : 0,
+                duration: const Duration(milliseconds: 150),
+                child: const Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  size: 22,
+                  color: WrColors.navy,
+                ),
+              ),
+            ],
+          ),
+        ),
+        if (_open) ...[const SizedBox(height: WrCard.kGap), widget.snapshot],
+      ],
     );
   }
 }
@@ -531,46 +887,6 @@ class WrPatternRow extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             WrProgressTrack(value: ratio, color: barColor),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// "Xem thêm" — lối sang danh sách đầy đủ, giữ màn chính gọn đúng ba dòng.
-// ---------------------------------------------------------------------------
-
-class _SeeMoreLink extends StatelessWidget {
-  const _SeeMoreLink({required this.count, required this.onTap});
-
-  final int count;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      key: const Key('wr_discover_see_more'),
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          children: [
-            Text(
-              tr(
-                'Xem thêm $count điều lặp lại',
-                'See $count more repeating situations',
-              ),
-              style: const TextStyle(
-                fontSize: 14.5,
-                fontWeight: FontWeight.w700,
-                color: WrColors.navy,
-              ),
-            ),
-            const SizedBox(width: 4),
-            const Icon(Icons.arrow_forward, size: 14, color: WrColors.navy),
           ],
         ),
       ),
@@ -664,9 +980,8 @@ class _CareerSnapshotCard extends ConsumerWidget {
   /// TRUYỀN VÀO, không tự tính. Cột "Xuất hiện" của thẻ này đọc [counts] và
   /// [classifiedTotal] — hai con số gồm cả tình huống tích cực — còn trụ nổi
   /// trội thì §2.2 tính trên riêng lượt thách thức. Tự tính lại từ [counts] là
-  /// ra một câu trả lời khác với màn cha, mà màn cha lại dùng câu trả lời của
-  /// nó để quyết định ẩn thẻ mời Diễn giải sâu. Lệch nhau là mất cả hai lối
-  /// vào.
+  /// ra một câu trả lời khác với màn cha (khách báo 12/09/2026: hai chỗ tự
+  /// tính bằng hai mẫu số thì mất lối vào Diễn giải sâu).
   final SelfCheckPillar? dominant;
 
   final VoidCallback onStartSelfCheck;
@@ -823,9 +1138,9 @@ class _CareerSnapshotCard extends ConsumerWidget {
           // đường giống hệt nhau cách nhau một màn hình — khách yêu cầu bỏ cái
           // trùng (11/09).
           //
-          // Lối đi không mất, nó dồn về `_SeeMoreLink` ở mục phía trên. Chỗ đó
-          // chỉ hiện khi CÒN dòng bị giấu, và như vậy là đủ: hết dòng bị giấu
-          // thì màn chính đã bày đúng bằng những gì màn đầy đủ có.
+          // Từ v47 tab không còn lối sang danh sách đầy đủ: mục "Những vòng
+          // lặp quen thuộc" phía trên bày MỌI điều lặp lại và mở được từng lần
+          // ngay tại chỗ.
           //
           // Nói cách khác, lỗi khách báo 24/08 ("đủ 15 lần rồi mà không có nút
           // để click vào xem bức tranh") không tái phát ở đây — lần đó cả THẺ
@@ -1249,12 +1564,12 @@ class _SelfCheckInviteCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final total = kSelfCheckQuestions.length;
     final shown = answered > total ? total : answered;
-    return WrCardMinimal(
+    return WrCard(
       key: const Key('wr_discover_self_check_invite'),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          WrParagraph(
+          Text(
             tr(
               'Chỉ với $total câu hỏi ngắn giúp hệ thống hiểu rõ hơn trạng thái '
                   'hiện tại của bạn. Đừng quên cập nhật lại bất cứ khi nào bạn thấy '
@@ -1263,11 +1578,7 @@ class _SelfCheckInviteCard extends StatelessWidget {
                   'right now. Do come back and update it whenever something at work '
                   'shifts.',
             ),
-            style: const TextStyle(
-              fontSize: 14.5,
-              height: 1.65,
-              color: WrColors.muted,
-            ),
+            style: _muted,
           ),
           const SizedBox(height: 14),
           Text(
@@ -1276,36 +1587,38 @@ class _SelfCheckInviteCard extends StatelessWidget {
               'Last time you got to: $shown/$total',
             ),
             key: const Key('wr_discover_self_check_progress'),
-            style: const TextStyle(fontSize: 13.5, color: WrColors.muted),
+            style: _tiny,
           ),
-          const SizedBox(height: 8),
-          WrProgressTrack(
-            value: shown / total,
-            color: shown == 0 ? WrColors.muted : WrColors.teal,
+          const SizedBox(height: 6),
+          // `.progressline`: vạch 3px, nền navy 8%, phần đã làm navy.
+          ClipRRect(
+            borderRadius: BorderRadius.circular(2),
+            child: SizedBox(
+              height: 3,
+              child: LinearProgressIndicator(
+                value: shown / total,
+                backgroundColor: WrColors.navy.withValues(alpha: 0.08),
+                color: WrColors.navy,
+              ),
+            ),
           ),
           const SizedBox(height: 16),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              onPressed: onStart,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: WrColors.coral,
-                foregroundColor: WrColors.navy,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                elevation: 0,
+          FilledButton(
+            key: const Key('wr_discover_self_check_start'),
+            onPressed: onStart,
+            style: FilledButton.styleFrom(
+              backgroundColor: WrColors.coral,
+              foregroundColor: WrColors.navy,
+              padding: const EdgeInsets.all(14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
               ),
-              child: Text(
-                shown > 0
-                    ? tr('Cập nhật lại Self-Check', 'Update your Self-Check')
-                    : tr('Bắt đầu Self-Check', 'Start the Self-Check'),
-                style: const TextStyle(
-                  fontSize: 15.5,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+            ),
+            child: Text(
+              shown > 0
+                  ? tr('Cập nhật lại Self-Check', 'Update your Self-Check')
+                  : tr('Bắt đầu Self-Check', 'Start the Self-Check'),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
             ),
           ),
         ],
@@ -1334,29 +1647,83 @@ class _SelfCheckDeepLock extends ConsumerWidget {
     final entitlement =
         ref.watch(wrEntitlementProvider).valueOrNull ??
         WrEntitlement(plan: WrPlan.free);
-    if (entitlement.canUseFeature(WrPremiumFeature.selfCheckDeepDive)) {
-      return WrLinkRow(
-        key: const Key('wr_discover_sca_deep_open'),
-        label: tr('Diễn giải sâu & xu hướng', 'Deep reading & trends'),
-        onTap: () => openScaDeepDive(context, ref),
-      );
-    }
-    return WrPremiumLock(
-      key: const Key('wr_discover_sca_deep_lock'),
-      title: tr(
-        'Diễn giải sâu & theo dõi xu hướng',
-        'Deep reading & trend tracking',
+    final premium = entitlement.canUseFeature(
+      WrPremiumFeature.selfCheckDeepDive,
+    );
+    // Thẻ navy của mockup v47. Người đã Premium vẫn thấy thẻ, chỉ đổi nút
+    // thành lối vào (changelog 24/08 §7). `openScaDeepDive` lo cả hai nhánh:
+    // chưa có quyền thì mở paywall, mua xong đi thẳng vào màn đích.
+    return Container(
+      key: Key(
+        premium ? 'wr_discover_sca_deep_open' : 'wr_discover_sca_deep_lock',
       ),
-      description: tr(
-        'So sánh kết quả theo thời gian để thấy điều kiện làm việc của bạn đã '
-            'thay đổi ra sao và đối chiếu với các ghi chú trước đó.',
-        'Compare results over time to see how your working conditions have '
-            'changed, and set them against your earlier notes.',
+      padding: WrCard.kPadding,
+      decoration: BoxDecoration(
+        color: WrColors.navy,
+        borderRadius: BorderRadius.circular(WrCard.kRadius),
       ),
-      ctaLabel: tr('Mở khoá', 'Unlock'),
-      paywallTrigger: 'sca_deep',
-      // Mua xong đi thẳng vào màn đích, không rơi lại tab Hiểu mình (§7).
-      onPressed: () => openScaDeepDive(context, ref),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.auto_awesome_outlined,
+                size: 20,
+                color: WrColors.coral,
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 3,
+                ),
+                decoration: BoxDecoration(
+                  color: WrColors.coral.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(100),
+                ),
+                child: const Text(
+                  'Premium',
+                  style: TextStyle(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                    color: WrColors.pillCoralText,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            tr('Diễn giải sâu & xu hướng', 'Deep reading & trends'),
+            style: const TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: WrColors.cream,
+            ),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            tr(
+              'So sánh kết quả theo thời gian để thấy điều kiện làm việc của bạn '
+                  'đã thay đổi ra sao và đối chiếu với các ghi chú trước đó.',
+              'Compare results over time to see how your working conditions '
+                  'have changed, and set them against your earlier notes.',
+            ),
+            style: _muted.copyWith(
+              color: WrColors.cream.withValues(alpha: 0.7),
+            ),
+          ),
+          const SizedBox(height: 12),
+          _PrimarySmallButton(
+            key: const Key('wr_discover_sca_deep_button'),
+            label: premium
+                ? tr('Xem diễn giải sâu', 'See the deep reading')
+                : tr('Mở khoá', 'Unlock'),
+            onTap: () => openScaDeepDive(context, ref),
+          ),
+        ],
+      ),
     );
   }
 }

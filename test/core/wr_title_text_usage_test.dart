@@ -19,7 +19,7 @@ String _classBody(String path, String className) {
 
 const _p = 'lib/features/';
 const _titles = <(String, String)>[
-  ('${_p}wr/presentation/wr_home_screen.dart', '_CheckinQuestion'),
+  ('${_p}wr/presentation/wr_home_screen.dart', '_CheckinQuestionState'),
   ('${_p}wr/presentation/wr_self_check_screen.dart', '_WrSelfCheckScreenState'),
   ('${_p}wr/presentation/wr_payment_screen.dart', '_FreeOrderCard'),
   ('${_p}wr/presentation/wr_payment_screen.dart', '_VoucherListSheetState'),
@@ -43,7 +43,7 @@ void main() {
       expect(body.contains('WrTitleText('), isTrue);
       // Các lớp khác có thể có đoạn văn thật dùng WrParagraph; chỉ khối câu
       // hỏi Home (toàn tiêu đề) mới cấm hẳn.
-      if (cls == '_CheckinQuestion') {
+      if (cls == '_CheckinQuestionState') {
         expect(body.contains('WrParagraph('), isFalse);
       }
     });

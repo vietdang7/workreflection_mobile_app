@@ -15,7 +15,10 @@ import '../../../core/logic/wr_ai_disclosure.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
 import '../../../core/widgets/wr_renewal_notice_card.dart';
+import '../../../core/widgets/eyebrow.dart';
+import '../../../core/widgets/wr_card.dart';
 import '../../../features/auth/data/auth_repository.dart';
+import '../../../features/auth/guest_session.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../wr/org_survey_providers.dart';
 import '../../wr/wr_providers.dart';
@@ -52,6 +55,10 @@ class ProfileScreen extends ConsumerWidget {
                   // trong khi mọi màn khác của app đã là hệ thẻ.
                   _AvatarSection(),
                   const SizedBox(height: 20),
+                  // Khách chưa lưu hành trình: lối lưu đứng trên cùng, vì
+                  // đây là thứ duy nhất ở màn này có thể làm mất dữ liệu nếu
+                  // bị bỏ qua.
+                  const _GuestSaveCard(),
                   _StatsCard(),
                   const SizedBox(height: 12),
                   // Nhắc kỳ thuê bao sắp kết thúc. Đứng NGAY TRÊN thẻ mời nâng
@@ -728,7 +735,7 @@ class _SettingsSection extends ConsumerWidget {
           _SettingRow(
             key: const Key('profile_change_avatar_btn'),
             icon: Icons.photo_camera_outlined,
-            label: 'Đổi ảnh đại diện',
+            label: tr('Đổi ảnh đại diện', 'Change profile photo'),
             onTap: ref.watch(avatarUploadProvider).isLoading
                 ? null
                 : () => _pickAvatar(context, ref),
@@ -841,18 +848,19 @@ class _SettingsSection extends ConsumerWidget {
             ),
           ),
 
-          // Đổi mật khẩu
-          _SettingRow(
-            key: const Key('profile_change_password_btn'),
-            icon: Icons.lock_outline,
-            label: l10n.profileSettingChangePassword,
-            onTap: () => showChangePasswordDialog(context, ref),
-            trailing: const Icon(
-              Icons.chevron_right,
-              color: WrColors.muted,
-              size: 16,
+          // Đổi mật khẩu — khách chưa có mật khẩu để đổi.
+          if (!ref.watch(isGuestProvider))
+            _SettingRow(
+              key: const Key('profile_change_password_btn'),
+              icon: Icons.lock_outline,
+              label: l10n.profileSettingChangePassword,
+              onTap: () => showChangePasswordDialog(context, ref),
+              trailing: const Icon(
+                Icons.chevron_right,
+                color: WrColors.muted,
+                size: 16,
+              ),
             ),
-          ),
 
           _SettingRow(
             key: const Key('profile_export_btn'),
@@ -876,7 +884,7 @@ class _SettingsSection extends ConsumerWidget {
           _SettingRow(
             key: const Key('profile_ai_consent_btn'),
             icon: Icons.privacy_tip_outlined,
-            label: 'Xử lý dữ liệu bằng AI',
+            label: tr('Xử lý dữ liệu bằng AI', 'AI data processing'),
             onTap: () => context.push(kWrAiRevokePath),
             trailing: const Icon(
               Icons.chevron_right,
@@ -1106,6 +1114,40 @@ class _LogoutButton extends ConsumerWidget {
   }
 
   Future<void> _logout(BuildContext context, WidgetRef ref) async {
+    // Khách đăng xuất là mất phiên ẩn danh, không có cách nào vào lại.
+    if (ref.read(isGuestProvider)) {
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: Text(
+            tr('Hành trình chưa được lưu', 'Your journey is not saved'),
+          ),
+          content: Text(
+            tr(
+              'Bạn chưa tạo tài khoản. Đăng xuất bây giờ thì những gì bạn đã '
+                  'ghi lại sẽ không mở lại được nữa.',
+              'You have not created an account. If you sign out now, what you '
+                  'have recorded cannot be opened again.',
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(false),
+              child: Text(tr('Ở lại', 'Stay')),
+            ),
+            TextButton(
+              key: const Key('profile_guest_logout_confirm'),
+              onPressed: () => Navigator.of(ctx).pop(true),
+              style: TextButton.styleFrom(
+                foregroundColor: WrColors.destructive,
+              ),
+              child: Text(tr('Vẫn đăng xuất', 'Sign out anyway')),
+            ),
+          ],
+        ),
+      );
+      if (ok != true) return;
+    }
     try {
       await ref.read(authRepositoryProvider).signOut();
       // Router redirect handles navigation to /auth
@@ -1236,6 +1278,75 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
           child: Text(l10n.profileDeleteAccountCta),
         ),
       ],
+    );
+  }
+}
+
+/// Thẻ mời khách lưu hành trình (khách bấm "Để sau" ở sheet sau lần nhìn lại
+/// đầu tiên thì vào lại được từ đây).
+class _GuestSaveCard extends ConsumerWidget {
+  const _GuestSaveCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (!ref.watch(isGuestProvider)) return const SizedBox.shrink();
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: WrCard(
+        key: const Key('profile_guest_save_card'),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            WrEyebrow(tr('Bạn đang dùng thử', 'You are trying it out')),
+            const SizedBox(height: 6),
+            Text(
+              tr('Lưu lại hành trình của bạn', 'Keep your journey'),
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                color: WrColors.navy,
+              ),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              tr(
+                'Nếu chưa lưu, hành trình chỉ nằm trên thiết bị này và sẽ mất '
+                    'khi bạn xóa ứng dụng.',
+                'Until you save it, your journey lives only on this device and '
+                    'will be lost if you delete the app.',
+              ),
+              style: const TextStyle(
+                fontSize: 14,
+                color: WrColors.text2,
+                height: 1.55,
+              ),
+            ),
+            const SizedBox(height: 14),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                key: const Key('profile_guest_save_btn'),
+                onPressed: () => context.push('/auth/save'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: WrColors.navy,
+                  foregroundColor: WrColors.cream,
+                  padding: const EdgeInsets.symmetric(vertical: 13),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: Text(
+                  tr(
+                    'Tạo tài khoản bằng email',
+                    'Create an account with email',
+                  ),
+                  style: const TextStyle(fontWeight: FontWeight.w700),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/data/wr_chat_repository.dart';
 import '../../core/l10n/wr_tr.dart';
+import '../../core/logic/wr_chat_offer.dart';
 import '../../core/logic/wr_chat_starters.dart';
 import '../../core/logic/wr_repeated_situations.dart';
 import '../../core/models/wr_chat.dart';
@@ -122,7 +123,7 @@ class WrChatController extends StateNotifier<WrChatState> {
       final latest = conversations.first;
       final history = await _repo.fetchHistory(latest.id);
       state = state.copyWith(
-        messages: history,
+        messages: restoreLastChatAction(history),
         conversationId: latest.id,
         loading: false,
         error: null,
@@ -158,7 +159,10 @@ class WrChatController extends StateNotifier<WrChatState> {
     );
     try {
       final history = await _repo.fetchHistory(conversationId);
-      state = state.copyWith(messages: history, loading: false);
+      state = state.copyWith(
+        messages: restoreLastChatAction(history),
+        loading: false,
+      );
     } catch (_) {
       state = state.copyWith(
         loading: false,

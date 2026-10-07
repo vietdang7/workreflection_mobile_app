@@ -106,10 +106,18 @@ class _AiConsentInvite extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const WrParagraph(
-            'Phần này do AI viết từ những tình huống bạn đã ghi lại, nên cần '
-            'bạn cho phép gửi dữ liệu đó đi thì mới chạy được.',
-            style: TextStyle(fontSize: 15, color: WrColors.navy, height: 1.6),
+          WrParagraph(
+            tr(
+              'Phần này do AI viết từ những tình huống bạn đã ghi lại, nên cần '
+                  'bạn cho phép gửi dữ liệu đó đi thì mới chạy được.',
+              'AI writes this part from the situations you have logged, so it '
+                  'only works once you allow that data to be sent.',
+            ),
+            style: const TextStyle(
+              fontSize: 15,
+              color: WrColors.navy,
+              height: 1.6,
+            ),
           ),
           const SizedBox(height: 12),
           OutlinedButton(
@@ -122,9 +130,12 @@ class _AiConsentInvite extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: const Text(
-              'Xem app gửi những gì',
-              style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
+            child: Text(
+              tr('Xem app gửi những gì', 'See what the app sends'),
+              style: const TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ),
         ],

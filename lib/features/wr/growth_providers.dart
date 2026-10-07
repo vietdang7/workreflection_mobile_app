@@ -8,7 +8,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/data/wr_content_repository.dart';
 import '../../core/data/wr_intelligence_repository.dart';
+import '../../core/l10n/wr_tr.dart';
 import '../../core/logic/wr_dominant_need.dart';
+import '../../core/logic/wr_practice_legacy_titles.dart';
 import '../../core/logic/wr_practice_match.dart';
 import '../../core/logic/wr_practice_theme_grant.dart';
 import '../../core/logic/wr_repeated_situations.dart';
@@ -16,6 +18,7 @@ import '../../core/logic/wr_seniority.dart';
 import '../../core/logic/wr_skill_formation.dart';
 import '../../core/logic/wr_skill_jd_match.dart';
 import '../../core/models/wr_content.dart';
+import '../../core/models/wr_mood_content.dart' show PracticeStepNote;
 import '../../core/models/wr_intelligence.dart';
 import '../profile/profile_providers.dart';
 import 'owned_skill_providers.dart';
@@ -54,6 +57,9 @@ final allPracticeStepsProvider = FutureProvider<List<PracticeStep>>((
 /// tiếng gì thì đọc lại đúng tiếng ấy, dịch máy lời của người ta là chuyện
 /// khác hẳn.
 final wrPracticeLabelMapProvider = Provider<Map<String, String>>((ref) {
+  // Giá trị của map là tên theo ngôn ngữ LÚC DỰNG; không theo dõi ngôn ngữ thì
+  // đổi tiếng xong map vẫn trả tiếng cũ tới khi danh sách chủ đề tải lại.
+  wrWatchLocale(ref);
   final themes = ref.watch(practiceThemesProvider).valueOrNull ?? const [];
   final steps = ref.watch(allPracticeStepsProvider).valueOrNull ?? const [];
 
@@ -72,9 +78,36 @@ final wrPracticeLabelMapProvider = Provider<Map<String, String>>((ref) {
   }
   for (final s in steps) {
     put(s.titleVi, s.titleEn, s.title);
+    // Bản ghi trước 05/08 còn mang dấu gạch dài ("Nhận diện — …").
+    for (final k in practiceLegacyTitleKeys(s.titleVi)) {
+      put(k, null, s.title);
+    }
   }
+  // Tên bước cũ trước migration 4 bước, còn đóng băng trong Career Memory.
+  for (final (vi, en) in kLegacyPracticeStepTitles) {
+    for (final k in practiceLegacyTitleKeys(vi)) {
+      put(k, en, tr(vi, en));
+    }
+  }
+  // Hậu tố của mảnh "duy trì" (`logPracticeMaintained`).
+  put('Duy trì', 'Upkeep', tr('Duy trì', 'Upkeep'));
   return map;
 });
+
+/// Ghi chú các bước thực hành của người dùng, theo `step_id`.
+final practiceStepNotesProvider =
+    FutureProvider<Map<String, PracticeStepNote>>((ref) async {
+      final userId = ref.watch(currentUserIdProvider);
+      if (userId == null) return const {};
+      try {
+        final notes = await ref
+            .read(wrIntelligenceRepositoryProvider)
+            .fetchPracticeStepNotes(userId);
+        return {for (final n in notes) n.stepId: n};
+      } catch (_) {
+        return const {};
+      }
+    });
 
 final practiceEnrollmentsProvider = FutureProvider<List<PracticeEnrollment>>((
   ref,

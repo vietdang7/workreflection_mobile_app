@@ -13,6 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
+import '../../../core/l10n/wr_tr.dart';
 import '../../../core/widgets/wr_ai_consent_sheet.dart';
 import '../../../core/models/survey_models.dart';
 import '../../profile/profile_providers.dart';
@@ -141,15 +142,32 @@ class _VideoReportScreenState extends ConsumerState<VideoReportScreen> {
               // "Chưa cho phép gửi sang AI" KHÔNG phải hỏng — nói đúng chuyện
               // và mở màn xin phép ngay tại đây, thay vì để người dùng bấm
               // "Thử lại" mãi cho một thứ sẽ không bao giờ chạy.
-              if (e is VideoReportAiConsentRequired) ...[
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 32),
+              if (e is VideoReportAiVoiceOff) ...[
+                Padding(
+                  key: const Key('video_report_ai_voice_off'),
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
                   child: Text(
-                    'Bản đọc thành tiếng cần gửi đoạn chữ sang dịch vụ đọc '
-                    'giọng nói bên ngoài. Bạn xem app gửi những gì rồi quyết '
-                    'định nhé.',
+                    tr(
+                      'Bản thu đang được chuẩn bị.',
+                      'The recording is on its way.',
+                    ),
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white70, height: 1.6),
+                    style: const TextStyle(color: Colors.white70, height: 1.6),
+                  ),
+                ),
+              ] else if (e is VideoReportAiConsentRequired) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Text(
+                    tr(
+                      'Bản đọc thành tiếng cần gửi đoạn chữ sang dịch vụ đọc '
+                          'giọng nói bên ngoài. Bạn xem app gửi những gì rồi '
+                          'quyết định nhé.',
+                      'The spoken version needs to send the text to an outside '
+                          'voice service. See what the app sends, then decide.',
+                    ),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: Colors.white70, height: 1.6),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -160,7 +178,7 @@ class _VideoReportScreenState extends ConsumerState<VideoReportScreen> {
                       ref.invalidate(videoReportDataProvider(widget.reportId));
                     }
                   },
-                  child: const Text('Xem app gửi những gì'),
+                  child: Text(tr('Xem app gửi những gì', 'See what the app sends')),
                 ),
               ] else ...[
                 Text(

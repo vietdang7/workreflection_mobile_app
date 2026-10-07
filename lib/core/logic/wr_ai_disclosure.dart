@@ -48,6 +48,8 @@
 //
 // Pure Dart, không phụ thuộc Flutter → test được trực tiếp.
 
+import '../l10n/wr_tr.dart';
+
 /// Phiên bản bản công bố.
 ///
 /// Nâng số này khi nội dung đổi về BẢN CHẤT — thêm một bên nhận dữ liệu, hoặc
@@ -101,15 +103,24 @@ class WrAiRecipient {
 /// OpenRouter là bên TRUNG CHUYỂN, không phải nơi cuối cùng — nên phải kể cả
 /// hai tầng. Chỉ ghi "gửi cho OpenRouter" là giấu mất chuyện dữ liệu đi tiếp
 /// sang DeepSeek và Google.
-const List<WrAiRecipient> kWrAiRecipients = [
+///
+/// Getter chứ không phải `const`: [WrAiRecipient.role] đi qua `tr()`, giữ
+/// trong một hằng thì đóng băng ở ngôn ngữ lúc đọc lần đầu.
+List<WrAiRecipient> get kWrAiRecipients => [
   WrAiRecipient(
     name: 'OpenRouter',
-    role: 'Nhận và chuyển tiếp yêu cầu tới hai mô hình AI bên dưới.',
+    role: tr(
+      'Nhận và chuyển tiếp yêu cầu tới hai mô hình AI bên dưới.',
+      'Receives requests and forwards them to the two AI models below.',
+    ),
     privacyUrl: 'https://openrouter.ai/privacy',
   ),
   WrAiRecipient(
     name: 'DeepSeek',
-    role: 'Mô hình trả lời trong phần Trò chuyện và viết phần Diễn biến.',
+    role: tr(
+      'Mô hình trả lời trong phần Trò chuyện và viết phần Diễn biến.',
+      'The model that replies in Chat and writes your story.',
+    ),
     // KHÔNG phải `deepseek.com/privacy` — đường đó trả 404 (kiểm 07/09/2026).
     // Một liên kết chết ngay trong công bố quyền riêng tư còn tệ hơn không có.
     privacyUrl:
@@ -117,12 +128,18 @@ const List<WrAiRecipient> kWrAiRecipients = [
   ),
   WrAiRecipient(
     name: 'Google (Gemini)',
-    role: 'Mô hình đọc nội dung tài liệu JD và CV bạn tải lên.',
+    role: tr(
+      'Mô hình đọc nội dung tài liệu JD và CV bạn tải lên.',
+      'The model that reads the JD and CV documents you upload.',
+    ),
     privacyUrl: 'https://policies.google.com/privacy',
   ),
   WrAiRecipient(
     name: 'Ausynclab',
-    role: 'Chuyển đoạn chữ thành giọng nói khi bạn bật nghe.',
+    role: tr(
+      'Chuyển đoạn chữ thành giọng nói khi bạn bật nghe.',
+      'Turns text into speech when you switch on listening.',
+    ),
     // Trỏ đúng văn bản cam kết, không trỏ trang chủ: dán nhãn "Chính sách
     // quyền riêng tư" lên một trang giới thiệu sản phẩm là nói không đúng.
     privacyUrl:
@@ -135,41 +152,71 @@ const List<WrAiRecipient> kWrAiRecipients = [
 /// Người đọc màn hình này đang quyết định một chuyện về dữ liệu của họ. "Gọi
 /// Edge Function wr-doc-analyze" không giúp họ quyết được gì; "khi bạn tải JD
 /// lên để đọc" thì có.
-const List<WrAiDataFlow> kWrAiDataFlows = [
+List<WrAiDataFlow> get kWrAiDataFlows => [
   WrAiDataFlow(
-    trigger: 'Khi bạn trò chuyện với trợ lý phản chiếu',
-    data:
-        'Câu bạn vừa viết, các lượt trước trong cùng cuộc trò chuyện, và tóm '
-        'tắt những điều bạn đã nhìn lại gần đây: tình huống bạn ghi, insight, '
-        'chủ đề đang thực hành, kết quả tự đánh giá.',
+    trigger: tr(
+      'Khi bạn trò chuyện với trợ lý phản chiếu',
+      'When you chat with the reflection assistant',
+    ),
+    data: tr(
+      'Câu bạn vừa viết, các lượt trước trong cùng cuộc trò chuyện, và tóm '
+          'tắt những điều bạn đã nhìn lại gần đây: tình huống bạn ghi, insight, '
+          'chủ đề đang thực hành, kết quả tự đánh giá.',
+      'What you just wrote, the earlier turns in the same conversation, and a '
+          'summary of what you have looked back on recently: the situations you '
+          'logged, insights, the themes you are practising, your self-assessment '
+          'results.',
+    ),
     recipient: 'OpenRouter → DeepSeek',
   ),
   WrAiDataFlow(
-    trigger: 'Khi bạn tải JD hoặc CV lên để đọc',
-    data:
-        'Toàn bộ nội dung tài liệu đó, kể cả phần bạn không nhắc tới trong '
-        'app.',
+    trigger: tr(
+      'Khi bạn tải JD hoặc CV lên để đọc',
+      'When you upload a JD or CV to be read',
+    ),
+    data: tr(
+      'Toàn bộ nội dung tài liệu đó, kể cả phần bạn không nhắc tới trong '
+          'app.',
+      'The whole document, including parts you never mention in the app.',
+    ),
     recipient: 'OpenRouter → Google (Gemini)',
   ),
   WrAiDataFlow(
-    trigger: 'Khi phần mềm viết mục Diễn biến',
-    data:
-        'Các tình huống bạn đã ghi lại theo thời gian. Việc này chạy tự động '
-        'khi bạn mở mục đó, không cần bạn bấm gì.',
+    trigger: tr(
+      'Khi phần mềm viết mục Diễn biến',
+      'When the app writes your story',
+    ),
+    data: tr(
+      'Các tình huống bạn đã ghi lại theo thời gian. Việc này chạy tự động '
+          'khi bạn mở mục đó, không cần bạn bấm gì.',
+      'The situations you have logged over time. This runs automatically '
+          'when you open that screen, without you tapping anything.',
+    ),
     recipient: 'OpenRouter → DeepSeek',
   ),
   WrAiDataFlow(
-    trigger: 'Khi bạn bật nghe đọc thành tiếng',
-    data: 'Đoạn chữ đang được đọc.',
+    trigger: tr(
+      'Khi bạn bật nghe đọc thành tiếng',
+      'When you switch on read-aloud',
+    ),
+    data: tr('Đoạn chữ đang được đọc.', 'The text being read aloud.'),
     recipient: 'Ausynclab',
   ),
   WrAiDataFlow(
-    trigger: 'Khi bạn mở Báo cáo khảo sát',
-    data:
-        'Vị trí công việc, thâm niên và phòng ban bạn đã khai, cùng điểm ba '
-        'lớp, điểm tổng, chỉ số ESI và lớp đang yếu nhất. Dùng để viết lại phần '
-        'nhận định cho hợp với hoàn cảnh của bạn. Việc này chạy tự động khi bạn '
-        'mở báo cáo, không cần bạn bấm gì.',
+    trigger: tr(
+      'Khi bạn mở Báo cáo khảo sát',
+      'When you open the Survey report',
+    ),
+    data: tr(
+      'Vị trí công việc, thâm niên và phòng ban bạn đã khai, cùng điểm ba '
+          'lớp, điểm tổng, chỉ số ESI và lớp đang yếu nhất. Dùng để viết lại phần '
+          'nhận định cho hợp với hoàn cảnh của bạn. Việc này chạy tự động khi bạn '
+          'mở báo cáo, không cần bạn bấm gì.',
+      'The job title, seniority and department you entered, plus your three '
+          'layer scores, overall score, ESI and weakest layer. Used to rewrite '
+          'the commentary to fit your situation. This runs automatically when '
+          'you open the report, without you tapping anything.',
+    ),
     recipient: 'OpenRouter → Google (Gemini)',
   ),
 ];
@@ -178,26 +225,33 @@ const List<WrAiDataFlow> kWrAiDataFlows = [
 ///
 /// Nói ra phần này vì nó là thứ người dùng thật sự lo, và vì nó đúng — đã đối
 /// chiếu mã nguồn 07/09/2026.
-const List<String> kWrAiNeverSent = [
-  'Tên và địa chỉ email của bạn',
-  'Mật khẩu',
-  'Thông tin thanh toán',
-  'Ảnh đại diện',
+List<String> get kWrAiNeverSent => [
+  tr('Tên và địa chỉ email của bạn', 'Your name and email address'),
+  tr('Mật khẩu', 'Your password'),
+  tr('Thông tin thanh toán', 'Payment details'),
+  tr('Ảnh đại diện', 'Your profile photo'),
 ];
 
 /// Câu tóm tắt một dòng, dùng ở chỗ chật như thẻ nhắc trên màn Tài khoản.
-const String kWrAiDisclosureSummary =
-    'Một số phần của app gửi nội dung bạn viết sang dịch vụ AI bên ngoài để xử '
-    'lý. Bạn quyết định có cho phép hay không.';
+String get kWrAiDisclosureSummary => tr(
+  'Một số phần của app gửi nội dung bạn viết sang dịch vụ AI bên ngoài để xử '
+      'lý. Bạn quyết định có cho phép hay không.',
+  'Some parts of the app send what you write to outside AI services for '
+      'processing. You decide whether to allow it.',
+);
 
 /// Câu nói rõ người dùng đổi ý được bất cứ lúc nào.
 ///
 /// Không phải chữ cho đẹp: quyền rút lại là thứ phải có thật, và [kWrAiRevokePath]
 /// dưới đây là chỗ nó nằm.
-const String kWrAiRevokeNote =
-    'Bạn tắt lại bất cứ lúc nào trong Tài khoản → Xử lý dữ liệu bằng AI. Tắt '
-    'rồi thì những phần cần AI sẽ ngừng hoạt động, phần còn lại của app vẫn '
-    'dùng bình thường.';
+String get kWrAiRevokeNote => tr(
+  'Bạn tắt lại bất cứ lúc nào trong Tài khoản → Xử lý dữ liệu bằng AI. Tắt '
+      'rồi thì những phần cần AI sẽ ngừng hoạt động, phần còn lại của app vẫn '
+      'dùng bình thường.',
+  'You can switch this off at any time in Account → AI data processing. Once '
+      'it is off, the parts that need AI stop working and the rest of the app '
+      'works as usual.',
+);
 
 /// Đường dẫn màn quản lý lựa chọn này.
 const String kWrAiRevokePath = '/wr/ai-consent';

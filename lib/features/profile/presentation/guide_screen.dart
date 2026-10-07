@@ -204,7 +204,6 @@ class _GuideVideoTopic {
     required this.chapterTitle,
     required this.subtitle,
     required this.imageAsset,
-    required this.duration,
     required this.sceneId,
   });
 
@@ -215,7 +214,6 @@ class _GuideVideoTopic {
   final String chapterTitle;
   final String subtitle;
   final String imageAsset;
-  final String duration;
   final IntroSceneId sceneId;
 }
 
@@ -241,7 +239,6 @@ class _GuideVideoShowcaseState extends State<_GuideVideoShowcase> {
         'Overview of WorkReflection and how to reflect on work daily',
       ),
       imageAsset: 'assets/images/thumb_intro_overview.jpg',
-      duration: '1:00',
       sceneId: IntroSceneId.welcome,
     ),
     _GuideVideoTopic(
@@ -261,7 +258,6 @@ class _GuideVideoShowcaseState extends State<_GuideVideoShowcase> {
         'How to check-in emotions and reflect on moments in 4 steps',
       ),
       imageAsset: 'assets/images/thumb_daily_reflect.jpg',
-      duration: '1:00',
       sceneId: IntroSceneId.reflect,
     ),
     _GuideVideoTopic(
@@ -281,7 +277,6 @@ class _GuideVideoShowcaseState extends State<_GuideVideoShowcase> {
         'Recognize repeating patterns and skill practice plan',
       ),
       imageAsset: 'assets/images/thumb_understand_grow.jpg',
-      duration: '1:00',
       sceneId: IntroSceneId.understand,
     ),
     _GuideVideoTopic(
@@ -301,7 +296,6 @@ class _GuideVideoShowcaseState extends State<_GuideVideoShowcase> {
         'Chat, ask questions, and get contextual work advice',
       ),
       imageAsset: 'assets/images/thumb_ai_mentor.jpg',
-      duration: '1:00',
       sceneId: IntroSceneId.assistant,
     ),
   ];
@@ -406,43 +400,6 @@ class _GuideVideoShowcaseState extends State<_GuideVideoShowcase> {
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.5,
-                              color: Colors.white,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  // Huy hiệu thời lượng góc trên bên phải
-                  Positioned(
-                    top: 14,
-                    right: 14,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 9,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.55),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.2),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.schedule_rounded,
-                            size: 12,
-                            color: Colors.white,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            current.duration,
-                            style: const TextStyle(
-                              fontSize: 11.5,
-                              fontWeight: FontWeight.w600,
                               color: Colors.white,
                             ),
                           ),
@@ -632,36 +589,17 @@ class _ChapterItem extends StatelessWidget {
                 behavior: HitTestBehavior.opaque,
                 onTap: onPlay,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 5,
-                  ),
+                  padding: const EdgeInsets.all(7),
                   decoration: BoxDecoration(
                     color: selected
                         ? WrColors.coral.withValues(alpha: 0.12)
                         : WrColors.pageBg,
-                    borderRadius: BorderRadius.circular(8),
+                    shape: BoxShape.circle,
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Icon(
-                        selected
-                            ? Icons.play_arrow_rounded
-                            : Icons.play_circle_outline_rounded,
-                        size: 16,
-                        color: selected ? WrColors.coral : WrColors.muted,
-                      ),
-                      const SizedBox(width: 3),
-                      Text(
-                        topic.duration,
-                        style: TextStyle(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w600,
-                          color: selected ? WrColors.coral : WrColors.muted,
-                        ),
-                      ),
-                    ],
+                  child: Icon(
+                    Icons.play_arrow_rounded,
+                    size: 18,
+                    color: selected ? WrColors.coral : WrColors.muted,
                   ),
                 ),
               ),

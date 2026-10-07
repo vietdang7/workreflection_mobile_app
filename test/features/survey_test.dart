@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/logic/wr_ai_voice.dart';
 import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
@@ -202,6 +203,15 @@ void main() {
         findsAtLeast(1),
       );
     });
+
+    // Giọng đọc AI tắt mặc định (mockup v47, khách 06/10): không có nút đọc
+    // câu hỏi, nên không gì gửi sang `tts-proxy`.
+    testWidgets('giọng AI tắt thì không có nút đọc câu hỏi', (tester) async {
+      await tester.pumpWidget(_wrap(const SurveyQuestionsScreen(), repo: repo));
+      await tester.pumpAndSettle();
+
+      expect(find.byIcon(Icons.volume_up_outlined), findsNothing);
+    }, skip: kAiVoiceEnabled);
 
     testWidgets('renders progress indicator 1/3', (tester) async {
       await tester.pumpWidget(_wrap(const SurveyQuestionsScreen(), repo: repo));

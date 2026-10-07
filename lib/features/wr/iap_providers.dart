@@ -24,6 +24,7 @@ import '../../core/data/wr_iap_repository.dart';
 import '../../core/data/wr_iap_subscription_repository.dart';
 import '../../core/logic/wr_iap_renewal.dart';
 import 'wr_providers.dart';
+import '../../core/l10n/wr_tr.dart';
 
 /// Các gói đang bày bán, đã hỏi giá kho ứng dụng.
 ///
@@ -117,7 +118,10 @@ class WrIapController extends StateNotifier<WrIapState> {
           if (!mounted) return;
           state = state.copyWith(
             phase: WrIapPhase.idle,
-            error: 'Kho ứng dụng báo lỗi. Bạn thử lại sau nhé.',
+            error: tr(
+              'Kho ứng dụng báo lỗi. Bạn thử lại sau nhé.',
+              'The store reported an error. Please try again later.',
+            ),
           );
         },
       );
@@ -144,7 +148,10 @@ class WrIapController extends StateNotifier<WrIapState> {
           phase: WrIapPhase.idle,
           error: purchase.errorMessage?.trim().isNotEmpty == true
               ? purchase.errorMessage
-              : 'Kho ứng dụng không hoàn tất được giao dịch.',
+              : tr(
+                  'Kho ứng dụng không hoàn tất được giao dịch.',
+                  'The store could not complete the purchase.',
+                ),
         );
         return;
 
@@ -209,7 +216,12 @@ class WrIapController extends StateNotifier<WrIapState> {
   Future<void> buy(String productId) async {
     final userId = _ref.read(currentUserIdProvider);
     if (userId == null) {
-      state = state.copyWith(error: 'Bạn cần đăng nhập trước khi mua.');
+      state = state.copyWith(
+        error: tr(
+          'Bạn cần đăng nhập trước khi mua.',
+          'Please sign in before buying.',
+        ),
+      );
       return;
     }
     state = state.copyWith(
@@ -226,7 +238,10 @@ class WrIapController extends StateNotifier<WrIapState> {
       if (!mounted) return;
       state = state.copyWith(
         phase: WrIapPhase.idle,
-        error: 'Không mở được cửa sổ thanh toán của kho ứng dụng.',
+        error: tr(
+          'Không mở được cửa sổ thanh toán của kho ứng dụng.',
+          'Could not open the store payment window.',
+        ),
       );
     }
   }
@@ -239,7 +254,9 @@ class WrIapController extends StateNotifier<WrIapState> {
   Future<void> restore() async {
     final userId = _ref.read(currentUserIdProvider);
     if (userId == null) {
-      state = state.copyWith(error: 'Bạn cần đăng nhập trước.');
+      state = state.copyWith(
+        error: tr('Bạn cần đăng nhập trước.', 'Please sign in first.'),
+      );
       return;
     }
     state = state.copyWith(
@@ -253,7 +270,10 @@ class WrIapController extends StateNotifier<WrIapState> {
       if (!mounted) return;
       state = state.copyWith(
         phase: WrIapPhase.idle,
-        error: 'Không khôi phục được lúc này. Bạn thử lại sau nhé.',
+        error: tr(
+          'Không khôi phục được lúc này. Bạn thử lại sau nhé.',
+          'Could not restore right now. Please try again later.',
+        ),
       );
       return;
     }

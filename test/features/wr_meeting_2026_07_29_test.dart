@@ -12,6 +12,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/logic/wr_ai_voice.dart';
 import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -315,10 +316,10 @@ void main() {
       expect(find.byKey(const Key('wr_home_mood_content')), findsOneWidget);
     });
 
-    testWidgets('thứ tự dọc đúng mockup: check-in → nhận ra → gợi ý → '
-        'Insight → Tiếp tục', (tester) async {
-      // Thứ tự lấy từ `screenHome()` của mockup Sprint 2. Hai khối "sau
-      // check-in" chèn vào GIỮA, không đẩy check-in hay Insight đi đâu cả.
+    testWidgets('thứ tự dọc đúng mockup v47: cảm xúc hôm nay → gợi ý → nhận '
+        'ra → Tiếp tục; Insight gần nhất nhường chỗ', (tester) async {
+      // Thứ tự lấy từ `screenHome()` của mockup v47. Sau check-in, Insight
+      // gần nhất nhường chỗ cho hai khối nói về chính lần check-in đó.
       // Khoá bằng toạ độ chứ không bằng thứ tự trong code — đây là thứ người
       // dùng thật sự nhìn thấy.
       final intel = intelWithPattern()
@@ -361,23 +362,100 @@ void main() {
 
       double top(String key) => tester.getTopLeft(find.byKey(Key(key))).dy;
 
-      final checkin = tester
-          .getTopLeft(
-            find.text(wrKeepTitleTail('Ngày hôm nay của bạn như thế nào?')),
-          )
-          .dy;
-      expect(checkin, lessThan(top('wr_home_system_notice')));
-      expect(
-        top('wr_home_system_notice'),
-        lessThan(top('wr_home_mood_content')),
-      );
+      expect(top('wr_home_mood_row'), lessThan(top('wr_home_mood_content')));
       expect(
         top('wr_home_mood_content'),
-        lessThan(top('wr_home_latest_insight')),
+        lessThan(top('wr_home_system_notice')),
       );
       expect(
-        top('wr_home_latest_insight'),
+        top('wr_home_system_notice'),
         lessThan(top('wr_home_continue_today')),
+      );
+      expect(find.byKey(const Key('wr_home_latest_insight')), findsNothing);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  group('Home — mockup v47', () {
+    testWidgets('hero thành phố thay minh hoạ cũ, avatar nằm trên hero', (
+      tester,
+    ) async {
+      await _pump(tester, _wrap(const WrHomeScreen()));
+
+      final hero = find.byKey(const Key('wr_home_hero'));
+      expect(hero, findsOneWidget);
+      expect(
+        find.descendant(
+          of: hero,
+          matching: find.byKey(const Key('wr_home_profile_button')),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Dừng lại một chút. Hôm nay của bạn đang như thế nào?'),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('chưa check-in: lưới sáu ô + Insight gần nhất', (tester) async {
+      await _pump(tester, _wrap(const WrHomeScreen()));
+
+      expect(find.byKey(const Key('wr_home_mood_row')), findsNothing);
+      expect(find.byKey(const Key('wr_home_checkin_stress')), findsOneWidget);
+      expect(
+        find.byKey(const Key('wr_home_latest_insight_empty')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('đã check-in: lưới thu thành "Hôm nay bạn … · Đổi", Đổi mở '
+        'lại lưới', (tester) async {
+      await _pump(
+        tester,
+        _wrap(
+          const WrHomeScreen(),
+          repo: FakeWrRepository()..seedTodayCheckin(_checkin(Mood.tired)),
+        ),
+      );
+
+      final row = find.byKey(const Key('wr_home_mood_row'));
+      expect(row, findsOneWidget);
+      expect(
+        find.descendant(
+          of: row,
+          matching: find.textContaining(
+            'mệt mỏi cần nghỉ ngơi',
+            findRichText: true,
+          ),
+        ),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('wr_home_checkin_stress')), findsNothing);
+
+      await tester.tap(find.byKey(const Key('wr_home_mood_change')));
+      await tester.pumpAndSettle();
+      expect(row, findsNothing);
+      expect(find.byKey(const Key('wr_home_checkin_stress')), findsOneWidget);
+    });
+
+    testWidgets('lối vào Thư viện nằm trên đầu thẻ gợi ý', (tester) async {
+      final moodContent = FakeWrMoodContentRepository()
+        ..seedContent([fakeMoodContent(id: 'm1', mood: Mood.stressed)]);
+      await _pump(
+        tester,
+        _wrap(
+          const WrHomeScreen(),
+          repo: FakeWrRepository()..seedTodayCheckin(_checkin(Mood.stressed)),
+          moodContent: moodContent,
+        ),
+      );
+
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('wr_home_mood_content_card')),
+          matching: find.byKey(const Key('wr_home_mood_library_link')),
+        ),
+        findsOneWidget,
       );
     });
   });
@@ -415,7 +493,7 @@ void main() {
       // Khuôn câu của mockup Sprint 2: Home nhắc GIAI ĐOẠN đang dở, tên việc cụ
       // thể để dành cho màn chủ đề.
       expect(
-        find.text('Chủ đề "Dám lên tiếng": bước Nhận diện đang chờ'),
+        find.text('"Dám lên tiếng": bước Nhận diện đang chờ'),
         findsOneWidget,
       );
     });
@@ -542,7 +620,7 @@ void main() {
 
         expect(find.byKey(const Key('wr_home_continue_today')), findsOneWidget);
         expect(
-          find.text('Chủ đề "Phản hồi hiệu quả": bước Nhận diện đang chờ'),
+          find.text('"Phản hồi hiệu quả": bước Nhận diện đang chờ'),
           findsOneWidget,
         );
 
@@ -596,8 +674,9 @@ void main() {
 
       await _pump(tester, _wrap(const WrHomeScreen(), intel: intel));
 
+      // Nhãn giai đoạn theo mockup v47: bước thứ hai là "Phần của tôi".
       expect(
-        find.text('Chủ đề "Gần xong": bước Thử nghiệm đang chờ'),
+        find.text('"Gần xong": bước Phần của tôi đang chờ'),
         findsOneWidget,
       );
     });
@@ -1106,6 +1185,27 @@ void main() {
       expect(find.byKey(const Key('wr_chat_action_calm')), findsOneWidget);
     });
 
+    testWidgets('mở lại cuộc trò chuyện: lời mời ở lượt cuối vẫn có nút', (
+      tester,
+    ) async {
+      // Người dùng gặp 09/09: nút không lưu vào DB, nên mở lại cuộc trò chuyện
+      // thì câu "thử một bài đọc ngắn" còn đó mà không có gì để bấm.
+      final chat = FakeWrChatRepository()
+        ..seedConversation('c1', const [
+          WrChatMessage(role: WrChatRole.user, content: 'khá là căng thẳng'),
+          WrChatMessage(
+            role: WrChatRole.assistant,
+            content:
+                'Bạn có muốn thử một bài đọc ngắn để thấy nhẹ lòng hơn lúc này không?',
+          ),
+        ]);
+
+      await _pump(tester, _wrap(const WrAskScreen(), chat: chat));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('wr_chat_action_calm')), findsOneWidget);
+    });
+
     testWidgets('lượt không có lời mời thì KHÔNG có nút', (tester) async {
       final chat = FakeWrChatRepository()..replyAction = null;
 
@@ -1364,8 +1464,12 @@ void main() {
       );
       expect(find.textContaining(kTraChieuFormatLabel), findsOneWidget);
       expect(find.text('Xem chi tiết'), findsOneWidget);
-      // Chữ, không ảnh — nguyên tắc của họp 2026-07-29 vẫn giữ.
-      expect(find.byType(Image), findsNothing);
+      // Chữ, không ảnh — nguyên tắc của họp 2026-07-29 vẫn giữ. Chỉ xét trong
+      // thẻ: hero v47 của tab có ảnh minh hoạ riêng.
+      expect(
+        find.descendant(of: card, matching: find.byType(Image)),
+        findsNothing,
+      );
     });
 
     testWidgets('chạm thẻ mở màn Trà Chiều', (tester) async {
@@ -1444,17 +1548,26 @@ void main() {
         ),
       );
 
-      expect(find.byKey(const Key('wr_mood_reader_header')), findsOneWidget);
-      expect(find.byType(SliverAppBar), findsOneWidget);
+      final header = find.byKey(const Key('wr_mood_reader_header'));
+      expect(header, findsOneWidget);
+      final headerTop = tester.getTopLeft(header).dy;
 
-      await tester.drag(find.byType(CustomScrollView), const Offset(0, -1200));
+      await tester.drag(find.byType(ListView), const Offset(0, -1200));
       await tester.pumpAndSettle();
 
-      // Cuộn xa rồi mà thanh tiêu đề vẫn còn: đúng yêu cầu "chỉ đẩy nội dung
-      // lên thôi và giữ lại header".
-      expect(find.byKey(const Key('wr_mood_reader_header')), findsOneWidget);
+      // Cuộn xa rồi mà thanh tiêu đề vẫn ở đỉnh, nút lùi vẫn bấm được, và tên
+      // bài hiện thu nhỏ trên thanh: đúng yêu cầu "chỉ đẩy nội dung lên thôi
+      // và giữ lại header".
+      expect(tester.getTopLeft(header).dy, headerTop);
       expect(
-        find.text('Khi áp lực đến từ việc muốn kiểm soát mọi thứ'),
+        find.byKey(const Key('wr_mood_reader_back')).hitTestable(),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: header,
+          matching: find.text('Khi áp lực đến từ việc muốn kiểm soát mọi thứ'),
+        ),
         findsOneWidget,
       );
     });
@@ -1475,9 +1588,13 @@ void main() {
       expect(find.byKey(const Key('wr_mood_audio_player')), findsNothing);
     });
 
-    testWidgets('audio chưa có bản thu thì mời nghe bằng giọng đọc AI', (
+    testWidgets('audio chưa có bản thu: giọng AI tắt thì không mời dựng', (
       tester,
     ) async {
+      // Mockup v47 (khách 06/10): tắt giọng AI. `kAiVoiceEnabled` mặc định
+      // false, nên bài chưa có bản thu chỉ báo đang chuẩn bị, bấm không gọi
+      // TTS.
+      final tts = _FakeTts(url: 'https://cdn.test/x.wav');
       final moodContent = libraryWith(
         fakeMoodContent(
           id: 'm1',
@@ -1492,11 +1609,17 @@ void main() {
         _wrap(
           const WrMoodReaderScreen(contentId: 'm1'),
           moodContent: moodContent,
+          tts: tts,
         ),
       );
 
       expect(find.byKey(const Key('wr_mood_audio_player')), findsOneWidget);
-      expect(find.text('Nghe bằng giọng đọc AI'), findsOneWidget);
+      expect(find.text('Nghe bằng giọng đọc AI'), findsNothing);
+      expect(find.text('Bản thu đang được chuẩn bị.'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('wr_mood_audio_play')));
+      await tester.pumpAndSettle();
+      expect(tts.calls, 0);
     });
 
     testWidgets('đã có bản thu thì không gọi TTS', (tester) async {
@@ -1527,6 +1650,8 @@ void main() {
     });
 
     testWidgets('TTS hỏng thì hiện nguyên văn lý do', (tester) async {
+      // Nhánh dựng bản thu tại chỗ chỉ chạy khi bật giọng AI
+      // (`--dart-define=WR_AI_VOICE=true`).
       final tts = _FakeTts(
         error: const TtsException(
           'Giọng đọc AI chưa dùng được: A paid plan is required.',
@@ -1554,7 +1679,7 @@ void main() {
 
       expect(tts.calls, 1);
       expect(find.textContaining('A paid plan is required'), findsOneWidget);
-    });
+    }, skip: !kAiVoiceEnabled);
   });
 
   // -------------------------------------------------------------------------

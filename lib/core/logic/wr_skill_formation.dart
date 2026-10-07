@@ -74,10 +74,10 @@ const Set<String> kPracticeBehaviors = {
 // ---------------------------------------------------------------------------
 
 enum SkillStage {
-  /// Đang đi ba bước Nhận diện → Thử nghiệm → Chuyển hoá.
+  /// Đang đi bốn bước Nhận diện → Phần của tôi → Chọn một cách → Mang về.
   onboarding,
 
-  /// Đã xong ba bước, đang lặp lại để thành phản xạ.
+  /// Đã xong bốn bước, đang lặp lại để thành phản xạ.
   maintaining,
 
   /// Đã chạm ngưỡng — kỹ năng đã hình thành.
@@ -117,7 +117,7 @@ class SkillFormation {
 
   final int threshold;
 
-  /// Đã đi hết ba bước làm quen (ghi danh đã khép).
+  /// Đã đi hết bốn bước làm quen (ghi danh đã khép).
   final bool onboardingDone;
 
   /// Ngày chạm ngưỡng. Null khi chưa hình thành.

@@ -21,6 +21,8 @@
 // Ba vế, ba câu khác nhau, mỗi câu một cửa sổ ngày khác nhau — đủ để đáng có
 // chỗ riêng và có test riêng, thay vì trốn trong `build()` của một widget.
 
+import '../l10n/wr_tr.dart';
+
 /// Một thuê bao App Store của người đang đăng nhập.
 ///
 /// Ảnh chụp từ `wr_iap_transactions` — bảng đó client chỉ ĐỌC được hàng của
@@ -92,21 +94,41 @@ class WrRenewalNotice {
       '${date.month.toString().padLeft(2, '0')}/${date.year}';
 
   String get title => switch (kind) {
-    WrRenewalKind.willRenew => 'Gói tự động gia hạn ngày $dateLabel',
-    WrRenewalKind.willEnd => 'Gói hết hạn ngày $dateLabel',
-    WrRenewalKind.unknown => 'Kỳ hiện tại kết thúc ngày $dateLabel',
+    WrRenewalKind.willRenew => tr(
+      'Gói tự động gia hạn ngày $dateLabel',
+      'Your plan renews automatically on $dateLabel',
+    ),
+    WrRenewalKind.willEnd => tr(
+      'Gói hết hạn ngày $dateLabel',
+      'Your plan ends on $dateLabel',
+    ),
+    WrRenewalKind.unknown => tr(
+      'Kỳ hiện tại kết thúc ngày $dateLabel',
+      'The current period ends on $dateLabel',
+    ),
   };
 
   String get body => switch (kind) {
-    WrRenewalKind.willRenew =>
+    WrRenewalKind.willRenew => tr(
       'Apple sẽ trừ tiền kỳ tiếp vào ngày này. Không muốn gia hạn nữa thì '
           'tắt trước ngày đó: bạn vẫn dùng hết kỳ đã trả tiền.',
-    WrRenewalKind.willEnd =>
+      'Apple will charge for the next period on this date. If you do not '
+          'want to renew, turn it off before then: you keep the period you '
+          'have already paid for.',
+    ),
+    WrRenewalKind.willEnd => tr(
       'Bạn đã tắt tự động gia hạn. Sau ngày này tài khoản trở về bản miễn '
           'phí, những gì bạn đã ghi vẫn còn nguyên.',
-    WrRenewalKind.unknown =>
+      'You have turned off auto-renewal. After this date your account goes '
+          'back to the free version, and everything you have recorded stays.',
+    ),
+    WrRenewalKind.unknown => tr(
       'Nếu bạn chưa tắt tự động gia hạn thì Apple sẽ trừ tiền kỳ tiếp vào '
           'ngày này. Mở phần quản lý gói để xem và đổi.',
+      'If you have not turned off auto-renewal, Apple will charge for the '
+          'next period on this date. Open subscription management to check or '
+          'change it.',
+    ),
   };
 }
 

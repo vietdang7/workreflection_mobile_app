@@ -1,32 +1,37 @@
-// Màn 5 — Lựa chọn (HXA Pattern Commit · Hai Lớp v1.6 §VI).
+// Bước 4/4 — Mang theo (mockup v47, `screenReflectFlow` i===3).
 //
-// "Không tạo Goal lớn. Chỉ tạo Tiny Next Step." Bỏ qua được: Reflection kết
-// thúc khi đủ ý nghĩa, không phải khi đủ bước (HXA §3.8).
+// "Không tạo Goal lớn. Chỉ tạo Tiny Next Step." (HXA §3.8)
 //
-// v1.6 §VI đưa vào bể Lựa chọn: bốn lựa chọn có sẵn để CHẠM, thay vì một ô
-// trống bắt gõ. Lựa chọn đầu tiên là Practice riêng của tình huống vừa phản tư
-// (gắn nhãn "Gợi ý"), cộng ba câu ngẫu nhiên từ bể 8 câu dùng chung. Tình huống
-// tự mô tả không có Practice riêng nên lấy đủ bốn câu từ bể.
+// Trên cùng là thẻ coral "Điều bạn vừa nhìn thấy" nhắc lại Insight vừa giữ ở
+// bước 3, để phép thử bám vào đúng điều đó. Dưới là ba phép thử nhỏ theo luật
+// của mockup (`reflectionNextOptions`: ba thẻ riêng cho C2-03/04/05, còn lại
+// dùng bộ chung Quan sát · Thử một bước nhỏ · Nói ra điều mình cần — thẻ giữa
+// lấy bước thực hành của chính tình huống làm mô tả).
 //
-// Ô tự viết vẫn còn, chỉ là không còn bắt buộc: người dùng nào muốn viết thì
-// bấm "Tự viết".
+// Khách 06/10: "chọn hoặc tự gõ, rồi Lưu". Mockup chạm là lưu luôn; ở đây chạm
+// chỉ là chọn, nút Lưu mới ghi, để người dùng còn đổi ý hoặc chuyển sang tự
+// viết.
+//
+// Bản trước lấy bốn câu từ bể `wr_choice_pool` (Hai Lớp v1.6 §VI). v47 thay bằng
+// ba thẻ có tiêu đề + mô tả; bảng đó vẫn giữ nguyên trong DB.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/l10n/wr_tr.dart';
-import '../../../../core/logic/wr_reflect_flow.dart';
-import '../../../../core/logic/wr_situation_picker.dart';
+import '../../../../core/logic/wr_flow_error.dart';
+import '../../../../core/logic/wr_reflect_v47.dart';
 import '../../../../core/models/wr_episode.dart';
 import '../../../../core/theme/wr_colors.dart';
+import '../../../../core/theme/wr_text.dart';
+import '../../../../core/widgets/eyebrow.dart';
+import '../../../../core/widgets/wr_card.dart';
+import '../../../../core/widgets/wr_paragraph.dart';
 import '../../../../core/widgets/wr_voice_field.dart';
 import '../../episode_flow_controller.dart';
-import '../../mood_content_providers.dart';
 import '../../wr_providers.dart';
-import '../../../../core/logic/wr_flow_error.dart';
 import 'wr_flow_scaffold.dart';
-import '../../../../core/widgets/wr_paragraph.dart';
 
 class WrCommitScreen extends ConsumerStatefulWidget {
   const WrCommitScreen({super.key});
@@ -38,16 +43,16 @@ class WrCommitScreen extends ConsumerStatefulWidget {
 class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
   final _controller = TextEditingController();
   bool _busy = false;
-  bool _writing = false; // true = tự viết thay vì chọn từ bể
   String? _error;
-  String? _picked;
-  bool _restoredSavedAction = false;
-  Object? _restoredEpisodeKey;
-  bool _actionEdited = false;
 
-  /// Bốn lựa chọn của lần vào này. Giữ ở state để không bị trộn lại mỗi lần
-  /// widget dựng lại — chọn xong một câu rồi thấy danh sách đổi là rối.
-  List<String>? _options;
+  /// `id` của phép thử đang chọn.
+  String? _picked;
+
+  /// true = tự viết thay vì chọn một thẻ.
+  bool _writing = false;
+
+  /// Đã đọc lại lựa chọn đã lưu của phiên này chưa (mở lại phiên còn dở).
+  Object? _restoredFor;
 
   @override
   void dispose() {
@@ -55,88 +60,35 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
     super.dispose();
   }
 
-  void _resetForEpisode(ReflectionEpisode episode) {
-    // Persisted episodes always have an id. The identity fallback keeps two
-    // unsaved in-memory episodes from sharing state in a test/preview flow.
-    final episodeKey = episode.id ?? identityHashCode(episode);
-    if (_restoredEpisodeKey == episodeKey) return;
-    _restoredEpisodeKey = episodeKey;
-    _restoredSavedAction = false;
-    _actionEdited = false;
-    _writing = false;
+  List<ReflectNextOption> _options(ReflectionEpisode episode) =>
+      reflectionNextOptions(
+        code: episode.situationCode,
+        practice: ref.watch(wrEpisodeStoryProvider)?.practiceAction,
+      );
+
+  /// Mở lại phiên đã có bước nhỏ: chọn sẵn thẻ trùng tên, không trùng thì
+  /// đưa câu đó vào ô tự viết.
+  void _restore(ReflectionEpisode episode, List<ReflectNextOption> options) {
+    final key = episode.id ?? identityHashCode(episode);
+    if (_restoredFor == key) return;
+    _restoredFor = key;
+    // Đổi sang phiên khác trong cùng màn thì xoá lựa chọn của phiên trước, kẻo
+    // bấm Lưu ghi chữ của phiên cũ vào phiên mới.
     _picked = null;
-    _options = null;
+    _writing = false;
     _controller.clear();
-  }
-
-  List<String> _buildOptions() {
-    final pool = ref.watch(wrChoicePoolProvider).valueOrNull ?? const [];
-    if (pool.isEmpty) return const [];
-    final practice = ref.watch(wrEpisodeStoryProvider)?.practiceAction?.trim();
-    // `.text` chọn ngôn ngữ ở đây, lúc dựng màn — không phải lúc gọi server.
-    // Đổi ngôn ngữ dựng lại cả cây widget nên `_options` cũng được tính lại
-    // theo, chứ không kẹt lại bốn câu tiếng cũ.
-    return _options ??= pickChoiceOptions(
-      practice: practice,
-      pool: pool.map((line) => line.text).toList(),
-    );
-  }
-
-  /// Restore a saved Practice when this screen is reopened.
-  ///
-  /// Reopening an integrated Episode keeps its `tinyAction` and
-  /// `reflectChoice`. Without hydrating them here, the UI looked like a fresh
-  /// choice screen and a user could accidentally replace the old action just
-  /// because it was not selected.
-  void _restoreSavedAction({
-    required ReflectionEpisode episode,
-    required List<String> options,
-    required bool choicePoolReady,
-  }) {
-    if (_restoredSavedAction) return;
-
-    // The free-write fallback is visible while the pool is loading. If the
-    // user starts typing in that window, their text is authoritative: a late
-    // pool response must not switch the screen back to the saved preset.
-    if (_actionEdited) {
-      _writing = true;
-      _picked = null;
-      _restoredSavedAction = true;
-      return;
-    }
-
     final action = episode.tinyAction?.trim();
-    if (action == null || action.isEmpty) {
-      _restoredSavedAction = true;
-      return;
-    }
-
-    final choice = episode.reflectChoice?.trim();
-    if (choice != null && choice.isNotEmpty) {
-      // A preset may be localized or the pool may still be loading. Do not
-      // turn it into a free-form action before the pool has answered.
-      if (!choicePoolReady) return;
-      if (options.contains(choice)) {
-        _picked = choice;
-      } else {
-        // The old preset is no longer in the current pool. Preserve exactly
-        // what the user saved instead of silently replacing it.
-        _writing = true;
-        _controller.text = action;
+    if (action == null || action.isEmpty) return;
+    for (final o in options) {
+      if (o.title == action) {
+        _picked = o.id;
+        return;
       }
-    } else {
-      _writing = true;
-      _controller.text = action;
     }
-    _restoredSavedAction = true;
+    _writing = true;
+    _controller.text = action;
   }
 
-  void _handleActionChanged() {
-    _actionEdited = true;
-    setState(() {});
-  }
-
-  /// [choice] chỉ có khi câu này được chạm từ bể Lựa chọn (v1.6 §V · §VI).
   Future<void> _save(String action, {String? choice}) async {
     if (_busy) return;
     final text = action.trim();
@@ -170,103 +122,139 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
       return WrFlowGone(onHome: () => context.go('/home'));
     }
 
-    // A single mounted route can observe a different resumed Episode. Do not
-    // carry the previous episode's selected choice, controller text, or
-    // restoration guard into the new episode.
-    _resetForEpisode(episode);
+    final options = _options(episode);
+    _restore(episode, options);
 
-    final choicePool = ref.watch(wrChoicePoolProvider);
-    final options = _buildOptions();
-    _restoreSavedAction(
-      episode: episode,
-      options: options,
-      choicePoolReady: choicePool.hasValue || choicePool.hasError,
-    );
-    // Không đọc được bể thì lùi về ô tự viết — thà bắt gõ còn hơn hiện một màn
-    // không có lựa chọn nào.
-    final showChoices = options.isNotEmpty && !_writing;
-    final hasPractice =
-        (ref.watch(wrEpisodeStoryProvider)?.practiceAction?.trim() ?? '')
-            .isNotEmpty;
-
-    final canSave = showChoices
-        ? _picked != null
-        : _controller.text.trim().isNotEmpty;
+    ReflectNextOption? picked;
+    for (final o in options) {
+      if (o.id == _picked) picked = o;
+    }
+    final canSave = _writing
+        ? _controller.text.trim().isNotEmpty
+        : picked != null;
+    final seen = episode.draftMeaning?.trim();
 
     return WrFlowScaffold(
-      eyebrow: tr('Bước tiếp theo', 'Your next step'),
-      title: tr(
-        'Sau góc nhìn này, bước tiếp theo của bạn sẽ là gì?',
-        'After this way of seeing it, what will your next step be?',
-      ),
-      subtitle: tr(
-        'Mỗi lần nhìn lại luôn mang đến cho bạn một cơ hội để chủ động '
-            'thay đổi.',
-        'Every look back hands you a chance to change something on purpose.',
-      ),
-      progress: reflectProgress(3),
+      eyebrow: reflectStepEyebrow(3),
+      title: kTakeAwayTitle,
+      subtitle: kTakeAwaySubtitle,
+      step: 3,
       onBack: () => context.pop(),
+      // Đóng ở bước cuối vẫn giữ lần nhìn lại: sang màn Xong, chỉ không có
+      // bước nhỏ nào.
       onClose: () => context.push('/wr/flow/done'),
-      primaryLabel: tr('Lưu lựa chọn này', 'Save this choice'),
+      primaryLabel: kTakeAwaySave,
       busy: _busy,
       onPrimary: canSave
-          ? () => showChoices
-                // Chạm từ bể: câu này vừa là Choice vừa là Tiny Next Step.
-                ? _save(_picked!, choice: _picked)
-                // Tự viết: có cam kết, nhưng không có lựa chọn nào được chọn.
-                : _save(_controller.text)
+          ? () => _writing
+                ? _save(_controller.text)
+                : _save(picked!.title, choice: picked.title)
           : null,
-      // Hai lối ra phụ, tuỳ đang ở chế độ nào.
-      secondaryLabel: showChoices
-          ? tr('Tự viết', 'Write my own')
-          : tr('Chưa cần bước nào', 'No step needed yet'),
-      onSecondary: showChoices
-          ? () => setState(() {
-              _writing = true;
-              _picked = null;
-            })
-          : () => context.push('/wr/flow/done'),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          if (showChoices) ...[
-            for (final option in options) ...[
-              if (option != options.first) const SizedBox(height: 9),
-              _ChoiceTile(
-                key: Key('wr_choice_${options.indexOf(option)}'),
-                label: option,
-                // §VI: chỉ lựa chọn ĐẦU TIÊN mang nhãn "Gợi ý", và chỉ khi nó
-                // thật sự là Practice của tình huống — không phải một câu chung
-                // bốc từ bể.
-                suggested: hasPractice && option == options.first,
-                selected: _picked == option,
-                onTap: () => setState(() => _picked = option),
+          if (seen != null && seen.isNotEmpty) ...[
+            Container(
+              key: const Key('wr_commit_seen'),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+              decoration: BoxDecoration(
+                color: WrColors.coral.withValues(alpha: 0.055),
+                borderRadius: BorderRadius.circular(18),
               ),
-            ],
-            const SizedBox(height: 14),
-            Center(
-              child: GestureDetector(
-                key: const Key('wr_commit_skip'),
-                behavior: HitTestBehavior.opaque,
-                onTap: () => context.push('/wr/flow/done'),
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 6),
-                  child: Text(
-                    tr('Chưa cần bước nào', 'No step needed yet'),
-                    style: TextStyle(fontSize: 13.5, color: WrColors.muted),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  WrEyebrow(kTakeAwaySeen, color: WrColors.pillCoralText),
+                  const SizedBox(height: 6),
+                  WrParagraph(
+                    '“$seen”',
+                    style: WrText.serifQuote(
+                      fontSize: 15,
+                      color: WrColors.navy,
+                    ),
+                    textAlign: TextAlign.start,
                   ),
-                ),
+                ],
               ),
             ),
-          ] else
+            const SizedBox(height: 14),
+          ],
+          for (var i = 0; i < options.length; i++) ...[
+            if (i > 0) const SizedBox(height: 9),
+            WrMentorCard(
+              key: Key('wr_choice_$i'),
+              selected: !_writing && _picked == options[i].id,
+              onTap: _busy
+                  ? null
+                  : () => setState(() {
+                      _picked = options[i].id;
+                      _writing = false;
+                    }),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  WrParagraph(
+                    options[i].title,
+                    style: const TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w700,
+                      color: WrColors.navy,
+                      height: 1.42,
+                    ),
+                    textAlign: TextAlign.start,
+                  ),
+                  const SizedBox(height: 6),
+                  WrParagraph(
+                    options[i].desc,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      color: WrColors.text2,
+                      height: 1.5,
+                    ),
+                    textAlign: TextAlign.start,
+                  ),
+                  // Mockup v47 `.rf-mentor-pick`: thẻ đang chọn nói rõ là
+                  // đã chọn, và bấm Lưu là giữ lại.
+                  if (!_writing && _picked == options[i].id) ...[
+                    const SizedBox(height: 10),
+                    Text(
+                      tr('Đã chọn · lưu lại', 'Picked · save it'),
+                      key: Key('wr_choice_picked_$i'),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: WrColors.coral,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ],
+          const SizedBox(height: 9),
+          WrRadioOption(
+            key: const Key('wr_commit_write_own'),
+            label: kTakeAwayWriteOwn,
+            custom: true,
+            selected: _writing,
+            onTap: _busy
+                ? null
+                : () => setState(() {
+                    _writing = true;
+                    _picked = null;
+                  }),
+          ),
+          if (_writing) ...[
+            const SizedBox(height: 10),
             WrVoiceField(
               fieldKey: const Key('wr_commit_field'),
               controller: _controller,
-              hintText: tr('Mình sẽ thử…', 'I will try…'),
+              hintText: kTakeAwayHint,
               minLines: 3,
-              maxLines: 4,
-              onChanged: _handleActionChanged,
+              maxLines: 5,
+              onChanged: () => setState(() {}),
             ),
+          ],
           if (_error != null) ...[
             const SizedBox(height: 16),
             Text(
@@ -275,80 +263,6 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
             ),
           ],
         ],
-      ),
-    );
-  }
-}
-
-/// Một dòng lựa chọn. Nhãn "Gợi ý" chỉ gắn cho Practice của chính tình huống.
-class _ChoiceTile extends StatelessWidget {
-  const _ChoiceTile({
-    super.key,
-    required this.label,
-    required this.selected,
-    required this.suggested,
-    required this.onTap,
-  });
-
-  final String label;
-  final bool selected;
-  final bool suggested;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 14),
-        decoration: BoxDecoration(
-          color: selected
-              ? WrColors.coral.withValues(alpha: 0.07)
-              : WrColors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: selected
-                ? WrColors.coral
-                : WrColors.navy.withValues(alpha: 0.12),
-            width: 1.5,
-          ),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: WrParagraph(
-                label,
-                style: TextStyle(
-                  fontSize: 15,
-                  height: 1.45,
-                  color: WrColors.navy,
-                  fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
-                ),
-                textAlign: TextAlign.start,
-              ),
-            ),
-            if (suggested) ...[
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 3),
-                decoration: BoxDecoration(
-                  color: WrColors.teal.withValues(alpha: 0.14),
-                  borderRadius: BorderRadius.circular(100),
-                ),
-                child: Text(
-                  tr('Gợi ý', 'Suggestions'),
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w700,
-                    color: WrColors.pillTealText,
-                  ),
-                ),
-              ),
-            ],
-          ],
-        ),
       ),
     );
   }

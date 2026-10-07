@@ -15,7 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:workreflection_mobile/core/logic/wr_reflect_flow.dart';
+import 'package:workreflection_mobile/core/logic/wr_reflect_v47.dart';
 import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
@@ -89,6 +89,13 @@ class _FakeAuth implements AuthRepository {
 
   @override
   Future<void> deleteAccount() async => calls.add('deleteAccount');
+
+  @override
+  Future<void> signInAnonymously() async {}
+
+  @override
+  Future<bool> attachEmail(String email, String password, String name) async =>
+      true;
 }
 
 // ---------------------------------------------------------------------------
@@ -126,12 +133,6 @@ class _Stage {
         mood: 'tired',
         valence: WrValence.thachThuc,
       ),
-    ]);
-    moodContent.seedChoicePool(const [
-      'Ghi nhớ điều này để xem lại sau',
-      'Nói chuyện với ai đó về điều này',
-      'Chưa biết, cần thêm thời gian',
-      'Không cần hành động gì, chỉ cần ghi nhận là đủ',
     ]);
   }
 
@@ -234,34 +235,44 @@ Future<void> _pump(WidgetTester tester, Widget app) async {
   await tester.pumpAndSettle();
 }
 
-/// Đi hai bước ghi dữ liệu của luồng §V: chọn tình huống rồi qua bước chi tiết.
+/// Đi hai bước đầu của luồng v47: chọn tình huống rồi kể lại khoảnh khắc.
 ///
-/// Kết thúc ở màn Insight. [detail] null nghĩa là bỏ trống ô chi tiết — §V cho
-/// phép, và đó cũng là đường phần lớn người dùng đi.
+/// Kết thúc ở màn Insight. Mockup v47 bắt buộc ô kể, nên [detail] null nghĩa
+/// là gõ một câu mặc định — trừ khi ô đã có sẵn chữ của phiên được nạp lại.
 Future<void> _walkToMeaning(WidgetTester tester, {String? detail}) async {
-  // Bước 0 — CHỌN, không viết. Danh sách trộn ngẫu nhiên nên chạm mã nào đang
-  // hiện thì chạm mã đó.
+  // Bước 1/4 — CHỌN, không viết, rồi bấm "Tiếp tục". Danh sách trộn ngẫu
+  // nhiên nên chạm mã nào đang hiện thì chạm mã đó.
   if (find.byType(WrStepScreen).evaluate().isNotEmpty) {
-    for (final code in const ['C2-01', 'A3-01']) {
-      final chip = find.byKey(Key('wr_situation_$code'));
-      if (chip.evaluate().isEmpty) continue;
-      await tester.ensureVisible(chip);
-      await tester.pumpAndSettle();
-      await tester.tap(chip);
-      await tester.pumpAndSettle();
-      break;
-    }
+    await _pickVisibleSituation(tester);
   }
 
-  // Bước 1 — chi tiết cụ thể, không bắt buộc.
+  // Bước 2/4 — kể lại khoảnh khắc (bắt buộc).
   if (find.byType(WrDetailScreen).evaluate().isNotEmpty) {
-    if (detail != null) {
-      await tester.enterText(find.byKey(const Key('wr_detail_field')), detail);
+    final field = find.byKey(const Key('wr_detail_field'));
+    final current = tester.widget<TextField>(field).controller?.text ?? '';
+    if (detail != null || current.trim().isEmpty) {
+      await tester.enterText(field, detail ?? 'chuyện xảy ra hôm nay');
       await tester.pumpAndSettle();
     }
     await tester.tap(find.byKey(const Key('wr_flow_primary')));
     await tester.pumpAndSettle();
   }
+}
+
+/// Chọn tình huống đầu tiên đang hiện rồi bấm "Tiếp tục" (v47: chạm chỉ là
+/// chọn).
+Future<void> _pickVisibleSituation(WidgetTester tester) async {
+  for (final code in const ['C2-01', 'A3-01']) {
+    final chip = find.byKey(Key('wr_situation_$code'));
+    if (chip.evaluate().isEmpty) continue;
+    await tester.ensureVisible(chip);
+    await tester.pumpAndSettle();
+    await tester.tap(chip);
+    await tester.pumpAndSettle();
+    break;
+  }
+  await tester.tap(find.byKey(const Key('wr_flow_primary')));
+  await tester.pumpAndSettle();
 }
 
 void main() {
@@ -331,15 +342,8 @@ void main() {
     // và bắn điều hướng đè mất màn đang xem — xem test riêng bên dưới.
     expect(find.byType(WrStepScreen, skipOffstage: false), findsNothing);
 
-    // Bước Ý nghĩa có HAI LỚP từ changelog 24/08 §1.2: viết câu mở dở → xem
-    // góc nhìn chung → mới tiếp tục.
-    await tester.enterText(
-      find.byKey(const Key('wr_meaning_field')),
-      'mình chỉ lên tiếng khi thấy an toàn',
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('wr_flow_primary')));
-    await tester.pumpAndSettle();
+    // Mockup v47: Insight hiện NGAY sau bước kể, một chạm "Ừ, tôi cũng thấy
+    // vậy" là giữ câu đó.
     expect(find.byKey(const Key('wr_meaning_aha')), findsOneWidget);
     await tester.tap(find.byKey(const Key('wr_flow_primary')));
     await tester.pumpAndSettle();
@@ -354,15 +358,12 @@ void main() {
     expect(find.byType(WrDoneScreen), findsOneWidget);
     final saved = stage.episodes.episodes.single;
     expect(saved.state, ExperienceState.integrated);
-    // §1.2: `draft_meaning` là bản GỘP hai vế — lý do riêng của người dùng
-    // trước, góc nhìn chung sau. Giữ cả hai để Career Memory đọc lại được cả
-    // hai, thay vì chỉ giữ một câu đã viết sẵn.
+    // v47: `draft_meaning` là ĐÚNG câu Insight người dùng vừa đồng ý — dựng
+    // từ tình huống đã chọn và câu họ kể. Thư viện ở đây không có Story nên
+    // câu đó là câu chung của `reflectionAhaFor`.
     expect(
       saved.draftMeaning,
-      mergeInsight(
-        stem: 'mình chỉ lên tiếng khi thấy an toàn',
-        aha: kDefaultAha,
-      ),
+      reflectionAhaFor(code: saved.situationCode, detail: 'điều tôi viết thêm'),
     );
     expect(saved.tinyAction, isNotNull);
     // Đúng một STORY cho một phiên. Mảnh sinh thêm (Cột mốc · Chủ đề ·
@@ -375,6 +376,7 @@ void main() {
       hasLength(1),
     );
     expect(stage.intel.insertInsightCalls, hasLength(1));
+    expect(stage.intel.insertInsightCalls.single.content, saved.draftMeaning);
 
     // Không màn nào trong cả vòng ném lỗi ra mặt người dùng.
     expect(find.textContaining('Transition bất hợp lệ'), findsNothing);
@@ -390,24 +392,48 @@ void main() {
     stage.router.go('/wr/discover');
     await tester.pumpAndSettle();
     expect(find.byType(WrDiscoverScreen), findsOneWidget);
-    // Career Snapshot: mới một lần nhìn lại nên cột "Xuất hiện" còn thiếu 14.
+    // Một lần chọn tình huống: đã ghi nhận nhưng chưa điều nào lặp tới ngưỡng.
+    expect(
+      find.byKey(const Key('wr_discover_patterns_below_threshold')),
+      findsOneWidget,
+    );
+    // Career Snapshot (v47: thu gọn sẵn, mở ra mới thấy): mới một lần nhìn
+    // lại nên cột "Xuất hiện" còn thiếu 14.
+    final snapshotToggle = find.byKey(const Key('wr_discover_snapshot_toggle'));
+    await tester.ensureVisible(snapshotToggle);
+    await tester.pumpAndSettle();
+    await tester.tap(snapshotToggle);
+    await tester.pumpAndSettle();
     expect(
       find.textContaining('sẽ mở sau 14 lần nhìn lại nữa'),
       findsOneWidget,
     );
-    // Free: mọi diễn giải nằm sau paywall.
-    expect(find.byKey(const Key('wr_discover_need_lock')), findsOneWidget);
+    // Free: diễn giải sâu nằm sau paywall — thẻ navy cuối màn là ổ khoá.
+    expect(find.byKey(const Key('wr_discover_sca_deep_lock')), findsOneWidget);
 
     stage.router.go('/wr/journey');
     await tester.pumpAndSettle();
     expect(find.byType(WrJourneyScreen), findsOneWidget);
-    // Free: Career Memory khoá hoàn toàn, con số tổng vẫn nói ra.
+    // Mockup v47: không còn khối khoá riêng; Free khoá theo TỪNG MỐC ngoài
+    // tuần này. Fake repo khép Episode với ngày cố định 27/07/2026 nên mốc
+    // vừa tạo nằm ở tuần cũ → hiện "Premium · Mở khoá". Con số tổng vẫn nói
+    // ra.
     expect(
       find.byKey(const Key('wr_journey_memory_lock'), skipOffstage: false),
-      findsOneWidget,
+      findsNothing,
     );
+    expect(find.text('1 ghi nhận đã lưu', skipOffstage: false), findsOneWidget);
+    final firstEntry = find.byKey(
+      const Key('wr_journey_timeline_0'),
+      skipOffstage: false,
+    );
+    expect(firstEntry, findsOneWidget);
     expect(
-      find.textContaining('1 ghi nhận', skipOffstage: false),
+      find.descendant(
+        of: firstEntry,
+        matching: find.text('Premium · Mở khoá', skipOffstage: false),
+        skipOffstage: false,
+      ),
       findsOneWidget,
     );
 
@@ -442,13 +468,7 @@ void main() {
     await tester.pumpAndSettle();
     await _walkToMeaning(tester);
 
-    await tester.enterText(
-      find.byKey(const Key('wr_meaning_field')),
-      'đây không phải lần đầu',
-    );
-    await tester.pumpAndSettle();
-    await tester.tap(find.byKey(const Key('wr_flow_primary')));
-    await tester.pumpAndSettle();
+    // Giữ Insight — v47 chỉ còn một chạm ở bước này.
     await tester.tap(find.byKey(const Key('wr_flow_primary')));
     await tester.pumpAndSettle();
 
@@ -486,15 +506,7 @@ void main() {
     // Phiên 1 — bỏ dở giữa chừng bằng nút đóng.
     await tester.tap(find.byKey(const Key('wr_home_checkin_tired')));
     await tester.pumpAndSettle();
-    for (final code in const ['C2-01', 'A3-01']) {
-      final chip = find.byKey(Key('wr_situation_$code'));
-      if (chip.evaluate().isEmpty) continue;
-      await tester.ensureVisible(chip);
-      await tester.pumpAndSettle();
-      await tester.tap(chip);
-      await tester.pumpAndSettle();
-      break;
-    }
+    await _pickVisibleSituation(tester);
     await tester.enterText(
       find.byKey(const Key('wr_detail_field')),
       'câu trả lời dở dang',

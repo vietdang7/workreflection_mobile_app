@@ -103,6 +103,8 @@ class FakeWrContentRepository implements WrContentRepository {
             intensity: event.intensity,
             reflectionText: event.reflectionText,
             careerStage: event.careerStage,
+            // Giữ theme_id: bộ đếm thực hành và Cột mốc đọc theo cột này.
+            themeId: event.themeId,
             createdAt: DateTime.now(),
           );
     _events.add(stamped);

@@ -25,6 +25,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 
 import '../logic/wr_iap_catalog.dart';
 import '../models/wr_intelligence.dart';
+import '../l10n/wr_tr.dart';
 
 /// Tên Edge Function xác minh biên lai.
 const String kWrVerifyIapFunction = 'wr-verify-iap';
@@ -61,13 +62,15 @@ class WrIapOffer {
   String get durationSuffix {
     if (durationDays % 365 == 0) {
       final years = durationDays ~/ 365;
-      return years == 1 ? 'năm' : '$years năm';
+      return years == 1 ? tr('năm', 'year') : tr('$years năm', '$years years');
     }
     if (durationDays % 30 == 0) {
       final months = durationDays ~/ 30;
-      return months == 1 ? 'tháng' : '$months tháng';
+      return months == 1
+          ? tr('tháng', 'month')
+          : tr('$months tháng', '$months months');
     }
-    return '$durationDays ngày';
+    return tr('$durationDays ngày', '$durationDays days');
   }
 }
 
@@ -292,8 +295,11 @@ class StoreKitIapRepository implements WrIapRepository {
     }
 
     if (details == null) {
-      throw const WrIapException(
-        'Gói này chưa bày bán trên kho ứng dụng. Bạn thử lại sau nhé.',
+      throw WrIapException(
+        tr(
+          'Gói này chưa bày bán trên kho ứng dụng. Bạn thử lại sau nhé.',
+          'This plan is not on sale in the store yet. Please try again later.',
+        ),
       );
     }
 
@@ -324,8 +330,11 @@ class StoreKitIapRepository implements WrIapRepository {
   @override
   Future<WrEntitlementRecord> verify(WrIapPurchase purchase) async {
     if (purchase.serverVerificationData.isEmpty) {
-      throw const WrIapException(
-        'Kho ứng dụng không gửi kèm biên lai. Bạn thử "Khôi phục giao dịch".',
+      throw WrIapException(
+        tr(
+          'Kho ứng dụng không gửi kèm biên lai. Bạn thử "Khôi phục giao dịch".',
+          'The store did not send a receipt. Try "Restore purchases".',
+        ),
       );
     }
     try {
@@ -339,8 +348,11 @@ class StoreKitIapRepository implements WrIapRepository {
       );
       final data = res.data;
       if (data is! Map || data['entitlement'] == null) {
-        throw const WrIapException(
-          'Chưa xác nhận được giao dịch. Bạn thử "Khôi phục giao dịch".',
+        throw WrIapException(
+          tr(
+            'Chưa xác nhận được giao dịch. Bạn thử "Khôi phục giao dịch".',
+            'The purchase could not be confirmed. Try "Restore purchases".',
+          ),
         );
       }
       return WrEntitlementRecord.fromJson(
@@ -350,14 +362,22 @@ class StoreKitIapRepository implements WrIapRepository {
       final detail = e.details;
       final message = detail is Map ? detail['error']?.toString() : null;
       throw WrIapException(
-        message ?? 'Chưa xác nhận được giao dịch. Bạn thử lại sau nhé.',
+        message ??
+            tr(
+              'Chưa xác nhận được giao dịch. Bạn thử lại sau nhé.',
+              'The purchase could not be confirmed. Please try again later.',
+            ),
       );
     } on WrIapException {
       rethrow;
     } catch (_) {
-      throw const WrIapException(
-        'Không kết nối được để xác nhận giao dịch. Tiền chưa mất đi đâu: bạn '
-        'kiểm tra mạng rồi bấm "Khôi phục giao dịch".',
+      throw WrIapException(
+        tr(
+          'Không kết nối được để xác nhận giao dịch. Tiền chưa mất đi đâu: bạn '
+              'kiểm tra mạng rồi bấm "Khôi phục giao dịch".',
+          'Could not connect to confirm the purchase. Your money is safe: '
+              'check your connection, then tap "Restore purchases".',
+        ),
       );
     }
   }

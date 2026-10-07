@@ -175,7 +175,8 @@ void main() {
 
       expect(entries, hasLength(2));
       expect(entries.any((e) => e.title == 'X'), isFalse);
-      expect(entries.any((e) => e.title == 'Y'), isTrue);
+      // Mockup v47: bước thực hành xong mang tiêu đề "Thực hành: ‹việc›".
+      expect(entries.any((e) => e.title == 'Thực hành: Y'), isTrue);
     });
 
     test('chưa đọc được Episode thì vẫn giữ event của Episode', () {
@@ -395,7 +396,7 @@ void main() {
       expect(find.byKey(const Key('wr_skill_progress_t1')), findsNothing);
       expect(find.textContaining('lần thực hành'), findsNothing);
       expect(
-        find.text('Đi hết ba bước làm quen của chủ đề này trước đã.'),
+        find.text('Đi hết bốn bước làm quen của chủ đề này trước đã.'),
         findsOneWidget,
       );
     });

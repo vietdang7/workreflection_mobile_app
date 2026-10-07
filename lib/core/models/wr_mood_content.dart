@@ -221,6 +221,17 @@ Mood _moodFromContentKey(String value) => switch (value) {
 ///
 /// Hai cảm xúc thêm 24/08/2026 dùng CÙNG một chuỗi ở cả hai bảng (`foggy`,
 /// `outofsync`), nên chỗ lệch tên chỉ còn đúng hai cặp cũ.
+/// Mã nhóm trong `wr_mood_content.mood` → [Mood]; mã lạ hoặc null → null.
+Mood? moodFromContentKey(String? value) => switch (value) {
+  'stress' => Mood.stressed,
+  'tired' => Mood.tired,
+  'foggy' => Mood.foggy,
+  'outofsync' => Mood.outofsync,
+  'ok' => Mood.okay,
+  'happy' => Mood.happy,
+  _ => null,
+};
+
 extension MoodContentKey on Mood {
   String get moodContentKey => switch (this) {
     Mood.stressed => 'stress',
@@ -382,12 +393,16 @@ class PracticeStepNote {
     this.id,
     this.memoryEventId,
     this.createdAt,
+    this.choice,
   });
 
   final String? id;
   final String userId;
   final String stepId;
   final String note;
+
+  /// Cách người dùng đã chọn khi thử bước này (mockup v47), nếu có.
+  final String? choice;
 
   /// Mục Career Memory đã sinh ra từ ghi chú này, để truy vết ngược.
   final String? memoryEventId;
@@ -401,6 +416,7 @@ class PracticeStepNote {
       stepId: json['step_id'] as String,
       note: json['note'] as String,
       memoryEventId: json['memory_event_id'] as String?,
+      choice: json['choice'] as String?,
       createdAt: json['created_at'] != null
           ? DateTime.parse(json['created_at'] as String)
           : null,
@@ -412,6 +428,7 @@ class PracticeStepNote {
     'step_id': stepId,
     'note': note,
     if (memoryEventId != null) 'memory_event_id': memoryEventId,
+    if (choice != null) 'choice': choice,
   };
 }
 

@@ -2,7 +2,7 @@ name: workreflection_mobile
 description: "WorkReflection mobile app — daily career reflection."
 publish_to: 'none'
 
-version: 1.0.0+1
+version: 1.1.0+1
 
 environment:
   sdk: ^3.11.1
@@ -62,6 +62,7 @@ flutter:
     - assets/images/thumb_daily_reflect.jpg
     - assets/images/thumb_understand_grow.jpg
     - assets/images/thumb_ai_mentor.jpg
+    - assets/images/hero/
     - assets/seed/wr_situations.json
     - assets/seed/wr_stories.json
     # Giọng đọc của video hướng dẫn ở màn chào (intro_<vi|en>.mp3 + .json),
@@ -77,5 +78,7 @@ flutter:
   fonts:
     - family: Lora
       fonts:
+        # Lora đứng: câu hỏi lớn của luồng nhìn lại (`.h1.serif` mockup v47).
+        - asset: assets/fonts/Lora-Regular.ttf
         - asset: assets/fonts/Lora-Italic.ttf
           style: italic

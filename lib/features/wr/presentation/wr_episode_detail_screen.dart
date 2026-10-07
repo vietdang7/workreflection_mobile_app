@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_experience_state.dart';
+import '../../../core/logic/wr_reflect_v47.dart' show relocaliseEpisodeInsight;
 import '../../../core/models/wr_episode.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/section_divider.dart';
@@ -73,7 +74,15 @@ class WrEpisodeDetailScreen extends ConsumerWidget {
         if (episode.draftMeaning?.trim().isNotEmpty == true) ...[
           _Label(tr('ĐIỀU BẠN NHẬN RA', 'WHAT YOU NOTICED')),
           Text(
-            episode.draftMeaning!.trim(),
+            // Câu Insight lưu bằng ngôn ngữ lúc bấm giữ; dựng lại theo ngôn
+            // ngữ đang bật. Câu người dùng tự viết thì giữ nguyên.
+            relocaliseEpisodeInsight(
+              episode.draftMeaning!,
+              episode: episode,
+              situations:
+                  ref.watch(wrSituationsProvider).valueOrNull ?? const [],
+              stories: ref.watch(wrStoriesProvider).valueOrNull ?? const [],
+            ).trim(),
             key: const Key('wr_episode_detail_meaning'),
             style: const TextStyle(
               fontSize: 19,

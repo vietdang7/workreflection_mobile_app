@@ -852,3 +852,46 @@ Deno.test('mục tự khai không lộ mã chủ đề nội bộ', async () => 
   assertEquals(ctx.includes('pt-s2'), false);
   assertEquals(ctx.includes('certificate'), false);
 });
+
+// Chủ đề tự thêm: câu "đã thử rồi mà không có kết quả" (họp khách 05/10)
+// ---------------------------------------------------------------------------
+
+const TRIED_ROWS = {
+  ...ROWS,
+  wr_practice_enrollments: [
+    { theme_id: 'u-1', completed_steps: ['u-1-1'], completed_at: null },
+    { theme_id: 'pt-s2', completed_steps: [], completed_at: null },
+  ],
+  wr_practice_themes: [
+    {
+      theme_id: 'u-1',
+      title: 'Phản hồi hiệu quả',
+      intake: {
+        situation: 'Mỗi khi góp ý, tôi vòng vo.',
+        goal: 'Nói rõ hơn',
+        tried: 'Góp ý ngay trong họp',
+      },
+    },
+    { theme_id: 'pt-s2', title: 'Ưu tiên đúng việc của mình', intake: null },
+  ],
+};
+
+Deno.test('chủ đề tự thêm có câu đã thử → dặn đừng gợi ý lại đúng cách đó', async () => {
+  const { buildUserContext } = await import('./user_context.ts');
+  for (const premium of [false, true]) {
+    const ctx = await buildUserContext(fakeDb(TRIED_ROWS), 'u1', premium);
+    assertEquals(
+      ctx.includes(
+        'Với chủ đề "Phản hồi hiệu quả", họ đã thử "Góp ý ngay trong họp" mà '
+          + 'không có kết quả, đừng gợi ý lại cách này.',
+      ),
+      true,
+    );
+    // Chủ đề thư viện không có câu đã thử thì không sinh dòng nào.
+    assertEquals(ctx.includes('Với chủ đề "Ưu tiên đúng việc của mình"'), false);
+    assertEquals(
+      ctx.includes('Chủ đề thực hành đang theo: "Ưu tiên đúng việc của mình"'),
+      true,
+    );
+  }
+});

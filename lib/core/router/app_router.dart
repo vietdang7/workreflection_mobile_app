@@ -51,6 +51,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../l10n/wr_locale_scope.dart';
 import '../../features/auth/presentation/auth_screen.dart';
+import '../../features/auth/presentation/wr_save_account_screen.dart';
 import '../../features/onboarding/presentation/onboarding_screen.dart';
 import '../../features/shell/shell_screen.dart';
 import '../../features/splash/splash_screen.dart';
@@ -91,6 +92,9 @@ import '../../features/wr/presentation/wr_career_setup_screen.dart';
 import '../../features/wr/presentation/wr_context_doc_screen.dart';
 import '../../features/wr/presentation/wr_story_flow_screen.dart';
 import '../../features/wr/presentation/wr_mood_library_screen.dart';
+import '../../features/wr/presentation/wr_add_practice_theme_screen.dart';
+import '../../features/wr/presentation/wr_learning_capture_screen.dart';
+import '../models/wr_mood_content.dart' show moodFromContentKey;
 import '../../features/wr/presentation/wr_org_survey_flow_screen.dart';
 import '../../features/wr/presentation/wr_org_survey_intro_screen.dart';
 import '../../features/wr/presentation/wr_org_survey_result_screen.dart';
@@ -137,14 +141,27 @@ String? computeRedirect({
   required bool hasSession,
   required bool seenOnboarding,
   required String location,
+  bool isGuest = false,
 }) {
   const authScreens = {'/splash', '/onboarding', '/auth'};
+
+  // Khách (user ẩn danh, mockup v47) đã có phiên nhưng chưa có tài khoản.
+  // Họ vẫn được ở lại Onboarding — phiên khách được mở ngay giữa Onboarding,
+  // lúc chọn cảm xúc, và router không được giật họ ra Home giữa chừng — và
+  // vẫn mở được màn đăng nhập để vào tài khoản cũ. Chỉ màn chờ mới chuyển đi.
+  if (hasSession && isGuest) {
+    if (location == '/splash') return '/home';
+    return null;
+  }
 
   if (hasSession) {
     // Logged-in users must not linger on auth/onboarding screens.
     if (authScreens.contains(location)) return '/home';
     return null;
   }
+
+  // Cho phép xem màn hình Onboarding (Landing Board) và Hướng dẫn sử dụng mà không bắt buộc đăng nhập
+  if (location == '/profile/guide' || location == '/onboarding') return null;
 
   // No session:
   if (!seenOnboarding) {
@@ -231,7 +248,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
     initialLocation: '/splash',
     refreshListenable: authNotifier,
     redirect: (context, state) {
-      final hasSession = Supabase.instance.client.auth.currentSession != null;
+      final auth = Supabase.instance.client.auth;
+      final hasSession = auth.currentSession != null;
+      final isGuest = auth.currentUser?.isAnonymous ?? false;
       final seenOnboarding = seenOnboardingAsync.valueOrNull ?? false;
       final location = state.uri.toString();
 
@@ -239,6 +258,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         hasSession: hasSession,
         seenOnboarding: seenOnboarding,
         location: location,
+        isGuest: isGuest,
       );
     },
     routes: [
@@ -248,6 +268,11 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => OnboardingScreen(),
       ),
       wrRoute(path: '/auth', builder: (context, state) => AuthScreen()),
+      // Khách lưu hành trình bằng Email (sheet "Lưu lại hành trình").
+      wrRoute(
+        path: '/auth/save',
+        builder: (context, state) => WrSaveAccountScreen(),
+      ),
 
       // Survey flow (fullscreen, outside shell)
       wrRoute(
@@ -467,9 +492,9 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // Đường dẫn phải khớp `kWrAiRevokePath` trong `wr_ai_disclosure.dart`:
       // bản công bố nói với người dùng chỗ này nằm ở đâu, và Apple đọc chính
       // câu đó khi duyệt Guideline 5.1.1(i).
-      GoRoute(
+      wrRoute(
         path: kWrAiRevokePath,
-        builder: (context, state) => const WrAiConsentScreen(),
+        builder: (context, state) => WrAiConsentScreen(),
       ),
       // Career Memory đầy đủ — tab Hành trình chỉ hiện vài mảnh gần nhất.
       wrRoute(
@@ -490,6 +515,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       wrRoute(
         path: '/wr/growth/skills',
         builder: (context, state) => WrGrowthSkillsScreen(),
+      ),
+      // Mockup v47: "Tự thêm · Một chủ đề chưa có trong thư viện" và "Ghi
+      // nhận một điều · Bạn vừa học được điều hữu ích".
+      wrRoute(
+        path: '/wr/growth/add-theme',
+        builder: (context, state) => const WrAddPracticeThemeScreen(),
+      ),
+      wrRoute(
+        path: '/wr/growth/learning',
+        builder: (context, state) => const WrLearningCaptureScreen(),
       ),
 
       // Ô hỏi về hành trình nghề nghiệp (họp khách 2026-07-29). Mở từ bong
@@ -680,12 +715,16 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // §8.3: miễn phí cho mọi người dùng, không phân lớp Free/Paid.
       wrRoute(
         path: '/wr/mood-library',
-        builder: (context, state) => WrMoodLibraryScreen(),
+        builder: (context, state) => WrMoodLibraryScreen(
+          initialMood: moodFromContentKey(state.uri.queryParameters['mood']),
+        ),
       ),
       wrRoute(
         path: '/wr/mood-content/:id',
-        builder: (context, state) =>
-            WrMoodReaderScreen(contentId: state.pathParameters['id']!),
+        builder: (context, state) => WrMoodReaderScreen(
+          contentId: state.pathParameters['id']!,
+          fromLibrary: state.uri.queryParameters['from'] == 'library',
+        ),
       ),
     ],
   );

@@ -10,6 +10,16 @@ abstract class AuthRepository {
   Future<void> resetPassword(String email);
   Future<void> changePassword(String newPassword);
   Future<void> deleteAccount();
+
+  /// Phiên khách: Supabase anonymous sign-in (mockup v47, chốt 06/10).
+  Future<void> signInAnonymously();
+
+  /// Gắn email + mật khẩu vào CHÍNH user khách đang đăng nhập. Dữ liệu giữ
+  /// nguyên `user_id`.
+  ///
+  /// Trả `true` khi email đã dùng được ngay; `false` khi Supabase còn chờ
+  /// người dùng bấm link xác nhận trong hộp thư.
+  Future<bool> attachEmail(String email, String password, String displayName);
 }
 
 /// Live implementation backed by Supabase.
@@ -111,6 +121,43 @@ class SupabaseAuthRepository implements AuthRepository {
       // Token của tài khoản vừa xoá có thể bị từ chối — không sao, dữ liệu đã
       // xoá xong rồi. Đừng ném lỗi làm người dùng tưởng xoá hụt.
     }
+  }
+
+  @override
+  Future<void> signInAnonymously() async {
+    await _client.auth.signInAnonymously();
+  }
+
+  @override
+  Future<bool> attachEmail(
+    String email,
+    String password,
+    String displayName,
+  ) async {
+    // Gửi chung một lần: tên vào metadata trước khi email gắn vào, để trigger
+    // `on_auth_user_email_attached` dựng `cc_profiles.full_name` có tên luôn.
+    // Ba khoá tên: xem [signUp].
+    final res = await _client.auth.updateUser(
+      UserAttributes(
+        email: email,
+        password: password,
+        data: {
+          'full_name': displayName,
+          'name': displayName,
+          'display_name': displayName,
+        },
+      ),
+    );
+    final user = res.user;
+    if (user == null) throw Exception('attachEmail: no user returned');
+    await _client.from('wr_mobile_profiles').upsert({
+      'user_id': user.id,
+      'display_name': displayName,
+    });
+    // Project đang tự xác nhận email, nên email vào thẳng `user.email`. Nếu
+    // ai đó bật lại "Confirm email", email nằm ở `newEmail` cho tới khi người
+    // dùng bấm link.
+    return user.email?.toLowerCase() == email.toLowerCase();
   }
 }
 

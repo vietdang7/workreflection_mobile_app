@@ -23,6 +23,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 
+import '../l10n/wr_tr.dart';
 import '../logic/wr_ai_disclosure.dart';
 import '../theme/wr_colors.dart';
 import 'wr_paragraph.dart';
@@ -76,9 +77,13 @@ Future<void> openAiPrivacyUrl(BuildContext context, String url) async {
     opened = false;
   }
   if (!opened && context.mounted) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Không mở được trang này.')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          tr('Không mở được trang này.', 'Could not open this page.'),
+        ),
+      ),
+    );
   }
 }
 
@@ -104,9 +109,12 @@ class _ConsentSheetState extends ConsumerState<_ConsentSheet> {
       // app tưởng được phép rồi gửi dữ liệu đi, trong khi máy chủ vẫn thấy chưa
       // đồng ý và sẽ chặn — người dùng nhận một lỗi khó hiểu ở màn khác.
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text(
-            'Chưa lưu được lựa chọn. Bạn kiểm tra mạng rồi thử lại.',
+            tr(
+              'Chưa lưu được lựa chọn. Bạn kiểm tra mạng rồi thử lại.',
+              'Your choice was not saved. Check your connection and try again.',
+            ),
           ),
         ),
       );
@@ -179,7 +187,9 @@ class _Actions extends StatelessWidget {
                 elevation: 0,
               ),
               child: Text(
-                saving ? 'Đang lưu…' : 'Đồng ý và tiếp tục',
+                saving
+                    ? tr('Đang lưu…', 'Saving…')
+                    : tr('Đồng ý và tiếp tục', 'Agree and continue'),
                 style: const TextStyle(
                   fontSize: 15.5,
                   fontWeight: FontWeight.w700,
@@ -201,9 +211,12 @@ class _Actions extends StatelessWidget {
                   borderRadius: BorderRadius.circular(14),
                 ),
               ),
-              child: const Text(
-                'Không, để sau',
-                style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600),
+              child: Text(
+                tr('Không, để sau', 'No, not now'),
+                style: const TextStyle(
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
@@ -222,10 +235,13 @@ class WrAiDisclosureBody extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Trước khi dùng những phần có AI',
-          key: Key('wr_ai_consent_title'),
-          style: TextStyle(
+        Text(
+          tr(
+            'Trước khi dùng những phần có AI',
+            'Before you use the AI features',
+          ),
+          key: const Key('wr_ai_consent_title'),
+          style: const TextStyle(
             fontSize: 19,
             fontWeight: FontWeight.w800,
             color: WrColors.navy,
@@ -233,13 +249,19 @@ class WrAiDisclosureBody extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        const WrParagraph(
+        WrParagraph(
           kWrAiDisclosureSummary,
-          style: TextStyle(fontSize: 13.5, color: WrColors.navy, height: 1.6),
+          style: const TextStyle(
+            fontSize: 13.5,
+            color: WrColors.navy,
+            height: 1.6,
+          ),
         ),
         const SizedBox(height: 20),
 
-        const _SectionTitle('APP GỬI GÌ, KHI NÀO'),
+        _SectionTitle(
+          tr('APP GỬI GÌ, KHI NÀO', 'WHAT THE APP SENDS, AND WHEN'),
+        ),
         const SizedBox(height: 8),
         for (final flow in kWrAiDataFlows) ...[
           _FlowRow(flow: flow),
@@ -247,7 +269,7 @@ class WrAiDisclosureBody extends StatelessWidget {
         ],
 
         const SizedBox(height: 8),
-        const _SectionTitle('GỬI CHO AI'),
+        _SectionTitle(tr('GỬI CHO AI', 'WHO IT GOES TO')),
         const SizedBox(height: 8),
         for (final r in kWrAiRecipients) ...[
           _RecipientRow(recipient: r),
@@ -255,7 +277,7 @@ class WrAiDisclosureBody extends StatelessWidget {
         ],
 
         const SizedBox(height: 8),
-        const _SectionTitle('KHÔNG BAO GIỜ GỬI'),
+        _SectionTitle(tr('KHÔNG BAO GIỜ GỬI', 'NEVER SENT')),
         const SizedBox(height: 8),
         Container(
           decoration: BoxDecoration(
@@ -297,10 +319,14 @@ class WrAiDisclosureBody extends StatelessWidget {
         ),
 
         const SizedBox(height: 18),
-        const WrParagraph(
+        WrParagraph(
           kWrAiRevokeNote,
-          key: Key('wr_ai_consent_revoke_note'),
-          style: TextStyle(fontSize: 12, color: WrColors.muted, height: 1.6),
+          key: const Key('wr_ai_consent_revoke_note'),
+          style: const TextStyle(
+            fontSize: 12,
+            color: WrColors.muted,
+            height: 1.6,
+          ),
         ),
       ],
     );
@@ -411,11 +437,11 @@ class _RecipientRow extends StatelessWidget {
         const SizedBox(width: 10),
         GestureDetector(
           onTap: () => openAiPrivacyUrl(context, recipient.privacyUrl),
-          child: const Padding(
-            padding: EdgeInsets.only(top: 2),
+          child: Padding(
+            padding: const EdgeInsets.only(top: 2),
             child: Text(
-              'Chính sách',
-              style: TextStyle(
+              tr('Chính sách', 'Policy'),
+              style: const TextStyle(
                 fontSize: 11.5,
                 color: WrColors.pillTealText,
                 decoration: TextDecoration.underline,

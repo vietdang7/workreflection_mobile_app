@@ -12,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/data/wr_content_repository.dart';
 import '../../../core/data/wr_intelligence_repository.dart';
 import '../../../core/l10n/wr_tr.dart';
+import '../../../core/logic/wr_career_memory_rules.dart' show kMilestoneBehavior;
 import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_intelligence.dart';
@@ -21,20 +22,33 @@ import '../wr_providers.dart';
 import 'wr_practice_note_sheet.dart';
 import 'wr_skill_moment.dart';
 
+/// Kết quả một lần đánh dấu bước — cho thẻ "Cột mốc mới / Đã ghi nhận" ở màn
+/// chủ đề (mockup v47 `practiceCompletionNotice`).
+typedef PracticeStepCompletion = ({String stepTitle, bool firstMilestone});
+
 /// Đánh dấu [stepId] của [theme] là xong, kèm mọi dấu vết đi theo nó.
 ///
 /// §VII: hỏi ghi chú TRƯỚC khi ghi bất cứ thứ gì. Đóng tấm ghi chú là huỷ hẳn
 /// — bước vẫn chưa xong, chứ không phải xong-mà-không-ghi-chú.
-Future<void> completePracticeStep({
+///
+/// Mockup v47 hỏi ghi chú NGAY TRONG thẻ bước ("Bạn đã thử như thế nào?" ·
+/// Lưu lại · Chỉ đánh dấu · Để sau); màn chủ đề truyền câu trả lời vào
+/// [presetNote] nên tấm ghi chú không mở nữa. [choice] là cách người dùng đã
+/// chọn ở "Bạn muốn thử cách nào?", nếu có.
+///
+/// Trả null khi người dùng huỷ.
+Future<PracticeStepCompletion?> completePracticeStep({
   required BuildContext context,
   required WidgetRef ref,
   required PracticeTheme theme,
   required PracticeEnrollment enrollment,
   required String stepId,
   required List<PracticeStep> allSteps,
+  PracticeNoteResult? presetNote,
+  String? choice,
 }) async {
   final userId = ref.read(currentUserIdProvider);
-  if (userId == null) return;
+  if (userId == null) return null;
   final repo = ref.read(wrIntelligenceRepositoryProvider);
   final contentRepo = ref.read(wrContentRepositoryProvider);
   final entitlement =
@@ -46,11 +60,14 @@ Future<void> completePracticeStep({
       .map((s) => s.title)
       .firstOrNull;
 
-  final noteResult = await showPracticeNoteSheet(
-    context,
-    stepTitle: stepTitle ?? tr('Bước thực hành', 'Practice step'),
-  );
-  if (noteResult == null) return;
+  final noteResult =
+      presetNote ??
+      await showPracticeNoteSheet(
+        context,
+        stepTitle: stepTitle ?? tr('Bước thực hành', 'Practice step'),
+      );
+  if (noteResult == null) return null;
+  final firstMilestone = enrollment.completedSteps.isEmpty;
 
   final currentCompleted = enrollment.completedSteps;
   final newCompleted = [...currentCompleted, stepId];
@@ -79,7 +96,12 @@ Future<void> completePracticeStep({
       note.isNotEmpty) {
     try {
       await repo.upsertPracticeStepNote(
-        PracticeStepNote(userId: userId, stepId: stepId, note: note),
+        PracticeStepNote(
+          userId: userId,
+          stepId: stepId,
+          note: note,
+          choice: choice,
+        ),
       );
       await contentRepo.insertMemoryEvent(
         CareerMemoryEvent(
@@ -129,35 +151,69 @@ Future<void> completePracticeStep({
     );
   }
 
+  // Mockup v47: lần ĐẦU thử một bước của chủ đề là một Cột mốc — sự thật đã
+  // xảy ra, không phải kế hoạch.
+  if (firstMilestone) {
+    try {
+      await contentRepo.insertMemoryEvent(
+        CareerMemoryEvent(
+          id: '${DateTime.now().millisecondsSinceEpoch}m',
+          userId: userId,
+          behavior: kMilestoneBehavior,
+          themeId: theme.themeId,
+          // CHỈ tên chủ đề: câu "Lần đầu thử một cách khác: …" dựng lúc hiển
+          // thị, để đổi ngôn ngữ không kẹt lại bản đã ghép sẵn trong DB.
+          reflectionText: theme.titleVi,
+        ),
+      );
+    } catch (_) {
+      /* best-effort: Cột mốc hỏng không được nuốt ngược tiến độ */
+    }
+  }
+
+  // Cách đã "lưu để thử" xong nhiệm vụ của nó.
+  if (enrollment.pendingChoice != null) {
+    try {
+      await repo.setPendingChoice(
+        userId: userId,
+        themeId: theme.themeId,
+        choice: null,
+      );
+    } catch (_) {
+      /* best-effort */
+    }
+  }
+
   ref.invalidate(practiceEnrollmentsProvider);
   ref.invalidate(practiceMemoryEventsProvider);
+  ref.invalidate(practiceStepNotesProvider);
 
   // Xong ba bước KHÔNG còn nghĩa là đã thành kỹ năng — đó mới là giai đoạn làm
   // quen. Kỹ năng hình thành khi bộ đếm chạm ngưỡng, kể cả những lần duy trì
   // sau này. Ở đây chỉ kiểm tra xem lần thực hành vừa rồi có chạm ngưỡng không.
-  if (!context.mounted) return;
+  final result = (
+    stepTitle: stepTitle ?? stepId,
+    firstMilestone: firstMilestone,
+  );
+  if (!context.mounted) return result;
   await recordSkillMilestones(context: context, ref: ref, theme: theme);
+  return result;
 }
 
-/// Nhãn giai đoạn theo thứ tự bước — giao diện mẫu Sprint 2.
-///
-/// Ba giai đoạn là ngôn ngữ của người dùng ("Nhận diện → Thử nghiệm → Chuyển
-/// hoá"), không phải số thứ tự trần.
-String? practiceStageTag(int stepOrder) => switch (stepOrder) {
-  1 => tr('NHẬN DIỆN', 'NOTICE'),
-  2 => tr('THỬ NGHIỆM', 'TRY'),
-  3 => tr('CHUYỂN HOÁ', 'SHIFT'),
-  _ => null,
-};
+/// Nhãn giai đoạn theo thứ tự bước — mockup v47: Nhận diện → Phần của tôi →
+/// Chọn một cách → Mang về. Nhãn "Chuyển hoá" đã bỏ hẳn (migration
+/// 20261006120000 chuyển cả thư viện sang 4 bước).
+String? practiceStageTag(int stepOrder) => practiceStageLabel(stepOrder)
+    ?.toUpperCase();
 
-/// Cùng ba giai đoạn nhưng viết như trong câu, không phải nhãn in hoa.
+/// Cùng bốn giai đoạn nhưng viết như trong câu, không phải nhãn in hoa.
 ///
-/// Mockup dùng cả hai dạng: nhãn `.pill` in hoa trên từng bước ở tab Phát
-/// triển, và dạng câu ở dòng "Tiếp tục hôm nay" của Home ("bước Thử nghiệm đang
-/// chờ"). Giữ chung một nguồn để hai nơi không lệch tên giai đoạn.
+/// Dùng ở dòng "Tiếp tục hôm nay" của Home ("bước Phần của tôi đang chờ") và
+/// trên từng bước ở màn chủ đề. Giữ chung một nguồn để hai nơi không lệch tên.
 String? practiceStageLabel(int stepOrder) => switch (stepOrder) {
   1 => tr('Nhận diện', 'Notice'),
-  2 => tr('Thử nghiệm', 'Try'),
-  3 => tr('Chuyển hoá', 'Shift'),
+  2 => tr('Phần của tôi', 'Your part'),
+  3 => tr('Chọn một cách', 'Pick one way'),
+  4 => tr('Mang về', 'Take it with you'),
   _ => null,
 };

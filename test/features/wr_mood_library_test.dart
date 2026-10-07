@@ -28,12 +28,16 @@ Widget _wrap({
     routes: [
       GoRoute(
         path: '/wr/mood-library',
-        builder: (_, __) => const WrMoodLibraryScreen(),
+        builder: (_, s) => WrMoodLibraryScreen(
+          initialMood: moodFromContentKey(s.uri.queryParameters['mood']),
+        ),
       ),
       GoRoute(
         path: '/wr/mood-content/:id',
-        builder: (_, s) =>
-            WrMoodReaderScreen(contentId: s.pathParameters['id']!),
+        builder: (_, s) => WrMoodReaderScreen(
+          contentId: s.pathParameters['id']!,
+          fromLibrary: s.uri.queryParameters['from'] == 'library',
+        ),
       ),
     ],
   );
@@ -105,37 +109,117 @@ void main() {
       expect(positions, sorted);
     });
 
-    testWidgets('đã check-in thì CHỈ hiện nhóm của cảm xúc đó', (tester) async {
-      // Khách chốt 2026-07-29: nút "Xem thêm gợi ý trong thư viện" đi từ Home,
-      // nơi người dùng vừa nói mình đang mệt — bày cả bốn nhóm là bắt họ tự lọc
-      // lại điều vừa nói.
+    testWidgets(
+      'đã check-in thì mở sẵn nhóm của cảm xúc đó, chip chuyển nhóm',
+      (tester) async {
+        // Khách chốt 2026-07-29: đi từ Home, nơi người dùng vừa nói mình đang
+        // mệt — bày cả sáu nhóm là bắt họ tự lọc lại điều vừa nói. v47 giữ ý đó
+        // và thêm hàng chip để tự chuyển nhóm khi muốn.
+        final repo = FakeWrMoodContentRepository()
+          ..seedContent([
+            fakeMoodContent(id: 'a', mood: Mood.happy, title: 'Của vui'),
+            fakeMoodContent(id: 'b', mood: Mood.stressed, title: 'Của căng'),
+            fakeMoodContent(id: 'd', mood: Mood.tired, title: 'Của mệt'),
+          ]);
+
+        await _pump(
+          tester,
+          _wrap(moodContent: repo, checkedInMood: Mood.tired),
+        );
+
+        expect(find.text('Của mệt'), findsOneWidget);
+        expect(find.text('Của vui'), findsNothing);
+        expect(find.text('Của căng'), findsNothing);
+        expect(find.byKey(const Key('wr_reflect_band_tired')), findsOneWidget);
+
+        await tester.tap(find.byKey(const Key('wr_mood_chip_stress')));
+        await tester.pumpAndSettle();
+        expect(find.text('Của căng'), findsOneWidget);
+        expect(find.text('Của mệt'), findsNothing);
+        expect(find.byKey(const Key('wr_reflect_band_stress')), findsOneWidget);
+      },
+    );
+
+    testWidgets('chưa check-in thì mở nhóm Khá ổn, như mockup', (tester) async {
       final repo = FakeWrMoodContentRepository()
         ..seedContent([
-          fakeMoodContent(id: 'a', mood: Mood.happy, title: 'Của vui'),
-          fakeMoodContent(id: 'b', mood: Mood.stressed, title: 'Của căng'),
+          fakeMoodContent(id: 'c', mood: Mood.okay, title: 'Của ổn'),
           fakeMoodContent(id: 'd', mood: Mood.tired, title: 'Của mệt'),
         ]);
 
-      await _pump(tester, _wrap(moodContent: repo, checkedInMood: Mood.tired));
+      await _pump(tester, _wrap(moodContent: repo));
 
-      expect(find.text('Của mệt'), findsOneWidget);
-      expect(find.text('Của vui'), findsNothing);
-      expect(find.text('Của căng'), findsNothing);
-      expect(find.text('Căng thẳng'), findsNothing);
+      expect(find.text('Của ổn'), findsOneWidget);
+      expect(find.text('Của mệt'), findsNothing);
     });
 
-    testWidgets('cảm xúc đó chưa có nội dung thì nói rỗng, không bày lại '
-        'cả bốn nhóm', (tester) async {
+    testWidgets('bài đầu là thẻ "Nên bắt đầu từ đây", Đọc/Nghe lọc theo loại', (
+      tester,
+    ) async {
       final repo = FakeWrMoodContentRepository()
         ..seedContent([
-          fakeMoodContent(id: 'a', mood: Mood.happy, title: 'Của vui'),
+          fakeMoodContent(
+            id: 'r1',
+            mood: Mood.okay,
+            sortOrder: 1,
+            title: 'Bài đọc một',
+          ),
+          fakeMoodContent(
+            id: 'a1',
+            mood: Mood.okay,
+            sortOrder: 2,
+            type: MoodContentType.audio,
+            kind: 'HEALING AUDIO',
+            duration: '3 phút',
+            title: 'Bài nghe một',
+          ),
+          fakeMoodContent(
+            id: 'r2',
+            mood: Mood.okay,
+            sortOrder: 3,
+            title: 'Bài đọc hai',
+          ),
         ]);
 
-      await _pump(tester, _wrap(moodContent: repo, checkedInMood: Mood.tired));
+      await _pump(tester, _wrap(moodContent: repo));
+      expect(find.byKey(const Key('wr_mood_featured_r1')), findsOneWidget);
+      expect(find.text('NÊN BẮT ĐẦU TỪ ĐÂY'), findsOneWidget);
+      expect(find.byKey(const Key('wr_mood_row_a1')), findsOneWidget);
+      expect(find.text('3 gợi ý'), findsOneWidget);
+      expect(find.text('Nghe · 3 phút'), findsOneWidget);
+      // `duration` trong DB đã có chữ "đọc": không lặp thành "Đọc · … đọc".
+      expect(find.text('Đọc · 3 phút'), findsWidgets);
 
-      expect(find.textContaining('Chưa có nội dung'), findsOneWidget);
-      expect(find.text('Của vui'), findsNothing);
+      await tester.tap(find.byKey(const Key('wr_mood_filter_audio')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('wr_mood_featured_a1')), findsOneWidget);
+      expect(find.text('Bài đọc một'), findsNothing);
+      expect(find.text('1 gợi ý'), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('wr_mood_filter_reading')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('wr_mood_featured_r1')), findsOneWidget);
+      expect(find.byKey(const Key('wr_mood_row_r2')), findsOneWidget);
+      expect(find.text('Bài nghe một'), findsNothing);
     });
+
+    testWidgets(
+      'cảm xúc đó chưa có nội dung thì nói rỗng, không bày nhóm khác',
+      (tester) async {
+        final repo = FakeWrMoodContentRepository()
+          ..seedContent([
+            fakeMoodContent(id: 'a', mood: Mood.happy, title: 'Của vui'),
+          ]);
+
+        await _pump(
+          tester,
+          _wrap(moodContent: repo, checkedInMood: Mood.tired),
+        );
+
+        expect(find.byKey(const Key('wr_mood_library_none')), findsOneWidget);
+        expect(find.text('Của vui'), findsNothing);
+      },
+    );
 
     testWidgets('các mục trong một nhóm xếp theo sort_order', (tester) async {
       final repo = FakeWrMoodContentRepository()
@@ -207,21 +291,36 @@ void main() {
       expect(find.textContaining('Chưa có nội dung'), findsOneWidget);
     });
 
-    testWidgets('chạm một dòng mở đúng màn đọc', (tester) async {
+    testWidgets('chạm một bài mở đúng màn đọc; Xong thì quay về Thư viện', (
+      tester,
+    ) async {
       final repo = FakeWrMoodContentRepository()
         ..seedContent([
           fakeMoodContent(
             id: 'abc',
             mood: Mood.tired,
+            sortOrder: 1,
             title: 'Kiệt sức không phải là yếu đuối',
+          ),
+          fakeMoodContent(
+            id: 'def',
+            mood: Mood.tired,
+            sortOrder: 2,
+            title: 'Nghỉ một nhịp',
           ),
         ]);
 
-      await _pump(tester, _wrap(moodContent: repo));
-      await tester.tap(find.byKey(const Key('wr_mood_row_abc')));
+      await _pump(tester, _wrap(moodContent: repo, checkedInMood: Mood.tired));
+      await tester.tap(find.byKey(const Key('wr_mood_row_def')));
       await tester.pumpAndSettle();
+      expect(find.byType(WrMoodReaderScreen), findsOneWidget);
+      expect(find.byKey(const Key('wr_mood_reader_title')), findsOneWidget);
+      expect(find.text('Nghỉ một nhịp'), findsWidgets);
 
-      expect(find.text('Kiệt sức không phải là yếu đuối'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('wr_mood_reader_done')));
+      await tester.pumpAndSettle();
+      expect(find.byType(WrMoodReaderScreen), findsNothing);
+      expect(find.byType(WrMoodLibraryScreen), findsOneWidget);
     });
   });
 
@@ -271,7 +370,74 @@ void main() {
       );
 
       expect(find.byKey(const Key('wr_mood_audio_player')), findsOneWidget);
-      expect(find.text('HEALING AUDIO · 3 PHÚT'), findsOneWidget);
+      expect(find.text('Nghe · 3 phút'), findsOneWidget);
+    });
+
+    testWidgets('đoạn đầu là lời dẫn, đoạn cuối hỏi thì thành "Câu hỏi để '
+        'mang theo"', (tester) async {
+      final repo = FakeWrMoodContentRepository()
+        ..seedContent([
+          fakeMoodContent(
+            id: 'q1',
+            mood: Mood.stressed,
+            body: 'Lời dẫn.\n\nThân bài.\n\nĐiều gì bạn muốn giữ lại?',
+          ),
+        ]);
+
+      await _pump(
+        tester,
+        _wrap(moodContent: repo, initial: '/wr/mood-content/q1'),
+      );
+
+      expect(
+        tester.widget<Text>(find.byKey(const Key('wr_mood_reader_lead'))).data,
+        'Lời dẫn.',
+      );
+      expect(find.text('Thân bài.'), findsOneWidget);
+      expect(find.byKey(const Key('wr_mood_reader_ask')), findsOneWidget);
+      expect(find.text('CÂU HỎI ĐỂ MANG THEO'), findsOneWidget);
+      expect(find.text('Điều gì bạn muốn giữ lại?'), findsOneWidget);
+    });
+
+    testWidgets('bài hai đoạn thì không tách câu hỏi', (tester) async {
+      final repo = FakeWrMoodContentRepository()
+        ..seedContent([
+          fakeMoodContent(
+            id: 'q2',
+            mood: Mood.stressed,
+            body: 'Lời dẫn.\n\nBạn thấy sao?',
+          ),
+        ]);
+
+      await _pump(
+        tester,
+        _wrap(moodContent: repo, initial: '/wr/mood-content/q2'),
+      );
+
+      expect(find.byKey(const Key('wr_mood_reader_ask')), findsNothing);
+      expect(find.text('Bạn thấy sao?'), findsOneWidget);
+    });
+
+    testWidgets('mở từ Home thì Xong thay bằng Thư viện của đúng cảm xúc bài', (
+      tester,
+    ) async {
+      final repo = FakeWrMoodContentRepository()
+        ..seedContent([
+          fakeMoodContent(id: 'h1', mood: Mood.happy, title: 'Của vui'),
+          fakeMoodContent(id: 'o1', mood: Mood.okay, title: 'Của ổn'),
+        ]);
+
+      await _pump(
+        tester,
+        _wrap(moodContent: repo, initial: '/wr/mood-content/h1'),
+      );
+      await tester.tap(find.byKey(const Key('wr_mood_reader_done')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(WrMoodLibraryScreen), findsOneWidget);
+      expect(find.byKey(const Key('wr_reflect_band_happy')), findsOneWidget);
+      expect(find.text('Của vui'), findsOneWidget);
+      expect(find.text('Của ổn'), findsNothing);
     });
 
     testWidgets('nội dung nháp báo rõ chưa thu âm/biên tập', (tester) async {
