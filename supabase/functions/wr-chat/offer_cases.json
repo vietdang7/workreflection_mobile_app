@@ -5,6 +5,8 @@
     { "expect": "calm", "text": "Xin lỗi bạn, mình đã sơ suất quên đặt nút mở bài đọc. Bạn có muốn thử một bài đọc ngắn để thấy nhẹ lòng hơn lúc này không?" },
     { "expect": "calm", "text": "Nghe như dạo này khá nặng nề với bạn. Mình có một bài đọc ngắn có thể giúp bạn dịu lại một chút, muốn thử không?" },
     { "expect": "calm", "text": "Có một bài đọc ngắn trong Thư viện Nội dung Cảm xúc, bạn xem khi nào tiện nhé." },
+    { "expect": "calm", "text": "Mình hiểu cảm giác hôm nay của bạn. Có một bài đọc ngắn trong thư viện có thể giúp bạn dịu lại một chút, muốn thử không?" },
+    { "expect": null, "text": "Bài đọc hôm trước bạn kể là đã giúp được một chút." },
     { "expect": "reflect", "text": "Được, nút mở luồng đang ở ngay dưới đây nhé." },
     { "expect": "reflect", "text": "Cảm giác đó rất thật. Muốn ghi lại thành một Reflection đầy đủ để giữ lại không?" },
     { "expect": null, "text": "Mình không tự ghi lại thành một Reflection thay bạn được, nhưng mình ở đây nếu bạn muốn kể tiếp." },
