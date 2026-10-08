@@ -10,7 +10,14 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_experience_state.dart';
-import '../../../core/logic/wr_reflect_v47.dart' show relocaliseEpisodeInsight;
+import '../../../core/logic/wr_reflect_v47.dart'
+    show
+        kMomentTitle,
+        kPickStoryTitle,
+        ReflectNextOption,
+        reflectionNextOptions,
+        relocaliseEpisodeInsight;
+import '../../../core/logic/wr_situation_picker.dart' show resolveStoryFor;
 import '../../../core/models/wr_episode.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/section_divider.dart';
@@ -53,11 +60,14 @@ class WrEpisodeDetailScreen extends ConsumerWidget {
       );
     }
 
-    final at = episode.closedAt ?? episode.updatedAt ?? episode.openedAt;
+    final at = (episode.closedAt ?? episode.updatedAt ?? episode.openedAt)
+        ?.toLocal();
     final dateStr = at == null
         ? ''
         : '${at.day.toString().padLeft(2, '0')}/'
               '${at.month.toString().padLeft(2, '0')}/${at.year}';
+
+    final chosen = _chosenOption(ref, episode);
 
     return WrDetailScaffold(
       eyebrow: tr('MỘT LẦN NHÌN LẠI', 'ONE LOOK BACK'),
@@ -121,7 +131,7 @@ class WrEpisodeDetailScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    promptFor(episode.humanMoment, p),
+                    _promptOf(episode, p),
                     style: const TextStyle(
                       fontSize: 14.5,
                       color: WrColors.muted,
@@ -149,7 +159,7 @@ class WrEpisodeDetailScreen extends ConsumerWidget {
           const SizedBox(height: 20),
           _Label(tr('BƯỚC NHỎ BẠN CHỌN', 'THE SMALL STEP YOU CHOSE')),
           Text(
-            episode.tinyAction!.trim(),
+            chosen?.title ?? episode.tinyAction!.trim(),
             key: const Key('wr_episode_detail_action'),
             style: const TextStyle(
               fontSize: 16,
@@ -157,6 +167,18 @@ class WrEpisodeDetailScreen extends ConsumerWidget {
               height: 1.6,
             ),
           ),
+          if (chosen != null) ...[
+            const SizedBox(height: 4),
+            WrParagraph(
+              chosen.desc,
+              key: const Key('wr_episode_detail_action_desc'),
+              style: const TextStyle(
+                fontSize: 15,
+                color: WrColors.muted,
+                height: 1.6,
+              ),
+            ),
+          ],
         ],
 
         // ── Mở lại ───────────────────────────────────────────────────────
@@ -226,4 +248,56 @@ class _Label extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Câu hỏi của bước [p] đúng như lúc người dùng trả lời.
+///
+/// Lượt v47 (không có ghi chú bước reframe) đi bốn bước: chọn một câu kể rồi
+/// viết khoảnh khắc. [promptFor] là câu hỏi của luồng năm bước cũ ("Điều gì
+/// đang làm bạn mất năng lượng?"), đặt cạnh câu trả lời v47 là lệch nghĩa.
+String _promptOf(ReflectionEpisode e, ReflectionPattern p) {
+  final isV47 =
+      e.notes[ReflectionPattern.reframe.dbValue]?.trim().isNotEmpty != true;
+  if (isV47) {
+    if (p == ReflectionPattern.notice) return kPickStoryTitle;
+    if (p == ReflectionPattern.explore) return kMomentTitle;
+  }
+  return promptFor(e.humanMoment, p);
+}
+
+/// Thẻ phép thử người dùng đã chọn ở bước cuối, theo ngôn ngữ ĐANG bật.
+///
+/// `tiny_action` chỉ lưu TÊN thẻ ("Thử một bước nhỏ"), bằng ngôn ngữ lúc bấm
+/// lưu, nên dựng lại bộ thẻ của tình huống đó ở cả hai ngôn ngữ rồi khớp theo
+/// tên. Câu tự viết không khớp thẻ nào thì trả null, giữ nguyên chữ của họ.
+ReflectNextOption? _chosenOption(WidgetRef ref, ReflectionEpisode e) {
+  final action = e.tinyAction?.trim();
+  if (action == null || action.isEmpty) return null;
+  final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
+  final stories = ref.watch(wrStoriesProvider).valueOrNull ?? const [];
+  final situation = situations
+      .where((s) => s.code == e.situationCode)
+      .firstOrNull;
+  final story = situation == null ? null : resolveStoryFor(situation, stories);
+  // Getter `tr` / `practiceAction` đọc `wrEnglish` lúc gọi, nên dựng trong hàm.
+  List<ReflectNextOption> build() => reflectionNextOptions(
+    code: e.situationCode,
+    practice: story?.practiceAction,
+  );
+
+  final current = build();
+  final was = wrEnglish;
+  wrEnglish = !was;
+  final List<ReflectNextOption> other;
+  try {
+    other = build();
+  } finally {
+    wrEnglish = was;
+  }
+  for (final o in [...current, ...other]) {
+    if (o.title == action) {
+      return current.where((c) => c.id == o.id).firstOrNull;
+    }
+  }
+  return null;
 }

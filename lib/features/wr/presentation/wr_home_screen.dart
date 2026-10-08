@@ -76,7 +76,6 @@ import '../../profile/profile_providers.dart';
 import '../episode_flow_controller.dart';
 import '../growth_providers.dart';
 import '../mood_content_providers.dart';
-import '../user_action_providers.dart';
 import '../wr_providers.dart';
 import 'wr_mood_library_screen.dart' show WrDraftBadge;
 import 'wr_practice_step_completion.dart' show practiceStageLabel;
@@ -1284,11 +1283,8 @@ class _ContinueTodaySection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pending = ref.watch(wrPendingPracticeStepProvider).valueOrNull;
-    final userActions =
-        ref.watch(wrUserActionsProvider).valueOrNull ?? const [];
-    final pendingAction = userActions
-        .where((a) => !a.isCompleted && !a.doneToday)
-        .firstOrNull;
+    // "Việc bạn tự đặt" đã ẩn khỏi tab Phát triển (chốt 06/10), nên Home không
+    // còn dòng "Việc tự rèn luyện" dẫn sang đó nữa.
 
     // Chưa theo chủ đề nào: cùng một khối, cùng một chỗ, đổi lời và đổi điểm
     // đến sang danh sách chủ đề.
@@ -1365,56 +1361,6 @@ class _ContinueTodaySection extends ConsumerWidget {
                 ),
               ),
             ),
-            if (pendingAction != null) ...[
-              const SizedBox(height: 8),
-              GestureDetector(
-                key: const Key('wr_home_user_action_card'),
-                behavior: HitTestBehavior.opaque,
-                onTap: () => context.go('/wr/growth'),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 12,
-                  ),
-                  decoration: BoxDecoration(
-                    color: WrColors.teal.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(11),
-                    border: Border.all(
-                      color: WrColors.teal.withValues(alpha: 0.22),
-                    ),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.check_circle_outline_rounded,
-                        size: 20,
-                        color: WrColors.teal,
-                      ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          tr(
-                            'Việc tự rèn luyện: "${pendingAction.title}" (ngày ${pendingAction.doneCount + 1}/${pendingAction.targetCount})',
-                            'Self-practice: "${pendingAction.title}" (day ${pendingAction.doneCount + 1}/${pendingAction.targetCount})',
-                          ),
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: WrColors.navy,
-                            height: 1.5,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      const Icon(
-                        Icons.chevron_right,
-                        size: 18,
-                        color: WrColors.text3,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
           ],
         ),
       ),

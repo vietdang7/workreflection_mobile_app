@@ -18,6 +18,7 @@
 //
 // Pure Dart → test được trực tiếp.
 
+import '../models/checkin.dart' show Mood;
 import '../models/wr_chat.dart';
 
 RegExp _re(String source) => RegExp(source, caseSensitive: false);
@@ -98,4 +99,31 @@ List<WrChatMessage> restoreLastChatAction(List<WrChatMessage> history) {
       action: action,
     ),
   ];
+}
+
+// Nút "Xem điều gì đó nhẹ nhàng" mở Thư viện theo cảm xúc của hôm nay. Chưa
+// check-in thì Thư viện rơi về "Khá ổn", tức là trợ lý vừa thấy người dùng mệt
+// mà nút lại mở nhóm bài cho người đang ổn (test máy thật 08/10). Khi đó đọc
+// cảm xúc từ chính lời người dùng vừa nói; không nhận ra thì lấy "căng thẳng",
+// nhóm bài dịu lại chung nhất.
+final _moodTired = _re(
+  r'mệt|kiệt sức|đuối|uể oải|buồn ngủ|\btired\b|exhausted|drained|worn out|burn(ed|t)? out',
+);
+final _moodFoggy = _re(
+  r'rối|mông lung|mơ hồ|lạc hướng|không rõ|\bfoggy\b|confused|lost|unclear',
+);
+final _moodOutOfSync = _re(
+  r'lệch|lạc lõng|không hợp|không ăn khớp|out of sync|misaligned|don.t fit',
+);
+final _moodStressed = _re(
+  r'căng|áp lực|lo lắng|stress|bực|tense|pressure|anxious|overwhelm',
+);
+
+Mood calmMoodFor(String? userText) {
+  final t = userText ?? '';
+  if (_moodTired.hasMatch(t)) return Mood.tired;
+  if (_moodStressed.hasMatch(t)) return Mood.stressed;
+  if (_moodFoggy.hasMatch(t)) return Mood.foggy;
+  if (_moodOutOfSync.hasMatch(t)) return Mood.outofsync;
+  return Mood.stressed;
 }

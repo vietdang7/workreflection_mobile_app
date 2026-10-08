@@ -272,7 +272,7 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
         .eq('situation_code', situationCode)
         .maybeSingle();
 
-    final now = DateTime.now().toIso8601String();
+    final now = DateTime.now().toUtc().toIso8601String();
     if (existing != null) {
       final newCount = (existing['occurrence_count'] as int) + 1;
       await _client
@@ -487,7 +487,7 @@ class SupabaseWrIntelligenceRepository implements WrIntelligenceRepository {
   }) async {
     await _client
         .from('wr_practice_enrollments')
-        .update({'completed_at': DateTime.now().toIso8601String()})
+        .update({'completed_at': DateTime.now().toUtc().toIso8601String()})
         .eq('user_id', userId)
         .eq('theme_id', themeId);
   }

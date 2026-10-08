@@ -354,7 +354,7 @@ class SupabaseWrRepository implements WrRepository {
         .update({
           'status': status.dbValue,
           if (status == PracticeStatus.done)
-            'completed_at': DateTime.now().toIso8601String(),
+            'completed_at': DateTime.now().toUtc().toIso8601String(),
         })
         .eq('id', id)
         .eq('user_id', _uid);
@@ -402,7 +402,7 @@ class SupabaseWrRepository implements WrRepository {
         .from('wr_mobile_profiles')
         .update({
           'reminder_enabled': enabled,
-          'updated_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
         })
         .eq('user_id', _uid);
   }
@@ -413,7 +413,7 @@ class SupabaseWrRepository implements WrRepository {
         .from('wr_mobile_profiles')
         .update({
           'language': lang,
-          'updated_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
         })
         .eq('user_id', _uid);
   }
@@ -424,7 +424,7 @@ class SupabaseWrRepository implements WrRepository {
         .from('wr_mobile_profiles')
         .update({
           ...snapshot.toUpdate(),
-          'updated_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
         })
         .eq('user_id', _uid);
   }
@@ -435,7 +435,7 @@ class SupabaseWrRepository implements WrRepository {
         .from('wr_mobile_profiles')
         .update({
           'recent_situation_ids': codes,
-          'updated_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
         })
         .eq('user_id', _uid);
   }
@@ -449,7 +449,7 @@ class SupabaseWrRepository implements WrRepository {
           // Chuỗi rỗng ghi thành null: "chưa điền" và "điền rồi xoá hết" là
           // cùng một trạng thái, không nên phân biệt ở tầng dữ liệu.
           'role_text': (trimmed == null || trimmed.isEmpty) ? null : trimmed,
-          'updated_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
         })
         .eq('user_id', _uid);
   }
@@ -470,7 +470,7 @@ class SupabaseWrRepository implements WrRepository {
     // Không có khoá hợp lệ nào thì đừng gửi một UPDATE chỉ đụng `updated_at`:
     // nó làm hàng "vừa được sửa" trong khi thật ra không có gì đổi.
     if (patch.isEmpty) return;
-    patch['updated_at'] = DateTime.now().toIso8601String();
+    patch['updated_at'] = DateTime.now().toUtc().toIso8601String();
     await _client.from('wr_mobile_profiles').update(patch).eq('user_id', _uid);
   }
 
@@ -551,7 +551,7 @@ class SupabaseWrRepository implements WrRepository {
         .from('wr_mobile_profiles')
         .update({
           'display_name': displayName,
-          'updated_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
         })
         .eq('user_id', _uid);
   }
@@ -787,7 +787,7 @@ class SupabaseWrRepository implements WrRepository {
         if (displayName != null) 'display_name': displayName,
         if (onboardingSituation != null)
           'onboarding_situation': onboardingSituation,
-        'updated_at': DateTime.now().toIso8601String(),
+        'updated_at': DateTime.now().toUtc().toIso8601String(),
       });
     } else if (onboardingSituation != null) {
       // Profile exists — only update fields that don't overwrite user edits.
@@ -795,7 +795,7 @@ class SupabaseWrRepository implements WrRepository {
           .from('wr_mobile_profiles')
           .update({
             'onboarding_situation': onboardingSituation,
-            'updated_at': DateTime.now().toIso8601String(),
+            'updated_at': DateTime.now().toUtc().toIso8601String(),
           })
           .eq('user_id', _uid);
     }
@@ -824,7 +824,7 @@ class SupabaseWrRepository implements WrRepository {
         .from('wr_mobile_profiles')
         .update({
           'onboarding_situation': situation,
-          'updated_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
         })
         .eq('user_id', _uid);
   }

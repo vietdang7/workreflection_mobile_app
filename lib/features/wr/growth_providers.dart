@@ -194,9 +194,18 @@ final wrPendingPracticeStepProvider = FutureProvider<PendingPracticeStep?>((
     return sa.compareTo(sb);
   });
 
+  // Bản cũ đã retire (`pt-voice`) trùng TÊN với bản đang dùng (`pt-c2`): tab
+  // Phát triển gộp hai thẻ cùng tên làm một và chỉ hiện bản mới, nên Home cũng
+  // phải bỏ bản cũ, nếu không dòng "Tiếp tục" dẫn sang một chủ đề không có ở đó.
+  final liveTitles = {
+    for (final e in active)
+      if (themeById[e.themeId] case final t? when !t.isRetired) t.title,
+  };
+
   for (final enrollment in active) {
     final theme = themeById[enrollment.themeId];
     if (theme == null) continue;
+    if (theme.isRetired && liveTitles.contains(theme.title)) continue;
 
     final steps = (await ref.watch(
       practiceStepsProvider(theme.themeId).future,

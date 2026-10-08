@@ -562,7 +562,7 @@ List<WrGuideSection> wrGuideSections() => [
     id: 'growth',
     icon: WrGuideIcon.bolt,
     group: kGuideGroupTabs,
-    title: tr('Phát triển', 'Grow'),
+    title: tr('Phát triển', 'Develop'),
     summary: tr(
       'Các chủ đề thực hành được hệ thống đề xuất riêng cho bạn.',
       'Practice themes the app picks out for you.',

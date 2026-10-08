@@ -299,7 +299,7 @@ class SupabaseWrEpisodeRepository implements WrEpisodeRepository {
     return _patch(episode, {
       'state': ExperienceState.integrated.dbValue,
       if (memoryEventId != null) 'memory_event_id': memoryEventId,
-      'closed_at': DateTime.now().toIso8601String(),
+      'closed_at': DateTime.now().toUtc().toIso8601String(),
     });
   }
 
@@ -330,7 +330,7 @@ class SupabaseWrEpisodeRepository implements WrEpisodeRepository {
     }
     final row = await _client
         .from(_table)
-        .update({...values, 'updated_at': DateTime.now().toIso8601String()})
+        .update({...values, 'updated_at': DateTime.now().toUtc().toIso8601String()})
         .eq('id', id)
         .select()
         .single();

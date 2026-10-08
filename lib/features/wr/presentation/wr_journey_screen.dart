@@ -100,6 +100,14 @@ const String kEpisodeBehavior = 'reflection_episode';
 /// Ưu tiên bản dựng lại; chỉ khi Episode không có ghi chú `reframe` NÀO và cũng
 /// không tra được câu aha thì mới đọc `draft_meaning` — những Episode ghi từ
 /// trước lúc tách `notes` ra khỏi bản gộp.
+String? _ownInsight(ReflectionEpisode e) {
+  if (e.notes[ReflectionPattern.reframe.dbValue]?.trim().isNotEmpty == true) {
+    return null;
+  }
+  final own = e.draftMeaning?.trim();
+  return own == null || own.isEmpty ? null : own;
+}
+
 String? _episodeExcerpt(ReflectionEpisode e, String? aha) {
   final hasNote =
       e.notes[ReflectionPattern.reframe.dbValue]?.trim().isNotEmpty == true;
@@ -216,6 +224,10 @@ List<JourneyEntry> buildJourneyEntries({
                     situations: situations,
                     stories: stories,
                   )) ??
+            // Lượt v47 không có ghi chú bước reframe: `draft_meaning` không
+            // dựng lại được tức là câu người dùng bấm "Chưa đúng" rồi tự viết.
+            // Giữ nguyên chữ của họ, đừng rơi xuống câu aha mẫu.
+            _ownInsight(e) ??
             _episodeExcerpt(e, ahaByCode[e.situationCode]) ??
             situation ??
             e.humanMoment.label,

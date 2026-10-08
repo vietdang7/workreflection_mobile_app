@@ -540,7 +540,9 @@ class _StatBlock extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 4),
-        WrParagraph(
+        // Nhãn ngắn: không dùng WrParagraph, nó nối từ bằng U+00A0 nên ô hẹp
+        // + chữ lớn là vỡ giữa từ ("Refle/ct", "insi/ghts").
+        Text(
           label,
           style: const TextStyle(
             fontSize: 12.5,
