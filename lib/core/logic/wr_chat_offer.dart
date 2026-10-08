@@ -28,7 +28,7 @@ final _riskRedirect = _re(
   r'(tìm đến|tìm tới|nói chuyện với|chia sẻ với|liên hệ)[^.?!]{0,90}(người thân|bạn bè|người bạn|chuyên gia)|(người thân|bạn bè|người bạn|ai đó|chuyên gia tâm lý)[^.?!]{0,90}(tìm đến|tìm tới|ngay bây giờ|ngay lúc này|lúc này)',
 );
 final _calmOffer = _re(
-  r'(muốn|thử|gợi ý|giới thiệu|mình có)[^.?!]{0,40}(bài đọc|bài nghe|bài viết|audio|nội dung nhẹ|điều nhẹ nhàng)|thư viện nội dung cảm xúc',
+  r'(muốn|thử|gợi ý|giới thiệu|mình có)[^.?!]{0,40}(bài đọc|bài nghe|bài viết|audio|nội dung nhẹ|điều nhẹ nhàng)|thư viện nội dung cảm xúc|(bài đọc|bài viết|điều nhẹ nhàng)[^.?!]{0,80}(thử|xem|đọc) không',
 );
 final _reflectPointer = _re(
   r'(nút|bấm vào)[^.?!]{0,50}(reflection|luồng|ngay dưới|bên dưới|phía dưới)|bấm vào (nút|đó)|mở luồng (reflection|nhìn lại)',

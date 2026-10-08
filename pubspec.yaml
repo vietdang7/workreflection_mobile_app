@@ -57,6 +57,10 @@ flutter:
   assets:
     - assets/fonts/NotoSans-Regular.ttf
     - assets/fonts/NotoSans-Bold.ttf
+    # Be Vietnam Pro đóng gói sẵn: google_fonts thấy file trong assets thì dùng
+    # ngay, không tải qua mạng. Tải muộn làm lưới check-in Home đo chiều cao
+    # bằng font dự phòng rồi cắt mất dòng cuối khi font thật về (08/10).
+    - assets/google_fonts/
     - assets/images/wr_logo.png
     - assets/images/thumb_intro_overview.jpg
     - assets/images/thumb_daily_reflect.jpg

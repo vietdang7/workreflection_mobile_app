@@ -99,8 +99,14 @@ const RISK_REDIRECT_RE =
 ///
 /// Thêm "điều nhẹ nhàng" và "bài viết" vào nhóm danh từ. VẪN đòi một động từ mời
 /// đi kèm trong 40 ký tự, nên câu chỉ nhắc ngang qua không kích hoạt nhầm.
+///
+/// NỚI RA 08/10: "Có một bài đọc ngắn trong thư viện có thể giúp bạn dịu lại
+/// một chút, muốn thử không?" ra màn hình không có nút (máy thật). Lời mời đứng
+/// CUỐI câu, sau danh từ, nên nhánh "động từ trước, danh từ sau" không bắt được.
+/// Nhánh mới vẫn đòi đủ hai phần: danh từ nội dung rồi một câu hỏi mời
+/// ("thử / xem / đọc không").
 const CALM_OFFER_RE =
-  /(muốn|thử|gợi ý|giới thiệu|mình có)[^.?!]{0,40}(bài đọc|bài nghe|bài viết|audio|nội dung nhẹ|điều nhẹ nhàng)|thư viện nội dung cảm xúc/i;
+  /(muốn|thử|gợi ý|giới thiệu|mình có)[^.?!]{0,40}(bài đọc|bài nghe|bài viết|audio|nội dung nhẹ|điều nhẹ nhàng)|thư viện nội dung cảm xúc|(bài đọc|bài viết|điều nhẹ nhàng)[^.?!]{0,80}(thử|xem|đọc) không/i;
 
 /// Trợ lý đang CHỈ VÀO cái nút mở luồng Reflection.
 ///
