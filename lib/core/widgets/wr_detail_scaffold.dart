@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
+import '../l10n/wr_tr.dart';
 import '../theme/wr_colors.dart';
 import 'eyebrow.dart';
 import 'wr_paragraph.dart';
@@ -31,6 +32,7 @@ class WrDetailScaffold extends StatelessWidget {
         elevation: 0,
         leading: IconButton(
           key: const Key('wr_detail_back'),
+          tooltip: tr('Quay lại', 'Back'),
           icon: const Icon(Icons.arrow_back_ios_new, size: 18),
           color: WrColors.navy,
           onPressed: () => context.pop(),

@@ -234,7 +234,7 @@ class SupabaseWorkshopRepository implements WorkshopRepository {
 
   @override
   Future<void> checkIn(String registrationId) async {
-    final now = DateTime.now().toIso8601String();
+    final now = DateTime.now().toUtc().toIso8601String();
     await _client
         .from('cc_workshop_registrations')
         .update({
@@ -253,7 +253,7 @@ class SupabaseWorkshopRepository implements WorkshopRepository {
         .from('cc_workshop_registrations')
         .update({
           'image_consent': consent,
-          'image_consent_at': DateTime.now().toIso8601String(),
+          'image_consent_at': DateTime.now().toUtc().toIso8601String(),
         })
         .eq('id', registrationId);
   }
@@ -362,7 +362,7 @@ class SupabaseWorkshopRepository implements WorkshopRepository {
     required Map<String, int> answers,
   }) async {
     final uid = _uid;
-    final now = DateTime.now().toIso8601String();
+    final now = DateTime.now().toUtc().toIso8601String();
 
     // Step 1: insert cc_workshop_surveys and get the generated id.
     final surveyRow = await _client
@@ -396,7 +396,7 @@ class SupabaseWorkshopRepository implements WorkshopRepository {
         .from('cc_workshop_surveys')
         .update({
           'status': 'completed',
-          'completed_at': DateTime.now().toIso8601String(),
+          'completed_at': DateTime.now().toUtc().toIso8601String(),
         })
         .eq('id', surveyId);
   }

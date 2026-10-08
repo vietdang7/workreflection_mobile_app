@@ -9,6 +9,7 @@ import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:workreflection_mobile/core/logic/wr_chat_offer.dart';
+import 'package:workreflection_mobile/core/models/checkin.dart' show Mood;
 import 'package:workreflection_mobile/core/models/wr_chat.dart';
 
 WrChatMessage _assistant(String text) =>
@@ -68,6 +69,21 @@ void main() {
 
     test('lịch sử rỗng không lỗi', () {
       expect(restoreLastChatAction(const []), isEmpty);
+    });
+  });
+
+  group('calmMoodFor', () {
+    test('đọc cảm xúc từ lời người dùng, cả tiếng Anh', () {
+      expect(calmMoodFor('Hôm nay tôi mệt quá'), Mood.tired);
+      expect(calmMoodFor('Áp lực deadline quá'), Mood.stressed);
+      expect(calmMoodFor('Tôi thấy rối, không rõ nên làm gì'), Mood.foggy);
+      expect(calmMoodFor('Tôi thấy lạc lõng trong nhóm'), Mood.outofsync);
+      expect(calmMoodFor('I am so tired today'), Mood.tired);
+    });
+
+    test('không nhận ra thì lấy căng thẳng, không bao giờ là "Khá ổn"', () {
+      expect(calmMoodFor(null), Mood.stressed);
+      expect(calmMoodFor('xin chào'), Mood.stressed);
     });
   });
 }

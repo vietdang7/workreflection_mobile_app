@@ -14,7 +14,7 @@ import '../models/wr_episode.dart';
 int reflectionDayCount(List<ReflectionEpisode> episodes) {
   final days = <DateTime>{};
   for (final e in episodes) {
-    final at = e.closedAt;
+    final at = e.closedAt?.toLocal();
     if (at == null) continue;
     days.add(DateTime(at.year, at.month, at.day));
   }

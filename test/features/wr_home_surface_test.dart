@@ -673,7 +673,7 @@ void main() {
     });
 
     testWidgets(
-      'Việc tự rèn luyện chưa làm hôm nay hiện trên thẻ Tiếp tục hôm nay và chạm để sang /wr/growth',
+      'Việc tự rèn luyện chưa làm hôm nay KHÔNG còn hiện trên Home: "Việc bạn tự đặt" đã ẩn khỏi Phát triển (06/10)',
       (tester) async {
         final now = DateTime.now();
         final actionsRepo = FakeWrUserActionRepository()
@@ -691,21 +691,8 @@ void main() {
 
         await _pump(tester, _wrap(userActions: actionsRepo));
 
-        expect(
-          find.byKey(const Key('wr_home_user_action_card')),
-          findsOneWidget,
-        );
-        expect(
-          find.text(
-            'Việc tự rèn luyện: "Lắng nghe trọn vẹn khi họp" (ngày 3/5)',
-          ),
-          findsOneWidget,
-        );
-
-        await tester.tap(find.byKey(const Key('wr_home_user_action_card')));
-        await tester.pumpAndSettle();
-
-        expect(find.text('PHÁT TRIỂN'), findsOneWidget);
+        expect(find.byKey(const Key('wr_home_user_action_card')), findsNothing);
+        expect(find.textContaining('Việc tự rèn luyện'), findsNothing);
       },
     );
 

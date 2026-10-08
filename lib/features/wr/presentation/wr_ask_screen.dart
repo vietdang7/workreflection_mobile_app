@@ -28,6 +28,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_chat_starters.dart';
+import '../../../core/logic/wr_chat_offer.dart' show calmMoodFor;
 import '../../../core/models/wr_chat.dart';
 import '../../../core/models/wr_mood_content.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -127,6 +128,7 @@ class _WrAskScreenState extends ConsumerState<WrAskScreen> {
         elevation: 0,
         leading: IconButton(
           key: const Key('wr_detail_back'),
+          tooltip: tr('Quay lại', 'Back'),
           icon: const Icon(Icons.arrow_back_ios_new, size: 18),
           color: WrColors.navy,
           onPressed: () => context.pop(),
@@ -210,7 +212,14 @@ class _WrAskScreenState extends ConsumerState<WrAskScreen> {
                       controller: _scrollController,
                       padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
                       children: [
-                        for (final m in state.messages) _Bubble(message: m),
+                        for (final (i, m) in state.messages.indexed)
+                          _Bubble(
+                            message: m,
+                            lastUserText: _lastUserTextBefore(
+                              state.messages,
+                              i,
+                            ),
+                          ),
                         if (state.sending) const _TypingBubble(),
                       ],
                     ),
@@ -314,10 +323,22 @@ class _WrAskScreenState extends ConsumerState<WrAskScreen> {
 // Bong bóng
 // ---------------------------------------------------------------------------
 
+/// Lời người dùng gần nhất đứng trước lượt thứ [index].
+String? _lastUserTextBefore(List<WrChatMessage> messages, int index) {
+  for (var i = index - 1; i >= 0; i--) {
+    if (messages[i].role.isUser) return messages[i].content;
+  }
+  return null;
+}
+
 class _Bubble extends StatelessWidget {
-  const _Bubble({required this.message});
+  const _Bubble({required this.message, this.lastUserText});
 
   final WrChatMessage message;
+
+  /// Lời người dùng ngay trước lượt này, để nút dịu lại đoán cảm xúc khi hôm
+  /// nay chưa check-in.
+  final String? lastUserText;
 
   @override
   Widget build(BuildContext context) {
@@ -331,7 +352,8 @@ class _Bubble extends StatelessWidget {
         // Nút mở đúng việc trợ lý vừa mời. Mục 5 và bước 3 của mục 8 đều yêu cầu
         // lời mời này; trước 2026-08-03 trợ lý nói được nhưng không có đường đi
         // tới, nên người dùng gật đầu xong phải tự thoát ra tự tìm.
-        if (!isUser && action != null) _ActionButton(action: action),
+        if (!isUser && action != null)
+          _ActionButton(action: action, lastUserText: lastUserText),
       ],
     );
   }
@@ -384,20 +406,27 @@ class _Bubble extends StatelessWidget {
 }
 
 /// Nút mở luồng Reflection hoặc Thư viện Nội dung Cảm xúc.
-class _ActionButton extends StatelessWidget {
-  const _ActionButton({required this.action});
+class _ActionButton extends ConsumerWidget {
+  const _ActionButton({required this.action, this.lastUserText});
 
   final WrChatAction action;
+  final String? lastUserText;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Đã check-in thì Thư viện tự mở đúng cảm xúc hôm nay; chưa thì gửi kèm
+    // cảm xúc đọc từ lời người dùng, đừng để nó rơi về "Khá ổn".
+    final hasCheckin = ref.watch(todayCheckinProvider).valueOrNull != null;
+    final route = action == WrChatAction.calm && !hasCheckin
+        ? '${action.route}?mood=${calmMoodFor(lastUserText).moodContentKey}'
+        : action.route;
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: OutlinedButton.icon(
         key: Key('wr_chat_action_${action.name}'),
         // `push` chứ không phải `go`: người dùng phải quay lại được đúng cuộc
         // trò chuyện đang dở sau khi ghi xong hoặc đọc xong.
-        onPressed: () => context.push(action.route),
+        onPressed: () => context.push(route),
         icon: Icon(
           action == WrChatAction.reflect
               ? Icons.edit_note_outlined
@@ -729,31 +758,38 @@ class _SendButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: 46,
-      height: 46,
-      child: Material(
-        color: enabled ? WrColors.navy : WrColors.navy.withValues(alpha: 0.25),
-        shape: const CircleBorder(),
-        child: InkWell(
-          key: const Key('wr_ask_send'),
-          customBorder: const CircleBorder(),
-          onTap: enabled ? onTap : null,
-          child: Center(
-            child: sending
-                ? const SizedBox(
-                    width: 15,
-                    height: 15,
-                    child: CircularProgressIndicator(
+    return Semantics(
+      button: true,
+      enabled: enabled,
+      label: tr('Gửi', 'Send'),
+      child: SizedBox(
+        width: 46,
+        height: 46,
+        child: Material(
+          color: enabled
+              ? WrColors.navy
+              : WrColors.navy.withValues(alpha: 0.25),
+          shape: const CircleBorder(),
+          child: InkWell(
+            key: const Key('wr_ask_send'),
+            customBorder: const CircleBorder(),
+            onTap: enabled ? onTap : null,
+            child: Center(
+              child: sending
+                  ? const SizedBox(
+                      width: 15,
+                      height: 15,
+                      child: CircularProgressIndicator(
+                        color: WrColors.white,
+                        strokeWidth: 1.6,
+                      ),
+                    )
+                  : const Icon(
+                      Icons.arrow_upward,
+                      size: 19,
                       color: WrColors.white,
-                      strokeWidth: 1.6,
                     ),
-                  )
-                : const Icon(
-                    Icons.arrow_upward,
-                    size: 19,
-                    color: WrColors.white,
-                  ),
+            ),
           ),
         ),
       ),

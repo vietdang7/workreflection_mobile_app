@@ -92,7 +92,7 @@ class SupabaseWrJdRepository implements WrJdRepository {
       'current_day': nextDay,
       'completed_days': completed,
       if (isJdComplete(completed) && current?.completedAt == null)
-        'completed_at': DateTime.now().toIso8601String(),
+        'completed_at': DateTime.now().toUtc().toIso8601String(),
     };
 
     final row = await _client

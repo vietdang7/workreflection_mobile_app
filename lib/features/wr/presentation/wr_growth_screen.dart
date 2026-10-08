@@ -308,7 +308,7 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
         WrHeroHeader.inner(
           key: const Key('wr_growth_hero'),
           art: WrHeroArt.act,
-          eyebrow: tr('Phát triển', 'Grow'),
+          eyebrow: tr('Phát triển', 'Develop'),
           title: tr('Thực hành', 'Practice'),
           subtitle: tr(
             'Không cần thay đổi tất cả. Chỉ cần thử một cách khác.',

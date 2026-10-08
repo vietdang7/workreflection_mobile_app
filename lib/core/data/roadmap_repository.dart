@@ -442,7 +442,7 @@ class SupabaseRoadmapRepository implements RoadmapRepository {
       'report_id': reportId,
       'action_ref_id': actionRefId,
       'is_completed': isCompleted,
-      'completed_at': isCompleted ? DateTime.now().toIso8601String() : null,
+      'completed_at': isCompleted ? DateTime.now().toUtc().toIso8601String() : null,
     }, onConflict: 'user_id,report_id,action_ref_id');
   }
 
@@ -455,7 +455,7 @@ class SupabaseRoadmapRepository implements RoadmapRepository {
         .from('cc_custom_roadmap_tasks')
         .update({
           'is_completed': isCompleted,
-          'completed_at': isCompleted ? DateTime.now().toIso8601String() : null,
+          'completed_at': isCompleted ? DateTime.now().toUtc().toIso8601String() : null,
         })
         .eq('id', taskId);
   }
@@ -503,7 +503,7 @@ class SupabaseRoadmapRepository implements RoadmapRepository {
           'title': title,
           'description': description,
           'due_date': dueDate,
-          'updated_at': DateTime.now().toIso8601String(),
+          'updated_at': DateTime.now().toUtc().toIso8601String(),
         })
         .eq('id', taskId);
   }
@@ -550,7 +550,7 @@ class SupabaseRoadmapRepository implements RoadmapRepository {
       'user_id': uid,
       'coach_id': coachId,
       'status': 'pending',
-      'invited_at': DateTime.now().toIso8601String(),
+      'invited_at': DateTime.now().toUtc().toIso8601String(),
     }, onConflict: 'user_id,coach_id');
   }
 

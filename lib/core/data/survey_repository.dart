@@ -316,7 +316,7 @@ class SupabaseSurveyRepository implements SurveyRepository {
     String? existingSurveyId,
     void Function(String surveyId)? onSurveyCreated,
   }) async {
-    final now = DateTime.now().toIso8601String();
+    final now = DateTime.now().toUtc().toIso8601String();
 
     // 1. Insert cc_surveys (skip if resuming)
     final String surveyId;
@@ -546,7 +546,7 @@ class SupabaseSurveyRepository implements SurveyRepository {
       'user_id': _uid,
       'task_id': taskId,
       'completed': completed,
-      'completed_at': completed ? DateTime.now().toIso8601String() : null,
+      'completed_at': completed ? DateTime.now().toUtc().toIso8601String() : null,
     }, onConflict: 'user_id,task_id');
   }
 

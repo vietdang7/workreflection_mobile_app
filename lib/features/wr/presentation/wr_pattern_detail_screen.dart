@@ -29,7 +29,7 @@ import '../../../core/widgets/wr_paragraph.dart';
 /// Thứ tự ưu tiên giống màn một lần nhìn lại và dòng thời gian: lúc khép lại
 /// mới là lúc người dùng thật sự "đã nhìn lại xong".
 String? _dayOf(ReflectionEpisode e) {
-  final at = e.closedAt ?? e.updatedAt ?? e.openedAt;
+  final at = (e.closedAt ?? e.updatedAt ?? e.openedAt)?.toLocal();
   if (at == null) return null;
   return '${at.day.toString().padLeft(2, '0')}/'
       '${at.month.toString().padLeft(2, '0')}/${at.year}';

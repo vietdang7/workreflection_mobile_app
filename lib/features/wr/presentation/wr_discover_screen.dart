@@ -40,6 +40,8 @@ import '../../../core/widgets/wr_card.dart';
 import '../../../core/widgets/wr_hero_header.dart';
 import '../../../core/widgets/wr_link_row.dart';
 import 'wr_sca_deep_dive_screen.dart' show openScaDeepDive;
+import '../growth_providers.dart'
+    show practiceEnrollmentsProvider, practiceThemesProvider;
 import '../wr_providers.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 
@@ -438,11 +440,37 @@ class _TopPatternCardState extends ConsumerState<_TopPatternCard> {
             'Xem chủ đề thực hành liên quan',
             'See related practice themes',
           ),
-          onTap: () => context.go('/wr/growth'),
+          onTap: () async {
+            final route = await _relatedPracticeRoute();
+            if (context.mounted) context.go(route);
+          },
         ),
       ],
     ),
   );
+
+  /// Chủ đề đang theo cùng chiều SCA với điều lặp lại ở đầu trang. Trước đây nút
+  /// chỉ mở tab Phát triển chung chung, người dùng phải tự dò xem chủ đề nào
+  /// "liên quan". Chưa theo chủ đề nào cùng chiều thì vẫn về tab Phát triển:
+  /// chủ đề do phần mềm tự thêm, không mở một chủ đề chưa ghi danh.
+  Future<String> _relatedPracticeRoute() async {
+    final code = _topCode;
+    final situations = ref.read(wrSituationsProvider).valueOrNull ?? const [];
+    final dim = situations
+        .where((s) => s.code == code)
+        .firstOrNull
+        ?.scaDimension;
+    if (dim == null) return '/wr/growth';
+    final themes = await ref.read(practiceThemesProvider.future);
+    final enrollments = await ref.read(practiceEnrollmentsProvider.future);
+    for (final e in enrollments.where((e) => e.completedAt == null)) {
+      final t = themes.where((t) => t.themeId == e.themeId).firstOrNull;
+      if (t != null && !t.isRetired && t.scaDimension == dim) {
+        return '/wr/growth/theme/${t.themeId}';
+      }
+    }
+    return '/wr/growth';
+  }
 
   Widget _noView(List<RepeatedSituation> others) => _SoftTop(
     child: Column(
@@ -1591,14 +1619,18 @@ class _SelfCheckInviteCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           // `.progressline`: vạch 3px, nền navy 8%, phần đã làm navy.
-          ClipRRect(
-            borderRadius: BorderRadius.circular(2),
-            child: SizedBox(
-              height: 3,
-              child: LinearProgressIndicator(
-                value: shown / total,
-                backgroundColor: WrColors.navy.withValues(alpha: 0.08),
-                color: WrColors.navy,
+          // Dòng chữ ngay trên đã đọc "15/15"; để vạch lộ ra thì trình đọc màn
+          // hình gộp giá trị "100" của nó lên đầu cả thẻ ("100, Trong 30 lần…").
+          ExcludeSemantics(
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(2),
+              child: SizedBox(
+                height: 3,
+                child: LinearProgressIndicator(
+                  value: shown / total,
+                  backgroundColor: WrColors.navy.withValues(alpha: 0.08),
+                  color: WrColors.navy,
+                ),
               ),
             ),
           ),
