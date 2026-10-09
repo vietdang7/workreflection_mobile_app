@@ -147,7 +147,7 @@ class WrFlowScaffold extends ConsumerWidget {
                                   fontSize: 11.5,
                                   fontWeight: FontWeight.w700,
                                   letterSpacing: 0.8,
-                                  color: WrColors.text3,
+                                  color: WrColors.eyebrow,
                                 ),
                               ),
                               ?eyebrowTrailing,

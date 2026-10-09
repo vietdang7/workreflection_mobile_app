@@ -598,7 +598,7 @@ class _MentorCard extends StatelessWidget {
                 fontSize: 10.5,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 0.5,
-                color: WrColors.text3,
+                color: WrColors.eyebrow,
               ),
             ),
             TextSpan(text: wrKeepWords(text)),

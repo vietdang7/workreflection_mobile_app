@@ -1,111 +1,113 @@
-// Hero đầu màn theo mockup v47 (06/10): `.hero2`, `.onb-hero`, `.rf-band`.
+// Hero đầu màn theo mockup v55 Watercolor (09/10): `.hero2`, `.onb-hero`,
+// `.rf-band`.
 //
-// Ảnh nằm ở `assets/images/hero/*.webp`, xuất từ chính SVG của mockup bằng
-// `tool/render_mockup_heroes.mjs`. SVG đó dùng feTurbulence/feGaussianBlur nên
-// không vẽ lại được bằng flutter_svg hay CustomPainter cho giống.
+// v55 thay toàn bộ tranh SVG (thành phố theo khung giờ, phong cảnh ba tab,
+// dải theo cảm xúc) bằng ảnh màu nước khách gửi ở `hero_assets/`. Ảnh KHÔNG
+// chứa chữ, mọi chữ do app vẽ đè lên. Ảnh nằm ở `assets/images/hero/`:
 //
-// Ảnh là phần vẽ GỐC. Lớp mờ hai mép (`mask-image` trong CSS) do widget này
-// phủ, nên chỉnh độ mờ không phải xuất lại ảnh.
+//   hero_homnay / hero_hieu / hero_phat / hero_hanh   hero bốn tab + onboarding
+//   band_a / band_b                                   dải đầu màn con
 //
-// Khách 06/10: "chữ trên hero phải đọc rõ". Ở hai khung giờ tối, mép trên của
-// ảnh KHÔNG mờ đi: chữ màu kem nằm đúng mép đó, mờ ra nền xám sáng là mất chữ.
-// Ở các ảnh sáng, sau khối chữ có một quầng trắng như `.inner-landscape`.
+// Chữ đọc được là nhờ lớp phủ kem (`.hero-scrim`), không nhờ ảnh. Đổi ảnh thì
+// chỉ thay file, không đụng lớp phủ.
 
 import 'package:flutter/material.dart';
 
 import '../theme/wr_colors.dart';
-import 'wr_hero_scene.dart' show WrDayPeriod;
 import 'wr_paragraph.dart';
 
-export 'wr_hero_scene.dart' show WrDayPeriod;
-
-/// Ảnh hero của ba tab trong (`HERO_ART` của mockup).
+/// Ảnh hero của bốn tab (`HERO_PHOTO` + `TAB_PHOTO` của mockup v55).
 enum WrHeroArt {
-  understand,
-  act,
-  grow;
+  home('homnay'),
+  understand('hieu'),
+  act('phat'),
+  grow('hanh');
 
-  String get asset => 'assets/images/hero/inner_$name.webp';
+  const WrHeroArt(this._file);
+
+  final String _file;
+
+  String get asset => 'assets/images/hero/hero_$_file.webp';
 }
 
-/// Ảnh thành phố của Home theo khung giờ (`cityHero(period)`).
-String wrCityHeroAsset(WrDayPeriod period) =>
-    'assets/images/hero/city_${period.name}.webp';
+/// `.hero-photo { background-position: 18% 62% }`: neo trái-dưới để giữ bàn
+/// và cửa sổ khi ảnh bị cắt.
+const kWrHeroPhotoAlignment = Alignment(-0.64, 0.24);
 
-/// Tối và khuya là hai ảnh nền tối, chữ phải chuyển sang màu kem.
-bool wrIsDarkPeriod(WrDayPeriod period) =>
-    period == WrDayPeriod.evening || period == WrDayPeriod.latenight;
+/// `.onb-hero .hero-photo { background-position: 18% 58% }`.
+const kWrOnboardingPhotoAlignment = Alignment(-0.64, 0.16);
 
-/// Màu của khung trạng thái khi ảnh tối nằm sau nó
-/// (`.screen:has(.onb-hero.p-evening) .statusbar`).
-Color? wrDarkPeriodTop(WrDayPeriod period) => switch (period) {
-  WrDayPeriod.evening => const Color(0xFF2C335D),
-  WrDayPeriod.latenight => const Color(0xFF121633),
-  _ => null,
-};
+/// `.hero-scrim`: lớp phủ kem bắt buộc, đậm ở trên (chỗ chữ) và trong dần
+/// xuống dưới.
+const kWrHeroScrim = LinearGradient(
+  begin: Alignment.topCenter,
+  end: Alignment.bottomCenter,
+  colors: [
+    Color(0xF7FFF7EE), // .97
+    Color(0xEDFFF7EE), // .93
+    Color(0x8AFFF7EE), // .54
+    Color(0x14FFF7EE), // .08
+  ],
+  stops: [0, 0.44, 0.72, 1],
+);
 
-/// Ảnh hero kèm lớp mờ mép. Không có chữ.
+/// `.onb-hero-fade`: mờ nhẹ ở trên, đặc dần ở dưới để nối vào phần chữ. Mockup
+/// kết thúc bằng `--cream`; app kết thúc bằng màu nền màn để không lộ mép.
+const kWrOnboardingFade = LinearGradient(
+  begin: Alignment.topCenter,
+  end: Alignment.bottomCenter,
+  colors: [
+    Color(0x57FFF7EE), // .34
+    Color(0x1AFFF7EE), // .10
+    Color(0x9EFFF7EE), // .62
+    WrColors.pageBg,
+  ],
+  stops: [0, 0.34, 0.80, 1],
+);
+
+/// Ảnh hero kèm lớp phủ. Không có chữ.
 ///
-/// Dùng riêng ở Onboarding (`.onb-hero`, cao 292). Các tab dùng [WrHeroHeader].
+/// Dùng riêng ở Onboarding (`.onb-hero`). Các tab dùng [WrHeroHeader].
 class WrHeroBackdrop extends StatelessWidget {
   const WrHeroBackdrop({
     super.key,
     required this.asset,
-    this.alignment = Alignment.bottomCenter,
-    this.fadeTop = true,
-    this.fadeStops = const [0, 0.16, 0.76, 1],
+    this.alignment = kWrHeroPhotoAlignment,
+    this.overlay = kWrHeroScrim,
     this.landscapeTint = false,
   });
 
   final String asset;
 
-  /// Ảnh được cắt kiểu `slice` của SVG. Thành phố bám phải
-  /// (`xMaxYMid`), tranh phong cảnh bám đáy (`xMidYMax`).
+  /// `background-size: cover` kèm `background-position`.
   final Alignment alignment;
 
-  /// Mờ dần ở mép trên. Tắt cho ảnh tối để chữ kem không rơi lên nền sáng.
-  final bool fadeTop;
-
-  /// Bốn mốc của `mask-image: linear-gradient(...)`.
-  final List<double> fadeStops;
+  /// Lớp phủ ngay trên ảnh (`.hero-scrim` hoặc `.onb-hero-fade`).
+  final Gradient overlay;
 
   /// Hai quầng màu coral/teal của `.hero2.inner-landscape::after`.
   final bool landscapeTint;
 
   @override
   Widget build(BuildContext context) {
-    final image = Image.asset(
-      asset,
-      fit: BoxFit.cover,
-      alignment: alignment,
-      width: double.infinity,
-      height: double.infinity,
-      // Ảnh trang trí, trình đọc màn hình bỏ qua.
-      excludeFromSemantics: true,
-      gaplessPlayback: true,
-      // Test widget không nạp asset thật. Thiếu ảnh thì để trống chứ không
-      // làm đổ cả màn.
-      errorBuilder: (_, _, _) => const SizedBox.expand(),
-    );
     return IgnorePointer(
       child: Stack(
         fit: StackFit.expand,
         children: [
-          ShaderMask(
-            blendMode: BlendMode.dstIn,
-            shaderCallback: (rect) => LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                fadeTop ? Colors.transparent : Colors.black,
-                Colors.black,
-                Colors.black,
-                Colors.transparent,
-              ],
-              stops: fadeStops,
-            ).createShader(rect),
-            child: image,
+          Image.asset(
+            asset,
+            fit: BoxFit.cover,
+            alignment: alignment,
+            width: double.infinity,
+            height: double.infinity,
+            // Ảnh trang trí, trình đọc màn hình bỏ qua.
+            excludeFromSemantics: true,
+            gaplessPlayback: true,
+            // Test widget không nạp asset thật. Thiếu ảnh thì để trống chứ
+            // không làm đổ cả màn.
+            errorBuilder: (_, _, _) => const SizedBox.expand(),
           ),
+          DecoratedBox(decoration: BoxDecoration(gradient: overlay)),
           if (landscapeTint) ...const [
             DecoratedBox(
               decoration: BoxDecoration(
@@ -160,34 +162,26 @@ class WrHeroHeader extends StatelessWidget {
     this.overline,
     this.subtitle,
     this.trailing,
-    this.dark = false,
-    this.alignment = Alignment.bottomCenter,
     this.landscape = true,
-    bool? glow,
     this.height = kHeight,
-  }) : glow = glow ?? landscape;
+  });
 
-  /// Home tạo hero theo khung giờ.
-  factory WrHeroHeader.city({
+  /// Home (`.hero2.home2`): chỉ có ảnh và lớp phủ, không quầng màu, không
+  /// quầng trắng sau chữ. v55 bỏ hero theo khung giờ, cả ngày một ảnh.
+  factory WrHeroHeader.home({
     Key? key,
-    required WrDayPeriod period,
     required String title,
     String? overline,
     String? subtitle,
     Widget? trailing,
   }) => WrHeroHeader(
     key: key,
-    asset: wrCityHeroAsset(period),
+    asset: WrHeroArt.home.asset,
     title: title,
     overline: overline,
     subtitle: subtitle,
     trailing: trailing,
-    dark: wrIsDarkPeriod(period),
-    alignment: Alignment.centerRight,
     landscape: false,
-    // Ảnh sáng/chiều có nhà cao tầng ngay sau dòng chữ phụ: cần quầng trắng
-    // để chữ đọc được (ảnh soi M3, khổ 393pt).
-    glow: true,
   );
 
   /// Ba tab trong: Hiểu mình, Phát triển, Hành trình.
@@ -207,8 +201,8 @@ class WrHeroHeader extends StatelessWidget {
     trailing: trailing,
   );
 
-  /// `.hero2 { height: 250px }`, chưa tính thanh trạng thái. Bốn tab dùng
-  /// chung một chiều cao để chuyển tab không bị giật.
+  /// Chiều cao hero, chưa tính thanh trạng thái. Bốn tab dùng chung một chiều
+  /// cao để chuyển tab không bị giật.
   static const kHeight = 250.0;
 
   final String asset;
@@ -226,29 +220,19 @@ class WrHeroHeader extends StatelessWidget {
   /// Thường là `WrProfileAvatar`.
   final Widget? trailing;
 
-  /// Ảnh nền tối → chữ kem, mép trên không mờ.
-  final bool dark;
-
-  final Alignment alignment;
-
-  /// Thêm quầng màu và quầng trắng sau chữ như `.inner-landscape`.
+  /// `.inner-landscape`: hai quầng màu trên ảnh và quầng trắng sau khối chữ.
   final bool landscape;
 
-  /// Quầng trắng sau khối chữ (bỏ qua khi ảnh tối). Mặc định theo [landscape].
-  final bool glow;
-
   final double height;
+
+  // Chữ đặt trên ảnh phải đậm hơn chữ trên nền phẳng (mockup v55 đo trên
+  // chính ảnh): `.hero2 .hero-copy2` .94, `.hero2 .tiny` .80, `.eyebrow` .74.
+  static const _copyColor = Color(0xF02C335D);
+  static const _overlineColor = Color(0xCC2C335D);
 
   @override
   Widget build(BuildContext context) {
     final top = MediaQuery.paddingOf(context).top;
-    final titleColor = dark ? WrColors.cream : WrColors.navy;
-    final copyColor = dark
-        ? WrColors.cream.withValues(alpha: 0.78)
-        : const Color(0xA82C335D);
-    final smallColor = dark
-        ? WrColors.cream.withValues(alpha: 0.62)
-        : WrColors.text3;
 
     final copy = Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -257,26 +241,29 @@ class WrHeroHeader extends StatelessWidget {
         if (eyebrow != null) ...[
           Text(
             eyebrow!.toUpperCase(),
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.8,
-              color: smallColor,
+              color: WrColors.eyebrow,
             ),
           ),
           const SizedBox(height: 6),
         ],
         if (overline != null) ...[
-          Text(overline!, style: TextStyle(fontSize: 12.5, color: smallColor)),
+          Text(
+            overline!,
+            style: const TextStyle(fontSize: 12.5, color: _overlineColor),
+          ),
           const SizedBox(height: 3),
         ],
         // Từ ghép không rớt nửa xuống dòng dưới (họp khách 08/10).
         Text(
           wrKeepCompounds(title),
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 21,
             fontWeight: FontWeight.w800,
-            color: titleColor,
+            color: WrColors.navy,
             height: 1.32,
           ),
         ),
@@ -286,7 +273,11 @@ class WrHeroHeader extends StatelessWidget {
             constraints: const BoxConstraints(maxWidth: 275),
             child: Text(
               wrKeepWords(subtitle!),
-              style: TextStyle(fontSize: 14.5, color: copyColor, height: 1.55),
+              style: const TextStyle(
+                fontSize: 14.5,
+                color: _copyColor,
+                height: 1.55,
+              ),
             ),
           ),
         ],
@@ -298,12 +289,7 @@ class WrHeroHeader extends StatelessWidget {
       child: Stack(
         children: [
           Positioned.fill(
-            child: WrHeroBackdrop(
-              asset: asset,
-              alignment: alignment,
-              fadeTop: !dark,
-              landscapeTint: landscape,
-            ),
+            child: WrHeroBackdrop(asset: asset, landscapeTint: landscape),
           ),
           Padding(
             // `.topbar { padding: 8px 22px 14px }`
@@ -315,33 +301,32 @@ class WrHeroHeader extends StatelessWidget {
                   child: Stack(
                     clipBehavior: Clip.none,
                     children: [
-                      // Quầng trắng sau khối chữ: `.topbar > div::after`.
-                      if (glow && !dark)
+                      // Quầng trắng sau khối chữ:
+                      // `.inner-landscape .topbar > div::after`.
+                      if (landscape)
                         const Positioned(
                           left: -10,
                           top: -10,
                           right: -10,
                           bottom: -10,
                           child: IgnorePointer(
-                            child: SizedBox(
-                              child: DecoratedBox(
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.all(
-                                    Radius.circular(72),
-                                  ),
-                                  gradient: RadialGradient(
-                                    center: Alignment(-0.5, -0.5),
-                                    // CSS lấy bán kính tới góc xa nhất
-                                    // (≈217px); Flutter tính theo cạnh ngắn
-                                    // 144px.
-                                    radius: 1.5,
-                                    colors: [
-                                      Color(0xA8FFFFFF),
-                                      Color(0x29FFFFFF),
-                                      Color(0x00FFFFFF),
-                                    ],
-                                    stops: [0, 0.5, 0.74],
-                                  ),
+                            child: DecoratedBox(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(72),
+                                ),
+                                gradient: RadialGradient(
+                                  center: Alignment(-0.5, -0.5),
+                                  // CSS lấy bán kính tới góc xa nhất
+                                  // (≈217px); Flutter tính theo cạnh ngắn
+                                  // 144px.
+                                  radius: 1.5,
+                                  colors: [
+                                    Color(0xA8FFFFFF),
+                                    Color(0x29FFFFFF),
+                                    Color(0x00FFFFFF),
+                                  ],
+                                  stops: [0, 0.5, 0.74],
                                 ),
                               ),
                             ),
@@ -423,28 +408,113 @@ abstract final class WrMoodPalette {
   static Color dot(String? mood) => of(mood)[4];
 }
 
-/// Dải phong cảnh 150px ở đầu các màn con (`.rf-band`), màu theo cảm xúc.
+/// Dải ảnh ở đầu các màn con (`.rf-band` của mockup v55).
+///
+/// Một lớp ảnh thật (`band_a` cho căng thẳng / mơ hồ / khá ổn, `band_b` cho
+/// các cảm xúc còn lại) + một lớp phủ rất nhẹ mang màu cảm xúc, để người dùng
+/// vẫn nhận ra mình đang ở trạng thái nào. Truyền [asset] thì dùng ảnh đó và
+/// bỏ lớp màu cảm xúc (Onboarding bước 3–4 dùng ảnh hero của tab).
 ///
 /// Đặt ở lớp dưới cùng của một `Stack`, nội dung màn nằm đè lên.
 class WrReflectBand extends StatelessWidget {
-  const WrReflectBand({super.key, required this.mood, this.height = kHeight});
+  const WrReflectBand({
+    super.key,
+    required this.mood,
+    this.asset,
+    this.height = kHeight,
+  });
 
-  static const kHeight = 150.0;
+  /// `.rf-band { height: 112px }`, chưa tính thanh trạng thái: ảnh đã mờ hết
+  /// trước khi chạm vào nhãn và tiêu đề bên dưới.
+  static const kHeight = 112.0;
 
   final String? mood;
+  final String? asset;
   final double height;
+
+  /// `BAND_PHOTO[['stress','foggy','ok'].includes(id) ? 'a' : 'b']`.
+  static String assetFor(String? mood) {
+    final m = WrMoodPalette.normalize(mood);
+    final key = const {'stress', 'foggy', 'ok'}.contains(m) ? 'a' : 'b';
+    return 'assets/images/hero/band_$key.webp';
+  }
 
   @override
   Widget build(BuildContext context) {
+    final top = MediaQuery.paddingOf(context).top;
+    final total = height + top;
+    // `mask-image: linear-gradient(transparent 0, #000 10%, #000 34%,
+    // transparent 100%)`, tính trên phần dải dưới thanh trạng thái.
+    double at(double f) => (top + height * f) / total;
+    final pal = WrMoodPalette.of(mood);
+    final sky = pal[0];
+    final sun = pal[1];
     return SizedBox(
       key: Key('wr_reflect_band_${WrMoodPalette.normalize(mood)}'),
-      height: height + MediaQuery.paddingOf(context).top,
+      height: total,
       width: double.infinity,
-      child: WrHeroBackdrop(
-        asset: 'assets/images/hero/band_${WrMoodPalette.normalize(mood)}.webp',
-        alignment: Alignment.topCenter,
-        // `.rf-band { mask-image: ... 0, 14%, 52%, 100% }`
-        fadeStops: const [0, 0.14, 0.52, 1],
+      child: IgnorePointer(
+        child: ShaderMask(
+          blendMode: BlendMode.dstIn,
+          shaderCallback: (rect) => LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: const [
+              Colors.transparent,
+              Colors.black,
+              Colors.black,
+              Colors.transparent,
+            ],
+            stops: [0, at(0.10), at(0.34), 1],
+          ).createShader(rect),
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              Image.asset(
+                asset ?? assetFor(mood),
+                fit: BoxFit.cover,
+                // `.rf-band-photo { background-position: 50% 42% }`
+                alignment: asset == null
+                    ? const Alignment(0, -0.16)
+                    : kWrOnboardingPhotoAlignment,
+                excludeFromSemantics: true,
+                gaplessPlayback: true,
+                errorBuilder: (_, _, _) => const SizedBox.expand(),
+              ),
+              if (asset == null) ...[
+                // `.rf-band-tint`: quầng màu "mặt trời" của cảm xúc ...
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: RadialGradient(
+                      center: const Alignment(0.56, -0.4),
+                      radius: 1.1,
+                      colors: [sun.withAlpha(0x4A), sun.withAlpha(0)],
+                      stops: const [0, 0.62],
+                    ),
+                  ),
+                ),
+                // ... và lớp màu "trời" nhạt dần về nền kem.
+                DecoratedBox(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        sky.withAlpha(0x30),
+                        sky.withAlpha(0x10),
+                        const Color(0xF2FFF7EE),
+                      ],
+                      stops: const [0, 0.52, 1],
+                    ),
+                  ),
+                ),
+              ] else
+                const DecoratedBox(
+                  decoration: BoxDecoration(gradient: kWrOnboardingFade),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
