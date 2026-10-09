@@ -1,11 +1,13 @@
-// Onboarding năm bước — mockup v47 (`screenOnboarding`, 06/10/2026).
+// Onboarding năm bước — mockup v47 (`screenOnboarding`, 06/10/2026), ảnh
+// theo v55 Watercolor (09/10): dùng đúng bộ ảnh của các tab để phong cách liền
+// mạch từ màn giới thiệu sang màn dùng thật.
 //
-//   0 Dừng lại một chút   hero thành phố theo khung giờ
-//   1 Thấy rõ hơn         hero `understand`
-//   2 Hành trình          hero `grow`
-//   3 Riêng tư            chỉ có chữ (v47 bỏ giờ nhắc và dòng điều khoản)
+//   0 Dừng lại một chút   ảnh tab Hôm nay
+//   1 Thấy rõ hơn         ảnh tab Hiểu mình
+//   2 Hành trình          ảnh tab Hành trình
+//   3 Riêng tư            dải ảnh tab Phát triển (v47 bỏ giờ nhắc và điều khoản)
 //      → video hướng dẫn (khách 06/10: "video HDSD để sau landing page")
-//   4 Bắt đầu             chọn cảm xúc → vào thẳng lần nhìn lại đầu tiên
+//   4 Bắt đầu             dải ảnh tab Hôm nay · chọn cảm xúc → vào thẳng lần nhìn lại đầu tiên
 //
 // Không bắt đăng ký trước. Chọn cảm xúc (hoặc Bỏ qua) mở một phiên KHÁCH
 // (Supabase ẩn danh, `guest_session.dart`); sau lần nhìn lại đầu tiên, màn Xong
@@ -21,7 +23,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/wr_tr.dart';
-import '../../../core/logic/vn_date.dart';
 import '../../../core/router/app_router.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/wr_hero_header.dart';
@@ -80,11 +81,7 @@ List<_HeroStep> get _heroSteps => [
 const kOnboardingSteps = 5;
 
 class OnboardingScreen extends ConsumerStatefulWidget {
-  const OnboardingScreen({super.key, this.period});
-
-  /// Khung giờ của hero bước đầu. Bỏ trống thì theo giờ Việt Nam hiện tại;
-  /// test truyền thẳng để chụp bản tối.
-  final WrDayPeriod? period;
+  const OnboardingScreen({super.key});
 
   @override
   ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -93,12 +90,6 @@ class OnboardingScreen extends ConsumerStatefulWidget {
 class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   int _step = 0;
   bool _busy = false;
-
-  WrDayPeriod get _period =>
-      widget.period ?? WrDayPeriod.fromHour(nowVn().hour);
-
-  /// Bước đầu ở khung giờ tối: hero tối, chữ trên thanh đầu màu kem.
-  bool get _dark => _step == 0 && wrIsDarkPeriod(_period);
 
   void _go(int step) =>
       setState(() => _step = step.clamp(0, kOnboardingSteps - 1));
@@ -159,11 +150,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final darkTop = _dark ? wrDarkPeriodTop(_period) : null;
+    // Ảnh v55 luôn sáng (đã bỏ hero tối theo khung giờ): biểu tượng thanh
+    // trạng thái luôn màu tối.
     return AnnotatedRegion<SystemUiOverlayStyle>(
-      value: darkTop != null
-          ? SystemUiOverlayStyle.light
-          : SystemUiOverlayStyle.dark,
+      value: SystemUiOverlayStyle.dark,
       child: Scaffold(
         backgroundColor: WrColors.pageBg,
         body: AnimatedSwitcher(
@@ -186,7 +176,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   // ── Thanh đầu: nút lùi · năm vạch · Bỏ qua (`.onb-top`) ──────────────────
 
   Widget _topBar() {
-    final light = _dark;
     return Padding(
       padding: EdgeInsets.fromLTRB(
         22,
@@ -209,14 +198,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   height: 30,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: light
-                        ? WrColors.cream.withValues(alpha: 0.14)
-                        : WrColors.navy.withValues(alpha: 0.06),
+                    color: WrColors.navy.withValues(alpha: 0.06),
                   ),
                   child: Icon(
                     Icons.chevron_left_rounded,
                     size: 20,
-                    color: light ? WrColors.cream : WrColors.navy,
+                    color: WrColors.navy,
                   ),
                 ),
               ),
@@ -236,10 +223,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(2),
                         color: k <= _step
-                            ? (light ? WrColors.cream : WrColors.navy)
-                            : (light
-                                  ? WrColors.cream.withValues(alpha: 0.22)
-                                  : WrColors.navy.withValues(alpha: 0.14)),
+                            ? WrColors.navy
+                            : WrColors.navy.withValues(alpha: 0.14),
                       ),
                     ),
                   ),
@@ -252,9 +237,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             key: const Key('onboarding_skip'),
             onPressed: _busy ? null : _skip,
             style: TextButton.styleFrom(
-              foregroundColor: light
-                  ? WrColors.cream.withValues(alpha: 0.8)
-                  : WrColors.text2,
+              foregroundColor: WrColors.text2,
               padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 10),
               minimumSize: Size.zero,
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -291,7 +274,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.8,
-              color: WrColors.text3,
+              color: WrColors.eyebrow,
             ),
           ),
           const SizedBox(height: 8),
@@ -362,9 +345,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   // ── Bước 0–2 ─────────────────────────────────────────────────────────────
 
   Widget _heroStep(_HeroStep s) {
-    final city = _step == 0;
     final asset = switch (_step) {
-      0 => wrCityHeroAsset(_period),
+      0 => WrHeroArt.home.asset,
       1 => WrHeroArt.understand.asset,
       _ => WrHeroArt.grow.asset,
     };
@@ -386,11 +368,8 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         child: WrHeroBackdrop(
                           key: Key('onboarding_hero_$_step'),
                           asset: asset,
-                          alignment: city
-                              ? Alignment.centerRight
-                              : Alignment.bottomCenter,
-                          fadeTop: !_dark,
-                          fadeStops: const [0, 0.10, 0.90, 1],
+                          alignment: kWrOnboardingPhotoAlignment,
+                          overlay: kWrOnboardingFade,
                         ),
                       ),
                       _topBar(),
@@ -442,11 +421,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   Widget _privacyStep() {
     return Stack(
       children: [
-        const Positioned(
+        Positioned(
           top: 0,
           left: 0,
           right: 0,
-          child: WrReflectBand(mood: 'ok'),
+          child: WrReflectBand(mood: null, asset: WrHeroArt.act.asset),
         ),
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -486,11 +465,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final options = kCheckinOptions;
     return Stack(
       children: [
-        const Positioned(
+        Positioned(
           top: 0,
           left: 0,
           right: 0,
-          child: WrReflectBand(mood: 'happy'),
+          child: WrReflectBand(mood: null, asset: WrHeroArt.home.asset),
         ),
         Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,

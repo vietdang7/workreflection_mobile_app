@@ -1,4 +1,5 @@
-// Nền dùng chung của mockup v47 (M0): hero, dải cảm xúc, thẻ chuẩn.
+// Nền dùng chung của mockup v47 (M0): hero, dải cảm xúc, thẻ chuẩn. Ảnh hero
+// và dải theo mockup v55 Watercolor (09/10).
 
 import 'dart:io';
 
@@ -21,13 +22,12 @@ Widget _host(Widget child, {double top = 0}) => MaterialApp(
 
 void main() {
   group('ảnh hero', () {
-    test('đủ 13 ảnh trên đĩa và pubspec khai báo thư mục', () {
-      final paths = [
-        for (final p in WrDayPeriod.values) wrCityHeroAsset(p),
+    test('đủ 6 ảnh v55 trên đĩa và pubspec khai báo thư mục', () {
+      final paths = <String>{
         for (final a in WrHeroArt.values) a.asset,
-        for (final m in WrMoodPalette.moods) 'assets/images/hero/band_$m.webp',
-      ];
-      expect(paths, hasLength(13));
+        for (final m in WrMoodPalette.moods) WrReflectBand.assetFor(m),
+      };
+      expect(paths, hasLength(6));
       for (final p in paths) {
         expect(File(p).existsSync(), isTrue, reason: p);
       }
@@ -37,11 +37,20 @@ void main() {
       );
     });
 
-    test('tối và khuya là ảnh tối, sáng và chiều là ảnh sáng', () {
-      expect(wrIsDarkPeriod(WrDayPeriod.morning), isFalse);
-      expect(wrIsDarkPeriod(WrDayPeriod.afternoon), isFalse);
-      expect(wrIsDarkPeriod(WrDayPeriod.evening), isTrue);
-      expect(wrIsDarkPeriod(WrDayPeriod.latenight), isTrue);
+    test('bốn tab bốn ảnh riêng', () {
+      expect(WrHeroArt.home.asset, 'assets/images/hero/hero_homnay.webp');
+      expect(WrHeroArt.understand.asset, 'assets/images/hero/hero_hieu.webp');
+      expect(WrHeroArt.act.asset, 'assets/images/hero/hero_phat.webp');
+      expect(WrHeroArt.grow.asset, 'assets/images/hero/hero_hanh.webp');
+    });
+
+    test('dải màn con: căng thẳng / mơ hồ / khá ổn dùng band_a', () {
+      for (final m in ['stress', 'foggy', 'ok']) {
+        expect(WrReflectBand.assetFor(m), endsWith('band_a.webp'), reason: m);
+      }
+      for (final m in ['tired', 'outofsync', 'happy', null]) {
+        expect(WrReflectBand.assetFor(m), endsWith('band_b.webp'), reason: m);
+      }
     });
   });
 
@@ -84,28 +93,41 @@ void main() {
       expect(tester.getTopLeft(find.text('HIỂU MÌNH')).dy, 32);
     });
 
-    testWidgets('ảnh tối thì tiêu đề màu kem', (tester) async {
+    testWidgets('Home: chữ navy, mô tả đậm .94, không quầng màu', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         _host(
-          WrHeroHeader.city(
-            period: WrDayPeriod.evening,
+          WrHeroHeader.home(
             title: 'Chào Yumi',
             overline: 'Thứ Ba, 24 tháng 6',
+            subtitle: 'Dừng lại một chút.',
           ),
         ),
       );
       final title = tester.widget<Text>(find.text('Chào Yumi'));
-      expect(title.style!.color, WrColors.cream);
+      expect(title.style!.color, WrColors.navy);
+      final copy = tester.widget<Text>(find.text('Dừng lại một chút.'));
+      expect(copy.style!.color, const Color(0xF02C335D));
+      final backdrop = tester.widget<WrHeroBackdrop>(
+        find.byType(WrHeroBackdrop),
+      );
+      expect(backdrop.asset, WrHeroArt.home.asset);
+      expect(backdrop.landscapeTint, isFalse);
     });
 
-    testWidgets('ảnh sáng thì tiêu đề màu navy', (tester) async {
+    testWidgets('eyebrow trên hero dùng màu .74', (tester) async {
       await tester.pumpWidget(
         _host(
-          WrHeroHeader.city(period: WrDayPeriod.morning, title: 'Chào Yumi'),
+          WrHeroHeader.inner(
+            art: WrHeroArt.act,
+            eyebrow: 'Phát triển',
+            title: 'Thực hành',
+          ),
         ),
       );
-      final title = tester.widget<Text>(find.text('Chào Yumi'));
-      expect(title.style!.color, WrColors.navy);
+      final eyebrow = tester.widget<Text>(find.text('PHÁT TRIỂN'));
+      expect(eyebrow.style!.color, WrColors.eyebrow);
     });
   });
 

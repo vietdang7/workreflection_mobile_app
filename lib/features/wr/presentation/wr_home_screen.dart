@@ -220,18 +220,17 @@ class WrHomeScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: WrColors.pageBg,
       // Không bọc SafeArea: ảnh hero tràn lên dưới thanh trạng thái như mockup
-      // v47 (`.hero2.home2`), phần chữ tự né thanh đó trong `WrHeroHeader`.
+      // v55 (`.hero2.home2`), phần chữ tự né thanh đó trong `WrHeroHeader`.
       body: ListView(
         // Padding tường minh: `ListView` không có padding sẽ xoá phần thanh
         // trạng thái khỏi `MediaQuery` của con, ảnh hero hết tràn lên.
         padding: const EdgeInsets.only(bottom: 34),
         children: [
-          // Hero thành phố theo khung giờ (mockup v47 `cityHero`). Một khối tĩnh,
-          // đổi theo giờ hệ thống chứ không theo dữ liệu người dùng — nên nó ở
-          // đây kể cả trước lần check-in đầu tiên.
-          WrHeroHeader.city(
+          // Hero ảnh màu nước (mockup v55 `heroPhoto('home')`). Một khối tĩnh,
+          // cả ngày một ảnh, không theo dữ liệu người dùng — nên nó ở đây kể
+          // cả trước lần check-in đầu tiên.
+          WrHeroHeader.home(
             key: const Key('wr_home_hero'),
-            period: WrDayPeriod.fromHour(nowVn().hour),
             overline: _dateLabel(),
             title: wrGreeting(greetingName),
             subtitle: tr(

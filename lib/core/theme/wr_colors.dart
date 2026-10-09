@@ -28,8 +28,12 @@ abstract final class WrColors {
   /// Chữ phụ (`--text-2`).
   static const text2 = Color(0xB82C335D);
 
-  /// Chữ mờ, nhãn eyebrow (`--text-3`).
+  /// Chữ mờ (`--text-3`).
   static const text3 = Color(0x732C335D);
+
+  /// Nhãn eyebrow chữ hoa. Mockup v55: `--text-3` (.45) chỉ đạt 2.46:1, dưới
+  /// ngưỡng 4.5:1 cho chữ nhỏ; nâng lên .74 = 5.27:1.
+  static const eyebrow = Color(0xBD2C335D);
   // Chữ trên pill (§04). Pill luôn là nền màu gốc pha loãng 8–14% với CHỮ ĐẬM
   // HƠN, đã ngả tối — không phải chính hex gốc. Riêng pill navy thì chữ đúng
   // bằng [navy], spec ghi rõ như vậy.

@@ -15,12 +15,12 @@ class WrEyebrow extends StatelessWidget {
     return Text(
       text.toUpperCase(),
       textAlign: center ? TextAlign.center : null,
-      // `.eyebrow` của mockup: 10px / 700 / letter-spacing .08em / --text-3.
+      // `.eyebrow` của mockup: 10px / 700 / letter-spacing .08em / màu .74.
       style: TextStyle(
         fontSize: 11.5,
         fontWeight: FontWeight.w700,
         letterSpacing: 0.8,
-        color: color ?? WrColors.text3,
+        color: color ?? WrColors.eyebrow,
       ),
     );
   }

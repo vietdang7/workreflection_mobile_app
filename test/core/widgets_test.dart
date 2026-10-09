@@ -22,10 +22,12 @@ void main() {
       expect(find.text('HELLO WORLD'), findsOneWidget);
     });
 
-    testWidgets('dùng màu --text-3 của mockup', (tester) async {
+    testWidgets('dùng màu .74 của mockup v55 (đủ tương phản 4.5:1)', (
+      tester,
+    ) async {
       await tester.pumpWidget(wrap(const WrEyebrow('test')));
       final text = tester.widget<Text>(find.byType(Text));
-      expect(text.style?.color, WrColors.text3);
+      expect(text.style?.color, WrColors.eyebrow);
       expect(text.style?.fontSize, 11.5);
     });
   });
