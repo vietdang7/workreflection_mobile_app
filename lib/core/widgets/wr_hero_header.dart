@@ -291,6 +291,10 @@ class WrHeroHeader extends StatelessWidget {
           Positioned.fill(
             child: WrHeroBackdrop(asset: asset, landscapeTint: landscape),
           ),
+          // Đáy ảnh tan vào màu nền màn. Thiếu lớp này thì ảnh (đáy lớp phủ
+          // chỉ còn .08) đứt ngang thành một đường kẻ với phần bên dưới
+          // (người dùng chụp 09/10).
+          const Positioned.fill(child: IgnorePointer(child: _HeroBottomFade())),
           Padding(
             // `.topbar { padding: 8px 22px 14px }`
             padding: EdgeInsets.fromLTRB(22, top + 8, 22, 14),
@@ -341,6 +345,25 @@ class WrHeroHeader extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Ảnh hero mờ dần vào [WrColors.pageBg] ở phần ba dưới cùng.
+class _HeroBottomFade extends StatelessWidget {
+  const _HeroBottomFade();
+
+  @override
+  Widget build(BuildContext context) {
+    return const DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0x00F4F4F6), Color(0x99F4F4F6), WrColors.pageBg],
+          stops: [0.62, 0.86, 1],
+        ),
       ),
     );
   }
