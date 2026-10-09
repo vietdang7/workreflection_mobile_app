@@ -38,15 +38,16 @@ const kWrHeroPhotoAlignment = Alignment(-0.64, 0.24);
 const kWrOnboardingPhotoAlignment = Alignment(-0.64, 0.16);
 
 /// `.hero-scrim`: lớp phủ kem bắt buộc, đậm ở trên (chỗ chữ) và trong dần
-/// xuống dưới.
+/// xuống dưới. Mockup dùng .97 / .93 / .54 / .08; trên máy thật ảnh bị bạc
+/// quá (người dùng 09/10: "ảnh mờ quá"), nên nhẹ tay hơn mà chữ vẫn đọc rõ.
 const kWrHeroScrim = LinearGradient(
   begin: Alignment.topCenter,
   end: Alignment.bottomCenter,
   colors: [
-    Color(0xF7FFF7EE), // .97
-    Color(0xEDFFF7EE), // .93
-    Color(0x8AFFF7EE), // .54
-    Color(0x14FFF7EE), // .08
+    Color(0xE0FFF7EE), // .88
+    Color(0xBFFFF7EE), // .75
+    Color(0x52FFF7EE), // .32
+    Color(0x00FFF7EE), // 0
   ],
   stops: [0, 0.44, 0.72, 1],
 );
@@ -350,7 +351,7 @@ class WrHeroHeader extends StatelessWidget {
   }
 }
 
-/// Ảnh hero mờ dần vào [WrColors.pageBg] ở phần ba dưới cùng.
+/// Ảnh hero mờ dần vào [WrColors.pageBg] ở phần đáy.
 class _HeroBottomFade extends StatelessWidget {
   const _HeroBottomFade();
 
@@ -361,8 +362,8 @@ class _HeroBottomFade extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0x00F4F4F6), Color(0x99F4F4F6), WrColors.pageBg],
-          stops: [0.62, 0.86, 1],
+          colors: [Color(0x00F4F4F6), Color(0x80F4F4F6), WrColors.pageBg],
+          stops: [0.70, 0.88, 1],
         ),
       ),
     );
