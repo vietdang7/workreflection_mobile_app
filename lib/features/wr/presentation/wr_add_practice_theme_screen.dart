@@ -1,4 +1,4 @@
-// "Bạn muốn tự thêm điều gì?" — mockup v47 `screenAddPracticeTheme`.
+// "Bạn muốn thêm chủ đề nào?" (trước là "Bạn muốn tự thêm điều gì?") — mockup v47 `screenAddPracticeTheme`.
 //
 // Bốn câu, đúng bốn câu của mockup (khách 06/10: không hỏi thêm gì ngoài
 // script). Ba câu đầu bắt buộc, "Đã thử" thì không. Bấm "Tạo chủ đề" là ghi
@@ -179,8 +179,8 @@ class _WrAddPracticeThemeScreenState
                   const SizedBox(height: 6),
                   Text(
                     tr(
-                      'Bạn muốn tự thêm điều gì?',
-                      'What would you like to add?',
+                      'Bạn muốn thêm chủ đề nào?',
+                      'Which theme would you like to add?',
                     ),
                     style: const TextStyle(
                       fontSize: 21,

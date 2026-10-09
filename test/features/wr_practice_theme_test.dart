@@ -98,6 +98,13 @@ Future<void> _pumpLarge(WidgetTester tester, Widget widget) async {
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(widget);
   await tester.pumpAndSettle();
+  // Tab Phát triển: "Điều bạn đang thực hành" thu gọn sẵn (họp khách 08/10).
+  // Xổ ra để các test về thẻ chủ đề còn thấy thẻ.
+  final themesToggle = find.byKey(const Key('wr_growth_themes_toggle'));
+  if (themesToggle.evaluate().isNotEmpty) {
+    await tester.tap(themesToggle);
+    await tester.pumpAndSettle();
+  }
 }
 
 /// Mọi thẻ chủ đề trên tab Phát triển.
@@ -195,7 +202,7 @@ void main() {
         of: find.byKey(Key('wr_growth_theme_card_$id')),
         matching: find.text(text),
       );
-      expect(inCard('pt-voice', 'Đang thử'), findsOneWidget);
+      expect(inCard('pt-voice', 'Đang thực hành'), findsOneWidget);
       expect(inCard('pt-voice', 'Tiếp theo: Thử nghiệm'), findsOneWidget);
       expect(inCard('pt-rhythm', 'Có thể bắt đầu'), findsOneWidget);
       expect(inCard('pt-rhythm', 'Tiếp theo: Nhận diện'), findsOneWidget);

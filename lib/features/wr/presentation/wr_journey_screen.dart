@@ -718,11 +718,9 @@ class WrJourneyScreen extends ConsumerWidget {
 
     final all = watchJourneyEntries(ref);
     final shown = all.take(kJourneyPreviewCount).toList();
-    final learned = all.where((e) => e.learned != null).take(3).toList();
     final currentMonday = _mondayOf(DateTime.now());
     // Mockup v16: Free đọc được tuần này, các tuần trước khoá (khách chốt
-    // 2026-07-29 / 24-08). Áp cho cả "Những gì bạn đã học", nếu không lời
-    // người dùng viết tuần trước lọt ra ở đó.
+    // 2026-07-29 / 24-08).
     bool isLocked(JourneyEntry e) =>
         !entitlement.isPremium &&
         (e.at == null || _mondayOf(e.at!) != currentMonday);
@@ -796,37 +794,9 @@ class WrJourneyScreen extends ConsumerWidget {
                 ],
                 const SizedBox(height: 26),
 
-                // ── Những gì bạn đã học ───────────────────────────────────
-                Text(
-                  tr('Những gì bạn đã học', 'What you have learned'),
-                  style: _h2,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  tr(
-                    'Những điều đã xảy ra, không phải việc cần làm',
-                    'Things that happened, not things to do',
-                  ),
-                  style: _tiny,
-                ),
-                const SizedBox(height: 10),
-                if (learned.isEmpty)
-                  WrCard(
-                    key: const Key('wr_journey_learned_empty'),
-                    child: Text(
-                      tr(
-                        'Những điều bạn học được sẽ xuất hiện ở đây sau khi '
-                            'chúng thực sự xảy ra.',
-                        'What you learn will show up here once it has '
-                            'actually happened.',
-                      ),
-                      style: _muted,
-                    ),
-                  )
-                else
-                  for (final e in learned)
-                    _LearnedCard(entry: e, locked: isLocked(e)),
-                const SizedBox(height: 16),
+                // "Những gì bạn đã học" đã bỏ (họp khách 08/10): trùng với
+                // phần thực hành. Trang tập trung vào Dấu ấn hành trình và thẻ
+                // Trò chuyện về hành trình.
 
                 // ── Trò chuyện về hành trình ──────────────────────────────
                 // Script khách: thẻ nổi bật, bấm vào mở trợ lý chat.
@@ -1067,100 +1037,6 @@ class _TimelineItemState extends State<_TimelineItem> {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Những gì bạn đã học (mockup v47)
-// ---------------------------------------------------------------------------
-
-class _LearnedCard extends StatelessWidget {
-  const _LearnedCard({required this.entry, required this.locked});
-
-  final JourneyEntry entry;
-  final bool locked;
-
-  @override
-  Widget build(BuildContext context) {
-    final milestone = entry.learned == JourneyLearnedKind.milestone;
-    final accent = milestone ? WrColors.coral : WrColors.teal;
-    final excerpt = entry.subtitle?.trim();
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(WrCard.kRadius),
-          border: Border.all(color: WrColors.line),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: IntrinsicHeight(
-          child: Row(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(width: 3, color: accent),
-              Expanded(
-                child: Padding(
-                  padding: WrCard.kPadding,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        milestone
-                            ? tr('CỘT MỐC', 'MILESTONE')
-                            : tr('ĐIỀU ĐÃ THỬ', 'SOMETHING TRIED'),
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 0.6,
-                          color: milestone
-                              ? WrColors.pillCoralText
-                              : WrColors.pillTealText,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        locked ? kLockedEntryTitle : entry.title,
-                        style: TextStyle(
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.w700,
-                          color: locked ? WrColors.text2 : WrColors.navy,
-                          height: 1.4,
-                        ),
-                      ),
-                      if (locked) ...[
-                        const SizedBox(height: 6),
-                        GestureDetector(
-                          onTap: () =>
-                              context.push('/wr/paywall?trigger=career_memory'),
-                          child: Row(
-                            children: [
-                              Text(
-                                tr('Premium · Mở khoá', 'Premium · Unlock'),
-                                style: _tiny,
-                              ),
-                              const SizedBox(width: 4),
-                              const Icon(
-                                Icons.lock_outline,
-                                size: 14,
-                                color: WrColors.text3,
-                              ),
-                            ],
-                          ),
-                        ),
-                      ] else if (excerpt != null && excerpt.isNotEmpty) ...[
-                        const SizedBox(height: 4),
-                        Text(excerpt, style: _muted),
-                      ],
-                    ],
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

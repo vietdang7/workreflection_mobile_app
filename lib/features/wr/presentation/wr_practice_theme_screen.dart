@@ -340,13 +340,13 @@ class _WrPracticeThemeScreenState extends ConsumerState<WrPracticeThemeScreen> {
           WrEyebrow(tr('BƯỚC TIẾP THEO', 'NEXT STEP')),
           const SizedBox(height: 6),
           Text(
-            practiceStepAction(next.title),
+            wrKeepWords(practiceStepAction(next.title)),
             key: const Key('wr_practice_next_step'),
             style: _h2,
           ),
           if (next.content?.trim().isNotEmpty ?? false) ...[
             const SizedBox(height: 4),
-            Text(next.content!.trim(), style: _muted),
+            Text(wrKeepWords(next.content!.trim()), style: _muted),
           ],
           if (enrollment != null && !nextLocked) ...[
             const SizedBox(height: 18),
@@ -601,7 +601,7 @@ class _MentorCard extends StatelessWidget {
                 color: WrColors.text3,
               ),
             ),
-            TextSpan(text: text),
+            TextSpan(text: wrKeepWords(text)),
           ],
         ),
         style: const TextStyle(

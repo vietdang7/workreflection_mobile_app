@@ -161,6 +161,13 @@ Future<void> _pumpLarge(WidgetTester tester, Widget widget) async {
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(widget);
   await tester.pumpAndSettle();
+  // Tab Phát triển: "Điều bạn đang thực hành" thu gọn sẵn (họp khách 08/10).
+  // Xổ ra để các test về thẻ chủ đề còn thấy thẻ.
+  final themesToggle = find.byKey(const Key('wr_growth_themes_toggle'));
+  if (themesToggle.evaluate().isNotEmpty) {
+    await tester.tap(themesToggle);
+    await tester.pumpAndSettle();
+  }
 }
 
 // Fake data helpers

@@ -3,6 +3,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/l10n/wr_tr.dart';
 import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 void main() {
@@ -85,6 +86,50 @@ void main() {
 
       final text = tester.widget<Text>(find.byType(Text));
       expect(text.data, contains('mơ${nbsp}hồ.'));
+    });
+  });
+
+  group('wrKeepCompoundsTogether', () {
+    tearDown(() => wrEnglish = false);
+
+    test('giữ "phụ thuộc" đi liền (họp khách 08/10)', () {
+      final out = wrKeepCompoundsTogether(
+        'Phù hợp khi tình huống phụ thuộc vào ai đó.',
+      );
+      expect(out, contains('phụ${nbsp}thuộc'));
+      expect(out, contains('tình${nbsp}huống'));
+      expect(out, startsWith('Phù${nbsp}hợp khi '));
+    });
+
+    test('từ ghép chồng nhau thì nối cả cụm, không tách sai', () {
+      // "ba khía" và "khía cạnh" đều có trong từ điển; chọn tham từ trái sẽ
+      // để "cạnh" rớt một mình.
+      final out = wrKeepCompoundsTogether('ba khía cạnh');
+      expect(out, 'ba${nbsp}khía${nbsp}cạnh');
+    });
+
+    test('không nối qua dấu câu', () {
+      final out = wrKeepCompoundsTogether('phụ, thuộc');
+      expect(out, 'phụ, thuộc');
+    });
+
+    test('tắt khi đang tiếng Anh', () {
+      wrEnglish = true;
+      expect(wrKeepCompoundsTogether('phụ thuộc'), 'phụ thuộc');
+    });
+
+    test('wrKeepCompounds cho nhãn ngắn: khoá từ ghép, không nối cuối câu', () {
+      final saved = wrParagraphKeepsTail;
+      addTearDown(() => wrParagraphKeepsTail = saved);
+      wrParagraphKeepsTail = true;
+
+      expect(
+        wrKeepCompounds('Tôi mệt mỏi\ncần nghỉ ngơi'),
+        'Tôi mệt${nbsp}mỏi\ncần nghỉ${nbsp}ngơi',
+      );
+      // Tiếng Anh: không nối gì cả — "feeling good" phải còn ngắt được.
+      wrEnglish = true;
+      expect(wrKeepCompounds('I am\nfeeling good'), 'I am\nfeeling good');
     });
   });
 }

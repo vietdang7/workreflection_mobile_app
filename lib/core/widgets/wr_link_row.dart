@@ -45,7 +45,9 @@ class WrLinkRow extends StatelessWidget {
   final String? hint;
   final VoidCallback onTap;
 
-  static const TextStyle _labelStyle = TextStyle(
+  /// Cỡ chữ của mọi dòng chính trên tab Phát triển — kể cả dòng xổ "Điều bạn
+  /// đang thực hành", vốn không phải [WrLinkRow] nhưng phải cùng cỡ (họp 08/10).
+  static const TextStyle labelStyle = TextStyle(
     fontSize: 16,
     fontWeight: FontWeight.w600,
     color: WrColors.navy,
@@ -109,7 +111,7 @@ class WrLinkRow extends StatelessWidget {
             }
 
             final needed =
-                widthOf(label, _labelStyle) +
+                widthOf(label, labelStyle) +
                 _gap +
                 widthOf(hintText, _hintStyle) +
                 _trailing;
@@ -150,5 +152,5 @@ class WrLinkRow extends StatelessWidget {
   }
 
   Widget _label() =>
-      WrParagraph(label, style: _labelStyle, textAlign: TextAlign.start);
+      WrParagraph(label, style: labelStyle, textAlign: TextAlign.start);
 }

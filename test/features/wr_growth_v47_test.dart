@@ -127,6 +127,10 @@ Future<void> _tap(WidgetTester tester, Finder f) async {
   await tester.pumpAndSettle();
 }
 
+/// Xổ dòng "Điều bạn đang thực hành" — mặc định thu gọn (họp khách 08/10).
+Future<void> _expandThemes(WidgetTester tester) =>
+    _tap(tester, find.byKey(const Key('wr_growth_themes_toggle')));
+
 /// Bốn bước kiểu thư viện mới (migration 20261006120000): bước 4 Premium.
 List<PracticeStep> _libSteps(String themeId) => [
   PracticeStep(
@@ -403,6 +407,44 @@ void main() {
       );
       expect(find.byKey(const Key('wr_growth_bridge_open')), findsNothing);
     });
+
+    testWidgets('mặc định mở đủ, bấm vào thì thu còn một dòng trích', (
+      tester,
+    ) async {
+      final episodes = FakeWrEpisodeRepository()
+        ..seed([
+          _episode(
+            'e1',
+            situation: 'other',
+            meaning: 'mình cần nghỉ một nhịp',
+            openedAt: DateTime(2026, 10, 4),
+          ),
+        ]);
+      final intel = FakeWrIntelligenceRepository()
+        ..seedPracticeThemes(const [
+          PracticeTheme(themeId: 'pt-1', title: 'Chủ đề một'),
+        ])
+        ..seedPracticeSteps('pt-1', _libSteps('pt-1'))
+        ..seedEnrollments([_enroll('pt-1')]);
+
+      await _pumpTall(
+        tester,
+        _wrap(_router('/wr/growth'), intel: intel, episodes: episodes),
+      );
+
+      Text quote() =>
+          tester.widget<Text>(find.byKey(const Key('wr_growth_bridge_text')));
+      expect(quote().maxLines, isNull);
+      expect(find.byKey(const Key('wr_growth_bridge_open')), findsOneWidget);
+
+      await _tap(tester, find.byKey(const Key('wr_growth_bridge')));
+      expect(quote().maxLines, 1);
+      expect(
+        find.text('Bạn muốn thử một cách khác trong lần tới?'),
+        findsNothing,
+      );
+      expect(find.byKey(const Key('wr_growth_bridge_open')), findsNothing);
+    });
   });
 
   group('Tab Phát triển — Tự thêm, Ghi nhận, quota, lối rẽ', () {
@@ -500,6 +542,7 @@ void main() {
         ..seedEnrollments([_enroll('pt-c2'), _enroll('u-1')]);
 
       await _pumpTall(tester, _wrap(_router('/wr/growth'), intel: intel));
+      await _expandThemes(tester);
 
       expect(
         find.byKey(const Key('wr_growth_theme_card_pt-c2')),
@@ -508,12 +551,42 @@ void main() {
       expect(find.byKey(const Key('wr_growth_theme_card_u-1')), findsOneWidget);
     });
 
-    testWidgets('Ghi lại mở màn Ghi nhận một điều', (tester) async {
+    testWidgets('họp 08/10: bỏ "Ghi nhận một điều", đổi tên dòng thêm chủ đề', (
+      tester,
+    ) async {
       await _pumpTall(tester, _wrap(_router('/wr/growth')));
 
-      expect(find.byKey(const Key('wr_growth_learning_card')), findsOneWidget);
-      await _tap(tester, find.byKey(const Key('wr_growth_learning')));
-      expect(find.byType(WrLearningCaptureScreen), findsOneWidget);
+      expect(find.byKey(const Key('wr_growth_learning_card')), findsNothing);
+      expect(find.text('GHI NHẬN MỘT ĐIỀU'), findsNothing);
+      expect(find.text('TỰ THÊM'), findsNothing);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('wr_growth_add_theme')),
+          matching: find.text('Thêm một chủ đề chưa có trong thư viện'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('"Điều bạn đang thực hành" thu gọn sẵn, bấm mới xổ chủ đề', (
+      tester,
+    ) async {
+      final intel = FakeWrIntelligenceRepository()
+        ..seedPracticeThemes(const [
+          PracticeTheme(themeId: 'pt-1', title: 'Chủ đề một'),
+        ])
+        ..seedPracticeSteps('pt-1', _libSteps('pt-1'))
+        ..seedEnrollments([_enroll('pt-1')]);
+
+      await _pumpTall(tester, _wrap(_router('/wr/growth'), intel: intel));
+
+      expect(find.text('Điều bạn đang thử'), findsNothing);
+      expect(find.byKey(const Key('wr_growth_theme_card_pt-1')), findsNothing);
+      await _expandThemes(tester);
+      expect(
+        find.byKey(const Key('wr_growth_theme_card_pt-1')),
+        findsOneWidget,
+      );
     });
 
     testWidgets('dòng Cập nhật bối cảnh công việc mở màn JD/CV', (
@@ -1054,7 +1127,7 @@ void main() {
     });
 
     testWidgets(
-      'chủ đề tự thêm: nguồn Tự thêm, ngày bắt đầu, thông tin đã thêm',
+      'chủ đề tự thêm: nguồn Bạn thêm, ngày bắt đầu, thông tin đã thêm',
       (tester) async {
         const intake = PracticeIntake(
           situation: 'Mỗi khi góp ý, tôi vòng vo.',
@@ -1083,7 +1156,7 @@ void main() {
           _wrap(_router('/wr/growth/theme/u-1'), intel: intel),
         );
 
-        expect(find.text('TỰ THÊM · 08/06'), findsOneWidget);
+        expect(find.text('BẠN THÊM · 08/06'), findsOneWidget);
         expect(find.text('Bạn bắt đầu chủ đề này từ 08/06.'), findsOneWidget);
         final block = find.byKey(const Key('wr_practice_intake'));
         for (final t in [
