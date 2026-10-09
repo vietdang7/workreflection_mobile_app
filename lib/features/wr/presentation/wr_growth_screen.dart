@@ -8,14 +8,13 @@ import 'package:go_router/go_router.dart';
 
 // Phát triển — Practice Surface (WXS §8.6), bố cục theo mockup v47 `screenAct`.
 //
-// Thứ tự khối, đúng mockup:
-//   hero `act` "Thực hành" → thẻ cầu nối "Điều bạn từng viết" (Insight gần
-//   nhất → "Xem 3 cách để cân nhắc") → "Điều bạn đang thử" (tối đa 3 chủ đề +
-//   "Xem thêm") → thẻ nét đứt "Tự thêm · Một chủ đề chưa có trong thư viện" →
-//   "Ghi nhận một điều · Bạn vừa học được điều hữu ích" → "Free: tối đa N chủ
+// Thứ tự khối (họp khách 08/10 — gọn lại, mở dần từng phần):
+//   hero `act` "Thực hành" → thẻ cầu nối "Điều bạn từng viết" (thu còn một
+//   dòng trích, bấm mở đủ) → các dòng chính cùng cỡ chữ: "Điều bạn đang thực
+//   hành" (xổ ra danh sách chủ đề) · "Thêm một chủ đề chưa có trong thư viện" ·
+//   "Kỹ năng của bạn" · "Cập nhật bối cảnh công việc" → "Free: tối đa N chủ
 //   đề" + thẻ Trà Chiều.
-// Dưới cùng, ngoài mockup (theo chữ của khách): "Kỹ năng của bạn" và "Cập nhật
-// bối cảnh công việc" (JD/CV).
+// "Ghi nhận một điều" đã bỏ (trùng với lối thêm chủ đề).
 //
 // "Việc bạn tự đặt" đã rời màn này (chủ dự án chốt 06/10, Q3); bảng và dữ liệu
 // vẫn giữ nguyên.
@@ -66,6 +65,10 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
   /// Đã bấm "Xem thêm" chưa. Đặt ở State chứ không phải provider: đây là trạng
   /// thái của một lần xem màn, mở lại tab thì thu gọn về như cũ là đúng.
   bool _showAllThemes = false;
+
+  /// Dòng "Điều bạn đang thực hành" đang mở hay thu. Mặc định thu (họp khách
+  /// 08/10: mở dần từng phần thay vì đổ cả màn ra một lượt).
+  bool _themesExpanded = false;
 
   /// Đang tự thêm chủ đề — chặn chạy chồng khi build lại giữa chừng.
   bool _autoEnrolling = false;
@@ -324,157 +327,98 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
             children: [
               const WrTabBackLink(currentTab: WrTab.growth),
               // ── Điều bạn từng viết ──────────────────────────────────────
+              // Họp khách 08/10: thu còn một dòng trích, bấm mới mở đủ.
               _BridgeCard(
                 themes: themes,
                 enrollments: enrollments,
                 situations: situations,
               ),
-              const SizedBox(height: 14),
+              const SizedBox(height: 6),
 
-              // ── Điều bạn đang thử ───────────────────────────────────────
-              Text(tr('Điều bạn đang thử', 'What you are trying'), style: _h2),
-              const SizedBox(height: 2),
-              Text(
-                tr(
-                  'Những chủ đề bắt đầu từ chính hành trình của bạn',
-                  'Themes that started from your own journey',
-                ),
-                style: _tiny,
+              // ── Điều bạn đang thực hành ─────────────────────────────────
+              // Họp khách 08/10: màn quá nhiều chữ, cuộn mãi không hết. Danh
+              // sách chủ đề nằm sau một dòng xổ, cùng cỡ chữ với các dòng
+              // chính bên dưới; mặc định thu gọn.
+              _SectionToggleRow(
+                key: const Key('wr_growth_themes_toggle'),
+                label: tr('Điều bạn đang thực hành', 'What you are practising'),
+                count: enrolledCards.length,
+                expanded: _themesExpanded,
+                onTap: () => setState(() => _themesExpanded = !_themesExpanded),
               ),
-              const SizedBox(height: 10),
-              if (enrolledCards.isEmpty)
-                _buildEmptyThemeCard(
-                  context,
-                  eyebrow: tr('TRỌNG TÂM HIỆN TẠI', 'YOUR CURRENT FOCUS'),
-                  hasAnyTheme: themes.isNotEmpty,
-                  hasCandidates: unenrolledThemes.isNotEmpty,
-                  reflectionCount: reflectionCount,
-                )
-              else ...[
-                for (final pair in visibleCards)
-                  WrPracticeThemeCard(
-                    key: Key('wr_growth_theme_card_${pair.$1.themeId}'),
-                    theme: pair.$1,
-                    enrollment: pair.$2,
+              if (_themesExpanded) ...[
+                Text(
+                  tr(
+                    'Những chủ đề bắt đầu từ chính hành trình của bạn',
+                    'Themes that started from your own journey',
                   ),
-                if (hiddenThemeCount > 0)
-                  Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: WrActionLink(
-                      key: const Key('wr_growth_themes_more'),
-                      label: _showAllThemes
-                          ? tr('Thu gọn', 'Show less')
-                          : tr(
-                              'Xem thêm $hiddenThemeCount chủ đề',
-                              'See $hiddenThemeCount more themes',
-                            ),
-                      onTap: () =>
-                          setState(() => _showAllThemes = !_showAllThemes),
+                  style: _tiny,
+                ),
+                const SizedBox(height: 10),
+                if (enrolledCards.isEmpty)
+                  _buildEmptyThemeCard(
+                    context,
+                    eyebrow: tr('TRỌNG TÂM HIỆN TẠI', 'YOUR CURRENT FOCUS'),
+                    hasAnyTheme: themes.isNotEmpty,
+                    hasCandidates: unenrolledThemes.isNotEmpty,
+                    reflectionCount: reflectionCount,
+                  )
+                else ...[
+                  for (final pair in visibleCards)
+                    WrPracticeThemeCard(
+                      key: Key('wr_growth_theme_card_${pair.$1.themeId}'),
+                      theme: pair.$1,
+                      enrollment: pair.$2,
                     ),
-                  ),
+                  if (hiddenThemeCount > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 6),
+                      child: WrActionLink(
+                        key: const Key('wr_growth_themes_more'),
+                        label: _showAllThemes
+                            ? tr('Thu gọn', 'Show less')
+                            : tr(
+                                'Xem thêm $hiddenThemeCount chủ đề',
+                                'See $hiddenThemeCount more themes',
+                              ),
+                        onTap: () =>
+                            setState(() => _showAllThemes = !_showAllThemes),
+                      ),
+                    ),
+                ],
+                const SizedBox(height: 6),
               ],
-              const SizedBox(height: 10),
-              // ── Tự thêm ─────────────────────────────────────────────────
-              WrCard(
+              const _RowDivider(),
+
+              // ── Thêm một chủ đề chưa có trong thư viện ──────────────────
+              // Họp khách 08/10: bỏ chữ "Tự thêm", tách ra thành một dòng
+              // chính ngang cấp "Điều bạn đang thực hành". Mục "Ghi nhận một
+              // điều" bỏ hẳn — trùng với lối này (màn `/wr/growth/learning`
+              // vẫn còn trong router, chỉ mất lối vào từ đây).
+              WrLinkRow(
                 key: const Key('wr_growth_add_theme'),
-                dashed: true,
+                label: tr(
+                  'Thêm một chủ đề chưa có trong thư viện',
+                  'Add a theme that is not in the library',
+                ),
                 onTap: () => context.push(
                   canAddTheme
                       ? '/wr/growth/add-theme'
                       : '/wr/paywall?trigger=practice_limit',
                 ),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          WrEyebrow(tr('TỰ THÊM', 'ADD YOUR OWN')),
-                          const SizedBox(height: 6),
-                          Text(
-                            tr(
-                              'Một chủ đề chưa có trong thư viện',
-                              'A theme that is not in the library',
-                            ),
-                            style: _cardTitle,
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            tr(
-                              'Kể lại tình huống thật, điều bạn muốn khác đi và '
-                                  'cách bạn đã thử.',
-                              'Describe a real situation, what you want to '
-                                  'change and what you have tried.',
-                            ),
-                            style: _tiny.copyWith(height: 1.45),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    const Icon(
-                      Icons.chevron_right,
-                      size: 20,
-                      color: WrColors.navy,
-                    ),
-                  ],
-                ),
               ),
-              const SizedBox(height: 14),
-
-              // ── Ghi nhận một điều ───────────────────────────────────────
-              WrCard(
-                key: const Key('wr_growth_learning_card'),
-                dashed: true,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    WrEyebrow(tr('GHI NHẬN MỘT ĐIỀU', 'NOTE ONE THING')),
-                    const SizedBox(height: 6),
-                    Text(
-                      tr(
-                        'Bạn vừa học được điều hữu ích',
-                        'You just learned something useful',
-                      ),
-                      style: _cardTitle,
-                    ),
-                    const SizedBox(height: 5),
-                    Text(
-                      tr(
-                        'Một bài học vừa nhận ra cũng là một phần của hành '
-                            'trình, không phải một việc cần làm tiếp.',
-                        'A lesson you just noticed is part of the journey too, '
-                            'not another thing to do.',
-                      ),
-                      style: _tiny.copyWith(height: 1.5),
-                    ),
-                    const SizedBox(height: 10),
-                    WrSmallButton(
-                      key: const Key('wr_growth_learning'),
-                      kind: WrSmallButtonKind.ghost,
-                      label: tr('Ghi lại', 'Write it down'),
-                      arrow: true,
-                      onTap: () => context.push('/wr/growth/learning'),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 14),
-
-              // ── Quota + Trà Chiều ───────────────────────────────────────
-              if (entitlement.maxActivePracticeThemes != null) ...[
-                _QuotaCard(quota: entitlement.maxActivePracticeThemes!),
-                const SizedBox(height: WrCard.kGap),
-              ],
-              const _OpportunitySliver(),
-              const SizedBox(height: 14),
+              const _RowDivider(),
 
               // ── Ngoài mockup, theo chữ của khách ────────────────────────
+              // Ba dòng chính cùng một widget nên cùng một cỡ chữ (họp 08/10:
+              // "Kỹ năng của bạn" và "Cập nhật bối cảnh công việc" phải bằng
+              // nhau).
               WrLinkRow(
                 key: const Key('wr_growth_skills_row'),
                 label: tr('Kỹ năng của bạn', 'Your skills'),
                 onTap: () => context.push('/wr/growth/skills'),
               ),
+              const _RowDivider(),
               WrLinkRow(
                 key: const Key('wr_growth_context_docs_row'),
                 label: tr(
@@ -483,6 +427,14 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
                 ),
                 onTap: () => context.push('/wr/context-docs'),
               ),
+              const SizedBox(height: 18),
+
+              // ── Quota + Trà Chiều ───────────────────────────────────────
+              if (entitlement.maxActivePracticeThemes != null) ...[
+                _QuotaCard(quota: entitlement.maxActivePracticeThemes!),
+                const SizedBox(height: WrCard.kGap),
+              ],
+              const _OpportunitySliver(),
             ],
           ),
         ),
@@ -645,25 +597,30 @@ class _OpportunitySliver extends ConsumerWidget {
                     color: WrColors.coral,
                   ),
                   const SizedBox(width: 6),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 3,
-                    ),
-                    decoration: BoxDecoration(
-                      color: WrColors.teal.withValues(alpha: 0.22),
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    // Chữ teal sáng, không dùng teal đậm của `.pill-teal`: trên
-                    // nền navy teal đậm gần như chìm (script khách: chữ phải
-                    // đủ tương phản với nền).
-                    child: Text(
-                      'Offline · $kTraChieuLabel',
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w700,
-                        color: WrColors.teal,
-                        letterSpacing: 0.2,
+                  // Flexible: máy đặt cỡ chữ hệ thống 115% thì pill dài hơn
+                  // bề ngang thẻ và tràn 29px (máy thật 09/10). Cho xuống dòng
+                  // thay vì tràn.
+                  Flexible(
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: WrColors.teal.withValues(alpha: 0.22),
+                        borderRadius: BorderRadius.circular(100),
+                      ),
+                      // Chữ teal sáng, không dùng teal đậm của `.pill-teal`:
+                      // trên nền navy teal đậm gần như chìm (script khách: chữ
+                      // phải đủ tương phản với nền).
+                      child: Text(
+                        wrKeepWords('Offline · $kTraChieuLabel'),
+                        style: TextStyle(
+                          fontSize: 11.5,
+                          fontWeight: FontWeight.w700,
+                          color: WrColors.teal,
+                          letterSpacing: 0.2,
+                        ),
                       ),
                     ),
                   ),
@@ -673,12 +630,14 @@ class _OpportunitySliver extends ConsumerWidget {
               // Lịch trống thì nói đúng như vậy, không mượn câu chủ đề của
               // buổi cũ đã diễn ra để thẻ trông có nội dung.
               Text(
-                next == null
-                    ? tr(
-                        'Hiện chưa có lịch sự kiện mới.',
-                        'No sessions scheduled yet.',
-                      )
-                    : '"${next.title}"',
+                wrKeepWords(
+                  next == null
+                      ? tr(
+                          'Hiện chưa có lịch sự kiện mới.',
+                          'No sessions scheduled yet.',
+                        )
+                      : '"${next.title}"',
+                ),
                 style: WrText.serifQuote(fontSize: 15.5, color: WrColors.cream),
               ),
               const SizedBox(height: 8),
@@ -765,7 +724,7 @@ class WrPracticeThemeCard extends ConsumerWidget {
                 ),
                 _Pill(
                   label: doneCount > 0
-                      ? tr('Đang thử', 'Trying')
+                      ? tr('Đang thực hành', 'Practising')
                       : tr('Có thể bắt đầu', 'Ready to start'),
                   teal: doneCount > 0,
                 ),
@@ -852,14 +811,6 @@ const _h2 = TextStyle(
   height: 1.35,
 );
 
-/// Dòng chữ đậm 13px trong thẻ nét đứt, +1.5.
-const _cardTitle = TextStyle(
-  fontSize: 14.5,
-  fontWeight: FontWeight.w700,
-  color: WrColors.navy,
-  height: 1.4,
-);
-
 /// `.tiny` (11px) +1.5.
 const _tiny = TextStyle(fontSize: 12.5, color: WrColors.text3);
 
@@ -872,7 +823,7 @@ const _tiny = TextStyle(fontSize: 12.5, color: WrColors.text3);
 // tiên; không theo chủ đề nào thì không có nút.
 // ─────────────────────────────────────────────────────────────────────────────
 
-class _BridgeCard extends ConsumerWidget {
+class _BridgeCard extends ConsumerStatefulWidget {
   const _BridgeCard({
     required this.themes,
     required this.enrollments,
@@ -884,7 +835,19 @@ class _BridgeCard extends ConsumerWidget {
   final List<WrSituation> situations;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_BridgeCard> createState() => _BridgeCardState();
+}
+
+class _BridgeCardState extends ConsumerState<_BridgeCard> {
+  /// Mặc định MỞ đủ câu và nút sang chủ đề (chốt 09/10, đổi lại so với họp
+  /// 08/10); người dùng tự bấm để thu về nhãn + một dòng trích.
+  bool _expanded = true;
+
+  @override
+  Widget build(BuildContext context) {
+    final themes = widget.themes;
+    final enrollments = widget.enrollments;
+    final situations = widget.situations;
     final episodes =
         ref.watch(wrEpisodeHistoryProvider).valueOrNull ??
         const <ReflectionEpisode>[];
@@ -930,95 +893,197 @@ class _BridgeCard extends ConsumerWidget {
               stories: ref.watch(wrStoriesProvider).valueOrNull ?? const [],
             ),
           );
-    return Container(
+    final quoteStyle = WrText.serifQuote(fontSize: 16, color: WrColors.navy);
+    final collapsedLines = _expanded ? null : 1;
+    final collapsedOverflow = _expanded ? null : TextOverflow.ellipsis;
+    return InkWell(
       key: const Key('wr_growth_bridge'),
-      padding: WrCard.kPadding,
-      decoration: BoxDecoration(
-        color: WrColors.teal.withValues(alpha: 0.055),
-        borderRadius: BorderRadius.circular(WrCard.kRadius),
-        border: Border.all(color: WrColors.teal.withValues(alpha: 0.18)),
+      borderRadius: BorderRadius.circular(WrCard.kRadius),
+      onTap: () => setState(() => _expanded = !_expanded),
+      child: Ink(
+        padding: WrCard.kPadding,
+        decoration: BoxDecoration(
+          color: WrColors.teal.withValues(alpha: 0.055),
+          borderRadius: BorderRadius.circular(WrCard.kRadius),
+          border: Border.all(color: WrColors.teal.withValues(alpha: 0.18)),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: WrEyebrow(
+                    tr('ĐIỀU BẠN TỪNG VIẾT', 'WHAT YOU ONCE WROTE'),
+                    color: WrColors.pillTealText,
+                  ),
+                ),
+                Icon(
+                  _expanded ? Icons.expand_less : Icons.expand_more,
+                  key: const Key('wr_growth_bridge_toggle'),
+                  size: 20,
+                  color: WrColors.pillTealText,
+                ),
+              ],
+            ),
+            const SizedBox(height: 7),
+            if (has)
+              Text.rich(
+                key: const Key('wr_growth_bridge_text'),
+                TextSpan(
+                  children: [
+                    if (situation != null) ...[
+                      TextSpan(
+                        text: tr(
+                          'Lần gần nhất bạn viết về ',
+                          'The last time you wrote about ',
+                        ),
+                      ),
+                      TextSpan(
+                        text: '“${situation.text}”',
+                        style: const TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      TextSpan(
+                        text: wrKeepWords(
+                          tr(', bạn nhận ra: $gist', ', you noticed: $gist'),
+                        ),
+                      ),
+                    ] else
+                      TextSpan(
+                        text: wrKeepWords(
+                          tr(
+                            'Lần gần nhất bạn nhìn lại, bạn nhận ra: $gist',
+                            'The last time you looked back, you noticed: $gist',
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+                maxLines: collapsedLines,
+                overflow: collapsedOverflow,
+                style: quoteStyle,
+              )
+            else
+              Text(
+                wrKeepWords(
+                  tr(
+                    'Những điều bạn từng nhìn lại có thể trở thành điểm bắt '
+                        'đầu cho một cách thử mới.',
+                    'What you have looked back on can become the starting '
+                        'point for a new way to try.',
+                  ),
+                ),
+                maxLines: collapsedLines,
+                overflow: collapsedOverflow,
+                style: quoteStyle,
+              ),
+            if (_expanded) ...[
+              const SizedBox(height: 8),
+              Text(
+                wrKeepWords(
+                  has
+                      ? tr(
+                          'Bạn muốn thử một cách khác trong lần tới?',
+                          'Want to try a different way next time?',
+                        )
+                      : tr(
+                          'Khi một điều lặp lại đủ lâu, chúng ta có thể thử '
+                              'một cách khác.',
+                          'When something repeats long enough, we can try a '
+                              'different way.',
+                        ),
+                ),
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: WrColors.text2,
+                  height: 1.65,
+                ),
+              ),
+              if (related != null) ...[
+                const SizedBox(height: 11),
+                WrSmallButton(
+                  key: const Key('wr_growth_bridge_open'),
+                  kind: WrSmallButtonKind.dark,
+                  label: tr('Xem 3 cách để cân nhắc', 'See 3 ways to consider'),
+                  arrow: true,
+                  onTap: () =>
+                      context.push('/wr/growth/theme/${related.themeId}'),
+                ),
+              ],
+            ],
+          ],
+        ),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _SectionToggleRow — dòng chính xổ ra/thu lại (họp khách 08/10)
+//
+// Cùng cỡ chữ với [WrLinkRow] để mọi dòng chính trên màn bằng nhau; khác ở mũi
+// tên lên/xuống thay cho mũi tên sang phải, vì bấm vào là mở tại chỗ chứ không
+// sang màn khác.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _SectionToggleRow extends StatelessWidget {
+  const _SectionToggleRow({
+    super.key,
+    required this.label,
+    required this.count,
+    required this.expanded,
+    required this.onTap,
+  });
+
+  final String label;
+  final int count;
+  final bool expanded;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) => InkWell(
+    onTap: onTap,
+    child: Padding(
+      padding: const EdgeInsets.symmetric(vertical: 16),
+      child: Row(
         children: [
-          WrEyebrow(
-            tr('ĐIỀU BẠN TỪNG VIẾT', 'WHAT YOU ONCE WROTE'),
-            color: WrColors.pillTealText,
-          ),
-          const SizedBox(height: 7),
-          if (has)
-            Text.rich(
-              key: const Key('wr_growth_bridge_text'),
+          Expanded(
+            child: Text.rich(
               TextSpan(
                 children: [
-                  if (situation != null) ...[
+                  TextSpan(text: wrKeepWords(label)),
+                  if (count > 0)
                     TextSpan(
-                      text: tr(
-                        'Lần gần nhất bạn viết về ',
-                        'The last time you wrote about ',
-                      ),
-                    ),
-                    TextSpan(
-                      text: '“${situation.text}”',
-                      style: const TextStyle(fontWeight: FontWeight.w700),
-                    ),
-                    TextSpan(
-                      text: tr(', bạn nhận ra: $gist', ', you noticed: $gist'),
-                    ),
-                  ] else
-                    TextSpan(
-                      text: tr(
-                        'Lần gần nhất bạn nhìn lại, bạn nhận ra: $gist',
-                        'The last time you looked back, you noticed: $gist',
+                      text: ' ($count)',
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w500,
+                        color: WrColors.muted,
                       ),
                     ),
                 ],
               ),
-              style: WrText.serifQuote(fontSize: 16, color: WrColors.navy),
-            )
-          else
-            Text(
-              tr(
-                'Những điều bạn từng nhìn lại có thể trở thành điểm bắt đầu cho '
-                    'một cách thử mới.',
-                'What you have looked back on can become the starting point '
-                    'for a new way to try.',
-              ),
-              style: WrText.serifQuote(fontSize: 16, color: WrColors.navy),
-            ),
-          const SizedBox(height: 8),
-          Text(
-            has
-                ? tr(
-                    'Bạn muốn thử một cách khác trong lần tới?',
-                    'Want to try a different way next time?',
-                  )
-                : tr(
-                    'Khi một điều lặp lại đủ lâu, chúng ta có thể thử một cách '
-                        'khác.',
-                    'When something repeats long enough, we can try a '
-                        'different way.',
-                  ),
-            style: const TextStyle(
-              fontSize: 14,
-              color: WrColors.text2,
-              height: 1.65,
+              style: WrLinkRow.labelStyle,
             ),
           ),
-          if (related != null) ...[
-            const SizedBox(height: 11),
-            WrSmallButton(
-              key: const Key('wr_growth_bridge_open'),
-              kind: WrSmallButtonKind.dark,
-              label: tr('Xem 3 cách để cân nhắc', 'See 3 ways to consider'),
-              arrow: true,
-              onTap: () => context.push('/wr/growth/theme/${related.themeId}'),
-            ),
-          ],
+          const SizedBox(width: 8),
+          Icon(
+            expanded ? Icons.expand_less : Icons.expand_more,
+            size: 22,
+            color: WrColors.muted,
+          ),
         ],
       ),
-    );
-  }
+    ),
+  );
+}
+
+/// Đường kẻ mảnh giữa các dòng chính.
+class _RowDivider extends StatelessWidget {
+  const _RowDivider();
+
+  @override
+  Widget build(BuildContext context) =>
+      const Divider(height: 1, thickness: 1, color: WrColors.line);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

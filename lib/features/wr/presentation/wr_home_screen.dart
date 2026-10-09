@@ -579,8 +579,11 @@ class _CheckinTile extends ConsumerWidget {
         // (02/10, khổ 320px): dòng cuối rớt xuống và bị cắt dù RenderParagraph
         // báo đúng số dòng. Layout ở đây đúng; hãy thử trên máy thật trước khi
         // đổi bố cục.
+        //
+        // Chỉ khoá từ ghép ("nghỉ ngơi", họp khách 08/10) — bật ở tiếng Việt,
+        // không đụng tới lỗi "feeling goo" ở trên.
         child: Text(
-          option.label,
+          wrKeepCompounds(option.label),
           textAlign: TextAlign.center,
           style: const TextStyle(
             fontSize: 13.5,

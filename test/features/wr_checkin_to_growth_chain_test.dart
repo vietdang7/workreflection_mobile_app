@@ -365,6 +365,9 @@ void main() {
     stage.router.go('/wr/growth');
     await tester.pumpAndSettle();
     expect(find.byType(WrGrowthScreen), findsOneWidget);
+    // "Điều bạn đang thực hành" thu gọn sẵn (họp khách 08/10).
+    await tester.tap(find.byKey(const Key('wr_growth_themes_toggle')));
+    await tester.pumpAndSettle();
 
     // Ba lần chưa đổi được chủ đề: ngưỡng hướng 1 là 15 LẦN nhìn lại (khách
     // chốt 2026-08-04). Màn phải nói đúng quãng đường còn lại, và tuyệt đối

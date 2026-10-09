@@ -1,4 +1,4 @@
-// "Bạn muốn tự thêm điều gì?" — mockup v47 `screenAddPracticeTheme`.
+// "Bạn muốn thêm chủ đề nào?" (trước là "Bạn muốn tự thêm điều gì?") — mockup v47 `screenAddPracticeTheme`.
 //
 // Bốn câu, đúng bốn câu của mockup (khách 06/10: không hỏi thêm gì ngoài
 // script). Ba câu đầu bắt buộc, "Đã thử" thì không. Bấm "Tạo chủ đề" là ghi
@@ -20,6 +20,7 @@ import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_back_circle.dart';
 import '../../../core/widgets/wr_card.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 import '../../../core/widgets/wr_voice_field.dart';
 import '../growth_providers.dart';
 import '../wr_providers.dart';
@@ -177,10 +178,13 @@ class _WrAddPracticeThemeScreenState
                 children: [
                   WrEyebrow(tr('CHỦ ĐỀ CỦA BẠN', 'YOUR THEME')),
                   const SizedBox(height: 6),
+                  // wrKeepWords: không để "nào?" rớt một mình (máy thật 09/10).
                   Text(
-                    tr(
-                      'Bạn muốn tự thêm điều gì?',
-                      'What would you like to add?',
+                    wrKeepWords(
+                      tr(
+                        'Bạn muốn thêm chủ đề nào?',
+                        'Which theme would you like to add?',
+                      ),
                     ),
                     style: const TextStyle(
                       fontSize: 21,

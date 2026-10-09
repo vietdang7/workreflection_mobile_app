@@ -327,7 +327,7 @@ List<PracticeMentorOption> mentorOptionsFor(PracticeTheme theme) =>
     ? theme.mentorOptions
     : fallbackMentorOptions();
 
-/// Dòng nguồn trên thẻ chủ đề (`t.src` của mockup): "Tự thêm · 08/06" /
+/// Dòng nguồn trên thẻ chủ đề (`t.src` của mockup): "Bạn thêm · 08/06" /
 /// "Từ Reflection · 13/6".
 String practiceThemeSourceLabel(PracticeTheme theme, DateTime? startedAt) {
   final d = startedAt ?? theme.createdAt;
@@ -336,6 +336,6 @@ String practiceThemeSourceLabel(PracticeTheme theme, DateTime? startedAt) {
       : ' · ${d.toLocal().day.toString().padLeft(2, '0')}/'
             '${d.toLocal().month.toString().padLeft(2, '0')}';
   return theme.isUserAdded
-      ? tr('Tự thêm$date', 'Added by you$date')
+      ? tr('Bạn thêm$date', 'Added by you$date')
       : tr('Từ Reflection$date', 'From Reflection$date');
 }

@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 
 import '../theme/wr_colors.dart';
 import 'wr_hero_scene.dart' show WrDayPeriod;
+import 'wr_paragraph.dart';
 
 export 'wr_hero_scene.dart' show WrDayPeriod;
 
@@ -269,8 +270,9 @@ class WrHeroHeader extends StatelessWidget {
           Text(overline!, style: TextStyle(fontSize: 12.5, color: smallColor)),
           const SizedBox(height: 3),
         ],
+        // Từ ghép không rớt nửa xuống dòng dưới (họp khách 08/10).
         Text(
-          title,
+          wrKeepCompounds(title),
           style: TextStyle(
             fontSize: 21,
             fontWeight: FontWeight.w800,
@@ -283,7 +285,7 @@ class WrHeroHeader extends StatelessWidget {
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 275),
             child: Text(
-              subtitle!,
+              wrKeepWords(subtitle!),
               style: TextStyle(fontSize: 14.5, color: copyColor, height: 1.55),
             ),
           ),

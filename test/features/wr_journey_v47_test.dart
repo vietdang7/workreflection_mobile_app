@@ -156,8 +156,9 @@ void main() {
   // ───────────────────────────────────────────────────────────────────────────
 
   group('Bố cục v47', () {
-    testWidgets('hero → Dấu ấn → Những gì bạn đã học → Trò chuyện → Dòng nhìn '
-        'lại thời gian', (tester) async {
+    testWidgets('hero → Dấu ấn → Trò chuyện → Dòng nhìn lại thời gian', (
+      tester,
+    ) async {
       await _pumpTall(
         tester,
         _wrap(events: [_learning('l1', 'Hỏi rõ trước khi nhận việc')]),
@@ -165,7 +166,6 @@ void main() {
 
       final hero = _top(tester, find.byKey(const Key('wr_journey_hero')));
       final memory = _top(tester, find.text('Dấu ấn hành trình'));
-      final learned = _top(tester, find.text('Những gì bạn đã học'));
       final ask = _top(tester, find.byKey(const Key('wr_journey_ask_card')));
       final narrative = _top(
         tester,
@@ -173,8 +173,7 @@ void main() {
       );
 
       expect(hero, lessThan(memory));
-      expect(memory, lessThan(learned));
-      expect(learned, lessThan(ask));
+      expect(memory, lessThan(ask));
       expect(ask, lessThan(narrative));
 
       expect(find.text('Hành trình của bạn'), findsOneWidget);
@@ -185,6 +184,9 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('DÒNG NHÌN LẠI THỜI GIAN'), findsOneWidget);
+      // Họp khách 08/10: bỏ "Những gì bạn đã học" — trùng phần thực hành.
+      expect(find.text('Những gì bạn đã học'), findsNothing);
+      expect(find.byKey(const Key('wr_journey_learned_empty')), findsNothing);
     });
 
     for (final premium in const [false, true]) {
@@ -329,10 +331,10 @@ void main() {
   });
 
   // ───────────────────────────────────────────────────────────────────────────
-  // Những gì bạn đã học + nội dung các loại mốc mới
+  // Nội dung các loại mốc mới trên dòng thời gian
   // ───────────────────────────────────────────────────────────────────────────
 
-  group('Những gì bạn đã học', () {
+  group('Nội dung các loại mốc mới', () {
     testWidgets('Cột mốc lần đầu thử: tên chủ đề lấy từ thư viện chủ đề', (
       tester,
     ) async {
@@ -355,44 +357,30 @@ void main() {
       );
 
       const title = 'Lần đầu thử một cách khác: Dám lên tiếng';
-      // Một ở dòng thời gian, một ở "Những gì bạn đã học".
-      expect(find.text(title), findsNWidgets(2));
       expect(
         find.descendant(of: _timeline(0), matching: find.text(title)),
         findsOneWidget,
       );
-      expect(find.text('CỘT MỐC'), findsNWidgets(2));
       expect(find.textContaining('Tên cũ đã đóng băng'), findsNothing);
-      // Thẻ học hiện đoạn trích luôn; dòng thời gian thì chưa.
-      expect(
-        find.text('Bạn đã thử bước đầu tiên của chủ đề này.'),
-        findsOneWidget,
-      );
-      expect(
-        find.text('“Bạn đã thử bước đầu tiên của chủ đề này.”'),
-        findsNothing,
-      );
-      expect(find.byKey(const Key('wr_journey_learned_empty')), findsNothing);
     });
 
-    testWidgets('bài học vừa ghi: tiêu đề cố định + lời người dùng', (
-      tester,
-    ) async {
-      await _pumpTall(
-        tester,
-        _wrap(events: [_learning('l1', 'Hỏi rõ trước khi nhận việc')]),
-      );
+    testWidgets(
+      'bài học vừa ghi: tiêu đề cố định, lời người dùng chạm mới hiện',
+      (tester) async {
+        await _pumpTall(
+          tester,
+          _wrap(events: [_learning('l1', 'Hỏi rõ trước khi nhận việc')]),
+        );
 
-      expect(find.text('Bạn vừa học được điều hữu ích'), findsNWidgets(2));
-      // Lời người dùng nằm ở thẻ học; ở dòng thời gian nó là đoạn trích ẩn.
-      expect(find.text('Hỏi rõ trước khi nhận việc'), findsOneWidget);
-      expect(find.text('“Hỏi rõ trước khi nhận việc”'), findsNothing);
+        expect(find.text('Bạn vừa học được điều hữu ích'), findsOneWidget);
+        expect(find.textContaining('Hỏi rõ trước khi nhận việc'), findsNothing);
 
-      await _tap(tester, _timeline(0));
-      expect(find.text('“Hỏi rõ trước khi nhận việc”'), findsOneWidget);
-    });
+        await _tap(tester, _timeline(0));
+        expect(find.text('“Hỏi rõ trước khi nhận việc”'), findsOneWidget);
+      },
+    );
 
-    testWidgets('bước thực hành xong: "Thực hành: ‹việc›" + ĐIỀU ĐÃ THỬ', (
+    testWidgets('bước thực hành xong: "Thực hành: ‹việc›", nhãn THỰC HÀNH', (
       tester,
     ) async {
       await _pumpTall(
@@ -409,67 +397,13 @@ void main() {
         ),
       );
 
-      expect(
-        find.text('Thực hành: Quan sát lúc muốn im lặng'),
-        findsNWidgets(2),
-      );
-      expect(find.text('ĐIỀU ĐÃ THỬ'), findsOneWidget);
-      // Nhãn loại trên dòng thời gian vẫn là THỰC HÀNH.
+      expect(find.text('Thực hành: Quan sát lúc muốn im lặng'), findsOneWidget);
       expect(
         find.descendant(of: _timeline(0), matching: find.text('THỰC HÀNH')),
         findsOneWidget,
       );
-      expect(
-        find.text('Bạn đã thử: Quan sát lúc muốn im lặng.'),
-        findsOneWidget,
-      );
       // Nhãn giai đoạn "Nhận diện:" không lọt vào câu.
       expect(find.textContaining('Nhận diện:'), findsNothing);
-    });
-
-    testWidgets('nhiều nhất 3 thẻ, lấy 3 điều mới nhất', (tester) async {
-      final base = _thisWeek();
-      await _pumpTall(
-        tester,
-        _wrap(
-          events: [
-            for (var i = 0; i < 5; i++)
-              _learning(
-                'l$i',
-                'Bài học $i',
-                at: base.subtract(Duration(minutes: i)),
-              ),
-          ],
-        ),
-      );
-
-      // Lời người dùng chỉ hiện ở thẻ học (dòng thời gian ẩn đoạn trích).
-      expect(find.text('Bài học 0'), findsOneWidget);
-      expect(find.text('Bài học 1'), findsOneWidget);
-      expect(find.text('Bài học 2'), findsOneWidget);
-      expect(find.text('Bài học 3'), findsNothing);
-      expect(find.text('Bài học 4'), findsNothing);
-      // 4 mốc trên dòng thời gian + 3 thẻ học.
-      expect(find.text('Bạn vừa học được điều hữu ích'), findsNWidgets(7));
-    });
-
-    testWidgets('chưa có điều gì đã học: thẻ trống', (tester) async {
-      await _pumpTall(
-        tester,
-        _wrap(
-          events: [_event(id: 'e1', reflectionText: 'Chỉ là ghi chú')],
-        ),
-      );
-
-      expect(find.byKey(const Key('wr_journey_learned_empty')), findsOneWidget);
-      expect(
-        find.text(
-          'Những điều bạn học được sẽ xuất hiện ở đây sau khi chúng thực sự '
-          'xảy ra.',
-        ),
-        findsOneWidget,
-      );
-      expect(find.text('ĐIỀU ĐÃ THỬ'), findsNothing);
     });
   });
 
@@ -483,9 +417,7 @@ void main() {
       _learning('old', 'Bài học tuần cũ', at: _olderWeek()),
     ];
 
-    testWidgets('mốc tuần cũ khoá ở cả dòng thời gian lẫn thẻ học', (
-      tester,
-    ) async {
+    testWidgets('mốc tuần cũ khoá trên dòng thời gian', (tester) async {
       await _pumpTall(tester, _wrap(events: events()));
 
       // Mới trước: mốc 0 là tuần này, mốc 1 là tuần cũ.
@@ -507,12 +439,9 @@ void main() {
         ),
         findsOneWidget,
       );
-      // Một ở dòng thời gian, một ở thẻ học của mốc tuần cũ.
-      expect(find.text('Premium · Mở khoá'), findsNWidgets(2));
+      expect(find.text('Premium · Mở khoá'), findsOneWidget);
       // Lời người dùng tuần cũ không lọt ra đâu cả.
       expect(find.textContaining('Bài học tuần cũ'), findsNothing);
-      // Tuần này thì đọc được.
-      expect(find.text('Bài học tuần này'), findsOneWidget);
 
       await _tap(tester, _timeline(0));
       expect(find.text('“Bài học tuần này”'), findsOneWidget);
@@ -555,21 +484,10 @@ void main() {
       expect(find.textContaining('Bài học tuần cũ'), findsNothing);
     });
 
-    testWidgets('chạm "Premium · Mở khoá" ở thẻ học mở paywall career_memory', (
-      tester,
-    ) async {
-      await _pumpTall(tester, _wrap(events: events()));
-
-      // Thẻ học nằm dưới dòng thời gian → cái cuối là của thẻ học.
-      await _tap(tester, find.text('Premium · Mở khoá').last);
-      expect(find.text('PAYWALL career_memory'), findsOneWidget);
-    });
-
     testWidgets('Premium: mốc tuần cũ mở ra bình thường', (tester) async {
       await _pumpTall(tester, _wrap(events: events(), premium: true));
 
       expect(find.text('Premium · Mở khoá'), findsNothing);
-      expect(find.text('Bài học tuần cũ'), findsOneWidget);
 
       await _tap(tester, _timeline(1));
       expect(find.text('“Bài học tuần cũ”'), findsOneWidget);
