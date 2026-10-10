@@ -129,12 +129,58 @@ class _Notice extends StatelessWidget {
   }
 }
 
-/// Một tài liệu: dấu phát + tiêu đề, không gì khác.
+/// Tông màu của một tài liệu, chọn theo danh mục.
 ///
-/// Người dùng 10/10, hai lần gọt: bỏ ảnh bìa (ảnh mỗi tập một khổ, "mất công
-/// canh ảnh khi upload"), rồi bỏ cả nhãn danh mục, mô tả, thời lượng ("mất cân
-/// đối, khó đọc, nhiều chữ — hiển thị tiêu đề là được"). Mô tả vẫn đọc được ở
-/// màn xem video.
+/// Ba tông của thương hiệu, xoay vòng theo tên danh mục: cùng danh mục thì
+/// cùng màu ở mọi lần mở, khác danh mục thì danh sách có nhịp màu thay vì một
+/// cột thẻ trắng giống hệt nhau.
+typedef LearningTone = ({
+  Color tile,
+  Color markBg,
+  Color markIcon,
+  Color onTile,
+  Color chipBg,
+  Color chipFg,
+});
+
+LearningTone learningTone(String? category) {
+  final key = (category ?? '').trim().toLowerCase();
+  final index = key.isEmpty ? 0 : key.codeUnits.fold(0, (a, c) => a + c) % 3;
+  return switch (index) {
+    0 => (
+      tile: WrColors.navy,
+      markBg: WrColors.coral,
+      markIcon: WrColors.navy,
+      onTile: WrColors.white,
+      chipBg: WrColors.navy.withValues(alpha: 0.08),
+      chipFg: WrColors.navy,
+    ),
+    1 => (
+      tile: WrColors.teal,
+      markBg: WrColors.white,
+      markIcon: WrColors.navy,
+      onTile: WrColors.navy,
+      chipBg: WrColors.teal.withValues(alpha: 0.14),
+      chipFg: const Color(0xFF0B7A76),
+    ),
+    _ => (
+      tile: WrColors.coral,
+      markBg: WrColors.navy,
+      markIcon: WrColors.white,
+      onTile: WrColors.navy,
+      chipBg: WrColors.coral.withValues(alpha: 0.14),
+      chipFg: const Color(0xFFB8402F),
+    ),
+  };
+}
+
+/// Một tài liệu trong danh sách.
+///
+/// Người dùng 10/10 qua ba vòng: bỏ ảnh bìa ("mất công canh ảnh khi upload"),
+/// bỏ mô tả dài ("nhiều chữ, khó đọc"), rồi bản chỉ-tiêu-đề lại "cơ bản quá" —
+/// muốn có màu và thông tin kèm cho rõ. Nên: một ô màu bên trái (dấu phát +
+/// thời lượng) thay chỗ ảnh, bên phải là nhãn danh mục, tiêu đề, và MỘT hàng
+/// thông tin ngắn có biểu tượng. Mô tả vẫn chỉ ở màn xem video.
 class _ResourceCard extends StatelessWidget {
   const _ResourceCard({required this.resource});
 
@@ -142,28 +188,144 @@ class _ResourceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final tone = learningTone(resource.category);
+    final added = resource.createdAt?.toLocal();
+
     return WrCard(
       key: Key('wr_learning_resource_${resource.id}'),
+      padding: EdgeInsets.zero,
       onTap: () => openLearningResource(context, resource),
-      child: Row(
-        children: [
-          LearningPlayMark(resource: resource, size: 38),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Text(
-              resource.title,
-              style: const TextStyle(
-                fontSize: 15.5,
-                fontWeight: FontWeight.w600,
-                color: WrColors.navy,
-                height: 1.4,
+      child: IntrinsicHeight(
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // ── Ô màu: dấu phát + thời lượng ──────────────────────────────
+            Container(
+              width: 78,
+              color: tone.tile,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 40,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: tone.markBg,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      resource.isVideo
+                          ? Icons.play_arrow_rounded
+                          : Icons.menu_book_rounded,
+                      size: resource.isVideo ? 26 : 20,
+                      color: tone.markIcon,
+                    ),
+                  ),
+                  if (resource.durationLabel != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      resource.durationLabel!,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: tone.onTile,
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ),
-          ),
-          const SizedBox(width: 8),
-          const Icon(Icons.arrow_forward_ios, size: 13, color: WrColors.muted),
-        ],
+            // ── Chữ ────────────────────────────────────────────────────────
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    if (resource.category != null) ...[
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: tone.chipBg,
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                        child: Text(
+                          resource.category!,
+                          style: TextStyle(
+                            fontSize: 11.5,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 0.3,
+                            color: tone.chipFg,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 7),
+                    ],
+                    Text(
+                      resource.title,
+                      maxLines: 4,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 15.5,
+                        fontWeight: FontWeight.w700,
+                        color: WrColors.navy,
+                        height: 1.38,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 4,
+                      children: [
+                        _MetaItem(
+                          icon: resource.isVideo
+                              ? Icons.smart_display_outlined
+                              : Icons.description_outlined,
+                          label: resource.kindLabel,
+                        ),
+                        if (added != null)
+                          _MetaItem(
+                            key: const Key('wr_learning_added'),
+                            icon: Icons.event_outlined,
+                            label: tr(
+                              'Đăng ${added.day}/${added.month}/${added.year}',
+                              'Added ${added.day}/${added.month}/${added.year}',
+                            ),
+                          ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
+    );
+  }
+}
+
+class _MetaItem extends StatelessWidget {
+  const _MetaItem({super.key, required this.icon, required this.label});
+
+  final IconData icon;
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Icon(icon, size: 15, color: WrColors.muted),
+        const SizedBox(width: 4),
+        Text(label, style: TextStyle(fontSize: 13, color: WrColors.muted)),
+      ],
     );
   }
 }

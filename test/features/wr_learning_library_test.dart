@@ -162,6 +162,29 @@ void main() {
     });
   });
 
+  group('learningTone', () {
+    test(
+      'cùng danh mục thì cùng màu, không phân biệt hoa thường/khoảng trắng',
+      () {
+        expect(learningTone('Communication'), learningTone(' communication '));
+      },
+    );
+
+    test('không có danh mục vẫn có màu (navy)', () {
+      expect(learningTone(null).tile, learningTone('').tile);
+    });
+  });
+
+  group('learningTone', () {
+    test('cùng danh mục thì cùng màu, không phân biệt hoa thường', () {
+      expect(learningTone('Communication'), learningTone(' communication '));
+    });
+
+    test('không có danh mục vẫn có màu', () {
+      expect(learningTone(null).tile, learningTone('').tile);
+    });
+  });
+
   group('Thẻ ở tab Phát triển', () {
     testWidgets('tập mới nhất làm thẻ, bấm là phát luôn', (tester) async {
       await tester.pumpWidget(
@@ -248,25 +271,28 @@ void main() {
   });
 
   group('Màn Thư viện học tập', () {
-    testWidgets('mỗi tài liệu chỉ hiện tiêu đề — không ảnh, không mô tả', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        _wrap(
-          const WrLearningLibraryScreen(),
-          _FakeLearningRepo([_series, _pdf]),
-        ),
-      );
-      await tester.pumpAndSettle();
+    testWidgets(
+      'mỗi tài liệu: ô màu, danh mục, tiêu đề, thông tin ngắn — không mô tả',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrap(
+            const WrLearningLibraryScreen(),
+            _FakeLearningRepo([_series, _pdf]),
+          ),
+        );
+        await tester.pumpAndSettle();
 
-      expect(find.text(_series.title), findsOneWidget);
-      expect(find.text(_pdf.title), findsOneWidget);
-      // Người dùng 10/10: "hiển thị tiêu đề là được rồi".
-      expect(find.text('Communication'), findsNothing);
-      expect(find.text('Video · 9 phút'), findsNothing);
-      expect(find.textContaining('hệ sinh của WorkReflection'), findsNothing);
-      expect(_networkImages, findsNothing);
-    });
+        expect(find.text(_series.title), findsOneWidget);
+        expect(find.text(_pdf.title), findsOneWidget);
+        expect(find.text('Communication'), findsOneWidget);
+        expect(find.text('9 phút'), findsOneWidget);
+        expect(find.text('Đăng 24/9/2026'), findsOneWidget);
+        expect(find.text('Tài liệu'), findsOneWidget);
+        // Người dùng 10/10: mô tả dài làm danh sách "nhiều chữ, khó đọc".
+        expect(find.textContaining('hệ sinh của WorkReflection'), findsNothing);
+        expect(_networkImages, findsNothing);
+      },
+    );
 
     testWidgets('bấm video YouTube thì mở màn phát trong app', (tester) async {
       await tester.pumpWidget(
