@@ -120,6 +120,7 @@ import '../../features/wr/wr_providers.dart' show wrStorePolicyProvider;
 import '../../features/wr/presentation/wr_paywall_screen.dart';
 import '../../features/wr/presentation/wr_self_check_screen.dart';
 import '../../features/wr/presentation/wr_tra_chieu_screen.dart';
+import '../../features/wr/presentation/wr_learning_library_screen.dart';
 import '../../features/wr/presentation/wr_jd_builder_screen.dart';
 import '../../features/wr/presentation/wr_sca_deep_dive_screen.dart';
 import '../../features/wr/presentation/wr_work_info_screen.dart';
@@ -540,6 +541,18 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       wrRoute(
         path: '/wr/tra-chieu/lich',
         builder: (context, state) => WrTraChieuCalendarScreen(),
+      ),
+
+      // Thư viện học tập — video, tài liệu của web xem ngay trong app (khách
+      // 10/10). Lối vào là thẻ dưới Trà Chiều ở tab Phát triển.
+      wrRoute(
+        path: '/wr/learning-library',
+        builder: (context, state) => const WrLearningLibraryScreen(),
+      ),
+      wrRoute(
+        path: '/wr/learning-library/:id',
+        builder: (context, state) =>
+            WrLearningVideoScreen(resourceId: state.pathParameters['id']!),
       ),
       wrRoute(
         path: '/wr/growth/journey',
