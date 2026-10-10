@@ -44,6 +44,7 @@ dependencies:
   # Guideline 3.1.3(b) cho phép dùng chéo nền tảng, nhưng CHỈ KHI trong app
   # cũng bán được. Xem `lib/core/logic/wr_iap_catalog.dart`.
   in_app_purchase: ^3.2.0
+  youtube_player_iframe: ^6.0.2
 
 dev_dependencies:
   flutter_test:

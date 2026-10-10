@@ -20,6 +20,7 @@ import 'package:go_router/go_router.dart';
 // vẫn giữ nguyên.
 
 import '../../../core/data/wr_intelligence_repository.dart';
+import '../../../core/data/wr_learning_repository.dart';
 import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/logic/wr_practice_theme_grant.dart';
 import '../../../core/logic/wr_repeated_situations.dart';
@@ -42,6 +43,7 @@ import '../../workshops/workshops_providers.dart';
 import '../growth_providers.dart';
 import '../owned_skill_providers.dart';
 import '../wr_providers.dart';
+import 'wr_learning_library_screen.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -306,7 +308,10 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
     return ListView(
       // Padding tường minh: `ListView` không có padding sẽ xoá phần thanh
       // trạng thái khỏi `MediaQuery` của con, ảnh hero hết tràn lên.
-      padding: const EdgeInsets.only(bottom: 24),
+      // Đáy 80 như tab Hiểu mình: thẻ cuối (Thư viện học tập) phải cuộn lên
+      // được khỏi bong bóng chat nổi, không thì bong bóng che chữ (máy thật
+      // 10/10).
+      padding: const EdgeInsets.only(bottom: 80),
       children: [
         WrHeroHeader.inner(
           key: const Key('wr_growth_hero'),
@@ -435,6 +440,7 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
                 const SizedBox(height: WrCard.kGap),
               ],
               const _OpportunitySliver(),
+              const _LearningLibrarySliver(),
             ],
           ),
         ),
@@ -671,6 +677,75 @@ class _OpportunitySliver extends ConsumerWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// _LearningLibrarySliver — lối vào Thư viện học tập, ngay dưới Trà Chiều.
+//
+// Khách 10/10 muốn chuỗi video "Tâm thế người đi làm" của web vào app "như Trà
+// Chiều". Thẻ TRẮNG chứ không navy: navy dành cho khối dẫn ra ngoài app, còn
+// video ở đây phát ngay trong app.
+//
+// Thư viện trống (hoặc tải lỗi) thì không hiện gì — khác Trà Chiều, ở đây không
+// có chương trình nào để kể khi chưa có tài liệu.
+// ─────────────────────────────────────────────────────────────────────────────
+
+class _LearningLibrarySliver extends ConsumerWidget {
+  const _LearningLibrarySliver();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final items =
+        ref.watch(wrLearningResourcesProvider).valueOrNull ?? const [];
+    if (items.isEmpty) return const SizedBox.shrink();
+    final newest = items.first;
+
+    return Padding(
+      padding: const EdgeInsets.only(top: WrCard.kGap),
+      child: WrCard(
+        key: const Key('wr_growth_learning_library'),
+        onTap: () => context.push('/wr/learning-library'),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 104,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: LearningCover(resource: newest),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(kLearningLibraryLabel, style: WrLinkRow.labelStyle),
+                  const SizedBox(height: 4),
+                  Text(
+                    tr(
+                      '${items.length} video, tài liệu để tự học',
+                      '${items.length} videos and materials to learn from',
+                    ),
+                    style: TextStyle(
+                      fontSize: 13.5,
+                      height: 1.45,
+                      color: WrColors.muted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(
+              Icons.arrow_forward_ios,
+              size: 13,
+              color: WrColors.muted,
+            ),
+          ],
         ),
       ),
     );
