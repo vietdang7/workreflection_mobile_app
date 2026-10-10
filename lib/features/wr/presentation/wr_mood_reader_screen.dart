@@ -17,6 +17,8 @@
 //   khối "Kịch bản lồng tiếng (nội bộ)". Trường đó không tồn tại trong
 //   [MoodContent] vì repository đọc qua view `wr_mood_content_public`.
 
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -422,9 +424,14 @@ class _AudioPlayerBlockState extends ConsumerState<_AudioPlayerBlock> {
   /// Tạo muộn: hàm dựng của [AudioPlayer] chạm platform channel, mà màn này
   /// được dựng trong widget test không có nền tảng thật.
   AudioPlayer? _player;
+  StreamSubscription<PlayerState>? _playerState;
 
   String? _url;
   bool _busy = false;
+
+  /// Đang gọi TTS dựng bản thu, khác với đang tải một bản thu có sẵn — hai
+  /// việc chờ khác nhau thì dòng trạng thái phải nói khác nhau.
+  bool _synthesizing = false;
   String? _error;
 
   @override
@@ -435,8 +442,26 @@ class _AudioPlayerBlockState extends ConsumerState<_AudioPlayerBlock> {
 
   @override
   void dispose() {
+    _playerState?.cancel();
     _player?.dispose();
     super.dispose();
+  }
+
+  AudioPlayer _ensurePlayer() {
+    final existing = _player;
+    if (existing != null) return existing;
+    final player = _player = AudioPlayer();
+    // Nghe trạng thái để nút đổi biểu tượng theo trình phát chứ không chỉ theo
+    // lần bấm. Phát hết bài thì just_audio giữ `playing = true` ở trạng thái
+    // `completed`: không tua về đầu thì nút kẹt ở "dừng" và bấm lại không phát.
+    _playerState = player.playerStateStream.listen((state) async {
+      if (state.processingState == ProcessingState.completed) {
+        await player.pause();
+        await player.seek(Duration.zero);
+      }
+      if (mounted) setState(() {});
+    });
+    return player;
   }
 
   Future<void> _toggle() async {
@@ -456,6 +481,7 @@ class _AudioPlayerBlockState extends ConsumerState<_AudioPlayerBlock> {
 
     setState(() {
       _busy = true;
+      _synthesizing = _url == null;
       _error = null;
     });
     try {
@@ -465,12 +491,16 @@ class _AudioPlayerBlockState extends ConsumerState<_AudioPlayerBlock> {
           .read(ttsServiceProvider)
           .synthesize(text: widget.item.body, name: widget.item.title);
 
-      final player = _player ??= AudioPlayer();
+      final player = _ensurePlayer();
       if (player.playing) {
         await player.pause();
       } else {
         if (player.audioSource == null) await player.setUrl(url);
-        await player.play();
+        // KHÔNG await: Future của `play()` chỉ xong khi bài dừng hoặc phát
+        // hết, nên await ở đây giữ `_busy` suốt cả bài — vòng quay không tắt
+        // và nút dừng bị chặn (lộ ra trên máy thật 10/10). Biểu tượng nút đổi
+        // theo `playerStateStream`.
+        unawaited(player.play());
       }
     } on TtsException catch (e) {
       if (mounted) setState(() => _error = e.message);
@@ -484,7 +514,12 @@ class _AudioPlayerBlockState extends ConsumerState<_AudioPlayerBlock> {
         );
       }
     } finally {
-      if (mounted) setState(() => _busy = false);
+      if (mounted) {
+        setState(() {
+          _busy = false;
+          _synthesizing = false;
+        });
+      }
     }
   }
 
@@ -531,11 +566,13 @@ class _AudioPlayerBlockState extends ConsumerState<_AudioPlayerBlock> {
           const SizedBox(height: 16),
           Text(
             _error ??
-                (_busy
+                (_synthesizing
                     ? tr(
                         'Đang dựng bản thu bằng giọng đọc AI…',
                         'Building the recording with the AI voice…',
                       )
+                    : _busy
+                    ? tr('Đang tải bản thu…', 'Loading the recording…')
                     : _url != null
                     ? widget.item.durationLabel
                     : kAiVoiceEnabled
