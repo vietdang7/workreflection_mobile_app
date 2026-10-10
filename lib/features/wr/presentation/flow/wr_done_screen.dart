@@ -291,7 +291,9 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
   }
 }
 
-/// `.completion-memory`: vạch coral bên trái, nền ửng coral.
+/// `.completion-memory`: nền ửng coral, bo đều bốn góc. Mockup có vạch coral
+/// bên trái; khách 10/10 bảo bỏ vì nhìn lệch cả màn (mọi khối khác đều căn
+/// giữa).
 class _MemoryNote extends StatelessWidget {
   const _MemoryNote({super.key, required this.eyebrow, required this.child});
 
@@ -306,8 +308,7 @@ class _MemoryNote extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       decoration: BoxDecoration(
         color: WrColors.coral.withValues(alpha: 0.06),
-        borderRadius: const BorderRadius.horizontal(right: Radius.circular(14)),
-        border: const Border(left: BorderSide(color: WrColors.coral, width: 3)),
+        borderRadius: BorderRadius.circular(14),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

@@ -8,6 +8,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:workreflection_mobile/core/logic/wr_ai_voice.dart';
 import 'package:workreflection_mobile/core/theme/wr_colors.dart';
 import 'package:workreflection_mobile/core/widgets/wr_card.dart';
+import 'package:workreflection_mobile/core/widgets/wr_detail_scaffold.dart';
 import 'package:workreflection_mobile/core/widgets/wr_hero_header.dart';
 
 Widget _host(Widget child, {double top = 0}) => MaterialApp(
@@ -134,6 +135,55 @@ void main() {
   testWidgets('WrReflectBand mang mã cảm xúc đã chuẩn hoá', (tester) async {
     await tester.pumpWidget(_host(const WrReflectBand(mood: 'la')));
     expect(find.byKey(const Key('wr_reflect_band_happy')), findsOneWidget);
+  });
+
+  group('dải màn con theo tab (decorateInner, v55)', () {
+    test('ảnh bg_* có trên đĩa, màu theo INNER_PAL', () {
+      for (final a in WrHeroArt.values) {
+        expect(File(a.bgAsset).existsSync(), isTrue, reason: a.bgAsset);
+      }
+      expect(WrHeroArt.understand.bandMood, 'tired');
+      expect(WrHeroArt.act.bandMood, 'ok');
+      expect(WrHeroArt.grow.bandMood, 'happy');
+    });
+
+    testWidgets('WrReflectBand.tab dùng ảnh bg của tab', (tester) async {
+      await tester.pumpWidget(_host(WrReflectBand.tab(WrHeroArt.grow)));
+      expect(find.byKey(const Key('wr_reflect_band_tab_grow')), findsOneWidget);
+      final img = tester.widget<Image>(find.byType(Image));
+      expect((img.image as AssetImage).assetName, WrHeroArt.grow.bgAsset);
+    });
+
+    testWidgets('WrDetailScaffold có art thì có dải, không thì nền trơn', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: WrDetailScaffold(
+            eyebrow: 'E',
+            title: 'T',
+            art: WrHeroArt.grow,
+            children: const [],
+          ),
+        ),
+      );
+      expect(find.byKey(const Key('wr_reflect_band_tab_grow')), findsOneWidget);
+      expect(
+        tester.widget<Scaffold>(find.byType(Scaffold)).backgroundColor,
+        Colors.transparent,
+      );
+
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: WrDetailScaffold(eyebrow: 'E', title: 'T', children: []),
+        ),
+      );
+      expect(find.byType(WrReflectBand), findsNothing);
+      expect(
+        tester.widget<Scaffold>(find.byType(Scaffold)).backgroundColor,
+        WrColors.pageBg,
+      );
+    });
   });
 
   group('WrCard', () {

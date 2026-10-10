@@ -6,7 +6,8 @@
 // chứa chữ, mọi chữ do app vẽ đè lên. Ảnh nằm ở `assets/images/hero/`:
 //
 //   hero_homnay / hero_hieu / hero_phat / hero_hanh   hero bốn tab + onboarding
-//   band_a / band_b                                   dải đầu màn con
+//   band_a / band_b                                   dải đầu màn con theo cảm xúc
+//   bg_homnay / bg_hieu / bg_phat / bg_hanh           dải đầu màn con theo tab
 //
 // Chữ đọc được là nhờ lớp phủ kem (`.hero-scrim`), không nhờ ảnh. Đổi ảnh thì
 // chỉ thay file, không đụng lớp phủ.
@@ -28,6 +29,17 @@ enum WrHeroArt {
   final String _file;
 
   String get asset => 'assets/images/hero/hero_$_file.webp';
+
+  /// `BG_PHOTO`: bản nhạt hơn, bớt bão hoà, làm dải đầu các màn con.
+  String get bgAsset => 'assets/images/hero/bg_$_file.webp';
+
+  /// `INNER_PAL` của mockup: màu cảm xúc phủ lên dải ảnh màn con. Tab Hôm nay
+  /// không có màu riêng, mockup lấy cảm xúc vừa check-in, rơi về `happy`.
+  String get bandMood => switch (this) {
+    WrHeroArt.understand => 'tired',
+    WrHeroArt.act => 'ok',
+    WrHeroArt.grow || WrHeroArt.home => 'happy',
+  };
 }
 
 /// `.hero-photo { background-position: 18% 62% }`: neo trái-dưới để giữ bàn
@@ -446,7 +458,14 @@ class WrReflectBand extends StatelessWidget {
     required this.mood,
     this.asset,
     this.height = kHeight,
-  });
+  }) : art = null;
+
+  /// Dải của màn con thuộc một tab (`decorateInner` của mockup v55): ảnh
+  /// `bg_*` của tab đó + màu cảm xúc của tab, để màn con giữ cùng khung cảnh
+  /// với tab cha.
+  WrReflectBand.tab(WrHeroArt this.art, {super.key, this.height = kHeight})
+    : mood = art.bandMood,
+      asset = null;
 
   /// `.rf-band { height: 112px }`, chưa tính thanh trạng thái: ảnh đã mờ hết
   /// trước khi chạm vào nhãn và tiêu đề bên dưới.
@@ -454,6 +473,7 @@ class WrReflectBand extends StatelessWidget {
 
   final String? mood;
   final String? asset;
+  final WrHeroArt? art;
   final double height;
 
   /// `BAND_PHOTO[['stress','foggy','ok'].includes(id) ? 'a' : 'b']`.
@@ -474,7 +494,11 @@ class WrReflectBand extends StatelessWidget {
     final sky = pal[0];
     final sun = pal[1];
     return SizedBox(
-      key: Key('wr_reflect_band_${WrMoodPalette.normalize(mood)}'),
+      key: Key(
+        art == null
+            ? 'wr_reflect_band_${WrMoodPalette.normalize(mood)}'
+            : 'wr_reflect_band_tab_${art!.name}',
+      ),
       height: total,
       width: double.infinity,
       child: IgnorePointer(
@@ -495,7 +519,7 @@ class WrReflectBand extends StatelessWidget {
             fit: StackFit.expand,
             children: [
               Image.asset(
-                asset ?? assetFor(mood),
+                asset ?? art?.bgAsset ?? assetFor(mood),
                 fit: BoxFit.cover,
                 // `.rf-band-photo { background-position: 50% 42% }`
                 alignment: asset == null
@@ -539,6 +563,36 @@ class WrReflectBand extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Nền có dải ảnh tab cho các màn con dựng bằng `Scaffold`.
+///
+/// Dải nằm SAU cả `Scaffold`, nên [child] phải để nền trong suốt (cả
+/// `Scaffold.backgroundColor` lẫn `AppBar`): bố cục màn giữ nguyên, chỉ lộ
+/// thêm ảnh ở đầu. Danh sách cuộn trong thân màn vẫn bị cắt ở mép dưới
+/// `AppBar`, nên chữ không trôi ra sau nút quay lại.
+class WrInnerBandBackdrop extends StatelessWidget {
+  const WrInnerBandBackdrop({
+    super.key,
+    required this.art,
+    required this.child,
+  });
+
+  final WrHeroArt art;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return ColoredBox(
+      color: WrColors.pageBg,
+      child: Stack(
+        children: [
+          Positioned(top: 0, left: 0, right: 0, child: WrReflectBand.tab(art)),
+          Positioned.fill(child: child),
+        ],
       ),
     );
   }

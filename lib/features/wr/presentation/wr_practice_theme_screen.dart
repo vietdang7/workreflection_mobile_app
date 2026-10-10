@@ -31,6 +31,7 @@ import '../../../core/widgets/wr_card.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 import '../../../core/widgets/wr_small_button.dart';
 import '../../../core/widgets/wr_voice_field.dart';
+import '../../../core/widgets/wr_hero_header.dart';
 import '../growth_providers.dart';
 import '../wr_providers.dart';
 import 'wr_practice_note_sheet.dart';
@@ -549,23 +550,27 @@ class _Shell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: WrColors.pageBg,
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(22, 16, 22, 32),
-          children: [
-            Align(
-              alignment: Alignment.centerLeft,
-              child: WrBackCircle(
-                key: const Key('wr_practice_back'),
-                onTap: () =>
-                    context.canPop() ? context.pop() : context.go('/wr/growth'),
+    return WrInnerBandBackdrop(
+      art: WrHeroArt.act,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(22, 16, 22, 32),
+            children: [
+              Align(
+                alignment: Alignment.centerLeft,
+                child: WrBackCircle(
+                  key: const Key('wr_practice_back'),
+                  onTap: () => context.canPop()
+                      ? context.pop()
+                      : context.go('/wr/growth'),
+                ),
               ),
-            ),
-            const SizedBox(height: 14),
-            ...children,
-          ],
+              const SizedBox(height: 14),
+              ...children,
+            ],
+          ),
         ),
       ),
     );

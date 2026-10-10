@@ -1507,6 +1507,7 @@ class _WrCareerMemoryScreenState extends ConsumerState<WrCareerMemoryScreen> {
         : shown.length;
 
     return WrDetailScaffold(
+      art: WrHeroArt.grow,
       eyebrow: 'CAREER MEMORY',
       // Mockup v16: "Bạn đã để lại N mảnh ký ức nghề nghiệp." — con số TỔNG,
       // kể cả với bản miễn phí. Việc mình đã làm thì luôn được nói ra; cái bị

@@ -22,6 +22,7 @@ import '../../../core/widgets/wr_back_circle.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 import '../../../core/widgets/wr_voice_field.dart';
+import '../../../core/widgets/wr_hero_header.dart';
 import '../growth_providers.dart';
 import '../wr_providers.dart';
 
@@ -139,223 +140,226 @@ class _WrAddPracticeThemeScreenState
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: WrColors.pageBg,
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.only(bottom: 30),
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
-              child: Row(
-                children: [
-                  WrBackCircle(
-                    key: const Key('wr_add_theme_back'),
-                    onTap: () => context.pop(),
-                  ),
-                  const Spacer(),
-                  TextButton(
-                    key: const Key('wr_add_theme_close'),
-                    onPressed: () => context.pop(),
-                    style: TextButton.styleFrom(
-                      foregroundColor: WrColors.text2,
+    return WrInnerBandBackdrop(
+      art: WrHeroArt.act,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.only(bottom: 30),
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
+                child: Row(
+                  children: [
+                    WrBackCircle(
+                      key: const Key('wr_add_theme_back'),
+                      onTap: () => context.pop(),
                     ),
-                    child: Text(
-                      tr('Đóng', 'Close'),
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
+                    const Spacer(),
+                    TextButton(
+                      key: const Key('wr_add_theme_close'),
+                      onPressed: () => context.pop(),
+                      style: TextButton.styleFrom(
+                        foregroundColor: WrColors.text2,
                       ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(22, 14, 22, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  WrEyebrow(tr('CHỦ ĐỀ CỦA BẠN', 'YOUR THEME')),
-                  const SizedBox(height: 6),
-                  // wrKeepWords: không để "nào?" rớt một mình (máy thật 09/10).
-                  Text(
-                    wrKeepWords(
-                      tr(
-                        'Bạn muốn thêm chủ đề nào?',
-                        'Which theme would you like to add?',
-                      ),
-                    ),
-                    style: const TextStyle(
-                      fontSize: 21,
-                      fontWeight: FontWeight.w700,
-                      color: WrColors.navy,
-                      height: 1.45,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    tr(
-                      'Không cần gọi tên thật chính xác. Chỉ cần kể đủ để hệ '
-                          'thống hiểu bạn đang gặp chuyện gì và muốn điều gì '
-                          'khác đi.',
-                      'No need to name it exactly. Just say enough for the app '
-                          'to understand what is happening and what you want '
-                          'to change.',
-                    ),
-                    style: _muted,
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(22, 20, 22, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _Question(
-                    eyebrow: tr('01 · CHỦ ĐỀ', '01 · THEME'),
-                    label: tr(
-                      'Bạn gọi chuyện này là gì?',
-                      'What do you call this?',
-                    ),
-                    field: WrVoiceField(
-                      fieldKey: const Key('wr_add_theme_name'),
-                      controller: _name,
-                      hintText: tr(
-                        'Ví dụ: Phản hồi hiệu quả',
-                        'For example: Giving useful feedback',
-                      ),
-                      minLines: 1,
-                      maxLines: 2,
-                      onChanged: () => setState(() {}),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  _Question(
-                    eyebrow: tr('02 · TÌNH HUỐNG', '02 · SITUATION'),
-                    label: tr('Điều gì đang xảy ra?', 'What is happening?'),
-                    hint: tr(
-                      'Một tình huống thật gần đây sẽ giúp gợi ý bám sát hơn.',
-                      'A real recent situation helps the suggestions fit.',
-                    ),
-                    field: WrVoiceField(
-                      fieldKey: const Key('wr_add_theme_situation'),
-                      controller: _situation,
-                      hintText: tr(
-                        'Ví dụ: Mỗi khi cần góp ý cho đồng nghiệp, tôi thường '
-                            'vòng vo...',
-                        'For example: Whenever I need to give a colleague '
-                            'feedback, I beat around the bush...',
-                      ),
-                      minLines: 3,
-                      maxLines: 6,
-                      onChanged: () => setState(() {}),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  _Question(
-                    eyebrow: tr('03 · ĐIỀU BẠN MUỐN', '03 · WHAT YOU WANT'),
-                    label: tr(
-                      'Bạn muốn điều gì khác đi?',
-                      'What do you want to be different?',
-                    ),
-                    hint: tr(
-                      'Viết về thay đổi bạn muốn thấy ở cách mình hành động, '
-                          'không cần đặt thành mục tiêu lớn.',
-                      'Write about the change you want in how you act. It '
-                          'does not need to be a big goal.',
-                    ),
-                    field: WrVoiceField(
-                      fieldKey: const Key('wr_add_theme_goal'),
-                      controller: _goal,
-                      hintText: tr(
-                        'Ví dụ: Tôi muốn nói rõ hơn mà không làm người kia '
-                            'phòng thủ...',
-                        'For example: I want to be clearer without making the '
-                            'other person defensive...',
-                      ),
-                      minLines: 3,
-                      maxLines: 6,
-                      onChanged: () => setState(() {}),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  _Question(
-                    eyebrow: tr('04 · ĐÃ THỬ', '04 · ALREADY TRIED'),
-                    label: tr('Bạn đã thử gì rồi?', 'What have you tried?'),
-                    hint: tr(
-                      'Không bắt buộc. Thông tin này giúp gợi ý không lặp lại '
-                          'đúng cách bạn đã thử trước đó.',
-                      'Optional. It helps the suggestions avoid repeating what '
-                          'you already tried.',
-                    ),
-                    field: WrVoiceField(
-                      fieldKey: const Key('wr_add_theme_tried'),
-                      controller: _tried,
-                      hintText: tr(
-                        'Ví dụ: Tôi đã thử góp ý ngay trong cuộc họp nhưng...',
-                        'For example: I tried giving feedback right in the '
-                            'meeting but...',
-                      ),
-                      minLines: 3,
-                      maxLines: 5,
-                      onChanged: () => setState(() {}),
-                    ),
-                  ),
-                  if (_error != null) ...[
-                    const SizedBox(height: 14),
-                    Text(
-                      _error!,
-                      key: const Key('wr_add_theme_error'),
-                      style: const TextStyle(
-                        fontSize: 14.5,
-                        color: WrColors.coral,
+                      child: Text(
+                        tr('Đóng', 'Close'),
+                        style: const TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
                     ),
                   ],
-                  const SizedBox(height: 18),
-                  FilledButton(
-                    key: const Key('wr_add_theme_create'),
-                    onPressed: _valid && !_busy ? _create : null,
-                    style: FilledButton.styleFrom(
-                      backgroundColor: WrColors.coral,
-                      foregroundColor: WrColors.navy,
-                      disabledBackgroundColor: WrColors.line,
-                      disabledForegroundColor: WrColors.text3,
-                      minimumSize: const Size.fromHeight(50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(22, 14, 22, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    WrEyebrow(tr('CHỦ ĐỀ CỦA BẠN', 'YOUR THEME')),
+                    const SizedBox(height: 6),
+                    // wrKeepWords: không để "nào?" rớt một mình (máy thật 09/10).
+                    Text(
+                      wrKeepWords(
+                        tr(
+                          'Bạn muốn thêm chủ đề nào?',
+                          'Which theme would you like to add?',
+                        ),
+                      ),
+                      style: const TextStyle(
+                        fontSize: 21,
+                        fontWeight: FontWeight.w700,
+                        color: WrColors.navy,
+                        height: 1.45,
                       ),
                     ),
-                    child: _busy
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: WrColors.navy,
-                            ),
-                          )
-                        : Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                tr('Tạo chủ đề', 'Create theme'),
-                                style: const TextStyle(
-                                  fontSize: 15,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                              const SizedBox(width: 6),
-                              const Icon(Icons.arrow_forward, size: 16),
-                            ],
-                          ),
-                  ),
-                ],
+                    const SizedBox(height: 8),
+                    Text(
+                      tr(
+                        'Không cần gọi tên thật chính xác. Chỉ cần kể đủ để hệ '
+                            'thống hiểu bạn đang gặp chuyện gì và muốn điều gì '
+                            'khác đi.',
+                        'No need to name it exactly. Just say enough for the app '
+                            'to understand what is happening and what you want '
+                            'to change.',
+                      ),
+                      style: _muted,
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+              Padding(
+                padding: const EdgeInsets.fromLTRB(22, 20, 22, 0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _Question(
+                      eyebrow: tr('01 · CHỦ ĐỀ', '01 · THEME'),
+                      label: tr(
+                        'Bạn gọi chuyện này là gì?',
+                        'What do you call this?',
+                      ),
+                      field: WrVoiceField(
+                        fieldKey: const Key('wr_add_theme_name'),
+                        controller: _name,
+                        hintText: tr(
+                          'Ví dụ: Phản hồi hiệu quả',
+                          'For example: Giving useful feedback',
+                        ),
+                        minLines: 1,
+                        maxLines: 2,
+                        onChanged: () => setState(() {}),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    _Question(
+                      eyebrow: tr('02 · TÌNH HUỐNG', '02 · SITUATION'),
+                      label: tr('Điều gì đang xảy ra?', 'What is happening?'),
+                      hint: tr(
+                        'Một tình huống thật gần đây sẽ giúp gợi ý bám sát hơn.',
+                        'A real recent situation helps the suggestions fit.',
+                      ),
+                      field: WrVoiceField(
+                        fieldKey: const Key('wr_add_theme_situation'),
+                        controller: _situation,
+                        hintText: tr(
+                          'Ví dụ: Mỗi khi cần góp ý cho đồng nghiệp, tôi thường '
+                              'vòng vo...',
+                          'For example: Whenever I need to give a colleague '
+                              'feedback, I beat around the bush...',
+                        ),
+                        minLines: 3,
+                        maxLines: 6,
+                        onChanged: () => setState(() {}),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    _Question(
+                      eyebrow: tr('03 · ĐIỀU BẠN MUỐN', '03 · WHAT YOU WANT'),
+                      label: tr(
+                        'Bạn muốn điều gì khác đi?',
+                        'What do you want to be different?',
+                      ),
+                      hint: tr(
+                        'Viết về thay đổi bạn muốn thấy ở cách mình hành động, '
+                            'không cần đặt thành mục tiêu lớn.',
+                        'Write about the change you want in how you act. It '
+                            'does not need to be a big goal.',
+                      ),
+                      field: WrVoiceField(
+                        fieldKey: const Key('wr_add_theme_goal'),
+                        controller: _goal,
+                        hintText: tr(
+                          'Ví dụ: Tôi muốn nói rõ hơn mà không làm người kia '
+                              'phòng thủ...',
+                          'For example: I want to be clearer without making the '
+                              'other person defensive...',
+                        ),
+                        minLines: 3,
+                        maxLines: 6,
+                        onChanged: () => setState(() {}),
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    _Question(
+                      eyebrow: tr('04 · ĐÃ THỬ', '04 · ALREADY TRIED'),
+                      label: tr('Bạn đã thử gì rồi?', 'What have you tried?'),
+                      hint: tr(
+                        'Không bắt buộc. Thông tin này giúp gợi ý không lặp lại '
+                            'đúng cách bạn đã thử trước đó.',
+                        'Optional. It helps the suggestions avoid repeating what '
+                            'you already tried.',
+                      ),
+                      field: WrVoiceField(
+                        fieldKey: const Key('wr_add_theme_tried'),
+                        controller: _tried,
+                        hintText: tr(
+                          'Ví dụ: Tôi đã thử góp ý ngay trong cuộc họp nhưng...',
+                          'For example: I tried giving feedback right in the '
+                              'meeting but...',
+                        ),
+                        minLines: 3,
+                        maxLines: 5,
+                        onChanged: () => setState(() {}),
+                      ),
+                    ),
+                    if (_error != null) ...[
+                      const SizedBox(height: 14),
+                      Text(
+                        _error!,
+                        key: const Key('wr_add_theme_error'),
+                        style: const TextStyle(
+                          fontSize: 14.5,
+                          color: WrColors.coral,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 18),
+                    FilledButton(
+                      key: const Key('wr_add_theme_create'),
+                      onPressed: _valid && !_busy ? _create : null,
+                      style: FilledButton.styleFrom(
+                        backgroundColor: WrColors.coral,
+                        foregroundColor: WrColors.navy,
+                        disabledBackgroundColor: WrColors.line,
+                        disabledForegroundColor: WrColors.text3,
+                        minimumSize: const Size.fromHeight(50),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: _busy
+                          ? const SizedBox(
+                              width: 20,
+                              height: 20,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: WrColors.navy,
+                              ),
+                            )
+                          : Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  tr('Tạo chủ đề', 'Create theme'),
+                                  style: const TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w700,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                                const Icon(Icons.arrow_forward, size: 16),
+                              ],
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

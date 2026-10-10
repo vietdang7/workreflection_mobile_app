@@ -27,6 +27,7 @@ import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../core/widgets/wr_detail_scaffold.dart';
+import '../../../core/widgets/wr_hero_header.dart';
 import '../../../core/widgets/wr_link_row.dart';
 import '../../workshops/workshops_providers.dart';
 import '../../../core/widgets/wr_paragraph.dart';
@@ -73,6 +74,7 @@ class WrTraChieuScreen extends ConsumerWidget {
     final upcoming = upcomingTraChieu(workshops, now: DateTime.now());
 
     return WrDetailScaffold(
+      art: WrHeroArt.act,
       eyebrow: 'OFFLINE · $kTraChieuLabel',
       title: kTraChieuLabel,
       children: [
@@ -344,6 +346,7 @@ class WrTraChieuCalendarScreen extends ConsumerWidget {
     final sessions = upcomingTraChieu(workshops, now: DateTime.now());
 
     return WrDetailScaffold(
+      art: WrHeroArt.act,
       eyebrow: kTraChieuLabel.toUpperCase(),
       title: tr('Lịch các buổi', 'Session schedule'),
       children: [

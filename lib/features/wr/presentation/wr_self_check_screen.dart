@@ -19,6 +19,7 @@ import 'wr_sca_deep_dive_screen.dart' show openScaDeepDive;
 import '../wr_providers.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 import '../../../core/widgets/wr_title_text.dart';
+import '../../../core/widgets/wr_hero_header.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Route: /wr/self-check
@@ -205,118 +206,124 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
   // ── Intro ──────────────────────────────────────────────────────────────────
 
   Widget _buildIntro() {
-    return Scaffold(
-      backgroundColor: WrColors.pageBg,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              IconButton(
-                onPressed: () => context.pop(),
-                icon: const Icon(Icons.arrow_back_ios_new, size: 18),
-                color: WrColors.dark,
-                tooltip: tr('Quay lại', 'Back'),
-                constraints: const BoxConstraints.tightFor(
-                  width: 44,
-                  height: 44,
+    return WrInnerBandBackdrop(
+      art: WrHeroArt.understand,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                IconButton(
+                  onPressed: () => context.pop(),
+                  icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+                  color: WrColors.dark,
+                  tooltip: tr('Quay lại', 'Back'),
+                  constraints: const BoxConstraints.tightFor(
+                    width: 44,
+                    height: 44,
+                  ),
+                  padding: EdgeInsets.zero,
+                  alignment: Alignment.centerLeft,
                 ),
-                padding: EdgeInsets.zero,
-                alignment: Alignment.centerLeft,
-              ),
-              // Khối giới thiệu canh GIỮA phần trống, không dán lên mép trên.
-              // Trước đây một `Spacer` đẩy nút xuống đáy và để lại nguyên nửa
-              // màn hình trắng ở giữa — màn nhìn như đang tải dở.
-              //
-              // `Center` bọc ngoài chỗ cuộn: nội dung ngắn thì nằm giữa, máy nhỏ
-              // hoặc cỡ chữ lớn thì cuộn được thay vì tràn khung.
-              Expanded(
-                child: Center(
-                  child: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // Khách 09/09/2026 (§15.1): bỏ chấm tròn ◉ ở đầu màn.
-                        Text(
-                          tr(
-                            '${kSelfCheckQuestions.length} câu hỏi phản chiếu',
-                            '${kSelfCheckQuestions.length} reflection questions',
+                // Khối giới thiệu canh GIỮA phần trống, không dán lên mép trên.
+                // Trước đây một `Spacer` đẩy nút xuống đáy và để lại nguyên nửa
+                // màn hình trắng ở giữa — màn nhìn như đang tải dở.
+                //
+                // `Center` bọc ngoài chỗ cuộn: nội dung ngắn thì nằm giữa, máy nhỏ
+                // hoặc cỡ chữ lớn thì cuộn được thay vì tràn khung.
+                Expanded(
+                  child: Center(
+                    child: SingleChildScrollView(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // Khách 09/09/2026 (§15.1): bỏ chấm tròn ◉ ở đầu màn.
+                          Text(
+                            tr(
+                              '${kSelfCheckQuestions.length} câu hỏi phản chiếu',
+                              '${kSelfCheckQuestions.length} reflection questions',
+                            ),
+                            style: const TextStyle(
+                              fontSize: 28,
+                              fontWeight: FontWeight.w800,
+                              color: WrColors.dark,
+                              height: 1.2,
+                              letterSpacing: -0.6,
+                            ),
                           ),
-                          style: const TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w800,
-                            color: WrColors.dark,
-                            height: 1.2,
-                            letterSpacing: -0.6,
+                          const SizedBox(height: 12),
+                          WrParagraph(
+                            tr(
+                              'Hãy trả lời dựa trên trải nghiệm thực tế của bạn tại '
+                                  'nơi làm việc.',
+                              'Answer from what actually happens for you at work.',
+                            ),
+                            style: TextStyle(
+                              fontSize: 16.5,
+                              color: WrColors.text2,
+                              height: 1.7,
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        WrParagraph(
-                          tr(
-                            'Hãy trả lời dựa trên trải nghiệm thực tế của bạn tại '
-                                'nơi làm việc.',
-                            'Answer from what actually happens for you at work.',
+                          const SizedBox(height: 26),
+                          // Khách 09/09/2026 (§15.4): bỏ emoji ⏱🔒↺, dùng icon
+                          // line art. Emoji đổi dáng theo từng máy và không nhận
+                          // màu của brand.
+                          _InfoRow(
+                            icon: Icons.schedule_outlined,
+                            text: tr(
+                              'Thời gian: Khoảng 3–4 phút hoàn thành',
+                              'Takes about 3–4 minutes',
+                            ),
                           ),
-                          style: TextStyle(
-                            fontSize: 16.5,
-                            color: WrColors.text2,
-                            height: 1.7,
+                          const SizedBox(height: 12),
+                          _InfoRow(
+                            icon: Icons.lock_outline,
+                            text: tr(
+                              'Bảo mật tuyệt đối. Chỉ bạn mới thấy kết quả',
+                              'Completely private. Only you see the results',
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 26),
-                        // Khách 09/09/2026 (§15.4): bỏ emoji ⏱🔒↺, dùng icon
-                        // line art. Emoji đổi dáng theo từng máy và không nhận
-                        // màu của brand.
-                        _InfoRow(
-                          icon: Icons.schedule_outlined,
-                          text: tr(
-                            'Thời gian: Khoảng 3–4 phút hoàn thành',
-                            'Takes about 3–4 minutes',
+                          const SizedBox(height: 12),
+                          _InfoRow(
+                            icon: Icons.refresh_outlined,
+                            text: tr(
+                              'Có thể làm lại bất cứ lúc nào bạn muốn',
+                              'Retake it any time you like',
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: 12),
-                        _InfoRow(
-                          icon: Icons.lock_outline,
-                          text: tr(
-                            'Bảo mật tuyệt đối. Chỉ bạn mới thấy kết quả',
-                            'Completely private. Only you see the results',
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        _InfoRow(
-                          icon: Icons.refresh_outlined,
-                          text: tr(
-                            'Có thể làm lại bất cứ lúc nào bạn muốn',
-                            'Retake it any time you like',
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
-              ),
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  onPressed: () => setState(() => _step = 1),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: WrColors.navy,
-                    foregroundColor: WrColors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 17),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => setState(() => _step = 1),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: WrColors.navy,
+                      foregroundColor: WrColors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 17),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      elevation: 0,
                     ),
-                    elevation: 0,
-                  ),
-                  child: Text(
-                    tr('Bắt đầu →', 'Start →'),
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
+                    child: Text(
+                      tr('Bắt đầu →', 'Start →'),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -340,203 +347,209 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
     };
     final current = _answers[q.id];
 
-    return Scaffold(
-      backgroundColor: WrColors.pageBg,
-      body: SafeArea(
-        child: Column(
-          children: [
-            // Thanh tiến độ + điều hướng
-            Padding(
-              padding: const EdgeInsets.fromLTRB(22, 14, 22, 10),
-              child: Column(
-                children: [
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(2),
-                    child: LinearProgressIndicator(
-                      value: progress,
-                      minHeight: 3,
-                      backgroundColor: WrColors.lineSoft,
-                      color: WrColors.dark,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Row(
-                    children: [
-                      // Vùng chạm 44×44 quanh mũi tên: cái icon 16px trần
-                      // trước đây là một mục tiêu bé bằng đầu que diêm.
-                      IconButton(
-                        onPressed: () {
-                          // Không huỷ ở đây thì lượt hẹn đang chờ vẫn nổ và
-                          // đẩy người dùng ngược lại đúng câu vừa rời khỏi.
-                          _advanceTimer?.cancel();
-                          setState(() {
-                            if (_step > 1) {
-                              _step--;
-                            } else {
-                              _step = 0;
-                            }
-                          });
-                        },
-                        icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+    return WrInnerBandBackdrop(
+      art: WrHeroArt.understand,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: Column(
+            children: [
+              // Thanh tiến độ + điều hướng
+              Padding(
+                padding: const EdgeInsets.fromLTRB(22, 14, 22, 10),
+                child: Column(
+                  children: [
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(2),
+                      child: LinearProgressIndicator(
+                        value: progress,
+                        minHeight: 3,
+                        // Nằm trên dải ảnh đầu màn (v55): `lineSoft` chìm vào ảnh.
+                        backgroundColor: WrColors.navy.withValues(alpha: 0.18),
                         color: WrColors.dark,
-                        tooltip: tr('Câu trước', 'Previous'),
-                        constraints: const BoxConstraints.tightFor(
-                          width: 44,
-                          height: 44,
-                        ),
-                        padding: EdgeInsets.zero,
                       ),
-                      const Spacer(),
-                      Text(
-                        tr(
-                          'Câu ${_questionIndex + 1} / '
-                              '${kSelfCheckQuestions.length}',
-                          'Question ${_questionIndex + 1} / '
-                              '${kSelfCheckQuestions.length}',
+                    ),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        // Vùng chạm 44×44 quanh mũi tên: cái icon 16px trần
+                        // trước đây là một mục tiêu bé bằng đầu que diêm.
+                        IconButton(
+                          onPressed: () {
+                            // Không huỷ ở đây thì lượt hẹn đang chờ vẫn nổ và
+                            // đẩy người dùng ngược lại đúng câu vừa rời khỏi.
+                            _advanceTimer?.cancel();
+                            setState(() {
+                              if (_step > 1) {
+                                _step--;
+                              } else {
+                                _step = 0;
+                              }
+                            });
+                          },
+                          icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+                          color: WrColors.dark,
+                          tooltip: tr('Câu trước', 'Previous'),
+                          constraints: const BoxConstraints.tightFor(
+                            width: 44,
+                            height: 44,
+                          ),
+                          padding: EdgeInsets.zero,
                         ),
-                        style: const TextStyle(
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.w600,
-                          color: WrColors.text2,
-                        ),
-                      ),
-                      const Spacer(),
-                      // Lối thoát. Trước đây chỉ có mũi tên lùi MỘT câu: đang ở
-                      // câu 12 mà muốn ra thì phải bấm mười hai lần, nên trên
-                      // thực tế màn này không có cửa ra.
-                      TextButton(
-                        key: const Key('wr_self_check_close'),
-                        onPressed: _confirmClose,
-                        style: TextButton.styleFrom(
-                          foregroundColor: WrColors.text2,
-                          minimumSize: const Size(44, 44),
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                        ),
-                        child: Text(
-                          tr('Đóng', 'Close'),
-                          style: TextStyle(
-                            fontSize: 15.5,
+                        const Spacer(),
+                        Text(
+                          tr(
+                            'Câu ${_questionIndex + 1} / '
+                                '${kSelfCheckQuestions.length}',
+                            'Question ${_questionIndex + 1} / '
+                                '${kSelfCheckQuestions.length}',
+                          ),
+                          style: const TextStyle(
+                            fontSize: 14.5,
                             fontWeight: FontWeight.w600,
+                            color: WrColors.text2,
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-
-            Expanded(
-              // Cuộn được, và câu hỏi KHÔNG còn bị `Spacer` đẩy dính mép trên
-              // trong khi năm ô chọn dính mép dưới. Câu hỏi dài hoặc máy chỉnh
-              // cỡ chữ lớn thì trước đây tràn khung; giờ chỉ cần cuộn.
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(24, 10, 24, 28),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: pillarBg,
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                      child: Text(
-                        q.pillar.displayName,
-                        style: TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w700,
-                          color: pillarColor,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 18),
-                    WrTitleText(
-                      q.text,
-                      style: const TextStyle(
-                        fontSize: 21,
-                        fontWeight: FontWeight.w600,
-                        color: WrColors.dark,
-                        height: 1.5,
-                        letterSpacing: -0.3,
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-
-                    // Năm mức Likert.
-                    //
-                    // Ô CHƯA chọn có nền TRẮNG ĐẶC, không phải trong suốt: nền
-                    // màn là kem #FBF9F5, ô trong suốt viền navy 10% thì gần
-                    // như tàng hình — nhìn ra thì thấy năm vệt trắng mờ chứ
-                    // không thấy năm cái nút.
-                    ...List.generate(_likertLabels.length, (i) {
-                      final score = i + 1; // 1-5
-                      final selected = current == score;
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 10),
-                        child: Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () => _answer(score),
-                            borderRadius: BorderRadius.circular(12),
-                            child: AnimatedContainer(
-                              duration: const Duration(milliseconds: 150),
-                              width: double.infinity,
-                              constraints: const BoxConstraints(minHeight: 56),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 18,
-                                vertical: 16,
-                              ),
-                              decoration: BoxDecoration(
-                                color: selected
-                                    ? WrColors.coral.withValues(alpha: 0.10)
-                                    : WrColors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: selected
-                                      ? WrColors.coral
-                                      : WrColors.line,
-                                  width: selected ? 2 : 1.5,
-                                ),
-                              ),
-                              child: Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      _likertLabels[i],
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: selected
-                                            ? FontWeight.w700
-                                            : FontWeight.w500,
-                                        color: WrColors.dark,
-                                        height: 1.35,
-                                      ),
-                                    ),
-                                  ),
-                                  if (selected) ...[
-                                    const SizedBox(width: 12),
-                                    const Icon(
-                                      Icons.check_circle_outlined,
-                                      size: 20,
-                                      color: WrColors.coral,
-                                    ),
-                                  ],
-                                ],
-                              ),
+                        const Spacer(),
+                        // Lối thoát. Trước đây chỉ có mũi tên lùi MỘT câu: đang ở
+                        // câu 12 mà muốn ra thì phải bấm mười hai lần, nên trên
+                        // thực tế màn này không có cửa ra.
+                        TextButton(
+                          key: const Key('wr_self_check_close'),
+                          onPressed: _confirmClose,
+                          style: TextButton.styleFrom(
+                            foregroundColor: WrColors.text2,
+                            minimumSize: const Size(44, 44),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                          ),
+                          child: Text(
+                            tr('Đóng', 'Close'),
+                            style: TextStyle(
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
-                      );
-                    }),
+                      ],
+                    ),
                   ],
                 ),
               ),
-            ),
-          ],
+
+              Expanded(
+                // Cuộn được, và câu hỏi KHÔNG còn bị `Spacer` đẩy dính mép trên
+                // trong khi năm ô chọn dính mép dưới. Câu hỏi dài hoặc máy chỉnh
+                // cỡ chữ lớn thì trước đây tràn khung; giờ chỉ cần cuộn.
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.fromLTRB(24, 10, 24, 28),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 5,
+                        ),
+                        decoration: BoxDecoration(
+                          color: pillarBg,
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                        child: Text(
+                          q.pillar.displayName,
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                            color: pillarColor,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      WrTitleText(
+                        q.text,
+                        style: const TextStyle(
+                          fontSize: 21,
+                          fontWeight: FontWeight.w600,
+                          color: WrColors.dark,
+                          height: 1.5,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      const SizedBox(height: 28),
+
+                      // Năm mức Likert.
+                      //
+                      // Ô CHƯA chọn có nền TRẮNG ĐẶC, không phải trong suốt: nền
+                      // màn là kem #FBF9F5, ô trong suốt viền navy 10% thì gần
+                      // như tàng hình — nhìn ra thì thấy năm vệt trắng mờ chứ
+                      // không thấy năm cái nút.
+                      ...List.generate(_likertLabels.length, (i) {
+                        final score = i + 1; // 1-5
+                        final selected = current == score;
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 10),
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () => _answer(score),
+                              borderRadius: BorderRadius.circular(12),
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 150),
+                                width: double.infinity,
+                                constraints: const BoxConstraints(
+                                  minHeight: 56,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 18,
+                                  vertical: 16,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: selected
+                                      ? WrColors.coral.withValues(alpha: 0.10)
+                                      : WrColors.white,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: selected
+                                        ? WrColors.coral
+                                        : WrColors.line,
+                                    width: selected ? 2 : 1.5,
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        _likertLabels[i],
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: selected
+                                              ? FontWeight.w700
+                                              : FontWeight.w500,
+                                          color: WrColors.dark,
+                                          height: 1.35,
+                                        ),
+                                      ),
+                                    ),
+                                    if (selected) ...[
+                                      const SizedBox(width: 12),
+                                      const Icon(
+                                        Icons.check_circle_outlined,
+                                        size: 20,
+                                        color: WrColors.coral,
+                                      ),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -545,140 +558,143 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
   // ── Result ─────────────────────────────────────────────────────────────────
 
   Widget _buildResult() {
-    return Scaffold(
-      backgroundColor: WrColors.pageBg,
-      body: SafeArea(
-        child: CustomScrollView(
-          slivers: [
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(22, 16, 22, 8),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      tr('Bức tranh của bạn', 'Your picture'),
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w700,
-                        color: WrColors.dark,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      tr(
-                        'Dựa trên 15 câu hỏi phản chiếu',
-                        'Based on 15 reflection questions',
-                      ),
-                      style: TextStyle(fontSize: 15.5, color: WrColors.muted),
-                    ),
-                    if (_saving) ...[
-                      const SizedBox(height: 10),
-                      const LinearProgressIndicator(color: WrColors.navy),
-                    ],
-                    if (_errorMsg != null) ...[
-                      const SizedBox(height: 8),
+    return WrInnerBandBackdrop(
+      art: WrHeroArt.understand,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 16, 22, 8),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        _errorMsg!,
-                        style: const TextStyle(
-                          fontSize: 14.5,
-                          color: WrColors.coral,
+                        tr('Bức tranh của bạn', 'Your picture'),
+                        style: TextStyle(
+                          fontSize: 26,
+                          fontWeight: FontWeight.w700,
+                          color: WrColors.dark,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        tr(
+                          'Dựa trên 15 câu hỏi phản chiếu',
+                          'Based on 15 reflection questions',
+                        ),
+                        style: TextStyle(fontSize: 15.5, color: WrColors.muted),
+                      ),
+                      if (_saving) ...[
+                        const SizedBox(height: 10),
+                        const LinearProgressIndicator(color: WrColors.navy),
+                      ],
+                      if (_errorMsg != null) ...[
+                        const SizedBox(height: 8),
+                        Text(
+                          _errorMsg!,
+                          style: const TextStyle(
+                            fontSize: 14.5,
+                            color: WrColors.coral,
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              ),
+
+              // 3 pillar score bars
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 4, 22, 0),
+                  child: Column(
+                    children: [
+                      _PillarScoreCard(
+                        pillarName: SelfCheckPillar.s.displayName,
+                        score: _sScore,
+                        color: const Color(0xFF5B8CC9),
+                      ),
+                      const SizedBox(height: 10),
+                      _PillarScoreCard(
+                        pillarName: SelfCheckPillar.c.displayName,
+                        score: _cScore,
+                        color: WrColors.teal,
+                      ),
+                      const SizedBox(height: 10),
+                      _PillarScoreCard(
+                        pillarName: SelfCheckPillar.a.displayName,
+                        score: _aScore,
+                        color: const Color(0xFF5E7A5A),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+
+              // ── Free: một đoạn đọc nhanh cho trụ thấp nhất ────────────────
+              SliverToBoxAdapter(child: _buildQuickRead()),
+
+              // ── Paid: diễn giải sâu · mất cân bằng · xu hướng · pattern ───
+              SliverToBoxAdapter(child: _buildDeepDive()),
+
+              // Action buttons
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 20, 22, 32),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => context.go('/wr/growth'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: WrColors.dark,
+                            foregroundColor: WrColors.white,
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            tr('Vào Thực hành', 'Go to Practice'),
+                            style: TextStyle(
+                              fontSize: 16.5,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ElevatedButton(
+                          onPressed: () => context.go('/wr/journey'),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFE6F7F7),
+                            foregroundColor: WrColors.navy,
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: Text(
+                            tr('Xem Hành trình', 'See my Journey'),
+                            style: TextStyle(
+                              fontSize: 16.5,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
                         ),
                       ),
                     ],
-                  ],
+                  ),
                 ),
               ),
-            ),
-
-            // 3 pillar score bars
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(22, 4, 22, 0),
-                child: Column(
-                  children: [
-                    _PillarScoreCard(
-                      pillarName: SelfCheckPillar.s.displayName,
-                      score: _sScore,
-                      color: const Color(0xFF5B8CC9),
-                    ),
-                    const SizedBox(height: 10),
-                    _PillarScoreCard(
-                      pillarName: SelfCheckPillar.c.displayName,
-                      score: _cScore,
-                      color: WrColors.teal,
-                    ),
-                    const SizedBox(height: 10),
-                    _PillarScoreCard(
-                      pillarName: SelfCheckPillar.a.displayName,
-                      score: _aScore,
-                      color: const Color(0xFF5E7A5A),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-            // ── Free: một đoạn đọc nhanh cho trụ thấp nhất ────────────────
-            SliverToBoxAdapter(child: _buildQuickRead()),
-
-            // ── Paid: diễn giải sâu · mất cân bằng · xu hướng · pattern ───
-            SliverToBoxAdapter(child: _buildDeepDive()),
-
-            // Action buttons
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(22, 20, 22, 32),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () => context.go('/wr/growth'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: WrColors.dark,
-                          foregroundColor: WrColors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 13),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: Text(
-                          tr('Vào Thực hành', 'Go to Practice'),
-                          style: TextStyle(
-                            fontSize: 16.5,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: () => context.go('/wr/journey'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFE6F7F7),
-                          foregroundColor: WrColors.navy,
-                          padding: const EdgeInsets.symmetric(vertical: 13),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          elevation: 0,
-                        ),
-                        child: Text(
-                          tr('Xem Hành trình', 'See my Journey'),
-                          style: TextStyle(
-                            fontSize: 16.5,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

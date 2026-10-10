@@ -30,6 +30,7 @@ import '../../../core/models/wr_jd_draft.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_paragraph.dart';
+import '../../../core/widgets/wr_hero_header.dart';
 import '../wr_providers.dart';
 
 /// Bản JD đang có. Null = chưa từng mở màn này.
@@ -153,131 +154,138 @@ class _WrJdBuilderScreenState extends ConsumerState<WrJdBuilderScreen> {
     final day = _current;
     final isLast = day.number >= kJdDayCount;
 
-    return Scaffold(
-      backgroundColor: WrColors.pageBg,
-      appBar: AppBar(
-        backgroundColor: WrColors.pageBg,
-        elevation: 0,
-        foregroundColor: WrColors.navy,
-        title: Text(
-          tr('Cùng tạo JD của bạn', 'Let us build your JD'),
-          style: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-            color: WrColors.navy,
+    return WrInnerBandBackdrop(
+      art: WrHeroArt.act,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          scrolledUnderElevation: 0,
+          elevation: 0,
+          foregroundColor: WrColors.navy,
+          title: Text(
+            tr('Cùng tạo JD của bạn', 'Let us build your JD'),
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: WrColors.navy,
+            ),
           ),
         ),
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(22, 4, 22, 24),
-                children: [
-                  WrEyebrow(day.eyebrow.toUpperCase()),
-                  const SizedBox(height: 8),
-                  Text(
-                    day.title,
-                    style: const TextStyle(
-                      fontSize: 24,
-                      fontWeight: FontWeight.w700,
-                      color: WrColors.navy,
-                      height: 1.25,
-                    ),
-                  ),
-                  const SizedBox(height: 14),
-                  _ProgressBar(
-                    current: day.number,
-                    completed: _completed,
-                    onTap: (n) => setState(() => _day = n),
-                  ),
-                  const SizedBox(height: 20),
-                  if (day.intro != null) ...[
-                    WrParagraph(
-                      day.intro!,
+        body: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(22, 4, 22, 24),
+                  children: [
+                    WrEyebrow(day.eyebrow.toUpperCase()),
+                    const SizedBox(height: 8),
+                    Text(
+                      day.title,
                       style: const TextStyle(
-                        fontSize: 14.5,
-                        height: 1.65,
-                        color: WrColors.muted,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: WrColors.navy,
+                        height: 1.25,
                       ),
+                    ),
+                    const SizedBox(height: 14),
+                    _ProgressBar(
+                      current: day.number,
+                      completed: _completed,
+                      onTap: (n) => setState(() => _day = n),
                     ),
                     const SizedBox(height: 20),
-                  ],
-                  for (final f in day.fields) ...[
-                    _Field(
-                      field: f,
-                      controller: _controllerFor(f.column, null),
-                    ),
-                    const SizedBox(height: 22),
-                  ],
-                  if (isLast) _CompletionBanner(),
-                  if (_error != null) ...[
-                    const SizedBox(height: 12),
-                    Text(
-                      _error!,
-                      key: const Key('wr_jd_error'),
-                      style: const TextStyle(
-                        fontSize: 13.5,
-                        color: WrColors.coral,
-                      ),
-                    ),
-                  ],
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(22, 0, 22, 16),
-              child: Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      key: const Key('wr_jd_primary'),
-                      onPressed: _busy ? null : () => _save(markDayDone: true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: WrColors.navy,
-                        foregroundColor: WrColors.white,
-                        disabledBackgroundColor: WrColors.line,
-                        minimumSize: const Size.fromHeight(52),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(14),
-                        ),
-                        elevation: 0,
-                      ),
-                      child: Text(
-                        isLast
-                            ? tr(
-                                'Hoàn tất, lưu vào hồ sơ',
-                                'Finish and save to my profile',
-                              )
-                            : tr('Lưu và tiếp tục', 'Save and continue'),
+                    if (day.intro != null) ...[
+                      WrParagraph(
+                        day.intro!,
                         style: const TextStyle(
-                          fontSize: 16.5,
-                          fontWeight: FontWeight.w600,
+                          fontSize: 14.5,
+                          height: 1.65,
+                          color: WrColors.muted,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+                    for (final f in day.fields) ...[
+                      _Field(
+                        field: f,
+                        controller: _controllerFor(f.column, null),
+                      ),
+                      const SizedBox(height: 22),
+                    ],
+                    if (isLast) _CompletionBanner(),
+                    if (_error != null) ...[
+                      const SizedBox(height: 12),
+                      Text(
+                        _error!,
+                        key: const Key('wr_jd_error'),
+                        style: const TextStyle(
+                          fontSize: 13.5,
+                          color: WrColors.coral,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(22, 0, 22, 16),
+                child: Column(
+                  children: [
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        key: const Key('wr_jd_primary'),
+                        onPressed: _busy
+                            ? null
+                            : () => _save(markDayDone: true),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: WrColors.navy,
+                          foregroundColor: WrColors.white,
+                          disabledBackgroundColor: WrColors.line,
+                          minimumSize: const Size.fromHeight(52),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: Text(
+                          isLast
+                              ? tr(
+                                  'Hoàn tất, lưu vào hồ sơ',
+                                  'Finish and save to my profile',
+                                )
+                              : tr('Lưu và tiếp tục', 'Save and continue'),
+                          style: const TextStyle(
+                            fontSize: 16.5,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  TextButton(
-                    key: const Key('wr_jd_pause'),
-                    onPressed: _busy ? null : _pauseAndLeave,
-                    child: Text(
-                      tr(
-                        'Dừng ở đây, làm tiếp sau',
-                        'Stop here, carry on later',
-                      ),
-                      style: TextStyle(
-                        fontSize: 15.5,
-                        color: WrColors.muted,
-                        fontWeight: FontWeight.w500,
+                    TextButton(
+                      key: const Key('wr_jd_pause'),
+                      onPressed: _busy ? null : _pauseAndLeave,
+                      child: Text(
+                        tr(
+                          'Dừng ở đây, làm tiếp sau',
+                          'Stop here, carry on later',
+                        ),
+                        style: TextStyle(
+                          fontSize: 15.5,
+                          color: WrColors.muted,
+                          fontWeight: FontWeight.w500,
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

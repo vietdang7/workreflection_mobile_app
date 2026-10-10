@@ -27,57 +27,61 @@ import '../profile_providers.dart';
 import 'change_password_dialog.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 import '../../../core/widgets/wr_title_text.dart';
+import '../../../core/widgets/wr_hero_header.dart';
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Scaffold(
-      backgroundColor: WrColors.pageBg,
-      body: SafeArea(
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            SliverToBoxAdapter(child: _ProfileHeader()),
-            const SliverToBoxAdapter(child: SizedBox(height: 28)),
-            SliverPadding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
-              sliver: SliverList(
-                delegate: SliverChildListDelegate([
-                  // Thứ tự và mặt phẳng lấy nguyên từ mockup Sprint 2 bản (4)
-                  // §screenProfile: khối nhận diện căn giữa → THẺ số liệu → thẻ
-                  // mời Premium → THẺ danh sách cài đặt → thẻ Khảo sát tổ chức
-                  // → nút đăng xuất.
-                  //
-                  // Không còn đường kẻ ngang nào: mockup phân đoạn bằng thẻ chứ
-                  // không bằng vạch. Ba vạch cũ chia màn thành các dải rời rạc
-                  // trong khi mọi màn khác của app đã là hệ thẻ.
-                  _AvatarSection(),
-                  const SizedBox(height: 20),
-                  // Khách chưa lưu hành trình: lối lưu đứng trên cùng, vì
-                  // đây là thứ duy nhất ở màn này có thể làm mất dữ liệu nếu
-                  // bị bỏ qua.
-                  const _GuestSaveCard(),
-                  _StatsCard(),
-                  const SizedBox(height: 12),
-                  // Nhắc kỳ thuê bao sắp kết thúc. Đứng NGAY TRÊN thẻ mời nâng
-                  // cấp vì hai thẻ này loại trừ nhau: người đang có gói thấy
-                  // lời nhắc, người chưa có thấy lời mời.
-                  const WrRenewalNoticeCard(),
-                  _PremiumCard(),
-                  _SettingsSection(),
-                  const SizedBox(height: 12),
-                  _OrgSurveyCard(),
-                  const SizedBox(height: 12),
-                  _LogoutButton(),
-                  const SizedBox(height: 8),
-                  _DeleteAccountButton(),
-                  const SizedBox(height: 80),
-                ]),
+    return WrInnerBandBackdrop(
+      art: WrHeroArt.grow,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: CustomScrollView(
+            physics: const BouncingScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(child: _ProfileHeader()),
+              const SliverToBoxAdapter(child: SizedBox(height: 28)),
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                sliver: SliverList(
+                  delegate: SliverChildListDelegate([
+                    // Thứ tự và mặt phẳng lấy nguyên từ mockup Sprint 2 bản (4)
+                    // §screenProfile: khối nhận diện căn giữa → THẺ số liệu → thẻ
+                    // mời Premium → THẺ danh sách cài đặt → thẻ Khảo sát tổ chức
+                    // → nút đăng xuất.
+                    //
+                    // Không còn đường kẻ ngang nào: mockup phân đoạn bằng thẻ chứ
+                    // không bằng vạch. Ba vạch cũ chia màn thành các dải rời rạc
+                    // trong khi mọi màn khác của app đã là hệ thẻ.
+                    _AvatarSection(),
+                    const SizedBox(height: 20),
+                    // Khách chưa lưu hành trình: lối lưu đứng trên cùng, vì
+                    // đây là thứ duy nhất ở màn này có thể làm mất dữ liệu nếu
+                    // bị bỏ qua.
+                    const _GuestSaveCard(),
+                    _StatsCard(),
+                    const SizedBox(height: 12),
+                    // Nhắc kỳ thuê bao sắp kết thúc. Đứng NGAY TRÊN thẻ mời nâng
+                    // cấp vì hai thẻ này loại trừ nhau: người đang có gói thấy
+                    // lời nhắc, người chưa có thấy lời mời.
+                    const WrRenewalNoticeCard(),
+                    _PremiumCard(),
+                    _SettingsSection(),
+                    const SizedBox(height: 12),
+                    _OrgSurveyCard(),
+                    const SizedBox(height: 12),
+                    _LogoutButton(),
+                    const SizedBox(height: 8),
+                    _DeleteAccountButton(),
+                    const SizedBox(height: 80),
+                  ]),
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -129,7 +133,15 @@ class _ProfileHeader extends StatelessWidget {
             ),
           // Tên đã nằm ở khối nhận diện căn giữa ngay bên dưới — in lại ở đây
           // là đọc tên người dùng hai lần trong một màn hình.
-          Text(l10n.profileGreeting, style: WrTextStyles.greeting),
+          // Nằm đè lên dải ảnh đầu màn (v55): chữ xám nhạt chìm vào ảnh, nên
+          // dùng navy đậm.
+          Text(
+            l10n.profileGreeting,
+            style: WrTextStyles.greeting.copyWith(
+              color: WrColors.navy,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
