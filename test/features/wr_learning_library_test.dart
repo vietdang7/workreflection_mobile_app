@@ -174,7 +174,7 @@ void main() {
   });
 
   group('Thẻ ở tab Phát triển', () {
-    testWidgets('có tài liệu thì hiện thẻ, bấm vào mở thư viện', (
+    testWidgets('tập mới nhất làm thẻ nổi bật, bấm là phát luôn', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -184,14 +184,51 @@ void main() {
 
       final card = find.byKey(const Key('wr_growth_learning_library'));
       await tester.scrollUntilVisible(card, 200);
-      expect(find.text('Thư viện học tập'), findsOneWidget);
-      expect(find.text('1 video, tài liệu để tự học'), findsOneWidget);
-
       await tester.ensureVisible(card);
       await tester.pumpAndSettle();
-      await tester.tap(find.text('Thư viện học tập'));
+      expect(find.text('Thư viện học tập'), findsOneWidget);
+      expect(find.text('Xem ngay'), findsOneWidget);
+      expect(find.text('9 phút'), findsOneWidget);
+      // Một tài liệu thì không có dải cuộn ngang.
+      expect(find.byKey(const Key('wr_learning_mini_doc1')), findsNothing);
+
+      await tester.tap(find.text('Xem ngay'));
+      await tester.pumpAndSettle();
+      expect(find.text('VideoScreen f0d7658d'), findsOneWidget);
+    });
+
+    testWidgets('"Xem tất cả" mở danh sách', (tester) async {
+      await tester.pumpWidget(
+        _wrap(const WrGrowthScreen(), _FakeLearningRepo([_series])),
+      );
+      await tester.pumpAndSettle();
+
+      final seeAll = find.byKey(const Key('wr_learning_see_all'));
+      await tester.scrollUntilVisible(seeAll, 200);
+      await tester.ensureVisible(seeAll);
+      await tester.pumpAndSettle();
+      await tester.tap(seeAll);
       await tester.pumpAndSettle();
       expect(find.text('LibraryScreen'), findsOneWidget);
+    });
+
+    testWidgets('từ hai tài liệu thì các tập còn lại nằm ở dải cuộn ngang', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(const WrGrowthScreen(), _FakeLearningRepo([_series, _pdf])),
+      );
+      await tester.pumpAndSettle();
+
+      final mini = find.byKey(const Key('wr_learning_mini_doc1'));
+      // Màn có hai vùng cuộn (dọc + dải ngang): chỉ rõ cuộn vùng dọc.
+      await tester.scrollUntilVisible(
+        mini,
+        200,
+        scrollable: find.byType(Scrollable).first,
+      );
+      expect(mini, findsOneWidget);
+      expect(find.text(_pdf.title), findsOneWidget);
     });
 
     testWidgets('thư viện trống thì không có thẻ', (tester) async {
