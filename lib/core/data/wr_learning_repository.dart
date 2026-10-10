@@ -37,7 +37,7 @@ class SupabaseWrLearningRepository implements WrLearningRepository {
         .from('cc_workshop_resources')
         .select(
           'id, title, description, category, resource_type, external_url, '
-          'file_url, thumbnail_url, duration_minutes, created_at',
+          'file_url, duration_minutes, created_at',
         )
         .eq('status', 'active')
         .order('created_at', ascending: false);

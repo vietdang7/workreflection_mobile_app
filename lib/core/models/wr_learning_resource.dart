@@ -5,8 +5,8 @@
 //   • thẻ ở tab Phát triển, cạnh thẻ Trà Chiều;
 //   • trước mắt nhận HẾT tài liệu của thư viện, chưa lọc riêng một series;
 //   • video phát NGAY TRONG APP, không đẩy ra YouTube;
-//   • có ảnh bìa, lấy từ YouTube. Khác Trà Chiều (chữ-only, họp 29/7): lệnh cấm
-//     ảnh ở đó là ảnh workshop của web, còn ảnh bìa là thứ khách xin thêm.
+//   • KHÔNG ảnh bìa: lúc đầu chốt lấy ảnh YouTube, nhưng ảnh mỗi tập một khổ,
+//     cắt vào khung nào cũng lệch — "mất công canh ảnh khi upload lên".
 //
 // Dữ liệu ở `cc_workshop_resources` (trang "Thư viện học tập" của web). Bảng mở
 // đọc cho mọi người với `status = 'active'`. App chỉ đọc — khách thêm tập ở web.
@@ -24,7 +24,6 @@ class LearningResource {
     this.resourceType,
     this.externalUrl,
     this.fileUrl,
-    this.thumbnailUrl,
     this.durationMinutes,
     this.createdAt,
   });
@@ -38,7 +37,6 @@ class LearningResource {
         resourceType: _blankToNull(json['resource_type']),
         externalUrl: _blankToNull(json['external_url']),
         fileUrl: _blankToNull(json['file_url']),
-        thumbnailUrl: _blankToNull(json['thumbnail_url']),
         durationMinutes: (json['duration_minutes'] as num?)?.toInt(),
         createdAt: json['created_at'] == null
             ? null
@@ -54,7 +52,6 @@ class LearningResource {
   final String? resourceType;
   final String? externalUrl;
   final String? fileUrl;
-  final String? thumbnailUrl;
   final int? durationMinutes;
   final DateTime? createdAt;
 
@@ -65,17 +62,6 @@ class LearningResource {
   String? get youtubeId => youtubeVideoId(url);
 
   bool get isVideo => resourceType == 'video' || youtubeId != null;
-
-  /// Ảnh bìa: ảnh web đã đặt, không có thì lấy ảnh của YouTube.
-  ///
-  /// `hqdefault` có cho MỌI video; `maxresdefault` chỉ có khi video tải lên ở
-  /// độ phân giải cao, thiếu thì YouTube trả ảnh xám 120×90 chứ không báo lỗi.
-  String? get coverUrl =>
-      thumbnailUrl ??
-      switch (youtubeId) {
-        final id? => 'https://i.ytimg.com/vi/$id/hqdefault.jpg',
-        null => null,
-      };
 
   /// Nhãn loại: "Video" / "Tài liệu".
   String get kindLabel =>

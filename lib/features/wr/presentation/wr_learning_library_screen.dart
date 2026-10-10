@@ -19,6 +19,7 @@ import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../core/widgets/wr_detail_scaffold.dart';
 import '../../../core/widgets/wr_hero_header.dart';
+import '../../../core/widgets/wr_link_row.dart';
 
 /// Nhãn chương trình — dùng chung cho thẻ ở tab Phát triển và màn danh sách.
 String get kLearningLibraryLabel => tr('Thư viện học tập', 'Learning library');
@@ -128,7 +129,12 @@ class _Notice extends StatelessWidget {
   }
 }
 
-/// Một tài liệu: ảnh bìa, nhãn, tiêu đề, hai dòng mô tả, thời lượng.
+/// Một tài liệu: dấu phát + tiêu đề, không gì khác.
+///
+/// Người dùng 10/10, hai lần gọt: bỏ ảnh bìa (ảnh mỗi tập một khổ, "mất công
+/// canh ảnh khi upload"), rồi bỏ cả nhãn danh mục, mô tả, thời lượng ("mất cân
+/// đối, khó đọc, nhiều chữ — hiển thị tiêu đề là được"). Mô tả vẫn đọc được ở
+/// màn xem video.
 class _ResourceCard extends StatelessWidget {
   const _ResourceCard({required this.resource});
 
@@ -136,136 +142,53 @@ class _ResourceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final meta = [resource.kindLabel, ?resource.durationLabel].join(' · ');
-
     return WrCard(
       key: Key('wr_learning_resource_${resource.id}'),
-      padding: EdgeInsets.zero,
       onTap: () => openLearningResource(context, resource),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          LearningCover(resource: resource),
-          Padding(
-            padding: WrCard.kPadding,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                if (resource.category != null) ...[
-                  _CategoryPill(resource.category!),
-                  const SizedBox(height: 8),
-                ],
-                Text(
-                  resource.title,
-                  style: const TextStyle(
-                    fontSize: 16.5,
-                    fontWeight: FontWeight.w700,
-                    color: WrColors.navy,
-                    height: 1.4,
-                  ),
-                ),
-                if (resource.description != null) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    resource.description!,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      fontSize: 14.5,
-                      color: WrColors.muted,
-                      height: 1.55,
-                    ),
-                  ),
-                ],
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Icon(
-                      resource.isVideo
-                          ? Icons.play_circle_outline
-                          : Icons.open_in_new,
-                      size: 16,
-                      color: WrColors.coral,
-                    ),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        meta,
-                        style: TextStyle(fontSize: 13.5, color: WrColors.muted),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
+          LearningPlayMark(resource: resource, size: 38),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Text(
+              resource.title,
+              style: const TextStyle(
+                fontSize: 15.5,
+                fontWeight: FontWeight.w600,
+                color: WrColors.navy,
+                height: 1.4,
+              ),
             ),
           ),
+          const SizedBox(width: 8),
+          const Icon(Icons.arrow_forward_ios, size: 13, color: WrColors.muted),
         ],
       ),
     );
   }
 }
 
-/// Ảnh bìa 16:9. Không có ảnh hoặc tải hỏng thì ra một ô navy nhạt có nút phát,
-/// để thẻ không co lại thành một khoảng trống.
-class LearningCover extends StatelessWidget {
-  const LearningCover({
-    super.key,
-    required this.resource,
-    this.showPlay = true,
-  });
+/// Dấu tròn coral thay cho ảnh bìa: nút phát cho video, mũi tên ra ngoài cho
+/// tài liệu khác. Nút coral chữ navy — quy ước nút chính của app.
+class LearningPlayMark extends StatelessWidget {
+  const LearningPlayMark({super.key, required this.resource, this.size = 44});
 
   final LearningResource resource;
-
-  /// Tắt khi nơi dùng tự vẽ nút phát to hơn (thẻ nổi bật ở tab Phát triển).
-  final bool showPlay;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
-    final cover = resource.coverUrl;
-    final placeholder = ColoredBox(
-      color: WrColors.navy.withValues(alpha: 0.08),
-      child: Center(
-        child: Icon(
-          resource.isVideo ? Icons.play_circle_outline : Icons.menu_book,
-          size: 40,
-          color: WrColors.navy.withValues(alpha: 0.5),
-        ),
+    return Container(
+      width: size,
+      height: size,
+      decoration: const BoxDecoration(
+        color: WrColors.coral,
+        shape: BoxShape.circle,
       ),
-    );
-
-    return AspectRatio(
-      aspectRatio: 16 / 9,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          if (cover == null)
-            placeholder
-          else
-            Image.network(
-              cover,
-              key: const Key('wr_learning_cover'),
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => placeholder,
-              loadingBuilder: (context, child, progress) =>
-                  progress == null ? child : placeholder,
-            ),
-          if (showPlay && cover != null && resource.isVideo)
-            Center(
-              child: Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  color: WrColors.navy.withValues(alpha: 0.72),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.play_arrow_rounded,
-                  size: 32,
-                  color: WrColors.white,
-                ),
-              ),
-            ),
-        ],
+      child: Icon(
+        resource.isVideo ? Icons.play_arrow_rounded : Icons.open_in_new,
+        size: resource.isVideo ? size * 0.6 : size * 0.45,
+        color: WrColors.navy,
       ),
     );
   }
@@ -414,14 +337,16 @@ class _YoutubeViewState extends State<_YoutubeView> {
 // ---------------------------------------------------------------------------
 // Khối Thư viện học tập ở tab Phát triển
 //
-// Người dùng 10/10: bản thẻ trắng một dòng "cơ bản quá, không có ấn tượng gì".
-// Bản này đưa tập mới nhất lên làm video nổi bật, theo ngôn ngữ màu nước của
-// mockup v55: ảnh bìa lớn tan dần vào nền kem (giống `.hero-scrim`), không cắt
-// cạnh cứng giữa ảnh và chữ. Kem chứ không navy: thẻ Trà Chiều navy nằm ngay
-// trên, hai khối navy chồng nhau thì nặng.
+// Người dùng 10/10, hai vòng:
+//   1. thẻ trắng một dòng "cơ bản quá, không có ấn tượng gì";
+//   2. thẻ lớn dọc (ảnh bìa nửa thẻ + mô tả + nút to) "đẹp mắt hơn nhưng to và
+//      chiếm chỗ quá".
+//   3. bỏ luôn ảnh bìa: "mất công canh ảnh khi upload lên cho phù hợp".
+// Bản này: MỘT thẻ nền kem cao cỡ một dòng chủ đề — dấu phát coral, nhãn,
+// tiêu đề. Các tập khác nằm sau "Xem tất cả".
 //
-// Bấm thẻ là PHÁT LUÔN tập đó — một chạm tới video. "Xem tất cả" mới mở danh
-// sách. Từ hai tài liệu trở lên thì có thêm một dải cuộn ngang các tập còn lại.
+// Bấm thẻ là PHÁT LUÔN tập mới nhất. Kem chứ không navy: thẻ Trà Chiều navy
+// nằm ngay trên, hai khối navy chồng nhau thì nặng.
 // ---------------------------------------------------------------------------
 
 class WrLearningLibrarySection extends StatelessWidget {
@@ -432,39 +357,30 @@ class WrLearningLibrarySection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final newest = items.first;
-    final rest = items.skip(1).toList();
-
-    // Tiêu đề đứng riêng một hàng, "Xem tất cả" đi cùng hàng nhãn nhỏ phía
-    // trên: chung hàng với tiêu đề thì máy để cỡ chữ lớn bị gãy "Thư viện
-    // học / tập" (máy thật 10/10).
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Row(
           children: [
             Expanded(
-              child: Text(
-                tr('HỌC MỌI LÚC', 'LEARN ANYTIME'),
-                style: const TextStyle(
-                  fontSize: 11.5,
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 1.2,
-                  color: WrColors.coral,
-                ),
-              ),
+              child: Text(kLearningLibraryLabel, style: WrLinkRow.labelStyle),
             ),
             InkWell(
               key: const Key('wr_learning_see_all'),
               borderRadius: BorderRadius.circular(8),
               onTap: () => context.push('/wr/learning-library'),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      tr('Xem tất cả', 'See all'),
+                      items.length > 1
+                          ? tr(
+                              'Xem tất cả (${items.length})',
+                              'See all (${items.length})',
+                            )
+                          : tr('Xem tất cả', 'See all'),
                       style: const TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w600,
@@ -482,37 +398,15 @@ class WrLearningLibrarySection extends StatelessWidget {
             ),
           ],
         ),
-        const SizedBox(height: 2),
-        Text(
-          kLearningLibraryLabel,
-          style: const TextStyle(
-            fontSize: 19,
-            fontWeight: FontWeight.w700,
-            color: WrColors.navy,
-            height: 1.3,
-          ),
-        ),
-        const SizedBox(height: 12),
-        _FeaturedCard(resource: newest),
-        if (rest.isNotEmpty) ...[
-          const SizedBox(height: 12),
-          SizedBox(
-            height: 156,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              clipBehavior: Clip.none,
-              itemCount: rest.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 10),
-              itemBuilder: (context, i) => _MiniCard(resource: rest[i]),
-            ),
-          ),
-        ],
+        const SizedBox(height: 8),
+        _FeaturedCard(resource: items.first),
       ],
     );
   }
 }
 
-/// Màu kem của các lớp tan ảnh trong mockup v55 (`rgba(255,247,238,…)`).
+/// Màu kem của mockup v55 (`rgba(255,247,238,…)`) — tách thẻ này khỏi các thẻ
+/// trắng và thẻ Trà Chiều navy ngay trên.
 const Color _kCreamWash = Color(0xFFFFF7EE);
 
 class _FeaturedCard extends StatelessWidget {
@@ -525,196 +419,74 @@ class _FeaturedCard extends StatelessWidget {
     final isNew =
         resource.createdAt != null &&
         DateTime.now().difference(resource.createdAt!).inDays <= 30;
+    final meta = [
+      resource.kindLabel.toUpperCase(),
+      ?resource.durationLabel?.toUpperCase(),
+    ].join(' · ');
 
-    return Container(
+    return Material(
       key: const Key('wr_growth_learning_library'),
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: _kCreamWash,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: [
-          BoxShadow(
-            color: WrColors.navy.withValues(alpha: 0.10),
-            blurRadius: 18,
-            offset: const Offset(0, 6),
-          ),
-        ],
+      color: _kCreamWash,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(WrCard.kRadius),
+        side: const BorderSide(color: WrColors.line),
       ),
-      child: Material(
-        type: MaterialType.transparency,
-        child: InkWell(
-          onTap: () => openLearningResource(context, resource),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => openLearningResource(context, resource),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+          child: Row(
             children: [
-              Stack(
-                children: [
-                  LearningCover(resource: resource, showPlay: false),
-                  // Ảnh tan vào nền kem ở 40% dưới — không có đường cắt.
-                  Positioned.fill(
-                    child: DecoratedBox(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          stops: const [0, 0.6, 1],
-                          colors: [
-                            _kCreamWash.withValues(alpha: 0),
-                            _kCreamWash.withValues(alpha: 0),
-                            _kCreamWash,
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                  // Không đặt nút phát giữa ảnh: ảnh bìa của khách đã in sẵn
-                  // tên tập ở giữa, nút tròn che mất (máy thật 10/10). Nút
-                  // "Xem ngay" bên dưới đã nói việc bấm để xem.
-                  if (isNew)
-                    Positioned(
-                      top: 12,
-                      left: 12,
-                      child: _Chip(
-                        label: tr('MỚI', 'NEW'),
-                        background: WrColors.coral,
-                        foreground: WrColors.navy,
-                      ),
-                    ),
-                  if (resource.durationLabel != null)
-                    Positioned(
-                      top: 12,
-                      right: 12,
-                      child: _Chip(
-                        label: resource.durationLabel!,
-                        icon: Icons.schedule,
-                        background: WrColors.navy.withValues(alpha: 0.78),
-                        foreground: WrColors.white,
-                      ),
-                    ),
-                ],
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
+              LearningPlayMark(resource: resource, size: 46),
+              const SizedBox(width: 14),
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      [
-                        resource.kindLabel.toUpperCase(),
-                        ?resource.category,
-                      ].join(' · '),
-                      style: const TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 0.8,
-                        color: WrColors.teal,
-                      ),
+                    Row(
+                      children: [
+                        if (isNew) ...[
+                          _Chip(
+                            label: tr('MỚI', 'NEW'),
+                            background: WrColors.coral,
+                            foreground: WrColors.navy,
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                        Flexible(
+                          child: Text(
+                            meta,
+                            style: const TextStyle(
+                              fontSize: 11.5,
+                              fontWeight: FontWeight.w700,
+                              letterSpacing: 0.8,
+                              color: WrColors.teal,
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 5),
                     Text(
                       resource.title,
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        fontSize: 17,
+                        fontSize: 15,
                         fontWeight: FontWeight.w700,
                         color: WrColors.navy,
                         height: 1.38,
                       ),
                     ),
-                    if (resource.description != null) ...[
-                      const SizedBox(height: 6),
-                      Text(
-                        resource.description!,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: WrColors.muted,
-                          height: 1.5,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 14),
-                    // Nút coral chữ navy — quy ước nút chính của app.
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: WrColors.coral,
-                        borderRadius: BorderRadius.circular(100),
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            resource.isVideo
-                                ? Icons.play_arrow_rounded
-                                : Icons.open_in_new,
-                            size: 20,
-                            color: WrColors.navy,
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            resource.isVideo
-                                ? tr('Xem ngay', 'Watch now')
-                                : tr('Mở tài liệu', 'Open'),
-                            style: const TextStyle(
-                              fontSize: 14.5,
-                              fontWeight: FontWeight.w700,
-                              color: WrColors.navy,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
                   ],
                 ),
               ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Một tập trong dải cuộn ngang: ảnh bìa nhỏ + hai dòng tiêu đề.
-class _MiniCard extends StatelessWidget {
-  const _MiniCard({required this.resource});
-
-  final LearningResource resource;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 172,
-      child: Material(
-        color: WrColors.white,
-        borderRadius: BorderRadius.circular(16),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          key: Key('wr_learning_mini_${resource.id}'),
-          onTap: () => openLearningResource(context, resource),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              LearningCover(resource: resource),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(10, 8, 10, 0),
-                child: Text(
-                  resource.title,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w600,
-                    color: WrColors.navy,
-                    height: 1.35,
-                  ),
-                ),
+              const SizedBox(width: 6),
+              const Icon(
+                Icons.arrow_forward_ios,
+                size: 13,
+                color: WrColors.muted,
               ),
             ],
           ),
@@ -729,39 +501,28 @@ class _Chip extends StatelessWidget {
     required this.label,
     required this.background,
     required this.foreground,
-    this.icon,
   });
 
   final String label;
   final Color background;
   final Color foreground;
-  final IconData? icon;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(100),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 13, color: foreground),
-            const SizedBox(width: 4),
-          ],
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.4,
-              color: foreground,
-            ),
-          ),
-        ],
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11.5,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.4,
+          color: foreground,
+        ),
       ),
     );
   }

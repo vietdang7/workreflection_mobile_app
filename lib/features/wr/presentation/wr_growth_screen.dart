@@ -702,7 +702,7 @@ class _LearningLibrarySliver extends ConsumerWidget {
         ref.watch(wrLearningResourcesProvider).valueOrNull ?? const [];
     if (items.isEmpty) return const SizedBox.shrink();
     return Padding(
-      padding: const EdgeInsets.only(top: 26),
+      padding: const EdgeInsets.only(top: 22),
       child: WrLearningLibrarySection(items: items),
     );
   }

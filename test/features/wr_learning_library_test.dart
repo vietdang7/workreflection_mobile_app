@@ -20,6 +20,12 @@ import '../support/fake_wr_content_repository.dart';
 import '../support/fake_wr_episode_repository.dart';
 import '../support/fake_wr_intelligence_repository.dart';
 
+/// Ảnh tải từ mạng — ảnh đầu trang (asset) của màn thì được phép.
+final _networkImages = find.byWidgetPredicate(
+  (w) => w is Image && w.image is NetworkImage,
+  skipOffstage: false,
+);
+
 class _FakeLearningRepo implements WrLearningRepository {
   _FakeLearningRepo(this.items, {this.fail = false});
 
@@ -126,26 +132,9 @@ void main() {
   });
 
   group('LearningResource', () {
-    test('không có ảnh web đặt thì lấy ảnh bìa của YouTube', () {
-      expect(
-        _series.coverUrl,
-        'https://i.ytimg.com/vi/iKs4vZjT7rs/hqdefault.jpg',
-      );
-    });
-
-    test('ảnh web đã đặt thì ưu tiên ảnh đó', () {
-      final custom = LearningResource.fromJson({
-        'id': 'x',
-        'title': 'T',
-        'external_url': 'https://youtu.be/iKs4vZjT7rs',
-        'thumbnail_url': 'https://cdn.example/bia.jpg',
-      });
-      expect(custom.coverUrl, 'https://cdn.example/bia.jpg');
-    });
-
-    test('tài liệu không phải video thì không bịa ảnh bìa', () {
-      expect(_pdf.coverUrl, isNull);
+    test('tài liệu không phải YouTube thì không phải video, mở link file', () {
       expect(_pdf.isVideo, isFalse);
+      expect(_pdf.youtubeId, isNull);
       expect(_pdf.url, 'https://cdn.example/so-tay.pdf');
     });
 
@@ -174,9 +163,7 @@ void main() {
   });
 
   group('Thẻ ở tab Phát triển', () {
-    testWidgets('tập mới nhất làm thẻ nổi bật, bấm là phát luôn', (
-      tester,
-    ) async {
+    testWidgets('tập mới nhất làm thẻ, bấm là phát luôn', (tester) async {
       await tester.pumpWidget(
         _wrap(const WrGrowthScreen(), _FakeLearningRepo([_series])),
       );
@@ -187,12 +174,12 @@ void main() {
       await tester.ensureVisible(card);
       await tester.pumpAndSettle();
       expect(find.text('Thư viện học tập'), findsOneWidget);
-      expect(find.text('Xem ngay'), findsOneWidget);
-      expect(find.text('9 phút'), findsOneWidget);
-      // Một tài liệu thì không có dải cuộn ngang.
-      expect(find.byKey(const Key('wr_learning_mini_doc1')), findsNothing);
+      expect(find.text('VIDEO · 9 PHÚT'), findsOneWidget);
+      expect(find.text(_series.title), findsOneWidget);
+      // Không ảnh bìa (người dùng 10/10): không một Image mạng nào.
+      expect(_networkImages, findsNothing);
 
-      await tester.tap(find.text('Xem ngay'));
+      await tester.tap(find.text(_series.title));
       await tester.pumpAndSettle();
       expect(find.text('VideoScreen f0d7658d'), findsOneWidget);
     });
@@ -212,7 +199,7 @@ void main() {
       expect(find.text('LibraryScreen'), findsOneWidget);
     });
 
-    testWidgets('từ hai tài liệu thì các tập còn lại nằm ở dải cuộn ngang', (
+    testWidgets('từ hai tài liệu thì "Xem tất cả" kèm số, chỉ một thẻ', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -220,15 +207,10 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      final mini = find.byKey(const Key('wr_learning_mini_doc1'));
-      // Màn có hai vùng cuộn (dọc + dải ngang): chỉ rõ cuộn vùng dọc.
-      await tester.scrollUntilVisible(
-        mini,
-        200,
-        scrollable: find.byType(Scrollable).first,
-      );
-      expect(mini, findsOneWidget);
-      expect(find.text(_pdf.title), findsOneWidget);
+      final seeAll = find.byKey(const Key('wr_learning_see_all'));
+      await tester.scrollUntilVisible(seeAll, 200);
+      expect(find.text('Xem tất cả (2)'), findsOneWidget);
+      expect(find.text(_pdf.title, skipOffstage: false), findsNothing);
     });
 
     testWidgets('thư viện trống thì không có thẻ', (tester) async {
@@ -266,7 +248,7 @@ void main() {
   });
 
   group('Màn Thư viện học tập', () {
-    testWidgets('mỗi tài liệu một thẻ có ảnh bìa, tiêu đề, nhãn, thời lượng', (
+    testWidgets('mỗi tài liệu chỉ hiện tiêu đề — không ảnh, không mô tả', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -278,17 +260,12 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text(_series.title), findsOneWidget);
-      expect(find.text('Communication'), findsOneWidget);
-      expect(find.text('Video · 9 phút'), findsOneWidget);
-      // Ảnh bìa YouTube cho video; tài liệu không ảnh thì ra ô thay thế.
-      final covers = tester.widgetList<Image>(
-        find.byKey(const Key('wr_learning_cover'), skipOffstage: false),
-      );
-      expect(covers, hasLength(1));
-      expect(
-        (covers.single.image as NetworkImage).url,
-        'https://i.ytimg.com/vi/iKs4vZjT7rs/hqdefault.jpg',
-      );
+      expect(find.text(_pdf.title), findsOneWidget);
+      // Người dùng 10/10: "hiển thị tiêu đề là được rồi".
+      expect(find.text('Communication'), findsNothing);
+      expect(find.text('Video · 9 phút'), findsNothing);
+      expect(find.textContaining('hệ sinh của WorkReflection'), findsNothing);
+      expect(_networkImages, findsNothing);
     });
 
     testWidgets('bấm video YouTube thì mở màn phát trong app', (tester) async {
