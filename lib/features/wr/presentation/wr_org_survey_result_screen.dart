@@ -26,6 +26,7 @@ import '../../../core/logic/wr_org_survey_scoring.dart';
 import '../../../core/models/wr_org_survey.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
+import '../../../core/widgets/wr_hero_header.dart';
 import '../org_survey_providers.dart';
 
 class WrOrgSurveyResultScreen extends ConsumerWidget {
@@ -47,45 +48,51 @@ class WrOrgSurveyResultScreen extends ConsumerWidget {
         : null;
     final data = response ?? latestAsync?.valueOrNull;
 
-    return Scaffold(
-      backgroundColor: WrColors.pageBg,
-      appBar: AppBar(
-        backgroundColor: WrColors.pageBg,
-        elevation: 0,
-        foregroundColor: WrColors.navy,
-        automaticallyImplyLeading: false,
-        actions: [
-          TextButton(
-            key: const Key('wr_org_survey_result_close'),
-            onPressed: () {
-              if (context.canPop()) {
-                context.pop();
-              } else {
-                context.go('/profile');
-              }
-            },
-            child: Text(
-              tr('Đóng', 'Close'),
-              style: TextStyle(fontSize: 14, color: WrColors.muted),
+    return WrInnerBandBackdrop(
+      art: WrHeroArt.understand,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          scrolledUnderElevation: 0,
+          elevation: 0,
+          foregroundColor: WrColors.navy,
+          automaticallyImplyLeading: false,
+          actions: [
+            TextButton(
+              key: const Key('wr_org_survey_result_close'),
+              onPressed: () {
+                if (context.canPop()) {
+                  context.pop();
+                } else {
+                  context.go('/profile');
+                }
+              },
+              child: Text(
+                tr('Đóng', 'Close'),
+                style: TextStyle(fontSize: 14, color: WrColors.muted),
+              ),
             ),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: data != null
-            ? _Result(response: data)
-            : latestAsync == null || latestAsync.isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : latestAsync.hasError
-            ? _LoadError(
-                message: tr(
-                  'Chưa tải được kết quả của bạn.',
-                  'Could not load your results.',
-                ),
-                onRetry: () => ref.invalidate(wrOrgSurveyLatestOrThrowProvider),
-                retryKey: const Key('wr_org_survey_result_retry'),
-              )
-            : const _Empty(),
+          ],
+        ),
+        body: SafeArea(
+          child: data != null
+              ? _Result(response: data)
+              : latestAsync == null || latestAsync.isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : latestAsync.hasError
+              ? _LoadError(
+                  message: tr(
+                    'Chưa tải được kết quả của bạn.',
+                    'Could not load your results.',
+                  ),
+                  onRetry: () =>
+                      ref.invalidate(wrOrgSurveyLatestOrThrowProvider),
+                  retryKey: const Key('wr_org_survey_result_retry'),
+                )
+              : const _Empty(),
+        ),
       ),
     );
   }

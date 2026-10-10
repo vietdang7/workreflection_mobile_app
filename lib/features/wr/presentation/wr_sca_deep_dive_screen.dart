@@ -23,6 +23,7 @@ import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_paragraph.dart';
+import '../../../core/widgets/wr_hero_header.dart';
 import '../wr_providers.dart';
 import 'wr_discover_screen.dart' show WrPatternRow;
 
@@ -67,25 +68,30 @@ class WrScaDeepDiveScreen extends ConsumerWidget {
         ref.watch(wrEntitlementProvider).valueOrNull ??
         WrEntitlement(plan: WrPlan.free);
 
-    return Scaffold(
-      backgroundColor: WrColors.pageBg,
-      appBar: AppBar(
-        backgroundColor: WrColors.pageBg,
-        elevation: 0,
-        foregroundColor: WrColors.navy,
-        title: Text(
-          tr('Diễn giải sâu & xu hướng', 'Deep reading & trends'),
-          style: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-            color: WrColors.navy,
+    return WrInnerBandBackdrop(
+      art: WrHeroArt.understand,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          scrolledUnderElevation: 0,
+          elevation: 0,
+          foregroundColor: WrColors.navy,
+          title: Text(
+            tr('Diễn giải sâu & xu hướng', 'Deep reading & trends'),
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: WrColors.navy,
+            ),
           ),
         ),
-      ),
-      body: SafeArea(
-        child: entitlement.canUseFeature(WrPremiumFeature.selfCheckDeepDive)
-            ? const _Body()
-            : const _Locked(),
+        body: SafeArea(
+          child: entitlement.canUseFeature(WrPremiumFeature.selfCheckDeepDive)
+              ? const _Body()
+              : const _Locked(),
+        ),
       ),
     );
   }

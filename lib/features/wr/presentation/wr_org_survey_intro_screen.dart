@@ -20,6 +20,7 @@ import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../org_survey_providers.dart';
 import '../../../core/widgets/wr_title_text.dart';
+import '../../../core/widgets/wr_hero_header.dart';
 
 class WrOrgSurveyIntroScreen extends ConsumerWidget {
   const WrOrgSurveyIntroScreen({super.key});
@@ -59,244 +60,255 @@ class WrOrgSurveyIntroScreen extends ConsumerWidget {
     // hành sửa được, và một màn hứa 13 câu rồi hỏi 11 câu là màn nói dối.
     final total = questions.isEmpty ? null : questions.length + 2;
 
-    return Scaffold(
-      backgroundColor: WrColors.pageBg,
-      appBar: AppBar(
-        backgroundColor: WrColors.pageBg,
-        elevation: 0,
-        foregroundColor: WrColors.navy,
-        title: Text(
-          tr('Khảo sát tổ chức', 'Organisation survey'),
-          style: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-            color: WrColors.navy,
+    return WrInnerBandBackdrop(
+      art: WrHeroArt.understand,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          scrolledUnderElevation: 0,
+          elevation: 0,
+          foregroundColor: WrColors.navy,
+          title: Text(
+            tr('Khảo sát tổ chức', 'Organisation survey'),
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: WrColors.navy,
+            ),
           ),
         ),
-      ),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(22, 8, 22, 32),
-          children: [
-            WrEyebrow(
-              tr(
-                'TUỲ CHỌN, TÁCH RIÊNG KHỎI REFLECTION',
-                'OPTIONAL, SEPARATE FROM REFLECTION',
+        body: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(22, 8, 22, 32),
+            children: [
+              WrEyebrow(
+                tr(
+                  'TUỲ CHỌN, TÁCH RIÊNG KHỎI REFLECTION',
+                  'OPTIONAL, SEPARATE FROM REFLECTION',
+                ),
               ),
-            ),
-            const SizedBox(height: 10),
-            Text(
-              tr(
-                'Bạn đang ở đâu so với mặt bằng chung?',
-                'Where do you sit against the wider picture?',
+              const SizedBox(height: 10),
+              Text(
+                tr(
+                  'Bạn đang ở đâu so với mặt bằng chung?',
+                  'Where do you sit against the wider picture?',
+                ),
+                style: TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  height: 1.35,
+                  color: WrColors.navy,
+                ),
               ),
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w700,
-                height: 1.35,
-                color: WrColors.navy,
-              ),
-            ),
-            const SizedBox(height: 18),
+              const SizedBox(height: 18),
 
-            // --- 1 · Được gì ngay ---
-            _Card(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    total == null
-                        ? tr(
-                            'Vài câu ngắn về đãi ngộ, phát triển, sự công bằng và '
-                                'mức hỗ trợ nơi bạn làm việc.',
-                            'A few short questions about pay, growth, fairness and '
-                                'support where you work.',
-                          )
-                        : tr(
-                            'Trả lời $total câu ngắn về đãi ngộ, phát triển, sự '
-                                'công bằng và mức hỗ trợ nơi bạn làm việc.',
-                            '$total short questions about pay, growth, fairness '
-                                'and support where you work.',
-                          ),
-                    style: _bodyStyle,
-                  ),
-                  const SizedBox(height: 14),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
-                    decoration: BoxDecoration(
-                      color: WrColors.teal.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(11),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Icon(
-                          Icons.auto_awesome_outlined,
-                          size: 14,
-                          color: WrColors.pillTealText,
-                        ),
-                        SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            tr(
-                              'Xong là có ngay bản so sánh của riêng bạn, khoảng '
-                                  '5 phút.',
-                              'Finish and your own comparison is ready, about '
-                                  '5 minutes.',
+              // --- 1 · Được gì ngay ---
+              _Card(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      total == null
+                          ? tr(
+                              'Vài câu ngắn về đãi ngộ, phát triển, sự công bằng và '
+                                  'mức hỗ trợ nơi bạn làm việc.',
+                              'A few short questions about pay, growth, fairness and '
+                                  'support where you work.',
+                            )
+                          : tr(
+                              'Trả lời $total câu ngắn về đãi ngộ, phát triển, sự '
+                                  'công bằng và mức hỗ trợ nơi bạn làm việc.',
+                              '$total short questions about pay, growth, fairness '
+                                  'and support where you work.',
                             ),
-                            style: TextStyle(
-                              fontSize: 13.5,
-                              height: 1.5,
-                              fontWeight: FontWeight.w700,
-                              color: WrColors.pillTealText,
-                            ),
-                          ),
-                        ),
-                      ],
+                      style: _bodyStyle,
                     ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // --- 2 · Vì sao rộng hơn ---
-            _Card(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    tr(
-                      'Vì sao câu trả lời của bạn cũng có giá trị rộng hơn',
-                      'Why your answers matter more widely too',
-                    ),
-                    style: TextStyle(
-                      fontSize: 16.5,
-                      fontWeight: FontWeight.w700,
-                      color: WrColors.navy,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    tr(
-                      'Ngoài bản so sánh riêng cho bạn, câu trả lời khi gộp cùng '
-                          'nhiều người khác ở dạng ẩn danh còn giúp xây dựng dữ liệu '
-                          'benchmark ngành, phục vụ nghiên cứu và các công cụ chẩn '
-                          'đoán tổ chức trong tương lai của Cloud & Coral. Đây là '
-                          'phần thưởng thêm, không phải lý do chính để bạn tham gia.',
-                      'Beyond your own comparison, answers pooled anonymously with '
-                          'many others help build industry benchmark data for '
-                          'research and for future organisational diagnostic tools at '
-                          'Cloud & Coral. That is a bonus, not the main reason to '
-                          'take part.',
-                    ),
-                    style: _bodyStyle,
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // --- 3 · Được đảm bảo gì ---
-            _Card(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  WrTitleText(
-                    tr('Điều gì được đảm bảo', 'What is guaranteed'),
-                    style: TextStyle(
-                      fontSize: 16.5,
-                      fontWeight: FontWeight.w700,
-                      color: WrColors.navy,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  for (final g in _guarantees)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 10),
+                    const SizedBox(height: 14),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 10,
+                      ),
+                      decoration: BoxDecoration(
+                        color: WrColors.teal.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(11),
+                      ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Padding(
-                            padding: EdgeInsets.only(top: 2),
-                            child: Icon(
-                              Icons.check,
-                              size: 14,
-                              color: WrColors.teal,
+                          Icon(
+                            Icons.auto_awesome_outlined,
+                            size: 14,
+                            color: WrColors.pillTealText,
+                          ),
+                          SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              tr(
+                                'Xong là có ngay bản so sánh của riêng bạn, khoảng '
+                                    '5 phút.',
+                                'Finish and your own comparison is ready, about '
+                                    '5 minutes.',
+                              ),
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                height: 1.5,
+                                fontWeight: FontWeight.w700,
+                                color: WrColors.pillTealText,
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          Expanded(child: Text(g, style: _bodyStyle)),
                         ],
                       ),
                     ),
-                ],
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 22),
+              const SizedBox(height: 12),
 
-            if (questionsAsync.hasError ||
-                (questionsAsync.hasValue && questions.isEmpty))
-              Padding(
-                padding: EdgeInsets.only(bottom: 12),
-                child: Text(
-                  tr(
-                    'Chưa tải được bộ câu hỏi. Bạn thử lại sau nhé.',
-                    'Could not load the questions. Please try again later.',
+              // --- 2 · Vì sao rộng hơn ---
+              _Card(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tr(
+                        'Vì sao câu trả lời của bạn cũng có giá trị rộng hơn',
+                        'Why your answers matter more widely too',
+                      ),
+                      style: TextStyle(
+                        fontSize: 16.5,
+                        fontWeight: FontWeight.w700,
+                        color: WrColors.navy,
+                      ),
+                    ),
+                    SizedBox(height: 8),
+                    Text(
+                      tr(
+                        'Ngoài bản so sánh riêng cho bạn, câu trả lời khi gộp cùng '
+                            'nhiều người khác ở dạng ẩn danh còn giúp xây dựng dữ liệu '
+                            'benchmark ngành, phục vụ nghiên cứu và các công cụ chẩn '
+                            'đoán tổ chức trong tương lai của Cloud & Coral. Đây là '
+                            'phần thưởng thêm, không phải lý do chính để bạn tham gia.',
+                        'Beyond your own comparison, answers pooled anonymously with '
+                            'many others help build industry benchmark data for '
+                            'research and for future organisational diagnostic tools at '
+                            'Cloud & Coral. That is a bonus, not the main reason to '
+                            'take part.',
+                      ),
+                      style: _bodyStyle,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 12),
+
+              // --- 3 · Được đảm bảo gì ---
+              _Card(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    WrTitleText(
+                      tr('Điều gì được đảm bảo', 'What is guaranteed'),
+                      style: TextStyle(
+                        fontSize: 16.5,
+                        fontWeight: FontWeight.w700,
+                        color: WrColors.navy,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    for (final g in _guarantees)
+                      Padding(
+                        padding: const EdgeInsets.only(bottom: 10),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Padding(
+                              padding: EdgeInsets.only(top: 2),
+                              child: Icon(
+                                Icons.check,
+                                size: 14,
+                                color: WrColors.teal,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(child: Text(g, style: _bodyStyle)),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 22),
+
+              if (questionsAsync.hasError ||
+                  (questionsAsync.hasValue && questions.isEmpty))
+                Padding(
+                  padding: EdgeInsets.only(bottom: 12),
+                  child: Text(
+                    tr(
+                      'Chưa tải được bộ câu hỏi. Bạn thử lại sau nhé.',
+                      'Could not load the questions. Please try again later.',
+                    ),
+                    key: Key('wr_org_survey_questions_error'),
+                    style: TextStyle(fontSize: 14, color: WrColors.coral),
                   ),
-                  key: Key('wr_org_survey_questions_error'),
-                  style: TextStyle(fontSize: 14, color: WrColors.coral),
+                ),
+
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  key: const Key('wr_org_survey_start'),
+                  // Không mở luồng khi chưa có câu hỏi: người dùng sẽ bấm vào một
+                  // màn trống và không hiểu mình vừa làm gì sai.
+                  onPressed: questions.isEmpty
+                      ? null
+                      : () => context.push('/wr/org-survey/flow'),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: WrColors.dark,
+                    foregroundColor: WrColors.white,
+                    disabledBackgroundColor: WrColors.line,
+                    padding: const EdgeInsets.symmetric(vertical: 15),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    questionsAsync.isLoading
+                        ? tr('Đang tải…', 'Loading…')
+                        : tr(
+                            'Bắt đầu, khoảng 5 phút',
+                            'Start, about 5 minutes',
+                          ),
+                    style: const TextStyle(
+                      fontSize: 15.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                 ),
               ),
 
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                key: const Key('wr_org_survey_start'),
-                // Không mở luồng khi chưa có câu hỏi: người dùng sẽ bấm vào một
-                // màn trống và không hiểu mình vừa làm gì sai.
-                onPressed: questions.isEmpty
-                    ? null
-                    : () => context.push('/wr/org-survey/flow'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: WrColors.dark,
-                  foregroundColor: WrColors.white,
-                  disabledBackgroundColor: WrColors.line,
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-                child: Text(
-                  questionsAsync.isLoading
-                      ? tr('Đang tải…', 'Loading…')
-                      : tr('Bắt đầu, khoảng 5 phút', 'Start, about 5 minutes'),
-                  style: const TextStyle(
-                    fontSize: 15.5,
-                    fontWeight: FontWeight.w600,
+              // Đã làm rồi thì cho xem lại ngay từ đây — nếu không, người muốn mở
+              // lại bản so sánh cũ buộc phải làm lại cả bài.
+              if (latest != null) ...[
+                const SizedBox(height: 8),
+                TextButton(
+                  key: const Key('wr_org_survey_view_result'),
+                  onPressed: () => context.push('/wr/org-survey/result'),
+                  child: Text(
+                    tr(
+                      'Xem lại kết quả lần trước',
+                      'See your previous results',
+                    ),
+                    style: TextStyle(fontSize: 14.5, color: WrColors.navy),
                   ),
                 ),
-              ),
-            ),
-
-            // Đã làm rồi thì cho xem lại ngay từ đây — nếu không, người muốn mở
-            // lại bản so sánh cũ buộc phải làm lại cả bài.
-            if (latest != null) ...[
-              const SizedBox(height: 8),
-              TextButton(
-                key: const Key('wr_org_survey_view_result'),
-                onPressed: () => context.push('/wr/org-survey/result'),
-                child: Text(
-                  tr('Xem lại kết quả lần trước', 'See your previous results'),
-                  style: TextStyle(fontSize: 14.5, color: WrColors.navy),
-                ),
-              ),
+              ],
             ],
-          ],
+          ),
         ),
       ),
     );

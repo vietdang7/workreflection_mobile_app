@@ -25,6 +25,7 @@ import '../wr_providers.dart';
 import 'widgets/wr_owned_skills_section.dart';
 import 'wr_jd_builder_screen.dart' show wrJdDraftProvider;
 import '../../../core/widgets/wr_paragraph.dart';
+import '../../../core/widgets/wr_hero_header.dart';
 
 class WrWorkInfoScreen extends ConsumerStatefulWidget {
   const WrWorkInfoScreen({super.key});
@@ -85,152 +86,160 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
       _prefilled = true;
     }
 
-    return Scaffold(
-      backgroundColor: WrColors.pageBg,
-      appBar: AppBar(
-        backgroundColor: WrColors.pageBg,
-        elevation: 0,
-        foregroundColor: WrColors.navy,
-        title: Text(
-          tr('Thông tin công việc', 'Work details'),
-          style: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
-            color: WrColors.navy,
+    return WrInnerBandBackdrop(
+      art: WrHeroArt.grow,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          scrolledUnderElevation: 0,
+          elevation: 0,
+          foregroundColor: WrColors.navy,
+          title: Text(
+            tr('Thông tin công việc', 'Work details'),
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: WrColors.navy,
+            ),
           ),
         ),
-      ),
-      body: SafeArea(
-        child: ListView(
-          padding: const EdgeInsets.fromLTRB(22, 8, 22, 32),
-          children: [
-            WrParagraph(
-              tr(
-                'Chia sẻ vai trò hiện tại của bạn. Dựa vào đây, các bài thực hành '
-                    'sẽ được phác thảo riêng cho công việc của bạn.',
-                'Tell us about your current role. From this, the practice exercises '
-                    'are shaped around the job you actually do.',
+        body: SafeArea(
+          child: ListView(
+            padding: const EdgeInsets.fromLTRB(22, 8, 22, 32),
+            children: [
+              WrParagraph(
+                tr(
+                  'Chia sẻ vai trò hiện tại của bạn. Dựa vào đây, các bài thực hành '
+                      'sẽ được phác thảo riêng cho công việc của bạn.',
+                  'Tell us about your current role. From this, the practice exercises '
+                      'are shaped around the job you actually do.',
+                ),
+                style: TextStyle(
+                  fontSize: 14.5,
+                  height: 1.65,
+                  color: WrColors.muted,
+                ),
               ),
-              style: TextStyle(
-                fontSize: 14.5,
-                height: 1.65,
-                color: WrColors.muted,
-              ),
-            ),
-            const SizedBox(height: 20),
+              const SizedBox(height: 20),
 
-            WrEyebrow(
-              tr('VỊ TRÍ / CHỨC DANH HIỆN TẠI', 'CURRENT ROLE / JOB TITLE'),
-            ),
-            const SizedBox(height: 10),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: WrColors.white,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: WrColors.line),
+              WrEyebrow(
+                tr('VỊ TRÍ / CHỨC DANH HIỆN TẠI', 'CURRENT ROLE / JOB TITLE'),
               ),
-              child: TextField(
-                key: const Key('wr_work_info_field'),
-                controller: _controller,
-                minLines: 3,
-                maxLines: 6,
-                style: const TextStyle(
-                  fontSize: 16.5,
-                  color: WrColors.navy,
-                  height: 1.6,
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
                 ),
-                decoration: InputDecoration(
-                  border: InputBorder.none,
-                  hintText: tr(
-                    'Ví dụ: trưởng nhóm nội dung, quản lý 4 bạn, làm việc '
-                        'nhiều với phòng kinh doanh',
-                    'For example: content team lead, managing 4 people, '
-                        'working closely with sales',
-                  ),
-                  hintStyle: TextStyle(fontSize: 15.5, color: WrColors.muted),
+                decoration: BoxDecoration(
+                  color: WrColors.white,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: WrColors.line),
                 ),
-                onChanged: (_) => setState(() => _saved = false),
-              ),
-            ),
-            const SizedBox(height: 14),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                key: const Key('wr_work_info_save'),
-                onPressed: _busy ? null : _save,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: WrColors.dark,
-                  foregroundColor: WrColors.white,
-                  padding: const EdgeInsets.symmetric(vertical: 13),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  elevation: 0,
-                ),
-                child: Text(
-                  _busy ? tr('Đang lưu…', 'Saving…') : tr('Lưu', 'Save'),
+                child: TextField(
+                  key: const Key('wr_work_info_field'),
+                  controller: _controller,
+                  minLines: 3,
+                  maxLines: 6,
                   style: const TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w600,
+                    fontSize: 16.5,
+                    color: WrColors.navy,
+                    height: 1.6,
+                  ),
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    hintText: tr(
+                      'Ví dụ: trưởng nhóm nội dung, quản lý 4 bạn, làm việc '
+                          'nhiều với phòng kinh doanh',
+                      'For example: content team lead, managing 4 people, '
+                          'working closely with sales',
+                    ),
+                    hintStyle: TextStyle(fontSize: 15.5, color: WrColors.muted),
+                  ),
+                  onChanged: (_) => setState(() => _saved = false),
+                ),
+              ),
+              const SizedBox(height: 14),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  key: const Key('wr_work_info_save'),
+                  onPressed: _busy ? null : _save,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: WrColors.dark,
+                    foregroundColor: WrColors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 13),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    elevation: 0,
+                  ),
+                  child: Text(
+                    _busy ? tr('Đang lưu…', 'Saving…') : tr('Lưu', 'Save'),
+                    style: const TextStyle(
+                      fontSize: 14.5,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
               ),
-            ),
-            if (_saved) ...[
-              const SizedBox(height: 10),
+              if (_saved) ...[
+                const SizedBox(height: 10),
+                Text(
+                  tr('Đã lưu.', 'Saved.'),
+                  key: Key('wr_work_info_saved'),
+                  style: TextStyle(fontSize: 13.5, color: WrColors.teal),
+                ),
+              ],
+              if (_error != null) ...[
+                const SizedBox(height: 10),
+                Text(
+                  _error!,
+                  style: const TextStyle(fontSize: 13.5, color: WrColors.coral),
+                ),
+              ],
+
+              const SizedBox(height: 28),
+              WrEyebrow(tr('TÀI LIỆU CHI TIẾT', 'DETAILED DOCUMENTS')),
+              const SizedBox(height: 6),
               Text(
-                tr('Đã lưu.', 'Saved.'),
-                key: Key('wr_work_info_saved'),
-                style: TextStyle(fontSize: 13.5, color: WrColors.teal),
+                tr(
+                  'Tải lên file JD (Mô tả công việc) hoặc CV để hệ thống có thêm dữ '
+                      'liệu phân tích. (Không bắt buộc)',
+                  'Upload a JD (job description) or CV so the app has more to work '
+                      'with. (Optional)',
+                ),
+                style: TextStyle(
+                  fontSize: 14.5,
+                  height: 1.65,
+                  color: WrColors.muted,
+                ),
               ),
+              WrLinkRow(
+                key: const Key('wr_work_info_context_docs_row'),
+                label: tr('Tải lên JD hoặc CV của bạn', 'Upload your JD or CV'),
+                onTap: () => context.push('/wr/context-docs'),
+              ),
+
+              // Lối vào DUY NHẤT của "Cùng tạo JD của bạn" (changelog 24/08 §6).
+              //
+              // Đặt ngay dưới ô tải tài liệu là có chủ đích: hai thẻ này trả lời
+              // cùng một câu hỏi ("làm sao app biết công việc thật của tôi"), chỉ
+              // khác ở chỗ người dùng đã có sẵn JD hay chưa. Tách xa nhau thì ai
+              // không có JD sẽ dừng lại ở thẻ tải lên và nghĩ mình không dùng
+              // được phần này.
+              const SizedBox(height: 18),
+              const _JdBuilderCard(),
+
+              // Chứng chỉ, khoá học, kỹ năng đã có (họp khách 01/10/2026).
+              // Đặt dưới khối tài liệu: cùng là "bạn là ai trong công việc",
+              // nhưng đây là thứ người dùng tự khai, không cần tải tài liệu nào.
+              const SizedBox(height: 28),
+              const WrOwnedSkillsSection(),
             ],
-            if (_error != null) ...[
-              const SizedBox(height: 10),
-              Text(
-                _error!,
-                style: const TextStyle(fontSize: 13.5, color: WrColors.coral),
-              ),
-            ],
-
-            const SizedBox(height: 28),
-            WrEyebrow(tr('TÀI LIỆU CHI TIẾT', 'DETAILED DOCUMENTS')),
-            const SizedBox(height: 6),
-            Text(
-              tr(
-                'Tải lên file JD (Mô tả công việc) hoặc CV để hệ thống có thêm dữ '
-                    'liệu phân tích. (Không bắt buộc)',
-                'Upload a JD (job description) or CV so the app has more to work '
-                    'with. (Optional)',
-              ),
-              style: TextStyle(
-                fontSize: 14.5,
-                height: 1.65,
-                color: WrColors.muted,
-              ),
-            ),
-            WrLinkRow(
-              key: const Key('wr_work_info_context_docs_row'),
-              label: tr('Tải lên JD hoặc CV của bạn', 'Upload your JD or CV'),
-              onTap: () => context.push('/wr/context-docs'),
-            ),
-
-            // Lối vào DUY NHẤT của "Cùng tạo JD của bạn" (changelog 24/08 §6).
-            //
-            // Đặt ngay dưới ô tải tài liệu là có chủ đích: hai thẻ này trả lời
-            // cùng một câu hỏi ("làm sao app biết công việc thật của tôi"), chỉ
-            // khác ở chỗ người dùng đã có sẵn JD hay chưa. Tách xa nhau thì ai
-            // không có JD sẽ dừng lại ở thẻ tải lên và nghĩ mình không dùng
-            // được phần này.
-            const SizedBox(height: 18),
-            const _JdBuilderCard(),
-
-            // Chứng chỉ, khoá học, kỹ năng đã có (họp khách 01/10/2026).
-            // Đặt dưới khối tài liệu: cùng là "bạn là ai trong công việc",
-            // nhưng đây là thứ người dùng tự khai, không cần tải tài liệu nào.
-            const SizedBox(height: 28),
-            const WrOwnedSkillsSection(),
-          ],
+          ),
         ),
       ),
     );

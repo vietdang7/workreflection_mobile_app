@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../l10n/wr_tr.dart';
 import '../theme/wr_colors.dart';
 import 'eyebrow.dart';
+import 'wr_hero_header.dart';
 import 'wr_paragraph.dart';
 
 /// Khung chung cho các màn đọc mở từ một dòng danh sách.
@@ -16,19 +17,26 @@ class WrDetailScaffold extends StatelessWidget {
     required this.eyebrow,
     required this.title,
     required this.children,
+    this.art,
   });
 
   final String eyebrow;
   final String title;
   final List<Widget> children;
 
+  /// Tab cha của màn. Có thì đầu màn có dải ảnh của tab đó (`decorateInner`
+  /// của mockup v55); không có thì giữ nền trơn như cũ.
+  final WrHeroArt? art;
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: WrColors.pageBg,
+    final banded = art != null;
+    final scaffold = Scaffold(
+      backgroundColor: banded ? Colors.transparent : WrColors.pageBg,
       appBar: AppBar(
-        backgroundColor: WrColors.pageBg,
-        surfaceTintColor: WrColors.white,
+        backgroundColor: banded ? Colors.transparent : WrColors.pageBg,
+        surfaceTintColor: banded ? Colors.transparent : WrColors.white,
+        scrolledUnderElevation: banded ? 0 : null,
         elevation: 0,
         leading: IconButton(
           key: const Key('wr_detail_back'),
@@ -61,5 +69,6 @@ class WrDetailScaffold extends StatelessWidget {
         ),
       ),
     );
+    return banded ? WrInnerBandBackdrop(art: art!, child: scaffold) : scaffold;
   }
 }

@@ -783,8 +783,11 @@ void main() {
         _wrap(const WrTraChieuScreen(), workshops: workshops),
       );
 
-      expect(find.byType(Image), findsNothing);
+      expect(_contentImages, findsNothing);
       expect(find.byType(NetworkImage), findsNothing);
+      // Dải ảnh đầu màn của mockup v55 (10/10) là trang trí của app, không
+      // phải ảnh lấy từ web; khách tự đặt nó trong mockup cho màn này.
+      expect(find.byKey(const Key('wr_reflect_band_tab_act')), findsOneWidget);
     });
 
     testWidgets('ba luật và phần vì sao đều có mặt', (tester) async {
@@ -862,7 +865,7 @@ void main() {
 
       expect(find.text('"Buổi A"'), findsOneWidget);
       expect(find.text('"Buổi B"'), findsOneWidget);
-      expect(find.byType(Image), findsNothing);
+      expect(_contentImages, findsNothing);
     });
 
     // Khách 2026-07-30: "để chạm vào là chuyển như vậy dễ chạm nhầm lắm, chỉ
@@ -1751,3 +1754,9 @@ void main() {
     });
   });
 }
+
+/// Mọi ảnh trên màn trừ dải ảnh đầu màn (ảnh asset của app). Thứ bị cấm là
+/// ảnh nội dung: ảnh workshop của web, ảnh tải qua mạng.
+final _contentImages = find.byWidgetPredicate(
+  (w) => w is Image && w.image is! AssetImage,
+);

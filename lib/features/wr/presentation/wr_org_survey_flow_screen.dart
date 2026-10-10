@@ -24,6 +24,7 @@ import '../../profile/profile_providers.dart';
 import '../../../core/models/wr_org_survey.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
+import '../../../core/widgets/wr_hero_header.dart';
 import '../org_survey_providers.dart';
 
 class WrOrgSurveyFlowScreen extends ConsumerStatefulWidget {
@@ -198,85 +199,88 @@ class _WrOrgSurveyFlowScreenState extends ConsumerState<WrOrgSurveyFlowScreen> {
     final isIndustry = _index == 0;
     final isEnps = _index >= questions.length + 1;
 
-    return Scaffold(
-      backgroundColor: WrColors.pageBg,
-      body: SafeArea(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _TopBar(
-              progress: (_index + 1) / total,
-              onBack: _submitting ? null : _back,
-              onClose: _submitting ? null : _close,
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(22, 18, 22, 0),
-              child: WrEyebrow(
-                isEnps
-                    ? tr(
-                        'CÂU $total / $total, CÂU CUỐI',
-                        'QUESTION $total / $total, THE LAST ONE',
+    return WrInnerBandBackdrop(
+      art: WrHeroArt.understand,
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _TopBar(
+                progress: (_index + 1) / total,
+                onBack: _submitting ? null : _back,
+                onClose: _submitting ? null : _close,
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(22, 18, 22, 0),
+                child: WrEyebrow(
+                  isEnps
+                      ? tr(
+                          'CÂU $total / $total, CÂU CUỐI',
+                          'QUESTION $total / $total, THE LAST ONE',
+                        )
+                      : tr(
+                          'CÂU ${_index + 1} / $total',
+                          'QUESTION ${_index + 1} / $total',
+                        ),
+                ),
+              ),
+              Expanded(
+                child: isIndustry
+                    ? _IndustryStep(
+                        selected: _industry,
+                        onChanged: (v) => setState(() => _pickedIndustry = v),
+                        onNext: () => setState(() => _index++),
                       )
-                    : tr(
-                        'CÂU ${_index + 1} / $total',
-                        'QUESTION ${_index + 1} / $total',
+                    : isEnps
+                    ? _EnpsStep(
+                        selected: _enps,
+                        onSelect: _submitting ? null : _answerEnps,
+                      )
+                    : _ScaleStep(
+                        question: questions[_index - 1],
+                        selected: _answers[questions[_index - 1].id],
+                        onSelect: _submitting
+                            ? null
+                            : (v) => _answer(questions[_index - 1].id, v),
                       ),
               ),
-            ),
-            Expanded(
-              child: isIndustry
-                  ? _IndustryStep(
-                      selected: _industry,
-                      onChanged: (v) => setState(() => _pickedIndustry = v),
-                      onNext: () => setState(() => _index++),
-                    )
-                  : isEnps
-                  ? _EnpsStep(
-                      selected: _enps,
-                      onSelect: _submitting ? null : _answerEnps,
-                    )
-                  : _ScaleStep(
-                      question: questions[_index - 1],
-                      selected: _answers[questions[_index - 1].id],
-                      onSelect: _submitting
-                          ? null
-                          : (v) => _answer(questions[_index - 1].id, v),
+              if (_submitting)
+                Padding(
+                  padding: EdgeInsets.only(bottom: 20),
+                  child: Center(
+                    child: Text(
+                      tr('Đang gửi…', 'Sending…'),
+                      style: TextStyle(fontSize: 14, color: WrColors.muted),
                     ),
-            ),
-            if (_submitting)
-              Padding(
-                padding: EdgeInsets.only(bottom: 20),
-                child: Center(
-                  child: Text(
-                    tr('Đang gửi…', 'Sending…'),
-                    style: TextStyle(fontSize: 14, color: WrColors.muted),
                   ),
                 ),
-              ),
-            if (_error != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(22, 0, 22, 20),
-                child: Column(
-                  children: [
-                    Text(
-                      _error!,
-                      key: const Key('wr_org_survey_submit_error'),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        color: WrColors.coral,
+              if (_error != null)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(22, 0, 22, 20),
+                  child: Column(
+                    children: [
+                      Text(
+                        _error!,
+                        key: const Key('wr_org_survey_submit_error'),
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: WrColors.coral,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextButton(
-                      key: const Key('wr_org_survey_retry'),
-                      onPressed: _submit,
-                      child: Text(tr('Gửi lại', 'Send again')),
-                    ),
-                  ],
+                      const SizedBox(height: 8),
+                      TextButton(
+                        key: const Key('wr_org_survey_retry'),
+                        onPressed: _submit,
+                        child: Text(tr('Gửi lại', 'Send again')),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -315,7 +319,8 @@ class _TopBar extends StatelessWidget {
                 key: const Key('wr_org_survey_progress'),
                 value: progress.clamp(0.0, 1.0),
                 minHeight: 4,
-                backgroundColor: WrColors.line,
+                // Nằm trên dải ảnh đầu màn (v55): `line` chìm vào ảnh.
+                backgroundColor: WrColors.navy.withValues(alpha: 0.18),
                 valueColor: const AlwaysStoppedAnimation<Color>(WrColors.navy),
               ),
             ),
