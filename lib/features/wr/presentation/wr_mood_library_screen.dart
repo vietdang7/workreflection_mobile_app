@@ -54,14 +54,14 @@ enum MoodLibraryFilter {
 
 /// "Đọc · 5 phút" / "Nghe · 3 phút".
 ///
-/// `duration` trong DB thường đã kèm "phút đọc"; bỏ chữ "đọc" ở đuôi để khỏi
-/// thành "Đọc · 4 phút đọc".
+/// `duration` trong DB thường đã kèm "phút đọc"/"phút nghe"; bỏ chữ ở đuôi để
+/// khỏi thành "Đọc · 4 phút đọc" hay "Nghe · 2 phút nghe".
 String moodContentMeta(MoodContent c) {
   final kind = c.type == MoodContentType.audio
       ? tr('Nghe', 'Listen')
       : tr('Đọc', 'Read');
   final duration = c.durationLabel.replaceFirst(
-    RegExp(r'\s+(đọc|read)$', caseSensitive: false),
+    RegExp(r'\s+(đọc|read|nghe|listen)$', caseSensitive: false),
     '',
   );
   return '$kind · $duration';

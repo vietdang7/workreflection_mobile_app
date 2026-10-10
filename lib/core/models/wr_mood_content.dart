@@ -110,13 +110,18 @@ class MoodContent {
 
   /// [duration] theo ngôn ngữ đang bật.
   ///
-  /// Bảng chỉ chứa dạng "N phút đọc", nên bóc lấy con số rồi dựng lại câu. Dạng
-  /// nào không khớp thì trả nguyên văn, cùng lý do với [kindLabel].
+  /// Bảng chỉ chứa dạng "N phút đọc" (BÀI ĐỌC) và "N phút nghe" (HEALING
+  /// AUDIO), nên bóc lấy con số rồi dựng lại câu. Dạng nào không khớp thì trả
+  /// nguyên văn, cùng lý do với [kindLabel].
   String get durationLabel {
-    final match = RegExp(r'^(\d+)\s*phút đọc$').firstMatch(duration.trim());
+    final match = RegExp(
+      r'^(\d+)\s*phút (đọc|nghe)$',
+    ).firstMatch(duration.trim());
     if (match == null) return duration;
     final minutes = match.group(1)!;
-    return tr('$minutes phút đọc', '$minutes min read');
+    return match.group(2) == 'nghe'
+        ? tr('$minutes phút nghe', '$minutes min listen')
+        : tr('$minutes phút đọc', '$minutes min read');
   }
 
   /// §8.2: true = còn nháp, chưa thu âm hoặc biên tập chính thức.

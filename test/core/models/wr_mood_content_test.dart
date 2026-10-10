@@ -190,6 +190,20 @@ void main() {
       expect(item.durationLabel, '3 min read');
     });
 
+    test('HEALING AUDIO dùng "N phút nghe", dịch thành "N min listen"', () {
+      final listen = fakeMoodContent(
+        id: 'm4',
+        mood: Mood.stressed,
+        kind: 'HEALING AUDIO',
+        duration: '2 phút nghe',
+      );
+      expect(listen.durationLabel, '2 phút nghe');
+
+      wrSetLocale('en');
+      expect(listen.kindLabel, 'HEALING AUDIO');
+      expect(listen.durationLabel, '2 min listen');
+    });
+
     test('giá trị lạ thì trả nguyên văn, không bịa nhãn', () {
       // Đội nội dung thêm một loại mới mà quên báo: người dùng tiếng Anh thấy
       // một nhãn tiếng Việt — dở, nhưng hơn hẳn một ô trống hay một nhãn bịa.
