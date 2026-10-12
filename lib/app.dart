@@ -11,6 +11,7 @@ import 'core/data/user_session_scope.dart';
 import 'core/router/app_router.dart';
 import 'core/theme/wr_text_scale.dart';
 import 'core/theme/wr_theme.dart';
+import 'core/widgets/wr_app_background.dart';
 import 'features/profile/profile_providers.dart';
 import 'features/wr/iap_providers.dart';
 import 'l10n/app_localizations.dart';
@@ -26,9 +27,10 @@ import 'l10n/app_localizations.dart';
 /// thị. `_WrAppState.build` gọi `wrSetLocale` ngay trước khi dựng cây, nên giá
 /// trị ở đây luôn là ngôn ngữ của khung hình này.
 Widget wrLocaleAwareBuilder(BuildContext context, Widget? child) {
+  final scaled = wrTextScaleBuilder(context, child);
   return WrLocaleScope(
     localeCode: wrLocaleCode,
-    child: wrTextScaleBuilder(context, child),
+    child: scaled,
   );
 }
 
@@ -122,10 +124,15 @@ class _WrAppState extends ConsumerState<WrApp> {
     // dùng ngay ở khung hình đầu, và nó phải đọc được ngôn ngữ vừa ghi.
     ref.watch(wrIapControllerProvider);
 
+    final bgMode = ref.watch(appBackgroundModeProvider);
+
     return MaterialApp.router(
       title: 'WorkReflection',
-      theme: wrTheme(),
-      builder: wrLocaleAwareBuilder,
+      theme: wrTheme(isWatercolor: bgMode == AppBackgroundMode.watercolor),
+      builder: (context, child) {
+        final inner = wrLocaleAwareBuilder(context, child);
+        return WrAppBackground(mode: bgMode, child: inner);
+      },
       routerConfig: router,
       locale: Locale(localeCode),
       localizationsDelegates: const [

@@ -111,7 +111,6 @@ import '../../features/wr/presentation/wr_growth_themes_screen.dart';
 import '../../features/wr/presentation/wr_practice_theme_screen.dart';
 import '../../features/wr/presentation/wr_ai_consent_screen.dart';
 import '../logic/wr_ai_disclosure.dart';
-import '../../features/wr/presentation/wr_journey_narrative_screen.dart';
 import '../../features/wr/presentation/wr_pattern_detail_screen.dart';
 import '../../features/wr/presentation/wr_patterns_screen.dart';
 import '../../features/wr/presentation/wr_payment_screen.dart';
@@ -131,7 +130,14 @@ import '../../features/wr/presentation/flow/wr_detail_screen.dart';
 import '../../features/wr/presentation/flow/wr_meaning_screen.dart';
 import '../../features/wr/presentation/flow/wr_moment_screen.dart';
 import '../../features/wr/presentation/flow/wr_step_screen.dart';
+import '../../features/wr/presentation/wr_experience_interpret_screen.dart';
+import '../../features/wr/presentation/wr_chapters_screen.dart';
+import '../../features/wr/presentation/wr_chapter_read_screen.dart';
+import '../../features/wr/presentation/wr_stance_keep_screen.dart';
+import '../../features/wr/presentation/wr_step_options_screen.dart';
+import '../../features/wr/presentation/wr_timeline_read_screen.dart';
 import 'auth_change_notifier.dart';
+
 
 // ---------------------------------------------------------------------------
 // Pure redirect logic — no Flutter/Supabase dependencies, fully testable.
@@ -486,7 +492,7 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       ),
       wrRoute(
         path: '/wr/journey/narrative',
-        builder: (context, state) => WrJourneyNarrativeScreen(),
+        builder: (context, state) => const WrTimelineReadScreen(),
       ),
       // Xử lý dữ liệu bằng AI — xem lại bản công bố và bật/tắt.
       //
@@ -738,6 +744,40 @@ final appRouterProvider = Provider<GoRouter>((ref) {
           contentId: state.pathParameters['id']!,
           fromLibrary: state.uri.queryParameters['from'] == 'library',
         ),
+      ),
+
+      // Màn hình tầng trong — Sprint 2 (Gom lớp & Giảm tải chữ)
+      wrRoute(
+        path: '/wr/experience-interpret',
+        builder: (context, state) => WrExperienceInterpretScreen(),
+      ),
+      wrRoute(
+        path: '/wr/chapters',
+        builder: (context, state) => WrChaptersScreen(),
+      ),
+      wrRoute(
+        path: '/wr/chapter/:id',
+        builder: (context, state) => WrChapterReadScreen(
+          chapterId: state.pathParameters['id'] ?? 'ch3',
+        ),
+      ),
+      wrRoute(
+        path: '/wr/growth/stance-keep',
+        builder: (context, state) => WrStanceKeepScreen(),
+      ),
+      wrRoute(
+        path: '/wr/practice-options/:themeId',
+        builder: (context, state) => WrStepOptionsScreen(
+          themeId: state.pathParameters['themeId'] ?? '',
+        ),
+      ),
+      wrRoute(
+        path: '/wr/timeline-read',
+        builder: (context, state) => WrTimelineReadScreen(),
+      ),
+      wrRoute(
+        path: '/wr/job-context',
+        builder: (context, state) => WrWorkInfoScreen(),
       ),
     ],
   );

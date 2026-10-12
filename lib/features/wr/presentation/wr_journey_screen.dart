@@ -41,6 +41,9 @@ import '../growth_providers.dart';
 import '../wr_providers.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 
+/// Số dòng mặc định khi thu gọn bản kể
+const int kNarrativeCollapsedLines = 4;
+
 /// Loại mục của "Những gì bạn đã học" (mockup v47): Cột mốc hay Điều đã thử.
 enum JourneyLearnedKind { milestone, tried }
 
@@ -675,9 +678,9 @@ Color eventColor(CareerMemoryEvent e) {
 /// Người dùng lâu năm có hàng chục mảnh; đổ hết ra thì tab này thành một cuộn
 /// dài vô tận và mọi thứ nằm dưới Career Memory (Cơ hội phát triển, ô hỏi tự
 /// do) coi như không ai thấy. Phần còn lại nằm ở màn riêng.
-/// BỐN, đúng mockup v16 §8.1: "thẻ xem trước lấy 4 mục gần nhất". Bản trước để
-/// 5 — lệch nhỏ nhưng không có lý do nào để lệch.
-const int kJourneyPreviewCount = 4;
+/// BỐN, đúng mockup v16 §8.1: "thẻ xem trước lấy 4 mục gần nhất".
+/// Sprint 2 chốt 3 thẻ: kJourneyPreviewCount = 3.
+const int kJourneyPreviewCount = 3;
 
 /// Dựng dòng thời gian từ các provider — dùng chung giữa tab Hành trình và màn
 /// Career Memory đầy đủ, để hai nơi không bao giờ liệt kê khác nhau.
@@ -756,7 +759,15 @@ class WrJourneyScreen extends ConsumerWidget {
                 // ── Dấu ấn hành trình ─────────────────────────────────────
                 // Script khách: Career Memory lên ĐẦU TRANG.
                 Text(tr('Dấu ấn hành trình', 'Journey marks'), style: _h2),
-                const SizedBox(height: 2),
+                const SizedBox(height: 4),
+                Text(
+                  tr(
+                    'Những lần bạn dừng lại và ghi nhận, thực hành một điều gì đó, giờ các dấu ấn đang cùng ở đây.',
+                    'The moments you paused, noticed, and practiced something are all gathered here.',
+                  ),
+                  style: _muted,
+                ),
+                const SizedBox(height: 5),
                 Text(
                   tr(
                     '${all.length} ghi nhận đã lưu',
@@ -794,9 +805,10 @@ class WrJourneyScreen extends ConsumerWidget {
                 ],
                 const SizedBox(height: 26),
 
-                // "Những gì bạn đã học" đã bỏ (họp khách 08/10): trùng với
-                // phần thực hành. Trang tập trung vào Dấu ấn hành trình và thẻ
-                // Trò chuyện về hành trình.
+                // ── HÀNH TRÌNH THEO CHẶNG ─────────────────────────────────
+                // Mockup v47 / screenGrow.js: các mốc đã khép lại.
+                const _ChapterJourneyCard(),
+                const SizedBox(height: 26),
 
                 // ── Trò chuyện về hành trình ──────────────────────────────
                 // Script khách: thẻ nổi bật, bấm vào mở trợ lý chat.
@@ -1043,6 +1055,74 @@ class _TimelineItemState extends State<_TimelineItem> {
 }
 
 // ---------------------------------------------------------------------------
+// Hành trình theo chặng — mockup v47 / screenGrow.js
+// ---------------------------------------------------------------------------
+
+class _ChapterJourneyCard extends ConsumerWidget {
+  const _ChapterJourneyCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final episodes =
+        ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [];
+    final chaptersCount = (episodes.length / 5).ceil().clamp(1, 10);
+
+    return WrCard(
+      key: const Key('wr_journey_chapters_card'),
+      onTap: () => context.push('/wr/chapters'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                tr('HÀNH TRÌNH THEO CHẶNG', 'JOURNEY BY CHAPTERS'),
+                style: const TextStyle(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: WrColors.text3,
+                  letterSpacing: 0.6,
+                ),
+              ),
+              const Text(
+                '›',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: WrColors.text3,
+                  fontWeight: FontWeight.w300,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 5),
+          Text(
+            tr('$chaptersCount chặng đã đi qua', '$chaptersCount chapters passed'),
+            style: const TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+              color: WrColors.navy,
+            ),
+          ),
+          const SizedBox(height: 5),
+          Text(
+            tr(
+              'Cứ sau một quãng đủ dài, hệ thống đọc lại quãng đó và ghi ra điều gì đã đổi so với chặng trước.',
+              'After a long enough stretch, the system reads through it and notes what changed compared to previous chapter.',
+            ),
+            style: const TextStyle(
+              fontSize: 13.5,
+              color: WrColors.text2,
+              height: 1.55,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
 // Trò chuyện về hành trình — thẻ nổi bật (script khách)
 // ---------------------------------------------------------------------------
 
@@ -1053,39 +1133,132 @@ class _AskCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return WrCardNavy(
       key: const Key('wr_journey_ask_card'),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            tr('Trò chuyện về hành trình của bạn', 'Talk about your journey'),
-            style: const TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w700,
-              color: WrColors.cream,
-              height: 1.35,
+      padding: EdgeInsets.zero,
+      child: InkWell(
+        onTap: () => context.push('/wr/ask'),
+        borderRadius: BorderRadius.circular(WrCard.kRadius),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ClipRRect(
+              borderRadius: const BorderRadius.vertical(
+                top: Radius.circular(WrCard.kRadius),
+              ),
+              child: Stack(
+                children: [
+                  SizedBox(
+                    height: 88,
+                    width: double.infinity,
+                    child: Image.asset(
+                      'assets/images/card_chat.webp',
+                      fit: BoxFit.cover,
+                      alignment: const Alignment(0, 0.08),
+                    ),
+                  ),
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    height: 30,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            WrColors.navy.withValues(alpha: 0.0),
+                            WrColors.navy,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            tr(
-              'Hỏi về những gì bạn đã đi qua. Trợ lý trả lời ngay.',
-              'Ask about what you have been through. The assistant answers '
-                  'right away.',
+            Padding(
+              padding: const EdgeInsets.fromLTRB(17, 6, 17, 17),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    tr('NGƯỜI ĐỒNG HÀNH', 'COMPANION'),
+                    style: TextStyle(
+                      fontSize: 9.5,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.4,
+                      color: WrColors.cream.withValues(alpha: 0.78),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    tr('Trò chuyện về hành trình', 'Talk about your journey'),
+                    style: const TextStyle(
+                      fontFamily: 'Lora',
+                      fontSize: 19,
+                      fontWeight: FontWeight.w600,
+                      color: WrColors.cream,
+                      height: 1.32,
+                    ),
+                  ),
+                  const SizedBox(height: 7),
+                  Text(
+                    tr(
+                      'Bạn còn những suy tư chưa chia sẻ, cũng như những câu chuyện chưa được sáng tỏ. Hãy trò chuyện cùng người đồng hành để khơi mở sâu hơn nhé.',
+                      'You still have thoughts left unsaid and stories waiting to unfold. Talk to your companion to explore deeper.',
+                    ),
+                    style: TextStyle(
+                      fontSize: 12.5,
+                      height: 1.6,
+                      color: WrColors.cream.withValues(alpha: 0.84),
+                    ),
+                  ),
+                  const SizedBox(height: 14),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Container(
+                      key: const Key('wr_journey_ask_row'),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: WrColors.coral,
+                        borderRadius: BorderRadius.circular(11),
+                        boxShadow: [
+                          BoxShadow(
+                            color: WrColors.coral.withValues(alpha: 0.28),
+                            blurRadius: 12,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            tr('Bắt đầu trò chuyện', 'Start a conversation'),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          const Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 13,
+                            color: Colors.white,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-            style: TextStyle(
-              fontSize: 14,
-              height: 1.55,
-              color: WrColors.cream.withValues(alpha: 0.82),
-            ),
-          ),
-          const SizedBox(height: 12),
-          WrSmallButton(
-            key: const Key('wr_journey_ask_row'),
-            label: tr('Bắt đầu trò chuyện', 'Start a conversation'),
-            arrow: true,
-            onTap: () => context.push('/wr/ask'),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -1115,217 +1288,65 @@ class _AskCard extends StatelessWidget {
 /// có gì để so), trong khi thẻ Career Health ở tab Hiểu mình đếm MỌI Episode.
 /// Bỏ mấy chữ này là hai màn nói hai con số cho cùng một chữ "lần nhìn lại" —
 /// đúng cái khách gọi tên là "dữ liệu trong app chưa được kết nối với nhau".
-String _waitingLine(WrNarrativeRefresh? refresh, {bool rewriting = false}) {
-  // Đã có bản kể, chỉ là bằng tiếng kia. Nói đúng chuyện đang xảy ra: nếu dùng
-  // câu "chưa đủ dữ liệu" ở đây thì người vừa đổi ngôn ngữ tưởng mình mất hết
-  // dữ liệu, còn nếu hiện đại đoạn tiếng cũ thì tưởng app không đổi được tiếng.
-  if (rewriting) {
-    return tr(
-      'Đang viết lại diễn biến của bạn bằng ngôn ngữ vừa chọn. Mở lại '
-          'tab này sau một lát nhé.',
-      'Your story is being rewritten in the language you just picked. '
-          'Come back to this tab in a moment.',
-    );
-  }
-  final needed = refresh?.needed;
-  return switch (refresh?.status) {
-    WrNarrativeStatus.notEnoughData when needed != null && needed > 0 => tr(
-      'Còn $needed lần nhìn lại có chọn tình huống nữa là WorkReflection kể '
-          'lại được diễn biến của bạn.',
-      '$needed more look-backs with a situation picked and WorkReflection can '
-          'tell you how things have been moving.',
-    ),
-    WrNarrativeStatus.notEnoughData => tr(
-      'Chưa đủ dữ liệu để kể lại diễn biến. Ghi thêm vài lần nữa nhé.',
-      'Not enough yet to tell the story. Record a few more.',
-    ),
-    // Đã kể rồi mà `latest` rỗng thì bản kể chưa kịp về tới màn — nói vậy còn
-    // hơn nói "chưa đủ dữ liệu", vì dữ liệu thì đủ rồi.
-    WrNarrativeStatus.upToDate => tr(
-      'Diễn biến của bạn đang được đọc lại. Mở lại tab này sau một lát nhé.',
-      'Your story is being read. Come back to this tab in a moment.',
-    ),
-    _ => tr(
-      'Chưa đủ dữ liệu để kể lại diễn biến. Ghi thêm vài lần nữa, '
-          'WorkReflection sẽ chỉ ra điều gì đang đổi.',
-      'Not enough yet to tell the story. Record a few more and '
-          'WorkReflection will point out what is shifting.',
-    ),
-  };
-}
 
-/// Số dòng đoạn Diễn biến hiện ra khi chưa mở rộng.
-///
-/// Khách 26_1: "đoạn AI này dài ngắn thất thường, có hôm đẩy hết mọi thứ khác
-/// xuống dưới màn hình". Bản kể do `wr-narrative` sinh ra không có giới hạn độ
-/// dài, nên chiều cao thẻ phụ thuộc vào mô hình chứ không phải vào thiết kế —
-/// kẹp lại ở đây để mọi hôm mở tab Hành trình đều thấy cùng một bố cục.
-const int kNarrativeCollapsedLines = 4;
 
-class _NarrativeCard extends ConsumerStatefulWidget {
+class _NarrativeCard extends StatelessWidget {
   const _NarrativeCard();
 
   @override
-  ConsumerState<_NarrativeCard> createState() => _NarrativeCardState();
-}
-
-class _NarrativeCardState extends ConsumerState<_NarrativeCard> {
-  /// Mở rộng là trạng thái của LẦN XEM này, không lưu lại.
-  ///
-  /// Cố tình không nhớ: thẻ này nằm giữa một danh sách, người dùng mở ra đọc
-  /// xong rồi rời tab thì lần sau quay lại vẫn nên thấy bố cục gọn như cũ.
-  bool _expanded = false;
-
-  @override
   Widget build(BuildContext context) {
-    final entitlement =
-        ref.watch(wrEntitlementProvider).valueOrNull ??
-        WrEntitlement(plan: WrPlan.free);
-    final narratives =
-        ref.watch(wrPatternNarrativesProvider).valueOrNull ?? const [];
-    final canRead = entitlement.canUseFeature(WrPremiumFeature.patternAdvanced);
-    // Chỉ nhận đoạn ĐÚNG ngôn ngữ đang bật — xem `currentLocaleNarrative`.
-    final latest = currentLocaleNarrative(narratives)?.narrative;
-    final rewriting = latest == null && narratives.isNotEmpty;
-
-    // Đánh thức `wr-narrative`. Chỉ `watch` để provider chạy — giá trị dùng
-    // đúng một việc: nói còn thiếu bao nhiêu lần nữa.
-    //
-    // Trước bản 2026-08-24 KHÔNG có dòng này, và cũng không có gì khác trong
-    // toàn hệ thống ghi vào `wr_pattern_narratives`. Thẻ đọc một cái bảng không
-    // ai ghi, nên nó nói "Chưa đủ dữ liệu" mãi mãi, kể cả với người đã để lại
-    // hàng chục mảnh ký ức.
-    final refresh = ref.watch(wrNarrativeRefreshProvider).valueOrNull;
-
-    final hasStory = canRead && latest != null;
-    // Mockup v47 `.ai-insight-card`: nền kem, không viền.
-    return Container(
+    return WrCard(
       key: const Key('wr_journey_narrative_card'),
-      padding: WrCard.kPadding,
-      decoration: BoxDecoration(
-        color: WrColors.cream,
-        borderRadius: BorderRadius.circular(WrCard.kRadius),
-      ),
+      padding: EdgeInsets.zero,
+      onTap: () => context.push('/wr/journey/narrative'),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Khách 09/09/2026 (§12.1): bỏ biểu tượng ✦ ở đầu nhãn AI.
-          WrEyebrow(
-            tr('DÒNG NHÌN LẠI THỜI GIAN', 'LOOKING BACK OVER TIME'),
-            color: WrColors.navy,
-          ),
-          const SizedBox(height: 10),
-          if (canRead)
-            GestureDetector(
-              // Bấm vào chính đoạn chữ để mở/thu — khách xin "bấm vào là nó
-              // bung ra", không phải đi tìm một nút riêng.
-              key: const Key('wr_journey_narrative_expand'),
-              behavior: HitTestBehavior.opaque,
-              onTap: latest == null
-                  ? null
-                  : () => setState(() => _expanded = !_expanded),
-              child: hasStory
-                  ? Text(
-                      latest,
-                      // Chỉ kẹp bản kể của AI: độ dài của nó do mô hình quyết.
-                      maxLines: _expanded ? null : kNarrativeCollapsedLines,
-                      overflow: _expanded ? null : TextOverflow.ellipsis,
-                      style: WrText.serifQuote(
-                        fontSize: 15.5,
-                        color: WrColors.text2,
-                      ),
-                    )
-                  : Text(
-                      _waitingLine(refresh, rewriting: rewriting),
-                      style: _muted,
-                    ),
-            )
-          else
-            // Free: không gửi một chữ nào của bản kể xuống máy.
-            Container(
-              key: const Key('wr_journey_narrative_lock'),
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: WrColors.coral.withValues(alpha: 0.08),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    tr('PHÂN TÍCH BỊ KHÓA', 'ANALYSIS LOCKED'),
-                    style: const TextStyle(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w700,
-                      color: WrColors.pillCoralText,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    tr(
-                      'Mở khóa bản đầy đủ để nhìn lại toàn bộ bức tranh thay '
-                          'đổi của bạn qua từng giai đoạn.',
-                      'Unlock the full version to see the whole picture of '
-                          'how you have changed, stage by stage.',
-                    ),
-                    style: const TextStyle(
-                      fontSize: 13.5,
-                      color: WrColors.navy,
-                      height: 1.5,
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  WrSmallButton(
-                    key: const Key('wr_journey_narrative_row'),
-                    label: tr('Xem đúc kết chi tiết', 'See the full reading'),
-                    onTap: () => context.push('/wr/paywall?trigger=ai_insight'),
-                  ),
-                ],
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(WrCard.kRadius),
+            ),
+            child: SizedBox(
+              height: 110,
+              child: Image.asset(
+                'assets/images/card_timeline.webp',
+                fit: BoxFit.cover,
               ),
             ),
-          if (hasStory) ...[
-            const SizedBox(height: 10),
-            Row(
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 13, 16, 15),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                GestureDetector(
-                  key: const Key('wr_journey_narrative_expand_label'),
-                  behavior: HitTestBehavior.opaque,
-                  onTap: () => setState(() => _expanded = !_expanded),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        _expanded
-                            ? tr('Thu gọn', 'Collapse')
-                            : tr('Mở rộng', 'Expand'),
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
-                          color: WrColors.navy,
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      Icon(
-                        _expanded ? Icons.expand_less : Icons.expand_more,
-                        size: 16,
-                        color: WrColors.navy,
-                      ),
-                    ],
+                Text(
+                  tr('Nhìn lại dòng thời gian', 'Looking back along the timeline'),
+                  style: const TextStyle(
+                    fontSize: 15.5,
+                    fontWeight: FontWeight.w700,
+                    color: WrColors.navy,
+                    height: 1.35,
                   ),
+                ),
+                const SizedBox(height: 5),
+                Text(
+                  tr(
+                    'Những lần nhìn lại của bạn đang chuyển dịch theo một hướng. Dành vài phút đọc chậm.',
+                    'Your look-backs are shifting in a meaningful direction. Take a few minutes to read slowly.',
+                  ),
+                  style: _muted,
+                ),
+                const SizedBox(height: 12),
+                WrSmallButton(
+                  key: const Key('wr_journey_narrative_row'),
+                  kind: WrSmallButtonKind.dark,
+                  label: tr('Đọc diễn giải', 'Read interpretation'),
+                  arrow: true,
+                  onTap: () => context.push('/wr/journey/narrative'),
                 ),
               ],
             ),
-          ],
-          if (canRead) ...[
-            const SizedBox(height: 12),
-            WrSmallButton(
-              key: const Key('wr_journey_narrative_row'),
-              kind: WrSmallButtonKind.ghost,
-              label: tr('Đọc toàn bộ diễn biến', 'Read the whole story'),
-              arrow: true,
-              onTap: () => context.push('/wr/journey/narrative'),
-            ),
-          ],
+          ),
         ],
       ),
     );

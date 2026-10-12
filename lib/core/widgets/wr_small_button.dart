@@ -55,10 +55,12 @@ class WrSmallButton extends StatelessWidget {
         onPressed: onTap,
         style: OutlinedButton.styleFrom(
           foregroundColor: WrColors.navy,
+          backgroundColor: WrColors.white,
           padding: padding,
           minimumSize: Size.zero,
-          side: const BorderSide(color: Color(0x40093774), width: 1.5),
+          side: const BorderSide(color: Color(0x66093774), width: 1.5),
           shape: shape,
+          elevation: 0.5,
         ),
         child: text,
       ),
@@ -68,9 +70,8 @@ class WrSmallButton extends StatelessWidget {
           backgroundColor: kind == WrSmallButtonKind.dark
               ? WrColors.navy
               : WrColors.coral,
-          foregroundColor: kind == WrSmallButtonKind.dark
-              ? WrColors.cream
-              : WrColors.navy,
+          foregroundColor: WrColors.white,
+          elevation: 1.5,
           padding: padding,
           minimumSize: Size.zero,
           shape: shape,

@@ -166,6 +166,13 @@ class WrCard extends StatelessWidget {
         color: color,
         borderRadius: radius,
         border: Border.all(color: WrColors.line),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A093774),
+            blurRadius: 10,
+            offset: Offset(0, 3),
+          ),
+        ],
       ),
       child: body,
     );

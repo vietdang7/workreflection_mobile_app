@@ -70,6 +70,10 @@ GoRouter _router(String initial) => GoRouter(
       builder: (_, __) => const Scaffold(body: Text('CONTEXT_DOCS')),
     ),
     GoRoute(
+      path: '/wr/job-context',
+      builder: (_, __) => const Scaffold(body: Text('CONTEXT_DOCS')),
+    ),
+    GoRoute(
       path: '/wr/tra-chieu',
       builder: (_, __) => const Scaffold(body: Text('TRA_CHIEU')),
     ),
@@ -589,12 +593,12 @@ void main() {
       );
     });
 
-    testWidgets('dòng Cập nhật bối cảnh công việc mở màn JD/CV', (
+    testWidgets('dòng Bối cảnh công việc mở màn JD/CV', (
       tester,
     ) async {
       await _pumpTall(tester, _wrap(_router('/wr/growth')));
 
-      expect(find.text('Cập nhật bối cảnh công việc'), findsOneWidget);
+      expect(find.text('Bối cảnh công việc'), findsOneWidget);
       await _tap(tester, find.byKey(const Key('wr_growth_context_docs_row')));
       expect(find.text('CONTEXT_DOCS'), findsOneWidget);
     });

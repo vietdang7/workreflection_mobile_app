@@ -129,8 +129,8 @@ class _TabDef {
 List<_TabDef> _buildTabs(AppLocalizations l10n) => [
   // Bốn icon của mockup: con mắt (quan sát) · bóng đèn (hiểu) · tia chớp
   // (hành động) · nhịp sóng (hành trình).
-  _TabDef(icon: Icons.visibility_outlined, semanticsLabel: l10n.tabToday),
-  _TabDef(icon: Icons.lightbulb_outline, semanticsLabel: l10n.tabUnderstand),
+  _TabDef(icon: Icons.visibility_outlined, semanticsLabel: tr('Home', 'Home')),
+  _TabDef(icon: Icons.lightbulb_outline, semanticsLabel: tr('Hiểu', 'Understand')),
   _TabDef(icon: Icons.bolt_outlined, semanticsLabel: l10n.tabDevelop),
   _TabDef(icon: Icons.show_chart, semanticsLabel: l10n.tabJourney),
 ];

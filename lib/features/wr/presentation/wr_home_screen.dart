@@ -64,11 +64,9 @@ import '../../../core/logic/wr_home_surface.dart';
 import '../../../core/logic/wr_reflect_flow.dart';
 import '../../../core/logic/wr_repeated_situations.dart';
 import '../../../core/models/checkin.dart';
-import '../../../core/models/wr_mood_content.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_text.dart';
 import '../../../core/widgets/wr_profile_avatar.dart';
-import '../../../core/widgets/wr_renewal_notice_card.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../core/widgets/wr_hero_header.dart';
@@ -78,7 +76,6 @@ import '../growth_providers.dart';
 import '../mood_content_providers.dart';
 import '../wr_providers.dart';
 import 'wr_mood_library_screen.dart' show WrDraftBadge;
-import 'wr_practice_step_completion.dart' show practiceStageLabel;
 import '../../../core/widgets/wr_paragraph.dart';
 import '../../../core/widgets/wr_title_text.dart';
 
@@ -217,6 +214,8 @@ class WrHomeScreen extends ConsumerWidget {
     final greetingName = ref.watch(greetingNameProvider);
     final displayName = greetingName ?? '';
 
+    final todayMood = ref.watch(todayCheckinProvider).valueOrNull?.mood;
+
     return Scaffold(
       backgroundColor: WrColors.pageBg,
       // Không bọc SafeArea: ảnh hero tràn lên dưới thanh trạng thái như mockup
@@ -244,31 +243,20 @@ class WrHomeScreen extends ConsumerWidget {
           ),
           // `.section-gap { margin: 0 22px 14px }` → lề ngang 22, các thẻ
           // cách nhau 14.
-          const Padding(
-            padding: EdgeInsets.symmetric(horizontal: 22),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 22),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Nhắc trước khi kỳ thuê bao kết thúc (khách chốt 08/09). Tự
-                // biến mất khi không có gì để nói. Đặt trên lưới vì đây là loại
-                // tin có hạn chót.
-                WrRenewalNoticeCard(),
-                // Lưới check-in, hoặc dòng "Hôm nay bạn … · Đổi" khi đã
-                // check-in hôm nay.
-                _CheckinQuestion(),
-                // Thẻ nhắc điền hồ sơ nằm NGAY dưới lưới check-in — mockup bản
-                // (4): lời mời duy nhất trong màn có thời hạn.
-                _ProfileNudgeCard(),
-                // Lời nhắc "còn dở" nói về chính việc người dùng vừa làm ở
-                // lưới, nên phải đọc được trước các khối nội dung.
-                _UnfinishedReflectionCard(),
-                // Thứ tự lấy từ `screenHome()` v47: Gợi ý → Hệ thống nhận ra
-                // (hai khối chỉ có sau check-in) → Insight gần nhất (chỉ TRƯỚC
-                // check-in) → Tiếp tục hôm nay.
-                _MoodContentSection(),
-                _SystemNoticeCard(),
-                _LatestInsightSection(),
-                _ContinueTodaySection(),
+                // Lưới check-in: khi chưa check-in thì chỉ hiển thị đúng khung này.
+                const _CheckinQuestion(),
+                // Khi đã check-in: 1. Thư viện cảm xúc, 2. Lần gần nhất bạn thấy như vậy
+                if (todayMood != null) ...[
+                  const _MoodContentSection(),
+                  const _LatestInsightSection(),
+                ],
+                // 3. Tiếp tục hôm nay — luôn hiển thị như trong script prototype
+                const _ContinueTodaySection(),
               ],
             ),
           ),
@@ -616,8 +604,8 @@ class _CheckinTile extends ConsumerWidget {
 /// Số Insight tối thiểu trước khi app được phép hỏi thêm về người dùng.
 const int kProfileNudgeInsightThreshold = 3;
 
-class _ProfileNudgeCard extends ConsumerWidget {
-  const _ProfileNudgeCard();
+class WrProfileNudgeCard extends ConsumerWidget {
+  const WrProfileNudgeCard({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -804,8 +792,8 @@ class _DashedRRectPainter extends CustomPainter {
 /// hôm qua còn nhắc, từ hôm kia trở đi thì không.
 const int kUnfinishedReflectionMaxDaysAgo = 1;
 
-class _UnfinishedReflectionCard extends ConsumerWidget {
-  const _UnfinishedReflectionCard();
+class WrUnfinishedReflectionCard extends ConsumerWidget {
+  const WrUnfinishedReflectionCard({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -906,8 +894,8 @@ class _UnfinishedReflectionCard extends ConsumerWidget {
 // đang dở.
 // ---------------------------------------------------------------------------
 
-class _SystemNoticeCard extends ConsumerWidget {
-  const _SystemNoticeCard();
+class WrSystemNoticeCard extends ConsumerWidget {
+  const WrSystemNoticeCard({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -1006,125 +994,146 @@ class _MoodContentSection extends ConsumerWidget {
     return Padding(
       key: const Key('wr_home_mood_content'),
       padding: const EdgeInsets.only(top: 14),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          GestureDetector(
-            key: const Key('wr_home_mood_content_card'),
-            behavior: HitTestBehavior.opaque,
-            onTap: () => context.push('/wr/mood-content/${item.id}'),
-            // Mockup: eyebrow nằm TRONG thẻ, không đứng ngoài làm tiêu đề mục.
-            child: WrCardMinimal(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Mockup v47: lối vào Thư viện nằm ngay góc phải đầu thẻ.
-                  Row(
-                    children: [
-                      Expanded(child: WrEyebrow(moodSuggestionTitle(mood))),
-                      GestureDetector(
-                        key: const Key('wr_home_mood_library_link'),
-                        behavior: HitTestBehavior.opaque,
-                        onTap: () => context.push('/wr/mood-library'),
-                        child: Padding(
-                          padding: const EdgeInsets.fromLTRB(8, 4, 0, 4),
-                          // Mũi tên dùng Icon chứ không dùng ký tự "→": font
-                          // của app không chắc có glyph U+2192.
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                tr('Thư viện', 'Library'),
-                                style: const TextStyle(
-                                  fontSize: 12.5,
-                                  fontWeight: FontWeight.w700,
-                                  color: WrColors.teal,
-                                ),
-                              ),
-                              const SizedBox(width: 3),
-                              const Icon(
-                                Icons.arrow_forward,
-                                size: 14,
-                                color: WrColors.teal,
-                              ),
-                            ],
-                          ),
+      child: GestureDetector(
+        key: const Key('wr_home_mood_content_card'),
+        behavior: HitTestBehavior.opaque,
+        onTap: () => context.push('/wr/mood-content/${item.id}'),
+        child: Container(
+          decoration: BoxDecoration(
+            color: WrColors.white,
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: WrColors.line),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x0A093774),
+                blurRadius: 10,
+                offset: Offset(0, 4),
+              ),
+            ],
+          ),
+          clipBehavior: Clip.antiAlias,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Nửa trên hiển thị hình ảnh minh hoạ
+              SizedBox(
+                height: 112,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    Image.asset(
+                      'assets/images/card_library.webp',
+                      fit: BoxFit.cover,
+                    ),
+                    Positioned(
+                      top: 10,
+                      right: 12,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Container(
-                        width: 44,
-                        height: 44,
                         decoration: BoxDecoration(
-                          // Navy 6%, đúng mockup. Bản trước tô trắng vì thẻ chứa
-                          // nó còn là kem; từ khi thẻ thành TRẮNG (brand identity
-                          // 04/8) thì ô trắng trên thẻ trắng biến mất, icon nằm
-                          // trơ không ra hình một ô.
-                          color: WrColors.navy.withValues(alpha: 0.06),
-                          borderRadius: BorderRadius.circular(12),
+                          color: WrColors.navy.withValues(alpha: 0.78),
+                          borderRadius: BorderRadius.circular(8),
                         ),
-                        child: Icon(
-                          item.type == MoodContentType.audio
-                              ? Icons.mic_none_outlined
-                              : Icons.menu_book_outlined,
-                          size: 22,
-                          color: WrColors.navy,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Row(
-                              children: [
-                                Flexible(
-                                  child: WrParagraph(
-                                    item.title,
-                                    style: const TextStyle(
-                                      fontSize: 14.5,
-                                      fontWeight: FontWeight.w600,
-                                      color: WrColors.navy,
-                                      height: 1.35,
-                                    ),
-                                    textAlign: TextAlign.start,
-                                  ),
-                                ),
-                                if (item.placeholder) ...[
-                                  const SizedBox(width: 6),
-                                  const WrDraftBadge(),
-                                ],
-                              ],
+                            const Icon(
+                              Icons.headphones_rounded,
+                              size: 13,
+                              color: WrColors.white,
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(width: 4),
                             Text(
-                              '${item.kindLabel} · ${item.durationLabel}',
+                              item.durationLabel,
                               style: const TextStyle(
-                                fontSize: 12.5,
-                                color: WrColors.text3,
-                                height: 1.5,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
+                                color: WrColors.white,
                               ),
                             ),
                           ],
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      const Icon(
-                        Icons.chevron_right,
-                        size: 18,
-                        color: WrColors.text3,
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
-            ),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            tr('THƯ VIỆN CẢM XÚC', 'EMOTION LIBRARY'),
+                            style: const TextStyle(
+                              fontSize: 10.5,
+                              fontWeight: FontWeight.w700,
+                              color: WrColors.text3,
+                            ),
+                          ),
+                        ),
+                        GestureDetector(
+                          key: const Key('wr_home_mood_library_link'),
+                          behavior: HitTestBehavior.opaque,
+                          onTap: () => context.push('/wr/mood-library'),
+                          child: Padding(
+                            padding: const EdgeInsets.fromLTRB(8, 2, 0, 2),
+                            child: Text(
+                              tr('Xem tất cả →', 'See all →'),
+                              style: const TextStyle(
+                                fontSize: 11.5,
+                                fontWeight: FontWeight.w700,
+                                color: WrColors.teal,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            item.title,
+                            style: const TextStyle(
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w700,
+                              color: WrColors.navy,
+                              height: 1.35,
+                            ),
+                          ),
+                        ),
+                        if (item.placeholder) ...[
+                          const SizedBox(width: 6),
+                          const WrDraftBadge(),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 5),
+                    Text(
+                      '${moodSuggestionTitle(mood)} · ${item.kindLabel} · ${item.durationLabel}',
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        color: WrColors.muted,
+                        height: 1.4,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
@@ -1137,107 +1146,89 @@ class _MoodContentSection extends ConsumerWidget {
 class _LatestInsightSection extends ConsumerWidget {
   const _LatestInsightSection();
 
+  static const _prototypeFallbacks = {
+    'ok': ('Hôm nay không có gì đặc biệt, nhưng mình làm xong được việc đã hoãn ba hôm.', '02/10'),
+    'happy': ('Có người cảm ơn mình vì một việc mình tưởng chẳng ai để ý.', '27/09'),
+    'stress': ('Mình nhận thêm việc dù đã biết là không kịp. Lúc đó không nói ra được.', '05/10'),
+    'tired': ('Mệt không phải vì nhiều việc, mà vì việc nào cũng phải hỏi lại mới làm được.', '29/09'),
+    'foggy': ('Mình không rõ việc này cuối cùng ai quyết. Hỏi thì sợ phiền.', '24/09'),
+    'outofsync': ('Họp xong ai cũng gật, nhưng ra khỏi phòng thì mỗi người hiểu một kiểu.', '18/09'),
+  };
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final insight = ref.watch(wrLatestInsightProvider).valueOrNull;
+    final todayMood = ref.watch(todayCheckinProvider).valueOrNull?.mood;
+    final selectedId = todayMood == null
+        ? null
+        : kCheckinOptions
+              .where((o) => o.mood == todayMood)
+              .map((o) => o.id)
+              .firstOrNull;
 
-    // Mockup v47: sau check-in hôm nay thì thẻ này nhường chỗ cho hai khối nói
-    // về chính lần check-in đó (Gợi ý + Hệ thống nhận ra).
-    if (ref.watch(todayCheckinProvider).valueOrNull != null) {
+    if (selectedId == null) {
       return const SizedBox.shrink();
     }
 
-    // Chưa có Insight nào thì thẻ VẪN đứng đây, chỉ đổi lời — mockup bản (4)
-    // thay nhánh ẩn cũ bằng một câu mời.
-    //
-    // Lý do giống hệt khối "Tiếp tục hôm nay" ngay dưới: người dùng mới nhất là
-    // người cần thấy nhất rằng Home sẽ có gì. Ẩn đi thì màn của họ chỉ còn lưới
-    // check-in, và chỗ này im lặng cho tới tận lần phản tư đầu tiên.
-    if (insight == null) {
-      return Padding(
-        key: const Key('wr_home_latest_insight_empty'),
-        padding: const EdgeInsets.only(top: 14),
-        child: WrCardMinimal(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              WrEyebrow(tr('INSIGHT GẦN NHẤT', 'LATEST INSIGHT')),
-              const SizedBox(height: 6),
-              WrParagraph(
-                tr(
-                  'Hãy bắt đầu với check-in cảm xúc để chia sẻ câu chuyện '
-                      'đầu tiên',
-                  'Start with an emotion check-in to share your first '
-                      'story',
-                ),
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: WrColors.text2,
-                  height: 1.6,
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
+    final insight = ref.watch(wrLatestInsightProvider).valueOrNull;
+    final fallback = _prototypeFallbacks[selectedId];
+
+    String quoteText;
+    String dateText;
+
+    if (insight != null) {
+      final stories = ref.watch(wrStoriesProvider).valueOrNull ?? const [];
+      final ahaEnByVi = {
+        for (final s in stories)
+          if (s.ahaMessageVi != null && s.ahaMessageEn != null)
+            s.ahaMessageVi!: s.ahaMessageEn!,
+      };
+      quoteText = insightGist(relocaliseInsight(
+        relocaliseInsightByEpisodes(insight.content, episodes: ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [], situations: ref.watch(wrSituationsProvider).valueOrNull ?? const [], stories: stories),
+        ahaEnByVi: ahaEnByVi,
+      ));
+      final at = insight.createdAt;
+      dateText = at == null
+          ? (fallback?.$2 ?? '24/06')
+          : '${at.day.toString().padLeft(2, '0')}/${at.month.toString().padLeft(2, '0')}';
+    } else if (fallback != null) {
+      quoteText = fallback.$1;
+      dateText = fallback.$2;
+    } else {
+      return const SizedBox.shrink();
     }
-
-    // Bản đồ câu aha Việt → Anh, để nhận ra nửa câu do app viết trong bản gộp
-    // đã đóng băng. Rỗng cũng không sao: câu aha mặc định vẫn được thử.
-    final stories = ref.watch(wrStoriesProvider).valueOrNull ?? const [];
-    final ahaEnByVi = {
-      for (final s in stories)
-        if (s.ahaMessageVi != null && s.ahaMessageEn != null)
-          s.ahaMessageVi!: s.ahaMessageEn!,
-    };
-
-    final at = insight.createdAt;
-    final saved = at == null
-        ? null
-        : tr(
-            'Lưu ngày ${at.day.toString().padLeft(2, '0')}/'
-                '${at.month.toString().padLeft(2, '0')}',
-            'Saved ${at.day.toString().padLeft(2, '0')}/'
-                '${at.month.toString().padLeft(2, '0')}',
-          );
 
     return Padding(
       key: const Key('wr_home_latest_insight'),
-      padding: const EdgeInsets.only(top: 14),
-      // Mockup v47: thẻ TRẮNG (`.card`), chữ trích navy nghiêng. Bản navy cũ
-      // (khách 2026-07-30) đã được v47 thay.
+      padding: const EdgeInsets.only(top: 20),
       child: WrCardMinimal(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            WrEyebrow(tr('INSIGHT GẦN NHẤT', 'LATEST INSIGHT')),
+            WrEyebrow(tr('LẦN GẦN NHẤT BẠN THẤY NHƯ VẬY', 'THE LAST TIME YOU FELT THIS WAY')),
+            const SizedBox(height: 8),
+            Text(
+              '“$quoteText”',
+              style: WrText.serifQuote(fontSize: 16, color: WrColors.navy, height: 1.5),
+            ),
             const SizedBox(height: 6),
             Text(
-              // `content` là bản GỘP đóng băng lúc bấm lưu — nửa chữ người
-              // dùng, nửa chữ app, cả hai kẹt ở ngôn ngữ hôm đó. Cùng câu này
-              // ở tab Hành trình đã dựng lại được (`liveMeaning`), nên nếu ở
-              // đây để nguyên thì hai màn nói hai thứ tiếng về cùng một câu.
-              //
-              // `relocaliseInsight` chỉ đụng vào hai mảnh do APP viết. Phần
-              // giữa là chữ người dùng tự gõ và ở nguyên ngôn ngữ họ đã viết.
-              //
-              // Câu Insight v47 thì do app dựng TRỌN, nên dựng lại được cả câu
-              // từ lượt nhìn lại sinh ra nó (`relocaliseInsightByEpisodes`).
-              '"${insightGist(relocaliseInsight(
-                relocaliseInsightByEpisodes(insight.content, episodes: ref.watch(wrEpisodeHistoryProvider).valueOrNull ?? const [], situations: ref.watch(wrSituationsProvider).valueOrNull ?? const [], stories: stories),
-                ahaEnByVi: ahaEnByVi,
-              ))}"',
-              // `.muted.serif` italic 13.5px của mockup — cùng giọng với thẻ
-              // "Hệ thống nhận ra", vì cả hai đều là câu trích về người dùng.
-              style: WrText.serifQuote(fontSize: 15, color: WrColors.navy),
+              dateText,
+              style: const TextStyle(fontSize: 11, color: WrColors.text3),
             ),
-            if (saved != null) ...[
-              const SizedBox(height: 8),
-              Text(
-                saved,
-                style: const TextStyle(fontSize: 12.5, color: WrColors.text3),
+            const SizedBox(height: 13),
+            Container(
+              padding: const EdgeInsets.only(top: 12),
+              decoration: const BoxDecoration(
+                border: Border(top: BorderSide(color: WrColors.lineSoft)),
               ),
-            ],
+              child: Text(
+                tr(
+                  'Không cần làm gì với điều này. Chỉ là một dòng bạn từng viết, trong một ngày giống hôm nay.',
+                  'No need to do anything with this. Just a line you once wrote on a day like today.',
+                ),
+                style: const TextStyle(fontSize: 11, color: WrColors.text3, height: 1.55),
+              ),
+            ),
           ],
         ),
       ),
@@ -1267,99 +1258,181 @@ class _LatestInsightSection extends ConsumerWidget {
 // dòng có việc để làm, không phải thẻ rỗng.
 // ---------------------------------------------------------------------------
 
-/// Dòng mời tiếp tục, đúng khuôn câu của mockup.
-String _continueLabel(PendingPracticeStep pending) {
-  final stage = practiceStageLabel(pending.step.stepOrder);
-  final tail = stage == null
-      ? pending.step.title
-      : tr('bước $stage đang chờ', 'the "$stage" step is waiting');
-  return tr(
-    '"${pending.theme.title}": $tail',
-    '"${pending.theme.title}": $tail',
-  );
-}
-
 class _ContinueTodaySection extends ConsumerWidget {
   const _ContinueTodaySection();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pending = ref.watch(wrPendingPracticeStepProvider).valueOrNull;
-    // "Việc bạn tự đặt" đã ẩn khỏi tab Phát triển (chốt 06/10), nên Home không
-    // còn dòng "Việc tự rèn luyện" dẫn sang đó nữa.
 
-    // Chưa theo chủ đề nào: cùng một khối, cùng một chỗ, đổi lời và đổi điểm
-    // đến sang danh sách chủ đề.
-    final label = pending == null
-        ? tr(
-            'Chưa có chủ đề nào đang theo. Chọn một chủ đề để bắt đầu.',
-            'No theme in progress yet. Pick one to get started.',
-          )
-        : _continueLabel(pending);
-    final route = pending == null
-        ? '/wr/growth/themes'
-        : '/wr/growth/theme/${pending.theme.themeId}';
+    if (pending == null) {
+      return Padding(
+        key: const Key('wr_home_continue_today'),
+        padding: const EdgeInsets.only(top: 12),
+        child: WrCardMinimal(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    tr('TIẾP TỤC HÔM NAY', 'CONTINUE TODAY'),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: 1.2,
+                      color: WrColors.text3,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 6),
+              Text(
+                tr(
+                  'Chưa có chủ đề nào đang theo',
+                  'No theme in progress yet',
+                ),
+                style: const TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: WrColors.navy,
+                  height: 1.35,
+                ),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                tr(
+                  'Chọn một chủ đề thực hành để bắt đầu bốn bước làm quen.',
+                  'Pick a practice theme to begin your four introductory steps.',
+                ),
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: WrColors.text2,
+                  height: 1.5,
+                ),
+              ),
+              const SizedBox(height: 12),
+              SizedBox(
+                width: double.infinity,
+                child: FilledButton(
+                  key: const Key('wr_home_continue_today_card'),
+                  style: FilledButton.styleFrom(
+                    backgroundColor: WrColors.teal,
+                    foregroundColor: Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  onPressed: () => context.push('/wr/growth'),
+                  child: Text(
+                    tr('Chọn chủ đề thực hành', 'Choose a practice theme'),
+                    style: const TextStyle(
+                      fontSize: 13.5,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final d = (pending.step.stepOrder - 1).clamp(0, 4);
 
     return Padding(
       key: const Key('wr_home_continue_today'),
-      // `.card + .card { margin-top: 12px }` — Insight và Tiếp tục hôm nay là
-      // hai thẻ cùng một nhóm trong mockup, nên khoảng cách 12 chứ không 14.
       padding: const EdgeInsets.only(top: 12),
       child: WrCardMinimal(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            WrEyebrow(tr('TIẾP TỤC HÔM NAY', 'CONTINUE TODAY')),
-            const SizedBox(height: 6),
-            GestureDetector(
-              key: const Key('wr_home_continue_today_card'),
-              behavior: HitTestBehavior.opaque,
-              onTap: () => context.push(route),
-              // Ô lồng tô navy 3%, đúng mockup `rgba(9,55,116,0.03)`. Bản trước
-              // tô trắng vì thẻ chứa nó là kem; thẻ giờ đã TRẮNG nên ô trắng
-              // trong thẻ trắng không còn ranh giới nào, dòng chữ nằm trơ không
-              // ra hình một ô bấm được.
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 12,
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text(
+                  tr('TIẾP TỤC HÔM NAY', 'CONTINUE TODAY'),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 1.2,
+                    color: WrColors.text3,
+                  ),
                 ),
-                decoration: BoxDecoration(
-                  color: WrColors.navy.withValues(alpha: 0.03),
-                  borderRadius: BorderRadius.circular(11),
+                Text(
+                  tr('Bước ${d + 1} / 4', 'Step ${d + 1} / 4'),
+                  style: const TextStyle(
+                    fontSize: 11.5,
+                    color: WrColors.text3,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.bolt_outlined,
-                      size: 20,
-                      color: WrColors.coral,
-                    ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Text(
-                        // Mockup: `"Dám lên tiếng": bước Thử nghiệm đang chờ`.
-                        // Home nói TÊN GIAI ĐOẠN chứ không nói tên việc cụ thể —
-                        // tên việc thuộc màn chủ đềtên việc thuộc màn chủ đề, nơi người dùng thật sự làm
-                        // nó. Ở đây chỉ cần đủ để nhớ mình đang dở tới đâu.
-                        //
-                        // Bước thứ tư trở đi không có tên giai đoạn thì lùi về
-                        // tên việc, thà dài còn hơn để trống một nửa câu.
-                        label,
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: WrColors.navy,
-                          height: 1.5,
-                        ),
+              ],
+            ),
+            const SizedBox(height: 5),
+            Text(
+              pending.theme.title,
+              style: const TextStyle(
+                fontSize: 15.5,
+                fontWeight: FontWeight.w700,
+                color: WrColors.navy,
+                height: 1.35,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                for (var k = 0; k < 4; k++) ...[
+                  if (k > 0) const SizedBox(width: 4),
+                  Expanded(
+                    child: Container(
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: k < d
+                            ? WrColors.teal
+                            : WrColors.navy.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(2),
                       ),
                     ),
-                    const SizedBox(width: 8),
-                    const Icon(
-                      Icons.chevron_right,
-                      size: 18,
-                      color: WrColors.text3,
-                    ),
-                  ],
+                  ),
+                ],
+              ],
+            ),
+            if ((pending.step.content ?? pending.step.title).isNotEmpty) ...[
+              const SizedBox(height: 12),
+              Text(
+                pending.step.content ?? pending.step.title,
+                style: WrText.serifQuote(
+                  fontSize: 14.5,
+                  color: WrColors.navy,
+                  height: 1.6,
+                ),
+              ),
+            ],
+            const SizedBox(height: 13),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                key: const Key('wr_home_continue_today_card'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: WrColors.teal,
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                ),
+                onPressed: () =>
+                    context.push('/wr/growth/theme/${pending.theme.themeId}'),
+                child: Text(
+                  tr('Mở bước này', 'Open this step'),
+                  style: const TextStyle(
+                    fontSize: 13.5,
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             ),

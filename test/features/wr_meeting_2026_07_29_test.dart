@@ -1442,9 +1442,8 @@ void main() {
       expect(find.byKey(const Key('wr_growth_other_themes_row')), findsNothing);
       // Lối rẽ còn lại không bị đụng tới. "Chặng đường phát triển" đã bỏ khỏi
       // màn này (2026-08-03).
-      // Đổi tên theo Ma trận Cấp bậc v1.0 mục A.1: giữ chữ "kỹ năng", bỏ chữ
-      // "hình thành" ở tên gọi chính.
-      expect(find.text('Kỹ năng của bạn'), findsOneWidget);
+      // Chuẩn hoá thuật ngữ: "Kỹ năng" -> "Tâm thế làm việc".
+      expect(find.textContaining('Tâm thế làm việc'), findsOneWidget);
       expect(find.text('Chặng đường phát triển'), findsNothing);
     });
 
