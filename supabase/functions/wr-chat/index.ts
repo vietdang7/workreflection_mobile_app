@@ -116,6 +116,7 @@ const MAX_OUTPUT_TOKENS = 300;
 /// chờ lâu hơn nữa thì thà báo lỗi để họ gửi lại.
 const UPSTREAM_TIMEOUT_MS = 45_000;
 
+const DEEPSEEK_URL = 'https://api.deepseek.com/chat/completions';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 const CORS_HEADERS = {
@@ -166,12 +167,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return fail(pick(locale, 'Yêu cầu không hợp lệ.', 'Invalid request.'), 405);
   }
 
+  const deepSeekKey = Deno.env.get('DEEPSEEK_API_KEY');
   const openRouterKey = Deno.env.get('OPENROUTER_API_KEY');
-  if (!openRouterKey) {
+  if (!deepSeekKey && !openRouterKey) {
     // Cấu hình thiếu là lỗi của người vận hành, không phải của người dùng. Ghi
     // ra log để người vận hành thấy, còn người dùng chỉ cần biết là chưa dùng
     // được.
-    console.error('THIẾU secret OPENROUTER_API_KEY — hàm không thể chạy.');
+    console.error('THIẾU secret DEEPSEEK_API_KEY hoặc OPENROUTER_API_KEY — hàm không thể chạy.');
     return fail(
       pick(
         locale,
@@ -432,59 +434,56 @@ Deno.serve(async (req: Request): Promise<Response> => {
     { role: 'user', content: message },
   ];
 
-  /// Gọi OpenRouter một lần.
+  const providerName = deepSeekKey ? 'DeepSeek' : 'OpenRouter';
+
+  /// Gọi DeepSeek trực tiếp hoặc fallback sang OpenRouter một lần.
   const callUpstream = () => {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
-    return fetch(OPENROUTER_URL, {
+    const useDeepSeek = Boolean(deepSeekKey);
+    const url = useDeepSeek ? DEEPSEEK_URL : OPENROUTER_URL;
+    const headers: Record<string, string> = {
+      Authorization: `Bearer ${deepSeekKey ?? openRouterKey}`,
+      'Content-Type': 'application/json',
+    };
+    if (!useDeepSeek) {
+      headers['HTTP-Referer'] = 'https://workreflection.app';
+      headers['X-Title'] = 'WorkReflection Mobile';
+    }
+
+    const payload: Record<string, unknown> = {
+      model: useDeepSeek
+        ? (Deno.env.get('DEEPSEEK_MODEL') ?? 'deepseek-chat')
+        : MODEL,
+      messages,
+      temperature: 0.7,
+      max_tokens: MAX_OUTPUT_TOKENS,
+    };
+    if (!useDeepSeek) {
+      payload.reasoning = { enabled: false };
+    }
+
+    return fetch(url, {
       method: 'POST',
       signal: controller.signal,
-      headers: {
-        Authorization: `Bearer ${openRouterKey}`,
-        'Content-Type': 'application/json',
-        // OpenRouter dùng hai header này để gắn nhãn nguồn gọi trên trang thống
-        // kê. Không bắt buộc, nhưng có thì đọc hoá đơn mới biết tiền đi đâu.
-        'HTTP-Referer': 'https://workreflection.app',
-        'X-Title': 'WorkReflection Mobile',
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        messages,
-        temperature: 0.7,
-        max_tokens: MAX_OUTPUT_TOKENS,
-        // Tắt reasoning: đây là trò chuyện ngắn có giọng văn quy định sẵn,
-        // không phải bài toán suy luận. Bật lên chỉ thêm độ trễ và token trả
-        // tiền cho phần người dùng không bao giờ đọc.
-        reasoning: { enabled: false },
-      }),
+      headers,
+      body: JSON.stringify(payload),
     }).finally(() => clearTimeout(timer));
   };
 
   let reply: string;
   try {
     // THỬ LẠI MỘT LẦN khi đường lên trục trặc tạm thời.
-    //
-    // Bản đầu không thử lại, nên một cú vấp của nhà cung cấp là người dùng nhận
-    // ngay "Mình chưa trả lời được" và phải tự gõ lại. Khách gặp đúng lỗi này
-    // ngày 2026-08-03 (502 giữa cuộc trò chuyện đang trôi chảy). Đo lúc đó thấy
-    // OpenRouter vẫn sống nhưng độ trễ dao động từ 0,9 tới 11,7 giây, tức là
-    // trục trặc thoáng qua chứ không phải hỏng hẳn.
-    //
-    // Chỉ thử lại với lỗi CÓ THỂ TỰ KHỎI: 429 và nhóm 5xx. Lỗi 4xx khác là sai
-    // ở phía ta, thử lại chỉ tốn thêm tiền cho cùng một câu trả lời sai.
-    //
-    // Đúng MỘT lần thôi: người dùng đang nhìn con trỏ nhấp nháy, và hai lần chờ
-    // 45 giây liên tiếp thì thà báo lỗi để họ gửi lại còn hơn.
     let res = await callUpstream();
     if (res.status === 429 || res.status >= 500) {
-      console.warn(`OpenRouter ${res.status}, thử lại một lần.`);
+      console.warn(`${providerName} ${res.status}, thử lại một lần.`);
       await new Promise((r) => setTimeout(r, 600));
       res = await callUpstream();
     }
 
     if (!res.ok) {
       const detail = await res.text();
-      console.error(`OpenRouter ${res.status}: ${detail.slice(0, 500)}`);
+      console.error(`${providerName} ${res.status}: ${detail.slice(0, 500)}`);
       return fail(
         pick(
           locale,
@@ -498,7 +497,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     const payload = await res.json();
     reply = (payload?.choices?.[0]?.message?.content ?? '').trim();
     if (!reply) {
-      console.error('OpenRouter trả về nội dung rỗng:', JSON.stringify(payload).slice(0, 500));
+      console.error(`${providerName} trả về nội dung rỗng:`, JSON.stringify(payload).slice(0, 500));
       return fail(
         pick(
           locale,
@@ -510,7 +509,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }
   } catch (e) {
     const aborted = e instanceof DOMException && e.name === 'AbortError';
-    console.error(aborted ? 'OpenRouter quá hạn chờ' : `OpenRouter lỗi: ${e}`);
+    console.error(aborted ? `${providerName} quá hạn chờ` : `${providerName} lỗi: ${e}`);
     return fail(
       aborted
         ? pick(
