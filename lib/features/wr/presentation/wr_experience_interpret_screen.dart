@@ -17,7 +17,6 @@ import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../core/widgets/wr_detail_scaffold.dart';
 import '../../../core/widgets/wr_hero_header.dart';
-import '../../../core/widgets/wr_paragraph.dart';
 import '../wr_providers.dart';
 import 'wr_sca_deep_dive_screen.dart' show openScaDeepDive;
 
@@ -59,15 +58,16 @@ class _WrExperienceInterpretScreenState
       title: tr('Trải nghiệm của bạn', 'Your Experience'),
       children: [
         if (_activeTab == 0) ...[
-          WrParagraph(
+          Text(
             tr(
               'Mấy cách đọc cùng một thứ. Bạn có thể vào từng phần, hoặc đọc thẳng phần tổng hợp.',
               'Multiple ways to read the same experience. You can explore each part, or read the full synthesis directly.',
             ),
+            textAlign: TextAlign.start,
             style: const TextStyle(
               fontSize: 14.5,
               color: WrColors.muted,
-              height: 1.6,
+              height: 1.65,
             ),
           ),
           const SizedBox(height: 18),
@@ -179,105 +179,118 @@ class _MenuCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: WrCardMinimal(
+      padding: const EdgeInsets.only(bottom: 11),
+      child: Material(
+        color: WrColors.white,
+        borderRadius: BorderRadius.circular(18),
+        clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(16),
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            style: const TextStyle(
-                              fontSize: 15.5,
-                              fontWeight: FontWeight.w700,
-                              color: WrColors.navy,
-                              height: 1.35,
-                            ),
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            subtitle,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              color: WrColors.muted,
-                              height: 1.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    if (isNew) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: WrColors.coral.withValues(alpha: 0.12),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: WrColors.line),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 15),
+            child: Opacity(
+              opacity: ready ? 1.0 : 0.6,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(
                         child: Text(
-                          tr('Mới', 'New'),
+                          title,
                           style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: WrColors.coral,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                    ],
-                    if (isPremium) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: WrColors.navy.withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: const Text(
-                          'Premium',
-                          style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 14.5,
                             fontWeight: FontWeight.w700,
                             color: WrColors.navy,
+                            height: 1.35,
                           ),
                         ),
                       ),
-                    ] else
-                      const Icon(
-                        Icons.chevron_right_rounded,
-                        color: WrColors.text3,
-                        size: 20,
+                      const SizedBox(width: 8),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          if (isNew) ...[
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2.5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: WrColors.coral.withValues(alpha: 0.12),
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              child: Text(
+                                tr('Mới', 'New'),
+                                style: const TextStyle(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: Color(0xFFC6402F),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                          ],
+                          if (isPremium)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2.5,
+                              ),
+                              decoration: BoxDecoration(
+                                color: WrColors.navy.withValues(alpha: 0.08),
+                                borderRadius: BorderRadius.circular(100),
+                              ),
+                              child: const Text(
+                                'Premium',
+                                style: TextStyle(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w700,
+                                  color: WrColors.navy,
+                                ),
+                              ),
+                            )
+                          else
+                            const Text(
+                              '›',
+                              style: TextStyle(
+                                fontSize: 17,
+                                color: WrColors.muted,
+                                height: 1.0,
+                              ),
+                            ),
+                        ],
                       ),
-                  ],
-                ),
-                if (!ready && notReadyLabel != null) ...[
-                  const SizedBox(height: 8),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
                   Text(
-                    notReadyLabel!,
+                    subtitle,
+                    textAlign: TextAlign.start,
                     style: const TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: WrColors.teal,
+                      fontSize: 13,
+                      color: WrColors.muted,
+                      height: 1.55,
                     ),
                   ),
+                  if (!ready && notReadyLabel != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      notReadyLabel!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: WrColors.teal,
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
         ),
@@ -385,9 +398,8 @@ class _ExpByReflectView extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         WrCardMinimal(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
+          padding: const EdgeInsets.all(16),
+          child: Column(
               children: [
                 for (var i = 0; i < pillars.length; i++) ...[
                   if (i > 0) const Divider(height: 20, color: WrColors.lineSoft),
@@ -435,7 +447,6 @@ class _ExpByReflectView extends StatelessWidget {
                 ],
               ],
             ),
-          ),
         ),
         const SizedBox(height: 16),
         Text(
@@ -557,48 +568,46 @@ class _ExpBySurveyView extends StatelessWidget {
         ),
         const SizedBox(height: 16),
         WrCardMinimal(
-          child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                for (var i = 0; i < pillars.length; i++) ...[
-                  if (i > 0) const Divider(height: 20, color: WrColors.lineSoft),
-                  Row(
-                    children: [
-                      Container(
-                        width: 10,
-                        height: 10,
-                        decoration: BoxDecoration(
-                          color: pillars[i].color,
-                          shape: BoxShape.circle,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              for (var i = 0; i < pillars.length; i++) ...[
+                if (i > 0) const Divider(height: 20, color: WrColors.lineSoft),
+                Row(
+                  children: [
+                    Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: pillars[i].color,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        pillars[i].label,
+                        style: const TextStyle(
+                          fontSize: 13.5,
+                          fontWeight: FontWeight.w600,
+                          color: WrColors.navy,
                         ),
                       ),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          pillars[i].label,
-                          style: const TextStyle(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w600,
-                            color: WrColors.navy,
-                          ),
-                        ),
+                    ),
+                    Text(
+                      scaPillarStatus(pillars[i].score).label,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w700,
+                        color: pillars[i].score >= 3.8
+                            ? WrColors.teal
+                            : (pillars[i].score >= 2.8 ? WrColors.navy : WrColors.coral),
                       ),
-                      Text(
-                        scaPillarStatus(pillars[i].score).label,
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: pillars[i].score >= 3.8
-                              ? WrColors.teal
-                              : (pillars[i].score >= 2.8 ? WrColors.navy : WrColors.coral),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ],
-            ),
+            ],
           ),
         ),
         const SizedBox(height: 16),

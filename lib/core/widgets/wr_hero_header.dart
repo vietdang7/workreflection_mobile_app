@@ -205,6 +205,7 @@ class WrHeroHeader extends StatelessWidget {
     required String title,
     String? subtitle,
     Widget? trailing,
+    double height = 236.0,
   }) => WrHeroHeader(
     key: key,
     asset: art.asset,
@@ -212,6 +213,7 @@ class WrHeroHeader extends StatelessWidget {
     title: title,
     subtitle: subtitle,
     trailing: trailing,
+    height: height,
   );
 
   /// Chiều cao hero, chưa tính thanh trạng thái. Bốn tab dùng chung một chiều
