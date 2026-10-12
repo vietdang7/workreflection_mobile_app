@@ -18,11 +18,22 @@ class WrBackCircle extends StatelessWidget {
         onTap: onTap,
         radius: 22,
         child: Container(
-          width: 30,
-          height: 30,
+          width: 32,
+          height: 32,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: WrColors.navy.withValues(alpha: 0.06),
+            color: WrColors.white,
+            border: Border.all(
+              color: WrColors.navy.withValues(alpha: 0.16),
+              width: 1.2,
+            ),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x18093774),
+                blurRadius: 6,
+                offset: Offset(0, 2),
+              ),
+            ],
           ),
           child: const Icon(
             Icons.chevron_left_rounded,

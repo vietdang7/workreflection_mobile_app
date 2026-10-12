@@ -368,6 +368,42 @@ class _WrPracticeThemeScreenState extends ConsumerState<WrPracticeThemeScreen> {
               style: _muted,
             ),
             const SizedBox(height: 11),
+            WrCard(
+              onTap: () =>
+                  context.push('/wr/practice-options/${widget.themeId}'),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          tr('Xem ba cách gợi ý', 'See 3 suggested options'),
+                          style: const TextStyle(
+                            fontSize: 14.5,
+                            fontWeight: FontWeight.w700,
+                            color: WrColors.teal,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          tr(
+                            'Mở màn hình riêng để cân nhắc từng cách',
+                            'Open dedicated view to consider each option',
+                          ),
+                          style: const TextStyle(
+                            fontSize: 12.5,
+                            color: WrColors.text3,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(Icons.chevron_right, size: 20, color: WrColors.teal),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
             for (var i = 0; i < options.length; i++) ...[
               if (i > 0) const SizedBox(height: 10),
               _MentorCard(
@@ -1056,7 +1092,7 @@ class _MaintainBlock extends ConsumerWidget {
         children: [
           Text(
             formation.skillFormed
-                ? tr('ĐÃ THÀNH KỸ NĂNG', 'NOW A SKILL')
+                ? tr('TÂM THẾ ĐANG HÌNH THÀNH', 'EMERGING STANCE')
                 : tr('GIAI ĐOẠN DUY TRÌ', 'UPKEEP STAGE'),
             style: const TextStyle(
               fontSize: 12,
@@ -1076,10 +1112,10 @@ class _MaintainBlock extends ConsumerWidget {
                   )
                 : tr(
                     'Đã ${formation.practiceCount}/${formation.threshold} lần. '
-                        'Còn ${formation.remaining} lần nữa là điều này thành kỹ '
-                        'năng của bạn.',
+                        'Còn ${formation.remaining} lần nữa là điều này thành tâm thế làm việc '
+                        'của bạn.',
                     '${formation.practiceCount}/${formation.threshold} so far. '
-                        '${formation.remaining} more and this becomes a skill of '
+                        '${formation.remaining} more and this becomes a work stance of '
                         'yours.',
                   ),
             key: const Key('wr_practice_maintain_count'),
@@ -1091,6 +1127,12 @@ class _MaintainBlock extends ConsumerWidget {
           ),
           const SizedBox(height: 14),
           WrMaintainPracticeAction(theme: theme),
+          const SizedBox(height: 10),
+          WrSmallButton(
+            kind: WrSmallButtonKind.ghost,
+            label: tr('Xem phần duy trì & tâm thế ›', 'View stance & retention ›'),
+            onTap: () => context.push('/wr/growth/stance-keep'),
+          ),
         ],
       ),
     );

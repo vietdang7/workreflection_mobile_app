@@ -67,6 +67,11 @@ flutter:
     - assets/images/thumb_daily_reflect.jpg
     - assets/images/thumb_understand_grow.jpg
     - assets/images/thumb_ai_mentor.jpg
+    - assets/images/bg_watercolor_paper.webp
+    - assets/images/card_library.webp
+    - assets/images/card_survey.webp
+    - assets/images/card_timeline.webp
+    - assets/images/thumb_trachieu.webp
     - assets/images/hero/
     - assets/seed/wr_situations.json
     - assets/seed/wr_stories.json

@@ -394,6 +394,10 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
                 const SizedBox(height: 6),
               ],
               const _RowDivider(),
+              const SizedBox(height: 14),
+              const _KeepingSection(),
+              const SizedBox(height: 14),
+              const _RowDivider(),
 
               // ── Thêm một chủ đề chưa có trong thư viện ──────────────────
               // Họp khách 08/10: bỏ chữ "Tự thêm", tách ra thành một dòng
@@ -415,22 +419,20 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
               const _RowDivider(),
 
               // ── Ngoài mockup, theo chữ của khách ────────────────────────
-              // Ba dòng chính cùng một widget nên cùng một cỡ chữ (họp 08/10:
-              // "Kỹ năng của bạn" và "Cập nhật bối cảnh công việc" phải bằng
-              // nhau).
+              // Chuẩn hoá thuật ngữ: "Kỹ năng" -> "Tâm thế làm việc".
               WrLinkRow(
                 key: const Key('wr_growth_skills_row'),
-                label: tr('Kỹ năng của bạn', 'Your skills'),
+                label: tr('Tâm thế làm việc của bạn', 'Your work stances'),
                 onTap: () => context.push('/wr/growth/skills'),
               ),
               const _RowDivider(),
               WrLinkRow(
                 key: const Key('wr_growth_context_docs_row'),
                 label: tr(
-                  'Cập nhật bối cảnh công việc',
-                  'Update your work context',
+                  'Bối cảnh công việc',
+                  'Work context',
                 ),
-                onTap: () => context.push('/wr/context-docs'),
+                onTap: () => context.push('/wr/job-context'),
               ),
               const SizedBox(height: 18),
 
@@ -1045,6 +1047,180 @@ class _BridgeCardState extends ConsumerState<_BridgeCard> {
           ],
         ),
       ),
+    );
+  }
+}
+
+class _KeepingSection extends ConsumerStatefulWidget {
+  const _KeepingSection();
+
+  @override
+  ConsumerState<_KeepingSection> createState() => _KeepingSectionState();
+}
+
+class _KeepingSectionState extends ConsumerState<_KeepingSection> {
+  final Set<String> _marked = {};
+
+  @override
+  Widget build(BuildContext context) {
+    final themes = ref.watch(practiceThemesProvider).valueOrNull ?? const [];
+    final enrollments =
+        ref.watch(practiceEnrollmentsProvider).valueOrNull ?? const [];
+    final completed = enrollments.where((e) => e.completedAt != null).toList();
+
+    final items = <(String, String, int, String)>[
+      for (final e in completed)
+        if (themes.where((t) => t.themeId == e.themeId).firstOrNull case final t?)
+          (
+            e.themeId,
+            t.title,
+            (e.completedSteps.length).clamp(1, 99),
+            tr('hôm qua', 'yesterday'),
+          ),
+      (
+        'k1',
+        tr('Rõ ràng về điều được kỳ vọng', 'Clarity on expectations'),
+        12,
+        tr('hôm qua', 'yesterday'),
+      ),
+      (
+        'k2',
+        tr('Thoát khỏi vòng lặp phản ứng', 'Breaking reactive feedback loops'),
+        7,
+        tr('3 ngày trước', '3 days ago'),
+      ),
+      (
+        'k3',
+        tr('Giữ năng lượng đường dài', 'Sustaining energy over time'),
+        2,
+        tr('tuần trước', 'last week'),
+      ),
+    ];
+
+    final preview = items.take(3).toList();
+    final remaining = items.length - preview.length;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        WrCard(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    tr('ĐANG DUY TRÌ', 'MAINTAINING'),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w700,
+                      color: WrColors.text3,
+                      letterSpacing: 0.6,
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () => context.push('/wr/growth/stance-keep'),
+                    child: Text(
+                      tr('Xem đầy đủ ›', 'See all ›'),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: WrColors.pillTealText,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              for (var i = 0; i < preview.length; i++) ...[
+                if (i > 0)
+                  const Divider(height: 1, thickness: 1, color: WrColors.line),
+                Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 10),
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              preview[i].$2,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: WrColors.navy,
+                                height: 1.3,
+                              ),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '${preview[i].$3} ${tr('lần', 'times')} · ${tr('gần nhất', 'last')} ${preview[i].$4}',
+                              style: const TextStyle(
+                                fontSize: 11.5,
+                                color: WrColors.text3,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      WrSmallButton(
+                        kind: _marked.contains(preview[i].$1)
+                            ? WrSmallButtonKind.ghost
+                            : WrSmallButtonKind.dark,
+                        label: _marked.contains(preview[i].$1)
+                            ? tr('✓ Đã ghi', '✓ Saved')
+                            : tr('Ghi nhận', 'Record'),
+                        onTap: () {
+                          setState(() {
+                            if (_marked.contains(preview[i].$1)) {
+                              _marked.remove(preview[i].$1);
+                            } else {
+                              _marked.add(preview[i].$1);
+                            }
+                          });
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+              if (remaining > 0) ...[
+                const Divider(height: 1, thickness: 1, color: WrColors.line),
+                InkWell(
+                  onTap: () => context.push('/wr/growth/stance-keep'),
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 10),
+                    child: Center(
+                      child: Text(
+                        tr('Còn $remaining chủ đề khác', 'And $remaining other themes'),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: WrColors.text3,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        Text(
+          tr(
+            'Những chủ đề đã hoàn thành ở bốn bước làm quen. Mỗi lần bạn thực hành lại trong công việc thật, bấm Ghi nhận để hệ thống giúp bạn lưu giữ.',
+            'Themes completed in the four steps. Each time you practice in real work, tap Record to preserve your journey.',
+          ),
+          style: const TextStyle(
+            fontSize: 12,
+            color: WrColors.text3,
+            height: 1.55,
+          ),
+        ),
+      ],
     );
   }
 }

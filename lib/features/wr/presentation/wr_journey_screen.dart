@@ -675,9 +675,9 @@ Color eventColor(CareerMemoryEvent e) {
 /// Người dùng lâu năm có hàng chục mảnh; đổ hết ra thì tab này thành một cuộn
 /// dài vô tận và mọi thứ nằm dưới Career Memory (Cơ hội phát triển, ô hỏi tự
 /// do) coi như không ai thấy. Phần còn lại nằm ở màn riêng.
-/// BỐN, đúng mockup v16 §8.1: "thẻ xem trước lấy 4 mục gần nhất". Bản trước để
-/// 5 — lệch nhỏ nhưng không có lý do nào để lệch.
-const int kJourneyPreviewCount = 4;
+/// BỐN, đúng mockup v16 §8.1: "thẻ xem trước lấy 4 mục gần nhất".
+/// Sprint 2 chốt 3 thẻ: kJourneyPreviewCount = 3.
+const int kJourneyPreviewCount = 3;
 
 /// Dựng dòng thời gian từ các provider — dùng chung giữa tab Hành trình và màn
 /// Career Memory đầy đủ, để hai nơi không bao giờ liệt kê khác nhau.
@@ -1068,9 +1068,8 @@ class _AskCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             tr(
-              'Hỏi về những gì bạn đã đi qua. Trợ lý trả lời ngay.',
-              'Ask about what you have been through. The assistant answers '
-                  'right away.',
+              'Người đồng hành lắng nghe và cùng bạn bóc tách những điều đang trải qua.',
+              'Your companion listens and unpacks what you have been through.',
             ),
             style: TextStyle(
               fontSize: 14,
@@ -1198,10 +1197,10 @@ class _NarrativeCardState extends ConsumerState<_NarrativeCard> {
     final refresh = ref.watch(wrNarrativeRefreshProvider).valueOrNull;
 
     final hasStory = canRead && latest != null;
-    // Mockup v47 `.ai-insight-card`: nền kem, không viền.
+    // Mockup Sprint 2: Thẻ minh họa card_timeline.webp, mở màn tầng trong WrTimelineReadScreen.
     return Container(
       key: const Key('wr_journey_narrative_card'),
-      padding: WrCard.kPadding,
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: WrColors.cream,
         borderRadius: BorderRadius.circular(WrCard.kRadius),
@@ -1209,12 +1208,31 @@ class _NarrativeCardState extends ConsumerState<_NarrativeCard> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Khách 09/09/2026 (§12.1): bỏ biểu tượng ✦ ở đầu nhãn AI.
-          WrEyebrow(
-            tr('DÒNG NHÌN LẠI THỜI GIAN', 'LOOKING BACK OVER TIME'),
-            color: WrColors.navy,
+          Image.asset(
+            'assets/images/card_timeline.webp',
+            height: 110,
+            width: double.infinity,
+            fit: BoxFit.cover,
           ),
-          const SizedBox(height: 10),
+          Padding(
+            padding: WrCard.kPadding,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                WrEyebrow(
+                  tr('DÒNG NHÌN LẠI THỜI GIAN', 'LOOKING BACK OVER TIME'),
+                  color: WrColors.navy,
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  tr('Nhìn lại dòng thời gian', 'Looking back along the timeline'),
+                  style: const TextStyle(
+                    fontSize: 16.5,
+                    fontWeight: FontWeight.w700,
+                    color: WrColors.navy,
+                  ),
+                ),
+                const SizedBox(height: 10),
           if (canRead)
             GestureDetector(
               // Bấm vào chính đoạn chữ để mở/thu — khách xin "bấm vào là nó
@@ -1326,6 +1344,9 @@ class _NarrativeCardState extends ConsumerState<_NarrativeCard> {
               onTap: () => context.push('/wr/journey/narrative'),
             ),
           ],
+              ],
+            ),
+          ),
         ],
       ),
     );

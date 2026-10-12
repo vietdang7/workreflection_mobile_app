@@ -15,13 +15,13 @@ ColorScheme wrColorScheme() {
 
 /// Full app theme including Be Vietnam Pro font. Requires Flutter binding
 /// (call after [WidgetsFlutterBinding.ensureInitialized]).
-ThemeData wrTheme() {
+ThemeData wrTheme({bool isWatercolor = false}) {
   return ThemeData(
     useMaterial3: true,
     colorScheme: wrColorScheme(),
     // Spec §01: nền toàn màn hình là Cream BG, không phải trắng thuần — thẻ
     // trắng nổi lên được là nhờ nền này.
-    scaffoldBackgroundColor: WrColors.pageBg,
+    scaffoldBackgroundColor: isWatercolor ? Colors.transparent : WrColors.pageBg,
     textTheme: GoogleFonts.beVietnamProTextTheme(),
   );
 }

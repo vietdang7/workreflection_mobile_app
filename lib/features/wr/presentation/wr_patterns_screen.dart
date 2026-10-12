@@ -26,15 +26,10 @@ class WrPatternsScreen extends ConsumerWidget {
     final situations = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
     final sitMap = {for (final s in situations) s.code: s.text};
 
-    // Cùng recentSituationIds VÀ cùng ngưỡng lặp với tab Hiểu mình — khác chỗ
-    // duy nhất là màn kia cắt lấy ba dòng đầu, màn này liệt kê hết. Lệch một
-    // trong hai thì "Xem thêm N điều lặp lại" sẽ dẫn tới một danh sách không
-    // khớp con số vừa hứa.
     final repeated = repeatedSituations(
       episodes,
       minCount: kRepeatedSituationsMinCount,
     );
-    final maxCount = repeated.fold<int>(1, (m, p) => p.count > m ? p.count : m);
 
     return WrDetailScaffold(
       eyebrow: tr('NHỮNG VÒNG LẶP QUEN THUỘC', 'FAMILIAR LOOPS'),
@@ -89,7 +84,7 @@ class WrPatternsScreen extends ConsumerWidget {
               key: Key('wr_patterns_row_${p.situationCode}'),
               label: situationLabelFor(sitMap, p.situationCode),
               count: p.count,
-              ratio: p.count / maxCount,
+              ratio: p.count / repeated.fold<int>(1, (m, x) => x.count > m ? x.count : m),
               onTap: () => context.push('/wr/pattern/${p.situationCode}'),
             ),
             if (p != repeated.last) const SizedBox(height: 18),

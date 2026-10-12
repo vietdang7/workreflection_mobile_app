@@ -20,6 +20,7 @@ import '../../../core/widgets/wr_card.dart';
 import '../../../features/auth/data/auth_repository.dart';
 import '../../../features/auth/guest_session.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/widgets/wr_app_background.dart';
 import '../../wr/org_survey_providers.dart';
 import '../../wr/wr_providers.dart';
 import '../avatar_providers.dart';
@@ -70,6 +71,8 @@ class ProfileScreen extends ConsumerWidget {
                     const WrRenewalNoticeCard(),
                     _PremiumCard(),
                     _SettingsSection(),
+                    const SizedBox(height: 12),
+                    const _AppearanceCard(),
                     const SizedBox(height: 12),
                     _OrgSurveyCard(),
                     const SizedBox(height: 12),
@@ -582,6 +585,124 @@ class _StatBlock extends StatelessWidget {
 /// Không có cổng Premium ở đây. Màn giới thiệu hứa "không đổi lấy quyền lợi hay
 /// tính năng nào trong ứng dụng" — gắn nó vào gói trả tiền theo bất kỳ chiều
 /// nào cũng là phá lời hứa đó.
+class _AppearanceCard extends ConsumerWidget {
+  const _AppearanceCard();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final mode = ref.watch(appBackgroundModeProvider);
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: WrColors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: WrColors.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.palette_outlined, size: 18, color: WrColors.navy),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  tr('Giao diện & Nền ứng dụng', 'Appearance & Background'),
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w700,
+                    color: WrColors.navy,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            tr(
+              'Thử nghiệm hiển thị vân giấy vẽ màu nước hoặc nền trơn trên thiết bị của bạn.',
+              'Experiment with watercolor paper texture or plain paper background.',
+            ),
+            style: const TextStyle(
+              fontSize: 13,
+              color: WrColors.text2,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: _BgOptionButton(
+                  label: tr('Nền giấy trơn', 'Plain Paper'),
+                  selected: mode == AppBackgroundMode.plain,
+                  onTap: () => ref
+                      .read(appBackgroundModeProvider.notifier)
+                      .setMode(AppBackgroundMode.plain),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: _BgOptionButton(
+                  label: tr('Nền màu nước', 'Watercolor'),
+                  selected: mode == AppBackgroundMode.watercolor,
+                  onTap: () => ref
+                      .read(appBackgroundModeProvider.notifier)
+                      .setMode(AppBackgroundMode.watercolor),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BgOptionButton extends StatelessWidget {
+  const _BgOptionButton({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 8),
+        decoration: BoxDecoration(
+          color: selected ? WrColors.navy : WrColors.white,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: selected ? WrColors.navy : WrColors.line,
+            width: selected ? 1.5 : 1,
+          ),
+        ),
+        child: Center(
+          child: Text(
+            label,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+              color: selected ? WrColors.white : WrColors.navy,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
 class _OrgSurveyCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {

@@ -103,6 +103,10 @@ Widget _wrap({
         builder: (_, __) => const Scaffold(body: Text('NARRATIVE')),
       ),
       GoRoute(
+        path: '/wr/timeline-read',
+        builder: (_, __) => const Scaffold(body: Text('NARRATIVE')),
+      ),
+      GoRoute(
         path: '/wr/episode/:id',
         builder: (_, s) =>
             Scaffold(body: Text('EPISODE ${s.pathParameters['id']}')),
