@@ -25,7 +25,9 @@ import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 import '../../../core/widgets/wr_hero_header.dart';
 import '../wr_providers.dart';
-import 'wr_discover_screen.dart' show WrPatternRow;
+import '../../../core/logic/wr_self_check_questions.dart';
+import 'wr_discover_screen.dart'
+    show WrPatternRow, scaStatusColor, scriptPillarColor;
 
 /// Đường vào màn này từ bất kỳ nút "Mở khoá" nào của tính năng Self-Check sâu.
 ///
@@ -78,14 +80,8 @@ class WrScaDeepDiveScreen extends ConsumerWidget {
           scrolledUnderElevation: 0,
           elevation: 0,
           foregroundColor: WrColors.navy,
-          title: Text(
-            tr('Diễn giải sâu & xu hướng', 'Deep reading & trends'),
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w700,
-              color: WrColors.navy,
-            ),
-          ),
+          // Không đặt tiêu đề trên thanh: script chỉ có nút quay lại, tiêu đề
+          // "Xu hướng theo thời gian" nằm trong thân màn.
         ),
         body: SafeArea(
           child: entitlement.canUseFeature(WrPremiumFeature.selfCheckDeepDive)
@@ -133,7 +129,7 @@ class _Locked extends StatelessWidget {
             elevation: 0,
           ),
           child: Text(
-            tr('Mở diễn giải sâu', 'Open the deep reading'),
+            wrKeepCompounds(tr('Mở diễn giải sâu', 'Open the deep reading')),
             style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w600),
           ),
         ),
@@ -245,9 +241,49 @@ class _BodyState extends ConsumerState<_Body> {
         .toList();
     final maxLoop = loops.fold<int>(1, (m, s) => s.count > m ? s.count : m);
 
+    // Phần của script đứng đầu, chỉ khi đã có ít nhất một lần Self-Check: ba
+    // thẻ của nó đọc mức của lần gần nhất.
+    final showScript = pillars.isNotEmpty;
+    final patternCounts = pillarPatternCounts(episodes, situations, now: now);
+
     return ListView(
       padding: const EdgeInsets.fromLTRB(22, 4, 22, 32),
       children: [
+        // ── 0 · "Xu hướng theo thời gian" — đúng `screenScaDeepDive` ────
+        //
+        // Quyết định 13/10/2026: script Sprint 2 là nguồn chuẩn cho màn này,
+        // nên phần của script đứng ĐẦU. Nội dung Diễn giải sâu v2 phong phú
+        // hơn (khối chính theo thang ưu tiên, vòng lặp, xu hướng nhìn lại, chi
+        // tiết theo nhóm) KHÔNG bị xoá, mà nằm phía dưới, sau một dòng ngăn.
+        if (showScript) ...[
+          _ScriptTrendHeader(),
+          const SizedBox(height: 16),
+          for (final p in pillars) ...[
+            _ScriptPillarCard(
+              data: p,
+              patternText: scaScriptPatternText(
+                pillar: p.pillar,
+                status: p.status,
+                counts: patternCounts,
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+          Text(
+            wrKeepCompounds(scaDeepDiveFootnote(previous)),
+            key: const Key('wr_sca_deep_dive_footnote'),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 13,
+              height: 1.55,
+              color: WrColors.text3,
+            ),
+          ),
+          const SizedBox(height: 28),
+          WrEyebrow(tr('DIỄN GIẢI SÂU', 'DEEP READING')),
+          const SizedBox(height: 12),
+        ],
+
         // ── 1 · Khối chính ──────────────────────────────────────────────
         _LeadCard(
           text: _polished(
@@ -381,7 +417,7 @@ class _BodyState extends ConsumerState<_Body> {
               elevation: 0,
             ),
             child: Text(
-              tr('Làm Self-Check', 'Take the Self-Check'),
+              wrKeepCompounds(tr('Làm Self-Check', 'Take the Self-Check')),
               style: const TextStyle(
                 fontSize: 16.5,
                 fontWeight: FontWeight.w600,
@@ -411,18 +447,187 @@ class _BodyState extends ConsumerState<_Body> {
           ),
         ],
 
-        const SizedBox(height: 12),
+        if (!showScript) ...[
+          const SizedBox(height: 12),
+          Text(
+            wrKeepCompounds(scaDeepDiveFootnote(previous)),
+            key: const Key('wr_sca_deep_dive_footnote'),
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontSize: 13.5,
+              height: 1.55,
+              color: WrColors.text3,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+/// Đầu phần script: nhãn Premium, tiêu đề, câu dẫn.
+class _ScriptTrendHeader extends StatelessWidget {
+  const _ScriptTrendHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      key: const Key('wr_sca_trend_header'),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+          decoration: BoxDecoration(
+            color: WrColors.coral.withValues(alpha: 0.14),
+            borderRadius: BorderRadius.circular(100),
+          ),
+          child: const Text(
+            'Premium',
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              color: WrColors.pillCoralText,
+            ),
+          ),
+        ),
+        const SizedBox(height: 10),
         Text(
-          scaDeepDiveFootnote(previous),
-          key: const Key('wr_sca_deep_dive_footnote'),
-          textAlign: TextAlign.center,
+          wrKeepCompounds(tr('Xu hướng theo thời gian', 'Trends over time')),
           style: const TextStyle(
-            fontSize: 13.5,
-            height: 1.55,
-            color: WrColors.text3,
+            fontSize: 26,
+            fontWeight: FontWeight.w700,
+            color: WrColors.navy,
+            height: 1.3,
+            letterSpacing: -0.5,
+          ),
+        ),
+        const SizedBox(height: 6),
+        WrParagraph(
+          tr(
+            'Đối chiếu kết quả khảo sát điều kiện làm việc giữa các lần, và với '
+                'những điều đang lặp lại trong các lần nhìn lại của bạn.',
+            'Comparing your workplace conditions survey across attempts, and '
+                'against what keeps repeating in your look-backs.',
+          ),
+          textAlign: TextAlign.start,
+          style: const TextStyle(
+            fontSize: 15,
+            height: 1.65,
+            color: WrColors.muted,
           ),
         ),
       ],
+    );
+  }
+}
+
+/// Một thẻ trụ của script: huy hiệu, tên đầy đủ, mức; câu xu hướng; câu đối
+/// chiếu với những lần nhìn lại.
+class _ScriptPillarCard extends StatelessWidget {
+  const _ScriptPillarCard({required this.data, required this.patternText});
+
+  final ScaDeepDivePillar data;
+  final String patternText;
+
+  @override
+  Widget build(BuildContext context) {
+    final p = data.pillar;
+    final code = switch (p) {
+      SelfCheckPillar.s => 'S',
+      SelfCheckPillar.c => 'C',
+      SelfCheckPillar.a => 'A',
+    };
+    final trend = data.trendText;
+    return Container(
+      key: Key('wr_sca_trend_card_${p.name}'),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: WrColors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: WrColors.line),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 30,
+                height: 30,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: scriptPillarColor(p),
+                  borderRadius: BorderRadius.circular(9),
+                ),
+                child: Text(
+                  wrKeepCompounds(code),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    color: WrColors.white,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      wrKeepCompounds(scaPillarFullName(p)),
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: WrColors.navy,
+                        height: 1.35,
+                      ),
+                    ),
+                    Text(
+                      wrKeepCompounds(data.status.label),
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        fontWeight: FontWeight.w700,
+                        color: scaStatusColor(data.status),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          // Script trả chuỗi rỗng khi chưa có lần trước: không có dòng nào.
+          if (trend != null) ...[
+            const SizedBox(height: 10),
+            WrParagraph(
+              trend,
+              key: Key('wr_sca_trend_line_${p.name}'),
+              textAlign: TextAlign.start,
+              style: const TextStyle(
+                fontSize: 14.5,
+                height: 1.55,
+                color: WrColors.muted,
+              ),
+            ),
+          ],
+          const SizedBox(height: 8),
+          Container(
+            padding: const EdgeInsets.only(top: 8),
+            decoration: const BoxDecoration(
+              border: Border(top: BorderSide(color: WrColors.lineSoft)),
+            ),
+            child: WrParagraph(
+              patternText,
+              key: Key('wr_sca_pattern_line_${p.name}'),
+              textAlign: TextAlign.start,
+              style: const TextStyle(
+                fontSize: 14.5,
+                height: 1.55,
+                color: WrColors.muted,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -452,7 +657,7 @@ class _LeadCard extends StatelessWidget {
         children: [
           if (highlight) ...[
             Text(
-              tr('Khoảng lệch đáng chú ý', 'A gap worth noticing'),
+              wrKeepCompounds(tr('Khoảng lệch đáng chú ý', 'A gap worth noticing')),
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
@@ -509,7 +714,7 @@ class _Empty extends StatelessWidget {
             elevation: 0,
           ),
           child: Text(
-            tr('Làm Self-Check', 'Take the Self-Check'),
+            wrKeepCompounds(tr('Làm Self-Check', 'Take the Self-Check')),
             style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w600),
           ),
         ),
@@ -599,12 +804,12 @@ class _PillarCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    situations.isEmpty
+                    wrKeepCompounds(situations.isEmpty
                         ? tr('chưa có', 'none yet')
                         : tr(
                             '${situations.length} tình huống',
                             '${situations.length} situations',
-                          ),
+                          )),
                     key: Key('wr_deep_pillar_count_${data.pillar.name}'),
                     style: const TextStyle(
                       fontSize: 13.5,
@@ -683,7 +888,7 @@ class _PillarCard extends StatelessWidget {
                             ),
                             const SizedBox(width: 10),
                             Text(
-                              tr('${s.count} lần', '${s.count}×'),
+                              wrKeepCompounds(tr('${s.count} lần', '${s.count}×')),
                               style: const TextStyle(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w600,

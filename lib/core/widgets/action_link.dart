@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/wr_colors.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 class WrActionLink extends StatelessWidget {
   const WrActionLink({super.key, required this.label, required this.onTap});
@@ -22,7 +23,7 @@ class WrActionLink extends StatelessWidget {
         children: [
           Flexible(
             child: Text(
-              label,
+              wrKeepCompounds(label),
               style: const TextStyle(
                 fontSize: 14.5,
                 fontWeight: FontWeight.w600,

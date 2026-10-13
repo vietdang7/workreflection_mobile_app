@@ -93,7 +93,7 @@ class _PracticeNoteSheetState extends State<_PracticeNoteSheet> {
             ),
             const SizedBox(height: 20),
             Text(
-              tr('BẠN VỪA HOÀN THÀNH', 'YOU HAVE JUST FINISHED'),
+              wrKeepCompounds(tr('BẠN VỪA HOÀN THÀNH', 'YOU HAVE JUST FINISHED')),
               style: TextStyle(
                 fontSize: 10.5,
                 fontWeight: FontWeight.w700,
@@ -103,7 +103,7 @@ class _PracticeNoteSheetState extends State<_PracticeNoteSheet> {
             ),
             const SizedBox(height: 6),
             Text(
-              widget.stepTitle,
+              wrKeepCompounds(widget.stepTitle),
               style: const TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
@@ -163,7 +163,7 @@ class _PracticeNoteSheetState extends State<_PracticeNoteSheet> {
                   ),
                   child: Center(
                     child: Text(
-                      tr('Lưu và hoàn thành', 'Save and finish'),
+                      wrKeepCompounds(tr('Lưu và hoàn thành', 'Save and finish')),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
@@ -185,7 +185,7 @@ class _PracticeNoteSheetState extends State<_PracticeNoteSheet> {
                 child: Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
                   child: Text(
-                    tr('Bỏ qua, chỉ đánh dấu xong', 'Skip, just mark it done'),
+                    wrKeepCompounds(tr('Bỏ qua, chỉ đánh dấu xong', 'Skip, just mark it done')),
                     style: TextStyle(fontSize: 14.5, color: WrColors.muted),
                   ),
                 ),

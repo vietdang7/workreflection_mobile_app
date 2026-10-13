@@ -114,11 +114,14 @@ List<WrJdDay> get kJdDays => [
     number: 1,
     title: tr('Khởi động', 'Warm-up'),
     eyebrow: tr('Bước 1 / 5 · khoảng 2 phút', 'Step 1 / 5 · about 2 minutes'),
+    // Script `screenJdBuilder` buổi 1, "buổi" đổi thành "bước" (khách duyệt).
     intro: tr(
-      'Đừng áp lực phải viết đúng chuẩn. Hãy thoải mái trả lời những câu '
-          'hỏi, chia sẻ của bạn sẽ là chất liệu để tạo nên bản JD hoàn chỉnh.',
-      'No pressure to get the wording right. Just answer freely; what you '
-          'share becomes the material for the finished JD.',
+      'Nếu chưa quen viết JD, đừng bắt đầu từ những trường chuẩn. Trả lời tự '
+          'do vài câu hỏi đời thường sau, câu trả lời sẽ là nguyên liệu cho '
+          'các bước sau.',
+      'If you are new to writing a JD, do not start from the standard '
+          'fields. Answer a few everyday questions freely below; your answers '
+          'become the material for the next steps.',
     ),
     fields: [
       WrJdField(
@@ -302,10 +305,8 @@ List<WrJdDay> get kJdDays => [
   ),
   WrJdDay(
     number: 5,
-    title: tr(
-      'Mối quan hệ & điều kiện làm việc',
-      'Working relationships & conditions',
-    ),
+    // Script: tiêu đề buổi 5 là "Hoàn tất".
+    title: tr('Hoàn tất', 'Wrap-up'),
     eyebrow: tr('Bước 5 / 5 · khoảng 2 phút', 'Step 5 / 5 · about 2 minutes'),
     fields: [
       WrJdField(

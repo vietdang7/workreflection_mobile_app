@@ -20,6 +20,7 @@ import 'package:workreflection_mobile/core/logic/wr_career_memory_rules.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_discover_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_journey_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/wr_timeline_read_screen.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 
 import '../support/fake_wr_content_repository.dart';
@@ -674,7 +675,8 @@ void main() {
   // ─────────────────────────────────────────────────────────────────────────────
 
   // Link chéo "Xem toàn bộ hành trình" đã bỏ khỏi Hiểu mình sau khi tối giản:
-  // mỗi dòng nay mở màn chi tiết của chính điều lặp lại đó.
+  // tab chỉ còn thẻ "QUAY LẠI NHIỀU NHẤT" (script `screenUnderstand`), danh
+  // sách đầy đủ nằm ở màn "Những điều đang lặp lại".
   group('Hiểu mình sau tối giản', () {
     testWidgets('không còn link chéo sang Hành trình', (tester) async {
       final content = FakeWrContentRepository();
@@ -695,188 +697,112 @@ void main() {
       );
 
       expect(find.textContaining('Xem toàn bộ hành trình'), findsNothing);
-      expect(find.text('Áp lực deadline'), findsOneWidget);
-      expect(find.text('4 lần'), findsOneWidget);
+      expect(find.text('“Áp lực deadline”'), findsOneWidget);
+      expect(find.text('4 lần trong 4 lần nhìn lại'), findsOneWidget);
     });
   });
 
   // ───────────────────────────────────────────────────────────────────────────
-  // Thẻ "Dòng nhìn lại thời gian" — v47 đưa xuống dưới Career Memory
+  // Màn "Nhìn lại dòng thời gian" — script `screenTimelineRead`
   // ───────────────────────────────────────────────────────────────────────────
 
-  group('Hành trình — thẻ Diễn biến theo thời gian', () {
-    testWidgets('bản miễn phí không thấy một chữ nào của nội dung diễn giải', (
-      tester,
-    ) async {
-      final intel = FakeWrIntelligenceRepository();
-      intel.seedPatternNarratives([
+  group('Nhìn lại dòng thời gian', () {
+    Widget wrapRead({FakeWrIntelligenceRepository? intel, bool premium = false}) {
+      final i = intel ?? FakeWrIntelligenceRepository();
+      if (premium) {
+        i.seedEntitlement(
+          WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
+        );
+      }
+      final router = GoRouter(
+        initialLocation: '/read',
+        routes: [
+          GoRoute(
+            path: '/read',
+            builder: (_, __) => const WrTimelineReadScreen(),
+          ),
+          GoRoute(
+            path: '/wr/paywall',
+            builder: (_, s) => Scaffold(
+              body: Text('PAYWALL ${s.uri.queryParameters['trigger']}'),
+            ),
+          ),
+          GoRoute(
+            path: '/wr/journey/narrative/full',
+            builder: (_, __) => const Scaffold(body: Text('FULL')),
+          ),
+        ],
+      );
+      return ProviderScope(
+        overrides: [
+          wrContentRepositoryProvider.overrideWithValue(
+            FakeWrContentRepository(),
+          ),
+          wrIntelligenceRepositoryProvider.overrideWithValue(i),
+          wrEpisodeRepositoryProvider.overrideWithValue(
+            FakeWrEpisodeRepository(),
+          ),
+          currentUserIdProvider.overrideWithValue('u1'),
+        ],
+        child: MaterialApp.router(
+          builder: wrTextScaleBuilder,
+          routerConfig: router,
+        ),
+      );
+    }
+
+    FakeWrIntelligenceRepository seeded() => FakeWrIntelligenceRepository()
+      ..seedPatternNarratives([
         PatternNarrative(
           id: 'n1',
           userId: 'u1',
-          narrative: 'Bạn đang học cách lên tiếng.',
+          narrative: [
+            'Mở đầu bài đọc.',
+            'Đoạn một.',
+            'Đoạn hai.',
+            'Đoạn ba.',
+            'Đoạn bốn.',
+            'Đoạn năm.',
+          ].join('\n\n'),
         ),
       ]);
 
-      await _pumpLarge(tester, _wrapJourney(intel: intel));
+    testWidgets('bản miễn phí đọc được mở đầu + bốn đoạn, chỉ khoá phần '
+        'diễn biến đầy đủ', (tester) async {
+      await _pumpLarge(tester, wrapRead(intel: seeded()));
 
-      expect(
-        find.byKey(const Key('wr_journey_narrative_card')),
-        findsOneWidget,
-      );
-      // Khoá, không phải làm mờ: chữ mờ vẫn là chữ đã gửi xuống máy.
-      expect(find.text('Bạn đang học cách lên tiếng.'), findsNothing);
-      expect(
-        find.byKey(const Key('wr_journey_narrative_lock')),
-        findsOneWidget,
-      );
-      expect(find.text('PHÂN TÍCH BỊ KHÓA'), findsOneWidget);
-      expect(find.text('Xem đúc kết chi tiết'), findsOneWidget);
-      expect(
-        find.byKey(const Key('wr_journey_narrative_expand')),
-        findsNothing,
-      );
-    });
+      expect(find.text('Nhìn lại dòng thời gian'), findsOneWidget);
+      expect(find.text('HÀNH TRÌNH'), findsOneWidget);
+      expect(find.text('Mở đầu bài đọc.'), findsOneWidget);
+      for (final p in ['Đoạn một.', 'Đoạn hai.', 'Đoạn ba.', 'Đoạn bốn.']) {
+        expect(find.text(p), findsOneWidget, reason: p);
+      }
+      expect(find.text('Đoạn năm.'), findsNothing);
+      expect(find.text('DIỄN BIẾN ĐẦY ĐỦ'), findsOneWidget);
 
-    testWidgets('Premium đọc được ngay diễn giải mới nhất trên tab', (
-      tester,
-    ) async {
-      final intel = FakeWrIntelligenceRepository();
-      intel.seedPatternNarratives([
-        PatternNarrative(
-          id: 'n1',
-          userId: 'u1',
-          narrative: 'Bạn đang học cách lên tiếng.',
-        ),
-      ]);
-
-      await _pumpLarge(tester, _wrapJourney(intel: intel, premium: true));
-
-      expect(find.text('Bạn đang học cách lên tiếng.'), findsOneWidget);
-      expect(find.text('Đọc toàn bộ diễn biến'), findsOneWidget);
-    });
-
-    testWidgets('Premium chưa đủ dữ liệu thì nói thẳng, không dựng thẻ rỗng', (
-      tester,
-    ) async {
-      await _pumpLarge(tester, _wrapJourney(premium: true));
-
-      expect(
-        find.byKey(const Key('wr_journey_narrative_card')),
-        findsOneWidget,
-      );
-      expect(find.textContaining('Chưa đủ dữ liệu'), findsOneWidget);
-    });
-
-    // Script khách v47: "Đẩy Dòng nhìn lại thời gian xuống phía dưới".
-    testWidgets('thẻ nằm DƯỚI Career Memory', (tester) async {
-      await _pumpLarge(tester, _wrapJourney(premium: true));
-
-      final card = tester.getTopLeft(
-        find.byKey(const Key('wr_journey_narrative_card')),
-      );
-      final memory = tester.getTopLeft(find.text('Dấu ấn hành trình'));
-      expect(card.dy, greaterThan(memory.dy));
-      expect(find.text('DÒNG NHÌN LẠI THỜI GIAN'), findsOneWidget);
-    });
-
-    testWidgets('Premium bấm dòng dẫn mở màn Diễn biến riêng', (tester) async {
-      await _pumpLarge(tester, _wrapJourney(premium: true));
-
-      await tester.tap(find.byKey(const Key('wr_journey_narrative_row')));
+      await tester.tap(find.byKey(const Key('wr_timeline_read_full_cta')));
       await tester.pumpAndSettle();
-
-      expect(find.text('Narrative'), findsOneWidget);
+      expect(find.text('PAYWALL ai_insight'), findsOneWidget);
     });
 
-    testWidgets('bản miễn phí bấm nút trong khối khoá thì mở paywall', (
+    testWidgets('Premium bấm "Đọc toàn bộ diễn biến" mở bản đầy đủ', (
       tester,
     ) async {
-      await _pumpLarge(tester, _wrapJourney());
+      await _pumpLarge(tester, wrapRead(intel: seeded(), premium: true));
 
-      await tester.tap(find.byKey(const Key('wr_journey_narrative_row')));
+      await tester.tap(find.byKey(const Key('wr_timeline_read_full_cta')));
       await tester.pumpAndSettle();
-
-      expect(find.text('PaywallScreen'), findsOneWidget);
-      expect(find.text('Narrative'), findsNothing);
+      expect(find.text('FULL'), findsOneWidget);
     });
 
-    // ── Khung cố định, bấm để mở rộng (khách, họp 26_1) ───────────────────
-    //
-    // Bản kể do `wr-narrative` sinh ra không có giới hạn độ dài, nên chiều cao
-    // thẻ phụ thuộc vào mô hình chứ không phải vào thiết kế — có hôm nó đẩy hết
-    // Career Memory xuống dưới màn hình.
-
-    testWidgets('đoạn dài bị kẹp lại, không kéo dài thẻ vô hạn', (
+    testWidgets('chưa có bản kể thật thì trạng thái rỗng, không đoạn mẫu', (
       tester,
     ) async {
-      final intel = FakeWrIntelligenceRepository();
-      intel.seedPatternNarratives([
-        PatternNarrative(
-          id: 'n1',
-          userId: 'u1',
-          narrative: List.filled(80, 'Bạn đang học cách lên tiếng.').join(' '),
-        ),
-      ]);
+      await _pumpLarge(tester, wrapRead(premium: true));
 
-      await _pumpLarge(tester, _wrapJourney(intel: intel, premium: true));
-
-      final para = tester.widget<Text>(
-        find.descendant(
-          of: find.byKey(const Key('wr_journey_narrative_expand')),
-          matching: find.byType(Text),
-        ),
-      );
-      expect(para.maxLines, kNarrativeCollapsedLines);
-      expect(para.overflow, TextOverflow.ellipsis);
-      expect(find.text('Mở rộng'), findsOneWidget);
-    });
-
-    testWidgets('bấm vào đoạn chữ thì bung ra, bấm lần nữa thì thu lại', (
-      tester,
-    ) async {
-      final intel = FakeWrIntelligenceRepository();
-      intel.seedPatternNarratives([
-        PatternNarrative(
-          id: 'n1',
-          userId: 'u1',
-          narrative: List.filled(80, 'Bạn đang học cách lên tiếng.').join(' '),
-        ),
-      ]);
-
-      await _pumpLarge(tester, _wrapJourney(intel: intel, premium: true));
-
-      Text body() => tester.widget<Text>(
-        find.descendant(
-          of: find.byKey(const Key('wr_journey_narrative_expand')),
-          matching: find.byType(Text),
-        ),
-      );
-
-      await tester.tap(find.byKey(const Key('wr_journey_narrative_expand')));
-      await tester.pumpAndSettle();
-      expect(body().maxLines, isNull);
-      expect(find.text('Thu gọn'), findsOneWidget);
-
-      await tester.tap(find.byKey(const Key('wr_journey_narrative_expand')));
-      await tester.pumpAndSettle();
-      expect(body().maxLines, kNarrativeCollapsedLines);
-    });
-
-    testWidgets('câu chờ và câu quảng cáo Premium KHÔNG bị kẹp', (
-      tester,
-    ) async {
-      // Hai câu đó do mình viết, độ dài đã biết trước. Kẹp thêm chỉ tổ cắt cụt
-      // đúng câu đang giải thích vì sao chưa có gì để đọc.
-      await _pumpLarge(tester, _wrapJourney(premium: true));
-
-      final para = tester.widget<Text>(
-        find.descendant(
-          of: find.byKey(const Key('wr_journey_narrative_expand')),
-          matching: find.byType(Text),
-        ),
-      );
-      expect(para.maxLines, isNull);
-      expect(find.text('Mở rộng'), findsNothing);
+      expect(find.byKey(const Key('wr_timeline_read_empty')), findsOneWidget);
+      expect(find.textContaining('12 lần nhìn lại'), findsNothing);
+      expect(find.byKey(const Key('wr_timeline_read_lead')), findsNothing);
     });
   });
 }

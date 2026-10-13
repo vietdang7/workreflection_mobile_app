@@ -17,6 +17,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../../core/l10n/wr_tr.dart';
 import '../../../../core/logic/wr_flow_error.dart';
+import '../../../../core/logic/wr_reflect_flow.dart' show kOtherSituationLabel;
 import '../../../../core/logic/wr_reflect_v47.dart';
 import '../../../../core/models/wr_episode.dart';
 import '../../../../core/theme/wr_colors.dart';
@@ -86,7 +87,9 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
       }
     }
     final note = episode.notes[ReflectionPattern.notice.dbValue]?.trim();
-    return (note == null || note.isEmpty) ? null : note;
+    if (note != null && note.isNotEmpty) return note;
+    // Nhánh "Điều khác" không có mã: script Sprint 2 hiện đúng nhãn của mục đó.
+    return code == null ? kOtherSituationLabel : null;
   }
 
   @override
@@ -109,6 +112,7 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
       title: kMomentTitle,
       subtitle: kMomentSubtitle,
       step: 1,
+      centerContent: true,
       onBack: () => context.pop(),
       onClose: _leave,
       primaryLabel: kMomentDone,
@@ -156,7 +160,7 @@ class _WrDetailScreenState extends ConsumerState<WrDetailScreen> {
           if (_error != null) ...[
             const SizedBox(height: 16),
             Text(
-              _error!,
+              wrKeepCompounds(_error!),
               style: const TextStyle(fontSize: 14.5, color: WrColors.coral),
             ),
           ],

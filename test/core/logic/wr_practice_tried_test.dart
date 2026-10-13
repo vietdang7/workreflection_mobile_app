@@ -79,7 +79,7 @@ void main() {
   });
 
   group('buildUserPracticeSteps', () {
-    test('có câu đã thử → bước "Chọn một cách" dặn đừng lặp lại', () {
+    test('mô tả bước 3 theo script, không nhắc lại điều đã thử', () {
       final steps = buildUserPracticeSteps(
         themeId: 'u-1',
         intake: const PracticeIntake(
@@ -88,28 +88,29 @@ void main() {
           tried: 'Góp ý ngay trong họp.',
         ),
       );
+      // Ba cách gợi ý (`buildUserThemeMentorOptions`) đã tránh điều đã thử.
       expect(
         steps[2].content,
-        endsWith(
-          'Lần này đừng lặp lại điều bạn đã thử: "Góp ý ngay trong họp".',
-        ),
+        'Mở phần gợi ý, chọn một cách, rồi thử trong một tình huống thật liên '
+        'quan tới nói rõ hơn.',
       );
-      expect(steps[2].contentEn, contains('do not repeat'));
-      for (final i in [0, 1, 3]) {
-        expect(steps[i].content, isNot(contains('đã thử:')));
-      }
+      expect(steps[2].contentEn, isNot(contains('do not repeat')));
     });
 
-    test('không có câu đã thử → chữ bước như cũ', () {
+    test('bước 4 là "Câu hỏi cho lần sau", Premium', () {
       final steps = buildUserPracticeSteps(
         themeId: 'u-1',
         intake: const PracticeIntake(situation: 's', goal: 'Nói rõ hơn'),
       );
+      expect(steps[3].title, 'Câu hỏi cho lần sau: Điều bạn muốn hỏi lần tới');
       expect(
-        steps[2].content,
-        'Chọn một trong các cách ở trên và thử trong một tình huống thật, liên '
-        'quan tới nói rõ hơn.',
+        steps[3].content,
+        'Sau khi thử, bạn muốn mang theo câu hỏi nào cho lần sau?',
       );
+      expect(steps[3].isPremium, isTrue);
+      expect(steps[0].title, 'Nhận diện: Quan sát một tình huống thật');
+      expect(steps[1].title, 'Phần của tôi: Tách phần mình và phần bối cảnh');
+      expect(steps[2].title, 'Chọn một cách: Chọn một cách rồi thử');
     });
   });
 }

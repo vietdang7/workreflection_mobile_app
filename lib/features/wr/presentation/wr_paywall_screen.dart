@@ -5,13 +5,17 @@ import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/data/wr_iap_repository.dart';
 import '../../../core/l10n/wr_tr.dart';
+import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/logic/wr_pricing.dart';
+import '../../../core/models/wr_intelligence.dart' show WrPlan;
 import '../../../core/logic/wr_store_policy.dart';
 import '../../../core/logic/wr_tra_chieu.dart' show kWebAppBaseUrl;
 import '../../../core/theme/wr_colors.dart';
+import '../../../core/widgets/wr_app_background.dart';
+import '../../../core/widgets/wr_card.dart';
+import '../../../core/widgets/wr_paragraph.dart';
 import '../iap_providers.dart';
 import '../wr_providers.dart';
-import '../../../core/widgets/wr_paragraph.dart';
 
 /// Trigger cho các headline khác nhau của Paywall.
 enum PaywallTrigger {
@@ -32,6 +36,12 @@ enum PaywallTrigger {
   /// Diễn giải sâu + theo dõi xu hướng của Self-Check (mockup Sprint 2,
   /// trigger `sca_deep`).
   selfCheckDeep,
+
+  /// Đã đủ số chủ đề Thực hành của bản miễn phí (script `practice_limit`).
+  practiceLimit,
+
+  /// Bước cuối của một chủ đề Thực hành (script `practice_step`).
+  practiceStep,
 }
 
 /// Mở màn thanh toán, và tự đóng Paywall nếu người dùng quay lại sau khi đã mua.
@@ -119,10 +129,10 @@ Future<void> _openWebPurchase(
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          tr(
+          wrKeepCompounds(tr(
             'Không mở được trang nâng cấp.',
             'Could not open the upgrade page.',
-          ),
+          )),
         ),
       ),
     );
@@ -198,8 +208,13 @@ class _PaywallCta extends ConsumerWidget {
           key: const Key('wr_paywall_cta'),
           onPressed: () => _openPayment(context, ref, pricing),
           style: _ctaStyle,
+          // Script: "Bắt đầu Premium, 499.000đ/năm" — giá ghép từ gói đang
+          // chọn trong `cc_products`, không viết cứng.
           child: Text(
-            tr('Bắt đầu Premium →', 'Start Premium →'),
+            wrKeepCompounds(tr(
+              'Bắt đầu Premium, ${pricing.currentLabel}/${pricing.durationSuffix}',
+              'Start Premium, ${pricing.currentLabel}/${pricing.durationSuffix}',
+            )),
             style: const TextStyle(fontSize: 16.5, fontWeight: FontWeight.w700),
           ),
         ),
@@ -215,7 +230,7 @@ class _PaywallCta extends ConsumerWidget {
             onPressed: () => _openWebPurchase(context, pricing),
             style: _ctaStyle,
             child: Text(
-              tr('Nâng cấp trên web →', 'Upgrade on the web →'),
+              wrKeepCompounds(tr('Nâng cấp trên web →', 'Upgrade on the web →')),
               style: const TextStyle(
                 fontSize: 16.5,
                 fontWeight: FontWeight.w700,
@@ -302,7 +317,7 @@ Future<void> _openLegal(BuildContext context, String url) async {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          tr('Không mở được trang này.', 'Could not open this page.'),
+          wrKeepCompounds(tr('Không mở được trang này.', 'Could not open this page.')),
         ),
       ),
     );
@@ -329,16 +344,16 @@ class _NativeIapCta extends ConsumerWidget {
       final messenger = ScaffoldMessenger.maybeOf(context);
       if (messenger == null) return;
       if (next.error != null && next.error != prev?.error) {
-        messenger.showSnackBar(SnackBar(content: Text(next.error!)));
+        messenger.showSnackBar(SnackBar(content: Text(wrKeepCompounds(next.error!))));
         ref.read(wrIapControllerProvider.notifier).clearMessages();
       } else if (next.restoredNothing && !(prev?.restoredNothing ?? false)) {
         messenger.showSnackBar(
           SnackBar(
             content: Text(
-              tr(
+              wrKeepCompounds(tr(
                 'Không tìm thấy gói nào đã mua trên tài khoản Apple này.',
                 'No purchases found on this Apple account.',
-              ),
+              )),
             ),
           ),
         );
@@ -465,7 +480,7 @@ class _IapOfferList extends ConsumerWidget {
           key: const Key('wr_paywall_iap_restore'),
           onPressed: busy ? null : controller.restore,
           child: Text(
-            tr('Khôi phục giao dịch đã mua', 'Restore purchases'),
+            wrKeepCompounds(tr('Khôi phục giao dịch đã mua', 'Restore purchases')),
             style: const TextStyle(fontSize: 13, color: WrColors.pillTealText),
           ),
         ),
@@ -546,7 +561,7 @@ class _IapOfferButton extends StatelessWidget {
           elevation: 0,
         ),
         child: Text(
-          label,
+          wrKeepCompounds(label),
           textAlign: TextAlign.center,
           style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700),
         ),
@@ -563,7 +578,7 @@ class _IapOfferButton extends StatelessWidget {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
       ),
       child: Text(
-        label,
+        wrKeepCompounds(label),
         textAlign: TextAlign.center,
         style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
       ),
@@ -582,7 +597,7 @@ class _LegalLink extends StatelessWidget {
     return GestureDetector(
       onTap: () => _openLegal(context, url),
       child: Text(
-        label,
+        wrKeepCompounds(label),
         style: const TextStyle(
           fontSize: 11,
           color: WrColors.pillTealText,
@@ -615,14 +630,29 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
 
   PaywallTrigger get trigger => widget.trigger;
 
+  // Tiêu đề và câu phụ của các trigger có trong script `screenPaywall` lấy
+  // nguyên văn `headlines` của script. Ba trigger script không có (trial_end,
+  // benchmark, need_reading) giữ câu cũ.
   ({String title, String sub}) get _headline => switch (trigger) {
     PaywallTrigger.aiInsight => (
-      title: tr('Diễn giải theo thời gian', 'Structured timeline reading'),
+      title: tr('AI Insight từ Career Memory', 'AI Insight from Career Memory'),
       sub: tr(
-        'Khi bạn cho phép xử lý bằng AI, bản Premium tổng hợp những lần nhìn lại '
-            'gần đây thành một câu chuyện có cấu trúc.',
-        'With your permission for AI processing, Premium turns recent look-backs '
-            'into a structured narrative.',
+        'Nhận diện mẫu hình bạn khó tự thấy.',
+        'Spot the patterns that are hard to see on your own.',
+      ),
+    ),
+    PaywallTrigger.practiceLimit => (
+      title: tr('Không giới hạn Thực hành', 'Unlimited Practice'),
+      sub: tr(
+        'Theo đuổi bao nhiêu chủ đề phát triển tuỳ bạn.',
+        'Pursue as many growth themes as you like.',
+      ),
+    ),
+    PaywallTrigger.practiceStep => (
+      title: tr('Mở khoá bước cuối', 'Unlock the final step'),
+      sub: tr(
+        'Nơi giá trị luyện tập thật sự tích lũy.',
+        'Where the value of practice really builds up.',
       ),
     ),
     PaywallTrigger.trialEnd => (
@@ -643,15 +673,10 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
       ),
     ),
     PaywallTrigger.growthOpportunity => (
-      title: tr(
-        'Hướng phát triển tiếp theo của bạn',
-        'Where you could grow next',
-      ),
+      title: tr('Cơ hội phát triển từ AI', 'Growth opportunities from AI'),
       sub: tr(
-        'Từ những gì bạn đã nhìn lại, bản đầy đủ chỉ ra một hướng '
-            'năng lực đáng thử tiếp.',
-        'From what you have looked back on, the full version points to one '
-            'skill worth trying next.',
+        'Tổng hợp từ toàn bộ hành trình, gợi ý hướng năng lực tiếp theo.',
+        'Drawn from your whole journey, suggesting the next skill to build.',
       ),
     ),
     PaywallTrigger.needReading => (
@@ -667,34 +692,24 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
       ),
     ),
     PaywallTrigger.careerMemory => (
-      title: tr(
-        'Toàn bộ ký ức nghề nghiệp của bạn',
-        'Your whole career memory',
-      ),
+      title: tr('Xem toàn bộ Career Memory', 'See all of Career Memory'),
       sub: tr(
-        'Mở lại từng mảnh bạn đã để lại, theo đúng dòng thời gian.',
-        'Reopen every piece you have left behind, in order.',
+        'Mọi Reflection bạn từng viết, kết nối thành một hành trình.',
+        'Every Reflection you have written, joined into one journey.',
       ),
     ),
     PaywallTrigger.selfCheckDeep => (
-      title: tr(
-        'Môi trường làm việc của bạn đang thay đổi ra sao?',
-        'How is your work environment changing?',
-      ),
+      title: tr('Diễn giải sâu cho Self-Check', 'Deep reading for Self-Check'),
       sub: tr(
-        'Theo dõi sự thay đổi qua thời gian từ bộ 15 câu hỏi đánh giá, '
-            'giúp bạn nhận diện xu hướng và đối chiếu với các góc nhìn '
-            'trước đó.',
-        'Follow the shifts over time through the 15 self-check questions, so '
-            'you can spot trends and compare them with what you saw '
-            'earlier.',
+        'Xem điều gì đang thực sự ảnh hưởng đến bạn.',
+        'See what is really affecting you.',
       ),
     ),
     PaywallTrigger.defaultTrigger => (
-      title: tr('Mở khoá toàn bộ hành trình', 'Unlock the whole journey'),
+      title: tr('Mở khoá toàn bộ trí tuệ', 'Unlock all the insight'),
       sub: tr(
-        'Tiếp tục phát triển không giới hạn.',
-        'Keep growing without limits.',
+        'Từ chính dữ liệu bạn đã tạo ra mỗi ngày.',
+        'From the very data you create every day.',
       ),
     ),
   };
@@ -744,66 +759,73 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
       (a, b) => a.durationDays <= b.durationDays ? a : b,
     );
 
-    final premiumHighlights = [
-      _Highlight(
-        icon: '◈',
-        title: tr('Diễn giải sâu theo thời gian', 'Deep timeline reading'),
-        desc: tr(
-          'Khi bạn cho phép xử lý bằng AI, bản Premium đọc các tình huống bạn đã '
-              'ghi nhận để viết lại diễn biến theo thời gian.',
-          'With your permission for AI processing, Premium reads your recorded '
-              'situations to write a structured timeline narrative.',
-        ),
-      ),
-      _Highlight(
-        icon: '◇',
-        title: 'Career Pattern',
-        desc: tr(
-          'Nhận diện các mẫu hình hành vi và cảm xúc lặp lại trong suốt '
-              'hành trình phát triển.',
-          'Spots the behaviour and feeling patterns that repeat across your '
-              'whole journey.',
-        ),
-      ),
-      _Highlight(
-        icon: '◎',
-        title: tr('Truy cập không giới hạn', 'Unlimited access'),
-        desc: tr(
-          'Mở khóa trọn vẹn kho bài viết, bài tập Thực hành và toàn bộ '
-              'Career Memory.',
-          'Opens the full library of articles, Practice exercises and all of '
-              'Career Memory.',
-        ),
-      ),
-    ];
-
+    // Bảng Free/Premium đúng `freeFeatures` của script `screenPaywall`.
+    //
+    // Số chủ đề Thực hành của bản miễn phí đọc từ luật gói đang chạy
+    // ([WrEntitlement.maxActivePracticeThemes]) chứ không viết cứng: script ghi
+    // "2 chủ đề Thực hành", khớp luật hiện tại; nếu luật đổi thì chữ đổi theo
+    // thay vì hứa một con số app không giữ.
+    final freeThemeLimit =
+        WrEntitlement(plan: WrPlan.free).maxActivePracticeThemes ?? 2;
     final freeFeatures = [
       _FeatureRow(
-        label: tr('Story Reflection hàng ngày', 'Daily Story Reflection'),
-        avail: true,
-      ),
-      _FeatureRow(label: tr('Check-in nhanh', 'Quick check-in'), avail: true),
-      const _FeatureRow(label: 'Career Memory Timeline', avail: true),
-      _FeatureRow(
-        label: tr('15 câu hỏi phản chiếu', '15 reflection questions'),
+        label: tr('Reflection hàng ngày', 'Daily Reflection'),
         avail: true,
       ),
       _FeatureRow(
-        label: tr('3 chủ đề Thực hành', '3 Practice themes'),
+        label: tr(
+          'Pattern cơ bản (đếm lặp lại)',
+          'Basic Pattern (repeat counts)',
+        ),
         avail: true,
       ),
-      const _FeatureRow(label: 'AI Insight', avail: false),
-      const _FeatureRow(label: 'Career Pattern Analysis', avail: false),
-      const _FeatureRow(label: 'Career Benchmark', avail: false),
       _FeatureRow(
-        label: tr('Không giới hạn Thực hành', 'Unlimited Practice'),
+        label: tr('Self-Check (15 câu)', 'Self-Check (15 questions)'),
+        avail: true,
+      ),
+      _FeatureRow(
+        label: tr(
+          '$freeThemeLimit chủ đề Thực hành',
+          '$freeThemeLimit Practice themes',
+        ),
+        avail: true,
+      ),
+      _FeatureRow(
+        label: tr(
+          'AI Insight & Pattern nâng cao',
+          'AI Insight & advanced Pattern',
+        ),
         avail: false,
+      ),
+      _FeatureRow(
+        label: tr(
+          'Diễn giải sâu Self-Check + xu hướng',
+          'Self-Check deep reading + trends',
+        ),
+        avail: false,
+      ),
+      _FeatureRow(
+        label: tr(
+          'Cơ hội phát triển (Growth Intelligence)',
+          'Growth opportunities (Growth Intelligence)',
+        ),
+        avail: false,
+      ),
+      _FeatureRow(
+        label: tr('Career Memory đầy đủ', 'Full Career Memory'),
+        avail: false,
+      ),
+      _FeatureRow(
+        label: tr('Thực hành không giới hạn', 'Unlimited Practice'),
+        avail: false,
+        isLast: true,
       ),
     ];
 
-    return Scaffold(
-      backgroundColor: WrColors.pageBg,
-      body: Column(
+    return WrAppBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Column(
         children: [
           // Header — navy background
           Container(
@@ -844,7 +866,7 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                           const SizedBox(width: 8),
                           if (showsPrice && pricing.hasDiscount) ...[
                             Text(
-                              pricing.originalLabel!,
+                              wrKeepCompounds(pricing.originalLabel!),
                               style: const TextStyle(
                                 fontSize: 11.5,
                                 color: Color(0x66FFFFFF),
@@ -856,7 +878,7 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                           ],
                           if (showsPrice)
                             Text(
-                              '${pricing.currentLabel} / ${pricing.durationSuffix}',
+                              wrKeepCompounds('${pricing.currentLabel} / ${pricing.durationSuffix}'),
                               style: const TextStyle(
                                 fontSize: 11.5,
                                 color: Color(0xB3FFFFFF),
@@ -915,57 +937,14 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Premium highlights
+                  // Bảng Free/Premium — script `screenPaywall` chỉ có một thẻ
+                  // liệt kê tính năng, không khối "Bạn nhận được" riêng.
                   Padding(
                     padding: const EdgeInsets.fromLTRB(22, 16, 22, 4),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          tr('BẠN NHẬN ĐƯỢC', 'WHAT YOU GET'),
-                          style: const TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w700,
-                            color: WrColors.muted,
-                            letterSpacing: 0.08,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        ...premiumHighlights.map(
-                          (item) => Padding(
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: _HighlightCard(highlight: item),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Free vs Premium comparison
-                  Padding(
-                    padding: const EdgeInsets.fromLTRB(22, 12, 22, 4),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          tr('SO SÁNH GÓI', 'PLAN COMPARISON'),
-                          style: const TextStyle(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w700,
-                            color: WrColors.muted,
-                            letterSpacing: 0.08,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Container(
-                          decoration: BoxDecoration(
-                            color: WrColors.white,
-                            borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: WrColors.line),
-                          ),
-                          child: Column(children: freeFeatures),
-                        ),
-                      ],
+                    child: WrCard(
+                      key: const Key('wr_paywall_feature_table'),
+                      padding: EdgeInsets.zero,
+                      child: Column(children: freeFeatures),
                     ),
                   ),
 
@@ -1005,6 +984,34 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                     ),
                   ),
 
+                  // Script: nút viền "Để sau" ngay dưới nút chính.
+                  if (!alreadyPremium)
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(22, 0, 22, 12),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton(
+                          key: const Key('wr_paywall_later'),
+                          onPressed: () => Navigator.of(context).maybePop(),
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: WrColors.navy,
+                            padding: const EdgeInsets.symmetric(vertical: 13),
+                            side: const BorderSide(color: WrColors.line),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
+                          ),
+                          child: Text(
+                            wrKeepCompounds(tr('Để sau', 'Maybe later')),
+                            style: const TextStyle(
+                              fontSize: 14.5,
+                              fontWeight: FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
                   // Bảo đảm hoàn tiền — chỉ ở bản bán trong app.
                   //
                   // Đây là điều khoản thương mại của một giao dịch. Ở bản phát
@@ -1031,10 +1038,10 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              tr(
+                              wrKeepCompounds(tr(
                                 'Bảo đảm hoàn tiền 7 ngày',
                                 '7-day money-back guarantee',
-                              ),
+                              )),
                               style: const TextStyle(
                                 fontSize: 12.5,
                                 fontWeight: FontWeight.w700,
@@ -1063,6 +1070,7 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
           ),
         ],
       ),
+    ),
     );
   }
 }
@@ -1093,7 +1101,7 @@ class _PlanSelector extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          tr('CHỌN GÓI', 'CHOOSE A PLAN'),
+          wrKeepCompounds(tr('CHỌN GÓI', 'CHOOSE A PLAN')),
           style: const TextStyle(
             fontSize: 11.5,
             fontWeight: FontWeight.w700,
@@ -1180,9 +1188,9 @@ class _PlanOption extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    // "Một năm" / "Một tháng" — viết hoa chữ đầu.
+                    wrKeepCompounds(// "Một năm" / "Một tháng" — viết hoa chữ đầu.
                     plan.durationLabel[0].toUpperCase() +
-                        plan.durationLabel.substring(1),
+                        plan.durationLabel.substring(1)),
                     style: const TextStyle(
                       fontSize: 15.5,
                       fontWeight: FontWeight.w700,
@@ -1192,12 +1200,12 @@ class _PlanOption extends StatelessWidget {
                   if (savingsPercent != null) ...[
                     const SizedBox(height: 2),
                     Text(
-                      tr(
+                      wrKeepCompounds(tr(
                         '≈ ${formatVndPrice(plan.pricePerMonth, plan.currency)}'
                             ' mỗi tháng',
                         '≈ ${formatVndPrice(plan.pricePerMonth, plan.currency)}'
                             ' per month',
-                      ),
+                      )),
                       style: const TextStyle(
                         fontSize: 12.5,
                         color: WrColors.muted,
@@ -1215,7 +1223,7 @@ class _PlanOption extends StatelessWidget {
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
                 child: Text(
-                  tr('TIẾT KIỆM $savingsPercent%', 'SAVE $savingsPercent%'),
+                  wrKeepCompounds(tr('TIẾT KIỆM $savingsPercent%', 'SAVE $savingsPercent%')),
                   style: const TextStyle(
                     fontSize: 10.5,
                     fontWeight: FontWeight.w700,
@@ -1226,7 +1234,7 @@ class _PlanOption extends StatelessWidget {
               const SizedBox(width: 9),
             ],
             Text(
-              plan.currentLabel,
+              wrKeepCompounds(plan.currentLabel),
               style: const TextStyle(
                 fontSize: 16.5,
                 fontWeight: FontWeight.w700,
@@ -1267,7 +1275,7 @@ class _PriceBlock extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      pricing.currentLabel,
+                      wrKeepCompounds(pricing.currentLabel),
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
@@ -1280,7 +1288,7 @@ class _PriceBlock extends StatelessWidget {
                       Padding(
                         padding: const EdgeInsets.only(bottom: 3),
                         child: Text(
-                          pricing.originalLabel!,
+                          wrKeepCompounds(pricing.originalLabel!),
                           style: const TextStyle(
                             fontSize: 14.5,
                             color: WrColors.text3,
@@ -1293,10 +1301,10 @@ class _PriceBlock extends StatelessWidget {
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  tr(
+                  wrKeepCompounds(tr(
                     'cho ${pricing.durationLabel} Premium',
                     'for ${pricing.durationLabel} of Premium',
-                  ),
+                  )),
                   style: const TextStyle(fontSize: 12.5, color: WrColors.muted),
                 ),
               ],
@@ -1310,7 +1318,7 @@ class _PriceBlock extends StatelessWidget {
               ),
               padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
               child: Text(
-                '−${pricing.discountPercent}%',
+                wrKeepCompounds('−${pricing.discountPercent}%'),
                 style: const TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w700,
@@ -1324,102 +1332,65 @@ class _PriceBlock extends StatelessWidget {
   }
 }
 
-class _Highlight {
-  const _Highlight({
-    required this.icon,
-    required this.title,
-    required this.desc,
+/// Một dòng của bảng Free/Premium (`freeFeatures` của script): dấu ✓/✕ trong
+/// vòng tròn, tên tính năng, và nhãn gói ở bên phải.
+class _FeatureRow extends StatelessWidget {
+  const _FeatureRow({
+    required this.label,
+    required this.avail,
+    this.isLast = false,
   });
-  final String icon;
-  final String title;
-  final String desc;
-}
-
-class _HighlightCard extends StatelessWidget {
-  const _HighlightCard({required this.highlight});
-  final _Highlight highlight;
+  final String label;
+  final bool avail;
+  final bool isLast;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: WrColors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: WrColors.line),
+        border: isLast
+            ? null
+            : const Border(bottom: BorderSide(color: WrColors.lineSoft)),
       ),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Container(
-            width: 34,
-            height: 34,
+            width: 18,
+            height: 18,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
-              color: WrColors.navy.withValues(alpha: 0.06),
-              borderRadius: BorderRadius.circular(9),
+              shape: BoxShape.circle,
+              color: avail
+                  ? WrColors.teal.withValues(alpha: 0.15)
+                  : WrColors.navy.withValues(alpha: 0.06),
             ),
-            child: Center(
-              child: Text(highlight.icon, style: const TextStyle(fontSize: 16)),
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  highlight.title,
-                  style: const TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w700,
-                    color: WrColors.navy,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                WrParagraph(
-                  highlight.desc,
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    color: WrColors.muted,
-                    height: 1.6,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _FeatureRow extends StatelessWidget {
-  const _FeatureRow({required this.label, required this.avail});
-  final String label;
-  final bool avail;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: WrColors.line)),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
-      child: Row(
-        children: [
-          Expanded(
             child: Text(
-              label,
+              wrKeepCompounds(avail ? '✓' : '✕'),
               style: TextStyle(
-                fontSize: 13.5,
-                color: avail ? WrColors.dark : WrColors.muted,
+                fontSize: 10,
+                color: avail ? WrColors.pillTealText : WrColors.text3,
               ),
             ),
           ),
-          Icon(
-            avail ? Icons.check_circle_outlined : Icons.cancel_outlined,
-            size: 16,
-            color: avail ? WrColors.teal : WrColors.text3,
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              wrKeepCompounds(label),
+              style: TextStyle(
+                fontSize: 14,
+                color: avail ? WrColors.navy : WrColors.text3,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Text(
+            wrKeepCompounds(avail ? 'Free' : 'Premium'),
+            style: const TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w700,
+              color: WrColors.navy,
+            ),
           ),
         ],
       ),

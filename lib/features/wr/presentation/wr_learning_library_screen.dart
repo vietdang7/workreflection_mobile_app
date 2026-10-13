@@ -20,6 +20,7 @@ import '../../../core/widgets/wr_card.dart';
 import '../../../core/widgets/wr_detail_scaffold.dart';
 import '../../../core/widgets/wr_hero_header.dart';
 import '../../../core/widgets/wr_link_row.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 /// Nhãn chương trình — dùng chung cho thẻ ở tab Phát triển và màn danh sách.
 String get kLearningLibraryLabel => tr('Thư viện học tập', 'Learning library');
@@ -57,7 +58,7 @@ class WrLearningLibraryScreen extends ConsumerWidget {
       title: kLearningLibraryLabel,
       children: [
         Text(
-          kLearningLibraryIntro,
+          wrKeepCompounds(kLearningLibraryIntro),
           style: TextStyle(fontSize: 15.5, color: WrColors.muted, height: 1.6),
         ),
         const SizedBox(height: 22),
@@ -116,12 +117,12 @@ class _Notice extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            text,
+            wrKeepCompounds(text),
             style: TextStyle(fontSize: 15.5, color: WrColors.dark, height: 1.6),
           ),
           if (action != null) ...[
             const SizedBox(height: 8),
-            TextButton(onPressed: onAction, child: Text(action!)),
+            TextButton(onPressed: onAction, child: Text(wrKeepCompounds(action!))),
           ],
         ],
       ),
@@ -225,7 +226,7 @@ class _ResourceCard extends StatelessWidget {
                   if (resource.durationLabel != null) ...[
                     const SizedBox(height: 8),
                     Text(
-                      resource.durationLabel!,
+                      wrKeepCompounds(resource.durationLabel!),
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 12.5,
@@ -256,7 +257,7 @@ class _ResourceCard extends StatelessWidget {
                           borderRadius: BorderRadius.circular(100),
                         ),
                         child: Text(
-                          resource.category!,
+                          wrKeepCompounds(resource.category!),
                           style: TextStyle(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w700,
@@ -268,7 +269,7 @@ class _ResourceCard extends StatelessWidget {
                       const SizedBox(height: 7),
                     ],
                     Text(
-                      resource.title,
+                      wrKeepCompounds(resource.title),
                       maxLines: 4,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -324,7 +325,7 @@ class _MetaItem extends StatelessWidget {
       children: [
         Icon(icon, size: 15, color: WrColors.muted),
         const SizedBox(width: 4),
-        Text(label, style: TextStyle(fontSize: 13, color: WrColors.muted)),
+        Text(wrKeepCompounds(label), style: TextStyle(fontSize: 13, color: WrColors.muted)),
       ],
     );
   }
@@ -370,7 +371,7 @@ class _CategoryPill extends StatelessWidget {
         borderRadius: BorderRadius.circular(100),
       ),
       child: Text(
-        label,
+        wrKeepCompounds(label),
         style: const TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w700,
@@ -406,10 +407,10 @@ class WrLearningVideoScreen extends ConsumerWidget {
             const Center(child: CircularProgressIndicator())
           else
             Text(
-              tr(
+              wrKeepCompounds(tr(
                 'Video này có thể đã được gỡ khỏi thư viện.',
                 'This video may have been removed from the library.',
-              ),
+              )),
               style: TextStyle(
                 fontSize: 15.5,
                 color: WrColors.muted,
@@ -442,7 +443,7 @@ class WrLearningVideoScreen extends ConsumerWidget {
         if (resource.description != null) ...[
           const SizedBox(height: 14),
           Text(
-            resource.description!,
+            wrKeepCompounds(resource.description!),
             style: TextStyle(
               fontSize: 15.5,
               color: WrColors.dark,
@@ -525,7 +526,7 @@ class WrLearningLibrarySection extends StatelessWidget {
         Row(
           children: [
             Expanded(
-              child: Text(kLearningLibraryLabel, style: WrLinkRow.labelStyle),
+              child: Text(wrKeepCompounds(kLearningLibraryLabel), style: WrLinkRow.labelStyle),
             ),
             InkWell(
               key: const Key('wr_learning_see_all'),
@@ -537,12 +538,12 @@ class WrLearningLibrarySection extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      items.length > 1
+                      wrKeepCompounds(items.length > 1
                           ? tr(
                               'Xem tất cả (${items.length})',
                               'See all (${items.length})',
                             )
-                          : tr('Xem tất cả', 'See all'),
+                          : tr('Xem tất cả', 'See all')),
                       style: const TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w600,
@@ -618,7 +619,7 @@ class _FeaturedCard extends StatelessWidget {
                         ],
                         Flexible(
                           child: Text(
-                            meta,
+                            wrKeepCompounds(meta),
                             style: const TextStyle(
                               fontSize: 11.5,
                               fontWeight: FontWeight.w700,
@@ -631,7 +632,7 @@ class _FeaturedCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 5),
                     Text(
-                      resource.title,
+                      wrKeepCompounds(resource.title),
                       maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -678,7 +679,7 @@ class _Chip extends StatelessWidget {
         borderRadius: BorderRadius.circular(100),
       ),
       child: Text(
-        label,
+        wrKeepCompounds(label),
         style: TextStyle(
           fontSize: 11.5,
           fontWeight: FontWeight.w700,

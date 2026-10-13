@@ -27,6 +27,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../profile/profile_providers.dart';
 import '../roadmap_providers.dart';
 import '../../../core/l10n/wr_tr.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 // ---------------------------------------------------------------------------
 // Constants — mirror LAYERS / DAYS from web
@@ -183,7 +184,7 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
           icon: const Icon(Icons.arrow_back, color: WrColors.navy),
           onPressed: () => context.pop(),
         ),
-        title: Text(l10n.roadmapTitle, style: WrTextStyles.hMedium),
+        title: Text(wrKeepCompounds(l10n.roadmapTitle), style: WrTextStyles.hMedium),
       ),
       body: reportsAsync.when(
         loading: () =>
@@ -201,14 +202,14 @@ class _RoadmapScreenState extends ConsumerState<RoadmapScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  e.toString(),
+                  wrKeepCompounds(e.toString()),
                   style: WrTextStyles.body,
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 16),
                 TextButton(
                   onPressed: () => ref.invalidate(premiumReportsProvider),
-                  child: Text(l10n.homeRetry),
+                  child: Text(wrKeepCompounds(l10n.homeRetry)),
                 ),
               ],
             ),
@@ -286,13 +287,13 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              l10n.roadmapNoPremiumReports,
+              wrKeepCompounds(l10n.roadmapNoPremiumReports),
               style: WrTextStyles.hMedium,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              l10n.roadmapNoPremiumReportsBody,
+              wrKeepCompounds(l10n.roadmapNoPremiumReportsBody),
               style: WrTextStyles.body,
               textAlign: TextAlign.center,
             ),
@@ -306,7 +307,7 @@ class _EmptyState extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                 ),
               ),
-              child: Text(l10n.roadmapStartSurvey),
+              child: Text(wrKeepCompounds(l10n.roadmapStartSurvey)),
             ),
           ],
         ),
@@ -342,12 +343,12 @@ class _RoadmapBody extends ConsumerWidget {
       loading: () =>
           const Center(child: CircularProgressIndicator(strokeWidth: 2)),
       error: (e, _) =>
-          Center(child: Text(e.toString(), style: WrTextStyles.body)),
+          Center(child: Text(wrKeepCompounds(e.toString()), style: WrTextStyles.body)),
       data: (progressData) => actionsAsync.when(
         loading: () =>
             const Center(child: CircularProgressIndicator(strokeWidth: 2)),
         error: (e, _) =>
-            Center(child: Text(e.toString(), style: WrTextStyles.body)),
+            Center(child: Text(wrKeepCompounds(e.toString()), style: WrTextStyles.body)),
         data: (actions) {
           // Init optimistic notifiers once data is available
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -534,7 +535,7 @@ class _ReportPickerRow extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: Text(
-                      _reportLabel(selectedReport),
+                      wrKeepCompounds(_reportLabel(selectedReport)),
                       style: WrTextStyles.hMedium.copyWith(fontSize: 15.5),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -590,7 +591,7 @@ class _ReportPickerRow extends ConsumerWidget {
                 final isSelected = r.id == selectedReport.id;
                 return ListTile(
                   title: Text(
-                    _reportLabel(r),
+                    wrKeepCompounds(_reportLabel(r)),
                     style: WrTextStyles.hMedium.copyWith(
                       fontSize: 15.5,
                       color: isSelected ? WrColors.coral : null,
@@ -633,13 +634,13 @@ class _ReportPickerRow extends ConsumerWidget {
             ref.invalidate(premiumReportsProvider);
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.roadmapNicknameSaved)),
+                SnackBar(content: Text(wrKeepCompounds(l10n.roadmapNicknameSaved))),
               );
             }
           } catch (_) {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.roadmapNicknameError)),
+                SnackBar(content: Text(wrKeepCompounds(l10n.roadmapNicknameError))),
               );
             }
           }
@@ -686,7 +687,7 @@ class _RenameDialogState extends State<_RenameDialog> {
   Widget build(BuildContext context) {
     final l10n = widget.l10n;
     return AlertDialog(
-      title: Text(l10n.roadmapRenameReport),
+      title: Text(wrKeepCompounds(l10n.roadmapRenameReport)),
       content: TextField(
         key: const Key('roadmap_nickname_field'),
         controller: _ctrl,
@@ -700,7 +701,7 @@ class _RenameDialogState extends State<_RenameDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(l10n.commonCancel),
+          child: Text(wrKeepCompounds(l10n.commonCancel)),
         ),
         TextButton(
           key: const Key('roadmap_nickname_save'),
@@ -708,7 +709,7 @@ class _RenameDialogState extends State<_RenameDialog> {
               ? null
               : () => widget.onSave(_ctrl.text.trim()),
           child: Text(
-            l10n.roadmapTaskSave,
+            wrKeepCompounds(l10n.roadmapTaskSave),
             style: const TextStyle(color: WrColors.coral),
           ),
         ),
@@ -743,9 +744,9 @@ class _ProgressBar extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(l10n.roadmapProgressLabel, style: WrTextStyles.hMedium),
+            Text(wrKeepCompounds(l10n.roadmapProgressLabel), style: WrTextStyles.hMedium),
             Text(
-              '$completed/$total ($pct%)',
+              wrKeepCompounds('$completed/$total ($pct%)'),
               style: WrTextStyles.body.copyWith(fontSize: 14.5),
             ),
           ],
@@ -811,7 +812,7 @@ class _LayerSection extends ConsumerWidget {
           child: Row(
             children: [
               Text(
-                label.toUpperCase(),
+                wrKeepCompounds(label.toUpperCase()),
                 style: const TextStyle(
                   color: WrColors.white,
                   fontWeight: FontWeight.w700,
@@ -822,7 +823,7 @@ class _LayerSection extends ConsumerWidget {
               if (focus != null) ...[
                 const Spacer(),
                 Text(
-                  '${focus!.label} · ${focus!.score.toStringAsFixed(1)}',
+                  wrKeepCompounds('${focus!.label} · ${focus!.score.toStringAsFixed(1)}'),
                   style: const TextStyle(color: Colors.white70, fontSize: 13.5),
                 ),
               ],
@@ -846,7 +847,7 @@ class _LayerSection extends ConsumerWidget {
                   border: Border.all(color: color.withValues(alpha: 0.3)),
                 ),
                 child: Text(
-                  '${focus!.score.toStringAsFixed(1)} · ${_scoreLabel(focus!.score, l10n)}',
+                  wrKeepCompounds('${focus!.score.toStringAsFixed(1)} · ${_scoreLabel(focus!.score, l10n)}'),
                   style: TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w600,
@@ -950,7 +951,7 @@ class _DayCell extends ConsumerWidget {
                     children: [
                       // Day header
                       Text(
-                        _dayHeader(day, l10n).toUpperCase(),
+                        wrKeepCompounds(_dayHeader(day, l10n).toUpperCase()),
                         style: const TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w700,
@@ -1042,13 +1043,13 @@ class _DayCell extends ConsumerWidget {
             if (context.mounted) {
               ScaffoldMessenger.of(
                 context,
-              ).showSnackBar(SnackBar(content: Text(l10n.roadmapTaskUpdated)));
+              ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.roadmapTaskUpdated))));
             }
           } catch (_) {
             if (context.mounted) {
               ScaffoldMessenger.of(
                 context,
-              ).showSnackBar(SnackBar(content: Text(l10n.roadmapErrorEdit)));
+              ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.roadmapErrorEdit))));
             }
           }
         },
@@ -1067,13 +1068,13 @@ class _DayCell extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.roadmapTaskDeleted)));
+        ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.roadmapTaskDeleted))));
       }
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.roadmapErrorDelete)));
+        ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.roadmapErrorDelete))));
       }
     }
   }
@@ -1121,7 +1122,7 @@ class _ActionRow extends StatelessWidget {
                 GestureDetector(
                   onTap: () => onToggle(!isCompleted),
                   child: Text(
-                    trDb(action.titleVi, action.titleEn),
+                    wrKeepCompounds(trDb(action.titleVi, action.titleEn)),
                     // Xong rồi thì dấu tick nói đủ, không gạch ngang chữ
                     // (yêu cầu 05/08).
                     style: WrTextStyles.hMedium.copyWith(
@@ -1133,7 +1134,7 @@ class _ActionRow extends StatelessWidget {
                 if (action.descriptionVi.isNotEmpty) ...[
                   const SizedBox(height: 3),
                   Text(
-                    trDb(action.descriptionVi, action.descriptionEn),
+                    wrKeepCompounds(trDb(action.descriptionVi, action.descriptionEn)),
                     style: WrTextStyles.body.copyWith(
                       fontSize: 13.5,
                       color: WrColors.muted,
@@ -1196,7 +1197,7 @@ class _CustomTaskRow extends StatelessWidget {
                       child: GestureDetector(
                         onTap: () => onToggle(!isCompleted),
                         child: Text(
-                          task.title,
+                          wrKeepCompounds(task.title),
                           // Xong rồi thì dấu tick nói đủ, không gạch ngang chữ
                           // (yêu cầu 05/08).
                           style: WrTextStyles.body.copyWith(
@@ -1219,7 +1220,7 @@ class _CustomTaskRow extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text(
-                        task.dueDate!,
+                        wrKeepCompounds(task.dueDate!),
                         style: WrTextStyles.body.copyWith(
                           fontSize: 12.5,
                           color: WrColors.text3,
@@ -1232,7 +1233,7 @@ class _CustomTaskRow extends StatelessWidget {
                     task.description!.isNotEmpty) ...[
                   const SizedBox(height: 2),
                   Text(
-                    task.description!,
+                    wrKeepCompounds(task.description!),
                     style: WrTextStyles.body.copyWith(
                       fontSize: 13.5,
                       color: WrColors.muted,
@@ -1300,7 +1301,7 @@ class _AddTaskButton extends ConsumerWidget {
           // viền nên phải cho phép xuống dòng thay vì giữ nguyên một hàng.
           Flexible(
             child: Text(
-              l10n.roadmapAddCustomTask,
+              wrKeepCompounds(l10n.roadmapAddCustomTask),
               style: WrTextStyles.body.copyWith(
                 fontSize: 13.5,
                 color: WrColors.muted,
@@ -1335,13 +1336,13 @@ class _AddTaskButton extends ConsumerWidget {
             if (context.mounted) {
               ScaffoldMessenger.of(
                 context,
-              ).showSnackBar(SnackBar(content: Text(l10n.roadmapTaskAdded)));
+              ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.roadmapTaskAdded))));
             }
           } catch (_) {
             if (context.mounted) {
               ScaffoldMessenger.of(
                 context,
-              ).showSnackBar(SnackBar(content: Text(l10n.roadmapErrorAdd)));
+              ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.roadmapErrorAdd))));
             }
           }
         },
@@ -1406,7 +1407,7 @@ class _CustomTaskDialogState extends State<_CustomTaskDialog> {
     final l10n = widget.l10n;
     return AlertDialog(
       title: Text(
-        widget.isEdit ? l10n.roadmapEditTaskTitle : l10n.roadmapAddTaskTitle,
+        wrKeepCompounds(widget.isEdit ? l10n.roadmapEditTaskTitle : l10n.roadmapAddTaskTitle),
       ),
       content: SingleChildScrollView(
         child: Column(
@@ -1414,7 +1415,7 @@ class _CustomTaskDialogState extends State<_CustomTaskDialog> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              l10n.roadmapTaskTitleLabel,
+              wrKeepCompounds(l10n.roadmapTaskTitleLabel),
               style: WrTextStyles.body.copyWith(fontSize: 13.5),
             ),
             const SizedBox(height: 4),
@@ -1435,7 +1436,7 @@ class _CustomTaskDialogState extends State<_CustomTaskDialog> {
             ),
             const SizedBox(height: 12),
             Text(
-              l10n.roadmapTaskDescLabel,
+              wrKeepCompounds(l10n.roadmapTaskDescLabel),
               style: WrTextStyles.body.copyWith(fontSize: 13.5),
             ),
             const SizedBox(height: 4),
@@ -1457,7 +1458,7 @@ class _CustomTaskDialogState extends State<_CustomTaskDialog> {
             ),
             const SizedBox(height: 12),
             Text(
-              l10n.roadmapTaskDueDateLabel,
+              wrKeepCompounds(l10n.roadmapTaskDueDateLabel),
               style: WrTextStyles.body.copyWith(fontSize: 13.5),
             ),
             const SizedBox(height: 4),
@@ -1481,7 +1482,7 @@ class _CustomTaskDialogState extends State<_CustomTaskDialog> {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(l10n.commonCancel),
+          child: Text(wrKeepCompounds(l10n.commonCancel)),
         ),
         TextButton(
           key: Key(
@@ -1495,7 +1496,7 @@ class _CustomTaskDialogState extends State<_CustomTaskDialog> {
                   _dueCtrl.text.trim(),
                 ),
           child: Text(
-            widget.isEdit ? l10n.roadmapTaskSave : l10n.roadmapTaskAdd,
+            wrKeepCompounds(widget.isEdit ? l10n.roadmapTaskSave : l10n.roadmapTaskAdd),
             style: const TextStyle(color: WrColors.coral),
           ),
         ),
@@ -1533,7 +1534,7 @@ class _CoachSection extends ConsumerWidget {
               children: [
                 if (entries.isEmpty)
                   Text(
-                    l10n.roadmapNoCoachs,
+                    wrKeepCompounds(l10n.roadmapNoCoachs),
                     style: WrTextStyles.body.copyWith(color: WrColors.muted),
                   ),
                 for (final entry in entries)
@@ -1543,7 +1544,7 @@ class _CoachSection extends ConsumerWidget {
                   key: const Key('roadmap_invite_coach_btn'),
                   onPressed: () => _showInviteDialog(context, ref, entries),
                   icon: const Icon(Icons.person_add_outlined, size: 18),
-                  label: Text(l10n.roadmapInviteCoach),
+                  label: Text(wrKeepCompounds(l10n.roadmapInviteCoach)),
                   style: OutlinedButton.styleFrom(
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
@@ -1577,12 +1578,12 @@ class _CoachSection extends ConsumerWidget {
             if (context.mounted) {
               ScaffoldMessenger.of(
                 context,
-              ).showSnackBar(SnackBar(content: Text(l10n.roadmapCoachInvited)));
+              ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.roadmapCoachInvited))));
             }
           } catch (_) {
             if (context.mounted) {
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text(l10n.roadmapErrorInviteCoach)),
+                SnackBar(content: Text(wrKeepCompounds(l10n.roadmapErrorInviteCoach))),
               );
             }
           }
@@ -1619,7 +1620,7 @@ class _CoachAccessTile extends StatelessWidget {
             radius: 20,
             backgroundColor: WrColors.navy.withValues(alpha: 0.08),
             child: Text(
-              (entry.coachName ?? 'C').characters.first.toUpperCase(),
+              wrKeepCompounds((entry.coachName ?? 'C').characters.first.toUpperCase()),
               style: const TextStyle(
                 color: WrColors.navy,
                 fontWeight: FontWeight.w700,
@@ -1632,12 +1633,12 @@ class _CoachAccessTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  entry.coachName ?? 'Coach',
+                  wrKeepCompounds(entry.coachName ?? 'Coach'),
                   style: WrTextStyles.hMedium.copyWith(fontSize: 14.5),
                 ),
                 if (entry.coachTitle != null)
                   Text(
-                    entry.coachTitle!,
+                    wrKeepCompounds(entry.coachTitle!),
                     style: WrTextStyles.body.copyWith(
                       fontSize: 13.5,
                       color: WrColors.muted,
@@ -1653,7 +1654,7 @@ class _CoachAccessTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              _statusLabel(l10n),
+              wrKeepCompounds(_statusLabel(l10n)),
               style: TextStyle(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w600,
@@ -1683,7 +1684,7 @@ class _InviteCoachDialog extends ConsumerWidget {
     final coachesAsync = ref.watch(availableCoachesProvider);
 
     return AlertDialog(
-      title: Text(l10n.roadmapChooseCoach),
+      title: Text(wrKeepCompounds(l10n.roadmapChooseCoach)),
       content: SizedBox(
         width: double.maxFinite,
         child: coachesAsync.when(
@@ -1698,7 +1699,7 @@ class _InviteCoachDialog extends ConsumerWidget {
                 .toList();
             if (available.isEmpty) {
               return Text(
-                l10n.roadmapNoCoachesAvailable,
+                wrKeepCompounds(l10n.roadmapNoCoachesAvailable),
                 style: WrTextStyles.body,
               );
             }
@@ -1711,7 +1712,7 @@ class _InviteCoachDialog extends ConsumerWidget {
                   leading: CircleAvatar(
                     backgroundColor: WrColors.navy.withValues(alpha: 0.08),
                     child: Text(
-                      coach.fullName.characters.first.toUpperCase(),
+                      wrKeepCompounds(coach.fullName.characters.first.toUpperCase()),
                       style: const TextStyle(
                         color: WrColors.navy,
                         fontWeight: FontWeight.w700,
@@ -1719,12 +1720,12 @@ class _InviteCoachDialog extends ConsumerWidget {
                     ),
                   ),
                   title: Text(
-                    coach.fullName,
+                    wrKeepCompounds(coach.fullName),
                     style: WrTextStyles.hMedium.copyWith(fontSize: 15.5),
                   ),
                   subtitle: coach.title != null
                       ? Text(
-                          coach.title!,
+                          wrKeepCompounds(coach.title!),
                           style: WrTextStyles.body.copyWith(fontSize: 13.5),
                         )
                       : null,
@@ -1738,7 +1739,7 @@ class _InviteCoachDialog extends ConsumerWidget {
       actions: [
         TextButton(
           onPressed: () => Navigator.of(context).pop(),
-          child: Text(l10n.commonCancel),
+          child: Text(wrKeepCompounds(l10n.commonCancel)),
         ),
       ],
     );
@@ -1811,7 +1812,7 @@ class _ActivityLog extends StatelessWidget {
         const SizedBox(height: 12),
         if (entries.isEmpty)
           Text(
-            l10n.roadmapActivityEmpty,
+            wrKeepCompounds(l10n.roadmapActivityEmpty),
             style: WrTextStyles.body.copyWith(color: WrColors.muted),
           )
         else
@@ -1853,7 +1854,7 @@ class _ActivityEntryTile extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  entry.content,
+                  wrKeepCompounds(entry.content),
                   style: WrTextStyles.body.copyWith(fontSize: 14.5),
                 ),
                 const SizedBox(height: 2),
@@ -1869,7 +1870,7 @@ class _ActivityEntryTile extends StatelessWidget {
                         borderRadius: BorderRadius.circular(4),
                       ),
                       child: Text(
-                        entry.layer,
+                        wrKeepCompounds(entry.layer),
                         style: TextStyle(
                           fontSize: 11.5,
                           fontWeight: FontWeight.w700,
@@ -1880,7 +1881,7 @@ class _ActivityEntryTile extends StatelessWidget {
                     if (entry.date != null) ...[
                       const SizedBox(width: 8),
                       Text(
-                        entry.date!.substring(0, 10),
+                        wrKeepCompounds(entry.date!.substring(0, 10)),
                         style: WrTextStyles.body.copyWith(
                           fontSize: 12.5,
                           color: WrColors.text3,

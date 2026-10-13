@@ -1,17 +1,35 @@
-// Màn hình Tâm thế đang hình thành & Đang duy trì — Sprint 2 `screenStanceKeep`.
+// Màn hình Tâm thế đang hình thành & Đang duy trì — script Sprint 2
+// `screenStanceKeep`.
 // Hai tầng tách bạch: tâm thế là một câu không đếm, duy trì là số lần đếm được.
+//
+// Câu tâm thế KHÔNG ghi cứng câu mẫu `STANCE` của script: dựng từ dữ liệu thật
+// bằng [buildStanceObservation], chưa đủ dữ liệu thì nói rõ là còn ít dữ liệu.
+// "Đúng với tôi" và "Ghi lại" (tự gọi tên) ghi một Cột mốc vào Career Memory
+// như `confirmStance` / `saveStanceOwn`.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../../core/data/wr_content_repository.dart';
 import '../../../core/l10n/wr_tr.dart';
+import '../../../core/logic/wr_career_memory_rules.dart'
+    show kMilestoneBehavior;
+import '../../../core/logic/wr_practice_v47.dart';
+import '../../../core/models/wr_content.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../core/widgets/wr_detail_scaffold.dart';
 import '../../../core/widgets/wr_hero_header.dart';
 import '../../../core/widgets/wr_small_button.dart';
 import '../growth_providers.dart';
+import '../wr_providers.dart';
+import 'wr_growth_screen.dart' show WrKeepRow;
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
+
+/// Số dòng "Đang duy trì" hiện sẵn, và số thêm mỗi lần "Xem thêm" (script
+/// `keepShow`).
+const kStanceKeepPreview = 5;
 
 class WrStanceKeepScreen extends ConsumerStatefulWidget {
   const WrStanceKeepScreen({super.key});
@@ -21,12 +39,12 @@ class WrStanceKeepScreen extends ConsumerStatefulWidget {
 }
 
 class _WrStanceKeepScreenState extends ConsumerState<WrStanceKeepScreen> {
-  String? _feedback; // 'yes', 'no', 'paused', null
+  String? _feedback; // 'yes', 'no', 'paused', 'own', null
   String? _ownText;
   bool _writing = false;
+  bool _busy = false;
   final _ownController = TextEditingController();
-  final Set<String> _markedToday = {};
-  int _showLimit = 5;
+  int _showLimit = kStanceKeepPreview;
 
   static const _prefStanceFbKey = 'wr_stance_feedback';
   static const _prefStanceOwnKey = 'wr_stance_own_text';
@@ -55,7 +73,10 @@ class _WrStanceKeepScreenState extends ConsumerState<WrStanceKeepScreen> {
   }
 
   Future<void> _saveFeedback(String? fb) async {
-    setState(() => _feedback = fb);
+    setState(() {
+      _feedback = fb;
+      _writing = false;
+    });
     try {
       final sp = await SharedPreferences.getInstance();
       if (fb == null) {
@@ -66,171 +87,212 @@ class _WrStanceKeepScreenState extends ConsumerState<WrStanceKeepScreen> {
     } catch (_) {}
   }
 
-  Future<void> _saveOwnText(String text) async {
+  /// Ghi một Cột mốc vào Career Memory. Trả về false khi không ghi được.
+  Future<bool> _writeMilestone(String text) async {
+    final userId = ref.read(currentUserIdProvider);
+    if (userId == null) return false;
+    try {
+      await ref
+          .read(wrContentRepositoryProvider)
+          .insertMemoryEvent(
+            CareerMemoryEvent(
+              id: '${DateTime.now().millisecondsSinceEpoch}s',
+              userId: userId,
+              behavior: kMilestoneBehavior,
+              reflectionText: text,
+            ),
+          );
+      ref.invalidate(practiceMemoryEventsProvider);
+      return true;
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              wrKeepCompounds(tr(
+                'Chưa ghi nhận được. Thử lại.',
+                'Could not save it. Try again.',
+              )),
+            ),
+          ),
+        );
+      }
+      return false;
+    }
+  }
+
+  /// "Đúng với tôi" (script `confirmStance`): một lần người dùng nhận ra mình,
+  /// nên ghi vào hành trình.
+  Future<void> _confirmStance() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    final ok = await _writeMilestone(
+      tr(
+        'Bạn xác nhận một tâm thế đang hình thành',
+        'You confirmed a stance that is taking shape',
+      ),
+    );
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (ok) await _saveFeedback('yes');
+  }
+
+  /// "Ghi lại" (script `saveStanceOwn`): cách gọi của người dùng thay cho câu
+  /// của hệ thống, và được lưu như một mốc trong hành trình. Để trống thì chỉ
+  /// đóng ô viết.
+  Future<void> _saveOwnText(String raw) async {
+    final text = raw.trim();
+    if (text.isEmpty) {
+      setState(() => _writing = false);
+      return;
+    }
+    if (_busy) return;
+    setState(() => _busy = true);
+    final ok = await _writeMilestone(
+      tr(
+        'Bạn tự gọi tên điều đang hình thành: “$text”',
+        'You named what is taking shape: “$text”',
+      ),
+    );
+    if (!mounted) return;
+    setState(() => _busy = false);
+    if (!ok) return;
     setState(() {
-      _ownText = text.trim().isEmpty ? null : text.trim();
+      _ownText = text;
       _writing = false;
       _feedback = 'own';
     });
     try {
       final sp = await SharedPreferences.getInstance();
-      if (_ownText == null) {
-        await sp.remove(_prefStanceOwnKey);
-      } else {
-        await sp.setString(_prefStanceOwnKey, _ownText!);
-      }
+      await sp.setString(_prefStanceOwnKey, text);
+      await sp.setString(_prefStanceFbKey, 'own');
     } catch (_) {}
   }
 
+  /// "Chưa gọi tên được" / "Để sau" (script `skipStance`).
+  void _skipStance() => _saveFeedback('paused');
+
   @override
   Widget build(BuildContext context) {
-    final themes = ref.watch(practiceThemesProvider).valueOrNull ?? const [];
-    final enrollments =
-        ref.watch(practiceEnrollmentsProvider).valueOrNull ?? const [];
+    final items = ref.watch(wrKeepingThemesProvider);
+    final events =
+        ref.watch(practiceMemoryEventsProvider).valueOrNull ?? const [];
+    final notes = ref.watch(practiceStepNotesProvider).valueOrNull ?? const {};
+    final stance = buildStanceObservation(
+      events: events,
+      notes: notes.values.toList(),
+    );
 
-    // Dựng danh sách duy trì từ các chủ đề đã hoàn thành + danh sách mặc định
-    final completedEnrollments =
-        enrollments.where((e) => e.completedAt != null).toList();
-
-    final keepingItems = <_KeepItem>[
-      for (final e in completedEnrollments)
-        if (themes.where((t) => t.themeId == e.themeId).firstOrNull
-            case final t?)
-          _KeepItem(
-            id: 'e-${e.themeId}',
-            name: t.title,
-            count: (e.completedSteps.length).clamp(1, 99),
-            last: tr('hôm qua', 'yesterday'),
-          ),
-      _KeepItem(
-        id: 'k1',
-        name: tr('Rõ ràng về điều được kỳ vọng', 'Clarity on expectations'),
-        count: 12,
-        last: tr('hôm qua', 'yesterday'),
-      ),
-      _KeepItem(
-        id: 'k2',
-        name: tr(
-            'Thoát khỏi vòng lặp phản ứng', 'Breaking reactive feedback loops'),
-        count: 7,
-        last: tr('3 ngày trước', '3 days ago'),
-      ),
-      _KeepItem(
-        id: 'k3',
-        name: tr('Giữ năng lượng đường dài', 'Sustaining energy over time'),
-        count: 2,
-        last: tr('tuần trước', 'last week'),
-      ),
-    ];
-
-    final visibleItems = keepingItems.take(_showLimit).toList();
-    final remaining = keepingItems.length - visibleItems.length;
+    final visibleItems = items.take(_showLimit).toList();
+    final remaining = items.length - visibleItems.length;
+    final now = DateTime.now();
 
     return WrDetailScaffold(
       art: WrHeroArt.act,
-      eyebrow: tr('TÂM THẾ & DUY TRÌ', 'STANCE & RETENTION'),
+      eyebrow: tr('TÂM THẾ & DUY TRÌ', 'STANCE & UPKEEP'),
       title: tr('Những gì đang hình thành', 'What is taking shape'),
       children: [
-        _buildStanceCard(),
-        const SizedBox(height: 24),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              tr('ĐANG DUY TRÌ', 'MAINTAINING'),
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: WrColors.text3,
-                letterSpacing: 0.6,
-              ),
+        _buildStanceCard(stance),
+        if (items.isNotEmpty) ...[
+          const SizedBox(height: 24),
+          Text(
+            wrKeepCompounds(tr('ĐANG DUY TRÌ', 'MAINTAINING')),
+            style: const TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              color: WrColors.text3,
+              letterSpacing: 0.6,
             ),
-            Text(
-              '${keepingItems.length} ${tr('chủ đề', 'themes')}',
-              style: const TextStyle(
-                fontSize: 12,
-                color: WrColors.text3,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        WrCard(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-          child: Column(
-            children: [
-              for (var i = 0; i < visibleItems.length; i++) ...[
-                if (i > 0)
+          ),
+          const SizedBox(height: 8),
+          WrCard(
+            key: const Key('wr_stance_keep_list'),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            child: Column(
+              children: [
+                for (var i = 0; i < visibleItems.length; i++) ...[
+                  if (i > 0)
+                    const Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: WrColors.lineSoft,
+                    ),
+                  WrKeepRow(
+                    item: visibleItems[i],
+                    now: now,
+                    doneLabel: tr('✓ Đã ghi hôm nay', '✓ Recorded today'),
+                  ),
+                ],
+                if (remaining > 0) ...[
                   const Divider(
                     height: 1,
                     thickness: 1,
-                    color: WrColors.line,
+                    color: WrColors.lineSoft,
                   ),
-                _buildKeepRow(visibleItems[i]),
-              ],
-              if (remaining > 0) ...[
-                const Divider(
-                  height: 1,
-                  thickness: 1,
-                  color: WrColors.line,
-                ),
-                InkWell(
-                  onTap: () => setState(() => _showLimit = _showLimit + 5),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 13),
-                    child: Center(
-                      child: Text(
-                        tr(
-                          'Xem thêm $remaining chủ đề',
-                          'See $remaining more themes',
-                        ),
-                        style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: WrColors.pillTealText,
+                  InkWell(
+                    key: const Key('wr_stance_keep_more'),
+                    onTap: () => setState(
+                      () => _showLimit = _showLimit + kStanceKeepPreview,
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      child: Center(
+                        child: Text(
+                          wrKeepCompounds(tr(
+                            'Xem thêm ${remaining < kStanceKeepPreview ? remaining : kStanceKeepPreview} chủ đề',
+                            'See ${remaining < kStanceKeepPreview ? remaining : kStanceKeepPreview} more themes',
+                          )),
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w700,
+                            color: WrColors.pillTealText,
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
+                ],
               ],
-            ],
+            ),
           ),
-        ),
-        const SizedBox(height: 10),
-        Text(
-          tr(
-            'Mỗi lần bạn thực hành trong công việc thật, bấm “Ghi nhận” để lưu giữ hành trình.',
-            'Each time you practice in real work, tap "Record" to preserve your journey.',
+          const SizedBox(height: 10),
+          Text(
+            wrKeepCompounds(tr(
+              'Mỗi lần bạn thực hành trong công việc thật, bấm “Ghi nhận” để lưu giữ hành trình.',
+              'Each time you practise in real work, tap “Record” to keep it in your journey.',
+            )),
+            style: const TextStyle(
+              fontSize: 12.5,
+              color: WrColors.text3,
+              height: 1.55,
+            ),
           ),
-          style: const TextStyle(
-            fontSize: 12.5,
-            color: WrColors.text3,
-            height: 1.55,
-          ),
-        ),
+        ],
       ],
     );
   }
 
-  Widget _buildStanceCard() {
+  Widget _eyebrow(String text, {Color color = WrColors.teal}) => Text(
+    wrKeepCompounds(text),
+    style: TextStyle(
+      fontSize: 11,
+      fontWeight: FontWeight.w700,
+      color: color,
+      letterSpacing: 0.6,
+    ),
+  );
+
+  Widget _buildStanceCard(String? stance) {
     if (_ownText != null) {
       return WrCard(
+        key: const Key('wr_stance_own'),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              tr('BẠN TỰ GỌI TÊN', 'YOU NAMED IT YOURSELF'),
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: WrColors.teal,
-                letterSpacing: 0.6,
-              ),
-            ),
+            _eyebrow(tr('BẠN TỰ GỌI TÊN', 'YOU NAMED IT YOURSELF')),
             const SizedBox(height: 9),
             Text(
-              '“$_ownText”',
+              wrKeepCompounds('“$_ownText”'),
               style: const TextStyle(
                 fontSize: 16,
                 fontStyle: FontStyle.italic,
@@ -241,10 +303,10 @@ class _WrStanceKeepScreenState extends ConsumerState<WrStanceKeepScreen> {
             ),
             const SizedBox(height: 10),
             Text(
-              tr(
+              wrKeepCompounds(tr(
                 'Cách gọi này là của bạn. Những lần thực hành tới sẽ được đọc lại dựa trên nó.',
-                'This wording is yours. Upcoming practice reviews will be phrased around it.',
-              ),
+                'This wording is yours. Your next practices will be read back with it as the base.',
+              )),
               style: const TextStyle(
                 fontSize: 12.5,
                 color: WrColors.text2,
@@ -254,22 +316,24 @@ class _WrStanceKeepScreenState extends ConsumerState<WrStanceKeepScreen> {
             const SizedBox(height: 12),
             InkWell(
               onTap: () async {
-                final sp = await SharedPreferences.getInstance();
-                await sp.remove(_prefStanceOwnKey);
-                await sp.remove(_prefStanceFbKey);
                 setState(() {
                   _ownText = null;
                   _feedback = null;
                   _writing = false;
                 });
+                try {
+                  final sp = await SharedPreferences.getInstance();
+                  await sp.remove(_prefStanceOwnKey);
+                  await sp.remove(_prefStanceFbKey);
+                } catch (_) {}
               },
               child: Center(
                 child: Text(
-                  tr('Xem lại quan sát của hệ thống', 'Review system observation'),
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    color: WrColors.text3,
-                  ),
+                  wrKeepCompounds(tr(
+                    'Xem lại quan sát của hệ thống',
+                    'See the app’s observation again',
+                  )),
+                  style: const TextStyle(fontSize: 12.5, color: WrColors.text3),
                 ),
               ),
             ),
@@ -280,24 +344,17 @@ class _WrStanceKeepScreenState extends ConsumerState<WrStanceKeepScreen> {
 
     if (_writing) {
       return WrCard(
+        key: const Key('wr_stance_writing'),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              tr('BẠN GỌI TÊN NÓ THẾ NÀO?', 'HOW WOULD YOU NAME IT?'),
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: WrColors.teal,
-                letterSpacing: 0.6,
-              ),
-            ),
+            _eyebrow(tr('BẠN GỌI TÊN NÓ THẾ NÀO?', 'HOW WOULD YOU NAME IT?')),
             const SizedBox(height: 7),
             Text(
-              tr(
+              wrKeepCompounds(tr(
                 'Không cần đúng chữ nghĩa. Viết theo cách bạn hay nói với chính mình cũng được.',
-                'It does not have to be formal. Write how you speak to yourself.',
-              ),
+                'It does not have to be precise. Write it the way you talk to yourself.',
+              )),
               style: const TextStyle(
                 fontSize: 13.5,
                 color: WrColors.text2,
@@ -313,6 +370,7 @@ class _WrStanceKeepScreenState extends ConsumerState<WrStanceKeepScreen> {
                 border: Border.all(color: WrColors.line),
               ),
               child: TextField(
+                key: const Key('wr_stance_own_field'),
                 controller: _ownController,
                 minLines: 3,
                 maxLines: 5,
@@ -321,7 +379,7 @@ class _WrStanceKeepScreenState extends ConsumerState<WrStanceKeepScreen> {
                   border: InputBorder.none,
                   hintText: tr(
                     'Ví dụ: Mình không nói ra sớm hơn, mình chỉ bớt thấy ngại khi chưa biết hết.',
-                    'E.g., I did not speak sooner, I just felt less shy when not knowing all.',
+                    'For example: I am not speaking up sooner, I just feel less uneasy when I do not know everything.',
                   ),
                   hintStyle: const TextStyle(
                     fontSize: 14,
@@ -335,17 +393,21 @@ class _WrStanceKeepScreenState extends ConsumerState<WrStanceKeepScreen> {
               children: [
                 Expanded(
                   child: WrSmallButton(
-                    kind: WrSmallButtonKind.dark,
+                    key: const Key('wr_stance_own_save'),
+                    kind: WrSmallButtonKind.primary,
                     label: tr('Ghi lại', 'Save'),
-                    onTap: () => _saveOwnText(_ownController.text),
+                    onTap: _busy
+                        ? null
+                        : () => _saveOwnText(_ownController.text),
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: WrSmallButton(
+                    key: const Key('wr_stance_own_skip'),
                     kind: WrSmallButtonKind.ghost,
-                    label: tr('Chưa gọi tên được', 'Not yet'),
-                    onTap: () => setState(() => _writing = false),
+                    label: tr('Chưa gọi tên được', 'Cannot name it yet'),
+                    onTap: _skipStance,
                   ),
                 ),
               ],
@@ -357,24 +419,20 @@ class _WrStanceKeepScreenState extends ConsumerState<WrStanceKeepScreen> {
 
     if (_feedback == 'no') {
       return WrCard(
+        key: const Key('wr_stance_no'),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              tr('QUAN SÁT CHƯA KHỚP', 'OBSERVATION NOT ALIGNED'),
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: WrColors.text3,
-                letterSpacing: 0.6,
-              ),
+            _eyebrow(
+              tr('QUAN SÁT CHƯA KHỚP', 'OBSERVATION DOES NOT FIT'),
+              color: WrColors.text3,
             ),
             const SizedBox(height: 8),
             Text(
-              tr(
+              wrKeepCompounds(tr(
                 'Quan sát này được cất đi, sẽ không hiện lại nữa. Hệ thống sẽ đọc lại sau vài lần thực hành nữa.',
-                'This observation is put away. The system will read again after a few more practices.',
-              ),
+                'This observation is put away and will not show again. The app will read again after a few more practices.',
+              )),
               style: const TextStyle(
                 fontSize: 14,
                 color: WrColors.text2,
@@ -386,8 +444,8 @@ class _WrStanceKeepScreenState extends ConsumerState<WrStanceKeepScreen> {
               children: [
                 Expanded(
                   child: WrSmallButton(
-                    kind: WrSmallButtonKind.dark,
-                    label: tr('Tôi tự gọi tên', 'Name it myself'),
+                    kind: WrSmallButtonKind.primary,
+                    label: tr('Tôi tự gọi tên', 'I will name it'),
                     onTap: () => setState(() => _writing = true),
                   ),
                 ),
@@ -396,7 +454,7 @@ class _WrStanceKeepScreenState extends ConsumerState<WrStanceKeepScreen> {
                   child: WrSmallButton(
                     kind: WrSmallButtonKind.ghost,
                     label: tr('Để sau', 'Later'),
-                    onTap: () => _saveFeedback('paused'),
+                    onTap: _skipStance,
                   ),
                 ),
               ],
@@ -407,76 +465,41 @@ class _WrStanceKeepScreenState extends ConsumerState<WrStanceKeepScreen> {
     }
 
     if (_feedback == 'paused') {
-      return WrCard(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              tr('ĐANG ĐỌC LẠI', 'REREADING IN PROGRESS'),
-              style: const TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w700,
-                color: WrColors.text3,
-                letterSpacing: 0.6,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              tr(
-                'Chưa có quan sát nào mới. Sau vài lần thực hành nữa, phần này sẽ có nội dung trở lại.',
-                'No new observations yet. After more practice sessions, content will return.',
-              ),
-              style: const TextStyle(
-                fontSize: 14,
-                color: WrColors.text2,
-                height: 1.6,
-              ),
-            ),
-            const SizedBox(height: 12),
-            InkWell(
-              onTap: () => setState(() => _writing = true),
-              child: Center(
-                child: Text(
-                  tr('Tự gọi tên bây giờ', 'Name it now'),
-                  style: const TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                    color: WrColors.pillTealText,
-                  ),
-                ),
-              ),
-            ),
-          ],
+      return _quietCard(
+        key: const Key('wr_stance_paused'),
+        eyebrow: tr('ĐANG ĐỌC LẠI', 'READING AGAIN'),
+        body: tr(
+          'Chưa có quan sát nào mới. Sau vài lần thực hành nữa, phần này sẽ có nội dung trở lại.',
+          'No new observation yet. After a few more practices, this part will have something again.',
         ),
       );
     }
 
-    // Default observation
+    // Script §1: dưới ngưỡng dữ liệu thì để trống và nói rõ là còn ít dữ liệu.
+    if (stance == null) {
+      return _quietCard(
+        key: const Key('wr_stance_low_data'),
+        eyebrow: tr('TÂM THẾ ĐANG HÌNH THÀNH', 'A STANCE TAKING SHAPE'),
+        body: tr(
+          'Phần này còn trống vì dữ liệu còn ít. Khi bạn thực hành thêm vài lần, '
+              'trên hơn một chủ đề, một quan sát đầu tiên sẽ hiện ở đây.',
+          'This part is empty because there is little to go on yet. Once you '
+              'practise a few more times, across more than one theme, a first '
+              'observation will appear here.',
+        ),
+      );
+    }
+
     return WrCard(
+      key: const Key('wr_stance_observation'),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            tr('TÂM THẾ ĐANG HÌNH THÀNH', 'EMERGING STANCE'),
-            style: const TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              color: WrColors.teal,
-              letterSpacing: 0.6,
-            ),
-          ),
+          _eyebrow(tr('TÂM THẾ ĐANG HÌNH THÀNH', 'A STANCE TAKING SHAPE')),
           const SizedBox(height: 9),
           Text(
-            tr(
-              'Những ghi chú đầu tiên của bạn phần lớn là chuyện chờ: chờ đủ thông tin, '
-                  'chờ người khác hỏi trước, chờ đến lúc thật chắc chắn. Mấy lần thử gần đây '
-                  'có thêm một nhịp khác, bạn nói ra sớm hơn khi mọi thứ còn chưa rõ hết. '
-                  'Nhịp này đã lặp lại vài lần, chưa thành phản xạ nhưng đã đủ để nhìn thấy.',
-              'Your earliest notes were mostly about waiting: waiting for enough info, '
-                  'waiting for others to ask first, waiting for full certainty. Recent trials '
-                  'show a different rhythm: speaking up sooner before everything is clear. '
-                  'This has repeated a few times, visible though not yet reflex.',
-            ),
+            wrKeepCompounds(stance),
+            key: const Key('wr_stance_text'),
             style: const TextStyle(
               fontSize: 15,
               height: 1.62,
@@ -486,7 +509,7 @@ class _WrStanceKeepScreenState extends ConsumerState<WrStanceKeepScreen> {
           if (_feedback == 'yes') ...[
             const SizedBox(height: 12),
             Text(
-              tr('✓ Bạn thấy điều này đúng', '✓ You found this accurate'),
+              wrKeepCompounds(tr('✓ Bạn thấy điều này đúng', '✓ You found this true')),
               style: const TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w700,
@@ -499,14 +522,16 @@ class _WrStanceKeepScreenState extends ConsumerState<WrStanceKeepScreen> {
               children: [
                 Expanded(
                   child: WrSmallButton(
+                    key: const Key('wr_stance_yes'),
                     kind: WrSmallButtonKind.ghost,
-                    label: tr('Đúng với tôi', 'Fits me'),
-                    onTap: () => _saveFeedback('yes'),
+                    label: tr('Đúng với tôi', 'True for me'),
+                    onTap: _busy ? null : _confirmStance,
                   ),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: WrSmallButton(
+                    key: const Key('wr_stance_not_quite'),
                     kind: WrSmallButtonKind.ghost,
                     label: tr('Chưa đúng lắm', 'Not quite'),
                     onTap: () => _saveFeedback('no'),
@@ -517,10 +542,10 @@ class _WrStanceKeepScreenState extends ConsumerState<WrStanceKeepScreen> {
           ],
           const SizedBox(height: 11),
           Text(
-            tr(
+            wrKeepCompounds(tr(
               'Đây là một quan sát từ hệ thống, bạn xem lại với những gì mình trải nghiệm và chọn để lưu lại hành trình nhé.',
-              'This is a system observation. Review against your experience to guide your journey.',
-            ),
+              'This is an observation from the app. Check it against what you have lived through, and choose whether to keep it in your journey.',
+            )),
             style: const TextStyle(
               fontSize: 12,
               color: WrColors.text3,
@@ -532,71 +557,44 @@ class _WrStanceKeepScreenState extends ConsumerState<WrStanceKeepScreen> {
     );
   }
 
-  Widget _buildKeepRow(_KeepItem item) {
-    final marked = _markedToday.contains(item.id);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
+  /// Thẻ chữ xám có lối "Tự gọi tên bây giờ".
+  Widget _quietCard({
+    required Key key,
+    required String eyebrow,
+    required String body,
+  }) {
+    return WrCard(
+      key: key,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  item.name,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w700,
-                    color: WrColors.navy,
-                    height: 1.35,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  '${item.count} ${tr('lần', 'times')} · ${tr('gần nhất', 'last')} ${item.last}',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: WrColors.text3,
-                  ),
-                ),
-              ],
+          _eyebrow(eyebrow, color: WrColors.text3),
+          const SizedBox(height: 8),
+          Text(
+            wrKeepCompounds(body),
+            style: const TextStyle(
+              fontSize: 14,
+              color: WrColors.text2,
+              height: 1.6,
             ),
           ),
-          const SizedBox(width: 8),
-          WrSmallButton(
-            kind: marked ? WrSmallButtonKind.ghost : WrSmallButtonKind.dark,
-            label: marked
-                ? tr('✓ Đã ghi hôm nay', '✓ Recorded today')
-                : tr('Ghi nhận', 'Record'),
-            onTap: () {
-              setState(() {
-                if (marked) {
-                  _markedToday.remove(item.id);
-                } else {
-                  _markedToday.add(item.id);
-                  item.count++;
-                  item.last = tr('hôm nay', 'today');
-                }
-              });
-            },
+          const SizedBox(height: 12),
+          InkWell(
+            key: const Key('wr_stance_name_now'),
+            onTap: () => setState(() => _writing = true),
+            child: Center(
+              child: Text(
+                wrKeepCompounds(tr('Tự gọi tên bây giờ', 'Name it now')),
+                style: const TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                  color: WrColors.pillTealText,
+                ),
+              ),
+            ),
           ),
         ],
       ),
     );
   }
-}
-
-class _KeepItem {
-  _KeepItem({
-    required this.id,
-    required this.name,
-    required this.count,
-    required this.last,
-  });
-
-  final String id;
-  final String name;
-  int count;
-  String last;
 }

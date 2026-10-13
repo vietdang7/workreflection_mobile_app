@@ -13,7 +13,11 @@
 // Pure Dart → test được trực tiếp.
 
 import '../l10n/wr_tr.dart';
+import '../models/wr_content.dart' show CareerMemoryEvent;
 import '../models/wr_intelligence.dart';
+import '../models/wr_mood_content.dart' show PracticeStepNote;
+import 'wr_skill_formation.dart'
+    show kPracticeBehaviors, kPracticeMaintainedBehavior, maintainedToday;
 
 /// Số bước của mọi chủ đề.
 const int kPracticeStageCount = 4;
@@ -37,16 +41,12 @@ List<PracticeStep> buildUserPracticeSteps({
   required String themeId,
   required PracticeIntake intake,
 }) {
+  // Script Sprint 2 `buildPracticeSteps`. Điều người dùng "đã thử" không nằm
+  // trong mô tả bước nữa: ba cách gợi ý (`buildUserThemeMentorOptions`) đã
+  // tránh lặp lại nó.
   final g = intake.goal.trim().toLowerCase().replaceAll(RegExp(r'\.$'), '');
   final what = g.isEmpty ? 'điều bạn muốn khác đi' : g;
   final whatEn = g.isEmpty ? 'what you want to change' : g;
-  final tried = _triedQuote(intake.tried);
-  final avoid = tried == null
-      ? ''
-      : ' Lần này đừng lặp lại điều bạn đã thử: "$tried".';
-  final avoidEn = tried == null
-      ? ''
-      : ' This time, do not repeat what you already tried: "$tried".';
   return [
     PracticeStep(
       stepId: '$themeId-1',
@@ -82,19 +82,19 @@ List<PracticeStep> buildUserPracticeSteps({
       title: 'Chọn một cách: Chọn một cách rồi thử',
       titleEn: 'Pick one way: Pick one way and try it',
       content:
-          'Chọn một trong các cách ở trên và thử trong một tình huống thật, liên '
-          'quan tới $what.$avoid',
+          'Mở phần gợi ý, chọn một cách, rồi thử trong một tình huống thật liên '
+          'quan tới $what.',
       contentEn:
-          'Pick one of the ways above and try it in a real situation, related '
-          'to $whatEn.$avoidEn',
+          'Open the suggestions, pick one way, then try it in a real situation '
+          'related to $whatEn.',
       isPremium: false,
     ),
     PracticeStep(
       stepId: '$themeId-4',
       themeId: themeId,
       stepOrder: 4,
-      title: 'Mang về: Giữ lại một câu hỏi',
-      titleEn: 'Take it with you: Keep one question',
+      title: 'Câu hỏi cho lần sau: Điều bạn muốn hỏi lần tới',
+      titleEn: 'A question for next time: What you want to ask next time',
       content: 'Sau khi thử, bạn muốn mang theo câu hỏi nào cho lần sau?',
       contentEn:
           'After trying, what question do you want to carry into next time?',
@@ -301,8 +301,10 @@ List<PracticeMentorOption> fallbackMentorOptions({String? practice}) {
       id: 'observe',
       title: 'Quan sát thêm một lần',
       titleEn: 'Observe one more time',
-      fit: 'Hợp khi bạn chưa chắc đây là một mẫu hình hay chỉ là một lần xảy ra.',
-      fitEn: 'Good when you are not sure whether this is a pattern or a one-off.',
+      fit:
+          'Hợp khi bạn chưa chắc đây là một mẫu hình hay chỉ là một lần xảy ra.',
+      fitEn:
+          'Good when you are not sure whether this is a pattern or a one-off.',
       tradeoff: 'Bạn có thêm thông tin, nhưng điều này có thể kéo dài thêm.',
       tradeoffEn:
           'You learn more, but the situation may go on a little longer.',
@@ -312,7 +314,8 @@ List<PracticeMentorOption> fallbackMentorOptions({String? practice}) {
       title: 'Đưa người khác vào cuộc',
       titleEn: 'Bring someone else in',
       fit: 'Hợp khi tình huống phụ thuộc vào ai đó hoặc cần thêm một góc nhìn.',
-      fitEn: 'Good when the situation depends on someone else or needs another view.',
+      fitEn:
+          'Good when the situation depends on someone else or needs another view.',
       tradeoff:
           'Bạn phải mở lời và chấp nhận có thể nhận phản hồi không như mong đợi.',
       tradeoffEn:
@@ -338,4 +341,347 @@ String practiceThemeSourceLabel(PracticeTheme theme, DateTime? startedAt) {
   return theme.isUserAdded
       ? tr('Bạn thêm$date', 'Added by you$date')
       : tr('Từ Reflection$date', 'From Reflection$date');
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Script Sprint 2 — màn chủ đề, phần duy trì, câu tâm thế.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/// Câu hỏi + chữ mờ khi bấm "Tôi đã thử bước này" (script `STEP_PROMPTS`).
+///
+/// Mỗi bước một câu riêng, vì mỗi bước hỏi một thứ khác nhau. Tra theo THỨ TỰ
+/// bước chứ không theo nhãn: nhãn đổi theo ngôn ngữ, thứ tự thì không.
+({String q, String ph}) practiceStepPrompt(
+  int stepOrder,
+) => switch (stepOrder) {
+  1 => (
+    q: tr('Bạn để ý thấy gì?', 'What did you notice?'),
+    ph: tr(
+      'Ví dụ: Chiều thứ Năm nào mình cũng thấy đuối, thường sau cuộc họp dài.',
+      'For example: Every Thursday afternoon I feel drained, usually after a '
+          'long meeting.',
+    ),
+  ),
+  2 => (
+    q: tr(
+      'Điều gì thuộc quyền quyết định của bạn?',
+      'What is yours to decide?',
+    ),
+    ph: tr(
+      'Ví dụ: Mình chọn được giờ họp, nhưng không chọn được số lượng họp.',
+      'For example: I can choose when we meet, but not how many meetings '
+          'there are.',
+    ),
+  ),
+  4 => (
+    q: tr(
+      'Câu hỏi bạn muốn mang theo cho lần sau?',
+      'What question do you want to carry into next time?',
+    ),
+    ph: tr(
+      'Ví dụ: Lần tới mình có cần chờ đến lúc chắc chắn mới nói không?',
+      'For example: Next time, do I really need to wait until I am sure before '
+          'I speak?',
+    ),
+  ),
+  _ => (
+    q: tr('Bạn đã thử như thế nào?', 'How did you try it?'),
+    ph: tr(
+      'Ví dụ: Mình dời một cuộc họp sang sáng hôm sau, và buổi chiều nhẹ hẳn.',
+      'For example: I moved one meeting to the next morning, and the afternoon '
+          'felt much lighter.',
+    ),
+  ),
+};
+
+// Ba cách gợi ý ở bước 3 (script `STEP3_OPTIONS`): chỉ có tên cách và một dòng
+// "hợp khi", không có "đánh đổi". Mang cả hai thứ tiếng nên để là hằng được:
+// [PracticeMentorOption.title] chọn ngôn ngữ lúc đọc chứ không phải lúc dựng.
+
+/// `STEP3_OPTIONS.t1` — "Dám lên tiếng".
+const List<PracticeMentorOption> kStep3OptionsVoice = [
+  PracticeMentorOption(
+    id: 'small',
+    title: 'Đặt một câu hỏi nhỏ trước',
+    titleEn: 'Ask one small question first',
+    fit: 'Hợp khi bạn chưa muốn nêu nguyên một quan điểm.',
+    fitEn: 'Fits when you are not ready to put forward a whole view.',
+    tradeoff: '',
+  ),
+  PracticeMentorOption(
+    id: 'watch',
+    title: 'Quan sát thêm một lần',
+    titleEn: 'Observe one more time',
+    fit: 'Hợp khi bạn chưa chắc đây là mẫu hình hay chỉ một lần xảy ra.',
+    fitEn: 'Fits when you are not sure whether this is a pattern or a one-off.',
+    tradeoff: '',
+  ),
+  PracticeMentorOption(
+    id: 'ally',
+    title: 'Nói trước với một người',
+    titleEn: 'Tell one person first',
+    fit: 'Hợp khi nói riêng dễ hơn nói giữa cuộc họp.',
+    fitEn: 'Fits when speaking privately is easier than speaking in a meeting.',
+    tradeoff: '',
+  ),
+];
+
+/// `STEP3_OPTIONS.t2` — chủ đề phản hồi.
+const List<PracticeMentorOption> kStep3OptionsFeedback = [
+  PracticeMentorOption(
+    id: 'ask',
+    title: 'Hỏi lại điều chưa rõ',
+    titleEn: 'Ask about what is unclear',
+    fit: 'Hợp khi bạn thấy mình đang đoán ý người kia.',
+    fitEn: 'Fits when you notice you are guessing what the other person means.',
+    tradeoff: '',
+  ),
+  PracticeMentorOption(
+    id: 'watch',
+    title: 'Quan sát thêm một lần',
+    titleEn: 'Observe one more time',
+    fit: 'Hợp khi bạn chưa chắc đây là mẫu hình hay chỉ một lần xảy ra.',
+    fitEn: 'Fits when you are not sure whether this is a pattern or a one-off.',
+    tradeoff: '',
+  ),
+  PracticeMentorOption(
+    id: 'time',
+    title: 'Chọn thời điểm khác để nói',
+    titleEn: 'Pick another moment to say it',
+    fit: 'Hợp khi nội dung đúng nhưng lúc nói chưa hợp.',
+    fitEn: 'Fits when the message is right but the moment is not.',
+    tradeoff: '',
+  ),
+];
+
+/// `STEP3_OPTIONS._default`.
+const List<PracticeMentorOption> kStep3OptionsDefault = [
+  PracticeMentorOption(
+    id: 'small',
+    title: 'Thử một thay đổi nhỏ nhất',
+    titleEn: 'Try the smallest change',
+    fit: 'Hợp khi bạn đã biết điều mình muốn thử.',
+    fitEn: 'Fits when you already know what you want to try.',
+    tradeoff: '',
+  ),
+  PracticeMentorOption(
+    id: 'watch',
+    title: 'Quan sát thêm một lần',
+    titleEn: 'Observe one more time',
+    fit: 'Hợp khi bạn chưa chắc đây là mẫu hình hay chỉ một lần xảy ra.',
+    fitEn: 'Fits when you are not sure whether this is a pattern or a one-off.',
+    tradeoff: '',
+  ),
+  PracticeMentorOption(
+    id: 'ally',
+    title: 'Đưa người khác vào cuộc',
+    titleEn: 'Bring someone else in',
+    fit: 'Hợp khi tình huống phụ thuộc vào ai đó hoặc cần thêm một góc nhìn.',
+    fitEn:
+        'Fits when the situation depends on someone else or needs another '
+        'view.',
+    tradeoff: '',
+  ),
+];
+
+/// Ba cách của bước "Chọn một cách" cho một chủ đề.
+///
+/// Chủ đề thư viện theo `STEP3_OPTIONS` của script: "Dám lên tiếng" (`pt-c2`,
+/// bản cũ `pt-voice`) dùng bộ t1, chủ đề phản hồi (`pt-c3`, bản cũ
+/// `pt-feedback`) dùng bộ t2, còn lại bộ chung. Chủ đề người dùng tự thêm giữ ba
+/// cách dựng từ chính lời họ kể (`buildUserThemeMentorOptions`), vì đó là dữ
+/// liệu thật của riêng họ.
+List<PracticeMentorOption> step3OptionsFor(PracticeTheme theme) {
+  if (theme.isUserAdded) {
+    return theme.mentorOptions.isNotEmpty
+        ? theme.mentorOptions
+        : kStep3OptionsDefault;
+  }
+  return switch (theme.themeId) {
+    'pt-c2' || 'pt-voice' => kStep3OptionsVoice,
+    'pt-c3' || 'pt-feedback' => kStep3OptionsFeedback,
+    _ => kStep3OptionsDefault,
+  };
+}
+
+/// Cách đã chọn, tra từ giá trị lưu ở `pending_choice`.
+///
+/// Bản mới lưu `id` của cách; bản cũ (trước script Sprint 2) lưu tên cách, có
+/// thể bằng tiếng Việt hoặc tiếng Anh tuỳ ngôn ngữ lúc chọn. Nhận cả ba.
+PracticeMentorOption? findPracticeOption(
+  List<PracticeMentorOption> options,
+  String? saved,
+) {
+  final v = saved?.trim();
+  if (v == null || v.isEmpty) return null;
+  for (final o in options) {
+    if (o.id == v || o.titleVi == v || o.titleEn == v) return o;
+  }
+  return null;
+}
+
+/// Một chủ đề trong phần "Đang duy trì".
+class KeepingTheme {
+  const KeepingTheme({
+    required this.theme,
+    required this.count,
+    required this.lastAt,
+    required this.markedToday,
+  });
+
+  final PracticeTheme theme;
+
+  /// Số lần: lần đưa vào duy trì (script `moveToKeep`, `count:1`) cộng mỗi lần
+  /// người dùng bấm "Ghi nhận" (một mảnh `practice_maintained` trong Career
+  /// Memory).
+  final int count;
+
+  /// Lần gần nhất: lần bấm "Ghi nhận" mới nhất, chưa bấm lần nào thì là ngày
+  /// đưa vào duy trì.
+  final DateTime? lastAt;
+
+  /// Hôm nay đã ghi nhận chưa — mỗi chủ đề một lần một ngày.
+  final bool markedToday;
+}
+
+bool _maintainedOf(CareerMemoryEvent e, PracticeTheme theme) {
+  if (e.behavior != kPracticeMaintainedBehavior) return false;
+  final id = e.themeId;
+  if (id != null && id.isNotEmpty) return id == theme.themeId;
+  // Mảnh ghi trước khi có cột `theme_id`: so theo tên chủ đề.
+  final text = e.reflectionText ?? '';
+  return text.startsWith(theme.titleVi) ||
+      (theme.titleEn != null && text.startsWith(theme.titleEn!));
+}
+
+/// Danh sách "Đang duy trì": chủ đề đã đi hết bốn bước VÀ đã được đưa vào phần
+/// duy trì (`completed_at` có giá trị). Mới đưa vào trước.
+///
+/// Hai hàng thư viện cùng một tên (`pt-voice`, `pt-c2`) là một chủ đề: giữ hàng
+/// đầu tiên. Chủ đề người dùng tự thêm thì giữ cả khi trùng tên thư viện.
+List<KeepingTheme> buildKeepingThemes({
+  required List<PracticeTheme> themes,
+  required List<PracticeEnrollment> enrollments,
+  required List<CareerMemoryEvent> events,
+  required DateTime now,
+}) {
+  final byId = {for (final t in themes) t.themeId: t};
+  final kept = enrollments.where((e) => e.completedAt != null).toList()
+    ..sort((a, b) => b.completedAt!.compareTo(a.completedAt!));
+  final seenTitles = <String>{};
+  final out = <KeepingTheme>[];
+  for (final e in kept) {
+    final theme = byId[e.themeId];
+    if (theme == null) continue;
+    if (!theme.isUserAdded && !seenTitles.add(theme.title)) continue;
+    var count = 1;
+    DateTime? last = e.completedAt;
+    for (final ev in events) {
+      if (!_maintainedOf(ev, theme)) continue;
+      count++;
+      final at = ev.createdAt;
+      if (at != null && (last == null || at.isAfter(last))) last = at;
+    }
+    out.add(
+      KeepingTheme(
+        theme: theme,
+        count: count,
+        lastAt: last,
+        markedToday: maintainedToday(theme, events, now),
+      ),
+    );
+  }
+  return out;
+}
+
+/// "gần nhất ‹…›" theo cách script viết: hôm nay · hôm qua · 3 ngày trước ·
+/// tuần trước. Xa hơn hai tuần thì đếm tuần, xa hơn hai tháng thì đếm tháng.
+String keepLastLabel(DateTime at, DateTime now) {
+  final a = at.toLocal();
+  final days = DateTime(
+    now.year,
+    now.month,
+    now.day,
+  ).difference(DateTime(a.year, a.month, a.day)).inDays;
+  if (days <= 0) return tr('hôm nay', 'today');
+  if (days == 1) return tr('hôm qua', 'yesterday');
+  if (days < 7) return tr('$days ngày trước', '$days days ago');
+  if (days < 14) return tr('tuần trước', 'last week');
+  if (days < 60) {
+    final w = days ~/ 7;
+    return tr('$w tuần trước', '$w weeks ago');
+  }
+  final m = days ~/ 30;
+  return tr('$m tháng trước', '$m months ago');
+}
+
+/// Số lần thực hành tối thiểu, trên số chủ đề tối thiểu, để được sinh câu tâm
+/// thế (script, NGUYÊN TẮC SINH CÂU TÂM THẾ §1).
+const int kStanceMinPractices = 3;
+const int kStanceMinThemes = 2;
+
+/// Đủ dữ liệu để gọi tên một tâm thế chưa: ít nhất [kStanceMinPractices] lần
+/// thực hành được ghi nhận, trải trên ít nhất [kStanceMinThemes] chủ đề.
+bool stanceHasEnoughData(List<CareerMemoryEvent> events) {
+  var count = 0;
+  final themeIds = <String>{};
+  for (final e in events) {
+    if (!kPracticeBehaviors.contains(e.behavior)) continue;
+    count++;
+    final id = e.themeId;
+    if (id != null && id.isNotEmpty) themeIds.add(id);
+  }
+  return count >= kStanceMinPractices && themeIds.length >= kStanceMinThemes;
+}
+
+/// Câu tâm thế dựng từ dữ liệu thật, hoặc null khi chưa đủ để gọi tên.
+///
+/// Chưa có lớp AI đọc ghi chú, nên câu dựng theo bốn nhịp của script ở mức tối
+/// thiểu và LẤY LẠI ĐÚNG CHỮ người dùng đã viết:
+///   a. nhịp cũ    : ghi chú đầu tiên
+///   b. nhịp mới   : ghi chú gần nhất
+///   c. tích luỹ   : "xuất hiện nhiều hơn trước, không còn là một lần"
+///   d. để mở      : "chưa thành phản xạ, vẫn đang hình thành"
+/// Không số lần, không tính từ chỉ con người, không tự xưng. Cần ít nhất hai ghi
+/// chú khác nhau: không có chữ của chính họ thì câu chỉ còn là một lời khen
+/// trống, đúng điều script dặn tránh, nên để trống.
+String? buildStanceObservation({
+  required List<CareerMemoryEvent> events,
+  required List<PracticeStepNote> notes,
+}) {
+  if (!stanceHasEnoughData(events)) return null;
+  final written = [
+    for (final n in notes)
+      if (n.note.trim().isNotEmpty) n,
+  ];
+  if (written.length < 2) return null;
+  written.sort((a, b) {
+    final ca = a.createdAt;
+    final cb = b.createdAt;
+    if (ca == null && cb == null) return 0;
+    if (ca == null) return 1;
+    if (cb == null) return -1;
+    return ca.compareTo(cb);
+  });
+  final first = _stanceQuote(written.first.note);
+  final last = _stanceQuote(written.last.note);
+  if (first.toLowerCase() == last.toLowerCase()) return null;
+  return tr(
+    'Những ghi chú đầu tiên của bạn nói nhiều về “$first”. Mấy lần thử gần '
+        'đây có thêm một nhịp khác: “$last”. Nhịp này xuất hiện nhiều hơn '
+        'trước, không còn là một lần, chưa thành phản xạ nhưng đang dần hình '
+        'thành.',
+    'Your earliest notes talk a lot about “$first”. Your recent tries add a '
+        'different beat: “$last”. This beat shows up more than before, not '
+        'just once. It is not a reflex yet, but it is taking shape.',
+  );
+}
+
+String _stanceQuote(String note) {
+  final t = note.trim().replaceAll(RegExp(r'\s+'), ' ');
+  final s = t.replaceAll(RegExp(r'[.!?…]+$'), '');
+  if (s.length <= 90) return s;
+  final cut = s.substring(0, 90);
+  final sp = cut.lastIndexOf(' ');
+  return '${(sp > 40 ? cut.substring(0, sp) : cut).trimRight()}…';
 }

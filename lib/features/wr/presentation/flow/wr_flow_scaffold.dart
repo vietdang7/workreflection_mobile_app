@@ -57,6 +57,7 @@ class WrFlowScaffold extends ConsumerWidget {
     this.onSecondary,
     this.aboveActions,
     this.busy = false,
+    this.centerContent = false,
   });
 
   final String? title;
@@ -95,6 +96,11 @@ class WrFlowScaffold extends ConsumerWidget {
 
   final bool busy;
 
+  /// Script Sprint 2 (bước 2-3): thẻ và ô nhập nằm giữa vùng còn lại theo chiều
+  /// dọc (`flex:1; justify-content:center`). Khi bàn phím mở hay nội dung dài
+  /// hơn màn hình thì không còn khoảng trống, khối nội dung chỉ cuộn như thường.
+  final bool centerContent;
+
   int? get _segment {
     if (step != null) return step;
     final p = progress;
@@ -130,73 +136,135 @@ class WrFlowScaffold extends ConsumerWidget {
                   onClose: onClose,
                 ),
                 Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.fromLTRB(22, 20, 22, 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (eyebrow != null) ...[
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 6,
-                            crossAxisAlignment: WrapCrossAlignment.center,
-                            children: [
-                              Text(
-                                eyebrow!.toUpperCase(),
-                                style: const TextStyle(
-                                  fontSize: 11.5,
-                                  fontWeight: FontWeight.w700,
-                                  letterSpacing: 0.8,
-                                  color: WrColors.eyebrow,
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: LayoutBuilder(
+                          builder: (context, viewport) => SingleChildScrollView(
+                            padding: const EdgeInsets.fromLTRB(22, 20, 22, 24),
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                minHeight: centerContent
+                                    ? (viewport.maxHeight - 44).clamp(
+                                        0.0,
+                                        double.infinity,
+                                      )
+                                    : 0,
+                              ),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                // Ba khối: phần đầu · nội dung · khối rỗng.
+                                // spaceBetween chia đều khoảng trống ở hai bên
+                                // nội dung, nên nội dung nằm giữa vùng còn lại.
+                                mainAxisAlignment: centerContent
+                                    ? MainAxisAlignment.spaceBetween
+                                    : MainAxisAlignment.start,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      if (eyebrow != null) ...[
+                                        Wrap(
+                                          spacing: 8,
+                                          runSpacing: 6,
+                                          crossAxisAlignment:
+                                              WrapCrossAlignment.center,
+                                          children: [
+                                            Text(
+                                              wrKeepCompounds(eyebrow!.toUpperCase()),
+                                              style: const TextStyle(
+                                                fontSize: 11.5,
+                                                fontWeight: FontWeight.w700,
+                                                letterSpacing: 0.8,
+                                                color: WrColors.eyebrow,
+                                              ),
+                                            ),
+                                            ?eyebrowTrailing,
+                                          ],
+                                        ),
+                                        SizedBox(
+                                          height: eyebrowNote == null ? 8 : 6,
+                                        ),
+                                      ],
+                                      if (eyebrowNote != null) ...[
+                                        WrParagraph(
+                                          eyebrowNote!,
+                                          key: const Key(
+                                            'wr_flow_eyebrow_note',
+                                          ),
+                                          style: const TextStyle(
+                                            fontSize: 14.5,
+                                            color: WrColors.text2,
+                                            height: 1.55,
+                                          ),
+                                          textAlign: TextAlign.start,
+                                        ),
+                                        const SizedBox(height: 12),
+                                      ],
+                                      if (title != null)
+                                        WrParagraph(
+                                          title!,
+                                          style: titleScale == 1.0
+                                              ? wrFlowTitleStyle
+                                              : wrFlowTitleStyle.copyWith(
+                                                  fontSize:
+                                                      wrFlowTitleStyle
+                                                          .fontSize! *
+                                                      titleScale,
+                                                ),
+                                          textAlign: TextAlign.start,
+                                        ),
+                                      if (subtitle != null) ...[
+                                        const SizedBox(height: 8),
+                                        WrParagraph(
+                                          subtitle!,
+                                          style: const TextStyle(
+                                            fontSize: 14.5,
+                                            color: WrColors.text2,
+                                            height: 1.6,
+                                          ),
+                                          // Câu phụ ngắn: căn đều làm giãn chữ thành khe hở.
+                                          textAlign: TextAlign.start,
+                                        ),
+                                      ],
+                                      if (title != null || subtitle != null)
+                                        const SizedBox(height: 20),
+                                    ],
+                                  ),
+                                  child,
+                                  if (centerContent) const SizedBox.shrink(),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                      // `.rf-cta`: dải mờ phía trên vùng nút dính đáy, nội dung
+                      // cuộn tới đó thì nhạt dần thay vì bị cắt ngang.
+                      if (hasActions)
+                        Positioned(
+                          left: 0,
+                          right: 0,
+                          bottom: 0,
+                          height: 24,
+                          child: IgnorePointer(
+                            child: DecoratedBox(
+                              key: const Key('wr_flow_cta_fade'),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    WrColors.pageBg.withValues(alpha: 0),
+                                    WrColors.pageBg,
+                                  ],
                                 ),
                               ),
-                              ?eyebrowTrailing,
-                            ],
-                          ),
-                          SizedBox(height: eyebrowNote == null ? 8 : 6),
-                        ],
-                        if (eyebrowNote != null) ...[
-                          WrParagraph(
-                            eyebrowNote!,
-                            key: const Key('wr_flow_eyebrow_note'),
-                            style: const TextStyle(
-                              fontSize: 14.5,
-                              color: WrColors.text2,
-                              height: 1.55,
                             ),
-                            textAlign: TextAlign.start,
                           ),
-                          const SizedBox(height: 12),
-                        ],
-                        if (title != null)
-                          WrParagraph(
-                            title!,
-                            style: titleScale == 1.0
-                                ? wrFlowTitleStyle
-                                : wrFlowTitleStyle.copyWith(
-                                    fontSize:
-                                        wrFlowTitleStyle.fontSize! * titleScale,
-                                  ),
-                            textAlign: TextAlign.start,
-                          ),
-                        if (subtitle != null) ...[
-                          const SizedBox(height: 8),
-                          WrParagraph(
-                            subtitle!,
-                            style: const TextStyle(
-                              fontSize: 14.5,
-                              color: WrColors.text2,
-                              height: 1.6,
-                            ),
-                            // Câu phụ ngắn: căn đều làm giãn chữ thành khe hở.
-                            textAlign: TextAlign.start,
-                          ),
-                        ],
-                        if (title != null || subtitle != null)
-                          const SizedBox(height: 20),
-                        child,
-                      ],
-                    ),
+                        ),
+                    ],
                   ),
                 ),
                 if (hasActions)
@@ -231,7 +299,7 @@ class WrFlowScaffold extends ConsumerWidget {
                                       ),
                                     )
                                   : Text(
-                                      primaryLabel!,
+                                      wrKeepCompounds(primaryLabel!),
                                       style: const TextStyle(
                                         fontSize: 15,
                                         fontWeight: FontWeight.w700,
@@ -259,7 +327,7 @@ class WrFlowScaffold extends ConsumerWidget {
                                 ),
                               ),
                               child: Text(
-                                secondaryLabel!,
+                                wrKeepCompounds(secondaryLabel!),
                                 style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w700,
@@ -361,7 +429,7 @@ class _FlowHeader extends StatelessWidget {
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               child: Text(
-                tr('Đóng', 'Close'),
+                wrKeepCompounds(tr('Đóng', 'Close')),
                 style: const TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w500,
@@ -467,7 +535,7 @@ class WrBigChoiceTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    badge!.toUpperCase(),
+                    wrKeepCompounds(badge!.toUpperCase()),
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w700,
@@ -622,7 +690,7 @@ class WrMoodChip extends StatelessWidget {
           const SizedBox(width: 6),
           Flexible(
             child: Text(
-              moodCheckinLabel(mood),
+              wrKeepCompounds(moodCheckinLabel(mood)),
               style: const TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w600,

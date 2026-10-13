@@ -58,7 +58,7 @@ const Map<Mood, String> kMoodCodes = {
   Mood.happy: 'happy',
 };
 
-/// Số tình huống hiện mỗi lần ở bước Notice (§III, §4.1).
+/// Số tình huống hiện mỗi lần ở bước 1 (script Sprint 2: `slice(0,5)`).
 const int kSituationChoiceCount = 5;
 
 /// Sức chứa lịch sử chống lặp (§4.1).
@@ -74,9 +74,38 @@ const int kChoicePoolSampleWithoutPractice = 4;
 // §IV.1 — Chọn tình huống
 // ---------------------------------------------------------------------------
 
-/// Five real situations for Notice, selected with the v2 soft-priority rule:
-/// three matching the selected mood and two from another mood with the same
-/// valence. The custom self-description option is appended by UI.
+/// Mã tình huống "hoàn thành một khoá học / buổi đào tạo" mà script Sprint 2
+/// (`getSituationChoices`) thỉnh thoảng chèn vào danh sách.
+const String kCompletionSituationCode = 'P-11';
+
+/// Xác suất chèn [kCompletionSituationCode] vào ô cuối khi nó chưa có mặt
+/// (script Sprint 2: `Math.random() < 0.45`).
+const double kCompletionSituationOdds = 0.45;
+
+final RegExp _scaCodePrefix = RegExp(r'^(S1|S2|C1|C2|A1|A3)-');
+
+/// Chiều (`dim` của script) dùng để lọc theo cảm xúc.
+///
+/// Script gán `dim` theo đúng tiền tố mã cho sáu nhóm vấn đề (S1-01 → S1), kể
+/// cả C1-10 mà catalog v2 xếp vào P-STEADY. Nhóm P-xx không có tiền tố chiều,
+/// nên đọc `sca_dimension` (P-STEADY / P-ACHIEVE), khớp cột `dim` của script.
+ScaDimension situationDim(WrSituation situation) {
+  final m = _scaCodePrefix.firstMatch(situation.code);
+  if (m != null) return ScaDimension.fromDb(m.group(1)!);
+  return situation.scaDimension;
+}
+
+/// Năm tình huống cho bước 1, theo `getSituationChoices` của script Sprint 2:
+///
+///   1. Lọc theo chiều của cảm xúc ([kMoodDimensions]); có từ 5 mục liên quan
+///      trở lên thì lấy từ đó, không thì dùng toàn bộ thư viện.
+///   2. Bỏ các mục đã gặp (cả lịch sử [recentIds], tối đa 30 mã); còn ít hơn 5
+///      mục chưa gặp thì cho lặp lại.
+///   3. Xáo, lấy 5.
+///   4. Với xác suất [kCompletionSituationOdds], đặt [kCompletionSituationCode]
+///      vào ô cuối nếu nó chưa có mặt.
+///
+/// Mục "Điều khác, để tôi tự mô tả" do tầng UI tự thêm vào cuối.
 List<WrSituation> pickSituationChoices({
   required List<WrSituation> all,
   Mood? mood,
@@ -84,65 +113,40 @@ List<WrSituation> pickSituationChoices({
   int count = kSituationChoiceCount,
   Random? random,
 }) {
-  final offered = all.where(_isPickerEligible).toList();
-  if (offered.isEmpty) return const [];
+  final real = <WrSituation>[];
+  final codes = <String>{};
+  for (final s in all) {
+    // Bỏ trùng mã phòng khi người gọi truyền hàng lặp.
+    if (_isPickerEligible(s) && codes.add(s.code)) real.add(s);
+  }
+  if (real.isEmpty) return const [];
 
   final wanted = count < 0 ? 0 : count;
   if (wanted == 0) return const [];
 
-  final recentWindow = recentIds.take(10).toSet();
-  final selected = <WrSituation>[];
-  final selectedCodes = <String>{};
+  final rng = random ?? Random();
+  final dims = mood == null ? null : kMoodDimensions[mood];
+  final relevant = dims == null
+      ? real
+      : real.where((s) => dims.contains(situationDim(s))).toList();
+  final basePool = relevant.length >= wanted ? relevant : real;
+  final seen = recentIds.toSet();
+  final unseen = basePool.where((s) => !seen.contains(s.code)).toList();
+  final pool = unseen.length >= wanted ? unseen : basePool;
 
-  WrValence valenceOf(WrSituation situation) =>
-      situation.explicitValence ?? situation.valence;
+  final picked = _shuffle(pool, rng).take(wanted).toList();
 
-  List<WrSituation> unseenFirst(List<WrSituation> pool, int take) {
-    if (take <= 0 || pool.isEmpty) return const [];
-    final unseen = pool.where((s) => !recentWindow.contains(s.code)).toList();
-    final source = unseen.length >= take ? unseen : pool;
-    return _shuffle(source, random).take(take).toList();
+  WrSituation? completion;
+  for (final s in real) {
+    if (s.code == kCompletionSituationCode) completion = s;
   }
-
-  if (mood == null) {
-    selected.addAll(unseenFirst(offered, wanted));
-  } else {
-    final moodCode = kMoodCodes[mood];
-    final matching = offered.where((s) => s.mood == moodCode).toList();
-    // If a partial/legacy catalog has no mood rows, fail soft to the complete
-    // real catalog instead of returning an empty Notice state.
-    if (matching.isEmpty) {
-      selected.addAll(unseenFirst(offered, wanted));
-    } else {
-      final matchingTake = wanted < 3 ? wanted : 3;
-      final sameValence = offered
-          .where(
-            (s) =>
-                s.mood != moodCode && valenceOf(s) == valenceOf(matching.first),
-          )
-          .toList();
-      final otherTake = wanted - matchingTake;
-      selected.addAll(unseenFirst(matching, matchingTake));
-      selected.addAll(unseenFirst(sameValence, otherTake < 2 ? otherTake : 2));
-
-      // Fill a non-standard count from any remaining real records. This path
-      // also handles a malformed catalog where one of the two requested pools
-      // is too small, without ever duplicating a code.
-      if (selected.length < wanted) {
-        final remainder = offered
-            .where((s) => !selected.any((picked) => picked.code == s.code))
-            .toList();
-        selected.addAll(unseenFirst(remainder, wanted - selected.length));
-      }
-    }
+  if (completion != null &&
+      picked.isNotEmpty &&
+      !picked.any((s) => s.code == kCompletionSituationCode) &&
+      rng.nextDouble() < kCompletionSituationOdds) {
+    picked[picked.length - 1] = completion;
   }
-
-  // Defensive de-duplication protects callers that pass duplicate catalog
-  // rows, while preserving the random order chosen above.
-  return [
-    for (final situation in selected)
-      if (selectedCodes.add(situation.code)) situation,
-  ];
+  return picked;
 }
 
 bool _isPickerEligible(WrSituation situation) {

@@ -185,20 +185,33 @@ void main() {
     });
   });
 
+  // Script Sprint 2 (PR #48): khối "Thư viện học tập" + "Xem tất cả" ở tab
+  // Phát triển nhường chỗ cho thẻ "TẬP MỚI · YOUTUBE" trong phần Mở rộng. Thẻ
+  // vẫn lấy tập VIDEO mới nhất thật từ `cc_workshop_resources` và bấm là phát
+  // trong app; tài liệu không phải video không lên thẻ này.
   group('Thẻ ở tab Phát triển', () {
-    testWidgets('tập mới nhất làm thẻ, bấm là phát luôn', (tester) async {
+    final youtubeCard = find.byKey(
+      const Key('wr_growth_youtube_card'),
+      skipOffstage: false,
+    );
+
+    testWidgets('tập video mới nhất làm thẻ, bấm là phát luôn', (tester) async {
       await tester.pumpWidget(
         _wrap(const WrGrowthScreen(), _FakeLearningRepo([_series])),
       );
       await tester.pumpAndSettle();
 
-      final card = find.byKey(const Key('wr_growth_learning_library'));
+      final card = find.byKey(const Key('wr_growth_youtube_card'));
       await tester.scrollUntilVisible(card, 200);
       await tester.ensureVisible(card);
       await tester.pumpAndSettle();
-      expect(find.text('Thư viện học tập'), findsOneWidget);
-      expect(find.text('VIDEO · 9 PHÚT'), findsOneWidget);
+      expect(find.text('MỞ RỘNG'), findsOneWidget);
+      expect(find.text('TẬP MỚI'), findsOneWidget);
+      expect(find.text('YOUTUBE · 9 PHÚT'), findsOneWidget);
       expect(find.text(_series.title), findsOneWidget);
+      // Dữ liệu thật không có số tập: không bịa "Tập 7" như script demo.
+      expect(find.text('Chương trình Tâm thế'), findsOneWidget);
+      expect(find.textContaining('Tập 7'), findsNothing);
       // Không ảnh bìa (người dùng 10/10): không một Image mạng nào.
       expect(_networkImages, findsNothing);
 
@@ -207,33 +220,29 @@ void main() {
       expect(find.text('VideoScreen f0d7658d'), findsOneWidget);
     });
 
-    testWidgets('"Xem tất cả" mở danh sách', (tester) async {
-      await tester.pumpWidget(
-        _wrap(const WrGrowthScreen(), _FakeLearningRepo([_series])),
-      );
-      await tester.pumpAndSettle();
-
-      final seeAll = find.byKey(const Key('wr_learning_see_all'));
-      await tester.scrollUntilVisible(seeAll, 200);
-      await tester.ensureVisible(seeAll);
-      await tester.pumpAndSettle();
-      await tester.tap(seeAll);
-      await tester.pumpAndSettle();
-      expect(find.text('LibraryScreen'), findsOneWidget);
-    });
-
-    testWidgets('từ hai tài liệu thì "Xem tất cả" kèm số, chỉ một thẻ', (
+    testWidgets('chỉ một thẻ dù có nhiều tài liệu; tài liệu không lên thẻ', (
       tester,
     ) async {
       await tester.pumpWidget(
-        _wrap(const WrGrowthScreen(), _FakeLearningRepo([_series, _pdf])),
+        _wrap(const WrGrowthScreen(), _FakeLearningRepo([_pdf, _series])),
       );
       await tester.pumpAndSettle();
 
-      final seeAll = find.byKey(const Key('wr_learning_see_all'));
-      await tester.scrollUntilVisible(seeAll, 200);
-      expect(find.text('Xem tất cả (2)'), findsOneWidget);
+      expect(youtubeCard, findsOneWidget);
+      expect(find.text(_series.title, skipOffstage: false), findsOneWidget);
       expect(find.text(_pdf.title, skipOffstage: false), findsNothing);
+    });
+
+    testWidgets('chỉ có tài liệu, không video thì không có thẻ', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(const WrGrowthScreen(), _FakeLearningRepo([_pdf])),
+      );
+      await tester.pumpAndSettle();
+
+      expect(tester.takeException(), isNull);
+      expect(youtubeCard, findsNothing);
     });
 
     testWidgets('thư viện trống thì không có thẻ', (tester) async {
@@ -242,13 +251,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(
-        find.byKey(
-          const Key('wr_growth_learning_library'),
-          skipOffstage: false,
-        ),
-        findsNothing,
-      );
+      expect(youtubeCard, findsNothing);
     });
 
     testWidgets('tải lỗi thì cũng không có thẻ, màn vẫn dựng bình thường', (
@@ -260,13 +263,8 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
-      expect(
-        find.byKey(
-          const Key('wr_growth_learning_library'),
-          skipOffstage: false,
-        ),
-        findsNothing,
-      );
+      expect(youtubeCard, findsNothing);
+      expect(find.byKey(const Key('wr_growth_hero')), findsOneWidget);
     });
   });
 

@@ -149,6 +149,7 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
       eyebrow: reflectStepEyebrow(2),
       title: kInsightTitle,
       step: 2,
+      centerContent: true,
       onBack: () => context.pop(),
       onClose: _leave,
       primaryLabel: kInsightAgree,
@@ -218,7 +219,10 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
       title: kCorrectionTitle,
       subtitle: kCorrectionNote,
       step: 2,
-      onBack: () => setState(() => _retelling = false),
+      centerContent: true,
+      // Script Sprint 2: màn "Một góc nhìn khác" vẫn là bước 3, nên lùi là về
+      // bước 2 (Khoảnh khắc cụ thể), không về câu Insight.
+      onBack: () => context.pop(),
       onClose: _leave,
       primaryLabel: kCorrectionKeep,
       busy: _busy,
@@ -245,7 +249,7 @@ class _WrMeaningScreenState extends ConsumerState<WrMeaningScreen> {
     if (_error != null) ...[
       const SizedBox(height: 16),
       Text(
-        _error!,
+        wrKeepCompounds(_error!),
         style: const TextStyle(fontSize: 14.5, color: WrColors.coral),
       ),
     ],

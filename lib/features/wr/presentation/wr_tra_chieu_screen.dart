@@ -50,15 +50,15 @@ List<String> get kTraChieuRules => [
   ),
 ];
 
+/// "Vì sao lại là Trà Chiều" — nguyên văn script `screenTraChieu`.
 String get kTraChieuWhy => tr(
-  'Trà Chiều là một không gian tự do được kết nối bởi chính những người đi '
-      'làm. Bằng việc cùng đào sâu bằng phản chiếu, chúng ta mượn trải nghiệm của '
-      'người khác và gỡ rối cho chính mình. Giá trị lớn nhất ở khoảnh khắc bạn '
-      'nhận ra: Hóa ra mình không hề đơn độc trên hành trình này.',
-  'Tea Time is an open space held together by working people themselves. '
-      'By going deeper through reflection, we borrow other people\'s experience '
-      'to untangle our own. The greatest value is the moment you realise you are '
-      'not alone on this road.',
+  'Không phải hội thảo, không có sân khấu. Mười đến mười hai người ngồi quanh '
+      'một bàn trà, cùng trả lời một câu hỏi duy nhất. Đây là chính trải nghiệm '
+      'phản chiếu của WorkReflection, chỉ khác là được nói thành lời, trong một '
+      'không gian an toàn.',
+  'Not a seminar, no stage. Ten to twelve people sit around one tea table and '
+      'answer a single question together. It is the same reflection you do in '
+      'WorkReflection, only spoken out loud, in a safe space.',
 );
 
 // ---------------------------------------------------------------------------
@@ -79,7 +79,7 @@ class WrTraChieuScreen extends ConsumerWidget {
       title: kTraChieuLabel,
       children: [
         Text(
-          kTraChieuFormatLabel,
+          wrKeepCompounds(kTraChieuFormatLabel),
           style: TextStyle(fontSize: 15.5, color: WrColors.muted, height: 1.6),
         ),
         const SizedBox(height: 22),
@@ -94,7 +94,7 @@ class WrTraChieuScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                tr('Tinh thần của buổi Trà Chiều', 'The spirit of Tea Time'),
+                wrKeepCompounds(tr('Vì sao lại là Trà Chiều', 'Why Tea Time')),
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -103,7 +103,7 @@ class WrTraChieuScreen extends ConsumerWidget {
               ),
               SizedBox(height: 10),
               Text(
-                kTraChieuWhy,
+                wrKeepCompounds(kTraChieuWhy),
                 style: TextStyle(
                   fontSize: 15.5,
                   color: WrColors.dark,
@@ -139,7 +139,7 @@ class WrTraChieuScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                tr('3 nguyên tắc cốt lõi', '3 core principles'),
+                wrKeepCompounds(tr('Ba luật của mọi buổi', 'Three rules of every session')),
                 style: TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
@@ -159,7 +159,7 @@ class WrTraChieuScreen extends ConsumerWidget {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        rule,
+                        wrKeepCompounds(rule),
                         style: const TextStyle(
                           fontSize: 15.5,
                           color: WrColors.dark,
@@ -200,7 +200,7 @@ class _NextSessionCard extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            '"${session.title}"',
+            wrKeepCompounds('"${session.title}"'),
             style: const TextStyle(
               fontSize: 19,
               fontStyle: FontStyle.italic,
@@ -215,7 +215,7 @@ class _NextSessionCard extends StatelessWidget {
               session.description!.trim().isNotEmpty) ...[
             const SizedBox(height: 10),
             Text(
-              session.description!.trim(),
+              wrKeepCompounds(session.description!.trim()),
               key: const Key('wr_tra_chieu_next_description'),
               maxLines: 3,
               overflow: TextOverflow.ellipsis,
@@ -230,8 +230,11 @@ class _NextSessionCard extends StatelessWidget {
           Container(height: 1, color: WrColors.cream.withValues(alpha: 0.15)),
           const SizedBox(height: 16),
           _DarkLine(traChieuWhenLabel(session)),
-          if (session.location != null && session.location!.isNotEmpty)
-            _DarkLine(session.location!),
+          _DarkLine(
+            session.location?.trim().isNotEmpty ?? false
+                ? session.location!.trim()
+                : kTraChieuNoVenue,
+          ),
           _DarkLine(traChieuSeatLabel(session)),
           const SizedBox(height: 18),
           SizedBox(
@@ -250,7 +253,7 @@ class _NextSessionCard extends StatelessWidget {
                 ),
               ),
               child: Text(
-                tr('Xem chi tiết và đăng ký', 'See details and sign up'),
+                wrKeepCompounds(tr('Xem chi tiết và đăng ký', 'See details and sign up')),
                 style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700),
               ),
             ),
@@ -276,10 +279,10 @@ class _NextSessionCard extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  tr(
+                  wrKeepCompounds(tr(
                     'Nhắn Zalo để giữ một ghế',
                     'Message on Zalo to hold a seat',
-                  ),
+                  )),
                   style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w600),
                 ),
               ),
@@ -301,7 +304,7 @@ class _DarkLine extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 4),
       child: Text(
-        text,
+        wrKeepCompounds(text),
         style: TextStyle(
           fontSize: 15.5,
           height: 1.6,
@@ -352,7 +355,7 @@ class WrTraChieuCalendarScreen extends ConsumerWidget {
       children: [
         if (sessions.isEmpty)
           Text(
-            tr('Hiện chưa có lịch sự kiện mới.', 'No sessions scheduled yet.'),
+            wrKeepCompounds(tr('Hiện chưa có lịch sự kiện mới.', 'No sessions scheduled yet.')),
             key: Key('wr_tra_chieu_calendar_empty'),
             style: TextStyle(
               fontSize: 15.5,
@@ -367,10 +370,14 @@ class WrTraChieuCalendarScreen extends ConsumerWidget {
           ],
         const SizedBox(height: 22),
         Text(
-          tr(
-            'Chủ đề đổi mỗi buổi. Định kỳ hai tuần một lần, chiều thứ Bảy.',
-            'A new topic each time. Every two weeks, Saturday afternoon.',
-          ),
+          wrKeepCompounds(tr(
+            'Định kỳ 2 tuần một lần, chiều thứ Bảy. Có thể dày hơn nếu lượng '
+                'đăng ký trước đủ đông.',
+            'Every 2 weeks, on Saturday afternoon. Possibly more often if enough '
+                'people sign up early.',
+          )),
+          key: const Key('wr_tra_chieu_calendar_footer'),
+          textAlign: TextAlign.center,
           style: TextStyle(fontSize: 14.5, color: WrColors.muted, height: 1.7),
         ),
       ],
@@ -412,7 +419,7 @@ class _SessionRow extends StatelessWidget {
               borderRadius: BorderRadius.circular(100),
             ),
             child: Text(
-              traChieuWhenLabel(session),
+              wrKeepCompounds(traChieuWhenLabel(session)),
               style: const TextStyle(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w700,
@@ -422,7 +429,7 @@ class _SessionRow extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            '"${session.title}"',
+            wrKeepCompounds('"${session.title}"'),
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
@@ -444,8 +451,12 @@ class _SessionRow extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 12),
-          if (location != null && location.isNotEmpty)
-            _MetaLine(icon: Icons.place_outlined, text: location),
+          _MetaLine(
+            icon: Icons.place_outlined,
+            text: location != null && location.isNotEmpty
+                ? location
+                : kTraChieuNoVenue,
+          ),
           _MetaLine(
             icon: Icons.local_activity_outlined,
             text: traChieuSeatLabel(session),
@@ -467,7 +478,7 @@ class _SessionRow extends StatelessWidget {
                 ),
               ),
               child: Text(
-                tr('Xem chi tiết và đăng ký', 'See details and sign up'),
+                wrKeepCompounds(tr('Xem chi tiết và đăng ký', 'See details and sign up')),
                 style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
               ),
             ),
@@ -499,7 +510,7 @@ class _MetaLine extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              text,
+              wrKeepCompounds(text),
               style: const TextStyle(
                 fontSize: 14.5,
                 color: WrColors.dark,
@@ -546,6 +557,6 @@ Future<void> _open(BuildContext context, String url, String failure) async {
   if (!opened && context.mounted) {
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(failure)));
+    ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(failure))));
   }
 }

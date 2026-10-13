@@ -13,6 +13,7 @@ import '../../../core/widgets/pill_button.dart';
 import '../../../features/profile/profile_providers.dart';
 import '../../../l10n/app_localizations.dart';
 import '../workshops_providers.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 class WorkshopSurveyScreen extends ConsumerStatefulWidget {
   const WorkshopSurveyScreen({super.key, required this.workshopId});
@@ -53,7 +54,7 @@ class _WorkshopSurveyScreenState extends ConsumerState<WorkshopSurveyScreen> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(l10n.wsSurveyError)));
+      ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.wsSurveyError))));
     }
   }
 
@@ -68,17 +69,17 @@ class _WorkshopSurveyScreenState extends ConsumerState<WorkshopSurveyScreen> {
       appBar: AppBar(
         backgroundColor: WrColors.pageBg,
         elevation: 0,
-        title: Text(l10n.wsSurveyTitle, style: WrTextStyles.hMedium),
+        title: Text(wrKeepCompounds(l10n.wsSurveyTitle), style: WrTextStyles.hMedium),
       ),
       body: surveyAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
-        error: (err, _) => Center(child: Text(err.toString())),
+        error: (err, _) => Center(child: Text(wrKeepCompounds(err.toString()))),
         data: (surveySet) {
           // No survey or no questions.
           if (surveySet == null || surveySet.questions.isEmpty) {
             return Center(
               child: Text(
-                l10n.wsSurveyNone,
+                wrKeepCompounds(l10n.wsSurveyNone),
                 key: const Key('ws_survey_none'),
                 textAlign: TextAlign.center,
               ),
@@ -92,7 +93,7 @@ class _WorkshopSurveyScreenState extends ConsumerState<WorkshopSurveyScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    l10n.wsSurveyThanks,
+                    wrKeepCompounds(l10n.wsSurveyThanks),
                     key: const Key('ws_survey_thanks'),
                     style: WrTextStyles.hMedium,
                     textAlign: TextAlign.center,
@@ -134,7 +135,7 @@ class _WorkshopSurveyScreenState extends ConsumerState<WorkshopSurveyScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            questionText,
+                            wrKeepCompounds(questionText),
                             style: WrTextStyles.hMedium.copyWith(
                               color: WrColors.dark,
                             ),
@@ -147,7 +148,7 @@ class _WorkshopSurveyScreenState extends ConsumerState<WorkshopSurveyScreen> {
                               final isSelected = selected == value;
                               return ChoiceChip(
                                 key: Key('chip_${question.id}_$value'),
-                                label: Text('$value'),
+                                label: Text(wrKeepCompounds('$value')),
                                 selected: isSelected,
                                 onSelected: (_) {
                                   setState(() {

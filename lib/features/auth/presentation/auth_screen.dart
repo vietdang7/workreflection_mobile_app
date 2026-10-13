@@ -10,6 +10,7 @@ import '../../../core/data/seed_service.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../onboarding/presentation/wr_logo.dart';
 import '../data/auth_repository.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 class AuthScreen extends ConsumerStatefulWidget {
   const AuthScreen({super.key});
@@ -114,13 +115,13 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.authForgotPasswordSuccess)));
+        ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.authForgotPasswordSuccess))));
       }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.authForgotPasswordError)));
+        ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.authForgotPasswordError))));
       }
     }
   }
@@ -190,17 +191,17 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                           const Center(child: WrLogo(width: 240)),
                           const SizedBox(height: 22),
                           Text(
-                            _isLogin
+                            wrKeepCompounds(_isLogin
                                 ? l10n.authLoginTitle
-                                : l10n.authRegisterTitle,
+                                : l10n.authRegisterTitle),
                             textAlign: TextAlign.center,
                             style: WrTextStyles.hLarge.copyWith(fontSize: 26),
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            _isLogin
+                            wrKeepCompounds(_isLogin
                                 ? l10n.authLoginSubtitle
-                                : l10n.authRegisterSubtitle,
+                                : l10n.authRegisterSubtitle),
                             textAlign: TextAlign.center,
                             style: WrTextStyles.body.copyWith(
                               fontSize: 14.5,
@@ -313,7 +314,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                                       onPressed: () =>
                                           _showForgotPasswordDialog(context),
                                       child: Text(
-                                        l10n.authForgotPassword,
+                                        wrKeepCompounds(l10n.authForgotPassword),
                                         style: const TextStyle(
                                           color: WrColors.coral,
                                           fontSize: 14.5,
@@ -349,7 +350,7 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                                         const SizedBox(width: 8),
                                         Expanded(
                                           child: Text(
-                                            _errorMessage!,
+                                            wrKeepCompounds(_errorMessage!),
                                             style: const TextStyle(
                                               color: WrColors.destructive,
                                               fontSize: 14.5,
@@ -393,9 +394,9 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                                 });
                               },
                               child: Text(
-                                _isLogin
+                                wrKeepCompounds(_isLogin
                                     ? l10n.authSwitchToRegister
-                                    : l10n.authSwitchToLogin,
+                                    : l10n.authSwitchToLogin),
                                 style: const TextStyle(
                                   color: WrColors.coral,
                                   fontSize: 15.5,
@@ -454,7 +455,7 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
   Widget build(BuildContext context) {
     final l10n = context.l10n;
     return AlertDialog(
-      title: Text(l10n.authForgotPasswordDialogTitle),
+      title: Text(wrKeepCompounds(l10n.authForgotPasswordDialogTitle)),
       content: Form(
         key: _formKey,
         child: TextFormField(
@@ -476,12 +477,12 @@ class _ForgotPasswordDialogState extends State<_ForgotPasswordDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: widget.onCancel, child: Text(l10n.commonCancel)),
+        TextButton(onPressed: widget.onCancel, child: Text(wrKeepCompounds(l10n.commonCancel))),
         TextButton(
           key: const Key('auth_forgot_password_submit'),
           onPressed: _submit,
           child: Text(
-            l10n.authForgotPasswordSubmit,
+            wrKeepCompounds(l10n.authForgotPasswordSubmit),
             style: const TextStyle(color: WrColors.coral),
           ),
         ),

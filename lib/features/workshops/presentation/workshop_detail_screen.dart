@@ -28,6 +28,7 @@ import '../../../core/widgets/pill_button.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../workshops_providers.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 class WorkshopDetailScreen extends ConsumerWidget {
   const WorkshopDetailScreen({super.key, required this.workshopId});
@@ -49,7 +50,7 @@ class WorkshopDetailScreen extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back, color: WrColors.navy),
           onPressed: () => context.pop(),
         ),
-        title: Text(l10n.wsListTitle, style: WrTextStyles.hMedium),
+        title: Text(wrKeepCompounds(l10n.wsListTitle), style: WrTextStyles.hMedium),
       ),
       body: detailAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -61,7 +62,7 @@ class WorkshopDetailScreen extends ConsumerWidget {
         ),
         data: (workshop) {
           if (workshop == null) {
-            return Center(child: Text(l10n.wsEmpty, style: WrTextStyles.body));
+            return Center(child: Text(wrKeepCompounds(l10n.wsEmpty), style: WrTextStyles.body));
           }
           return registrationAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
@@ -122,14 +123,14 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(l10n.wsRegisterSuccess)));
+      ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.wsRegisterSuccess))));
       ref.invalidate(myRegistrationProvider(widget.workshopId));
       ref.invalidate(workshopDetailProvider(widget.workshopId));
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(l10n.wsRegisterError)));
+      ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.wsRegisterError))));
     } finally {
       if (mounted) setState(() => _registering = false);
     }
@@ -140,12 +141,12 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
     showDialog<void>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(l10n.wsPaidDialogTitle),
-        content: Text(l10n.wsPaidDialogBody),
+        title: Text(wrKeepCompounds(l10n.wsPaidDialogTitle)),
+        content: Text(wrKeepCompounds(l10n.wsPaidDialogBody)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text(l10n.wsPaidDialogOk),
+            child: Text(wrKeepCompounds(l10n.wsPaidDialogOk)),
           ),
         ],
       ),
@@ -185,7 +186,7 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
           ],
 
           // Title
-          Text(w.title, style: WrTextStyles.hLarge),
+          Text(wrKeepCompounds(w.title), style: WrTextStyles.hLarge),
           const SizedBox(height: 12),
 
           // Date/time row
@@ -218,13 +219,13 @@ class _DetailBodyState extends ConsumerState<_DetailBody> {
 
           // Description
           if (w.description != null) ...[
-            Text(w.description!, style: WrTextStyles.body),
+            Text(wrKeepCompounds(w.description!), style: WrTextStyles.body),
             const SizedBox(height: 16),
           ],
 
           // Price line
           Text(
-            w.isFree ? l10n.wsFree : _formatPrice(w.price, w.currency),
+            wrKeepCompounds(w.isFree ? l10n.wsFree : _formatPrice(w.price, w.currency)),
             style: WrTextStyles.hMedium.copyWith(color: WrColors.navy),
           ),
 
@@ -352,7 +353,7 @@ class _StatusChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(100),
       ),
       child: Text(
-        chipLabel,
+        wrKeepCompounds(chipLabel),
         style: TextStyle(
           fontSize: 14.5,
           fontWeight: FontWeight.w600,
@@ -385,7 +386,7 @@ class _SurveyArea extends ConsumerWidget {
           return Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(l10n.wsSurveyDone, style: WrTextStyles.body),
+              Text(wrKeepCompounds(l10n.wsSurveyDone), style: WrTextStyles.body),
               const SizedBox(height: 8),
               WrActionLink(
                 key: const Key('ws_detail_view_results'),
@@ -443,7 +444,7 @@ class _ResourcesSection extends ConsumerWidget {
             const SizedBox(height: 12),
 
             if (registration == null) ...[
-              Text(l10n.wsResourcesLocked, style: WrTextStyles.body),
+              Text(wrKeepCompounds(l10n.wsResourcesLocked), style: WrTextStyles.body),
             ] else ...[
               WrCardMinimal(
                 child: Column(
@@ -483,14 +484,14 @@ class _AttachmentRow extends StatelessWidget {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: Icon(_icon, color: WrColors.navy),
-      title: Text(attachment.fileName, style: WrTextStyles.body),
+      title: Text(wrKeepCompounds(attachment.fileName), style: WrTextStyles.body),
       onTap: () async {
         final l10n = AppLocalizations.of(context)!;
         await Clipboard.setData(ClipboardData(text: attachment.fileUrl));
         if (context.mounted) {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text(l10n.wsLinkCopied)));
+          ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.wsLinkCopied))));
         }
       },
     );
@@ -514,7 +515,7 @@ class _InfoRow extends StatelessWidget {
       children: [
         Icon(icon, size: 16, color: WrColors.muted),
         const SizedBox(width: 6),
-        Expanded(child: Text(text, style: WrTextStyles.body)),
+        Expanded(child: Text(wrKeepCompounds(text), style: WrTextStyles.body)),
       ],
     );
   }
@@ -539,7 +540,7 @@ class _ErrorCard extends StatelessWidget {
           const SizedBox(height: 16),
           TextButton(
             onPressed: onRetry,
-            child: Text(AppLocalizations.of(context)!.homeRetry),
+            child: Text(wrKeepCompounds(AppLocalizations.of(context)!.homeRetry)),
           ),
         ],
       ),

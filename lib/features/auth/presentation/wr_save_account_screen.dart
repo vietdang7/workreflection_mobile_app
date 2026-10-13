@@ -15,11 +15,13 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../../core/l10n/wr_tr.dart';
 import '../../../core/theme/wr_colors.dart';
+import '../../../core/widgets/wr_app_background.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../wr/presentation/wr_paywall_screen.dart'
     show kAppleStandardEulaUrl, kPrivacyPolicyUrl;
 import '../data/auth_repository.dart';
 import '../guest_session.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 class WrSaveAccountScreen extends ConsumerStatefulWidget {
   const WrSaveAccountScreen({super.key});
@@ -72,7 +74,7 @@ class _WrSaveAccountScreenState extends ConsumerState<WrSaveAccountScreen> {
           backgroundColor: WrColors.navy,
           behavior: SnackBarBehavior.floating,
           content: Text(
-            tr('Đã lưu hành trình của bạn', 'Your journey is saved'),
+            wrKeepCompounds(tr('Đã lưu hành trình của bạn', 'Your journey is saved')),
             textAlign: TextAlign.center,
             style: const TextStyle(
               color: WrColors.cream,
@@ -145,19 +147,21 @@ class _WrSaveAccountScreenState extends ConsumerState<WrSaveAccountScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: WrColors.pageBg,
-      appBar: AppBar(
-        backgroundColor: WrColors.pageBg,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        foregroundColor: WrColors.navy,
-      ),
-      body: SafeArea(
-        top: false,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(22, 4, 22, 24),
-          child: _pendingEmail != null ? _pendingView() : _form(),
+    return WrAppBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
+          foregroundColor: WrColors.navy,
+        ),
+        body: SafeArea(
+          top: false,
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(22, 4, 22, 24),
+            child: _pendingEmail != null ? _pendingView() : _form(),
+          ),
         ),
       ),
     );
@@ -168,7 +172,7 @@ class _WrSaveAccountScreenState extends ConsumerState<WrSaveAccountScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          eyebrow.toUpperCase(),
+          wrKeepCompounds(eyebrow.toUpperCase()),
           style: const TextStyle(
             fontSize: 11.5,
             fontWeight: FontWeight.w700,
@@ -178,7 +182,7 @@ class _WrSaveAccountScreenState extends ConsumerState<WrSaveAccountScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          title,
+          wrKeepCompounds(title),
           style: const TextStyle(
             fontSize: 21,
             fontWeight: FontWeight.w800,
@@ -188,7 +192,7 @@ class _WrSaveAccountScreenState extends ConsumerState<WrSaveAccountScreen> {
         ),
         const SizedBox(height: 8),
         Text(
-          body,
+          wrKeepCompounds(body),
           style: const TextStyle(
             fontSize: 14.5,
             color: WrColors.text2,
@@ -222,7 +226,7 @@ class _WrSaveAccountScreenState extends ConsumerState<WrSaveAccountScreen> {
             onPressed: () =>
                 context.canPop() ? context.pop() : context.go('/home'),
             style: _primaryStyle,
-            child: Text(tr('Quay lại', 'Back')),
+            child: Text(wrKeepCompounds(tr('Quay lại', 'Back'))),
           ),
         ),
       ],
@@ -314,7 +318,7 @@ class _WrSaveAccountScreenState extends ConsumerState<WrSaveAccountScreen> {
           if (_error != null) ...[
             const SizedBox(height: 12),
             Text(
-              _error!,
+              wrKeepCompounds(_error!),
               key: const Key('wr_save_account_error'),
               style: const TextStyle(
                 fontSize: 13.5,
@@ -341,7 +345,7 @@ class _WrSaveAccountScreenState extends ConsumerState<WrSaveAccountScreen> {
                         color: WrColors.navy,
                       ),
                     )
-                  : Text(tr('Tạo tài khoản', 'Create account')),
+                  : Text(wrKeepCompounds(tr('Tạo tài khoản', 'Create account'))),
             ),
           ),
         ],

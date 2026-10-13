@@ -14,10 +14,14 @@ abstract final class WrColors {
 
   // Token lấy nguyên từ `:root` của mockup Sprint 2 — đừng đoán lại bằng mắt.
   //   --line:rgba(9,55,116,0.10)
-  //   --text-2:rgba(44,51,93,0.72) · --text-3:rgba(44,51,93,0.45)
+  //   --text-2:rgba(44,51,93,0.76) · --text-3:rgba(44,51,93,0.74)
+  //   (mockup Sprint 2 Paper nâng --text-3 từ .45 lên .74 để chữ nhỏ đạt 4.5:1)
   /// Nền màn hình. Brand identity mới (chốt 04/8) thay nền kem `--cream-bg`
   /// #FBF9F5 bằng xám trung tính; thẻ vẫn trắng thuần nên vẫn nổi trên nền.
   static const pageBg = Color(0xFFF4F4F6);
+
+  /// Nền kem giấy vẽ (`--cream-bg` #FBF9F5) của mockup Sprint 2 Paper.
+  static const creamBg = Color(0xFFFBF9F5);
 
   /// Viền thẻ (`--line`).
   static const line = Color(0x1A093774);
@@ -25,11 +29,15 @@ abstract final class WrColors {
   /// Viền mảnh (`--line-soft`).
   static const lineSoft = Color(0x0F093774);
 
-  /// Chữ phụ (`--text-2`).
-  static const text2 = Color(0xB82C335D);
+  /// Chữ phụ (`--text-2`, .76).
+  static const text2 = Color(0xC22C335D);
 
-  /// Chữ mờ (`--text-3`).
-  static const text3 = Color(0x732C335D);
+  /// Chữ mờ (`--text-3`, .74).
+  static const text3 = Color(0xBD2C335D);
+
+  /// Chữ link teal đậm (#0C8C88) của mockup: "Đổi", "Xem tất cả →". Teal gốc
+  /// #15B5B0 trên nền sáng không đủ tương phản cho chữ nhỏ.
+  static const link = Color(0xFF0C8C88);
 
   /// Nhãn eyebrow chữ hoa. Mockup v55: `--text-3` (.45) chỉ đạt 2.46:1, dưới
   /// ngưỡng 4.5:1 cho chữ nhỏ; nâng lên .74 = 5.27:1.

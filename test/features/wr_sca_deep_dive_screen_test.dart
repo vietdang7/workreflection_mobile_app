@@ -119,6 +119,17 @@ Widget _wrap({
   );
 }
 
+/// Phần "Xu hướng theo thời gian" của script đứng đầu màn, nên nội dung Diễn
+/// giải sâu v2 nằm dưới mép màn hình lúc mới mở: phải cuộn tới mới dựng.
+Future<void> _scrollTo(WidgetTester tester, String key) async {
+  await tester.scrollUntilVisible(
+    find.byKey(Key(key)),
+    200,
+    scrollable: find.byType(Scrollable).first,
+  );
+  await tester.pumpAndSettle();
+}
+
 void main() {
   setUp(() {
     final view =
@@ -157,6 +168,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await _scrollTo(tester, 'wr_sca_deep_dive_pillar_a');
     for (final p in ['s', 'c', 'a']) {
       expect(find.byKey(Key('wr_sca_deep_dive_pillar_$p')), findsOneWidget);
       // Nhãn mức đánh giá đã bỏ — nó trùng nguyên cột "Bạn đánh giá" của
@@ -175,12 +187,68 @@ void main() {
     // Và KHÔNG còn câu đối chiếu pattern theo trụ.
     expect(find.byKey(const Key('wr_sca_deep_dive_pattern_c')), findsNothing);
 
+    // Đã có Self-Check thì dòng chú thích nằm cuối phần script, ở đầu màn.
     await tester.scrollUntilVisible(
       find.byKey(const Key('wr_sca_deep_dive_footnote')),
-      200,
+      -200,
       scrollable: find.byType(Scrollable).first,
     );
     expect(find.byKey(const Key('wr_sca_deep_dive_footnote')), findsOneWidget);
+  });
+
+  // Script `screenScaDeepDive`: nhãn Premium, tiêu đề "Xu hướng theo thời
+  // gian", câu dẫn, rồi ba thẻ trụ — mỗi thẻ một câu xu hướng (so với lần
+  // Self-Check trước) và một câu đối chiếu với những lần nhìn lại.
+  testWidgets('Premium: phần script đứng đầu, ba thẻ trụ có hai câu', (
+    tester,
+  ) async {
+    final now = DateTime.now();
+    await tester.pumpWidget(
+      _wrap(
+        premium: true,
+        history: [
+          _check(at: now.subtract(const Duration(days: 40)), c: 2.0),
+          // Mối quan hệ 4.2 = "Đang hỗ trợ tốt", tăng so với 2.0.
+          _check(at: now.subtract(const Duration(days: 2)), c: 4.2),
+        ],
+        episodes: [
+          for (var i = 0; i < 4; i++)
+            _ep('C2-01', now.subtract(Duration(days: i))),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.byKey(const Key('wr_sca_trend_header')), findsOneWidget);
+    expect(find.text('Xu hướng theo thời gian'), findsOneWidget);
+    expect(find.text('Niềm tin & an toàn để lên tiếng'), findsOneWidget);
+    for (final p in ['s', 'c', 'a']) {
+      expect(find.byKey(Key('wr_sca_trend_card_$p')), findsOneWidget);
+      expect(find.byKey(Key('wr_sca_pattern_line_$p')), findsOneWidget);
+    }
+
+    String textOf(String key) => tester
+        .widget<Text>(
+          find.descendant(
+            of: find.byKey(Key(key)),
+            matching: find.byType(Text),
+          ),
+        )
+        .data!;
+
+    expect(textOf('wr_sca_trend_line_c'), startsWith('Tăng nhẹ so với lần trước'));
+    // Mối quan hệ là nhóm quay lại nhiều nhất VÀ tự chấm "Đang hỗ trợ tốt":
+    // đúng nhánh chênh lệch của script.
+    expect(
+      textOf('wr_sca_pattern_line_c'),
+      startsWith('Bạn tự đánh giá phần này đang hỗ trợ tốt, nhưng'),
+    );
+    expect(textOf('wr_sca_pattern_line_c'), contains('(4 lần)'));
+    expect(
+      textOf('wr_sca_pattern_line_s'),
+      'Chưa có đủ tín hiệu từ Reflection gần đây để đối chiếu thêm cho nhóm '
+      'này.',
+    );
   });
 
   // Phép thử cuối của §9.1, dựng lại đúng hình dạng tài khoản khách báo lỗi.
@@ -241,6 +309,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
+    await _scrollTo(tester, 'wr_deep_pillar_toggle_s');
     await tester.tap(find.byKey(const Key('wr_deep_pillar_toggle_s')));
     await tester.pumpAndSettle();
 
@@ -301,6 +370,7 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    await _scrollTo(tester, 'wr_deep_waiting_line');
 
     // Cả khối XU HƯỚNG vắng mặt, không còn hai đoạn dài giữa màn.
     expect(find.byKey(const Key('wr_deep_trend')), findsNothing);

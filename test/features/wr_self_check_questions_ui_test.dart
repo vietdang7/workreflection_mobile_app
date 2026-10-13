@@ -69,10 +69,7 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // Vào bộ câu hỏi.
-    await tester.tap(find.text('Bắt đầu →'));
-    await tester.pumpAndSettle();
-
+    // Script mở thẳng vào câu 1, không còn màn giới thiệu.
     // Duyệt từng câu: chữ trên màn phải khớp tuyệt đối, và đúng thứ tự.
     for (var i = 0; i < kSelfCheckQuestions.length; i++) {
       final q = kSelfCheckQuestions[i];
@@ -94,7 +91,7 @@ void main() {
       );
 
       // Trả lời để sang câu kế (màn tự nhảy sau 260ms).
-      await tester.tap(find.text('Đôi khi đúng'));
+      await tester.tap(find.text('Đôi khi'));
       await tester.pump(const Duration(milliseconds: 400));
       await tester.pumpAndSettle();
     }

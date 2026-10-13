@@ -19,6 +19,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../profile/profile_providers.dart';
 import '../survey_providers.dart';
 import '../../../core/l10n/wr_tr.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 // ---------------------------------------------------------------------------
 // TTS playback provider (per-screen, auto-disposed)
@@ -265,7 +266,7 @@ class SurveyQuestionsScreen extends ConsumerWidget {
           const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (e, _) => Scaffold(
         body: Center(
-          child: Text(AppLocalizations.of(context)!.surveyProcessingError),
+          child: Text(wrKeepCompounds(AppLocalizations.of(context)!.surveyProcessingError)),
         ),
       ),
       data: (type) => _QuestionsBody(surveyType: type),
@@ -287,7 +288,7 @@ class _QuestionsBody extends ConsumerWidget {
           const Scaffold(body: Center(child: CircularProgressIndicator())),
       error: (e, _) => Scaffold(
         body: Center(
-          child: Text(AppLocalizations.of(context)!.surveyProcessingError),
+          child: Text(wrKeepCompounds(AppLocalizations.of(context)!.surveyProcessingError)),
         ),
       ),
       data: (questions) => optionsAsync.when(
@@ -295,7 +296,7 @@ class _QuestionsBody extends ConsumerWidget {
             const Scaffold(body: Center(child: CircularProgressIndicator())),
         error: (e, _) => Scaffold(
           body: Center(
-            child: Text(AppLocalizations.of(context)!.surveyProcessingError),
+            child: Text(wrKeepCompounds(AppLocalizations.of(context)!.surveyProcessingError)),
           ),
         ),
         data: (options) => _QuestionView(
@@ -434,7 +435,7 @@ class _QuestionViewState extends ConsumerState<_QuestionView> {
                   ),
                   const SizedBox(width: 12),
                   Text(
-                    l10n.surveyProgress(safeIndex + 1, questions.length),
+                    wrKeepCompounds(l10n.surveyProgress(safeIndex + 1, questions.length)),
                     style: WrTextStyles.greeting,
                   ),
                 ],
@@ -598,7 +599,7 @@ class _MicButton extends ConsumerWidget {
                 if (context.mounted) {
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(l10n.voiceInputNoMatch),
+                      content: Text(wrKeepCompounds(l10n.voiceInputNoMatch)),
                       duration: const Duration(seconds: 2),
                     ),
                   );
@@ -730,7 +731,7 @@ class _LikertPills extends StatelessWidget {
                 ),
               ),
               child: Text(
-                trDb(opt.label, opt.labelEn),
+                wrKeepCompounds(trDb(opt.label, opt.labelEn)),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 16.5,
@@ -781,7 +782,7 @@ class _EnpsGrid extends StatelessWidget {
             ),
             alignment: Alignment.center,
             child: Text(
-              '$i',
+              wrKeepCompounds('$i'),
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w700,

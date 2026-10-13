@@ -191,6 +191,24 @@ void main() {
     },
   );
 
+  testWidgets('ảnh đầu bước cao 236 ở bước 1–4, 188 ở bước cuối', (
+    tester,
+  ) async {
+    await tester.pumpWidget(_Harness().app());
+    await _settle(tester);
+
+    double heroHeight(int step) =>
+        tester.getSize(find.byKey(Key('onboarding_hero_$step'))).height;
+
+    for (var step = 0; step < 3; step++) {
+      expect(heroHeight(step), 236, reason: 'bước ${step + 1}');
+      await _next(tester);
+    }
+    expect(heroHeight(3), 236, reason: 'bước Riêng tư');
+    await _toMoodStepFromPrivacy(tester);
+    expect(heroHeight(4), 188, reason: 'bước chọn cảm xúc');
+  });
+
   testWidgets('đã có phiên thì không mở phiên khách thứ hai', (tester) async {
     final h = _Harness(hasSession: true);
     await tester.pumpWidget(h.app());

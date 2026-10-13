@@ -136,6 +136,7 @@ import '../../features/wr/presentation/wr_chapter_read_screen.dart';
 import '../../features/wr/presentation/wr_stance_keep_screen.dart';
 import '../../features/wr/presentation/wr_step_options_screen.dart';
 import '../../features/wr/presentation/wr_timeline_read_screen.dart';
+import '../../features/wr/presentation/wr_journey_narrative_screen.dart';
 import 'auth_change_notifier.dart';
 
 
@@ -494,6 +495,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/wr/journey/narrative',
         builder: (context, state) => const WrTimelineReadScreen(),
       ),
+      // "Đọc toàn bộ diễn biến" của bản Premium — mọi bản kể theo giai đoạn,
+      // kèm lời xin phép xử lý bằng AI (Guideline 5.1.1(i)).
+      wrRoute(
+        path: '/wr/journey/narrative/full',
+        builder: (context, state) => const WrJourneyNarrativeScreen(),
+      ),
       // Xử lý dữ liệu bằng AI — xem lại bản công bố và bật/tắt.
       //
       // Đường dẫn phải khớp `kWrAiRevokePath` trong `wr_ai_disclosure.dart`:
@@ -613,7 +620,13 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final triggerStr = state.uri.queryParameters['trigger'];
           final trigger = switch (triggerStr) {
-            'ai_insight' => PaywallTrigger.aiInsight,
+            // Script `screenPaywall` không có trigger `pattern_advanced`: phần
+            // diễn giải theo thời gian thuộc `ai_insight`. Giữ chuỗi cũ ánh xạ
+            // về đây để mọi nút còn gửi `pattern_advanced` không rơi về
+            // tiêu đề chung.
+            'ai_insight' || 'pattern_advanced' => PaywallTrigger.aiInsight,
+            'practice_limit' => PaywallTrigger.practiceLimit,
+            'practice_step' => PaywallTrigger.practiceStep,
             'trial_end' => PaywallTrigger.trialEnd,
             'benchmark' => PaywallTrigger.benchmark,
             'growth_opportunity' => PaywallTrigger.growthOpportunity,
@@ -749,7 +762,12 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       // Màn hình tầng trong — Sprint 2 (Gom lớp & Giảm tải chữ)
       wrRoute(
         path: '/wr/experience-interpret',
-        builder: (context, state) => WrExperienceInterpretScreen(),
+        // `?tab=1|2|3` mở thẳng một màn con (Theo những lần nhìn lại / Theo
+        // khảo sát / Tổng hợp) với đầu màn riêng, đúng `expHeader` của script.
+        builder: (context, state) => WrExperienceInterpretScreen(
+          initialTab:
+              int.tryParse(state.uri.queryParameters['tab'] ?? '') ?? 0,
+        ),
       ),
       wrRoute(
         path: '/wr/chapters',

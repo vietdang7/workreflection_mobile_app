@@ -10,6 +10,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/wr_tr.dart';
 import '../../../core/theme/wr_colors.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 /// Mở sheet. Trả về khi sheet đóng (người dùng chọn Email hoặc Để sau).
 Future<void> showSaveJourneySheet(BuildContext context) async {
@@ -37,7 +38,8 @@ class WrSaveJourneySheet extends StatelessWidget {
     return Container(
       key: const Key('wr_save_journey_sheet'),
       decoration: const BoxDecoration(
-        color: WrColors.pageBg,
+        // `.sv-sheet { background: var(--cream-bg) }`
+        color: WrColors.creamBg,
         borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
         boxShadow: [
           BoxShadow(
@@ -69,7 +71,7 @@ class WrSaveJourneySheet extends StatelessWidget {
             ),
           ),
           Text(
-            tr('Dấu ấn đầu tiên', 'Your first mark').toUpperCase(),
+            wrKeepCompounds(tr('Dấu ấn đầu tiên', 'Your first mark').toUpperCase()),
             style: const TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
@@ -79,7 +81,7 @@ class WrSaveJourneySheet extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            tr('Lưu lại hành trình của bạn', 'Keep your journey'),
+            wrKeepCompounds(tr('Lưu lại hành trình của bạn', 'Keep your journey')),
             style: const TextStyle(
               fontSize: 21,
               fontWeight: FontWeight.w800,
@@ -89,12 +91,12 @@ class WrSaveJourneySheet extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            tr(
+            wrKeepCompounds(tr(
               'Bạn vừa để lại dấu ấn đầu tiên. Tạo tài khoản để giữ nó an toàn, '
                   'kể cả khi bạn đổi điện thoại hoặc cài lại ứng dụng.',
               'You have just left your first mark. Create an account to keep '
                   'it safe, even if you change phones or reinstall the app.',
-            ),
+            )),
             style: const TextStyle(
               fontSize: 14.5,
               color: Color(0xBD2C335D),
@@ -112,10 +114,10 @@ class WrSaveJourneySheet extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  tr(
+                  wrKeepCompounds(tr(
                     'Nội dung vẫn chỉ mình bạn xem được.',
                     'Only you can see what you write.',
-                  ),
+                  )),
                   style: const TextStyle(
                     fontSize: 13.5,
                     fontWeight: FontWeight.w600,
@@ -128,13 +130,20 @@ class WrSaveJourneySheet extends StatelessWidget {
           const SizedBox(height: 16),
           SizedBox(
             width: double.infinity,
-            child: FilledButton(
+            // `.sv-btn.sv-alt`: nền trắng, chữ navy, viền navy 18%. Mockup đặt
+            // nút Apple (navy đặc) ở trên; app chưa có Apple/Google nên email
+            // giữ đúng kiểu của nó, không mượn kiểu nút Apple.
+            child: OutlinedButton(
               key: const Key('wr_save_sheet_email'),
               onPressed: () => Navigator.of(context).pop(_SaveChoice.email),
-              style: FilledButton.styleFrom(
-                backgroundColor: WrColors.navy,
-                foregroundColor: WrColors.cream,
-                padding: const EdgeInsets.symmetric(vertical: 14),
+              style: OutlinedButton.styleFrom(
+                backgroundColor: WrColors.white,
+                foregroundColor: WrColors.navy,
+                side: BorderSide(
+                  color: WrColors.navy.withValues(alpha: 0.18),
+                  width: 1.5,
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 13),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
@@ -143,7 +152,7 @@ class WrSaveJourneySheet extends StatelessWidget {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              child: Text(tr('Dùng email', 'Use email')),
+              child: Text(wrKeepCompounds(tr('Dùng email', 'Use email'))),
             ),
           ),
           const SizedBox(height: 6),
@@ -153,7 +162,7 @@ class WrSaveJourneySheet extends StatelessWidget {
               onPressed: () => Navigator.of(context).pop(_SaveChoice.later),
               style: TextButton.styleFrom(foregroundColor: WrColors.text2),
               child: Text(
-                tr('Để sau', 'Later'),
+                wrKeepCompounds(tr('Để sau', 'Later')),
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -163,12 +172,12 @@ class WrSaveJourneySheet extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            tr(
+            wrKeepCompounds(tr(
               'Nếu chưa lưu, hành trình chỉ nằm trên thiết bị này và sẽ mất '
                   'khi bạn xóa ứng dụng.',
               'Until you save it, your journey lives only on this device and '
                   'will be lost if you delete the app.',
-            ),
+            )),
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 12.5,

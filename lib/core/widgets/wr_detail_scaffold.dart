@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import '../l10n/wr_tr.dart';
 import '../theme/wr_colors.dart';
 import 'eyebrow.dart';
+import 'wr_app_background.dart';
 import 'wr_hero_header.dart';
 import 'wr_paragraph.dart';
 
@@ -32,11 +33,11 @@ class WrDetailScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final banded = art != null;
     final scaffold = Scaffold(
-      backgroundColor: banded ? Colors.transparent : WrColors.pageBg,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: banded ? Colors.transparent : WrColors.pageBg,
-        surfaceTintColor: banded ? Colors.transparent : WrColors.white,
-        scrolledUnderElevation: banded ? 0 : null,
+        backgroundColor: Colors.transparent,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
         elevation: 0,
         leading: IconButton(
           key: const Key('wr_detail_back'),
@@ -69,6 +70,8 @@ class WrDetailScaffold extends StatelessWidget {
         ),
       ),
     );
-    return banded ? WrInnerBandBackdrop(art: art!, child: scaffold) : scaffold;
+    return banded
+        ? WrInnerBandBackdrop(art: art!, child: scaffold)
+        : WrAppBackground(child: scaffold);
   }
 }

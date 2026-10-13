@@ -59,6 +59,10 @@ abstract class WrRepository {
     CheckinDirection? direction,
   });
   Future<List<DateTime>> getCheckinDates({int limit = 60});
+
+  /// Các lần check-in gần nhất (mới nhất trước), kèm cảm xúc của từng ngày.
+  /// Mỗi ngày một dòng (upsert theo `user_id,checkin_date`).
+  Future<List<Checkin>> getRecentCheckins({int limit = 60});
   Future<int> countCheckins();
 
   // --- Insights ---
@@ -240,6 +244,17 @@ class SupabaseWrRepository implements WrRepository {
     return rows
         .map((r) => DateTime.parse(r['checkin_date'] as String))
         .toList();
+  }
+
+  @override
+  Future<List<Checkin>> getRecentCheckins({int limit = 60}) async {
+    final rows = await _client
+        .from('wr_checkins')
+        .select()
+        .eq('user_id', _uid)
+        .order('checkin_date', ascending: false)
+        .limit(limit);
+    return rows.map(Checkin.fromJson).toList();
   }
 
   @override

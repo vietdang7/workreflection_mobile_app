@@ -13,6 +13,7 @@ import '../../../../core/theme/wr_colors.dart';
 import '../../episode_flow_controller.dart';
 import '../../../../core/logic/wr_flow_error.dart';
 import 'wr_flow_scaffold.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 class WrMomentScreen extends ConsumerStatefulWidget {
   const WrMomentScreen({super.key});
@@ -91,7 +92,7 @@ class _WrMomentScreenState extends ConsumerState<WrMomentScreen> {
           if (_error != null) ...[
             const SizedBox(height: 16),
             Text(
-              _error!,
+              wrKeepCompounds(_error!),
               style: const TextStyle(fontSize: 14.5, color: WrColors.coral),
             ),
           ],

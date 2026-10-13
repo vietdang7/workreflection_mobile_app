@@ -9,6 +9,7 @@ import '../../../core/widgets/eyebrow.dart';
 import '../../../l10n/app_localizations.dart';
 import '../survey_providers.dart';
 import '../../../core/l10n/wr_tr.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 class ActionPlanScreen extends ConsumerWidget {
   const ActionPlanScreen({super.key, required this.reportId});
@@ -28,12 +29,12 @@ class ActionPlanScreen extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back, color: WrColors.navy),
           onPressed: () => context.pop(),
         ),
-        title: Text(l10n.actionPlanTitle, style: WrTextStyles.hMedium),
+        title: Text(wrKeepCompounds(l10n.actionPlanTitle), style: WrTextStyles.hMedium),
       ),
       body: typeAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
-          child: Text(AppLocalizations.of(context)!.surveyProcessingError),
+          child: Text(wrKeepCompounds(AppLocalizations.of(context)!.surveyProcessingError)),
         ),
         data: (type) => _ActionPlanBody(reportId: reportId, surveyType: type),
       ),
@@ -54,14 +55,14 @@ class _ActionPlanBody extends ConsumerWidget {
 
     return planAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text(l10n.surveyProcessingError)),
+      error: (e, _) => Center(child: Text(wrKeepCompounds(l10n.surveyProcessingError))),
       data: (phases) => progressAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
           child: Padding(
             padding: const EdgeInsets.all(24),
             child: Text(
-              l10n.surveyProcessingError,
+              wrKeepCompounds(l10n.surveyProcessingError),
               style: WrTextStyles.body,
               textAlign: TextAlign.center,
             ),
@@ -135,11 +136,11 @@ class _PhaseCard extends StatelessWidget {
       children: [
         WrEyebrow(l10n.actionPlanDay(phase.day)),
         const SizedBox(height: 8),
-        Text(trDb(phase.titleVi, phase.titleEn), style: WrTextStyles.hMedium),
+        Text(wrKeepCompounds(trDb(phase.titleVi, phase.titleEn)), style: WrTextStyles.hMedium),
         if (phase.reflectionQuestion != null) ...[
           const SizedBox(height: 8),
           Text(
-            '${l10n.actionPlanReflection}: ${phase.reflectionQuestion}',
+            wrKeepCompounds('${l10n.actionPlanReflection}: ${phase.reflectionQuestion}'),
             style: WrTextStyles.body,
           ),
         ],
@@ -166,7 +167,7 @@ class _PhaseCard extends StatelessWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      task.label,
+                      wrKeepCompounds(task.label),
                       // Xong rồi thì dấu tick nói đủ, không gạch ngang chữ
                       // (yêu cầu 05/08).
                       style: WrTextStyles.body.copyWith(

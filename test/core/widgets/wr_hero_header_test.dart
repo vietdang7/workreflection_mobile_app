@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:workreflection_mobile/core/logic/wr_ai_voice.dart';
 import 'package:workreflection_mobile/core/theme/wr_colors.dart';
+import 'package:workreflection_mobile/core/widgets/wr_app_background.dart';
 import 'package:workreflection_mobile/core/widgets/wr_card.dart';
 import 'package:workreflection_mobile/core/widgets/wr_detail_scaffold.dart';
 import 'package:workreflection_mobile/core/widgets/wr_hero_header.dart';
@@ -72,7 +73,7 @@ void main() {
   });
 
   group('WrHeroHeader', () {
-    testWidgets('cao 250 cộng thanh trạng thái, chữ bắt đầu ngay dưới', (
+    testWidgets('cao 208 cộng thanh trạng thái, chữ bắt đầu ngay dưới', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -87,11 +88,48 @@ void main() {
           top: 24,
         ),
       );
-      expect(tester.getSize(find.byKey(const Key('hero'))).height, 274);
+      expect(tester.getSize(find.byKey(const Key('hero'))).height, 232);
       expect(find.text('HIỂU MÌNH'), findsOneWidget);
       expect(find.text('Những điều đang lặp lại'), findsOneWidget);
       // Tiêu đề nằm sát mép trên: 24 thanh trạng thái + 8 lề + eyebrow.
       expect(tester.getTopLeft(find.text('HIỂU MÌNH')).dy, 32);
+    });
+
+    testWidgets('chữ 1.15 (máy khách): không tràn, hero cao theo chữ', (
+      tester,
+    ) async {
+      for (final width in [320.0, 390.0]) {
+        await tester.pumpWidget(
+          MaterialApp(
+            home: MediaQuery(
+              data: MediaQueryData(
+                size: Size(width, 844),
+                padding: const EdgeInsets.only(top: 47),
+                textScaler: const TextScaler.linear(1.15),
+              ),
+              child: Scaffold(
+                body: SingleChildScrollView(
+                  child: WrHeroHeader.home(
+                    key: const Key('hero'),
+                    title: 'Chào Nguyễn Thị Thanh Hương',
+                    overline: 'Thứ Năm, 24 tháng 12',
+                    subtitle:
+                        'Dừng lại một chút. Hôm nay của bạn đang như thế nào?',
+                    trailing: const SizedBox(width: 36, height: 36),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+        expect(tester.takeException(), isNull, reason: 'width $width');
+        final hero = tester.getRect(find.byKey(const Key('hero')));
+        expect(hero.height, greaterThanOrEqualTo(208 + 47));
+        final subtitle = tester.getRect(
+          find.textContaining('Dừng lại một chút'),
+        );
+        expect(subtitle.bottom, lessThanOrEqualTo(hero.bottom));
+      }
     });
 
     testWidgets('Home: chữ navy, mô tả đậm .94, không quầng màu', (
@@ -179,9 +217,10 @@ void main() {
         ),
       );
       expect(find.byType(WrReflectBand), findsNothing);
+      expect(find.byType(WrAppBackground), findsOneWidget);
       expect(
         tester.widget<Scaffold>(find.byType(Scaffold)).backgroundColor,
-        WrColors.pageBg,
+        Colors.transparent,
       );
     });
   });

@@ -41,6 +41,7 @@ import 'package:workreflection_mobile/features/wr/presentation/flow/wr_step_scre
 import 'package:workreflection_mobile/features/wr/presentation/wr_discover_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_growth_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_home_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/wr_patterns_screen.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
 
@@ -159,8 +160,11 @@ class _Stage {
         builder: (_, __) => const WrCommitScreen(),
       ),
       GoRoute(path: '/wr/flow/done', builder: (_, __) => const WrDoneScreen()),
+      GoRoute(
+        path: '/wr/patterns',
+        builder: (_, __) => const WrPatternsScreen(),
+      ),
       for (final p in const [
-        '/wr/patterns',
         '/wr/paywall',
         '/wr/self-check',
         '/wr/journey',
@@ -319,63 +323,52 @@ void main() {
       findsNothing,
       reason: 'đã lặp đủ 3 lần mà khối vẫn báo chưa tới ngưỡng',
     );
-    // Thẻ đầu trang v47 gọi đúng tên, đúng mẫu số.
+    // Thẻ "QUAY LẠI NHIỀU NHẤT" gọi đúng tên, đúng mẫu số (chữ script
+    // `${top.count} lần trong ${total} lần nhìn lại`).
     expect(find.text('“$_situationText”'), findsOneWidget);
-    expect(find.text('3 lần trong 3 lần ghi nhận'), findsOneWidget);
-    // Dòng "Những vòng lặp quen thuộc" + pill số lần.
+    expect(find.text('3 lần trong 3 lần nhìn lại'), findsOneWidget);
+
+    // Chạm thẻ → màn "Những điều đang lặp lại" (script `screenRepeatList`):
+    // dòng tình huống + pill số lần.
+    final top = find.byKey(const Key('wr_discover_top_title'));
+    await tester.ensureVisible(top);
+    await tester.pumpAndSettle();
+    await tester.tap(top);
+    await tester.pumpAndSettle();
+    expect(find.byType(WrPatternsScreen), findsOneWidget);
     expect(find.text(_situationText), findsOneWidget);
-    final loop = find.byKey(const Key('wr_discover_loop_C2-01'));
+    final row = find.byKey(const Key('wr_patterns_row_C2-01'));
     expect(
-      find.descendant(of: loop, matching: find.text('3 lần')),
+      find.descendant(of: row, matching: find.text('3 lần')),
       findsOneWidget,
     );
 
     // Mở dòng ra: đúng ba lần, mỗi lần mang đúng câu đã gõ ở bước kể lại —
-    // chứng minh chữ người dùng viết chảy được tới tận tab này.
-    await tester.ensureVisible(loop);
+    // chứng minh chữ người dùng viết chảy được tới tận đây.
+    await tester.ensureVisible(row);
     await tester.pumpAndSettle();
-    await tester.tap(loop);
+    await tester.tap(row);
     await tester.pumpAndSettle();
     expect(
       find.descendant(
-        of: find.byKey(const Key('wr_discover_loop_log_C2-01')),
+        of: find.byKey(const Key('wr_patterns_row_log_C2-01')),
         matching: find.text('“$_detailText”'),
       ),
       findsNWidgets(3),
-    );
-
-    // Khối Career Snapshot dựng được (v47: thu gọn sẵn, mở ra mới thấy), và
-    // nói đúng còn thiếu bao nhiêu lần nữa thì cột "Xuất hiện" mở ra —
-    // 15 − 3 = 12.
-    final snapshotToggle = find.byKey(const Key('wr_discover_snapshot_toggle'));
-    await tester.ensureVisible(snapshotToggle);
-    await tester.pumpAndSettle();
-    await tester.tap(snapshotToggle);
-    await tester.pumpAndSettle();
-    expect(
-      find.byKey(const Key('wr_discover_career_snapshot')),
-      findsOneWidget,
-    );
-    expect(
-      find.textContaining('sẽ mở sau 12 lần nhìn lại nữa'),
-      findsOneWidget,
     );
 
     // ── Tab Phát triển ───────────────────────────────────────────────────
     stage.router.go('/wr/growth');
     await tester.pumpAndSettle();
     expect(find.byType(WrGrowthScreen), findsOneWidget);
-    // "Điều bạn đang thực hành" thu gọn sẵn (họp khách 08/10).
-    await tester.tap(find.byKey(const Key('wr_growth_themes_toggle')));
-    await tester.pumpAndSettle();
-
-    // Ba lần chưa đổi được chủ đề: ngưỡng hướng 1 là 15 LẦN nhìn lại (khách
-    // chốt 2026-08-04). Màn phải nói đúng quãng đường còn lại, và tuyệt đối
-    // chưa tự thêm chủ đề nào.
-    expect(find.text('Chưa xác định chủ đề trọng tâm'), findsOneWidget);
-    expect(find.textContaining('3/15 lượt'), findsOneWidget);
+    // Ba lần chưa tới ngưỡng hướng 1 (15 LẦN nhìn lại, khách chốt
+    // 2026-08-04): phần mềm tuyệt đối chưa tự thêm chủ đề nào. Tab đã theo
+    // script `screenAct` (PR #48 bỏ khối "Chưa xác định chủ đề trọng tâm ·
+    // 3/15 lượt"), nên điều còn khoá được là: không ghi danh, và không chủ đề
+    // nào đang ở một bước làm quen.
     expect(stage.intel.enrollThemeCalls, isEmpty);
-    expect(find.text(_theme.title), findsNothing);
+    expect(find.textContaining(RegExp(r'^Bước \d+ / 4$')), findsNothing);
+    expect(find.text('ĐANG DUY TRÌ'), findsNothing);
   });
 
   // ---------------------------------------------------------------------------

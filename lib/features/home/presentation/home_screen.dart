@@ -28,7 +28,7 @@ class HomeScreen extends ConsumerWidget {
     final displayName =
         profileAsync.valueOrNull?.displayName ?? tr('bạn', 'you');
     return Scaffold(
-      backgroundColor: WrColors.pageBg,
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
@@ -88,7 +88,7 @@ class _HomeHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.homeGreeting(displayName), style: WrTextStyles.greeting),
+          Text(wrKeepCompounds(l10n.homeGreeting(displayName)), style: WrTextStyles.greeting),
           const SizedBox(height: 4),
           Text(
             key: const Key('home_date_title'),
@@ -115,7 +115,7 @@ class _CheckinSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(l10n.homeCheckinQuestion, style: WrTextStyles.hLarge),
+        Text(wrKeepCompounds(l10n.homeCheckinQuestion), style: WrTextStyles.hLarge),
         const SizedBox(height: 12),
         GridView.count(
           crossAxisCount: 2,
@@ -266,7 +266,7 @@ class _SurveyCta extends ConsumerWidget {
               key: const Key('home_survey_cta_start_btn'),
               onPressed: () => context.push('/survey'),
               icon: const Icon(Icons.edit_note_rounded, size: 22),
-              label: Text(l10n.homeStartReflection),
+              label: Text(wrKeepCompounds(l10n.homeStartReflection)),
               style: ElevatedButton.styleFrom(
                 backgroundColor: WrColors.coral,
                 foregroundColor: WrColors.navy,
@@ -362,12 +362,12 @@ class _SuggestionSection extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          l10n.homeSuggestionTitle,
+                          wrKeepCompounds(l10n.homeSuggestionTitle),
                           style: WrTextStyles.hMedium,
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          l10n.homeSuggestionMeta,
+                          wrKeepCompounds(l10n.homeSuggestionMeta),
                           style: WrTextStyles.body.copyWith(fontSize: 14.5),
                         ),
                       ],
@@ -382,11 +382,11 @@ class _SuggestionSection extends StatelessWidget {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    l10n.homeSuggestionProgress,
+                    wrKeepCompounds(l10n.homeSuggestionProgress),
                     style: WrTextStyles.body.copyWith(fontSize: 13.5),
                   ),
                   Text(
-                    l10n.homeSuggestionStatus,
+                    wrKeepCompounds(l10n.homeSuggestionStatus),
                     style: const TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w600,
@@ -442,7 +442,7 @@ class _InsightEmpty extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     return Container(
       key: const Key('home_insight_empty'),
-      child: Text(l10n.homeInsightEmpty, style: WrTextStyles.body),
+      child: Text(wrKeepCompounds(l10n.homeInsightEmpty), style: WrTextStyles.body),
     );
   }
 }
@@ -459,10 +459,10 @@ class _InsightContent extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('"${insight.content}"', style: WrTextStyles.insightQuote),
+        Text(wrKeepCompounds('"${insight.content}"'), style: WrTextStyles.insightQuote),
         const SizedBox(height: 10),
         Text(
-          l10n.homeInsightSavedDate(dateStr),
+          wrKeepCompounds(l10n.homeInsightSavedDate(dateStr)),
           style: WrTextStyles.body.copyWith(fontSize: 13.5),
         ),
       ],
@@ -498,9 +498,9 @@ class _ErrorCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
-        Text(l10n.homeErrorLoadData, style: WrTextStyles.body),
+        Text(wrKeepCompounds(l10n.homeErrorLoadData), style: WrTextStyles.body),
         const SizedBox(width: 8),
-        TextButton(onPressed: onRetry, child: Text(l10n.homeRetry)),
+        TextButton(onPressed: onRetry, child: Text(wrKeepCompounds(l10n.homeRetry))),
       ],
     );
   }

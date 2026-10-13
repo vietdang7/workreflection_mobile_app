@@ -23,7 +23,7 @@ class UnderstandScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: WrColors.pageBg,
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
@@ -65,9 +65,9 @@ class _UnderstandHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.understandGreeting, style: WrTextStyles.greeting),
+          Text(wrKeepCompounds(l10n.understandGreeting), style: WrTextStyles.greeting),
           const SizedBox(height: 4),
-          Text(l10n.understandTitle, style: WrTextStyles.dateTitle),
+          Text(wrKeepCompounds(l10n.understandTitle), style: WrTextStyles.dateTitle),
         ],
       ),
     );
@@ -117,7 +117,7 @@ class _DominantNeedBlock extends ConsumerWidget {
               ),
               const SizedBox(height: 12),
               Text(
-                '$source ${l10n.understandNeedSuffix}',
+                wrKeepCompounds('$source ${l10n.understandNeedSuffix}'),
                 style: WrTextStyles.body.copyWith(fontSize: 14.5),
               ),
               const SizedBox(height: 12),
@@ -153,7 +153,7 @@ class _SituationsList extends ConsumerWidget {
           data: (situations) {
             if (situations.isEmpty) {
               return Text(
-                l10n.understandNoSituations,
+                wrKeepCompounds(l10n.understandNoSituations),
                 style: WrTextStyles.body,
               );
             }
@@ -204,9 +204,9 @@ class _SituationRow extends StatelessWidget {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(situation.label, style: WrTextStyles.hMedium),
+            Text(wrKeepCompounds(situation.label), style: WrTextStyles.hMedium),
             Text(
-              l10n.understandSituationCount(situation.occurrenceCount),
+              wrKeepCompounds(l10n.understandSituationCount(situation.occurrenceCount)),
               style: TextStyle(
                 fontSize: 14.5,
                 fontWeight: isTop ? FontWeight.w700 : FontWeight.w600,
@@ -334,7 +334,7 @@ class _ScaRow extends StatelessWidget {
           ),
           alignment: Alignment.center,
           child: Text(
-            badge,
+            wrKeepCompounds(badge),
             style: TextStyle(
               fontSize: 13.5,
               fontWeight: FontWeight.w700,
@@ -343,9 +343,9 @@ class _ScaRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        Expanded(child: Text(label, style: WrTextStyles.hMedium)),
+        Expanded(child: Text(wrKeepCompounds(label), style: WrTextStyles.hMedium)),
         Text(
-          status,
+          wrKeepCompounds(status),
           style: TextStyle(
             fontSize: 14.5,
             fontWeight: FontWeight.w600,
@@ -382,11 +382,11 @@ class _CareerHealthCheck extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                l10n.understandHealthReady(count),
+                wrKeepCompounds(l10n.understandHealthReady(count)),
                 style: WrTextStyles.hMedium,
               ),
               const SizedBox(height: 8),
-              Text(l10n.understandHealthPrompt, style: WrTextStyles.body),
+              Text(wrKeepCompounds(l10n.understandHealthPrompt), style: WrTextStyles.body),
               const SizedBox(height: 12),
               WrActionLink(
                 label: l10n.understandHealthCta,
@@ -479,9 +479,9 @@ class _ErrorCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
-        Text(l10n.homeErrorLoadData, style: WrTextStyles.body),
+        Text(wrKeepCompounds(l10n.homeErrorLoadData), style: WrTextStyles.body),
         const SizedBox(width: 8),
-        TextButton(onPressed: onRetry, child: Text(l10n.homeRetry)),
+        TextButton(onPressed: onRetry, child: Text(wrKeepCompounds(l10n.homeRetry))),
       ],
     );
   }

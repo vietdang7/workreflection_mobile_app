@@ -37,9 +37,9 @@ void main() {
   });
 
   group('canonical v2 catalog', () {
-    test('contains exactly 72 real rows plus client custom option', () {
-      expect(raw, hasLength(73));
-      expect(real, hasLength(72));
+    test('contains exactly 73 real rows plus client custom option', () {
+      expect(raw, hasLength(74));
+      expect(real, hasLength(73));
       expect(raw.where((row) => row['custom'] == true), hasLength(1));
       expect(parsed['other']!.isCustom, isTrue);
     });
@@ -79,10 +79,10 @@ void main() {
       );
     });
 
-    test('valence split is 48 challenge and 24 positive', () {
+    test('valence split is 49 challenge and 24 positive (S2-04 back)', () {
       expect(
         real.where((row) => row['valence'] == 'thach-thuc'),
-        hasLength(48),
+        hasLength(49),
       );
       expect(real.where((row) => row['valence'] == 'tich-cuc'), hasLength(24));
     });
@@ -91,7 +91,7 @@ void main() {
       for (final mood in kWrV2MoodCodes) {
         expect(
           real.where((row) => row['mood'] == mood),
-          hasLength(12),
+          hasLength(mood == 'outofsync' ? 13 : 12),
           reason: '$mood must have 12 rows',
         );
       }
@@ -104,7 +104,7 @@ void main() {
             (row) =>
                 row['subgroup'] == subgroup && row['valence'] == 'thach-thuc',
           ),
-          hasLength(8),
+          hasLength(subgroup == 'S2' ? 9 : 8),
           reason: '$subgroup must have 8 challenge rows',
         );
       }
@@ -132,7 +132,7 @@ void main() {
       () {
         final audit = _retirementAudit();
         expect(audit['pass'], isTrue);
-        expect(audit['retiredCount'], 11);
+        expect(audit['retiredCount'], 10);
         expect(audit['activeRealCount'], real.length);
         expect(audit['customCount'], 1);
         expect(audit['activeRetiredCodes'], isEmpty);

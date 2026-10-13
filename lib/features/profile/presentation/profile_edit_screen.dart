@@ -7,9 +7,11 @@ import '../../../core/logic/profile_options.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
 import '../../../core/widgets/eyebrow.dart';
+import '../../../core/widgets/wr_app_background.dart';
 import '../../../l10n/app_localizations.dart';
 import '../avatar_providers.dart';
 import '../profile_providers.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 /// Navigated to via context.push('/profile/edit').
 /// Loads current cc_profiles + mobileProfile, lets user edit,
@@ -73,7 +75,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     if (url != null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(l10n.avatarUploadSuccess)));
+      ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.avatarUploadSuccess))));
       return;
     }
     // Cùng cách xử lý với màn Hồ sơ: từ chối quyền thì mời sang Cài đặt, vì
@@ -82,7 +84,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     if (error is AvatarPermissionDeniedException) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(l10n.avatarPermissionDenied),
+          content: Text(wrKeepCompounds(l10n.avatarPermissionDenied)),
           action: SnackBarAction(
             label: l10n.avatarPermissionOpenSettings,
             onPressed: permission.openSettings,
@@ -92,7 +94,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     } else if (error != null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(l10n.avatarUploadError)));
+      ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.avatarUploadError))));
     }
   }
 
@@ -122,14 +124,14 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
         } else {
           ScaffoldMessenger.of(
             context,
-          ).showSnackBar(SnackBar(content: Text(l10n.profileEditSaveSuccess)));
+          ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.profileEditSaveSuccess))));
         }
       }
     } catch (_) {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.profileEditSaveError)));
+        ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.profileEditSaveError))));
       }
     }
   }
@@ -157,17 +159,19 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     final avatarState = ref.watch(avatarUploadProvider);
     final isUploadingAvatar = avatarState.isLoading;
 
-    return Scaffold(
-      backgroundColor: WrColors.pageBg,
-      appBar: AppBar(
-        backgroundColor: WrColors.pageBg,
-        elevation: 0,
+    return WrAppBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          surfaceTintColor: Colors.transparent,
+          elevation: 0,
         automaticallyImplyLeading: false,
         leading: widget.setupMode
             ? null
             : const BackButton(color: WrColors.navy),
         title: Text(
-          widget.setupMode ? l10n.profileSetupTitle : l10n.profileEditTitle,
+          wrKeepCompounds(widget.setupMode ? l10n.profileSetupTitle : l10n.profileEditTitle),
           style: WrTextStyles.hMedium,
         ),
         centerTitle: false,
@@ -179,7 +183,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                 key: const Key('profile_setup_skip_btn'),
                 onPressed: () => context.go('/home'),
                 child: Text(
-                  l10n.profileSetupSkip,
+                  wrKeepCompounds(l10n.profileSetupSkip),
                   style: const TextStyle(color: WrColors.muted),
                 ),
               ),
@@ -199,9 +203,9 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                       ),
                     )
                   : Text(
-                      widget.setupMode
+                      wrKeepCompounds(widget.setupMode
                           ? l10n.profileSetupComplete
-                          : l10n.profileEditSave,
+                          : l10n.profileEditSave),
                       style: const TextStyle(
                         color: WrColors.coral,
                         fontWeight: FontWeight.w700,
@@ -292,9 +296,9 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            isUploadingAvatar
+                            wrKeepCompounds(isUploadingAvatar
                                 ? l10n.avatarUploading
-                                : l10n.avatarChangeBtn,
+                                : l10n.avatarChangeBtn),
                             style: WrTextStyles.body.copyWith(
                               fontSize: 13.5,
                               color: WrColors.coral,
@@ -421,12 +425,13 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                 ),
               ),
             ),
+      ),
     );
   }
 
   DropdownMenuItem<String> _opt(String value, String label) => DropdownMenuItem(
     value: value,
-    child: Text(label, style: WrTextStyles.body),
+    child: Text(wrKeepCompounds(label), style: WrTextStyles.body),
   );
 
   static String _computeInitials(String name) {
@@ -505,7 +510,7 @@ class _SelectField<T> extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          wrKeepCompounds(label),
           style: WrTextStyles.body.copyWith(
             color: WrColors.muted,
             fontSize: 13.5,
@@ -523,7 +528,7 @@ class _SelectField<T> extends StatelessWidget {
               isExpanded: true,
               value: value,
               hint: Text(
-                hint,
+                wrKeepCompounds(hint),
                 style: WrTextStyles.body.copyWith(color: WrColors.muted),
               ),
               items: items,
@@ -555,7 +560,7 @@ class _InitialsCircle extends StatelessWidget {
       color: WrColors.navy.withValues(alpha: 0.08),
       alignment: Alignment.center,
       child: Text(
-        initials,
+        wrKeepCompounds(initials),
         style: const TextStyle(
           fontSize: 24,
           fontWeight: FontWeight.w700,

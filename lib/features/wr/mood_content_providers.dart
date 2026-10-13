@@ -74,16 +74,18 @@ String moodLabel(Mood mood) => switch (mood) {
 /// Sáu câu khác nhau chứ không phải một câu chung: người vừa chọn "đang vui"
 /// mà thấy "Gợi ý khi căng thẳng" thì thẻ mất hết ý nghĩa.
 String moodSuggestionTitle(Mood mood) => switch (mood) {
-  Mood.stressed => tr('GỢI Ý KHI CĂNG THẲNG', 'IDEAS WHEN YOU ARE TENSE'),
-  Mood.tired => tr('GỢI Ý KHI MỆT MỎI', 'IDEAS WHEN YOU ARE DRAINED'),
+  // Nguyên văn `cardTitle` của mockup Sprint 2: chữ thường, không viết hoa —
+  // nó đứng đầu dòng meta "Gợi ý khi căng thẳng · BÀI ĐỌC · 2 phút đọc".
+  Mood.stressed => tr('Gợi ý khi căng thẳng', 'Ideas for when you feel tense'),
+  Mood.tired => tr('Gợi ý khi mệt mỏi', 'Ideas for when you feel drained'),
   Mood.foggy => tr(
-    'GỢI Ý KHI MỌI THỨ CHƯA RÕ RÀNG',
-    'IDEAS WHEN THINGS ARE UNCLEAR',
+    'Gợi ý khi mọi thứ chưa rõ ràng',
+    'Ideas for when things are unclear',
   ),
   Mood.outofsync => tr(
-    'GỢI Ý KHI MỌI THỨ LỆCH NHAU',
-    'IDEAS WHEN THINGS ARE OUT OF SYNC',
+    'Gợi ý khi mọi thứ lệch nhau',
+    'Ideas for when things are out of sync',
   ),
-  Mood.okay => tr('GỢI Ý CHO HÔM NAY', 'IDEAS FOR TODAY'),
-  Mood.happy => tr('GIỮ LẠI CẢM XÚC NÀY', 'HOLD ON TO THIS FEELING'),
+  Mood.okay => tr('Gợi ý cho hôm nay', 'Ideas for today'),
+  Mood.happy => tr('Giữ lại cảm xúc này', 'Hold on to this feeling'),
 };

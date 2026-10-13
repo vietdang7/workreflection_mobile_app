@@ -126,7 +126,13 @@ void main() {
       stories: _stories,
     );
     expect(out, reflectionAhaFor());
-    expect(out, startsWith('You stopped'));
+    // Script Sprint 2: khuôn chung với title của mục "Điều khác".
+    expect(
+      out,
+      startsWith(
+        'What you just described may be about more than “Something else',
+      ),
+    );
   });
 
   test('Insight ở Home tìm đúng lượt nhìn lại theo nguyên văn', () {

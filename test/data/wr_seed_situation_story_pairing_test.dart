@@ -58,9 +58,9 @@ void main() {
   });
 
   group('v2 seed shape', () {
-    test('contains 72 real rows plus the client custom option', () {
-      expect(situationRows, hasLength(73));
-      expect(realSituations, hasLength(72));
+    test('contains 73 real rows plus the client custom option', () {
+      expect(situationRows, hasLength(74));
+      expect(realSituations, hasLength(73));
       expect(situationRows.where((row) => row['custom'] == true), hasLength(1));
       expect(
         situationRows.singleWhere((row) => row['custom'] == true)['id'],
@@ -68,12 +68,12 @@ void main() {
       );
     });
 
-    test('has the required 48/24 valence split', () {
+    test('has the 49/24 valence split (S2-04 back per script)', () {
       expect(
         realSituations.where(
           (row) => row['valence'] == WrValence.thachThuc.dbValue,
         ),
-        hasLength(48),
+        hasLength(49),
       );
       expect(
         realSituations.where(
@@ -87,7 +87,7 @@ void main() {
       for (final mood in kWrV2MoodCodes) {
         expect(
           realSituations.where((row) => row['mood'] == mood),
-          hasLength(12),
+          hasLength(mood == 'outofsync' ? 13 : 12),
           reason: '$mood must have 12 rows',
         );
       }
@@ -101,7 +101,7 @@ void main() {
                 row['subgroup'] == subgroup &&
                 row['valence'] == WrValence.thachThuc.dbValue,
           ),
-          hasLength(8),
+          hasLength(subgroup == 'S2' ? 9 : 8),
           reason: '$subgroup must have 8 challenge rows',
         );
       }
@@ -118,7 +118,7 @@ void main() {
       final situationIds = _codes(realSituations, 'id');
       final storyIds = _codes(storyRows, 'story_id');
 
-      expect(storyRows, hasLength(72));
+      expect(storyRows, hasLength(73));
       expect(storyIds, hasLength(storyRows.length));
       expect(storyIds, situationIds);
     });
@@ -152,7 +152,7 @@ void main() {
         situationsJson: situationRows,
         storiesJson: storyRows,
       );
-      expect(catalog.realSituations, hasLength(72));
+      expect(catalog.realSituations, hasLength(73));
       expect(catalog.situationFor('other')!.isCustom, isTrue);
       expect(catalog.situationFor('other')!.hasV2Classification, isFalse);
       expect(catalog.situationFor('other')!.explicitValence, isNull);
@@ -163,9 +163,9 @@ void main() {
     test('explicit audit passes without deleting historical rows', () {
       final audit = _retirementAudit();
       expect(audit['pass'], isTrue);
-      expect(audit['retiredCount'], 11);
+      expect(audit['retiredCount'], 10);
       expect(audit['activeRetiredCodes'], isEmpty);
-      expect(audit['activeRealCount'], 72);
+      expect(audit['activeRealCount'], 73);
       expect(audit['customCount'], 1);
     });
   });

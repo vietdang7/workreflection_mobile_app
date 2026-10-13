@@ -161,13 +161,6 @@ Future<void> _pumpLarge(WidgetTester tester, Widget widget) async {
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(widget);
   await tester.pumpAndSettle();
-  // Tab Phát triển: "Điều bạn đang thực hành" thu gọn sẵn (họp khách 08/10).
-  // Xổ ra để các test về thẻ chủ đề còn thấy thẻ.
-  final themesToggle = find.byKey(const Key('wr_growth_themes_toggle'));
-  if (themesToggle.evaluate().isNotEmpty) {
-    await tester.tap(themesToggle);
-    await tester.pumpAndSettle();
-  }
 }
 
 // Fake data helpers
@@ -361,15 +354,17 @@ void main() {
         expect(intel.enrollThemeCalls.first.themeId, 't-culture');
         // Chủ đề vào thẳng danh sách, không qua thẻ báo tin nào: khách bỏ khối
         // "BẠN VỪA CÓ CHỦ ĐỀ MỚI" ngày 2026-08-04 vì nó chồng lên thẻ chủ đề
-        // ngay bên dưới.
+        // ngay bên dưới. (Script Sprint 2: một dòng trong "Đang làm quen".)
         expect(
-          find.byKey(const Key('wr_growth_theme_card_t-culture')),
+          find.byKey(const Key('wr_growth_theme_row_t-culture')),
           findsOneWidget,
         );
       },
     );
 
-    testWidgets('14 lần thì chưa thêm gì, và nói còn thiếu bao nhiêu', (
+    // Script Sprint 2 bỏ thẻ "Chưa xác định chủ đề trọng tâm · 14/15 lượt" khỏi
+    // tab; ngưỡng thì giữ nguyên.
+    testWidgets('14 lần thì chưa thêm gì', (
       tester,
     ) async {
       final content = FakeWrContentRepository();
@@ -391,8 +386,7 @@ void main() {
       );
 
       expect(intel.enrollThemeCalls, isEmpty);
-      expect(find.text('Chưa xác định chủ đề trọng tâm'), findsOneWidget);
-      expect(find.textContaining('14/15 lượt'), findsOneWidget);
+      expect(await intel.fetchEnrollments('u1'), isEmpty);
     });
 
     // Hướng 2 — làm xong bộ 15 câu là có chủ đề ngay, không cần lặp lần nào.
@@ -565,7 +559,7 @@ void main() {
     });
 
     testWidgets(
-      'không có pattern + không có self-check → nói thẳng là chưa đủ dữ liệu',
+      'không có pattern + không có self-check → không tự thêm gì',
       (tester) async {
         final intel = FakeWrIntelligenceRepository();
         intel.seedPracticeThemes([
@@ -576,11 +570,7 @@ void main() {
         await _pumpLarge(tester, _wrapGrowth(intel: intel));
 
         expect(intel.enrollThemeCalls, isEmpty);
-        expect(find.text('Chưa xác định chủ đề trọng tâm'), findsOneWidget);
-        expect(
-          find.byKey(const Key('wr_growth_suggestion_self_check')),
-          findsOneWidget,
-        );
+        expect(await intel.fetchEnrollments('u1'), isEmpty);
         // Danh sách chủ đề khác không xổ tại chỗ (khách 2026-07-30).
         expect(find.text('HOẠT ĐỘNG KHÁC'), findsNothing);
         expect(
@@ -696,7 +686,7 @@ void main() {
   // về; nhãn "Thử nghiệm / Chuyển hoá" đã bỏ (migration 20261006120000).
   group('Task E — Tags bước theo stepOrder', () {
     testWidgets(
-      'step order 1→NHẬN DIỆN, 2→PHẦN CỦA TÔI, 3→CHỌN MỘT CÁCH, 4→MANG VỀ',
+      'step order 1→NHẬN DIỆN, 2→PHẦN CỦA TÔI, 3→CHỌN MỘT CÁCH, 4→CÂU HỎI CHO LẦN SAU',
       (tester) async {
         final intel = FakeWrIntelligenceRepository();
         intel.seedPracticeThemes([_theme('t1', 'Chủ đề test')]);
@@ -713,7 +703,8 @@ void main() {
         expect(find.text('NHẬN DIỆN'), findsOneWidget);
         expect(find.text('PHẦN CỦA TÔI'), findsOneWidget);
         expect(find.text('CHỌN MỘT CÁCH'), findsOneWidget);
-        expect(find.text('MANG VỀ'), findsOneWidget);
+        expect(find.text('CÂU HỎI CHO LẦN SAU'), findsOneWidget);
+        expect(find.text('MANG VỀ'), findsNothing);
         expect(find.text('THỬ NGHIỆM'), findsNothing);
         expect(find.text('CHUYỂN HOÁ'), findsNothing);
       },
@@ -737,7 +728,8 @@ void main() {
       expect(find.text('NHẬN DIỆN'), findsOneWidget);
       expect(find.text('PHẦN CỦA TÔI'), findsOneWidget);
       expect(find.text('CHỌN MỘT CÁCH'), findsOneWidget);
-      expect(find.text('MANG VỀ'), findsOneWidget);
+      expect(find.text('CÂU HỎI CHO LẦN SAU'), findsOneWidget);
+      expect(find.text('MANG VỀ'), findsNothing);
       final row5 = find.byKey(const Key('wr_practice_step_s5'));
       expect(
         find.descendant(of: row5, matching: find.text('Bước 5 không tag')),

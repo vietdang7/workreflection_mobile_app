@@ -9,6 +9,7 @@ import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../understand_providers.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 class InsightsScreen extends ConsumerWidget {
   const InsightsScreen({super.key});
@@ -27,7 +28,7 @@ class InsightsScreen extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back, color: WrColors.navy),
           onPressed: () => context.pop(),
         ),
-        title: Text(l10n.insightsTitle, style: WrTextStyles.hMedium),
+        title: Text(wrKeepCompounds(l10n.insightsTitle), style: WrTextStyles.hMedium),
         centerTitle: false,
       ),
       body: SafeArea(
@@ -38,11 +39,11 @@ class InsightsScreen extends ConsumerWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(l10n.homeErrorLoadData, style: WrTextStyles.body),
+                Text(wrKeepCompounds(l10n.homeErrorLoadData), style: WrTextStyles.body),
                 const SizedBox(height: 8),
                 TextButton(
                   onPressed: () => ref.invalidate(understandInsightsProvider),
-                  child: Text(l10n.homeRetry),
+                  child: Text(wrKeepCompounds(l10n.homeRetry)),
                 ),
               ],
             ),
@@ -80,12 +81,12 @@ class InsightsScreen extends ConsumerWidget {
                         const SizedBox(height: 8),
                       ],
                       Text(
-                        '"${insight.content}"',
+                        wrKeepCompounds('"${insight.content}"'),
                         style: WrTextStyles.insightQuote.copyWith(fontSize: 16),
                       ),
                       const SizedBox(height: 8),
                       Text(
-                        l10n.insightSavedDate(dateStr),
+                        wrKeepCompounds(l10n.insightSavedDate(dateStr)),
                         style: WrTextStyles.body.copyWith(fontSize: 13.5),
                       ),
                     ],

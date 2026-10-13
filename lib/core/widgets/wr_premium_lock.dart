@@ -111,7 +111,7 @@ class WrPremiumLock extends StatelessWidget {
                 elevation: 0,
               ),
               child: Text(
-                ctaLabel,
+                wrKeepCompounds(ctaLabel),
                 style: const TextStyle(
                   fontSize: 14.5,
                   fontWeight: FontWeight.w600,

@@ -16,8 +16,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../features/profile/profile_providers.dart';
+import '../../features/wr/wr_providers.dart' show wrEntitlementProvider;
 import '../l10n/wr_tr.dart';
 import '../theme/wr_colors.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 /// Chữ cái đầu của tên, tối đa hai ký tự. Rỗng thì trả 'WR'.
 String profileInitials(String name) {
@@ -54,6 +56,29 @@ class WrProfileAvatar extends ConsumerWidget {
     // "TD" ở Hôm nay mà chỉ "T" ở ba tab còn lại.
     final name = displayName ?? ref.watch(greetingNameProvider) ?? '';
 
+    // `.avatar.premium` (mockup Sprint 2): người Premium thấy "★" trên nền
+    // chuyển navy → teal thay cho chữ cái đầu. Chưa biết quyền thì coi như
+    // miễn phí, không nháy ngôi sao rồi rút lại.
+    final premium =
+        ref.watch(wrEntitlementProvider).valueOrNull?.isPremium ?? false;
+
+    // Ảnh người dùng tự cài ở màn Tài khoản (`cc_profiles.avatar_url`) luôn
+    // đứng trước: script không có ảnh đại diện nên "★" của `.avatar.premium`
+    // chỉ thay cho CHỮ VIẾT TẮT, không bao giờ đè lên ảnh thật (máy thật 13/10).
+    final avatarUrl =
+        ref.watch(ccProfileProvider).valueOrNull?['avatar_url'] as String?;
+    final hasPhoto = avatarUrl != null && avatarUrl.trim().isNotEmpty;
+
+    final fallback = Text(
+      wrKeepCompounds(premium ? '★' : profileInitials(name)),
+      key: premium ? const Key('wr_avatar_premium') : null,
+      style: TextStyle(
+        fontSize: size * 0.39,
+        fontWeight: FontWeight.w700,
+        color: WrColors.cream,
+      ),
+    );
+
     return Semantics(
       label: tr('Tôi', 'Me'),
       button: true,
@@ -65,18 +90,29 @@ class WrProfileAvatar extends ConsumerWidget {
           height: size,
           alignment: Alignment.center,
           // `.avatar { width:36; background: var(--trust); color: var(--cream) }`
-          decoration: const BoxDecoration(
+          decoration: BoxDecoration(
             color: WrColors.navy,
+            gradient: premium
+                ? const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [WrColors.navy, WrColors.teal],
+                  )
+                : null,
             shape: BoxShape.circle,
           ),
-          child: Text(
-            profileInitials(name),
-            style: TextStyle(
-              fontSize: size * 0.39,
-              fontWeight: FontWeight.w700,
-              color: WrColors.cream,
-            ),
-          ),
+          clipBehavior: hasPhoto ? Clip.antiAlias : Clip.none,
+          child: hasPhoto
+              ? Image.network(
+                  avatarUrl.trim(),
+                  key: const Key('wr_avatar_photo'),
+                  width: size,
+                  height: size,
+                  fit: BoxFit.cover,
+                  // Ảnh hỏng hoặc mất mạng: quay về chữ viết tắt / "★".
+                  errorBuilder: (_, __, ___) => Center(child: fallback),
+                )
+              : fallback,
         ),
       ),
     );

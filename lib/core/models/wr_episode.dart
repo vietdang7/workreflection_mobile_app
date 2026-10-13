@@ -366,6 +366,10 @@ class ReflectionEpisode {
     /// [reflectChoice] chỉ có nghĩa "giữ nguyên", trong khi đổi từ câu chọn sẵn
     /// sang câu tự viết thì lựa chọn cũ phải biến mất.
     bool clearReflectChoice = false,
+
+    /// Xoá `situationCode` và `scaDimension` về null: người dùng lùi về bước 1
+    /// rồi đổi sang "Điều khác, để tôi tự mô tả".
+    bool clearSituation = false,
   }) {
     return ReflectionEpisode(
       id: id ?? this.id,
@@ -373,8 +377,10 @@ class ReflectionEpisode {
       humanMoment: humanMoment,
       state: state ?? this.state,
       energy: energy ?? this.energy,
-      situationCode: situationCode ?? this.situationCode,
-      scaDimension: scaDimension ?? this.scaDimension,
+      situationCode: clearSituation
+          ? null
+          : (situationCode ?? this.situationCode),
+      scaDimension: clearSituation ? null : (scaDimension ?? this.scaDimension),
       humanNeed: humanNeed ?? this.humanNeed,
       intention: intention ?? this.intention,
       patternsDone: patternsDone ?? this.patternsDone,

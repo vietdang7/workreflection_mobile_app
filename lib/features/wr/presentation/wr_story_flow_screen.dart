@@ -186,10 +186,10 @@ class _WrStoryFlowScreenState extends ConsumerState<WrStoryFlowScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text(tr('Không có câu chuyện nào.', 'No stories here.')),
+              Text(wrKeepCompounds(tr('Không có câu chuyện nào.', 'No stories here.'))),
               TextButton(
                 onPressed: () => context.go('/home'),
-                child: Text(tr('Về trang chủ', 'Back to home')),
+                child: Text(wrKeepCompounds(tr('Về trang chủ', 'Back to home'))),
               ),
             ],
           ),
@@ -229,7 +229,7 @@ class _WrStoryFlowScreenState extends ConsumerState<WrStoryFlowScreen> {
                         ),
                         const SizedBox(height: 4),
                         Text(
-                          _phaseLabel,
+                          wrKeepCompounds(_phaseLabel),
                           style: const TextStyle(
                             fontSize: 11.5,
                             color: WrColors.text3,
@@ -315,7 +315,7 @@ class _PhaseStory extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
       children: [
         Text(
-          '"${story.storyContent}"',
+          wrKeepCompounds('"${story.storyContent}"'),
           style: const TextStyle(
             fontSize: 16,
             fontStyle: FontStyle.italic,
@@ -335,7 +335,7 @@ class _PhaseStory extends StatelessWidget {
             ),
           ),
           child: Text(
-            tr('Tôi cũng từng như vậy', 'I have been there too'),
+            wrKeepCompounds(tr('Tôi cũng từng như vậy', 'I have been there too')),
             style: TextStyle(fontWeight: FontWeight.w600),
           ),
         ),
@@ -343,10 +343,10 @@ class _PhaseStory extends StatelessWidget {
         TextButton(
           onPressed: onNotResonates,
           child: Text(
-            tr(
+            wrKeepCompounds(tr(
               'Câu chuyện này không quen với tôi',
               'This story is not familiar to me',
-            ),
+            )),
             style: TextStyle(color: WrColors.muted),
           ),
         ),
@@ -408,7 +408,7 @@ class _PhaseAha extends StatelessWidget {
             ),
           ),
           child: Text(
-            tr('Tiếp tục', 'Continue'),
+            wrKeepCompounds(tr('Tiếp tục', 'Continue')),
             style: TextStyle(fontWeight: FontWeight.w600),
           ),
         ),
@@ -427,10 +427,10 @@ class _PhaseConfidence extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
       children: [
         Text(
-          tr(
+          wrKeepCompounds(tr(
             'Điều này có liên quan đến bạn không?',
             'Does this relate to you?',
-          ),
+          )),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -475,7 +475,7 @@ class _ConfidenceOption extends StatelessWidget {
           border: Border.all(color: const Color(0x1A2C335D)),
         ),
         child: Text(
-          label,
+          wrKeepCompounds(label),
           style: const TextStyle(
             fontSize: 16.5,
             fontWeight: FontWeight.w500,
@@ -560,7 +560,7 @@ class _PhaseReflectionState extends State<_PhaseReflection> {
             ),
           ),
           child: Text(
-            tr('Lưu và tiếp tục', 'Save and continue'),
+            wrKeepCompounds(tr('Lưu và tiếp tục', 'Save and continue')),
             style: TextStyle(fontWeight: FontWeight.w600),
           ),
         ),
@@ -568,7 +568,7 @@ class _PhaseReflectionState extends State<_PhaseReflection> {
         TextButton(
           onPressed: widget.onSkip,
           child: Text(
-            tr('Bỏ qua', 'Skip'),
+            wrKeepCompounds(tr('Bỏ qua', 'Skip')),
             style: TextStyle(color: WrColors.muted),
           ),
         ),
@@ -601,7 +601,7 @@ class _PhasePractice extends StatelessWidget {
               border: Border.all(color: const Color(0x1A2C335D)),
             ),
             child: Text(
-              story.practiceAction!,
+              wrKeepCompounds(story.practiceAction!),
               style: const TextStyle(
                 fontSize: 16.5,
                 color: WrColors.dark,
@@ -621,7 +621,7 @@ class _PhasePractice extends StatelessWidget {
             ),
           ),
           child: Text(
-            tr('Thêm vào lịch thực hành', 'Add to my practice schedule'),
+            wrKeepCompounds(tr('Thêm vào lịch thực hành', 'Add to my practice schedule')),
             style: TextStyle(fontWeight: FontWeight.w600),
           ),
         ),
@@ -629,7 +629,7 @@ class _PhasePractice extends StatelessWidget {
         TextButton(
           onPressed: onSkip,
           child: Text(
-            tr('Lần này bỏ qua', 'Skip this time'),
+            wrKeepCompounds(tr('Lần này bỏ qua', 'Skip this time')),
             style: TextStyle(color: WrColors.muted),
           ),
         ),
@@ -657,10 +657,10 @@ class _PhaseMemory extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(22, 24, 22, 20),
       children: [
         Text(
-          tr(
+          wrKeepCompounds(tr(
             'Trải nghiệm này thuộc loại nào?',
             'What kind of experience was this?',
-          ),
+          )),
           style: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
@@ -707,7 +707,7 @@ class _MemoryTypeBtn extends StatelessWidget {
           border: Border.all(color: const Color(0x1A2C335D)),
         ),
         child: Text(
-          label,
+          wrKeepCompounds(label),
           textAlign: TextAlign.center,
           style: const TextStyle(
             fontSize: 14.5,

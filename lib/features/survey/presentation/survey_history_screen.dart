@@ -9,6 +9,7 @@ import '../../../core/theme/wr_theme.dart';
 import '../../../core/widgets/pill_button.dart';
 import '../../../l10n/app_localizations.dart';
 import '../survey_providers.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 // ---------------------------------------------------------------------------
 // Score-level badge color — mirrors ReportScreen._ScoreLevelBadge
@@ -55,7 +56,7 @@ class SurveyHistoryScreen extends ConsumerWidget {
             }
           },
         ),
-        title: Text(l10n.surveyHistoryTitle, style: WrTextStyles.hMedium),
+        title: Text(wrKeepCompounds(l10n.surveyHistoryTitle), style: WrTextStyles.hMedium),
       ),
       body: reportsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -120,7 +121,7 @@ class _ReportRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    dateStr,
+                    wrKeepCompounds(dateStr),
                     style: WrTextStyles.hMedium.copyWith(fontSize: 15.5),
                   ),
                   const SizedBox(height: 4),
@@ -136,7 +137,7 @@ class _ReportRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
-                    report.scoreTotal.toStringAsFixed(1),
+                    wrKeepCompounds(report.scoreTotal.toStringAsFixed(1)),
                     style: const TextStyle(
                       fontSize: 22,
                       fontWeight: FontWeight.w800,
@@ -144,7 +145,7 @@ class _ReportRow extends StatelessWidget {
                     ),
                   ),
                   Text(
-                    l10n.surveyHistoryScoreLabel,
+                    wrKeepCompounds(l10n.surveyHistoryScoreLabel),
                     style: WrTextStyles.body.copyWith(fontSize: 12.5),
                   ),
                 ],
@@ -168,7 +169,7 @@ class _ReportRow extends StatelessWidget {
                         borderRadius: BorderRadius.circular(100),
                       ),
                       child: Text(
-                        levelLabel,
+                        wrKeepCompounds(levelLabel),
                         style: TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w700,
@@ -217,7 +218,7 @@ class _TypeChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(100),
       ),
       child: Text(
-        label,
+        wrKeepCompounds(label),
         style: TextStyle(
           fontSize: 11.5,
           fontWeight: FontWeight.w700,
@@ -250,13 +251,13 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             Text(
-              l10n.surveyHistoryEmptyTitle,
+              wrKeepCompounds(l10n.surveyHistoryEmptyTitle),
               style: WrTextStyles.hMedium,
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 8),
             Text(
-              l10n.surveyHistoryEmptyBody,
+              wrKeepCompounds(l10n.surveyHistoryEmptyBody),
               style: WrTextStyles.body,
               textAlign: TextAlign.center,
             ),
@@ -291,9 +292,9 @@ class _ErrorState extends StatelessWidget {
         children: [
           const Icon(Icons.error_outline, color: WrColors.coral, size: 40),
           const SizedBox(height: 12),
-          Text(l10n.homeErrorLoadData, style: WrTextStyles.body),
+          Text(wrKeepCompounds(l10n.homeErrorLoadData), style: WrTextStyles.body),
           const SizedBox(height: 12),
-          TextButton(onPressed: onRetry, child: Text(l10n.homeRetry)),
+          TextButton(onPressed: onRetry, child: Text(wrKeepCompounds(l10n.homeRetry))),
         ],
       ),
     );

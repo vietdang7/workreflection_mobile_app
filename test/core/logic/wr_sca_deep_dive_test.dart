@@ -69,12 +69,79 @@ const _situations = <WrSituation>[
 
 void main() {
   group('Lớp 1 · mức điểm dùng chung với màn Kết quả', () {
-    test('ba mức theo ngưỡng 3.8 / 2.5 của màn Kết quả Self-Check', () {
+    // Script `pillarLevelText`: >=3 / >=2 trên thang 0–4 (LIKERT lưu theo
+    // chỉ số). App lưu thang 1–5 (chỉ số + 1), nên ngưỡng là 4.0 / 3.0.
+    test('ba mức theo ngưỡng của script, quy sang thang 1–5: 4.0 / 3.0', () {
       expect(scaPillarStatus(4.2), ScaPillarStatus.developing);
-      expect(scaPillarStatus(3.8), ScaPillarStatus.developing);
-      expect(scaPillarStatus(3.79), ScaPillarStatus.needsAttention);
-      expect(scaPillarStatus(2.5), ScaPillarStatus.needsAttention);
-      expect(scaPillarStatus(2.49), ScaPillarStatus.priority);
+      expect(scaPillarStatus(4.0), ScaPillarStatus.developing);
+      expect(scaPillarStatus(3.99), ScaPillarStatus.needsAttention);
+      expect(scaPillarStatus(3.8), ScaPillarStatus.needsAttention);
+      expect(scaPillarStatus(3.0), ScaPillarStatus.needsAttention);
+      expect(scaPillarStatus(2.99), ScaPillarStatus.priority);
+      expect(scaPillarStatus(2.5), ScaPillarStatus.priority);
+    });
+
+    test('"Thường xuyên" đều cả trụ (script: 3) là mức cao nhất', () {
+      // Mức thứ tư của LIKERT lưu là 4 trên thang app.
+      expect(scaPillarStatus(4), ScaPillarStatus.developing);
+      // "Đôi khi" đều cả trụ (script: 2) là mức giữa.
+      expect(scaPillarStatus(3), ScaPillarStatus.needsAttention);
+      // "Hiếm khi" đều cả trụ (script: 1) là "Đang cản trở".
+      expect(scaPillarStatus(2), ScaPillarStatus.priority);
+    });
+
+    test('câu đối chiếu của script theo từng trụ', () {
+      final counts = {
+        SelfCheckPillar.s: 0,
+        SelfCheckPillar.c: 5,
+        SelfCheckPillar.a: 2,
+      };
+      expect(
+        scaScriptPatternText(
+          pillar: SelfCheckPillar.s,
+          status: ScaPillarStatus.priority,
+          counts: counts,
+        ),
+        startsWith('Chưa có đủ tín hiệu'),
+      );
+      // Trụ nổi trội, tự chấm mức giữa: script vẫn coi là "mức tốt".
+      expect(
+        scaScriptPatternText(
+          pillar: SelfCheckPillar.c,
+          status: ScaPillarStatus.needsAttention,
+          counts: counts,
+        ),
+        startsWith('Bạn tự đánh giá phần này ổn, còn dư địa, nhưng'),
+      );
+      expect(
+        scaScriptPatternText(
+          pillar: SelfCheckPillar.c,
+          status: ScaPillarStatus.priority,
+          counts: counts,
+        ),
+        contains('Hai nguồn dữ liệu đang xác nhận lẫn nhau.'),
+      );
+      expect(
+        scaScriptPatternText(
+          pillar: SelfCheckPillar.a,
+          status: ScaPillarStatus.developing,
+          counts: counts,
+        ),
+        'Nhóm này xuất hiện 2 lần trong Reflection gần đây, chưa phải nhóm '
+        'chiếm ưu thế nhất.',
+      );
+    });
+
+    test('trụ nổi trội theo script: hoà thì theo thứ tự S · C · A', () {
+      expect(
+        scriptDominantPillar({
+          SelfCheckPillar.s: 2,
+          SelfCheckPillar.c: 2,
+          SelfCheckPillar.a: 1,
+        }),
+        SelfCheckPillar.s,
+      );
+      expect(scriptDominantPillar(const {}), isNull);
     });
 
     test('nhãn đúng bộ khách chốt ở A7', () {

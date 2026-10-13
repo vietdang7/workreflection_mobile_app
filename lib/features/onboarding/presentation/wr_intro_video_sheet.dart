@@ -29,6 +29,7 @@ import '../intro_video_providers.dart';
 import '../intro_video_script.dart';
 import '../intro_video_timeline.dart';
 import 'intro_scene_view.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 /// Quá thời gian này mà tiếng chưa sẵn sàng thì coi như không tải được.
 const Duration kIntroLoadTimeout = Duration(seconds: 8);
@@ -297,7 +298,7 @@ class _WrIntroVideoSheetState extends ConsumerState<WrIntroVideoSheet>
                 size: 18,
               ),
               label: Text(
-                _muted ? tr('Bật tiếng', 'Sound on') : tr('Tắt tiếng', 'Mute'),
+                wrKeepCompounds(_muted ? tr('Bật tiếng', 'Sound on') : tr('Tắt tiếng', 'Mute')),
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
@@ -329,12 +330,12 @@ class _WrIntroVideoSheetState extends ConsumerState<WrIntroVideoSheet>
                   ),
                   const SizedBox(height: 14),
                   Text(
-                    tr(
+                    wrKeepCompounds(tr(
                       'Chưa tải được video. Bạn có thể xem lại trong phần '
                           'Hướng dẫn.',
                       'The video could not load. You can watch it later in '
                           'the Guide.',
-                    ),
+                    )),
                     key: const Key('intro_video_error'),
                     textAlign: TextAlign.center,
                     style: const TextStyle(
@@ -351,7 +352,7 @@ class _WrIntroVideoSheetState extends ConsumerState<WrIntroVideoSheet>
                       side: const BorderSide(color: WrColors.navy),
                       shape: const StadiumBorder(),
                     ),
-                    child: Text(tr('Đóng', 'Close')),
+                    child: Text(wrKeepCompounds(tr('Đóng', 'Close'))),
                   ),
                 ],
               ),

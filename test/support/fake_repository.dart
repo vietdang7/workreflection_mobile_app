@@ -184,6 +184,21 @@ class FakeWrRepository implements WrRepository {
     return _checkinDates.take(limit).toList();
   }
 
+  /// Check-in các ngày TRƯỚC hôm nay, kèm cảm xúc — nguồn cho
+  /// [getRecentCheckins]. Check-in hôm nay đi qua [seedTodayCheckin].
+  final List<Checkin> _pastCheckins = [];
+
+  void seedPastCheckin(Checkin checkin) {
+    _pastCheckins.add(checkin);
+  }
+
+  @override
+  Future<List<Checkin>> getRecentCheckins({int limit = 60}) async {
+    final all = [?_todayCheckin, ..._pastCheckins]
+      ..sort((a, b) => b.checkinDate.compareTo(a.checkinDate));
+    return all.take(limit).toList();
+  }
+
   @override
   Future<int> countCheckins() async => _checkinDates.length;
 

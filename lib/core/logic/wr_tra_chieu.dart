@@ -61,8 +61,17 @@ String get kTraChieuLabel => tr('Trà Chiều Nghề Nghiệp', 'Career Tea Time
 ///
 /// Đây là quy ước của chương trình, không phải dữ liệu từng buổi: mọi buổi đều
 /// cùng số người, cùng thời lượng, cùng một câu hỏi.
-String get kTraChieuFormatLabel =>
-    tr('10–12 người · 2 giờ chia sẻ', '10–12 people · 2 hours of sharing');
+/// Dòng khuôn dưới tên chương trình (script `screenTraChieu`).
+String get kTraChieuFormatLabel => tr(
+  '10 đến 12 người · 2 tiếng · 1 câu hỏi.',
+  '10 to 12 people · 2 hours · 1 question.',
+);
+
+/// Địa điểm khi buổi chưa có địa chỉ (script `screenTraChieu`).
+String get kTraChieuNoVenue => tr(
+  'TP.HCM, địa điểm sẽ thông báo sau',
+  'Ho Chi Minh City, venue to be announced',
+);
 
 /// Các giá trị `category` được coi là Trà Chiều.
 ///
@@ -196,4 +205,21 @@ String traChieuWhenLabel(WorkshopDetail workshop) {
   return end == null
       ? '$day, ${hhmm(start)}'
       : '$day, ${hhmm(start)} – ${hhmm(end)}';
+}
+
+/// Tiêu đề thẻ Trà Chiều ở tab Phát triển (script: `${ev.label} · 15:00`):
+/// "T7 08/08 · 15:00" theo giờ bắt đầu thật của buổi; buổi chưa có giờ thì chỉ
+/// ghi ngày.
+String traChieuCardLabel(WorkshopDetail workshop) {
+  const weekdays = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
+  final d = workshop.date;
+  final day =
+      '${weekdays[d.weekday - 1]} '
+      '${d.day.toString().padLeft(2, '0')}/'
+      '${d.month.toString().padLeft(2, '0')}';
+  final start = workshop.startsAt;
+  if (start == null) return day;
+  final t = start.toLocal();
+  return '$day · ${t.hour.toString().padLeft(2, '0')}:'
+      '${t.minute.toString().padLeft(2, '0')}';
 }

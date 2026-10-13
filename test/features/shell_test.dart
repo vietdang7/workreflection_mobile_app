@@ -151,6 +151,21 @@ void main() {
       expect(icon.color, isNot(WrColors.cream));
     });
 
+    testWidgets(
+      'bong bóng nằm ngay trên mép thanh tab, không che icon tab, cách phải 18',
+      (tester) async {
+        await tester.pumpWidget(_wrapWithRouter());
+        await tester.pumpAndSettle();
+
+        final bubble = tester.getRect(find.byKey(const Key('wr_ask_bubble')));
+        final tabBar = tester.getRect(find.byType(WrTabBar));
+        final screen = tester.getRect(find.byType(ShellScreen));
+        // Script đè 18px, nhưng máy thật (13/10) phần đè che icon tab cuối.
+        expect(bubble.bottom, closeTo(tabBar.top, 0.5));
+        expect(screen.right - bubble.right, closeTo(18, 0.5));
+      },
+    );
+
     testWidgets('WrTabItem widgets count is 4', (tester) async {
       await tester.pumpWidget(_wrapWithRouter());
       await tester.pumpAndSettle();
@@ -175,12 +190,9 @@ void main() {
       final tabBarFinder = find.byType(WrTabBar);
       expect(tabBarFinder, findsOneWidget);
 
-      for (final label in [
-        'Hôm nay',
-        'Hiểu mình',
-        'Phát triển',
-        'Hành trình',
-      ]) {
+      // Nguyên văn `TabBar()` của mockup Sprint 2: Home · Hiểu · Phát triển ·
+      // Hành trình.
+      for (final label in ['Home', 'Hiểu', 'Phát triển', 'Hành trình']) {
         expect(
           find.descendant(of: tabBarFinder, matching: find.text(label)),
           findsOneWidget,

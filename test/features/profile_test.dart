@@ -194,7 +194,7 @@ void main() {
       await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
 
       expect(find.textContaining('PREMIUM'), findsNothing);
-      expect(find.textContaining('Thành viên'), findsOneWidget);
+      expect(find.text('Free'), findsOneWidget);
     });
 
     // Chốt chặn hồi quy: `subscription_expires_at` KHÔNG còn quyết định gói
@@ -216,7 +216,7 @@ void main() {
         await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
 
         expect(find.textContaining('PREMIUM'), findsNothing);
-        expect(find.textContaining('Thành viên'), findsOneWidget);
+        expect(find.text('Free'), findsOneWidget);
       },
     );
 
@@ -254,11 +254,24 @@ void main() {
       expect(find.textContaining('ngày Reflect'), findsOneWidget);
       expect(find.textContaining('Ngày streak'), findsNothing);
       expect(find.textContaining('Insight lưu'), findsOneWidget);
-      expect(find.textContaining('Milestone'), findsOneWidget);
-      // insight count = 2
-      expect(find.textContaining('2'), findsWidgets);
-      // milestone count = 1
-      expect(find.textContaining('1'), findsWidgets);
+      // Script `screenProfile`: ô thứ ba là Thực hành (2 với bản miễn phí, ∞
+      // với Premium), không còn Milestone.
+      expect(find.textContaining('Milestone'), findsNothing);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('profile_stat_insights')),
+          matching: find.text('2'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('profile_stat_practice')),
+          matching: find.text('2'),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Thực hành'), findsOneWidget);
     });
 
     testWidgets('renders settings section labels', (tester) async {

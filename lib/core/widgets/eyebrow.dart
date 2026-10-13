@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/wr_colors.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 class WrEyebrow extends StatelessWidget {
   const WrEyebrow(this.text, {super.key, this.color, this.center = false});
@@ -13,7 +14,7 @@ class WrEyebrow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      text.toUpperCase(),
+      wrKeepCompounds(text.toUpperCase()),
       textAlign: center ? TextAlign.center : null,
       // `.eyebrow` của mockup: 10px / 700 / letter-spacing .08em / màu .74.
       style: TextStyle(

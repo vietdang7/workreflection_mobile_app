@@ -36,6 +36,8 @@ import 'package:workreflection_mobile/features/wr/presentation/flow/wr_energy_sc
 import 'package:workreflection_mobile/features/wr/presentation/flow/wr_meaning_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/flow/wr_moment_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/flow/wr_step_screen.dart';
+import 'package:workreflection_mobile/features/wr/presentation/flow/wr_flow_scaffold.dart'
+    show WrRadioOption;
 import 'package:workreflection_mobile/features/wr/presentation/wr_home_screen.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
@@ -317,6 +319,73 @@ void main() {
       expect(saved.patternsDone, contains(ReflectionPattern.notice));
       // §4.1: mã vừa chọn được đẩy lên đầu lịch sử chống lặp.
       expect(h.wr.saveRecentSituationIdsCalls.last.first, shown);
+    });
+
+    testWidgets('script Sprint 2: bước 2 bấm lùi về bước 1 giữ lựa chọn, đổi '
+        'sang Điều khác thì gỡ mã và thẻ Bạn chọn hiện đúng nhãn', (
+      tester,
+    ) async {
+      final h = _Harness();
+      h.content.seedSituations(_someSituations);
+      await _pump(tester, h.app());
+      await tester.tap(find.byKey(const Key('wr_home_checkin_tired')));
+      await tester.pumpAndSettle();
+
+      final shown = _firstVisibleSituationCode();
+      await tester.tap(find.byKey(Key('wr_situation_$shown')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
+      await tester.pumpAndSettle();
+      expect(find.byType(WrDetailScreen), findsOneWidget);
+      expect(h.episodes.episodes.single.situationCode, shown);
+
+      // Lùi: về bước 1, KHÔNG về Home, lựa chọn vẫn sáng.
+      await tester.tap(find.byKey(const Key('wr_flow_back')));
+      await tester.pumpAndSettle();
+      expect(find.byType(WrStepScreen), findsOneWidget);
+      expect(find.byType(WrDetailScreen), findsNothing);
+      expect(
+        tester
+            .widget<WrRadioOption>(find.byKey(Key('wr_situation_$shown')))
+            .selected,
+        isTrue,
+      );
+
+      // Đổi sang "Điều khác" rồi đi tiếp: không mở phiên thứ hai, mã cũ bị gỡ.
+      await tester.ensureVisible(find.byKey(const Key('wr_situation_other')));
+      await tester.tap(find.byKey(const Key('wr_situation_other')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
+      await tester.pumpAndSettle();
+      expect(find.byType(WrDetailScreen), findsOneWidget);
+      expect(h.episodes.openEpisodeCalls, hasLength(1));
+      final ep = h.episodes.episodes.single;
+      expect(ep.situationCode, isNull);
+      expect(ep.notes['notice'], isNull);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('wr_detail_chosen')),
+          matching: _para('Điều khác, để tôi tự mô tả'),
+        ),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('script Sprint 2: "Xem tất cả" vẫn giữ chip cảm xúc và link', (
+      tester,
+    ) async {
+      final h = _Harness();
+      h.content.seedSituations(_someSituations);
+      await _pump(tester, h.app());
+      await tester.tap(find.byKey(const Key('wr_home_checkin_tired')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('wr_step_mood_chip')), findsOneWidget);
+      await tester.tap(find.byKey(const Key('wr_step_show_all')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const Key('wr_step_mood_chip')), findsOneWidget);
+      expect(find.byKey(const Key('wr_step_show_all')), findsOneWidget);
+      expect(find.byKey(const Key('wr_step_reshuffle')), findsOneWidget);
     });
 
     testWidgets('check-in lần hai luôn mở phiên mới, kể cả khi còn phiên dở', (
@@ -643,11 +712,12 @@ void main() {
       expect(h.intel.insertInsightCalls, isEmpty);
       expect(h.episodes.confirmMeaningCalls, isEmpty);
 
-      // Lùi lại là về thẻ Insight, không rời bước.
+      // Script Sprint 2: màn "Một góc nhìn khác" vẫn là bước 3, lùi lại là về
+      // bước 2 (Khoảnh khắc cụ thể).
       await tester.tap(find.byKey(const Key('wr_flow_back')));
       await tester.pumpAndSettle();
-      expect(find.byType(WrMeaningScreen), findsOneWidget);
-      expect(find.byKey(const Key('wr_meaning_aha')), findsOneWidget);
+      expect(find.byType(WrMeaningScreen), findsNothing);
+      expect(find.byType(WrDetailScreen), findsOneWidget);
     });
 
     testWidgets('Nói lại: Insight là CÂU NGƯỜI DÙNG và Episode vẫn chốt', (
@@ -950,9 +1020,9 @@ void main() {
       expect(h.episodes.integrateCalls, isEmpty);
       expect(h.content.insertMemoryEventCalls, isEmpty);
 
-      // Đóng ở bước cuối vẫn giữ lần nhìn lại — HXA §3.8: Reflection kết thúc
-      // khi đủ ý nghĩa, không phải khi đủ bước.
-      await tester.tap(find.byKey(const Key('wr_flow_close')));
+      // Chọn một phép thử rồi Lưu mới khép phiên.
+      await _tapCard(tester, 0);
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
       await tester.pumpAndSettle();
 
       expect(find.byType(WrDoneScreen), findsOneWidget);
@@ -971,6 +1041,43 @@ void main() {
         'reflection_episode',
       );
       expect(h.episodes.episodes.single.state, ExperienceState.integrated);
+    });
+
+    testWidgets('Đóng ở bước 4 về Home, KHÔNG lưu gì (script Sprint 2)', (
+      tester,
+    ) async {
+      final h = _Harness();
+      h.seedOpenEpisode(
+        moment: HumanMoment.celebration,
+        state: ExperienceState.exploring,
+        patternsDone: const [
+          ReflectionPattern.notice,
+          ReflectionPattern.explore,
+        ],
+        notes: const {'explore': 'Mình đã dám trình bày'},
+      );
+      await _pump(tester, h.app());
+      await _resume(tester);
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
+      await tester.pumpAndSettle();
+      expect(find.byType(WrCommitScreen), findsOneWidget);
+
+      await tester.tap(find.byKey(const Key('wr_flow_close')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(WrDoneScreen), findsNothing);
+      expect(find.byType(WrCommitScreen), findsNothing);
+      expect(h.episodes.integrateCalls, isEmpty);
+      expect(
+        h.content.insertMemoryEventCalls.where(
+          (e) => e.behavior == 'reflection_episode',
+        ),
+        isEmpty,
+      );
+      expect(
+        h.episodes.episodes.single.state,
+        isNot(ExperienceState.integrated),
+      );
     });
 
     testWidgets('màn Xong nhắc lại điều được giữ, lần đầu là một cột mốc', (
@@ -1014,6 +1121,58 @@ void main() {
       await tester.tap(find.byKey(const Key('wr_flow_primary')));
       await tester.pumpAndSettle();
       expect(find.byType(WrHomeScreen), findsOneWidget);
+    });
+
+    testWidgets('script Sprint 2: tình huống hoàn thành (P-11) → màn Xong ghi '
+        'nhận cột mốc với TÊN tình huống, không có dòng đếm số lần', (
+      tester,
+    ) async {
+      const title = 'Tôi vừa hoàn thành một khoá học hoặc một buổi đào tạo';
+      final h = _Harness();
+      h.content.seedSituations(const [
+        WrSituation(
+          code: 'P-11',
+          text: title,
+          scaDimension: ScaDimension.pSteady,
+          pillarCode: 'A',
+          subgroup: 'Ap',
+          mood: 'ok',
+          valence: WrValence.tichCuc,
+          wave: 1,
+        ),
+      ]);
+      h.seedOpenEpisode(
+        moment: HumanMoment.celebration,
+        state: ExperienceState.exploring,
+        patternsDone: const [
+          ReflectionPattern.notice,
+          ReflectionPattern.explore,
+        ],
+        situationCode: 'P-11',
+        notes: const {'notice': title, 'explore': 'Khoá học quản lý dự án'},
+      );
+      await _pump(tester, h.app());
+      await _resume(tester);
+      await _confirmMeaning(tester);
+      await _tapCard(tester, 0);
+      await tester.tap(find.byKey(const Key('wr_flow_primary')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(WrDoneScreen), findsOneWidget);
+      expect(find.text(kDoneMilestoneTitle), findsOneWidget);
+      expect(_para(kDoneCompletionNote), findsOneWidget);
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('wr_done_milestone')),
+          matching: _para(title),
+        ),
+        findsOneWidget,
+      );
+      expect(find.text('Được ghi nhận hôm nay'), findsOneWidget);
+      expect(
+        find.textContaining('Bạn đã ghi lại tình huống này'),
+        findsNothing,
+      );
     });
 
     // Owner gặp trên bản web 2026-07-29: "Transition bất hợp lệ: integrated →

@@ -67,7 +67,7 @@ class _WrGrowthThemesScreenState extends ConsumerState<WrGrowthThemesScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              tr('Không bắt đầu được. Thử lại.', 'Could not start. Try again.'),
+              wrKeepCompounds(tr('Không bắt đầu được. Thử lại.', 'Could not start. Try again.')),
             ),
           ),
         );
@@ -165,10 +165,10 @@ class _WrGrowthThemesScreenState extends ConsumerState<WrGrowthThemesScreen> {
           Padding(
             padding: EdgeInsets.only(bottom: 26),
             child: Text(
-              tr(
+              wrKeepCompounds(tr(
                 'Bạn đã bắt đầu tất cả chủ đề hiện có.',
                 'You have started every theme available.',
-              ),
+              )),
               style: TextStyle(
                 fontSize: 15.5,
                 color: WrColors.muted,
@@ -296,7 +296,7 @@ class _SuggestionCard extends StatelessWidget {
               case final reason?) ...[
             const SizedBox(height: 6),
             Text(
-              reason,
+              wrKeepCompounds(reason),
               key: const Key('wr_growth_themes_reason'),
               style: const TextStyle(
                 fontSize: 13.5,
@@ -332,9 +332,9 @@ class _SuggestionCard extends StatelessWidget {
                       ),
                     )
                   : Text(
-                      canEnroll
+                      wrKeepCompounds(canEnroll
                           ? tr('Bắt đầu', 'Start')
-                          : tr('Mở với Premium', 'Open with Premium'),
+                          : tr('Mở với Premium', 'Open with Premium')),
                       style: const TextStyle(
                         fontSize: 15.5,
                         fontWeight: FontWeight.w600,
@@ -367,7 +367,7 @@ class _TraChieuRow extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    kTraChieuLabel,
+                    wrKeepCompounds(kTraChieuLabel),
                     style: TextStyle(
                       fontSize: 17,
                       fontWeight: FontWeight.w700,
@@ -419,7 +419,7 @@ class _TraChieuRow extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  tr('Xem lịch các buổi', 'See the schedule'),
+                  wrKeepCompounds(tr('Xem lịch các buổi', 'See the schedule')),
                   style: TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w700,
@@ -505,7 +505,7 @@ class _ThemeRow extends StatelessWidget {
                         ),
                       )
                     : Text(
-                        tr('Bắt đầu', 'Start'),
+                        wrKeepCompounds(tr('Bắt đầu', 'Start')),
                         style: TextStyle(
                           fontSize: 15.5,
                           fontWeight: FontWeight.w600,

@@ -121,7 +121,7 @@ class WrLinkRow extends StatelessWidget {
                 children: [
                   Expanded(child: _label()),
                   const SizedBox(width: _gap),
-                  Text(hintText, style: _hintStyle),
+                  Text(wrKeepCompounds(hintText), style: _hintStyle),
                   const SizedBox(width: 8),
                   chevron,
                 ],
@@ -137,7 +137,7 @@ class WrLinkRow extends StatelessWidget {
                     children: [
                       _label(),
                       const SizedBox(height: 4),
-                      Text(hintText, style: _hintStyle),
+                      Text(wrKeepCompounds(hintText), style: _hintStyle),
                     ],
                   ),
                 ),

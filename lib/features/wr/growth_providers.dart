@@ -12,6 +12,7 @@ import '../../core/l10n/wr_tr.dart';
 import '../../core/logic/wr_dominant_need.dart';
 import '../../core/logic/wr_practice_legacy_titles.dart';
 import '../../core/logic/wr_practice_match.dart';
+import '../../core/logic/wr_practice_v47.dart';
 import '../../core/logic/wr_practice_theme_grant.dart';
 import '../../core/logic/wr_repeated_situations.dart';
 import '../../core/logic/wr_seniority.dart';
@@ -95,19 +96,20 @@ final wrPracticeLabelMapProvider = Provider<Map<String, String>>((ref) {
 });
 
 /// Ghi chú các bước thực hành của người dùng, theo `step_id`.
-final practiceStepNotesProvider =
-    FutureProvider<Map<String, PracticeStepNote>>((ref) async {
-      final userId = ref.watch(currentUserIdProvider);
-      if (userId == null) return const {};
-      try {
-        final notes = await ref
-            .read(wrIntelligenceRepositoryProvider)
-            .fetchPracticeStepNotes(userId);
-        return {for (final n in notes) n.stepId: n};
-      } catch (_) {
-        return const {};
-      }
-    });
+final practiceStepNotesProvider = FutureProvider<Map<String, PracticeStepNote>>(
+  (ref) async {
+    final userId = ref.watch(currentUserIdProvider);
+    if (userId == null) return const {};
+    try {
+      final notes = await ref
+          .read(wrIntelligenceRepositoryProvider)
+          .fetchPracticeStepNotes(userId);
+      return {for (final n in notes) n.stepId: n};
+    } catch (_) {
+      return const {};
+    }
+  },
+);
 
 final practiceEnrollmentsProvider = FutureProvider<List<PracticeEnrollment>>((
   ref,
@@ -145,10 +147,28 @@ final practiceStepsProvider = FutureProvider.family<List<PracticeStep>, String>(
 
 /// Một bước thực hành đang chờ người dùng — chủ đề nào, bước nào.
 class PendingPracticeStep {
-  const PendingPracticeStep({required this.theme, required this.step});
+  const PendingPracticeStep({
+    required this.theme,
+    required this.step,
+    this.completedCount = 0,
+    this.totalSteps = 4,
+    this.stepNumber = 0,
+  });
 
   final PracticeTheme theme;
   final PracticeStep step;
+
+  /// Số bước đã xong của chủ đề — "Bước ${completedCount + 1} / 4".
+  final int completedCount;
+
+  /// Tổng số bước của chủ đề (bốn bước làm quen).
+  final int totalSteps;
+
+  /// Vị trí (1-based) của [step] trong chủ đề — số hiện ở "Bước n / 4".
+  /// Không suy từ [completedCount]: dữ liệu cũ có thể đã xong bước sau mà
+  /// chưa xong bước trước, khi đó "đã xong + 1" lệch với câu của [step].
+  /// 0 = không rõ, nơi dùng tự lùi về `completedCount + 1`.
+  final int stepNumber;
 }
 
 /// Bước thực hành gần nhất còn dở — nguồn cho khối "Tiếp tục hôm nay" ở Home.
@@ -172,7 +192,12 @@ final wrPendingPracticeStepProvider = FutureProvider<PendingPracticeStep?>((
   ref,
 ) async {
   final enrollments = await ref.watch(practiceEnrollmentsProvider.future);
-  final active = enrollments.where((e) => e.completedAt == null).toList();
+  // Mockup Sprint 2 `resumeTheme()`: chỉ chủ đề ĐANG DỞ — đã xong ít nhất một
+  // bước và còn bước chưa xong. Chủ đề mới ghi danh, chưa làm bước nào, không
+  // phải "tiếp tục".
+  final active = enrollments
+      .where((e) => e.completedAt == null && e.completedSteps.isNotEmpty)
+      .toList();
   if (active.isEmpty) return null;
 
   final themes = await ref.watch(practiceThemesProvider.future);
@@ -219,11 +244,20 @@ final wrPendingPracticeStepProvider = FutureProvider<PendingPracticeStep?>((
                   !entitlement.canAccessPracticeStep(isPremiumStep: true)),
         )
         .firstOrNull;
-    if (next != null) return PendingPracticeStep(theme: theme, step: next);
+    if (next != null) {
+      return PendingPracticeStep(
+        theme: theme,
+        step: next,
+        completedCount: steps
+            .where((s) => enrollment.completedSteps.contains(s.stepId))
+            .length,
+        totalSteps: steps.length,
+        stepNumber: steps.indexOf(next) + 1,
+      );
+    }
   }
 
-  // Mọi chủ đề đang theo đều hết bước mở được. Home vẫn giữ khối "Tiếp tục hôm
-  // nay" và đổi sang lời mời chọn chủ đề khác.
+  // Không có chủ đề nào đang dở: Home ẩn hẳn khối "Tiếp tục hôm nay".
   return null;
 });
 
@@ -374,5 +408,16 @@ final wrSkillJdMatchProvider = FutureProvider<SkillJdMatch?>((ref) async {
     allThemes: themes,
     tier: ref.watch(wrSeniorityTierProvider),
     ownedThemeIds: ref.watch(wrOwnedThemeIdsProvider),
+  );
+});
+
+/// Danh sách "Đang duy trì" — một nguồn cho cả tab Phát triển lẫn màn Tâm thế
+/// & duy trì (script `KEEPING`, nhưng dựng từ dữ liệu thật).
+final wrKeepingThemesProvider = Provider<List<KeepingTheme>>((ref) {
+  return buildKeepingThemes(
+    themes: ref.watch(practiceThemesProvider).valueOrNull ?? const [],
+    enrollments: ref.watch(practiceEnrollmentsProvider).valueOrNull ?? const [],
+    events: ref.watch(practiceMemoryEventsProvider).valueOrNull ?? const [],
+    now: DateTime.now(),
   );
 });

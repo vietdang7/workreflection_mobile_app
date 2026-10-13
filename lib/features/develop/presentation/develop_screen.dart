@@ -13,6 +13,7 @@ import '../../../core/widgets/progress_track.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../develop_providers.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 class DevelopScreen extends ConsumerWidget {
   const DevelopScreen({super.key});
@@ -20,7 +21,7 @@ class DevelopScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: WrColors.pageBg,
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
@@ -60,9 +61,9 @@ class _DevelopHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.developGreeting, style: WrTextStyles.greeting),
+          Text(wrKeepCompounds(l10n.developGreeting), style: WrTextStyles.greeting),
           const SizedBox(height: 4),
-          Text(l10n.developTitle, style: WrTextStyles.dateTitle),
+          Text(wrKeepCompounds(l10n.developTitle), style: WrTextStyles.dateTitle),
         ],
       ),
     );
@@ -93,7 +94,7 @@ class _ThemeFocusSection extends ConsumerWidget {
               borderRadius: BorderRadius.circular(20),
               border: Border.all(color: WrColors.line),
             ),
-            child: Text(l10n.developNoTheme, style: WrTextStyles.body),
+            child: Text(wrKeepCompounds(l10n.developNoTheme), style: WrTextStyles.body),
           );
         }
         return _ThemeCard(theme: theme);
@@ -116,7 +117,7 @@ class _ThemeCard extends StatelessWidget {
           WrEyebrow(l10n.developEyebrowFocus),
           const SizedBox(height: 8),
           Text(
-            theme.code,
+            wrKeepCompounds(theme.code),
             style: const TextStyle(
               fontSize: 40,
               fontWeight: FontWeight.w800,
@@ -125,7 +126,7 @@ class _ThemeCard extends StatelessWidget {
             ),
           ),
           Text(
-            theme.title,
+            wrKeepCompounds(theme.title),
             style: const TextStyle(
               fontSize: 15.5,
               color: Color(0xB3FFFFFF), // white 70%
@@ -139,7 +140,7 @@ class _ThemeCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            l10n.developStage(theme.stage, theme.totalStages),
+            wrKeepCompounds(l10n.developStage(theme.stage, theme.totalStages)),
             style: const TextStyle(
               fontSize: 13.5,
               color: Color(0x80FFFFFF), // white 50%
@@ -172,7 +173,7 @@ class _PracticesSection extends ConsumerWidget {
               _ErrorCard(onRetry: () => ref.invalidate(practicesProvider)),
           data: (practices) {
             if (practices.isEmpty) {
-              return Text(l10n.developNoPractices, style: WrTextStyles.body);
+              return Text(wrKeepCompounds(l10n.developNoPractices), style: WrTextStyles.body);
             }
             return Column(
               children: practices
@@ -238,10 +239,10 @@ class _PracticeRow extends ConsumerWidget {
                   children: [
                     // Xong rồi thì dấu tick và độ mờ nói đủ, không gạch ngang
                     // chữ (yêu cầu 05/08).
-                    Text(practice.title, style: WrTextStyles.hMedium),
+                    Text(wrKeepCompounds(practice.title), style: WrTextStyles.hMedium),
                     const SizedBox(height: 2),
                     Text(
-                      statusLabel,
+                      wrKeepCompounds(statusLabel),
                       style: TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w600,
@@ -321,7 +322,7 @@ class _OpportunityCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      l10n.developWorkshopTag.toUpperCase(),
+                      wrKeepCompounds(l10n.developWorkshopTag.toUpperCase()),
                       style: const TextStyle(
                         fontSize: 12.5,
                         fontWeight: FontWeight.w700,
@@ -331,7 +332,7 @@ class _OpportunityCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      workshop.title,
+                      wrKeepCompounds(workshop.title),
                       style: WrTextStyles.hMedium.copyWith(fontSize: 16.5),
                     ),
                     const SizedBox(height: 6),
@@ -389,9 +390,9 @@ class _ErrorCard extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     return Row(
       children: [
-        Text(l10n.developErrorLoadData, style: WrTextStyles.body),
+        Text(wrKeepCompounds(l10n.developErrorLoadData), style: WrTextStyles.body),
         const SizedBox(width: 8),
-        TextButton(onPressed: onRetry, child: Text(l10n.homeRetry)),
+        TextButton(onPressed: onRetry, child: Text(wrKeepCompounds(l10n.homeRetry))),
       ],
     );
   }

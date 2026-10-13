@@ -164,10 +164,14 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
   // -------------------------------------------------------------------------
 
   /// Ghi lại một bước phản tư: ghi chú tự viết hoặc tình huống đã chọn.
+  ///
+  /// [clearSituation]: gỡ tình huống đã gắn khi người dùng lùi về bước 1 rồi
+  /// đổi sang "Điều khác" ([situation] null).
   Future<void> submitStep({
     required ReflectionPattern pattern,
     String? note,
     WrSituation? situation,
+    bool clearSituation = false,
   }) async {
     final ep = state;
     if (ep == null) return;
@@ -178,6 +182,7 @@ class EpisodeFlowController extends StateNotifier<ReflectionEpisode?> {
       pattern: pattern,
       note: note ?? situation?.text,
       situation: situation,
+      clearSituation: clearSituation,
     );
   }
 

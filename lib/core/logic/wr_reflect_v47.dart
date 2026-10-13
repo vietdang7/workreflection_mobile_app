@@ -25,13 +25,13 @@ import 'wr_situation_picker.dart' show resolveStoryFor;
 /// Số bước của luồng v47.
 const int kReflectV47Steps = 4;
 
-/// Nhãn bước: "Bước 2/4 · Một khoảnh khắc cụ thể".
+/// Nhãn bước, nguyên văn script Sprint 2: "Bước 2/4 · Khoảnh khắc cụ thể".
 String reflectStepEyebrow(int step) {
   final name = switch (step) {
-    0 => tr('Chọn chuyện', 'Pick a story'),
-    1 => tr('Một khoảnh khắc cụ thể', 'One specific moment'),
-    2 => tr('Nhìn lại cùng nhau', 'Looking back together'),
-    _ => tr('Mang theo', 'Take it with you'),
+    0 => tr('Tình huống giống bạn', 'Situations like yours'),
+    1 => tr('Khoảnh khắc cụ thể', 'A specific moment'),
+    2 => tr('Nhìn lại sâu hơn', 'Looking deeper'),
+    _ => tr('Thử lại lần tới', 'Trying again next time'),
   };
   return tr(
     'Bước ${step + 1}/$kReflectV47Steps · $name',
@@ -240,10 +240,26 @@ String reflectionAhaFor({
             );
   }
 
+  if (code == null || code == 'other') {
+    // Nhánh "Điều khác": script Sprint 2 dùng đúng khuôn chung bên dưới với
+    // title "Điều khác, để tôi tự mô tả" và aha riêng của mục `other`.
+    return tr(
+      'Điều bạn vừa kể có thể không chỉ là “Điều khác, để tôi tự mô tả”.\n\n'
+          'Có thể phần đáng nhìn thêm là: Dừng lại để gọi tên một trải nghiệm '
+          'cụ thể đã là bước phản chiếu quan trọng nhất, dù tôi chưa chắc chắn '
+          'về ý nghĩa của nó.',
+      'What you just described may be about more than “Something else, let '
+          'me describe it”.\n\n'
+          'What may be worth a closer look: Stopping to name one specific '
+          'experience is already the most important step of reflection, even '
+          'if I am not yet sure what it means.',
+    );
+  }
+
   final aha = situationAha?.trim();
   final name = title?.trim().replaceFirst(RegExp(r'^Tôi\s+'), '');
   if (name == null || name.isEmpty || aha == null || aha.isEmpty) {
-    // Nhánh "Điều khác": không có tình huống trong thư viện để dựa vào.
+    // Tình huống có mã nhưng thiếu Story (dữ liệu chưa nạp đủ): không bịa aha.
     return tr(
       'Bạn đã dừng lại để gọi tên một khoảnh khắc cụ thể. Có thể điều đáng '
           'nhìn thêm là vì sao chính khoảnh khắc này, chứ không phải một '
@@ -506,8 +522,17 @@ String get kDoneSavedTitle =>
     tr('Đã lưu vào Career Memory', 'Saved to your Career Memory');
 
 String get kDoneSavedNote => tr(
-  'Lần nhìn lại này vừa để lại thêm một mảnh cho hành trình của bạn.',
-  'This look back just added one more piece to your journey.',
+  'Reflection này vừa để lại thêm một mảnh cho hành trình của bạn.',
+  'This reflection just added one more piece to your journey.',
+);
+
+/// Câu phụ khi tình huống là một cột mốc hoàn thành / học được (P-11, P-08),
+/// nguyên văn script Sprint 2.
+String get kDoneCompletionNote => tr(
+  'Điều bạn vừa hoàn thành / học được đã được lưu như một sự thật đã xảy ra, '
+      'không phải một việc cần làm.',
+  'What you just completed or learned is kept as something that happened, '
+      'not a to-do.',
 );
 
 String get kDoneMilestoneTitle =>

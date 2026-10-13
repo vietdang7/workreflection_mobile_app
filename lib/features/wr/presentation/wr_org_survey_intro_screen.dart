@@ -21,6 +21,7 @@ import '../../../core/widgets/eyebrow.dart';
 import '../org_survey_providers.dart';
 import '../../../core/widgets/wr_title_text.dart';
 import '../../../core/widgets/wr_hero_header.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 class WrOrgSurveyIntroScreen extends ConsumerWidget {
   const WrOrgSurveyIntroScreen({super.key});
@@ -71,7 +72,7 @@ class WrOrgSurveyIntroScreen extends ConsumerWidget {
           elevation: 0,
           foregroundColor: WrColors.navy,
           title: Text(
-            tr('Khảo sát tổ chức', 'Organisation survey'),
+            wrKeepCompounds(tr('Khảo sát tổ chức', 'Organisation survey')),
             style: TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.w700,
@@ -91,10 +92,10 @@ class WrOrgSurveyIntroScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                tr(
+                wrKeepCompounds(tr(
                   'Bạn đang ở đâu so với mặt bằng chung?',
                   'Where do you sit against the wider picture?',
-                ),
+                )),
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w700,
@@ -110,19 +111,10 @@ class WrOrgSurveyIntroScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      total == null
-                          ? tr(
-                              'Vài câu ngắn về đãi ngộ, phát triển, sự công bằng và '
-                                  'mức hỗ trợ nơi bạn làm việc.',
-                              'A few short questions about pay, growth, fairness and '
-                                  'support where you work.',
-                            )
-                          : tr(
-                              'Trả lời $total câu ngắn về đãi ngộ, phát triển, sự '
-                                  'công bằng và mức hỗ trợ nơi bạn làm việc.',
-                              '$total short questions about pay, growth, fairness '
-                                  'and support where you work.',
-                            ),
+                      wrKeepCompounds('${total == null ? tr('Vài câu ngắn về đãi ngộ, phát triển, sự công bằng và mức hỗ trợ nơi bạn làm việc.', 'A few short questions about pay, growth, fairness and support where you work.') : tr('Trả lời $total câu ngắn về đãi ngộ, phát triển, sự công bằng và mức hỗ trợ nơi bạn làm việc.', 'Answer $total short questions about pay, growth, fairness and support where you work.')} '
+                      // Script `screenEsiInfo`.
+                      '${tr('Xong ngay, bạn sẽ thấy kết quả của mình so với mặt bằng chung ẩn danh của những người khác, trước khi bất kỳ ai khác thấy được điều đó.', 'As soon as you finish, you see your results against the anonymous picture of everyone else, before anyone else sees them.')}'),
+                      key: const Key('wr_org_survey_intro_lead'),
                       style: _bodyStyle,
                     ),
                     const SizedBox(height: 14),
@@ -146,12 +138,12 @@ class WrOrgSurveyIntroScreen extends ConsumerWidget {
                           SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              tr(
-                                'Xong là có ngay bản so sánh của riêng bạn, khoảng '
-                                    '5 phút.',
-                                'Finish and your own comparison is ready, about '
-                                    '5 minutes.',
-                              ),
+                              wrKeepCompounds(tr(
+                                'Nhận ngay: bản so sánh cá nhân sau khi hoàn tất, '
+                                    'khoảng 5 phút',
+                                'Right away: your personal comparison once you '
+                                    'finish, about 5 minutes',
+                              )),
                               style: TextStyle(
                                 fontSize: 13.5,
                                 height: 1.5,
@@ -174,10 +166,10 @@ class WrOrgSurveyIntroScreen extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      tr(
+                      wrKeepCompounds(tr(
                         'Vì sao câu trả lời của bạn cũng có giá trị rộng hơn',
                         'Why your answers matter more widely too',
-                      ),
+                      )),
                       style: TextStyle(
                         fontSize: 16.5,
                         fontWeight: FontWeight.w700,
@@ -186,7 +178,7 @@ class WrOrgSurveyIntroScreen extends ConsumerWidget {
                     ),
                     SizedBox(height: 8),
                     Text(
-                      tr(
+                      wrKeepCompounds(tr(
                         'Ngoài bản so sánh riêng cho bạn, câu trả lời khi gộp cùng '
                             'nhiều người khác ở dạng ẩn danh còn giúp xây dựng dữ liệu '
                             'benchmark ngành, phục vụ nghiên cứu và các công cụ chẩn '
@@ -197,7 +189,7 @@ class WrOrgSurveyIntroScreen extends ConsumerWidget {
                             'research and for future organisational diagnostic tools at '
                             'Cloud & Coral. That is a bonus, not the main reason to '
                             'take part.',
-                      ),
+                      )),
                       style: _bodyStyle,
                     ),
                   ],
@@ -234,7 +226,7 @@ class WrOrgSurveyIntroScreen extends ConsumerWidget {
                               ),
                             ),
                             const SizedBox(width: 8),
-                            Expanded(child: Text(g, style: _bodyStyle)),
+                            Expanded(child: Text(wrKeepCompounds(g), style: _bodyStyle)),
                           ],
                         ),
                       ),
@@ -248,10 +240,10 @@ class WrOrgSurveyIntroScreen extends ConsumerWidget {
                 Padding(
                   padding: EdgeInsets.only(bottom: 12),
                   child: Text(
-                    tr(
+                    wrKeepCompounds(tr(
                       'Chưa tải được bộ câu hỏi. Bạn thử lại sau nhé.',
                       'Could not load the questions. Please try again later.',
-                    ),
+                    )),
                     key: Key('wr_org_survey_questions_error'),
                     style: TextStyle(fontSize: 14, color: WrColors.coral),
                   ),
@@ -277,14 +269,45 @@ class WrOrgSurveyIntroScreen extends ConsumerWidget {
                     elevation: 0,
                   ),
                   child: Text(
-                    questionsAsync.isLoading
+                    wrKeepCompounds(questionsAsync.isLoading
                         ? tr('Đang tải…', 'Loading…')
                         : tr(
                             'Bắt đầu, khoảng 5 phút',
                             'Start, about 5 minutes',
-                          ),
+                          )),
                     style: const TextStyle(
                       fontSize: 15.5,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+
+              // Script: nút viền "Để sau" dưới nút bắt đầu.
+              const SizedBox(height: 8),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  key: const Key('wr_org_survey_later'),
+                  onPressed: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go('/profile');
+                    }
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: WrColors.navy,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    side: const BorderSide(color: WrColors.line),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: Text(
+                    wrKeepCompounds(tr('Để sau', 'Maybe later')),
+                    style: const TextStyle(
+                      fontSize: 15,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -299,10 +322,10 @@ class WrOrgSurveyIntroScreen extends ConsumerWidget {
                   key: const Key('wr_org_survey_view_result'),
                   onPressed: () => context.push('/wr/org-survey/result'),
                   child: Text(
-                    tr(
+                    wrKeepCompounds(tr(
                       'Xem lại kết quả lần trước',
                       'See your previous results',
-                    ),
+                    )),
                     style: TextStyle(fontSize: 14.5, color: WrColors.navy),
                   ),
                 ),

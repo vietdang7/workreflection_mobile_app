@@ -24,6 +24,7 @@ import '../models/video_report_models.dart';
 import '../video_report_providers.dart';
 import 'scenes/video_scene_view.dart';
 import 'video_subtitle_overlay.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 const _kBg = Color(0xFF0B1121);
 
@@ -115,7 +116,7 @@ class _VideoReportScreenState extends ConsumerState<VideoReportScreen> {
         backgroundColor: _kBg,
         foregroundColor: Colors.white,
         elevation: 0,
-        title: Text(l10n.videoReportTitle),
+        title: Text(wrKeepCompounds(l10n.videoReportTitle)),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => Navigator.of(context).maybePop(),
@@ -129,7 +130,7 @@ class _VideoReportScreenState extends ConsumerState<VideoReportScreen> {
               const CircularProgressIndicator(),
               const SizedBox(height: 16),
               Text(
-                l10n.videoReportGenerating,
+                wrKeepCompounds(l10n.videoReportGenerating),
                 style: const TextStyle(color: Colors.white70),
               ),
             ],
@@ -147,10 +148,10 @@ class _VideoReportScreenState extends ConsumerState<VideoReportScreen> {
                   key: const Key('video_report_ai_voice_off'),
                   padding: const EdgeInsets.symmetric(horizontal: 32),
                   child: Text(
-                    tr(
+                    wrKeepCompounds(tr(
                       'Bản thu đang được chuẩn bị.',
                       'The recording is on its way.',
-                    ),
+                    )),
                     textAlign: TextAlign.center,
                     style: const TextStyle(color: Colors.white70, height: 1.6),
                   ),
@@ -159,13 +160,13 @@ class _VideoReportScreenState extends ConsumerState<VideoReportScreen> {
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 32),
                   child: Text(
-                    tr(
+                    wrKeepCompounds(tr(
                       'Bản đọc thành tiếng cần gửi đoạn chữ sang dịch vụ đọc '
                           'giọng nói bên ngoài. Bạn xem app gửi những gì rồi '
                           'quyết định nhé.',
                       'The spoken version needs to send the text to an outside '
                           'voice service. See what the app sends, then decide.',
-                    ),
+                    )),
                     textAlign: TextAlign.center,
                     style: const TextStyle(color: Colors.white70, height: 1.6),
                   ),
@@ -178,18 +179,18 @@ class _VideoReportScreenState extends ConsumerState<VideoReportScreen> {
                       ref.invalidate(videoReportDataProvider(widget.reportId));
                     }
                   },
-                  child: Text(tr('Xem app gửi những gì', 'See what the app sends')),
+                  child: Text(wrKeepCompounds(tr('Xem app gửi những gì', 'See what the app sends'))),
                 ),
               ] else ...[
                 Text(
-                  l10n.videoReportError,
+                  wrKeepCompounds(l10n.videoReportError),
                   style: const TextStyle(color: Colors.white70),
                 ),
                 const SizedBox(height: 12),
                 ElevatedButton(
                   onPressed: () =>
                       ref.invalidate(videoReportDataProvider(widget.reportId)),
-                  child: Text(l10n.videoReportRetry),
+                  child: Text(wrKeepCompounds(l10n.videoReportRetry)),
                 ),
               ],
             ],

@@ -131,7 +131,7 @@ class _AiConsentInvite extends ConsumerWidget {
               ),
             ),
             child: Text(
-              tr('Xem app gửi những gì', 'See what the app sends'),
+              wrKeepCompounds(tr('Xem app gửi những gì', 'See what the app sends')),
               style: const TextStyle(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w600,
@@ -200,7 +200,7 @@ class _NarrativeBlock extends StatelessWidget {
         children: [
           if (period != null) ...[
             Text(
-              period,
+              wrKeepCompounds(period),
               style: const TextStyle(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w600,

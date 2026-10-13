@@ -56,6 +56,7 @@ import '../../../../core/theme/wr_colors.dart';
 import '../../episode_flow_controller.dart';
 import '../../wr_providers.dart';
 import 'wr_flow_scaffold.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 class WrStepScreen extends ConsumerStatefulWidget {
   const WrStepScreen({super.key});
@@ -75,7 +76,13 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
   List<WrSituation>? _choices;
 
   /// true khi người dùng đã bấm "Xem tất cả, không chỉ theo cảm xúc" (§III).
+  /// "Xem tình huống khác" bật lại bộ lọc (script Sprint 2).
   bool _ignoreMoodFilter = false;
+
+  /// Đã chọn xong ở CHÍNH màn này và đi tiếp sang bước 2. Khi người dùng bấm
+  /// lùi từ bước 2 về (script Sprint 2: lùi về bước 1 giữ nguyên lựa chọn), màn
+  /// này phải hiện lại danh sách để đổi tình huống, không tự chuyển tiếp nữa.
+  bool _pickedHere = false;
 
   /// Cảm xúc dùng để lọc chip.
   ///
@@ -91,6 +98,10 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
 
   /// Năm tình huống cho bước Notice, đã lọc theo cảm xúc và tránh lặp (§III, §IV).
   List<WrSituation> _situationChoices() {
+    // Đã chốt danh sách thì giữ nguyên, kể cả khi lịch sử xoay vòng đang tải
+    // lại sau một lần chọn (lùi từ bước 2 về phải thấy đúng danh sách cũ).
+    final cached = _choices;
+    if (cached != null) return cached;
     final all = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
     if (all.isEmpty) return const [];
 
@@ -109,10 +120,12 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
     );
   }
 
-  /// Trộn lại danh sách — "Xem tình huống khác" (§III).
+  /// Trộn lại danh sách. "Xem tình huống khác" lọc lại theo cảm xúc, "Xem tất
+  /// cả" bỏ lọc (script Sprint 2, `getSituationChoices(state.homeMoodDims)` /
+  /// `getSituationChoices(null)`).
   void _reshuffle({required bool dropMoodFilter}) {
     setState(() {
-      if (dropMoodFilter) _ignoreMoodFilter = true;
+      _ignoreMoodFilter = dropMoodFilter;
       _choices = null;
       _selectedCode = null;
     });
@@ -154,7 +167,8 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
 
       // Chưa có Episode nào thì mở tại đây. Archetype suy từ cảm xúc check-in
       // (§9.1: Home chỉ có bốn ô cảm xúc, không có màn chọn khoảnh khắc).
-      if (_liveEpisode(ref.read(episodeFlowProvider)) == null) {
+      final live = _liveEpisode(ref.read(episodeFlowProvider));
+      if (live == null) {
         final mood = _mood;
         final energy =
             ref.read(pendingEnergyProvider) ??
@@ -176,11 +190,16 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
         pattern: ReflectionPattern.notice,
         note: noticeNoteFor(situation),
         situation: situation,
+        // Lùi về đổi từ một tình huống sang "Điều khác": gỡ tình huống cũ.
+        clearSituation: situation == null && live?.situationCode != null,
       );
 
       if (situation != null) await _rememberChosen(situation.code);
 
-      if (mounted) context.pushReplacement('/wr/flow/detail');
+      // push (không thay thế) để bước 2 bấm lùi về đúng màn này, còn nguyên
+      // danh sách và lựa chọn.
+      _pickedHere = true;
+      if (mounted) context.push('/wr/flow/detail');
     } catch (e, s) {
       logFlowError('pickSituation', e, s);
       if (mounted) {
@@ -208,7 +227,8 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
     // tới bước còn dở. `isCurrent` là chốt an toàn: chỉ màn đang đứng trên cùng
     // mới được điều hướng, nếu không một bản dựng lại của màn này khi nó đã nằm
     // dưới đáy stack sẽ đè mất màn người dùng đang xem.
-    if (episode != null &&
+    if (!_pickedHere &&
+        episode != null &&
         (episode.situationCode != null ||
             episode.patternsDone.contains(ReflectionPattern.notice))) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -220,8 +240,10 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
     }
 
     final choices = _situationChoices();
-    final filtered = !_ignoreMoodFilter && _mood != null;
+    // Script Sprint 2: chip cảm xúc và link "Xem tất cả" còn nguyên sau khi
+    // bấm "Xem tất cả" (chúng chỉ phụ thuộc cảm xúc đã chọn).
     final mood = _mood;
+    final filtered = mood != null;
 
     WrSituation? selectedSituation;
     for (final sit in choices) {
@@ -231,9 +253,8 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
 
     return WrFlowScaffold(
       eyebrow: reflectStepEyebrow(0),
-      // Chip cảm xúc vừa chọn ở Home (`.mood-chip`), chỉ khi danh sách đang
-      // lọc theo cảm xúc đó.
-      eyebrowTrailing: filtered && mood != null
+      // Chip cảm xúc vừa chọn ở Home (`.mood-chip`).
+      eyebrowTrailing: filtered
           ? WrMoodChip(key: const Key('wr_step_mood_chip'), mood: mood)
           : null,
       title: kPickStoryTitle,
@@ -264,7 +285,7 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
                   children: [
                     Flexible(
                       child: Text(
-                        tr('Xem tình huống khác', 'See other situations'),
+                        wrKeepCompounds(tr('Xem tình huống khác', 'See other situations')),
                         style: const TextStyle(
                           fontSize: 13.5,
                           fontWeight: FontWeight.w700,
@@ -290,7 +311,7 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
                 child: Padding(
                   padding: const EdgeInsets.symmetric(vertical: 4),
                   child: Text(
-                    tr('Xem tất cả', 'See all'),
+                    wrKeepCompounds(tr('Xem tất cả', 'See all')),
                     style: const TextStyle(
                       fontSize: 13,
                       color: Color(0x9E2C335D),
@@ -344,7 +365,7 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
           if (_error != null) ...[
             const SizedBox(height: 16),
             Text(
-              _error!,
+              wrKeepCompounds(_error!),
               style: const TextStyle(fontSize: 14.5, color: WrColors.coral),
             ),
           ],

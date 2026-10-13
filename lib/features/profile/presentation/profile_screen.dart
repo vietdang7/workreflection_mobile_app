@@ -12,6 +12,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../../core/data/wr_repository.dart';
 import '../../../core/logic/wr_ai_disclosure.dart';
+import '../../../core/logic/wr_entitlement.dart';
+import '../../../core/models/wr_intelligence.dart' show WrPlan;
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
 import '../../../core/widgets/wr_renewal_notice_card.dart';
@@ -123,7 +125,7 @@ class _ProfileHeader extends StatelessWidget {
                     ),
                     SizedBox(width: 6),
                     Text(
-                      tr('Quay lại', 'Back'),
+                      wrKeepCompounds(tr('Quay lại', 'Back')),
                       style: TextStyle(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w500,
@@ -139,7 +141,7 @@ class _ProfileHeader extends StatelessWidget {
           // Nằm đè lên dải ảnh đầu màn (v55): chữ xám nhạt chìm vào ảnh, nên
           // dùng navy đậm.
           Text(
-            l10n.profileGreeting,
+            wrKeepCompounds(l10n.profileGreeting),
             style: WrTextStyles.greeting.copyWith(
               color: WrColors.navy,
               fontWeight: FontWeight.w600,
@@ -177,7 +179,7 @@ Future<void> _pickAvatar(BuildContext context, WidgetRef ref) async {
   // `null` cũng là kết quả của việc người dùng bấm huỷ trong bộ chọn ảnh —
   // im lặng trong trường hợp đó, chỉ báo khi provider thật sự lỗi.
   if (url != null) {
-    messenger.showSnackBar(SnackBar(content: Text(l10n.avatarUploadSuccess)));
+    messenger.showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.avatarUploadSuccess))));
     return;
   }
   final error = ref.read(avatarUploadProvider).error;
@@ -186,7 +188,7 @@ Future<void> _pickAvatar(BuildContext context, WidgetRef ref) async {
     // tới khi bật lại, mà bật lại thì phải sang Cài đặt vì iOS chỉ hỏi một lần.
     messenger.showSnackBar(
       SnackBar(
-        content: Text(l10n.avatarPermissionDenied),
+        content: Text(wrKeepCompounds(l10n.avatarPermissionDenied)),
         action: SnackBarAction(
           label: l10n.avatarPermissionOpenSettings,
           onPressed: permission.openSettings,
@@ -194,7 +196,7 @@ Future<void> _pickAvatar(BuildContext context, WidgetRef ref) async {
       ),
     );
   } else if (error != null) {
-    messenger.showSnackBar(SnackBar(content: Text(l10n.avatarUploadError)));
+    messenger.showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.avatarUploadError))));
   }
 }
 
@@ -278,7 +280,7 @@ class _AvatarSection extends ConsumerWidget {
                           fit: BoxFit.cover,
                           errorBuilder: (_, __, ___) => Center(
                             child: Text(
-                              _initials(name),
+                              wrKeepCompounds(_initials(name)),
                               style: const TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.w700,
@@ -289,7 +291,7 @@ class _AvatarSection extends ConsumerWidget {
                         )
                       : Center(
                           child: Text(
-                            _initials(name),
+                            wrKeepCompounds(_initials(name)),
                             style: const TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.w700,
@@ -335,7 +337,7 @@ class _AvatarSection extends ConsumerWidget {
           if (email.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(
-              email,
+              wrKeepCompounds(email),
               textAlign: TextAlign.center,
               style: WrTextStyles.body.copyWith(fontSize: 14.5),
             ),
@@ -352,7 +354,8 @@ class _AvatarSection extends ConsumerWidget {
               borderRadius: BorderRadius.circular(20),
             ),
             child: Text(
-              isPremium ? l10n.profileBadgePremium : l10n.profileBadgeMember,
+              wrKeepCompounds(// Script `screenProfile`: "Premium Member" / "Free".
+              isPremium ? l10n.profileBadgePremium : 'Free'),
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w700,
@@ -440,12 +443,12 @@ class _PremiumCard extends ConsumerWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                // §03: chữ trên nền coral là navy, pha loãng cho dòng phụ chứ
+                wrKeepCompounds(// §03: chữ trên nền coral là navy, pha loãng cho dòng phụ chứ
                 // không đổi sang trắng hay xám.
                 tr(
                   '${price}Diễn giải sâu, Pattern nâng cao, Career Memory đầy đủ.',
                   '${price}Deep readings, advanced Patterns, the full Career Memory.',
-                ),
+                )),
                 style: TextStyle(
                   fontSize: 13.5,
                   color: WrColors.navy.withValues(alpha: 0.75),
@@ -469,7 +472,7 @@ class _PremiumCard extends ConsumerWidget {
                   ),
                 ),
                 child: Text(
-                  tr('Xem chi tiết', 'See details'),
+                  wrKeepCompounds(tr('Xem chi tiết', 'See details')),
                   style: TextStyle(fontSize: 13.5, fontWeight: FontWeight.w600),
                 ),
               ),
@@ -485,49 +488,53 @@ class _PremiumCard extends ConsumerWidget {
 // Stats row
 // ---------------------------------------------------------------------------
 
-/// Ba con số trong MỘT thẻ trắng — `<div class="card card-pad">` của mockup.
+/// Ba con số trong MỘT thẻ trắng — script `screenProfile`:
+/// "Ngày streak · Insight lưu · Thực hành".
 ///
-/// Trước đây là ba cột trần ngăn nhau bằng vạch dọc, cỡ số 36px. Mockup dùng cỡ
-/// `.h2` và đặt cả ba trong một thẻ: chúng là một câu ("bạn đã đi được tới đâu"),
-/// không phải ba mục riêng.
+/// Số thật cả ba. Ô đầu GIỮ tổng số ngày đã nhìn lại thay cho chuỗi ngày liên
+/// tiếp: khách yêu cầu riêng ngày 05/08 (chuỗi liên tiếp nghỉ một ngày là về 0,
+/// con số tích luỹ thì không lấy đi thứ người dùng đã làm được), script chưa
+/// cập nhật điểm này. Hai ô sau theo script: số insight đã lưu
+/// ([insightCountProvider]) và số chủ đề Thực hành được theo đuổi — "∞" với
+/// Premium, bản miễn phí là giới hạn của luật gói đang chạy
+/// ([WrEntitlement.maxActivePracticeThemes], hiện là 2, khớp script).
 class _StatsCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    // Tổng số ngày đã nhìn lại, KHÔNG phải chuỗi ngày liên tiếp (yêu cầu
-    // 05/08). Chuỗi liên tiếp nghỉ một ngày là về 0; con số tích luỹ thì
-    // không bao giờ lấy đi thứ người dùng đã làm được.
     final reflectDays = ref.watch(reflectionDayCountProvider).valueOrNull ?? 0;
     final insights = ref.watch(insightCountProvider).valueOrNull ?? 0;
-    final milestones = ref.watch(milestoneCountProvider).valueOrNull ?? 0;
+    // Chưa đọc xong quyền thì coi như bản miễn phí — cùng quy ước với nhãn gói.
+    final entitlement =
+        ref.watch(wrEntitlementProvider).valueOrNull ??
+        WrEntitlement(plan: WrPlan.free);
+    final practiceLimit = entitlement.maxActivePracticeThemes;
+    final practice = practiceLimit == null ? '∞' : '$practiceLimit';
 
-    return Container(
-      width: double.infinity,
+    return WrCard(
       padding: const EdgeInsets.symmetric(vertical: 18, horizontal: 12),
-      decoration: BoxDecoration(
-        color: WrColors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: WrColors.line),
-      ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceAround,
         children: [
           Expanded(
             child: _StatBlock(
-              number: reflectDays,
+              key: const Key('profile_stat_reflect_days'),
+              number: '$reflectDays',
               label: l10n.profileStatReflectDays,
             ),
           ),
           Expanded(
             child: _StatBlock(
-              number: insights,
-              label: l10n.profileStatInsights,
+              key: const Key('profile_stat_insights'),
+              number: '$insights',
+              label: tr('Insight lưu', 'Saved insights'),
             ),
           ),
           Expanded(
             child: _StatBlock(
-              number: milestones,
-              label: l10n.profileStatMilestones,
+              key: const Key('profile_stat_practice'),
+              number: practice,
+              label: tr('Thực hành', 'Practice'),
             ),
           ),
         ],
@@ -537,8 +544,8 @@ class _StatsCard extends ConsumerWidget {
 }
 
 class _StatBlock extends StatelessWidget {
-  const _StatBlock({required this.number, required this.label});
-  final int number;
+  const _StatBlock({super.key, required this.number, required this.label});
+  final String number;
   final String label;
 
   @override
@@ -546,7 +553,7 @@ class _StatBlock extends StatelessWidget {
     return Column(
       children: [
         Text(
-          '$number',
+          wrKeepCompounds(number),
           style: const TextStyle(
             fontSize: 24,
             fontWeight: FontWeight.w800,
@@ -558,7 +565,7 @@ class _StatBlock extends StatelessWidget {
         // Nhãn ngắn: không dùng WrParagraph, nó nối từ bằng U+00A0 nên ô hẹp
         // + chữ lớn là vỡ giữa từ ("Refle/ct", "insi/ghts").
         Text(
-          label,
+          wrKeepCompounds(label),
           style: const TextStyle(
             fontSize: 12.5,
             color: WrColors.text3,
@@ -592,14 +599,8 @@ class _AppearanceCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final mode = ref.watch(appBackgroundModeProvider);
 
-    return Container(
-      width: double.infinity,
+    return WrCard(
       padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: WrColors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: WrColors.line),
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -609,7 +610,7 @@ class _AppearanceCard extends ConsumerWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  tr('Giao diện & Nền ứng dụng', 'Appearance & Background'),
+                  wrKeepCompounds(tr('Giao diện & Nền ứng dụng', 'Appearance & Background')),
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
@@ -621,10 +622,10 @@ class _AppearanceCard extends ConsumerWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            tr(
+            wrKeepCompounds(tr(
               'Thử nghiệm hiển thị vân giấy vẽ màu nước hoặc nền trơn trên thiết bị của bạn.',
               'Experiment with watercolor paper texture or plain paper background.',
-            ),
+            )),
             style: const TextStyle(
               fontSize: 13,
               color: WrColors.text2,
@@ -690,7 +691,7 @@ class _BgOptionButton extends StatelessWidget {
         ),
         child: Center(
           child: Text(
-            label,
+            wrKeepCompounds(label),
             style: TextStyle(
               fontSize: 13,
               fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
@@ -712,14 +713,8 @@ class _OrgSurveyCard extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 24),
-      child: Container(
-        width: double.infinity,
+      child: WrCard(
         padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          color: WrColors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: WrColors.line),
-        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -729,10 +724,10 @@ class _OrgSurveyCard extends ConsumerWidget {
                 SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    tr(
+                    wrKeepCompounds(tr(
                       'Khảo sát tổ chức (tuỳ chọn)',
                       'Organisation survey (optional)',
-                    ),
+                    )),
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -774,9 +769,9 @@ class _OrgSurveyCard extends ConsumerWidget {
                 ),
               ),
               child: Text(
-                done
+                wrKeepCompounds(done
                     ? tr('Xem lại kết quả', 'See your results')
-                    : tr('Tìm hiểu & tham gia', 'Find out & take part'),
+                    : tr('Tìm hiểu & tham gia', 'Find out & take part')),
                 style: const TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w600,
@@ -817,15 +812,11 @@ class _SettingsSection extends ConsumerWidget {
     // Ảnh khách gửi 04/8 chỉ có bốn dòng, nhưng khách chốt lại ngay sau đó là
     // GIỮ đủ mục: đổi mật khẩu, sửa hồ sơ, thông tin công việc, bản Premium đều
     // là lối vào duy nhất của chúng — cắt đi là mất hẳn đường tới.
-    return Container(
-      margin: const EdgeInsets.only(top: 12),
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: WrColors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: WrColors.line),
-      ),
-      child: Column(
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: WrCard(
+        padding: EdgeInsets.zero,
+        child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // "Thông tin của bạn" — mockup Sprint 2 bản (4). Đứng ĐẦU danh sách,
@@ -847,7 +838,7 @@ class _SettingsSection extends ConsumerWidget {
                   builder: (context) {
                     final status = ref.watch(myInfoStatusProvider(l10n));
                     return Text(
-                      '${status.filled}/${status.total}',
+                      wrKeepCompounds('${status.filled}/${status.total}'),
                       key: const Key('profile_my_info_count'),
                       style: WrTextStyles.body.copyWith(fontSize: 14.5),
                     );
@@ -876,7 +867,7 @@ class _SettingsSection extends ConsumerWidget {
                 : () => _pickAvatar(context, ref),
             trailing: ref.watch(avatarUploadProvider).isLoading
                 ? Text(
-                    l10n.avatarUploading,
+                    wrKeepCompounds(l10n.avatarUploading),
                     key: const Key('profile_avatar_uploading_label'),
                     style: WrTextStyles.body.copyWith(fontSize: 14.5),
                   )
@@ -929,7 +920,7 @@ class _SettingsSection extends ConsumerWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  l10n.profileLanguageValue,
+                  wrKeepCompounds(l10n.profileLanguageValue),
                   style: WrTextStyles.body.copyWith(fontSize: 14.5),
                 ),
                 const SizedBox(width: 4),
@@ -965,7 +956,7 @@ class _SettingsSection extends ConsumerWidget {
               children: [
                 if (isPremium)
                   Text(
-                    tr('Đang dùng', 'Active'),
+                    wrKeepCompounds(tr('Đang dùng', 'Active')),
                     key: const Key('profile_premium_active_label'),
                     style: WrTextStyles.body.copyWith(
                       fontSize: 14.5,
@@ -1048,6 +1039,7 @@ class _SettingsSection extends ConsumerWidget {
           ),
         ],
       ),
+    ),
     );
   }
 
@@ -1090,19 +1082,19 @@ class _SettingsSection extends ConsumerWidget {
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.languageDialogTitle),
+        title: Text(wrKeepCompounds(l10n.languageDialogTitle)),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             ListTile(
-              title: Text(l10n.languageOptionVietnamese),
+              title: Text(wrKeepCompounds(l10n.languageOptionVietnamese)),
               onTap: () {
                 Navigator.of(ctx).pop();
                 _applyLanguage(ref, 'vi');
               },
             ),
             ListTile(
-              title: Text(l10n.languageOptionEnglish),
+              title: Text(wrKeepCompounds(l10n.languageOptionEnglish)),
               onTap: () {
                 Navigator.of(ctx).pop();
                 _applyLanguage(ref, 'en');
@@ -1127,10 +1119,10 @@ class _SettingsSection extends ConsumerWidget {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
-                tr(
+                wrKeepCompounds(tr(
                   'Đã chép dữ liệu vào clipboard.',
                   'Copied your data to the clipboard.',
-                ),
+                )),
               ),
             ),
           );
@@ -1145,10 +1137,10 @@ class _SettingsSection extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              tr(
+              wrKeepCompounds(tr(
                 'Đã xuất dữ liệu: ${file.path}',
                 'Data exported: ${file.path}',
-              ),
+              )),
             ),
           ),
         );
@@ -1158,7 +1150,7 @@ class _SettingsSection extends ConsumerWidget {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              tr('Không thể xuất dữ liệu.', 'Could not export your data.'),
+              wrKeepCompounds(tr('Không thể xuất dữ liệu.', 'Could not export your data.')),
             ),
           ),
         );
@@ -1209,7 +1201,7 @@ class _SettingRow extends StatelessWidget {
               Icon(icon, size: 18, color: WrColors.navy),
               const SizedBox(width: 10),
             ],
-            Expanded(child: Text(label, style: WrTextStyles.hMedium)),
+            Expanded(child: Text(wrKeepCompounds(label), style: WrTextStyles.hMedium)),
             trailing,
           ],
         ),
@@ -1241,7 +1233,7 @@ class _LogoutButton extends ConsumerWidget {
           ),
         ),
         child: Text(
-          l10n.profileSettingLogout,
+          wrKeepCompounds(l10n.profileSettingLogout),
           style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600),
         ),
       ),
@@ -1255,20 +1247,20 @@ class _LogoutButton extends ConsumerWidget {
         context: context,
         builder: (ctx) => AlertDialog(
           title: Text(
-            tr('Hành trình chưa được lưu', 'Your journey is not saved'),
+            wrKeepCompounds(tr('Hành trình chưa được lưu', 'Your journey is not saved')),
           ),
           content: Text(
-            tr(
+            wrKeepCompounds(tr(
               'Bạn chưa tạo tài khoản. Đăng xuất bây giờ thì những gì bạn đã '
                   'ghi lại sẽ không mở lại được nữa.',
               'You have not created an account. If you sign out now, what you '
                   'have recorded cannot be opened again.',
-            ),
+            )),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
-              child: Text(tr('Ở lại', 'Stay')),
+              child: Text(wrKeepCompounds(tr('Ở lại', 'Stay'))),
             ),
             TextButton(
               key: const Key('profile_guest_logout_confirm'),
@@ -1276,7 +1268,7 @@ class _LogoutButton extends ConsumerWidget {
               style: TextButton.styleFrom(
                 foregroundColor: WrColors.destructive,
               ),
-              child: Text(tr('Vẫn đăng xuất', 'Sign out anyway')),
+              child: Text(wrKeepCompounds(tr('Vẫn đăng xuất', 'Sign out anyway'))),
             ),
           ],
         ),
@@ -1290,7 +1282,7 @@ class _LogoutButton extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text(tr('Không thể đăng xuất.', 'Could not sign out.')),
+            content: Text(wrKeepCompounds(tr('Không thể đăng xuất.', 'Could not sign out.'))),
           ),
         );
       }
@@ -1318,7 +1310,7 @@ class _DeleteAccountButton extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(vertical: 10),
       ),
       child: Text(
-        l10n.profileDeleteAccount,
+        wrKeepCompounds(l10n.profileDeleteAccount),
         style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
       ),
     );
@@ -1340,7 +1332,7 @@ class _DeleteAccountButton extends ConsumerWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.profileDeleteAccountError)));
+        ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.profileDeleteAccountError))));
       }
     }
   }
@@ -1376,13 +1368,13 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
         l10n.profileDeleteAccountConfirmWord.toUpperCase();
 
     return AlertDialog(
-      title: Text(l10n.profileDeleteAccountTitle),
+      title: Text(wrKeepCompounds(l10n.profileDeleteAccountTitle)),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            l10n.profileDeleteAccountBody,
+            wrKeepCompounds(l10n.profileDeleteAccountBody),
             style: const TextStyle(fontSize: 13.5, height: 1.6),
           ),
           const SizedBox(height: 14),
@@ -1404,13 +1396,13 @@ class _DeleteAccountDialogState extends State<_DeleteAccountDialog> {
         TextButton(
           key: const Key('profile_delete_cancel_btn'),
           onPressed: () => Navigator.of(context).pop(false),
-          child: Text(l10n.profileDeleteAccountCancel),
+          child: Text(wrKeepCompounds(l10n.profileDeleteAccountCancel)),
         ),
         TextButton(
           key: const Key('profile_delete_confirm_btn'),
           onPressed: ok ? () => Navigator.of(context).pop(true) : null,
           style: TextButton.styleFrom(foregroundColor: WrColors.coral),
-          child: Text(l10n.profileDeleteAccountCta),
+          child: Text(wrKeepCompounds(l10n.profileDeleteAccountCta)),
         ),
       ],
     );
@@ -1435,7 +1427,7 @@ class _GuestSaveCard extends ConsumerWidget {
             WrEyebrow(tr('Bạn đang dùng thử', 'You are trying it out')),
             const SizedBox(height: 6),
             Text(
-              tr('Lưu lại hành trình của bạn', 'Keep your journey'),
+              wrKeepCompounds(tr('Lưu lại hành trình của bạn', 'Keep your journey')),
               style: const TextStyle(
                 fontSize: 17,
                 fontWeight: FontWeight.w700,
@@ -1444,12 +1436,12 @@ class _GuestSaveCard extends ConsumerWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              tr(
+              wrKeepCompounds(tr(
                 'Nếu chưa lưu, hành trình chỉ nằm trên thiết bị này và sẽ mất '
                     'khi bạn xóa ứng dụng.',
                 'Until you save it, your journey lives only on this device and '
                     'will be lost if you delete the app.',
-              ),
+              )),
               style: const TextStyle(
                 fontSize: 14,
                 color: WrColors.text2,
@@ -1471,10 +1463,10 @@ class _GuestSaveCard extends ConsumerWidget {
                   ),
                 ),
                 child: Text(
-                  tr(
+                  wrKeepCompounds(tr(
                     'Tạo tài khoản bằng email',
                     'Create an account with email',
-                  ),
+                  )),
                   style: const TextStyle(fontWeight: FontWeight.w700),
                 ),
               ),

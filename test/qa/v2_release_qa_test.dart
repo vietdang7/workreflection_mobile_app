@@ -23,29 +23,42 @@ void main() {
   setUpAll(() async => catalog = await loadWrCanonicalCatalog());
 
   for (final mood in Mood.values) {
-    test('QA ${mood.name}: ten selections remain fresh across 100 seeds', () {
-      for (var seed = 0; seed < 100; seed++) {
-        final random = Random(seed);
-        var recent = <String>[];
-        for (var turn = 0; turn < 10; turn++) {
-          final choices = pickSituationChoices(
-            all: catalog.situations,
-            mood: mood,
-            recentIds: recent,
-            random: random,
-          );
-          expect(choices, hasLength(5));
-          expect(choices.map((s) => s.code).toSet(), hasLength(5));
-          expect(choices.where((s) => recent.contains(s.code)), isEmpty);
-          expect(
-            choices.where((s) => s.mood == kMoodCodes[mood]),
-            hasLength(3),
-          );
-          expect(choices.map((s) => s.valence).toSet(), hasLength(1));
-          recent = rememberSituation(choices[random.nextInt(5)].code, recent);
+    test(
+      'QA ${mood.name}: ten selections follow script dims across 100 seeds',
+      () {
+        for (var seed = 0; seed < 100; seed++) {
+          final random = Random(seed);
+          var recent = <String>[];
+          for (var turn = 0; turn < 10; turn++) {
+            final choices = pickSituationChoices(
+              all: catalog.situations,
+              mood: mood,
+              recentIds: recent,
+              random: random,
+            );
+            expect(choices, hasLength(5));
+            expect(choices.map((s) => s.code).toSet(), hasLength(5));
+            // Script Sprint 2 (`getSituationChoices`): lọc theo chiều của cảm
+            // xúc; P-11 có thể được chèn vào ô cuối bất kể chiều và lịch sử.
+            final dims = kMoodDimensions[mood]!;
+            final core = choices
+                .where((s) => s.code != kCompletionSituationCode)
+                .toList();
+            expect(core.every((s) => dims.contains(situationDim(s))), isTrue);
+            final unseen = catalog.realSituations.where(
+              (s) =>
+                  !s.isRetired &&
+                  dims.contains(situationDim(s)) &&
+                  !recent.contains(s.code),
+            );
+            if (unseen.length >= 5) {
+              expect(core.where((s) => recent.contains(s.code)), isEmpty);
+            }
+            recent = rememberSituation(choices[random.nextInt(5)].code, recent);
+          }
         }
-      }
-    });
+      },
+    );
   }
 
   test(

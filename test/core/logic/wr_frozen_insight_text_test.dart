@@ -179,7 +179,7 @@ void main() {
       );
 
       expect(entries, hasLength(1));
-      expect(entries.single.title, 'Điều hệ thống đọc ra');
+      expect(entries.single.title, 'Pattern được nhận diện');
       expect(
         entries.single.subtitle,
         'Cùng một mạch sự rõ ràng chạy suốt 14 ngày qua: bắt đầu ở '

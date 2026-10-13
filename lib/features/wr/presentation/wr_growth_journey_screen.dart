@@ -81,7 +81,7 @@ class _SnapshotBlock extends StatelessWidget {
         children: [
           if (period.isNotEmpty) ...[
             Text(
-              period,
+              wrKeepCompounds(period),
               style: const TextStyle(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w600,
@@ -91,11 +91,11 @@ class _SnapshotBlock extends StatelessWidget {
             const SizedBox(height: 8),
           ],
           Text(
-            snapshot.direction ??
+            wrKeepCompounds(snapshot.direction ??
                 tr(
                   'Chặng này chưa có ghi chú hướng đi.',
                   'No direction notes for this stage yet.',
-                ),
+                )),
             style: const TextStyle(
               fontSize: 16,
               color: WrColors.navy,
@@ -119,7 +119,7 @@ class _SnapshotBlock extends StatelessWidget {
                       borderRadius: BorderRadius.circular(100),
                     ),
                     child: Text(
-                      '${e.key}: ${e.value}',
+                      wrKeepCompounds('${e.key}: ${e.value}'),
                       style: const TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w600,

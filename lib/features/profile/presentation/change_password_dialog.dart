@@ -11,6 +11,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../features/auth/data/auth_repository.dart';
 import '../../../l10n/app_localizations.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 /// Mở hộp thoại đổi mật khẩu và tự xử lý cả báo lỗi lẫn báo thành công.
 ///
@@ -29,7 +30,7 @@ void showChangePasswordDialog(BuildContext context, WidgetRef ref) {
           if (context.mounted) {
             ScaffoldMessenger.of(
               context,
-            ).showSnackBar(SnackBar(content: Text(l10n.changePasswordSuccess)));
+            ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.changePasswordSuccess))));
           }
         } catch (e) {
           if (context.mounted) {
@@ -39,7 +40,7 @@ void showChangePasswordDialog(BuildContext context, WidgetRef ref) {
                 : l10n.changePasswordErrorGeneric;
             ScaffoldMessenger.of(
               context,
-            ).showSnackBar(SnackBar(content: Text(text)));
+            ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(text))));
           }
         }
       },
@@ -90,7 +91,7 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
   Widget build(BuildContext context) {
     final l10n = widget.l10n;
     return AlertDialog(
-      title: Text(l10n.changePasswordTitle),
+      title: Text(wrKeepCompounds(l10n.changePasswordTitle)),
       content: Form(
         key: _formKey,
         child: Column(
@@ -156,12 +157,12 @@ class _ChangePasswordDialogState extends State<ChangePasswordDialog> {
         ),
       ),
       actions: [
-        TextButton(onPressed: widget.onCancel, child: Text(l10n.commonCancel)),
+        TextButton(onPressed: widget.onCancel, child: Text(wrKeepCompounds(l10n.commonCancel))),
         TextButton(
           key: const Key('change_password_submit'),
           onPressed: _submit,
           child: Text(
-            l10n.changePasswordSubmit,
+            wrKeepCompounds(l10n.changePasswordSubmit),
             style: const TextStyle(color: WrColors.coral),
           ),
         ),

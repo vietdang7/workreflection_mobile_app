@@ -23,6 +23,7 @@ import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_title_text.dart';
 import '../growth_providers.dart';
 import '../owned_skill_providers.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 /// Một tệp đã chọn.
 typedef PickedOwnedSkillFile = ({String name, String ext, List<int> bytes});
@@ -238,23 +239,23 @@ class _WrOwnedSkillSheetState extends ConsumerState<WrOwnedSkillSheet> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(tr('Xoá mục này?', 'Delete this item?')),
+        title: Text(wrKeepCompounds(tr('Xoá mục này?', 'Delete this item?'))),
         content: Text(
-          tr(
+          wrKeepCompounds(tr(
             'App sẽ có thể gợi ý lại các chủ đề gắn với mục này.',
             'The app may suggest the themes linked to it again.',
-          ),
+          )),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(tr('Huỷ', 'Cancel')),
+            child: Text(wrKeepCompounds(tr('Huỷ', 'Cancel'))),
           ),
           TextButton(
             key: const Key('wr_owned_skill_delete_confirm'),
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(
-              tr('Xoá', 'Delete'),
+              wrKeepCompounds(tr('Xoá', 'Delete')),
               style: const TextStyle(color: WrColors.destructive),
             ),
           ),
@@ -361,7 +362,7 @@ class _WrOwnedSkillSheetState extends ConsumerState<WrOwnedSkillSheet> {
                   for (final k in OwnedSkillKind.values)
                     ChoiceChip(
                       key: Key('wr_owned_skill_kind_${k.dbValue}'),
-                      label: Text(k.label),
+                      label: Text(wrKeepCompounds(k.label)),
                       selected: _kind == k,
                       onSelected: (_) => setState(() => _kind = k),
                       selectedColor: WrColors.navy.withValues(alpha: 0.12),
@@ -417,12 +418,12 @@ class _WrOwnedSkillSheetState extends ConsumerState<WrOwnedSkillSheet> {
                     icon: const Icon(Icons.event_outlined, size: 18),
                     style: TextButton.styleFrom(foregroundColor: WrColors.navy),
                     label: Text(
-                      _completedOn == null
+                      wrKeepCompounds(_completedOn == null
                           ? tr(
                               'Ngày hoàn thành (không bắt buộc)',
                               'Completion date (optional)',
                             )
-                          : _dateLabel(_completedOn!),
+                          : _dateLabel(_completedOn!)),
                       style: const TextStyle(fontSize: 14),
                     ),
                   ),
@@ -432,21 +433,21 @@ class _WrOwnedSkillSheetState extends ConsumerState<WrOwnedSkillSheet> {
                     icon: const Icon(Icons.attach_file, size: 18),
                     style: TextButton.styleFrom(foregroundColor: WrColors.navy),
                     label: Text(
-                      fileName ??
+                      wrKeepCompounds(fileName ??
                           tr(
                             'Đính kèm tệp (không bắt buộc)',
                             'Attach a file (optional)',
-                          ),
+                          )),
                       style: const TextStyle(fontSize: 14),
                     ),
                   ),
                 ],
               ),
               Text(
-                tr(
+                wrKeepCompounds(tr(
                   'Tệp chỉ được lưu lại cho bạn, app chưa đọc nội dung tệp.',
                   'The file is only kept for you; the app does not read it.',
-                ),
+                )),
                 style: const TextStyle(
                   fontSize: 13,
                   color: WrColors.muted,
@@ -457,12 +458,12 @@ class _WrOwnedSkillSheetState extends ConsumerState<WrOwnedSkillSheet> {
               WrEyebrow(tr('CHỦ ĐỀ TƯƠNG ỨNG', 'MATCHING THEMES')),
               const SizedBox(height: 6),
               Text(
-                tr(
+                wrKeepCompounds(tr(
                   'App gợi ý từ tên bạn nhập và sẽ không đề xuất lại các chủ đề '
                       'đã tích. Bỏ tích nếu không đúng.',
                   'Suggested from the name you typed. Ticked themes will not '
                       'be suggested to you again. Untick any that do not fit.',
-                ),
+                )),
                 style: const TextStyle(
                   fontSize: 13.5,
                   color: WrColors.muted,
@@ -473,10 +474,10 @@ class _WrOwnedSkillSheetState extends ConsumerState<WrOwnedSkillSheet> {
                 Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
-                    tr(
+                    wrKeepCompounds(tr(
                       'Chưa thấy chủ đề nào khớp với tên này.',
                       'No theme matches this name yet.',
-                    ),
+                    )),
                     key: const Key('wr_owned_skill_no_suggestion'),
                     style: const TextStyle(fontSize: 14, color: WrColors.navy),
                   ),
@@ -492,7 +493,7 @@ class _WrOwnedSkillSheetState extends ConsumerState<WrOwnedSkillSheet> {
                     controlAffinity: ListTileControlAffinity.leading,
                     activeColor: WrColors.navy,
                     title: Text(
-                      t.title,
+                      wrKeepCompounds(t.title),
                       style: const TextStyle(
                         fontSize: 15,
                         color: WrColors.navy,
@@ -508,9 +509,9 @@ class _WrOwnedSkillSheetState extends ConsumerState<WrOwnedSkillSheet> {
                   padding: EdgeInsets.zero,
                 ),
                 child: Text(
-                  _showAllThemes
+                  wrKeepCompounds(_showAllThemes
                       ? tr('Thu gọn danh sách chủ đề', 'Show fewer themes')
-                      : tr('Chọn chủ đề khác', 'Pick another theme'),
+                      : tr('Chọn chủ đề khác', 'Pick another theme')),
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -520,7 +521,7 @@ class _WrOwnedSkillSheetState extends ConsumerState<WrOwnedSkillSheet> {
               if (_error != null) ...[
                 const SizedBox(height: 6),
                 Text(
-                  _error!,
+                  wrKeepCompounds(_error!),
                   style: const TextStyle(fontSize: 13.5, color: WrColors.coral),
                 ),
               ],
@@ -546,7 +547,7 @@ class _WrOwnedSkillSheetState extends ConsumerState<WrOwnedSkillSheet> {
                     ),
                   ),
                   child: Text(
-                    _busy ? tr('Đang lưu…', 'Saving…') : tr('Lưu', 'Save'),
+                    wrKeepCompounds(_busy ? tr('Đang lưu…', 'Saving…') : tr('Lưu', 'Save')),
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -561,7 +562,7 @@ class _WrOwnedSkillSheetState extends ConsumerState<WrOwnedSkillSheet> {
                     key: const Key('wr_owned_skill_delete'),
                     onPressed: _busy ? null : _delete,
                     child: Text(
-                      tr('Xoá mục này', 'Delete this item'),
+                      wrKeepCompounds(tr('Xoá mục này', 'Delete this item')),
                       style: const TextStyle(
                         fontSize: 14,
                         color: WrColors.destructive,

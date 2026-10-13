@@ -172,24 +172,24 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(tr('Xoá tài liệu này?', 'Delete this document?')),
+        title: Text(wrKeepCompounds(tr('Xoá tài liệu này?', 'Delete this document?'))),
         content: Text(
-          tr(
+          wrKeepCompounds(tr(
             'Nội dung đã đọc từ ${docTypeLabel(doc.docType).toLowerCase()} cũng '
                 'sẽ không còn được dùng cho gợi ý nữa.',
             'What was read from your ${docTypeLabel(doc.docType).toLowerCase()} '
                 'will no longer be used for prompts either.',
-          ),
+          )),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(tr('Giữ lại', 'Keep it')),
+            child: Text(wrKeepCompounds(tr('Giữ lại', 'Keep it'))),
           ),
           TextButton(
             key: const Key('wr_context_doc_delete_confirm'),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(tr('Xoá', 'Delete')),
+            child: Text(wrKeepCompounds(tr('Xoá', 'Delete'))),
           ),
         ],
       ),
@@ -209,7 +209,7 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
           children: [
             for (final (value, label) in _kDocTypes)
               ListTile(
-                title: Text(label),
+                title: Text(wrKeepCompounds(label)),
                 onTap: () => Navigator.of(ctx).pop(value),
               ),
           ],
@@ -238,7 +238,7 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
         elevation: 0,
         foregroundColor: WrColors.dark,
         title: Text(
-          tr('Tải lên JD hoặc CV của bạn', 'Upload your JD or CV'),
+          wrKeepCompounds(tr('Tải lên JD hoặc CV của bạn', 'Upload your JD or CV')),
           style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700),
         ),
       ),
@@ -283,7 +283,7 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
             if (_errorMsg != null) ...[
               const SizedBox(height: 8),
               Text(
-                _errorMsg!,
+                wrKeepCompounds(_errorMsg!),
                 key: const Key('wr_context_doc_error'),
                 style: const TextStyle(fontSize: 13.5, color: WrColors.coral),
               ),
@@ -304,9 +304,9 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
                   elevation: 0,
                 ),
                 child: Text(
-                  _busy
+                  wrKeepCompounds(_busy
                       ? tr('Đang tải lên…', 'Uploading…')
-                      : tr('Thêm tài liệu', 'Add a document'),
+                      : tr('Thêm tài liệu', 'Add a document')),
                   style: const TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w600,
@@ -316,10 +316,10 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
             ),
             const SizedBox(height: 8),
             Text(
-              tr(
+              wrKeepCompounds(tr(
                 'Nhận file PDF, Word (.docx) hoặc ảnh chụp (PNG, JPG, WEBP).',
                 'Takes PDF, Word (.docx) or photos (PNG, JPG, WEBP).',
-              ),
+              )),
               style: TextStyle(
                 fontSize: 13.5,
                 height: 1.55,
@@ -330,12 +330,12 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
             if (!canUpload && maxDocs != null) ...[
               const SizedBox(height: 10),
               Text(
-                tr(
+                wrKeepCompounds(tr(
                   'Bản miễn phí lưu được $maxDocs tài liệu. Nâng cấp để thêm '
                       'không giới hạn.',
                   'The free version stores $maxDocs documents. Upgrade for '
                       'unlimited.',
-                ),
+                )),
                 style: const TextStyle(fontSize: 13.5, color: WrColors.muted),
               ),
             ],
@@ -403,7 +403,7 @@ class _WhatAiDoes extends StatelessWidget {
                 const SizedBox(width: 9),
                 Expanded(
                   child: Text(
-                    t,
+                    wrKeepCompounds(t),
                     style: const TextStyle(
                       fontSize: 14.5,
                       height: 1.6,
@@ -435,7 +435,7 @@ class _EmptyDocs extends StatelessWidget {
         ),
       ),
       child: Text(
-        tr('Chưa có tài liệu nào.', 'No documents yet.'),
+        wrKeepCompounds(tr('Chưa có tài liệu nào.', 'No documents yet.')),
         style: TextStyle(fontSize: 14.5, color: WrColors.muted),
       ),
     );
@@ -486,7 +486,7 @@ class _DocRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      docTypeLabel(doc.docType),
+                      wrKeepCompounds(docTypeLabel(doc.docType)),
                       style: const TextStyle(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w600,
@@ -495,7 +495,7 @@ class _DocRow extends StatelessWidget {
                     ),
                     if (at != null)
                       Text(
-                        '${at.day}/${at.month}/${at.year}',
+                        wrKeepCompounds('${at.day}/${at.month}/${at.year}'),
                         style: const TextStyle(
                           fontSize: 12.5,
                           color: WrColors.muted,
@@ -533,7 +533,7 @@ class _DocRow extends StatelessWidget {
               ),
             if (a.organization != null)
               Text(
-                a.organization!,
+                wrKeepCompounds(a.organization!),
                 style: const TextStyle(fontSize: 14, color: WrColors.muted),
               ),
             if (a.summary.isNotEmpty) ...[
@@ -573,10 +573,10 @@ class _DocRow extends StatelessWidget {
           if (doc.analysisStatus == DocAnalysisStatus.failed) ...[
             const SizedBox(height: 10),
             Text(
-              tr(
+              wrKeepCompounds(tr(
                 'Chưa đọc được tài liệu này.',
                 'Could not read this document.',
-              ),
+              )),
               style: TextStyle(fontSize: 14, color: WrColors.coral),
             ),
             const SizedBox(height: 6),
@@ -618,7 +618,7 @@ class _MiniList extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            label.toUpperCase(),
+            wrKeepCompounds(label.toUpperCase()),
             style: const TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
@@ -632,7 +632,7 @@ class _MiniList extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 3),
               child: Text(
-                '· $t',
+                wrKeepCompounds('· $t'),
                 style: const TextStyle(
                   fontSize: 14,
                   height: 1.55,
@@ -642,10 +642,10 @@ class _MiniList extends StatelessWidget {
             ),
           if (items.length > 4)
             Text(
-              tr(
+              wrKeepCompounds(tr(
                 '… và ${items.length - 4} mục nữa',
                 '… and ${items.length - 4} more',
-              ),
+              )),
               style: const TextStyle(fontSize: 13, color: WrColors.muted),
             ),
         ],
@@ -674,7 +674,7 @@ class _TextButtonRow extends StatelessWidget {
       child: Row(
         children: [
           Text(
-            label,
+            wrKeepCompounds(label),
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,
@@ -711,7 +711,7 @@ class _StatusChip extends StatelessWidget {
           ),
           SizedBox(width: 7),
           Text(
-            tr('Đang đọc', 'Reading'),
+            wrKeepCompounds(tr('Đang đọc', 'Reading')),
             style: TextStyle(fontSize: 13, color: WrColors.muted),
           ),
         ],
@@ -734,7 +734,7 @@ class _StatusChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        label,
+        wrKeepCompounds(label),
         style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w700,

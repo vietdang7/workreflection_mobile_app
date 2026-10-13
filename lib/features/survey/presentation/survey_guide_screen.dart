@@ -9,6 +9,7 @@ import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/pill_button.dart';
 import '../../../l10n/app_localizations.dart';
 import '../survey_providers.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 class SurveyGuideScreen extends ConsumerWidget {
   const SurveyGuideScreen({super.key});
@@ -79,15 +80,15 @@ class _GuideBody extends StatelessWidget {
           const SizedBox(height: 8),
           WrEyebrow(l10n.surveyGuideEyebrow),
           const SizedBox(height: 12),
-          Text(title, style: WrTextStyles.hLarge),
+          Text(wrKeepCompounds(title), style: WrTextStyles.hLarge),
           const SizedBox(height: 16),
-          Text(intro, style: WrTextStyles.body),
+          Text(wrKeepCompounds(intro), style: WrTextStyles.body),
           if (!isPremium) ...[
             const SizedBox(height: 8),
-            Text(l10n.surveyGuideFreeDescription, style: WrTextStyles.body),
+            Text(wrKeepCompounds(l10n.surveyGuideFreeDescription), style: WrTextStyles.body),
           ],
           const SizedBox(height: 8),
-          Text(details, style: WrTextStyles.body),
+          Text(wrKeepCompounds(details), style: WrTextStyles.body),
           const SizedBox(height: 16),
           ...benefits.asMap().entries.map(
             (e) => Padding(
@@ -102,14 +103,14 @@ class _GuideBody extends StatelessWidget {
                     color: WrColors.teal,
                   ),
                   const SizedBox(width: 10),
-                  Expanded(child: Text(e.value, style: WrTextStyles.body)),
+                  Expanded(child: Text(wrKeepCompounds(e.value), style: WrTextStyles.body)),
                 ],
               ),
             ),
           ),
           if (isPremium) ...[
             const SizedBox(height: 8),
-            Text(l10n.surveyGuidePremiumReportDesc, style: WrTextStyles.body),
+            Text(wrKeepCompounds(l10n.surveyGuidePremiumReportDesc), style: WrTextStyles.body),
             const SizedBox(height: 10),
             ...[
               l10n.surveyGuidePremiumReport1,
@@ -127,7 +128,7 @@ class _GuideBody extends StatelessWidget {
                       color: WrColors.coral,
                     ),
                     const SizedBox(width: 10),
-                    Expanded(child: Text(e.value, style: WrTextStyles.body)),
+                    Expanded(child: Text(wrKeepCompounds(e.value), style: WrTextStyles.body)),
                   ],
                 ),
               ),
@@ -136,7 +137,7 @@ class _GuideBody extends StatelessWidget {
           if (!isPremium) ...[
             const SizedBox(height: 8),
             Text(
-              l10n.surveyGuideFreeNote,
+              wrKeepCompounds(l10n.surveyGuideFreeNote),
               style: WrTextStyles.body.copyWith(
                 fontStyle: FontStyle.italic,
                 color: WrColors.muted,
@@ -144,7 +145,7 @@ class _GuideBody extends StatelessWidget {
             ),
           ],
           const SizedBox(height: 8),
-          Text(closing, style: WrTextStyles.body),
+          Text(wrKeepCompounds(closing), style: WrTextStyles.body),
           const SizedBox(height: 32),
           WrPillButton(
             label: l10n.surveyGuideCta,

@@ -164,7 +164,7 @@ class _WrAddPracticeThemeScreenState
                         foregroundColor: WrColors.text2,
                       ),
                       child: Text(
-                        tr('Đóng', 'Close'),
+                        wrKeepCompounds(tr('Đóng', 'Close')),
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
@@ -198,14 +198,14 @@ class _WrAddPracticeThemeScreenState
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      tr(
+                      wrKeepCompounds(tr(
                         'Không cần gọi tên thật chính xác. Chỉ cần kể đủ để hệ '
                             'thống hiểu bạn đang gặp chuyện gì và muốn điều gì '
                             'khác đi.',
                         'No need to name it exactly. Just say enough for the app '
                             'to understand what is happening and what you want '
                             'to change.',
-                      ),
+                      )),
                       style: _muted,
                     ),
                   ],
@@ -309,7 +309,7 @@ class _WrAddPracticeThemeScreenState
                     if (_error != null) ...[
                       const SizedBox(height: 14),
                       Text(
-                        _error!,
+                        wrKeepCompounds(_error!),
                         key: const Key('wr_add_theme_error'),
                         style: const TextStyle(
                           fontSize: 14.5,
@@ -344,7 +344,7 @@ class _WrAddPracticeThemeScreenState
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  tr('Tạo chủ đề', 'Create theme'),
+                                  wrKeepCompounds(tr('Tạo chủ đề', 'Create theme')),
                                   style: const TextStyle(
                                     fontSize: 15,
                                     fontWeight: FontWeight.w700,
@@ -389,7 +389,7 @@ class _Question extends StatelessWidget {
           WrEyebrow(eyebrow),
           const SizedBox(height: 6),
           Text(
-            label,
+            wrKeepCompounds(label),
             style: const TextStyle(
               fontSize: 14.5,
               fontWeight: FontWeight.w700,
@@ -399,7 +399,7 @@ class _Question extends StatelessWidget {
           SizedBox(height: hint == null ? 6 : 3),
           if (hint != null) ...[
             Text(
-              hint!,
+              wrKeepCompounds(hint!),
               style: const TextStyle(fontSize: 12.5, color: WrColors.text3),
             ),
             const SizedBox(height: 7),

@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/data/wr_repository.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
+import '../../../core/widgets/wr_app_background.dart';
 import '../../../l10n/app_localizations.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 // ---------------------------------------------------------------------------
 // Providers
@@ -96,18 +98,18 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen>
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.invitationsAcceptTitle),
-        content: Text(l10n.invitationsAcceptBody(orgName, role)),
+        title: Text(wrKeepCompounds(l10n.invitationsAcceptTitle)),
+        content: Text(wrKeepCompounds(l10n.invitationsAcceptBody(orgName, role))),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.commonCancel),
+            child: Text(wrKeepCompounds(l10n.commonCancel)),
           ),
           TextButton(
             key: const Key('invitations_confirm_accept'),
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(
-              l10n.invitationsAcceptBtn,
+              wrKeepCompounds(l10n.invitationsAcceptBtn),
               style: const TextStyle(color: WrColors.coral),
             ),
           ),
@@ -122,14 +124,14 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen>
           .accept(inv['token'] as String);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.invitationsAcceptSuccess(joinedOrg))),
+          SnackBar(content: Text(wrKeepCompounds(l10n.invitationsAcceptSuccess(joinedOrg)))),
         );
       }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.invitationsAcceptError)));
+        ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.invitationsAcceptError))));
       }
     }
   }
@@ -141,18 +143,18 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen>
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.invitationsDeclineTitle),
-        content: Text(l10n.invitationsDeclineBody(orgName)),
+        title: Text(wrKeepCompounds(l10n.invitationsDeclineTitle)),
+        content: Text(wrKeepCompounds(l10n.invitationsDeclineBody(orgName))),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(l10n.commonCancel),
+            child: Text(wrKeepCompounds(l10n.commonCancel)),
           ),
           TextButton(
             key: const Key('invitations_confirm_decline'),
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(
-              l10n.invitationsDeclineBtn,
+              wrKeepCompounds(l10n.invitationsDeclineBtn),
               style: const TextStyle(color: WrColors.destructive),
             ),
           ),
@@ -168,13 +170,13 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen>
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.invitationsDeclineSuccess)));
+        ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.invitationsDeclineSuccess))));
       }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.invitationsDeclineError)));
+        ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.invitationsDeclineError))));
       }
     }
   }
@@ -185,13 +187,14 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen>
     final invAsync = ref.watch(invitationsProvider);
     final actionState = ref.watch(invitationActionProvider);
 
-    return Scaffold(
-      backgroundColor: WrColors.pageBg,
-      appBar: AppBar(
-        backgroundColor: WrColors.pageBg,
+    return WrAppBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
         elevation: 0,
         leading: const BackButton(color: WrColors.navy),
-        title: Text(l10n.invitationsTitle, style: WrTextStyles.hMedium),
+        title: Text(wrKeepCompounds(l10n.invitationsTitle), style: WrTextStyles.hMedium),
         centerTitle: false,
         bottom: TabBar(
           controller: _tabs,
@@ -211,7 +214,7 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen>
           child: CircularProgressIndicator(color: WrColors.coral),
         ),
         error: (_, __) => Center(
-          child: Text(l10n.invitationsEmpty, style: WrTextStyles.body),
+          child: Text(wrKeepCompounds(l10n.invitationsEmpty), style: WrTextStyles.body),
         ),
         data: (invitations) {
           final now = DateTime.now();
@@ -282,6 +285,7 @@ class _InvitationsScreenState extends ConsumerState<InvitationsScreen>
           );
         },
       ),
+    ),
     );
   }
 }
@@ -315,7 +319,7 @@ class _InvitationTab extends StatelessWidget {
     if (invitations.isEmpty) {
       return Center(
         child: Text(
-          emptyMessage,
+          wrKeepCompounds(emptyMessage),
           style: WrTextStyles.body.copyWith(color: WrColors.muted),
         ),
       );
@@ -402,7 +406,7 @@ class _InvitationCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        orgName,
+                        wrKeepCompounds(orgName),
                         style: WrTextStyles.hMedium.copyWith(
                           color: WrColors.navy,
                         ),
@@ -414,7 +418,7 @@ class _InvitationCard extends StatelessWidget {
                           if (department != null && department.isNotEmpty) ...[
                             const SizedBox(width: 6),
                             Text(
-                              '• $department',
+                              wrKeepCompounds('• $department'),
                               style: WrTextStyles.body.copyWith(
                                 fontSize: 13.5,
                                 color: WrColors.muted,
@@ -433,13 +437,13 @@ class _InvitationCard extends StatelessWidget {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            isExpired
+                            wrKeepCompounds(isExpired
                                 ? l10n.invitationsExpiredAt(
                                     formatDate(expiresAt),
                                   )
                                 : l10n.invitationsExpiresAt(
                                     formatDate(expiresAt),
-                                  ),
+                                  )),
                             style: WrTextStyles.body.copyWith(
                               fontSize: 12.5,
                               color: WrColors.text3,
@@ -470,7 +474,7 @@ class _InvitationCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
-                    child: Text(l10n.invitationsDeclineBtn),
+                    child: Text(wrKeepCompounds(l10n.invitationsDeclineBtn)),
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton(
@@ -484,7 +488,7 @@ class _InvitationCard extends StatelessWidget {
                       ),
                       elevation: 0,
                     ),
-                    child: Text(l10n.invitationsAcceptBtn),
+                    child: Text(wrKeepCompounds(l10n.invitationsAcceptBtn)),
                   ),
                 ],
               ),
@@ -509,7 +513,7 @@ class _Chip extends StatelessWidget {
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
-        label,
+        wrKeepCompounds(label),
         style: WrTextStyles.body.copyWith(fontSize: 12.5, color: WrColors.navy),
       ),
     );
@@ -565,7 +569,7 @@ class _StatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        label,
+        wrKeepCompounds(label),
         style: WrTextStyles.body.copyWith(fontSize: 12.5, color: fg),
       ),
     );

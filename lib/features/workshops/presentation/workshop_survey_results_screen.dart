@@ -22,6 +22,7 @@ import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../workshops_providers.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 class WorkshopSurveyResultsScreen extends ConsumerWidget {
   const WorkshopSurveyResultsScreen({super.key, required this.workshopId});
@@ -42,13 +43,13 @@ class WorkshopSurveyResultsScreen extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back, color: WrColors.navy),
           onPressed: () => context.pop(),
         ),
-        title: Text(l10n.wsSurveyResultsTitle, style: WrTextStyles.hMedium),
+        title: Text(wrKeepCompounds(l10n.wsSurveyResultsTitle), style: WrTextStyles.hMedium),
       ),
       body: resultsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, __) => Center(
           child: Text(
-            l10n.wsSurveyResultsNotFound,
+            wrKeepCompounds(l10n.wsSurveyResultsNotFound),
             key: const Key('ws_results_not_found'),
             style: WrTextStyles.body,
             textAlign: TextAlign.center,
@@ -58,7 +59,7 @@ class WorkshopSurveyResultsScreen extends ConsumerWidget {
           if (results == null) {
             return Center(
               child: Text(
-                l10n.wsSurveyResultsNotFound,
+                wrKeepCompounds(l10n.wsSurveyResultsNotFound),
                 key: const Key('ws_results_not_found'),
                 style: WrTextStyles.body,
                 textAlign: TextAlign.center,
@@ -102,7 +103,7 @@ class _ResultsBody extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      results.total.toStringAsFixed(1),
+                      wrKeepCompounds(results.total.toStringAsFixed(1)),
                       key: const Key('ws_results_total'),
                       style: WrTextStyles.hLarge.copyWith(
                         fontSize: 48,
@@ -112,7 +113,7 @@ class _ResultsBody extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 6),
                       child: Text(
-                        ' /5.0',
+                        wrKeepCompounds(' /5.0'),
                         style: WrTextStyles.body.copyWith(
                           color: WrColors.muted,
                         ),
@@ -125,7 +126,7 @@ class _ResultsBody extends StatelessWidget {
                 _EngagementBar(percentage: engagementPct),
                 const SizedBox(height: 8),
                 Text(
-                  l10n.wsSurveyResultsResponses(results.responseCount),
+                  wrKeepCompounds(l10n.wsSurveyResultsResponses(results.responseCount)),
                   style: WrTextStyles.body.copyWith(color: WrColors.muted),
                 ),
               ],
@@ -202,7 +203,7 @@ class _EngagementBar extends StatelessWidget {
         ),
         const SizedBox(height: 4),
         Text(
-          'Engagement: $percentage%',
+          wrKeepCompounds('Engagement: $percentage%'),
           style: WrTextStyles.body.copyWith(
             color: color,
             fontWeight: FontWeight.w600,
@@ -245,7 +246,7 @@ class _LayerRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                layer,
+                wrKeepCompounds(layer),
                 style: WrTextStyles.body.copyWith(
                   fontWeight: FontWeight.w600,
                   color: WrColors.dark,
@@ -266,7 +267,7 @@ class _LayerRow extends StatelessWidget {
         ),
         const SizedBox(width: 16),
         Text(
-          score.toStringAsFixed(1),
+          wrKeepCompounds(score.toStringAsFixed(1)),
           style: WrTextStyles.hMedium.copyWith(color: _scoreColor),
         ),
       ],

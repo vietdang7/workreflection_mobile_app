@@ -26,10 +26,14 @@ void main() {
     });
 
     // Spec §01b: chữ phụ không được là xám trung tính, phải là Deep Space pha
-    // alpha (--text-2). #8A95A3 cũ là lỗi.
-    test('muted is text-2 rgba(44,51,93,0.72)', () {
-      expect(WrColors.muted, const Color(0xB82C335D));
+    // alpha (--text-2). #8A95A3 cũ là lỗi. Script Sprint 2 nâng .72 → .76.
+    test('muted is text-2 rgba(44,51,93,0.76)', () {
+      expect(WrColors.muted, const Color(0xC22C335D));
       expect(WrColors.muted, WrColors.text2);
+    });
+
+    test('text-3 is rgba(44,51,93,0.74)', () {
+      expect(WrColors.text3, const Color(0xBD2C335D));
     });
 
     test('white is #FFFFFF', () {

@@ -15,6 +15,7 @@ import '../../features/wr/iap_providers.dart';
 import '../l10n/wr_tr.dart';
 import '../logic/wr_iap_renewal.dart';
 import '../theme/wr_colors.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 /// Trang quản lý thuê bao của Apple.
 ///
@@ -55,7 +56,7 @@ class WrRenewalNoticeCard extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              notice.title,
+              wrKeepCompounds(notice.title),
               key: const Key('wr_renewal_notice_title'),
               style: const TextStyle(
                 fontSize: 15,
@@ -66,7 +67,7 @@ class WrRenewalNoticeCard extends ConsumerWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              notice.body,
+              wrKeepCompounds(notice.body),
               style: const TextStyle(
                 fontSize: 13,
                 color: WrColors.text2,
@@ -78,7 +79,7 @@ class WrRenewalNoticeCard extends ConsumerWidget {
               key: const Key('wr_renewal_notice_manage'),
               onTap: () => _openManageSubscriptions(context),
               child: Text(
-                tr('Quản lý gói đăng ký', 'Manage subscription'),
+                wrKeepCompounds(tr('Quản lý gói đăng ký', 'Manage subscription')),
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
@@ -108,12 +109,12 @@ Future<void> _openManageSubscriptions(BuildContext context) async {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          tr(
+          wrKeepCompounds(tr(
             'Không mở được trang quản lý gói. Bạn vào Cài đặt → tên bạn → Thuê '
                 'bao nhé.',
             'Could not open subscription management. Go to Settings → your '
                 'name → Subscriptions.',
-          ),
+          )),
         ),
       ),
     );

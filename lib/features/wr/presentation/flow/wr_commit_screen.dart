@@ -140,9 +140,10 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
       subtitle: kTakeAwaySubtitle,
       step: 3,
       onBack: () => context.pop(),
-      // Đóng ở bước cuối vẫn giữ lần nhìn lại: sang màn Xong, chỉ không có
-      // bước nhỏ nào.
-      onClose: () => context.push('/wr/flow/done'),
+      // Script Sprint 2: "Đóng" ở bước 4 về Home và KHÔNG lưu gì vào Career
+      // Memory (không khép Episode, không sinh STORY). Episode chỉ tạm dừng như
+      // khi đóng ở các bước khác.
+      onClose: _leave,
       primaryLabel: kTakeAwaySave,
       busy: _busy,
       onPrimary: canSave
@@ -218,7 +219,7 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
                   if (!_writing && _picked == options[i].id) ...[
                     const SizedBox(height: 10),
                     Text(
-                      tr('Đã chọn · lưu lại', 'Picked · save it'),
+                      wrKeepCompounds(tr('Đã chọn · lưu lại', 'Picked · save it')),
                       key: Key('wr_choice_picked_$i'),
                       style: const TextStyle(
                         fontSize: 12,
@@ -258,12 +259,21 @@ class _WrCommitScreenState extends ConsumerState<WrCommitScreen> {
           if (_error != null) ...[
             const SizedBox(height: 16),
             Text(
-              _error!,
+              wrKeepCompounds(_error!),
               style: const TextStyle(fontSize: 14.5, color: WrColors.coral),
             ),
           ],
         ],
       ),
     );
+  }
+
+  Future<void> _leave() async {
+    try {
+      await ref.read(episodeFlowProvider.notifier).pause();
+    } catch (e, s) {
+      logFlowError('pauseAtCommit', e, s);
+    }
+    if (mounted) context.go('/home');
   }
 }

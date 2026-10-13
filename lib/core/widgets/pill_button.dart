@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/wr_colors.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 enum WrPillVariant { navy, coral, teal }
 
@@ -51,7 +52,7 @@ class WrPillButton extends StatelessWidget {
                   strokeWidth: 2,
                 ),
               )
-            : Text(label),
+            : Text(wrKeepCompounds(label)),
       ),
     );
   }

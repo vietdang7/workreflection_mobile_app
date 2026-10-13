@@ -28,6 +28,7 @@ import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_hero_header.dart';
 import '../org_survey_providers.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 class WrOrgSurveyResultScreen extends ConsumerWidget {
   const WrOrgSurveyResultScreen({super.key, this.response});
@@ -70,7 +71,7 @@ class WrOrgSurveyResultScreen extends ConsumerWidget {
                 }
               },
               child: Text(
-                tr('Đóng', 'Close'),
+                wrKeepCompounds(tr('Đóng', 'Close')),
                 style: TextStyle(fontSize: 14, color: WrColors.muted),
               ),
             ),
@@ -120,7 +121,7 @@ class _LoadError extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              message,
+              wrKeepCompounds(message),
               textAlign: TextAlign.center,
               style: const TextStyle(fontSize: 15, color: WrColors.muted),
             ),
@@ -128,7 +129,7 @@ class _LoadError extends StatelessWidget {
             TextButton(
               key: retryKey,
               onPressed: onRetry,
-              child: Text(tr('Thử lại', 'Try again')),
+              child: Text(wrKeepCompounds(tr('Thử lại', 'Try again'))),
             ),
           ],
         ),
@@ -146,10 +147,10 @@ class _Empty extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.all(32),
         child: Text(
-          tr(
+          wrKeepCompounds(tr(
             'Chưa có câu trả lời nào để so sánh.',
             'No answers to compare yet.',
-          ),
+          )),
           key: Key('wr_org_survey_result_empty'),
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 15, color: WrColors.muted),
@@ -194,9 +195,9 @@ class _Result extends ConsumerWidget {
         WrEyebrow(tr('CẢM ƠN BẠN ĐÃ THAM GIA', 'THANK YOU FOR TAKING PART')),
         const SizedBox(height: 10),
         Text(
-          anyComparable
+          wrKeepCompounds(anyComparable
               ? tr('Bạn so với mặt bằng chung', 'You against the wider picture')
-              : tr('Kết quả của bạn', 'Your results'),
+              : tr('Kết quả của bạn', 'Your results')),
           style: const TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w700,
@@ -254,9 +255,9 @@ class _Result extends ConsumerWidget {
               WrEyebrow(tr('ENPS CỦA BẠN', 'YOUR ENPS')),
               const SizedBox(height: 6),
               Text(
-                response.enps == null
+                wrKeepCompounds(response.enps == null
                     ? '– / $kEnpsMaxScore'
-                    : '${response.enps} / $kEnpsMaxScore',
+                    : '${response.enps} / $kEnpsMaxScore'),
                 key: const Key('wr_org_survey_result_enps'),
                 style: const TextStyle(
                   fontSize: 26,
@@ -268,22 +269,22 @@ class _Result extends ConsumerWidget {
               if (enpsBenchmark != null && enpsBenchmark.isComparable) ...[
                 const SizedBox(height: 4),
                 Text(
-                  tr(
+                  wrKeepCompounds(tr(
                     'Mặt bằng chung ẩn danh: '
                         '${_fmt(enpsBenchmark.value!)} / $kEnpsMaxScore',
                     'Anonymous wider picture: '
                         '${_fmt(enpsBenchmark.value!)} / $kEnpsMaxScore',
-                  ),
+                  )),
                   style: const TextStyle(fontSize: 13.5, color: WrColors.muted),
                 ),
               ] else if (anyComparable) ...[
                 // Một số mảng đã so sánh được, riêng phần này thì chưa.
                 const SizedBox(height: 4),
                 Text(
-                  tr(
+                  wrKeepCompounds(tr(
                     'Chưa đủ dữ liệu để so sánh phần này.',
                     'Not enough data to compare this part yet.',
-                  ),
+                  )),
                   style: const TextStyle(fontSize: 13.5, color: WrColors.muted),
                 ),
               ],
@@ -292,8 +293,8 @@ class _Result extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.only(top: 4),
                   child: Text(
-                    '${tr('Cùng lĩnh vực', 'Same field')}: '
-                    '${_fmt(ib.value!)} / $kEnpsMaxScore',
+                    wrKeepCompounds('${tr('Cùng lĩnh vực', 'Same field')}: '
+                    '${_fmt(ib.value!)} / $kEnpsMaxScore'),
                     key: const Key('wr_org_survey_industry_row_enps'),
                     style: const TextStyle(
                       fontSize: 13.5,
@@ -320,12 +321,12 @@ class _Result extends ConsumerWidget {
           Padding(
             padding: const EdgeInsets.only(bottom: 12),
             child: Text(
-              tr(
+              wrKeepCompounds(tr(
                 'Mặt bằng chung sẽ hiện khi có đủ $kOrgSurveyMinSample người '
                     'tham gia. Hiện đã có $people người.',
                 'The overall comparison appears once $kOrgSurveyMinSample '
                     'people have taken part. So far: $people.',
-              ),
+              )),
               key: const Key('wr_org_survey_no_benchmark'),
               textAlign: TextAlign.center,
               style: const TextStyle(
@@ -337,15 +338,40 @@ class _Result extends ConsumerWidget {
           ),
         const SizedBox(height: 4),
 
+        // Script `screenEsiResult`.
         Text(
-          tr(
-            'Câu trả lời của bạn được gộp vào dữ liệu benchmark ẩn danh, không ảnh '
-                'hưởng đến Reflection hay Career Memory cá nhân.',
-            'Your answers are pooled into anonymous benchmark data. They do not '
-                'affect your own Reflection or Career Memory.',
-          ),
+          wrKeepCompounds(tr(
+            'Cảm ơn bạn đã đóng góp. Câu trả lời của bạn đã được gộp vào dữ liệu '
+                'benchmark ẩn danh, không ảnh hưởng đến Reflection hay Career '
+                'Memory cá nhân.',
+            'Thank you for contributing. Your answers have been pooled into '
+                'anonymous benchmark data. They do not affect your own '
+                'Reflection or Career Memory.',
+          )),
+          key: const Key('wr_org_survey_result_thanks'),
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 14, height: 1.6, color: WrColors.muted),
+        ),
+        const SizedBox(height: 14),
+        SizedBox(
+          width: double.infinity,
+          child: ElevatedButton(
+            key: const Key('wr_org_survey_back_to_profile'),
+            onPressed: () => _backToProfile(context),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: WrColors.navy,
+              foregroundColor: WrColors.white,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+              elevation: 0,
+            ),
+            child: Text(
+              wrKeepCompounds(tr('Về Hồ sơ', 'Back to Profile')),
+              style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+            ),
+          ),
         ),
         const SizedBox(height: 20),
 
@@ -357,6 +383,20 @@ class _Result extends ConsumerWidget {
 }
 
 String _fmt(double v) => v.toStringAsFixed(1);
+
+/// Lùi về màn Hồ sơ: bỏ qua cả màn giới thiệu khảo sát nếu nó còn nằm trong
+/// ngăn xếp. Không tìm thấy Hồ sơ phía sau thì mở thẳng.
+void _backToProfile(BuildContext context) {
+  final router = GoRouter.of(context);
+  String path() => router.routerDelegate.currentConfiguration.uri.path;
+  while (router.canPop() && path() != '/profile') {
+    final before = path();
+    router.pop();
+    // Đường dẫn không đổi sau một lần lùi thì dừng, đừng lùi mù tiếp.
+    if (path() == before) break;
+  }
+  if (path() != '/profile') router.go('/profile');
+}
 
 // ---------------------------------------------------------------------------
 
@@ -397,7 +437,7 @@ class _AreaBar extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                area.label,
+                wrKeepCompounds(area.label),
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -406,7 +446,7 @@ class _AreaBar extends StatelessWidget {
               ),
             ),
             Text(
-              standingText,
+              wrKeepCompounds(standingText),
               key: Key('wr_org_survey_standing_${area.code}'),
               style: const TextStyle(fontSize: 12.5, color: WrColors.muted),
             ),
@@ -454,12 +494,12 @@ class _AreaBar extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  tr('Cùng lĩnh vực', 'Same field'),
+                  wrKeepCompounds(tr('Cùng lĩnh vực', 'Same field')),
                   style: const TextStyle(fontSize: 12.5, color: WrColors.muted),
                 ),
               ),
               Text(
-                '${_fmt(industryValue)} / $kOrgSurveyMaxScore',
+                wrKeepCompounds('${_fmt(industryValue)} / $kOrgSurveyMaxScore'),
                 style: const TextStyle(fontSize: 12.5, color: WrColors.muted),
               ),
             ],
@@ -502,7 +542,7 @@ class _Legend extends StatelessWidget {
         _dot(WrColors.teal),
         const SizedBox(width: 6),
         Text(
-          tr('Bạn', 'You'),
+          wrKeepCompounds(tr('Bạn', 'You')),
           style: TextStyle(fontSize: 12.5, color: WrColors.muted),
         ),
         const SizedBox(width: 16),
@@ -512,7 +552,7 @@ class _Legend extends StatelessWidget {
         // chạm mép ở màn hẹp nếu để Text tự do.
         Flexible(
           child: Text(
-            tr('Mặt bằng chung (ẩn danh)', 'Wider picture (anonymous)'),
+            wrKeepCompounds(tr('Mặt bằng chung (ẩn danh)', 'Wider picture (anonymous)')),
             style: TextStyle(fontSize: 12.5, color: WrColors.muted),
           ),
         ),
@@ -543,24 +583,24 @@ class _WithdrawButtonState extends ConsumerState<_WithdrawButton> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(tr('Ngừng tham gia?', 'Stop taking part?')),
+        title: Text(wrKeepCompounds(tr('Ngừng tham gia?', 'Stop taking part?'))),
         content: Text(
-          tr(
+          wrKeepCompounds(tr(
             'Mọi câu trả lời khảo sát tổ chức của bạn sẽ bị xoá và không còn được '
                 'tính vào dữ liệu tổng hợp. Reflection của bạn không bị ảnh hưởng.',
             'All your organisation survey answers will be deleted and no longer '
                 'counted in the pooled data. Your Reflections are unaffected.',
-          ),
+          )),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(tr('Giữ lại', 'Keep them')),
+            child: Text(wrKeepCompounds(tr('Giữ lại', 'Keep them'))),
           ),
           TextButton(
             key: const Key('wr_org_survey_withdraw_confirm'),
             onPressed: () => Navigator.of(ctx).pop(true),
-            child: Text(tr('Xoá', 'Delete')),
+            child: Text(wrKeepCompounds(tr('Xoá', 'Delete'))),
           ),
         ],
       ),
@@ -584,10 +624,10 @@ class _WithdrawButtonState extends ConsumerState<_WithdrawButton> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            tr(
+            wrKeepCompounds(tr(
               'Chưa xoá được. Bạn thử lại sau nhé.',
               'Could not delete. Please try again later.',
-            ),
+            )),
           ),
         ),
       );
@@ -600,12 +640,12 @@ class _WithdrawButtonState extends ConsumerState<_WithdrawButton> {
       key: const Key('wr_org_survey_withdraw'),
       onPressed: _busy ? null : _withdraw,
       child: Text(
-        _busy
+        wrKeepCompounds(_busy
             ? tr('Đang xoá…', 'Deleting…')
             : tr(
                 'Ngừng tham gia và xoá câu trả lời',
                 'Stop taking part and delete my answers',
-              ),
+              )),
         style: const TextStyle(fontSize: 14, color: WrColors.destructive),
       ),
     );

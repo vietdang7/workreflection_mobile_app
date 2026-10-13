@@ -23,6 +23,7 @@ import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../coaching_providers.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 // ---------------------------------------------------------------------------
 // Screen
@@ -93,35 +94,35 @@ class _CoachingScheduleScreenState
     if (_selectedDate == null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(l10n.coachSchedPickDate)));
+      ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.coachSchedPickDate))));
       return;
     }
     if (_selectedTime == null) {
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(l10n.coachSchedPickTime)));
+      ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.coachSchedPickTime))));
       return;
     }
 
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(l10n.coachSchedConfirmTitle),
+        title: Text(wrKeepCompounds(l10n.coachSchedConfirmTitle)),
         content: Text(
-          l10n.coachSchedConfirmBody(
+          wrKeepCompounds(l10n.coachSchedConfirmBody(
             _selectedDate!.split('-').reversed.join('/'),
             _selectedTime!,
-          ),
+          )),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.commonCancel),
+            child: Text(wrKeepCompounds(l10n.commonCancel)),
           ),
           TextButton(
             key: const Key('scheduleConfirmBtn'),
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l10n.commonConfirm),
+            child: Text(wrKeepCompounds(l10n.commonConfirm)),
           ),
         ],
       ),
@@ -144,13 +145,13 @@ class _CoachingScheduleScreenState
       ref.invalidate(myBookingsProvider);
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(l10n.coachSchedSuccess)));
+      ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.coachSchedSuccess))));
       context.pop();
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(l10n.coachSchedError)));
+      ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.coachSchedError))));
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -190,7 +191,7 @@ class _CoachingScheduleScreenState
           ),
         ),
         body: Center(
-          child: Text(l10n.coachSchedNotFound, style: WrTextStyles.body),
+          child: Text(wrKeepCompounds(l10n.coachSchedNotFound), style: WrTextStyles.body),
         ),
       );
     }
@@ -208,7 +209,7 @@ class _CoachingScheduleScreenState
           icon: const Icon(Icons.arrow_back, color: WrColors.navy),
           onPressed: () => context.pop(),
         ),
-        title: Text(l10n.coachSchedTitle, style: WrTextStyles.hMedium),
+        title: Text(wrKeepCompounds(l10n.coachSchedTitle), style: WrTextStyles.hMedium),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
@@ -236,7 +237,7 @@ class _CoachingScheduleScreenState
                       ),
                       Expanded(
                         child: Text(
-                          '$monthLabel $_year',
+                          wrKeepCompounds('$monthLabel $_year'),
                           textAlign: TextAlign.center,
                           style: WrTextStyles.hMedium,
                         ),
@@ -254,7 +255,7 @@ class _CoachingScheduleScreenState
                         .map(
                           (d) => Expanded(
                             child: Text(
-                              d,
+                              wrKeepCompounds(d),
                               textAlign: TextAlign.center,
                               style: WrTextStyles.body.copyWith(
                                 color: WrColors.muted,
@@ -291,7 +292,7 @@ class _CoachingScheduleScreenState
                           ),
                           alignment: Alignment.center,
                           child: Text(
-                            '${cell.date.day}',
+                            wrKeepCompounds('${cell.date.day}'),
                             style: TextStyle(
                               fontSize: 14.5,
                               fontWeight: FontWeight.w500,
@@ -309,7 +310,7 @@ class _CoachingScheduleScreenState
                   if (_selectedDate != null) ...[
                     const SizedBox(height: 8),
                     Text(
-                      '${l10n.coachSchedSelectedDate} ${_selectedDate!.split('-').reversed.join('/')}',
+                      wrKeepCompounds('${l10n.coachSchedSelectedDate} ${_selectedDate!.split('-').reversed.join('/')}'),
                       style: WrTextStyles.body.copyWith(color: WrColors.muted),
                     ),
                   ],
@@ -342,7 +343,7 @@ class _CoachingScheduleScreenState
                       ),
                       alignment: Alignment.center,
                       child: Text(
-                        slot,
+                        wrKeepCompounds(slot),
                         style: const TextStyle(
                           fontSize: 15.5,
                           fontWeight: FontWeight.w600,
@@ -406,7 +407,7 @@ class _CoachingScheduleScreenState
                         ),
                       )
                     : Text(
-                        l10n.coachSchedSubmit,
+                        wrKeepCompounds(l10n.coachSchedSubmit),
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -462,7 +463,7 @@ class _SessionInfo extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
       ),
       child: Text(
-        l10n.coachSessionOf(n, total),
+        wrKeepCompounds(l10n.coachSessionOf(n, total)),
         style: WrTextStyles.body.copyWith(
           color: WrColors.navy,
           fontWeight: FontWeight.w600,
@@ -510,7 +511,7 @@ class _SectionCard extends StatelessWidget {
             children: [
               Icon(icon, size: 18, color: WrColors.coral),
               const SizedBox(width: 8),
-              Text(title, style: WrTextStyles.hMedium),
+              Text(wrKeepCompounds(title), style: WrTextStyles.hMedium),
             ],
           ),
           const SizedBox(height: 12),
