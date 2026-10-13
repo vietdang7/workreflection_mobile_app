@@ -265,7 +265,7 @@ void main() {
     // Script Sprint 2: hết bốn bước KHÔNG tự khép; chủ đề chỉ rời "Đang làm
     // quen" khi người dùng bấm "Đưa vào phần duy trì" (completed_at).
     testWidgets('đi hết bốn bước mà chưa đưa vào duy trì thì vẫn ở Đang làm '
-        'quen, đứng ở bước cuối', (tester) async {
+        'quen, mời "Hết một vòng · Đưa vào phần duy trì"', (tester) async {
       final intel = _twoThemes();
       intel.seedEnrollments([
         _enroll(
@@ -276,7 +276,13 @@ void main() {
 
       await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
 
-      expect(inRow('pt-voice', 'Bước 4 / 4'), findsOneWidget);
+      // Máy thật 13/10: "Bước 4 / 4" không nói cho người dùng biết còn một
+      // lần bấm nữa mới sang Đang duy trì.
+      expect(
+        inRow('pt-voice', 'Hết một vòng · Đưa vào phần duy trì ›'),
+        findsOneWidget,
+      );
+      expect(inRow('pt-voice', 'Bước 4 / 4'), findsNothing);
       expect(find.byKey(const Key('wr_growth_keeping')), findsNothing);
     });
 

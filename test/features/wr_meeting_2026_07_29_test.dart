@@ -1440,9 +1440,8 @@ void main() {
   // thẻ mời Trà Chiều, dựng theo mockup Sprint 2 (`screenAct`).
   // Script Sprint 2 (PR #48): Trà Chiều là thẻ thứ hai của phần "Mở rộng"
   // (`upcomingTraChieu() ? … : ''`): ảnh thumb, nhãn "OFFLINE · TRÀ CHIỀU",
-  // ngày giờ buổi, "10 đến 12 người · 2 giờ · một câu hỏi". Không có buổi sắp
-  // tới thì thẻ ẩn hẳn (thay cho câu "Hiện chưa có lịch sự kiện mới." của bản
-  // 30/7).
+  // "Trà chiều nghề nghiệp", "10 đến 12 người · 2 giờ · một câu hỏi". Người
+  // dùng 13/10: giữ bản đã duyệt, thẻ luôn hiện kể cả khi chưa có buổi nào.
   group('Phát triển — thẻ Trà Chiều thay dòng Thực hành khác', () {
     final card = find.byKey(const Key('wr_growth_tra_chieu_card'));
 
@@ -1455,9 +1454,7 @@ void main() {
       expect(find.text('Chặng đường phát triển'), findsNothing);
     });
 
-    testWidgets('thẻ nói nhãn, ngày giờ buổi và khuôn buổi theo script', (
-      tester,
-    ) async {
+    testWidgets('thẻ nói nhãn, tên chương trình và khuôn buổi', (tester) async {
       final buoi = _traChieu(date: DateTime.now().add(const Duration(days: 9)));
       final workshops = FakeWorkshopRepository()..seedWorkshops([buoi]);
 
@@ -1466,7 +1463,7 @@ void main() {
       expect(card, findsOneWidget);
       Finder inCard(Finder f) => find.descendant(of: card, matching: f);
       expect(inCard(find.text('OFFLINE · TRÀ CHIỀU')), findsOneWidget);
-      expect(inCard(find.text(traChieuCardLabel(buoi))), findsOneWidget);
+      expect(inCard(find.text('Trà chiều nghề nghiệp')), findsOneWidget);
       expect(
         inCard(find.text('10 đến 12 người · 2 giờ · một câu hỏi')),
         findsOneWidget,
@@ -1475,9 +1472,7 @@ void main() {
       // vẫn KHÔNG được chèn — nguyên tắc họp 2026-07-29.
       expect(
         inCard(
-          find.byWidgetPredicate(
-            (w) => w is Image && w.image is NetworkImage,
-          ),
+          find.byWidgetPredicate((w) => w is Image && w.image is NetworkImage),
         ),
         findsNothing,
       );
@@ -1493,11 +1488,15 @@ void main() {
       expect(find.byType(WrTraChieuScreen), findsOneWidget);
     });
 
-    testWidgets('chưa mở buổi nào thì không dựng thẻ', (tester) async {
+    // Khách 30/07: lịch trống vẫn giữ cửa vào Trà Chiều, thẻ nói thẳng.
+    testWidgets('chưa mở buổi nào thì thẻ vẫn hiện', (tester) async {
       await _pump(tester, _wrap(const WrGrowthScreen()));
 
-      expect(card, findsNothing);
-      expect(find.text('OFFLINE · TRÀ CHIỀU'), findsNothing);
+      expect(card, findsOneWidget);
+      expect(
+        find.descendant(of: card, matching: find.text('Trà chiều nghề nghiệp')),
+        findsOneWidget,
+      );
       expect(tester.takeException(), isNull);
     });
 
@@ -1515,7 +1514,7 @@ void main() {
       await _pump(tester, _wrap(const WrGrowthScreen(), workshops: workshops));
 
       expect(find.textContaining('Buổi tháng trước'), findsNothing);
-      expect(card, findsNothing);
+      expect(card, findsOneWidget);
     });
   });
 

@@ -55,6 +55,7 @@ Widget _wrap(
       for (final p in [
         '/wr/growth/stance-keep',
         '/wr/tra-chieu',
+        '/wr/learning-library',
         '/wr/learning-library/:id',
         '/wr/growth/theme/:id',
         '/wr/paywall',
@@ -127,6 +128,74 @@ void main() {
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   group('Tab Phát triển — Đang duy trì', () {
+    // Máy thật 13/10: chủ đề xong đủ bốn bước nhưng chưa bấm "Đưa vào phần
+    // duy trì" vẫn ghi "Bước 4 / 4", người dùng tưởng app không chuyển.
+    testWidgets('xong đủ bước, chưa đưa vào duy trì: dòng mời "Hết một vòng"', (
+      tester,
+    ) async {
+      PracticeStep step(int n) => PracticeStep(
+        stepId: 'pt-s3-$n',
+        themeId: 'pt-s3',
+        stepOrder: n,
+        title: 'Bước $n',
+        isPremium: false,
+      );
+      final intel = FakeWrIntelligenceRepository()
+        ..seedPracticeThemes(const [
+          PracticeTheme(
+            themeId: 'pt-s3',
+            title: 'Vững vàng khi mọi thứ thay đổi',
+          ),
+          PracticeTheme(themeId: 'pt-s2', title: 'Ưu tiên đúng việc của mình'),
+        ])
+        ..seedPracticeSteps('pt-s3', [for (var n = 1; n <= 4; n++) step(n)])
+        ..seedPracticeSteps('pt-s2', [
+          for (var n = 1; n <= 4; n++)
+            PracticeStep(
+              stepId: 'pt-s2-$n',
+              themeId: 'pt-s2',
+              stepOrder: n,
+              title: 'Bước $n',
+              isPremium: false,
+            ),
+        ])
+        ..seedEnrollments(const [
+          PracticeEnrollment(
+            userId: 'u1',
+            themeId: 'pt-s3',
+            completedSteps: ['pt-s3-1', 'pt-s3-2', 'pt-s3-3', 'pt-s3-4'],
+          ),
+          PracticeEnrollment(
+            userId: 'u1',
+            themeId: 'pt-s2',
+            completedSteps: ['pt-s2-1'],
+          ),
+        ]);
+
+      await _pump(tester, _wrap(const WrGrowthScreen(), intel: intel));
+
+      expect(
+        find.byKey(const Key('wr_growth_theme_round_done_pt-s3')),
+        findsOneWidget,
+      );
+      expect(
+        find.text('Hết một vòng · Đưa vào phần duy trì ›'),
+        findsOneWidget,
+      );
+      // Chủ đề đang dở vẫn ghi bước đang làm.
+      expect(
+        find.byKey(const Key('wr_growth_theme_round_done_pt-s2')),
+        findsNothing,
+      );
+      expect(find.text('Bước 2 / 4'), findsOneWidget);
+      // Chưa bấm thì chưa nằm ở "Đang duy trì".
+      expect(find.byKey(const Key('wr_keep_row_pt-s3')), findsNothing);
+
+      await tester.tap(find.byKey(const Key('wr_growth_theme_row_pt-s3')));
+      await tester.pumpAndSettle();
+      expect(find.text('ROUTE /wr/growth/theme/pt-s3'), findsOneWidget);
+    });
+
     testWidgets('chưa có chủ đề nào được đưa vào duy trì thì ẩn cả khối', (
       tester,
     ) async {
@@ -222,94 +291,48 @@ void main() {
   });
 
   group('Tab Phát triển — Mở rộng', () {
-    testWidgets('không có video lẫn buổi Trà Chiều thì ẩn khối', (
-      tester,
-    ) async {
+    // Người dùng 13/10: Mở rộng giữ đúng bản đã duyệt — hai thẻ cố định
+    // "Chuỗi Series Tâm thế người đi làm" và "Trà chiều nghề nghiệp", luôn
+    // hiện kể cả khi chưa có video hay buổi nào (khách 30/07).
+    testWidgets('hai thẻ cố định, hiện cả khi chưa có dữ liệu', (tester) async {
       await _pump(tester, _wrap(const WrGrowthScreen(), intel: _kept()));
 
-      expect(find.byKey(const Key('wr_growth_youtube_card')), findsNothing);
-      expect(find.byKey(const Key('wr_growth_tra_chieu_card')), findsNothing);
-      expect(find.textContaining('Tập 7'), findsNothing);
-    });
-
-    testWidgets('thẻ YouTube là tập mới nhất thật, không ghi cứng số tập', (
-      tester,
-    ) async {
-      await _pump(
-        tester,
-        _wrap(
-          const WrGrowthScreen(),
-          intel: _kept(),
-          videos: [
-            LearningResource(
-              id: 'v1',
-              title: 'Khi tôi không dám hỏi lại',
-              externalUrl: 'https://youtu.be/iKs4vZjT7rs',
-              durationMinutes: 9,
-              createdAt: DateTime(2026, 10, 1),
-            ),
-          ],
-        ),
-      );
-
-      final card = find.byKey(const Key('wr_growth_youtube_card'));
+      final series = find.byKey(const Key('wr_growth_youtube_card'));
+      final tea = find.byKey(const Key('wr_growth_tra_chieu_card'));
+      await tester.scrollUntilVisible(tea, 200);
       for (final t in [
-        'TẬP MỚI',
-        'YOUTUBE · 9 PHÚT',
-        'Khi tôi không dám hỏi lại',
-        'Chương trình Tâm thế',
+        'YOUTUBE',
+        'SERIES CHIA SẺ',
+        'Chuỗi Series Tâm thế người đi làm',
       ]) {
         expect(
-          find.descendant(of: card, matching: find.text(t)),
+          find.descendant(of: series, matching: find.text(t)),
           findsOneWidget,
           reason: t,
         );
       }
-      await tester.tap(card);
-      await tester.pumpAndSettle();
-      expect(find.text('ROUTE /wr/learning-library/v1'), findsOneWidget);
+      for (final t in [
+        'OFFLINE · TRÀ CHIỀU',
+        'Trà chiều nghề nghiệp',
+        '10 đến 12 người · 2 giờ · một câu hỏi',
+      ]) {
+        expect(
+          find.descendant(of: tea, matching: find.text(t)),
+          findsOneWidget,
+          reason: t,
+        );
+      }
+      expect(find.textContaining('Tập 7'), findsNothing);
     });
 
-    testWidgets('thẻ Trà Chiều: nhãn buổi sắp tới · giờ thật', (tester) async {
-      final next = DateTime.now().add(const Duration(days: 5));
-      final start = DateTime(next.year, next.month, next.day, 15, 30);
-      final workshops = FakeWorkshopRepository()
-        ..seedWorkshops([
-          WorkshopDetail(
-            id: 'tc1',
-            title: 'Bận cả tuần',
-            category: 'Trà chiều nghề nghiệp',
-            date: start,
-            startsAt: start,
-            price: 199000,
-            currency: 'VND',
-            currentParticipants: 0,
-            status: 'published',
-            isActive: true,
-          ),
-        ]);
-      await _pump(
-        tester,
-        _wrap(const WrGrowthScreen(), intel: _kept(), workshops: workshops),
-      );
+    testWidgets('chạm thẻ Series mở Thư viện học tập', (tester) async {
+      await _pump(tester, _wrap(const WrGrowthScreen(), intel: _kept()));
 
-      const weekdays = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
-      final label =
-          '${weekdays[start.weekday - 1]} '
-          '${start.day.toString().padLeft(2, '0')}/'
-          '${start.month.toString().padLeft(2, '0')} · 15:30';
-      final card = find.byKey(const Key('wr_growth_tra_chieu_card'));
-      expect(
-        find.descendant(of: card, matching: find.text(label)),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(
-          of: card,
-          matching: find.text('10 đến 12 người · 2 giờ · một câu hỏi'),
-        ),
-        findsOneWidget,
-      );
+      final series = find.byKey(const Key('wr_growth_youtube_card'));
+      await tester.scrollUntilVisible(series, 200);
+      await tester.tap(series);
+      await tester.pumpAndSettle();
+      expect(find.text('ROUTE /wr/learning-library'), findsOneWidget);
     });
   });
 
