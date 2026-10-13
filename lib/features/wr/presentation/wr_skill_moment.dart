@@ -376,7 +376,7 @@ class _WrKeepMarkButtonState extends ConsumerState<WrKeepMarkButton> {
         behavior: HitTestBehavior.opaque,
         onTap: on || _busy ? null : _mark,
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 6),
           decoration: BoxDecoration(
             color: on ? WrColors.teal : WrColors.teal.withValues(alpha: 0.07),
             borderRadius: BorderRadius.circular(9),
@@ -387,7 +387,7 @@ class _WrKeepMarkButtonState extends ConsumerState<WrKeepMarkButton> {
           child: Text(
             wrKeepCompounds(on ? widget.doneLabel : tr('Ghi nhận', 'Record')),
             style: TextStyle(
-              fontSize: 13,
+              fontSize: 11.5,
               fontWeight: FontWeight.w700,
               color: on ? WrColors.white : WrColors.pillTealText,
             ),

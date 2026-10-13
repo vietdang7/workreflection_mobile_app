@@ -195,66 +195,29 @@ void main() {
       skipOffstage: false,
     );
 
-    testWidgets('tập video mới nhất làm thẻ, bấm là phát luôn', (tester) async {
-      await tester.pumpWidget(
-        _wrap(const WrGrowthScreen(), _FakeLearningRepo([_series])),
-      );
-      await tester.pumpAndSettle();
-
-      final card = find.byKey(const Key('wr_growth_youtube_card'));
-      await tester.scrollUntilVisible(card, 200);
-      await tester.ensureVisible(card);
-      await tester.pumpAndSettle();
-      expect(find.text('MỞ RỘNG'), findsOneWidget);
-      expect(find.text('TẬP MỚI'), findsOneWidget);
-      expect(find.text('YOUTUBE · 9 PHÚT'), findsOneWidget);
-      expect(find.text(_series.title), findsOneWidget);
-      // Dữ liệu thật không có số tập: không bịa "Tập 7" như script demo.
-      expect(find.text('Chương trình Tâm thế'), findsOneWidget);
-      expect(find.textContaining('Tập 7'), findsNothing);
-      // Không ảnh bìa (người dùng 10/10): không một Image mạng nào.
-      expect(_networkImages, findsNothing);
-
-      await tester.tap(find.text(_series.title));
-      await tester.pumpAndSettle();
-      expect(find.text('VideoScreen f0d7658d'), findsOneWidget);
-    });
-
-    testWidgets('chỉ một thẻ dù có nhiều tài liệu; tài liệu không lên thẻ', (
-      tester,
-    ) async {
+    // Người dùng 13/10: thẻ Series là thẻ cố định của bản đã duyệt, không
+    // đổi theo tập mới nhất; bấm vào mở cả Thư viện.
+    testWidgets('thẻ Series cố định, bấm mở Thư viện học tập', (tester) async {
       await tester.pumpWidget(
         _wrap(const WrGrowthScreen(), _FakeLearningRepo([_pdf, _series])),
       );
       await tester.pumpAndSettle();
 
-      expect(youtubeCard, findsOneWidget);
-      expect(find.text(_series.title, skipOffstage: false), findsOneWidget);
+      await tester.scrollUntilVisible(youtubeCard, 200);
+      await tester.ensureVisible(youtubeCard);
+      await tester.pumpAndSettle();
+      expect(find.text('MỞ RỘNG'), findsOneWidget);
+      expect(find.text('Chuỗi Series Tâm thế người đi làm'), findsOneWidget);
+      expect(find.text(_series.title, skipOffstage: false), findsNothing);
       expect(find.text(_pdf.title, skipOffstage: false), findsNothing);
-    });
+      expect(_networkImages, findsNothing);
 
-    testWidgets('chỉ có tài liệu, không video thì không có thẻ', (
-      tester,
-    ) async {
-      await tester.pumpWidget(
-        _wrap(const WrGrowthScreen(), _FakeLearningRepo([_pdf])),
-      );
+      await tester.tap(youtubeCard);
       await tester.pumpAndSettle();
-
-      expect(tester.takeException(), isNull);
-      expect(youtubeCard, findsNothing);
+      expect(find.text('LibraryScreen'), findsOneWidget);
     });
 
-    testWidgets('thư viện trống thì không có thẻ', (tester) async {
-      await tester.pumpWidget(
-        _wrap(const WrGrowthScreen(), _FakeLearningRepo(const [])),
-      );
-      await tester.pumpAndSettle();
-
-      expect(youtubeCard, findsNothing);
-    });
-
-    testWidgets('tải lỗi thì cũng không có thẻ, màn vẫn dựng bình thường', (
+    testWidgets('thư viện tải lỗi thì thẻ vẫn có, màn dựng bình thường', (
       tester,
     ) async {
       await tester.pumpWidget(
@@ -263,7 +226,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(tester.takeException(), isNull);
-      expect(youtubeCard, findsNothing);
+      expect(youtubeCard, findsOneWidget);
       expect(find.byKey(const Key('wr_growth_hero')), findsOneWidget);
     });
   });

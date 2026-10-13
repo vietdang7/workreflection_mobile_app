@@ -5,25 +5,23 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../core/data/wr_intelligence_repository.dart';
-import '../../../core/data/wr_learning_repository.dart';
 import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/logic/wr_practice_theme_grant.dart';
 import '../../../core/logic/wr_repeated_situations.dart';
-import '../../../core/logic/wr_tra_chieu.dart';
 import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
+import '../../../core/theme/wr_text_scale.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/tab_back_link.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../core/widgets/wr_hero_header.dart';
 import '../../../core/logic/wr_practice_v47.dart';
 import '../../../core/widgets/wr_profile_avatar.dart';
-import '../../workshops/workshops_providers.dart';
 import '../growth_providers.dart';
 import '../owned_skill_providers.dart';
 import '../wr_providers.dart';
-import 'wr_learning_library_screen.dart' show openLearningResource;
+import 'wr_practice_step_completion.dart' show practiceReachableDone;
 import 'wr_skill_moment.dart';
 import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
@@ -451,6 +449,22 @@ class _PracticeThemeRow extends ConsumerWidget {
               ? kPracticeStageCount
               : doneCount + 1);
 
+    // Đã đi hết các bước với tới được (Free không có bước 4 Premium) mà chưa
+    // đưa vào duy trì: cùng điều kiện với thẻ "HẾT MỘT VÒNG" của màn chủ đề.
+    // Hiện lời mời thay cho "Bước 4 / 4", không thì người dùng không biết còn
+    // một bước bấm nữa mới sang "Đang duy trì" (máy thật 13/10).
+    final entitlement = ref.watch(wrEntitlementProvider).valueOrNull;
+    final roundDone =
+        enrollment != null &&
+        enrollment!.completedAt == null &&
+        ordered.isNotEmpty &&
+        entitlement != null &&
+        practiceReachableDone(
+          steps: ordered,
+          completed: enrollment!.completedSteps,
+          entitlement: entitlement,
+        );
+
     return InkWell(
       key: Key('wr_growth_theme_row_${theme.themeId}'),
       onTap: () => context.push('/wr/growth/theme/${theme.themeId}'),
@@ -487,15 +501,33 @@ class _PracticeThemeRow extends ConsumerWidget {
             const SizedBox(height: 3),
             // Script: "Bước ${d+1} / 4" là bước ĐANG LÀM, không phải số bước
             // đã xong. Hết bước mà chưa đưa vào duy trì thì đứng ở bước cuối.
-            Text(
-              wrKeepCompounds(doneCount == 0
-                  ? tr('Chưa bắt đầu', 'Not started')
-                  : tr(
-                      'Bước $currentStep / $kPracticeStageCount',
-                      'Step $currentStep / $kPracticeStageCount',
-                    )),
-              style: const TextStyle(fontSize: 12, color: WrColors.text3),
-            ),
+            if (roundDone)
+              Text(
+                wrKeepCompounds(
+                  tr(
+                    'Hết một vòng · Đưa vào phần duy trì ›',
+                    'One full round · Move to keeping ›',
+                  ),
+                ),
+                key: Key('wr_growth_theme_round_done_${theme.themeId}'),
+                style: const TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: WrColors.link,
+                ),
+              )
+            else
+              Text(
+                wrKeepCompounds(
+                  doneCount == 0
+                      ? tr('Chưa bắt đầu', 'Not started')
+                      : tr(
+                          'Bước $currentStep / $kPracticeStageCount',
+                          'Step $currentStep / $kPracticeStageCount',
+                        ),
+                ),
+                style: const TextStyle(fontSize: 12, color: WrColors.text3),
+              ),
             const SizedBox(height: 6),
             Row(
               children: [
@@ -609,237 +641,270 @@ class _AddSection extends StatelessWidget {
 
 // ── PHẦN 3: MỞ RỘNG ────────────────────────────────────────────────────────
 
-class _ExpandSection extends ConsumerWidget {
+class _ExpandSection extends StatelessWidget {
   const _ExpandSection();
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // Tập mới nhất của chuỗi video (bảng `cc_workshop_resources`, mới nhất
-    // trước). Dữ liệu thật không có số tập, nên dòng phụ chỉ ghi tên chương
-    // trình, không bịa "Tập 7" như script demo.
-    final resources =
-        ref.watch(wrLearningResourcesProvider).valueOrNull ?? const [];
-    final video = resources.where((r) => r.isVideo).firstOrNull;
-    // Buổi Trà Chiều sắp tới thật (`cc_workshops`). Không có buổi nào thì ẩn
-    // thẻ, đúng script `ev ? … : ''`.
-    final workshops =
-        ref.watch(activeWorkshopsProvider).valueOrNull ?? const [];
-    final next = nextTraChieu(workshops, now: DateTime.now());
-    if (video == null && next == null) return const SizedBox.shrink();
-
+  Widget build(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         WrEyebrow(tr('Mở rộng', 'Expand')),
         const SizedBox(height: 8),
 
-        // 1. Tập mới trên YouTube — chương trình Tâm thế.
-        if (video != null)
-          WrCard(
-            key: const Key('wr_growth_youtube_card'),
-            padding: EdgeInsets.zero,
-            onTap: () => openLearningResource(context, video),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(16),
-                  ),
-                  child: SizedBox(
-                    height: 98,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Image.asset(
-                          'assets/images/hero/bg_hieu.webp',
-                          fit: BoxFit.cover,
-                        ),
-                        Container(color: Colors.black.withValues(alpha: 0.15)),
-                        Positioned(
-                          left: 12,
-                          top: 11,
-                          child: Row(
-                            children: [
-                              _Badge(
-                                label: tr('TẬP MỚI', 'NEW EPISODE'),
-                                background: WrColors.coral,
-                                color: Colors.white,
-                              ),
-                              const SizedBox(width: 6),
-                              _Badge(
-                                label:
-                                    video.durationMinutes != null &&
-                                        video.durationMinutes! > 0
-                                    ? tr(
-                                        'YOUTUBE · ${video.durationMinutes} PHÚT',
-                                        'YOUTUBE · ${video.durationMinutes} MIN',
-                                      )
-                                    : 'YOUTUBE',
-                                background: Colors.white.withValues(
-                                  alpha: 0.92,
-                                ),
-                                color: WrColors.navy,
-                              ),
-                            ],
-                          ),
-                        ),
-                        Positioned(
-                          right: 12,
-                          bottom: 11,
-                          child: Container(
-                            width: 32,
-                            height: 32,
-                            decoration: const BoxDecoration(
-                              color: WrColors.coral,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.play_arrow,
-                              color: Colors.white,
-                              size: 18,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(15, 12, 15, 14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+        // 1. Chuỗi Series Tâm thế người đi làm Card
+        WrCard(
+          key: const Key('wr_growth_youtube_card'),
+          padding: EdgeInsets.zero,
+          // Bản đầu chỉ hiện SnackBar; giờ mở Thư viện video của chuỗi.
+          onTap: () => context.push('/wr/learning-library'),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(16)),
+                child: SizedBox(
+                  height: 98,
+                  child: Stack(
+                    fit: StackFit.expand,
                     children: [
-                      Text(
-                        wrKeepCompounds(video.title),
-                        style: const TextStyle(
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.w700,
-                          color: WrColors.navy,
-                          height: 1.4,
+                      _FadeBottom(
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Image.asset(
+                              'assets/images/hero/bg_hieu.webp',
+                              fit: BoxFit.cover,
+                            ),
+                            Container(
+                              color: Colors.black.withValues(alpha: 0.15),
+                            ),
+                          ],
                         ),
                       ),
-                      const SizedBox(height: 3),
-                      Text(
-                        wrKeepCompounds(tr('Chương trình Tâm thế', 'The Mindset programme')),
-                        style: const TextStyle(
-                          fontSize: 12.5,
-                          color: WrColors.text2,
-                          height: 1.35,
+                      Positioned(
+                        left: 12,
+                        top: 11,
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: WrColors.coral,
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                              child: Text(
+                                tr('YOUTUBE', 'YOUTUBE'),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 6),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 3,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.white.withValues(alpha: 0.92),
+                                borderRadius: BorderRadius.circular(5),
+                              ),
+                              child: Text(
+                                tr('SERIES CHIA SẺ', 'VIDEO SERIES'),
+                                style: const TextStyle(
+                                  color: WrColors.navy,
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      Positioned(
+                        right: 12,
+                        bottom: 11,
+                        child: Container(
+                          width: 32,
+                          height: 32,
+                          decoration: const BoxDecoration(
+                            color: WrColors.coral,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.play_arrow,
+                            color: Colors.white,
+                            size: 18,
+                          ),
                         ),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(15, 4, 15, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tr(
+                        'Chuỗi Series Tâm thế người đi làm',
+                        'Work Mindset Series',
+                      ),
+                      style: const TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w700,
+                        color: WrColors.navy,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      tr(
+                        'Các góc nhìn, tâm thế và cách ứng xử trước những tình huống thực tế nơi công sở.',
+                        'Perspectives, mindset, and practical responses in the workplace.',
+                      ),
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        color: WrColors.text2,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
+        ),
 
-        // 2. Trà Chiều — buổi sắp tới.
-        if (next != null) ...[
-          if (video != null) const SizedBox(height: 11),
-          WrCard(
-            key: const Key('wr_growth_tra_chieu_card'),
-            padding: EdgeInsets.zero,
-            onTap: () => context.push('/wr/tra-chieu'),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(16),
-                  ),
-                  child: SizedBox(
-                    height: 88,
-                    child: Stack(
-                      fit: StackFit.expand,
-                      children: [
-                        Image.asset(
-                          'assets/images/thumb_trachieu.webp',
-                          fit: BoxFit.cover,
+        const SizedBox(height: 11),
+
+        // 2. Trà chiều nghề nghiệp Card
+        // Luôn hiện, kể cả khi chưa có buổi (khách 30/07: "tôi không còn
+        // thấy cái mục giao diện trà chiều đâu cả").
+        WrCard(
+          key: const Key('wr_growth_tra_chieu_card'),
+          padding: EdgeInsets.zero,
+          onTap: () => context.push('/wr/tra-chieu'),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ClipRRect(
+                borderRadius:
+                    const BorderRadius.vertical(top: Radius.circular(16)),
+                child: SizedBox(
+                  height: 88,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      _FadeBottom(
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            Image.asset(
+                              'assets/images/thumb_trachieu.webp',
+                              fit: BoxFit.cover,
+                            ),
+                            Container(
+                              color: Colors.black.withValues(alpha: 0.10),
+                            ),
+                          ],
                         ),
-                        Container(color: Colors.black.withValues(alpha: 0.10)),
-                        Positioned(
-                          left: 12,
-                          top: 10,
-                          child: _Badge(
-                            label: tr(
+                      ),
+                      Positioned(
+                        left: 12,
+                        top: 10,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
+                          decoration: BoxDecoration(
+                            color: const Color(0xDC093774),
+                            borderRadius: BorderRadius.circular(5),
+                          ),
+                          child: Text(
+                            tr(
                               'OFFLINE · TRÀ CHIỀU',
                               'OFFLINE · AFTERNOON TEA',
                             ),
-                            background: const Color(0xDC093774),
-                            color: WrColors.cream,
+                            style: const TextStyle(
+                              color: WrColors.cream,
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(15, 12, 15, 14),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        wrKeepCompounds(traChieuCardLabel(next)),
-                        style: const TextStyle(
-                          fontSize: 14.5,
-                          fontWeight: FontWeight.w700,
-                          color: WrColors.navy,
-                          height: 1.4,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        wrKeepCompounds(tr(
-                          '10 đến 12 người · 2 giờ · một câu hỏi',
-                          '10 to 12 people · 2 hours · one question',
-                        )),
-                        style: const TextStyle(
-                          fontSize: 12.5,
-                          color: WrColors.text2,
-                          height: 1.35,
                         ),
                       ),
                     ],
                   ),
                 ),
-              ],
-            ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(15, 4, 15, 14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tr('Trà chiều nghề nghiệp', 'Career Afternoon Tea'),
+                      style: const TextStyle(
+                        fontSize: 14.5,
+                        fontWeight: FontWeight.w700,
+                        color: WrColors.navy,
+                        height: 1.4,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      tr(
+                        '10 đến 12 người · 2 giờ · một câu hỏi',
+                        '10 to 12 people · 2 hours · one question',
+                      ),
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        color: WrColors.text2,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
           ),
-        ],
+        ),
       ],
     );
   }
 }
 
-/// Nhãn nhỏ trên ảnh của thẻ Mở rộng.
-class _Badge extends StatelessWidget {
-  const _Badge({
-    required this.label,
-    required this.background,
-    required this.color,
-  });
+/// Đáy ảnh mờ dần 30px vào nền thẻ (như thẻ 15 câu hỏi, `.chatcard-img::after`).
+/// Làm mờ chính ảnh thay vì phủ một màu: thẻ trắng có vân giấy, một dải màu
+/// trơn sẽ lộ thành vạch.
+class _FadeBottom extends StatelessWidget {
+  const _FadeBottom({required this.child});
 
-  final String label;
-  final Color background;
-  final Color color;
+  final Widget child;
+
+  static const double fade = 30;
 
   @override
-  Widget build(BuildContext context) => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-    decoration: BoxDecoration(
-      color: background,
-      borderRadius: BorderRadius.circular(5),
-    ),
-    child: Text(
-      wrKeepCompounds(label),
-      style: TextStyle(
-        color: color,
-        fontSize: 9.5,
-        fontWeight: FontWeight.w700,
-      ),
-    ),
+  Widget build(BuildContext context) => ShaderMask(
+    blendMode: BlendMode.dstIn,
+    shaderCallback: (rect) => LinearGradient(
+      begin: Alignment.topCenter,
+      end: Alignment.bottomCenter,
+      colors: const [Colors.white, Colors.white, Colors.transparent],
+      stops: [0, ((rect.height - fade) / rect.height).clamp(0.0, 1.0), 1],
+    ).createShader(rect),
+    child: child,
   );
 }
 
@@ -1104,39 +1169,44 @@ class WrKeepRow extends StatelessWidget {
             '${item.count} lần · gần nhất ${keepLastLabel(last, now)}',
             '${item.count} times · last ${keepLastLabel(last, now)}',
           );
-    return Padding(
-      key: Key('wr_keep_row_${item.theme.themeId}'),
-      padding: const EdgeInsets.symmetric(vertical: 11),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  wrKeepCompounds(item.theme.title),
-                  style: const TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w700,
-                    color: WrColors.navy,
-                    height: 1.35,
+    // Cỡ chữ đúng script (`.keep`: tên 14px, `.tiny` 11px, `.mark` 11.5px).
+    // Để phần cộng của WrTextScaler thì nút "✓ Đã ghi hôm nay" phình ra, ép
+    // tên chủ đề vỡ từng chữ (máy thật 13/10, cỡ chữ hệ thống 1.15).
+    return WrScriptTextScale(
+      child: Padding(
+        key: Key('wr_keep_row_${item.theme.themeId}'),
+        padding: const EdgeInsets.symmetric(vertical: 11),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    wrKeepCompounds(item.theme.title),
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: WrColors.navy,
+                      height: 1.35,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  wrKeepCompounds(meta),
-                  style: const TextStyle(fontSize: 12, color: WrColors.text3),
-                ),
-              ],
+                  const SizedBox(height: 2),
+                  Text(
+                    wrKeepCompounds(meta),
+                    style: const TextStyle(fontSize: 11, color: WrColors.text3),
+                  ),
+                ],
+              ),
             ),
-          ),
-          const SizedBox(width: 10),
-          WrKeepMarkButton(
-            theme: item.theme,
-            markedToday: item.markedToday,
-            doneLabel: doneLabel,
-          ),
-        ],
+            const SizedBox(width: 10),
+            WrKeepMarkButton(
+              theme: item.theme,
+              markedToday: item.markedToday,
+              doneLabel: doneLabel,
+            ),
+          ],
+        ),
       ),
     );
   }
