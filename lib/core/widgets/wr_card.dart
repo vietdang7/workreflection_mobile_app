@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../theme/wr_colors.dart';
+import 'wr_app_background.dart';
 
 // Hệ thẻ dùng chung cho cả bốn tab. Brand identity mới, chốt với khách
 // 2026-08-04, thay hệ kem-cam của bản 2026-07-30:
@@ -20,9 +21,18 @@ class WrCardMinimal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isPaper = WrBackgroundScope.of(context);
     return Container(
       decoration: BoxDecoration(
         color: WrColors.white,
+        image: isPaper
+            ? const DecorationImage(
+                image: AssetImage('assets/images/paper_card.webp'),
+                repeat: ImageRepeat.repeat,
+                scale: 2.0,
+                alignment: Alignment.topLeft,
+              )
+            : null,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: WrColors.line),
       ),
@@ -140,6 +150,10 @@ class WrCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isPaper = WrBackgroundScope.of(context);
+    final isWhiteCard =
+        color == WrColors.white || color == const Color(0xFFFFFFFF);
+    final hasPaperTexture = isPaper && isWhiteCard;
     const radius = BorderRadius.all(Radius.circular(kRadius));
     Widget body = Padding(padding: padding, child: child);
     if (onTap != null) {
@@ -156,7 +170,20 @@ class WrCard extends StatelessWidget {
         ),
         child: ClipRRect(
           borderRadius: radius,
-          child: ColoredBox(color: color, child: body),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              color: color,
+              image: hasPaperTexture
+                  ? const DecorationImage(
+                      image: AssetImage('assets/images/paper_card.webp'),
+                      repeat: ImageRepeat.repeat,
+                      scale: 2.0,
+                      alignment: Alignment.topLeft,
+                    )
+                  : null,
+            ),
+            child: body,
+          ),
         ),
       );
     }
@@ -164,6 +191,14 @@ class WrCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: color,
+        image: hasPaperTexture
+            ? const DecorationImage(
+                image: AssetImage('assets/images/paper_card.webp'),
+                repeat: ImageRepeat.repeat,
+                scale: 2.0,
+                alignment: Alignment.topLeft,
+              )
+            : null,
         borderRadius: radius,
         border: Border.all(color: WrColors.line),
         boxShadow: const [
@@ -195,6 +230,7 @@ class WrMentorCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isPaper = WrBackgroundScope.of(context);
     const radius = BorderRadius.all(Radius.circular(16));
     return Semantics(
       selected: selected,
@@ -209,6 +245,14 @@ class WrMentorCard extends StatelessWidget {
                   WrColors.white,
                 )
               : WrColors.white,
+          image: isPaper
+              ? const DecorationImage(
+                  image: AssetImage('assets/images/paper_card.webp'),
+                  repeat: ImageRepeat.repeat,
+                  scale: 2.0,
+                  alignment: Alignment.topLeft,
+                )
+              : null,
           borderRadius: radius,
           border: Border.all(
             color: selected ? WrColors.coral : const Color(0x1F093774),

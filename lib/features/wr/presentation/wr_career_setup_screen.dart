@@ -181,10 +181,10 @@ class _WrCareerSetupScreenState extends ConsumerState<WrCareerSetupScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    tr(
+                    wrKeepCompounds(tr(
                       'THIẾT LẬP HỒ SƠ · ${_step + 1}/3',
                       'SETTING UP · ${_step + 1}/3',
-                    ),
+                    )),
                     style: TextStyle(
                       fontSize: 11.5,
                       fontWeight: FontWeight.w700,
@@ -215,7 +215,7 @@ class _WrCareerSetupScreenState extends ConsumerState<WrCareerSetupScreen> {
                   if (_errorMsg != null) ...[
                     const SizedBox(height: 10),
                     Text(
-                      _errorMsg!,
+                      wrKeepCompounds(_errorMsg!),
                       style: const TextStyle(
                         fontSize: 12.5,
                         color: WrColors.coral,
@@ -252,9 +252,9 @@ class _WrCareerSetupScreenState extends ConsumerState<WrCareerSetupScreen> {
                 child: TextButton(
                   onPressed: _saving ? null : _advance,
                   child: Text(
-                    _step < 2
+                    wrKeepCompounds(_step < 2
                         ? tr('Bỏ qua bước này', 'Skip this step')
-                        : tr('Bỏ qua, vào app', 'Skip, go to the app'),
+                        : tr('Bỏ qua, vào app', 'Skip, go to the app')),
                     style: TextStyle(
                       fontSize: 13.5,
                       color: WrColors.white.withValues(alpha: 0.35),
@@ -308,7 +308,7 @@ class _OptionTile extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  label,
+                  wrKeepCompounds(label),
                   style: TextStyle(
                     fontSize: 15.5,
                     fontWeight: selected ? FontWeight.w700 : FontWeight.w400,

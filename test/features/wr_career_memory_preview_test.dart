@@ -17,6 +17,7 @@ import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart'
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 import 'package:workreflection_mobile/core/models/wr_episode.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
+import 'package:workreflection_mobile/core/logic/wr_career_memory_rules.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_journey_screen.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 
@@ -305,15 +306,11 @@ void main() {
       expect(find.text('Xem toàn bộ lịch sử'), findsOneWidget);
     });
 
-    testWidgets('bản miễn phí thấy dòng thời gian, mốc tuần cũ khoá từng dòng', (
+    testWidgets('bản miễn phí: phần xem trước không khoá theo tuần', (
       tester,
     ) async {
-      // Mockup v16 khoá theo TUẦN: `!g.current && !state.isPremium`. Quyết định
-      // 2026-07-29 ("khoá hoàn toàn với Free") bị bản 24/08 thay thế — dựng một
-      // khung trống rồi mời trả tiền thì không ai biết mình đang mua gì.
-      //
-      // v47: không còn khối mời riêng `wr_journey_memory_lock`; mỗi mốc khoá
-      // tự nói "Premium · Mở khoá".
+      // Script `screenGrow`: phần xem trước chỉ mở ra / thu lại, không khoá
+      // theo tuần. Khoá theo tuần chỉ còn ở màn Career Memory đầy đủ.
       await _pumpTall(
         tester,
         _wrap(
@@ -323,18 +320,13 @@ void main() {
         ),
       );
 
-      expect(find.byKey(const Key('wr_journey_memory_lock')), findsNothing);
       expect(
         find.byKey(const Key('wr_journey_memory_see_all')),
         findsOneWidget,
       );
-      // Dòng thời gian có mặt; mọi mốc (tháng 7/2026, ngoài tuần này) đã khoá.
       expect(_tabEntries(tester), kJourneyPreviewCount);
-      expect(
-        find.text('Premium · Mở khoá'),
-        findsNWidgets(kJourneyPreviewCount),
-      );
-      expect(find.text('Chạm để xem'), findsNothing);
+      expect(find.text('Premium · Mở khoá'), findsNothing);
+      expect(find.text('Chạm để xem'), findsNWidgets(kJourneyPreviewCount));
     });
 
     testWidgets('bấm nút thì sang màn Career Memory đầy đủ', (tester) async {
@@ -347,7 +339,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('Bạn đã có 38 ghi nhận trên hành trình sự nghiệp.'),
+        find.text('Bạn đã để lại 38 ghi nhận trên hành trình sự nghiệp.'),
         findsOneWidget,
       );
     });
@@ -364,14 +356,15 @@ void main() {
     });
 
     // Khách 2026-08-01: "nên phân theo ngày trong tuần, tuần trong tháng".
-    testWidgets('dựng đủ ba tầng tháng · tuần · ngày', (tester) async {
+    testWidgets('mỗi tuần một tiêu đề, rồi tới ngày', (tester) async {
       await _pumpTall(
         tester,
         _wrap(home: const WrCareerMemoryScreen(), events: _events(10)),
       );
 
-      // Tháng — sự kiện rơi vào 02/07 đến 11/07/2026.
-      expect(find.text('THÁNG 7, 2026'), findsOneWidget);
+      // Script `screenCareerMemory`: không còn tầng "THÁNG X" — tuần đã
+      // mang khoảng ngày kèm tháng.
+      expect(find.text('THÁNG 7, 2026'), findsNothing);
       // Tuần — có số thứ tự và khoảng ngày, cắt theo biên tháng.
       expect(find.textContaining('TUẦN 1 · '), findsOneWidget);
       expect(find.textContaining('TUẦN 2 · '), findsOneWidget);
@@ -461,7 +454,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(
-        find.text('Bạn đã có 7 ghi nhận trên hành trình sự nghiệp.'),
+        find.text('Bạn đã để lại 7 ghi nhận trên hành trình sự nghiệp.'),
         findsOneWidget,
       );
       expect(find.text('Nhận ra 1'), findsOneWidget);
@@ -496,11 +489,51 @@ void main() {
 
       expect(find.byKey(const Key('wr_career_memory_lock')), findsOneWidget);
       expect(find.text('Nội dung đã khoá'), findsWidgets);
-      // Con số tổng vẫn nói ra — đó là việc của chính người dùng đã làm.
       expect(
-        find.text('Bạn đã có 38 ghi nhận trên hành trình sự nghiệp.'),
+        find.text('Mở khoá Premium để xem toàn bộ ghi nhận này.'),
+        findsWidgets,
+      );
+      // Chân bản miễn phí: một câu đúng script, không câu thêm.
+      expect(
+        find.textContaining('thuộc các tuần và tháng trước đó.'),
         findsOneWidget,
       );
+      expect(find.textContaining('Bản đầy đủ mở lại'), findsNothing);
+      // Con số tổng vẫn nói ra — đó là việc của chính người dùng đã làm.
+      expect(
+        find.text('Bạn đã để lại 38 ghi nhận trên hành trình sự nghiệp.'),
+        findsOneWidget,
+      );
+    });
+
+    // Script: INSIGHT chỉ Premium — khoá với bản miễn phí kể cả ở tuần này.
+    testWidgets('bản miễn phí: INSIGHT tuần này vẫn khoá, có nhãn Premium', (
+      tester,
+    ) async {
+      await _pumpTall(
+        tester,
+        _wrap(
+          home: const WrCareerMemoryScreen(),
+          premium: false,
+          events: [
+            CareerMemoryEvent(
+              id: 'ci1',
+              userId: 'u1',
+              behavior: kInsightBehavior,
+              reflectionText: 'Câu insight bí mật',
+              createdAt: DateTime.now(),
+            ),
+          ],
+        ),
+      );
+
+      expect(find.textContaining('Câu insight bí mật'), findsNothing);
+      expect(find.text('Nội dung đã khoá'), findsOneWidget);
+      expect(
+        find.byKey(const Key('wr_journey_insight_premium_tag')),
+        findsOneWidget,
+      );
+      expect(find.byKey(const Key('wr_career_memory_lock')), findsOneWidget);
     });
 
     testWidgets('chưa có mảnh nào thì nói rõ, không để trang trắng', (

@@ -7,6 +7,7 @@ import '../../../core/theme/wr_theme.dart';
 import '../../../core/widgets/pill_button.dart';
 import '../../../l10n/app_localizations.dart';
 import '../survey_providers.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 // Provider that runs the submission once and returns the report id.
 final _submitProvider = FutureProvider.autoDispose<String>((ref) async {
@@ -60,7 +61,7 @@ class SurveyProcessingScreen extends ConsumerWidget {
                 const CircularProgressIndicator(color: WrColors.coral),
                 const SizedBox(height: 24),
                 Text(
-                  l10n.surveyProcessingTitle,
+                  wrKeepCompounds(l10n.surveyProcessingTitle),
                   style: WrTextStyles.hMedium,
                   textAlign: TextAlign.center,
                 ),
@@ -73,7 +74,7 @@ class SurveyProcessingScreen extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  l10n.surveyProcessingError,
+                  wrKeepCompounds(l10n.surveyProcessingError),
                   style: WrTextStyles.body,
                   textAlign: TextAlign.center,
                 ),

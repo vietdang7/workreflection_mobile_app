@@ -49,6 +49,18 @@ Widget _wrap(
         ),
       ),
       GoRoute(
+        path: '/wr/growth/stance-keep',
+        builder: (_, __) => const Scaffold(body: Text('StanceKeep')),
+      ),
+      GoRoute(
+        path: '/wr/practice-options/:themeId',
+        builder: (_, __) => const Scaffold(body: Text('StepOptions')),
+      ),
+      GoRoute(
+        path: '/wr/growth/add-theme',
+        builder: (_, __) => const Scaffold(body: Text('AddTheme')),
+      ),
+      GoRoute(
         path: '/wr/growth/themes',
         builder: (_, __) => const Scaffold(body: Text('Themes')),
       ),
@@ -98,21 +110,17 @@ Future<void> _pumpLarge(WidgetTester tester, Widget widget) async {
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(widget);
   await tester.pumpAndSettle();
-  // Tab Phát triển: "Điều bạn đang thực hành" thu gọn sẵn (họp khách 08/10).
-  // Xổ ra để các test về thẻ chủ đề còn thấy thẻ.
-  final themesToggle = find.byKey(const Key('wr_growth_themes_toggle'));
-  if (themesToggle.evaluate().isNotEmpty) {
-    await tester.tap(themesToggle);
-    await tester.pumpAndSettle();
-  }
 }
 
-/// Mọi thẻ chủ đề trên tab Phát triển.
-final Finder _themeCards = find.byWidgetPredicate(
+/// Mọi dòng chủ đề trong khối "Đang làm quen" của tab Phát triển (script
+/// Sprint 2 `rowLearn`: tên, "Bước n / 4" hoặc "Chưa bắt đầu", bốn vạch).
+final Finder _themeRows = find.byWidgetPredicate(
   (w) =>
       w.key is ValueKey<String> &&
-      (w.key! as ValueKey<String>).value.startsWith('wr_growth_theme_card_'),
+      (w.key! as ValueKey<String>).value.startsWith('wr_growth_theme_row_'),
 );
+
+Key _row(String id) => Key('wr_growth_theme_row_$id');
 
 /// Mọi nút "Tôi đã thử bước này" trên màn chủ đề.
 final Finder _stepDoneButtons = find.byWidgetPredicate(
@@ -145,16 +153,18 @@ PracticeEnrollment _enroll(
   List<String> done = const [],
   DateTime? completedAt,
   DateTime? startedAt,
+  String? pendingChoice,
 }) => PracticeEnrollment(
   userId: 'u1',
   themeId: themeId,
   completedSteps: done,
   completedAt: completedAt,
   startedAt: startedAt,
+  pendingChoice: pendingChoice,
 );
 
-/// Hai chủ đề, mỗi chủ đề ba bước, bước cuối Premium — đúng dữ liệu đang gieo
-/// trong migration 20260722000002.
+/// Hai chủ đề, mỗi chủ đề bốn bước, bước cuối Premium — đúng bộ 4 bước v47
+/// (migration 20261006120000) với chữ của script Sprint 2.
 FakeWrIntelligenceRepository _twoThemes() {
   final intel = FakeWrIntelligenceRepository();
   intel.seedPracticeThemes([
@@ -163,9 +173,36 @@ FakeWrIntelligenceRepository _twoThemes() {
   ]);
   for (final t in ['pt-voice', 'pt-rhythm']) {
     intel.seedPracticeSteps(t, [
-      _step('$t-1', t, 1, 'Nhận diện', content: 'Quan sát một tuần.'),
-      _step('$t-2', t, 2, 'Thử nghiệm', content: 'Thử đúng một lần.'),
-      _step('$t-3', t, 3, 'Duy trì', premium: true, content: 'Giữ bốn tuần.'),
+      _step(
+        '$t-1',
+        t,
+        1,
+        'Nhận diện: Quan sát lúc muốn im lặng',
+        content: 'Quan sát một tuần.',
+      ),
+      _step(
+        '$t-2',
+        t,
+        2,
+        'Phần của tôi: Tách phần mình và phần bối cảnh',
+        content: 'Điều gì thuộc quyền quyết định của bạn?',
+      ),
+      _step(
+        '$t-3',
+        t,
+        3,
+        'Chọn một cách: Chọn một cách rồi thử',
+        content:
+            'Mở phần gợi ý, chọn một cách, rồi thử trong một cuộc họp thật.',
+      ),
+      _step(
+        '$t-4',
+        t,
+        4,
+        'Câu hỏi cho lần sau: Điều bạn muốn hỏi lần tới',
+        premium: true,
+        content: 'Sau khi thử, bạn muốn mang theo câu hỏi nào cho lần sau?',
+      ),
     ]);
   }
   return intel;
@@ -177,6 +214,9 @@ void main() {
   // ───────────────────────────────────────────────────────────────────────────
 
   group('Tab Phát triển — danh sách chủ đề', () {
+    Finder inRow(String id, String text) =>
+        find.descendant(of: find.byKey(_row(id)), matching: find.text(text));
+
     testWidgets('hiện đủ MỌI chủ đề đang thực hành, không riêng chủ đề đầu', (
       tester,
     ) async {
@@ -188,29 +228,18 @@ void main() {
 
       await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
 
-      expect(
-        find.byKey(const Key('wr_growth_theme_card_pt-voice')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const Key('wr_growth_theme_card_pt-rhythm')),
-        findsOneWidget,
-      );
-      // Mockup v47: thẻ nói trạng thái bằng pill và bước kế tiếp, không còn
-      // dòng "x/y bước hoàn thành".
-      Finder inCard(String id, String text) => find.descendant(
-        of: find.byKey(Key('wr_growth_theme_card_$id')),
-        matching: find.text(text),
-      );
-      expect(inCard('pt-voice', 'Đang thực hành'), findsOneWidget);
-      expect(inCard('pt-voice', 'Tiếp theo: Thử nghiệm'), findsOneWidget);
-      expect(inCard('pt-rhythm', 'Có thể bắt đầu'), findsOneWidget);
-      expect(inCard('pt-rhythm', 'Tiếp theo: Nhận diện'), findsOneWidget);
+      expect(find.text('ĐANG LÀM QUEN'), findsOneWidget);
+      expect(find.byKey(_row('pt-voice')), findsOneWidget);
+      expect(find.byKey(_row('pt-rhythm')), findsOneWidget);
+      // Script `rowLearn`: "Bước ${d+1} / 4" là bước ĐANG LÀM; chưa xong bước
+      // nào thì "Chưa bắt đầu".
+      expect(inRow('pt-voice', 'Bước 2 / 4'), findsOneWidget);
+      expect(inRow('pt-rhythm', 'Chưa bắt đầu'), findsOneWidget);
     });
 
-    testWidgets('hai chủ đề trùng tên chỉ hiện một thẻ', (tester) async {
+    testWidgets('hai chủ đề trùng tên chỉ hiện một dòng', (tester) async {
       // Thư viện thật có `pt-voice` (đời đầu) và `pt-c2` cùng tên "Dám lên
-      // tiếng". Ghi danh cả hai thì hai thẻ hiện y hệt nhau, và vì bộ đếm nhận
+      // tiếng". Ghi danh cả hai thì hai dòng hiện y hệt nhau, và vì bộ đếm nhận
       // sự kiện theo tên nên tiến độ cũng luôn trùng khít.
       final intel = FakeWrIntelligenceRepository();
       intel.seedPracticeThemes([
@@ -229,24 +258,35 @@ void main() {
 
       expect(find.text('Dám lên tiếng'), findsOneWidget);
       // Giữ chủ đề mới hơn — nội dung bước của nó là bản đang dùng.
-      expect(
-        find.byKey(const Key('wr_growth_theme_card_pt-c2')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const Key('wr_growth_theme_card_pt-voice')),
-        findsNothing,
-      );
+      expect(find.byKey(_row('pt-c2')), findsOneWidget);
+      expect(find.byKey(_row('pt-voice')), findsNothing);
     });
 
-    testWidgets('chủ đề đã đi hết bước xếp sau chủ đề đang thử', (
-      tester,
-    ) async {
+    // Script Sprint 2: hết bốn bước KHÔNG tự khép; chủ đề chỉ rời "Đang làm
+    // quen" khi người dùng bấm "Đưa vào phần duy trì" (completed_at).
+    testWidgets('đi hết bốn bước mà chưa đưa vào duy trì thì vẫn ở Đang làm '
+        'quen, đứng ở bước cuối', (tester) async {
       final intel = _twoThemes();
       intel.seedEnrollments([
         _enroll(
           'pt-voice',
-          done: ['pt-voice-1', 'pt-voice-2', 'pt-voice-3'],
+          done: ['pt-voice-1', 'pt-voice-2', 'pt-voice-3', 'pt-voice-4'],
+        ),
+      ]);
+
+      await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
+
+      expect(inRow('pt-voice', 'Bước 4 / 4'), findsOneWidget);
+      expect(find.byKey(const Key('wr_growth_keeping')), findsNothing);
+    });
+
+    testWidgets('chủ đề đã đưa vào duy trì rời Đang làm quen, sang Đang duy '
+        'trì', (tester) async {
+      final intel = _twoThemes();
+      intel.seedEnrollments([
+        _enroll(
+          'pt-voice',
+          done: ['pt-voice-1', 'pt-voice-2', 'pt-voice-3', 'pt-voice-4'],
           completedAt: DateTime(2026, 7, 1),
         ),
         _enroll('pt-rhythm'),
@@ -254,24 +294,17 @@ void main() {
 
       await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
 
-      // v47 bỏ nhãn "Đã hoàn thành / Trọn chuỗi": thẻ nói đã đi hết các bước.
+      expect(find.byKey(_row('pt-voice')), findsNothing);
+      expect(find.byKey(_row('pt-rhythm')), findsOneWidget);
+      expect(find.byKey(const Key('wr_growth_keeping')), findsOneWidget);
+      expect(find.byKey(const Key('wr_keep_row_pt-voice')), findsOneWidget);
+      // Khối duy trì nằm DƯỚI khối đang làm quen (thứ tự script).
       expect(
-        find.descendant(
-          of: find.byKey(const Key('wr_growth_theme_card_pt-voice')),
-          matching: find.text('Bạn đã đi hết các bước hiện tại.'),
+        tester.getTopLeft(find.byKey(_row('pt-rhythm'))).dy,
+        lessThan(
+          tester.getTopLeft(find.byKey(const Key('wr_keep_row_pt-voice'))).dy,
         ),
-        findsOneWidget,
       );
-
-      // Đang thực hành phải nằm TRÊN đã hoàn thành: việc còn dở mới là việc
-      // cần nhìn thấy trước.
-      final active = tester.getTopLeft(
-        find.byKey(const Key('wr_growth_theme_card_pt-rhythm')),
-      );
-      final done = tester.getTopLeft(
-        find.byKey(const Key('wr_growth_theme_card_pt-voice')),
-      );
-      expect(active.dy, lessThan(done.dy));
     });
 
     // Yêu cầu khách 2026-08-04: hiện HẾT chủ đề, dài quá thì bỏ vào "Xem thêm",
@@ -285,12 +318,8 @@ void main() {
 
       await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
 
-      final moiNhat = tester.getTopLeft(
-        find.byKey(const Key('wr_growth_theme_card_pt-rhythm')),
-      );
-      final cuHon = tester.getTopLeft(
-        find.byKey(const Key('wr_growth_theme_card_pt-voice')),
-      );
+      final moiNhat = tester.getTopLeft(find.byKey(_row('pt-rhythm')));
+      final cuHon = tester.getTopLeft(find.byKey(_row('pt-voice')));
       expect(moiNhat.dy, lessThan(cuHon.dy));
     });
 
@@ -313,37 +342,26 @@ void main() {
 
         await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
 
-        // Ba thẻ mới nhất hiện sẵn, hai thẻ cũ nhất nằm sau nút.
-        expect(
-          find.byKey(const Key('wr_growth_theme_card_pt-5')),
-          findsOneWidget,
-        );
-        expect(
-          find.byKey(const Key('wr_growth_theme_card_pt-3')),
-          findsOneWidget,
-        );
-        expect(
-          find.byKey(const Key('wr_growth_theme_card_pt-2')),
-          findsNothing,
-        );
-        expect(
-          find.byKey(const Key('wr_growth_theme_card_pt-1')),
-          findsNothing,
-        );
+        // Ba dòng mới nhất hiện sẵn, hai dòng cũ nhất nằm sau nút.
+        expect(find.byKey(_row('pt-5')), findsOneWidget);
+        expect(find.byKey(_row('pt-3')), findsOneWidget);
+        expect(find.byKey(_row('pt-2')), findsNothing);
+        expect(find.byKey(_row('pt-1')), findsNothing);
+        // Script `actShowLearn`: "Xem thêm ${Math.min(3,moreLearn)} chủ đề".
         expect(find.text('Xem thêm 2 chủ đề'), findsOneWidget);
 
-        await tester.tap(find.byKey(const Key('wr_growth_themes_more')));
+        await tester.tap(find.byKey(const Key('wr_growth_learn_more')));
         await tester.pumpAndSettle();
 
         // Không có chủ đề nào bị cắt mất — bấm là ra đủ cả năm.
         for (final id in ids) {
           expect(
-            find.byKey(Key('wr_growth_theme_card_$id')),
+            find.byKey(_row(id)),
             findsOneWidget,
             reason: '$id phải hiện sau khi xổ',
           );
         }
-        expect(find.text('Thu gọn'), findsOneWidget);
+        expect(find.byKey(const Key('wr_growth_learn_more')), findsNothing);
       },
     );
 
@@ -355,34 +373,34 @@ void main() {
 
       await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
 
-      expect(find.byKey(const Key('wr_growth_themes_more')), findsNothing);
+      expect(_themeRows, findsNWidgets(2));
+      expect(find.byKey(const Key('wr_growth_learn_more')), findsNothing);
     });
 
-    testWidgets('bấm thẻ chủ đề mở màn chủ đề đó', (tester) async {
+    testWidgets('bấm dòng chủ đề mở màn chủ đề đó', (tester) async {
       final intel = _twoThemes();
       intel.seedEnrollments([_enroll('pt-rhythm')]);
 
       await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
 
-      await tester.tap(find.byKey(const Key('wr_growth_theme_card_pt-rhythm')));
+      await tester.tap(find.byKey(_row('pt-rhythm')));
       await tester.pumpAndSettle();
 
-      expect(find.text('Nhịp làm việc ổn định'), findsOneWidget);
-      // "Nhận diện" hiện hai lần: ở "Bước tiếp theo" và trong danh sách bước.
-      expect(
-        tester
-            .widget<Text>(find.byKey(const Key('wr_practice_next_step')))
-            .data,
-        'Nhận diện',
-      );
-      for (final id in ['pt-rhythm-1', 'pt-rhythm-2', 'pt-rhythm-3']) {
+      expect(find.byType(WrPracticeThemeScreen), findsOneWidget);
+      expect(find.text('Nhịp làm việc ổn định'), findsWidgets);
+      for (final id in [
+        'pt-rhythm-1',
+        'pt-rhythm-2',
+        'pt-rhythm-3',
+        'pt-rhythm-4',
+      ]) {
         expect(find.byKey(Key('wr_practice_step_$id')), findsOneWidget);
       }
-      expect(find.text('Thử nghiệm'), findsOneWidget);
-      expect(find.text('Duy trì'), findsOneWidget);
     });
 
-    testWidgets('thẻ quota chỉ hiện với bản miễn phí và dẫn sang paywall', (
+    // Script Sprint 2 bỏ thẻ quota trên tab. Trần Free vẫn giữ: hết chỗ thì
+    // lối "Chủ đề chưa có trong thư viện" dẫn sang paywall thay vì màn thêm.
+    testWidgets('Free hết 2/2 chỗ: dòng thêm chủ đề dẫn sang paywall', (
       tester,
     ) async {
       final intel = _twoThemes();
@@ -390,17 +408,44 @@ void main() {
 
       await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
 
-      expect(find.byKey(const Key('wr_growth_quota_card')), findsOneWidget);
-      // Mockup v47: không còn "(đang mở x/y)", chỉ nói trần và lối lên Premium.
-      expect(find.text('Free: tối đa 2 chủ đề cùng lúc'), findsOneWidget);
-      expect(find.text('Premium: không giới hạn'), findsOneWidget);
-
-      await tester.tap(find.byKey(const Key('wr_growth_quota_card')));
+      expect(find.text('Chủ đề chưa có trong thư viện'), findsOneWidget);
+      await tester.tap(find.byKey(const Key('wr_growth_add_theme')));
       await tester.pumpAndSettle();
       expect(find.text('Paywall practice_limit'), findsOneWidget);
     });
 
-    testWidgets('Premium không thấy thẻ quota — không có trần thì không nói', (
+    testWidgets('Free còn chỗ: dòng thêm chủ đề mở màn thêm', (tester) async {
+      final intel = _twoThemes();
+      intel.seedEnrollments([_enroll('pt-voice')]);
+
+      await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
+
+      await tester.tap(find.byKey(const Key('wr_growth_add_theme')));
+      await tester.pumpAndSettle();
+      expect(find.text('AddTheme'), findsOneWidget);
+    });
+
+    testWidgets('Premium không có trần: hai chủ đề vẫn mở màn thêm', (
+      tester,
+    ) async {
+      final intel = _twoThemes();
+      intel.seedEnrollments([_enroll('pt-voice'), _enroll('pt-rhythm')]);
+      intel.seedEntitlement(
+        WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
+      );
+
+      await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
+
+      expect(find.textContaining('Free:'), findsNothing);
+      await tester.tap(find.byKey(const Key('wr_growth_add_theme')));
+      await tester.pumpAndSettle();
+      expect(find.text('AddTheme'), findsOneWidget);
+    });
+
+    // Đã theo chủ đề rồi thì màn này không mời thêm chủ đề thư viện, kể cả
+    // premium: chủ đề mới do phần mềm tự thêm khi đã tổng hợp đủ dữ liệu
+    // (khách 2026-08-04).
+    testWidgets('đã theo chủ đề thì không bày chủ đề thư viện chưa ghi danh', (
       tester,
     ) async {
       final intel = _twoThemes();
@@ -411,59 +456,35 @@ void main() {
 
       await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
 
-      expect(find.byKey(const Key('wr_growth_quota_card')), findsNothing);
+      expect(find.byKey(_row('pt-voice')), findsOneWidget);
+      expect(find.byKey(_row('pt-rhythm')), findsNothing);
     });
 
-    // Đã theo chủ đề rồi thì màn này không mời thêm chủ đề, kể cả premium:
-    // chủ đề mới do phần mềm tự thêm khi đã tổng hợp đủ dữ liệu (khách
-    // 2026-08-04). Premium chỉ khác free ở chỗ không bị thẻ quota chặn.
-    testWidgets('Premium không thấy khối mời thêm chủ đề', (tester) async {
-      final intel = _twoThemes();
-      intel.seedEnrollments([_enroll('pt-voice'), _enroll('pt-rhythm')]);
-      intel.seedEntitlement(
-        WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
-      );
+    testWidgets('chưa ghi danh chủ đề nào: không mời chủ đề thư viện '
+        '(khách 04/8, chủ đề do phần mềm tự thêm)', (tester) async {
+      final intel = FakeWrIntelligenceRepository();
+      final ids = ['pt-1', 'pt-2', 'pt-3', 'pt-4'];
+      intel.seedPracticeThemes([for (final id in ids) _theme(id, 'Chủ đề $id')]);
 
       await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
 
-      expect(find.byKey(const Key('wr_growth_suggestion_empty')), findsNothing);
-      expect(find.byKey(const Key('wr_growth_add_theme_row')), findsNothing);
+      expect(_themeRows, findsNothing);
+      expect(find.text('Chưa bắt đầu'), findsNothing);
+      expect(find.text('ĐANG LÀM QUEN'), findsNothing);
+      expect(find.byKey(const Key('wr_growth_learn_more')), findsNothing);
     });
 
-    testWidgets('Free còn chỗ cũng không thấy khối mời thêm', (tester) async {
-      final intel = _twoThemes();
-      intel.seedEnrollments([_enroll('pt-voice')]);
-
-      await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
-
-      expect(find.byKey(const Key('wr_growth_suggestion_empty')), findsNothing);
-      expect(find.byKey(const Key('wr_growth_add_theme_row')), findsNothing);
-    });
-
-    testWidgets('Free hết 2/2 chỗ thì nhường cho thẻ quota', (tester) async {
-      final intel = _twoThemes();
-      intel.seedEnrollments([_enroll('pt-voice'), _enroll('pt-rhythm')]);
-
-      await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
-
-      expect(find.byKey(const Key('wr_growth_suggestion_empty')), findsNothing);
-      expect(find.byKey(const Key('wr_growth_quota_card')), findsOneWidget);
-    });
-
-    testWidgets('chưa ghi danh chủ đề nào thì không dựng danh sách rỗng', (
+    testWidgets('thư viện trống và chưa ghi danh thì không dựng khối rỗng', (
       tester,
     ) async {
-      final intel = _twoThemes();
-
-      await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
-
-      expect(_themeCards, findsNothing);
-      expect(
-        find.byKey(const Key('wr_growth_suggestion_empty')),
-        findsOneWidget,
+      await _pumpLarge(
+        tester,
+        _wrap(const WrGrowthScreen(), intel: FakeWrIntelligenceRepository()),
       );
-      // v47: dòng quota của bản Free luôn hiện, kể cả khi chưa theo chủ đề nào.
-      expect(find.byKey(const Key('wr_growth_quota_card')), findsOneWidget);
+
+      expect(_themeRows, findsNothing);
+      expect(find.text('ĐANG LÀM QUEN'), findsNothing);
+      expect(tester.takeException(), isNull);
     });
 
     testWidgets('ghi danh trỏ tới chủ đề không còn trong thư viện thì bỏ qua', (
@@ -474,12 +495,9 @@ void main() {
 
       await _pumpLarge(tester, _wrap(const WrGrowthScreen(), intel: intel));
 
-      // Không thẻ rỗng, không văng lỗi.
-      expect(_themeCards, findsNothing);
-      expect(
-        find.byKey(const Key('wr_growth_suggestion_empty')),
-        findsOneWidget,
-      );
+      // Không dòng rỗng, không văng lỗi, không dựng khối "Đang làm quen" trống.
+      expect(_themeRows, findsNothing);
+      expect(find.text('ĐANG LÀM QUEN'), findsNothing);
       expect(tester.takeException(), isNull);
     });
   });
@@ -489,119 +507,249 @@ void main() {
   // ───────────────────────────────────────────────────────────────────────────
 
   group('Màn chủ đề', () {
-    testWidgets('bước Premium hiện nội dung kèm nút mở khoá cho bản miễn phí', (
+    Future<void> openTheme(
+      WidgetTester tester,
+      FakeWrIntelligenceRepository intel, {
+      FakeWrContentRepository? content,
+      String themeId = 'pt-voice',
+    }) => _pumpLarge(
+      tester,
+      _wrap(
+        WrPracticeThemeScreen(themeId: themeId),
+        intel: intel,
+        content: content,
+      ),
+    );
+
+    Finder inStep(String stepId, Finder f) => find.descendant(
+      of: find.byKey(Key('wr_practice_step_$stepId')),
+      matching: f,
+    );
+
+    testWidgets('đầu màn: Đang thực hành, Bốn bước làm quen, n / 4', (
+      tester,
+    ) async {
+      final intel = _twoThemes();
+      intel.seedEnrollments([
+        _enroll('pt-voice', done: ['pt-voice-1']),
+      ]);
+      await openTheme(tester, intel);
+
+      expect(find.text('ĐANG THỰC HÀNH'), findsOneWidget);
+      expect(find.text('BỐN BƯỚC LÀM QUEN'), findsOneWidget);
+      expect(find.text('1 / 4'), findsOneWidget);
+      expect(find.text('ĐIỀU BẠN TỪNG VIẾT'), findsOneWidget);
+      // Các khối v47 mà script không có đã bỏ.
+      expect(find.text('BƯỚC TIẾP THEO'), findsNothing);
+      expect(find.textContaining('Giai đoạn'), findsNothing);
+      expect(find.text('Lưu cách tôi muốn thử'), findsNothing);
+    });
+
+    testWidgets('chỉ bước đang làm mở ra; bước sau một dòng, không mô tả', (
+      tester,
+    ) async {
+      final intel = _twoThemes();
+      intel.seedEnrollments([
+        _enroll('pt-voice', done: ['pt-voice-1']),
+      ]);
+      await openTheme(tester, intel);
+
+      // Bước đã xong: hậu tố "· đã thử", không nút.
+      expect(
+        inStep('pt-voice-1', find.text('NHẬN DIỆN · ĐÃ THỬ')),
+        findsOneWidget,
+      );
+      // Bước đang làm: mô tả + nút.
+      expect(
+        inStep(
+          'pt-voice-2',
+          find.text('Điều gì thuộc quyền quyết định của bạn?'),
+        ),
+        findsOneWidget,
+      );
+      expect(_stepDoneButtons, findsOneWidget);
+      expect(
+        find.byKey(const Key('wr_practice_step_done_pt-voice-2')),
+        findsOneWidget,
+      );
+      // Bước sau: chỉ tên việc.
+      expect(
+        inStep('pt-voice-3', find.text('Chọn một cách rồi thử')),
+        findsOneWidget,
+      );
+      expect(
+        inStep(
+          'pt-voice-3',
+          find.text(
+            'Mở phần gợi ý, chọn một cách, rồi thử trong một cuộc họp thật.',
+          ),
+        ),
+        findsNothing,
+      );
+    });
+
+    testWidgets('mỗi bước một câu hỏi riêng khi bấm Tôi đã thử bước này', (
+      tester,
+    ) async {
+      final intel = _twoThemes();
+      intel.seedEnrollments([_enroll('pt-voice')]);
+      await openTheme(tester, intel);
+
+      await tester.tap(
+        find.byKey(const Key('wr_practice_step_done_pt-voice-1')),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Bạn để ý thấy gì?'), findsOneWidget);
+      expect(find.text('Chỉ đánh dấu'), findsOneWidget);
+      expect(find.byKey(const Key('wr_practice_note_later')), findsOneWidget);
+    });
+
+    testWidgets('bước 3 chưa chọn cách: chỉ có lối Xem ba cách gợi ý', (
       tester,
     ) async {
       final intel = _twoThemes();
       intel.seedEnrollments([
         _enroll('pt-voice', done: ['pt-voice-1', 'pt-voice-2']),
       ]);
+      await openTheme(tester, intel);
 
-      await _pumpLarge(
-        tester,
-        _wrap(const WrPracticeThemeScreen(themeId: 'pt-voice'), intel: intel),
-      );
+      expect(find.byKey(const Key('wr_practice_open_options')), findsOneWidget);
+      expect(find.text('Xem ba cách gợi ý'), findsOneWidget);
+      // Ba cách KHÔNG xổ tại chỗ, và chưa đánh dấu được.
+      expect(find.text('Đặt một câu hỏi nhỏ trước'), findsNothing);
+      expect(_stepDoneButtons, findsNothing);
+
+      await tester.tap(find.byKey(const Key('wr_practice_open_options')));
+      await tester.pumpAndSettle();
+      expect(find.text('StepOptions'), findsOneWidget);
+    });
+
+    testWidgets(
+      'đã chọn cách: thẻ Cách bạn đang thử, thử xong thành "Thử: ‹cách›"',
+      (tester) async {
+        final intel = _twoThemes();
+        final content = FakeWrContentRepository();
+        intel.seedEnrollments([
+          _enroll(
+            'pt-voice',
+            done: ['pt-voice-1', 'pt-voice-2'],
+            pendingChoice: 'small',
+          ),
+        ]);
+        await openTheme(tester, intel, content: content);
+
+        final choice = find.byKey(const Key('wr_practice_choice'));
+        expect(
+          find.descendant(
+            of: choice,
+            matching: find.text('Đặt một câu hỏi nhỏ trước'),
+          ),
+          findsOneWidget,
+        );
+        expect(
+          find.descendant(
+            of: choice,
+            matching: find.text('✓ Cách bạn đang thử'),
+          ),
+          findsOneWidget,
+        );
+        expect(find.text('Tôi đã thử cách này'), findsOneWidget);
+        expect(find.text('Đổi sang cách khác'), findsOneWidget);
+
+        await tester.tap(
+          find.byKey(const Key('wr_practice_step_done_pt-voice-3')),
+        );
+        await tester.pumpAndSettle();
+        expect(find.text('Bạn đã thử như thế nào?'), findsOneWidget);
+        await tester.enterText(
+          find.byKey(const Key('wr_practice_note_field')),
+          'Mình hỏi lại một câu.',
+        );
+        await tester.pumpAndSettle();
+        await tester.tap(find.byKey(const Key('wr_practice_note_save')));
+        await tester.pumpAndSettle();
+
+        expect(
+          inStep('pt-voice-3', find.text('Thử: Đặt một câu hỏi nhỏ trước')),
+          findsOneWidget,
+        );
+        expect(
+          inStep('pt-voice-3', find.text('CHỌN MỘT CÁCH · ĐÃ THỬ')),
+          findsOneWidget,
+        );
+        expect(
+          intel.upsertPracticeStepNoteCalls.single.choice,
+          'Đặt một câu hỏi nhỏ trước',
+        );
+      },
+    );
+
+    testWidgets('bước Premium hiện kèm nút mở khoá cho bản miễn phí', (
+      tester,
+    ) async {
+      final intel = _twoThemes();
+      intel.seedEnrollments([
+        _enroll('pt-voice', done: ['pt-voice-1', 'pt-voice-2', 'pt-voice-3']),
+      ]);
+      await openTheme(tester, intel);
 
       // §IV khoá cấp nội dung: vẫn thấy mình đang bỏ lỡ gì.
-      final row = find.byKey(const Key('wr_practice_step_pt-voice-3'));
       expect(
-        find.descendant(of: row, matching: find.text('Duy trì')),
+        inStep('pt-voice-4', find.text('Điều bạn muốn hỏi lần tới')),
         findsOneWidget,
       );
       expect(
-        find.descendant(of: row, matching: find.text('Giữ bốn tuần.')),
+        inStep('pt-voice-4', find.text('CÂU HỎI CHO LẦN SAU')),
         findsOneWidget,
       );
-      // Bước kế tiếp đang khoá thì chưa mời chọn cách thử.
-      expect(find.byKey(const Key('wr_practice_option_try')), findsNothing);
       expect(
-        find.byKey(const Key('wr_practice_step_unlock_pt-voice-3')),
+        find.byKey(const Key('wr_practice_step_unlock_pt-voice-4')),
         findsOneWidget,
       );
       // Và không có đường vòng để tự đánh dấu xong.
       expect(
-        find.byKey(const Key('wr_practice_step_done_pt-voice-3')),
+        find.byKey(const Key('wr_practice_step_done_pt-voice-4')),
         findsNothing,
       );
 
       await tester.tap(
-        find.byKey(const Key('wr_practice_step_unlock_pt-voice-3')),
+        find.byKey(const Key('wr_practice_step_unlock_pt-voice-4')),
       );
       await tester.pumpAndSettle();
       expect(find.text('Paywall practice_step'), findsOneWidget);
     });
 
+    // Bước 4 khoá Premium với bản miễn phí. Đòi đủ bốn bước thì người dùng
+    // miễn phí không bao giờ vào được phần duy trì.
     testWidgets(
-      'đi hết bước rồi thì không còn gì để bấm, chuyển sang duy trì',
+      'miễn phí hết ba bước mở được: thẻ Hết một vòng → Đưa vào phần duy trì',
       (tester) async {
         final intel = _twoThemes();
-        intel.seedEntitlement(
-          WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
-        );
+        final content = FakeWrContentRepository();
         intel.seedEnrollments([
-          _enroll(
-            'pt-voice',
-            done: ['pt-voice-1', 'pt-voice-2', 'pt-voice-3'],
-            completedAt: DateTime(2026, 7, 1),
-          ),
+          _enroll('pt-voice', done: ['pt-voice-1', 'pt-voice-2', 'pt-voice-3']),
         ]);
+        await openTheme(tester, intel, content: content);
 
-        await _pumpLarge(
-          tester,
-          _wrap(const WrPracticeThemeScreen(themeId: 'pt-voice'), intel: intel),
-        );
+        expect(find.byKey(const Key('wr_practice_round_done')), findsOneWidget);
+        expect(find.text('HẾT MỘT VÒNG'), findsOneWidget);
+        expect(find.text('Bạn vừa đi hết bốn bước'), findsOneWidget);
+        expect(intel.completeThemeCalls, isEmpty);
 
-        // Xong ba bước = xong giai đoạn làm quen, chủ đề chuyển sang duy trì —
-        // không phải "đã hoàn thành" rồi thôi (spec Skill Formation).
-        expect(find.byKey(const Key('wr_practice_all_done')), findsOneWidget);
-        expect(_stepDoneButtons, findsNothing);
-        expect(
-          find.byKey(const Key('wr_practice_maintain_block')),
-          findsOneWidget,
+        await tester.tap(find.byKey(const Key('wr_practice_move_to_keep')));
+        await tester.pumpAndSettle();
+
+        expect(intel.completeThemeCalls, hasLength(1));
+        final milestone = content.insertMemoryEventCalls.singleWhere(
+          (e) => e.behavior == 'career_milestone',
         );
-        expect(
-          find.byKey(const Key('wr_practice_maintain_pt-voice')),
-          findsOneWidget,
-        );
+        expect(milestone.reflectionText, 'Hết một vòng: Dám lên tiếng');
+        expect(milestone.themeId, isNull);
+        expect(find.text('StanceKeep'), findsOneWidget);
       },
     );
 
-    // Cả 13 chủ đề thật đều khoá bước "Chuyển hóa". Nếu người dùng miễn phí
-    // khép giai đoạn làm quen ở bước 2 mà nút duy trì không mở, họ kẹt ở 2/5 và
-    // KHÔNG BAO GIỜ hình thành được kỹ năng nào.
-    testWidgets('miễn phí khép ở bước 2 vẫn mở được giai đoạn duy trì', (
-      tester,
-    ) async {
-      final intel = _twoThemes();
-      intel.seedEnrollments([
-        _enroll(
-          'pt-voice',
-          done: ['pt-voice-1', 'pt-voice-2'],
-          completedAt: DateTime(2026, 7, 1),
-        ),
-      ]);
-
-      await _pumpLarge(
-        tester,
-        _wrap(const WrPracticeThemeScreen(themeId: 'pt-voice'), intel: intel),
-      );
-
-      expect(
-        find.byKey(const Key('wr_practice_maintain_block')),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const Key('wr_practice_maintain_pt-voice')),
-        findsOneWidget,
-      );
-      // Bước "Chuyển hóa" vẫn khoá — mở đường đi tiếp không phải là cho không.
-      expect(
-        find.byKey(const Key('wr_practice_step_unlock_pt-voice-3')),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('nâng cấp Premium rồi thì bước cuối bấm được, dù đã khép', (
+    testWidgets('đã đưa vào duy trì: thẻ Đang duy trì, không còn gì để bấm', (
       tester,
     ) async {
       final intel = _twoThemes();
@@ -611,127 +759,109 @@ void main() {
       intel.seedEnrollments([
         _enroll(
           'pt-voice',
-          done: ['pt-voice-1', 'pt-voice-2'],
+          done: ['pt-voice-1', 'pt-voice-2', 'pt-voice-3', 'pt-voice-4'],
           completedAt: DateTime(2026, 7, 1),
         ),
       ]);
+      await openTheme(tester, intel);
 
-      await _pumpLarge(
-        tester,
-        _wrap(const WrPracticeThemeScreen(themeId: 'pt-voice'), intel: intel),
+      expect(find.byKey(const Key('wr_practice_keeping')), findsOneWidget);
+      expect(find.byKey(const Key('wr_practice_round_done')), findsNothing);
+      expect(_stepDoneButtons, findsNothing);
+    });
+
+    testWidgets('nâng cấp Premium rồi thì bước cuối bấm được, dù đã duy trì', (
+      tester,
+    ) async {
+      final intel = _twoThemes();
+      intel.seedEntitlement(
+        WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
       );
+      intel.seedEnrollments([
+        _enroll(
+          'pt-voice',
+          done: ['pt-voice-1', 'pt-voice-2', 'pt-voice-3'],
+          completedAt: DateTime(2026, 7, 1),
+        ),
+      ]);
+      await openTheme(tester, intel);
 
-      // Khoá vĩnh viễn bước 3 chỉ vì hôm còn miễn phí đã khép chủ đề là ăn quỵt
+      // Khoá vĩnh viễn bước 4 chỉ vì hôm còn miễn phí đã khép chủ đề là ăn quỵt
       // đúng thứ người ta vừa trả tiền để mở.
       expect(
-        find.byKey(const Key('wr_practice_step_done_pt-voice-3')),
+        find.byKey(const Key('wr_practice_step_done_pt-voice-4')),
         findsOneWidget,
       );
+      expect(find.text('Ghi lại câu hỏi'), findsOneWidget);
     });
 
     testWidgets('chưa ghi danh thì đọc được nội dung nhưng chưa bấm được', (
       tester,
     ) async {
       final intel = _twoThemes();
-
-      await _pumpLarge(
-        tester,
-        _wrap(const WrPracticeThemeScreen(themeId: 'pt-voice'), intel: intel),
-      );
+      await openTheme(tester, intel);
 
       expect(
-        find.descendant(
-          of: find.byKey(const Key('wr_practice_step_pt-voice-1')),
-          matching: find.text('Quan sát một tuần.'),
-        ),
+        inStep('pt-voice-1', find.text('Quan sát một tuần.')),
         findsOneWidget,
       );
-      // Chưa ghi danh: không nút đánh dấu, không mời chọn cách.
       expect(_stepDoneButtons, findsNothing);
-      expect(find.byKey(const Key('wr_practice_option_try')), findsNothing);
     });
 
     testWidgets('chủ đề không tồn tại thì báo rõ, không màn trắng', (
       tester,
     ) async {
       final intel = _twoThemes();
-
-      await _pumpLarge(
-        tester,
-        _wrap(const WrPracticeThemeScreen(themeId: 'khong-co'), intel: intel),
-      );
+      await openTheme(tester, intel, themeId: 'khong-co');
 
       expect(find.byKey(const Key('wr_practice_theme_gone')), findsOneWidget);
       expect(tester.takeException(), isNull);
     });
 
     testWidgets(
-      'hoàn thành bước cuối khép chủ đề và ghi mảnh ký ức tương ứng',
+      'bước cuối: Ghi lại câu hỏi · Chưa có; xong KHÔNG tự khép chủ đề',
       (tester) async {
         final intel = _twoThemes();
         final content = FakeWrContentRepository();
         // Chủ đề hai bước để bước cuối không phải bước Premium.
         intel.seedPracticeThemes([_theme('pt-mini', 'Chủ đề hai bước')]);
         intel.seedPracticeSteps('pt-mini', [
-          _step('pt-mini-1', 'pt-mini', 1, 'Bước một'),
-          _step('pt-mini-2', 'pt-mini', 2, 'Bước hai'),
+          _step('pt-mini-1', 'pt-mini', 1, 'Nhận diện: Bước một'),
+          _step('pt-mini-2', 'pt-mini', 4, 'Câu hỏi cho lần sau: Bước hai'),
         ]);
         intel.seedEnrollments([
           _enroll('pt-mini', done: ['pt-mini-1']),
         ]);
+        await openTheme(tester, intel, content: content, themeId: 'pt-mini');
 
-        await _pumpLarge(
-          tester,
-          _wrap(
-            const WrPracticeThemeScreen(themeId: 'pt-mini'),
-            intel: intel,
-            content: content,
-          ),
-        );
-
+        expect(find.text('Ghi lại câu hỏi'), findsOneWidget);
         await tester.tap(
           find.byKey(const Key('wr_practice_step_done_pt-mini-2')),
         );
         await tester.pumpAndSettle();
+        expect(
+          find.text('Câu hỏi bạn muốn mang theo cho lần sau?'),
+          findsOneWidget,
+        );
+        expect(find.text('Chưa có'), findsOneWidget);
+        expect(
+          find.text('Chưa nghĩ ra cũng không sao. Quay lại khi bạn nghĩ ra.'),
+          findsOneWidget,
+        );
         await tester.tap(find.byKey(const Key('wr_practice_note_skip')));
         await tester.pumpAndSettle();
 
-        expect(intel.completeThemeCalls, isNotEmpty);
+        // Script `moveToKeep`: người dùng tự đưa vào duy trì.
+        expect(intel.completeThemeCalls, isEmpty);
         expect(
           content.insertMemoryEventCalls.map((e) => e.behavior),
-          contains('practice_theme_done'),
+          isNot(contains('practice_theme_done')),
         );
-      },
-    );
-
-    testWidgets(
-      'miễn phí: xong bước 2 là khép giai đoạn làm quen, không đợi bước khoá',
-      (tester) async {
-        final intel = _twoThemes();
-        final content = FakeWrContentRepository();
-        intel.seedEnrollments([
-          _enroll('pt-voice', done: ['pt-voice-1']),
-        ]);
-
-        await _pumpLarge(
-          tester,
-          _wrap(
-            const WrPracticeThemeScreen(themeId: 'pt-voice'),
-            intel: intel,
-            content: content,
-          ),
+        expect(find.byKey(const Key('wr_practice_round_done')), findsOneWidget);
+        expect(
+          inStep('pt-mini-2', find.text('CÂU HỎI CHO LẦN SAU · ĐỂ SAU')),
+          findsOneWidget,
         );
-
-        await tester.tap(
-          find.byKey(const Key('wr_practice_step_done_pt-voice-2')),
-        );
-        await tester.pumpAndSettle();
-        await tester.tap(find.byKey(const Key('wr_practice_note_skip')));
-        await tester.pumpAndSettle();
-
-        // Bước 3 khoá, nên bước 2 là bước cuối NGƯỜI NÀY đi được. Đòi đủ ba
-        // bước thì nút duy trì không bao giờ mở cho bản miễn phí.
-        expect(intel.completeThemeCalls, isNotEmpty);
       },
     );
 
@@ -743,26 +873,18 @@ void main() {
         intel.seedEntitlement(
           WrEntitlementRecord(userId: 'u1', plan: WrPlan.premium),
         );
-        // Đã khép hồi còn miễn phí (hai bước), giờ nâng cấp và đi nốt bước 3.
+        // Đã đưa vào duy trì hồi còn miễn phí, giờ nâng cấp và đi nốt bước 4.
         intel.seedEnrollments([
           _enroll(
             'pt-voice',
-            done: ['pt-voice-1', 'pt-voice-2'],
+            done: ['pt-voice-1', 'pt-voice-2', 'pt-voice-3'],
             completedAt: DateTime(2026, 7, 1),
           ),
         ]);
-
-        await _pumpLarge(
-          tester,
-          _wrap(
-            const WrPracticeThemeScreen(themeId: 'pt-voice'),
-            intel: intel,
-            content: content,
-          ),
-        );
+        await openTheme(tester, intel, content: content);
 
         await tester.tap(
-          find.byKey(const Key('wr_practice_step_done_pt-voice-3')),
+          find.byKey(const Key('wr_practice_step_done_pt-voice-4')),
         );
         await tester.pumpAndSettle();
         await tester.tap(find.byKey(const Key('wr_practice_note_skip')));
@@ -773,6 +895,7 @@ void main() {
           content.insertMemoryEventCalls.map((e) => e.behavior),
           isNot(contains('practice_theme_done')),
         );
+        expect(find.byKey(const Key('wr_practice_keeping')), findsOneWidget);
       },
     );
   });

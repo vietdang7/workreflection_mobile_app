@@ -25,6 +25,7 @@ import '../../../core/widgets/wr_hero_header.dart';
 import '../../../core/widgets/wr_voice_field.dart';
 import '../growth_providers.dart';
 import '../wr_providers.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 /// Tình huống "Tôi vừa học được một điều nhỏ nhưng hữu ích".
 const String kLearningSituationCode = 'P-08';
@@ -117,7 +118,7 @@ class _WrLearningCaptureScreenState
     onPressed: _back,
     style: TextButton.styleFrom(foregroundColor: WrColors.text2),
     child: Text(
-      tr('Đóng', 'Close'),
+      wrKeepCompounds(tr('Đóng', 'Close')),
       style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
     ),
   );
@@ -162,10 +163,10 @@ class _WrLearningCaptureScreenState
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      tr(
+                      wrKeepCompounds(tr(
                         'Bạn vừa học được điều hữu ích',
                         'You just learned something useful',
-                      ),
+                      )),
                       style: const TextStyle(
                         fontSize: 21,
                         fontWeight: FontWeight.w700,
@@ -175,14 +176,14 @@ class _WrLearningCaptureScreenState
                     ),
                     const SizedBox(height: 7),
                     Text(
-                      (story != null && story.isNotEmpty)
+                      wrKeepCompounds((story != null && story.isNotEmpty)
                           ? story
                           : tr(
                               'Không cần điều gì lớn lao. Chỉ cần một điều giúp '
                                   'bạn làm việc khác đi một chút.',
                               'It does not need to be big. Just one thing that '
                                   'helps you work a little differently.',
-                            ),
+                            )),
                       style: _muted,
                     ),
                     const SizedBox(height: 22),
@@ -206,14 +207,14 @@ class _WrLearningCaptureScreenState
                           ),
                           const SizedBox(height: 8),
                           Text(
-                            (practice != null && practice.isNotEmpty)
+                            wrKeepCompounds((practice != null && practice.isNotEmpty)
                                 ? practice
                                 : tr(
                                     'Viết lại điều mình vừa học, bằng chính lời '
                                         'của mình.',
                                     'Write down what you just learned, in your '
                                         'own words.',
-                                  ),
+                                  )),
                             style: WrText.serifQuote(
                               fontSize: 16,
                               color: WrColors.navy,
@@ -239,20 +240,20 @@ class _WrLearningCaptureScreenState
                     ),
                     const SizedBox(height: 13),
                     Text(
-                      (aha != null && aha.isNotEmpty)
+                      wrKeepCompounds((aha != null && aha.isNotEmpty)
                           ? aha
                           : tr(
                               'Phần lớn sự tiến bộ đến từ những điều nhỏ được '
                                   'nhận ra và giữ lại.',
                               'Most progress comes from small things that get '
                                   'noticed and kept.',
-                            ),
+                            )),
                       style: _muted,
                     ),
                     if (_error != null) ...[
                       const SizedBox(height: 14),
                       Text(
-                        _error!,
+                        wrKeepCompounds(_error!),
                         style: const TextStyle(
                           fontSize: 14.5,
                           color: WrColors.coral,
@@ -278,7 +279,7 @@ class _WrLearningCaptureScreenState
                     ),
                   ),
                   child: Text(
-                    tr('Lưu bài học', 'Save the lesson'),
+                    wrKeepCompounds(tr('Lưu bài học', 'Save the lesson')),
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -333,7 +334,7 @@ class _WrLearningCaptureScreenState
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      _controller.text.trim(),
+                      wrKeepCompounds(_controller.text.trim()),
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 21,
@@ -369,10 +370,10 @@ class _WrLearningCaptureScreenState
                           ),
                           const SizedBox(height: 5),
                           Text(
-                            tr(
+                            wrKeepCompounds(tr(
                               'Bạn vừa học được điều hữu ích',
                               'You just learned something useful',
-                            ),
+                            )),
                             style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w700,
@@ -381,12 +382,13 @@ class _WrLearningCaptureScreenState
                           ),
                           const SizedBox(height: 5),
                           Text(
+                            wrKeepCompounds(// Phần "Những gì bạn đã học" đã bỏ (họp khách
+                            // 08/10); cột mốc này nằm trên dòng Hành trình.
                             tr(
-                              'Được ghi nhận hôm nay · sẽ xuất hiện trong “Những '
-                                  'gì bạn đã học”',
-                              'Recorded today · will appear in “What you have '
-                                  'learned”',
-                            ),
+                              'Được ghi nhận hôm nay · sẽ xuất hiện trong Hành '
+                                  'trình',
+                              'Recorded today · will appear in your Journey',
+                            )),
                             style: const TextStyle(
                               fontSize: 12.5,
                               color: WrColors.text3,
@@ -410,7 +412,7 @@ class _WrLearningCaptureScreenState
                           ),
                         ),
                         child: Text(
-                          tr('Quay lại Phát triển', 'Back to Grow'),
+                          wrKeepCompounds(tr('Quay lại Phát triển', 'Back to Grow')),
                           style: const TextStyle(
                             fontSize: 15,
                             fontWeight: FontWeight.w700,

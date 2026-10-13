@@ -21,10 +21,11 @@ const ROOT = path.resolve(__dirname, '..');
 const SITUATIONS_ASSET = path.join(ROOT, 'assets/seed/wr_situations.json');
 
 // Explicit retirement audit. Keep these values readable for release review.
+// S2-04 quay lại thư viện theo script Sprint 2 (migration
+// 20261013100000_wr_situations_sprint2_parity.sql).
 const RETIRED_SITUATION_CODES = Object.freeze([
   'S1-06',
   'S1-09',
-  'S2-04',
   'S2-09',
   'C1-08',
   'C2-08',
@@ -72,7 +73,7 @@ function auditRetiredSituationIds({ assetPath = SITUATIONS_ASSET } = {}) {
     pass:
       activeRetiredCodes.length === 0 &&
       duplicateActiveCodes.length === 0 &&
-      realRows.length === 72 &&
+      realRows.length === 73 &&
       rows.length - realRows.length === 1,
   };
 }

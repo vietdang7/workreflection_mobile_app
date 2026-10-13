@@ -21,6 +21,8 @@ import '../../../core/logic/wr_my_info.dart';
 import '../../../core/logic/profile_options.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
+import '../../../core/widgets/wr_app_background.dart';
+import '../../../core/widgets/wr_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../profile_providers.dart';
 import '../../../core/widgets/wr_paragraph.dart';
@@ -59,9 +61,10 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
     final filled = myInfoFilledCount(fields, read);
     final groups = myInfoGroups(fields);
 
-    return Scaffold(
-      backgroundColor: WrColors.pageBg,
-      body: SafeArea(
+    return WrAppBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
         child: ListView(
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 40),
           children: [
@@ -82,7 +85,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
                       ),
                       SizedBox(width: 6),
                       Text(
-                        tr('Quay lại', 'Back'),
+                        wrKeepCompounds(tr('Quay lại', 'Back')),
                         style: TextStyle(
                           fontSize: 14.5,
                           fontWeight: FontWeight.w500,
@@ -96,7 +99,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
             WrEyebrow(tr('HỒ SƠ', 'PROFILE')),
             const SizedBox(height: 8),
             Text(
-              tr('Thông tin của bạn', 'Your details'),
+              wrKeepCompounds(tr('Thông tin của bạn', 'Your details')),
               style: TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.w800,
@@ -155,7 +158,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
             for (final group in groups) ...[
               const SizedBox(height: 20),
               Text(
-                group,
+                wrKeepCompounds(group),
                 style: const TextStyle(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
@@ -175,7 +178,7 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
             ],
             const SizedBox(height: 20),
             Text(
-              tr('Công việc hiện tại (chi tiết)', 'Current role (details)'),
+              wrKeepCompounds(tr('Công việc hiện tại (chi tiết)', 'Current role (details)')),
               style: TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w700,
@@ -186,12 +189,12 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
             _WorkInfoRow(hasRoleText: (profile?.roleText ?? '').isNotEmpty),
             const SizedBox(height: 16),
             Text(
-              tr(
+              wrKeepCompounds(tr(
                 '$filled/${fields.length} mục đã điền. Tất cả đều tuỳ chọn, sửa '
                     'lại bất cứ lúc nào.',
                 '$filled/${fields.length} filled in. All optional, editable any '
                     'time.',
-              ),
+              )),
               key: const Key('my_info_filled_count'),
               textAlign: TextAlign.center,
               style: const TextStyle(
@@ -203,8 +206,9 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
           ],
         ),
       ),
-    );
-  }
+    ),
+  );
+}
 
   Future<void> _pick(MyInfoField field, String value) async {
     setState(() => _expanded = null);
@@ -217,10 +221,10 @@ class _MyInfoScreenState extends ConsumerState<MyInfoScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            tr(
+            wrKeepCompounds(tr(
               'Chưa lưu được, thử lại giúp mình nhé.',
               'Could not save, please try again.',
-            ),
+            )),
           ),
         ),
       );
@@ -249,12 +253,8 @@ class _GroupCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: WrColors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: WrColors.line),
-      ),
+    return WrCard(
+      padding: EdgeInsets.zero,
       child: Column(
         children: [
           for (var i = 0; i < fields.length; i++)
@@ -311,7 +311,7 @@ class _FieldRow extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    field.label,
+                    wrKeepCompounds(field.label),
                     style: const TextStyle(
                       fontSize: 14.5,
                       color: WrColors.navy,
@@ -321,9 +321,9 @@ class _FieldRow extends StatelessWidget {
                 const SizedBox(width: 12),
                 Flexible(
                   child: Text(
-                    // "Chưa có" chứ không phải để trống: một dòng trống trông
+                    wrKeepCompounds(// "Chưa có" chứ không phải để trống: một dòng trống trông
                     // như lỗi tải, còn chữ này nói rõ đây là chỗ chờ người dùng.
-                    label ?? tr('Chưa có', 'Not set'),
+                    label ?? tr('Chưa có', 'Not set')),
                     textAlign: TextAlign.right,
                     style: TextStyle(
                       fontSize: 13,
@@ -388,7 +388,7 @@ class _OptionTile extends StatelessWidget {
           border: Border.all(color: WrColors.line),
         ),
         child: Text(
-          option.label,
+          wrKeepCompounds(option.label),
           style: TextStyle(
             fontSize: 14,
             fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
@@ -409,35 +409,28 @@ class _WorkInfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return WrCard(
       key: const Key('my_info_work_info_row'),
-      behavior: HitTestBehavior.opaque,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       onTap: () => context.push('/wr/work-info'),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: WrColors.white,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: WrColors.line),
-        ),
-        child: Row(
+      child: Row(
           children: [
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    tr('Vai trò, và JD hoặc CV', 'Role, and JD or CV'),
+                    wrKeepCompounds(tr('Vai trò, và JD hoặc CV', 'Role, and JD or CV')),
                     style: TextStyle(fontSize: 14.5, color: WrColors.navy),
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    hasRoleText
+                    wrKeepCompounds(hasRoleText
                         ? tr(
                             'Đã có, chạm để xem hoặc sửa',
                             'Added, tap to view or edit',
                           )
-                        : tr('Chưa có, chạm để thêm', 'Not added, tap to add'),
+                        : tr('Chưa có, chạm để thêm', 'Not added, tap to add')),
                     style: const TextStyle(
                       fontSize: 12.5,
                       color: WrColors.text3,
@@ -450,7 +443,6 @@ class _WorkInfoRow extends StatelessWidget {
             const Icon(Icons.chevron_right, size: 18, color: WrColors.text3),
           ],
         ),
-      ),
-    );
+      );
   }
 }

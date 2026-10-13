@@ -27,6 +27,7 @@ import '../../user_action_providers.dart';
 import '../../wr_providers.dart'
     show currentUserIdProvider, wrMemoryEventsProvider;
 import '../wr_practice_theme_screen.dart' show WrPracticeProgressDots;
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 class WrUserActionsSection extends ConsumerStatefulWidget {
   const WrUserActionsSection({super.key});
@@ -131,23 +132,23 @@ class _WrUserActionsSectionState extends ConsumerState<WrUserActionsSection> {
     final ok = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(tr('Xoá việc này?', 'Delete this action?')),
+        title: Text(wrKeepCompounds(tr('Xoá việc này?', 'Delete this action?'))),
         content: Text(
-          tr(
+          wrKeepCompounds(tr(
             'Những ngày bạn đã ghi cho việc này cũng sẽ mất.',
             'The days you logged for it will be removed too.',
-          ),
+          )),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(tr('Huỷ', 'Cancel')),
+            child: Text(wrKeepCompounds(tr('Huỷ', 'Cancel'))),
           ),
           TextButton(
             key: const Key('wr_growth_user_action_delete_confirm'),
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(
-              tr('Xoá', 'Delete'),
+              wrKeepCompounds(tr('Xoá', 'Delete')),
               style: const TextStyle(color: WrColors.destructive),
             ),
           ),
@@ -206,7 +207,7 @@ class _WrUserActionsSectionState extends ConsumerState<WrUserActionsSection> {
                 borderRadius: BorderRadius.circular(10),
               ),
               child: Text(
-                tr('5 ngày', '5 days'),
+                wrKeepCompounds(tr('5 ngày', '5 days')),
                 style: const TextStyle(
                   fontSize: 10.5,
                   fontWeight: FontWeight.w700,
@@ -218,10 +219,10 @@ class _WrUserActionsSectionState extends ConsumerState<WrUserActionsSection> {
         ),
         const SizedBox(height: 6),
         Text(
-          tr(
+          wrKeepCompounds(tr(
             'Mục tiêu nhỏ 5 ngày bạn tự đặt, thực hành song song cùng chủ đề mỗi ngày.',
             '5-day micro-habits you set yourself, practiced daily alongside your themes.',
-          ),
+          )),
           style: const TextStyle(
             fontSize: 13.5,
             color: WrColors.muted,
@@ -304,7 +305,7 @@ class _WrUserActionsSectionState extends ConsumerState<WrUserActionsSection> {
                   ),
                 ),
                 child: Text(
-                  tr('Thêm', 'Add'),
+                  wrKeepCompounds(tr('Thêm', 'Add')),
                   style: const TextStyle(
                     fontSize: 14.5,
                     fontWeight: FontWeight.w700,
@@ -324,7 +325,7 @@ class _WrUserActionsSectionState extends ConsumerState<WrUserActionsSection> {
                   padding: const EdgeInsets.only(right: 8),
                   child: ActionChip(
                     label: Text(
-                      tr(s.vi, s.en),
+                      wrKeepCompounds(tr(s.vi, s.en)),
                       style: const TextStyle(
                         fontSize: 12.5,
                         color: WrColors.navy,
@@ -356,7 +357,7 @@ class _WrUserActionsSectionState extends ConsumerState<WrUserActionsSection> {
         if (_error != null) ...[
           const SizedBox(height: 8),
           Text(
-            _error!,
+            wrKeepCompounds(_error!),
             style: const TextStyle(fontSize: 13.5, color: WrColors.coral),
           ),
         ],
@@ -403,9 +404,9 @@ class _UserActionCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          a.isCompleted
+                          wrKeepCompounds(a.isCompleted
                               ? tr('ĐÃ HOÀN THÀNH', 'COMPLETED')
-                              : tr('MỤC TIÊU 5 NGÀY', '5-DAY GOAL'),
+                              : tr('MỤC TIÊU 5 NGÀY', '5-DAY GOAL')),
                           style: const TextStyle(
                             fontSize: 11,
                             letterSpacing: 0.8,
@@ -441,7 +442,7 @@ class _UserActionCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    '$shown/${a.targetCount}',
+                    wrKeepCompounds('$shown/${a.targetCount}'),
                     style: TextStyle(
                       fontSize: 12.5,
                       fontWeight: FontWeight.w700,
@@ -496,7 +497,7 @@ class _UserActionCard extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             Text(
-              tr('Đã xong', 'Done'),
+              wrKeepCompounds(tr('Đã xong', 'Done')),
               style: const TextStyle(
                 fontSize: 14.5,
                 fontWeight: FontWeight.w700,
@@ -506,7 +507,7 @@ class _UserActionCard extends StatelessWidget {
             const SizedBox(width: 6),
             Expanded(
               child: Text(
-                tr('· Đã lưu vào Hành trình', '· Saved to Journey'),
+                wrKeepCompounds(tr('· Đã lưu vào Hành trình', '· Saved to Journey')),
                 style: const TextStyle(
                   fontSize: 13,
                   color: WrColors.muted,
@@ -530,7 +531,7 @@ class _UserActionCard extends StatelessWidget {
           const SizedBox(width: 8),
           Expanded(
             child: Text(
-              tr('Hoàn thành', 'Target reached'),
+              wrKeepCompounds(tr('Hoàn thành', 'Target reached')),
               style: const TextStyle(
                 fontSize: 14.5,
                 fontWeight: FontWeight.w700,
@@ -548,7 +549,7 @@ class _UserActionCard extends StatelessWidget {
               foregroundColor: const WidgetStatePropertyAll(WrColors.teal),
             ),
             child: Text(
-              tr('Đánh dấu xong', 'Mark as done'),
+              wrKeepCompounds(tr('Đánh dấu xong', 'Mark as done')),
               style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
             ),
           ),
@@ -568,9 +569,9 @@ class _UserActionCard extends StatelessWidget {
           color: today ? WrColors.teal : WrColors.coral,
         ),
         label: Text(
-          today
+          wrKeepCompounds(today
               ? tr('Đã ghi hôm nay', 'Logged today')
-              : tr('Hôm nay tôi đã làm', 'Done today'),
+              : tr('Hôm nay tôi đã làm', 'Done today')),
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w700,

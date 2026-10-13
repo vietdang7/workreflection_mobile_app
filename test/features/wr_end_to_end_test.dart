@@ -338,9 +338,10 @@ void main() {
     // SCA ở tab Hiểu mình sẽ trống mãi (§4.3).
     expect(stage.episodes.episodes.single.situationCode, isNotNull);
     expect(find.byType(WrMeaningScreen), findsOneWidget);
-    // Màn Bước phải rời hẳn stack. Còn nằm dưới là nó vẫn dựng lại theo Episode
-    // và bắn điều hướng đè mất màn đang xem — xem test riêng bên dưới.
-    expect(find.byType(WrStepScreen, skipOffstage: false), findsNothing);
+    // Script Sprint 2: màn Bước nằm lại dưới stack để bước 2 bấm lùi về đúng
+    // nó (giữ lựa chọn). Nó KHÔNG được tự điều hướng — xem test bên dưới.
+    expect(find.byType(WrStepScreen, skipOffstage: false), findsOneWidget);
+    expect(find.byType(WrStepScreen), findsNothing);
 
     // Mockup v47: Insight hiện NGAY sau bước kể, một chạm "Ừ, tôi cũng thấy
     // vậy" là giữ câu đó.
@@ -397,27 +398,25 @@ void main() {
       find.byKey(const Key('wr_discover_patterns_below_threshold')),
       findsOneWidget,
     );
-    // Career Snapshot (v47: thu gọn sẵn, mở ra mới thấy): mới một lần nhìn
-    // lại nên cột "Xuất hiện" còn thiếu 14.
-    final snapshotToggle = find.byKey(const Key('wr_discover_snapshot_toggle'));
-    await tester.ensureVisible(snapshotToggle);
-    await tester.pumpAndSettle();
-    await tester.tap(snapshotToggle);
-    await tester.pumpAndSettle();
+    // Hai thẻ còn lại của tab theo script `screenUnderstand`: "Trải nghiệm của
+    // bạn" (lối vào màn Diễn giải) và lời mời "Khảo sát điều kiện làm việc".
+    // Chưa làm khảo sát nên lời mời là "Bắt đầu khảo sát".
     expect(
-      find.textContaining('sẽ mở sau 14 lần nhìn lại nữa'),
+      find.byKey(const Key('wr_discover_experience_read')),
       findsOneWidget,
     );
-    // Free: diễn giải sâu nằm sau paywall — thẻ navy cuối màn là ổ khoá.
-    expect(find.byKey(const Key('wr_discover_sca_deep_lock')), findsOneWidget);
+    expect(
+      find.byKey(const Key('wr_discover_self_check_invite')),
+      findsOneWidget,
+    );
+    expect(find.text('Bắt đầu khảo sát →'), findsOneWidget);
 
     stage.router.go('/wr/journey');
     await tester.pumpAndSettle();
     expect(find.byType(WrJourneyScreen), findsOneWidget);
-    // Mockup v47: không còn khối khoá riêng; Free khoá theo TỪNG MỐC ngoài
-    // tuần này. Fake repo khép Episode với ngày cố định 27/07/2026 nên mốc
-    // vừa tạo nằm ở tuần cũ → hiện "Premium · Mở khoá". Con số tổng vẫn nói
-    // ra.
+    // Script `screenGrow`: phần xem trước không khoá theo tuần — mốc vừa tạo
+    // (dù nằm ở tuần cũ vì fake repo khép Episode ngày 27/07/2026) vẫn mở ra
+    // được. Con số tổng vẫn nói ra.
     expect(
       find.byKey(const Key('wr_journey_memory_lock'), skipOffstage: false),
       findsNothing,
@@ -431,7 +430,7 @@ void main() {
     expect(
       find.descendant(
         of: firstEntry,
-        matching: find.text('Premium · Mở khoá', skipOffstage: false),
+        matching: find.text('Chạm để xem', skipOffstage: false),
         skipOffstage: false,
       ),
       findsOneWidget,
@@ -485,10 +484,11 @@ void main() {
       hasLength(1),
       reason: 'màn Ý nghĩa bị đẩy chồng lên chính nó: $stack',
     );
+    // Màn Bước nằm dưới (để lùi về bước 1) nhưng không được đè màn khác.
     expect(
-      stack,
-      isNot(contains('/wr/flow/step')),
-      reason: 'màn Bước còn nằm dưới sẽ đè màn khác: $stack',
+      stack.where((l) => l == '/wr/flow/step'),
+      hasLength(1),
+      reason: 'màn Bước bị đẩy chồng hoặc tự điều hướng: $stack',
     );
     expect(find.textContaining('Transition bất hợp lệ'), findsNothing);
   });

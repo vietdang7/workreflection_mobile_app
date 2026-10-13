@@ -87,3 +87,36 @@ Widget wrTextScaleBuilder(BuildContext context, Widget? child) {
     child: child ?? const SizedBox.shrink(),
   );
 }
+
+/// Vùng chữ giữ đúng cỡ của script Sprint 2: BỎ phần cộng thêm của
+/// [WrTextScaler], chỉ còn hệ số cỡ chữ hệ thống (vẫn chặn trong
+/// [WrTextScaler.minSystemScale]–[WrTextScaler.maxSystemScale]).
+///
+/// Dùng cho thẻ có nhiều chữ nhỏ đặt sát nhau mà script đã cân sẵn cỡ: thẻ
+/// "Ghi nhận từ hệ thống", thẻ "15 câu hỏi ngắn". Đường cong cộng +2.7px cho
+/// chữ 12.5px, nhân cỡ chữ hệ thống 1.15 thì thành ~17px, thẻ phình và chữ rớt
+/// dòng (máy thật 13/10).
+class WrScriptTextScale extends StatelessWidget {
+  const WrScriptTextScale({super.key, required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final current = MediaQuery.textScalerOf(context);
+    final system = current is WrTextScaler
+        ? current.systemScale
+        : current.scale(14) / 14;
+    final clamped = clampDouble(
+      system,
+      WrTextScaler.minSystemScale,
+      WrTextScaler.maxSystemScale,
+    );
+    return MediaQuery(
+      data: MediaQuery.of(
+        context,
+      ).copyWith(textScaler: TextScaler.linear(clamped)),
+      child: child,
+    );
+  }
+}

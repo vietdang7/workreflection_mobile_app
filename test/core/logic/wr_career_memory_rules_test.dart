@@ -105,6 +105,54 @@ void main() {
       );
     });
 
+    test('script Sprint 2: P-11 / P-08 luôn là cột mốc, kể cả không phải '
+        'lần đầu', () {
+      final seen = [
+        _story(id: '1', need: HumanNeed.phatTrien, at: _now),
+        _story(id: '2', need: HumanNeed.phatTrien, at: _now),
+      ];
+      expect(
+        milestoneTextForStory(
+          story: _story(
+            id: '3',
+            need: HumanNeed.phatTrien,
+            at: _now,
+            code: 'P-11',
+          ),
+          previousStories: seen,
+        ),
+        'Đã hoàn thành một trải nghiệm học tập',
+      );
+      expect(
+        milestoneTextForStory(
+          story: _story(
+            id: '4',
+            need: HumanNeed.phatTrien,
+            at: _now,
+            code: 'P-08',
+          ),
+          previousStories: const [],
+        ),
+        'Một điều nhỏ bạn vừa học được',
+      );
+      // Tình huống khác cùng nhóm, không phải lần đầu: không có cột mốc.
+      expect(
+        milestoneTextForStory(
+          story: _story(
+            id: '5',
+            need: HumanNeed.phatTrien,
+            at: _now,
+            code: 'P-06',
+          ),
+          previousStories: seen,
+        ),
+        isNull,
+      );
+      expect(situationMilestoneKind('P-11'), SituationMilestoneKind.completion);
+      expect(situationMilestoneKind('P-08'), SituationMilestoneKind.learning);
+      expect(situationMilestoneKind(null), isNull);
+    });
+
     test('lượt sau mà không có nhu cầu thì không phải cột mốc', () {
       final s = _story(id: '2', need: null, at: _now);
       expect(

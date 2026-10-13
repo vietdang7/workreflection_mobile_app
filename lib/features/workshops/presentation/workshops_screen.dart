@@ -15,6 +15,7 @@ import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../workshops_providers.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 class WorkshopsScreen extends ConsumerWidget {
   const WorkshopsScreen({super.key});
@@ -33,7 +34,7 @@ class WorkshopsScreen extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back, color: WrColors.navy),
           onPressed: () => context.pop(),
         ),
-        title: Text(l10n.wsListTitle, style: WrTextStyles.hMedium),
+        title: Text(wrKeepCompounds(l10n.wsListTitle), style: WrTextStyles.hMedium),
       ),
       body: workshopsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -41,7 +42,7 @@ class WorkshopsScreen extends ConsumerWidget {
             _ErrorCard(onRetry: () => ref.invalidate(activeWorkshopsProvider)),
         data: (workshops) {
           if (workshops.isEmpty) {
-            return Center(child: Text(l10n.wsEmpty, style: WrTextStyles.body));
+            return Center(child: Text(wrKeepCompounds(l10n.wsEmpty), style: WrTextStyles.body));
           }
           return ListView.separated(
             padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
@@ -112,14 +113,14 @@ class _WorkshopCard extends StatelessWidget {
                   ],
 
                   // Title
-                  Text(workshop.title, style: WrTextStyles.hMedium),
+                  Text(wrKeepCompounds(workshop.title), style: WrTextStyles.hMedium),
                   const SizedBox(height: 8),
 
                   // Date + location line
                   Text(
-                    workshop.location != null
+                    wrKeepCompounds(workshop.location != null
                         ? '${_formatDate(workshop.date)} · ${workshop.location}'
-                        : _formatDate(workshop.date),
+                        : _formatDate(workshop.date)),
                     style: WrTextStyles.body,
                   ),
                   const SizedBox(height: 12),
@@ -192,7 +193,7 @@ class _Chip extends StatelessWidget {
         borderRadius: BorderRadius.circular(100),
       ),
       child: Text(
-        label,
+        wrKeepCompounds(label),
         style: TextStyle(
           fontSize: 13.5,
           fontWeight: FontWeight.w600,
@@ -222,7 +223,7 @@ class _ErrorCard extends StatelessWidget {
           const SizedBox(height: 16),
           TextButton(
             onPressed: onRetry,
-            child: Text(AppLocalizations.of(context)!.homeRetry),
+            child: Text(wrKeepCompounds(AppLocalizations.of(context)!.homeRetry)),
           ),
         ],
       ),

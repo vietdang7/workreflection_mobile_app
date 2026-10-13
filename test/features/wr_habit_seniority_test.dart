@@ -29,6 +29,7 @@ import 'package:workreflection_mobile/features/wr/growth_providers.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_growth_skills_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_practice_theme_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_skill_moment.dart';
+import 'package:workreflection_mobile/features/wr/presentation/wr_stance_keep_screen.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
 
@@ -92,7 +93,10 @@ Future<void> _pumpLarge(WidgetTester tester, Widget widget) async {
 }
 
 /// Chủ đề C1 của bộ 10 — chủ đề duy nhất có mặt trong cả bảng B.2 lẫn B.3.
-FakeWrIntelligenceRepository _trustTheme({DateTime? completedAt}) {
+FakeWrIntelligenceRepository _trustTheme({
+  DateTime? completedAt,
+  List<String> done = const ['pt-c1-1', 'pt-c1-2', 'pt-c1-3'],
+}) {
   final intel = FakeWrIntelligenceRepository()
     ..seedPracticeThemes([
       const PracticeTheme(
@@ -133,7 +137,7 @@ FakeWrIntelligenceRepository _trustTheme({DateTime? completedAt}) {
       PracticeEnrollment(
         userId: 'u1',
         themeId: 'pt-c1',
-        completedSteps: const ['pt-c1-1', 'pt-c1-2', 'pt-c1-3'],
+        completedSteps: done,
         completedAt: completedAt,
       ),
     ]);
@@ -142,12 +146,16 @@ FakeWrIntelligenceRepository _trustTheme({DateTime? completedAt}) {
 
 void main() {
   group('B.3 — bước Chuyển hoá theo cấp bậc trên màn chủ đề', () {
+    // Script Sprint 2: chỉ bước ĐANG LÀM hiện mô tả, nên đặt người dùng ở
+    // bước thứ ba để đọc được nội dung đã viết lại theo cấp bậc.
+    const atStep3 = ['pt-c1-1', 'pt-c1-2'];
+
     testWidgets('chưa khai vị trí thì giữ nguyên nội dung gốc', (tester) async {
       await _pumpLarge(
         tester,
         _wrap(
           const WrPracticeThemeScreen(themeId: 'pt-c1'),
-          intel: _trustTheme(),
+          intel: _trustTheme(done: atStep3),
         ),
       );
 
@@ -161,16 +169,13 @@ void main() {
         tester,
         _wrap(
           const WrPracticeThemeScreen(themeId: 'pt-c1'),
-          intel: _trustTheme(),
+          intel: _trustTheme(done: atStep3),
           tier: SeniorityTier.leadTeam,
         ),
       );
 
       expect(find.text('Nội dung gốc bước 3.'), findsNothing);
       expect(find.textContaining('giao việc và thật sự buông'), findsOneWidget);
-      // Hai bước đầu không đổi — B.3 chỉ cho viết lại bước thứ ba.
-      expect(find.text('Nội dung gốc bước 1.'), findsOneWidget);
-      expect(find.text('Nội dung gốc bước 2.'), findsOneWidget);
     });
 
     testWidgets('quản lý nhiều nhóm thấy bản phạm vi rộng hơn', (tester) async {
@@ -178,7 +183,7 @@ void main() {
         tester,
         _wrap(
           const WrPracticeThemeScreen(themeId: 'pt-c1'),
-          intel: _trustTheme(),
+          intel: _trustTheme(done: atStep3),
           tier: SeniorityTier.leadOrg,
         ),
       );
@@ -191,8 +196,8 @@ void main() {
   });
 
   group('Yêu cầu 05/08 — màn chủ đề', () {
-    // Mockup v47 đảo yêu cầu 05/08: các bước nằm chung MỘT khung trắng, mỗi
-    // bước là một hàng ngăn bằng kẻ mảnh; đoạn nối dọc giữa các thẻ đã bỏ.
+    // Script `practiceDetail`: các bước nằm chung MỘT thẻ, mỗi bước là một hàng
+    // ngăn bằng kẻ mảnh.
     testWidgets('các bước nằm chung một khung, hàng ngăn bằng kẻ mảnh', (
       tester,
     ) async {
@@ -207,30 +212,9 @@ void main() {
       expect(find.byType(WrListCard), findsNothing);
       expect(find.byKey(const Key('wr_practice_step_connector')), findsNothing);
 
-      BoxDecoration? rowBox(String id) =>
-          tester
-                  .widget<Container>(find.byKey(Key('wr_practice_step_$id')))
-                  .decoration
-              as BoxDecoration?;
-
-      // Hai hàng đầu có kẻ dưới, hàng cuối thì không.
-      for (final id in ['pt-c1-1', 'pt-c1-2']) {
-        final border = rowBox(id)?.border as Border?;
-        expect(border?.bottom.color, WrColors.lineSoft, reason: id);
-      }
-      expect(rowBox('pt-c1-3'), isNull);
-
-      // Cả ba hàng chung một khung trắng bo góc.
       final frame = find.ancestor(
         of: find.byKey(const Key('wr_practice_step_pt-c1-1')),
-        matching: find.byWidgetPredicate(
-          (w) =>
-              w is Container &&
-              w.decoration is BoxDecoration &&
-              (w.decoration! as BoxDecoration).color == WrColors.white &&
-              (w.decoration! as BoxDecoration).borderRadius ==
-                  BorderRadius.circular(WrCard.kRadius),
-        ),
+        matching: find.byType(WrCard),
       );
       expect(frame, findsOneWidget);
       for (final id in ['pt-c1-2', 'pt-c1-3']) {
@@ -243,64 +227,36 @@ void main() {
           reason: id,
         );
       }
+      // Ba hàng, hai đường kẻ mảnh giữa chúng.
+      final dividers = tester.widgetList<Divider>(
+        find.descendant(of: frame, matching: find.byType(Divider)),
+      );
+      expect(dividers, hasLength(2));
+      expect(dividers.every((d) => d.color == WrColors.lineSoft), isTrue);
     });
 
-    testWidgets('bước đã xong không mờ đi, chỉ bước Premium bị khoá mới mờ', (
+    testWidgets('bước đã xong không mờ đi; bước chưa tới chữ nhạt', (
       tester,
     ) async {
-      // v47: bước đã xong giữ nguyên độ đậm, kèm dấu tick và ghi chú. Mờ đi
-      // chỉ dành cho bước người dùng chưa mở được.
-      final intel = _trustTheme()
-        ..seedPracticeSteps('pt-c1', const [
-          PracticeStep(
-            stepId: 'pt-c1-1',
-            themeId: 'pt-c1',
-            stepOrder: 1,
-            title: 'Nhận diện',
-            isPremium: false,
-          ),
-          PracticeStep(
-            stepId: 'pt-c1-2',
-            themeId: 'pt-c1',
-            stepOrder: 2,
-            title: 'Thử nghiệm',
-            isPremium: false,
-          ),
-          PracticeStep(
-            stepId: 'pt-c1-3',
-            themeId: 'pt-c1',
-            stepOrder: 3,
-            title: 'Chuyển hoá',
-            isPremium: true,
-          ),
-        ])
-        ..seedEnrollments([
-          const PracticeEnrollment(
-            userId: 'u1',
-            themeId: 'pt-c1',
-            completedSteps: ['pt-c1-1'],
-          ),
-        ]);
+      final intel = _trustTheme(done: const ['pt-c1-1']);
 
       await _pumpLarge(
         tester,
         _wrap(const WrPracticeThemeScreen(themeId: 'pt-c1'), intel: intel),
       );
 
-      double opacityOf(String id) => tester
-          .widget<Opacity>(
-            find
-                .ancestor(
-                  of: find.byKey(Key('wr_practice_step_$id')),
-                  matching: find.byType(Opacity),
-                )
-                .first,
+      Color? colorOf(String stepId, String text) => tester
+          .widget<Text>(
+            find.descendant(
+              of: find.byKey(Key('wr_practice_step_$stepId')),
+              matching: find.text(text),
+            ),
           )
-          .opacity;
+          .style
+          ?.color;
 
-      expect(opacityOf('pt-c1-1'), 1.0);
-      expect(opacityOf('pt-c1-2'), 1.0);
-      expect(opacityOf('pt-c1-3'), lessThan(1.0));
+      expect(colorOf('pt-c1-1', 'Nhận diện'), WrColors.text2);
+      expect(colorOf('pt-c1-3', 'Chuyển hoá'), WrColors.text3);
     });
 
     testWidgets('bước đã xong KHÔNG bị gạch ngang chữ', (tester) async {
@@ -331,13 +287,13 @@ void main() {
       await _pumpLarge(
         tester,
         _wrap(
-          const WrPracticeThemeScreen(themeId: 'pt-c1'),
+          const WrStanceKeepScreen(),
           intel: _trustTheme(completedAt: DateTime(2026, 8, 1)),
           content: content,
         ),
       );
 
-      await tester.tap(find.byKey(const Key('wr_practice_maintain_pt-c1')));
+      await tester.tap(find.byKey(const Key('wr_keep_mark_pt-c1')));
       await tester.pumpAndSettle();
 
       final logged = content.insertMemoryEventCalls
@@ -345,6 +301,8 @@ void main() {
           .toList();
       expect(logged, hasLength(1));
       expect(logged.single.themeId, 'pt-c1');
+      // Script `markKeep`: mục Career Memory "Duy trì: ‹chủ đề›".
+      expect(logged.single.reflectionText, 'Duy trì: Tin và được tin');
     });
   });
 
@@ -462,19 +420,24 @@ void main() {
               ),
         ]);
 
-    testWidgets('bộ đếm của mỗi chủ đề là 4/5, không phải 8/5', (tester) async {
+    testWidgets('mỗi chủ đề đếm riêng: 5 lần, không phải 9 lần', (
+      tester,
+    ) async {
       await _pumpLarge(
         tester,
         _wrap(
-          const WrPracticeThemeScreen(themeId: 'pt-c2'),
+          const WrStanceKeepScreen(),
           intel: twoVoiceThemes(),
           content: fourEach(),
         ),
       );
 
-      expect(find.textContaining('Đã 4/5 lần'), findsOneWidget);
-      expect(find.textContaining('8/5'), findsNothing);
-      expect(find.textContaining('Còn 1 lần nữa'), findsOneWidget);
+      // Một tên là một dòng (giữ chủ đề mới đưa vào duy trì), và chỉ đếm
+      // những lần của đúng chủ đề đó: 1 lần đưa vào + 4 lần ghi nhận.
+      expect(find.byKey(const Key('wr_keep_row_pt-c2')), findsOneWidget);
+      expect(find.byKey(const Key('wr_keep_row_pt-voice')), findsNothing);
+      expect(find.textContaining('5 lần'), findsOneWidget);
+      expect(find.textContaining('9 lần'), findsNothing);
     });
 
     testWidgets('lần thứ 5 mới ăn mừng, và dấu mốc ghi đúng theme_id', (
@@ -484,13 +447,13 @@ void main() {
       await _pumpLarge(
         tester,
         _wrap(
-          const WrPracticeThemeScreen(themeId: 'pt-c2'),
+          const WrStanceKeepScreen(),
           intel: twoVoiceThemes(),
           content: content,
         ),
       );
 
-      await tester.tap(find.byKey(const Key('wr_practice_maintain_pt-c2')));
+      await tester.tap(find.byKey(const Key('wr_keep_mark_pt-c2')));
       await tester.pumpAndSettle();
 
       expect(

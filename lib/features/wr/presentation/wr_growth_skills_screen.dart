@@ -215,7 +215,7 @@ class _SectionLabel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      text,
+      wrKeepCompounds(text),
       style: const TextStyle(
         fontSize: 12.5,
         fontWeight: FontWeight.w700,
@@ -331,13 +331,13 @@ class _FormingSkillTile extends StatelessWidget {
             _ProgressBar(progress: formation.progress),
             const SizedBox(height: 7),
             Text(
-              // Dấu phẩy, không phải dấu chấm giữa (bản đối chiếu UX/UI 05/08).
+              wrKeepCompounds(// Dấu phẩy, không phải dấu chấm giữa (bản đối chiếu UX/UI 05/08).
               tr(
                 '${formation.practiceCount}/${formation.threshold} lần thực hành, '
                     'còn ${formation.remaining} lần nữa',
                 '${formation.practiceCount}/${formation.threshold} practices, '
                     '${formation.remaining} to go',
-              ),
+              )),
               key: Key('wr_skill_progress_${formation.themeId}'),
               style: const TextStyle(fontSize: 14, color: WrColors.muted),
             ),
@@ -364,10 +364,10 @@ class _OnboardingHint extends StatelessWidget {
         children: [
           Expanded(
             child: Text(
-              tr(
+              wrKeepCompounds(tr(
                 'Đi hết bốn bước làm quen của chủ đề này trước đã.',
                 'Finish the four getting-familiar steps of this theme first.',
-              ),
+              )),
               style: TextStyle(
                 fontSize: 14.5,
                 color: WrColors.muted,
@@ -458,7 +458,7 @@ class _JdSection extends ConsumerWidget {
             child: Row(
               children: [
                 Text(
-                  tr('Thêm mô tả công việc', 'Add a job description'),
+                  wrKeepCompounds(tr('Thêm mô tả công việc', 'Add a job description')),
                   style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
@@ -483,10 +483,10 @@ class _JdSection extends ConsumerWidget {
         ),
         const SizedBox(height: 12),
         Text(
-          tr(
+          wrKeepCompounds(tr(
             'Công việc bạn mô tả xoay quanh ${match.pillarSentence.toLowerCase()}.',
             'The job you describe centres on ${match.pillarSentence.toLowerCase()}.',
-          ),
+          )),
           style: const TextStyle(
             fontSize: 16,
             fontWeight: FontWeight.w700,
@@ -497,7 +497,7 @@ class _JdSection extends ConsumerWidget {
         const SizedBox(height: 16),
         if (match.matchedSkills.isNotEmpty) ...[
           Text(
-            tr('Bạn đã có sẵn', 'You already have'),
+            wrKeepCompounds(tr('Bạn đã có sẵn', 'You already have')),
             style: TextStyle(
               fontSize: 14.5,
               fontWeight: FontWeight.w700,
@@ -519,10 +519,10 @@ class _JdSection extends ConsumerWidget {
         ],
         if (match.gapThemes.isNotEmpty) ...[
           Text(
-            tr(
+            wrKeepCompounds(tr(
               'Công việc này còn cần, bạn chưa hình thành',
               'This job also needs, and you have not formed',
-            ),
+            )),
             style: TextStyle(
               fontSize: 14.5,
               fontWeight: FontWeight.w700,
@@ -632,7 +632,7 @@ class _BulletLine extends StatelessWidget {
         ],
         Expanded(
           child: Text(
-            text,
+            wrKeepCompounds(text),
             style: const TextStyle(
               fontSize: 15.5,
               fontWeight: FontWeight.w600,

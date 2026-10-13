@@ -91,6 +91,7 @@ class FakeWrEpisodeRepository implements WrEpisodeRepository {
     required ReflectionPattern pattern,
     String? note,
     WrSituation? situation,
+    bool clearSituation = false,
   }) async {
     _maybeThrow();
     final nextState =
@@ -110,6 +111,10 @@ class FakeWrEpisodeRepository implements WrEpisodeRepository {
     if (text != null && text.trim().isNotEmpty) {
       notes[pattern.dbValue] = text.trim();
     }
+    final clear = clearSituation && situation == null;
+    if (clear && (text == null || text.trim().isEmpty)) {
+      notes.remove(pattern.dbValue);
+    }
 
     return _store(
       episode.copyWith(
@@ -118,7 +123,10 @@ class FakeWrEpisodeRepository implements WrEpisodeRepository {
         notes: notes,
         situationCode: situation?.code,
         scaDimension: situation?.scaDimension,
-        humanNeed: situation?.humanNeed,
+        humanNeed: clear
+            ? episode.humanMoment.relatedNeed
+            : situation?.humanNeed,
+        clearSituation: clear,
       ),
     );
   }

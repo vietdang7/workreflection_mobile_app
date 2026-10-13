@@ -30,6 +30,10 @@ Future<void> logPracticeMaintained({
 }) async {
   final userId = ref.read(currentUserIdProvider);
   if (userId == null) return;
+  // Mỗi chủ đề ghi nhận một lần một ngày (script `markKeep`): hai lần trong
+  // cùng một ngày vẫn là một ngày có thực hành.
+  final known = ref.read(practiceMemoryEventsProvider).valueOrNull ?? const [];
+  if (maintainedToday(theme, known, DateTime.now())) return;
   final contentRepo = ref.read(wrContentRepositoryProvider);
   final messenger = ScaffoldMessenger.of(context);
 
@@ -43,17 +47,17 @@ Future<void> logPracticeMaintained({
         // `themeId` là thứ bộ đếm đọc; `reflectionText` chỉ còn để hiện chữ ở
         // tab Hành trình (Phần C mục 1).
         themeId: theme.themeId,
-        reflectionText: tr(
-          '${theme.title} · Duy trì',
-          '${theme.title} · Upkeep',
-        ),
+        // Script `markKeep`: mục Career Memory "Duy trì: ‹chủ đề›". Tiền tố
+        // "Duy trì" có trong `wrPracticeLabelMapProvider` nên Hành trình đổi
+        // được theo ngôn ngữ đang bật.
+        reflectionText: tr('Duy trì: ${theme.title}', 'Upkeep: ${theme.title}'),
       ),
     );
   } catch (_) {
     messenger.showSnackBar(
       SnackBar(
         content: Text(
-          tr('Chưa ghi nhận được. Thử lại.', 'Could not record it. Try again.'),
+          wrKeepCompounds(tr('Chưa ghi nhận được. Thử lại.', 'Could not record it. Try again.')),
         ),
       ),
     );
@@ -164,7 +168,7 @@ Future<void> showSkillFormedCelebration(
             ),
             const SizedBox(height: 22),
             Text(
-              tr('MỘT KỸ NĂNG CỦA BẠN', 'A SKILL OF YOURS'),
+              wrKeepCompounds(tr('MỘT KỸ NĂNG CỦA BẠN', 'A SKILL OF YOURS')),
               style: TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w700,
@@ -174,7 +178,7 @@ Future<void> showSkillFormedCelebration(
             ),
             const SizedBox(height: 10),
             Text(
-              skill.title,
+              wrKeepCompounds(skill.title),
               key: const Key('wr_skill_formed_title'),
               style: const TextStyle(
                 fontSize: 22,
@@ -189,11 +193,11 @@ Future<void> showSkillFormedCelebration(
             // chưa có câu riêng — ba chủ đề đời đầu, hoặc migration nội dung
             // chưa chạy — thì lùi về đúng câu chốt ở mục A.1.
             Text(
-              skill.formedLine ??
+              wrKeepCompounds(skill.formedLine ??
                   tr(
                     '"${skill.title}" giờ là một kỹ năng của bạn.',
                     '"${skill.title}" is now a skill of yours.',
-                  ),
+                  )),
               key: const Key('wr_skill_formed_line'),
               style: const TextStyle(
                 fontSize: 16.5,
@@ -218,10 +222,10 @@ Future<void> showSkillFormedCelebration(
             ),
             const SizedBox(height: 10),
             Text(
-              tr(
+              wrKeepCompounds(tr(
                 'Dấu mốc này đã được ghi vào hành trình của bạn.',
                 'This marker has been written into your journey.',
-              ),
+              )),
               style: TextStyle(
                 fontSize: 14,
                 color: WrColors.muted,
@@ -245,7 +249,7 @@ Future<void> showSkillFormedCelebration(
                   elevation: 0,
                 ),
                 child: Text(
-                  tr('Ghi nhận điều này', 'Record this'),
+                  wrKeepCompounds(tr('Ghi nhận điều này', 'Record this')),
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
                 ),
               ),
@@ -281,10 +285,10 @@ class WrMaintainPracticeAction extends ConsumerWidget {
           SizedBox(width: 8),
           Expanded(
             child: Text(
-              tr(
+              wrKeepCompounds(tr(
                 'Đã ghi nhận hôm nay. Hẹn bạn lần thực hành sau.',
                 'Recorded for today. See you at the next practice.',
-              ),
+              )),
               style: TextStyle(
                 fontSize: 14.5,
                 color: WrColors.muted,
@@ -313,8 +317,81 @@ class WrMaintainPracticeAction extends ConsumerWidget {
           ),
         ),
         child: Text(
-          tr('Tôi vừa thực hành điều này hôm nay', 'I practised this today'),
+          wrKeepCompounds(tr('Tôi vừa thực hành điều này hôm nay', 'I practised this today')),
           style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+        ),
+      ),
+    );
+  }
+}
+
+/// Nút "Ghi nhận" của một chủ đề đang duy trì (script `markKeep`).
+///
+/// Mỗi chủ đề một lần một ngày, không huỷ được: bấm rồi thì nút thành
+/// [doneLabel] tới hết ngày, mở lại vào hôm sau. Ghi xuống Career Memory qua
+/// [logPracticeMaintained], nên tab Phát triển và màn Tâm thế & duy trì đọc
+/// cùng một nguồn.
+class WrKeepMarkButton extends ConsumerStatefulWidget {
+  const WrKeepMarkButton({
+    super.key,
+    required this.theme,
+    required this.markedToday,
+    required this.doneLabel,
+  });
+
+  final PracticeTheme theme;
+  final bool markedToday;
+  final String doneLabel;
+
+  @override
+  ConsumerState<WrKeepMarkButton> createState() => _WrKeepMarkButtonState();
+}
+
+class _WrKeepMarkButtonState extends ConsumerState<WrKeepMarkButton> {
+  bool _busy = false;
+
+  Future<void> _mark() async {
+    if (_busy || widget.markedToday) return;
+    setState(() => _busy = true);
+    try {
+      await logPracticeMaintained(
+        context: context,
+        ref: ref,
+        theme: widget.theme,
+      );
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // `.mark` / `.mark.on` của script: viền teal nhạt, đã ghi thì nền teal.
+    final on = widget.markedToday;
+    return Semantics(
+      button: true,
+      enabled: !on,
+      child: GestureDetector(
+        key: Key('wr_keep_mark_${widget.theme.themeId}'),
+        behavior: HitTestBehavior.opaque,
+        onTap: on || _busy ? null : _mark,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+          decoration: BoxDecoration(
+            color: on ? WrColors.teal : WrColors.teal.withValues(alpha: 0.07),
+            borderRadius: BorderRadius.circular(9),
+            border: Border.all(
+              color: on ? WrColors.teal : WrColors.teal.withValues(alpha: 0.5),
+            ),
+          ),
+          child: Text(
+            wrKeepCompounds(on ? widget.doneLabel : tr('Ghi nhận', 'Record')),
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w700,
+              color: on ? WrColors.white : WrColors.pillTealText,
+            ),
+          ),
         ),
       ),
     );

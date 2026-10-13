@@ -22,6 +22,11 @@ ThemeData wrTheme({bool isWatercolor = false}) {
     // Spec §01: nền toàn màn hình là Cream BG, không phải trắng thuần — thẻ
     // trắng nổi lên được là nhờ nền này.
     scaffoldBackgroundColor: isWatercolor ? Colors.transparent : WrColors.pageBg,
+    appBarTheme: AppBarTheme(
+      backgroundColor: isWatercolor ? Colors.transparent : WrColors.pageBg,
+      elevation: 0,
+      scrolledUnderElevation: 0,
+    ),
     textTheme: GoogleFonts.beVietnamProTextTheme(),
   );
 }

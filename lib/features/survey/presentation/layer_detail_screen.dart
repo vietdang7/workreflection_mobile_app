@@ -12,6 +12,7 @@ import '../../../core/widgets/progress_track.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../survey_providers.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 // ---------------------------------------------------------------------------
 // Sub-component label resolver
@@ -114,17 +115,17 @@ class LayerDetailScreen extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back, color: WrColors.navy),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(_layerTitle(l10n), style: WrTextStyles.hMedium),
+        title: Text(wrKeepCompounds(_layerTitle(l10n)), style: WrTextStyles.hMedium),
       ),
       body: reportAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
-          child: Text(l10n.surveyProcessingError, style: WrTextStyles.body),
+          child: Text(wrKeepCompounds(l10n.surveyProcessingError), style: WrTextStyles.body),
         ),
         data: (report) {
           if (report == null) {
             return Center(
-              child: Text(l10n.surveyProcessingError, style: WrTextStyles.body),
+              child: Text(wrKeepCompounds(l10n.surveyProcessingError), style: WrTextStyles.body),
             );
           }
           final subScoresAsync = ref.watch(
@@ -133,7 +134,7 @@ class LayerDetailScreen extends ConsumerWidget {
           return subScoresAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Center(
-              child: Text(l10n.surveyProcessingError, style: WrTextStyles.body),
+              child: Text(wrKeepCompounds(l10n.surveyProcessingError), style: WrTextStyles.body),
             ),
             data: (subScores) => _LayerDetailBody(
               report: report,
@@ -186,7 +187,7 @@ class _LayerDetailBody extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  l10n.layerDetailOverallScore,
+                  wrKeepCompounds(l10n.layerDetailOverallScore),
                   style: WrTextStyles.eyebrow.copyWith(
                     color: WrColors.text3,
                     letterSpacing: 0.55,
@@ -197,7 +198,7 @@ class _LayerDetailBody extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      overallScore.toStringAsFixed(1),
+                      wrKeepCompounds(overallScore.toStringAsFixed(1)),
                       style: WrTextStyles.hLarge,
                     ),
                     _StatusBadge(score: overallScore, l10n: l10n),
@@ -219,9 +220,9 @@ class _LayerDetailBody extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(l10n.layerDetailNoData, style: WrTextStyles.hMedium),
+                  Text(wrKeepCompounds(l10n.layerDetailNoData), style: WrTextStyles.hMedium),
                   const SizedBox(height: 8),
-                  Text(l10n.layerDetailNoDataBody, style: WrTextStyles.body),
+                  Text(wrKeepCompounds(l10n.layerDetailNoDataBody), style: WrTextStyles.body),
                 ],
               ),
             ),
@@ -264,10 +265,10 @@ class _SubComponentCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(child: Text(label, style: WrTextStyles.hMedium)),
+              Expanded(child: Text(wrKeepCompounds(label), style: WrTextStyles.hMedium)),
               const SizedBox(width: 8),
               Text(
-                subScore.score.toStringAsFixed(1),
+                wrKeepCompounds(subScore.score.toStringAsFixed(1)),
                 style: WrTextStyles.hLarge,
               ),
             ],
@@ -280,7 +281,7 @@ class _SubComponentCard extends StatelessWidget {
             children: [
               _InlineBadge(label: statusLabel, color: statusColor),
               Text(
-                l10n.layerDetailResponses(subScore.count),
+                wrKeepCompounds(l10n.layerDetailResponses(subScore.count)),
                 style: WrTextStyles.body.copyWith(color: WrColors.muted),
               ),
             ],
@@ -322,7 +323,7 @@ class _InlineBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(100),
       ),
       child: Text(
-        label,
+        wrKeepCompounds(label),
         style: TextStyle(
           fontSize: 13.5,
           fontWeight: FontWeight.w700,

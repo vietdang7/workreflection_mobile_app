@@ -1,5 +1,6 @@
-// Widget tests — WrSelfCheckScreen, tầng Free vs Paid.
-// Spec: Kiến trúc Dữ liệu Hai Lớp v1.2 §II + §IV (khoá cấp tính năng).
+// Widget tests — WrSelfCheckScreen theo script Sprint 2 (`scaQuestionScreen`,
+// `scaResultScreen`): vào thẳng câu 1, năm mức LIKERT, màn kết quả ba trụ +
+// thẻ khoá Premium.
 // Run: flutter test test/features/wr_self_check_premium_test.dart
 
 import 'package:flutter/material.dart';
@@ -11,7 +12,6 @@ import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
 import 'package:workreflection_mobile/core/logic/wr_self_check_questions.dart';
-import 'package:workreflection_mobile/core/models/wr_content.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_self_check_screen.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
@@ -41,8 +41,10 @@ Widget _wrap({
             path: 'wr/paywall',
             builder: (_, __) => const Scaffold(body: Text('PAYWALL')),
           ),
-          GoRoute(path: 'wr/growth', builder: (_, __) => const Scaffold()),
-          GoRoute(path: 'wr/journey', builder: (_, __) => const Scaffold()),
+          GoRoute(
+            path: 'wr/sca-deep-dive',
+            builder: (_, __) => const Scaffold(body: Text('DEEP DIVE')),
+          ),
         ],
       ),
     ],
@@ -62,14 +64,11 @@ Widget _wrap({
   );
 }
 
-/// Bắt đầu và trả lời cả 15 câu bằng nhãn Likert [label].
+/// Trả lời cả 15 câu bằng nhãn LIKERT [label]. Màn mở thẳng vào câu 1.
 Future<void> _completeSurvey(
   WidgetTester tester, {
-  String label = 'Hoàn toàn không đúng',
+  String label = 'Không bao giờ',
 }) async {
-  await tester.tap(find.text('Bắt đầu →'));
-  await tester.pumpAndSettle();
-
   for (var i = 0; i < kSelfCheckQuestions.length; i++) {
     // Ô chọn cuối nằm dưới mép màn trên viewport thấp của test — cuộn tới đã
     // rồi mới chạm, đúng như người dùng phải làm.
@@ -82,46 +81,6 @@ Future<void> _completeSurvey(
   }
 }
 
-/// Cuộn trang kết quả từ trên xuống để tìm [finder] (sliver ngoài màn hình
-/// chưa được dựng nên find.text đơn thuần không thấy).
-Future<bool> _seenWhileScrolling(WidgetTester tester, Finder finder) async {
-  final scrollable = find.byType(Scrollable).first;
-  await tester.drag(scrollable, const Offset(0, 4000));
-  await tester.pumpAndSettle();
-  for (var i = 0; i < 40; i++) {
-    if (finder.evaluate().isNotEmpty) return true;
-    await tester.drag(scrollable, const Offset(0, -260));
-    await tester.pumpAndSettle();
-  }
-  return finder.evaluate().isNotEmpty;
-}
-
-Future<void> _expectVisible(
-  WidgetTester tester,
-  Finder f, {
-  String? why,
-}) async {
-  expect(await _seenWhileScrolling(tester, f), isTrue, reason: why);
-}
-
-Future<void> _expectAbsent(WidgetTester tester, Finder f, {String? why}) async {
-  expect(await _seenWhileScrolling(tester, f), isFalse, reason: why);
-}
-
-/// Mở một mục thu gọn ở trang kết quả bằng cách chạm vào dòng chữ in hoa.
-Future<void> _openSection(WidgetTester tester, String title) async {
-  final header = find.byKey(Key('self_check_section_$title'));
-  expect(
-    await _seenWhileScrolling(tester, header),
-    isTrue,
-    reason: 'không thấy mục "$title"',
-  );
-  await tester.ensureVisible(header);
-  await tester.pumpAndSettle();
-  await tester.tap(header);
-  await tester.pumpAndSettle();
-}
-
 WrEntitlementRecord _premium() => WrEntitlementRecord(
   userId: 'u1',
   plan: WrPlan.premium,
@@ -129,7 +88,48 @@ WrEntitlementRecord _premium() => WrEntitlementRecord(
 );
 
 void main() {
-  testWidgets('Free: thấy 3 trụ + đọc nhanh, khối diễn giải sâu bị khoá', (
+  testWidgets('không còn màn giới thiệu: mở ra là câu 1', (tester) async {
+    final intel = FakeWrIntelligenceRepository()..seedEntitlement(null);
+    await tester.pumpWidget(_wrap(intel: intel));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Bắt đầu →'), findsNothing);
+    expect(find.text('Câu 1 / ${kSelfCheckQuestions.length}'), findsOneWidget);
+  });
+
+  testWidgets('năm mức trả lời đúng nguyên văn LIKERT của script', (
+    tester,
+  ) async {
+    final intel = FakeWrIntelligenceRepository()..seedEntitlement(null);
+    await tester.pumpWidget(_wrap(intel: intel));
+    await tester.pumpAndSettle();
+
+    for (final l in const [
+      'Không bao giờ',
+      'Hiếm khi',
+      'Đôi khi',
+      'Thường xuyên',
+      'Gần như luôn luôn',
+    ]) {
+      expect(find.text(l), findsOneWidget, reason: l);
+    }
+  });
+
+  testWidgets('giá trị lưu vẫn là thang 1–5: "Thường xuyên" là 4', (
+    tester,
+  ) async {
+    final intel = FakeWrIntelligenceRepository()..seedEntitlement(null);
+    await tester.pumpWidget(_wrap(intel: intel));
+    await tester.pumpAndSettle();
+
+    await _completeSurvey(tester, label: 'Thường xuyên');
+
+    final saved = intel.insertSelfCheckResponseCalls.single;
+    expect(saved.answers.values.toSet(), {4});
+    expect(saved.structureScore, 4.0);
+  });
+
+  testWidgets('Free: màn kết quả đúng script, thẻ khoá mở paywall', (
     tester,
   ) async {
     final intel = FakeWrIntelligenceRepository()..seedEntitlement(null);
@@ -138,235 +138,87 @@ void main() {
 
     await _completeSurvey(tester);
 
-    expect(find.text('Bức tranh của bạn'), findsOneWidget);
-    expect(find.text('Sự rõ ràng'), findsWidgets);
+    expect(find.text('KẾT QUẢ KHẢO SÁT'), findsOneWidget);
+    expect(
+      find.text(wrKeepTitleTail('Điều kiện xung quanh bạn')),
+      findsOneWidget,
+    );
+    expect(find.text('Sự rõ ràng trong công việc'), findsOneWidget);
+    expect(find.text('Niềm tin & an toàn để lên tiếng'), findsOneWidget);
+    expect(find.text('Nhịp thực thi & nhìn lại'), findsOneWidget);
+    // "Không bao giờ" đều cả ba trụ = 1.0 → "Đang cản trở".
+    expect(find.text('Đang cản trở'), findsNWidgets(3));
 
-    await _expectVisible(tester, find.text('ĐIỀU ĐÁNG CHÚ Ý NHẤT'));
-    await _expectVisible(tester, find.text('DIỄN GIẢI SÂU'));
-    await _expectVisible(tester, find.text('Premium'));
-    await _expectVisible(tester, find.text('Mở diễn giải sâu'));
+    // Phần app tự thêm mà script không có đã đi.
+    expect(find.text('ĐIỀU ĐÁNG CHÚ Ý NHẤT'), findsNothing);
+    expect(find.text('Vào Thực hành'), findsNothing);
+    expect(find.text('Xem Hành trình'), findsNothing);
 
-    // Không lộ nội dung Paid.
-    await _expectAbsent(tester, find.text('XU HƯỚNG THEO THỜI GIAN'));
-    await _expectAbsent(tester, find.text('MẤT CÂN BẰNG GIỮA CÁC MẶT'));
-  });
-
-  testWidgets('Free: nút nâng cấp mở paywall', (tester) async {
-    final intel = FakeWrIntelligenceRepository()..seedEntitlement(null);
-    await tester.pumpWidget(_wrap(intel: intel));
+    final cta = find.byKey(const Key('wr_self_check_result_cta'));
+    await tester.ensureVisible(cta);
     await tester.pumpAndSettle();
-
-    await _completeSurvey(tester);
-    await _expectVisible(tester, find.text('Mở diễn giải sâu'));
-
-    // _expectVisible cuộn hết trang rồi trả về đầu, nên nút lại nằm ngoài
-    // khung — phải kéo nó vào tầm mắt trước khi chạm.
-    await tester.ensureVisible(find.text('Mở diễn giải sâu'));
+    expect(find.text('Xem diễn giải đầy đủ'), findsOneWidget);
+    await tester.tap(cta);
     await tester.pumpAndSettle();
-    await tester.tap(find.text('Mở diễn giải sâu'));
-    await tester.pumpAndSettle();
-
     expect(find.text('PAYWALL'), findsOneWidget);
   });
 
-  testWidgets('Paid: thấy diễn giải sâu và khối xu hướng', (tester) async {
-    final intel = FakeWrIntelligenceRepository()..seedEntitlement(_premium());
-    await tester.pumpWidget(_wrap(intel: intel));
-    await tester.pumpAndSettle();
-
-    await _completeSurvey(tester);
-
-    await _expectVisible(tester, find.text('DIỄN GIẢI SÂU'));
-    await _expectAbsent(tester, find.text('Mở diễn giải sâu'));
-    await _expectVisible(tester, find.text('XU HƯỚNG THEO THỜI GIAN'));
-
-    // Mục thu gọn sẵn: nội dung chỉ hiện sau khi chạm vào dòng chữ in hoa.
-    await _expectAbsent(tester, find.textContaining('lần tự soi đầu tiên'));
-    await _openSection(tester, 'XU HƯỚNG THEO THỜI GIAN');
-    await _expectVisible(tester, find.textContaining('lần tự soi đầu tiên'));
-  });
-
-  testWidgets('Paid: có lịch sử thì hiện so sánh với lần trước', (
-    tester,
-  ) async {
-    final now = DateTime.now();
-    final intel = FakeWrIntelligenceRepository()
-      ..seedEntitlement(_premium())
-      ..seedSelfCheckHistory([
-        ScaSelfCheckResponse(
-          userId: 'u1',
-          answers: const {},
-          structureScore: 1.0,
-          cultureScore: 1.0,
-          activityScore: 1.0,
-          takenAt: now.subtract(const Duration(days: 1)),
-        ),
-        ScaSelfCheckResponse(
-          userId: 'u1',
-          answers: const {},
-          structureScore: 1.0,
-          cultureScore: 1.0,
-          activityScore: 1.0,
-          takenAt: now.subtract(const Duration(days: 30)),
-        ),
-      ]);
-    await tester.pumpWidget(_wrap(intel: intel));
-    await tester.pumpAndSettle();
-
-    // Hai lần trước đều rất thấp, lần này trả lời cao nhất → xu hướng đi lên.
-    await _completeSurvey(tester, label: 'Hoàn toàn đúng');
-
-    await _openSection(tester, 'XU HƯỚNG THEO THỜI GIAN');
-    await _expectVisible(tester, find.textContaining('Đã ghi 3 lần tự soi'));
-    await _expectVisible(tester, find.textContaining('cải thiện'));
-  });
-
-  testWidgets('Paid: khi ba mặt lệch nhau thì hiện khối mất cân bằng', (
+  testWidgets('Paid: nút của thẻ khoá vào thẳng màn Diễn giải sâu', (
     tester,
   ) async {
     final intel = FakeWrIntelligenceRepository()..seedEntitlement(_premium());
     await tester.pumpWidget(_wrap(intel: intel));
     await tester.pumpAndSettle();
 
-    // Trả lời thấp toàn bộ → cả ba trụ đều dưới 2.8 → allLow.
-    await _completeSurvey(tester);
+    await _completeSurvey(tester, label: 'Gần như luôn luôn');
+    expect(find.text('Đang hỗ trợ tốt'), findsNWidgets(3));
 
-    await _expectVisible(tester, find.text('MẤT CÂN BẰNG GIỮA CÁC MẶT'));
-  });
-
-  testWidgets('Paid: mục mất cân bằng thu gọn sẵn, chạm mới mở ra', (
-    tester,
-  ) async {
-    final intel = FakeWrIntelligenceRepository()..seedEntitlement(_premium());
-    await tester.pumpWidget(_wrap(intel: intel));
+    final cta = find.byKey(const Key('wr_self_check_result_cta'));
+    await tester.ensureVisible(cta);
     await tester.pumpAndSettle();
-
-    await _completeSurvey(tester);
-
-    // Chỉ dòng chữ in hoa hiện ra, đoạn diễn giải nằm im.
-    await _expectVisible(tester, find.text('MẤT CÂN BẰNG GIỮA CÁC MẶT'));
-    await _expectAbsent(
-      tester,
-      find.textContaining('Cả ba mặt đều đang ở mức thấp'),
-    );
-
-    await _openSection(tester, 'MẤT CÂN BẰNG GIỮA CÁC MẶT');
-    await _expectVisible(
-      tester,
-      find.textContaining('Cả ba mặt đều đang ở mức thấp'),
-    );
-
-    // Chạm lần nữa thì thu lại.
-    await _openSection(tester, 'MẤT CÂN BẰNG GIỮA CÁC MẶT');
-    await _expectAbsent(
-      tester,
-      find.textContaining('Cả ba mặt đều đang ở mức thấp'),
-    );
-  });
-
-  testWidgets('Paid: đối chiếu với pattern lặp lại của cùng một mặt', (
-    tester,
-  ) async {
-    final content = FakeWrContentRepository()
-      ..seedSituations([
-        const WrSituation(
-          code: 'C2-sit-01',
-          text: 'Không dám lên tiếng',
-          scaDimension: ScaDimension.c2,
-          humanNeed: HumanNeed.ketNoi,
-          wave: 1,
-        ),
-      ]);
-    final intel = FakeWrIntelligenceRepository()
-      ..seedEntitlement(_premium())
-      ..seedPatternCounts([
-        PatternCount(
-          userId: 'u1',
-          situationCode: 'C2-sit-01',
-          scaDimension: ScaDimension.c2,
-          occurrenceCount: 5,
-          lastSeenAt: DateTime.now(),
-        ),
-      ]);
-
-    await tester.pumpWidget(_wrap(intel: intel, content: content));
+    expect(find.text('Xem diễn giải sâu'), findsOneWidget);
+    await tester.tap(cta);
     await tester.pumpAndSettle();
-
-    // Trả lời thấp đều → trụ thấp nhất hoà điểm, ưu tiên "Sự rõ ràng"; pattern
-    // thuộc "Mối quan hệ" nên khối đối chiếu chỉ hiện khi khớp trụ.
-    await _completeSurvey(tester, label: 'Hoàn toàn đúng');
-
-    await _expectVisible(tester, find.text('DIỄN GIẢI SÂU'));
+    expect(find.text('DEEP DIVE'), findsOneWidget);
   });
 
   // ───────────────────────────────────────────────────────────────────────────
-  // Lối thoát. Trước bản này màn chỉ có mũi tên lùi MỘT câu — đang ở câu 12 mà
-  // muốn ra thì phải bấm mười hai lần, tức là trên thực tế không có cửa ra.
+  // Lối thoát. Script đóng thẳng, không hỏi lại; câu 1 lùi nữa là rời màn.
   // ───────────────────────────────────────────────────────────────────────────
   group('thoát khỏi bộ câu hỏi', () {
-    Future<void> openFirstQuestion(WidgetTester tester) async {
-      await tester.tap(find.text('Bắt đầu →'));
-      await tester.pumpAndSettle();
-    }
-
-    testWidgets('chưa trả lời câu nào thì đóng thẳng, không cản đường', (
+    testWidgets('"Đóng" rời màn ngay, kể cả khi đã trả lời vài câu', (
       tester,
     ) async {
       final intel = FakeWrIntelligenceRepository()..seedEntitlement(null);
       await tester.pumpWidget(_wrap(intel: intel));
       await tester.pumpAndSettle();
 
-      await openFirstQuestion(tester);
-      expect(find.byKey(const Key('wr_self_check_close')), findsOneWidget);
+      for (var i = 0; i < 3; i++) {
+        await tester.tap(find.text('Đôi khi'));
+        await tester.pump(const Duration(milliseconds: 300));
+        await tester.pumpAndSettle();
+      }
+      expect(find.text('Câu 4 / 15'), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('wr_self_check_close')));
       await tester.pumpAndSettle();
 
-      // Tiêu đề hộp thoại chứa U+00A0 (wrKeepTitleTail) nên phải tìm đúng dạng đó,
-      // nếu không phép "không thấy" này đúng cả khi hộp thoại có mặt. Dạng đó
-      // được chứng minh tìm ra được ở test dưới.
-      expect(
-        find.text(wrKeepTitleTail('Thoát khỏi bộ câu hỏi?')),
-        findsNothing,
-      );
+      expect(find.byType(AlertDialog), findsNothing);
       expect(find.byType(WrSelfCheckScreen), findsNothing);
+      expect(find.text('HOME'), findsOneWidget);
+      // Bài dở không được ghi xuống.
+      expect(intel.insertSelfCheckResponseCalls, isEmpty);
     });
 
-    testWidgets('đã trả lời rồi thì hỏi lại trước khi bỏ', (tester) async {
-      // Bài dở không được lưu ở đâu cả — chạm nhầm "Đóng" là mất sạch.
+    testWidgets('lùi ở câu 1 là rời màn', (tester) async {
       final intel = FakeWrIntelligenceRepository()..seedEntitlement(null);
       await tester.pumpWidget(_wrap(intel: intel));
       await tester.pumpAndSettle();
 
-      await openFirstQuestion(tester);
-      for (var i = 0; i < 3; i++) {
-        await tester.tap(find.text('Đôi khi đúng'));
-        await tester.pump(const Duration(milliseconds: 300));
-        await tester.pumpAndSettle();
-      }
-
-      await tester.tap(find.byKey(const Key('wr_self_check_close')));
-      await tester.pumpAndSettle();
-
-      expect(find.textContaining('3 câu bạn đã trả lời'), findsOneWidget);
-      expect(
-        find.text(wrKeepTitleTail('Thoát khỏi bộ câu hỏi?')),
-        findsOneWidget,
-      );
-
-      // "Làm tiếp" đưa về đúng chỗ đang dở, không mất gì.
-      await tester.tap(find.text('Làm tiếp'));
-      await tester.pumpAndSettle();
-      expect(find.text('Câu 4 / 15'), findsOneWidget);
-
-      // "Thoát" mới thật sự ra khỏi màn, và không ghi gì xuống.
-      await tester.tap(find.byKey(const Key('wr_self_check_close')));
-      await tester.pumpAndSettle();
-      await tester.tap(find.byKey(const Key('wr_self_check_close_confirm')));
+      await tester.tap(find.byTooltip('Câu trước'));
       await tester.pumpAndSettle();
 
       expect(find.byType(WrSelfCheckScreen), findsNothing);
-      expect(intel.insertSelfCheckResponseCalls, isEmpty);
     });
   });
 
@@ -385,8 +237,8 @@ void main() {
     /// Chạm [first] rồi đổi sang [second] TRƯỚC khi màn kịp tự nhảy câu.
     Future<void> answerThenChangeMind(
       WidgetTester tester, {
-      String first = 'Đôi khi đúng',
-      String second = 'Khá đúng',
+      String first = 'Đôi khi',
+      String second = 'Thường xuyên',
     }) async {
       // Kéo cả hai ô vào tầm mắt TRƯỚC khi chạm: giữa hai lượt chạm chỉ được
       // phép trôi qua dưới 260ms, không còn chỗ cho thao tác cuộn.
@@ -402,9 +254,6 @@ void main() {
     testWidgets('trả lời đủ 15 câu, không câu nào bị nhảy qua', (tester) async {
       final intel = FakeWrIntelligenceRepository()..seedEntitlement(null);
       await tester.pumpWidget(_wrap(intel: intel));
-      await tester.pumpAndSettle();
-
-      await tester.tap(find.text('Bắt đầu →'));
       await tester.pumpAndSettle();
 
       for (var i = 0; i < kSelfCheckQuestions.length; i++) {
@@ -429,18 +278,15 @@ void main() {
       await tester.pumpWidget(_wrap(intel: intel));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Bắt đầu →'));
-      await tester.pumpAndSettle();
-
       for (var i = 0; i < kSelfCheckQuestions.length - 1; i++) {
-        await tester.tap(find.text('Đôi khi đúng'));
+        await tester.tap(find.text('Đôi khi'));
         await tester.pump(const Duration(milliseconds: 300));
         await tester.pumpAndSettle();
       }
 
       await answerThenChangeMind(tester);
 
-      expect(find.text('Bức tranh của bạn'), findsOneWidget);
+      expect(find.byKey(const Key('wr_self_check_result')), findsOneWidget);
       expect(intel.insertSelfCheckResponseCalls, hasLength(1));
     });
 
@@ -452,14 +298,11 @@ void main() {
       await tester.pumpWidget(_wrap(intel: intel));
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Bắt đầu →'));
-      await tester.pumpAndSettle();
-
       for (var i = 0; i < kSelfCheckQuestions.length; i++) {
         await answerThenChangeMind(
           tester,
-          first: 'Hoàn toàn không đúng', // 1
-          second: 'Hoàn toàn đúng', //     5
+          first: 'Không bao giờ', //      1
+          second: 'Gần như luôn luôn', // 5
         );
       }
 

@@ -80,7 +80,7 @@ Future<void> openAiPrivacyUrl(BuildContext context, String url) async {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          tr('Không mở được trang này.', 'Could not open this page.'),
+          wrKeepCompounds(tr('Không mở được trang này.', 'Could not open this page.')),
         ),
       ),
     );
@@ -111,10 +111,10 @@ class _ConsentSheetState extends ConsumerState<_ConsentSheet> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            tr(
+            wrKeepCompounds(tr(
               'Chưa lưu được lựa chọn. Bạn kiểm tra mạng rồi thử lại.',
               'Your choice was not saved. Check your connection and try again.',
-            ),
+            )),
           ),
         ),
       );
@@ -187,9 +187,9 @@ class _Actions extends StatelessWidget {
                 elevation: 0,
               ),
               child: Text(
-                saving
+                wrKeepCompounds(saving
                     ? tr('Đang lưu…', 'Saving…')
-                    : tr('Đồng ý và tiếp tục', 'Agree and continue'),
+                    : tr('Đồng ý và tiếp tục', 'Agree and continue')),
                 style: const TextStyle(
                   fontSize: 15.5,
                   fontWeight: FontWeight.w700,
@@ -212,7 +212,7 @@ class _Actions extends StatelessWidget {
                 ),
               ),
               child: Text(
-                tr('Không, để sau', 'No, not now'),
+                wrKeepCompounds(tr('Không, để sau', 'No, not now')),
                 style: const TextStyle(
                   fontSize: 14.5,
                   fontWeight: FontWeight.w600,
@@ -236,10 +236,10 @@ class WrAiDisclosureBody extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          tr(
+          wrKeepCompounds(tr(
             'Trước khi dùng những phần có AI',
             'Before you use the AI features',
-          ),
+          )),
           key: const Key('wr_ai_consent_title'),
           style: const TextStyle(
             fontSize: 19,
@@ -340,7 +340,7 @@ class _SectionTitle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      text,
+      wrKeepCompounds(text),
       style: const TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.w800,
@@ -368,7 +368,7 @@ class _FlowRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            flow.trigger,
+            wrKeepCompounds(flow.trigger),
             style: const TextStyle(
               fontSize: 13.5,
               fontWeight: FontWeight.w700,
@@ -387,7 +387,7 @@ class _FlowRow extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            '→ ${flow.recipient}',
+            wrKeepCompounds('→ ${flow.recipient}'),
             style: const TextStyle(
               fontSize: 12,
               fontWeight: FontWeight.w600,
@@ -415,7 +415,7 @@ class _RecipientRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                recipient.name,
+                wrKeepCompounds(recipient.name),
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
@@ -440,7 +440,7 @@ class _RecipientRow extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.only(top: 2),
             child: Text(
-              tr('Chính sách', 'Policy'),
+              wrKeepCompounds(tr('Chính sách', 'Policy')),
               style: const TextStyle(
                 fontSize: 11.5,
                 color: WrColors.pillTealText,

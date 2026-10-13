@@ -40,11 +40,15 @@ List<Insight> _insights(int n) => [
     ),
 ];
 
-Widget _wrap(FakeWrRepository repo, {FakeWrIntelligenceRepository? intel}) {
+Widget _wrap(
+  FakeWrRepository repo, {
+  FakeWrIntelligenceRepository? intel,
+  Widget home = const WrHomeScreen(),
+}) {
   final router = GoRouter(
     initialLocation: '/home',
     routes: [
-      GoRoute(path: '/home', builder: (_, __) => const WrHomeScreen()),
+      GoRoute(path: '/home', builder: (_, __) => home),
       GoRoute(
         path: '/profile/my-info',
         builder: (_, __) => const Scaffold(body: Text('THÔNG TIN CỦA BẠN')),
@@ -77,11 +81,12 @@ Future<void> _pump(
   WidgetTester tester,
   FakeWrRepository repo, {
   FakeWrIntelligenceRepository? intel,
+  Widget home = const WrHomeScreen(),
 }) async {
   tester.view.physicalSize = const Size(1080, 3000);
   tester.view.devicePixelRatio = 2.0;
   addTearDown(tester.view.reset);
-  await tester.pumpWidget(_wrap(repo, intel: intel));
+  await tester.pumpWidget(_wrap(repo, intel: intel, home: home));
   await tester.pumpAndSettle();
 }
 
@@ -90,6 +95,10 @@ void main() {
 
   final nudge = find.byKey(const Key('wr_home_profile_nudge'));
 
+  // Mockup Sprint 2 (bản hiện hành) không đặt thẻ này trên Home nữa, nên các
+  // test dựng thẳng widget để giữ logic ngưỡng, không khẳng định nó ở Home.
+  const nudgeHost = Scaffold(body: WrProfileNudgeCard());
+
   group('thẻ nhắc điền hồ sơ', () {
     testWidgets('người mới KHÔNG bị hỏi — dưới ba Insight thì im', (
       tester,
@@ -97,7 +106,7 @@ void main() {
       final repo = FakeWrRepository()
         ..seedInsights(_insights(2))
         ..seedCcProfile({});
-      await _pump(tester, repo);
+      await _pump(tester, repo, home: nudgeHost);
       expect(nudge, findsNothing);
     });
 
@@ -107,7 +116,7 @@ void main() {
       final repo = FakeWrRepository()
         ..seedInsights(_insights(kProfileNudgeInsightThreshold))
         ..seedCcProfile({});
-      await _pump(tester, repo);
+      await _pump(tester, repo, home: nudgeHost);
       expect(nudge, findsOneWidget);
       expect(
         find.text(
@@ -121,7 +130,7 @@ void main() {
       final repo = FakeWrRepository()
         ..seedInsights(_insights(9))
         ..seedCcProfile({'total_work_experience': '5_10'});
-      await _pump(tester, repo);
+      await _pump(tester, repo, home: nudgeHost);
       expect(nudge, findsNothing);
     });
 
@@ -131,7 +140,7 @@ void main() {
       final repo = FakeWrRepository()
         ..seedInsights(_insights(5))
         ..seedCcProfile({'total_work_experience': '  '});
-      await _pump(tester, repo);
+      await _pump(tester, repo, home: nudgeHost);
       expect(nudge, findsOneWidget);
     });
 
@@ -139,7 +148,7 @@ void main() {
       final repo = FakeWrRepository()
         ..seedInsights(_insights(4))
         ..seedCcProfile({});
-      await _pump(tester, repo);
+      await _pump(tester, repo, home: nudgeHost);
 
       await tester.tap(find.byKey(const Key('wr_home_profile_nudge_fill')));
       await tester.pumpAndSettle();
@@ -150,7 +159,7 @@ void main() {
       final repo = FakeWrRepository()
         ..seedInsights(_insights(4))
         ..seedCcProfile({});
-      await _pump(tester, repo);
+      await _pump(tester, repo, home: nudgeHost);
 
       await tester.tap(find.byKey(const Key('wr_home_profile_nudge_dismiss')));
       await tester.pumpAndSettle();
@@ -167,7 +176,7 @@ void main() {
       final repo = FakeWrRepository()
         ..seedInsights(_insights(9))
         ..seedCcProfile({});
-      await _pump(tester, repo);
+      await _pump(tester, repo, home: nudgeHost);
       expect(nudge, findsNothing);
     });
   });
@@ -213,25 +222,11 @@ void main() {
     });
   });
 
+  // Mockup Sprint 2: khối dưới lưới là "Lần gần nhất bạn thấy như vậy", chỉ
+  // hiện sau check-in và đọc chữ người dùng viết, không đọc Insight đã lưu.
+  // Không còn thẻ "Insight gần nhất" lẫn lời mời rỗng của nó.
   group('Insight gần nhất', () {
-    testWidgets('chưa có Insight nào thì thẻ VẪN đứng đây, đổi thành lời mời', (
-      tester,
-    ) async {
-      final repo = FakeWrRepository()..seedCcProfile({});
-      await _pump(tester, repo);
-
-      expect(
-        find.byKey(const Key('wr_home_latest_insight_empty')),
-        findsOneWidget,
-      );
-      expect(find.text('INSIGHT GẦN NHẤT'), findsOneWidget);
-      expect(
-        find.textContaining('Hãy bắt đầu với check-in cảm xúc'),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('có Insight thì hiện câu thật, không hiện lời mời', (
+    testWidgets('không còn thẻ Insight gần nhất, kể cả lời mời rỗng', (
       tester,
     ) async {
       final repo = FakeWrRepository()..seedCcProfile({});
@@ -249,8 +244,8 @@ void main() {
         find.byKey(const Key('wr_home_latest_insight_empty')),
         findsNothing,
       );
-      expect(find.byKey(const Key('wr_home_latest_insight')), findsOneWidget);
-      expect(find.text('"Tôi thường im lặng vì sợ phán xét."'), findsOneWidget);
+      expect(find.byKey(const Key('wr_home_latest_insight')), findsNothing);
+      expect(find.text('INSIGHT GẦN NHẤT'), findsNothing);
     });
   });
 }

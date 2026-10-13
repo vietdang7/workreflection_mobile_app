@@ -26,6 +26,7 @@ import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_hero_header.dart';
 import '../org_survey_providers.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 class WrOrgSurveyFlowScreen extends ConsumerStatefulWidget {
   const WrOrgSurveyFlowScreen({super.key});
@@ -144,22 +145,22 @@ class _WrOrgSurveyFlowScreenState extends ConsumerState<WrOrgSurveyFlowScreen> {
       final leave = await showDialog<bool>(
         context: context,
         builder: (ctx) => AlertDialog(
-          title: Text(tr('Thoát khảo sát?', 'Leave the survey?')),
+          title: Text(wrKeepCompounds(tr('Thoát khảo sát?', 'Leave the survey?'))),
           content: Text(
-            tr(
+            wrKeepCompounds(tr(
               'Câu trả lời chưa được gửi đi. Thoát bây giờ là mất hết.',
               'Your answers have not been sent. Leaving now loses them all.',
-            ),
+            )),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(ctx).pop(false),
-              child: Text(tr('Ở lại', 'Stay')),
+              child: Text(wrKeepCompounds(tr('Ở lại', 'Stay'))),
             ),
             TextButton(
               key: const Key('wr_org_survey_leave_confirm'),
               onPressed: () => Navigator.of(ctx).pop(true),
-              child: Text(tr('Thoát', 'Leave')),
+              child: Text(wrKeepCompounds(tr('Thoát', 'Leave'))),
             ),
           ],
         ),
@@ -251,7 +252,7 @@ class _WrOrgSurveyFlowScreenState extends ConsumerState<WrOrgSurveyFlowScreen> {
                   padding: EdgeInsets.only(bottom: 20),
                   child: Center(
                     child: Text(
-                      tr('Đang gửi…', 'Sending…'),
+                      wrKeepCompounds(tr('Đang gửi…', 'Sending…')),
                       style: TextStyle(fontSize: 14, color: WrColors.muted),
                     ),
                   ),
@@ -262,7 +263,7 @@ class _WrOrgSurveyFlowScreenState extends ConsumerState<WrOrgSurveyFlowScreen> {
                   child: Column(
                     children: [
                       Text(
-                        _error!,
+                        wrKeepCompounds(_error!),
                         key: const Key('wr_org_survey_submit_error'),
                         textAlign: TextAlign.center,
                         style: const TextStyle(
@@ -274,7 +275,7 @@ class _WrOrgSurveyFlowScreenState extends ConsumerState<WrOrgSurveyFlowScreen> {
                       TextButton(
                         key: const Key('wr_org_survey_retry'),
                         onPressed: _submit,
-                        child: Text(tr('Gửi lại', 'Send again')),
+                        child: Text(wrKeepCompounds(tr('Gửi lại', 'Send again'))),
                       ),
                     ],
                   ),
@@ -329,7 +330,7 @@ class _TopBar extends StatelessWidget {
             key: const Key('wr_org_survey_close'),
             onPressed: onClose,
             child: Text(
-              tr('Đóng', 'Close'),
+              wrKeepCompounds(tr('Đóng', 'Close')),
               style: TextStyle(fontSize: 14, color: WrColors.muted),
             ),
           ),
@@ -377,7 +378,7 @@ class _IndustryStep extends StatelessWidget {
             key: ValueKey(selected),
             initialValue: selected,
             isExpanded: true,
-            hint: Text(tr('Chọn lĩnh vực', 'Choose a field')),
+            hint: Text(wrKeepCompounds(tr('Chọn lĩnh vực', 'Choose a field'))),
             decoration: InputDecoration(
               filled: true,
               fillColor: WrColors.white,
@@ -388,7 +389,7 @@ class _IndustryStep extends StatelessWidget {
             ),
             items: [
               for (final o in myInfoIndustryOptions())
-                DropdownMenuItem(value: o.value, child: Text(o.label)),
+                DropdownMenuItem(value: o.value, child: Text(wrKeepCompounds(o.label))),
             ],
             onChanged: onChanged,
           ),
@@ -408,7 +409,7 @@ class _IndustryStep extends StatelessWidget {
             elevation: 0,
           ),
           child: Text(
-            tr('Tiếp tục', 'Continue'),
+            wrKeepCompounds(tr('Tiếp tục', 'Continue')),
             style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700),
           ),
         ),
@@ -494,7 +495,7 @@ class _Option extends StatelessWidget {
             ),
           ),
           child: Text(
-            label,
+            wrKeepCompounds(label),
             style: TextStyle(
               fontSize: 15.5,
               fontWeight: selected ? FontWeight.w700 : FontWeight.w400,
@@ -535,10 +536,10 @@ class _EnpsStep extends StatelessWidget {
         ),
         const SizedBox(height: 8),
         Text(
-          tr(
+          wrKeepCompounds(tr(
             '0 là chắc chắn không, 10 là chắc chắn có.',
             '0 is definitely not, 10 is definitely yes.',
-          ),
+          )),
           style: TextStyle(fontSize: 14, color: WrColors.muted),
         ),
         const SizedBox(height: 22),
@@ -570,7 +571,7 @@ class _EnpsStep extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      '$n',
+                      wrKeepCompounds('$n'),
                       style: const TextStyle(
                         fontSize: 14.5,
                         fontWeight: FontWeight.w700,

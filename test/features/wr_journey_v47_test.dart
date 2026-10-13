@@ -187,7 +187,7 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(find.text('DÒNG NHÌN LẠI THỜI GIAN'), findsOneWidget);
+      expect(find.text('Nhìn lại dòng thời gian'), findsOneWidget);
       // Họp khách 08/10: bỏ "Những gì bạn đã học" — trùng phần thực hành.
       expect(find.text('Những gì bạn đã học'), findsNothing);
       expect(find.byKey(const Key('wr_journey_learned_empty')), findsNothing);
@@ -415,87 +415,92 @@ void main() {
   // Khoá theo tuần cho bản miễn phí
   // ───────────────────────────────────────────────────────────────────────────
 
-  group('Free khoá mốc ngoài tuần này', () {
+  // Script `screenGrow`: phần xem trước KHÔNG khoá theo tuần — mục nào cũng
+  // chỉ mở ra / thu lại. Thứ duy nhất khoá là INSIGHT với bản miễn phí.
+  group('Phần xem trước: không khoá theo tuần, INSIGHT chỉ Premium', () {
     List<CareerMemoryEvent> events() => [
       _learning('new', 'Bài học tuần này', at: _thisWeek()),
       _learning('old', 'Bài học tuần cũ', at: _olderWeek()),
     ];
 
-    testWidgets('mốc tuần cũ khoá trên dòng thời gian', (tester) async {
+    testWidgets('Free: mốc tuần cũ vẫn mở ra được', (tester) async {
       await _pumpTall(tester, _wrap(events: events()));
-
-      // Mới trước: mốc 0 là tuần này, mốc 1 là tuần cũ.
-      expect(
-        find.descendant(of: _timeline(0), matching: find.text('Chạm để xem')),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(
-          of: _timeline(1),
-          matching: find.text('Premium · Mở khoá'),
-        ),
-        findsOneWidget,
-      );
-      expect(
-        find.descendant(
-          of: _timeline(1),
-          matching: find.byIcon(Icons.lock_outline),
-        ),
-        findsOneWidget,
-      );
-      expect(find.text('Premium · Mở khoá'), findsOneWidget);
-      // Lời người dùng tuần cũ không lọt ra đâu cả.
-      expect(find.textContaining('Bài học tuần cũ'), findsNothing);
-
-      await _tap(tester, _timeline(0));
-      expect(find.text('“Bài học tuần này”'), findsOneWidget);
-      expect(find.textContaining('Bài học tuần cũ'), findsNothing);
-    });
-
-    testWidgets('mốc tuần cũ giấu luôn tiêu đề, vì tiêu đề có thể là lời người '
-        'dùng', (tester) async {
-      await _pumpTall(
-        tester,
-        _wrap(
-          events: [
-            _event(
-              id: 'd1',
-              behavior: 'decision',
-              reflectionText: 'Tôi quyết định rời đi',
-              createdAt: _olderWeek(),
-            ),
-          ],
-        ),
-      );
-
-      expect(find.textContaining('Tôi quyết định rời đi'), findsNothing);
-      expect(
-        find.descendant(
-          of: _timeline(0),
-          matching: find.text('Nội dung đã khoá'),
-        ),
-        findsOneWidget,
-      );
-    });
-
-    testWidgets('chạm mốc khoá trên dòng thời gian mở paywall career_memory', (
-      tester,
-    ) async {
-      await _pumpTall(tester, _wrap(events: events()));
-
-      await _tap(tester, _timeline(1));
-      expect(find.text('PAYWALL career_memory'), findsOneWidget);
-      expect(find.textContaining('Bài học tuần cũ'), findsNothing);
-    });
-
-    testWidgets('Premium: mốc tuần cũ mở ra bình thường', (tester) async {
-      await _pumpTall(tester, _wrap(events: events(), premium: true));
 
       expect(find.text('Premium · Mở khoá'), findsNothing);
-
       await _tap(tester, _timeline(1));
       expect(find.text('“Bài học tuần cũ”'), findsOneWidget);
       expect(find.textContaining('PAYWALL'), findsNothing);
+    });
+
+    CareerMemoryEvent insight() => _event(
+      id: 'i1',
+      behavior: kInsightBehavior,
+      reflectionText: 'Câu insight bí mật',
+    );
+
+    testWidgets('Free: INSIGHT khoá, có nhãn Premium, bấm mở paywall '
+        'ai_insight', (tester) async {
+      await _pumpTall(tester, _wrap(events: [insight()]));
+
+      expect(
+        find.descendant(
+          of: _timeline(0),
+          matching: find.byKey(const Key('wr_journey_insight_premium_tag')),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(of: _timeline(0), matching: find.text('Nội dung đã khoá')),
+        findsOneWidget,
+      );
+      await _tap(tester, _timeline(0));
+      expect(find.text('PAYWALL ai_insight'), findsOneWidget);
+      expect(find.textContaining('Câu insight bí mật'), findsNothing);
+    });
+
+    testWidgets('Premium: INSIGHT đọc được, vẫn mang nhãn Premium', (
+      tester,
+    ) async {
+      await _pumpTall(tester, _wrap(events: [insight()], premium: true));
+
+      expect(find.text('Pattern được nhận diện'), findsOneWidget);
+      expect(
+        find.byKey(const Key('wr_journey_insight_premium_tag')),
+        findsOneWidget,
+      );
+      await _tap(tester, _timeline(0));
+      expect(find.text('“Câu insight bí mật”'), findsOneWidget);
+    });
+
+    testWidgets('STORY mang nhãn "Phản chiếu" ở phần xem trước', (
+      tester,
+    ) async {
+      await _pumpTall(
+        tester,
+        _wrap(
+          episodes: [
+            // Lần đầu thuộc một loại là Cột mốc (cờ trên STORY), nên dùng lần
+            // thứ hai cùng loại làm mốc mới nhất.
+            for (final (id, at) in [
+              ('ep1', _olderWeek()),
+              ('ep2', _thisWeek()),
+            ])
+              ReflectionEpisode(
+                id: id,
+                userId: 'u1',
+                humanMoment: HumanMoment.confusion,
+                state: ExperienceState.integrated,
+                situationCode: 'C1-sit-01',
+                openedAt: at,
+                closedAt: at,
+              ),
+          ],
+        ),
+      );
+      expect(
+        find.descendant(of: _timeline(0), matching: find.text('PHẢN CHIẾU')),
+        findsOneWidget,
+      );
     });
   });
 
@@ -507,44 +512,24 @@ void main() {
     testWidgets('thẻ Trò chuyện mở trợ lý chat', (tester) async {
       await _pumpTall(tester, _wrap());
 
-      expect(find.text('Trò chuyện về hành trình của bạn'), findsOneWidget);
+      expect(find.text('Trò chuyện về hành trình'), findsOneWidget);
       expect(find.text('Bắt đầu trò chuyện'), findsOneWidget);
       await _tap(tester, find.byKey(const Key('wr_journey_ask_row')));
       expect(find.text('ASK'), findsOneWidget);
     });
 
-    testWidgets('Free: khối khoá, nút mở paywall ai_insight', (tester) async {
-      await _pumpTall(tester, _wrap());
+    // Script `screenGrow`: thẻ ảnh "Nhìn lại dòng thời gian" mở màn đọc cho
+    // cả hai bản; phần khoá nằm trong màn đọc (thẻ DIỄN BIẾN ĐẦY ĐỦ).
+    for (final premium in const [false, true]) {
+      testWidgets('${premium ? 'Premium' : 'Free'}: nút Đọc diễn giải mở màn '
+          'đọc', (tester) async {
+        await _pumpTall(tester, _wrap(premium: premium));
 
-      expect(
-        find.byKey(const Key('wr_journey_narrative_lock')),
-        findsOneWidget,
-      );
-      expect(find.text('PHÂN TÍCH BỊ KHÓA'), findsOneWidget);
-      expect(
-        find.text(
-          'Mở khóa bản đầy đủ để nhìn lại toàn bộ bức tranh thay đổi của bạn '
-          'qua từng giai đoạn.',
-        ),
-        findsOneWidget,
-      );
-      expect(
-        find.byKey(const Key('wr_journey_narrative_expand')),
-        findsNothing,
-      );
-
-      await _tap(tester, find.byKey(const Key('wr_journey_narrative_row')));
-      expect(find.text('PAYWALL ai_insight'), findsOneWidget);
-    });
-
-    testWidgets('Premium: dòng dẫn mở màn Diễn biến riêng', (tester) async {
-      await _pumpTall(tester, _wrap(premium: true));
-
-      expect(find.byKey(const Key('wr_journey_narrative_lock')), findsNothing);
-      expect(find.text('Đọc toàn bộ diễn biến'), findsOneWidget);
-      await _tap(tester, find.byKey(const Key('wr_journey_narrative_row')));
-      expect(find.text('NARRATIVE'), findsOneWidget);
-    });
+        expect(find.text('Đọc diễn giải'), findsOneWidget);
+        await _tap(tester, find.byKey(const Key('wr_journey_narrative_row')));
+        expect(find.text('NARRATIVE'), findsOneWidget);
+      });
+    }
   });
 
   // ───────────────────────────────────────────────────────────────────────────

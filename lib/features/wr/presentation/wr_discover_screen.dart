@@ -28,10 +28,9 @@ import '../../../core/logic/wr_sca_deep_dive.dart'
     show ScaPillarStatus, scaPillarStatus;
 import '../../../core/logic/wr_self_check_questions.dart';
 import '../../../core/models/wr_content.dart';
-import '../../../core/models/wr_episode.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
-import '../../../core/theme/wr_text.dart';
+import '../../../core/theme/wr_text_scale.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/progress_track.dart';
 import '../../../core/widgets/tab_back_link.dart';
@@ -104,8 +103,24 @@ bool pillarStatusIsReassuring(String label) =>
 
 Color pillarStatusColor(double? score) {
   if (score == null || score <= 0) return WrColors.muted;
-  return score >= 3.8 ? WrColors.teal : WrColors.coral;
+  return scaStatusColor(scaPillarStatus(score));
 }
+
+/// Màu của ba mức, đúng `pillarLevelText` của script: xanh #0E7A76 · vàng nâu
+/// #B8862F · đỏ #C6402F.
+Color scaStatusColor(ScaPillarStatus status) => switch (status) {
+  ScaPillarStatus.developing => WrColors.pillTealText,
+  ScaPillarStatus.needsAttention => const Color(0xFFB8862F),
+  ScaPillarStatus.priority => WrColors.pillCoralText,
+};
+
+/// Màu chấm của ba trụ trong các màn Diễn giải, đúng `SNAPSHOT_PILLARS` của
+/// script: Sự rõ ràng navy · Mối quan hệ coral · Cách làm việc teal.
+Color scriptPillarColor(SelfCheckPillar pillar) => switch (pillar) {
+  SelfCheckPillar.s => WrColors.navy,
+  SelfCheckPillar.c => WrColors.coral,
+  SelfCheckPillar.a => WrColors.teal,
+};
 
 /// Màu nhận diện của từng trụ — trùng với màn Tự đánh giá.
 Color pillarColor(SelfCheckPillar pillar) => switch (pillar) {
@@ -140,7 +155,7 @@ class WrDiscoverScreen extends ConsumerWidget {
     );
 
     return Scaffold(
-      backgroundColor: WrColors.pageBg,
+      backgroundColor: Colors.transparent,
       // Không bọc SafeArea: ảnh hero tràn lên dưới thanh trạng thái.
       body: ListView(
         // Padding tường minh: `ListView` không có padding sẽ xoá phần thanh
@@ -168,6 +183,7 @@ class WrDiscoverScreen extends ConsumerWidget {
                 _TopPatternCard(
                   key: const Key('wr_discover_top_pattern'),
                   recentTotal: recent.length,
+                  reflectionTotal: episodes.length,
                   repeated: repeated,
                   labels: sitMap,
                 ),
@@ -203,13 +219,18 @@ class _TopPatternCard extends ConsumerStatefulWidget {
   const _TopPatternCard({
     super.key,
     required this.recentTotal,
+    required this.reflectionTotal,
     required this.repeated,
     required this.labels,
   });
 
-  /// Số lần nhìn lại có chọn tình huống trong cửa sổ gần đây — cùng mẫu với
-  /// con số "N lần" của từng dòng.
+  /// Số lần nhìn lại có chọn tình huống trong cửa sổ gần đây — mẫu số của
+  /// câu "N lần trong T lần nhìn lại", cùng phạm vi với số đếm N, và cùng con
+  /// số ở màn danh sách.
   final int recentTotal;
+
+  /// Tổng số lần nhìn lại thật (mọi thời gian).
+  final int reflectionTotal;
   final List<RepeatedSituation> repeated;
   final Map<String, String> labels;
 
@@ -301,7 +322,7 @@ class _TopPatternCardState extends ConsumerState<_TopPatternCard> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  tr('QUAY LẠI NHIỀU NHẤT', 'RETURNED MOST'),
+                  wrKeepCompounds(tr('QUAY LẠI NHIỀU NHẤT', 'RETURNED MOST')),
                   style: const TextStyle(
                     fontSize: 11,
                     fontWeight: FontWeight.w700,
@@ -311,7 +332,7 @@ class _TopPatternCardState extends ConsumerState<_TopPatternCard> {
                 ),
                 const SizedBox(height: 6),
                 Text(
-                  '“${situationLabelFor(widget.labels, code)}”',
+                  wrKeepCompounds('“${situationLabelFor(widget.labels, code)}”'),
                   key: const Key('wr_discover_top_title'),
                   style: const TextStyle(
                     fontFamily: 'Lora',
@@ -323,15 +344,12 @@ class _TopPatternCardState extends ConsumerState<_TopPatternCard> {
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  tr(
+                  wrKeepCompounds(tr(
                     '${top.count} lần trong ${widget.recentTotal} lần nhìn lại',
-                    '${top.count} times in ${widget.recentTotal} reflections',
-                  ),
+                    '${top.count} times in ${widget.recentTotal} look-backs',
+                  )),
                   key: const Key('wr_discover_top_count'),
-                  style: const TextStyle(
-                    fontSize: 11.5,
-                    color: WrColors.text3,
-                  ),
+                  style: const TextStyle(fontSize: 11.5, color: WrColors.text3),
                 ),
               ],
             ),
@@ -354,21 +372,35 @@ class _TopPatternCardState extends ConsumerState<_TopPatternCard> {
                 onTap: () => context.push('/wr/patterns'),
                 child: Row(
                   children: [
+                    // Script: 13px w600 navy, một dòng. Cỡ chữ hệ thống lớn
+                    // (máy thật 1.15) thì thu chữ cho vừa thay vì xuống hàng.
                     Expanded(
-                      child: Text(
-                        tr('Những điều khác đang lặp lại', 'Other recurring patterns'),
-                        style: const TextStyle(
-                          fontSize: 12.5,
-                          fontWeight: FontWeight.w600,
-                          color: WrColors.navy,
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          wrKeepCompounds(tr(
+                            'Những điều khác đang lặp lại',
+                            'Other recurring patterns',
+                          )),
+                          maxLines: 1,
+                          softWrap: false,
+                          style: const TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: WrColors.navy,
+                          ),
                         ),
                       ),
                     ),
                     const SizedBox(width: 8),
+                    // Script `.tiny` teal 700: 11px.
                     Text(
-                      tr('${others.length} điều ›', '${others.length} items ›'),
+                      wrKeepCompounds(tr('${others.length} điều ›', '${others.length} items ›')),
+                      maxLines: 1,
+                      softWrap: false,
                       style: const TextStyle(
-                        fontSize: 11.5,
+                        fontSize: 11,
                         fontWeight: FontWeight.w700,
                         color: WrColors.teal,
                       ),
@@ -386,12 +418,20 @@ class _TopPatternCardState extends ConsumerState<_TopPatternCard> {
   Widget _askView() => Column(
     crossAxisAlignment: CrossAxisAlignment.start,
     children: [
-      Text(
-        tr('Điều này có đúng với bạn không?', 'Does this ring true for you?'),
-        style: const TextStyle(
-          fontSize: 12,
-          fontWeight: FontWeight.w700,
-          color: WrColors.navy,
+      // Script `.tiny` 700: 11px, màu chữ phụ, một dòng. Cỡ chữ hệ thống lớn
+      // (máy thật 1.15, 13/10) thì thu chữ cho vừa thay vì xuống hàng.
+      FittedBox(
+        fit: BoxFit.scaleDown,
+        alignment: Alignment.centerLeft,
+        child: Text(
+          wrKeepCompounds(tr('Điều này có đúng với bạn không?', 'Does this ring true for you?')),
+          maxLines: 1,
+          softWrap: false,
+          style: const TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: WrColors.text3,
+          ),
         ),
       ),
       const SizedBox(height: 8),
@@ -426,12 +466,12 @@ class _TopPatternCardState extends ConsumerState<_TopPatternCard> {
           children: [
             Expanded(
               child: Text(
-                tr(
+                wrKeepCompounds(tr(
                   'Vậy thì đây có thể là chỗ đáng để bạn dành thêm chú ý trong thời '
                       'gian tới.',
                   'Then this may be worth a bit more of your attention in the '
                       'coming weeks.',
-                ),
+                )),
                 style: const TextStyle(
                   fontSize: 12.5,
                   color: WrColors.text2,
@@ -445,7 +485,11 @@ class _TopPatternCardState extends ConsumerState<_TopPatternCard> {
               child: const SizedBox(
                 width: 36,
                 height: 36,
-                child: Icon(Icons.refresh_rounded, size: 18, color: WrColors.text3),
+                child: Icon(
+                  Icons.refresh_rounded,
+                  size: 18,
+                  color: WrColors.text3,
+                ),
               ),
             ),
           ],
@@ -498,10 +542,10 @@ class _TopPatternCardState extends ConsumerState<_TopPatternCard> {
       children: [
         Expanded(
           child: Text(
-            tr(
+            wrKeepCompounds(tr(
               'Cảm ơn bạn đã cho biết. Quan sát này sẽ được đọc lại sau vài lần nhìn lại nữa.',
               'Thanks for letting us know. This observation will be revisited after a few more reflections.',
-            ),
+            )),
             style: const TextStyle(
               fontSize: 12.5,
               color: WrColors.text2,
@@ -542,9 +586,6 @@ class _SoftTop extends StatelessWidget {
 /// `.muted` (12.5px) +1.5 theo quy ước cỡ chữ của app.
 const _muted = TextStyle(fontSize: 14, color: WrColors.text2, height: 1.65);
 
-/// `.tiny` (11px) +1.5.
-const _tiny = TextStyle(fontSize: 12.5, color: WrColors.text3);
-
 /// `.btn.btn-ghost.btn-sm`.
 class _GhostSmallButton extends StatelessWidget {
   const _GhostSmallButton({
@@ -568,14 +609,19 @@ class _GhostSmallButton extends StatelessWidget {
         border: Border.all(color: const Color(0x40093774), width: 1.5),
         borderRadius: BorderRadius.circular(10),
       ),
-      child: Text(
-        label,
-        maxLines: 1,
-        softWrap: false,
-        style: const TextStyle(
-          fontSize: 11.5,
-          fontWeight: FontWeight.w700,
-          color: WrColors.navy,
+      // Cỡ chữ hệ thống lớn (máy thật 1.15, 13/10) làm "Chưa đúng lắm" tràn
+      // nửa ô và bị cắt thành "Chưa đúng lần": thu chữ lại cho vừa thay vì cắt.
+      child: FittedBox(
+        fit: BoxFit.scaleDown,
+        child: Text(
+          wrKeepCompounds(label),
+          maxLines: 1,
+          softWrap: false,
+          style: const TextStyle(
+            fontSize: 11.5,
+            fontWeight: FontWeight.w700,
+            color: WrColors.navy,
+          ),
         ),
       ),
     ),
@@ -604,7 +650,7 @@ class _PrimarySmallButton extends StatelessWidget {
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(
-        label,
+        wrKeepCompounds(label),
         maxLines: 1,
         style: const TextStyle(
           fontSize: 11,
@@ -614,252 +660,6 @@ class _PrimarySmallButton extends StatelessWidget {
       ),
     ),
   );
-}
-
-// ---------------------------------------------------------------------------
-// "Những vòng lặp quen thuộc" — mỗi tình huống một dòng, chạm mở ra từng lần.
-//
-// Danh sách từng lần lấy từ `episodesForSituation`, CÙNG cửa sổ với con số
-// "N lần" — khách báo 2026-08-01 khi số đếm và danh sách lệch nhau.
-// ---------------------------------------------------------------------------
-
-class WrRepeatLoopsCard extends StatefulWidget {
-  const WrRepeatLoopsCard({
-    super.key,
-    required this.repeated,
-    required this.labels,
-    required this.episodes,
-  });
-
-  final List<RepeatedSituation> repeated;
-  final Map<String, String> labels;
-  final List<ReflectionEpisode> episodes;
-
-  @override
-  State<WrRepeatLoopsCard> createState() => _WrRepeatLoopsCardState();
-}
-
-class _WrRepeatLoopsCardState extends State<WrRepeatLoopsCard> {
-  String? _open;
-
-  @override
-  Widget build(BuildContext context) {
-    return WrCard(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          WrEyebrow(tr('NHỮNG VÒNG LẶP QUEN THUỘC', 'FAMILIAR LOOPS')),
-          const SizedBox(height: 2),
-          for (var i = 0; i < widget.repeated.length; i++)
-            _loopRow(widget.repeated[i], last: i == widget.repeated.length - 1),
-        ],
-      ),
-    );
-  }
-
-  Widget _loopRow(RepeatedSituation r, {required bool last}) {
-    final code = r.situationCode;
-    final open = _open == code;
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 11),
-      decoration: last
-          ? null
-          : const BoxDecoration(
-              border: Border(bottom: BorderSide(color: WrColors.lineSoft)),
-            ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          GestureDetector(
-            key: Key('wr_discover_loop_$code'),
-            behavior: HitTestBehavior.opaque,
-            onTap: () => setState(() => _open = open ? null : code),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    situationLabelFor(widget.labels, code),
-                    style: const TextStyle(
-                      fontSize: 14,
-                      color: WrColors.navy,
-                      height: 1.45,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: WrColors.navy.withValues(alpha: 0.08),
-                    borderRadius: BorderRadius.circular(100),
-                  ),
-                  child: Text(
-                    tr('${r.count} lần', '${r.count} times'),
-                    style: const TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w700,
-                      color: WrColors.navy,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 6),
-                AnimatedRotation(
-                  turns: open ? 0.5 : 0,
-                  duration: const Duration(milliseconds: 150),
-                  child: const Icon(
-                    Icons.keyboard_arrow_down_rounded,
-                    size: 20,
-                    color: WrColors.navy,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          if (open) _log(code),
-        ],
-      ),
-    );
-  }
-
-  Widget _log(String code) {
-    final entries = episodesForSituation(widget.episodes, code);
-    return Container(
-      key: Key('wr_discover_loop_log_$code'),
-      margin: const EdgeInsets.only(top: 10),
-      padding: const EdgeInsets.only(left: 10),
-      decoration: const BoxDecoration(
-        border: Border(left: BorderSide(color: WrColors.lineSoft, width: 2)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (final e in entries)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 9),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    _dayMonth(e.openedAt ?? e.updatedAt ?? e.closedAt),
-                    style: _tiny.copyWith(fontWeight: FontWeight.w700),
-                  ),
-                  const SizedBox(height: 2),
-                  if (_written(e) case final t?)
-                    Text(
-                      '“$t”',
-                      style: WrText.serifQuote(
-                        fontSize: 14,
-                        color: WrColors.text2,
-                        height: 1.55,
-                      ),
-                    )
-                  else
-                    Text(
-                      tr(
-                        'Bạn không viết gì lần này',
-                        'You wrote nothing this time',
-                      ),
-                      style: _tiny.copyWith(
-                        color: WrColors.text3.withValues(alpha: 0.55),
-                      ),
-                    ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  /// Câu người dùng đã kể ở bước 2 ("Kể lại khoảnh khắc…").
-  static String? _written(ReflectionEpisode e) {
-    final t = e.notes[ReflectionPattern.explore.dbValue]?.trim();
-    return (t == null || t.isEmpty) ? null : t;
-  }
-
-  static String _dayMonth(DateTime? d) {
-    if (d == null) return '';
-    final l = d.toLocal();
-    return '${l.day.toString().padLeft(2, '0')}/'
-        '${l.month.toString().padLeft(2, '0')}';
-  }
-}
-
-// ---------------------------------------------------------------------------
-// "Xem theo nhóm trải nghiệm" — mặc định THU GỌN (mockup v47); mở ra mới thấy
-// Career Snapshot.
-// ---------------------------------------------------------------------------
-
-class _SnapshotSection extends StatefulWidget {
-  const _SnapshotSection({required this.snapshot});
-
-  final Widget snapshot;
-
-  @override
-  State<_SnapshotSection> createState() => _SnapshotSectionState();
-}
-
-class _SnapshotSectionState extends State<_SnapshotSection> {
-  bool _open = false;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        WrCard(
-          key: const Key('wr_discover_snapshot_toggle'),
-          onTap: () => setState(() => _open = !_open),
-          child: Row(
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      tr(
-                        'Xem theo nhóm trải nghiệm',
-                        'View by experience group',
-                      ),
-                      style: const TextStyle(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                        color: WrColors.navy,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      tr(
-                        'Ba nhóm, đối chiếu điều bạn tự đánh giá với điều đang '
-                            'lặp lại',
-                        'Three groups, setting how you rate yourself against '
-                            'what keeps repeating',
-                      ),
-                      style: _tiny,
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              AnimatedRotation(
-                turns: _open ? 0.5 : 0,
-                duration: const Duration(milliseconds: 150),
-                child: const Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  size: 22,
-                  color: WrColors.navy,
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (_open) ...[const SizedBox(height: WrCard.kGap), widget.snapshot],
-      ],
-    );
-  }
 }
 
 // ---------------------------------------------------------------------------
@@ -914,7 +714,7 @@ class WrPatternRow extends StatelessWidget {
                 ),
                 const SizedBox(width: 12),
                 Text(
-                  tr('$count lần', '$count times'),
+                  wrKeepCompounds(tr('$count lần', '$count times')),
                   style: TextStyle(
                     fontSize: 14.5,
                     fontWeight: _isStrong ? FontWeight.w700 : FontWeight.w600,
@@ -1088,10 +888,10 @@ class WrCareerSnapshotCard extends ConsumerWidget {
           if (_hasSelfCheck && takenAt != null) ...[
             const SizedBox(height: 10),
             Text(
-              tr(
+              wrKeepCompounds(tr(
                 'Self-Check gần nhất: ${selfCheckDateLabel(takenAt)}',
                 'Last Self-Check: ${selfCheckDateLabel(takenAt)}',
-              ),
+              )),
               key: const Key('wr_snapshot_self_check_date'),
               style: const TextStyle(fontSize: 13.5, color: WrColors.muted),
             ),
@@ -1264,7 +1064,7 @@ class _SnapshotRow extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: Text(
-                  pillar.displayName,
+                  wrKeepCompounds(pillar.displayName),
                   style: const TextStyle(
                     fontSize: 16.5,
                     fontWeight: FontWeight.w600,
@@ -1330,7 +1130,7 @@ class _SnapshotCell extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          caption,
+          wrKeepCompounds(caption),
           style: const TextStyle(fontSize: 13, color: WrColors.muted),
         ),
         const SizedBox(height: 3),
@@ -1345,7 +1145,7 @@ class _SnapshotCell extends StatelessWidget {
         // Bản tiếng Việt "Ổn, còn dư địa" ngắn hơn nên vừa một dòng và không
         // bao giờ lộ.
         Text(
-          value,
+          wrKeepCompounds(value),
           style: TextStyle(
             fontSize: 14.5,
             fontWeight: strong ? FontWeight.w700 : FontWeight.w400,
@@ -1410,7 +1210,7 @@ class _SnapshotButton extends StatelessWidget {
           elevation: 0,
         ),
         child: Text(
-          label,
+          wrKeepCompounds(label),
           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),
@@ -1485,9 +1285,9 @@ class _SnapshotGapLine extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            premium
+            wrKeepCompounds(premium
                 ? tr('Khoảng lệch đáng chú ý', 'A gap worth noticing')
-                : 'Premium',
+                : 'Premium'),
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w700,
@@ -1543,7 +1343,7 @@ class _SnapshotGapLine extends ConsumerWidget {
                   elevation: 0,
                 ),
                 child: Text(
-                  tr('Mở khoá diễn giải', 'Unlock the reading'),
+                  wrKeepCompounds(tr('Mở khoá diễn giải', 'Unlock the reading')),
                   style: TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600),
                 ),
               ),
@@ -1601,85 +1401,127 @@ class _SelfCheckInviteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return WrCardNavy(
-      key: const Key('wr_discover_self_check_invite'),
-      padding: EdgeInsets.zero,
-      child: InkWell(
-        onTap: onStart,
-        borderRadius: BorderRadius.circular(18),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
-              child: SizedBox(
-                height: 88,
-                child: Image.asset(
-                  'assets/images/card_survey.webp',
-                  fit: BoxFit.cover,
+    // Cỡ chữ đúng script (bỏ phần cộng thêm của WrTextScaler) và ảnh tan vào
+    // nền navy qua một dải chuyển màu như `.chatcard-img::after`, không cắt
+    // ngang thẳng.
+    return WrScriptTextScale(
+      child: WrCardNavy(
+        key: const Key('wr_discover_self_check_invite'),
+        padding: EdgeInsets.zero,
+        child: InkWell(
+          onTap: onStart,
+          borderRadius: BorderRadius.circular(18),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ClipRRect(
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(18),
+                ),
+                child: SizedBox(
+                  height: 88,
+                  child: Stack(
+                    fit: StackFit.expand,
+                    children: [
+                      Image.asset(
+                        'assets/images/card_survey.webp',
+                        fit: BoxFit.cover,
+                        alignment: const Alignment(0, 0.08), // 50% 54%
+                      ),
+                      // `.chatcard-img::after`: 30px đáy ảnh chuyển từ trong
+                      // suốt sang đúng màu nền thẻ.
+                      Positioned(
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        height: 30,
+                        child: DecoratedBox(
+                          key: const Key('wr_discover_self_check_fade'),
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                WrColors.navy.withValues(alpha: 0),
+                                WrColors.navy,
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(17, 14, 17, 17),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    tr('15 CÂU HỎI NGẮN', '15 SHORT QUESTIONS'),
-                    style: TextStyle(
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w700,
-                      letterSpacing: 1.4,
-                      color: WrColors.cream.withValues(alpha: 0.78),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    tr('Khảo sát điều kiện làm việc', 'Workplace Conditions Survey'),
-                    style: const TextStyle(
-                      fontFamily: 'Lora',
-                      fontSize: 19,
-                      fontWeight: FontWeight.w600,
-                      color: WrColors.cream,
-                      height: 1.32,
-                    ),
-                  ),
-                  const SizedBox(height: 7),
-                  Text(
-                    tr(
-                      'Giúp hệ thống hiểu rõ hơn trạng thái hiện tại của bạn. Đừng quên cập nhật lại bất cứ khi nào bạn thấy có sự thay đổi trong công việc nhé.',
-                      'Help the system better understand your current state. Remember to update whenever you notice shifts at work.',
-                    ),
-                    style: TextStyle(
-                      fontSize: 12.5,
-                      height: 1.6,
-                      color: WrColors.cream.withValues(alpha: 0.84),
-                    ),
-                  ),
-                  if (answered > 0) ...[
-                    const SizedBox(height: 11),
+              Padding(
+                // `.chatcard-body{padding:2px 17px 17px}`: chữ bắt đầu ngay dưới
+                // dải chuyển màu, liền một mảng với ảnh.
+                padding: const EdgeInsets.fromLTRB(17, 2, 17, 17),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
                     Text(
-                      tr('Lần gần nhất: $answered/15 câu', 'Last time: $answered/15 questions'),
-                      key: const Key('wr_discover_self_check_progress'),
+                      wrKeepCompounds(tr('15 CÂU HỎI NGẮN', '15 SHORT QUESTIONS')),
                       style: TextStyle(
-                        fontSize: 11,
-                        color: WrColors.cream.withValues(alpha: 0.7),
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 1.4,
+                        color: WrColors.cream.withValues(alpha: 0.78),
                       ),
                     ),
+                    const SizedBox(height: 4),
+                    Text(
+                      wrKeepCompounds(tr(
+                        'Khảo sát điều kiện làm việc',
+                        'Workplace Conditions Survey',
+                      )),
+                      style: const TextStyle(
+                        fontFamily: 'Lora',
+                        fontSize: 19,
+                        fontWeight: FontWeight.w600,
+                        color: WrColors.cream,
+                        height: 1.32,
+                      ),
+                    ),
+                    const SizedBox(height: 7),
+                    Text(
+                      wrKeepCompounds(tr(
+                        'Giúp hệ thống hiểu rõ hơn trạng thái hiện tại của bạn. Đừng quên cập nhật lại bất cứ khi nào bạn thấy có sự thay đổi trong công việc nhé.',
+                        'Help the system better understand your current state. Remember to update whenever you notice shifts at work.',
+                      )),
+                      style: TextStyle(
+                        fontSize: 12.5,
+                        height: 1.6,
+                        color: WrColors.cream.withValues(alpha: 0.84),
+                      ),
+                    ),
+                    if (answered > 0) ...[
+                      const SizedBox(height: 11),
+                      Text(
+                        wrKeepCompounds(tr(
+                          'Lần gần nhất: $answered/15 câu',
+                          'Last time: $answered/15 questions',
+                        )),
+                        key: const Key('wr_discover_self_check_progress'),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: WrColors.cream.withValues(alpha: 0.7),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 14),
+                    _PrimarySmallButton(
+                      key: const Key('wr_discover_self_check_start'),
+                      label: answered > 0
+                          ? tr('Cập nhật lại →', 'Update again →')
+                          : tr('Bắt đầu khảo sát →', 'Start survey →'),
+                      onTap: onStart,
+                    ),
                   ],
-                  const SizedBox(height: 14),
-                  _PrimarySmallButton(
-                    key: const Key('wr_discover_self_check_start'),
-                    label: answered > 0
-                        ? tr('Cập nhật lại →', 'Update again →')
-                        : tr('Bắt đầu khảo sát →', 'Start survey →'),
-                    onTap: onStart,
-                  ),
-                ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -1691,277 +1533,78 @@ class _SystemExperienceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return WrCard(
-      padding: EdgeInsets.zero,
-      onTap: () => context.push('/wr/experience-interpret'),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          SizedBox(
-            height: 88,
-            child: Image.asset(
-              'assets/images/hero/bg_hieu.webp',
-              fit: BoxFit.cover,
-              alignment: const Alignment(0, -0.2), // 50% 40%
-              errorBuilder: (_, __, ___) => Image.asset(
-                'assets/images/card_timeline.webp',
-                fit: BoxFit.cover,
+    // Cỡ chữ đúng script, như thẻ khảo sát bên dưới.
+    return WrScriptTextScale(
+      child: WrCard(
+        padding: EdgeInsets.zero,
+        onTap: () => context.push('/wr/experience-interpret'),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(
+              height: 88,
+              child: ShaderMask(
+                shaderCallback: (bounds) => const LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  stops: [0.66, 1.0],
+                  colors: [Colors.black, Colors.transparent],
+                ).createShader(bounds),
+                blendMode: BlendMode.dstIn,
+                child: Image.asset(
+                  'assets/images/hero/bg_hieu.webp',
+                  fit: BoxFit.cover,
+                  alignment: const Alignment(0, -0.2), // 50% 40%
+                  errorBuilder: (_, __, ___) => Image.asset(
+                    'assets/images/card_timeline.webp',
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 13, 16, 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                WrEyebrow(tr('GHI NHẬN TỪ HỆ THỐNG', 'SYSTEM OBSERVATION')),
-                const SizedBox(height: 4),
-                Text(
-                  tr('Trải nghiệm của bạn', 'Your experience'),
-                  style: const TextStyle(
-                    fontSize: 15.5,
-                    fontWeight: FontWeight.w700,
-                    color: WrColors.navy,
-                    height: 1.35,
-                  ),
-                ),
-                const SizedBox(height: 6),
-                Text(
-                  tr(
-                    'Những gì bạn đã ghi nhận qua các lần nhìn lại: năng lượng, cảm xúc và những điều lặp lại nhiều nhất.',
-                    'What you recorded across your reflections: energy, emotions, and what recurs most.',
-                  ),
-                  style: const TextStyle(
-                    fontSize: 12.5,
-                    color: WrColors.muted,
-                    height: 1.6,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Container(
-                  padding: const EdgeInsets.only(top: 11),
-                  decoration: const BoxDecoration(
-                    border: Border(top: BorderSide(color: WrColors.lineSoft)),
-                  ),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        tr('Xem chi tiết', 'See details'),
-                        style: const TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w700,
-                          color: WrColors.navy,
-                        ),
-                      ),
-                      const Text(
-                        '›',
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: WrColors.navy,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class WrChapterMilestoneCard extends StatelessWidget {
-  const WrChapterMilestoneCard({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: WrColors.white,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: WrColors.line),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x0A093774),
-            blurRadius: 10,
-            offset: Offset(0, 4),
-          ),
-        ],
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.push('/wr/chapter/ch3'),
-        borderRadius: BorderRadius.circular(18),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 13, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  WrEyebrow(tr('TỔNG HỢP THEO CHẶNG 3 THÁNG', '3-MONTH CHAPTER RECAP')),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: WrColors.coral.withValues(alpha: 0.12),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Text(
-                      tr('Chặng 3 · Mới', 'Chapter 3 · New'),
-                      style: const TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w700,
-                        color: WrColors.coral,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              Text(
-                tr('Nhìn lại chặng Tháng 8 đến tháng 10', 'Review Chapter August to October'),
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: WrColors.navy,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                tr(
-                  'Những gì bạn ghi lại ở chặng này đã đổi chỗ so với chặng trước. Xem điều gì mới nổi lên và điều gì đã thôi lặp lại.',
-                  'What you recorded shifted compared to the last chapter. See what emerged and what stopped recurring.',
-                ),
-                style: const TextStyle(
-                  fontSize: 13.5,
-                  color: WrColors.muted,
-                  height: 1.5,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Row(
-                children: [
+                  WrEyebrow(tr('GHI NHẬN TỪ HỆ THỐNG', 'SYSTEM OBSERVATION')),
+                  const SizedBox(height: 4),
                   Text(
-                    tr('Đọc báo cáo chặng', 'Read chapter report'),
+                    wrKeepCompounds(tr('Trải nghiệm của bạn', 'Your experience')),
                     style: const TextStyle(
-                      fontSize: 13,
+                      fontSize: 15.5,
                       fontWeight: FontWeight.w700,
-                      color: WrColors.teal,
+                      color: WrColors.navy,
+                      height: 1.35,
                     ),
                   ),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.arrow_forward_rounded, size: 14, color: WrColors.teal),
+                  const SizedBox(height: 6),
+                  Text(
+                    wrKeepCompounds(tr(
+                      'Dựa vào những lần nhìn lại cũng như cập nhật điều kiện bạn '
+                          'đang làm việc, đây là những ghi nhận từ hệ thống '
+                          'WorkReflection.',
+                      'Based on your look-backs and the working conditions you '
+                          'have shared, this is what the WorkReflection system '
+                          'has noticed.',
+                    )),
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      color: WrColors.muted,
+                      height: 1.6,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  _PrimarySmallButton(
+                    key: const Key('wr_discover_experience_read'),
+                    label: tr('Đọc diễn giải', 'Read the interpretation'),
+                    onTap: () => context.push('/wr/experience-interpret'),
+                  ),
                 ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-      ),
-    );
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Diễn giải sâu & theo dõi xu hướng — Premium.
-//
-// Ranh giới giống mọi chỗ khác trên màn này: Free thấy CON SỐ của lần gần nhất,
-// Premium mới thấy nó đang đi theo hướng nào và vì sao.
-//
-// Người đã Premium KHÔNG còn thấy thẻ khoá, nhưng vẫn thấy một dòng dẫn sang
-// màn Diễn giải sâu. Trước changelog 24/08 §7 thì thẻ này biến mất hẳn với họ,
-// nghĩa là người đã trả tiền không còn lối nào vào tính năng mình vừa mua từ
-// tab Hiểu mình — chỗ tự nhiên nhất để tìm nó.
-// ---------------------------------------------------------------------------
-
-class WrSelfCheckDeepLock extends ConsumerWidget {
-  const WrSelfCheckDeepLock({super.key});
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final entitlement =
-        ref.watch(wrEntitlementProvider).valueOrNull ??
-        WrEntitlement(plan: WrPlan.free);
-    final premium = entitlement.canUseFeature(
-      WrPremiumFeature.selfCheckDeepDive,
-    );
-    // Thẻ navy của mockup v47. Người đã Premium vẫn thấy thẻ, chỉ đổi nút
-    // thành lối vào (changelog 24/08 §7). `openScaDeepDive` lo cả hai nhánh:
-    // chưa có quyền thì mở paywall, mua xong đi thẳng vào màn đích.
-    return Container(
-      key: Key(
-        premium ? 'wr_discover_sca_deep_open' : 'wr_discover_sca_deep_lock',
-      ),
-      padding: WrCard.kPadding,
-      decoration: BoxDecoration(
-        color: WrColors.navy,
-        borderRadius: BorderRadius.circular(WrCard.kRadius),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.auto_awesome_outlined,
-                size: 20,
-                color: WrColors.coral,
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 3,
-                ),
-                decoration: BoxDecoration(
-                  color: WrColors.coral.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(100),
-                ),
-                child: const Text(
-                  'Premium',
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w700,
-                    color: WrColors.pillCoralText,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            tr('Diễn giải sâu & xu hướng', 'Deep reading & trends'),
-            style: const TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.w700,
-              color: WrColors.cream,
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            tr(
-              'So sánh kết quả theo thời gian để thấy điều kiện làm việc của bạn '
-                  'đã thay đổi ra sao và đối chiếu với các ghi chú trước đó.',
-              'Compare results over time to see how your working conditions '
-                  'have changed, and set them against your earlier notes.',
-            ),
-            style: _muted.copyWith(
-              color: WrColors.cream.withValues(alpha: 0.7),
-            ),
-          ),
-          const SizedBox(height: 12),
-          _PrimarySmallButton(
-            key: const Key('wr_discover_sca_deep_button'),
-            label: premium
-                ? tr('Xem diễn giải sâu', 'See the deep reading')
-                : tr('Mở khoá', 'Unlock'),
-            onTap: () => openScaDeepDive(context, ref),
-          ),
-        ],
       ),
     );
   }

@@ -12,96 +12,13 @@ import '../../../core/widgets/wr_detail_scaffold.dart';
 import '../../../core/widgets/wr_hero_header.dart';
 import '../wr_providers.dart';
 import 'wr_discover_screen.dart' show situationLabelFor;
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 class _RepeatLogItem {
   const _RepeatLogItem({required this.date, required this.text});
   final String date;
   final String text;
 }
-
-const _kScriptDemoLogs = <String, List<_RepeatLogItem>>{
-  'C2-01': [
-    _RepeatLogItem(
-      date: '24/08',
-      text: 'Mình đã chuẩn bị kỹ nhưng tới lượt thì nói hơi nhanh.',
-    ),
-    _RepeatLogItem(
-      date: '17/08',
-      text: 'Lần này mình nói sau, và cũng không ai hỏi lại.',
-    ),
-    _RepeatLogItem(date: '09/08', text: ''),
-    _RepeatLogItem(
-      date: '02/08',
-      text: 'Anh T nhắc lại đúng ý mình vừa nói.',
-    ),
-    _RepeatLogItem(date: '28/07', text: ''),
-  ],
-  'A3-02': [
-    _RepeatLogItem(
-      date: '22/08',
-      text: 'Ngủ đủ mà vẫn thấy nặng đầu từ sáng.',
-    ),
-    _RepeatLogItem(date: '15/08', text: ''),
-    _RepeatLogItem(
-      date: '06/08',
-      text: 'Không có việc gì gấp, vẫn thấy mệt.',
-    ),
-  ],
-  'C2-07': [
-    _RepeatLogItem(
-      date: '20/08',
-      text: 'Cả phòng im nên mình cũng thôi.',
-    ),
-    _RepeatLogItem(date: '11/08', text: ''),
-  ],
-  'S1-01': [
-    _RepeatLogItem(
-      date: '19/08',
-      text: 'Nhận việc rồi mới biết phần nào là của mình.',
-    ),
-    _RepeatLogItem(date: '05/08', text: ''),
-  ],
-  'S1-02': [
-    _RepeatLogItem(
-      date: '13/08',
-      text: 'Tự đoán cách làm, xong thấy người khác làm kiểu khác.',
-    ),
-    _RepeatLogItem(date: '01/08', text: ''),
-  ],
-  'A1-01': [
-    _RepeatLogItem(
-      date: '24/08',
-      text: 'Lên kế hoạch rất chi tiết nhưng cuối ngày lại tự hỏi mục đích thật là gì.',
-    ),
-    _RepeatLogItem(
-      date: '17/08',
-      text: 'Hoàn thành mọi đầu việc nhưng cảm giác trống rỗng.',
-    ),
-    _RepeatLogItem(date: '09/08', text: ''),
-    _RepeatLogItem(
-      date: '02/08',
-      text: 'Mọi người khen nhanh nhẹn, nhưng mình không biết bước tiếp theo là đâu.',
-    ),
-  ],
-  'A1-02': [
-    _RepeatLogItem(
-      date: '21/08',
-      text: 'Lại mở tin tuyển dụng trong giờ nghỉ.',
-    ),
-    _RepeatLogItem(date: '12/08', text: ''),
-    _RepeatLogItem(
-      date: '03/08',
-      text: 'Muốn đổi môi trường nhưng chưa hình dung rõ điều mình cần.',
-    ),
-  ],
-  'A1-03': [
-    _RepeatLogItem(
-      date: '18/08',
-      text: 'Tuần này rất bận, nhưng nhìn lại không biết mình làm vì điều gì.',
-    ),
-    _RepeatLogItem(date: '10/08', text: ''),
-  ],
-};
 
 class WrPatternsScreen extends ConsumerStatefulWidget {
   const WrPatternsScreen({super.key});
@@ -113,38 +30,29 @@ class WrPatternsScreen extends ConsumerStatefulWidget {
 class _WrPatternsScreenState extends ConsumerState<WrPatternsScreen> {
   String? _expandedCode;
 
+  /// Từng lần của một tình huống — CHÍNH những lần đứng sau con số "n lần"
+  /// của dòng đó: cùng `episodesForSituation`, cùng cửa sổ
+  /// [kRecentSituationsWindow] lần gần nhất, mới nhất đứng đầu. Lấy tập khác
+  /// (toàn bộ lịch sử) là để dòng ghi "3 lần" mà xổ ra năm mục.
+  ///
+  /// Không có Episode thì không có mục nào; không bao giờ bày dữ liệu mẫu.
   List<_RepeatLogItem> _resolveLogs(
     String code,
     List<ReflectionEpisode> episodes,
-  ) {
-    final relevant = episodes.where((e) => e.situationCode == code).toList();
-    relevant.sort((a, b) {
-      final aTime = a.closedAt ?? a.updatedAt ?? a.openedAt ?? DateTime(2000);
-      final bTime = b.closedAt ?? b.updatedAt ?? b.openedAt ?? DateTime(2000);
-      return bTime.compareTo(aTime);
-    });
+  ) => [
+    for (final e in episodesForSituation(episodes, code))
+      _RepeatLogItem(
+        date: _dayMonth(e.openedAt ?? e.updatedAt ?? e.closedAt),
+        // Câu người dùng đã kể ở bước "Kể lại khoảnh khắc".
+        text: e.notes[ReflectionPattern.explore.dbValue]?.trim() ?? '',
+      ),
+  ];
 
-    final realItems = <_RepeatLogItem>[];
-    for (final e in relevant) {
-      final at = (e.closedAt ?? e.updatedAt ?? e.openedAt)?.toLocal();
-      final dateStr = at != null
-          ? '${at.day.toString().padLeft(2, '0')}/${at.month.toString().padLeft(2, '0')}'
-          : '';
-      final text = e.notes['detail'] ??
-          e.notes['notice'] ??
-          e.draftMeaning ??
-          '';
-      realItems.add(_RepeatLogItem(date: dateStr, text: text));
-    }
-
-    if (realItems.isNotEmpty) {
-      return realItems;
-    }
-
-    return _kScriptDemoLogs[code] ??
-        const [
-          _RepeatLogItem(date: 'Gần đây', text: ''),
-        ];
+  static String _dayMonth(DateTime? d) {
+    if (d == null) return '';
+    final l = d.toLocal();
+    return '${l.day.toString().padLeft(2, '0')}/'
+        '${l.month.toString().padLeft(2, '0')}';
   }
 
   @override
@@ -158,7 +66,12 @@ class _WrPatternsScreenState extends ConsumerState<WrPatternsScreen> {
       episodes,
       minCount: kRepeatedSituationsMinCount,
     );
-    final total = episodes.length;
+    // Mẫu số phải cùng phạm vi với số đếm: số đếm lấy trong cửa sổ
+    // `recentSituationIds` (30 lần gần nhất), nên mẫu số cũng là số lần trong
+    // cửa sổ đó. Lấy tổng mọi lần sẽ ra câu sai nghĩa "4 lần trong 50 lần"
+    // trong khi 4 chỉ đếm trên 30 lần (máy thật 13/10). Cùng con số với thẻ
+    // "Quay lại nhiều nhất" của tab Hiểu mình.
+    final total = recentSituationIds(episodes).length;
 
     return WrDetailScaffold(
       art: WrHeroArt.understand,
@@ -167,7 +80,7 @@ class _WrPatternsScreenState extends ConsumerState<WrPatternsScreen> {
       children: [
         if (repeated.isEmpty)
           Text(
-            recentSituationIds(episodes).isEmpty
+            wrKeepCompounds(recentSituationIds(episodes).isEmpty
                 ? tr(
                     'Sau vài lần nhìn lại có chọn tình huống, những điều lặp lại '
                         'sẽ hiện ra ở đây.',
@@ -179,7 +92,7 @@ class _WrPatternsScreenState extends ConsumerState<WrPatternsScreen> {
                         'Những gì bạn đã ghi vẫn còn nguyên trong Hành trình.',
                     'Nothing has come back $kRepeatedSituationsMinCount times yet. '
                         'Everything you recorded is still there in your Journey.',
-                  ),
+                  )),
             style: const TextStyle(
               fontSize: 14.5,
               color: WrColors.muted,
@@ -188,12 +101,12 @@ class _WrPatternsScreenState extends ConsumerState<WrPatternsScreen> {
           )
         else ...[
           Text(
-            tr(
+            wrKeepCompounds(tr(
               'Xếp theo số lần quay lại trong $total lần nhìn lại gần đây. '
                   'Chạm vào một dòng để xem bạn đã viết gì những lần đó.',
               'Sorted by recurrences in your last $total look-backs. '
                   'Tap a row to see what you wrote each time.',
-            ),
+            )),
             style: const TextStyle(
               fontSize: 14,
               color: WrColors.muted,
@@ -266,6 +179,7 @@ class _RepeatSituationRow extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           InkWell(
+            key: Key('wr_patterns_row_$code'),
             onTap: onToggle,
             borderRadius: BorderRadius.circular(8),
             child: Row(
@@ -273,7 +187,7 @@ class _RepeatSituationRow extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    title,
+                    wrKeepCompounds(title),
                     style: const TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w600,
@@ -293,7 +207,7 @@ class _RepeatSituationRow extends StatelessWidget {
                     borderRadius: BorderRadius.circular(100),
                   ),
                   child: Text(
-                    tr('$count lần', '$count times'),
+                    wrKeepCompounds(tr('$count lần', '$count times')),
                     style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w700,
@@ -316,6 +230,7 @@ class _RepeatSituationRow extends StatelessWidget {
           ),
           if (isOpen) ...[
             Container(
+              key: Key('wr_patterns_row_log_$code'),
               margin: const EdgeInsets.only(top: 11),
               padding: const EdgeInsets.only(left: 11),
               decoration: const BoxDecoration(
@@ -336,7 +251,7 @@ class _RepeatSituationRow extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            l.date,
+                            wrKeepCompounds(l.date),
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
@@ -346,7 +261,7 @@ class _RepeatSituationRow extends StatelessWidget {
                           const SizedBox(height: 2),
                           if (l.text.isNotEmpty)
                             Text(
-                              '“${l.text}”',
+                              wrKeepCompounds('“${l.text}”'),
                               style: const TextStyle(
                                 fontFamily: 'Lora',
                                 fontStyle: FontStyle.italic,
@@ -357,10 +272,10 @@ class _RepeatSituationRow extends StatelessWidget {
                             )
                           else
                             Text(
-                              tr(
+                              wrKeepCompounds(tr(
                                 'Bạn không viết gì lần này',
                                 'You wrote nothing this time',
-                              ),
+                              )),
                               style: TextStyle(
                                 fontSize: 11,
                                 color: WrColors.muted.withValues(alpha: 0.55),

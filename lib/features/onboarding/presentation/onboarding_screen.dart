@@ -5,9 +5,9 @@
 //   0 Dừng lại một chút   ảnh tab Hôm nay
 //   1 Thấy rõ hơn         ảnh tab Hiểu mình
 //   2 Hành trình          ảnh tab Hành trình
-//   3 Riêng tư            dải ảnh tab Phát triển (v47 bỏ giờ nhắc và điều khoản)
+//   3 Riêng tư            ảnh tab Phát triển (v47 bỏ giờ nhắc và điều khoản)
 //      → video hướng dẫn (khách 06/10: "video HDSD để sau landing page")
-//   4 Bắt đầu             dải ảnh tab Hôm nay · chọn cảm xúc → vào thẳng lần nhìn lại đầu tiên
+//   4 Bắt đầu             ảnh tab Hôm nay, thấp hơn (188) · chọn cảm xúc → vào thẳng lần nhìn lại đầu tiên
 //
 // Không bắt đăng ký trước. Chọn cảm xúc (hoặc Bỏ qua) mở một phiên KHÁCH
 // (Supabase ẩn danh, `guest_session.dart`); sau lần nhìn lại đầu tiên, màn Xong
@@ -31,6 +31,7 @@ import '../../wr/presentation/wr_home_screen.dart'
     show CheckinOption, kCheckinOptions, startReflectionFromCheckin;
 import '../intro_video_providers.dart';
 import 'wr_intro_video_sheet.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 /// Ba bước có hero (`ONB_STEPS` của mockup v47).
 typedef _HeroStep = ({String eyebrow, String title, String text});
@@ -115,10 +116,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       messenger.showSnackBar(
         SnackBar(
           content: Text(
-            tr(
+            wrKeepCompounds(tr(
               'Chưa kết nối được. Kiểm tra mạng rồi thử lại.',
               'Could not connect. Check your network and try again.',
-            ),
+            )),
           ),
         ),
       );
@@ -243,7 +244,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
             child: Text(
-              tr('Bỏ qua', 'Skip'),
+              wrKeepCompounds(tr('Bỏ qua', 'Skip')),
               style: const TextStyle(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w600,
@@ -269,7 +270,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            eyebrow.toUpperCase(),
+            wrKeepCompounds(eyebrow.toUpperCase()),
             style: const TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
@@ -279,7 +280,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           ),
           const SizedBox(height: 8),
           Text(
-            title,
+            wrKeepCompounds(title),
             style: const TextStyle(
               fontSize: 23,
               fontWeight: FontWeight.w800,
@@ -290,7 +291,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           if (text != null) ...[
             const SizedBox(height: 10),
             Text(
-              text,
+              wrKeepCompounds(text),
               style: const TextStyle(
                 fontSize: 15,
                 color: Color(0xB82C335D),
@@ -333,10 +334,37 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                   fontWeight: FontWeight.w700,
                 ),
               ),
-              child: Text(label),
+              child: Text(wrKeepCompounds(label)),
             ),
           ),
           ?below,
+        ],
+      ),
+    );
+  }
+
+  // ── Ảnh đầu bước (`.onb-hero`) ───────────────────────────────────────────
+
+  /// `.onb-hero { height: 236px }` cho bước 1–4, `.onb-hero.short { 188px }`
+  /// cho bước cuối (còn sáu ô cảm xúc bên dưới). Một chiều cao chung để chuyển
+  /// bước không bị hụt một khoảng. Ảnh tràn lên dưới thanh trạng thái.
+  static const double kHeroHeight = 236;
+  static const double kHeroShortHeight = 188;
+
+  Widget _hero(String asset, {double height = kHeroHeight}) {
+    return SizedBox(
+      height: height + MediaQuery.paddingOf(context).top,
+      child: Stack(
+        children: [
+          Positioned.fill(
+            child: WrHeroBackdrop(
+              key: Key('onboarding_hero_$_step'),
+              asset: asset,
+              alignment: kWrOnboardingPhotoAlignment,
+              overlay: kWrOnboardingFade,
+            ),
+          ),
+          _topBar(),
         ],
       ),
     );
@@ -358,24 +386,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                SizedBox(
-                  // `.onb-hero { height: 292px }`, ảnh tràn lên thanh trạng
-                  // thái.
-                  height: 292 + MediaQuery.paddingOf(context).top,
-                  child: Stack(
-                    children: [
-                      Positioned.fill(
-                        child: WrHeroBackdrop(
-                          key: Key('onboarding_hero_$_step'),
-                          asset: asset,
-                          alignment: kWrOnboardingPhotoAlignment,
-                          overlay: kWrOnboardingFade,
-                        ),
-                      ),
-                      _topBar(),
-                    ],
-                  ),
-                ),
+                _hero(asset),
                 _copy(eyebrow: s.eyebrow, title: s.title, text: s.text),
               ],
             ),
@@ -419,22 +430,16 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   // ── Bước 3: Riêng tư ─────────────────────────────────────────────────────
 
   Widget _privacyStep() {
-    return Stack(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: WrReflectBand(mood: null, asset: WrHeroArt.act.asset),
-        ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _topBar(),
-            Expanded(
-              child: SingleChildScrollView(
-                child: _copy(
-                  top: 22,
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _hero(WrHeroArt.act.asset),
+                _copy(
                   eyebrow: tr('Riêng tư', 'Privacy'),
                   title: tr(
                     'Những gì bạn viết là của bạn',
@@ -450,11 +455,11 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                         'time.',
                   ),
                 ),
-              ),
+              ],
             ),
-            _cta(tr('Tiếp tục', 'Continue'), _afterPrivacy),
-          ],
+          ),
         ),
+        _cta(tr('Tiếp tục', 'Continue'), _afterPrivacy),
       ],
     );
   }
@@ -463,91 +468,80 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 
   Widget _moodStep() {
     final options = kCheckinOptions;
-    return Stack(
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: WrReflectBand(mood: null, asset: WrHeroArt.home.asset),
-        ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _topBar(),
-            Expanded(
-              child: SingleChildScrollView(
-                padding: EdgeInsets.only(
-                  bottom: 24 + MediaQuery.paddingOf(context).bottom,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _copy(
-                      top: 22,
-                      eyebrow: tr('Bắt đầu', 'Begin'),
-                      title: tr(
-                        'Ngày hôm nay của bạn như thế nào?',
-                        'How has your day been?',
-                      ),
-                      text: tr(
-                        'Chọn cảm xúc sát nhất với bạn lúc này để bắt đầu lần '
-                            'nhìn lại đầu tiên.',
-                        'Pick the feeling closest to you right now to begin '
-                            'your first look back.',
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 26),
-                      child: Column(
-                        children: [
-                          for (var i = 0; i < options.length; i += 2) ...[
-                            if (i > 0) const SizedBox(height: 8),
-                            IntrinsicHeight(
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.stretch,
-                                children: [
-                                  Expanded(child: _moodTile(options[i])),
-                                  const SizedBox(width: 8),
-                                  Expanded(
-                                    child: i + 1 < options.length
-                                        ? _moodTile(options[i + 1])
-                                        : const SizedBox.shrink(),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 14),
-                    if (_busy)
-                      const Center(
-                        child: SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        ),
-                      )
-                    else
-                      Text(
-                        tr(
-                          'Lần nhìn lại đầu tiên chỉ mất khoảng một phút.',
-                          'Your first look back takes about a minute.',
-                        ),
-                        textAlign: TextAlign.center,
-                        style: const TextStyle(
-                          fontSize: 12.5,
-                          color: WrColors.text3,
-                        ),
-                      ),
-                  ],
-                ),
-              ),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: EdgeInsets.only(
+              bottom: 24 + MediaQuery.paddingOf(context).bottom,
             ),
-          ],
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                _hero(WrHeroArt.home.asset, height: kHeroShortHeight),
+                _copy(
+                  eyebrow: tr('Bắt đầu', 'Begin'),
+                  title: tr(
+                    'Ngày hôm nay của bạn như thế nào?',
+                    'How has your day been?',
+                  ),
+                  text: tr(
+                    'Chọn cảm xúc sát nhất với bạn lúc này để bắt đầu lần '
+                        'nhìn lại đầu tiên.',
+                    'Pick the feeling closest to you right now to begin '
+                        'your first look back.',
+                  ),
+                ),
+                const SizedBox(height: 16),
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 26),
+                  child: Column(
+                    children: [
+                      for (var i = 0; i < options.length; i += 2) ...[
+                        if (i > 0) const SizedBox(height: 8),
+                        IntrinsicHeight(
+                          child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.stretch,
+                            children: [
+                              Expanded(child: _moodTile(options[i])),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: i + 1 < options.length
+                                    ? _moodTile(options[i + 1])
+                                    : const SizedBox.shrink(),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 14),
+                if (_busy)
+                  const Center(
+                    child: SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    ),
+                  )
+                else
+                  Text(
+                    wrKeepCompounds(tr(
+                      'Lần nhìn lại đầu tiên chỉ mất khoảng một phút.',
+                      'Your first look back takes about a minute.',
+                    )),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      color: WrColors.text3,
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ),
       ],
     );
@@ -568,7 +562,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 14),
           child: Center(
             child: Text(
-              option.label,
+              wrKeepCompounds(option.label),
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 14,

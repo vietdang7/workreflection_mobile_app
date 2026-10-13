@@ -3,9 +3,12 @@
 // Đây là nơi duy nhất Meaning được đưa vào Career Memory (WDA Invariant 6:
 // chỉ những trải nghiệm đã được chuyển hóa mới được lưu).
 //
-// Hai tiêu đề như mockup: "Đã ghi nhận một cột mốc" khi lần này là một "lần
-// đầu" theo luật Cột mốc của Career Memory (`milestoneTextForStory` — cột mốc là
-// cờ trên STORY, không phải bản ghi riêng), còn lại "Đã lưu vào Career Memory".
+// Hai tiêu đề như mockup: "Đã ghi nhận một cột mốc" khi lần này là một cột
+// mốc theo luật Career Memory (`milestoneTextForStory` — cột mốc là cờ trên
+// STORY, không phải bản ghi riêng), còn lại "Đã lưu vào Career Memory".
+//
+// Script Sprint 2: tình huống hoàn thành / học được (P-11, P-08) luôn là cột
+// mốc; thẻ "Career Memory · Cột mốc" khi đó hiện TÊN tình huống.
 // Bên dưới là "Điều được giữ lại": Insight người dùng vừa giữ ở bước 3.
 //
 // Nội dung hiển thị ở đây là GHI NHẬN, không phải diễn giải — nên bản miễn phí
@@ -23,9 +26,8 @@ import '../../episode_flow_controller.dart';
 import '../../wr_providers.dart';
 import '../../../../core/logic/wr_flow_error.dart';
 import '../../../../core/logic/wr_career_memory_rules.dart'
-    show closedStories, milestoneTextForStory;
+    show closedStories, milestoneTextForStory, situationMilestoneKind;
 import '../../../../core/logic/wr_reflect_v47.dart';
-import '../../../../core/logic/wr_repeated_situations.dart';
 import '../../../../core/models/wr_episode.dart';
 import '../../../../core/theme/wr_text.dart';
 import '../../../../core/widgets/eyebrow.dart';
@@ -85,15 +87,15 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
     await showSaveJourneySheet(context);
   }
 
-  /// Số lần đã gặp tình huống này — thuần ghi nhận, không diễn giải.
-  ///
-  /// Đếm từ Episode chứ không từ `wr_pattern_counts` (v2.0 §4.3): bảng kia cộng
-  /// thêm một lần nữa mỗi khi người dùng mở lại một Episode đã khép và xác nhận
-  /// Ý nghĩa lần hai, nên "lần thứ N" ở đây sẽ vượt số lần ghi ở màn chi tiết.
-  int? _occurrenceCount(List<ReflectionEpisode>? episodes) {
+  /// Tên tình huống vừa nhìn lại, theo ngôn ngữ đang bật.
+  String? _situationTitle() {
     final code = _situationCode;
-    if (code == null || episodes == null) return null;
-    return countSituation(episodes, code);
+    if (code == null) return null;
+    final all = ref.watch(wrSituationsProvider).valueOrNull ?? const [];
+    for (final s in all) {
+      if (s.code == code) return s.text;
+    }
+    return null;
   }
 
   /// Câu Cột mốc nếu lần nhìn lại vừa khép là một "lần đầu".
@@ -118,8 +120,11 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
     final history = _integrating
         ? null
         : ref.watch(wrEpisodeHistoryProvider).valueOrNull;
-    final milestone = _milestone(history);
-    final count = _occurrenceCount(history);
+    // Tình huống hoàn thành / học được: cột mốc ngay, không chờ lịch sử.
+    final completion = situationMilestoneKind(_situationCode) != null;
+    final milestone = completion
+        ? (_situationTitle() ?? _milestone(history))
+        : _milestone(history);
 
     return Scaffold(
       backgroundColor: WrColors.pageBg,
@@ -135,7 +140,7 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
                   onPressed: _integrating ? null : _home,
                   style: TextButton.styleFrom(foregroundColor: WrColors.text2),
                   child: Text(
-                    tr('Đóng', 'Close'),
+                    wrKeepCompounds(tr('Đóng', 'Close')),
                     style: const TextStyle(fontSize: 13.5),
                   ),
                 ),
@@ -156,7 +161,7 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
                             ),
                             const SizedBox(height: 14),
                             Text(
-                              tr('Đang lưu lại…', 'Saving…'),
+                              wrKeepCompounds(tr('Đang lưu lại…', 'Saving…')),
                               style: const TextStyle(
                                 fontSize: 15,
                                 color: WrColors.text2,
@@ -164,7 +169,7 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
                             ),
                           ],
                         )
-                      : _doneBody(milestone: milestone, count: count),
+                      : _doneBody(milestone: milestone, completion: completion),
                 ),
               ),
             ),
@@ -174,7 +179,7 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
     );
   }
 
-  Widget _doneBody({String? milestone, int? count}) {
+  Widget _doneBody({String? milestone, bool completion = false}) {
     final kept = _meaning?.trim();
     return Column(
       key: const Key('wr_done_body'),
@@ -195,7 +200,7 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
         ),
         const SizedBox(height: 18),
         Text(
-          milestone != null ? kDoneMilestoneTitle : kDoneSavedTitle,
+          wrKeepCompounds(milestone != null ? kDoneMilestoneTitle : kDoneSavedTitle),
           key: const Key('wr_done_title'),
           textAlign: TextAlign.center,
           style: const TextStyle(
@@ -207,7 +212,9 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
         ),
         const SizedBox(height: 8),
         WrParagraph(
-          milestone != null ? kDoneMilestoneNote : kDoneSavedNote,
+          milestone == null
+              ? kDoneSavedNote
+              : (completion ? kDoneCompletionNote : kDoneMilestoneNote),
           textAlign: TextAlign.center,
           style: const TextStyle(
             fontSize: 14,
@@ -248,22 +255,10 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  tr('Được ghi nhận hôm nay', 'Recorded today'),
+                  wrKeepCompounds(tr('Được ghi nhận hôm nay', 'Recorded today')),
                   style: const TextStyle(fontSize: 12.5, color: WrColors.text3),
                 ),
               ],
-            ),
-          ),
-        if (count != null && count >= 2)
-          Padding(
-            padding: const EdgeInsets.only(bottom: 18),
-            child: Text(
-              tr(
-                'Bạn đã ghi lại tình huống này $count lần',
-                'You have recorded this situation $count times',
-              ),
-              textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 13, color: WrColors.text3),
             ),
           ),
         const SizedBox(height: 4),
@@ -281,7 +276,7 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
               ),
             ),
             child: Text(
-              kDoneHome,
+              wrKeepCompounds(kDoneHome),
               style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
             ),
           ),

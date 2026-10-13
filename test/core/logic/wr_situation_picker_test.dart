@@ -113,28 +113,61 @@ void main() {
 
   // -------------------------------------------------------------------------
   group('§III — lọc tình huống theo cảm xúc check-in', () {
-    test('mỗi cảm xúc lấy ba mục cùng mood và hai mục cùng valence', () {
+    test('mỗi cảm xúc chỉ lấy tình huống thuộc chiều của nó (script dims)', () {
       final all = _library();
 
-      for (final entry in kMoodCodes.entries) {
+      for (final entry in kMoodDimensions.entries) {
         final picked = pickSituationChoices(
           all: all,
           mood: entry.key,
           random: Random(1),
         );
         expect(picked, hasLength(kSituationChoiceCount));
-        final sameMood = picked.where((s) => s.mood == entry.value).toList();
-        expect(sameMood, hasLength(3));
-        final valence = sameMood.first.explicitValence;
-        expect(
-          picked
-              .skip(3)
-              .every(
-                (s) => s.mood != entry.value && s.explicitValence == valence,
-              ),
-          isTrue,
-        );
+        for (final s in picked) {
+          expect(
+            entry.value,
+            contains(situationDim(s)),
+            reason: '${entry.key.name} nhận phải ${s.code}',
+          );
+        }
       }
+    });
+
+    test('bảng chiều đúng MOODS của script', () {
+      expect(kMoodDimensions[Mood.stressed], [
+        ScaDimension.a3,
+        ScaDimension.c2,
+      ]);
+      expect(kMoodDimensions[Mood.tired], [ScaDimension.a3, ScaDimension.a1]);
+      expect(kMoodDimensions[Mood.foggy], [ScaDimension.s1]);
+      expect(kMoodDimensions[Mood.outofsync], [ScaDimension.s2]);
+      expect(kMoodDimensions[Mood.okay], [ScaDimension.pSteady]);
+      expect(kMoodDimensions[Mood.happy], [ScaDimension.pAchieve]);
+    });
+
+    test('chiều lấy theo tiền tố mã, P-xx lấy theo sca_dimension', () {
+      // C1-10 được catalog v2 xếp vào P-STEADY, script vẫn coi là C1.
+      final c110 = WrSituation(
+        code: 'C1-10',
+        text: 'Tôi cảm thấy an tâm khi làm việc cùng họ',
+        scaDimension: ScaDimension.pSteady,
+        pillarCode: 'C',
+        subgroup: 'C1',
+        mood: 'ok',
+        valence: WrValence.tichCuc,
+        wave: 1,
+      );
+      expect(situationDim(c110), ScaDimension.c1);
+      expect(
+        situationDim(_sit('P-S1', ScaDimension.pSteady)),
+        ScaDimension.pSteady,
+      );
+      final picked = pickSituationChoices(
+        all: [..._library(), c110],
+        mood: Mood.okay,
+        random: Random(2),
+      );
+      expect(picked.any((s) => s.code == 'C1-10'), isFalse);
     });
 
     test('cảm xúc tích cực không bao giờ chạm vào chiều vấn đề', () {
@@ -332,13 +365,28 @@ void main() {
 
       expect(picked, hasLength(kSituationChoiceCount));
       expect(
-        picked.take(3).every((s) => s.mood == kMoodCodes[Mood.stressed]),
+        picked.every(
+          (s) => kMoodDimensions[Mood.stressed]!.contains(situationDim(s)),
+        ),
         isTrue,
       );
-      expect(
-        picked.skip(3).every((s) => s.mood != kMoodCodes[Mood.stressed]),
-        isTrue,
-      );
+    });
+
+    test('lọc "chưa gặp" theo cả lịch sử 30 mã, không chỉ 10 mã đầu', () {
+      // Mười mã đầu là thứ khác; sáu mã S1 nằm ở vị trí 11-16.
+      final recent = [for (var i = 1; i <= 10; i++) 'X-$i', 'S1-1', 'S1-2'];
+      for (var seed = 0; seed < 20; seed++) {
+        final picked = pickSituationChoices(
+          all: [
+            ..._library(),
+            for (var i = 7; i <= 9; i++) _sit('S1-$i', ScaDimension.s1),
+          ],
+          mood: Mood.foggy,
+          recentIds: recent,
+          random: Random(seed),
+        );
+        expect(picked.any((s) => recent.contains(s.code)), isFalse);
+      }
     });
 
     test('tình huống đã ngưng đề xuất không lọt vào bể', () {
@@ -391,6 +439,64 @@ void main() {
       expect(anchorSituation(pool, ['S1-1', 'A3-1'])?.code, 'A3-1');
       expect(anchorSituation(pool, const []), isNull);
       expect(anchorSituation(pool, ['S1-1']), isNull);
+    });
+  });
+
+  // -------------------------------------------------------------------------
+  group('script Sprint 2 — chèn P-11 với xác suất 0.45', () {
+    final completion = _sit(kCompletionSituationCode, ScaDimension.pSteady);
+
+    test('nextDouble < 0.45 thì P-11 thay ô cuối', () {
+      final picked = pickSituationChoices(
+        all: [..._library(), completion],
+        mood: Mood.stressed,
+        random: _FixedRandom(0.2),
+      );
+      expect(picked, hasLength(kSituationChoiceCount));
+      expect(picked.last.code, kCompletionSituationCode);
+      expect(
+        picked.take(4).every((s) => s.code != kCompletionSituationCode),
+        isTrue,
+      );
+    });
+
+    test('nextDouble >= 0.45 thì không chèn', () {
+      final picked = pickSituationChoices(
+        all: [..._library(), completion],
+        mood: Mood.stressed,
+        random: _FixedRandom(0.45),
+      );
+      expect(picked.any((s) => s.code == kCompletionSituationCode), isFalse);
+    });
+
+    test('P-11 đã có mặt thì không chèn thêm lần nữa', () {
+      final all = [
+        for (var i = 1; i <= 4; i++) _sit('P-S$i', ScaDimension.pSteady),
+        completion,
+      ];
+      final picked = pickSituationChoices(
+        all: all,
+        mood: Mood.okay,
+        random: _FixedRandom(0.0),
+      );
+      expect(picked, hasLength(5));
+      expect(
+        picked.where((s) => s.code == kCompletionSituationCode),
+        hasLength(1),
+      );
+    });
+
+    test('thư viện không có P-11 thì không đổi gì', () {
+      final picked = pickSituationChoices(
+        all: _library(),
+        mood: Mood.happy,
+        random: _FixedRandom(0.0),
+      );
+      expect(picked, hasLength(5));
+      expect(
+        picked.every((s) => s.scaDimension == ScaDimension.pAchieve),
+        isTrue,
+      );
     });
   });
 
@@ -572,4 +678,20 @@ void _resolveTests() {
       );
     });
   });
+}
+
+/// Random cố định: nextDouble luôn trả [value], nextInt luôn trả 0.
+class _FixedRandom implements Random {
+  _FixedRandom(this.value);
+
+  final double value;
+
+  @override
+  bool nextBool() => false;
+
+  @override
+  double nextDouble() => value;
+
+  @override
+  int nextInt(int max) => 0;
 }

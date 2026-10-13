@@ -13,6 +13,7 @@ import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_mood_content_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
+import 'package:workreflection_mobile/core/logic/vn_date.dart';
 import 'package:workreflection_mobile/core/logic/wr_home_surface.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 import 'package:workreflection_mobile/core/models/wr_episode.dart';
@@ -269,6 +270,69 @@ void main() {
     });
   });
 
+  group('lastWrittenForMood', () {
+    final today = DateTime(2026, 10, 13);
+    Checkin ck(DateTime day, Mood mood) => Checkin(
+      id: 'c',
+      userId: 'u1',
+      mood: mood,
+      checkinDate: day,
+      createdAt: day,
+    );
+    ReflectionEpisode ep(DateTime utc, String? text) => ReflectionEpisode(
+      userId: 'u1',
+      humanMoment: HumanMoment.confusion,
+      notes: {if (text != null) 'explore': text},
+      openedAt: utc,
+    );
+
+    test('lấy lần gần nhất cùng cảm xúc, ngày theo giờ Việt Nam', () {
+      // 18:00 UTC ngày 4/10 = 01:00 sáng 5/10 giờ Việt Nam.
+      final r = lastWrittenForMood(
+        episodes: [
+          ep(DateTime.utc(2026, 10, 4, 18), 'Dòng ngày 5/10'),
+          ep(DateTime.utc(2026, 10, 1, 3), 'Dòng ngày 1/10'),
+        ],
+        checkins: [
+          ck(DateTime(2026, 10, 5), Mood.stressed),
+          ck(DateTime(2026, 10, 1), Mood.stressed),
+        ],
+        mood: Mood.stressed,
+        todayVn: today,
+      );
+      expect(r?.text, 'Dòng ngày 5/10');
+      expect(r?.date, DateTime(2026, 10, 5));
+    });
+
+    test('bỏ qua lần nhìn lại của chính hôm nay và lần không viết gì', () {
+      final r = lastWrittenForMood(
+        episodes: [
+          ep(DateTime.utc(2026, 10, 13, 3), 'Vừa viết hôm nay'),
+          ep(DateTime.utc(2026, 10, 10, 3), '   '),
+          ep(DateTime.utc(2026, 10, 9, 3), null),
+        ],
+        checkins: [
+          ck(DateTime(2026, 10, 13), Mood.tired),
+          ck(DateTime(2026, 10, 10), Mood.tired),
+          ck(DateTime(2026, 10, 9), Mood.tired),
+        ],
+        mood: Mood.tired,
+        todayVn: today,
+      );
+      expect(r, isNull);
+    });
+
+    test('ngày không có check-in thì không đoán cảm xúc', () {
+      final r = lastWrittenForMood(
+        episodes: [ep(DateTime.utc(2026, 10, 10, 3), 'Có chữ')],
+        checkins: const [],
+        mood: Mood.okay,
+        todayVn: today,
+      );
+      expect(r, isNull);
+    });
+  });
+
   group('readingMinutes', () {
     test('tối thiểu một phút', () {
       expect(readingMinutes('ngắn'), 1);
@@ -363,181 +427,46 @@ void main() {
       expect(find.byKey(const Key('wr_home_system_notice')), findsNothing);
     });
 
-    // Khách báo 2026-08-22: check-in "đang căng thẳng" ngày 21/08 rồi rời màn
-    // chọn tình huống, tin là đã ghi xong. DB ngày đó có check-in và không có
-    // Episode nào, còn Home thì không nói gì.
-    group('Còn dở', () {
-      testWidgets('check-in rồi mà chưa mở phiên nào hôm nay thì Home nhắc', (
-        tester,
-      ) async {
-        final repo = FakeWrRepository()
-          ..seedTodayCheckin(_checkin(Mood.stressed));
-
-        // `_episodes` mở ngày 2026-07-01 — có lịch sử, nhưng không phải hôm nay.
-        final episodes = FakeWrEpisodeRepository()..seed(_episodes('s1', 3));
-
-        await _pump(tester, _wrap(repo: repo, episodes: episodes));
-
-        expect(
-          find.byKey(const Key('wr_home_unfinished_reflection')),
-          findsOneWidget,
-        );
-        expect(
-          find.textContaining('chưa chọn điều muốn nhìn lại'),
-          findsOneWidget,
-        );
-      });
-
-      testWidgets('chưa check-in thì không nhắc', (tester) async {
-        await _pump(tester, _wrap());
-
-        expect(
-          find.byKey(const Key('wr_home_unfinished_reflection')),
-          findsNothing,
-        );
-      });
-
-      // Khách 2026-08-25: "tự nhiên còn dở là sao". Trên DB thật tài khoản của
-      // khách có tám Episode chưa khép, mới nhất cách hôm đó hai mươi mốt ngày —
-      // `fetchOpenEpisode` không có mốc thời gian nên nhắc mãi về một phiên
-      // không ai còn nhớ.
-      testWidgets('phiên bỏ dở hôm qua thì vẫn mời quay lại', (tester) async {
-        final repo = FakeWrRepository()
-          ..seedTodayCheckin(_checkin(Mood.stressed));
-        final episodes = FakeWrEpisodeRepository()
-          ..seed([
-            ReflectionEpisode(
-              id: 'hom-qua',
-              userId: 'u1',
-              humanMoment: HumanMoment.confusion,
-              state: ExperienceState.exploring,
-              situationCode: 's1',
-              openedAt: DateTime.now().toUtc().subtract(
-                const Duration(days: 1),
-              ),
-              updatedAt: DateTime.now().toUtc().subtract(
-                const Duration(days: 1),
-              ),
-            ),
-          ]);
-
-        await _pump(tester, _wrap(repo: repo, episodes: episodes));
-
-        expect(find.text('ĐANG BỎ NGỎ'), findsOneWidget);
-        expect(find.textContaining('chưa hoàn thành'), findsOneWidget);
-      });
-
-      testWidgets('phiên bỏ dở ba tuần trước thì Home thôi nhắc về nó', (
-        tester,
-      ) async {
-        final repo = FakeWrRepository()
-          ..seedTodayCheckin(_checkin(Mood.stressed));
-        final episodes = FakeWrEpisodeRepository()
-          ..seed([
-            ReflectionEpisode(
-              id: 'ba-tuan-truoc',
-              userId: 'u1',
-              humanMoment: HumanMoment.confusion,
-              state: ExperienceState.exploring,
-              situationCode: 's1',
-              openedAt: DateTime.now().toUtc().subtract(
-                const Duration(days: 21),
-              ),
-              updatedAt: DateTime.now().toUtc().subtract(
-                const Duration(days: 21),
-              ),
-            ),
-          ]);
-
-        await _pump(tester, _wrap(repo: repo, episodes: episodes));
-
-        // Phiên cũ không còn được nhắc tới. Thẻ vẫn ở đó nhưng nói về việc hôm
-        // nay — đã ghi cảm xúc, chưa chọn điều muốn nhìn lại.
-        expect(find.text('ĐANG BỎ NGỎ'), findsNothing);
-        expect(find.textContaining('chưa hoàn thành'), findsNothing);
-        expect(
-          find.textContaining('chưa chọn điều muốn nhìn lại'),
-          findsOneWidget,
-        );
-      });
-
-      testWidgets('nhãn cũ "CÒN DỞ" không còn ở đâu trên Home', (tester) async {
-        // "dở" một mình trong tiếng Việt là DỞ/TỆ — khách đọc ra thành lời chê.
-        final repo = FakeWrRepository()
-          ..seedTodayCheckin(_checkin(Mood.stressed));
-        final episodes = FakeWrEpisodeRepository()..seed(_episodes('s1', 3));
-
-        await _pump(tester, _wrap(repo: repo, episodes: episodes));
-
-        expect(find.text('CÒN DỞ'), findsNothing);
-        expect(find.textContaining('đang dở'), findsNothing);
-      });
-
-      testWidgets('đã mở phiên hôm nay thì thôi nhắc', (tester) async {
-        final repo = FakeWrRepository()
-          ..seedTodayCheckin(_checkin(Mood.stressed));
-        final episodes = FakeWrEpisodeRepository()
-          ..seed([
-            ReflectionEpisode(
-              id: 'hom-nay',
-              userId: 'u1',
-              humanMoment: HumanMoment.confusion,
-              state: ExperienceState.integrated,
-              situationCode: 's1',
-              openedAt: DateTime.now().toUtc(),
-            ),
-          ]);
-
-        await _pump(tester, _wrap(repo: repo, episodes: episodes));
-
-        expect(
-          find.byKey(const Key('wr_home_unfinished_reflection')),
-          findsNothing,
-        );
-      });
-    });
-
-    testWidgets('Hệ thống nhận ra hiện đúng câu từ dữ liệu thật', (
+    // Mockup Sprint 2 §screenHome chỉ còn: cảm xúc hôm nay → Thư viện cảm xúc
+    // → "Lần gần nhất bạn thấy như vậy" → "Tiếp tục hôm nay". Thẻ "Đang bỏ
+    // ngỏ"/"Còn một bước nữa" và thẻ navy "Hệ thống nhận ra" không còn trên
+    // Home (từ PR #48), kể cả khi có đủ dữ liệu để dựng chúng.
+    testWidgets('Home không còn thẻ Đang bỏ ngỏ và Hệ thống nhận ra', (
       tester,
     ) async {
       final content = FakeWrContentRepository()
-        // C2 để khớp cụm chiều của "căng thẳng" (A3+C2, §III) — từ 2026-08-22
-        // thẻ chỉ đọc tình huống thuộc cảm xúc vừa check-in. Chiều này cũng
-        // đúng với nội dung câu: né tránh lên tiếng.
         ..seedSituations([
           _sit('s1', 'Ngại phản biện với đồng nghiệp', dim: ScaDimension.c2),
         ]);
-      final episodes = FakeWrEpisodeRepository()..seed(_episodes('s1', 5));
       final repo = FakeWrRepository()
         ..seedTodayCheckin(_checkin(Mood.stressed));
+      final episodes = FakeWrEpisodeRepository()
+        ..seed([
+          ..._episodes('s1', 5),
+          ReflectionEpisode(
+            id: 'hom-qua',
+            userId: 'u1',
+            humanMoment: HumanMoment.confusion,
+            state: ExperienceState.exploring,
+            situationCode: 's1',
+            openedAt: DateTime.now().toUtc().subtract(const Duration(days: 1)),
+            updatedAt: DateTime.now().toUtc().subtract(const Duration(days: 1)),
+          ),
+        ]);
 
       await _pump(
         tester,
         _wrap(content: content, episodes: episodes, repo: repo),
       );
 
-      expect(find.byKey(const Key('wr_home_system_notice')), findsOneWidget);
-      expect(find.text('HỆ THỐNG NHẬN RA'), findsOneWidget);
-      expect(find.textContaining('Bạn đã gặp tình huống'), findsOneWidget);
-    });
-
-    testWidgets('Tìm hiểu thêm mở đúng màn chi tiết của tình huống đó', (
-      tester,
-    ) async {
-      final content = FakeWrContentRepository()
-        ..seedSituations([_sit('s1', 'Ngại phản biện', dim: ScaDimension.c2)]);
-      final episodes = FakeWrEpisodeRepository()..seed(_episodes('s1', 4));
-      final repo = FakeWrRepository()
-        ..seedTodayCheckin(_checkin(Mood.stressed));
-
-      await _pump(
-        tester,
-        _wrap(content: content, episodes: episodes, repo: repo),
+      expect(
+        find.byKey(const Key('wr_home_unfinished_reflection')),
+        findsNothing,
       );
-      await tester.tap(find.byKey(const Key('wr_home_notice_link')));
-      await tester.pumpAndSettle();
-
-      expect(find.text('PATTERN s1'), findsOneWidget);
+      expect(find.text('ĐANG BỎ NGỎ'), findsNothing);
+      expect(find.text('CÒN DỞ'), findsNothing);
+      expect(find.byKey(const Key('wr_home_system_notice')), findsNothing);
+      expect(find.text('HỆ THỐNG NHẬN RA'), findsNothing);
     });
 
     testWidgets('chưa check-in thì khối Thư viện Cảm xúc im lặng', (
@@ -586,9 +515,13 @@ void main() {
       await _pump(tester, _wrap(moodContent: moodContent, repo: repo));
 
       expect(find.byKey(const Key('wr_home_mood_content')), findsOneWidget);
-      expect(find.text('GỢI Ý KHI CĂNG THẲNG'), findsOneWidget);
       expect(find.text('Ba nhịp thở trước khi phản hồi'), findsOneWidget);
-      expect(find.text('HEALING AUDIO · 3 phút'), findsOneWidget);
+      // Mockup Sprint 2: "Gợi ý khi căng thẳng · BÀI ĐỌC · 2 phút đọc", chữ
+      // thường ở phần đầu, không viết hoa cả dòng.
+      expect(
+        find.text('Gợi ý khi căng thẳng · HEALING AUDIO · 3 phút'),
+        findsOneWidget,
+      );
       // Không được lấy nhầm mục của cảm xúc khác.
       expect(find.text('Bài của vui'), findsNothing);
       expect(find.text('Bài thứ hai'), findsNothing);
@@ -598,10 +531,12 @@ void main() {
       // Người vừa chọn "đang vui" mà thấy "Gợi ý khi căng thẳng" thì thẻ mất
       // hết ý nghĩa.
       const expected = {
-        Mood.stressed: 'GỢI Ý KHI CĂNG THẲNG',
-        Mood.tired: 'GỢI Ý KHI MỆT MỎI',
-        Mood.okay: 'GỢI Ý CHO HÔM NAY',
-        Mood.happy: 'GIỮ LẠI CẢM XÚC NÀY',
+        Mood.stressed: 'Gợi ý khi căng thẳng',
+        Mood.tired: 'Gợi ý khi mệt mỏi',
+        Mood.foggy: 'Gợi ý khi mọi thứ chưa rõ ràng',
+        Mood.outofsync: 'Gợi ý khi mọi thứ lệch nhau',
+        Mood.okay: 'Gợi ý cho hôm nay',
+        Mood.happy: 'Giữ lại cảm xúc này',
       };
 
       for (final entry in expected.entries) {
@@ -611,15 +546,18 @@ void main() {
 
         await _pump(tester, _wrap(moodContent: moodContent, repo: repo));
         expect(
-          find.text(entry.value),
+          find.textContaining('${entry.value} · '),
           findsOneWidget,
           reason: 'sai nhãn cho ${entry.key.name}',
         );
       }
     });
 
-    testWidgets('nội dung còn nháp hiện nhãn Nháp', (tester) async {
-      // §8.2 + §XII.3: placeholder = true là chưa sẵn sàng phát hành.
+    testWidgets('thẻ Thư viện: không nhãn Nháp, không huy hiệu tai nghe', (
+      tester,
+    ) async {
+      // Mockup Sprint 2 chỉ báo nháp bằng dòng "Bản nháp, chưa biên tập chính
+      // thức" ở cuối màn đọc; thẻ ở Home không có nhãn hay huy hiệu nào.
       final repo = FakeWrRepository()..seedTodayCheckin(_checkin(Mood.okay));
       final moodContent = FakeWrMoodContentRepository()
         ..seedContent([
@@ -628,7 +566,16 @@ void main() {
 
       await _pump(tester, _wrap(moodContent: moodContent, repo: repo));
 
-      expect(find.text('Nháp'), findsOneWidget);
+      expect(find.byKey(const Key('wr_home_mood_content')), findsOneWidget);
+      expect(find.text('Nháp'), findsNothing);
+      expect(find.byIcon(Icons.headphones_rounded), findsNothing);
+      // `.tlcard-img` cao 88.
+      expect(
+        tester
+            .getSize(find.byKey(const Key('wr_home_mood_content_image')))
+            .height,
+        88,
+      );
     });
 
     testWidgets('chạm thẻ mở đúng màn đọc của mục đó', (tester) async {
@@ -655,21 +602,100 @@ void main() {
       expect(find.text('THƯ VIỆN'), findsOneWidget);
     });
 
-    testWidgets('Insight gần nhất hiện câu và ngày lưu thật', (tester) async {
-      final intel = FakeWrIntelligenceRepository()
-        ..seedInsights([
-          WrInsight(
+    group('Lần gần nhất bạn thấy như vậy', () {
+      // Ngày quá khứ theo giờ Việt Nam, và một mốc UTC rơi đúng vào ngày đó
+      // (10:00 sáng giờ Việt Nam).
+      DateTime pastDay(int daysAgo) =>
+          todayVnFrom(DateTime.now().toUtc()).subtract(Duration(days: daysAgo));
+      DateTime utcOn(DateTime day) =>
+          DateTime.utc(day.year, day.month, day.day, 3);
+      String ddmm(DateTime d) =>
+          '${d.day.toString().padLeft(2, '0')}/'
+          '${d.month.toString().padLeft(2, '0')}';
+
+      ReflectionEpisode written(String id, DateTime day, String? text) =>
+          ReflectionEpisode(
+            id: id,
             userId: 'u1',
-            content: 'Tôi thường im lặng vì sợ phán xét.',
-            createdAt: DateTime(2026, 6, 20),
-          ),
-        ]);
+            humanMoment: HumanMoment.confusion,
+            state: ExperienceState.integrated,
+            situationCode: 's1',
+            notes: {if (text != null) 'explore': text},
+            openedAt: utcOn(day),
+          );
 
-      await _pump(tester, _wrap(intel: intel));
+      Checkin pastCheckin(DateTime day, Mood mood) => Checkin(
+        id: 'ck-${day.toIso8601String()}',
+        userId: 'u1',
+        mood: mood,
+        checkinDate: day,
+        createdAt: day,
+      );
 
-      expect(find.byKey(const Key('wr_home_latest_insight')), findsOneWidget);
-      expect(find.text('"Tôi thường im lặng vì sợ phán xét."'), findsOneWidget);
-      expect(find.text('Lưu ngày 20/06'), findsOneWidget);
+      testWidgets('hiện dòng người dùng viết ở lần gần nhất cùng cảm xúc', (
+        tester,
+      ) async {
+        final d3 = pastDay(3);
+        final d5 = pastDay(5);
+        final d8 = pastDay(8);
+        final repo = FakeWrRepository()
+          ..seedTodayCheckin(_checkin(Mood.stressed))
+          ..seedPastCheckin(pastCheckin(d3, Mood.happy))
+          ..seedPastCheckin(pastCheckin(d5, Mood.stressed))
+          ..seedPastCheckin(pastCheckin(d8, Mood.stressed));
+        final episodes = FakeWrEpisodeRepository()
+          ..seed([
+            written('vui', d3, 'Hôm đó vui.'),
+            written('gan', d5, 'Mình nhận thêm việc dù biết là không kịp.'),
+            written('xa', d8, 'Một lần căng thẳng cũ hơn.'),
+          ]);
+
+        await _pump(tester, _wrap(repo: repo, episodes: episodes));
+
+        expect(find.byKey(const Key('wr_home_latest_insight')), findsOneWidget);
+        expect(
+          find.text('“Mình nhận thêm việc dù biết là không kịp.”'),
+          findsOneWidget,
+        );
+        expect(find.text(ddmm(d5)), findsOneWidget);
+        expect(find.textContaining('Hôm đó vui'), findsNothing);
+      });
+
+      testWidgets('không có lần nào cùng cảm xúc thì ẩn khối, không câu mẫu', (
+        tester,
+      ) async {
+        final d3 = pastDay(3);
+        final repo = FakeWrRepository()
+          ..seedTodayCheckin(_checkin(Mood.okay))
+          ..seedPastCheckin(pastCheckin(d3, Mood.stressed));
+        final episodes = FakeWrEpisodeRepository()
+          ..seed([written('a', d3, 'Chuyện hôm căng thẳng.')]);
+
+        await _pump(tester, _wrap(repo: repo, episodes: episodes));
+
+        expect(find.byKey(const Key('wr_home_latest_insight')), findsNothing);
+        // Câu mẫu `MOOD_LAST_ENTRY` của mockup không bao giờ lộ ra.
+        expect(find.textContaining('làm xong được việc đã hoãn'), findsNothing);
+      });
+
+      testWidgets('Insight đã lưu không còn là nguồn của khối này', (
+        tester,
+      ) async {
+        final intel = FakeWrIntelligenceRepository()
+          ..seedInsights([
+            WrInsight(
+              userId: 'u1',
+              content: 'Tôi thường im lặng vì sợ phán xét.',
+              createdAt: DateTime(2026, 6, 20),
+            ),
+          ]);
+        final repo = FakeWrRepository()
+          ..seedTodayCheckin(_checkin(Mood.stressed));
+
+        await _pump(tester, _wrap(intel: intel, repo: repo));
+
+        expect(find.byKey(const Key('wr_home_latest_insight')), findsNothing);
+      });
     });
 
     testWidgets(

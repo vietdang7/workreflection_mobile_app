@@ -39,7 +39,7 @@ class _WrAiConsentScreenState extends ConsumerState<WrAiConsentScreen> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
-          ok
+          wrKeepCompounds(ok
               ? (turnOn
                     ? tr(
                         'Đã bật. Những phần cần AI dùng được rồi.',
@@ -52,7 +52,7 @@ class _WrAiConsentScreenState extends ConsumerState<WrAiConsentScreen> {
               : tr(
                   'Chưa lưu được. Bạn kiểm tra mạng rồi thử lại.',
                   'Not saved. Check your connection and try again.',
-                ),
+                )),
         ),
       ),
     );
@@ -85,7 +85,7 @@ class _WrAiConsentScreenState extends ConsumerState<WrAiConsentScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      on ? tr('Đang bật', 'On') : tr('Đang tắt', 'Off'),
+                      wrKeepCompounds(on ? tr('Đang bật', 'On') : tr('Đang tắt', 'Off')),
                       style: TextStyle(
                         fontSize: 15.5,
                         fontWeight: FontWeight.w700,

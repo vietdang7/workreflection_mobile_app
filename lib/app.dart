@@ -12,6 +12,7 @@ import 'core/router/app_router.dart';
 import 'core/theme/wr_text_scale.dart';
 import 'core/theme/wr_theme.dart';
 import 'core/widgets/wr_app_background.dart';
+import 'core/widgets/wr_status_bar_strip.dart';
 import 'features/profile/profile_providers.dart';
 import 'features/wr/iap_providers.dart';
 import 'l10n/app_localizations.dart';
@@ -28,10 +29,7 @@ import 'l10n/app_localizations.dart';
 /// trị ở đây luôn là ngôn ngữ của khung hình này.
 Widget wrLocaleAwareBuilder(BuildContext context, Widget? child) {
   final scaled = wrTextScaleBuilder(context, child);
-  return WrLocaleScope(
-    localeCode: wrLocaleCode,
-    child: scaled,
-  );
+  return WrLocaleScope(localeCode: wrLocaleCode, child: scaled);
 }
 
 class WrApp extends ConsumerStatefulWidget {
@@ -131,7 +129,16 @@ class _WrAppState extends ConsumerState<WrApp> {
       theme: wrTheme(isWatercolor: bgMode == AppBackgroundMode.watercolor),
       builder: (context, child) {
         final inner = wrLocaleAwareBuilder(context, child);
-        return WrAppBackground(mode: bgMode, child: inner);
+        return WrAppBackground(
+          mode: bgMode,
+          child: WrStatusBarStrip(
+            isPaper: bgMode == AppBackgroundMode.watercolor,
+            routeChanges: router.routerDelegate,
+            currentPath: () =>
+                router.routerDelegate.currentConfiguration.uri.path,
+            child: inner,
+          ),
+        );
       },
       routerConfig: router,
       locale: Locale(localeCode),

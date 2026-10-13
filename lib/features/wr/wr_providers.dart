@@ -265,6 +265,18 @@ final todayCheckinProvider = FutureProvider<Checkin?>((ref) async {
   return repo.getTodayCheckin();
 });
 
+/// Các lần check-in gần nhất kèm cảm xúc từng ngày — để Home biết lần nhìn lại
+/// nào cùng cảm xúc với hôm nay ("Lần gần nhất bạn thấy như vậy"). Lỗi thì
+/// rỗng: khối đó im lặng chứ không làm hỏng Home.
+final wrRecentCheckinsProvider = FutureProvider<List<Checkin>>((ref) async {
+  final repo = ref.watch(wrRepositoryProvider);
+  try {
+    return await repo.getRecentCheckins(limit: 120);
+  } catch (_) {
+    return const [];
+  }
+});
+
 /// Fetch pattern counts for current user, ordered by occurrence_count desc.
 final wrPatternCountsProvider = FutureProvider<List<PatternCount>>((ref) async {
   final userId = ref.watch(currentUserIdProvider);

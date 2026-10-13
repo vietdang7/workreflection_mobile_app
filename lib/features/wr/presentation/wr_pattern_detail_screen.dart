@@ -128,10 +128,10 @@ class WrPatternDetailScreen extends ConsumerWidget {
             const SizedBox(height: 14),
             if (related.isEmpty)
               Text(
-                tr(
+                wrKeepCompounds(tr(
                   'Chưa có lần nhìn lại nào gắn với điều này.',
                   'No look-backs tied to this yet.',
-                ),
+                )),
                 style: TextStyle(
                   fontSize: 15.5,
                   color: WrColors.muted,
@@ -165,7 +165,7 @@ class WrPatternDetailScreen extends ConsumerWidget {
                           if (_dayOf(e) case final day?) ...[
                             const SizedBox(width: 12),
                             Text(
-                              day,
+                              wrKeepCompounds(day),
                               style: const TextStyle(
                                 fontSize: 14.5,
                                 color: WrColors.text3,

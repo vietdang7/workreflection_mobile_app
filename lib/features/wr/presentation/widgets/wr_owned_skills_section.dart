@@ -16,6 +16,7 @@ import '../../../../core/widgets/wr_link_row.dart';
 import '../../growth_providers.dart';
 import '../../owned_skill_providers.dart';
 import '../wr_owned_skill_sheet.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 class WrOwnedSkillsSection extends ConsumerWidget {
   const WrOwnedSkillsSection({super.key});
@@ -37,11 +38,11 @@ class WrOwnedSkillsSection extends ConsumerWidget {
         ),
         const SizedBox(height: 6),
         Text(
-          tr(
+          wrKeepCompounds(tr(
             'Khai những gì bạn đã có để app không gợi ý lại. (Không bắt buộc)',
             'List what you already have so the app does not suggest it '
                 'again. (Optional)',
-          ),
+          )),
           style: const TextStyle(
             fontSize: 14.5,
             height: 1.65,
@@ -124,7 +125,7 @@ class _OwnedSkillTile extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      skill.title,
+                      wrKeepCompounds(skill.title),
                       style: const TextStyle(
                         fontSize: 15.5,
                         fontWeight: FontWeight.w600,
@@ -134,7 +135,7 @@ class _OwnedSkillTile extends StatelessWidget {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      meta,
+                      wrKeepCompounds(meta),
                       style: const TextStyle(
                         fontSize: 13.5,
                         color: WrColors.muted,
@@ -144,10 +145,10 @@ class _OwnedSkillTile extends StatelessWidget {
                     if (themeTitles.isNotEmpty) ...[
                       const SizedBox(height: 3),
                       Text(
-                        tr(
+                        wrKeepCompounds(tr(
                           'Không gợi ý lại: ${themeTitles.join(', ')}',
                           'Not suggested again: ${themeTitles.join(', ')}',
-                        ),
+                        )),
                         style: const TextStyle(
                           fontSize: 13.5,
                           color: WrColors.pillTealText,

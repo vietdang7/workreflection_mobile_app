@@ -13,6 +13,7 @@ import 'package:workreflection_mobile/core/models/survey_models.dart';
 import 'package:workreflection_mobile/features/video_report/models/video_report_models.dart';
 import '../../../../core/l10n/wr_tr.dart';
 import 'video_scene_frame.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 // Colors mirroring the web video renderer, keyed off `.toJson()` strings.
 const _kScoreLevelColors = <String, Color>{
@@ -99,18 +100,18 @@ class VideoSceneView extends StatelessWidget {
         const _AppTitle(),
         const SizedBox(height: 20),
         Text(
-          greeting,
+          wrKeepCompounds(greeting),
           textAlign: TextAlign.center,
           style: const TextStyle(color: _kInkMuted, fontSize: 18),
         ),
         const SizedBox(height: 8),
         Text(
-          _isEn
+          wrKeepCompounds(_isEn
               ? 'Here is your team snapshot.'
               : tr(
                   'Đây là bức tranh nhanh về đội nhóm của bạn.',
                   'Here is a quick picture of your team.',
-                ),
+                )),
           textAlign: TextAlign.center,
           style: const TextStyle(color: _kInkMuted, fontSize: 16.5),
         ),
@@ -125,7 +126,7 @@ class VideoSceneView extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          _isEn ? 'Overall score' : tr('Điểm tổng quan', 'Scores at a glance'),
+          wrKeepCompounds(_isEn ? 'Overall score' : tr('Điểm tổng quan', 'Scores at a glance')),
           style: const TextStyle(color: _kInkMuted, fontSize: 16),
         ),
         const SizedBox(height: 12),
@@ -135,7 +136,7 @@ class VideoSceneView extends StatelessWidget {
           textBaseline: TextBaseline.alphabetic,
           children: [
             Text(
-              report.scoreTotal.toStringAsFixed(1),
+              wrKeepCompounds(report.scoreTotal.toStringAsFixed(1)),
               style: const TextStyle(
                 color: _kInk,
                 fontSize: 76,
@@ -184,7 +185,7 @@ class VideoSceneView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
-          _layerName(layerKey),
+          wrKeepCompounds(_layerName(layerKey)),
           textAlign: TextAlign.center,
           style: TextStyle(
             color: color,
@@ -195,7 +196,7 @@ class VideoSceneView extends StatelessWidget {
         const SizedBox(height: 12),
         Center(
           child: Text(
-            value.toStringAsFixed(1),
+            wrKeepCompounds(value.toStringAsFixed(1)),
             style: const TextStyle(
               color: _kInk,
               fontSize: 56,
@@ -248,9 +249,9 @@ class VideoSceneView extends StatelessWidget {
         const SizedBox(height: 12),
         Center(
           child: Text(
-            esi == null
+            wrKeepCompounds(esi == null
                 ? tr('Chưa có dữ liệu', 'No data yet')
-                : esi.toStringAsFixed(1),
+                : esi.toStringAsFixed(1)),
             style: TextStyle(
               color: _kInk,
               // Câu "chưa có dữ liệu" không đọc được ở cỡ của một con số.
@@ -291,7 +292,7 @@ class VideoSceneView extends StatelessWidget {
         const SizedBox(height: 12),
         Center(
           child: Text(
-            enps == null ? tr('Chưa có dữ liệu', 'No data yet') : '$enps',
+            wrKeepCompounds(enps == null ? tr('Chưa có dữ liệu', 'No data yet') : '$enps'),
             style: TextStyle(
               color: _kInk,
               fontSize: enps == null ? 20 : 56,
@@ -325,12 +326,12 @@ class VideoSceneView extends StatelessWidget {
           Icon(Icons.warning_amber_rounded, color: color, size: 40),
           const SizedBox(height: 10),
           Text(
-            _isEn ? 'Bottleneck' : tr('Điểm nghẽn', 'Bottleneck'),
+            wrKeepCompounds(_isEn ? 'Bottleneck' : tr('Điểm nghẽn', 'Bottleneck')),
             style: const TextStyle(color: _kInkMuted, fontSize: 16.5),
           ),
           const SizedBox(height: 6),
           Text(
-            _layerName(key),
+            wrKeepCompounds(_layerName(key)),
             style: TextStyle(
               color: color,
               fontSize: 26,
@@ -351,7 +352,7 @@ class VideoSceneView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          _isEn ? 'Recommendations' : tr('Khuyến nghị', 'Recommendation'),
+          wrKeepCompounds(_isEn ? 'Recommendations' : tr('Khuyến nghị', 'Recommendation')),
           style: const TextStyle(
             color: _kInk,
             fontSize: 22,
@@ -374,7 +375,7 @@ class VideoSceneView extends StatelessWidget {
               const SizedBox(width: 10),
               Expanded(
                 child: Text(
-                  tip,
+                  wrKeepCompounds(tip),
                   style: const TextStyle(
                     color: _kInk,
                     fontSize: 16.5,
@@ -395,7 +396,7 @@ class VideoSceneView extends StatelessWidget {
       mainAxisSize: MainAxisSize.min,
       children: [
         Text(
-          _isEn ? 'Thank you!' : tr('Cảm ơn!', 'Thank you!'),
+          wrKeepCompounds(_isEn ? 'Thank you!' : tr('Cảm ơn!', 'Thank you!')),
           style: const TextStyle(
             color: _kInk,
             fontSize: 34,
@@ -569,7 +570,7 @@ class _Chip extends StatelessWidget {
         border: Border.all(color: color, width: 1.2),
       ),
       child: Text(
-        label,
+        wrKeepCompounds(label),
         style: TextStyle(
           color: color,
           fontSize: 16.5,
@@ -608,7 +609,7 @@ class _LayerBar extends StatelessWidget {
           children: [
             Flexible(
               child: Text(
-                label,
+                wrKeepCompounds(label),
                 overflow: TextOverflow.ellipsis,
                 style: TextStyle(
                   color: _kInkMuted,
@@ -617,7 +618,7 @@ class _LayerBar extends StatelessWidget {
               ),
             ),
             Text(
-              value.toStringAsFixed(1),
+              wrKeepCompounds(value.toStringAsFixed(1)),
               style: TextStyle(
                 color: _kInk,
                 fontSize: compact ? 12 : 14,

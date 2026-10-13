@@ -398,7 +398,7 @@ class _WrPaymentScreenState extends ConsumerState<WrPaymentScreen> {
         elevation: 0,
         foregroundColor: WrColors.navy,
         title: Text(
-          tr('Thanh toán', 'Payment'),
+          wrKeepCompounds(tr('Thanh toán', 'Payment')),
           style: TextStyle(fontWeight: FontWeight.w700, fontSize: 17),
         ),
       ),
@@ -511,7 +511,7 @@ class _Message extends StatelessWidget {
       child: Padding(
         padding: const EdgeInsets.all(28),
         child: Text(
-          text,
+          wrKeepCompounds(text),
           textAlign: TextAlign.center,
           style: const TextStyle(
             fontSize: 16.5,
@@ -549,10 +549,10 @@ class _CountdownBar extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            tr(
+            wrKeepCompounds(tr(
               'Đơn còn hiệu lực ${formatCountdown(remaining)}',
               'Order valid for ${formatCountdown(remaining)}',
-            ),
+            )),
             style: TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w600,
@@ -576,7 +576,7 @@ class _AmountCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            tr('SỐ TIỀN CẦN CHUYỂN', 'AMOUNT TO TRANSFER'),
+            wrKeepCompounds(tr('SỐ TIỀN CẦN CHUYỂN', 'AMOUNT TO TRANSFER')),
             style: TextStyle(
               fontSize: 12.5,
               letterSpacing: 0.8,
@@ -589,7 +589,7 @@ class _AmountCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                formatVndPrice(order.finalAmount),
+                wrKeepCompounds(formatVndPrice(order.finalAmount)),
                 key: const Key('wr_payment_amount'),
                 style: const TextStyle(
                   fontSize: 28,
@@ -602,7 +602,7 @@ class _AmountCard extends StatelessWidget {
                 Padding(
                   padding: const EdgeInsets.only(bottom: 5),
                   child: Text(
-                    formatVndPrice(order.originalAmount),
+                    wrKeepCompounds(formatVndPrice(order.originalAmount)),
                     style: const TextStyle(
                       fontSize: 16.5,
                       color: WrColors.text3,
@@ -650,7 +650,7 @@ class _VoucherCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  tr('MÃ GIẢM GIÁ', 'DISCOUNT CODE'),
+                  wrKeepCompounds(tr('MÃ GIẢM GIÁ', 'DISCOUNT CODE')),
                   style: TextStyle(
                     fontSize: 12.5,
                     letterSpacing: 0.8,
@@ -668,7 +668,7 @@ class _VoucherCard extends StatelessWidget {
                     padding: EdgeInsets.zero,
                   ),
                   child: Text(
-                    tr('Chọn mã có sẵn', 'Pick a code'),
+                    wrKeepCompounds(tr('Chọn mã có sẵn', 'Pick a code')),
                     style: TextStyle(fontSize: 14.5),
                   ),
                 ),
@@ -686,7 +686,7 @@ class _VoucherCard extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    tr('Đã áp dụng $applied', '$applied applied'),
+                    wrKeepCompounds(tr('Đã áp dụng $applied', '$applied applied')),
                     key: const Key('wr_payment_voucher_applied'),
                     style: const TextStyle(
                       fontSize: 15.5,
@@ -698,7 +698,7 @@ class _VoucherCard extends StatelessWidget {
                 TextButton(
                   key: const Key('wr_payment_voucher_remove'),
                   onPressed: busy ? null : onRemove,
-                  child: Text(tr('Gỡ', 'Remove')),
+                  child: Text(wrKeepCompounds(tr('Gỡ', 'Remove'))),
                 ),
               ],
             )
@@ -725,14 +725,14 @@ class _VoucherCard extends StatelessWidget {
                     backgroundColor: WrColors.navy,
                     foregroundColor: WrColors.white,
                   ),
-                  child: Text(tr('Áp dụng', 'Apply')),
+                  child: Text(wrKeepCompounds(tr('Áp dụng', 'Apply'))),
                 ),
               ],
             ),
           if (error != null) ...[
             const SizedBox(height: 8),
             Text(
-              error!,
+              wrKeepCompounds(error!),
               key: const Key('wr_payment_voucher_error'),
               style: const TextStyle(fontSize: 14.5, color: WrColors.coral),
             ),
@@ -781,17 +781,17 @@ class _FreeOrderCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            tr(
+            wrKeepCompounds(tr(
               'Mã giảm giá đã trừ hết. Không cần chuyển khoản.',
               'The discount covers it all. No transfer needed.',
-            ),
+            )),
             textAlign: TextAlign.center,
             style: TextStyle(fontSize: 14.5, color: WrColors.text3),
           ),
           if (error != null) ...[
             const SizedBox(height: 12),
             Text(
-              error!,
+              wrKeepCompounds(error!),
               key: const Key('wr_payment_free_error'),
               textAlign: TextAlign.center,
               style: const TextStyle(
@@ -816,11 +816,11 @@ class _FreeOrderCard extends StatelessWidget {
                 ),
               ),
               child: Text(
-                busy
+                wrKeepCompounds(busy
                     ? tr('Đang xử lý…', 'Processing…')
                     : (error == null
                           ? tr('Nhận Premium', 'Get Premium')
-                          : tr('Thử lại', 'Try again')),
+                          : tr('Thử lại', 'Try again'))),
                 style: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
@@ -863,10 +863,10 @@ class _VoucherListSheetState extends State<_VoucherListSheet> {
             ),
             const SizedBox(height: 4),
             Text(
-              tr(
+              wrKeepCompounds(tr(
                 'Những mã đang dùng được cho gói Premium.',
                 'Codes you can use for Premium right now.',
-              ),
+              )),
               style: TextStyle(fontSize: 14.5, color: WrColors.text3),
             ),
             const SizedBox(height: 14),
@@ -894,10 +894,10 @@ class _VoucherListSheetState extends State<_VoucherListSheet> {
                       padding: EdgeInsets.symmetric(vertical: 36),
                       child: Center(
                         child: Text(
-                          tr(
+                          wrKeepCompounds(tr(
                             'Chưa có mã nào dành cho bạn lúc này.',
                             'No codes available for you at the moment.',
-                          ),
+                          )),
                           style: TextStyle(
                             fontSize: 15.5,
                             color: WrColors.text3,
@@ -956,7 +956,7 @@ class _VoucherTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    voucher.code,
+                    wrKeepCompounds(voucher.code),
                     style: const TextStyle(
                       fontSize: 16.5,
                       fontWeight: FontWeight.w800,
@@ -966,7 +966,7 @@ class _VoucherTile extends StatelessWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    voucherDiscountLabel(voucher),
+                    wrKeepCompounds(voucherDiscountLabel(voucher)),
                     style: const TextStyle(
                       fontSize: 14.5,
                       color: WrColors.text2,
@@ -977,7 +977,7 @@ class _VoucherTile extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.only(top: 3),
                       child: Text(
-                        [
+                        wrKeepCompounds([
                           if (voucher.validTo != null)
                             'HSD ${_date(voucher.validTo!)}',
                           if (maxUses != null && maxUses > 0)
@@ -985,7 +985,7 @@ class _VoucherTile extends StatelessWidget {
                               'còn ${maxUses - voucher.usedCount}/$maxUses lượt',
                               '${maxUses - voucher.usedCount}/$maxUses uses left',
                             ),
-                        ].join(' · '),
+                        ].join(' · ')),
                         style: const TextStyle(
                           fontSize: 13.5,
                           color: WrColors.text3,
@@ -1005,11 +1005,11 @@ class _VoucherTile extends StatelessWidget {
                   foregroundColor: WrColors.white,
                   visualDensity: VisualDensity.compact,
                 ),
-                child: Text(tr('Dùng', 'Use')),
+                child: Text(wrKeepCompounds(tr('Dùng', 'Use'))),
               )
             else
               Text(
-                reason!,
+                wrKeepCompounds(reason!),
                 style: const TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
@@ -1040,10 +1040,10 @@ class _QrCard extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            tr(
+            wrKeepCompounds(tr(
               'Mở app ngân hàng và quét mã',
               'Open your banking app and scan the code',
-            ),
+            )),
             style: TextStyle(
               fontSize: 15.5,
               fontWeight: FontWeight.w600,
@@ -1052,10 +1052,10 @@ class _QrCard extends StatelessWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            tr(
+            wrKeepCompounds(tr(
               'Số tiền và nội dung đã nằm sẵn trong mã',
               'The amount and reference are already in the code',
-            ),
+            )),
             style: TextStyle(fontSize: 14, color: WrColors.text3),
           ),
           const SizedBox(height: 14),
@@ -1074,10 +1074,10 @@ class _QrCard extends StatelessWidget {
                 height: 220,
                 child: Center(
                   child: Text(
-                    tr(
+                    wrKeepCompounds(tr(
                       'Không tải được mã QR.\nBạn chuyển khoản thủ công\ntheo thông tin bên dưới nhé.',
                       'Could not load the QR code.\nPlease transfer manually\nusing the details below.',
-                    ),
+                    )),
                     textAlign: TextAlign.center,
                     style: TextStyle(fontSize: 14.5, color: WrColors.text2),
                   ),
@@ -1109,7 +1109,7 @@ class _BankCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            tr('HOẶC CHUYỂN KHOẢN THỦ CÔNG', 'OR TRANSFER MANUALLY'),
+            wrKeepCompounds(tr('HOẶC CHUYỂN KHOẢN THỦ CÔNG', 'OR TRANSFER MANUALLY')),
             style: TextStyle(
               fontSize: 12.5,
               letterSpacing: 0.8,
@@ -1160,13 +1160,13 @@ class _BankCard extends StatelessWidget {
           SizedBox(
             width: 104,
             child: Text(
-              label,
+              wrKeepCompounds(label),
               style: const TextStyle(fontSize: 14.5, color: WrColors.text3),
             ),
           ),
           Expanded(
             child: Text(
-              value,
+              wrKeepCompounds(value),
               style: const TextStyle(
                 fontSize: 15.5,
                 fontWeight: FontWeight.w600,
@@ -1209,7 +1209,7 @@ class _InvoiceCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(
-                  tr('Xuất hoá đơn VAT', 'Issue a VAT invoice'),
+                  wrKeepCompounds(tr('Xuất hoá đơn VAT', 'Issue a VAT invoice')),
                   style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
@@ -1276,7 +1276,7 @@ class _InvoiceCard extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(
-                  err,
+                  wrKeepCompounds(err),
                   key: const Key('wr_payment_invoice_error'),
                   style: const TextStyle(fontSize: 14.5, color: WrColors.coral),
                 ),
@@ -1328,10 +1328,10 @@ class _WaitingNote extends StatelessWidget {
         SizedBox(width: 10),
         Flexible(
           child: Text(
-            tr(
+            wrKeepCompounds(tr(
               'Đang chờ ngân hàng báo về. Bạn cứ để màn này mở.',
               'Waiting on the bank. Just leave this screen open.',
-            ),
+            )),
             style: TextStyle(fontSize: 14.5, color: WrColors.text3),
           ),
         ),
@@ -1380,12 +1380,12 @@ class _ExpiredView extends StatelessWidget {
             ),
             const SizedBox(height: 8),
             Text(
-              tr(
+              wrKeepCompounds(tr(
                 'Phiên thanh toán ${kPaymentWindow.inMinutes} phút đã kết thúc. '
                     'Bạn tạo đơn mới rồi quét lại nhé.',
                 'The ${kPaymentWindow.inMinutes}-minute payment window has closed. '
                     'Create a new order and scan again.',
-              ),
+              )),
               textAlign: TextAlign.center,
               style: const TextStyle(
                 fontSize: 15.5,
@@ -1424,7 +1424,7 @@ class _ExpiredView extends StatelessWidget {
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh, size: 18),
                 label: Text(
-                  tr('Tạo đơn mới', 'Create a new order'),
+                  wrKeepCompounds(tr('Tạo đơn mới', 'Create a new order')),
                   style: TextStyle(fontWeight: FontWeight.w700),
                 ),
                 style: ElevatedButton.styleFrom(
@@ -1439,7 +1439,7 @@ class _ExpiredView extends StatelessWidget {
             ),
             TextButton(
               onPressed: () => Navigator.of(context).maybePop(),
-              child: Text(tr('Để sau', 'Later')),
+              child: Text(wrKeepCompounds(tr('Để sau', 'Later'))),
             ),
           ],
         ),
@@ -1459,12 +1459,12 @@ class _ExpiredView extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
-            label,
+            wrKeepCompounds(label),
             style: const TextStyle(fontSize: 14.5, color: WrColors.text3),
           ),
           const SizedBox(width: 16),
           Text(
-            value,
+            wrKeepCompounds(value),
             style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w700,
@@ -1504,10 +1504,10 @@ class _SuccessView extends StatelessWidget {
             ),
             const SizedBox(height: 10),
             Text(
-              tr(
+              wrKeepCompounds(tr(
                 'Premium đã mở. Toàn bộ phần khoá trước đây giờ dùng được ngay.',
                 'Premium is open. Everything that was locked works now.',
-              ),
+              )),
               textAlign: TextAlign.center,
               style: TextStyle(
                 fontSize: 16,
@@ -1537,7 +1537,7 @@ class _SuccessView extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  tr('Bắt đầu dùng', 'Get started'),
+                  wrKeepCompounds(tr('Bắt đầu dùng', 'Get started')),
                   style: TextStyle(fontWeight: FontWeight.w700),
                 ),
               ),

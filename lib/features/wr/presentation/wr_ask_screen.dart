@@ -32,6 +32,7 @@ import '../../../core/logic/wr_chat_offer.dart' show calmMoodFor;
 import '../../../core/models/wr_chat.dart';
 import '../../../core/models/wr_mood_content.dart';
 import '../../../core/theme/wr_colors.dart';
+import '../../../core/widgets/wr_app_background.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../core/widgets/wr_ai_consent_sheet.dart';
 import '../../../core/widgets/wr_voice_field.dart';
@@ -120,10 +121,11 @@ class _WrAskScreenState extends ConsumerState<WrAskScreen> {
       if ((prev?.messages.length ?? 0) != next.messages.length) _scrollToEnd();
     });
 
-    return Scaffold(
-      backgroundColor: WrColors.pageBg,
-      appBar: AppBar(
-        backgroundColor: WrColors.pageBg,
+    return WrAppBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
         surfaceTintColor: WrColors.white,
         elevation: 0,
         leading: IconButton(
@@ -134,7 +136,7 @@ class _WrAskScreenState extends ConsumerState<WrAskScreen> {
           onPressed: () => context.pop(),
         ),
         title: Text(
-          tr('Trò chuyện', 'Chat'),
+          wrKeepCompounds(tr('Trò chuyện', 'Chat')),
           style: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w700,
@@ -168,18 +170,18 @@ class _WrAskScreenState extends ConsumerState<WrAskScreen> {
             itemBuilder: (_) => [
               PopupMenuItem(
                 value: 'conversations',
-                child: Text(tr('Lịch sử trò chuyện', 'Chat history')),
+                child: Text(wrKeepCompounds(tr('Lịch sử trò chuyện', 'Chat history'))),
               ),
               PopupMenuItem(
                 value: 'history',
                 child: Text(
-                  tr('Câu hỏi đã gửi trước đây', 'Questions you sent before'),
+                  wrKeepCompounds(tr('Câu hỏi đã gửi trước đây', 'Questions you sent before')),
                 ),
               ),
               PopupMenuItem(
                 value: 'clear',
                 child: Text(
-                  tr('Xoá cuộc trò chuyện này', 'Delete this conversation'),
+                  wrKeepCompounds(tr('Xoá cuộc trò chuyện này', 'Delete this conversation')),
                 ),
               ),
             ],
@@ -242,6 +244,7 @@ class _WrAskScreenState extends ConsumerState<WrAskScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 
@@ -271,7 +274,7 @@ class _WrAskScreenState extends ConsumerState<WrAskScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: WrColors.white,
-        title: Text(tr('Xoá cuộc trò chuyện?', 'Delete this conversation?')),
+        title: Text(wrKeepCompounds(tr('Xoá cuộc trò chuyện?', 'Delete this conversation?'))),
         content: WrParagraph(
           tr(
             'Toàn bộ lượt trò chuyện sẽ bị xoá và không lấy lại được. '
@@ -284,13 +287,13 @@ class _WrAskScreenState extends ConsumerState<WrAskScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
-            child: Text(tr('Giữ lại', 'Keep it')),
+            child: Text(wrKeepCompounds(tr('Giữ lại', 'Keep it'))),
           ),
           TextButton(
             key: const Key('wr_chat_clear_confirm'),
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(
-              tr('Xoá', 'Delete'),
+              wrKeepCompounds(tr('Xoá', 'Delete')),
               style: TextStyle(color: WrColors.coral),
             ),
           ),
@@ -434,7 +437,7 @@ class _ActionButton extends ConsumerWidget {
           size: 17,
         ),
         label: Text(
-          action.label,
+          wrKeepCompounds(action.label),
           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
         ),
         style: OutlinedButton.styleFrom(
@@ -525,10 +528,10 @@ class _EmptyState extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
       children: [
         Text(
-          tr(
+          wrKeepCompounds(tr(
             'Kể mình nghe một chuyện trong công việc',
             'Tell me something from work',
-          ),
+          )),
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w700,
@@ -567,7 +570,7 @@ class _EmptyState extends StatelessWidget {
                   children: [
                     Expanded(
                       child: Text(
-                        s,
+                        wrKeepCompounds(s),
                         style: const TextStyle(
                           fontSize: 15.5,
                           color: WrColors.dark,
@@ -628,7 +631,7 @@ class _ErrorBar extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            message,
+            wrKeepCompounds(message),
             style: const TextStyle(
               fontSize: 14.5,
               color: WrColors.dark,
@@ -648,7 +651,7 @@ class _ErrorBar extends StatelessWidget {
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
               child: Text(
-                tr('Xem gói Premium', 'See Premium'),
+                wrKeepCompounds(tr('Xem gói Premium', 'See Premium')),
                 style: TextStyle(
                   fontSize: 14.5,
                   fontWeight: FontWeight.w600,
@@ -726,7 +729,7 @@ class _Composer extends StatelessWidget {
           if (remaining != null) ...[
             const SizedBox(height: 8),
             Text(
-              remaining == 0
+              wrKeepCompounds(remaining == 0
                   ? tr(
                       'Hôm nay bạn đã dùng hết lượt trò chuyện miễn phí.',
                       'You have used up your free chats for today.',
@@ -734,7 +737,7 @@ class _Composer extends StatelessWidget {
                   : tr(
                       'Còn $remaining lượt trò chuyện miễn phí hôm nay.',
                       '$remaining free chats left today.',
-                    ),
+                    )),
               key: const Key('wr_chat_quota_hint'),
               style: const TextStyle(fontSize: 13, color: WrColors.text3),
             ),
@@ -819,7 +822,7 @@ class _ConversationsSheet extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              tr('LỊCH SỬ TRÒ CHUYỆN', 'CHAT HISTORY'),
+              wrKeepCompounds(tr('LỊCH SỬ TRÒ CHUYỆN', 'CHAT HISTORY')),
               style: TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w700,
@@ -842,10 +845,10 @@ class _ConversationsSheet extends ConsumerWidget {
               error: (_, __) => Padding(
                 padding: EdgeInsets.only(bottom: 12),
                 child: Text(
-                  tr(
+                  wrKeepCompounds(tr(
                     'Chưa đọc được lịch sử. Bạn thử lại sau nhé.',
                     'Could not load the history. Please try again later.',
-                  ),
+                  )),
                   style: TextStyle(fontSize: 15.5, color: WrColors.muted),
                 ),
               ),
@@ -854,10 +857,10 @@ class _ConversationsSheet extends ConsumerWidget {
                       key: Key('wr_chat_conversations_empty'),
                       padding: EdgeInsets.only(bottom: 12),
                       child: Text(
-                        tr(
+                        wrKeepCompounds(tr(
                           'Chưa có cuộc trò chuyện nào được lưu.',
                           'No conversations saved yet.',
-                        ),
+                        )),
                         style: TextStyle(
                           fontSize: 15.5,
                           color: WrColors.muted,
@@ -916,7 +919,7 @@ class _ConversationRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    conversation.displayTitle,
+                    wrKeepCompounds(conversation.displayTitle),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: TextStyle(
@@ -928,14 +931,14 @@ class _ConversationRow extends StatelessWidget {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    tr(
+                    wrKeepCompounds(tr(
                       '${at.day.toString().padLeft(2, '0')}/'
                           '${at.month.toString().padLeft(2, '0')}/${at.year}'
                           '${isCurrent ? '  ·  đang mở' : ''}',
                       '${at.day.toString().padLeft(2, '0')}/'
                           '${at.month.toString().padLeft(2, '0')}/${at.year}'
                           '${isCurrent ? '  ·  open' : ''}',
-                    ),
+                    )),
                     style: const TextStyle(
                       fontSize: 13.5,
                       color: WrColors.muted,
@@ -975,7 +978,7 @@ class _OldQuestionsSheet extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              tr('BẠN ĐÃ HỎI', 'YOU ASKED'),
+              wrKeepCompounds(tr('BẠN ĐÃ HỎI', 'YOU ASKED')),
               style: TextStyle(
                 fontSize: 12.5,
                 fontWeight: FontWeight.w700,
@@ -989,10 +992,10 @@ class _OldQuestionsSheet extends ConsumerWidget {
                 key: Key('wr_ask_history_empty'),
                 padding: EdgeInsets.only(bottom: 12),
                 child: Text(
-                  tr(
+                  wrKeepCompounds(tr(
                     'Bạn chưa gửi câu hỏi nào theo cách cũ.',
                     'You have not sent any questions the old way.',
-                  ),
+                  )),
                   style: TextStyle(
                     fontSize: 15.5,
                     color: WrColors.muted,
@@ -1036,8 +1039,8 @@ class _QuestionRow extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 6),
               child: Text(
-                '${at.day.toString().padLeft(2, '0')}/'
-                '${at.month.toString().padLeft(2, '0')}',
+                wrKeepCompounds('${at.day.toString().padLeft(2, '0')}/'
+                '${at.month.toString().padLeft(2, '0')}'),
                 style: const TextStyle(fontSize: 13.5, color: WrColors.muted),
               ),
             ),
@@ -1052,7 +1055,7 @@ class _QuestionRow extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            question.isAnswered ? question.answer! : kAskPendingMessage,
+            wrKeepCompounds(question.isAnswered ? question.answer! : kAskPendingMessage),
             style: TextStyle(
               fontSize: 15,
               height: 1.7,

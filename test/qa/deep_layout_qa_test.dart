@@ -61,6 +61,14 @@ void main() {
     );
     await tester.pumpAndSettle();
     final footer = find.byKey(const Key('wr_deep_waiting_line'));
+    // Phần "Xu hướng theo thời gian" của script đứng đầu màn (13/10/2026), nên
+    // dòng chờ nằm dưới mép màn lúc mới mở: cuộn tới đã rồi mới đo.
+    await tester.scrollUntilVisible(
+      footer,
+      200,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
     expect(footer, findsOneWidget);
 
     // Đo trên chính thứ đã render, không đo trên thuộc tính widget: `maxLines`

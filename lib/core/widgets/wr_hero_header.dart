@@ -15,6 +15,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/wr_colors.dart';
+import 'wr_app_background.dart';
 import 'wr_paragraph.dart';
 
 /// Ảnh hero của bốn tab (`HERO_PHOTO` + `TAB_PHOTO` của mockup v55).
@@ -50,18 +51,17 @@ const kWrHeroPhotoAlignment = Alignment(-0.64, 0.24);
 const kWrOnboardingPhotoAlignment = Alignment(-0.64, 0.16);
 
 /// `.hero-scrim`: lớp phủ kem bắt buộc, đậm ở trên (chỗ chữ) và trong dần
-/// xuống dưới. Mockup dùng .97 / .93 / .54 / .08; trên máy thật ảnh bị bạc
-/// quá (người dùng 09/10: "ảnh mờ quá"), nên nhẹ tay hơn mà chữ vẫn đọc rõ.
+/// xuống dưới. Khớp `.hero-scrim` của mockup Sprint 2 Paper.
 const kWrHeroScrim = LinearGradient(
   begin: Alignment.topCenter,
   end: Alignment.bottomCenter,
   colors: [
-    Color(0xE0FFF7EE), // .88
-    Color(0xBFFFF7EE), // .75
-    Color(0x52FFF7EE), // .32
-    Color(0x00FFF7EE), // 0
+    Color(0xF7FFF7EE), // .97
+    Color(0xF2FFF7EE), // .95
+    Color(0xB8FFF7EE), // .72
+    Color(0x1AFFF7EE), // .10
   ],
-  stops: [0, 0.44, 0.72, 1],
+  stops: [0, 0.56, 0.78, 1],
 );
 
 /// `.onb-hero-fade`: mờ nhẹ ở trên, đặc dần ở dưới để nối vào phần chữ. Mockup
@@ -205,7 +205,7 @@ class WrHeroHeader extends StatelessWidget {
     required String title,
     String? subtitle,
     Widget? trailing,
-    double height = 236.0,
+    double height = kHeight,
   }) => WrHeroHeader(
     key: key,
     asset: art.asset,
@@ -216,9 +216,10 @@ class WrHeroHeader extends StatelessWidget {
     height: height,
   );
 
-  /// Chiều cao hero, chưa tính thanh trạng thái. Bốn tab dùng chung một chiều
-  /// cao để chuyển tab không bị giật.
-  static const kHeight = 250.0;
+  /// Chiều cao hero, chưa tính thanh trạng thái (`.hero2 { height: 208px }`
+  /// của mockup Sprint 2). Bốn tab dùng chung một chiều cao để chuyển tab
+  /// không bị giật. Là chiều cao tối thiểu: chữ dài hơn thì hero cao theo.
+  static const kHeight = 208.0;
 
   final String asset;
   final String title;
@@ -255,7 +256,7 @@ class WrHeroHeader extends StatelessWidget {
       children: [
         if (eyebrow != null) ...[
           Text(
-            eyebrow!.toUpperCase(),
+            wrKeepCompounds(eyebrow!.toUpperCase()),
             style: const TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
@@ -267,7 +268,7 @@ class WrHeroHeader extends StatelessWidget {
         ],
         if (overline != null) ...[
           Text(
-            overline!,
+            wrKeepCompounds(overline!),
             style: const TextStyle(fontSize: 12.5, color: _overlineColor),
           ),
           const SizedBox(height: 3),
@@ -299,8 +300,11 @@ class WrHeroHeader extends StatelessWidget {
       ],
     );
 
-    return SizedBox(
-      height: height + top,
+    // Chiều cao TỐI THIỂU chứ không cố định: chữ phóng to (máy khách để cỡ
+    // chữ 1.15) hay tên dài hai dòng thì hero cao thêm theo chữ, ảnh phủ kín
+    // theo, thay vì chữ tràn khỏi đáy ảnh.
+    return ConstrainedBox(
+      constraints: BoxConstraints(minHeight: height + top),
       child: Stack(
         children: [
           Positioned.fill(
@@ -365,19 +369,36 @@ class WrHeroHeader extends StatelessWidget {
   }
 }
 
-/// Ảnh hero mờ dần vào [WrColors.pageBg] ở phần đáy.
+/// Ảnh hero mờ dần vào nền màn ở phần đáy.
 class _HeroBottomFade extends StatelessWidget {
   const _HeroBottomFade();
 
   @override
   Widget build(BuildContext context) {
-    return const DecoratedBox(
+    final isPaper = WrBackgroundScope.of(context);
+    if (isPaper) {
+      return const DecoratedBox(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0x00FBF9F5), Color(0x20FBF9F5), Color(0xAAFBF9F5)],
+            stops: [0.70, 0.88, 1],
+          ),
+        ),
+      );
+    }
+    return DecoratedBox(
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0x00F4F4F6), Color(0x80F4F4F6), WrColors.pageBg],
-          stops: [0.70, 0.88, 1],
+          colors: [
+            const Color(0x00FBF9F5),
+            WrColors.pageBg.withValues(alpha: 0.45),
+            WrColors.pageBg.withValues(alpha: 0.82),
+          ],
+          stops: const [0.70, 0.88, 1],
         ),
       ),
     );
@@ -588,8 +609,7 @@ class WrInnerBandBackdrop extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ColoredBox(
-      color: WrColors.pageBg,
+    return WrAppBackground(
       child: Stack(
         children: [
           Positioned(top: 0, left: 0, right: 0, child: WrReflectBand.tab(art)),

@@ -28,6 +28,7 @@ import '../../../core/data/ausynclab_tts_service.dart';
 import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_ai_voice.dart';
 import '../../../core/widgets/wr_ai_consent_sheet.dart';
+import '../../../core/widgets/wr_app_background.dart';
 import '../../../core/models/checkin.dart' show Mood;
 import '../../../core/models/wr_mood_content.dart';
 import '../../../core/theme/wr_colors.dart';
@@ -35,7 +36,8 @@ import '../../../core/theme/wr_text.dart';
 import '../../../core/widgets/wr_back_circle.dart';
 import '../../../core/widgets/wr_hero_header.dart';
 import '../mood_content_providers.dart';
-import 'wr_mood_library_screen.dart' show moodContentMeta;
+import 'wr_mood_library_screen.dart' show kWrBandContentGap, moodContentMeta;
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 class WrMoodReaderScreen extends ConsumerWidget {
   const WrMoodReaderScreen({
@@ -55,7 +57,7 @@ class WrMoodReaderScreen extends ConsumerWidget {
     final library = ref.watch(wrMoodLibraryProvider);
 
     return Scaffold(
-      backgroundColor: WrColors.pageBg,
+      backgroundColor: Colors.transparent,
       body: library.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (_, _) => const _ReaderMissing(),
@@ -113,7 +115,9 @@ class _ReaderBodyState extends State<_ReaderBody> {
     super.dispose();
   }
 
-  void _done() {
+  /// Về Thư viện: mở từ Thư viện thì lùi một bước, mở từ Home thì thay màn
+  /// này bằng Thư viện của đúng cảm xúc bài đang đọc.
+  void _toLibrary() {
     if (widget.fromLibrary && context.canPop()) {
       context.pop();
     } else {
@@ -148,7 +152,14 @@ class _ReaderBodyState extends State<_ReaderBody> {
               ),
               ListView(
                 controller: _scroll,
-                padding: EdgeInsets.fromLTRB(22, top + _barHeight + 4, 22, 24),
+                // Chữ bắt đầu dưới dải ảnh như màn Thư viện: 16 + nút 32 +
+                // [kWrBandContentGap] + 18 = 118.
+                padding: EdgeInsets.fromLTRB(
+                  22,
+                  top + 16 + 32 + kWrBandContentGap + 18,
+                  22,
+                  24,
+                ),
                 children: [
                   Row(
                     children: [
@@ -156,7 +167,7 @@ class _ReaderBodyState extends State<_ReaderBody> {
                       const SizedBox(width: 8),
                       Flexible(
                         child: Text(
-                          moodContentMeta(item),
+                          wrKeepCompounds(moodContentMeta(item)),
                           style: const TextStyle(
                             fontSize: 12.5,
                             color: WrColors.text3,
@@ -166,12 +177,14 @@ class _ReaderBodyState extends State<_ReaderBody> {
                     ],
                   ),
                   const SizedBox(height: 12),
+                  // `.h1.serif { font-weight: 400; font-size: 21px }`.
                   Text(
-                    item.title,
+                    wrKeepCompounds(item.title),
                     key: const Key('wr_mood_reader_title'),
                     style: const TextStyle(
-                      fontSize: 22,
-                      fontWeight: FontWeight.w700,
+                      fontFamily: WrText.serifFamily,
+                      fontSize: 21,
+                      fontWeight: FontWeight.w400,
                       color: WrColors.navy,
                       height: 1.4,
                     ),
@@ -188,7 +201,7 @@ class _ReaderBodyState extends State<_ReaderBody> {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 18),
                       child: Text(
-                        parts.lead!,
+                        wrKeepCompounds(parts.lead!),
                         key: const Key('wr_mood_reader_lead'),
                         style: const TextStyle(
                           fontSize: 17.5,
@@ -202,7 +215,7 @@ class _ReaderBodyState extends State<_ReaderBody> {
                     Padding(
                       padding: const EdgeInsets.only(bottom: 16),
                       child: Text(
-                        p,
+                        wrKeepCompounds(p),
                         style: const TextStyle(
                           fontSize: 16,
                           color: WrColors.text2,
@@ -217,10 +230,10 @@ class _ReaderBodyState extends State<_ReaderBody> {
                     const SizedBox(height: 18),
                     Center(
                       child: Text(
-                        tr(
+                        wrKeepCompounds(tr(
                           'Bản nháp, chưa biên tập chính thức',
                           'Draft, not yet properly edited',
-                        ),
+                        )),
                         key: const Key('wr_mood_draft_notice'),
                         style: TextStyle(
                           fontSize: 12.5,
@@ -246,7 +259,11 @@ class _ReaderBodyState extends State<_ReaderBody> {
                     height: top + _barHeight,
                     padding: EdgeInsets.fromLTRB(22, top, 22, 0),
                     decoration: BoxDecoration(
-                      color: WrColors.pageBg.withValues(alpha: t),
+                      color:
+                          (WrBackgroundScope.of(context)
+                                  ? WrColors.creamBg
+                                  : WrColors.pageBg)
+                              .withValues(alpha: t),
                       border: Border(
                         bottom: BorderSide(
                           color: WrColors.line.withValues(alpha: t),
@@ -255,16 +272,19 @@ class _ReaderBodyState extends State<_ReaderBody> {
                     ),
                     child: Row(
                       children: [
+                        // Mockup: nút lùi luôn về Thư viện
+                        // (`setState({screen:'contentLibrary'})`), kể cả khi
+                        // bài được mở từ thẻ ở Home.
                         WrBackCircle(
                           key: const Key('wr_mood_reader_back'),
-                          onTap: () => context.pop(),
+                          onTap: _toLibrary,
                         ),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Opacity(
                             opacity: t,
                             child: Text(
-                              item.title,
+                              wrKeepCompounds(item.title),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
@@ -292,7 +312,7 @@ class _ReaderBodyState extends State<_ReaderBody> {
               width: double.infinity,
               child: FilledButton(
                 key: const Key('wr_mood_reader_done'),
-                onPressed: _done,
+                onPressed: _toLibrary,
                 style: FilledButton.styleFrom(
                   backgroundColor: WrColors.coral,
                   foregroundColor: WrColors.navy,
@@ -302,7 +322,7 @@ class _ReaderBodyState extends State<_ReaderBody> {
                   ),
                 ),
                 child: Text(
-                  tr('Xong, đọc bài khác', 'Done, read another'),
+                  wrKeepCompounds(tr('Xong, đọc bài khác', 'Done, read another')),
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
@@ -345,7 +365,7 @@ class _MoodChip extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            moodLabel(mood),
+            wrKeepCompounds(moodLabel(mood)),
             style: const TextStyle(
               fontSize: 12.5,
               fontWeight: FontWeight.w600,
@@ -379,7 +399,7 @@ class _AskBlock extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            tr('CÂU HỎI ĐỂ MANG THEO', 'A QUESTION TO TAKE WITH YOU'),
+            wrKeepCompounds(tr('CÂU HỎI ĐỂ MANG THEO', 'A QUESTION TO TAKE WITH YOU')),
             style: const TextStyle(
               fontSize: 11.5,
               fontWeight: FontWeight.w700,
@@ -389,7 +409,7 @@ class _AskBlock extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            question,
+            wrKeepCompounds(question),
             style: WrText.serifQuote(fontSize: 16, color: WrColors.navy),
           ),
         ],
@@ -565,7 +585,7 @@ class _AudioPlayerBlockState extends ConsumerState<_AudioPlayerBlock> {
           ),
           const SizedBox(height: 16),
           Text(
-            _error ??
+            wrKeepCompounds(_error ??
                 (_synthesizing
                     ? tr(
                         'Đang dựng bản thu bằng giọng đọc AI…',
@@ -580,7 +600,7 @@ class _AudioPlayerBlockState extends ConsumerState<_AudioPlayerBlock> {
                     : tr(
                         'Bản thu đang được chuẩn bị.',
                         'The recording is on its way.',
-                      )),
+                      ))),
             key: const Key('wr_mood_audio_status'),
             textAlign: TextAlign.center,
             style: TextStyle(
@@ -606,7 +626,7 @@ class _ReaderMissing extends StatelessWidget {
       child: Padding(
         padding: EdgeInsets.symmetric(horizontal: 40),
         child: Text(
-          tr('Không mở được nội dung này.', 'Could not open this content.'),
+          wrKeepCompounds(tr('Không mở được nội dung này.', 'Could not open this content.')),
           textAlign: TextAlign.center,
           style: TextStyle(fontSize: 15, color: WrColors.muted),
         ),

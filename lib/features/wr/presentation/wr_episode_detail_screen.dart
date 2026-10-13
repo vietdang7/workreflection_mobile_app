@@ -75,7 +75,7 @@ class WrEpisodeDetailScreen extends ConsumerWidget {
       children: [
         if (dateStr.isNotEmpty)
           Text(
-            dateStr,
+            wrKeepCompounds(dateStr),
             style: const TextStyle(fontSize: 15.5, color: WrColors.muted),
           ),
         const SizedBox(height: 24),
@@ -84,7 +84,7 @@ class WrEpisodeDetailScreen extends ConsumerWidget {
         if (episode.draftMeaning?.trim().isNotEmpty == true) ...[
           _Label(tr('ĐIỀU BẠN NHẬN RA', 'WHAT YOU NOTICED')),
           Text(
-            // Câu Insight lưu bằng ngôn ngữ lúc bấm giữ; dựng lại theo ngôn
+            wrKeepCompounds(// Câu Insight lưu bằng ngôn ngữ lúc bấm giữ; dựng lại theo ngôn
             // ngữ đang bật. Câu người dùng tự viết thì giữ nguyên.
             relocaliseEpisodeInsight(
               episode.draftMeaning!,
@@ -92,7 +92,7 @@ class WrEpisodeDetailScreen extends ConsumerWidget {
               situations:
                   ref.watch(wrSituationsProvider).valueOrNull ?? const [],
               stories: ref.watch(wrStoriesProvider).valueOrNull ?? const [],
-            ).trim(),
+            ).trim()),
             key: const Key('wr_episode_detail_meaning'),
             style: const TextStyle(
               fontSize: 19,
@@ -109,10 +109,10 @@ class WrEpisodeDetailScreen extends ConsumerWidget {
         _Label(tr('BẠN ĐÃ VIẾT', 'WHAT YOU WROTE')),
         if (episode.patternsDone.isEmpty)
           Text(
-            tr(
+            wrKeepCompounds(tr(
               'Lần này bạn chưa ghi lại gì.',
               'You did not write anything that time.',
-            ),
+            )),
             style: TextStyle(
               fontSize: 16.5,
               color: WrColors.muted,
@@ -131,7 +131,7 @@ class WrEpisodeDetailScreen extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    _promptOf(episode, p),
+                    wrKeepCompounds(_promptOf(episode, p)),
                     style: const TextStyle(
                       fontSize: 14.5,
                       color: WrColors.muted,
@@ -159,7 +159,7 @@ class WrEpisodeDetailScreen extends ConsumerWidget {
           const SizedBox(height: 20),
           _Label(tr('BƯỚC NHỎ BẠN CHỌN', 'THE SMALL STEP YOU CHOSE')),
           Text(
-            chosen?.title ?? episode.tinyAction!.trim(),
+            wrKeepCompounds(chosen?.title ?? episode.tinyAction!.trim()),
             key: const Key('wr_episode_detail_action'),
             style: const TextStyle(
               fontSize: 16,
@@ -220,7 +220,7 @@ class _ReopenButton extends ConsumerWidget {
           ),
         ),
         child: Text(
-          tr('Hiểu lại chuyện này', 'Look at this again'),
+          wrKeepCompounds(tr('Hiểu lại chuyện này', 'Look at this again')),
           style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w600),
         ),
       ),
@@ -238,7 +238,7 @@ class _Label extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Text(
-        text,
+        wrKeepCompounds(text),
         style: const TextStyle(
           fontSize: 12.5,
           fontWeight: FontWeight.w700,

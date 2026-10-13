@@ -18,7 +18,7 @@ class JourneyScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Scaffold(
-      backgroundColor: WrColors.pageBg,
+      backgroundColor: Colors.transparent,
       body: SafeArea(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
@@ -56,9 +56,9 @@ class _JourneyHeader extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.journeyGreeting, style: WrTextStyles.greeting),
+          Text(wrKeepCompounds(l10n.journeyGreeting), style: WrTextStyles.greeting),
           const SizedBox(height: 4),
-          Text(l10n.journeyTitle, style: WrTextStyles.dateTitle),
+          Text(wrKeepCompounds(l10n.journeyTitle), style: WrTextStyles.dateTitle),
         ],
       ),
     );
@@ -99,7 +99,7 @@ class _StoryQuoteBlock extends ConsumerWidget {
             ),
             const SizedBox(height: 12),
             Text(
-              l10n.journeyCaption(now.month, now.year),
+              wrKeepCompounds(l10n.journeyCaption(now.month, now.year)),
               style: WrTextStyles.body.copyWith(
                 fontSize: 13.5,
                 color: WrColors.muted,
@@ -130,10 +130,10 @@ class _TimelineSection extends ConsumerWidget {
           return Container(
             key: const Key('journey_timeline_empty'),
             child: Text(
-              tr(
+              wrKeepCompounds(tr(
                 'Chưa có sự kiện nào trong hành trình.',
                 'Nothing in your journey yet.',
-              ),
+              )),
               style: WrTextStyles.body,
             ),
           );
@@ -250,21 +250,21 @@ class _TimelineItem extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  dateStr,
+                  wrKeepCompounds(dateStr),
                   style: WrTextStyles.body.copyWith(
                     fontSize: 13.5,
                     color: WrColors.muted,
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(event.title, style: WrTextStyles.hMedium),
+                Text(wrKeepCompounds(event.title), style: WrTextStyles.hMedium),
                 if (event.description != null) ...[
                   const SizedBox(height: 4),
-                  Text(event.description!, style: WrTextStyles.body),
+                  Text(wrKeepCompounds(event.description!), style: WrTextStyles.body),
                 ],
                 const SizedBox(height: 6),
                 Text(
-                  typeLabel,
+                  wrKeepCompounds(typeLabel),
                   style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w700,
@@ -308,9 +308,9 @@ class _ErrorCard extends StatelessWidget {
     final l10n = context.l10n;
     return Row(
       children: [
-        Text(l10n.homeErrorLoadData, style: WrTextStyles.body),
+        Text(wrKeepCompounds(l10n.homeErrorLoadData), style: WrTextStyles.body),
         const SizedBox(width: 8),
-        TextButton(onPressed: onRetry, child: Text(l10n.homeRetry)),
+        TextButton(onPressed: onRetry, child: Text(wrKeepCompounds(l10n.homeRetry))),
       ],
     );
   }

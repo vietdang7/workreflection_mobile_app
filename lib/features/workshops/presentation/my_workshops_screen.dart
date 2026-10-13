@@ -27,6 +27,7 @@ import '../../../core/widgets/wr_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../profile/profile_providers.dart';
 import '../workshops_providers.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 class MyWorkshopsScreen extends ConsumerStatefulWidget {
   const MyWorkshopsScreen({super.key});
@@ -58,13 +59,13 @@ class _MyWorkshopsScreenState extends ConsumerState<MyWorkshopsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.wsCancelRegSuccess)));
+        ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.wsCancelRegSuccess))));
       }
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.wsCancelRegError)));
+        ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.wsCancelRegError))));
       }
     } finally {
       if (mounted) {
@@ -116,7 +117,7 @@ class _MyWorkshopsScreenState extends ConsumerState<MyWorkshopsScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.wsCertificateError)));
+        ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.wsCertificateError))));
       }
     } finally {
       if (mounted) setState(() => _generatingCertFor.remove(reg.id));
@@ -137,7 +138,7 @@ class _MyWorkshopsScreenState extends ConsumerState<MyWorkshopsScreen> {
           icon: const Icon(Icons.arrow_back, color: WrColors.navy),
           onPressed: () => context.pop(),
         ),
-        title: Text(l10n.wsMyTitle, style: WrTextStyles.hMedium),
+        title: Text(wrKeepCompounds(l10n.wsMyTitle), style: WrTextStyles.hMedium),
       ),
       body: myAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -146,7 +147,7 @@ class _MyWorkshopsScreenState extends ConsumerState<MyWorkshopsScreen> {
         data: (pairs) {
           if (pairs.isEmpty) {
             return Center(
-              child: Text(l10n.wsMyEmpty, style: WrTextStyles.body),
+              child: Text(wrKeepCompounds(l10n.wsMyEmpty), style: WrTextStyles.body),
             );
           }
           return ListView.separated(
@@ -271,10 +272,10 @@ class _MyWorkshopRow extends ConsumerWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(title, style: WrTextStyles.hMedium),
+                      Text(wrKeepCompounds(title), style: WrTextStyles.hMedium),
                       if (date != null) ...[
                         const SizedBox(height: 4),
-                        Text(_formatDate(date), style: WrTextStyles.body),
+                        Text(wrKeepCompounds(_formatDate(date)), style: WrTextStyles.body),
                       ],
                     ],
                   ),
@@ -297,7 +298,7 @@ class _MyWorkshopRow extends ConsumerWidget {
                       '/workshops/${registration.workshopId}/survey-results',
                     ),
                     child: Text(
-                      l10n.wsSurveyViewResults,
+                      wrKeepCompounds(l10n.wsSurveyViewResults),
                       key: const Key('my_ws_view_results'),
                       style: WrTextStyles.body.copyWith(
                         color: WrColors.coral,
@@ -317,7 +318,7 @@ class _MyWorkshopRow extends ConsumerWidget {
               GestureDetector(
                 onTap: onCancel,
                 child: Text(
-                  l10n.wsCancelReg,
+                  wrKeepCompounds(l10n.wsCancelReg),
                   key: const Key('my_ws_cancel'),
                   style: WrTextStyles.body.copyWith(
                     color: WrColors.muted,
@@ -349,7 +350,7 @@ class _MyWorkshopRow extends ConsumerWidget {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            l10n.wsCertificateGenerating,
+                            wrKeepCompounds(l10n.wsCertificateGenerating),
                             style: WrTextStyles.body.copyWith(
                               color: WrColors.coral,
                             ),
@@ -366,7 +367,7 @@ class _MyWorkshopRow extends ConsumerWidget {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            l10n.wsCertificateDownload,
+                            wrKeepCompounds(l10n.wsCertificateDownload),
                             key: const Key('my_ws_download_cert'),
                             style: WrTextStyles.body.copyWith(
                               color: WrColors.coral,
@@ -413,7 +414,7 @@ class _StatusChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(100),
       ),
       child: Text(
-        label,
+        wrKeepCompounds(label),
         style: TextStyle(
           fontSize: 13.5,
           fontWeight: FontWeight.w600,
@@ -456,9 +457,9 @@ class _CancelDialog extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(l10n.wsCancelRegTitle, style: WrTextStyles.hMedium),
+          Text(wrKeepCompounds(l10n.wsCancelRegTitle), style: WrTextStyles.hMedium),
           const SizedBox(height: 8),
-          Text(l10n.wsCancelRegBody, style: WrTextStyles.body),
+          Text(wrKeepCompounds(l10n.wsCancelRegBody), style: WrTextStyles.body),
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.end,
@@ -466,7 +467,7 @@ class _CancelDialog extends StatelessWidget {
               TextButton(
                 key: const Key('cancel_dismiss'),
                 onPressed: cancelling ? null : onDismiss,
-                child: Text(l10n.commonCancel),
+                child: Text(wrKeepCompounds(l10n.commonCancel)),
               ),
               const SizedBox(width: 8),
               ElevatedButton(
@@ -485,7 +486,7 @@ class _CancelDialog extends StatelessWidget {
                           color: WrColors.navy,
                         ),
                       )
-                    : Text(l10n.commonConfirm),
+                    : Text(wrKeepCompounds(l10n.commonConfirm)),
               ),
             ],
           ),
@@ -514,7 +515,7 @@ class _ErrorCard extends StatelessWidget {
           const SizedBox(height: 16),
           TextButton(
             onPressed: onRetry,
-            child: Text(AppLocalizations.of(context)!.homeRetry),
+            child: Text(wrKeepCompounds(AppLocalizations.of(context)!.homeRetry)),
           ),
         ],
       ),

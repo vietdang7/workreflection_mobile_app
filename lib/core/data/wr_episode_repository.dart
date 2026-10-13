@@ -33,11 +33,16 @@ abstract class WrEpisodeRepository {
   /// Ghi một bước phản tư: thêm pattern vào patterns_done, lưu ghi chú.
   /// Tự chuyển Captured → Exploring ở bước đầu tiên.
   /// [situation] gắn thêm ngữ cảnh tình huống nếu bước này là chọn tình huống.
+  ///
+  /// [clearSituation] (chỉ khi [situation] null) gỡ tình huống đã gắn trước đó
+  /// và ghi chú của bước [pattern]: người dùng lùi về bước 1 rồi đổi sang
+  /// "Điều khác, để tôi tự mô tả".
   Future<ReflectionEpisode> recordPattern({
     required ReflectionEpisode episode,
     required ReflectionPattern pattern,
     String? note,
     WrSituation? situation,
+    bool clearSituation = false,
   });
 
   /// Lưu Draft Meaning — chưa vào Career Memory (WXS §4.3 State 4).
@@ -180,6 +185,7 @@ class SupabaseWrEpisodeRepository implements WrEpisodeRepository {
     required ReflectionPattern pattern,
     String? note,
     WrSituation? situation,
+    bool clearSituation = false,
   }) async {
     // Bước phản tư đầu tiên đưa Episode từ Captured sang Exploring.
     final nextState =
@@ -198,6 +204,10 @@ class SupabaseWrEpisodeRepository implements WrEpisodeRepository {
     if (note != null && note.trim().isNotEmpty) {
       notes[pattern.dbValue] = note.trim();
     }
+    final clear = clearSituation && situation == null;
+    if (clear && (note == null || note.trim().isEmpty)) {
+      notes.remove(pattern.dbValue);
+    }
 
     return _patch(episode, {
       'state': nextState.dbValue,
@@ -208,6 +218,11 @@ class SupabaseWrEpisodeRepository implements WrEpisodeRepository {
         'sca_dimension': situation.scaDimension.dbValue,
         if (situation.humanNeed != null)
           'human_need': situation.humanNeed!.dbValue,
+      },
+      if (clear) ...{
+        'situation_code': null,
+        'sca_dimension': null,
+        'human_need': episode.humanMoment.relatedNeed.dbValue,
       },
     });
   }

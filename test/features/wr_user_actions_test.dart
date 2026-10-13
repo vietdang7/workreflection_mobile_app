@@ -79,13 +79,6 @@ Future<void> _pump(WidgetTester tester, Widget w) async {
   addTearDown(tester.view.resetDevicePixelRatio);
   await tester.pumpWidget(w);
   await tester.pumpAndSettle();
-  // Tab Phát triển: "Điều bạn đang thực hành" thu gọn sẵn (họp khách 08/10).
-  // Xổ ra để các test về thẻ chủ đề còn thấy thẻ.
-  final themesToggle = find.byKey(const Key('wr_growth_themes_toggle'));
-  if (themesToggle.evaluate().isNotEmpty) {
-    await tester.tap(themesToggle);
-    await tester.pumpAndSettle();
-  }
 }
 
 PracticeTheme _theme(String id, String title) => PracticeTheme(
@@ -120,7 +113,8 @@ void main() {
     await _pump(tester, _wrap(actions: repo, intel: intel));
 
     // Tab vẫn dựng bình thường với chủ đề đang theo…
-    expect(find.byKey(const Key('wr_growth_theme_card_t1')), findsOneWidget);
+    // (Script Sprint 2: mỗi chủ đề một dòng trong khối "Đang làm quen".)
+    expect(find.byKey(const Key('wr_growth_theme_row_t1')), findsOneWidget);
     // …nhưng không còn khối tự đặt, kể cả khi có sẵn dữ liệu.
     expect(find.byType(WrUserActionsSection), findsNothing);
     expect(find.text('VIỆC BẠN TỰ ĐẶT'), findsNothing);

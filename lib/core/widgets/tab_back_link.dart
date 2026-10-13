@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 
 import '../l10n/wr_tr.dart';
 import '../theme/wr_colors.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 /// Tab identity for WrTabBackLink — which shell tab the host screen is.
 enum WrTab {
@@ -49,7 +50,7 @@ class WrTabBackLink extends StatelessWidget {
             Icon(Icons.arrow_back_ios_new, size: 14, color: WrColors.muted),
             SizedBox(width: 6),
             Text(
-              tr('Quay lại', 'Back'),
+              wrKeepCompounds(tr('Quay lại', 'Back')),
               style: TextStyle(
                 fontSize: 14.5,
                 fontWeight: FontWeight.w500,

@@ -23,6 +23,7 @@ import '../../../core/theme/wr_theme.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../l10n/app_localizations.dart';
 import '../coaching_providers.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 class CoachingSessionsScreen extends ConsumerWidget {
   const CoachingSessionsScreen({super.key});
@@ -41,7 +42,7 @@ class CoachingSessionsScreen extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back, color: WrColors.navy),
           onPressed: () => context.pop(),
         ),
-        title: Text(l10n.coachMyTitle, style: WrTextStyles.hMedium),
+        title: Text(wrKeepCompounds(l10n.coachMyTitle), style: WrTextStyles.hMedium),
       ),
       body: bookingsAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
@@ -50,7 +51,7 @@ class CoachingSessionsScreen extends ConsumerWidget {
         data: (bookings) {
           if (bookings.isEmpty) {
             return Center(
-              child: Text(l10n.coachMyEmpty, style: WrTextStyles.body),
+              child: Text(wrKeepCompounds(l10n.coachMyEmpty), style: WrTextStyles.body),
             );
           }
           return _BookingsList(bookings: bookings);
@@ -146,7 +147,7 @@ class _SessionRow extends StatelessWidget {
               children: [
                 Expanded(
                   child: Text(
-                    l10n.coachSessionOf(n, total),
+                    wrKeepCompounds(l10n.coachSessionOf(n, total)),
                     style: WrTextStyles.hMedium,
                   ),
                 ),
@@ -166,7 +167,7 @@ class _SessionRow extends StatelessWidget {
                   ),
                   const SizedBox(width: 6),
                   Text(
-                    _formatScheduledAt(b.scheduledAt),
+                    wrKeepCompounds(_formatScheduledAt(b.scheduledAt)),
                     style: WrTextStyles.body,
                   ),
                 ],
@@ -186,7 +187,7 @@ class _SessionRow extends StatelessWidget {
                     color: WrColors.coral,
                   ),
                   label: Text(
-                    l10n.coachSchedButton,
+                    wrKeepCompounds(l10n.coachSchedButton),
                     style: const TextStyle(color: WrColors.coral),
                   ),
                   style: OutlinedButton.styleFrom(
@@ -210,7 +211,7 @@ class _SessionRow extends StatelessWidget {
                   Clipboard.setData(ClipboardData(text: b.meetingLink!));
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
-                      content: Text(AppLocalizations.of(context)!.wsLinkCopied),
+                      content: Text(wrKeepCompounds(AppLocalizations.of(context)!.wsLinkCopied)),
                     ),
                   );
                 },
@@ -219,7 +220,7 @@ class _SessionRow extends StatelessWidget {
                     const Icon(Icons.link, size: 16, color: WrColors.navy),
                     const SizedBox(width: 6),
                     Text(
-                      l10n.coachMeetingLink,
+                      wrKeepCompounds(l10n.coachMeetingLink),
                       style: WrTextStyles.body.copyWith(
                         color: WrColors.navy,
                         decoration: TextDecoration.underline,
@@ -263,7 +264,7 @@ class _StatusChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(100),
       ),
       child: Text(
-        label,
+        wrKeepCompounds(label),
         style: TextStyle(
           fontSize: 13.5,
           fontWeight: FontWeight.w600,
@@ -292,7 +293,7 @@ class _ErrorCard extends StatelessWidget {
           const SizedBox(height: 16),
           TextButton(
             onPressed: onRetry,
-            child: Text(AppLocalizations.of(context)!.homeRetry),
+            child: Text(wrKeepCompounds(AppLocalizations.of(context)!.homeRetry)),
           ),
         ],
       ),

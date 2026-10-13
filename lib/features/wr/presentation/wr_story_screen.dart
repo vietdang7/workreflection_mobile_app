@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/l10n/wr_tr.dart';
 import '../../../core/theme/wr_colors.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 /// Story tab screen — shows CTA to launch the full WrStoryFlowScreen.
 class WrStoryScreen extends StatelessWidget {
@@ -43,7 +44,7 @@ class WrStoryScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      tr('Trải nghiệm của tôi', 'My experience'),
+                      wrKeepCompounds(tr('Trải nghiệm của tôi', 'My experience')),
                       style: TextStyle(
                         fontSize: 11.5,
                         color: WrColors.text3,
@@ -52,7 +53,7 @@ class WrStoryScreen extends StatelessWidget {
                     ),
                     SizedBox(height: 3),
                     Text(
-                      tr('Story của tôi', 'My Story'),
+                      wrKeepCompounds(tr('Story của tôi', 'My Story')),
                       style: TextStyle(
                         fontSize: 21,
                         fontWeight: FontWeight.w700,
@@ -61,10 +62,10 @@ class WrStoryScreen extends StatelessWidget {
                     ),
                     SizedBox(height: 4),
                     Text(
-                      tr(
+                      wrKeepCompounds(tr(
                         'Câu chuyện từ Career Memory của bạn sẽ hiện ra tại đây.',
                         'Stories from your Career Memory will appear here.',
-                      ),
+                      )),
                       style: TextStyle(
                         fontSize: 14.5,
                         color: WrColors.muted,
@@ -82,10 +83,10 @@ class WrStoryScreen extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      tr(
+                      wrKeepCompounds(tr(
                         'Đọc câu chuyện phù hợp với bạn lúc này.',
                         'Read a story that fits where you are right now.',
-                      ),
+                      )),
                       style: TextStyle(
                         fontSize: 14.5,
                         color: WrColors.muted,
@@ -108,7 +109,7 @@ class WrStoryScreen extends StatelessWidget {
                         ),
                       ),
                       child: Text(
-                        tr('Bắt đầu đọc', 'Start reading'),
+                        wrKeepCompounds(tr('Bắt đầu đọc', 'Start reading')),
                         style: TextStyle(fontWeight: FontWeight.w600),
                       ),
                     ),

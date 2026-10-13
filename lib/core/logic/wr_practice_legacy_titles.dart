@@ -85,6 +85,12 @@ const List<(String, String)> kLegacyPracticeStepTitles = [
     'Chuyển hóa: Xác nhận thay vì giả định',
     'Shift: Confirm rather than assume',
   ),
+  // Bước 4 của bộ 4 bước v47, trước khi đổi sang nhãn "Câu hỏi cho lần sau"
+  // (20261013130000_wr_practice_keep_parity.sql).
+  (
+    'Mang về: Giữ lại một câu hỏi',
+    'Take it with you: Keep one question',
+  ),
 ];
 
 /// Mọi cách một tên bước cũ có thể đã bị lưu: dạng hai chấm và dạng gạch dài

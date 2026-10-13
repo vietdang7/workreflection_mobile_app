@@ -14,9 +14,9 @@ void main() {
   });
 
   test('loads the 72 real situations, custom option, and 72 stories', () {
-    expect(catalog.realSituations, hasLength(72));
-    expect(catalog.situations, hasLength(73));
-    expect(catalog.stories, hasLength(72));
+    expect(catalog.realSituations, hasLength(73));
+    expect(catalog.situations, hasLength(74));
+    expect(catalog.stories, hasLength(73));
     expect(catalog.situationFor('other')!.isCustom, isTrue);
   });
 

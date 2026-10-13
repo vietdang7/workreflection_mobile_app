@@ -10,6 +10,7 @@ import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_episode_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
+import 'package:workreflection_mobile/core/data/wr_work_context_repository.dart';
 import 'package:workreflection_mobile/core/models/mobile_profile.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 import 'package:workreflection_mobile/core/models/wr_episode.dart';
@@ -24,6 +25,7 @@ import '../support/fake_repository.dart';
 import '../support/fake_wr_content_repository.dart';
 import '../support/fake_wr_episode_repository.dart';
 import '../support/fake_wr_intelligence_repository.dart';
+import '../support/fake_wr_work_context_repository.dart';
 
 final _now = DateTime(2026, 7, 28);
 
@@ -60,6 +62,7 @@ Widget _wrap(
   FakeWrIntelligenceRepository? intel,
   FakeWrContentRepository? content,
   FakeWrEpisodeRepository? episodes,
+  FakeWrWorkContextRepository? workContext,
   bool premium = false,
 }) {
   final intelRepo = intel ?? FakeWrIntelligenceRepository();
@@ -102,6 +105,9 @@ Widget _wrap(
         episodes ?? FakeWrEpisodeRepository(),
       ),
       currentUserIdProvider.overrideWithValue('u1'),
+      wrWorkContextRepositoryProvider.overrideWithValue(
+        workContext ?? FakeWrWorkContextRepository(),
+      ),
     ],
     child: MaterialApp.router(
       builder: wrTextScaleBuilder,
@@ -201,45 +207,139 @@ void main() {
     }
   });
 
-  group('Màn Thông tin công việc', () {
-    testWidgets('điền sẵn mô tả đã lưu', (tester) async {
-      await tester.pumpWidget(
+  // Script Sprint 2 `screenJobContext` + `ROLE_FIELDS`.
+  group('Màn Bối cảnh công việc', () {
+    Future<void> pumpTall(WidgetTester tester, Widget w) async {
+      tester.view.physicalSize = const Size(1080, 5000);
+      tester.view.devicePixelRatio = 1.0;
+      addTearDown(tester.view.resetPhysicalSize);
+      addTearDown(tester.view.resetDevicePixelRatio);
+      await tester.pumpWidget(w);
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> record(
+      WidgetTester tester,
+      String key,
+      String text,
+    ) async {
+      await tester.tap(find.byKey(Key('wr_work_info_edit_$key')));
+      await tester.pumpAndSettle();
+      await tester.enterText(find.byKey(Key('wr_work_info_input_$key')), text);
+      await tester.tap(find.byKey(Key('wr_work_info_record_$key')));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('tiêu đề, eyebrow và ba trường VAI TRÒ đúng script', (
+      tester,
+    ) async {
+      await pumpTall(tester, _wrap(const WrWorkInfoScreen(), repo: _repo()));
+
+      expect(find.text('Bối cảnh công việc'), findsOneWidget);
+      expect(find.text('GIÚP GỢI Ý CHÍNH XÁC HƠN'), findsOneWidget);
+      expect(find.text('VAI TRÒ'), findsOneWidget);
+      expect(find.text('Vị trí công việc'), findsOneWidget);
+      expect(find.text('Kiến thức chuyên môn'), findsOneWidget);
+      expect(find.text('Kỹ năng chuyên môn'), findsOneWidget);
+      expect(find.text('Thêm'), findsNWidgets(3));
+      expect(find.text('TÀI LIỆU'), findsOneWidget);
+      expect(find.text('Đính kèm tài liệu'), findsOneWidget);
+      expect(
+        find.text('Nếu bạn chưa có JD, hãy cùng phác thảo theo gợi ý.'),
+        findsOneWidget,
+      );
+      expect(find.text('Phác thảo theo gợi ý'), findsOneWidget);
+    });
+
+    testWidgets('role_text cũ hiện ở Vị trí công việc khi chưa có lịch sử', (
+      tester,
+    ) async {
+      await pumpTall(
+        tester,
         _wrap(
           const WrWorkInfoScreen(),
           repo: _repo(roleText: 'trưởng nhóm nội dung'),
         ),
       );
-      await tester.pumpAndSettle();
 
-      final field = tester.widget<TextField>(
-        find.byKey(const Key('wr_work_info_field')),
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('wr_work_info_current_position')),
+          matching: find.text('trưởng nhóm nội dung'),
+        ),
+        findsOneWidget,
       );
-      expect(field.controller!.text, 'trưởng nhóm nội dung');
+      expect(find.text('Điều chỉnh'), findsOneWidget);
     });
 
-    testWidgets('lưu ghi mô tả xuống hồ sơ', (tester) async {
+    testWidgets('ghi Vị trí: thêm một bản lịch sử và đồng bộ role_text', (
+      tester,
+    ) async {
       final repo = _repo();
-      await tester.pumpWidget(_wrap(const WrWorkInfoScreen(), repo: repo));
-      await tester.pumpAndSettle();
-
-      await tester.enterText(
-        find.byKey(const Key('wr_work_info_field')),
-        'quản lý dự án, làm việc với 3 phòng ban',
+      final wc = FakeWrWorkContextRepository();
+      await pumpTall(
+        tester,
+        _wrap(const WrWorkInfoScreen(), repo: repo, workContext: wc),
       );
-      await tester.tap(find.byKey(const Key('wr_work_info_save')));
-      await tester.pumpAndSettle();
 
-      expect(repo.saveRoleTextCalls, hasLength(1));
+      await record(tester, 'position', 'quản lý dự án, 3 phòng ban');
+
+      expect(repo.saveRoleTextCalls.single, 'quản lý dự án, 3 phòng ban');
+      expect(wc.rows.single.field, WrWorkContextField.position);
+      expect(find.text('quản lý dự án, 3 phòng ban'), findsOneWidget);
+      expect(find.textContaining('Cập nhật '), findsOneWidget);
+    });
+
+    testWidgets('sửa lần hai ghi THÊM, bản cũ còn trong lịch sử xổ ra được', (
+      tester,
+    ) async {
+      final wc = FakeWrWorkContextRepository();
+      await pumpTall(
+        tester,
+        _wrap(const WrWorkInfoScreen(), repo: _repo(), workContext: wc),
+      );
+
+      await record(tester, 'skill', 'Dựng báo cáo Excel');
+      await tester.tap(find.byKey(const Key('wr_work_info_edit_skill')));
+      await tester.pumpAndSettle();
       expect(
-        repo.saveRoleTextCalls.single,
-        'quản lý dự án, làm việc với 3 phòng ban',
+        find.text(
+          'Nội dung cũ vẫn được giữ lại. Lần này được ghi thêm, không đè lên.',
+        ),
+        findsOneWidget,
       );
-      expect(find.byKey(const Key('wr_work_info_saved')), findsOneWidget);
+      await tester.enterText(
+        find.byKey(const Key('wr_work_info_input_skill')),
+        'Kèm nhân viên mới',
+      );
+      await tester.tap(find.byKey(const Key('wr_work_info_record_skill')));
+      await tester.pumpAndSettle();
+
+      expect(wc.rows, hasLength(2));
+      expect(find.text('Kèm nhân viên mới'), findsOneWidget);
+      expect(find.text('Dựng báo cáo Excel'), findsNothing);
+      expect(find.text('1 lần cập nhật trước ›'), findsOneWidget);
+
+      await tester.tap(find.text('1 lần cập nhật trước ›'));
+      await tester.pumpAndSettle();
+      expect(find.text('Dựng báo cáo Excel'), findsOneWidget);
+      expect(find.text('Thu gọn'), findsOneWidget);
+
+      await tester.tap(find.text('Thu gọn'));
+      await tester.pumpAndSettle();
+      expect(find.text('Dựng báo cáo Excel'), findsNothing);
+    });
+
+    testWidgets('ghi Kiến thức không đụng tới role_text', (tester) async {
+      final repo = _repo();
+      await pumpTall(tester, _wrap(const WrWorkInfoScreen(), repo: repo));
+
+      await record(tester, 'knowledge', 'Quy trình hoàn tiền');
+      expect(repo.saveRoleTextCalls, isEmpty);
     });
 
     testWidgets('có lối sang Tài liệu bối cảnh (JD · CV)', (tester) async {
-      await tester.pumpWidget(_wrap(const WrWorkInfoScreen(), repo: _repo()));
-      await tester.pumpAndSettle();
+      await pumpTall(tester, _wrap(const WrWorkInfoScreen(), repo: _repo()));
 
       await tester.tap(find.byKey(const Key('wr_work_info_context_docs_row')));
       await tester.pumpAndSettle();
@@ -247,19 +347,10 @@ void main() {
     });
 
     // Changelog 24/08/2026 §6 — lối vào duy nhất của "Viết JD cùng app".
-    testWidgets('có lối sang Viết JD cùng app', (tester) async {
-      await tester.pumpWidget(_wrap(const WrWorkInfoScreen(), repo: _repo()));
-      await tester.pumpAndSettle();
+    testWidgets('có lối sang Phác thảo JD theo gợi ý', (tester) async {
+      await pumpTall(tester, _wrap(const WrWorkInfoScreen(), repo: _repo()));
 
-      expect(
-        find.text(
-          'Nếu chưa có sẵn JD, bạn có thể tự phác thảo nhanh theo 5 bước hướng dẫn',
-        ),
-        findsOneWidget,
-      );
       final card = find.byKey(const Key('wr_work_info_jd_builder_card'));
-      await tester.ensureVisible(card);
-      await tester.pumpAndSettle();
       await tester.tap(card);
       await tester.pumpAndSettle();
       expect(find.text('JdBuilder'), findsOneWidget);

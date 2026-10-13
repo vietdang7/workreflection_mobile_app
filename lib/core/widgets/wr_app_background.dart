@@ -12,17 +12,17 @@ enum AppBackgroundMode {
 const String _kBgPrefKey = 'wr_app_background_mode';
 
 class AppBackgroundNotifier extends StateNotifier<AppBackgroundMode> {
-  AppBackgroundNotifier() : super(AppBackgroundMode.plain) {
+  AppBackgroundNotifier() : super(AppBackgroundMode.watercolor) {
     _load();
   }
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
     final val = prefs.getString(_kBgPrefKey);
-    if (val == 'watercolor') {
-      state = AppBackgroundMode.watercolor;
-    } else {
+    if (val == 'plain') {
       state = AppBackgroundMode.plain;
+    } else {
+      state = AppBackgroundMode.watercolor;
     }
   }
 
@@ -38,38 +38,68 @@ final appBackgroundModeProvider =
   return AppBackgroundNotifier();
 });
 
-/// Widget bọc nền ứng dụng, hỗ trợ chuyển đổi giữa Nền giấy trơn và Nền giấy màu nước.
-class WrAppBackground extends StatelessWidget {
+/// Scope truyền trạng thái nền giấy vẽ xuống cây widget con (để các thẻ WrCard phủ vân giấy).
+class WrBackgroundScope extends InheritedWidget {
+  const WrBackgroundScope({
+    super.key,
+    required this.isPaper,
+    required super.child,
+  });
+
+  final bool isPaper;
+
+  static bool of(BuildContext context) {
+    final scope =
+        context.dependOnInheritedWidgetOfExactType<WrBackgroundScope>();
+    return scope?.isPaper ?? false;
+  }
+
+  @override
+  bool updateShouldNotify(WrBackgroundScope oldWidget) =>
+      isPaper != oldWidget.isPaper;
+}
+
+/// Widget bọc nền ứng dụng, hỗ trợ chuyển đổi giữa Nền giấy trơn và Nền giấy vẽ màu nước.
+class WrAppBackground extends ConsumerWidget {
   const WrAppBackground({
     super.key,
     required this.child,
-    this.mode = AppBackgroundMode.plain,
+    this.mode,
     this.backgroundColor,
   });
 
   final Widget child;
-  final AppBackgroundMode mode;
+  final AppBackgroundMode? mode;
   final Color? backgroundColor;
 
   @override
-  Widget build(BuildContext context) {
-    if (mode == AppBackgroundMode.watercolor) {
-      return Container(
-        decoration: const BoxDecoration(
-          color: WrColors.pageBg,
-          image: DecorationImage(
-            image: AssetImage('assets/images/bg_watercolor_paper.webp'),
-            fit: BoxFit.cover,
-            opacity: 0.85,
-          ),
+  Widget build(BuildContext context, WidgetRef ref) {
+    AppBackgroundMode effectiveMode = mode ?? AppBackgroundMode.watercolor;
+    if (mode == null) {
+      try {
+        effectiveMode = ref.watch(appBackgroundModeProvider);
+      } catch (_) {
+        effectiveMode = AppBackgroundMode.watercolor;
+      }
+    }
+    final isPaper = effectiveMode == AppBackgroundMode.watercolor;
+    final defaultBg = isPaper ? WrColors.creamBg : WrColors.pageBg;
+    return WrBackgroundScope(
+      isPaper: isPaper,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: backgroundColor ?? defaultBg,
+          image: isPaper
+              ? const DecorationImage(
+                  image: AssetImage('assets/images/paper_screen.webp'),
+                  repeat: ImageRepeat.repeat,
+                  scale: 2.0,
+                  alignment: Alignment.topLeft,
+                )
+              : null,
         ),
         child: child,
-      );
-    }
-
-    return Container(
-      color: backgroundColor ?? WrColors.pageBg,
-      child: child,
+      ),
     );
   }
 }

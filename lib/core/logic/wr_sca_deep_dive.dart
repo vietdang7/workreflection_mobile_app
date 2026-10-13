@@ -15,13 +15,15 @@
 // nổi bật), không phải AI sinh tự do — §7 nói rõ để giữ nhất quán giọng văn và
 // kiểm soát chi phí. Vì vậy toàn bộ phần này là Dart thuần, test được trực tiếp.
 //
-// HAI CHỖ CỐ Ý LỆCH SO VỚI MOCKUP, và vì sao:
+// THANG ĐIỂM. Script Sprint 2 chấm năm mức LIKERT theo chỉ số 0–4 (`onScaAnswer`
+// lưu `idx`) rồi chia ba mức theo `pillarLevelText`: >=3, >=2, còn lại. App lưu
+// cùng năm mức nhưng theo thang 1–5 (chỉ số + 1), nên cùng một ngưỡng của
+// script viết trên thang app là >=4.0 và >=3.0 — xem [scaPillarStatus]. Bản
+// trước ghi nhầm "mockup chấm 1–4" và dùng 3.8 / 2.5, nên trung bình 3.8–3.99
+// lọt lên mức cao và 2.5–2.99 được xếp mức giữa, trong khi script xếp hai
+// khoảng đó thấp hơn một mức.
 //
-//   · Thang điểm. Mockup chấm Likert 1–4 và chia ba mức (>=3, >=2, còn lại).
-//     App chấm Likert 1–5 và màn Kết quả đã có sẵn ba nhãn theo ngưỡng 3.8 /
-//     2.5. §7 yêu cầu "tái dùng ĐÚNG logic màu/nhãn của màn Kết quả", nên ở đây
-//     dùng ngưỡng của app chứ không bê ngưỡng mockup sang — bê sang là hai màn
-//     nói hai mức khác nhau cho cùng một điểm.
+// MỘT CHỖ CỐ Ý LỆCH SO VỚI MOCKUP:
 //
 //   · Cửa sổ pattern. Mockup đếm trên 30 MỤC gần nhất và §7 ghi chú đó là chỗ
 //     cần sửa: "Cần lưu kèm timestamp cho mỗi lần Reflection để lọc đúng cửa sổ
@@ -66,9 +68,8 @@ enum ScaPillarStatus {
   /// nhánh theo đúng ba chữ đó — nhánh A đọc "Đang hỗ trợ tốt", nhánh B/D đọc
   /// "Đang cản trở" và "Ổn, còn dư địa".
   ///
-  /// **Ngưỡng KHÔNG đổi theo.** Mockup chấm Likert 1–4, app chấm 1–5; bê ngưỡng
-  /// của mockup sang đây là mọi người dùng cũ mở app lên thấy đánh giá của mình
-  /// tự nhiên khác đi mà không ai chạm vào dữ liệu của họ.
+  /// Ngưỡng nằm ở [scaPillarStatus], đúng `pillarLevelText` của script quy
+  /// sang thang 1–5 của app.
   String get label => switch (this) {
     ScaPillarStatus.developing => tr('Đang hỗ trợ tốt', 'Supporting you well'),
     ScaPillarStatus.needsAttention => tr(
@@ -100,12 +101,35 @@ enum ScaPillarStatus {
   bool get isReassuring => this == ScaPillarStatus.developing;
 }
 
-/// Ngưỡng lấy đúng từ màn Kết quả Self-Check.
+/// Ngưỡng của script (`pillarLevelText`): trung bình >=3 là "Đang hỗ trợ tốt",
+/// >=2 là "Ổn, còn dư địa", còn lại "Đang cản trở" — trên thang 0–4 của script.
+/// App lưu mỗi câu theo thang 1–5 (mức thứ i của LIKERT lưu là i + 1), nên hai
+/// ngưỡng đó viết trên thang app là [kScaLevelHigh] và [kScaLevelMid].
 ScaPillarStatus scaPillarStatus(double score) {
-  if (score >= 3.8) return ScaPillarStatus.developing;
-  if (score >= 2.5) return ScaPillarStatus.needsAttention;
+  if (score >= kScaLevelHigh) return ScaPillarStatus.developing;
+  if (score >= kScaLevelMid) return ScaPillarStatus.needsAttention;
   return ScaPillarStatus.priority;
 }
+
+/// Ngưỡng "Đang hỗ trợ tốt" trên thang 1–5 (script: >=3 trên thang 0–4).
+const double kScaLevelHigh = 4.0;
+
+/// Ngưỡng "Ổn, còn dư địa" trên thang 1–5 (script: >=2 trên thang 0–4).
+const double kScaLevelMid = 3.0;
+
+/// Tên ĐẦY ĐỦ của ba trụ, đúng màn Kết quả khảo sát và màn Xu hướng theo thời
+/// gian của script. Các màn khác dùng tên ngắn [SelfCheckPillar.displayName].
+String scaPillarFullName(SelfCheckPillar pillar) => switch (pillar) {
+  SelfCheckPillar.s => tr('Sự rõ ràng trong công việc', 'Clarity in your work'),
+  SelfCheckPillar.c => tr(
+    'Niềm tin & an toàn để lên tiếng',
+    'Trust & safety to speak up',
+  ),
+  SelfCheckPillar.a => tr(
+    'Nhịp thực thi & nhìn lại',
+    'Rhythm of doing & looking back',
+  ),
+};
 
 // ---------------------------------------------------------------------------
 // Lớp 2 — xu hướng so với lần Self-Check trước
@@ -291,22 +315,86 @@ SelfCheckPillar? dominantPatternPillar(
 );
 
 // ---------------------------------------------------------------------------
-// ĐÃ BỎ: scaPatternText
+// Phần "Xu hướng theo thời gian" của script (`screenScaDeepDive`)
 // ---------------------------------------------------------------------------
 //
-// Hàm này sinh câu "đối chiếu Pattern" cho TỪNG trụ, và màn hình in cả ba.
-// `DienGiaiSau v2` §1.3 gọi thẳng tên vấn đề: "Mỗi trụ đang hiện nhãn mức đánh
-// giá (đã có ở Career Snapshot) cộng số lần xuất hiện (cũng đã có ở Career
-// Snapshot), cộng một câu gần như giống hệt nhau ba lần. Nói với người dùng ba
-// lần rằng không có gì nổi trội thì đúng về logic nhưng vô nghĩa về trải
-// nghiệm."
+// LỊCH SỬ. Câu đối chiếu theo TỪNG trụ từng bị bỏ (`DienGiaiSau v2` §1.3: nói
+// cùng một câu ba lần là vô nghĩa về trải nghiệm). Script Sprint 2 của khách
+// đưa nó trở lại, nguyên văn, mỗi trụ một thẻ: câu xu hướng + câu đối chiếu.
+// Màn Diễn giải sâu đặt phần này LÊN ĐẦU đúng như script; nội dung Diễn giải sâu
+// v2 (khối chính, vòng lặp, xu hướng, chi tiết theo nhóm) vẫn giữ, nằm phía
+// dưới.
 //
-// Điều nó nói đúng — chỗ lệch pha giữa tự đánh giá và tần suất — nay do khối
-// chính nói, đúng MỘT lần, ở bậc R3 của thang ưu tiên. Giữ lại hàm này là để
-// hai nguồn cùng kết luận về một chênh lệch rồi có ngày nói khác nhau.
-//
-// Khung "Lệch pha tự nhận thức" ở Insight Career Memory KHÔNG dùng hàm này —
-// nó gọi [selfAwarenessGapNarrative] bên dưới, và khung đó vẫn còn.
+// Luật trụ nổi trội ở đây là luật CỦA SCRIPT: trụ có nhiều lần nhất, hoà thì
+// theo thứ tự S · C · A, không có ngưỡng 40% của [dominantPatternPillar]. Hai
+// luật cùng tồn tại vì hai phần của màn nói hai câu khác nhau; phần script chỉ
+// nói "nhóm bạn quay lại nhiều nhất", đúng nghĩa đen của phép đếm.
+
+/// Trụ có nhiều lần nhất theo luật script (`pillarPatternCounts` rồi sắp giảm
+/// dần, lấy đầu). Null khi cả ba trụ đều 0.
+SelfCheckPillar? scriptDominantPillar(Map<SelfCheckPillar, int> counts) {
+  SelfCheckPillar? best;
+  var bestCount = 0;
+  for (final p in SelfCheckPillar.values) {
+    final c = counts[p] ?? 0;
+    if (c > bestCount) {
+      best = p;
+      bestCount = c;
+    }
+  }
+  return best;
+}
+
+/// Câu đối chiếu của một trụ, nguyên văn `patternText` của script.
+///
+/// "Mức tốt" theo script gồm CẢ "Đang hỗ trợ tốt" lẫn "Ổn, còn dư địa" — khác
+/// [ScaPillarStatus.isReassuring]. Giữ đúng script vì đây là câu của script.
+String scaScriptPatternText({
+  required SelfCheckPillar pillar,
+  required ScaPillarStatus status,
+  required Map<SelfCheckPillar, int> counts,
+}) {
+  final count = counts[pillar] ?? 0;
+  if (count == 0) {
+    return tr(
+      'Chưa có đủ tín hiệu từ Reflection gần đây để đối chiếu thêm cho nhóm '
+          'này.',
+      'There is not yet enough signal from recent Reflections to compare this '
+          'group further.',
+    );
+  }
+  final isDominant = scriptDominantPillar(counts) == pillar;
+  final isGoodLevel = status != ScaPillarStatus.priority;
+  final level = status.label.toLowerCase();
+  if (isDominant && isGoodLevel) {
+    return tr(
+      'Bạn tự đánh giá phần này $level, nhưng đây lại là nhóm tình huống bạn '
+          'quay lại nhiều nhất trong Reflection gần đây ($count lần). Sự chênh '
+          'lệch này thường đáng chú ý hơn bản thân điểm số, có thể bạn đã quen '
+          'đến mức không còn nhận ra ảnh hưởng của nó nữa.',
+      'You rate this part as $level, yet it is the group of situations you '
+          'return to most in recent Reflections ($count times). That gap is '
+          'often more telling than the score itself; you may have grown so used '
+          'to it that you no longer notice its effect.',
+    );
+  }
+  if (isDominant) {
+    return tr(
+      'Nhóm này vừa được bạn tự đánh giá $level, vừa là nơi bạn quay lại nhiều '
+          'nhất trong Reflection ($count lần). Hai nguồn dữ liệu đang xác nhận '
+          'lẫn nhau.',
+      'You rate this group as $level, and it is also where you return most in '
+          'Reflection ($count times). The two sources are confirming each '
+          'other.',
+    );
+  }
+  return tr(
+    'Nhóm này xuất hiện $count lần trong Reflection gần đây, chưa phải nhóm '
+        'chiếm ưu thế nhất.',
+    'This group came up $count times in recent Reflections, not yet the most '
+        'prominent one.',
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Khung "Lệch pha tự nhận thức" — §9, khung thứ ba của Insight Career Memory

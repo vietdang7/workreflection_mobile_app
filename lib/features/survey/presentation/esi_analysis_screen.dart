@@ -13,6 +13,7 @@ import '../../../core/widgets/progress_track.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../survey_providers.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 // ---------------------------------------------------------------------------
 // ESI pillar definitions
@@ -91,17 +92,17 @@ class EsiAnalysisScreen extends ConsumerWidget {
           icon: const Icon(Icons.arrow_back, color: WrColors.navy),
           onPressed: () => Navigator.of(context).pop(),
         ),
-        title: Text(l10n.esiAnalysisTitle, style: WrTextStyles.hMedium),
+        title: Text(wrKeepCompounds(l10n.esiAnalysisTitle), style: WrTextStyles.hMedium),
       ),
       body: reportAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
-          child: Text(l10n.surveyProcessingError, style: WrTextStyles.body),
+          child: Text(wrKeepCompounds(l10n.surveyProcessingError), style: WrTextStyles.body),
         ),
         data: (report) {
           if (report == null) {
             return Center(
-              child: Text(l10n.surveyProcessingError, style: WrTextStyles.body),
+              child: Text(wrKeepCompounds(l10n.surveyProcessingError), style: WrTextStyles.body),
             );
           }
 
@@ -116,7 +117,7 @@ class EsiAnalysisScreen extends ConsumerWidget {
           return pillarScoresAsync.when(
             loading: () => const Center(child: CircularProgressIndicator()),
             error: (e, _) => Center(
-              child: Text(l10n.surveyProcessingError, style: WrTextStyles.body),
+              child: Text(wrKeepCompounds(l10n.surveyProcessingError), style: WrTextStyles.body),
             ),
             data: (pillarScores) => _EsiAnalysisBody(
               report: report,
@@ -147,9 +148,9 @@ class _EsiNoDataBody extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(l10n.esiAnalysisNoData, style: WrTextStyles.hMedium),
+            Text(wrKeepCompounds(l10n.esiAnalysisNoData), style: WrTextStyles.hMedium),
             const SizedBox(height: 8),
-            Text(l10n.esiAnalysisNoDataBody, style: WrTextStyles.body),
+            Text(wrKeepCompounds(l10n.esiAnalysisNoDataBody), style: WrTextStyles.body),
           ],
         ),
       ),
@@ -211,7 +212,7 @@ class _EsiAnalysisBody extends ConsumerWidget {
               children: [
                 WrEyebrow(l10n.esiAnalysisEsiScore),
                 const SizedBox(height: 12),
-                Text(esi.toStringAsFixed(1), style: WrTextStyles.hLarge),
+                Text(wrKeepCompounds(esi.toStringAsFixed(1)), style: WrTextStyles.hLarge),
                 const SizedBox(height: 8),
                 WrProgressTrack(value: esi / 5.0, color: WrColors.teal),
               ],
@@ -227,15 +228,15 @@ class _EsiAnalysisBody extends ConsumerWidget {
                 children: [
                   WrEyebrow(l10n.esiAnalysisEnpsScore),
                   const SizedBox(height: 12),
-                  Text('$enps', style: WrTextStyles.hLarge),
+                  Text(wrKeepCompounds('$enps'), style: WrTextStyles.hLarge),
                   const SizedBox(height: 8),
-                  Text(_enpsCategory(enps), style: WrTextStyles.body),
+                  Text(wrKeepCompounds(_enpsCategory(enps)), style: WrTextStyles.body),
                   if (breakdown != null) ...[
                     const SizedBox(height: 4),
                     Text(
-                      '${l10n.esiAnalysisEnpsPromoter}: ${breakdown.promoters} · '
+                      wrKeepCompounds('${l10n.esiAnalysisEnpsPromoter}: ${breakdown.promoters} · '
                       '${l10n.esiAnalysisEnpsPassive}: ${breakdown.passives} · '
-                      '${l10n.esiAnalysisEnpsDetractor}: ${breakdown.detractors}',
+                      '${l10n.esiAnalysisEnpsDetractor}: ${breakdown.detractors}'),
                       style: WrTextStyles.body.copyWith(color: WrColors.muted),
                     ),
                   ],
@@ -246,7 +247,7 @@ class _EsiAnalysisBody extends ConsumerWidget {
           ],
 
           // Pillars section
-          Text(l10n.esiAnalysisPillarsTitle, style: WrTextStyles.hMedium),
+          Text(wrKeepCompounds(l10n.esiAnalysisPillarsTitle), style: WrTextStyles.hMedium),
           const SizedBox(height: 12),
 
           if (pillarScores.isEmpty) ...[
@@ -254,9 +255,9 @@ class _EsiAnalysisBody extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(l10n.esiAnalysisNoData, style: WrTextStyles.hMedium),
+                  Text(wrKeepCompounds(l10n.esiAnalysisNoData), style: WrTextStyles.hMedium),
                   const SizedBox(height: 8),
-                  Text(l10n.esiAnalysisNoDataBody, style: WrTextStyles.body),
+                  Text(wrKeepCompounds(l10n.esiAnalysisNoDataBody), style: WrTextStyles.body),
                 ],
               ),
             ),
@@ -306,9 +307,9 @@ class _PillarCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Expanded(child: Text(label, style: WrTextStyles.hMedium)),
+              Expanded(child: Text(wrKeepCompounds(label), style: WrTextStyles.hMedium)),
               if (score != null)
-                Text(score!.toStringAsFixed(1), style: WrTextStyles.hLarge),
+                Text(wrKeepCompounds(score!.toStringAsFixed(1)), style: WrTextStyles.hLarge),
             ],
           ),
           const SizedBox(height: 10),
@@ -316,7 +317,7 @@ class _PillarCard extends StatelessWidget {
             WrProgressTrack(value: score! / 5.0, color: WrColors.teal)
           else
             Text(
-              l10n.esiAnalysisNoData,
+              wrKeepCompounds(l10n.esiAnalysisNoData),
               style: WrTextStyles.body.copyWith(color: WrColors.muted),
             ),
         ],

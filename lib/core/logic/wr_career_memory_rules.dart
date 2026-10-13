@@ -121,6 +121,33 @@ String pickVariant(List<String> variants, int seed) =>
 // Cột mốc — §8.2
 // ---------------------------------------------------------------------------
 
+/// Loại cột mốc do CHÍNH tình huống tạo ra — cờ `completionMilestone` /
+/// `learningMilestone` trong `SITUATIONS` của script Sprint 2.
+enum SituationMilestoneKind { completion, learning }
+
+/// Mã tình huống mang cờ cột mốc. Giữ ở code (không thêm cột DB) vì script chỉ
+/// có đúng hai mục.
+const Map<String, SituationMilestoneKind> kSituationMilestones = {
+  'P-11': SituationMilestoneKind.completion,
+  'P-08': SituationMilestoneKind.learning,
+};
+
+/// Loại cột mốc của tình huống [code], null khi tình huống không mang cờ.
+SituationMilestoneKind? situationMilestoneKind(String? code) =>
+    code == null ? null : kSituationMilestones[code];
+
+/// Tiêu đề mục MILESTONE trong Career Memory (script `commitReflectionEntry`).
+String situationMilestoneTitle(SituationMilestoneKind kind) => switch (kind) {
+  SituationMilestoneKind.completion => tr(
+    'Đã hoàn thành một trải nghiệm học tập',
+    'Completed a learning experience',
+  ),
+  SituationMilestoneKind.learning => tr(
+    'Một điều nhỏ bạn vừa học được',
+    'Something small you just learned',
+  ),
+};
+
 /// Câu giải thích vì sao lượt này là một cột mốc. Null = không phải cột mốc.
 ///
 /// §8.2 nói rõ Cột mốc KHÔNG phải một bản ghi tách biệt: "Hệ thống gắn cờ 'lần
@@ -141,6 +168,11 @@ String? milestoneTextForStory({
   required ReflectionEpisode story,
   required List<ReflectionEpisode> previousStories,
 }) {
+  // Script Sprint 2: hoàn thành / học được là một sự thật đã xảy ra, nên lượt
+  // nhìn lại về chính điều đó LUÔN là một Cột mốc, không cần là "lần đầu".
+  final kind = situationMilestoneKind(story.situationCode);
+  if (kind != null) return situationMilestoneTitle(kind);
+
   if (previousStories.isEmpty) {
     return tr(
       'Lần đầu tiên bạn dừng lại và nhìn lại một chuyện ở công việc.',

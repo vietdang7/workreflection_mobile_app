@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme/wr_colors.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 /// Kiểu của [WrSmallButton] — `.btn-primary` / `.btn-ghost` / `.btn-dark` của
 /// mockup, cỡ `.btn-sm`.
@@ -36,7 +37,7 @@ class WrSmallButton extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                label,
+                wrKeepCompounds(label),
                 style: const TextStyle(
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
@@ -47,7 +48,7 @@ class WrSmallButton extends StatelessWidget {
             ],
           )
         : Text(
-            label,
+            wrKeepCompounds(label),
             style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
           );
     return switch (kind) {

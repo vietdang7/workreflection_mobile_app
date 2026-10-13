@@ -19,6 +19,7 @@ import '../../../core/widgets/wr_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../profile/profile_providers.dart';
 import '../survey_providers.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 // Provider family for a specific report
 final _reportProvider = FutureProvider.family<CcReportFull?, String>((
@@ -110,7 +111,7 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
       if (mounted) {
         ScaffoldMessenger.of(
           context,
-        ).showSnackBar(SnackBar(content: Text(l10n.reportPdfError)));
+        ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.reportPdfError))));
       }
     } finally {
       if (mounted) setState(() => _isExporting = false);
@@ -151,7 +152,7 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
           icon: const Icon(Icons.close, color: WrColors.navy),
           onPressed: () => context.go('/understand'),
         ),
-        title: Text(l10n.reportTitle, style: WrTextStyles.hMedium),
+        title: Text(wrKeepCompounds(l10n.reportTitle), style: WrTextStyles.hMedium),
         actions: [
           if (canExport)
             _isExporting
@@ -181,12 +182,12 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
       body: reportAsync.when(
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (e, _) => Center(
-          child: Text(AppLocalizations.of(context)!.surveyProcessingError),
+          child: Text(wrKeepCompounds(AppLocalizations.of(context)!.surveyProcessingError)),
         ),
         data: (report) {
           if (report == null) {
             return Center(
-              child: Text(l10n.surveyProcessingError, style: WrTextStyles.body),
+              child: Text(wrKeepCompounds(l10n.surveyProcessingError), style: WrTextStyles.body),
             );
           }
           return narrativesAsync.when(
@@ -195,7 +196,7 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
               child: Padding(
                 padding: const EdgeInsets.all(24),
                 child: Text(
-                  l10n.surveyProcessingError,
+                  wrKeepCompounds(l10n.surveyProcessingError),
                   style: WrTextStyles.body,
                   textAlign: TextAlign.center,
                 ),
@@ -271,7 +272,7 @@ class _ReportBody extends ConsumerWidget {
             child: Column(
               children: [
                 Text(
-                  report.scoreTotal.toStringAsFixed(1),
+                  wrKeepCompounds(report.scoreTotal.toStringAsFixed(1)),
                   style: WrTextStyles.dateTitle.copyWith(fontSize: 48),
                 ),
                 const SizedBox(height: 8),
@@ -279,7 +280,7 @@ class _ReportBody extends ConsumerWidget {
                 if (totalNarrative != null) ...[
                   const SizedBox(height: 16),
                   Text(
-                    _narrativeText(totalNarrative, localeCode),
+                    wrKeepCompounds(_narrativeText(totalNarrative, localeCode)),
                     textAlign: TextAlign.center,
                     style: WrTextStyles.body,
                   ),
@@ -426,7 +427,7 @@ class _ScoreLevelBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(100),
       ),
       child: Text(
-        label,
+        wrKeepCompounds(label),
         style: TextStyle(
           fontSize: 14.5,
           fontWeight: FontWeight.w700,
@@ -475,15 +476,15 @@ class _LayerCard extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(label, style: WrTextStyles.hMedium),
-              Text(score.toStringAsFixed(1), style: WrTextStyles.hLarge),
+              Text(wrKeepCompounds(label), style: WrTextStyles.hMedium),
+              Text(wrKeepCompounds(score.toStringAsFixed(1)), style: WrTextStyles.hLarge),
             ],
           ),
           const SizedBox(height: 10),
           WrProgressTrack(value: score / 5.0, color: WrColors.navy),
           if (_narrativeText != null) ...[
             const SizedBox(height: 10),
-            Text(_narrativeText!, style: WrTextStyles.body),
+            Text(wrKeepCompounds(_narrativeText!), style: WrTextStyles.body),
           ],
           const SizedBox(height: 12),
           Align(
@@ -491,7 +492,7 @@ class _LayerCard extends StatelessWidget {
             child: TextButton(
               onPressed: () =>
                   context.push('/survey/report/$reportId/layer/$layer'),
-              child: Text(l10n.layerDetailViewDetail),
+              child: Text(wrKeepCompounds(l10n.layerDetailViewDetail)),
             ),
           ),
         ],
@@ -538,7 +539,7 @@ class _BottleneckCard extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            l10n.reportBottleneckTitle.toUpperCase(),
+            wrKeepCompounds(l10n.reportBottleneckTitle.toUpperCase()),
             style: TextStyle(
               fontSize: 12.5,
               fontWeight: FontWeight.w700,
@@ -548,13 +549,13 @@ class _BottleneckCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            _layerLabel(report.bottleneckLayer),
+            wrKeepCompounds(_layerLabel(report.bottleneckLayer)),
             style: WrTextStyles.hLarge.copyWith(color: WrColors.white),
           ),
           if (_narrativeText != null) ...[
             const SizedBox(height: 10),
             Text(
-              _narrativeText!,
+              wrKeepCompounds(_narrativeText!),
               style: WrTextStyles.body.copyWith(
                 color: WrColors.white.withValues(alpha: 0.8),
               ),
@@ -585,7 +586,7 @@ class _EsiCard extends StatelessWidget {
         children: [
           WrEyebrow(l10n.reportEsiTitle),
           const SizedBox(height: 12),
-          Text(esi.toStringAsFixed(1), style: WrTextStyles.hLarge),
+          Text(wrKeepCompounds(esi.toStringAsFixed(1)), style: WrTextStyles.hLarge),
           const SizedBox(height: 8),
           WrProgressTrack(value: esi / 5.0, color: WrColors.teal),
           const SizedBox(height: 12),
@@ -593,7 +594,7 @@ class _EsiCard extends StatelessWidget {
             alignment: Alignment.centerRight,
             child: TextButton(
               onPressed: () => context.push('/survey/report/${report.id}/esi'),
-              child: Text(l10n.layerDetailViewDetail),
+              child: Text(wrKeepCompounds(l10n.layerDetailViewDetail)),
             ),
           ),
         ],
@@ -624,18 +625,18 @@ class _EnpsCard extends ConsumerWidget {
         children: [
           WrEyebrow(l10n.reportEnpsTitle),
           const SizedBox(height: 12),
-          Text('$enps', style: WrTextStyles.hLarge),
+          Text(wrKeepCompounds('$enps'), style: WrTextStyles.hLarge),
           const SizedBox(height: 8),
           if (breakdown != null)
             Text(
-              '${l10n.reportEnpsPromoter}: ${breakdown.promoters} · '
+              wrKeepCompounds('${l10n.reportEnpsPromoter}: ${breakdown.promoters} · '
               '${l10n.reportEnpsPassive}: ${breakdown.passives} · '
-              '${l10n.reportEnpsDetractor}: ${breakdown.detractors}',
+              '${l10n.reportEnpsDetractor}: ${breakdown.detractors}'),
               style: WrTextStyles.body,
             )
           else
             Text(
-              '${l10n.reportEnpsPromoter} · ${l10n.reportEnpsPassive} · ${l10n.reportEnpsDetractor}',
+              wrKeepCompounds('${l10n.reportEnpsPromoter} · ${l10n.reportEnpsPassive} · ${l10n.reportEnpsDetractor}'),
               style: WrTextStyles.body,
             ),
         ],
@@ -662,7 +663,7 @@ class _PremiumUpsellCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: WrColors.line),
       ),
-      child: Text(l10n.reportPremiumUpsell, style: WrTextStyles.body),
+      child: Text(wrKeepCompounds(l10n.reportPremiumUpsell), style: WrTextStyles.body),
     );
   }
 }
@@ -875,7 +876,7 @@ class _AiPersonalizedPremiumSection extends ConsumerWidget {
             ),
             const SizedBox(width: 10),
             Text(
-              l10n.reportAiPersonalizingLabel,
+              wrKeepCompounds(l10n.reportAiPersonalizingLabel),
               style: WrTextStyles.body.copyWith(
                 color: WrColors.dark.withValues(alpha: 0.6),
               ),
@@ -949,7 +950,7 @@ class _AiPersonalizedPremiumSection extends ConsumerWidget {
             ),
             const SizedBox(width: 10),
             Text(
-              l10n.reportAiPersonalizingLabel,
+              wrKeepCompounds(l10n.reportAiPersonalizingLabel),
               style: WrTextStyles.body.copyWith(
                 color: WrColors.dark.withValues(alpha: 0.6),
               ),
@@ -1058,7 +1059,7 @@ class _AiSectionCard extends StatelessWidget {
           ...content.map(
             (text) => Padding(
               padding: const EdgeInsets.only(bottom: 8),
-              child: Text(text, style: WrTextStyles.body),
+              child: Text(wrKeepCompounds(text), style: WrTextStyles.body),
             ),
           ),
         ],
@@ -1116,7 +1117,7 @@ class ScaRadarChart extends StatelessWidget {
                   child: Column(
                     children: [
                       Text(
-                        l10n.reportLayerStructure,
+                        wrKeepCompounds(l10n.reportLayerStructure),
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 12.5,
@@ -1125,7 +1126,7 @@ class ScaRadarChart extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        structure.toStringAsFixed(1),
+                        wrKeepCompounds(structure.toStringAsFixed(1)),
                         textAlign: TextAlign.center,
                         style: const TextStyle(
                           fontSize: 12.5,
@@ -1144,7 +1145,7 @@ class ScaRadarChart extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
                       Text(
-                        l10n.reportLayerCulture,
+                        wrKeepCompounds(l10n.reportLayerCulture),
                         style: const TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w700,
@@ -1152,7 +1153,7 @@ class ScaRadarChart extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        culture.toStringAsFixed(1),
+                        wrKeepCompounds(culture.toStringAsFixed(1)),
                         style: const TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w500,
@@ -1170,7 +1171,7 @@ class ScaRadarChart extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        l10n.reportLayerActivity,
+                        wrKeepCompounds(l10n.reportLayerActivity),
                         style: const TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w700,
@@ -1178,7 +1179,7 @@ class ScaRadarChart extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        activity.toStringAsFixed(1),
+                        wrKeepCompounds(activity.toStringAsFixed(1)),
                         style: const TextStyle(
                           fontSize: 12.5,
                           fontWeight: FontWeight.w500,

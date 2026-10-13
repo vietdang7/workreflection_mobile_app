@@ -187,8 +187,8 @@ void main() {
       expect(find.byKey(const Key('wr_mood_row_a1')), findsOneWidget);
       expect(find.text('3 gợi ý'), findsOneWidget);
       expect(find.text('Nghe · 3 phút'), findsOneWidget);
-      // `duration` trong DB đã có chữ "đọc": không lặp thành "Đọc · … đọc".
-      expect(find.text('Đọc · 3 phút'), findsWidgets);
+      // Mockup Sprint 2: "Đọc · 2 phút đọc", giữ nguyên chữ thời lượng.
+      expect(find.text('Đọc · 3 phút đọc'), findsWidgets);
 
       await tester.tap(find.byKey(const Key('wr_mood_filter_audio')));
       await tester.pumpAndSettle();
@@ -253,7 +253,7 @@ void main() {
       expect(two, lessThan(three));
     });
 
-    testWidgets('nội dung nháp có nhãn, nội dung thật thì không', (
+    testWidgets('không có nhãn Nháp trên thẻ và dòng (chỉ màn đọc báo nháp)', (
       tester,
     ) async {
       final repo = FakeWrMoodContentRepository()
@@ -274,8 +274,26 @@ void main() {
 
       await _pump(tester, _wrap(moodContent: repo));
 
-      expect(find.text('Nháp'), findsOneWidget);
+      expect(find.text('Nháp'), findsNothing);
     });
+
+    testWidgets(
+      'thẻ "Nên bắt đầu từ đây": tiêu đề serif 16, nằm dưới dải ảnh',
+      (tester) async {
+        final repo = FakeWrMoodContentRepository()
+          ..seedContent([
+            fakeMoodContent(id: 'r1', mood: Mood.okay, title: 'Bài đầu'),
+          ]);
+
+        await _pump(tester, _wrap(moodContent: repo));
+
+        final title = tester.widget<Text>(find.text('Bài đầu'));
+        expect(title.style!.fontFamily, 'Lora');
+        expect(title.style!.fontSize, 16);
+        // Dải ảnh cao 112: chữ "THƯ VIỆN" bắt đầu ở 118, dưới dải.
+        expect(tester.getTopLeft(find.text('THƯ VIỆN')).dy, greaterThan(112));
+      },
+    );
 
     testWidgets('thư viện rỗng thì nói thẳng, không hiện khung trống', (
       tester,
@@ -438,6 +456,45 @@ void main() {
       expect(find.byKey(const Key('wr_reflect_band_happy')), findsOneWidget);
       expect(find.text('Của vui'), findsOneWidget);
       expect(find.text('Của ổn'), findsNothing);
+    });
+
+    testWidgets('mở từ Home thì nút lùi cũng về Thư viện (mockup Sprint 2)', (
+      tester,
+    ) async {
+      final repo = FakeWrMoodContentRepository()
+        ..seedContent([
+          fakeMoodContent(id: 'h1', mood: Mood.happy, title: 'Của vui'),
+        ]);
+
+      await _pump(
+        tester,
+        _wrap(moodContent: repo, initial: '/wr/mood-content/h1'),
+      );
+      await tester.tap(find.byKey(const Key('wr_mood_reader_back')));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(WrMoodLibraryScreen), findsOneWidget);
+      expect(find.text('Của vui'), findsOneWidget);
+    });
+
+    testWidgets('tiêu đề serif chữ thường 21; meta giữ chữ "phút đọc"', (
+      tester,
+    ) async {
+      final repo = FakeWrMoodContentRepository()
+        ..seedContent([fakeMoodContent(id: 'r1', mood: Mood.okay)]);
+
+      await _pump(
+        tester,
+        _wrap(moodContent: repo, initial: '/wr/mood-content/r1'),
+      );
+
+      final title = tester.widget<Text>(
+        find.byKey(const Key('wr_mood_reader_title')),
+      );
+      expect(title.style!.fontFamily, 'Lora');
+      expect(title.style!.fontSize, 21);
+      expect(title.style!.fontWeight, FontWeight.w400);
+      expect(find.text('Đọc · 3 phút đọc'), findsOneWidget);
     });
 
     testWidgets('nội dung nháp báo rõ chưa thu âm/biên tập', (tester) async {

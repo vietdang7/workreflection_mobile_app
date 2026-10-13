@@ -42,6 +42,9 @@ class _FailingCheckinRepo implements WrRepository {
   Future<List<DateTime>> getCheckinDates({int limit = 60}) =>
       _d.getCheckinDates(limit: limit);
   @override
+  Future<List<Checkin>> getRecentCheckins({int limit = 60}) =>
+      _d.getRecentCheckins(limit: limit);
+  @override
   Future<int> countCheckins() => _d.countCheckins();
   @override
   Future<Insight?> getLatestInsight() => _d.getLatestInsight();
@@ -133,6 +136,9 @@ class _FailingPracticeRepo implements WrRepository {
   @override
   Future<List<DateTime>> getCheckinDates({int limit = 60}) =>
       _d.getCheckinDates(limit: limit);
+  @override
+  Future<List<Checkin>> getRecentCheckins({int limit = 60}) =>
+      _d.getRecentCheckins(limit: limit);
   @override
   Future<int> countCheckins() => _d.countCheckins();
   @override

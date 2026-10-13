@@ -16,6 +16,7 @@
 import '../l10n/wr_tr.dart';
 import '../models/checkin.dart';
 import '../models/wr_content.dart';
+import '../models/wr_episode.dart';
 import 'wr_dominant_need.dart';
 import 'wr_repeated_situations.dart';
 import 'wr_situation_picker.dart';
@@ -217,4 +218,55 @@ StorySuggestion? suggestStory({
     minutes: readingMinutes(pick.storyContent),
     alreadyRead: readIds.contains(pick.storyId),
   );
+}
+
+// ---------------------------------------------------------------------------
+// "Lần gần nhất bạn thấy như vậy"
+// ---------------------------------------------------------------------------
+
+/// Một dòng người dùng tự viết, kèm ngày (giờ Việt Nam, chỉ phần ngày).
+typedef LastWrittenLine = ({String text, DateTime date});
+
+/// Dòng chính người dùng đã viết ở lần nhìn lại gần nhất mà hôm đó họ check-in
+/// CÙNG cảm xúc [mood] (mockup Sprint 2 `lastEntryForMood`).
+///
+/// Không phải số liệu hệ thống đếm được: là chữ của chính họ, ở bước kể lại
+/// khoảnh khắc (`notes['explore']`). Chip tình huống ở bước 0 là chữ của app,
+/// nên không lấy.
+///
+/// Episode không lưu cảm xúc, nên cảm xúc của một lần nhìn lại là cảm xúc của
+/// lần check-in CÙNG NGÀY (giờ Việt Nam). `wr_checkins` mỗi ngày một dòng, đổi
+/// cảm xúc trong ngày là ghi đè, nên đây là cảm xúc chốt cuối của ngày đó.
+///
+/// Bỏ qua các lần nhìn lại của chính hôm nay: khối này nói về "một ngày giống
+/// hôm nay", không phải đọc lại điều người dùng vừa viết xong.
+///
+/// Không có thì trả null — khối biến mất (WXS Orch. Inv.5), không bịa câu mẫu.
+LastWrittenLine? lastWrittenForMood({
+  required List<ReflectionEpisode> episodes,
+  required List<Checkin> checkins,
+  required Mood mood,
+  required DateTime todayVn,
+}) {
+  String key(int y, int m, int d) => '$y-$m-$d';
+  final moodByDay = <String, Mood>{
+    for (final c in checkins)
+      key(c.checkinDate.year, c.checkinDate.month, c.checkinDate.day): c.mood,
+  };
+
+  final dated = <(DateTime, ReflectionEpisode)>[
+    for (final e in episodes)
+      if (e.openedAt case final at?)
+        (at.toUtc().add(const Duration(hours: 7)), e),
+  ]..sort((a, b) => b.$1.compareTo(a.$1));
+
+  for (final (vn, e) in dated) {
+    final day = DateTime(vn.year, vn.month, vn.day);
+    if (!day.isBefore(todayVn)) continue;
+    if (moodByDay[key(day.year, day.month, day.day)] != mood) continue;
+    final text = e.notes[ReflectionPattern.explore.dbValue]?.trim();
+    if (text == null || text.isEmpty) continue;
+    return (text: text, date: day);
+  }
+  return null;
 }

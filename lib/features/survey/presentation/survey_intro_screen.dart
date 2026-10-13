@@ -13,6 +13,7 @@ import '../../../core/data/wr_repository.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../profile/profile_providers.dart';
 import '../survey_providers.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 class SurveyIntroScreen extends ConsumerStatefulWidget {
   const SurveyIntroScreen({super.key});
@@ -143,7 +144,7 @@ class _SurveyIntroScreenState extends ConsumerState<SurveyIntroScreen> {
                       children: [
                         Expanded(
                           child: Text(
-                            l10n.surveyIntroTitle,
+                            wrKeepCompounds(l10n.surveyIntroTitle),
                             style: WrTextStyles.hLarge,
                           ),
                         ),
@@ -160,7 +161,7 @@ class _SurveyIntroScreenState extends ConsumerState<SurveyIntroScreen> {
                       ],
                     ),
                     const SizedBox(height: 12),
-                    Text(l10n.surveyIntroBody, style: WrTextStyles.body),
+                    Text(wrKeepCompounds(l10n.surveyIntroBody), style: WrTextStyles.body),
                     const SizedBox(height: 28),
 
                     // Position dropdown
@@ -172,7 +173,7 @@ class _SurveyIntroScreenState extends ConsumerState<SurveyIntroScreen> {
                           .map(
                             (o) => DropdownMenuItem(
                               value: o.value,
-                              child: Text(o.label, style: WrTextStyles.body),
+                              child: Text(wrKeepCompounds(o.label), style: WrTextStyles.body),
                             ),
                           )
                           .toList(),
@@ -189,7 +190,7 @@ class _SurveyIntroScreenState extends ConsumerState<SurveyIntroScreen> {
                           .map(
                             (o) => DropdownMenuItem(
                               value: o.value,
-                              child: Text(o.label, style: WrTextStyles.body),
+                              child: Text(wrKeepCompounds(o.label), style: WrTextStyles.body),
                             ),
                           )
                           .toList(),
@@ -206,7 +207,7 @@ class _SurveyIntroScreenState extends ConsumerState<SurveyIntroScreen> {
                           .map(
                             (o) => DropdownMenuItem(
                               value: o.value,
-                              child: Text(o.label, style: WrTextStyles.body),
+                              child: Text(wrKeepCompounds(o.label), style: WrTextStyles.body),
                             ),
                           )
                           .toList(),
@@ -223,7 +224,7 @@ class _SurveyIntroScreenState extends ConsumerState<SurveyIntroScreen> {
                           .map(
                             (o) => DropdownMenuItem(
                               value: o.value,
-                              child: Text(o.label, style: WrTextStyles.body),
+                              child: Text(wrKeepCompounds(o.label), style: WrTextStyles.body),
                             ),
                           )
                           .toList(),
@@ -240,7 +241,7 @@ class _SurveyIntroScreenState extends ConsumerState<SurveyIntroScreen> {
                           .map(
                             (o) => DropdownMenuItem(
                               value: o.value,
-                              child: Text(o.label, style: WrTextStyles.body),
+                              child: Text(wrKeepCompounds(o.label), style: WrTextStyles.body),
                             ),
                           )
                           .toList(),
@@ -278,7 +279,7 @@ class _BadgeChip extends StatelessWidget {
         borderRadius: BorderRadius.circular(100),
       ),
       child: Text(
-        label,
+        wrKeepCompounds(label),
         style: TextStyle(
           fontSize: 12.5,
           fontWeight: FontWeight.w700,
@@ -311,7 +312,7 @@ class _DropdownField<T> extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          wrKeepCompounds(label),
           style: WrTextStyles.body.copyWith(
             color: WrColors.muted,
             fontSize: 13.5,
@@ -329,7 +330,7 @@ class _DropdownField<T> extends StatelessWidget {
               isExpanded: true,
               value: value,
               hint: Text(
-                hint,
+                wrKeepCompounds(hint),
                 style: WrTextStyles.body.copyWith(color: WrColors.muted),
               ),
               items: items,

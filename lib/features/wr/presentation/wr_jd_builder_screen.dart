@@ -165,7 +165,7 @@ class _WrJdBuilderScreenState extends ConsumerState<WrJdBuilderScreen> {
           elevation: 0,
           foregroundColor: WrColors.navy,
           title: Text(
-            tr('Cùng tạo JD của bạn', 'Let us build your JD'),
+            wrKeepCompounds(tr('Cùng tạo JD của bạn', 'Let us build your JD')),
             style: TextStyle(
               fontSize: 17,
               fontWeight: FontWeight.w700,
@@ -183,7 +183,7 @@ class _WrJdBuilderScreenState extends ConsumerState<WrJdBuilderScreen> {
                     WrEyebrow(day.eyebrow.toUpperCase()),
                     const SizedBox(height: 8),
                     Text(
-                      day.title,
+                      wrKeepCompounds(day.title),
                       style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.w700,
@@ -220,7 +220,7 @@ class _WrJdBuilderScreenState extends ConsumerState<WrJdBuilderScreen> {
                     if (_error != null) ...[
                       const SizedBox(height: 12),
                       Text(
-                        _error!,
+                        wrKeepCompounds(_error!),
                         key: const Key('wr_jd_error'),
                         style: const TextStyle(
                           fontSize: 13.5,
@@ -253,12 +253,12 @@ class _WrJdBuilderScreenState extends ConsumerState<WrJdBuilderScreen> {
                           elevation: 0,
                         ),
                         child: Text(
-                          isLast
+                          wrKeepCompounds(isLast
                               ? tr(
                                   'Hoàn tất, lưu vào hồ sơ',
                                   'Finish and save to my profile',
                                 )
-                              : tr('Lưu và tiếp tục', 'Save and continue'),
+                              : tr('Lưu và tiếp tục', 'Save and continue')),
                           style: const TextStyle(
                             fontSize: 16.5,
                             fontWeight: FontWeight.w600,
@@ -270,10 +270,10 @@ class _WrJdBuilderScreenState extends ConsumerState<WrJdBuilderScreen> {
                       key: const Key('wr_jd_pause'),
                       onPressed: _busy ? null : _pauseAndLeave,
                       child: Text(
-                        tr(
+                        wrKeepCompounds(tr(
                           'Dừng ở đây, làm tiếp sau',
                           'Stop here, carry on later',
-                        ),
+                        )),
                         style: TextStyle(
                           fontSize: 15.5,
                           color: WrColors.muted,
@@ -469,7 +469,7 @@ class _CompletionBanner extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            tr('HOÀN TẤT', 'DONE'),
+            wrKeepCompounds(tr('HOÀN TẤT', 'DONE')),
             style: TextStyle(
               fontSize: 12.5,
               fontWeight: FontWeight.w700,

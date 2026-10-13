@@ -12,7 +12,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/data/wr_content_repository.dart';
 import '../../../core/data/wr_intelligence_repository.dart';
 import '../../../core/l10n/wr_tr.dart';
-import '../../../core/logic/wr_career_memory_rules.dart' show kMilestoneBehavior;
+import '../../../core/logic/wr_career_memory_rules.dart'
+    show kMilestoneBehavior;
 import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_intelligence.dart';
@@ -51,9 +52,6 @@ Future<PracticeStepCompletion?> completePracticeStep({
   if (userId == null) return null;
   final repo = ref.read(wrIntelligenceRepositoryProvider);
   final contentRepo = ref.read(wrContentRepositoryProvider);
-  final entitlement =
-      ref.read(wrEntitlementProvider).valueOrNull ??
-      WrEntitlement(plan: WrPlan.free);
 
   final stepTitle = allSteps
       .where((s) => s.stepId == stepId)
@@ -117,39 +115,11 @@ Future<PracticeStepCompletion?> completePracticeStep({
     }
   }
 
-  // Xong giai đoạn làm quen = xong mọi bước NGƯỜI NÀY MỞ ĐƯỢC, không phải mọi
-  // bước tồn tại.
-  //
-  // Cả 13 chủ đề đều khoá bước "Chuyển hóa". Nếu đòi đủ ba bước thì người dùng
-  // miễn phí dừng ở bước 2 vĩnh viễn, mà nút "Tôi vừa thực hành điều này hôm
-  // nay" lại chỉ mở sau khi khép giai đoạn làm quen — nghĩa là họ kẹt ở 2/5 và
-  // KHÔNG BAO GIỜ hình thành được kỹ năng nào. Cái bị khoá ở đó là việc ghi
-  // nhận, trong khi ranh giới của mình là "ghi nhận miễn phí, diễn giải mới
-  // Premium". Bước "Chuyển hóa" vẫn khoá; chỉ có đường đi tiếp là mở.
-  final reachable = allSteps
-      .where(
-        (s) => entitlement.canAccessPracticeStep(isPremiumStep: s.isPremium),
-      )
-      .map((s) => s.stepId)
-      .toSet();
-  final hasCompletedAll =
-      reachable.isNotEmpty && reachable.every(newCompleted.contains);
-
-  // `completedAt != null` là cái mốc khép giai đoạn làm quen. Đã khép rồi thì
-  // thôi — nâng cấp lên Premium xong đi nốt bước "Chuyển hóa" không được phép
-  // sinh thêm một dòng "đã hoàn thành chủ đề" thứ hai trong Hành trình.
-  if (hasCompletedAll && enrollment.completedAt == null) {
-    await repo.completeTheme(userId: userId, themeId: theme.themeId);
-    await contentRepo.insertMemoryEvent(
-      CareerMemoryEvent(
-        id: '${DateTime.now().millisecondsSinceEpoch}t',
-        userId: userId,
-        behavior: 'practice_theme_done',
-        themeId: theme.themeId,
-        reflectionText: theme.title,
-      ),
-    );
-  }
+  // Hết bốn bước KHÔNG tự khép chủ đề nữa (script Sprint 2 `moveToKeep`):
+  // màn chủ đề hiện thẻ "Hết một vòng" và người dùng tự bấm "Đưa vào phần duy
+  // trì" — xem [movePracticeThemeToKeep]. "Hết" vẫn là hết mọi bước NGƯỜI NÀY
+  // MỞ ĐƯỢC (bước 4 khoá Premium), tính ở màn chủ đề bằng
+  // [practiceReachableDone].
 
   // Mockup v47: lần ĐẦU thử một bước của chủ đề là một Cột mốc — sự thật đã
   // xảy ra, không phải kế hoạch.
@@ -171,18 +141,8 @@ Future<PracticeStepCompletion?> completePracticeStep({
     }
   }
 
-  // Cách đã "lưu để thử" xong nhiệm vụ của nó.
-  if (enrollment.pendingChoice != null) {
-    try {
-      await repo.setPendingChoice(
-        userId: userId,
-        themeId: theme.themeId,
-        choice: null,
-      );
-    } catch (_) {
-      /* best-effort */
-    }
-  }
+  // `pending_choice` giữ lại sau khi thử: đó là cách đã dùng ở bước 3, màn
+  // chủ đề cần nó cho dòng "Thử: ‹cách›" (script `practiceDetail`).
 
   ref.invalidate(practiceEnrollmentsProvider);
   ref.invalidate(practiceMemoryEventsProvider);
@@ -200,11 +160,11 @@ Future<PracticeStepCompletion?> completePracticeStep({
   return result;
 }
 
-/// Nhãn giai đoạn theo thứ tự bước — mockup v47: Nhận diện → Phần của tôi →
-/// Chọn một cách → Mang về. Nhãn "Chuyển hoá" đã bỏ hẳn (migration
+/// Nhãn giai đoạn theo thứ tự bước — script Sprint 2: Nhận diện → Phần của
+/// tôi → Chọn một cách → Câu hỏi cho lần sau. Nhãn "Chuyển hoá" đã bỏ hẳn (migration
 /// 20261006120000 chuyển cả thư viện sang 4 bước).
-String? practiceStageTag(int stepOrder) => practiceStageLabel(stepOrder)
-    ?.toUpperCase();
+String? practiceStageTag(int stepOrder) =>
+    practiceStageLabel(stepOrder)?.toUpperCase();
 
 /// Cùng bốn giai đoạn nhưng viết như trong câu, không phải nhãn in hoa.
 ///
@@ -214,6 +174,71 @@ String? practiceStageLabel(int stepOrder) => switch (stepOrder) {
   1 => tr('Nhận diện', 'Notice'),
   2 => tr('Phần của tôi', 'Your part'),
   3 => tr('Chọn một cách', 'Pick one way'),
-  4 => tr('Mang về', 'Take it with you'),
+  4 => tr('Câu hỏi cho lần sau', 'A question for next time'),
   _ => null,
 };
+
+/// Đã đi hết mọi bước người này MỞ ĐƯỢC của chủ đề chưa.
+///
+/// Bước 4 khoá Premium: người dùng miễn phí đi hết ba bước đầu là hết một vòng
+/// của họ, nếu không thì họ kẹt vĩnh viễn và không bao giờ vào được phần duy
+/// trì (ranh giới là "ghi nhận miễn phí, diễn giải mới Premium").
+bool practiceReachableDone({
+  required List<PracticeStep> steps,
+  required List<String> completed,
+  required WrEntitlement entitlement,
+}) {
+  final reachable = [
+    for (final s in steps)
+      if (entitlement.canAccessPracticeStep(isPremiumStep: s.isPremium))
+        s.stepId,
+  ];
+  return reachable.isNotEmpty && reachable.every(completed.contains);
+}
+
+/// Đưa một chủ đề đã đi hết bốn bước vào phần duy trì (script `moveToKeep`).
+///
+/// `completed_at` là mốc khép giai đoạn làm quen: từ đây chủ đề nằm trong
+/// "Đang duy trì", không chiếm suất chủ đề đang làm, và bộ đếm kỹ năng coi như
+/// đã qua phần làm quen. Ghi kèm một Cột mốc "Hết một vòng: ‹chủ đề›" vào
+/// Career Memory. Không gắn `theme_id` cho cột mốc này: Hành trình đọc cột mốc
+/// có `theme_id` là "Lần đầu thử một cách khác", nên tiêu đề đi trong chữ.
+///
+/// Trả về false khi không ghi được, để màn gọi giữ nguyên nút cho người dùng
+/// thử lại.
+Future<bool> movePracticeThemeToKeep({
+  required WidgetRef ref,
+  required PracticeTheme theme,
+  required PracticeEnrollment enrollment,
+}) async {
+  final userId = ref.read(currentUserIdProvider);
+  if (userId == null) return false;
+  if (enrollment.completedAt != null) return true;
+  try {
+    await ref
+        .read(wrIntelligenceRepositoryProvider)
+        .completeTheme(userId: userId, themeId: theme.themeId);
+  } catch (_) {
+    return false;
+  }
+  try {
+    await ref
+        .read(wrContentRepositoryProvider)
+        .insertMemoryEvent(
+          CareerMemoryEvent(
+            id: '${DateTime.now().millisecondsSinceEpoch}k',
+            userId: userId,
+            behavior: kMilestoneBehavior,
+            reflectionText: tr(
+              'Hết một vòng: ${theme.title}',
+              'One full round: ${theme.title}',
+            ),
+          ),
+        );
+  } catch (_) {
+    // Chủ đề đã sang duy trì; thiếu một dòng ký ức không đáng chặn người dùng.
+  }
+  ref.invalidate(practiceEnrollmentsProvider);
+  ref.invalidate(practiceMemoryEventsProvider);
+  return true;
+}

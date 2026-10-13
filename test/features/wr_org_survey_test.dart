@@ -59,6 +59,10 @@ Widget _wrap(
         builder: (_, __) => const WrOrgSurveyFlowScreen(),
       ),
       GoRoute(
+        path: '/profile',
+        builder: (_, __) => const Scaffold(body: Text('PROFILE')),
+      ),
+      GoRoute(
         path: '/wr/org-survey/result',
         builder: (_, s) => WrOrgSurveyResultScreen(
           response: s.extra is OrgSurveyResponse
@@ -85,7 +89,7 @@ Widget _wrap(
 }
 
 Future<void> _pump(WidgetTester tester, Widget app) async {
-  tester.view.physicalSize = const Size(1080, 3200);
+  tester.view.physicalSize = const Size(1080, 4400);
   tester.view.devicePixelRatio = 2.0;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(app);
@@ -123,6 +127,31 @@ void main() {
       );
       expect(find.textContaining('Không bắt buộc'), findsOneWidget);
       expect(find.textContaining('ngừng tham gia'), findsOneWidget);
+    });
+
+    // Script `screenEsiInfo`.
+    testWidgets('câu mở đầu, dải "Nhận ngay" và nút Để sau đúng script', (
+      tester,
+    ) async {
+      await _pump(tester, _wrap(FakeWrOrgSurveyRepository()));
+
+      expect(
+        find.textContaining(
+          'Xong ngay, bạn sẽ thấy kết quả của mình so với mặt bằng chung ẩn '
+          'danh của những người khác, trước khi bất kỳ ai khác thấy được điều '
+          'đó.',
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.text(
+          'Nhận ngay: bản so sánh cá nhân sau khi hoàn tất, khoảng 5 phút',
+        ),
+        findsOneWidget,
+      );
+      await tester.tap(find.byKey(const Key('wr_org_survey_later')));
+      await tester.pumpAndSettle();
+      expect(find.text('PROFILE'), findsOneWidget);
     });
 
     testWidgets('số câu đếm từ bảng hỏi, không ghi cứng', (tester) async {
@@ -319,6 +348,26 @@ void main() {
 
   // -------------------------------------------------------------------------
   group('Màn kết quả', () {
+    // Script `screenEsiResult`: lời cảm ơn + nút "Về Hồ sơ".
+    testWidgets('cảm ơn đã đóng góp, nút Về Hồ sơ về đúng Hồ sơ', (
+      tester,
+    ) async {
+      final repo = FakeWrOrgSurveyRepository();
+      await _pump(tester, _wrap(repo, initial: '/wr/org-survey/flow'));
+      await _answerEverything(tester, 5);
+
+      expect(
+        find.textContaining('Cảm ơn bạn đã đóng góp.'),
+        findsOneWidget,
+      );
+      final back = find.byKey(const Key('wr_org_survey_back_to_profile'));
+      await tester.ensureVisible(back);
+      await tester.pumpAndSettle();
+      await tester.tap(back);
+      await tester.pumpAndSettle();
+      expect(find.text('PROFILE'), findsOneWidget);
+    });
+
     testWidgets('CHƯA đủ mẫu thì không vẽ vạch so sánh và nói thẳng vì sao', (
       tester,
     ) async {

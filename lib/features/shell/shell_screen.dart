@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/l10n/wr_tr.dart';
 import '../../core/theme/wr_colors.dart';
+import '../../core/widgets/wr_app_background.dart';
 import '../../l10n/app_localizations.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 // ---------------------------------------------------------------------------
 // Shell — hosts the 4-tab StatefulShellRoute.indexedStack
@@ -19,38 +21,57 @@ class ShellScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: WrColors.pageBg,
-      // Bong bóng trò chuyện, BẬT LẠI 2026-08-03.
-      //
-      // Khách tắt nó ngày 2026-07-30 ("bỏ cái ô chatbot giúp tôi, chúng ta sẽ
-      // làm cái này sau") vì lúc đó chạm vào chỉ ra một ô hỏi một chiều, câu
-      // trả lời hẹn gửi qua email. Giờ phía sau đã là hội thoại thật nên lối
-      // vào có lý do tồn tại.
-      //
-      // Yêu cầu gốc họp 2026-07-29, giữ nguyên: nổi trên MỌI tab, "nó sẽ hiển
-      // thị trên mọi trang luôn chứ không riêng trang hành trình".
-      body: Stack(
-        children: [
-          navigationShell,
-          // Không dùng `bottom: 18` trần: máy có thanh cử chỉ dưới đáy sẽ đè
-          // lên bong bóng. `viewPadding` chứ không phải `padding` — Scaffold đã
-          // trừ phần thanh tab khỏi `padding`, đọc nhầm cái đó thì bong bóng
-          // tụt xuống đúng chỗ vừa trừ.
-          Positioned(
-            right: 18,
-            bottom: 18 + MediaQuery.of(context).viewPadding.bottom,
-            child: const WrAskBubble(),
+    return WrAppBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        // Bong bóng trò chuyện, BẬT LẠI 2026-08-03.
+        //
+        // Khách tắt nó ngày 2026-07-30 ("bỏ cái ô chatbot giúp tôi, chúng ta sẽ
+        // làm cái này sau") vì lúc đó chạm vào chỉ ra một ô hỏi một chiều, câu
+        // trả lời hẹn gửi qua email. Giờ phía sau đã là hội thoại thật nên lối
+        // vào có lý do tồn tại.
+        //
+        // Yêu cầu gốc họp 2026-07-29, giữ nguyên: nổi trên MỌI tab, "nó sẽ hiển
+        // thị trên mọi trang luôn chứ không riêng trang hành trình".
+        body: navigationShell,
+        // `.fab-chat { right: 18px; bottom: 54px }` trên thanh tab cao 72: đáy
+        // bong bóng đè lên mép trên thanh tab 18px. Đặt trong Stack của body thì
+        // phần đè đó bị cắt và không bấm được, nên đi đường FAB của Scaffold
+        // (vẽ trên thanh tab, nhận chạm) với một vị trí cố định riêng.
+        floatingActionButton: const WrAskBubble(),
+        floatingActionButtonLocation: const _AskBubbleLocation(),
+        floatingActionButtonAnimator: FloatingActionButtonAnimator.noAnimation,
+        bottomNavigationBar: WrTabBar(
+          currentIndex: navigationShell.currentIndex,
+          onTap: (index) => navigationShell.goBranch(
+            index,
+            initialLocation: index == navigationShell.currentIndex,
           ),
-        ],
-      ),
-      bottomNavigationBar: WrTabBar(
-        currentIndex: navigationShell.currentIndex,
-        onTap: (index) => navigationShell.goBranch(
-          index,
-          initialLocation: index == navigationShell.currentIndex,
         ),
       ),
+    );
+  }
+}
+
+/// Vị trí bong bóng: cách mép phải 18, đáy chạm mép trên thanh tab.
+///
+/// Script đè 18px xuống thanh tab, nhưng trên máy thật (cỡ chữ 1.15, 13/10)
+/// phần đè che mất icon tab Hành trình, nên không đè nữa.
+///
+/// `contentBottom` là mép trên thanh tab (đã gồm thanh cử chỉ của máy), nên
+/// bong bóng không bao giờ nằm dưới vùng cử chỉ.
+class _AskBubbleLocation extends FloatingActionButtonLocation {
+  const _AskBubbleLocation();
+
+  static const double _right = 18;
+  static const double _overlap = 0;
+
+  @override
+  Offset getOffset(ScaffoldPrelayoutGeometry g) {
+    final size = g.floatingActionButtonSize;
+    return Offset(
+      g.scaffoldSize.width - _right - size.width,
+      g.contentBottom + _overlap - size.height,
     );
   }
 }
@@ -58,9 +79,8 @@ class ShellScreen extends StatelessWidget {
 // ---------------------------------------------------------------------------
 // Bong bóng hỏi — lối vào ô hỏi tự do về hành trình nghề nghiệp.
 //
-// Nằm ở Stack của shell chứ không phải `floatingActionButton`: FAB của Scaffold
-// sẽ bị thanh tab đẩy lên và đổi chỗ theo bàn phím, còn đây phải luôn ở đúng
-// một chỗ trên cả bốn tab.
+// Là `floatingActionButton` của shell với vị trí riêng [_AskBubbleLocation]:
+// luôn ở đúng một chỗ trên cả bốn tab, đè mép trên thanh tab như mockup.
 //
 // Cố tình nhỏ và không có nhãn chữ. Trước 2026-08-05 bong bóng còn là nền navy
 // vì được xem là lối vào phụ; khách chốt đổi sang Human Coral để trợ lý phản
@@ -98,9 +118,11 @@ class WrAskBubble extends StatelessWidget {
               BoxShadow(
                 // Bóng đổ theo đúng màu nền bong bóng. Giữ bóng navy dưới một
                 // khối coral sẽ ra một quầng tím bẩn ở rìa.
-                color: WrColors.coral.withValues(alpha: 0.28),
-                blurRadius: 16,
-                offset: const Offset(0, 6),
+                // `.fab-chat`: 0 10px 22px -6px rgba(255,104,89,.55).
+                color: WrColors.coral.withValues(alpha: 0.55),
+                blurRadius: 22,
+                spreadRadius: -6,
+                offset: const Offset(0, 10),
               ),
             ],
           ),
@@ -130,7 +152,10 @@ List<_TabDef> _buildTabs(AppLocalizations l10n) => [
   // Bốn icon của mockup: con mắt (quan sát) · bóng đèn (hiểu) · tia chớp
   // (hành động) · nhịp sóng (hành trình).
   _TabDef(icon: Icons.visibility_outlined, semanticsLabel: tr('Home', 'Home')),
-  _TabDef(icon: Icons.lightbulb_outline, semanticsLabel: tr('Hiểu', 'Understand')),
+  _TabDef(
+    icon: Icons.lightbulb_outline,
+    semanticsLabel: tr('Hiểu', 'Understand'),
+  ),
   _TabDef(icon: Icons.bolt_outlined, semanticsLabel: l10n.tabDevelop),
   _TabDef(icon: Icons.show_chart, semanticsLabel: l10n.tabJourney),
 ];
@@ -215,7 +240,7 @@ class WrTabItem extends StatelessWidget {
               child: FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text(
-                  semanticsLabel,
+                  wrKeepCompounds(semanticsLabel),
                   maxLines: 1,
                   style: TextStyle(
                     fontSize: 10.5,

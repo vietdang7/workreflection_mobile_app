@@ -188,14 +188,9 @@ Future<void> _pumpTall(WidgetTester tester, Widget widget) async {
   }
 }
 
-/// Chữ trên pill "Giai đoạn x/y" ở đầu màn chủ đề.
+/// Chữ tiến độ "n / tổng" cạnh tiêu đề "Bốn bước làm quen" (script Sprint 2).
 String? _progressPill(WidgetTester tester) => tester
-    .widget<Text>(
-      find.descendant(
-        of: find.byKey(const Key('wr_practice_theme_progress')),
-        matching: find.byType(Text),
-      ),
-    )
+    .widget<Text>(find.byKey(const Key('wr_practice_theme_progress')))
     .data;
 
 Future<void> _expandFirstJourneyEntry(WidgetTester tester) async {
@@ -323,24 +318,37 @@ void main() {
         findsOneWidget,
       );
 
-      // Khối Career Snapshot dựng ngay cả khi chưa có gì: cả hai cột đều là
-      // LỜI MỜI, không phải ổ khoá (Changelog CareerSnapshot §4). v47 để nó
-      // sau "Xem theo nhóm trải nghiệm", thu gọn sẵn — mở ra mới thấy.
-      final toggle = find.byKey(const Key('wr_discover_snapshot_toggle'));
-      await tester.ensureVisible(toggle);
-      await tester.pumpAndSettle();
-      await tester.tap(toggle);
-      await tester.pumpAndSettle();
+      // Script Sprint 2 bỏ khối Career Snapshot (và nút xổ của nó) khỏi tab;
+      // lời mời Self-Check đứng riêng, vẫn là LỜI MỜI chứ không phải ổ khoá.
       expect(
-        find.byKey(const Key('wr_discover_career_snapshot')),
-        findsOneWidget,
+        find.byKey(const Key('wr_discover_snapshot_toggle'), skipOffstage: false),
+        findsNothing,
       );
       // Hai khối cũ đã biến mất — đó là điều kiện để mâu thuẫn không quay lại.
       expect(
         find.byKey(const Key('wr_discover_career_health'), skipOffstage: false),
         findsNothing,
       );
-      expect(find.text('Làm Self-Check'), findsOneWidget);
+      final invite = find.byKey(
+        const Key('wr_discover_self_check_invite'),
+        skipOffstage: false,
+      );
+      expect(invite, findsOneWidget);
+      // Chưa làm lần nào: không có dòng "Lần gần nhất".
+      expect(
+        find.byKey(
+          const Key('wr_discover_self_check_progress'),
+          skipOffstage: false,
+        ),
+        findsNothing,
+      );
+      expect(
+        find.byKey(
+          const Key('wr_discover_self_check_start'),
+          skipOffstage: false,
+        ),
+        findsOneWidget,
+      );
     });
 
     testWidgets('không diễn giải gì khi chưa có dữ liệu', (tester) async {
@@ -376,33 +384,27 @@ void main() {
       );
     });
 
-    testWidgets(
-      'chưa có chủ đề nào trong thư viện thì nói WorkReflection sẽ đề xuất',
-      (tester) async {
-        await _pumpTall(tester, _wrap(const WrGrowthScreen()));
-
-        expect(
-          find.textContaining('Chưa có chủ đề nào đang thực hành'),
-          findsOneWidget,
-        );
-        // Chủ đề là thứ phần mềm chuẩn bị từ những gì người dùng đã nhìn lại
-        // (khách 2026-08-04) — không đẩy họ sang màn khác để tự tìm.
-        expect(
-          find.textContaining('WorkReflection sẽ đề xuất chủ đề'),
-          findsOneWidget,
-        );
-      },
-    );
-
-    testWidgets('empty card shows TRỌNG TÂM HIỆN TẠI eyebrow', (tester) async {
+    // Script Sprint 2 bỏ thẻ "TRỌNG TÂM HIỆN TẠI" / "WorkReflection sẽ đề
+    // xuất chủ đề": thư viện trống và chưa ghi danh thì khối "Đang làm quen"
+    // ẩn hẳn, các phần còn lại của tab vẫn dựng.
+    testWidgets('thư viện trống: không dựng khối Đang làm quen rỗng', (
+      tester,
+    ) async {
       await _pumpTall(tester, _wrap(const WrGrowthScreen()));
 
-      expect(find.textContaining('TRỌNG TÂM HIỆN TẠI'), findsOneWidget);
+      expect(tester.takeException(), isNull);
+      expect(find.text('ĐANG LÀM QUEN'), findsNothing);
+      expect(find.textContaining('TRỌNG TÂM HIỆN TẠI'), findsNothing);
+      expect(find.byKey(const Key('wr_growth_add_theme')), findsOneWidget);
+      expect(
+        find.byKey(const Key('wr_growth_context_docs_row')),
+        findsOneWidget,
+      );
     });
   });
 
   group('WrGrowthScreen — with themes (free user)', () {
-    testWidgets('thẻ chủ đề: nguồn, pill, tên, bước tiếp theo', (tester) async {
+    testWidgets('dòng chủ đề: tên và trạng thái bước', (tester) async {
       final intel = FakeWrIntelligenceRepository();
       intel.seedPracticeThemes([_theme()]);
       intel.seedPracticeSteps('pt-voice', [
@@ -419,15 +421,15 @@ void main() {
 
       await _pumpTall(tester, _wrap(const WrGrowthScreen(), intel: intel));
 
-      final card = find.byKey(const Key('wr_growth_theme_card_pt-voice'));
+      // Script Sprint 2 `rowLearn`: tên, "Chưa bắt đầu" / "Bước n / 4", bốn
+      // vạch — không còn nguồn, pill hay "Tiếp theo: …" của thẻ v47.
+      final card = find.byKey(const Key('wr_growth_theme_row_pt-voice'));
       expect(card, findsOneWidget);
       Finder inCard(String text) =>
           find.descendant(of: card, matching: find.text(text));
-      expect(inCard('Từ Reflection · 13/06'), findsOneWidget);
-      expect(inCard('Có thể bắt đầu'), findsOneWidget);
       expect(inCard('Dám lên tiếng'), findsOneWidget);
-      // Bỏ nhãn giai đoạn ở đầu tiêu đề bước.
-      expect(inCard('Tiếp theo: Quan sát'), findsOneWidget);
+      expect(inCard('Chưa bắt đầu'), findsOneWidget);
+      expect(find.textContaining('Tiếp theo:'), findsNothing);
       // Tiến độ dạng chữ của bản cũ đã bỏ.
       expect(find.textContaining('bước hoàn thành'), findsNothing);
       expect(find.text('CHỦ ĐỀ CỦA BẠN'), findsNothing);
@@ -456,7 +458,7 @@ void main() {
       expect(find.text('NHẬN DIỆN'), findsOneWidget);
       expect(find.text('PHẦN CỦA TÔI'), findsOneWidget);
       expect(find.text('CHỌN MỘT CÁCH'), findsOneWidget);
-      expect(_progressPill(tester), 'Giai đoạn 1/3');
+      expect(_progressPill(tester), '0 / 3');
     });
 
     testWidgets('bước đã xong có dấu tick, không còn nút bấm', (tester) async {
@@ -476,18 +478,15 @@ void main() {
         _wrap(const WrPracticeThemeScreen(themeId: 'pt-voice'), intel: intel),
       );
 
-      expect(_progressPill(tester), 'Giai đoạn 2/2');
+      expect(_progressPill(tester), '1 / 2');
       final row1 = find.byKey(const Key('wr_practice_step_pt-voice-1'));
       expect(
         find.descendant(of: row1, matching: find.byIcon(Icons.check)),
         findsOneWidget,
       );
-      // Đánh dấu không kèm ghi chú thì nói rõ là không có ghi chú.
+      // Script: bước đã thử thu lại một dòng, nhãn có hậu tố "· đã thử".
       expect(
-        find.descendant(
-          of: row1,
-          matching: find.text('Đã đánh dấu, bạn không ghi chú gì lần này.'),
-        ),
+        find.descendant(of: row1, matching: find.text('NHẬN DIỆN · ĐÃ THỬ')),
         findsOneWidget,
       );
       // Bước đã xong không còn nút bấm — không đánh dấu xong được hai lần.
@@ -497,10 +496,10 @@ void main() {
       );
     });
 
-    testWidgets('mọi bước chưa xong và chưa khoá đều đánh dấu được', (
+    testWidgets('chỉ bước đang làm đánh dấu được, bước sau chỉ một dòng', (
       tester,
     ) async {
-      // v47 bỏ ràng buộc làm tuần tự: thử bước nào trước cũng được.
+      // Script Sprint 2 `practiceDetail`: chỉ bước đang làm mở ra.
       final intel = FakeWrIntelligenceRepository();
       intel.seedPracticeThemes([_theme()]);
       intel.seedPracticeSteps('pt-voice', [
@@ -520,7 +519,7 @@ void main() {
       );
       expect(
         find.byKey(const Key('wr_practice_step_done_pt-voice-2')),
-        findsOneWidget,
+        findsNothing,
       );
       expect(find.text('Xong bước trước rồi mở tiếp'), findsNothing);
       expect(find.byKey(const Key('wr_practice_step_connector')), findsNothing);
@@ -556,13 +555,8 @@ void main() {
           reason: id,
         );
       }
-      // Bước đầu cũng là "Bước tiếp theo".
-      expect(
-        tester
-            .widget<Text>(find.byKey(const Key('wr_practice_next_step')))
-            .data,
-        'Nhận diện',
-      );
+      // Khối "Bước tiếp theo" của v47 đã bỏ (script không có).
+      expect(find.byKey(const Key('wr_practice_next_step')), findsNothing);
     });
 
     testWidgets('bước Premium với bản miễn phí hiện Premium · Mở khoá', (
@@ -630,12 +624,10 @@ void main() {
         find.byKey(const Key('wr_practice_step_done_pt-voice-3')),
         findsOneWidget,
       );
-      // Bước kế tiếp mở được nên có ba cách để chọn.
-      expect(find.byKey(const Key('wr_practice_option_try')), findsOneWidget);
     });
 
     testWidgets(
-      'no active theme shows empty invite card (not Practices section)',
+      'no active theme and empty library: no list, no Practices section',
       (tester) async {
         final intel = FakeWrIntelligenceRepository();
         // Seed no themes → no unenrolledThemes → old empty card shown
@@ -644,11 +636,8 @@ void main() {
 
         await _pumpTall(tester, _wrap(const WrGrowthScreen(), intel: intel));
 
-        // Thư viện rỗng → thẻ nói chưa có chủ đề nào, không dựng danh sách.
-        expect(
-          find.textContaining('Chưa có chủ đề nào đang thực hành'),
-          findsOneWidget,
-        );
+        // Thư viện rỗng → không dựng danh sách, không nút bắt đầu.
+        expect(find.text('ĐANG LÀM QUEN'), findsNothing);
         expect(find.text('Bắt đầu chủ đề'), findsNothing);
         expect(find.textContaining('PRACTICES HÔM NAY'), findsNothing);
       },
@@ -764,10 +753,6 @@ void main() {
         // Ghi chú hiện lại ngay trong hàng bước.
         final row1 = find.byKey(const Key('wr_practice_step_pt-voice-1'));
         expect(
-          find.descendant(of: row1, matching: find.text('Bạn đã ghi lại')),
-          findsOneWidget,
-        );
-        expect(
           find.descendant(
             of: row1,
             matching: find.text(
@@ -783,8 +768,10 @@ void main() {
       final intel = FakeWrIntelligenceRepository();
       final content = FakeWrContentRepository();
       intel.seedPracticeThemes([_theme()]);
+      // Hai bước: bước cuối không có "Để sau" (script: "Chưa có").
       intel.seedPracticeSteps('pt-voice', [
         _step(id: 'pt-voice-1', order: 1, title: 'Nhận diện'),
+        _step(id: 'pt-voice-2', order: 2, title: 'Phần của tôi'),
       ]);
       intel.seedEnrollments([_enrollment()]);
 
@@ -975,12 +962,11 @@ void main() {
   // dòng ("Premium · Mở khoá"), không còn khối khoá riêng
   // `wr_journey_memory_lock`.
   group('WrJourneyScreen — with events (free user)', () {
-    testWidgets('free: mốc tuần cũ bị khoá từng dòng, chạm vào mở paywall', (
+    testWidgets('free: phần xem trước không khoá theo tuần, chạm để mở ra', (
       tester,
     ) async {
-      // Khoá theo TUẦN (mockup v16 `!g.current && !isPremium`). Các mốc dưới
-      // đây đều thuộc tháng 7/2026 — quá khứ so với lúc chạy test — nên toàn bộ
-      // nằm ngoài tuần hiện tại và không chữ nào lọt ra ngoài paywall.
+      // Script `screenGrow`: phần xem trước KHÔNG khoá theo tuần — chỉ mở ra /
+      // thu lại. Khoá theo tuần nằm ở màn Career Memory đầy đủ.
       final content = FakeWrContentRepository();
       content.seedMemoryEvents(
         List.generate(
@@ -993,9 +979,6 @@ void main() {
         ),
       );
 
-      // Khối mời nằm DƯỚI dòng thời gian (mockup v16), mà ListView dựng lười —
-      // ở khung 600px mặc định nó chưa được dựng, `skipOffstage: false` cũng
-      // không tìm ra thứ chưa tồn tại. Cho khung cao để cả màn nằm trong tầm.
       tester.view.physicalSize = const Size(1080, 3000);
       tester.view.devicePixelRatio = 1.0;
       addTearDown(tester.view.reset);
@@ -1003,18 +986,13 @@ void main() {
       await tester.pumpWidget(_wrap(const WrJourneyScreen(), content: content));
       await tester.pumpAndSettle();
 
-      expect(
-        find.byKey(const Key('wr_journey_memory_lock'), skipOffstage: false),
-        findsNothing,
-      );
-      expect(find.text('Premium · Mở khoá'), findsNWidgets(3));
-      expect(find.text('Chạm để xem'), findsNothing);
-      // Con số tổng vẫn nói ra — đó là việc chính người dùng đã làm.
+      expect(find.text('Premium · Mở khoá'), findsNothing);
+      expect(find.text('Chạm để xem'), findsNWidgets(3));
       expect(find.text('3 ghi nhận đã lưu'), findsOneWidget);
 
       await tester.tap(find.byKey(const Key('wr_journey_timeline_0')));
       await tester.pumpAndSettle();
-      expect(find.text('Paywall'), findsOneWidget);
+      expect(find.text('Paywall'), findsNothing);
     });
 
     testWidgets('chưa có ký ức nào thì không dựng khối khoá rỗng', (
@@ -1141,27 +1119,25 @@ void main() {
       );
     }
 
-    testWidgets('shows Giai đoạn 1/2 when no steps completed', (tester) async {
+    testWidgets('0 / 2 khi chưa xong bước nào', (tester) async {
       await pumpWith(tester, const []);
-      expect(_progressPill(tester), 'Giai đoạn 1/2');
+      expect(_progressPill(tester), '0 / 2');
     });
 
-    testWidgets('shows Giai đoạn 2/2 when first step completed', (
-      tester,
-    ) async {
+    testWidgets('1 / 2 khi xong bước đầu', (tester) async {
       await pumpWith(tester, const ['pt-voice-1']);
-      expect(_progressPill(tester), 'Giai đoạn 2/2');
+      expect(_progressPill(tester), '1 / 2');
     });
 
-    testWidgets('kẹp ở 2/2 (không phải 3/2) khi đã xong mọi bước', (
+    testWidgets('2 / 2 khi đã xong mọi bước, kèm thẻ Hết một vòng', (
       tester,
     ) async {
       await pumpWith(tester, const ['pt-voice-1', 'pt-voice-2']);
 
-      // Đếm giai đoạn không được vượt tổng số bước.
-      expect(find.textContaining('3/2'), findsNothing);
-      expect(_progressPill(tester), 'Giai đoạn 2/2');
-      expect(find.byKey(const Key('wr_practice_all_done')), findsOneWidget);
+      // Đếm không được vượt tổng số bước.
+      expect(find.textContaining('3 / 2'), findsNothing);
+      expect(_progressPill(tester), '2 / 2');
+      expect(find.byKey(const Key('wr_practice_round_done')), findsOneWidget);
     });
   });
 
@@ -1187,11 +1163,10 @@ void main() {
           _wrap(const WrPracticeThemeScreen(themeId: 'pt-voice'), intel: intel),
         );
 
+        // Bước đang làm là order=1.
         expect(
-          tester
-              .widget<Text>(find.byKey(const Key('wr_practice_next_step')))
-              .data,
-          'Nhận diện',
+          find.byKey(const Key('wr_practice_step_done_pt-voice-1')),
+          findsOneWidget,
         );
         expect(
           tester
@@ -1229,13 +1204,7 @@ void main() {
           _wrap(const WrPracticeThemeScreen(themeId: 'pt-voice'), intel: intel),
         );
 
-        expect(
-          tester
-              .widget<Text>(find.byKey(const Key('wr_practice_next_step')))
-              .data,
-          'Thử nghiệm',
-        );
-        expect(_progressPill(tester), 'Giai đoạn 2/3');
+        expect(_progressPill(tester), '1 / 3');
         expect(
           find.byKey(const Key('wr_practice_step_done_pt-voice-1')),
           findsNothing,
@@ -1256,7 +1225,7 @@ void main() {
       await tester.pumpWidget(_wrap(const WrPaywallScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('Mở khoá toàn bộ hành trình'), findsOneWidget);
+      expect(find.text('Mở khoá toàn bộ trí tuệ'), findsOneWidget);
     });
 
     testWidgets('ai_insight trigger shows correct headline', (tester) async {
@@ -1265,7 +1234,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Diễn giải theo thời gian'), findsOneWidget);
+      expect(find.text('AI Insight từ Career Memory'), findsOneWidget);
     });
 
     testWidgets('trial_end trigger shows correct headline', (tester) async {
@@ -1304,7 +1273,41 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Toàn bộ ký ức nghề nghiệp của bạn'), findsOneWidget);
+      expect(find.text('Xem toàn bộ Career Memory'), findsOneWidget);
+    });
+
+    // Script `screenPaywall`: hai trigger của Thực hành có tiêu đề riêng.
+    testWidgets('practice_limit và practice_step nói đúng phần vừa khoá', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _wrap(const WrPaywallScreen(trigger: PaywallTrigger.practiceLimit)),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Không giới hạn Thực hành'), findsOneWidget);
+      expect(
+        find.text('Theo đuổi bao nhiêu chủ đề phát triển tuỳ bạn.'),
+        findsOneWidget,
+      );
+
+      await tester.pumpWidget(
+        _wrap(const WrPaywallScreen(trigger: PaywallTrigger.practiceStep)),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Mở khoá bước cuối'), findsOneWidget);
+    });
+
+    // Bảng Free/Premium đúng script; số chủ đề Free khớp luật gói thật (2).
+    testWidgets('bảng tính năng Free/Premium đúng script', (tester) async {
+      await tester.pumpWidget(_wrap(const WrPaywallScreen()));
+      await tester.pumpAndSettle();
+
+      expect(find.text('Pattern cơ bản (đếm lặp lại)'), findsOneWidget);
+      expect(find.text('2 chủ đề Thực hành'), findsOneWidget);
+      expect(find.text('Diễn giải sâu Self-Check + xu hướng'), findsOneWidget);
+      expect(find.text('Career Memory đầy đủ'), findsOneWidget);
+      expect(find.text('3 chủ đề Thực hành'), findsNothing);
+      expect(find.byKey(const Key('wr_paywall_later')), findsOneWidget);
     });
 
     // Giá lấy từ `cc_products`, dòng `premium_mobile` — gói APP 499.000đ, KHÔNG
@@ -1471,32 +1474,29 @@ void main() {
       );
     });
 
-    testWidgets('shows 3 premium highlights', (tester) async {
-      await tester.pumpWidget(_wrap(const WrPaywallScreen()));
-      await tester.pumpAndSettle();
-
-      expect(find.text('Diễn giải sâu theo thời gian'), findsOneWidget);
-      expect(find.text('Career Pattern'), findsOneWidget);
-      expect(find.text('Truy cập không giới hạn'), findsOneWidget);
-      // Mục "Báo cáo chuyên sâu 49 câu" đã bỏ khỏi paywall.
-      expect(find.textContaining('Báo cáo chuyên sâu'), findsNothing);
-    });
-
-    testWidgets('shows free vs premium comparison table with 9 rows', (
+    // Script `screenPaywall` không có khối "Bạn nhận được" riêng — chỉ một
+    // bảng Free/Premium chín dòng.
+    testWidgets('không còn khối highlight, bảng đủ chín dòng của script', (
       tester,
     ) async {
       await tester.pumpWidget(_wrap(const WrPaywallScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('Story Reflection hàng ngày'), findsOneWidget);
-      expect(find.text('Check-in nhanh'), findsOneWidget);
-      expect(find.text('Career Memory Timeline'), findsOneWidget);
-      expect(find.text('15 câu hỏi phản chiếu'), findsOneWidget);
-      expect(find.text('3 chủ đề Thực hành'), findsOneWidget);
-      expect(find.text('AI Insight'), findsOneWidget);
-      expect(find.text('Career Pattern Analysis'), findsOneWidget);
-      expect(find.text('Career Benchmark'), findsOneWidget);
-      expect(find.text('Không giới hạn Thực hành'), findsOneWidget);
+      expect(find.text('Diễn giải sâu theo thời gian'), findsNothing);
+      expect(find.textContaining('Báo cáo chuyên sâu'), findsNothing);
+      for (final label in [
+        'Reflection hàng ngày',
+        'Pattern cơ bản (đếm lặp lại)',
+        'Self-Check (15 câu)',
+        '2 chủ đề Thực hành',
+        'AI Insight & Pattern nâng cao',
+        'Diễn giải sâu Self-Check + xu hướng',
+        'Cơ hội phát triển (Growth Intelligence)',
+        'Career Memory đầy đủ',
+        'Thực hành không giới hạn',
+      ]) {
+        expect(find.text(label), findsOneWidget, reason: label);
+      }
     });
 
     testWidgets('CTA button mở màn thanh toán', (tester) async {
@@ -1504,13 +1504,13 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.scrollUntilVisible(
-        find.text('Bắt đầu Premium →'),
+        find.text('Bắt đầu Premium, 499.000đ/năm'),
         200,
         scrollable: find.byType(Scrollable).last,
       );
       await tester.pumpAndSettle();
 
-      await tester.tap(find.text('Bắt đầu Premium →'));
+      await tester.tap(find.text('Bắt đầu Premium, 499.000đ/năm'));
       await tester.pumpAndSettle();
 
       expect(find.text('Màn thanh toán'), findsOneWidget);

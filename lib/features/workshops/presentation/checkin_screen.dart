@@ -13,6 +13,7 @@ import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
 import '../../../l10n/app_localizations.dart';
 import '../workshops_providers.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 class CheckinScreen extends ConsumerStatefulWidget {
   const CheckinScreen({super.key});
@@ -143,22 +144,22 @@ class _CheckinScreenState extends ConsumerState<CheckinScreen> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) => AlertDialog(
-        title: Text(l10n.wsConsentTitle),
-        content: Text(l10n.wsConsentBody),
+        title: Text(wrKeepCompounds(l10n.wsConsentTitle)),
+        content: Text(wrKeepCompounds(l10n.wsConsentBody)),
         actions: [
           TextButton(
             onPressed: () {
               Navigator.of(ctx).pop();
               record(false);
             },
-            child: Text(l10n.wsConsentDecline),
+            child: Text(wrKeepCompounds(l10n.wsConsentDecline)),
           ),
           TextButton(
             onPressed: () {
               Navigator.of(ctx).pop();
               record(true);
             },
-            child: Text(l10n.wsConsentAccept),
+            child: Text(wrKeepCompounds(l10n.wsConsentAccept)),
           ),
         ],
       ),
@@ -179,7 +180,7 @@ class _CheckinScreenState extends ConsumerState<CheckinScreen> {
       appBar: AppBar(
         backgroundColor: WrColors.pageBg,
         elevation: 0,
-        title: Text(l10n.wsCheckinTitle, style: WrTextStyles.hMedium),
+        title: Text(wrKeepCompounds(l10n.wsCheckinTitle), style: WrTextStyles.hMedium),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -212,7 +213,7 @@ class _CheckinScreenState extends ConsumerState<CheckinScreen> {
 
             // Hint text.
             Text(
-              l10n.wsCheckinScanHint,
+              wrKeepCompounds(l10n.wsCheckinScanHint),
               style: WrTextStyles.hMedium.copyWith(color: WrColors.dark),
               textAlign: TextAlign.center,
             ),
@@ -221,7 +222,7 @@ class _CheckinScreenState extends ConsumerState<CheckinScreen> {
 
             // Manual entry label.
             Text(
-              l10n.wsCheckinManualLabel,
+              wrKeepCompounds(l10n.wsCheckinManualLabel),
               style: const TextStyle(color: Colors.grey),
             ),
 
@@ -249,7 +250,7 @@ class _CheckinScreenState extends ConsumerState<CheckinScreen> {
                 backgroundColor: WrColors.coral,
                 foregroundColor: WrColors.navy,
               ),
-              child: Text(l10n.wsCheckinSubmit),
+              child: Text(wrKeepCompounds(l10n.wsCheckinSubmit)),
             ),
 
             const SizedBox(height: 16),
@@ -257,7 +258,7 @@ class _CheckinScreenState extends ConsumerState<CheckinScreen> {
             // Inline error.
             if (_errorMessage != null)
               Text(
-                _errorMessage!,
+                wrKeepCompounds(_errorMessage!),
                 key: const Key('checkin_error'),
                 style: const TextStyle(color: Colors.red),
                 textAlign: TextAlign.center,
@@ -266,7 +267,7 @@ class _CheckinScreenState extends ConsumerState<CheckinScreen> {
             // Inline success.
             if (_success)
               Text(
-                l10n.wsCheckinSuccess,
+                wrKeepCompounds(l10n.wsCheckinSuccess),
                 key: const Key('checkin_success'),
                 style: TextStyle(
                   color: Colors.green.shade700,

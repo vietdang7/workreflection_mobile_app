@@ -51,6 +51,8 @@ import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_user_guide.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/eyebrow.dart';
+import '../../../core/widgets/wr_app_background.dart';
+import '../../../core/widgets/wr_card.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 import '../../onboarding/intro_video_script.dart';
 import '../../onboarding/presentation/wr_intro_video_sheet.dart';
@@ -110,10 +112,11 @@ class _GuideScreenState extends State<GuideScreen> {
       sectionWidgets.add(const SizedBox(height: 10));
     }
 
-    return Scaffold(
-      backgroundColor: WrColors.pageBg,
-      body: SafeArea(
-        child: ListView(
+    return WrAppBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: SafeArea(
+          child: ListView(
           padding: const EdgeInsets.fromLTRB(24, 8, 24, 40),
           children: [
             if (GoRouter.maybeOf(context) != null && context.canPop())
@@ -133,7 +136,7 @@ class _GuideScreenState extends State<GuideScreen> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        tr('Quay lại', 'Back'),
+                        wrKeepCompounds(tr('Quay lại', 'Back')),
                         style: const TextStyle(
                           fontSize: 14.5,
                           fontWeight: FontWeight.w500,
@@ -147,7 +150,7 @@ class _GuideScreenState extends State<GuideScreen> {
             WrEyebrow(tr('HỒ SƠ', 'PROFILE')),
             const SizedBox(height: 8),
             Text(
-              tr('Hướng dẫn sử dụng', 'User guide'),
+              wrKeepCompounds(tr('Hướng dẫn sử dụng', 'User guide')),
               style: const TextStyle(
                 fontSize: 26,
                 fontWeight: FontWeight.w800,
@@ -187,6 +190,7 @@ class _GuideScreenState extends State<GuideScreen> {
           ],
         ),
       ),
+    ),
     );
   }
 }
@@ -395,7 +399,7 @@ class _GuideVideoShowcaseState extends State<_GuideVideoShowcase> {
                           ),
                           const SizedBox(width: 6),
                           Text(
-                            current.tabLabel.toUpperCase(),
+                            wrKeepCompounds(current.tabLabel.toUpperCase()),
                             style: const TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.w700,
@@ -440,7 +444,7 @@ class _GuideVideoShowcaseState extends State<_GuideVideoShowcase> {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Text(
-                          current.heroTitle,
+                          wrKeepCompounds(current.heroTitle),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
@@ -452,7 +456,7 @@ class _GuideVideoShowcaseState extends State<_GuideVideoShowcase> {
                         ),
                         const SizedBox(height: 3),
                         Text(
-                          current.subtitle,
+                          wrKeepCompounds(current.subtitle),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: TextStyle(
@@ -546,7 +550,7 @@ class _ChapterItem extends StatelessWidget {
                 ),
                 alignment: Alignment.center,
                 child: Text(
-                  topic.number,
+                  wrKeepCompounds(topic.number),
                   style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
@@ -561,7 +565,7 @@ class _ChapterItem extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      topic.chapterTitle,
+                      wrKeepCompounds(topic.chapterTitle),
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: selected
@@ -572,7 +576,7 @@ class _ChapterItem extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      topic.subtitle,
+                      wrKeepCompounds(topic.subtitle),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
@@ -655,7 +659,7 @@ class _AssistantCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      kGuideChatTitle,
+                      wrKeepCompounds(kGuideChatTitle),
                       style: const TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w800,
@@ -665,7 +669,7 @@ class _AssistantCard extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      kGuideChatSubtitle,
+                      wrKeepCompounds(kGuideChatSubtitle),
                       style: const TextStyle(
                         fontSize: 13,
                         color: WrColors.text3,
@@ -721,7 +725,7 @@ class _AssistantCard extends StatelessWidget {
                     border: Border.all(color: WrColors.line),
                   ),
                   child: Text(
-                    '“$q”',
+                    wrKeepCompounds('“$q”'),
                     style: const TextStyle(
                       fontSize: 12.5,
                       color: WrColors.text2,
@@ -750,7 +754,7 @@ class _AssistantCard extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    kGuideChatCta,
+                    wrKeepCompounds(kGuideChatCta),
                     style: const TextStyle(
                       fontSize: 14.5,
                       fontWeight: FontWeight.w600,
@@ -808,7 +812,7 @@ class _ClosingCta extends StatelessWidget {
             const SizedBox(width: 12),
             Expanded(
               child: Text(
-                kGuideClosingCta,
+                wrKeepCompounds(kGuideClosingCta),
                 style: const TextStyle(
                   fontSize: 14.5,
                   fontWeight: FontWeight.w600,
@@ -847,13 +851,8 @@ class _SectionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: WrColors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: WrColors.line),
-      ),
+    return WrCard(
+      padding: EdgeInsets.zero,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -874,7 +873,7 @@ class _SectionCard extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          section.title,
+                          wrKeepCompounds(section.title),
                           style: const TextStyle(
                             fontSize: 15.5,
                             fontWeight: FontWeight.w700,
@@ -887,7 +886,7 @@ class _SectionCard extends StatelessWidget {
                         if (!expanded) ...[
                           const SizedBox(height: 3),
                           Text(
-                            section.summary,
+                            wrKeepCompounds(section.summary),
                             style: const TextStyle(
                               fontSize: 12.5,
                               color: WrColors.text3,
@@ -989,7 +988,7 @@ class _GuideBlockView extends StatelessWidget {
     // widget thì compiler chặn ngay, không để lại khoảng trống trên màn.
     return switch (block) {
       WrGuideHeading(:final text) => Text(
-        text,
+        wrKeepCompounds(text),
         style: const TextStyle(
           fontSize: 14.5,
           fontWeight: FontWeight.w700,
@@ -1080,7 +1079,7 @@ class _GuideBlockView extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item.question,
+                    wrKeepCompounds(item.question),
                     style: const TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
@@ -1170,7 +1169,7 @@ class _BulletRow extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                item.label,
+                wrKeepCompounds(item.label),
                 style: const TextStyle(
                   fontSize: 13.5,
                   fontWeight: FontWeight.w700,
@@ -1216,7 +1215,7 @@ class _StepRow extends StatelessWidget {
           ),
           child: Center(
             child: Text(
-              '$index',
+              wrKeepCompounds('$index'),
               style: const TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
@@ -1235,7 +1234,7 @@ class _StepRow extends StatelessWidget {
                 children: [
                   Flexible(
                     child: Text(
-                      step.title,
+                      wrKeepCompounds(step.title),
                       style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w700,
@@ -1260,7 +1259,7 @@ class _StepRow extends StatelessWidget {
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
-                        tr('bỏ qua được', 'skippable'),
+                        wrKeepCompounds(tr('bỏ qua được', 'skippable')),
                         style: const TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,

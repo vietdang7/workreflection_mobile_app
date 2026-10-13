@@ -15,6 +15,7 @@ import '../../../core/theme/wr_colors.dart';
 import '../../video_report/presentation/scenes/video_scene_frame.dart';
 import '../intro_video_script.dart';
 import 'wr_logo.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 /// Bề ngang thiết kế của nội dung cảnh trước khi thu cho vừa khung.
 const double _kDesignWidth = 340;
@@ -106,7 +107,7 @@ class _Title extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      text,
+      wrKeepCompounds(text),
       textAlign: TextAlign.center,
       style: const TextStyle(
         fontSize: 24,
@@ -182,7 +183,7 @@ class _TabChip extends StatelessWidget {
           Icon(icon, size: 17, color: active ? WrColors.white : WrColors.navy),
           const SizedBox(width: 6),
           Text(
-            label,
+            wrKeepCompounds(label),
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
@@ -210,7 +211,7 @@ class _NumberDot extends StatelessWidget {
         shape: BoxShape.circle,
       ),
       child: Text(
-        '$n',
+        wrKeepCompounds('$n'),
         style: const TextStyle(
           color: WrColors.white,
           fontWeight: FontWeight.w700,
@@ -241,7 +242,7 @@ class _Welcome extends StatelessWidget {
           progress: progress,
           from: 0.15,
           child: Text(
-            kIntroWelcomeTagline,
+            wrKeepCompounds(kIntroWelcomeTagline),
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 22,
@@ -315,7 +316,7 @@ class _Reflect extends StatelessWidget {
                     ),
                   ),
                   child: Text(
-                    moods[i],
+                    wrKeepCompounds(moods[i]),
                     style: const TextStyle(fontSize: 14, color: WrColors.dark),
                   ),
                 ),
@@ -339,7 +340,7 @@ class _Reflect extends StatelessWidget {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        steps[i],
+                        wrKeepCompounds(steps[i]),
                         style: const TextStyle(
                           fontSize: 15.5,
                           fontWeight: FontWeight.w600,
@@ -378,7 +379,7 @@ class _Understand extends StatelessWidget {
         _Title(kIntroUnderstandTitle),
         const SizedBox(height: 6),
         Text(
-          kIntroExampleLabel,
+          wrKeepCompounds(kIntroExampleLabel),
           style: const TextStyle(fontSize: 13, color: WrColors.text3),
         ),
         const SizedBox(height: 16),
@@ -395,7 +396,7 @@ class _Understand extends StatelessWidget {
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
-                        loops[i],
+                        wrKeepCompounds(loops[i]),
                         style: const TextStyle(
                           fontSize: 15,
                           color: WrColors.dark,
@@ -415,7 +416,7 @@ class _Understand extends StatelessWidget {
                         borderRadius: BorderRadius.circular(99),
                       ),
                       child: Text(
-                        '×${(1 + (_counts[i] - 1) * _phase(progress, 0.2 + i * 0.15, 0.75)).round()}',
+                        wrKeepCompounds('×${(1 + (_counts[i] - 1) * _phase(progress, 0.2 + i * 0.15, 0.75)).round()}'),
                         style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
@@ -462,7 +463,7 @@ class _Grow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  kIntroGrowTheme,
+                  wrKeepCompounds(kIntroGrowTheme),
                   style: const TextStyle(
                     fontSize: 17,
                     fontWeight: FontWeight.w700,
@@ -522,7 +523,7 @@ class _Grow extends StatelessWidget {
                 const SizedBox(width: 8),
                 Flexible(
                   child: Text(
-                    kIntroGrowSkill,
+                    wrKeepCompounds(kIntroGrowSkill),
                     style: const TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w700,
@@ -662,7 +663,7 @@ class _Bubble extends StatelessWidget {
           border: mine ? null : Border.all(color: WrColors.line),
         ),
         child: Text(
-          text,
+          wrKeepCompounds(text),
           style: TextStyle(
             fontSize: 14.5,
             height: 1.35,
@@ -711,7 +712,7 @@ class _Closing extends StatelessWidget {
           progress: progress,
           from: 0.5,
           child: Text(
-            kIntroClosingLine,
+            wrKeepCompounds(kIntroClosingLine),
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 20,

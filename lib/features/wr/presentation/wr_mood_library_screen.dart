@@ -22,16 +22,26 @@ import '../../../core/l10n/wr_tr.dart';
 import '../../../core/models/checkin.dart';
 import '../../../core/models/wr_mood_content.dart';
 import '../../../core/theme/wr_colors.dart';
+import '../../../core/theme/wr_text.dart';
 import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_back_circle.dart';
+import '../../../core/widgets/wr_card.dart';
 import '../../../core/widgets/wr_hero_header.dart';
 import '../mood_content_providers.dart';
 import '../wr_providers.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 /// Thứ tự chip cố định, khớp thứ tự sáu ô check-in ở Home
 /// (`kCheckinOptions`). Đọc từ `Mood.values` chứ không liệt kê tay: enum đã
 /// khai đúng thứ tự đó.
 const List<Mood> kMoodLibraryOrder = Mood.values;
+
+/// Khoảng từ đáy nút quay lại tới khối chữ đầu tiên ở màn Thư viện và màn đọc.
+///
+/// Mockup: `.backrow` đệm trên 16 + nút 30 + đệm dưới 54, rồi khối chữ cách
+/// thêm 18, nên chữ bắt đầu ở 118, ngay dưới dải ảnh cao 112. Nút của app cao
+/// 32, nên đệm dưới còn 52 để chữ vẫn bắt đầu ở 118.
+const double kWrBandContentGap = 52;
 
 /// Bộ lọc loại nội dung: `.lib-seg` Tất cả / Đọc / Nghe.
 enum MoodLibraryFilter {
@@ -52,19 +62,15 @@ enum MoodLibraryFilter {
   };
 }
 
-/// "Đọc · 5 phút" / "Nghe · 3 phút".
+/// "Đọc · 2 phút đọc" / "Nghe · 3 phút nghe".
 ///
-/// `duration` trong DB thường đã kèm "phút đọc"/"phút nghe"; bỏ chữ ở đuôi để
-/// khỏi thành "Đọc · 4 phút đọc" hay "Nghe · 2 phút nghe".
+/// Nguyên văn mockup Sprint 2 (`meta = (audio ? 'Nghe' : 'Đọc') + ' · ' +
+/// c.duration`): giữ nguyên chữ thời lượng, kể cả chữ "đọc"/"nghe" ở đuôi.
 String moodContentMeta(MoodContent c) {
   final kind = c.type == MoodContentType.audio
       ? tr('Nghe', 'Listen')
       : tr('Đọc', 'Read');
-  final duration = c.durationLabel.replaceFirst(
-    RegExp(r'\s+(đọc|read|nghe|listen)$', caseSensitive: false),
-    '',
-  );
-  return '$kind · $duration';
+  return '$kind · ${c.durationLabel}';
 }
 
 class WrMoodLibraryScreen extends ConsumerStatefulWidget {
@@ -94,7 +100,7 @@ class _WrMoodLibraryScreenState extends ConsumerState<WrMoodLibraryScreen> {
     final key = mood.moodContentKey;
 
     return Scaffold(
-      backgroundColor: WrColors.pageBg,
+      backgroundColor: Colors.transparent,
       body: Stack(
         children: [
           Positioned(
@@ -118,8 +124,15 @@ class _WrMoodLibraryScreenState extends ConsumerState<WrMoodLibraryScreen> {
                 return ListView(
                   padding: const EdgeInsets.only(bottom: 24),
                   children: [
+                    // `.scr-body.rf .backrow { padding: 16px 22px 54px }`:
+                    // chỉ nút quay lại nằm trên dải ảnh, chữ bắt đầu dưới dải.
                     Padding(
-                      padding: const EdgeInsets.fromLTRB(22, 16, 22, 0),
+                      padding: const EdgeInsets.fromLTRB(
+                        22,
+                        16,
+                        22,
+                        kWrBandContentGap,
+                      ),
                       child: Align(
                         alignment: Alignment.centerLeft,
                         child: WrBackCircle(
@@ -136,7 +149,7 @@ class _WrMoodLibraryScreenState extends ConsumerState<WrMoodLibraryScreen> {
                           WrEyebrow(tr('THƯ VIỆN', 'LIBRARY')),
                           const SizedBox(height: 6),
                           Text(
-                            tr('Gợi ý cho bạn', 'Ideas for you'),
+                            wrKeepCompounds(tr('Gợi ý cho bạn', 'Ideas for you')),
                             style: const TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.w800,
@@ -146,10 +159,10 @@ class _WrMoodLibraryScreenState extends ConsumerState<WrMoodLibraryScreen> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            tr(
+                            wrKeepCompounds(tr(
                               'Chọn theo cảm xúc. Mỗi bài chỉ vài phút.',
                               'Pick by feeling. Each one takes a few minutes.',
-                            ),
+                            )),
                             style: const TextStyle(
                               fontSize: 14,
                               color: WrColors.text2,
@@ -173,11 +186,11 @@ class _WrMoodLibraryScreenState extends ConsumerState<WrMoodLibraryScreen> {
                           ),
                           const Spacer(),
                           Text(
-                            tr(
+                            wrKeepCompounds(tr(
                               '${items.length} gợi ý',
                               '${items.length} '
                                   '${items.length == 1 ? 'idea' : 'ideas'}',
-                            ),
+                            )),
                             key: const Key('wr_mood_library_count'),
                             style: const TextStyle(
                               fontSize: 12.5,
@@ -194,10 +207,10 @@ class _WrMoodLibraryScreenState extends ConsumerState<WrMoodLibraryScreen> {
                               key: const Key('wr_mood_library_none'),
                               padding: const EdgeInsets.symmetric(vertical: 24),
                               child: Text(
-                                tr(
+                                wrKeepCompounds(tr(
                                   'Chưa có gợi ý loại này cho cảm xúc đang chọn.',
                                   'No ideas of this kind for this feeling yet.',
-                                ),
+                                )),
                                 textAlign: TextAlign.center,
                                 style: const TextStyle(
                                   fontSize: 14,
@@ -211,12 +224,8 @@ class _WrMoodLibraryScreenState extends ConsumerState<WrMoodLibraryScreen> {
                                 _FeaturedCard(item: items.first, mood: key),
                                 if (items.length > 1) ...[
                                   const SizedBox(height: 12),
-                                  Container(
-                                    decoration: BoxDecoration(
-                                      color: WrColors.white,
-                                      borderRadius: BorderRadius.circular(18),
-                                      border: Border.all(color: WrColors.line),
-                                    ),
+                                  WrCard(
+                                    padding: EdgeInsets.zero,
                                     child: Column(
                                       children: [
                                         for (
@@ -315,7 +324,7 @@ class _MoodChip extends StatelessWidget {
             ),
             const SizedBox(width: 6),
             Text(
-              moodLabel(mood),
+              wrKeepCompounds(moodLabel(mood)),
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
@@ -371,7 +380,7 @@ class _FilterSegment extends StatelessWidget {
                       )
                     : null,
                 child: Text(
-                  f.label,
+                  wrKeepCompounds(f.label),
                   style: TextStyle(
                     fontSize: 12.5,
                     fontWeight: FontWeight.w600,
@@ -415,11 +424,12 @@ class _FeaturedCard extends StatelessWidget {
           children: [
             WrEyebrow(tr('NÊN BẮT ĐẦU TỪ ĐÂY', 'START HERE')),
             const SizedBox(height: 6),
+            // `.serif` 16, đậm thường như mockup.
             Text(
-              item.title,
+              wrKeepCompounds(item.title),
               style: const TextStyle(
-                fontSize: 17.5,
-                fontWeight: FontWeight.w600,
+                fontFamily: WrText.serifFamily,
+                fontSize: 16,
                 color: WrColors.navy,
                 height: 1.4,
               ),
@@ -427,15 +437,16 @@ class _FeaturedCard extends StatelessWidget {
             const SizedBox(height: 8),
             Row(
               children: [
-                Text(
-                  moodContentMeta(item),
-                  style: const TextStyle(fontSize: 12.5, color: WrColors.text2),
+                Expanded(
+                  child: Text(
+                    wrKeepCompounds(moodContentMeta(item)),
+                    style: const TextStyle(
+                      fontSize: 12.5,
+                      color: WrColors.text2,
+                    ),
+                  ),
                 ),
-                if (item.placeholder) ...[
-                  const SizedBox(width: 8),
-                  const WrDraftBadge(),
-                ],
-                const Spacer(),
+                const SizedBox(width: 8),
                 Container(
                   width: 30,
                   height: 30,
@@ -495,7 +506,7 @@ class WrMoodContentRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    item.title,
+                    wrKeepCompounds(item.title),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
@@ -506,53 +517,15 @@ class WrMoodContentRow extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 3),
-                  Row(
-                    children: [
-                      Text(
-                        moodContentMeta(item),
-                        style: const TextStyle(
-                          fontSize: 12,
-                          color: WrColors.text2,
-                        ),
-                      ),
-                      if (item.placeholder) ...[
-                        const SizedBox(width: 6),
-                        const WrDraftBadge(),
-                      ],
-                    ],
+                  Text(
+                    wrKeepCompounds(moodContentMeta(item)),
+                    style: const TextStyle(fontSize: 12, color: WrColors.text2),
                   ),
                 ],
               ),
             ),
             const Icon(Icons.chevron_right, size: 18, color: WrColors.text3),
           ],
-        ),
-      ),
-    );
-  }
-}
-
-/// Nhãn "Nháp" cho nội dung chưa thu âm hoặc biên tập chính thức.
-///
-/// §8.2 + §XII.3: nội dung còn `placeholder = true` chưa sẵn sàng phát hành.
-/// Hiện nhãn để người dùng biết đây là bản demo luồng, không phải nội dung thật.
-class WrDraftBadge extends StatelessWidget {
-  const WrDraftBadge({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-      decoration: BoxDecoration(
-        color: WrColors.navy.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(100),
-      ),
-      child: Text(
-        tr('Nháp', 'Draft'),
-        style: TextStyle(
-          fontSize: 10.5,
-          fontWeight: FontWeight.w700,
-          color: WrColors.navy,
         ),
       ),
     );
@@ -582,10 +555,10 @@ class _LibraryEmpty extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 40),
               child: Text(
-                tr(
+                wrKeepCompounds(tr(
                   'Chưa có nội dung nào trong thư viện.',
                   'Nothing in the library yet.',
-                ),
+                )),
                 textAlign: TextAlign.center,
                 style: const TextStyle(fontSize: 15, color: WrColors.muted),
               ),

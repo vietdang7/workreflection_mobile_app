@@ -6,7 +6,9 @@ import '../../../core/data/wr_repository.dart';
 import '../../../core/l10n/wr_tr.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_theme.dart';
+import '../../../core/widgets/wr_app_background.dart';
 import '../../../l10n/app_localizations.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 // ---------------------------------------------------------------------------
 // Provider
@@ -36,7 +38,7 @@ class _VouchersScreenState extends ConsumerState<VouchersScreen> {
     final l10n = AppLocalizations.of(context)!;
     ScaffoldMessenger.of(
       context,
-    ).showSnackBar(SnackBar(content: Text(l10n.voucherCopiedToast(code))));
+    ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.voucherCopiedToast(code)))));
     Future.delayed(const Duration(seconds: 2), () {
       if (mounted) setState(() => _copiedId = null);
     });
@@ -56,13 +58,14 @@ class _VouchersScreenState extends ConsumerState<VouchersScreen> {
     final l10n = AppLocalizations.of(context)!;
     final async = ref.watch(vouchersProvider);
 
-    return Scaffold(
-      backgroundColor: WrColors.pageBg,
-      appBar: AppBar(
-        backgroundColor: WrColors.pageBg,
+    return WrAppBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
         elevation: 0,
         leading: const BackButton(color: WrColors.navy),
-        title: Text(l10n.vouchersTitle, style: WrTextStyles.hMedium),
+        title: Text(wrKeepCompounds(l10n.vouchersTitle), style: WrTextStyles.hMedium),
         centerTitle: false,
       ),
       body: async.when(
@@ -70,7 +73,7 @@ class _VouchersScreenState extends ConsumerState<VouchersScreen> {
           child: CircularProgressIndicator(color: WrColors.coral),
         ),
         error: (_, __) =>
-            Center(child: Text(l10n.vouchersEmpty, style: WrTextStyles.body)),
+            Center(child: Text(wrKeepCompounds(l10n.vouchersEmpty), style: WrTextStyles.body)),
         data: (vouchers) => _VouchersList(
           vouchers: vouchers,
           copiedId: _copiedId,
@@ -78,6 +81,7 @@ class _VouchersScreenState extends ConsumerState<VouchersScreen> {
           formatDate: _formatDate,
         ),
       ),
+    ),
     );
   }
 }
@@ -116,7 +120,7 @@ class _VouchersList extends StatelessWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  l10n.voucherWebNote,
+                  wrKeepCompounds(l10n.voucherWebNote),
                   style: WrTextStyles.body.copyWith(
                     fontSize: 13.5,
                     color: WrColors.coral,
@@ -172,14 +176,14 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text(
-            l10n.vouchersEmpty,
+            wrKeepCompounds(l10n.vouchersEmpty),
             style: WrTextStyles.hMedium.copyWith(color: WrColors.navy),
           ),
           const SizedBox(height: 6),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Text(
-              l10n.vouchersEmptyBody,
+              wrKeepCompounds(l10n.vouchersEmptyBody),
               style: WrTextStyles.body.copyWith(color: WrColors.muted),
               textAlign: TextAlign.center,
             ),
@@ -274,7 +278,7 @@ class _VoucherCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        code,
+                        wrKeepCompounds(code),
                         style: WrTextStyles.hMedium.copyWith(
                           fontFamily: 'monospace',
                           letterSpacing: 1.5,
@@ -283,11 +287,11 @@ class _VoucherCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        discountType == 'percentage'
+                        wrKeepCompounds(discountType == 'percentage'
                             ? l10n.voucherDiscountPercent(discountPercent)
                             : l10n.voucherDiscountAmount(
                                 discountAmount.toStringAsFixed(0),
-                              ),
+                              )),
                         style: WrTextStyles.body.copyWith(
                           fontSize: 13.5,
                           color: WrColors.muted,
@@ -325,7 +329,7 @@ class _VoucherCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
-                      labels[s] ?? s,
+                      wrKeepCompounds(labels[s] ?? s),
                       style: WrTextStyles.body.copyWith(
                         fontSize: 11.5,
                         color: WrColors.pillCoralText,
@@ -348,7 +352,7 @@ class _VoucherCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        l10n.voucherExpiry(formatDate(validTo)),
+                        wrKeepCompounds(l10n.voucherExpiry(formatDate(validTo))),
                         style: WrTextStyles.body.copyWith(
                           fontSize: 13.5,
                           color: WrColors.muted,
@@ -356,7 +360,7 @@ class _VoucherCard extends StatelessWidget {
                       ),
                       if (maxUses > 0)
                         Text(
-                          l10n.voucherUsesLeft(maxUses - usedCount, maxUses),
+                          wrKeepCompounds(l10n.voucherUsesLeft(maxUses - usedCount, maxUses)),
                           style: WrTextStyles.body.copyWith(
                             fontSize: 13.5,
                             color: WrColors.muted,
@@ -374,7 +378,7 @@ class _VoucherCard extends StatelessWidget {
                       size: 14,
                     ),
                     label: Text(
-                      isCopied ? l10n.voucherCopied : l10n.voucherCopy,
+                      wrKeepCompounds(isCopied ? l10n.voucherCopied : l10n.voucherCopy),
                       style: const TextStyle(fontSize: 13.5),
                     ),
                     style: ElevatedButton.styleFrom(
@@ -437,7 +441,7 @@ class _StatusBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        label,
+        wrKeepCompounds(label),
         style: WrTextStyles.body.copyWith(fontSize: 12.5, color: fg),
       ),
     );

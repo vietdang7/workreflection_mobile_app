@@ -23,6 +23,7 @@ import '../../../core/widgets/pill_button.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../l10n/app_localizations.dart';
 import '../coaching_providers.dart';
+import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 class CoachingScreen extends ConsumerStatefulWidget {
   const CoachingScreen({super.key});
@@ -50,7 +51,7 @@ class _CoachingScreenState extends ConsumerState<CoachingScreen> {
           icon: const Icon(Icons.arrow_back, color: WrColors.navy),
           onPressed: () => context.pop(),
         ),
-        title: Text(l10n.coachTitle, style: WrTextStyles.hMedium),
+        title: Text(wrKeepCompounds(l10n.coachTitle), style: WrTextStyles.hMedium),
         actions: [
           TextButton.icon(
             key: const Key('coachViewMyBtn'),
@@ -60,7 +61,7 @@ class _CoachingScreenState extends ConsumerState<CoachingScreen> {
               color: WrColors.navy,
             ),
             label: Text(
-              l10n.coachViewMy,
+              wrKeepCompounds(l10n.coachViewMy),
               style: const TextStyle(color: WrColors.navy),
             ),
             onPressed: () => context.push('/coaching/sessions'),
@@ -141,7 +142,7 @@ class _Body extends ConsumerWidget {
             Center(
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 24),
-                child: Text(l10n.wsEmpty, style: WrTextStyles.body),
+                child: Text(wrKeepCompounds(l10n.wsEmpty), style: WrTextStyles.body),
               ),
             )
           else
@@ -227,7 +228,7 @@ class _AudienceToggle extends StatelessWidget {
   }) {
     final isSelected = selected == value;
     return ChoiceChip(
-      label: Text(label),
+      label: Text(wrKeepCompounds(label)),
       selected: isSelected,
       onSelected: (_) => onChanged(isSelected ? null : value),
       selectedColor: WrColors.navy,
@@ -269,17 +270,17 @@ class _PackageCardState extends ConsumerState<_PackageCard> {
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(l10n.coachClaimConfirmTitle),
-        content: Text(l10n.coachClaimConfirmBody(widget.pkg.name)),
+        title: Text(wrKeepCompounds(l10n.coachClaimConfirmTitle)),
+        content: Text(wrKeepCompounds(l10n.coachClaimConfirmBody(widget.pkg.name))),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: Text(l10n.commonCancel),
+            child: Text(wrKeepCompounds(l10n.commonCancel)),
           ),
           TextButton(
             key: const Key('claimOkBtn'),
             onPressed: () => Navigator.of(context).pop(true),
-            child: Text(l10n.commonConfirm),
+            child: Text(wrKeepCompounds(l10n.commonConfirm)),
           ),
         ],
       ),
@@ -295,13 +296,13 @@ class _PackageCardState extends ConsumerState<_PackageCard> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(l10n.coachClaimSuccess)));
+      ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.coachClaimSuccess))));
       ref.invalidate(myBookingsProvider);
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text(l10n.coachClaimError)));
+      ).showSnackBar(SnackBar(content: Text(wrKeepCompounds(l10n.coachClaimError))));
     } finally {
       if (mounted) setState(() => _claiming = false);
     }
@@ -312,12 +313,12 @@ class _PackageCardState extends ConsumerState<_PackageCard> {
     showDialog<void>(
       context: context,
       builder: (_) => AlertDialog(
-        title: Text(l10n.wsPaidDialogTitle),
-        content: Text(l10n.wsPaidDialogBody),
+        title: Text(wrKeepCompounds(l10n.wsPaidDialogTitle)),
+        content: Text(wrKeepCompounds(l10n.wsPaidDialogBody)),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: Text(l10n.wsPaidDialogOk),
+            child: Text(wrKeepCompounds(l10n.wsPaidDialogOk)),
           ),
         ],
       ),
@@ -335,12 +336,12 @@ class _PackageCardState extends ConsumerState<_PackageCard> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Name
-          Text(pkg.name, style: WrTextStyles.hMedium),
+          Text(wrKeepCompounds(pkg.name), style: WrTextStyles.hMedium),
           const SizedBox(height: 4),
 
           // Sessions fmt
           Text(
-            l10n.coachSessionsFmt(pkg.sessionsCount, duration),
+            wrKeepCompounds(l10n.coachSessionsFmt(pkg.sessionsCount, duration)),
             style: WrTextStyles.body,
           ),
           const SizedBox(height: 12),
@@ -354,7 +355,7 @@ class _PackageCardState extends ConsumerState<_PackageCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text('• ', style: TextStyle(color: WrColors.muted)),
-                    Expanded(child: Text(f, style: WrTextStyles.body)),
+                    Expanded(child: Text(wrKeepCompounds(f), style: WrTextStyles.body)),
                   ],
                 ),
               ),
@@ -364,7 +365,7 @@ class _PackageCardState extends ConsumerState<_PackageCard> {
 
           // Price
           Text(
-            pkg.isFree ? l10n.wsFree : _formatPrice(pkg.price, pkg.currency),
+            wrKeepCompounds(pkg.isFree ? l10n.wsFree : _formatPrice(pkg.price, pkg.currency)),
             style: WrTextStyles.hMedium.copyWith(color: WrColors.navy),
           ),
           const SizedBox(height: 16),
@@ -413,7 +414,7 @@ class _CoachRow extends StatelessWidget {
               : null,
           child: c.avatarUrl == null
               ? Text(
-                  c.initials,
+                  wrKeepCompounds(c.initials),
                   style: const TextStyle(
                     color: WrColors.navy,
                     fontWeight: FontWeight.w700,
@@ -429,22 +430,22 @@ class _CoachRow extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(c.fullName, style: WrTextStyles.hMedium),
+              Text(wrKeepCompounds(c.fullName), style: WrTextStyles.hMedium),
               if (c.title != null) ...[
                 const SizedBox(height: 2),
-                Text(c.title!, style: WrTextStyles.body),
+                Text(wrKeepCompounds(c.title!), style: WrTextStyles.body),
               ],
               if (c.specializations.isNotEmpty) ...[
                 const SizedBox(height: 4),
                 Text(
-                  c.specializations.join(' · '),
+                  wrKeepCompounds(c.specializations.join(' · ')),
                   style: WrTextStyles.body.copyWith(color: WrColors.muted),
                 ),
               ],
               if (c.experienceYears != null) ...[
                 const SizedBox(height: 4),
                 Text(
-                  l10n.coachYearsExp(c.experienceYears!),
+                  wrKeepCompounds(l10n.coachYearsExp(c.experienceYears!)),
                   style: WrTextStyles.body.copyWith(color: WrColors.muted),
                 ),
               ],
@@ -492,7 +493,7 @@ class _ReviewsSection extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    '$avg/5.0',
+                    wrKeepCompounds('$avg/5.0'),
                     style: const TextStyle(
                       fontSize: 13.5,
                       fontWeight: FontWeight.w700,
@@ -551,7 +552,7 @@ class _ReviewCard extends StatelessWidget {
           if (review.comment != null && review.comment!.isNotEmpty) ...[
             const SizedBox(height: 6),
             Text(
-              '"${review.comment}"',
+              wrKeepCompounds('"${review.comment}"'),
               style: WrTextStyles.body.copyWith(fontStyle: FontStyle.italic),
             ),
           ],
@@ -562,9 +563,9 @@ class _ReviewCard extends StatelessWidget {
                 radius: 12,
                 backgroundColor: WrColors.navy.withValues(alpha: 0.1),
                 child: Text(
-                  review.reviewerName.isNotEmpty
+                  wrKeepCompounds(review.reviewerName.isNotEmpty
                       ? review.reviewerName[0].toUpperCase()
-                      : '?',
+                      : '?'),
                   style: const TextStyle(
                     fontSize: 11.5,
                     fontWeight: FontWeight.w700,
@@ -574,7 +575,7 @@ class _ReviewCard extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               Text(
-                review.reviewerName,
+                wrKeepCompounds(review.reviewerName),
                 style: WrTextStyles.body.copyWith(fontWeight: FontWeight.w600),
               ),
             ],
@@ -603,7 +604,7 @@ class _ErrorCard extends StatelessWidget {
           const SizedBox(height: 16),
           TextButton(
             onPressed: onRetry,
-            child: Text(AppLocalizations.of(context)!.homeRetry),
+            child: Text(wrKeepCompounds(AppLocalizations.of(context)!.homeRetry)),
           ),
         ],
       ),
