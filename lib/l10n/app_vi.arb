@@ -32,7 +32,7 @@
   "homeMoodHappy": "Tôi đang vui",
   "homeEyebrowSystem": "Hệ thống nhận ra",
   "homeEyebrowSuggestion": "Gợi ý khi mệt mỏi",
-  "homeEyebrowInsight": "Insight gần nhất",
+  "homeEyebrowInsight": "Phần đọc gần nhất",
   "homeLinkLearnMore": "Tìm hiểu thêm",
   "homeSuggestionTitle": "Khi bạn muốn nói nhưng chọn im lặng",
   "homeSuggestionMeta": "VOICE · 5 phút đọc",
@@ -57,7 +57,7 @@
   "understandStatusStable": "Đang nâng đỡ bạn",
   "understandStatusImproving": "Nâng đỡ nhưng chưa đều",
   "understandStatusUnrated": "Chưa đánh giá",
-  "understandHealthReady": "Bạn đã có đủ {n} reflection.",
+  "understandHealthReady": "Bạn đã có đủ {n} lần nhìn lại.",
   "@understandHealthReady": {
     "placeholders": {
       "n": {"type": "int"}
@@ -90,7 +90,7 @@
   "developWorkshopTag": "Workshop",
   "developWorkshopLink": "Tại sao bây giờ?",
 
-  "journeyGreeting": "Career Memory",
+  "journeyGreeting": "Dấu ấn hành trình",
   "journeyTitle": "Hành trình",
   "journeyEyebrowStory": "Câu chuyện của bạn",
   "journeyEyebrowMonth": "Tháng {m}",
@@ -114,7 +114,7 @@
   "profileBadgePremium": "PREMIUM MEMBER",
   "profileBadgeMember": "Thành viên",
   "profileStatReflectDays": "ngày Reflect",
-  "profileStatInsights": "Insight lưu",
+  "profileStatInsights": "Phần đọc đã lưu",
   "profileStatMilestones": "Milestone",
   "profileEyebrowSettings": "Cài đặt",
   "profileSettingReminder": "Nhắc nhở hằng ngày",
@@ -125,7 +125,7 @@
 
   "profileDeleteAccount": "Xoá tài khoản",
   "profileDeleteAccountTitle": "Xoá tài khoản vĩnh viễn?",
-  "profileDeleteAccountBody": "Toàn bộ dữ liệu của bạn sẽ bị xoá và không lấy lại được: những lần nhìn lại, Career Memory, chủ đề thực hành, kết quả self-check và hồ sơ. Nếu bạn đang có bản đầy đủ, phần thời hạn còn lại cũng mất theo.",
+  "profileDeleteAccountBody": "Toàn bộ dữ liệu của bạn sẽ bị xoá và không lấy lại được: những lần nhìn lại, Dấu ấn hành trình, chủ đề thực hành, kết quả khảo sát điều kiện làm việc và hồ sơ. Nếu bạn đang có bản đầy đủ, phần thời hạn còn lại cũng mất theo.",
   "profileDeleteAccountHint": "Gõ XOÁ để xác nhận",
   "profileDeleteAccountConfirmWord": "XOÁ",
   "profileDeleteAccountCta": "Xoá vĩnh viễn",
@@ -136,7 +136,7 @@
   "understandNeedSuffix": "· Nhu cầu chủ đạo",
   "understandNoSituations": "Chưa có tình huống nào được ghi nhận.",
 
-  "homeInsightEmpty": "Chưa có insight nào. Hãy bắt đầu hành trình của bạn!",
+  "homeInsightEmpty": "Chưa có phần đọc nào. Hãy bắt đầu hành trình của bạn!",
   "homeErrorLoadData": "Không thể tải dữ liệu.",
   "homeRetry": "Thử lại",
 
@@ -489,15 +489,15 @@
   "profileEditDeptOther": "Khác",
   "profileEditSelectHint": "Chọn...",
 
-  "insightsTitle": "Tất cả insight",
-  "insightsEmpty": "Bạn chưa có insight nào. Hãy bắt đầu hành trình của bạn!",
+  "insightsTitle": "Tất cả phần đọc",
+  "insightsEmpty": "Bạn chưa có phần đọc nào. Hãy bắt đầu hành trình của bạn!",
   "insightSavedDate": "Lưu ngày {date}",
   "@insightSavedDate": {
     "placeholders": {
       "date": {"type": "String"}
     }
   },
-  "understandViewAllInsights": "Xem tất cả insight",
+  "understandViewAllInsights": "Xem tất cả phần đọc",
 
   "profileCheckinHistory": "30 ngày gần đây",
 

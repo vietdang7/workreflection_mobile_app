@@ -141,7 +141,7 @@ const REFLECT_POINTER_RE =
 /// đòi một dấu hiệu MỜI đi kèm (từ để hỏi hoặc dấu hỏi) để câu kể lại chuyện cũ
 /// không kích hoạt nhầm.
 const REFLECT_INVITE_RE =
-  /(muốn|thử)[^.?!]{0,60}ghi lại[^.?!]{0,60}reflection|ghi lại thành (một )?reflection[^.?!]{0,40}\?/i;
+  /(muốn|thử)[^.?!]{0,60}ghi lại[^.?!]{0,60}(reflection|lần nhìn lại)|ghi lại thành (một )?(reflection|lần nhìn lại)[^.?!]{0,40}\?/i;
 
 /// Trợ lý đang NÓI KHÔNG về việc ghi lại, không phải đang mời.
 ///
@@ -175,10 +175,10 @@ const CALM_OFFER_EN_RE =
   /\b(want|would you like|like to|try|suggest|recommend|i have|there is|there's)\b[^.?!]{0,40}\b(short read|reading|article|audio|something (gentle|gentler|calming|lighter))\b|\bemotional content library\b/i;
 
 const REFLECT_POINTER_EN_RE =
-  /\b(button|tap)\b[^.?!]{0,50}\b(reflection|below|underneath)\b|\btap (it|that|the button|on it)\b|\bopen (the )?reflection\b/i;
+  /\b(button|tap)\b[^.?!]{0,50}\b(reflection|look-back|below|underneath)\b|\btap (it|that|the button|on it)\b|\bopen (the )?(reflection|look-back)\b/i;
 
 const REFLECT_INVITE_EN_RE =
-  /\b(want|would you like|like to|try)\b[^.?!]{0,60}\b(record|write|capture|save|note)\b[^.?!]{0,60}\breflection\b|\b(record|write|capture|save) (it|this|that) (down )?as an? (full )?reflection\b[^.?!]{0,40}\?/i;
+  /\b(want|would you like|like to|try)\b[^.?!]{0,60}\b(record|write|capture|save|note)\b[^.?!]{0,60}\b(reflection|look-back)\b|\b(record|write|capture|save) (it|this|that) (down )?as an? (full )?(reflection|look-back)\b[^.?!]{0,40}\?/i;
 
 const REFLECT_REFUSAL_EN_RE =
   /\b(can ?not|can't|cannot|unable to|not able to)\b[^.?!]{0,20}\b(record|save|write|log)\b/i;

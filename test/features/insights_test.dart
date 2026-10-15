@@ -46,14 +46,14 @@ void main() {
       await _pump(tester, _wrap(const InsightsScreen(), repo));
 
       expect(find.byKey(const Key('insights_empty')), findsOneWidget);
-      expect(find.textContaining('chưa có insight'), findsOneWidget);
+      expect(find.textContaining('chưa có phần đọc'), findsOneWidget);
     });
 
     testWidgets('shows title in app bar', (tester) async {
       final repo = FakeWrRepository();
       await _pump(tester, _wrap(const InsightsScreen(), repo));
 
-      expect(find.textContaining('Tất cả insight'), findsOneWidget);
+      expect(find.textContaining('Tất cả phần đọc'), findsOneWidget);
     });
 
     testWidgets('shows list when insights available', (tester) async {

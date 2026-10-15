@@ -356,8 +356,8 @@ class _WrLearningCaptureScreenState
                         children: [
                           WrEyebrow(
                             tr(
-                              'CAREER MEMORY · CỘT MỐC',
-                              'CAREER MEMORY · MILESTONE',
+                              'DẤU ẤN HÀNH TRÌNH · CỘT MỐC',
+                              'JOURNEY MARKS · MILESTONE',
                             ),
                             color: WrColors.pillCoralText,
                           ),

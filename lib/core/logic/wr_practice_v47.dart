@@ -340,7 +340,7 @@ String practiceThemeSourceLabel(PracticeTheme theme, DateTime? startedAt) {
             '${d.toLocal().month.toString().padLeft(2, '0')}';
   return theme.isUserAdded
       ? tr('Bạn thêm$date', 'Added by you$date')
-      : tr('Từ Reflection$date', 'From Reflection$date');
+      : tr('Từ lần nhìn lại$date', 'From a look-back$date');
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

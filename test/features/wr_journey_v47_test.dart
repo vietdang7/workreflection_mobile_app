@@ -463,7 +463,7 @@ void main() {
     ) async {
       await _pumpTall(tester, _wrap(events: [insight()], premium: true));
 
-      expect(find.text('Pattern được nhận diện'), findsOneWidget);
+      expect(find.text('Điều đang lặp lại'), findsOneWidget);
       expect(
         find.byKey(const Key('wr_journey_insight_premium_tag')),
         findsOneWidget,

@@ -519,11 +519,11 @@ List<ReflectNextOption> reflectionNextOptions({
 // ---------------------------------------------------------------------------
 
 String get kDoneSavedTitle =>
-    tr('Đã lưu vào Career Memory', 'Saved to your Career Memory');
+    tr('Đã lưu vào Dấu ấn hành trình', 'Saved to your Journey marks');
 
 String get kDoneSavedNote => tr(
-  'Reflection này vừa để lại thêm một mảnh cho hành trình của bạn.',
-  'This reflection just added one more piece to your journey.',
+  'Lần nhìn lại này vừa để lại thêm một mảnh cho hành trình của bạn.',
+  'This look-back just added one more piece to your journey.',
 );
 
 /// Câu phụ khi tình huống là một cột mốc hoàn thành / học được (P-11, P-08),

@@ -151,7 +151,7 @@ void main() {
       await _pumpLarge(tester, _wrap(const HomeScreen(), repo));
 
       // WrEyebrow uppercases text: "INSIGHT GẦN NHẤT"
-      expect(find.textContaining('INSIGHT'), findsWidgets);
+      expect(find.textContaining('PHẦN ĐỌC'), findsWidgets);
       expect(find.textContaining('im lặng'), findsWidgets);
     });
 

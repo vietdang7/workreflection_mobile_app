@@ -76,7 +76,7 @@ class _WrPatternsScreenState extends ConsumerState<WrPatternsScreen> {
     return WrDetailScaffold(
       art: WrHeroArt.understand,
       eyebrow: tr('HIỂU MÌNH', 'UNDERSTAND'),
-      title: tr('Những điều đang lặp lại', 'Recurring Patterns'),
+      title: tr('Những điều đang lặp lại', 'What keeps coming back'),
       children: [
         if (repeated.isEmpty)
           Text(

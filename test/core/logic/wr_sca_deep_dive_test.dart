@@ -127,7 +127,7 @@ void main() {
           status: ScaPillarStatus.developing,
           counts: counts,
         ),
-        'Nhóm này xuất hiện 2 lần trong Reflection gần đây, chưa phải nhóm '
+        'Nhóm này xuất hiện 2 lần trong những lần nhìn lại gần đây, chưa phải nhóm '
         'chiếm ưu thế nhất.',
       );
     });

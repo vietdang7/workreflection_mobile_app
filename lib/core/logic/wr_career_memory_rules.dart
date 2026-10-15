@@ -315,10 +315,10 @@ String get kThemeDetail => tr(
 
 /// Chi tiết của một mảnh INSIGHT. Luật §8.2 + §9.
 String get kInsightDetail => tr(
-  'Insight được tổng hợp từ nhiều lần nhìn lại gần nhất, không phải từ một '
+  'Phần đọc này được tổng hợp từ nhiều lần nhìn lại gần nhất, không phải từ một '
       'lần duy nhất. Nó sinh định kỳ mỗi $kInsightEveryDays ngày, hoặc sau mỗi '
       '$kInsightEveryStories lượt nhìn lại mới.',
-  'Insights are drawn from several recent look-backs, not from a single '
+  'These readings are drawn from several recent look-backs, not from a single '
       'one. They appear every $kInsightEveryDays days, or after every '
       '$kInsightEveryStories new look-backs.',
 );
@@ -330,10 +330,17 @@ String get kInsightDetail => tr(
 /// §9, khung "Chủ đề vừa nổi lên" — câu mẫu của tài liệu.
 const List<WrFrozenSentence> kThemeEmergingTemplates = [
   WrFrozenSentence(
-    '{n} lần Reflection gần đây của bạn đều xoay quanh {need}. Đây có thể là '
+    '{n} lần nhìn lại gần đây của bạn đều xoay quanh {need}. Đây có thể là '
         'điều đáng để nhìn kỹ hơn.',
-    'Your last {n} Reflections all circle around {need}. This may be worth a '
+    'Your last {n} look-backs all circle around {need}. This may be worth a '
         'closer look.',
+    // Chữ trước 15/10/2026 ("Reflection" vào danh sách từ đã bỏ).
+    formerly: [
+      '{n} lần Reflection gần đây của bạn đều xoay quanh {need}. Đây có thể là '
+          'điều đáng để nhìn kỹ hơn.',
+      'Your last {n} Reflections all circle around {need}. This may be worth a '
+          'closer look.',
+    ],
   ),
   WrFrozenSentence(
     'Trong {days} ngày qua, {n} lần bạn nhìn lại đều dẫn về {need}. Một chủ đề '

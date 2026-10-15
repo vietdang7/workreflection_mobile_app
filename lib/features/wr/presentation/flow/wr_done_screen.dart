@@ -235,7 +235,7 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
         if (milestone != null)
           _MemoryNote(
             key: const Key('wr_done_milestone'),
-            eyebrow: tr('Career Memory · Cột mốc', 'Career Memory · Milestone'),
+            eyebrow: tr('Dấu ấn hành trình · Cột mốc', 'Journey marks · Milestone'),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [

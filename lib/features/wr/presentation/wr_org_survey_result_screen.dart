@@ -342,11 +342,11 @@ class _Result extends ConsumerWidget {
         Text(
           wrKeepCompounds(tr(
             'Cảm ơn bạn đã đóng góp. Câu trả lời của bạn đã được gộp vào dữ liệu '
-                'benchmark ẩn danh, không ảnh hưởng đến Reflection hay Career '
-                'Memory cá nhân.',
+                'benchmark ẩn danh, không ảnh hưởng đến những lần nhìn lại hay Dấu '
+                'ấn hành trình cá nhân.',
             'Thank you for contributing. Your answers have been pooled into '
                 'anonymous benchmark data. They do not affect your own '
-                'Reflection or Career Memory.',
+                'look-backs or Journey marks.',
           )),
           key: const Key('wr_org_survey_result_thanks'),
           textAlign: TextAlign.center,
@@ -587,9 +587,9 @@ class _WithdrawButtonState extends ConsumerState<_WithdrawButton> {
         content: Text(
           wrKeepCompounds(tr(
             'Mọi câu trả lời khảo sát tổ chức của bạn sẽ bị xoá và không còn được '
-                'tính vào dữ liệu tổng hợp. Reflection của bạn không bị ảnh hưởng.',
+                'tính vào dữ liệu tổng hợp. Những lần nhìn lại của bạn không bị ảnh hưởng.',
             'All your organisation survey answers will be deleted and no longer '
-                'counted in the pooled data. Your Reflections are unaffected.',
+                'counted in the pooled data. Your look-backs are unaffected.',
           )),
         ),
         actions: [

@@ -282,7 +282,7 @@ void main() {
         findsOneWidget,
       );
       expect(find.text('Xem toàn bộ lịch sử'), findsOneWidget);
-      expect(find.text('Xem toàn bộ Career Memory'), findsNothing);
+      expect(find.text('Xem toàn bộ Dấu ấn hành trình'), findsNothing);
       expect(find.textContaining('Còn 34 ghi nhận nữa'), findsNothing);
     });
 

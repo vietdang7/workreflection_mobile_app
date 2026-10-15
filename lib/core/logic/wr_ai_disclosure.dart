@@ -160,11 +160,11 @@ List<WrAiDataFlow> get kWrAiDataFlows => [
     ),
     data: tr(
       'Câu bạn vừa viết, các lượt trước trong cùng cuộc trò chuyện, và tóm '
-          'tắt những điều bạn đã nhìn lại gần đây: tình huống bạn ghi, insight, '
+          'tắt những điều bạn đã nhìn lại gần đây: tình huống bạn ghi, phần đọc, '
           'chủ đề đang thực hành, kết quả tự đánh giá.',
       'What you just wrote, the earlier turns in the same conversation, and a '
           'summary of what you have looked back on recently: the situations you '
-          'logged, insights, the themes you are practising, your self-assessment '
+          'logged, readings, the themes you are practising, your self-assessment '
           'results.',
     ),
     recipient: 'OpenRouter → DeepSeek',

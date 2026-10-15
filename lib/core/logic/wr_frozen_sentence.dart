@@ -42,10 +42,15 @@ import '../l10n/wr_tr.dart';
 
 /// Một câu mẫu có sẵn hai bản, để còn nhận ra nó khi đọc lại.
 class WrFrozenSentence {
-  const WrFrozenSentence(this.vi, this.en);
+  const WrFrozenSentence(this.vi, this.en, {this.formerly = const []});
 
   final String vi;
   final String en;
+
+  /// Những bản chữ cũ của chính câu mẫu này. Câu đã lưu trong DB mang chữ của
+  /// lúc ghi, nên đổi chữ câu mẫu mà không giữ bản cũ ở đây thì mọi dòng cũ
+  /// thôi được nhận ra và hiện nguyên văn chữ cũ.
+  final List<String> formerly;
 
   /// Bản của ngôn ngữ đang bật.
   String get text => tr(vi, en);
@@ -70,7 +75,7 @@ String localizeFrozenSentence(
   for (final template in templates) {
     // Thử khớp với CẢ HAI bản. Bản đang bật cũng phải thử: câu có thể đúng
     // ngôn ngữ ở phần khung nhưng lẫn nhãn của ngôn ngữ kia trong ô trống.
-    for (final source in [template.vi, template.en]) {
+    for (final source in [template.vi, template.en, ...template.formerly]) {
       final slots = _slotsOf(text, source);
       if (slots == null) continue;
 

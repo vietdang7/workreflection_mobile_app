@@ -635,9 +635,12 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
   // benchmark, need_reading) giữ câu cũ.
   ({String title, String sub}) get _headline => switch (trigger) {
     PaywallTrigger.aiInsight => (
-      title: tr('AI Insight từ Career Memory', 'AI Insight from Career Memory'),
+      title: tr(
+        'Đọc sâu từ Dấu ấn hành trình',
+        'A deeper reading from your Journey marks',
+      ),
       sub: tr(
-        'Nhận diện mẫu hình bạn khó tự thấy.',
+        'Nhận ra điều đang lặp lại mà bạn khó tự thấy.',
         'Spot the patterns that are hard to see on your own.',
       ),
     ),
@@ -692,17 +695,23 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
       ),
     ),
     PaywallTrigger.careerMemory => (
-      title: tr('Xem toàn bộ Career Memory', 'See all of Career Memory'),
+      title: tr(
+        'Xem toàn bộ Dấu ấn hành trình',
+        'See all of your Journey marks',
+      ),
       sub: tr(
-        'Mọi Reflection bạn từng viết, kết nối thành một hành trình.',
-        'Every Reflection you have written, joined into one journey.',
+        'Mọi dòng bạn từng viết, nối lại thành một hành trình.',
+        'Every line you have written, joined into one journey.',
       ),
     ),
     PaywallTrigger.selfCheckDeep => (
-      title: tr('Diễn giải sâu cho Self-Check', 'Deep reading for Self-Check'),
+      title: tr(
+        'Đọc sâu điều kiện làm việc',
+        'A deeper reading of your working conditions',
+      ),
       sub: tr(
-        'Xem điều gì đang thực sự ảnh hưởng đến bạn.',
-        'See what is really affecting you.',
+        'Xem điều gì quanh bạn đang nâng đỡ và điều gì đang cản trở.',
+        'See what around you is supporting you and what is holding you back.',
       ),
     ),
     PaywallTrigger.defaultTrigger => (
@@ -769,18 +778,21 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
         WrEntitlement(plan: WrPlan.free).maxActivePracticeThemes ?? 2;
     final freeFeatures = [
       _FeatureRow(
-        label: tr('Reflection hàng ngày', 'Daily Reflection'),
+        label: tr('Nhìn lại hàng ngày', 'Daily look-backs'),
         avail: true,
       ),
       _FeatureRow(
         label: tr(
-          'Pattern cơ bản (đếm lặp lại)',
-          'Basic Pattern (repeat counts)',
+          'Những điều đang lặp lại',
+          'What keeps coming back',
         ),
         avail: true,
       ),
       _FeatureRow(
-        label: tr('Self-Check (15 câu)', 'Self-Check (15 questions)'),
+        label: tr(
+          'Khảo sát điều kiện làm việc (15 câu)',
+          'Workplace conditions survey (15 questions)',
+        ),
         avail: true,
       ),
       _FeatureRow(
@@ -792,15 +804,15 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
       ),
       _FeatureRow(
         label: tr(
-          'AI Insight & Pattern nâng cao',
-          'AI Insight & advanced Pattern',
+          'Tổng quan hai nguồn đặt cạnh nhau',
+          'Both sources side by side',
         ),
         avail: false,
       ),
       _FeatureRow(
         label: tr(
-          'Diễn giải sâu Self-Check + xu hướng',
-          'Self-Check deep reading + trends',
+          'Xu hướng điều kiện làm việc theo thời gian',
+          'Working conditions trends over time',
         ),
         avail: false,
       ),
@@ -812,7 +824,7 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
         avail: false,
       ),
       _FeatureRow(
-        label: tr('Career Memory đầy đủ', 'Full Career Memory'),
+        label: tr('Dấu ấn hành trình đầy đủ', 'All your Journey marks'),
         avail: false,
       ),
       _FeatureRow(
