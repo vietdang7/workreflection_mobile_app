@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 
 import '../l10n/wr_tr.dart';
 import '../l10n/wr_vi_compounds.g.dart';
@@ -127,7 +128,8 @@ String wrKeepCompounds(String text) =>
 /// gì — nhưng đừng tắt nó ở mã chạy thật.
 bool wrParagraphKeepsTail = true;
 
-/// Đoạn văn nội dung: căn đều hai bên, chữ cuối câu không rớt xuống một mình.
+/// Đoạn văn nội dung: căn đều hai bên khi các dòng đã gần kín (không thì căn
+/// trái, xem [wrParagraphShouldJustify]), chữ cuối câu không rớt xuống một mình.
 ///
 /// Dùng cho phần ĐỌC — mô tả chủ đề, câu chuyện, insight, đoạn giải thích.
 /// KHÔNG dùng cho tiêu đề, nhãn nút hay dòng chữ ngắn trong thẻ: căn đều một
@@ -161,14 +163,110 @@ class WrParagraph extends StatelessWidget {
     height: 1.6,
   );
 
+  /// Căn đều được giãn mỗi khoảng trắng thêm tối đa bấy nhiêu lần cỡ chữ.
+  /// Quá mức này thì khoảng trắng giữa chữ thấy rõ — khi đó cả đoạn căn trái.
+  static const double kMaxJustifyStretchEm = 0.2;
+
   @override
   Widget build(BuildContext context) {
-    return Text(
-      wrKeepWords(text),
+    final text = Text(
+      wrKeepWords(this.text),
       textAlign: textAlign,
       maxLines: maxLines,
       overflow: overflow,
       style: style ?? defaultStyle,
     );
+    // Họp khách 14/10: "căn chỉnh chữ cân đối". Căn đều hai bên mà một cụm
+    // từ ghép đã nối (không ngắt được) phải xuống dòng, thì dòng trên bị kéo
+    // giãn, khoảng trắng giữa các chữ to bất thường ("hệ thống   gợi ý   giúp
+    // bám sát"). [_JustifyGuard] đo lúc dàn trang: dòng nào giãn quá tay thì
+    // cả đoạn căn trái.
+    return textAlign == TextAlign.justify ? _JustifyGuard(child: text) : text;
+  }
+}
+
+/// Bọc ngoài một `Text` căn đều; lúc dàn trang quyết định `RenderParagraph`
+/// bên trong căn đều hay căn trái, theo [wrParagraphShouldJustify].
+///
+/// Không dùng `LayoutBuilder`: nó không trả được kích thước nội tại, nên mọi
+/// đoạn nằm trong `AlertDialog` (vốn đo `IntrinsicWidth`) sẽ đổ. Ở đây chỉ đổi
+/// lề — lề không đổi kích thước chữ — nên kích thước nội tại vẫn đi thẳng
+/// xuống `Text`.
+class _JustifyGuard extends SingleChildRenderObjectWidget {
+  const _JustifyGuard({required super.child});
+
+  @override
+  RenderObject createRenderObject(BuildContext context) =>
+      _RenderJustifyGuard();
+
+  @override
+  void updateRenderObject(BuildContext context, RenderObject renderObject) {
+    // `Text` dựng lại sẽ đặt lề về căn đều (chỉ vẽ lại, không dàn lại trang),
+    // nên ép dàn lại để quyết định lề được áp lần nữa.
+    renderObject.markNeedsLayout();
+  }
+}
+
+class _RenderJustifyGuard extends RenderProxyBox {
+  RenderParagraph? _paragraph() {
+    RenderObject? node = child;
+    for (var depth = 0; node != null && depth < 8; depth++) {
+      if (node is RenderParagraph) return node;
+      RenderObject? next;
+      node.visitChildren((c) => next ??= c);
+      node = next;
+    }
+    return null;
+  }
+
+  @override
+  void performLayout() {
+    final p = _paragraph();
+    if (p != null) {
+      p.textAlign = wrParagraphShouldJustify(p, constraints.maxWidth)
+          ? TextAlign.justify
+          : TextAlign.start;
+    }
+    super.performLayout();
+  }
+}
+
+/// Đoạn trong [paragraph] ở bề rộng [maxWidth] căn đều có đẹp không: ở mọi
+/// dòng trừ dòng cuối, phần hụt chia cho số khoảng trắng của dòng không vượt
+/// quá [WrParagraph.kMaxJustifyStretchEm] lần cỡ chữ. Tính trên từng khoảng
+/// trắng chứ không trên cả dòng: dòng ít chữ (cỡ chữ máy to) chỉ hụt chút ít
+/// cũng đã giãn mỗi khoảng trắng rất rộng.
+bool wrParagraphShouldJustify(RenderParagraph paragraph, double maxWidth) {
+  if (!maxWidth.isFinite || maxWidth <= 0) return true;
+  final span = paragraph.text;
+  final plain = span.toPlainText();
+  final painter = TextPainter(
+    text: span,
+    textDirection: paragraph.textDirection,
+    textScaler: paragraph.textScaler,
+    maxLines: paragraph.maxLines,
+    strutStyle: paragraph.strutStyle,
+    textHeightBehavior: paragraph.textHeightBehavior,
+  )..layout(maxWidth: maxWidth);
+  try {
+    final lines = painter.computeLineMetrics();
+    if (lines.length < 2) return true;
+    final fontSize = (span is TextSpan ? span.style?.fontSize : null) ?? 14;
+    final maxStretch =
+        paragraph.textScaler.scale(fontSize) * WrParagraph.kMaxJustifyStretchEm;
+    for (final line in lines.take(lines.length - 1)) {
+      final start = painter.getPositionForOffset(
+        Offset(0, line.baseline - line.ascent / 2),
+      );
+      final range = painter.getLineBoundary(start);
+      final gaps = ' '
+          .allMatches(plain.substring(range.start, range.end).trimRight())
+          .length;
+      if (gaps == 0) return false;
+      if ((maxWidth - line.width) / gaps > maxStretch) return false;
+    }
+    return true;
+  } finally {
+    painter.dispose();
   }
 }

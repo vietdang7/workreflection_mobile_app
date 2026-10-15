@@ -201,14 +201,16 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
       SnackBar(
         key: const Key('wr_work_info_saved'),
         content: Text(
-          wrKeepCompounds(filled == 0
-              ? tr('Chưa có mục nào được điền.', 'Nothing filled in yet.')
-              : tr(
-                  'Đã lưu bối cảnh công việc ($filled mục). Gợi ý thực hành '
-                      'sẽ bám sát hơn.',
-                  'Work context saved ($filled items). Practice suggestions '
-                      'will fit more closely.',
-                )),
+          wrKeepCompounds(
+            filled == 0
+                ? tr('Chưa có mục nào được điền.', 'Nothing filled in yet.')
+                : tr(
+                    'Đã lưu bối cảnh công việc ($filled mục). Gợi ý thực hành '
+                        'sẽ bám sát hơn.',
+                    'Work context saved ($filled items). Practice suggestions '
+                        'will fit more closely.',
+                  ),
+          ),
         ),
       ),
     );
@@ -241,7 +243,12 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
             padding: const EdgeInsets.fromLTRB(22, 6, 22, 40),
             children: [
               Text(
-                wrKeepCompounds(tr('GIÚP GỢI Ý CHÍNH XÁC HƠN', 'FOR MORE ACCURATE SUGGESTIONS')),
+                wrKeepCompounds(
+                  tr(
+                    'GIÚP GỢI Ý CHÍNH XÁC HƠN',
+                    'FOR MORE ACCURATE SUGGESTIONS',
+                  ),
+                ),
                 style: const TextStyle(
                   fontSize: 11.5,
                   fontWeight: FontWeight.w700,
@@ -297,7 +304,8 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
                       _RoleField(
                         field: f,
                         history: history[f] ?? const [],
-                        legacy: f == WrWorkContextField.position && hasLegacyRole
+                        legacy:
+                            f == WrWorkContextField.position && hasLegacyRole
                             ? legacyRole
                             : null,
                         isLast: f == WrWorkContextField.values.last,
@@ -328,7 +336,11 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
                       onPressed: _busy ? null : _saveAll,
                       style: _primaryStyle,
                       child: Text(
-                        wrKeepCompounds(_busy ? tr('Đang lưu…', 'Saving…') : tr('Lưu', 'Save')),
+                        wrKeepCompounds(
+                          _busy
+                              ? tr('Đang lưu…', 'Saving…')
+                              : tr('Lưu', 'Save'),
+                        ),
                         style: const TextStyle(
                           fontSize: 14.5,
                           fontWeight: FontWeight.w700,
@@ -341,8 +353,13 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
               const SizedBox(height: 20),
 
               // ── 2. TÀI LIỆU ────────────────────────────────────────────
-              // Họp khách 14/10: chứng chỉ gom chung vào thẻ này.
               const _DocumentsCard(),
+              const SizedBox(height: 20),
+
+              // ── 3. CHỨNG CHỈ, KHOÁ HỌC ĐÃ CÓ ───────────────────────────
+              // Họp khách 14/10: chỉ một nút tải file thay cho form nhiều ô.
+              // Người dùng 15/10: thẻ riêng, không chung thẻ Tài liệu.
+              const _OwnedSkillsCard(),
             ],
           ),
         ),
@@ -372,7 +389,11 @@ const _tealAction = TextStyle(
   color: WrColors.pillTealText,
 );
 
-const _tinyMuted = TextStyle(fontSize: 12.5, color: WrColors.text3, height: 1.5);
+const _tinyMuted = TextStyle(
+  fontSize: 12.5,
+  color: WrColors.text3,
+  height: 1.5,
+);
 
 /// Một trường của khối VAI TRÒ — `field(key)` trong script.
 class _RoleField extends StatelessWidget {
@@ -450,9 +471,11 @@ class _RoleField extends StatelessWidget {
                   child: Padding(
                     padding: const EdgeInsets.only(left: 10),
                     child: Text(
-                      wrKeepCompounds(curText != null
-                          ? tr('Điều chỉnh', 'Adjust')
-                          : tr('Thêm', 'Add')),
+                      wrKeepCompounds(
+                        curText != null
+                            ? tr('Điều chỉnh', 'Adjust')
+                            : tr('Thêm', 'Add'),
+                      ),
                       style: _tealAction,
                     ),
                   ),
@@ -495,12 +518,14 @@ class _RoleField extends StatelessWidget {
             if (curText != null) ...[
               const SizedBox(height: 6),
               Text(
-                wrKeepCompounds(tr(
-                  'Nội dung cũ vẫn được giữ lại. Lần này được ghi thêm, không '
-                      'đè lên.',
-                  'Your earlier text is kept. This one is added, not written '
-                      'over it.',
-                )),
+                wrKeepCompounds(
+                  tr(
+                    'Nội dung cũ vẫn được giữ lại. Lần này được ghi thêm, không '
+                        'đè lên.',
+                    'Your earlier text is kept. This one is added, not written '
+                        'over it.',
+                  ),
+                ),
                 style: _tinyMuted,
               ),
             ],
@@ -553,10 +578,12 @@ class _RoleField extends StatelessWidget {
             if (cur != null) ...[
               const SizedBox(height: 4),
               Text(
-                wrKeepCompounds(tr(
-                  'Cập nhật ${workContextDateLabel(cur.createdAt)}',
-                  'Updated ${workContextDateLabel(cur.createdAt)}',
-                )),
+                wrKeepCompounds(
+                  tr(
+                    'Cập nhật ${workContextDateLabel(cur.createdAt)}',
+                    'Updated ${workContextDateLabel(cur.createdAt)}',
+                  ),
+                ),
                 style: _tinyMuted,
               ),
             ],
@@ -592,7 +619,9 @@ class _RoleField extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              wrKeepCompounds(workContextDateLabel(h.createdAt)),
+                              wrKeepCompounds(
+                                workContextDateLabel(h.createdAt),
+                              ),
                               style: _tinyMuted,
                             ),
                             const SizedBox(height: 1),
@@ -617,7 +646,10 @@ class _RoleField extends StatelessWidget {
                 onTap: onToggleHistory,
                 child: Padding(
                   padding: const EdgeInsets.only(top: 2),
-                  child: Text(wrKeepCompounds(tr('Thu gọn', 'Collapse')), style: _tealAction),
+                  child: Text(
+                    wrKeepCompounds(tr('Thu gọn', 'Collapse')),
+                    style: _tealAction,
+                  ),
                 ),
               ),
             ] else
@@ -628,10 +660,12 @@ class _RoleField extends StatelessWidget {
                 child: Padding(
                   padding: const EdgeInsets.only(top: 7),
                   child: Text(
-                    wrKeepCompounds(tr(
-                      '${older.length} lần cập nhật trước ›',
-                      '${older.length} earlier updates ›',
-                    )),
+                    wrKeepCompounds(
+                      tr(
+                        '${older.length} lần cập nhật trước ›',
+                        '${older.length} earlier updates ›',
+                      ),
+                    ),
                     style: _tealAction,
                   ),
                 ),
@@ -773,18 +807,33 @@ class _DocumentsCard extends ConsumerWidget {
             onPressed: () => context.push('/wr/jd-builder'),
             style: _ghostStyle,
             child: Text(
-              wrKeepCompounds(tr('Phác thảo theo gợi ý', 'Sketch with prompts')),
+              wrKeepCompounds(
+                tr('Phác thảo theo gợi ý', 'Sketch with prompts'),
+              ),
               style: const TextStyle(
                 fontSize: 13.5,
                 fontWeight: FontWeight.w600,
               ),
             ),
           ),
-          // ── Chứng chỉ, khoá học đã có ── (họp khách 14/10: chung một thẻ
-          // với JD, chỉ một nút tải file thay cho form nhiều ô).
-          const SizedBox(height: 15),
-          Container(height: 1, color: WrColors.lineSoft),
-          const SizedBox(height: 13),
+        ],
+      ),
+    );
+  }
+}
+
+/// Khối CHỨNG CHỈ, KHOÁ HỌC ĐÃ CÓ — thẻ riêng dưới thẻ Tài liệu.
+class _OwnedSkillsCard extends StatelessWidget {
+  const _OwnedSkillsCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return WrCard(
+      key: const Key('wr_work_info_owned_skills_card'),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
           Text(
             wrKeepCompounds(
               tr('CHỨNG CHỈ, KHOÁ HỌC ĐÃ CÓ', 'CERTIFICATES AND COURSES'),

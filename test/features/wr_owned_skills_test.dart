@@ -259,13 +259,20 @@ void main() {
         ),
       );
 
-      // Nằm chung thẻ Tài liệu với JD, không còn khối riêng.
+      // Thẻ riêng dưới thẻ Tài liệu (người dùng 15/10), không chung thẻ JD.
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('wr_work_info_owned_skills_card')),
+          matching: find.text('CHỨNG CHỈ, KHOÁ HỌC ĐÃ CÓ'),
+        ),
+        findsOneWidget,
+      );
       expect(
         find.descendant(
           of: find.byKey(const Key('wr_work_info_documents_card')),
           matching: find.text('CHỨNG CHỈ, KHOÁ HỌC ĐÃ CÓ'),
         ),
-        findsOneWidget,
+        findsNothing,
       );
       await _openAddSheet(tester);
 
