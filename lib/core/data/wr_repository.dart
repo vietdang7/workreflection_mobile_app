@@ -19,9 +19,12 @@ import '../models/workshop.dart';
 
 /// Những đuôi file người dùng được chọn cho tài liệu bối cảnh.
 ///
-/// JD và CV người Việt gửi nhau phần lớn là file Word, sau đó mới tới PDF và
-/// ảnh chụp. `.docx` đọc được từ 04/08 — máy chủ tự bóc chữ trong file, không
-/// qua model (`wr-doc-analyze/docx.ts`).
+/// JD và CV người Việt gửi nhau phần lớn là file Word, sau đó mới tới PDF.
+/// Máy chủ tự bóc chữ trong file (`wr-doc-analyze/docx.ts`, `pdf.ts`) rồi gửi
+/// chữ cho DeepSeek.
+///
+/// Ảnh chụp KHÔNG còn nhận từ 15/10/2026: DeepSeek chỉ đọc chữ, không đọc
+/// hình. Trước đó ảnh đi qua OpenRouter tới Gemini.
 ///
 /// `.doc` bản cũ thì KHÔNG: nó là định dạng nhị phân đời khác, không phải ZIP,
 /// bóc được nó là một việc riêng. Cho chọn rồi báo hỏng còn tệ hơn không cho
@@ -29,10 +32,6 @@ import '../models/workshop.dart';
 const List<String> kContextDocExtensions = [
   'pdf',
   'docx',
-  'png',
-  'jpg',
-  'jpeg',
-  'webp',
 ];
 
 /// Kiểu MIME theo đuôi file, dùng lúc đẩy lên Storage.

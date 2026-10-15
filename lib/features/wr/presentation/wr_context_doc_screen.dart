@@ -317,8 +317,10 @@ class _WrContextDocScreenState extends ConsumerState<WrContextDocScreen> {
             const SizedBox(height: 8),
             Text(
               wrKeepCompounds(tr(
-                'Nhận file PDF, Word (.docx) hoặc ảnh chụp (PNG, JPG, WEBP).',
-                'Takes PDF, Word (.docx) or photos (PNG, JPG, WEBP).',
+                'Nhận file PDF hoặc Word (.docx). PDF cần là bản có chữ, không '
+                    'phải bản chụp hay quét.',
+                'Takes PDF or Word (.docx). The PDF needs real text, not a scan '
+                    'or photo.',
               )),
               style: TextStyle(
                 fontSize: 13.5,

@@ -24,11 +24,17 @@
 //   · Trần [DAILY_LIMIT] lượt gọi model mỗi người mỗi 24 giờ.
 //
 // ---------------------------------------------------------------------------
-// SECRET: dùng chung OPENROUTER_API_KEY với `wr-chat`.
+// SECRET: DEEPSEEK_API_KEY, dùng chung mọi hàm AI (`_shared/deepseek.ts`).
 // ---------------------------------------------------------------------------
 
 import { createClient } from 'jsr:@supabase/supabase-js@2';
 import { hasAiConsent } from '../_shared/ai_consent.ts';
+import {
+  deepSeekFetch,
+  deepSeekKey,
+  deepSeekModel,
+  deepSeekText,
+} from '../_shared/deepseek.ts';
 import { pick, readLocale, readLocaleHeader, WrLocale } from '../_shared/locale.ts';
 import {
   buildMessages,
@@ -38,15 +44,9 @@ import {
   validateAll,
 } from './reading.ts';
 
-/// Cùng model với `wr-chat` / `wr-narrative`, ghim bản có ngày.
-const MODEL = Deno.env.get('WR_EXPERIENCE_MODEL') ??
-  'deepseek/deepseek-v4-flash-0731';
-
 const MAX_OUTPUT_TOKENS = 700;
 const UPSTREAM_TIMEOUT_MS = 45_000;
 const DAILY_LIMIT = 8;
-
-const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -77,9 +77,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return json({ error: pick(locale, 'Yêu cầu không hợp lệ.', 'Invalid request.') }, 405);
   }
 
-  const apiKey = Deno.env.get('OPENROUTER_API_KEY');
+  const apiKey = deepSeekKey();
   if (!apiKey) {
-    console.error('THIẾU secret OPENROUTER_API_KEY — hàm không thể chạy.');
+    console.error('THIẾU secret DEEPSEEK_API_KEY — hàm không thể chạy.');
     return skip('not_configured');
   }
 
@@ -107,8 +107,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   // ── 2 · Chưa cho phép gửi sang AI thì dừng ──────────────────────────────
   //
-  // Hàm này gửi chính những dòng người dùng tự viết sang DeepSeek qua
-  // OpenRouter. Guideline 5.1.1(i), xem `_shared/ai_consent.ts`.
+  // Hàm này gửi chính những dòng người dùng tự viết sang DeepSeek.
+  // Guideline 5.1.1(i), xem `_shared/ai_consent.ts`.
   if (!(await hasAiConsent(db, user.id))) {
     return skip('ai_consent_required');
   }
@@ -156,7 +156,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     reply = await callModel(apiKey, buildMessages(pillars, locale));
   } catch (e) {
     const aborted = e instanceof DOMException && e.name === 'AbortError';
-    console.error(aborted ? 'OpenRouter quá hạn chờ' : `OpenRouter lỗi: ${e}`);
+    console.error(aborted ? 'DeepSeek quá hạn chờ' : `DeepSeek lỗi: ${e}`);
     return skip('upstream_error');
   }
   if (!reply) return skip('empty_reply');
@@ -177,43 +177,24 @@ Deno.serve(async (req: Request): Promise<Response> => {
     fingerprint: key,
     locale,
     result,
-    model: MODEL,
+    model: deepSeekModel(),
   });
   if (writeError) console.error('Không ghi được bản đọc:', writeError.message);
 
   return json({ generated: true, cached: false, locale, pillars: result });
 });
 
-async function callModel(apiKey: string, messages: unknown[]): Promise<string> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
-  try {
-    const res = await fetch(OPENROUTER_URL, {
-      method: 'POST',
-      signal: controller.signal,
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://workreflection.app',
-        'X-Title': 'WorkReflection Mobile',
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        messages,
-        // Đọc lại dữ liệu, không trò chuyện: nhiệt độ thấp để khỏi bịa thêm.
-        temperature: 0.3,
-        max_tokens: MAX_OUTPUT_TOKENS,
-        response_format: { type: 'json_object' },
-        reasoning: { enabled: false },
-      }),
-    });
-    if (!res.ok) {
-      console.error(`OpenRouter ${res.status}: ${(await res.text()).slice(0, 500)}`);
-      return '';
-    }
-    const payload = await res.json();
-    return String(payload?.choices?.[0]?.message?.content ?? '').trim();
-  } finally {
-    clearTimeout(timer);
+async function callModel(key: string, messages: unknown[]): Promise<string> {
+  const res = await deepSeekFetch(key, messages, {
+    // Đọc lại dữ liệu, không trò chuyện: nhiệt độ thấp để khỏi bịa thêm.
+    temperature: 0.3,
+    maxTokens: MAX_OUTPUT_TOKENS,
+    json: true,
+    timeoutMs: UPSTREAM_TIMEOUT_MS,
+  });
+  if (!res.ok) {
+    console.error(`DeepSeek ${res.status}: ${(await res.text()).slice(0, 500)}`);
+    return '';
   }
+  return deepSeekText(res);
 }

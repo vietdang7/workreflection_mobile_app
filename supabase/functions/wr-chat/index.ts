@@ -1,10 +1,10 @@
-// Edge Function `wr-chat` — cầu nối giữa app và OpenRouter cho tính năng
+// Edge Function `wr-chat` — cầu nối giữa app và DeepSeek cho tính năng
 // Trò chuyện (AI Chatbox System Prompt v1.0).
 //
 // ---------------------------------------------------------------------------
-// VÌ SAO CÓ HÀM NÀY THAY VÌ APP GỌI THẲNG OPENROUTER
+// VÌ SAO CÓ HÀM NÀY THAY VÌ APP GỌI THẲNG DEEPSEEK
 //
-// Khoá OpenRouter gắn với ví tiền thật. Nhúng vào APK thì bất kỳ ai giải nén
+// Khoá DeepSeek gắn với ví tiền thật. Nhúng vào APK thì bất kỳ ai giải nén
 // bản cài cũng lấy được và tiêu tiền của khách, và đổi khoá sẽ phải phát hành
 // lại app. Ở đây khoá là một secret của Supabase, app không bao giờ thấy nó.
 //
@@ -19,7 +19,10 @@
 // ---------------------------------------------------------------------------
 // SECRET CẦN ĐẶT TRƯỚC KHI DEPLOY
 //
-//   supabase secrets set OPENROUTER_API_KEY=sk-or-v1-...
+//   supabase secrets set DEEPSEEK_API_KEY=sk-...   (xem `_shared/deepseek.ts`)
+//
+// Từ 15/10/2026 KHÔNG còn đường OpenRouter: tài khoản đó hết credit và mọi
+// hàm AI đã chuyển hẳn sang DeepSeek.
 //
 // SUPABASE_URL và SUPABASE_SERVICE_ROLE_KEY do nền tảng tự cấp, không cần đặt.
 // ---------------------------------------------------------------------------
@@ -29,6 +32,7 @@ import {
   AI_CONSENT_REQUIRED_MESSAGE,
   hasAiConsent,
 } from '../_shared/ai_consent.ts';
+import { deepSeekFetch, deepSeekKey, deepSeekModel } from '../_shared/deepseek.ts';
 import { pick, readLocale, readLocaleHeader, WrLocale } from '../_shared/locale.ts';
 import { buildSystemPrompt } from './system_prompt.ts';
 import { buildUserContext } from './user_context.ts';
@@ -38,17 +42,10 @@ import { conversationTitle, shapeReply } from './reply_shaping.ts';
 // Cấu hình
 // ---------------------------------------------------------------------------
 
-/// Model chạy tính năng này.
-///
-/// Ghim đúng bản có ngày, CỐ Ý không dùng alias `~deepseek/deepseek-v4-flash-latest`.
-/// Alias sẽ tự trỏ sang model khác khi DeepSeek phát hành bản mới, và system
-/// prompt v1.0 đã được thử nghiệm theo hành vi của đúng bản này. Đổi model là
-/// một quyết định có kiểm chứng, không phải một việc xảy ra lúc nửa đêm.
-///
-/// So sánh 2026-08-03 giữa `deepseek-v4-flash` (24/04) và bản 0731: cùng cửa sổ
-/// 1M token, cùng bộ tham số, nhưng 0731 mới hơn, đã re-post-train, và rẻ hơn
-/// 36% ($0.09/$0.18 so với $0.14/$0.28 mỗi triệu token).
-const MODEL = Deno.env.get('WR_CHAT_MODEL') ?? 'deepseek/deepseek-v4-flash-0731';
+/// Model chạy tính năng này: `DEEPSEEK_MODEL`, mặc định `deepseek-chat` — chung
+/// mọi hàm AI (`_shared/deepseek.ts`). Ghi kèm mỗi lượt trả lời để biết lượt
+/// nào do model nào viết.
+const MODEL = deepSeekModel();
 
 /// Số lượt hỏi mỗi ngày của gói miễn phí (giờ VN, xem `wr_chat_used_today`).
 const FREE_DAILY_LIMIT = Number(Deno.env.get('WR_CHAT_FREE_LIMIT') ?? '10');
@@ -116,8 +113,6 @@ const MAX_OUTPUT_TOKENS = 300;
 /// chờ lâu hơn nữa thì thà báo lỗi để họ gửi lại.
 const UPSTREAM_TIMEOUT_MS = 45_000;
 
-const DEEPSEEK_URL = 'https://api.deepseek.com/chat/completions';
-const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -167,13 +162,12 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return fail(pick(locale, 'Yêu cầu không hợp lệ.', 'Invalid request.'), 405);
   }
 
-  const deepSeekKey = Deno.env.get('DEEPSEEK_API_KEY');
-  const openRouterKey = Deno.env.get('OPENROUTER_API_KEY');
-  if (!deepSeekKey && !openRouterKey) {
+  const apiKey = deepSeekKey();
+  if (!apiKey) {
     // Cấu hình thiếu là lỗi của người vận hành, không phải của người dùng. Ghi
     // ra log để người vận hành thấy, còn người dùng chỉ cần biết là chưa dùng
     // được.
-    console.error('THIẾU secret DEEPSEEK_API_KEY hoặc OPENROUTER_API_KEY — hàm không thể chạy.');
+    console.error('THIẾU secret DEEPSEEK_API_KEY — hàm không thể chạy.');
     return fail(
       pick(
         locale,
@@ -434,42 +428,14 @@ Deno.serve(async (req: Request): Promise<Response> => {
     { role: 'user', content: message },
   ];
 
-  const providerName = deepSeekKey ? 'DeepSeek' : 'OpenRouter';
+  const providerName = 'DeepSeek';
 
-  /// Gọi DeepSeek trực tiếp hoặc fallback sang OpenRouter một lần.
-  const callUpstream = () => {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
-    const useDeepSeek = Boolean(deepSeekKey);
-    const url = useDeepSeek ? DEEPSEEK_URL : OPENROUTER_URL;
-    const headers: Record<string, string> = {
-      Authorization: `Bearer ${deepSeekKey ?? openRouterKey}`,
-      'Content-Type': 'application/json',
-    };
-    if (!useDeepSeek) {
-      headers['HTTP-Referer'] = 'https://workreflection.app';
-      headers['X-Title'] = 'WorkReflection Mobile';
-    }
-
-    const payload: Record<string, unknown> = {
-      model: useDeepSeek
-        ? (Deno.env.get('DEEPSEEK_MODEL') ?? 'deepseek-chat')
-        : MODEL,
-      messages,
+  const callUpstream = () =>
+    deepSeekFetch(apiKey, messages, {
       temperature: 0.7,
-      max_tokens: MAX_OUTPUT_TOKENS,
-    };
-    if (!useDeepSeek) {
-      payload.reasoning = { enabled: false };
-    }
-
-    return fetch(url, {
-      method: 'POST',
-      signal: controller.signal,
-      headers,
-      body: JSON.stringify(payload),
-    }).finally(() => clearTimeout(timer));
-  };
+      maxTokens: MAX_OUTPUT_TOKENS,
+      timeoutMs: UPSTREAM_TIMEOUT_MS,
+    });
 
   let reply: string;
   try {

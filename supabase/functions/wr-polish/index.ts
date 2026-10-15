@@ -36,9 +36,11 @@
 // ---------------------------------------------------------------------------
 // SECRET CẦN ĐẶT TRƯỚC KHI DEPLOY
 //
-//   supabase secrets set OPENROUTER_API_KEY=sk-or-v1-...   (dùng chung wr-chat)
+//   supabase secrets set DEEPSEEK_API_KEY=sk-...   (dùng chung mọi hàm AI,
+//   xem `_shared/deepseek.ts`)
 // ---------------------------------------------------------------------------
 
+import { deepSeekFetch, deepSeekKey, deepSeekText } from '../_shared/deepseek.ts';
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 import { languageRule, readLocale, WrLocale } from '../_shared/locale.ts';
 import { stripMarkdown } from '../_shared/strip_markdown.ts';
@@ -47,11 +49,6 @@ import {
   inspectPolished,
   sourceHash,
 } from './guard.ts';
-
-/// Cùng model với `wr-chat` và `wr-narrative`. Ghim bản có ngày, không dùng
-/// alias `-latest` — xem ghi chú dài ở `wr-chat/index.ts`.
-const MODEL = Deno.env.get('WR_POLISH_MODEL') ??
-  'deepseek/deepseek-v4-flash-0731';
 
 /// Trần độ dài. Câu gốc dài nhất của lớp 2 chừng 80 chữ, và quy tắc 7 buộc bản
 /// viết lại không được dài hơn 20%.
@@ -64,8 +61,6 @@ const MAX_OUTPUT_TOKENS = 320;
 /// vào bộ đệm và lần mở màn SAU sẽ đọc được ngay. Cắt ở 2 giây tại đây thì
 /// không lượt nào kịp vào đệm, và lớp 3 vĩnh viễn không bao giờ hiện.
 const UPSTREAM_TIMEOUT_MS = 20_000;
-
-const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 /// Trần độ dài chuỗi nhận vào. Câu lớp 2 dài nhất chừng 400 ký tự; 2000 là
 /// rộng rãi mà vẫn chặn được ai đó bơm cả một bài văn lên để đốt token.
@@ -108,9 +103,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
   if (req.method !== 'POST') return plain('method_not_allowed');
 
-  const openRouterKey = Deno.env.get('OPENROUTER_API_KEY');
-  if (!openRouterKey) {
-    console.error('THIẾU secret OPENROUTER_API_KEY — lớp 3 tắt.');
+  const apiKey = deepSeekKey();
+  if (!apiKey) {
+    console.error('THIẾU secret DEEPSEEK_API_KEY — lớp 3 tắt.');
     return plain('no_api_key');
   }
 
@@ -169,45 +164,30 @@ Deno.serve(async (req: Request): Promise<Response> => {
 
   // ── 5 · Gọi model ───────────────────────────────────────────────────────
   let raw = '';
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
   try {
-    const res = await fetch(OPENROUTER_URL, {
-      method: 'POST',
-      signal: controller.signal,
-      headers: {
-        Authorization: `Bearer ${openRouterKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://workreflection.app',
-        'X-Title': 'WorkReflection Mobile',
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [
-          { role: 'system', content: POLISH_SYSTEM_PROMPT + languageRule(locale) },
-          { role: 'user', content: original },
-        ],
-        // Thấp nhất trong ba hàm. Đây là biên tập câu chữ, không phải sáng tác:
-        // nhiệt độ cao ở đây đọc ra thành viết lại nội dung.
+    const res = await deepSeekFetch(
+      apiKey,
+      [
+        { role: 'system', content: POLISH_SYSTEM_PROMPT + languageRule(locale) },
+        { role: 'user', content: original },
+      ],
+      {
+        // Thấp nhất trong các hàm. Đây là biên tập câu chữ, không phải sáng
+        // tác: nhiệt độ cao ở đây đọc ra thành viết lại nội dung.
         temperature: 0.3,
-        max_tokens: MAX_OUTPUT_TOKENS,
-        reasoning: { enabled: false },
-      }),
-    });
+        maxTokens: MAX_OUTPUT_TOKENS,
+        timeoutMs: UPSTREAM_TIMEOUT_MS,
+      },
+    );
     if (!res.ok) {
-      console.error(`OpenRouter ${res.status}`);
+      console.error(`DeepSeek ${res.status}`);
       return plain('upstream_error');
     }
-    const payload = await res.json();
-    raw = stripMarkdown(
-      String(payload?.choices?.[0]?.message?.content ?? ''),
-    ).trim();
+    raw = stripMarkdown(await deepSeekText(res)).trim();
   } catch (e) {
     const aborted = e instanceof DOMException && e.name === 'AbortError';
-    console.error(aborted ? 'OpenRouter quá hạn chờ' : `OpenRouter lỗi: ${e}`);
+    console.error(aborted ? 'DeepSeek quá hạn chờ' : `DeepSeek lỗi: ${e}`);
     return plain(aborted ? 'upstream_timeout' : 'upstream_error');
-  } finally {
-    clearTimeout(timer);
   }
 
   // ── 6 · Ba rào chắn ─────────────────────────────────────────────────────

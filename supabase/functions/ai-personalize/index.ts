@@ -13,8 +13,8 @@
 // ---------------------------------------------------------------------------
 // VÌ SAO PHẢI THÊM CỔNG CHẶN — VÀ VÌ SAO CHẶN CÓ ĐIỀU KIỆN
 //
-// Hàm gửi vị trí, thâm niên, phòng ban và điểm khảo sát sang OpenRouter →
-// Google (Gemini). App gọi nó TỰ ĐỘNG lúc mở màn Báo cáo, người dùng không bấm
+// Hàm gửi vị trí, thâm niên, phòng ban và điểm khảo sát sang DeepSeek
+// (trước 15/10/2026 là OpenRouter → Gemini). App gọi nó TỰ ĐỘNG lúc mở màn Báo cáo, người dùng không bấm
 // gì cả. Không chặn thì dữ liệu rời máy trước khi kịp hỏi — đúng thứ App Store
 // Guideline 5.1.1(i) cấm, và là lý do bản 1.0 (6) bị từ chối ngày 06/09/2026.
 //
@@ -35,13 +35,14 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
 import { stripMarkdown } from "../_shared/strip_markdown.ts";
+import { DEEPSEEK_URL, deepSeekKey, deepSeekModel } from "../_shared/deepseek.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const OPENROUTER_API_KEY = Deno.env.get("OPENROUTER_API_KEY");
-
-const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1/chat/completions";
-const MODEL_NAME = "google/gemini-3.1-flash-lite-preview";
+// 15/10/2026: chuyển từ OpenRouter → Gemini sang gọi thẳng DeepSeek, như mọi
+// hàm AI khác (`_shared/deepseek.ts`). OpenRouter hết credit từ 14/10.
+const DEEPSEEK_API_KEY = deepSeekKey();
+const MODEL_NAME = deepSeekModel();
 const REQUEST_TIMEOUT_MS = 30_000;
 
 /// Phải khớp `kWrAiDisclosureVersion` trong `lib/core/logic/wr_ai_disclosure.dart`.
@@ -275,17 +276,17 @@ async function handleGenerate(
     console.error("[ai-personalize] upsert error:", upsertError.message);
   }
 
-  // Call OpenRouter API with timeout
+  // Call DeepSeek API with timeout
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
     const userPrompt = buildUserPrompt(section, userContext, scoreContext, defaultContent);
 
-    const openRouterRes = await fetch(OPENROUTER_BASE_URL, {
+    const upstreamRes = await fetch(DEEPSEEK_URL, {
       method: "POST",
       headers: {
-        Authorization: `Bearer ${OPENROUTER_API_KEY}`,
+        Authorization: `Bearer ${DEEPSEEK_API_KEY}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
@@ -302,15 +303,15 @@ async function handleGenerate(
 
     clearTimeout(timeoutId);
 
-    if (!openRouterRes.ok) {
-      const errorBody = await openRouterRes.text();
-      console.error("[ai-personalize] OpenRouter error:", errorBody);
+    if (!upstreamRes.ok) {
+      const errorBody = await upstreamRes.text();
+      console.error("[ai-personalize] DeepSeek error:", errorBody);
 
       await supabaseAdmin
         .from("cc_ai_personalization_cache")
         .update({
           status: "failed",
-          error_message: `OpenRouter API error: ${openRouterRes.status}`,
+          error_message: `DeepSeek API error: ${upstreamRes.status}`,
           updated_at: new Date().toISOString(),
         })
         .eq("report_id", reportId)
@@ -322,11 +323,11 @@ async function handleGenerate(
       );
     }
 
-    const openRouterData = await openRouterRes.json();
-    const rawContent = openRouterData?.choices?.[0]?.message?.content;
+    const upstreamData = await upstreamRes.json();
+    const rawContent = upstreamData?.choices?.[0]?.message?.content;
 
     if (!rawContent) {
-      console.error("[ai-personalize] No content in OpenRouter response:", openRouterData);
+      console.error("[ai-personalize] No content in DeepSeek response:", upstreamData);
 
       await supabaseAdmin
         .from("cc_ai_personalization_cache")
@@ -452,8 +453,8 @@ Deno.serve(async (req) => {
   }
 
   try {
-    if (!OPENROUTER_API_KEY) {
-      return jsonResponse({ error: "OPENROUTER_API_KEY is not configured" }, 500);
+    if (!DEEPSEEK_API_KEY) {
+      return jsonResponse({ error: "DEEPSEEK_API_KEY is not configured" }, 500);
     }
 
     const body = await req.json();

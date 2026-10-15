@@ -78,10 +78,13 @@ void main() {
       final names = kWrAiRecipients.map((r) => r.name).toList();
       // Apple: "identify who the data is sent to". "Các đối tác công nghệ" là
       // cách nói tránh và không qua được điều kiện đó.
-      expect(names, contains('OpenRouter'));
-      expect(names, contains('DeepSeek'));
-      expect(names, contains('Google (Gemini)'));
-      expect(names, contains('Ausynclab'));
+      // Từ 15/10/2026 mọi luồng AI gọi thẳng DeepSeek; không còn bên trung
+      // chuyển nào phải kể.
+      expect(names, ['DeepSeek', 'Ausynclab']);
+      for (final f in kWrAiDataFlows) {
+        expect(f.recipient, isNot(contains('OpenRouter')));
+        expect(f.recipient, isNot(contains('Gemini')));
+      }
     });
 
     test('mỗi bên nhận đều kèm link chính sách để tự kiểm', () {
@@ -91,10 +94,10 @@ void main() {
       }
     });
 
-    test('kể đủ CẢ NĂM luồng gửi dữ liệu đang có trong app', () {
+    test('kể đủ CẢ SÁU luồng gửi dữ liệu đang có trong app', () {
       // Sáu luồng: chat, đọc JD/CV, sinh Diễn biến, "Bạn đang khó ở chỗ nào"
       // (15/10/2026), đọc thành tiếng, và cá nhân hoá Báo cáo khảo sát
-      // (`ai-personalize` → Gemini). Thêm một luồng AI mới mà quên khai ở đây
+      // (`ai-personalize`). Thêm một luồng AI mới mà quên khai ở đây
       // thì bản công bố thành lời khai thiếu.
       //
       // Luồng thứ năm từng bị bỏ sót vì nó gọi một Edge Function có sẵn từ bản

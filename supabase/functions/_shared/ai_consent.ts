@@ -37,6 +37,11 @@ import type { SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 /// Lên 2 ngày 09/09/2026: bản công bố thêm luồng Báo cáo khảo sát gửi hồ sơ
 /// nghề nghiệp + điểm sang Gemini. Ai đồng ý bản 1 sẽ được hỏi lại — đó là ý
 /// đồ, vì họ đồng ý cho một danh sách ngắn hơn.
+///
+/// App lên bản công bố 3 ngày 15/10/2026 (chuyển hẳn sang DeepSeek), nhưng ở
+/// đây CỐ Ý giữ 2: app đang có trên kho ghi lời đồng ý bản 2 và không có màn
+/// nào để đồng ý bản 3, nâng số này lúc đó là cắt hết AI của họ. Chỉ nâng khi
+/// bản app cũ đã hết người dùng.
 export const AI_DISCLOSURE_VERSION = 2;
 
 /// Câu báo cho người dùng khi chưa đồng ý.
