@@ -251,7 +251,7 @@ void main() {
       await _pumpLarge(tester, _wrap(const ProfileScreen(), repo));
 
       // Tổng số ngày đã nhìn lại thay cho chuỗi ngày liên tiếp (yêu cầu 05/08).
-      expect(find.textContaining('ngày Reflect'), findsOneWidget);
+      expect(find.textContaining('ngày nhìn lại'), findsOneWidget);
       expect(find.textContaining('Ngày streak'), findsNothing);
       expect(find.textContaining('Phần đọc đã lưu'), findsOneWidget);
       // Script `screenProfile`: ô thứ ba là Thực hành (2 với bản miễn phí, ∞

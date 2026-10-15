@@ -2,6 +2,7 @@
 
 import { assert, assertEquals } from 'jsr:@std/assert@1';
 import {
+  dropTrailingAlternative,
   fingerprint,
   parsePillars,
   repairMessage,
@@ -130,7 +131,7 @@ Deno.test('khoá nhớ đệm đổi theo nguyên liệu và ngôn ngữ', async
   assert((await fingerprint(p, 'vi')) !== (await fingerprint(p, 'en')));
 });
 
-Deno.test('câu trả lời thật 15/10 dài 54 chữ: loại, nói rõ lý do để xin sửa', () => {
+Deno.test('câu trả lời thật 15/10 dài 54 chữ: cắt vế "hoặc" ở đuôi thì qua', () => {
   const asked = parsePillars({
     pillars: [{ pillar: 'c', stories: [{ title: 'B', count: 3, lines: [] }] }],
   });
@@ -149,8 +150,59 @@ Deno.test('câu trả lời thật 15/10 dài 54 chữ: loại, nói rõ lý do 
     asked,
     'vi',
   );
+  assertEquals(Object.keys(review.failures), []);
+  assertEquals(
+    review.ok.c?.detail,
+    'Điều bạn ghi lại không phải việc thiếu ý. Bạn có kế hoạch và đã nói ra. Phần khó là nói ra rồi bị ngắt lời.',
+  );
+});
+
+Deno.test('câu trả lời thật 15/10 lượt sửa 51 chữ (nhóm a): cắt vế "hoặc" thì qua', () => {
+  const r = validateReading(
+    {
+      shape:
+        'Năm chuyện quay lại trong nhóm này đều xuất hiện ở cùng một lúc: lúc làm xong việc mà chưa thấy kết quả.',
+      detail:
+        'Không phải việc lười. Bạn làm cả tuần và có báo cáo. Phần khó là làm xong mà sếp chưa đọc, hoặc ngắt lời đồng nghiệp trong họp.',
+      hard_part: 'việc làm xong mà chưa được ghi nhận',
+    },
+    'vi',
+  );
+  assert(r);
+  assert(r.detail.endsWith('Phần khó là làm xong mà sếp chưa đọc.'), r.detail);
+});
+
+Deno.test('cắt vế "hoặc": chỉ ở đuôi câu cuối, không cắt trơ nhịp 3', () => {
+  const m = 'Phần khó là';
+  assertEquals(dropTrailingAlternative('A. Phần khó là x, hoặc y. Câu khác.', m, false), null);
+  assertEquals(dropTrailingAlternative('A. Phần khó là x, hoặc y.', m, false), null);
+  assertEquals(dropTrailingAlternative('A. Phần khó là x y z.', m, false), null);
+  assertEquals(
+    dropTrailingAlternative('A. The hard part is x y, or z.', 'The hard part is', true),
+    'A. The hard part is x y.',
+  );
+});
+
+Deno.test('dài mà không cắt được: loại, nói rõ phải cắt bao nhiêu để xin sửa', () => {
+  const asked = parsePillars({
+    pillars: [{ pillar: 'c', stories: [{ title: 'B', count: 3, lines: [] }] }],
+  });
+  const review = reviewAll(
+    {
+      pillars: {
+        c: {
+          ...GOOD_VI,
+          detail:
+            'Điều bạn ghi lại không phải việc thiếu ý. Bạn có kế hoạch rất rõ và đã nói ra trong buổi họp. Phần khó là nói ra rồi bị ngắt lời giữa chừng khi chưa kịp nói xong.',
+        },
+      },
+    },
+    asked,
+    'vi',
+  );
   assertEquals(Object.keys(review.ok), []);
-  assert(review.failures.c?.includes('54 chữ'), review.failures.c);
+  assert(review.failures.c?.includes('chữ'), review.failures.c);
+  assert(review.failures.c?.includes('cắt bớt ít nhất'), review.failures.c);
   const msg = repairMessage(review.failures, 'vi');
   assert(msg.includes('- c:'), msg);
   assert(msg.includes('cùng dạng JSON'), msg);

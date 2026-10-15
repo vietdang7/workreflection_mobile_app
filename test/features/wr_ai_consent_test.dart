@@ -178,6 +178,18 @@ void main() {
         grantedAt: DateTime(2026, 9, 7, 10),
       );
       expect(c.isGranted, isFalse);
+      // Và phải HỎI thật: tính là đã trả lời thì ensureAiConsent trả false
+      // mà không mở màn xin phép, AI tắt lặng lẽ (lỗi máy thật 15/10, 2 → 3).
+      expect(c.hasAnswered, isFalse);
+    });
+
+    test('đã từ chối bản cũ thì KHÔNG hỏi lại khi lên bản mới', () {
+      final c = WrAiConsent(
+        version: kWrAiDisclosureVersion - 1,
+        revokedAt: DateTime(2026, 9, 7, 10),
+      );
+      expect(c.isGranted, isFalse);
+      expect(c.hasAnswered, isTrue);
     });
   });
 

@@ -468,11 +468,23 @@ String pillarCondLead(SelfCheckPillar pillar, CondSplit s) {
 }
 
 /// Mảnh "chuỗi cản trở" của nhóm [pillar] trong câu nối Tổng quan.
+///
+/// Ghép từ cụm thì lấy tối đa [kBlockedChainMaxPhrases] cụm, như dòng phụ dưới
+/// nhãn nhóm. Máy thật 15/10: năm điều cản trở ghép đủ cả năm làm câu liên hệ
+/// dài gần 50 chữ, trong khi mảnh mẫu của tài liệu chỉ có hai ý.
 String blockedChainFragment(SelfCheckPillar pillar, CondSplit s) {
   final chain = _matchingChain(pillar, s);
   if (chain != null) return chain.fragment;
-  return _joinAnd(s.phrasesOf(CondLevel.down).map(_lowerFirst).toList());
+  return _joinAnd(
+    s
+        .phrasesOf(CondLevel.down)
+        .take(kBlockedChainMaxPhrases)
+        .map(_lowerFirst)
+        .toList(),
+  );
 }
+
+const int kBlockedChainMaxPhrases = 2;
 
 // ---------------------------------------------------------------------------
 // Cả bộ khảo sát

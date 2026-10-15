@@ -120,6 +120,20 @@ void main() {
       );
     });
 
+    test('mảnh chuỗi cản trở ghép từ cụm chỉ lấy hai cụm đầu', () {
+      final s = condSplit(
+        _answers({6: 1, 7: 1, 8: 1, 9: 1, 10: 1}),
+        SelfCheckPillar.c,
+      );
+      expect(s.down, hasLength(5));
+      final p = s.phrasesOf(CondLevel.down);
+      String low(String x) => x[0].toLowerCase() + x.substring(1);
+      expect(
+        blockedChainFragment(SelfCheckPillar.c, s),
+        '${low(p[0])} và ${low(p[1])}',
+      );
+    });
+
     test(
       'S có thêm câu 5 (thay đổi bất ngờ): không còn "đều ở lúc bắt đầu"',
       () {
