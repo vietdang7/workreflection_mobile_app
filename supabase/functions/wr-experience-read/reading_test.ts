@@ -2,6 +2,7 @@
 
 import { assert, assertEquals } from 'jsr:@std/assert@1';
 import {
+  checkReading,
   dropTrailingAlternative,
   fingerprint,
   parsePillars,
@@ -206,4 +207,49 @@ Deno.test('dài mà không cắt được: loại, nói rõ phải cắt bao nhi
   const msg = repairMessage(review.failures, 'vi');
   assert(msg.includes('- c:'), msg);
   assert(msg.includes('cùng dạng JSON'), msg);
+});
+
+Deno.test('trục Phía đặt chính người dùng vào thì loại (máy thật 15/10)', () => {
+  const r = checkReading(
+    {
+      shape: 'Hai chuyện quay lại trong nhóm này đều xảy ra với cùng một phía: chính bạn.',
+      detail:
+        'Điều bạn ghi lại không phải việc thiếu cố gắng. Phần khó là nhịp làm việc không khớp với lúc được ghi nhận.',
+      hard_part: 'nhịp làm việc không khớp',
+    },
+    'vi',
+  );
+  assert(!r.ok);
+  assert(r.reason.includes('Phía'), r.reason);
+  assert(
+    validateReading(
+      {
+        shape: 'Hai chuyện quay lại trong nhóm này đều xảy ra với cùng một phía: cấp trên.',
+        detail: 'Điều bạn ghi lại không phải việc thiếu cố gắng. Phần khó là báo cáo gửi đi mà chưa được đọc.',
+      },
+      'vi',
+    ),
+  );
+  assert(
+    !checkReading(
+      {
+        shape:
+          'Two of the situations that keep coming back in this group happen with the same side: yourself.',
+        detail: 'This is not a lack of effort. The hard part is that the report goes unread.',
+      },
+      'en',
+    ).ok,
+  );
+});
+
+Deno.test('model ghi null cho một nhóm: im lặng, không tính là trượt để xin sửa', () => {
+  const asked = parsePillars({
+    pillars: [
+      { pillar: 'a', stories: [{ title: 'A', count: 3, lines: [] }] },
+      { pillar: 'c', stories: [{ title: 'B', count: 3, lines: [] }] },
+    ],
+  });
+  const review = reviewAll({ pillars: { a: null } }, asked, 'vi');
+  assertEquals(Object.keys(review.ok), []);
+  assertEquals(Object.keys(review.failures), ['c']);
 });
