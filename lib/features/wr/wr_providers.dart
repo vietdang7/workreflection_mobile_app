@@ -6,9 +6,12 @@ import '../../core/data/wr_content_repository.dart';
 import '../../core/data/wr_episode_repository.dart';
 import '../../core/data/wr_intelligence_repository.dart';
 import '../../core/data/wr_reading_feedback_repository.dart';
+import '../../core/data/wr_experience_read_repository.dart';
 import '../../core/data/wr_repository.dart';
 import '../../core/logic/wr_career_profile.dart';
 import '../../core/logic/wr_entitlement.dart';
+import '../../core/logic/wr_experience_reading.dart';
+import '../../core/logic/wr_self_check_questions.dart';
 import '../../core/models/checkin.dart';
 import '../../core/models/wr_content.dart';
 import '../../core/models/wr_episode.dart';
@@ -311,6 +314,36 @@ final wrOverviewFeedbackProvider = FutureProvider<ReadingFeedback?>((
   } catch (_) {
     return null;
   }
+});
+
+/// Khối "Bạn đang khó ở chỗ nào" của mọi nhóm đủ ngưỡng (tài liệu §2).
+///
+/// Miễn phí: đây là phần đọc từ chính dữ liệu của người dùng (tài liệu §1).
+/// Chạy TỰ ĐỘNG khi mở màn, nên cổng xin phép AI phải nằm ngay ở đây, như
+/// [wrNarrativeRefreshProvider].
+final wrExperienceAiReadingProvider = FutureProvider<ExperienceAiReading>((
+  ref,
+) async {
+  // Chữ do model viết: đổi ngôn ngữ là phải xin viết lại.
+  ref.watch(appLocaleProvider);
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null) return const ExperienceAiReading.none();
+
+  final episodes = await ref.watch(wrEpisodeHistoryProvider.future);
+  if (episodes.length < kExperienceMinReflections) {
+    return const ExperienceAiReading.none();
+  }
+  final situations = await ref.watch(wrSituationsProvider.future);
+  final request = difficultyRequest({
+    for (final p in SelfCheckPillar.values)
+      p: recurringStories(episodes, situations, p),
+  });
+  if (request.isEmpty) return const ExperienceAiReading.none();
+
+  final consent = await ref.watch(wrAiConsentProvider.future);
+  if (!consent.isGranted) return const ExperienceAiReading.none();
+
+  return ref.watch(wrExperienceReadRepositoryProvider).read(request);
 });
 
 /// Lớp 3 — bản AI viết lại của một câu Diễn giải sâu (§7).

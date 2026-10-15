@@ -30,6 +30,7 @@
 //   `supabase/functions/wr-chat/user_context.ts`   — các bảng nạp vào ngữ cảnh
 //   `supabase/functions/wr-doc-analyze/index.ts`   — đọc JD/CV
 //   `supabase/functions/wr-narrative/index.ts`     — sinh Diễn biến
+//   `supabase/functions/wr-experience-read/index.ts` — "Bạn đang khó ở chỗ nào"
 //   `lib/features/video_report/data/…`             — đọc thành tiếng
 //   `ai-personalize` (Edge Function, không nằm trong repo này) — viết lại phần
 //                                                    nhận định của Báo cáo
@@ -118,8 +119,10 @@ List<WrAiRecipient> get kWrAiRecipients => [
   WrAiRecipient(
     name: 'DeepSeek',
     role: tr(
-      'Mô hình trả lời trong phần Trò chuyện và viết phần Diễn biến.',
-      'The model that replies in Chat and writes your story.',
+      'Mô hình trả lời trong phần Trò chuyện, viết phần Diễn biến và phần '
+          'Bạn đang khó ở chỗ nào.',
+      'The model that replies in Chat, writes your story and writes Where it '
+          'is hard for you.',
     ),
     // KHÔNG phải `deepseek.com/privacy` — đường đó trả 404 (kiểm 07/09/2026).
     // Một liên kết chết ngay trong công bố quyền riêng tư còn tệ hơn không có.
@@ -191,6 +194,24 @@ List<WrAiDataFlow> get kWrAiDataFlows => [
           'khi bạn mở mục đó, không cần bạn bấm gì.',
       'The situations you have logged over time. This runs automatically '
           'when you open that screen, without you tapping anything.',
+    ),
+    recipient: 'OpenRouter → DeepSeek',
+  ),
+  // `wr-experience-read` (15/10/2026). Cùng bên nhận và cùng loại dữ liệu với
+  // mục Diễn biến (tình huống đã ghi + dòng tự viết), nên không nâng
+  // [kWrAiDisclosureVersion]; nhưng vẫn khai riêng vì nó chạy ở một màn khác.
+  WrAiDataFlow(
+    trigger: tr(
+      'Khi phần mềm viết mục "Bạn đang khó ở chỗ nào"',
+      'When the app writes "Where it is hard for you"',
+    ),
+    data: tr(
+      'Những tình huống đang quay lại trong một nhóm trải nghiệm, số lần, và '
+          'các dòng bạn đã tự viết cho chúng. Việc này chạy tự động khi bạn mở '
+          'phần Trải nghiệm của bạn, không cần bạn bấm gì.',
+      'The situations that keep coming back in a group of experience, how '
+          'often, and the lines you wrote for them. This runs automatically '
+          'when you open Your experience, without you tapping anything.',
     ),
     recipient: 'OpenRouter → DeepSeek',
   ),

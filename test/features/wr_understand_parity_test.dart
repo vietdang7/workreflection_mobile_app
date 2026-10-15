@@ -8,7 +8,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
+import 'package:workreflection_mobile/core/data/wr_ai_consent_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_episode_repository.dart';
+import 'package:workreflection_mobile/core/data/wr_experience_read_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_reading_feedback_repository.dart';
 import 'package:workreflection_mobile/core/logic/wr_experience_reading.dart';
@@ -21,6 +23,7 @@ import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_chapter_read_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_experience_interpret_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_patterns_screen.dart';
+import 'package:workreflection_mobile/features/wr/ai_consent_providers.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -44,6 +47,16 @@ const _situations = <WrSituation>[
   WrSituation(
     code: 'C2-01',
     text: 'Không dám nói',
+    scaDimension: ScaDimension.c2,
+    wave: 1,
+    pillarCode: 'C',
+    subgroup: 'C2',
+    mood: 'stress',
+    valence: WrValence.thachThuc,
+  ),
+  WrSituation(
+    code: 'C2-02',
+    text: 'Ý kiến bị bỏ qua',
     scaDimension: ScaDimension.c2,
     wave: 1,
     pillarCode: 'C',
@@ -115,12 +128,45 @@ class _FakeReadingFeedback implements WrReadingFeedbackRepository {
   }
 }
 
+class _FakeExperienceRead implements WrExperienceReadRepository {
+  _FakeExperienceRead(this.reading);
+
+  final ExperienceAiReading reading;
+  final calls = <List<Map<String, dynamic>>>[];
+
+  @override
+  Future<ExperienceAiReading> read(List<Map<String, dynamic>> pillars) async {
+    calls.add(pillars);
+    return reading;
+  }
+}
+
+const _aiC = ExperienceAiReading(
+  locale: 'vi',
+  pillars: {
+    SelfCheckPillar.c: DifficultyReading(
+      shape:
+          'Hai chuyện quay lại nhiều nhất trong nhóm này đều nằm ở cùng một '
+          'chỗ: lúc cần lên tiếng.',
+      detail:
+          'Điều bạn ghi lại không phải việc thiếu ý. Phần khó là ý nói ra mà '
+          'không đến nơi.',
+      hardPart: 'việc nói ra mà không đến nơi',
+    ),
+  },
+);
+
+final _granted = WrAiConsent(version: 99, grantedAt: DateTime.utc(2026, 9, 1));
+
 class _Harness {
   _Harness({
     required bool premium,
     List<ReflectionEpisode> episodes = const [],
     List<ScaSelfCheckResponse> history = const [],
-  }) : intel = FakeWrIntelligenceRepository()
+    this.consent = WrAiConsent.unknown,
+    ExperienceAiReading ai = const ExperienceAiReading.none(),
+  }) : read = _FakeExperienceRead(ai),
+       intel = FakeWrIntelligenceRepository()
          ..seedSelfCheckHistory(history)
          ..seedEntitlement(
            WrEntitlementRecord(
@@ -133,6 +179,8 @@ class _Harness {
        eps = FakeWrEpisodeRepository()..seed(episodes);
 
   final feedback = _FakeReadingFeedback();
+  final WrAiConsent consent;
+  final _FakeExperienceRead read;
   final FakeWrIntelligenceRepository intel;
   final FakeWrContentRepository content;
   final FakeWrEpisodeRepository eps;
@@ -168,6 +216,10 @@ class _Harness {
           builder: (_, __) => const Scaffold(body: Text('SELF-CHECK')),
         ),
         GoRoute(
+          path: '/wr/growth',
+          builder: (_, __) => const Scaffold(body: Text('GROWTH')),
+        ),
+        GoRoute(
           path: '/wr/sca-deep-dive',
           builder: (_, __) => const Scaffold(body: Text('DEEP DIVE')),
         ),
@@ -180,6 +232,8 @@ class _Harness {
         wrEpisodeRepositoryProvider.overrideWithValue(eps),
         currentUserIdProvider.overrideWithValue('u1'),
         wrReadingFeedbackRepositoryProvider.overrideWithValue(feedback),
+        wrAiConsentProvider.overrideWith((ref) async => consent),
+        wrExperienceReadRepositoryProvider.overrideWithValue(read),
       ],
       child: MaterialApp.router(
         builder: wrTextScaleBuilder,
@@ -325,6 +379,125 @@ void main() {
       );
       expect(find.textContaining('chưa nói nhóm đó'), findsNothing);
     });
+
+    /// 16 lần: Mối quan hệ có hai chuyện quay lại (đủ ngưỡng §2), Sự rõ ràng
+    /// một lần.
+    List<ReflectionEpisode> twoStories(DateTime now) => [
+      for (var i = 0; i < 9; i++)
+        _ep(
+          'C2-01',
+          now.subtract(Duration(days: i + 1)),
+          note: i == 0
+              ? 'Họp xong mới nghĩ ra'
+              : (i == 4 ? 'Nói mà không ai nghe' : null),
+        ),
+      for (var i = 0; i < 6; i++)
+        _ep('C2-02', now.subtract(Duration(days: i + 20))),
+      _ep('S1-01', now.subtract(const Duration(days: 40))),
+    ];
+
+    testWidgets('đã cho phép AI: khối "khó ở chỗ nào" + hai trích dẫn', (
+      tester,
+    ) async {
+      final h = _Harness(
+        premium: false,
+        episodes: twoStories(DateTime.now()),
+        consent: _granted,
+        ai: _aiC,
+      );
+      await tester.pumpWidget(h.app('/wr/experience-interpret?tab=1'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('wr_exp_reflect_difficulty')),
+        findsOneWidget,
+      );
+      expect(find.text('BẠN ĐANG KHÓ Ở CHỖ NÀO'), findsOneWidget);
+      expect(find.textContaining('lúc cần lên tiếng'), findsOneWidget);
+      expect(find.text('“Họp xong mới nghĩ ra”'), findsOneWidget);
+      expect(find.text('“Nói mà không ai nghe”'), findsOneWidget);
+      // Chỉ gửi nhóm đủ ngưỡng: Sự rõ ràng một lần thì không gửi.
+      expect(h.read.calls.single.map((r) => r['pillar']), ['c']);
+    });
+
+    testWidgets('chưa trả lời xin phép: mời bấm, không gửi gì đi', (
+      tester,
+    ) async {
+      final h = _Harness(premium: false, episodes: twoStories(DateTime.now()));
+      await tester.pumpWidget(h.app('/wr/experience-interpret?tab=1'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('wr_exp_reflect_difficulty')), findsNothing);
+      expect(find.byKey(const Key('wr_exp_reflect_ai_invite')), findsOneWidget);
+      expect(h.read.calls, isEmpty);
+    });
+
+    testWidgets('đã từ chối: không mời lại, chỉ hiện số đếm', (tester) async {
+      final h = _Harness(
+        premium: false,
+        episodes: twoStories(DateTime.now()),
+        consent: WrAiConsent(version: 99, revokedAt: DateTime.utc(2026, 9, 1)),
+      );
+      await tester.pumpWidget(h.app('/wr/experience-interpret?tab=1'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('wr_exp_reflect_ai_invite')), findsNothing);
+      expect(find.byKey(const Key('wr_exp_reflect_difficulty')), findsNothing);
+      expect(find.text('15 / 16'), findsOneWidget);
+    });
+
+    testWidgets('bấm một nhóm: từng chuyện, toàn bộ dòng tự viết, số lần đánh '
+        'dấu', (tester) async {
+      final h = _Harness(
+        premium: false,
+        episodes: twoStories(DateTime.now()),
+        consent: _granted,
+        ai: _aiC,
+      );
+      await tester.pumpWidget(h.app('/wr/experience-interpret?tab=1'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('wr_exp_reflect_row_c')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('15 trong 16 lần nhìn lại'), findsOneWidget);
+      expect(
+        _textOf(tester, 'wr_exp_pillar_reflect_shape'),
+        contains('lúc cần lên tiếng'),
+      );
+      expect(find.text('9 lần'), findsOneWidget);
+      expect(find.text('6 lần'), findsOneWidget);
+      expect(find.text('Và 7 lần bạn chỉ đánh dấu.'), findsOneWidget);
+      expect(
+        find.text('Những lần này bạn chỉ đánh dấu, chưa viết thêm dòng nào.'),
+        findsOneWidget,
+      );
+
+      await tester.ensureVisible(
+        find.byKey(const Key('wr_exp_pillar_reflect_grow')),
+      );
+      await tester.tap(find.byKey(const Key('wr_exp_pillar_reflect_grow')));
+      await tester.pumpAndSettle();
+      expect(find.text('GROWTH'), findsOneWidget);
+    });
+
+    testWidgets('nhóm chưa có chuyện quay lại: nói chưa đủ để đọc hình dạng', (
+      tester,
+    ) async {
+      final h = _Harness(
+        premium: false,
+        episodes: twoStories(DateTime.now()),
+        consent: _granted,
+        ai: _aiC,
+      );
+      await tester.pumpWidget(h.app('/wr/experience-interpret?tab=1&pillar=s'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('wr_exp_pillar_reflect_thin')),
+        findsOneWidget,
+      );
+      expect(find.text('NHỮNG CHUYỆN ĐANG QUAY LẠI'), findsNothing);
+    });
   });
 
   group('Từ điều kiện quanh bạn', () {
@@ -469,6 +642,37 @@ void main() {
       await tester.tap(find.byKey(const Key('wr_exp_overview_start_open')));
       await tester.pumpAndSettle();
       expect(find.text('CÁCH LÀM VIỆC'), findsOneWidget);
+    });
+
+    testWidgets('lệch nhau: câu liên hệ dùng phần khó AI đã rút gọn', (
+      tester,
+    ) async {
+      final now = DateTime.now();
+      final h = _Harness(
+        premium: true,
+        episodes: _cHeavy(now),
+        history: [_check(now, answers: _demoAnswers)],
+        consent: _granted,
+        ai: _aiC,
+      );
+      await tester.pumpWidget(h.app('/wr/experience-interpret?tab=3'));
+      await tester.pumpAndSettle();
+
+      expect(
+        _textOf(tester, 'wr_exp_overview_link'),
+        contains(
+          'để nhìn lại, việc nói ra mà không đến nơi cũng khó tự nhẹ đi.',
+        ),
+      );
+
+      // Bấm "Chưa đúng lắm": mảnh đó lưu cùng bản đọc.
+      await tester.ensureVisible(find.byKey(const Key('wr_exp_overview_off')));
+      await tester.tap(find.byKey(const Key('wr_exp_overview_off')));
+      await tester.pumpAndSettle();
+      expect(
+        h.feedback.inserted.single.reading['hard_part'],
+        'việc nói ra mà không đến nơi',
+      );
     });
 
     testWidgets('trùng nhau: hai phía cùng chỉ về một chỗ', (tester) async {

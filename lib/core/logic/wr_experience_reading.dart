@@ -17,10 +17,18 @@
 //     kiểm chứng được" của chính tài liệu. Ở đây câu viết sẵn chỉ dùng khi tập
 //     điều đang cản trở khớp đúng điều câu đó nói; còn lại ghép từ cụm "đang
 //     cản trở" của đúng những câu người dùng chấm thấp.
-//   · Mảnh "phần khó rút gọn" của nhóm dom trong câu nối Tổng quan: tài liệu
-//     §2 nói AI sinh cùng khối "bạn đang khó ở chỗ nào", mockup ghi cứng theo
-//     nhóm. Khối AI chưa làm, nên tạm gọi đúng thứ dữ liệu cho phép nói: "những
-//     chuyện bạn ghi lại ở ‹nhóm›".
+//   · Mảnh "phần khó rút gọn" của nhóm dom trong câu nối Tổng quan: mockup
+//     ghi cứng một câu cho mỗi nhóm ("cảm giác cạn sức vào những ngày không có
+//     gì gấp"), câu đó sai với phần lớn người dùng. Ở đây lấy đúng mảnh AI sinh
+//     cùng khối "bạn đang khó ở chỗ nào" (§2, mục 9 đã chốt "AI sinh"); chưa có
+//     mảnh đó (chưa đủ ngưỡng, chưa cho phép AI, AI lỗi, khác ngôn ngữ) thì gọi
+//     đúng thứ dữ liệu cho phép nói: "những chuyện bạn ghi lại ở ‹nhóm›".
+//
+// Nguồn 1 — "Bạn đang khó ở chỗ nào": ngưỡng viết câu theo §2 (từ hai chuyện
+// quay lại, hoặc một chuyện từ ba lần), KHÔNG theo bảng §5 (một chuyện hai
+// lần). §2 có lý do ("hai điểm là một đường thẳng… gần như luôn sai"), bảng §5
+// là bản tóm tắt; và ngưỡng chặt không đụng tới con số 2 lần mà mục 9 đã chốt
+// cho danh sách "đang quay lại".
 //
 // Thang điểm: app lưu năm mức Likert theo thang 1–5 (Không bao giờ = 1 … Gần
 // như luôn luôn = 5). Mockup v77 lưu chỉ số 0–4 khi bấm nhưng chia mức như
@@ -28,6 +36,10 @@
 // "Đôi khi" = 3 = còn thất thường, nên ở đây theo tài liệu.
 
 import '../l10n/wr_tr.dart';
+import '../models/wr_content.dart';
+import '../models/wr_episode.dart';
+import 'wr_career_health.dart' show pillarOfSituation, selfCheckDateLabel;
+import 'wr_repeated_situations.dart' show kRepeatedSituationsMinCount;
 import 'wr_self_check_questions.dart';
 
 // ---------------------------------------------------------------------------
@@ -159,7 +171,9 @@ Map<String, CondPhrase> get kCondPhrases => {
       'Your work tied to the shared goal',
     ),
     tr(
-      'Mối nối giữa việc của bạn và mục tiêu chung',
+      // Tài liệu ghi "Mối nối giữa việc của bạn và mục tiêu chung" (10 chữ),
+      // vượt trần chín chữ của chính nó. Bỏ "của", nghĩa không đổi (15/10).
+      'Mối nối giữa việc bạn và mục tiêu chung',
       'The link between your work and the shared goal',
     ),
     tr(
@@ -546,6 +560,8 @@ class OverviewInputs {
     required this.domCount,
     required this.total,
     required this.answers,
+    this.hardPart,
+    this.hardPartLocale,
   });
 
   /// Nhóm người dùng quay lại nhiều nhất.
@@ -558,11 +574,23 @@ class OverviewInputs {
   /// Câu trả lời khảo sát lúc đọc.
   final Map<String, dynamic> answers;
 
+  /// Mảnh "phần khó rút gọn" của nhóm [dom] do AI sinh, null khi chưa có.
+  ///
+  /// Lưu CÙNG bản đọc: sau "Chưa đúng lắm" bản cũ phải giữ nguyên từng chữ,
+  /// không được tự đổi theo một lượt AI viết lại.
+  final String? hardPart;
+
+  /// Ngôn ngữ của [hardPart] ('vi'/'en'). Chữ do model viết, không getter nào
+  /// dịch hộ được, nên khác ngôn ngữ đang bật thì không dùng.
+  final String? hardPartLocale;
+
   Map<String, dynamic> toJson() => {
     'dom': dom.name,
     'dom_count': domCount,
     'total': total,
     'answers': answers,
+    if (hardPart != null) 'hard_part': hardPart,
+    if (hardPart != null) 'hard_part_locale': hardPartLocale,
   };
 
   static OverviewInputs? fromJson(Map<String, dynamic>? json) {
@@ -577,6 +605,8 @@ class OverviewInputs {
       domCount: (json['dom_count'] as num?)?.toInt() ?? 0,
       total: (json['total'] as num?)?.toInt() ?? 0,
       answers: Map<String, dynamic>.from(answers),
+      hardPart: json['hard_part'] as String?,
+      hardPartLocale: json['hard_part_locale'] as String?,
     );
   }
 }
@@ -691,6 +721,11 @@ ExperienceOverview buildOverview(OverviewInputs i) {
 
   final blockedName = blocked.displayName;
   final majority = i.domCount * 2 > i.total;
+  final hard = i.hardPart?.trim();
+  final domHard =
+      hard != null && hard.isNotEmpty && i.hardPartLocale == wrLocaleCode
+      ? hard
+      : null;
   return ExperienceOverview(
     kind: OverviewCase.diverged,
     dom: i.dom,
@@ -721,13 +756,14 @@ ExperienceOverview buildOverview(OverviewInputs i) {
           ),
     link: tr(
       'Hai chuyện này thường có liên hệ. Khi '
-          '${blockedChainFragment(blocked, down[blocked]!)}, những chuyện bạn '
-          'ghi lại ở $domName cũng khó tự nhẹ đi. Chỗ đáng thử trước có thể '
-          'không phải chỗ bạn đang để tâm.',
+          '${blockedChainFragment(blocked, down[blocked]!)}, '
+          '${domHard ?? 'những chuyện bạn ghi lại ở $domName'} cũng khó tự nhẹ '
+          'đi. Chỗ đáng thử trước có thể không phải chỗ bạn đang để tâm.',
       'These two are often linked. When '
-          '${blockedChainFragment(blocked, down[blocked]!)}, what you write '
-          'down about $domName is hard to ease on its own. The place worth '
-          'trying first may not be where your attention is.',
+          '${blockedChainFragment(blocked, down[blocked]!)}, '
+          '${domHard ?? 'what you write down about $domName'} is hard to ease '
+          'on its own. The place worth trying first may not be where your '
+          'attention is.',
     ),
     startPillar: blocked,
     startReason: tr(
@@ -737,4 +773,224 @@ ExperienceOverview buildOverview(OverviewInputs i) {
           'one of them often eases what your attention is on too.',
     ),
   );
+}
+
+// ---------------------------------------------------------------------------
+// Nguồn 1 — những chuyện đang quay lại và khối "Bạn đang khó ở chỗ nào"
+// ---------------------------------------------------------------------------
+//
+// Tài liệu §2. Phạm vi là TOÀN BỘ lịch sử. Một chuyện vào danh sách "đang quay
+// lại" khi được ghi từ [kRepeatedSituationsMinCount] lần trở lên (mục 9: "2
+// lần, giữ nguyên"). Câu do AI viết thì cần ngưỡng chặt hơn, xem
+// [difficultyReadable].
+//
+// Chỉ lấy tình huống THÁCH THỨC: khối này nói người dùng đang khó ở đâu, và
+// mười lần vui với đồng nghiệp không phải một chỗ khó.
+
+/// Một dòng người dùng tự viết ở một lần nhìn lại: nguyên văn, kèm ngày.
+class WrittenLine {
+  const WrittenLine({required this.text, required this.date});
+
+  final String text;
+
+  /// Ngày theo giờ Việt Nam, chỉ phần ngày.
+  final DateTime date;
+
+  String get dateLabel => selfCheckDateLabel(date);
+
+  Map<String, dynamic> toJson() => {'text': text, 'date': dateLabel};
+}
+
+/// Một chuyện đang quay lại trong một nhóm.
+class RecurringStory {
+  const RecurringStory({
+    required this.code,
+    required this.title,
+    required this.count,
+    required this.lines,
+  });
+
+  final String code;
+  final String title;
+
+  /// Số lần ghi, kể cả những lần chỉ đánh dấu.
+  final int count;
+
+  /// Dòng người dùng tự viết, mới nhất trước.
+  final List<WrittenLine> lines;
+
+  /// Số lần chỉ đánh dấu mà không viết gì: được đếm, không được bịa thành câu.
+  int get markOnly => count - lines.length;
+}
+
+/// Dòng tự viết của một lần nhìn lại: bước kể lại khoảnh khắc. Chip tình huống
+/// ở bước 0 là chữ của app nên không lấy.
+String? _ownWords(ReflectionEpisode e) {
+  final t = e.notes[ReflectionPattern.explore.dbValue]?.trim();
+  return t == null || t.isEmpty ? null : t;
+}
+
+DateTime _vnDay(DateTime at) {
+  final vn = at.toUtc().add(const Duration(hours: 7));
+  return DateTime(vn.year, vn.month, vn.day);
+}
+
+/// Những chuyện đang quay lại trong nhóm [pillar], nhiều lần nhất trước (bằng
+/// nhau thì chuyện có lần ghi gần nhất đứng trước).
+List<RecurringStory> recurringStories(
+  List<ReflectionEpisode> episodes,
+  List<WrSituation> situations,
+  SelfCheckPillar pillar,
+) {
+  final byCode = {for (final s in situations) s.code: s};
+  final groups = <String, List<ReflectionEpisode>>{};
+  for (final e in episodes) {
+    final s = byCode[e.situationCode];
+    if (s == null || s.valence.isPositive) continue;
+    if (pillarOfSituation(s) != pillar) continue;
+    (groups[s.code] ??= []).add(e);
+  }
+
+  DateTime latest(List<ReflectionEpisode> es) => es
+      .map((e) => e.openedAt ?? DateTime(0))
+      .reduce((a, b) => a.isAfter(b) ? a : b);
+
+  final out = <(RecurringStory, DateTime)>[];
+  for (final entry in groups.entries) {
+    if (entry.value.length < kRepeatedSituationsMinCount) continue;
+    final dated = [...entry.value]
+      ..sort(
+        (a, b) =>
+            (b.openedAt ?? DateTime(0)).compareTo(a.openedAt ?? DateTime(0)),
+      );
+    out.add((
+      RecurringStory(
+        code: entry.key,
+        title: byCode[entry.key]!.text,
+        count: entry.value.length,
+        lines: [
+          for (final e in dated)
+            if (_ownWords(e) case final t? when e.openedAt != null)
+              WrittenLine(text: t, date: _vnDay(e.openedAt!)),
+        ],
+      ),
+      latest(entry.value),
+    ));
+  }
+  out.sort((a, b) {
+    final c = b.$1.count.compareTo(a.$1.count);
+    return c != 0 ? c : b.$2.compareTo(a.$2);
+  });
+  return [for (final o in out) o.$1];
+}
+
+/// Đủ dữ liệu để viết câu hình dạng chưa (§2): từ hai chuyện quay lại trở lên,
+/// hoặc một chuyện quay lại từ ba lần trở lên. Dưới mức đó chỉ hiện số đếm.
+bool difficultyReadable(List<RecurringStory> stories) =>
+    stories.length >= 2 || stories.any((s) => s.count >= 3);
+
+/// Hai trích dẫn dưới khối "khó ở chỗ nào": dòng tự viết mới nhất trước, lấy
+/// từ CÙNG tập chuyện đã sinh ra câu, nên câu thứ hai luôn đặt cạnh được
+/// chính chứng cứ của nó.
+List<WrittenLine> difficultyQuotes(
+  List<RecurringStory> stories, {
+  int max = 2,
+}) {
+  final all = [for (final s in stories) ...s.lines]
+    ..sort((a, b) => b.date.compareTo(a.date));
+  return all.take(max).toList();
+}
+
+/// Trần nguyên liệu gửi sang AI: đủ để thấy điểm chung, không gửi cả lịch sử.
+const int kDifficultyMaxStories = 6;
+const int kDifficultyMaxLinesPerStory = 6;
+const int kDifficultyMaxLineChars = 400;
+
+/// Thân yêu cầu gửi Edge Function `wr-experience-read`: chỉ những nhóm đủ
+/// ngưỡng. Rỗng thì không gọi.
+List<Map<String, dynamic>> difficultyRequest(
+  Map<SelfCheckPillar, List<RecurringStory>> byPillar,
+) {
+  String clip(String t) => t.length <= kDifficultyMaxLineChars
+      ? t
+      : t.substring(0, kDifficultyMaxLineChars);
+  return [
+    for (final p in SelfCheckPillar.values)
+      if (byPillar[p] case final stories? when difficultyReadable(stories))
+        {
+          'pillar': p.name,
+          'name': p.displayName,
+          'stories': [
+            for (final s in stories.take(kDifficultyMaxStories))
+              {
+                'title': s.title,
+                'count': s.count,
+                'lines': [
+                  for (final l in s.lines.take(kDifficultyMaxLinesPerStory))
+                    {'text': clip(l.text), 'date': l.dateLabel},
+                ],
+              },
+          ],
+          'quotes': [
+            for (final q in difficultyQuotes(stories))
+              {'text': clip(q.text), 'date': q.dateLabel},
+          ],
+        },
+  ];
+}
+
+/// Hai câu AI viết cho một nhóm, kèm mảnh "phần khó rút gọn" cho Tổng quan.
+class DifficultyReading {
+  const DifficultyReading({
+    required this.shape,
+    required this.detail,
+    this.hardPart,
+  });
+
+  /// Câu hình dạng: điểm chung của những chuyện đang quay lại.
+  final String shape;
+
+  /// Câu phân biệt: chặn cách hiểu tự trách, gọi tên phần khó thật.
+  final String detail;
+
+  /// Nhịp 3 rút thành một cụm danh từ, viết thường chữ đầu.
+  final String? hardPart;
+
+  static DifficultyReading? fromJson(Object? json) {
+    if (json is! Map) return null;
+    final shape = (json['shape'] as String?)?.trim() ?? '';
+    final detail = (json['detail'] as String?)?.trim() ?? '';
+    if (shape.isEmpty || detail.isEmpty) return null;
+    final hard = (json['hard_part'] as String?)?.trim();
+    return DifficultyReading(
+      shape: shape,
+      detail: detail,
+      hardPart: hard == null || hard.isEmpty ? null : hard,
+    );
+  }
+}
+
+/// Kết quả một lượt đọc: mỗi nhóm đủ ngưỡng một bản, cùng ngôn ngữ đã viết.
+class ExperienceAiReading {
+  const ExperienceAiReading({required this.pillars, required this.locale});
+
+  const ExperienceAiReading.none() : pillars = const {}, locale = null;
+
+  final Map<SelfCheckPillar, DifficultyReading> pillars;
+  final String? locale;
+
+  DifficultyReading? of(SelfCheckPillar p) =>
+      locale == wrLocaleCode ? pillars[p] : null;
+
+  static ExperienceAiReading fromJson(Map<String, dynamic> json) {
+    final raw = json['pillars'];
+    final out = <SelfCheckPillar, DifficultyReading>{};
+    if (raw is Map) {
+      for (final p in SelfCheckPillar.values) {
+        final r = DifficultyReading.fromJson(raw[p.name]);
+        if (r != null) out[p] = r;
+      }
+    }
+    return ExperienceAiReading(pillars: out, locale: json['locale'] as String?);
+  }
 }

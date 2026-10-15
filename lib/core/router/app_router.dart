@@ -765,7 +765,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/wr/experience-interpret',
         // `?tab=1|2|3` mở thẳng một màn con (Từ những lần nhìn lại / Từ điều
         // kiện quanh bạn / Tổng quan) với đầu màn riêng, đúng `expHeader` của
-        // script; `&pillar=s|c|a` mở năm điều kiện của một nhóm.
+        // script; `&pillar=s|c|a` mở bên trong một nhóm: những chuyện đang
+        // quay lại (tab=1) hoặc năm điều kiện (tab=2).
         builder: (context, state) => WrExperienceInterpretScreen(
           initialTab:
               int.tryParse(state.uri.queryParameters['tab'] ?? '') ?? 0,

@@ -6,6 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:workreflection_mobile/core/l10n/wr_tr.dart';
 import 'package:workreflection_mobile/core/logic/wr_experience_reading.dart';
 import 'package:workreflection_mobile/core/logic/wr_self_check_questions.dart';
+import 'package:workreflection_mobile/core/models/wr_content.dart';
+import 'package:workreflection_mobile/core/models/wr_episode.dart';
 
 final _ids = [
   for (var i = 1; i <= 15; i++) 'scq-${i.toString().padLeft(2, '0')}',
@@ -28,16 +30,19 @@ void main() {
       expect(condLevelOf(1), CondLevel.down);
     });
 
-    // Tài liệu đặt trần chín chữ mỗi cụm, nhưng chính bảng của tài liệu có một
-    // cụm mười chữ (câu 11, mức giữa). Giữ nguyên văn, chỉ cho phép đúng cụm đó.
+    // Tài liệu đặt trần chín chữ mỗi cụm; cụm câu 11 mức giữa của tài liệu
+    // dài mười chữ nên đã rút "của" (15/10).
     test('đủ 45 cụm, mỗi cụm tối đa chín chữ', () {
       expect(kCondPhrases.keys, _ids);
       for (final p in kCondPhrases.values) {
         for (final t in [p.up, p.mid, p.down]) {
-          if (t == 'Mối nối giữa việc của bạn và mục tiêu chung') continue;
           expect(t.split(' ').length, lessThanOrEqualTo(9), reason: t);
         }
       }
+      expect(
+        kCondPhrases['scq-11']!.mid,
+        'Mối nối giữa việc bạn và mục tiêu chung',
+      );
     });
 
     test('giá trị lạ bị bỏ qua, không bị đếm thành cản trở', () {
@@ -178,6 +183,44 @@ void main() {
       expect(o.body, startsWith('Những gì bạn ghi lại nằm nhiều nhất ở'));
     });
 
+    test('lệch nhau: có mảnh AI thì câu nối dùng mảnh đó', () {
+      final i = OverviewInputs(
+        dom: SelfCheckPillar.c,
+        domCount: 9,
+        total: 16,
+        answers: _answers({4: 1, 5: 2}),
+        hardPart: 'việc nói ra mà không đến nơi',
+        hardPartLocale: 'vi',
+      );
+      expect(
+        buildOverview(i).link,
+        contains(', việc nói ra mà không đến nơi cũng khó tự nhẹ đi.'),
+      );
+      // Mảnh viết bằng tiếng Anh thì không ghép vào câu tiếng Việt.
+      final en = OverviewInputs.fromJson({
+        ...i.toJson(),
+        'hard_part_locale': 'en',
+      })!;
+      expect(
+        buildOverview(en).link,
+        contains('những chuyện bạn ghi lại ở Mối quan hệ cũng khó tự nhẹ đi'),
+      );
+    });
+
+    test('mảnh AI được lưu cùng bản đọc', () {
+      final i = OverviewInputs(
+        dom: SelfCheckPillar.c,
+        domCount: 9,
+        total: 16,
+        answers: _answers({4: 1}),
+        hardPart: 'việc nói ra mà không đến nơi',
+        hardPartLocale: 'vi',
+      );
+      final back = OverviewInputs.fromJson(i.toJson())!;
+      expect(back.hardPart, i.hardPart);
+      expect(buildOverview(back).link, buildOverview(i).link);
+    });
+
     test('đầu vào lưu được rồi dựng lại đúng bản cũ', () {
       final i = inputs(_answers({11: 2, 12: 2, 14: 2}));
       final back = OverviewInputs.fromJson(i.toJson())!;
@@ -205,5 +248,123 @@ void main() {
       pillarCondLabel(_answers({}), SelfCheckPillar.a).text,
       'Supporting you',
     );
+  });
+
+  group('những chuyện đang quay lại', () {
+    const situations = [
+      WrSituation(
+        code: 'C2-01',
+        text: 'Không dám nói',
+        scaDimension: ScaDimension.c2,
+        wave: 1,
+        pillarCode: 'C',
+        subgroup: 'C2',
+        mood: 'stress',
+        valence: WrValence.thachThuc,
+      ),
+      WrSituation(
+        code: 'C2-02',
+        text: 'Ý kiến bị bỏ qua',
+        scaDimension: ScaDimension.c2,
+        wave: 1,
+        pillarCode: 'C',
+        subgroup: 'C2',
+        mood: 'stress',
+        valence: WrValence.thachThuc,
+      ),
+      WrSituation(
+        code: 'C3-P',
+        text: 'Đồng nghiệp hỗ trợ',
+        scaDimension: ScaDimension.c3,
+        wave: 1,
+        pillarCode: 'C',
+        subgroup: 'C3',
+        mood: 'happy',
+        valence: WrValence.tichCuc,
+      ),
+    ];
+    final t0 = DateTime.utc(2026, 10, 1, 3);
+    ReflectionEpisode ep(String code, int day, [String? note]) =>
+        ReflectionEpisode(
+          userId: 'u1',
+          humanMoment: HumanMoment.confusion,
+          situationCode: code,
+          openedAt: t0.add(Duration(days: day)),
+          notes: {if (note != null) ReflectionPattern.explore.dbValue: note},
+        );
+
+    test('từ 2 lần mới vào danh sách; không lấy tình huống tích cực', () {
+      final stories = recurringStories(
+        [
+          ep('C2-01', 0, 'Họp xong mới nghĩ ra'),
+          ep('C2-01', 3),
+          ep('C2-01', 5, 'Nói mà không ai nghe'),
+          ep('C2-02', 1),
+          ep('C3-P', 2),
+          ep('C3-P', 4),
+        ],
+        situations,
+        SelfCheckPillar.c,
+      );
+      expect(stories.map((s) => s.code), ['C2-01']);
+      final s = stories.single;
+      expect(s.count, 3);
+      expect(s.lines.map((l) => l.text), [
+        'Nói mà không ai nghe',
+        'Họp xong mới nghĩ ra',
+      ]);
+      expect(s.markOnly, 1);
+      expect(s.lines.first.dateLabel, '06/10/2026');
+    });
+
+    test('ngưỡng viết câu: hai chuyện, hoặc một chuyện từ ba lần', () {
+      RecurringStory st(int n) =>
+          RecurringStory(code: 'x$n', title: 'x', count: n, lines: const []);
+      expect(difficultyReadable([st(2)]), isFalse);
+      expect(difficultyReadable([st(3)]), isTrue);
+      expect(difficultyReadable([st(2), st(2)]), isTrue);
+    });
+
+    test('hai trích dẫn mới nhất, lấy chung mọi chuyện', () {
+      final stories = recurringStories(
+        [
+          ep('C2-01', 0, 'a'),
+          ep('C2-01', 9, 'b'),
+          ep('C2-02', 4, 'c'),
+          ep('C2-02', 6),
+        ],
+        situations,
+        SelfCheckPillar.c,
+      );
+      expect(difficultyQuotes(stories).map((l) => l.text), ['b', 'c']);
+    });
+
+    test('chỉ gửi nhóm đủ ngưỡng', () {
+      final c = recurringStories(
+        [ep('C2-01', 0), ep('C2-01', 1), ep('C2-02', 2), ep('C2-02', 3)],
+        situations,
+        SelfCheckPillar.c,
+      );
+      final req = difficultyRequest({
+        SelfCheckPillar.c: c,
+        SelfCheckPillar.s: const [],
+      });
+      expect(req.map((r) => r['pillar']), ['c']);
+      expect((req.single['stories'] as List).length, 2);
+    });
+
+    test('bản AI viết bằng ngôn ngữ khác thì không dùng', () {
+      final r = ExperienceAiReading.fromJson({
+        'locale': 'en',
+        'pillars': {
+          'c': {'shape': 'S', 'detail': 'D', 'hard_part': 'h'},
+          's': {'shape': '', 'detail': 'D'},
+        },
+      });
+      expect(r.pillars.keys, [SelfCheckPillar.c]);
+      expect(r.of(SelfCheckPillar.c), isNull);
+      wrSetLocale('en');
+      expect(r.of(SelfCheckPillar.c)!.hardPart, 'h');
+    });
   });
 }

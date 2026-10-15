@@ -1,19 +1,19 @@
 // Trải nghiệm của bạn — màn hình tầng trong của tab Hiểu mình.
 //
 // Theo "Logic đọc hiểu mình.docx" (15/10/2026) và mockup v77:
-// `screenExpInterpret` (mục lục), `screenExpByReflect`, `screenExpBySurvey`,
-// `screenExpPillarSurvey`, `screenExpSynthesis`. Mỗi màn con là một lượt mở
-// route riêng (`/wr/experience-interpret?tab=1|2|3`, bên trong một nhóm điều
-// kiện thêm `&pillar=s|c|a`), nên nút quay lại đưa về đúng màn trước.
+// `screenExpInterpret` (mục lục), `screenExpByReflect`, `screenExpPillarReflect`,
+// `screenExpBySurvey`, `screenExpPillarSurvey`, `screenExpSynthesis`. Mỗi màn
+// con là một lượt mở route riêng (`/wr/experience-interpret?tab=1|2|3`, bên
+// trong một nhóm thêm `&pillar=s|c|a`), nên nút quay lại đưa về đúng màn trước.
 //
 // Hai nguồn đọc, hai chủ ngữ: phần từ những lần nhìn lại lấy NGƯỜI DÙNG làm
 // chủ ngữ; phần từ khảo sát lấy MÔI TRƯỜNG làm chủ ngữ. Hai phần đó là dữ liệu
 // của người dùng nên luôn miễn phí; Tổng quan và chặng là việc hệ thống đọc
 // ra nên là Premium.
 //
-// Khối "Bạn đang khó ở chỗ nào" (AI viết hai câu từ những chuyện đang quay
-// lại) và màn bên trong một nhóm trải nghiệm CHƯA làm: chờ khách chốt ngưỡng
-// và cách sinh hai mảnh câu dùng chung với Tổng quan.
+// Khối "Bạn đang khó ở chỗ nào" do AI viết (Edge Function `wr-experience-read`,
+// xem [wrExperienceAiReadingProvider]). Chưa đủ ngưỡng, chưa cho phép AI, hay
+// câu trượt phép thử thì khối im lặng và màn hình chỉ hiện số đếm.
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,13 +27,16 @@ import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/logic/wr_experience_reading.dart';
 import '../../../core/logic/wr_sca_deep_dive.dart';
 import '../../../core/logic/wr_self_check_questions.dart';
+import '../../../core/models/wr_content.dart';
 import '../../../core/models/wr_episode.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
+import '../../../core/widgets/wr_ai_consent_sheet.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../core/widgets/wr_detail_scaffold.dart';
 import '../../../core/widgets/wr_hero_header.dart';
 import '../../../core/widgets/wr_paragraph.dart';
+import '../ai_consent_providers.dart';
 import '../wr_providers.dart';
 import 'wr_discover_screen.dart' show scriptPillarColor;
 
@@ -93,11 +96,37 @@ class WrExperienceInterpretScreen extends ConsumerWidget {
 
     switch (initialTab) {
       case 1:
+        final p = pillar;
+        if (p != null && reflectionTotal > 0) {
+          final n = tally.appearance[p] ?? 0;
+          return WrDetailScaffold(
+            art: WrHeroArt.understand,
+            eyebrow: p.displayName,
+            title: tr(
+              '$n trong $reflectionTotal lần nhìn lại',
+              '$n of $reflectionTotal look-backs',
+            ),
+            children: [
+              _ExpPillarReflectView(
+                pillar: p,
+                total: reflectionTotal,
+                stories: recurringStories(episodes, situations, p),
+              ),
+            ],
+          );
+        }
         return WrDetailScaffold(
           art: WrHeroArt.understand,
           eyebrow: readingTitle,
           title: tr('Từ những lần bạn nhìn lại', 'From your look-backs'),
-          children: [_ExpByReflectView(total: reflectionTotal, tally: tally)],
+          children: [
+            _ExpByReflectView(
+              total: reflectionTotal,
+              tally: tally,
+              episodes: episodes,
+              situations: situations,
+            ),
+          ],
         );
       case 2:
         final p = pillar;
@@ -503,10 +532,17 @@ Widget _primaryButton(Key key, String label, VoidCallback onPressed) =>
 // đang tốt hay đang khó" (tài liệu §8 luật 5, và chính là ví dụ "Không đạt").
 
 class _ExpByReflectView extends StatelessWidget {
-  const _ExpByReflectView({required this.total, required this.tally});
+  const _ExpByReflectView({
+    required this.total,
+    required this.tally,
+    required this.episodes,
+    required this.situations,
+  });
 
   final int total;
   final PillarTally tally;
+  final List<ReflectionEpisode> episodes;
+  final List<WrSituation> situations;
 
   @override
   Widget build(BuildContext context) {
@@ -571,6 +607,11 @@ class _ExpByReflectView extends StatelessWidget {
           ),
           style: _tiny,
         ),
+        if (total >= kExperienceMinReflections && dom != null)
+          _DifficultyBlock(
+            pillar: dom,
+            stories: recurringStories(episodes, situations, dom),
+          ),
         if (total > 0) ...[
           const SizedBox(height: 22),
           _eyebrow(tr('BA NHÓM TRẢI NGHIỆM', 'THREE GROUPS'), WrColors.text3),
@@ -582,43 +623,381 @@ class _ExpByReflectView extends StatelessWidget {
                 for (final p in SelfCheckPillar.values) ...[
                   if (p != SelfCheckPillar.s)
                     const Divider(height: 1, color: WrColors.lineSoft),
-                  Padding(
+                  InkWell(
                     key: Key('wr_exp_reflect_row_${p.name}'),
-                    padding: const EdgeInsets.symmetric(vertical: 13),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        _pillarRow(
-                          p,
-                          Text(
-                            wrKeepCompounds('${counts[p] ?? 0} / $total'),
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w700,
-                              color: WrColors.navy,
+                    onTap: () => context.push(
+                      '/wr/experience-interpret?tab=1&pillar=${p.name}',
+                    ),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 13),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          _pillarRow(
+                            p,
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  wrKeepCompounds('${counts[p] ?? 0} / $total'),
+                                  style: const TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w700,
+                                    color: WrColors.navy,
+                                  ),
+                                ),
+                                const SizedBox(width: 7),
+                                const Text(
+                                  '›',
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    color: WrColors.text3,
+                                    height: 1.0,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 8),
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: LinearProgressIndicator(
-                            value: (counts[p] ?? 0) / total,
-                            minHeight: 6,
-                            backgroundColor: WrColors.lineSoft,
-                            valueColor: const AlwaysStoppedAnimation<Color>(
-                              WrColors.navy,
+                          const SizedBox(height: 8),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(4),
+                            child: LinearProgressIndicator(
+                              value: (counts[p] ?? 0) / total,
+                              minHeight: 6,
+                              backgroundColor: WrColors.lineSoft,
+                              valueColor: const AlwaysStoppedAnimation<Color>(
+                                WrColors.navy,
+                              ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ],
               ],
             ),
           ),
+          const SizedBox(height: 9),
+          Text(
+            wrKeepCompounds(
+              tr(
+                'Bấm vào một nhóm để đọc những chuyện đang quay lại trong nhóm '
+                    'đó.',
+                'Tap a group to read the situations that keep coming back in '
+                    'it.',
+              ),
+            ),
+            style: _tiny,
+          ),
         ],
+      ],
+    );
+  }
+}
+
+/// Khối "Bạn đang khó ở chỗ nào" ở màn ngoài: hai câu AI viết cho nhóm dom,
+/// rồi tối đa hai trích dẫn lấy từ CÙNG tập chuyện đã sinh ra câu.
+class _DifficultyBlock extends ConsumerWidget {
+  const _DifficultyBlock({required this.pillar, required this.stories});
+
+  final SelfCheckPillar pillar;
+  final List<RecurringStory> stories;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Dưới ngưỡng §2 chỉ hiện số đếm, không viết câu nào.
+    if (!difficultyReadable(stories)) return const SizedBox.shrink();
+    final reading = ref
+        .watch(wrExperienceAiReadingProvider)
+        .valueOrNull
+        ?.of(pillar);
+    if (reading == null) return const _AiInviteIfUnasked(topGap: 22);
+    return Column(
+      key: const Key('wr_exp_reflect_difficulty'),
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        const SizedBox(height: 22),
+        _eyebrow(
+          tr('BẠN ĐANG KHÓ Ở CHỖ NÀO', 'WHERE IT IS HARD FOR YOU'),
+          WrColors.pillTealText,
+        ),
+        const SizedBox(height: 8),
+        WrParagraph(reading.shape, textAlign: TextAlign.start, style: _para),
+        const SizedBox(height: 8),
+        WrParagraph(reading.detail, textAlign: TextAlign.start, style: _para),
+        for (final q in difficultyQuotes(stories)) _Quote(line: q),
+      ],
+    );
+  }
+}
+
+/// Một dòng người dùng tự viết: nguyên văn, kèm ngày.
+class _Quote extends StatelessWidget {
+  const _Quote({required this.line, this.accent = WrColors.teal});
+
+  final WrittenLine line;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.only(left: 12, top: 2, bottom: 2),
+      decoration: BoxDecoration(
+        border: Border(left: BorderSide(color: accent, width: 2)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Nguyên văn, không qua WrParagraph: chữ của người dùng không được
+          // căn đều hay chèn dấu nối.
+          Text(
+            '“${line.text}”',
+            style: const TextStyle(
+              fontSize: 13.5,
+              fontStyle: FontStyle.italic,
+              color: WrColors.navy,
+              height: 1.6,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(line.dateLabel, style: _tiny),
+        ],
+      ),
+    );
+  }
+}
+
+/// Chưa trả lời câu xin phép AI thì nói vì sao khối trống và để người dùng chủ
+/// động bấm. Đã từ chối thì im lặng: hỏi tới hỏi lui là ép buộc.
+class _AiInviteIfUnasked extends ConsumerWidget {
+  const _AiInviteIfUnasked({this.topGap = 0});
+
+  final double topGap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final consent = ref.watch(wrAiConsentProvider).valueOrNull;
+    if (consent == null || consent.isGranted || consent.hasAnswered) {
+      return const SizedBox.shrink();
+    }
+    return Padding(
+      padding: EdgeInsets.only(top: topGap),
+      child: WrCardMinimal(
+        key: const Key('wr_exp_reflect_ai_invite'),
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            WrParagraph(
+              tr(
+                'Phần "Bạn đang khó ở chỗ nào" do AI viết từ những dòng bạn đã '
+                    'ghi lại, nên cần bạn cho phép gửi dữ liệu đó đi thì mới '
+                    'chạy được.',
+                'AI writes "Where it is hard for you" from the lines you have '
+                    'written, so it only works once you allow that data to be '
+                    'sent.',
+              ),
+              textAlign: TextAlign.start,
+              style: _para,
+            ),
+            const SizedBox(height: 12),
+            _ghostButton(
+              const Key('wr_exp_reflect_ai_cta'),
+              tr('Xem app gửi những gì', 'See what the app sends'),
+              () => ensureAiConsent(context, ref),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Màn con 1b — bên trong một nhóm (`screenExpPillarReflect`)
+// ---------------------------------------------------------------------------
+//
+// Câu hình dạng và câu phân biệt của chính nhóm đó, rồi từng chuyện đang quay
+// lại với số lần và TOÀN BỘ dòng người dùng đã viết. Màn ngoài chỉ giữ hai
+// trích dẫn; phần còn lại nằm ở đây.
+
+class _ExpPillarReflectView extends ConsumerWidget {
+  const _ExpPillarReflectView({
+    required this.pillar,
+    required this.total,
+    required this.stories,
+  });
+
+  final SelfCheckPillar pillar;
+  final int total;
+  final List<RecurringStory> stories;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final reading = ref
+        .watch(wrExperienceAiReadingProvider)
+        .valueOrNull
+        ?.of(pillar);
+    final readable = difficultyReadable(stories);
+    final color = scriptPillarColor(pillar);
+
+    final List<Widget> head;
+    if (reading != null) {
+      head = [
+        WrParagraph(
+          reading.shape,
+          key: const Key('wr_exp_pillar_reflect_shape'),
+          textAlign: TextAlign.start,
+          style: _lead,
+        ),
+        const SizedBox(height: 10),
+        WrParagraph(reading.detail, textAlign: TextAlign.start, style: _para),
+      ];
+    } else if (total < kExperienceMinReflections) {
+      head = [
+        WrParagraph(
+          tr(
+            'Phần đọc hình dạng cần ít nhất $kExperienceMinReflections lần nhìn '
+                'lại. Bạn đã có $total lần, còn '
+                '${kExperienceMinReflections - total} lần nữa.',
+            'Reading a shape needs at least $kExperienceMinReflections '
+                'look-backs. You have $total, '
+                '${kExperienceMinReflections - total} to go.',
+          ),
+          key: const Key('wr_exp_pillar_reflect_progress'),
+          textAlign: TextAlign.start,
+          style: _lead,
+        ),
+      ];
+    } else if (!readable) {
+      head = [
+        WrParagraph(
+          tr(
+            'Nhóm này chưa có chuyện nào quay lại đủ nhiều để đọc thành một '
+                'hình dạng.',
+            'Nothing in this group has come back often enough to read a shape '
+                'yet.',
+          ),
+          key: const Key('wr_exp_pillar_reflect_thin'),
+          textAlign: TextAlign.start,
+          style: _lead,
+        ),
+      ];
+    } else {
+      head = const [_AiInviteIfUnasked()];
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ...head,
+        if (stories.isNotEmpty) ...[
+          const SizedBox(height: 24),
+          _eyebrow(
+            tr('NHỮNG CHUYỆN ĐANG QUAY LẠI', 'WHAT KEEPS COMING BACK'),
+            WrColors.text3,
+          ),
+          for (final st in stories)
+            Padding(
+              padding: const EdgeInsets.only(top: 11),
+              child: WrCardMinimal(
+                key: Key('wr_exp_pillar_story_${st.code}'),
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            wrKeepCompounds(st.title),
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w700,
+                              color: WrColors.navy,
+                              height: 1.4,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Text(
+                          tr('${st.count} lần', '${st.count} times'),
+                          style: TextStyle(
+                            fontSize: 12.5,
+                            fontWeight: FontWeight.w700,
+                            color: color,
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (st.lines.isEmpty) ...[
+                      const SizedBox(height: 9),
+                      Text(
+                        wrKeepCompounds(
+                          tr(
+                            'Những lần này bạn chỉ đánh dấu, chưa viết thêm '
+                                'dòng nào.',
+                            'Each time you only marked it, without writing a '
+                                'line.',
+                          ),
+                        ),
+                        style: _tiny,
+                      ),
+                    ] else ...[
+                      for (final l in st.lines)
+                        _Quote(line: l, accent: WrColors.lineSoft),
+                      if (st.markOnly > 0) ...[
+                        const SizedBox(height: 9),
+                        Text(
+                          wrKeepCompounds(
+                            tr(
+                              'Và ${st.markOnly} lần bạn chỉ đánh dấu.',
+                              'And ${st.markOnly} times you only marked it.',
+                            ),
+                          ),
+                          style: _tiny,
+                        ),
+                      ],
+                    ],
+                  ],
+                ),
+              ),
+            ),
+        ],
+        const SizedBox(height: 18),
+        WrCardMinimal(
+          key: const Key('wr_exp_pillar_reflect_next'),
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              _eyebrow(
+                tr('BƯỚC TIẾP THEO', 'NEXT STEP'),
+                WrColors.pillTealText,
+              ),
+              const SizedBox(height: 7),
+              WrParagraph(
+                tr(
+                  'Nếu bạn muốn làm việc với nhóm này, phần Phát triển có bốn '
+                      'bước làm quen cho đúng chủ đề đang quay lại nhiều nhất.',
+                  'If you want to work on this group, Grow has four getting-'
+                      'started steps for the theme that comes back most.',
+                ),
+                textAlign: TextAlign.start,
+                style: _para,
+              ),
+              const SizedBox(height: 12),
+              _ghostButton(
+                const Key('wr_exp_pillar_reflect_grow'),
+                tr('Mở phần Phát triển', 'Open Grow'),
+                () => context.go('/wr/growth'),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
@@ -998,11 +1377,19 @@ class _ExpSynthesisViewState extends ConsumerState<_ExpSynthesisView> {
       );
     }
 
+    // Mảnh "phần khó rút gọn" của dom do AI viết cùng khối "khó ở chỗ nào".
+    final hardPart = ref
+        .watch(wrExperienceAiReadingProvider)
+        .valueOrNull
+        ?.of(dom)
+        ?.hardPart;
     final current = OverviewInputs(
       dom: dom,
       domCount: widget.tally.appearance[dom] ?? 0,
       total: total,
       answers: latest.answers,
+      hardPart: hardPart,
+      hardPartLocale: hardPart == null ? null : wrLocaleCode,
     );
 
     // Bản nào đang hiện, và phản hồi nào đi kèm.
