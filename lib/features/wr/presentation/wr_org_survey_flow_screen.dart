@@ -327,14 +327,8 @@ class _TopBar extends StatelessWidget {
               ),
             ),
           ),
-          TextButton(
-            key: const Key('wr_org_survey_close'),
-            onPressed: onClose,
-            child: Text(
-              wrKeepCompounds(tr('Đóng', 'Close')),
-              style: TextStyle(fontSize: 14, color: WrColors.muted),
-            ),
-          ),
+          const SizedBox(width: 12),
+          WrCloseCircle(key: const Key('wr_org_survey_close'), onTap: onClose),
         ],
       ),
     );

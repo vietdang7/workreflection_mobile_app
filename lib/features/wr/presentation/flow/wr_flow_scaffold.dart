@@ -410,25 +410,9 @@ class _FlowHeader extends StatelessWidget {
             ),
           ),
           if (onClose != null)
-            TextButton(
-              key: const Key('wr_flow_close'),
-              onPressed: onClose,
-              style: TextButton.styleFrom(
-                foregroundColor: WrColors.text2,
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: Text(
-                wrKeepCompounds(tr('Đóng', 'Close')),
-                style: const TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            )
+            WrCloseCircle(key: const Key('wr_flow_close'), onTap: onClose)
           else
-            const SizedBox(width: 30),
+            const SizedBox(width: 34),
         ],
       ),
     );

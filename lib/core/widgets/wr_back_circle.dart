@@ -66,3 +66,29 @@ class WrBackCircle extends StatelessWidget {
     );
   }
 }
+
+/// Nút Đóng dạng vòng tròn ✕ — cùng kiểu với [WrBackCircle] (họp khách 14/10:
+/// chữ "Đóng" xám chìm trên ảnh đầu màn, máy thật 15/10).
+class WrCloseCircle extends StatelessWidget {
+  const WrCloseCircle({super.key, required this.onTap});
+
+  /// Null thì nút mờ đi và không bấm được.
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      enabled: onTap != null,
+      label: tr('Đóng', 'Close'),
+      child: InkResponse(
+        onTap: onTap,
+        radius: 22,
+        child: Opacity(
+          opacity: onTap == null ? 0.4 : 1,
+          child: const WrNavCircle.close(),
+        ),
+      ),
+    );
+  }
+}

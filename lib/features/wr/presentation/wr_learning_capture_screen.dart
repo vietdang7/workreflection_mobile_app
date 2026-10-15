@@ -113,15 +113,8 @@ class _WrLearningCaptureScreenState
     );
   }
 
-  Widget _closeButton() => TextButton(
-    key: const Key('wr_learning_close'),
-    onPressed: _back,
-    style: TextButton.styleFrom(foregroundColor: WrColors.text2),
-    child: Text(
-      wrKeepCompounds(tr('Đóng', 'Close')),
-      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-    ),
-  );
+  Widget _closeButton() =>
+      WrCloseCircle(key: const Key('wr_learning_close'), onTap: _back);
 
   Widget _writeView() {
     final p08 = _p08();

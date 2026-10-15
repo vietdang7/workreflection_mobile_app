@@ -322,7 +322,12 @@ class _ReaderBodyState extends State<_ReaderBody> {
                   ),
                 ),
                 child: Text(
-                  wrKeepCompounds(tr('Xong, đọc bài khác', 'Done, read another')),
+                  // Bài nghe thì "nghe bài khác" (lỗi máy thật 10/10).
+                  wrKeepCompounds(
+                    item.type == MoodContentType.audio
+                        ? tr('Xong, nghe bài khác', 'Done, listen to another')
+                        : tr('Xong, đọc bài khác', 'Done, read another'),
+                  ),
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w700,

@@ -32,6 +32,7 @@ import '../../../../core/models/wr_episode.dart';
 import '../../../../core/theme/wr_text.dart';
 import '../../../../core/widgets/eyebrow.dart';
 import '../../../../core/widgets/wr_paragraph.dart';
+import 'package:workreflection_mobile/core/widgets/wr_back_circle.dart';
 
 /// Mockup v47: sheet lưu hành trình hiện sau màn Xong 1100ms.
 const kSaveSheetDelay = Duration(milliseconds: 1100);
@@ -135,14 +136,9 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
               alignment: Alignment.centerRight,
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(22, 12, 18, 0),
-                child: TextButton(
+                child: WrCloseCircle(
                   key: const Key('wr_flow_close'),
-                  onPressed: _integrating ? null : _home,
-                  style: TextButton.styleFrom(foregroundColor: WrColors.text2),
-                  child: Text(
-                    wrKeepCompounds(tr('Đóng', 'Close')),
-                    style: const TextStyle(fontSize: 13.5),
-                  ),
+                  onTap: _integrating ? null : _home,
                 ),
               ),
             ),

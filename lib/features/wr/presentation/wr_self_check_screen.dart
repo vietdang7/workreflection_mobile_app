@@ -225,21 +225,9 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                         // Lối thoát. Trước đây chỉ có mũi tên lùi MỘT câu: đang ở
                         // câu 12 mà muốn ra thì phải bấm mười hai lần, nên trên
                         // thực tế màn này không có cửa ra.
-                        TextButton(
+                        WrCloseCircle(
                           key: const Key('wr_self_check_close'),
-                          onPressed: _close,
-                          style: TextButton.styleFrom(
-                            foregroundColor: WrColors.text2,
-                            minimumSize: const Size(44, 44),
-                            padding: const EdgeInsets.symmetric(horizontal: 8),
-                          ),
-                          child: Text(
-                            wrKeepCompounds(tr('Đóng', 'Close')),
-                            style: TextStyle(
-                              fontSize: 15.5,
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
+                          onTap: _close,
                         ),
                       ],
                     ),
