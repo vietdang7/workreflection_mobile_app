@@ -301,18 +301,25 @@ class WrHeroHeader extends StatelessWidget {
           if (subtitle!.contains('\n'))
             // Câu đã ngắt sẵn (họp khách 14/10: "chủ động ngắt thành 2 dòng"):
             // mỗi dòng giữ trọn trên một hàng, máy hẹp hay cỡ chữ lớn thì thu
-            // nhỏ dòng đó lại chứ không để rớt một chữ xuống hàng thứ ba.
-            for (final line in subtitle!.split('\n'))
-              FittedBox(
-                fit: BoxFit.scaleDown,
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  line,
-                  maxLines: 1,
-                  softWrap: false,
-                  style: _subtitleStyle,
-                ),
-              )
+            // nhỏ lại chứ không để rớt một chữ xuống hàng thứ ba. Thu CẢ KHỐI
+            // một lần để các dòng cùng cỡ — thu từng dòng riêng thì dòng dài
+            // nhỏ hẳn đi so với dòng ngắn (máy thật 15/10, cỡ chữ hệ thống to).
+            FittedBox(
+              fit: BoxFit.scaleDown,
+              alignment: Alignment.centerLeft,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final line in subtitle!.split('\n'))
+                    Text(
+                      line,
+                      maxLines: 1,
+                      softWrap: false,
+                      style: _subtitleStyle,
+                    ),
+                ],
+              ),
+            )
           else
             ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 275),

@@ -764,9 +764,11 @@ class WrJourneyScreen extends ConsumerWidget {
             eyebrow: tr('Hành trình', 'Journey'),
             title: tr('Hành trình của bạn', 'Your journey'),
             subtitle: tr(
-              'Nhìn lại những gì đã ở lại,\nđể thấy mình đã thật sự đi qua '
+              // Ngắt cho hai dòng dài gần bằng nhau: dòng dài quá thì cả khối
+              // bị thu nhỏ theo nó (máy thật 15/10).
+              'Nhìn lại những gì đã ở lại, để thấy\nmình đã thật sự đi qua '
                   'điều gì.',
-              'Look back at what stayed,\nto see what you have truly been '
+              'Look back at what stayed, to see\nwhat you have truly been '
                   'through.',
             ),
             // v1.6 §9.1: "Tôi" là avatar ở mọi màn tab.

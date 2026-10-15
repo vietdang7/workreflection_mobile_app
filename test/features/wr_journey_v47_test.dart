@@ -182,11 +182,11 @@ void main() {
 
       expect(find.text('Hành trình của bạn'), findsOneWidget);
       // Họp khách 14/10: câu dưới tiêu đề ngắt sẵn thành hai dòng.
-      expect(find.text('Nhìn lại những gì đã ở lại,'), findsOneWidget);
       expect(
-        find.text('để thấy mình đã thật sự đi qua điều gì.'),
+        find.text('Nhìn lại những gì đã ở lại, để thấy'),
         findsOneWidget,
       );
+      expect(find.text('mình đã thật sự đi qua điều gì.'), findsOneWidget);
       expect(find.text('Nhìn lại dòng thời gian'), findsOneWidget);
       // Họp khách 08/10: bỏ "Những gì bạn đã học" — trùng phần thực hành.
       expect(find.text('Những gì bạn đã học'), findsNothing);

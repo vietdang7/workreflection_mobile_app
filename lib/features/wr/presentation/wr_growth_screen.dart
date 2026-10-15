@@ -665,51 +665,83 @@ class _ExpandSection extends StatelessWidget {
         WrEyebrow(tr('Mở rộng', 'Expand')),
         const SizedBox(height: 8),
 
-        // Hai thẻ dùng chung một khuôn [_ExpandCard] nên luôn to bằng nhau
-        // (họp khách 14/10: "cân đối kích thước hai thẻ").
+        // Hai thẻ dùng chung một khuôn [_ExpandCard] và phần chữ cao bằng
+        // thẻ dài hơn (họp khách 14/10: "cân đối kích thước hai thẻ"). Không
+        // cắt chữ: máy để cỡ chữ to thì cả hai cùng cao lên (máy thật 15/10).
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final seriesTitle = kLearningLibraryLabel;
+            final seriesLine = kLearningLibraryIntro;
+            final teaTitle = tr(
+              'Trà chiều nghề nghiệp',
+              'Career Afternoon Tea',
+            );
+            final teaLine = kTraChieuCardLine;
+            final bodyMin = [
+              _ExpandCard.bodyHeight(
+                context,
+                width: constraints.maxWidth,
+                title: seriesTitle,
+                subtitle: seriesLine,
+              ),
+              _ExpandCard.bodyHeight(
+                context,
+                width: constraints.maxWidth,
+                title: teaTitle,
+                subtitle: teaLine,
+              ),
+            ].reduce((a, b) => a > b ? a : b);
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // 1. Chuỗi series Tâm thế người đi làm
+                _ExpandCard(
+                  key: const Key('wr_growth_youtube_card'),
+                  onTap: () => context.push('/wr/learning-library'),
+                  image: 'assets/images/hero/bg_hieu.webp',
+                  dim: 0.15,
+                  badges: [
+                    _ExpandBadge(
+                      tr('YOUTUBE', 'YOUTUBE'),
+                      background: WrColors.coral,
+                      color: Colors.white,
+                    ),
+                    _ExpandBadge(
+                      tr('SERIES CHIA SẺ', 'VIDEO SERIES'),
+                      background: Colors.white.withValues(alpha: 0.92),
+                      color: WrColors.navy,
+                    ),
+                  ],
+                  playIcon: true,
+                  title: seriesTitle,
+                  subtitle: seriesLine,
+                  bodyMinHeight: bodyMin,
+                ),
 
-        // 1. Chuỗi series Tâm thế người đi làm
-        _ExpandCard(
-          key: const Key('wr_growth_youtube_card'),
-          onTap: () => context.push('/wr/learning-library'),
-          image: 'assets/images/hero/bg_hieu.webp',
-          dim: 0.15,
-          badges: [
-            _ExpandBadge(
-              tr('YOUTUBE', 'YOUTUBE'),
-              background: WrColors.coral,
-              color: Colors.white,
-            ),
-            _ExpandBadge(
-              tr('SERIES CHIA SẺ', 'VIDEO SERIES'),
-              background: Colors.white.withValues(alpha: 0.92),
-              color: WrColors.navy,
-            ),
-          ],
-          playIcon: true,
-          title: kLearningLibraryLabel,
-          subtitle: kLearningLibraryIntro,
-        ),
+                const SizedBox(height: 11),
 
-        const SizedBox(height: 11),
-
-        // 2. Trà chiều nghề nghiệp
-        // Luôn hiện, kể cả khi chưa có buổi (khách 30/07: "tôi không còn
-        // thấy cái mục giao diện trà chiều đâu cả").
-        _ExpandCard(
-          key: const Key('wr_growth_tra_chieu_card'),
-          onTap: () => context.push('/wr/tra-chieu'),
-          image: 'assets/images/thumb_trachieu.webp',
-          dim: 0.10,
-          badges: [
-            _ExpandBadge(
-              tr('OFFLINE · TRÀ CHIỀU', 'OFFLINE · AFTERNOON TEA'),
-              background: const Color(0xDC093774),
-              color: WrColors.cream,
-            ),
-          ],
-          title: tr('Trà chiều nghề nghiệp', 'Career Afternoon Tea'),
-          subtitle: kTraChieuCardLine,
+                // 2. Trà chiều nghề nghiệp
+                // Luôn hiện, kể cả khi chưa có buổi (khách 30/07: "tôi không còn
+                // thấy cái mục giao diện trà chiều đâu cả").
+                _ExpandCard(
+                  key: const Key('wr_growth_tra_chieu_card'),
+                  onTap: () => context.push('/wr/tra-chieu'),
+                  image: 'assets/images/thumb_trachieu.webp',
+                  dim: 0.10,
+                  badges: [
+                    _ExpandBadge(
+                      tr('OFFLINE · TRÀ CHIỀU', 'OFFLINE · AFTERNOON TEA'),
+                      background: const Color(0xDC093774),
+                      color: WrColors.cream,
+                    ),
+                  ],
+                  title: teaTitle,
+                  subtitle: teaLine,
+                  bodyMinHeight: bodyMin,
+                ),
+              ],
+            );
+          },
         ),
       ],
     );
@@ -761,6 +793,7 @@ class _ExpandCard extends StatelessWidget {
     required this.title,
     required this.subtitle,
     this.playIcon = false,
+    this.bodyMinHeight = 0,
   });
 
   final VoidCallback onTap;
@@ -771,9 +804,22 @@ class _ExpandCard extends StatelessWidget {
   final String subtitle;
   final bool playIcon;
 
-  static const double imageHeight = 92;
+  /// Chiều cao tối thiểu phần chữ: [_ExpandSection] truyền chiều cao của
+  /// thẻ có chữ dài nhất, để hai thẻ cao bằng nhau mà không cắt chữ nào.
+  final double bodyMinHeight;
 
-  static const _subtitleStyle = TextStyle(
+  static const double imageHeight = 92;
+  static const double titleGap = 3;
+  static const bodyPadding = EdgeInsets.fromLTRB(15, 4, 15, 14);
+
+  static const titleStyle = TextStyle(
+    fontSize: 14.5,
+    fontWeight: FontWeight.w700,
+    color: WrColors.navy,
+    height: 1.4,
+  );
+
+  static const subtitleStyle = TextStyle(
     fontSize: 12.5,
     color: WrColors.text2,
     height: 1.35,
@@ -842,46 +888,50 @@ class _ExpandCard extends StatelessWidget {
               ),
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(15, 4, 15, 14),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  wrKeepCompounds(title),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w700,
-                    color: WrColors.navy,
-                    height: 1.4,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Stack(
-                  children: [
-                    // Giữ chỗ đúng hai dòng theo cỡ chữ thật của máy.
-                    const Opacity(
-                      opacity: 0,
-                      child: ExcludeSemantics(
-                        child: Text('A\nA', style: _subtitleStyle),
-                      ),
-                    ),
-                    Text(
-                      wrKeepCompounds(subtitle),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: _subtitleStyle,
-                    ),
-                  ],
-                ),
-              ],
+          ConstrainedBox(
+            constraints: BoxConstraints(minHeight: bodyMinHeight),
+            child: Padding(
+              padding: bodyPadding,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(wrKeepCompounds(title), style: titleStyle),
+                  const SizedBox(height: titleGap),
+                  Text(wrKeepCompounds(subtitle), style: subtitleStyle),
+                ],
+              ),
             ),
           ),
         ],
       ),
     );
+  }
+
+  /// Chiều cao phần chữ của thẻ ở bề rộng [width], theo cỡ chữ của máy.
+  static double bodyHeight(
+    BuildContext context, {
+    required double width,
+    required String title,
+    required String subtitle,
+  }) {
+    final scaler = MediaQuery.textScalerOf(context);
+    final dir = Directionality.of(context);
+    final textWidth = width - bodyPadding.horizontal;
+    double measure(String text, TextStyle style) {
+      final p = TextPainter(
+        text: TextSpan(text: wrKeepCompounds(text), style: style),
+        textDirection: dir,
+        textScaler: scaler,
+      )..layout(maxWidth: textWidth);
+      final h = p.height;
+      p.dispose();
+      return h;
+    }
+
+    return bodyPadding.vertical +
+        measure(title, titleStyle) +
+        titleGap +
+        measure(subtitle, subtitleStyle);
   }
 }
 
