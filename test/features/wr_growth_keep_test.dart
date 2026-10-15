@@ -303,7 +303,8 @@ void main() {
       for (final t in [
         'YOUTUBE',
         'SERIES CHIA SẺ',
-        'Chuỗi Series Tâm thế người đi làm',
+        // Họp khách 14/10: tên chuỗi thay "Thư viện học tập".
+        'Chuỗi series Tâm thế người đi làm',
       ]) {
         expect(
           find.descendant(of: series, matching: find.text(t)),
@@ -314,7 +315,7 @@ void main() {
       for (final t in [
         'OFFLINE · TRÀ CHIỀU',
         'Trà chiều nghề nghiệp',
-        '10 đến 12 người · 2 giờ · một câu hỏi',
+        '12 đến 14 người · 2 tiếng',
       ]) {
         expect(
           find.descendant(of: tea, matching: find.text(t)),
@@ -488,7 +489,8 @@ void main() {
       );
 
       expect(
-        find.text('10 đến 12 người · 2 tiếng · 1 câu hỏi.'),
+        // Họp khách 14/10: 12–14 người, bỏ "1 câu hỏi".
+        find.text('12 đến 14 người · 2 tiếng.'),
         findsOneWidget,
       );
       expect(find.text('Vì sao lại là Trà Chiều'), findsOneWidget);

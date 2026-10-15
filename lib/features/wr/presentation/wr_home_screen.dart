@@ -72,6 +72,7 @@ import '../../profile/profile_providers.dart';
 import '../episode_flow_controller.dart';
 import '../growth_providers.dart';
 import '../mood_content_providers.dart';
+import '../../../core/models/wr_mood_content.dart';
 import '../wr_providers.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 import '../../../core/widgets/wr_title_text.dart';
@@ -232,14 +233,16 @@ class WrHomeScreen extends ConsumerWidget {
             overline: _dateLabel(),
             title: wrGreeting(greetingName),
             subtitle: tr(
-              'Dừng lại một chút. Hôm nay của bạn đang như thế nào?',
-              'Pause for a moment. How is your day going?',
+              // Ngắt sẵn thành hai dòng (họp khách 14/10).
+              'Dừng lại một chút.\nHôm nay của bạn đang như thế nào?',
+              'Pause for a moment.\nHow is your day going?',
             ),
             trailing: WrProfileAvatar(
               key: const Key('wr_home_profile_button'),
               displayName: displayName,
             ),
           ),
+          const SizedBox(height: WrHeroHeader.kContentGap),
           // `.section-gap { margin: 0 22px 14px }` → lề ngang 22, các thẻ
           // cách nhau 14.
           Padding(
@@ -1072,7 +1075,9 @@ class _MoodContentSection extends ConsumerWidget {
     // WXS Orch. Inv.5: im lặng là lựa chọn hợp lệ, không bịa nội dung mẫu.
     if (mood == null || items.isEmpty) return const SizedBox.shrink();
 
-    final item = items.first;
+    // Bài nghe trước (họp khách 14/10), chưa có bài nghe thì lấy bài đọc.
+    final item = audioFirst(items).first;
+    final isAudio = item.type == MoodContentType.audio && item.hasAudio;
     final paper = WrBackgroundScope.of(context);
 
     // `.card.tlcard` của mockup Sprint 2: mặt giấy trắng bo 18, viền `--line`,
@@ -1197,6 +1202,39 @@ class _MoodContentSection extends ConsumerWidget {
                         height: 1.65,
                       ),
                     ),
+                    // Nút "Nghe" nổi bật (họp khách 14/10): người dùng phải
+                    // thấy ngay đây là bài nghe, không tưởng là bài đọc chữ.
+                    // Bấm vào mở màn bài nghe, nơi có trình phát.
+                    if (isAudio) ...[
+                      const SizedBox(height: 10),
+                      Container(
+                        key: const Key('wr_home_mood_listen'),
+                        padding: const EdgeInsets.fromLTRB(12, 7, 16, 7),
+                        decoration: BoxDecoration(
+                          color: WrColors.coral,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(
+                              Icons.play_arrow_rounded,
+                              size: 20,
+                              color: WrColors.navy,
+                            ),
+                            const SizedBox(width: 4),
+                            Text(
+                              wrKeepCompounds(tr('Nghe ngay', 'Listen now')),
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w700,
+                                color: WrColors.navy,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),

@@ -27,6 +27,7 @@ import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_hero_header.dart';
 import '../org_survey_providers.dart';
 import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
+import 'package:workreflection_mobile/core/widgets/wr_back_circle.dart';
 
 class WrOrgSurveyFlowScreen extends ConsumerStatefulWidget {
   const WrOrgSurveyFlowScreen({super.key});
@@ -309,7 +310,7 @@ class _TopBar extends StatelessWidget {
         children: [
           IconButton(
             key: const Key('wr_org_survey_back'),
-            icon: const Icon(Icons.arrow_back_ios_new, size: 16),
+            icon: const WrNavCircle.back(),
             color: WrColors.navy,
             onPressed: onBack,
           ),

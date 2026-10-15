@@ -40,6 +40,14 @@ import '../models/wr_episode.dart';
 import 'wr_repeated_situations.dart' show kRepeatedSituationsMinCount;
 
 /// Số lần nhìn lại tối thiểu trong một chặng (script `CHAPTER_MIN_ENTRIES`).
+/// Có hiện lối vào "Nhìn lại một chặng" trên giao diện hay không.
+///
+/// Họp khách 14/10: bản đọc chặng (~3 tháng) đang đọc dữ liệu chồng chéo,
+/// người dùng thử thấy rối → TẠM ẨN ở cả tab Hiểu mình lẫn Hành trình. Chỉ ẩn
+/// lối vào; dữ liệu Episode vẫn tích luỹ như cũ, route `/wr/chapters` và
+/// `/wr/chapter/:id` vẫn còn. Bật lại khi dữ liệu người dùng đủ dày.
+const bool kWrChaptersVisible = false;
+
 const int kChapterMinEntries = 8;
 
 /// Số tuần tối thiểu kể từ lần khép trước (script `CHAPTER_MIN_WEEKS`).

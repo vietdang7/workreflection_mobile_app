@@ -52,16 +52,20 @@ const kWrOnboardingPhotoAlignment = Alignment(-0.64, 0.16);
 
 /// `.hero-scrim`: lớp phủ kem bắt buộc, đậm ở trên (chỗ chữ) và trong dần
 /// xuống dưới. Khớp `.hero-scrim` của mockup Sprint 2 Paper.
+///
+/// Họp khách 14/10: ảnh hero "mờ quá so với ảnh thẻ". Phần trên (chỗ chữ) giữ
+/// đậm như cũ, phần dưới mỏng đi nhiều để tranh lộ rõ; mép đáy thì do
+/// [WrHeroHeader] làm tan vào nền chứ không do lớp phủ này.
 const kWrHeroScrim = LinearGradient(
   begin: Alignment.topCenter,
   end: Alignment.bottomCenter,
   colors: [
-    Color(0xF7FFF7EE), // .97
     Color(0xF2FFF7EE), // .95
-    Color(0xB8FFF7EE), // .72
-    Color(0x1AFFF7EE), // .10
+    Color(0xE6FFF7EE), // .90
+    Color(0x6BFFF7EE), // .42
+    Color(0x00FFF7EE), // 0
   ],
-  stops: [0, 0.56, 0.78, 1],
+  stops: [0, 0.50, 0.74, 0.94],
 );
 
 /// `.onb-hero-fade`: mờ nhẹ ở trên, đặc dần ở dưới để nối vào phần chữ. Mockup
@@ -221,6 +225,10 @@ class WrHeroHeader extends StatelessWidget {
   /// không bị giật. Là chiều cao tối thiểu: chữ dài hơn thì hero cao theo.
   static const kHeight = 208.0;
 
+  /// Khoảng trống giữa đáy hero và thẻ đầu tiên của tab (họp khách 14/10:
+  /// thẻ đầu "dính sát ảnh hero"). Bốn tab dùng chung để lề trên đồng bộ.
+  static const kContentGap = 20.0;
+
   final String asset;
   final String title;
 
@@ -245,6 +253,11 @@ class WrHeroHeader extends StatelessWidget {
   // chính ảnh): `.hero2 .hero-copy2` .94, `.hero2 .tiny` .80, `.eyebrow` .74.
   static const _copyColor = Color(0xF02C335D);
   static const _overlineColor = Color(0xCC2C335D);
+  static const _subtitleStyle = TextStyle(
+    fontSize: 14.5,
+    color: _copyColor,
+    height: 1.55,
+  );
 
   @override
   Widget build(BuildContext context) {
@@ -285,17 +298,26 @@ class WrHeroHeader extends StatelessWidget {
         ),
         if (subtitle != null) ...[
           const SizedBox(height: 9),
-          ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 275),
-            child: Text(
-              wrKeepWords(subtitle!),
-              style: const TextStyle(
-                fontSize: 14.5,
-                color: _copyColor,
-                height: 1.55,
-              ),
+          if (subtitle!.contains('\n'))
+            // Câu đã ngắt sẵn (họp khách 14/10: "chủ động ngắt thành 2 dòng"):
+            // mỗi dòng giữ trọn trên một hàng, máy hẹp hay cỡ chữ lớn thì thu
+            // nhỏ dòng đó lại chứ không để rớt một chữ xuống hàng thứ ba.
+            for (final line in subtitle!.split('\n'))
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  line,
+                  maxLines: 1,
+                  softWrap: false,
+                  style: _subtitleStyle,
+                ),
+              )
+          else
+            ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 275),
+              child: Text(wrKeepWords(subtitle!), style: _subtitleStyle),
             ),
-          ),
         ],
       ],
     );
@@ -307,13 +329,22 @@ class WrHeroHeader extends StatelessWidget {
       constraints: BoxConstraints(minHeight: height + top),
       child: Stack(
         children: [
+          // Đáy ảnh tan hẳn vào nền màn (cả nền giấy) bằng cách làm ảnh
+          // trong suốt dần, không phủ một dải màu phẳng lên: dải màu phẳng
+          // vẫn để lại một đường ngang thô trên nền giấy có vân (người dùng
+          // chụp 09/10, khách nhắc lại 14/10).
           Positioned.fill(
-            child: WrHeroBackdrop(asset: asset, landscapeTint: landscape),
+            child: ShaderMask(
+              blendMode: BlendMode.dstIn,
+              shaderCallback: (rect) => const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Colors.black, Colors.black, Color(0x00000000)],
+                stops: [0, 0.74, 1],
+              ).createShader(rect),
+              child: WrHeroBackdrop(asset: asset, landscapeTint: landscape),
+            ),
           ),
-          // Đáy ảnh tan vào màu nền màn. Thiếu lớp này thì ảnh (đáy lớp phủ
-          // chỉ còn .08) đứt ngang thành một đường kẻ với phần bên dưới
-          // (người dùng chụp 09/10).
-          const Positioned.fill(child: IgnorePointer(child: _HeroBottomFade())),
           Padding(
             // `.topbar { padding: 8px 22px 14px }`
             padding: EdgeInsets.fromLTRB(22, top + 8, 22, 14),
@@ -364,42 +395,6 @@ class WrHeroHeader extends StatelessWidget {
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-/// Ảnh hero mờ dần vào nền màn ở phần đáy.
-class _HeroBottomFade extends StatelessWidget {
-  const _HeroBottomFade();
-
-  @override
-  Widget build(BuildContext context) {
-    final isPaper = WrBackgroundScope.of(context);
-    if (isPaper) {
-      return const DecoratedBox(
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0x00FBF9F5), Color(0x20FBF9F5), Color(0xAAFBF9F5)],
-            stops: [0.70, 0.88, 1],
-          ),
-        ),
-      );
-    }
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            const Color(0x00FBF9F5),
-            WrColors.pageBg.withValues(alpha: 0.45),
-            WrColors.pageBg.withValues(alpha: 0.82),
-          ],
-          stops: const [0.70, 0.88, 1],
-        ),
       ),
     );
   }

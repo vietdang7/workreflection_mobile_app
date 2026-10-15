@@ -16,7 +16,8 @@ import 'package:go_router/go_router.dart';
 
 import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_career_memory_rules.dart';
-import '../../../core/logic/wr_chapters.dart' show buildChapters;
+import '../../../core/logic/wr_chapters.dart'
+    show buildChapters, kWrChaptersVisible;
 import '../../../core/logic/wr_dominant_need.dart';
 import '../../../core/logic/wr_reflect_flow.dart';
 import '../../../core/logic/wr_entitlement.dart';
@@ -763,14 +764,15 @@ class WrJourneyScreen extends ConsumerWidget {
             eyebrow: tr('Hành trình', 'Journey'),
             title: tr('Hành trình của bạn', 'Your journey'),
             subtitle: tr(
-              'Nhìn lại những gì đã ở lại, để thấy mình đã thật sự đi qua '
+              'Nhìn lại những gì đã ở lại,\nđể thấy mình đã thật sự đi qua '
                   'điều gì.',
-              'Look back at what stayed, to see what you have truly been '
+              'Look back at what stayed,\nto see what you have truly been '
                   'through.',
             ),
             // v1.6 §9.1: "Tôi" là avatar ở mọi màn tab.
             trailing: const WrProfileAvatar(),
           ),
+          const SizedBox(height: WrHeroHeader.kContentGap),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 22),
             child: Column(
@@ -828,9 +830,12 @@ class WrJourneyScreen extends ConsumerWidget {
                 const SizedBox(height: 26),
 
                 // ── HÀNH TRÌNH THEO CHẶNG ─────────────────────────────────
-                // Mockup v47 / screenGrow.js: các mốc đã khép lại.
-                const _ChapterJourneyCard(),
-                const SizedBox(height: 26),
+                // Mockup v47 / screenGrow.js: các mốc đã khép lại. Tạm ẩn
+                // theo họp khách 14/10, xem [kWrChaptersVisible].
+                if (kWrChaptersVisible) ...[
+                  const _ChapterJourneyCard(),
+                  const SizedBox(height: 26),
+                ],
 
                 // ── Trò chuyện về hành trình ──────────────────────────────
                 // Script khách: thẻ nổi bật, bấm vào mở trợ lý chat.

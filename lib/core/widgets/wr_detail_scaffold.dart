@@ -7,6 +7,7 @@ import 'eyebrow.dart';
 import 'wr_app_background.dart';
 import 'wr_hero_header.dart';
 import 'wr_paragraph.dart';
+import 'wr_back_circle.dart';
 
 /// Khung chung cho các màn đọc mở từ một dòng danh sách.
 ///
@@ -42,7 +43,7 @@ class WrDetailScaffold extends StatelessWidget {
         leading: IconButton(
           key: const Key('wr_detail_back'),
           tooltip: tr('Quay lại', 'Back'),
-          icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+          icon: const WrNavCircle.back(),
           color: WrColors.navy,
           onPressed: () => context.pop(),
         ),

@@ -341,10 +341,8 @@ class _WrWorkInfoScreenState extends ConsumerState<WrWorkInfoScreen> {
               const SizedBox(height: 20),
 
               // ── 2. TÀI LIỆU ────────────────────────────────────────────
+              // Họp khách 14/10: chứng chỉ gom chung vào thẻ này.
               const _DocumentsCard(),
-
-              const SizedBox(height: 28),
-              const WrOwnedSkillsSection(),
             ],
           ),
         ),
@@ -782,6 +780,24 @@ class _DocumentsCard extends ConsumerWidget {
               ),
             ),
           ),
+          // ── Chứng chỉ, khoá học đã có ── (họp khách 14/10: chung một thẻ
+          // với JD, chỉ một nút tải file thay cho form nhiều ô).
+          const SizedBox(height: 15),
+          Container(height: 1, color: WrColors.lineSoft),
+          const SizedBox(height: 13),
+          Text(
+            wrKeepCompounds(
+              tr('CHỨNG CHỈ, KHOÁ HỌC ĐÃ CÓ', 'CERTIFICATES AND COURSES'),
+            ),
+            style: const TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.7,
+              color: WrColors.navy,
+            ),
+          ),
+          const SizedBox(height: 7),
+          const WrOwnedSkillsSection(),
         ],
       ),
     );

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import '../../../core/l10n/wr_tr.dart';
 import '../../../core/theme/wr_colors.dart';
 import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
+import 'package:workreflection_mobile/core/widgets/wr_back_circle.dart';
 
 /// Story tab screen — shows CTA to launch the full WrStoryFlowScreen.
 class WrStoryScreen extends StatelessWidget {
@@ -21,11 +22,7 @@ class WrStoryScreen extends StatelessWidget {
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: IconButton(
-                    icon: const Icon(
-                      Icons.arrow_back_ios_new,
-                      size: 18,
-                      color: WrColors.dark,
-                    ),
+                    icon: const WrNavCircle.back(),
                     onPressed: () {
                       if (context.canPop()) {
                         context.pop();

@@ -168,12 +168,14 @@ class WrDiscoverScreen extends ConsumerWidget {
             eyebrow: tr('Hiểu mình', 'Understand'),
             title: tr('Những điều đang lặp lại', 'What keeps coming back'),
             subtitle: tr(
-              'Sau một thời gian nhìn lại, có những điều thường lặp lại.',
-              'After a while of looking back, certain things tend to recur.',
+              // Ngắt sẵn thành hai dòng (họp khách 14/10).
+              'Sau một thời gian nhìn lại,\ncó những điều thường lặp lại.',
+              'After a while of looking back,\ncertain things tend to recur.',
             ),
             // v1.6 §9.1: "Tôi" là avatar ở mọi màn tab, không còn tab riêng.
             trailing: const WrProfileAvatar(),
           ),
+          const SizedBox(height: WrHeroHeader.kContentGap),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 22),
             child: Column(

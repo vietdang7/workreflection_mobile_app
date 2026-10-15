@@ -912,18 +912,20 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
                 ),
                 GestureDetector(
                   onTap: () => Navigator.of(context).maybePop(),
+                  // Trên khối navy: vòng tròn trắng sáng thay vì navy (họp
+                  // khách 14/10), để nút đóng nổi hẳn lên.
                   child: Container(
-                    width: 30,
-                    height: 30,
+                    width: 34,
+                    height: 34,
                     margin: const EdgeInsets.only(left: 10),
-                    decoration: BoxDecoration(
-                      color: const Color(0x1AFFFFFF),
-                      borderRadius: BorderRadius.circular(15),
+                    decoration: const BoxDecoration(
+                      color: Color(0xF2FFFFFF),
+                      shape: BoxShape.circle,
                     ),
                     child: const Icon(
-                      Icons.close,
-                      color: Color(0x99FFFFFF),
-                      size: 14,
+                      Icons.close_rounded,
+                      color: WrColors.navy,
+                      size: 19,
                     ),
                   ),
                 ),

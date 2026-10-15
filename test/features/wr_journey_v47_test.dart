@@ -181,10 +181,10 @@ void main() {
       expect(ask, lessThan(narrative));
 
       expect(find.text('Hành trình của bạn'), findsOneWidget);
+      // Họp khách 14/10: câu dưới tiêu đề ngắt sẵn thành hai dòng.
+      expect(find.text('Nhìn lại những gì đã ở lại,'), findsOneWidget);
       expect(
-        find.text(
-          'Nhìn lại những gì đã ở lại, để thấy mình đã thật sự đi qua điều gì.',
-        ),
+        find.text('để thấy mình đã thật sự đi qua điều gì.'),
         findsOneWidget,
       );
       expect(find.text('Nhìn lại dòng thời gian'), findsOneWidget);

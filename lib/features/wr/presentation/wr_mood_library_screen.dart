@@ -45,9 +45,10 @@ const double kWrBandContentGap = 52;
 
 /// Bộ lọc loại nội dung: `.lib-seg` Tất cả / Đọc / Nghe.
 enum MoodLibraryFilter {
+  // "Nghe" đứng trước "Đọc" (họp khách 14/10: ưu tiên bài nghe).
   all,
-  reading,
-  audio;
+  audio,
+  reading;
 
   String get label => switch (this) {
     MoodLibraryFilter.all => tr('Tất cả', 'All'),
@@ -118,11 +119,17 @@ class _WrMoodLibraryScreenState extends ConsumerState<WrMoodLibraryScreen> {
                 if (grouped.isEmpty) {
                   return _LibraryEmpty(onBack: () => context.pop());
                 }
-                final items = (grouped[mood] ?? const <MoodContent>[])
-                    .where(_filter.accepts)
-                    .toList();
+                final items = audioFirst(
+                  (grouped[mood] ?? const <MoodContent>[]).where(
+                    _filter.accepts,
+                  ),
+                );
                 return ListView(
-                  padding: const EdgeInsets.only(bottom: 24),
+                  // Cộng phần thanh điều hướng hệ thống: thiếu nó thì mục cuối
+                  // nằm dưới thanh Android dù đã cuộn hết (máy thật 10/10).
+                  padding: EdgeInsets.only(
+                    bottom: 24 + MediaQuery.paddingOf(context).bottom,
+                  ),
                   children: [
                     // `.scr-body.rf .backrow { padding: 16px 22px 54px }`:
                     // chỉ nút quay lại nằm trên dải ảnh, chữ bắt đầu dưới dải.

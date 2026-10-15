@@ -414,10 +414,9 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(
-        find.text('Dừng lại một chút. Hôm nay của bạn đang như thế nào?'),
-        findsOneWidget,
-      );
+      // Họp khách 14/10: ngắt sẵn thành hai dòng, mỗi dòng một Text.
+      expect(find.text('Dừng lại một chút.'), findsOneWidget);
+      expect(find.text('Hôm nay của bạn đang như thế nào?'), findsOneWidget);
     });
 
     testWidgets('chưa check-in: chỉ lưới sáu ô', (tester) async {
@@ -1465,7 +1464,8 @@ void main() {
       expect(inCard(find.text('OFFLINE · TRÀ CHIỀU')), findsOneWidget);
       expect(inCard(find.text('Trà chiều nghề nghiệp')), findsOneWidget);
       expect(
-        inCard(find.text('10 đến 12 người · 2 giờ · một câu hỏi')),
+        // Họp khách 14/10: 12–14 người, 2 tiếng, bỏ "một câu hỏi".
+        inCard(find.text('12 đến 14 người · 2 tiếng')),
         findsOneWidget,
       );
       // Ảnh thumb của script là asset cố định; ảnh của workshop (image_url)

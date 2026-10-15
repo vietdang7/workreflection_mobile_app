@@ -52,13 +52,14 @@ List<String> get kTraChieuRules => [
 
 /// "Vì sao lại là Trà Chiều" — nguyên văn script `screenTraChieu`.
 String get kTraChieuWhy => tr(
-  'Không phải hội thảo, không có sân khấu. Mười đến mười hai người ngồi quanh '
-      'một bàn trà, cùng trả lời một câu hỏi duy nhất. Đây là chính trải nghiệm '
-      'phản chiếu của WorkReflection, chỉ khác là được nói thành lời, trong một '
-      'không gian an toàn.',
-  'Not a seminar, no stage. Ten to twelve people sit around one tea table and '
-      'answer a single question together. It is the same reflection you do in '
-      'WorkReflection, only spoken out loud, in a safe space.',
+  // Họp khách 14/10: 12–14 người, bỏ "cùng trả lời một câu hỏi duy nhất".
+  'Không phải hội thảo, không có sân khấu. Mười hai đến mười bốn người ngồi '
+      'quanh một bàn trà. Đây là chính trải nghiệm phản chiếu của '
+      'WorkReflection, chỉ khác là được nói thành lời, trong một không gian an '
+      'toàn.',
+  'Not a seminar, no stage. Twelve to fourteen people sit around one tea '
+      'table. It is the same reflection you do in WorkReflection, only spoken '
+      'out loud, in a safe space.',
 );
 
 // ---------------------------------------------------------------------------
@@ -258,7 +259,7 @@ class _NextSessionCard extends StatelessWidget {
               ),
             ),
           ),
-          // Lối thứ hai: nhắn thẳng Zalo. Giữ chỗ một buổi 10–12 người là việc
+          // Lối thứ hai: nhắn thẳng Zalo. Giữ chỗ một buổi 12–14 người là việc
           // của người tổ chức chứ không cần một form đăng ký, nên với nhiều
           // người đây mới là đường ngắn nhất.
           if (kTraChieuZaloUrl.isNotEmpty) ...[

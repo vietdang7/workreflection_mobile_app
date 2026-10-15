@@ -32,6 +32,22 @@ final wrTodayMoodContentProvider = FutureProvider<List<MoodContent>>((
 });
 
 /// Toàn bộ thư viện, nhóm theo cảm xúc — cho màn "Xem thêm gợi ý" (§8.3).
+/// Bài nghe đứng trước bài đọc, giữ nguyên thứ tự `sort_order` trong từng
+/// loại. Họp khách 14/10: thư viện cảm xúc ưu tiên bài nghe (Healing Audio);
+/// bài nghe chưa có bản thu thì vẫn xếp sau bài đọc.
+List<MoodContent> audioFirst(Iterable<MoodContent> items) {
+  final list = items.toList();
+  int rank(MoodContent c) =>
+      c.type == MoodContentType.audio && c.hasAudio ? 0 : 1;
+  // Sắp ổn định: `List.sort` không hứa giữ thứ tự, nên so thêm vị trí cũ.
+  final indexed = [for (var i = 0; i < list.length; i++) (i, list[i])];
+  indexed.sort((a, b) {
+    final r = rank(a.$2).compareTo(rank(b.$2));
+    return r != 0 ? r : a.$1.compareTo(b.$1);
+  });
+  return [for (final e in indexed) e.$2];
+}
+
 final wrMoodLibraryProvider = FutureProvider<Map<Mood, List<MoodContent>>>((
   ref,
 ) async {

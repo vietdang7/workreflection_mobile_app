@@ -412,11 +412,11 @@ void main() {
         router.push('/wr/story');
         await tester.pumpAndSettle();
 
-        // Phải thấy icon arrow_back_ios_new
-        expect(find.byIcon(Icons.arrow_back_ios_new), findsOneWidget);
+        // Phải thấy nút lùi vòng tròn (WrNavCircle.back)
+        expect(find.byIcon(Icons.chevron_left_rounded), findsOneWidget);
 
         // Tap → pop về HOME_STUB
-        await tester.tap(find.byIcon(Icons.arrow_back_ios_new));
+        await tester.tap(find.byIcon(Icons.chevron_left_rounded));
         await tester.pumpAndSettle();
 
         expect(find.text('HOME_STUB'), findsOneWidget);
@@ -449,9 +449,9 @@ void main() {
         );
         await tester.pumpAndSettle();
 
-        expect(find.byIcon(Icons.arrow_back_ios_new), findsOneWidget);
+        expect(find.byIcon(Icons.chevron_left_rounded), findsOneWidget);
 
-        await tester.tap(find.byIcon(Icons.arrow_back_ios_new));
+        await tester.tap(find.byIcon(Icons.chevron_left_rounded));
         await tester.pumpAndSettle();
 
         expect(find.text('HOME_STUB'), findsOneWidget);

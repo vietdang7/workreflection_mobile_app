@@ -25,6 +25,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../support/fake_wr_content_repository.dart';
 import '../support/fake_wr_episode_repository.dart';
 import '../support/fake_wr_intelligence_repository.dart';
+import 'package:workreflection_mobile/core/logic/wr_chapters.dart';
 
 const _situations = <WrSituation>[
   WrSituation(
@@ -191,7 +192,7 @@ void main() {
       expect(find.text('Premium'), findsNothing);
     });
 
-    testWidgets('free thấy nhãn Premium; dòng chặng lấy chặng thật gần nhất', (
+    testWidgets('đã khép chặng mà dòng chặng vẫn ẩn (họp khách 14/10)', (
       tester,
     ) async {
       final h = _Harness(
@@ -201,14 +202,11 @@ void main() {
       await tester.pumpWidget(h.app('/wr/experience-interpret'));
       await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('wr_exp_menu_chapter')), findsOneWidget);
-      expect(find.text('Nhìn lại chặng 2'), findsOneWidget);
-      // Dòng chặng + dòng tổng hợp.
-      expect(find.text('Premium'), findsNWidgets(2));
-
-      await tester.tap(find.byKey(const Key('wr_exp_menu_chapter')));
-      await tester.pumpAndSettle();
-      expect(find.byKey(const Key('wr_chapter_read_locked')), findsOneWidget);
+      expect(kWrChaptersVisible, isFalse);
+      expect(find.byKey(const Key('wr_exp_menu_chapter')), findsNothing);
+      expect(find.text('Nhìn lại chặng 2'), findsNothing);
+      // Chỉ còn dòng tổng hợp mang nhãn Premium.
+      expect(find.text('Premium'), findsOneWidget);
     });
 
     testWidgets('màn con có đầu màn riêng "Diễn giải" + tiêu đề', (

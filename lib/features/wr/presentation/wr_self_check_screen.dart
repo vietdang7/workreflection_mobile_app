@@ -19,6 +19,7 @@ import '../wr_providers.dart';
 import '../../../core/widgets/wr_title_text.dart';
 import '../../../core/widgets/wr_hero_header.dart';
 import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
+import 'package:workreflection_mobile/core/widgets/wr_back_circle.dart';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Route: /wr/self-check
@@ -197,7 +198,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                               _close();
                             }
                           },
-                          icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+                          icon: const WrNavCircle.back(),
                           color: WrColors.dark,
                           tooltip: tr('Câu trước', 'Previous'),
                           constraints: const BoxConstraints.tightFor(
@@ -382,7 +383,7 @@ class _WrSelfCheckScreenState extends ConsumerState<WrSelfCheckScreen> {
                 alignment: Alignment.centerLeft,
                 child: IconButton(
                   onPressed: () => context.pop(),
-                  icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+                  icon: const WrNavCircle.back(),
                   color: WrColors.dark,
                   tooltip: tr('Quay lại', 'Back'),
                   constraints: const BoxConstraints.tightFor(
