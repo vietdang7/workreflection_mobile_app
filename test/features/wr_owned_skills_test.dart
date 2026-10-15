@@ -160,22 +160,6 @@ Future<void> _openAddSheet(WidgetTester tester) async {
   await tester.pumpAndSettle();
 }
 
-Future<void> _typeTitle(WidgetTester tester, String title) async {
-  await tester.enterText(find.byKey(const Key('wr_owned_skill_title')), title);
-  await tester.pumpAndSettle();
-}
-
-Future<void> _save(WidgetTester tester) async {
-  final save = find.byKey(const Key('wr_owned_skill_save'));
-  await tester.ensureVisible(save);
-  await tester.tap(save);
-  await tester.pumpAndSettle();
-}
-
-bool? _checked(WidgetTester tester, String themeId) => tester
-    .widget<CheckboxListTile>(find.byKey(Key('wr_owned_skill_theme_$themeId')))
-    .value;
-
 void main() {
   group('gợi ý chủ đề bỏ qua thứ người dùng đã có', () {
     test(
@@ -259,112 +243,105 @@ void main() {
     });
   });
 
-  group('màn Thông tin công việc', () {
-    testWidgets(
-      'màn Thông tin công việc: thêm Chứng chỉ → sheet hiện gợi ý chủ đề có ô tích, bỏ tích thì lưu theme_ids rỗng',
-      (tester) async {
-        final owned = FakeWrOwnedSkillRepository();
-        await _pump(
-          tester,
-          _app(const WrWorkInfoScreen(), _overrides(owned: owned)),
-        );
+  // Họp khách 14/10: bỏ form nhiều ô, chỉ còn nút tải file trong thẻ Tài liệu.
+  group('màn Bối cảnh công việc — tải chứng chỉ', () {
+    OwnedSkillFilePicker pick(String name) =>
+        () async => (name: name, ext: 'pdf', bytes: const [1, 2, 3]);
 
-        expect(find.text('CHỨNG CHỈ, KHOÁ HỌC, KỸ NĂNG ĐÃ CÓ'), findsOneWidget);
-        await _openAddSheet(tester);
-
-        await tester.tap(
-          find.byKey(const Key('wr_owned_skill_kind_certificate')),
-        );
-        await tester.pumpAndSettle();
-        await _typeTitle(tester, 'Chứng chỉ Quản lý dự án PMP');
-
-        // Gợi ý hiện ra, đã tích sẵn để người dùng xác nhận.
-        expect(_checked(tester, 'pt-s2'), isTrue);
-
-        await tester.tap(find.byKey(const Key('wr_owned_skill_theme_pt-s2')));
-        await tester.pumpAndSettle();
-        expect(_checked(tester, 'pt-s2'), isFalse);
-
-        await _save(tester);
-
-        final saved = owned.addCalls.single;
-        expect(saved.kind, OwnedSkillKind.certificate);
-        expect(saved.title, 'Chứng chỉ Quản lý dự án PMP');
-        expect(saved.themeIds, isEmpty);
-        // Sheet đóng, mục mới hiện trong danh sách.
-        expect(find.byKey(const Key('wr_owned_skill_save')), findsNothing);
-        expect(
-          find.byKey(Key('wr_work_info_owned_skill_${owned.rows.single.id}')),
-          findsOneWidget,
-        );
-      },
-    );
-
-    testWidgets('giữ ô tích thì lưu đúng chủ đề đã xác nhận', (tester) async {
+    testWidgets('tải file → thành Chứng chỉ, tên lấy từ tên file, máy tự '
+        'khớp chủ đề', (tester) async {
       final owned = FakeWrOwnedSkillRepository();
       await _pump(
         tester,
-        _app(const WrWorkInfoScreen(), _overrides(owned: owned)),
+        _app(
+          const WrWorkInfoScreen(),
+          _overrides(owned: owned, picker: pick('Chung_chi-Quan ly du an.pdf')),
+        ),
       );
 
+      // Thẻ riêng dưới thẻ Tài liệu (người dùng 15/10), không chung thẻ JD.
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('wr_work_info_owned_skills_card')),
+          matching: find.text('CHỨNG CHỈ, KHOÁ HỌC ĐÃ CÓ'),
+        ),
+        findsOneWidget,
+      );
+      expect(
+        find.descendant(
+          of: find.byKey(const Key('wr_work_info_documents_card')),
+          matching: find.text('CHỨNG CHỈ, KHOÁ HỌC ĐÃ CÓ'),
+        ),
+        findsNothing,
+      );
       await _openAddSheet(tester);
-      await _typeTitle(tester, 'Chứng chỉ Quản lý dự án PMP');
-      await tester.enterText(
-        find.byKey(const Key('wr_owned_skill_issuer')),
-        'PMI',
-      );
-      await tester.pumpAndSettle();
-      await _save(tester);
 
+      // Không mở form nào.
+      expect(find.byKey(const Key('wr_owned_skill_title')), findsNothing);
       final saved = owned.addCalls.single;
-      expect(saved.themeIds, ['pt-s2']);
-      expect(saved.issuer, 'PMI');
+      expect(saved.kind, OwnedSkillKind.certificate);
+      expect(saved.title, 'Chung chi Quan ly du an');
+      expect(saved.filePath, owned.uploadedPaths.single);
+      expect(owned.uploadedPaths.single, startsWith('u1/cert-'));
+      expect(
+        find.byKey(Key('wr_work_info_owned_skill_${owned.rows.single.id}')),
+        findsOneWidget,
+      );
     });
 
-    testWidgets('tên không khớp gì → không gợi ý, không tự gắn chủ đề nào', (
+    testWidgets('tên khớp chủ đề thì gắn chủ đề đó để không gợi ý lại', (
       tester,
     ) async {
       final owned = FakeWrOwnedSkillRepository();
       await _pump(
         tester,
-        _app(const WrWorkInfoScreen(), _overrides(owned: owned)),
+        _app(
+          const WrWorkInfoScreen(),
+          _overrides(
+            owned: owned,
+            picker: pick('Chứng chỉ Quản lý dự án PMP.pdf'),
+          ),
+        ),
       );
-
       await _openAddSheet(tester);
-      await _typeTitle(tester, 'Bằng lái xe B2');
-      expect(find.byType(CheckboxListTile), findsNothing);
-      expect(
-        find.byKey(const Key('wr_owned_skill_no_suggestion')),
-        findsOneWidget,
-      );
-
-      await _save(tester);
-      expect(owned.addCalls.single.themeIds, isEmpty);
+      expect(owned.addCalls.single.title, 'Chứng chỉ Quản lý dự án PMP');
+      expect(owned.addCalls.single.themeIds, ['pt-s2']);
     });
 
-    testWidgets('tên trống → nút Lưu tắt', (tester) async {
+    testWidgets('tên không khớp gì → không tự gắn chủ đề nào', (tester) async {
       final owned = FakeWrOwnedSkillRepository();
       await _pump(
         tester,
-        _app(const WrWorkInfoScreen(), _overrides(owned: owned)),
+        _app(
+          const WrWorkInfoScreen(),
+          _overrides(owned: owned, picker: pick('Bằng lái xe B2.pdf')),
+        ),
       );
-
       await _openAddSheet(tester);
-      await _typeTitle(tester, '   ');
-      final save = tester.widget<ElevatedButton>(
-        find.byKey(const Key('wr_owned_skill_save')),
+      expect(owned.addCalls.single.themeIds, isEmpty);
+    });
+
+    testWidgets('huỷ chọn file thì không lưu gì', (tester) async {
+      final owned = FakeWrOwnedSkillRepository();
+      await _pump(
+        tester,
+        _app(
+          const WrWorkInfoScreen(),
+          _overrides(owned: owned, picker: () async => null),
+        ),
       );
-      expect(save.onPressed, isNull);
+      await _openAddSheet(tester);
+      expect(owned.addCalls, isEmpty);
+      expect(owned.uploadedPaths, isEmpty);
     });
 
     testWidgets(
-      'Free thêm chứng chỉ không chiếm suất tài liệu (canUploadContextDocument không đổi)',
+      'Free tải chứng chỉ không chiếm suất tài liệu (canUploadContextDocument không đổi)',
       (tester) async {
         final owned = FakeWrOwnedSkillRepository();
         final intel = FakeWrIntelligenceRepository()
           ..seedPracticeThemes(kTestThemes)
           ..seedContextDocuments([]);
-        final wr = _wrRepo();
         await _pump(
           tester,
           _app(
@@ -372,9 +349,8 @@ void main() {
             _overrides(
               owned: owned,
               intel: intel,
-              wr: wr,
-              picker: () async =>
-                  (name: 'pmp.pdf', ext: 'pdf', bytes: const [1, 2, 3]),
+              wr: _wrRepo(),
+              picker: pick('pmp.pdf'),
             ),
           ),
         );
@@ -386,21 +362,10 @@ void main() {
         final docsBefore = await container.read(
           wrContextDocumentsProvider.future,
         );
-        expect(entitlement.canUploadContextDocument(docsBefore.length), isTrue);
 
         await _openAddSheet(tester);
-        await _typeTitle(tester, 'Chứng chỉ Quản lý dự án PMP');
-        final attach = find.byKey(const Key('wr_owned_skill_attach'));
-        await tester.ensureVisible(attach);
-        await tester.tap(attach);
-        await tester.pumpAndSettle();
-        expect(find.text('pmp.pdf'), findsOneWidget);
-        await _save(tester);
 
-        // Tệp đi vào thư mục của người dùng, tiền tố cert-.
-        expect(owned.uploadedPaths.single, startsWith('u1/cert-'));
-        expect(owned.addCalls.single.filePath, owned.uploadedPaths.single);
-        // Không thành một tài liệu JD/CV, suất tài liệu giữ nguyên.
+        expect(owned.addCalls, hasLength(1));
         expect(intel.insertContextDocumentCalls, isEmpty);
         container.invalidate(wrContextDocumentsProvider);
         final docsAfter = await container.read(
@@ -411,7 +376,7 @@ void main() {
       },
     );
 
-    testWidgets('bấm một mục đã khai → sửa được, xoá phải hỏi lại', (
+    testWidgets('mục đã có (kể cả khai tay trước đây) xoá phải hỏi lại', (
       tester,
     ) async {
       final owned = FakeWrOwnedSkillRepository()
@@ -432,17 +397,14 @@ void main() {
       final item = find.byKey(const Key('wr_work_info_owned_skill_os1'));
       expect(item, findsOneWidget);
       expect(
-        find.descendant(of: item, matching: find.textContaining('Trung tâm A')),
+        find.descendant(
+          of: item,
+          matching: find.text('Khoá kỹ năng thuyết trình'),
+        ),
         findsOneWidget,
       );
 
-      await tester.ensureVisible(item);
-      await tester.tap(item);
-      await tester.pumpAndSettle();
-      // Mở lại đúng lựa chọn người dùng đã xác nhận.
-      expect(_checked(tester, 'pt-c2'), isTrue);
-
-      final del = find.byKey(const Key('wr_owned_skill_delete'));
+      final del = find.byKey(const Key('wr_owned_skill_delete_os1'));
       await tester.ensureVisible(del);
       await tester.tap(del);
       await tester.pumpAndSettle();

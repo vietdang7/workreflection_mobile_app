@@ -11,6 +11,7 @@ import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../wr_providers.dart';
 import '../../../core/widgets/wr_paragraph.dart';
+import 'package:workreflection_mobile/core/widgets/wr_back_circle.dart';
 
 // Phase order cho story flow
 enum _StoryPhase { story, aha, confidence, reflection, practice, memory }
@@ -208,7 +209,7 @@ class _WrStoryFlowScreenState extends ConsumerState<WrStoryFlowScreen> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+                    icon: const WrNavCircle.back(),
                     onPressed: _phase == _StoryPhase.story
                         ? null
                         : () {
@@ -240,7 +241,7 @@ class _WrStoryFlowScreenState extends ConsumerState<WrStoryFlowScreen> {
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.close, size: 20),
+                    icon: const WrNavCircle.close(),
                     onPressed: () => context.go('/home'),
                   ),
                 ],

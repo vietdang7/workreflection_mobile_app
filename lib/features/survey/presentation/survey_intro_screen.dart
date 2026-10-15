@@ -14,6 +14,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../profile/profile_providers.dart';
 import '../survey_providers.dart';
 import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
+import 'package:workreflection_mobile/core/widgets/wr_back_circle.dart';
 
 class SurveyIntroScreen extends ConsumerStatefulWidget {
   const SurveyIntroScreen({super.key});
@@ -123,7 +124,7 @@ class _SurveyIntroScreenState extends ConsumerState<SurveyIntroScreen> {
         backgroundColor: WrColors.pageBg,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: WrColors.navy),
+          icon: const WrNavCircle.close(),
           onPressed: () => context.pop(),
         ),
       ),

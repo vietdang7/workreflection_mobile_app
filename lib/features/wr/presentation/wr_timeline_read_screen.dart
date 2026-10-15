@@ -16,6 +16,7 @@ import '../../../core/theme/wr_colors.dart';
 import '../../../core/theme/wr_text.dart';
 import '../../../core/widgets/wr_app_background.dart';
 import '../../../core/widgets/wr_card.dart';
+import '../../../core/widgets/wr_expandable_text.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 import '../../../core/widgets/wr_small_button.dart';
 import '../wr_providers.dart';
@@ -111,34 +112,12 @@ class WrTimelineReadScreen extends ConsumerWidget {
                         height: 1.7,
                       ),
                     )
-                  : Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // `.rd-lead`
-                        Text(
-                          wrKeepCompounds(lead),
-                          key: const Key('wr_timeline_read_lead'),
-                          style: WrText.serifQuote(
-                            fontSize: 17,
-                            color: WrColors.navy,
-                            height: 1.65,
-                          ),
-                        ),
-                        const SizedBox(height: 18),
-                        // `.rd-p`
-                        for (var i = 0; i < paras.length; i++) ...[
-                          WrParagraph(
-                            paras[i],
-                            key: Key('wr_timeline_read_p_$i'),
-                            style: const TextStyle(
-                              fontSize: 15,
-                              color: WrColors.text2,
-                              height: 1.8,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-                      ],
+                  : _TimelineBody(
+                      period: (start != null && end != null)
+                          ? '${_ddmm(start)} → ${_ddmm(end)}'
+                          : null,
+                      lead: lead,
+                      paras: paras,
                     ),
             ),
             Padding(
@@ -196,6 +175,95 @@ class WrTimelineReadScreen extends ConsumerWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Thân bài: mốc thời gian nổi bật + phần mở đầu xem trước vài dòng, bấm
+/// "Xem thêm" mới hiện trọn bài (họp khách 14/10: "nhiều chữ quá").
+class _TimelineBody extends StatefulWidget {
+  const _TimelineBody({
+    required this.period,
+    required this.lead,
+    required this.paras,
+  });
+
+  final String? period;
+  final String lead;
+  final List<String> paras;
+
+  @override
+  State<_TimelineBody> createState() => _TimelineBodyState();
+}
+
+class _TimelineBodyState extends State<_TimelineBody> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final leadStyle = WrText.serifQuote(
+      fontSize: 17,
+      color: WrColors.navy,
+      height: 1.65,
+    );
+    final paras = widget.paras;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (widget.period != null) ...[
+          Align(
+            alignment: Alignment.centerLeft,
+            child: WrDateBadge(
+              widget.period!,
+              key: const Key('wr_timeline_read_period'),
+            ),
+          ),
+          const SizedBox(height: 12),
+        ],
+        // `.rd-lead`. Bài chỉ có một đoạn: chính đoạn đó thu gọn. Bài nhiều
+        // đoạn: phần mở đầu hiện trọn, các đoạn sau chờ "Xem thêm".
+        if (paras.isEmpty)
+          WrExpandableText(
+            widget.lead,
+            key: const Key('wr_timeline_read_lead'),
+            style: leadStyle,
+          )
+        else ...[
+          Text(
+            wrKeepCompounds(widget.lead),
+            key: const Key('wr_timeline_read_lead'),
+            style: leadStyle,
+          ),
+          const SizedBox(height: 18),
+          // `.rd-p`
+          if (_expanded)
+            for (var i = 0; i < paras.length; i++) ...[
+              WrParagraph(
+                paras[i],
+                key: Key('wr_timeline_read_p_$i'),
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: WrColors.text2,
+                  height: 1.8,
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          GestureDetector(
+            key: const Key('wr_timeline_read_more'),
+            behavior: HitTestBehavior.opaque,
+            onTap: () => setState(() => _expanded = !_expanded),
+            child: Text(
+              _expanded ? tr('Thu gọn', 'Show less') : tr('Xem thêm', 'Read more'),
+              style: const TextStyle(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w700,
+                color: WrColors.pillTealText,
+              ),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

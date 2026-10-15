@@ -20,6 +20,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../profile/profile_providers.dart';
 import '../survey_providers.dart';
 import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
+import 'package:workreflection_mobile/core/widgets/wr_back_circle.dart';
 
 // Provider family for a specific report
 final _reportProvider = FutureProvider.family<CcReportFull?, String>((
@@ -149,7 +150,7 @@ class _ReportScreenState extends ConsumerState<ReportScreen> {
         backgroundColor: WrColors.pageBg,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: WrColors.navy),
+          icon: const WrNavCircle.close(),
           onPressed: () => context.go('/understand'),
         ),
         title: Text(wrKeepCompounds(l10n.reportTitle), style: WrTextStyles.hMedium),

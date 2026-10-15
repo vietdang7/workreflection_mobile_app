@@ -29,6 +29,7 @@ import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_hero_header.dart';
 import '../org_survey_providers.dart';
 import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
+import 'package:workreflection_mobile/core/widgets/wr_back_circle.dart';
 
 class WrOrgSurveyResultScreen extends ConsumerWidget {
   const WrOrgSurveyResultScreen({super.key, this.response});
@@ -61,18 +62,17 @@ class WrOrgSurveyResultScreen extends ConsumerWidget {
           foregroundColor: WrColors.navy,
           automaticallyImplyLeading: false,
           actions: [
-            TextButton(
-              key: const Key('wr_org_survey_result_close'),
-              onPressed: () {
-                if (context.canPop()) {
-                  context.pop();
-                } else {
-                  context.go('/profile');
-                }
-              },
-              child: Text(
-                wrKeepCompounds(tr('Đóng', 'Close')),
-                style: TextStyle(fontSize: 14, color: WrColors.muted),
+            Padding(
+              padding: const EdgeInsets.only(right: 14),
+              child: WrCloseCircle(
+                key: const Key('wr_org_survey_result_close'),
+                onTap: () {
+                  if (context.canPop()) {
+                    context.pop();
+                  } else {
+                    context.go('/profile');
+                  }
+                },
               ),
             ),
           ],

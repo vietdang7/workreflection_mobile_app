@@ -11,7 +11,9 @@ import '../../../core/logic/wr_entitlement.dart';
 import '../../../core/models/wr_intelligence.dart';
 import '../../../core/theme/wr_colors.dart';
 import '../../../core/widgets/wr_ai_consent_sheet.dart';
+import '../../../core/logic/wr_timeline_stages.dart';
 import '../../../core/widgets/wr_detail_scaffold.dart';
+import '../../../core/widgets/wr_expandable_text.dart';
 import '../../../core/widgets/wr_premium_lock.dart';
 import '../ai_consent_providers.dart';
 import '../wr_providers.dart';
@@ -31,7 +33,14 @@ class WrJourneyNarrativeScreen extends ConsumerWidget {
     // Lọc theo ngôn ngữ đang bật, cùng lý do với thẻ ở tab Hành trình: đây là
     // màn ĐỌC, một trang tiếng Anh xen mấy khối tiếng Việt còn khó chịu hơn là
     // chờ. Bản đang được viết lại sẽ hiện ở lần mở sau.
-    final narratives = all.where((n) => n.matchesCurrentLocale).toList();
+    final inLocale = all.where((n) => n.matchesCurrentLocale).toList();
+    // Mỗi quãng một bản, không chồng nhau, cũ trước — xem [timelineStages].
+    // Bản không ghi ngày (dữ liệu rất cũ) thì vẫn hiện bản mới nhất, còn hơn
+    // để màn trống.
+    final staged = timelineStages(inLocale);
+    final narratives = staged.isNotEmpty
+        ? staged
+        : inLocale.take(1).toList();
     final rewriting = narratives.isEmpty && all.isNotEmpty;
     final canRead = entitlement.canUseFeature(WrPremiumFeature.patternAdvanced);
     final aiAllowed = ref.watch(wrAiConsentGrantedProvider);
@@ -79,7 +88,7 @@ class WrJourneyNarrativeScreen extends ConsumerWidget {
             ),
           )
         else
-          ...narratives.take(6).map((n) => _NarrativeBlock(narrative: n)),
+          ...narratives.map((n) => _NarrativeBlock(narrative: n)),
       ],
     );
   }
@@ -199,17 +208,10 @@ class _NarrativeBlock extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           if (period != null) ...[
-            Text(
-              wrKeepCompounds(period),
-              style: const TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w600,
-                color: WrColors.muted,
-              ),
-            ),
-            const SizedBox(height: 8),
+            WrDateBadge(period),
+            const SizedBox(height: 10),
           ],
-          WrParagraph(
+          WrExpandableText(
             narrative.narrative,
             style: const TextStyle(
               fontSize: 16,
@@ -227,7 +229,8 @@ String? _period(PatternNarrative n) {
   final start = n.periodStart;
   final end = n.periodEnd;
   if (start == null && end == null) return null;
-  String f(DateTime d) => '${d.day}/${d.month}/${d.year}';
+  String f(DateTime d) =>
+      '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
   if (start != null && end != null) return '${f(start)} → ${f(end)}';
   return f((start ?? end)!);
 }

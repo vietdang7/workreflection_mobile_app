@@ -8,12 +8,22 @@
 //   • KHÔNG ảnh bìa: lúc đầu chốt lấy ảnh YouTube, nhưng ảnh mỗi tập một khổ,
 //     cắt vào khung nào cũng lệch — "mất công canh ảnh khi upload lên".
 //
+// Họp khách 14/10: đổi tên thành "Chuỗi series Tâm thế người đi làm" và CHỈ
+// nạp tài liệu có tag [kMindsetSeriesTag] (cột `tags` của web), để nội dung
+// khác của thư viện web không lan sang app. Lọc theo tag chứ không dò chữ trong
+// tiêu đề.
+//
 // Dữ liệu ở `cc_workshop_resources` (trang "Thư viện học tập" của web). Bảng mở
 // đọc cho mọi người với `status = 'active'`. App chỉ đọc — khách thêm tập ở web.
 //
 // Pure Dart, không phụ thuộc Flutter → test được trực tiếp.
 
 import '../l10n/wr_tr.dart';
+import '../logic/wr_tra_chieu.dart' show normalizeCategory;
+
+/// Tag web gắn cho các tập của chuỗi. So khớp bỏ dấu, không phân biệt hoa
+/// thường, nên "Chuỗi Series Tâm Thế Người Đi Làm" bên web vẫn nhận.
+const kMindsetSeriesTag = 'Chuỗi series tâm thế người đi làm';
 
 class LearningResource {
   const LearningResource({
@@ -26,6 +36,7 @@ class LearningResource {
     this.fileUrl,
     this.durationMinutes,
     this.createdAt,
+    this.tags = const [],
   });
 
   factory LearningResource.fromJson(Map<String, dynamic> json) =>
@@ -41,6 +52,10 @@ class LearningResource {
         createdAt: json['created_at'] == null
             ? null
             : DateTime.tryParse(json['created_at'] as String),
+        tags: [
+          for (final t in (json['tags'] as List?) ?? const [])
+            if (t is String && t.trim().isNotEmpty) t.trim(),
+        ],
       );
 
   final String id;
@@ -54,6 +69,15 @@ class LearningResource {
   final String? fileUrl;
   final int? durationMinutes;
   final DateTime? createdAt;
+
+  /// Cột `tags` (text[]) của web.
+  final List<String> tags;
+
+  /// Thuộc chuỗi "Tâm thế người đi làm" — xem [kMindsetSeriesTag].
+  bool get isMindsetSeries {
+    final want = normalizeCategory(kMindsetSeriesTag);
+    return tags.any((t) => normalizeCategory(t) == want);
+  }
 
   /// Link mở được: link ngoài trước, file tải lên sau.
   String? get url => externalUrl ?? fileUrl;

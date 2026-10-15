@@ -23,12 +23,18 @@ import '../../../core/widgets/wr_link_row.dart';
 import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
 /// Nhãn chương trình — dùng chung cho thẻ ở tab Phát triển và màn danh sách.
-String get kLearningLibraryLabel => tr('Thư viện học tập', 'Learning library');
+///
+/// Họp khách 14/10: đổi "Thư viện học tập" thành tên chuỗi.
+String get kLearningLibraryLabel => tr(
+  'Chuỗi series Tâm thế người đi làm',
+  'Work Mindset Series',
+);
 
-/// Câu giới thiệu — nguyên văn trang Thư viện học tập của web.
+/// Câu giới thiệu chuỗi — dùng ở thẻ tab Phát triển và đầu màn danh sách.
 String get kLearningLibraryIntro => tr(
-  'Video, tài liệu online để bạn tự học mọi lúc mọi nơi',
-  'Videos and online materials to learn at your own pace, anywhere',
+  // Vừa hai dòng của thẻ ở tab Phát triển (thẻ cố định hai dòng mô tả).
+  'Góc nhìn, tâm thế và cách ứng xử trước tình huống thực tế nơi công sở.',
+  'Perspectives, mindset, and practical responses in the workplace.',
 );
 
 /// Mở một tài liệu: video YouTube thì phát trong app, còn lại mở link ngoài.

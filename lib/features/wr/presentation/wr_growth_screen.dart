@@ -24,6 +24,9 @@ import '../wr_providers.dart';
 import 'wr_practice_step_completion.dart' show practiceReachableDone;
 import 'wr_skill_moment.dart';
 import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
+import 'wr_learning_library_screen.dart'
+    show kLearningLibraryIntro, kLearningLibraryLabel;
+import '../../../core/logic/wr_tra_chieu.dart' show kTraChieuCardLine;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WrGrowthScreen — ConsumerStatefulWidget for enroll double-tap guard
@@ -280,12 +283,13 @@ class _WrGrowthScreenState extends ConsumerState<WrGrowthScreen> {
           eyebrow: tr('Phát triển', 'Develop'),
           title: tr('Thực hành', 'Practice'),
           subtitle: tr(
-            'Không cần thay đổi tất cả. Chỉ cần thử một cách khác.',
-            'You do not need to change everything. Just try one different way.',
+            'Không cần thay đổi tất cả.\nChỉ cần thử một cách khác.',
+            'You do not need to change everything.\nJust try one different way.',
           ),
           // v1.6 §9.1: "Tôi" là avatar ở mọi màn tab.
           trailing: const WrProfileAvatar(),
         ),
+        const SizedBox(height: WrHeroHeader.kContentGap),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 22),
           child: Column(
@@ -368,10 +372,12 @@ class _LearningSection extends StatelessWidget {
             ),
             const SizedBox(height: 4),
             Text(
-              wrKeepCompounds(tr(
-                'Những chủ đề bạn đang đi qua bốn bước làm quen.',
-                'Themes you are going through four introductory steps.',
-              )),
+              wrKeepCompounds(
+                tr(
+                  'Những chủ đề bạn đang đi qua bốn bước làm quen.',
+                  'Themes you are going through four introductory steps.',
+                ),
+              ),
               style: const TextStyle(
                 fontSize: 13,
                 color: WrColors.text2,
@@ -399,10 +405,12 @@ class _LearningSection extends StatelessWidget {
                     key: const Key('wr_growth_learn_more'),
                     onTap: onShowMore,
                     child: Text(
-                      wrKeepCompounds(tr(
-                        'Xem thêm ${moreCount < kGrowthThemesPreview ? moreCount : kGrowthThemesPreview} chủ đề',
-                        'See ${moreCount < kGrowthThemesPreview ? moreCount : kGrowthThemesPreview} more themes',
-                      )),
+                      wrKeepCompounds(
+                        tr(
+                          'Xem thêm ${moreCount < kGrowthThemesPreview ? moreCount : kGrowthThemesPreview} chủ đề',
+                          'See ${moreCount < kGrowthThemesPreview ? moreCount : kGrowthThemesPreview} more themes',
+                        ),
+                      ),
                       style: const TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
@@ -437,7 +445,8 @@ class _PracticeThemeRow extends ConsumerWidget {
     // Bước đang làm = bước đầu tiên chưa xong theo thứ tự, như màn chủ đề.
     // Không lấy "đã xong + 1": dữ liệu cũ có thể đã xong bước sau mà chưa xong
     // bước trước.
-    final ordered = [...steps]..sort((a, b) => a.stepOrder.compareTo(b.stepOrder));
+    final ordered = [...steps]
+      ..sort((a, b) => a.stepOrder.compareTo(b.stepOrder));
     final firstOpen = enrollment == null
         ? -1
         : ordered.indexWhere(
@@ -585,10 +594,12 @@ class _AddSection extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          wrKeepCompounds(tr(
-                            'Chủ đề chưa có trong thư viện',
-                            'Theme not in the library',
-                          )),
+                          wrKeepCompounds(
+                            tr(
+                              'Chủ đề chưa có trong thư viện',
+                              'Theme not in the library',
+                            ),
+                          ),
                           style: const TextStyle(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w600,
@@ -615,7 +626,9 @@ class _AddSection extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          wrKeepCompounds(tr('Bối cảnh công việc', 'Work context')),
+                          wrKeepCompounds(
+                            tr('Bối cảnh công việc', 'Work context'),
+                          ),
                           style: const TextStyle(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w600,
@@ -652,236 +665,273 @@ class _ExpandSection extends StatelessWidget {
         WrEyebrow(tr('Mở rộng', 'Expand')),
         const SizedBox(height: 8),
 
-        // 1. Chuỗi Series Tâm thế người đi làm Card
-        WrCard(
-          key: const Key('wr_growth_youtube_card'),
-          padding: EdgeInsets.zero,
-          // Bản đầu chỉ hiện SnackBar; giờ mở Thư viện video của chuỗi.
-          onTap: () => context.push('/wr/learning-library'),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(16)),
-                child: SizedBox(
-                  height: 98,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      _FadeBottom(
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            Image.asset(
-                              'assets/images/hero/bg_hieu.webp',
-                              fit: BoxFit.cover,
-                            ),
-                            Container(
-                              color: Colors.black.withValues(alpha: 0.15),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Positioned(
-                        left: 12,
-                        top: 11,
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: WrColors.coral,
-                                borderRadius: BorderRadius.circular(5),
-                              ),
-                              child: Text(
-                                tr('YOUTUBE', 'YOUTUBE'),
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 6),
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white.withValues(alpha: 0.92),
-                                borderRadius: BorderRadius.circular(5),
-                              ),
-                              child: Text(
-                                tr('SERIES CHIA SẺ', 'VIDEO SERIES'),
-                                style: const TextStyle(
-                                  color: WrColors.navy,
-                                  fontSize: 9.5,
-                                  fontWeight: FontWeight.w700,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Positioned(
-                        right: 12,
-                        bottom: 11,
-                        child: Container(
-                          width: 32,
-                          height: 32,
-                          decoration: const BoxDecoration(
-                            color: WrColors.coral,
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.play_arrow,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+        // Hai thẻ dùng chung một khuôn [_ExpandCard] và phần chữ cao bằng
+        // thẻ dài hơn (họp khách 14/10: "cân đối kích thước hai thẻ"). Không
+        // cắt chữ: máy để cỡ chữ to thì cả hai cùng cao lên (máy thật 15/10).
+        LayoutBuilder(
+          builder: (context, constraints) {
+            final seriesTitle = kLearningLibraryLabel;
+            final seriesLine = kLearningLibraryIntro;
+            final teaTitle = tr(
+              'Trà chiều nghề nghiệp',
+              'Career Afternoon Tea',
+            );
+            final teaLine = kTraChieuCardLine;
+            final bodyMin = [
+              _ExpandCard.bodyHeight(
+                context,
+                width: constraints.maxWidth,
+                title: seriesTitle,
+                subtitle: seriesLine,
               ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(15, 4, 15, 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      tr(
-                        'Chuỗi Series Tâm thế người đi làm',
-                        'Work Mindset Series',
-                      ),
-                      style: const TextStyle(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w700,
-                        color: WrColors.navy,
-                        height: 1.4,
-                      ),
+              _ExpandCard.bodyHeight(
+                context,
+                width: constraints.maxWidth,
+                title: teaTitle,
+                subtitle: teaLine,
+              ),
+            ].reduce((a, b) => a > b ? a : b);
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                // 1. Chuỗi series Tâm thế người đi làm
+                _ExpandCard(
+                  key: const Key('wr_growth_youtube_card'),
+                  onTap: () => context.push('/wr/learning-library'),
+                  image: 'assets/images/hero/bg_hieu.webp',
+                  dim: 0.15,
+                  badges: [
+                    _ExpandBadge(
+                      tr('YOUTUBE', 'YOUTUBE'),
+                      background: WrColors.coral,
+                      color: Colors.white,
                     ),
-                    const SizedBox(height: 3),
-                    Text(
-                      tr(
-                        'Các góc nhìn, tâm thế và cách ứng xử trước những tình huống thực tế nơi công sở.',
-                        'Perspectives, mindset, and practical responses in the workplace.',
-                      ),
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: WrColors.text2,
-                        height: 1.35,
-                      ),
+                    _ExpandBadge(
+                      tr('SERIES CHIA SẺ', 'VIDEO SERIES'),
+                      background: Colors.white.withValues(alpha: 0.92),
+                      color: WrColors.navy,
                     ),
                   ],
+                  playIcon: true,
+                  title: seriesTitle,
+                  subtitle: seriesLine,
+                  bodyMinHeight: bodyMin,
                 ),
-              ),
-            ],
-          ),
-        ),
 
-        const SizedBox(height: 11),
+                const SizedBox(height: 11),
 
-        // 2. Trà chiều nghề nghiệp Card
-        // Luôn hiện, kể cả khi chưa có buổi (khách 30/07: "tôi không còn
-        // thấy cái mục giao diện trà chiều đâu cả").
-        WrCard(
-          key: const Key('wr_growth_tra_chieu_card'),
-          padding: EdgeInsets.zero,
-          onTap: () => context.push('/wr/tra-chieu'),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              ClipRRect(
-                borderRadius:
-                    const BorderRadius.vertical(top: Radius.circular(16)),
-                child: SizedBox(
-                  height: 88,
-                  child: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      _FadeBottom(
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            Image.asset(
-                              'assets/images/thumb_trachieu.webp',
-                              fit: BoxFit.cover,
-                            ),
-                            Container(
-                              color: Colors.black.withValues(alpha: 0.10),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Positioned(
-                        left: 12,
-                        top: 10,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 3,
-                          ),
-                          decoration: BoxDecoration(
-                            color: const Color(0xDC093774),
-                            borderRadius: BorderRadius.circular(5),
-                          ),
-                          child: Text(
-                            tr(
-                              'OFFLINE · TRÀ CHIỀU',
-                              'OFFLINE · AFTERNOON TEA',
-                            ),
-                            style: const TextStyle(
-                              color: WrColors.cream,
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(15, 4, 15, 14),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      tr('Trà chiều nghề nghiệp', 'Career Afternoon Tea'),
-                      style: const TextStyle(
-                        fontSize: 14.5,
-                        fontWeight: FontWeight.w700,
-                        color: WrColors.navy,
-                        height: 1.4,
-                      ),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      tr(
-                        '10 đến 12 người · 2 giờ · một câu hỏi',
-                        '10 to 12 people · 2 hours · one question',
-                      ),
-                      style: const TextStyle(
-                        fontSize: 12.5,
-                        color: WrColors.text2,
-                        height: 1.35,
-                      ),
+                // 2. Trà chiều nghề nghiệp
+                // Luôn hiện, kể cả khi chưa có buổi (khách 30/07: "tôi không còn
+                // thấy cái mục giao diện trà chiều đâu cả").
+                _ExpandCard(
+                  key: const Key('wr_growth_tra_chieu_card'),
+                  onTap: () => context.push('/wr/tra-chieu'),
+                  image: 'assets/images/thumb_trachieu.webp',
+                  dim: 0.10,
+                  badges: [
+                    _ExpandBadge(
+                      tr('OFFLINE · TRÀ CHIỀU', 'OFFLINE · AFTERNOON TEA'),
+                      background: const Color(0xDC093774),
+                      color: WrColors.cream,
                     ),
                   ],
+                  title: teaTitle,
+                  subtitle: teaLine,
+                  bodyMinHeight: bodyMin,
                 ),
-              ),
-            ],
-          ),
+              ],
+            );
+          },
         ),
       ],
     );
+  }
+}
+
+/// Nhãn nhỏ góc trên ảnh của thẻ Mở rộng.
+class _ExpandBadge extends StatelessWidget {
+  const _ExpandBadge(
+    this.label, {
+    required this.background,
+    required this.color,
+  });
+
+  final String label;
+  final Color background;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: background,
+        borderRadius: BorderRadius.circular(5),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontSize: 9.5,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
+    );
+  }
+}
+
+/// Khuôn chung của thẻ Mở rộng: dải ảnh cao cố định + tên + mô tả luôn chiếm
+/// đúng HAI dòng (mô tả ngắn một dòng vẫn giữ chỗ dòng thứ hai), nên hai thẻ
+/// cao bằng nhau ở mọi cỡ chữ.
+class _ExpandCard extends StatelessWidget {
+  const _ExpandCard({
+    super.key,
+    required this.onTap,
+    required this.image,
+    required this.dim,
+    required this.badges,
+    required this.title,
+    required this.subtitle,
+    this.playIcon = false,
+    this.bodyMinHeight = 0,
+  });
+
+  final VoidCallback onTap;
+  final String image;
+  final double dim;
+  final List<Widget> badges;
+  final String title;
+  final String subtitle;
+  final bool playIcon;
+
+  /// Chiều cao tối thiểu phần chữ: [_ExpandSection] truyền chiều cao của
+  /// thẻ có chữ dài nhất, để hai thẻ cao bằng nhau mà không cắt chữ nào.
+  final double bodyMinHeight;
+
+  static const double imageHeight = 92;
+  static const double titleGap = 3;
+  static const bodyPadding = EdgeInsets.fromLTRB(15, 4, 15, 14);
+
+  static const titleStyle = TextStyle(
+    fontSize: 14.5,
+    fontWeight: FontWeight.w700,
+    color: WrColors.navy,
+    height: 1.4,
+  );
+
+  static const subtitleStyle = TextStyle(
+    fontSize: 12.5,
+    color: WrColors.text2,
+    height: 1.35,
+  );
+
+  @override
+  Widget build(BuildContext context) {
+    return WrCard(
+      padding: EdgeInsets.zero,
+      onTap: onTap,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            child: SizedBox(
+              height: imageHeight,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  _FadeBottom(
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.asset(
+                          image,
+                          fit: BoxFit.cover,
+                          excludeFromSemantics: true,
+                          errorBuilder: (_, _, _) => const SizedBox.expand(),
+                        ),
+                        Container(color: Colors.black.withValues(alpha: dim)),
+                      ],
+                    ),
+                  ),
+                  Positioned(
+                    left: 12,
+                    top: 11,
+                    child: Row(
+                      children: [
+                        for (var i = 0; i < badges.length; i++) ...[
+                          if (i > 0) const SizedBox(width: 6),
+                          badges[i],
+                        ],
+                      ],
+                    ),
+                  ),
+                  if (playIcon)
+                    Positioned(
+                      right: 12,
+                      bottom: 11,
+                      child: Container(
+                        width: 32,
+                        height: 32,
+                        decoration: const BoxDecoration(
+                          color: WrColors.coral,
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.play_arrow,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          ConstrainedBox(
+            constraints: BoxConstraints(minHeight: bodyMinHeight),
+            child: Padding(
+              padding: bodyPadding,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(wrKeepCompounds(title), style: titleStyle),
+                  const SizedBox(height: titleGap),
+                  Text(wrKeepCompounds(subtitle), style: subtitleStyle),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Chiều cao phần chữ của thẻ ở bề rộng [width], theo cỡ chữ của máy.
+  static double bodyHeight(
+    BuildContext context, {
+    required double width,
+    required String title,
+    required String subtitle,
+  }) {
+    final scaler = MediaQuery.textScalerOf(context);
+    final dir = Directionality.of(context);
+    final textWidth = width - bodyPadding.horizontal;
+    double measure(String text, TextStyle style) {
+      final p = TextPainter(
+        text: TextSpan(text: wrKeepCompounds(text), style: style),
+        textDirection: dir,
+        textScaler: scaler,
+      )..layout(maxWidth: textWidth);
+      final h = p.height;
+      p.dispose();
+      return h;
+    }
+
+    return bodyPadding.vertical +
+        measure(title, titleStyle) +
+        titleGap +
+        measure(subtitle, subtitleStyle);
   }
 }
 
@@ -942,7 +992,9 @@ class WrPracticeThemeCard extends ConsumerWidget {
               children: [
                 Expanded(
                   child: Text(
-                    wrKeepCompounds(practiceThemeSourceLabel(theme, enrollment.startedAt)),
+                    wrKeepCompounds(
+                      practiceThemeSourceLabel(theme, enrollment.startedAt),
+                    ),
                     style: _tiny,
                   ),
                 ),
@@ -958,15 +1010,17 @@ class WrPracticeThemeCard extends ConsumerWidget {
             Text(wrKeepCompounds(theme.title), style: _h2),
             const SizedBox(height: 7),
             Text(
-              wrKeepCompounds(next != null
-                  ? tr(
-                      'Tiếp theo: ${practiceStepAction(next.title)}',
-                      'Next: ${practiceStepAction(next.title)}',
-                    )
-                  : tr(
-                      'Bạn đã đi hết các bước hiện tại.',
-                      'You have gone through all the current steps.',
-                    )),
+              wrKeepCompounds(
+                next != null
+                    ? tr(
+                        'Tiếp theo: ${practiceStepAction(next.title)}',
+                        'Next: ${practiceStepAction(next.title)}',
+                      )
+                    : tr(
+                        'Bạn đã đi hết các bước hiện tại.',
+                        'You have gone through all the current steps.',
+                      ),
+              ),
               style: const TextStyle(
                 fontSize: 13,
                 color: WrColors.text2,
@@ -1110,10 +1164,12 @@ class _KeepingSection extends ConsumerWidget {
                       padding: const EdgeInsets.fromLTRB(0, 11, 0, 13),
                       child: Center(
                         child: Text(
-                          wrKeepCompounds(tr(
-                            'Còn $remaining chủ đề khác',
-                            '$remaining more themes',
-                          )),
+                          wrKeepCompounds(
+                            tr(
+                              'Còn $remaining chủ đề khác',
+                              '$remaining more themes',
+                            ),
+                          ),
                           style: const TextStyle(
                             fontSize: 12,
                             color: WrColors.text3,
@@ -1129,10 +1185,12 @@ class _KeepingSection extends ConsumerWidget {
           ),
           const SizedBox(height: 9),
           Text(
-            wrKeepCompounds(tr(
-              'Những chủ đề đã hoàn thành ở bốn bước làm quen. Mỗi lần bạn thực hành lại trong công việc thật, bấm Ghi nhận để hệ thống giúp bạn lưu giữ.',
-              'Themes completed in the four steps. Each time you practise again in real work, tap Record so the app keeps it for you.',
-            )),
+            wrKeepCompounds(
+              tr(
+                'Những chủ đề đã hoàn thành ở bốn bước làm quen. Mỗi lần bạn thực hành lại trong công việc thật, bấm Ghi nhận để hệ thống giúp bạn lưu giữ.',
+                'Themes completed in the four steps. Each time you practise again in real work, tap Record so the app keeps it for you.',
+              ),
+            ),
             style: const TextStyle(
               fontSize: 12,
               color: WrColors.text3,

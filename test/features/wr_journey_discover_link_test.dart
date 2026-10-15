@@ -774,6 +774,10 @@ void main() {
       expect(find.text('Nhìn lại dòng thời gian'), findsOneWidget);
       expect(find.text('HÀNH TRÌNH'), findsOneWidget);
       expect(find.text('Mở đầu bài đọc.'), findsOneWidget);
+      // Họp khách 14/10: các đoạn sau thu lại sau "Xem thêm".
+      expect(find.text('Đoạn một.'), findsNothing);
+      await tester.tap(find.byKey(const Key('wr_timeline_read_more')));
+      await tester.pumpAndSettle();
       for (final p in ['Đoạn một.', 'Đoạn hai.', 'Đoạn ba.', 'Đoạn bốn.']) {
         expect(find.text(p), findsOneWidget, reason: p);
       }

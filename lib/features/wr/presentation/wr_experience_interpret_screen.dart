@@ -129,7 +129,8 @@ class WrExperienceInterpretScreen extends ConsumerWidget {
         ),
         const SizedBox(height: 18),
 
-        if (latestChapter != null)
+        // Tạm ẩn theo họp khách 14/10, xem [kWrChaptersVisible].
+        if (kWrChaptersVisible && latestChapter != null)
           _MenuCard(
             key: const Key('wr_exp_menu_chapter'),
             title: tr(

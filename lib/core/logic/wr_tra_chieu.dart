@@ -60,11 +60,19 @@ String get kTraChieuLabel => tr('Trà Chiều Nghề Nghiệp', 'Career Tea Time
 /// Khuôn buổi — ba con số nói hết định dạng, dùng ở cả thẻ mời và màn chi tiết.
 ///
 /// Đây là quy ước của chương trình, không phải dữ liệu từng buổi: mọi buổi đều
-/// cùng số người, cùng thời lượng, cùng một câu hỏi.
+/// cùng số người, cùng thời lượng.
 /// Dòng khuôn dưới tên chương trình (script `screenTraChieu`).
+///
+/// Họp khách 14/10: 12–14 người, 2 tiếng, BỎ quy định "1 câu hỏi".
 String get kTraChieuFormatLabel => tr(
-  '10 đến 12 người · 2 tiếng · 1 câu hỏi.',
-  '10 to 12 people · 2 hours · 1 question.',
+  '12 đến 14 người · 2 tiếng.',
+  '12 to 14 people · 2 hours.',
+);
+
+/// Dòng dưới tên chương trình ở thẻ tab Phát triển.
+String get kTraChieuCardLine => tr(
+  '12 đến 14 người · 2 tiếng',
+  '12 to 14 people · 2 hours',
 );
 
 /// Địa điểm khi buổi chưa có địa chỉ (script `screenTraChieu`).

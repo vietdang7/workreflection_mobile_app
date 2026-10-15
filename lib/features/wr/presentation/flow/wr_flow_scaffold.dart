@@ -17,6 +17,7 @@ import '../../episode_flow_controller.dart' show pendingMoodProvider;
 import '../../../../core/theme/wr_colors.dart';
 import '../../../../core/theme/wr_text.dart';
 import '../../../../core/widgets/wr_paragraph.dart';
+import 'package:workreflection_mobile/core/widgets/wr_back_circle.dart';
 
 /// Dáng chữ của câu hỏi lớn trong luồng (`.h1.serif` 20px của mockup v47).
 ///
@@ -366,8 +367,8 @@ class _FlowHeader extends StatelessWidget {
       child: Row(
         children: [
           SizedBox(
-            width: 30,
-            height: 30,
+            width: 34,
+            height: 34,
             child: onBack == null
                 ? null
                 : Semantics(
@@ -377,17 +378,7 @@ class _FlowHeader extends StatelessWidget {
                       key: const Key('wr_flow_back'),
                       onTap: onBack,
                       radius: 22,
-                      child: Container(
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: WrColors.navy.withValues(alpha: 0.06),
-                        ),
-                        child: const Icon(
-                          Icons.chevron_left_rounded,
-                          size: 20,
-                          color: WrColors.navy,
-                        ),
-                      ),
+                      child: const WrNavCircle.back(),
                     ),
                   ),
           ),
@@ -419,25 +410,9 @@ class _FlowHeader extends StatelessWidget {
             ),
           ),
           if (onClose != null)
-            TextButton(
-              key: const Key('wr_flow_close'),
-              onPressed: onClose,
-              style: TextButton.styleFrom(
-                foregroundColor: WrColors.text2,
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-                minimumSize: Size.zero,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-              ),
-              child: Text(
-                wrKeepCompounds(tr('Đóng', 'Close')),
-                style: const TextStyle(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            )
+            WrCloseCircle(key: const Key('wr_flow_close'), onTap: onClose)
           else
-            const SizedBox(width: 30),
+            const SizedBox(width: 34),
         ],
       ),
     );

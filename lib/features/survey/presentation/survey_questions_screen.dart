@@ -20,6 +20,7 @@ import '../../profile/profile_providers.dart';
 import '../survey_providers.dart';
 import '../../../core/l10n/wr_tr.dart';
 import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
+import 'package:workreflection_mobile/core/widgets/wr_back_circle.dart';
 
 // ---------------------------------------------------------------------------
 // TTS playback provider (per-screen, auto-disposed)
@@ -397,7 +398,7 @@ class _QuestionViewState extends ConsumerState<_QuestionView> {
                 },
               )
             : IconButton(
-                icon: const Icon(Icons.close, color: WrColors.navy),
+                icon: const WrNavCircle.close(),
                 onPressed: () => context.pop(),
               ),
         actions: [

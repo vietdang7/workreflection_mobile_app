@@ -2,6 +2,7 @@
 // Khách chỉ ra lỗi này trên ảnh 2026-08-05 ("…chờ đợi trong mơ / hồ.").
 
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:workreflection_mobile/core/l10n/wr_tr.dart';
 import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
@@ -75,6 +76,63 @@ void main() {
 
       final text = tester.widget<Text>(find.byType(Text));
       expect(text.textAlign, TextAlign.start);
+    });
+
+    // Họp khách 14/10: căn đều mà có dòng hụt nhiều thì khoảng trắng giữa
+    // chữ giãn to — đoạn đó phải căn trái. Font test: mỗi ký tự rộng đúng
+    // cỡ chữ, nên 200px chứa 20 ký tự cỡ 10.
+    Future<TextAlign?> alignAt(WidgetTester tester, String text) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          home: Scaffold(
+            body: Center(
+              child: SizedBox(
+                width: 200,
+                child: WrParagraph(
+                  text,
+                  style: const TextStyle(fontSize: 10, height: 1),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      // Lề quyết định lúc dàn trang, nằm trên RenderParagraph chứ không trên
+      // tham số của widget Text.
+      return tester
+          .renderObject<RenderParagraph>(find.byType(RichText))
+          .textAlign;
+    }
+
+    testWidgets('các dòng đã gần kín thì căn đều', (tester) async {
+      expect(
+        await alignAt(tester, 'aaaa bbbb cccc dddd eeee ffff gggg hhhh'),
+        TextAlign.justify,
+      );
+    });
+
+    testWidgets('một cụm dài phải xuống dòng làm dòng trên hụt nhiều thì '
+        'căn trái', (tester) async {
+      expect(
+        await alignAt(tester, 'aa bbbbbbbbbbbbbbbbbb cc'),
+        TextAlign.start,
+      );
+    });
+
+    testWidgets('đoạn căn đều nằm trong AlertDialog không đổ (đo nội tại)', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        const MaterialApp(
+          home: Scaffold(
+            body: AlertDialog(
+              content: WrParagraph('Một đoạn đọc chậm nằm trong hộp thoại.'),
+            ),
+          ),
+        ),
+      );
+      expect(tester.takeException(), isNull);
+      expect(find.byType(WrParagraph), findsOneWidget);
     });
 
     testWidgets('chữ hiển thị đã được nối cụm cuối', (tester) async {

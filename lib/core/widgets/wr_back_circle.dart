@@ -3,7 +3,51 @@ import 'package:flutter/material.dart';
 import '../l10n/wr_tr.dart';
 import '../theme/wr_colors.dart';
 
-/// Nút lùi tròn 30px của các màn con (mockup v47 `.backbtn`).
+/// Vòng tròn của nút Quay lại / Đóng (họp khách 14/10: "nút thoát có vòng
+/// tròn xanh đậm hoặc trắng sáng bao quanh để nổi trên nền").
+///
+/// Thông số theo README bộ ảnh v72: nền navy đặc `rgba(9,55,116,.82)`, icon
+/// màu kem, viền sáng `rgba(255,243,230,.5)`. Nền 6% navy của bản cũ chỉ đạt
+/// 1.03:1 trên ảnh, gần như vô hình.
+///
+/// Chỉ là phần vẽ, không bắt chạm: đặt làm `icon` của `IconButton` hoặc dùng
+/// qua [WrBackCircle].
+class WrNavCircle extends StatelessWidget {
+  const WrNavCircle.back({super.key}) : icon = Icons.chevron_left_rounded;
+
+  const WrNavCircle.close({super.key}) : icon = Icons.close_rounded;
+
+  final IconData icon;
+
+  static const _fill = Color(0xD1093774);
+  static const _ring = Color(0x80FFF3E6);
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 34,
+      height: 34,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: _fill,
+        border: Border.all(color: _ring, width: 1.2),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x29093774),
+            blurRadius: 8,
+            offset: Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Icon(
+        icon,
+        size: icon == Icons.close_rounded ? 19 : 22,
+        color: WrColors.cream,
+      ),
+    );
+  }
+}
+
 class WrBackCircle extends StatelessWidget {
   const WrBackCircle({super.key, required this.onTap});
 
@@ -17,29 +61,32 @@ class WrBackCircle extends StatelessWidget {
       child: InkResponse(
         onTap: onTap,
         radius: 22,
-        child: Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: WrColors.white,
-            border: Border.all(
-              color: WrColors.navy.withValues(alpha: 0.16),
-              width: 1.2,
-            ),
-            boxShadow: const [
-              BoxShadow(
-                color: Color(0x18093774),
-                blurRadius: 6,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
-          child: const Icon(
-            Icons.chevron_left_rounded,
-            size: 20,
-            color: WrColors.navy,
-          ),
+        child: const WrNavCircle.back(),
+      ),
+    );
+  }
+}
+
+/// Nút Đóng dạng vòng tròn ✕ — cùng kiểu với [WrBackCircle] (họp khách 14/10:
+/// chữ "Đóng" xám chìm trên ảnh đầu màn, máy thật 15/10).
+class WrCloseCircle extends StatelessWidget {
+  const WrCloseCircle({super.key, required this.onTap});
+
+  /// Null thì nút mờ đi và không bấm được.
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Semantics(
+      button: true,
+      enabled: onTap != null,
+      label: tr('Đóng', 'Close'),
+      child: InkResponse(
+        onTap: onTap,
+        radius: 22,
+        child: Opacity(
+          opacity: onTap == null ? 0.4 : 1,
+          child: const WrNavCircle.close(),
         ),
       ),
     );

@@ -37,12 +37,14 @@ class SupabaseWrLearningRepository implements WrLearningRepository {
         .from('cc_workshop_resources')
         .select(
           'id, title, description, category, resource_type, external_url, '
-          'file_url, duration_minutes, created_at',
+          'file_url, duration_minutes, created_at, tags',
         )
         .eq('status', 'active')
         .order('created_at', ascending: false);
     return rows
         .map(LearningResource.fromJson)
+        // Chỉ các tập của chuỗi Tâm thế người đi làm (họp khách 14/10).
+        .where((r) => r.isMindsetSeries)
         .where((r) => r.title.isNotEmpty && r.url != null)
         .toList();
   }

@@ -157,19 +157,9 @@ class _WrAddPracticeThemeScreenState
                       onTap: () => context.pop(),
                     ),
                     const Spacer(),
-                    TextButton(
+                    WrCloseCircle(
                       key: const Key('wr_add_theme_close'),
-                      onPressed: () => context.pop(),
-                      style: TextButton.styleFrom(
-                        foregroundColor: WrColors.text2,
-                      ),
-                      child: Text(
-                        wrKeepCompounds(tr('Đóng', 'Close')),
-                        style: const TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      onTap: () => context.pop(),
                     ),
                   ],
                 ),

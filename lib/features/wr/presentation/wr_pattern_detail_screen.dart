@@ -22,6 +22,7 @@ import '../../../core/widgets/wr_premium_lock.dart';
 import '../wr_providers.dart';
 import 'wr_discover_screen.dart' show kInsightThreshold, situationLabel;
 import '../../../core/widgets/wr_paragraph.dart';
+import 'package:workreflection_mobile/core/widgets/wr_back_circle.dart';
 
 /// Ngày của một lần nhìn lại, dạng `dd/MM/yyyy`. null khi Episode chưa có mốc
 /// thời gian nào — lúc đó dòng chỉ còn tiêu đề, không bịa ra ngày.
@@ -72,7 +73,7 @@ class WrPatternDetailScreen extends ConsumerWidget {
         surfaceTintColor: WrColors.white,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+          icon: const WrNavCircle.back(),
           color: WrColors.navy,
           onPressed: () => context.pop(),
         ),

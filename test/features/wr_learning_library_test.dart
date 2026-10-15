@@ -207,7 +207,7 @@ void main() {
       await tester.ensureVisible(youtubeCard);
       await tester.pumpAndSettle();
       expect(find.text('MỞ RỘNG'), findsOneWidget);
-      expect(find.text('Chuỗi Series Tâm thế người đi làm'), findsOneWidget);
+      expect(find.text('Chuỗi series Tâm thế người đi làm'), findsOneWidget);
       expect(find.text(_series.title, skipOffstage: false), findsNothing);
       expect(find.text(_pdf.title, skipOffstage: false), findsNothing);
       expect(_networkImages, findsNothing);

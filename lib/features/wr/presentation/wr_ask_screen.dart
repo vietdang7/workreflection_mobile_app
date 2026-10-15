@@ -40,6 +40,7 @@ import '../chat_providers.dart';
 import '../wr_providers.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 import '../../../core/widgets/wr_title_text.dart';
+import 'package:workreflection_mobile/core/widgets/wr_back_circle.dart';
 
 /// Câu người dùng thấy cho những câu hỏi gửi theo cách cũ, chưa được trả lời.
 ///
@@ -131,7 +132,7 @@ class _WrAskScreenState extends ConsumerState<WrAskScreen> {
         leading: IconButton(
           key: const Key('wr_detail_back'),
           tooltip: tr('Quay lại', 'Back'),
-          icon: const Icon(Icons.arrow_back_ios_new, size: 18),
+          icon: const WrNavCircle.back(),
           color: WrColors.navy,
           onPressed: () => context.pop(),
         ),

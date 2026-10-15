@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'wr_colors.dart';
+import '../widgets/wr_back_circle.dart';
 
 /// Build the app's [ColorScheme]. Pure function — no font loading.
 ColorScheme wrColorScheme() {
@@ -26,6 +27,12 @@ ThemeData wrTheme({bool isWatercolor = false}) {
       backgroundColor: isWatercolor ? Colors.transparent : WrColors.pageBg,
       elevation: 0,
       scrolledUnderElevation: 0,
+    ),
+    // Nút Quay lại / Đóng mặc định của AppBar cũng mang vòng tròn navy, để mọi
+    // màn cùng một kiểu (họp khách 14/10).
+    actionIconTheme: ActionIconThemeData(
+      backButtonIconBuilder: (_) => const WrNavCircle.back(),
+      closeButtonIconBuilder: (_) => const WrNavCircle.close(),
     ),
     textTheme: GoogleFonts.beVietnamProTextTheme(),
   );

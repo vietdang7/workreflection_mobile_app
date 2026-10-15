@@ -10,6 +10,7 @@ import '../../../core/widgets/pill_button.dart';
 import '../../../l10n/app_localizations.dart';
 import '../survey_providers.dart';
 import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
+import 'package:workreflection_mobile/core/widgets/wr_back_circle.dart';
 
 // ---------------------------------------------------------------------------
 // Score-level badge color — mirrors ReportScreen._ScoreLevelBadge
@@ -47,7 +48,7 @@ class SurveyHistoryScreen extends ConsumerWidget {
         backgroundColor: WrColors.pageBg,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.close, color: WrColors.navy),
+          icon: const WrNavCircle.close(),
           onPressed: () {
             if (context.canPop()) {
               context.pop();
