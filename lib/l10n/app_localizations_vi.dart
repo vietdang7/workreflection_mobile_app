@@ -134,10 +134,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get understandScaMeaning => 'Cách làm việc';
 
   @override
-  String get understandStatusStable => 'Đang hỗ trợ tốt';
+  String get understandStatusStable => 'Đang nâng đỡ bạn';
 
   @override
-  String get understandStatusImproving => 'Ổn, còn dư địa';
+  String get understandStatusImproving => 'Nâng đỡ nhưng chưa đều';
 
   @override
   String get understandStatusUnrated => 'Chưa đánh giá';

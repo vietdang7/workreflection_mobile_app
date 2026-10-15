@@ -68,13 +68,18 @@ enum ScaPillarStatus {
   /// nhánh theo đúng ba chữ đó — nhánh A đọc "Đang hỗ trợ tốt", nhánh B/D đọc
   /// "Đang cản trở" và "Ổn, còn dư địa".
   ///
+  /// 15/10/2026 ("Logic đọc hiểu mình.docx" §8): "Đang hỗ trợ tốt" và "Ổn, còn
+  /// dư địa" vào danh sách từ đã bỏ — người đọc không biết ổn cái gì, dư địa
+  /// gì. Đổi chữ, giữ nguyên ngưỡng và nhánh. Màn Trải nghiệm không dùng nhãn
+  /// này nữa mà đọc từng câu (`pillarCondLabel`).
+  ///
   /// Ngưỡng nằm ở [scaPillarStatus], đúng `pillarLevelText` của script quy
   /// sang thang 1–5 của app.
   String get label => switch (this) {
-    ScaPillarStatus.developing => tr('Đang hỗ trợ tốt', 'Supporting you well'),
+    ScaPillarStatus.developing => tr('Đang nâng đỡ bạn', 'Supporting you'),
     ScaPillarStatus.needsAttention => tr(
-      'Ổn, còn dư địa',
-      'Fine, room to grow',
+      'Nâng đỡ nhưng chưa đều',
+      'Supporting, but unevenly',
     ),
     ScaPillarStatus.priority => tr('Đang cản trở', 'Holding you back'),
   };
@@ -85,10 +90,10 @@ enum ScaPillarStatus {
   /// phẩy, nên "tự đánh giá ổn, còn dư địa, vừa là nơi…" đọc ra thành hai mệnh
   /// đề rời. Mức giữa cần một dạng liền câu riêng.
   String get inlineLabel => switch (this) {
-    ScaPillarStatus.developing => tr('đang hỗ trợ tốt', 'supporting you well'),
+    ScaPillarStatus.developing => tr('đang nâng đỡ bạn', 'supporting you'),
     ScaPillarStatus.needsAttention => tr(
-      'ổn nhưng còn dư địa',
-      'fine but with room to grow',
+      'nâng đỡ chưa đều',
+      'supporting you unevenly',
     ),
     ScaPillarStatus.priority => tr('đang cản trở', 'holding you back'),
   };
@@ -365,7 +370,7 @@ String scaScriptPatternText({
   }
   final isDominant = scriptDominantPillar(counts) == pillar;
   final isGoodLevel = status != ScaPillarStatus.priority;
-  final level = status.label.toLowerCase();
+  final level = status.inlineLabel;
   if (isDominant && isGoodLevel) {
     return tr(
       'Bạn tự đánh giá phần này $level, nhưng đây lại là nhóm tình huống bạn '

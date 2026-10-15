@@ -341,13 +341,13 @@ abstract class AppLocalizations {
   /// No description provided for @understandStatusStable.
   ///
   /// In vi, this message translates to:
-  /// **'Đang hỗ trợ tốt'**
+  /// **'Đang nâng đỡ bạn'**
   String get understandStatusStable;
 
   /// No description provided for @understandStatusImproving.
   ///
   /// In vi, this message translates to:
-  /// **'Ổn, còn dư địa'**
+  /// **'Nâng đỡ nhưng chưa đều'**
   String get understandStatusImproving;
 
   /// No description provided for @understandStatusUnrated.

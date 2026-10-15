@@ -54,8 +54,8 @@
   "understandScaRole": "Sự rõ ràng",
   "understandScaVoice": "Mối quan hệ",
   "understandScaMeaning": "Cách làm việc",
-  "understandStatusStable": "Đang hỗ trợ tốt",
-  "understandStatusImproving": "Ổn, còn dư địa",
+  "understandStatusStable": "Đang nâng đỡ bạn",
+  "understandStatusImproving": "Nâng đỡ nhưng chưa đều",
   "understandStatusUnrated": "Chưa đánh giá",
   "understandHealthReady": "Bạn đã có đủ {n} reflection.",
   "@understandHealthReady": {

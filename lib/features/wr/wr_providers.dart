@@ -5,6 +5,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../core/data/wr_content_repository.dart';
 import '../../core/data/wr_episode_repository.dart';
 import '../../core/data/wr_intelligence_repository.dart';
+import '../../core/data/wr_reading_feedback_repository.dart';
 import '../../core/data/wr_repository.dart';
 import '../../core/logic/wr_career_profile.dart';
 import '../../core/logic/wr_entitlement.dart';
@@ -293,6 +294,23 @@ final wrSelfCheckHistoryProvider = FutureProvider<List<ScaSelfCheckResponse>>((
   if (userId == null) return const [];
   final repo = ref.watch(wrIntelligenceRepositoryProvider);
   return repo.fetchSelfCheckHistory(userId);
+});
+
+/// Lần phản hồi gần nhất cho bản đọc Tổng quan ("Khớp với tôi" / "Chưa đúng
+/// lắm"). Lỗi đọc (mất mạng, bảng chưa có) coi như chưa phản hồi: màn hình
+/// hiện lại hai nút chứ không chặn bản đọc.
+final wrOverviewFeedbackProvider = FutureProvider<ReadingFeedback?>((
+  ref,
+) async {
+  final userId = ref.watch(currentUserIdProvider);
+  if (userId == null) return null;
+  try {
+    return await ref
+        .watch(wrReadingFeedbackRepositoryProvider)
+        .fetchLatest(userId, kReadingKindOverview);
+  } catch (_) {
+    return null;
+  }
 });
 
 /// Lớp 3 — bản AI viết lại của một câu Diễn giải sâu (§7).

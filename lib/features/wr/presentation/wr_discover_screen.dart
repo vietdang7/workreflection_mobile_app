@@ -110,7 +110,7 @@ Color pillarStatusColor(double? score) {
 /// #B8862F · đỏ #C6402F.
 Color scaStatusColor(ScaPillarStatus status) => switch (status) {
   ScaPillarStatus.developing => WrColors.pillTealText,
-  ScaPillarStatus.needsAttention => const Color(0xFFB8862F),
+  ScaPillarStatus.needsAttention => const Color(0xFF94681A),
   ScaPillarStatus.priority => WrColors.pillCoralText,
 };
 

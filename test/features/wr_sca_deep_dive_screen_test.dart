@@ -241,7 +241,7 @@ void main() {
     // đúng nhánh chênh lệch của script.
     expect(
       textOf('wr_sca_pattern_line_c'),
-      startsWith('Bạn tự đánh giá phần này đang hỗ trợ tốt, nhưng'),
+      startsWith('Bạn tự đánh giá phần này đang nâng đỡ bạn, nhưng'),
     );
     expect(textOf('wr_sca_pattern_line_c'), contains('(4 lần)'));
     expect(

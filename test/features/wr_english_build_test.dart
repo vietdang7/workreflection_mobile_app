@@ -89,10 +89,10 @@ void main() {
     // chuyển sang getter. Chuyển sót một enum thì nó im lặng ở lại tiếng Việt.
     test('ScaPillarStatus', () {
       wrSetLocale('en');
-      expect(ScaPillarStatus.developing.label, 'Supporting you well');
+      expect(ScaPillarStatus.developing.label, 'Supporting you');
       expect(
         ScaPillarStatus.needsAttention.inlineLabel,
-        'fine but with room to grow',
+        'supporting you unevenly',
       );
     });
 
