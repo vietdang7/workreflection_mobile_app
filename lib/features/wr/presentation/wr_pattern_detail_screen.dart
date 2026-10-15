@@ -208,8 +208,8 @@ class WrPatternDetailScreen extends ConsumerWidget {
                 description: tr(
                   'Bản đầy đủ đọc ra nguyên nhân sâu đứng sau điều lặp lại '
                       'này, và điều gì đang dần thay đổi trong bạn.',
-                  'The full version reads the deeper cause behind this pattern, '
-                      'and what is slowly changing in you.',
+                  'The full version reads the deeper cause behind what keeps '
+                      'coming back, and what is slowly changing in you.',
                 ),
                 ctaLabel: tr('Mở phần diễn giải', 'Open the reading'),
                 paywallTrigger: 'pattern_advanced',

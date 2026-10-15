@@ -184,5 +184,24 @@ void main() {
       expect(find.byKey(const Key('wr_paywall_cta_owned')), findsOneWidget);
       expect(find.byKey(const Key('wr_paywall_cta')), findsNothing);
     });
+
+    testWidgets('người đã có Premium: mọi dòng đều ✓, nhãn gói giữ nguyên', (
+      tester,
+    ) async {
+      await tester.pumpWidget(_paywall(WrStorePolicy.open, premium: true));
+      await tester.pumpAndSettle();
+
+      // Máy thật 15/10: đầu đề "tất cả tính năng đã mở sẵn" mà dòng Premium
+      // vẫn mang dấu ✕.
+      expect(find.text('✕'), findsNothing);
+      expect(find.text('Premium'), findsWidgets);
+    });
+
+    testWidgets('người dùng Free: dòng Premium vẫn ✕', (tester) async {
+      await tester.pumpWidget(_paywall(WrStorePolicy.open));
+      await tester.pumpAndSettle();
+
+      expect(find.text('✕'), findsWidgets);
+    });
   });
 }

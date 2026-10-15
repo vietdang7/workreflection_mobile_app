@@ -641,7 +641,7 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
       ),
       sub: tr(
         'Nhận ra điều đang lặp lại mà bạn khó tự thấy.',
-        'Spot the patterns that are hard to see on your own.',
+        'Notice what keeps coming back that is hard to see alone.',
       ),
     ),
     PaywallTrigger.practiceLimit => (
@@ -807,29 +807,34 @@ class _WrPaywallScreenState extends ConsumerState<WrPaywallScreen> {
           'Tổng quan hai nguồn đặt cạnh nhau',
           'Both sources side by side',
         ),
-        avail: false,
+        avail: alreadyPremium,
+        premiumTier: true,
       ),
       _FeatureRow(
         label: tr(
           'Xu hướng điều kiện làm việc theo thời gian',
           'Working conditions trends over time',
         ),
-        avail: false,
+        avail: alreadyPremium,
+        premiumTier: true,
       ),
       _FeatureRow(
         label: tr(
           'Cơ hội phát triển (Growth Intelligence)',
           'Growth opportunities (Growth Intelligence)',
         ),
-        avail: false,
+        avail: alreadyPremium,
+        premiumTier: true,
       ),
       _FeatureRow(
         label: tr('Dấu ấn hành trình đầy đủ', 'All your Journey marks'),
-        avail: false,
+        avail: alreadyPremium,
+        premiumTier: true,
       ),
       _FeatureRow(
         label: tr('Thực hành không giới hạn', 'Unlimited Practice'),
-        avail: false,
+        avail: alreadyPremium,
+        premiumTier: true,
         isLast: true,
       ),
     ];
@@ -1352,10 +1357,18 @@ class _FeatureRow extends StatelessWidget {
   const _FeatureRow({
     required this.label,
     required this.avail,
+    this.premiumTier = false,
     this.isLast = false,
   });
   final String label;
+
+  /// Người đang xem có dùng được dòng này không (✓/✕). Người đã có Premium
+  /// thấy ✓ ở mọi dòng — đầu đề đã nói "tất cả tính năng đã mở sẵn".
   final bool avail;
+
+  /// Dòng thuộc gói nào, cho nhãn bên phải. Tách khỏi [avail]: người Premium
+  /// dùng được dòng Premium nhưng nhãn vẫn phải ghi "Premium".
+  final bool premiumTier;
   final bool isLast;
 
   @override
@@ -1399,7 +1412,7 @@ class _FeatureRow extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(
-            wrKeepCompounds(avail ? 'Free' : 'Premium'),
+            wrKeepCompounds(premiumTier ? 'Premium' : 'Free'),
             style: const TextStyle(
               fontSize: 12.5,
               fontWeight: FontWeight.w700,
