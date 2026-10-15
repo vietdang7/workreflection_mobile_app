@@ -41,7 +41,8 @@ import {
   fingerprint,
   parseJsonLoose,
   parsePillars,
-  validateAll,
+  repairMessage,
+  reviewAll,
 } from './reading.ts';
 
 const MAX_OUTPUT_TOKENS = 700;
@@ -151,9 +152,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if ((count ?? 0) >= DAILY_LIMIT) return skip('daily_limit');
 
   // ── 6 · Gọi model ───────────────────────────────────────────────────────
+  const messages = buildMessages(pillars, locale);
   let reply: string;
   try {
-    reply = await callModel(apiKey, buildMessages(pillars, locale));
+    reply = await callModel(apiKey, messages);
   } catch (e) {
     const aborted = e instanceof DOMException && e.name === 'AbortError';
     console.error(aborted ? 'DeepSeek quá hạn chờ' : `DeepSeek lỗi: ${e}`);
@@ -161,16 +163,38 @@ Deno.serve(async (req: Request): Promise<Response> => {
   }
   if (!reply) return skip('empty_reply');
 
-  // ── 7 · Phép thử trước khi hiển thị ─────────────────────────────────────
+  // ── 7 · Phép thử trước khi hiển thị, cho sửa một lần ────────────────────
   //
-  // Nhóm nào trượt thì im lặng. Vẫn ghi lại kết quả (kể cả rỗng) để lần mở sau
-  // không gọi model lại cho cùng nguyên liệu: câu trượt một lần thường trượt
-  // lại, và chờ thêm một lần nhìn lại mới là nguyên liệu mới.
-  const result = validateAll(parseJsonLoose(reply), pillars, locale);
-  const dropped = pillars.map((p) => p.pillar).filter((p) => !result[p]);
-  if (dropped.length > 0) {
-    console.warn(`Phép thử loại nhóm ${dropped.join(',')}: ${reply.slice(0, 600)}`);
+  // Nhóm trượt thì gửi lại đúng lý do và xin viết lại MỘT lần (15/10: lần
+  // chạy thật đầu tiên trượt vì dài 54 chữ). Vẫn trượt thì nhóm đó im lặng.
+  // Ghi lại kết quả kể cả khi rỗng, để cùng nguyên liệu không gọi model lại.
+  const review = reviewAll(parseJsonLoose(reply), pillars, locale);
+  if (Object.keys(review.failures).length > 0) {
+    console.warn(
+      `Phép thử loại ${JSON.stringify(review.failures)}: ${reply.slice(0, 600)}`,
+    );
+    try {
+      const retry = await callModel(apiKey, [
+        ...messages,
+        { role: 'assistant', content: reply },
+        { role: 'user', content: repairMessage(review.failures, locale) },
+      ]);
+      const again = reviewAll(
+        parseJsonLoose(retry),
+        pillars.filter((p) => review.failures[p.pillar]),
+        locale,
+      );
+      Object.assign(review.ok, again.ok);
+      if (Object.keys(again.failures).length > 0) {
+        console.warn(
+          `Sửa vẫn trượt ${JSON.stringify(again.failures)}: ${retry.slice(0, 600)}`,
+        );
+      }
+    } catch (e) {
+      console.error(`Lượt sửa lỗi: ${e}`);
+    }
   }
+  const result = review.ok;
 
   const { error: writeError } = await db.from('wr_experience_readings').insert({
     user_id: user.id,

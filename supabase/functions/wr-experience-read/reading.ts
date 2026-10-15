@@ -106,12 +106,19 @@ export function readable(stories: StoryInput[]): boolean {
   return stories.length >= 2 || stories.some((s) => s.count >= 3);
 }
 
-/// Khoá nhớ đệm: cùng nguyên liệu, cùng ngôn ngữ thì không gọi model lại.
+/// Nâng khi đổi lời dặn hay phép thử: bản đọc cũ (kể cả bản rỗng vì trượt
+/// phép thử) nằm trong nhớ đệm theo khoá cũ, không nâng thì nó chặn mãi.
+export const PROMPT_VERSION = 2;
+
+/// Khoá nhớ đệm: cùng nguyên liệu, cùng ngôn ngữ, cùng lời dặn thì không gọi
+/// model lại.
 export async function fingerprint(
   pillars: PillarInput[],
   locale: WrLocale,
 ): Promise<string> {
-  const bytes = new TextEncoder().encode(JSON.stringify({ locale, pillars }));
+  const bytes = new TextEncoder().encode(
+    JSON.stringify({ v: PROMPT_VERSION, locale, pillars }),
+  );
   const hash = await crypto.subtle.digest('SHA-256', bytes);
   return [...new Uint8Array(hash)]
     .map((b) => b.toString(16).padStart(2, '0'))
@@ -143,7 +150,7 @@ Viết ĐÚNG khung của trục đã chọn. ‹N› viết bằng chữ, viế
 - Nhịp 2: công nhận phần người dùng đã làm, lấy từ chính chữ họ viết. Ví dụ: "Bạn có ý và đã chuẩn bị." Không dòng nào cho thấy họ đã làm phần của mình thì BỎ nhịp 2.
 - Nhịp 3: bắt đầu bằng đúng chữ "Phần khó là", gọi tên phần khó thật bằng một mệnh đề người đọc kiểm chứng được với HAI TRÍCH DẪN của nhóm đó.
 
-3. "hard_part" — nhịp 3 rút thành một cụm danh từ ngắn, tối đa 12 chữ, viết thường chữ đầu, không dấu chấm. Cụm này được ghép vào câu "Khi ‹điều kiện›, ‹hard_part› cũng khó tự nhẹ đi", nên phải đọc trơn ở vị trí đó. Ví dụ: "việc nói ra mà không đến nơi".
+3. "hard_part" — rút từ CHÍNH nhịp 3 bạn vừa viết cho nhóm đó thành một cụm danh từ ngắn, tối đa 12 chữ, viết thường chữ đầu, không dấu chấm. Cụm này được ghép vào câu "Khi ‹điều kiện›, ‹hard_part› cũng khó tự nhẹ đi", nên phải đọc trơn ở vị trí đó. Ví dụ: "việc nói ra mà không đến nơi".
 
 Không được viết:
 - Chẩn đoán con người, ví dụ "bạn là người ngại va chạm", "bạn thiếu quyết đoán". Đọc hành vi đã ghi, không đọc tính cách.
@@ -153,7 +160,9 @@ Không được viết:
 - Xưng "tôi", "chúng ta". Dùng câu không chủ ngữ hoặc câu quan sát, gọi người dùng là "bạn".
 - Các từ Insight, Reflection, Pattern, Self-Check, Mentor, Kỹ năng.
 - Chi tiết không có trong dữ liệu gửi kèm.
-- Quá 45 chữ cho "shape" và "detail" cộng lại.
+- Quá 45 chữ cho "shape" và "detail" cộng lại (mỗi tiếng là một chữ). Giữ "shape" khoảng 20 chữ và "detail" khoảng 25 chữ.
+
+Ví dụ dưới đây chỉ để thấy giọng và cấu trúc. KHÔNG chép chữ nào của ví dụ: mốc, hành động, phần khó và "hard_part" đều phải lấy từ dữ liệu của chính nhóm đó.
 
 Ví dụ đạt:
 shape: "Hai chuyện quay lại nhiều nhất trong nhóm này đều nằm ở cùng một chỗ: lúc cần lên tiếng."
@@ -187,7 +196,7 @@ Write EXACTLY the frame of the chosen axis. Write ‹N› as a capitalised word 
 - Beat 2: acknowledge what the user has done, taken from their own words. Example: "You had them and you prepared." If no line shows they did their part, DROP beat 2.
 - Beat 3: start with exactly "The hard part is", and name the real difficulty in a way the reader can check against the TWO QUOTES of that group.
 
-3. "hard_part": beat 3 shortened to a noun phrase of at most 12 words, lowercase first letter, no full stop. It is placed in "When ‹condition›, ‹hard_part› is hard to ease on its own", so it must read naturally there. Example: "ideas that are said but do not land".
+3. "hard_part": the beat 3 YOU just wrote for that group, shortened to a noun phrase of at most 12 words, lowercase first letter, no full stop. It is placed in "When ‹condition›, ‹hard_part› is hard to ease on its own", so it must read naturally there. Example: "ideas that are said but do not land".
 
 Never write:
 - A diagnosis of the person ("you avoid conflict", "you lack decisiveness"). Read the recorded behaviour, not the personality.
@@ -197,7 +206,9 @@ Never write:
 - "I", "we". Use observations and address the user as "you".
 - The words Insight, Reflection, Pattern, Self-Check, Mentor, Skill.
 - Details that are not in the attached data.
-- More than 45 words for "shape" and "detail" together.
+- More than 45 words for "shape" and "detail" together. Keep "shape" around 20 words and "detail" around 25.
+
+The example below only shows tone and structure. Do NOT copy its words: the moment, the action, the hard part and "hard_part" must all come from that group's own data.
 
 Good example:
 shape: "Two of the situations that come back most in this group sit in the same place: when you need to speak up."
@@ -289,29 +300,39 @@ function words(s: string): number {
   return s.split(/\s+/u).filter((w) => w.length > 0).length;
 }
 
-/// Kiểm một bản đọc. Trả null khi không được hiển thị.
-export function validateReading(
-  raw: unknown,
-  locale: WrLocale,
-): DifficultyReading | null {
-  if (!raw || typeof raw !== 'object') return null;
+export type ReadingCheck =
+  | { ok: true; reading: DifficultyReading }
+  | { ok: false; reason: string };
+
+/// Kiểm một bản đọc. Lý do trượt viết sao cho gửi lại model được.
+export function checkReading(raw: unknown, locale: WrLocale): ReadingCheck {
+  const no = (reason: string): ReadingCheck => ({ ok: false, reason });
+  if (!raw || typeof raw !== 'object') return no('thiếu nhóm này trong JSON');
   const o = raw as Record<string, unknown>;
   const shape = typeof o.shape === 'string' ? o.shape.trim() : '';
   const detail = typeof o.detail === 'string' ? o.detail.trim() : '';
-  if (!shape || !detail) return null;
+  if (!shape || !detail) return no('thiếu "shape" hoặc "detail"');
 
   const en = locale === 'en';
   const frames = en ? SHAPE_EN : SHAPE_VI;
-  if (!frames.some((re) => re.test(shape))) return null;
+  if (!frames.some((re) => re.test(shape))) {
+    return no('"shape" không theo đúng một trong bốn khung câu');
+  }
 
   const hardMarker = en ? 'The hard part is' : 'Phần khó là';
-  if (!detail.includes(hardMarker)) return null;
+  if (!detail.includes(hardMarker)) {
+    return no(`"detail" thiếu nhịp 3 bắt đầu bằng "${hardMarker}"`);
+  }
 
   const banned = en ? BANNED_EN : BANNED_VI;
-  if (banned.test(shape) || banned.test(detail)) return null;
-  if (/[*#`]/u.test(shape + detail)) return null;
-  if (words(shape) + words(detail) > (en ? MAX_WORDS_EN : MAX_WORDS_VI)) {
-    return null;
+  if (banned.test(shape) || banned.test(detail)) {
+    return no('có từ bị cấm (xưng hô, lời khuyên, câu rút lại hoặc từ đã bỏ)');
+  }
+  if (/[*#`]/u.test(shape + detail)) return no('có ký hiệu Markdown');
+  const n = words(shape) + words(detail);
+  const max = en ? MAX_WORDS_EN : MAX_WORDS_VI;
+  if (n > max) {
+    return no(`"shape" và "detail" cộng lại ${n} chữ, phải không quá 45`);
   }
 
   // Mảnh rút gọn hỏng thì chỉ bỏ mảnh đó: Tổng quan có câu dự phòng, còn hai
@@ -330,7 +351,41 @@ export function validateReading(
     hard = hard[0].toLowerCase() + hard.slice(1);
   }
 
-  return { shape, detail, hard_part: hard };
+  return { ok: true, reading: { shape, detail, hard_part: hard } };
+}
+
+/// Kiểm một bản đọc. Trả null khi không được hiển thị.
+export function validateReading(
+  raw: unknown,
+  locale: WrLocale,
+): DifficultyReading | null {
+  const c = checkReading(raw, locale);
+  return c.ok ? c.reading : null;
+}
+
+export interface Review {
+  ok: Partial<Record<PillarCode, DifficultyReading>>;
+  failures: Partial<Record<PillarCode, string>>;
+}
+
+/// Kiểm câu trả lời của model: chỉ giữ nhóm đã hỏi và qua phép thử, kèm lý do
+/// của từng nhóm trượt.
+export function reviewAll(
+  parsed: Record<string, unknown> | null,
+  asked: PillarInput[],
+  locale: WrLocale,
+): Review {
+  const review: Review = { ok: {}, failures: {} };
+  const raw = parsed?.pillars;
+  const map = raw && typeof raw === 'object'
+    ? raw as Record<string, unknown>
+    : {};
+  for (const p of asked) {
+    const c = checkReading(map[p.pillar], locale);
+    if (c.ok) review.ok[p.pillar] = c.reading;
+    else review.failures[p.pillar] = c.reason;
+  }
+  return review;
 }
 
 /// Lọc câu trả lời của model: chỉ giữ nhóm đã hỏi và qua phép thử.
@@ -339,15 +394,21 @@ export function validateAll(
   asked: PillarInput[],
   locale: WrLocale,
 ): Partial<Record<PillarCode, DifficultyReading>> {
-  const out: Partial<Record<PillarCode, DifficultyReading>> = {};
-  const raw = parsed?.pillars;
-  if (!raw || typeof raw !== 'object') return out;
-  const map = raw as Record<string, unknown>;
-  for (const p of asked) {
-    const r = validateReading(map[p.pillar], locale);
-    if (r) out[p.pillar] = r;
-  }
-  return out;
+  return reviewAll(parsed, asked, locale).ok;
+}
+
+/// Lượt sửa: nói cho model nhóm nào trượt và vì sao, xin viết lại đúng các
+/// nhóm đó, cùng dạng JSON.
+export function repairMessage(
+  failures: Partial<Record<PillarCode, string>>,
+  locale: WrLocale,
+): string {
+  const lines = Object.entries(failures).map(([k, r]) => `- ${k}: ${r}`);
+  return locale === 'en'
+    ? `Your answer was rejected for these groups:\n${lines.join('\n')}\n` +
+      'Rewrite ONLY these groups, following every rule, and return the same JSON shape.'
+    : `Bản vừa rồi bị loại ở các nhóm sau:\n${lines.join('\n')}\n` +
+      'Viết lại CHỈ các nhóm này, đúng mọi luật, trả về cùng dạng JSON.';
 }
 
 /// Bóc JSON ra khỏi câu trả lời của model (cùng cách `wr-doc-analyze`).

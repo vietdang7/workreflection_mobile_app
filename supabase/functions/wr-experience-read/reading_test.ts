@@ -4,6 +4,8 @@ import { assert, assertEquals } from 'jsr:@std/assert@1';
 import {
   fingerprint,
   parsePillars,
+  repairMessage,
+  reviewAll,
   validateAll,
   validateReading,
 } from './reading.ts';
@@ -126,4 +128,30 @@ Deno.test('khoá nhớ đệm đổi theo nguyên liệu và ngôn ngữ', async
   assertEquals(await fingerprint(p, 'vi'), await fingerprint(p, 'vi'));
   assert((await fingerprint(p, 'vi')) !== (await fingerprint(q, 'vi')));
   assert((await fingerprint(p, 'vi')) !== (await fingerprint(p, 'en')));
+});
+
+Deno.test('câu trả lời thật 15/10 dài 54 chữ: loại, nói rõ lý do để xin sửa', () => {
+  const asked = parsePillars({
+    pillars: [{ pillar: 'c', stories: [{ title: 'B', count: 3, lines: [] }] }],
+  });
+  const review = reviewAll(
+    {
+      pillars: {
+        c: {
+          shape:
+            'Hai chuyện quay lại nhiều nhất trong nhóm này đều nằm ở cùng một chỗ: lúc cần lên tiếng.',
+          detail:
+            'Điều bạn ghi lại không phải việc thiếu ý. Bạn có kế hoạch và đã nói ra. Phần khó là nói ra rồi bị ngắt lời, hoặc đồng ý dù trong lòng không đồng ý.',
+          hard_part: 'việc nói ra mà không đến nơi',
+        },
+      },
+    },
+    asked,
+    'vi',
+  );
+  assertEquals(Object.keys(review.ok), []);
+  assert(review.failures.c?.includes('54 chữ'), review.failures.c);
+  const msg = repairMessage(review.failures, 'vi');
+  assert(msg.includes('- c:'), msg);
+  assert(msg.includes('cùng dạng JSON'), msg);
 });
