@@ -222,8 +222,8 @@ List<JourneyEntry> buildJourneyEntries({
         // Script `CAREER_MEMORY_ENTRIES`: "Reflection: ‹tên tình huống›".
         title: situation != null && situation.trim().isNotEmpty
             ? tr(
-                'Reflection: ${situation.trim().replaceFirst(RegExp(r'^Tôi vừa '), '')}',
-                'Reflection: ${situation.trim()}',
+                'Lần nhìn lại: ${situation.trim().replaceFirst(RegExp(r'^Tôi vừa '), '')}',
+                'Look-back: ${situation.trim()}',
               )
             : e.humanMoment.label,
         // Dựng LẠI câu ý nghĩa thay vì đọc `draft_meaning` đã đóng băng.
@@ -340,7 +340,7 @@ List<JourneyEntry> buildJourneyEntries({
                     : tr('Một chủ đề mới xuất hiện', 'A new theme appeared'))
               // Script `CAREER_MEMORY_ENTRIES`: INSIGHT mang tên gọi cố định
               // "Pattern được nhận diện".
-              : tr('Pattern được nhận diện', 'Pattern identified'),
+              : tr('Điều đang lặp lại', 'Something that keeps coming back'),
           // Câu này được GHÉP SẴN lúc khép lượt nhìn lại rồi lưu vào
           // `reflection_text`, nên nó mang ngôn ngữ của thời điểm GHI chứ không
           // phải thời điểm đọc — dựng lại theo ngôn ngữ đang bật, cùng cách đã
@@ -639,7 +639,9 @@ String emotionLabel(String? emotion) => switch (emotion) {
 String get kStoryLabel => tr('CÂU CHUYỆN', 'STORY');
 String get kMilestoneLabel => tr('CỘT MỐC', 'MILESTONE');
 String get kThemeLabel => tr('CHỦ ĐỀ', 'THEME');
-const String kInsightLabel = 'INSIGHT';
+// "Insight" vào danh sách từ đã bỏ ("Logic đọc hiểu mình" §8, 15/10/2026),
+// thay bằng "Phần đọc", dù mockup v77 vẫn ghi Insight.
+String get kInsightLabel => tr('PHẦN ĐỌC', 'READING');
 
 /// Nhãn loại của một mốc trên timeline Hành trình.
 ///
@@ -668,7 +670,7 @@ String eventTypeLabel(CareerMemoryEvent e) {
   }
   if (e.behavior == 'insight') return tr('NHẬN RA', 'NOTICED');
   if (e.behavior == 'decision') return tr('QUYẾT ĐỊNH', 'DECISION');
-  if (e.storyId != null) return tr('PHẢN CHIẾU', 'REFLECTION');
+  if (e.storyId != null) return tr('PHẢN CHIẾU', 'LOOK-BACK');
   if (e.situationCode != null) return tr('TRẢI NGHIỆM', 'EXPERIENCE');
   return tr('GHI CHÚ', 'NOTE');
 }
@@ -867,7 +869,7 @@ String get kLockedEntryBody => tr(
 );
 
 /// Nhãn STORY ở phần xem trước của tab Hành trình — script `screenGrow`.
-String get kStoryPreviewLabel => tr('PHẢN CHIẾU', 'REFLECTION');
+String get kStoryPreviewLabel => tr('PHẢN CHIẾU', 'LOOK-BACK');
 
 /// Nhãn loại của một mảnh ký ức, kèm thẻ "PREMIUM" với INSIGHT.
 class _TypeLabel extends StatelessWidget {
@@ -1668,7 +1670,7 @@ class _WrCareerMemoryScreenState extends ConsumerState<WrCareerMemoryScreen> {
 
     return WrDetailScaffold(
       art: WrHeroArt.grow,
-      eyebrow: 'CAREER MEMORY',
+      eyebrow: tr('DẤU ẤN HÀNH TRÌNH', 'JOURNEY MARKS'),
       // Mockup v16: "Bạn đã để lại N mảnh ký ức nghề nghiệp." — con số TỔNG,
       // kể cả với bản miễn phí. Việc mình đã làm thì luôn được nói ra; cái bị
       // khoá là nội dung từng mục.
@@ -1679,7 +1681,7 @@ class _WrCareerMemoryScreenState extends ConsumerState<WrCareerMemoryScreen> {
       // nên gọi vật chứa như vậy sẽ ra "42 cột mốc" ở tiêu đề trong khi bên dưới
       // chỉ vài mục thật sự mang nhãn đó. Luật đếm không đổi.
       title: all.isEmpty
-          ? 'Career Memory'
+          ? tr('Dấu ấn hành trình', 'Journey marks')
           : _type == null
           ? tr(
               'Bạn đã để lại ${all.length} ghi nhận trên hành trình sự nghiệp.',
@@ -1758,8 +1760,8 @@ class _WrCareerMemoryScreenState extends ConsumerState<WrCareerMemoryScreen> {
                     key: const Key('wr_career_memory_unlock'),
                     kind: WrSmallButtonKind.primary,
                     label: tr(
-                      'Mở khoá toàn bộ Career Memory',
-                      'Unlock all of Career Memory',
+                      'Mở khoá toàn bộ Dấu ấn hành trình',
+                      'Unlock all of your Journey marks',
                     ),
                     onTap: () =>
                         context.push('/wr/paywall?trigger=career_memory'),

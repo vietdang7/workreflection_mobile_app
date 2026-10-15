@@ -70,6 +70,7 @@ class WrAiConsentController {
   void _invalidateAiSurfaces() {
     _ref.invalidate(wrAiConsentProvider);
     _ref.invalidate(wrNarrativeRefreshProvider);
+    _ref.invalidate(wrExperienceAiReadingProvider);
   }
 }
 

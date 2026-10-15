@@ -30,6 +30,7 @@
 //   `supabase/functions/wr-chat/user_context.ts`   — các bảng nạp vào ngữ cảnh
 //   `supabase/functions/wr-doc-analyze/index.ts`   — đọc JD/CV
 //   `supabase/functions/wr-narrative/index.ts`     — sinh Diễn biến
+//   `supabase/functions/wr-experience-read/index.ts` — "Bạn đang khó ở chỗ nào"
 //   `lib/features/video_report/data/…`             — đọc thành tiếng
 //   `ai-personalize` (Edge Function, không nằm trong repo này) — viết lại phần
 //                                                    nhận định của Báo cáo
@@ -58,7 +59,15 @@ import '../l10n/wr_tr.dart';
 /// KHÔNG nâng khi chỉ sửa câu chữ cho dễ đọc: hỏi lại vì một dấu phẩy là dạy
 /// người dùng bấm "Đồng ý" mà không đọc, và như thế thì lần hỏi nào cũng vô
 /// nghĩa.
-const int kWrAiDisclosureVersion = 2;
+///
+/// Lên 3 ngày 15/10/2026: mọi luồng AI chuyển hẳn sang DeepSeek, bỏ OpenRouter
+/// và Gemini. Tài liệu JD/CV và hồ sơ Báo cáo khảo sát giờ tới DeepSeek thay
+/// vì Google, nên người đã đồng ý bản cũ được hỏi lại.
+///
+/// Phía máy chủ (`_shared/ai_consent.ts`) CỐ Ý vẫn nhận từ bản 2: nâng ở đó
+/// trước khi bản app mới lên kho là cắt hết AI của người đang dùng bản cũ —
+/// app cũ không có màn nào để đồng ý bản 3.
+const int kWrAiDisclosureVersion = 3;
 
 /// Một việc app làm có gửi dữ liệu ra ngoài.
 class WrAiDataFlow {
@@ -100,39 +109,26 @@ class WrAiRecipient {
 
 /// Các bên nhận dữ liệu.
 ///
-/// OpenRouter là bên TRUNG CHUYỂN, không phải nơi cuối cùng — nên phải kể cả
-/// hai tầng. Chỉ ghi "gửi cho OpenRouter" là giấu mất chuyện dữ liệu đi tiếp
-/// sang DeepSeek và Google.
+/// Từ 15/10/2026 app gọi thẳng DeepSeek, không còn bên trung chuyển
+/// (OpenRouter) hay mô hình thứ hai (Gemini).
 ///
 /// Getter chứ không phải `const`: [WrAiRecipient.role] đi qua `tr()`, giữ
 /// trong một hằng thì đóng băng ở ngôn ngữ lúc đọc lần đầu.
 List<WrAiRecipient> get kWrAiRecipients => [
   WrAiRecipient(
-    name: 'OpenRouter',
-    role: tr(
-      'Nhận và chuyển tiếp yêu cầu tới hai mô hình AI bên dưới.',
-      'Receives requests and forwards them to the two AI models below.',
-    ),
-    privacyUrl: 'https://openrouter.ai/privacy',
-  ),
-  WrAiRecipient(
     name: 'DeepSeek',
     role: tr(
-      'Mô hình trả lời trong phần Trò chuyện và viết phần Diễn biến.',
-      'The model that replies in Chat and writes your story.',
+      'Mô hình AI duy nhất của app: trả lời trong phần Trò chuyện, viết phần '
+          'Diễn biến và phần Bạn đang khó ở chỗ nào, đọc tài liệu JD và CV, '
+          'và viết phần nhận định của Báo cáo khảo sát.',
+      'The app\'s only AI model: it replies in Chat, writes your story and '
+          'Where it is hard for you, reads your JD and CV documents, and '
+          'writes the commentary in the Survey report.',
     ),
     // KHÔNG phải `deepseek.com/privacy` — đường đó trả 404 (kiểm 07/09/2026).
     // Một liên kết chết ngay trong công bố quyền riêng tư còn tệ hơn không có.
     privacyUrl:
         'https://cdn.deepseek.com/policies/en-US/deepseek-privacy-policy.html',
-  ),
-  WrAiRecipient(
-    name: 'Google (Gemini)',
-    role: tr(
-      'Mô hình đọc nội dung tài liệu JD và CV bạn tải lên.',
-      'The model that reads the JD and CV documents you upload.',
-    ),
-    privacyUrl: 'https://policies.google.com/privacy',
   ),
   WrAiRecipient(
     name: 'Ausynclab',
@@ -160,14 +156,14 @@ List<WrAiDataFlow> get kWrAiDataFlows => [
     ),
     data: tr(
       'Câu bạn vừa viết, các lượt trước trong cùng cuộc trò chuyện, và tóm '
-          'tắt những điều bạn đã nhìn lại gần đây: tình huống bạn ghi, insight, '
+          'tắt những điều bạn đã nhìn lại gần đây: tình huống bạn ghi, phần đọc, '
           'chủ đề đang thực hành, kết quả tự đánh giá.',
       'What you just wrote, the earlier turns in the same conversation, and a '
           'summary of what you have looked back on recently: the situations you '
-          'logged, insights, the themes you are practising, your self-assessment '
+          'logged, readings, the themes you are practising, your self-assessment '
           'results.',
     ),
-    recipient: 'OpenRouter → DeepSeek',
+    recipient: 'DeepSeek',
   ),
   WrAiDataFlow(
     trigger: tr(
@@ -179,7 +175,7 @@ List<WrAiDataFlow> get kWrAiDataFlows => [
           'app.',
       'The whole document, including parts you never mention in the app.',
     ),
-    recipient: 'OpenRouter → Google (Gemini)',
+    recipient: 'DeepSeek',
   ),
   WrAiDataFlow(
     trigger: tr(
@@ -192,7 +188,25 @@ List<WrAiDataFlow> get kWrAiDataFlows => [
       'The situations you have logged over time. This runs automatically '
           'when you open that screen, without you tapping anything.',
     ),
-    recipient: 'OpenRouter → DeepSeek',
+    recipient: 'DeepSeek',
+  ),
+  // `wr-experience-read` (15/10/2026). Cùng bên nhận và cùng loại dữ liệu với
+  // mục Diễn biến (tình huống đã ghi + dòng tự viết), nên không nâng
+  // [kWrAiDisclosureVersion]; nhưng vẫn khai riêng vì nó chạy ở một màn khác.
+  WrAiDataFlow(
+    trigger: tr(
+      'Khi phần mềm viết mục "Bạn đang khó ở chỗ nào"',
+      'When the app writes "Where it is hard for you"',
+    ),
+    data: tr(
+      'Những tình huống đang quay lại trong một nhóm trải nghiệm, số lần, và '
+          'các dòng bạn đã tự viết cho chúng. Việc này chạy tự động khi bạn mở '
+          'phần Trải nghiệm của bạn, không cần bạn bấm gì.',
+      'The situations that keep coming back in a group of experience, how '
+          'often, and the lines you wrote for them. This runs automatically '
+          'when you open Your experience, without you tapping anything.',
+    ),
+    recipient: 'DeepSeek',
   ),
   WrAiDataFlow(
     trigger: tr(
@@ -217,7 +231,7 @@ List<WrAiDataFlow> get kWrAiDataFlows => [
           'the commentary to fit your situation. This runs automatically when '
           'you open the report, without you tapping anything.',
     ),
-    recipient: 'OpenRouter → Google (Gemini)',
+    recipient: 'DeepSeek',
   ),
 ];
 

@@ -122,7 +122,7 @@ void main() {
 
       expect(find.textContaining('tổng hợp, ẩn danh'), findsOneWidget);
       expect(
-        find.textContaining('không ảnh hưởng đến Reflection'),
+        find.textContaining('không ảnh hưởng đến những lần nhìn lại'),
         findsOneWidget,
       );
       expect(find.textContaining('Không bắt buộc'), findsOneWidget);

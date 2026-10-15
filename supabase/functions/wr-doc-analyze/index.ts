@@ -9,7 +9,7 @@
 // bối cảnh không nói được gì hơn ngoài ngày tải lên. Hàm này là bước còn thiếu.
 //
 // Đặt ở máy chủ vì ba lý do, cùng lý do của `wr-chat`:
-//   • Khoá OpenRouter gắn với ví tiền thật, không được nằm trong APK.
+//   • Khoá DeepSeek gắn với ví tiền thật, không được nằm trong APK.
 //   • Ranh giới Free/Premium đọc từ database; để app khai thì ai cũng khai
 //     mình Premium.
 //   • File nằm trong bucket riêng tư `context-docs`; tải nó về cần service role.
@@ -17,10 +17,9 @@
 // ---------------------------------------------------------------------------
 // SECRET
 //
-//   supabase secrets set OPENROUTER_API_KEY=sk-or-v1-...
+//   supabase secrets set DEEPSEEK_API_KEY=sk-...   (xem `_shared/deepseek.ts`)
 //
 // Tuỳ chọn:
-//   WR_DOC_MODEL            model đọc tài liệu (mặc định google/gemini-2.5-flash)
 //   WR_DOC_ANALYSIS_FREE    'true' = mở phân tích cho cả gói miễn phí
 //   WR_DOC_DAILY_LIMIT      số lần phân tích mỗi ngày mỗi người (mặc định 10)
 // ---------------------------------------------------------------------------
@@ -30,17 +29,25 @@ import {
   AI_CONSENT_REQUIRED_MESSAGE,
   hasAiConsent,
 } from '../_shared/ai_consent.ts';
+import { deepSeekFetch, deepSeekKey, deepSeekModel, deepSeekText }
+  from '../_shared/deepseek.ts';
 import { languageRule, pick, readLocale, readLocaleHeader, WrLocale }
   from '../_shared/locale.ts';
 import { buildExtractionPrompt, normalizeAnalysis } from './analysis.ts';
 import { extractDocxText } from './docx.ts';
+import { extractPdfText } from './pdf.ts';
 
-/// Model đọc tài liệu.
+/// Model đọc tài liệu: DeepSeek, chung mọi hàm AI (15/10/2026).
 ///
-/// KHÁC model của `wr-chat`: DeepSeek chỉ nhận chữ, mà thứ người dùng tải lên
-/// là ảnh chụp hoặc PDF. Đây phải là model đọc được hình. Ghim bản cụ thể qua
-/// secret khi cần; mặc định chọn bản rẻ, nhanh, đọc tốt tiếng Việt.
-const MODEL = Deno.env.get('WR_DOC_MODEL') ?? 'google/gemini-2.5-flash';
+/// DeepSeek chỉ nhận CHỮ. Nên chữ được bóc tại chỗ trước khi gửi: Word qua
+/// `docx.ts`, PDF có lớp chữ qua `pdf.ts`. Ảnh chụp và PDF quét không có chữ
+/// để bóc, nên từ ngày này app chỉ nhận PDF và Word. Trước đó tài liệu đi qua
+/// OpenRouter tới Gemini, model đọc được hình.
+const MODEL = deepSeekModel();
+
+/// Trần chữ gửi model. Một JD/CV dài cỡ 3–4 trang là 10–15 nghìn ký tự; cắt
+/// ở đây chỉ để một file 200 trang không đốt cả lượt.
+const MAX_TEXT_CHARS = 40_000;
 
 /// Mở phân tích cho gói miễn phí.
 ///
@@ -69,7 +76,6 @@ const MAX_FILE_BYTES = 12 * 1024 * 1024;
 /// Đọc một trang tài liệu lâu hơn trả lời một câu chat.
 const UPSTREAM_TIMEOUT_MS = 90_000;
 
-const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const BUCKET = 'context-docs';
 
 const CORS_HEADERS = {
@@ -117,19 +123,6 @@ function mimeOf(path: string): string | null {
   }
 }
 
-/// Bytes → base64, cắt khúc.
-///
-/// `String.fromCharCode(...bytes)` trên một file vài MB làm tràn stack — lỗi
-/// này chỉ xuất hiện với file lớn, tức là sẽ không thấy khi thử với ảnh nhỏ.
-function toBase64(bytes: Uint8Array): string {
-  const CHUNK = 0x8000;
-  let binary = '';
-  for (let i = 0; i < bytes.length; i += CHUNK) {
-    binary += String.fromCharCode(...bytes.subarray(i, i + CHUNK));
-  }
-  return btoa(binary);
-}
-
 /// Bóc JSON ra khỏi câu trả lời của model.
 ///
 /// Đã yêu cầu JSON thuần, nhưng model vẫn có lúc bọc trong ```json. Thử lần
@@ -164,9 +157,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return fail(pick(locale, 'Yêu cầu không hợp lệ.', 'Invalid request.'), 405);
   }
 
-  const openRouterKey = Deno.env.get('OPENROUTER_API_KEY');
-  if (!openRouterKey) {
-    console.error('THIẾU secret OPENROUTER_API_KEY — hàm không thể chạy.');
+  const apiKey = deepSeekKey();
+  if (!apiKey) {
+    console.error('THIẾU secret DEEPSEEK_API_KEY — hàm không thể chạy.');
     return fail(
       pick(
         locale,
@@ -218,7 +211,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // ── 1b · Chưa cho phép gửi sang AI thì dừng ─────────────────────────────
   //
   // Hàm này gửi đi NHIỀU dữ liệu riêng tư nhất trong cả app: toàn văn JD hoặc
-  // CV, sang Google Gemini qua OpenRouter. Guideline 5.1.1(i) — xem
+  // CV, sang DeepSeek. Guideline 5.1.1(i) — xem
   // `_shared/ai_consent.ts`.
   if (!await hasAiConsent(db, user.id)) {
     return fail(AI_CONSENT_REQUIRED_MESSAGE, 403);
@@ -342,8 +335,8 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return fail(
       pick(
         locale,
-        'Định dạng tài liệu này chưa đọc được. Bạn thử file PDF, Word (.docx) hoặc ảnh chụp nhé.',
-        'That file format cannot be read yet. Try a PDF, a Word (.docx) file, or a photo.',
+        'Định dạng tài liệu này chưa đọc được. Bạn thử file PDF hoặc Word (.docx) nhé.',
+        'That file format cannot be read yet. Try a PDF or a Word (.docx) file.',
       ),
       415,
     );
@@ -402,77 +395,63 @@ Deno.serve(async (req: Request): Promise<Response> => {
     );
   }
 
-  // File Word: chữ nằm sẵn trong file, bóc tại chỗ rồi gửi model dạng chữ.
-  // Không gửi cả file như PDF — bộ đọc file của OpenRouter chỉ nhận PDF.
-  let docxText: string | null = null;
-  if (isDocx) {
-    docxText = await extractDocxText(fileBytes);
-    if (!docxText || docxText.length < MIN_TEXT_CHARS) {
-      return await failAndMark(
-        pick(
+  // ── 6 · Bóc chữ ─────────────────────────────────────────────────────────
+  //
+  // DeepSeek chỉ nhận chữ. Ảnh chụp (tài liệu tải lên trước 15/10) không có
+  // chữ để bóc: nói thẳng để người dùng tải bản PDF hoặc Word.
+  const isPdf = mime === 'application/pdf';
+  if (!isDocx && !isPdf) {
+    return await failAndMark(
+      pick(
         locale,
-        'Chưa đọc được chữ trong file Word này. Bạn thử lưu lại thành PDF rồi tải lên nhé.',
-        'The text in this Word file could not be read. Try saving it as a PDF and uploading that.',
+        'Ảnh chụp chưa đọc được. Bạn tải bản PDF hoặc Word (.docx) của tài liệu này nhé.',
+        'Photos cannot be read. Please upload this document as a PDF or Word (.docx) file.',
       ),
-        docxText === null
-          ? 'không mở được docx'
-          : `docx chỉ có ${docxText.length} ký tự`,
-        422,
-      );
-    }
+      'ảnh chụp: model chỉ nhận chữ',
+      415,
+    );
+  }
+  const docText = isDocx
+    ? await extractDocxText(fileBytes)
+    : await extractPdfText(fileBytes);
+  if (!docText || docText.length < MIN_TEXT_CHARS) {
+    return await failAndMark(
+      isDocx
+        ? pick(
+          locale,
+          'Chưa đọc được chữ trong file Word này. Bạn thử lưu lại thành PDF rồi tải lên nhé.',
+          'The text in this Word file could not be read. Try saving it as a PDF and uploading that.',
+        )
+        : pick(
+          locale,
+          'File PDF này không có lớp chữ (thường là bản chụp hoặc quét). Bạn tải bản PDF xuất từ Word/Google Docs, hoặc file Word (.docx) nhé.',
+          'This PDF has no text layer (usually a scan or photo). Please upload a PDF exported from Word/Google Docs, or a Word (.docx) file.',
+        ),
+      docText === null
+        ? `không mở được ${isDocx ? 'docx' : 'pdf'}`
+        : `${isDocx ? 'docx' : 'pdf'} chỉ có ${docText.length} ký tự`,
+      422,
+    );
   }
 
-  // ── 6 · Gọi model ───────────────────────────────────────────────────────
-  const isPdf = mime === 'application/pdf';
+  // ── 6b · Gọi model ──────────────────────────────────────────────────────
+  //
+  // Chữ đã có sẵn, nên KHÔNG bắt model chép lại vào `raw_text`: chép lại một
+  // tài liệu dài là cách nhanh nhất để vượt `max_tokens` và cắt cụt JSON.
   const prompt = buildExtractionPrompt(String(doc.doc_type ?? 'other')) +
-    languageRule(locale);
-  const content = isDocx
-    ? [{ type: 'text', text: `${prompt}\n\nNỘI DUNG TÀI LIỆU:\n${docxText}` }]
-    : [
-      { type: 'text', text: prompt },
-      isPdf
-        ? {
-          type: 'file',
-          file: {
-            filename: filePath.split('/').pop() ?? 'tai-lieu.pdf',
-            file_data: `data:${mime};base64,${toBase64(fileBytes)}`,
-          },
-        }
-        : {
-          type: 'image_url',
-          image_url: { url: `data:${mime};base64,${toBase64(fileBytes)}` },
-        },
-    ];
+    languageRule(locale) +
+    '\n\nChữ của tài liệu đã được bóc sẵn ở dưới. Trường "raw_text" trả chuỗi rỗng "".' +
+    `\n\nNỘI DUNG TÀI LIỆU:\n${docText.slice(0, MAX_TEXT_CHARS)}`;
 
-  const callUpstream = () => {
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
-    return fetch(OPENROUTER_URL, {
-      method: 'POST',
-      signal: controller.signal,
-      headers: {
-        Authorization: `Bearer ${openRouterKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://workreflection.app',
-        'X-Title': 'WorkReflection Mobile',
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        messages: [{ role: 'user', content }],
-        // Nhiệt độ thấp: đây là việc ĐỌC một tài liệu có sẵn, không phải viết
-        // sáng tạo. Sáng tạo ở đây nghĩa là bịa thêm dòng không có trong JD.
-        temperature: 0.1,
-        max_tokens: 2400,
-        response_format: { type: 'json_object' },
-        // PDF đi qua bộ đọc chữ của OpenRouter. `pdf-text` là engine miễn phí,
-        // đọc được PDF có lớp chữ; PDF scan (ảnh) sẽ rơi về đường đọc hình của
-        // chính model.
-        ...(isPdf
-          ? { plugins: [{ id: 'file-parser', pdf: { engine: 'pdf-text' } }] }
-          : {}),
-      }),
-    }).finally(() => clearTimeout(timer));
-  };
+  const callUpstream = () =>
+    deepSeekFetch(apiKey, [{ role: 'user', content: prompt }], {
+      // Nhiệt độ thấp: đây là việc ĐỌC một tài liệu có sẵn, không phải viết
+      // sáng tạo. Sáng tạo ở đây nghĩa là bịa thêm dòng không có trong JD.
+      temperature: 0.1,
+      maxTokens: 2400,
+      json: true,
+      timeoutMs: UPSTREAM_TIMEOUT_MS,
+    });
 
   let raw: string;
   try {
@@ -480,13 +459,13 @@ Deno.serve(async (req: Request): Promise<Response> => {
     // Thử lại đúng một lần với lỗi có thể tự khỏi — cùng lý do đã ghi trong
     // `wr-chat`: nhà cung cấp vấp một nhịp không nên thành lỗi của người dùng.
     if (res.status === 429 || res.status >= 500) {
-      console.warn(`OpenRouter ${res.status}, thử lại một lần.`);
+      console.warn(`DeepSeek ${res.status}, thử lại một lần.`);
       await new Promise((r) => setTimeout(r, 800));
       res = await callUpstream();
     }
     if (!res.ok) {
       const detail = await res.text();
-      console.error(`OpenRouter ${res.status}: ${detail.slice(0, 500)}`);
+      console.error(`DeepSeek ${res.status}: ${detail.slice(0, 500)}`);
       return await failAndMark(
         pick(
         locale,
@@ -497,8 +476,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
         502,
       );
     }
-    const payload = await res.json();
-    raw = String(payload?.choices?.[0]?.message?.content ?? '').trim();
+    raw = await deepSeekText(res);
     if (!raw) {
       return await failAndMark(
         pick(
@@ -512,7 +490,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     }
   } catch (e) {
     const aborted = e instanceof DOMException && e.name === 'AbortError';
-    console.error(aborted ? 'OpenRouter quá hạn chờ' : `OpenRouter lỗi: ${e}`);
+    console.error(aborted ? 'DeepSeek quá hạn chờ' : `DeepSeek lỗi: ${e}`);
     return await failAndMark(
       aborted
         ? 'Tài liệu này đọc lâu quá. Bạn thử lại giúp mình nhé.'
@@ -541,22 +519,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
     );
   }
 
-  const { analysis, extractedText } = normalizeAnalysis(parsed);
-
-  // Không đọc ra chữ nào = ảnh mờ, ảnh chụp nghiêng, hoặc không phải tài liệu.
-  // Nói thẳng để người dùng chụp lại, thay vì lưu một bản phân tích rỗng ruột
-  // rồi để mọi tính năng phía sau nói chuyện trên không khí.
-  if (extractedText.trim().length < MIN_TEXT_CHARS) {
-    return await failAndMark(
-      pick(
-        locale,
-        'Mình chưa đọc được chữ trong tài liệu này. Bạn thử chụp rõ hơn nhé.',
-        'I could not read the text in this document. Try a sharper photo.',
-      ),
-      'không trích được chữ',
-      422,
-    );
-  }
+  // Chữ lưu lại là chữ bóc từ file, nguyên văn — không phải bản model chép.
+  const { analysis } = normalizeAnalysis(parsed);
+  const extractedText = docText;
 
   // ── 8 · Lưu ─────────────────────────────────────────────────────────────
   const { error: saveError } = await db

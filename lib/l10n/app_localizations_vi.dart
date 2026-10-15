@@ -84,7 +84,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get homeEyebrowSuggestion => 'Gợi ý khi mệt mỏi';
 
   @override
-  String get homeEyebrowInsight => 'Insight gần nhất';
+  String get homeEyebrowInsight => 'Phần đọc gần nhất';
 
   @override
   String get homeLinkLearnMore => 'Tìm hiểu thêm';
@@ -134,17 +134,17 @@ class AppLocalizationsVi extends AppLocalizations {
   String get understandScaMeaning => 'Cách làm việc';
 
   @override
-  String get understandStatusStable => 'Đang hỗ trợ tốt';
+  String get understandStatusStable => 'Đang nâng đỡ bạn';
 
   @override
-  String get understandStatusImproving => 'Ổn, còn dư địa';
+  String get understandStatusImproving => 'Nâng đỡ nhưng chưa đều';
 
   @override
   String get understandStatusUnrated => 'Chưa đánh giá';
 
   @override
   String understandHealthReady(int n) {
-    return 'Bạn đã có đủ $n reflection.';
+    return 'Bạn đã có đủ $n lần nhìn lại.';
   }
 
   @override
@@ -194,7 +194,7 @@ class AppLocalizationsVi extends AppLocalizations {
   String get developWorkshopLink => 'Tại sao bây giờ?';
 
   @override
-  String get journeyGreeting => 'Career Memory';
+  String get journeyGreeting => 'Dấu ấn hành trình';
 
   @override
   String get journeyTitle => 'Hành trình';
@@ -231,10 +231,10 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profileBadgeMember => 'Thành viên';
 
   @override
-  String get profileStatReflectDays => 'ngày Reflect';
+  String get profileStatReflectDays => 'ngày nhìn lại';
 
   @override
-  String get profileStatInsights => 'Insight lưu';
+  String get profileStatInsights => 'Phần đọc đã lưu';
 
   @override
   String get profileStatMilestones => 'Milestone';
@@ -265,7 +265,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get profileDeleteAccountBody =>
-      'Toàn bộ dữ liệu của bạn sẽ bị xoá và không lấy lại được: những lần nhìn lại, Career Memory, chủ đề thực hành, kết quả self-check và hồ sơ. Nếu bạn đang có bản đầy đủ, phần thời hạn còn lại cũng mất theo.';
+      'Toàn bộ dữ liệu của bạn sẽ bị xoá và không lấy lại được: những lần nhìn lại, Dấu ấn hành trình, chủ đề thực hành, kết quả khảo sát điều kiện làm việc và hồ sơ. Nếu bạn đang có bản đầy đủ, phần thời hạn còn lại cũng mất theo.';
 
   @override
   String get profileDeleteAccountHint => 'Gõ XOÁ để xác nhận';
@@ -294,7 +294,7 @@ class AppLocalizationsVi extends AppLocalizations {
 
   @override
   String get homeInsightEmpty =>
-      'Chưa có insight nào. Hãy bắt đầu hành trình của bạn!';
+      'Chưa có phần đọc nào. Hãy bắt đầu hành trình của bạn!';
 
   @override
   String get homeErrorLoadData => 'Không thể tải dữ liệu.';
@@ -1125,11 +1125,11 @@ class AppLocalizationsVi extends AppLocalizations {
   String get profileEditSelectHint => 'Chọn...';
 
   @override
-  String get insightsTitle => 'Tất cả insight';
+  String get insightsTitle => 'Tất cả phần đọc';
 
   @override
   String get insightsEmpty =>
-      'Bạn chưa có insight nào. Hãy bắt đầu hành trình của bạn!';
+      'Bạn chưa có phần đọc nào. Hãy bắt đầu hành trình của bạn!';
 
   @override
   String insightSavedDate(String date) {
@@ -1137,7 +1137,7 @@ class AppLocalizationsVi extends AppLocalizations {
   }
 
   @override
-  String get understandViewAllInsights => 'Xem tất cả insight';
+  String get understandViewAllInsights => 'Xem tất cả phần đọc';
 
   @override
   String get profileCheckinHistory => '30 ngày gần đây';

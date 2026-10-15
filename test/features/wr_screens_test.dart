@@ -1059,7 +1059,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Xem toàn bộ Career Memory'), findsNothing);
+      expect(find.text('Xem toàn bộ Dấu ấn hành trình'), findsNothing);
     });
 
     testWidgets('diễn biến theo thời gian là một dòng dẫn sang màn riêng', (
@@ -1234,7 +1234,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('AI Insight từ Career Memory'), findsOneWidget);
+      expect(find.text('Đọc sâu từ Dấu ấn hành trình'), findsOneWidget);
     });
 
     testWidgets('trial_end trigger shows correct headline', (tester) async {
@@ -1273,7 +1273,7 @@ void main() {
       );
       await tester.pumpAndSettle();
 
-      expect(find.text('Xem toàn bộ Career Memory'), findsOneWidget);
+      expect(find.text('Xem toàn bộ Dấu ấn hành trình'), findsOneWidget);
     });
 
     // Script `screenPaywall`: hai trigger của Thực hành có tiêu đề riêng.
@@ -1302,10 +1302,10 @@ void main() {
       await tester.pumpWidget(_wrap(const WrPaywallScreen()));
       await tester.pumpAndSettle();
 
-      expect(find.text('Pattern cơ bản (đếm lặp lại)'), findsOneWidget);
+      expect(find.text('Những điều đang lặp lại'), findsOneWidget);
       expect(find.text('2 chủ đề Thực hành'), findsOneWidget);
-      expect(find.text('Diễn giải sâu Self-Check + xu hướng'), findsOneWidget);
-      expect(find.text('Career Memory đầy đủ'), findsOneWidget);
+      expect(find.text('Xu hướng điều kiện làm việc theo thời gian'), findsOneWidget);
+      expect(find.text('Dấu ấn hành trình đầy đủ'), findsOneWidget);
       expect(find.text('3 chủ đề Thực hành'), findsNothing);
       expect(find.byKey(const Key('wr_paywall_later')), findsOneWidget);
     });
@@ -1485,14 +1485,14 @@ void main() {
       expect(find.text('Diễn giải sâu theo thời gian'), findsNothing);
       expect(find.textContaining('Báo cáo chuyên sâu'), findsNothing);
       for (final label in [
-        'Reflection hàng ngày',
-        'Pattern cơ bản (đếm lặp lại)',
-        'Self-Check (15 câu)',
+        'Nhìn lại hàng ngày',
+        'Những điều đang lặp lại',
+        'Khảo sát điều kiện làm việc (15 câu)',
         '2 chủ đề Thực hành',
-        'AI Insight & Pattern nâng cao',
-        'Diễn giải sâu Self-Check + xu hướng',
+        'Tổng quan hai nguồn đặt cạnh nhau',
+        'Xu hướng điều kiện làm việc theo thời gian',
         'Cơ hội phát triển (Growth Intelligence)',
-        'Career Memory đầy đủ',
+        'Dấu ấn hành trình đầy đủ',
         'Thực hành không giới hạn',
       ]) {
         expect(find.text(label), findsOneWidget, reason: label);

@@ -84,7 +84,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get homeEyebrowSuggestion => 'Suggestion when tired';
 
   @override
-  String get homeEyebrowInsight => 'Latest insight';
+  String get homeEyebrowInsight => 'Latest reading';
 
   @override
   String get homeLinkLearnMore => 'Learn more';
@@ -144,7 +144,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String understandHealthReady(int n) {
-    return 'You have $n reflections.';
+    return 'You have $n look-backs.';
   }
 
   @override
@@ -194,7 +194,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get developWorkshopLink => 'Why now?';
 
   @override
-  String get journeyGreeting => 'Career Memory';
+  String get journeyGreeting => 'Journey marks';
 
   @override
   String get journeyTitle => 'Journey';
@@ -234,7 +234,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileStatReflectDays => 'Days reflected';
 
   @override
-  String get profileStatInsights => 'Saved insights';
+  String get profileStatInsights => 'Saved readings';
 
   @override
   String get profileStatMilestones => 'Milestones';
@@ -265,7 +265,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get profileDeleteAccountBody =>
-      'All your data will be erased and cannot be recovered: your reflections, Career Memory, practice themes, self-check results and profile. If you have the full version, the remaining time goes with it.';
+      'All your data will be erased and cannot be recovered: your look-backs, Journey marks, practice themes, workplace conditions survey results and profile. If you have the full version, the remaining time goes with it.';
 
   @override
   String get profileDeleteAccountHint => 'Type DELETE to confirm';
@@ -293,7 +293,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get understandNoSituations => 'No situations recorded yet.';
 
   @override
-  String get homeInsightEmpty => 'No insights yet. Start your journey!';
+  String get homeInsightEmpty => 'No readings yet. Start your journey!';
 
   @override
   String get homeErrorLoadData => 'Could not load data.';
@@ -1128,10 +1128,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get profileEditSelectHint => 'Select...';
 
   @override
-  String get insightsTitle => 'All insights';
+  String get insightsTitle => 'All readings';
 
   @override
-  String get insightsEmpty => 'No insights yet. Start your journey!';
+  String get insightsEmpty => 'No readings yet. Start your journey!';
 
   @override
   String insightSavedDate(String date) {
@@ -1139,7 +1139,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get understandViewAllInsights => 'View all insights';
+  String get understandViewAllInsights => 'View all readings';
 
   @override
   String get profileCheckinHistory => 'Last 30 days';

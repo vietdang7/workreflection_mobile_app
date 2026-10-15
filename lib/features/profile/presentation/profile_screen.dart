@@ -446,8 +446,10 @@ class _PremiumCard extends ConsumerWidget {
                 wrKeepCompounds(// §03: chữ trên nền coral là navy, pha loãng cho dòng phụ chứ
                 // không đổi sang trắng hay xám.
                 tr(
-                  '${price}Diễn giải sâu, Pattern nâng cao, Career Memory đầy đủ.',
-                  '${price}Deep readings, advanced Patterns, the full Career Memory.',
+                  '${price}Tổng quan hai nguồn, xu hướng điều kiện làm việc, Dấu ấn '
+                      'hành trình đầy đủ.',
+                  '${price}Both sources side by side, working conditions '
+                      'trends, all your Journey marks.',
                 )),
                 style: TextStyle(
                   fontSize: 13.5,
@@ -527,7 +529,7 @@ class _StatsCard extends ConsumerWidget {
             child: _StatBlock(
               key: const Key('profile_stat_insights'),
               number: '$insights',
-              label: tr('Insight lưu', 'Saved insights'),
+              label: tr('Phần đọc đã lưu', 'Saved readings'),
             ),
           ),
           Expanded(

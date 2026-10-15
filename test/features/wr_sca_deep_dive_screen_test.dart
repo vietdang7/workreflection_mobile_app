@@ -241,12 +241,13 @@ void main() {
     // đúng nhánh chênh lệch của script.
     expect(
       textOf('wr_sca_pattern_line_c'),
-      startsWith('Bạn tự đánh giá phần này đang hỗ trợ tốt, nhưng'),
+      startsWith('Bạn tự đánh giá phần này đang nâng đỡ bạn, nhưng'),
     );
     expect(textOf('wr_sca_pattern_line_c'), contains('(4 lần)'));
     expect(
       textOf('wr_sca_pattern_line_s'),
-      'Chưa có đủ tín hiệu từ Reflection gần đây để đối chiếu thêm cho nhóm '
+      'Chưa có đủ tín hiệu từ những lần nhìn lại gần đây để đối chiếu thêm '
+      'cho nhóm '
       'này.',
     );
   });
@@ -320,7 +321,7 @@ void main() {
       ),
     );
     expect(trend.data, contains('lần tự soi đầu tiên'));
-    expect(find.textContaining('Self-Check trước đó: chưa có'), findsOneWidget);
+    expect(find.textContaining('Lần khảo sát trước đó: chưa có'), findsOneWidget);
   });
 
   testWidgets('Premium, đã nhìn lại đều mà chưa Self-Check: vẫn có khối chính', (

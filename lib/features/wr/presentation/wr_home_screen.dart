@@ -397,9 +397,9 @@ class _CheckinQuestionState extends ConsumerState<_CheckinQuestion> {
             width: double.infinity,
             child: Text(
               wrKeepCompounds(tr(
-                'Chạm để bắt đầu một Reflection, dựa trên đúng cảm giác lúc '
+                'Chạm để bắt đầu một lần nhìn lại, dựa trên đúng cảm giác lúc '
                     'này.',
-                'Tap to start a Reflection, based on exactly how you feel right '
+                'Tap to start a look-back, based on exactly how you feel right '
                     'now.',
               )),
               textAlign: TextAlign.center,

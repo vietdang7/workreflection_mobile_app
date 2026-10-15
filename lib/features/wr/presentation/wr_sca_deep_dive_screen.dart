@@ -111,7 +111,7 @@ class _Locked extends StatelessWidget {
                 'tự soi trước, và đối chiếu với những tình huống bạn hay gặp khi nhìn '
                 'lại.',
             'This reads each side closely against your score band, sets it beside '
-                'your earlier self-checks, and compares it with the situations you '
+                'your earlier surveys, and compares it with the situations you '
                 'meet most when looking back.',
           ),
           style: TextStyle(fontSize: 16.5, height: 1.65, color: WrColors.muted),
@@ -392,8 +392,10 @@ class _BodyState extends ConsumerState<_Body> {
           const SizedBox(height: 22),
           WrParagraph(
             tr(
-              'Làm Self-Check để so điều bạn tự đánh giá với điều đang lặp lại.',
-              'Take the Self-Check to compare your view with what keeps repeating.',
+              'Làm khảo sát điều kiện làm việc để so điều bạn tự đánh giá với điều '
+                  'đang lặp lại.',
+              'Take the conditions survey to compare your view with what keeps '
+                  'repeating.',
             ),
             key: const Key('wr_deep_no_self_check_yet'),
             textAlign: TextAlign.start,
@@ -417,7 +419,7 @@ class _BodyState extends ConsumerState<_Body> {
               elevation: 0,
             ),
             child: Text(
-              wrKeepCompounds(tr('Làm Self-Check', 'Take the Self-Check')),
+              wrKeepCompounds(tr('Làm khảo sát', 'Take the survey')),
               style: const TextStyle(
                 fontSize: 16.5,
                 fontWeight: FontWeight.w600,
@@ -693,9 +695,10 @@ class _Empty extends StatelessWidget {
       children: [
         WrParagraph(
           tr(
-            'Phần này đọc từ kết quả Self-Check của bạn, mà bạn thì chưa làm lần '
+            'Phần này đọc từ kết quả khảo sát điều kiện làm việc của bạn, mà bạn '
+                'thì chưa làm lần '
                 'nào. Trả lời 15 câu một lượt, rồi quay lại đây.',
-            'This reads from your Self-Check results, and you have not taken it '
+            'This reads from your conditions survey results, and you have not taken it '
                 'yet. Answer the 15 questions in one go, then come back here.',
           ),
           style: TextStyle(fontSize: 16.5, height: 1.65, color: WrColors.muted),
@@ -714,7 +717,7 @@ class _Empty extends StatelessWidget {
             elevation: 0,
           ),
           child: Text(
-            wrKeepCompounds(tr('Làm Self-Check', 'Take the Self-Check')),
+            wrKeepCompounds(tr('Làm khảo sát', 'Take the survey')),
             style: TextStyle(fontSize: 16.5, fontWeight: FontWeight.w600),
           ),
         ),

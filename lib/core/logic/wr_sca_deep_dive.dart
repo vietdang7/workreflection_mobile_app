@@ -68,13 +68,18 @@ enum ScaPillarStatus {
   /// nhánh theo đúng ba chữ đó — nhánh A đọc "Đang hỗ trợ tốt", nhánh B/D đọc
   /// "Đang cản trở" và "Ổn, còn dư địa".
   ///
+  /// 15/10/2026 ("Logic đọc hiểu mình.docx" §8): "Đang hỗ trợ tốt" và "Ổn, còn
+  /// dư địa" vào danh sách từ đã bỏ — người đọc không biết ổn cái gì, dư địa
+  /// gì. Đổi chữ, giữ nguyên ngưỡng và nhánh. Màn Trải nghiệm không dùng nhãn
+  /// này nữa mà đọc từng câu (`pillarCondLabel`).
+  ///
   /// Ngưỡng nằm ở [scaPillarStatus], đúng `pillarLevelText` của script quy
   /// sang thang 1–5 của app.
   String get label => switch (this) {
-    ScaPillarStatus.developing => tr('Đang hỗ trợ tốt', 'Supporting you well'),
+    ScaPillarStatus.developing => tr('Đang nâng đỡ bạn', 'Supporting you'),
     ScaPillarStatus.needsAttention => tr(
-      'Ổn, còn dư địa',
-      'Fine, room to grow',
+      'Nâng đỡ nhưng chưa đều',
+      'Supporting, but unevenly',
     ),
     ScaPillarStatus.priority => tr('Đang cản trở', 'Holding you back'),
   };
@@ -85,10 +90,10 @@ enum ScaPillarStatus {
   /// phẩy, nên "tự đánh giá ổn, còn dư địa, vừa là nơi…" đọc ra thành hai mệnh
   /// đề rời. Mức giữa cần một dạng liền câu riêng.
   String get inlineLabel => switch (this) {
-    ScaPillarStatus.developing => tr('đang hỗ trợ tốt', 'supporting you well'),
+    ScaPillarStatus.developing => tr('đang nâng đỡ bạn', 'supporting you'),
     ScaPillarStatus.needsAttention => tr(
-      'ổn nhưng còn dư địa',
-      'fine but with room to grow',
+      'nâng đỡ chưa đều',
+      'supporting you unevenly',
     ),
     ScaPillarStatus.priority => tr('đang cản trở', 'holding you back'),
   };
@@ -200,7 +205,7 @@ String? scaTrendText({
 String get kScaNoTrendText => tr(
   'Đây là lần tự soi đầu tiên được ghi lại, nên chưa có gì để so. Làm lại sau '
       'vài tuần, phần này sẽ cho bạn thấy điều gì đã đổi.',
-  'This is the first self-check on record, so there is nothing to compare '
+  'This is the first survey on record, so there is nothing to compare '
       'against yet. Take it again in a few weeks and this part will show you '
       'what has shifted.',
 );
@@ -357,23 +362,24 @@ String scaScriptPatternText({
   final count = counts[pillar] ?? 0;
   if (count == 0) {
     return tr(
-      'Chưa có đủ tín hiệu từ Reflection gần đây để đối chiếu thêm cho nhóm '
+      'Chưa có đủ tín hiệu từ những lần nhìn lại gần đây để đối chiếu thêm '
+          'cho nhóm '
           'này.',
-      'There is not yet enough signal from recent Reflections to compare this '
+      'There is not yet enough signal from recent look-backs to compare this '
           'group further.',
     );
   }
   final isDominant = scriptDominantPillar(counts) == pillar;
   final isGoodLevel = status != ScaPillarStatus.priority;
-  final level = status.label.toLowerCase();
+  final level = status.inlineLabel;
   if (isDominant && isGoodLevel) {
     return tr(
       'Bạn tự đánh giá phần này $level, nhưng đây lại là nhóm tình huống bạn '
-          'quay lại nhiều nhất trong Reflection gần đây ($count lần). Sự chênh '
+          'quay lại nhiều nhất trong những lần nhìn lại gần đây ($count lần). Sự chênh '
           'lệch này thường đáng chú ý hơn bản thân điểm số, có thể bạn đã quen '
           'đến mức không còn nhận ra ảnh hưởng của nó nữa.',
       'You rate this part as $level, yet it is the group of situations you '
-          'return to most in recent Reflections ($count times). That gap is '
+          'return to most in recent look-backs ($count times). That gap is '
           'often more telling than the score itself; you may have grown so used '
           'to it that you no longer notice its effect.',
     );
@@ -381,17 +387,17 @@ String scaScriptPatternText({
   if (isDominant) {
     return tr(
       'Nhóm này vừa được bạn tự đánh giá $level, vừa là nơi bạn quay lại nhiều '
-          'nhất trong Reflection ($count lần). Hai nguồn dữ liệu đang xác nhận '
+          'nhất trong những lần nhìn lại ($count lần). Hai nguồn dữ liệu đang xác nhận '
           'lẫn nhau.',
       'You rate this group as $level, and it is also where you return most in '
-          'Reflection ($count times). The two sources are confirming each '
+          'your look-backs ($count times). The two sources are confirming each '
           'other.',
     );
   }
   return tr(
-    'Nhóm này xuất hiện $count lần trong Reflection gần đây, chưa phải nhóm '
+    'Nhóm này xuất hiện $count lần trong những lần nhìn lại gần đây, chưa phải nhóm '
         'chiếm ưu thế nhất.',
-    'This group came up $count times in recent Reflections, not yet the most '
+    'This group came up $count times in recent look-backs, not yet the most '
         'prominent one.',
   );
 }
@@ -448,11 +454,11 @@ String? selfAwarenessGapNarrative({
 
 /// Dòng chú thích cuối màn.
 String scaDeepDiveFootnote(ScaSelfCheckResponse? previous) => tr(
-  'Pattern được tính từ $kScaPatternWindowDays ngày Reflection gần nhất. '
-      'Self-Check trước đó: '
+  'Những điều đang lặp lại được tính từ những lần nhìn lại trong '
+      '$kScaPatternWindowDays ngày gần nhất. Lần khảo sát trước đó: '
       '${previous == null ? 'chưa có' : scaDateLabel(previous.takenAt)}.',
-  'Patterns are drawn from the last $kScaPatternWindowDays days of '
-      'Reflection. Previous Self-Check: '
+  'What keeps coming back is drawn from your look-backs in the last '
+      '$kScaPatternWindowDays days. Previous survey: '
       '${previous == null ? 'none yet' : scaDateLabel(previous.takenAt)}.',
 );
 

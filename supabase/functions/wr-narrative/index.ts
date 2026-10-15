@@ -31,13 +31,20 @@
 // ---------------------------------------------------------------------------
 // SECRET CẦN ĐẶT TRƯỚC KHI DEPLOY
 //
-//   supabase secrets set OPENROUTER_API_KEY=sk-or-v1-...   (dùng chung wr-chat)
+//   supabase secrets set DEEPSEEK_API_KEY=sk-...   (dùng chung mọi hàm AI,
+//   xem `_shared/deepseek.ts`)
 //
 // SUPABASE_URL / SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY do nền tảng cấp.
 // ---------------------------------------------------------------------------
 
 import { createClient, type SupabaseClient } from 'jsr:@supabase/supabase-js@2';
 import { hasAiConsent } from '../_shared/ai_consent.ts';
+import {
+  deepSeekFetch,
+  deepSeekKey,
+  deepSeekModel,
+  deepSeekText,
+} from '../_shared/deepseek.ts';
 import { stripMarkdown } from '../_shared/strip_markdown.ts';
 import { pick, readLocaleHeader, WrLocale } from '../_shared/locale.ts';
 import { buildNarrativePrompt, type NarrativeInput } from './prompt.ts';
@@ -53,11 +60,6 @@ import {
 // Cấu hình
 // ---------------------------------------------------------------------------
 
-/// Ghim đúng bản có ngày, cùng model với `wr-chat` — xem ghi chú dài ở
-/// `wr-chat/index.ts` về việc vì sao không dùng alias `-latest`.
-const MODEL = Deno.env.get('WR_NARRATIVE_MODEL') ??
-  'deepseek/deepseek-v4-flash-0731';
-
 /// Số Episode nạp làm nguyên liệu.
 ///
 /// Bằng đúng `kRecentSituationsWindow` bên app (v2.0 §4.1: "tối đa 30 mục gần
@@ -70,8 +72,6 @@ const EPISODE_WINDOW = 30;
 const MAX_OUTPUT_TOKENS = 420;
 
 const UPSTREAM_TIMEOUT_MS = 60_000;
-
-const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -115,9 +115,9 @@ Deno.serve(async (req: Request): Promise<Response> => {
     return fail(pick(locale, 'Yêu cầu không hợp lệ.', 'Invalid request.'), 405);
   }
 
-  const openRouterKey = Deno.env.get('OPENROUTER_API_KEY');
-  if (!openRouterKey) {
-    console.error('THIẾU secret OPENROUTER_API_KEY — hàm không thể chạy.');
+  const apiKey = deepSeekKey();
+  if (!apiKey) {
+    console.error('THIẾU secret DEEPSEEK_API_KEY — hàm không thể chạy.');
     return fail(
       pick(locale, 'Chưa kể lại được lúc này.', 'Cannot retell this right now.'),
       503,
@@ -155,7 +155,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // ── 1b · Chưa cho phép gửi sang AI thì dừng ─────────────────────────────
   //
   // Hàm này đọc `wr_reflection_episodes` — chính những tình huống người dùng đã
-  // ghi lại — rồi gửi sang DeepSeek qua OpenRouter. Guideline 5.1.1(i), xem
+  // ghi lại — rồi gửi sang DeepSeek. Guideline 5.1.1(i), xem
   // `_shared/ai_consent.ts`.
   //
   // Trả `skip` chứ KHÔNG phải `fail`: app gọi hàm này tự động khi mở mục Diễn
@@ -236,10 +236,10 @@ Deno.serve(async (req: Request): Promise<Response> => {
   // ── 5 · Gọi model ───────────────────────────────────────────────────────
   let narrative: string;
   try {
-    narrative = await callModel(openRouterKey, buildNarrativePrompt(input, locale));
+    narrative = await callModel(apiKey, buildNarrativePrompt(input, locale));
   } catch (e) {
     const aborted = e instanceof DOMException && e.name === 'AbortError';
-    console.error(aborted ? 'OpenRouter quá hạn chờ' : `OpenRouter lỗi: ${e}`);
+    console.error(aborted ? 'DeepSeek quá hạn chờ' : `DeepSeek lỗi: ${e}`);
     // Không ai đang ngồi chờ câu này, nên hỏng thì im lặng bỏ qua: lần mở tab
     // sau sẽ thử lại, và tới lúc đó thẻ vẫn đang hiện bản kể trước đó.
     return skip('upstream_error');
@@ -275,7 +275,7 @@ Deno.serve(async (req: Request): Promise<Response> => {
     periodStart: decision.periodStart,
     periodEnd: decision.periodEnd,
     episodeCount: episodes.length,
-    model: MODEL,
+    model: deepSeekModel(),
   });
 });
 
@@ -345,41 +345,20 @@ async function resolveTitles(
 }
 
 async function callModel(apiKey: string, messages: unknown[]): Promise<string> {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
-  try {
-    const res = await fetch(OPENROUTER_URL, {
-      method: 'POST',
-      signal: controller.signal,
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://workreflection.app',
-        'X-Title': 'WorkReflection Mobile',
-      },
-      body: JSON.stringify({
-        model: MODEL,
-        messages,
-        // Thấp hơn `wr-chat` (0.7): đây là bài đọc lại dữ liệu, không phải trò
-        // chuyện. Nhiệt độ cao ở đây đọc ra thành bịa thêm chi tiết.
-        temperature: 0.4,
-        max_tokens: MAX_OUTPUT_TOKENS,
-        reasoning: { enabled: false },
-      }),
-    });
-
-    if (!res.ok) {
-      const detail = await res.text();
-      console.error(`OpenRouter ${res.status}: ${detail.slice(0, 500)}`);
-      return '';
-    }
-    const payload = await res.json();
-    // Lột Markdown ngay tại cửa ra (mục 17.1, khách 09/09). Bài Diễn biến dựng
-    // bằng `Text` thuần trên màn Hành trình, nên một cụm `**...**` lọt qua là
-    // hiện nguyên hình. Prompt đã dặn viết chữ thuần; đây là hàng rào thứ hai.
-    const content = String(payload?.choices?.[0]?.message?.content ?? '');
-    return stripMarkdown(content).trim();
-  } finally {
-    clearTimeout(timer);
+  const res = await deepSeekFetch(apiKey, messages, {
+    // Thấp hơn `wr-chat` (0.7): đây là bài đọc lại dữ liệu, không phải trò
+    // chuyện. Nhiệt độ cao ở đây đọc ra thành bịa thêm chi tiết.
+    temperature: 0.4,
+    maxTokens: MAX_OUTPUT_TOKENS,
+    timeoutMs: UPSTREAM_TIMEOUT_MS,
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    console.error(`DeepSeek ${res.status}: ${detail.slice(0, 500)}`);
+    return '';
   }
+  // Lột Markdown ngay tại cửa ra (mục 17.1, khách 09/09). Bài Diễn biến dựng
+  // bằng `Text` thuần trên màn Hành trình, nên một cụm `**...**` lọt qua là
+  // hiện nguyên hình. Prompt đã dặn viết chữ thuần; đây là hàng rào thứ hai.
+  return stripMarkdown(await deepSeekText(res)).trim();
 }

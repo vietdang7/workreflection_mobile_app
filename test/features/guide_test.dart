@@ -144,7 +144,7 @@ void main() {
       expect(byId['growth'], contains('$kSkillThreshold lần'));
       expect(
         byId['understand'],
-        contains('${kSelfCheckQuestions.length} câu hỏi'),
+        contains('(${kSelfCheckQuestions.length} câu)'),
       );
     });
 

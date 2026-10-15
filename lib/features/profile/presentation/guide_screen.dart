@@ -288,12 +288,12 @@ class _GuideVideoShowcaseState extends State<_GuideVideoShowcase> {
       number: '04',
       tabLabel: tr('Trợ lý AI', 'AI Assistant'),
       heroTitle: tr(
-        'Đồng hành cùng Trợ lý AI Mentoring',
-        'Companion with AI Mentor',
+        'Đồng hành cùng Trợ lý AI',
+        'Alongside the AI Assistant',
       ),
       chapterTitle: tr(
         'Trò chuyện & Tham vấn Trợ lý AI',
-        'Chat & consult with AI Mentor',
+        'Chat & consult with the AI Assistant',
       ),
       subtitle: tr(
         'Trò chuyện, hỏi đáp và nhận góc nhìn bám sát bối cảnh công việc',

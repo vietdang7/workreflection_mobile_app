@@ -229,7 +229,7 @@ void main() {
       );
 
       expect(entries.first.episodeId, 'mới');
-      expect(entries.first.title, 'Reflection: Áp lực deadline');
+      expect(entries.first.title, 'Lần nhìn lại: Áp lực deadline');
     });
 
     test('mỗi mảnh mang theo dòng "vì sao mảnh này có mặt"', () {

@@ -60,8 +60,8 @@ class WrStoryScreen extends StatelessWidget {
                     SizedBox(height: 4),
                     Text(
                       wrKeepCompounds(tr(
-                        'Câu chuyện từ Career Memory của bạn sẽ hiện ra tại đây.',
-                        'Stories from your Career Memory will appear here.',
+                        'Câu chuyện từ Dấu ấn hành trình của bạn sẽ hiện ra tại đây.',
+                        'Stories from your Journey marks will appear here.',
                       )),
                       style: TextStyle(
                         fontSize: 14.5,

@@ -34,7 +34,7 @@ final _reflectPointer = _re(
   r'(nút|bấm vào)[^.?!]{0,50}(reflection|luồng|ngay dưới|bên dưới|phía dưới)|bấm vào (nút|đó)|mở luồng (reflection|nhìn lại)',
 );
 final _reflectInvite = _re(
-  r'(muốn|thử)[^.?!]{0,60}ghi lại[^.?!]{0,60}reflection|ghi lại thành (một )?reflection[^.?!]{0,40}\?',
+  r'(muốn|thử)[^.?!]{0,60}ghi lại[^.?!]{0,60}(reflection|lần nhìn lại)|ghi lại thành (một )?(reflection|lần nhìn lại)[^.?!]{0,40}\?',
 );
 final _reflectRefusal = _re(
   r'(không|chưa) (thể |tự |được )?(ghi|lưu)|không có quyền (ghi|lưu)',
@@ -50,10 +50,10 @@ final _calmOfferEn = _re(
   r"\b(want|would you like|like to|try|suggest|recommend|i have|there is|there's)\b[^.?!]{0,40}\b(short read|reading|article|audio|something (gentle|gentler|calming|lighter))\b|\bemotional content library\b",
 );
 final _reflectPointerEn = _re(
-  r'\b(button|tap)\b[^.?!]{0,50}\b(reflection|below|underneath)\b|\btap (it|that|the button|on it)\b|\bopen (the )?reflection\b',
+  r'\b(button|tap)\b[^.?!]{0,50}\b(reflection|look-back|below|underneath)\b|\btap (it|that|the button|on it)\b|\bopen (the )?(reflection|look-back)\b',
 );
 final _reflectInviteEn = _re(
-  r'\b(want|would you like|like to|try)\b[^.?!]{0,60}\b(record|write|capture|save|note)\b[^.?!]{0,60}\breflection\b|\b(record|write|capture|save) (it|this|that) (down )?as an? (full )?reflection\b[^.?!]{0,40}\?',
+  r'\b(want|would you like|like to|try)\b[^.?!]{0,60}\b(record|write|capture|save|note)\b[^.?!]{0,60}\b(reflection|look-back)\b|\b(record|write|capture|save) (it|this|that) (down )?as an? (full )?(reflection|look-back)\b[^.?!]{0,40}\?',
 );
 final _reflectRefusalEn = _re(
   r"\b(can ?not|can't|cannot|unable to|not able to)\b[^.?!]{0,20}\b(record|save|write|log)\b",

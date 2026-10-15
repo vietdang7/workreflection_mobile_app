@@ -110,7 +110,7 @@ Color pillarStatusColor(double? score) {
 /// #B8862F · đỏ #C6402F.
 Color scaStatusColor(ScaPillarStatus status) => switch (status) {
   ScaPillarStatus.developing => WrColors.pillTealText,
-  ScaPillarStatus.needsAttention => const Color(0xFFB8862F),
+  ScaPillarStatus.needsAttention => const Color(0xFF94681A),
   ScaPillarStatus.priority => WrColors.pillCoralText,
 };
 
@@ -891,8 +891,8 @@ class WrCareerSnapshotCard extends ConsumerWidget {
             const SizedBox(height: 10),
             Text(
               wrKeepCompounds(tr(
-                'Self-Check gần nhất: ${selfCheckDateLabel(takenAt)}',
-                'Last Self-Check: ${selfCheckDateLabel(takenAt)}',
+                'Khảo sát gần nhất: ${selfCheckDateLabel(takenAt)}',
+                'Last survey: ${selfCheckDateLabel(takenAt)}',
               )),
               key: const Key('wr_snapshot_self_check_date'),
               style: const TextStyle(fontSize: 13.5, color: WrColors.muted),

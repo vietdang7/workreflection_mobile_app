@@ -501,8 +501,9 @@ List<WrGuideSection> wrGuideSections() => [
     blocks: [
       WrGuideHeading(
         tr(
-          '${kSelfCheckQuestions.length} câu hỏi phản chiếu (Self-Check)',
-          '${kSelfCheckQuestions.length} reflective questions (Self-Check)',
+          'Khảo sát điều kiện làm việc (${kSelfCheckQuestions.length} câu)',
+          'Workplace conditions survey (${kSelfCheckQuestions.length} '
+              'questions)',
         ),
       ),
       WrGuideText(
@@ -517,21 +518,25 @@ List<WrGuideSection> wrGuideSections() => [
               'changes.',
         ),
       ),
-      WrGuideHeading('Career Snapshot'),
+      WrGuideHeading(tr('Trải nghiệm của bạn', 'Your experience')),
       WrGuideText(
         tr(
-          'Cùng ba khía cạnh đó, nhìn từ hai phía đặt cạnh nhau: điều bạn '
-              'tự đánh giá qua Self-Check, và điều đang thực sự lặp lại trong '
-              'các lần nhìn lại của bạn. Hai cột này không phải lúc nào cũng '
-              'khớp nhau, và chính khoảng lệch đó thường là điều đáng chú ý '
-              'nhất. Cột hành vi mở ra khi bạn có đủ $kCareerHealthThreshold '
-              'lần nhìn lại.',
-          'The same three sides, seen from two directions side by side: '
-              'what you rate yourself in Self-Check, and what actually keeps '
-              'coming back in your look-backs. The two columns do not always '
-              'agree, and that gap is usually the most telling part. The '
-              'behaviour column opens once you have $kCareerHealthThreshold '
-              'look-backs.',
+          'Hệ thống đọc ba khía cạnh đó từ hai nguồn. Phần thứ nhất lấy từ '
+              'chính những gì bạn viết ra trong các lần nhìn lại, nên nó nói về '
+              'cách bạn cảm nhận công việc; phần này mở ra khi bạn có đủ '
+              '$kCareerHealthThreshold lần nhìn lại. Phần thứ hai lấy từ khảo '
+              'sát điều kiện làm việc, nên nó nói về cách công việc quanh bạn '
+              'được tổ chức: điều gì đang nâng đỡ, điều gì đang cản trở. Phần '
+              'Tổng quan đặt hai nguồn cạnh nhau và chỉ ra chỗ đáng bắt đầu '
+              'trước, dành cho gói Premium.',
+          'The app reads those three sides from two sources. The first comes '
+              'from what you write in your look-backs, so it is about how you '
+              'experience your work; it opens once you have '
+              '$kCareerHealthThreshold look-backs. The second comes from the '
+              'workplace conditions survey, so it is about how the work around '
+              'you is organised: what supports you and what holds you back. '
+              'The Overview sets the two side by side and points to where it is '
+              'worth starting, on Premium.',
         ),
       ),
       WrGuideHeading(tr('Những vòng lặp quen thuộc', 'Familiar loops')),
@@ -549,10 +554,10 @@ List<WrGuideSection> wrGuideSections() => [
       ),
       WrGuideNote(
         tr(
-          'Premium: Diễn giải sâu đọc ý nghĩa của khoảng lệch giữa hai '
-              'cột, và theo dõi nó thay đổi ra sao qua thời gian.',
-          'Premium: a deeper reading of what the gap between the two '
-              'columns means, and how it shifts over time.',
+          'Premium: phần Tổng quan đặt hai nguồn cạnh nhau, và xu hướng điều '
+              'kiện làm việc qua các lần khảo sát.',
+          'Premium: the Overview that sets the two sources side by side, and '
+              'how your working conditions shift across surveys.',
         ),
         tone: WrGuideNoteTone.coral,
       ),
@@ -573,11 +578,11 @@ List<WrGuideSection> wrGuideSections() => [
         tr(
           'Sau khi bạn tích lũy đủ $kReflectionsPerPracticeTheme lần nhìn '
               'lại, ứng dụng sẽ tự động gợi ý chủ đề phù hợp nhất với bạn. '
-              'Bạn cũng có thể hoàn thành Self-Check để mở khóa ngay mà không '
-              'cần chờ.',
+              'Bạn cũng có thể hoàn thành khảo sát điều kiện làm việc để mở khóa '
+              'ngay mà không cần chờ.',
           'Once you have $kReflectionsPerPracticeTheme look-backs, the '
               'app suggests the theme that fits you best. You can also finish '
-              'the Self-Check to unlock it straight away.',
+              'the workplace conditions survey to unlock it straight away.',
         ),
       ),
       WrGuideHeading(tr('Thói quen đang rèn luyện', 'Habits you are building')),
@@ -623,8 +628,8 @@ List<WrGuideSection> wrGuideSections() => [
     group: kGuideGroupTabs,
     title: tr('Hành trình', 'Journey'),
     summary: tr(
-      'Lưu giữ Career Memory và theo dõi tiến trình qua thời gian.',
-      'Keeps your Career Memory and tracks how you move over time.',
+      'Lưu giữ Dấu ấn hành trình và theo dõi tiến trình qua thời gian.',
+      'Keeps your Journey marks and tracks how you move over time.',
     ),
     blocks: [
       WrGuideText(
@@ -647,8 +652,10 @@ List<WrGuideSection> wrGuideSections() => [
         WrGuideBullet(
           tr('Cột mốc.', 'Milestones.'),
           tr(
-            'Những lần đầu tiên đáng nhớ, ví dụ lần đầu bạn hoàn thành Self-Check.',
-            'Memorable firsts, such as the first time you finish a Self-Check.',
+            'Những lần đầu tiên đáng nhớ, ví dụ lần đầu bạn hoàn thành khảo sát '
+                'điều kiện làm việc.',
+            'Memorable firsts, such as the first time you finish the '
+                'conditions survey.',
           ),
         ),
         WrGuideBullet(
@@ -661,7 +668,7 @@ List<WrGuideSection> wrGuideSections() => [
           ),
         ),
         WrGuideBullet(
-          tr('Insight.', 'Insights.'),
+          tr('Phần đọc.', 'Readings.'),
           tr(
             'Nhận định tổng hợp từ nhiều lần nhìn lại gần nhau. Dành cho gói Premium.',
             'A reading drawn from several look-backs close together. Premium only.',
@@ -772,16 +779,17 @@ List<WrGuideSection> wrGuideSections() => [
       WrGuideChecks(
         [
           tr(
-            'Diễn giải sâu và theo dõi xu hướng cho Self-Check.',
-            'A deeper reading and trend tracking for your Self-Check.',
+            'Tổng quan hai nguồn và xu hướng điều kiện làm việc theo thời gian.',
+            'Both sources side by side, and working conditions trends over '
+                'time.',
           ),
           tr(
-            'AI Insight cá nhân hóa trong Career Memory.',
-            'Personalised AI insights in your Career Memory.',
+            'Phần đọc từ AI trong Dấu ấn hành trình.',
+            'AI readings in your Journey marks.',
           ),
           tr(
-            'Xem toàn bộ Career Memory, không giới hạn số ghi nhận.',
-            'See your whole Career Memory, with no limit on entries.',
+            'Xem toàn bộ Dấu ấn hành trình, không giới hạn số ghi nhận.',
+            'See all your Journey marks, with no limit on entries.',
           ),
           tr(
             'Không giới hạn số chủ đề thực hành cùng lúc.',

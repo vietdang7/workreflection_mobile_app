@@ -40,8 +40,8 @@ enum WrChatAction {
   /// Chữ trên nút.
   String get label => switch (this) {
     WrChatAction.reflect => tr(
-      'Ghi lại thành một Reflection',
-      'Record it as a Reflection',
+      'Ghi lại thành một lần nhìn lại',
+      'Record it as a look-back',
     ),
     WrChatAction.calm => tr(
       'Xem điều gì đó nhẹ nhàng',

@@ -186,7 +186,7 @@ class _WrGrowthThemesScreenState extends ConsumerState<WrGrowthThemesScreen> {
                     'WorkReflection sẽ chỉ ra chủ đề hợp với bạn. Trong lúc chờ, bạn '
                     'vẫn tự chọn được ở danh sách bên dưới.',
                 'Practice themes are drawn from the situations you meet again and '
-                    'again. Look back a few more times, or take the self-check, and '
+                    'again. Look back a few more times, or take the conditions survey, and '
                     'WorkReflection will point out the theme that fits you. While '
                     'you wait, you can still pick from the list below.',
               ),

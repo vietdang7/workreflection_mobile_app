@@ -44,12 +44,24 @@ class WrAiConsent {
     return true;
   }
 
-  /// Đã từng trả lời (dù đồng ý hay từ chối).
+  /// Đang từ chối: lần trả lời mới nhất là rút lại / không đồng ý.
+  bool get isDeclined {
+    final revoked = revokedAt;
+    if (revoked == null) return false;
+    final granted = grantedAt;
+    return granted == null || !revoked.isBefore(granted);
+  }
+
+  /// Đã trả lời cho bản công bố hiện hành (đồng ý), hoặc đã từ chối.
   ///
   /// Khác [isGranted]: người đã chủ động TỪ CHỐI thì không được hỏi lại mỗi lần
   /// mở màn — hỏi tới hỏi lui cho tới khi người ta bấm bừa là ép buộc, không
   /// phải xin phép.
-  bool get hasAnswered => grantedAt != null || revokedAt != null;
+  ///
+  /// Đồng ý cho một bản công bố CŨ thì chưa tính là trả lời: phải hỏi lại cho
+  /// bản mới. Trước đây chỉ xem có mốc hay không, nên nâng bản công bố (2 → 3,
+  /// 15/10) làm AI tắt lặng lẽ với mọi người đã đồng ý mà không ai được hỏi lại.
+  bool get hasAnswered => isGranted || isDeclined;
 
   factory WrAiConsent.fromJson(Map<String, dynamic> json) {
     return WrAiConsent(

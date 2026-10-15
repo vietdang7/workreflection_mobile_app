@@ -245,7 +245,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeEyebrowInsight.
   ///
   /// In vi, this message translates to:
-  /// **'Insight gần nhất'**
+  /// **'Phần đọc gần nhất'**
   String get homeEyebrowInsight;
 
   /// No description provided for @homeLinkLearnMore.
@@ -341,13 +341,13 @@ abstract class AppLocalizations {
   /// No description provided for @understandStatusStable.
   ///
   /// In vi, this message translates to:
-  /// **'Đang hỗ trợ tốt'**
+  /// **'Đang nâng đỡ bạn'**
   String get understandStatusStable;
 
   /// No description provided for @understandStatusImproving.
   ///
   /// In vi, this message translates to:
-  /// **'Ổn, còn dư địa'**
+  /// **'Nâng đỡ nhưng chưa đều'**
   String get understandStatusImproving;
 
   /// No description provided for @understandStatusUnrated.
@@ -359,7 +359,7 @@ abstract class AppLocalizations {
   /// No description provided for @understandHealthReady.
   ///
   /// In vi, this message translates to:
-  /// **'Bạn đã có đủ {n} reflection.'**
+  /// **'Bạn đã có đủ {n} lần nhìn lại.'**
   String understandHealthReady(int n);
 
   /// No description provided for @understandHealthPrompt.
@@ -449,7 +449,7 @@ abstract class AppLocalizations {
   /// No description provided for @journeyGreeting.
   ///
   /// In vi, this message translates to:
-  /// **'Career Memory'**
+  /// **'Dấu ấn hành trình'**
   String get journeyGreeting;
 
   /// No description provided for @journeyTitle.
@@ -515,13 +515,13 @@ abstract class AppLocalizations {
   /// No description provided for @profileStatReflectDays.
   ///
   /// In vi, this message translates to:
-  /// **'ngày Reflect'**
+  /// **'ngày nhìn lại'**
   String get profileStatReflectDays;
 
   /// No description provided for @profileStatInsights.
   ///
   /// In vi, this message translates to:
-  /// **'Insight lưu'**
+  /// **'Phần đọc đã lưu'**
   String get profileStatInsights;
 
   /// No description provided for @profileStatMilestones.
@@ -581,7 +581,7 @@ abstract class AppLocalizations {
   /// No description provided for @profileDeleteAccountBody.
   ///
   /// In vi, this message translates to:
-  /// **'Toàn bộ dữ liệu của bạn sẽ bị xoá và không lấy lại được: những lần nhìn lại, Career Memory, chủ đề thực hành, kết quả self-check và hồ sơ. Nếu bạn đang có bản đầy đủ, phần thời hạn còn lại cũng mất theo.'**
+  /// **'Toàn bộ dữ liệu của bạn sẽ bị xoá và không lấy lại được: những lần nhìn lại, Dấu ấn hành trình, chủ đề thực hành, kết quả khảo sát điều kiện làm việc và hồ sơ. Nếu bạn đang có bản đầy đủ, phần thời hạn còn lại cũng mất theo.'**
   String get profileDeleteAccountBody;
 
   /// No description provided for @profileDeleteAccountHint.
@@ -635,7 +635,7 @@ abstract class AppLocalizations {
   /// No description provided for @homeInsightEmpty.
   ///
   /// In vi, this message translates to:
-  /// **'Chưa có insight nào. Hãy bắt đầu hành trình của bạn!'**
+  /// **'Chưa có phần đọc nào. Hãy bắt đầu hành trình của bạn!'**
   String get homeInsightEmpty;
 
   /// No description provided for @homeErrorLoadData.
@@ -2213,13 +2213,13 @@ abstract class AppLocalizations {
   /// No description provided for @insightsTitle.
   ///
   /// In vi, this message translates to:
-  /// **'Tất cả insight'**
+  /// **'Tất cả phần đọc'**
   String get insightsTitle;
 
   /// No description provided for @insightsEmpty.
   ///
   /// In vi, this message translates to:
-  /// **'Bạn chưa có insight nào. Hãy bắt đầu hành trình của bạn!'**
+  /// **'Bạn chưa có phần đọc nào. Hãy bắt đầu hành trình của bạn!'**
   String get insightsEmpty;
 
   /// No description provided for @insightSavedDate.
@@ -2231,7 +2231,7 @@ abstract class AppLocalizations {
   /// No description provided for @understandViewAllInsights.
   ///
   /// In vi, this message translates to:
-  /// **'Xem tất cả insight'**
+  /// **'Xem tất cả phần đọc'**
   String get understandViewAllInsights;
 
   /// No description provided for @profileCheckinHistory.

@@ -21,6 +21,9 @@
     { "expect": "reflect", "text": "This seems to keep coming back. Would you like to capture this as a Reflection?" },
     { "expect": null, "text": "I cannot record a Reflection for you, but I am here if you want to keep talking." },
     { "expect": null, "text": "You mentioned you were trying to finish reading the report before the meeting." },
-    { "expect": null, "text": "What would make that question feel safe enough to ask?" }
+    { "expect": null, "text": "What would make that question feel safe enough to ask?" },
+    { "expect": "reflect", "text": "Cảm giác đó rất thật. Đây có vẻ giống một tình huống bạn đã gặp vài lần gần đây. Muốn ghi lại thành một lần nhìn lại đầy đủ để giữ lại không?" },
+    { "expect": "reflect", "text": "That feeling is real. It sounds like something you have met a few times lately. Would you like to record it as a full look-back?" },
+    { "expect": null, "text": "Mình không tự ghi lại thành một lần nhìn lại thay bạn được, việc đó phải do chính bạn làm." }
   ]
 }

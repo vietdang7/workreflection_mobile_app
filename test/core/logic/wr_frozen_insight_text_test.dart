@@ -109,7 +109,7 @@ void main() {
             'worth a closer look.';
         expect(
           localizeFrozenInsightText(emerging, situations: _situations),
-          '3 lần Reflection gần đây của bạn đều xoay quanh sự rõ ràng. Đây có '
+          '3 lần nhìn lại gần đây của bạn đều xoay quanh sự rõ ràng. Đây có '
           'thể là điều đáng để nhìn kỹ hơn.',
         );
       },
@@ -179,7 +179,7 @@ void main() {
       );
 
       expect(entries, hasLength(1));
-      expect(entries.single.title, 'Pattern được nhận diện');
+      expect(entries.single.title, 'Điều đang lặp lại');
       expect(
         entries.single.subtitle,
         'Cùng một mạch sự rõ ràng chạy suốt 14 ngày qua: bắt đầu ở '
@@ -211,7 +211,7 @@ void main() {
 
       expect(
         entries.single.subtitle,
-        '3 lần Reflection gần đây của bạn đều xoay quanh sự rõ ràng. Đây có '
+        '3 lần nhìn lại gần đây của bạn đều xoay quanh sự rõ ràng. Đây có '
         'thể là điều đáng để nhìn kỹ hơn.',
       );
     });

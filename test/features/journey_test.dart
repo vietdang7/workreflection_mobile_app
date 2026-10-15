@@ -62,7 +62,7 @@ void main() {
       final repo = FakeWrRepository();
       await _pumpLarge(tester, _wrap(const JourneyScreen(), repo));
 
-      expect(find.textContaining('Career Memory'), findsOneWidget);
+      expect(find.textContaining('Dấu ấn hành trình'), findsOneWidget);
       expect(find.textContaining('Hành trình'), findsWidgets);
     });
 

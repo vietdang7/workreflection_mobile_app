@@ -34,10 +34,10 @@ class WrOrgSurveyIntroScreen extends ConsumerWidget {
           'an individual.',
     ),
     tr(
-      'Hoàn toàn không ảnh hưởng đến Reflection, Insight hay Career Memory cá '
-          'nhân của bạn.',
-      'It has no effect at all on your own Reflection, Insight or Career '
-          'Memory.',
+      'Hoàn toàn không ảnh hưởng đến những lần nhìn lại, phần đọc hay Dấu '
+          'ấn hành trình cá nhân của bạn.',
+      'It has no effect at all on your own look-backs, readings or Journey '
+          'marks.',
     ),
     tr(
       'Không bắt buộc, không đổi lấy quyền lợi hay tính năng nào trong ứng dụng.',
@@ -86,8 +86,8 @@ class WrOrgSurveyIntroScreen extends ConsumerWidget {
             children: [
               WrEyebrow(
                 tr(
-                  'TUỲ CHỌN, TÁCH RIÊNG KHỎI REFLECTION',
-                  'OPTIONAL, SEPARATE FROM REFLECTION',
+                  'TUỲ CHỌN, TÁCH RIÊNG KHỎI NHỮNG LẦN NHÌN LẠI',
+                  'OPTIONAL, SEPARATE FROM YOUR LOOK-BACKS',
                 ),
               ),
               const SizedBox(height: 10),

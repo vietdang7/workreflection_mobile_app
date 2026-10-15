@@ -999,9 +999,9 @@ void main() {
       // Ngưỡng của script (>=3 / >=2 trên thang 0–4) quy sang thang 1–5.
       expect(pillarStatusLabel(1.8), 'Đang cản trở');
       expect(pillarStatusLabel(2.5), 'Đang cản trở');
-      expect(pillarStatusLabel(3.0), 'Ổn, còn dư địa');
-      expect(pillarStatusLabel(3.8), 'Ổn, còn dư địa');
-      expect(pillarStatusLabel(4.0), 'Đang hỗ trợ tốt');
+      expect(pillarStatusLabel(3.0), 'Nâng đỡ nhưng chưa đều');
+      expect(pillarStatusLabel(3.8), 'Nâng đỡ nhưng chưa đều');
+      expect(pillarStatusLabel(4.0), 'Đang nâng đỡ bạn');
     });
 
     // A7 đổi bộ nhãn, và trước đó màn này CHÉP lại cả ngưỡng lẫn chữ. Khoá

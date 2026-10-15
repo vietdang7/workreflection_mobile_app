@@ -1097,7 +1097,7 @@ void main() {
       );
 
       expect(text, contains('The C-0 matter'));
-      expect(text, contains('15 challenge reflections'));
+      expect(text, contains('15 challenge look-backs'));
       expect(text, startsWith('Within this group'));
     });
 

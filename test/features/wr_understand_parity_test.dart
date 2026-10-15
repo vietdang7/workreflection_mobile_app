@@ -7,9 +7,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:workreflection_mobile/core/logic/wr_ai_disclosure.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
+import 'package:workreflection_mobile/core/data/wr_ai_consent_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_episode_repository.dart';
+import 'package:workreflection_mobile/core/data/wr_experience_read_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_intelligence_repository.dart';
+import 'package:workreflection_mobile/core/data/wr_reading_feedback_repository.dart';
+import 'package:workreflection_mobile/core/logic/wr_experience_reading.dart';
+import 'package:workreflection_mobile/core/logic/wr_self_check_questions.dart';
 import 'package:workreflection_mobile/core/logic/wr_career_memory_rules.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 import 'package:workreflection_mobile/core/models/wr_episode.dart';
@@ -18,6 +24,7 @@ import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_chapter_read_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_experience_interpret_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_patterns_screen.dart';
+import 'package:workreflection_mobile/features/wr/ai_consent_providers.dart';
 import 'package:workreflection_mobile/features/wr/wr_providers.dart';
 import 'package:workreflection_mobile/l10n/app_localizations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -48,6 +55,16 @@ const _situations = <WrSituation>[
     mood: 'stress',
     valence: WrValence.thachThuc,
   ),
+  WrSituation(
+    code: 'C2-02',
+    text: 'Ý kiến bị bỏ qua',
+    scaDimension: ScaDimension.c2,
+    wave: 1,
+    pillarCode: 'C',
+    subgroup: 'C2',
+    mood: 'stress',
+    valence: WrValence.thachThuc,
+  ),
 ];
 
 ReflectionEpisode _ep(String code, DateTime at, {String? note}) =>
@@ -59,22 +76,98 @@ ReflectionEpisode _ep(String code, DateTime at, {String? note}) =>
       notes: {if (note != null) ReflectionPattern.explore.dbValue: note},
     );
 
-ScaSelfCheckResponse _check(DateTime at, {double s = 3, double c = 3}) =>
+ScaSelfCheckResponse _check(DateTime at, {Map<String, int>? answers}) =>
     ScaSelfCheckResponse(
       userId: 'u1',
-      answers: {for (var i = 1; i <= 15; i++) 'scq-$i': 3},
+      answers: answers ?? {for (final id in _ids) id: 3},
       takenAt: at,
-      structureScore: s,
-      cultureScore: c,
+      structureScore: 3,
+      cultureScore: 3,
       activityScore: 3,
     );
+
+final _ids = [
+  for (var i = 1; i <= 15; i++) 'scq-${i.toString().padLeft(2, '0')}',
+];
+
+/// Bộ trả lời mẫu của mockup v77 (`scaAnswers`), trên thang 1–5.
+final _demoAnswers = {
+  for (final e in const [4, 3, 3, 4, 3, 3, 3, 4, 3, 3, 2, 2, 3, 2, 3].indexed)
+    _ids[e.$1]: e.$2,
+};
+
+/// 15 lần Mối quan hệ + 1 lần Sự rõ ràng: đủ ngưỡng 15, dom = C.
+List<ReflectionEpisode> _cHeavy(DateTime now) => [
+  for (var i = 0; i < 15; i++) _ep('C2-01', now.subtract(Duration(minutes: i))),
+  _ep('S1-01', now.subtract(const Duration(minutes: 30))),
+];
+
+class _FakeReadingFeedback implements WrReadingFeedbackRepository {
+  ReadingFeedback? latest;
+  final inserted = <ReadingFeedback>[];
+
+  @override
+  Future<ReadingFeedback?> fetchLatest(String userId, String kind) async =>
+      latest;
+
+  @override
+  Future<void> insert({
+    required String userId,
+    required String kind,
+    required String readingKey,
+    required Map<String, dynamic> reading,
+    required bool match,
+  }) async {
+    inserted.add(
+      ReadingFeedback(
+        match: match,
+        readingKey: readingKey,
+        reading: reading,
+        createdAt: DateTime.now(),
+      ),
+    );
+  }
+}
+
+class _FakeExperienceRead implements WrExperienceReadRepository {
+  _FakeExperienceRead(this.reading);
+
+  final ExperienceAiReading reading;
+  final calls = <List<Map<String, dynamic>>>[];
+
+  @override
+  Future<ExperienceAiReading> read(List<Map<String, dynamic>> pillars) async {
+    calls.add(pillars);
+    return reading;
+  }
+}
+
+const _aiC = ExperienceAiReading(
+  locale: 'vi',
+  pillars: {
+    SelfCheckPillar.c: DifficultyReading(
+      shape:
+          'Hai chuyện quay lại nhiều nhất trong nhóm này đều nằm ở cùng một '
+          'chỗ: lúc cần lên tiếng.',
+      detail:
+          'Điều bạn ghi lại không phải việc thiếu ý. Phần khó là ý nói ra mà '
+          'không đến nơi.',
+      hardPart: 'việc nói ra mà không đến nơi',
+    ),
+  },
+);
+
+final _granted = WrAiConsent(version: 99, grantedAt: DateTime.utc(2026, 9, 1));
 
 class _Harness {
   _Harness({
     required bool premium,
     List<ReflectionEpisode> episodes = const [],
     List<ScaSelfCheckResponse> history = const [],
-  }) : intel = FakeWrIntelligenceRepository()
+    this.consent = WrAiConsent.unknown,
+    ExperienceAiReading ai = const ExperienceAiReading.none(),
+  }) : read = _FakeExperienceRead(ai),
+       intel = FakeWrIntelligenceRepository()
          ..seedSelfCheckHistory(history)
          ..seedEntitlement(
            WrEntitlementRecord(
@@ -86,6 +179,9 @@ class _Harness {
        content = FakeWrContentRepository()..seedSituations(_situations),
        eps = FakeWrEpisodeRepository()..seed(episodes);
 
+  final feedback = _FakeReadingFeedback();
+  final WrAiConsent consent;
+  final _FakeExperienceRead read;
   final FakeWrIntelligenceRepository intel;
   final FakeWrContentRepository content;
   final FakeWrEpisodeRepository eps;
@@ -98,6 +194,9 @@ class _Harness {
           path: '/wr/experience-interpret',
           builder: (_, s) => WrExperienceInterpretScreen(
             initialTab: int.tryParse(s.uri.queryParameters['tab'] ?? '') ?? 0,
+            pillar: SelfCheckPillar.values
+                .where((p) => p.name == s.uri.queryParameters['pillar'])
+                .firstOrNull,
           ),
         ),
         GoRoute(
@@ -118,6 +217,10 @@ class _Harness {
           builder: (_, __) => const Scaffold(body: Text('SELF-CHECK')),
         ),
         GoRoute(
+          path: '/wr/growth',
+          builder: (_, __) => const Scaffold(body: Text('GROWTH')),
+        ),
+        GoRoute(
           path: '/wr/sca-deep-dive',
           builder: (_, __) => const Scaffold(body: Text('DEEP DIVE')),
         ),
@@ -129,6 +232,9 @@ class _Harness {
         wrContentRepositoryProvider.overrideWithValue(content),
         wrEpisodeRepositoryProvider.overrideWithValue(eps),
         currentUserIdProvider.overrideWithValue('u1'),
+        wrReadingFeedbackRepositoryProvider.overrideWithValue(feedback),
+        wrAiConsentProvider.overrideWith((ref) async => consent),
+        wrExperienceReadRepositoryProvider.overrideWithValue(read),
       ],
       child: MaterialApp.router(
         builder: wrTextScaleBuilder,
@@ -209,21 +315,34 @@ void main() {
       expect(find.text('Premium'), findsOneWidget);
     });
 
-    testWidgets('màn con có đầu màn riêng "Diễn giải" + tiêu đề', (
+    testWidgets('màn con có đầu màn riêng "Trải nghiệm của bạn" + tiêu đề', (
       tester,
     ) async {
       final h = _Harness(premium: false);
       await tester.pumpWidget(h.app('/wr/experience-interpret?tab=1'));
       await tester.pumpAndSettle();
 
-      expect(find.text('DIỄN GIẢI'), findsOneWidget);
-      expect(find.textContaining('Theo những lần nhìn lại'), findsOneWidget);
-      expect(find.text('Trải nghiệm của bạn'), findsNothing);
+      expect(find.text('TRẢI NGHIỆM CỦA BẠN'), findsOneWidget);
+      expect(find.text('Từ những lần bạn nhìn lại'), findsOneWidget);
+    });
+
+    testWidgets('dòng khảo sát đếm số điều cản trở / nâng đỡ', (tester) async {
+      final h = _Harness(
+        premium: false,
+        history: [_check(DateTime(2026, 9, 20, 10), answers: _demoAnswers)],
+      );
+      await tester.pumpWidget(h.app('/wr/experience-interpret'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.text('3 điều đang cản trở, 3 điều đang nâng đỡ bạn.'),
+        findsOneWidget,
+      );
     });
   });
 
-  group('Theo những lần nhìn lại / Theo khảo sát', () {
-    testWidgets('ba trụ đúng tên script, đúng thứ tự S · C · A', (
+  group('Từ những lần bạn nhìn lại', () {
+    testWidgets('chưa đủ 15 lần: nói còn thiếu bao nhiêu, ba trụ S · C · A', (
       tester,
     ) async {
       final now = DateTime.now();
@@ -238,81 +357,470 @@ void main() {
       await tester.pumpWidget(h.app('/wr/experience-interpret?tab=1'));
       await tester.pumpAndSettle();
 
+      expect(_textOf(tester, 'wr_exp_reflect_lead'), contains('còn 9 lần nữa'));
       final ys = [
         for (final p in ['s', 'c', 'a'])
           tester.getTopLeft(find.byKey(Key('wr_exp_reflect_row_$p'))).dy,
       ];
       expect(ys[0] < ys[1] && ys[1] < ys[2], isTrue);
-      expect(find.text('Sự rõ ràng'), findsOneWidget);
-      expect(find.text('Mối quan hệ'), findsWidgets);
-      expect(find.text('Cách làm việc'), findsOneWidget);
       expect(find.text('5 / 6'), findsOneWidget);
     });
 
-    testWidgets('theo khảo sát có dòng ngày, mức giữa màu #B8862F', (
+    testWidgets('đủ 15 lần: chủ ngữ là người dùng, không có câu rút lại', (
+      tester,
+    ) async {
+      final h = _Harness(premium: false, episodes: _cHeavy(DateTime.now()));
+      await tester.pumpWidget(h.app('/wr/experience-interpret?tab=1'));
+      await tester.pumpAndSettle();
+
+      expect(
+        _textOf(tester, 'wr_exp_reflect_lead'),
+        'Trong 16 lần nhìn lại, bạn dừng lại ở Mối quan hệ nhiều hơn hai nhóm '
+        'còn lại: 15 lần.',
+      );
+      expect(find.textContaining('chưa nói nhóm đó'), findsNothing);
+    });
+
+    /// 16 lần: Mối quan hệ có hai chuyện quay lại (đủ ngưỡng §2), Sự rõ ràng
+    /// một lần.
+    List<ReflectionEpisode> twoStories(DateTime now) => [
+      for (var i = 0; i < 9; i++)
+        _ep(
+          'C2-01',
+          now.subtract(Duration(days: i + 1)),
+          note: i == 0
+              ? 'Họp xong mới nghĩ ra'
+              : (i == 4 ? 'Nói mà không ai nghe' : null),
+        ),
+      for (var i = 0; i < 6; i++)
+        _ep('C2-02', now.subtract(Duration(days: i + 20))),
+      _ep('S1-01', now.subtract(const Duration(days: 40))),
+    ];
+
+    testWidgets('đã cho phép AI: khối "khó ở chỗ nào" + hai trích dẫn', (
       tester,
     ) async {
       final h = _Harness(
         premium: false,
-        history: [_check(DateTime(2026, 9, 20, 10), s: 3.2)],
+        episodes: twoStories(DateTime.now()),
+        consent: _granted,
+        ai: _aiC,
+      );
+      await tester.pumpWidget(h.app('/wr/experience-interpret?tab=1'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('wr_exp_reflect_difficulty')),
+        findsOneWidget,
+      );
+      expect(find.text('BẠN ĐANG KHÓ Ở CHỖ NÀO'), findsOneWidget);
+      expect(find.textContaining('lúc cần lên tiếng'), findsOneWidget);
+      expect(find.text('“Họp xong mới nghĩ ra”'), findsOneWidget);
+      expect(find.text('“Nói mà không ai nghe”'), findsOneWidget);
+      // Chỉ gửi nhóm đủ ngưỡng: Sự rõ ràng một lần thì không gửi.
+      expect(h.read.calls.single.map((r) => r['pillar']), ['c']);
+    });
+
+    testWidgets('chưa trả lời xin phép: mời bấm, không gửi gì đi', (
+      tester,
+    ) async {
+      final h = _Harness(premium: false, episodes: twoStories(DateTime.now()));
+      await tester.pumpWidget(h.app('/wr/experience-interpret?tab=1'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('wr_exp_reflect_difficulty')), findsNothing);
+      expect(find.byKey(const Key('wr_exp_reflect_ai_invite')), findsOneWidget);
+      expect(h.read.calls, isEmpty);
+    });
+
+    testWidgets('đồng ý bản công bố CŨ: mời lại, không gửi gì đi', (
+      tester,
+    ) async {
+      final h = _Harness(
+        premium: false,
+        episodes: twoStories(DateTime.now()),
+        consent: WrAiConsent(
+          version: kWrAiDisclosureVersion - 1,
+          grantedAt: DateTime.utc(2026, 9, 12),
+        ),
+      );
+      await tester.pumpWidget(h.app('/wr/experience-interpret?tab=1&pillar=c'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('wr_exp_reflect_ai_invite')), findsOneWidget);
+      expect(h.read.calls, isEmpty);
+    });
+
+    testWidgets('đã từ chối: không mời lại, chỉ hiện số đếm', (tester) async {
+      final h = _Harness(
+        premium: false,
+        episodes: twoStories(DateTime.now()),
+        consent: WrAiConsent(version: 99, revokedAt: DateTime.utc(2026, 9, 1)),
+      );
+      await tester.pumpWidget(h.app('/wr/experience-interpret?tab=1'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('wr_exp_reflect_ai_invite')), findsNothing);
+      expect(find.byKey(const Key('wr_exp_reflect_difficulty')), findsNothing);
+      expect(find.text('15 / 16'), findsOneWidget);
+    });
+
+    testWidgets('bấm một nhóm: từng chuyện, toàn bộ dòng tự viết, số lần đánh '
+        'dấu', (tester) async {
+      final h = _Harness(
+        premium: false,
+        episodes: twoStories(DateTime.now()),
+        consent: _granted,
+        ai: _aiC,
+      );
+      await tester.pumpWidget(h.app('/wr/experience-interpret?tab=1'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('wr_exp_reflect_row_c')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('15 trong 16 lần nhìn lại'), findsOneWidget);
+      expect(
+        _textOf(tester, 'wr_exp_pillar_reflect_shape'),
+        contains('lúc cần lên tiếng'),
+      );
+      expect(find.text('9 lần'), findsOneWidget);
+      expect(find.text('6 lần'), findsOneWidget);
+      expect(find.text('Và 7 lần bạn chỉ đánh dấu.'), findsOneWidget);
+      expect(
+        find.text('Những lần này bạn chỉ đánh dấu, chưa viết thêm dòng nào.'),
+        findsOneWidget,
+      );
+
+      await tester.ensureVisible(
+        find.byKey(const Key('wr_exp_pillar_reflect_grow')),
+      );
+      await tester.tap(find.byKey(const Key('wr_exp_pillar_reflect_grow')));
+      await tester.pumpAndSettle();
+      expect(find.text('GROWTH'), findsOneWidget);
+    });
+
+    testWidgets('nhóm chưa có chuyện quay lại: nói chưa đủ để đọc hình dạng', (
+      tester,
+    ) async {
+      final h = _Harness(
+        premium: false,
+        episodes: twoStories(DateTime.now()),
+        consent: _granted,
+        ai: _aiC,
+      );
+      await tester.pumpWidget(h.app('/wr/experience-interpret?tab=1&pillar=s'));
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('wr_exp_pillar_reflect_thin')),
+        findsOneWidget,
+      );
+      expect(find.text('NHỮNG CHUYỆN ĐANG QUAY LẠI'), findsNothing);
+    });
+  });
+
+  group('Từ điều kiện quanh bạn', () {
+    testWidgets('đọc từng câu: nhãn đếm số điều, dòng phụ gọi tên', (
+      tester,
+    ) async {
+      final h = _Harness(
+        premium: false,
+        history: [_check(DateTime(2026, 9, 20, 10), answers: _demoAnswers)],
       );
       await tester.pumpWidget(h.app('/wr/experience-interpret?tab=2'));
       await tester.pumpAndSettle();
 
       expect(
-        _textOf(tester, 'wr_exp_survey_date'),
-        'Khảo sát gần nhất: 20/09/2026',
+        _textOf(tester, 'wr_exp_survey_lead'),
+        'Trong mười lăm điều kiện quanh bạn, 3 điều đang cản trở và 3 điều '
+        'đang nâng đỡ. Phần đang cản trở tập trung ở Cách làm việc.',
       );
-      final mid = tester.widget<Text>(find.text('Ổn, còn dư địa').first);
-      expect(mid.style?.color, const Color(0xFFB8862F));
+      expect(
+        _textOf(tester, 'wr_exp_survey_date'),
+        contains(
+          'Nguồn là mười lăm câu bạn đã trả lời, lần gần nhất ngày '
+          '20/09/2026.',
+        ),
+      );
+      expect(
+        _textOf(tester, 'wr_exp_survey_label_s'),
+        'Nâng đỡ nhưng chưa đều',
+      );
+      expect(
+        tester
+            .widget<Text>(find.byKey(const Key('wr_exp_survey_label_s')))
+            .style
+            ?.color,
+        const Color(0xFF94681A),
+      );
+      expect(_textOf(tester, 'wr_exp_survey_label_a'), '3 điều đang cản trở');
+      expect(
+        _textOf(tester, 'wr_exp_survey_sub_a'),
+        'Đang cản trở: Chưa thấy việc mình gắn với mục tiêu chung · Mục tiêu '
+        'đổi mà biết muộn · và 1 điều nữa',
+      );
+      expect(
+        _textOf(tester, 'wr_exp_survey_sub_s'),
+        'Đang nâng đỡ: Trách nhiệm được làm rõ từ đầu · Thông tin đi đúng kênh '
+        '· còn 3 điều chưa đều',
+      );
+      expect(find.textContaining('dư địa'), findsNothing);
+      expect(find.byKey(const Key('wr_exp_survey_stale')), findsNothing);
+    });
+
+    testWidgets('bấm một nhóm: câu nối chuỗi + ba khối mức', (tester) async {
+      final h = _Harness(
+        premium: false,
+        history: [_check(DateTime.now(), answers: _demoAnswers)],
+      );
+      await tester.pumpWidget(h.app('/wr/experience-interpret?tab=2'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('wr_exp_survey_row_a')));
+      await tester.pumpAndSettle();
+
+      expect(find.text('CÁCH LÀM VIỆC'), findsOneWidget);
+      expect(
+        _textOf(tester, 'wr_exp_pillar_lead'),
+        startsWith('Ba điều đang cản trở ở nhóm này nối thành một chuỗi'),
+      );
+      expect(find.byKey(const Key('wr_exp_pillar_group_down')), findsOneWidget);
+      expect(find.byKey(const Key('wr_exp_pillar_group_mid')), findsOneWidget);
+      expect(find.byKey(const Key('wr_exp_pillar_group_up')), findsNothing);
+      expect(find.text('Thiếu lúc để nhìn lại'), findsOneWidget);
+      expect(find.text('Nhịp phối hợp của nhóm'), findsOneWidget);
+    });
+
+    testWidgets('khảo sát quá ba tháng: thêm dòng nhắc, không khoá', (
+      tester,
+    ) async {
+      final h = _Harness(
+        premium: false,
+        history: [
+          _check(
+            DateTime.now().subtract(const Duration(days: 120)),
+            answers: _demoAnswers,
+          ),
+        ],
+      );
+      await tester.pumpWidget(h.app('/wr/experience-interpret?tab=2'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('wr_exp_survey_stale')), findsOneWidget);
+      expect(find.byKey(const Key('wr_exp_survey_lead')), findsOneWidget);
     });
   });
 
-  group('Tổng hợp từ hệ thống (Premium)', () {
-    List<ReflectionEpisode> cHeavy(DateTime now) => [
-      for (var i = 0; i < 6; i++) _ep('C2-01', now.subtract(Duration(days: i))),
-      _ep('S1-01', now),
-    ];
-
-    testWidgets('trụ nổi trội tự chấm chưa ổn: hai nguồn KHỚP', (tester) async {
-      final now = DateTime.now();
-      final h = _Harness(
-        premium: true,
-        episodes: cHeavy(now),
-        history: [_check(now, c: 2.0)],
-      );
+  group('Tổng quan (Premium)', () {
+    testWidgets('chưa Premium: khoá, hai phần trước vẫn miễn phí', (
+      tester,
+    ) async {
+      final h = _Harness(premium: false, episodes: _cHeavy(DateTime.now()));
       await tester.pumpWidget(h.app('/wr/experience-interpret?tab=3'));
       await tester.pumpAndSettle();
 
-      expect(
-        _textOf(tester, 'wr_exp_synthesis_lead'),
-        'Mối quan hệ là nhóm bạn quay lại nhiều nhất, 6 trong 7 lần nhìn lại.',
-      );
-      expect(
-        _textOf(tester, 'wr_exp_synthesis_aligned'),
-        contains('Hai nguồn đang nói cùng một chuyện'),
-      );
-      expect(find.byKey(const Key('wr_exp_synthesis_trend')), findsOneWidget);
+      expect(find.byKey(const Key('wr_exp_synthesis_locked')), findsOneWidget);
     });
 
-    testWidgets('trụ nổi trội tự chấm tốt: hai nguồn LỆCH', (tester) async {
+    testWidgets('lệch nhau: câu chứng cứ hai con số + câu liên hệ', (
+      tester,
+    ) async {
       final now = DateTime.now();
       final h = _Harness(
         premium: true,
-        episodes: cHeavy(now),
-        history: [_check(now, c: 4.4)],
+        episodes: _cHeavy(now),
+        history: [_check(now, answers: _demoAnswers)],
       );
       await tester.pumpWidget(h.app('/wr/experience-interpret?tab=3'));
       await tester.pumpAndSettle();
 
       expect(
-        _textOf(tester, 'wr_exp_synthesis_diverged'),
-        contains('Hai nguồn đang lệch nhau'),
+        _textOf(tester, 'wr_exp_overview_diverged'),
+        'Chỗ bạn để tâm nhiều nhất và chỗ điều kiện đang cản trở nhiều nhất '
+        'không trùng nhau.',
       );
+      expect(
+        _textOf(tester, 'wr_exp_overview_body'),
+        'Phần lớn những gì bạn ghi lại nằm ở Mối quan hệ, 15 trong 16 lần. '
+        'Trong khi đó điều kiện đang cản trở rõ nhất lại ở Cách làm việc, với '
+        '3 điều.',
+      );
+      expect(
+        _textOf(tester, 'wr_exp_overview_link'),
+        contains(
+          'Khi việc chưa được nối với mục tiêu chung và không có lúc nào '
+          'để nhìn lại, những chuyện bạn ghi lại ở Mối quan hệ cũng khó tự '
+          'nhẹ đi.',
+        ),
+      );
+      expect(_textOf(tester, 'wr_exp_overview_start_pillar'), 'Cách làm việc');
+      expect(find.byKey(const Key('wr_exp_synthesis_trend')), findsOneWidget);
+
+      await tester.ensureVisible(
+        find.byKey(const Key('wr_exp_overview_start_open')),
+      );
+      await tester.tap(find.byKey(const Key('wr_exp_overview_start_open')));
+      await tester.pumpAndSettle();
+      expect(find.text('CÁCH LÀM VIỆC'), findsOneWidget);
+    });
+
+    testWidgets('lệch nhau: câu liên hệ dùng phần khó AI đã rút gọn', (
+      tester,
+    ) async {
+      final now = DateTime.now();
+      final h = _Harness(
+        premium: true,
+        episodes: _cHeavy(now),
+        history: [_check(now, answers: _demoAnswers)],
+        consent: _granted,
+        ai: _aiC,
+      );
+      await tester.pumpWidget(h.app('/wr/experience-interpret?tab=3'));
+      await tester.pumpAndSettle();
+
+      expect(
+        _textOf(tester, 'wr_exp_overview_link'),
+        contains(
+          'để nhìn lại, việc nói ra mà không đến nơi cũng khó tự nhẹ đi.',
+        ),
+      );
+
+      // Bấm "Chưa đúng lắm": mảnh đó lưu cùng bản đọc.
+      await tester.ensureVisible(find.byKey(const Key('wr_exp_overview_off')));
+      await tester.tap(find.byKey(const Key('wr_exp_overview_off')));
+      await tester.pumpAndSettle();
+      expect(
+        h.feedback.inserted.single.reading['hard_part'],
+        'việc nói ra mà không đến nơi',
+      );
+    });
+
+    testWidgets('trùng nhau: hai phía cùng chỉ về một chỗ', (tester) async {
+      final now = DateTime.now();
+      final answers = {for (final id in _ids) id: 4}
+        ..['scq-08'] = 2
+        ..['scq-09'] = 1;
+      final h = _Harness(
+        premium: true,
+        episodes: _cHeavy(now),
+        history: [_check(now, answers: answers)],
+      );
+      await tester.pumpWidget(h.app('/wr/experience-interpret?tab=3'));
+      await tester.pumpAndSettle();
+
+      expect(
+        _textOf(tester, 'wr_exp_overview_aligned'),
+        'Hai phía cùng chỉ về một chỗ: Mối quan hệ.',
+      );
+      expect(find.byKey(const Key('wr_exp_overview_link')), findsNothing);
+    });
+
+    testWidgets('không có cản trở: nói rõ phần đáng làm là cách xoay xở', (
+      tester,
+    ) async {
+      final now = DateTime.now();
+      final h = _Harness(
+        premium: true,
+        episodes: _cHeavy(now),
+        history: [
+          _check(now, answers: {for (final id in _ids) id: 4}),
+        ],
+      );
+      await tester.pumpWidget(h.app('/wr/experience-interpret?tab=3'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('wr_exp_overview_noBlock')), findsOneWidget);
+      expect(_textOf(tester, 'wr_exp_overview_start_pillar'), 'Mối quan hệ');
+    });
+
+    testWidgets('"Chưa đúng lắm": ghi nhật ký, giữ bản cũ, không đổi câu', (
+      tester,
+    ) async {
+      final now = DateTime.now();
+      final h = _Harness(
+        premium: true,
+        episodes: _cHeavy(now),
+        history: [_check(now, answers: _demoAnswers)],
+      );
+      await tester.pumpWidget(h.app('/wr/experience-interpret?tab=3'));
+      await tester.pumpAndSettle();
+
+      await tester.ensureVisible(find.byKey(const Key('wr_exp_overview_off')));
+      await tester.tap(find.byKey(const Key('wr_exp_overview_off')));
+      await tester.pumpAndSettle();
+
+      final row = h.feedback.inserted.single;
+      expect(row.match, isFalse);
+      expect(row.readingKey, 'diverged:c:a');
+      expect(row.reading['dom'], 'c');
+      expect(find.byKey(const Key('wr_exp_overview_held')), findsOneWidget);
+      expect(find.textContaining('đọc lại sau 3 lần'), findsOneWidget);
+      expect(find.byKey(const Key('wr_exp_overview_diverged')), findsOneWidget);
+    });
+
+    testWidgets('đang chờ đọc lại: giữ bản đã phản hồi dù dữ liệu đổi', (
+      tester,
+    ) async {
+      final now = DateTime.now();
+      final h = _Harness(
+        premium: true,
+        // Một lần nhìn lại SAU phản hồi: còn chờ 2 lần nữa.
+        episodes: [
+          ..._cHeavy(now.subtract(const Duration(days: 2))),
+          _ep('C2-01', now),
+        ],
+        // Khảo sát mới: hết cản trở ở mọi nhóm.
+        history: [
+          _check(now, answers: {for (final id in _ids) id: 4}),
+        ],
+      );
+      h.feedback.latest = ReadingFeedback(
+        match: false,
+        readingKey: 'diverged:c:a',
+        reading: OverviewInputs(
+          dom: SelfCheckPillar.c,
+          domCount: 15,
+          total: 16,
+          answers: _demoAnswers,
+        ).toJson(),
+        createdAt: now.subtract(const Duration(days: 1)),
+      );
+      await tester.pumpWidget(h.app('/wr/experience-interpret?tab=3'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('wr_exp_overview_diverged')), findsOneWidget);
+      expect(find.textContaining('đọc lại sau 2 lần'), findsOneWidget);
+      expect(find.byKey(const Key('wr_exp_overview_off')), findsNothing);
+    });
+
+    testWidgets('đủ 3 lần sau "Chưa đúng lắm": đọc lại, hỏi lại', (
+      tester,
+    ) async {
+      final now = DateTime.now();
+      final h = _Harness(
+        premium: true,
+        episodes: [
+          ..._cHeavy(now.subtract(const Duration(days: 5))),
+          for (var i = 0; i < 3; i++) _ep('C2-01', now),
+        ],
+        history: [
+          _check(now, answers: {for (final id in _ids) id: 4}),
+        ],
+      );
+      h.feedback.latest = ReadingFeedback(
+        match: false,
+        readingKey: 'diverged:c:a',
+        reading: const {},
+        createdAt: now.subtract(const Duration(days: 1)),
+      );
+      await tester.pumpWidget(h.app('/wr/experience-interpret?tab=3'));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('wr_exp_overview_noBlock')), findsOneWidget);
+      expect(find.byKey(const Key('wr_exp_overview_off')), findsOneWidget);
     });
 
     testWidgets('chưa khảo sát: mời "Làm khảo sát"', (tester) async {
-      final h = _Harness(premium: true, episodes: cHeavy(DateTime.now()));
+      final h = _Harness(premium: true, episodes: _cHeavy(DateTime.now()));
       await tester.pumpWidget(h.app('/wr/experience-interpret?tab=3'));
       await tester.pumpAndSettle();
 
@@ -323,6 +831,25 @@ void main() {
       await tester.tap(find.byKey(const Key('wr_exp_synthesis_take_survey')));
       await tester.pumpAndSettle();
       expect(find.text('SELF-CHECK'), findsOneWidget);
+    });
+
+    testWidgets('có khảo sát, chưa đủ 15 lần nhìn lại: nói thiếu phía nào', (
+      tester,
+    ) async {
+      final now = DateTime.now();
+      final h = _Harness(
+        premium: true,
+        episodes: [_ep('C2-01', now)],
+        history: [_check(now, answers: _demoAnswers)],
+      );
+      await tester.pumpWidget(h.app('/wr/experience-interpret?tab=3'));
+      await tester.pumpAndSettle();
+
+      expect(
+        _textOf(tester, 'wr_exp_synthesis_need_reflections'),
+        contains('cần 15 lần nhìn lại, bạn đã có 1 lần'),
+      );
+      expect(find.byKey(const Key('wr_exp_overview_start')), findsNothing);
     });
   });
 
@@ -363,10 +890,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('ĐÃ GHI VÀO HÀNH TRÌNH'), findsNothing);
-      expect(
-        find.byKey(const Key('wr_chapter_answer_error')),
-        findsOneWidget,
-      );
+      expect(find.byKey(const Key('wr_chapter_answer_error')), findsOneWidget);
     });
 
     testWidgets('chưa đủ dữ liệu thì không bày chặng mẫu', (tester) async {
@@ -380,9 +904,7 @@ void main() {
   });
 
   group('Danh sách lặp lại', () {
-    testWidgets('xổ ra đúng những lần đứng sau con số "n lần"', (
-      tester,
-    ) async {
+    testWidgets('xổ ra đúng những lần đứng sau con số "n lần"', (tester) async {
       final now = DateTime.now();
       final h = _Harness(
         premium: false,
@@ -399,7 +921,10 @@ void main() {
       await tester.pumpWidget(h.app('/wr/patterns'));
       await tester.pumpAndSettle();
 
-      expect(find.textContaining('trong 30 lần nhìn lại gần đây'), findsOneWidget);
+      expect(
+        find.textContaining('trong 30 lần nhìn lại gần đây'),
+        findsOneWidget,
+      );
       expect(find.text('3 lần'), findsOneWidget);
       await tester.tap(find.text('Không dám nói'));
       await tester.pumpAndSettle();

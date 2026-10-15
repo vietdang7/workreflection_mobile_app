@@ -186,7 +186,7 @@ void main() {
       ]);
       await _pumpLarge(tester, _wrap(const UnderstandScreen(), repo));
 
-      expect(find.textContaining('reflection'), findsOneWidget);
+      expect(find.textContaining('lần nhìn lại'), findsOneWidget);
       expect(find.textContaining('Bắt đầu kiểm tra'), findsOneWidget);
     });
 
@@ -276,7 +276,7 @@ void main() {
         find.byKey(const Key('understand_view_all_insights')),
         findsOneWidget,
       );
-      expect(find.textContaining('Xem tất cả insight'), findsOneWidget);
+      expect(find.textContaining('Xem tất cả phần đọc'), findsOneWidget);
     });
   });
 }

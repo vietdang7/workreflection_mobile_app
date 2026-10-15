@@ -34,7 +34,7 @@ void main() {
   test('câu phụ màn hoàn tất nguyên văn script', () {
     expect(
       kDoneSavedNote,
-      'Reflection này vừa để lại thêm một mảnh cho hành trình của bạn.',
+      'Lần nhìn lại này vừa để lại thêm một mảnh cho hành trình của bạn.',
     );
     expect(
       kDoneCompletionNote,

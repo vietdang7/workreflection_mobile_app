@@ -171,7 +171,7 @@ void main() {
     await tester.pumpAndSettle();
 
     await _completeSurvey(tester, label: 'Gần như luôn luôn');
-    expect(find.text('Đang hỗ trợ tốt'), findsNWidgets(3));
+    expect(find.text('Đang nâng đỡ bạn'), findsNWidgets(3));
 
     final cta = find.byKey(const Key('wr_self_check_result_cta'));
     await tester.ensureVisible(cta);

@@ -31,7 +31,7 @@
   "homeMoodHappy": "I'm happy",
   "homeEyebrowSystem": "System noticed",
   "homeEyebrowSuggestion": "Suggestion when tired",
-  "homeEyebrowInsight": "Latest insight",
+  "homeEyebrowInsight": "Latest reading",
   "homeLinkLearnMore": "Learn more",
   "homeSuggestionTitle": "When you want to speak but choose silence",
   "homeSuggestionMeta": "VOICE · 5 min read",
@@ -56,7 +56,7 @@
   "understandStatusStable": "Supporting you well",
   "understandStatusImproving": "Fine, room to grow",
   "understandStatusUnrated": "Unrated",
-  "understandHealthReady": "You have {n} reflections.",
+  "understandHealthReady": "You have {n} look-backs.",
   "@understandHealthReady": {
     "placeholders": {
       "n": {"type": "int"}
@@ -89,7 +89,7 @@
   "developWorkshopTag": "Workshop",
   "developWorkshopLink": "Why now?",
 
-  "journeyGreeting": "Career Memory",
+  "journeyGreeting": "Journey marks",
   "journeyTitle": "Journey",
   "journeyEyebrowStory": "Your story",
   "journeyEyebrowMonth": "Month {m}",
@@ -113,7 +113,7 @@
   "profileBadgePremium": "PREMIUM MEMBER",
   "profileBadgeMember": "Member",
   "profileStatReflectDays": "Days reflected",
-  "profileStatInsights": "Saved insights",
+  "profileStatInsights": "Saved readings",
   "profileStatMilestones": "Milestones",
   "profileEyebrowSettings": "Settings",
   "profileSettingReminder": "Daily reminder",
@@ -124,7 +124,7 @@
 
   "profileDeleteAccount": "Delete account",
   "profileDeleteAccountTitle": "Permanently delete your account?",
-  "profileDeleteAccountBody": "All your data will be erased and cannot be recovered: your reflections, Career Memory, practice themes, self-check results and profile. If you have the full version, the remaining time goes with it.",
+  "profileDeleteAccountBody": "All your data will be erased and cannot be recovered: your look-backs, Journey marks, practice themes, workplace conditions survey results and profile. If you have the full version, the remaining time goes with it.",
   "profileDeleteAccountHint": "Type DELETE to confirm",
   "profileDeleteAccountConfirmWord": "DELETE",
   "profileDeleteAccountCta": "Delete permanently",
@@ -135,7 +135,7 @@
   "understandNeedSuffix": "· Dominant need",
   "understandNoSituations": "No situations recorded yet.",
 
-  "homeInsightEmpty": "No insights yet. Start your journey!",
+  "homeInsightEmpty": "No readings yet. Start your journey!",
   "homeErrorLoadData": "Could not load data.",
   "homeRetry": "Retry",
 
@@ -488,15 +488,15 @@
   "profileEditDeptOther": "Other",
   "profileEditSelectHint": "Select...",
 
-  "insightsTitle": "All insights",
-  "insightsEmpty": "No insights yet. Start your journey!",
+  "insightsTitle": "All readings",
+  "insightsEmpty": "No readings yet. Start your journey!",
   "insightSavedDate": "Saved {date}",
   "@insightSavedDate": {
     "placeholders": {
       "date": {"type": "String"}
     }
   },
-  "understandViewAllInsights": "View all insights",
+  "understandViewAllInsights": "View all readings",
 
   "profileCheckinHistory": "Last 30 days",
 

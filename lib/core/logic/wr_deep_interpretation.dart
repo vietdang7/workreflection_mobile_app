@@ -714,14 +714,15 @@ String _deepGapBody(DeepFacts f) {
   return switch (branch) {
     DeepGapBranch.outOfSync => switch (v) {
       0 => tr(
-        'Trong bộ Self-Check gần nhất, bạn đánh giá $name đang ở mức khá '
+        'Trong lần khảo sát điều kiện làm việc gần nhất, bạn đánh giá $name '
+            'đang ở mức khá '
             'ổn. Nhưng khi nhìn lại, $count trong $total lượt thách thức gần đây '
             'của bạn lại xoay quanh chính nhóm này. Khoảng cách giữa hai điều '
             'đó thường đáng để dừng lại một chút. Có thể đây là điều bạn đã '
             'quen đến mức không còn thấy nó ảnh hưởng nữa. Bạn thử nghĩ xem sao '
             'nhé.',
-        'In your last Self-Check you rated $name as fairly okay. Yet '
-            'looking back, $count of your last $total challenge reflections circle around '
+        'In your last conditions survey you rated $name as fairly okay. Yet '
+            'looking back, $count of your last $total challenge look-backs circle around '
             'this very group. That distance is usually worth pausing on. It may '
             'be something you have grown so used to that you no longer see it '
             'affecting you. Worth a thought.',
@@ -733,7 +734,7 @@ String _deepGapBody(DeepFacts f) {
             'hai câu chuyện khác nhau. Điều gì có thể giải thích cho khoảng '
             'cách này?',
         'You once rated $name as a part of work that was fine. But $count '
-            'of your last $total challenge reflections relate to this group. The two are '
+            'of your last $total challenge look-backs relate to this group. The two are '
             'not necessarily in conflict, yet they are telling different '
             'stories. What might explain the gap?',
       ),
@@ -760,7 +761,7 @@ String _deepGapBody(DeepFacts f) {
             'đã nhìn khá rõ điều đang xảy ra với mình.',
         '${dom.displayName} is both the part you rate as needing '
             'attention and the group of situations that returns most across '
-            'your last $total challenge reflections, $count times. What you sense '
+            'your last $total challenge look-backs, $count times. What you sense '
             'and what is '
             'actually happening line up. That usually means you are seeing your '
             'own situation fairly clearly.',
@@ -771,18 +772,20 @@ String _deepGapBody(DeepFacts f) {
             '$count lần thuộc về nhóm này. Khi cảm nhận và trải nghiệm thật '
             'khớp nhau như vậy, đây thường là chỗ đáng để bắt đầu.',
         'Both sources point the same way. You rate $name as the part to '
-            'improve, and $count of your last $total challenge reflections belong to this '
+            'improve, and $count of your last $total challenge look-backs belong to this '
             'group. When feeling and lived experience match like this, it is '
             'usually the place to start.',
       ),
       _ => tr(
         '${dom.displayName} đang là điều rõ ràng nhất trong bức tranh hiện '
-            'tại của bạn. Bạn đã tự nhận ra nó qua Self-Check, và nó cũng chiếm '
+            'tại của bạn. Bạn đã tự nhận ra nó qua khảo sát điều kiện làm việc, '
+            'và nó cũng chiếm '
             '$count trong $total lượt thách thức bạn đã ghi nhận. Bạn muốn thử một '
             'bước nhỏ nào cho phần này trong tuần tới không?',
         '${dom.displayName} is the clearest thing in your picture right '
-            'now. You spotted it yourself in the Self-Check, and it accounts '
-            'for $count of the $total challenge reflections you recorded. Fancy '
+            'now. You spotted it yourself in the conditions survey, and it '
+            'accounts '
+            'for $count of the $total challenge look-backs you recorded. Fancy '
             'trying one small step on it this coming week?',
       ),
     },
@@ -795,19 +798,20 @@ String _deepGapBody(DeepFacts f) {
               'là $name, với $count lần. Đôi khi điều làm ta bận tâm mỗi ngày '
               'không trùng với điều ta nghĩ là vấn đề lớn nhất.',
           'You rate $weak as the hardest part right now. But across your '
-              'last $total challenge reflections, the group that returns most is '
+              'last $total challenge look-backs, the group that returns most is '
               '$name, '
               'with $count. Sometimes what occupies us daily is not what we '
               'think of as the biggest problem.',
         ),
         1 => tr(
-          'Có hai điều đang cùng nổi lên. Self-Check cho thấy $weak là '
+          'Có hai điều đang cùng nổi lên. Khảo sát điều kiện làm việc cho thấy '
+              '$weak là '
               'phần bạn thấy khó nhất, còn các lần nhìn lại của bạn lại tập '
               'trung nhiều vào $name, $count trên $total lượt thách thức. Cả hai đều là dữ '
               'liệu thật về bạn, chỉ là chúng đang nói về hai lớp khác nhau.',
-          'Two things are surfacing together. The Self-Check says $weak is '
+          'Two things are surfacing together. The conditions survey says $weak is '
               'what you find hardest, while your look-backs cluster around '
-              '$name, $count out of $total challenge reflections. Both are real data about you; they '
+              '$name, $count out of $total challenge look-backs. Both are real data about you; they '
               'are just speaking about different layers.',
         ),
         _ => tr(
@@ -816,7 +820,7 @@ String _deepGapBody(DeepFacts f) {
               'đánh giá thấp nhất. Điều gì khiến nhóm này thường xuyên quay lại '
               'như vậy?',
           '${dom.displayName} takes up more of your look-backs than any '
-              'other, $count out of $total challenge reflections, even though it is not the part you '
+              'other, $count out of $total challenge look-backs, even though it is not the part you '
               'rate lowest. What keeps bringing this group back?',
         ),
       };
@@ -1360,11 +1364,11 @@ String? deepSelfCheckTrendText(DeepFacts f) {
       final name = (dom ?? SelfCheckPillar.s).displayName.toLowerCase();
       return v == 0
           ? tr(
-              'Ở lần Self-Check trước, bạn đánh giá $name khá ổn trong khi đây lại '
+              'Ở lần khảo sát trước, bạn đánh giá $name khá ổn trong khi đây lại '
                   'là nhóm quay lại nhiều nhất trong các lần nhìn lại. Lần này, '
                   'đánh giá của bạn đã sát hơn với điều đang thực sự diễn ra. Việc '
                   'dừng lại nhìn lại đều đặn đang giúp bạn thấy rõ hơn chính mình.',
-              'At your previous Self-Check you rated $name as fairly okay while '
+              'At your previous conditions survey you rated $name as fairly okay while '
                   'it was the group returning most in your look-backs. This time '
                   'your rating sits closer to what is actually happening. Stopping '
                   'to look back regularly is helping you see yourself more '
@@ -1421,11 +1425,11 @@ String? deepSelfCheckTrendText(DeepFacts f) {
             ? tr('tăng lên', 'gone up')
             : tr('giảm xuống', 'gone down');
         return tr(
-          'So với lần cập nhật Self-Check trước vào $date, đánh giá của '
+          'So với lần cập nhật khảo sát trước vào $date, đánh giá của '
               'bạn về ${changed.displayName.toLowerCase()} đã $dir. Bạn có nhớ '
               'điều gì trong công việc đã thay đổi trong khoảng thời gian này '
               'không?',
-          'Since your previous Self-Check on $date, your rating of '
+          'Since your previous conditions survey on $date, your rating of '
               '${changed.displayName.toLowerCase()} has $dir. Do you remember '
               'what changed at work over that period?',
         );
@@ -1464,10 +1468,10 @@ String get kDeepNoTrendYet => tr(
 
 /// Câu thay cho tầng 3 khi mới có một lần Self-Check.
 String get kDeepOneSelfCheckOnly => tr(
-  'Sau lần cập nhật Self-Check tiếp theo, bạn sẽ thấy được cảm nhận của mình '
+  'Sau lần cập nhật khảo sát tiếp theo, bạn sẽ thấy được cảm nhận của mình '
       'đã thay đổi ra sao so với hôm nay. Bạn có thể cập nhật bất cứ khi nào thấy '
       'công việc có gì khác đi.',
-  'After your next Self-Check update, you will see how your sense of things '
+  'After your next conditions survey update, you will see how your sense of things '
       'has shifted since today. Update it whenever work feels different.',
 );
 
@@ -1483,20 +1487,20 @@ String get kDeepOneSelfCheckOnly => tr(
 /// không đếm ngược "còn N ngày nữa".
 String get kDeepSelfChecksTooClose => tr(
   'Cảm nhận về công việc thường đổi theo tháng chứ không theo tuần, nên phần '
-      'so sánh này chờ hai lần Self-Check cách nhau một quãng đủ dài. Khi bạn cập '
+      'so sánh này chờ hai lần khảo sát cách nhau một quãng đủ dài. Khi bạn cập '
       'nhật lại sau một thời gian nữa, bạn sẽ thấy được điều gì đã dịch chuyển so '
       'với hôm nay.',
   'How work feels tends to shift over months rather than weeks, so this '
-      'comparison waits for two Self-Checks a good stretch apart. When you update '
+      'comparison waits for two surveys a good stretch apart. When you update '
       'again after a while, you will see what has moved since today.',
 );
 
 /// Câu mời cập nhật khi lần Self-Check gần nhất đã quá 3 tháng.
 String deepStaleSelfCheckText(DateTime takenAt) => tr(
-  'Lần Self-Check gần nhất của bạn là vào ${selfCheckDateLabel(takenAt)}. '
+  'Lần khảo sát gần nhất của bạn là vào ${selfCheckDateLabel(takenAt)}. '
       'Công việc có thể đã khác đi từ đó, bạn thử cập nhật lại để bức tranh sát '
       'với hiện tại hơn nhé.',
-  'Your last Self-Check was on ${selfCheckDateLabel(takenAt)}. Work may have '
+  'Your last conditions survey was on ${selfCheckDateLabel(takenAt)}. Work may have '
       'changed since, so it is worth updating to keep the picture close to now.',
 );
 
@@ -1601,9 +1605,9 @@ class DeepInterpretation {
     if (waitingTrend && waitingSelfCheck) {
       return tr(
         'Phần so sánh theo thời gian sẽ mở ra khi bạn có thêm một khoảng '
-            'nhìn lại nữa và một lần Self-Check cách lần này đủ xa.',
+            'nhìn lại nữa và một lần khảo sát cách lần này đủ xa.',
         'The over-time comparison opens once you have another stretch of '
-            'looking back and a Self-Check far enough from this one.',
+            'looking back and a survey far enough from this one.',
       );
     }
     if (waitingTrend) {
@@ -1616,9 +1620,9 @@ class DeepInterpretation {
     }
     if (waitingSelfCheck) {
       return tr(
-        'Phần so với lần Self-Check trước sẽ mở ra khi hai lần cách nhau '
+        'Phần so với lần khảo sát trước sẽ mở ra khi hai lần cách nhau '
             'đủ xa.',
-        'The comparison with your previous Self-Check opens once the two are '
+        'The comparison with your previous survey opens once the two are '
             'far enough apart.',
       );
     }

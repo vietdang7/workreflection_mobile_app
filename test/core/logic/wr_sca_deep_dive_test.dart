@@ -111,7 +111,7 @@ void main() {
           status: ScaPillarStatus.needsAttention,
           counts: counts,
         ),
-        startsWith('Bạn tự đánh giá phần này ổn, còn dư địa, nhưng'),
+        startsWith('Bạn tự đánh giá phần này nâng đỡ chưa đều, nhưng'),
       );
       expect(
         scaScriptPatternText(
@@ -127,7 +127,7 @@ void main() {
           status: ScaPillarStatus.developing,
           counts: counts,
         ),
-        'Nhóm này xuất hiện 2 lần trong Reflection gần đây, chưa phải nhóm '
+        'Nhóm này xuất hiện 2 lần trong những lần nhìn lại gần đây, chưa phải nhóm '
         'chiếm ưu thế nhất.',
       );
     });
@@ -145,8 +145,8 @@ void main() {
     });
 
     test('nhãn đúng bộ khách chốt ở A7', () {
-      expect(ScaPillarStatus.developing.label, 'Đang hỗ trợ tốt');
-      expect(ScaPillarStatus.needsAttention.label, 'Ổn, còn dư địa');
+      expect(ScaPillarStatus.developing.label, 'Đang nâng đỡ bạn');
+      expect(ScaPillarStatus.needsAttention.label, 'Nâng đỡ nhưng chưa đều');
       expect(ScaPillarStatus.priority.label, 'Đang cản trở');
     });
 
@@ -158,7 +158,7 @@ void main() {
         expect(s.inlineLabel.contains(','), isFalse, reason: s.name);
         expect(s.inlineLabel, s.inlineLabel.toLowerCase(), reason: s.name);
       }
-      expect(ScaPillarStatus.needsAttention.inlineLabel, 'ổn nhưng còn dư địa');
+      expect(ScaPillarStatus.needsAttention.inlineLabel, 'nâng đỡ chưa đều');
     });
 
     // "Ổn, còn dư địa" không phải lời tự nhận là ổn — gộp nó vào nhóm ổn thì
