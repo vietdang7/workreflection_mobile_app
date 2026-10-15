@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:workreflection_mobile/core/logic/wr_ai_disclosure.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_ai_consent_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_episode_repository.dart';
@@ -428,6 +429,24 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('wr_exp_reflect_difficulty')), findsNothing);
+      expect(find.byKey(const Key('wr_exp_reflect_ai_invite')), findsOneWidget);
+      expect(h.read.calls, isEmpty);
+    });
+
+    testWidgets('đồng ý bản công bố CŨ: mời lại, không gửi gì đi', (
+      tester,
+    ) async {
+      final h = _Harness(
+        premium: false,
+        episodes: twoStories(DateTime.now()),
+        consent: WrAiConsent(
+          version: kWrAiDisclosureVersion - 1,
+          grantedAt: DateTime.utc(2026, 9, 12),
+        ),
+      );
+      await tester.pumpWidget(h.app('/wr/experience-interpret?tab=1&pillar=c'));
+      await tester.pumpAndSettle();
+
       expect(find.byKey(const Key('wr_exp_reflect_ai_invite')), findsOneWidget);
       expect(h.read.calls, isEmpty);
     });
