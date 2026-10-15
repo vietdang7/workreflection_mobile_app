@@ -383,7 +383,7 @@ class _TopPatternCardState extends ConsumerState<_TopPatternCard> {
                         child: Text(
                           wrKeepCompounds(tr(
                             'Những điều khác đang lặp lại',
-                            'Other recurring patterns',
+                            'Other things that recur',
                           )),
                           maxLines: 1,
                           softWrap: false,
