@@ -6,6 +6,7 @@
 // Run: flutter test test/logic/wr_org_survey_scoring_test.dart
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/l10n/wr_tr.dart';
 import 'package:workreflection_mobile/core/logic/wr_org_survey_scoring.dart';
 import 'package:workreflection_mobile/core/models/wr_org_survey.dart';
 
@@ -146,5 +147,40 @@ void main() {
     // Ngưỡng thật nằm trong `wr_org_survey_benchmark_v2` (cfg min_sample = 10).
     // Lệch số này là app nói "cần 10 người" trong khi máy chủ đòi số khác.
     expect(kOrgSurveyMinSample, 10);
+  });
+
+  // Máy thật 16/10: bật tiếng Anh mà câu hỏi khảo sát vẫn tiếng Việt.
+  group('câu hỏi theo ngôn ngữ đang bật', () {
+    tearDown(() => wrSetLocale('vi'));
+
+    test('đọc text_en khi bật tiếng Anh', () {
+      final q = OrgSurveyQuestion.fromJson({
+        'id': 'OS-09',
+        'area': 'fairness',
+        'text':
+            'Mức độ hài lòng của bạn với cách các vấn đề hoặc khiếu nại được xử lý.',
+        'text_en':
+            'How satisfied you are with how problems or complaints are handled.',
+        'sort_order': 9,
+      })!;
+      wrSetLocale('en');
+      expect(
+        q.displayText,
+        'How satisfied you are with how problems or complaints are handled.',
+      );
+      wrSetLocale('vi');
+      expect(q.displayText, startsWith('Mức độ hài lòng'));
+    });
+
+    test('chưa có text_en (app chạy trước migration) thì rơi về tiếng Việt', () {
+      final q = OrgSurveyQuestion.fromJson({
+        'id': 'OS-01',
+        'area': 'compensation',
+        'text': 'Câu tiếng Việt',
+        'sort_order': 1,
+      })!;
+      wrSetLocale('en');
+      expect(q.displayText, 'Câu tiếng Việt');
+    });
   });
 }

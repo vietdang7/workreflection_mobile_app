@@ -359,8 +359,32 @@ String? rebuildEpisodeInsight(
   } finally {
     wrEnglish = was;
   }
-  return s == other.trim() ? current : null;
+  if (s == other.trim()) return current;
+  // Không khớp nguyên văn vì nội dung đã đổi SAU lúc lưu — tên tình huống
+  // (P-01..P-10 sửa theo script 13/10) hay câu aha của Story. Câu vẫn là câu
+  // app dựng theo khuôn chung, không phải lời người dùng, nên dựng lại theo dữ
+  // liệu hiện tại thay vì để nguyên tiếng của lúc lưu (máy thật 16/10: thẻ Home
+  // hiện câu tiếng Việt khi đang bật tiếng Anh).
+  if (_kGenericInsightShape.hasMatch(s) &&
+      _kGenericInsightShape.hasMatch(current.trim())) {
+    return current;
+  }
+  // Lượt nhìn lại trước v47 lưu `draft_meaning` là đúng câu aha của một Story
+  // (48 lượt trên remote lúc viết, 16/10). Đó là chữ của hệ thống, không phải
+  // lời người dùng — đọc lại câu aha ấy theo ngôn ngữ đang bật.
+  for (final st in stories) {
+    if (st.ahaMessageVi?.trim() == s || st.ahaMessageEn?.trim() == s) {
+      return st.ahaMessage;
+    }
+  }
+  return null;
 }
+
+/// Khuôn chung của [reflectionAhaFor], cả hai ngôn ngữ.
+final _kGenericInsightShape = RegExp(
+  r'^(?:Điều bạn vừa kể có thể không chỉ là|What you just described may be about more than) “.+”\.\n\n(?:Có thể phần đáng nhìn thêm là|What may be worth a closer look): .+$',
+  dotAll: true,
+);
 
 /// Như [relocaliseEpisodeInsight] cho một câu Insight không mang theo lượt
 /// nhìn lại của nó (`wr_reflection_insights` không có `episode_id`): tìm lượt

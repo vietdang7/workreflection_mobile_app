@@ -565,6 +565,24 @@ class _DocRow extends StatelessWidget {
                 items: a.skills,
               ),
             const SizedBox(height: 10),
+            // Bản đọc viết bằng ngôn ngữ lúc bấm đọc và không ghi lại ngôn ngữ
+            // đó. Bật tiếng Anh sau đó thì người dùng thấy cả khối tiếng Việt
+            // mà không biết vì sao (máy thật 16/10) — nói rõ và chỉ nút đọc lại.
+            if (wrEnglish && looksVietnamese(a.summary)) ...[
+              Text(
+                wrKeepCompounds(tr(
+                  'Bản đọc này được viết khi app đang dùng tiếng Việt. Bấm “Đọc lại tài liệu này” để có bản tiếng Anh.',
+                  'This reading was written while the app was in Vietnamese. Tap “Read this document again” to get it in English.',
+                )),
+                key: Key('wr_context_doc_lang_note_${doc.id ?? ''}'),
+                style: const TextStyle(
+                  fontSize: 13.5,
+                  height: 1.5,
+                  color: WrColors.muted,
+                ),
+              ),
+              const SizedBox(height: 6),
+            ],
             _TextButtonRow(
               label: tr('Đọc lại tài liệu này', 'Read this document again'),
               keyValue: 'wr_context_doc_reanalyze_${doc.id ?? ''}',
