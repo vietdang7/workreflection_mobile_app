@@ -145,6 +145,9 @@ FakeWrIntelligenceRepository _trustTheme({
 }
 
 void main() {
+  // Luật một ngày một lần có trí nhớ theo phiên; mỗi test là một phiên mới.
+  setUp(resetMaintainGuardsForTest);
+
   group('B.3 — bước Chuyển hoá theo cấp bậc trên màn chủ đề', () {
     // Script Sprint 2: chỉ bước ĐANG LÀM hiện mô tả, nên đặt người dùng ở
     // bước thứ ba để đọc được nội dung đã viết lại theo cấp bậc.
