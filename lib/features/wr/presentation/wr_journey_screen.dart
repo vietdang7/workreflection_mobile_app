@@ -170,10 +170,79 @@ String localizeFrozenPracticeText(String frozen, Map<String, String> labels) {
       if (bestKey == null || key.length > bestKey.length) bestKey = key;
     }
     if (bestKey == null) return raw;
-    return '${labels[bestKey]}${s.substring(bestKey.length)}';
+    // Phần sau dấu hai chấm cũng có thể là một TÊN: mảnh duy trì ghi
+    // "Duy trì: ‹chủ đề›". Chỉ đổi khi khớp trọn một tên — lời người dùng tự
+    // viết thì giữ nguyên.
+    final rest = s.substring(bestKey.length + 2);
+    return '${labels[bestKey]}: ${labels[rest.trim()] ?? rest}';
   }
 
   return frozen.split(' · ').map(segment).join(' · ');
+}
+
+/// Câu Cột mốc do app tự viết rồi lưu vào `reflection_text` — đóng băng theo
+/// ngôn ngữ lúc GHI. Mỗi cặp là (bản Việt, bản Anh) đúng như chỗ ghi.
+const _kFrozenMilestoneSentences = [
+  // `wr_stance_keep_screen.dart` — `_confirmStance`.
+  (
+    'Bạn xác nhận một tâm thế đang hình thành',
+    'You confirmed a stance that is taking shape',
+  ),
+];
+
+/// Tiền tố của câu Cột mốc ghép với một tên (chủ đề / việc thực hành).
+const _kFrozenMilestonePrefixes = [
+  // `wr_practice_step_completion.dart` — hết bốn bước của chủ đề.
+  ('Hết một vòng: ', 'One full round: '),
+  // `wr_user_actions_section.dart` — đủ 5 ngày một việc tự đặt.
+  ('Đã hoàn thành 5 ngày thực hành: ', 'Completed 5-day practice: '),
+];
+
+/// Câu trả lời cuối chặng (`wr_chapter_read_screen.dart`).
+const _kFrozenChapterExcerpts = [
+  ('Chuyện đó đã nhẹ đi thật.', 'It really has eased.'),
+  ('Mình chỉ thôi để ý tới nó.', 'I just stopped noticing it.'),
+];
+
+final _frozenChapterLine = RegExp(
+  r'^(?:Chặng|Chapter) (\d+): (?:bạn trả lời câu hỏi cuối chặng|you answered the end-of-chapter question)\. ?(.*)$',
+  dotAll: true,
+);
+
+/// Đọc lại câu Cột mốc đã ĐÓNG BĂNG theo ngôn ngữ đang bật.
+///
+/// Cùng bệnh với [localizeFrozenPracticeText]: câu được ghép bằng `tr()` lúc
+/// GHI rồi lưu nguyên vào DB, nên ghi lúc đang tiếng Việt thì bật tiếng Anh vẫn
+/// đọc ra tiếng Việt (máy thật 16/10: "Bạn xác nhận một tâm thế đang hình
+/// thành"). Chỉ nhận đúng những câu app tự viết; Cột mốc người dùng tự viết
+/// (màn Tâm thế, "Ghi lại") không khớp mẫu nào nên giữ nguyên văn.
+String localizeFrozenMilestoneText(
+  String frozen,
+  Map<String, String> labels,
+) {
+  final s = frozen.trim();
+  for (final (vi, en) in _kFrozenMilestoneSentences) {
+    if (s == vi || s == en) return tr(vi, en);
+  }
+  for (final (vi, en) in _kFrozenMilestonePrefixes) {
+    final prefix = s.startsWith(vi) ? vi : (s.startsWith(en) ? en : null);
+    if (prefix == null) continue;
+    final name = s.substring(prefix.length);
+    return '${tr(vi, en)}${labels[name.trim()] ?? name}';
+  }
+  final chapter = _frozenChapterLine.firstMatch(s);
+  if (chapter != null) {
+    final n = chapter.group(1)!;
+    var excerpt = chapter.group(2)!.trim();
+    for (final (vi, en) in _kFrozenChapterExcerpts) {
+      if (excerpt == vi || excerpt == en) excerpt = tr(vi, en);
+    }
+    return tr(
+      'Chặng $n: bạn trả lời câu hỏi cuối chặng. $excerpt',
+      'Chapter $n: you answered the end-of-chapter question. $excerpt',
+    ).trim();
+  }
+  return frozen;
 }
 
 List<JourneyEntry> buildJourneyEntries({
@@ -362,9 +431,20 @@ List<JourneyEntry> buildJourneyEntries({
         ev.behavior == 'practice_step_done' ||
         ev.behavior == 'practice_theme_done' ||
         ev.behavior == kPracticeMaintainedBehavior ||
-        ev.behavior == kPracticeStepNoteBehavior;
-    final shownText = hasText && isPracticeText
+        ev.behavior == kPracticeStepNoteBehavior ||
+        // Kỹ năng hình thành lưu đúng TÊN chủ đề.
+        ev.behavior == 'skill_certified';
+    // Cột mốc không gắn chủ đề (đã xử lý ở trên) và việc tự đặt xong 5 ngày:
+    // câu do app viết, xem `localizeFrozenMilestoneText`.
+    final isMilestoneText =
+        ev.behavior == kMilestoneBehavior ||
+        ev.behavior == 'user_action_completed';
+    final shownText = !hasText
+        ? text
+        : isPracticeText
         ? localizeFrozenPracticeText(text, practiceLabels)
+        : isMilestoneText
+        ? localizeFrozenMilestoneText(text, practiceLabels)
         : text;
 
     // Mockup v47: một lần thử là "Thực hành: ‹việc›" + "Bạn đã thử: ‹việc›.".
