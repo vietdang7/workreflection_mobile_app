@@ -210,11 +210,42 @@ bool _isPracticeOf(CareerMemoryEvent e, PracticeTheme theme) {
 /// `·` là dạng đang ghi; các dấu kia là dữ liệu cũ còn trong Career Memory.
 const Set<String> _kTitleSeparators = {'·', '—', '–', '-', ':', '|'};
 
+/// Những lần thực hành được TÍNH của một chủ đề.
+///
+/// Ghi nhận duy trì chỉ tính một lần mỗi ngày (giữ lần sớm nhất), dù DB lỡ có
+/// nhiều dòng: bấm liên tục khi mạng chậm từng ghi hai dòng trong nửa giây
+/// (máy thật 16/10) và đẩy kỹ năng "hình thành" sớm một lần. Luật một ngày một
+/// lần ở [maintainedToday] chặn lúc ghi; ở đây chặn lúc đếm, để dữ liệu đã lỡ
+/// trùng cũng không làm sai con số.
+List<CareerMemoryEvent> _countedPractice(
+  PracticeTheme theme,
+  List<CareerMemoryEvent> events,
+) {
+  final sorted = [
+    for (final e in events)
+      if (_isPracticeOf(e, theme)) e,
+  ]..sort((a, b) {
+      final x = a.createdAt, y = b.createdAt;
+      if (x == null || y == null) return 0;
+      return x.compareTo(y);
+    });
+  final maintainedDays = <String>{};
+  return [
+    for (final e in sorted)
+      if (e.behavior != kPracticeMaintainedBehavior ||
+          e.createdAt == null ||
+          maintainedDays.add(_dayKey(e.createdAt!.toLocal())))
+        e,
+  ];
+}
+
+String _dayKey(DateTime d) => '${d.year}-${d.month}-${d.day}';
+
 /// Số lần đã thực hành một chủ đề, đếm từ Career Memory.
 int practiceCountForTheme(
   PracticeTheme theme,
   List<CareerMemoryEvent> events,
-) => events.where((e) => _isPracticeOf(e, theme)).length;
+) => _countedPractice(theme, events).length;
 
 /// Lần thực hành gần nhất của một chủ đề.
 DateTime? lastPracticedAtForTheme(
@@ -245,7 +276,9 @@ bool maintainedToday(
   for (final e in events) {
     if (e.behavior != kPracticeMaintainedBehavior) continue;
     if (!_isPracticeOf(e, theme)) continue;
-    final at = e.createdAt;
+    // `created_at` về từ máy chủ là giờ UTC; "hôm nay" là ngày theo giờ máy.
+    // So thẳng thì từ 0h đến 7h sáng giờ Việt Nam bị lệch một ngày.
+    final at = e.createdAt?.toLocal();
     if (at == null) continue;
     if (at.year == now.year && at.month == now.month && at.day == now.day) {
       return true;
@@ -272,8 +305,8 @@ DateTime? skillFormedDateFor(
   }
 
   final dates = <DateTime>[
-    for (final e in events)
-      if (_isPracticeOf(e, theme) && e.createdAt != null) e.createdAt!,
+    for (final e in _countedPractice(theme, events))
+      if (e.createdAt != null) e.createdAt!,
   ]..sort();
   if (dates.length < threshold) return null;
   return dates[threshold - 1];

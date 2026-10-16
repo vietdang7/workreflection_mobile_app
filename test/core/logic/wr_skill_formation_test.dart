@@ -52,6 +52,41 @@ SkillFormation? _formation({
 
 void main() {
   group('practiceCountForTheme', () {
+    // Máy thật 16/10: bấm "Ghi nhận" liên tiếp khi mạng chậm ghi hai dòng
+    // duy trì trong nửa giây, đẩy kỹ năng tới ngưỡng sớm một lần.
+    test('ghi nhận duy trì trùng trong một ngày chỉ tính một lần', () {
+      final day = DateTime(2026, 10, 16, 14, 23, 9);
+      final events = [
+        ..._steps('Dám lên tiếng', 3),
+        _maintained('Dám lên tiếng', i: 1, at: day),
+        _maintained(
+          'Dám lên tiếng',
+          i: 2,
+          at: day.add(const Duration(milliseconds: 500)),
+        ),
+      ];
+      expect(practiceCountForTheme(_theme, events), 4);
+      expect(_formation(events: events)!.skillFormed, isFalse);
+
+      // Hai ngày khác nhau vẫn là hai lần.
+      final twoDays = [
+        ...events,
+        _maintained(
+          'Dám lên tiếng',
+          i: 3,
+          at: day.add(const Duration(days: 1)),
+        ),
+      ];
+      expect(practiceCountForTheme(_theme, twoDays), 5);
+    });
+
+    test('"hôm nay" so theo giờ máy, không theo giờ UTC của máy chủ', () {
+      // 23:30 UTC ngày 15 là 06:30 sáng ngày 16 ở Việt Nam.
+      final utc = DateTime.utc(2026, 10, 15, 23, 30);
+      final events = [_maintained('Dám lên tiếng', at: utc)];
+      expect(maintainedToday(_theme, events, utc.toLocal()), isTrue);
+    });
+
     test('đếm cả hoàn thành bước lẫn ghi nhận duy trì', () {
       final events = [
         ..._steps('Dám lên tiếng', 3),

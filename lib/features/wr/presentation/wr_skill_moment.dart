@@ -19,21 +19,55 @@ import '../growth_providers.dart';
 import '../wr_providers.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 
+/// Chủ đề đang được ghi nhận — lượt ghi chưa xong.
+final Set<String> _maintainInFlight = {};
+
+/// Chủ đề đã ghi nhận trong phiên này, theo ngày (`themeId` → ngày).
+///
+/// Danh sách Career Memory được tải lại SAU khi ghi; trong khoảng đó nó chưa có
+/// dòng vừa ghi (thậm chí tạm rỗng), nên chỉ dựa vào nó thì cú bấm thứ hai vẫn
+/// lọt qua luật một ngày một lần. Máy thật 16/10: bấm lần đầu không thấy gì,
+/// bấm thêm thì ghi hai dòng trong nửa giây và kỹ năng "hình thành" sớm.
+final Map<String, DateTime> _maintainedThisSession = {};
+
+/// Xoá trí nhớ của phiên — chỉ cho test (mỗi test là một "phiên" mới).
+@visibleForTesting
+void resetMaintainGuardsForTest() {
+  _maintainInFlight.clear();
+  _maintainedThisSession.clear();
+}
+
+bool _sameDay(DateTime a, DateTime b) =>
+    a.year == b.year && a.month == b.month && a.day == b.day;
+
+/// Chủ đề này đã được ghi nhận hôm nay trong phiên hiện tại chưa — để nút đổi
+/// sang "đã ghi" ngay, không chờ danh sách tải lại.
+bool maintainedThisSessionToday(String themeId, DateTime now) {
+  final at = _maintainedThisSession[themeId];
+  return at != null && _sameDay(at, now);
+}
+
 /// Ghi nhận một lần duy trì: "Tôi vừa thực hành điều này hôm nay".
 ///
 /// Một mảnh ký ức trong Career Memory, không phải một ô đếm riêng — cùng nguồn
 /// sự thật với hoàn thành bước (luật số 1, Nguyên tắc Logic Dữ liệu).
-Future<void> logPracticeMaintained({
+///
+/// Trả true khi đã ghi (hoặc hôm nay đã ghi từ trước).
+Future<bool> logPracticeMaintained({
   required BuildContext context,
   required WidgetRef ref,
   required PracticeTheme theme,
 }) async {
   final userId = ref.read(currentUserIdProvider);
-  if (userId == null) return;
+  if (userId == null) return false;
+  final now = DateTime.now();
   // Mỗi chủ đề ghi nhận một lần một ngày (script `markKeep`): hai lần trong
   // cùng một ngày vẫn là một ngày có thực hành.
+  if (maintainedThisSessionToday(theme.themeId, now)) return true;
   final known = ref.read(practiceMemoryEventsProvider).valueOrNull ?? const [];
-  if (maintainedToday(theme, known, DateTime.now())) return;
+  if (maintainedToday(theme, known, now)) return true;
+  // Lượt trước của chính chủ đề này còn đang gửi: bỏ qua cú bấm này.
+  if (!_maintainInFlight.add(theme.themeId)) return false;
   final contentRepo = ref.read(wrContentRepositoryProvider);
   final messenger = ScaffoldMessenger.of(context);
 
@@ -53,6 +87,7 @@ Future<void> logPracticeMaintained({
         reflectionText: tr('Duy trì: ${theme.title}', 'Upkeep: ${theme.title}'),
       ),
     );
+    _maintainedThisSession[theme.themeId] = now;
   } catch (_) {
     messenger.showSnackBar(
       SnackBar(
@@ -61,12 +96,16 @@ Future<void> logPracticeMaintained({
         ),
       ),
     );
-    return;
+    return false;
+  } finally {
+    _maintainInFlight.remove(theme.themeId);
   }
 
   ref.invalidate(practiceMemoryEventsProvider);
-  if (!context.mounted) return;
-  await recordSkillMilestones(context: context, ref: ref, theme: theme);
+  if (context.mounted) {
+    await recordSkillMilestones(context: context, ref: ref, theme: theme);
+  }
+  return true;
 }
 
 /// Ghi dấu mốc cho những kỹ năng vừa hình thành và ăn mừng — đúng một lần.
@@ -265,17 +304,45 @@ Future<void> showSkillFormedCelebration(
 ///
 /// Hiện khi chủ đề đã đi hết ba bước làm quen. Đã bấm hôm nay thì chuyển thành
 /// dòng xác nhận, không phải một nút bấm được nhưng không làm gì.
-class WrMaintainPracticeAction extends ConsumerWidget {
+class WrMaintainPracticeAction extends ConsumerStatefulWidget {
   const WrMaintainPracticeAction({super.key, required this.theme, this.onDone});
 
   final PracticeTheme theme;
   final VoidCallback? onDone;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<WrMaintainPracticeAction> createState() =>
+      _WrMaintainPracticeActionState();
+}
+
+class _WrMaintainPracticeActionState
+    extends ConsumerState<WrMaintainPracticeAction> {
+  bool _busy = false;
+
+  Future<void> _press() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      final ok = await logPracticeMaintained(
+        context: context,
+        ref: ref,
+        theme: widget.theme,
+      );
+      if (ok) widget.onDone?.call();
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = widget.theme;
     final events =
         ref.watch(practiceMemoryEventsProvider).valueOrNull ?? const [];
-    final doneToday = maintainedToday(theme, events, DateTime.now());
+    final now = DateTime.now();
+    final doneToday =
+        maintainedToday(theme, events, now) ||
+        maintainedThisSessionToday(theme.themeId, now);
 
     if (doneToday) {
       return Row(
@@ -304,10 +371,7 @@ class WrMaintainPracticeAction extends ConsumerWidget {
       width: double.infinity,
       child: OutlinedButton(
         key: Key('wr_practice_maintain_${theme.themeId}'),
-        onPressed: () async {
-          await logPracticeMaintained(context: context, ref: ref, theme: theme);
-          onDone?.call();
-        },
+        onPressed: _busy ? null : _press,
         style: OutlinedButton.styleFrom(
           foregroundColor: WrColors.navy,
           side: BorderSide(color: WrColors.navy.withValues(alpha: 0.22)),
@@ -350,8 +414,12 @@ class WrKeepMarkButton extends ConsumerStatefulWidget {
 class _WrKeepMarkButtonState extends ConsumerState<WrKeepMarkButton> {
   bool _busy = false;
 
+  bool get _on =>
+      widget.markedToday ||
+      maintainedThisSessionToday(widget.theme.themeId, DateTime.now());
+
   Future<void> _mark() async {
-    if (_busy || widget.markedToday) return;
+    if (_busy || _on) return;
     setState(() => _busy = true);
     try {
       await logPracticeMaintained(
@@ -367,7 +435,9 @@ class _WrKeepMarkButtonState extends ConsumerState<WrKeepMarkButton> {
   @override
   Widget build(BuildContext context) {
     // `.mark` / `.mark.on` của script: viền teal nhạt, đã ghi thì nền teal.
-    final on = widget.markedToday;
+    // Ghi xong là đổi ngay theo [maintainedThisSessionToday], không chờ danh
+    // sách Career Memory tải lại.
+    final on = _on;
     return Semantics(
       button: true,
       enabled: !on,
@@ -384,14 +454,28 @@ class _WrKeepMarkButtonState extends ConsumerState<WrKeepMarkButton> {
               color: on ? WrColors.teal : WrColors.teal.withValues(alpha: 0.5),
             ),
           ),
-          child: Text(
-            wrKeepCompounds(on ? widget.doneLabel : tr('Ghi nhận', 'Record')),
-            style: TextStyle(
-              fontSize: 11.5,
-              fontWeight: FontWeight.w700,
-              color: on ? WrColors.white : WrColors.pillTealText,
-            ),
-          ),
+          // Đang gửi: thay chữ bằng vòng xoay cùng cỡ, để cú bấm đầu có phản
+          // hồi ngay chứ không im lặng tới khi mạng trả về.
+          child: _busy && !on
+              ? SizedBox(
+                  key: Key('wr_keep_mark_busy_${widget.theme.themeId}'),
+                  width: 14,
+                  height: 14,
+                  child: const CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: WrColors.pillTealText,
+                  ),
+                )
+              : Text(
+                  wrKeepCompounds(
+                    on ? widget.doneLabel : tr('Ghi nhận', 'Record'),
+                  ),
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w700,
+                    color: on ? WrColors.white : WrColors.pillTealText,
+                  ),
+                ),
         ),
       ),
     );

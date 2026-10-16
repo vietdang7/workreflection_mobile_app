@@ -6,6 +6,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/features/wr/presentation/wr_skill_moment.dart'
+    show resetMaintainGuardsForTest;
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/workshop_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
@@ -125,6 +127,9 @@ FakeWrIntelligenceRepository _kept({
 }
 
 void main() {
+  // Luật một ngày một lần có trí nhớ theo phiên; mỗi test là một phiên mới.
+  setUp(resetMaintainGuardsForTest);
+
   setUp(() => SharedPreferences.setMockInitialValues({}));
 
   group('Tab Phát triển — Đang duy trì', () {
@@ -260,6 +265,41 @@ void main() {
       // Bấm lại trong ngày: không huỷ, không cộng thêm.
       await tester.tap(mark);
       await tester.pumpAndSettle();
+      expect(
+        content.insertMemoryEventCalls.where(
+          (e) => e.behavior == kPracticeMaintainedBehavior,
+        ),
+        hasLength(1),
+      );
+      expect(
+        find.descendant(of: mark, matching: find.text('✓ Đã ghi')),
+        findsOneWidget,
+      );
+    });
+
+    // Máy thật 16/10: bấm lần đầu không thấy gì (mạng chậm), bấm thêm vài lần
+    // thì ghi nhiều dòng duy trì cùng lúc.
+    testWidgets('mạng chậm: bấm liên tiếp chỉ ghi một lần, có vòng xoay ngay', (
+      tester,
+    ) async {
+      final content = FakeWrContentRepository()
+        ..insertDelay = const Duration(seconds: 2);
+      await _pump(
+        tester,
+        _wrap(const WrGrowthScreen(), intel: _kept(), content: content),
+      );
+
+      final mark = find.byKey(const Key('wr_keep_mark_pt-c2'));
+      await tester.tap(mark);
+      await tester.pump();
+      // Phản hồi ngay ở cú bấm đầu.
+      expect(find.byKey(const Key('wr_keep_mark_busy_pt-c2')), findsOneWidget);
+
+      await tester.tap(mark, warnIfMissed: false);
+      await tester.tap(mark, warnIfMissed: false);
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle(const Duration(seconds: 3));
+
       expect(
         content.insertMemoryEventCalls.where(
           (e) => e.behavior == kPracticeMaintainedBehavior,

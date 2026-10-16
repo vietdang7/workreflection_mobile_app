@@ -20,6 +20,10 @@ class FakeWrContentRepository implements WrContentRepository {
 
   // --- Call recorders ---
   final List<CareerMemoryEvent> insertMemoryEventCalls = [];
+
+  /// Giả mạng chậm: lời gọi được ghi nhận ngay, nhưng phải chờ chừng này mới
+  /// xong. Dùng để thử bấm liên tiếp trong lúc lượt đầu còn đang gửi.
+  Duration insertDelay = Duration.zero;
   final List<({String userId, String situationCode, DateTime day})>
   deleteTodayMemoryEventsForSituationCalls = [];
 
@@ -88,6 +92,7 @@ class FakeWrContentRepository implements WrContentRepository {
   Future<void> insertMemoryEvent(CareerMemoryEvent event) async {
     _maybeThrow();
     insertMemoryEventCalls.add(event);
+    if (insertDelay > Duration.zero) await Future<void>.delayed(insertDelay);
     // Stamp createdAt = now if not provided, so date-based filtering works in tests.
     final stamped = event.createdAt != null
         ? event
