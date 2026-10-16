@@ -275,6 +275,22 @@ void main() {
       );
     });
 
+    test('dạng cũ "chủ đề — giai đoạn" (trước 05/08)', () {
+      const old = {
+        'Dám lên tiếng': 'Speaking up',
+        'Nhận diện': 'Notice',
+      };
+      expect(
+        localizeFrozenPracticeText('Dám lên tiếng — Nhận diện', old),
+        'Speaking up — Notice',
+      );
+      // Một vế không có trong bảng: giữ nguyên, không dịch nửa vời.
+      expect(
+        localizeFrozenPracticeText('Dám lên tiếng — Điều gì đó', old),
+        'Dám lên tiếng — Điều gì đó',
+      );
+    });
+
     test('Cột mốc do app viết đọc lại theo ngôn ngữ đang bật', () {
       wrSetLocale('en');
       const names = {'Nhịp làm việc ổn định': 'A steady working rhythm'};

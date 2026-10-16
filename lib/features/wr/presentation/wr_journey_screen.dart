@@ -169,7 +169,17 @@ String localizeFrozenPracticeText(String frozen, Map<String, String> labels) {
       if (!s.startsWith('$key: ')) continue;
       if (bestKey == null || key.length > bestKey.length) bestKey = key;
     }
-    if (bestKey == null) return raw;
+    if (bestKey == null) {
+      // Bản ghi trước 05/08: "‹chủ đề› — ‹giai đoạn›" ("Dám lên tiếng — Nhận
+      // diện"). Chỉ đổi khi CẢ HAI vế đều là tên — tên bước cũ cũng chứa " — ".
+      final dash = s.indexOf(' — ');
+      if (dash > 0) {
+        final head = labels[s.substring(0, dash)];
+        final tail = labels[s.substring(dash + 3)];
+        if (head != null && tail != null) return '$head — $tail';
+      }
+      return raw;
+    }
     // Phần sau dấu hai chấm cũng có thể là một TÊN: mảnh duy trì ghi
     // "Duy trì: ‹chủ đề›". Chỉ đổi khi khớp trọn một tên — lời người dùng tự
     // viết thì giữ nguyên.
