@@ -21,6 +21,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:workreflection_mobile/core/l10n/wr_tr.dart';
+import 'package:workreflection_mobile/core/logic/wr_skill_formation.dart';
 import 'package:workreflection_mobile/core/models/wr_content.dart';
 import 'package:workreflection_mobile/core/models/wr_mood_content.dart';
 import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
@@ -247,6 +248,133 @@ void main() {
         situationLabels: const {},
       );
       expect(entries.single.title, 'Vững vàng khi mọi thứ thay đổi');
+    });
+
+    // Máy thật 16/10, bật tiếng Anh: "Upkeep: Nhịp làm việc ổn định" và
+    // "Bạn xác nhận một tâm thế đang hình thành" vẫn tiếng Việt.
+    test('mảnh duy trì "Duy trì: ‹chủ đề›" dịch cả tên chủ đề', () {
+      const withUpkeep = {
+        ...labels,
+        'Nhịp làm việc ổn định': 'A steady working rhythm',
+        'Duy trì': 'Upkeep',
+      };
+      expect(
+        localizeFrozenPracticeText(
+          'Duy trì: Nhịp làm việc ổn định',
+          withUpkeep,
+        ),
+        'Upkeep: A steady working rhythm',
+      );
+      // Dạng cũ "‹chủ đề› · Duy trì" vẫn chạy.
+      expect(
+        localizeFrozenPracticeText(
+          'Nhịp làm việc ổn định · Duy trì',
+          withUpkeep,
+        ),
+        'A steady working rhythm · Upkeep',
+      );
+    });
+
+    test('dạng cũ "chủ đề — giai đoạn" (trước 05/08)', () {
+      const old = {
+        'Dám lên tiếng': 'Speaking up',
+        'Nhận diện': 'Notice',
+      };
+      expect(
+        localizeFrozenPracticeText('Dám lên tiếng — Nhận diện', old),
+        'Speaking up — Notice',
+      );
+      // Một vế không có trong bảng: giữ nguyên, không dịch nửa vời.
+      expect(
+        localizeFrozenPracticeText('Dám lên tiếng — Điều gì đó', old),
+        'Dám lên tiếng — Điều gì đó',
+      );
+    });
+
+    test('Cột mốc do app viết đọc lại theo ngôn ngữ đang bật', () {
+      wrSetLocale('en');
+      const names = {'Nhịp làm việc ổn định': 'A steady working rhythm'};
+      expect(
+        localizeFrozenMilestoneText(
+          'Bạn xác nhận một tâm thế đang hình thành',
+          names,
+        ),
+        'You confirmed a stance that is taking shape',
+      );
+      expect(
+        localizeFrozenMilestoneText('Hết một vòng: Nhịp làm việc ổn định', names),
+        'One full round: A steady working rhythm',
+      );
+      expect(
+        localizeFrozenMilestoneText(
+          'Chặng 2: bạn trả lời câu hỏi cuối chặng. Chuyện đó đã nhẹ đi thật.',
+          names,
+        ),
+        'Chapter 2: you answered the end-of-chapter question. It really has eased.',
+      );
+      expect(
+        localizeFrozenMilestoneText(
+          'Đã hoàn thành 5 ngày thực hành: Gửi 1 lời cảm ơn cụ thể',
+          names,
+        ),
+        'Completed 5-day practice: Gửi 1 lời cảm ơn cụ thể',
+      );
+      // Cột mốc người dùng tự viết: giữ nguyên văn.
+      expect(
+        localizeFrozenMilestoneText('Tôi đang học cách nói không', names),
+        'Tôi đang học cách nói không',
+      );
+      // Ngược lại: ghi lúc tiếng Anh, đọc lúc tiếng Việt.
+      wrSetLocale('vi');
+      expect(
+        localizeFrozenMilestoneText(
+          'You confirmed a stance that is taking shape',
+          names,
+        ),
+        'Bạn xác nhận một tâm thế đang hình thành',
+      );
+      wrSetLocale('en');
+    });
+
+    test('buildJourneyEntries dịch Cột mốc, kỹ năng và duy trì', () {
+      wrSetLocale('en');
+      const withUpkeep = {
+        'Nhịp làm việc ổn định': 'A steady working rhythm',
+        'Duy trì': 'Upkeep',
+      };
+      final entries = buildJourneyEntries(
+        episodes: const [],
+        events: [
+          CareerMemoryEvent(
+            id: '1',
+            userId: 'u',
+            behavior: 'career_milestone',
+            reflectionText: 'Bạn xác nhận một tâm thế đang hình thành',
+            createdAt: DateTime(2026, 10, 13, 3),
+          ),
+          CareerMemoryEvent(
+            id: '2',
+            userId: 'u',
+            behavior: 'skill_certified',
+            reflectionText: 'Nhịp làm việc ổn định',
+            createdAt: DateTime(2026, 10, 13, 2),
+          ),
+          CareerMemoryEvent(
+            id: '3',
+            userId: 'u',
+            behavior: kPracticeMaintainedBehavior,
+            reflectionText: 'Duy trì: Nhịp làm việc ổn định',
+            createdAt: DateTime(2026, 10, 13, 1),
+          ),
+        ],
+        situationLabels: const {},
+        practiceLabels: withUpkeep,
+      );
+      expect(entries.map((e) => e.title), [
+        'You confirmed a stance that is taking shape',
+        'A steady working rhythm',
+        'Upkeep: A steady working rhythm',
+      ]);
     });
   });
 }
