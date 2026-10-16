@@ -33,6 +33,20 @@ void main() {
   tearDown(() => wrEnglish = false);
 
   group('localizeFrozenInsightText', () {
+    // Máy thật 16/10: Insight lưu từ lúc S2-02 còn tên cũ "Tôi luôn phải chờ
+    // người khác". Tên cũ phải dịch theo nghĩa CŨ, không đổi sang tên S2-02 mới.
+    test('tên tình huống cũ (đã đổi nghĩa) dịch theo đúng câu cũ', () {
+      wrEnglish = true;
+      const frozen =
+          'Trong 14 ngày qua, bạn đang học cách sự rõ ràng, từ "Tôi không biết '
+          'ai là người quyết định cuối cùng", đến "Tôi luôn phải chờ người khác".';
+      final out = localizeFrozenInsightText(frozen, situations: _situations);
+      expect(out, contains('"I always have to wait for other people"'));
+      expect(out, isNot(contains('group chats')));
+      expect(out, contains('"I do not know who makes the final call"'));
+      expect(RegExp('[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]').hasMatch(out), isFalse);
+    });
+
     test('câu tiếng Anh đã lưu được kể lại bằng tiếng Việt', () {
       wrEnglish = false;
 

@@ -528,6 +528,54 @@ const List<WrFrozenSentence> kFrozenInsightTemplates = [
 /// tra được thì giữ nguyên — đó là chữ người dùng tự viết (`_storyTitle` rơi về
 /// `draftMeaning` khi lượt đó không gắn mã tình huống nào), và dịch chữ của họ
 /// là việc không được phép làm.
+/// Tên tình huống ĐÃ ĐỔI nhưng còn nằm trong câu Insight đóng băng.
+///
+/// Mỗi tên mang bản dịch RIÊNG của nó, không tra theo mã: nhiều mã đã đổi hẳn
+/// nghĩa (S2-02 cũ "Tôi luôn phải chờ người khác", nay "Tôi bị lạc giữa quá
+/// nhiều nhóm chat"), thay theo mã là sửa lời của chính lượt nhìn lại đó.
+/// Danh sách lấy từ các migration cũ, đối chiếu dữ liệu remote 16/10. Đổi tên
+/// một tình huống thì thêm tên cũ vào đây.
+const List<(String, String)> kFormerSituationTitles = [
+  ('Tôi luôn phải chờ người khác', 'I always have to wait for other people'),
+  // P-01..P-10 sửa câu chữ theo script ngày 13/10.
+  (
+    'Tôi vừa hoàn thành một nhiệm vụ khó hơn mong đợi',
+    'I just finished a task that was harder than expected',
+  ),
+  (
+    'Tôi nhận được sự ghi nhận tích cực từ cấp trên',
+    'I received positive recognition from my manager',
+  ),
+  (
+    'Tôi giúp đồng nghiệp tháo gỡ một vấn đề phức tạp',
+    'I helped a colleague untangle a complex problem',
+  ),
+  (
+    'Tôi nhận tin được tăng lương hoặc thăng chức',
+    'I got news of a raise or a promotion',
+  ),
+  (
+    'Công việc hôm nay diễn ra trơn tru đúng như kỳ vọng',
+    'Today’s work went smoothly, just as expected',
+  ),
+  (
+    'Tôi cảm thấy hoàn toàn làm chủ nhịp độ công việc',
+    'I feel fully in control of my pace at work',
+  ),
+  (
+    'Tôi vừa học được một điều nhỏ nhưng vô cùng hữu ích',
+    'I just learned something small but very useful',
+  ),
+  (
+    'Tôi có một cuộc trò chuyện chất lượng với đồng nghiệp',
+    'I had a really good conversation with a colleague',
+  ),
+  (
+    'Hôm nay không có gì đặc biệt, nhưng tôi thấy thật sự ổn',
+    'Nothing special happened today, but I feel truly fine',
+  ),
+];
+
 String localizeFrozenInsightText(
   String frozen, {
   required Iterable<WrSituation> situations,
@@ -539,6 +587,13 @@ String localizeFrozenInsightText(
     final current = needSeekingLabel(need);
     swaps[vi] = current;
     swaps[en] = current;
+  }
+
+  // Tên cũ trước, tên hiện hành sau: một câu cũ trùng nguyên văn tên hiện hành
+  // của mã khác thì tên hiện hành thắng.
+  for (final (vi, en) in kFormerSituationTitles) {
+    swaps[vi] = tr(vi, en);
+    swaps[en] = tr(vi, en);
   }
 
   for (final situation in situations) {
