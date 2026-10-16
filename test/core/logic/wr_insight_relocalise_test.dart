@@ -154,4 +154,50 @@ void main() {
       'khác',
     );
   });
+
+  // Máy thật 16/10: P-09 đổi tên ngày 13/10 ("có một cuộc trò chuyện chất
+  // lượng với đồng nghiệp" → "có một cuộc trò chuyện tốt với đồng nghiệp"), nên
+  // câu lưu trước đó không còn khớp nguyên văn và thẻ Home hiện tiếng Việt.
+  test('tên tình huống đã đổi sau lúc lưu vẫn dựng lại được', () {
+    const savedOld =
+        'Điều bạn vừa kể có thể không chỉ là “bị giao một việc mơ hồ”.\n\n'
+        'Có thể phần đáng nhìn thêm là: Một câu aha cũ đã được sửa.';
+    wrEnglish = true;
+    final out = relocaliseEpisodeInsight(
+      savedOld,
+      episode: _episode(savedOld),
+      situations: _situations,
+      stories: _stories,
+    );
+    expect(out, _buildIn(true));
+    expect(out, contains('I was given unclear work'.replaceFirst('I ', '')));
+  });
+
+  test('câu tự viết có dấu ngoặc vẫn giữ nguyên', () {
+    const own = 'Tôi nghĩ “im lặng” là cách mình tự bảo vệ.';
+    wrEnglish = true;
+    expect(
+      relocaliseEpisodeInsight(
+        own,
+        episode: _episode(own),
+        situations: _situations,
+        stories: _stories,
+      ),
+      own,
+    );
+  });
+
+  test('lượt cũ lưu nguyên câu aha của Story cũng dịch được', () {
+    const saved = 'Có thể bạn đang phải tự đoán kỳ vọng.';
+    wrEnglish = true;
+    expect(
+      relocaliseEpisodeInsight(
+        saved,
+        episode: _episode(saved),
+        situations: _situations,
+        stories: _stories,
+      ),
+      'Maybe you are having to guess the expectation.',
+    );
+  });
 }

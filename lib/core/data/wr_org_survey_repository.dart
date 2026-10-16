@@ -69,7 +69,9 @@ class SupabaseWrOrgSurveyRepository implements WrOrgSurveyRepository {
   Future<List<OrgSurveyQuestion>> fetchQuestions() async {
     final rows = await _client
         .from(_questionsTable)
-        .select('id, area, text, sort_order')
+        // Lấy mọi cột thay vì liệt kê: `text_en` thêm sau (16/10), app chạy
+        // trước migration thì liệt kê cột chưa có sẽ làm hỏng cả màn khảo sát.
+        .select()
         .eq('active', true)
         .order('sort_order', ascending: true);
     return rows

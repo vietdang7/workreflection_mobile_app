@@ -62,12 +62,23 @@ class OrgSurveyQuestion {
     required this.area,
     required this.text,
     required this.sortOrder,
+    this.textEn,
   });
 
   final String id;
   final OrgSurveyArea area;
+
+  /// Bản tiếng Việt — bản gốc trong bảng.
   final String text;
+
+  /// Cột `text_en`; chưa dịch thì null.
+  final String? textEn;
+
   final int sortOrder;
+
+  /// Câu hỏi theo ngôn ngữ đang bật. Chưa có bản tiếng Anh thì rơi về tiếng
+  /// Việt (`trDb`), không hiện ô trống.
+  String get displayText => trDb(text, textEn);
 
   static OrgSurveyQuestion? fromJson(Map<String, dynamic> json) {
     final area = OrgSurveyArea.fromCode(json['area'] as String?);
@@ -79,6 +90,7 @@ class OrgSurveyQuestion {
       id: json['id'] as String,
       area: area,
       text: json['text'] as String,
+      textEn: json['text_en'] as String?,
       sortOrder: (json['sort_order'] as num?)?.toInt() ?? 0,
     );
   }

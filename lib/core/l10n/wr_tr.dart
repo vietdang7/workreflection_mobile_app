@@ -113,3 +113,17 @@ Map<String, String> get wrLocaleHeaders => {'x-wr-locale': wrLocaleCode};
 void wrSetLocale(String localeCode) {
   wrEnglish = localeCode == 'en';
 }
+
+final _vietnameseMarks = RegExp(
+  '[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]',
+  caseSensitive: false,
+);
+
+/// Đoạn chữ do MODEL viết có vẻ là tiếng Việt không.
+///
+/// Dùng cho chữ AI đã lưu mà không ghi lại ngôn ngữ lúc viết (bản đọc CV/JD):
+/// bật tiếng Anh mà bản đọc mang dấu tiếng Việt thì biết là viết từ lúc trước.
+/// Ngưỡng 3 dấu để một tên riêng có dấu lọt vào câu tiếng Anh ("Đà Nẵng")
+/// không bị tính nhầm.
+bool looksVietnamese(String text) =>
+    _vietnameseMarks.allMatches(text).length >= 3;

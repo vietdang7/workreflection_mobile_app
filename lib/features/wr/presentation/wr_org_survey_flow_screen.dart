@@ -431,7 +431,7 @@ class _ScaleStep extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(22, 22, 22, 22),
       children: [
         WrTitleText(
-          question.text,
+          question.displayText,
           key: const Key('wr_org_survey_question_text'),
           style: const TextStyle(
             fontSize: 17,

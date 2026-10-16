@@ -7,6 +7,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:workreflection_mobile/core/l10n/wr_tr.dart';
 import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
@@ -357,6 +358,54 @@ void main() {
       expect(
         find.byKey(const Key('wr_context_doc_reanalyze_doc-1')),
         findsOneWidget,
+      );
+    });
+
+    // Máy thật 16/10: bản đọc viết lúc app tiếng Việt, bật tiếng Anh vẫn hiện
+    // nguyên khối tiếng Việt mà không ai nói vì sao.
+    testWidgets('bản đọc tiếng Việt khi đang bật tiếng Anh thì nhắc đọc lại', (
+      tester,
+    ) async {
+      wrSetLocale('en');
+      addTearDown(() => wrSetLocale('vi'));
+      final intel = FakeWrIntelligenceRepository()
+        ..seedEntitlement(_premium())
+        ..seedContextDocuments([
+          docFixture(
+            status: DocAnalysisStatus.ready,
+            analysis: const WrDocAnalysis(
+              title: 'Trưởng nhóm kinh doanh',
+              summary: 'Dẫn dắt nhóm bán hàng khu vực phía Nam.',
+            ),
+          ),
+        ]);
+      await tester.pumpWidget(_wrap(const WrContextDocScreen(), intel: intel));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('wr_context_doc_lang_note_doc-1')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('bản đọc đã là tiếng Anh thì không nhắc', (tester) async {
+      wrSetLocale('en');
+      addTearDown(() => wrSetLocale('vi'));
+      final intel = FakeWrIntelligenceRepository()
+        ..seedEntitlement(_premium())
+        ..seedContextDocuments([
+          docFixture(
+            status: DocAnalysisStatus.ready,
+            analysis: const WrDocAnalysis(
+              title: 'Sales team lead',
+              summary: 'Leads the regional sales team in the South.',
+            ),
+          ),
+        ]);
+      await tester.pumpWidget(_wrap(const WrContextDocScreen(), intel: intel));
+      await tester.pumpAndSettle();
+      expect(
+        find.byKey(const Key('wr_context_doc_lang_note_doc-1')),
+        findsNothing,
       );
     });
 
