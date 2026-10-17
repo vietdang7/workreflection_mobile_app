@@ -179,7 +179,7 @@ class WrExperienceInterpretScreen extends ConsumerWidget {
     String surveySubtitle() {
       if (!hasSurvey || latestCheck == null) {
         return tr(
-          'Mười lăm câu ngắn về cách công việc quanh bạn đang được tổ chức.',
+          '15 câu ngắn về cách công việc quanh bạn đang được tổ chức.',
           'Fifteen short questions on how the work around you is organised.',
         );
       }
@@ -1023,8 +1023,8 @@ List<Widget> _surveySource(
       wrKeepCompounds(
         tr(
           '${withScope ? 'Phần đọc này nói về cách công việc quanh bạn được tổ '
-                        'chức, không phải cảm nhận của bạn về nó. ' : ''}Nguồn là mười '
-              'lăm câu bạn đã trả lời, lần gần nhất ngày $date.',
+                        'chức, không phải cảm nhận của bạn về nó. ' : ''}Nguồn là 15 '
+              'câu bạn đã trả lời, lần gần nhất ngày $date.',
           '${withScope ? 'This reading is about how the work around you is '
                         'organised, not how you feel about it. ' : ''}It comes from '
               'the fifteen questions you answered, most recently on $date.',
@@ -1065,7 +1065,7 @@ class _SurveyMissing extends StatelessWidget {
         const SizedBox(height: 10),
         WrParagraph(
           tr(
-            'Mười lăm câu ngắn, khoảng ba phút. Sau đó phần này sẽ gọi tên từng '
+            '15 câu ngắn, khoảng ba phút. Sau đó phần này sẽ gọi tên từng '
                 'điều đang nâng đỡ và từng điều đang cản trở bạn.',
             'Fifteen short questions, about three minutes. After that this part '
                 'names each thing that supports you and each thing that holds '
@@ -1690,7 +1690,7 @@ class _SynthesisMissing extends StatelessWidget {
     if (hasReflections) {
       detail = tr(
         'Phần đọc từ những lần nhìn lại đã có. Còn thiếu phần điều kiện quanh '
-            'bạn, là mười lăm câu khảo sát. Khi có đủ hai phía, hệ thống mới '
+            'bạn, là 15 câu khảo sát. Khi có đủ hai phía, hệ thống mới '
             'nói được chỗ nào đáng bắt đầu trước.',
         'The reading from your look-backs is ready. The conditions around you '
             'are still missing: the fifteen survey questions. Only with both '
@@ -1707,7 +1707,7 @@ class _SynthesisMissing extends StatelessWidget {
       );
     } else {
       detail = tr(
-        'Còn thiếu cả hai phía: mười lăm câu khảo sát điều kiện làm việc, và '
+        'Còn thiếu cả hai phía: 15 câu khảo sát điều kiện làm việc, và '
             'phần từ những lần nhìn lại ($reflectionGap). Khi có đủ hai phía, '
             'hệ thống mới nói được chỗ nào đáng bắt đầu trước.',
         'Both sides are still missing: the fifteen workplace conditions '
