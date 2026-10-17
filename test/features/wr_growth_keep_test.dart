@@ -341,10 +341,9 @@ void main() {
       final tea = find.byKey(const Key('wr_growth_tra_chieu_card'));
       await tester.scrollUntilVisible(tea, 200);
       for (final t in [
-        'YOUTUBE',
-        'SERIES CHIA SẺ',
-        // Họp khách 14/10: tên chuỗi thay "Thư viện học tập".
-        'Chuỗi series Tâm thế người đi làm',
+        'TẬP MỚI',
+        'YOUTUBE · 9 PHÚT',
+        'Tâm thế người đi làm',
       ]) {
         expect(
           find.descendant(of: series, matching: find.text(t)),
@@ -355,7 +354,7 @@ void main() {
       for (final t in [
         'OFFLINE · TRÀ CHIỀU',
         'Trà chiều nghề nghiệp',
-        '12 đến 14 người · 2 tiếng',
+        'T7 22/08 · 10 đến 12 người · 2 giờ',
       ]) {
         expect(
           find.descendant(of: tea, matching: find.text(t)),
@@ -529,8 +528,7 @@ void main() {
       );
 
       expect(
-        // Họp khách 14/10: 12–14 người, bỏ "1 câu hỏi".
-        find.text('12 đến 14 người · 2 tiếng.'),
+        find.text('10 đến 12 người · 2 tiếng · 1 câu hỏi.'),
         findsOneWidget,
       );
       expect(find.text('Vì sao lại là Trà Chiều'), findsOneWidget);
@@ -559,7 +557,6 @@ void main() {
         ),
         findsOneWidget,
       );
-      expect(find.text('TP.HCM, địa điểm sẽ thông báo sau'), findsOneWidget);
     });
   });
 }

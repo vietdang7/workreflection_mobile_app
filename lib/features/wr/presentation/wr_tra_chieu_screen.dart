@@ -16,6 +16,7 @@
 // (xem `wr_tra_chieu.dart`). App chỉ đọc — mọi buổi đều được tạo bên web.
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -28,7 +29,6 @@ import '../../../core/widgets/eyebrow.dart';
 import '../../../core/widgets/wr_card.dart';
 import '../../../core/widgets/wr_detail_scaffold.dart';
 import '../../../core/widgets/wr_hero_header.dart';
-import '../../../core/widgets/wr_link_row.dart';
 import '../../workshops/workshops_providers.dart';
 import '../../../core/widgets/wr_paragraph.dart';
 
@@ -52,14 +52,13 @@ List<String> get kTraChieuRules => [
 
 /// "Vì sao lại là Trà Chiều" — nguyên văn script `screenTraChieu`.
 String get kTraChieuWhy => tr(
-  // Họp khách 14/10: 12–14 người, bỏ "cùng trả lời một câu hỏi duy nhất".
-  'Không phải hội thảo, không có sân khấu. Mười hai đến mười bốn người ngồi '
-      'quanh một bàn trà. Đây là chính trải nghiệm phản chiếu của '
-      'WorkReflection, chỉ khác là được nói thành lời, trong một không gian an '
-      'toàn.',
-  'Not a seminar, no stage. Twelve to fourteen people sit around one tea '
-      'table. It is the same reflection you do in WorkReflection, only spoken '
-      'out loud, in a safe space.',
+  'Không phải hội thảo, không có sân khấu. Mười đến mười hai người ngồi '
+      'quanh một bàn trà, cùng trả lời một câu hỏi duy nhất. Đây là chính '
+      'trải nghiệm phản chiếu của WorkReflection, chỉ khác là được nói thành '
+      'lời, trong một không gian an toàn.',
+  'Not a seminar, no stage. Ten to twelve people sit around one tea table, '
+      'answering a single question together. It is the same reflection you do '
+      'in WorkReflection, only spoken out loud, in a safe space.',
 );
 
 // ---------------------------------------------------------------------------
@@ -72,76 +71,62 @@ class WrTraChieuScreen extends ConsumerWidget {
     final workshops =
         ref.watch(activeWorkshopsProvider).valueOrNull ?? const [];
     final next = nextTraChieu(workshops, now: DateTime.now());
-    final upcoming = upcomingTraChieu(workshops, now: DateTime.now());
 
     return WrDetailScaffold(
       art: WrHeroArt.act,
-      eyebrow: 'OFFLINE · $kTraChieuLabel',
+      eyebrow: tr('Offline · Trà Chiều Nghề Nghiệp', 'Offline · Career Tea Time'),
       title: kTraChieuLabel,
       children: [
         Text(
-          wrKeepCompounds(kTraChieuFormatLabel),
-          style: TextStyle(fontSize: 15.5, color: WrColors.muted, height: 1.6),
+          wrKeepWords(kTraChieuFormatLabel),
+          style: const TextStyle(fontSize: 14.5, color: WrColors.muted, height: 1.55),
         ),
-        const SizedBox(height: 22),
+        const SizedBox(height: 20),
 
-        // ── Vì sao lại là Trà Chiều ────────────────────────────────────
-        //
-        // Thứ tự màn (khách 2026-08-03): vì sao → buổi sắp tới → lịch các buổi
-        // → ba luật. Nói "cái này là gì" trước rồi mới mời một buổi cụ thể;
-        // ba luật là điều kiện tham dự nên đứng cuối, sau khi đã có lý do.
+        // ── 1. Buổi sắp tới (Thẻ xanh Navy đứng đầu theo đúng script) ──
+        if (next == null)
+          const _DefaultNextSessionCard()
+        else
+          _NextSessionCard(session: next),
+
+        const SizedBox(height: 18),
+
+        // ── 2. Vì sao lại là Trà Chiều ────────────────────────────────
         WrCardMinimal(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 wrKeepCompounds(tr('Vì sao lại là Trà Chiều', 'Why Tea Time')),
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: WrColors.navy,
                 ),
               ),
-              SizedBox(height: 10),
+              const SizedBox(height: 10),
               Text(
-                wrKeepCompounds(kTraChieuWhy),
-                style: TextStyle(
-                  fontSize: 15.5,
+                wrKeepWords(kTraChieuWhy),
+                style: const TextStyle(
+                  fontSize: 14.5,
                   color: WrColors.dark,
-                  height: 1.75,
+                  height: 1.65,
                 ),
               ),
             ],
           ),
         ),
-        const SizedBox(height: 22),
 
-        // ── Buổi sắp tới ───────────────────────────────────────────────
-        if (next == null)
-          const _NoSessionCard()
-        else
-          _NextSessionCard(session: next),
-
-        // ── Lịch các buổi ──────────────────────────────────────────────
-        const SizedBox(height: 18),
-        WrLinkRow(
-          key: const Key('wr_tra_chieu_calendar_row'),
-          label: tr('Xem lịch các buổi', 'See the schedule'),
-          hint: upcoming.isEmpty
-              ? null
-              : tr('${upcoming.length} buổi', '${upcoming.length} sessions'),
-          onTap: () => context.push('/wr/tra-chieu/lich'),
-        ),
         const SizedBox(height: 18),
 
-        // ── Ba luật ────────────────────────────────────────────────────
+        // ── 3. Ba luật của mọi buổi ───────────────────────────────────
         WrCardMinimal(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 wrKeepCompounds(tr('Ba luật của mọi buổi', 'Three rules of every session')),
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                   color: WrColors.navy,
@@ -155,14 +140,14 @@ class WrTraChieuScreen extends ConsumerWidget {
                   children: [
                     const Padding(
                       padding: EdgeInsets.only(top: 3),
-                      child: Icon(Icons.check, size: 15, color: WrColors.teal),
+                      child: Icon(Icons.check, size: 16, color: WrColors.teal),
                     ),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Text(
                         wrKeepCompounds(rule),
                         style: const TextStyle(
-                          fontSize: 15.5,
+                          fontSize: 15,
                           color: WrColors.dark,
                           height: 1.7,
                         ),
@@ -171,6 +156,50 @@ class WrTraChieuScreen extends ConsumerWidget {
                   ],
                 ),
               ],
+            ],
+          ),
+        ),
+
+        const SizedBox(height: 18),
+
+        // ── 4. Xem lịch các buổi (Card theo mockup script) ───────────
+        WrCard(
+          key: const Key('wr_tra_chieu_calendar_row'),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
+          onTap: () => context.push('/wr/tra-chieu/lich'),
+          child: Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      wrKeepCompounds(tr('Xem lịch các buổi', 'See the schedule')),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: WrColors.navy,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      wrKeepCompounds(tr(
+                        'Chủ đề đổi mỗi buổi, theo đúng thứ tự ưu tiên',
+                        'Theme changes each session, in priority order',
+                      )),
+                      style: const TextStyle(
+                        fontSize: 12.5,
+                        color: WrColors.muted,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.chevron_right_rounded,
+                color: WrColors.navy,
+                size: 24,
+              ),
             ],
           ),
         ),
@@ -238,37 +267,37 @@ class _NextSessionCard extends StatelessWidget {
           ),
           _DarkLine(traChieuSeatLabel(session)),
           const SizedBox(height: 18),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              key: const Key('wr_tra_chieu_detail_button'),
-              onPressed: () =>
-                  openTraChieuOnWeb(context, traChieuUrlKey(session)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: WrColors.coral,
-                foregroundColor: WrColors.navy,
-                elevation: 0,
-                minimumSize: const Size.fromHeight(48),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(14),
+          if (kTraChieuZaloUrl.isNotEmpty) ...[
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                key: const Key('wr_tra_chieu_zalo_button'),
+                onPressed: () => openTraChieuZalo(context),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: WrColors.coral,
+                  foregroundColor: WrColors.navy,
+                  elevation: 0,
+                  minimumSize: const Size.fromHeight(48),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: Text(
+                  wrKeepCompounds(tr(
+                    'Nhắn Zalo "Trà Chiều" để giữ một ghế',
+                    'Message on Zalo "Tea Time" to reserve a seat',
+                  )),
+                  style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700),
                 ),
               ),
-              child: Text(
-                wrKeepCompounds(tr('Xem chi tiết và đăng ký', 'See details and sign up')),
-                style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700),
-              ),
             ),
-          ),
-          // Lối thứ hai: nhắn thẳng Zalo. Giữ chỗ một buổi 12–14 người là việc
-          // của người tổ chức chứ không cần một form đăng ký, nên với nhiều
-          // người đây mới là đường ngắn nhất.
-          if (kTraChieuZaloUrl.isNotEmpty) ...[
             const SizedBox(height: 10),
             SizedBox(
               width: double.infinity,
               child: OutlinedButton(
-                key: const Key('wr_tra_chieu_zalo_button'),
-                onPressed: () => openTraChieuZalo(context),
+                key: const Key('wr_tra_chieu_detail_button'),
+                onPressed: () =>
+                    openTraChieuOnWeb(context, traChieuUrlKey(session)),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: WrColors.cream,
                   side: BorderSide(
@@ -280,15 +309,100 @@ class _NextSessionCard extends StatelessWidget {
                   ),
                 ),
                 child: Text(
-                  wrKeepCompounds(tr(
-                    'Nhắn Zalo để giữ một ghế',
-                    'Message on Zalo to hold a seat',
-                  )),
-                  style: TextStyle(fontSize: 15.5, fontWeight: FontWeight.w600),
+                  wrKeepCompounds(tr('Xem chi tiết và đăng ký', 'See details and sign up')),
+                  style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ),
+          ] else ...[
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                key: const Key('wr_tra_chieu_detail_button'),
+                onPressed: () =>
+                    openTraChieuOnWeb(context, traChieuUrlKey(session)),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: WrColors.coral,
+                  foregroundColor: WrColors.navy,
+                  elevation: 0,
+                  minimumSize: const Size.fromHeight(48),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: Text(
+                  wrKeepCompounds(tr('Xem chi tiết và đăng ký', 'See details and sign up')),
+                  style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700),
                 ),
               ),
             ),
           ],
+        ],
+      ),
+    );
+  }
+}
+
+class _DefaultNextSessionCard extends StatelessWidget {
+  const _DefaultNextSessionCard();
+
+  @override
+  Widget build(BuildContext context) {
+    const s = kDefaultTraChieuSessions;
+    final first = s.first;
+
+    return WrCardDark(
+      key: const Key('wr_tra_chieu_next'),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          WrEyebrow(
+            tr('BUỔI SẮP TỚI', 'NEXT SESSION'),
+            color: WrColors.cream.withValues(alpha: 0.5),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            wrKeepCompounds('"${first.topic}"'),
+            style: const TextStyle(
+              fontSize: 19,
+              fontStyle: FontStyle.italic,
+              color: WrColors.cream,
+              height: 1.5,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Container(height: 1, color: WrColors.cream.withValues(alpha: 0.15)),
+          const SizedBox(height: 14),
+          _DarkLine('${first.label}, 15:30 đến 17:30'),
+          _DarkLine(kTraChieuNoVenue),
+          _DarkLine(tr(
+            'Giữ chỗ 199.000đ, bao gồm trà và bánh',
+            'Reserve spot 199,000 VND, includes tea & pastry',
+          )),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              key: const Key('wr_tra_chieu_zalo_button'),
+              onPressed: () => openTraChieuZalo(context),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: WrColors.coral,
+                foregroundColor: WrColors.navy,
+                elevation: 0,
+                minimumSize: const Size.fromHeight(48),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+              ),
+              child: Text(
+                wrKeepCompounds(tr(
+                  'Nhắn Zalo "Trà Chiều" để giữ một ghế',
+                  'Message on Zalo "Tea Time" to reserve a seat',
+                )),
+                style: const TextStyle(fontSize: 15.5, fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -316,28 +430,9 @@ class _DarkLine extends StatelessWidget {
   }
 }
 
-class _NoSessionCard extends StatelessWidget {
-  const _NoSessionCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return WrCardMinimal(
-      key: Key('wr_tra_chieu_empty'),
-      child: WrParagraph(
-        tr(
-          'Hiện chưa có lịch sự kiện mới. Lịch tổ chức Trà Chiều thường sẽ được '
-              'thông báo trước hai tuần để bạn tiện sắp xếp công việc.',
-          'No sessions scheduled yet. Tea Time dates are usually announced two '
-              'weeks ahead so you can plan around work.',
-        ),
-        style: TextStyle(fontSize: 15.5, color: WrColors.muted, height: 1.7),
-      ),
-    );
-  }
-}
 
 // ---------------------------------------------------------------------------
-// Lịch các buổi — mỗi buổi một dòng CHỮ: chủ đề, ngày giờ, địa điểm, giá.
+// Lịch các buổi — bố cục thẻ duy nhất gom tất cả các buổi (script `screenTraChieuCalendar`).
 // ---------------------------------------------------------------------------
 
 class WrTraChieuCalendarScreen extends ConsumerWidget {
@@ -354,21 +449,51 @@ class WrTraChieuCalendarScreen extends ConsumerWidget {
       eyebrow: kTraChieuLabel.toUpperCase(),
       title: tr('Lịch các buổi', 'Session schedule'),
       children: [
-        if (sessions.isEmpty)
-          Text(
-            wrKeepCompounds(tr('Hiện chưa có lịch sự kiện mới.', 'No sessions scheduled yet.')),
-            key: Key('wr_tra_chieu_calendar_empty'),
-            style: TextStyle(
-              fontSize: 15.5,
-              color: WrColors.muted,
-              height: 1.7,
-            ),
-          )
-        else
-          for (final s in sessions) ...[
-            _SessionRow(session: s),
-            if (s != sessions.last) const SizedBox(height: 12),
-          ],
+        WrCard(
+          padding: EdgeInsets.zero,
+          child: Column(
+            children: [
+              if (sessions.isNotEmpty)
+                for (var i = 0; i < sessions.length; i++) ...[
+                  _SessionCalendarRow(
+                    key: Key('wr_tra_chieu_session_${sessions[i].id}'),
+                    label: traChieuWhenLabel(sessions[i]),
+                    topic: sessions[i].title,
+                    note: sessions[i].description,
+                    onTap: () => _showTraChieuSessionSheet(
+                      context,
+                      label: traChieuWhenLabel(sessions[i]),
+                      topic: sessions[i].title,
+                      note: sessions[i].description,
+                      publicSession: true,
+                      webUrlKey: traChieuUrlKey(sessions[i]),
+                    ),
+                  ),
+                  if (i < sessions.length - 1)
+                    const Divider(height: 1, thickness: 1, color: WrColors.lineSoft),
+                ]
+              else
+                for (var i = 0; i < kDefaultTraChieuSessions.length; i++) ...[
+                  _SessionCalendarRow(
+                    key: Key('wr_tra_chieu_session_${kDefaultTraChieuSessions[i].id}'),
+                    label: '${kDefaultTraChieuSessions[i].label}${!kDefaultTraChieuSessions[i].publicSession ? ' · Buổi kín' : ''}',
+                    topic: kDefaultTraChieuSessions[i].topic,
+                    note: kDefaultTraChieuSessions[i].note,
+                    dimmed: !kDefaultTraChieuSessions[i].publicSession,
+                    onTap: () => _showTraChieuSessionSheet(
+                      context,
+                      label: kDefaultTraChieuSessions[i].label,
+                      topic: kDefaultTraChieuSessions[i].topic,
+                      note: kDefaultTraChieuSessions[i].note,
+                      publicSession: kDefaultTraChieuSessions[i].publicSession,
+                    ),
+                  ),
+                  if (i < kDefaultTraChieuSessions.length - 1)
+                    const Divider(height: 1, thickness: 1, color: WrColors.lineSoft),
+                ],
+            ],
+          ),
+        ),
         const SizedBox(height: 22),
         Text(
           wrKeepCompounds(tr(
@@ -379,151 +504,329 @@ class WrTraChieuCalendarScreen extends ConsumerWidget {
           )),
           key: const Key('wr_tra_chieu_calendar_footer'),
           textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 14.5, color: WrColors.muted, height: 1.7),
+          style: const TextStyle(fontSize: 14.5, color: WrColors.muted, height: 1.7),
         ),
       ],
     );
   }
 }
 
-/// Một buổi trong lịch.
-///
-/// Khách 2026-07-30: "thêm cho tôi cái nút để chuyển tới, chứ để chạm vào là
-/// chuyển như vậy dễ chạm nhầm lắm, chỉ vuốt lên thôi mà vô tình chạm cũng bất
-/// tiện". Nên cả thẻ KHÔNG còn bắt chạm nữa — chỉ nút mới rời khỏi app. Đây là
-/// hành động một chiều (mở trình duyệt, mất ngữ cảnh đang đọc), loại hành động
-/// không được phép xảy ra do một cú vuốt trượt tay.
-///
-/// Bố cục: ngày giờ trên một dải kem đậm, tên buổi, mô tả ngắn, rồi hai dòng
-/// địa điểm và giá có icon dẫn, cuối cùng là nút. Đủ năm thứ khách liệt kê cho
-/// tab này, tất cả bằng chữ.
-class _SessionRow extends StatelessWidget {
-  const _SessionRow({required this.session});
-
-  final WorkshopDetail session;
-
-  @override
-  Widget build(BuildContext context) {
-    final location = session.location?.trim();
-    final description = session.description?.trim();
-
-    return WrCardMinimal(
-      key: Key('wr_tra_chieu_session_${session.id}'),
-      padding: const EdgeInsets.all(18),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-            decoration: BoxDecoration(
-              color: WrColors.white,
-              borderRadius: BorderRadius.circular(100),
-            ),
-            child: Text(
-              wrKeepCompounds(traChieuWhenLabel(session)),
-              style: const TextStyle(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w700,
-                color: WrColors.coral,
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
-          Text(
-            wrKeepCompounds('"${session.title}"'),
-            style: const TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-              color: WrColors.navy,
-              height: 1.4,
-            ),
-          ),
-          if (description != null && description.isNotEmpty) ...[
-            const SizedBox(height: 6),
-            WrParagraph(
-              description,
-              maxLines: 3,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                fontSize: 14.5,
-                color: WrColors.muted,
-                height: 1.6,
-              ),
-            ),
-          ],
-          const SizedBox(height: 12),
-          _MetaLine(
-            icon: Icons.place_outlined,
-            text: location != null && location.isNotEmpty
-                ? location
-                : kTraChieuNoVenue,
-          ),
-          _MetaLine(
-            icon: Icons.local_activity_outlined,
-            text: traChieuSeatLabel(session),
-          ),
-          const SizedBox(height: 14),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              key: Key('wr_tra_chieu_session_button_${session.id}'),
-              onPressed: () =>
-                  openTraChieuOnWeb(context, traChieuUrlKey(session)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: WrColors.navy,
-                foregroundColor: WrColors.white,
-                elevation: 0,
-                minimumSize: const Size.fromHeight(44),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+void _showTraChieuSessionSheet(
+  BuildContext context, {
+  required String label,
+  required String topic,
+  String? note,
+  bool publicSession = true,
+  String? webUrlKey,
+}) {
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    builder: (ctx) {
+      return Container(
+        decoration: const BoxDecoration(
+          color: WrColors.creamBg,
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+        child: SafeArea(
+          top: false,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 36,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: WrColors.muted.withValues(alpha: 0.35),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
               ),
-              child: Text(
-                wrKeepCompounds(tr('Xem chi tiết và đăng ký', 'See details and sign up')),
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+              const SizedBox(height: 14),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: publicSession
+                          ? WrColors.coral.withValues(alpha: 0.12)
+                          : WrColors.navy.withValues(alpha: 0.08),
+                      borderRadius: BorderRadius.circular(6),
+                    ),
+                    child: Text(
+                      publicSession
+                          ? tr('TRÀ CHIỀU NGHỀ NGHIỆP', 'CAREER TEA TIME')
+                          : tr('BUỔI KÍN', 'PRIVATE SESSION'),
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                        color: publicSession ? WrColors.coral : WrColors.navy,
+                        letterSpacing: 0.4,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.close_rounded, size: 22, color: WrColors.muted),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: () => Navigator.pop(ctx),
+                  ),
+                ],
               ),
-            ),
+              const SizedBox(height: 12),
+              Text(
+                wrKeepCompounds('"$topic"'),
+                style: const TextStyle(
+                  fontSize: 18.5,
+                  fontWeight: FontWeight.w700,
+                  color: WrColors.navy,
+                  height: 1.38,
+                ),
+              ),
+              if (note != null && note.trim().isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Text(
+                  wrKeepCompounds(note.trim()),
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontStyle: FontStyle.italic,
+                    color: WrColors.muted,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 16),
+              WrCardMinimal(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  children: [
+                    _sheetInfoRow(Icons.calendar_today_rounded, '$label · 15:30 đến 17:30'),
+                    const SizedBox(height: 10),
+                    _sheetInfoRow(Icons.place_outlined, kTraChieuNoVenue),
+                    const SizedBox(height: 10),
+                    _sheetInfoRow(
+                      Icons.groups_outlined,
+                      tr('10 đến 12 người · 2 tiếng · 1 câu hỏi', '10 to 12 people · 2 hours · 1 question'),
+                    ),
+                    const SizedBox(height: 10),
+                    _sheetInfoRow(
+                      Icons.local_cafe_outlined,
+                      tr('Giữ chỗ 199.000đ, bao gồm trà và bánh', 'Reserve 199,000 VND, includes tea & pastries'),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                wrKeepWords(tr(
+                  'Không hội thảo, không sân khấu. Ngồi quanh một bàn trà, cùng trả lời một câu hỏi duy nhất trong không gian an toàn và bảo mật.',
+                  'No seminar, no stage. Sitting around a tea table, answering one question in a safe and confidential space.',
+                )),
+                style: const TextStyle(fontSize: 13, color: WrColors.muted, height: 1.55),
+              ),
+              const SizedBox(height: 20),
+              if (publicSession) ...[
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    key: const Key('wr_tra_chieu_sheet_zalo_button'),
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      openTraChieuZalo(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: WrColors.coral,
+                      foregroundColor: WrColors.navy,
+                      elevation: 0,
+                      minimumSize: const Size.fromHeight(48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: Text(
+                      wrKeepCompounds(tr(
+                        'Nhắn Zalo "Trà Chiều" để giữ một ghế',
+                        'Message on Zalo "Tea Time" to reserve a seat',
+                      )),
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
+                if (webUrlKey != null) ...[
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton(
+                      onPressed: () {
+                        Navigator.pop(ctx);
+                        openTraChieuOnWeb(context, webUrlKey);
+                      },
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: WrColors.navy,
+                        side: BorderSide(color: WrColors.navy.withValues(alpha: 0.2)),
+                        minimumSize: const Size.fromHeight(46),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                      ),
+                      child: Text(
+                        wrKeepCompounds(tr('Xem chi tiết và đăng ký trên web', 'See details and sign up on web')),
+                        style: const TextStyle(fontSize: 14.5, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ),
+                ],
+              ] else ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: WrColors.navy.withValues(alpha: 0.05),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    wrKeepWords(tr(
+                      'Buổi kín: Chỉ dành cho khách mời từ danh sách chờ hoặc người đã từng tham gia.',
+                      'Private session: Reserved for invitees from waitlist or prior participants.',
+                    )),
+                    style: const TextStyle(fontSize: 13, color: WrColors.dark, height: 1.5),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(ctx);
+                      openTraChieuZalo(context);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: WrColors.navy,
+                      foregroundColor: WrColors.cream,
+                      elevation: 0,
+                      minimumSize: const Size.fromHeight(48),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                    child: Text(
+                      wrKeepCompounds(tr(
+                        'Nhắn Zalo để vào danh sách chờ',
+                        'Message on Zalo to join waitlist',
+                      )),
+                      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                ),
+              ],
+            ],
           ),
-        ],
-      ),
-    );
-  }
+        ),
+      );
+    },
+  );
 }
 
-/// Một dòng thông tin phụ: icon dẫn + chữ.
-class _MetaLine extends StatelessWidget {
-  const _MetaLine({required this.icon, required this.text});
+Widget _sheetInfoRow(IconData icon, String text) {
+  return Row(
+    children: [
+      Icon(icon, size: 16, color: WrColors.teal),
+      const SizedBox(width: 10),
+      Expanded(
+        child: Text(
+          wrKeepCompounds(text),
+          style: const TextStyle(
+            fontSize: 13.5,
+            color: WrColors.dark,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+      ),
+    ],
+  );
+}
 
-  final IconData icon;
-  final String text;
+class _SessionCalendarRow extends StatelessWidget {
+  const _SessionCalendarRow({
+    super.key,
+    required this.label,
+    required this.topic,
+    this.note,
+    this.dimmed = false,
+    this.onTap,
+  });
+
+  final String label;
+  final String topic;
+  final String? note;
+  final bool dimmed;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Padding(
-            padding: const EdgeInsets.only(top: 2),
-            child: Icon(icon, size: 15, color: WrColors.coral),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              wrKeepCompounds(text),
-              style: const TextStyle(
-                fontSize: 14.5,
-                color: WrColors.dark,
-                height: 1.5,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Opacity(
+        opacity: dimmed ? 0.5 : 1.0,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      wrKeepCompounds(label),
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: WrColors.navy,
+                      ),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      wrKeepCompounds('"$topic"'),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: WrColors.navy,
+                        height: 1.35,
+                      ),
+                    ),
+                    if (note != null && note!.trim().isNotEmpty) ...[
+                      const SizedBox(height: 3),
+                      Text(
+                        wrKeepCompounds(note!.trim()),
+                        style: const TextStyle(
+                          fontSize: 11.5,
+                          color: WrColors.muted,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
-            ),
+              const SizedBox(width: 8),
+              const Icon(
+                Icons.chevron_right_rounded,
+                size: 20,
+                color: WrColors.muted,
+              ),
+            ],
           ),
-        ],
+        ),
       ),
     );
   }
 }
+
 
 // ---------------------------------------------------------------------------
 
@@ -538,12 +841,77 @@ Future<void> openTraChieuOnWeb(BuildContext context, String workshopId) =>
       tr('Không mở được trang chi tiết.', 'Could not open the details page.'),
     );
 
-/// Mở Zalo để giữ chỗ. Chỉ gọi khi [kTraChieuZaloUrl] có giá trị.
-Future<void> openTraChieuZalo(BuildContext context) => _open(
-  context,
-  kTraChieuZaloUrl,
-  tr('Không mở được Zalo.', 'Could not open Zalo.'),
-);
+/// Mở Zalo để giữ chỗ.
+Future<void> openTraChieuZalo(BuildContext context) async {
+  final url = kTraChieuZaloUrl.isNotEmpty
+      ? kTraChieuZaloUrl
+      : kTraChieuDefaultZaloUrl;
+  var opened = false;
+  try {
+    opened = await launchUrl(
+      Uri.parse(url),
+      mode: LaunchMode.externalApplication,
+    );
+  } catch (_) {
+    opened = false;
+  }
+  if (!opened) {
+    try {
+      opened = await launchUrl(
+        Uri.parse(url),
+        mode: LaunchMode.platformDefault,
+      );
+    } catch (_) {
+      opened = false;
+    }
+  }
+  if (!opened && context.mounted) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+        title: Text(
+          wrKeepCompounds(tr('Giữ chỗ Trà Chiều', 'Tea Time Reservation')),
+          style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w700, color: WrColors.navy),
+        ),
+        content: Text(
+          wrKeepCompounds(tr(
+            'Mở ứng dụng Zalo và gửi tin nhắn "TRÀ CHIỀU" đến số 0866883047 để giữ một ghế tham gia.',
+            'Open Zalo and send message "TEA TIME" to 0866883047 to reserve a seat.',
+          )),
+          style: const TextStyle(fontSize: 14.5, color: WrColors.dark, height: 1.6),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Clipboard.setData(const ClipboardData(text: '0866883047'));
+              Navigator.pop(ctx);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(tr(
+                    'Đã sao chép số Zalo 0866883047',
+                    'Copied Zalo number 0866883047',
+                  )),
+                ),
+              );
+            },
+            child: Text(
+              tr('Sao chép số', 'Copy number'),
+              style: const TextStyle(fontWeight: FontWeight.w700, color: WrColors.teal),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              tr('Đã hiểu', 'Got it'),
+              style: const TextStyle(fontWeight: FontWeight.w700, color: WrColors.navy),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
 
 Future<void> _open(BuildContext context, String url, String failure) async {
   var opened = false;

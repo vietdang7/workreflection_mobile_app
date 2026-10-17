@@ -25,8 +25,11 @@ import 'wr_practice_step_completion.dart' show practiceReachableDone;
 import 'wr_skill_moment.dart';
 import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 import 'wr_learning_library_screen.dart'
-    show kLearningLibraryIntro, kLearningLibraryLabel;
-import '../../../core/logic/wr_tra_chieu.dart' show kTraChieuCardLine;
+    show kLearningLibraryIntro, kLearningLibraryLabel, kLearningLibraryMeta;
+import '../../../core/logic/wr_tra_chieu.dart'
+    show kTraChieuCardDescription, kTraChieuCardLine, nextTraChieu, traChieuCardLabel;
+import '../../workshops/workshops_providers.dart'
+    show activeWorkshopsProvider;
 
 // ─────────────────────────────────────────────────────────────────────────────
 // WrGrowthScreen — ConsumerStatefulWidget for enroll double-tap guard
@@ -654,47 +657,56 @@ class _AddSection extends StatelessWidget {
 
 // ── PHẦN 3: MỞ RỘNG ────────────────────────────────────────────────────────
 
-class _ExpandSection extends StatelessWidget {
+class _ExpandSection extends ConsumerWidget {
   const _ExpandSection();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         WrEyebrow(tr('Mở rộng', 'Expand')),
         const SizedBox(height: 8),
 
-        // Hai thẻ dùng chung một khuôn [_ExpandCard] và phần chữ cao bằng
-        // thẻ dài hơn (họp khách 14/10: "cân đối kích thước hai thẻ"). Không
-        // cắt chữ: máy để cỡ chữ to thì cả hai cùng cao lên (máy thật 15/10).
         LayoutBuilder(
           builder: (context, constraints) {
             final seriesTitle = kLearningLibraryLabel;
-            final seriesLine = kLearningLibraryIntro;
+            final seriesDescription = kLearningLibraryIntro;
+            final seriesMeta = kLearningLibraryMeta;
+
             final teaTitle = tr(
               'Trà chiều nghề nghiệp',
               'Career Afternoon Tea',
             );
-            final teaLine = kTraChieuCardLine;
+            final teaDescription = kTraChieuCardDescription;
+            final workshops =
+                ref.watch(activeWorkshopsProvider).valueOrNull ?? const [];
+            final next = nextTraChieu(workshops, now: DateTime.now());
+            final teaMeta = next != null
+                ? '${traChieuCardLabel(next)} · ${tr('10 đến 12 người · 2 giờ', '10 to 12 people · 2 hours')}'
+                : kTraChieuCardLine;
+
             final bodyMin = [
               _ExpandCard.bodyHeight(
                 context,
                 width: constraints.maxWidth,
                 title: seriesTitle,
-                subtitle: seriesLine,
+                description: seriesDescription,
+                meta: seriesMeta,
               ),
               _ExpandCard.bodyHeight(
                 context,
                 width: constraints.maxWidth,
                 title: teaTitle,
-                subtitle: teaLine,
+                description: teaDescription,
+                meta: teaMeta,
               ),
             ].reduce((a, b) => a > b ? a : b);
+
             return Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 1. Chuỗi series Tâm thế người đi làm
+                // 1. Tâm thế người đi làm
                 _ExpandCard(
                   key: const Key('wr_growth_youtube_card'),
                   onTap: () => context.push('/wr/learning-library'),
@@ -702,27 +714,26 @@ class _ExpandSection extends StatelessWidget {
                   dim: 0.15,
                   badges: [
                     _ExpandBadge(
-                      tr('YOUTUBE', 'YOUTUBE'),
+                      tr('TẬP MỚI', 'NEW EPISODE'),
                       background: WrColors.coral,
                       color: Colors.white,
                     ),
                     _ExpandBadge(
-                      tr('SERIES CHIA SẺ', 'VIDEO SERIES'),
+                      tr('YOUTUBE · 9 PHÚT', 'YOUTUBE · 9 MIN'),
                       background: Colors.white.withValues(alpha: 0.92),
                       color: WrColors.navy,
                     ),
                   ],
                   playIcon: true,
                   title: seriesTitle,
-                  subtitle: seriesLine,
+                  description: seriesDescription,
+                  meta: seriesMeta,
                   bodyMinHeight: bodyMin,
                 ),
 
                 const SizedBox(height: 11),
 
                 // 2. Trà chiều nghề nghiệp
-                // Luôn hiện, kể cả khi chưa có buổi (khách 30/07: "tôi không còn
-                // thấy cái mục giao diện trà chiều đâu cả").
                 _ExpandCard(
                   key: const Key('wr_growth_tra_chieu_card'),
                   onTap: () => context.push('/wr/tra-chieu'),
@@ -736,7 +747,8 @@ class _ExpandSection extends StatelessWidget {
                     ),
                   ],
                   title: teaTitle,
-                  subtitle: teaLine,
+                  description: teaDescription,
+                  meta: teaMeta,
                   bodyMinHeight: bodyMin,
                 ),
               ],
@@ -770,6 +782,8 @@ class _ExpandBadge extends StatelessWidget {
       ),
       child: Text(
         label,
+        maxLines: 1,
+        softWrap: false,
         style: TextStyle(
           color: color,
           fontSize: 9.5,
@@ -780,9 +794,7 @@ class _ExpandBadge extends StatelessWidget {
   }
 }
 
-/// Khuôn chung của thẻ Mở rộng: dải ảnh cao cố định + tên + mô tả luôn chiếm
-/// đúng HAI dòng (mô tả ngắn một dòng vẫn giữ chỗ dòng thứ hai), nên hai thẻ
-/// cao bằng nhau ở mọi cỡ chữ.
+/// Khuôn chung của thẻ Mở rộng: dải ảnh + tiêu đề + mô tả + meta (script Sprint 2).
 class _ExpandCard extends StatelessWidget {
   const _ExpandCard({
     super.key,
@@ -791,7 +803,8 @@ class _ExpandCard extends StatelessWidget {
     required this.dim,
     required this.badges,
     required this.title,
-    required this.subtitle,
+    required this.description,
+    required this.meta,
     this.playIcon = false,
     this.bodyMinHeight = 0,
   });
@@ -801,16 +814,16 @@ class _ExpandCard extends StatelessWidget {
   final double dim;
   final List<Widget> badges;
   final String title;
-  final String subtitle;
+  final String description;
+  final String meta;
   final bool playIcon;
 
   /// Chiều cao tối thiểu phần chữ: [_ExpandSection] truyền chiều cao của
   /// thẻ có chữ dài nhất, để hai thẻ cao bằng nhau mà không cắt chữ nào.
   final double bodyMinHeight;
 
-  static const double imageHeight = 92;
-  static const double titleGap = 3;
-  static const bodyPadding = EdgeInsets.fromLTRB(15, 4, 15, 14);
+  static const double imageHeight = 94;
+  static const bodyPadding = EdgeInsets.fromLTRB(15, 12, 15, 14);
 
   static const titleStyle = TextStyle(
     fontSize: 14.5,
@@ -819,10 +832,17 @@ class _ExpandCard extends StatelessWidget {
     height: 1.4,
   );
 
-  static const subtitleStyle = TextStyle(
-    fontSize: 12.5,
-    color: WrColors.text2,
+  static const descriptionStyle = TextStyle(
+    fontSize: 11.5,
+    color: WrColors.muted,
+    height: 1.45,
+  );
+
+  static const metaStyle = TextStyle(
+    fontSize: 9.6,
+    color: WrColors.muted,
     height: 1.35,
+    letterSpacing: -0.15,
   );
 
   @override
@@ -847,6 +867,7 @@ class _ExpandCard extends StatelessWidget {
                         Image.asset(
                           image,
                           fit: BoxFit.cover,
+                          alignment: const Alignment(0.0, -0.16),
                           excludeFromSemantics: true,
                           errorBuilder: (_, _, _) => const SizedBox.expand(),
                         ),
@@ -878,9 +899,9 @@ class _ExpandCard extends StatelessWidget {
                           shape: BoxShape.circle,
                         ),
                         child: const Icon(
-                          Icons.play_arrow,
-                          color: Colors.white,
-                          size: 18,
+                          Icons.play_arrow_rounded,
+                          color: WrColors.navy,
+                          size: 20,
                         ),
                       ),
                     ),
@@ -896,8 +917,19 @@ class _ExpandCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(wrKeepCompounds(title), style: titleStyle),
-                  const SizedBox(height: titleGap),
-                  Text(wrKeepCompounds(subtitle), style: subtitleStyle),
+                  const SizedBox(height: 4),
+                  Text(wrKeepWords(description), style: descriptionStyle),
+                  const SizedBox(height: 5),
+                  FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      meta,
+                      maxLines: 1,
+                      softWrap: false,
+                      style: metaStyle,
+                    ),
+                  ),
                 ],
               ),
             ),
@@ -912,14 +944,15 @@ class _ExpandCard extends StatelessWidget {
     BuildContext context, {
     required double width,
     required String title,
-    required String subtitle,
+    required String description,
+    required String meta,
   }) {
     final scaler = MediaQuery.textScalerOf(context);
     final dir = Directionality.of(context);
     final textWidth = width - bodyPadding.horizontal;
     double measure(String text, TextStyle style) {
       final p = TextPainter(
-        text: TextSpan(text: wrKeepCompounds(text), style: style),
+        text: TextSpan(text: wrKeepWords(text), style: style),
         textDirection: dir,
         textScaler: scaler,
       )..layout(maxWidth: textWidth);
@@ -928,10 +961,24 @@ class _ExpandCard extends StatelessWidget {
       return h;
     }
 
+    double measureSingleLine(String text, TextStyle style) {
+      final p = TextPainter(
+        text: TextSpan(text: text, style: style),
+        textDirection: dir,
+        textScaler: scaler,
+        maxLines: 1,
+      )..layout();
+      final h = p.height;
+      p.dispose();
+      return h;
+    }
+
     return bodyPadding.vertical +
         measure(title, titleStyle) +
-        titleGap +
-        measure(subtitle, subtitleStyle);
+        4.0 +
+        measure(description, descriptionStyle) +
+        5.0 +
+        measureSingleLine(meta, metaStyle);
   }
 }
 

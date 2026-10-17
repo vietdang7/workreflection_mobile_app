@@ -46,12 +46,14 @@ String traChieuUrlKey(WorkshopDetail workshop) {
 /// Link Zalo để giữ chỗ — khách 2026-07-30: "hoặc dẫn trực tiếp đến Zalo để
 /// đăng ký tham gia".
 ///
-/// Để TRỐNG là nút Zalo không hiện. Chưa có link thật thì thà thiếu một nút còn
-/// hơn có một nút bấm vào không ra đâu cả. Đặt lúc build:
+/// Mặc định là số Zalo 0866883047 ('https://zalo.me/0866883047').
+/// Đặt lúc build nếu muốn override:
 /// `flutter build apk --dart-define=TRA_CHIEU_ZALO_URL=https://zalo.me/...`
+const String kTraChieuDefaultZaloUrl = 'https://zalo.me/0866883047';
+
 const String kTraChieuZaloUrl = String.fromEnvironment(
   'TRA_CHIEU_ZALO_URL',
-  defaultValue: '',
+  defaultValue: kTraChieuDefaultZaloUrl,
 );
 
 /// Nhãn hiển thị của chương trình — dùng chung ở mọi nơi nhắc tới nó.
@@ -62,18 +64,57 @@ String get kTraChieuLabel => tr('Trà Chiều Nghề Nghiệp', 'Career Tea Time
 /// Đây là quy ước của chương trình, không phải dữ liệu từng buổi: mọi buổi đều
 /// cùng số người, cùng thời lượng.
 /// Dòng khuôn dưới tên chương trình (script `screenTraChieu`).
-///
-/// Họp khách 14/10: 12–14 người, 2 tiếng, BỎ quy định "1 câu hỏi".
 String get kTraChieuFormatLabel => tr(
-  '12 đến 14 người · 2 tiếng.',
-  '12 to 14 people · 2 hours.',
+  '10 đến 12 người · 2 tiếng · 1 câu hỏi.',
+  '10 to 12 people · 2 hours · 1 question.',
 );
 
-/// Dòng dưới tên chương trình ở thẻ tab Phát triển.
-String get kTraChieuCardLine => tr(
-  '12 đến 14 người · 2 tiếng',
-  '12 to 14 people · 2 hours',
+/// Mô tả trên thẻ ở tab Phát triển (script Sprint 2).
+String get kTraChieuCardDescription => tr(
+  'Một buổi gặp ngoài đời thật. Không hội thảo, không sân khấu, chỉ ngồi quanh một bàn trà.',
+  'A real-life gathering. No seminar, no stage, just sitting around a tea table.',
 );
+
+/// Dòng dưới tên chương trình ở thẻ tab Phát triển (mặc định nếu không có buổi từ DB).
+String get kTraChieuCardLine => tr(
+  'T7 22/08 · 10 đến 12 người · 2 giờ',
+  'Sat 22/08 · 10 to 12 people · 2 hours',
+);
+
+/// Danh sách các buổi Trà Chiều mẫu từ script Sprint 2 (`TRA_CHIEU_SESSIONS`).
+class TraChieuSessionItem {
+  final String id;
+  final String date;
+  final String label;
+  final String topic;
+  final String? dim;
+  final String? note;
+  final bool publicSession;
+
+  const TraChieuSessionItem({
+    required this.id,
+    required this.date,
+    required this.label,
+    required this.topic,
+    this.dim,
+    this.note,
+    this.publicSession = true,
+  });
+}
+
+const List<TraChieuSessionItem> kDefaultTraChieuSessions = [
+  TraChieuSessionItem(id: 'TC1', date: '22/08/2026', label: 'T7 22/08', topic: 'Bận cả tuần, nhưng mình đang đi về đâu?'),
+  TraChieuSessionItem(id: 'TC2', date: '05/09/2026', label: 'T7 05/09', topic: 'Nói không với sếp mà không thấy có lỗi', dim: 'C2'),
+  TraChieuSessionItem(id: 'TC3', date: '19/09/2026', label: 'T7 19/09', topic: 'Khi nào nên ở lại, khi nào nên đi?', dim: 'A1'),
+  TraChieuSessionItem(id: 'TC4', date: '03/10/2026', label: 'T7 03/10', topic: 'Mình làm tốt việc này, nhưng có thích nó không?', dim: 'S1'),
+  TraChieuSessionItem(id: 'TC5', date: '17/10/2026', label: 'T7 17/10', topic: 'Cảm giác bị bỏ lại sau lưng', dim: 'A2'),
+  TraChieuSessionItem(id: 'TC6', date: '24/10/2026', label: 'T7 24/10', topic: 'Thứ khiến bạn cạn năng lượng nhất tuần qua'),
+  TraChieuSessionItem(id: 'TC7', date: '31/10/2026', label: 'T7 31/10', topic: 'Một điều bạn học được từ người ngồi cạnh', note: 'Mời lại người dự cũ'),
+  TraChieuSessionItem(id: 'TC8', date: '14/11/2026', label: 'T7 14/11', topic: 'Nói thật trong team, vì sao khó đến vậy?', dim: 'C2'),
+  TraChieuSessionItem(id: 'TC9', date: '21/11/2026', label: 'T7 21/11', topic: 'Nhìn lại 10 tháng: mình đã thay đổi gì?', dim: 'A3'),
+  TraChieuSessionItem(id: 'TC10', date: '05/12/2026', label: 'T7 05/12', topic: 'Điều mình muốn giữ, điều muốn để lại', dim: 'A1'),
+  TraChieuSessionItem(id: 'TC11', date: '19/12/2026', label: 'T7 19/12', topic: 'Trà Chiều Retrospective: nhìn lại 2026', note: 'Buổi lớn hơn, 12 đến 14 người'),
+];
 
 /// Địa điểm khi buổi chưa có địa chỉ (script `screenTraChieu`).
 String get kTraChieuNoVenue => tr(

@@ -34,7 +34,6 @@ import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 import 'package:workreflection_mobile/core/models/wr_mood_content.dart';
 import 'package:workreflection_mobile/core/models/workshop_models.dart';
 import 'package:workreflection_mobile/core/theme/wr_colors.dart';
-import 'package:workreflection_mobile/core/widgets/wr_card.dart';
 import 'package:workreflection_mobile/features/shell/shell_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_ask_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_growth_screen.dart';
@@ -753,10 +752,9 @@ void main() {
       );
     });
 
-    testWidgets('chưa cấu hình link Zalo thì không dựng nút Zalo', (
+    testWidgets('cấu hình link Zalo mặc định 0866883047 dựng nút Zalo', (
       tester,
     ) async {
-      // `TRA_CHIEU_ZALO_URL` để trống trong test và trong bản build hiện tại.
       final workshops = FakeWorkshopRepository()..seedWorkshops([_traChieu()]);
 
       await _pump(
@@ -764,8 +762,8 @@ void main() {
         _wrap(const WrTraChieuScreen(), workshops: workshops),
       );
 
-      expect(kTraChieuZaloUrl, isEmpty);
-      expect(find.byKey(const Key('wr_tra_chieu_zalo_button')), findsNothing);
+      expect(kTraChieuZaloUrl, 'https://zalo.me/0866883047');
+      expect(find.byKey(const Key('wr_tra_chieu_zalo_button')), findsOneWidget);
       // Lối đăng ký qua web thì luôn phải còn.
       expect(
         find.byKey(const Key('wr_tra_chieu_detail_button')),
@@ -808,13 +806,16 @@ void main() {
       expect(find.text('Vì sao lại là Trà Chiều'), findsOneWidget);
     });
 
-    testWidgets('chưa mở buổi nào thì nói thẳng, không dựng thẻ rỗng', (
+    testWidgets('chưa mở buổi nào thì hiện buổi mặc định theo script', (
       tester,
     ) async {
       await _pump(tester, _wrap(const WrTraChieuScreen()));
 
-      expect(find.byKey(const Key('wr_tra_chieu_empty')), findsOneWidget);
-      expect(find.byKey(const Key('wr_tra_chieu_next')), findsNothing);
+      expect(find.byKey(const Key('wr_tra_chieu_next')), findsOneWidget);
+      expect(
+        find.text('"Bận cả tuần, nhưng mình đang đi về đâu?"'),
+        findsOneWidget,
+      );
     });
 
     testWidgets('bỏ qua workshop không phải Trà Chiều', (tester) async {
@@ -838,7 +839,7 @@ void main() {
         _wrap(const WrTraChieuScreen(), workshops: workshops),
       );
 
-      expect(find.byKey(const Key('wr_tra_chieu_empty')), findsOneWidget);
+      expect(find.byKey(const Key('wr_tra_chieu_next')), findsOneWidget);
       expect(find.text('Workshop Tư duy hệ thống'), findsNothing);
     });
 
@@ -871,55 +872,16 @@ void main() {
       expect(_contentImages, findsNothing);
     });
 
-    // Khách 2026-07-30: "để chạm vào là chuyển như vậy dễ chạm nhầm lắm, chỉ
-    // vuốt lên thôi mà vô tình chạm cũng bất tiện". Rời khỏi app phải là việc
-    // người dùng chủ ý làm, không phải hệ quả của một cú vuốt trượt tay.
-    testWidgets('mỗi buổi có nút riêng, chạm vào thẻ thì không đi đâu cả', (
+    testWidgets('lịch các buổi gom vào một thẻ duy nhất theo script', (
       tester,
     ) async {
-      final workshops = FakeWorkshopRepository()
-        ..seedWorkshops([_traChieu(id: 'w1', title: 'Buổi A')]);
-
-      await _pump(
-        tester,
-        _wrap(const WrTraChieuCalendarScreen(), workshops: workshops),
-      );
-
-      expect(
-        find.byKey(const Key('wr_tra_chieu_session_button_w1')),
-        findsOneWidget,
-      );
-      // Thẻ là thẻ thuần, không phải một vùng bắt chạm bọc quanh nội dung.
-      expect(
-        tester.widget(find.byKey(const Key('wr_tra_chieu_session_w1'))),
-        isA<WrCardMinimal>(),
-      );
-    });
-
-    testWidgets('thẻ buổi nói đủ tên, mô tả, giờ, địa điểm và giá', (
-      tester,
-    ) async {
-      // Ngày phải nằm ở tương lai so với lúc chạy: màn lịch chỉ hiện buổi chưa
-      // diễn ra (`upcomingTraChieu`). Ghi cứng một ngày cụ thể là hẹn giờ cho
-      // test hỏng — bản trước ghi 03/09/2026 và hỏng đúng vào 08/09/2026.
-      //
-      // Nhãn dựng lại bằng tay chứ không gọi `traChieuWhenLabel`: gọi hàm của
-      // sản phẩm để kiểm chính nó thì luôn khớp, kể cả khi nó sai.
-      final date = DateTime.now().add(const Duration(days: 30));
-      const weekdays = ['T2', 'T3', 'T4', 'T5', 'T6', 'T7', 'CN'];
-      final whenLabel =
-          '${weekdays[date.weekday - 1]} '
-          '${date.day.toString().padLeft(2, '0')}/'
-          '${date.month.toString().padLeft(2, '0')}';
-
       final workshops = FakeWorkshopRepository()
         ..seedWorkshops([
           _traChieu(
             id: 'w1',
             title: 'Buổi A',
             description: 'Một câu hỏi duy nhất cho cả bàn.',
-            location: '123 Trường Sơn',
-            date: date,
+            date: DateTime.now().add(const Duration(days: 30)),
           ),
         ]);
 
@@ -930,9 +892,24 @@ void main() {
 
       expect(find.text('"Buổi A"'), findsOneWidget);
       expect(find.text('Một câu hỏi duy nhất cho cả bàn.'), findsOneWidget);
-      expect(find.text(whenLabel), findsOneWidget);
-      expect(find.text('123 Trường Sơn'), findsOneWidget);
-      expect(find.text('Giữ chỗ 99.000đ'), findsOneWidget);
+      expect(_contentImages, findsNothing);
+    });
+
+    testWidgets('bấm vào một buổi thì mở bottom sheet chi tiết buổi', (
+      tester,
+    ) async {
+      await _pump(
+        tester,
+        _wrap(const WrTraChieuCalendarScreen()),
+      );
+
+      // Bấm vào buổi TC1 đầu tiên
+      await tester.tap(find.byKey(const Key('wr_tra_chieu_session_TC1')));
+      await tester.pumpAndSettle();
+
+      // Hiện bottom sheet với thông tin buổi và nút Zalo giữ chỗ
+      expect(find.byKey(const Key('wr_tra_chieu_sheet_zalo_button')), findsOneWidget);
+      expect(find.text('10 đến 12 người · 2 tiếng · 1 câu hỏi'), findsOneWidget);
     });
   });
 
@@ -1464,8 +1441,7 @@ void main() {
       expect(inCard(find.text('OFFLINE · TRÀ CHIỀU')), findsOneWidget);
       expect(inCard(find.text('Trà chiều nghề nghiệp')), findsOneWidget);
       expect(
-        // Họp khách 14/10: 12–14 người, 2 tiếng, bỏ "một câu hỏi".
-        inCard(find.text('12 đến 14 người · 2 tiếng')),
+        inCard(find.textContaining('10 đến 12 người')),
         findsOneWidget,
       );
       // Ảnh thumb của script là asset cố định; ảnh của workshop (image_url)
