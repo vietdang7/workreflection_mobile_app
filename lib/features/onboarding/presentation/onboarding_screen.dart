@@ -111,8 +111,6 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     final messenger = ScaffoldMessenger.of(context);
     try {
       await ensureGuestSession(ref);
-      await setSeenOnboarding();
-      ref.invalidate(seenOnboardingProvider);
     } catch (_) {
       if (mounted) setState(() => _busy = false);
       messenger.showSnackBar(
@@ -137,7 +135,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
     if (!mounted) return;
     ref.read(onboardingCheckinProvider.notifier).state = option;
     startReflectionFromCheckin(ref, option);
-    router.push('/wr/flow/step');
+    router.go('/wr/flow/step');
   });
 
   /// Bỏ qua: Đánh dấu đã qua onboarding rồi chuyển sang màn hình đăng ký / đăng nhập.

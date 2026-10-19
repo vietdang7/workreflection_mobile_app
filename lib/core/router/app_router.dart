@@ -173,8 +173,9 @@ String? computeRedirect({
     return null;
   }
 
-  // Khách (chưa có tài khoản thật): ĐƯỢC PHÉP trải nghiệm luồng nhìn lại đầu tiên
-  if (isGuest && (location == '/wr/flow' || location.startsWith('/wr/flow/'))) {
+  // CHO PHÉP trải nghiệm luồng nhìn lại / khảo sát ban đầu (/wr/flow/*)
+  // để người dùng chọn các đáp án reflection trước khi bắt buộc đăng ký!
+  if (location == '/wr/flow' || location.startsWith('/wr/flow/')) {
     return null;
   }
 
@@ -256,8 +257,11 @@ GoRoute wrRoute({
 // ---------------------------------------------------------------------------
 
 final appRouterProvider = Provider<GoRouter>((ref) {
-  final seenOnboardingAsync = ref.watch(seenOnboardingProvider);
   final authNotifier = ref.watch(authChangeNotifierProvider);
+  ref.listen(
+    seenOnboardingProvider,
+    (_, __) => ref.read(authChangeNotifierProvider).notify(),
+  );
 
   return GoRouter(
     initialLocation: '/splash',
@@ -266,7 +270,8 @@ final appRouterProvider = Provider<GoRouter>((ref) {
       final auth = Supabase.instance.client.auth;
       final hasSession = auth.currentSession != null;
       final isGuest = auth.currentUser?.isAnonymous ?? false;
-      final seenOnboarding = seenOnboardingAsync.valueOrNull ?? false;
+      final seenOnboarding =
+          ref.read(seenOnboardingProvider).valueOrNull ?? false;
       final location = state.uri.toString();
 
       return computeRedirect(

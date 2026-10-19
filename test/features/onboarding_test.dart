@@ -182,7 +182,8 @@ void main() {
 
       expect(h.auth.anonymousSignIns, 1);
       final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getBool('seen_onboarding'), isTrue);
+      // Chưa đánh dấu xong onboarding khi đang làm reflection đầu tiên
+      expect(prefs.getBool('seen_onboarding'), isNull);
       expect(find.text('STEP'), findsOneWidget);
     },
   );
