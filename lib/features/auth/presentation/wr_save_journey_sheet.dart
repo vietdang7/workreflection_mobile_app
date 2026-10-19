@@ -25,6 +25,8 @@ Future<void> showSaveJourneySheet(BuildContext context) async {
   );
   if (choice == _SaveChoice.email) {
     await router.push<void>('/auth/save');
+  } else if (choice == _SaveChoice.later) {
+    router.go('/auth');
   }
 }
 

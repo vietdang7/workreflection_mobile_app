@@ -55,6 +55,7 @@ import '../../../../core/models/wr_episode.dart';
 import '../../../../core/theme/wr_colors.dart';
 import '../../episode_flow_controller.dart';
 import '../../wr_providers.dart';
+import '../../../auth/guest_session.dart';
 import 'wr_flow_scaffold.dart';
 import 'package:workreflection_mobile/core/widgets/wr_paragraph.dart';
 
@@ -381,6 +382,12 @@ class _WrStepScreenState extends ConsumerState<WrStepScreen> {
 
   Future<void> _leave() async {
     await ref.read(episodeFlowProvider.notifier).pause();
-    if (mounted) context.go('/home');
+    if (mounted) {
+      if (ref.read(isGuestProvider)) {
+        context.go('/auth');
+      } else {
+        context.go('/home');
+      }
+    }
   }
 }

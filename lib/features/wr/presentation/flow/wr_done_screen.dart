@@ -113,7 +113,11 @@ class _WrDoneScreenState extends ConsumerState<WrDoneScreen> {
   void _home() {
     ref.read(episodeFlowProvider.notifier).leave();
     ref.read(pendingEnergyProvider.notifier).state = null;
-    context.go('/home');
+    if (ref.read(isGuestProvider)) {
+      context.go('/auth/save');
+    } else {
+      context.go('/home');
+    }
   }
 
   @override

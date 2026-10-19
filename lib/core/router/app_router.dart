@@ -154,16 +154,10 @@ String? computeRedirect({
 }) {
   const authScreens = {'/splash', '/onboarding', '/auth'};
 
-  // Khách (user ẩn danh, mockup v47) đã có phiên nhưng chưa có tài khoản.
-  // Họ vẫn được ở lại Onboarding — phiên khách được mở ngay giữa Onboarding,
-  // lúc chọn cảm xúc, và router không được giật họ ra Home giữa chừng — và
-  // vẫn mở được màn đăng nhập để vào tài khoản cũ. Chỉ màn chờ mới chuyển đi.
-  if (hasSession && isGuest) {
-    if (location == '/splash') return '/home';
-    return null;
-  }
+  // Người dùng đã có tài khoản thật (không cho phép khách ẩn danh bypass vào app)
+  final hasRealSession = hasSession && !isGuest;
 
-  if (hasSession) {
+  if (hasRealSession) {
     // Logged-in users must not linger on auth/onboarding screens.
     if (authScreens.contains(location)) return '/home';
     return null;
@@ -172,15 +166,27 @@ String? computeRedirect({
   // Cho phép xem màn hình Onboarding (Landing Board) và Hướng dẫn sử dụng mà không bắt buộc đăng nhập
   if (location == '/profile/guide' || location == '/onboarding') return null;
 
-  // No session:
-  if (!seenOnboarding) {
-    // Must go through onboarding first.
-    if (location == '/onboarding') return null;
-    return '/onboarding';
+  // Cho phép ở các màn hình auth (đăng ký, đăng nhập)
+  if (location == '/auth' ||
+      location.startsWith('/auth?') ||
+      location.startsWith('/auth/')) {
+    return null;
   }
 
-  // Onboarding seen but not authenticated.
-  if (location == '/auth') return null;
+  // Khách (chưa có tài khoản thật): ĐƯỢC PHÉP trải nghiệm luồng nhìn lại đầu tiên
+  if (isGuest && (location == '/wr/flow' || location.startsWith('/wr/flow/'))) {
+    return null;
+  }
+
+  // Khi chưa đăng nhập tài khoản thật:
+  // Nếu mở từ màn chờ /splash:
+  // - Nếu chưa xem onboarding: vào /onboarding
+  // - Nếu đã xem onboarding: vào /auth
+  if (location == '/splash') {
+    return seenOnboarding ? '/auth' : '/onboarding';
+  }
+
+  // Đối với các route được bảo vệ khác (/home, /survey, /profile, /understand, /journey...), bắt buộc sang /auth
   return '/auth';
 }
 
@@ -276,7 +282,17 @@ final appRouterProvider = Provider<GoRouter>((ref) {
         path: '/onboarding',
         builder: (context, state) => OnboardingScreen(),
       ),
-      wrRoute(path: '/auth', builder: (context, state) => AuthScreen()),
+      wrRoute(
+        path: '/auth',
+        builder: (context, state) {
+          final mode = state.uri.queryParameters['mode'];
+          final extra = state.extra;
+          final bool? initialIsLogin = extra is Map<String, dynamic>
+              ? extra['isLogin'] as bool?
+              : (mode != null ? mode == 'login' : null);
+          return AuthScreen(initialIsLogin: initialIsLogin);
+        },
+      ),
       // Khách lưu hành trình bằng Email (sheet "Lưu lại hành trình").
       wrRoute(
         path: '/auth/save',
