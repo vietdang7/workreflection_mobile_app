@@ -50,6 +50,18 @@ abstract class WrChatRepository {
 
   /// Xoá một cuộc trò chuyện. Lượt bên trong bị xoá theo (cascade).
   Future<void> deleteConversation(String conversationId);
+
+  /// Ghi một báo cáo câu trả lời AI vào `wr_ai_reports`.
+  ///
+  /// [content] là bản chụp câu trả lời: xoá cuộc trò chuyện thì tin nhắn mất,
+  /// báo cáo vẫn phải đọc được.
+  Future<void> reportMessage({
+    required String content,
+    required WrAiReportReason reason,
+    String? note,
+    String? conversationId,
+    String? messageId,
+  });
 }
 
 final wrChatRepositoryProvider = Provider<WrChatRepository>((ref) {
@@ -144,6 +156,34 @@ class SupabaseWrChatRepository implements WrChatRepository {
   /// `details` là thân phản hồi đã giải mã JSON khi máy chủ trả JSON. Nếu vì lý
   /// do nào đó nó không có dạng mong đợi (ví dụ gateway chen vào một trang HTML
   /// 502), rơi về một câu chung thay vì ném nguyên `details` lên màn hình.
+  @override
+  Future<void> reportMessage({
+    required String content,
+    required WrAiReportReason reason,
+    String? note,
+    String? conversationId,
+    String? messageId,
+  }) async {
+    final trimmed = note?.trim();
+    try {
+      await _client.from('wr_ai_reports').insert({
+        'reason': reason.wire,
+        'content': content,
+        if (trimmed != null && trimmed.isNotEmpty) 'note': trimmed,
+        if (conversationId != null) 'conversation_id': conversationId,
+        if (messageId != null) 'message_id': messageId,
+        'locale': wrLocaleCode,
+      });
+    } catch (_) {
+      throw WrChatException(
+        tr(
+          'Chưa gửi được báo cáo. Bạn kiểm tra mạng rồi thử lại nhé.',
+          'The report could not be sent. Check your network and try again.',
+        ),
+      );
+    }
+  }
+
   WrChatException _fromFunctionException(FunctionException e) {
     final d = e.details;
     if (d is Map) {

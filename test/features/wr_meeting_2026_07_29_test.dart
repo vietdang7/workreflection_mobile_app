@@ -898,18 +898,21 @@ void main() {
     testWidgets('bấm vào một buổi thì mở bottom sheet chi tiết buổi', (
       tester,
     ) async {
-      await _pump(
-        tester,
-        _wrap(const WrTraChieuCalendarScreen()),
-      );
+      await _pump(tester, _wrap(const WrTraChieuCalendarScreen()));
 
       // Bấm vào buổi TC1 đầu tiên
       await tester.tap(find.byKey(const Key('wr_tra_chieu_session_TC1')));
       await tester.pumpAndSettle();
 
       // Hiện bottom sheet với thông tin buổi và nút Zalo giữ chỗ
-      expect(find.byKey(const Key('wr_tra_chieu_sheet_zalo_button')), findsOneWidget);
-      expect(find.text('10 đến 12 người · 2 tiếng · 1 câu hỏi'), findsOneWidget);
+      expect(
+        find.byKey(const Key('wr_tra_chieu_sheet_zalo_button')),
+        findsOneWidget,
+      );
+      expect(
+        find.text('10 đến 12 người · 2 tiếng · 1 câu hỏi'),
+        findsOneWidget,
+      );
     });
   });
 
@@ -1025,6 +1028,94 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.byKey(const Key('wr_chat_quota_hint')), findsNothing);
+    });
+
+    // Chính sách Nội dung do AI tạo của Google Play: báo cáo được câu trả lời
+    // AI ngay trong app.
+    testWidgets('câu trả lời AI có nút Báo cáo, câu của người dùng thì không', (
+      tester,
+    ) async {
+      final chat = FakeWrChatRepository();
+
+      await _pump(tester, _wrap(const WrAskScreen(), chat: chat));
+      await tester.enterText(find.byKey(const Key('wr_ask_field')), 'Xin chào');
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('wr_ask_send')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('wr_chat_ai_bubble')), findsOneWidget);
+      expect(find.byKey(const Key('wr_chat_report')), findsOneWidget);
+    });
+
+    testWidgets(
+      'báo cáo: phải chọn lý do mới gửi được, gửi kèm bản chụp câu trả lời',
+      (tester) async {
+        final chat = FakeWrChatRepository()
+          ..replyText = 'Câu trả lời cần báo cáo';
+
+        await _pump(tester, _wrap(const WrAskScreen(), chat: chat));
+        await tester.enterText(
+          find.byKey(const Key('wr_ask_field')),
+          'Xin chào',
+        );
+        await tester.pump();
+        await tester.tap(find.byKey(const Key('wr_ask_send')));
+        await tester.pumpAndSettle();
+
+        await tester.tap(find.byKey(const Key('wr_chat_report')));
+        await tester.pumpAndSettle();
+        expect(find.text('Báo cáo câu trả lời này'), findsOneWidget);
+
+        final submit = find.byKey(const Key('wr_chat_report_submit'));
+        expect(tester.widget<FilledButton>(submit).onPressed, isNull);
+
+        await tester.tap(find.byKey(const Key('wr_chat_report_offensive')));
+        await tester.pump();
+        await tester.enterText(
+          find.byKey(const Key('wr_chat_report_note')),
+          '  thô lỗ  ',
+        );
+        await tester.pump();
+        await tester.ensureVisible(submit);
+        await tester.tap(submit);
+        await tester.pumpAndSettle();
+
+        expect(chat.reportCalls, hasLength(1));
+        final call = chat.reportCalls.single;
+        expect(call.content, 'Câu trả lời cần báo cáo');
+        expect(call.reason, WrAiReportReason.offensive);
+        expect(call.note, '  thô lỗ  ');
+        expect(call.conversationId, 'c1');
+        expect(find.text('Báo cáo câu trả lời này'), findsNothing);
+        expect(
+          find.text('Cảm ơn bạn. Báo cáo đã được ghi nhận để đội ngũ xem lại.'),
+          findsOneWidget,
+        );
+      },
+    );
+
+    testWidgets('báo cáo lỗi mạng: tấm trượt ở lại và báo lỗi', (tester) async {
+      final chat = FakeWrChatRepository();
+
+      await _pump(tester, _wrap(const WrAskScreen(), chat: chat));
+      await tester.enterText(find.byKey(const Key('wr_ask_field')), 'Xin chào');
+      await tester.pump();
+      await tester.tap(find.byKey(const Key('wr_ask_send')));
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byKey(const Key('wr_chat_report')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const Key('wr_chat_report_other')));
+      await tester.pump();
+      chat.nextError = const WrChatException('Chưa gửi được báo cáo.');
+      final submit = find.byKey(const Key('wr_chat_report_submit'));
+      await tester.ensureVisible(submit);
+      await tester.tap(submit);
+      await tester.pumpAndSettle();
+
+      expect(chat.reportCalls, isEmpty);
+      expect(find.text('Báo cáo câu trả lời này'), findsOneWidget);
+      expect(find.text('Chưa gửi được báo cáo.'), findsOneWidget);
     });
 
     testWidgets('mở màn là vào thẳng cuộc gần nhất, đúng thứ tự', (
@@ -1440,10 +1531,7 @@ void main() {
       Finder inCard(Finder f) => find.descendant(of: card, matching: f);
       expect(inCard(find.text('OFFLINE · TRÀ CHIỀU')), findsOneWidget);
       expect(inCard(find.text('Trà chiều nghề nghiệp')), findsOneWidget);
-      expect(
-        inCard(find.textContaining('10 đến 12 người')),
-        findsOneWidget,
-      );
+      expect(inCard(find.textContaining('10 đến 12 người')), findsOneWidget);
       // Ảnh thumb của script là asset cố định; ảnh của workshop (image_url)
       // vẫn KHÔNG được chèn — nguyên tắc họp 2026-07-29.
       expect(

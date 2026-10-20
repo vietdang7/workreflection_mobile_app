@@ -26,6 +26,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../core/data/wr_chat_repository.dart';
 import '../../../core/l10n/wr_tr.dart';
 import '../../../core/logic/wr_chat_starters.dart';
 import '../../../core/logic/wr_chat_offer.dart' show calmMoodFor;
@@ -127,125 +128,134 @@ class _WrAskScreenState extends ConsumerState<WrAskScreen> {
         backgroundColor: Colors.transparent,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
-        surfaceTintColor: WrColors.white,
-        elevation: 0,
-        leading: IconButton(
-          key: const Key('wr_detail_back'),
-          tooltip: tr('Quay lại', 'Back'),
-          icon: const WrNavCircle.back(),
-          color: WrColors.navy,
-          onPressed: () => context.pop(),
-        ),
-        title: Text(
-          wrKeepCompounds(tr('Trò chuyện', 'Chat')),
-          style: TextStyle(
-            fontSize: 17,
-            fontWeight: FontWeight.w700,
+          surfaceTintColor: WrColors.white,
+          elevation: 0,
+          leading: IconButton(
+            key: const Key('wr_detail_back'),
+            tooltip: tr('Quay lại', 'Back'),
+            icon: const WrNavCircle.back(),
             color: WrColors.navy,
+            onPressed: () => context.pop(),
           ),
-        ),
-        actions: [
-          // Nút cuộc mới đứng RIÊNG ngoài menu, không nằm trong ba chấm: đây là
-          // hành động thường xuyên thứ hai ở màn này, sau việc gõ và gửi.
-          IconButton(
-            key: const Key('wr_chat_new'),
-            tooltip: tr('Cuộc trò chuyện mới', 'New conversation'),
-            icon: const Icon(Icons.add_comment_outlined, size: 20),
-            color: WrColors.navy,
-            onPressed: state.sending
-                ? null
-                : () {
-                    ref.read(wrChatControllerProvider.notifier).startNew();
-                    _controller.clear();
-                    setState(() {});
-                  },
-          ),
-          PopupMenuButton<String>(
-            key: const Key('wr_chat_menu'),
-            icon: const Icon(Icons.more_horiz, color: WrColors.navy),
-            onSelected: (value) {
-              if (value == 'conversations') _showConversations();
-              if (value == 'history') _showOldQuestions();
-              if (value == 'clear') _confirmClear();
-            },
-            itemBuilder: (_) => [
-              PopupMenuItem(
-                value: 'conversations',
-                child: Text(wrKeepCompounds(tr('Lịch sử trò chuyện', 'Chat history'))),
-              ),
-              PopupMenuItem(
-                value: 'history',
-                child: Text(
-                  wrKeepCompounds(tr('Câu hỏi đã gửi trước đây', 'Questions you sent before')),
-                ),
-              ),
-              PopupMenuItem(
-                value: 'clear',
-                child: Text(
-                  wrKeepCompounds(tr('Xoá cuộc trò chuyện này', 'Delete this conversation')),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: state.loading
-                  ? const Center(
-                      key: Key('wr_chat_loading'),
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 1.8),
-                      ),
-                    )
-                  : state.isEmpty && !state.sending
-                  ? _EmptyState(
-                      starters: ref.watch(wrChatStartersProvider),
-                      onPick: (text) {
-                        _controller.text = text;
-                        setState(() {});
-                      },
-                    )
-                  : ListView(
-                      key: const Key('wr_chat_list'),
-                      controller: _scrollController,
-                      padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-                      children: [
-                        for (final (i, m) in state.messages.indexed)
-                          _Bubble(
-                            message: m,
-                            lastUserText: _lastUserTextBefore(
-                              state.messages,
-                              i,
-                            ),
-                          ),
-                        if (state.sending) const _TypingBubble(),
-                      ],
-                    ),
+          title: Text(
+            wrKeepCompounds(tr('Trò chuyện', 'Chat')),
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w700,
+              color: WrColors.navy,
             ),
-            if (state.error != null)
-              _ErrorBar(
-                message: state.error!,
-                quotaExhausted: state.quotaExhausted,
-              ),
-            _Composer(
-              controller: _controller,
-              sending: state.sending,
-              remaining: state.isPremium ? null : state.remaining,
-              onChanged: () {
-                ref.read(wrChatControllerProvider.notifier).dismissError();
-                setState(() {});
+          ),
+          actions: [
+            // Nút cuộc mới đứng RIÊNG ngoài menu, không nằm trong ba chấm: đây là
+            // hành động thường xuyên thứ hai ở màn này, sau việc gõ và gửi.
+            IconButton(
+              key: const Key('wr_chat_new'),
+              tooltip: tr('Cuộc trò chuyện mới', 'New conversation'),
+              icon: const Icon(Icons.add_comment_outlined, size: 20),
+              color: WrColors.navy,
+              onPressed: state.sending
+                  ? null
+                  : () {
+                      ref.read(wrChatControllerProvider.notifier).startNew();
+                      _controller.clear();
+                      setState(() {});
+                    },
+            ),
+            PopupMenuButton<String>(
+              key: const Key('wr_chat_menu'),
+              icon: const Icon(Icons.more_horiz, color: WrColors.navy),
+              onSelected: (value) {
+                if (value == 'conversations') _showConversations();
+                if (value == 'history') _showOldQuestions();
+                if (value == 'clear') _confirmClear();
               },
-              onSend: _send,
+              itemBuilder: (_) => [
+                PopupMenuItem(
+                  value: 'conversations',
+                  child: Text(
+                    wrKeepCompounds(tr('Lịch sử trò chuyện', 'Chat history')),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'history',
+                  child: Text(
+                    wrKeepCompounds(
+                      tr(
+                        'Câu hỏi đã gửi trước đây',
+                        'Questions you sent before',
+                      ),
+                    ),
+                  ),
+                ),
+                PopupMenuItem(
+                  value: 'clear',
+                  child: Text(
+                    wrKeepCompounds(
+                      tr('Xoá cuộc trò chuyện này', 'Delete this conversation'),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
+        body: SafeArea(
+          child: Column(
+            children: [
+              Expanded(
+                child: state.loading
+                    ? const Center(
+                        key: Key('wr_chat_loading'),
+                        child: SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 1.8),
+                        ),
+                      )
+                    : state.isEmpty && !state.sending
+                    ? _EmptyState(
+                        starters: ref.watch(wrChatStartersProvider),
+                        onPick: (text) {
+                          _controller.text = text;
+                          setState(() {});
+                        },
+                      )
+                    : ListView(
+                        key: const Key('wr_chat_list'),
+                        controller: _scrollController,
+                        padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+                        children: [
+                          for (final (i, m) in state.messages.indexed)
+                            _Bubble(
+                              message: m,
+                              lastUserText: _lastUserTextBefore(
+                                state.messages,
+                                i,
+                              ),
+                            ),
+                          if (state.sending) const _TypingBubble(),
+                        ],
+                      ),
+              ),
+              if (state.error != null)
+                _ErrorBar(
+                  message: state.error!,
+                  quotaExhausted: state.quotaExhausted,
+                ),
+              _Composer(
+                controller: _controller,
+                sending: state.sending,
+                remaining: state.isPremium ? null : state.remaining,
+                onChanged: () {
+                  ref.read(wrChatControllerProvider.notifier).dismissError();
+                  setState(() {});
+                },
+                onSend: _send,
+              ),
+            ],
+          ),
+        ),
       ),
-    ),
     );
   }
 
@@ -275,7 +285,11 @@ class _WrAskScreenState extends ConsumerState<WrAskScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: WrColors.white,
-        title: Text(wrKeepCompounds(tr('Xoá cuộc trò chuyện?', 'Delete this conversation?'))),
+        title: Text(
+          wrKeepCompounds(
+            tr('Xoá cuộc trò chuyện?', 'Delete this conversation?'),
+          ),
+        ),
         content: WrParagraph(
           tr(
             'Toàn bộ lượt trò chuyện sẽ bị xoá và không lấy lại được. '
@@ -358,6 +372,9 @@ class _Bubble extends StatelessWidget {
         // tới, nên người dùng gật đầu xong phải tự thoát ra tự tìm.
         if (!isUser && action != null)
           _ActionButton(action: action, lastUserText: lastUserText),
+        // Chính sách Nội dung do AI tạo của Google Play: người dùng phải báo cáo
+        // được câu trả lời xúc phạm ngay trong app.
+        if (!isUser && !message.pending) _ReportLink(message: message),
       ],
     );
   }
@@ -404,6 +421,226 @@ class _Bubble extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Liên kết nhỏ "Báo cáo" dưới mỗi câu trả lời của trợ lý.
+class _ReportLink extends StatelessWidget {
+  const _ReportLink({required this.message});
+
+  final WrChatMessage message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: TextButton.icon(
+        key: const Key('wr_chat_report'),
+        onPressed: () => showModalBottomSheet<void>(
+          context: context,
+          backgroundColor: WrColors.white,
+          isScrollControlled: true,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(22)),
+          ),
+          builder: (_) => _ReportSheet(message: message),
+        ),
+        icon: const Icon(Icons.outlined_flag, size: 16),
+        label: Text(
+          wrKeepCompounds(tr('Báo cáo', 'Report')),
+          style: const TextStyle(fontSize: 14),
+        ),
+        style: TextButton.styleFrom(
+          foregroundColor: WrColors.text3,
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          minimumSize: const Size(0, 36),
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+      ),
+    );
+  }
+}
+
+/// Tấm trượt chọn lý do báo cáo một câu trả lời của trợ lý.
+class _ReportSheet extends ConsumerStatefulWidget {
+  const _ReportSheet({required this.message});
+
+  final WrChatMessage message;
+
+  @override
+  ConsumerState<_ReportSheet> createState() => _ReportSheetState();
+}
+
+class _ReportSheetState extends ConsumerState<_ReportSheet> {
+  final _note = TextEditingController();
+  WrAiReportReason? _reason;
+  bool _sending = false;
+  String? _error;
+
+  @override
+  void dispose() {
+    _note.dispose();
+    super.dispose();
+  }
+
+  Future<void> _submit() async {
+    final reason = _reason;
+    if (reason == null || _sending) return;
+    setState(() {
+      _sending = true;
+      _error = null;
+    });
+    try {
+      await ref
+          .read(wrChatRepositoryProvider)
+          .reportMessage(
+            content: widget.message.content,
+            reason: reason,
+            note: _note.text,
+            conversationId: ref.read(wrChatControllerProvider).conversationId,
+            messageId: widget.message.id,
+          );
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.maybeOf(context);
+      Navigator.of(context).pop();
+      messenger?.showSnackBar(
+        SnackBar(
+          content: Text(
+            tr(
+              'Cảm ơn bạn. Báo cáo đã được ghi nhận để đội ngũ xem lại.',
+              'Thank you. Your report has been recorded for our team to review.',
+            ),
+          ),
+        ),
+      );
+    } on WrChatException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _sending = false;
+        _error = e.message;
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(
+          20,
+          16,
+          20,
+          16 + MediaQuery.of(context).viewInsets.bottom,
+        ),
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(
+                wrKeepCompounds(
+                  tr('Báo cáo câu trả lời này', 'Report this answer'),
+                ),
+                style: const TextStyle(
+                  fontSize: 19,
+                  fontWeight: FontWeight.w700,
+                  color: WrColors.navy,
+                ),
+              ),
+              const SizedBox(height: 6),
+              WrParagraph(
+                tr(
+                  'Câu trả lời do AI tạo ra. Nếu thấy không phù hợp, bạn chọn '
+                      'lý do để đội ngũ xem lại.',
+                  'This answer was generated by AI. If it seems inappropriate, '
+                      'pick a reason so our team can review it.',
+                ),
+                style: const TextStyle(
+                  fontSize: 15,
+                  height: 1.55,
+                  color: WrColors.text2,
+                ),
+                textAlign: TextAlign.start,
+              ),
+              const SizedBox(height: 8),
+              RadioGroup<WrAiReportReason>(
+                groupValue: _reason,
+                onChanged: (v) => setState(() => _reason = v),
+                child: Column(
+                  children: [
+                    for (final r in WrAiReportReason.values)
+                      RadioListTile<WrAiReportReason>(
+                        key: Key('wr_chat_report_${r.name}'),
+                        value: r,
+                        contentPadding: EdgeInsets.zero,
+                        dense: true,
+                        activeColor: WrColors.navy,
+                        title: Text(
+                          wrKeepCompounds(r.label),
+                          style: const TextStyle(
+                            fontSize: 16,
+                            color: WrColors.dark,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 4),
+              TextField(
+                key: const Key('wr_chat_report_note'),
+                controller: _note,
+                maxLength: 1000,
+                minLines: 2,
+                maxLines: 4,
+                decoration: InputDecoration(
+                  hintText: tr(
+                    'Ghi thêm (không bắt buộc)',
+                    'Add details (optional)',
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+              if (_error != null)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 8),
+                  child: Text(
+                    _error!,
+                    style: const TextStyle(color: WrColors.destructive),
+                  ),
+                ),
+              FilledButton(
+                key: const Key('wr_chat_report_submit'),
+                onPressed: _reason == null || _sending ? null : _submit,
+                style: FilledButton.styleFrom(
+                  backgroundColor: WrColors.coral,
+                  foregroundColor: WrColors.navy,
+                  minimumSize: const Size.fromHeight(48),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+                child: _sending
+                    ? const SizedBox(
+                        width: 18,
+                        height: 18,
+                        child: CircularProgressIndicator(strokeWidth: 2),
+                      )
+                    : Text(
+                        wrKeepCompounds(tr('Gửi báo cáo', 'Send report')),
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -529,10 +766,12 @@ class _EmptyState extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
       children: [
         Text(
-          wrKeepCompounds(tr(
-            'Kể mình nghe một chuyện trong công việc',
-            'Tell me something from work',
-          )),
+          wrKeepCompounds(
+            tr(
+              'Kể mình nghe một chuyện trong công việc',
+              'Tell me something from work',
+            ),
+          ),
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w700,
@@ -730,15 +969,17 @@ class _Composer extends StatelessWidget {
           if (remaining != null) ...[
             const SizedBox(height: 8),
             Text(
-              wrKeepCompounds(remaining == 0
-                  ? tr(
-                      'Hôm nay bạn đã dùng hết lượt trò chuyện miễn phí.',
-                      'You have used up your free chats for today.',
-                    )
-                  : tr(
-                      'Còn $remaining lượt trò chuyện miễn phí hôm nay.',
-                      '$remaining free chats left today.',
-                    )),
+              wrKeepCompounds(
+                remaining == 0
+                    ? tr(
+                        'Hôm nay bạn đã dùng hết lượt trò chuyện miễn phí.',
+                        'You have used up your free chats for today.',
+                      )
+                    : tr(
+                        'Còn $remaining lượt trò chuyện miễn phí hôm nay.',
+                        '$remaining free chats left today.',
+                      ),
+              ),
               key: const Key('wr_chat_quota_hint'),
               style: const TextStyle(fontSize: 13, color: WrColors.text3),
             ),
@@ -846,10 +1087,12 @@ class _ConversationsSheet extends ConsumerWidget {
               error: (_, __) => Padding(
                 padding: EdgeInsets.only(bottom: 12),
                 child: Text(
-                  wrKeepCompounds(tr(
-                    'Chưa đọc được lịch sử. Bạn thử lại sau nhé.',
-                    'Could not load the history. Please try again later.',
-                  )),
+                  wrKeepCompounds(
+                    tr(
+                      'Chưa đọc được lịch sử. Bạn thử lại sau nhé.',
+                      'Could not load the history. Please try again later.',
+                    ),
+                  ),
                   style: TextStyle(fontSize: 15.5, color: WrColors.muted),
                 ),
               ),
@@ -858,10 +1101,12 @@ class _ConversationsSheet extends ConsumerWidget {
                       key: Key('wr_chat_conversations_empty'),
                       padding: EdgeInsets.only(bottom: 12),
                       child: Text(
-                        wrKeepCompounds(tr(
-                          'Chưa có cuộc trò chuyện nào được lưu.',
-                          'No conversations saved yet.',
-                        )),
+                        wrKeepCompounds(
+                          tr(
+                            'Chưa có cuộc trò chuyện nào được lưu.',
+                            'No conversations saved yet.',
+                          ),
+                        ),
                         style: TextStyle(
                           fontSize: 15.5,
                           color: WrColors.muted,
@@ -932,14 +1177,16 @@ class _ConversationRow extends StatelessWidget {
                   ),
                   const SizedBox(height: 5),
                   Text(
-                    wrKeepCompounds(tr(
-                      '${at.day.toString().padLeft(2, '0')}/'
-                          '${at.month.toString().padLeft(2, '0')}/${at.year}'
-                          '${isCurrent ? '  ·  đang mở' : ''}',
-                      '${at.day.toString().padLeft(2, '0')}/'
-                          '${at.month.toString().padLeft(2, '0')}/${at.year}'
-                          '${isCurrent ? '  ·  open' : ''}',
-                    )),
+                    wrKeepCompounds(
+                      tr(
+                        '${at.day.toString().padLeft(2, '0')}/'
+                            '${at.month.toString().padLeft(2, '0')}/${at.year}'
+                            '${isCurrent ? '  ·  đang mở' : ''}',
+                        '${at.day.toString().padLeft(2, '0')}/'
+                            '${at.month.toString().padLeft(2, '0')}/${at.year}'
+                            '${isCurrent ? '  ·  open' : ''}',
+                      ),
+                    ),
                     style: const TextStyle(
                       fontSize: 13.5,
                       color: WrColors.muted,
@@ -993,10 +1240,12 @@ class _OldQuestionsSheet extends ConsumerWidget {
                 key: Key('wr_ask_history_empty'),
                 padding: EdgeInsets.only(bottom: 12),
                 child: Text(
-                  wrKeepCompounds(tr(
-                    'Bạn chưa gửi câu hỏi nào theo cách cũ.',
-                    'You have not sent any questions the old way.',
-                  )),
+                  wrKeepCompounds(
+                    tr(
+                      'Bạn chưa gửi câu hỏi nào theo cách cũ.',
+                      'You have not sent any questions the old way.',
+                    ),
+                  ),
                   style: TextStyle(
                     fontSize: 15.5,
                     color: WrColors.muted,
@@ -1040,8 +1289,10 @@ class _QuestionRow extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(bottom: 6),
               child: Text(
-                wrKeepCompounds('${at.day.toString().padLeft(2, '0')}/'
-                '${at.month.toString().padLeft(2, '0')}'),
+                wrKeepCompounds(
+                  '${at.day.toString().padLeft(2, '0')}/'
+                  '${at.month.toString().padLeft(2, '0')}',
+                ),
                 style: const TextStyle(fontSize: 13.5, color: WrColors.muted),
               ),
             ),
@@ -1056,7 +1307,9 @@ class _QuestionRow extends StatelessWidget {
           ),
           const SizedBox(height: 10),
           Text(
-            wrKeepCompounds(question.isAnswered ? question.answer! : kAskPendingMessage),
+            wrKeepCompounds(
+              question.isAnswered ? question.answer! : kAskPendingMessage,
+            ),
             style: TextStyle(
               fontSize: 15,
               height: 1.7,

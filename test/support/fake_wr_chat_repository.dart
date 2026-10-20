@@ -30,6 +30,16 @@ class FakeWrChatRepository implements WrChatRepository {
   final List<({String message, String? conversationId, bool? premiumOverride})>
   sendCalls = [];
   final List<String> deleteCalls = [];
+  final List<
+    ({
+      String content,
+      WrAiReportReason reason,
+      String? note,
+      String? conversationId,
+      String? messageId,
+    })
+  >
+  reportCalls = [];
 
   /// Gieo một cuộc trò chuyện đã có, kèm các lượt bên trong.
   void seedConversation(
@@ -117,5 +127,23 @@ class FakeWrChatRepository implements WrChatRepository {
     deleteCalls.add(conversationId);
     _conversations.removeWhere((c) => c.id == conversationId);
     _byConversation.remove(conversationId);
+  }
+
+  @override
+  Future<void> reportMessage({
+    required String content,
+    required WrAiReportReason reason,
+    String? note,
+    String? conversationId,
+    String? messageId,
+  }) async {
+    _maybeThrow();
+    reportCalls.add((
+      content: content,
+      reason: reason,
+      note: note,
+      conversationId: conversationId,
+      messageId: messageId,
+    ));
   }
 }
