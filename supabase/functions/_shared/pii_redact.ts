@@ -219,6 +219,42 @@ const ADDRESS_LABEL_RE = new RegExp(
   'gimu',
 );
 
+/// Địa chỉ có nhãn nằm GIỮA dòng ("Email: … | Địa chỉ: …") hoặc trong chữ bị
+/// bóc thành một dòng dài (PDF không đánh dấu xuống dòng — lỗi thật 20/10/2026).
+/// Giá trị dừng ở dấu "|", xuống dòng, hoặc ngay trước nhãn kế tiếp
+/// ("SĐT:", "Ngày sinh:", "MỤC TIÊU …"), tối đa 140 ký tự.
+/// Nhãn địa chỉ cá nhân, dài trước ngắn sau để "Địa chỉ thường trú" thắng
+/// "Địa chỉ". Không gồm "Địa chỉ làm việc / công ty" — đó là nơi làm việc.
+const ADDRESS_LABELS = [
+  'Địa chỉ thường trú', 'Địa chỉ tạm trú', 'Địa chỉ liên hệ', 'Địa chỉ liên lạc',
+  'Địa chỉ hiện tại', 'Địa chỉ cư trú', 'Địa chỉ nhà', 'Địa chỉ',
+  'Hộ khẩu thường trú', 'Hộ khẩu', 'Thường trú', 'Tạm trú',
+  'Nơi ở hiện tại', 'Nơi ở hiện nay', 'Nơi ở', 'Chỗ ở hiện tại', 'Chỗ ở',
+  'Quê quán', 'Nguyên quán', 'Nơi sinh',
+  'Residential Address', 'Permanent Address', 'Current Address', 'Mailing Address',
+  'Home Address', 'Address', 'Hometown', 'Place of birth',
+];
+
+/// Ba cách viết thường gặp của một nhãn: "Địa chỉ", "ĐỊA CHỈ", "địa chỉ".
+///
+/// KHÔNG dùng cờ `i` cho cả regex: dưới `iu`, `\p{Lu}` khớp cả chữ thường, và
+/// luật "dừng trước tiêu đề viết hoa" sẽ dừng ngay ở "Hai Bà Trưng".
+const ADDRESS_LABEL_ALT = ADDRESS_LABELS
+  .flatMap((l) => [l, l.toUpperCase(), l[0].toLowerCase() + l.slice(1)])
+  .map(escapeRe)
+  .join('|');
+
+const ADDRESS_INLINE_RE = new RegExp(
+  `${before}(${ADDRESS_LABEL_ALT})` +
+    `(?!\\s+(?:làm việc|công ty|văn phòng|cơ quan|nơi làm|LÀM VIỆC|CÔNG TY))` +
+    `(\\s*[:：]\\s*)` +
+    // Dừng trước nhãn kế tiếp ("Ngày sinh:", "SĐT:") hoặc tiêu đề viết hoa
+    // ("MỤC TIÊU NGHỀ NGHIỆP"), trước "|", "[" và xuống dòng.
+    `((?:(?!\\s+\\p{Lu}[\\p{L}.]*(?:\\s+[\\p{L}.]+){0,3}\\s*[:：])` +
+    `(?!\\s+\\p{Lu}{2,}\\s+\\p{Lu}{2,})[^\\n|\\[]){4,140})`,
+  'gu',
+);
+
 /// Từ hành chính để nhận ra một dòng địa chỉ KHÔNG nhãn ở đầu CV.
 const ADMIN_WORDS_RE =
   /(?<![\p{L}])(?:số nhà|đường|phố|ngõ|ngách|hẻm|kiệt|phường|xã|thị trấn|quận|huyện|thị xã|tỉnh|thành phố|tp\.?|q\.\s?\d+|p\.\s?\d+|street|st\.|road|ward|district|city|province)(?![\p{L}])/giu;
@@ -439,6 +475,14 @@ export function redactPiiDetailed(input: string, opts: RedactOptions = {}): Reda
     'address',
     counts,
     (_m, lead, label, sep) => `${lead}${label}${sep}${PII_TAGS.address}`,
+  );
+
+  t = replaceCount(
+    t,
+    ADDRESS_INLINE_RE,
+    'address',
+    counts,
+    (_m, label, sep) => `${label}${sep}${PII_TAGS.address}`,
   );
 
   // Họ tên: có nhãn thì thay giá trị; CV thì soi thêm đầu trang. Tên nào tìm ra
