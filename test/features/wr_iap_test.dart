@@ -17,7 +17,9 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:workreflection_mobile/core/data/wr_iap_repository.dart';
 import 'package:workreflection_mobile/core/logic/wr_entitlement.dart';
 import 'package:workreflection_mobile/core/logic/wr_iap_catalog.dart';
@@ -403,6 +405,63 @@ void main() {
     });
   });
 
+  group('Kết quả rỗng của Google Play', () {
+    // Play báo lần mua hỏng / bị huỷ bằng một giao dịch `productID: ''`. Nuốt
+    // nó là Paywall quay mãi — đã gặp trên máy thật 20/10/2026.
+    Future<WrIapPurchase> firstUpdate(PurchaseDetails d) {
+      final plugin = _FakePlugin();
+      final repo = StoreKitIapRepository(
+        plugin,
+        SupabaseClient('http://localhost', 'test-anon-key'),
+      );
+      final next = repo.purchaseUpdates.first;
+      plugin.emit([d]);
+      return next;
+    }
+
+    PurchaseDetails emptyResult(PurchaseStatus status, String code) =>
+        PurchaseDetails(
+            purchaseID: '',
+            productID: '',
+            status: status,
+            transactionDate: null,
+            verificationData: PurchaseVerificationData(
+              localVerificationData: '',
+              serverVerificationData: '',
+              source: 'google_play',
+            ),
+          )
+          ..error = IAPError(
+            source: 'google_play',
+            code: 'purchase_error',
+            message: code,
+          );
+
+    test('ITEM_UNAVAILABLE tới được tầng trên thành lỗi đọc được', () async {
+      final p = await firstUpdate(
+        emptyResult(PurchaseStatus.error, 'BillingResponse.itemUnavailable'),
+      );
+      expect(p.status, WrIapStatus.error);
+      expect(p.errorMessage, contains('Google Play'));
+      expect(p.errorMessage, isNot(contains('BillingResponse')));
+    });
+
+    test('huỷ cũng tới được tầng trên', () async {
+      final p = await firstUpdate(
+        emptyResult(PurchaseStatus.canceled, 'BillingResponse.userCanceled'),
+      );
+      expect(p.status, WrIapStatus.canceled);
+    });
+
+    test('mã lỗi lạ thì để Paywall dùng câu chung', () async {
+      final p = await firstUpdate(
+        emptyResult(PurchaseStatus.error, 'BillingResponse.error'),
+      );
+      expect(p.status, WrIapStatus.error);
+      expect(p.errorMessage, isNull);
+    });
+  });
+
   group('Hai kho ứng dụng', () {
     test('Android bán qua Google Play, còn lại qua App Store', () {
       debugDefaultTargetPlatformOverride = TargetPlatform.android;
@@ -595,4 +654,16 @@ void main() {
       expect(WrStorePolicy.appStore, isNot(WrStorePolicy.silent));
     });
   });
+}
+
+class _FakePlugin implements InAppPurchase {
+  final _controller = StreamController<List<PurchaseDetails>>.broadcast();
+
+  void emit(List<PurchaseDetails> batch) => _controller.add(batch);
+
+  @override
+  Stream<List<PurchaseDetails>> get purchaseStream => _controller.stream;
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
 }

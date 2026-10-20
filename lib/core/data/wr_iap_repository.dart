@@ -250,6 +250,26 @@ class StoreKitIapRepository implements WrIapRepository {
 
   Stream<WrIapPurchase> _convert(List<PurchaseDetails> batch) async* {
     for (final d in batch) {
+      // Google Play báo lần mua hỏng hoặc bị huỷ bằng MỘT giao dịch rỗng
+      // (`productID: ''`) — plugin không biết gói nào vì Play không trả về gói
+      // nào. Lọt xuống nhánh "gói lạ" bên dưới là bị nuốt im lặng, và Paywall
+      // quay mãi ở trạng thái đang mua (gặp ở lần thử đầu trên máy thật
+      // 20/10/2026, Play trả ITEM_UNAVAILABLE). StoreKit luôn kèm product id
+      // nên nhánh này chỉ Android đi vào.
+      if (d.productID.isEmpty &&
+          (d.status == PurchaseStatus.error ||
+              d.status == PurchaseStatus.canceled)) {
+        yield WrIapPurchase(
+          productId: '',
+          status: d.status == PurchaseStatus.canceled
+              ? WrIapStatus.canceled
+              : WrIapStatus.error,
+          serverVerificationData: '',
+          pendingComplete: false,
+          errorMessage: _playErrorMessage(d.error),
+        );
+        continue;
+      }
       if (!isWrIapProductId(wrIapCanonicalProductId(d.productID))) {
         // Giao dịch của product id không còn bán — ví dụ gói của bản build cũ.
         // Vẫn PHẢI đóng lại: giao dịch chưa đóng thì iOS dựng lại nó mỗi lần mở
@@ -267,6 +287,28 @@ class StoreKitIapRepository implements WrIapRepository {
       _originals[purchase] = d;
       yield purchase;
     }
+  }
+
+  /// Câu báo lỗi cho lần mua Google Play hỏng mà không kèm giao dịch nào.
+  ///
+  /// Plugin đặt `message` là tên mã lỗi (ví dụ `BillingResponse.itemUnavailable`)
+  /// — đưa thẳng lên màn hình thì người dùng đọc không hiểu. null để Paywall
+  /// dùng câu chung.
+  static String? _playErrorMessage(IAPError? error) {
+    final code = error?.message ?? '';
+    if (code.contains('itemUnavailable')) {
+      return tr(
+        'Gói này chưa mở bán trên Google Play. Bạn thử lại sau nhé.',
+        'This plan is not available on Google Play yet. Please try again later.',
+      );
+    }
+    if (code.contains('itemAlreadyOwned')) {
+      return tr(
+        'Tài khoản Google Play này đã có gói. Bạn bấm "Khôi phục giao dịch".',
+        'This Google Play account already owns a plan. Tap "Restore purchases".',
+      );
+    }
+    return null;
   }
 
   WrIapPurchase _toPurchase(PurchaseDetails d) {
