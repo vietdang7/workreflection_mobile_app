@@ -18,15 +18,16 @@ void main() {
       );
     });
 
-    // Case 2: no session, no onboarding seen, on /home → go to /onboarding
-    test('no session + not seen onboarding + on /home → /onboarding', () {
+    // Case 2: no session, no onboarding seen, on /home → route được bảo vệ
+    // luôn sang /auth (d504dd0); chỉ /splash mới rẽ theo cờ onboarding.
+    test('no session + not seen onboarding + on /home → /auth', () {
       expect(
         computeRedirect(
           hasSession: false,
           seenOnboarding: false,
           location: '/home',
         ),
-        '/onboarding',
+        '/auth',
       );
     });
 

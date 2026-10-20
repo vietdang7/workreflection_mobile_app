@@ -15,6 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workreflection_mobile/core/logic/wr_reflect_v47.dart';
 import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:go_router/go_router.dart';
@@ -276,6 +277,10 @@ Future<void> _pickVisibleSituation(WidgetTester tester) async {
 }
 
 void main() {
+  // Màn Xong ghi cờ đã xem onboarding (2015328) qua SharedPreferences; không
+  // mock thì getInstance() treo và vòng xoay "Đang lưu lại…" quay mãi.
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   testWidgets('đăng ký → hồ sơ → phản tư trọn vòng → các tab đều đọc được', (
     tester,
   ) async {

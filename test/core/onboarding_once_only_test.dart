@@ -95,7 +95,8 @@ void main() {
       computeRedirect(
         hasSession: false,
         seenOnboarding: seen,
-        location: '/auth',
+        // /splash là lối duy nhất còn rẽ theo cờ; /auth luôn mở (d504dd0).
+        location: '/splash',
       ),
       '/onboarding',
     );

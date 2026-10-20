@@ -21,6 +21,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
@@ -269,6 +270,10 @@ Future<void> _pump(WidgetTester tester, Widget app) async {
 }
 
 void main() {
+  // Màn Xong ghi cờ đã xem onboarding (2015328) qua SharedPreferences; không
+  // mock thì getInstance() treo và vòng xoay "Đang lưu lại…" quay mãi.
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   testWidgets('ba lần check-in cùng một tình huống → Hiểu mình đếm đúng 3, '
       'Phát triển gợi đúng chủ đề của chiều đó', (tester) async {
     final stage = _Stage();

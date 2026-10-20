@@ -14,6 +14,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
 import 'package:go_router/go_router.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
@@ -133,6 +134,10 @@ Future<void> _pump(WidgetTester tester, Widget app) async {
 }
 
 void main() {
+  // Màn Xong ghi cờ đã xem onboarding (2015328) qua SharedPreferences; không
+  // mock thì getInstance() treo và vòng xoay "Đang lưu lại…" quay mãi.
+  setUp(() => SharedPreferences.setMockInitialValues({}));
+
   group('Home — hỏi luôn năng lượng', () {
     testWidgets('hỏi ngay trên Home, không cần bấm Bắt đầu', (tester) async {
       final h = _Harness();
