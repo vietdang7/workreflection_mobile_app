@@ -91,3 +91,15 @@ Deno.test('mergeFragments: không gộp hai cách khác nhau vào một', () => 
   assertEquals(m.length, 2);
   assertEquals(m[0].tradeoff, undefined);
 });
+
+Deno.test('lời dặn có mẫu CÓ CHỮ đủ ba khoá; phép thử nói rõ khoá nào thiếu', () => {
+  const vi = (buildMessages({ title: 'a', situation: 'b', goal: 'c', tried: null }, 'vi') as {
+    content: string;
+  }[])[0].content;
+  assertStringIncludes(vi, '"tradeoff":"Bạn mất thêm một phút');
+  const r = review({
+    options: [{ title: 'A', fit: 'f' }, { title: 'B', fit: 'g' }, { title: 'C', fit: 'h' }],
+  });
+  assertEquals(r.ok, null);
+  assertStringIncludes(r.reason ?? '', 'thiếu tradeoff');
+});

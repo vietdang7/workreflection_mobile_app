@@ -61,6 +61,59 @@ export function parseIntake(body: unknown): PracticeIntakeInput | null {
   return { title, situation, goal, tried: tried || null };
 }
 
+/// Mẫu CÓ CHỮ cho đủ ba khoá. Chạy thật 20/10/2026: với mẫu rỗng
+/// `{"title":"","fit":"","tradeoff":""}`, DeepSeek lúc tách mỗi cách làm hai
+/// object, lúc bỏ hẳn `tradeoff` — mẫu rỗng không ghì được khuôn. Tình huống
+/// minh hoạ cố ý khác hẳn (giao việc) để model không chép sang.
+const EXAMPLE_VI = JSON.stringify({
+  options: [
+    {
+      title: 'Hỏi lại một câu trước khi nhận việc',
+      fit: 'Phù hợp khi bạn chưa rõ việc được giao cần xong lúc nào.',
+      tradeoff: 'Bạn mất thêm một phút và có thể bị xem là chậm nhận việc.',
+    },
+    {
+      title: 'Ghi ba việc ưu tiên lên giấy',
+      fit: 'Phù hợp khi nhiều việc đến cùng lúc và bạn dễ rối.',
+      tradeoff: 'Bạn phải tạm gác những việc nhỏ đang làm dở.',
+    },
+    {
+      title: 'Báo trước khi thấy sắp trễ hạn',
+      fit: 'Phù hợp khi bạn hay im lặng đến phút cuối.',
+      tradeoff: 'Bạn phải chịu cảm giác ngại khi thừa nhận mình chưa kịp.',
+    },
+  ],
+  question: 'Lần này điều gì giúp bạn nói ra sớm hơn?',
+});
+
+const EXAMPLE_EN = JSON.stringify({
+  options: [
+    {
+      title: 'Ask one question before accepting',
+      fit: 'Fits when you are unsure when the task is due.',
+      tradeoff: 'It takes an extra minute and may look like hesitation.',
+    },
+    {
+      title: 'Write down your top three tasks',
+      fit: 'Fits when many requests arrive at once.',
+      tradeoff: 'You have to pause the small tasks already in progress.',
+    },
+    {
+      title: 'Flag a delay before the deadline',
+      fit: 'Fits when you tend to stay silent until the last minute.',
+      tradeoff: 'You have to sit with the discomfort of admitting it early.',
+    },
+  ],
+  question: 'What helped you speak up earlier this time?',
+});
+
+/// Lời nhắc cho lượt sửa khi phép thử loại câu trả lời đầu.
+export function repairMessage(reason: string, locale: WrLocale): string {
+  return locale === 'en'
+    ? `Your answer was not usable (${reason}). Return the full json again: exactly 3 elements in "options", each with all three keys title, fit and tradeoff, plus "question".`
+    : `Câu trả lời chưa dùng được (${reason}). Trả lại trọn object json: đúng 3 phần tử trong "options", mỗi phần tử có đủ ba khoá title, fit, tradeoff, kèm "question".`;
+}
+
 export function buildMessages(intake: PracticeIntakeInput, locale: WrLocale): unknown[] {
   const en = locale === 'en';
   const system = en
@@ -74,8 +127,8 @@ Rules:
 5. Plain text only: no markdown, no emoji, no em dash. Do not mention names, phone numbers or any personal details. Do not diagnose or label the person.
 6. Write in English.
 
-Return ONLY a json object. Each element of "options" must contain all three keys title, fit and tradeoff together:
-{"options":[{"title":"","fit":"","tradeoff":""},{"title":"","fit":"","tradeoff":""},{"title":"","fit":"","tradeoff":""}],"question":""}`
+Return ONLY a json object. Every element of "options" MUST have all three keys title, fit and tradeoff. Example of the exact shape (content is only an illustration from another situation, do not copy it):
+${EXAMPLE_EN}`
     : `Bạn giúp một người đi làm thực hành một thay đổi nhỏ trong công việc. Họ kể một tình huống, điều họ muốn khác đi, và có thể cả điều đã thử mà chưa có kết quả. Hãy đề xuất đúng 3 cách làm cụ thể, thực tế, hợp với bối cảnh của họ, và 1 câu hỏi để họ tự hỏi sau khi thử.
 
 Quy tắc:
@@ -86,8 +139,8 @@ Quy tắc:
 5. Chỉ chữ trơn: không markdown, không emoji, không dấu gạch dài. Không nhắc tên người, số điện thoại hay thông tin cá nhân. Không chẩn đoán hay dán nhãn con người họ.
 6. Viết bằng tiếng Việt, xưng "bạn".
 
-Chỉ trả về một object json. Mỗi phần tử của "options" phải có đủ cả ba khoá title, fit, tradeoff trong cùng một object:
-{"options":[{"title":"","fit":"","tradeoff":""},{"title":"","fit":"","tradeoff":""},{"title":"","fit":"","tradeoff":""}],"question":""}`;
+Chỉ trả về một object json. Mỗi phần tử của "options" BẮT BUỘC có đủ ba khoá title, fit, tradeoff. Ví dụ đúng khuôn (nội dung chỉ minh hoạ cho một tình huống khác, đừng chép):
+${EXAMPLE_VI}`;
 
   const user = en
     ? `Theme: ${intake.title}\nSituation: ${intake.situation}\nWants to be different: ${intake.goal}\nAlready tried without success: ${intake.tried ?? '(nothing stated)'}`
@@ -186,7 +239,15 @@ export function review(parsed: unknown): { ok: Suggestion | null; reason?: strin
     seen.add(key);
     options.push(opt);
   }
-  if (options.length < 3) return { ok: null, reason: `options=${options.length}` };
+  if (options.length < 3) {
+    const missing = ['title', 'fit', 'tradeoff'].filter((k) =>
+      rawOptions.some((o) => !String(o[k] ?? '').trim())
+    );
+    return {
+      ok: null,
+      reason: `options=${options.length}${missing.length ? ` thiếu ${missing.join(',')}` : ''}`,
+    };
+  }
 
   let question = clean(p.question);
   if (question && !question.endsWith('?')) question = '';

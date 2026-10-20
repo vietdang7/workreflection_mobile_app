@@ -31,7 +31,13 @@ import { deepSeekFetch, deepSeekKey, deepSeekModel, deepSeekText }
 import { pick, readLocale, readLocaleHeader, WrLocale } from '../_shared/locale.ts';
 import { describeCounts, loadPiiIdentity, redactPiiDetailed }
   from '../_shared/pii_redact.ts';
-import { buildMessages, parseIntake, parseJsonLoose, review } from './suggest.ts';
+import {
+  buildMessages,
+  parseIntake,
+  parseJsonLoose,
+  repairMessage,
+  review,
+} from './suggest.ts';
 
 const FREE_LIMIT = Number(Deno.env.get('WR_PRACTICE_AI_FREE_LIMIT') ?? '2');
 const DAILY_LIMIT = Number(Deno.env.get('WR_PRACTICE_AI_DAILY_LIMIT') ?? '20');
@@ -44,6 +50,10 @@ const UPSTREAM_TIMEOUT_MS = 11_000;
 /// cho ca xấu nhất (model viết lan man) — độ trễ thường ngày do độ dài xin
 /// trong lời dặn (`ASK` ở `suggest.ts`) quyết định, không phải số này.
 const MAX_OUTPUT_TOKENS = 600;
+
+/// Còn ít hơn ngần này thì không gửi lượt sửa — thà rơi về bộ luật đúng hẹn
+/// còn hơn để app chờ quá 12 giây.
+const REPAIR_MIN_MS = 4_000;
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
@@ -186,31 +196,31 @@ Deno.serve(async (req: Request): Promise<Response> => {
   console.log(`PII đã khử: ${counts.join(' | ')}`);
 
   // ── Gọi model ───────────────────────────────────────────────────────────
-  let reply = '';
-  let reason = '';
-  try {
-    const res = await deepSeekFetch(apiKey, buildMessages(safe, locale), {
-      // Thấp: cần cách làm thực tế, không cần bay bổng.
-      temperature: 0.3,
-      maxTokens: MAX_OUTPUT_TOKENS,
-      json: true,
-      timeoutMs: UPSTREAM_TIMEOUT_MS,
-    });
-    if (res.ok) {
-      reply = await deepSeekText(res);
-    } else {
-      reason = `upstream_${res.status}`;
-      console.error(`DeepSeek ${res.status}: ${(await res.text()).slice(0, 500)}`);
-    }
-  } catch (e) {
-    const aborted = e instanceof DOMException && e.name === 'AbortError';
-    reason = aborted ? 'timeout' : 'upstream_error';
-    console.error(aborted ? 'DeepSeek quá hạn chờ' : `DeepSeek lỗi: ${e}`);
-  }
+  const started = Date.now();
+  const messages = buildMessages(safe, locale);
+  const { reply, reason } = await callModel(apiKey, messages, UPSTREAM_TIMEOUT_MS);
 
-  const checked = reply ? review(parseJsonLoose(reply)) : { ok: null, reason: reason || 'empty_reply' };
-  if (!checked.ok) {
-    if (reply) console.warn(`Phép thử loại (${checked.reason}): ${reply.slice(0, 600)}`);
+  let checked = reply ? review(parseJsonLoose(reply)) : { ok: null, reason: reason || 'empty_reply' };
+  if (!checked.ok && reply) {
+    console.warn(`Phép thử loại (${checked.reason}): ${reply.slice(0, 600)}`);
+    // Một lượt sửa nếu còn đủ thời gian: model thường trả đúng khuôn khi được
+    // nhắc đích danh khoá còn thiếu, và một lượt chỉ mất ~2 giây.
+    const left = UPSTREAM_TIMEOUT_MS - (Date.now() - started);
+    if (left >= REPAIR_MIN_MS) {
+      const again = await callModel(apiKey, [
+        ...messages,
+        { role: 'assistant', content: reply },
+        { role: 'user', content: repairMessage(checked.reason ?? '', locale) },
+      ], left);
+      if (again.reply) {
+        const second = review(parseJsonLoose(again.reply));
+        if (second.ok) {
+          checked = second;
+        } else {
+          console.warn(`Sửa vẫn trượt (${second.reason}): ${again.reply.slice(0, 600)}`);
+        }
+      }
+    }
   }
 
   // Ghi cả lần hỏng: trần ngày đếm mọi lượt gọi model; trần trọn đời Free chỉ
@@ -226,3 +236,28 @@ Deno.serve(async (req: Request): Promise<Response> => {
   if (!checked.ok) return skip(checked.reason ?? 'rejected');
   return json({ generated: true, locale, ...checked.ok });
 });
+
+async function callModel(
+  key: string,
+  messages: unknown[],
+  timeoutMs: number,
+): Promise<{ reply: string; reason: string }> {
+  try {
+    const res = await deepSeekFetch(key, messages, {
+      // Thấp: cần cách làm thực tế, không cần bay bổng.
+      temperature: 0.3,
+      maxTokens: MAX_OUTPUT_TOKENS,
+      json: true,
+      timeoutMs,
+    });
+    if (!res.ok) {
+      console.error(`DeepSeek ${res.status}: ${(await res.text()).slice(0, 500)}`);
+      return { reply: '', reason: `upstream_${res.status}` };
+    }
+    return { reply: await deepSeekText(res), reason: '' };
+  } catch (e) {
+    const aborted = e instanceof DOMException && e.name === 'AbortError';
+    console.error(aborted ? 'DeepSeek quá hạn chờ' : `DeepSeek lỗi: ${e}`);
+    return { reply: '', reason: aborted ? 'timeout' : 'upstream_error' };
+  }
+}
