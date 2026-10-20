@@ -19,7 +19,6 @@ import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:workreflection_mobile/core/data/wr_repository.dart';
 import 'package:workreflection_mobile/core/l10n/wr_tr.dart';
-import 'package:workreflection_mobile/core/models/checkin.dart';
 import 'package:workreflection_mobile/core/router/app_router.dart';
 import 'package:workreflection_mobile/core/router/auth_change_notifier.dart';
 import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
@@ -51,11 +50,11 @@ class _GuestAuth implements AuthRepository {
 }
 
 class _Harness {
-  _Harness({this.hasSession = false}) {
+  _Harness() {
     auth = _GuestAuth(notifier);
   }
 
-  final bool hasSession;
+  final bool hasSession = false;
   final notifier = AuthChangeNotifier();
   late final _GuestAuth auth;
   final repo = FakeWrRepository();
