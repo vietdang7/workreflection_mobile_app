@@ -18,7 +18,8 @@
 //      cách. Đây là lớp chắc nhất, không phải đoán.
 //   2. Mẫu nhận diện: email, số điện thoại VN và quốc tế, số CCCD/CMND/hộ
 //      chiếu, ngày sinh có nhãn, địa chỉ có nhãn, liên kết mạng xã hội cá nhân,
-//      họ tên có nhãn hoặc ở dòng tiêu đề đầu CV.
+//      họ tên có nhãn hoặc ở dòng tiêu đề đầu CV, và tên NGƯỜI KHÁC viết lẫn
+//      trong câu (sau xưng hô "anh/chị/sếp…", hoặc cụm Họ + Tên đệm + Tên).
 //
 // Lớp 2 là heuristic, KHÔNG hứa bắt được 100%: một địa chỉ không nhãn nằm giữa
 // trang, hay tên người khác (người tham chiếu) viết trơn, có thể lọt. Vì thế
@@ -242,6 +243,96 @@ const VN_SURNAMES = new Set([
   'dam', 'lo', 'cu', 'han', 'bach', 'tat', 'hong',
 ]);
 
+/// Tên đệm phổ biến (bỏ dấu, chữ thường). Một cụm "Họ + Tên đệm + Tên" viết
+/// hoa là dấu hiệu rất mạnh của tên người: "Trần Văn Bình", "Nguyễn Thị Lan".
+/// Nhờ đòi chữ thứ hai nằm trong danh sách này mà "Phòng Đào Tạo", "Hồ Sơ Năng
+/// Lực", "Lý Thường Kiệt", "Trưởng Nhóm Kinh Doanh" KHÔNG bị nhận nhầm — họ
+/// "Đào", "Hồ", "Lý", "Trương" trùng mặt chữ với danh từ thường.
+const VN_MIDDLE_NAMES = new Set([
+  'van', 'thi', 'huu', 'duc', 'minh', 'ngoc', 'thanh', 'quoc', 'hoang', 'gia',
+  'anh', 'thanh', 'cong', 'xuan', 'thu', 'kim', 'manh', 'tuan', 'hai', 'hong',
+  'bao', 'quang', 'trung', 'dinh', 'duy', 'tien', 'the', 'ba', 'phuong', 'nhu',
+  'my', 'dieu', 'khanh', 'nhat', 'tan', 'trong', 'huy', 'thuy', 'hoai', 'phuc',
+  'vinh', 'dang', 'dac', 'khac', 'viet', 'ha', 'lan', 'mai', 'bich', 'cam',
+  'thao', 'tuong', 'van', 'tu', 'hieu', 'nam', 'son', 'long', 'chi', 'kieu',
+  'tuyet', 'hue', 'an', 'binh', 'cuong', 'dung', 'hung', 'khoa', 'linh', 'loan',
+  'nga', 'nguyet', 'phu', 'quynh', 'tam', 'thien', 'trieu', 'uyen', 'yen',
+]);
+
+/// Địa danh / cụm quen thuộc có dáng "Họ + Tên đệm" — không phải người.
+const NOT_PERSON_PHRASES = new Set([
+  'ho chi minh', 'ha noi', 'ha nam', 'ha tinh', 'ha giang', 'ha dong',
+  'thai binh', 'thai nguyen', 'ninh binh', 'ninh thuan', 'cao bang',
+  'lam dong', 'kim ma', 'han quoc', 'thai lan', 'mai linh', 'hong kong',
+]);
+
+/// Xưng hô đứng trước tên người: "anh Bình", "sếp Trần Văn Bình", "Ms Lan".
+const HONORIFIC_NAME_RE = new RegExp(
+  `${before}(anh|chị|em|ông|bà|cô|chú|bác|sếp|bạn|thầy|Mr\\.?|Mrs\\.?|Ms\\.?|Miss)` +
+    `(\\s+)((?:\\p{Lu}[\\p{L}'’]*)(?:\\s+\\p{Lu}[\\p{L}'’]*){0,3})${after}`,
+  'gu',
+);
+
+/// Xưng hô viết hoa chỉ tính khi đứng ĐẦU CÂU ("Chị Lan bảo..."). Ở giữa câu,
+/// "Anh" viết hoa thường là tiếng Anh ("học tiếng Anh Mỹ"), không phải người.
+const SENTENCE_HONORIFIC_RE = new RegExp(
+  `((?:^|[.!?…:\\n])\\s*)(Anh|Chị|Em|Ông|Bà|Cô|Chú|Bác|Sếp|Thầy)` +
+    `(\\s+)((?:\\p{Lu}[\\p{L}'’]*)(?:\\s+\\p{Lu}[\\p{L}'’]*){0,3})${after}`,
+  'gu',
+);
+
+/// Cụm 3–4 chữ viết hoa đầu (hoặc hoa toàn bộ) — ứng viên họ tên trong câu.
+const CAPITALISED_RUN_RE = new RegExp(
+  `${before}\\p{Lu}[\\p{L}'’]*(?:\\s+\\p{Lu}[\\p{L}'’]*){2,3}${after}`,
+  'gu',
+);
+
+/// Trước cụm là số nhà hay "đường/phố" thì đó là TÊN ĐƯỜNG ("123 Lê Văn Sỹ").
+const STREET_CONTEXT_RE = /(?:\d+[A-Za-z]?[\/,]?\s*|(?:đường|phố|đ\.|street|st\.)\s+)$/iu;
+
+function looksLikeFullName(words: string[]): boolean {
+  const norm = words.map((w) => stripDiacritics(w).toLowerCase());
+  if (!VN_SURNAMES.has(norm[0]) || !VN_MIDDLE_NAMES.has(norm[1])) return false;
+  for (let n = 2; n <= norm.length; n++) {
+    if (NOT_PERSON_PHRASES.has(norm.slice(0, n).join(' '))) return false;
+  }
+  return true;
+}
+
+/// Tên NGƯỜI KHÁC viết lẫn trong câu chữ tự do ("góp ý cho sếp Trần Văn Bình",
+/// "anh Bình bảo..."). Lớp danh tính chỉ biết tên của chính người dùng, còn
+/// nhãn "Họ tên:" thì người ta chẳng bao giờ gõ khi kể chuyện.
+function redactFreeTextNames(
+  text: string,
+  counts: Record<PiiKind, number>,
+  foundNames: string[],
+): string {
+  let t = text.replace(HONORIFIC_NAME_RE, (m, hon, sp, name) => {
+    counts.name++;
+    if (name.split(/\s+/).length >= 2) foundNames.push(name);
+    return `${hon}${sp}${PII_TAGS.name}`;
+  });
+  t = t.replace(SENTENCE_HONORIFIC_RE, (m, lead, hon, sp, name) => {
+    counts.name++;
+    if (name.split(/\s+/).length >= 2) foundNames.push(name);
+    return `${lead}${hon}${sp}${PII_TAGS.name}`;
+  });
+  t = t.replace(CAPITALISED_RUN_RE, (m: string, offset: number, whole: string) => {
+    const words = m.split(/\s+/);
+    // Cụm dài hơn tên (tiêu đề viết hoa từng chữ) thì chỉ xét phần đầu.
+    for (let n = Math.min(4, words.length); n >= 3; n--) {
+      const head = words.slice(0, n);
+      if (!looksLikeFullName(head)) continue;
+      if (STREET_CONTEXT_RE.test(whole.slice(Math.max(0, offset - 12), offset))) return m;
+      counts.name++;
+      foundNames.push(head.join(' '));
+      return [PII_TAGS.name, ...words.slice(n)].join(' ');
+    }
+    return m;
+  });
+  return t;
+}
+
 /// Chữ cho biết một dòng là tiêu đề / chức danh chứ không phải tên người.
 const HEADER_STOPWORDS_RE =
   /(?<![\p{L}])(?:cv|resume|résumé|curriculum|vitae|profile|hồ sơ|sơ yếu|lý lịch|thông tin|information|contact|liên hệ|mục tiêu|objective|summary|kinh nghiệm|experience|kỹ năng|skills?|học vấn|education|developer|engineer|manager|executive|specialist|designer|analyst|intern|chuyên viên|nhân viên|kỹ sư|trưởng|phó|giám đốc|thực tập|công ty|company|ltd|jsc|corp)(?![\p{L}])/iu;
@@ -361,6 +452,7 @@ export function redactPiiDetailed(input: string, opts: RedactOptions = {}): Reda
     return `${lead}${label}${sep}${PII_TAGS.name}`;
   });
   if (opts.isCv) t = redactCvHeader(t, counts, foundNames);
+  t = redactFreeTextNames(t, counts, foundNames);
   for (const n of foundNames) {
     const re = nameRegex(n);
     if (re) t = replaceCount(t, re, 'name', counts);

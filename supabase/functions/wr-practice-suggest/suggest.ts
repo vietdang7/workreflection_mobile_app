@@ -36,6 +36,16 @@ export const LIMITS = {
   questionWords: 28,
 } as const;
 
+/// Độ dài XIN model viết — chặt hơn [LIMITS] (phép thử). Đây là chỗ quyết định
+/// độ trễ: model sinh bao nhiêu chữ thì chờ bấy nhiêu, `max_tokens` chỉ là
+/// trần. Lần chạy thật 20/10 viết câu ~20 chữ, mất 9,3 giây trong khung 12.
+/// Phép thử nới hơn để model lố vài chữ vẫn dùng được, không rơi về bộ luật.
+export const ASK = {
+  titleWords: 7,
+  sentenceWords: 18,
+  questionWords: 20,
+} as const;
+
 function clip(v: unknown): string {
   return String(v ?? '').replace(/\s+/g, ' ').trim().slice(0, MAX_FIELD_CHARS);
 }
@@ -59,8 +69,8 @@ export function buildMessages(intake: PracticeIntakeInput, locale: WrLocale): un
 Rules:
 1. Never suggest again what they already tried, nor a close variant of it.
 2. Each way is something they can do in one real situation this week. No generic advice like "communicate better".
-3. "title": at most ${LIMITS.titleWords} words, starts with a verb. "fit": one sentence starting with "Fits when". "tradeoff": one sentence on what it costs them.
-4. "question": one open question ending with "?", at most ${LIMITS.questionWords} words.
+3. "title": at most ${ASK.titleWords} words, starts with a verb. "fit": one sentence starting with "Fits when", at most ${ASK.sentenceWords} words. "tradeoff": one sentence on what it costs them, at most ${ASK.sentenceWords} words.
+4. "question": one open question ending with "?", at most ${ASK.questionWords} words.
 5. Plain text only: no markdown, no emoji, no em dash. Do not mention names, phone numbers or any personal details. Do not diagnose or label the person.
 6. Write in English.
 
@@ -70,8 +80,8 @@ Return ONLY a json object: {"options":[{"title":"","fit":"","tradeoff":""},{...}
 Quy tắc:
 1. Tuyệt đối không gợi ý lại điều họ đã thử, kể cả một biến thể gần giống.
 2. Mỗi cách là việc làm được trong một tình huống thật ngay tuần này. Không khuyên chung chung kiểu "giao tiếp tốt hơn".
-3. "title": tối đa ${LIMITS.titleWords} chữ, mở đầu bằng động từ. "fit": một câu, mở đầu bằng "Phù hợp khi". "tradeoff": một câu nói cái giá họ phải chấp nhận.
-4. "question": một câu hỏi mở, kết thúc bằng "?", tối đa ${LIMITS.questionWords} chữ.
+3. "title": tối đa ${ASK.titleWords} chữ, mở đầu bằng động từ. "fit": một câu, mở đầu bằng "Phù hợp khi", tối đa ${ASK.sentenceWords} chữ. "tradeoff": một câu nói cái giá họ phải chấp nhận, tối đa ${ASK.sentenceWords} chữ.
+4. "question": một câu hỏi mở, kết thúc bằng "?", tối đa ${ASK.questionWords} chữ.
 5. Chỉ chữ trơn: không markdown, không emoji, không dấu gạch dài. Không nhắc tên người, số điện thoại hay thông tin cá nhân. Không chẩn đoán hay dán nhãn con người họ.
 6. Viết bằng tiếng Việt, xưng "bạn".
 

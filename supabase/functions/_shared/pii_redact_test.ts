@@ -164,3 +164,22 @@ Deno.test('loadPiiIdentity: đọc hỏng thì trả rỗng, không ném', async
   };
   assertEquals(await loadPiiIdentity(ok, 'u1'), { fullName: 'A B', email: 'a@b.c', phone: null });
 });
+
+Deno.test('tên người KHÁC trong câu kể chuyện bị khử', () => {
+  const text = redactPii(
+    'Khi góp ý cho sếp Trần Văn Bình trong họp, anh Bình hay ngắt lời. ' +
+      'Chị Lan bảo tôi hỏi Nguyễn Thị Hồng Nhung bên kế toán. Ms Huong agreed.',
+  );
+  for (const leak of ['Trần Văn Bình', 'Bình hay', 'Lan bảo', 'Nguyễn Thị Hồng Nhung', 'Huong']) {
+    assert(!text.includes(leak), `còn lọt: ${leak} — ${text}`);
+  }
+  assertStringIncludes(text, 'sếp [HỌ TÊN] trong họp');
+  assertStringIncludes(text, 'bên kế toán');
+});
+
+Deno.test('địa danh, tên đường, tiêu đề mục KHÔNG bị nhận nhầm là tên người', () => {
+  const s = 'Văn phòng TP Hồ Chí Minh và Hà Nội. Phòng Đào Tạo Nội Bộ, ' +
+    'mục Hồ Sơ Năng Lực. Trưởng Nhóm Kinh Doanh làm ở 123 Lê Văn Sỹ, ' +
+    'gần đường Lê Văn Lương, đối diện Lý Thường Kiệt. Học tiếng Anh với khách Hàn Quốc.';
+  assertEquals(redactPii(s), s);
+});

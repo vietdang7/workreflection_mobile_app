@@ -40,9 +40,10 @@ const DAILY_LIMIT = Number(Deno.env.get('WR_PRACTICE_AI_DAILY_LIMIT') ?? '20');
 /// không đốt token cho một câu trả lời không ai còn chờ.
 const UPSTREAM_TIMEOUT_MS = 11_000;
 
-/// Ba thẻ ngắn + một câu hỏi, một ngôn ngữ: ~300 token là đủ. Trần thấp cũng
-/// là trần độ trễ.
-const MAX_OUTPUT_TOKENS = 700;
+/// Ba thẻ ngắn + một câu hỏi, một ngôn ngữ: ~300 token là đủ. Đây chỉ là trần
+/// cho ca xấu nhất (model viết lan man) — độ trễ thường ngày do độ dài xin
+/// trong lời dặn (`ASK` ở `suggest.ts`) quyết định, không phải số này.
+const MAX_OUTPUT_TOKENS = 600;
 
 const CORS_HEADERS = {
   'Access-Control-Allow-Origin': '*',
