@@ -22,6 +22,7 @@
 // chỗ riêng và có test riêng, thay vì trốn trong `build()` của một widget.
 
 import '../l10n/wr_tr.dart';
+import 'wr_iap_catalog.dart';
 
 /// Một thuê bao App Store của người đang đăng nhập.
 ///
@@ -108,28 +109,31 @@ class WrRenewalNotice {
     ),
   };
 
-  String get body => switch (kind) {
-    WrRenewalKind.willRenew => tr(
-      'Apple sẽ trừ tiền kỳ tiếp vào ngày này. Không muốn gia hạn nữa thì '
-          'tắt trước ngày đó: bạn vẫn dùng hết kỳ đã trả tiền.',
-      'Apple will charge for the next period on this date. If you do not '
-          'want to renew, turn it off before then: you keep the period you '
-          'have already paid for.',
-    ),
-    WrRenewalKind.willEnd => tr(
-      'Bạn đã tắt tự động gia hạn. Sau ngày này tài khoản trở về bản miễn '
-          'phí, những gì bạn đã ghi vẫn còn nguyên.',
-      'You have turned off auto-renewal. After this date your account goes '
-          'back to the free version, and everything you have recorded stays.',
-    ),
-    WrRenewalKind.unknown => tr(
-      'Nếu bạn chưa tắt tự động gia hạn thì Apple sẽ trừ tiền kỳ tiếp vào '
-          'ngày này. Mở phần quản lý gói để xem và đổi.',
-      'If you have not turned off auto-renewal, Apple will charge for the '
-          'next period on this date. Open subscription management to check or '
-          'change it.',
-    ),
-  };
+  String get body {
+    final store = WrIapStore.current.accountName;
+    return switch (kind) {
+      WrRenewalKind.willRenew => tr(
+        '$store sẽ trừ tiền kỳ tiếp vào ngày này. Không muốn gia hạn nữa thì '
+            'tắt trước ngày đó: bạn vẫn dùng hết kỳ đã trả tiền.',
+        '$store will charge for the next period on this date. If you do not '
+            'want to renew, turn it off before then: you keep the period you '
+            'have already paid for.',
+      ),
+      WrRenewalKind.willEnd => tr(
+        'Bạn đã tắt tự động gia hạn. Sau ngày này tài khoản trở về bản miễn '
+            'phí, những gì bạn đã ghi vẫn còn nguyên.',
+        'You have turned off auto-renewal. After this date your account goes '
+            'back to the free version, and everything you have recorded stays.',
+      ),
+      WrRenewalKind.unknown => tr(
+        'Nếu bạn chưa tắt tự động gia hạn thì $store sẽ trừ tiền kỳ tiếp vào '
+            'ngày này. Mở phần quản lý gói để xem và đổi.',
+        'If you have not turned off auto-renewal, $store will charge for the '
+            'next period on this date. Open subscription management to check or '
+            'change it.',
+      ),
+    };
+  }
 }
 
 /// Cửa sổ nhắc, tính bằng ngày trước lúc hết kỳ.

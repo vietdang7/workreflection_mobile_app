@@ -13,6 +13,7 @@
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -188,6 +189,26 @@ void main() {
 
     test('không có hai gói trùng id', () {
       expect(kWrIapProductIds.length, kWrIapProducts.length);
+    });
+
+    test('mã gửi kho Google Play vừa giới hạn 40 ký tự và đổi ngược được', () {
+      for (final store in WrIapStore.values) {
+        for (final p in kWrIapProducts) {
+          final storeId = store.storeProductId(p.id);
+          expect(wrIapCanonicalProductId(storeId), p.id);
+          if (store == WrIapStore.googlePlay) {
+            expect(storeId.length, lessThanOrEqualTo(40), reason: storeId);
+          }
+        }
+      }
+      expect(
+        WrIapStore.googlePlay.storeProductId(kIapMonthlyProductId),
+        kIapMonthlyPlayProductId,
+      );
+      expect(
+        WrIapStore.appStore.storeProductId(kIapMonthlyProductId),
+        kIapMonthlyProductId,
+      );
     });
   });
 
@@ -382,6 +403,61 @@ void main() {
     });
   });
 
+  group('Hai kho ứng dụng', () {
+    test('Android bán qua Google Play, còn lại qua App Store', () {
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      try {
+        expect(WrIapStore.current, WrIapStore.googlePlay);
+        // Server rẽ nhánh kiểm biên lai theo đúng chữ này.
+        expect(WrIapStore.current.verifyPlatform, 'android');
+        expect(
+          WrIapStore.current.manageSubscriptionsUrl,
+          contains('package=$kAndroidPackageName'),
+        );
+        debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+        expect(WrIapStore.current, WrIapStore.appStore);
+        expect(WrIapStore.current.verifyPlatform, 'ios');
+        expect(
+          WrIapStore.current.manageSubscriptionsUrl,
+          startsWith('https://apps.apple.com/'),
+        );
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
+    });
+
+    test('package Android trùng bundle id iOS — product id dùng chung', () {
+      expect(kAndroidPackageName, kIosBundleId);
+    });
+
+    testWidgets(
+      'Paywall Android gọi đúng tên Google Play, không dán EULA Apple',
+      (tester) async {
+        debugDefaultTargetPlatformOverride = TargetPlatform.android;
+        try {
+          await tester.pumpWidget(_paywall(_FakeIapRepository()));
+          await tester.pumpAndSettle();
+
+          expect(find.textContaining('tài khoản Google Play'), findsWidgets);
+          expect(find.textContaining('Apple'), findsNothing);
+          expect(find.byKey(const Key('wr_paywall_terms_link')), findsNothing);
+          expect(
+            find.byKey(const Key('wr_paywall_privacy_link')),
+            findsOneWidget,
+          );
+          // Nút khôi phục Google không bắt buộc nhưng vẫn giữ: người đổi máy
+          // Android cũng cần lấy lại gói đã mua.
+          expect(
+            find.byKey(const Key('wr_paywall_iap_restore')),
+            findsOneWidget,
+          );
+        } finally {
+          debugDefaultTargetPlatformOverride = null;
+        }
+      },
+    );
+  });
+
   group('Paywall bản App Store', () {
     testWidgets('hiện giá của StoreKit, KHÔNG hiện giá VND của cc_products', (
       tester,
@@ -420,11 +496,21 @@ void main() {
     testWidgets('có liên kết Điều khoản và Chính sách quyền riêng tư', (
       tester,
     ) async {
-      await tester.pumpWidget(_paywall(_FakeIapRepository()));
-      await tester.pumpAndSettle();
+      // Máy test mặc định là Android; EULA mẫu chỉ hiện ở bản iOS.
+      debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+      try {
+        await tester.pumpWidget(_paywall(_FakeIapRepository()));
+        await tester.pumpAndSettle();
 
-      expect(find.byKey(const Key('wr_paywall_terms_link')), findsOneWidget);
-      expect(find.byKey(const Key('wr_paywall_privacy_link')), findsOneWidget);
+        expect(find.byKey(const Key('wr_paywall_terms_link')), findsOneWidget);
+        expect(
+          find.byKey(const Key('wr_paywall_privacy_link')),
+          findsOneWidget,
+        );
+        expect(find.textContaining('tài khoản Apple'), findsWidgets);
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
     });
 
     testWidgets('không có nút dẫn sang web — đó là thứ bị từ chối lần trước', (

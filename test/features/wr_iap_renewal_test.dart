@@ -4,6 +4,7 @@
 // cùng một ngày trên lịch, người còn bật gia hạn sắp bị trừ tiền còn người đã
 // tắt thì sắp mất quyền. Nói nhầm vế là nói sai với đúng một nửa người đọc.
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -97,6 +98,21 @@ void main() {
 
       expect(notice.kind, WrRenewalKind.unknown);
       expect(notice.body, contains('Nếu bạn chưa tắt'));
+    });
+
+    test('gọi đúng tên kho đang trừ tiền', () {
+      final notice = wrRenewalNotice(
+        _sub(expiresAt: DateTime(2026, 9, 12), autoRenew: true),
+        now: now,
+      )!;
+      debugDefaultTargetPlatformOverride = TargetPlatform.android;
+      try {
+        expect(notice.body, startsWith('Google Play sẽ trừ tiền'));
+        debugDefaultTargetPlatformOverride = TargetPlatform.iOS;
+        expect(notice.body, startsWith('Apple sẽ trừ tiền'));
+      } finally {
+        debugDefaultTargetPlatformOverride = null;
+      }
     });
   });
 
