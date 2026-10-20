@@ -183,3 +183,18 @@ Deno.test('địa danh, tên đường, tiêu đề mục KHÔNG bị nhận nh�
     'gần đường Lê Văn Lương, đối diện Lý Thường Kiệt. Học tiếng Anh với khách Hàn Quốc.';
   assertEquals(redactPii(s), s);
 });
+
+Deno.test('chữ PDF bị dồn thành một dòng: địa chỉ có nhãn vẫn bị khử, nghề nghiệp giữ nguyên', () => {
+  // Đúng dạng chữ `unpdf.extractText` từng trả cho CV mẫu ngày 20/10/2026.
+  const flat = 'NGUYỄN THỊ MINH ANH Chuyên viên Marketing SĐT: 0909 123 456 | ' +
+    'Email: a@b.vn | Địa chỉ: 99 Hai Bà Trưng, Quận 1, TP.HCM Ngày sinh: 14/02/1996 ' +
+    'Địa chỉ thường trú: Số 12 ngõ 45 Trần Duy Hưng, Cầu Giấy, Hà Nội MỤC TIÊU NGHỀ NGHIỆP ' +
+    'Phát triển thương hiệu FMCG. Địa chỉ làm việc: Tầng 5, 18 Lý Thường Kiệt, Hà Nội';
+  const { text, counts } = redactPiiDetailed(flat, { isCv: true });
+  assert(!text.includes('Hai Bà Trưng'), text);
+  assert(!text.includes('Trần Duy Hưng'), text);
+  assertEquals(counts.address, 2);
+  assertStringIncludes(text, 'Ngày sinh: [NGÀY SINH]');
+  assertStringIncludes(text, 'MỤC TIÊU NGHỀ NGHIỆP Phát triển thương hiệu FMCG.');
+  assertStringIncludes(text, 'Địa chỉ làm việc: Tầng 5, 18 Lý Thường Kiệt');
+});
