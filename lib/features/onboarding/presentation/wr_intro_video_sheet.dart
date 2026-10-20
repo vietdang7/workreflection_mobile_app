@@ -116,11 +116,11 @@ class _WrIntroVideoSheetState extends ConsumerState<WrIntroVideoSheet>
 
   static int _sceneStartTime(IntroSceneId id) => switch (id) {
     IntroSceneId.welcome => 0,
-    IntroSceneId.reflect => 25,
-    IntroSceneId.understand => 68,
-    IntroSceneId.grow => 95,
-    IntroSceneId.assistant => 115,
-    IntroSceneId.closing => 145,
+    IntroSceneId.reflect => 28,
+    IntroSceneId.understand => 65,
+    IntroSceneId.grow => 87,
+    IntroSceneId.assistant => 123,
+    IntroSceneId.closing => 154,
   };
 
   Future<void> _prepare() async {
@@ -333,7 +333,10 @@ class _WrIntroVideoSheetState extends ConsumerState<WrIntroVideoSheet>
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
                     child: Center(
                       child: AspectRatio(
-                        aspectRatio: _useVideo ? (16 / 9) : (9 / 16),
+                        aspectRatio: _useVideo &&
+                                _videoController!.value.aspectRatio > 0
+                            ? _videoController!.value.aspectRatio
+                            : (9 / 16),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(24),
                           child: _stage(),
@@ -458,7 +461,7 @@ class _WrIntroVideoSheetState extends ConsumerState<WrIntroVideoSheet>
                   child: AspectRatio(
                     aspectRatio: vpc.value.aspectRatio > 0
                         ? vpc.value.aspectRatio
-                        : (16 / 9),
+                        : (9 / 16),
                     child: VideoPlayer(vpc),
                   ),
                 ),
