@@ -1,4 +1,7 @@
 // lib/features/wr/wr_providers.dart
+
+import 'dart:async';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -223,11 +226,40 @@ final wrEntitlementProvider = FutureProvider<WrEntitlement>((ref) async {
     if (userId == null) return WrEntitlement(plan: WrPlan.free);
     final record = await repo.fetchEntitlement(userId);
     if (record == null) return WrEntitlement(plan: WrPlan.free);
+    _scheduleEntitlementRecheck(ref, record.validUntil);
     return WrEntitlement.fromRecord(record);
   } catch (_) {
     return WrEntitlement(plan: WrPlan.free);
   }
 });
+
+/// Hỏi lại server ngay sau mốc hết kỳ thay vì tin con số đọc lúc mở app.
+///
+/// [WrEntitlement.isPremium] so hạn với giờ hiện tại mỗi lần đọc, nên app đang
+/// mở qua mốc chuyển kỳ sẽ tự hạ về bản miễn phí — trong khi kho ứng dụng vừa
+/// gia hạn và `wr-google-notifications` / `wr-apple-notifications` đã nới hạn
+/// trên server vài giây sau đó. Gặp trên máy thật 20/10/2026 với gói thử 5 phút.
+///
+/// Chỉ hẹn khi mốc nằm trong 24 giờ tới: hạn xa hơn thì lần mở app sau (và lần
+/// app quay lại từ nền — xem `WrIapController`) đã đủ đọc lại. Hẹn 30 giây sau
+/// mốc cho thông báo gia hạn kịp về; vừa qua mốc chưa tới 5 phút mà vẫn chưa
+/// thấy hạn mới thì hỏi thêm mỗi phút một lần.
+void _scheduleEntitlementRecheck(Ref ref, DateTime? validUntil) {
+  if (validUntil == null) return;
+  final now = DateTime.now();
+  final Duration wait;
+  if (validUntil.isAfter(now)) {
+    final untilEnd = validUntil.difference(now);
+    if (untilEnd > const Duration(hours: 24)) return;
+    wait = untilEnd + const Duration(seconds: 30);
+  } else if (now.difference(validUntil) < const Duration(minutes: 5)) {
+    wait = const Duration(minutes: 1);
+  } else {
+    return;
+  }
+  final timer = Timer(wait, ref.invalidateSelf);
+  ref.onDispose(timer.cancel);
+}
 
 /// Các gói Premium bán trong app (năm / tháng), xếp theo `display_order`.
 ///

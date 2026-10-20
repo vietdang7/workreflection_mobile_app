@@ -18,6 +18,7 @@
 
 import 'dart:async';
 
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/data/wr_iap_repository.dart';
@@ -102,6 +103,29 @@ class WrIapState {
 class WrIapController extends StateNotifier<WrIapState> {
   WrIapController(this._ref) : super(const WrIapState()) {
     _listen();
+    _refreshOnResume();
+  }
+
+  AppLifecycleListener? _lifecycle;
+
+  /// Đọc lại quyền và thuê bao mỗi lần app quay lại từ nền.
+  ///
+  /// Kỳ thuê bao có thể chuyển (gia hạn, huỷ, hoàn tiền) trong lúc app nằm nền,
+  /// và người dùng thường vừa từ trang quản lý gói của kho quay lại. Không đọc
+  /// lại thì app tin con số cũ: hạn cũ qua là hạ về miễn phí dù kho đã gia hạn,
+  /// hoặc vẫn báo "tự động gia hạn" sau khi người dùng vừa tắt.
+  void _refreshOnResume() {
+    if (!_ref.read(wrStorePolicyProvider).allowsNativeIap) return;
+    try {
+      _lifecycle = AppLifecycleListener(
+        onResume: () {
+          _ref.invalidate(wrEntitlementProvider);
+          _ref.invalidate(wrIapSubscriptionProvider);
+        },
+      );
+    } catch (_) {
+      /* chưa có WidgetsBinding (test thuần Dart) — không có gì để nghe */
+    }
   }
 
   final Ref _ref;
@@ -193,8 +217,11 @@ class WrIapController extends StateNotifier<WrIapState> {
       _ref.read(premiumOverrideProvider.notifier).set(null);
     }
 
-    // Bắt cả app đọc lại quyền: Paywall, các cổng Premium, màn Tài khoản.
+    // Bắt cả app đọc lại quyền: Paywall, các cổng Premium, màn Tài khoản —
+    // và cả thuê bao, nếu không thẻ nhắc gia hạn / nút quản lý gói vẫn giữ kết
+    // quả "chưa có gói" đọc từ trước lúc mua.
     _ref.invalidate(wrEntitlementProvider);
+    _ref.invalidate(wrIapSubscriptionProvider);
 
     if (!mounted) return;
     state = state.copyWith(
@@ -295,6 +322,7 @@ class WrIapController extends StateNotifier<WrIapState> {
   @override
   void dispose() {
     _sub?.cancel();
+    _lifecycle?.dispose();
     super.dispose();
   }
 }

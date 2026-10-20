@@ -23,6 +23,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:workreflection_mobile/core/data/wr_iap_repository.dart';
 import 'package:workreflection_mobile/core/logic/wr_entitlement.dart';
 import 'package:workreflection_mobile/core/logic/wr_iap_catalog.dart';
+import 'package:workreflection_mobile/core/logic/wr_iap_renewal.dart';
 import 'package:workreflection_mobile/core/logic/wr_pricing.dart';
 import 'package:workreflection_mobile/core/logic/wr_store_policy.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
@@ -154,9 +155,11 @@ Widget _paywall(
   _FakeIapRepository repo, {
   WrStorePolicy policy = WrStorePolicy.appStore,
   bool premium = false,
+  WrIapSubscription? subscription,
 }) => ProviderScope(
   overrides: [
     wrStorePolicyProvider.overrideWithValue(policy),
+    wrIapSubscriptionProvider.overrideWith((ref) async => subscription),
     wrIapRepositoryProvider.overrideWithValue(repo),
     currentUserIdProvider.overrideWithValue(_userId),
     wrPremiumPlansProvider.overrideWith((ref) async => _webPlans),
@@ -644,6 +647,39 @@ void main() {
       expect(find.byKey(const Key('wr_paywall_cta_owned')), findsOneWidget);
       expect(
         find.byKey(const Key('wr_paywall_iap_buy_$kIapYearlyProductId')),
+        findsNothing,
+      );
+    });
+
+    testWidgets('gói mua qua kho: trang Bản Premium có nút quản lý gói', (
+      tester,
+    ) async {
+      await tester.pumpWidget(
+        _paywall(
+          _FakeIapRepository(),
+          premium: true,
+          subscription: WrIapSubscription(
+            productId: kIapMonthlyProductId,
+            expiresAt: DateTime.now().add(const Duration(days: 20)),
+            autoRenew: true,
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+
+      expect(
+        find.byKey(const Key('wr_paywall_manage_subscription')),
+        findsOneWidget,
+      );
+    });
+
+    testWidgets('Premium từ web: không có gói kho nào để tắt', (tester) async {
+      await tester.pumpWidget(_paywall(_FakeIapRepository(), premium: true));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const Key('wr_paywall_cta_owned')), findsOneWidget);
+      expect(
+        find.byKey(const Key('wr_paywall_manage_subscription')),
         findsNothing,
       );
     });

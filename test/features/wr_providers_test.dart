@@ -102,6 +102,65 @@ void main() {
 
   // Khách chốt 2026-08-01: "nếu trên web role Premium thì trên app cũng Premium
   // luôn". Hai nguồn được HỢP lúc đọc — không đồng bộ dữ liệu giữa hai bảng.
+  group('wrEntitlementProvider — tự đọc lại quanh mốc hết kỳ', () {
+    // App mở qua mốc chuyển kỳ thì `isPremium` tự hạ về miễn phí, trong khi kho
+    // đã gia hạn và server đã nới hạn vài giây sau. Gặp trên máy thật 20/10/2026.
+    Future<_CountingIntel> readOnce(
+      WidgetTester tester,
+      Duration untilEnd,
+      ProviderContainer Function(_CountingIntel) make,
+    ) async {
+      final intel = _CountingIntel()
+        ..seedEntitlement(
+          WrEntitlementRecord(
+            userId: 'u1',
+            plan: WrPlan.premium,
+            validUntil: DateTime.now().add(untilEnd),
+          ),
+        );
+      final c = make(intel);
+      await c.read(wrEntitlementProvider.future);
+      return intel;
+    }
+
+    // Huỷ container NGAY trong thân test chứ không qua addTearDown: teardown
+    // chạy sau bước kiểm tra "còn Timer treo" của flutter_test, mà chính giờ
+    // hẹn đó là thứ đang được test. Trong app, ProviderScope bị huỷ cùng cây
+    // widget nên giờ hẹn huỷ theo.
+    ProviderContainer containerWith(_CountingIntel intel) => ProviderContainer(
+      overrides: [
+        currentUserIdProvider.overrideWithValue('u1'),
+        wrIntelligenceRepositoryProvider.overrideWithValue(intel),
+        ccProfileProvider.overrideWith((ref) async => {'role': 'free'}),
+      ],
+    );
+
+    testWidgets('hạn trong 24 giờ: hỏi lại server sau mốc', (tester) async {
+      late ProviderContainer c;
+      final intel = await readOnce(tester, const Duration(minutes: 1), (i) {
+        return c = containerWith(i);
+      });
+      expect(intel.fetches, 1);
+
+      await tester.pump(const Duration(minutes: 2));
+      await c.read(wrEntitlementProvider.future);
+      expect(intel.fetches, 2);
+      c.dispose();
+    });
+
+    testWidgets('hạn còn xa: không hẹn giờ, giữ kết quả cũ', (tester) async {
+      late ProviderContainer c;
+      final intel = await readOnce(tester, const Duration(days: 30), (i) {
+        return c = containerWith(i);
+      });
+
+      await tester.pump(const Duration(minutes: 2));
+      await c.read(wrEntitlementProvider.future);
+      expect(intel.fetches, 1);
+      c.dispose();
+    });
+  });
+
   group('wrEntitlementProvider — Premium chung với web', () {
     ProviderContainer makeWith({
       required String? webRole,
@@ -343,4 +402,14 @@ void main() {
       expect(p.currentPrice, kPremiumFallbackPrice);
     });
   });
+}
+
+class _CountingIntel extends FakeWrIntelligenceRepository {
+  int fetches = 0;
+
+  @override
+  Future<WrEntitlementRecord?> fetchEntitlement(String userId) {
+    fetches++;
+    return super.fetchEntitlement(userId);
+  }
 }
