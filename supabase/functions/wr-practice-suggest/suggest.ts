@@ -74,7 +74,8 @@ Rules:
 5. Plain text only: no markdown, no emoji, no em dash. Do not mention names, phone numbers or any personal details. Do not diagnose or label the person.
 6. Write in English.
 
-Return ONLY a json object: {"options":[{"title":"","fit":"","tradeoff":""},{...},{...}],"question":""}`
+Return ONLY a json object. Each element of "options" must contain all three keys title, fit and tradeoff together:
+{"options":[{"title":"","fit":"","tradeoff":""},{"title":"","fit":"","tradeoff":""},{"title":"","fit":"","tradeoff":""}],"question":""}`
     : `Bạn giúp một người đi làm thực hành một thay đổi nhỏ trong công việc. Họ kể một tình huống, điều họ muốn khác đi, và có thể cả điều đã thử mà chưa có kết quả. Hãy đề xuất đúng 3 cách làm cụ thể, thực tế, hợp với bối cảnh của họ, và 1 câu hỏi để họ tự hỏi sau khi thử.
 
 Quy tắc:
@@ -85,7 +86,8 @@ Quy tắc:
 5. Chỉ chữ trơn: không markdown, không emoji, không dấu gạch dài. Không nhắc tên người, số điện thoại hay thông tin cá nhân. Không chẩn đoán hay dán nhãn con người họ.
 6. Viết bằng tiếng Việt, xưng "bạn".
 
-Chỉ trả về một object json: {"options":[{"title":"","fit":"","tradeoff":""},{...},{...}],"question":""}`;
+Chỉ trả về một object json. Mỗi phần tử của "options" phải có đủ cả ba khoá title, fit, tradeoff trong cùng một object:
+{"options":[{"title":"","fit":"","tradeoff":""},{"title":"","fit":"","tradeoff":""},{"title":"","fit":"","tradeoff":""}],"question":""}`;
 
   const user = en
     ? `Theme: ${intake.title}\nSituation: ${intake.situation}\nWants to be different: ${intake.goal}\nAlready tried without success: ${intake.tried ?? '(nothing stated)'}`
@@ -125,6 +127,39 @@ function clean(v: unknown): string {
     .trim();
 }
 
+/// Gộp các mảnh của cùng một cách.
+///
+/// Chạy thật 20/10/2026, DeepSeek trả mỗi cách thành HAI object liền nhau:
+/// `{title, fit}` rồi `{tradeoff}`. Nội dung đúng, chỉ sai khuôn — loại hết là
+/// phí một lượt tốt. Mảnh nào chưa đủ ba khoá thì nhận thêm khoá còn thiếu từ
+/// mảnh kế tiếp, miễn mảnh đó không mở một cách mới (không có `title` khi mình
+/// đã có `title`).
+export function mergeFragments(raw: unknown[]): Record<string, unknown>[] {
+  const out: Record<string, unknown>[] = [];
+  let cur: Record<string, unknown> | null = null;
+  const has = (o: Record<string, unknown>, k: string) =>
+    typeof o[k] === 'string' && String(o[k]).trim() !== '';
+  for (const item of raw) {
+    if (!item || typeof item !== 'object') continue;
+    const r = item as Record<string, unknown>;
+    const opensNew = has(r, 'title');
+    const prev: Record<string, unknown> | null = cur;
+    if (prev && !(opensNew && has(prev, 'title'))) {
+      const keys = ['title', 'fit', 'tradeoff'];
+      const canTake = keys.some((k) => has(r, k) && !has(prev, k));
+      const clashes = keys.some((k) => has(r, k) && has(prev, k));
+      if (canTake && !clashes) {
+        cur = Object.assign({}, prev, r) as Record<string, unknown>;
+        continue;
+      }
+    }
+    if (cur) out.push(cur);
+    cur = { ...r };
+  }
+  if (cur) out.push(cur);
+  return out;
+}
+
 /// Còn sót số điện thoại / email / nhãn PII trong chữ AI viết thì loại.
 const PII_LEFTOVER_RE = /@|\[(?:HỌ TÊN|EMAIL|SỐ|ĐỊA CHỈ|NGÀY SINH|LIÊN KẾT)|\d{6,}/u;
 
@@ -132,11 +167,11 @@ const PII_LEFTOVER_RE = /@|\[(?:HỌ TÊN|EMAIL|SỐ|ĐỊA CHỈ|NGÀY SINH|LI�
 /// dựng bằng luật (lớp 2), người dùng không thấy lỗi nào.
 export function review(parsed: unknown): { ok: Suggestion | null; reason?: string } {
   const p = (parsed ?? {}) as Record<string, unknown>;
-  const rawOptions = Array.isArray(p.options) ? p.options : [];
+  const rawOptions = mergeFragments(Array.isArray(p.options) ? p.options : []);
   const options: SuggestedOption[] = [];
   const seen = new Set<string>();
   for (const o of rawOptions) {
-    const r = (o ?? {}) as Record<string, unknown>;
+    const r = o;
     const opt = {
       title: clean(r.title).replace(/[.。]+$/, ''),
       fit: clean(r.fit),

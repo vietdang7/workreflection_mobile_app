@@ -3,7 +3,7 @@
 // Chạy: deno test supabase/functions/wr-practice-suggest/suggest_test.ts
 
 import { assert, assertEquals, assertStringIncludes } from 'jsr:@std/assert@1';
-import { buildMessages, parseIntake, parseJsonLoose, review } from './suggest.ts';
+import { buildMessages, mergeFragments, parseIntake, parseJsonLoose, review } from './suggest.ts';
 
 const good = {
   options: [
@@ -59,4 +59,35 @@ Deno.test('parseJsonLoose: bọc ``` hoặc có lời dẫn vẫn đọc đượ
   assertEquals((parseJsonLoose('```json\n{"a":1}\n```') as { a: number }).a, 1);
   assertEquals((parseJsonLoose('Đây: {"a":2} nhé') as { a: number }).a, 2);
   assertEquals(parseJsonLoose('không có json'), null);
+});
+
+Deno.test('review: mỗi cách bị tách làm hai object (DeepSeek 20/10) vẫn gộp lại được', () => {
+  // Nguyên văn khuôn sai của lần chạy thật 20/10/2026.
+  const r = review({
+    options: [
+      { title: 'Đặt câu hỏi làm rõ rủi ro', fit: 'Phù hợp khi bạn muốn nêu lo ngại mà không đối đầu trực diện.' },
+      { tradeoff: 'Bạn phải chấp nhận cuộc họp kéo dài thêm vài phút.' },
+      { title: 'Chuẩn bị sẵn một câu phản biện', fit: 'Phù hợp khi bạn biết trước kế hoạch sẽ được chốt trong họp.' },
+      { tradeoff: 'Bạn phải dành thời gian chuẩn bị trước mỗi cuộc họp.' },
+      { title: 'Xin một phút trao đổi cuối họp', fit: 'Phù hợp khi bạn cần thời gian ngắn để sắp xếp ý.' },
+      { tradeoff: 'Bạn có thể bị xem là người làm chậm tiến độ cuộc họp.' },
+    ],
+    question: 'Điều gì khiến bạn im lặng lúc đó?',
+  });
+  assert(r.ok);
+  assertEquals(r.ok.options.map((o) => o.title), [
+    'Đặt câu hỏi làm rõ rủi ro',
+    'Chuẩn bị sẵn một câu phản biện',
+    'Xin một phút trao đổi cuối họp',
+  ]);
+  assertEquals(r.ok.options[2].tradeoff, 'Bạn có thể bị xem là người làm chậm tiến độ cuộc họp.');
+});
+
+Deno.test('mergeFragments: không gộp hai cách khác nhau vào một', () => {
+  const m = mergeFragments([
+    { title: 'A', fit: 'f' },
+    { title: 'B', fit: 'g', tradeoff: 't' },
+  ]);
+  assertEquals(m.length, 2);
+  assertEquals(m[0].tradeoff, undefined);
 });
