@@ -12,3 +12,7 @@ GeneratedPluginRegistrant.java
 key.properties
 **/*.keystore
 **/*.jks
+
+# Upload keystore cho CH Play — không bao giờ commit.
+*.jks
+*.keystore
