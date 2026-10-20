@@ -26,6 +26,11 @@ import 'package:flutter/services.dart' show FontLoader;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:workreflection_mobile/core/data/wr_ai_consent_repository.dart';
+import 'package:workreflection_mobile/core/logic/wr_ai_disclosure.dart'
+    show kWrAiDisclosureVersion;
+import 'package:workreflection_mobile/features/wr/ai_consent_providers.dart';
 import 'package:workreflection_mobile/core/data/wr_chat_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_content_repository.dart';
 import 'package:workreflection_mobile/core/data/wr_episode_repository.dart';
@@ -39,6 +44,9 @@ import 'package:workreflection_mobile/core/models/wr_episode.dart';
 import 'package:workreflection_mobile/core/models/wr_intelligence.dart';
 import 'package:workreflection_mobile/core/theme/wr_text.dart';
 import 'package:workreflection_mobile/core/theme/wr_text_scale.dart';
+import 'package:workreflection_mobile/core/theme/wr_theme.dart'
+    show wrColorScheme;
+import 'package:workreflection_mobile/core/widgets/wr_app_background.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_ask_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_discover_screen.dart';
 import 'package:workreflection_mobile/features/wr/presentation/wr_growth_screen.dart';
@@ -89,6 +97,35 @@ Future<void> _loadFonts() async {
   await load('NotoSans', 'assets/fonts/NotoSans-Regular.ttf');
   await load('NotoSans', 'assets/fonts/NotoSans-Bold.ttf');
   await load(WrText.serifFamily, 'assets/fonts/Lora-Italic.ttf');
+
+  // Ký hiệu ★ (avatar Premium) và → ("Xem tất cả →") không có trong NotoSans
+  // của app. Trên máy thật hệ điều hành tự mượn font khác; máy test thì không,
+  // nên phải nạp thêm vào cùng họ, không thì ra ô vuông.
+  await load(
+    'NotoSansSymbols2',
+    '/usr/share/fonts/truetype/noto/NotoSansSymbols2-Regular.ttf',
+  );
+  await load(
+    'NotoSansMath',
+    '/usr/share/fonts/truetype/noto/NotoSansMath-Regular.ttf',
+  );
+
+  // Font thật của app là Be Vietnam Pro, nạp qua google_fonts lúc chạy — máy
+  // test không có mạng nên phải trỏ tới bản tải sẵn (WR_BVP_DIR). Thiếu thì ảnh
+  // rơi về NotoSans, khác chữ trên máy thật.
+  final bvp = Platform.environment['WR_BVP_DIR'];
+  if (bvp != null) {
+    for (final w in [
+      'Regular',
+      'Medium',
+      'SemiBold',
+      'Bold',
+      'ExtraBold',
+      'Italic',
+    ]) {
+      await load('BeVietnamPro', '$bvp/BeVietnamPro-$w.ttf');
+    }
+  }
 
   // Icon cũng là font. Không nạp thì mọi Icon() ra ô vuông rỗng — ảnh coi như
   // bỏ. Font nằm trong cache của Flutter SDK chứ không trong repo.
@@ -305,17 +342,73 @@ class _Stage {
         wrRepositoryProvider.overrideWithValue(wr),
         wrChatRepositoryProvider.overrideWithValue(chat),
         currentUserIdProvider.overrideWithValue('u1'),
+        // Người trong ảnh đã đồng ý cho AI xử lý — ảnh màn Trò chuyện không bị
+        // hộp xin phép che mất.
+        wrAiConsentProvider.overrideWith(
+          (ref) async => WrAiConsent(
+            version: kWrAiDisclosureVersion,
+            grantedAt: DateTime(2026, 8, 1),
+          ),
+        ),
       ],
       child: MaterialApp.router(
-        builder: wrTextScaleBuilder,
+        // Giống `lib/app.dart`: nền giấy màu nước bọc ngoài mọi màn. Thiếu lớp
+        // này thì Scaffold trong suốt và ảnh ra nền đen.
+        builder: (context, child) => WrAppBackground(
+          mode: AppBackgroundMode.watercolor,
+          child: wrTextScaleBuilder(context, child),
+        ),
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(fontFamily: 'NotoSans', useMaterial3: true),
+        // Bản sao `wrTheme(isWatercolor: true)` trừ textTheme: bản gốc gọi
+        // google_fonts tải font qua mạng, máy test không có.
+        theme: ThemeData(
+          useMaterial3: true,
+          colorScheme: wrColorScheme(),
+          scaffoldBackgroundColor: Colors.transparent,
+          appBarTheme: const AppBarTheme(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            scrolledUnderElevation: 0,
+          ),
+          fontFamily: Platform.environment['WR_BVP_DIR'] != null
+              ? 'BeVietnamPro'
+              : 'NotoSans',
+          fontFamilyFallback: const [
+            'NotoSans',
+            'NotoSansSymbols2',
+            'NotoSansMath',
+          ],
+        ),
         routerConfig: router,
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         locale: const Locale('vi'),
       ),
     );
+  }
+}
+
+/// Giải mã xong mọi ảnh asset đang có trên màn rồi mới chụp.
+///
+/// Ảnh nền màu nước (.webp) giải mã bất đồng bộ; trong `testWidgets` đồng hồ
+/// là giả nên `pumpAndSettle` xong mà ảnh vẫn chưa có, chụp ra nền đen. Phải
+/// giải mã trong `runAsync` (đồng hồ thật) rồi pump lại.
+Future<void> _precacheImages(WidgetTester tester) async {
+  for (var round = 0; round < 2; round++) {
+    final providers = <ImageProvider, Element>{};
+    for (final e in find.byType(Image).evaluate()) {
+      providers[(e.widget as Image).image] = e;
+    }
+    for (final e in find.byType(DecoratedBox).evaluate()) {
+      final d = (e.widget as DecoratedBox).decoration;
+      if (d is BoxDecoration && d.image != null) providers[d.image!.image] = e;
+    }
+    await tester.runAsync(() async {
+      for (final entry in providers.entries) {
+        await precacheImage(entry.key, entry.value);
+      }
+    });
+    await tester.pumpAndSettle();
   }
 }
 
@@ -336,6 +429,7 @@ Future<void> _shoot(WidgetTester tester, Widget app, String name) async {
 
     await tester.pumpWidget(app);
     await tester.pumpAndSettle();
+    await _precacheImages(tester);
 
     await expectLater(
       find.byType(MaterialApp),
@@ -349,6 +443,10 @@ void main() {
     TestWidgetsFlutterBinding.ensureInitialized();
     await _loadFonts();
   });
+
+  // Công tắc thử Premium đọc SharedPreferences; không mock thì getInstance()
+  // ném MissingPluginException ngay khi dựng màn.
+  setUp(() => SharedPreferences.setMockInitialValues({}));
 
   _Stage buildStage({Mood mood = Mood.okay}) {
     final s = _Stage();
