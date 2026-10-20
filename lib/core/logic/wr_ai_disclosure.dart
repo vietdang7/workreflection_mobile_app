@@ -31,6 +31,8 @@
 //   `supabase/functions/wr-doc-analyze/index.ts`   — đọc JD/CV
 //   `supabase/functions/wr-narrative/index.ts`     — sinh Diễn biến
 //   `supabase/functions/wr-experience-read/index.ts` — "Bạn đang khó ở chỗ nào"
+//   `supabase/functions/wr-practice-suggest/index.ts` — gợi ý khi tạo chủ đề
+//   `supabase/functions/_shared/pii_redact.ts`     — khử thông tin định danh
 //   `lib/features/video_report/data/…`             — đọc thành tiếng
 //   `ai-personalize` (Edge Function, không nằm trong repo này) — viết lại phần
 //                                                    nhận định của Báo cáo
@@ -46,6 +48,12 @@
 // biết gói Free hay Premium, và cột đó KHÔNG đi kèm sang model. Nên câu "không
 // gửi tên và email" là nói thật, không phải nói cho êm tai. Sửa mã nguồn mà
 // không sửa file này là biến bản công bố thành lời khai sai.
+//
+// 20/10/2026: câu đó từng SAI một nửa — CV gửi nguyên văn sang DeepSeek, mà
+// đầu trang CV chính là họ tên + email. Từ ngày này mọi chữ JD/CV và chữ tạo
+// chủ đề đi qua `_shared/pii_redact.ts`: xoá đúng tên/email/SĐT thật của người
+// dùng (đọc từ `cc_profiles`), rồi xoá thêm các mẫu nhận diện được. Lớp sau là
+// heuristic, nên câu chữ ở đây nói "nhận diện được", không hứa "sạch hoàn toàn".
 //
 // Pure Dart, không phụ thuộc Flutter → test được trực tiếp.
 
@@ -63,6 +71,11 @@ import '../l10n/wr_tr.dart';
 /// Lên 3 ngày 15/10/2026: mọi luồng AI chuyển hẳn sang DeepSeek, bỏ OpenRouter
 /// và Gemini. Tài liệu JD/CV và hồ sơ Báo cáo khảo sát giờ tới DeepSeek thay
 /// vì Google, nên người đã đồng ý bản cũ được hỏi lại.
+///
+/// KHÔNG nâng ngày 20/10/2026 khi thêm gợi ý thực hành (`wr-practice-suggest`):
+/// cùng bên nhận (DeepSeek), cùng loại dữ liệu (chữ chính người dùng viết, như
+/// Trò chuyện), giống tiền lệ `wr-experience-read` ngày 15/10. Khai riêng một
+/// luồng bên dưới vì nó chạy ở một màn khác.
 ///
 /// Phía máy chủ (`_shared/ai_consent.ts`) CỐ Ý vẫn nhận từ bản 2: nâng ở đó
 /// trước khi bản app mới lên kho là cắt hết AI của người đang dùng bản cũ —
@@ -120,10 +133,12 @@ List<WrAiRecipient> get kWrAiRecipients => [
     role: tr(
       'Mô hình AI duy nhất của app: trả lời trong phần Trò chuyện, viết phần '
           'Diễn biến và phần Bạn đang khó ở chỗ nào, đọc tài liệu JD và CV, '
-          'và viết phần nhận định của Báo cáo khảo sát.',
+          'gợi ý cách thực hành khi bạn tạo chủ đề, và viết phần nhận định của '
+          'Báo cáo khảo sát.',
       'The app\'s only AI model: it replies in Chat, writes your story and '
-          'Where it is hard for you, reads your JD and CV documents, and '
-          'writes the commentary in the Survey report.',
+          'Where it is hard for you, reads your JD and CV documents, suggests '
+          'ways to practise when you create a theme, and writes the commentary '
+          'in the Survey report.',
     ),
     // KHÔNG phải `deepseek.com/privacy` — đường đó trả 404 (kiểm 07/09/2026).
     // Một liên kết chết ngay trong công bố quyền riêng tư còn tệ hơn không có.
@@ -171,9 +186,30 @@ List<WrAiDataFlow> get kWrAiDataFlows => [
       'When you upload a JD or CV to be read',
     ),
     data: tr(
-      'Toàn bộ nội dung tài liệu đó, kể cả phần bạn không nhắc tới trong '
-          'app.',
-      'The whole document, including parts you never mention in the app.',
+      'Nội dung tài liệu đó, kể cả phần bạn không nhắc tới trong app. Trước '
+          'khi gửi, app tự động loại bỏ các thông tin liên lạc và định danh cá '
+          'nhân nhận diện được: họ tên, số điện thoại, email, địa chỉ, ngày '
+          'sinh, số giấy tờ tùy thân, liên kết mạng xã hội.',
+      'The content of that document, including parts you never mention in the '
+          'app. Before sending, the app automatically removes the contact and '
+          'identity details it can recognise: name, phone number, email, '
+          'address, date of birth, ID numbers, social media links.',
+    ),
+    recipient: 'DeepSeek',
+  ),
+  WrAiDataFlow(
+    trigger: tr(
+      'Khi bạn tạo một chủ đề thực hành',
+      'When you create a practice theme',
+    ),
+    data: tr(
+      'Tên chủ đề, tình huống bạn đang gặp, điều bạn muốn khác đi và điều bạn '
+          'đã thử, sau khi bỏ các thông tin liên lạc nhận diện được. Dùng để gợi '
+          'ý ba cách làm và một câu hỏi cho lần sau.',
+      'The theme name, the situation you face, what you want to change and '
+          'what you already tried, after removing contact details it can '
+          'recognise. Used to suggest three ways to try and a question for '
+          'next time.',
     ),
     recipient: 'DeepSeek',
   ),

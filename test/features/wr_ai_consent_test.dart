@@ -94,21 +94,32 @@ void main() {
       }
     });
 
-    test('kể đủ CẢ SÁU luồng gửi dữ liệu đang có trong app', () {
-      // Sáu luồng: chat, đọc JD/CV, sinh Diễn biến, "Bạn đang khó ở chỗ nào"
-      // (15/10/2026), đọc thành tiếng, và cá nhân hoá Báo cáo khảo sát
-      // (`ai-personalize`). Thêm một luồng AI mới mà quên khai ở đây
+    test('kể đủ CẢ BẢY luồng gửi dữ liệu đang có trong app', () {
+      // Bảy luồng: chat, đọc JD/CV, gợi ý khi tạo chủ đề (20/10/2026), sinh
+      // Diễn biến, "Bạn đang khó ở chỗ nào" (15/10/2026), đọc thành tiếng, và
+      // cá nhân hoá Báo cáo khảo sát (`ai-personalize`). Thêm một luồng AI mới
+      // mà quên khai ở đây
       // thì bản công bố thành lời khai thiếu.
       //
       // Luồng thứ năm từng bị bỏ sót vì nó gọi một Edge Function có sẵn từ bản
       // web, không nằm trong `supabase/functions/` của repo này. Muốn soát lại
       // cho đủ thì quét theo điểm gọi trong `lib/` — `functions.invoke(` và các
       // URL ngoài — chứ đừng quét theo thư mục mã nguồn.
-      expect(kWrAiDataFlows.length, 6);
+      expect(kWrAiDataFlows.length, 7);
       for (final f in kWrAiDataFlows) {
         expect(f.trigger.trim(), isNotEmpty);
         expect(f.data.trim(), isNotEmpty);
         expect(f.recipient.trim(), isNotEmpty);
+      }
+    });
+
+    test('JD/CV và tạo chủ đề nói rõ có loại bỏ thông tin nhận diện', () {
+      // Câu hứa phải khớp `_shared/pii_redact.ts`, và KHÔNG được hứa quá: bộ
+      // lọc là heuristic nên chữ phải là "nhận diện được".
+      for (final key in ['JD', 'chủ đề']) {
+        final f = kWrAiDataFlows.firstWhere((f) => f.trigger.contains(key));
+        expect(f.data, contains('nhận diện được'));
+        expect(f.data, isNot(contains('100%')));
       }
     });
 
